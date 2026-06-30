@@ -70,11 +70,12 @@ function showStartSession(round) {
 // =================== Voting (hot-seat) ===================
 
 function startVoting(round, session, games, members) {
-  setCrumbs([
+  const setVotingCrumbs = () => setCrumbs([
     { label: t('nav.home'), onClick: showHome },
     { label: round.name, onClick: () => showRound(round.id) },
     { label: t('vote.crumb') },
   ]);
+  setVotingCrumbs();
 
   // votes[memberId][gameId] = { rating, retire }
   const votes = {};
@@ -90,7 +91,8 @@ function startVoting(round, session, games, members) {
 
   let idx = 0;
   // Re-render the current step in the new language (keeps votes/progress).
-  currentView = () => render();
+  // Also refresh the breadcrumb so its label follows the new locale.
+  currentView = () => { setVotingCrumbs(); render(); };
 
   function render() {
     const step = steps[idx];
