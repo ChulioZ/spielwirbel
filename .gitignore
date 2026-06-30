@@ -1,0 +1,12 @@
+node_modules/
+
+# All user-specific data (rounds, sessions, uploaded cover images) lives here.
+# Never publish it.
+data/
+
+*.bak
+*.log
+.DS_Store
+
+# Claude Code local settings
+.claude/settings.local.json

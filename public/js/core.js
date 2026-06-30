@@ -1,0 +1,251 @@
+/* Familien-Spielesammlung – core: DOM helpers, API, small utilities, stats,
+   design application. Part of the frontend; all files share one global script
+   scope. Load order: see index.html. */
+
+'use strict';
+
+const app = document.getElementById('app');
+const crumbs = document.getElementById('crumbs');
+const toastEl = document.getElementById('toast');
+
+// Arrow so showHome (defined in a later script) is only resolved on click –
+// it does not exist yet while core.js is loading.
+document.getElementById('homeBtn').addEventListener('click', () => showHome());
+
+// Re-invoked when the language changes, to re-render the current screen.
+let currentView = () => showHome();
+
+// ---- small helpers ---------------------------------------------------------
+
+const h = (html) => {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+};
+const esc = (s) =>
+  String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+
+let toastTimer;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (toastEl.hidden = true), 2200);
+}
+
+async function api(method, url, body) {
+  const opts = { method, headers: {} };
+  if (body instanceof FormData) {
+    opts.body = body;
+  } else if (body !== undefined) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    let msg = 'Error';
+    try { msg = (await res.json()).error || msg; } catch {}
+    throw new Error(msg);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+function setCrumbs(parts) {
+  crumbs.innerHTML = '';
+  parts.forEach((p, i) => {
+    if (i > 0) crumbs.appendChild(h('<span class="sep">›</span>'));
+    if (p.onClick) {
+      const b = h(`<button class="link-btn">${esc(p.label)}</button>`);
+      b.addEventListener('click', p.onClick);
+      crumbs.appendChild(b);
+    } else {
+      crumbs.appendChild(h(`<span>${esc(p.label)}</span>`));
+    }
+  });
+}
+
+// Join names for the active language: "A", "A and B", "A, B and C".
+function joinNames(names) {
+  if (names.length <= 1) return names[0] || '';
+  return names.slice(0, -1).join(', ') + ' ' + t('list.and') + ' ' + names[names.length - 1];
+}
+
+// Texts that live outside the rendered views (top bar). Re-applied on language change.
+function applyStaticTexts() {
+  document.getElementById('homeBtn').textContent = t('app.title');
+}
+
+// Language picker in the top bar.
+function setupLangPicker() {
+  const sel = document.getElementById('langPicker');
+  sel.innerHTML = SUPPORTED_LOCALES.map(
+    (loc) => `<option value="${loc}">${LOCALE_LABELS[loc]}</option>`
+  ).join('');
+  sel.value = getLocale();
+  sel.addEventListener('change', () => {
+    setLocale(sel.value);
+    applyStaticTexts();
+    currentView(); // re-render the current screen in the new language
+  });
+}
+
+// Games list sorting – kept for the running session.
+let gamesSort = 'random';
+// Remembered random order per round, so it stays the same when navigating back.
+const randomOrderCache = {};
+function randomOrderedGames(round, activeGames) {
+  const ids = activeGames.map((g) => g.id);
+  const cached = randomOrderCache[round.id];
+  const sameSet = cached && cached.length === ids.length && ids.every((id) => cached.includes(id));
+  const order = sameSet ? cached : (randomOrderCache[round.id] = shuffled(ids));
+  return order.map((id) => activeGames.find((g) => g.id === id)).filter(Boolean);
+}
+
+// Rating stats of a game within ONE session.
+function gameStatsForSession(round, session, gameId) {
+  const ratings = [];
+  let sortCount = 0;
+  round.members.forEach((m) => {
+    const v = (session.votes[m.id] || {})[gameId];
+    if (!v) return;
+    if (v.retire) sortCount++;
+    if (typeof v.rating === 'number') ratings.push(v.rating);
+  });
+  const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
+  return { avg, count: ratings.length, sortCount };
+}
+
+// Rating stats of a game across ALL (still existing) sessions. Computed on
+// demand on purpose: sessions are the single source of truth, so deleting a
+// session automatically removes its effect.
+function gameStats(round, gameId) {
+  const ratings = [];
+  let sortCount = 0;
+  let sessions = 0;
+  let votesCast = 0; // total votes cast (rating and/or "retire")
+  round.sessions.forEach((s) => {
+    if (!s.gameIds.includes(gameId)) return;
+    sessions++;
+    round.members.forEach((m) => {
+      const v = (s.votes[m.id] || {})[gameId];
+      if (!v) return;
+      votesCast++;
+      if (v.retire) sortCount++;
+      if (typeof v.rating === 'number') ratings.push(v.rating);
+    });
+  });
+  const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
+  return { avg, count: ratings.length, sortCount, sessions, votesCast };
+}
+
+// Retirement suggestions: games often suggested for retirement and/or with a
+// very low average. Thresholds chosen so nothing is suggested until there are
+// enough votes (no false alarm from a few votes).
+function retireRecommendations(activeGames, statsByGame, minVotes) {
+  const SORT_SHARE = 0.5; // at least half want it retired
+  const LOW_AVG = 2.0; // "very low" on the 1–5 scale
+  const recs = [];
+  activeGames.forEach((g) => {
+    const st = statsByGame[g.id];
+    if (!st || st.votesCast < minVotes) return;
+    const share = st.votesCast ? st.sortCount / st.votesCast : 0;
+    const reasons = [];
+    if (share >= SORT_SHARE)
+      reasons.push(t('rec.reasonSort', { n: st.sortCount, pct: Math.round(share * 100) }));
+    if (st.avg !== null && st.avg <= LOW_AVG)
+      reasons.push(t('rec.reasonAvg', { avg: st.avg.toFixed(1) }));
+    if (!reasons.length) return;
+    const severity = share + (st.avg !== null ? Math.max(0, 3 - st.avg) / 3 : 0);
+    recs.push({ game: g, reasons, severity });
+  });
+  recs.sort((a, b) => b.severity - a.severity);
+  return recs;
+}
+
+// Recommendation box minimized for this session (per round).
+const minimizedRecs = new Set();
+
+// ---- Design ----
+
+const STANDARD_ACCENT = '#c2410c';
+const STANDARD_PATTERN = 'clouds';
+
+// Organic textures from SVG fractal noise (feTurbulence), tinted with the accent
+// color and only faintly visible. Entirely in the browser, no images. Each
+// "pattern" variant has a different frequency/strength -> looks irregular.
+const TEXTURES = {
+  // soft, cloudy wisps
+  clouds: { w: 600, h: 600, type: 'fractalNoise', freq: '0.012', oct: 4, amp: 0.16, bias: 0.02 },
+  // fine, paper-like grain
+  grain: { w: 200, h: 200, type: 'fractalNoise', freq: '0.85', oct: 2, amp: 0.05, bias: 0.012 },
+  // long, flowing streaks
+  wisps: { w: 720, h: 520, type: 'fractalNoise', freq: '0.006 0.022', oct: 4, amp: 0.14, bias: 0.01 },
+  // marbled veins
+  marble: { w: 560, h: 560, type: 'turbulence', freq: '0.018', oct: 5, amp: 0.13, bias: 0.02 },
+  // very calm, misty gradient
+  mist: { w: 820, h: 820, type: 'fractalNoise', freq: '0.008', oct: 3, amp: 0.12, bias: 0.03 },
+};
+
+function textureImage(pattern, accent) {
+  const tex = TEXTURES[pattern] || TEXTURES[STANDARD_PATTERN];
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${tex.w}' height='${tex.h}'>` +
+    `<defs><filter id='t' x='0' y='0' width='100%' height='100%'>` +
+    `<feTurbulence type='${tex.type}' baseFrequency='${tex.freq}' numOctaves='${tex.oct}' seed='7' stitchTiles='stitch' result='n'/>` +
+    `<feColorMatrix in='n' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${tex.amp} ${tex.bias}' result='m'/>` +
+    `<feFlood flood-color='${accent}' result='c'/>` +
+    `<feComposite in='c' in2='m' operator='in'/>` +
+    `</filter></defs><rect width='100%' height='100%' filter='url(#t)'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+// Apply the round's design: page background + accent color + organic texture.
+// All other tones (placeholders, borders, accent surfaces) follow via CSS
+// color-mix with the accent color.
+function applyBackground(bg) {
+  const root = document.documentElement.style;
+  let page, accent, pattern;
+  if (bg && bg.type === 'theme' && bg.page && bg.accent) {
+    page = bg.page;
+    accent = bg.accent;
+    pattern = bg.pattern || STANDARD_PATTERN;
+    root.setProperty('--page-bg', page);
+    root.setProperty('--brand', accent);
+  } else if (bg && bg.type === 'color' && bg.color) {
+    page = bg.color; // Altbestand: nur Hintergrundfarbe
+    accent = STANDARD_ACCENT;
+    pattern = STANDARD_PATTERN;
+    root.setProperty('--page-bg', page);
+    root.removeProperty('--brand');
+  } else {
+    page = '#f4f1ea';
+    accent = STANDARD_ACCENT;
+    pattern = STANDARD_PATTERN;
+    root.removeProperty('--page-bg'); // back to the :root default
+    root.removeProperty('--brand');
+  }
+  document.body.style.backgroundImage = textureImage(pattern, accent);
+}
+
+// Color for an average 1–5: red (bad) → yellow → green (good).
+function avgColor(avg) {
+  const hue = Math.max(0, Math.min(120, ((avg - 1) / 4) * 120));
+  return `hsl(${hue}, 60%, 42%)`;
+}
+
+// Copy of an array in random order (Fisher–Yates).
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const typeTag = (type) =>
+  type === 'digital'
+    ? `<span class="tag tag--digital">${t('type.digital')}</span>`
+    : `<span class="tag tag--analog">${t('type.analog')}</span>`;

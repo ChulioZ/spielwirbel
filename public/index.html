@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎲 Familien-Spielesammlung</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <button id="homeBtn" class="topbar__home" type="button">🎲</button>
+    <nav id="crumbs" class="crumbs"></nav>
+    <select id="langPicker" class="lang-picker" aria-label="Language"></select>
+  </header>
+
+  <main id="app" class="app">
+    <!-- Content is rendered by the js/* files -->
+  </main>
+
+  <!-- small toast for feedback -->
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- Order matters: i18n + languages first, core next, main (bootstrap) last. -->
+  <script src="js/i18n.js"></script>
+  <script src="js/lang/en.js"></script>
+  <script src="js/lang/de.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/views-home.js"></script>
+  <script src="js/views-round.js"></script>
+  <script src="js/views-session.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

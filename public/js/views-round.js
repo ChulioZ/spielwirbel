@@ -1,0 +1,783 @@
+/* Familien-Spielesammlung – views: round overview, retired games, design,
+   game detail, add game. Part of the frontend; all files share one global
+   script scope. */
+
+// =================== Round: overview ===================
+
+async function showRound(rid) {
+  currentView = () => showRound(rid);
+  app.innerHTML = '<p class="muted">…</p>';
+  const round = await api('GET', '/api/rounds/' + rid);
+  applyBackground(round.background);
+  setCrumbs([{ label: t('nav.home'), onClick: showHome }, { label: round.name }]);
+
+  app.innerHTML = '';
+  const head = h(`<div class="page-head">
+       <div>
+         <h1>${esc(round.name)}</h1>
+         <div class="muted">👥 ${round.members.map((m) => esc(m.name)).join(', ')}</div>
+       </div>
+       <button class="btn" id="bgBtn">${esc(t('round.design'))}</button>
+     </div>`);
+  head.querySelector('#bgBtn').addEventListener('click', () => showBackground(rid));
+  app.appendChild(head);
+
+  // Active games (in the collection) vs. retired games.
+  const activeGames = round.games.filter((g) => !g.retired);
+  const retiredGames = round.games.filter((g) => g.retired);
+
+  // Stats per active game, computed once (for recommendation, pill, sorting).
+  const statsByGame = {};
+  activeGames.forEach((g) => (statsByGame[g.id] = gameStats(round, g.id)));
+
+  // Actions
+  const actions = h('<div class="toolbar"></div>');
+  const startBtn = h(`<button class="btn btn--primary btn--lg">${esc(t('round.startSession'))}</button>`);
+  startBtn.addEventListener('click', () => showStartSession(round));
+  if (activeGames.length === 0) {
+    startBtn.disabled = true;
+    startBtn.title = t('round.startSessionDisabled');
+  }
+  const addGameBtn = h(`<button class="btn btn--lg">${esc(t('round.addGame'))}</button>`);
+  addGameBtn.addEventListener('click', () => showAddGame(round));
+  actions.appendChild(startBtn);
+  actions.appendChild(addGameBtn);
+  app.appendChild(actions);
+
+  // Retirement suggestions: only shown when something qualifies. Enough data =
+  // at least three times as many votes as members.
+  const recs = retireRecommendations(activeGames, statsByGame, round.members.length * 3);
+  if (recs.length) {
+    const minimized = minimizedRecs.has(round.id);
+    const box = h(`<div class="recommend-box${minimized ? ' is-min' : ''}">
+         <div class="recommend-box__head">
+           <span>${esc(t('rec.title', { n: recs.length }))}</span>
+           <button class="link-btn recommend-box__toggle">${minimized ? esc(t('rec.show')) : esc(t('rec.minimize'))}</button>
+         </div>
+         <div class="recommend-box__body">
+           <div class="muted recommend-box__sub">${esc(t('rec.sub'))}</div>
+           <div class="recommend-list"></div>
+         </div>
+       </div>`);
+    const body = box.querySelector('.recommend-box__body');
+    const toggle = box.querySelector('.recommend-box__toggle');
+    if (minimized) body.style.display = 'none';
+    toggle.addEventListener('click', () => {
+      if (minimizedRecs.has(round.id)) {
+        minimizedRecs.delete(round.id);
+        body.style.display = '';
+        box.classList.remove('is-min');
+        toggle.textContent = t('rec.minimize');
+      } else {
+        minimizedRecs.add(round.id);
+        body.style.display = 'none';
+        box.classList.add('is-min');
+        toggle.textContent = t('rec.show');
+      }
+    });
+    const list = box.querySelector('.recommend-list');
+    recs.slice(0, 5).forEach(({ game, reasons }) => {
+      const item = h(`<div class="recommend-item">
+           <div class="recommend-item__info">
+             <span class="recommend-item__title">${esc(game.title)} ${typeTag(game.type)}</span>
+             <span class="recommend-item__reason">${reasons.map(esc).join(' · ')}</span>
+           </div>
+           <button class="btn recommend-item__btn">${esc(t('rec.retire'))}</button>
+         </div>`);
+      item.querySelector('.recommend-item__title').addEventListener('click', () => showGameDetail(round.id, game.id));
+      item.querySelector('.recommend-item__btn').addEventListener('click', async () => {
+        if (!confirm(t('detail.retireConfirm', { title: game.title }))) return;
+        try {
+          await api('POST', `/api/rounds/${round.id}/games/${game.id}/retire`, { retired: true });
+          toast(t('games.retired', { title: game.title }));
+          showRound(round.id);
+        } catch (e) { toast(e.message); }
+      });
+      list.appendChild(item);
+    });
+    if (recs.length > 5) {
+      list.appendChild(h(`<div class="muted recommend-more">${esc(t('rec.more', { n: recs.length - 5 }))}</div>`));
+    }
+    app.appendChild(box);
+  }
+
+  // Activity feed (above the games section).
+  const feed = buildActivityFeed(round);
+  const feedSec = h('<div class="section"></div>');
+  const feedHead = h(`<div class="section-head"><h3>${esc(t('activity.title'))}</h3></div>`);
+  feedSec.appendChild(feedHead);
+  if (feed.length === 0) {
+    feedSec.appendChild(h(`<div class="muted">${esc(t('activity.empty'))}</div>`));
+  } else {
+    const VISIBLE = 5;
+    const list = h('<div class="activity-feed"></div>');
+    feed.forEach((e) => {
+      const item = h(`<div class="activity">
+           <span class="activity__icon">${e.icon}</span>
+           <span class="activity__text">${esc(e.text)}</span>
+           <span class="activity__time">${fmtDateTime(e.at)}</span>
+           ${e.id ? `<button class="activity__del" title="${esc(t('activity.delete'))}">✕</button>` : ''}
+         </div>`);
+      if (e.id) {
+        item.querySelector('.activity__del').addEventListener('click', async () => {
+          if (!confirm(t('activity.deleteConfirm'))) return;
+          try {
+            await api('DELETE', `/api/rounds/${rid}/activities/${e.id}`);
+            toast(t('activity.deleted'));
+            showRound(rid);
+          } catch (err) { toast(err.message); }
+        });
+      }
+      list.appendChild(item);
+    });
+
+    if (feed.length <= VISIBLE) {
+      feedSec.appendChild(list);
+    } else {
+      // Like the games: fade/blur out at the bottom + centered expand button.
+      const clip = h('<div class="activity-clip"></div>');
+      const fadeEl = h('<div class="activity-fade"></div>');
+      const expandEl = h(`<button class="games-expand">${esc(t('games.showAllShort'))}</button>`);
+      clip.appendChild(list);
+      clip.appendChild(fadeEl);
+      clip.appendChild(expandEl);
+      feedSec.appendChild(clip);
+
+      const moreBtn = h('<button class="section-toggle"></button>');
+      feedHead.appendChild(moreBtn);
+
+      let feedExpanded = false;
+      function applyFeedCollapse() {
+        if (feedExpanded) {
+          list.style.maxHeight = '';
+          list.style.overflow = '';
+          fadeEl.style.display = 'none';
+          expandEl.style.display = 'none';
+          moreBtn.textContent = t('activity.showLess');
+          return;
+        }
+        // Show about 4.5 rows; the last (~5th) fades out.
+        const rowH = list.firstElementChild ? list.firstElementChild.offsetHeight : 56;
+        list.style.maxHeight = Math.round(rowH * (VISIBLE - 0.5)) + 'px';
+        list.style.overflow = 'hidden';
+        fadeEl.style.display = '';
+        fadeEl.style.height = Math.round(rowH) + 'px';
+        expandEl.style.display = '';
+        expandEl.textContent = t('activity.showAll', { n: feed.length });
+        moreBtn.textContent = t('activity.showAll', { n: feed.length });
+      }
+      moreBtn.addEventListener('click', () => { feedExpanded = !feedExpanded; applyFeedCollapse(); });
+      expandEl.addEventListener('click', () => { feedExpanded = true; applyFeedCollapse(); });
+      requestAnimationFrame(applyFeedCollapse);
+      function onFeedResize() {
+        if (!document.body.contains(list)) return window.removeEventListener('resize', onFeedResize);
+        if (!feedExpanded) applyFeedCollapse();
+      }
+      window.addEventListener('resize', onFeedResize);
+    }
+  }
+  app.appendChild(feedSec);
+
+  // Games
+  const gamesSec = h('<div class="section"></div>');
+  const gamesHead = h(`<div class="section-head"><h3>${esc(t('games.title', { n: activeGames.length }))}</h3><div class="section-tools"></div></div>`);
+  const gamesTools = gamesHead.querySelector('.section-tools');
+  gamesSec.appendChild(gamesHead);
+  if (activeGames.length === 0) {
+    gamesSec.appendChild(h(`<div class="empty"><p>${esc(t('games.empty'))}</p></div>`));
+  } else {
+    // Average per game (from the already computed stats) for pill and sorting.
+    const avgMap = {};
+    activeGames.forEach((g) => (avgMap[g.id] = statsByGame[g.id].avg));
+
+    // Sort picker next to the heading; the choice is kept for the session.
+    const sortSel = h(`<select class="sort-select" aria-label="${esc(t('games.sort.random'))}">
+        <option value="random">${esc(t('games.sort.random'))}</option>
+        <option value="name">${esc(t('games.sort.name'))}</option>
+        <option value="avg">${esc(t('games.sort.rating'))}</option>
+      </select>`);
+    sortSel.value = gamesSort;
+    gamesTools.appendChild(sortSel);
+
+    const grid = h('<div class="cards"></div>');
+
+    // Build the cards once and remember them by game id. When re-sorting we only
+    // reorder these existing nodes – no page rebuild that would reset the scroll.
+    const cardById = {};
+    activeGames.forEach((g) => {
+      const imgStyle = g.image ? `style="background-image:url('${g.image}')"` : '';
+      const fallback = g.image ? '' : (g.type === 'digital' ? '💻' : '🎲');
+      const avg = avgMap[g.id];
+      const scorePill =
+        avg !== null
+          ? `<span class="score-pill" style="background:${avgColor(avg)}">Ø ${avg.toFixed(1)}</span>`
+          : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
+      const gc = h(`<div class="game-card game-card--clickable">
+           <div class="game-card__img" ${imgStyle}>${fallback}${scorePill}</div>
+           <div class="game-card__body">
+             <div class="game-card__title">${esc(g.title)}</div>
+             <div class="game-card__row">
+               ${typeTag(g.type)}
+               <button class="link-btn" style="color:var(--warn)">${esc(t('games.retire'))}</button>
+             </div>
+           </div>
+         </div>`);
+      gc.addEventListener('click', () => showGameDetail(rid, g.id));
+      gc.querySelector('button').addEventListener('click', async (e) => {
+        e.stopPropagation(); // don't count as a click on the card
+        if (!confirm(t('games.retireConfirm', { title: g.title }))) return;
+        try {
+          await api('POST', `/api/rounds/${rid}/games/${g.id}/retire`, { retired: true });
+          toast(t('games.retired', { title: g.title }));
+          showRound(rid);
+        } catch (err) { toast(err.message); }
+      });
+      cardById[g.id] = gc;
+    });
+
+    // When collapsed we show the first row fully and only the top of the second,
+    // increasingly blurred/faded toward the bottom as a hint that there is more.
+    const clip = h('<div class="games-clip"></div>');
+    const fade = h('<div class="games-fade"></div>');
+    const expandBtn = h(`<button class="games-expand">${esc(t('games.showAllShort'))}</button>`);
+    clip.appendChild(grid);
+    clip.appendChild(fade);
+    clip.appendChild(expandBtn);
+    gamesSec.appendChild(clip);
+    expandBtn.addEventListener('click', () => { expanded = true; applyCollapse(); });
+
+    // Toggle next to the heading (only visible when needed).
+    const toggleBtn = h('<button class="section-toggle" hidden></button>');
+    gamesTools.appendChild(toggleBtn);
+
+    let expanded = false;
+    let cards = [];
+    function columnsInGrid() {
+      if (cards.length === 0) return 1;
+      const top = cards[0].offsetTop;
+      let cols = 0;
+      for (const c of cards) {
+        if (c.offsetTop === top) cols++;
+        else break;
+      }
+      return Math.max(1, cols);
+    }
+    function expand() {
+      grid.style.maxHeight = '';
+      grid.style.overflow = '';
+      fade.style.display = 'none';
+      expandBtn.style.display = 'none';
+      toggleBtn.textContent = t('games.showLess');
+    }
+    function applyCollapse() {
+      const cols = columnsInGrid();
+      const totalRows = Math.ceil(cards.length / cols);
+      if (totalRows <= 2) {
+        // Fits in two rows -> nothing to collapse.
+        toggleBtn.hidden = true;
+        expand();
+        return;
+      }
+      toggleBtn.hidden = false;
+      if (expanded) {
+        expand();
+        return;
+      }
+      // First row fully + about half the second row visible.
+      const cardHeight = cards[0].offsetHeight;
+      const rowPitch = cards[cols] ? cards[cols].offsetTop - cards[0].offsetTop : cardHeight;
+      const gap = Math.max(0, rowPitch - cardHeight);
+      const clipHeight = Math.round(cardHeight + gap + cardHeight * 0.5);
+      grid.style.maxHeight = clipHeight + 'px';
+      grid.style.overflow = 'hidden';
+      fade.style.display = '';
+      fade.style.height = Math.round(cardHeight * 0.6) + 'px';
+      expandBtn.style.display = '';
+      expandBtn.textContent = t('games.showAll', { n: cards.length });
+      toggleBtn.textContent = t('games.showAll', { n: cards.length });
+    }
+
+    function orderedGames() {
+      if (gamesSort === 'name') {
+        return [...activeGames].sort((a, b) =>
+          a.title.localeCompare(b.title, getLocale(), { sensitivity: 'base' })
+        );
+      }
+      if (gamesSort === 'avg') {
+        // Best first; unrated (null) at the end.
+        return [...activeGames].sort((a, b) => (avgMap[b.id] ?? -1) - (avgMap[a.id] ?? -1));
+      }
+      return randomOrderedGames(round, activeGames);
+    }
+    // Only reorder the cards (no page rebuild) and re-collapse.
+    function renderGames() {
+      cards = orderedGames().map((g) => cardById[g.id]);
+      grid.replaceChildren(...cards);
+      applyCollapse();
+    }
+
+    sortSel.addEventListener('change', () => {
+      gamesSort = sortSel.value;
+      renderGames();
+    });
+    toggleBtn.addEventListener('click', () => {
+      expanded = !expanded;
+      applyCollapse();
+    });
+    // First arrangement after layout; re-collapse on resize.
+    requestAnimationFrame(renderGames);
+    function onResize() {
+      if (!document.body.contains(grid)) return window.removeEventListener('resize', onResize);
+      applyCollapse();
+    }
+    window.addEventListener('resize', onResize);
+  }
+  app.appendChild(gamesSec);
+
+  // Link to the retired games.
+  const retiredLink = h(
+    `<div style="margin-top:12px"><button class="link-btn">${esc(t('retired.link', { n: retiredGames.length }))}</button></div>`
+  );
+  retiredLink.querySelector('button').addEventListener('click', () => showRetired(round.id));
+  app.appendChild(retiredLink);
+
+  // Past sessions
+  const done = round.sessions.filter((s) => s.done).reverse();
+  if (done.length) {
+    const sec = h(`<div class="section"><h3>${esc(t('sessions.title'))}</h3></div>`);
+    const list = h('<div class="cards"></div>');
+    done.forEach((s) => {
+      const when = fmtDateTime(s.createdAt);
+      const chosen = s.chosenGameId && round.games.find((g) => g.id === s.chosenGameId);
+      const chosenLine = chosen
+        ? `<div class="card__meta" style="color:var(--brand-dark);font-weight:700">🎮 ${esc(chosen.title)}</div>`
+        : '';
+      const winnerNames = (s.winnerIds || [])
+        .map((wid) => (round.members.find((m) => m.id === wid) || {}).name)
+        .filter(Boolean);
+      const winnerLine = s.finished
+        ? `<div class="card__meta">${winnerNames.length ? '🏆 ' + winnerNames.map(esc).join(', ') : esc(t('sessions.played'))}</div>`
+        : '';
+      const card = h(`<div class="card">
+           <h3>${when}</h3>
+           <div class="card__meta">${esc(t('sessions.rated', { n: s.gameIds.length }))}</div>
+           ${chosenLine}
+           ${winnerLine}
+           <div class="card__row" style="margin-top:8px">
+             <button class="link-btn" data-act="open">${esc(t('sessions.view'))}</button>
+             <button class="link-btn" data-act="del" style="color:var(--danger)">${esc(t('common.delete'))}</button>
+           </div>
+         </div>`);
+      card.addEventListener('click', (e) => {
+        if (e.target.dataset.act === 'del') return; // delete button is not "open"
+        showResults(round, s);
+      });
+      card.querySelector('[data-act="del"]').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!confirm(t('sessions.deleteConfirm', { when }))) return;
+        try {
+          await api('DELETE', `/api/rounds/${round.id}/sessions/${s.id}`);
+          toast(t('sessions.deleted'));
+          showRound(round.id);
+        } catch (err) { toast(err.message); }
+      });
+      list.appendChild(card);
+    });
+    sec.appendChild(list);
+    app.appendChild(sec);
+  }
+
+  // Delete round (subtle, at the bottom)
+  const del = h(`<div class="section center"><button class="link-btn" style="color:var(--danger)">${esc(t('round.deleteRound'))}</button></div>`);
+  del.querySelector('button').addEventListener('click', async () => {
+    if (!confirm(t('round.deleteConfirm', { name: round.name }))) return;
+    await api('DELETE', '/api/rounds/' + rid);
+    showHome();
+  });
+  app.appendChild(del);
+}
+
+// =================== Retired games ===================
+
+async function showRetired(rid) {
+  currentView = () => showRetired(rid);
+  app.innerHTML = '<p class="muted">…</p>';
+  const round = await api('GET', '/api/rounds/' + rid);
+  applyBackground(round.background);
+  setCrumbs([
+    { label: t('nav.home'), onClick: showHome },
+    { label: round.name, onClick: () => showRound(rid) },
+    { label: t('retired.crumb') },
+  ]);
+
+  // Newest first.
+  const games = round.games
+    .filter((g) => g.retired)
+    .sort((a, b) => String(b.retiredAt || '').localeCompare(String(a.retiredAt || '')));
+
+  app.innerHTML = '';
+  app.appendChild(
+    h(`<div class="page-head"><div>
+         <h1>${esc(t('retired.title'))}</h1>
+         <div class="muted">${esc(round.name)}</div>
+       </div></div>`)
+  );
+
+  if (games.length === 0) {
+    app.appendChild(h(`<div class="empty"><p>${esc(t('retired.empty'))}</p></div>`));
+  } else {
+    const grid = h('<div class="cards"></div>');
+    games.forEach((g) => {
+      const imgStyle = g.image ? `style="background-image:url('${g.image}')"` : '';
+      const fallback = g.image ? '' : (g.type === 'digital' ? '💻' : '🎲');
+      const when = g.retiredAt ? fmtDateTime(g.retiredAt) : '?';
+      const gc = h(`<div class="game-card">
+           <div class="game-card__img" ${imgStyle}>${fallback}</div>
+           <div class="game-card__body">
+             <div class="game-card__title">${esc(g.title)}</div>
+             <div class="game-card__row">${typeTag(g.type)}</div>
+             <div class="card__meta">${esc(t('retired.at', { when }))}</div>
+             <button class="btn" style="margin-top:10px">${esc(t('retired.restore'))}</button>
+           </div>
+         </div>`);
+      gc.querySelector('button').addEventListener('click', async () => {
+        try {
+          await api('POST', `/api/rounds/${rid}/games/${g.id}/retire`, { retired: false });
+          toast(t('retired.restored', { title: g.title }));
+          showRetired(rid);
+        } catch (e) { toast(e.message); }
+      });
+      grid.appendChild(gc);
+    });
+    app.appendChild(grid);
+  }
+
+  const back = h(`<div class="section center"><button class="btn btn--lg">${esc(t('common.backToRound'))}</button></div>`);
+  back.querySelector('button').addEventListener('click', () => showRound(rid));
+  app.appendChild(back);
+}
+
+// =================== Design ===================
+
+// Coordinated designs: light background + matching accent color. The first is
+// the default (warm cream + orange). Labels are translation keys.
+const THEMES = [
+  { labelKey: 'theme.standard', page: '#f4f1ea', accent: '#c2410c', pattern: 'clouds', std: true },
+  { labelKey: 'theme.blaugrau', page: '#eef3f8', accent: '#2563eb', pattern: 'mist' },
+  { labelKey: 'theme.salbei', page: '#e9f1ea', accent: '#2e7d46', pattern: 'grain' },
+  { labelKey: 'theme.rose', page: '#f6ecf1', accent: '#bb3a78', pattern: 'marble' },
+  { labelKey: 'theme.lavendel', page: '#efedf9', accent: '#6d4ac2', pattern: 'wisps' },
+  { labelKey: 'theme.sand', page: '#f6efe2', accent: '#a76a17', pattern: 'clouds' },
+  { labelKey: 'theme.schiefer', page: '#e7edf2', accent: '#2f6f9e', pattern: 'wisps' },
+  { labelKey: 'theme.pfirsich', page: '#f7ece7', accent: '#d2542f', pattern: 'marble' },
+];
+
+async function showBackground(rid) {
+  currentView = () => showBackground(rid);
+  app.innerHTML = '<p class="muted">…</p>';
+  const round = await api('GET', '/api/rounds/' + rid);
+  applyBackground(round.background);
+  setCrumbs([
+    { label: t('nav.home'), onClick: showHome },
+    { label: round.name, onClick: () => showRound(rid) },
+    { label: t('design.crumb') },
+  ]);
+
+  app.innerHTML = '';
+  app.appendChild(h(`<div class="page-head"><h1>${esc(t('design.title'))}</h1></div>`));
+
+  const sec = h(`<div class="section"><h3>${esc(t('design.scheme'))}</h3></div>`);
+  sec.appendChild(
+    h(`<div class="muted" style="margin-bottom:14px">${esc(t('design.note'))}</div>`)
+  );
+
+  const bg = round.background;
+  const currentPage = bg && bg.type === 'theme' ? (bg.page || '').toLowerCase() : null;
+
+  const swatches = h('<div class="bg-swatches"></div>');
+  THEMES.forEach((th) => {
+    const active = th.std ? !currentPage : currentPage === th.page.toLowerCase();
+    const sw = h(`<button class="bg-swatch${active ? ' is-active' : ''}" style="background:${th.page}" title="${esc(t(th.labelKey))}">
+         <span class="bg-swatch__dot" style="background:${th.accent}"></span>
+       </button>`);
+    sw.addEventListener('click', async () => {
+      const payload = th.std
+        ? { type: 'none' }
+        : { type: 'theme', page: th.page, accent: th.accent, pattern: th.pattern };
+      try {
+        const saved = await api('POST', `/api/rounds/${rid}/background`, payload);
+        applyBackground(saved.background);
+        swatches.querySelectorAll('.bg-swatch').forEach((el) => el.classList.remove('is-active'));
+        sw.classList.add('is-active');
+        toast(t('design.toast.set'));
+      } catch (e) { toast(e.message); }
+    });
+    swatches.appendChild(sw);
+  });
+  sec.appendChild(swatches);
+  app.appendChild(sec);
+
+  const back = h(`<div class="section center"><button class="btn btn--lg">${esc(t('common.backToRound'))}</button></div>`);
+  back.querySelector('button').addEventListener('click', () => showRound(rid));
+  app.appendChild(back);
+}
+
+// =================== Game detail ===================
+
+async function showGameDetail(rid, gameId) {
+  currentView = () => showGameDetail(rid, gameId);
+  app.innerHTML = '<p class="muted">…</p>';
+  const round = await api('GET', '/api/rounds/' + rid);
+  applyBackground(round.background);
+  const game = round.games.find((g) => g.id === gameId);
+  if (!game) return showRound(rid);
+  setCrumbs([
+    { label: t('nav.home'), onClick: showHome },
+    { label: round.name, onClick: () => showRound(rid) },
+    { label: game.title },
+  ]);
+
+  const st = gameStats(round, gameId);
+  const imgStyle = game.image ? `style="background-image:url('${game.image}')"` : '';
+  const fallback = game.image ? '' : (game.type === 'digital' ? '💻' : '🎲');
+  const retiredBadge = game.retired ? ` <span class="tag tag--retired">${t('result.retiredTag')}</span>` : '';
+
+  app.innerHTML = '';
+
+  // Header: image + title + average.
+  const ratingsLine = t(st.count === 1 ? 'detail.ratingsLineOne' : 'detail.ratingsLine', { n: st.count, s: st.sessions });
+  const scoreBig =
+    st.avg !== null
+      ? `<div class="gd-score" style="color:${avgColor(st.avg)}">${st.avg.toFixed(1)}</div>
+         <div class="score-label">${esc(ratingsLine)}</div>`
+      : `<div class="gd-score gd-score--none">–</div><div class="score-label">${esc(t('detail.noRating'))}</div>`;
+  const sortLine = st.sortCount
+    ? `<div class="sort-flag" style="margin-top:8px">${esc(t('detail.totalSort', { n: st.sortCount }))}</div>`
+    : '';
+
+  app.appendChild(
+    h(`<div class="gd-head">
+         <div class="gd-img" ${imgStyle}>${fallback}</div>
+         <div class="gd-info">
+           <h1>${esc(game.title)} ${typeTag(game.type)}${retiredBadge}</h1>
+           <div class="gd-stats">${scoreBig}${sortLine}</div>
+         </div>
+       </div>`)
+  );
+
+  // Retire / restore right from here.
+  const actionWrap = h('<div class="toolbar" style="margin-top:18px"></div>');
+  if (game.retired) {
+    const restore = h(`<button class="btn">${esc(t('detail.restore'))}</button>`);
+    restore.addEventListener('click', async () => {
+      try {
+        await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: false });
+        toast(t('retired.restored', { title: game.title }));
+        showGameDetail(rid, gameId);
+      } catch (e) { toast(e.message); }
+    });
+    actionWrap.appendChild(restore);
+  } else {
+    const retire = h(`<button class="btn" style="color:var(--warn)">${esc(t('detail.retire'))}</button>`);
+    retire.addEventListener('click', async () => {
+      if (!confirm(t('detail.retireConfirm', { title: game.title }))) return;
+      try {
+        await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: true });
+        toast(t('games.retired', { title: game.title }));
+        showGameDetail(rid, gameId);
+      } catch (e) { toast(e.message); }
+    });
+    actionWrap.appendChild(retire);
+  }
+  app.appendChild(actionWrap);
+
+  // Related sessions (those that drew this game) – newest first.
+  const related = round.sessions
+    .filter((s) => s.gameIds.includes(gameId))
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+
+  const sec = h(`<div class="section"><h3>${esc(t('detail.relatedTitle'))}</h3></div>`);
+  if (related.length === 0) {
+    sec.appendChild(h(`<div class="muted">${esc(t('detail.relatedEmpty'))}</div>`));
+  } else {
+    const list = h('<div class="ds-list"></div>');
+    related.slice(0, 15).forEach((s) => {
+      const sst = gameStatsForSession(round, s, gameId);
+      const when = fmtDateTime(s.createdAt);
+      const picked = s.chosenGameId === gameId;
+      let status;
+      if (picked) {
+        const names = (s.winnerIds || [])
+          .map((wid) => (round.members.find((m) => m.id === wid) || {}).name)
+          .filter(Boolean);
+        status = s.finished
+          ? `${esc(t('detail.played'))}${names.length ? ' · 🏆 ' + names.map(esc).join(', ') : ''}`
+          : esc(t('detail.chosen'));
+      } else {
+        status = `<span class="muted">${esc(t('detail.notChosen'))}</span>`;
+      }
+      const scoreCell =
+        sst.avg !== null
+          ? `<span class="score-pill" style="background:${avgColor(sst.avg)}">Ø ${sst.avg.toFixed(1)}</span>`
+          : '<span class="score-pill score-pill--none">–</span>';
+      const sortCell = sst.sortCount ? `<span class="sort-flag">🗑️ ${sst.sortCount}×</span>` : '';
+      const row = h(`<div class="ds-row${picked ? ' ds-row--picked' : ''}">
+           <div class="ds-row__main">
+             <div class="ds-row__date">${when}</div>
+             <div class="ds-row__status">${status}</div>
+           </div>
+           <div class="ds-row__meta">${sortCell}${scoreCell}</div>
+         </div>`);
+      row.addEventListener('click', () => showResults(round, s));
+      list.appendChild(row);
+    });
+    sec.appendChild(list);
+  }
+  app.appendChild(sec);
+
+  const back = h(`<div class="section center"><button class="btn btn--lg">${esc(t('common.backToRound'))}</button></div>`);
+  back.querySelector('button').addEventListener('click', () => showRound(rid));
+  app.appendChild(back);
+}
+
+// =================== Add game ===================
+
+function showAddGame(round) {
+  currentView = () => showAddGame(round);
+  setCrumbs([
+    { label: t('nav.home'), onClick: showHome },
+    { label: round.name, onClick: () => showRound(round.id) },
+    { label: t('addGame.crumb') },
+  ]);
+  app.innerHTML = '';
+  app.appendChild(h(`<div class="page-head"><h1>${esc(t('addGame.title'))}</h1></div>`));
+
+  const form = h(`<div>
+      <div class="field">
+        <label for="title">${esc(t('addGame.titleLabel'))}</label>
+        <input id="title" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" />
+      </div>
+      <div class="field">
+        <label>${esc(t('addGame.typeLabel'))}</label>
+        <div class="segmented" id="typeSeg">
+          <label class="is-checked" data-type="analog">${t('type.analog')}</label>
+          <label data-type="digital">${t('type.digital')}</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>${esc(t('addGame.imageLabel'))}</label>
+        <div id="pasteZone" class="paste-zone" tabindex="0">
+          <div class="paste-zone__hint">
+            <div class="paste-zone__icon">🖼️</div>
+            <div>${esc(t('addGame.pasteHint'))}</div>
+            <div class="muted" style="font-size:14px">${esc(t('addGame.pasteSub'))}</div>
+          </div>
+          <img class="paste-zone__preview" hidden />
+        </div>
+        <div class="toolbar" style="margin-top:10px">
+          <button type="button" id="pasteBtn" class="btn">${esc(t('addGame.pasteBtn'))}</button>
+          <button type="button" id="clearImg" class="btn btn--ghost" hidden>${esc(t('addGame.removeImage'))}</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button id="save" class="btn btn--primary btn--lg">${esc(t('addGame.save'))}</button>
+        <button id="saveMore" class="btn btn--lg">${esc(t('addGame.saveMore'))}</button>
+      </div>
+    </div>`);
+  app.appendChild(form);
+
+  let type = 'analog';
+  const seg = form.querySelector('#typeSeg');
+  seg.querySelectorAll('label').forEach((lbl) => {
+    lbl.addEventListener('click', () => {
+      seg.querySelectorAll('label').forEach((l) => l.classList.remove('is-checked'));
+      lbl.classList.add('is-checked');
+      type = lbl.dataset.type;
+    });
+  });
+
+  // --- Image via clipboard ---
+  let pastedBlob = null;
+  const pasteZone = form.querySelector('#pasteZone');
+  const preview = form.querySelector('.paste-zone__preview');
+  const clearBtn = form.querySelector('#clearImg');
+
+  function setImage(blob) {
+    if (preview.src) URL.revokeObjectURL(preview.src);
+    pastedBlob = blob;
+    if (blob) {
+      preview.src = URL.createObjectURL(blob);
+      preview.hidden = false;
+      pasteZone.classList.add('has-image');
+      clearBtn.hidden = false;
+    } else {
+      preview.removeAttribute('src');
+      preview.hidden = true;
+      pasteZone.classList.remove('has-image');
+      clearBtn.hidden = true;
+    }
+  }
+
+  // ⌘V anywhere on the page (the listener removes itself when the view changes).
+  function onPaste(e) {
+    if (!document.body.contains(pasteZone)) {
+      document.removeEventListener('paste', onPaste);
+      return;
+    }
+    const items = (e.clipboardData && e.clipboardData.items) || [];
+    for (const it of items) {
+      if (it.kind === 'file' && it.type.startsWith('image/')) {
+        const blob = it.getAsFile();
+        if (blob) { setImage(blob); toast(t('addGame.toast.pasted')); e.preventDefault(); }
+        return;
+      }
+    }
+  }
+  document.addEventListener('paste', onPaste);
+
+  // Button: Clipboard API, reliable on click (also without a keyboard).
+  form.querySelector('#pasteBtn').addEventListener('click', async () => {
+    try {
+      if (!navigator.clipboard || !navigator.clipboard.read) {
+        return toast(t('addGame.toast.useShortcut'));
+      }
+      const items = await navigator.clipboard.read();
+      for (const it of items) {
+        const imgType = it.types.find((ty) => ty.startsWith('image/'));
+        if (imgType) {
+          setImage(await it.getType(imgType));
+          toast(t('addGame.toast.pasted'));
+          return;
+        }
+      }
+      toast(t('addGame.toast.noImage'));
+    } catch (err) {
+      toast(t('addGame.toast.pasteFail'));
+    }
+  });
+
+  clearBtn.addEventListener('click', () => setImage(null));
+  pasteZone.addEventListener('click', () => pasteZone.focus());
+
+  async function save(again) {
+    const title = form.querySelector('#title').value.trim();
+    if (!title) return toast(t('addGame.toast.needTitle'));
+    const fd = new FormData();
+    fd.append('title', title);
+    fd.append('type', type);
+    if (pastedBlob) {
+      const ext = (pastedBlob.type && pastedBlob.type.split('/')[1]) || 'png';
+      fd.append('image', pastedBlob, 'pasted.' + ext);
+    }
+    try {
+      await api('POST', `/api/rounds/${round.id}/games`, fd);
+      toast(t('addGame.toast.saved'));
+      const fresh = await api('GET', '/api/rounds/' + round.id);
+      if (again) showAddGame(fresh);
+      else showRound(fresh.id);
+    } catch (e) { toast(e.message); }
+  }
+  form.querySelector('#save').addEventListener('click', () => save(false));
+  form.querySelector('#saveMore').addEventListener('click', () => save(true));
+  form.querySelector('#title').focus();
+}
