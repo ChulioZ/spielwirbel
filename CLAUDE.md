@@ -51,11 +51,11 @@ accounts, or cloud services unless explicitly asked.
 
 - Match the surrounding style: 2-space indent, single quotes, `'use strict';` in
   Node files, **English comments and code**.
-- One deliberate exception: the German domain word **`aussortiert`** ("retired")
-  is kept as a stable identifier in the data model, route paths
-  (`…/games/:gid/aussortieren`), activity types (`game_aussortiert`) and the
-  `showAussortiert` view. Renaming it would require a `data.json` migration. The
-  *display* word is localized ("Retire"/"Aussortieren") via i18n.
+- The "retire" domain concept (a game kept but taken out of the active list) uses
+  English identifiers throughout: data fields `retired`/`retiredAt`, the vote flag
+  `retire`, activity type `game_retired`, route `…/games/:gid/retire`, the
+  `showRetired` view. `lib/store.js` migrates any older `aussortiert`-named data on
+  load. The German display word "Aussortieren" lives only in `lang/de.js`.
 - Data is small (one family). Prefer simple, readable code over optimization.
 - Keep the `data/` folder out of git (already in `.gitignore`).
 
