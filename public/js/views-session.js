@@ -434,4 +434,7 @@ async function showResults(round, session, gamesHint) {
   const back = h(`<div class="section center"><button class="btn btn--lg">${esc(t('common.backToRound'))}</button></div>`);
   back.querySelector('button').addEventListener('click', () => showRound(round.id));
   app.appendChild(back);
+
+  // The most relevant info (chosen game, results) is at the top.
+  window.scrollTo(0, 0);
 }
