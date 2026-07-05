@@ -615,13 +615,13 @@ body {
   .activity__time { width: 100%; padding-left: 38px; }
 }
 
-/* Finish game / winners */
-.finish-box {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 18px 20px;
+/* Finish game / winners (inside the chosen game's result row) */
+.row-finish {
+  grid-column: 1 / -1;
+  border-top: 1px dashed var(--brand-edge);
+  padding-top: 14px;
 }
+.row-finish h3 { margin: 0 0 6px; }
 .winner-chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .winner-chip {
   font-family: inherit;

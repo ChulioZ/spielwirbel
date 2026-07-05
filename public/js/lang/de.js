@@ -175,7 +175,6 @@ I18N.de = {
   'result.toast.choiceCleared': 'Auswahl aufgehoben',
   'result.finishTitleDone': '🏆 Ergebnis eingetragen',
   'result.finishTitle': 'Spiel abschließen',
-  'result.finishPrompt': 'Wähle oben zuerst aus, welches Spiel ihr spielt.',
   'result.whoWon': 'Wer hat „{game}“ gewonnen? (Mehrfachauswahl möglich)',
   'result.update': '✓ Ergebnis aktualisieren',
   'result.markPlayed': '🏆 Als gespielt markieren',

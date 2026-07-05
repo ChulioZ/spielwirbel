@@ -175,7 +175,6 @@ I18N.en = {
   'result.toast.choiceCleared': 'Choice cleared',
   'result.finishTitleDone': '🏆 Result recorded',
   'result.finishTitle': 'Finish game',
-  'result.finishPrompt': 'Choose above which game you’re playing first.',
   'result.whoWon': 'Who won “{game}”? (multiple possible)',
   'result.update': '✓ Update result',
   'result.markPlayed': '🏆 Mark as played',

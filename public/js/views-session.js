@@ -295,6 +295,7 @@ async function showResults(round, session, gamesHint) {
            <div class="score-label">${esc(t('result.avgOf', { n: r.count }))}</div>
            <button class="btn play-btn">${esc(t('result.play'))}</button>
          </div>
+         <div class="row-finish" hidden></div>
        </div>`);
     const sortBtn = row.querySelector('.sortflag-btn');
     if (sortBtn) {
@@ -320,7 +321,7 @@ async function showResults(round, session, gamesHint) {
         toast(newId ? t('result.toast.willPlay', { title: g.title }) : t('result.toast.choiceCleared'));
       } catch (e) { toast(e.message); }
     });
-    rowRefs.push({ gameId: g.id, row, btn });
+    rowRefs.push({ gameId: g.id, row, btn, finishEl: row.querySelector('.row-finish') });
     app.appendChild(row);
   });
 
@@ -345,20 +346,18 @@ async function showResults(round, session, gamesHint) {
     renderFinish();
   }
 
-  // --- Finish game / record winners ---
+  // --- Finish game / record winners (rendered inside the chosen game's tile) ---
   let finished = !!session.finished;
   let winnerIds = Array.isArray(session.winnerIds) ? session.winnerIds.slice() : [];
-  const finishWrap = h('<div class="section finish-box"></div>');
-  app.appendChild(finishWrap);
 
   function renderFinish() {
     updateTitle();
-    finishWrap.innerHTML = '';
-    if (!chosenId) {
-      finishWrap.appendChild(h(`<h3>${esc(t('result.finishTitle'))}</h3>`));
-      finishWrap.appendChild(h(`<div class="muted">${esc(t('result.finishPrompt'))}</div>`));
-      return;
-    }
+    rowRefs.forEach(({ finishEl }) => { finishEl.hidden = true; finishEl.innerHTML = ''; });
+    if (!chosenId) return;
+    const ref = rowRefs.find((x) => x.gameId === chosenId);
+    if (!ref) return;
+    const finishWrap = ref.finishEl;
+    finishWrap.hidden = false;
     const chosenGame = games.find((g) => g.id === chosenId);
     finishWrap.appendChild(
       h(`<h3>${esc(finished ? t('result.finishTitleDone') : t('result.finishTitle'))}</h3>`)
