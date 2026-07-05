@@ -58,6 +58,7 @@ I18N.de = {
   'activity.gameAdded': '„{title}“ hinzugefügt',
   'activity.gameRetired': '„{title}“ aussortiert',
   'activity.gameRestored': '„{title}“ wieder aufgenommen',
+  'activity.gameDeleted': '„{title}“ endgültig gelöscht',
   'activity.wonOne': '{names} hat „{game}“ gewonnen',
   'activity.wonMany': '{names} haben „{game}“ gewonnen',
   'activity.played': '„{game}“ wurde gespielt',
@@ -85,6 +86,9 @@ I18N.de = {
   'retired.at': '🗑️ Aussortiert am {when}',
   'retired.restore': '↩︎ Wieder aufnehmen',
   'retired.restored': '„{title}“ wieder aufgenommen',
+  'retired.delete': '✕ Endgültig löschen',
+  'retired.deleteConfirm': '„{title}“ endgültig löschen? Auch alle Bewertungen aus früheren Sessions werden entfernt. Das kann nicht rückgängig gemacht werden.',
+  'retired.deleted': '„{title}“ endgültig gelöscht',
 
   'sessions.title': 'Frühere Sessions',
   'sessions.rated': '{n} Spiele bewertet',

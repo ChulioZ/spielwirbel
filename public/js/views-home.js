@@ -141,6 +141,8 @@ function buildActivityFeed(round) {
       entries.push({ id: a.id, at: a.at, icon: '🗑️', text: t('activity.gameRetired', { title: a.title }) });
     else if (a.type === 'game_restored')
       entries.push({ id: a.id, at: a.at, icon: '↩︎', text: t('activity.gameRestored', { title: a.title }) });
+    else if (a.type === 'game_deleted')
+      entries.push({ id: a.id, at: a.at, icon: '✕', text: t('activity.gameDeleted', { title: a.title }) });
   });
 
   round.sessions.forEach((s) => {

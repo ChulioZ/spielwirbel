@@ -437,13 +437,22 @@ async function showRetired(rid) {
              <div class="game-card__title">${esc(g.title)}</div>
              <div class="game-card__row">${typeTag(g.type)}</div>
              <div class="card__meta">${esc(t('retired.at', { when }))}</div>
-             <button class="btn" style="margin-top:10px">${esc(t('retired.restore'))}</button>
+             <button class="btn" data-act="restore" style="margin-top:10px">${esc(t('retired.restore'))}</button>
+             <button class="btn btn--danger" data-act="delete" style="margin-top:8px">${esc(t('retired.delete'))}</button>
            </div>
          </div>`);
-      gc.querySelector('button').addEventListener('click', async () => {
+      gc.querySelector('[data-act="restore"]').addEventListener('click', async () => {
         try {
           await api('POST', `/api/rounds/${rid}/games/${g.id}/retire`, { retired: false });
           toast(t('retired.restored', { title: g.title }));
+          showRetired(rid);
+        } catch (e) { toast(e.message); }
+      });
+      gc.querySelector('[data-act="delete"]').addEventListener('click', async () => {
+        if (!confirm(t('retired.deleteConfirm', { title: g.title }))) return;
+        try {
+          await api('DELETE', `/api/rounds/${rid}/games/${g.id}`);
+          toast(t('retired.deleted', { title: g.title }));
           showRetired(rid);
         } catch (e) { toast(e.message); }
       });

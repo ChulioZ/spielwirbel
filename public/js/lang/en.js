@@ -58,6 +58,7 @@ I18N.en = {
   'activity.gameAdded': '“{title}” added',
   'activity.gameRetired': '“{title}” retired',
   'activity.gameRestored': '“{title}” brought back',
+  'activity.gameDeleted': '“{title}” permanently deleted',
   'activity.wonOne': '{names} won “{game}”',
   'activity.wonMany': '{names} won “{game}”',
   'activity.played': '“{game}” was played',
@@ -85,6 +86,9 @@ I18N.en = {
   'retired.at': '🗑️ Retired on {when}',
   'retired.restore': '↩︎ Bring back',
   'retired.restored': '“{title}” brought back',
+  'retired.delete': '✕ Delete permanently',
+  'retired.deleteConfirm': 'Permanently delete “{title}”? Its ratings are removed from all past sessions as well. This cannot be undone.',
+  'retired.deleted': '“{title}” permanently deleted',
 
   'sessions.title': 'Earlier sessions',
   'sessions.rated': '{n} games rated',
