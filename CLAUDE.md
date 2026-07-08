@@ -54,8 +54,12 @@ accounts, or cloud services unless explicitly asked.
 - The "retire" domain concept (a game kept but taken out of the active list) uses
   English identifiers throughout: data fields `retired`/`retiredAt`, the vote flag
   `retire`, activity type `game_retired`, route `…/games/:gid/retire`, the
-  `showRetired` view. `lib/store.js` migrates any older `aussortiert`-named data on
-  load. The German display word "Aussortieren" lives only in `lang/de.js`.
+  `showRetired` view. The German display word "Aussortieren" lives only in
+  `lang/de.js`.
+- There is intentionally **no one-time migration code** in the backend; the live
+  `data.json` is fully up to date. For a future schema change, migrate the data
+  once (with the server stopped, see `.claude/rules/`) rather than keeping
+  migration code around permanently.
 - Data is small (one family). Prefer simple, readable code over optimization.
 - Keep the `data/` folder out of git (already in `.gitignore`).
 
