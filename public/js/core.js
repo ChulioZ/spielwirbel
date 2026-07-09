@@ -220,10 +220,10 @@ function applyBackground(bg) {
     root.setProperty('--page-bg', page);
     root.removeProperty('--brand');
   } else {
-    page = '#f4f1ea';
+    // no page bg -> fall back to the :root default (#f4f1ea)
     accent = STANDARD_ACCENT;
     pattern = STANDARD_PATTERN;
-    root.removeProperty('--page-bg'); // back to the :root default
+    root.removeProperty('--page-bg');
     root.removeProperty('--brand');
   }
   document.body.style.backgroundImage = textureImage(pattern, accent);
@@ -293,7 +293,7 @@ async function readClipboardImage() {
     }
     toast(t('addGame.toast.noImage'));
     return null;
-  } catch (err) {
+  } catch {
     toast(t('addGame.toast.pasteFail'));
     return null;
   }

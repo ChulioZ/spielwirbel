@@ -948,7 +948,7 @@ function showAddGame(round) {
         }
       }
       toast(t('addGame.toast.noImage'));
-    } catch (err) {
+    } catch {
       toast(t('addGame.toast.pasteFail'));
     }
   });

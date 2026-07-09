@@ -1,0 +1,17 @@
+# Dependabot keeps dependencies current and opens PRs for known-vulnerable ones
+# (paired with GitHub's Dependabot security alerts, enabled in repo Settings).
+# The opened PRs run the CI + Lint workflows, so updates are validated before merge.
+version: 2
+updates:
+  # npm dependencies (express, multer, eslint, supertest, …)
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # The GitHub Actions used by the workflows (actions/checkout, setup-node, …)
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
