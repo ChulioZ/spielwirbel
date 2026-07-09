@@ -68,7 +68,12 @@ accounts, or cloud services unless explicitly asked.
 - Start: `npm start` (serves on `http://localhost:3000`; `PORT` env to change).
 - Tests: `npm test` (Node's built-in `node --test`; specs in `test/*.test.js`).
   Add/update tests with new features and keep them green — see `.claude/rules/`.
-- Quick syntax check: `node --check <file>`.
+- Lint: `npm run lint` (ESLint flat config in `eslint.config.js`). Keep it green;
+  the frontend shared-global-scope pattern needs care — see `.claude/rules/`.
+- Quick syntax check: `node --check <file>`, or `npm run check:syntax` for all.
+- CI runs `npm test` (CI workflow) plus lint + syntax (Lint workflow) on every
+  push/PR; Dependabot (`.github/dependabot.yml`) opens weekly dependency-update
+  PRs, which those workflows then validate.
 - API smoke tests: `curl` against `http://localhost:3000/api/...`.
 - For UI changes, verify in a real browser. Note: a non-painted/headless preview
   tab may not flush `requestAnimationFrame`, so grid contents that render via
