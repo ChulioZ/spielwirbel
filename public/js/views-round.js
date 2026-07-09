@@ -138,89 +138,6 @@ async function showRound(rid) {
     app.appendChild(box);
   }
 
-  // Activity feed (above the games section).
-  const feed = buildActivityFeed(round);
-  const feedSec = h('<div class="section"></div>');
-  const feedHead = h(`<div class="section-head"><h3>${esc(t('activity.title'))}</h3></div>`);
-  feedSec.appendChild(feedHead);
-  if (feed.length === 0) {
-    feedSec.appendChild(h(`<div class="muted">${esc(t('activity.empty'))}</div>`));
-  } else {
-    const VISIBLE = 5;
-    const list = h('<div class="activity-feed"></div>');
-    feed.forEach((e) => {
-      const item = h(`<div class="activity${e.nav ? ' activity--link' : ''}">
-           <span class="activity__icon">${e.icon}</span>
-           <span class="activity__text">${esc(e.text)}</span>
-           <span class="activity__time">${fmtDateTime(e.at)}</span>
-           ${e.id ? `<button class="activity__del" title="${esc(t('activity.delete'))}">✕</button>` : ''}
-         </div>`);
-      if (e.nav) {
-        item.addEventListener('click', (ev) => {
-          if (ev.target.closest('.activity__del')) return; // delete is not "open"
-          e.nav();
-        });
-      }
-      if (e.id) {
-        item.querySelector('.activity__del').addEventListener('click', async () => {
-          if (!confirm(t('activity.deleteConfirm'))) return;
-          try {
-            await api('DELETE', `/api/rounds/${rid}/activities/${e.id}`);
-            toast(t('activity.deleted'));
-            showRound(rid);
-          } catch (err) { toast(err.message); }
-        });
-      }
-      list.appendChild(item);
-    });
-
-    if (feed.length <= VISIBLE) {
-      feedSec.appendChild(list);
-    } else {
-      // Like the games: fade/blur out at the bottom + centered expand button.
-      const clip = h('<div class="activity-clip"></div>');
-      const fadeEl = h('<div class="activity-fade"></div>');
-      const expandEl = h(`<button class="games-expand">${esc(t('games.showAllShort'))}</button>`);
-      clip.appendChild(list);
-      clip.appendChild(fadeEl);
-      clip.appendChild(expandEl);
-      feedSec.appendChild(clip);
-
-      const moreBtn = h('<button class="section-toggle"></button>');
-      feedHead.appendChild(moreBtn);
-
-      let feedExpanded = false;
-      function applyFeedCollapse() {
-        if (feedExpanded) {
-          list.style.maxHeight = '';
-          list.style.overflow = '';
-          fadeEl.style.display = 'none';
-          expandEl.style.display = 'none';
-          moreBtn.textContent = t('activity.showLess');
-          return;
-        }
-        // Show about 4.5 rows; the last (~5th) fades out.
-        const rowH = list.firstElementChild ? list.firstElementChild.offsetHeight : 56;
-        list.style.maxHeight = Math.round(rowH * (VISIBLE - 0.5)) + 'px';
-        list.style.overflow = 'hidden';
-        fadeEl.style.display = '';
-        fadeEl.style.height = Math.round(rowH) + 'px';
-        expandEl.style.display = '';
-        expandEl.textContent = t('activity.showAll', { n: feed.length });
-        moreBtn.textContent = t('activity.showAll', { n: feed.length });
-      }
-      moreBtn.addEventListener('click', () => { feedExpanded = !feedExpanded; applyFeedCollapse(); });
-      expandEl.addEventListener('click', () => { feedExpanded = true; applyFeedCollapse(); });
-      requestAnimationFrame(applyFeedCollapse);
-      function onFeedResize() {
-        if (!document.body.contains(list)) return window.removeEventListener('resize', onFeedResize);
-        if (!feedExpanded) applyFeedCollapse();
-      }
-      window.addEventListener('resize', onFeedResize);
-    }
-  }
-  app.appendChild(feedSec);
-
   // Games
   const gamesSec = h('<div class="section"></div>');
   const gamesHead = h(`<div class="section-head"><h3>${esc(t('games.title', { n: activeGames.length }))}</h3><div class="section-tools"></div></div>`);
@@ -433,6 +350,45 @@ async function showRound(rid) {
     sec.appendChild(list);
     app.appendChild(sec);
   }
+
+  // Activity feed: a quiet, secondary log below the history. A capped scroll
+  // region keeps the page short — scroll is expected in a feed, so no
+  // height-measuring or collapse machinery is needed.
+  const feed = buildActivityFeed(round);
+  const feedSec = h('<div class="section"></div>');
+  feedSec.appendChild(h(`<div class="section-head"><h3>${esc(t('activity.title'))}</h3></div>`));
+  if (feed.length === 0) {
+    feedSec.appendChild(h(`<div class="muted">${esc(t('activity.empty'))}</div>`));
+  } else {
+    const list = h('<div class="activity-feed"></div>');
+    feed.forEach((e) => {
+      const item = h(`<div class="activity${e.nav ? ' activity--link' : ''}">
+           <span class="activity__icon">${e.icon}</span>
+           <span class="activity__text">${esc(e.text)}</span>
+           <span class="activity__time">${fmtDateTime(e.at)}</span>
+           ${e.id ? `<button class="activity__del" title="${esc(t('activity.delete'))}">✕</button>` : ''}
+         </div>`);
+      if (e.nav) {
+        item.addEventListener('click', (ev) => {
+          if (ev.target.closest('.activity__del')) return; // delete is not "open"
+          e.nav();
+        });
+      }
+      if (e.id) {
+        item.querySelector('.activity__del').addEventListener('click', async () => {
+          if (!confirm(t('activity.deleteConfirm'))) return;
+          try {
+            await api('DELETE', `/api/rounds/${rid}/activities/${e.id}`);
+            toast(t('activity.deleted'));
+            showRound(rid);
+          } catch (err) { toast(err.message); }
+        });
+      }
+      list.appendChild(item);
+    });
+    feedSec.appendChild(list);
+  }
+  app.appendChild(feedSec);
 
   // Link to the retired games.
   const retiredLink = h(

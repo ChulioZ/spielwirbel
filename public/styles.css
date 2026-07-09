@@ -722,12 +722,15 @@ body {
 .recommend-item__btn { flex: none; color: var(--warn); padding: 8px 14px; font-size: 15px; }
 .recommend-more { font-size: 14px; padding: 2px 4px; }
 
-/* Activity feed – deliberately quiet: secondary info, not main content. */
+/* Activity feed – deliberately quiet: secondary info, not main content. A
+   capped scroll region: shows a few rows, scrolls for the rest. */
 .activity-feed {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  overflow: hidden;
+  max-height: 16rem;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   font-size: 15px;
   color: var(--ink-soft);
 }
@@ -756,27 +759,6 @@ body {
   border-radius: 8px;
 }
 .activity__del:hover { background: #f8e3e3; color: var(--danger); }
-
-/* Collapsed feed: increasingly blurred + faded out at the bottom (on white panel). */
-.activity-clip { position: relative; }
-.activity-fade {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.8) 65%,
-    rgba(255, 255, 255, 1) 100%
-  );
-  -webkit-backdrop-filter: blur(2.5px);
-  backdrop-filter: blur(2.5px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.6) 45%, #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.6) 45%, #000 100%);
-  border-radius: 0 0 var(--radius) var(--radius);
-}
 
 @media (max-width: 520px) {
   .activity { flex-wrap: wrap; }
