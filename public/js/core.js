@@ -74,7 +74,8 @@ function joinNames(names) {
 
 // Texts that live outside the rendered views (top bar). Re-applied on language change.
 function applyStaticTexts() {
-  document.getElementById('homeBtn').textContent = t('app.title');
+  document.getElementById('homeBtn').innerHTML =
+    `<i class="ti ti-dice-5" aria-hidden="true"></i> ${esc(t('app.title'))}`;
 }
 
 // Language picker in the top bar.
@@ -357,7 +358,7 @@ const durationTag = (duration) => {
 const playersTag = (min, max) => {
   if (!Number.isInteger(min) || !Number.isInteger(max)) return '';
   const text = min === max ? t('players.single', { n: min }) : t('players.range', { min, max });
-  return `<span class="tag tag--players">${text}</span>`;
+  return `<span class="tag tag--players"><i class="ti ti-users" aria-hidden="true"></i> ${text}</span>`;
 };
 
 // Icon-only badges for the compact card overlay; the full localized word

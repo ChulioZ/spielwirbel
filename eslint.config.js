@@ -40,9 +40,11 @@ const frontendGlobals = {
   showRound: 'readonly', showRetired: 'readonly', THEMES: 'readonly',
   showBackground: 'readonly', showGameDetail: 'readonly', showAddGame: 'readonly',
   HUB_TABS: 'readonly', renderHubDock: 'readonly', renderStartTab: 'readonly',
-  renderRegalTab: 'readonly', renderChronikTab: 'readonly',
+  renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
+  activeSheet: 'writable', closeSheet: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
+  showFinale: 'readonly',
 };
 
 module.exports = [

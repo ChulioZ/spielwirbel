@@ -1,7 +1,8 @@
-/* Familien-Spielesammlung – views: start session, voting (hot-seat), results.
-   Part of the frontend; all files share one global script scope. */
+/* Familien-Spielesammlung – views: game-night setup, voting (hot-seat),
+   finale reveal, results podium. Part of the frontend; all files share one
+   global script scope. */
 
-// =================== Start session ===================
+// =================== Game night: setup ===================
 
 function showStartSession(round) {
   currentView = () => showStartSession(round);
@@ -13,48 +14,47 @@ function showStartSession(round) {
   app.innerHTML = '';
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('startSession.title'))}</h1></div>`));
 
+  const activeGames = round.games.filter((g) => !g.retired);
   const counts = {
-    all: round.games.filter((g) => !g.retired).length,
-    digital: round.games.filter((g) => !g.retired && g.type === 'digital').length,
-    analog: round.games.filter((g) => !g.retired && g.type === 'analog').length,
+    all: activeGames.length,
+    digital: activeGames.filter((g) => g.type === 'digital').length,
+    analog: activeGames.filter((g) => g.type === 'analog').length,
   };
   const DURATIONS = ['short', 'medium', 'long'];
 
   const form = h(`<div>
       <div class="field">
         <label>${esc(t('startSession.membersLabel'))}</label>
-        <div class="member-chips" id="memberChips">
-          ${round.members
-            .map(
-              (m) =>
-                `<button type="button" class="member-chip is-selected" data-mid="${esc(m.id)}">${esc(m.name)}</button>`
-            )
-            .join('')}
+        <div class="nr-table">
+          <div class="nr-table__ring"></div>
+          <div class="nr-table__center"></div>
         </div>
-        <div class="muted" style="margin-top:6px;font-size:14px">${esc(t('startSession.membersNote'))}</div>
+        <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
       </div>
       <div class="field">
         <label>${esc(t('startSession.whichGames'))}</label>
-        <div class="segmented" id="filterSeg">
-          <label class="is-checked" data-f="all">${esc(t('startSession.filterAll', { n: counts.all }))}</label>
-          <label data-f="analog">${esc(t('startSession.filterAnalog', { n: counts.analog }))}</label>
-          <label data-f="digital">${esc(t('startSession.filterDigital', { n: counts.digital }))}</label>
+        <div class="filter-chips" id="filterChips">
+          <button type="button" class="chip is-on" data-f="all">${esc(t('games.filter.all', { n: counts.all }))}</button>
+          <button type="button" class="chip" data-f="analog"><i class="ti ti-dice-3" aria-hidden="true"></i>${esc(t('games.filter.analog', { n: counts.analog }))}</button>
+          <button type="button" class="chip" data-f="digital"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i>${esc(t('games.filter.digital', { n: counts.digital }))}</button>
+          <span class="filter-chips__sep"></span>
+          <button type="button" class="chip is-on" data-d="short"><i class="ti ti-bolt" aria-hidden="true"></i>${esc(t('duration.short'))}</button>
+          <button type="button" class="chip is-on" data-d="medium"><i class="ti ti-clock" aria-hidden="true"></i>${esc(t('duration.medium'))}</button>
+          <button type="button" class="chip is-on" data-d="long"><i class="ti ti-hourglass" aria-hidden="true"></i>${esc(t('duration.long'))}</button>
         </div>
-      </div>
-      <div class="field">
-        <label>${esc(t('startSession.durationLabel'))}</label>
-        <div class="segmented" id="durationSeg">
-          ${DURATIONS.map((d) => `<label class="is-checked" data-d="${d}">${t('duration.' + d)}</label>`).join('')}
-        </div>
-        <div class="muted" style="margin-top:6px;font-size:14px">${esc(t('startSession.durationNote'))}</div>
+        <div class="muted field__hint">${esc(t('startSession.durationNote'))}</div>
       </div>
       <div class="field">
         <label for="count">${esc(t('startSession.countLabel'))}</label>
-        <input id="count" class="input" type="number" min="1" value="3" />
-        <div class="muted" id="poolHint" style="margin-top:6px"></div>
+        <div class="stepper">
+          <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+          <input id="count" class="stepper__val" inputmode="numeric" value="3" />
+          <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+        </div>
       </div>
+      <div class="pool-hint" id="poolHint"></div>
       <div class="toolbar">
-        <button id="go" class="btn btn--primary btn--lg">${esc(t('startSession.draw'))}</button>
+        <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-dice-5" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
       </div>
     </div>`);
   app.appendChild(form);
@@ -65,57 +65,101 @@ function showStartSession(round) {
   // All members join by default; the number of joining members filters the
   // games by their player count.
   const joining = new Set(round.members.map((m) => m.id));
-  const seg = form.querySelector('#filterSeg');
-  const durSeg = form.querySelector('#durationSeg');
-  const memberChips = form.querySelector('#memberChips');
-  const countInput = form.querySelector('#count');
-  const hint = form.querySelector('#poolHint');
+
+  // Seats around the table: tap a member to toggle whether they join tonight.
+  const table = form.querySelector('.nr-table');
+  const tableCenter = form.querySelector('.nr-table__center');
+  function renderSeats() {
+    table.querySelectorAll('.nr-seat').forEach((el) => el.remove());
+    tableCenter.textContent = t('startSession.tableCount', { n: joining.size });
+    const cx = 140, cy = 118, rx = 112, ry = 92;
+    round.members.forEach((m, i) => {
+      const angle = ((-90 + (i * 360) / round.members.length) * Math.PI) / 180;
+      const joined = joining.has(m.id);
+      const seat = h(`<button type="button" class="nr-seat${joined ? '' : ' nr-seat--out'}" title="${esc(m.name)}">
+           <span class="nr-seat__avatar"${joined ? ` style="background:${memberColor(round, m.id)}"` : ''}>${
+             joined ? esc(initials(m.name)) : '<i class="ti ti-plus" aria-hidden="true"></i>'
+           }</span>
+           <span class="nr-seat__name">${esc(m.name)}</span>
+         </button>`);
+      seat.style.left = cx + rx * Math.cos(angle) + 'px';
+      seat.style.top = cy + ry * Math.sin(angle) - 23 + 'px';
+      seat.addEventListener('click', () => {
+        if (joining.has(m.id)) {
+          if (joining.size === 1) return toast(t('startSession.toast.noMembers'));
+          joining.delete(m.id);
+        } else {
+          joining.add(m.id);
+        }
+        renderSeats();
+        updateHint();
+      });
+      table.appendChild(seat);
+    });
+  }
+
   // Games matching all filters; with all durations selected, games without a
   // duration (from before the feature) are included too. The joining member
   // count must fall within a game's player range.
-  const poolCount = () =>
-    round.games.filter(
+  const pool = () =>
+    activeGames.filter(
       (g) =>
-        !g.retired &&
         (filter === 'all' || g.type === filter) &&
         (durations.size === DURATIONS.length || durations.has(g.duration)) &&
         (typeof g.minPlayers !== 'number' || joining.size >= g.minPlayers) &&
         (typeof g.maxPlayers !== 'number' || joining.size <= g.maxPlayers)
-    ).length;
+    );
+
+  // Live pool preview: count plus a few cover thumbnails.
+  const hint = form.querySelector('#poolHint');
   const updateHint = () => {
-    hint.textContent = t('startSession.available', { n: poolCount() });
+    const games = pool();
+    const thumbs = games
+      .slice(0, 6)
+      .map((g) => {
+        const style = g.image ? ` style="background-image:url('${g.image}')"` : '';
+        const fb = g.image
+          ? ''
+          : `<i class="ti ${g.type === 'digital' ? 'ti-device-gamepad-2' : 'ti-dice-3'}" aria-hidden="true"></i>`;
+        return `<span class="pool-thumb"${style} title="${esc(g.title)}">${fb}</span>`;
+      })
+      .join('');
+    const more = games.length > 6 ? `<span class="pool-thumb pool-thumb--more">+${games.length - 6}</span>` : '';
+    hint.innerHTML = `<span class="pool-hint__text">${esc(
+      tn(games.length, 'startSession.availableOne', 'startSession.available')
+    )}</span><span class="pool-thumbs">${thumbs}${more}</span>`;
   };
+  renderSeats();
   updateHint();
-  // Toggle a member's participation; keep at least one joining.
-  memberChips.querySelectorAll('.member-chip').forEach((chip) => {
+
+  // Type chips are radio-like; duration chips toggle independently.
+  const chips = form.querySelector('#filterChips');
+  chips.querySelectorAll('[data-f]').forEach((chip) => {
     chip.addEventListener('click', () => {
-      const mid = chip.dataset.mid;
-      if (joining.has(mid)) {
-        if (joining.size === 1) return toast(t('startSession.toast.noMembers'));
-        joining.delete(mid);
-      } else {
-        joining.add(mid);
-      }
-      chip.classList.toggle('is-selected', joining.has(mid));
+      filter = chip.dataset.f;
+      chips.querySelectorAll('[data-f]').forEach((c) => c.classList.toggle('is-on', c === chip));
       updateHint();
     });
   });
-  seg.querySelectorAll('label').forEach((lbl) => {
-    lbl.addEventListener('click', () => {
-      seg.querySelectorAll('label').forEach((l) => l.classList.remove('is-checked'));
-      lbl.classList.add('is-checked');
-      filter = lbl.dataset.f;
-      updateHint();
-    });
-  });
-  // Multi-select: each duration toggles independently.
-  durSeg.querySelectorAll('label').forEach((lbl) => {
-    lbl.addEventListener('click', () => {
-      const d = lbl.dataset.d;
+  chips.querySelectorAll('[data-d]').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const d = chip.dataset.d;
       if (durations.has(d)) durations.delete(d);
       else durations.add(d);
-      lbl.classList.toggle('is-checked', durations.has(d));
+      chip.classList.toggle('is-on', durations.has(d));
       updateHint();
+    });
+  });
+
+  const countInput = form.querySelector('#count');
+  countInput.addEventListener('input', () => {
+    const digits = countInput.value.replace(/\D/g, '');
+    if (countInput.value !== digits) countInput.value = digits;
+  });
+  form.querySelectorAll('.stepper__btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const cur = parseInt(countInput.value, 10);
+      countInput.value = Math.max(1, (Number.isInteger(cur) ? cur : 1) + parseInt(btn.dataset.d, 10));
     });
   });
 
@@ -123,7 +167,7 @@ function showStartSession(round) {
     let count = parseInt(countInput.value, 10);
     if (!Number.isFinite(count) || count < 1) count = 1;
     if (joining.size === 0) return toast(t('startSession.toast.noMembers'));
-    if (durations.size === 0 || poolCount() === 0) return toast(t('startSession.toast.noGames'));
+    if (durations.size === 0 || pool().length === 0) return toast(t('startSession.toast.noGames'));
     try {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         count,
@@ -131,6 +175,8 @@ function showStartSession(round) {
         durations: [...durations],
         memberIds: [...joining],
       });
+      // Straight into the first handover — the drawn games stay secret until
+      // each person rates them.
       startVoting(round, data.session, data.games, data.members);
     } catch (e) { toast(e.message); }
   });
@@ -163,23 +209,33 @@ function startVoting(round, session, games, members) {
   // Also refresh the breadcrumb so its label follows the new locale.
   currentView = () => { setVotingCrumbs(); render(); };
 
+  // Segmented progress: one segment per member, filled in their color.
+  const perMember = games.length + 1; // intro + one card per game
+  function progressBar() {
+    return `<div class="vote-progress">${order
+      .map((m, mi) => {
+        const done = Math.max(0, Math.min(perMember, idx - mi * perMember));
+        const pct = Math.round((done / perMember) * 100);
+        return `<span class="vote-progress__seg"><span style="width:${pct}%;background:${memberColor(round, m.id)}"></span></span>`;
+      })
+      .join('')}</div>`;
+  }
+
   function render() {
     const step = steps[idx];
     const total = steps.length;
-    const pct = Math.round((idx / total) * 100);
 
-    // Handover screen: pass the device to the next person.
+    // Handover screen: full color card in the member's color.
     if (step.type === 'intro') {
+      const color = memberColor(round, step.member.id);
       app.innerHTML = '';
-      const card = h(`<div class="vote">
-          <div class="vote__progress"><div style="width:${pct}%"></div></div>
-          <div class="handover">
-            <div class="handover__icon">🎲</div>
-            <div class="handover__name">${esc(step.member.name)}</div>
-            <div class="handover__sub">${esc(t('vote.handover'))}</div>
-            <button class="btn btn--primary btn--lg" id="goBtn">${esc(t('vote.go'))}</button>
-          </div>
-          ${idx > 0 ? `<div class="vote__nav"><button class="btn" id="backBtn">${esc(t('vote.back'))}</button></div>` : ''}
+      const card = h(`<div class="handover" style="background:${color}">
+          ${progressBar()}
+          <span class="handover__avatar" style="color:${color}">${esc(initials(step.member.name))}</span>
+          <div class="handover__name">${esc(t('vote.turn', { name: step.member.name }))}</div>
+          <div class="handover__sub"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>
+          <button class="handover__go" id="goBtn" style="color:${color}">${esc(t('vote.go'))}</button>
+          ${idx > 0 ? `<button class="handover__back" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>` : ''}
         </div>`);
       card.querySelector('#goBtn').addEventListener('click', () => { idx++; render(); });
       const back = card.querySelector('#backBtn');
@@ -191,14 +247,17 @@ function startVoting(round, session, games, members) {
 
     const { member, game } = step;
     const current = votes[member.id][game.id] || { rating: null, retire: false };
+    const color = memberColor(round, member.id);
 
     const imgStyle = game.image ? `style="background-image:url('${game.image}')"` : '';
-    const fallback = game.image ? '' : (game.type === 'digital' ? '💻' : '🎲');
+    const fallback = game.image
+      ? ''
+      : `<i class="ti ${game.type === 'digital' ? 'ti-device-gamepad-2' : 'ti-dice-3'}" aria-hidden="true"></i>`;
 
     app.innerHTML = '';
     const card = h(`<div class="vote vote--split">
-        <div class="vote__progress"><div style="width:${pct}%"></div></div>
-        <div class="vote__who">${esc(t('vote.who'))}<strong>${esc(member.name)}</strong></div>
+        ${progressBar()}
+        <div class="vote__who">${esc(t('vote.who'))} <strong style="color:${color}">${esc(member.name)}</strong></div>
         <div class="vote__img" ${imgStyle}>${fallback}</div>
         <div class="vote__title">${esc(game.title)}</div>
         <div class="vote__type">${typeTag(game.type)} ${durationTag(game.duration)}</div>
@@ -206,17 +265,26 @@ function startVoting(round, session, games, members) {
         <div class="rating"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
         <div class="vote__sort">
-          <button class="sortBtn ${current.retire ? 'is-selected' : ''}">${esc(t('vote.suggestRetire'))}</button>
+          <button class="sortBtn ${current.retire ? 'is-selected' : ''}"><i class="ti ti-armchair" aria-hidden="true"></i> ${esc(t('vote.suggestRetire'))}</button>
         </div>
         <div class="vote__nav">
-          <button class="btn" id="backBtn">${esc(t('vote.back'))}</button>
+          <button class="btn" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
           <button class="btn btn--primary" id="nextBtn">${esc(idx === total - 1 ? t('vote.finish') : t('vote.next'))}</button>
         </div>
       </div>`);
 
+    // 1–5 as mood faces; the selected one takes the rating's traffic-light color.
+    const MOODS = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
     const ratingEl = card.querySelector('.rating');
     for (let n = 1; n <= 5; n++) {
-      const b = h(`<button class="${current.rating === n ? 'is-selected' : ''}">${n}</button>`);
+      const sel = current.rating === n;
+      const b = h(`<button class="mood${sel ? ' is-selected' : ''}" aria-label="${n}">
+           <i class="ti ${MOODS[n - 1]}" aria-hidden="true"></i><span class="mood__n">${n}</span>
+         </button>`);
+      if (sel) {
+        b.style.background = avgColor(n);
+        b.style.borderColor = avgColor(n);
+      }
       b.addEventListener('click', () => {
         votes[member.id][game.id] = { rating: n, retire: current.retire };
         render();
@@ -252,17 +320,60 @@ function startVoting(round, session, games, members) {
       await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/results`, { votes });
       const fresh = await api('GET', '/api/rounds/' + round.id);
       const savedSession = fresh.sessions.find((s) => s.id === session.id);
-      toast(t('vote.toast.saved'));
-      showResults(fresh, savedSession, games);
+      // Nobody sees the result yet: the finale gate gathers everyone first.
+      showFinale(fresh, savedSession, games);
     } catch (e) { toast(e.message); }
   }
 
   render();
 }
 
+// =================== Finale: everyone gathers for the reveal ===================
+
+// Shown only when arriving from voting; opening old results from the Chronik
+// skips the gate.
+function showFinale(round, session, games) {
+  currentView = () => showFinale(round, session, games);
+  setCrumbs([
+    { label: t('nav.home'), onClick: showHome },
+    { label: round.name, onClick: () => showRound(round.id) },
+    { label: t('finale.crumb') },
+  ]);
+
+  const voters = Array.isArray(session.memberIds)
+    ? round.members.filter((m) => session.memberIds.includes(m.id))
+    : round.members;
+
+  app.innerHTML = '';
+  const stage = h(`<div class="stage">
+      <div class="stage__seal">
+        <i class="ti ti-mail" aria-hidden="true"></i>
+        <span class="stage__lock"><i class="ti ti-lock" aria-hidden="true"></i></span>
+      </div>
+      <h1 class="stage__title">${esc(t('finale.title'))}</h1>
+      <div class="stage__sub">${esc(t('finale.sub'))}</div>
+      <div class="stage__voters">${voters
+        .map(
+          (m) => `<span class="stage__voter">
+             <span class="stage__voter-avatar">
+               <span class="avatar" style="background:${memberColor(round, m.id)}">${esc(initials(m.name))}</span>
+               <span class="stage__voter-check"><i class="ti ti-check" aria-hidden="true"></i></span>
+             </span>
+             <span class="stage__voter-name">${esc(m.name)}</span>
+           </span>`
+        )
+        .join('')}</div>
+      <button class="btn btn--primary btn--lg stage__reveal"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('finale.reveal'))}</button>
+      <div class="stage__note">${esc(t('finale.note'))}</div>
+    </div>`);
+  stage.querySelector('.stage__reveal').addEventListener('click', () => showResults(round, session, games, true));
+  app.appendChild(stage);
+  window.scrollTo(0, 0);
+}
+
 // =================== Results ===================
 
-async function showResults(round, session, gamesHint) {
+async function showResults(round, session, gamesHint, reveal) {
   currentView = () => showResults(round, session, gamesHint);
   setCrumbs([
     { label: t('nav.home'), onClick: showHome },
@@ -308,6 +419,42 @@ async function showResults(round, session, gamesHint) {
   app.appendChild(head);
   const titleEl = head.querySelector('.result-title');
 
+  // Podium: the top three as a stage. With `reveal` the pedestals rise
+  // 3rd → 1st and confetti falls — the finale's payoff moment.
+  if (rows.length >= 2 && !session.cancelled) {
+    const top = rows.slice(0, 3);
+    const podium = h(`<div class="result-podium${reveal ? ' is-reveal' : ''}"></div>`);
+    [top[1], top[0], top[2]].filter(Boolean).forEach((r) => {
+      const rank = top.indexOf(r) + 1;
+      const g = r.game;
+      const imgStyle = g.image ? ` style="background-image:url('${g.image}')"` : '';
+      const fb = g.image
+        ? ''
+        : `<i class="ti ${g.type === 'digital' ? 'ti-device-gamepad-2' : 'ti-dice-3'}" aria-hidden="true"></i>`;
+      podium.appendChild(
+        h(`<div class="result-podium__col result-podium__col--${rank}">
+             ${rank === 1 ? '<i class="ti ti-crown result-podium__crown" aria-hidden="true"></i>' : ''}
+             <span class="result-podium__img"${imgStyle}>${fb}</span>
+             <span class="result-podium__title">${esc(g.title)}</span>
+             ${r.count ? `<span class="score-pill result-podium__pill" style="background:${avgColor(r.avg)}">Ø ${r.avg.toFixed(1)}</span>` : ''}
+             <span class="result-podium__base">${rank}</span>
+           </div>`)
+      );
+    });
+    if (reveal) {
+      const conf = h('<div class="confetti" aria-hidden="true"></div>');
+      for (let i = 0; i < 16; i++) {
+        const bit = h('<span class="confetti__bit"></span>');
+        bit.style.left = Math.round(Math.random() * 100) + '%';
+        bit.style.background = MEMBER_COLORS[i % MEMBER_COLORS.length];
+        bit.style.animationDelay = (Math.random() * 0.9).toFixed(2) + 's';
+        conf.appendChild(bit);
+      }
+      podium.appendChild(conf);
+    }
+    app.appendChild(podium);
+  }
+
   function updateTitle() {
     if (cancelled) {
       titleEl.textContent = t('result.titleCancelled');
@@ -346,7 +493,9 @@ async function showResults(round, session, gamesHint) {
   rows.forEach((r, i) => {
     const g = r.game;
     const imgStyle = g.image ? `style="background-image:url('${g.image}')"` : '';
-    const fallback = g.image ? '' : (g.type === 'digital' ? '💻' : '🎲');
+    const fallback = g.image
+      ? ''
+      : `<i class="ti ${g.type === 'digital' ? 'ti-device-gamepad-2' : 'ti-dice-3'}" aria-hidden="true"></i>`;
     const bars = r.dist
       .map((c, n) => {
         const hpx = 4 + Math.round((c / maxBar) * 24);
@@ -357,7 +506,7 @@ async function showResults(round, session, gamesHint) {
     const retiredBadge = g.retired ? ` <span class="tag tag--retired">${t('result.retiredTag')}</span>` : '';
     // "Suggested for retirement" line; with a direct action if not retired yet.
     const sortFlag = r.sortCount
-      ? `<div class="sort-flag">${esc(t('result.sortFlag', { n: r.sortCount }))}${
+      ? `<div class="sort-flag"><i class="ti ti-armchair" aria-hidden="true"></i> ${esc(t('result.sortFlag', { n: r.sortCount }))}${
           g.retired ? '' : ` <button class="link-btn sortflag-btn">${esc(t('result.retireNow'))}</button>`
         }</div>`
       : '';
