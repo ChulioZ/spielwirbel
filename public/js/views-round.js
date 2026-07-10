@@ -5,8 +5,8 @@
 // =================== Round: hub (Start / Regal / Chronik) ===================
 
 // The round screen is a hub with tabs, switched by the floating dock at the
-// bottom. Pokale (hall of fame) joins as a fourth tab in a later step.
-const HUB_TABS = ['start', 'regal', 'chronik'];
+// bottom.
+const HUB_TABS = ['start', 'regal', 'chronik', 'pokale'];
 
 async function showRound(rid, tab) {
   const activeTab = HUB_TABS.includes(tab) ? tab : 'start';
@@ -20,6 +20,7 @@ async function showRound(rid, tab) {
   const activeGames = round.games.filter((g) => !g.retired);
   if (activeTab === 'regal') renderRegalTab(round, activeGames);
   else if (activeTab === 'chronik') renderChronikTab(round);
+  else if (activeTab === 'pokale') renderPokaleTab(round);
   else renderStartTab(round, activeGames);
   renderHubDock(rid, activeTab);
 }
@@ -30,6 +31,7 @@ function renderHubDock(rid, activeTab) {
     { id: 'start', icon: 'ti-home', label: t('hub.tab.start') },
     { id: 'regal', icon: 'ti-cards', label: t('hub.tab.regal') },
     { id: 'chronik', icon: 'ti-history', label: t('hub.tab.chronik') },
+    { id: 'pokale', icon: 'ti-trophy', label: t('hub.tab.pokale') },
   ];
   const dock = h('<nav class="dock"></nav>');
   tabs.forEach(({ id: tabId, icon, label }) => {
@@ -90,7 +92,9 @@ function renderStartTab(round, activeGames) {
     const sst = gameStatsForSession(round, lastPlayed, game.id);
     const when = fmtDateTime(lastPlayed.finishedAt || lastPlayed.chosenAt || lastPlayed.createdAt);
     const imgStyle = game.image ? ` style="background-image:url('${game.image}')"` : '';
-    const fallback = game.image ? '' : game.type === 'digital' ? '💻' : '🎲';
+    const fallback = game.image
+      ? ''
+      : `<i class="ti ${game.type === 'digital' ? 'ti-device-gamepad-2' : 'ti-dice-3'}" aria-hidden="true"></i>`;
     const pill =
       sst.avg !== null
         ? `<span class="score-pill" style="background:${avgColor(sst.avg)}">Ø ${sst.avg.toFixed(1)}</span>`
@@ -120,7 +124,7 @@ function renderStartTab(round, activeGames) {
   if (recs.length && !minimizedRecs.has(round.id)) {
     const banner = h(`<div class="rec-banner">
          <div class="rec-banner__bar">
-           <span class="rec-banner__text">${esc(t('rec.title', { n: recs.length }))}</span>
+           <span class="rec-banner__text"><i class="ti ti-armchair" aria-hidden="true"></i> ${esc(t('rec.title', { n: recs.length }))}</span>
            <div class="rec-banner__actions">
              <button class="link-btn rec-banner__toggle">${esc(t('rec.show'))}</button>
              <button class="rec-banner__dismiss" title="${esc(t('rec.dismiss'))}" aria-label="${esc(t('rec.dismiss'))}">✕</button>
@@ -269,7 +273,9 @@ function renderRegalTab(round, activeGames) {
     const cardById = {};
     activeGames.forEach((g) => {
       const imgStyle = g.image ? `style="background-image:url('${g.image}')"` : '';
-      const fallback = g.image ? '' : (g.type === 'digital' ? '💻' : '🎲');
+      const fallback = g.image
+        ? ''
+        : `<i class="ti ${g.type === 'digital' ? 'ti-device-gamepad-2' : 'ti-dice-3'}" aria-hidden="true"></i>`;
       const avg = avgMap[g.id];
       const scorePill =
         avg !== null
@@ -336,7 +342,7 @@ function renderRegalTab(round, activeGames) {
   // Quiet footer: the way into the archive of retired games.
   const retiredGames = round.games.filter((g) => g.retired);
   const foot = h('<div class="round-footer"></div>');
-  const retiredBtn = h(`<button class="link-btn">${esc(t('retired.link', { n: retiredGames.length }))}</button>`);
+  const retiredBtn = h(`<button class="link-btn"><i class="ti ti-armchair" aria-hidden="true"></i> ${esc(t('retired.link', { n: retiredGames.length }))}</button>`);
   retiredBtn.addEventListener('click', () => showRetired(round.id));
   foot.appendChild(retiredBtn);
   app.appendChild(foot);
@@ -410,7 +416,7 @@ function renderChronikTab(round) {
 
     const parts = [];
     if (chosen) parts.push(esc(when));
-    if (s.finished) parts.push(winnerNames.length ? '🏆 ' + winnerNames.map(esc).join(', ') : esc(t('sessions.played')));
+    if (s.finished) parts.push(winnerNames.length ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' + winnerNames.map(esc).join(', ') : esc(t('sessions.played')));
     else if (s.cancelled) parts.push(`<span style="color:var(--danger)">${esc(t('sessions.cancelled'))}</span>`);
     parts.push(esc(t('sessions.rated', { n: s.gameIds.length })));
 
@@ -493,6 +499,140 @@ function renderChronikTab(round) {
   app.appendChild(footer);
 }
 
+// --- Pokale tab: hall of fame — member podium and fun stats, all computed
+// on demand from sessions (single source of truth, like the rating averages).
+function renderPokaleTab(round) {
+  const finished = round.sessions.filter((s) => s.finished);
+
+  const sec = h('<div class="section"></div>');
+  sec.appendChild(h(`<div class="section-head"><h3>${esc(t('pokale.title'))}</h3></div>`));
+
+  if (finished.length === 0) {
+    sec.appendChild(h(`<div class="empty"><p>${esc(t('pokale.empty'))}</p></div>`));
+    app.appendChild(sec);
+    return;
+  }
+
+  // Wins per member (a night can have several winners).
+  const wins = {};
+  round.members.forEach((m) => (wins[m.id] = 0));
+  finished.forEach((s) =>
+    (s.winnerIds || []).forEach((wid) => {
+      if (wid in wins) wins[wid]++;
+    })
+  );
+  const ranked = [...round.members].sort((a, b) => wins[b.id] - wins[a.id]);
+
+  // Podium in classic order (second — first — third); only members who have
+  // actually won something get to stand on it.
+  const top = ranked.filter((m) => wins[m.id] > 0).slice(0, 3);
+  if (top.length) {
+    const podium = h('<div class="podium"></div>');
+    [top[1], top[0], top[2]].filter(Boolean).forEach((m) => {
+      const rank = top.indexOf(m) + 1;
+      podium.appendChild(
+        h(`<div class="podium__col podium__col--${rank}">
+             ${rank === 1 ? '<i class="ti ti-crown podium__crown" aria-hidden="true"></i>' : ''}
+             <span class="avatar podium__avatar" style="background:${memberColor(round, m.id)}">${esc(initials(m.name))}</span>
+             <span class="podium__name">${esc(m.name)}</span>
+             <span class="podium__base"><span class="podium__rank">${rank}</span>${esc(tn(wins[m.id], 'pokale.winsOne', 'pokale.wins'))}</span>
+           </div>`)
+      );
+    });
+    sec.appendChild(podium);
+  }
+  const rest = ranked.filter((m) => !top.includes(m));
+  if (rest.length) {
+    const line = rest
+      .map((m) => `${esc(m.name)} · ${esc(tn(wins[m.id], 'pokale.winsOne', 'pokale.wins'))}`)
+      .join('&ensp;—&ensp;');
+    sec.appendChild(h(`<div class="muted podium__rest">${line}</div>`));
+  }
+
+  const statCard = (icon, label, value, sub) =>
+    h(`<div class="pokale-card">
+         <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
+         <span class="pokale-card__label">${esc(label)}</span>
+         <span class="pokale-card__value">${esc(value)}</span>
+         <span class="pokale-card__sub">${esc(sub)}</span>
+       </div>`);
+  const cards = h('<div class="pokale-cards"></div>');
+
+  // Most played: chosen most often across finished nights (game must exist).
+  const playCount = {};
+  finished.forEach((s) => {
+    if (s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
+      playCount[s.chosenGameId] = (playCount[s.chosenGameId] || 0) + 1;
+  });
+  let mostId = null;
+  Object.keys(playCount).forEach((gid) => {
+    if (mostId === null || playCount[gid] > playCount[mostId]) mostId = gid;
+  });
+  if (mostId) {
+    const g = round.games.find((x) => x.id === mostId);
+    cards.appendChild(
+      statCard('ti-flame', t('pokale.mostPlayed'), g.title, tn(playCount[mostId], 'home.chip.nightsOne', 'home.chip.nights'))
+    );
+  }
+
+  // Best rated: highest overall average with a bit of data behind it.
+  let best = null;
+  round.games
+    .filter((g) => !g.retired)
+    .forEach((g) => {
+      const st = gameStats(round, g.id);
+      if (st.avg !== null && st.count >= 3 && (!best || st.avg > best.avg)) best = { g, avg: st.avg };
+    });
+  if (best) cards.appendChild(statCard('ti-star', t('pokale.bestRated'), best.g.title, `Ø ${best.avg.toFixed(1)}`));
+
+  // Streak: how many of the latest nights in a row one member won alone.
+  const chrono = [...finished].sort((a, b) =>
+    String(a.finishedAt || a.createdAt).localeCompare(String(b.finishedAt || b.createdAt))
+  );
+  let streakMember = null;
+  let streak = 0;
+  for (let i = chrono.length - 1; i >= 0; i--) {
+    const ws = chrono[i].winnerIds || [];
+    if (streakMember === null) {
+      if (ws.length !== 1) break;
+      streakMember = ws[0];
+      streak = 1;
+    } else if (ws.length === 1 && ws[0] === streakMember) {
+      streak++;
+    } else break;
+  }
+  const streakM = streakMember && round.members.find((m) => m.id === streakMember);
+  if (streakM && streak >= 2)
+    cards.appendChild(statCard('ti-bolt', t('pokale.streak'), streakM.name, t('pokale.streakN', { n: streak })));
+
+  // Gathering dust: the active game whose last night is longest ago (or never).
+  const lastAt = {};
+  finished.forEach((s) => {
+    if (!s.chosenGameId) return;
+    const at = s.finishedAt || s.createdAt;
+    if (!lastAt[s.chosenGameId] || at > lastAt[s.chosenGameId]) lastAt[s.chosenGameId] = at;
+  });
+  const active = round.games.filter((g) => !g.retired);
+  let dusty = null;
+  active.forEach((g) => {
+    const at = lastAt[g.id] || '';
+    if (!dusty || at < dusty.at) dusty = { g, at };
+  });
+  if (dusty && active.length > 1) {
+    cards.appendChild(
+      statCard(
+        'ti-sparkles',
+        t('pokale.dusty'),
+        dusty.g.title,
+        dusty.at ? t('pokale.dustyAt', { when: fmtMonth(dusty.at) }) : t('pokale.dustyNever')
+      )
+    );
+  }
+
+  if (cards.children.length) sec.appendChild(cards);
+  app.appendChild(sec);
+}
+
 // =================== Retired games ===================
 
 async function showRetired(rid) {
@@ -522,29 +662,32 @@ async function showRetired(rid) {
   if (games.length === 0) {
     app.appendChild(h(`<div class="empty"><p>${esc(t('retired.empty'))}</p></div>`));
   } else {
-    const grid = h('<div class="cards"></div>');
+    const list = h('<div class="archive-list"></div>');
     games.forEach((g) => {
-      const imgStyle = g.image ? `style="background-image:url('${g.image}')"` : '';
-      const fallback = g.image ? '' : (g.type === 'digital' ? '💻' : '🎲');
+      const imgStyle = g.image ? ` style="background-image:url('${g.image}')"` : '';
+      const fallback = g.image
+        ? ''
+        : `<i class="ti ${g.type === 'digital' ? 'ti-device-gamepad-2' : 'ti-dice-3'}" aria-hidden="true"></i>`;
       const when = g.retiredAt ? fmtDateTime(g.retiredAt) : '?';
-      const gc = h(`<div class="game-card">
-           <div class="game-card__img" ${imgStyle}>${fallback}</div>
-           <div class="game-card__body">
-             <div class="game-card__title">${esc(g.title)}</div>
-             <div class="game-card__row">${typeTag(g.type)} ${durationTag(g.duration)}</div>
-             <div class="card__meta">${esc(t('retired.at', { when }))}</div>
-             <button class="btn" data-act="restore" style="margin-top:10px">${esc(t('retired.restore'))}</button>
-             <button class="btn btn--danger" data-act="delete" style="margin-top:8px">${esc(t('retired.delete'))}</button>
+      const row = h(`<div class="archive-row">
+           <div class="archive-row__img"${imgStyle}>${fallback}</div>
+           <div class="archive-row__body">
+             <div class="archive-row__title">${esc(g.title)} ${typeTag(g.type)} ${durationTag(g.duration)}</div>
+             <div class="muted archive-row__meta"><i class="ti ti-armchair" aria-hidden="true"></i> ${esc(t('retired.at', { when }))}</div>
+           </div>
+           <div class="archive-row__actions">
+             <button class="btn" data-act="restore"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('retired.restore'))}</button>
+             <button class="btn btn--danger" data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.delete'))}</button>
            </div>
          </div>`);
-      gc.querySelector('[data-act="restore"]').addEventListener('click', async () => {
+      row.querySelector('[data-act="restore"]').addEventListener('click', async () => {
         try {
           await api('POST', `/api/rounds/${rid}/games/${g.id}/retire`, { retired: false });
           toast(t('retired.restored', { title: g.title }));
           showRetired(rid);
         } catch (e) { toast(e.message); }
       });
-      gc.querySelector('[data-act="delete"]').addEventListener('click', async () => {
+      row.querySelector('[data-act="delete"]').addEventListener('click', async () => {
         if (!confirm(t('retired.deleteConfirm', { title: g.title }))) return;
         try {
           await api('DELETE', `/api/rounds/${rid}/games/${g.id}`);
@@ -552,9 +695,9 @@ async function showRetired(rid) {
           showRetired(rid);
         } catch (e) { toast(e.message); }
       });
-      grid.appendChild(gc);
+      list.appendChild(row);
     });
-    app.appendChild(grid);
+    app.appendChild(list);
   }
 
   const back = h(`<div class="section center"><button class="btn btn--lg">${esc(t('common.backToRound'))}</button></div>`);
@@ -599,11 +742,17 @@ async function showBackground(rid) {
   const bg = round.background;
   const currentPage = bg && bg.type === 'theme' ? (bg.page || '').toLowerCase() : null;
 
-  const swatches = h('<div class="bg-swatches"></div>');
+  // Theme cards: each is a tiny live preview of the palette — page background,
+  // an accent "button", a text line and the accent dot.
+  const swatches = h('<div class="theme-cards"></div>');
   THEMES.forEach((th) => {
     const active = th.std ? !currentPage : currentPage === th.page.toLowerCase();
-    const sw = h(`<button class="bg-swatch${active ? ' is-active' : ''}" style="background:${th.page}" title="${esc(t(th.labelKey))}">
-         <span class="bg-swatch__dot" style="background:${th.accent}"></span>
+    const sw = h(`<button class="theme-card${active ? ' is-active' : ''}" style="background:${th.page}" title="${esc(t(th.labelKey))}">
+         <span class="theme-card__bar" style="background:${th.accent}"></span>
+         <span class="theme-card__line"></span>
+         <span class="theme-card__line theme-card__line--short"></span>
+         <span class="theme-card__name" style="color:${th.accent}">${esc(t(th.labelKey))}</span>
+         <span class="theme-card__check" style="background:${th.accent}"><i class="ti ti-check" aria-hidden="true"></i></span>
        </button>`);
     sw.addEventListener('click', async () => {
       const payload = th.std
@@ -612,7 +761,7 @@ async function showBackground(rid) {
       try {
         const saved = await api('POST', `/api/rounds/${rid}/background`, payload);
         applyBackground(saved.background);
-        swatches.querySelectorAll('.bg-swatch').forEach((el) => el.classList.remove('is-active'));
+        swatches.querySelectorAll('.theme-card').forEach((el) => el.classList.remove('is-active'));
         sw.classList.add('is-active');
         toast(t('design.toast.set'));
       } catch (e) { toast(e.message); }
@@ -644,7 +793,9 @@ async function showGameDetail(rid, gameId) {
 
   const st = gameStats(round, gameId);
   const imgStyle = game.image ? `style="background-image:url('${game.image}')"` : '';
-  const fallback = game.image ? '' : (game.type === 'digital' ? '💻' : '🎲');
+  const fallback = game.image
+    ? ''
+    : `<i class="ti ${game.type === 'digital' ? 'ti-device-gamepad-2' : 'ti-dice-3'}" aria-hidden="true"></i>`;
   app.innerHTML = '';
 
   // Send a partial update, then re-render the page from fresh data.
@@ -777,22 +928,31 @@ async function showGameDetail(rid, gameId) {
     });
   }
 
-  // Header: image + title + average.
+  // Header card: image + title + score ring ("Spielepass").
   const ratingsLine = t(st.count === 1 ? 'detail.ratingsLineOne' : 'detail.ratingsLine', { n: st.count, s: st.sessions });
-  const scoreBig =
+  const RING_C = (2 * Math.PI * 34).toFixed(1);
+  const scoreRing =
     st.avg !== null
-      ? `<div class="gd-score" style="color:${avgColor(st.avg)}">${st.avg.toFixed(1)}</div>
+      ? `<div class="gd-ring">
+           <svg viewBox="0 0 80 80" aria-hidden="true">
+             <circle cx="40" cy="40" r="34" fill="none" stroke="var(--sunken)" stroke-width="8"/>
+             <circle cx="40" cy="40" r="34" fill="none" stroke="${avgColor(st.avg)}" stroke-width="8" stroke-linecap="round"
+               stroke-dasharray="${(((st.avg - 1) / 4) * 2 * Math.PI * 34).toFixed(1)} ${RING_C}" transform="rotate(-90 40 40)"/>
+           </svg>
+           <span class="gd-ring__num" style="color:${avgColor(st.avg)}">${st.avg.toFixed(1)}</span>
+         </div>
          <div class="score-label">${esc(ratingsLine)}</div>`
-      : `<div class="gd-score gd-score--none">–</div><div class="score-label">${esc(t('detail.noRating'))}</div>`;
+      : `<div class="gd-ring gd-ring--none"><span class="gd-ring__num">–</span></div>
+         <div class="score-label">${esc(t('detail.noRating'))}</div>`;
   const sortLine = st.sortCount
-    ? `<div class="sort-flag" style="margin-top:8px">${esc(t('detail.totalSort', { n: st.sortCount }))}</div>`
+    ? `<div class="sort-flag" style="margin-top:8px"><i class="ti ti-armchair" aria-hidden="true"></i> ${esc(t('detail.totalSort', { n: st.sortCount }))}</div>`
     : '';
 
   const head = h(`<div class="gd-head">
        <div class="gd-info">
          <h1></h1>
-         <div class="gd-stats">${scoreBig}${sortLine}</div>
        </div>
+       <div class="gd-stats">${scoreRing}${sortLine}</div>
      </div>`);
 
   // Editable cover image (click to paste a new one or remove it).
@@ -838,7 +998,7 @@ async function showGameDetail(rid, gameId) {
   // Retire / restore right from here.
   const actionWrap = h('<div class="toolbar" style="margin-top:18px"></div>');
   if (game.retired) {
-    const restore = h(`<button class="btn">${esc(t('detail.restore'))}</button>`);
+    const restore = h(`<button class="btn"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('detail.restore'))}</button>`);
     restore.addEventListener('click', async () => {
       try {
         await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: false });
@@ -848,7 +1008,7 @@ async function showGameDetail(rid, gameId) {
     });
     actionWrap.appendChild(restore);
   } else {
-    const retire = h(`<button class="btn" style="color:var(--warn)">${esc(t('detail.retire'))}</button>`);
+    const retire = h(`<button class="btn" style="color:var(--warn)"><i class="ti ti-armchair" aria-hidden="true"></i> ${esc(t('detail.retire'))}</button>`);
     retire.addEventListener('click', async () => {
       if (!confirm(t('detail.retireConfirm', { title: game.title }))) return;
       try {
@@ -881,7 +1041,7 @@ async function showGameDetail(rid, gameId) {
           .map((wid) => (round.members.find((m) => m.id === wid) || {}).name)
           .filter(Boolean);
         status = s.finished
-          ? `${esc(t('detail.played'))}${names.length ? ' · 🏆 ' + names.map(esc).join(', ') : ''}`
+          ? `${esc(t('detail.played'))}${names.length ? ' · <i class="ti ti-trophy" aria-hidden="true"></i> ' + names.map(esc).join(', ') : ''}`
           : esc(t('detail.chosen'));
       } else if (s.cancelled) {
         status = `<span class="muted">${esc(t('detail.sessionCancelled'))}</span>`;
@@ -912,99 +1072,132 @@ async function showGameDetail(rid, gameId) {
   app.appendChild(back);
 }
 
-// =================== Add game ===================
+// =================== Add game (bottom sheet) ===================
 
+// The active sheet (backdrop element), so navigation/reopen can close it.
+let activeSheet = null;
+function closeSheet() {
+  if (!activeSheet) return;
+  document.removeEventListener('keydown', activeSheet.onKey, true);
+  activeSheet.el.remove();
+  activeSheet = null;
+}
+
+// Opens as a bottom sheet over the current screen (usually the Regal).
 function showAddGame(round) {
-  currentView = () => showAddGame(round);
-  setCrumbs([
-    { label: t('nav.home'), onClick: showHome },
-    { label: round.name, onClick: () => showRound(round.id) },
-    { label: t('addGame.crumb') },
-  ]);
-  app.innerHTML = '';
-  app.appendChild(h(`<div class="page-head"><h1>${esc(t('addGame.title'))}</h1></div>`));
-
-  const form = h(`<div>
-      <div class="field">
-        <label for="title">${esc(t('addGame.titleLabel'))}</label>
-        <input id="title" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" />
-      </div>
-      <div class="field">
-        <label>${esc(t('addGame.typeLabel'))}</label>
-        <div class="segmented" id="typeSeg">
-          <label class="is-checked" data-type="analog">${t('type.analog')}</label>
-          <label data-type="digital">${t('type.digital')}</label>
+  closeSheet();
+  const backdrop = h(`<div class="sheet-backdrop">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t('addGame.title'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('addGame.title'))}</h2>
+          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
-      </div>
-      <div class="field">
-        <label>${esc(t('addGame.durationLabel'))}</label>
-        <div class="segmented" id="durationSeg">
-          <label data-duration="short">${t('duration.short')}</label>
-          <label class="is-checked" data-duration="medium">${t('duration.medium')}</label>
-          <label data-duration="long">${t('duration.long')}</label>
+        <div class="field">
+          <label for="title">${esc(t('addGame.titleLabel'))}</label>
+          <input id="title" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" />
         </div>
-        <div class="muted" style="margin-top:6px;font-size:14px">${esc(t('addGame.durationHint'))}</div>
-      </div>
-      <div class="field">
-        <label>${esc(t('addGame.playersLabel'))}</label>
-        <div class="toolbar">
-          <input id="minPlayers" class="input" style="width:110px" inputmode="numeric"
-                 placeholder="${esc(t('addGame.minPlayersPlaceholder'))}" />
-          <span>–</span>
-          <input id="maxPlayers" class="input" style="width:110px" inputmode="numeric"
-                 placeholder="${esc(t('addGame.maxPlayersPlaceholder'))}" />
-        </div>
-      </div>
-      <div class="field">
-        <label>${esc(t('addGame.imageLabel'))}</label>
-        <div id="pasteZone" class="paste-zone" tabindex="0">
-          <div class="paste-zone__hint">
-            <div class="paste-zone__icon">🖼️</div>
-            <div>${esc(t('addGame.pasteHint'))}</div>
-            <div class="muted" style="font-size:14px">${esc(t('addGame.pasteSub'))}</div>
+        <div class="field">
+          <label>${esc(t('addGame.typeLabel'))}</label>
+          <div class="opt-cards" id="typeSeg">
+            <button type="button" class="opt-card is-on" data-type="analog"><i class="ti ti-dice-3" aria-hidden="true"></i>${esc(t('type.analog'))}</button>
+            <button type="button" class="opt-card" data-type="digital"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i>${esc(t('type.digital'))}</button>
           </div>
-          <img class="paste-zone__preview" hidden />
         </div>
-        <div class="toolbar" style="margin-top:10px">
-          <button type="button" id="pasteBtn" class="btn">${esc(t('addGame.pasteBtn'))}</button>
-          <button type="button" id="clearImg" class="btn btn--ghost" hidden>${esc(t('addGame.removeImage'))}</button>
+        <div class="field">
+          <label>${esc(t('addGame.durationLabel'))}</label>
+          <div class="filter-chips" id="durationSeg">
+            <button type="button" class="chip" data-duration="short"><i class="ti ti-bolt" aria-hidden="true"></i>${esc(t('duration.short'))}</button>
+            <button type="button" class="chip is-on" data-duration="medium"><i class="ti ti-clock" aria-hidden="true"></i>${esc(t('duration.medium'))}</button>
+            <button type="button" class="chip" data-duration="long"><i class="ti ti-hourglass" aria-hidden="true"></i>${esc(t('duration.long'))}</button>
+          </div>
+          <div class="muted field__hint">${esc(t('addGame.durationHint'))}</div>
         </div>
-      </div>
-      <div class="toolbar">
-        <button id="save" class="btn btn--primary btn--lg">${esc(t('addGame.save'))}</button>
-        <button id="saveMore" class="btn btn--lg">${esc(t('addGame.saveMore'))}</button>
+        <div class="field">
+          <label>${esc(t('addGame.playersLabel'))}</label>
+          <div class="stepper-row">
+            <div class="stepper" data-for="minPlayers">
+              <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+              <input id="minPlayers" class="stepper__val" inputmode="numeric" value="2" aria-label="${esc(t('addGame.minPlayersPlaceholder'))}" />
+              <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+            </div>
+            <span class="muted">–</span>
+            <div class="stepper" data-for="maxPlayers">
+              <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+              <input id="maxPlayers" class="stepper__val" inputmode="numeric" value="4" aria-label="${esc(t('addGame.maxPlayersPlaceholder'))}" />
+              <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+            </div>
+            <span class="muted">${esc(t('addGame.playersUnit'))}</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>${esc(t('addGame.imageLabel'))}</label>
+          <div id="pasteZone" class="paste-zone" tabindex="0">
+            <div class="paste-zone__hint">
+              <div class="paste-zone__icon"><i class="ti ti-photo" aria-hidden="true"></i></div>
+              <div>${esc(t('addGame.pasteHint'))}</div>
+              <div class="muted" style="font-size:14px">${esc(t('addGame.pasteSub'))}</div>
+            </div>
+            <img class="paste-zone__preview" hidden />
+          </div>
+          <div class="toolbar" style="margin-top:10px">
+            <button type="button" id="pasteBtn" class="btn"><i class="ti ti-clipboard" aria-hidden="true"></i> ${esc(t('addGame.pasteBtn'))}</button>
+            <button type="button" id="clearImg" class="btn btn--ghost" hidden>${esc(t('addGame.removeImage'))}</button>
+          </div>
+        </div>
+        <div class="toolbar sheet__actions">
+          <button id="save" class="btn btn--primary btn--lg"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('addGame.save'))}</button>
+          <button id="saveMore" class="btn btn--lg">${esc(t('addGame.saveMore'))}</button>
+        </div>
       </div>
     </div>`);
-  app.appendChild(form);
+  const form = backdrop.querySelector('.sheet');
+  document.body.appendChild(backdrop);
+
+  const onKey = (e) => {
+    if (e.key === 'Escape') closeSheet();
+  };
+  document.addEventListener('keydown', onKey, true);
+  activeSheet = { el: backdrop, onKey };
+  backdrop.addEventListener('mousedown', (e) => {
+    if (e.target === backdrop) closeSheet();
+  });
+  form.querySelector('.sheet__close').addEventListener('click', closeSheet);
 
   let type = 'analog';
   const seg = form.querySelector('#typeSeg');
-  seg.querySelectorAll('label').forEach((lbl) => {
-    lbl.addEventListener('click', () => {
-      seg.querySelectorAll('label').forEach((l) => l.classList.remove('is-checked'));
-      lbl.classList.add('is-checked');
-      type = lbl.dataset.type;
+  seg.querySelectorAll('.opt-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      seg.querySelectorAll('.opt-card').forEach((c) => c.classList.toggle('is-on', c === card));
+      type = card.dataset.type;
     });
   });
 
   let duration = 'medium';
   const durSeg = form.querySelector('#durationSeg');
-  durSeg.querySelectorAll('label').forEach((lbl) => {
-    lbl.addEventListener('click', () => {
-      durSeg.querySelectorAll('label').forEach((l) => l.classList.remove('is-checked'));
-      lbl.classList.add('is-checked');
-      duration = lbl.dataset.duration;
+  durSeg.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      durSeg.querySelectorAll('.chip').forEach((c) => c.classList.toggle('is-on', c === chip));
+      duration = chip.dataset.duration;
     });
   });
 
-  // Player-count inputs accept digits only (text + filter is stricter than
-  // type="number", which still lets "e", "-" etc. through).
+  // Player-count steppers: digits only, +/- clamp at 1.
   const minInput = form.querySelector('#minPlayers');
   const maxInput = form.querySelector('#maxPlayers');
   [minInput, maxInput].forEach((inp) => {
     inp.addEventListener('input', () => {
       const digits = inp.value.replace(/\D/g, '');
       if (inp.value !== digits) inp.value = digits;
+    });
+  });
+  form.querySelectorAll('.stepper').forEach((st) => {
+    const input = st.querySelector('.stepper__val');
+    st.querySelectorAll('.stepper__btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const cur = parseInt(input.value, 10);
+        const next = (Number.isInteger(cur) ? cur : 1) + parseInt(btn.dataset.d, 10);
+        input.value = Math.max(1, next);
+      });
     });
   });
 
@@ -1030,7 +1223,7 @@ function showAddGame(round) {
     }
   }
 
-  // ⌘V anywhere on the page (the listener removes itself when the view changes).
+  // ⌘V anywhere on the page (the listener removes itself when the sheet closes).
   function onPaste(e) {
     if (!document.body.contains(pasteZone)) {
       document.removeEventListener('paste', onPaste);
@@ -1049,23 +1242,8 @@ function showAddGame(round) {
 
   // Button: Clipboard API, reliable on click (also without a keyboard).
   form.querySelector('#pasteBtn').addEventListener('click', async () => {
-    try {
-      if (!navigator.clipboard || !navigator.clipboard.read) {
-        return toast(t('addGame.toast.useShortcut'));
-      }
-      const items = await navigator.clipboard.read();
-      for (const it of items) {
-        const imgType = it.types.find((ty) => ty.startsWith('image/'));
-        if (imgType) {
-          setImage(await it.getType(imgType));
-          toast(t('addGame.toast.pasted'));
-          return;
-        }
-      }
-      toast(t('addGame.toast.noImage'));
-    } catch {
-      toast(t('addGame.toast.pasteFail'));
-    }
+    const blob = await readClipboardImage();
+    if (blob) { setImage(blob); toast(t('addGame.toast.pasted')); }
   });
 
   clearBtn.addEventListener('click', () => setImage(null));
@@ -1092,9 +1270,15 @@ function showAddGame(round) {
     try {
       await api('POST', `/api/rounds/${round.id}/games`, fd);
       toast(t('addGame.toast.saved'));
-      const fresh = await api('GET', '/api/rounds/' + round.id);
-      if (again) showAddGame(fresh);
-      else showRound(fresh.id, 'regal');
+      if (again) {
+        // Keep the sheet open for the next game; type/duration/players stay.
+        form.querySelector('#title').value = '';
+        setImage(null);
+        form.querySelector('#title').focus();
+      } else {
+        closeSheet();
+        showRound(round.id, 'regal');
+      }
     } catch (e) { toast(e.message); }
   }
   form.querySelector('#save').addEventListener('click', () => save(false));
