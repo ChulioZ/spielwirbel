@@ -715,8 +715,12 @@ function renderPokaleTab(round) {
     } else break;
   }
   const streakM = streakMember && round.members.find((m) => m.id === streakMember);
-  if (streakM && streak >= 2)
-    cards.appendChild(statCard('ti-bolt', t('pokale.streak'), streakM.name, t('pokale.streakN', { n: streak })));
+  if (streakM && streak >= 2) {
+    const streakCard = statCard('ti-bolt', t('pokale.streak'), streakM.name, t('pokale.streakN', { n: streak }));
+    // Link the member name to their detail page, like the podium members above.
+    makeMemberLink(streakCard.querySelector('.pokale-card__value'), round.id, streakMember);
+    cards.appendChild(streakCard);
+  }
 
   // Gathering dust: the active game whose last night is longest ago (or never).
   const lastAt = {};
