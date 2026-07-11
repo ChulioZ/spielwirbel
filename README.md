@@ -145,6 +145,57 @@ npm run check:syntax  # node --check over all JS files
 CI runs the test suite plus lint and syntax checks on every push and pull
 request; Dependabot keeps dependencies updated via weekly PRs.
 
+## Contributing
+
+This project is built and maintained with [Claude Code](https://claude.com/claude-code),
+and the repository ships the workflow with it: a set of **skills** in
+`.claude/skills/` and **rules** in `.claude/rules/` that encode how work gets
+done here. Whether you contribute by prompting Claude Code or by hand, these are
+the intended path — start there rather than improvising.
+
+### Before you start
+
+- Read `CLAUDE.md` — it states the non-negotiables (local-only, no auth, no build
+  step, no framework, no database; German UI, English code) and the architecture
+  you must work within.
+- Skim `.claude/rules/` — one short file per hard-won gotcha (frontend script
+  load order, the shared-global-scope lint setup, theme-derived colours, why you
+  must never read the production `data/` folder, …). When you touch an area a
+  rule covers, follow it. Found a new gotcha? Add a rule file for it.
+
+### The skill workflow
+
+The skills chain into a backlog-to-merge pipeline. Invoke a skill in Claude Code
+by name (e.g. `/implement`), or just describe the task and let the matching skill
+trigger. Each is self-contained and enforces this repo's constraints.
+
+| Skill | What it does |
+| --- | --- |
+| **`create-issue`** | Interviews you and files a GitHub issue specific enough to implement without follow-up questions, grounded in this repo's architecture. |
+| **`pick-issue`** | Surveys open issues (and pending Dependabot PRs), ranks them by value-for-effort, and hands the best next one to the right builder skill. |
+| **`implement`** | Takes a change end-to-end: branch from up-to-date `main`, write the code **plus tests**, review locally, open a PR, review it, and merge only if it's safe — then watch `main`'s CI and clean up. |
+| **`review-pr`** | Reviews a pull request (human or bot) against this repo's constraints and returns a `SAFE TO MERGE` / `NOT SAFE` verdict with concrete blockers. |
+| **`dependabot`** | Triages open Dependabot PRs, merging what passes review and commenting on what doesn't. |
+| **`test-data`** | Creates isolated, throwaway data in a temp `DATA_DIR` for tests or manual runs — the safe alternative to ever touching the real `data/`. |
+
+A typical flow: **`create-issue`** to capture the work → **`pick-issue`** to
+choose what's next → **`implement`** to ship it (it calls `review-pr` before
+merging). For dependency bumps, **`dependabot`** handles the batch.
+
+### Doing it by hand
+
+If you'd rather not drive Claude Code, the same expectations apply:
+
+- Branch off an up-to-date `main` (never commit on `main`); use a descriptive
+  name like `feat/session-export` or `fix/vote-tie`.
+- Add or update tests for testable changes, and add any new user-facing string
+  to **both** `public/js/lang/en.js` and `de.js` (key parity is enforced by a
+  test).
+- Make `npm test`, `npm run lint`, and `npm run check:syntax` all pass before
+  opening a PR.
+- Update `README.md` in the same PR when the change adds/renames a user-facing
+  feature, alters the file tree above, or changes routes, scripts, or env vars.
+
 ## Data & backup
 
 Everything lives in the `data/` folder (`data.json` + `uploads/`) — copy it to
