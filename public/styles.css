@@ -316,6 +316,34 @@ h1, h2, h3 { font-family: var(--font-display); }
 .dock__item.is-active { background: var(--brand); color: #fff; }
 .dock__item:not(.is-active):hover { background: var(--brand-tint-soft); }
 
+/* ---- Narrow screens: keep the top bar and last-played ticket from
+   overflowing. The three top-bar items (brand, breadcrumb, language picker)
+   don't all fit under ~400px, so the picker gets clipped; drop the wordmark to
+   the dice icon there and tighten the bar. The ticket's side "stub" is too
+   wide next to its main part on a phone, so stack it as a footer instead. */
+@media (max-width: 520px) {
+  .topbar { gap: 10px; padding: 10px 14px; }
+  .topbar__home { padding: 6px; font-size: 20px; }
+  .topbar__word { display: none; }
+  .crumbs { min-width: 0; }
+
+  .ticket { flex-direction: column; }
+  .ticket__stub {
+    flex-direction: row;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    border-left: none;
+    border-top: 2px dashed var(--line);
+    padding: 12px 16px;
+  }
+  /* Move the perforation punch-holes to the two ends of the top divider. */
+  .ticket__stub::before { top: -8px; left: -8px; }
+  .ticket__stub::after { top: -8px; left: auto; right: -8px; }
+  /* With the stub full-width, the winner name has room to wrap in full. */
+  .ticket__names { white-space: normal; }
+}
+
 .section { margin-top: 32px; }
 .section h3 {
   font-size: 16px;
