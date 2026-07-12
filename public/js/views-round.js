@@ -1301,8 +1301,9 @@ function scoreHit(title, q) {
 
 // Wire search-as-you-type merged provider suggestions onto an input + menu.
 // onPick(result) fires when a suggestion is chosen; onInput() (optional) fires
-// on every manual edit. Returns { closeMenu } so callers can dismiss the menu
-// programmatically (e.g. after a pick). Shared by showAddGame and
+// on every manual edit. Returns { closeMenu, search }: closeMenu dismisses the
+// menu programmatically (e.g. after a pick), search(q) runs a lookup immediately
+// (e.g. for a prefilled value on open). Shared by showAddGame and
 // showLinkProvider so the two lookups stay in sync.
 function attachLookup(input, menu, onPick, onInput) {
   let searchTimer;
@@ -1370,7 +1371,16 @@ function attachLookup(input, menu, onPick, onInput) {
   });
   input.addEventListener('blur', () => setTimeout(closeMenu, 150));
 
-  return { closeMenu };
+  // Kick off a search immediately (no debounce), respecting the same
+  // minimum-length guard as typing. Used to search a prefilled value on open.
+  function search(q) {
+    clearTimeout(searchTimer);
+    q = (q || '').trim();
+    if (q.length < 2) return closeMenu();
+    runSearch(q);
+  }
+
+  return { closeMenu, search };
 }
 
 // Opens as a bottom sheet over the current screen (usually the Regal).
@@ -1676,8 +1686,8 @@ function showAddGame(round) {
 // link is always saved; the field overrides default to "take everything".
 function showLinkProvider(round, game) {
   closeSheet();
-  const backdrop = h(`<div class="sheet-backdrop">
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t('linkProvider.title'))}">
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('linkProvider.title'))}">
         <div class="sheet__head">
           <h2>${esc(t('linkProvider.title'))}</h2>
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
@@ -1709,6 +1719,9 @@ function showLinkProvider(round, game) {
 
   // Wire the shared lookup; a manual edit clears the pending match panel.
   const lookup = attachLookup(input, menu, pickSuggestion, () => { resultBox.innerHTML = ''; });
+  // The title is already filled in, so search for it right away — setting
+  // input.value above doesn't fire an 'input' event, so trigger it explicitly.
+  lookup.search(game.title);
 
   async function pickSuggestion(r) {
     lookup.closeMenu();
