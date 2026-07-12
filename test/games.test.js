@@ -123,6 +123,45 @@ test('POST games ignores an unknown source provider and a non-http source url', 
   assert.equal(noUrl.body.source.url, null); // rejected, but the link id is kept
 });
 
+test('POST games stores a BoardGameGeek source link', async () => {
+  const round = await createRound(request);
+  const res = await addGame(round.id, {
+    title: 'Catan',
+    type: 'analog',
+    sourceProvider: 'bgg',
+    sourceExternalId: '13',
+    sourceUrl: 'https://boardgamegeek.com/boardgame/13/catan',
+  });
+  assert.equal(res.status, 201);
+  assert.deepEqual(res.body.source, {
+    provider: 'bgg',
+    externalId: '13',
+    url: 'https://boardgamegeek.com/boardgame/13/catan',
+  });
+});
+
+test('POST games downloads a cover from the BoardGameGeek image host', async () => {
+  const realFetch = global.fetch;
+  global.fetch = async () => ({
+    ok: true,
+    status: 200,
+    headers: { get: () => 'image/jpeg' },
+    arrayBuffer: async () => new Uint8Array([1, 2, 3, 4]).buffer,
+  });
+  try {
+    const round = await createRound(request);
+    const res = await addGame(round.id, {
+      title: 'Catan',
+      imageUrl: 'https://cf.geekdo-images.com/x/pic.jpg',
+    });
+    assert.equal(res.status, 201);
+    assert.match(res.body.image, /^\/uploads\/[0-9a-f]+\.jpg$/);
+    assert.ok(fs.existsSync(path.join(store.UPLOAD_DIR, path.basename(res.body.image))));
+  } finally {
+    global.fetch = realFetch;
+  }
+});
+
 test('POST games downloads a cover from an allowlisted host', async () => {
   const realFetch = global.fetch;
   global.fetch = async () => ({
