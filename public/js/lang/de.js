@@ -194,7 +194,7 @@ I18N.de = {
   'addGame.toast.noImage': 'Kein Bild in der Zwischenablage',
   'addGame.toast.pasteFail': 'Einfügen nicht möglich – bitte ⌘V benutzen',
   'addGame.toast.useShortcut': 'Bitte ⌘V zum Einfügen benutzen',
-  'addGame.searchHint': 'Tippen für Vorschläge aus dem PlayStation Store und von BoardGameGeek.',
+  'addGame.searchHint': 'Tippen für Vorschläge aus dem PlayStation Store, von Steam und von BoardGameGeek.',
   'addGame.toast.filled': 'Details von {provider} übernommen',
   'lookup.searching': 'Suche läuft …',
   'lookup.loadingMore': 'Weitere Ergebnisse werden geladen …',
