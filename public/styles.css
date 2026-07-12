@@ -1460,7 +1460,8 @@ kbd {
   border-radius: 6px;
   background: var(--sunken);
 }
-.lookup__thumb--none { display: inline-block; }
+.lookup__thumb--none { display: inline-flex; align-items: center; justify-content: center; }
+.lookup__thumb--none .ti { font-size: 20px; color: var(--placeholder); }
 .lookup__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lookup__msg { padding: 9px 12px; font-size: 15px; }
 

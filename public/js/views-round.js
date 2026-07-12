@@ -1559,7 +1559,7 @@ function showAddGame(round) {
       ranked.forEach((r) => {
         const thumb = r.thumbnail
           ? `<img class="lookup__thumb" src="${esc(r.thumbnail)}" alt="" loading="lazy" />`
-          : '<span class="lookup__thumb lookup__thumb--none" aria-hidden="true"></span>';
+          : `<span class="lookup__thumb lookup__thumb--none" aria-hidden="true"><i class="ti ${typeIcon(r.provider === 'bgg' ? 'analog' : 'digital')}"></i></span>`;
         const opt = h(`<button type="button" class="lookup__opt">${thumb}<span class="lookup__title">${esc(r.title)}</span></button>`);
         // mousedown (not click) so it fires before the input's blur closes the menu.
         opt.addEventListener('mousedown', (e) => { e.preventDefault(); pickSuggestion(r); });
