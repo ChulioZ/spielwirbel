@@ -1496,9 +1496,9 @@ kbd {
   white-space: nowrap;
   cursor: pointer;
 }
-/* Logo variant: a small square chip framing the full-color brand mark. The
-   logo colors are a deliberate exception to the theme system (brand identity,
-   not theme) — see theme-derived-colors.md. */
+/* Logo variant: a small square chip framing the brand-color glyph. The logo
+   colors are a deliberate exception to the theme system (brand identity, not
+   theme) — see theme-derived-colors.md. */
 .lookup__badge--logo {
   width: 30px;
   height: 30px;
