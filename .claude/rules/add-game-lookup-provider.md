@@ -1,19 +1,54 @@
-# Add-game lookup provider (PlayStation Store) — how it works and its limits
+# Add-game lookup providers (PlayStation Store + BoardGameGeek) — how they work
 
 The add-game title field is a search-as-you-type lookup (`lib/providers/`,
-`routes/lookup.js`, `showAddGame` in `views-round.js`). BGG sends no CORS
-headers and the PS Store call is likewise cross-origin, so **all provider calls
-run server-side** through `/api/lookup/*`; the browser never calls the provider.
+`routes/lookup.js`, `showAddGame` in `views-round.js`). All provider calls are
+cross-origin (no CORS headers), so **all provider calls run server-side**
+through `/api/lookup/*`; the browser never calls the provider. The frontend
+queries **every** provider in parallel and merges the hits (round-robin
+interleave) into one dropdown, each result tagged with its own provider; one
+provider failing (502) must not blank out the other's results (`Promise.allSettled`).
 
-## Why not BoardGameGeek
+## Why the BGG XML API2 is NOT usable (and how we got BGG anyway)
 
-The first attempt used BGG's XML API2. **As of 2025-07-02 BGG closed it**: every
-request now needs a registered application and an `Authorization: Bearer <token>`
+The first BGG attempt used BGG's XML API2. **As of 2025-07-02 BGG closed it**:
+every request needs a registered application and an `Authorization: Bearer <token>`
 header (see https://boardgamegeek.com/using_the_xml_api). Without a token every
-call returns `401 Unauthorized` — for everyone, from any network, confirmed in a
-real browser. There is no free unauthenticated BGG endpoint anymore. Don't
-re-add BGG expecting it to "just work"; it needs a manually-approved app token
-(approval takes a week+). That's why we switched to the PlayStation Store.
+call returns `401 Unauthorized` — confirmed in a real browser. **BGG's website
+search is also blocked** to scripts: `/search/boardgame` and `geeksearch.php`
+return `403` even with a browser User-Agent. So there is no key-free BGG *search*
+endpoint. Don't re-add the XML API2 or scrape the search page expecting either to
+"just work".
+
+BGG is nonetheless supported (issue #69) via a **two-stage, no-key** split — see
+`lib/providers/bgg.js` and the section below.
+
+## How the BoardGameGeek provider works (`lib/providers/bgg.js`)
+
+Because BGG's own *search* is gated but its *item data* is not, the provider
+splits the job across two public, key-free endpoints:
+
+- **search = Wikidata Query Service (SPARQL).** Run Wikidata's full-text search
+  (CirrusSearch via `wikibase:mwapi`, `api "Search"` + `mwapi:srsearch`),
+  restricted to entities carrying a **BoardGameGeek ID (property P2339)**.
+  Wikidata is only the search *index*: it maps the typed name → a BGG object id
+  + a label. (Prefer CirrusSearch over `EntitySearch`/`wbsearchentities`: the
+  latter is prefix/alias-only and has poor recall — e.g. "catan" misses "Catan:
+  Cities & Knights".) A descriptive `User-Agent` is required by Wikimedia policy.
+- **detail = BGG's public JSON,** `api.geekdo.com/api/geekitems?objectid=<id>&
+  objecttype=thing&nosession=1` (the API behind the public site, no auth). It
+  returns the real fields: `name`, `minplayers`/`maxplayers` (strings, "0" =
+  unknown → treat as null), `minplaytime`/`maxplaytime`, `imageurl`
+  (on `cf.geekdo-images.com`), and `canonical_link`. So the saved game's data,
+  cover, and "View on BoardGameGeek" link are genuinely BGG, not Wikidata.
+
+**Known limits — don't treat these as bugs:**
+- **No play *time* from Wikidata; from BGG it's minutes**, bucketed to the app's
+  short/medium/long via the **average** of min/max play time (matches the
+  add-game hint: <30 short · 30–60 medium · >60 long).
+- Search results carry `thumbnail: null` (Wikidata isn't asked for an image); the
+  BGG cover is fetched with the detail on pick. That's why BGG rows show the
+  placeholder thumb in the dropdown — expected, not a bug.
+- Both hops are undocumented; every parser degrades to null/empty, never throws.
 
 ## How the PlayStation Store provider works
 
@@ -52,5 +87,6 @@ cover-download tests in `test/games.test.js`.
 
 **Cover downloads are host-allowlisted (SSRF guard):** `POST …/games` only
 downloads an `imageUrl` whose host a provider vouches for (`imageHostAllowed` /
-`isAllowedImageUrl` — Sony's `image.api.playstation.com` / `playstation.net`).
-Keep that guard when adding providers; never fetch arbitrary client-supplied URLs.
+`isAllowedImageUrl` — Sony's `image.api.playstation.com` / `playstation.net`, and
+BGG's `cf.geekdo-images.com` / `geekdo-images.com`). Keep that guard when adding
+providers; never fetch arbitrary client-supplied URLs.

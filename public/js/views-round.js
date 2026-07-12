@@ -1449,7 +1449,7 @@ function showAddGame(round) {
     clearBtn.hidden = false;
   }
 
-  // --- Search-as-you-type suggestions (PlayStation Store) ---
+  // --- Search-as-you-type suggestions (PlayStation Store + BoardGameGeek) ---
   const titleInput = form.querySelector('#title');
   const menu = form.querySelector('#lookupMenu');
   let searchTimer;
@@ -1481,14 +1481,15 @@ function showAddGame(round) {
   async function pickSuggestion(r) {
     closeMenu();
     titleInput.value = r.title;
-    chosenSource = { provider: 'psstore', externalId: r.providerId, url: '' };
-    // PlayStation Store titles are always digital — set it now so it's right even
-    // if the detail call fails; the cover comes from the search thumbnail.
-    applyDetail({ type: 'digital' });
+    chosenSource = { provider: r.provider, externalId: r.providerId, url: '' };
+    // Set the obvious type now so it's right even if the detail call fails: PS
+    // Store titles are digital, BoardGameGeek titles analog. A PS Store cover
+    // comes from the search thumbnail; a BGG cover arrives with the detail call.
+    applyDetail({ type: r.provider === 'psstore' ? 'digital' : 'analog' });
     if (r.thumbnail && !pastedBlob) showProviderImage(r.thumbnail);
     let d;
     try {
-      d = await api('GET', `/api/lookup/game?provider=psstore&id=${encodeURIComponent(r.providerId)}`);
+      d = await api('GET', `/api/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}`);
     } catch {
       toast(t('lookup.error'));
       return;
@@ -1497,21 +1498,40 @@ function showAddGame(round) {
     chosenSource.url = d.url || '';
     applyDetail(d);
     if (d.imageUrl && !pastedBlob) showProviderImage(d.imageUrl);
-    toast(t('addGame.toast.filled'));
+    // Provider names are proper nouns, not translated (see the source link too).
+    const providerLabel = { psstore: 'PlayStation Store', bgg: 'BoardGameGeek' }[r.provider] || r.provider;
+    toast(t('addGame.toast.filled', { provider: providerLabel }));
+  }
+
+  // The lookup queries every provider in parallel and merges the hits into one
+  // menu; each result carries its own provider so the follow-up detail call and
+  // the saved source use the right one. One provider failing must not hide the
+  // other's results — only an all-providers failure shows the error state.
+  const LOOKUP_PROVIDERS = ['psstore', 'bgg'];
+  const MAX_SUGGESTIONS = 10;
+
+  async function searchProvider(provider, q) {
+    const res = await api('GET', `/api/lookup/search?provider=${provider}&q=${encodeURIComponent(q)}`);
+    return ((res && res.results) || []).map((r) => Object.assign({ provider }, r));
+  }
+
+  // Round-robin merge so both sources are visible near the top of the menu.
+  function interleave(lists) {
+    const out = [];
+    for (let i = 0; lists.some((l) => i < l.length); i++) {
+      for (const l of lists) if (i < l.length) out.push(l[i]);
+    }
+    return out;
   }
 
   async function runSearch(q) {
     const seq = ++searchSeq;
     showMenuMsg(t('lookup.searching'));
-    let res;
-    try {
-      res = await api('GET', `/api/lookup/search?provider=psstore&q=${encodeURIComponent(q)}`);
-    } catch {
-      if (seq === searchSeq) showMenuMsg(t('lookup.error'));
-      return;
-    }
+    const settled = await Promise.allSettled(LOOKUP_PROVIDERS.map((p) => searchProvider(p, q)));
     if (seq !== searchSeq) return; // a newer keystroke superseded this search
-    const results = (res && res.results) || [];
+    const lists = settled.filter((s) => s.status === 'fulfilled').map((s) => s.value);
+    if (!lists.length) return showMenuMsg(t('lookup.error')); // every provider failed
+    const results = interleave(lists).slice(0, MAX_SUGGESTIONS);
     if (!results.length) return showMenuMsg(t('lookup.noResults'));
     menu.innerHTML = '';
     results.forEach((r) => {

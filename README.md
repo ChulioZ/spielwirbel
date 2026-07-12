@@ -21,12 +21,14 @@ code and documentation are in English.
 - **Games** – each game has a title, type (analog / digital), an expected
   duration (short / medium / long), a required player range (min–max), and an
   optional cover image (paste from clipboard or pick a file). When adding a
-  game, the title field doubles as a **search-as-you-type lookup against the
-  PlayStation Store** (digital games): pick a suggestion to auto-fill the title,
-  cover art, player range and type, and store a link back to the store page
-  (shown on the game's detail view). The lookup is optional — manual entry works
-  exactly as before, and the app degrades gracefully when the store is
-  unreachable. Details can be edited inline on the game's detail page. Games are
+  game, the title field doubles as a **search-as-you-type lookup**: it queries
+  the **PlayStation Store** (digital games) and **BoardGameGeek** (board games)
+  together and merges the hits into one dropdown. Pick a suggestion to auto-fill
+  the title, cover art, player range, play time and type, and store a link back
+  to the source page (shown on the game's detail view). The lookup is optional —
+  manual entry works exactly as before, and the app degrades gracefully when a
+  source is unreachable (one provider failing still shows the other's results).
+  Details can be edited inline on the game's detail page. Games are
   never lost by accident:
   instead of deleting, they are **retired** — kept with a timestamp in a
   browsable archive and restorable any time. Only already-retired games can be
@@ -88,11 +90,12 @@ code and documentation are in English.
 - **Frontend:** plain HTML/CSS/vanilla JS under `public/` — **no build step**.
 - **Runs entirely on your machine.** Fonts and the icon set are self-hosted
   under `public/fonts/`, and the subtle background grain is an inline SVG in the
-  stylesheet — no CDNs. The one runtime external call is **opt-in**: the
-  add-game lookup queries the PlayStation Store server-side (via `/api/lookup/*`)
-  only when you type a title to search; it sends just the search text, and the
-  app works fully without it. The store locale defaults to `de-de` and is
-  overridable with the `PSSTORE_LOCALE` env var.
+  stylesheet — no CDNs. The only runtime external calls are **opt-in**: the
+  add-game lookup queries the PlayStation Store and BoardGameGeek server-side
+  (via `/api/lookup/*`) only when you type a title to search; it sends just the
+  search text, and the app works fully without it. None of these need an API key
+  or account. The PS Store locale defaults to `de-de` and is overridable with
+  the `PSSTORE_LOCALE` env var.
 
 ```
 server.js            starts the HTTP server (the only place that listens)
@@ -106,8 +109,10 @@ lib/
     index.js         provider registry + image-host allowlist
     psstore.js       PlayStation Store: search + detail via the store's
                      server-rendered page data (digital games)
+    bgg.js           BoardGameGeek: search via Wikidata (maps a name to a BGG
+                     id), detail via BGG's public JSON endpoint (board games)
 routes/
-  lookup.js          /api/lookup            (search/game — PlayStation Store proxy)
+  lookup.js          /api/lookup            (search/game — provider proxy: PS Store, BGG)
   rounds.js          /api/rounds            (list, detail, create, delete)
   games.js           …/games                (add [+cover download/source],
                                              edit, retire/restore, delete)

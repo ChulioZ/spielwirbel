@@ -14,6 +14,7 @@ function stubFetch(handler) {
   global.fetch = async (url) => handler(String(url));
 }
 const htmlRes = (text) => ({ ok: true, status: 200, text: async () => text });
+const jsonRes = (obj) => ({ ok: true, status: 200, json: async () => obj });
 
 function page(apolloState, body = '') {
   const next = { props: { pageProps: { apolloState } } };
@@ -90,4 +91,62 @@ test('game still returns a usable digital detail when the page has no product st
 test('game requires an id', async () => {
   const res = await request(app).get('/api/lookup/game?provider=psstore');
   assert.equal(res.status, 400);
+});
+
+// --- BoardGameGeek provider (Wikidata search -> BGG detail, both JSON) -----
+
+const WDQS_CATAN = {
+  results: {
+    bindings: [
+      { bgg: { value: '13' }, itemLabel: { value: 'Catan' } },
+      { bgg: { value: '926' }, itemLabel: { value: 'Catan: Cities & Knights' } },
+    ],
+  },
+};
+const GEEK_CATAN = {
+  item: {
+    name: 'Catan',
+    minplayers: '3',
+    maxplayers: '4',
+    minplaytime: '60',
+    maxplaytime: '120',
+    imageurl: 'https://cf.geekdo-images.com/x/pic.png',
+    canonical_link: 'https://boardgamegeek.com/boardgame/13/catan',
+  },
+};
+
+test('GET /api/lookup/search?provider=bgg returns BGG-id results (via Wikidata)', async () => {
+  stubFetch((url) => {
+    assert.match(url, /query\.wikidata\.org/);
+    return jsonRes(WDQS_CATAN);
+  });
+  const res = await request(app).get('/api/lookup/search?provider=bgg&q=catan');
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.results, [
+    { providerId: '13', title: 'Catan', thumbnail: null },
+    { providerId: '926', title: 'Catan: Cities & Knights', thumbnail: null },
+  ]);
+});
+
+test('GET /api/lookup/game?provider=bgg returns analog detail with players + bucketed duration', async () => {
+  stubFetch((url) => {
+    assert.match(url, /api\.geekdo\.com\/api\/geekitems/);
+    return jsonRes(GEEK_CATAN);
+  });
+  const res = await request(app).get('/api/lookup/game?provider=bgg&id=13');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.title, 'Catan');
+  assert.equal(res.body.type, 'analog');
+  assert.equal(res.body.duration, 'long');
+  assert.equal(res.body.minPlayers, 3);
+  assert.equal(res.body.maxPlayers, 4);
+  assert.equal(res.body.imageUrl, 'https://cf.geekdo-images.com/x/pic.png');
+  assert.equal(res.body.url, 'https://boardgamegeek.com/boardgame/13/catan');
+});
+
+test('bgg search returns 502 when Wikidata is unreachable', async () => {
+  stubFetch(() => { throw new Error('network down'); });
+  const res = await request(app).get('/api/lookup/search?provider=bgg&q=zzzunreachable');
+  assert.equal(res.status, 502);
+  assert.equal(res.body.error, 'provider_unreachable');
 });
