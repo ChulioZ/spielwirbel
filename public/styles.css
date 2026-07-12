@@ -1629,6 +1629,11 @@ kbd {
   align-items: flex-end;
   justify-content: center;
 }
+/* A short sheet (e.g. link-provider) reads better as a centered dialog card:
+   its prefilled field sits mid-screen so the suggestion dropdown has room.
+   The bottom padding biases the card slightly upward so the downward-opening
+   dropdown (up to 340px) stays fully on-screen on shorter viewports. */
+.sheet-backdrop--center { align-items: center; padding-bottom: 120px; }
 .sheet {
   width: 100%;
   max-width: 720px;
@@ -1639,6 +1644,13 @@ kbd {
   border: 1px solid var(--line);
   border-bottom: none;
   padding: 18px 22px 26px;
+}
+.sheet--dialog {
+  width: calc(100% - 32px);
+  max-width: 460px;
+  max-height: 86vh;
+  border-radius: 24px;
+  border-bottom: 1px solid var(--line);
 }
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: sheet-up 0.25s ease-out; }
