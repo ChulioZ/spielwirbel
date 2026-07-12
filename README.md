@@ -212,6 +212,22 @@ Use a different data folder: `DATA_DIR=/path/to/data npm start`
 Enable buy-next AI suggestions: `ANTHROPIC_API_KEY=sk-ant-… npm start`
 (optional — everything else works without it)
 
+### Configuration via a `.env` file
+
+All settings above are plain environment variables (see `.env.example` for the
+full list). To keep them in a file instead of the command line, copy the
+template and start with `start:env`:
+
+```bash
+cp .env.example .env      # then edit .env and fill in what you need
+npm run start:env         # loads .env, then runs the server
+```
+
+`start:env` uses Node's built-in `--env-file-if-exists` (Node ≥ 20.12; a missing
+`.env` is fine), so there is no extra dependency. **`.env` is gitignored** — it
+may hold your `ANTHROPIC_API_KEY`, so never commit it. Plain `npm start` ignores
+`.env` and reads only real environment variables.
+
 ## Development
 
 ```bash
