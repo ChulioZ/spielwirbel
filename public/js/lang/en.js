@@ -194,7 +194,7 @@ I18N.en = {
   'addGame.toast.noImage': 'No image in the clipboard',
   'addGame.toast.pasteFail': 'Couldn’t paste – please use ⌘V',
   'addGame.toast.useShortcut': 'Please use ⌘V to paste',
-  'addGame.searchHint': 'Start typing to get suggestions from the PlayStation Store and BoardGameGeek.',
+  'addGame.searchHint': 'Start typing to get suggestions from the PlayStation Store, Steam and BoardGameGeek.',
   'addGame.toast.filled': 'Details filled in from {provider}',
   'lookup.searching': 'Searching…',
   'lookup.loadingMore': 'Loading more results…',

@@ -150,3 +150,59 @@ test('bgg search returns 502 when Wikidata is unreachable', async () => {
   assert.equal(res.status, 502);
   assert.equal(res.body.error, 'provider_unreachable');
 });
+
+// --- Steam provider (storesearch -> appdetails, both public JSON) ----------
+
+const STEAM_SEARCH = {
+  total: 2,
+  items: [
+    { type: 'app', id: 413150, name: 'Stardew Valley', tiny_image: 'https://shared.akamai.steamstatic.com/apps/413150/capsule.jpg' },
+    { type: 'sub', id: 999, name: 'Some Bundle', tiny_image: 'https://shared.akamai.steamstatic.com/subs/999/capsule.jpg' },
+  ],
+};
+const STEAM_DETAIL = {
+  413150: {
+    success: true,
+    data: {
+      type: 'game',
+      name: 'Stardew Valley',
+      header_image: 'https://shared.akamai.steamstatic.com/apps/413150/header.jpg',
+      categories: [{ id: 2, description: 'Single-player' }, { id: 9, description: 'Co-op' }],
+    },
+  },
+};
+
+test('GET /api/lookup/search?provider=steam returns only full games (type app)', async () => {
+  stubFetch((url) => {
+    assert.match(url, /store\.steampowered\.com\/api\/storesearch/);
+    return jsonRes(STEAM_SEARCH);
+  });
+  const res = await request(app).get('/api/lookup/search?provider=steam&q=stardew');
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.results, [
+    { providerId: '413150', title: 'Stardew Valley', thumbnail: 'https://shared.akamai.steamstatic.com/apps/413150/capsule.jpg' },
+  ]);
+});
+
+test('GET /api/lookup/game?provider=steam returns digital detail (players, long duration)', async () => {
+  stubFetch((url) => {
+    assert.match(url, /store\.steampowered\.com\/api\/appdetails/);
+    return jsonRes(STEAM_DETAIL);
+  });
+  const res = await request(app).get('/api/lookup/game?provider=steam&id=413150');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.title, 'Stardew Valley');
+  assert.equal(res.body.type, 'digital');
+  assert.equal(res.body.duration, 'long');
+  assert.equal(res.body.minPlayers, 1); // co-op present -> multiplayer, upper bound unknown
+  assert.equal(res.body.maxPlayers, null);
+  assert.equal(res.body.imageUrl, 'https://shared.akamai.steamstatic.com/apps/413150/header.jpg');
+  assert.equal(res.body.url, 'https://store.steampowered.com/app/413150/');
+});
+
+test('steam search returns 502 when Steam is unreachable', async () => {
+  stubFetch(() => { throw new Error('network down'); });
+  const res = await request(app).get('/api/lookup/search?provider=steam&q=zzzunreachable');
+  assert.equal(res.status, 502);
+  assert.equal(res.body.error, 'provider_unreachable');
+});

@@ -1184,7 +1184,7 @@ async function showGameDetail(rid, gameId) {
   // Link back to the provider page when the game was added from an external
   // source (PlayStation Store). The provider name is a proper noun, not translated.
   if (game.source && game.source.url) {
-    const providerLabel = { psstore: 'PlayStation Store', bgg: 'BoardGameGeek' }[game.source.provider] || game.source.provider;
+    const providerLabel = { psstore: 'PlayStation Store', bgg: 'BoardGameGeek', steam: 'Steam' }[game.source.provider] || game.source.provider;
     const src = h(`<div class="section"><a class="link-out" href="${esc(game.source.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('detail.viewSource', { provider: providerLabel }))}</a></div>`);
     app.appendChild(src);
   }
@@ -1449,7 +1449,7 @@ function showAddGame(round) {
     clearBtn.hidden = false;
   }
 
-  // --- Search-as-you-type suggestions (PlayStation Store + BoardGameGeek) ---
+  // --- Search-as-you-type suggestions (PlayStation Store + BoardGameGeek + Steam) ---
   const titleInput = form.querySelector('#title');
   const menu = form.querySelector('#lookupMenu');
   let searchTimer;
@@ -1482,10 +1482,11 @@ function showAddGame(round) {
     closeMenu();
     titleInput.value = r.title;
     chosenSource = { provider: r.provider, externalId: r.providerId, url: '' };
-    // Set the obvious type now so it's right even if the detail call fails: PS
-    // Store titles are digital, BoardGameGeek titles analog. A PS Store cover
-    // comes from the search thumbnail; a BGG cover arrives with the detail call.
-    applyDetail({ type: r.provider === 'psstore' ? 'digital' : 'analog' });
+    // Set the obvious type now so it's right even if the detail call fails:
+    // BoardGameGeek titles are analog, every store (PlayStation, Steam, …) is
+    // digital. A store cover comes from the search thumbnail; a BGG cover
+    // arrives with the detail call.
+    applyDetail({ type: r.provider === 'bgg' ? 'analog' : 'digital' });
     if (r.thumbnail && !pastedBlob) showProviderImage(r.thumbnail);
     let d;
     try {
@@ -1499,7 +1500,7 @@ function showAddGame(round) {
     applyDetail(d);
     if (d.imageUrl && !pastedBlob) showProviderImage(d.imageUrl);
     // Provider names are proper nouns, not translated (see the source link too).
-    const providerLabel = { psstore: 'PlayStation Store', bgg: 'BoardGameGeek' }[r.provider] || r.provider;
+    const providerLabel = { psstore: 'PlayStation Store', bgg: 'BoardGameGeek', steam: 'Steam' }[r.provider] || r.provider;
     toast(t('addGame.toast.filled', { provider: providerLabel }));
   }
 
@@ -1510,7 +1511,7 @@ function showAddGame(round) {
   // is ranked by how well each title matches the query, re-sorted in place as
   // each provider arrives. One provider failing must not hide the other's
   // results — only an all-providers failure shows the error state.
-  const LOOKUP_PROVIDERS = ['psstore', 'bgg'];
+  const LOOKUP_PROVIDERS = ['psstore', 'bgg', 'steam'];
   const MAX_SUGGESTIONS = 10;
 
   async function searchProvider(provider, q) {
