@@ -182,8 +182,11 @@ Show the user a short ranked shortlist (top ~3) as a compact list: for each,
 **the winner** and *why it beat the runner-up* in one or two sentences.
 
 Then **hand off to the builder automatically in the same turn** (phase 5) — don't
-stop to ask for a go-ahead. The user invoked this skill to get the next thing
-started, so choosing *is* the authorization to build it.
+stop to ask for a go-ahead on the *choice*. The user invoked this skill to get the
+next thing started, so choosing *is* the authorization to act on it. (This
+authorizes *starting* the work, not every step within it: a heavier or
+hard-to-reverse action that surfaces while handling the pick — e.g. closing a
+contributor's superseded PR — still gets its own confirmation, see phase 5.)
 
 Only pause instead of handing off when:
 - the top candidate tripped the **malicious-intent** check (phase 2) — flag it,
@@ -205,9 +208,29 @@ Invoke the appropriate skill with the chosen item:
 - **A Dependabot PR →** invoke the **`dependabot`** skill (it reviews and merges
   the safe ones). Don't try to "implement" a dependency bump by hand.
 - **A standalone PR →** invoke the **`review-pr`** skill on it (pass the PR
-  number) for a verdict, then follow GitHub's norms for a **contributor's** PR.
-  The code is someone else's, so this is *not* the same as `implement` merging its
-  own PR — respect these best practices:
+  number) for a verdict, then **handle the PR — and handling it is the whole job
+  for this invocation.** Merging is only *one* possible outcome of "handling": a
+  clean, valuable PR gets merged/approved, but a superseded or obsolete one should
+  be **closed**, one that needs work gets a **review comment / changes requested**,
+  and some are best left for the contributor. Picking a non-merge outcome (closing
+  a superseded PR, commenting) is a **complete, legitimate result** — it is *the*
+  action this skill took, not a preamble. **Do not, having handled the PR, go on to
+  rank or start implementing an issue** — that would be the double-action this
+  skill exists to avoid (a picked PR is nearly always the right single thing to do,
+  precisely because it's cheap and may already contain the very issue you'd
+  otherwise start building). Handle the one PR, report it, and stop.
+
+  **When in doubt about the action, ask first.** A clean merge/approve of a
+  green, clearly-good PR needs no check-in (choosing it *is* the authorization).
+  But when the right move is anything heavier or less reversible — **closing** a
+  PR, posting a **review comment / requesting changes**, or any action you're not
+  confident the user wants — state the PR (`#number — title`), your proposed
+  action, and *why*, and get a clear yes before doing it. Closing someone's PR is
+  outward-facing and hard to undo; don't do it on your own judgement alone.
+
+  Follow GitHub's norms for a **contributor's** PR. The code is someone else's, so
+  this is *not* the same as `implement` merging its own PR — respect these best
+  practices:
 
   - **CI may be waiting on you, not failing.** For a PR from a **fork** (a
     first-time or outside contributor), GitHub Actions doesn't run workflows until
@@ -238,7 +261,11 @@ Invoke the appropriate skill with the chosen item:
   - **NOT SAFE** → do **not** merge or approve. Report each blocker `review-pr`
     named; the contributor clears it.
 
-Hand off exactly one chosen item; don't start several builds/reviews at once.
+Hand off exactly one chosen item; don't start several builds/reviews at once, and
+don't chain a second action after the first. In particular, once you pick a
+standalone PR, **handling that PR is the entire invocation** — whatever its outcome
+(merge, close, comment, or "left for the contributor"), you are done; do not follow
+it by ranking or implementing an issue.
 
 ## Report
 
