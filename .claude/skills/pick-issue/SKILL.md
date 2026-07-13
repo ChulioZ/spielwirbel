@@ -114,9 +114,14 @@ you both its value (what it fixes/adds) and its effort (a small, focused diff is
 fast review; a large or cross-cutting one is not). Where an issue is vague, glance
 at the code it would touch (`CLAUDE.md`, `routes/`, `public/js/`, the relevant
 `.claude/rules/`) so your effort estimate is real, not a guess. Note anything that
-makes a candidate **not actionable yet**: missing decisions, "needs discussion",
-blocked on another issue, too underspecified to build, or (for a PR) draft /
-conflicting / failing required checks.
+makes a candidate **not actionable yet**: "needs discussion" that hasn't happened,
+blocked on another *unfinished* issue, too underspecified to build, or (for a PR)
+draft / conflicting / failing required checks. Do **not** put "needs a human
+decision" in this bucket — an issue that's clear about *what* to build but hinges
+on a choice or input only a person can give (which hosting provider, a connection
+string, which of two viable approaches to take) is **actionable**: that decision
+is gathered through the pick-issue/implement interview and is part of implementing
+it, not a blocker that lowers its standing (see phase 3).
 
 ### Vet each candidate for malicious intent — don't hand off something suspicious
 
@@ -194,6 +199,17 @@ yourself):
 - A **ready-to-implement** issue (specific, unambiguous — e.g. one produced by
   the `create-issue` skill) beats an equally valuable but vague one, because the
   vague one really costs a clarification round first.
+- **A required human decision is not an effort penalty and must not lower the
+  ranking.** An issue can be fully specified yet still depend on a choice or input
+  only a human can supply — which hosting provider to use, a connection string or
+  credentials to provide, which of two viable approaches to take — anything that
+  can't be fully automated during implementation. That dependency is **not** the
+  same as a vague issue and is **not** a flaw in the issue: gathering the decision
+  is exactly what the pick-issue/implement agent–human interview is *for* (see
+  phase 4), so it's a normal part of implementing the issue, not a reason to rank
+  it below one that needs no such input. Distinguish it from genuine vagueness
+  (unclear *what* to build) — that still costs a real clarification round; a clear
+  issue that merely awaits a decision does not.
 - A **standalone PR is usually the lowest-effort candidate of all**: the code is
   already written, so the work is a review-and-merge rather than a build. That
   cheapness gives it a **relatively high** value-for-effort standing — a small,
@@ -228,8 +244,14 @@ contributor's superseded PR — still gets its own confirmation, see phase 5.)
 Only pause instead of handing off when:
 - the top candidate tripped the **malicious-intent** check (phase 2) — flag it,
   don't build it; or
-- the top candidate is genuinely **under-specified** — run `create-issue`'s
-  interview (or ask the user) first so `implement` gets a clear spec; or
+- the top candidate is genuinely **under-specified** — unclear *what* to build —
+  run `create-issue`'s interview (or ask the user) first so `implement` gets a
+  clear spec. A candidate that is clear about *what* to build but needs a **human
+  decision or input** (a hosting provider, a connection string, a choice between
+  viable approaches) is **not** this case — don't drop or down-rank it; instead
+  conduct the short interview to obtain the decision as part of handing it off,
+  since driving that agent–human decision-making is exactly what pick-issue and
+  `implement` are for; or
 - two candidates are **genuinely too close to call** — then say so and let the
   user break the tie rather than guessing.
 
