@@ -126,6 +126,11 @@ code and documentation are in English.
   a generous global limit plus a stricter one on the billable buy-next endpoint.
   TLS is expected to terminate at a reverse proxy (`TRUST_PROXY` then forwards
   the real client IP); see the env vars below.
+- **Observability:** a `/healthz` liveness/readiness probe, structured JSON
+  request/error logs to stdout (`LOG_LEVEL`, no bodies or personal data), and a
+  central error handler so unexpected throws never leak a stack trace — they
+  return a generic 500 and are logged (and optionally forwarded to
+  `ERROR_WEBHOOK_URL`). See `lib/observability.js`.
 - **Runs entirely on your machine.** Fonts and the icon set are self-hosted
   under `public/fonts/`, and the subtle background grain is an inline SVG in the
   stylesheet — no CDNs. The only runtime external calls are **opt-in**: the
@@ -154,6 +159,7 @@ lib/
                      routes so deep links / reloads work)
   store.js           in-memory data + atomic load/save (data/ folder), helpers
   upload.js          multer image-upload config
+  observability.js   structured logging, /healthz, central error handler
   providers/         external game-database providers for the add-game lookup
     index.js         provider registry + image-host allowlist
     psstore.js       PlayStation Store: search + detail via the store's
@@ -234,6 +240,12 @@ Enable buy-next AI suggestions: `ANTHROPIC_API_KEY=sk-ant-… npm start`
 Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
 the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min)
 and `RECS_RATE_LIMIT_MAX` (buy-next generations, per hour).
+
+Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
+(`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and
+`ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook. The
+`/healthz` endpoint returns `{ status: 'ok', uptime, timestamp }` for uptime
+monitors.
 
 ### Configuration via a `.env` file
 
