@@ -3,15 +3,16 @@
 /* Routes for rounds: list, detail, create (optionally importing games), delete. */
 
 const express = require('express');
-const { data, saveData, id, findRound, pushActivity } = require('../lib/store');
+const repo = require('../lib/repo');
 
 const router = express.Router();
 
 // Compact list for the home screen: identity, live counts, the round's design
 // and a "last played" highlight so the lobby cards can tell each round's story.
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
+  const rounds = await repo.listRounds();
   res.json(
-    data.rounds.map((r) => {
+    rounds.map((r) => {
       // Newest finished session whose chosen game still exists (same rule as
       // the round screen's "Zuletzt gespielt" line).
       const lastPlayed = r.sessions
@@ -47,63 +48,34 @@ router.get('/', (req, res) => {
   );
 });
 
-router.get('/:rid', (req, res) => {
-  const round = findRound(req.params.rid);
+router.get('/:rid', async (req, res) => {
+  const round = await repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
   res.json(round);
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const name = String(req.body.name || '').trim();
   const members = Array.isArray(req.body.members) ? req.body.members : [];
-  const cleanMembers = members
-    .map((m) => String(m || '').trim())
-    .filter(Boolean)
-    .map((nm) => ({ id: id(), name: nm }));
+  const cleanMembers = members.map((m) => String(m || '').trim()).filter(Boolean);
 
   if (!name) return res.status(400).json({ error: 'Round name is missing' });
   if (cleanMembers.length === 0)
     return res.status(400).json({ error: 'At least one member is required' });
 
-  const round = {
-    id: id(),
+  // The data layer mints ids and (optionally) copies the games list
+  // (title/type/image only) from an existing round.
+  const round = await repo.createRound({
     name,
     members: cleanMembers,
-    games: [],
-    sessions: [],
-    activities: [],
-    background: null,
-  };
-
-  // Optional: copy the games list (title/type/image only) from an existing round.
-  const src = req.body.importFromRoundId ? findRound(req.body.importFromRoundId) : null;
-  if (src) {
-    src.games
-      .filter((g) => !g.retired)
-      .forEach((g) => {
-        const ng = {
-          id: id(),
-          title: g.title,
-          type: g.type,
-          image: g.image, // shares the same image file (files are never deleted)
-          retired: false,
-          retiredAt: null,
-        };
-        round.games.push(ng);
-        pushActivity(round, 'game_added', { gameId: ng.id, title: ng.title });
-      });
-  }
-
-  data.rounds.push(round);
-  saveData();
+    importFromRoundId: req.body.importFromRoundId || null,
+  });
   res.status(201).json(round);
 });
 
-router.delete('/:rid', (req, res) => {
-  const idx = data.rounds.findIndex((r) => r.id === req.params.rid);
-  if (idx === -1) return res.status(404).json({ error: 'Round not found' });
-  data.rounds.splice(idx, 1);
-  saveData();
+router.delete('/:rid', async (req, res) => {
+  const deleted = await repo.deleteRound(req.params.rid);
+  if (!deleted) return res.status(404).json({ error: 'Round not found' });
   res.json({ ok: true });
 });
 

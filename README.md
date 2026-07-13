@@ -157,7 +157,11 @@ lib/
   app.js             builds the Express app: static files + route modules,
                      plus the SPA fallback (serves index.html for frontend
                      routes so deep links / reloads work)
-  store.js           in-memory data + atomic load/save (data/ folder), helpers
+  repo.js            data-access layer: the async API every route reads/writes
+                     through (getRound + typed mutators). One seam so the
+                     persistence backend can change without touching routes.
+  store.js           the repo's current backend: in-memory data + atomic
+                     load/save to the data/ folder, id/activity helpers
   upload.js          multer image-upload config
   observability.js   structured logging, /healthz, central error handler
   providers/         external game-database providers for the add-game lookup

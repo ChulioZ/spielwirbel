@@ -5,7 +5,7 @@
    Adding/removing members after round creation is intentionally out of scope. */
 
 const express = require('express');
-const { saveData, findRound } = require('../lib/store');
+const repo = require('../lib/repo');
 
 const router = express.Router({ mergeParams: true });
 
@@ -18,28 +18,30 @@ const MEMBER_COLORS = [
 ];
 
 // Edit a member's name and/or avatar color. Accepts any subset of { name, color }.
-router.patch('/:mid', (req, res) => {
-  const round = findRound(req.params.rid);
+router.patch('/:mid', async (req, res) => {
+  const round = await repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
-  const member = round.members.find((m) => m.id === req.params.mid);
-  if (!member) return res.status(404).json({ error: 'Member not found' });
+  if (!round.members.some((m) => m.id === req.params.mid))
+    return res.status(404).json({ error: 'Member not found' });
 
   const b = req.body;
+  const patch = {};
 
   if (b.name !== undefined) {
     const name = String(b.name).trim();
     if (!name) return res.status(400).json({ error: 'Name is missing' });
-    member.name = name;
+    patch.name = name;
   }
   if (b.color !== undefined) {
     if (!MEMBER_COLORS.includes(b.color))
       return res.status(400).json({ error: 'Invalid color' });
-    member.color = b.color;
+    patch.color = b.color;
   }
 
   // No activity entry: like the inline game edits, member tweaks are minor and
   // would just clutter the feed.
-  saveData();
+  const member = await repo.updateMember(req.params.rid, req.params.mid, patch);
+  if (!member) return res.status(404).json({ error: 'Member not found' });
   res.json(member);
 });
 
