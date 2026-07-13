@@ -3,8 +3,9 @@
 /*
  * Spieleabend – small local server.
  *
- * Persistence: a single file data/data.json (see lib/store.js).
- * Images: stored as files under data/uploads/; data.json only holds the path.
+ * Persistence: the default is a single file data/data.json (see lib/store.js);
+ * set DATABASE_URL to use PostgreSQL instead (see lib/repo/, issue #127).
+ * Images: stored as files under data/uploads/; only the path is persisted.
  *
  * Start:  npm start   ->  http://localhost:3000
  *
@@ -16,12 +17,20 @@
 
 const { DATA_FILE, UPLOAD_DIR } = require('./lib/store');
 const { createApp } = require('./lib/app');
+const repo = require('./lib/repo');
 
 const app = createApp();
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`\n  🎲  Spieleabend running at  http://localhost:${PORT}\n`);
-  console.log(`      Data is stored in:   ${DATA_FILE}`);
-  console.log(`      Images are stored in: ${UPLOAD_DIR}\n`);
+
+// Prepare the data backend before serving (Postgres ensures its schema here;
+// the JSON backend's init() is a no-op), then listen.
+repo.init().then(() => {
+  app.listen(PORT, () => {
+    console.log(`\n  🎲  Spieleabend running at  http://localhost:${PORT}\n`);
+    console.log(`      Persistence:          ${process.env.DATABASE_URL ? 'PostgreSQL (DATABASE_URL)' : DATA_FILE}`);
+    console.log(`      Images are stored in: ${UPLOAD_DIR}\n`);
+  });
+}).catch((err) => {
+  console.error('Failed to initialise the data backend:', err.message);
+  process.exit(1);
 });

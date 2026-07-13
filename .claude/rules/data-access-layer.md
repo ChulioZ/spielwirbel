@@ -1,15 +1,17 @@
 # Routes go through lib/repo.js — the data-access layer (never lib/store.js)
 
-Issue #127 (persistence migration, step 1) introduced `lib/repo.js`: the async
-API that **every route reads and writes the data through**. `lib/store.js` is now
-just the repo's *backend* (the in-memory tree + `data.json` persistence). The
-point of the seam is that the PostgreSQL backend (a follow-up PR) implements the
-same repo contract, so the routes don't change again.
+Issue #127 introduced `lib/repo/`: the async API that **every route reads and
+writes the data through**. It has two interchangeable backends selected at require
+time by `lib/repo/index.js` — `json.js` (default; the `lib/store.js` in-memory
+tree + `data.json`) and `postgres.js` (when `DATABASE_URL` is set). The point of
+the seam is that both satisfy the same contract, so the routes don't change when
+the backend does. Postgres-specific gotchas: `.claude/rules/postgres-backend.md`.
 
 **Rule:** new/changed route code calls `require('../lib/repo')` — never imports
 `data`/`saveData`/`findRound`/`pushActivity` from `lib/store` to mutate the tree
-directly. If you need a new data operation, add a typed method to `lib/repo.js`
-(and cover it in `test/repo.test.js`), don't reach past it.
+directly. If you need a new data operation, add a typed method to **both** backends
+(`lib/repo/json.js` and `lib/repo/postgres.js`) and a case to the shared contract
+(`test/support/repo-contract.js`), don't reach past it.
 
 Non-obvious things baked into the design — keep them:
 
