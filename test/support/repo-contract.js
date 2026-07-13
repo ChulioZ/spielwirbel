@@ -51,6 +51,31 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.getRound(round.id), null);
   });
 
+  test('importRounds inserts full rounds preserving ids, references and shapes', async () => {
+    // A whole round with fixed ids and every field kind (nested votes map, arrays,
+    // background, recommendationRuns) — importRounds must round-trip it exactly.
+    const round = {
+      id: 'rnd_imported_1',
+      name: 'Imported',
+      members: [{ id: 'mem_a', name: 'A', color: '#1d9e75' }, { id: 'mem_b', name: 'B' }],
+      games: [{
+        id: 'game_x', title: 'X', platform: 'analog', type: 'analog', duration: 'medium',
+        minPlayers: 1, maxPlayers: 4, image: '/uploads/x.jpg', retired: false, retiredAt: null,
+      }],
+      sessions: [{
+        id: 'sess_1', createdAt: 't', gameIds: ['game_x'], votes: { mem_a: { game_x: { rating: 4 } } },
+        chosenGameId: 'game_x', chosenAt: 't', finished: true, finishedAt: 't', winnerIds: ['mem_b'],
+        cancelled: false, cancelledAt: null, done: true,
+      }],
+      activities: [{ id: 'act_1', type: 'game_added', at: 't', gameId: 'game_x', title: 'X' }],
+      background: { type: 'theme', page: 'p', accent: 'a' },
+      recommendationRuns: [{ id: 'run_1', items: [{ title: 'Y' }] }],
+    };
+    assert.equal(await repo.importRounds([round]), 1);
+    // Every id, nested reference, and field kind survives the round-trip.
+    assert.deepEqual(await repo.getRound('rnd_imported_1'), round);
+  });
+
   test('createRound import copies only active games (title/type/image) + logs them', async () => {
     const src = await freshRound();
     const active = await repo.createGame(src.id, {

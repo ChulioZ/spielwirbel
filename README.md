@@ -252,6 +252,12 @@ Use PostgreSQL instead of the JSON file: `DATABASE_URL=postgres://… npm start`
 app creates its schema on first start; add `DATABASE_SSL=true` for managed Postgres
 that requires TLS). Unset, it uses `DATA_DIR/data.json` as before.
 
+Migrate an existing `data/data.json` into a fresh Postgres database (one-off, with
+the server **stopped**): `DATABASE_URL=postgres://… npm run migrate:postgres`. It
+copies every round into Postgres preserving ids, and refuses to run against a
+non-empty target. Cover images stay under `DATA_DIR/uploads` (object storage is a
+later step). See `scripts/migrate-json-to-postgres.js`.
+
 Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
 the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min)
 and `RECS_RATE_LIMIT_MAX` (buy-next generations, per hour).
