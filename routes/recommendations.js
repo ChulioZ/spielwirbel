@@ -26,7 +26,8 @@
  */
 
 const express = require('express');
-const { saveData, findRound, id } = require('../lib/store');
+const { id } = require('../lib/store');
+const repo = require('../lib/repo');
 
 const router = express.Router({ mergeParams: true });
 
@@ -254,26 +255,18 @@ function history(round) {
   return [];
 }
 
-// Materialize round.recommendationRuns from history() before a write, so a
-// mutation (append/delete) operates on the array and the legacy object is
-// retired in the same save — the one place the read-time normalization is
-// persisted. Callers must saveData() after mutating.
-function ensureRuns(round) {
-  if (!Array.isArray(round.recommendationRuns)) {
-    round.recommendationRuns = history(round);
-    delete round.recommendations;
-  }
-  return round.recommendationRuns;
-}
+// Persist a mutated run history: normalizes history() (folding any legacy
+// single object) into the newest-first array and retires the pre-#115
+// `recommendations` object in the same write (repo.saveRecommendationRuns).
 
-router.get('/', (req, res) => {
-  const round = findRound(req.params.rid);
+router.get('/', async (req, res) => {
+  const round = await repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
   res.json(history(round));
 });
 
 router.post('/', async (req, res) => {
-  const round = findRound(req.params.rid);
+  const round = await repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
   // Active UI locale, sent by the client; anything but 'de' falls back to 'en'.
   const locale = req.body && req.body.locale === 'de' ? 'de' : 'en';
@@ -288,19 +281,20 @@ router.post('/', async (req, res) => {
     items: result.items,
   };
   // Append (newest first), keeping every past run — nothing is pruned (#115).
-  ensureRuns(round).unshift(run);
-  saveData();
+  const runs = history(round);
+  runs.unshift(run);
+  await repo.saveRecommendationRuns(req.params.rid, runs);
   res.json(run);
 });
 
-router.delete('/:runId', (req, res) => {
-  const round = findRound(req.params.rid);
+router.delete('/:runId', async (req, res) => {
+  const round = await repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
-  const runs = ensureRuns(round);
+  const runs = history(round);
   const idx = runs.findIndex((r) => r.id === req.params.runId);
   if (idx === -1) return res.status(404).json({ error: 'Run not found' });
   runs.splice(idx, 1);
-  saveData();
+  await repo.saveRecommendationRuns(req.params.rid, runs);
   res.json(runs);
 });
 

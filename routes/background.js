@@ -6,23 +6,20 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { UPLOAD_DIR, saveData, findRound } = require('../lib/store');
+const { UPLOAD_DIR } = require('../lib/store');
+const repo = require('../lib/repo');
 
 const router = express.Router({ mergeParams: true });
 
 // Remove an old collage image file when the background changes (legacy data).
-function cleanupOldBackground(round, newBg) {
-  const old = round.background;
+function cleanupOldBackground(old, newBg) {
   if (old && old.type === 'collage' && old.image && (!newBg || newBg.image !== old.image)) {
     fs.promises.unlink(path.join(UPLOAD_DIR, path.basename(old.image))).catch(() => {});
   }
 }
 
 // Set a design (background + accent), a legacy plain color, or "default".
-router.post('/', (req, res) => {
-  const round = findRound(req.params.rid);
-  if (!round) return res.status(404).json({ error: 'Round not found' });
-
+router.post('/', async (req, res) => {
   let bg;
   if (req.body.type === 'theme' && typeof req.body.page === 'string' && typeof req.body.accent === 'string') {
     // Page + accent only. (Older data may still carry a "pattern" field from
@@ -33,9 +30,10 @@ router.post('/', (req, res) => {
   } else {
     bg = { type: 'none' };
   }
-  cleanupOldBackground(round, bg);
-  round.background = bg;
-  saveData();
+
+  const result = await repo.setBackground(req.params.rid, bg);
+  if (!result) return res.status(404).json({ error: 'Round not found' });
+  cleanupOldBackground(result.previous, bg);
   res.json({ background: bg });
 });
 

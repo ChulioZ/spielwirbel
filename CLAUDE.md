@@ -21,10 +21,18 @@ asked, not to bolt onto an unrelated change as a side effect.
 
 - **No build step, no framework, no database.** Keep it that way unless asked.
 - **Backend:** Express. `server.js` only wires middleware and mounts routers.
-  - `lib/store.js` is the single source of truth: an in-memory `data` object
-    persisted to `data/data.json` via atomic `saveData()` (temp file + rename).
-    Mutate `data` in place; never reassign it. Use `findRound`, `id`,
-    `pushActivity` from here. The data location is overridable via `DATA_DIR`.
+  - `lib/repo.js` is the **data-access layer**: the async API every route reads
+    and writes through (`getRound`/`listRounds` return snapshots; typed mutators
+    like `createGame`, `finishSession`, `deleteRound` persist one change). Routes
+    must go through it — never touch `lib/store.js` directly. This is the seam the
+    PostgreSQL migration (#127) drops a second backend into; keeping routes off
+    the store is what makes that swap not-a-rewrite. See
+    `.claude/rules/data-access-layer.md`.
+  - `lib/store.js` is the repo's **current backend**: the single in-memory `data`
+    object persisted to `data/data.json` via atomic `saveData()` (temp file +
+    rename). Mutate `data` in place; never reassign it. `id`/`findRound`/
+    `pushActivity` live here for the repo (and the store's own tests) to use; new
+    route code calls the repo, not these. Data location overridable via `DATA_DIR`.
   - `lib/upload.js` is the multer config for cover images (stored under
     `data/uploads/`, only the path is saved in `data.json`).
   - `routes/*.js` are Express routers, one per resource, mounted under

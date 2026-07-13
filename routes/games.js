@@ -7,7 +7,8 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { data, saveData, id, findRound, pushActivity, UPLOAD_DIR } = require('../lib/store');
+const { id, UPLOAD_DIR } = require('../lib/store');
+const repo = require('../lib/repo');
 const { upload, saveUploadedImage } = require('../lib/upload');
 const { getProvider, isAllowedImageUrl } = require('../lib/providers');
 
@@ -69,7 +70,7 @@ function buildSource(body) {
 }
 
 router.post('/', upload.single('image'), async (req, res) => {
-  const round = findRound(req.params.rid);
+  const round = await repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
 
   const title = String(req.body.title || '').trim();
@@ -100,8 +101,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     image = await downloadCover(req.body.imageUrl);
   }
 
-  const game = {
-    id: id(),
+  const game = await repo.createGame(req.params.rid, {
     title,
     platform,
     type,
@@ -109,14 +109,9 @@ router.post('/', upload.single('image'), async (req, res) => {
     minPlayers,
     maxPlayers,
     image,
-    retired: false,
-    retiredAt: null,
-  };
-  const source = buildSource(req.body);
-  if (source) game.source = source;
-  round.games.push(game);
-  pushActivity(round, 'game_added', { gameId: game.id, title: game.title });
-  saveData();
+    source: buildSource(req.body),
+  });
+  if (!game) return res.status(404).json({ error: 'Round not found' });
   res.status(201).json(game);
 });
 
@@ -127,38 +122,40 @@ router.post('/', upload.single('image'), async (req, res) => {
 // the game linked to a provider (sourceProvider/…) — this is what "link an
 // existing game to a provider" (issue #74) uses.
 router.patch('/:gid', upload.single('image'), async (req, res) => {
-  const round = findRound(req.params.rid);
+  const round = await repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
   const game = round.games.find((g) => g.id === req.params.gid);
   if (!game) return res.status(404).json({ error: 'Game not found' });
 
   const b = req.body;
+  // Collect only the fields that actually change; the data layer applies them.
+  const patch = {};
 
   if (b.title !== undefined) {
     const title = String(b.title).trim();
     if (!title) return res.status(400).json({ error: 'Title is missing' });
-    game.title = title;
+    patch.title = title;
   }
   // Platform is authoritative: for a concrete platform the type is derived and a
   // client-sent type is ignored; `other` (or a bare type edit, e.g. the Other
   // analog/digital sub-control and the link-provider override) honours the type.
   if (b.platform !== undefined) {
     if (PLATFORMS.includes(b.platform)) {
-      game.platform = b.platform;
+      patch.platform = b.platform;
       if (b.platform !== 'other') {
-        game.type = PLATFORM_TYPE[b.platform];
+        patch.type = PLATFORM_TYPE[b.platform];
       } else if (b.type !== undefined) {
-        game.type = b.type === 'digital' ? 'digital' : 'analog';
+        patch.type = b.type === 'digital' ? 'digital' : 'analog';
       }
     }
     // An invalid platform is ignored (leave platform/type untouched).
   } else if (b.type !== undefined) {
-    game.type = b.type === 'digital' ? 'digital' : 'analog';
+    patch.type = b.type === 'digital' ? 'digital' : 'analog';
   }
   if (b.duration !== undefined) {
     if (!DURATIONS.includes(b.duration))
       return res.status(400).json({ error: 'Invalid duration' });
-    game.duration = b.duration;
+    patch.duration = b.duration;
   }
   if (b.minPlayers !== undefined || b.maxPlayers !== undefined) {
     const minPlayers = b.minPlayers !== undefined ? parseInt(b.minPlayers, 10) : game.minPlayers;
@@ -167,107 +164,76 @@ router.patch('/:gid', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'minPlayers must be an integer >= 1' });
     if (!Number.isInteger(maxPlayers) || maxPlayers < minPlayers)
       return res.status(400).json({ error: 'maxPlayers must be an integer >= minPlayers' });
-    game.minPlayers = minPlayers;
-    game.maxPlayers = maxPlayers;
+    patch.minPlayers = minPlayers;
+    patch.maxPlayers = maxPlayers;
   }
 
   // Attach a provider source link (used to link a previously-unlinked game to a
   // provider). Only set when a valid provider + id is supplied; never clobber an
   // existing link with an empty/invalid one.
   const source = buildSource(b);
-  if (source) game.source = source;
+  if (source) patch.source = source;
 
   // Image: a new upload replaces the old file; removeImage clears it; otherwise
   // a provider imageUrl (host-allowlisted) is downloaded server-side. The old
   // file is deleted unless another game still references it.
   const oldImage = game.image;
+  let newImage = oldImage;
   if (req.file) {
     const stored = saveUploadedImage(req.file);
     if (!stored) return res.status(400).json({ error: 'Uploaded file is not a supported image' });
-    game.image = stored;
+    newImage = stored;
   } else if (b.removeImage === 'true' || b.removeImage === true) {
-    game.image = null;
+    newImage = null;
   } else if (b.imageUrl) {
     const downloaded = await downloadCover(b.imageUrl);
-    if (downloaded) game.image = downloaded; // a failed/blocked download keeps the old cover
+    if (downloaded) newImage = downloaded; // a failed/blocked download keeps the old cover
   }
-  if (oldImage && oldImage !== game.image) {
-    const stillUsed = data.rounds.some((r) => r.games.some((g) => g.image === oldImage));
-    if (!stillUsed) fs.unlink(path.join(UPLOAD_DIR, path.basename(oldImage)), () => {});
-  }
+  if (newImage !== oldImage) patch.image = newImage;
 
   // No activity entry: with inline editing, small tweaks are frequent and would
   // just clutter the feed. Retire/restore/add/delete remain the noteworthy events.
-  saveData();
-  res.json(game);
+  const updated = await repo.updateGame(req.params.rid, req.params.gid, patch);
+  if (!updated) return res.status(404).json({ error: 'Game not found' });
+  if (oldImage && oldImage !== newImage && !(await repo.isImageReferenced(oldImage))) {
+    fs.unlink(path.join(UPLOAD_DIR, path.basename(oldImage)), () => {});
+  }
+  res.json(updated);
 });
 
 // Retire a game (or take it back into the collection). The game is kept, only
 // flagged as retired with a timestamp.
-router.post('/:gid/retire', (req, res) => {
-  const round = findRound(req.params.rid);
+router.post('/:gid/retire', async (req, res) => {
+  const round = await repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
-  const game = round.games.find((g) => g.id === req.params.gid);
-  if (!game) return res.status(404).json({ error: 'Game not found' });
 
   const retired = req.body.retired !== false; // default: true
-  game.retired = retired;
-  game.retiredAt = retired ? new Date().toISOString() : null;
-  pushActivity(round, retired ? 'game_retired' : 'game_restored', {
-    gameId: game.id,
-    title: game.title,
-  });
-  saveData();
+  const game = await repo.retireGame(req.params.rid, req.params.gid, retired);
+  if (!game) return res.status(404).json({ error: 'Game not found' });
   res.json(game);
 });
 
 // Permanently delete a retired game: remove it from the collection and erase
 // every trace of it from past sessions and the activity feed. Rating averages
 // are derived from session votes, so they adjust automatically.
-router.delete('/:gid', (req, res) => {
-  const round = findRound(req.params.rid);
+router.delete('/:gid', async (req, res) => {
+  const round = await repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
-  const idx = round.games.findIndex((g) => g.id === req.params.gid);
-  if (idx === -1) return res.status(404).json({ error: 'Game not found' });
-  const game = round.games[idx];
-  if (!game.retired)
+
+  // The data layer removes the game and scrubs it from sessions + the feed,
+  // returning the deleted game's cover path so the file can be cleaned up.
+  const result = await repo.deleteGame(req.params.rid, req.params.gid);
+  if (result === null) return res.status(404).json({ error: 'Game not found' });
+  if (result === 'not_retired')
     return res.status(400).json({ error: 'Only retired games can be deleted' });
-
-  round.games.splice(idx, 1);
-
-  // Scrub the game from all sessions of this round.
-  round.sessions = round.sessions.filter((s) => {
-    s.gameIds = s.gameIds.filter((gid) => gid !== game.id);
-    if (s.gameIds.length === 0) return false; // session only contained this game
-    for (const mid in s.votes || {}) delete s.votes[mid][game.id];
-    if (s.chosenGameId === game.id) {
-      s.chosenGameId = null;
-      s.chosenAt = null;
-      s.finished = false;
-      s.finishedAt = null;
-      s.winnerIds = [];
-    }
-    return true;
-  });
-
-  // Drop feed entries that reference the game, then log the deletion itself.
-  if (Array.isArray(round.activities))
-    round.activities = round.activities.filter((a) => a.gameId !== game.id);
-  pushActivity(round, 'game_deleted', { title: game.title });
 
   // Remove the cover image file unless another game (e.g. in an imported
   // round) still uses the same file.
-  if (game.image) {
-    const stillUsed = data.rounds.some((r) =>
-      r.games.some((g) => g.image === game.image)
-    );
-    if (!stillUsed) {
-      const file = path.join(UPLOAD_DIR, path.basename(game.image));
-      fs.unlink(file, () => {}); // best effort; data.json no longer references it
-    }
+  if (result.image && !(await repo.isImageReferenced(result.image))) {
+    const file = path.join(UPLOAD_DIR, path.basename(result.image));
+    fs.unlink(file, () => {}); // best effort; the store no longer references it
   }
 
-  saveData();
   res.json({ ok: true });
 });
 
