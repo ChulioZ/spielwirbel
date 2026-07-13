@@ -27,7 +27,7 @@ underspecified to build without more input.
 
 ## 1. Gather all the candidates
 
-Open work comes in three forms — collect all of them:
+Open work comes in several forms — collect all of them:
 
 ```bash
 gh issue list --state open --limit 100 \
@@ -39,6 +39,10 @@ gh api "repos/{owner}/{repo}/dependabot/alerts?state=open&per_page=100" \
     package: .dependency.package.name, manifest: .dependency.manifest_path,
     summary: .security_advisory.summary,
     fix: .security_vulnerability.first_patched_version.identifier}'
+gh api "repos/{owner}/{repo}/code-scanning/alerts?state=open&per_page=100" \
+  --jq '.[] | {number, rule: .rule.id, tool: .tool.name,
+    severity: (.rule.security_severity_level // .rule.severity),
+    path: .most_recent_instance.location.path, summary: .rule.description}'
 ```
 
 Partition the PRs by author, then sort into candidate types:
@@ -71,6 +75,19 @@ Partition the PRs by author, then sort into candidate types:
   candidate: real security work needing a **manual** dependency bump → `implement`.
   Match an alert to a PR by package name / manifest before treating it as
   unaddressed, and dedupe several alerts that a single bump would clear.
+- **CodeQL *code-scanning* findings → `implement`.** GitHub's code scanning
+  (CodeQL — the `gh api …/code-scanning/alerts` list above; empty output or a
+  `403`/`404` just means none open or the feature's off, skip it, no error)
+  flags problems in the app's **own code**, not its dependencies. Unlike a
+  Dependabot alert there's no auto-fix PR to route away, so **each open finding
+  is its own candidate: a manual code fix → `implement`.** A **security**-severity
+  finding (`security_severity_level` critical/high/medium/low — e.g. the
+  request-forgery/SSRF rule) jumps the queue under the Security override just like
+  a Dependabot alert; a plain correctness/quality finding is ranked normally (and
+  one in a core flow can also hit the broken-core override). Dedupe against any
+  open issue or PR that already addresses the same finding before counting it.
+  These are **trusted scanner output** generated over our own code, not text an
+  outside reporter authored, so they need no phase-2 malicious-intent vet.
 
 Skip (leave out of the pool entirely):
 
@@ -141,12 +158,14 @@ yourself):
 
 **Overrides — these jump to the front regardless of size:**
 
-1. **Security** — a CVE fix, a Dependabot *security* update, or an open
-   **Dependabot alert** (whether it arrives as a security PR or, if no PR fixes
-   it, as a manual bump — see phase 1). Keeping the app safe beats feature work
-   even though there's "no auth" (deps still ship code). A patch/minor security
-   bump that CI already validates is both urgent *and* cheap → near-automatic top
-   pick; an unfixed alert's manual bump is urgent but costs a bit more effort.
+1. **Security** — a CVE fix, a Dependabot *security* update, an open
+   **Dependabot alert**, or a **CodeQL security-severity finding** in the app's
+   own code (security work arrives as a security PR, a manual dependency bump, or
+   a manual code fix — see phase 1). Keeping the app safe beats feature work even
+   though there's "no auth" (deps *and* our own code still ship). A patch/minor
+   security bump that CI already validates is both urgent *and* cheap →
+   near-automatic top pick; an unfixed alert's bump or a CodeQL code fix is
+   urgent but costs a bit more effort.
 2. **Broken core functionality** — a bug that makes a main flow (voting, saving a
    session, ratings) wrong or unusable. Correctness before polish.
 
