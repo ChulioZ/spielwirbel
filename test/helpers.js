@@ -21,6 +21,11 @@ process.env.DATA_DIR = DATA_DIR;
 process.env.RATE_LIMIT_MAX = '1000000';
 process.env.RECS_RATE_LIMIT_MAX = '1000000';
 
+// Keep the observability request logger quiet during the ordinary suite so test
+// output isn't buried under one JSON line per request. test/observability.test.js
+// drives LOG_LEVEL itself to assert the logger's real behaviour.
+process.env.LOG_LEVEL = 'silent';
+
 const { createApp } = require('../lib/app');
 const store = require('../lib/store');
 
