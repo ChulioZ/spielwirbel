@@ -46,6 +46,17 @@ Non-obvious things that cost effort — keep them:
   Postgres (and `postgres.js` isn't loaded there, so it isn't coverage-gated — the
   dedicated `postgres` CI job with a service container is what exercises it).
 
+**Migrating data.json -> Postgres preserves ids.** The one-off tool
+`scripts/migrate-json-to-postgres.js` (`npm run migrate:postgres`, server stopped,
+empty target) reads `data.json` and calls **`repo.importRounds(rounds)`** — a
+bulk insert that keeps each entity's existing id, because the app's `create*`
+methods *mint new ids*, which would break every cross-reference (votes maps keyed
+by member/game id, `chosenGameId`, `winnerIds`, `gameIds`, activity `gameId`).
+`importRounds` is the inverse of `assemble()` and lives on both backends (JSON for
+symmetry/contract coverage); if you change the storage shape, change it too. The
+migration folds the pre-#115 legacy `recommendations` object into
+`recommendationRuns` (defensively) and refuses a non-empty target.
+
 **Why the storage shape is tables-of-jsonb, not fully normalized:** the roadmap
 (§3) explicitly allows JSONB for the messy bits (votes maps, activity payloads),
 and the app never queries sessions/votes by field in SQL — routes fetch a whole
