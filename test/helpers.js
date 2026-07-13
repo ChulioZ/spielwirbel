@@ -14,6 +14,13 @@ const path = require('path');
 const DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'game-sessions-test-'));
 process.env.DATA_DIR = DATA_DIR;
 
+// The shared app must never trip the rate limiters during the ordinary suite —
+// raise both ceilings out of reach here (createApp reads them at call time).
+// The limiters' real behaviour is covered by test/security.test.js, which builds
+// its own app with tiny limits.
+process.env.RATE_LIMIT_MAX = '1000000';
+process.env.RECS_RATE_LIMIT_MAX = '1000000';
+
 const { createApp } = require('../lib/app');
 const store = require('../lib/store');
 
