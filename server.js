@@ -8,9 +8,10 @@
  *
  * Start:  npm start   ->  http://localhost:3000
  *
- * Note: no authentication yet – the MVP runs on a local home network only.
- *       Bringing this live as a hosted website/app (accounts, auth) is the
- *       roadmap; local-only is the current stage, not a permanent stance.
+ * Note: auth is optional and off by default – the MVP runs on a local home
+ *       network only. Set AUTH_PASSWORD to gate the app behind a single shared
+ *       login (issue #129, see lib/auth.js); a full account model is the roadmap.
+ *       Local-only/open is the current stage, not a permanent stance.
  */
 
 const { DATA_FILE, UPLOAD_DIR } = require('./lib/store');
