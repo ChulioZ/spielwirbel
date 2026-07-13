@@ -115,10 +115,13 @@ code and documentation are in English.
 
 ## Tech & architecture
 
-- **Backend:** Node.js + [Express](https://expressjs.com/). No database — a
-  single `data/data.json` file is the source of truth (loaded into memory,
-  written atomically on every change). Cover images are stored as files under
-  `data/uploads/`; only their paths live in `data.json`.
+- **Backend:** Node.js + [Express](https://expressjs.com/). Routes read and write
+  through a small **data-access layer** (`lib/repo/`) with two interchangeable
+  backends: by default a single `data/data.json` file (loaded into memory, written
+  atomically on every change — zero-dependency, right for local/home use), or
+  **PostgreSQL** when `DATABASE_URL` is set (the stateless path for a hosted
+  deployment; the app ensures its schema on startup). Cover images are stored as
+  files under `data/uploads/`; only their paths are persisted.
 - **Frontend:** plain HTML/CSS/vanilla JS under `public/` — **no build step**.
 - **Hardening:** [helmet](https://helmetjs.github.io/) sets security headers
   (CSP, `X-Content-Type-Options`, frame options, HSTS) and
@@ -157,10 +160,12 @@ lib/
   app.js             builds the Express app: static files + route modules,
                      plus the SPA fallback (serves index.html for frontend
                      routes so deep links / reloads work)
-  repo.js            data-access layer: the async API every route reads/writes
-                     through (getRound + typed mutators). One seam so the
-                     persistence backend can change without touching routes.
-  store.js           the repo's current backend: in-memory data + atomic
+  repo/              data-access layer: the async API every route reads/writes
+                     through (getRound + typed mutators). One seam, two backends:
+    index.js         picks the backend (DATABASE_URL ? postgres : json)
+    json.js          default backend — the data/data.json store below
+    postgres.js      PostgreSQL backend (schema + SQL), used when DATABASE_URL set
+  store.js           the JSON backend's engine: in-memory data + atomic
                      load/save to the data/ folder, id/activity helpers
   upload.js          multer image-upload config
   observability.js   structured logging, /healthz, central error handler
@@ -242,6 +247,10 @@ Use a different port: `PORT=8080 npm start`
 Use a different data folder: `DATA_DIR=/path/to/data npm start`
 Enable buy-next AI suggestions: `ANTHROPIC_API_KEY=sk-ant-… npm start`
 (optional — everything else works without it)
+
+Use PostgreSQL instead of the JSON file: `DATABASE_URL=postgres://… npm start` (the
+app creates its schema on first start; add `DATABASE_SSL=true` for managed Postgres
+that requires TLS). Unset, it uses `DATA_DIR/data.json` as before.
 
 Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
 the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min)

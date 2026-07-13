@@ -42,3 +42,33 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run coverage:ci
+
+  # PostgreSQL backend (issue #127): run the data-access-layer contract against a
+  # real Postgres service container. The `test` matrix above exercises the default
+  # JSON backend (no DATABASE_URL); this is additive and proves the Postgres
+  # backend satisfies the same contract, which every route depends on.
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: gamesessions
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: npm
+      - run: npm ci
+      - run: node --test test/repo.postgres.test.js
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/gamesessions
