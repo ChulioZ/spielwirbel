@@ -120,6 +120,12 @@ code and documentation are in English.
   written atomically on every change). Cover images are stored as files under
   `data/uploads/`; only their paths live in `data.json`.
 - **Frontend:** plain HTML/CSS/vanilla JS under `public/` — **no build step**.
+- **Hardening:** [helmet](https://helmetjs.github.io/) sets security headers
+  (CSP, `X-Content-Type-Options`, frame options, HSTS) and
+  [express-rate-limit](https://express-rate-limit.mintlify.app/) caps requests —
+  a generous global limit plus a stricter one on the billable buy-next endpoint.
+  TLS is expected to terminate at a reverse proxy (`TRUST_PROXY` then forwards
+  the real client IP); see the env vars below.
 - **Runs entirely on your machine.** Fonts and the icon set are self-hosted
   under `public/fonts/`, and the subtle background grain is an inline SVG in the
   stylesheet — no CDNs. The only runtime external calls are **opt-in**: the
@@ -224,6 +230,10 @@ Use a different port: `PORT=8080 npm start`
 Use a different data folder: `DATA_DIR=/path/to/data npm start`
 Enable buy-next AI suggestions: `ANTHROPIC_API_KEY=sk-ant-… npm start`
 (optional — everything else works without it)
+
+Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
+the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min)
+and `RECS_RATE_LIMIT_MAX` (buy-next generations, per hour).
 
 ### Configuration via a `.env` file
 
