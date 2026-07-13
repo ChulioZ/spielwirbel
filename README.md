@@ -243,6 +243,13 @@ Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
 the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min)
 and `RECS_RATE_LIMIT_MAX` (buy-next generations, per hour).
 
+Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate
+the whole app behind a single shared password — an unauthenticated visitor gets a
+login page and the API returns `401`. Leave `AUTH_PASSWORD` unset (the default) and
+the app stays open, as the local-only MVP runs today. Tune the login brute-force
+limit with `AUTH_RATE_LIMIT_MAX` (attempts per 15 min, default 20). The session is
+a signed, httpOnly cookie (marked `Secure` automatically behind a TLS proxy).
+
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and
 `ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook. The

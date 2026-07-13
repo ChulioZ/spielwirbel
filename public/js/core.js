@@ -46,7 +46,13 @@ async function api(method, url, body) {
   const res = await fetch(url, opts);
   if (!res.ok) {
     let msg = 'Error';
-    try { msg = (await res.json()).error || msg; } catch {}
+    let payload;
+    try { payload = await res.json(); msg = payload.error || msg; } catch {}
+    // Session expired or missing while auth is on (issue #129): bounce to '/',
+    // which the server serves the login page for when locked.
+    if (res.status === 401 && payload && payload.error === 'auth_required') {
+      window.location.assign('/');
+    }
     throw new Error(msg);
   }
   return res.status === 204 ? null : res.json();
