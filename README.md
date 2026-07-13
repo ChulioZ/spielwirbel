@@ -199,8 +199,10 @@ public/
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
     buynext.js       local "play these again" recommender (Layer A)
     views-home.js    lobby + new round
-    views-round.js   round hub (Start/Regal/Chronik/Pokale), archive,
-                     design picker, game detail, add game
+    views-round.js        round hub (Start/Regal/Chronik/Pokale dock) + Start tab
+    views-round-tabs.js   Regal, Chronik, Pokale tabs + retired games
+    views-round-detail.js game detail, design picker, sheet helpers
+    views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, voting (hot-seat), finale, results
     router.js        URL ↔ view routing (History API): deep links, reloads
