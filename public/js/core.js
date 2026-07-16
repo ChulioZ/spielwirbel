@@ -415,12 +415,21 @@ const durationTag = (duration) => {
   return `<span class="tag tag--duration"><i class="ti ${icon}" aria-hidden="true"></i> ${t('duration.' + duration)}</span>`;
 };
 
-// Games from before the player-count feature could lack the fields -> no tag.
-const playersTag = (min, max) => {
+// Plain localized player-count text ("2–4 Personen"), or '' when the game
+// predates the player-count feature (one/both fields missing). The plain form is
+// reused wherever a range is shown without the .tag chrome (e.g. the
+// link-provider value preview, issue #183).
+const playersText = (min, max) => {
   if (!Number.isInteger(min) || !Number.isInteger(max)) return '';
-  const text = min === max
+  return min === max
     ? tn(min, 'players.one', 'players.single', { n: min })
     : t('players.range', { min, max });
+};
+
+// Games from before the player-count feature could lack the fields -> no tag.
+const playersTag = (min, max) => {
+  const text = playersText(min, max);
+  if (!text) return '';
   return `<span class="tag tag--players"><i class="ti ti-users" aria-hidden="true"></i> ${text}</span>`;
 };
 

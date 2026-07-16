@@ -38,7 +38,7 @@ const frontendGlobals = {
   readClipboardImage: 'readonly', shuffled: 'readonly', iconText: 'readonly',
   makeGameLink: 'readonly', makeMemberLink: 'readonly',
   typeIcon: 'readonly', typeTag: 'readonly',
-  durationTag: 'readonly', playersTag: 'readonly', typeBadge: 'readonly',
+  durationTag: 'readonly', playersTag: 'readonly', playersText: 'readonly', typeBadge: 'readonly',
   durationBadge: 'readonly',
   // ranking.js + lookup-group.js + buynext.js (also CommonJS modules for tests — hence `module`)
   computePlaces: 'readonly', groupLookupHits: 'readonly',

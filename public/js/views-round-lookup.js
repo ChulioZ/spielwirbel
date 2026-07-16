@@ -688,11 +688,39 @@ function showLinkProvider(round, game) {
         cover.appendChild(chipEl(imageField));
         chips.appendChild(cover);
       }
+      // The text fields (players/duration/type): pair each toggle with a muted
+      // "current value → provider value" line, so — like the cover preview above
+      // — the user sees exactly what an on-toggle overwrites (issue #183). The
+      // "to" side is what the game *becomes* (applyLink merges), so an absent
+      // provider sub-value falls back to the game's own, not a blank.
+      const notSet = t('linkProvider.notSet');
+      const fieldChange = (key) => {
+        if (key === 'players') {
+          const toMin = Number.isInteger(d.minPlayers) ? d.minPlayers : game.minPlayers;
+          const toMax = Number.isInteger(d.maxPlayers) ? d.maxPlayers : game.maxPlayers;
+          return { from: playersText(game.minPlayers, game.maxPlayers) || notSet,
+            to: playersText(toMin, toMax) || notSet };
+        }
+        if (key === 'duration')
+          return { from: game.duration ? t('duration.' + game.duration) : notSet,
+            to: t('duration.' + d.duration) };
+        if (key === 'type')
+          return { from: game.type ? t('type.' + game.type) : notSet,
+            to: t('type.' + lookupProviderType(r.provider)) };
+        return null; // title: the provider value is already shown in the header
+      };
       const rest = fields.filter((f) => f.key !== 'image');
       if (rest.length) {
-        const row = h('<div class="filter-chips"></div>');
-        rest.forEach((f) => row.appendChild(chipEl(f)));
-        chips.appendChild(row);
+        const list = h('<div class="link-field-list"></div>');
+        rest.forEach((f) => {
+          const field = h('<div class="link-field"></div>');
+          field.appendChild(chipEl(f));
+          const change = fieldChange(f.key);
+          if (change)
+            field.appendChild(h(`<div class="link-field__change"><span>${esc(change.from)}</span> <span class="link-field__arrow" aria-hidden="true">→</span> <span class="link-field__to">${esc(change.to)}</span></div>`));
+          list.appendChild(field);
+        });
+        chips.appendChild(list);
       }
       box.appendChild(chips);
     } else {

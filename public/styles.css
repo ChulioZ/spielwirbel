@@ -1567,6 +1567,15 @@ kbd {
   background: var(--sunken);
   border: 1px solid var(--line);
 }
+/* Value preview for the players/duration/type toggles: the text analogue of the
+   cover preview above — each toggle sits beside a muted "current → provider"
+   line so it isn't opted into blind (issue #183). Colors derive from the base
+   ink family, not hardcoded tones. */
+.link-field-list { display: flex; flex-direction: column; gap: 8px; }
+.link-field { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.link-field__change { font-size: 13px; color: var(--ink-soft); }
+.link-field__arrow { margin: 0 3px; opacity: 0.75; }
+.link-field__to { color: var(--ink); font-weight: 600; }
 
 /* ---- Add-game lookup (search-as-you-type suggestions) ---- */
 .lookup { position: relative; }
