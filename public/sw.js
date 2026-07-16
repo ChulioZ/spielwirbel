@@ -20,7 +20,7 @@
  * forward-looking note more than a live concern today.)
  */
 
-const CACHE = 'spieleabend-shell-v1';
+const CACHE = 'spieleabend-shell-v2';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
