@@ -19,6 +19,7 @@
     "check:syntax": "find . -path ./node_modules -prune -o -path ./data -prune -o -name '*.js' -print0 | xargs -0 -n1 node --check"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1088.0",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.3.0",

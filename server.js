@@ -5,7 +5,8 @@
  *
  * Persistence: the default is a single file data/data.json (see lib/store.js);
  * set DATABASE_URL to use PostgreSQL instead (see lib/repo/, issue #127).
- * Images: stored as files under data/uploads/; only the path is persisted.
+ * Images: files under data/uploads/ by default, or S3-compatible object storage
+ * when S3_BUCKET is set (see lib/storage/, issue #128); only the path is persisted.
  *
  * Start:  npm start   ->  http://localhost:3000
  *
@@ -19,6 +20,10 @@ const { DATA_FILE, UPLOAD_DIR } = require('./lib/store');
 const { createApp } = require('./lib/app');
 const repo = require('./lib/repo');
 
+const imagesLocation = process.env.S3_BUCKET
+  ? `S3 object storage (bucket ${process.env.S3_BUCKET})`
+  : UPLOAD_DIR;
+
 const app = createApp();
 const PORT = process.env.PORT || 3000;
 
@@ -28,7 +33,7 @@ repo.init().then(() => {
   app.listen(PORT, () => {
     console.log(`\n  🎲  Spieleabend running at  http://localhost:${PORT}\n`);
     console.log(`      Persistence:          ${process.env.DATABASE_URL ? 'PostgreSQL (DATABASE_URL)' : DATA_FILE}`);
-    console.log(`      Images are stored in: ${UPLOAD_DIR}\n`);
+    console.log(`      Images are stored in: ${imagesLocation}\n`);
   });
 }).catch((err) => {
   console.error('Failed to initialise the data backend:', err.message);

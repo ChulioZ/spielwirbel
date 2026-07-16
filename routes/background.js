@@ -4,17 +4,15 @@
    Mounted under /api/rounds/:rid/background (mergeParams for rid). */
 
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const { UPLOAD_DIR } = require('../lib/store');
 const repo = require('../lib/repo');
+const storage = require('../lib/storage');
 
 const router = express.Router({ mergeParams: true });
 
-// Remove an old collage image file when the background changes (legacy data).
-function cleanupOldBackground(old, newBg) {
+// Remove an old collage image when the background changes (legacy data).
+async function cleanupOldBackground(old, newBg) {
   if (old && old.type === 'collage' && old.image && (!newBg || newBg.image !== old.image)) {
-    fs.promises.unlink(path.join(UPLOAD_DIR, path.basename(old.image))).catch(() => {});
+    await storage.remove(old.image);
   }
 }
 
@@ -33,7 +31,7 @@ router.post('/', async (req, res) => {
 
   const result = await repo.setBackground(req.params.rid, bg);
   if (!result) return res.status(404).json({ error: 'Round not found' });
-  cleanupOldBackground(result.previous, bg);
+  await cleanupOldBackground(result.previous, bg);
   res.json({ background: bg });
 });
 

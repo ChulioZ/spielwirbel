@@ -120,8 +120,11 @@ code and documentation are in English.
   backends: by default a single `data/data.json` file (loaded into memory, written
   atomically on every change — zero-dependency, right for local/home use), or
   **PostgreSQL** when `DATABASE_URL` is set (the stateless path for a hosted
-  deployment; the app ensures its schema on startup). Cover images are stored as
-  files under `data/uploads/`; only their paths are persisted.
+  deployment; the app ensures its schema on startup). Cover images go through a
+  matching storage seam (`lib/storage/`): files under `data/uploads/` by default,
+  or **S3-compatible object storage** when `S3_BUCKET` is set (so uploads survive
+  an ephemeral/scaled host). Only the `/uploads/<key>` path is persisted either
+  way.
 - **Frontend:** plain HTML/CSS/vanilla JS under `public/` — **no build step**.
 - **Hardening:** [helmet](https://helmetjs.github.io/) sets security headers
   (CSP, `X-Content-Type-Options`, frame options, HSTS) and
@@ -167,7 +170,11 @@ lib/
     postgres.js      PostgreSQL backend (schema + SQL), used when DATABASE_URL set
   store.js           the JSON backend's engine: in-memory data + atomic
                      load/save to the data/ folder, id/activity helpers
-  upload.js          multer image-upload config
+  storage/           cover-image storage: one seam, two backends
+    index.js         picks the backend (S3_BUCKET ? s3 : disk)
+    disk.js          default backend — files under DATA_DIR/uploads
+    s3.js            S3-compatible object storage, used when S3_BUCKET set
+  upload.js          multer image-upload config (persists via lib/storage)
   observability.js   structured logging, /healthz, central error handler
   providers/         external game-database providers for the add-game lookup
     index.js         provider registry + image-host allowlist
@@ -255,8 +262,14 @@ that requires TLS). Unset, it uses `DATA_DIR/data.json` as before.
 Migrate an existing `data/data.json` into a fresh Postgres database (one-off, with
 the server **stopped**): `DATABASE_URL=postgres://… npm run migrate:postgres`. It
 copies every round into Postgres preserving ids, and refuses to run against a
-non-empty target. Cover images stay under `DATA_DIR/uploads` (object storage is a
-later step). See `scripts/migrate-json-to-postgres.js`.
+non-empty target. See `scripts/migrate-json-to-postgres.js`.
+
+Store cover images in S3-compatible object storage instead of on local disk (for
+a stateless, scalable app tier): `S3_BUCKET=my-bucket npm start`. Set `S3_ENDPOINT`
+(+ usually `S3_FORCE_PATH_STYLE=true`) for non-AWS stores like Cloudflare R2,
+Backblaze B2 or MinIO; credentials come from `S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`
+or the AWS default provider chain. Unset, images stay under `DATA_DIR/uploads` as
+before. See the S3 block in `.env.example`.
 
 Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
 the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min)

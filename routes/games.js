@@ -5,10 +5,8 @@
    Mounted under /api/rounds/:rid/games (mergeParams for rid). */
 
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const { id, UPLOAD_DIR } = require('../lib/store');
 const repo = require('../lib/repo');
+const storage = require('../lib/storage');
 const { upload, saveUploadedImage } = require('../lib/upload');
 const { getProvider, isAllowedImageUrl } = require('../lib/providers');
 
@@ -30,9 +28,9 @@ const EXT_BY_MIME = {
   'image/webp': '.webp',
 };
 
-// Download a provider cover image into data/uploads/ and return its /uploads
-// path, or null on any failure (never throws — a missing cover must not block
-// adding the game). The host is allowlisted by the provider layer (SSRF guard).
+// Download a provider cover image into storage and return its /uploads path, or
+// null on any failure (never throws — a missing cover must not block adding the
+// game). The host is allowlisted by the provider layer (SSRF guard).
 async function downloadCover(url) {
   if (!url || !isAllowedImageUrl(url)) return null;
   const ctrl = new AbortController();
@@ -45,9 +43,7 @@ async function downloadCover(url) {
     if (!ext) return null; // not an image type we store
     const buf = Buffer.from(await res.arrayBuffer());
     if (buf.length === 0 || buf.length > MAX_IMG_BYTES) return null;
-    const filename = id() + ext;
-    fs.writeFileSync(path.join(UPLOAD_DIR, filename), buf);
-    return '/uploads/' + filename;
+    return storage.save(buf, ext);
   } catch {
     return null;
   } finally {
@@ -91,11 +87,11 @@ router.post('/', upload.single('image'), async (req, res) => {
     return res.status(400).json({ error: 'maxPlayers is required (integer >= minPlayers)' });
 
   // Cover: an uploaded file wins; otherwise pull a provider image URL (if given
-  // and host-allowlisted) down into data/uploads/ so only a local path is stored.
-  // The upload is verified by content (magic bytes), not the client mimetype.
+  // and host-allowlisted) into storage so only the /uploads path is stored. The
+  // upload is verified by content (magic bytes), not the client mimetype.
   let image = null;
   if (req.file) {
-    image = saveUploadedImage(req.file);
+    image = await saveUploadedImage(req.file);
     if (!image) return res.status(400).json({ error: 'Uploaded file is not a supported image' });
   } else if (req.body.imageUrl) {
     image = await downloadCover(req.body.imageUrl);
@@ -180,7 +176,7 @@ router.patch('/:gid', upload.single('image'), async (req, res) => {
   const oldImage = game.image;
   let newImage = oldImage;
   if (req.file) {
-    const stored = saveUploadedImage(req.file);
+    const stored = await saveUploadedImage(req.file);
     if (!stored) return res.status(400).json({ error: 'Uploaded file is not a supported image' });
     newImage = stored;
   } else if (b.removeImage === 'true' || b.removeImage === true) {
@@ -196,7 +192,7 @@ router.patch('/:gid', upload.single('image'), async (req, res) => {
   const updated = await repo.updateGame(req.params.rid, req.params.gid, patch);
   if (!updated) return res.status(404).json({ error: 'Game not found' });
   if (oldImage && oldImage !== newImage && !(await repo.isImageReferenced(oldImage))) {
-    fs.unlink(path.join(UPLOAD_DIR, path.basename(oldImage)), () => {});
+    await storage.remove(oldImage);
   }
   res.json(updated);
 });
@@ -227,11 +223,10 @@ router.delete('/:gid', async (req, res) => {
   if (result === 'not_retired')
     return res.status(400).json({ error: 'Only retired games can be deleted' });
 
-  // Remove the cover image file unless another game (e.g. in an imported
-  // round) still uses the same file.
+  // Remove the cover image unless another game (e.g. in an imported round) still
+  // uses the same one. Best effort; the store no longer references it.
   if (result.image && !(await repo.isImageReferenced(result.image))) {
-    const file = path.join(UPLOAD_DIR, path.basename(result.image));
-    fs.unlink(file, () => {}); // best effort; the store no longer references it
+    await storage.remove(result.image);
   }
 
   res.json({ ok: true });
