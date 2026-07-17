@@ -1,10 +1,12 @@
 'use strict';
 
-// Container guardrails (issue #131). These are static assertions over the
-// Dockerfile / .dockerignore text — no Docker daemon needed — so they run in the
-// ordinary `npm test` suite and catch the ways a container change quietly goes
-// wrong: baking secrets or user data into a shipped image, dropping the non-root
-// user, moving data off the mountable volume, or a silent base-image bump.
+// Container + deploy guardrails (issue #131). These are static assertions over
+// the Dockerfile / .dockerignore / railway.json text — no Docker daemon or
+// network needed — so they run in the ordinary `npm test` suite and catch the
+// ways a container/deploy change quietly goes wrong: baking secrets or user data
+// into a shipped image, dropping the non-root user, moving data off the mountable
+// volume, a silent base-image bump, or a Railway config that stops building the
+// Dockerfile / health-checks the wrong path.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -42,4 +44,12 @@ test('.dockerignore keeps secrets and user data out of the build context', () =>
   for (const entry of ['data', '.env', 'node_modules', '.git']) {
     assert.ok(ignore.includes(entry), `.dockerignore must exclude ${entry}`);
   }
+});
+
+test('railway.json builds the Dockerfile and health-checks the real /healthz', () => {
+  const cfg = JSON.parse(read('railway.json')); // also asserts it stays valid JSON
+  assert.equal(cfg.build.builder, 'DOCKERFILE');
+  assert.equal(cfg.build.dockerfilePath, 'Dockerfile');
+  // Must match the unauthenticated probe the app actually serves (lib/app.js).
+  assert.equal(cfg.deploy.healthcheckPath, '/healthz');
 });
