@@ -350,6 +350,17 @@ in front of the container, then set `TRUST_PROXY=1` (see issue #156). On merge t
 `main`, CI publishes the image to the GitHub Container Registry
 (`ghcr.io/chulioz/game-sessions`), so a host can pull it instead of building.
 
+### Deploying to Railway (production)
+
+The production target is [Railway](https://railway.com): it builds the
+`Dockerfile` (config in `railway.json`, health-checked at `/healthz`) and
+auto-deploys on push to `main`. Pair it with **managed PostgreSQL** (Railway
+plugin → `DATABASE_URL`, the #127 backend) and **Cloudflare R2** for cover images
+(S3-compatible → the #128 backend via `S3_ENDPOINT`); Railway terminates TLS at
+its edge, so set `TRUST_PROXY=1`. The full step-by-step — EU region, custom
+domain, and the account/secret steps only you can do — is in
+[`docs/deploy-railway.md`](docs/deploy-railway.md).
+
 ## Development
 
 ```bash
