@@ -501,15 +501,35 @@ directly here: several of the app's hand-rolled, security-or-correctness-
 critical pieces now have a stronger case for a mature library than for
 growing the homegrown version further. Not filed as issues yet — see §13.
 
-1. **Postgres schema migrations** — [`lib/repo/postgres.js`](../lib/repo/postgres.js)
-   evolves the schema via `CREATE TABLE`/`ALTER TABLE ... IF NOT EXISTS` run on
-   every `init()`, tracked only by code comments, with no migrations table and
-   no rollback. This already caused a real incident (`init()` needed a hand-
-   written advisory lock to survive concurrent boots — see
+1. **Postgres schema migrations, and re-open "no ORM"** —
+   [`lib/repo/postgres.js`](../lib/repo/postgres.js) evolves the schema via
+   `CREATE TABLE`/`ALTER TABLE ... IF NOT EXISTS` run on every `init()`,
+   tracked only by code comments, with no migrations table and no rollback.
+   This already caused a real incident (`init()` needed a hand-written
+   advisory lock to survive concurrent boots — see
    [`.claude/rules/postgres-backend.md`](../.claude/rules/postgres-backend.md)).
-   This is now running against a **live production database**. A tool built
-   for exactly this (`node-pg-migrate`, Umzug, or Flyway) replaces it with
-   versioned, tracked, lockable migrations. **Highest-priority candidate.**
+   It also hand-writes every parameterized SQL string, with its own documented
+   footguns (the `JSON.stringify` + `::jsonb`-cast dance, arrays silently
+   becoming Postgres array literals instead of JSON if you forget it — same
+   rule file). Both are now running against a **live production database**,
+   and both are exactly the class of hand-rolled, correctness-critical code
+   the mindset shift in [`CLAUDE.md`](../CLAUDE.md) argues against defaulting
+   to — so **the codebase's "no ORM" stance is reopened, not settled.**
+   Two honest options, not one obvious answer:
+   - **Migrations only** (`node-pg-migrate`, Umzug, or Flyway) — the narrower,
+     more surgical fix; leaves the raw-SQL/JSONB footguns as-is.
+   - **A query builder that also ships migrations** (**Knex** is the pragmatic
+     fit — mature, CommonJS-native like this codebase, keeps a raw-SQL escape
+     hatch for the tenant-scoped `tx`/`qt` transactions and RLS
+     `SET_CONFIG`/`FOR UPDATE` calls that a heavier ORM would fight) — fixes
+     both problems with one dependency, at the cost of rewriting
+     `lib/repo/postgres.js`'s ~30 methods.
+   A **full ORM (Prisma-style) is still not recommended**: RLS and the
+   tenant-scoped transaction pattern (`tx(tenant, fn)` setting
+   `app.tenant_id` per-transaction) don't retrofit cleanly into one, and the
+   dual JSON/Postgres backend contract (`test/support/repo-contract.js`)
+   would gain nothing from it. **Highest-priority candidate** either way —
+   pick a lane based on appetite for the larger rewrite.
 2. **Structured logging + error tracking** — swap the hand-rolled logger for
    `pino`/`pino-http`, and the webhook-forward stand-in for a real error
    tracker (e.g. Sentry) now that production traffic makes alerting/
@@ -763,7 +783,7 @@ the shortlist in §7).
 
 | Item | Effort | Risk | Notes |
 |---|---|---|---|
-| **Postgres schema migrations** — adopt a real migration tool (`node-pg-migrate`/Umzug/Flyway) instead of the `IF NOT EXISTS` DDL in `lib/repo/postgres.js` | M | Med | Highest priority — already caused one concurrency incident (§7) |
+| **Postgres schema migrations** (and re-open "no ORM") — a migration tool (`node-pg-migrate`/Umzug/Flyway) instead of the `IF NOT EXISTS` DDL, or a query builder that also ships migrations (`Knex`) instead of hand-written SQL — pick a lane, see §7 | M–L | Med | Highest priority — already caused one concurrency incident (§7) |
 | **Structured logging + real error tracking** — `pino`/`pino-http` + Sentry (or similar) instead of the hand-rolled logger + webhook stand-in | S–M | Low | `lib/observability.js` |
 | **Centralized request validation** — `zod` schemas at the router boundary instead of per-route ad hoc checks | M | Low | Incremental; can land route-by-route |
 | **Reconsider identity/token issuance** — IdP/OAuth, or at least `jsonwebtoken`/`jose` for the primitives in `lib/accounts.js` | M–L | Med | Revisit now that accounts gate real users, not a hypothetical |
