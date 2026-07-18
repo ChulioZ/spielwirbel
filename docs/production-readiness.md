@@ -499,7 +499,7 @@ with `tenant_id` + RLS is the right weight.
 it minimal").** The mindset shift in [`CLAUDE.md`](../CLAUDE.md) applies most
 directly here: several of the app's hand-rolled, security-or-correctness-
 critical pieces now have a stronger case for a mature library than for
-growing the homegrown version further. Not filed as issues yet — see §13.
+growing the homegrown version further. Filed as #211–#215 (2026-07-19).
 
 1. **Postgres schema migrations, and re-open "no ORM"** —
    [`lib/repo/postgres.js`](../lib/repo/postgres.js) evolves the schema via
@@ -528,28 +528,33 @@ growing the homegrown version further. Not filed as issues yet — see §13.
    tenant-scoped transaction pattern (`tx(tenant, fn)` setting
    `app.tenant_id` per-transaction) don't retrofit cleanly into one, and the
    dual JSON/Postgres backend contract (`test/support/repo-contract.js`)
-   would gain nothing from it. **Highest-priority candidate** either way —
-   pick a lane based on appetite for the larger rewrite.
+   would gain nothing from it. **Highest-priority candidate.** **Decided
+   2026-07-19: Knex** (query builder + migrations combined, one issue) —
+   filed as **#211**.
 2. **Structured logging + error tracking** — swap the hand-rolled logger for
    `pino`/`pino-http`, and the webhook-forward stand-in for a real error
    tracker (e.g. Sentry) now that production traffic makes alerting/
-   symbolication actually valuable.
+   symbolication actually valuable. **Decided 2026-07-19: scope the logging
+   half only** (`pino`/`pino-http`); leave the error-tracking provider open
+   for a later decision (cost/DPA implications, §9) — filed as **#212**.
 3. **Request validation** — mutating routes each hand-roll their own
    `typeof`/`Array.isArray` checks (`routes/games.js`, `routes/sessions.js`,
    `routes/rounds.js`, `routes/account.js`). A schema validator (`zod`) at the
    router boundary would make validation uniform and total instead of
-   per-handler, and is cheap to retrofit incrementally.
+   per-handler, and is cheap to retrofit incrementally. Filed as **#213**.
 4. **Identity/token issuance** — [`lib/accounts.js`](../lib/accounts.js) is a
    well-built hand-rolled HMAC access-token + rotating-refresh-token scheme,
    but it's about to gate real users' accounts. Revisit §5's existing
    recommendation to **strongly consider an IdP/OAuth** (or at minimum
    `jsonwebtoken`/`jose` for the token primitives) now that the account system
-   is live rather than hypothetical.
+   is live rather than hypothetical. **Decided 2026-07-19: scope as a
+   code-only swap to `jsonwebtoken`/`jose`**, not an IdP migration — the IdP
+   question is a separate, later build-vs-buy decision — filed as **#214**.
 5. **Rate-limit store** — `express-rate-limit`'s default in-memory store only
    works correctly for exactly one process. Fine today (single Railway
    instance); becomes wrong the moment horizontal scaling (§12 Phase 3) adds a
    second process. Track `rate-limit-redis` (or similar) as a prerequisite for
-   scaling out, not an immediate fix.
+   scaling out, not an immediate fix. Filed as **#215**.
 
 **Recommendation.** Treat #1 (migrations) as worth its own issue soon — it's
 the one place a real production incident risk already exists. The rest are
@@ -781,13 +786,13 @@ closing the gap between "shipped" and "production-battle-tested" now that the
 priority has shifted (see the mindset note in [`CLAUDE.md`](../CLAUDE.md) and
 the shortlist in §7).
 
-| Item | Effort | Risk | Notes |
-|---|---|---|---|
-| **Postgres schema migrations** (and re-open "no ORM") — a migration tool (`node-pg-migrate`/Umzug/Flyway) instead of the `IF NOT EXISTS` DDL, or a query builder that also ships migrations (`Knex`) instead of hand-written SQL — pick a lane, see §7 | M–L | Med | Highest priority — already caused one concurrency incident (§7) |
-| **Structured logging + real error tracking** — `pino`/`pino-http` + Sentry (or similar) instead of the hand-rolled logger + webhook stand-in | S–M | Low | `lib/observability.js` |
-| **Centralized request validation** — `zod` schemas at the router boundary instead of per-route ad hoc checks | M | Low | Incremental; can land route-by-route |
-| **Reconsider identity/token issuance** — IdP/OAuth, or at least `jsonwebtoken`/`jose` for the primitives in `lib/accounts.js` | M–L | Med | Revisit now that accounts gate real users, not a hypothetical |
-| **Rate-limit shared store** (`rate-limit-redis` or similar) | S | Low | Only needed once horizontal scaling (Phase 3) adds a second process |
+| Item | Effort | Risk | Notes | Issue |
+|---|---|---|---|---|
+| **Postgres schema migrations** + adopt **Knex** (query builder + migrations combined, replacing hand-written SQL and the `IF NOT EXISTS` DDL) | L | Med | Highest priority — already caused one concurrency incident (§7) | #211 |
+| **Structured logging** — `pino`/`pino-http` instead of the hand-rolled logger (error-tracking provider left open) | S–M | Low | `lib/observability.js` | #212 |
+| **Centralized request validation** — `zod` schemas at the router boundary instead of per-route ad hoc checks | M | Low | Incremental; can land route-by-route | #213 |
+| **Identity/token issuance** — `jsonwebtoken`/`jose` for the primitives in `lib/accounts.js` (code-only swap; IdP/OAuth deliberately deferred as a separate decision) | M | Med | Revisit now that accounts gate real users, not a hypothetical | #214 |
+| **Rate-limit shared store** (`rate-limit-redis` or similar) | S | Low | Only needed once horizontal scaling (Phase 3) adds a second process | #215 |
 
 ### Phase 2 — Multi-tenant SaaS
 | Item | Effort | Risk | Blocker? |
