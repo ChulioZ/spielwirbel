@@ -205,9 +205,9 @@ gh api repos/{owner}/{repo}/commits/$(git rev-parse origin/main)/status \
   --jq '{state: .state, statuses: [.statuses[] | {context, state, description}]}'
 ```
 
-The Railway context is `spielwirbel - game-sessions` (the Railway *project* was
-renamed to `spielwirbel` in #230; the *service* keeps its `game-sessions` name);
-a build + deploy
+The Railway context is `spielwirbel - spielwirbel` (both the Railway *project*
+and *service* were renamed from `game-sessions` in #230 — verified against the
+live deploy status); a build + deploy
 typically takes a few minutes, so poll until the state is `success`. If it ends
 `failure`/`error`, GitHub only shows "Deployment failed" — the real reason is in
 the Railway **Build/Deploy Logs** (the status's `target_url`); see
