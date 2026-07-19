@@ -46,7 +46,13 @@ jobs:
   # PostgreSQL backend (issue #127): run the data-access-layer contract against a
   # real Postgres service container. The `test` matrix above exercises the default
   # JSON backend (no DATABASE_URL); this is additive and proves the Postgres
-  # backend satisfies the same contract, which every route depends on.
+  # backend satisfies the same contract, which every route depends on. Since #211
+  # it also runs the Knex migration test (empty-DB boot + idempotent + concurrent
+  # init). The two files run with --test-concurrency=1 (one at a time) because the
+  # contract file's RLS probe does cluster-global CREATE ROLE + GRANT ON ALL
+  # TABLES, which shouldn't race the migration file's DDL on the shared database;
+  # the advisory-locked concurrent boot is covered in-process by the migration
+  # test's own Promise.all([init, init, init]).
   postgres:
     runs-on: ubuntu-latest
     services:
@@ -69,6 +75,6 @@ jobs:
           node-version: 24.x
           cache: npm
       - run: npm ci
-      - run: node --test test/repo.postgres.test.js
+      - run: node --test --test-concurrency=1 test/repo.postgres.test.js test/migrate.postgres.test.js
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/gamesessions

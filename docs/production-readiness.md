@@ -278,25 +278,24 @@ directly here: several hand-rolled, security-or-correctness-critical pieces
 now have a stronger case for a mature library than for growing the homegrown
 version further. Filed as #211–#215 (2026-07-19).
 
-1. **Postgres schema migrations, and re-open "no ORM"** —
-   [`lib/repo/postgres.js`](../lib/repo/postgres.js) evolves the schema via
-   `CREATE TABLE`/`ALTER TABLE ... IF NOT EXISTS` on every `init()`, tracked
-   only by code comments, no migrations table, no rollback. This already
-   caused a real incident (`init()` needed a hand-written advisory lock to
-   survive concurrent boots — see
-   [`.claude/rules/postgres-backend.md`](../.claude/rules/postgres-backend.md)).
-   It also hand-writes every parameterized SQL string, with documented
-   footguns (the `JSON.stringify` + `::jsonb`-cast dance; arrays silently
-   becoming Postgres array literals if you forget it — same rule file). Both
-   now run against a **live production database** — exactly the class of
-   hand-rolled, correctness-critical code the mindset shift argues against
-   defaulting to, so **"no ORM" is reopened, not settled.** **Decided
-   2026-07-19: Knex** (query builder + migrations combined, one dependency;
-   keeps a raw-SQL escape hatch for the tenant-scoped `tx`/`qt` transactions
-   and RLS `set_config`/`FOR UPDATE` calls a heavier ORM would fight). A full
-   ORM (Prisma-style) is still not recommended — RLS and the tenant-scoped
-   transaction pattern don't retrofit cleanly into one. **Highest-priority
-   candidate.** Filed as **#211**.
+1. **Postgres schema migrations + "no ORM" reopened — shipped (#211).**
+   [`lib/repo/postgres.js`](../lib/repo/postgres.js) used to evolve the schema
+   via `CREATE TABLE`/`ALTER TABLE ... IF NOT EXISTS` on every `init()`, tracked
+   only by code comments, no migrations table, no rollback (a real incident: it
+   needed a hand-written advisory lock to survive concurrent boots), and it
+   hand-wrote every parameterized SQL string with the `JSON.stringify` +
+   `::jsonb`-cast footgun (arrays silently becoming Postgres array literals).
+   Now on **Knex** (query builder + built-in migrations, one dependency): the
+   `~30` data-access methods use the fluent builder, schema lives in versioned
+   migration files under [`lib/repo/migrations/`](../lib/repo/migrations)
+   (`npm run migrate`), and `init()` runs `knex.migrate.latest()`. The baseline
+   migration mirrors the old DDL idempotently, so it's a safe no-op on the live
+   prod DB (records the baseline, no data change). It's **not** a full ORM — RLS,
+   the tenant-scoped `tx`/`qt` `set_config`, advisory locks and `FOR UPDATE`
+   stay on `knex.raw()` (a full ORM was rejected: it doesn't retrofit cleanly to
+   RLS + the tenant-transaction pattern). The advisory lock **stays** — Knex's
+   own migration lock doesn't cover the first-boot bookkeeping-table create race
+   (verified). See [`.claude/rules/postgres-backend.md`](../.claude/rules/postgres-backend.md).
 2. **Structured logging + error tracking** — the logging half is **shipped
    (#212)**: the hand-rolled JSON-line writer + request logger are now
    `pino`/`pino-http` internally, with the public `lib/observability.js` exports,
@@ -323,9 +322,9 @@ version further. Filed as #211–#215 (2026-07-19).
    second process. Track `rate-limit-redis` (or similar) as a prerequisite for
    scaling out, not an immediate fix. Filed as **#215**.
 
-**Recommendation.** Treat #1 (migrations) as worth its own issue soon — it's
-the one place a real production incident risk already exists. The rest are
-fast-follow hardening, sequenced by how much production traffic has grown.
+**Recommendation.** #1 (migrations/Knex) is **shipped (#211)** — it was the one
+place a real production incident risk already existed. The rest are fast-follow
+hardening, sequenced by how much production traffic has grown.
 
 ---
 
@@ -519,7 +518,7 @@ Not go-live blockers (Phase 1 is already live) — closing the gap between
 
 | Item | Effort | Risk | Issue |
 |---|---|---|---|
-| **Postgres schema migrations** + adopt **Knex** | L | Med | #211 |
+| **Postgres schema migrations** + adopt **Knex** — **shipped** (#211) | L | Med | #211 |
 | **Structured logging** — `pino`/`pino-http` — **shipped** (#212) | S–M | Low | #212 |
 | **Centralized request validation** — `zod` at the router boundary — **shipped** (#213) | M | Low | #213 |
 | **Identity/token issuance** — access-token JWTs via `jsonwebtoken` — **shipped** (#214) | M | Med | #214 |
