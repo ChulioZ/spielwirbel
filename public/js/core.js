@@ -129,7 +129,7 @@ function joinNames(names) {
 // Texts that live outside the rendered views (top bar). Re-applied on language change.
 function applyStaticTexts() {
   document.getElementById('homeBtn').innerHTML =
-    `<i class="ti ti-dice-5" aria-hidden="true"></i> <span class="topbar__word">${esc(t('app.title'))}</span>`;
+    `<i class="ti ti-tornado" aria-hidden="true"></i> <span class="topbar__word">${esc(t('app.title'))}</span>`;
 }
 
 // Language picker in the top bar.

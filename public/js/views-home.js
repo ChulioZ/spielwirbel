@@ -52,7 +52,7 @@ async function showHome() {
     }
 
     const card = h(`<button class="round-card">
-         <span class="round-card__emblem" style="background:${themeAccent(r.background)}"><i class="ti ti-dice-5" aria-hidden="true"></i></span>
+         <span class="round-card__emblem" style="background:${themeAccent(r.background)}"><i class="ti ti-tornado" aria-hidden="true"></i></span>
          <span class="round-card__body">
            <span class="round-card__name">${esc(r.name)}</span>
            <span class="round-card__meta">

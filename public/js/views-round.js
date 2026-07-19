@@ -89,7 +89,7 @@ function renderStartTab(round, activeGames) {
   });
 
   const startBtn = h(
-    `<button class="btn btn--primary hub-cta"><i class="ti ti-dice-5" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
+    `<button class="btn btn--primary hub-cta"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
   );
   startBtn.addEventListener('click', () => showStartSession(round));
   if (activeGames.length === 0) {
@@ -112,7 +112,7 @@ function renderStartTab(round, activeGames) {
         ? game.image
           ? ''
           : `<i class="ti ${typeIcon(game.type)}" aria-hidden="true"></i>`
-        : '<i class="ti ti-dice-5" aria-hidden="true"></i>';
+        : '<i class="ti ti-tornado" aria-hidden="true"></i>';
       let pill = '';
       if (game) {
         const sst = gameStatsForSession(round, session, game.id);
