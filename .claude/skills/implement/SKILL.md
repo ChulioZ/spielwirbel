@@ -3,8 +3,8 @@ name: implement
 description: >-
   End-to-end workflow for implementing a change: branch from up-to-date main,
   write the prod code + tests, review locally, commit/push, open a PR, review it,
-  merge if safe, watch main's CI + the Railway production deploy, and clean up
-  the branch. Use whenever you're
+  merge with the user's go-ahead if safe, watch main's CI + the Railway
+  production deploy, and clean up the branch. Use whenever you're
   told to implement, build, add, fix, or otherwise ship something — a GitHub
   issue on this repo, a directly requested change, or similar. Not for reviewing
   someone else's PR (use `review-pr`) or triaging Dependabot (use `dependabot`).
@@ -18,9 +18,10 @@ without leaving stale local state behind. Work the phases in order; each one
 gates the next.
 
 **This ships code and touches the remote.** Pushing, opening a PR, and merging
-are outward-facing and hard to reverse — do them deliberately, and never merge a
-PR your own review says isn't safe. If a phase's exit condition isn't met, stop
-and report rather than pushing ahead.
+are outward-facing and hard to reverse — do them deliberately, never merge a PR
+your own review says isn't safe, and never merge without the user's explicit
+go-ahead (phase 6). If a phase's exit condition isn't met, stop and report rather
+than pushing ahead.
 
 First, be sure you understand the task. If it's a GitHub issue, read it:
 `gh issue view <N>`. If the request is ambiguous in a way that changes what you'd
@@ -157,19 +158,31 @@ Review your own PR honestly — the fact that you wrote it is not evidence it's
 correct. Wait for CI (`gh pr checks <PR> --watch`) so the verdict reflects real
 check results, not pending ones.
 
-## 6. Merge — only if the review allows it
+## 6. Merge — ask first, then merge normally
+
+Merging is **never automatic**. Two gates must both clear: your review must pass
+*and* the user must give an explicit go-ahead.
 
 - If the verdict is **NOT SAFE**: do **not** merge. Address each blocker (go back
   to phase 2/3, push fixes, re-review) or, if it's out of your hands, report what
   needs to happen and stop.
-- If **SAFE TO MERGE** and required checks are green:
+- If **SAFE TO MERGE** and required checks are green: **ask the user for
+  permission to merge** (`AskUserQuestion`) — name the PR, the review verdict, and
+  that CI is green — then wait for a clear yes. Don't merge on your own
+  initiative; the repo's branch-protection settings would block an un-approved
+  merge anyway, so asking is both the rule here and the only path that actually
+  goes through.
+- Once the user says yes, do a **normal** squash merge — no admin override, no
+  `--admin`, no bypassing branch protection:
 
   ```bash
   gh pr merge <PR> --squash --delete-branch
   ```
 
   `--delete-branch` removes the remote branch. Squash keeps `main` history to one
-  commit per change.
+  commit per change. If a plain merge is still refused, report what protection
+  requires (a missing approval, a red or pending check) and stop — never force it
+  through with `--admin`.
 
 ## 7. Monitor main's CI and the Railway deployment
 
