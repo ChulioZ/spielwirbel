@@ -111,7 +111,22 @@ test('GET /healthz returns 200 with ok status and a numeric uptime', async () =>
 // deterministically (a real supertest request logs in a later tick, after the
 // test's env override is already restored — a race, not a real bug).
 function fakeReqRes(path, method = 'GET', status = 200) {
-  const req = { path, method, ip: '127.0.0.1', query: { secret: 'x' }, body: { name: 'Alice' } };
+  // Carry data that MUST NOT reach the logs: a query string, a body, and
+  // secret-bearing headers (Authorization/Cookie). pino-http's default req
+  // serializer would log the headers and the full URL incl. the query string,
+  // so this fake is what proves those defaults are disabled.
+  const req = {
+    path,
+    method,
+    ip: '127.0.0.1',
+    // originalUrl is what the logger reads (see reqPath): the full path, never
+    // rewritten by routers, with the query string carrying data it must drop.
+    originalUrl: `${path}?secret=leak`,
+    url: `${path}?secret=leak`,
+    query: { secret: 'leak' },
+    body: { name: 'Alice' },
+    headers: { authorization: 'Bearer SECRET_TOKEN', cookie: 'sa=SECRET_COOKIE' },
+  };
   const res = new EventEmitter();
   res.statusCode = status;
   return { req, res };
@@ -139,6 +154,61 @@ test('request logger logs a request on finish with no personal data', async () =
   // No body / query (which carry personal data) leak into the log line.
   assert.equal(reqLines[0].body, undefined);
   assert.equal(reqLines[0].query, undefined);
+});
+
+test('request log line is a strict allowlist — no headers/query/stack leak', async () => {
+  const { req, res } = fakeReqRes('/api/rounds');
+  const lines = await withEnv('LOG_LEVEL', 'info', () =>
+    captureStdout(() => {
+      requestLogger(req, res, () => {});
+      res.emit('finish');
+    })
+  );
+  const reqLines = lines.filter((l) => l.startsWith('{'));
+  const parsed = parseLogLines(lines).filter((o) => o.event === 'request');
+  assert.equal(parsed.length, 1);
+  // Exactly these keys — nothing pino-http might add by default (req, res,
+  // headers, url, responseTime, msg, reqId, err) may appear.
+  assert.deepEqual(
+    Object.keys(parsed[0]).sort(),
+    ['durationMs', 'event', 'ip', 'level', 'method', 'path', 'status', 'ts']
+  );
+  // And no secret value survives anywhere in the raw serialized line.
+  const raw = reqLines.join('');
+  assert.equal(raw.includes('SECRET_TOKEN'), false);
+  assert.equal(raw.includes('SECRET_COOKIE'), false);
+  assert.equal(raw.includes('secret=leak'), false);
+  assert.equal(raw.includes('Alice'), false);
+});
+
+test('request logger logs the full path even after a router rewrites req.path', async () => {
+  // Nested routers rewrite req.path/req.url to the mount-relative sub-path by
+  // the time the response finishes (an /api/rounds request arrives at finish
+  // with req.path === '/'). The logger must report the real full path from
+  // req.originalUrl, not the mangled one.
+  const { req, res } = fakeReqRes('/api/rounds');
+  req.path = '/'; // simulate the post-routing mangled value
+  req.url = '/';
+  const lines = await withEnv('LOG_LEVEL', 'info', () =>
+    captureStdout(() => {
+      requestLogger(req, res, () => {});
+      res.emit('finish');
+    })
+  );
+  const reqLines = parseLogLines(lines).filter((o) => o.event === 'request');
+  assert.equal(reqLines.length, 1);
+  assert.equal(reqLines[0].path, '/api/rounds');
+});
+
+test('request logger is silenced by LOG_LEVEL=silent', async () => {
+  const { req, res } = fakeReqRes('/api/rounds');
+  const lines = await withEnv('LOG_LEVEL', 'silent', () =>
+    captureStdout(() => {
+      requestLogger(req, res, () => {});
+      res.emit('finish');
+    })
+  );
+  assert.equal(parseLogLines(lines).filter((o) => o.event === 'request').length, 0);
 });
 
 test('request logger skips /healthz (no log even on finish)', async () => {
