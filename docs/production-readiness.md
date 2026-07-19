@@ -199,11 +199,11 @@ and `.env`-only secrets management (see
   reconcile against stored data — the game-edit min/max range, session
   round-membership filters — stay in the handlers by design; they aren't
   body-shape validation.)
-- **Structured logging / real error tracking** — the current logger +
-  webhook-forward is hand-rolled and dependency-free by design (pre-launch
-  trade-off); swapping to `pino`/`pino-http` is scoped as **#212**; a real
-  error-tracking provider (e.g. Sentry) is a later, separate decision
-  (cost/DPA implications, §9).
+- **Real error tracking** — the logging engine is now `pino`/`pino-http`
+  (**#212 shipped**, same log shape/fields, no-PII request allowlist
+  preserved); what remains hand-rolled is only the *error-tracking* stand-in:
+  `captureError`'s `ERROR_WEBHOOK_URL` forward. Choosing a real provider (e.g.
+  Sentry) is a later, separate decision (cost/DPA implications, §9).
 - **Rate-limit store** — `express-rate-limit`'s in-memory store only works
   correctly for one process; fine today (single Railway instance), tracked as
   a prerequisite for horizontal scaling as **#215**.
@@ -296,12 +296,13 @@ version further. Filed as #211–#215 (2026-07-19).
    ORM (Prisma-style) is still not recommended — RLS and the tenant-scoped
    transaction pattern don't retrofit cleanly into one. **Highest-priority
    candidate.** Filed as **#211**.
-2. **Structured logging + error tracking** — swap the hand-rolled logger for
-   `pino`/`pino-http`, and the webhook-forward stand-in for a real error
-   tracker (e.g. Sentry) now that production traffic makes alerting/
-   symbolication actually valuable. **Decided 2026-07-19: scope the logging
-   half only** (`pino`/`pino-http`); leave the error-tracking provider open
-   for a later decision (cost/DPA implications, §9). Filed as **#212**.
+2. **Structured logging + error tracking** — the logging half is **shipped
+   (#212)**: the hand-rolled JSON-line writer + request logger are now
+   `pino`/`pino-http` internally, with the public `lib/observability.js` exports,
+   the exact log shape/fields, and the no-PII request allowlist unchanged. The
+   webhook-forward stand-in for a real error tracker (e.g. Sentry) is still
+   open — **decided 2026-07-19 to scope the logging half only** and leave the
+   error-tracking provider for a later decision (cost/DPA implications, §9).
 3. **Request validation — shipped (#213).** Mutating routes used to hand-roll
    their own `typeof`/`Array.isArray` checks. A `zod` schema per body shape,
    run through the shared `lib/validate.js` helper, now makes body validation
@@ -509,7 +510,7 @@ Not go-live blockers (Phase 1 is already live) — closing the gap between
 | Item | Effort | Risk | Issue |
 |---|---|---|---|
 | **Postgres schema migrations** + adopt **Knex** | L | Med | #211 |
-| **Structured logging** — `pino`/`pino-http` | S–M | Low | #212 |
+| **Structured logging** — `pino`/`pino-http` — **shipped** (#212) | S–M | Low | #212 |
 | **Centralized request validation** — `zod` at the router boundary — **shipped** (#213) | M | Low | #213 |
 | **Identity/token issuance** — `jsonwebtoken`/`jose` | M | Med | #214 |
 | **Rate-limit shared store** (`rate-limit-redis` or similar) | S | Low | #215 |
