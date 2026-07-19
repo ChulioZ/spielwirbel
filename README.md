@@ -237,9 +237,6 @@ routes/
   activities.js      …/activities           (list the feed [GET], delete an entry)
   background.js      …/background           (set the design)
   tags.js            …/tags                 (create a custom tag [deduped], delete one)
-  legacy-migrate.js  …/legacy                (one-time #242 tool: list leftover
-                                             platform/duration values, migrate one
-                                             to a tag; removed by #243 after use)
   recommendations.js …/recommendations      (buy-next run history: list [GET],
                                              generate & append via Claude [POST],
                                              delete one run [DELETE /:runId])

@@ -44,7 +44,6 @@ I18N.en = {
 
   'round.design': 'Design',
   'round.tags': 'Tags',
-  'round.migrateLegacy': 'Move platform/play time to tags',
   'round.startSession': 'Start session',
   'round.startSessionDisabled': 'Add games first',
   'round.addGame': 'Add a game',
@@ -231,20 +230,6 @@ I18N.en = {
   'linkProvider.field.players': 'Player count',
   'linkProvider.apply': 'Link game',
   'linkProvider.linked': 'Game linked to provider',
-
-  'legacyMigrate.title': 'Move to tags',
-  'legacyMigrate.intro': 'Games added earlier may still carry a platform or play-time value. Convert each to a tag — this tags the affected games and removes the old field.',
-  'legacyMigrate.empty': 'Nothing left to migrate.',
-  'legacyMigrate.platformField': 'Platform',
-  'legacyMigrate.durationField': 'Play time',
-  'legacyMigrate.count': '{n} games',
-  'legacyMigrate.countOne': '{n} game',
-  'legacyMigrate.chooseTag': 'Choose a tag…',
-  'legacyMigrate.newTag': '＋ New tag',
-  'legacyMigrate.newTagPlaceholder': 'New tag name',
-  'legacyMigrate.apply': 'Apply',
-  'legacyMigrate.applied': 'Tagged {n} games',
-  'legacyMigrate.needTag': 'Please choose or enter a tag',
 
   'startSession.crumb': 'Session',
   'startSession.title': 'New session',

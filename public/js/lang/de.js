@@ -44,7 +44,6 @@ I18N.de = {
 
   'round.design': 'Design',
   'round.tags': 'Tags',
-  'round.migrateLegacy': 'Plattform/Dauer zu Tags',
   'round.startSession': 'Session wirbeln',
   'round.startSessionDisabled': 'Erst Spiele hinzufügen',
   'round.addGame': 'Spiel hinzufügen',
@@ -231,20 +230,6 @@ I18N.de = {
   'linkProvider.field.players': 'Spieleranzahl',
   'linkProvider.apply': 'Spiel verknüpfen',
   'linkProvider.linked': 'Spiel mit Anbieter verknüpft',
-
-  'legacyMigrate.title': 'Zu Tags verschieben',
-  'legacyMigrate.intro': 'Früher hinzugefügte Spiele tragen evtl. noch eine Plattform oder Spieldauer. Wandle jeden Wert in einen Tag um — das markiert die betroffenen Spiele und entfernt das alte Feld.',
-  'legacyMigrate.empty': 'Nichts mehr zu übertragen.',
-  'legacyMigrate.platformField': 'Plattform',
-  'legacyMigrate.durationField': 'Spieldauer',
-  'legacyMigrate.count': '{n} Spiele',
-  'legacyMigrate.countOne': '{n} Spiel',
-  'legacyMigrate.chooseTag': 'Tag wählen…',
-  'legacyMigrate.newTag': '＋ Neuer Tag',
-  'legacyMigrate.newTagPlaceholder': 'Name des neuen Tags',
-  'legacyMigrate.apply': 'Übernehmen',
-  'legacyMigrate.applied': '{n} Spiele getaggt',
-  'legacyMigrate.needTag': 'Bitte einen Tag wählen oder eingeben',
 
   'startSession.crumb': 'Session',
   'startSession.title': 'Neue Session',

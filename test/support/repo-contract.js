@@ -95,34 +95,6 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.updateGame(T, 'missing', game.id, { title: 'X' }), null);
   });
 
-  test('migrateLegacyFieldToTag tags matching games and clears the legacy field (#242)', async () => {
-    const round = await freshRound();
-    const tag = await repo.addTag(T, round.id, 'Steam');
-    // Seed two legacy games via the generic patch (createGame no longer writes
-    // the retired fields), plus one without the field.
-    const a = await repo.createGame(T, round.id, gameFields({ title: 'A' }));
-    const b = await repo.createGame(T, round.id, gameFields({ title: 'B' }));
-    const c = await repo.createGame(T, round.id, gameFields({ title: 'C' }));
-    await repo.updateGame(T, round.id, a.id, { platform: 'steam' });
-    await repo.updateGame(T, round.id, b.id, { platform: 'steam' });
-    await repo.updateGame(T, round.id, c.id, { platform: 'ps' });
-
-    const count = await repo.migrateLegacyFieldToTag(T, round.id, 'platform', 'steam', tag.id);
-    assert.equal(count, 2);
-
-    const games = (await repo.getRound(T, round.id)).games;
-    const byId = Object.fromEntries(games.map((g) => [g.id, g]));
-    assert.deepEqual(byId[a.id].tagIds, [tag.id]);
-    assert.equal('platform' in byId[a.id], false);
-    assert.deepEqual(byId[b.id].tagIds, [tag.id]);
-    assert.equal('platform' in byId[b.id], false);
-    // The 'ps' game is untouched (different value).
-    assert.equal(byId[c.id].platform, 'ps');
-    assert.equal(byId[c.id].tagIds, undefined);
-    // A missing round -> null.
-    assert.equal(await repo.migrateLegacyFieldToTag(T, 'missing', 'platform', 'steam', tag.id), null);
-  });
-
   test('deleteGame refuses active games, scrubs retired ones from sessions', async () => {
     const round = await freshRound();
     const game = await repo.createGame(T, round.id, gameFields({ image: '/uploads/x.png' }));

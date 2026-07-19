@@ -1,8 +1,7 @@
 /* Spielwirbel – views: the add-game / link-provider search-as-you-type lookup
    plumbing (provider helpers, attachLookup), the add-game and link-provider
-   sheets, starting a session directly from a game, and the one-time legacy
-   platform/duration → tags migration sheet (#242). Loaded after views-round.js;
-   shares one global script scope. */
+   sheets, and starting a session directly from a game. Loaded after
+   views-round.js; shares one global script scope. */
 
 // --- Shared add-game / link-provider lookup plumbing ---
 // Provider display names are proper nouns, not translated (see the source link).
@@ -716,97 +715,4 @@ function startDirectSession(round, game) {
       showResults(round, data.session, data.games);
     } catch (e) { toast(e.message); }
   });
-}
-
-// =================== Legacy platform/duration → tags migration (#242) ===================
-
-// One-time tool: list the round's leftover legacy platform/duration values and
-// let the user convert each to a tag (existing or new), which tags the affected
-// games and clears the legacy field. Temporary — removed by #243 once used.
-function showLegacyMigrate(round) {
-  closeSheet();
-  const backdrop = h(`<div class="sheet-backdrop">
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t('legacyMigrate.title'))}">
-        <div class="sheet__head">
-          <h2>${esc(t('legacyMigrate.title'))}</h2>
-          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
-        </div>
-        <div class="muted field__hint">${esc(t('legacyMigrate.intro'))}</div>
-        <div id="legacyList"></div>
-      </div>
-    </div>`);
-  const sheet = backdrop.querySelector('.sheet');
-  document.body.appendChild(backdrop);
-
-  const dismiss = () => { closeSheet(); showRound(round.id); };
-  const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
-  document.addEventListener('keydown', onKey, true);
-  activeSheet = { el: backdrop, onKey };
-  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) dismiss(); });
-  sheet.querySelector('.sheet__close').addEventListener('click', dismiss);
-
-  const list = sheet.querySelector('#legacyList');
-  // Local copy of the round's tags; a freshly created tag is appended here so it
-  // shows up in the other rows' pickers too (never mutate the cached round).
-  const roundTags = (round.tags || []).slice();
-
-  const fieldLabel = (field) => t(field === 'platform' ? 'legacyMigrate.platformField' : 'legacyMigrate.durationField');
-
-  function tagOptions() {
-    return [`<option value="">${esc(t('legacyMigrate.chooseTag'))}</option>`]
-      .concat(roundTags.map((tg) => `<option value="${esc(tg.id)}">${esc(tg.name)}</option>`))
-      .concat(`<option value="__new__">${esc(t('legacyMigrate.newTag'))}</option>`)
-      .join('');
-  }
-
-  function renderRows(values) {
-    list.innerHTML = '';
-    if (!values.length) {
-      list.appendChild(h(`<div class="empty"><p>${esc(t('legacyMigrate.empty'))}</p></div>`));
-      return;
-    }
-    values.forEach((v) => {
-      const row = h(`<div class="section legacy-row">
-          <div class="legacy-row__label"><strong>${esc(fieldLabel(v.field))}: ${esc(v.value)}</strong>
-            <span class="muted"> · ${esc(tn(v.count, 'legacyMigrate.countOne', 'legacyMigrate.count', { n: v.count }))}</span></div>
-          <div class="toolbar" style="margin-top:8px">
-            <select class="input legacy-row__tag" style="flex:1" aria-label="${esc(t('legacyMigrate.chooseTag'))}">${tagOptions()}</select>
-            <input class="input legacy-row__new" placeholder="${esc(t('legacyMigrate.newTagPlaceholder'))}" style="flex:1" autocomplete="off" hidden />
-            <button type="button" class="btn btn--primary legacy-row__apply">${esc(t('legacyMigrate.apply'))}</button>
-          </div>
-        </div>`);
-      const select = row.querySelector('.legacy-row__tag');
-      const newInput = row.querySelector('.legacy-row__new');
-      select.addEventListener('change', () => {
-        newInput.hidden = select.value !== '__new__';
-        if (!newInput.hidden) newInput.focus();
-      });
-      row.querySelector('.legacy-row__apply').addEventListener('click', async () => {
-        try {
-          let tagId = select.value;
-          if (tagId === '__new__') {
-            const name = newInput.value.trim();
-            if (!name) return toast(t('legacyMigrate.needTag'));
-            const tag = await api('POST', `/api/rounds/${round.id}/tags`, { name });
-            if (!roundTags.some((x) => x.id === tag.id)) roundTags.push(tag);
-            tagId = tag.id;
-          }
-          if (!tagId) return toast(t('legacyMigrate.needTag'));
-          const res = await api('POST', `/api/rounds/${round.id}/legacy/migrate`,
-            { field: v.field, value: v.value, tagId });
-          toast(t('legacyMigrate.applied', { n: res.migrated }));
-          load(); // refresh: the migrated value is now gone from the list
-        } catch (e) { toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message); }
-      });
-      list.appendChild(row);
-    });
-  }
-
-  async function load() {
-    try {
-      const data = await api('GET', `/api/rounds/${round.id}/legacy`);
-      renderRows((data && data.values) || []);
-    } catch (e) { toast(e.message); }
-  }
-  load();
 }

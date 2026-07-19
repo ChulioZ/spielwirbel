@@ -265,15 +265,6 @@ function renderStartTab(round, activeGames) {
   actions.appendChild(addGameBtn);
   actions.appendChild(tagsBtn);
   actions.appendChild(bgBtn);
-  // One-time platform/duration → tags migration (#242): only offered while the
-  // round still has games carrying the retired legacy fields. Removed by #243.
-  if (round.games.some((g) => g.platform || g.duration)) {
-    const migrateBtn = h(
-      `<button class="btn"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${esc(t('round.migrateLegacy'))}</button>`
-    );
-    migrateBtn.addEventListener('click', () => showLegacyMigrate(round));
-    actions.appendChild(migrateBtn);
-  }
   app.appendChild(actions);
 }
 
