@@ -301,23 +301,36 @@ async function showGameDetail(rid, gameId) {
 
       const input = h(`<input class="input" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}" />`);
       const addBtn = h(`<button class="btn">${esc(t('tags.add'))}</button>`);
+      // Returns false only when a real creation attempt failed, so the OK
+      // handler below can keep the popover open instead of discarding the
+      // typed name (an empty input is a no-op, not a failure).
       const create = async () => {
         const name = input.value.trim();
-        if (!name) return;
+        if (!name) return true;
         try {
           const tag = await api('POST', `/api/rounds/${rid}/tags`, { name });
           if (!tags.some((x) => x.id === tag.id)) tags.push(tag);
           selected.add(tag.id);
           input.value = '';
           renderChips();
-        } catch (e) { toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message); }
+          return true;
+        } catch (e) {
+          toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message);
+          return false;
+        }
       };
       addBtn.addEventListener('click', create);
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); create(); }
       });
       const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
-      okBtn.addEventListener('click', () => { close(); updateGame({ tagIds: [...selected] }); });
+      // OK commits unsubmitted input first (#249): typing a name and hitting OK
+      // without clicking Hinzufügen used to discard it silently.
+      okBtn.addEventListener('click', async () => {
+        if (!await create()) return; // creation failed — stay open, toast already shown
+        close();
+        updateGame({ tagIds: [...selected] });
+      });
       const row = h('<div class="pp-row"></div>');
       row.appendChild(input);
       row.appendChild(addBtn);
