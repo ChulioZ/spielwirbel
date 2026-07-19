@@ -142,6 +142,16 @@ test('per-tenant recommendation-spend cap', async (t) => {
     assert.equal(second.body.error, 'quota_recommendations');
   });
 
+  await t.test('reading and deleting runs still works once the quota is spent (only POST is capped)', async () => {
+    // Account A's quota is exhausted from the test above. GET the history and
+    // DELETE a run must NOT 429 — the guard only caps the billed POST.
+    const list = await request(app).get(`/api/rounds/${ridA}/recommendations`).set(auth(a.token));
+    assert.equal(list.status, 200);
+    assert.ok(list.body.length >= 1);
+    const del = await request(app).delete(`/api/rounds/${ridA}/recommendations/${list.body[0].id}`).set(auth(a.token));
+    assert.equal(del.status, 200);
+  });
+
   await t.test('the cap is per tenant — another account still gets its one generation', async () => {
     process.env.ANTHROPIC_API_KEY = 'test-key';
     global.fetch = async () => okReply();

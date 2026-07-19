@@ -22,6 +22,13 @@ bite if you forget them:
   `lib/quota.js` bucketed by **calendar month** (a month key, no timer) instead.
   Don't "restore" it to a rateLimit() with a monthly windowMs.
 
+- **The guard only caps POST, though it's mounted for all methods.** It's added
+  with `app.use()` on the recommendations path, which matches GET/POST/DELETE
+  alike — so the guard checks `req.method !== 'POST' → next()` first. Otherwise,
+  once a tenant spent its 1/month, **GET** (read the run history) and **DELETE**
+  (drop a run) would also 429, locking the tenant out of its own past runs. Only
+  the billed POST generates and spends.
+
 - **It counts on SUCCESS, it does not reserve.** `recommendationsGuard` refuses
   when the month's count is already at the ceiling, then increments only in a
   `res.on('finish')` when `res.statusCode === 200`. So a 502/503 (no key / upstream
