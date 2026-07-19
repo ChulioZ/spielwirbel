@@ -51,7 +51,7 @@ function showStartSession(round) {
       </div>
       <div class="pool-hint" id="poolHint"></div>
       <div class="toolbar">
-        <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-dice-5" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
+        <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-tornado" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
       </div>
     </div>`);
   app.appendChild(form);

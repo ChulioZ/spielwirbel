@@ -174,7 +174,7 @@ function setError(card, msg) {
 
 function showLogin() {
   openAuth(showLogin, `<form class="auth__card" autocomplete="on">
-      <div class="auth__logo"><i class="ti ti-dice-5" aria-hidden="true"></i></div>
+      <div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.login.title'))}</h1>
       <p class="auth__sub muted">${esc(t('auth.login.sub'))}</p>
       <div class="field">
@@ -222,7 +222,7 @@ function showLogin() {
 
 function showRegister() {
   openAuth(showRegister, `<form class="auth__card" autocomplete="on">
-      <div class="auth__logo"><i class="ti ti-dice-5" aria-hidden="true"></i></div>
+      <div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.register.title'))}</h1>
       <p class="auth__sub muted">${esc(t('auth.register.sub'))}</p>
       <div class="field">
