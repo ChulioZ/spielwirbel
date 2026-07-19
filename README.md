@@ -186,7 +186,8 @@ lib/
                      through (getRound + typed mutators). One seam, two backends:
     index.js         picks the backend (DATABASE_URL ? postgres : json)
     json.js          default backend — the data/data.json store below
-    postgres.js      PostgreSQL backend (schema + SQL), used when DATABASE_URL set
+    postgres.js      PostgreSQL backend (Knex query builder), used when DATABASE_URL set
+    migrations/      versioned Knex schema migrations (npm run migrate)
   tenant.js          resolves each request's tenant and scopes the repo to it
   store.js           the JSON backend's engine: in-memory data + atomic
                      load/save to the data/ folder, id/activity helpers
@@ -275,6 +276,7 @@ Dockerfile           production container image (node:22-slim, non-root,
                      builder rejects it, see .claude/rules/)
 .dockerignore        keeps secrets + user data out of the build context
 docker-compose.yml   one-command run with a persistent /data volume
+knexfile.js          Knex config (Postgres) shared by the app + the migrate CLI
 railway.json         Railway build/deploy config (see docs/deploy-railway.md)
 .github/workflows/   CI: tests, lint, secret scan, Docker image build + publish
 ```
@@ -306,8 +308,10 @@ Enable buy-next AI suggestions: `ANTHROPIC_API_KEY=sk-ant-… npm start`
 (optional — everything else works without it)
 
 Use PostgreSQL instead of the JSON file: `DATABASE_URL=postgres://… npm start` (the
-app creates its schema on first start; add `DATABASE_SSL=true` for managed Postgres
-that requires TLS). Unset, it uses `DATA_DIR/data.json` as before.
+app runs its Knex migrations on start, so the schema is created/updated
+automatically; add `DATABASE_SSL=true` for managed Postgres that requires TLS).
+Unset, it uses `DATA_DIR/data.json` as before. Migrations can also be run
+explicitly with `npm run migrate` (and authored with `npm run migrate:make -- <name>`).
 
 Store cover images in S3-compatible object storage instead of on local disk (for
 a stateless, scalable app tier): `S3_BUCKET=my-bucket npm start`. Set `S3_ENDPOINT`
@@ -416,6 +420,8 @@ npm run coverage      # tests with a coverage report (built-in, no extra deps)
 npm run lint          # ESLint (flat config)
 npm run check:syntax  # node --check over all JS files
 npm run build         # optional: content-hash + minify js/css into dist/
+npm run migrate       # apply pending Postgres migrations (needs DATABASE_URL)
+npm run migrate:make -- <name>  # scaffold a new Postgres migration file
 ```
 
 `coverage` uses Node's built-in `--experimental-test-coverage`, so it needs no

@@ -37,8 +37,9 @@ production-readiness review for the public multi-tenant end-state
 app needs), the second is about not fragmenting round-data storage across
 more than one source of truth, not about dependency count (a Redis dependency
 for rate-limiting or caching wouldn't violate it — that's not round-data
-persistence). **"No ORM" did not hold up under the same scrutiny** and is now
-an open question, not a settled one — see the Architecture section below.
+persistence). **"No ORM" did not hold up under the same scrutiny** and was
+reopened — and **decided (#211, 2026-07-19): Knex** (query builder + real
+migrations, not a full ORM). See the Architecture section below.
 
 ## Architecture (read before changing things)
 
@@ -59,16 +60,16 @@ an open question, not a settled one — see the Architecture section below.
   that call is still good, it's about not fragmenting round-data storage
   across more than one source of truth (a Redis dependency for something
   that isn't round data, e.g. rate-limiting, doesn't violate it). **The
-  "no ORM" stance is open, not settled**: `lib/repo/postgres.js` hand-writes
-  parameterized SQL with real, documented footguns (JSONB/array
-  serialization, the tenant-scoped `tx`/`qt` transaction helpers — see
-  `.claude/rules/postgres-backend.md`) — exactly the kind of hand-rolled,
-  correctness-critical code the mindset above argues against defaulting to.
-  Don't reach for a full ORM (Prisma-style) ad hoc — RLS and the tenant-scoped
-  transaction pattern don't retrofit cleanly into one — but a query builder
-  that also ships a real migrations story (Knex is the pragmatic fit for this
-  CommonJS codebase) is a live candidate; see `docs/production-readiness.md`
-  §7 before picking one.
+  "no ORM" question was reopened and settled with Knex (#211):**
+  `lib/repo/postgres.js` now uses the **Knex query builder** (no more
+  hand-written SQL strings, which sidesteps the JSONB/array serialization
+  footgun) and **versioned Knex migration files** in `lib/repo/migrations/`
+  (`npm run migrate`) instead of an inline DDL template. It is deliberately
+  **not** a full ORM — RLS, the tenant-scoped `tx`/`qt` `set_config` pattern,
+  advisory locks and `FOR UPDATE` still drop to `knex.raw()` (that raw escape
+  hatch is exactly why Knex was chosen over Prisma). Don't reintroduce raw
+  `pool.query` for round data, and don't reach for a full ORM. See
+  `.claude/rules/postgres-backend.md` and `docs/production-readiness.md` §7.
 - **Backend:** Express. `server.js` only wires middleware, mounts routers, and
   `await repo.init()`s the backend before listening.
   - `lib/repo/` is the **data-access layer**: the async API every route reads and
