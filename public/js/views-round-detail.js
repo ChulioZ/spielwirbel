@@ -137,7 +137,7 @@ async function showTags(rid) {
          </div>`);
       const del = h(`<button class="btn btn--ghost" aria-label="${esc(t('tags.delete'))}" style="color:var(--danger)"><i class="ti ti-trash" aria-hidden="true"></i></button>`);
       del.addEventListener('click', async () => {
-        if (!confirm(t('tags.deleteConfirm', { name: tg.name }))) return;
+        if (n > 0 && !confirm(t('tags.deleteConfirm', { name: tg.name }))) return;
         try {
           await api('DELETE', `/api/rounds/${rid}/tags/${tg.id}`);
           toast(t('tags.toast.deleted'));
