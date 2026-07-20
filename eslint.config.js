@@ -70,7 +70,7 @@ const frontendGlobals = {
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   activeSheet: 'writable', closeSheet: 'readonly', startDirectSession: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
-  scoreHit: 'readonly', providerLabel: 'readonly',
+  scoreHit: 'readonly', providerLabel: 'readonly', providerMatchCover: 'readonly',
   providerLogo: 'readonly', PROVIDER_LOGOS: 'readonly',
   PROVIDER_LABELS: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
   // views-member.js
