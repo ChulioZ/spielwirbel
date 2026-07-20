@@ -1051,7 +1051,13 @@ h1, h2, h3 { font-family: var(--font-display); }
 
 /* ---- Onboarding / account auth (issue #138) ---- */
 /* Auth screens take over the view; the top bar keeps only the language picker. */
+/* #feedbackBtn is in here because it is otherwise ALWAYS visible (unlike
+   #accountBtn, which starts `hidden` and is only revealed once logged in). On
+   the auth screen the caller has no token, so POST /api/feedback would 401 and
+   api()'s session-lost handling would bounce them to login — discarding the
+   message they just typed. Hide the entry point rather than offer a dead end. */
 body.auth-screen .topbar__home,
+body.auth-screen #feedbackBtn,
 body.auth-screen .crumbs { display: none; }
 
 .auth {
