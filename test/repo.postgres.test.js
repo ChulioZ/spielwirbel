@@ -148,6 +148,13 @@ if (!process.env.DATABASE_URL) {
         const feed = await probe.query(native(READ_SQL.activities), ['rls-probe', round.id, round.id]);
         assert.equal(feed.rows[0].round.id, round.id);
         assert.deepEqual(feed.rows[0].acts, []);
+        // The light validation reads follow the same embedded-set_config
+        // contract as the assembled reads.
+        const meta = await probe.query(native(READ_SQL.meta), ['rls-probe', round.id, round.id]);
+        assert.equal(meta.rows[0].round.id, round.id);
+        assert.equal(meta.rows[0].members.length, 1);
+        const noSession = await probe.query(native(READ_SQL.session), ['rls-probe', 'nope', round.id]);
+        assert.equal(noSession.rows[0].entity, null);
         // The statement-embedded setting must die WITH the statement: a plain
         // follow-up on the same connection is back to fail-closed zero rows.
         const after = await probe.query('SELECT count(*)::int AS n FROM rounds');
