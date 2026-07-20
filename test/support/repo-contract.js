@@ -129,6 +129,34 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.isImageReferenced(OTHER, '/uploads/shared.jpg'), false);
   });
 
+  test('createSession stores the draw-flow filter preset on the round (#252)', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const base = {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    };
+
+    // Absent until a draw-flow session has ever run — both backends omit the
+    // key entirely rather than emitting null.
+    assert.equal('lastSessionFilters' in (await repo.getRound(T, round.id)), false);
+    assert.equal('lastSessionFilters' in (await repo.listRounds(T)).find((r) => r.id === round.id), false);
+
+    const filters = { tagIds: ['t1'], excludeTagIds: ['t2'], count: 4 };
+    await repo.createSession(T, round.id, base, filters);
+    assert.deepEqual((await repo.getRound(T, round.id)).lastSessionFilters, filters);
+    assert.deepEqual(
+      (await repo.listRounds(T)).find((r) => r.id === round.id).lastSessionFilters, filters);
+
+    // Omitting the argument (direct-pick) leaves the stored preset untouched.
+    await repo.createSession(T, round.id, base);
+    assert.deepEqual((await repo.getRound(T, round.id)).lastSessionFilters, filters);
+
+    const next = { tagIds: [], excludeTagIds: [], count: 1 };
+    await repo.createSession(T, round.id, base, next);
+    assert.deepEqual((await repo.getRound(T, round.id)).lastSessionFilters, next);
+  });
+
   test('session mutators persist through getRound', async () => {
     const round = await freshRound();
     const g = await repo.createGame(T, round.id, gameFields());
