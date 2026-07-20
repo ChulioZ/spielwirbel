@@ -57,8 +57,16 @@ looks merely "plain" rather than broken.
 Found on #282: `.ti-link` and `.ti-external-link` had been used on the game
 detail screen since #74 (the "View on X" / "Link to provider" actions) but were
 **never added to the CSS**, so both had been invisible in production the whole
-time. They were added (`\eade` / `\ea99`, cmap-verified) alongside the new
-`.ti-unlink` (`\eb46`).
+time. Running the grep below then turned up **five more** in the same state —
+`ti-heart`, `ti-percentage` (Pokale cards) and `ti-lock-question`,
+`ti-mail-check`, `ti-logout` (the account/auth screens). All eight are declared
+and cmap-verified as of #282.
+
+Note two of them, `\f931` and `\f939`, sit in the **CJK Compatibility Ideographs**
+block rather than the Private Use Area — that is fine and not a sign of a wrong
+lookup (this bundle maps glyphs above U+F900), but it does mean the codepoint
+prints as a CJK character in a console dump. Judge those by the rendered glyph,
+not by how the `content` string looks in devtools.
 
 **So when you add an icon, also grep the class you're copying from:**
 

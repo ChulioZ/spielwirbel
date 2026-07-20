@@ -76,4 +76,9 @@
 .ti-external-link::before { content: "\ea99"; }
 .ti-link::before { content: "\eade"; }
 .ti-unlink::before { content: "\eb46"; }
+.ti-heart::before { content: "\eabe"; }
+.ti-percentage::before { content: "\ecf4"; }
+.ti-lock-question::before { content: "\f931"; }
+.ti-mail-check::before { content: "\f939"; }
+.ti-logout::before { content: "\eba8"; }
 .ti-calendar::before { content: "\ea53"; }
