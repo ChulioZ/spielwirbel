@@ -51,8 +51,8 @@ code and documentation are in English.
   Start tab. Tags are the single way to categorize games. Assign
   any number of tags to a game — in the add-game sheet or later from the game's
   detail page, creating new tags inline — and filter both the Regal and the
-  session draw by them (tri-state chips: off / include / exclude, all off by
-  default; included tags combine with AND, excluded tags reject any match).
+  session draw by them (tri-state chips: off / include / exclude; included tags
+  combine with AND, excluded tags reject any match).
   Deleting a tag simply unassigns it from every game.
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list) with their stats — wins,
@@ -78,7 +78,9 @@ code and documentation are in English.
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally filter
   the collection by custom tags, and draw a random set of candidate games —
   only games whose player range fits the number of joining members are
-  eligible. The device is then passed around: a handover screen names whose
+  eligible. The tags and count a round was last drawn with are remembered and
+  preselected the next time, so a group that always draws the same way just
+  confirms. The device is then passed around: a handover screen names whose
   turn it is, and each member rates every drawn game **1–5** or proposes to
   retire it (member order is randomized).
 - **Jetzt spielen** (play now) – when the group already knows what they want,

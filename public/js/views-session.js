@@ -44,7 +44,18 @@ function showStartSession(round) {
   // Custom-tag filter (#238, tri-state #241): all ignored by default = no tag
   // filter. Map<tagId, 'include'|'exclude'>; included tags combine with AND,
   // excluded tags reject a game carrying any of them.
+  // Preset from the round's last draw-flow session (#252) when there is one;
+  // tag ids whose tag has since been deleted are dropped, mirroring the
+  // drop-unknown-ids rule the backend applies at session-creation time.
+  const preset = round.lastSessionFilters || null;
   const selectedTags = new Map();
+  if (preset) {
+    const known = new Set((round.tags || []).map((tg) => tg.id));
+    (preset.tagIds || []).filter((x) => known.has(x)).forEach((x) => selectedTags.set(x, 'include'));
+    (preset.excludeTagIds || [])
+      .filter((x) => known.has(x) && !selectedTags.has(x))
+      .forEach((x) => selectedTags.set(x, 'exclude'));
+  }
   // All members join by default; the number of joining members filters the
   // games by their player count.
   const joining = new Set(round.members.map((m) => m.id));
@@ -100,6 +111,11 @@ function showStartSession(round) {
   }
 
   const countInput = form.querySelector('#count');
+  // Preloaded from the remembered preset (#252); the markup's 3 stays the
+  // default for a round that has never run a draw-flow session.
+  if (preset && Number.isInteger(preset.count) && preset.count >= 1) {
+    countInput.value = String(preset.count);
+  }
   countInput.addEventListener('input', () => {
     const digits = countInput.value.replace(/\D/g, '');
     if (countInput.value !== digits) countInput.value = digits;

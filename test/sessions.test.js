@@ -35,6 +35,53 @@ test('tag filter narrows the pool (#242)', async () => {
   assert.equal(res.body.games[0].title, 'B');
 });
 
+test('a draw-flow session remembers its filters on the round (#252)', async () => {
+  const round = await createRound(request);
+  const inc = (await request(app).post(`/api/rounds/${round.id}/tags`).send({ name: 'Party' })).body;
+  const exc = (await request(app).post(`/api/rounds/${round.id}/tags`).send({ name: 'Long' })).body;
+  await addGame(round.id, { title: 'A', tagIds: inc.id });
+
+  // Fresh round: no preset yet, so the key is absent (both backends).
+  assert.equal((await request(app).get(`/api/rounds/${round.id}`)).body.lastSessionFilters, undefined);
+
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    // 'ghost' is not a tag of this round -> dropped, like every unknown id.
+    .send({ tagIds: [inc.id, 'ghost'], excludeTagIds: [exc.id], count: 4 });
+  assert.equal(res.status, 201);
+
+  const after = (await request(app).get(`/api/rounds/${round.id}`)).body;
+  assert.deepEqual(after.lastSessionFilters, {
+    tagIds: [inc.id],
+    excludeTagIds: [exc.id],
+    count: 4,
+  });
+});
+
+test('an unfiltered draw stores empty filter arrays, direct-pick leaves the preset alone (#252)', async () => {
+  const round = await createRound(request);
+  const tag = (await request(app).post(`/api/rounds/${round.id}/tags`).send({ name: 'Party' })).body;
+  const game = await addGame(round.id, { title: 'A', tagIds: tag.id });
+
+  await request(app).post(`/api/rounds/${round.id}/sessions`).send({ tagIds: [tag.id], count: 2 });
+  // A direct pick skips the filter/draw flow entirely, so it must neither read
+  // nor overwrite what the last real draw remembered.
+  const direct = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ gameId: game.id });
+  assert.equal(direct.status, 201);
+  assert.deepEqual((await request(app).get(`/api/rounds/${round.id}`)).body.lastSessionFilters, {
+    tagIds: [tag.id], excludeTagIds: [], count: 2,
+  });
+
+  // A later unfiltered draw overwrites it with empty arrays (not null), which is
+  // what the client presets "nothing selected" from.
+  await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1 });
+  assert.deepEqual((await request(app).get(`/api/rounds/${round.id}`)).body.lastSessionFilters, {
+    tagIds: [], excludeTagIds: [], count: 1,
+  });
+});
+
 test('player count filters games by their min/max range', async () => {
   const round = await createRound(request);
   await addGame(round.id, { title: 'Solo', minPlayers: '1', maxPlayers: '1' });

@@ -125,6 +125,12 @@ router.post('/', async (req, res) => {
 
   const picked = shuffle(pool.slice()).slice(0, Math.min(count, pool.length));
 
+  // Remember what this draw was started with (#252), so the next "New session"
+  // sheet for this round opens preset with it. Stored resolved (unknown tag ids
+  // are already dropped above) and normalized to arrays, so the client presets
+  // without having to re-derive null-vs-empty.
+  const filters = { tagIds: tagIds || [], excludeTagIds: excludeTagIds || [], count };
+
   const session = await req.repo.createSession(req.params.rid, {
     createdAt: new Date().toISOString(),
     tagIds, // null = no tag filter (#238)
@@ -141,7 +147,7 @@ router.post('/', async (req, res) => {
     cancelled: false, // final state: no game appealed, nothing was played
     cancelledAt: null, // when it was cancelled
     done: false,
-  });
+  }, filters);
 
   // Convenience for the frontend: send the picked games right away.
   res.status(201).json({ session, games: picked, members });
