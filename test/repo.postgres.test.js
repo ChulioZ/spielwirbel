@@ -148,6 +148,11 @@ if (!process.env.DATABASE_URL) {
         const feed = await probe.query(native(READ_SQL.activities), ['rls-probe', round.id, round.id]);
         assert.equal(feed.rows[0].round.id, round.id);
         assert.deepEqual(feed.rows[0].acts, []);
+        // The summary read joins across all five patterns (lateral + scalar
+        // subqueries + nested aggregation) — same embedded set_config contract.
+        const sums = await probe.query(native(READ_SQL.summaries), ['rls-probe']);
+        assert.deepEqual(sums.rows[0].summaries.map((s) => s.id), [round.id]);
+        assert.equal(sums.rows[0].summaries[0].memberCount, 1);
         // The light validation reads follow the same embedded-set_config
         // contract as the assembled reads.
         const meta = await probe.query(native(READ_SQL.meta), ['rls-probe', round.id, round.id]);

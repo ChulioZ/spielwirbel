@@ -145,6 +145,98 @@ module.exports = function repoContract(repo) {
     );
   });
 
+  test('listRoundSummaries computes the home-screen shape without child payloads', async () => {
+    const round = await freshRound({ name: 'Sommerrunde' });
+    const [alice, bob] = round.members;
+    const active = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    await repo.createGame(T, round.id, gameFields({ title: 'Azul' }));
+    // Both archives are excluded from gameCount (#250) — it must match what a
+    // createRound import would copy.
+    const retired = await repo.createGame(T, round.id, gameFields({ title: 'Old' }));
+    await repo.retireGame(T, round.id, retired.id, true);
+    const done = await repo.createGame(T, round.id, gameFields({ title: 'Done' }));
+    await repo.completeGame(T, round.id, done.id, true);
+
+    await repo.createSession(T, round.id, {
+      createdAt: '2026-01-01T10:00:00.000Z', gameIds: [active.id], votes: {},
+      chosenGameId: active.id, chosenAt: 't', finished: true, finishedAt: 't',
+      winnerIds: [bob.id, alice.id, 'ghost'], cancelled: false, cancelledAt: null, done: true,
+    });
+    await repo.createSession(T, round.id, {
+      createdAt: '2026-01-02T10:00:00.000Z', gameIds: [active.id], votes: {},
+      chosenGameId: null, chosenAt: null, finished: false, finishedAt: null,
+      winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    });
+
+    const summaries = await repo.listRoundSummaries(T);
+    const s = summaries.find((x) => x.id === round.id);
+    assert.deepEqual(s, {
+      id: round.id,
+      name: 'Sommerrunde',
+      members: [
+        { id: alice.id, name: 'Alice' },
+        { id: bob.id, name: 'Bob' },
+      ],
+      memberCount: 2,
+      gameCount: 2,
+      sessionCount: 2,
+      playedCount: 1,
+      background: null,
+      lastPlayed: {
+        gameTitle: 'Catan',
+        // winnerIds order preserved; the unknown id is dropped, not blanked.
+        winnerNames: ['Bob', 'Alice'],
+        at: '2026-01-01T10:00:00.000Z',
+      },
+    });
+    // Counts must be real numbers on both backends (the Postgres count()
+    // bigint-as-string trap, #288).
+    assert.equal(typeof s.gameCount, 'number');
+    assert.equal(typeof s.playedCount, 'number');
+    // Absent-key parity: no member ever had a color written, so the key is
+    // absent (not null/undefined) — a color set later must then appear.
+    assert.equal('color' in s.members[0], false);
+    await repo.updateMember(T, round.id, alice.id, { color: '#d85a30' });
+    const again = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    assert.deepEqual(again.members[0], { id: alice.id, name: 'Alice', color: '#d85a30' });
+  });
+
+  test('listRoundSummaries: lastPlayed picks the newest finished session by createdAt and follows the design', async () => {
+    const round = await freshRound();
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'First' }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'Second' }));
+    const mkSession = (createdAt, game) => repo.createSession(T, round.id, {
+      createdAt, gameIds: [game.id], votes: {}, chosenGameId: game.id, chosenAt: createdAt,
+      finished: true, finishedAt: createdAt, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    // Inserted newest-first on purpose: the pick must order by createdAt (when
+    // the session was played), not by insertion or finish time.
+    await mkSession('2026-02-02T10:00:00.000Z', b);
+    await mkSession('2026-01-01T10:00:00.000Z', a);
+    await repo.setBackground(T, round.id, { type: 'theme', page: '#fff', accent: '#c2410c' });
+
+    const s = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    assert.equal(s.lastPlayed.gameTitle, 'Second');
+    assert.deepEqual(s.lastPlayed.winnerNames, []);
+    assert.deepEqual(s.background, { type: 'theme', page: '#fff', accent: '#c2410c' });
+    // No sessions finished -> no highlight (null, not absent).
+    const bare = await freshRound();
+    const bareSummary = (await repo.listRoundSummaries(T)).find((x) => x.id === bare.id);
+    assert.equal(bareSummary.lastPlayed, null);
+  });
+
+  test('listRoundSummaries is tenant-scoped and returns snapshots', async () => {
+    const round = await freshRound();
+    await repo.setBackground(T, round.id, { type: 'theme', page: '#eee', accent: '#111111' });
+    const other = await repo.listRoundSummaries(OTHER);
+    assert.equal(other.some((x) => x.id === round.id), false);
+
+    const s = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    s.background.page = 'HACKED';
+    const again = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    assert.equal(again.background.page, '#eee');
+  });
+
   test('deleteRound is refused across tenants and frees nothing', async () => {
     const round = await freshRound();
     await repo.createGame(T, round.id, gameFields({ image: '/uploads/kept-280.jpg' }));
