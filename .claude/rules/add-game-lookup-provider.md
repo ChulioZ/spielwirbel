@@ -83,9 +83,36 @@ the store's normal server-rendered pages and reads the `__NEXT_DATA__` JSON blob
   `__NEXT_DATA__` → collect Apollo `Product` objects with
   `storeDisplayClassification === 'FULL_GAME'` (filters out DLC/bundles) →
   `{ providerId, title, thumbnail }`.
-- **detail:** `GET .../product/{id}` → same blob for title + cover image, **plus
-  a regex over the rendered HTML** for the player count, which appears only as
-  markup like `compatText">1 - 4 players</span>` (not in the JSON).
+- **detail:** `GET .../product/{id}` → same blob for the title, **plus a regex
+  over the rendered HTML** for the player count, which appears only as markup
+  like `compatText">1 - 4 players</span>` (not in the JSON). **No cover** — see
+  the next section.
+
+**PS Store `detail` returns `imageUrl: null` — the cover lives on the SEARCH
+hit** (#281). `parseProduct` does call `pickImage(product.media)`, so this reads
+like it should work; it doesn't, because a *product* page's `__NEXT_DATA__`
+carries only a bare `Product` stub (id + name, **no `media` array**). Only the
+*search* page's Apollo entries have `media`. PS Store is the **only** provider
+like this — BGG, Steam, Nintendo and Xbox all populate `imageUrl` from `detail`.
+
+So **any flow that offers a provider cover must fall back to the search hit's
+`thumbnail`**, not read `detail.imageUrl` alone. Both come from the same
+`pickImage()` helper and therefore the same `IMAGE_HOSTS`, so the server's
+`providerCoverUrl()` allowlist accepts either — the fallback needs no server
+change. `providerMatchCover(r, d)` in `public/js/lookup-cover.js` is that one
+chokepoint for the link-provider sheet; the add-game flow does the same inline
+(`showProviderImage(r.thumbnail)` before the detail call resolves).
+
+**Forgetting that fallback fails silently and asymmetrically:** the cover toggle
+simply never renders for PS Store while every other provider works, which reads
+as "linking is broken for Sony" rather than as a missing fallback. Guarded by
+`test/provider-match-cover.test.js`, which asserts the asymmetry against the
+real parsers — so a future Sony page change that *starts* shipping `media` is
+noticed rather than silently making the test vacuous.
+
+(`providerMatchCover` lives in its own small module rather than as an export
+from `views-round-lookup.js` for a reason unrelated to providers — see
+`.claude/rules/frontend-helper-modules-and-coverage.md`.)
 
 **Known limits — don't treat these as bugs:**
 - It's **undocumented storefront scraping**. Sony can change the page shape any

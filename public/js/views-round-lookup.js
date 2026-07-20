@@ -564,7 +564,8 @@ function showLinkProvider(round, game) {
     const fields = [];
     // Cover: offer whenever the provider returns one — a remote URL can't be
     // compared to a local /uploads path, so always treat it as "differs".
-    if (d.imageUrl) fields.push({ key: 'image', label: t('linkProvider.field.image') });
+    const coverUrl = providerMatchCover(r, d);
+    if (coverUrl) fields.push({ key: 'image', label: t('linkProvider.field.image') });
     if ((Number.isInteger(d.minPlayers) && d.minPlayers !== game.minPlayers) ||
         (Number.isInteger(d.maxPlayers) && d.maxPlayers !== game.maxPlayers))
       fields.push({ key: 'players', label: t('linkProvider.field.players') });
@@ -596,7 +597,7 @@ function showLinkProvider(round, game) {
       const imageField = fields.find((f) => f.key === 'image');
       if (imageField) {
         const cover = h('<div class="link-cover"></div>');
-        cover.appendChild(h(`<img class="link-cover__img" src="${esc(d.imageUrl)}" alt="" loading="lazy" />`));
+        cover.appendChild(h(`<img class="link-cover__img" src="${esc(coverUrl)}" alt="" loading="lazy" />`));
         cover.appendChild(chipEl(imageField));
         chips.appendChild(cover);
       }
@@ -649,7 +650,8 @@ function showLinkProvider(round, game) {
     const body = { sourceProvider: r.provider, sourceExternalId: r.providerId };
     if (d.url) body.sourceUrl = d.url;
     if (isOn(chips, 'title')) body.title = (d.title || r.title || '').trim();
-    if (isOn(chips, 'image') && d.imageUrl) body.imageUrl = d.imageUrl;
+    const coverUrl = providerMatchCover(r, d);
+    if (isOn(chips, 'image') && coverUrl) body.imageUrl = coverUrl;
     if (isOn(chips, 'players')) {
       if (Number.isInteger(d.minPlayers)) body.minPlayers = d.minPlayers;
       if (Number.isInteger(d.maxPlayers)) body.maxPlayers = d.maxPlayers;
