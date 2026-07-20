@@ -112,10 +112,15 @@ let swrRenderToken = 0; // bumped by syncUrl (router.js) on every navigation
 function invalidateRoundCache() {
   swrStore.clear();
 }
-// True while a modal-ish surface is open — a background re-render would
-// destroy it (the sheets/popovers live inside #app / on body).
+// True while a background re-render would destroy something the user is in
+// the middle of: an open sheet/popover, or a focused form field anywhere in
+// the app (member rename, tag creation, the Regal search box — a re-render
+// replaces the node and eats the keystrokes). A skipped re-render is always
+// safe: the cache is already fresh for the next navigation.
 function uiBusy() {
-  return !!document.querySelector('.sheet-backdrop') || !!activePopover;
+  if (document.querySelector('.sheet-backdrop') || activePopover) return true;
+  const el = document.activeElement;
+  return !!el && app.contains(el) && el.matches('input, textarea, select');
 }
 // Serve the cached value for `key` (instantly, however old) and revalidate in
 // the background; block only on a cache miss. `rerender: false` still refreshes
