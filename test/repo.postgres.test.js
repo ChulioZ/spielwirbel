@@ -30,7 +30,17 @@ if (!process.env.DATABASE_URL) {
       ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
     });
     await c.connect();
-    await c.query('TRUNCATE rounds, members, games, sessions, activities CASCADE');
+    // EVERY table the contract suite writes, not just the round ones. The JSON
+    // backend gets a fresh temp DATA_DIR per run, so the shared contract assumes
+    // an empty store — but a Postgres database persists between runs. Omitting
+    // `users` and `moderation_log` here made the suite pass on a fresh database
+    // and fail on the second run against the same one ("logModeration appends
+    // and listModeration returns newest first" asserts an absolute count of 2
+    // and saw 4). CI never noticed: it gets a clean service container each time,
+    // so this only ever bit someone re-running against a local container.
+    // TRUNCATE is table-level and exempt from RLS, which is why it works here at
+    // all (.claude/rules/tenancy-rls.md).
+    await c.query('TRUNCATE rounds, members, games, sessions, activities, users, moderation_log CASCADE');
     await c.end();
   });
 
