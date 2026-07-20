@@ -4,10 +4,13 @@
 
 'use strict';
 
-// Neutral game icon shown on a card/thumbnail that has no cover image. Since
-// games no longer carry a platform/type (#242), one generic glyph stands in for
-// every game (`ti-dice-3` is declared in the bundled tabler-icons subset).
-const GAME_ICON = 'ti-dice-3';
+// Game icon shown on a card/thumbnail that has no cover image. Since games no
+// longer carry a platform/type (#242), one glyph stands in for every game: the
+// app's own wirbel/tornado emblem (#251) — the same mark used in the topbar,
+// auth screen, round cards and session CTA — so a coverless game reinforces one
+// consistent brand glyph instead of mixing in a dice. (`ti-tornado` is declared
+// in the bundled tabler-icons subset.)
+const GAME_ICON = 'ti-tornado';
 
 // Deterministic hue offset (0–359) for a game's cover placeholder, derived from
 // its title so the same game always draws the same colour and two games in one
