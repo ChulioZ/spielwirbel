@@ -45,3 +45,26 @@ unregister the SW and clear its caches first:
 
 See also the `tabler-glyph-and-icon-regen` memory note and
 `.claude/rules/pwa-service-worker.md` (cache-first shell assets).
+
+## A `ti-*` class in the markup does NOT mean it's declared
+
+Because the subset only declares the classes someone remembered to add, an
+`<i class="ti ti-foo">` whose rule is **missing** renders **nothing at all** —
+no tofu, no console warning, no lint error, no failing test. It just silently
+occupies zero-ish width, and the label next to it still reads fine, so the UI
+looks merely "plain" rather than broken.
+
+Found on #282: `.ti-link` and `.ti-external-link` had been used on the game
+detail screen since #74 (the "View on X" / "Link to provider" actions) but were
+**never added to the CSS**, so both had been invisible in production the whole
+time. They were added (`\eade` / `\ea99`, cmap-verified) alongside the new
+`.ti-unlink` (`\eb46`).
+
+**So when you add an icon, also grep the class you're copying from:**
+
+```bash
+grep -o '^\.ti-[a-z0-9-]*' public/fonts/tabler-icons.css   # what's declared
+grep -rho 'ti-[a-z0-9-]*' public/js public/*.html | sort -u # what's used
+```
+
+A name in the second list but not the first is an already-invisible icon.

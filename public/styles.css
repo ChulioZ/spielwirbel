@@ -1646,6 +1646,16 @@ kbd {
   font: inherit;
 }
 
+/* "View on X" and "Remove link" side by side (issue #282). The unlink action is
+   secondary to the outbound link, so it is muted rather than brand-coloured. */
+.gd-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+}
+.link-out--muted { color: var(--ink-soft); font-weight: 600; }
+
 /* The picked provider match inside the link-provider sheet. */
 .link-match { font-size: 15px; }
 /* Cover-override preview: the provider image the "Titelbild" toggle would apply,

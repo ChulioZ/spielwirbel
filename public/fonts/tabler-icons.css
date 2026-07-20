@@ -73,4 +73,7 @@
 .ti-medal::before { content: "\ec78"; }
 .ti-star::before { content: "\eb2e"; }
 .ti-player-play::before { content: "\ed46"; }
+.ti-external-link::before { content: "\ea99"; }
+.ti-link::before { content: "\eade"; }
+.ti-unlink::before { content: "\eb46"; }
 .ti-calendar::before { content: "\ea53"; }

@@ -201,6 +201,10 @@ I18N.en = {
 
   'detail.viewSource': 'View on {provider}',
   'detail.linkProvider': 'Link to provider',
+  'detail.unlinkProvider': 'Remove link',
+  'detail.unlinkConfirm': 'Remove the link to {provider}?',
+  'detail.unlinkConfirmCover': 'Remove the link to {provider}? The cover image from {provider} will be removed as well.',
+  'detail.toast.unlinked': 'Link removed',
 
   'linkProvider.title': 'Link to provider',
   'linkProvider.searchLabel': 'Find the game at a provider',
