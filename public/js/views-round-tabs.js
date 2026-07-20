@@ -1,5 +1,6 @@
 /* Spielwirbel – views: the round hub's non-Start tabs — Regal (games library),
-   Chronik (session history), Pokale (trophies) and the retired-games screen.
+   Chronik (session history), Pokale (trophies) and the two archive screens
+   (retired / completed games).
    Loaded after views-round.js; shares one global script scope. */
 
 // --- Regal tab: the games library — search, filter chips, cover grid.
@@ -150,12 +151,18 @@ function renderRegalTab(round, activeGames) {
   }
   app.appendChild(gamesSec);
 
-  // Quiet footer: the way into the archive of retired games.
+  // Quiet footer: the ways into the two archives — retired ("Aussortiert") and
+  // completed ("Durchgespielt", #250). Both take a game out of the active
+  // collection; they are kept apart because the reason differs.
   const retiredGames = round.games.filter((g) => g.retired);
+  const completedGames = round.games.filter((g) => g.completed);
   const foot = h('<div class="round-footer"></div>');
   const retiredBtn = h(`<button class="link-btn"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.link', { n: retiredGames.length }))}</button>`);
   retiredBtn.addEventListener('click', () => showRetired(round.id));
   foot.appendChild(retiredBtn);
+  const completedBtn = h(`<button class="link-btn"><i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('completed.link', { n: completedGames.length }))}</button>`);
+  completedBtn.addEventListener('click', () => showCompleted(round.id));
+  foot.appendChild(completedBtn);
   app.appendChild(foot);
 }
 
@@ -176,6 +183,8 @@ function renderChronikTab(round, activities) {
       game_added: { icon: 'ti-plus', text: t('activity.gameAdded', { title: a.title }) },
       game_retired: { icon: 'ti-trash', text: t('activity.gameRetired', { title: a.title }) },
       game_restored: { icon: 'ti-arrow-back-up', text: t('activity.gameRestored', { title: a.title }) },
+      game_completed: { icon: 'ti-circle-check', text: t('activity.gameCompleted', { title: a.title }) },
+      game_uncompleted: { icon: 'ti-arrow-back-up', text: t('activity.gameUncompleted', { title: a.title }) },
       game_deleted: { icon: 'ti-trash', text: t('activity.gameDeleted', { title: a.title }) },
     }[a.type];
     if (!meta) return;
@@ -251,9 +260,11 @@ function renderChronikTab(round, activities) {
     const nav =
       e.type === 'game_retired'
         ? () => showRetired(rid)
-        : gameExists
-          ? () => showGameDetail(rid, e.gameId)
-          : null;
+        : e.type === 'game_completed'
+          ? () => showCompleted(rid)
+          : gameExists
+            ? () => showGameDetail(rid, e.gameId)
+            : null;
     const row = h(`<div class="tl-act${nav ? ' tl-act--link' : ''}">
          <span class="tl-act__icon"><i class="ti ${e.icon}" aria-hidden="true"></i></span>
          <span class="tl-act__text">${esc(e.text)}</span>
@@ -398,7 +409,8 @@ function renderPokaleTab(round) {
          <span class="pokale-card__sub">${esc(sub)}</span>
        </div>`);
   // Like statCard but the value is one or more games, each listed on its own row
-  // with a "Jetzt spielen" launcher (icon-only; omitted for a retired game).
+  // with a "Jetzt spielen" launcher (icon-only; omitted for an archived game —
+  // retired or completed, neither is in the active collection any more).
   const gameStatCard = (icon, label, games, sub) => {
     const card = h(`<div class="pokale-card">
          <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
@@ -411,10 +423,10 @@ function renderPokaleTab(round) {
       const row = h(`<span class="pokale-game">
            <span class="pokale-game__title">${esc(g.title)}</span>
          </span>`);
-      // The game name opens its detail page (retired games too — the detail
+      // The game name opens its detail page (archived games too — the detail
       // view supports them; only the "Jetzt spielen" launcher is omitted).
       makeGameLink(row.querySelector('.pokale-game__title'), round.id, g.id);
-      if (!g.retired) {
+      if (!g.retired && !g.completed) {
         const btn = h(`<button class="pokale-game__play" title="${esc(t('directPlay.button'))}" aria-label="${esc(t('directPlay.button'))}"><i class="ti ti-player-play" aria-hidden="true"></i></button>`);
         btn.addEventListener('click', () => startDirectSession(round, g));
         row.appendChild(btn);
@@ -447,7 +459,7 @@ function renderPokaleTab(round) {
   // Best rated: highest overall average with a bit of data behind it; ties
   // share the tile.
   const rated = round.games
-    .filter((g) => !g.retired)
+    .filter((g) => !g.retired && !g.completed)
     .map((g) => {
       const st = gameStats(round, g.id);
       return { g, avg: st.avg, count: st.count };
@@ -492,7 +504,7 @@ function renderPokaleTab(round) {
     const at = s.createdAt;
     if (!lastAt[s.chosenGameId] || at > lastAt[s.chosenGameId]) lastAt[s.chosenGameId] = at;
   });
-  const active = round.games.filter((g) => !g.retired);
+  const active = round.games.filter((g) => !g.retired && !g.completed);
   // Find the earliest last-played timestamp ('' = never played sorts first),
   // then pick a random game among all that tie for it, so the same game isn't
   // always highlighted.
@@ -520,11 +532,41 @@ function renderPokaleTab(round) {
   app.appendChild(sec);
 }
 
-// =================== Retired games ===================
+// =================== Archives: retired & completed games ===================
+/*
+ * Two parallel archive screens (#250). Both take a game out of the active
+ * collection and offer the same two actions (restore / delete permanently);
+ * only the wording, the icon and the flag differ — retiring means "we don't
+ * want this any more", completing means "we finished it". They share one
+ * renderer so the pair can't drift apart, with ARCHIVES holding everything
+ * that is genuinely per-kind.
+ */
+const ARCHIVES = {
+  retired: {
+    icon: 'ti-trash',
+    flag: (g) => g.retired,
+    at: (g) => g.retiredAt,
+    endpoint: (rid, gid) => `/api/rounds/${rid}/games/${gid}/retire`,
+    body: { retired: false },
+  },
+  completed: {
+    icon: 'ti-circle-check',
+    flag: (g) => g.completed,
+    at: (g) => g.completedAt,
+    endpoint: (rid, gid) => `/api/rounds/${rid}/games/${gid}/complete`,
+    body: { completed: false },
+  },
+};
 
-async function showRetired(rid) {
-  currentView = () => showRetired(rid);
-  syncUrl(`/round/${rid}/retired`);
+const showRetired = (rid) => showArchive(rid, 'retired');
+const showCompleted = (rid) => showArchive(rid, 'completed');
+
+// `kind` keys both ARCHIVES and the i18n namespace (retired.* / completed.*),
+// so the two stay in lockstep by construction.
+async function showArchive(rid, kind) {
+  const a = ARCHIVES[kind];
+  currentView = () => showArchive(rid, kind);
+  syncUrl(`/round/${rid}/${kind}`);
   app.innerHTML = '<p class="muted">…</p>';
   let round;
   try { round = await fetchRound(rid); }
@@ -533,55 +575,55 @@ async function showRetired(rid) {
   setCrumbs([
     { label: t('nav.home'), onClick: showHome },
     { label: round.name, onClick: () => showRound(rid) },
-    { label: t('retired.crumb') },
+    { label: t(`${kind}.crumb`) },
   ]);
 
   // Newest first.
   const games = round.games
-    .filter((g) => g.retired)
-    .sort((a, b) => String(b.retiredAt || '').localeCompare(String(a.retiredAt || '')));
+    .filter(a.flag)
+    .sort((x, y) => String(a.at(y) || '').localeCompare(String(a.at(x) || '')));
 
   app.innerHTML = '';
   app.appendChild(
     h(`<div class="page-head"><div>
-         <h1>${esc(t('retired.title'))}</h1>
+         <h1>${esc(t(`${kind}.title`))}</h1>
          <div class="muted">${esc(round.name)}</div>
        </div></div>`)
   );
 
   if (games.length === 0) {
-    app.appendChild(h(`<div class="empty"><p>${esc(t('retired.empty'))}</p></div>`));
+    app.appendChild(h(`<div class="empty"><p>${esc(t(`${kind}.empty`))}</p></div>`));
   } else {
     const list = h('<div class="archive-list"></div>');
     const loadCover = createCoverLoader(); // lazy archive thumbs (#198)
     games.forEach((g) => {
       const fallback = coverPlaceholder(g);
-      const when = g.retiredAt ? fmtDateTime(g.retiredAt) : '?';
+      const when = a.at(g) ? fmtDateTime(a.at(g)) : '?';
       const row = h(`<div class="archive-row">
            <div class="archive-row__img">${fallback}</div>
            <div class="archive-row__body">
              <div class="archive-row__title">${esc(g.title)}</div>
-             <div class="muted archive-row__meta"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.at', { when }))}</div>
+             <div class="muted archive-row__meta"><i class="ti ${a.icon}" aria-hidden="true"></i> ${esc(t(`${kind}.at`, { when }))}</div>
            </div>
            <div class="archive-row__actions">
-             <button class="btn" data-act="restore"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('retired.restore'))}</button>
-             <button class="btn btn--danger" data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.delete'))}</button>
+             <button class="btn" data-act="restore"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
+             <button class="btn btn--danger" data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>
            </div>
          </div>`);
       if (g.image) loadCover(row.querySelector('.archive-row__img'), g.image);
       row.querySelector('[data-act="restore"]').addEventListener('click', async () => {
         try {
-          await api('POST', `/api/rounds/${rid}/games/${g.id}/retire`, { retired: false });
-          toast(t('retired.restored', { title: g.title }));
-          showRetired(rid);
+          await api('POST', a.endpoint(rid, g.id), a.body);
+          toast(t(`${kind}.restored`, { title: g.title }));
+          showArchive(rid, kind);
         } catch (e) { toast(e.message); }
       });
       row.querySelector('[data-act="delete"]').addEventListener('click', async () => {
-        if (!confirm(t('retired.deleteConfirm', { title: g.title }))) return;
+        if (!confirm(t(`${kind}.deleteConfirm`, { title: g.title }))) return;
         try {
           await api('DELETE', `/api/rounds/${rid}/games/${g.id}`);
-          toast(t('retired.deleted', { title: g.title }));
-          showRetired(rid);
+          toast(t(`${kind}.deleted`, { title: g.title }));
+          showArchive(rid, kind);
         } catch (e) { toast(e.message); }
       });
       list.appendChild(row);

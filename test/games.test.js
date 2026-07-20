@@ -66,6 +66,52 @@ test('restoring clears retiredAt and logs game_restored', async () => {
   assert.equal(res.body.retiredAt, null);
 });
 
+test('complete flag sets completed/completedAt and logs game_completed (#250)', async () => {
+  const round = await createRound(request);
+  const game = (await addGame(round.id)).body;
+  const res = await request(app).post(`/api/rounds/${round.id}/games/${game.id}/complete`).send({});
+  assert.equal(res.status, 200);
+  assert.equal(res.body.completed, true);
+  assert.ok(res.body.completedAt);
+
+  const feed = await request(app).get(`/api/rounds/${round.id}/activities`);
+  assert.ok(feed.body.some((a) => a.type === 'game_completed'));
+
+  const back = await request(app)
+    .post(`/api/rounds/${round.id}/games/${game.id}/complete`)
+    .send({ completed: false });
+  assert.equal(back.body.completed, false);
+  assert.equal(back.body.completedAt, null);
+});
+
+// The two archives are exclusive, enforced server-side: a client that calls
+// both endpoints must never end up with a game in Retired AND Completed.
+test('completing a retired game moves it rather than stacking (#250)', async () => {
+  const round = await createRound(request);
+  const game = (await addGame(round.id)).body;
+  await request(app).post(`/api/rounds/${round.id}/games/${game.id}/retire`).send({});
+  const res = await request(app).post(`/api/rounds/${round.id}/games/${game.id}/complete`).send({});
+  assert.equal(res.body.completed, true);
+  assert.equal(res.body.retired, false);
+  assert.equal(res.body.retiredAt, null);
+});
+
+test('complete 404s on an unknown round or game (#250)', async () => {
+  const round = await createRound(request);
+  const game = (await addGame(round.id)).body;
+  assert.equal((await request(app).post(`/api/rounds/${round.id}/games/nope/complete`).send({})).status, 404);
+  assert.equal((await request(app).post(`/api/rounds/nope/games/${game.id}/complete`).send({})).status, 404);
+});
+
+test('DELETE also accepts a completed game (#250)', async () => {
+  const round = await createRound(request);
+  const game = (await addGame(round.id)).body;
+  await request(app).post(`/api/rounds/${round.id}/games/${game.id}/complete`).send({});
+  assert.equal((await request(app).delete(`/api/rounds/${round.id}/games/${game.id}`)).status, 200);
+  const after = await request(app).get(`/api/rounds/${round.id}`);
+  assert.equal(after.body.games.length, 0);
+});
+
 test('PATCH games edits fields without adding an activity', async () => {
   const round = await createRound(request);
   const game = (await addGame(round.id)).body;

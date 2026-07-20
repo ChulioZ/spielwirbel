@@ -46,7 +46,11 @@ router.get('/', async (req, res) => {
         name: r.name,
         members: r.members.map((m) => ({ id: m.id, name: m.name, color: m.color })),
         memberCount: r.members.length,
-        gameCount: r.games.filter((g) => !g.retired).length,
+        // Active games only — both archives are excluded (#250). This number
+        // also drives the import dropdown's "n games", and createRound's import
+        // skips retired AND completed, so counting either here would promise
+        // more games than the copy delivers.
+        gameCount: r.games.filter((g) => !g.retired && !g.completed).length,
         sessionCount: r.sessions.length,
         playedCount: r.sessions.filter((s) => s.finished).length,
         background: r.background || null,

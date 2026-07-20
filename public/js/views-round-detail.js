@@ -445,21 +445,30 @@ async function showGameDetail(rid, gameId) {
     h1.append(space(), tagEl);
   }
   if (game.retired) h1.append(space(), h(`<span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`));
+  if (game.completed) h1.append(space(), h(`<span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`));
 
   app.appendChild(head);
 
-  // Retire / restore right from here.
+  // Archive actions right from here. A game is Active, Retired or Completed
+  // (#250), so the three branches are exclusive: an archived game offers only
+  // the way back, an active one both ways out.
   const actionWrap = h('<div class="toolbar" style="margin-top:18px"></div>');
-  if (game.retired) {
+  // Restore out of whichever archive the game is in.
+  const restoreFrom = (kind, endpoint, body) => {
     const restore = h(`<button class="btn"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('detail.restore'))}</button>`);
     restore.addEventListener('click', async () => {
       try {
-        await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: false });
-        toast(t('retired.restored', { title: game.title }));
+        await api('POST', `/api/rounds/${rid}/games/${gameId}/${endpoint}`, body);
+        toast(t(`${kind}.restored`, { title: game.title }));
         showGameDetail(rid, gameId);
       } catch (e) { toast(e.message); }
     });
     actionWrap.appendChild(restore);
+  };
+  if (game.retired) {
+    restoreFrom('retired', 'retire', { retired: false });
+  } else if (game.completed) {
+    restoreFrom('completed', 'complete', { completed: false });
   } else {
     // Direct launch: skip the vote and play this game right away.
     const play = h(`<button class="btn btn--primary"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>`);
@@ -475,6 +484,16 @@ async function showGameDetail(rid, gameId) {
       } catch (e) { toast(e.message); }
     });
     actionWrap.appendChild(retire);
+    const complete = h(`<button class="btn" style="color:var(--good)"><i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('detail.complete'))}</button>`);
+    complete.addEventListener('click', async () => {
+      if (!confirm(t('detail.completeConfirm', { title: game.title }))) return;
+      try {
+        await api('POST', `/api/rounds/${rid}/games/${gameId}/complete`, { completed: true });
+        toast(t('games.completed', { title: game.title }));
+        showGameDetail(rid, gameId);
+      } catch (e) { toast(e.message); }
+    });
+    actionWrap.appendChild(complete);
   }
   app.appendChild(actionWrap);
 

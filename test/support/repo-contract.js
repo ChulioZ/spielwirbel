@@ -99,6 +99,10 @@ module.exports = function repoContract(repo) {
     const active = await repo.createGame(T, src.id, gameFields({ title: 'Catan', minPlayers: 3, image: '/uploads/a.jpg' }));
     const retired = await repo.createGame(T, src.id, gameFields({ title: 'Old', minPlayers: 2, maxPlayers: 2 }));
     await repo.retireGame(T, src.id, retired.id, true);
+    // Completed games are archived too (#250) — the import must skip them just
+    // like retired ones, not only filter on `retired`.
+    const done = await repo.createGame(T, src.id, gameFields({ title: 'Campaign' }));
+    await repo.completeGame(T, src.id, done.id, true);
 
     const copy = await repo.createRound(T, { name: 'Copy', members: ['Z'], importFromRoundId: src.id });
     assert.equal(copy.games.length, 1);
@@ -150,6 +154,54 @@ module.exports = function repoContract(repo) {
     assert.equal(reread.image, null);
   });
 
+  // #250: Active / Retired / Completed are mutually exclusive, and the data
+  // layer — not just the UI — is what enforces it, so a client that calls both
+  // endpoints can never produce a game that is in two archives at once.
+  test('completeGame archives a game and clears any retired state (and vice versa)', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Pandemic Legacy' }));
+    assert.equal(game.completed, false);
+    assert.equal(game.completedAt, null);
+
+    const done = await repo.completeGame(T, round.id, game.id, true);
+    assert.equal(done.completed, true);
+    assert.ok(done.completedAt, 'a completion timestamp is stamped');
+    assert.ok((await repo.listActivities(T, round.id)).some((a) => a.type === 'game_completed'));
+
+    // Retiring a completed game moves it across, it does not stack.
+    const retired = await repo.retireGame(T, round.id, game.id, true);
+    assert.equal(retired.retired, true);
+    assert.equal(retired.completed, false);
+    assert.equal(retired.completedAt, null);
+
+    // ...and back the other way.
+    const again = await repo.completeGame(T, round.id, game.id, true);
+    assert.equal(again.completed, true);
+    assert.equal(again.retired, false);
+    assert.equal(again.retiredAt, null);
+
+    // Un-completing returns it to the active collection.
+    const active = await repo.completeGame(T, round.id, game.id, false);
+    assert.equal(active.completed, false);
+    assert.equal(active.completedAt, null);
+    assert.equal(active.retired, false);
+    assert.ok((await repo.listActivities(T, round.id)).some((a) => a.type === 'game_uncompleted'));
+
+    assert.equal(await repo.completeGame(T, round.id, 'missing', true), null);
+    assert.equal(await repo.completeGame(T, 'missing', game.id, true), null);
+  });
+
+  // A completed game is deletable exactly like a retired one — the delete guard
+  // covers both archives, not just `retired`.
+  test('deleteGame accepts a completed game', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Done', image: '/uploads/d.png' }));
+    assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_archived');
+    await repo.completeGame(T, round.id, game.id, true);
+    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/d.png' });
+    assert.equal((await repo.getRound(T, round.id)).games.length, 0);
+  });
+
   test('deleteGame refuses active games, scrubs retired ones from sessions', async () => {
     const round = await freshRound();
     const game = await repo.createGame(T, round.id, gameFields({ image: '/uploads/x.png' }));
@@ -160,7 +212,7 @@ module.exports = function repoContract(repo) {
       cancelled: false, cancelledAt: null, done: true,
     });
 
-    assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_retired');
+    assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_archived');
     await repo.retireGame(T, round.id, game.id, true);
     const result = await repo.deleteGame(T, round.id, game.id);
     assert.deepEqual(result, { image: '/uploads/x.png' });

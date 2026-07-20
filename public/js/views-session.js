@@ -14,7 +14,7 @@ function showStartSession(round) {
   app.innerHTML = '';
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('startSession.title'))}</h1></div>`));
 
-  const activeGames = round.games.filter((g) => !g.retired);
+  const activeGames = round.games.filter((g) => !g.retired && !g.completed);
 
   const form = h(`<div>
       <div class="field">
@@ -486,12 +486,17 @@ async function showResults(round, session, gamesHint, reveal) {
         return `<div class="bar" style="height:${hpx}px" title="${esc(t('result.barTitle', { c, r: n + 1 }))}">${c || ''}</div>`;
       })
       .join('');
-    // Info if the game has been retired in the meantime.
-    const retiredBadge = g.retired ? ` <span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>` : '';
-    // "Suggested for retirement" line; with a direct action if not retired yet.
+    // Info if the game has been archived in the meantime (#250: either way).
+    const retiredBadge = g.retired
+      ? ` <span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`
+      : g.completed
+        ? ` <span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`
+        : '';
+    // "Suggested for retirement" line; with a direct action only while the game
+    // is still active — an already-archived game has nothing left to retire.
     const sortFlag = r.sortCount
       ? `<div class="sort-flag"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('result.sortFlag', { n: r.sortCount }))}${
-          g.retired ? '' : ` <button class="link-btn sortflag-btn">${esc(t('result.retireNow'))}</button>`
+          g.retired || g.completed ? '' : ` <button class="link-btn sortflag-btn">${esc(t('result.retireNow'))}</button>`
         }</div>`
       : '';
     const medal = r.place && r.place <= 3 ? `<span class="rank-medal rank-medal--${medalRanks[r.place - 1]}"><i class="ti ti-medal" aria-hidden="true"></i></span>` : '';

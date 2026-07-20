@@ -46,6 +46,7 @@
 .ti-minus::before { content: "\eaf2"; }
 .ti-x::before { content: "\eb55"; }
 .ti-check::before { content: "\ea5e"; }
+.ti-circle-check::before { content: "\ea67"; }
 .ti-chevron-left::before { content: "\ea60"; }
 .ti-chevron-right::before { content: "\ea61"; }
 .ti-chevron-down::before { content: "\ea5f"; }

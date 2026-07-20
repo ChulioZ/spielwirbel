@@ -90,6 +90,8 @@ I18N.de = {
   'activity.gameAdded': '„{title}“ hinzugefügt',
   'activity.gameRetired': '„{title}“ aussortiert',
   'activity.gameRestored': '„{title}“ wieder aufgenommen',
+  'activity.gameCompleted': '„{title}“ durchgespielt',
+  'activity.gameUncompleted': '„{title}“ wieder aufgenommen',
   'activity.gameDeleted': '„{title}“ endgültig gelöscht',
 
   'games.title': 'Spiele ({n})',
@@ -103,6 +105,7 @@ I18N.de = {
   'games.scoreNew': 'neu',
   'games.retireConfirm': '„{title}“ aussortieren? Es verschwindet aus der Spieleliste, bleibt aber unter „Aussortierte Spiele“ einsehbar.',
   'games.retired': '„{title}“ aussortiert',
+  'games.completed': '„{title}“ als durchgespielt markiert',
   'games.search': 'Spiele suchen',
   'games.noMatch': 'Keine Spiele passen zu „{q}“.',
 
@@ -116,6 +119,18 @@ I18N.de = {
   'retired.delete': 'Endgültig löschen',
   'retired.deleteConfirm': '„{title}“ endgültig löschen? Auch alle Bewertungen aus früheren Sessions werden entfernt. Das kann nicht rückgängig gemacht werden.',
   'retired.deleted': '„{title}“ endgültig gelöscht',
+  // Completed ("durchgespielt", #250): the second archive — the group
+  // finished the game's content, rather than wanting rid of it.
+  'completed.link': 'Durchgespielt ({n})',
+  'completed.crumb': 'Durchgespielt',
+  'completed.title': 'Durchgespielt',
+  'completed.empty': 'Es wurde noch kein Spiel durchgespielt.',
+  'completed.at': 'Durchgespielt seit {when}',
+  'completed.restore': 'Comeback',
+  'completed.restored': '„{title}“ wieder aufgenommen',
+  'completed.delete': 'Endgültig löschen',
+  'completed.deleteConfirm': '„{title}“ endgültig löschen? Auch alle Bewertungen aus früheren Sessions werden entfernt. Das kann nicht rückgängig gemacht werden.',
+  'completed.deleted': '„{title}“ endgültig gelöscht',
 
   'sessions.rated': '{n} Spiele bewertet',
   'sessions.played': 'Gespielt',
@@ -128,6 +143,7 @@ I18N.de = {
   'detail.noRating': 'Noch keine Bewertung',
   'detail.totalSort': 'Insgesamt {n}× Aussortieren vorgeschlagen',
   'detail.retire': 'Aussortieren',
+  'detail.complete': 'Durchgespielt',
   'detail.restore': 'Wieder aufnehmen',
   'detail.editName': 'Zum Umbenennen klicken',
   'detail.editHint': 'Zum Bearbeiten klicken',
@@ -144,6 +160,7 @@ I18N.de = {
   'detail.notChosen': 'nicht gewählt',
   'detail.sessionCancelled': 'Session abgebrochen',
   'detail.retireConfirm': '„{title}“ aussortieren?',
+  'detail.completeConfirm': '„{title}“ als durchgespielt markieren?',
   'detail.onboard.title': 'Ein unbeschriebenes Blatt',
   'detail.onboard.text':
     'Dieses Spiel wurde noch nicht gespielt oder bewertet. Bewertungen und Sessions erscheinen hier von selbst, sobald ihr es spielt — bis dahin kannst du ihm ein Gesicht geben.',
@@ -274,6 +291,7 @@ I18N.de = {
   'result.retireNow': '— jetzt aussortieren',
   'result.retireNowConfirm': '„{title}“ jetzt aussortieren? Es wird aus der Spieleliste der Runde entfernt.',
   'result.retiredTag': 'aussortiert',
+  'result.completedTag': 'durchgespielt',
   'result.toast.willPlay': '„{title}“ wird gespielt',
   'result.toast.choiceCleared': 'Auswahl aufgehoben',
   'result.titleCancelled': 'Session abgebrochen – es wurde nichts gespielt.',

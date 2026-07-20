@@ -23,6 +23,25 @@ test('starting a session picks from matching games and returns them', async () =
   assert.equal(res.body.session.gameIds.length, 2);
 });
 
+// A completed game is out of the active collection, so it must be as
+// undrawable and unpickable as a retired one (#250).
+test('completed games are excluded from the draw pool and direct pick (#250)', async () => {
+  const round = await createRound(request);
+  const keep = await addGame(round.id, { title: 'A' });
+  const done = await addGame(round.id, { title: 'B' });
+  await request(app).post(`/api/rounds/${round.id}/games/${done.id}/complete`).send({});
+
+  const drawn = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 5 });
+  assert.equal(drawn.status, 201);
+  assert.deepEqual(drawn.body.session.gameIds, [keep.id]);
+
+  const picked = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ gameId: done.id });
+  assert.equal(picked.status, 400);
+  assert.match(picked.body.error, /completed/i);
+});
+
 test('tag filter narrows the pool (#242)', async () => {
   const round = await createRound(request);
   const tag = (await request(app).post(`/api/rounds/${round.id}/tags`).send({ name: 'Party' })).body;
