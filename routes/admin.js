@@ -297,4 +297,19 @@ router.get('/log', async (req, res) => {
   res.json({ entries: await repo.listModeration(limit) });
 });
 
+/* -------------------------------- feedback --------------------------------- */
+
+// In-app user feedback (issue #260), newest first. It lives on THIS router, and
+// therefore behind ADMIN_PASSWORD, rather than getting a credential of its own:
+// a second admin secret alongside the panel's would be a strictly worse surface
+// to secure for no gain. Same limit clamp as /log.
+//
+// Feedback is global, un-scoped data (like the moderation log), so this reads it
+// from the module-level `repo` — req.repo does not exist on this router and
+// listFeedback is deliberately absent from TENANT_METHODS.
+router.get('/feedback', async (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 500);
+  res.json({ entries: await repo.listFeedback(limit) });
+});
+
 module.exports = router;

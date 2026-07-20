@@ -83,3 +83,4 @@
 .ti-mail-check::before { content: "\f939"; }
 .ti-logout::before { content: "\eba8"; }
 .ti-calendar::before { content: "\ea53"; }
+.ti-message::before { content: "\eaef"; }

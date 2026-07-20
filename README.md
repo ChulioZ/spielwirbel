@@ -123,6 +123,13 @@ code and documentation are in English.
   **offline** (the shell and static assets are cached; live round data still
   needs the network). In keeping with the no-build-step stance, the manifest,
   service worker and icons are plain static files.
+- **Feedback** – a button in the top bar opens a short form for telling the
+  operator what is missing, confusing or broken, together with the screen it was
+  written on. Submissions are **anonymous by default**: when accounts are on,
+  attaching your e-mail address so the operator can reply is a separate, opt-in
+  checkbox that is never ticked for you. The operator reads what comes in from
+  the moderation panel (see below) — there is no third-party feedback service
+  and no analytics script involved.
 
 ## Tech & architecture
 
@@ -228,8 +235,11 @@ routes/
   admin.js           /api/admin             (operator moderation: image→tenant
                                              lookup, takedown, account
                                              suspend/restore, GDPR export +
-                                             erasure, action log —
+                                             erasure, action log, user feedback —
                                              404 unless ADMIN_PASSWORD)
+  feedback.js        /api/feedback          (in-app user feedback: submit one
+                                             message; read side lives on
+                                             /api/admin — issue #260)
   lookup.js          /api/lookup            (search/game — provider proxy: PS Store, BGG, Steam, Nintendo, Xbox)
   rounds.js          /api/rounds            (list, detail, create, delete)
   games.js           …/games                (add [+cover hotlink/source],
@@ -264,6 +274,7 @@ public/
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
     cover.js         deterministic per-title gradient for games with no cover
     lookup-group.js  collapses same-title provider hits into one multi-badge row
+    feedback.js      top-bar feedback button + submission sheet (issue #260)
     views-home.js    lobby + new round
     views-round.js        round hub (Start/Regal/Chronik/Pokale dock) + Start tab
     views-round-tabs.js   Regal, Chronik, Pokale tabs + the two archive
@@ -393,6 +404,13 @@ the erasure entry deliberately records only the account id, tenant, date, reason
 and counts — never the erased address or any content, since the log outlives the
 erasure it evidences. Suspension remains the right first response to an abuse
 case: it preserves evidence, which erasure by definition destroys.
+
+The same panel carries the **Feedback** card (issue #260): what users have sent
+through the in-app feedback button, newest first, with the screen, language and
+tenant each message came from — plus the sender's address on the messages where
+they opted in to be contacted. It is read-only, and it lives behind
+`ADMIN_PASSWORD` rather than getting a credential of its own. Tune how often one
+IP may submit with `FEEDBACK_RATE_LIMIT_MAX` (per 15 min, default 10).
 
 `ADMIN_PASSWORD` must be a **separate** secret from `AUTH_PASSWORD`: the latter is
 shared with everyone using the instance, while these powers cross tenant

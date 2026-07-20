@@ -98,6 +98,7 @@
     panel.hidden = false;
     $('password').value = '';
     loadUsers();
+    loadFeedback();
     loadLog();
   }
 
@@ -350,6 +351,49 @@
       cell(row, e.action);
       cell(row, e.gameTitle ? `${e.gameTitle} (${e.target})` : e.email || e.target);
       cell(row, e.reason || '—');
+      body.appendChild(row);
+    }
+  }
+
+  // ---- feedback (#260) -----------------------------------------------------
+
+  // In-app user feedback, newest first. Read-only: there is no action to take
+  // here beyond reading, so unlike the accounts table this renders no buttons.
+  async function loadFeedback() {
+    const body = $('feedbackTable').querySelector('tbody');
+    body.replaceChildren();
+    hide($('feedbackError'));
+    let entries;
+    try {
+      ({ entries } = await api('/feedback'));
+    } catch (err) {
+      show($('feedbackError'), message(err), 'err');
+      return;
+    }
+
+    const head = document.createElement('tr');
+    ['Zeitpunkt', 'Nachricht', 'Kontext', 'Kontakt'].forEach((h) => cell(head, h, { head: true }));
+    body.appendChild(head);
+
+    if (!entries.length) {
+      const row = document.createElement('tr');
+      cell(row, 'Noch kein Feedback.', { colSpan: 4 });
+      body.appendChild(row);
+      return;
+    }
+
+    for (const f of entries) {
+      const ctx = f.context || {};
+      const row = document.createElement('tr');
+      cell(row, fmt(f.createdAt));
+      // The message is user-authored free text — cell() uses textContent, so it
+      // is never interpreted as markup on this privileged page. `pre-wrap` keeps
+      // the submitter's own line breaks readable.
+      cell(row, f.message).style.whiteSpace = 'pre-wrap';
+      cell(row, [ctx.path, ctx.locale, ctx.tenantId].filter(Boolean).join(' · ') || '—');
+      // Only present when the submitter explicitly opted in; anonymous is the
+      // default, so an em dash here is the normal case, not missing data.
+      cell(row, ctx.email || '—');
       body.appendChild(row);
     }
   }

@@ -564,6 +564,39 @@ module.exports = function repoContract(repo) {
     assert.equal((await repo.listModeration(1)).length, 1);
   });
 
+  // Feedback (#260) is global and un-scoped like the moderation log, so it is
+  // covered here rather than among the tenant-isolation cases — there is no
+  // tenant argument to isolate on. The submitter's tenant rides along inside
+  // `context` as ordinary metadata.
+  test('createFeedback appends and listFeedback returns newest first', async () => {
+    const first = await repo.createFeedback({
+      message: 'first note',
+      context: { path: '/', locale: 'en', tenantId: T },
+      createdAt: '2026-07-20T10:00:00.000Z',
+    });
+    assert.match(first.id, /^[0-9a-f]{16}$/);
+    await repo.createFeedback({
+      message: 'second note',
+      context: { path: '/round/x', locale: 'de', tenantId: 'tenant-b', email: 'who@example.com' },
+      createdAt: '2026-07-20T11:00:00.000Z',
+    });
+
+    const entries = await repo.listFeedback(10);
+    assert.equal(entries.length, 2);
+    assert.equal(entries[0].message, 'second note'); // newest first
+    // Both tenants' feedback comes back from one un-scoped read — that IS the
+    // contract here, the opposite of every round-scoped method above.
+    assert.equal(entries[0].context.tenantId, 'tenant-b');
+    assert.equal(entries[0].context.email, 'who@example.com');
+    assert.equal(entries[1].message, 'first note');
+    assert.equal(entries[1].context.tenantId, T);
+    // An anonymous entry round-trips with the key genuinely absent, not as null
+    // — both backends must agree (.claude/rules/postgres-backend.md).
+    assert.equal(entries[1].context.email, undefined);
+
+    assert.equal((await repo.listFeedback(1)).length, 1);
+  });
+
   // The suite shares one store across cases, so assert on the delta, not on an
   // absolute count — other tests have already created users by now.
   test('listUsers returns every user for the operator account list', async () => {
