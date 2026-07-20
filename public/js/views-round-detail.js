@@ -106,6 +106,9 @@ async function showTags(rid) {
        <button class="btn btn--primary"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('tags.add'))}</button>
      </div>`);
   const input = addRow.querySelector('input');
+  // Icon picker for the new tag (#255), below the name row so the grid gets the
+  // full width instead of squeezing the input.
+  const picker = tagIconPicker(null);
   // A duplicate name returns the existing tag (the server dedupes) — detected
   // here by its id already being known, for the right toast.
   const existingIds = new Set((round.tags || []).map((tg) => tg.id));
@@ -113,7 +116,7 @@ async function showTags(rid) {
     const name = input.value.trim();
     if (!name) return;
     try {
-      const tag = await api('POST', `/api/rounds/${rid}/tags`, { name });
+      const tag = await api('POST', `/api/rounds/${rid}/tags`, { name, icon: picker.get() });
       toast(existingIds.has(tag.id) ? t('tags.toast.exists') : t('tags.toast.added'));
       showTags(rid);
     } catch (e) { toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message); }
@@ -123,6 +126,7 @@ async function showTags(rid) {
     if (e.key === 'Enter') { e.preventDefault(); add(); }
   });
   sec.appendChild(addRow);
+  sec.appendChild(picker.el);
 
   const tags = round.tags || [];
   if (tags.length === 0) {
@@ -132,9 +136,32 @@ async function showTags(rid) {
     tags.forEach((tg) => {
       const n = round.games.filter((g) => (g.tagIds || []).includes(tg.id)).length;
       const row = h(`<div class="ds-row">
-           <div class="ds-row__main"><span class="tag tag--custom">${esc(tg.name)}</span></div>
+           <div class="ds-row__main"><span class="tag tag--custom"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</span></div>
            <div class="ds-row__meta"><span class="muted">${esc(tn(n, 'tags.gamesOne', 'tags.games'))}</span></div>
          </div>`);
+      // Change an existing tag's icon (#255) — the Tags screen is the only
+      // surface that edits a tag; the popover and add-game sheet only create
+      // and assign. Expands the picker inline rather than opening a dialog.
+      const edit = h(`<button class="btn btn--ghost" aria-label="${esc(t('tags.editIcon'))}" title="${esc(t('tags.editIcon'))}"><i class="ti ti-pencil" aria-hidden="true"></i></button>`);
+      edit.addEventListener('click', () => {
+        const open = row.nextElementSibling;
+        if (open && open.classList.contains('icon-picker')) { // second click closes it
+          open.remove();
+          return;
+        }
+        const p = tagIconPicker(tg.icon);
+        p.el.querySelectorAll('.icon-picker__btn').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            try {
+              await api('PATCH', `/api/rounds/${rid}/tags/${tg.id}`, { icon: btn.dataset.icon });
+              toast(t('tags.toast.iconUpdated'));
+              showTags(rid);
+            } catch (e) { toast(e.message); }
+          });
+        });
+        row.after(p.el);
+      });
+      row.querySelector('.ds-row__meta').appendChild(edit);
       const del = h(`<button class="btn btn--ghost" aria-label="${esc(t('tags.delete'))}" style="color:var(--danger)"><i class="ti ti-trash" aria-hidden="true"></i></button>`);
       del.addEventListener('click', async () => {
         if (n > 0 && !confirm(t('tags.deleteConfirm', { name: tg.name }))) return;
@@ -284,7 +311,7 @@ async function showGameDetail(rid, gameId) {
       const chipsWrap = h('<div class="filter-chips"></div>');
       const renderChips = () => {
         chipsWrap.replaceChildren(...tags.map((tg) => {
-          const chip = h(`<button type="button" class="chip${selected.has(tg.id) ? ' is-on' : ''}">${esc(tg.name)}</button>`);
+          const chip = h(`<button type="button" class="chip${selected.has(tg.id) ? ' is-on' : ''}"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</button>`);
           chip.addEventListener('click', () => {
             if (selected.has(tg.id)) selected.delete(tg.id);
             else selected.add(tg.id);
@@ -299,6 +326,9 @@ async function showGameDetail(rid, gameId) {
 
       const input = h(`<input class="input" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}" />`);
       const addBtn = h(`<button class="btn">${esc(t('tags.add'))}</button>`);
+      // Icon picker for the inline "create new tag" (#255).
+      const picker = tagIconPicker(null);
+      el.appendChild(picker.el);
       // Returns false only when a real creation attempt failed, so the OK
       // handler below can keep the popover open instead of discarding the
       // typed name (an empty input is a no-op, not a failure).
@@ -306,7 +336,7 @@ async function showGameDetail(rid, gameId) {
         const name = input.value.trim();
         if (!name) return true;
         try {
-          const tag = await api('POST', `/api/rounds/${rid}/tags`, { name });
+          const tag = await api('POST', `/api/rounds/${rid}/tags`, { name, icon: picker.get() });
           if (!tags.some((x) => x.id === tag.id)) tags.push(tag);
           selected.add(tag.id);
           input.value = '';
@@ -435,7 +465,7 @@ async function showGameDetail(rid, gameId) {
   if (assignedTagIds.length) {
     assignedTagIds.forEach((x) => {
       const tg = roundTags.find((q) => q.id === x);
-      const tagEl = h(`<span class="tag tag--custom">${esc(tg.name)}</span>`);
+      const tagEl = h(`<span class="tag tag--custom"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</span>`);
       makeEditableTag(tagEl, () => openTagsPopover(tagEl));
       h1.append(space(), tagEl);
     });

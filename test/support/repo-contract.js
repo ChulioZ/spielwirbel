@@ -326,6 +326,39 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.addTag(T, 'missing', 'X'), null);
   });
 
+  test('tag icons: absent by default, set on create, patchable, clearable (#255)', async () => {
+    const round = await freshRound();
+
+    // Absent-key parity: a tag created without an icon carries no `icon` key at
+    // all in either backend, so old tags and new plain ones look identical.
+    const plain = await repo.addTag(T, round.id, 'Plain');
+    assert.equal('icon' in plain, false);
+
+    const withIcon = await repo.addTag(T, round.id, 'Puzzles', 'puzzle');
+    assert.equal(withIcon.icon, 'puzzle');
+    assert.deepEqual((await repo.getRound(T, round.id)).tags, [plain, withIcon]);
+
+    // A duplicate name reuses the existing tag and must NOT adopt the icon —
+    // creating a tag may never silently restyle one the round already has.
+    const dup = await repo.addTag(T, round.id, 'plain', 'rocket');
+    assert.deepEqual(dup, plain);
+
+    // setTagIcon sets…
+    const set = await repo.setTagIcon(T, round.id, plain.id, 'brain');
+    assert.equal(set.icon, 'brain');
+    assert.equal(set.name, 'Plain'); // name untouched — renaming stays unsupported
+    assert.equal((await repo.getRound(T, round.id)).tags[0].icon, 'brain');
+
+    // …and clears back to the absent key, not an empty string.
+    const cleared = await repo.setTagIcon(T, round.id, plain.id, null);
+    assert.equal('icon' in cleared, false);
+    assert.equal('icon' in (await repo.getRound(T, round.id)).tags[0], false);
+
+    // A missing round and a missing tag both read as not-found.
+    assert.equal(await repo.setTagIcon(T, round.id, 'nope', 'star'), null);
+    assert.equal(await repo.setTagIcon(T, 'missing', plain.id, 'star'), null);
+  });
+
   test('listActivities serves the feed; rounds no longer embed it', async () => {
     const round = await freshRound();
     assert.equal('activities' in round, false); // not on the created round…

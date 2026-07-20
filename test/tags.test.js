@@ -216,3 +216,80 @@ test('session draw: exclude tag filter rejects games carrying the tag (#241)', a
     assert.equal(unknown.body.games.length, 3);
   });
 });
+
+// Tag icons (#255): the optional `icon` on create and the PATCH route, which is
+// the first (and only) way to change an existing tag.
+test('tag icons: create with one, patch it, clear it, reject bad input', async (t) => {
+  const round = await createRound(request);
+
+  await t.test('a tag created without an icon carries no icon key', async () => {
+    const res = await request(app).post(`/api/rounds/${round.id}/tags`).send({ name: 'Plain' });
+    assert.equal(res.status, 201);
+    assert.equal('icon' in res.body, false);
+  });
+
+  let puzzles;
+  await t.test('a tag can be created with an icon from the curated set', async () => {
+    const res = await request(app).post(`/api/rounds/${round.id}/tags`)
+      .send({ name: 'Puzzles', icon: 'puzzle' });
+    assert.equal(res.status, 201);
+    assert.equal(res.body.icon, 'puzzle');
+    puzzles = res.body;
+  });
+
+  await t.test('an icon outside the curated set is rejected on create', async () => {
+    const res = await request(app).post(`/api/rounds/${round.id}/tags`)
+      .send({ name: 'Bogus', icon: 'skull-and-crossbones' });
+    assert.equal(res.status, 400);
+  });
+
+  await t.test('PATCH changes the icon and persists it', async () => {
+    const res = await request(app).patch(`/api/rounds/${round.id}/tags/${puzzles.id}`)
+      .send({ icon: 'brain' });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.icon, 'brain');
+    assert.equal(res.body.name, 'Puzzles'); // the route patches icon only
+
+    const round2 = await request(app).get(`/api/rounds/${round.id}`);
+    assert.equal(round2.body.tags.find((tg) => tg.id === puzzles.id).icon, 'brain');
+  });
+
+  await t.test('PATCH with null clears the icon back to the default glyph', async () => {
+    const res = await request(app).patch(`/api/rounds/${round.id}/tags/${puzzles.id}`)
+      .send({ icon: null });
+    assert.equal(res.status, 200);
+    assert.equal('icon' in res.body, false);
+  });
+
+  await t.test('PATCH rejects an unknown icon and an empty body', async () => {
+    const bad = await request(app).patch(`/api/rounds/${round.id}/tags/${puzzles.id}`)
+      .send({ icon: 'not-a-real-icon' });
+    assert.equal(bad.status, 400);
+    // `icon` is required on update — an empty body is a client error, not a
+    // silent no-op that reports success.
+    const empty = await request(app).patch(`/api/rounds/${round.id}/tags/${puzzles.id}`).send({});
+    assert.equal(empty.status, 400);
+  });
+
+  await t.test('PATCH 404s for an unknown tag and an unknown round', async () => {
+    const noTag = await request(app).patch(`/api/rounds/${round.id}/tags/nope`)
+      .send({ icon: 'star' });
+    assert.equal(noTag.status, 404);
+    assert.equal(noTag.body.error, 'Tag not found');
+
+    const noRound = await request(app).patch(`/api/rounds/missing/tags/${puzzles.id}`)
+      .send({ icon: 'star' });
+    assert.equal(noRound.status, 404);
+    assert.equal(noRound.body.error, 'Round not found');
+  });
+
+  await t.test('a duplicate name reuses the existing tag without restyling it', async () => {
+    const styled = await request(app).post(`/api/rounds/${round.id}/tags`)
+      .send({ name: 'Dice night', icon: 'dice-3' });
+    assert.equal(styled.status, 201);
+    const dup = await request(app).post(`/api/rounds/${round.id}/tags`)
+      .send({ name: 'DICE NIGHT', icon: 'rocket' });
+    assert.equal(dup.status, 201);
+    assert.deepEqual(dup.body, styled.body);
+  });
+});

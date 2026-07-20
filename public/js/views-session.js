@@ -99,9 +99,9 @@ function showStartSession(round) {
     form.querySelector('#gamesFilterField').hidden = false;
     roundTags.forEach((tg) => {
       const chip = h('<button type="button" class="chip"></button>');
-      paintTagChip(chip, tg.name, selectedTags.get(tg.id));
+      paintTagChip(chip, tg.name, selectedTags.get(tg.id), tg.icon);
       chip.addEventListener('click', () => {
-        paintTagChip(chip, tg.name, cycleTagState(selectedTags, tg.id));
+        paintTagChip(chip, tg.name, cycleTagState(selectedTags, tg.id), tg.icon);
         updateHint();
       });
       chips.appendChild(chip);

@@ -28,6 +28,7 @@ const frontendGlobals = {
   regalFilters: 'writable', regalFiltersRid: 'writable',
   TAG_STATES: 'readonly', cycleTagState: 'readonly',
   paintTagChip: 'readonly', matchesTagFilter: 'readonly',
+  tagIconPicker: 'readonly',
   randomOrderCache: 'readonly', randomOrderedGames: 'readonly',
   gameStatsForSession: 'readonly', gameStats: 'readonly',
   retireRecommendations: 'readonly', minimizedRecs: 'readonly',
@@ -57,11 +58,12 @@ const frontendGlobals = {
   // feedback.js (issue #260)
   FEEDBACK_MESSAGE_MAX: 'readonly', showFeedback: 'readonly',
   setupFeedbackUi: 'readonly',
-  // ranking.js + lookup-group.js + lookup-cover.js + cover.js (also CommonJS
-  // modules for tests — hence `module`)
+  // ranking.js + lookup-group.js + lookup-cover.js + cover.js + tag-icons.js
+  // (also CommonJS modules for tests — hence `module`)
   computePlaces: 'readonly', groupLookupHits: 'readonly', module: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   providerMatchCover: 'readonly',
+  TAG_ICONS: 'readonly', tagIconClass: 'readonly',
   // views-home.js
   showHome: 'readonly', showNewRound: 'readonly',
   // views-round.js (hub + Start tab) and its siblings loaded right after it:
