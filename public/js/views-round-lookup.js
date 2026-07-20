@@ -299,7 +299,7 @@ function showAddGame(round) {
   function renderTagChips() {
     tagSeg.hidden = roundTags.length === 0;
     tagSeg.replaceChildren(...roundTags.map((tg) => {
-      const chip = h(`<button type="button" class="chip${selectedTagIds.has(tg.id) ? ' is-on' : ''}">${esc(tg.name)}</button>`);
+      const chip = h(`<button type="button" class="chip${selectedTagIds.has(tg.id) ? ' is-on' : ''}"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</button>`);
       chip.addEventListener('click', () => {
         if (selectedTagIds.has(tg.id)) selectedTagIds.delete(tg.id);
         else selectedTagIds.add(tg.id);
@@ -310,11 +310,15 @@ function showAddGame(round) {
   }
   renderTagChips();
   const newTagInput = form.querySelector('#newTag');
+  // Icon picker for the inline "create new tag" (#255), directly under the
+  // new-tag input so it reads as part of that sub-form.
+  const tagPicker = tagIconPicker(null);
+  newTagInput.closest('.toolbar').after(tagPicker.el);
   const createTag = async () => {
     const name = newTagInput.value.trim();
     if (!name) return;
     try {
-      const tag = await api('POST', `/api/rounds/${round.id}/tags`, { name });
+      const tag = await api('POST', `/api/rounds/${round.id}/tags`, { name, icon: tagPicker.get() });
       if (!roundTags.some((x) => x.id === tag.id)) roundTags.push(tag);
       selectedTagIds.add(tag.id);
       newTagInput.value = '';

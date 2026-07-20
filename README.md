@@ -65,7 +65,10 @@ code and documentation are in English.
   any number of tags to a game — in the add-game sheet or later from the game's
   detail page, creating new tags inline — and filter both the Regal and the
   session draw by them (tri-state chips: off / include / exclude; included tags
-  combine with AND, excluded tags reject any match).
+  combine with AND, excluded tags reject any match). Each tag can carry an
+  **icon** picked from a curated set, shown next to its name everywhere the tag
+  appears; a tag without one keeps the default tag glyph, and the icon can be
+  changed later from the Tags screen.
   Deleting a tag simply unassigns it from every game.
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list) with their stats — wins,
@@ -255,7 +258,7 @@ routes/
                                              cancel, delete, remove one game)
   activities.js      …/activities           (list the feed [GET], delete an entry)
   background.js      …/background           (set the design)
-  tags.js            …/tags                 (create a custom tag [deduped], delete one)
+  tags.js            …/tags                 (create a custom tag [deduped], set its icon, delete one)
 public/
   index.html
   login.html         standalone login page (shown only when AUTH_PASSWORD is set)

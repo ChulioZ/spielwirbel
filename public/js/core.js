@@ -174,10 +174,13 @@ function cycleTagState(map, id) {
 // Reflect a tag chip's state on its element: the fill class, the glyph (a ban
 // icon for exclude), and an accessible label so include vs exclude is
 // distinguishable without relying on color alone (a11y).
-function paintTagChip(chip, name, state) {
+function paintTagChip(chip, name, state, tagIcon) {
   chip.classList.toggle('is-on', state === 'include');
   chip.classList.toggle('is-excluded', state === 'exclude');
-  const icon = state === 'exclude' ? 'ti-ban' : 'ti-tags';
+  // The ban glyph still wins for the exclude state (#255): it conveys filter
+  // semantics, not tag identity, and losing it would make include/exclude
+  // indistinguishable without color.
+  const icon = state === 'exclude' ? 'ti-ban' : tagIconClass(tagIcon);
   const key =
     state === 'include' ? 'tags.filter.included'
     : state === 'exclude' ? 'tags.filter.excluded'
@@ -185,6 +188,37 @@ function paintTagChip(chip, name, state) {
   chip.setAttribute('aria-label', t(key, { name }));
   chip.innerHTML = `<i class="ti ${icon}" aria-hidden="true"></i>${esc(name)}`;
 }
+// Build the curated tag-icon picker (#255): a grid of glyph buttons, exactly
+// one active, following the MEMBER_COLORS swatch pattern (a fixed set, no free
+// input). Returns { el, get } — `get()` reads the current pick, so a caller can
+// create/patch a tag with whatever is selected at submit time.
+// `selected` is the tag's stored icon (or null/undefined for an unset one,
+// which lands on the default `tags` glyph — the same one it already renders).
+function tagIconPicker(selected) {
+  let current = TAG_ICONS.includes(selected) ? selected : 'tags';
+  const el = h(`<div class="icon-picker" role="group" aria-label="${esc(t('tags.chooseIcon'))}"></div>`);
+  TAG_ICONS.forEach((key) => {
+    const label = t(`tags.icons.${key}`);
+    // data-icon carries the key so a caller can read it off the button it was
+    // clicked on, rather than inferring it from the button's position.
+    const btn = h(`<button type="button" class="icon-picker__btn${key === current ? ' is-active' : ''}"
+         data-icon="${esc(key)}" title="${esc(label)}" aria-label="${esc(label)}" aria-pressed="${key === current}">
+         <i class="ti ${tagIconClass(key)}" aria-hidden="true"></i>
+       </button>`);
+    btn.addEventListener('click', () => {
+      current = key;
+      el.querySelectorAll('.icon-picker__btn').forEach((b) => {
+        b.classList.remove('is-active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('is-active');
+      btn.setAttribute('aria-pressed', 'true');
+    });
+    el.appendChild(btn);
+  });
+  return { el, get: () => current };
+}
+
 // A game passes the tri-state tag filter iff it carries every included tag (AND)
 // and none of the excluded tags. `map` is Map<tagId, 'include'|'exclude'>.
 function matchesTagFilter(map, gameTagIds) {

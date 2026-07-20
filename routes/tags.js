@@ -9,6 +9,7 @@ const express = require('express');
 const { z } = require('zod');
 const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
+const { TAG_ICONS } = require('../lib/tag-icons');
 const { trackEvent } = require('../lib/observability');
 
 const router = express.Router({ mergeParams: true });
@@ -18,12 +19,21 @@ const router = express.Router({ mergeParams: true });
 // never round-trips; this is the backstop.
 const TAG_NAME_MAX = 30;
 
+// A tag's icon is a key from the curated set (#255), never a free string — the
+// client renders it as `ti-<key>`, so an arbitrary value would emit a class
+// with no CSS rule behind it and silently render nothing.
 const createTagSchema = z.object({
   name: z.preprocess(
     (v) => String(v || '').trim(),
     z.string().min(1, 'Tag name is missing').max(TAG_NAME_MAX, 'Tag name is too long'),
   ),
+  // Optional on create — a tag without one renders the default `ti-tags` glyph.
+  icon: z.enum(TAG_ICONS).nullish(),
 });
+
+// On update the key is required (an empty body is a client error, not a silent
+// no-op), but null is a valid value: it clears the icon back to the default.
+const updateTagSchema = z.object({ icon: z.enum(TAG_ICONS).nullable() });
 
 // Create a tag. A name matching an existing tag (trimmed, case-insensitive)
 // returns that tag instead of creating a duplicate.
@@ -42,12 +52,27 @@ router.post('/', async (req, res) => {
     return res.status(403).json({ error: 'quota_tags', limit: quota.tagsPerRound() });
   }
 
-  const tag = await req.repo.addTag(req.params.rid, body.name);
+  const tag = await req.repo.addTag(req.params.rid, body.name, body.icon);
   if (!tag) return res.status(404).json({ error: 'Round not found' });
   // Only a genuinely new name is a creation — a duplicate reuses the existing
   // tag above, which is not a new tag and must not inflate the count.
   if (!exists) trackEvent('tag_created', { tenantId: req.tenantId });
   res.status(201).json(tag);
+});
+
+// Patch a tag's icon (#255). Only `icon` is patchable — renaming a tag is
+// deliberately still unsupported. No quota interaction: changing an icon
+// doesn't consume the per-round tag cap.
+router.patch('/:tagId', async (req, res) => {
+  const round = await req.repo.getRound(req.params.rid);
+  if (!round) return res.status(404).json({ error: 'Round not found' });
+
+  const body = validateBody(updateTagSchema, req, res);
+  if (!body) return;
+
+  const tag = await req.repo.setTagIcon(req.params.rid, req.params.tagId, body.icon);
+  if (!tag) return res.status(404).json({ error: 'Tag not found' });
+  res.json(tag);
 });
 
 // Delete a tag; the data layer also unassigns it from every game that had it.

@@ -69,9 +69,9 @@ function renderRegalTab(round, activeGames) {
     if (roundTags.length) {
       roundTags.forEach((tg) => {
         const chip = h('<button class="chip"></button>');
-        paintTagChip(chip, tg.name, tagFilter.get(tg.id));
+        paintTagChip(chip, tg.name, tagFilter.get(tg.id), tg.icon);
         chip.addEventListener('click', () => {
-          paintTagChip(chip, tg.name, cycleTagState(tagFilter, tg.id));
+          paintTagChip(chip, tg.name, cycleTagState(tagFilter, tg.id), tg.icon);
           renderGames();
         });
         chips.appendChild(chip);

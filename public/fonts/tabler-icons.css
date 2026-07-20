@@ -84,3 +84,16 @@
 .ti-logout::before { content: "\eba8"; }
 .ti-calendar::before { content: "\ea53"; }
 .ti-message::before { content: "\eaef"; }
+
+/* Tag icons (#255) — codepoints read from this bundle's own cmap via fontTools,
+   NOT from tabler.io (they differ; see .claude/rules/tabler-icon-codepoints.md). */
+.ti-dice-5::before { content: "\f08f"; }
+.ti-chess::before { content: "\f382"; }
+.ti-puzzle::before { content: "\eb10"; }
+.ti-sword::before { content: "\f030"; }
+.ti-shield::before { content: "\eb24"; }
+.ti-rocket::before { content: "\ec45"; }
+.ti-brain::before { content: "\f59f"; }
+.ti-ghost::before { content: "\eb8e"; }
+.ti-building-castle::before { content: "\ed88"; }
+.ti-world::before { content: "\eb54"; }
