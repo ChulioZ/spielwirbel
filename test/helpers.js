@@ -20,6 +20,9 @@ process.env.DATA_DIR = DATA_DIR;
 // its own app with tiny limits.
 process.env.RATE_LIMIT_MAX = '1000000';
 process.env.AUTH_RATE_LIMIT_MAX = '1000000';
+// Same reasoning for the feedback limiter (#260), whose real default is a
+// deliberately low 10/window — well within reach of a single spec file.
+process.env.FEEDBACK_RATE_LIMIT_MAX = '1000000';
 
 // Keep the observability request logger quiet during the ordinary suite so test
 // output isn't buried under one JSON line per request. test/observability.test.js

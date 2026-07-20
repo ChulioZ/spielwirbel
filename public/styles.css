@@ -1633,6 +1633,28 @@ kbd {
 /* ---- Shared small helpers ---- */
 .field__hint { margin-top: 6px; font-size: 14px; }
 
+/* ---- Feedback sheet (issue #260) ---- */
+.feedback__text { font-size: 16px; resize: vertical; min-height: 110px; }
+/* The identity opt-in reads as one row, so the label sits beside the box rather
+   than above it — hence overriding .field label's block display. */
+.feedback__opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.feedback__opt input { margin-top: 3px; accent-color: var(--brand); flex: none; }
+/* Honeypot: removed from view and from the a11y tree, but NOT display:none —
+   some bots skip hidden fields, which would defeat the trap. */
+.feedback__hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
 /* External link back to a game's provider page (game detail). */
 .link-out {
   display: inline-flex;

@@ -54,6 +54,9 @@ const frontendGlobals = {
   showLogin: 'readonly', showRegister: 'readonly', showForgot: 'readonly',
   showAuthDone: 'readonly', renderVerifyLanding: 'readonly',
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',
+  // feedback.js (issue #260)
+  FEEDBACK_MESSAGE_MAX: 'readonly', showFeedback: 'readonly',
+  setupFeedbackUi: 'readonly',
   // ranking.js + lookup-group.js + lookup-cover.js + cover.js (also CommonJS
   // modules for tests — hence `module`)
   computePlaces: 'readonly', groupLookupHits: 'readonly', module: 'readonly',

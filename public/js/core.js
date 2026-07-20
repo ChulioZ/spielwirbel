@@ -130,6 +130,10 @@ function joinNames(names) {
 function applyStaticTexts() {
   document.getElementById('homeBtn').innerHTML =
     `<i class="ti ti-tornado" aria-hidden="true"></i> <span class="topbar__word">${esc(t('app.title'))}</span>`;
+  // The feedback button is icon-only, so its accessible name is the only thing a
+  // screen reader announces — localize it here (this runs on locale init AND on
+  // every change) rather than leaving the static English label from index.html.
+  document.getElementById('feedbackBtn').setAttribute('aria-label', t('feedback.button'));
 }
 
 // Language picker in the top bar.
