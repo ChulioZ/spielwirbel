@@ -39,13 +39,26 @@ Everything is configured with the same env vars documented in
 
 ### 2. Add managed PostgreSQL
 
-1. In the project, **New → Database → PostgreSQL**.
+1. In the project, **New → Database → PostgreSQL** — and check the new service's
+   **region**: it MUST be the app's region. The region is per *service*, so the
+   database does **not** inherit the app's; a mismatched default (e.g. a US
+   region under an EU app) is easy to miss and costs a full cross-continent
+   round trip on **every** query — the app's data endpoints sit at 300–600 ms
+   instead of ~100 ms, scaling with response size (TCP windows over the long
+   link). It is also a data-residency problem: EU user data at rest outside the
+   EU contradicts the DSGVO posture this doc sets up. The private network spans
+   regions transparently, so a `railway.internal` hostname is NO guarantee of
+   proximity — verify the region in the service settings, and after deploy check
+   the request logs: `durationMs` for `/api/rounds` should be ~10 ms, not ~500.
+   See `.claude/rules/railway-db-same-region.md` for how this was diagnosed.
 2. In the **app service → Variables**, add `DATABASE_URL` referencing the DB, e.g.
-   `${{Postgres.DATABASE_URL}}`. The app creates its schema on first boot.
-3. Add `DATABASE_SSL=true` if you connect over Railway's **public** Postgres
+   `${{Postgres.DATABASE_URL}}`. This resolves to the **private-network**
+   hostname (`postgres.railway.internal`) — always prefer it over the public
+   `…rlwy.net` proxy endpoint, which adds TLS + public-internet hops to every
+   query. The app creates its schema on first boot.
+3. Add `DATABASE_SSL=true` only if you connect over Railway's **public** Postgres
    endpoint (managed Postgres over the internet requires TLS); over the project's
-   **private** network it is usually not needed. Start with it set; drop it only
-   if the driver reports the server doesn't support SSL.
+   **private** network leave it unset — the handshake is pure per-connection cost.
 4. *(Optional hardening, #136)* the round tables are protected by **Row-Level
    Security**, but Postgres **superusers bypass RLS entirely** — and Railway's
    default `postgres` user is one. The app's own queries are tenant-filtered

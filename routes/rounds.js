@@ -26,46 +26,11 @@ const createRoundSchema = z.object({
 
 // Compact list for the home screen: identity, live counts, the round's design
 // and a "last played" highlight so the lobby cards can tell each round's story.
+// Computed by the data layer (listRoundSummaries) so the Postgres backend can
+// answer it in one small statement instead of assembling every game/session of
+// the tenant just to count them — the response shape is unchanged.
 router.get('/', async (req, res) => {
-  const rounds = await req.repo.listRounds();
-  res.json(
-    rounds.map((r) => {
-      // Newest finished session whose chosen game still exists (same rule as
-      // the round screen's "Zuletzt gespielt" line). Ordered by `createdAt` —
-      // when the session was played — like the Chronik. Using `finishedAt`
-      // would let re-finishing an older session jump it to the top while the
-      // Chronik keeps it in place.
-      const lastPlayed = r.sessions
-        .filter(
-          (s) => s.finished && s.chosenGameId && r.games.some((g) => g.id === s.chosenGameId)
-        )
-        .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
-      const lastGame = lastPlayed && r.games.find((g) => g.id === lastPlayed.chosenGameId);
-      return {
-        id: r.id,
-        name: r.name,
-        members: r.members.map((m) => ({ id: m.id, name: m.name, color: m.color })),
-        memberCount: r.members.length,
-        // Active games only — both archives are excluded (#250). This number
-        // also drives the import dropdown's "n games", and createRound's import
-        // skips retired AND completed, so counting either here would promise
-        // more games than the copy delivers.
-        gameCount: r.games.filter((g) => !g.retired && !g.completed).length,
-        sessionCount: r.sessions.length,
-        playedCount: r.sessions.filter((s) => s.finished).length,
-        background: r.background || null,
-        lastPlayed: lastPlayed
-          ? {
-              gameTitle: lastGame.title,
-              winnerNames: (lastPlayed.winnerIds || [])
-                .map((wid) => (r.members.find((m) => m.id === wid) || {}).name)
-                .filter(Boolean),
-              at: lastPlayed.createdAt,
-            }
-          : null,
-      };
-    })
-  );
+  res.json(await req.repo.listRoundSummaries());
 });
 
 router.get('/:rid', async (req, res) => {
@@ -83,7 +48,9 @@ router.post('/', async (req, res) => {
   // tenant's current rounds; deleting one frees a slot.
   if (quota.enforced()) {
     const limit = quota.roundsPerTenant();
-    const rounds = await req.repo.listRounds();
+    // Summaries, not full rounds: only the count matters here, and the summary
+    // read doesn't drag every game/session row out of the database.
+    const rounds = await req.repo.listRoundSummaries();
     if (rounds.length >= limit) {
       return res.status(403).json({ error: 'quota_rounds', limit });
     }
