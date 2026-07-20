@@ -75,6 +75,7 @@ router.post('/', async (req, res) => {
     const game = round.games.find((g) => g.id === String(body.gameId));
     if (!game) return res.status(400).json({ error: 'Game does not belong to this round' });
     if (game.retired) return res.status(400).json({ error: 'Game is retired' });
+    if (game.completed) return res.status(400).json({ error: 'Game is completed' });
     const now = new Date().toISOString();
     const session = await req.repo.createSession(req.params.rid, {
       createdAt: now,
@@ -117,6 +118,7 @@ router.post('/', async (req, res) => {
   const pool = round.games.filter(
     (g) =>
       !g.retired &&
+      !g.completed && // both archives are out of the draw pool (#250)
       (!tagIds || tagIds.every((x) => (g.tagIds || []).includes(x))) &&
       (!excludeTagIds || !excludeTagIds.some((x) => (g.tagIds || []).includes(x))) &&
       (typeof g.minPlayers !== 'number' || playerCount >= g.minPlayers) &&

@@ -51,9 +51,14 @@ code and documentation are in English.
   link is always saved. A link can also be **removed again** from the same
   detail page if the match turns out to be wrong; a hotlinked provider cover is
   cleared with it (your own uploaded cover is kept). Games are never lost by accident:
-  instead of deleting, they are **retired** — kept with a timestamp in a
-  browsable archive and restorable any time. Only already-retired games can be
-  permanently deleted.
+  instead of deleting, they are **archived** — kept with a timestamp in a
+  browsable archive and restorable any time. There are two archives, because
+  the reason matters: **retired** ("Aussortiert") means the group wants rid of
+  the game, **completed** ("Durchgespielt") means they finished its content — a
+  campaign, a legacy box, a story-driven video game. A game is active, retired
+  or completed, never two at once, and either archive can be reached from the
+  round hub's footer. Only an already-archived game can be permanently
+  deleted.
 - **Tags** – every round can define its own free-form tags (e.g. "outside",
   "quick lunch break", "digital", "co-op") on a dedicated screen reached from the
   Start tab. Tags are the single way to categorize games. Assign
@@ -229,7 +234,8 @@ routes/
   rounds.js          /api/rounds            (list, detail, create, delete)
   games.js           …/games                (add [+cover hotlink/source],
                                              edit [+link to provider],
-                                             retire/restore, delete)
+                                             retire/restore, complete/restore,
+                                             delete)
   members.js         …/members              (edit name / avatar color)
   sessions.js        …/sessions             (start, results, choice, finish,
                                              cancel, delete, remove one game)
@@ -260,7 +266,8 @@ public/
     lookup-group.js  collapses same-title provider hits into one multi-badge row
     views-home.js    lobby + new round
     views-round.js        round hub (Start/Regal/Chronik/Pokale dock) + Start tab
-    views-round-tabs.js   Regal, Chronik, Pokale tabs + retired games
+    views-round-tabs.js   Regal, Chronik, Pokale tabs + the two archive
+                          screens (retired / completed)
     views-round-detail.js game detail, design picker, tags screen, sheet helpers
     views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)

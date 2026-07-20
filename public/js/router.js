@@ -73,6 +73,7 @@ function resolveRoute(pathname) {
     if (!sub || sub === 'start') return () => showRound(rid, 'start');
     if (['regal', 'chronik', 'pokale'].includes(sub)) return () => showRound(rid, sub);
     if (sub === 'retired') return () => showRetired(rid);
+    if (sub === 'completed') return () => showCompleted(rid);
     if (sub === 'design') return () => showBackground(rid);
     if (sub === 'tags') return () => showTags(rid);
     if (sub === 'game' && parts[3]) return () => showGameDetail(rid, parts[3]);

@@ -1218,6 +1218,13 @@ body.auth-screen .crumbs { display: none; }
   background: color-mix(in srgb, var(--warn) 14%, var(--surface));
   color: var(--warn);
 }
+/* The other archive (#250): "durchgespielt" is an achievement, not a discard,
+   so it reads green against retired's warning amber. Both tint a semantic
+   variable rather than a fixed pastel — see theme-derived-colors.md. */
+.tag--completed {
+  background: color-mix(in srgb, var(--good) 14%, var(--surface));
+  color: var(--good);
+}
 .rank-medal { font-size: 22px; margin-right: 6px; vertical-align: middle; }
 .rank-medal--gold { color: var(--gold); }
 .rank-medal--silver { color: #9ca3af; }

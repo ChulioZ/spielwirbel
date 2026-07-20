@@ -1,7 +1,7 @@
 'use strict';
 
 /* Routes for the games of a round: add (with image), retire/restore,
-   permanently delete (retired games only).
+   permanently delete (archived games only).
    Mounted under /api/rounds/:rid/games (mergeParams for rid). */
 
 const express = require('express');
@@ -76,7 +76,7 @@ router.post('/', upload.single('image'), async (req, res) => {
   if (!round) return res.status(404).json({ error: 'Round not found' });
 
   // Per-tenant games-per-round cap (#139): only in the public multi-tenant mode.
-  // Counts every game in the round (active + retired — both hold a row and a
+  // Counts every game in the round (active + archived — both hold a row and a
   // possible cover). multer has buffered any upload in memory but nothing is
   // persisted yet, so refusing here leaves no orphan file.
   if (quota.enforced() && (round.games || []).length >= quota.gamesPerRound()) {
@@ -217,7 +217,20 @@ router.post('/:gid/retire', async (req, res) => {
   res.json(game);
 });
 
-// Permanently delete a retired game: remove it from the collection and erase
+// Mark a game as completed ("durchgespielt") — the group finished its content,
+// as opposed to retiring it. Like retiring it takes the game out of the active
+// collection; the data layer keeps the two states mutually exclusive (#250).
+router.post('/:gid/complete', async (req, res) => {
+  const round = await req.repo.getRound(req.params.rid);
+  if (!round) return res.status(404).json({ error: 'Round not found' });
+
+  const completed = req.body.completed !== false; // default: true
+  const game = await req.repo.completeGame(req.params.rid, req.params.gid, completed);
+  if (!game) return res.status(404).json({ error: 'Game not found' });
+  res.json(game);
+});
+
+// Permanently delete an archived game: remove it from the collection and erase
 // every trace of it from past sessions and the activity feed. Rating averages
 // are derived from session votes, so they adjust automatically.
 router.delete('/:gid', async (req, res) => {
@@ -228,8 +241,8 @@ router.delete('/:gid', async (req, res) => {
   // returning the deleted game's cover path so the file can be cleaned up.
   const result = await req.repo.deleteGame(req.params.rid, req.params.gid);
   if (result === null) return res.status(404).json({ error: 'Game not found' });
-  if (result === 'not_retired')
-    return res.status(400).json({ error: 'Only retired games can be deleted' });
+  if (result === 'not_archived')
+    return res.status(400).json({ error: 'Only retired or completed games can be deleted' });
 
   // Remove the cover image unless another game (e.g. in an imported round) still
   // uses the same one. Best effort; the store no longer references it.

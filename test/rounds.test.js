@@ -47,6 +47,35 @@ test('GET /api/rounds returns a compact list counting only active games', async 
   assert.equal(entry.memberCount, 2);
 });
 
+// gameCount also feeds the import dropdown's "n games", and createRound's
+// import skips BOTH archives — so counting a completed game here would promise
+// more games than the copy actually delivers (#250).
+test('GET /api/rounds excludes completed games from gameCount (#250)', async () => {
+  const round = await createRound(request);
+  const mk = async (title) =>
+    (await request(app)
+      .post(`/api/rounds/${round.id}/games`)
+      .field('title', title)
+      .field('minPlayers', '2')
+      .field('maxPlayers', '4')).body;
+  const active = await mk('Catan');
+  const done = await mk('Pandemic Legacy');
+  const gone = await mk('Alte Gurke');
+  await request(app).post(`/api/rounds/${round.id}/games/${done.id}/complete`).send({});
+  await request(app).post(`/api/rounds/${round.id}/games/${gone.id}/retire`).send({});
+
+  const entry = (await request(app).get('/api/rounds')).body.find((r) => r.id === round.id);
+  assert.equal(entry.gameCount, 1, 'only the active game counts');
+  assert.ok(active.id);
+
+  // ...and the import actually copies exactly that one game.
+  const copy = await request(app)
+    .post('/api/rounds')
+    .send({ name: 'Copy', members: ['Z', 'Y'], importFromRoundId: round.id });
+  assert.equal(copy.body.games.length, entry.gameCount);
+  assert.equal(copy.body.games[0].title, 'Catan');
+});
+
 test('GET /api/rounds summary carries members, background and lastPlayed', async () => {
   const round = await createRound(request); // Alice, Bob
 

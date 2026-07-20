@@ -35,7 +35,7 @@ async function showRound(rid, tab) {
   setCrumbs([{ label: t('nav.home'), onClick: showHome }, { label: round.name }]);
 
   app.innerHTML = '';
-  const activeGames = round.games.filter((g) => !g.retired);
+  const activeGames = round.games.filter((g) => !g.retired && !g.completed);
   if (activeTab === 'regal') renderRegalTab(round, activeGames);
   else if (activeTab === 'chronik') renderChronikTab(round, activities);
   else if (activeTab === 'pokale') renderPokaleTab(round);
