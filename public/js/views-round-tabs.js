@@ -198,7 +198,7 @@ async function showMoveGames(round) {
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         ${others.length
-          ? `<p class="muted">${esc(t('moveGames.intro', { n }))}</p>
+          ? `<p class="muted">${esc(tn(n, 'moveGames.introOne', 'moveGames.intro'))}</p>
              <div class="field">
                <label for="moveTarget">${esc(t('moveGames.pick'))}</label>
                <select id="moveTarget" class="input">
@@ -227,12 +227,12 @@ async function showMoveGames(round) {
     const targetId = select.value;
     const targetName = (others.find((r) => r.id === targetId) || {}).name || '';
     // The source round's sessions do not survive the move, so this one confirms.
-    if (!confirm(t('moveGames.confirm', { n, round: targetName }))) return;
+    if (!confirm(tn(n, 'moveGames.confirmOne', 'moveGames.confirm', { round: targetName }))) return;
     go.disabled = true;
     try {
       const res = await api('POST', `/api/rounds/${round.id}/games/move-to`, { targetRoundId: targetId });
       closeSheet();
-      toast(t('moveGames.toast.done', { n: res.movedGames }));
+      toast(tn(res.movedGames, 'moveGames.toast.doneOne', 'moveGames.toast.done'));
       showRound(round.id, 'regal');
     } catch (e) {
       go.disabled = false;
@@ -267,8 +267,8 @@ function renderChronikTab(round, activities) {
       game_deleted: { icon: 'ti-trash', text: t('activity.gameDeleted', { title: a.title }) },
       // One bulk entry per side of a whole-shelf move (#253) — these carry a
       // count and the other round's name, not a game title.
-      games_moved_out: { icon: 'ti-arrow-right', text: t('activity.gamesMovedOut', { n: a.count, round: a.roundName }) },
-      games_moved_in: { icon: 'ti-arrow-left', text: t('activity.gamesMovedIn', { n: a.count, round: a.roundName }) },
+      games_moved_out: { icon: 'ti-arrow-right', text: tn(a.count, 'activity.gamesMovedOutOne', 'activity.gamesMovedOut', { round: a.roundName }) },
+      games_moved_in: { icon: 'ti-arrow-left', text: tn(a.count, 'activity.gamesMovedInOne', 'activity.gamesMovedIn', { round: a.roundName }) },
     }[a.type];
     if (!meta) return;
     entries.push({ kind: 'activity', at: a.at, id: a.id, gameId: a.gameId, type: a.type, ...meta });

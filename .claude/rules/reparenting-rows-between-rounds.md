@@ -34,6 +34,16 @@ each hold the row the other wants, i.e. a deadlock. One
 `whereIn('id', [rid, targetRid]).orderBy('id').forUpdate()` acquires them in a
 deterministic global order, so the two transactions serialize instead.
 
+This relies on the sort happening *below* the locking, which is worth knowing is
+real rather than assumed — `EXPLAIN` on the emitted statement puts `LockRows`
+above `Sort`, so rows are locked in the order the sort emits them:
+
+```
+LockRows
+  ->  Sort  (Sort Key: id)
+        ->  Bitmap Heap Scan on rounds
+```
+
 ## 3. The quota check lives in the REPO, not the route
 
 Every other quota (`.claude/rules/per-tenant-quotas.md`) is checked in the route
