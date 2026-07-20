@@ -92,8 +92,8 @@ migrations, not a full ORM). See the Architecture section below.
 - **Frontend:** `public/js/*.js` are plain classic `<script>`s sharing one global
   scope. They are loaded in a fixed order (the authoritative list is the
   `<script>` tags in `public/index.html` — don't let this summary drift from
-  it): `i18n.js` → `lang/en.js` → `lang/de.js` → `core.js` → `account.js` →
-  `ranking.js` → `lookup-group.js` → the `views-*.js` files →
+  it): `i18n.js` → `lang/en.js` → `lang/de.js` → `cover.js` → `core.js` →
+  `account.js` → `ranking.js` → `lookup-group.js` → the `views-*.js` files →
   `router.js` → `main.js` → `pwa.js`. i18n + languages load first (so `t()` is
   available everywhere), `core.js` holds shared helpers/state, and `main.js`
   calls `initLocale()`/`showHome()` last. (`public/js/login.js` is a separate
