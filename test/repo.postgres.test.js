@@ -32,15 +32,33 @@ if (!process.env.DATABASE_URL) {
     await c.connect();
     // EVERY table the contract suite writes, not just the round ones. The JSON
     // backend gets a fresh temp DATA_DIR per run, so the shared contract assumes
-    // an empty store — but a Postgres database persists between runs. Omitting
-    // `users` and `moderation_log` here made the suite pass on a fresh database
-    // and fail on the second run against the same one ("logModeration appends
-    // and listModeration returns newest first" asserts an absolute count of 2
-    // and saw 4). CI never noticed: it gets a clean service container each time,
-    // so this only ever bit someone re-running against a local container.
-    // TRUNCATE is table-level and exempt from RLS, which is why it works here at
-    // all (.claude/rules/tenancy-rls.md).
-    await c.query('TRUNCATE rounds, members, games, sessions, activities, users, moderation_log CASCADE');
+    // an empty store — but a Postgres database persists between runs, and
+    // several contract tests assert ABSOLUTE counts.
+    //
+    // This is DISCOVERED, not a hand-maintained list, because the hand-written
+    // one silently rotted twice: omitting `users`/`moderation_log` broke
+    // "logModeration appends…" (expected 2, saw 4), and `feedback` (added later
+    // by #260) was never added at all, breaking "createFeedback appends…"
+    // (expected 2, saw 6). Both passed on a fresh database and failed only on a
+    // re-run against the same one — and CI never noticed either, since it gets a
+    // clean service container every time, so this only ever bit someone
+    // iterating against a local container. A new global table would have been
+    // the third repeat; now it is covered the moment its migration runs.
+    //
+    // knex's own bookkeeping is excluded: truncating it would make the next
+    // init() re-run every migration. TRUNCATE is table-level and exempt from
+    // RLS, which is why it works here at all (.claude/rules/tenancy-rls.md).
+    await c.query(`
+      DO $$
+      DECLARE tables text;
+      BEGIN
+        SELECT string_agg(quote_ident(tablename), ', ') INTO tables
+          FROM pg_tables
+         WHERE schemaname = 'public' AND tablename NOT LIKE 'knex\\_%';
+        IF tables IS NOT NULL THEN
+          EXECUTE 'TRUNCATE ' || tables || ' CASCADE';
+        END IF;
+      END $$;`);
     await c.end();
   });
 
