@@ -2,8 +2,16 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const request = require('supertest');
 const { app, createRound } = require('./helpers');
+const store = require('../lib/store');
+
+// A minimal but real PNG (magic bytes) — uploads are validated by content.
+const PNG_BYTES = Buffer.concat([
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(8),
+]);
 
 test('POST /api/rounds creates a round with cleaned members', async () => {
   const res = await request(app)
@@ -133,6 +141,69 @@ test('DELETE /api/rounds/:rid removes the round', async () => {
   assert.equal(del.status, 200);
   const res = await request(app).get(`/api/rounds/${round.id}`);
   assert.equal(res.status, 404);
+});
+
+// #280: the cover objects of a deleted round's games used to be left behind
+// forever — unreachable, since the only copy of the key was the deleted row.
+test('DELETE /api/rounds/:rid deletes its games\' cover files', async () => {
+  const round = await createRound(request);
+  const upload = await request(app)
+    .post(`/api/rounds/${round.id}/games`)
+    .field('title', 'Chess').field('minPlayers', '2').field('maxPlayers', '4')
+    .attach('image', PNG_BYTES, { filename: 'c.png', contentType: 'image/png' });
+  assert.equal(upload.status, 201);
+  const cover = path.join(store.UPLOAD_DIR, path.basename(upload.body.image));
+  assert.ok(fs.existsSync(cover));
+
+  assert.equal((await request(app).delete(`/api/rounds/${round.id}`)).status, 200);
+  assert.equal(fs.existsSync(cover), false);
+});
+
+// The counterpart: importFromRoundId copies the cover PATH, not the file, so
+// deleting one round must not pull the cover out from under the other.
+test('DELETE /api/rounds/:rid keeps a cover another round still references', async () => {
+  const src = await createRound(request, { name: 'Src' });
+  const upload = await request(app)
+    .post(`/api/rounds/${src.id}/games`)
+    .field('title', 'Chess').field('minPlayers', '2').field('maxPlayers', '4')
+    .attach('image', PNG_BYTES, { filename: 'c.png', contentType: 'image/png' });
+  const cover = path.join(store.UPLOAD_DIR, path.basename(upload.body.image));
+
+  const copy = await request(app)
+    .post('/api/rounds')
+    .send({ name: 'Copy', members: ['Z'], importFromRoundId: src.id });
+  assert.equal(copy.body.games[0].image, upload.body.image);
+
+  assert.equal((await request(app).delete(`/api/rounds/${src.id}`)).status, 200);
+  assert.ok(fs.existsSync(cover), 'the imported round still shows this cover');
+
+  // Once the last referencing round goes, the object is cleaned up after all.
+  assert.equal((await request(app).delete(`/api/rounds/${copy.body.id}`)).status, 200);
+  assert.equal(fs.existsSync(cover), false);
+});
+
+// A hotlinked provider cover (#172) is not ours to delete, and storage.remove's
+// basename() would otherwise resolve it onto one of OUR objects.
+test('DELETE /api/rounds/:rid leaves hotlinked provider covers alone', async () => {
+  const round = await createRound(request);
+  const decoy = await createRound(request, { name: 'Decoy' });
+  const upload = await request(app)
+    .post(`/api/rounds/${decoy.id}/games`)
+    .field('title', 'Keep').field('minPlayers', '2').field('maxPlayers', '4')
+    .attach('image', PNG_BYTES, { filename: 'c.png', contentType: 'image/png' });
+  const ours = path.join(store.UPLOAD_DIR, path.basename(upload.body.image));
+
+  // Same basename as our object, but on a provider host — deleting the round
+  // must not touch the file the colliding name resolves to.
+  const hotlink = `https://cf.geekdo-images.com/x/${path.basename(upload.body.image)}`;
+  const game = await request(app)
+    .post(`/api/rounds/${round.id}/games`)
+    .field('title', 'Linked').field('minPlayers', '2').field('maxPlayers', '4')
+    .field('imageUrl', hotlink);
+  assert.equal(game.body.image, hotlink);
+
+  assert.equal((await request(app).delete(`/api/rounds/${round.id}`)).status, 200);
+  assert.ok(fs.existsSync(ours), 'the colliding own-upload survives');
 });
 
 test('importFromRoundId copies active games into the new round', async () => {

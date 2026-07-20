@@ -4,9 +4,10 @@
 
 const express = require('express');
 const { z } = require('zod');
+const storage = require('../lib/storage');
 const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
-const { trackEvent } = require('../lib/observability');
+const { trackEvent, logger } = require('../lib/observability');
 
 const router = express.Router();
 
@@ -96,8 +97,27 @@ router.post('/', async (req, res) => {
 });
 
 router.delete('/:rid', async (req, res) => {
+  // The data layer hands back the cover paths the round freed — it is the only
+  // place that can still see them, since the games cascade away with the round.
   const deleted = await req.repo.deleteRound(req.params.rid);
-  if (!deleted) return res.status(404).json({ error: 'Round not found' });
+  if (deleted === null) return res.status(404).json({ error: 'Round not found' });
+
+  // Rows first, bytes second (as in the game delete and the admin erasure): the
+  // references are already gone, so a failed object delete leaves an orphaned
+  // file, never a broken cover. The round IS deleted at this point, so nothing
+  // in here may throw its way into a 500 — the whole loop body is guarded and a
+  // failure is logged and stepped over, never surfaced as a failed deletion.
+  // The isImageReferenced check matters because createRound's importFromRoundId
+  // copies a cover path across rounds rather than the file; storage.remove
+  // ignores hotlinked provider URLs by construction (#172).
+  for (const image of deleted.images) {
+    try {
+      if (!(await req.repo.isImageReferenced(image))) await storage.remove(image);
+    } catch (err) {
+      logger.error({ event: 'round_delete_object_failed', err: err.message });
+    }
+  }
+
   res.json({ ok: true });
 });
 
