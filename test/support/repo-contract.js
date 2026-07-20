@@ -60,9 +60,38 @@ module.exports = function repoContract(repo) {
   test('getRound returns null for a missing round; deleteRound reports found/again', async () => {
     assert.equal(await repo.getRound(T, 'nope'), null);
     const round = await freshRound();
-    assert.equal(await repo.deleteRound(T, round.id), true);
-    assert.equal(await repo.deleteRound(T, round.id), false);
+    assert.deepEqual(await repo.deleteRound(T, round.id), { images: [] });
+    assert.equal(await repo.deleteRound(T, round.id), null);
     assert.equal(await repo.getRound(T, round.id), null);
+  });
+
+  // #280: the games cascade away with the round, so their cover paths are only
+  // knowable here — an unreported one is an object nothing can ever reach again.
+  test('deleteRound reports its games\' cover images, deduped', async () => {
+    const round = await freshRound();
+    await repo.createGame(T, round.id, gameFields({ title: 'A', image: '/uploads/a.jpg' }));
+    await repo.createGame(T, round.id, gameFields({ title: 'B', image: '/uploads/b.jpg' }));
+    // A second game on the same cover (as an imported round produces) must be
+    // reported once, so the route deletes the object once.
+    await repo.createGame(T, round.id, gameFields({ title: 'C', image: '/uploads/a.jpg' }));
+    await repo.createGame(T, round.id, gameFields({ title: 'D' })); // no cover
+    // Retired games hold a cover too — they must not be missed.
+    const retired = await repo.createGame(T, round.id, gameFields({ title: 'E', image: '/uploads/e.jpg' }));
+    await repo.retireGame(T, round.id, retired.id, true);
+
+    const out = await repo.deleteRound(T, round.id);
+    assert.deepEqual(
+      [...out.images].sort(),
+      ['/uploads/a.jpg', '/uploads/b.jpg', '/uploads/e.jpg']
+    );
+  });
+
+  test('deleteRound is refused across tenants and frees nothing', async () => {
+    const round = await freshRound();
+    await repo.createGame(T, round.id, gameFields({ image: '/uploads/kept-280.jpg' }));
+    assert.equal(await repo.deleteRound(OTHER, round.id), null);
+    assert.ok(await repo.getRound(T, round.id));
+    assert.equal(await repo.isImageReferenced(T, '/uploads/kept-280.jpg'), true);
   });
 
   test('createRound import copies only active games (title/image) + logs them', async () => {
@@ -301,7 +330,7 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.addTag(OTHER, round.id, 'evil'), null);
     assert.equal(await repo.deleteTag(OTHER, round.id, 'any'), false);
     assert.equal(await repo.deleteActivity(OTHER, round.id, 'any'), false);
-    assert.equal(await repo.deleteRound(OTHER, round.id), false);
+    assert.equal(await repo.deleteRound(OTHER, round.id), null);
 
     // The round is fully intact for its own tenant after all of that.
     const intact = await repo.getRound(T, round.id);
