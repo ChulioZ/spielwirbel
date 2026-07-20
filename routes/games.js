@@ -165,6 +165,12 @@ router.patch('/:gid', upload.single('image'), async (req, res) => {
   const source = buildSource(b);
   if (source) patch.source = source;
 
+  // Detach an existing link (#282). Opt-in and multipart-safe like removeImage,
+  // and it wins over a source sent in the same request — an explicit clear is
+  // never the ambiguous half of a contradictory body.
+  const removeSource = b.removeSource === 'true' || b.removeSource === true;
+  if (removeSource) patch.source = null;
+
   // Image: a new upload replaces the old file; removeImage clears it; otherwise
   // a provider imageUrl (host-allowlisted) is stored as a hotlink (#172). The
   // old cover is deleted unless another game still references it — and only
@@ -180,6 +186,12 @@ router.patch('/:gid', upload.single('image'), async (req, res) => {
   } else if (b.imageUrl) {
     const linked = providerCoverUrl(b.imageUrl);
     if (linked) newImage = linked; // an untrusted/malformed URL keeps the old cover
+  } else if (removeSource && !storage.isHostedImage(oldImage)) {
+    // Unlinking takes the hotlinked provider cover with it — keeping it would
+    // leave the game showing artwork from a provider it is no longer linked to.
+    // A '/uploads/' cover is the member's own upload and stays. The game falls
+    // back to the deterministic per-title placeholder (#256).
+    newImage = null;
   }
   if (newImage !== oldImage) patch.image = newImage;
 

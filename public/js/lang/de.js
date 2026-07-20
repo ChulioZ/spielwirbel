@@ -201,6 +201,10 @@ I18N.de = {
 
   'detail.viewSource': 'Auf {provider} ansehen',
   'detail.linkProvider': 'Mit Anbieter verknüpfen',
+  'detail.unlinkProvider': 'Verknüpfung lösen',
+  'detail.unlinkConfirm': 'Verknüpfung mit {provider} lösen?',
+  'detail.unlinkConfirmCover': 'Verknüpfung mit {provider} lösen? Das Titelbild von {provider} wird dabei ebenfalls entfernt.',
+  'detail.toast.unlinked': 'Verknüpfung gelöst',
 
   'linkProvider.title': 'Mit Anbieter verknüpfen',
   'linkProvider.searchLabel': 'Spiel bei einem Anbieter finden',

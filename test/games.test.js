@@ -256,6 +256,132 @@ test('PATCH ignores an invalid source and does not clobber the field', async () 
   assert.equal(res.body.title, 'Renamed'); // other fields still applied
 });
 
+// --- Unlink a game from its provider (issue #282) ---
+
+// Add a game that is linked to a provider and carries its hotlinked cover.
+async function addLinkedGame(rid, image = 'https://cf.geekdo-images.com/x/pic.jpg') {
+  const fields = {
+    sourceProvider: 'bgg',
+    sourceExternalId: '13',
+    sourceUrl: 'https://boardgamegeek.com/boardgame/13/catan',
+  };
+  if (image) fields.imageUrl = image;
+  return (await addGame(rid, fields)).body;
+}
+
+test('PATCH removeSource clears the link and the hotlinked provider cover', async () => {
+  const round = await createRound(request);
+  const game = await addLinkedGame(round.id);
+  assert.equal(game.source.provider, 'bgg');
+  assert.equal(game.image, 'https://cf.geekdo-images.com/x/pic.jpg');
+
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ removeSource: true });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.source, null);
+  assert.equal(res.body.image, null); // falls back to the per-title placeholder
+
+  // and it persisted, not just echoed back
+  const after = await request(app).get(`/api/rounds/${round.id}`);
+  const stored = after.body.games.find((g) => g.id === game.id);
+  assert.equal(stored.source, null);
+  assert.equal(stored.image, null);
+});
+
+test('PATCH removeSource accepts the multipart string form', async () => {
+  const round = await createRound(request);
+  const game = await addLinkedGame(round.id);
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .field('removeSource', 'true');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.source, null);
+  assert.equal(res.body.image, null);
+});
+
+test('PATCH removeSource keeps an own upload and deletes no stored object', async () => {
+  const round = await createRound(request);
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/games`)
+    .field('title', 'Chess')
+    .field('minPlayers', '2')
+    .field('maxPlayers', '4')
+    .field('sourceProvider', 'bgg')
+    .field('sourceExternalId', '13')
+    .attach('image', PNG_BYTES, { filename: 'cover.png', contentType: 'image/png' });
+  const game = res.body;
+  assert.ok(game.image.startsWith('/uploads/'));
+  const key = path.join(store.UPLOAD_DIR, path.basename(game.image));
+  assert.ok(fs.existsSync(key));
+
+  const un = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ removeSource: true });
+  assert.equal(un.status, 200);
+  assert.equal(un.body.source, null);
+  assert.equal(un.body.image, game.image, 'the member’s own cover is kept');
+  assert.ok(fs.existsSync(key), 'the stored object was not deleted');
+  // Other specs in this file assert the shared upload dir is empty — this is
+  // the only one that deliberately leaves a file behind, so it clears it.
+  fs.unlinkSync(key);
+});
+
+test('PATCH removeSource unlinks a source that has no url', async () => {
+  const round = await createRound(request);
+  // sourceUrl rejected as non-http → the link is stored with url: null
+  const game = (await addGame(round.id, {
+    sourceProvider: 'bgg',
+    sourceExternalId: '13',
+    sourceUrl: 'javascript:alert(1)',
+  })).body;
+  assert.equal(game.source.url, null);
+
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ removeSource: true });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.source, null);
+});
+
+test('PATCH without removeSource still never clobbers an existing link', async () => {
+  const round = await createRound(request);
+  const game = await addLinkedGame(round.id);
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ title: 'Renamed' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.title, 'Renamed');
+  assert.deepEqual(res.body.source, game.source);
+  assert.equal(res.body.image, game.image);
+});
+
+test('PATCH removeSource wins over a source sent in the same request', async () => {
+  const round = await createRound(request);
+  const game = await addLinkedGame(round.id);
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({
+      removeSource: true,
+      sourceProvider: 'bgg',
+      sourceExternalId: '99',
+      sourceUrl: 'https://boardgamegeek.com/boardgame/99/other',
+    });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.source, null);
+});
+
+test('PATCH removeSource together with a new cover keeps the new cover', async () => {
+  const round = await createRound(request);
+  const game = await addLinkedGame(round.id);
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ removeSource: true, imageUrl: 'https://cf.geekdo-images.com/y/other.jpg' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.source, null);
+  assert.equal(res.body.image, 'https://cf.geekdo-images.com/y/other.jpg');
+});
+
 test('PATCH stores an allowlisted imageUrl as a hotlink without downloading it', async () => {
   const realFetch = global.fetch;
   let called = false;

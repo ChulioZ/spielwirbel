@@ -45,3 +45,34 @@ unregister the SW and clear its caches first:
 
 See also the `tabler-glyph-and-icon-regen` memory note and
 `.claude/rules/pwa-service-worker.md` (cache-first shell assets).
+
+## A `ti-*` class in the markup does NOT mean it's declared
+
+Because the subset only declares the classes someone remembered to add, an
+`<i class="ti ti-foo">` whose rule is **missing** renders **nothing at all** —
+no tofu, no console warning, no lint error, no failing test. It just silently
+occupies zero-ish width, and the label next to it still reads fine, so the UI
+looks merely "plain" rather than broken.
+
+Found on #282: `.ti-link` and `.ti-external-link` had been used on the game
+detail screen since #74 (the "View on X" / "Link to provider" actions) but were
+**never added to the CSS**, so both had been invisible in production the whole
+time. Running the grep below then turned up **five more** in the same state —
+`ti-heart`, `ti-percentage` (Pokale cards) and `ti-lock-question`,
+`ti-mail-check`, `ti-logout` (the account/auth screens). All eight are declared
+and cmap-verified as of #282.
+
+Note two of them, `\f931` and `\f939`, sit in the **CJK Compatibility Ideographs**
+block rather than the Private Use Area — that is fine and not a sign of a wrong
+lookup (this bundle maps glyphs above U+F900), but it does mean the codepoint
+prints as a CJK character in a console dump. Judge those by the rendered glyph,
+not by how the `content` string looks in devtools.
+
+**So when you add an icon, also grep the class you're copying from:**
+
+```bash
+grep -o '^\.ti-[a-z0-9-]*' public/fonts/tabler-icons.css   # what's declared
+grep -rho 'ti-[a-z0-9-]*' public/js public/*.html | sort -u # what's used
+```
+
+A name in the second list but not the first is an already-invisible icon.

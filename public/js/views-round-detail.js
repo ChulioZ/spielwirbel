@@ -513,10 +513,30 @@ async function showGameDetail(rid, gameId) {
   // Link back to the provider page when the game was added from an external
   // source. A game with no source instead offers to link one after the fact
   // (issue #74). Provider names are proper nouns, not translated.
-  if (game.source && game.source.url) {
-    const src = h(`<div class="section"><a class="link-out" href="${esc(game.source.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('detail.viewSource', { provider: providerLabel(game.source.provider) }))}</a></div>`);
+  if (game.source) {
+    const provider = providerLabel(game.source.provider);
+    const src = h('<div class="section gd-source"></div>');
+    // A link built before the provider exposed a URL has none — it stays
+    // unlinkable rather than rendering nothing at all.
+    if (game.source.url) {
+      src.appendChild(h(`<a class="link-out" href="${esc(game.source.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('detail.viewSource', { provider }))}</a>`));
+    }
+    const un = h(`<button class="link-out link-out--btn link-out--muted"><i class="ti ti-unlink" aria-hidden="true"></i> ${esc(t('detail.unlinkProvider'))}</button>`);
+    un.addEventListener('click', async () => {
+      // Only a hotlinked provider cover is dropped with the link; the member's
+      // own upload is kept, so the two wordings must not be swapped.
+      const ownUpload = typeof game.image === 'string' && game.image.startsWith('/uploads/');
+      const key = game.image && !ownUpload ? 'detail.unlinkConfirmCover' : 'detail.unlinkConfirm';
+      if (!confirm(t(key, { provider }))) return;
+      try {
+        await api('PATCH', `/api/rounds/${rid}/games/${gameId}`, { removeSource: true });
+        toast(t('detail.toast.unlinked'));
+        showGameDetail(rid, gameId);
+      } catch (e) { toast(e.message); }
+    });
+    src.appendChild(un);
     app.appendChild(src);
-  } else if (!game.source) {
+  } else {
     const link = h(`<div class="section"><button class="link-out link-out--btn"><i class="ti ti-link" aria-hidden="true"></i> ${esc(t('detail.linkProvider'))}</button></div>`);
     link.querySelector('button').addEventListener('click', () => showLinkProvider(round, game));
     app.appendChild(link);

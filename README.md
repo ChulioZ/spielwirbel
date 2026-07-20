@@ -48,7 +48,9 @@ code and documentation are in English.
   (with no source link) can be **linked to a provider after the fact** from its
   detail page: search the providers, pick the match, and choose which differing
   fields (name, cover, player count) to take from it — the source
-  link is always saved. Games are never lost by accident:
+  link is always saved. A link can also be **removed again** from the same
+  detail page if the match turns out to be wrong; a hotlinked provider cover is
+  cleared with it (your own uploaded cover is kept). Games are never lost by accident:
   instead of deleting, they are **retired** — kept with a timestamp in a
   browsable archive and restorable any time. Only already-retired games can be
   permanently deleted.
