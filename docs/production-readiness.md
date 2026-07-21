@@ -615,6 +615,7 @@ same as anything else.
 | — | Mobile-web responsiveness pass | Not yet filed as its own issue |
 | — | Localize server-side error messages if user-facing surfaces grow | Not yet filed as its own issue |
 | — | Attorney trademark clearance (DPMA + EUIPO) for the chosen brand | Advisable before heavy brand spend, not blocking anything shipped (§10) |
+| — | Consent mechanism (cookie/tracking banner) | Conditional, not yet needed — only if non-essential tracking is ever added (§9.3) |
 
 **Hard blockers, consolidated — all shipped:** real database + stateless tier
 (§3/§2.3), authentication (§5), TLS + security headers + rate limiting (§4),
