@@ -47,7 +47,12 @@
     h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.4rem; }
     .intro { font-size: 0.9rem; color: #aab2c4; margin: 0 0 1.4rem; }
     label { display: block; font-size: 0.85rem; margin: 1rem 0 0.4rem; color: #aab2c4; }
-    input, textarea {
+    /* Art. 16(2) report fields (#272): revealed by the category select. */
+    .hint { font-size: 0.82rem; color: #8b93a6; margin: 0.75rem 0 0; }
+    .check { display: flex; gap: 0.6rem; align-items: flex-start; margin-top: 1rem; }
+    .check input { width: auto; margin-top: 0.2rem; }
+    .check label { margin: 0; font-size: 0.85rem; }
+    select, input, textarea {
       width: 100%;
       padding: 0.7rem 0.85rem;
       font-size: 1rem;
@@ -58,7 +63,7 @@
       color: #e8eaf0;
     }
     textarea { min-height: 8rem; resize: vertical; }
-    input:focus, textarea:focus { outline: 2px solid #6c7ae0; outline-offset: 1px; }
+    select:focus, input:focus, textarea:focus { outline: 2px solid #6c7ae0; outline-offset: 1px; }
     /* Honeypot: off-screen, not tab-reachable, hidden from assistive tech. Real
        users never fill it; a non-empty value is treated as a bot server-side. */
     .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
@@ -94,6 +99,8 @@
     </div>
     <h1 id="t-title">Kontakt</h1>
     <p class="intro" id="t-intro"></p>
+    <!-- Names this form as the DSA content-report channel (#272 / Art. 16). -->
+    <p class="intro" id="t-report-note"></p>
 
 <!-- Wrapped so kontakt.js can hide the whole input section at once when
          GET /api/config reports the channel as not configured yet (same
@@ -104,6 +111,21 @@
 
       <label for="email" id="t-email-label"></label>
       <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required />
+
+      <label for="category" id="t-category-label"></label>
+      <select id="category" name="category"></select>
+
+      <!-- Art. 16(2) elicitation, revealed when a report category is chosen:
+           exact address of the content plus the good-faith accuracy statement. -->
+      <div id="reportFields" hidden>
+        <p class="hint" id="t-report-hint"></p>
+        <label for="url" id="t-url-label"></label>
+        <input id="url" name="url" type="text" maxlength="500" />
+        <div class="check">
+          <input id="goodFaith" name="goodFaith" type="checkbox" />
+          <label for="goodFaith" id="t-goodfaith-label"></label>
+        </div>
+      </div>
 
       <label for="subject" id="t-subject-label"></label>
       <input id="subject" name="subject" type="text" maxlength="200" />

@@ -254,8 +254,10 @@ routes/
                                              e-mail, login, refresh, logout,
                                              forgot/reset password, me —
                                              404 unless ACCOUNTS_ENABLED)
-  contact.js         /api/contact           (public contact form → e-mails the
-                                             operator; no auth, own rate limit,
+  contact.js         /api/contact           (public contact form / DSA notice
+                                             intake → stores every submission +
+                                             e-mails the operator + acknowledges
+                                             reports; no auth, own rate limit,
                                              honeypot; fails loud in production)
   legal.js           /impressum, /datenschutz,
                      /nutzungsbedingungen    (server-rendered legal pages,
@@ -265,6 +267,8 @@ routes/
                                              status, lookup by image/round/
                                              e-mail/tenant, per-tenant summary,
                                              round text + redaction, takedown,
+                                             notices inbox + decisions, Art. 17
+                                             statements of reasons,
                                              account suspend/restore, GDPR
                                              export + erasure, filterable action
                                              log, user feedback —
@@ -389,14 +393,20 @@ Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
 the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min)
 and `CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5).
 
-Contact form (issue #224): a public, login-free page at `/kontakt.html` with a
-bilingual form that POSTs to `/api/contact`, which e-mails the operator — the
-phone-free second communication channel a German Impressum (§ 5 DDG) relies on, and
-the DSA notice-and-action channel. Delivery goes to `CONTACT_TO` (falling back to
-`MAIL_FROM`) via the same Brevo setup as the account mails. It has its own low rate
-limit and a server-side honeypot for spam, and in `NODE_ENV=production` it **fails
-loud** (`502` with a fallback e-mail) rather than silently dropping a message when
-mail is unconfigured — so configure `BREVO_API_KEY` + `MAIL_FROM` + `CONTACT_TO`
+Contact form (issues #224/#272): a public, login-free page at `/kontakt.html`
+with a bilingual form that POSTs to `/api/contact`, which e-mails the operator —
+the phone-free second communication channel a German Impressum (§ 5 DDG) relies
+on, and the DSA notice-and-action channel: a category select turns a message
+into a structured Art. 16 report (reported URL + good-faith statement; a CSAM
+report may be anonymous), which is acknowledged to the notifier by mail
+(Art. 16(4)). Every accepted submission is **also stored** (the operator
+panel's Meldungen inbox), so a lost mail can never mean a notice left no
+record — storing happens before sending. Delivery goes to `CONTACT_TO` (falling
+back to `MAIL_FROM`) via the same Brevo setup as the account mails. It has its
+own low rate limit and a server-side honeypot for spam, and in
+`NODE_ENV=production` it **fails loud** (`502` with a fallback e-mail) rather
+than silently dropping a message when mail is unconfigured — so configure
+`BREVO_API_KEY` + `MAIL_FROM` + `CONTACT_TO`
 before relying on it in production. A shared site footer links to it — but the
 footer (and the form itself) only appears once the public `GET /api/config`
 reports the instance ready: mail configured **and** the Impressum identity set
@@ -452,12 +462,18 @@ production is a deliberate step (it replaces the shared gate and starts sending
 mail); *inviting other people into a shared tenant is still follow-up work (#207),
 as are roles (#137)*.
 
-Operator moderation (issues #268/#273/#274/#275): setting `ADMIN_PASSWORD`
+Operator moderation (issues #268/#272/#273/#274/#275): setting `ADMIN_PASSWORD`
 exposes `/admin.html` + `/api/admin`, the standalone operator panel for acting
-on abuse notices and data-subject requests. It can resolve a notice by reported
+on abuse notices and data-subject requests. It shows the stored contact
+submissions as a **Meldungen inbox** (a reported `/uploads/…` path hands off to
+the image lookup with the takedown reason prefilled; deciding a notice records
+the outcome and can notify the notifier with redress information, Art. 16(5));
+it can resolve a notice by reported
 cover path, round link, e-mail address or tenant id (with a per-tenant summary
 shown against the quota ceilings); take a cover image down (deletes the object
-*and* clears every reference); **redact** any user-authored text — round name,
+*and* clears every reference) — after which the panel generates the DSA
+**Art. 17 statement of reasons** from the log entry, copyable or sent by mail
+with the delivery recorded on the entry; **redact** any user-authored text — round name,
 game title, member name, tag name, feedback message — by overwriting the field
 with `[entfernt]` while preserving the original wording on the log entry a DSA
 Art. 17 statement of reasons has to quote (redaction never deletes a row);

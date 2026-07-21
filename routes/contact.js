@@ -5,20 +5,30 @@
  * visitors have a phone-free second communication channel (§5 DDG) alongside
  * the mandatory Impressum email, and a DSA notice-and-action channel (#140).
  *
+ * Since #272 every accepted submission is ALSO stored (repo.createContactNotice,
+ * the operator panel's Meldungen inbox): a lost or filtered mail must not mean
+ * there is no record a notice ever arrived — Art. 16 compliance is judged on how
+ * notices were handled, which presupposes knowing they exist. The form carries
+ * the Art. 16(2) elicitation fields (category, reported URL, good-faith
+ * statement), and a report submission gets an automatic acknowledgement mail
+ * (Art. 16(4)).
+ *
  * Mounted BEFORE the auth gate in createApp() (next to /api/auth and
  * /api/account) so it stays reachable to unauthenticated visitors, behind its
  * own low rate limiter (contactLimiter, CONTACT_RATE_LIMIT_MAX).
  *
- * Fails LOUD, unlike the account flows' sendSafe (which log-and-continue so
- * registration never 500s on a mail hiccup): a lost contact message defeats the
- * legal purpose, so a send() error returns 502 with the fallback operator email,
- * and in production with mail unconfigured the route refuses to report a fake
- * success via the in-memory outbox (which is lost on restart).
+ * Delivery to the operator fails LOUD, unlike the account flows' sendSafe: a
+ * send() error returns 502 with the fallback operator email (the stored notice
+ * is kept — storing happens first), and in production with mail unconfigured
+ * the route refuses to accept at all rather than report a success nobody will
+ * be notified about. The acknowledgement, by contrast, is send-safe: its
+ * failure must never fail a submission that is already stored and delivered.
  */
 
 const express = require('express');
 const { z } = require('zod');
 const mail = require('../lib/mail');
+const repo = require('../lib/repo');
 const { validateBody } = require('../lib/validate');
 const { logger } = require('../lib/observability');
 
@@ -29,12 +39,36 @@ const router = express.Router();
 // length-guards first (CodeQL js/polynomial-redos).
 const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
 
-// Message/subject/name are capped so a single POST can't ship an unbounded blob.
+// The report categories mirror the Nutzungsbedingungen §5 prohibited-content
+// list — each resolved notice's Art. 17 statement of reasons points back at a
+// named clause there, so the intake asks in the same terms. An absent category
+// means an ordinary contact message, not a notice.
+const CATEGORIES = ['copyright', 'csam', 'hate', 'defamation', 'privacy', 'other'];
+
+// Message/subject/name/url are capped so a single POST can't ship an unbounded
+// blob. The e-mail is OPTIONAL at the schema level: the route below requires it
+// for everything except a CSAM report — Art. 16(3) DSA exempts exactly that
+// case from the identity requirement, and the published ToS §6 says so.
 const contactSchema = z.object({
   name: z.string().max(200).optional(),
-  email: z.string().max(254).regex(EMAIL_RE, 'invalid_email'),
+  email: z.preprocess(
+    (v) => (String(v || '').trim() ? String(v).trim() : undefined),
+    z.string().max(254).regex(EMAIL_RE, 'invalid_email').optional(),
+  ),
   subject: z.string().max(200).optional(),
   message: z.string().trim().min(1, 'message_required').max(5000, 'message_too_long'),
+  // '' (the form's "general" default) folds to absent; an UNKNOWN value is a
+  // 400, not a silent drop — dropping would quietly demote a report to an
+  // ordinary message, losing the acknowledgement and the panel's report view.
+  category: z.preprocess(
+    (v) => (String(v || '').trim() ? String(v).trim() : undefined),
+    z.enum(CATEGORIES, { message: 'invalid_category' }).optional(),
+  ),
+  url: z.preprocess(
+    (v) => (String(v || '').trim() ? String(v).trim() : undefined),
+    z.string().max(500, 'url_too_long').optional(),
+  ),
+  goodFaith: z.boolean().optional(),
 });
 
 // Where contact mail is delivered. CONTACT_TO, falling back to MAIL_FROM (the
@@ -42,10 +76,22 @@ const contactSchema = z.object({
 // destination without a second env var.
 const contactTo = () => process.env.CONTACT_TO || process.env.MAIL_FROM || '';
 
+// German labels for the operator-facing mail (the panel shares this map via its
+// own copy in public/js/admin.js — the panel is German-only, #268).
+const CATEGORY_LABELS = {
+  copyright: 'Urheberrecht',
+  csam: 'Missbrauchsdarstellungen',
+  hate: 'Volksverhetzung / verbotene Kennzeichen',
+  defamation: 'Beleidigung / Verleumdung',
+  privacy: 'Persönlichkeitsrecht / private Daten',
+  other: 'Sonstiger rechtswidriger Inhalt',
+};
+
 router.post('/', async (req, res) => {
   // Honeypot: the form ships a hidden `website` field real users never fill.
-  // A non-empty value means a bot — answer a fake success (no signal) and never
-  // send. Checked before validation so a bot learns nothing about the schema.
+  // A non-empty value means a bot — answer a fake success (no signal), never
+  // send and never store. Checked before validation so a bot learns nothing
+  // about the schema.
   if (String((req.body || {}).website || '').trim() !== '') {
     logger.info({ event: 'contact_honeypot' });
     return res.json({ ok: true });
@@ -54,19 +100,61 @@ router.post('/', async (req, res) => {
   const body = validateBody(contactSchema, req, res);
   if (!body) return; // 400 already sent
 
-  // Fail loud rather than black-hole into the outbox: in production, delivery
-  // must actually be possible or the "reachable channel" guarantee is a lie.
+  const isReport = Boolean(body.category);
+
+  // The e-mail is required unless this is a CSAM report (Art. 16(3) DSA allows
+  // those to be anonymous; every other notice needs a notifier to acknowledge
+  // and to send the Art. 16(5) decision to).
+  if (!body.email && body.category !== 'csam') {
+    return res.status(400).json({ error: 'invalid_email' });
+  }
+  // Art. 16(2)(d): a notice must carry the statement that it is made in good
+  // faith and the information is accurate — the form's required checkbox.
+  if (isReport && body.goodFaith !== true) {
+    return res.status(400).json({ error: 'good_faith_required' });
+  }
+
+  // Fail loud rather than black-hole: in production, delivery must actually be
+  // possible or the "reachable channel" guarantee is a lie. Checked BEFORE
+  // storing — this state means the instance isn't configured yet (the form is
+  // hidden client-side too), not a runtime mail hiccup.
   if (process.env.NODE_ENV === 'production' && !mail.isConfigured()) {
     logger.error({ event: 'contact_mail_unconfigured' });
     return res.status(502).json({ error: 'contact_unavailable', fallbackEmail: contactTo() || undefined });
   }
 
-  const to = contactTo();
   const name = (body.name || '').trim();
   const subject = (body.subject || '').trim();
+
+  // Store FIRST (#272): the stored row is the record that a notice arrived, so
+  // a mail failure below must not lose it. Every key is present (null when
+  // unset) for backend absent-key parity, like the users rows.
+  const notice = await repo.createContactNotice({
+    createdAt: new Date().toISOString(),
+    name: name || null,
+    email: body.email || null,
+    subject: subject || null,
+    message: body.message,
+    category: body.category || null,
+    url: body.url || null,
+    goodFaith: isReport ? body.goodFaith === true : null,
+    status: 'open',
+    decidedAt: null,
+    decisionNote: null,
+    decisionSentAt: null,
+  });
+
+  const to = contactTo();
+  const from = body.email
+    ? (name ? `${name} <${body.email}>` : body.email)
+    : `${name || 'anonym'} (keine E-Mail-Adresse angegeben)`;
   const text = [
-    `Von: ${name ? `${name} <${body.email}>` : body.email}`,
+    `Von: ${from}`,
     subject ? `Betreff: ${subject}` : null,
+    isReport ? `Meldung: ${CATEGORY_LABELS[body.category]}` : null,
+    body.url ? `Gemeldete URL: ${body.url}` : null,
+    isReport ? 'Richtigkeitserklärung (Art. 16 Abs. 2 DSA): abgegeben' : null,
+    `Panel: /admin.html (Meldung ${notice.id})`,
     '',
     body.message,
   ].filter((l) => l !== null).join('\n');
@@ -74,15 +162,35 @@ router.post('/', async (req, res) => {
   try {
     await mail.send({
       to,
-      subject: subject ? `[Kontakt] ${subject}` : '[Kontakt] Neue Nachricht',
+      subject: `[${isReport ? 'Meldung' : 'Kontakt'}] ${subject || (isReport ? CATEGORY_LABELS[body.category] : 'Neue Nachricht')}`,
       text,
-      // Reply-To the visitor so the operator answers them directly.
-      replyTo: body.email,
+      // Reply-To the visitor so the operator answers them directly (omitted for
+      // an anonymous CSAM report — there is nobody to reply to).
+      ...(body.email ? { replyTo: body.email } : {}),
     });
   } catch (e) {
-    logger.error({ event: 'contact_mail_failed', message: e.message });
+    // The record above survives; the visitor is still told to use the fallback
+    // address so a broken mail setup can't silently swallow the channel.
+    logger.error({ event: 'contact_mail_failed', message: e.message, noticeId: notice.id });
     return res.status(502).json({ error: 'contact_unavailable', fallbackEmail: to || undefined });
   }
+
+  // Art. 16(4): confirm receipt of a notice without undue delay. Send-safe — an
+  // acknowledgement failure must never fail a submission that is already stored
+  // and delivered to the operator. Bilingual like the account mails: a notifier
+  // can be anyone. Replies go to the operator mailbox (#307: no-reply is a real
+  // alias, but the visible Reply-To keeps amendments to a notice in the loop).
+  if (isReport && body.email) {
+    const when = new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' });
+    await mail.send({
+      to: body.email,
+      subject: 'Spielwirbel: Eingangsbestätigung deiner Meldung / Confirmation of your report',
+      text: `Hallo!\n\nDeine Meldung vom ${when}${body.url ? ` zu ${body.url}` : ''} ist bei uns eingegangen (Art. 16 Abs. 4 der Verordnung (EU) 2022/2065, „DSA“). Wir prüfen sie zeitnah, sorgfältig und frei von Willkür und teilen dir unsere Entscheidung mit.\n\n---\n\nHi!\n\nYour report of ${when}${body.url ? ` about ${body.url}` : ''} has been received (Art. 16(4) of Regulation (EU) 2022/2065, "DSA"). We will review it diligently and let you know our decision.\n\nSpielwirbel${to ? ` — Kontakt: ${to}` : ''}`,
+      ...(to ? { replyTo: to } : {}),
+    }).catch((e) => logger.warn({ event: 'contact_ack_failed', message: e.message, noticeId: notice.id }));
+  }
+
+  logger.info({ event: isReport ? 'contact_report_received' : 'contact_message_received', noticeId: notice.id });
   res.json({ ok: true });
 });
 

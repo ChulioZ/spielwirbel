@@ -29,17 +29,22 @@ die Begründung (unten) zeigt auf die konkrete Ziffer.
   eindeutige Bezeichnung wie Konto/Runde/Spieltitel (Art. 16 Abs. 2 lit. b:
   „an die Art des Hosting-Dienstes angepasst") —, Name + E-Mail außer bei
   CSAM-Bezug, Richtigkeitserklärung).
-- Die strukturierte Intake-Erfassung (Kategorie/URL/Erklärung im Formular,
-  Speicherung jeder Meldung) ist **#272** — bis dahin ist das Postfach der
-  Nachweis über eingegangene Meldungen; Postfach-Ordner `Meldungen` anlegen
-  und eingegangene Meldungen dort belassen (Aufbewahrung s. `retention.md`).
+- Die strukturierte Intake-Erfassung (**#272, umgesetzt**): das Formular
+  erhebt Kategorie, gemeldete URL und die Richtigkeitserklärung
+  (Art. 16 Abs. 2); **jede Formular-Einsendung wird zusätzlich in der
+  Datenbank gespeichert** (`contact_notices`) und erscheint als Karte
+  „Meldungen" im Betreiber-Panel (`/admin.html`). Das Postfach bleibt der
+  Nachweis für Meldungen, die per E-Mail eingehen (Ordner `Meldungen`,
+  Aufbewahrung s. `retention.md`); bei CSAM-Bezug ist die Meldung im Formular
+  ohne E-Mail-Adresse möglich (Art. 16 Abs. 3).
 
 ## Ablauf
 
-1. **Eingang bestätigen** (Art. 16 Abs. 4) — unverzüglich, formlos
-   (Vorlage unten). Ab #272 automatisch. Gilt nur, soweit die Meldung
-   Kontaktdaten enthält (eine anonyme Meldung — bei CSAM-Bezug zulässig —
-   wird ohne Bestätigung geprüft).
+1. **Eingang bestätigen** (Art. 16 Abs. 4) — unverzüglich, formlos. Für
+   Formular-Meldungen **automatisch** (#272: Bestätigungs-Mail beim Absenden);
+   für Meldungen per E-Mail weiterhin manuell (Vorlage unten). Gilt nur,
+   soweit die Meldung Kontaktdaten enthält (eine anonyme Meldung — bei
+   CSAM-Bezug zulässig — wird ohne Bestätigung geprüft).
 2. **Prüfen** — zeitnah, sorgfältig, objektiv, frei von Willkür (Art. 16
    Abs. 6); keine automatisierten Entscheidungsverfahren (das steht so in den
    Nutzungsbedingungen — bei Einführung dort UND hier ändern). Grundlage:
@@ -59,12 +64,17 @@ die Begründung (unten) zeigt auf die konkrete Ziffer.
    Moderations-Log-Eintrag (`logModeration`) mit Zeitpunkt, Maßnahme, Grund.
    Im Grund-Feld die verletzte Ziffer der Nutzungsbedingungen (z. B. „NB §5:
    fremdes Cover ohne Rechte") und ggf. das Meldungs-Datum referenzieren.
-4. **Betroffene Person begründen** (Art. 17) — Vorlage unten, per E-Mail an
-   die Konto-Adresse, sobald eine Maßnahme Inhalte oder das Konto betrifft.
+4. **Betroffene Person begründen** (Art. 17) — nach einem Takedown erzeugt
+   das Panel den Begründungstext aus dem Log-Eintrag (#272: kopierbar oder
+   direkt per E-Mail; der Versand wird auf dem Eintrag vermerkt,
+   `statementSentAt`). Für andere Maßnahmen Vorlage unten, per E-Mail an die
+   Konto-Adresse, sobald eine Maßnahme Inhalte oder das Konto betrifft.
    Nicht nötig bei irreführenden kommerziellen Massen-Inhalten (Art. 17
    Abs. 2) — hier praktisch nie einschlägig.
-5. **Meldende Person bescheiden** (Art. 16 Abs. 5) — Entscheidung + Hinweis
-   auf Rechtsbehelfe (Vorlage unten).
+5. **Meldende Person bescheiden** (Art. 16 Abs. 5) — für gespeicherte
+   Formular-Meldungen über die Panel-Karte „Meldungen" (#272: Status
+   erledigt/abgelehnt + optionale Begründung, Versand an die angegebene
+   Adresse); für E-Mail-Meldungen manuell (Vorlage unten).
 6. **Dokumentieren** — der Moderations-Log-Eintrag ist der Nachweis;
    Schriftwechsel bleibt im Postfach (Aufbewahrung: `retention.md`).
 
@@ -78,8 +88,10 @@ die Begründung (unten) zeigt auf die konkrete Ziffer.
 
 ## Vorlage: Begründung gegenüber der betroffenen Person (Art. 17 DSA)
 
-Pflichtinhalte nach Art. 17 Abs. 3 lit. a–f; #272 generiert diesen Text aus
-dem Moderations-Log-Eintrag. Struktur:
+Pflichtinhalte nach Art. 17 Abs. 3 lit. a–f; seit #272 generiert das Panel
+diesen Text aus dem Moderations-Log-Eintrag (`GET /api/admin/statement`) —
+die Vorlage hier bleibt die Referenz für manuell verfasste Begründungen.
+Struktur:
 
 > Betreff: Entscheidung zu Inhalten in deinem Spielwirbel-Konto
 >
