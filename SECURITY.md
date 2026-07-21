@@ -32,8 +32,8 @@ Security issues especially relevant given the current architecture:
   add-game lookup providers.
 - Injection or remote code execution reachable from a request (including SQL
   injection against the Postgres backend).
-- Leaking secrets (`ANTHROPIC_API_KEY`, `SESSION_SECRET`, `DATABASE_URL`,
-  S3/Brevo credentials) or another tenant's private data.
+- Leaking secrets (`SESSION_SECRET`, `DATABASE_URL`, S3/Brevo credentials) or
+  another tenant's private data.
 - Dependency vulnerabilities with a realistic exploitation path here.
 
 ## Supported versions
@@ -47,7 +47,7 @@ land there.
 
 Use GitHub's **private vulnerability reporting**: go to the repository's
 **Security** tab and click **"Report a vulnerability"**
-([Security Advisories](https://github.com/ChulioZ/game-sessions/security/advisories/new)).
+([Security Advisories](https://github.com/ChulioZ/spielwirbel/security/advisories/new)).
 This opens a private advisory visible only to you and the maintainers.
 
 When reporting, please include:

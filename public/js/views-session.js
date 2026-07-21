@@ -14,32 +14,21 @@ function showStartSession(round) {
   app.innerHTML = '';
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('startSession.title'))}</h1></div>`));
 
-  const activeGames = round.games.filter((g) => !g.retired);
-  const counts = {
-    all: activeGames.length,
-    digital: activeGames.filter((g) => g.type === 'digital').length,
-    analog: activeGames.filter((g) => g.type === 'analog').length,
-  };
-  const DURATIONS = ['short', 'medium', 'long'];
+  const activeGames = round.games.filter((g) => !g.retired && !g.completed);
 
+  // These two headings label a group of buttons, not a form control, so they are
+  // <div class="label">, not <label> (#145): a <label> with no `for` and no
+  // wrapped input labels nothing at all. `aria-labelledby` on the group is what
+  // actually ties the text to the seats/chips.
   const form = h(`<div>
       <div class="field">
-        <label>${esc(t('startSession.membersLabel'))}</label>
+        <div class="field__label" id="seatsLabel">${esc(t('startSession.membersLabel'))}</div>
         <div id="seatMount"></div>
         <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
       </div>
-      <div class="field">
-        <label>${esc(t('startSession.whichGames'))}</label>
-        <div class="filter-chips" id="filterChips">
-          <button type="button" class="chip is-on" data-f="all">${esc(t('games.filter.all', { n: counts.all }))}</button>
-          <button type="button" class="chip" data-f="analog"><i class="ti ti-dice-3" aria-hidden="true"></i>${esc(t('games.filter.analog', { n: counts.analog }))}</button>
-          <button type="button" class="chip" data-f="digital"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i>${esc(t('games.filter.digital', { n: counts.digital }))}</button>
-          <span class="filter-chips__sep"></span>
-          <button type="button" class="chip is-on" data-d="short"><i class="ti ti-bolt" aria-hidden="true"></i>${esc(t('duration.short'))}</button>
-          <button type="button" class="chip is-on" data-d="medium"><i class="ti ti-clock" aria-hidden="true"></i>${esc(t('duration.medium'))}</button>
-          <button type="button" class="chip is-on" data-d="long"><i class="ti ti-hourglass" aria-hidden="true"></i>${esc(t('duration.long'))}</button>
-        </div>
-        <div class="muted field__hint">${esc(t('startSession.durationNote'))}</div>
+      <div class="field" id="gamesFilterField" hidden>
+        <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
+        <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
       </div>
       <div class="field">
         <label for="count">${esc(t('startSession.countLabel'))}</label>
@@ -51,26 +40,35 @@ function showStartSession(round) {
       </div>
       <div class="pool-hint" id="poolHint"></div>
       <div class="toolbar">
-        <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-dice-5" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
+        <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-tornado" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
       </div>
     </div>`);
   app.appendChild(form);
 
-  let filter = 'all';
-  // All durations selected by default = no duration filter.
-  const durations = new Set(DURATIONS);
+  // Custom-tag filter (#238, tri-state #241): all ignored by default = no tag
+  // filter. Map<tagId, 'include'|'exclude'>; included tags combine with AND,
+  // excluded tags reject a game carrying any of them.
+  // Preset from the round's last draw-flow session (#252) when there is one;
+  // tag ids whose tag has since been deleted are dropped, mirroring the
+  // drop-unknown-ids rule the backend applies at session-creation time.
+  const preset = round.lastSessionFilters || null;
+  const selectedTags = new Map();
+  if (preset) {
+    const known = new Set((round.tags || []).map((tg) => tg.id));
+    (preset.tagIds || []).filter((x) => known.has(x)).forEach((x) => selectedTags.set(x, 'include'));
+    (preset.excludeTagIds || [])
+      .filter((x) => known.has(x) && !selectedTags.has(x))
+      .forEach((x) => selectedTags.set(x, 'exclude'));
+  }
   // All members join by default; the number of joining members filters the
   // games by their player count.
   const joining = new Set(round.members.map((m) => m.id));
 
-  // Games matching all filters; with all durations selected, games without a
-  // duration (from before the feature) are included too. The joining member
-  // count must fall within a game's player range.
+  // Games matching the tag filter, whose player range fits the joining count.
   const pool = () =>
     activeGames.filter(
       (g) =>
-        (filter === 'all' || g.type === filter) &&
-        (durations.size === DURATIONS.length || durations.has(g.duration)) &&
+        matchesTagFilter(selectedTags, g.tagIds) &&
         (typeof g.minPlayers !== 'number' || joining.size >= g.minPlayers) &&
         (typeof g.maxPlayers !== 'number' || joining.size <= g.maxPlayers)
     );
@@ -82,10 +80,8 @@ function showStartSession(round) {
     const thumbs = games
       .slice(0, 6)
       .map((g) => {
-        const style = g.image ? ` style="background-image:url('${g.image}')"` : '';
-        const fb = g.image
-          ? ''
-          : `<i class="ti ${typeIcon(g.type)}" aria-hidden="true"></i>`;
+        const style = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
+        const fb = coverPlaceholder(g);
         return `<span class="pool-thumb"${style} title="${esc(g.title)}">${fb}</span>`;
       })
       .join('');
@@ -95,29 +91,38 @@ function showStartSession(round) {
     )}</span><span class="pool-thumbs">${thumbs}${more}</span>`;
   };
   // Seats around the table: tap a member to toggle whether they join tonight.
-  form.querySelector('#seatMount').replaceWith(renderSeatPicker(round, joining, updateHint));
+  // The group attributes go on the table itself, not on #seatMount — replaceWith
+  // swaps the mount out, so anything set on it in the markup would be lost.
+  const seatTable = renderSeatPicker(round, joining, updateHint);
+  seatTable.setAttribute('role', 'group');
+  seatTable.setAttribute('aria-labelledby', 'seatsLabel');
+  form.querySelector('#seatMount').replaceWith(seatTable);
   updateHint();
 
-  // Type chips are radio-like; duration chips toggle independently.
+  // Custom-tag chips (#238, tri-state #241) are the only game filter now (#242).
+  // Clicking cycles ignore -> include -> exclude -> ignore. With no round tags
+  // there is nothing to filter, so the whole field stays hidden.
   const chips = form.querySelector('#filterChips');
-  chips.querySelectorAll('[data-f]').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      filter = chip.dataset.f;
-      chips.querySelectorAll('[data-f]').forEach((c) => c.classList.toggle('is-on', c === chip));
-      updateHint();
+  const roundTags = round.tags || [];
+  if (roundTags.length) {
+    form.querySelector('#gamesFilterField').hidden = false;
+    roundTags.forEach((tg) => {
+      const chip = h('<button type="button" class="chip"></button>');
+      paintTagChip(chip, tg.name, selectedTags.get(tg.id), tg.icon);
+      chip.addEventListener('click', () => {
+        paintTagChip(chip, tg.name, cycleTagState(selectedTags, tg.id), tg.icon);
+        updateHint();
+      });
+      chips.appendChild(chip);
     });
-  });
-  chips.querySelectorAll('[data-d]').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const d = chip.dataset.d;
-      if (durations.has(d)) durations.delete(d);
-      else durations.add(d);
-      chip.classList.toggle('is-on', durations.has(d));
-      updateHint();
-    });
-  });
+  }
 
   const countInput = form.querySelector('#count');
+  // Preloaded from the remembered preset (#252); the markup's 3 stays the
+  // default for a round that has never run a draw-flow session.
+  if (preset && Number.isInteger(preset.count) && preset.count >= 1) {
+    countInput.value = String(preset.count);
+  }
   countInput.addEventListener('input', () => {
     const digits = countInput.value.replace(/\D/g, '');
     if (countInput.value !== digits) countInput.value = digits;
@@ -133,12 +138,12 @@ function showStartSession(round) {
     let count = parseInt(countInput.value, 10);
     if (!Number.isFinite(count) || count < 1) count = 1;
     if (joining.size === 0) return toast(t('startSession.toast.noMembers'));
-    if (durations.size === 0 || pool().length === 0) return toast(t('startSession.toast.noGames'));
+    if (pool().length === 0) return toast(t('startSession.toast.noGames'));
     try {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         count,
-        filter,
-        durations: [...durations],
+        tagIds: [...selectedTags].filter(([, s]) => s === 'include').map(([id]) => id),
+        excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
         memberIds: [...joining],
       });
       // Straight into the first handover — the drawn games stay secret until
@@ -215,10 +220,8 @@ function startVoting(round, session, games, members) {
     const current = votes[member.id][game.id] || { rating: null, retire: false };
     const color = memberColor(round, member.id);
 
-    const imgStyle = game.image ? `style="background-image:url('${game.image}')"` : '';
-    const fallback = game.image
-      ? ''
-      : `<i class="ti ${typeIcon(game.type)}" aria-hidden="true"></i>`;
+    const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
+    const fallback = coverPlaceholder(game);
 
     app.innerHTML = '';
     const card = h(`<div class="vote vote--split">
@@ -226,12 +229,11 @@ function startVoting(round, session, games, members) {
         <div class="vote__who">${esc(t('vote.who'))} <strong style="color:${color}">${esc(member.name)}</strong></div>
         <div class="vote__img" ${imgStyle}>${fallback}</div>
         <div class="vote__title">${esc(game.title)}</div>
-        <div class="vote__type">${typeTag(game.type)} ${durationTag(game.duration)}</div>
-        <div class="vote__q">${esc(t('vote.question'))}</div>
-        <div class="rating"></div>
+        <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
+        <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
         <div class="vote__sort">
-          <button class="sortBtn ${current.retire ? 'is-selected' : ''}"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('vote.suggestRetire'))}</button>
+          <button class="sortBtn ${current.retire ? 'is-selected' : ''}" aria-pressed="${!!current.retire}"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('vote.suggestRetire'))}</button>
         </div>
         <div class="vote__nav">
           <button class="btn" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
@@ -244,7 +246,12 @@ function startVoting(round, session, games, members) {
     const ratingEl = card.querySelector('.rating');
     for (let n = 1; n <= 5; n++) {
       const sel = current.rating === n;
-      const b = h(`<button class="mood${sel ? ' is-selected' : ''}" aria-label="${n}">
+      // aria-pressed carries the choice (#145): the selected face is otherwise
+      // marked only by its traffic-light fill, so nothing announced which rating
+      // was picked — on the app's central action. The label spells out the scale
+      // too; a bare "1" gave no hint of what the number meant or how far it ran.
+      const b = h(`<button class="mood${sel ? ' is-selected' : ''}"
+           aria-pressed="${sel}" aria-label="${esc(t('vote.ratingLabel', { n, max: 5 }))}">
            <i class="ti ${MOODS[n - 1]}" aria-hidden="true"></i><span class="mood__n">${n}</span>
          </button>`);
       if (sel) {
@@ -284,7 +291,7 @@ function startVoting(round, session, games, members) {
   async function finish() {
     try {
       await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/results`, { votes });
-      const fresh = await api('GET', '/api/rounds/' + round.id);
+      const fresh = await fetchRoundFresh(round.id);
       const savedSession = fresh.sessions.find((s) => s.id === session.id);
       // Nobody sees the result yet: the finale gate gathers everyone first.
       showFinale(fresh, savedSession, games);
@@ -422,10 +429,8 @@ async function showResults(round, session, gamesHint, reveal) {
     arranged.forEach((r) => {
       const place = r.place;
       const g = r.game;
-      const imgStyle = g.image ? ` style="background-image:url('${g.image}')"` : '';
-      const fb = g.image
-        ? ''
-        : `<i class="ti ${typeIcon(g.type)}" aria-hidden="true"></i>`;
+      const imgStyle = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
+      const fb = coverPlaceholder(g);
       const col = h(`<div class="result-podium__col result-podium__col--${place}">
              ${place === 1 ? '<i class="ti ti-crown result-podium__crown" aria-hidden="true"></i>' : ''}
              <span class="result-podium__img"${imgStyle}>${fb}</span>
@@ -487,29 +492,32 @@ async function showResults(round, session, gamesHint, reveal) {
 
   rows.forEach((r) => {
     const g = r.game;
-    const imgStyle = g.image ? `style="background-image:url('${g.image}')"` : '';
-    const fallback = g.image
-      ? ''
-      : `<i class="ti ${typeIcon(g.type)}" aria-hidden="true"></i>`;
+    const imgStyle = g.image ? `style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
+    const fallback = coverPlaceholder(g);
     const bars = r.dist
       .map((c, n) => {
         const hpx = 4 + Math.round((c / maxBar) * 24);
         return `<div class="bar" style="height:${hpx}px" title="${esc(t('result.barTitle', { c, r: n + 1 }))}">${c || ''}</div>`;
       })
       .join('');
-    // Info if the game has been retired in the meantime.
-    const retiredBadge = g.retired ? ` <span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>` : '';
-    // "Suggested for retirement" line; with a direct action if not retired yet.
+    // Info if the game has been archived in the meantime (#250: either way).
+    const retiredBadge = g.retired
+      ? ` <span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`
+      : g.completed
+        ? ` <span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`
+        : '';
+    // "Suggested for retirement" line; with a direct action only while the game
+    // is still active — an already-archived game has nothing left to retire.
     const sortFlag = r.sortCount
       ? `<div class="sort-flag"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('result.sortFlag', { n: r.sortCount }))}${
-          g.retired ? '' : ` <button class="link-btn sortflag-btn">${esc(t('result.retireNow'))}</button>`
+          g.retired || g.completed ? '' : ` <button class="link-btn sortflag-btn">${esc(t('result.retireNow'))}</button>`
         }</div>`
       : '';
     const medal = r.place && r.place <= 3 ? `<span class="rank-medal rank-medal--${medalRanks[r.place - 1]}"><i class="ti ti-medal" aria-hidden="true"></i></span>` : '';
     const row = h(`<div class="result-row">
          <div class="result-row__img" ${imgStyle}>${fallback}</div>
          <div>
-           <div class="result-row__title">${medal}${esc(g.title)} ${typeTag(g.type)} ${durationTag(g.duration)}${retiredBadge}</div>
+           <div class="result-row__title">${medal}${esc(g.title)}${retiredBadge}</div>
            <div class="result-row__bars">${bars}</div>
            ${sortFlag}
            <button class="link-btn result-row__remove">${iconText('ti-trash', t('result.removeGame'))}</button>
@@ -522,9 +530,11 @@ async function showResults(round, session, gamesHint, reveal) {
          <div class="row-finish" hidden></div>
        </div>`);
     // Title and cover open the game's detail page (the action buttons below
-    // live in sibling elements, so they keep working independently).
+    // live in sibling elements, so they keep working independently). The cover
+    // is flagged redundant: it targets the same game as the title beside it, so
+    // it stays mouse-clickable but is not a second (nameless) tab stop.
     makeGameLink(row.querySelector('.result-row__title'), round.id, g.id);
-    makeGameLink(row.querySelector('.result-row__img'), round.id, g.id);
+    makeGameLink(row.querySelector('.result-row__img'), round.id, g.id, { redundant: true });
     const sortBtn = row.querySelector('.sortflag-btn');
     if (sortBtn) {
       sortBtn.addEventListener('click', async () => {
@@ -532,7 +542,7 @@ async function showResults(round, session, gamesHint, reveal) {
         try {
           await api('POST', `/api/rounds/${round.id}/games/${g.id}/retire`, { retired: true });
           toast(t('games.retired', { title: g.title }));
-          const fresh = await api('GET', '/api/rounds/' + round.id);
+          const fresh = await fetchRoundFresh(round.id);
           const sess = fresh.sessions.find((s) => s.id === session.id) || session;
           showResults(fresh, sess, games);
         } catch (e) { toast(e.message); }
@@ -544,7 +554,7 @@ async function showResults(round, session, gamesHint, reveal) {
       try {
         await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}/games/${g.id}`);
         toast(t('result.toast.gameRemoved', { title: g.title }));
-        const fresh = await api('GET', '/api/rounds/' + round.id);
+        const fresh = await fetchRoundFresh(round.id);
         const sess = fresh.sessions.find((s) => s.id === session.id) || session;
         showResults(fresh, sess, games);
       } catch (e) { toast(e.message); }
@@ -583,7 +593,7 @@ async function showResults(round, session, gamesHint, reveal) {
       banner.classList.remove('is-set');
     } else if (chosenId) {
       const g = games.find((x) => x.id === chosenId);
-      const icon = `<i class="ti ${typeIcon(g ? g.type : '')}" aria-hidden="true"></i> `;
+      const icon = `<i class="ti ${GAME_ICON}" aria-hidden="true"></i> `;
       banner.innerHTML = icon + t('result.bannerChosen', { title: '<strong>' + esc(g ? g.title : '') + '</strong>' });
       banner.classList.add('is-set');
     } else {
@@ -643,8 +653,22 @@ async function showResults(round, session, gamesHint, reveal) {
     finishWrap.hidden = false;
     const chosenGame = games.find((g) => g.id === chosenId);
     finishWrap.appendChild(
-      h(`<h3>${finished ? iconText('ti-trophy', t('result.finishTitleDone')) : esc(t('result.finishTitle'))}</h3>`)
+      h(`<h2>${finished ? iconText('ti-trophy', t('result.finishTitleDone')) : esc(t('result.finishTitle'))}</h2>`)
     );
+    // Finishing comes first and needs no winners; the winner picker only shows
+    // up afterwards, so it can't read as a prerequisite (#254).
+    if (!finished) {
+      finishWrap.appendChild(
+        h(`<div class="muted" style="margin-bottom:10px">${esc(t('result.finishPrompt', { game: chosenGame ? chosenGame.title : '' }))}</div>`)
+      );
+      const finishBtn = h(`<button class="btn btn--primary">${iconText('ti-check', t('result.markPlayed'))}</button>`);
+      finishBtn.addEventListener('click', () => saveWinners([]));
+      const actions = h('<div class="toolbar" style="margin-top:14px"></div>');
+      actions.appendChild(finishBtn);
+      finishWrap.appendChild(actions);
+      return;
+    }
+
     finishWrap.appendChild(
       h(`<div class="muted" style="margin-bottom:10px">${esc(t('result.whoWon', { game: chosenGame ? chosenGame.title : '' }))}</div>`)
     );
@@ -653,63 +677,57 @@ async function showResults(round, session, gamesHint, reveal) {
     members.forEach((m) => {
       const sel = winnerIds.includes(m.id);
       const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${esc(m.name)}</button>`);
-      chip.addEventListener('click', () => {
-        winnerIds = winnerIds.includes(m.id)
-          ? winnerIds.filter((x) => x !== m.id)
-          : [...winnerIds, m.id];
-        renderFinish();
-      });
+      // Each toggle persists right away — no separate save button in this state.
+      chip.addEventListener('click', () => saveWinners(
+        winnerIds.includes(m.id) ? winnerIds.filter((x) => x !== m.id) : [...winnerIds, m.id]
+      ));
       chips.appendChild(chip);
     });
     finishWrap.appendChild(chips);
 
     const actions = h('<div class="toolbar" style="margin-top:14px"></div>');
-    const saveBtn = h(`<button class="btn btn--primary">${finished ? iconText('ti-check', t('result.update')) : iconText('ti-trophy', t('result.markPlayed'))}</button>`);
-    saveBtn.addEventListener('click', async () => {
+    const resetBtn = h(`<button class="btn btn--ghost">${esc(t('result.reset'))}</button>`);
+    resetBtn.addEventListener('click', async () => {
       try {
-        const saved = await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/finish`, {
-          finished: true,
-          winnerIds,
+        await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/finish`, {
+          finished: false,
+          winnerIds: [],
         });
-        finished = true;
-        winnerIds = saved.winnerIds.slice(); // filtered server-side
-        session.finished = true;
-        session.winnerIds = winnerIds.slice();
-        toast(t('result.toast.saved'));
+        finished = false;
+        winnerIds = [];
+        session.finished = false;
+        session.winnerIds = [];
+        toast(t('result.toast.reset'));
         renderFinish();
       } catch (e) { toast(e.message); }
     });
-    actions.appendChild(saveBtn);
-
-    if (finished) {
-      const resetBtn = h(`<button class="btn btn--ghost">${esc(t('result.reset'))}</button>`);
-      resetBtn.addEventListener('click', async () => {
-        try {
-          await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/finish`, {
-            finished: false,
-            winnerIds: [],
-          });
-          finished = false;
-          winnerIds = [];
-          session.finished = false;
-          session.winnerIds = [];
-          toast(t('result.toast.reset'));
-          renderFinish();
-        } catch (e) { toast(e.message); }
-      });
-      actions.appendChild(resetBtn);
-    }
+    actions.appendChild(resetBtn);
     finishWrap.appendChild(actions);
 
-    if (finished) {
-      const names = winnerIds
-        .map((wid) => (members.find((m) => m.id === wid) || {}).name)
-        .filter(Boolean);
-      const inner = names.length
-        ? iconText('ti-trophy', t('result.winners', { names: names.join(', ') }))
-        : iconText('ti-check', t('result.playedNoWinner'));
-      finishWrap.appendChild(h(`<div class="winner-result">${inner}</div>`));
-    }
+    const names = winnerIds
+      .map((wid) => (members.find((m) => m.id === wid) || {}).name)
+      .filter(Boolean);
+    const inner = names.length
+      ? iconText('ti-trophy', t('result.winners', { names: names.join(', ') }))
+      : iconText('ti-check', t('result.playedNoWinner'));
+    finishWrap.appendChild(h(`<div class="winner-result">${inner}</div>`));
+  }
+
+  // Marks the session finished with the given winners (possibly none) and
+  // re-renders; only committed to local state once the server accepted it.
+  async function saveWinners(ids) {
+    try {
+      const saved = await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/finish`, {
+        finished: true,
+        winnerIds: ids,
+      });
+      finished = true;
+      winnerIds = saved.winnerIds.slice(); // filtered server-side
+      session.finished = true;
+      session.winnerIds = winnerIds.slice();
+      toast(t('result.toast.saved'));
+      renderFinish();
+    } catch (e) { toast(e.message); }
   }
 
   updateChosen();

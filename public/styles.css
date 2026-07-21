@@ -45,9 +45,17 @@
 
   --ink: #2b2620;
   --ink-soft: #6b6358;
-  --good: #16a34a;
-  --warn: #b45309;
-  --danger: #dc2626;
+  /* All three are used as TEXT, and not only on white --surface: `.link-btn`
+     ("Session löschen", "Aus Session entfernen") sits straight on the page. So
+     the bar each has to clear is 4.5:1 against the DARKEST theme page, Schiefer
+     #e9eef3 — measuring against white alone is too lenient and was how --good
+     (3.3:1 on white) and, less obviously, --warn and --danger (4.3/4.1:1 on
+     Schiefer) all shipped below AA (#145). These three land at 4.54–4.55:1
+     there. Re-check against the darkest THEMES page, not white, if you retune
+     them or add a darker theme. */
+  --good: #117c38;
+  --warn: #ae5009;
+  --danger: #d02424;
 
   /* Trophies, crowns, winners: one gold family across the app. */
   --gold: #d99a06;
@@ -225,6 +233,8 @@ h1, h2, h3 { font-family: var(--font-display); }
   padding: 14px 16px;
 }
 .ticket__img {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
   width: 56px;
   height: 56px;
   border-radius: 12px;
@@ -359,7 +369,10 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 
 .section { margin-top: 32px; }
-.section h3 {
+/* Matches h1/h2/h3 alike: the heading LEVEL is chosen for document structure
+   (#145 — the hub tabs needed an h1, sub-sections an h2), the look is the
+   section-label style regardless. Don't narrow this back to a single tag. */
+.section :is(h1, h2, h3) {
   font-size: 16px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -374,7 +387,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
-.section-head h3 { margin: 0; }
+.section-head :is(h1, h2, h3) { margin: 0; }
 .section-toggle {
   flex: none;
   border: none;
@@ -453,6 +466,13 @@ h1, h2, h3 { font-family: var(--font-display); }
 .chip .ti { font-size: 15px; }
 .chip:hover { border-color: var(--brand-edge); }
 .chip.is-on { background: var(--brand); border-color: var(--brand-dark); color: #fff; }
+/* Exclude state of a tri-state tag filter (#241): the semantic danger fill, so
+   "reject this tag" reads distinctly from the orange include state. */
+.chip.is-excluded {
+  background: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 70%, #000);
+  color: #fff;
+}
 .filter-chips__sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; flex: none; }
 
 /* ---- Buttons ----
@@ -508,7 +528,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   gap: 6px;
 }
 .card:hover { box-shadow: var(--shadow); transform: translateY(-2px) rotate(-0.3deg); }
-.card h3 { font-size: 20px; margin: 0; text-transform: none; letter-spacing: 0; color: var(--ink); }
+.card :is(h2, h3) { font-size: 20px; margin: 0; text-transform: none; letter-spacing: 0; color: var(--ink); }
 .card__meta { color: var(--ink-soft); font-size: 15px; }
 .card__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 
@@ -762,6 +782,8 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 .session-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
 .session-card__img {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
   width: 54px;
   height: 54px;
   border-radius: 12px;
@@ -848,6 +870,60 @@ h1, h2, h3 { font-family: var(--font-display); }
 .game-card__badges,
 .gd-img__edit {
   z-index: 2;
+}
+
+/* ---- "No cover yet" placeholder (#256) ----
+   Games without a cover used to render as a flat --sunken box with one grey
+   glyph, so a shelf of them read as a row of identical empty rectangles. Now
+   every such frame gets a deterministic two-stop gradient, built by
+   coverPlaceholder() in core.js which sets --cover-h from a hash of the title
+   — same game, same colour; different games, visibly different colours.
+
+   Both stops derive from --brand (per .claude/rules/theme-derived-colors.md),
+   so the placeholders follow the round's design instead of fighting it. The
+   base rule below is the fallback: a theme-derived light→dark brand wash with
+   no per-game hue variety. Browsers with relative colour syntax additionally
+   rotate the hue by --cover-h, which is what actually makes two games differ.
+   Kept as a fallback pair rather than a hard requirement so an older engine
+   degrades to "tasteful but uniform", never to an unstyled box. */
+.cover-ph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--brand-dark) 55%, #fff);
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand) 26%, var(--page-bg)),
+    color-mix(in srgb, var(--brand) 60%, var(--page-bg))
+  );
+}
+/* --cover-h is UNITLESS: inside oklch(from …) the `h` channel is a <number> of
+   degrees, so `calc(h + 40deg)` is a type error the browser drops silently —
+   the gradient computes to `none` and every card is a flat box again, with no
+   console error to point at the cause. Keep the value unitless on both sides. */
+/* --cover-h (0–359) is re-centred to roughly ±80° around the round's own accent
+   rather than used as an absolute hue: a full 360° spin makes every round look
+   the same (the brand hue stops mattering) and puts cold blues on a warm theme.
+   A band keeps two games clearly different while the whole shelf still reads as
+   belonging to this round's design. */
+@supports (color: oklch(from red l c h)) {
+  .cover-ph {
+    --cover-shift: calc((var(--cover-h, 180) - 180) * 0.45);
+    color: oklch(from var(--brand) 0.99 calc(c * 0.18) calc(h + var(--cover-shift)));
+    background-image: linear-gradient(
+      135deg,
+      oklch(from var(--brand) 0.82 calc(c * 0.55) calc(h + var(--cover-shift))),
+      oklch(from var(--brand) 0.58 calc(c * 0.85) calc(h + var(--cover-shift) + 42))
+    );
+  }
+}
+/* The glyph is decoration on a coloured field, not content — keep it subdued so
+   the title stays the thing you read on a card. */
+.cover-ph .ti {
+  opacity: 0.72;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.18));
 }
 .game-card--clickable { cursor: pointer; transition: box-shadow 0.15s ease, transform 0.08s ease; }
 .game-card--clickable:hover { box-shadow: var(--shadow); transform: translateY(-2px) rotate(-0.3deg); }
@@ -940,6 +1016,13 @@ h1, h2, h3 { font-family: var(--font-display); }
 /* Platform pill: neutral (theme-derived) surface; the brand glyph carries the
    only color, so no per-platform hardcoded tones (see theme-derived-colors). */
 .tag--platform { background: var(--sunken); color: var(--ink-soft); }
+/* Custom round tags (#238): accent-derived so they follow the theme. */
+.tag--custom { background: var(--brand-tint); color: var(--brand-dark); }
+/* inline-flex (not the base .tag's inline-block) so the leading icon (#255)
+   stays beside the label: on a narrow screen an inline-block pill wraps
+   *between* the glyph and the text, leaving the icon stranded on its own line.
+   Filter chips need nothing here — .chip is already a flex row with a gap. */
+.tag--custom { display: inline-flex; align-items: center; gap: 4px; }
 .tag__logo { display: inline-block; width: 12px; height: 12px; vertical-align: -2px; }
 .tag__logo svg { width: 100%; height: 100%; display: block; }
 
@@ -979,7 +1062,9 @@ h1, h2, h3 { font-family: var(--font-display); }
 
 /* ---- Formulare ---- */
 .field { margin-bottom: 18px; }
-.field label { display: block; font-weight: 600; margin-bottom: 6px; }
+/* .field__label is the same look for a heading that labels a GROUP of buttons
+   rather than a form control — a bare <label> there labels nothing (#145). */
+.field label, .field .field__label { display: block; font-weight: 600; margin-bottom: 6px; }
 .input, .select {
   width: 100%;
   font-family: inherit;
@@ -998,7 +1083,13 @@ h1, h2, h3 { font-family: var(--font-display); }
 
 /* ---- Onboarding / account auth (issue #138) ---- */
 /* Auth screens take over the view; the top bar keeps only the language picker. */
+/* #feedbackBtn is in here because it is otherwise ALWAYS visible (unlike
+   #accountBtn, which starts `hidden` and is only revealed once logged in). On
+   the auth screen the caller has no token, so POST /api/feedback would 401 and
+   api()'s session-lost handling would bounce them to login — discarding the
+   message they just typed. Hide the entry point rather than offer a dead end. */
 body.auth-screen .topbar__home,
+body.auth-screen #feedbackBtn,
 body.auth-screen .crumbs { display: none; }
 
 .auth {
@@ -1141,6 +1232,8 @@ body.auth-screen .crumbs { display: none; }
   align-items: center;
 }
 .result-row__img {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
   width: 64px; height: 64px; border-radius: 12px;
   background: var(--sunken) center/cover no-repeat;
   display: flex; align-items: center; justify-content: center; font-size: 28px;
@@ -1162,6 +1255,13 @@ body.auth-screen .crumbs { display: none; }
 .tag--retired {
   background: color-mix(in srgb, var(--warn) 14%, var(--surface));
   color: var(--warn);
+}
+/* The other archive (#250): "durchgespielt" is an achievement, not a discard,
+   so it reads green against retired's warning amber. Both tint a semantic
+   variable rather than a fixed pastel — see theme-derived-colors.md. */
+.tag--completed {
+  background: color-mix(in srgb, var(--good) 14%, var(--surface));
+  color: var(--good);
 }
 .rank-medal { font-size: 22px; margin-right: 6px; vertical-align: middle; }
 .rank-medal--gold { color: var(--gold); }
@@ -1266,68 +1366,6 @@ body.auth-screen .crumbs { display: none; }
 .recommend-item__btn { flex: none; color: var(--warn); padding: 8px 14px; font-size: 15px; }
 .recommend-more { font-size: 14px; padding: 2px 4px; }
 
-/* Buy-next / play-next suggestions (issue #101). Surfaces derive from the
-   round's accent so they match every theme (see .claude/rules). */
-.buynext { margin-top: 20px; display: flex; flex-direction: column; gap: 16px; }
-.buynext__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 17px;
-  font-weight: 800;
-}
-.buynext__block {
-  background: var(--brand-tint-soft);
-  border: 1px solid var(--brand-edge);
-  border-radius: var(--radius);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.buynext__label { font-weight: 700; font-size: 15px; }
-.buynext__sub { font-size: 14px; margin: 0; }
-.buynext__note { font-size: 13px; display: flex; align-items: center; gap: 6px; }
-.buynext__meta { font-size: 13px; }
-.buynext__gen { align-self: flex-start; }
-.buynext__block--static .recommend-item__title { cursor: default; }
-.buynext__block--static .recommend-item__title:hover { text-decoration: none; }
-.buynext .recommend-item__reason { color: var(--ink-soft); font-weight: 500; }
-/* Collapsible Layer-B results (issue #113): the header bar toggles the list. */
-.buynext__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  cursor: pointer;
-}
-.buynext__baraside { display: flex; align-items: center; gap: 8px; flex: none; }
-.buynext__count { font-size: 13px; }
-.buynext__caret {
-  color: var(--ink-soft);
-  font-size: 18px;
-  line-height: 1;
-  transition: transform 0.2s ease;
-}
-.buynext__collapse.is-open .buynext__caret { transform: rotate(180deg); }
-.buynext__body { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
-.buynext__body[hidden] { display: none; } /* author display: flex would otherwise beat the UA [hidden] rule */
-/* Run-history controls (issue #115): page through past runs + delete one. */
-.buynext__nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-.buynext__pager { display: flex; align-items: center; gap: 8px; }
-.buynext__pos { font-size: 13px; font-variant-numeric: tabular-nums; }
-
-@keyframes spin { to { transform: rotate(360deg); } }
-.spin { display: inline-block; animation: spin 0.8s linear infinite; }
-
 /* Utility footer: quiet, grouped maintenance actions. */
 .round-footer {
   display: flex;
@@ -1347,7 +1385,7 @@ body.auth-screen .crumbs { display: none; }
   border-top: 1px dashed var(--brand-edge);
   padding-top: 14px;
 }
-.row-finish h3 { margin: 0 0 6px; }
+.row-finish :is(h2, h3) { margin: 0 0 6px; }
 .member-chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .member-chip {
   font-family: var(--font-display);
@@ -1460,6 +1498,32 @@ body.auth-screen .crumbs { display: none; }
 .gd-img--edit:hover .gd-img__edit,
 .gd-img--edit:focus-visible .gd-img__edit { opacity: 1; }
 
+/* ---- Game detail: the "nothing here yet" panel (#256) ----
+   Shown instead of the score ring, the dashed chips and the empty related-
+   sessions list when a game has no cover, rating, session or tag. One solid
+   surface with a clear invitation reads as intentional, where the same page
+   made of four near-empty widgets read as broken. Tinted off --brand so it
+   belongs to the round's design (.claude/rules/theme-derived-colors.md). */
+.gd-onboard {
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: var(--radius);
+  background: var(--brand-tint-soft);
+  border: 1px solid var(--brand-edge);
+}
+.gd-onboard__head { display: flex; gap: 14px; align-items: flex-start; }
+.gd-onboard__icon { font-size: 26px; color: var(--brand-dark); flex: none; line-height: 1.2; }
+.gd-onboard :is(h2, h3) { margin: 0 0 4px; font-size: 19px; }
+.gd-onboard p { margin: 0; max-width: 62ch; line-height: 1.55; }
+.gd-onboard__acts { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 0 40px; }
+@media (max-width: 520px) {
+  .gd-onboard__acts { margin-left: 0; }
+  .gd-onboard__act { flex: 1 1 100%; justify-content: center; }
+}
+/* With no stats column the head is just cover + title, so let the title block
+   sit beside a full-width-ish cover instead of stretching across the page. */
+.gd-head--sparse .gd-info { min-width: 200px; }
+
 /* Member detail page: big avatar + editable name, color picker, stats. */
 .member-head { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
 .member-avatar {
@@ -1470,6 +1534,61 @@ body.auth-screen .crumbs { display: none; }
 }
 .member-head__info { flex: 1; min-width: 220px; }
 .member-head__info h1 { margin: 0; font-size: 26px; }
+/* Curated tag-icon picker (#255) — the glyph counterpart to .member-swatches:
+   a fixed grid, exactly one active. Auto-fill keeps it usable on a phone and
+   inside the narrow tag popover without a media query.
+   Since #293 the grid is collapsed behind .icon-picker__trigger. Note the
+   [hidden] rule is load-bearing: `display: grid` beats the UA sheet's
+   `[hidden] { display: none }`, so without it the "collapsed" grid stays
+   fully visible and the whole change silently does nothing. */
+.icon-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.icon-picker[hidden] { display: none; }
+.icon-picker__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  height: 44px;
+  padding: 0 8px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.icon-picker__trigger .ti { font-size: 20px; }
+.icon-picker__trigger .icon-picker__caret { font-size: 14px; opacity: 0.7; }
+.icon-picker__trigger:hover { border-color: var(--brand); color: var(--brand-dark); }
+.icon-picker__trigger[aria-expanded='true'] {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+  color: var(--brand-dark);
+}
+.icon-picker__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.icon-picker__btn .ti { font-size: 20px; }
+.icon-picker__btn:hover { transform: translateY(-1px); }
+.icon-picker__btn.is-active {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+  color: var(--brand-dark);
+  cursor: default;
+}
+
 .member-swatches { display: flex; flex-wrap: wrap; gap: 10px; }
 .member-swatch {
   width: 40px;
@@ -1521,6 +1640,14 @@ body.auth-screen .crumbs { display: none; }
 .popover__opt.is-current { border-color: var(--brand); background: var(--brand-tint); }
 .popover--players .pp-row { display: flex; align-items: center; gap: 8px; }
 .popover--players .pp-row .input { width: 68px; }
+.popover--tags { max-width: 340px; }
+.popover--tags .filter-chips { margin-bottom: 10px; }
+/* Wraps because the icon-picker trigger (#293) joined this row — four controls
+   don't always fit 340px, and squeezing the name input is worse than a wrap. */
+.popover--tags .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* The 120px basis is what makes the wrap above trigger: without a floor the
+   input just shrinks to a few characters instead of the buttons moving down. */
+.popover--tags .pp-row .input { min-width: 0; flex: 1 1 120px; }
 .popover--image { min-width: 220px; }
 .popover__hint { font-size: 13px; }
 
@@ -1541,11 +1668,22 @@ body.auth-screen .crumbs { display: none; }
 .ds-row__date { font-weight: 700; }
 .ds-row__status { font-size: 15px; margin-top: 2px; }
 .ds-row__meta { display: flex; align-items: center; gap: 10px; flex: none; }
+/* Lookup-provider rows (#294): brand mark + name on the left, its switch right.
+   Scoped to .provider-row — the plain .ds-row__main stacks its children (the
+   Chronik rows put a date over a status), so making it a flex row globally
+   would lay those out side by side. */
+.provider-row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.provider-row__logo { width: 22px; height: 22px; flex: none; display: inline-flex; }
+.provider-row__logo svg { width: 100%; height: 100%; display: block; }
+.provider-row__box { width: 18px; height: 18px; accent-color: var(--brand); cursor: pointer; }
 .ds-row__meta .score-pill { position: static; }
 .ds-row__meta .sort-flag { margin: 0; }
 
 
 /* ---- Toast ---- */
+/* Hidden by default via the class, NOT the `hidden` attribute: the element is a
+   permanent aria-live region (#145) and must stay in the accessibility tree, so
+   only `.is-on` decides whether it is painted. */
 .toast {
   position: fixed;
   bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -1553,7 +1691,9 @@ body.auth-screen .crumbs { display: none; }
   padding: 12px 22px; border-radius: 999px;
   box-shadow: var(--shadow); font-weight: 600;
   z-index: 50;
+  display: none;
 }
+.toast.is-on { display: block; }
 
 /* ---- Diverses ---- */
 .spacer { height: 12px; }
@@ -1603,6 +1743,28 @@ kbd {
 /* ---- Shared small helpers ---- */
 .field__hint { margin-top: 6px; font-size: 14px; }
 
+/* ---- Feedback sheet (issue #260) ---- */
+.feedback__text { font-size: 16px; resize: vertical; min-height: 110px; }
+/* The identity opt-in reads as one row, so the label sits beside the box rather
+   than above it — hence overriding .field label's block display. */
+.feedback__opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.feedback__opt input { margin-top: 3px; accent-color: var(--brand); flex: none; }
+/* Honeypot: removed from view and from the a11y tree, but NOT display:none —
+   some bots skip hidden fields, which would defeat the trap. */
+.feedback__hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
 /* External link back to a game's provider page (game detail). */
 .link-out {
   display: inline-flex;
@@ -1622,6 +1784,16 @@ kbd {
   cursor: pointer;
   font: inherit;
 }
+
+/* "View on X" and "Remove link" side by side (issue #282). The unlink action is
+   secondary to the outbound link, so it is muted rather than brand-coloured. */
+.gd-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+}
+.link-out--muted { color: var(--ink-soft); font-weight: 600; }
 
 /* The picked provider match inside the link-provider sheet. */
 .link-match { font-size: 15px; }
@@ -1901,20 +2073,44 @@ kbd {
 .sheet {
   width: 100%;
   max-width: 720px;
-  max-height: 92vh;
+  /* Capped well below the viewport so the sheet reads as a surface docked over
+     the page, not a full-screen takeover. The head/actions bars are sticky
+     (below), so a lower cap costs nothing — only the field area scrolls. */
+  max-height: min(85vh, 660px);
+  /* `.sheet` itself stays the scroll container: the lookup dropdown is
+     positioned in JS off a capture-phase `scroll` listener on window, which
+     only fires while this element is what scrolls. See
+     .claude/rules/lookup-menu-fixed-position.md. */
   overflow-y: auto;
   background: var(--page-bg);
   border-radius: 24px 24px 0 0;
   border: 1px solid var(--line);
   border-bottom: none;
-  padding: 18px 22px 26px;
+  /* Vertical padding lives on the sticky head/actions instead, so they can sit
+     flush against the scrollport edges with nothing peeking above or below. */
+  padding: 0 22px;
 }
+/* Not every sheet ends in a `.sheet__actions` bar — the feedback sheet closes
+   with a plain block button. That one needs the bottom breathing room the
+   sheet's own padding used to provide; the actions bar brings its own. */
+.sheet > :last-child:not(.sheet__actions) { margin-bottom: 26px; }
 .sheet--dialog {
   width: calc(100% - 32px);
   max-width: 460px;
-  max-height: 86vh;
+  max-height: min(80vh, 560px);
   border-radius: 24px;
   border-bottom: 1px solid var(--line);
+}
+/* Wide viewports: every sheet becomes a centered, fully-rounded card with a
+   visible gap on all four sides. Below the breakpoint it stays a bottom sheet
+   docked to the edge, which is the right idiom on a phone. */
+@media (min-width: 640px) {
+  .sheet-backdrop { align-items: center; padding: 24px; }
+  .sheet-backdrop--center { padding-bottom: 120px; }
+  .sheet {
+    border-radius: 24px;
+    border-bottom: 1px solid var(--line);
+  }
 }
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: sheet-up 0.25s ease-out; }
@@ -1923,12 +2119,21 @@ kbd {
     to { transform: translateY(0); opacity: 1; }
   }
 }
+/* Pinned so the dialog title never scrolls away mid-form. Sticky (rather than a
+   flex header over a body wrapper) because the sheets build their content as a
+   flat list of `.field` blocks with no body element — and because the
+   link-provider sheet appends its action bar at runtime, which a JS-built
+   wrapper would miss. */
 .sheet__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--page-bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  padding: 18px 0 14px;
 }
 .sheet__head h2 { margin: 0; font-size: 24px; }
 .sheet__close {
@@ -1945,7 +2150,27 @@ kbd {
 }
 .sheet__close .ti { font-size: 18px; }
 .sheet__close:hover { background: var(--sunken); color: var(--ink); }
-.sheet__actions { margin-top: 4px; }
+/* Pinned to the bottom edge so the primary action (Speichern) is reachable
+   without scrolling to the end of a long form. `env(safe-area-inset-bottom)`
+   keeps it clear of the iOS home indicator when the sheet is docked. */
+.sheet__actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--page-bg);
+  border-top: 1px solid var(--line);
+  margin-top: 14px;
+  padding: 14px 0 max(26px, env(safe-area-inset-bottom));
+}
+/* Narrow viewports: the add-game bar's two save buttons can't share a row, so
+   they wrap. At `btn--lg` metrics that bar cost a third of the sheet height —
+   stepping them down and stretching each to full width keeps the pinned bar
+   compact and reads as a deliberate stack rather than two ragged pills. */
+@media (max-width: 639px) {
+  .sheet__actions { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .sheet__actions .btn { flex: 1 1 auto; }
+  .sheet__actions .btn--lg { font-size: 17px; padding: 11px 20px; }
+}
 .opt-cards { display: flex; gap: 10px; flex-wrap: wrap; }
 .opt-card {
   flex: 1;
@@ -2002,6 +2227,8 @@ kbd {
 .pool-hint__text { font-family: var(--font-display); font-size: 15px; font-weight: 700; }
 .pool-thumbs { display: inline-flex; }
 .pool-thumb {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
   width: 38px;
   height: 38px;
   border-radius: 10px;
@@ -2208,6 +2435,8 @@ kbd {
 .result-podium__col { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 140px; }
 .result-podium__crown { font-size: 24px; color: var(--gold); }
 .result-podium__img {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
   width: 74px;
   height: 74px;
   border-radius: 14px;
@@ -2284,6 +2513,8 @@ kbd {
   padding: 12px 16px;
 }
 .archive-row__img {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
   width: 56px;
   height: 56px;
   border-radius: 12px;

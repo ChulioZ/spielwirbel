@@ -30,7 +30,7 @@
   process-local in-memory store, (3) transport security + production hosting
   (#127–#133, live on Railway — §12 Phase 1). What remains before opening
   **public** sign-up is the legal pack (Impressum #134, blocked externally;
-  ToS/DPAs #140) and per-tenant quotas (#139) — see §12.
+  ToS/DPAs #140); per-tenant quotas (#139) shipped 2026-07-19 — see §12.
 - **Kept the stack, no rewrite.** Node/Express, the no-build vanilla frontend,
   and hand-rolled-but-tested logic all proved out in production — see §2.
 - **The goal is a website *and* native iOS/Android store apps**, not just
@@ -184,8 +184,11 @@ gate #129; token-first accounts #135; tenant-scoped authorization #136, see
 hardened uploads — content-sniff/re-encode, safe extension derived from the
 detected type, not `originalname` (#133).
 
-**Already strong, kept:** the cover-image download SSRF allowlist (see
+**Already strong, kept:** the cover-image host allowlist (see
 [`.claude/rules/add-game-lookup-provider.md`](../.claude/rules/add-game-lookup-provider.md))
+— since #172 it gates what may be *stored and hotlinked* rather than downloaded,
+and the server no longer fetches cover bytes at all (see
+[`.claude/rules/provider-cover-hotlinking.md`](../.claude/rules/provider-cover-hotlinking.md))
 and `.env`-only secrets management (see
 [`.claude/rules/no-reading-env-files.md`](../.claude/rules/no-reading-env-files.md))
 — extend the same discipline to any new user-supplied-URL fetch.
@@ -243,8 +246,11 @@ enforcement point recommended here, not per-handler `WHERE` clauses. Postgres
 scale (migrations × N databases) for no real isolation gain over `tenant_id` +
 RLS.
 
-**Still open:** per-tenant quotas (rounds, uploads, recommendation spend) to
-bound abuse/cost — **#139**, a blocker for opening public sign-up (§12).
+**Shipped (#139, 2026-07-19):** per-tenant quotas — a rounds-per-tenant cap, a
+games-per-round cap (which transitively bounds cover-image storage), and a
+tags-per-round cap — enforced in accounts mode only, all env-tunable. (A fourth
+cap bounded the billed buy-next spend until that feature was removed in #264.)
+Bounds abuse/cost before opening public sign-up (§12).
 
 ---
 
@@ -276,25 +282,24 @@ directly here: several hand-rolled, security-or-correctness-critical pieces
 now have a stronger case for a mature library than for growing the homegrown
 version further. Filed as #211–#215 (2026-07-19).
 
-1. **Postgres schema migrations, and re-open "no ORM"** —
-   [`lib/repo/postgres.js`](../lib/repo/postgres.js) evolves the schema via
-   `CREATE TABLE`/`ALTER TABLE ... IF NOT EXISTS` on every `init()`, tracked
-   only by code comments, no migrations table, no rollback. This already
-   caused a real incident (`init()` needed a hand-written advisory lock to
-   survive concurrent boots — see
-   [`.claude/rules/postgres-backend.md`](../.claude/rules/postgres-backend.md)).
-   It also hand-writes every parameterized SQL string, with documented
-   footguns (the `JSON.stringify` + `::jsonb`-cast dance; arrays silently
-   becoming Postgres array literals if you forget it — same rule file). Both
-   now run against a **live production database** — exactly the class of
-   hand-rolled, correctness-critical code the mindset shift argues against
-   defaulting to, so **"no ORM" is reopened, not settled.** **Decided
-   2026-07-19: Knex** (query builder + migrations combined, one dependency;
-   keeps a raw-SQL escape hatch for the tenant-scoped `tx`/`qt` transactions
-   and RLS `set_config`/`FOR UPDATE` calls a heavier ORM would fight). A full
-   ORM (Prisma-style) is still not recommended — RLS and the tenant-scoped
-   transaction pattern don't retrofit cleanly into one. **Highest-priority
-   candidate.** Filed as **#211**.
+1. **Postgres schema migrations + "no ORM" reopened — shipped (#211).**
+   [`lib/repo/postgres.js`](../lib/repo/postgres.js) used to evolve the schema
+   via `CREATE TABLE`/`ALTER TABLE ... IF NOT EXISTS` on every `init()`, tracked
+   only by code comments, no migrations table, no rollback (a real incident: it
+   needed a hand-written advisory lock to survive concurrent boots), and it
+   hand-wrote every parameterized SQL string with the `JSON.stringify` +
+   `::jsonb`-cast footgun (arrays silently becoming Postgres array literals).
+   Now on **Knex** (query builder + built-in migrations, one dependency): the
+   `~30` data-access methods use the fluent builder, schema lives in versioned
+   migration files under [`lib/repo/migrations/`](../lib/repo/migrations)
+   (`npm run migrate`), and `init()` runs `knex.migrate.latest()`. The baseline
+   migration mirrors the old DDL idempotently, so it's a safe no-op on the live
+   prod DB (records the baseline, no data change). It's **not** a full ORM — RLS,
+   the tenant-scoped `tx`/`qt` `set_config`, advisory locks and `FOR UPDATE`
+   stay on `knex.raw()` (a full ORM was rejected: it doesn't retrofit cleanly to
+   RLS + the tenant-transaction pattern). The advisory lock **stays** — Knex's
+   own migration lock doesn't cover the first-boot bookkeeping-table create race
+   (verified). See [`.claude/rules/postgres-backend.md`](../.claude/rules/postgres-backend.md).
 2. **Structured logging + error tracking** — the logging half is **shipped
    (#212)**: the hand-rolled JSON-line writer + request logger are now
    `pino`/`pino-http` internally, with the public `lib/observability.js` exports,
@@ -321,9 +326,9 @@ version further. Filed as #211–#215 (2026-07-19).
    second process. Track `rate-limit-redis` (or similar) as a prerequisite for
    scaling out, not an immediate fix. Filed as **#215**.
 
-**Recommendation.** Treat #1 (migrations) as worth its own issue soon — it's
-the one place a real production incident risk already exists. The rest are
-fast-follow hardening, sequenced by how much production traffic has grown.
+**Recommendation.** #1 (migrations/Knex) is **shipped (#211)** — it was the one
+place a real production incident risk already existed. The rest are fast-follow
+hardening, sequenced by how much production traffic has grown.
 
 ---
 
@@ -337,8 +342,8 @@ human can do: [`docs/deploy-railway.md`](./deploy-railway.md).
 
 **Rejected, as planned:** self-hosting Postgres, rolling your own TLS, or a
 Kubernetes setup — all add operational burden managed services remove at this
-scale. Cost envelope stayed hobby-scale (~€25–50/month before any
-pay-per-use Anthropic API usage).
+scale. Cost envelope stayed hobby-scale (~€25–50/month); since #264 removed the
+buy-next feature there is no pay-per-use AI spend on top of it.
 
 ---
 
@@ -377,16 +382,14 @@ to mandatory.
   per processing purpose, **data-subject rights** (access/export/deletion —
   the app already deletes cleanly), **data minimization**, and **retention**
   limits.
-- **Third-party processors** need **Data Processing Agreements**: the host +
-  managed DB + object storage, and **Anthropic** — the buy-next feature makes
-  an outbound call to the Claude API with a deliberately aggregated,
-  member-anonymous taste profile (see
-  [`.claude/rules/buy-next-recommendations.md`](../.claude/rules/buy-next-recommendations.md)),
-  which lowers exposure but is still a **US transfer** needing DPA/SCC
-  coverage and privacy-policy disclosure. **Keep the anonymization.**
+- **Third-party processors** need **Data Processing Agreements**: the host,
+  the managed DB, and object storage. Since **#264** removed the buy-next
+  feature, the app makes **no outbound AI call** and there is no US
+  LLM-processor transfer left to cover — the remaining processors are the
+  hosting stack itself.
 - **Confirm with a lawyer/DPO:** lawful basis per purpose, retention periods,
-  whether a DPIA is needed, and the international-transfer basis for the
-  Anthropic call.
+  whether a DPIA is needed, and the international-transfer basis for whichever
+  hosting processors sit outside the EU.
 
 ### 9.3 Cookie / consent banner — probably not required today (verify)
 
@@ -398,8 +401,8 @@ to mandatory.
   under the necessity exception, so a consent banner is likely **not
   required**. Fonts are self-hosted, so no Google-Fonts consent issue either.
 - **This changes** the moment analytics, ads, or other non-essential tracking
-  is added. **Confirm with a lawyer** that the Anthropic call and any auth
-  cookies qualify as "strictly necessary."
+  is added. **Confirm with a lawyer** that the auth cookies qualify as
+  "strictly necessary."
 
 ### 9.4 Terms of Service — nice-to-have → must for SaaS — open (#140)
 
@@ -507,7 +510,7 @@ Risk = chance of getting it subtly wrong / blast radius.
 
 *Exit (reached):* the group's data runs in the cloud, gated, on TLS, on a real
 DB, with backups and monitoring. Public multi-tenant sign-up is still gated on
-the rest of §12 (Impressum #134, quotas #139, legal pack #140) and a
+the rest of §12 (Impressum #134, legal pack #140; quotas #139 shipped) and a
 deliberate decision to flip `ACCOUNTS_ENABLED` in production.
 
 ### Phase 1.5 — Harden the spine: prefer battle-tested deps over hand-rolled
@@ -517,7 +520,7 @@ Not go-live blockers (Phase 1 is already live) — closing the gap between
 
 | Item | Effort | Risk | Issue |
 |---|---|---|---|
-| **Postgres schema migrations** + adopt **Knex** | L | Med | #211 |
+| **Postgres schema migrations** + adopt **Knex** — **shipped** (#211) | L | Med | #211 |
 | **Structured logging** — `pino`/`pino-http` — **shipped** (#212) | S–M | Low | #212 |
 | **Centralized request validation** — `zod` at the router boundary — **shipped** (#213) | M | Low | #213 |
 | **Identity/token issuance** — access-token JWTs via `jsonwebtoken` — **shipped** (#214) | M | Med | #214 |
@@ -531,8 +534,8 @@ See §7 for the reasoning behind each.
 | Account model (users, email verify, password reset) — built **token-first** so native apps share it (§2.4/§5) | **L** | **High** | Blocker for public sign-up (§5) — **shipped** (#135) |
 | **Tenant model + isolation** (`tenant_id` everywhere, central enforcement, RLS) | **L** | **Very High** | Blocker — cross-tenant leak is catastrophic (§6) — **shipped** (#136) |
 | Onboarding / first-run flow + empty states | M | Med | Blocker for usable sign-up (§11) — **shipped** (#138) |
-| Per-tenant quotas (esp. recommendation spend) | S–M | Med | Cost/abuse control — **open** (#139) |
-| Terms of Service / AGB, DPAs (host, DB, Anthropic), transfer basis | S (+external) | Med | Legal must for SaaS (§9) — **open** (#140) |
+| Per-tenant quotas (rounds, games, tags) | S–M | Med | Cost/abuse control — **shipped** (#139) |
+| Terms of Service / AGB, DPAs (host, DB), transfer basis | S (+external) | Med | Legal must for SaaS (§9) — **open** (#140) |
 | Consent mechanism **iff** non-essential tracking is added | S | Low | Conditional (§9.3) |
 
 **Roles/permissions and invitations/tenant-sharing live in Phase 4, not here:**
@@ -569,7 +572,7 @@ members to hold their own login.
 (§3/§2.3), authentication (§5), TLS + security headers + rate limiting (§4),
 production hosting + deploy (§8), tenant isolation (§6), accounts (§5).
 **What's left before public sign-up:** the legal pack (Impressum #134, blocked
-externally; ToS/DPAs #140) and per-tenant quotas (#139) — plus the Phase 1.5
+externally; ToS/DPAs #140) — per-tenant quotas (#139) shipped — plus the Phase 1.5
 hardening above is recommended, not blocking. Tenant *sharing*, roles, and
 per-device voting are **not** in this list — see Phase 4.
 

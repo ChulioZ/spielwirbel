@@ -25,7 +25,9 @@
 }
 
 .ti-dice-3::before { content: "\f08d"; }
-.ti-dice-5::before { content: "\f08f"; }
+.ti-tags::before { content: "\ef86"; }
+.ti-ban::before { content: "\ea2e"; }
+.ti-tornado::before { content: "\ece2"; }
 .ti-cards::before { content: "\f510"; }
 .ti-trophy::before { content: "\eb45"; }
 .ti-confetti::before { content: "\ee46"; }
@@ -44,6 +46,7 @@
 .ti-minus::before { content: "\eaf2"; }
 .ti-x::before { content: "\eb55"; }
 .ti-check::before { content: "\ea5e"; }
+.ti-circle-check::before { content: "\ea67"; }
 .ti-chevron-left::before { content: "\ea60"; }
 .ti-chevron-right::before { content: "\ea61"; }
 .ti-chevron-down::before { content: "\ea5f"; }
@@ -71,4 +74,30 @@
 .ti-medal::before { content: "\ec78"; }
 .ti-star::before { content: "\eb2e"; }
 .ti-player-play::before { content: "\ed46"; }
+.ti-external-link::before { content: "\ea99"; }
+.ti-link::before { content: "\eade"; }
+.ti-unlink::before { content: "\eb46"; }
+.ti-heart::before { content: "\eabe"; }
+.ti-percentage::before { content: "\ecf4"; }
+.ti-lock-question::before { content: "\f931"; }
+.ti-mail-check::before { content: "\f939"; }
+.ti-logout::before { content: "\eba8"; }
 .ti-calendar::before { content: "\ea53"; }
+.ti-message::before { content: "\eaef"; }
+
+/* Tag icons (#255) — codepoints read from this bundle's own cmap via fontTools,
+   NOT from tabler.io (they differ; see .claude/rules/tabler-icon-codepoints.md). */
+.ti-dice-5::before { content: "\f08f"; }
+.ti-chess::before { content: "\f382"; }
+.ti-puzzle::before { content: "\eb10"; }
+.ti-sword::before { content: "\f030"; }
+.ti-shield::before { content: "\eb24"; }
+.ti-rocket::before { content: "\ec45"; }
+.ti-brain::before { content: "\f59f"; }
+.ti-ghost::before { content: "\eb8e"; }
+.ti-building-castle::before { content: "\ed88"; }
+.ti-world::before { content: "\eb54"; }
+/* Codepoint read from THIS bundle's cmap (glyph name `world-search`), not from
+   tabler.io — the two disagree for some glyphs. See
+   .claude/rules/tabler-icon-codepoints.md. */
+.ti-world-search::before { content: "\f9e7"; }

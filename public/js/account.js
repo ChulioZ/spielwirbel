@@ -87,6 +87,7 @@ async function refreshAccessToken() {
 // Called by core.js api() when a 401 survives a refresh attempt.
 function onSessionLost() {
   clearTokens();
+  invalidateRoundCache(); // no cached round data may survive the identity loss
   accountUser = null;
   setupAccountUi();
   showLogin();
@@ -95,6 +96,7 @@ function onSessionLost() {
 async function logout() {
   try { await authFetch('/logout', { refreshToken: getRefreshToken() }); } catch {}
   clearTokens();
+  invalidateRoundCache(); // the next login may be a different account/tenant
   accountUser = null;
   setupAccountUi();
   showLogin();
@@ -174,7 +176,7 @@ function setError(card, msg) {
 
 function showLogin() {
   openAuth(showLogin, `<form class="auth__card" autocomplete="on">
-      <div class="auth__logo"><i class="ti ti-dice-5" aria-hidden="true"></i></div>
+      <div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.login.title'))}</h1>
       <p class="auth__sub muted">${esc(t('auth.login.sub'))}</p>
       <div class="field">
@@ -207,6 +209,9 @@ function showLogin() {
         const { ok, status, data } = await authFetch('/login', { email: email.value.trim(), password: pw.value });
         if (ok) {
           setTokens(data.accessToken, data.refreshToken);
+          // A different account than the cache's owner may be logging in on
+          // this browser — its persisted round data must not leak across.
+          invalidateRoundCache();
           accountUser = data.user || null;
           enterApp();
           return;
@@ -222,7 +227,7 @@ function showLogin() {
 
 function showRegister() {
   openAuth(showRegister, `<form class="auth__card" autocomplete="on">
-      <div class="auth__logo"><i class="ti ti-dice-5" aria-hidden="true"></i></div>
+      <div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.register.title'))}</h1>
       <p class="auth__sub muted">${esc(t('auth.register.sub'))}</p>
       <div class="field">

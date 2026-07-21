@@ -36,6 +36,11 @@ function roundPath(rid, tab) {
 // each routable show*(). While the router is driving (routing === true) or the
 // path already matches, it replaces; otherwise it pushes a new history entry.
 function syncUrl(path) {
+  // Every view calls this first, so it doubles as the navigation signal for
+  // the SWR cache: bumping the token retires any background refresh armed by
+  // the previous view (core.js swrRead) — a late response updates the cache
+  // but must never re-render a view the user already left.
+  swrRenderToken += 1;
   if (routing || path === location.pathname) {
     history.replaceState({ path, idx: navIndex }, '', path);
   } else {
@@ -73,7 +78,10 @@ function resolveRoute(pathname) {
     if (!sub || sub === 'start') return () => showRound(rid, 'start');
     if (['regal', 'chronik', 'pokale'].includes(sub)) return () => showRound(rid, sub);
     if (sub === 'retired') return () => showRetired(rid);
+    if (sub === 'completed') return () => showCompleted(rid);
     if (sub === 'design') return () => showBackground(rid);
+    if (sub === 'tags') return () => showTags(rid);
+    if (sub === 'providers') return () => showProviders(rid);
     if (sub === 'game' && parts[3]) return () => showGameDetail(rid, parts[3]);
     if (sub === 'member' && parts[3]) return () => showMember(rid, parts[3]);
     if (sub === 'session' && parts[3]) return () => showResultsById(rid, parts[3]);

@@ -35,7 +35,7 @@ async function showRound(rid, tab) {
   setCrumbs([{ label: t('nav.home'), onClick: showHome }, { label: round.name }]);
 
   app.innerHTML = '';
-  const activeGames = round.games.filter((g) => !g.retired);
+  const activeGames = round.games.filter((g) => !g.retired && !g.completed);
   if (activeTab === 'regal') renderRegalTab(round, activeGames);
   else if (activeTab === 'chronik') renderChronikTab(round, activities);
   else if (activeTab === 'pokale') renderPokaleTab(round);
@@ -51,12 +51,16 @@ function renderHubDock(rid, activeTab) {
     { id: 'chronik', icon: 'ti-history', label: t('hub.tab.chronik') },
     { id: 'pokale', icon: 'ti-trophy', label: t('hub.tab.pokale') },
   ];
-  const dock = h('<nav class="dock"></nav>');
+  const dock = h(`<nav class="dock" aria-label="${esc(t('a11y.hubTabs'))}"></nav>`);
   tabs.forEach(({ id: tabId, icon, label }) => {
-    const item = h(`<button class="dock__item${tabId === activeTab ? ' is-active' : ''}">
+    // aria-current marks the tab you are on (#145). It was signalled by the
+    // is-active class alone, i.e. by color — and since the active tab also has
+    // no click handler, a screen-reader user met a dead button with no clue why.
+    const active = tabId === activeTab;
+    const item = h(`<button class="dock__item${active ? ' is-active' : ''}"${active ? ' aria-current="page"' : ''}>
          <i class="ti ${icon}" aria-hidden="true"></i>${esc(label)}
        </button>`);
-    if (tabId !== activeTab) item.addEventListener('click', () => showRound(rid, tabId));
+    if (!active) item.addEventListener('click', () => showRound(rid, tabId));
     dock.appendChild(item);
   });
   app.appendChild(dock);
@@ -89,7 +93,7 @@ function renderStartTab(round, activeGames) {
   });
 
   const startBtn = h(
-    `<button class="btn btn--primary hub-cta"><i class="ti ti-dice-5" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
+    `<button class="btn btn--primary hub-cta"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
   );
   startBtn.addEventListener('click', () => showStartSession(round));
   if (activeGames.length === 0) {
@@ -107,12 +111,10 @@ function renderStartTab(round, activeGames) {
     .forEach((session) => {
       const game = session.chosenGameId && round.games.find((g) => g.id === session.chosenGameId);
       const when = fmtDateTime(session.chosenAt || session.createdAt);
-      const imgStyle = game && game.image ? ` style="background-image:url('${game.image}')"` : '';
+      const imgStyle = game && game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
       const fallback = game
-        ? game.image
-          ? ''
-          : `<i class="ti ${typeIcon(game.type)}" aria-hidden="true"></i>`
-        : '<i class="ti ti-dice-5" aria-hidden="true"></i>';
+        ? coverPlaceholder(game)
+        : '<i class="ti ti-tornado" aria-hidden="true"></i>';
       let pill = '';
       if (game) {
         const sst = gameStatsForSession(round, session, game.id);
@@ -139,24 +141,20 @@ function renderStartTab(round, activeGames) {
 
   // "Last played" ticket: the newest finished session whose chosen game still
   // exists. Delivers the emotional payoff above the fold; tap opens that result.
+  // Ordered by `createdAt` — when the session was played — so this agrees with
+  // the Chronik; `finishedAt` changes when an old session is re-finished.
   const lastPlayed = round.sessions
     .filter((s) => s.finished && s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
-    .sort((a, b) =>
-      String(b.finishedAt || b.chosenAt || b.createdAt).localeCompare(
-        String(a.finishedAt || a.chosenAt || a.createdAt)
-      )
-    )[0];
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
   if (lastPlayed) {
     const game = round.games.find((g) => g.id === lastPlayed.chosenGameId);
     const winnerNames = (lastPlayed.winnerIds || [])
       .map((wid) => (round.members.find((m) => m.id === wid) || {}).name)
       .filter(Boolean);
     const sst = gameStatsForSession(round, lastPlayed, game.id);
-    const when = fmtDateTime(lastPlayed.finishedAt || lastPlayed.chosenAt || lastPlayed.createdAt);
-    const imgStyle = game.image ? ` style="background-image:url('${game.image}')"` : '';
-    const fallback = game.image
-      ? ''
-      : `<i class="ti ${typeIcon(game.type)}" aria-hidden="true"></i>`;
+    const when = fmtDateTime(lastPlayed.createdAt);
+    const imgStyle = game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
+    const fallback = coverPlaceholder(game);
     const pill =
       sst.avg !== null
         ? `<span class="score-pill" style="background:${avgColor(sst.avg)}">Ø ${sst.avg.toFixed(1)}</span>`
@@ -222,7 +220,7 @@ function renderStartTab(round, activeGames) {
     recs.slice(0, 5).forEach(({ game, reasons }) => {
       const item = h(`<div class="recommend-item">
            <div class="recommend-item__info">
-             <span class="recommend-item__title">${esc(game.title)} ${typeTag(game.type)}</span>
+             <span class="recommend-item__title">${esc(game.title)}</span>
              <span class="recommend-item__reason">${reasons.map(esc).join(' · ')}</span>
            </div>
            <button class="btn recommend-item__btn">${esc(t('rec.retire'))}</button>
@@ -244,225 +242,28 @@ function renderStartTab(round, activeGames) {
     app.appendChild(banner);
   }
 
-  // Buy-next / play-next suggestions (issue #101): a local rediscovery list
-  // (Layer A) plus an opt-in LLM buy-next list (Layer B).
-  renderBuyNext(round, activeGames, statsByGame);
-
   // Quick actions: quieter secondary tasks below the fold.
   const actions = h('<div class="hub-actions"></div>');
   const addGameBtn = h(
     `<button class="btn"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('round.addGame'))}</button>`
   );
   addGameBtn.addEventListener('click', () => showAddGame(round));
+  const tagsBtn = h(
+    `<button class="btn"><i class="ti ti-tags" aria-hidden="true"></i> ${esc(t('round.tags'))}</button>`
+  );
+  tagsBtn.addEventListener('click', () => showTags(rid));
+  const providersBtn = h(
+    `<button class="btn"><i class="ti ti-world-search" aria-hidden="true"></i> ${esc(t('round.providers'))}</button>`
+  );
+  providersBtn.addEventListener('click', () => showProviders(rid));
   const bgBtn = h(
     `<button class="btn"><i class="ti ti-palette" aria-hidden="true"></i> ${esc(t('round.design'))}</button>`
   );
   bgBtn.addEventListener('click', () => showBackground(rid));
   actions.appendChild(addGameBtn);
+  actions.appendChild(tagsBtn);
+  actions.appendChild(providersBtn);
   actions.appendChild(bgBtn);
   app.appendChild(actions);
-}
-
-// --- Buy-next / play-next suggestions (issue #101).
-// Layer A: a local, always-on "play these again" list (highly-rated but
-// rarely-played owned games), gated on enough votes. Layer B: an opt-in button
-// that asks the backend LLM route for real buy-next titles, cached per round.
-
-// Round ids whose Layer-B list should render expanded on the *next* render
-// (issue #113). Set right before an internal re-render (generate / paging /
-// delete) and cleared on read, so those keep the list open while a fresh entry
-// to the round still starts collapsed.
-const buyNextKeepOpen = new Set();
-
-// Which run of the Layer-B history is shown per round (issue #115), keyed by
-// round id -> run id. Survives the showRound() re-renders that paging/locale
-// changes trigger; a stale/absent id falls back to the newest run.
-const buyNextSelected = {};
-
-// The round's Layer-B run history as a plain array, newest first — read
-// defensively (matches history() in routes/recommendations.js) so legacy rounds
-// with only the pre-#115 single round.recommendations object still render, with
-// no migration. Returns [] when nothing has been generated.
-function buyNextRuns(round) {
-  if (Array.isArray(round.recommendationRuns)) return round.recommendationRuns;
-  if (round.recommendations && Array.isArray(round.recommendations.items)) {
-    return [{ id: 'legacy', ...round.recommendations }];
-  }
-  return [];
-}
-
-function renderBuyNext(round, activeGames, statsByGame) {
-  const runs = buyNextRuns(round);
-  // Nothing to offer on a near-empty round (unless a list was already generated).
-  if (activeGames.length < 3 && !runs.length) return;
-
-  const section = h(`<section class="buynext">
-       <h2 class="buynext__head"><i class="ti ti-bulb" aria-hidden="true"></i> ${esc(t('buynext.title'))}</h2>
-     </section>`);
-
-  // Layer A — local rediscovery. Enough data = three times as many votes as
-  // members (same gate as the retirement banner).
-  const playNext = playNextRecommendations(activeGames, statsByGame, round.members.length * 3);
-  if (playNext.length) {
-    const block = h(`<div class="buynext__block">
-         <div class="buynext__label">${esc(t('buynext.playTitle'))}</div>
-         <div class="muted buynext__sub">${esc(t('buynext.playSub'))}</div>
-         <div class="recommend-list"></div>
-       </div>`);
-    const list = block.querySelector('.recommend-list');
-    playNext.slice(0, 5).forEach(({ game, avg }) => {
-      const item = h(`<div class="recommend-item">
-           <div class="recommend-item__info">
-             <span class="recommend-item__title">${esc(game.title)} ${typeTag(game.type)}</span>
-           </div>
-           <span class="score-pill" style="background:${avgColor(avg)}">Ø ${avg.toFixed(1)}</span>
-         </div>`);
-      item.querySelector('.recommend-item__title').addEventListener('click', () => showGameDetail(round.id, game.id));
-      list.appendChild(item);
-    });
-    section.appendChild(block);
-  }
-
-  // Layer B — opt-in LLM buy-next list. Titles here aren't owned games, so the
-  // --static variant drops the clickable-title affordance Layer A uses.
-  const llm = h(`<div class="buynext__block buynext__block--static"></div>`);
-  if (runs.length) {
-    // Which run of the history to show: the remembered one, else the newest.
-    let idx = runs.findIndex((r) => r.id === buyNextSelected[round.id]);
-    if (idx < 0) idx = 0;
-    buyNextSelected[round.id] = runs[idx].id;
-    const cached = runs[idx];
-    const items = cached.items.slice(0, 8);
-    // The list can be long and this is a "once in a while" feature, so collapse
-    // it by default (issue #113). It starts expanded only on the single
-    // re-render right after a generate / paging / delete (buyNextKeepOpen,
-    // cleared on read); the header + regenerate button stay visible so the
-    // feature stays discoverable. The header bar doubles as the collapse toggle.
-    const startOpen = buyNextKeepOpen.has(round.id);
-    buyNextKeepOpen.delete(round.id);
-    const collapse = h(`<div class="buynext__collapse${startOpen ? ' is-open' : ''}">
-         <div class="buynext__bar" role="button" tabindex="0" aria-expanded="${startOpen}">
-           <span class="buynext__label">${esc(t('buynext.llmTitle'))}</span>
-           <span class="buynext__baraside">
-             <span class="muted buynext__count">${esc(t('buynext.llmCount', { n: items.length }))}</span>
-             <i class="ti ti-chevron-down buynext__caret" aria-hidden="true"></i>
-           </span>
-         </div>
-         <div class="buynext__body"${startOpen ? '' : ' hidden'}></div>
-       </div>`);
-    const body = collapse.querySelector('.buynext__body');
-    const list = h('<div class="recommend-list"></div>');
-    items.forEach(({ title, reason, platform, url }) => {
-      // platform/url are absent on runs cached before #106 — degrade to the
-      // plain title-and-reason row in that case.
-      const badge = platform ? ` ${platformTag(platform)}` : '';
-      const link = url
-        ? `<a class="recommend-item__link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">
-             <i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('buynext.view'))}</a>`
-        : '';
-      list.appendChild(h(`<div class="recommend-item">
-           <div class="recommend-item__info">
-             <span class="recommend-item__head">
-               <span class="recommend-item__title">${esc(title)}</span>${badge}
-             </span>
-             ${reason ? `<span class="recommend-item__reason">${esc(reason)}</span>` : ''}
-           </div>
-           ${link}
-         </div>`));
-    });
-    body.appendChild(list);
-    body.appendChild(h(`<div class="muted buynext__meta">${esc(t('buynext.meta', {
-      when: fmtDateTime(cached.generatedAt),
-      model: cached.model || '',
-    }))}</div>`));
-    // History controls (#115): page through past runs (numbered oldest→newest,
-    // so the newest shows n/n) and delete the shown run. Selecting a run keeps
-    // the list open across the re-render (buyNextKeepOpen).
-    const nav = h(`<div class="buynext__nav">
-         <div class="buynext__pager">
-           <button class="btn btn--sm buynext__page" data-dir="older" aria-label="${esc(t('buynext.olderRunAria'))}">
-             <i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('buynext.olderRun'))}</button>
-           <span class="muted buynext__pos">${esc(t('buynext.runPosition', { i: runs.length - idx, n: runs.length }))}</span>
-           <button class="btn btn--sm buynext__page" data-dir="newer" aria-label="${esc(t('buynext.newerRunAria'))}">
-             ${esc(t('buynext.newerRun'))} <i class="ti ti-chevron-right" aria-hidden="true"></i></button>
-         </div>
-         <button class="btn btn--sm btn--danger buynext__del"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('buynext.deleteRun'))}</button>
-       </div>`);
-    const older = nav.querySelector('[data-dir="older"]');
-    const newer = nav.querySelector('[data-dir="newer"]');
-    older.disabled = idx >= runs.length - 1; // no older run
-    newer.disabled = idx <= 0; // no newer run
-    const selectRun = (targetIdx) => {
-      buyNextSelected[round.id] = runs[targetIdx].id;
-      buyNextKeepOpen.add(round.id);
-      showRound(round.id);
-    };
-    older.addEventListener('click', () => { if (!older.disabled) selectRun(idx + 1); });
-    newer.addEventListener('click', () => { if (!newer.disabled) selectRun(idx - 1); });
-    nav.querySelector('.buynext__del').addEventListener('click', () => deleteBuyNextRun(round, cached));
-    body.appendChild(nav);
-    const bar = collapse.querySelector('.buynext__bar');
-    let expanded = startOpen;
-    const toggle = () => {
-      expanded = !expanded;
-      body.hidden = !expanded;
-      collapse.classList.toggle('is-open', expanded);
-      bar.setAttribute('aria-expanded', String(expanded));
-    };
-    bar.addEventListener('click', toggle);
-    bar.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggle();
-      }
-    });
-    llm.appendChild(collapse);
-    const regen = h(`<button class="btn buynext__gen"><i class="ti ti-refresh" aria-hidden="true"></i> ${esc(t('buynext.regenerate'))}</button>`);
-    regen.addEventListener('click', () => generateBuyNext(round, regen));
-    llm.appendChild(regen);
-  } else {
-    llm.appendChild(h(`<div class="buynext__label">${esc(t('buynext.llmTitle'))}</div>`));
-    llm.appendChild(h(`<div class="muted buynext__sub">${esc(t('buynext.llmIntro'))}</div>`));
-    const gen = h(`<button class="btn btn--primary buynext__gen"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('buynext.generate'))}</button>`);
-    gen.addEventListener('click', () => generateBuyNext(round, gen));
-    llm.appendChild(gen);
-    llm.appendChild(h(`<div class="muted buynext__note"><i class="ti ti-cloud-up" aria-hidden="true"></i> ${esc(t('buynext.llmNote'))}</div>`));
-  }
-  section.appendChild(llm);
-
-  app.appendChild(section);
-}
-
-// POST the round's taste profile to the LLM route and re-render on success. On
-// failure the app is untouched — Layer A stays as the fallback.
-async function generateBuyNext(round, btn) {
-  const original = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<i class="ti ti-loader-2 spin" aria-hidden="true"></i> ${esc(t('buynext.generating'))}`;
-  try {
-    const rec = await api('POST', `/api/rounds/${round.id}/recommendations`, { locale: getLocale() });
-    // The POST appends a new run; select and expand it on re-render (#113/#115).
-    buyNextSelected[round.id] = rec.id;
-    buyNextKeepOpen.add(round.id);
-    showRound(round.id); // re-render the Start tab with the fresh run
-  } catch (e) {
-    toast(e.message === 'not_configured' ? t('buynext.unavailable') : t('buynext.failed'));
-    btn.disabled = false;
-    btn.innerHTML = original;
-  }
-}
-
-// Delete one run from the Layer-B history (#115). After it's gone the selection
-// falls back to the newest remaining run (or the empty state), kept expanded.
-async function deleteBuyNextRun(round, run) {
-  if (!confirm(t('buynext.deleteRunConfirm'))) return;
-  try {
-    await api('DELETE', `/api/rounds/${round.id}/recommendations/${run.id}`);
-    delete buyNextSelected[round.id];
-    buyNextKeepOpen.add(round.id);
-    showRound(round.id);
-  } catch {
-    toast(t('buynext.deleteRunFailed'));
-  }
 }
 

@@ -1,5 +1,6 @@
 /* Spielwirbel – views: the round hub's non-Start tabs — Regal (games library),
-   Chronik (session history), Pokale (trophies) and the retired-games screen.
+   Chronik (session history), Pokale (trophies) and the two archive screens
+   (retired / completed games).
    Loaded after views-round.js; shares one global script scope. */
 
 // --- Regal tab: the games library — search, filter chips, cover grid.
@@ -9,7 +10,7 @@ function renderRegalTab(round, activeGames) {
   // Filters (and sort) persist for the session but are scoped to one round —
   // opening a different round's Regal resets them to defaults.
   if (regalFiltersRid !== round.id) {
-    regalFilters = { type: 'all', durations: new Set(), query: '' };
+    regalFilters = { tags: new Map(), query: '' };
     gamesSort = 'avg';
     regalFiltersRid = round.id;
   }
@@ -19,7 +20,10 @@ function renderRegalTab(round, activeGames) {
   activeGames.forEach((g) => (statsByGame[g.id] = gameStats(round, g.id)));
 
   const gamesSec = h('<div class="section"></div>');
-  const gamesHead = h(`<div class="section-head"><h3>${esc(t('games.title', { n: activeGames.length }))}</h3><div class="section-tools"></div></div>`);
+  // h1, not h3: on the Regal/Chronik/Pokale tabs this is the top-level heading of
+  // the view — only the Start tab renders the round-name hero (#145). The
+  // section-label look is unchanged; `.section-head :is(h1,h2,h3)` styles it.
+  const gamesHead = h(`<div class="section-head"><h1>${esc(t('games.title', { n: activeGames.length }))}</h1><div class="section-tools"></div></div>`);
   const gamesTools = gamesHead.querySelector('.section-tools');
   gamesSec.appendChild(gamesHead);
 
@@ -55,47 +59,28 @@ function renderRegalTab(round, activeGames) {
     gamesTools.appendChild(search);
     gamesTools.appendChild(sortSel);
 
-    // Filter chips: type behaves like a radio group, durations toggle freely
-    // (none selected = duration doesn't matter).
-    const counts = {
-      analog: activeGames.filter((g) => g.type === 'analog').length,
-      digital: activeGames.filter((g) => g.type === 'digital').length,
-    };
-    // Initialize from the persisted state; durFilter is the same Set instance,
-    // so toggling it writes straight back into regalFilters.
-    let typeFilter = regalFilters.type;
-    const durFilter = regalFilters.durations;
     let query = regalFilters.query;
-    const chips = h(`<div class="filter-chips">
-        <button class="chip" data-type="all">${esc(t('games.filter.all', { n: activeGames.length }))}</button>
-        <button class="chip" data-type="analog"><i class="ti ti-dice-3" aria-hidden="true"></i>${esc(t('games.filter.analog', { n: counts.analog }))}</button>
-        <button class="chip" data-type="digital"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i>${esc(t('games.filter.digital', { n: counts.digital }))}</button>
-        <span class="filter-chips__sep"></span>
-        <button class="chip" data-dur="short"><i class="ti ti-bolt" aria-hidden="true"></i>${esc(t('duration.short'))}</button>
-        <button class="chip" data-dur="medium"><i class="ti ti-clock" aria-hidden="true"></i>${esc(t('duration.medium'))}</button>
-        <button class="chip" data-dur="long"><i class="ti ti-hourglass" aria-hidden="true"></i>${esc(t('duration.long'))}</button>
-      </div>`);
-    // Reflect the persisted filters on the freshly built chips.
-    chips.querySelectorAll('[data-type]').forEach((c) => c.classList.toggle('is-on', c.dataset.type === typeFilter));
-    chips.querySelectorAll('[data-dur]').forEach((c) => c.classList.toggle('is-on', durFilter.has(c.dataset.dur)));
-    chips.querySelectorAll('[data-type]').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        typeFilter = chip.dataset.type;
-        regalFilters.type = typeFilter;
-        chips.querySelectorAll('[data-type]').forEach((c) => c.classList.toggle('is-on', c === chip));
-        renderGames();
+    // Filter chips: custom round tags only (#238, tri-state #241). One chip per
+    // round tag, all ignored by default; clicking cycles ignore -> include ->
+    // exclude, where included tags combine with AND and excluded tags reject a
+    // game carrying any of them. Ids of since-deleted tags are pruned from the
+    // persisted map so they can't invisibly filter everything out.
+    const chips = h('<div class="filter-chips"></div>');
+    const roundTags = round.tags || [];
+    const tagFilter = regalFilters.tags;
+    [...tagFilter.keys()].forEach((x) => { if (!roundTags.some((tg) => tg.id === x)) tagFilter.delete(x); });
+    if (roundTags.length) {
+      roundTags.forEach((tg) => {
+        const chip = h('<button class="chip"></button>');
+        paintTagChip(chip, tg.name, tagFilter.get(tg.id), tg.icon);
+        chip.addEventListener('click', () => {
+          paintTagChip(chip, tg.name, cycleTagState(tagFilter, tg.id), tg.icon);
+          renderGames();
+        });
+        chips.appendChild(chip);
       });
-    });
-    chips.querySelectorAll('[data-dur]').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        const d = chip.dataset.dur;
-        if (durFilter.has(d)) durFilter.delete(d);
-        else durFilter.add(d);
-        chip.classList.toggle('is-on', durFilter.has(d));
-        renderGames();
-      });
-    });
-    gamesSec.appendChild(chips);
+      gamesSec.appendChild(chips);
+    }
 
     // Build the cards once and remember them by game id. When re-sorting we only
     // reorder these existing nodes – no page rebuild that would reset the scroll.
@@ -104,9 +89,7 @@ function renderRegalTab(round, activeGames) {
     const loadCover = createCoverLoader();
     const cardById = {};
     activeGames.forEach((g) => {
-      const fallback = g.image
-        ? ''
-        : `<i class="ti ${typeIcon(g.type)}" aria-hidden="true"></i>`;
+      const fallback = coverPlaceholder(g);
       const avg = avgMap[g.id];
       const scorePill =
         avg !== null
@@ -114,13 +97,13 @@ function renderRegalTab(round, activeGames) {
           : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
       const gc = h(`<div class="game-card game-card--clickable">
            <div class="game-card__img">${fallback}
-             <div class="game-card__badges">${scorePill}${typeBadge(g.type)}${durationBadge(g.duration)}</div>
+             <div class="game-card__badges">${scorePill}</div>
            </div>
            <div class="game-card__body">
              <div class="game-card__title">${esc(g.title)}</div>
            </div>
          </div>`);
-      if (g.image) loadCover(gc, g.image, gc.querySelector('.game-card__img'));
+      if (g.image) loadCover(gc, coverUrl(g.image, COVER_CARD), gc.querySelector('.game-card__img'));
       gc.addEventListener('click', () => showGameDetail(rid, g.id));
       cardById[g.id] = gc;
     });
@@ -139,8 +122,7 @@ function renderRegalTab(round, activeGames) {
       return randomOrderedGames(round, activeGames);
     }
     function matchesFilters(g) {
-      if (typeFilter !== 'all' && g.type !== typeFilter) return false;
-      if (durFilter.size && !durFilter.has(g.duration)) return false;
+      if (!matchesTagFilter(tagFilter, g.tagIds)) return false;
       const q = query.trim().toLowerCase();
       if (q && !g.title.toLowerCase().includes(q)) return false;
       return true;
@@ -172,13 +154,98 @@ function renderRegalTab(round, activeGames) {
   }
   app.appendChild(gamesSec);
 
-  // Quiet footer: the way into the archive of retired games.
+  // Quiet footer: the ways into the two archives — retired ("Aussortiert") and
+  // completed ("Durchgespielt", #250). Both take a game out of the active
+  // collection; they are kept apart because the reason differs.
   const retiredGames = round.games.filter((g) => g.retired);
+  const completedGames = round.games.filter((g) => g.completed);
   const foot = h('<div class="round-footer"></div>');
   const retiredBtn = h(`<button class="link-btn"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.link', { n: retiredGames.length }))}</button>`);
   retiredBtn.addEventListener('click', () => showRetired(round.id));
   foot.appendChild(retiredBtn);
+  const completedBtn = h(`<button class="link-btn"><i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('completed.link', { n: completedGames.length }))}</button>`);
+  completedBtn.addEventListener('click', () => showCompleted(round.id));
+  foot.appendChild(completedBtn);
+
+  // Consolidate two rounds (#253). Gated on the WHOLE shelf, not activeGames:
+  // archived games move too, so a round with nothing but retired games must
+  // still offer this. Hidden entirely when there is nothing to move.
+  if (round.games.length) {
+    const moveBtn = h(`<button class="link-btn"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${esc(t('moveGames.link'))}</button>`);
+    moveBtn.addEventListener('click', () => showMoveGames(round));
+    foot.appendChild(moveBtn);
+  }
   app.appendChild(foot);
+}
+
+// Move every game of this round into another of the user's rounds (#253). The
+// target list is fetched BEFORE the sheet opens, so it never renders an empty
+// picker or a loading state — a user with only this one round gets a plain
+// explanation instead.
+async function showMoveGames(round) {
+  let rounds;
+  try {
+    rounds = await fetchRoundList({ rerender: false });
+  } catch (e) {
+    toast(e.message);
+    return;
+  }
+  const others = rounds.filter((r) => r.id !== round.id);
+  const n = round.games.length;
+
+  closeSheet();
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('moveGames.title'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('moveGames.title'))}</h2>
+          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        ${others.length
+          ? `<p class="muted">${esc(tn(n, 'moveGames.introOne', 'moveGames.intro'))}</p>
+             <div class="field">
+               <label for="moveTarget">${esc(t('moveGames.pick'))}</label>
+               <select id="moveTarget" class="input">
+                 ${others.map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}
+               </select>
+             </div>
+             <div class="toolbar sheet__actions">
+               <button id="moveGo" class="btn btn--primary btn--lg"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${esc(t('moveGames.submit'))}</button>
+             </div>`
+          : `<p class="muted">${esc(t('moveGames.empty'))}</p>`}
+      </div>
+    </div>`);
+  const form = backdrop.querySelector('.sheet');
+  document.body.appendChild(backdrop);
+
+  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  document.addEventListener('keydown', onKey, true);
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+  form.querySelector('.sheet__close').addEventListener('click', closeSheet);
+
+  const go = form.querySelector('#moveGo');
+  if (!go) return;
+  go.addEventListener('click', async () => {
+    const select = form.querySelector('#moveTarget');
+    const targetId = select.value;
+    const targetName = (others.find((r) => r.id === targetId) || {}).name || '';
+    // The source round's sessions do not survive the move, so this one confirms.
+    if (!confirm(tn(n, 'moveGames.confirmOne', 'moveGames.confirm', { round: targetName }))) return;
+    go.disabled = true;
+    try {
+      const res = await api('POST', `/api/rounds/${round.id}/games/move-to`, { targetRoundId: targetId });
+      closeSheet();
+      toast(tn(res.movedGames, 'moveGames.toast.doneOne', 'moveGames.toast.done'));
+      showRound(round.id, 'regal');
+    } catch (e) {
+      go.disabled = false;
+      const msg =
+        e.message === 'quota_games' ? t('moveGames.toast.quotaGames')
+          : e.message === 'quota_tags' ? t('moveGames.toast.quotaTags')
+            : e.message;
+      toast(msg);
+    }
+  });
 }
 
 // --- Chronik tab: one timeline of sessions and shelf changes. The activity
@@ -198,7 +265,13 @@ function renderChronikTab(round, activities) {
       game_added: { icon: 'ti-plus', text: t('activity.gameAdded', { title: a.title }) },
       game_retired: { icon: 'ti-trash', text: t('activity.gameRetired', { title: a.title }) },
       game_restored: { icon: 'ti-arrow-back-up', text: t('activity.gameRestored', { title: a.title }) },
+      game_completed: { icon: 'ti-circle-check', text: t('activity.gameCompleted', { title: a.title }) },
+      game_uncompleted: { icon: 'ti-arrow-back-up', text: t('activity.gameUncompleted', { title: a.title }) },
       game_deleted: { icon: 'ti-trash', text: t('activity.gameDeleted', { title: a.title }) },
+      // One bulk entry per side of a whole-shelf move (#253) — these carry a
+      // count and the other round's name, not a game title.
+      games_moved_out: { icon: 'ti-arrow-right', text: tn(a.count, 'activity.gamesMovedOutOne', 'activity.gamesMovedOut', { round: a.roundName }) },
+      games_moved_in: { icon: 'ti-arrow-left', text: tn(a.count, 'activity.gamesMovedInOne', 'activity.gamesMovedIn', { round: a.roundName }) },
     }[a.type];
     if (!meta) return;
     entries.push({ kind: 'activity', at: a.at, id: a.id, gameId: a.gameId, type: a.type, ...meta });
@@ -206,7 +279,7 @@ function renderChronikTab(round, activities) {
   entries.sort((a, b) => String(b.at).localeCompare(String(a.at)));
 
   const sec = h('<div class="section"></div>');
-  sec.appendChild(h(`<div class="section-head"><h3>${esc(t('chronik.title'))}</h3></div>`));
+  sec.appendChild(h(`<div class="section-head"><h1>${esc(t('chronik.title'))}</h1></div>`));
 
   // Filter chips: everything / sessions only / shelf changes only.
   let filter = 'all';
@@ -237,7 +310,7 @@ function renderChronikTab(round, activities) {
 
     // Thumbnail: the chosen game's cover, or an icon for the session's state.
     const thumbIcon = chosen
-      ? chosen.image ? '' : `<i class="ti ${typeIcon(chosen.type)}" aria-hidden="true"></i>`
+      ? coverPlaceholder(chosen)
       : `<i class="ti ${s.cancelled ? 'ti-x' : 'ti-cards'}" aria-hidden="true"></i>`;
 
     // Headline is the chosen game (with a rating pill); the date leads only
@@ -262,7 +335,7 @@ function renderChronikTab(round, activities) {
            <div class="session-card__meta">${parts.join(' · ')}</div>
          </div>
        </button>`);
-    if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), chosen.image);
+    if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
     card.addEventListener('click', () => showResults(round, s));
     return card;
   }
@@ -273,9 +346,11 @@ function renderChronikTab(round, activities) {
     const nav =
       e.type === 'game_retired'
         ? () => showRetired(rid)
-        : gameExists
-          ? () => showGameDetail(rid, e.gameId)
-          : null;
+        : e.type === 'game_completed'
+          ? () => showCompleted(rid)
+          : gameExists
+            ? () => showGameDetail(rid, e.gameId)
+            : null;
     const row = h(`<div class="tl-act${nav ? ' tl-act--link' : ''}">
          <span class="tl-act__icon"><i class="ti ${e.icon}" aria-hidden="true"></i></span>
          <span class="tl-act__text">${esc(e.text)}</span>
@@ -341,7 +416,7 @@ function renderPokaleTab(round) {
   const finished = round.sessions.filter((s) => s.finished);
 
   const sec = h('<div class="section"></div>');
-  sec.appendChild(h(`<div class="section-head"><h3>${esc(t('pokale.title'))}</h3></div>`));
+  sec.appendChild(h(`<div class="section-head"><h1>${esc(t('pokale.title'))}</h1></div>`));
 
   if (finished.length === 0) {
     sec.appendChild(h(`<div class="empty"><p>${esc(t('pokale.empty'))}</p></div>`));
@@ -420,7 +495,8 @@ function renderPokaleTab(round) {
          <span class="pokale-card__sub">${esc(sub)}</span>
        </div>`);
   // Like statCard but the value is one or more games, each listed on its own row
-  // with a "Jetzt spielen" launcher (icon-only; omitted for a retired game).
+  // with a "Jetzt spielen" launcher (icon-only; omitted for an archived game —
+  // retired or completed, neither is in the active collection any more).
   const gameStatCard = (icon, label, games, sub) => {
     const card = h(`<div class="pokale-card">
          <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
@@ -433,10 +509,10 @@ function renderPokaleTab(round) {
       const row = h(`<span class="pokale-game">
            <span class="pokale-game__title">${esc(g.title)}</span>
          </span>`);
-      // The game name opens its detail page (retired games too — the detail
+      // The game name opens its detail page (archived games too — the detail
       // view supports them; only the "Jetzt spielen" launcher is omitted).
       makeGameLink(row.querySelector('.pokale-game__title'), round.id, g.id);
-      if (!g.retired) {
+      if (!g.retired && !g.completed) {
         const btn = h(`<button class="pokale-game__play" title="${esc(t('directPlay.button'))}" aria-label="${esc(t('directPlay.button'))}"><i class="ti ti-player-play" aria-hidden="true"></i></button>`);
         btn.addEventListener('click', () => startDirectSession(round, g));
         row.appendChild(btn);
@@ -469,7 +545,7 @@ function renderPokaleTab(round) {
   // Best rated: highest overall average with a bit of data behind it; ties
   // share the tile.
   const rated = round.games
-    .filter((g) => !g.retired)
+    .filter((g) => !g.retired && !g.completed)
     .map((g) => {
       const st = gameStats(round, g.id);
       return { g, avg: st.avg, count: st.count };
@@ -482,8 +558,10 @@ function renderPokaleTab(round) {
   }
 
   // Streak: how many of the latest nights in a row one member won alone.
+  // Chronological by `createdAt` (when the night happened), like the Chronik —
+  // `finishedAt` moves when an old session is re-finished.
   const chrono = [...finished].sort((a, b) =>
-    String(a.finishedAt || a.createdAt).localeCompare(String(b.finishedAt || b.createdAt))
+    String(a.createdAt).localeCompare(String(b.createdAt))
   );
   let streakMember = null;
   let streak = 0;
@@ -509,10 +587,10 @@ function renderPokaleTab(round) {
   const lastAt = {};
   finished.forEach((s) => {
     if (!s.chosenGameId) return;
-    const at = s.finishedAt || s.createdAt;
+    const at = s.createdAt;
     if (!lastAt[s.chosenGameId] || at > lastAt[s.chosenGameId]) lastAt[s.chosenGameId] = at;
   });
-  const active = round.games.filter((g) => !g.retired);
+  const active = round.games.filter((g) => !g.retired && !g.completed);
   // Find the earliest last-played timestamp ('' = never played sorts first),
   // then pick a random game among all that tie for it, so the same game isn't
   // always highlighted.
@@ -540,11 +618,41 @@ function renderPokaleTab(round) {
   app.appendChild(sec);
 }
 
-// =================== Retired games ===================
+// =================== Archives: retired & completed games ===================
+/*
+ * Two parallel archive screens (#250). Both take a game out of the active
+ * collection and offer the same two actions (restore / delete permanently);
+ * only the wording, the icon and the flag differ — retiring means "we don't
+ * want this any more", completing means "we finished it". They share one
+ * renderer so the pair can't drift apart, with ARCHIVES holding everything
+ * that is genuinely per-kind.
+ */
+const ARCHIVES = {
+  retired: {
+    icon: 'ti-trash',
+    flag: (g) => g.retired,
+    at: (g) => g.retiredAt,
+    endpoint: (rid, gid) => `/api/rounds/${rid}/games/${gid}/retire`,
+    body: { retired: false },
+  },
+  completed: {
+    icon: 'ti-circle-check',
+    flag: (g) => g.completed,
+    at: (g) => g.completedAt,
+    endpoint: (rid, gid) => `/api/rounds/${rid}/games/${gid}/complete`,
+    body: { completed: false },
+  },
+};
 
-async function showRetired(rid) {
-  currentView = () => showRetired(rid);
-  syncUrl(`/round/${rid}/retired`);
+const showRetired = (rid) => showArchive(rid, 'retired');
+const showCompleted = (rid) => showArchive(rid, 'completed');
+
+// `kind` keys both ARCHIVES and the i18n namespace (retired.* / completed.*),
+// so the two stay in lockstep by construction.
+async function showArchive(rid, kind) {
+  const a = ARCHIVES[kind];
+  currentView = () => showArchive(rid, kind);
+  syncUrl(`/round/${rid}/${kind}`);
   app.innerHTML = '<p class="muted">…</p>';
   let round;
   try { round = await fetchRound(rid); }
@@ -553,57 +661,55 @@ async function showRetired(rid) {
   setCrumbs([
     { label: t('nav.home'), onClick: showHome },
     { label: round.name, onClick: () => showRound(rid) },
-    { label: t('retired.crumb') },
+    { label: t(`${kind}.crumb`) },
   ]);
 
   // Newest first.
   const games = round.games
-    .filter((g) => g.retired)
-    .sort((a, b) => String(b.retiredAt || '').localeCompare(String(a.retiredAt || '')));
+    .filter(a.flag)
+    .sort((x, y) => String(a.at(y) || '').localeCompare(String(a.at(x) || '')));
 
   app.innerHTML = '';
   app.appendChild(
     h(`<div class="page-head"><div>
-         <h1>${esc(t('retired.title'))}</h1>
+         <h1>${esc(t(`${kind}.title`))}</h1>
          <div class="muted">${esc(round.name)}</div>
        </div></div>`)
   );
 
   if (games.length === 0) {
-    app.appendChild(h(`<div class="empty"><p>${esc(t('retired.empty'))}</p></div>`));
+    app.appendChild(h(`<div class="empty"><p>${esc(t(`${kind}.empty`))}</p></div>`));
   } else {
     const list = h('<div class="archive-list"></div>');
     const loadCover = createCoverLoader(); // lazy archive thumbs (#198)
     games.forEach((g) => {
-      const fallback = g.image
-        ? ''
-        : `<i class="ti ${typeIcon(g.type)}" aria-hidden="true"></i>`;
-      const when = g.retiredAt ? fmtDateTime(g.retiredAt) : '?';
+      const fallback = coverPlaceholder(g);
+      const when = a.at(g) ? fmtDateTime(a.at(g)) : '?';
       const row = h(`<div class="archive-row">
            <div class="archive-row__img">${fallback}</div>
            <div class="archive-row__body">
-             <div class="archive-row__title">${esc(g.title)} ${typeTag(g.type)} ${durationTag(g.duration)}</div>
-             <div class="muted archive-row__meta"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.at', { when }))}</div>
+             <div class="archive-row__title">${esc(g.title)}</div>
+             <div class="muted archive-row__meta"><i class="ti ${a.icon}" aria-hidden="true"></i> ${esc(t(`${kind}.at`, { when }))}</div>
            </div>
            <div class="archive-row__actions">
-             <button class="btn" data-act="restore"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('retired.restore'))}</button>
-             <button class="btn btn--danger" data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.delete'))}</button>
+             <button class="btn" data-act="restore"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
+             <button class="btn btn--danger" data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>
            </div>
          </div>`);
-      if (g.image) loadCover(row.querySelector('.archive-row__img'), g.image);
+      if (g.image) loadCover(row.querySelector('.archive-row__img'), coverUrl(g.image, COVER_THUMB));
       row.querySelector('[data-act="restore"]').addEventListener('click', async () => {
         try {
-          await api('POST', `/api/rounds/${rid}/games/${g.id}/retire`, { retired: false });
-          toast(t('retired.restored', { title: g.title }));
-          showRetired(rid);
+          await api('POST', a.endpoint(rid, g.id), a.body);
+          toast(t(`${kind}.restored`, { title: g.title }));
+          showArchive(rid, kind);
         } catch (e) { toast(e.message); }
       });
       row.querySelector('[data-act="delete"]').addEventListener('click', async () => {
-        if (!confirm(t('retired.deleteConfirm', { title: g.title }))) return;
+        if (!confirm(t(`${kind}.deleteConfirm`, { title: g.title }))) return;
         try {
           await api('DELETE', `/api/rounds/${rid}/games/${g.id}`);
-          toast(t('retired.deleted', { title: g.title }));
-          showRetired(rid);
+          toast(t(`${kind}.deleted`, { title: g.title }));
+          showArchive(rid, kind);
         } catch (e) { toast(e.message); }
       });
       list.appendChild(row);

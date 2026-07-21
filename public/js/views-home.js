@@ -9,7 +9,9 @@ async function showHome() {
   setCrumbs([{ label: t('nav.home') }]);
   applyBackground(null); // home: default background
   app.innerHTML = '<p class="muted">…</p>';
-  const rounds = await api('GET', '/api/rounds');
+  // SWR: renders instantly from the cached summary (a background refresh
+  // re-invokes showHome via currentView if anything changed).
+  const rounds = await fetchRoundList();
 
   app.innerHTML = '';
   app.appendChild(
@@ -52,7 +54,7 @@ async function showHome() {
     }
 
     const card = h(`<button class="round-card">
-         <span class="round-card__emblem" style="background:${themeAccent(r.background)}"><i class="ti ti-dice-5" aria-hidden="true"></i></span>
+         <span class="round-card__emblem" style="background:${themeAccent(r.background)}"><i class="ti ti-tornado" aria-hidden="true"></i></span>
          <span class="round-card__body">
            <span class="round-card__name">${esc(r.name)}</span>
            <span class="round-card__meta">
@@ -85,8 +87,10 @@ async function showNewRound() {
   applyBackground(null);
   app.innerHTML = '<p class="muted">…</p>';
 
-  // Rounds whose games list can be copied over.
-  const allRounds = await api('GET', '/api/rounds');
+  // Rounds whose games list can be copied over. rerender:false — this screen
+  // is a form, and a background re-render would wipe what the user typed; a
+  // moments-stale import dropdown is harmless.
+  const allRounds = await fetchRoundList({ rerender: false });
   const importable = allRounds.filter((r) => r.gameCount > 0);
   const importField = importable.length
     ? `<div class="field import-card">
@@ -195,7 +199,7 @@ async function showNewRound() {
       const round = await api('POST', '/api/rounds', body);
       toast(body.importFromRoundId ? t('newRound.toast.createdImported') : t('newRound.toast.created'));
       showRound(round.id);
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message === 'quota_rounds' ? t('newRound.toast.quota') : e.message); }
   });
 
   nameInput.focus();

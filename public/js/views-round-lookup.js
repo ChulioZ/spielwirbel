@@ -1,7 +1,7 @@
 /* Spielwirbel – views: the add-game / link-provider search-as-you-type lookup
-   plumbing (provider + platform helpers, attachLookup), the add-game and
-   link-provider sheets, and starting a session directly from a game. Loaded
-   after views-round.js; shares one global script scope. */
+   plumbing (provider helpers, attachLookup), the add-game and link-provider
+   sheets, and starting a session directly from a game. Loaded after
+   views-round.js; shares one global script scope. */
 
 // --- Shared add-game / link-provider lookup plumbing ---
 // Provider display names are proper nouns, not translated (see the source link).
@@ -30,57 +30,6 @@ const PROVIDER_LOGOS = {
 function providerLogo(provider) {
   return PROVIDER_LOGOS[provider] || null;
 }
-// A provider's game type: BoardGameGeek is analog, every store is digital.
-function lookupProviderType(provider) {
-  return provider === 'bgg' ? 'analog' : 'digital';
-}
-
-// --- Platform (Analog / PS / Xbox / Switch / Steam / Other) ---
-// The user-facing platform field. `type` (analog/digital) is derived from it for
-// the five concrete platforms; only `other` keeps a manual analog/digital choice.
-const PLATFORM_IDS = ['analog', 'ps', 'xbox', 'switch', 'steam', 'other'];
-// Platform id → the brand-logo provider key (ids differ: ps↔psstore, switch↔nintendo).
-const PLATFORM_PROVIDER = { ps: 'psstore', xbox: 'xbox', switch: 'nintendo', steam: 'steam' };
-// The platform a picked lookup hit implies, from its provider (add-game auto-fill).
-function providerPlatform(provider) {
-  return { psstore: 'ps', xbox: 'xbox', nintendo: 'switch', steam: 'steam', bgg: 'analog' }[provider] || 'other';
-}
-// The lookup provider a platform belongs to (inverse of providerPlatform): the
-// four stores map via PLATFORM_PROVIDER, analog → BoardGameGeek. Returns null for
-// 'other' (and any platform with no dedicated provider), meaning "no preference".
-function platformProvider(platform) {
-  return platform === 'analog' ? 'bgg' : (PLATFORM_PROVIDER[platform] || null);
-}
-// Derived analog/digital type for a platform (Other defaults to analog).
-function platformType(platform) {
-  return platform === 'ps' || platform === 'xbox' || platform === 'switch' || platform === 'steam'
-    ? 'digital'
-    : 'analog';
-}
-// Brand glyph (the four stores) or null (analog/other use a Tabler icon instead).
-function platformLogo(platform) {
-  return PLATFORM_PROVIDER[platform] ? providerLogo(PLATFORM_PROVIDER[platform]) : null;
-}
-// Tabler icon for the non-branded platforms.
-function platformIcon(platform) {
-  return platform === 'analog' ? 'ti-dice-3' : 'ti-device-gamepad-2';
-}
-// A tag showing a game's platform: brand glyph for the four stores, a Tabler
-// icon for analog/other. Brand glyphs are the sanctioned hardcoded-color
-// exception (see .claude/rules/theme-derived-colors.md).
-function platformTag(platform) {
-  const logo = platformLogo(platform);
-  const mark = logo
-    ? `<span class="tag__logo" aria-hidden="true">${logo}</span>`
-    : `<i class="ti ${platformIcon(platform)}" aria-hidden="true"></i>`;
-  return `<span class="tag tag--platform">${mark} ${t('platform.' + platform)}</span>`;
-}
-// The platform an existing game should display: its stored field, or a defensive
-// fallback for any legacy game written before the field existed.
-function gamePlatform(game) {
-  if (PLATFORM_IDS.includes(game.platform)) return game.platform;
-  return game.type === 'digital' ? 'other' : 'analog';
-}
 
 // The lookup queries every provider in parallel and merges the hits into one
 // menu, each result carrying its own provider. Providers are rendered
@@ -88,12 +37,31 @@ function gamePlatform(game) {
 // the merged list is ranked by how well each title matches the query, re-sorted
 // in place as each provider arrives. One provider failing must not hide the
 // others' results — only an all-providers failure shows the error state.
+//
+// This is the registry order, which doubles as the interleave priority. Since
+// #294 it is the FULL set: filter it through enabledProviders() before any
+// fan-out, because a round can switch individual providers off.
 const LOOKUP_PROVIDERS = ['psstore', 'bgg', 'steam', 'nintendo', 'xbox'];
 const MAX_SUGGESTIONS = 10;
 
-async function searchProvider(provider, q) {
-  const res = await api('GET', `/api/lookup/search?provider=${provider}&q=${encodeURIComponent(q)}&lang=${encodeURIComponent(getLocale())}`);
+// The providers this round queries (#294). An ABSENT `providers` key means the
+// round was never configured, which means all of them — so don't treat a missing
+// key like an empty list, or every existing round would lose its lookup. An
+// empty array is a real, deliberate setting: query nothing.
+function enabledProviders(round) {
+  const ids = round && round.providers;
+  if (!Array.isArray(ids)) return LOOKUP_PROVIDERS;
+  return LOOKUP_PROVIDERS.filter((p) => ids.includes(p));
+}
+
+async function searchProvider(rid, provider, q) {
+  const res = await api('GET', `/api/rounds/${rid}/lookup/search?provider=${provider}&q=${encodeURIComponent(q)}&lang=${encodeURIComponent(getLocale())}`);
   return ((res && res.results) || []).map((r) => Object.assign({ provider }, r));
+}
+
+// Fetch one provider's detail for a round, honouring its enabled list server-side.
+function lookupDetail(rid, r) {
+  return api('GET', `/api/rounds/${rid}/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}&lang=${encodeURIComponent(getLocale())}`);
 }
 
 // Query-match relevance tier (higher = better), case-insensitive on trimmed
@@ -115,13 +83,18 @@ function scoreHit(title, q) {
 
 // Wire search-as-you-type merged provider suggestions onto an input + menu.
 // onPick(result) fires when a suggestion is chosen; onInput() (optional) fires
-// on every manual edit. preferredProvider (optional) biases ranking toward one
-// provider (see groupLookupHits) — showLinkProvider passes the game's platform
-// provider; showAddGame passes nothing. Returns { closeMenu, search }: closeMenu
-// dismisses the menu programmatically (e.g. after a pick), search(q) runs a
-// lookup immediately (e.g. for a prefilled value on open). Shared by showAddGame
-// and showLinkProvider so the two lookups stay in sync.
-function attachLookup(input, menu, onPick, onInput, preferredProvider) {
+// on every manual edit. Returns { closeMenu, search }: closeMenu dismisses the
+// menu programmatically (e.g. after a pick), search(q) runs a lookup immediately
+// (e.g. for a prefilled value on open). Shared by showAddGame and showLinkProvider
+// so the two lookups stay in sync.
+function attachLookup(round, input, menu, onPick, onInput) {
+  const rid = round.id;
+  const active = enabledProviders(round);
+  // Zero providers enabled is a legitimate configuration (#294): the field stays
+  // a plain title input with no dropdown. Return inert stubs so callers can keep
+  // calling closeMenu()/search() unconditionally.
+  if (!active.length) return { closeMenu() {}, search() {} };
+
   let searchTimer;
   let searchSeq = 0; // guards against out-of-order responses
 
@@ -180,7 +153,7 @@ function attachLookup(input, menu, onPick, onInput, preferredProvider) {
     const seq = ++searchSeq;
     showMenuMsg(t('lookup.searching'));
     const hits = []; // accumulates across providers as each resolves
-    let pending = LOOKUP_PROVIDERS.length;
+    let pending = active.length;
     let anyFulfilled = false;
 
     // Group same-title hits from different providers into one row (ranked by
@@ -189,7 +162,7 @@ function attachLookup(input, menu, onPick, onInput, preferredProvider) {
     // badge (or a new row) in place — see lookup-group.js.
     function render() {
       if (seq !== searchSeq) return; // a newer keystroke superseded this search
-      const groups = groupLookupHits(hits, MAX_SUGGESTIONS, preferredProvider);
+      const groups = groupLookupHits(hits, MAX_SUGGESTIONS);
       if (!groups.length) {
         if (pending > 0) return showMenuMsg(t('lookup.searching'));
         return showMenuMsg(anyFulfilled ? t('lookup.noResults') : t('lookup.error'));
@@ -198,7 +171,7 @@ function attachLookup(input, menu, onPick, onInput, preferredProvider) {
       groups.forEach((g) => {
         const thumb = g.thumbnail
           ? `<img class="lookup__thumb" src="${esc(g.thumbnail)}" alt="" loading="lazy" />`
-          : `<span class="lookup__thumb lookup__thumb--none" aria-hidden="true"><i class="ti ${typeIcon(lookupProviderType(g.primary.provider))}"></i></span>`;
+          : `<span class="lookup__thumb lookup__thumb--none" aria-hidden="true"><i class="ti ${g.primary.provider === 'bgg' ? 'ti-dice-3' : 'ti-device-gamepad-2'}"></i></span>`;
         const row = h(`<div class="lookup__opt">
             <button type="button" class="lookup__pick">${thumb}<span class="lookup__title">${esc(g.title)}</span></button>
             <span class="lookup__badges"></span>
@@ -227,8 +200,8 @@ function attachLookup(input, menu, onPick, onInput, preferredProvider) {
       openMenu();
     }
 
-    LOOKUP_PROVIDERS.forEach((provider, prio) => {
-      searchProvider(provider, q).then((list) => {
+    active.forEach((provider, prio) => {
+      searchProvider(rid, provider, q).then((list) => {
         if (seq !== searchSeq) return;
         anyFulfilled = true;
         list.forEach((r, order) => hits.push(Object.assign({ score: scoreHit(r.title, q), prio, order }, r)));
@@ -276,26 +249,6 @@ function showAddGame(round) {
           <div class="muted field__hint">${esc(t('addGame.searchHint'))}</div>
         </div>
         <div class="field">
-          <label>${esc(t('addGame.platformLabel'))}</label>
-          <div class="opt-cards opt-cards--platform" id="platformSeg"></div>
-          <div class="field field--sub" id="otherTypeField" hidden>
-            <label>${esc(t('addGame.typeLabel'))}</label>
-            <div class="opt-cards" id="typeSeg">
-              <button type="button" class="opt-card" data-type="analog"><i class="ti ti-dice-3" aria-hidden="true"></i>${esc(t('type.analog'))}</button>
-              <button type="button" class="opt-card is-on" data-type="digital"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i>${esc(t('type.digital'))}</button>
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label>${esc(t('addGame.durationLabel'))}</label>
-          <div class="filter-chips" id="durationSeg">
-            <button type="button" class="chip" data-duration="short"><i class="ti ti-bolt" aria-hidden="true"></i>${esc(t('duration.short'))}</button>
-            <button type="button" class="chip is-on" data-duration="medium"><i class="ti ti-clock" aria-hidden="true"></i>${esc(t('duration.medium'))}</button>
-            <button type="button" class="chip" data-duration="long"><i class="ti ti-hourglass" aria-hidden="true"></i>${esc(t('duration.long'))}</button>
-          </div>
-          <div class="muted field__hint">${esc(t('addGame.durationHint'))}</div>
-        </div>
-        <div class="field">
           <label>${esc(t('addGame.playersLabel'))}</label>
           <div class="stepper-row">
             <div class="stepper" data-for="minPlayers">
@@ -310,6 +263,14 @@ function showAddGame(round) {
               <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
             </div>
             <span class="muted">${esc(t('addGame.playersUnit'))}</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>${esc(t('addGame.tagsLabel'))}</label>
+          <div class="filter-chips" id="tagSeg" hidden></div>
+          <div class="toolbar" style="margin-top:6px">
+            <input id="newTag" class="input" placeholder="${esc(t('tags.addPlaceholder'))}" style="flex:1" autocomplete="off" />
+            <button type="button" id="addTagBtn" class="btn">${esc(t('tags.add'))}</button>
           </div>
         </div>
         <div class="field">
@@ -349,51 +310,52 @@ function showAddGame(round) {
     if (e.key === 'Escape') dismiss();
   };
   document.addEventListener('keydown', onKey, true);
-  activeSheet = { el: backdrop, onKey };
+  openSheet(backdrop, onKey);
   backdrop.addEventListener('mousedown', (e) => {
     if (e.target === backdrop) dismiss();
   });
   form.querySelector('.sheet__close').addEventListener('click', dismiss);
 
-  // Platform selector; `type` is derived from it (only Other reveals a manual
-  // analog/digital sub-control).
-  let platform = 'analog';
-  let type = 'analog';
-  const platformSeg = form.querySelector('#platformSeg');
-  const otherTypeField = form.querySelector('#otherTypeField');
-  const typeSeg = form.querySelector('#typeSeg');
-  platformSeg.innerHTML = PLATFORM_IDS.map((p) => {
-    const logo = platformLogo(p);
-    const mark = logo
-      ? `<span class="opt-card__logo" aria-hidden="true">${logo}</span>`
-      : `<i class="ti ${platformIcon(p)}" aria-hidden="true"></i>`;
-    return `<button type="button" class="opt-card${p === 'analog' ? ' is-on' : ''}" data-platform="${p}">${mark}${esc(t('platform.' + p))}</button>`;
-  }).join('');
-
-  function selectPlatform(p) {
-    platform = p;
-    platformSeg.querySelectorAll('.opt-card').forEach((c) => c.classList.toggle('is-on', c.dataset.platform === p));
-    otherTypeField.hidden = p !== 'other';
-    // Concrete platforms derive the type; Other keeps whatever the sub-control shows.
-    type = p === 'other' ? typeSeg.querySelector('.opt-card.is-on').dataset.type : platformType(p);
+  // Custom round tags (#238): toggle the round's existing tags onto the new
+  // game, or create one inline (added to the round's tag list immediately; a
+  // duplicate name reuses the existing tag — the server dedupes).
+  const selectedTagIds = new Set();
+  const roundTags = (round.tags || []).slice(); // local copy; never mutate the cached round
+  const tagSeg = form.querySelector('#tagSeg');
+  function renderTagChips() {
+    tagSeg.hidden = roundTags.length === 0;
+    tagSeg.replaceChildren(...roundTags.map((tg) => {
+      const chip = h(`<button type="button" class="chip${selectedTagIds.has(tg.id) ? ' is-on' : ''}"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</button>`);
+      chip.addEventListener('click', () => {
+        if (selectedTagIds.has(tg.id)) selectedTagIds.delete(tg.id);
+        else selectedTagIds.add(tg.id);
+        chip.classList.toggle('is-on', selectedTagIds.has(tg.id));
+      });
+      return chip;
+    }));
   }
-  platformSeg.querySelectorAll('.opt-card').forEach((card) => {
-    card.addEventListener('click', () => selectPlatform(card.dataset.platform));
-  });
-  typeSeg.querySelectorAll('.opt-card').forEach((card) => {
-    card.addEventListener('click', () => {
-      typeSeg.querySelectorAll('.opt-card').forEach((c) => c.classList.toggle('is-on', c === card));
-      type = card.dataset.type;
-    });
-  });
-
-  let duration = 'medium';
-  const durSeg = form.querySelector('#durationSeg');
-  durSeg.querySelectorAll('.chip').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      durSeg.querySelectorAll('.chip').forEach((c) => c.classList.toggle('is-on', c === chip));
-      duration = chip.dataset.duration;
-    });
+  renderTagChips();
+  const newTagInput = form.querySelector('#newTag');
+  // Icon picker for the inline "create new tag" (#255). The trigger sits in the
+  // new-tag toolbar so the row reads as one sub-form; the grid it expands opens
+  // directly below it (#293).
+  const tagPicker = tagIconPicker(null);
+  newTagInput.after(tagPicker.trigger);
+  newTagInput.closest('.toolbar').after(tagPicker.grid);
+  const createTag = async () => {
+    const name = newTagInput.value.trim();
+    if (!name) return;
+    try {
+      const tag = await api('POST', `/api/rounds/${round.id}/tags`, { name, icon: tagPicker.get() });
+      if (!roundTags.some((x) => x.id === tag.id)) roundTags.push(tag);
+      selectedTagIds.add(tag.id);
+      newTagInput.value = '';
+      renderTagChips();
+    } catch (e) { toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message); }
+  };
+  form.querySelector('#addTagBtn').addEventListener('click', createTag);
+  newTagInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); createTag(); }
   });
 
   // Player-count steppers: digits only, +/- clamp at 1.
@@ -486,14 +448,8 @@ function showAddGame(round) {
   const menu = form.querySelector('#lookupMenu');
   let lookup; // set below via attachLookup; pickSuggestion uses it to close the menu
 
-  // Fill the duration/player controls from a provider detail object. The type is
-  // not set here — it follows the platform, which pickSuggestion sets from the
-  // provider.
+  // Fill the player controls from a provider detail object.
   function applyDetail(d) {
-    if (d.duration) {
-      duration = d.duration;
-      durSeg.querySelectorAll('.chip').forEach((c) => c.classList.toggle('is-on', c.dataset.duration === duration));
-    }
     if (Number.isInteger(d.minPlayers)) minInput.value = d.minPlayers;
     if (Number.isInteger(d.maxPlayers)) maxInput.value = d.maxPlayers;
     // A provider with a known min but an unknown (null) max — e.g. Steam for a
@@ -507,15 +463,12 @@ function showAddGame(round) {
     lookup.closeMenu();
     titleInput.value = r.title;
     chosenSource = { provider: r.provider, externalId: r.providerId, url: '' };
-    // Pre-fill the platform from the provider so it's right even if the detail
-    // call fails (BoardGameGeek → Analog, each store → its platform); the type
-    // follows. A store cover comes from the search thumbnail; a BGG cover
-    // arrives with the detail call.
-    selectPlatform(providerPlatform(r.provider));
+    // A store cover comes from the search thumbnail; a BGG cover arrives with the
+    // detail call.
     if (r.thumbnail && !pastedBlob) showProviderImage(r.thumbnail);
     let d;
     try {
-      d = await api('GET', `/api/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}&lang=${encodeURIComponent(getLocale())}`);
+      d = await lookupDetail(round.id, r);
     } catch {
       toast(t('lookup.error'));
       return;
@@ -528,7 +481,7 @@ function showAddGame(round) {
   }
 
   // A manual edit no longer matches the picked suggestion.
-  lookup = attachLookup(titleInput, menu, pickSuggestion, () => { chosenSource = null; });
+  lookup = attachLookup(round, titleInput, menu, pickSuggestion, () => { chosenSource = null; });
 
   async function save(again) {
     const title = form.querySelector('#title').value.trim();
@@ -540,11 +493,9 @@ function showAddGame(round) {
     if (maxPlayers < minPlayers) return toast(t('addGame.toast.playersRange'));
     const fd = new FormData();
     fd.append('title', title);
-    fd.append('platform', platform);
-    fd.append('type', type);
-    fd.append('duration', duration);
     fd.append('minPlayers', minPlayers);
     fd.append('maxPlayers', maxPlayers);
+    selectedTagIds.forEach((x) => fd.append('tagIds', x));
     if (pastedBlob) {
       const ext = (pastedBlob.type && pastedBlob.type.split('/')[1]) || 'png';
       fd.append('image', pastedBlob, 'pasted.' + ext);
@@ -560,7 +511,7 @@ function showAddGame(round) {
       await api('POST', `/api/rounds/${round.id}/games`, fd);
       toast(t('addGame.toast.saved'));
       if (again) {
-        // Keep the sheet open for the next game; type/duration/players stay.
+        // Keep the sheet open for the next game; the player range stays.
         // Mark dirty so dismissing the sheet re-renders the Regal (issue #34).
         addedWhileOpen = true;
         chosenSource = null;
@@ -572,7 +523,7 @@ function showAddGame(round) {
         closeSheet();
         showRound(round.id, 'regal');
       }
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message === 'quota_games' ? t('addGame.toast.quota') : e.message); }
   }
   form.querySelector('#save').addEventListener('click', () => save(false));
   form.querySelector('#saveMore').addEventListener('click', () => save(true));
@@ -583,8 +534,8 @@ function showAddGame(round) {
 
 // Sheet for attaching a provider to a game that has no source yet: search the
 // providers (prefilled with the game's title), pick a match, then choose which
-// differing fields (cover, players, duration, type) to overwrite. The source
-// link is always saved; the field overrides default to "take everything".
+// differing fields (name, cover, players) to overwrite. The source link is
+// always saved; the field overrides default to "take everything".
 function showLinkProvider(round, game) {
   closeSheet();
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
@@ -609,7 +560,7 @@ function showLinkProvider(round, game) {
 
   const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
   document.addEventListener('keydown', onKey, true);
-  activeSheet = { el: backdrop, onKey };
+  openSheet(backdrop, onKey);
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   form.querySelector('.sheet__close').addEventListener('click', closeSheet);
 
@@ -618,11 +569,8 @@ function showLinkProvider(round, game) {
   const resultBox = form.querySelector('#linkResult');
   input.value = game.title;
 
-  // Wire the shared lookup; a manual edit clears the pending match panel. The
-  // game's platform already tells us the obviously-correct provider, so bias the
-  // ranking toward it (null for 'Other'/legacy → ranking unchanged) — issue #112.
-  const preferred = platformProvider(gamePlatform(game));
-  const lookup = attachLookup(input, menu, pickSuggestion, () => { resultBox.innerHTML = ''; }, preferred);
+  // Wire the shared lookup; a manual edit clears the pending match panel.
+  const lookup = attachLookup(round, input, menu, pickSuggestion, () => { resultBox.innerHTML = ''; });
   // The title is already filled in, so search for it right away — setting
   // input.value above doesn't fire an 'input' event, so trigger it explicitly.
   lookup.search(game.title);
@@ -633,7 +581,7 @@ function showLinkProvider(round, game) {
     resultBox.innerHTML = `<div class="section muted">${esc(t('lookup.searching'))}</div>`;
     let d;
     try {
-      d = await api('GET', `/api/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}&lang=${encodeURIComponent(getLocale())}`);
+      d = await lookupDetail(round.id, r);
     } catch {
       resultBox.innerHTML = '';
       toast(t('lookup.error'));
@@ -648,14 +596,11 @@ function showLinkProvider(round, game) {
     const fields = [];
     // Cover: offer whenever the provider returns one — a remote URL can't be
     // compared to a local /uploads path, so always treat it as "differs".
-    if (d.imageUrl) fields.push({ key: 'image', label: t('linkProvider.field.image') });
+    const coverUrl = providerMatchCover(r, d);
+    if (coverUrl) fields.push({ key: 'image', label: t('linkProvider.field.image') });
     if ((Number.isInteger(d.minPlayers) && d.minPlayers !== game.minPlayers) ||
         (Number.isInteger(d.maxPlayers) && d.maxPlayers !== game.maxPlayers))
       fields.push({ key: 'players', label: t('linkProvider.field.players') });
-    if (d.duration && d.duration !== game.duration)
-      fields.push({ key: 'duration', label: t('linkProvider.field.duration') });
-    if (lookupProviderType(r.provider) !== game.type)
-      fields.push({ key: 'type', label: t('linkProvider.field.type') });
     // Name: the add-game flow takes the provider title outright, so offer it
     // here too (issue #180). Show it first — the name is the most prominent
     // field — but only when it actually differs (trimmed, case-insensitive).
@@ -684,15 +629,15 @@ function showLinkProvider(round, game) {
       const imageField = fields.find((f) => f.key === 'image');
       if (imageField) {
         const cover = h('<div class="link-cover"></div>');
-        cover.appendChild(h(`<img class="link-cover__img" src="${esc(d.imageUrl)}" alt="" loading="lazy" />`));
+        cover.appendChild(h(`<img class="link-cover__img" src="${esc(coverUrl)}" alt="" loading="lazy" />`));
         cover.appendChild(chipEl(imageField));
         chips.appendChild(cover);
       }
-      // The text fields (players/duration/type): pair each toggle with a muted
-      // "current value → provider value" line, so — like the cover preview above
-      // — the user sees exactly what an on-toggle overwrites (issue #183). The
-      // "to" side is what the game *becomes* (applyLink merges), so an absent
-      // provider sub-value falls back to the game's own, not a blank.
+      // The players field: pair the toggle with a muted "current value → provider
+      // value" line, so — like the cover preview above — the user sees exactly what
+      // an on-toggle overwrites (issue #183). The "to" side is what the game
+      // *becomes* (applyLink merges), so an absent provider sub-value falls back to
+      // the game's own, not a blank.
       const notSet = t('linkProvider.notSet');
       const fieldChange = (key) => {
         if (key === 'players') {
@@ -701,12 +646,6 @@ function showLinkProvider(round, game) {
           return { from: playersText(game.minPlayers, game.maxPlayers) || notSet,
             to: playersText(toMin, toMax) || notSet };
         }
-        if (key === 'duration')
-          return { from: game.duration ? t('duration.' + game.duration) : notSet,
-            to: t('duration.' + d.duration) };
-        if (key === 'type')
-          return { from: game.type ? t('type.' + game.type) : notSet,
-            to: t('type.' + lookupProviderType(r.provider)) };
         return null; // title: the provider value is already shown in the header
       };
       const rest = fields.filter((f) => f.key !== 'image');
@@ -743,13 +682,12 @@ function showLinkProvider(round, game) {
     const body = { sourceProvider: r.provider, sourceExternalId: r.providerId };
     if (d.url) body.sourceUrl = d.url;
     if (isOn(chips, 'title')) body.title = (d.title || r.title || '').trim();
-    if (isOn(chips, 'image') && d.imageUrl) body.imageUrl = d.imageUrl;
+    const coverUrl = providerMatchCover(r, d);
+    if (isOn(chips, 'image') && coverUrl) body.imageUrl = coverUrl;
     if (isOn(chips, 'players')) {
       if (Number.isInteger(d.minPlayers)) body.minPlayers = d.minPlayers;
       if (Number.isInteger(d.maxPlayers)) body.maxPlayers = d.maxPlayers;
     }
-    if (isOn(chips, 'duration') && d.duration) body.duration = d.duration;
-    if (isOn(chips, 'type')) body.type = lookupProviderType(r.provider);
     try {
       await api('PATCH', `/api/rounds/${round.id}/games/${game.id}`, body);
       closeSheet();
@@ -794,7 +732,7 @@ function startDirectSession(round, game) {
   const dismiss = () => closeSheet();
   const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
   document.addEventListener('keydown', onKey, true);
-  activeSheet = { el: backdrop, onKey };
+  openSheet(backdrop, onKey);
   backdrop.addEventListener('mousedown', (e) => {
     if (e.target === backdrop) dismiss();
   });

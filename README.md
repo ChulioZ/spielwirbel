@@ -1,8 +1,8 @@
-# 🎲 Spielwirbel
+# 🌀 Spielwirbel
 
-[![CI](https://github.com/ChulioZ/game-sessions/actions/workflows/ci.yml/badge.svg)](https://github.com/ChulioZ/game-sessions/actions/workflows/ci.yml)
-[![Lint](https://github.com/ChulioZ/game-sessions/actions/workflows/lint.yml/badge.svg)](https://github.com/ChulioZ/game-sessions/actions/workflows/lint.yml)
-[![Secret Scan](https://github.com/ChulioZ/game-sessions/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/ChulioZ/game-sessions/actions/workflows/secret-scan.yml)
+[![CI](https://github.com/ChulioZ/spielwirbel/actions/workflows/ci.yml/badge.svg)](https://github.com/ChulioZ/spielwirbel/actions/workflows/ci.yml)
+[![Lint](https://github.com/ChulioZ/spielwirbel/actions/workflows/lint.yml/badge.svg)](https://github.com/ChulioZ/spielwirbel/actions/workflows/lint.yml)
+[![Secret Scan](https://github.com/ChulioZ/spielwirbel/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/ChulioZ/spielwirbel/actions/workflows/secret-scan.yml)
 
 A self-hosted web app for any group or gaming round to manage their board
 and digital games, decide what to play in a session, and track how much everyone
@@ -23,32 +23,63 @@ code and documentation are in English.
   is a lobby of round cards (members, game/session counts, last result); a new
   round is set up on a playful "seats around the table" screen, optionally
   importing the games list from an existing round.
-- **Games** – each game has a title, a **platform** (Analog / PlayStation / Xbox
-  / Switch / Steam / Sonstige), an expected duration (short / medium / long), a
-  required player range (min–max), and an optional cover image (paste from
-  clipboard or pick a file). The analog / digital type used by the filters and
-  badges is derived from the platform (only "Sonstige" lets you pick it by hand).
-  When adding a
+- **Games** – each game has a title, a required player range (min–max), any
+  number of custom round **tags** (see below), and an optional cover image (paste
+  from clipboard or pick a file). When adding a
   game, the title field doubles as a **search-as-you-type lookup**: it queries
   the **PlayStation Store**, **Steam**, the **Nintendo eShop** and the
   **Xbox / Microsoft Store** (digital games) and **BoardGameGeek** (board games)
   together and merges the hits into one
   dropdown. When several stores return the **same title** (e.g. a cross-platform
-  game), they collapse into a **single row with one badge per platform** — click
+  game), they collapse into a **single row with one badge per store** — click
   a badge to fill from that store, or the title to use the top match. Pick a
-  suggestion to auto-fill the title, cover art, player range, play time and
-  platform, and store a link back to the source page (shown on the game's detail
+  suggestion to auto-fill the title, cover art and player range, and store a link
+  back to the source page (shown on the game's detail
   view). The lookup is optional — manual entry works exactly as before, and the
   app degrades gracefully when a source is unreachable (one provider failing
   still shows the others' results).
+- **Providers per round** – each round chooses which of the five databases its
+  lookups query (a "Provider" screen next to Tags in the round hub). A
+  board-games-only group can switch the four digital stores off so their hits
+  stop crowding the dropdown — and the requests stop being made at all. A round
+  that never configures it queries all five, as before; turning *every* provider
+  off is allowed too and simply leaves the title field a plain text input.
+  **Provider cover art is hotlinked, not copied:** the picture is loaded straight
+  from the store's own servers rather than downloaded onto this instance, because
+  re-hosting third-party box art on a public service needs a licence we don't
+  have (issue #172). Your own uploaded covers are stored normally. One
+  consequence to expect: if a store moves or removes an image, that cover stops
+  showing — re-link the game or upload your own picture.
   Details can be edited inline on the game's detail page. A game added by hand
   (with no source link) can be **linked to a provider after the fact** from its
   detail page: search the providers, pick the match, and choose which differing
-  fields (cover, player count, play time, type) to take from it — the source
-  link is always saved. Games are never lost by accident:
-  instead of deleting, they are **retired** — kept with a timestamp in a
-  browsable archive and restorable any time. Only already-retired games can be
-  permanently deleted.
+  fields (name, cover, player count) to take from it — the source
+  link is always saved. A link can also be **removed again** from the same
+  detail page if the match turns out to be wrong; a hotlinked provider cover is
+  cleared with it (your own uploaded cover is kept). Games are never lost by accident:
+  instead of deleting, they are **archived** — kept with a timestamp in a
+  browsable archive and restorable any time. There are two archives, because
+  the reason matters: **retired** ("Aussortiert") means the group wants rid of
+  the game, **completed** ("Durchgespielt") means they finished its content — a
+  campaign, a legacy box, a story-driven video game. A game is active, retired
+  or completed, never two at once, and either archive can be reached from the
+  round hub's footer. Only an already-archived game can be permanently
+  deleted. Two rounds can be **consolidated**: "Spiele verschieben" in the
+  shelf's footer moves *all* of a round's games — archived ones included, with
+  their covers, provider links and tags — into another of your rounds, merging
+  same-named tags. The emptied round stays behind; its session history does
+  not, since a session cannot reference games that now live elsewhere.
+- **Tags** – every round can define its own free-form tags (e.g. "outside",
+  "quick lunch break", "digital", "co-op") on a dedicated screen reached from the
+  Start tab. Tags are the single way to categorize games. Assign
+  any number of tags to a game — in the add-game sheet or later from the game's
+  detail page, creating new tags inline — and filter both the Regal and the
+  session draw by them (tri-state chips: off / include / exclude; included tags
+  combine with AND, excluded tags reject any match). Each tag can carry an
+  **icon** picked from a curated set, shown next to its name everywhere the tag
+  appears; a tag without one keeps the default tag glyph, and the icon can be
+  changed later from the Tags screen.
+  Deleting a tag simply unassigns it from every game.
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list) with their stats — wins,
   sessions joined, win rate, average rating given, and favorite game — and lets
@@ -56,11 +87,12 @@ code and documentation are in English.
 - **Round hub** – each round is a small app of its own, with a floating dock
   switching between four tabs:
   - **Start** – the launchpad: hero with the members, a big "start session"
-    button, resumable in-progress sessions, the last played result, gentle
+    button, resumable in-progress sessions, the last played result, and gentle
     retire recommendations for games that are rated low or often proposed for
-    retirement, and **buy-next / play-next suggestions** (see below).
-  - **Regal** (shelf) – the game collection as a card grid with filter chips
-    (all / analog / digital), a search pill, sorting (random / name / rating),
+    retirement.
+  - **Regal** (shelf) – the game collection as a card grid with custom-tag
+    filter chips, a search pill, sorting
+    (random / name / rating),
     and the add-game sheet. Each card opens the game's detail page
     ("Spielepass") with its score ring, editable details, a **Jetzt spielen**
     launcher, and the history of sessions it appeared in.
@@ -69,10 +101,12 @@ code and documentation are in English.
   - **Pokale** (trophies) – a winners' podium (ties share a step) plus stat
     tiles: most played, best rated, current winning streak, and the
     "Staubfänger" — the game gathering dust the longest.
-- **Sessions (hot-seat voting)** – pick who is playing tonight, filter the
-  collection by type and duration, and draw a random set of candidate games —
+- **Sessions (hot-seat voting)** – pick who is playing tonight, optionally filter
+  the collection by custom tags, and draw a random set of candidate games —
   only games whose player range fits the number of joining members are
-  eligible. The device is then passed around: a handover screen names whose
+  eligible. The tags and count a round was last drawn with are remembered and
+  preselected the next time, so a group that always draws the same way just
+  confirms. The device is then passed around: a handover screen names whose
   turn it is, and each member rates every drawn game **1–5** or proposes to
   retire it (member order is randomized).
 - **Jetzt spielen** (play now) – when the group already knows what they want,
@@ -82,28 +116,12 @@ code and documentation are in English.
 - **Finale & results** – votes stay sealed until everyone is done, then a
   little show reveals the results: per-game average (colored by score), rating
   distribution, medals for the favourites, and retirement proposals. Pick the
-  game you actually played, mark it finished and record the winner(s) — or
+  game you actually played and mark it finished; recording the winner(s) is an
+  optional follow-up step afterwards — or
   cancel the session if nothing appealed. Sessions can be deleted later, and a
   single game can be removed from a session's results.
 - **Ratings on demand** – a game's average is always computed live from all
   session votes, so deleting a session automatically corrects every average.
-- **Buy-next / play-next suggestions** – on the Start tab, a two-layer
-  recommender. **Layer A** is always on and fully local: it resurfaces games you
-  rate highly but rarely play, so loved titles get back on the table (no
-  network, no key). **Layer B** is an opt-in "generate suggestions" button that
-  asks an LLM for real new titles to consider buying, matched to your
-  collection's taste; the result is cached per round. Suggestions are
-  **platform-aware** (each pick is tagged with one of the platforms your round
-  actually plays on, and carries a store-**search** link so you can go look it
-  up), and their reason text is written in the **active UI language**. Every
-  generation is **kept as a history** rather than overwriting the last, so you
-  can page back through past runs (each shows its date/model), delete one you
-  don't want, and no good earlier list is lost. It sends
-  only an **anonymized taste profile** (game titles + collection shape, never
-  member names or ids) to the [Claude API](https://www.anthropic.com/), and
-  needs an `ANTHROPIC_API_KEY` — without one, the button reports it isn't set up
-  and Layer A still works. This is the app's only outbound LLM call and it fires
-  only when you press the button.
 - **Designs** – per round, pick a colour scheme (page tone + accent); the
   whole UI derives from it — surfaces, shadows, even the dark "stage" of the
   finale.
@@ -118,6 +136,13 @@ code and documentation are in English.
   **offline** (the shell and static assets are cached; live round data still
   needs the network). In keeping with the no-build-step stance, the manifest,
   service worker and icons are plain static files.
+- **Feedback** – a button in the top bar opens a short form for telling the
+  operator what is missing, confusing or broken, together with the screen it was
+  written on. Submissions are **anonymous by default**: when accounts are on,
+  attaching your e-mail address so the operator can reply is a separate, opt-in
+  checkbox that is never ticked for you. The operator reads what comes in from
+  the moderation panel (see below) — there is no third-party feedback service
+  and no analytics script involved.
 
 ## Tech & architecture
 
@@ -143,8 +168,8 @@ code and documentation are in English.
   caches after a deploy — not a bundler or framework.
 - **Hardening:** [helmet](https://helmetjs.github.io/) sets security headers
   (CSP, `X-Content-Type-Options`, frame options, HSTS) and
-  [express-rate-limit](https://express-rate-limit.mintlify.app/) caps requests —
-  a generous global limit plus a stricter one on the billable buy-next endpoint.
+  [express-rate-limit](https://express-rate-limit.mintlify.app/) caps requests
+  with a generous global limit.
   Mutating request bodies are validated at the router boundary with
   [zod](https://zod.dev/) schemas (via `lib/validate.js`).
   TLS is expected to terminate at a reverse proxy (`TRUST_PROXY` then forwards
@@ -155,12 +180,16 @@ code and documentation are in English.
   request/error logs to stdout (`LOG_LEVEL`, no bodies or personal data), and a
   central error handler so unexpected throws never leak a stack trace — they
   return a generic 500 and are logged (and optionally forwarded to
-  `ERROR_WEBHOOK_URL`). See `lib/observability.js`.
+  `ERROR_WEBHOOK_URL`). The same logger also emits a handful of product-usage
+  events (round/session/game/tag created, session finished) carrying only the
+  event name and tenant id — no analytics service, no cookies, no client-side
+  tracking. See `lib/observability.js`.
 - **Runs entirely on your machine.** Fonts and the icon set are self-hosted
   under `public/fonts/`, and the subtle background grain is an inline SVG in the
   stylesheet — no CDNs. The only runtime external calls are **opt-in**: the
   add-game lookup queries the PlayStation Store, Steam, the Nintendo eShop, the
-  Xbox / Microsoft Store and BoardGameGeek server-side (via `/api/lookup/*`) only
+  Xbox / Microsoft Store and BoardGameGeek server-side (via
+  `/api/rounds/:rid/lookup/*`, and only the providers that round enabled) only
   when you type a title to search; it sends just the search text and the active
   UI language, and the app works fully without it. None of these need an API key
   or account. BoardGameGeek titles follow the **active UI language** (German or
@@ -169,12 +198,6 @@ code and documentation are in English.
   defaults to the German store, `de`/`german` (`STEAM_CC` / `STEAM_LOCALE`); the
   Nintendo eShop defaults to the German store, `de` (`NINTENDO_LOCALE`); the
   Xbox / Microsoft Store defaults to the German store, `de-de` (`XBOX_LOCALE`).
-  The one exception is the **buy-next suggestions** feature: pressing its
-  "generate" button calls the [Claude API](https://www.anthropic.com/)
-  server-side (via `/api/rounds/:rid/recommendations`) and requires an
-  `ANTHROPIC_API_KEY`. It is strictly opt-in (only on that click), sends an
-  anonymized taste profile with no member identifiers, and the app is fully
-  functional without the key.
 
 ```
 server.js            starts the HTTP server (the only place that listens)
@@ -186,7 +209,8 @@ lib/
                      through (getRound + typed mutators). One seam, two backends:
     index.js         picks the backend (DATABASE_URL ? postgres : json)
     json.js          default backend — the data/data.json store below
-    postgres.js      PostgreSQL backend (schema + SQL), used when DATABASE_URL set
+    postgres.js      PostgreSQL backend (Knex query builder), used when DATABASE_URL set
+    migrations/      versioned Knex schema migrations (npm run migrate)
   tenant.js          resolves each request's tenant and scopes the repo to it
   store.js           the JSON backend's engine: in-memory data + atomic
                      load/save to the data/ folder, id/activity helpers
@@ -196,11 +220,21 @@ lib/
     s3.js            S3-compatible object storage, used when S3_BUCKET set
   upload.js          multer image-upload config (persists via lib/storage)
   auth.js            shared-password gate (active when AUTH_PASSWORD is set)
+  admin.js           operator gate for the moderation surface (separate
+                     ADMIN_PASSWORD; 404s unless set — issue #268)
   accounts.js        user-account primitives: Argon2id passwords, access/refresh
                      tokens (issue #135; off unless ACCOUNTS_ENABLED)
   mail.js            outbound e-mail (Brevo when BREVO_API_KEY is set, else
                      logged to an in-memory outbox)
+  csv.js             RFC 4180 CSV writer for the operator panel's exports
+                     (issue #288) — quotes every field, so a feedback message
+                     with commas/quotes/newlines cannot corrupt the file, and
+                     neutralizes leading =/+/-/@ so it cannot become an Excel
+                     formula
   observability.js   structured logging, /healthz, central error handler
+  status.js          derived instance configuration for the operator panel's
+                     status card (issue #274) — booleans/enums only, never a
+                     secret value
   providers/         external game-database providers for the add-game lookup
     index.js         provider registry + image-host allowlist
     psstore.js       PlayStation Store: search + detail via the store's
@@ -223,23 +257,36 @@ routes/
   contact.js         /api/contact           (public contact form → e-mails the
                                              operator; no auth, own rate limit,
                                              honeypot; fails loud in production)
-  lookup.js          /api/lookup            (search/game — provider proxy: PS Store, BGG, Steam, Nintendo, Xbox)
+  admin.js           /api/admin             (operator moderation: instance
+                                             status, lookup by image/round/
+                                             e-mail/tenant, per-tenant summary,
+                                             round text + redaction, takedown,
+                                             account suspend/restore, GDPR
+                                             export + erasure, filterable action
+                                             log, user feedback —
+                                             404 unless ADMIN_PASSWORD)
+  feedback.js        /api/feedback          (in-app user feedback: submit one
+                                             message; read side lives on
+                                             /api/admin — issue #260)
+  lookup.js          …/lookup               (search/game — provider proxy: PS Store, BGG, Steam, Nintendo, Xbox;
+                                             round-scoped, refuses a provider the round disabled)
   rounds.js          /api/rounds            (list, detail, create, delete)
-  games.js           …/games                (add [+cover download/source],
+  games.js           …/games                (add [+cover hotlink/source],
                                              edit [+link to provider],
-                                             retire/restore, delete)
+                                             retire/restore, complete/restore,
+                                             delete, move all to another round)
   members.js         …/members              (edit name / avatar color)
   sessions.js        …/sessions             (start, results, choice, finish,
                                              cancel, delete, remove one game)
   activities.js      …/activities           (list the feed [GET], delete an entry)
   background.js      …/background           (set the design)
-  recommendations.js …/recommendations      (buy-next run history: list [GET],
-                                             generate & append via Claude [POST],
-                                             delete one run [DELETE /:runId])
+  tags.js            …/tags                 (create a custom tag [deduped], set its icon, delete one)
+  providers.js       …/providers            (set which lookup providers this round queries)
 public/
   index.html
   login.html         standalone login page (shown only when AUTH_PASSWORD is set)
   kontakt.html       standalone public contact form (bilingual, no login needed)
+  admin.html         standalone operator moderation page (needs ADMIN_PASSWORD)
   styles.css
   manifest.webmanifest  PWA manifest (installable app metadata + icons)
   sw.js              service worker: precache the app shell, offline fallback
@@ -250,18 +297,25 @@ public/
                      shared global scope below (only loaded by login.html)
     kontakt.js       kontakt.html's own script — an IIFE (bilingual form),
                      not part of the shared global scope (only loaded there)
+    admin.js         admin.html's own script — likewise an IIFE outside the
+                     shared scope, so no privileged code ships in the SPA
     i18n.js          translation engine (t(), locale detection)
     lang/en.js       English strings
     lang/de.js       German strings
     core.js          DOM/API helpers, stats, design, language picker  (loads first)
     account.js       onboarding + auth UI (login/register/verify/reset), token wiring
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
-    buynext.js       local "play these again" recommender (Layer A)
+    cover.js         deterministic per-title gradient for games with no cover
+    cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     lookup-group.js  collapses same-title provider hits into one multi-badge row
+    focus-trap.js    keeps Tab inside an open sheet + restores focus on close
+    feedback.js      top-bar feedback button + submission sheet (issue #260)
     views-home.js    lobby + new round
     views-round.js        round hub (Start/Regal/Chronik/Pokale dock) + Start tab
-    views-round-tabs.js   Regal, Chronik, Pokale tabs + retired games
-    views-round-detail.js game detail, design picker, sheet helpers
+    views-round-tabs.js   Regal, Chronik, Pokale tabs + the two archive
+                          screens (retired / completed)
+    views-round-detail.js game detail, design picker, tags + providers screens,
+                          sheet helpers
     views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, voting (hot-seat), finale, results
@@ -281,6 +335,7 @@ Dockerfile           production container image (node:22-slim, non-root,
                      builder rejects it, see .claude/rules/)
 .dockerignore        keeps secrets + user data out of the build context
 docker-compose.yml   one-command run with a persistent /data volume
+knexfile.js          Knex config (Postgres) shared by the app + the migrate CLI
 railway.json         Railway build/deploy config (see docs/deploy-railway.md)
 .github/workflows/   CI: tests, lint, secret scan, Docker image build + publish
 ```
@@ -308,12 +363,12 @@ From other devices on your home network: `http://<your-computer-ip>:3000`
 
 Use a different port: `PORT=8080 npm start`
 Use a different data folder: `DATA_DIR=/path/to/data npm start`
-Enable buy-next AI suggestions: `ANTHROPIC_API_KEY=sk-ant-… npm start`
-(optional — everything else works without it)
 
 Use PostgreSQL instead of the JSON file: `DATABASE_URL=postgres://… npm start` (the
-app creates its schema on first start; add `DATABASE_SSL=true` for managed Postgres
-that requires TLS). Unset, it uses `DATA_DIR/data.json` as before.
+app runs its Knex migrations on start, so the schema is created/updated
+automatically; add `DATABASE_SSL=true` for managed Postgres that requires TLS).
+Unset, it uses `DATA_DIR/data.json` as before. Migrations can also be run
+explicitly with `npm run migrate` (and authored with `npm run migrate:make -- <name>`).
 
 Store cover images in S3-compatible object storage instead of on local disk (for
 a stateless, scalable app tier): `S3_BUCKET=my-bucket npm start`. Set `S3_ENDPOINT`
@@ -323,9 +378,8 @@ or the AWS default provider chain. Unset, images stay under `DATA_DIR/uploads` a
 before. See the S3 block in `.env.example`.
 
 Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
-the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
-`RECS_RATE_LIMIT_MAX` (buy-next generations, per hour) and `CONTACT_RATE_LIMIT_MAX`
-(contact-form submissions, per 15 min, default 5).
+the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min)
+and `CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5).
 
 Contact form (issue #224): a public, login-free page at `/kontakt.html` with a
 bilingual form that POSTs to `/api/contact`, which e-mails the operator — the
@@ -336,6 +390,19 @@ limit and a server-side honeypot for spam, and in `NODE_ENV=production` it **fai
 loud** (`502` with a fallback e-mail) rather than silently dropping a message when
 mail is unconfigured — so configure `BREVO_API_KEY` + `MAIL_FROM` + `CONTACT_TO`
 before relying on it in production. A shared site footer links to it.
+
+Serving one deployment under several domains: `CANONICAL_HOST` + `REDIRECT_HOSTS`
+(issue #230) 301 the branded non-canonical domains onto a single canonical origin
+(default: `spielwirbel.de`/`.com` + `www` → `spielwirbel.app`). It's an
+allowlist, so it never touches the canonical host, a platform domain like
+`*.up.railway.app`, or a load-balancer health-check host. Point them at your own
+domains, or set `REDIRECT_HOSTS` empty to disable. See the block in `.env.example`.
+
+Per-tenant quotas (issue #139): in the public multi-tenant mode (`ACCOUNTS_ENABLED=true`)
+each tenant is capped on rounds (`MAX_ROUNDS_PER_TENANT`, default 10), games per
+round (`MAX_GAMES_PER_ROUND`, default 1000), and custom tags per round
+(`MAX_TAGS_PER_ROUND`, default 30). With accounts off (the
+default, single-tenant deploy) these are inert. See the quotas block in `.env.example`.
 
 Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate
 the whole app behind a single shared password — an unauthenticated visitor gets a
@@ -363,6 +430,74 @@ production is a deliberate step (it replaces the shared gate and starts sending
 mail); *inviting other people into a shared tenant is still follow-up work (#207),
 as are roles (#137)*.
 
+Operator moderation (issue #268): setting `ADMIN_PASSWORD` exposes `/admin.html`
+— a small standalone operator page (plus `/api/admin`) for acting on an abuse
+notice: resolve a reported `/uploads/…` cover image to the game, round, tenant and
+account behind it; take the image down (deletes the object *and* clears every
+reference, leaving the rest of the data intact); suspend or restore an account
+without deleting anything, so evidence survives; and read the log of those actions
+that a DSA Art. 17 statement of reasons needs. Suspension takes effect immediately
+— existing access tokens stop working, not just new logins.
+
+Issue #275 widened that from "images only": a notice can now be resolved by
+**round link, e-mail address or tenant id** as well as by cover path, and the
+result carries a **per-tenant summary** — rounds, games, sessions, members, tags
+and the storage those uploads occupy, each shown against the quota ceiling that
+would start refusing writes. Any user-authored **text** (round name, game title,
+member name, tag name, feedback message) can be **redacted**: the field is
+overwritten with `[entfernt]` and the original wording is preserved on the log
+entry, which is what an Art. 17 statement of reasons has to quote. Redaction
+never deletes a row — a redacted tag keeps its id, so no game loses a tag as a
+side effect; deleting data stays erasure (#273). The action log is filterable by
+tenant, action and date range, and the CSV export honours the same filter, so a
+hand-over prepared for one account can't silently widen to every tenant.
+
+The panel also opens with an **Instanz-Status** card (issue #274): how the running
+instance is *actually* configured — accounts mode and whether `SESSION_SECRET` is
+a secret of its own, whether `ADMIN_PASSWORD` differs from `AUTH_PASSWORD`, mail
+delivery vs. the in-memory outbox, the image and data backends, pending schema
+migrations, quota ceilings and whether they bite, the canonical host, whether the
+built `dist/` assets are being served, and the running version/commit. Every field
+is a derived boolean, enum or number — **no secret value is ever returned**, so a
+screenshot of the card is harmless. It exists so the go-live checklist can be
+verified from the app instead of by eye against the Railway dashboard.
+
+Data-subject requests (issue #273) are handled from the same Konten card:
+**Exportieren** downloads everything held for one account as JSON (its rounds
+with members, games, sessions *and* the activity feed, plus the account's own
+non-secret fields) for a GDPR Art. 15/20 access request; **Löschen** performs an
+Art. 17 erasure — the account row, every round of its tenant with all children,
+and the stored cover objects. Erasure is irreversible, so it demands a reason
+*and* the account's own e-mail address typed as confirmation, and it refuses
+outright if a second account still shares the tenant. Both actions are logged;
+the erasure entry deliberately records only the account id, tenant, date, reason
+and counts — never the erased address or any content, since the log outlives the
+erasure it evidences. Suspension remains the right first response to an abuse
+case: it preserves evidence, which erasure by definition destroys.
+
+The same panel carries the **Feedback** card (issue #260): what users have sent
+through the in-app feedback button, newest first, with the screen, language and
+tenant each message came from — plus the sender's address on the messages where
+they opted in to be contacted. It is read-only, and it lives behind
+`ADMIN_PASSWORD` rather than getting a credential of its own. Tune how often one
+IP may submit with `FEEDBACK_RATE_LIMIT_MAX` (per 15 min, default 10).
+
+Both the Feedback and the Protokoll card page rather than truncate (issue #288):
+each shows how much of the whole it is displaying (`100 von 342`), loads older
+entries on demand with **Mehr laden**, and offers a **CSV herunterladen** button
+that exports *every* entry — not just the loaded page — as a UTF-8 CSV (BOM
+included, so Excel renders umlauts correctly). Previously both stopped silently
+at the newest 100, which for the moderation log — the record backing an Art. 17
+statement of reasons — was the wrong failure mode. The exports need no reason and
+write no log entry: unlike the account export, they disclose nothing the operator
+cannot already read by scrolling the card.
+
+`ADMIN_PASSWORD` must be a **separate** secret from `AUTH_PASSWORD`: the latter is
+shared with everyone using the instance, while these powers cross tenant
+boundaries. Optionally set `ADMIN_SESSION_SECRET` to sign the admin cookie
+(otherwise `SESSION_SECRET`, then the password itself). Leave `ADMIN_PASSWORD`
+unset — the default — and the entire surface `404`s.
+
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and
 `ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook. The
@@ -382,7 +517,8 @@ npm run start:env         # loads .env, then runs the server
 
 `start:env` uses Node's built-in `--env-file-if-exists` (Node ≥ 20.12; a missing
 `.env` is fine), so there is no extra dependency. **`.env` is gitignored** — it
-may hold your `ANTHROPIC_API_KEY`, so never commit it. Plain `npm start` ignores
+may hold your `SESSION_SECRET` and provider credentials, so never commit it.
+Plain `npm start` ignores
 `.env` and reads only real environment variables.
 
 ### With Docker
@@ -405,7 +541,14 @@ it serves the content-hashed build (`dist/`).
 **TLS is not in the image** — terminate it at a reverse proxy or managed platform
 in front of the container, then set `TRUST_PROXY=1` (see issue #156). On merge to
 `main`, CI publishes the image to the GitHub Container Registry
-(`ghcr.io/chulioz/game-sessions`), so a host can pull it instead of building.
+(`ghcr.io/chulioz/spielwirbel`), so a host can pull it instead of building.
+
+> ⚠️ **Self-hosters: the image moved.** With the Spielwirbel rebrand (#230) the
+> repository was renamed `game-sessions` → `spielwirbel`, so the published image
+> is now **`ghcr.io/chulioz/spielwirbel`**. GHCR packages do **not** auto-redirect
+> like repo URLs, so the old `ghcr.io/chulioz/game-sessions` tags are frozen and
+> receive no new builds. Update your `docker-compose.yml`/`docker run` to pull the
+> new path.
 
 ### Deploying to Railway (production)
 
@@ -426,6 +569,8 @@ npm run coverage      # tests with a coverage report (built-in, no extra deps)
 npm run lint          # ESLint (flat config)
 npm run check:syntax  # node --check over all JS files
 npm run build         # optional: content-hash + minify js/css into dist/
+npm run migrate       # apply pending Postgres migrations (needs DATABASE_URL)
+npm run migrate:make -- <name>  # scaffold a new Postgres migration file
 ```
 
 `coverage` uses Node's built-in `--experimental-test-coverage`, so it needs no

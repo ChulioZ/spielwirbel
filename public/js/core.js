@@ -27,12 +27,24 @@ const esc = (s) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
   );
 
+// Toasts carry confirmations AND errors, so they must reach a screen reader
+// (#145). The element is an aria-live region declared in index.html, and it must
+// stay in the accessibility tree permanently for that to work: a live region
+// that is inserted (or un-`hidden`) with its text already in place is NOT
+// announced. So visibility is a class, never the `hidden` attribute — the empty
+// region sits in the tree and only its text content changes, which is exactly
+// the mutation aria-live listens for.
 let toastTimer;
 function toast(msg) {
   toastEl.textContent = msg;
-  toastEl.hidden = false;
+  toastEl.classList.add('is-on');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (toastEl.hidden = true), 2200);
+  toastTimer = setTimeout(() => {
+    toastEl.classList.remove('is-on');
+    // Clear the text too, so the next identical message is still a change the
+    // live region reports rather than a no-op mutation.
+    toastEl.textContent = '';
+  }, 2200);
 }
 
 async function api(method, url, body, _retried) {
@@ -61,6 +73,9 @@ async function api(method, url, body, _retried) {
         if (!_retried && (await refreshAccessToken())) return api(method, url, body, true);
         onSessionLost();
       } else {
+        // Locked out of the shared-password gate: drop the persisted cache
+        // before bouncing, so the login page never fronts stale round data.
+        invalidateRoundCache();
         window.location.assign('/');
       }
     }
@@ -74,36 +89,85 @@ async function api(method, url, body, _retried) {
   return res.status === 204 ? null : res.json();
 }
 
-/* Round cache. Tab switches re-render via showRound and used to re-fetch the
- * full round every time — the dominant felt latency on the hosted deploy.
- * Cache the last-fetched round briefly and serve navigations from it. Safe
- * because (a) api() invalidates on every successful mutation, so a stale hit
- * can only come from *another* device's change, which the short TTL bounds,
- * and (b) views never mutate the round object in place — they re-fetch and
- * re-render after mutations. The mid-session "fresh" fetches in
- * views-session.js intentionally bypass this and call api() directly. */
-const ROUND_CACHE_TTL_MS = 30 * 1000;
-let roundCache = { rid: null, round: null, at: 0 };
-let activityCache = { rid: null, activities: null, at: 0 };
+/* Stale-while-revalidate navigation cache (store: js/swr.js, loaded earlier).
+ *
+ * Every navigation used to block on a fresh fetch behind a "…" placeholder —
+ * the dominant felt latency on the hosted deploy, where each data request
+ * costs a full server round trip. Now a view renders INSTANTLY from the last
+ * known data (persisted in localStorage, so even a cold app start paints
+ * real content) while the fetch runs in the background; if it returns
+ * something different, the current view re-renders once, silently.
+ *
+ * Correctness guards, all load-bearing:
+ *  - api() clears the whole cache on every successful mutation (see above),
+ *    so a post-mutation navigation always awaits fresh data — the user never
+ *    sees their own change flash back to the old state. Stale renders can
+ *    only show *another* device's lag, which the background refresh corrects.
+ *  - A background refresh only re-renders while the SAME view instance is
+ *    current (swrRenderToken, bumped by syncUrl on every navigation) and no
+ *    sheet/popover is open (uiBusy) — never yanking UI out from under an
+ *    interaction. A skipped re-render is fine: the cache is already fresh for
+ *    the next navigation.
+ *  - The re-rendered view re-reads the cache within the freshness window, so
+ *    refresh -> re-render -> refresh can't loop (see swr.js beginRevalidate).
+ *  - The auth flows (account.js) clear the store on login/logout/session
+ *    loss, so no cached data survives an identity change.
+ * Views never mutate returned objects in place (same contract as before). The
+ * mid-session "must be fresh" fetches use fetchRoundFresh, which awaits the
+ * network and seeds the cache. */
+const SWR_FRESH_MS = 5000;
+const swrStore = createSwrStore({
+  storage: (() => { try { return window.localStorage; } catch { return null; } })(),
+  storageKey: 'spielwirbel.swr.v1',
+});
+let swrRenderToken = 0; // bumped by syncUrl (router.js) on every navigation
 function invalidateRoundCache() {
-  roundCache = { rid: null, round: null, at: 0 };
-  activityCache = { rid: null, activities: null, at: 0 };
+  swrStore.clear();
 }
-async function fetchRound(rid) {
-  const fresh = roundCache.rid === rid && Date.now() - roundCache.at < ROUND_CACHE_TTL_MS;
-  if (fresh) return roundCache.round;
+// True while a background re-render would destroy something the user is in
+// the middle of: an open sheet/popover, or a focused form field anywhere in
+// the app (member rename, tag creation, the Regal search box — a re-render
+// replaces the node and eats the keystrokes). A skipped re-render is always
+// safe: the cache is already fresh for the next navigation.
+function uiBusy() {
+  if (document.querySelector('.sheet-backdrop') || activePopover) return true;
+  const el = document.activeElement;
+  return !!el && app.contains(el) && el.matches('input, textarea, select');
+}
+// Serve the cached value for `key` (instantly, however old) and revalidate in
+// the background; block only on a cache miss. `rerender: false` still refreshes
+// the cache but never re-renders the view — for form screens, where a rebuild
+// would wipe what the user is typing.
+async function swrRead(key, url, { rerender = true } = {}) {
+  const cached = swrStore.get(key);
+  if (cached === undefined) {
+    const value = await api('GET', url);
+    swrStore.set(key, value);
+    return value;
+  }
+  if (swrStore.beginRevalidate(key, SWR_FRESH_MS)) {
+    const token = swrRenderToken;
+    api('GET', url)
+      .then((fresh) => {
+        swrStore.endRevalidate(key);
+        const changed = JSON.stringify(fresh) !== JSON.stringify(swrStore.get(key));
+        swrStore.set(key, fresh);
+        if (rerender && changed && token === swrRenderToken && !uiBusy()) currentView();
+      })
+      .catch(() => swrStore.endRevalidate(key));
+  }
+  return cached;
+}
+const fetchRoundList = (opts) => swrRead('rounds', '/api/rounds', opts);
+const fetchRound = (rid) => swrRead('round:' + rid, '/api/rounds/' + rid);
+// The activity feed lives on its own endpoint (#197), hence its own key.
+const fetchActivities = (rid) => swrRead('acts:' + rid, `/api/rounds/${rid}/activities`);
+// Await the network and seed the cache — for flows that must observe their own
+// just-written state (mid-session refreshes) where a stale render would lie.
+async function fetchRoundFresh(rid) {
   const round = await api('GET', '/api/rounds/' + rid);
-  roundCache = { rid, round, at: Date.now() };
+  swrStore.set('round:' + rid, round);
   return round;
-}
-// Same pattern for the activity feed, which lives on its own endpoint (#197)
-// and so misses the round cache — without this, every Chronik entry re-fetches.
-async function fetchActivities(rid) {
-  const fresh = activityCache.rid === rid && Date.now() - activityCache.at < ROUND_CACHE_TTL_MS;
-  if (fresh) return activityCache.activities;
-  const activities = await api('GET', '/api/rounds/' + rid + '/activities');
-  activityCache = { rid, activities, at: Date.now() };
-  return activities;
 }
 
 function setCrumbs(parts) {
@@ -128,8 +192,20 @@ function joinNames(names) {
 
 // Texts that live outside the rendered views (top bar). Re-applied on language change.
 function applyStaticTexts() {
-  document.getElementById('homeBtn').innerHTML =
-    `<i class="ti ti-dice-5" aria-hidden="true"></i> <span class="topbar__word">${esc(t('app.title'))}</span>`;
+  const home = document.getElementById('homeBtn');
+  home.innerHTML =
+    `<i class="ti ti-tornado" aria-hidden="true"></i> <span class="topbar__word">${esc(t('app.title'))}</span>`;
+  // These controls are icon-only (or, for the picker, unlabelled), so the
+  // aria-label is the ONLY thing a screen reader announces. index.html can only
+  // carry one hardcoded language, so every one of them is localized here — this
+  // runs on locale init AND on every change. Leaving the static markup in place
+  // announced "Home"/"Language"/"Account" in English over an otherwise German UI
+  // (#145); only the feedback button was being localized.
+  home.setAttribute('aria-label', t('a11y.home'));
+  document.getElementById('langPicker').setAttribute('aria-label', t('a11y.language'));
+  document.getElementById('feedbackBtn').setAttribute('aria-label', t('feedback.button'));
+  document.getElementById('accountBtn').setAttribute('aria-label', t('a11y.account'));
+  crumbs.setAttribute('aria-label', t('a11y.breadcrumb'));
   // Shared site footer (issue #224): the Kontakt link label. #134 adds the
   // Impressum/Datenschutz labels here alongside their links.
   document.getElementById('footerKontakt').textContent = t('footer.contact');
@@ -154,8 +230,106 @@ function setupLangPicker() {
 let gamesSort = 'avg';
 // Regal filter state – kept for the running session, scoped to one round.
 // Reset (along with gamesSort) when a different round's Regal is opened.
-let regalFilters = { type: 'all', durations: new Set(), query: '' };
+// `tags` is a tri-state Map<tagId, 'include'|'exclude'> (#241); absence = ignore.
+let regalFilters = { tags: new Map(), query: '' };
 let regalFiltersRid = null;
+
+// Tri-state custom-tag filter (#241), shared by the Regal and start-session tag
+// chips. State lives in a Map<tagId, 'include'|'exclude'> — a tag absent from the
+// map is ignored. Clicking a chip cycles ignore -> include -> exclude -> ignore.
+const TAG_STATES = [undefined, 'include', 'exclude'];
+// Advance one tag to its next state in the cycle, mutating the map, and return
+// the new state (undefined = back to ignore, so the entry is removed).
+function cycleTagState(map, id) {
+  const next = TAG_STATES[(TAG_STATES.indexOf(map.get(id)) + 1) % TAG_STATES.length];
+  if (next) map.set(id, next);
+  else map.delete(id);
+  return next;
+}
+// Reflect a tag chip's state on its element: the fill class, the glyph (a ban
+// icon for exclude), and an accessible label so include vs exclude is
+// distinguishable without relying on color alone (a11y).
+function paintTagChip(chip, name, state, tagIcon) {
+  chip.classList.toggle('is-on', state === 'include');
+  chip.classList.toggle('is-excluded', state === 'exclude');
+  // The ban glyph still wins for the exclude state (#255): it conveys filter
+  // semantics, not tag identity, and losing it would make include/exclude
+  // indistinguishable without color.
+  const icon = state === 'exclude' ? 'ti-ban' : tagIconClass(tagIcon);
+  const key =
+    state === 'include' ? 'tags.filter.included'
+    : state === 'exclude' ? 'tags.filter.excluded'
+    : 'tags.filter.ignored';
+  chip.setAttribute('aria-label', t(key, { name }));
+  chip.innerHTML = `<i class="ti ${icon}" aria-hidden="true"></i>${esc(name)}`;
+}
+// Build the curated tag-icon picker (#255): a grid of glyph buttons, exactly
+// one active, following the MEMBER_COLORS swatch pattern (a fixed set, no free
+// input). Since #293 the grid is collapsed behind a trigger showing the current
+// glyph — 20 always-open buttons dominated the narrow tag popover, making an
+// optional nicety read as the main task.
+// Returns { trigger, grid, get }: the two parts are handed back separately, not
+// as one wrapper, because every call site wants the trigger inline in an
+// existing input row and the grid on its own line below it — a wrapper would
+// force the grid into that row's flex layout. `get()` reads the current pick, so
+// a caller can create/patch a tag with whatever is selected at submit time.
+// `selected` is the tag's stored icon (or null/undefined for an unset one,
+// which lands on the default `tags` glyph — the same one it already renders).
+// `opts.expanded` drops the trigger entirely and renders the bare grid: the
+// Tags screen's per-tag edit already toggles the picker open from its own pencil
+// button, and nesting a second disclosure inside that would be one click too many.
+let iconPickerSeq = 0;
+function tagIconPicker(selected, opts) {
+  let current = TAG_ICONS.includes(selected) ? selected : 'tags';
+  const expanded = !!(opts && opts.expanded);
+  const gridId = `icon-picker-${++iconPickerSeq}`;
+  const grid = h(`<div class="icon-picker" id="${gridId}" role="group" aria-label="${esc(t('tags.chooseIcon'))}"${expanded ? '' : ' hidden'}></div>`);
+  const trigger = expanded ? null : h(`<button type="button" class="icon-picker__trigger" aria-expanded="false"
+       aria-controls="${gridId}" title="${esc(t('tags.chooseIcon'))}" aria-label="${esc(t('tags.chooseIcon'))}">
+       <i class="ti ${tagIconClass(current)}" aria-hidden="true"></i>
+       <i class="ti ti-chevron-down icon-picker__caret" aria-hidden="true"></i>
+     </button>`);
+  const setOpen = (open) => {
+    grid.hidden = !open;
+    trigger.setAttribute('aria-expanded', String(open));
+  };
+  if (trigger) trigger.addEventListener('click', () => setOpen(grid.hidden));
+  TAG_ICONS.forEach((key) => {
+    const label = t(`tags.icons.${key}`);
+    // data-icon carries the key so a caller can read it off the button it was
+    // clicked on, rather than inferring it from the button's position.
+    const btn = h(`<button type="button" class="icon-picker__btn${key === current ? ' is-active' : ''}"
+         data-icon="${esc(key)}" title="${esc(label)}" aria-label="${esc(label)}" aria-pressed="${key === current}">
+         <i class="ti ${tagIconClass(key)}" aria-hidden="true"></i>
+       </button>`);
+    btn.addEventListener('click', () => {
+      current = key;
+      grid.querySelectorAll('.icon-picker__btn').forEach((b) => {
+        b.classList.remove('is-active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('is-active');
+      btn.setAttribute('aria-pressed', 'true');
+      if (trigger) {
+        trigger.querySelector('.ti').className = `ti ${tagIconClass(key)}`;
+        setOpen(false);
+      }
+    });
+    grid.appendChild(btn);
+  });
+  return { trigger, grid, get: () => current };
+}
+
+// A game passes the tri-state tag filter iff it carries every included tag (AND)
+// and none of the excluded tags. `map` is Map<tagId, 'include'|'exclude'>.
+function matchesTagFilter(map, gameTagIds) {
+  const ids = gameTagIds || [];
+  for (const [id, state] of map) {
+    if (state === 'include' && !ids.includes(id)) return false;
+    if (state === 'exclude' && ids.includes(id)) return false;
+  }
+  return true;
+}
 // Remembered random order per round, so it stays the same when navigating back.
 const randomOrderCache = {};
 function randomOrderedGames(round, activeGames) {
@@ -234,6 +408,20 @@ const minimizedRecs = new Set();
 
 const STANDARD_ACCENT = '#c2410c';
 
+// The accent a stored design should actually paint with. Rounds save a snapshot
+// of the palette, so when a theme's accent is corrected — as Sand and Pfirsich
+// were for contrast (#145) — a round that picked it earlier still carries the
+// old, failing value. Resolving against the current THEMES on every render fixes
+// those rounds the next time they are drawn, which is the same render-time (not
+// capture-time) approach cover sizing takes and keeps the repo free of one-time
+// migration code (CLAUDE.md). An unknown page — a legacy or hand-edited design —
+// keeps whatever was stored. THEMES lives in a later-loaded file and is only
+// read here at call time, which the load order allows.
+function resolveAccent(bg) {
+  const theme = THEMES.find((th) => th.page.toLowerCase() === String(bg.page).toLowerCase());
+  return theme ? theme.accent : bg.accent;
+}
+
 // Apply the round's design: page background + accent color. Everything else —
 // placeholders, borders, accent surfaces, the page glow and the finale stage —
 // derives from these two custom properties via CSS color-mix (see styles.css).
@@ -241,7 +429,7 @@ function applyBackground(bg) {
   const root = document.documentElement.style;
   if (bg && bg.type === 'theme' && bg.page && bg.accent) {
     root.setProperty('--page-bg', bg.page);
-    root.setProperty('--brand', bg.accent);
+    root.setProperty('--brand', resolveAccent(bg));
   } else if (bg && bg.type === 'color' && bg.color) {
     // Legacy stored design: only a page color, standard accent.
     root.setProperty('--page-bg', bg.color);
@@ -254,22 +442,34 @@ function applyBackground(bg) {
 }
 
 // Color for an average 1–5: red (bad) → yellow → green (good).
+// The lightness is 30%, not the more obvious 42%, for contrast (#145): the scale
+// is used BOTH as a fill under white text (.score-pill) and as text/stroke on the
+// page (.gd-ring__num, the ring). At 42% the yellow-green middle only reached
+// 2.4:1 under white — every rating badge in the app failed WCAG AA. 30% is the
+// lightest value that clears 4.5:1 under white across the whole hue range (worst
+// case 4.5 at avg 3.0) while the ring still clears the 3:1 large-text bar on
+// every theme page. The hue is untouched, so the red→yellow→green reading is
+// unchanged; don't lighten it back without re-checking both uses.
 function avgColor(avg) {
   const hue = Math.max(0, Math.min(120, ((avg - 1) / 4) * 120));
-  return `hsl(${hue}, 60%, 42%)`;
+  return `hsl(${hue}, 60%, 30%)`;
 }
 
 // Fixed, friendly palette for member avatars. A member keeps "their" color
 // everywhere in the app; assignment is by position in round.members, which is
 // append-only, so colors stay stable for the life of the round.
+// Every entry carries white initials (.avatar, .nr-seat__avatar), so each one is
+// tuned to clear 4.5:1 against white (#145 — the original palette sat at
+// 3.4–3.9:1). Hues are the originals; six were darkened 7–15% to reach the bar,
+// slate blue and berry already cleared it. Keep any new color at ≥4.5:1 on white.
 const MEMBER_COLORS = [
-  '#d85a30', // coral
-  '#1d9e75', // teal
-  '#7f77dd', // violet
-  '#ba7517', // amber
-  '#d4537e', // pink
+  '#c6522c', // coral
+  '#198663', // teal
+  '#726bc7', // violet
+  '#a66815', // amber
+  '#c34d74', // pink
   '#2f6f9e', // slate blue
-  '#639922', // green
+  '#54821d', // green
   '#993556', // berry
 ];
 function memberColor(round, memberId) {
@@ -307,7 +507,12 @@ function renderSeatPicker(round, joining, onChange) {
     round.members.forEach((m, i) => {
       const angle = ((-90 + (i * 360) / round.members.length) * Math.PI) / 180;
       const joined = joining.has(m.id);
-      const seat = h(`<button type="button" class="nr-seat${joined ? '' : ' nr-seat--out'}" title="${esc(m.name)}">
+      // aria-pressed carries the in/out state (#145). Without it the seat is
+      // announced as a bare name and whether that member is playing tonight is
+      // conveyed by color and a "+" glyph alone — unusable without sight, on the
+      // control that decides who is in the session.
+      const seat = h(`<button type="button" class="nr-seat${joined ? '' : ' nr-seat--out'}"
+           aria-pressed="${joined}" title="${esc(m.name)}">
            <span class="nr-seat__avatar"${joined ? ` style="background:${memberColor(round, m.id)}"` : ''}>${
              joined ? esc(initials(m.name)) : '<i class="ti ti-plus" aria-hidden="true"></i>'
            }</span>
@@ -335,7 +540,9 @@ function renderSeatPicker(round, joining, onChange) {
 // Accent color of a round's stored design (fallback: the standard accent).
 // Works with both the full round object and the home-screen summary.
 function themeAccent(bg) {
-  return bg && bg.type === 'theme' && bg.accent ? bg.accent : STANDARD_ACCENT;
+  // Same normalization as applyBackground, so a home-screen emblem never shows a
+  // different accent than the round screen it opens.
+  return bg && bg.type === 'theme' && bg.accent ? resolveAccent(bg) : STANDARD_ACCENT;
 }
 
 // --- Anchored popover (small floating menu next to a clicked element) ---
@@ -348,7 +555,7 @@ function closePopover() {
   document.removeEventListener('mousedown', activePopover.onDoc, true);
   document.removeEventListener('keydown', activePopover.onKey, true);
   window.removeEventListener('resize', activePopover.onGone, true);
-  window.removeEventListener('scroll', activePopover.onGone, true);
+  window.removeEventListener('scroll', activePopover.onScroll, true);
   activePopover = null;
 }
 function openPopover(anchor, build) {
@@ -373,11 +580,16 @@ function openPopover(anchor, build) {
   const onDoc = (e) => { if (!el.contains(e.target) && !anchor.contains(e.target)) close(); };
   const onKey = (e) => { if (e.key === 'Escape') close(); };
   const onGone = () => close();
+  // Capture-phase scroll on window also fires for scrolls *inside* the popover —
+  // a single-line <input> scrolls as soon as its text overflows, which silently
+  // closed the popover mid-typing (#247). Ignore those; a page scroll targets
+  // `document` (not contained by `el`), so it still closes as before.
+  const onScroll = (e) => { if (!el.contains(e.target)) close(); };
   document.addEventListener('mousedown', onDoc, true);
   document.addEventListener('keydown', onKey, true);
   window.addEventListener('resize', onGone, true);
-  window.addEventListener('scroll', onGone, true);
-  activePopover = { el, onDoc, onKey, onGone };
+  window.addEventListener('scroll', onScroll, true);
+  activePopover = { el, onDoc, onKey, onGone, onScroll };
   return { el, close };
 }
 
@@ -454,10 +666,21 @@ function createCoverLoader() {
 // affordance (the `.game-link` class carries cursor/hover/focus styling).
 // Used from the session results and Pokale screens; `showGameDetail` is
 // resolved at call time (it lives in a later-loaded script).
-function makeGameLink(el, rid, gid) {
+//
+// `opts.redundant` marks a link that only repeats an adjacent one pointing at
+// the same game — a cover thumbnail next to its own title (#145). It stays
+// clickable with the mouse but leaves the tab order and the accessibility tree,
+// because the alternative is a second, *nameless* "button" on every result row:
+// an image element has no text, so it announced as an unlabelled control.
+function makeGameLink(el, rid, gid, opts) {
   el.classList.add('game-link');
-  el.setAttribute('role', 'button');
-  el.setAttribute('tabindex', '0');
+  if (opts && opts.redundant) {
+    el.setAttribute('aria-hidden', 'true');
+    el.setAttribute('tabindex', '-1');
+  } else {
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+  }
   el.addEventListener('click', () => showGameDetail(rid, gid));
   el.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -485,20 +708,8 @@ function makeMemberLink(el, rid, mid) {
   });
 }
 
-// Tabler icon class for a game type: digital -> gamepad, analog -> dice.
-const typeIcon = (type) => (type === 'digital' ? 'ti-device-gamepad-2' : 'ti-dice-3');
-
-const typeTag = (type) =>
-  type === 'digital'
-    ? `<span class="tag tag--digital"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i> ${t('type.digital')}</span>`
-    : `<span class="tag tag--analog"><i class="ti ti-dice-3" aria-hidden="true"></i> ${t('type.analog')}</span>`;
-
-// Games from before the duration feature have duration null -> no tag.
-const durationTag = (duration) => {
-  if (!['short', 'medium', 'long'].includes(duration)) return '';
-  const icon = { short: 'ti-bolt', medium: 'ti-clock', long: 'ti-hourglass' }[duration];
-  return `<span class="tag tag--duration"><i class="ti ${icon}" aria-hidden="true"></i> ${t('duration.' + duration)}</span>`;
-};
+// GAME_ICON / gameHue / coverPlaceholder live in js/cover.js (loaded earlier),
+// which is pure and dependency-free so the test suite can require it.
 
 // Plain localized player-count text ("2–4 Personen"), or '' when the game
 // predates the player-count feature (one/both fields missing). The plain form is
@@ -518,15 +729,3 @@ const playersTag = (min, max) => {
   return `<span class="tag tag--players"><i class="ti ti-users" aria-hidden="true"></i> ${text}</span>`;
 };
 
-// Icon-only badges for the compact card overlay; the full localized word
-// stays available as a tooltip.
-const typeBadge = (type) =>
-  type === 'digital'
-    ? `<span class="img-badge" title="${t('type.digital')}"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i></span>`
-    : `<span class="img-badge" title="${t('type.analog')}"><i class="ti ti-dice-3" aria-hidden="true"></i></span>`;
-
-const durationBadge = (duration) => {
-  if (!['short', 'medium', 'long'].includes(duration)) return '';
-  const icon = { short: 'ti-bolt', medium: 'ti-clock', long: 'ti-hourglass' }[duration];
-  return `<span class="img-badge" title="${t('duration.' + duration)}"><i class="ti ${icon}" aria-hidden="true"></i></span>`;
-};

@@ -20,9 +20,12 @@
 </head>
 <body>
   <header class="topbar">
-    <button id="homeBtn" class="topbar__home" type="button" aria-label="Home"><i class="ti ti-dice-3" aria-hidden="true"></i></button>
+    <button id="homeBtn" class="topbar__home" type="button" aria-label="Home"><i class="ti ti-tornado" aria-hidden="true"></i></button>
     <nav id="crumbs" class="crumbs"></nav>
     <select id="langPicker" class="lang-picker" aria-label="Language"></select>
+    <!-- Feedback (issue #260): always visible, in both auth modes; wired by
+         js/feedback.js. -->
+    <button id="feedbackBtn" class="topbar__acct" type="button" aria-label="Feedback"><i class="ti ti-message" aria-hidden="true"></i></button>
     <!-- Account menu (issue #138): hidden unless accounts are on and the user is
          logged in; wired by js/account.js setupAccountUi(). -->
     <button id="accountBtn" class="topbar__acct" type="button" hidden aria-label="Account"><i class="ti ti-user" aria-hidden="true"></i></button>
@@ -32,7 +35,7 @@
     <!-- Content is rendered by the js/* files -->
   </main>
 
-  <!-- Shared site footer (issue #224). Ships the public Kontakt link now; #134
+<!-- Shared site footer (issue #224). Ships the public Kontakt link now; #134
        adds the Impressum + Datenschutz links here once those pages exist — don't
        add links to not-yet-built legal pages (they'd 404 on Live). Root-absolute
        paths per .claude/rules/spa-fallback-absolute-asset-paths.md; label set in
@@ -41,18 +44,26 @@
     <a href="/kontakt.html" id="footerKontakt"></a>
   </footer>
 
-  <!-- small toast for feedback -->
-  <div id="toast" class="toast" hidden></div>
+  <!-- Small toast for feedback. A permanent aria-live region (#145): it stays in
+       the accessibility tree and is shown/hidden with a class, because a live
+       region that only appears together with its text is never announced. -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Order matters: i18n + languages first, core next, main (bootstrap) last. -->
   <script src="/js/i18n.js"></script>
   <script src="/js/lang/en.js"></script>
   <script src="/js/lang/de.js"></script>
+  <script src="/js/cover.js"></script>
+  <script src="/js/cover-size.js"></script>
+  <script src="/js/tag-icons.js"></script>
+  <script src="/js/swr.js"></script>
+  <script src="/js/focus-trap.js"></script>
   <script src="/js/core.js"></script>
   <script src="/js/account.js"></script>
   <script src="/js/ranking.js"></script>
   <script src="/js/lookup-group.js"></script>
-  <script src="/js/buynext.js"></script>
+  <script src="/js/lookup-cover.js"></script>
+  <script src="/js/feedback.js"></script>
   <script src="/js/views-home.js"></script>
   <script src="/js/views-round.js"></script>
   <script src="/js/views-round-tabs.js"></script>

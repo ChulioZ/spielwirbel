@@ -3,8 +3,10 @@
 The add-game title field is a search-as-you-type lookup (`lib/providers/`,
 `routes/lookup.js`, `showAddGame` in `views-round.js`). All provider calls are
 cross-origin (no CORS headers), so **all provider calls run server-side**
-through `/api/lookup/*`; the browser never calls the provider. The frontend
-queries **every** provider in parallel and merges the hits (round-robin
+through `/api/rounds/:rid/lookup/*`; the browser never calls the provider. The
+frontend queries every provider **the round has enabled** in parallel (since
+#294 — absent config means all five, see
+`.claude/rules/round-provider-config.md`) and merges the hits (round-robin
 interleave) into one dropdown, each result tagged with its own provider; one
 provider failing (502) must not blank out the other's results (`Promise.allSettled`).
 
@@ -43,8 +45,8 @@ splits the job across two public, key-free endpoints:
 
 ### Title language follows the UI locale (`lang` param, issue #114)
 
-BGG titles are **localized to the app's active language**. `/api/lookup/search`
-and `/api/lookup/game` accept a `lang` query param (allowlist `de`/`en`, default
+BGG titles are **localized to the app's active language**. The `search` and
+`game` lookup routes accept a `lang` query param (allowlist `de`/`en`, default
 `en` when absent — see `lookupLang` in `routes/lookup.js`), which the frontend
 sends as `getLocale()` and which is **part of the cache key** (so a de/en switch
 isn't served a stale-language hit). The route passes it as the trailing arg to
@@ -83,9 +85,36 @@ the store's normal server-rendered pages and reads the `__NEXT_DATA__` JSON blob
   `__NEXT_DATA__` → collect Apollo `Product` objects with
   `storeDisplayClassification === 'FULL_GAME'` (filters out DLC/bundles) →
   `{ providerId, title, thumbnail }`.
-- **detail:** `GET .../product/{id}` → same blob for title + cover image, **plus
-  a regex over the rendered HTML** for the player count, which appears only as
-  markup like `compatText">1 - 4 players</span>` (not in the JSON).
+- **detail:** `GET .../product/{id}` → same blob for the title, **plus a regex
+  over the rendered HTML** for the player count, which appears only as markup
+  like `compatText">1 - 4 players</span>` (not in the JSON). **No cover** — see
+  the next section.
+
+**PS Store `detail` returns `imageUrl: null` — the cover lives on the SEARCH
+hit** (#281). `parseProduct` does call `pickImage(product.media)`, so this reads
+like it should work; it doesn't, because a *product* page's `__NEXT_DATA__`
+carries only a bare `Product` stub (id + name, **no `media` array**). Only the
+*search* page's Apollo entries have `media`. PS Store is the **only** provider
+like this — BGG, Steam, Nintendo and Xbox all populate `imageUrl` from `detail`.
+
+So **any flow that offers a provider cover must fall back to the search hit's
+`thumbnail`**, not read `detail.imageUrl` alone. Both come from the same
+`pickImage()` helper and therefore the same `IMAGE_HOSTS`, so the server's
+`providerCoverUrl()` allowlist accepts either — the fallback needs no server
+change. `providerMatchCover(r, d)` in `public/js/lookup-cover.js` is that one
+chokepoint for the link-provider sheet; the add-game flow does the same inline
+(`showProviderImage(r.thumbnail)` before the detail call resolves).
+
+**Forgetting that fallback fails silently and asymmetrically:** the cover toggle
+simply never renders for PS Store while every other provider works, which reads
+as "linking is broken for Sony" rather than as a missing fallback. Guarded by
+`test/provider-match-cover.test.js`, which asserts the asymmetry against the
+real parsers — so a future Sony page change that *starts* shipping `media` is
+noticed rather than silently making the test vacuous.
+
+(`providerMatchCover` lives in its own small module rather than as an export
+from `views-round-lookup.js` for a reason unrelated to providers — see
+`.claude/rules/frontend-helper-modules-and-coverage.md`.)
 
 **Known limits — don't treat these as bugs:**
 - It's **undocumented storefront scraping**. Sony can change the page shape any
@@ -180,12 +209,20 @@ it in `afterEach` — the provider calls the global `fetch`, so this fully isola
 it. See `test/providers-psstore.test.js`, `test/lookup.test.js`, and the
 cover-download tests in `test/games.test.js`.
 
-**Cover downloads are host-allowlisted (SSRF guard):** `POST …/games` only
-downloads an `imageUrl` whose host a provider vouches for
+**Cover URLs are host-allowlisted:** `POST …/games` only accepts an `imageUrl`
+whose host a provider vouches for
 (`imageHostAllowed` / `isAllowedImageUrl`, aggregated in
 `lib/providers/index.js` from each provider's own `IMAGE_HOSTS` — Sony's
 `playstation.net`, Steam's `steamstatic.com`, Nintendo's `nintendo.com`,
 Xbox's `s-microsoft.com`, BGG's `geekdo-images.com`). Keep that guard when
-adding providers; never fetch arbitrary client-supplied URLs. The same
-`IMAGE_HOSTS` list feeds the CSP `img-src` allowlist — see
-`.claude/rules/security-middleware.md`.
+adding providers. The same `IMAGE_HOSTS` list feeds the CSP `img-src` allowlist
+— see `.claude/rules/security-middleware.md`.
+
+**Since #172 the server no longer downloads cover bytes at all:** a provider
+cover is **hotlinked** (the allowlisted URL is stored in `game.image` and the
+browser loads it from the provider), because re-hosting third-party box art on a
+public service needs a licence we don't hold. So the allowlist now gates what may
+be *stored and rendered* rather than what may be *fetched*, and `img-src` is what
+makes saved covers display at all. Adding a provider means its `IMAGE_HOSTS` must
+be right, or its games' covers are CSP-blocked with no error but a console
+violation. See `.claude/rules/provider-cover-hotlinking.md`.

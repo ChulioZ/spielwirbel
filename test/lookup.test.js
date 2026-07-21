@@ -1,12 +1,19 @@
 'use strict';
 
-const { test, afterEach } = require('node:test');
+const { test, before, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
-const { app } = require('./helpers');
+const { app, createRound } = require('./helpers');
 
 const realFetch = global.fetch;
 afterEach(() => { global.fetch = realFetch; });
+
+// The lookup is round-scoped since #294 (a round configures which providers it
+// queries), so every request needs a round. This one is never configured, i.e.
+// all providers stay enabled — test/providers.test.js covers the filtering.
+let rid;
+before(async () => { rid = (await createRound(request)).id; });
+const L = (p) => `/api/rounds/${rid}/lookup${p}`;
 
 // Replace global.fetch (used by lib/providers/psstore) with a stub returning
 // store HTML built from an Apollo-cache-shaped object.
@@ -29,12 +36,12 @@ const PROD = {
   media: [{ __typename: 'Media', role: 'MASTER', type: 'IMAGE', url: 'https://image.api.playstation.com/vulcan/w.png' }],
 };
 
-test('GET /api/lookup/search returns normalized results', async () => {
+test('GET …/lookup/search returns normalized results', async () => {
   stubFetch((url) => {
     assert.match(url, /\/search\//);
     return htmlRes(page({ 'Product:X': PROD }));
   });
-  const res = await request(app).get('/api/lookup/search?provider=psstore&q=witcher');
+  const res = await request(app).get(L('/search?provider=psstore&q=witcher'));
   assert.equal(res.status, 200);
   assert.deepEqual(res.body.results, [
     { providerId: PROD.id, title: 'The Witcher 3: Wild Hunt', thumbnail: 'https://image.api.playstation.com/vulcan/w.png' },
@@ -44,34 +51,33 @@ test('GET /api/lookup/search returns normalized results', async () => {
 test('search with a too-short query short-circuits without calling the provider', async () => {
   let called = false;
   stubFetch(() => { called = true; return htmlRes(page({})); });
-  const res = await request(app).get('/api/lookup/search?provider=psstore&q=a');
+  const res = await request(app).get(L('/search?provider=psstore&q=a'));
   assert.equal(res.status, 200);
   assert.deepEqual(res.body.results, []);
   assert.equal(called, false);
 });
 
 test('search rejects an unknown provider', async () => {
-  const res = await request(app).get('/api/lookup/search?provider=nope&q=witcher');
+  const res = await request(app).get(L('/search?provider=nope&q=witcher'));
   assert.equal(res.status, 400);
 });
 
 test('search returns 502 when the provider is unreachable', async () => {
   stubFetch(() => { throw new Error('network down'); });
-  const res = await request(app).get('/api/lookup/search?provider=psstore&q=zzzunreachable');
+  const res = await request(app).get(L('/search?provider=psstore&q=zzzunreachable'));
   assert.equal(res.status, 502);
   assert.equal(res.body.error, 'provider_unreachable');
 });
 
-test('GET /api/lookup/game returns normalized detail (digital, players, default long duration)', async () => {
+test('GET …/lookup/game returns normalized detail (digital, players)', async () => {
   stubFetch((url) => {
     assert.match(url, /\/product\//);
     return htmlRes(page({ 'Product:X': PROD }, '<span class="compatText">1 - 4 players</span>'));
   });
-  const res = await request(app).get(`/api/lookup/game?provider=psstore&id=${PROD.id}`);
+  const res = await request(app).get(L(`/game?provider=psstore&id=${PROD.id}`));
   assert.equal(res.status, 200);
   assert.equal(res.body.title, 'The Witcher 3: Wild Hunt');
   assert.equal(res.body.type, 'digital');
-  assert.equal(res.body.duration, 'long');
   assert.equal(res.body.minPlayers, 1);
   assert.equal(res.body.maxPlayers, 4);
   assert.equal(res.body.imageUrl, 'https://image.api.playstation.com/vulcan/w.png');
@@ -80,7 +86,7 @@ test('GET /api/lookup/game returns normalized detail (digital, players, default 
 
 test('game still returns a usable digital detail when the page has no product stub', async () => {
   stubFetch(() => htmlRes('<html><body><span class="compatText">1 - 4 players</span></body></html>'));
-  const res = await request(app).get('/api/lookup/game?provider=psstore&id=NOPE');
+  const res = await request(app).get(L('/game?provider=psstore&id=NOPE'));
   assert.equal(res.status, 200);
   assert.equal(res.body.type, 'digital');
   assert.equal(res.body.minPlayers, 1);
@@ -89,7 +95,7 @@ test('game still returns a usable digital detail when the page has no product st
 });
 
 test('game requires an id', async () => {
-  const res = await request(app).get('/api/lookup/game?provider=psstore');
+  const res = await request(app).get(L('/game?provider=psstore'));
   assert.equal(res.status, 400);
 });
 
@@ -115,12 +121,12 @@ const GEEK_CATAN = {
   },
 };
 
-test('GET /api/lookup/search?provider=bgg returns BGG-id results (via Wikidata)', async () => {
+test('GET …/lookup/search?provider=bgg returns BGG-id results (via Wikidata)', async () => {
   stubFetch((url) => {
     assert.match(url, /query\.wikidata\.org/);
     return jsonRes(WDQS_CATAN);
   });
-  const res = await request(app).get('/api/lookup/search?provider=bgg&q=catan');
+  const res = await request(app).get(L('/search?provider=bgg&q=catan'));
   assert.equal(res.status, 200);
   assert.deepEqual(res.body.results, [
     { providerId: '13', title: 'Catan', thumbnail: null },
@@ -128,7 +134,7 @@ test('GET /api/lookup/search?provider=bgg returns BGG-id results (via Wikidata)'
   ]);
 });
 
-test('GET /api/lookup/game?provider=bgg returns analog detail with players + bucketed duration', async () => {
+test('GET …/lookup/game?provider=bgg returns analog detail with players', async () => {
   // detail() now makes two calls: BGG geekitems (data) + a Wikidata label query
   // (localized title). With no localized label, the BGG canonical name is kept.
   stubFetch((url) => {
@@ -136,11 +142,10 @@ test('GET /api/lookup/game?provider=bgg returns analog detail with players + buc
     assert.match(url, /api\.geekdo\.com\/api\/geekitems/);
     return jsonRes(GEEK_CATAN);
   });
-  const res = await request(app).get('/api/lookup/game?provider=bgg&id=13');
+  const res = await request(app).get(L('/game?provider=bgg&id=13'));
   assert.equal(res.status, 200);
   assert.equal(res.body.title, 'Catan');
   assert.equal(res.body.type, 'analog');
-  assert.equal(res.body.duration, 'long');
   assert.equal(res.body.minPlayers, 3);
   assert.equal(res.body.maxPlayers, 4);
   assert.equal(res.body.imageUrl, 'https://cf.geekdo-images.com/x/pic.png');
@@ -153,7 +158,7 @@ test('bgg search threads lang into the Wikidata query (de -> German-first labels
     seen = url;
     return jsonRes(WDQS_CATAN);
   });
-  const res = await request(app).get('/api/lookup/search?provider=bgg&q=catan&lang=de');
+  const res = await request(app).get(L('/search?provider=bgg&q=catan&lang=de'));
   assert.equal(res.status, 200);
   // The requested language reaches the SPARQL sent to Wikidata (form-encoded, so
   // spaces arrive as '+').
@@ -168,7 +173,7 @@ test('bgg game with lang=de prefers the German Wikidata label over the BGG Engli
     }
     return jsonRes(GEEK_CATAN);
   });
-  const res = await request(app).get('/api/lookup/game?provider=bgg&id=13&lang=de');
+  const res = await request(app).get(L('/game?provider=bgg&id=13&lang=de'));
   assert.equal(res.status, 200);
   assert.equal(res.body.title, 'Die Siedler von Catan'); // German label wins
   assert.equal(res.body.minPlayers, 3); // other data still comes from BGG
@@ -180,14 +185,14 @@ test('bgg game still succeeds (BGG name kept) when the Wikidata label query fail
     return jsonRes(GEEK_CATAN);
   });
   // Distinct id so the route's per-(lang,id) cache doesn't serve an earlier hit.
-  const res = await request(app).get('/api/lookup/game?provider=bgg&id=14&lang=de');
+  const res = await request(app).get(L('/game?provider=bgg&id=14&lang=de'));
   assert.equal(res.status, 200);
   assert.equal(res.body.title, 'Catan'); // falls back to BGG's canonical name
 });
 
 test('bgg search returns 502 when Wikidata is unreachable', async () => {
   stubFetch(() => { throw new Error('network down'); });
-  const res = await request(app).get('/api/lookup/search?provider=bgg&q=zzzunreachable');
+  const res = await request(app).get(L('/search?provider=bgg&q=zzzunreachable'));
   assert.equal(res.status, 502);
   assert.equal(res.body.error, 'provider_unreachable');
 });
@@ -213,28 +218,27 @@ const STEAM_DETAIL = {
   },
 };
 
-test('GET /api/lookup/search?provider=steam returns only full games (type app)', async () => {
+test('GET …/lookup/search?provider=steam returns only full games (type app)', async () => {
   stubFetch((url) => {
     assert.match(url, /store\.steampowered\.com\/api\/storesearch/);
     return jsonRes(STEAM_SEARCH);
   });
-  const res = await request(app).get('/api/lookup/search?provider=steam&q=stardew');
+  const res = await request(app).get(L('/search?provider=steam&q=stardew'));
   assert.equal(res.status, 200);
   assert.deepEqual(res.body.results, [
     { providerId: '413150', title: 'Stardew Valley', thumbnail: 'https://shared.akamai.steamstatic.com/apps/413150/capsule.jpg' },
   ]);
 });
 
-test('GET /api/lookup/game?provider=steam returns digital detail (players, long duration)', async () => {
+test('GET …/lookup/game?provider=steam returns digital detail (players)', async () => {
   stubFetch((url) => {
     assert.match(url, /store\.steampowered\.com\/api\/appdetails/);
     return jsonRes(STEAM_DETAIL);
   });
-  const res = await request(app).get('/api/lookup/game?provider=steam&id=413150');
+  const res = await request(app).get(L('/game?provider=steam&id=413150'));
   assert.equal(res.status, 200);
   assert.equal(res.body.title, 'Stardew Valley');
   assert.equal(res.body.type, 'digital');
-  assert.equal(res.body.duration, 'long');
   assert.equal(res.body.minPlayers, 1); // co-op present -> multiplayer, upper bound unknown
   assert.equal(res.body.maxPlayers, null);
   assert.equal(res.body.imageUrl, 'https://shared.akamai.steamstatic.com/apps/413150/header.jpg');
@@ -243,7 +247,7 @@ test('GET /api/lookup/game?provider=steam returns digital detail (players, long 
 
 test('steam search returns 502 when Steam is unreachable', async () => {
   stubFetch(() => { throw new Error('network down'); });
-  const res = await request(app).get('/api/lookup/search?provider=steam&q=zzzunreachable');
+  const res = await request(app).get(L('/search?provider=steam&q=zzzunreachable'));
   assert.equal(res.status, 502);
   assert.equal(res.body.error, 'provider_unreachable');
 });
@@ -260,30 +264,29 @@ const NINTENDO_DOC = {
 };
 const NINTENDO_JSON = { response: { numFound: 1, docs: [NINTENDO_DOC] } };
 
-test('GET /api/lookup/search?provider=nintendo returns normalized Switch results', async () => {
+test('GET …/lookup/search?provider=nintendo returns normalized Switch results', async () => {
   stubFetch((url) => {
     assert.match(url, /searching\.nintendo-europe\.com/);
     assert.match(url, /system_type%3Anintendoswitch/); // Switch-only filter
     return jsonRes(NINTENDO_JSON);
   });
-  const res = await request(app).get('/api/lookup/search?provider=nintendo&q=mario');
+  const res = await request(app).get(L('/search?provider=nintendo&q=mario'));
   assert.equal(res.status, 200);
   assert.deepEqual(res.body.results, [
     { providerId: '70010000000153', title: 'Mario Kart 8 Deluxe', thumbnail: 'https://www.nintendo.com/eu/media/images/mk8_square.jpg' },
   ]);
 });
 
-test('GET /api/lookup/game?provider=nintendo returns digital detail (players, long duration)', async () => {
+test('GET …/lookup/game?provider=nintendo returns digital detail (players)', async () => {
   stubFetch((url) => {
     assert.match(url, /searching\.nintendo-europe\.com/);
     assert.match(url, /fs_id/); // detail filters the index down to one item
     return jsonRes(NINTENDO_JSON);
   });
-  const res = await request(app).get('/api/lookup/game?provider=nintendo&id=70010000000153');
+  const res = await request(app).get(L('/game?provider=nintendo&id=70010000000153'));
   assert.equal(res.status, 200);
   assert.equal(res.body.title, 'Mario Kart 8 Deluxe');
   assert.equal(res.body.type, 'digital');
-  assert.equal(res.body.duration, 'long');
   assert.equal(res.body.minPlayers, 1);
   assert.equal(res.body.maxPlayers, 8);
   assert.equal(res.body.imageUrl, 'https://www.nintendo.com/eu/media/images/mk8_square.jpg');
@@ -292,7 +295,7 @@ test('GET /api/lookup/game?provider=nintendo returns digital detail (players, lo
 
 test('nintendo search returns 502 when Nintendo is unreachable', async () => {
   stubFetch(() => { throw new Error('network down'); });
-  const res = await request(app).get('/api/lookup/search?provider=nintendo&q=zzzunreachable');
+  const res = await request(app).get(L('/search?provider=nintendo&q=zzzunreachable'));
   assert.equal(res.status, 502);
   assert.equal(res.body.error, 'provider_unreachable');
 });
@@ -332,28 +335,27 @@ const XBOX_DETAIL = {
   },
 };
 
-test('GET /api/lookup/search?provider=xbox returns only game suggestions', async () => {
+test('GET …/lookup/search?provider=xbox returns only game suggestions', async () => {
   stubFetch((url) => {
     assert.match(url, /msstoreapiprod\/api\/autosuggest/);
     return jsonRes(XBOX_SEARCH);
   });
-  const res = await request(app).get('/api/lookup/search?provider=xbox&q=halo');
+  const res = await request(app).get(L('/search?provider=xbox&q=halo'));
   assert.equal(res.status, 200);
   assert.deepEqual(res.body.results, [
     { providerId: '9PP5G1F0C2GV', title: 'Halo Infinite', thumbnail: 'https://store-images.s-microsoft.com/image/apps.9999.infinite.jpg' },
   ]);
 });
 
-test('GET /api/lookup/game?provider=xbox returns digital detail (players, long duration)', async () => {
+test('GET …/lookup/game?provider=xbox returns digital detail (players)', async () => {
   stubFetch((url) => {
     assert.match(url, /displaycatalog\.mp\.microsoft\.com/);
     return jsonRes(XBOX_DETAIL);
   });
-  const res = await request(app).get('/api/lookup/game?provider=xbox&id=9PP5G1F0C2GV');
+  const res = await request(app).get(L('/game?provider=xbox&id=9PP5G1F0C2GV'));
   assert.equal(res.status, 200);
   assert.equal(res.body.title, 'Halo Infinite');
   assert.equal(res.body.type, 'digital');
-  assert.equal(res.body.duration, 'long');
   assert.equal(res.body.minPlayers, 1); // SinglePlayer floors the minimum
   assert.equal(res.body.maxPlayers, 8);
   assert.equal(res.body.imageUrl, 'https://store-images.s-microsoft.com/image/box');
@@ -362,7 +364,7 @@ test('GET /api/lookup/game?provider=xbox returns digital detail (players, long d
 
 test('xbox search returns 502 when the provider is unreachable', async () => {
   stubFetch(() => { throw new Error('network down'); });
-  const res = await request(app).get('/api/lookup/search?provider=xbox&q=zzzunreachable');
+  const res = await request(app).get(L('/search?provider=xbox&q=zzzunreachable'));
   assert.equal(res.status, 502);
   assert.equal(res.body.error, 'provider_unreachable');
 });

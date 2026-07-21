@@ -31,7 +31,7 @@ const PORT = process.env.PORT || 3000;
 // the JSON backend's init() is a no-op), then listen.
 repo.init().then(() => {
   app.listen(PORT, () => {
-    console.log(`\n  🎲  Spielwirbel running at  http://localhost:${PORT}\n`);
+    console.log(`\n  🌀  Spielwirbel running at  http://localhost:${PORT}\n`);
     console.log(`      Persistence:          ${process.env.DATABASE_URL ? 'PostgreSQL (DATABASE_URL)' : DATA_FILE}`);
     console.log(`      Images are stored in: ${imagesLocation}\n`);
   });

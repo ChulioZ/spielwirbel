@@ -29,9 +29,10 @@ test('helmet sets security headers on every response', async () => {
   assert.match(csp, /style-src [^;]*'unsafe-inline'/);
   assert.match(csp, /img-src [^;]*data:/);
   assert.doesNotMatch(csp, /upgrade-insecure-requests/);
-  // Provider cover hosts are render-allowed on img-src, mirroring the
-  // server-side download allowlist (isAllowedImageUrl) so provider covers show
-  // in the add-game/link previews and lookup thumbnails — issue #179.
+  // Provider cover hosts are render-allowed on img-src, mirroring the host
+  // allowlist (isAllowedImageUrl) so provider covers show in the add-game/link
+  // previews and lookup thumbnails (#179) — and, since #172, so that SAVED
+  // covers render at all, since they are hotlinked rather than re-hosted.
   const imgSrc = csp.match(/img-src ([^;]*)/)[1];
   const sources = imageCspSources();
   assert.ok(sources.length > 0, 'there are provider image hosts to allow');
@@ -40,7 +41,6 @@ test('helmet sets security headers on every response', async () => {
 
 test('the global rate limit returns 429 once the ceiling is exceeded', async () => {
   process.env.RATE_LIMIT_MAX = '3';
-  process.env.RECS_RATE_LIMIT_MAX = '1000000';
   const limited = createApp();
   for (let i = 0; i < 3; i++) {
     const ok = await request(limited).get('/api/rounds');
@@ -49,23 +49,4 @@ test('the global rate limit returns 429 once the ceiling is exceeded', async () 
   const blocked = await request(limited).get('/api/rounds');
   assert.equal(blocked.status, 429);
   assert.deepEqual(blocked.body, { error: 'rate_limited' });
-});
-
-test('the recommendations endpoint has its own stricter limit', async () => {
-  process.env.RATE_LIMIT_MAX = '1000000'; // keep the global limit out of the way
-  process.env.RECS_RATE_LIMIT_MAX = '2';
-  const limited = createApp();
-  // The limiter counts every request before the route runs, so a bogus round
-  // (404) still consumes the allowance — no key or stubbed fetch needed.
-  for (let i = 0; i < 2; i++) {
-    const res = await request(limited).post('/api/rounds/nope/recommendations');
-    assert.equal(res.status, 404);
-  }
-  const blocked = await request(limited).post('/api/rounds/nope/recommendations');
-  assert.equal(blocked.status, 429);
-  assert.deepEqual(blocked.body, { error: 'rate_limited' });
-
-  // A different endpoint is unaffected by the recommendations limiter.
-  const other = await request(limited).get('/api/rounds');
-  assert.equal(other.status, 200);
 });
