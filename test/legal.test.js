@@ -65,7 +65,8 @@ test('configured: the privacy policy covers the real processors and no ODR link'
   const res = await request(app).get('/datenschutz');
   assert.equal(res.status, 200);
   for (const marker of [
-    'Railway', 'Cloudflare', 'Brevo',            // the three processors
+    'Railway', 'Cloudflare', 'Brevo',            // the three platform processors
+    'Heinlein',                                  // operator-mailbox host (#307)
     'Wikidata',                                  // BGG search recipient (adversarial pass)
     'geekdo-images.com', 'steamstatic.com',      // hotlinked cover hosts disclosed (#172)
     'Nutzungsereignisse',                        // product-event logging (#261) disclosed
