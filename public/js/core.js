@@ -211,6 +211,22 @@ function applyStaticTexts() {
   document.getElementById('footerKontakt').textContent = t('footer.contact');
 }
 
+// Shared site footer visibility (issues #224/#134). The footer starts hidden in
+// the markup and is shown only when the server says the public surfaces behind
+// it are configured (GET /api/config — mail delivery for Kontakt AND the
+// Impressum address for the legal pages). All-or-nothing by design: a
+// half-ready instance shows no footer rather than a broken one. Plain fetch
+// (not api()): the endpoint is public and a failure must never bounce to login
+// — on any error the footer just stays hidden.
+function initFooter() {
+  fetch('/api/config')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((cfg) => {
+      if (cfg && cfg.footer) document.querySelector('.site-footer').hidden = false;
+    })
+    .catch(() => {});
+}
+
 // Language picker in the top bar.
 function setupLangPicker() {
   const sel = document.getElementById('langPicker');

@@ -389,7 +389,11 @@ the DSA notice-and-action channel. Delivery goes to `CONTACT_TO` (falling back t
 limit and a server-side honeypot for spam, and in `NODE_ENV=production` it **fails
 loud** (`502` with a fallback e-mail) rather than silently dropping a message when
 mail is unconfigured — so configure `BREVO_API_KEY` + `MAIL_FROM` + `CONTACT_TO`
-before relying on it in production. A shared site footer links to it.
+before relying on it in production. A shared site footer links to it — but the
+footer (and the form itself) only appears once the public `GET /api/config`
+reports the instance ready: mail configured **and** `IMPRESSUM_ADDRESS` set
+(all-or-nothing, so a half-configured deploy shows no public footer rather than
+a broken one; the same footer carries the legal pages from issue #134).
 
 Serving one deployment under several domains: `CANONICAL_HOST` + `REDIRECT_HOSTS`
 (issue #230) 301 the branded non-canonical domains onto a single canonical origin

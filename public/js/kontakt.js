@@ -25,6 +25,7 @@
       errRate: 'Zu viele Anfragen. Bitte versuche es später noch einmal.',
       errGeneric: 'Senden fehlgeschlagen. Bitte versuche es später noch einmal.',
       errFallback: 'Senden fehlgeschlagen. Du erreichst uns direkt unter {email}.',
+      unavailable: 'Dieses Formular ist noch nicht freigeschaltet. Bitte versuche es später noch einmal.',
       back: '← Zur App',
     },
     en: {
@@ -42,6 +43,7 @@
       errRate: 'Too many requests. Please try again later.',
       errGeneric: 'Sending failed. Please try again later.',
       errFallback: 'Sending failed. You can reach us directly at {email}.',
+      unavailable: 'This form is not available yet. Please try again later.',
       back: '← Back to the app',
     },
   };
@@ -69,12 +71,18 @@
 
   let lang = resolveLang();
 
+  // Flipped by the /api/config probe below when the channel is not configured
+  // yet (mail unset / Impressum address missing — the same all-or-nothing gate
+  // that hides the site footer). The intro then carries the notice, so a
+  // language toggle keeps showing it.
+  let available = true;
+
   function applyLang() {
     const s = STR[lang];
     document.documentElement.lang = lang;
     document.title = s.docTitle;
     document.getElementById('t-title').textContent = s.title;
-    document.getElementById('t-intro').textContent = s.intro;
+    document.getElementById('t-intro').textContent = available ? s.intro : s.unavailable;
     document.getElementById('t-name-label').textContent = s.name;
     document.getElementById('t-email-label').textContent = s.email;
     document.getElementById('t-subject-label').textContent = s.subject;
@@ -151,4 +159,19 @@
   });
 
   applyLang();
+
+  // Availability gate (#224): a direct visit while the channel cannot deliver
+  // yet should say so up front instead of offering a form whose submit can only
+  // fail. On any probe error the form stays usable — the server-side fail-loud
+  // 502 still catches a genuinely broken send.
+  fetch('/api/config')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((cfg) => {
+      if (cfg && !cfg.footer) {
+        available = false;
+        document.getElementById('formFields').hidden = true;
+        applyLang();
+      }
+    })
+    .catch(() => {});
 })();

@@ -153,6 +153,9 @@ h1, h2, h3 { font-family: var(--font-display); }
   flex-wrap: wrap;
   font-size: 14px;
 }
+/* The gate (initFooter in core.js) hides the footer via the hidden attribute,
+   whose UA display:none would otherwise lose to the explicit flex above. */
+.site-footer[hidden] { display: none; }
 .site-footer a { color: var(--ink-soft); text-decoration: none; }
 .site-footer a:hover { text-decoration: underline; }
 .page-head {

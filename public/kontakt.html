@@ -86,7 +86,7 @@
 <body>
   <form class="card" id="contactForm" novalidate>
     <div class="topline">
-      <div class="logo" aria-hidden="true">🎲</div>
+      <div class="logo" aria-hidden="true">🌀</div>
       <div class="langs" role="group" aria-label="Language">
         <button type="button" data-lang="de" aria-pressed="true">DE</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
@@ -95,25 +95,30 @@
     <h1 id="t-title">Kontakt</h1>
     <p class="intro" id="t-intro"></p>
 
-    <label for="name" id="t-name-label"></label>
-    <input id="name" name="name" type="text" autocomplete="name" maxlength="200" />
+<!-- Wrapped so kontakt.js can hide the whole input section at once when
+         GET /api/config reports the channel as not configured yet (same
+         all-or-nothing gate as the site footer). -->
+    <div id="formFields">
+      <label for="name" id="t-name-label"></label>
+      <input id="name" name="name" type="text" autocomplete="name" maxlength="200" />
 
-    <label for="email" id="t-email-label"></label>
-    <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required />
+      <label for="email" id="t-email-label"></label>
+      <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required />
 
-    <label for="subject" id="t-subject-label"></label>
-    <input id="subject" name="subject" type="text" maxlength="200" />
+      <label for="subject" id="t-subject-label"></label>
+      <input id="subject" name="subject" type="text" maxlength="200" />
 
-    <label for="message" id="t-message-label"></label>
-    <textarea id="message" name="message" maxlength="5000" required></textarea>
+      <label for="message" id="t-message-label"></label>
+      <textarea id="message" name="message" maxlength="5000" required></textarea>
 
-    <!-- Honeypot (spam trap) — leave empty. -->
-    <div class="hp" aria-hidden="true">
-      <label for="website">Website</label>
-      <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+      <!-- Honeypot (spam trap) — leave empty. -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">Website</label>
+        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <button type="submit" class="submit" id="t-submit"></button>
     </div>
-
-    <button type="submit" class="submit" id="t-submit"></button>
     <p class="msg ok" id="ok" role="status" hidden></p>
     <p class="msg err" id="err" role="alert" hidden></p>
 
