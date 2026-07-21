@@ -1232,6 +1232,96 @@ module.exports = function repoContract(repo) {
     assert.equal(typeof (await repo.countFeedback()), 'number');
   });
 
+  // Contact notices (#272) follow the feedback pattern: global, un-scoped,
+  // newest-first — the store behind POST /api/contact and the panel's
+  // Meldungen inbox.
+  test('createContactNotice appends; list pages newest first; count is a number', async () => {
+    const first = await repo.createContactNotice({
+      createdAt: '2026-07-21T10:00:00.000Z',
+      name: 'Reporter',
+      email: 'reporter@example.com',
+      subject: null,
+      message: 'That cover is mine',
+      category: 'copyright',
+      url: '/uploads/stolen.jpg',
+      goodFaith: true,
+      status: 'open',
+      decidedAt: null,
+      decisionNote: null,
+      decisionSentAt: null,
+    });
+    assert.match(first.id, /^[0-9a-f]{16}$/);
+    await repo.createContactNotice({
+      createdAt: '2026-07-21T11:00:00.000Z',
+      name: null,
+      email: 'hi@example.com',
+      subject: 'Frage',
+      message: 'Just a question',
+      category: null,
+      url: null,
+      goodFaith: null,
+      status: 'open',
+      decidedAt: null,
+      decisionNote: null,
+      decisionSentAt: null,
+    });
+
+    const entries = await repo.listContactNotices(10);
+    assert.equal(entries.length, 2);
+    assert.equal(entries[0].message, 'Just a question'); // newest first
+    assert.equal(entries[1].category, 'copyright');
+    // null round-trips as null on both backends (the always-present-keys shape
+    // the users rows established — .claude/rules/postgres-backend.md).
+    assert.equal(entries[0].category, null);
+    assert.equal(entries[1].url, '/uploads/stolen.jpg');
+
+    assert.equal((await repo.listContactNotices(1)).length, 1);
+    assert.equal((await repo.listContactNotices(1, 1))[0].id, first.id);
+    assert.equal(typeof (await repo.countContactNotices()), 'number');
+    assert.equal(await repo.countContactNotices(), 2);
+  });
+
+  test('setContactNoticeStatus applies the decision fields; unknown id is null', async () => {
+    const notice = (await repo.listContactNotices(10)).find((n) => n.category === 'copyright');
+    const updated = await repo.setContactNoticeStatus(notice.id, {
+      status: 'actioned',
+      decidedAt: '2026-07-21T12:00:00.000Z',
+      decisionNote: 'Cover entfernt',
+      decisionSentAt: '2026-07-21T12:00:00.000Z',
+    });
+    assert.equal(updated.status, 'actioned');
+    assert.equal(updated.decisionNote, 'Cover entfernt');
+    // The untouched submission fields survive the patch.
+    assert.equal(updated.message, 'That cover is mine');
+
+    const reread = await repo.getContactNotice(notice.id);
+    assert.equal(reread.status, 'actioned');
+    assert.equal(reread.decidedAt, '2026-07-21T12:00:00.000Z');
+
+    assert.equal(await repo.setContactNoticeStatus('doesnotexist', { status: 'rejected' }), null);
+    assert.equal(await repo.getContactNotice('doesnotexist'), null);
+  });
+
+  // The Art. 17 statement flow (#272): load one entry, mark its statement sent.
+  test('getModeration and markModerationStatement round-trip one log entry', async () => {
+    const entry = await repo.logModeration({
+      action: 'takedown', target: '/uploads/x.jpg', reason: 'NB §5', at: '2026-07-21T12:30:00.000Z',
+      tenantId: T, gameTitle: 'Bad Game',
+    });
+    const loaded = await repo.getModeration(entry.id);
+    assert.equal(loaded.gameTitle, 'Bad Game');
+    // Not sent yet: the key is genuinely absent, not null — both backends agree.
+    assert.equal(loaded.statementSentAt, undefined);
+
+    const marked = await repo.markModerationStatement(entry.id, '2026-07-21T13:00:00.000Z');
+    assert.equal(marked.statementSentAt, '2026-07-21T13:00:00.000Z');
+    assert.equal(marked.reason, 'NB §5'); // the rest of the entry is untouched
+    assert.equal((await repo.getModeration(entry.id)).statementSentAt, '2026-07-21T13:00:00.000Z');
+
+    assert.equal(await repo.getModeration('doesnotexist'), null);
+    assert.equal(await repo.markModerationStatement('doesnotexist', 'now'), null);
+  });
+
   // The operator panel's "did this deploy migrate?" field (#274). Both backends
   // must answer in ONE shape, so the panel renders the same card either way —
   // the JSON backend has no schema, and says so, rather than throwing or

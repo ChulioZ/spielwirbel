@@ -16,6 +16,8 @@
   const loginForm = $('loginForm');
   const panel = $('panel');
   let currentImage = null;
+  let lastUsers = [];
+  let statementEntry = null;
 
   // ---- helpers -------------------------------------------------------------
 
@@ -54,6 +56,9 @@
     confirm_mismatch: 'Die eingegebene E-Mail-Adresse stimmt nicht mit dem Konto überein.',
     tenant_shared: 'Abgebrochen: Auf diesem Tenant liegt noch ein weiteres Konto. '
       + 'Die Daten gehören auch diesem Konto und werden nicht gelöscht.',
+    no_notifier_email: 'Die Meldung enthält keine E-Mail-Adresse — es gibt niemanden zu benachrichtigen.',
+    mail_failed: 'E-Mail-Versand fehlgeschlagen. Nichts wurde gespeichert — bitte erneut versuchen.',
+    invalid_email: 'Keine gültige E-Mail-Adresse.',
   };
   const message = (err) => MESSAGES[err.message] || err.message;
 
@@ -98,6 +103,7 @@
     panel.hidden = false;
     $('password').value = '';
     loadStatus();
+    loadNotices();
     loadUsers();
     loadFeedback();
     refreshLog();
@@ -262,11 +268,15 @@
     hide($('lookupResult'));
     $('takedownCard').hidden = true;
     $('contentCard').hidden = true;
+    $('statementBox').hidden = true;
     currentImage = null;
 
     const by = $('lookupBy').value;
     try {
       const out = await api(`/lookup?${by}=${encodeURIComponent($('lookupValue').value.trim())}`);
+      // Remembered for the statement flow: the affected person is one of this
+      // tenant's accounts, so their address prefills the recipient prompt.
+      lastUsers = out.users || [];
       renderLookup(out);
       // The takedown card is for an image and only an image — offering it after
       // an e-mail lookup would have no target.
@@ -491,10 +501,48 @@
       hide($('lookupResult'));
       currentImage = null;
       refreshLog();
+      // Art. 17 (#272): the statement of reasons for what just happened,
+      // generated server-side from the log entry that was just written.
+      offerStatement(out.entry);
     } catch (err) {
       show($('takedownMsg'), message(err), 'err');
     } finally {
       button.disabled = false;
+    }
+  });
+
+  // ---- statement of reasons (#272) -----------------------------------------
+
+  async function offerStatement(entry) {
+    if (!entry) return;
+    statementEntry = entry;
+    hide($('statementMsg'));
+    try {
+      const out = await api(`/statement?entry=${encodeURIComponent(entry.id)}`);
+      $('statementText').value = out.text;
+      $('statementBox').hidden = false;
+    } catch {
+      // The takedown itself succeeded; a failed preview just leaves the box
+      // hidden — the log card still holds everything the statement needs.
+    }
+  }
+
+  $('statementSend').addEventListener('click', async () => {
+    if (!statementEntry) return;
+    const to = window.prompt(
+      'Begründung senden an (E-Mail der betroffenen Person):',
+      lastUsers.length ? lastUsers[0].email : '',
+    );
+    if (!to || !to.trim()) return;
+    try {
+      await api('/statement', {
+        method: 'POST',
+        body: JSON.stringify({ entryId: statementEntry.id, to: to.trim() }),
+      });
+      show($('statementMsg'), 'Begründung gesendet und im Protokoll vermerkt.', 'ok');
+      refreshLog();
+    } catch (err) {
+      show($('statementMsg'), message(err), 'err');
     }
   });
 
@@ -826,6 +874,139 @@
   $('logReset').addEventListener('click', () => {
     for (const id of ['logAction', 'logTenant', 'logFrom', 'logTo']) $(id).value = '';
     loadLog();
+  });
+
+  // ---- notices (#272) ------------------------------------------------------
+
+  // German labels for the stored category values (routes/contact.js CATEGORIES).
+  const CATEGORY_LABELS = {
+    copyright: 'Urheberrecht',
+    csam: 'Missbrauchsdarstellungen',
+    hate: 'Volksverhetzung / Kennzeichen',
+    defamation: 'Beleidigung / Verleumdung',
+    privacy: 'Persönlichkeitsrecht',
+    other: 'Sonstiger rechtswidriger Inhalt',
+  };
+
+  const NOTICE_STATUS = {
+    open: ['warn', 'offen'],
+    actioned: ['ok', 'erledigt'],
+    rejected: ['', 'abgelehnt'],
+  };
+
+  // A reported URL that names one of OUR stored covers — whether pasted as the
+  // bare path or a full https://…/uploads/… address. Only this shape can be
+  // handed to the image lookup.
+  const uploadsPath = (url) => {
+    const m = String(url || '').match(/\/uploads\/[A-Za-z0-9_-]+\.[A-Za-z0-9]+/);
+    return m ? m[0] : null;
+  };
+
+  // The "resolve → takedown" hand-off: fill the existing image lookup with the
+  // reported path, prefill the takedown reason with a reference to the notice
+  // (what an Art. 17 statement later quotes), and run the lookup. The takedown
+  // route itself is unchanged — this only stops the flow being copy-paste.
+  function assignNotice(n, path) {
+    $('lookupBy').value = 'image';
+    $('lookupBy').dispatchEvent(new Event('change')); // updates label, clears the value
+    $('lookupValue').value = path;
+    const label = n.category ? (CATEGORY_LABELS[n.category] || n.category) : 'Kontakt';
+    $('takedownReason').value = `Meldung vom ${fmt(n.createdAt)} (${label}): ${n.url}`;
+    $('lookupForm').requestSubmit();
+    $('lookupForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Decide a notice: status + optional note, and — when the notice carries an
+  // address — the Art. 16(5) decision mail. The prompt's cancel aborts; an
+  // empty note is fine (the mail then states only the outcome).
+  async function decideNotice(n, status) {
+    const note = window.prompt(
+      `${status === 'actioned' ? 'Erledigt' : 'Abgelehnt'}: kurze Begründung für die meldende Person (optional)`,
+      '',
+    );
+    if (note === null) return;
+    const sendEmail = n.email
+      ? window.confirm(`Entscheidung per E-Mail an ${n.email} mitteilen (Art. 16 Abs. 5)?`)
+      : false;
+    try {
+      await api(`/notices/${encodeURIComponent(n.id)}/decision`, {
+        method: 'POST',
+        body: JSON.stringify({ status, note: note.trim(), sendEmail }),
+      });
+      loadNotices();
+    } catch (err) {
+      show($('noticesError'), message(err), 'err');
+    }
+  }
+
+  const loadNotices = listCard({
+    path: '/notices',
+    name: 'meldungen',
+    table: 'noticesTable',
+    count: 'noticesCount',
+    more: 'noticesMore',
+    csv: 'noticesCsv',
+    error: 'noticesError',
+    headers: ['Zeitpunkt', 'Kategorie', 'Meldung', 'Kontakt', 'Status', ''],
+    empty: 'Keine Meldungen.',
+    row: (n) => {
+      const row = document.createElement('tr');
+      cell(row, fmt(n.createdAt));
+      cell(row, n.category ? (CATEGORY_LABELS[n.category] || n.category) : 'Allgemein');
+
+      // Subject + message + reported URL, all attacker-controlled free text —
+      // cell() uses textContent, so nothing renders as markup or a live link.
+      const msg = cell(row, '');
+      msg.style.whiteSpace = 'pre-wrap';
+      msg.style.wordBreak = 'break-word';
+      msg.textContent = n.subject ? `${n.subject} — ${n.message}` : n.message;
+      if (n.url) {
+        const url = document.createElement('div');
+        url.style.color = '#8b93a6';
+        url.style.fontSize = '0.8rem';
+        url.textContent = n.url;
+        msg.appendChild(url);
+      }
+
+      // Anonymous is a legitimate state (CSAM reports, Art. 16(3)), not missing
+      // data.
+      cell(row, [n.name, n.email].filter(Boolean).join(' · ') || 'anonym');
+
+      const status = cell(row, '');
+      const [verdict, label] = NOTICE_STATUS[n.status] || ['', n.status];
+      const pill = document.createElement('span');
+      pill.className = verdict ? `pill pill--${verdict}` : 'pill';
+      pill.textContent = label;
+      status.appendChild(pill);
+      if (n.decisionNote) {
+        const why = document.createElement('div');
+        why.style.color = '#8b93a6';
+        why.style.fontSize = '0.8rem';
+        why.textContent = n.decisionNote;
+        status.appendChild(why);
+      }
+
+      const action = cell(row, '');
+      const actions = document.createElement('div');
+      actions.className = 'row';
+      const path = uploadsPath(n.url);
+      const buttons = [];
+      if (path) buttons.push(['Bild zuordnen', 'small ghost', () => assignNotice(n, path)]);
+      if (n.status === 'open') {
+        buttons.push(['Erledigt', 'small', () => decideNotice(n, 'actioned')]);
+        buttons.push(['Abgelehnt', 'small ghost', () => decideNotice(n, 'rejected')]);
+      }
+      for (const [text, cls, run] of buttons) {
+        const btn = document.createElement('button');
+        btn.className = cls;
+        btn.textContent = text;
+        btn.addEventListener('click', run);
+        actions.appendChild(btn);
+      }
+      action.appendChild(actions);
+
+      return row;
+    },
   });
 
   // ---- feedback (#260) -----------------------------------------------------

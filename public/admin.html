@@ -115,6 +115,22 @@
     </section>
 
     <section class="card">
+      <h2>Meldungen</h2>
+      <p class="sub" style="margin-bottom: 0.9rem;">
+        Gespeicherte Kontakt- und DSA-Meldungen (Art. 16). „Bild zuordnen“ übernimmt
+        einen gemeldeten /uploads-Pfad in die Suche unten; die Entscheidung wird
+        gespeichert und auf Wunsch der meldenden Person mitgeteilt (Art. 16 Abs. 5).
+      </p>
+      <p class="sub count" id="noticesCount" hidden></p>
+      <div class="scroll"><table id="noticesTable"><tbody></tbody></table></div>
+      <div class="row" style="margin-top: 1rem;">
+        <button class="ghost small" id="noticesMore" hidden>Mehr laden</button>
+        <button class="ghost small" id="noticesCsv">CSV herunterladen</button>
+      </div>
+      <p class="msg msg--err" id="noticesError" role="alert" hidden></p>
+    </section>
+
+    <section class="card">
       <h2>Zuordnen</h2>
       <p class="sub" style="margin-bottom: 0.9rem;">
         Eine Meldung nennt meist eine E-Mail-Adresse oder einen Rundenlink — nicht den Bildpfad.
@@ -146,6 +162,15 @@
         <button type="submit" class="danger">Endgültig entfernen</button>
       </form>
       <p class="msg" id="takedownMsg" role="alert" hidden></p>
+      <!-- After a takedown: the Art. 17 statement of reasons, generated from
+           the log entry — sendable per Mail, or copyable when mail is not the
+           right channel (#272). -->
+      <div id="statementBox" hidden>
+        <label for="statementText">Begründung an die betroffene Person (Art. 17 DSA) — kopierbar</label>
+        <textarea id="statementText" rows="10"></textarea>
+        <button type="button" class="small" id="statementSend" style="margin-top: 0.6rem;">Per E-Mail senden</button>
+        <p class="msg" id="statementMsg" role="alert" hidden></p>
+      </div>
     </section>
 
     <section class="card" id="contentCard" hidden>

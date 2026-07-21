@@ -65,6 +65,12 @@ test('the admin gate refuses everything without a valid operator session', async
       // The exports must be no more reachable than the cards they mirror (#288).
       ['get', '/api/admin/log.csv'],
       ['get', '/api/admin/feedback.csv'],
+      // The Meldungen inbox + Art. 17 statement flow (#272).
+      ['get', '/api/admin/notices'],
+      ['get', '/api/admin/notices.csv'],
+      ['post', '/api/admin/notices/x/decision'],
+      ['get', '/api/admin/statement?entry=x'],
+      ['post', '/api/admin/statement'],
     ]) {
       const res = await request(app)[method](path).send({});
       assert.equal(res.status, 401, `${method} ${path}`);
@@ -183,6 +189,139 @@ test('image lookup resolves across tenants and takedown clears the reference', a
       .send({ image: '/uploads/reported.jpg', reason: 'again' });
     assert.equal(res.status, 200);
     assert.equal(res.body.cleared, 0);
+  });
+
+  // The Art. 17 statement of reasons (#272), generated from the takedown's own
+  // log entry and recorded on it once delivered.
+  await t.test('the statement of reasons renders from the log entry and records its delivery', async () => {
+    const log = await request(app).get('/api/admin/log?action=takedown').set('Cookie', cookie);
+    const entry = log.body.entries.find((e) => e.reason === 'DSA notice 2026-07-20');
+
+    const preview = await request(app)
+      .get(`/api/admin/statement?entry=${entry.id}`)
+      .set('Cookie', cookie);
+    assert.equal(preview.status, 200);
+    assert.match(preview.body.text, /„Reported Game“/);
+    assert.match(preview.body.text, /DSA notice 2026-07-20/);
+    assert.match(preview.body.text, /ohne automatisierte Verfahren/);
+    assert.match(preview.body.text, /widersprechen/);
+
+    const before = outbox.length;
+    const sent = await request(app)
+      .post('/api/admin/statement')
+      .set('Cookie', cookie)
+      .send({ entryId: entry.id, to: 'owner@example.com' });
+    assert.equal(sent.status, 200);
+    assert.ok(sent.body.entry.statementSentAt, 'delivery is recorded on the entry');
+    assert.equal(outbox.length, before + 1);
+    const mail = outbox[outbox.length - 1];
+    assert.equal(mail.to, 'owner@example.com');
+    assert.match(mail.subject, /Art\. 17/);
+    assert.match(mail.text, /Reported Game/);
+
+    // The record survives the send: reading the log again shows the mark.
+    const after = await request(app).get('/api/admin/log?action=takedown').set('Cookie', cookie);
+    assert.ok(after.body.entries.find((e) => e.id === entry.id).statementSentAt);
+  });
+
+  await t.test('a statement for an unknown entry is a 404; a bad address a 400', async () => {
+    const missing = await request(app)
+      .get('/api/admin/statement?entry=doesnotexist')
+      .set('Cookie', cookie);
+    assert.equal(missing.status, 404);
+    const bad = await request(app)
+      .post('/api/admin/statement')
+      .set('Cookie', cookie)
+      .send({ entryId: 'doesnotexist', to: 'not-an-email' });
+    assert.equal(bad.status, 400);
+  });
+});
+
+test('the Meldungen inbox lists stored notices and the decision closes the loop (#272)', async (t) => {
+  const cookie = await adminCookie();
+
+  // Notices arrive through the public contact form — the same write path
+  // production uses (mail lands in the outbox; storing is what's under test).
+  await request(app).post('/api/contact').send({
+    name: 'Reporter',
+    email: 'reporter@example.com',
+    message: 'Das Cover verletzt meine Rechte.',
+    category: 'copyright',
+    url: 'https://spielwirbel.app/uploads/abc123.jpg',
+    goodFaith: true,
+  });
+  await request(app).post('/api/contact').send({
+    message: 'Anonymous CSAM report',
+    category: 'csam',
+    goodFaith: true,
+  });
+
+  let reported;
+  let anonymous;
+
+  await t.test('the inbox lists both, newest first, with a total', async () => {
+    const res = await request(app).get('/api/admin/notices').set('Cookie', cookie);
+    assert.equal(res.status, 200);
+    assert.ok(res.body.total >= 2);
+    [anonymous, reported] = res.body.entries;
+    assert.equal(anonymous.category, 'csam');
+    assert.equal(anonymous.email, null);
+    assert.equal(reported.category, 'copyright');
+    assert.equal(reported.url, 'https://spielwirbel.app/uploads/abc123.jpg');
+    assert.equal(reported.status, 'open');
+  });
+
+  await t.test('deciding with sendEmail notifies the notifier (Art. 16(5)) and stores the outcome', async () => {
+    const before = outbox.length;
+    const res = await request(app)
+      .post(`/api/admin/notices/${reported.id}/decision`)
+      .set('Cookie', cookie)
+      .send({ status: 'actioned', note: 'Cover entfernt', sendEmail: true });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.notice.status, 'actioned');
+    assert.equal(res.body.notice.decisionNote, 'Cover entfernt');
+    assert.ok(res.body.notice.decidedAt);
+    assert.ok(res.body.notice.decisionSentAt);
+
+    assert.equal(outbox.length, before + 1);
+    const mail = outbox[outbox.length - 1];
+    assert.equal(mail.to, 'reporter@example.com');
+    assert.match(mail.subject, /Entscheidung/);
+    assert.match(mail.text, /entfernt/);
+    assert.match(mail.text, /Cover entfernt/);
+    assert.match(mail.text, /Art\. 16/);
+  });
+
+  await t.test('an anonymous notice cannot be "notified" — but can be decided without mail', async () => {
+    const refused = await request(app)
+      .post(`/api/admin/notices/${anonymous.id}/decision`)
+      .set('Cookie', cookie)
+      .send({ status: 'rejected', sendEmail: true });
+    assert.equal(refused.status, 400);
+    assert.equal(refused.body.error, 'no_notifier_email');
+
+    const ok = await request(app)
+      .post(`/api/admin/notices/${anonymous.id}/decision`)
+      .set('Cookie', cookie)
+      .send({ status: 'rejected', note: 'Nicht nachvollziehbar' });
+    assert.equal(ok.status, 200);
+    assert.equal(ok.body.notice.status, 'rejected');
+    assert.equal(ok.body.notice.decisionSentAt, null);
+  });
+
+  await t.test('an unknown notice 404s; the CSV export carries the columns', async () => {
+    const missing = await request(app)
+      .post('/api/admin/notices/doesnotexist/decision')
+      .set('Cookie', cookie)
+      .send({ status: 'actioned' });
+    assert.equal(missing.status, 404);
+
+    const csv = await request(app).get('/api/admin/notices.csv').set('Cookie', cookie);
+    assert.equal(csv.status, 200);
+    assert.match(csv.headers['content-type'], /text\/csv/);
+    assert.match(csv.text, /Kategorie/);
+    assert.match(csv.text, /copyright/);
+    assert.match(csv.text, /Cover entfernt/);
   });
 });
 

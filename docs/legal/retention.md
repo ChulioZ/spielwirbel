@@ -27,6 +27,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Transaktions-E-Mails (Versandprotokolle bei Brevo) | Aufbewahrungsfenster des Anbieters; keine eigene Speicherung | automatisch (Brevo) |
 | Briefpost an die Empfangsanschrift (weitergeleitet) | nach Bearbeitung vernichten — spätestens bei der Jahresprüfung | manuell |
 | DSA-Meldungen + Bescheide (Postfach-Ordner `Meldungen`) | **3 Jahre** ab Jahresende der Entscheidung (wie Moderations-Log) | manuell, Jahresprüfung |
+| Gespeicherte Kontakt-Meldungen (Datenbank `contact_notices`, #272) | wie Postfach: Allgemeine Anfragen nach Bearbeitung, DSA-Meldungen **3 Jahre** ab Jahresende der Entscheidung | manuell (DB), Jahresprüfung |
 | **Moderations-Log-Einträge mit personenbezogenen Daten** (E-Mail-Adressen, redigierte Texte als `previous`-Nachweis) | **3 Jahre ab Ende des Jahres der Maßnahme** | Jahresprüfung (unten) |
 | Löschnachweise (`eraseAccount`-Einträge — ohne E-Mail-Adresse by design) | dauerhaft (Art. 17 Abs. 3 lit. b/e DSGVO) | — |
 | Backups | Backup-Zyklus der Plattform (Railway Managed Postgres) | automatisch |
@@ -57,7 +58,10 @@ nicht stillschweigend auf 10 Jahre „korrigieren".
    existiert noch nicht (#275 §6 lieferte Filter/Export); bis dahin per
    direktem DB-Zugriff löschen und den Vorgang im Log der Prüfung vermerken.
 2. Postfach: Ordner `Meldungen` nach demselben Stichtag aufräumen; erledigte
-   Support-Korrespondenz löschen.
+   Support-Korrespondenz löschen. Ebenso die **gespeicherten Meldungen** der
+   `contact_notices`-Tabelle (Panel-Karte „Meldungen“, #272) nach demselben
+   Stichtag per direktem DB-Zugriff löschen — ein Lösch-Endpunkt existiert
+   (wie beim Moderations-Log) noch nicht.
 3. Feedback-Karte im Panel leeren (bearbeitete Einträge löschen).
 4. Prüfung mit Datum in diesem Dokument unter „Durchgeführte Prüfungen"
    vermerken.

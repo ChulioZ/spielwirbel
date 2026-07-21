@@ -15,6 +15,9 @@ const request = require('supertest');
 const { app } = require('./helpers');
 const { createApp } = require('../lib/app');
 const { outbox } = require('../lib/mail');
+const repo = require('../lib/repo');
+
+const lastNotice = async () => (await repo.listContactNotices(1))[0];
 
 const realFetch = global.fetch;
 
@@ -48,12 +51,93 @@ test('a valid message is delivered to CONTACT_TO with the sender as reply-to', a
   assert.match(mail.text, /schreiben/);
 });
 
-test('a filled honeypot returns a fake 200 and sends nothing', async () => {
+test('every accepted submission is stored as a contact notice (#272)', async () => {
+  const res = await request(app).post('/api/contact').send(valid);
+  assert.equal(res.status, 200);
+  const notice = await lastNotice();
+  assert.equal(notice.message, valid.message);
+  assert.equal(notice.email, valid.email);
+  assert.equal(notice.name, 'Alice');
+  assert.equal(notice.subject, 'Hallo');
+  // An ordinary message, not a report: category null, undecided, open.
+  assert.equal(notice.category, null);
+  assert.equal(notice.url, null);
+  assert.equal(notice.status, 'open');
+  assert.equal(notice.decidedAt, null);
+});
+
+test('a report stores the Art. 16(2) fields and acknowledges receipt (Art. 16(4))', async () => {
+  process.env.CONTACT_TO = 'ops@example.com';
   const before = outbox.length;
+  const res = await request(app).post('/api/contact').send({
+    ...valid,
+    category: 'copyright',
+    url: 'https://spielwirbel.app/uploads/abc123.jpg',
+    goodFaith: true,
+  });
+  assert.equal(res.status, 200);
+
+  const notice = await lastNotice();
+  assert.equal(notice.category, 'copyright');
+  assert.equal(notice.url, 'https://spielwirbel.app/uploads/abc123.jpg');
+  assert.equal(notice.goodFaith, true);
+
+  // Two mails: the operator delivery AND the acknowledgement to the notifier.
+  assert.equal(outbox.length, before + 2);
+  const [operator, ack] = outbox.slice(-2);
+  assert.equal(operator.to, 'ops@example.com');
+  assert.match(operator.subject, /Meldung/);
+  assert.match(operator.text, /Urheberrecht/);
+  assert.match(operator.text, /uploads\/abc123\.jpg/);
+  assert.equal(ack.to, 'alice@example.com');
+  assert.match(ack.subject, /Eingangsbestätigung/);
+  assert.match(ack.text, /Art\. 16/);
+  // Replies to the acknowledgement land at the operator mailbox (#307): a reply
+  // is plausibly an amendment to the notice.
+  assert.equal(ack.replyTo, 'ops@example.com');
+});
+
+test('a report without the good-faith statement is rejected (Art. 16(2)(d))', async () => {
+  const res = await request(app).post('/api/contact').send({ ...valid, category: 'copyright' });
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, 'good_faith_required');
+});
+
+test('an unknown category is a 400, never silently demoted to a plain message', async () => {
+  const res = await request(app).post('/api/contact').send({ ...valid, category: 'nonsense', goodFaith: true });
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, 'invalid_category');
+});
+
+test('a CSAM report may be anonymous (Art. 16(3)); everything else needs an e-mail', async () => {
+  const anonymous = { message: 'Report about account X', category: 'csam', goodFaith: true };
+  const ok = await request(app).post('/api/contact').send(anonymous);
+  assert.equal(ok.status, 200);
+  const notice = await lastNotice();
+  assert.equal(notice.email, null);
+  assert.equal(notice.category, 'csam');
+  // No address, no acknowledgement — the operator mail is the only send, with
+  // no reply-to (there is nobody to reply to).
+  const operator = outbox[outbox.length - 1];
+  assert.match(operator.subject, /Meldung/);
+  assert.equal(operator.replyTo, undefined);
+
+  const rejected = await request(app).post('/api/contact')
+    .send({ message: 'anonymous general mail', category: 'copyright', goodFaith: true });
+  assert.equal(rejected.status, 400);
+  assert.equal(rejected.body.error, 'invalid_email');
+  const plain = await request(app).post('/api/contact').send({ message: 'no address at all' });
+  assert.equal(plain.status, 400);
+});
+
+test('a filled honeypot returns a fake 200, sends nothing and stores nothing', async () => {
+  const before = outbox.length;
+  const countBefore = await repo.countContactNotices();
   const res = await request(app).post('/api/contact').send({ ...valid, website: 'http://spam.example' });
   assert.equal(res.status, 200);
   assert.deepEqual(res.body, { ok: true });
   assert.equal(outbox.length, before, 'nothing was sent');
+  assert.equal(await repo.countContactNotices(), countBefore, 'nothing was stored');
 });
 
 test('an invalid email is rejected with 400 invalid_email', async () => {
@@ -126,13 +210,18 @@ test('in production with mail unconfigured it fails loud (502) instead of black-
   assert.equal(outbox.length, before, 'no fake success into the outbox');
 });
 
-test('a send failure returns 502 with the fallback email', async () => {
+test('a send failure returns 502 with the fallback email — but keeps the stored notice', async () => {
   process.env.BREVO_API_KEY = 'test-key';
   process.env.MAIL_FROM = 'no-reply@example.com';
   process.env.CONTACT_TO = 'ops@example.com';
   global.fetch = async () => ({ ok: false, status: 500 }); // Brevo error → mail.send rejects
-  const res = await request(app).post('/api/contact').send(valid);
+  const countBefore = await repo.countContactNotices();
+  const res = await request(app).post('/api/contact').send({ ...valid, message: 'survives the mail outage' });
   assert.equal(res.status, 502);
   assert.equal(res.body.error, 'contact_unavailable');
   assert.equal(res.body.fallbackEmail, 'ops@example.com');
+  // The record is the point of #272: a broken mail setup must not mean there is
+  // no evidence the message ever arrived.
+  assert.equal(await repo.countContactNotices(), countBefore + 1);
+  assert.equal((await lastNotice()).message, 'survives the mail outage');
 });
