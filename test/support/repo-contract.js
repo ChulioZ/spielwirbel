@@ -1048,6 +1048,20 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.redactText({ kind: 'game', roundId: round.id, id: 'nope' }, '[x]'), null);
     assert.equal(await repo.redactText({ kind: 'round', roundId: 'nope', id: 'nope' }, '[x]'), null);
     assert.equal(await repo.redactText({ kind: 'tag', roundId: round.id, id: 'nope' }, '[x]'), null);
+
+    // An unknown KIND is not-found too, on both backends. The route's z.enum
+    // makes this unreachable today, but a `kind === 'game' ? games : members`
+    // dispatch would quietly make members the fallback for anything it did not
+    // recognise — so pin the refusal down rather than the enum.
+    assert.equal(await repo.redactText({ kind: 'password', roundId: round.id, id: member.id }, '[x]'), null);
+    assert.equal((await repo.getRound(T, round.id)).members[0].name, '[x]'); // unchanged by the above
+
+    // A game id from ANOTHER round is not-found even though the id exists: the
+    // read and the write are scoped to the named round on both backends.
+    const other = await freshRound({ name: 'Elsewhere' });
+    const elsewhere = await repo.createGame(T, other.id, gameFields({ title: 'Not yours' }));
+    assert.equal(await repo.redactText({ kind: 'game', roundId: round.id, id: elsewhere.id }, '[x]'), null);
+    assert.equal((await repo.getRound(T, other.id)).games[0].title, 'Not yours');
   });
 
   test('logModeration appends and listModeration returns newest first', async () => {
