@@ -18,7 +18,7 @@ keine 20 Personen, kein besonderes Risiko).
 | 3 | Runden-/Spieldaten | Nutzer + von ihnen eingetragene Mitglieder | Rundennamen, Spieltitel, Mitgliedsnamen, Stimmen/Bewertungen, Tags, Aktivitäten | Kernfunktion des Dienstes | Art. 6 (1) b | Railway (DB) | USA (EU-Region; SCC) | bis Löschung durch Nutzer / Kontolöschung |
 | 4 | Hochgeladene Cover-Bilder | Nutzer | Bilddateien | Kernfunktion | Art. 6 (1) b | Cloudflare, Inc. (R2, AVV; DPF-zertifiziert) | USA (DPF/SCC) | bis Löschung des Spiels/Kontos |
 | 5 | Transaktions-E-Mails | Registrierte Nutzer, Kontaktformular-Nutzer | Empfänger-Adresse, Betreff, Inhalt | Verifikation, Passwort-Reset, Kontakt-Zustellung | Art. 6 (1) b | Brevo (Sendinblue SAS), Paris (AVV) | nein (EU) | Versandprotokolle des Anbieters |
-| 6 | Kontaktformular / E-Mail-Kontakt | Absender | E-Mail, Nachricht, optional Name/Betreff | Bearbeitung von Anfragen; DSA Notice-and-Action | Art. 6 (1) b/f | Brevo (Zustellung), Postfach des Betreibers | nein (EU) | bis Abschluss der Bearbeitung |
+| 6 | Kontaktformular / E-Mail-Kontakt | Absender | E-Mail, Nachricht, optional Name/Betreff | Bearbeitung von Anfragen; DSA Notice-and-Action | Art. 6 (1) b/f | Brevo (Zustellung), Betreiber-Postfach bei Heinlein Hosting GmbH (mailbox.org, AVV) | nein (DE/EU) | bis Abschluss der Bearbeitung |
 | 7 | In-App-Feedback | Nutzer (anonym, E-Mail optional) | Nachricht, optional E-Mail, App-Bereich, Sprache, Tenant-Id | Produktverbesserung | Art. 6 (1) f | Railway (DB) | USA (EU-Region; SCC) | nach Bearbeitung gelöscht |
 | 8 | Produkt-Ereignisse (Logs) | Nutzer (nur Tenant-Id) | Ereignisname + Tenant-Id, keine Inhalte | Nutzungsüberblick ohne Analytics | Art. 6 (1) f | Railway (Logs) | USA (EU-Region; SCC) | wie Zeile 1 |
 | 9 | Anbieter-Cover (Hotlinking) | Besucher, deren Runde Cover verknüpft hat | IP + Browser-Header (durch den Browser des Besuchers) | Anzeige verknüpfter Cover ohne eigene Vervielfältigung | Art. 6 (1) f | Sony, Valve, Nintendo, Microsoft, BoardGameGeek (eigene Verantwortliche, keine AV) | USA/Japan | keine Speicherung bei uns |
@@ -29,7 +29,10 @@ keine 20 Personen, kein besonderes Risiko).
 
 - Auftragsverarbeitungsverträge: Railway (railway.com/legal/dpa, inkl. SCC),
   Cloudflare (Customer DPA; EU-US Data Privacy Framework), Brevo (DPA im
-  Vertrag). Abschluss ist Teil der Go-live-Checkliste (#219/#226) — beim
+  Vertrag), Heinlein Hosting GmbH / mailbox.org (Betreiber-Postfach; **AVV
+  abgeschlossen 2026-07-21**, Verarbeitung vertraglich ausschließlich EU/EWR,
+  Subunternehmer nur deutsche Rechenzentrums-Infrastruktur — #307). Abschluss
+  der übrigen ist Teil der Go-live-Checkliste (#219/#226) — beim
   Anschriften-Dienstleister ist der AVV nach Art. 28 angefragt (Stand
   2026-07-21, Antwort ausstehend).
 - Es findet **kein** Tracking, keine Analyse, keine Werbung und kein Verkauf
