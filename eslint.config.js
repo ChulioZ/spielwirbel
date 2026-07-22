@@ -91,6 +91,9 @@ const frontendGlobals = {
   showBackground: 'readonly', showGameDetail: 'readonly', showAddGame: 'readonly',
   showTags: 'readonly', showMoveGames: 'readonly', showProviders: 'readonly',
   HUB_TABS: 'readonly', HUB_TAB_OF: 'readonly', hubTabOwning: 'readonly',
+  // round-rail.js
+  RAIL_OWN_ENTRY: 'readonly', railItem: 'readonly', railAction: 'readonly',
+  buildRoundRail: 'readonly',
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   activeSheet: 'writable', closeSheet: 'readonly', openSheet: 'readonly',

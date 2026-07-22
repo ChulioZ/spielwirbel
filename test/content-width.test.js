@@ -47,9 +47,6 @@ const rulesUnder = (re) => mediaBlocks()
   .flatMap(([, css]) => rulesOf(css))
   .reverse();
 
-const targetsFooter = (sel) => whole('.site-footer').test(sel);
-const targetsApp = (sel) => /(^|,)\s*\.app(?![\w-])/.test(sel);
-
 test('the page and its footer take their width from the same variable', () => {
   // A hardcoded px in either drifts from the other the moment the width is
   // re-tuned, and the footer silently stops lining up with the column above it
@@ -63,33 +60,101 @@ test('the page and its footer take their width from the same variable', () => {
   }
 });
 
-test('the content column has exactly ONE width', () => {
+test("the column's width depends on the VIEWPORT, never on what a screen renders", () => {
   /* The #332 regression, pinned so it cannot ship twice.
 
-     `.app` is centred, so a second width moves both its edges — and the hub tab
-     strip is inside it. Measured at 1920 before the revert: the strip sat at
-     x=480 on Start and x=260 on Regal, and because the widths alternated along
-     the tab row it slid back and forth as the user moved across it.
+     `.app` is centred, so changing its width moves both its edges — and before
+     the rail, navigation was inside it. #332 selected the width by content
+     (`.app:has(.cards, …)`), so the tab strip sat at x=480 on Start and x=260
+     on Regal, sliding back and forth as the user moved along the tab row.
 
-     Any rule that gives `.app` (or the footer that mirrors it) a max-width
-     other than --w-content reintroduces that, whether it is conditioned on
-     `:has()`, a media query or a modifier class. When the desktop rail lands
-     and navigation leaves this column, THIS test is the one to revisit — with
-     the rail's own left-edge-stability probe replacing it, not with the
-     assertion simply deleted. */
-  /* Read the declared values and compare them, rather than trying to express
-     "any max-width that isn't --w-content" as a negative lookahead: `\s*` can
-     backtrack to zero characters, which lets `(?!var\(--w-content\))` pass on
-     the very declarations it is meant to exempt. */
-  const declaredWidths = (body) =>
-    [...body.matchAll(/max-width:\s*([^;]+)/g)].map((m) => m[1].trim());
+     A width keyed to the viewport cannot do that: every screen at a given
+     viewport gets the same column, so nothing moves as you navigate. A width
+     keyed to CONTENT can, and always will. That is the distinction this
+     asserts — not "one width", which the rail breakpoint legitimately broke.
 
-  const offenders = RULES
-    .filter(([sel]) => targetsApp(sel) || targetsFooter(sel))
-    .filter(([, body]) => declaredWidths(body).some((v) => v !== 'var(--w-content)'))
-    .map(([sel]) => sel);
-  assert.deepEqual(offenders, [],
-    'these rules give the content column a second width, which moves the hub tab strip');
+     Note the rail's own `.app:has(.rail)` rule is fine and deliberately not
+     caught here: it sets `display`/`grid-template-columns`, i.e. it PLACES an
+     element. Only rules that choose the column's WIDTH are constrained. */
+  const columnRules = RULES.filter(([sel, body]) => {
+    if (!/max-width:/.test(body)) return false;
+    // A rule targets the column itself when its final compound is the column —
+    // `.app > *:not(.rail)` caps CHILDREN and is a different thing entirely.
+    return sel.split(',').some((part) => {
+      const last = part.trim().split(/[\s>+~]+/).pop() || '';
+      return whole('.app').test(last) || whole('.site-footer').test(last);
+    });
+  });
+  assert.ok(columnRules.length, 'no rule sets the content column width at all');
+
+  const contentKeyed = columnRules
+    .map(([sel]) => sel)
+    .filter((sel) => sel.split(',').some((part) => {
+      const last = part.trim().split(/[\s>+~]+/).pop() || '';
+      if (!whole('.app').test(last) && !whole('.site-footer').test(last)) return false;
+      /* Strip the two column classes and the combinators joining them from the
+         WHOLE part; a viewport-keyed rule is built from nothing else. Anything
+         left over — `:has(…)`, a state class, an attribute selector — keys off
+         content.
+
+         Checking the whole part rather than its last compound is load-bearing:
+         `.app:has(.cards) + .site-footer` carries its condition on the FIRST
+         compound, and that is the exact shape #332 shipped for the footer. An
+         earlier version of this assertion inspected only the last compound and
+         let it through. */
+      return part
+        .replace(/\.app(?![\w-])/g, '')
+        .replace(/\.site-footer(?![\w-])/g, '')
+        .replace(/[\s>+~]/g, '') !== '';
+    }));
+  assert.deepEqual(contentKeyed, [],
+    'these rules pick the column width from what the screen renders, which moves the navigation');
+});
+
+/* The rail hides four things the content column used to carry (the Start tab's
+   hero, its CTA, its Tags/Provider/Design links, the Regal's archive footer) and
+   the dock itself. Every one of those hides is a plain `display: none` competing
+   with a component rule declared ~400 lines further down the stylesheet, so each
+   one can lose on specificity or on source order — silently, rendering BOTH the
+   rail entry and the thing it replaced. All three shapes below actually happened
+   while building this; they cost a browser round trip each and no test noticed. */
+test('the rail out-ranks every component it hides', () => {
+  // `a.btn` is (0,1,1), so a bare `.rail-owned` (0,1,0) loses to it — and three
+  // of the hidden elements are exactly `a.btn`. The qualified form is (0,2,0).
+  const railOwned = RULES.filter(([sel]) => whole('.rail-owned').test(sel));
+  assert.ok(railOwned.length, 'nothing hides the rail-owned elements');
+  railOwned.forEach(([sel, body]) => {
+    assert.match(body, /display:\s*none/, `"${sel}" does not hide anything`);
+    const classes = (sel.match(/\.[\w-]+/g) || []).length;
+    assert.ok(classes >= 2,
+      `"${sel}" is one class (0,1,0) and loses to \`a.btn\` (0,1,1), which three of the elements it must hide are`);
+  });
+});
+
+test('the dock is hidden AFTER it is shown', () => {
+  /* `.dock { display: none }` ties `.dock { display: flex }` on specificity, so
+     source order decides. Declared in the Layout section — where it reads like
+     it belongs, next to the rest of the rail — it lost, and both navs rendered
+     at once. RULES is in document order, so the index comparison is the check. */
+  const shows = RULES.findIndex(([sel, body]) =>
+    /^\.dock$/.test(sel.trim()) && /display:\s*flex/.test(body));
+  const hides = RULES.findIndex(([sel, body]) =>
+    /^\.dock$/.test(sel.trim()) && /display:\s*none/.test(body));
+  assert.ok(shows >= 0, 'no base .dock rule sets display: flex');
+  assert.ok(hides >= 0, 'nothing hides the dock at the rail breakpoint');
+  assert.ok(hides > shows,
+    'the dock is hidden before it is shown, so the later rule wins and BOTH navs render');
+});
+
+test('the rail is hidden by default, not only below the breakpoint', () => {
+  /* The rail must be `display: none` in the base cascade and switched ON inside
+     the min-width block — not the reverse. A rail that defaults to visible and
+     is hidden by a max-width query renders on every phone the moment someone
+     adds a narrower breakpoint above it. */
+  const base = bodyOf('.rail');
+  assert.ok(base, 'no base .rail rule');
+  assert.match(base, /display:\s*none/,
+    '.rail does not default to hidden, so it can leak onto narrow screens');
 });
 
 test('a 390 viewport gets two Regal columns, not one', () => {

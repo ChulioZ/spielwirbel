@@ -5,6 +5,16 @@ presentations: the floating bottom dock below 860px, an in-flow strip at the top
 of the content column from 860px up. The information architecture is untouched —
 only the placement was ever a phone convention.
 
+> **Since the rail landed there is a THIRD presentation.** From 1280px up the
+> dock is `display: none` and navigation moves out of the content column into
+> `.rail` (`public/js/round-rail.js`), which also carries the round's identity,
+> both archives and the settings screens. Everything below still describes the
+> two narrow presentations exactly — they are unchanged under 1280px — but
+> "the dock is the nav" is only true below that. See
+> `.claude/rules/responsive-content-width.md` for why the rail exists at all
+> (it is what makes a variable content width safe) and for the specificity
+> traps involved in hiding the dock.
+
 ## 1. Width, deliberately — not `pointer` and not `display-mode`
 
 Three signals were on the table and the other two are traps:

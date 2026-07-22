@@ -53,7 +53,7 @@ async function showRound(rid, tab) {
   else if (activeTab === 'chronik') renderChronikTab(round, activities);
   else if (activeTab === 'pokale') renderPokaleTab(round);
   else renderStartTab(round, activeGames);
-  renderHubTabs(rid, activeTab);
+  renderHubTabs(round, activeTab);
 }
 
 // The hub's tab bar. ONE element with two presentations, branched in CSS by
@@ -71,7 +71,14 @@ async function showRound(rid, tab) {
 // the phone dock: it has never floated there, and starting now would put a
 // fixed element and 120px of clearance onto eight more screens, which is the
 // opposite of what this issue cleans up. `.dock--sub` is what CSS keys that on.
-function renderHubTabs(rid, activeTab, sub) {
+//
+// From 1280px up BOTH of those give way to the rail (js/round-rail.js), which
+// takes navigation out of the content column entirely. All three presentations
+// are rendered and CSS shows exactly one, so a resize never needs a re-render.
+// Takes the whole `round` because the rail carries its identity and counts, not
+// just its id.
+function renderHubTabs(round, activeTab, sub) {
+  const rid = round.id;
   const tabs = [
     { id: 'start', icon: 'ti-home', label: t('hub.tab.start') },
     { id: 'regal', icon: 'ti-cards', label: t('hub.tab.regal') },
@@ -101,13 +108,22 @@ function renderHubTabs(rid, activeTab, sub) {
     navLink(item, roundPath(rid, tabId), active && !sub ? null : () => showRound(rid, tabId));
     dock.appendChild(item);
   });
+  // Rail first, so it is the column's first child and the dock the second —
+  // both inert in the presentation where CSS hides them.
   app.prepend(dock);
+  app.prepend(buildRoundRail(round, activeTab, sub));
 }
 
 // Prepend the desktop-only strip to a round sub-screen, marking the tab that
 // owns it. `sub` is the router's own path segment (see HUB_TAB_OF).
-function renderSubScreenTabs(rid, sub) {
-  renderHubTabs(rid, hubTabOwning(sub), true);
+//
+// The segment is passed THROUGH, not reduced to a boolean. The dock only ever
+// asks "is this a sub-screen at all", so `true` was enough for it — but the rail
+// gives five of those screens an entry of their own and has to know which one it
+// is on. Collapsing it here made Tags/Provider/Design and both archives light up
+// "Start" instead of themselves, which looks like a plausible answer and is not.
+function renderSubScreenTabs(round, sub) {
+  renderHubTabs(round, hubTabOwning(sub), sub);
 }
 
 // --- Start tab: the launchpad — identity, the one big CTA, the latest story.
@@ -119,7 +135,7 @@ function renderStartTab(round, activeGames) {
   activeGames.forEach((g) => (statsByGame[g.id] = gameStats(round, g.id)));
 
   const playedCount = round.sessions.filter((s) => s.finished).length;
-  const hero = h(`<div class="hero">
+  const hero = h(`<div class="hero rail-owned">
        <h1>${esc(round.name)}</h1>
        <div class="hero__members">${round.members
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${esc(initials(m.name))}</a>`)
@@ -137,7 +153,7 @@ function renderStartTab(round, activeGames) {
   });
 
   const startBtn = h(
-    `<button class="btn btn--primary hub-cta"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
+    `<button class="btn btn--primary hub-cta rail-owned"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
   );
   startBtn.addEventListener('click', () => showStartSession(round));
   if (activeGames.length === 0) {
@@ -352,15 +368,15 @@ function renderStartTab(round, activeGames) {
   // Tags / Provider / Design are routed screens, so they are links (#330);
   // "Spiel hinzufügen" opens a sheet and stays a button.
   const tagsBtn = h(
-    `<a class="btn"><i class="ti ti-tags" aria-hidden="true"></i> ${esc(t('round.tags'))}</a>`
+    `<a class="btn rail-owned"><i class="ti ti-tags" aria-hidden="true"></i> ${esc(t('round.tags'))}</a>`
   );
   navLink(tagsBtn, roundPath(rid, 'tags'), () => showTags(rid));
   const providersBtn = h(
-    `<a class="btn"><i class="ti ti-world-search" aria-hidden="true"></i> ${esc(t('round.providers'))}</a>`
+    `<a class="btn rail-owned"><i class="ti ti-world-search" aria-hidden="true"></i> ${esc(t('round.providers'))}</a>`
   );
   navLink(providersBtn, roundPath(rid, 'providers'), () => showProviders(rid));
   const bgBtn = h(
-    `<a class="btn"><i class="ti ti-palette" aria-hidden="true"></i> ${esc(t('round.design'))}</a>`
+    `<a class="btn rail-owned"><i class="ti ti-palette" aria-hidden="true"></i> ${esc(t('round.design'))}</a>`
   );
   navLink(bgBtn, roundPath(rid, 'design'), () => showBackground(rid));
   actions.appendChild(addGameBtn);

@@ -84,10 +84,12 @@ code and documentation are in English.
   the Pokale podium, or a session's participant list) with their stats — wins,
   sessions joined, win rate, average rating given, and favorite game — and lets
   you rename them and pick their avatar color from the curated palette.
-- **Round hub** – each round is a small app of its own, with four tabs
-  presented per device: a floating bottom dock on phones, a tab strip at the
-  top of the content column on desktop (where it also stays visible on the
-  round's sub-screens, marking the section they belong to):
+- **Round hub** – each round is a small app of its own, with four sections
+  presented per screen size: a floating bottom dock on phones, a tab strip at
+  the top of the content column on tablets, and from 1280px a persistent left
+  rail carrying the round's identity, the "start session" action, the four
+  sections, both archives and the settings screens. All three stay visible on
+  the round's sub-screens, marking the section they belong to:
   - **Start** – the launchpad: hero with the members, a big "start session"
     button, resumable in-progress sessions, the last played result, and gentle
     retire recommendations for games that are rated low or often proposed for
@@ -347,6 +349,8 @@ public/
                      in-app on a plain click, so Cmd/middle-click opens a new
                      tab and "Copy link address" works (issue #330)
     feedback.js      top-bar feedback button + submission sheet (issue #260)
+    round-rail.js    the desktop navigation rail (from 1280px): round identity,
+                     the four sections, both archives and the settings screens
     views-home.js    lobby + new round
     views-round.js        round hub (Start/Regal/Chronik/Pokale tabs) + Start tab
     views-round-tabs.js   Regal, Chronik, Pokale tabs + the two archive
