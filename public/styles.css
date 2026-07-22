@@ -70,6 +70,12 @@
      phone-width hub tab. Above the strip breakpoint the tabs are in flow at the
      top of the column and nothing overlays the page bottom at all. */
   --dock-clearance: 120px;
+  /* Two content widths (#332). Everything used to be --w-content at every
+     viewport, so a 1920 screen spent 48% of itself on empty gutter and the
+     Regal stayed at four columns. Which one a screen gets is decided in the
+     Layout section — by what it renders, not by JS. */
+  --w-content: 1000px;
+  --w-wide: 1440px;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
   --font: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -157,7 +163,7 @@ h1, h2, h3 { font-family: var(--font-display); }
 
 /* ---- Layout ---- */
 .app {
-  max-width: 1000px;
+  max-width: var(--w-content);
   margin: 0 auto;
   /* Ordinary bottom padding. Room for the floating dock is added separately,
      conditioned on one actually being rendered — see the hub-tabs section. */
@@ -166,7 +172,7 @@ h1, h2, h3 { font-family: var(--font-display); }
 /* Shared site footer (issue #224). Muted, theme-derived link colour (no
    hardcoded tones — .claude/rules/theme-derived-colors.md). */
 .site-footer {
-  max-width: 1000px;
+  max-width: var(--w-content);
   margin: 0 auto;
   padding: 0 20px 40px;
   display: flex;
@@ -175,6 +181,32 @@ h1, h2, h3 { font-family: var(--font-display); }
   gap: 18px;
   font-size: 14px;
 }
+
+/* A screen gets the wide column when it actually renders a card GRID — the
+   Regal (.cards), the Pokale/member stat cards (.pokale-cards) and the home
+   lobby (.lobby-list). Everything else keeps the reading measure (#332).
+
+   Three things about this shape are deliberate:
+
+   1. **It is CSS, not JS.** There is no "begin view" hook in the frontend —
+      every show* function clears `#app` itself — so a width mode set per view
+      would silently inherit the PREVIOUS screen's width the first time someone
+      adds a view and forgets the call. `:has()` reads the rendered content, so
+      it cannot be forgotten. It is the same technique the dock clearance below
+      already uses, for the same reason.
+   2. **It fails to the NARROW width.** An unrecognised screen keeps the
+      pre-#332 measure, i.e. today's behaviour — a missed grid is "no wider
+      than before", never prose stretched to 1440px.
+   3. **`.theme-cards` is deliberately absent.** The design studio is a settings
+      picker, not content: its nine swatches read better as 6 columns × 2 rows
+      than as one 9-wide strip, and it stays consistent with the sibling
+      sub-screens (tags, providers) that keep the reading measure.
+
+   The footer mirrors the container it follows, so the two stay aligned at every
+   width — the acceptance criterion #324's clearance rule depends on. */
+.app:has(.cards, .pokale-cards, .lobby-list) { max-width: var(--w-wide); }
+.app:has(.cards, .pokale-cards, .lobby-list) + .site-footer { max-width: var(--w-wide); }
+
 /* The dock is `position: fixed` (below the strip breakpoint), and .app's own
    padding does NOT cover the footer, because the footer is .app's SIBLING
    rather than a child of it. So at the bottom of a hub tab the dock sat on top
@@ -616,6 +648,17 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
 }
+/* A 220px floor needs 456px for two columns, so EVERY phone got a single one:
+   a 22-game shelf measured 6332px of scroll, about eight screenfuls (#332).
+   Drop the floor below 520px — 150px matches the .theme-cards rule that
+   already tiles two-up down here — and 390px yields two 175px columns, which
+   still carries the 17px title and the absolutely-positioned badges. */
+@media (max-width: 520px) {
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+}
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -636,7 +679,16 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .lobby-head { margin: 6px 0 22px; }
 .lobby-head h1 { font-size: 30px; margin: 0; }
 .lobby-head__sub { font-weight: 700; margin-top: 2px; }
-.lobby-list { display: flex; flex-direction: column; gap: 14px; }
+/* One rich row per round, stacked. From the strip breakpoint up they tile
+   instead (#332): a round card is a fixed-height row carrying an emblem, a
+   name, two chips and a last-played line — stretching one to 1400px adds
+   nothing, but three side by side put a whole group's rounds above the fold.
+   860px is the breakpoint the dock and .vote--split already use; below it the
+   single column is unchanged. */
+.lobby-list { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 860px) {
+  .lobby-list { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+}
 .round-card {
   display: flex;
   align-items: center;
