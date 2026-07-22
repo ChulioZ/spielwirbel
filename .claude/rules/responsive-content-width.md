@@ -1,14 +1,13 @@
-# The content column has ONE width, because navigation lives inside it
+# The column's width may key off the VIEWPORT, never off what a screen renders
 
-`.app` is capped at `--w-content` (1000px) on every screen, and
-`test/content-width.test.js` fails if anything gives it or the `.site-footer`
-that mirrors it a second width — by `:has()`, by media query, or by a modifier
-class.
+`.app` is capped at `--w-content` (1000px) below 1280px and at `--w-shell`
+(1800px) above it, where the rail takes over. `test/content-width.test.js` fails
+if any rule picks that width from **content** — `:has()`, a state class, an
+attribute selector — rather than from a media query.
 
-That is not conservatism. #332 shipped a second, wider width for grid screens
-and it had to be reverted within hours. The reasoning is worth keeping, because
-the mechanism looked (and was) correct, and the defect it caused is invisible
-from any single screenshot.
+That distinction is the whole lesson. #332 shipped a content-selected width and
+it had to be reverted within hours; the mechanism looked (and was) correct, and
+the defect it caused is invisible from any single screenshot.
 
 ## What went wrong
 
@@ -56,22 +55,52 @@ them, and neither does any of the alternatives that look promising:
   today's look, but on grid screens the strip floats mid-page while the heading
   and grid start at the left. Prototyped both; neither is shippable as-is.
 
-## When this rule can be lifted
+## How the rail resolved it
 
-When navigation moves **out** of the content column — the desktop rail
-(≥1280px; below that the strip and dock are unchanged). Once the rail owns
-navigation, the content pane's width depends on the **viewport only**, never on
-which screen is showing, so nothing that stays on screen can move and the pane
-is free to be as wide as the shell allows.
+Navigation moved **out** of the content column: from 1280px up, `.rail`
+(`public/js/round-rail.js`) carries the round's identity, its four sections,
+both archives and the settings screens, and the dock is `display: none`. With
+nothing persistent left inside the column, its width is free to depend on the
+viewport — and because it depends on *only* the viewport, every screen at a
+given size gets the same pane and nothing moves as you navigate.
 
-The rail is why the one-width test says to *replace* its assertion with the
-rail's own left-edge-stability probe rather than delete it. The invariant that
-matters is "persistent chrome does not move", and the width cap is only today's
-way of guaranteeing it.
+Measured across all 12 round screens at 1920: rail jump 0px, pane jump 0px,
+width jump 0px.
 
 A rail is not free horizontally: 260px + a 32px gap costs 292px, so **below
-1280px a rail yields fewer Regal columns than today** — which is where that
-breakpoint comes from, rather than from taste.
+1280px a rail yields fewer Regal columns than the plain 1000px column** — which
+is where that breakpoint comes from, rather than from taste. Below it the strip
+and dock (#331) are untouched.
+
+Text still needs a measure inside a 1450px pane, so `.app > *` caps at
+`--w-read` and grid-bearing blocks opt out. Deciding *that* by content is safe
+precisely because it changes no width the navigation depends on — which is the
+distinction the test encodes.
+
+## Hiding something the rail replaced: your rule will lose
+
+The rail hides five things the column used to carry — the dock, the Start tab's
+hero, its CTA, its Tags/Provider/Design links and the Regal's archive footer.
+Each hide is a `display: none` competing with a component rule declared **~400
+lines further down** `styles.css`, and **three of the five lost on the first
+try.** Every failure was silent: no error, no failing test, just the rail entry
+*and* the thing it replaced both rendering.
+
+| Hide | Lost to | Why |
+|---|---|---|
+| `.dock` | `.dock { display: flex }` | ties on specificity → **source order** decides, and the base rule is later |
+| `.rail-owned` | `a.btn` (0,1,1) | a bare class is (0,1,0); three of the hidden elements are `a.btn` |
+| grid exemption `:has()` (0,2,0) | the cap `:not(.rail):not(.dock)` (0,3,0) | Regal quietly rendered 3 columns instead of 6 |
+
+**Rule:** when hiding or overriding an existing component from the rail's
+media block, win on **specificity**, not position — `.app .rail-owned` (0,2,0)
+rather than `.rail-owned`. Specificity survives someone moving the block;
+source order does not. The one exception is `.dock`, where the competing rule
+is the same specificity by nature, so its hide is declared next to the dock's
+own rules with a comment saying why it lives there.
+
+`test/content-width.test.js` pins all three, and each assertion was verified by
+reintroducing the exact bug and watching it go red.
 
 ## What survived from #332, and why
 

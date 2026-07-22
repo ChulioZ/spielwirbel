@@ -37,7 +37,7 @@ async function showBackground(rid) {
   ]);
 
   app.innerHTML = '';
-  renderSubScreenTabs(rid, 'design');
+  renderSubScreenTabs(round, 'design');
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('design.title'))}</h1></div>`));
 
   const sec = h(`<div class="section"><h2>${esc(t('design.scheme'))}</h2></div>`);
@@ -102,7 +102,7 @@ async function showTags(rid) {
   ]);
 
   app.innerHTML = '';
-  renderSubScreenTabs(rid, 'tags');
+  renderSubScreenTabs(round, 'tags');
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('tags.title'))}</h1></div>`));
 
   const sec = h('<div class="section"></div>');
@@ -217,7 +217,7 @@ async function showProviders(rid) {
   ]);
 
   app.innerHTML = '';
-  renderSubScreenTabs(rid, 'providers');
+  renderSubScreenTabs(round, 'providers');
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('providers.title'))}</h1></div>`));
 
   const sec = h('<div class="section"></div>');
@@ -295,7 +295,7 @@ async function showGameDetail(rid, gameId) {
   const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
   const fallback = coverPlaceholder(game);
   app.innerHTML = '';
-  renderSubScreenTabs(rid, 'game');
+  renderSubScreenTabs(round, 'game');
 
   // Send a partial update, then re-render the page from fresh data.
   async function updateGame(updates) {

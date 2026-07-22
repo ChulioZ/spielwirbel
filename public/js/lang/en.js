@@ -72,6 +72,10 @@ I18N.en = {
   'hub.tab.chronik': 'History',
   'hub.tab.pokale': 'Trophies',
 
+  // Group headings in the desktop navigation rail (from 1280px up).
+  'rail.archive': 'Archive',
+  'rail.settings': 'Settings',
+
   'pokale.title': 'Hall of fame',
   'pokale.empty': 'No trophies yet — the first session will decide.',
   'pokale.winsOne': '{n} win',
@@ -471,6 +475,7 @@ I18N.en = {
   'a11y.account': 'Account',
   'a11y.breadcrumb': 'Breadcrumb',
   'a11y.hubTabs': 'Round sections',
+  'a11y.roundNav': 'Round navigation',
 
   'feedback.button': 'Feedback',
   'feedback.title': 'Your feedback',

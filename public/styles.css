@@ -70,10 +70,19 @@
      phone-width hub tab. Above the strip breakpoint the tabs are in flow at the
      top of the column and nothing overlays the page bottom at all. */
   --dock-clearance: 120px;
-  /* The one content width every screen shares. #332 briefly gave grid screens
-     a second, wider one — see the Layout section for why that was reverted and
-     what has to change before width can vary again. */
+  /* Content width below the rail breakpoint: one value for every screen, which
+     is load-bearing while navigation sits inside the column — see the Layout
+     section. From 1280px up the rail takes navigation out of the column and the
+     shell widths below apply instead.
+
+     Every one of these is a function of the VIEWPORT only. None may ever be
+     selected by what a screen renders; that is what moved the tab strip 220px
+     sideways in #332, and test/content-width.test.js pins it. */
   --w-content: 1000px;
+  --w-shell: 1800px;   /* rail + content pane, from 1280px up */
+  --w-read: 900px;     /* prose/rows inside the pane, so text keeps a measure */
+  --rail-w: 260px;
+  --rail-gap: 32px;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
   --font: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -197,9 +206,144 @@ h1, h2, h3 { font-family: var(--font-display); }
    long as navigation lives inside the content column — no `:has()` list, and no
    per-view width flag, can reconcile them.
 
-   Width may vary again once navigation moves OUT of this column (the desktop
-   rail). Until then, one width. See
+   That is why the width may only ever key off the VIEWPORT — which is exactly
+   what the rail below makes possible, by lifting navigation out of the column
+   so nothing persistent is inside it to be moved. See
    .claude/rules/responsive-content-width.md. */
+
+/* ---- Desktop shell: the round rail (from 1280px) ----
+
+   Navigation moves out of the content column and into a persistent left rail
+   carrying the round's identity, its four sections, both archives and the
+   settings screens (#334). The content pane then depends on the viewport alone,
+   so it is free to be as wide as the shell allows without moving anything.
+
+   1280 is measured, not taste: the rail costs --rail-w + --rail-gap = 292px, so
+   below it a rail yields FEWER Regal columns than the plain 1000px column. At
+   1280 the two are equal (4 columns); by 1920 the rail shell gives 6.
+
+   Below 1280 every rule here is inert — `.rail` is display:none and the dock /
+   in-flow strip (#331) render exactly as before. */
+@media (min-width: 1280px) {
+  .app,
+  .app + .site-footer { max-width: var(--w-shell); }
+
+  /* The grid is conditioned on a rail actually being present, because Home
+     renders none — it keeps the full shell as a single column. This condition
+     places an element; it does not choose a WIDTH, so it cannot move anything
+     the way #332's width switch did. */
+  .app:has(.rail) {
+    display: grid;
+    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+    column-gap: var(--rail-gap);
+    align-content: start;
+  }
+  /* The rail spans every row so the content column stacks beside it rather than
+     below its first block. `span 999` rather than `1 / -1`: with only implicit
+     rows, `-1` resolves to the first line and the rail would occupy row 1 only —
+     which makes row 1 as tall as the rail and drops a gap under the first block.
+     The extra implicit rows are auto-sized to zero and cost nothing. */
+  .app:has(.rail) > .rail { grid-column: 1; grid-row: 1 / span 999; }
+  .app:has(.rail) > *:not(.rail) { grid-column: 2; }
+
+  /* Prose and rows keep a measure inside a pane that can now be ~1450px wide;
+     anything built around a grid uses the room instead. Safe to decide by
+     content HERE — the pane's own width is unaffected, so nothing moves.
+
+     The exemption repeats the cap's two `:not()`s so it can win: the cap is
+     (0,3,0) and a bare `.app > *:has(…)` would be (0,2,0), i.e. every grid
+     would stay capped at the reading measure. That failed silently — the Regal
+     simply rendered 3 columns instead of 6, which reads as "the shell is too
+     narrow" rather than "this rule lost". */
+  .app > *:not(.rail):not(.dock) { max-width: var(--w-read); }
+  /* Two selectors, because a grid reaches the column two different ways: most
+     screens wrap theirs in a `.section` (so the child CONTAINS the grid), but
+     the home lobby appends `.lobby-list` straight to `.app` (so the child IS
+     the grid). `:has()` alone only ever matched the first kind, which quietly
+     capped the lobby at the reading measure — 2 round cards across instead of
+     4, on the first screen anyone sees. */
+  .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .theme-cards, .lobby-list),
+  .app > *:not(.rail):not(.dock):has(.cards, .pokale-cards, .theme-cards, .lobby-list) {
+    max-width: none;
+  }
+
+  /* On a screen WITHOUT a rail — home, the new-round form, the session wizard —
+     capped content centres instead. Beside a rail, a left edge is anchored and
+     reads as deliberate; with no rail it is just a column shoved against the
+     left of an 1800px shell, with the self-centring site footer disagreeing
+     with it by half a screen. Alignment only: it moves no navigation, because
+     these screens render none. */
+  .app:not(:has(.rail)) > *:not(.dock) { margin-inline: auto; }
+
+  /* What the rail now carries: the Start tab's hero, its big CTA and its
+     Tags/Provider/Design links, and the Regal's archive footer. All of them stay
+     in the DOM and keep working below this breakpoint, where there is no rail
+     to carry them — so this is a CSS hide, never a JS removal.
+
+     Qualified with `.app` to reach (0,2,0) deliberately. A bare `.rail-owned`
+     is (0,1,0) and loses to `a.btn` (0,1,1) — which is what three of these
+     elements are — so the Tags/Provider/Design buttons went on rendering beside
+     the rail entries that had replaced them, with no error and no failing test.
+     The same trap as `.dock { display: none }` below: in this stylesheet a
+     utility declared up here is competing with component rules declared ~400
+     lines later, so it needs either the specificity or the source position to
+     win, and specificity is the one that cannot be broken by moving code. */
+  .app .rail-owned { display: none; }
+}
+
+.rail { display: none; }
+
+@media (min-width: 1280px) {
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    /* Sticky under the sticky top bar, so navigation stays reachable through a
+       long Chronik. `align-self: start` keeps it its natural height inside the
+       full-height grid area it spans. */
+    position: sticky;
+    top: 84px;
+    align-self: start;
+  }
+  .rail__name { font-family: var(--font-display); font-size: 22px; font-weight: 700; line-height: 1.2; }
+  .rail__members { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+  .rail__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .rail__cta { width: 100%; font-size: 16px; padding: 12px 16px; gap: 8px; }
+  .rail__group { display: flex; flex-direction: column; gap: 2px; }
+  .rail__label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    opacity: 0.8;
+    padding: 0 12px;
+    margin-bottom: 6px;
+  }
+  /* One row shape for both element kinds: the routed entries are <a> (#330) and
+     "Spiele verschieben" opens a sheet, so it stays a <button>. */
+  .rail__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    border: none;
+    border-radius: 10px;
+    background: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: left;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .rail__item .ti { font-size: 18px; flex: none; }
+  .rail__item span { min-width: 0; }
+  .rail__item:not(.is-active):hover { background: var(--brand-tint-soft); color: var(--ink); }
+  .rail__item.is-active { background: var(--brand); color: #fff; }
+}
 
 /* The dock is `position: fixed` (below the strip breakpoint), and .app's own
    padding does NOT cover the footer, because the footer is .app's SIBLING
@@ -459,6 +603,18 @@ h1, h2, h3 { font-family: var(--font-display); }
     font-size: 14px;
   }
   .dock__item .ti { font-size: 17px; }
+}
+
+/* Rail form: from 1280px the dock steps aside entirely and the rail (declared
+   in the Layout section) carries navigation out of the content column.
+
+   This lives HERE, after the dock's own rules, and that placement is
+   load-bearing: `.dock { display: none }` ties `.dock { display: flex }` on
+   specificity, so source order decides. Declared up in the Layout section
+   alongside the rest of the rail — where it reads like it belongs — it lost,
+   and BOTH navs rendered at once with no error anywhere. */
+@media (min-width: 1280px) {
+  .dock { display: none; }
 }
 
 /* ---- Narrow screens: keep the top bar and last-played ticket from

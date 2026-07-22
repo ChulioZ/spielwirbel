@@ -159,7 +159,7 @@ function renderRegalTab(round, activeGames) {
   // collection; they are kept apart because the reason differs.
   const retiredGames = round.games.filter((g) => g.retired);
   const completedGames = round.games.filter((g) => g.completed);
-  const foot = h('<div class="round-footer"></div>');
+  const foot = h('<div class="round-footer rail-owned"></div>');
   const retiredBtn = h(`<a class="link-btn"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.link', { n: retiredGames.length }))}</a>`);
   navLink(retiredBtn, roundPath(round.id, 'retired'), () => showRetired(round.id));
   foot.appendChild(retiredBtn);
@@ -687,7 +687,7 @@ async function showArchive(rid, kind) {
     .sort((x, y) => String(a.at(y) || '').localeCompare(String(a.at(x) || '')));
 
   app.innerHTML = '';
-  renderSubScreenTabs(rid, kind);
+  renderSubScreenTabs(round, kind);
   app.appendChild(
     h(`<div class="page-head"><div>
          <h1>${esc(t(`${kind}.title`))}</h1>

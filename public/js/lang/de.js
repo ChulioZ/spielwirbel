@@ -72,6 +72,10 @@ I18N.de = {
   'hub.tab.chronik': 'Chronik',
   'hub.tab.pokale': 'Pokale',
 
+  // Group headings in the desktop navigation rail (from 1280px up).
+  'rail.archive': 'Archiv',
+  'rail.settings': 'Einstellungen',
+
   'pokale.title': 'Ruhmeshalle',
   'pokale.empty': 'Noch keine Pokale vergeben — die erste Session entscheidet.',
   'pokale.winsOne': '{n} Sieg',
@@ -471,6 +475,7 @@ I18N.de = {
   'a11y.account': 'Konto',
   'a11y.breadcrumb': 'Brotkrümelnavigation',
   'a11y.hubTabs': 'Rundenbereiche',
+  'a11y.roundNav': 'Rundennavigation',
 
   'feedback.button': 'Feedback',
   'feedback.title': 'Dein Feedback',

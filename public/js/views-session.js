@@ -485,7 +485,7 @@ async function showResults(round, session, gamesHint, reveal) {
   // A finished session's results belong to the Chronik, and this is a routed
   // screen (unlike the wizard's transient steps, which deliberately resolve to
   // nothing and so get no strip).
-  renderSubScreenTabs(round.id, 'session');
+  renderSubScreenTabs(round, 'session');
   const when = fmtDateTime(session.createdAt);
   const head = h(`<div class="page-head"><div>
          <h1 class="result-title">${esc(t('result.title'))}</h1>
