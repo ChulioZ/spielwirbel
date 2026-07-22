@@ -145,7 +145,7 @@ async function showTags(rid) {
   if (tags.length === 0) {
     sec.appendChild(h(`<div class="empty"><p>${esc(t('tags.empty'))}</p></div>`));
   } else {
-    const list = h('<div class="ds-list"></div>');
+    const list = h('<div class="ds-list ds-list--tiles"></div>');
     tags.forEach((tg) => {
       const n = round.games.filter((g) => (g.tagIds || []).includes(tg.id)).length;
       const row = h(`<div class="ds-row">
@@ -232,7 +232,7 @@ async function showProviders(rid) {
     hint.textContent = enabled.size ? '' : t('providers.noneHint');
   };
 
-  const list = h('<div class="ds-list"></div>');
+  const list = h('<div class="ds-list ds-list--tiles"></div>');
   LOOKUP_PROVIDERS.forEach((id) => {
     const logo = providerLogo(id);
     const row = h(`<label class="ds-row provider-row">

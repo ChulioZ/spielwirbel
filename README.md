@@ -70,8 +70,8 @@ code and documentation are in English.
   same-named tags. The emptied round stays behind; its session history does
   not, since a session cannot reference games that now live elsewhere.
 - **Tags** – every round can define its own free-form tags (e.g. "outside",
-  "quick lunch break", "digital", "co-op") on a dedicated screen reached from the
-  Start tab. Tags are the single way to categorize games. Assign
+  "quick lunch break", "digital", "co-op") on a dedicated screen, reached from
+  the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign
   any number of tags to a game — in the add-game sheet or later from the game's
   detail page, creating new tags inline — and filter both the Regal and the
   session draw by them (tri-state chips: off / include / exclude; included tags

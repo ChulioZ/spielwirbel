@@ -262,8 +262,8 @@ h1, h2, h3 { font-family: var(--font-display); }
      the grid). `:has()` alone only ever matched the first kind, which quietly
      capped the lobby at the reading measure — 2 round cards across instead of
      4, on the first screen anyone sees. */
-  .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .theme-cards, .lobby-list),
-  .app > *:not(.rail):not(.dock):has(.cards, .pokale-cards, .theme-cards, .lobby-list) {
+  .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .theme-cards, .lobby-list, .ds-list--tiles),
+  .app > *:not(.rail):not(.dock):has(.cards, .pokale-cards, .theme-cards, .lobby-list, .ds-list--tiles) {
     max-width: none;
   }
 
@@ -1744,7 +1744,12 @@ body.auth-screen .crumbs { display: none; }
 }
 
 /* Game detail page */
-.gd-head { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+/* `fit-content`, so the header is as wide as cover + facts + ring and no wider.
+   Stretched to the full column it spread those three across 900px and left the
+   score ring stranded at the far edge. `max-width: 100%` keeps the phone
+   behaviour: the row still fills a narrow screen and still wraps, driven by
+   .gd-info's min-width below. */
+.gd-head { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; width: fit-content; max-width: 100%; }
 .gd-img {
   position: relative;
   width: 240px;
@@ -1759,7 +1764,12 @@ body.auth-screen .crumbs { display: none; }
   font-size: 64px;
   flex: none;
 }
-.gd-info { flex: 1; min-width: 240px; }
+/* Sized to its content, NOT `flex: 1`. Growing to fill the line pushed the
+   score ring to the far right of the header — measured 453px from a short
+   title, so the game's rating read as belonging to nothing. Shrinking is still
+   allowed (`0 1 auto`), so a long title or a row of tag chips takes the room it
+   needs and the ring follows it instead of the container's edge. */
+.gd-info { flex: 0 1 auto; min-width: 240px; }
 .gd-info h1 { margin: 0 0 14px; font-size: 26px; line-height: 1.5; }
 
 /* --- Inline editing on the game detail page --- */
@@ -1962,6 +1972,36 @@ body.auth-screen .crumbs { display: none; }
 .popover__hint { font-size: 13px; }
 
 .ds-list { display: flex; flex-direction: column; gap: 10px; }
+/* Tiles instead of full-width rows, for the lists whose entries are SHORT: the
+   round's tags and the lookup providers. As rows they each carried ~200px of
+   ink across a 900px line, which put a tag's count and actions — and a
+   provider's checkbox — some 700px from the label they belong to, and turned
+   nine tags into a screen and a half of scroll.
+
+   Only the CONTAINER changes. `.ds-row` stays a flex row, so its `meta` half
+   simply lands at the right edge of a ~280px tile instead of a 900px one, and
+   every row's internals (the tag chip, the provider logo, the checkbox) keep
+   working untouched. `auto-fill` means this needs no breakpoint: one column on
+   a phone, up to five in the desktop pane.
+
+   Deliberately a modifier, not a change to `.ds-list`: the game detail's
+   related-sessions list uses the same component and is genuinely a
+   chronological list, which should stay one entry per line. */
+.ds-list--tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+/* A row that outgrows its tile must WRAP, not overflow it. `.ds-row` is a
+   nowrap flex line built for a 900px width, so in a 280px tile the tag rows
+   pushed their edit/delete buttons straight out through the right edge, where
+   they were clipped and unclickable. Wrapping lets each list settle into the
+   shape its own content wants — providers keep logo, name and checkbox on one
+   line; a tag drops its count and actions onto a second — with no per-list
+   rule and no fixed height. `min-width: 0` lets a long tag name shrink rather
+   than forcing the overflow back. */
+.ds-list--tiles .ds-row { flex-wrap: wrap; row-gap: 10px; }
+.ds-list--tiles .ds-row__main { min-width: 0; }
 .ds-row {
   display: flex;
   align-items: center;

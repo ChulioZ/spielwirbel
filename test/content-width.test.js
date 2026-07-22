@@ -173,6 +173,34 @@ test('a 390 viewport gets two Regal columns, not one', () => {
     `a 390px phone gets ${columns} Regal column(s); the 22-game shelf needs two to halve its scroll`);
 });
 
+test('short-entry lists tile, and their rows may wrap inside a tile', () => {
+  /* The tags and provider screens moved from full-width rows to tiles: as rows
+     each carried ~200px of ink across a 900px line, putting a tag's count and
+     actions — and a provider's checkbox — some 700px from the label.
+
+     The wrap is the load-bearing half. `.ds-row` is a nowrap flex line sized
+     for a 900px width, so inside a ~280px tile the tag rows pushed their
+     edit/delete buttons straight out through the right edge, where they were
+     CLIPPED AND UNCLICKABLE — visible only as a slightly odd screenshot, with
+     every test green. */
+  const tiles = bodyOf('.ds-list--tiles');
+  assert.ok(tiles, '.ds-list--tiles rule not found');
+  assert.match(tiles, /display:\s*grid/, 'the tile list is not a grid');
+  const spec = gridSpec(tiles);
+  assert.ok(spec.floor && spec.gap, '.ds-list--tiles declares no minmax floor / gap');
+
+  const row = bodyOf('.ds-list--tiles .ds-row');
+  assert.ok(row, 'no rule lets a row wrap inside its tile');
+  assert.match(row, /flex-wrap:\s*wrap/,
+    'rows cannot wrap inside a tile, so a row wider than the tile clips its own controls');
+
+  // `auto-fill` is what makes this need no breakpoint: it must still collapse
+  // to a single column on the narrowest phone this app supports.
+  assert.match(tiles, /auto-fill/, 'a fixed column count would not collapse on a phone');
+  assert.ok(spec.floor <= 320,
+    `a ${spec.floor}px floor is wider than a 320px phone's content box, so the grid would overflow`);
+});
+
 test('the home lobby tiles once there is room for a second round card', () => {
   /* The lobby is a stack of full-width rows on a phone and a grid above the
      strip breakpoint. A floor set too high leaves it a one-column grid — which
