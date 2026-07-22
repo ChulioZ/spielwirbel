@@ -17,53 +17,16 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 
-const ROOT = path.join(__dirname, '..');
-/* Comments are stripped first, deliberately: they are brace-free text, so a
-   selector regex will happily span one and match a `.dock` mentioned in prose
-   against an unrelated rule below it. (Verified — an earlier version of this
-   file passed against the *broken* stylesheet for exactly that reason.) */
-const CSS = fs.readFileSync(path.join(ROOT, 'public/styles.css'), 'utf8')
-  .replace(/\/\*[\s\S]*?\*\//g, '');
-
-// [selector, body] of every rule in a chunk of CSS. Note this deliberately sees
-// THROUGH @media wrappers (the query is brace-free, so it never matches as a
-// selector) — which is what lets the whole-sheet assertions below find a rule
-// wherever it lives.
-const rulesOf = (css) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-  .map((m) => [m[1].trim(), m[2]]);
-
-const RULES = rulesOf(CSS);
-
-const bodyOf = (selector) => {
-  const hit = RULES.find(([sel]) => sel === selector);
-  return hit ? hit[1] : null;
-};
-
-/* Top-level @media blocks as [query, css]. Brace-matched, because `rulesOf`
-   cannot tell you which block a rule came from — and since #331 that
-   distinction is load-bearing: the clearance must exist below the strip
-   breakpoint and must NOT be owed above it. */
-function mediaBlocks() {
-  const out = [];
-  const re = /@media([^{]+)\{/g;
-  let m;
-  while ((m = re.exec(CSS))) {
-    let depth = 1;
-    let i = re.lastIndex;
-    for (; i < CSS.length && depth > 0; i++) {
-      if (CSS[i] === '{') depth++;
-      else if (CSS[i] === '}') depth--;
-    }
-    out.push([m[1].trim(), CSS.slice(re.lastIndex, i - 1)]);
-  }
-  return out;
-}
+/* The parser (comment stripping, [selector, body] tokenizing, brace-matched
+   @media blocks) is shared with the other CSS-text tests — one copy, because
+   its traps are what `.claude/rules/css-text-assertions-strip-comments.md`
+   exists to warn about and a second copy is a second chance to get them
+   wrong. */
+const { RULES, rulesOf, bodyOf, mediaBlocks, whole } = require('./support/css');
 
 // `.site-footer` as a whole class — never `.site-footer__links`/`__bgg`.
-const targetsFooter = (sel) => /\.site-footer(?![\w-])/.test(sel);
+const targetsFooter = (sel) => whole('.site-footer').test(sel);
 // A rule that hands out the clearance, i.e. one of the two reserves.
 const reserves = (body) => /padding-bottom:\s*var\(--dock-clearance\)/.test(body);
 
