@@ -1773,7 +1773,7 @@ kbd {
 
 @media (max-width: 520px) {
   body { font-size: 17px; }
-  .app { padding: 16px 14px 120px; }
+  .app { padding: 16px 14px var(--dock-clearance); }
   .mood { width: 56px; height: 60px; }
 }
 

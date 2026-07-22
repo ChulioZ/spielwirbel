@@ -40,12 +40,17 @@ test(':root defines the shared dock clearance', () => {
   assert.match(root, /--dock-clearance:\s*\d+px/);
 });
 
-test('.app reserves the dock clearance via the shared variable', () => {
-  const app = bodyOf('.app');
-  assert.ok(app, '.app rule not found in styles.css');
-  // A hardcoded px here would drift from the footer's copy — the exact bug the
-  // shared variable exists to prevent.
-  assert.match(app, /padding:[^;]*var\(--dock-clearance\)/);
+test('every .app rule reserves the dock clearance via the shared variable', () => {
+  // `.app` is declared twice — the base rule and the ≤520px override — and BOTH
+  // set the bottom padding for the dock. A hardcoded px in either drifts from
+  // the footer's copy the moment the dock is resized, which is the exact bug
+  // the shared variable exists to prevent (the narrow-screen one shipped that
+  // way and was only caught by reading the built CSS).
+  const apps = RULES.filter(([sel]) => /(^|,)\s*\.app\s*$/.test(sel));
+  assert.ok(apps.length >= 2, `expected the base .app rule and its media override, got ${apps.length}`);
+  apps.forEach(([, body]) => {
+    assert.match(body, /padding:[^;]*var\(--dock-clearance\)/);
+  });
 });
 
 test('the site footer gets dock clearance too, from the same variable', () => {
