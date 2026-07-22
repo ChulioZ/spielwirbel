@@ -122,6 +122,7 @@ certificate automatically — this completes #156.
 | `S3_BUCKET` / `S3_ENDPOINT` / `S3_REGION` / `S3_FORCE_PATH_STYLE` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | R2 bucket + token | Cover-image storage (#128) |
 | `TRUST_PROXY` | `1` | Real client IP behind Railway's proxy (#156) |
 | `AUTH_PASSWORD` / `SESSION_SECRET` | your choice / long random | Interim gate until accounts (#135) |
+| `BGG_API_TOKEN` | bearer token from your registered BGG application | BoardGameGeek lookup (#117) — unset means board-game search silently returns nothing |
 | `PORT` | *(injected by Railway)* | The app already honours it |
 
 `NODE_ENV=production` is baked into the image (serves the hashed `dist/` build).
@@ -136,6 +137,9 @@ These need an account or a credential I can't create or hold:
 - [ ] Add the **PostgreSQL** service and reference `DATABASE_URL` in the app.
 - [ ] Create the **Cloudflare R2** bucket + API token; set the `S3_*` vars.
 - [ ] Set `TRUST_PROXY=1`, and `AUTH_PASSWORD` + `SESSION_SECRET` before any public URL.
+- [ ] Register the **BoardGameGeek application**, create a token under
+      [Applications → Tokens](https://boardgamegeek.com/applications), and set
+      `BGG_API_TOKEN` (the operator status card flags it while it's missing).
 - [ ] Add the **custom domain** and its DNS record.
 
 ## CD note

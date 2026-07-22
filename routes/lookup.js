@@ -38,15 +38,6 @@ function cached(key, fn) {
   });
 }
 
-// The UI language the lookup should prefer for titles (currently only the BGG
-// provider honors it; the digital stores use their env-configured locale). Kept
-// to a tiny allowlist; defaults to 'en' for back-compat when the param is absent.
-const LOOKUP_LANGS = ['de', 'en'];
-function lookupLang(req) {
-  const lang = String(req.query.lang || '').toLowerCase();
-  return LOOKUP_LANGS.includes(lang) ? lang : 'en';
-}
-
 // Resolve the requested provider against BOTH the registry and the round's
 // enabled list (#294). Answers with the provider, or an { status, error } the
 // caller returns as-is:
@@ -74,11 +65,8 @@ router.get('/search', async (req, res) => {
   if (!provider) return res.status(status).json({ error });
   const q = String(req.query.q || '').trim();
   if (q.length < 2) return res.json({ results: [] });
-  const lang = lookupLang(req);
   try {
-    const results = await cached(`${provider.id}:search:${lang}:${q.toLowerCase()}`, () =>
-      provider.search(q, undefined, lang)
-    );
+    const results = await cached(`${provider.id}:search:${q.toLowerCase()}`, () => provider.search(q));
     res.json({ results });
   } catch {
     res.status(502).json({ error: 'provider_unreachable' });
@@ -90,9 +78,8 @@ router.get('/game', async (req, res) => {
   if (!provider) return res.status(status).json({ error });
   const id = String(req.query.id || '').trim();
   if (!id) return res.status(400).json({ error: 'Missing id' });
-  const lang = lookupLang(req);
   try {
-    const game = await cached(`${provider.id}:game:${lang}:${id}`, () => provider.detail(id, lang));
+    const game = await cached(`${provider.id}:game:${id}`, () => provider.detail(id));
     if (!game) return res.status(404).json({ error: 'Not found' });
     res.json(game);
   } catch {

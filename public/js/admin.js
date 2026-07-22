@@ -189,6 +189,10 @@
       s.assets.built ? 'gebautes dist/' : 'public/ (ungebaut)',
       s.assets.built ? null : 'Ohne Build greift kein Cache-Busting — Clients können alte JS/CSS behalten.']);
 
+    rows.push(['BGG-Lookup', s.lookup.bggTokenSet ? 'ok' : 'warn',
+      s.lookup.bggTokenSet ? 'Token gesetzt' : 'BGG_API_TOKEN fehlt',
+      s.lookup.bggTokenSet ? null : 'Ohne Token liefert die Brettspiel-Suche stumm keine Treffer; die übrigen Anbieter laufen weiter.']);
+
     rows.push(['Version', 'ok',
       `${s.app.version || '—'}${s.app.commit ? ` · ${s.app.commit}` : ''}`,
       `NODE_ENV: ${s.app.nodeEnv || '—'} · Laufzeit: ${formatUptime(s.app.uptimeSeconds)}`]);

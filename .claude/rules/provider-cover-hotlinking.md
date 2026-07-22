@@ -53,25 +53,27 @@ download-and-cache**, however tempting the reliability argument is.
 
 ## What was NOT done, and why
 
-- **BGG covers are hotlinked like the rest, for now.** BGG is the one provider
-  that *does* grant an image licence: its
-  [XML API Terms of Use](https://boardgamegeek.com/wiki/page/XML_API_Terms_of_Use)
+- **BGG covers are still hotlinked, but no longer for lack of a licence
+  (#117, 2026-07-22).** BGG is the one provider that grants an image licence:
+  its [XML API Terms of Use](https://boardgamegeek.com/wiki/page/XML_API_Terms_of_Use)
   grant "a worldwide, non-exclusive, royalty-free license to reproduce and
-  display the data available through the BGG XML API … solely for strictly
-  non-commercial purposes". Two catches, both blocking today:
-  1. That licence attaches to **the XML API**, and we don't use it — our BGG
-     provider reads the private `api.geekdo.com/api/geekitems` endpoint, about
-     which the same docs say "we are granting no license for use of those
-     endpoints". Moving onto the licensed API needs a registered application +
-     token → **#117**, blocked on the maintainer registering.
-  2. Using it publicly requires crediting BGG by name **and** displaying a
-     linked "Powered by BGG" logo. That ships with #117, not before — the
-     obligation starts when the licence does.
-- **"Non-commercial" is narrower than it sounds.** Per BGG's *Using the XML API*
-  page, an app monetised **solely through voluntary donations** is already
-  commercial and needs a commercial licence (which they say is "most likely
-  free"). Spielwirbel's stated direction is donations eventually, so the free
-  non-commercial grant will **not** be the applicable one — see #173.
+  display the data available through the BGG XML API". Both blockers are now
+  cleared: the provider runs on the **XML API2 under an approved application
+  token** (it used to read the private `api.geekdo.com/api/geekitems` endpoint,
+  about which the same docs say "we are granting no license for use of those
+  endpoints"), and the required linked **"Powered by BGG" logo ships in the
+  site footer**. So re-hosting BGG covers is now permitted. It has **not** been
+  done, for an engineering reason rather than a legal one: the licensed API
+  offers only a `fit-in/200x150` thumbnail or an untouchable multi-megabyte
+  master, so re-hosting would need an image-resizing pipeline this repo does
+  not have — see `.claude/rules/provider-cover-sizing.md`. Flipping BGG to
+  stored covers stays a deliberate follow-up, and it would remove the "cover
+  breaks if BGG changes the URL" failure mode.
+- **The licence we hold is the COMMERCIAL one.** Per BGG's *Using the XML API*
+  page, an app monetised solely through voluntary donations is already
+  commercial (they say such a licence is "most likely free"), and Spielwirbel's
+  stated direction is donations — so the application was registered and
+  approved as commercial, not under the free non-commercial grant. See #173.
 - **The digital storefronts have no path at all.** Sony, Microsoft, Nintendo and
   Valve offer no cover-art licence at any price, so hotlinking is the end state
   for them, not a stopgap.

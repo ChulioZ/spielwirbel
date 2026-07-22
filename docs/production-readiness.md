@@ -604,7 +604,6 @@ same as anything else.
 
 | Issue | What | Notes |
 |---|---|---|
-| **#117** | Search BGG directly via an API token | Blocked externally on the maintainer registering a BGG application, unrelated to go-live |
 | **#137** | Roles & permissions | Only matters once #207 lets multiple accounts share a tenant |
 | **#173** | Voluntary donations support link | Legally invisible (unconditional, no AGB/Widerruf) — independent of launch |
 | **#207** | Invitations & tenant-sharing (multi-user rounds) | Real product value, layered on a working single-owner launch |

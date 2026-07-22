@@ -108,6 +108,19 @@ test('mail reports outbox-only when unconfigured', async () => {
   assert.deepEqual(on.mail, { configured: true, fromSet: true, baseUrlSet: true });
 });
 
+test('the BGG lookup token is reported as presence only (#117)', async () => {
+  // Without it the board-game search answers empty and says nothing, so the
+  // operator's only signal that BGG is dark is this row.
+  const off = await withEnv({ BGG_API_TOKEN: undefined }, instanceStatus);
+  assert.deepEqual(off.lookup, { bggTokenSet: false });
+  const blank = await withEnv({ BGG_API_TOKEN: '   ' }, instanceStatus);
+  assert.deepEqual(blank.lookup, { bggTokenSet: false }, 'a whitespace-only token is no token');
+  // Deliberately not UUID-shaped like a real BGG token: a high-entropy literal
+  // here trips the repo's gitleaks scan as a generic-api-key.
+  const on = await withEnv({ BGG_API_TOKEN: 'not-a-real-token' }, instanceStatus);
+  assert.deepEqual(on.lookup, { bggTokenSet: true });
+});
+
 test('quota ceilings are reported with whether they actually bite', async (t) => {
   await t.test('inert with accounts off, whatever the numbers say', async () => {
     const s = await withEnv(
@@ -188,6 +201,7 @@ test('no secret value ever appears in the response', async () => {
     SESSION_SECRET: 'SECRETVALUE-session',
     ADMIN_PASSWORD: 'SECRETVALUE-admin',
     BREVO_API_KEY: 'SECRETVALUE-brevo',
+    BGG_API_TOKEN: 'SECRETVALUE-bgg',
     // Not secrets forever (they end up in the public Impressum), but before
     // launch they must not leak early through a panel screenshot — presence only.
     IMPRESSUM_ADDRESS: 'SECRETVALUE-address',

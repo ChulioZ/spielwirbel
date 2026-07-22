@@ -148,16 +148,28 @@ h1, h2, h3 { font-family: var(--font-display); }
   margin: 0 auto;
   padding: 0 20px 40px;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  font-size: 14px;
+}
+.site-footer__links {
+  display: flex;
   gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
-  font-size: 14px;
 }
-/* The gate (initFooter in core.js) hides the footer via the hidden attribute,
-   whose UA display:none would otherwise lose to the explicit flex above. */
-.site-footer[hidden] { display: none; }
-.site-footer a { color: var(--ink-soft); text-decoration: none; }
-.site-footer a:hover { text-decoration: underline; }
+/* The gate (initFooter in core.js) hides the links via the hidden attribute,
+   whose UA display:none would otherwise lose to the explicit flex above. The
+   BGG attribution below is never gated — see index.html. */
+.site-footer__links[hidden] { display: none; }
+.site-footer__links a { color: var(--ink-soft); text-decoration: none; }
+.site-footer__links a:hover { text-decoration: underline; }
+/* "Powered by BGG" (#117). BGG's XML API terms require the logo at a size where
+   its text stays easily legible, so don't shrink this below ~120px wide and
+   don't fade it into the background. */
+.site-footer__bgg { display: inline-flex; }
+.site-footer__bgg img { display: block; width: 132px; height: auto; }
 .page-head {
   display: flex;
   align-items: center;

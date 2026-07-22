@@ -6,7 +6,7 @@ numbers are not marginal — measured live on 2026-07-20:
 
 | Provider | Stored URL | Bytes | Decoded |
 |---|---|---|---|
-| BGG | `…/fit-in/246x300/…` | ~20 KB | small |
+| BGG | `…/fit-in/200x150/…` (was `246x300` before #117) | 4–13 KB | small |
 | Steam | `…/capsule_231x87.jpg` | ~50 KB | small |
 | Nintendo | `nintendo.com/…` | ~100 KB | medium |
 | **Xbox** | `store-images.s-microsoft.com/…` | **207–837 KB** | large |
@@ -43,6 +43,22 @@ first** — that number, not transferSize, is what predicts it.
   passing through untouched is the safe default, and own uploads
   (`/uploads/<key>`) must pass through byte-identically since we serve those
   ourselves and have no resizer.
+- **geekdo (BGG) can NEVER join `COVER_RESIZERS` — its transform paths are
+  signed.** Verified 2026-07-22: hand-editing the size segment of a
+  `cf.geekdo-images.com` URL (`fit-in/900x600` → `300x200`, or `__imagepage` →
+  `__original`) returns **400**, and appending `?w=`/`?imwidth=` is ignored
+  byte-for-byte. So the variant BGG hands us is the only one we get, and
+  **which one it hands us is the whole decision**: the XML API's `<image>` is
+  the untouched master (measured across eight popular games: 68 KB – 2.0 MB,
+  Ark Nova at 1.96 MB / 1 MP+), while `<thumbnail>` is a pre-sized
+  `fit-in/200x150` at 4–13 KB. `pickImage()` in `lib/providers/bgg.js` takes
+  the thumbnail and does **not** fall back to `<image>` — a fallback would
+  quietly reintroduce megabyte covers on exactly the items with unusual data.
+  The trade is accepted knowingly: it is roughly half the linear resolution the
+  pre-#117 private endpoint served, so a new BGG game's cover is softer on the
+  240 px game-detail hero. Re-hosting a resized copy is now *licensed* (the BGG
+  token grants reproduction rights) but needs an image pipeline this repo does
+  not have — that is the follow-up, not a reason to store the master.
 - **It must be render-time, not capture-time.** This repo keeps no permanent
   migration code (CLAUDE.md), so rewriting what `pickImage()` stores would fix
   only games added afterwards and leave the whole existing corpus slow. On
