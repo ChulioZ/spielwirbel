@@ -64,13 +64,13 @@ const frontendGlobals = {
   // feedback.js (issue #260)
   FEEDBACK_MESSAGE_MAX: 'readonly', showFeedback: 'readonly',
   setupFeedbackUi: 'readonly',
-  // ranking.js + lookup-group.js + lookup-cover.js + cover.js + tag-icons.js
-  // (also CommonJS modules for tests — hence `module`)
+  // ranking.js + lookup-group.js + lookup-cover.js + lookup-title.js +
+  // cover.js + tag-icons.js (also CommonJS modules for tests — hence `module`)
   computePlaces: 'readonly', groupLookupHits: 'readonly', module: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
   COVER_HERO: 'readonly', COVER_RESIZERS: 'readonly',
-  providerMatchCover: 'readonly',
+  providerMatchCover: 'readonly', pickedTitle: 'readonly',
   TAG_ICONS: 'readonly', tagIconClass: 'readonly',
   // views-home.js
   showHome: 'readonly', showNewRound: 'readonly',

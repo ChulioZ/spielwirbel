@@ -18,7 +18,7 @@ const L = (p) => `/api/rounds/${rid}/lookup${p}`;
 // Replace global.fetch (used by lib/providers/psstore) with a stub returning
 // store HTML built from an Apollo-cache-shaped object.
 function stubFetch(handler) {
-  global.fetch = async (url) => handler(String(url));
+  global.fetch = async (url, init) => handler(String(url), init);
 }
 const htmlRes = (text) => ({ ok: true, status: 200, text: async () => text });
 const jsonRes = (obj) => ({ ok: true, status: 200, json: async () => obj });
@@ -99,102 +99,139 @@ test('game requires an id', async () => {
   assert.equal(res.status, 400);
 });
 
-// --- BoardGameGeek provider (Wikidata search -> BGG detail, both JSON) -----
+// --- BoardGameGeek provider (XML API2 search + thing, token-authorized, #117) --
 
-const WDQS_CATAN = {
-  results: {
-    bindings: [
-      { bgg: { value: '13' }, itemLabel: { value: 'Catan' } },
-      { bgg: { value: '926' }, itemLabel: { value: 'Catan: Cities & Knights' } },
-    ],
-  },
-};
-const GEEK_CATAN = {
-  item: {
-    name: 'Catan',
-    minplayers: '3',
-    maxplayers: '4',
-    minplaytime: '60',
-    maxplaytime: '120',
-    imageurl: 'https://cf.geekdo-images.com/x/pic.png',
-    canonical_link: 'https://boardgamegeek.com/boardgame/13/catan',
-  },
-};
+const BGG_SEARCH_XML = `<items total="2">
+  <item type="boardgame" id="13"><name type="primary" value="CATAN"/></item>
+  <item type="boardgameexpansion" id="926"><name type="primary" value="Catan: Cities &amp; Knights"/></item>
+</items>`;
+const BGG_THING_XML = `<items>
+  <item type="boardgame" id="13">
+    <thumbnail>https://cf.geekdo-images.com/x__thumb/img/y=/fit-in/200x150/filters:strip_icc()/pic.png</thumbnail>
+    <image>https://cf.geekdo-images.com/x__original/img/z=/0x0/filters:format(png)/pic.png</image>
+    <name type="primary" value="CATAN"/>
+    <minplayers value="3"/>
+    <maxplayers value="4"/>
+  </item>
+</items>`;
 
-test('GET …/lookup/search?provider=bgg returns BGG-id results (via Wikidata)', async () => {
-  stubFetch((url) => {
-    assert.match(url, /query\.wikidata\.org/);
-    return jsonRes(WDQS_CATAN);
+// The token is read per call, so tests drive it through the env directly.
+function withToken(value, fn) {
+  const previous = process.env.BGG_API_TOKEN;
+  if (value === null) delete process.env.BGG_API_TOKEN;
+  else process.env.BGG_API_TOKEN = value;
+  return Promise.resolve()
+    .then(fn)
+    .finally(() => {
+      if (previous === undefined) delete process.env.BGG_API_TOKEN;
+      else process.env.BGG_API_TOKEN = previous;
+    });
+}
+
+test('GET …/lookup/search?provider=bgg queries the token-authorized XML API', async () => {
+  await withToken('test-token', async () => {
+    let seen = null;
+    global.fetch = async (url, init) => {
+      seen = { url: String(url), init };
+      return htmlRes(BGG_SEARCH_XML);
+    };
+    const res = await request(app).get(L('/search?provider=bgg&q=catan'));
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.results, [
+      { providerId: '13', title: 'CATAN', thumbnail: null },
+      { providerId: '926', title: 'Catan: Cities & Knights', thumbnail: null },
+    ]);
+    // The host must carry no www (BGG's docs: www breaks authorization), and the
+    // bearer token must actually be attached.
+    assert.match(seen.url, /^https:\/\/boardgamegeek\.com\/xmlapi2\/search\?/);
+    assert.equal(seen.init.headers.Authorization, 'Bearer test-token');
   });
-  const res = await request(app).get(L('/search?provider=bgg&q=catan'));
-  assert.equal(res.status, 200);
-  assert.deepEqual(res.body.results, [
-    { providerId: '13', title: 'Catan', thumbnail: null },
-    { providerId: '926', title: 'Catan: Cities & Knights', thumbnail: null },
-  ]);
 });
 
-test('GET …/lookup/game?provider=bgg returns analog detail with players', async () => {
-  // detail() now makes two calls: BGG geekitems (data) + a Wikidata label query
-  // (localized title). With no localized label, the BGG canonical name is kept.
-  stubFetch((url) => {
-    if (/query\.wikidata\.org/.test(url)) return jsonRes({ results: { bindings: [] } });
-    assert.match(url, /api\.geekdo\.com\/api\/geekitems/);
-    return jsonRes(GEEK_CATAN);
+test('GET …/lookup/game?provider=bgg returns analog detail with players and the small cover', async () => {
+  await withToken('test-token', async () => {
+    let seen = '';
+    stubFetch((url) => { seen = url; return htmlRes(BGG_THING_XML); });
+    const res = await request(app).get(L('/game?provider=bgg&id=13'));
+    assert.equal(res.status, 200);
+    assert.match(seen, /^https:\/\/boardgamegeek\.com\/xmlapi2\/thing\?/);
+    assert.equal(res.body.title, 'CATAN');
+    assert.equal(res.body.type, 'analog');
+    assert.equal(res.body.minPlayers, 3);
+    assert.equal(res.body.maxPlayers, 4);
+    // The pre-sized thumbnail, never the multi-megabyte <image> master.
+    assert.match(res.body.imageUrl, /__thumb\//);
+    assert.equal(res.body.url, 'https://boardgamegeek.com/boardgame/13');
   });
-  const res = await request(app).get(L('/game?provider=bgg&id=13'));
-  assert.equal(res.status, 200);
-  assert.equal(res.body.title, 'Catan');
-  assert.equal(res.body.type, 'analog');
-  assert.equal(res.body.minPlayers, 3);
-  assert.equal(res.body.maxPlayers, 4);
-  assert.equal(res.body.imageUrl, 'https://cf.geekdo-images.com/x/pic.png');
-  assert.equal(res.body.url, 'https://boardgamegeek.com/boardgame/13/catan');
 });
 
-test('bgg search threads lang into the Wikidata query (de -> German-first labels)', async () => {
-  let seen = '';
-  stubFetch((url) => {
-    seen = url;
-    return jsonRes(WDQS_CATAN);
+test('bgg degrades to an empty result set (never an error) when no token is configured', async () => {
+  await withToken(null, async () => {
+    let called = false;
+    stubFetch(() => { called = true; return htmlRes(BGG_SEARCH_XML); });
+    const res = await request(app).get(L('/search?provider=bgg&q=untokened'));
+    // A 502 here would surface as "couldn't reach provider" in a UI that merges
+    // providers with Promise.allSettled — an empty list keeps the other four clean.
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.results, []);
+    assert.equal(called, false, 'must not call BGG without a token');
   });
-  const res = await request(app).get(L('/search?provider=bgg&q=catan&lang=de'));
-  assert.equal(res.status, 200);
-  // The requested language reaches the SPARQL sent to Wikidata (form-encoded, so
-  // spaces arrive as '+').
-  assert.match(decodeURIComponent(seen).replace(/\+/g, ' '), /wikibase:language "de,en"/);
 });
 
-test('bgg game with lang=de prefers the German Wikidata label over the BGG English name', async () => {
-  stubFetch((url) => {
-    if (/query\.wikidata\.org/.test(url)) {
-      assert.match(decodeURIComponent(url).replace(/\+/g, ' '), /wikibase:language "de,en"/);
-      return jsonRes({ results: { bindings: [{ itemLabel: { value: 'Die Siedler von Catan' } }] } });
-    }
-    return jsonRes(GEEK_CATAN);
+test('bgg detail without a token still yields a working BoardGameGeek link', async () => {
+  await withToken(null, async () => {
+    stubFetch(() => { throw new Error('must not be called'); });
+    const res = await request(app).get(L('/game?provider=bgg&id=77'));
+    assert.equal(res.status, 200);
+    assert.equal(res.body.title, null);
+    assert.equal(res.body.url, 'https://boardgamegeek.com/boardgame/77');
   });
-  const res = await request(app).get(L('/game?provider=bgg&id=13&lang=de'));
-  assert.equal(res.status, 200);
-  assert.equal(res.body.title, 'Die Siedler von Catan'); // German label wins
-  assert.equal(res.body.minPlayers, 3); // other data still comes from BGG
 });
 
-test('bgg game still succeeds (BGG name kept) when the Wikidata label query fails', async () => {
-  stubFetch((url) => {
-    if (/query\.wikidata\.org/.test(url)) throw new Error('wikidata down');
-    return jsonRes(GEEK_CATAN);
+test('bgg retries a throttled answer within its budget, then succeeds', async () => {
+  await withToken('test-token', async () => {
+    let calls = 0;
+    stubFetch(() => {
+      calls += 1;
+      // BGG signals "too busy" with 503 rather than queueing.
+      if (calls === 1) return { ok: false, status: 503, text: async () => '' };
+      return htmlRes(BGG_SEARCH_XML);
+    });
+    const res = await request(app).get(L('/search?provider=bgg&q=throttled'));
+    assert.equal(res.status, 200);
+    assert.equal(calls, 2);
+    assert.equal(res.body.results.length, 2);
   });
-  // Distinct id so the route's per-(lang,id) cache doesn't serve an earlier hit.
-  const res = await request(app).get(L('/game?provider=bgg&id=14&lang=de'));
-  assert.equal(res.status, 200);
-  assert.equal(res.body.title, 'Catan'); // falls back to BGG's canonical name
 });
 
-test('bgg search returns 502 when Wikidata is unreachable', async () => {
-  stubFetch(() => { throw new Error('network down'); });
-  const res = await request(app).get(L('/search?provider=bgg&q=zzzunreachable'));
-  assert.equal(res.status, 502);
-  assert.equal(res.body.error, 'provider_unreachable');
+test('bgg gives up after its bounded retries rather than looping', async () => {
+  await withToken('test-token', async () => {
+    let calls = 0;
+    stubFetch(() => { calls += 1; return { ok: false, status: 429, text: async () => '' }; });
+    const res = await request(app).get(L('/search?provider=bgg&q=alwaysthrottled'));
+    assert.equal(res.status, 502);
+    assert.equal(res.body.error, 'provider_unreachable');
+    assert.equal(calls, 3, 'one attempt plus the two bounded retries');
+  });
+});
+
+test('bgg does not retry a rejected token (401 is final)', async () => {
+  await withToken('bad-token', async () => {
+    let calls = 0;
+    stubFetch(() => { calls += 1; return { ok: false, status: 401, text: async () => 'Unauthorized' }; });
+    const res = await request(app).get(L('/search?provider=bgg&q=unauthorized'));
+    assert.equal(res.status, 502);
+    assert.equal(calls, 1);
+  });
+});
+
+test('bgg search returns 502 when BGG is unreachable', async () => {
+  await withToken('test-token', async () => {
+    stubFetch(() => { throw new Error('network down'); });
+    const res = await request(app).get(L('/search?provider=bgg&q=zzzunreachable'));
+    assert.equal(res.status, 502);
+    assert.equal(res.body.error, 'provider_unreachable');
+  });
 });
 
 // --- Steam provider (storesearch -> appdetails, both public JSON) ----------

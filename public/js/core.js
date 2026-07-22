@@ -214,18 +214,20 @@ function applyStaticTexts() {
   document.getElementById('footerTerms').textContent = t('footer.terms');
 }
 
-// Shared site footer visibility (issues #224/#134). The footer starts hidden in
-// the markup and is shown only when the server says the public surfaces behind
-// it are configured (GET /api/config — mail delivery for Kontakt AND the
+// Shared footer LINK visibility (issues #224/#134). The links start hidden in
+// the markup and are shown only when the server says the public surfaces behind
+// them are configured (GET /api/config — mail delivery for Kontakt AND the
 // Impressum address for the legal pages). All-or-nothing by design: a
-// half-ready instance shows no footer rather than a broken one. Plain fetch
+// half-ready instance shows no links rather than broken ones. Plain fetch
 // (not api()): the endpoint is public and a failure must never bounce to login
-// — on any error the footer just stays hidden.
+// — on any error the links just stay hidden. The footer element itself is
+// always rendered: it also carries the ungated "Powered by BGG" attribution
+// BGG's XML API terms require (#117).
 function initFooter() {
   fetch('/api/config')
     .then((r) => (r.ok ? r.json() : null))
     .then((cfg) => {
-      if (cfg && cfg.footer) document.querySelector('.site-footer').hidden = false;
+      if (cfg && cfg.footer) document.getElementById('footerLinks').hidden = false;
     })
     .catch(() => {});
 }

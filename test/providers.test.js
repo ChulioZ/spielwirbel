@@ -98,15 +98,22 @@ test('a disabled provider is refused server-side and never reaches upstream', as
 test('an enabled provider still answers on a configured round', async () => {
   const round = await createRound(request);
   await setProviders(round.id, ['bgg']);
+  const previousToken = process.env.BGG_API_TOKEN;
+  process.env.BGG_API_TOKEN = 'test-token'; // BGG answers nothing without one (#117)
   global.fetch = async () => ({
     ok: true,
     status: 200,
-    json: async () => ({ results: { bindings: [{ bgg: { value: '13' }, itemLabel: { value: 'Catan' } }] } }),
+    text: async () => '<items><item type="boardgame" id="13"><name type="primary" value="Catan"/></item></items>',
   });
-  const res = await request(app)
-    .get(`/api/rounds/${round.id}/lookup/search?provider=bgg&q=catan`);
-  assert.equal(res.status, 200);
-  assert.deepEqual(res.body.results, [{ providerId: '13', title: 'Catan', thumbnail: null }]);
+  try {
+    const res = await request(app)
+      .get(`/api/rounds/${round.id}/lookup/search?provider=bgg&q=catan`);
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.results, [{ providerId: '13', title: 'Catan', thumbnail: null }]);
+  } finally {
+    if (previousToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = previousToken;
+  }
 });
 
 test('with no providers enabled every lookup is refused', async () => {

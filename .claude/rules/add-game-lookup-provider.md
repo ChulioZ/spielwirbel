@@ -10,43 +10,68 @@ has enabled** in parallel (absent config = all five, #294 — see
 interleave) into one dropdown; one provider failing (502) must not blank the
 others' results (`Promise.allSettled`).
 
-## BGG (`lib/providers/bgg.js`) — and why the XML API2 is NOT usable
+## BGG (`lib/providers/bgg.js`) — the XML API2, under a token (#117)
 
-**BGG closed its XML API2 (2025-07-02):** every request now needs a registered
-app + Bearer token — keyless calls get `401`. Its website search
-(`/search/boardgame`, `geeksearch.php`) `403`s scripts even with a browser
-User-Agent. Don't re-add the XML API2 or scrape the search page. Instead BGG
-(#69) splits the job across two public, key-free endpoints:
+Both hops run on BGG's official **XML API2** with a registered application
+token (`BGG_API_TOKEN`, approved as a **commercial** licence — donations count
+as commercial, see #173):
 
-- **search = Wikidata Query Service (SPARQL):** CirrusSearch full-text via
-  `wikibase:mwapi` (`api "Search"` + `mwapi:srsearch`), restricted to entities
-  with a BGG ID (property **P2339**). Wikidata is only the search *index*
-  (name → BGG object id + label). Prefer CirrusSearch over
-  `EntitySearch`/`wbsearchentities` — the latter is prefix/alias-only ("catan"
-  misses "Catan: Cities & Knights"). Wikimedia policy requires a descriptive
-  `User-Agent`.
-- **detail = BGG's public JSON:** `api.geekdo.com/api/geekitems?objectid=<id>&
-  objecttype=thing&nosession=1` (the site's own API, no auth) — real `name`,
-  `minplayers`/`maxplayers` (strings, "0" = unknown → null),
-  `minplaytime`/`maxplaytime`, `imageurl` (on `cf.geekdo-images.com`),
-  `canonical_link`.
+- **search:** `boardgamegeek.com/xmlapi2/search?query=<q>&type=boardgame,boardgameexpansion`
+- **detail:** `boardgamegeek.com/xmlapi2/thing?id=<id>` — `<name type="primary">`,
+  `<minplayers>`/`<maxplayers>` (attribute strings, "0" = unknown → null),
+  `<thumbnail>`, and the item `type` the canonical link is built from.
 
-**Titles follow the UI locale (#114):** the `search`/`game` routes accept
-`lang` (allowlist `de`/`en`, default `en` — `lookupLang` in
-`routes/lookup.js`), which is **part of the cache key**. BGG honours it at both
-layers via Wikidata's language-tagged labels: `buildSparql` emits the preferred
-language first with the other as fallback (dropdown label), and on pick
-`detail(id, lang)` runs a second key-free Wikidata label query
-(`buildLabelSparql`), falling back to BGG's English `item.name`. The other
-providers ignore `lang` (they localize via their own env locale).
-`labelLanguages()` guards the language literal against injection (non-2-letter
-→ `en`).
+Four things about it bite:
 
-**Known limits, not bugs:** play time comes from BGG in minutes, bucketed to
-short/medium/long via the **average** of min/max (<30 / 30–60 / >60). Search
-hits carry `thumbnail: null` (Wikidata isn't asked for an image) — BGG rows
-show the placeholder thumb in the dropdown; the cover arrives with the detail
-on pick.
+- **No `www.`, ever.** BGG's docs are explicit that `www.boardgamegeek.com`
+  interferes with request authorization — a perfectly valid token then `401`s.
+- **`Authorization: Bearer <token>`**, and the token is read **per call** from
+  env (like the rate-limit ceilings in `lib/app.js`), so a test can drive it.
+- **No token ⇒ `search()` returns `[]` and `detail()` returns the null-shaped
+  product** — never a throw. The frontend merges providers with
+  `Promise.allSettled`, so a 502 here would render as "couldn't reach provider"
+  across the whole dropdown; an empty list leaves the other four clean. The
+  silence is why `lib/status.js` reports `lookup.bggTokenSet` — otherwise a
+  missing token is invisible to the operator.
+- **Throttling is a status code, not a queue.** BGG answers `500`/`503` when
+  too busy (`202` on some endpoints, `429` generically). `fetchXml` retries
+  exactly those, twice, inside one 8 s budget; every other status (notably
+  `401`) is final. Don't turn this into an unbounded retry — the route's
+  `cached()` (10 min) plus the UI debounce are what actually keep the request
+  count down, which is what BGG's terms ask for.
+
+**Search results must be RANKED before truncating.** BGG's search is a plain
+name match with **no relevance order of its own** — "catan" matches well over a
+hundred items — so slicing the first 8 as they arrive routinely drops the game
+the user meant. `parseSearch` scores each name (exact > prefix > substring,
+diacritics/ß/punctuation folded) and prefers the shorter title on a tie, which
+is what keeps a base game ahead of its editions and expansions.
+
+**Localized titles come from the MATCHED name (#117 replaced #114's mechanism).**
+BGG answers a search with the name that matched, so a German query yields the
+German alternate name — while `/thing` always reports the primary (usually
+original-language) name. `pickedTitle()` (`public/js/lookup-title.js`)
+therefore keeps the search hit's title for `bgg` and lets detail win for every
+other provider. There is **no `lang` parameter anywhere any more**: no provider
+takes one, so the route, the cache key and the client query string dropped it.
+
+**XML is parsed by a small scanner, not a dependency.** Two details are
+load-bearing: an attribute value may legally contain a raw `>` (game titles do,
+and a naive `/<[^>]*>/` cuts the tag in half), and titles arrive
+entity-encoded, so every attribute and text node is decoded.
+
+**Known limits, not bugs:** no play-time bucketing (the field is read but the
+app no longer stores durations). Search hits carry `thumbnail: null` — the
+search endpoint returns no images at all, so BGG rows show the placeholder
+thumb in the dropdown and the cover arrives with the detail on pick.
+
+**Attribution is a licence condition, not decoration.** A public-facing app
+must display the "Powered by BGG" logo linked back to BoardGameGeek, at a size
+where its text stays legible — it lives in the always-visible half of the site
+footer (`public/index.html`, `.site-footer__bgg`) and is **self-hosted**, so
+rendering it contacts nobody. Don't gate it behind the legal-links config flag
+and don't shrink or fade it. BGG also forbids modifying the retrieved data:
+choosing which of BGG's own names to show is fine, rewriting one is not.
 
 ## PS Store (`lib/providers/psstore.js`)
 

@@ -35,18 +35,29 @@
     <!-- Content is rendered by the js/* files -->
   </main>
 
-<!-- Shared site footer (issues #224/#134): Kontakt + the legal pages. Hidden
-       until GET /api/config says the public surfaces behind it are configured
-       (initFooter() in core.js) — all-or-nothing, so a half-ready instance shows
-       no footer rather than a broken one (the legal routes 404 under the same
-       condition). Root-absolute paths per
-       .claude/rules/spa-fallback-absolute-asset-paths.md; labels set in
+<!-- Shared site footer, two independent parts:
+       - Kontakt + the legal pages (issues #224/#134), hidden until GET
+         /api/config says the surfaces behind them are configured (initFooter()
+         in core.js) — all-or-nothing, so a half-ready instance shows no links
+         rather than broken ones (the legal routes 404 under the same condition);
+       - the "Powered by BGG" attribution (#117), deliberately NOT gated: BGG's
+         XML API terms require a public-facing application to display the logo,
+         linked back to BoardGameGeek, at a size that keeps its text easily
+         legible. Self-hosted rather than hotlinked, so rendering it contacts
+         nobody (unlike the hotlinked game covers disclosed in the policy).
+       Root-absolute paths per
+       .claude/rules/spa-fallback-absolute-asset-paths.md; link labels are set in
        applyStaticTexts() so they re-localize on language change. -->
-  <footer class="site-footer" role="contentinfo" hidden>
-    <a href="/kontakt.html" id="footerKontakt"></a>
-    <a href="/impressum" id="footerImpressum"></a>
-    <a href="/datenschutz" id="footerPrivacy"></a>
-    <a href="/nutzungsbedingungen" id="footerTerms"></a>
+  <footer class="site-footer" role="contentinfo">
+    <div class="site-footer__links" id="footerLinks" hidden>
+      <a href="/kontakt.html" id="footerKontakt"></a>
+      <a href="/impressum" id="footerImpressum"></a>
+      <a href="/datenschutz" id="footerPrivacy"></a>
+      <a href="/nutzungsbedingungen" id="footerTerms"></a>
+    </div>
+    <a class="site-footer__bgg" href="https://boardgamegeek.com" target="_blank" rel="noopener noreferrer">
+      <img src="/icons/powered-by-bgg.png" width="900" height="264" alt="Powered by BGG" />
+    </a>
   </footer>
 
   <!-- Small toast for feedback. A permanent aria-live region (#145): it stays in
@@ -68,6 +79,7 @@
   <script src="/js/ranking.js"></script>
   <script src="/js/lookup-group.js"></script>
   <script src="/js/lookup-cover.js"></script>
+  <script src="/js/lookup-title.js"></script>
   <script src="/js/feedback.js"></script>
   <script src="/js/views-home.js"></script>
   <script src="/js/views-round.js"></script>

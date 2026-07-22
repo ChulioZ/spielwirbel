@@ -190,11 +190,15 @@ code and documentation are in English.
   add-game lookup queries the PlayStation Store, Steam, the Nintendo eShop, the
   Xbox / Microsoft Store and BoardGameGeek server-side (via
   `/api/rounds/:rid/lookup/*`, and only the providers that round enabled) only
-  when you type a title to search; it sends just the search text and the active
-  UI language, and the app works fully without it. None of these need an API key
-  or account. BoardGameGeek titles follow the **active UI language** (German or
-  English, falling back to the other), so a German search fills in the German
-  game name. The PS Store locale defaults to `de-de` (`PSSTORE_LOCALE`); Steam
+  when you type a title to search; it sends just the search text, and the app
+  works fully without it. The four digital stores need no key or account.
+  **BoardGameGeek does:** its XML API requires a registered application and a
+  bearer token in `BGG_API_TOKEN` (create one at
+  [boardgamegeek.com/applications](https://boardgamegeek.com/applications)).
+  Without it the board-game search silently returns nothing and the other four
+  providers carry on; the operator status panel flags the missing token. Because
+  BGG answers a search with the name that *matched*, typing a German title finds
+  and fills in the German name. The PS Store locale defaults to `de-de` (`PSSTORE_LOCALE`); Steam
   defaults to the German store, `de`/`german` (`STEAM_CC` / `STEAM_LOCALE`); the
   Nintendo eShop defaults to the German store, `de` (`NINTENDO_LOCALE`); the
   Xbox / Microsoft Store defaults to the German store, `de-de` (`XBOX_LOCALE`).
@@ -239,8 +243,8 @@ lib/
     index.js         provider registry + image-host allowlist
     psstore.js       PlayStation Store: search + detail via the store's
                      server-rendered page data (digital games)
-    bgg.js           BoardGameGeek: search via Wikidata (maps a name to a BGG
-                     id), detail via BGG's public JSON endpoint (board games)
+    bgg.js           BoardGameGeek: search + detail via BGG's official XML API2
+                     under an application token (board games)
     steam.js         Steam: search + detail via the store's public JSON
                      endpoints (storesearch / appdetails) (digital games)
     nintendo.js      Nintendo eShop: search + detail via Nintendo of Europe's
@@ -299,7 +303,8 @@ public/
   manifest.webmanifest  PWA manifest (installable app metadata + icons)
   sw.js              service worker: precache the app shell, offline fallback
   fonts/             self-hosted fonts + Tabler icon set
-  icons/             PWA / home-screen app icons (192, 512, apple-touch)
+  icons/             PWA / home-screen app icons (192, 512, apple-touch) and the
+                     "Powered by BGG" attribution logo shown in the footer
   js/
     login.js         login.html's own script — an IIFE, not part of the
                      shared global scope below (only loaded by login.html)
@@ -320,6 +325,8 @@ public/
                      the last known data while a background fetch refreshes
     lookup-group.js  collapses same-title provider hits into one multi-badge row
     lookup-cover.js  which cover image a picked provider match yields
+    lookup-title.js  which title a picked provider match fills in (BGG keeps the
+                     matched name, so a German search stays German)
     focus-trap.js    keeps Tab inside an open sheet + restores focus on close
     feedback.js      top-bar feedback button + submission sheet (issue #260)
     views-home.js    lobby + new round
@@ -504,6 +511,14 @@ is shared with everyone using the instance, while these powers cross tenant
 boundaries. Optionally set `ADMIN_SESSION_SECRET` to sign the admin cookie
 (otherwise `SESSION_SECRET`, then the password itself). Leave `ADMIN_PASSWORD`
 unset — the default — and the entire surface `404`s.
+
+Add-game lookup: the four digital stores work out of the box, but BoardGameGeek
+needs `BGG_API_TOKEN` — a bearer token from a registered application
+([boardgamegeek.com/applications](https://boardgamegeek.com/applications), see
+[Using the XML API](https://boardgamegeek.com/using_the_xml_api)). Requests are
+made server-side and cached, as BGG's terms ask, and the app displays the
+required linked "Powered by BGG" logo in its footer. Leave the token unset and
+board-game search simply returns nothing.
 
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and

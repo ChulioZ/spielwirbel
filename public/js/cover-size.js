@@ -19,11 +19,16 @@ const COVER_HERO = 480;
 // 8 KB at ?w=330, an Xbox master 681 KB → 42 KB at ?w=330&h=330&q=90.
 //
 // Only Sony and Microsoft are listed, and that is the whole point: BGG already
-// hands us a `fit-in/246x300` CDN URL (~20 KB) and Steam a `capsule_*` crop
+// hands us a `fit-in/200x150` CDN URL (4–13 KB) and Steam a `capsule_*` crop
 // (~50 KB), so both are already right-sized, and Nintendo's CDN ignores `?w=`
 // entirely (byte-identical response) so appending one would be noise. Adding a
 // host here means checking that its CDN actually honours the parameter —
 // an unrecognised host passing through untouched is the safe default.
+//
+// geekdo (BGG) can never be added: its transform paths are SIGNED, so a
+// hand-built variant 400s and a query parameter is ignored. The provider picks
+// the right-sized variant at capture time instead — see
+// .claude/rules/provider-cover-sizing.md.
 //
 // Each entry matches the host itself and any subdomain, mirroring the
 // `host === h || host.endsWith('.' + h)` shape every provider's download guard

@@ -55,13 +55,13 @@ function enabledProviders(round) {
 }
 
 async function searchProvider(rid, provider, q) {
-  const res = await api('GET', `/api/rounds/${rid}/lookup/search?provider=${provider}&q=${encodeURIComponent(q)}&lang=${encodeURIComponent(getLocale())}`);
+  const res = await api('GET', `/api/rounds/${rid}/lookup/search?provider=${provider}&q=${encodeURIComponent(q)}`);
   return ((res && res.results) || []).map((r) => Object.assign({ provider }, r));
 }
 
 // Fetch one provider's detail for a round, honouring its enabled list server-side.
 function lookupDetail(rid, r) {
-  return api('GET', `/api/rounds/${rid}/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}&lang=${encodeURIComponent(getLocale())}`);
+  return api('GET', `/api/rounds/${rid}/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}`);
 }
 
 // Query-match relevance tier (higher = better), case-insensitive on trimmed
@@ -473,7 +473,7 @@ function showAddGame(round) {
       toast(t('lookup.error'));
       return;
     }
-    if (d.title) titleInput.value = d.title;
+    titleInput.value = pickedTitle(r, d) || titleInput.value;
     chosenSource.url = d.url || '';
     applyDetail(d);
     if (d.imageUrl && !pastedBlob) showProviderImage(d.imageUrl);
@@ -604,13 +604,13 @@ function showLinkProvider(round, game) {
     // Name: the add-game flow takes the provider title outright, so offer it
     // here too (issue #180). Show it first — the name is the most prominent
     // field — but only when it actually differs (trimmed, case-insensitive).
-    const provTitle = (d.title || r.title || '').trim();
+    const provTitle = pickedTitle(r, d).trim();
     if (provTitle && provTitle.toLowerCase() !== (game.title || '').trim().toLowerCase())
       fields.unshift({ key: 'title', label: t('linkProvider.field.title') });
 
     resultBox.innerHTML = '';
     const box = h('<div class="section"></div>');
-    box.appendChild(h(`<div class="link-match"><strong>${esc(d.title || r.title)}</strong> · ${esc(providerLabel(r.provider))}</div>`));
+    box.appendChild(h(`<div class="link-match"><strong>${esc(provTitle)}</strong> · ${esc(providerLabel(r.provider))}</div>`));
 
     let chips = null;
     if (fields.length) {
@@ -681,7 +681,7 @@ function showLinkProvider(round, game) {
   async function applyLink(r, d, chips) {
     const body = { sourceProvider: r.provider, sourceExternalId: r.providerId };
     if (d.url) body.sourceUrl = d.url;
-    if (isOn(chips, 'title')) body.title = (d.title || r.title || '').trim();
+    if (isOn(chips, 'title')) body.title = pickedTitle(r, d).trim();
     const coverUrl = providerMatchCover(r, d);
     if (isOn(chips, 'image') && coverUrl) body.imageUrl = coverUrl;
     if (isOn(chips, 'players')) {
