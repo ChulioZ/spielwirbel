@@ -78,3 +78,29 @@ jobs:
       - run: node --test --test-concurrency=1 test/repo.postgres.test.js test/migrate.postgres.test.js
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/gamesessions
+
+  # Aggregate gate (issue #364): branch protection requires only this ONE context
+  # from the CI workflow. Because it depends on the whole `test` matrix (plus
+  # coverage + postgres), adding, removing or bumping a Node version can never
+  # again silently leave a matrix job ungated — the old failure mode where
+  # required checks were pinned by exact `test (X.x)` name and desynced from the
+  # matrix. Required checks go through this job; do NOT re-add individual
+  # `test (X.x)` contexts to branch protection — see
+  # .claude/rules/ci-aggregate-gate.md. The other workflows (Lint/Docker/
+  # Secret-Scan/DCO) have stable single job names and are required directly.
+  ci-passed:
+    if: always() # must run even when a dependency fails, to report the failure
+    needs: [test, coverage, postgres]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all CI jobs succeeded
+        # needs.*.result is the array of dependency results. A plain `needs:` gate
+        # SUCCEEDS when a dependency is skipped, which would silently reopen the
+        # gap this job closes — so treat any non-success (failure/cancelled/
+        # skipped) as a gate failure. None of test/coverage/postgres skip
+        # conditionally today; the `skipped` guard is defence for a future change.
+        if: >-
+          contains(needs.*.result, 'failure') ||
+          contains(needs.*.result, 'cancelled') ||
+          contains(needs.*.result, 'skipped')
+        run: exit 1
