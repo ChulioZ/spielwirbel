@@ -1069,6 +1069,50 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteGrant('round-1', 'user-x'), null);
   });
 
+  /* ------------------------------ Invitations ------------------------------- */
+  /*
+   * Round-sharing invitations (#207). Global and un-scoped like grants. The
+   * inviter's seat decision (memberId, or null for a fresh member) round-trips,
+   * and resolve is a one-way pending→accepted/declined that cannot fire twice.
+   */
+
+  test('invitations: create round-trips the seat decision; resolve is pending-once', async () => {
+    const inv = await repo.createInvitation({
+      roundId: 'round-9', ownerTenantId: 'owner-t', inviterUserId: 'inviter-1',
+      inviteeUserId: 'invitee-1', memberId: 'seat-3',
+    });
+    assert.match(inv.id, /^[0-9a-f]{16}$/);
+    assert.equal(inv.roundId, 'round-9');
+    assert.equal(inv.ownerTenantId, 'owner-t');
+    assert.equal(inv.inviterUserId, 'inviter-1');
+    assert.equal(inv.inviteeUserId, 'invitee-1');
+    assert.equal(inv.memberId, 'seat-3'); // the inviter's take-over choice
+    assert.equal(inv.status, 'pending');
+    assert.equal(inv.resolvedAt, null);
+    assert.match(inv.createdAt, /^\d{4}-\d\d-\d\dT.*Z$/);
+    assert.deepEqual(await repo.getInvitation(inv.id), inv);
+
+    // A fresh-member invite carries memberId: null (default).
+    const fresh = await repo.createInvitation({
+      roundId: 'round-9', ownerTenantId: 'owner-t', inviterUserId: 'inviter-1', inviteeUserId: 'invitee-2',
+    });
+    assert.equal(fresh.memberId, null);
+
+    // Both are visible on the round.
+    assert.deepEqual((await repo.listInvitationsForRound('round-9')).map((i) => i.inviteeUserId).sort(), ['invitee-1', 'invitee-2']);
+
+    // Resolve once (accept), then a second resolve is refused (null) — no double-accept.
+    const accepted = await repo.resolveInvitation(inv.id, 'accepted');
+    assert.equal(accepted.status, 'accepted');
+    assert.match(accepted.resolvedAt, /^\d{4}-\d\d-\d\dT.*Z$/);
+    assert.equal(await repo.resolveInvitation(inv.id, 'declined'), null); // already resolved
+    assert.equal((await repo.getInvitation(inv.id)).status, 'accepted'); // unchanged
+
+    // Decline the other; unknown id is null.
+    assert.equal((await repo.resolveInvitation(fresh.id, 'declined')).status, 'declined');
+    assert.equal(await repo.resolveInvitation('nope', 'accepted'), null);
+  });
+
   /* ------------------------------- Moderation ------------------------------- */
   /*
    * The operator methods (#268) are the one deliberately CROSS-TENANT read path:

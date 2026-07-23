@@ -114,7 +114,13 @@ async function accountApi(method, path, body, _retried) {
     onSessionLost();
     throw new Error('auth');
   }
-  if (!res.ok) throw new Error('request_failed');
+  if (!res.ok) {
+    // Surface the server's error code (like core.js api()) so callers can map it
+    // to a specific message — e.g. the invitation accept's 'seat_unavailable'.
+    let code = 'request_failed';
+    try { code = (await res.json()).error || code; } catch {}
+    throw new Error(code);
+  }
   return res.status === 204 ? null : res.json();
 }
 
