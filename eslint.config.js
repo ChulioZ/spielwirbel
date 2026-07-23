@@ -71,6 +71,8 @@ const frontendGlobals = {
   refreshInboxBadge: 'readonly',
   // views-inbox.js (issue #207)
   showInbox: 'readonly', renderInboxItem: 'readonly',
+  renderInvitationItem: 'readonly', renderGenericItem: 'readonly',
+  unreadDot: 'readonly', afterRemove: 'readonly',
   // support.js (issue #173)
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
   // views-landing.js (issue #322): logged-out landing page
@@ -96,6 +98,7 @@ const frontendGlobals = {
   showArchive: 'readonly', ARCHIVES: 'readonly', THEMES: 'readonly',
   showBackground: 'readonly', showGameDetail: 'readonly', showAddGame: 'readonly',
   showTags: 'readonly', showMoveGames: 'readonly', showProviders: 'readonly',
+  showInvite: 'readonly', inviteError: 'readonly',
   HUB_TABS: 'readonly', HUB_TAB_OF: 'readonly', hubTabOwning: 'readonly',
   // round-rail.js
   RAIL_OWN_ENTRY: 'readonly', railItem: 'readonly', railAction: 'readonly',

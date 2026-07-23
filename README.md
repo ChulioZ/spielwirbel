@@ -271,6 +271,10 @@ routes/
                                              forgot/reset password, me, and the
                                              per-user notification inbox (#207) —
                                              404 unless ACCOUNTS_ENABLED)
+  invitations.js     /api/account/invitations (round-sharing: send / accept /
+                                             decline; the inviter fixes the
+                                             member-seat take-over (#207) —
+                                             404 unless ACCOUNTS_ENABLED)
   contact.js         /api/contact           (public contact form / DSA notice
                                              intake → stores every submission +
                                              e-mails the operator + acknowledges

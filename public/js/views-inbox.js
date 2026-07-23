@@ -43,17 +43,76 @@ async function showInbox() {
   app.appendChild(list);
 }
 
-// One inbox row. Items are generic in this slice (no type-specific accept/decline
-// actions yet): a title, its timestamp, a read/unread mark, and a dismiss button.
-// Clicking an unread row marks it read. The unread state is signalled by both a
-// dot (an element with an aria-label) and a bolder title, never colour alone.
+// The unread dot: an element (present/absent) with an aria-label, so unread state
+// is never signalled by colour alone (the title also goes bolder).
+const unreadDot = (item) => (item.read
+  ? ''
+  : `<span class="inbox-row__dot" role="img" aria-label="${esc(t('inbox.unread'))}"></span>`);
+
+// After a row is removed, fall back to the empty state if nothing is left.
+function afterRemove() {
+  refreshInboxBadge();
+  if (!app.querySelector('.inbox-row')) showInbox();
+}
+
+// Dispatch on the item type. Round invitations (#207) are the first typed item,
+// with accept/decline actions; anything else renders as a generic notification.
 function renderInboxItem(item) {
-  const dot = item.read
-    ? ''
-    : `<span class="inbox-row__dot" role="img" aria-label="${esc(t('inbox.unread'))}"></span>`;
+  if (item.type === 'round_invitation') return renderInvitationItem(item);
+  return renderGenericItem(item);
+}
+
+// A round-sharing invitation (#207): accept routes into the now-shared round;
+// decline resolves it silently. Both clear the item server-side (the route
+// dismisses its inbox entry), so the row is removed either way.
+function renderInvitationItem(item) {
+  const p = item.payload || {};
+  const seat = p.memberName ? t('inbox.invite.asMember', { name: p.memberName }) : t('inbox.invite.asNew');
   const row = h(`<div class="ds-row inbox-row${item.read ? '' : ' inbox-row--unread'}">
       <div class="ds-row__main">
-        <div class="ds-row__date">${dot}${esc(t('inbox.item'))}</div>
+        <div class="ds-row__date">${unreadDot(item)}${esc(t('inbox.invite.title', { round: p.roundName || '' }))}</div>
+        <div class="ds-row__status muted">${esc(t('inbox.invite.from', { user: p.inviterUsername || '?' }))} · ${esc(seat)}</div>
+      </div>
+      <div class="ds-row__meta inbox-invite__actions">
+        <button class="btn btn--primary inbox-invite__accept" type="button">${esc(t('inbox.invite.accept'))}</button>
+        <button class="link-btn inbox-invite__decline" type="button">${esc(t('inbox.invite.decline'))}</button>
+      </div>
+    </div>`);
+
+  row.querySelector('.inbox-invite__accept').addEventListener('click', async () => {
+    try {
+      const { roundId } = await accountApi('POST', `/invitations/${p.invitationId}/accept`);
+      // Navigate straight into the now-shared round. Deliberately NOT afterRemove()
+      // here — its empty-state re-render (showInbox) is async and would land back
+      // on the inbox, overwriting this navigation. Just refresh the unread badge.
+      row.remove();
+      refreshInboxBadge();
+      showRound(roundId, 'start');
+    } catch (e) {
+      // Any accept failure means the invite is no longer actionable (seat taken,
+      // round gone, already resolved) — the server has cleared it, so drop the row
+      // and stay on the inbox (afterRemove re-renders the empty state if needed).
+      row.remove();
+      afterRemove();
+      toast(e.message === 'seat_unavailable' ? t('inbox.invite.seatGone') : t('inbox.invite.failed'));
+    }
+  });
+
+  row.querySelector('.inbox-invite__decline').addEventListener('click', async () => {
+    try { await accountApi('POST', `/invitations/${p.invitationId}/decline`); } catch {}
+    row.remove();
+    afterRemove();
+  });
+
+  return row;
+}
+
+// A generic notification: a title, its timestamp, a read/unread mark, and a
+// dismiss button. Clicking an unread row marks it read.
+function renderGenericItem(item) {
+  const row = h(`<div class="ds-row inbox-row${item.read ? '' : ' inbox-row--unread'}">
+      <div class="ds-row__main">
+        <div class="ds-row__date">${unreadDot(item)}${esc(t('inbox.item'))}</div>
         <div class="ds-row__status muted">${esc(fmtDateTime(item.createdAt))}</div>
       </div>
       <div class="ds-row__meta">
@@ -80,8 +139,7 @@ function renderInboxItem(item) {
     try {
       await accountApi('DELETE', `/inbox/${item.id}`);
       row.remove();
-      refreshInboxBadge();
-      if (!app.querySelector('.inbox-row')) showInbox(); // nothing left → re-render the empty state
+      afterRemove();
     } catch {}
   });
 

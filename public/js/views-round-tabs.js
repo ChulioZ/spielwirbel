@@ -205,6 +205,13 @@ function renderRegalTab(round, activeGames) {
     moveBtn.addEventListener('click', () => showMoveGames(round));
     foot.appendChild(moveBtn);
   }
+  // Invite an account to share this round (#207) — only in accounts mode; the
+  // route 404s otherwise, and legacy prod has no accounts to address.
+  if (accountsActive()) {
+    const inviteBtn = h(`<button class="link-btn"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('invite.link'))}</button>`);
+    inviteBtn.addEventListener('click', () => showInvite(round));
+    foot.appendChild(inviteBtn);
+  }
   app.appendChild(foot);
 }
 
@@ -274,6 +281,78 @@ async function showMoveGames(round) {
       toast(msg);
     }
   });
+}
+
+// Invite an account to share this round (#207). The OWNER fixes the seat here —
+// take over a specific user-less member, or create a fresh one — so the invitee
+// can't pick the wrong person. Accounts mode only (the entry points gate on
+// accountsActive(); the route 404s otherwise). A grantee who somehow reaches this
+// fails safely: the send route 404s a round they don't own.
+async function showInvite(round) {
+  const rid = round.id;
+  const freeSeats = (round.members || []).filter((m) => !m.userId);
+
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('invite.title'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('invite.title'))}</h2>
+          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <p class="muted">${esc(t('invite.intro', { round: round.name }))}</p>
+        <div class="field">
+          <label for="inviteUser">${esc(t('invite.username'))}</label>
+          <input id="inviteUser" class="input" type="text" autocomplete="off" spellcheck="false" placeholder="${esc(t('invite.usernamePlaceholder'))}">
+        </div>
+        <div class="field">
+          <label for="inviteSeat">${esc(t('invite.seat'))}</label>
+          <select id="inviteSeat" class="input">
+            <option value="">${esc(t('invite.newMember'))}</option>
+            ${freeSeats.map((m) => `<option value="${esc(m.id)}">${esc(t('invite.takeOver', { name: m.name }))}</option>`).join('')}
+          </select>
+        </div>
+        <div class="toolbar sheet__actions">
+          <button id="inviteGo" class="btn btn--primary btn--lg"><i class="ti ti-mail" aria-hidden="true"></i> ${esc(t('invite.submit'))}</button>
+        </div>
+      </div>
+    </div>`);
+  const form = backdrop.querySelector('.sheet');
+  document.body.appendChild(backdrop);
+
+  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  document.addEventListener('keydown', onKey, true);
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+  form.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+
+  const go = form.querySelector('#inviteGo');
+  go.addEventListener('click', async () => {
+    const username = form.querySelector('#inviteUser').value.trim();
+    const memberId = form.querySelector('#inviteSeat').value || null;
+    if (!username) { form.querySelector('#inviteUser').focus(); return; }
+    go.disabled = true;
+    try {
+      await accountApi('POST', '/invitations', { roundId: rid, username, memberId });
+      toast(t('invite.toast.sent', { user: username }));
+      closeSheet();
+    } catch (e) {
+      go.disabled = false;
+      toast(inviteError(e.message));
+    }
+  });
+}
+
+// Map a send-route error code to a localized message.
+function inviteError(code) {
+  const map = {
+    user_not_found: 'invite.err.userNotFound',
+    cannot_invite_self: 'invite.err.self',
+    already_member: 'invite.err.alreadyMember',
+    already_invited: 'invite.err.alreadyInvited',
+    invalid_seat: 'invite.err.seatGone',
+    seat_taken: 'invite.err.seatTaken',
+    round_not_found: 'invite.err.roundGone',
+  };
+  return t(map[code] || 'invite.err.generic');
 }
 
 // --- Chronik tab: one timeline of sessions and shelf changes. The activity
