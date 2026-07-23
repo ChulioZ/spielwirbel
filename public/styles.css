@@ -1112,10 +1112,15 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .tl-dot--session { background: var(--brand); width: 12px; height: 12px; left: -24px; }
 
-/* Quiet shelf-change rows on the timeline. */
+/* Quiet shelf-change rows on the timeline. align-items: flex-start keeps the
+   icon, timestamp and delete button pinned to the FIRST line of the label, so a
+   label that wraps on a narrow viewport doesn't leave them floating in the
+   vertical middle. Each side item is sized to one label line (1.5em on the icon,
+   an equivalent line-height on the timestamp) so they still read as centered on
+   single-line rows. */
 .tl-act {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 8px 14px;
   background: var(--surface);
@@ -1126,10 +1131,12 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .tl-act--link { cursor: pointer; }
 .tl-act--link:hover { box-shadow: var(--shadow); }
-.tl-act__icon { flex: none; display: flex; opacity: 0.75; }
+.tl-act__icon { flex: none; display: flex; align-items: center; min-height: 1.5em; opacity: 0.75; }
 .tl-act__icon .ti { font-size: 16px; }
 .tl-act__text { flex: 1; min-width: 0; }
-.tl-act__time { color: var(--ink-soft); font-size: 12px; opacity: 0.8; white-space: nowrap; flex: none; }
+/* line-height = one label line (row line-height 1.5 × row font 15px), so the
+   smaller timestamp still centers on the label's first line under flex-start. */
+.tl-act__time { color: var(--ink-soft); font-size: 12px; opacity: 0.8; white-space: nowrap; flex: none; line-height: calc(1.5 * 15px); }
 .tl-act__del {
   flex: none;
   border: none;
@@ -1142,11 +1149,6 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .tl-act__del .ti { font-size: 13px; }
 .tl-act__del:hover { background: color-mix(in srgb, var(--danger) 10%, var(--surface)); color: var(--danger); }
-
-@media (max-width: 520px) {
-  .tl-act { flex-wrap: wrap; }
-  .tl-act__time { width: 100%; padding-left: 26px; }
-}
 
 /* Past-session cards, anchored by the chosen game's cover thumbnail. */
 .session-card {
