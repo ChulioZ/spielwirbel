@@ -85,4 +85,8 @@ shelf has no undo.
   be NULL — see `.claude/rules/postgres-backend.md`).
 - **The Regal entry point is gated on `round.games.length`, not `activeGames`** —
   archived games move too, so a round holding nothing but retired games must
-  still offer the action.
+  still offer the action — **and on `!round.shared`**: moving is owner-only
+  (#411), so the entry point is hidden on a shared round and the route answers a
+  grantee `403 not_owner` before it looks anything up. That guard is what stops a
+  grantee reparenting the shelf into a round of the owner's they were never
+  invited to; see `.claude/rules/round-grant-resolver.md` §2.

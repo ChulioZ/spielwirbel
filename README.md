@@ -68,7 +68,8 @@ code and documentation are in English.
   shelf's footer moves *all* of a round's games — archived ones included, with
   their covers, provider links and tags — into another of your rounds, merging
   same-named tags. The emptied round stays behind; its session history does
-  not, since a session cannot reference games that now live elsewhere.
+  not, since a session cannot reference games that now live elsewhere. Moving is
+  owner-only — the action is not offered on a round that was shared with you.
 - **Tags** – every round can define its own free-form tags (e.g. "outside",
   "quick lunch break", "digital", "co-op") on a dedicated screen, reached from
   the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign
