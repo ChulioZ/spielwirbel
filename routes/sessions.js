@@ -8,6 +8,7 @@ const express = require('express');
 const { z } = require('zod');
 const { validateBody } = require('../lib/validate');
 const { trackEvent } = require('../lib/observability');
+const { emitFeedEvent } = require('../lib/feed');
 
 const router = express.Router({ mergeParams: true });
 
@@ -212,7 +213,16 @@ router.post('/:sid/finish', async (req, res) => {
   const updated = await req.repo.finishSession(req.params.rid, req.params.sid, { finished, winnerIds });
   if (!updated) return res.status(404).json({ error: 'Session not found' });
   // This route also UN-finishes (finished:false) — only the real finish counts.
-  if (finished) trackEvent('session_finished', { tenantId: req.tenantId });
+  if (finished) {
+    trackEvent('session_finished', { tenantId: req.tenantId });
+    // Freundeskreis feed (#325): "‹user› hat ‹Spiel› gespielt". The played game is
+    // the session's chosen one; carry its title + cover snapshot only (never
+    // members, winners or scores — those are the round's own data). Best-effort.
+    if (session.chosenGameId) {
+      const game = await req.repo.getGame(req.params.rid, session.chosenGameId);
+      if (game) await emitFeedEvent(req.userId, { type: 'session_played', title: game.title, coverUrl: game.image });
+    }
+  }
   res.json(updated);
 });
 

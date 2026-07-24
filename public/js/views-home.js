@@ -56,7 +56,7 @@ async function showHome() {
     const card = h(`<a class="round-card">
          <span class="round-card__emblem" style="background:${themeAccent(r.background)}"><i class="ti ti-tornado" aria-hidden="true"></i></span>
          <span class="round-card__body">
-           <span class="round-card__name">${esc(r.name)}</span>
+           <span class="round-card__name">${esc(r.name)}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>
            <span class="round-card__meta">
              <span class="avatar-stack">${stack}</span>
              <span class="stat-chip"><i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(r.gameCount, 'home.chip.gamesOne', 'home.chip.games'))}</span>
@@ -76,6 +76,15 @@ async function showHome() {
   navLink(newCard, '/round/new', () => showNewRound());
   list.appendChild(newCard);
   app.appendChild(list);
+
+  // Compact Freundeskreis feed (#325): a placeholder the friends module fills in
+  // (only in accounts mode with >= 1 friend) or removes. Not awaited — it must not
+  // delay the (SWR-instant) home render, and it self-guards against a re-render.
+  if (accountsActive() && isLoggedIn()) {
+    const friends = h('<section class="home-friends" id="homeFriends"></section>');
+    app.appendChild(friends);
+    renderHomeFriends(friends);
+  }
 }
 
 // =================== New round ===================
