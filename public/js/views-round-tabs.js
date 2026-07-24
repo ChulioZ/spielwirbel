@@ -217,10 +217,10 @@ function renderRegalTab(round, activeGames) {
   app.appendChild(foot);
 }
 
-// Move every game of this round into another of the user's rounds (#253). The
-// target list is fetched BEFORE the sheet opens, so it never renders an empty
-// picker or a loading state — a user with only this one round gets a plain
-// explanation instead.
+// Move games of this round into another of the user's rounds (#253), either the
+// whole shelf or a selection (#402). The target list is fetched BEFORE the sheet
+// opens, so it never renders an empty picker or a loading state — a user with
+// only this one round gets a plain explanation instead.
 async function showMoveGames(round) {
   let rounds;
   try {
@@ -231,6 +231,11 @@ async function showMoveGames(round) {
   }
   const others = rounds.filter((r) => r.id !== round.id);
   const n = round.games.length;
+
+  // Archived games move too, so they are listed — but labelled, since they are
+  // invisible on the Regal the user is looking at and would otherwise be a
+  // surprise in the count.
+  const stateOf = (g) => (g.retired ? t('retired.crumb') : g.completed ? t('completed.crumb') : '');
 
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('moveGames.title'))}">
@@ -245,6 +250,26 @@ async function showMoveGames(round) {
                <select id="moveTarget" class="input">
                  ${others.map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}
                </select>
+             </div>
+             <div class="move-picker">
+               <div class="move-list__head">
+                 <span id="moveCount" class="muted" aria-live="polite"></span>
+                 <button id="moveToggle" type="button" class="link-btn"></button>
+               </div>
+               <div class="ds-list move-list" role="group" aria-label="${esc(t('moveGames.games'))}">
+                 ${round.games.map((g) => {
+    const state = stateOf(g);
+    return `<label class="ds-row move-row">
+                     <div class="ds-row__main">
+                       <span class="move-row__name" title="${esc(g.title)}">${esc(g.title)}</span>
+                       ${state ? `<span class="muted move-row__state">${esc(state)}</span>` : ''}
+                     </div>
+                     <div class="ds-row__meta">
+                       <input type="checkbox" class="provider-row__box" value="${esc(g.id)}" checked />
+                     </div>
+                   </label>`;
+  }).join('')}
+               </div>
              </div>
              <div class="toolbar sheet__actions">
                <button id="moveGo" class="btn btn--primary btn--lg"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${esc(t('moveGames.submit'))}</button>
@@ -263,24 +288,58 @@ async function showMoveGames(round) {
 
   const go = form.querySelector('#moveGo');
   if (!go) return;
+
+  const boxes = [...form.querySelectorAll('.move-row input')];
+  const countEl = form.querySelector('#moveCount');
+  const toggle = form.querySelector('#moveToggle');
+  const picked = () => boxes.filter((b) => b.checked).map((b) => b.value);
+  // The toggle offers whichever action is still available: "select all" once
+  // anything is unchecked, "clear" while everything is on.
+  const sync = () => {
+    const sel = picked().length;
+    countEl.textContent = tn(sel, 'moveGames.selectedOne', 'moveGames.selected');
+    toggle.textContent = sel === boxes.length ? t('moveGames.selectNone') : t('moveGames.selectAll');
+    go.disabled = sel === 0;
+  };
+  boxes.forEach((b) => b.addEventListener('change', sync));
+  toggle.addEventListener('click', () => {
+    const all = picked().length === boxes.length;
+    boxes.forEach((b) => { b.checked = !all; });
+    sync();
+  });
+  sync();
+
   go.addEventListener('click', async () => {
     const select = form.querySelector('#moveTarget');
     const targetId = select.value;
     const targetName = (others.find((r) => r.id === targetId) || {}).name || '';
-    // The source round's sessions do not survive the move, so this one confirms.
-    if (!confirm(tn(n, 'moveGames.confirmOne', 'moveGames.confirm', { round: targetName }))) return;
+    const ids = picked();
+    if (!ids.length) return;
+    // Only warn about history when a selected game actually carries any: a
+    // shelf-tidying move of never-played games loses nothing, and a warning
+    // that cries wolf gets clicked through.
+    const chosen = new Set(ids);
+    const touchesHistory = (round.sessions || []).some((s) => (s.gameIds || []).some((x) => chosen.has(x)));
+    const msg = touchesHistory
+      ? tn(ids.length, 'moveGames.confirmOne', 'moveGames.confirm', { round: targetName })
+      : tn(ids.length, 'moveGames.confirmPlainOne', 'moveGames.confirmPlain', { round: targetName });
+    if (!confirm(msg)) return;
     go.disabled = true;
     try {
-      const res = await api('POST', `/api/rounds/${round.id}/games/move-to`, { targetRoundId: targetId });
+      // Send the explicit selection even when everything is checked — the count
+      // the user just confirmed is then exactly what the server moves, with no
+      // "all" shortcut that could pick up a game added from another device
+      // since the sheet opened.
+      const res = await api('POST', `/api/rounds/${round.id}/games/move-to`, { targetRoundId: targetId, gameIds: ids });
       toast(tn(res.movedGames, 'moveGames.toast.doneOne', 'moveGames.toast.done'));
       closeSheet(() => showRound(round.id, 'regal'));
     } catch (e) {
       go.disabled = false;
-      const msg =
+      const msg2 =
         e.message === 'quota_games' ? t('moveGames.toast.quotaGames')
           : e.message === 'quota_tags' ? t('moveGames.toast.quotaTags')
             : e.message;
-      toast(msg);
+      toast(msg2);
     }
   });
 }

@@ -58,9 +58,15 @@ const updateGameSchema = z.object({
   title: z.preprocess((v) => String(v).trim(), z.string().min(1, 'Title is missing')).optional(),
 });
 
-// Move-all-games body (#253): just the round to move into.
+// Move-games body (#253): the round to move into, plus an OPTIONAL subset of
+// game ids (#402). Absent means "every game of the round" — the original
+// all-or-nothing behaviour, kept as the default for backward compatibility and
+// for the same absent-≠-empty reason as `providers`
+// (.claude/rules/round-provider-config.md). An EMPTY array is a client error,
+// not a silent no-op: nothing asked to move is a bug in the caller.
 const moveGamesSchema = z.object({
   targetRoundId: z.preprocess((v) => String(v || '').trim(), z.string().min(1, 'targetRoundId is missing')),
+  gameIds: z.array(z.string().min(1)).min(1, 'gameIds must not be empty').optional(),
 });
 
 // Build the optional { provider, externalId, url } source link from POST fields,
@@ -139,8 +145,9 @@ router.post('/', upload.single('image'), async (req, res) => {
   res.status(201).json(game);
 });
 
-// Move EVERY game (active + archived) of this round into another round, merging
-// the two rounds' tags by name (#253). Both rounds are looked up through the
+// Move games (active + archived) of this round into another round, merging the
+// two rounds' tags by name (#253) — the whole shelf by default, or just the
+// games named in `gameIds` (#402). Both rounds are looked up through the
 // tenant-scoped req.repo, which is what makes "another round of the same user"
 // enforce itself: a round of any other tenant is simply not found.
 //
@@ -176,10 +183,17 @@ router.post('/move-to', async (req, res) => {
     ? { maxGames: quota.gamesPerRound(), maxTags: quota.tagsPerRound() }
     : null;
 
-  const result = await req.repo.moveGames(req.params.rid, body.targetRoundId, limits);
+  // Deduped here so both backends receive the same list and count. Membership
+  // in the source round is checked down in the data layer instead of against a
+  // snapshot read here: the shelf is already loaded inside the move's own
+  // transaction, so the check is atomic with the move rather than racing it.
+  const gameIds = body.gameIds ? [...new Set(body.gameIds)] : null;
+
+  const result = await req.repo.moveGames(req.params.rid, body.targetRoundId, limits, gameIds);
   if (result === null) return res.status(404).json({ error: 'Round not found' });
   if (result === 'same_round')
     return res.status(400).json({ error: 'Target round must be a different round' });
+  if (result === 'unknown_game') return res.status(400).json({ error: 'Unknown game' });
   if (result === 'quota_games')
     return res.status(403).json({ error: 'quota_games', limit: limits.maxGames });
   if (result === 'quota_tags')

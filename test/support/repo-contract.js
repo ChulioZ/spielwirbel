@@ -719,6 +719,118 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(session.winnerIds, []);
   });
 
+  test('moveGames moves only the named subset and leaves the rest in place (#402)', async () => {
+    const src = await freshRound({ name: 'Source' });
+    const dst = await freshRound({ name: 'Target' });
+
+    const goes = await repo.addTag(T, src.id, 'Goes');
+    const stays = await repo.addTag(T, src.id, 'Stays');
+    const a = await repo.createGame(T, src.id, gameFields({ title: 'A', tagIds: [goes.id] }));
+    const b = await repo.createGame(T, src.id, gameFields({ title: 'B' }));
+    const c = await repo.createGame(T, src.id, gameFields({ title: 'C', tagIds: [stays.id] }));
+    await repo.retireGame(T, src.id, b.id, true);
+
+    // An archived game is movable like any other; the request order (C, A) is
+    // deliberately not the shelf order — the move follows the SHELF.
+    const result = await repo.moveGames(T, src.id, dst.id, null, [c.id, a.id, b.id]);
+    assert.deepEqual(result, { movedGames: 3, mergedTags: 0, createdTags: 2 });
+
+    let after = await repo.getRound(T, src.id);
+    let target = await repo.getRound(T, dst.id);
+    assert.deepEqual(after.games, []);
+    assert.deepEqual(target.games.map((g) => g.title), ['A', 'B', 'C']);
+    assert.equal(target.games.find((g) => g.title === 'B').retired, true);
+
+    // Now the real subset case: one of three moves, the other two stay put and
+    // keep their shelf order, and only the tag the moved game carries is
+    // created in the target.
+    const src2 = await freshRound({ name: 'Source2' });
+    const dst2 = await freshRound({ name: 'Target2' });
+    const keep1 = await repo.createGame(T, src2.id, gameFields({ title: 'Keep1' }));
+    const carried = await repo.addTag(T, src2.id, 'Carried');
+    const idle = await repo.addTag(T, src2.id, 'Idle');
+    const picked = await repo.createGame(T, src2.id, gameFields({ title: 'Picked', tagIds: [carried.id] }));
+    const keep2 = await repo.createGame(T, src2.id, gameFields({ title: 'Keep2', tagIds: [idle.id] }));
+
+    assert.deepEqual(await repo.moveGames(T, src2.id, dst2.id, null, [picked.id]),
+      { movedGames: 1, mergedTags: 0, createdTags: 1 });
+
+    after = await repo.getRound(T, src2.id);
+    target = await repo.getRound(T, dst2.id);
+    assert.deepEqual(after.games.map((g) => g.id), [keep1.id, keep2.id]);
+    assert.deepEqual(target.games.map((g) => g.title), ['Picked']);
+    // Only the moved game's tag crosses; the kept game's tag is not created
+    // there even though the source still has it.
+    assert.deepEqual(target.tags.map((tg) => tg.name), ['Carried']);
+    assert.deepEqual(target.games[0].tagIds, [target.tags[0].id]);
+    // The source keeps its full tag list — a move never prunes tags.
+    assert.deepEqual(after.tags.map((tg) => tg.id), [carried.id, idle.id]);
+
+    // One bulk activity pair, counting the SUBSET.
+    const movedOut = (await repo.listActivities(T, src2.id)).filter((x) => x.type === 'games_moved_out');
+    assert.equal(movedOut.length, 1);
+    assert.equal(movedOut[0].count, 1);
+  });
+
+  test('moveGames with a subset scrubs only the moved game from a session (#402)', async () => {
+    const src = await freshRound();
+    const dst = await freshRound();
+    const moved = await repo.createGame(T, src.id, gameFields({ title: 'Moved' }));
+    const kept = await repo.createGame(T, src.id, gameFields({ title: 'Kept' }));
+    const mid = src.members[0].id;
+
+    // A session over both games: unlike the all-games move, this one SURVIVES —
+    // the kept game holds it open — so it must be scrubbed rather than dropped.
+    await repo.createSession(T, src.id, {
+      createdAt: 't', gameIds: [moved.id, kept.id],
+      votes: { [mid]: { [moved.id]: 5, [kept.id]: 3 } },
+      chosenGameId: moved.id, chosenAt: 't', finished: true, finishedAt: 't',
+      winnerIds: [mid], cancelled: false, cancelledAt: null, done: true,
+    });
+
+    await repo.moveGames(T, src.id, dst.id, null, [moved.id]);
+
+    const [session] = (await repo.getRound(T, src.id)).sessions;
+    assert.deepEqual(session.gameIds, [kept.id]);
+    assert.deepEqual(session.votes[mid], { [kept.id]: 3 });
+    // The moved game was the winner, so the choice + finish state resets.
+    assert.equal(session.chosenGameId, null);
+    assert.equal(session.chosenAt, null);
+    assert.equal(session.finished, false);
+    assert.equal(session.finishedAt, null);
+    assert.deepEqual(session.winnerIds, []);
+    // The target gains no history from the game it received.
+    assert.deepEqual((await repo.getRound(T, dst.id)).sessions, []);
+  });
+
+  test('moveGames refuses an unknown game id and counts a subset against the quota (#402)', async () => {
+    const src = await freshRound();
+    const dst = await freshRound();
+    const tag = await repo.addTag(T, src.id, 'Solo');
+    const one = await repo.createGame(T, src.id, gameFields({ title: 'One', tagIds: [tag.id] }));
+    const two = await repo.createGame(T, src.id, gameFields({ title: 'Two' }));
+    const elsewhere = await repo.createGame(T, dst.id, gameFields({ title: 'Elsewhere' }));
+
+    // An id that isn't a game of the SOURCE round refuses the whole move —
+    // including one that exists but lives in the target round.
+    assert.equal(await repo.moveGames(T, src.id, dst.id, null, ['nope']), 'unknown_game');
+    assert.equal(await repo.moveGames(T, src.id, dst.id, null, [one.id, 'nope']), 'unknown_game');
+    assert.equal(await repo.moveGames(T, src.id, dst.id, null, [elsewhere.id]), 'unknown_game');
+    // Refused atomically: nothing moved, no tag created.
+    assert.equal((await repo.getRound(T, src.id)).games.length, 2);
+    assert.deepEqual((await repo.getRound(T, dst.id)).games.map((g) => g.title), ['Elsewhere']);
+    assert.equal('tags' in (await repo.getRound(T, dst.id)), false);
+
+    // The caps count the SUBSET, not the whole shelf: the target already holds
+    // one game, so a cap of 2 refuses two more but admits one.
+    assert.equal(await repo.moveGames(T, src.id, dst.id, { maxGames: 2, maxTags: 99 }, [one.id, two.id]), 'quota_games');
+    // Likewise the tags: only a tag the SELECTED games carry would be created,
+    // so the tagged game trips a zero cap and the untagged one sails past it.
+    assert.equal(await repo.moveGames(T, src.id, dst.id, { maxGames: 99, maxTags: 0 }, [one.id]), 'quota_tags');
+    assert.deepEqual(await repo.moveGames(T, src.id, dst.id, { maxGames: 99, maxTags: 0 }, [two.id]),
+      { movedGames: 1, mergedTags: 0, createdTags: 0 });
+  });
+
   test('moveGames refuses a missing, identical or over-quota target', async () => {
     const src = await freshRound();
     const dst = await freshRound();

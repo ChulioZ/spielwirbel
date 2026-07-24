@@ -64,12 +64,15 @@ code and documentation are in English.
   campaign, a legacy box, a story-driven video game. A game is active, retired
   or completed, never two at once, and either archive can be reached from the
   round hub's footer. Only an already-archived game can be permanently
-  deleted. Two rounds can be **consolidated**: "Spiele verschieben" in the
-  shelf's footer moves *all* of a round's games — archived ones included, with
-  their covers, provider links and tags — into another of your rounds, merging
-  same-named tags. The emptied round stays behind; its session history does
-  not, since a session cannot reference games that now live elsewhere. Moving is
-  owner-only — the action is not offered on a round that was shared with you.
+  deleted. Games can be **moved between rounds**: "Spiele verschieben" in the
+  shelf's footer lists the round's games — archived ones included, labelled —
+  each pre-checked, so confirming untouched consolidates the whole round while
+  unchecking splits off just part of the shelf. Moved games keep their covers,
+  provider links and tags, and same-named tags are merged into the target. The
+  source round stays behind; a moved game drops out of its sessions, since a
+  session cannot reference games that now live elsewhere (a session left with
+  no games at all is dropped). Moving is owner-only — the action is not offered
+  on a round that was shared with you.
 - **Tags** – every round can define its own free-form tags (e.g. "outside",
   "quick lunch break", "digital", "co-op") on a dedicated screen, reached from
   the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign
@@ -319,7 +322,8 @@ routes/
   games.js           …/games                (add [+cover hotlink/source],
                                              edit [+link to provider],
                                              retire/restore, complete/restore,
-                                             delete, move all to another round)
+                                             delete, move some/all to another
+                                             round)
   members.js         …/members              (edit name / avatar color)
   sessions.js        …/sessions             (start, results, choice, finish,
                                              cancel, delete, remove one game)
