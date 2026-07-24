@@ -60,6 +60,7 @@
     mail_failed: 'E-Mail-Versand fehlgeschlagen. Nichts wurde gespeichert — bitte erneut versuchen.',
     invalid_email: 'Keine gültige E-Mail-Adresse.',
     already_neutral: 'Der Nutzername ist bereits neutralisiert.',
+    notice_decided: 'Entschiedene Meldungen sind als Nachweis aufzubewahren (Art. 17 DSA).',
   };
   const message = (err) => MESSAGES[err.message] || err.message;
 
@@ -591,6 +592,18 @@
     }
   }
 
+  // Delete one feedback entry (issue #389). Freely deletable — no retention duty
+  // (the policy §11 promises deletion once no longer needed), so a plain confirm.
+  async function deleteFeedback(entry) {
+    if (!window.confirm('Diesen Feedback-Eintrag endgültig löschen?')) return;
+    try {
+      await api(`/feedback/${encodeURIComponent(entry.id)}`, { method: 'DELETE' });
+      loadFeedback();
+    } catch (err) {
+      show($('feedbackError'), message(err), 'err');
+    }
+  }
+
   // ---- takedown ------------------------------------------------------------
 
   $('takedownForm').addEventListener('submit', async (e) => {
@@ -1084,6 +1097,25 @@
     }
   }
 
+  // Delete one notice (issue #389). A DECIDED notice is 3-year Art. 17 retention
+  // evidence — warn hard and send the server's `?force=1` override; an open one
+  // (test data) just needs a plain confirm. The server refuses a decided delete
+  // without the override, so this cannot silently defeat the retention duty.
+  async function deleteNotice(n) {
+    const decided = Boolean(n.decidedAt);
+    const warn = decided
+      ? 'Diese Meldung wurde ENTSCHIEDEN und ist als Nachweis (Art. 17 DSA) drei Jahre '
+        + 'aufzubewahren. Trotzdem endgültig löschen?'
+      : 'Diese Meldung endgültig löschen?';
+    if (!window.confirm(warn)) return;
+    try {
+      await api(`/notices/${encodeURIComponent(n.id)}${decided ? '?force=1' : ''}`, { method: 'DELETE' });
+      loadNotices();
+    } catch (err) {
+      show($('noticesError'), message(err), 'err');
+    }
+  }
+
   const loadNotices = listCard({
     path: '/notices',
     name: 'meldungen',
@@ -1142,6 +1174,7 @@
         buttons.push(['Erledigt', 'small', () => decideNotice(n, 'actioned')]);
         buttons.push(['Abgelehnt', 'small ghost', () => decideNotice(n, 'rejected')]);
       }
+      buttons.push(['Löschen', 'small danger', () => deleteNotice(n)]);
       for (const [text, cls, run] of buttons) {
         const btn = document.createElement('button');
         btn.className = cls;
@@ -1182,11 +1215,16 @@
       // Only present when the submitter explicitly opted in; anonymous is the
       // default, so an em dash here is the normal case, not missing data.
       cell(row, ctx.email || '—');
-      const btn = document.createElement('button');
-      btn.className = 'small danger';
-      btn.textContent = 'Redigieren';
-      btn.addEventListener('click', () => redactFeedback(f));
-      cell(row, '').appendChild(btn);
+      const actions = document.createElement('div');
+      actions.className = 'row';
+      for (const [text, run] of [['Redigieren', () => redactFeedback(f)], ['Löschen', () => deleteFeedback(f)]]) {
+        const btn = document.createElement('button');
+        btn.className = 'small danger';
+        btn.textContent = text;
+        btn.addEventListener('click', run);
+        actions.appendChild(btn);
+      }
+      cell(row, '').appendChild(actions);
       return row;
     },
   });

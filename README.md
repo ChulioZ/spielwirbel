@@ -568,7 +568,9 @@ returned**. A **Feedback** card shows what users sent through the contact form's
 Feedback category (with the sender's address only where they provided one).
 The Feedback and Protokoll cards page rather than truncate (`100 von 342`,
 **Mehr laden**) and export *every* entry as UTF-8 CSV (BOM included, so Excel
-renders umlauts correctly).
+renders umlauts correctly). Individual **Feedback** entries and **Meldungen** can
+be deleted from their rows — feedback freely, while a *decided* notice is
+protected (it is Art. 17 retention evidence) behind an explicit confirmation.
 
 `ADMIN_PASSWORD` must be a **separate** secret from `AUTH_PASSWORD`: the latter
 is shared with everyone using the instance, while these powers cross tenant
