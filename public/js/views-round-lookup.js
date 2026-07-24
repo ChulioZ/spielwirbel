@@ -263,7 +263,7 @@ function showAddGame(round) {
               <div>${esc(t('addGame.pasteHint'))}</div>
               <div class="muted" style="font-size:14px">${esc(t('addGame.pasteSub'))}</div>
             </div>
-            <img class="paste-zone__preview" hidden />
+            <img class="paste-zone__preview" alt="" hidden />
           </div>
           <div class="toolbar" style="margin-top:10px">
             <button type="button" id="pasteBtn" class="btn"><i class="ti ti-clipboard" aria-hidden="true"></i> ${esc(t('addGame.pasteBtn'))}</button>
@@ -306,11 +306,13 @@ function showAddGame(round) {
   function renderTagChips() {
     tagSeg.hidden = roundTags.length === 0;
     tagSeg.replaceChildren(...roundTags.map((tg) => {
-      const chip = h(`<button type="button" class="chip${selectedTagIds.has(tg.id) ? ' is-on' : ''}"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</button>`);
+      const chip = h(`<button type="button" class="chip${selectedTagIds.has(tg.id) ? ' is-on' : ''}" aria-pressed="${selectedTagIds.has(tg.id)}"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</button>`);
       chip.addEventListener('click', () => {
         if (selectedTagIds.has(tg.id)) selectedTagIds.delete(tg.id);
         else selectedTagIds.add(tg.id);
-        chip.classList.toggle('is-on', selectedTagIds.has(tg.id));
+        const on = selectedTagIds.has(tg.id);
+        chip.classList.toggle('is-on', on);
+        chip.setAttribute('aria-pressed', String(on));
       });
       return chip;
     }));
@@ -598,8 +600,10 @@ function showLinkProvider(round, game) {
       // isOn(chips, key) keeps finding each chip by [data-field] wherever it sits.
       chips = h('<div class="link-fields"></div>');
       const chipEl = (f) => {
-        const chip = h(`<button type="button" class="chip is-on" data-field="${f.key}"><i class="ti ti-check" aria-hidden="true"></i>${esc(f.label)}</button>`);
-        chip.addEventListener('click', () => chip.classList.toggle('is-on'));
+        const chip = h(`<button type="button" class="chip is-on" data-field="${f.key}" aria-pressed="true"><i class="ti ti-check" aria-hidden="true"></i>${esc(f.label)}</button>`);
+        chip.addEventListener('click', () => {
+          chip.setAttribute('aria-pressed', String(chip.classList.toggle('is-on')));
+        });
         return chip;
       };
       // Cover override: pair the "Titelbild" toggle with a preview of the exact

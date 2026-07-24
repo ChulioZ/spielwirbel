@@ -128,7 +128,7 @@ async function showMember(rid, mid) {
   const swatches = colorSec.querySelector('.member-swatches');
   MEMBER_COLORS.forEach((c) => {
     const active = c === color;
-    const sw = h(`<button class="member-swatch${active ? ' is-active' : ''}" style="background:${c}" aria-label="${c}">
+    const sw = h(`<button class="member-swatch${active ? ' is-active' : ''}" aria-pressed="${active}" style="background:${c}" aria-label="${c}">
          <i class="ti ti-check" aria-hidden="true"></i>
        </button>`);
     if (!active) sw.addEventListener('click', () => updateMember({ color: c }));
