@@ -1156,6 +1156,120 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.resolveInvitation('nope', 'accepted'), null);
   });
 
+  /* ------------------------------ Friendships ------------------------------- */
+  /*
+   * Friendships (#325). Global and un-scoped, one row per unordered account pair.
+   * A request pends until the addressee accepts; declining/cancelling/unfriending
+   * all delete the row via deleteFriendshipById, gated on the caller being a party.
+   */
+
+  test('friendships: one row per unordered pair; markers report the conflict', async () => {
+    const f = await repo.createFriendRequest({ requesterUserId: 'fr-a', addresseeUserId: 'fr-b' });
+    assert.match(f.id, /^[0-9a-f]{16}$/);
+    assert.equal(f.requesterUserId, 'fr-a');
+    assert.equal(f.addresseeUserId, 'fr-b');
+    assert.equal(f.status, 'pending');
+    assert.equal(f.acceptedAt, null);
+    assert.match(f.createdAt, /^\d{4}-\d\d-\d\dT.*Z$/);
+
+    // A second request for the SAME pair is refused, in EITHER direction.
+    assert.equal(await repo.createFriendRequest({ requesterUserId: 'fr-a', addresseeUserId: 'fr-b' }), 'request_pending');
+    assert.equal(await repo.createFriendRequest({ requesterUserId: 'fr-b', addresseeUserId: 'fr-a' }), 'request_pending');
+
+    // Both parties see it via listFriendships; a stranger does not.
+    assert.equal((await repo.listFriendships('fr-a')).some((x) => x.id === f.id), true);
+    assert.equal((await repo.listFriendships('fr-b')).some((x) => x.id === f.id), true);
+    assert.equal((await repo.listFriendships('fr-c')).some((x) => x.id === f.id), false);
+  });
+
+  test('friendships: only the addressee can accept a pending request, once', async () => {
+    const f = await repo.createFriendRequest({ requesterUserId: 'ac-a', addresseeUserId: 'ac-b' });
+
+    // The requester cannot accept their own request; a stranger cannot either.
+    assert.equal(await repo.acceptFriendRequest(f.id, 'ac-a'), null);
+    assert.equal(await repo.acceptFriendRequest(f.id, 'ac-c'), null);
+
+    const accepted = await repo.acceptFriendRequest(f.id, 'ac-b');
+    assert.equal(accepted.status, 'accepted');
+    assert.match(accepted.acceptedAt, /^\d{4}-\d\d-\d\dT.*Z$/);
+    // A once-accepted request is no longer pending, so a second accept is null.
+    assert.equal(await repo.acceptFriendRequest(f.id, 'ac-b'), null);
+
+    // A fresh request between an accepted pair is refused with 'already_friends'.
+    assert.equal(await repo.createFriendRequest({ requesterUserId: 'ac-b', addresseeUserId: 'ac-a' }), 'already_friends');
+  });
+
+  test('friendships: deleteFriendshipById needs the caller to be a party; frees the pair', async () => {
+    const f = await repo.createFriendRequest({ requesterUserId: 'del-a', addresseeUserId: 'del-b' });
+
+    // A non-party cannot delete it (indistinguishable from not-found).
+    assert.equal(await repo.deleteFriendshipById(f.id, 'del-c'), null);
+    // Either party can — here the requester cancels the outgoing request.
+    const removed = await repo.deleteFriendshipById(f.id, 'del-a');
+    assert.equal(removed.id, f.id);
+    assert.deepEqual(await repo.listFriendships('del-a'), []);
+    assert.deepEqual(await repo.listFriendships('del-b'), []);
+    // Re-deleting is null, and the pair is free to be re-requested.
+    assert.equal(await repo.deleteFriendshipById(f.id, 'del-a'), null);
+    assert.match((await repo.createFriendRequest({ requesterUserId: 'del-b', addresseeUserId: 'del-a' })).id, /^[0-9a-f]{16}$/);
+  });
+
+  /* --------------------------- Freundeskreis feed ---------------------------- */
+  /*
+   * Feed events (#325). The allowlist is the point: addFeedEvent must store ONLY
+   * type/title/coverUrl/at and DROP everything else, so a member name, score or
+   * round name passed by a call site can never reach a friend's feed.
+   */
+
+  test('feed: addFeedEvent stores only the allowlisted fields and drops the rest', async () => {
+    const ev = await repo.addFeedEvent('feed-u', {
+      type: 'game_added',
+      title: 'Azul',
+      coverUrl: 'https://example.test/azul.jpg',
+      // Everything below MUST be dropped — it never belongs in a friend's feed.
+      memberName: 'Anna', score: 5, roundName: 'Familienrunde', votes: { x: 1 }, uid: 'someone-else',
+    });
+    assert.match(ev.id, /^[0-9a-f]{16}$/);
+    assert.equal(ev.uid, 'feed-u');
+    assert.equal(ev.type, 'game_added');
+    assert.equal(ev.title, 'Azul');
+    assert.equal(ev.coverUrl, 'https://example.test/azul.jpg');
+    assert.match(ev.at, /^\d{4}-\d\d-\d\dT.*Z$/);
+    // The stored row carries no leaked field, whatever the call site passed.
+    assert.deepEqual(Object.keys(ev).sort(), ['at', 'coverUrl', 'id', 'title', 'type', 'uid']);
+    const stored = (await repo.listFeedEvents(['feed-u']))[0];
+    assert.deepEqual(Object.keys(stored).sort(), ['at', 'coverUrl', 'id', 'title', 'type', 'uid']);
+
+    // An unknown type is dropped (null), never a new untyped stream. coverUrl is optional.
+    assert.equal(await repo.addFeedEvent('feed-u', { type: 'made_up', title: 'X' }), null);
+    assert.equal((await repo.addFeedEvent('feed-u', { type: 'session_played', title: 'Catan' })).coverUrl, null);
+  });
+
+  test('feed: listFeedEvents reads the given uids newest-first; empty ids read nothing', async () => {
+    await repo.addFeedEvent('feed-x', { type: 'game_added', title: 'One' });
+    const two = await repo.addFeedEvent('feed-y', { type: 'game_added', title: 'Two' });
+    await repo.addFeedEvent('feed-z', { type: 'game_added', title: 'Three' }); // not a requested uid
+
+    const events = await repo.listFeedEvents(['feed-x', 'feed-y']);
+    assert.equal(events.some((e) => e.title === 'Three'), false); // feed-z excluded
+    assert.equal(events[0].id, two.id); // newest first (feed-y written after feed-x)
+    assert.deepEqual((await repo.listFeedEvents([])).length ? 'nonempty' : 'empty', 'empty');
+    assert.deepEqual(await repo.listFeedEvents(['nobody']), []);
+  });
+
+  test('feed: the per-user cap prunes the oldest on write (env MAX_FEED_EVENTS)', async () => {
+    const prev = process.env.MAX_FEED_EVENTS;
+    process.env.MAX_FEED_EVENTS = '3';
+    try {
+      const ids = [];
+      for (let i = 0; i < 5; i++) ids.push((await repo.addFeedEvent('feed-cap', { type: 'game_added', title: `g${i}` })).id);
+      assert.deepEqual((await repo.listFeedEvents(['feed-cap'])).map((e) => e.id), [ids[4], ids[3], ids[2]]);
+    } finally {
+      if (prev === undefined) delete process.env.MAX_FEED_EVENTS;
+      else process.env.MAX_FEED_EVENTS = prev;
+    }
+  });
+
   /* ------------------------------- Moderation ------------------------------- */
   /*
    * The operator methods (#268) are the one deliberately CROSS-TENANT read path:
@@ -1763,6 +1877,22 @@ module.exports = function repoContract(repo) {
     await repo.createGrant({ roundId: round.id, ownerTenantId: oTenant, userId: g2.id });
     await repo.eraseAccount(owner.id);
     assert.deepEqual(await repo.listGrantsForRound(round.id), []);
+  });
+
+  test('eraseAccount also removes the account\'s friendships and feed events (#325)', async () => {
+    const me = await repo.createUser(userFields({ tenantId: `frx-${Math.random().toString(16).slice(2)}` }));
+    const friend = await repo.createUser(userFields({ tenantId: `frf-${Math.random().toString(16).slice(2)}` }));
+
+    // A friendship (either side of the pair) and one of my feed events.
+    const f = await repo.createFriendRequest({ requesterUserId: me.id, addresseeUserId: friend.id });
+    await repo.acceptFriendRequest(f.id, friend.id);
+    await repo.addFeedEvent(me.id, { type: 'game_added', title: 'Azul' });
+
+    await repo.eraseAccount(me.id);
+    // The friendship is gone for BOTH parties, and my feed events with it.
+    assert.deepEqual(await repo.listFriendships(me.id), []);
+    assert.deepEqual(await repo.listFriendships(friend.id), []);
+    assert.deepEqual(await repo.listFeedEvents([me.id]), []);
   });
 
   test('eraseAccount refuses when a second account shares the tenant', async () => {

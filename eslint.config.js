@@ -73,6 +73,12 @@ const frontendGlobals = {
   showInbox: 'readonly', renderInboxItem: 'readonly',
   renderInvitationItem: 'readonly', renderGenericItem: 'readonly',
   unreadDot: 'readonly', afterRemove: 'readonly',
+  // views-friends.js (issue #325)
+  showFriends: 'readonly', renderHomeFriends: 'readonly',
+  renderFriendRequestItem: 'readonly', renderFeedEvent: 'readonly',
+  renderIncomingRequest: 'readonly', renderOutgoingRequest: 'readonly',
+  renderFriendRow: 'readonly', friendAvatar: 'readonly', friendName: 'readonly',
+  feedText: 'readonly', friendSendError: 'readonly',
   // support.js (issue #173)
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
   // views-landing.js (issue #322): logged-out landing page

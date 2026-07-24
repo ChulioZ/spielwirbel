@@ -155,6 +155,15 @@ code and documentation are in English.
   unlock nothing; the app contains no payment code and embeds no third-party
   widget — nothing is loaded from (or sent to) the donation platform until the
   link is clicked. With `DONATE_URL` unset the button does not exist.
+- **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
+  request to another account by its **username**; the recipient accepts or
+  declines it in the in-app inbox. Friends then see each other's activity in a
+  **Freundeskreis feed** (a compact section on the home screen plus a dedicated
+  view at `/freunde`): only "*added a game*" and "*played a game*" notes with the
+  **game title and cover** — never member names, ratings, votes or round names,
+  and only for activity after you became friends. A friendship shares **no round
+  data**; it is purely social. Unfriending is unilateral and immediate in both
+  directions. With accounts off the whole feature is inert.
 
 ## Tech & architecture
 
@@ -275,6 +284,10 @@ routes/
                                              decline; the inviter fixes the
                                              member-seat take-over (#207) —
                                              404 unless ACCOUNTS_ENABLED)
+  friends.js         /api/account/friends   (friendships + Freundeskreis feed:
+                                             send / accept / decline / unfriend,
+                                             list, feed (#325) —
+                                             404 unless ACCOUNTS_ENABLED)
   contact.js         /api/contact           (public contact form / DSA notice
                                              intake → stores every submission +
                                              e-mails the operator + acknowledges
@@ -368,6 +381,7 @@ public/
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, voting (hot-seat), finale, results
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
+    views-friends.js Freundeskreis view + home feed section (#325; accounts mode only)
     router.js        URL ↔ view routing (History API): deep links, reloads
     main.js          bootstrap: route from the current URL              (loads last)
     pwa.js           registers the service worker (installable + offline)
