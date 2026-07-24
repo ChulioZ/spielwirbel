@@ -459,6 +459,12 @@ I18N.de = {
   'invite.err.seatTaken': 'Dieser Platz ist bereits belegt.',
   'invite.err.roundGone': 'Runde nicht gefunden.',
   'invite.err.generic': 'Einladung konnte nicht gesendet werden.',
+  // Revoke / leave a share (issue #207)
+  'share.linked': 'Dieser Platz ist mit einem Konto verknüpft.',
+  'share.revoke': 'Zugriff entfernen',
+  'share.revokeConfirm': '{name} den Zugriff auf diese Runde entziehen?',
+  'share.leave': 'Runde verlassen',
+  'share.leaveConfirm': '„{name}“ verlassen? Du verlierst den Zugriff auf diese geteilte Runde.',
   'auth.email': 'E-Mail',
   'auth.username': 'Nutzername',
   'auth.password': 'Passwort',

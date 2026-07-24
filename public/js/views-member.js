@@ -143,8 +143,11 @@ async function showMember(rid, mid) {
        <div class="pokale-cards"></div>
      </div>`);
   if (st.joined === 0) {
+    // After the section title. The template has an <h2> (not <h3>) — querying the
+    // wrong tag returned null and threw for EVERY member with no joined sessions
+    // (a freshly-shared grantee is exactly that), crashing the member screen.
     statsSec
-      .querySelector('h3')
+      .querySelector('h2')
       .insertAdjacentElement('afterend', h(`<div class="muted member-nosessions">${esc(t('member.noSessions'))}</div>`));
   }
   const cards = statsSec.querySelector('.pokale-cards');
@@ -190,6 +193,26 @@ async function showMember(rid, mid) {
   }
   cards.appendChild(favCard);
   app.appendChild(statsSec);
+
+  // #207: a seat linked to an account (a shared grantee) — the OWNER can revoke
+  // that account's access here. The seat itself stays (its ratings/history are
+  // part of the round); only the account link is removed. Not offered to a
+  // grantee (round.shared) or on an unlinked seat.
+  if (!round.shared && member.userId) {
+    const shareSec = h(`<div class="round-footer">
+        <p class="muted">${esc(t('share.linked'))}</p>
+      </div>`);
+    const revokeBtn = h(`<button class="link-btn round-footer__danger">${esc(t('share.revoke'))}</button>`);
+    revokeBtn.addEventListener('click', async () => {
+      if (!confirm(t('share.revokeConfirm', { name: member.name }))) return;
+      try {
+        await api('DELETE', `/api/rounds/${rid}/shares/${member.userId}`);
+        showMember(rid, mid); // re-render: the seat is now unlinked
+      } catch (e) { toast(e.message); }
+    });
+    shareSec.appendChild(revokeBtn);
+    app.appendChild(shareSec);
+  }
 
   app.appendChild(backRow(() => showRound(rid)));
 }

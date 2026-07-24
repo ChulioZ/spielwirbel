@@ -115,7 +115,45 @@ router.delete('/:rid', async (req, res) => {
     }
   }
 
+  // #207: the round is gone, so no share may survive it. Its grants and
+  // invitations live in GLOBAL stores that deleteRound above didn't touch —
+  // revoke every grant and cancel every pending invitation, clearing the
+  // invitees' now-un-actionable inbox items.
+  for (const g of await repo.listGrantsForRound(req.params.rid)) {
+    await repo.deleteGrant(req.params.rid, g.userId);
+  }
+  for (const v of await repo.listInvitationsForRound(req.params.rid)) {
+    if (v.status !== 'pending') continue;
+    await repo.resolveInvitation(v.id, 'declined');
+    const item = (await repo.listInbox(v.inviteeUserId)).find(
+      (it) => it.type === 'round_invitation' && it.payload && it.payload.invitationId === v.id);
+    if (item) await repo.dismissInboxItem(v.inviteeUserId, item.id);
+  }
+
   res.json({ ok: true });
+});
+
+// #207: revoke a share (owner removes a grantee) or LEAVE one (grantee removes
+// their own). The grant is deleted and the freed member seat is UNLINKED but
+// kept — its ratings and session history stay on the round. A grantee may only
+// remove their OWN share; the owner may remove any. Either way req.repo is scoped
+// to the owner tenant (the owner's own, or a grantee's grant re-scope), so the
+// member unlink lands on the right round.
+router.delete('/:rid/shares/:userId', async (req, res) => {
+  const target = req.params.userId;
+  if (req.grant && target !== req.userId) return res.status(403).json({ error: 'not_owner' });
+  const round = await req.repo.getRoundMeta(req.params.rid);
+  if (!round) return res.status(404).json({ error: 'round_not_found' });
+
+  const removed = await repo.deleteGrant(req.params.rid, target);
+  if (!removed) return res.status(404).json({ error: 'not_shared' });
+  if (removed.memberId) {
+    const member = round.members.find((m) => m.id === removed.memberId);
+    if (member && member.userId === target) {
+      await req.repo.updateMember(req.params.rid, removed.memberId, { userId: null });
+    }
+  }
+  res.status(204).end();
 });
 
 module.exports = router;

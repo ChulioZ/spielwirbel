@@ -515,10 +515,21 @@ function renderChronikTab(round, activities) {
   renderTimeline();
 
   // Utility footer: deleting the round lives with its history, out of the way.
-  // Hidden on a SHARED round (#207): a grantee cannot delete the owner's round
-  // (the route answers 403 not_owner), so it isn't offered.
-  if (!round.shared) {
-    const footer = h('<div class="round-footer"></div>');
+  // On a SHARED round (#207) the owner-only delete is replaced by "leave" — a
+  // grantee gives up their own access; the owner's round and their seat's
+  // history stay.
+  const footer = h('<div class="round-footer"></div>');
+  if (round.shared) {
+    const leaveBtn = h(`<button class="link-btn round-footer__danger">${esc(t('share.leave'))}</button>`);
+    leaveBtn.addEventListener('click', async () => {
+      if (!confirm(t('share.leaveConfirm', { name: round.name }))) return;
+      try {
+        await api('DELETE', `/api/rounds/${rid}/shares/${accountUser.id}`);
+        showHome();
+      } catch (e) { toast(e.message); }
+    });
+    footer.appendChild(leaveBtn);
+  } else {
     const delBtn = h(`<button class="link-btn round-footer__danger">${esc(t('round.deleteRound'))}</button>`);
     delBtn.addEventListener('click', async () => {
       if (!confirm(t('round.deleteConfirm', { name: round.name }))) return;
@@ -526,8 +537,8 @@ function renderChronikTab(round, activities) {
       showHome();
     });
     footer.appendChild(delBtn);
-    app.appendChild(footer);
   }
+  app.appendChild(footer);
 }
 
 // --- Pokale tab: hall of fame — member podium and fun stats, all computed
