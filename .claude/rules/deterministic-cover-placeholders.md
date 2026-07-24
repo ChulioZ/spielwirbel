@@ -1,3 +1,10 @@
+---
+paths:
+  - "public/js/cover.js"
+  - "public/styles.css"
+  - "test/cover.test.js"
+---
+
 # Cover placeholders: the two silent traps in `public/js/cover.js` (#256)
 
 Games without a cover render a deterministic per-title gradient

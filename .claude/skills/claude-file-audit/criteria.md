@@ -1,6 +1,6 @@
 # Claude-file criteria
 
-- **last-researched:** never
+- **last-researched:** 2026-07-24
 - **cadence:** 30 days
 
 Seeded 2026-07-23 from `CLAUDE.md` (the "Capturing learnings" contract),
@@ -8,7 +8,7 @@ Seeded 2026-07-23 from `CLAUDE.md` (the "Capturing learnings" contract),
 `.claude/rules/token-friendly-source-files.md` — **not** from research.
 
 Scope: `CLAUDE.md`, `README.md`, and everything committed under `.claude/`
-(49 rule files, the skills, `launch.json`).
+(the rule files, the skills, `launch.json`).
 
 **The premise:** these files are *instructions to future sessions*. A stale one is
 worse than a missing one — it actively misdirects, and nothing in CI checks any of
@@ -79,7 +79,9 @@ research at all.
 - **Check:** `name` matches the directory; `description` says both **what it does** and
   **when to use it**, in the words a user would actually type, and names what it is *not*
   for when a sibling skill is the better match. A description that only describes the
-  skill's mechanics never fires.
+  skill's mechanics never fires. Observable (documented 2026-07-24): the combined
+  description must stay well under the 1,536-character listing cap, or it is truncated
+  in the skill listing and stops triggering.
 - **Enforced by:** `test/skills.test.js` (presence, `name`↔directory, non-empty description)
 
 ### C-008 — Skills compose rather than overlap
@@ -158,3 +160,23 @@ research at all.
   architecture section records *why* each call was made and when it was last re-examined,
   which a generic template drops. Reorganise only for a defect that costs a session real
   effort, and say what that defect was.
+
+### C-014 — Rule files are scoped deliberately: `paths:` when file-scoped, global when tool-triggered
+- **Status:** adopted · 2026-07-24 (operator decision: trial)
+- **Source:** official Claude Code memory docs (`paths:` frontmatter, retrieved 2026-07-24)
+- **Check:** A rule whose every trap requires reading or editing a specific file set
+  carries `paths:` frontmatter scoping it to those files; a rule whose trap surfaces
+  through tools or situations (browser pane artifacts, service-worker caching, git/CI,
+  deploys, data-directory handling) stays unconditional — a scoped rule that fails to
+  load when needed silently loses its protection, so when in doubt, stay global. When
+  adding a rule, decide the scope explicitly; when auditing, check that scoped rules'
+  globs still match the files their traps live in.
+- **Enforced by:** — (manual)
+
+### C-015 — `CLAUDE.md` stays within the documented adherence budget
+- **Status:** adopted · 2026-07-24
+- **Source:** official Claude Code guidance (target under ~200 lines per CLAUDE.md)
+- **Check:** `wc -l CLAUDE.md` stays around or under 200 (171 at adoption). Growth
+  beyond that is a signal to move content into a scoped rule or a skill, not to
+  restructure (C-R03 still holds).
+- **Enforced by:** — (manual)

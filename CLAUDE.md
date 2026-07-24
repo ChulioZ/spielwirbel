@@ -13,8 +13,11 @@ The app started as a local-only, no-auth MVP for a trusted home network; that
 stage is over. It now runs in production on Railway (managed PostgreSQL, R2
 object storage, TLS — see `docs/deploy-railway.md`), and the token-first
 account model, tenant isolation, and onboarding UI (issues #135/#136/#138) are
-shipped, staged behind `ACCOUNTS_ENABLED` for opening public registration (see
-`.claude/rules/accounts-mode-gate.md`). Full status and remaining launch work:
+shipped. Since layered auth (#266) they can run in production alongside the
+shared-password gate; the go-live step for public registration is now REMOVING
+`AUTH_PASSWORD`, not flipping a feature on (see
+`.claude/rules/accounts-mode-gate.md` and issue #219). Full status and
+remaining launch work:
 `docs/production-readiness.md`.
 
 **What this changes about how to work here.** Priority has shifted from

@@ -49,6 +49,13 @@ duties, Art. 5 Abs. 2 accountability).
    than the documents allow, the document change is *part of the feature* and
    ships with it — never silently after.
 
+**And bump the published date with the text:** any content change to the
+policy/terms markup in `lib/legal.js` bumps its `REVISION` constant in the
+same PR — the „Stand"-Zeile is part of the Art. 13 transparency, and a reader
+(or authority) must be able to see that the text changed. Missed on
+2026-07-24: #207/#325 added two §5 processing paragraphs and rewrote §15 while
+the pages still said „Stand: 2026-07-22" (caught by the audit).
+
 `test/legal.test.js` pins marker strings for every named processor (Railway,
 Cloudflare, Brevo, Heinlein) — so *removing/renaming* one in the policy fails
 loudly, but *adding* a processor in code without disclosing it fails no test.

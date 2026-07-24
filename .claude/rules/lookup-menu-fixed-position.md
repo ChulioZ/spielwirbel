@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/js/views-round-lookup.js"
+  - "public/styles.css"
+---
+
 # The lookup dropdown is `position: fixed`, placed by JS — not `absolute`
 
 The add-game / link-provider suggestion menu (`.lookup__menu`, built by

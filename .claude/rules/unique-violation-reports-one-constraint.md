@@ -1,3 +1,11 @@
+---
+paths:
+  - "lib/repo/**"
+  - "routes/account.js"
+  - "test/support/repo-contract.js"
+  - "test/account.test.js"
+---
+
 # Two unique indexes, one 23505: the constraint name is NOT the one you check first
 
 `users` carries two unique indexes — `users_email_idx` and, since #320,

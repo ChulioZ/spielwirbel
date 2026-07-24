@@ -1,3 +1,9 @@
+---
+paths:
+  - "test/**"
+  - "public/styles.css"
+---
+
 # Strip comments before matching selectors in a CSS-text test
 
 Several tests assert against `public/styles.css` as a **string** rather than a

@@ -1,6 +1,6 @@
 # Security criteria
 
-- **last-researched:** never
+- **last-researched:** 2026-07-24
 - **cadence:** 45 days
 
 Seeded 2026-07-24 from `lib/app.js`, `lib/accounts.js`, `lib/auth.js`,
@@ -168,7 +168,10 @@ that a generic scanner does not know about.
 - **Source:** `lib/validate.js` · `routes/*.js`
 - **Check:** State-changing routes run `validateBody(schema, req, res)` and reject shape
   violations with the route's own message. Unknown fields are stripped, not trusted.
-  A new write route that reads `req.body.x` without a schema is a finding.
+  A new write route that reads `req.body.x` without a schema is a finding. The two
+  pre-zod routes that validate inline (`routes/members.js`, `routes/background.js` —
+  every field checked before use) are accepted as-is; converting them is optional
+  consistency work, not a finding (audit 2026-07-24).
 - **Enforced by:** `test/validate.test.js`, per-route validation specs
 
 ### S-015 — Server-side fetch is confined to an allowlist of provider hosts (SSRF)

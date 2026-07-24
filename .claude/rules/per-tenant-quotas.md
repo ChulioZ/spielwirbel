@@ -7,8 +7,8 @@ them:
 
 - **Quotas are enforced ONLY when `accounts.accountsEnabled()`** (the public
   multi-tenant mode). `quota.enforced()` gates every check. With accounts off —
-  today's single-tenant production behind the shared-password gate, every caller
-  the one `'default'` tenant — the caps are inert, so that instance is
+  password-only or open mode, where every caller is the one `'default'` tenant —
+  the caps are inert, so that instance is
   byte-for-byte unchanged and an existing group already past a cap is never
   suddenly blocked. This mirrors how tenancy (#136) and onboarding (#138) gate
   their behaviour. Don't make a quota fire in legacy mode.

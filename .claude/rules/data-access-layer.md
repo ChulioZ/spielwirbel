@@ -1,4 +1,4 @@
-# Routes go through lib/repo.js — the data-access layer (never lib/store.js)
+# Routes go through lib/repo/ — the data-access layer (never lib/store.js)
 
 Issue #127 introduced `lib/repo/`: the async API that **every route reads and
 writes the data through**. It has two interchangeable backends selected at require

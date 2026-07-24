@@ -1,3 +1,11 @@
+---
+paths:
+  - "Dockerfile"
+  - "docker-compose.yml"
+  - "test/docker.test.js"
+  - "docs/deploy-railway.md"
+---
+
 # Railway's builder rejects the Dockerfile `VOLUME` instruction
 
 The production deploy (Railway, issue #131 — see `docs/deploy-railway.md`) builds

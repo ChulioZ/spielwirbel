@@ -1,6 +1,6 @@
 # Legal criteria
 
-- **last-researched:** never
+- **last-researched:** 2026-07-24
 - **cadence:** 90 days
 
 Seeded 2026-07-23 from `.claude/rules/keep-legal-docs-current.md`, `docs/legal/`,
@@ -124,7 +124,10 @@ than an acknowledged gap.
   been wrong before: the Postgres service sat in a **US region under an EU app** until
   2026-07-20 (`railway-db-same-region.md`) — a performance bug *and* an undisclosed
   transfer. Re-verify the region of every Railway service and the R2 bucket, not just the
-  app's.
+  app's. Also confirm the EU-US Data Privacy Framework adequacy decision still
+  stands — the Cloudflare transfer statement leans on it, with SCCs as fallback
+  (General Court upheld it 2025-09, *Latombe*; appeal C-703/25 P pending as of
+  2026-07-24).
 - **Enforced by:** — (manual; check the platform, not the code)
 
 ### L-012 — Donations stay unconditional
@@ -168,3 +171,14 @@ than an acknowledged gap.
   EU law are of wildly uneven reliability, and the artefacts here are public statements
   about real personal data. A wrong criterion adopted silently would generate confident,
   wrong issues against a live service.
+
+### L-R05 — "Adopt BFSG/EAA accessibility duties as legal criteria"
+- **Status:** rejected · 2026-07-24
+- **Why:** § 3 Abs. 3 BFSG exempts service-providing microenterprises (<10 heads,
+  ≤€2M turnover), which covers this solo-operated, donation-funded service — so no
+  binding accessibility duty attaches today. Accessibility stays covered by the
+  dedicated `accessibility-audit` skill on product merits (WCAG 2.2 AA as the bar;
+  its side of this decision is A-R05). Re-open if the operator grows past the
+  thresholds, a paid tier changes the classification, or the EAA/EN 301 549
+  harmonisation (V4.1.1 expected in the OJEU ~Oct 2026) shifts the applicability
+  analysis.

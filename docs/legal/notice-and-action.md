@@ -4,7 +4,9 @@ Internal record (German). Dokumentierter Ablauf für Meldungen rechtswidriger
 Inhalte nach der Verordnung (EU) 2022/2065 („DSA") — Spielwirbel ist ein
 **Hosting-Dienst** (Art. 3 lit. g iii), kein Online-Plattform-Dienst: die
 Inhalte eines Mandanten werden nicht öffentlich verbreitet, sondern nur
-innerhalb des Kontos angezeigt. Es gelten daher die Basispflichten der
+innerhalb des Kontos sowie ausdrücklich eingeladenen Konten und bestätigten
+Freunden (#207/#325) angezeigt — keine Verbreitung an die Allgemeinheit.
+Es gelten daher die Basispflichten der
 Art. 11–18 DSA, **nicht** die Plattform-Pflichten aus Kapitel III Abschnitt 3
 (Art. 19 ff.; von diesen wären Kleinstunternehmen ohnehin ausgenommen).
 Insbesondere besteht **keine Pflicht zu einem internen

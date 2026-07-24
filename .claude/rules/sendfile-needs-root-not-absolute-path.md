@@ -1,3 +1,9 @@
+---
+paths:
+  - "lib/app.js"
+  - "test/spa-fallback.test.js"
+---
+
 # res.sendFile must use a `root` option, not an absolute path
 
 The SPA fallback in `lib/app.js` serves `public/index.html` for frontend deep

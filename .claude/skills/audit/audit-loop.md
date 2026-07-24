@@ -1,8 +1,9 @@
 # The shared audit loop
 
 The procedure every domain audit follows (`accessibility-audit`, `legal-audit`,
-`claude-file-audit`). Each domain skill owns *what* to look at; this file owns
-*how*, so the loop is written once and the three cannot drift.
+`security-audit`, `claude-file-audit`). Each domain skill owns *what* to look
+at; this file owns
+*how*, so the loop is written once and the four cannot drift.
 
 Read this first, then your domain's `SKILL.md` and its `criteria.md`.
 

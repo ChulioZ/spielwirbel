@@ -14,7 +14,7 @@ Non-obvious things that will bite if you forget them:
 
 - **Bump `CACHE` when any shell asset changes** *for the unbuilt path.* Assets are
   served **cache-first**, so a changed `styles.css`/`*.js` would be served stale
-  until the cache version name changes. Bumping `CACHE` (`spieleabend-shell-vN`)
+  until the cache version name changes. Bumping `CACHE` (`spielwirbel-shell-vN`)
   re-precaches the shell and `activate` deletes the old cache. **Since #141** the
   optional production build (`npm run build`) content-hashes the js/css *and*
   rewrites the `SHELL` paths + the `CACHE` literal to a content-derived name, so a
