@@ -199,8 +199,10 @@ function renderRegalTab(round, activeGames) {
 
   // Consolidate two rounds (#253). Gated on the WHOLE shelf, not activeGames:
   // archived games move too, so a round with nothing but retired games must
-  // still offer this. Hidden entirely when there is nothing to move.
-  if (round.games.length) {
+  // still offer this. Hidden entirely when there is nothing to move — and on a
+  // SHARED round, where moving is owner-only (#411; the route 403s a grantee),
+  // like the invite action below.
+  if (round.games.length && !round.shared) {
     const moveBtn = h(`<button class="link-btn"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${esc(t('moveGames.link'))}</button>`);
     moveBtn.addEventListener('click', () => showMoveGames(round));
     foot.appendChild(moveBtn);

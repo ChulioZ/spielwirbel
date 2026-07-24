@@ -151,8 +151,9 @@ function buildRoundRail(round, activeTab, sub) {
     onNav: () => showBackground(rid), current: ownEntry === 'design',
   }));
   // Gated on the WHOLE shelf, not activeGames: archived games move too, so a
-  // round holding nothing but retired games must still offer it (#253).
-  if (round.games.length) {
+  // round holding nothing but retired games must still offer it (#253) — and not
+  // on a shared round, where moving is owner-only (#411), like the invite below.
+  if (round.games.length && !round.shared) {
     settings.appendChild(railAction({
       icon: 'ti-arrow-right', label: t('moveGames.link'),
       onClick: () => showMoveGames(round),

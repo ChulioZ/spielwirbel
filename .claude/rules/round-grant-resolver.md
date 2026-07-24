@@ -39,14 +39,39 @@ or an OR into the tenant policy.
    the owner's rounds finds no matching grant, keeps the caller's own-tenant
    `req.repo`, and 404s. If you ever re-scope on "the caller holds *any* grant in
    this tenant" instead of "a grant on *this* rid", a grantee can reach every
-   round the owner has. (Corollary: no `/api/rounds/:rid/*` handler may enumerate
-   the tenant's *other* rounds through `req.repo` — none do today; `moveGames`
-   takes a client-supplied target and fails closed when it isn't in the tenant.)
+   round the owner has.
 
-3. **A grant is not authority to DELETE the round.** `req.grant` is left set so
-   `DELETE /api/rounds/:rid` can refuse a grantee (`403 not_owner`). A grant lets
-   you act *within* a round, never destroy the owner's whole round + its history.
-   Per-action roles are #137; deleting is the one clear owner-only line drawn now.
+   **Corollary — and it has already been violated once (#411): no
+   `/api/rounds/:rid/*` handler may resolve *another* round through `req.repo`
+   while a grant is in play.** The re-scope is deliberately whole-tenant (that is
+   what makes RLS un-widened, §"The mechanism"), so `req.repo` under a grant
+   resolves **every** round the owner has — the per-round limit comes only from
+   *which* `:rid` the resolver matched, and a second round id taken from the
+   request body escapes it entirely. `POST …/games/move-to` did exactly that: its
+   `targetRoundId` was looked up through the re-scoped repo, so a grantee could
+   move a shared round's whole shelf into any round of the owner's they had never
+   been invited to. This rule's earlier claim that it "fails closed when it isn't
+   in the tenant" was the wrong test — the target *was* in the tenant, and being
+   in the tenant is not the same as being granted.
+
+   The fix was to make the action owner-only (`if (req.grant) …403`, §3) rather
+   than to authorize the target, so nothing from a grantee reaches the lookup.
+   **A future handler that genuinely needs a second round under a grant must
+   authorize that round on its own** — check for a grant on the *target* id too;
+   `req.repo` finding it proves nothing.
+
+3. **A grant is not authority to DESTROY or REPARENT the round.** `req.grant` is
+   left set so a handler can refuse a grantee (`403 not_owner`). A grant lets you
+   act *within* a round, never destroy the owner's whole round + its history, nor
+   move its shelf out of it. Three handlers draw that line today, all with the
+   same one-line guard placed **first, before any lookup**:
+   `DELETE /api/rounds/:rid`, `DELETE /api/rounds/:rid/shares/:userId` (a grantee
+   may remove only their *own* share) and `POST …/games/move-to` (#411 — moving
+   is destructive and hard to undo, see
+   `.claude/rules/reparenting-rows-between-rounds.md`). Per-action roles are #137;
+   until then, "owner-only" is the whole permission model, so a new destructive
+   round-level action needs that guard **and** the matching frontend gate on
+   `round.shared` — the payload flag `GET /api/rounds/:rid` sets for a grantee.
 
 4. **`req.userId` gates the whole thing.** Legacy mode (accounts off) and
    unauthenticated callers have no `req.userId`, so `resolveRoundGrant` is a

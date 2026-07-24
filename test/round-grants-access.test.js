@@ -112,6 +112,48 @@ test('the owner is unaffected: they read, edit and delete their own round normal
   assert.equal((await request(app).get(`/api/rounds/${round.id}`).set(auth(owner.token))).status, 404); // gone
 });
 
+test('moving games out of a shared round is owner-only (#411)', async () => {
+  const owner = await makeAccount('move-owner@example.com');
+  const grantee = await makeAccount('move-grantee@example.com');
+
+  // The owner's shared round (with a game to move) plus a SEPARATE private round
+  // the grantee holds no grant on — the target-round hole this guard closes.
+  const shared = (await request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Geteilte Runde', members: ['Owner'] })).body;
+  await request(app).post(`/api/rounds/${shared.id}/games`).set(auth(owner.token))
+    .send({ title: 'Catan', minPlayers: 2, maxPlayers: 4 });
+  const private_ = (await request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Privatrunde', members: ['Owner'] })).body;
+  const granteeOwn = (await request(app).post('/api/rounds').set(auth(grantee.token))
+    .send({ name: 'Eigene Runde', members: ['Grantee'] })).body;
+
+  await repo.createGrant({ roundId: shared.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id });
+
+  // A grantee may not move the shelf out of the shared round — whatever the
+  // target is. 403 in every case, never a 404 that would confirm/deny that a
+  // round of the owner's exists (same shape as the other owner-only guards).
+  for (const targetRoundId of [granteeOwn.id, private_.id, shared.id, 'no-such-round']) {
+    const res = await request(app).post(`/api/rounds/${shared.id}/games/move-to`)
+      .set(auth(grantee.token)).send({ targetRoundId });
+    assert.equal(res.status, 403, `move-to → ${targetRoundId}`);
+    assert.equal(res.body.error, 'not_owner');
+  }
+
+  // Nothing moved anywhere: the shelf is untouched and the owner's private round
+  // — which the grantee was never invited to — never received a game.
+  const stillThere = await request(app).get(`/api/rounds/${shared.id}`).set(auth(owner.token));
+  assert.deepEqual(stillThere.body.games.map((g) => g.title), ['Catan']);
+  assert.equal((await request(app).get(`/api/rounds/${private_.id}`).set(auth(owner.token))).body.games.length, 0);
+
+  // THE OWNER IS UNAFFECTED: the same call succeeds and actually moves the game.
+  const moved = await request(app).post(`/api/rounds/${shared.id}/games/move-to`)
+    .set(auth(owner.token)).send({ targetRoundId: private_.id });
+  assert.equal(moved.status, 200);
+  assert.equal(moved.body.movedGames, 1);
+  assert.deepEqual((await request(app).get(`/api/rounds/${private_.id}`).set(auth(owner.token)))
+    .body.games.map((g) => g.title), ['Catan']);
+});
+
 // Seed a shared round: owner's round, one member linked to the grantee + a grant.
 async function seedShare(owner, grantee, seatName = 'Anna') {
   const round = (await request(app).post('/api/rounds').set(auth(owner.token))

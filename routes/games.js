@@ -147,6 +147,16 @@ router.post('/', upload.single('image'), async (req, res) => {
 // Registered before the '/:gid' handlers below; it is a POST on a single
 // segment, so it can't collide with the two-segment '/:gid/retire|complete'.
 router.post('/move-to', async (req, res) => {
+  // Owner-only (#411), same guard and placement as the round delete and the
+  // share removal (routes/rounds.js): a grant lets a grantee act WITHIN a shared
+  // round, never reparent its whole shelf out of it. Fails fast, BEFORE the
+  // round lookup — which is also what closes the target-round hole: a grant
+  // re-scopes req.repo to the owner's WHOLE tenant (see
+  // .claude/rules/round-grant-resolver.md), so without this a grantee could
+  // resolve — and move games into — any round of the owner's they were never
+  // invited to. Nothing from a grantee reaches that lookup now.
+  if (req.grant) return res.status(403).json({ error: 'not_owner' });
+
   const round = await req.repo.getRoundMeta(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
 
