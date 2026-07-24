@@ -9,7 +9,7 @@ konfigurierte Empfangsanschrift; E-Mail: `IMPRESSUM_EMAIL`). Kein Vertreter,
 kein Datenschutzbeauftragter (nicht benannt; keine Pflicht nach § 38 BDSG —
 keine 20 Personen, kein besonderes Risiko).
 
-**Stand:** 2026-07-22
+**Stand:** 2026-07-24
 
 | # | Verarbeitung | Kategorien betroffener Personen | Datenkategorien | Zweck | Rechtsgrundlage | Empfänger / Auftragsverarbeiter | Drittland | Löschfrist |
 |---|---|---|---|---|---|---|---|---|
@@ -30,12 +30,18 @@ keine 20 Personen, kein besonderes Risiko).
 
 **Hinweise**
 
-- Auftragsverarbeitungsverträge: Railway (railway.com/legal/dpa, inkl. SCC),
-  Cloudflare (Customer DPA; EU-US Data Privacy Framework), Brevo (DPA im
-  Vertrag), Heinlein Hosting GmbH / mailbox.org (Betreiber-Postfach; **AVV
+- Auftragsverarbeitungsverträge — **alle vier wirksam** (Stand 2026-07-24,
+  #219): Railway (railway.com/legal/dpa, inkl. SCC; per Self-Service-DocuSign
+  **gezeichnet 2026-07-24**), Cloudflare (Customer DPA; EU-US Data Privacy
+  Framework — kraft Einbeziehung in die Self-Serve Subscription Agreement
+  wirksam), Brevo (DPA als Annex 2 der akzeptierten Nutzungsbedingungen
+  wirksam), Heinlein Hosting GmbH / mailbox.org (Betreiber-Postfach; **AVV
   abgeschlossen 2026-07-21**, Verarbeitung vertraglich ausschließlich EU/EWR,
-  Subunternehmer nur deutsche Rechenzentrums-Infrastruktur — #307). Abschluss
-  der übrigen ist Teil der Go-live-Checkliste (#219/#226).
+  Subunternehmer nur deutsche Rechenzentrums-Infrastruktur — #307). Zwei sind
+  aktiv gezeichnet (Railway, Heinlein), zwei kraft Einbeziehung in die
+  akzeptierten Vertragswerke wirksam (Cloudflare, Brevo). Die eigenen
+  Nachweiskopien (AVV/SCC, Subunternehmer-Listen, TOMs, Zertifikate, bei
+  Cloudflare der DPF-Nachweis) liegen beim Verantwortlichen.
 - Der Anschriften-Dienstleister **ZERODOX (Christian Jahnke), Koblenz**
   schließt bewusst **keinen AVV**: Er ordnet sich für die Postbearbeitung
   schriftlich (E-Mail vom 2026-07-21, beim Betreiber dokumentiert) als
