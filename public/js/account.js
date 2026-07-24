@@ -114,7 +114,13 @@ async function accountApi(method, path, body, _retried) {
     onSessionLost();
     throw new Error('auth');
   }
-  if (!res.ok) throw new Error('request_failed');
+  if (!res.ok) {
+    // Surface the server's error code (like core.js api()) so callers can map it
+    // to a specific message — e.g. the invitation accept's 'seat_unavailable'.
+    let code = 'request_failed';
+    try { code = (await res.json()).error || code; } catch {}
+    throw new Error(code);
+  }
   return res.status === 204 ? null : res.json();
 }
 
@@ -448,6 +454,10 @@ function setupAccountUi() {
     el.appendChild(h(`<div class="popover__head">${
       username ? `<strong>${esc(username)}</strong>` : ''
     }${esc((accountUser && accountUser.email) || '')}</div>`));
+    // Freundeskreis (#325): the entry point to the dedicated friends view.
+    const friends = h(`<button class="popover__opt"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('friends.menu'))}</button>`);
+    friends.addEventListener('click', () => { close(); showFriends(); });
+    el.appendChild(friends);
     const out = h(`<button class="popover__opt"><i class="ti ti-logout" aria-hidden="true"></i> ${esc(t('auth.logout'))}</button>`);
     out.addEventListener('click', () => { close(); logout(); });
     el.appendChild(out);
