@@ -234,6 +234,48 @@ that a generic scanner does not know about.
   license-probe message is the documented transient flake (re-run), not a leak.
 - **Enforced by:** CI (CodeQL, gitleaks, secret-scan)
 
+## Public-repo disclosure risk
+
+### S-021 — No control depends on the source being secret
+- **Status:** adopted · 2026-07-24
+- **Source:** Kerckhoffs's principle · this is a **public** GitHub repo
+- **Check:** The whole source is readable by any attacker, so *assume* it. "Public repo →
+  attacker knows more" is true of every line and is **not**, by itself, a finding (see
+  S-R06). A finding is the narrower case where that readability turns a theoretical
+  weakness into a **cheap, practical** exploit — where the code's *secrecy* is
+  load-bearing. Publishing the source must not be what protects the live service. Look
+  for, concretely:
+  - **A security check done only client-side** (`public/js/**`) and not re-enforced on the
+    server — the public code hands an attacker the exact bypass. The server is the trust
+    boundary; the client is a convenience. (This app is generally good about this — the
+    finding is any *new* gate that lives only in the client.)
+  - **A hardcoded value acting as a de-facto secret or access control** — a fixed token, a
+    magic bypass constant, a hardcoded id/e-mail allowlist that grants power. Contrast the
+    *correct* pattern already in the code: HS256 is public and harmless because the entropy
+    lives in `SESSION_SECRET`, not in the algorithm. The weakness is a control whose entropy
+    lives in the *code* instead of in a secret or in server-side state.
+  - **A predictable/guessable identifier that is the *only* thing guarding a resource** —
+    the source reveals the generation scheme, so absent an independent ownership/authz check
+    the resource is enumerable. (The documented per-tenant `/uploads` byte-leak by key
+    guess, #207/#137, is exactly this archetype: the key scheme is public and the gate does
+    not check ownership. Known and tracked — a *new* instance of the shape is the finding.)
+  - **An anti-abuse control whose exact parameters, now public, make it trivially evadable
+    or expose an oracle** — a rate-limit/lockout/anti-enumeration measure that only holds if
+    the attacker cannot read its thresholds.
+  - **Public prose (README, `docs/`, `.claude/rules/`, comments) that spells out a
+    currently-unmitigated exploitable weakness in attack-usable specificity** — a candid
+    limitation note is valuable internally, but in a public repo it is also a map.
+- **Remedy — fix the weakness, do not hide the code.** The correct fix always makes
+  security independent of source secrecy: add the server-side check, introduce a real
+  secret or server-side state, add the ownership check, make the identifier
+  unguessable-*and*-authz-gated. Only where the underlying weakness genuinely cannot be
+  closed yet is reducing the public specificity of the *live* hole (and restricting access)
+  a **secondary** mitigation — never the primary one, and never a reason to delete an honest
+  internal rule once the weakness itself is closed. A confirmed, currently-exploitable hole
+  found here is disclosed the private way (see SKILL.md "Handling a confirmed hole"), never
+  as a public issue with a reproduction.
+- **Enforced by:** — (manual; a judgement criterion, not a mechanizable one)
+
 ---
 
 ## Rejected — settled, do not re-litigate
@@ -279,3 +321,14 @@ that a generic scanner does not know about.
   This is not a code finding. The audit *may* verify the production role once (an ops
   check, not a code check) and note it — but "the code relies on RLS alone" is false and
   must not be reported as such.
+
+### S-R06 — "The repo is public, so any file that reveals implementation is a finding"
+- **Status:** rejected · 2026-07-24 — **the boundary for S-021, do not remove**
+- **Why:** Every line of a public repo tells an attacker something; treating that as the
+  bar would flag the entire codebase and drown the one signal that matters. A correct
+  system is safe *with* its source public (Kerckhoffs) — helmet's CSP, the HS256 choice,
+  the RLS model and the zod schemas lose nothing by being readable. S-021 fires only where
+  the code's **secrecy is load-bearing** *and* a **cheap exploit path** follows from
+  publishing it. "This reveals how auth/queries work" is not itself a finding; "this reveals
+  a control an attacker can now bypass for free" is. If you cannot name the concrete cheap
+  exploit that the disclosure enables, there is no S-021 finding.

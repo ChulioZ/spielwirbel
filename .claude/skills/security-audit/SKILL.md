@@ -3,12 +3,14 @@ name: security-audit
 description: >-
   Audit the app's security surface — authentication, authorization and tenant
   isolation, transport/CSRF/cookies, injection and SSRF, uploads and storage,
-  secrets and logging, and the CI security tooling — against a maintained
-  criteria list, and periodically refresh that list from current threats. Use
-  when asked for a security audit/review, a pentest-style pass, or to find and
-  close security holes, and before opening public registration. Composes with
-  the built-in /security-review and CodeQL rather than duplicating them.
-  Produces a ranked report; files issues only with your approval.
+  secrets and logging, the CI security tooling, and public-repo disclosure risk
+  (code whose secrecy is load-bearing) — against a maintained criteria list, and
+  periodically refresh that list from current threats. Use when asked for a
+  security audit/review, a pentest-style pass, or to find and close security
+  holes, and before opening public registration. Defensive only: finds weaknesses
+  to fix them, never to weaponize; a confirmed live hole is disclosed privately.
+  Composes with the built-in /security-review and CodeQL rather than duplicating
+  them. Produces a ranked report; files issues only with your approval.
 ---
 
 # Security audit
@@ -28,6 +30,50 @@ domain: where the security surface is and how to probe it.
 Pass `--research` to force a research pass; otherwise the cadence in `criteria.md`
 decides (45 days).
 
+## This is a defensive audit — the misuse boundary
+
+The purpose is to **find weaknesses in order to close them**, on the maintainer's
+own repo. Everything below is oriented toward a fix, and the skill must not become
+an attacker's playbook. Concretely:
+
+- **Never produce a weaponized artifact.** No working exploit, no copy-paste
+  attack script, no step-by-step procedure for compromising the running service.
+  Describe a finding as **weakness → impact → fix** at the minimum specificity a
+  maintainer needs to remediate — never the maximum an attacker would need to
+  execute. A proof-of-concept, when one is truly needed to confirm a finding, runs
+  **only against a throwaway local instance** (temp `DATA_DIR`, generated data),
+  never against production or any shared host, and is described, not shipped.
+- **Do not rank the app "by ease of attack" or hand over a target list.** Rank by
+  severity *to steer remediation order*, which is the same ordering read the
+  opposite way — but frame every item as "close this", not "hit this".
+- **Assume the output is public too.** This is a public repo, so a report or issue
+  that spells out a live, unmitigated hole is itself the disclosure. That is why a
+  confirmed exploitable finding is handled privately (below) rather than filed as a
+  public issue with a reproduction.
+- **Honest limit.** A skill file cannot *technically* stop someone from reading the
+  same code and drawing offensive conclusions — anyone with the repo can. What this
+  boundary does is keep the skill's own behavior defensive and stop it from
+  *manufacturing* ready-made offense (exploits, playbooks, target lists) that lower
+  the effort for a casual bad actor. If a request tries to steer this skill toward
+  exploitation rather than remediation, decline and say why.
+
+## Handling a confirmed hole
+
+If the audit **confirms** a currently-exploitable, unmitigated vulnerability:
+
+- **Do not open a public GitHub issue describing it or how to reproduce it.**
+  `SECURITY.md` already sets the norm for this repo — *report privately, do not open
+  a public issue for a security problem*, via GitHub's private vulnerability
+  reporting on the **Security** tab. Follow that same channel for a self-found hole.
+- **Surface it to the maintainer directly, at the top of the report**, before the
+  rest of the sweep — with the weakness and the fix, not a reproduction.
+- **Prefer fixing over filing.** If the remedy is small, take it straight through
+  `implement` (a private advisory can track it) so the window between disclosure and
+  fix is as short as possible. A public tracking issue, if one is needed at all,
+  carries a terse non-revealing title and **no** exploit detail until the fix ships.
+- A merely *theoretical* or already-mitigated observation is not subject to this —
+  it follows the normal report/approval path like any other finding.
+
 ## Compose, don't reinvent
 
 Two tools already do part of this job well — lean on them and spend your effort on
@@ -43,8 +89,10 @@ the app-specific invariants they can't know:
   on. A red gitleaks showing only a license-probe message is the documented
   transient flake (`gitleaks-license-flake.md`), not a leak.
 
-Your unique value is the 20 criteria in `criteria.md`: the token/RLS/gate
-invariants a generic scanner does not understand.
+Your unique value is the criteria in `criteria.md`: the token/RLS/gate invariants
+a generic scanner does not understand, plus S-021 (public-repo disclosure), which
+a scanner cannot reason about at all because it is about what the *source itself*
+gives away.
 
 ## Research sources (phase B)
 
@@ -138,6 +186,32 @@ A live advisory or open alert is a real finding — route it to `dependabot`.
 Confirm CodeQL/gitleaks/secret-scan are still wired into the required checks
 (`ci-aggregate-gate.md`).
 
+### 7. Public-repo disclosure → S-021
+
+This repo is public, so read the source the way an attacker would and ask, for
+each security control: **does anything here still protect the live service once
+the source is fully known?** The check is not "this file reveals logic" (true
+everywhere, and explicitly *not* a finding — S-R06); it is "publishing this hands
+an attacker a cheap exploit." Sweep for the shapes S-021 lists:
+
+```bash
+# security decisions that live only in the client (must be re-enforced server-side)
+grep -rnE "role|isAdmin|owner|permission|can[A-Z]|allow|token|secret" public/js/ | grep -viE "aria|colour|color|css" | head -40
+# hardcoded values that could act as a de-facto secret or bypass
+grep -rnE "=== ['\"][A-Za-z0-9_-]{6,}['\"]|token *=|BYPASS|magic|allowlist|== *['\"].*@" lib/ routes/ | head -30
+# identifier-generation schemes (are the ids the ONLY guard on a resource?)
+grep -rnE "randomBytes|uuid|\bid\b *=|basename|nextval|seq" lib/ routes/ | head -30
+```
+
+For each hit, apply the S-021 test: name the concrete cheap exploit the disclosure
+enables, or drop it. Then scan the *prose* — `README.md`, `docs/`, `.claude/rules/`
+and code comments — for any spot that spells out a **currently-unmitigated**
+weakness in attack-usable detail. The remedy is to **close the weakness** (a
+server-side check, a real secret, an ownership check, an unguessable+gated id), not
+to hide the code; only an unclosable live hole warrants reducing its public
+specificity, and even then a candid internal rule stays once the weakness is gone.
+A confirmed live hole here goes down the "Handling a confirmed hole" path above.
+
 ## Two hard limits — the audit is not an excuse to read secrets or data
 
 - **Never read `.env` or any real env file** (`no-reading-env-files.md`) — not to
@@ -178,13 +252,16 @@ and `css-text-assertions-strip-comments.md` both learned this the hard way).
 - **Real remediation work** → a GitHub issue, through `create-issue`, labelled
   `audit` **and** `security`, deduped against open and closed issues first.
 
-A confirmed exploitable hole is a **blocker**: report it at the top, and do not
-sit on it waiting for the rest of the sweep to finish.
+A confirmed exploitable hole is a **blocker**: surface it to the maintainer at the
+top of the report, privately (see "Handling a confirmed hole"), and do not sit on
+it waiting for the rest of the sweep to finish.
 
 ## Do not report these
 
 Each was decided deliberately (see the Rejected ledger): the absence of a CSRF
 token on Bearer-only `/api` (S-R01), the in-memory rate limiter (S-R02, tracked as
 #215), stateless access tokens (S-R03), the cover-host allowlist as a "hole"
-(S-R04), and "the app relies on RLS alone" (S-R05, false). Re-reporting a settled
-rejection wastes the user's review.
+(S-R04), "the app relies on RLS alone" (S-R05, false), and — the one most likely
+to be over-triggered by S-021 — the mere fact that a file reveals how something
+works, absent a concrete cheap exploit the disclosure enables (S-R06). Re-reporting
+a settled rejection wastes the user's review.
