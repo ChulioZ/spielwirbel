@@ -76,6 +76,13 @@ function buildSource(body) {
   };
 }
 
+// The member seat the acting account holds in this round, if any (#207) — used
+// to attribute the game-lifecycle activity these routes write. Undefined when the
+// caller isn't linked to a seat (an owner who never took one, or legacy mode), so
+// a single-actor round's feed carries no actor at all. The round is already
+// fetched for the 404/validation, so this costs nothing extra.
+const actorSeat = (round, uid) => (round.members.find((m) => m.userId === uid) || {}).id;
+
 router.post('/', upload.single('image'), async (req, res) => {
   // Light read: existence + tags. Only the quota branch below counts games,
   // and quotas are inert outside the public multi-tenant mode — so the full
@@ -121,7 +128,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     image,
     source: buildSource(req.body),
     tagIds,
-  });
+  }, actorSeat(round, req.userId));
   if (!game) return res.status(404).json({ error: 'Round not found' });
   trackEvent('game_added', { tenantId: req.tenantId });
   res.status(201).json(game);
@@ -261,7 +268,7 @@ router.post('/:gid/retire', async (req, res) => {
   if (!round) return res.status(404).json({ error: 'Round not found' });
 
   const retired = req.body.retired !== false; // default: true
-  const game = await req.repo.retireGame(req.params.rid, req.params.gid, retired);
+  const game = await req.repo.retireGame(req.params.rid, req.params.gid, retired, actorSeat(round, req.userId));
   if (!game) return res.status(404).json({ error: 'Game not found' });
   res.json(game);
 });
@@ -274,7 +281,7 @@ router.post('/:gid/complete', async (req, res) => {
   if (!round) return res.status(404).json({ error: 'Round not found' });
 
   const completed = req.body.completed !== false; // default: true
-  const game = await req.repo.completeGame(req.params.rid, req.params.gid, completed);
+  const game = await req.repo.completeGame(req.params.rid, req.params.gid, completed, actorSeat(round, req.userId));
   if (!game) return res.status(404).json({ error: 'Game not found' });
   res.json(game);
 });
@@ -288,7 +295,7 @@ router.delete('/:gid', async (req, res) => {
 
   // The data layer removes the game and scrubs it from sessions + the feed,
   // returning the deleted game's cover path so the file can be cleaned up.
-  const result = await req.repo.deleteGame(req.params.rid, req.params.gid);
+  const result = await req.repo.deleteGame(req.params.rid, req.params.gid, actorSeat(round, req.userId));
   if (result === null) return res.status(404).json({ error: 'Game not found' });
   if (result === 'not_archived')
     return res.status(400).json({ error: 'Only retired or completed games can be deleted' });

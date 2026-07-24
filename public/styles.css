@@ -1156,6 +1156,8 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 /* line-height = one label line (row line-height 1.5 × row font 15px), so the
    smaller timestamp still centers on the label's first line under flex-start. */
 .tl-act__time { color: var(--ink-soft); font-size: 12px; opacity: 0.8; white-space: nowrap; flex: none; line-height: calc(1.5 * 15px); }
+/* Actor attribution (#207): trailing "· von <name>", styled like the timestamp. */
+.tl-act__by { color: var(--ink-soft); font-size: 12px; opacity: 0.8; white-space: nowrap; flex: none; line-height: calc(1.5 * 15px); }
 .tl-act__del {
   flex: none;
   border: none;

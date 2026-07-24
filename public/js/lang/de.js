@@ -106,6 +106,7 @@ I18N.de = {
   'activity.delete': 'Aktivität löschen',
   'activity.deleteConfirm': 'Diese Aktivität löschen?',
   'activity.deleted': 'Aktivität gelöscht',
+  'activity.by': '· von {name}',
   'activity.gameAdded': '„{title}“ hinzugefügt',
   'activity.gameRetired': '„{title}“ aussortiert',
   'activity.gameRestored': '„{title}“ wieder aufgenommen',
