@@ -1820,6 +1820,56 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(await repo.exportTenant(null), { tenantId: null, rounds: [] });
   });
 
+  test('exportAccountData returns the account\'s rows in the five global stores, mirroring erasure (#397)', async () => {
+    const rand = () => Math.random().toString(16).slice(2);
+    const oTenant = `expg-o-${rand()}`;
+    const mTenant = `expg-m-${rand()}`;
+    const owner = await repo.createUser(userFields({ tenantId: oTenant }));
+    const me = await repo.createUser(userFields({ tenantId: mTenant }));
+    const round = await repo.createRound(oTenant, { name: 'Shared', members: ['Ann'] });
+
+    // Seed one row in each store the way eraseAccount enumerates them: a grant held
+    // as grantee, an inbox item, an invitation addressed to me, a friendship, and a
+    // feed event I authored.
+    await repo.createGrant({ roundId: round.id, ownerTenantId: oTenant, userId: me.id });
+    await repo.addInboxItem(me.id, { type: 'round_invitation', payload: { roundId: round.id } });
+    await repo.createInvitation({ roundId: round.id, ownerTenantId: oTenant, inviterUserId: owner.id, inviteeUserId: me.id });
+    const f = await repo.createFriendRequest({ requesterUserId: me.id, addresseeUserId: owner.id });
+    await repo.addFeedEvent(me.id, { type: 'game_added', title: 'Azul' });
+
+    const mine = await repo.exportAccountData(me.id, mTenant);
+    // Exactly the five named keys — this is the export/erasure symmetry guard: it
+    // must stay in step with the stores eraseAccount deletes (the erase tests below
+    // pin the delete side), so a sixth store added to one shows up as a shape drift.
+    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations']);
+    assert.equal(mine.grants.length, 1);
+    assert.equal(mine.grants[0].roundId, round.id);
+    assert.equal(mine.grants[0].userId, me.id);
+    assert.equal(mine.invitations.length, 1);
+    assert.equal(mine.invitations[0].inviteeUserId, me.id);
+    assert.equal(mine.inbox.length, 1);
+    assert.equal(mine.inbox[0].userId, me.id);
+    assert.equal(mine.friendships.length, 1);
+    assert.equal(mine.friendships[0].id, f.id);
+    assert.equal(mine.feedEvents.length, 1);
+    assert.equal(mine.feedEvents[0].title, 'Azul');
+
+    // Owner-side rows come through the tenant, exactly as erasure clears them: the
+    // grant and invitation SIT on the owner's round (ownerTenantId), the owner is
+    // the invitation's inviter, and the friendship's addressee.
+    const theirs = await repo.exportAccountData(owner.id, oTenant);
+    assert.equal(theirs.grants.length, 1, 'the grant on the owner\'s round is theirs to export');
+    assert.equal(theirs.invitations.length, 1);
+    assert.equal(theirs.friendships.length, 1);
+
+    // An account party to none of these exports empty arrays — keys present, shape stable.
+    const bTenant = `expg-b-${rand()}`;
+    const bystander = await repo.createUser(userFields({ tenantId: bTenant }));
+    assert.deepEqual(await repo.exportAccountData(bystander.id, bTenant), {
+      grants: [], invitations: [], inbox: [], friendships: [], feedEvents: [],
+    });
+  });
+
   test('eraseAccount removes the user, cascades the tenant and reports freed images', async () => {
     const tenant = `era-${Math.random().toString(16).slice(2)}`;
     const user = await repo.createUser(userFields({ tenantId: tenant }));

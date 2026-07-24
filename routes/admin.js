@@ -455,6 +455,11 @@ router.post('/users/:uid/export', async (req, res) => {
   if (!user) return res.status(404).json({ error: 'not_found' });
 
   const { rounds } = await repo.exportTenant(user.tenantId || null);
+  // The account's rows in the global stores (friendships, feed, inbox, invitations,
+  // grants) that live OUTSIDE the tenant's rounds — #397. Erasure already deletes
+  // all five as the account's personal data, so an Art. 15/20 answer must return
+  // them too; exportAccountData mirrors that enumeration.
+  const shares = await repo.exportAccountData(user.id, user.tenantId || null);
   const at = new Date().toISOString();
 
   // The disclosure itself is logged: handing a copy of someone's data out is an
@@ -470,7 +475,20 @@ router.post('/users/:uid/export', async (req, res) => {
   });
 
   logger.info({ event: 'admin_user_exported', tenantId: user.tenantId || null });
-  res.json({ export: { exportedAt: at, account: safeUser(user), tenantId: user.tenantId || null, rounds }, entry });
+  res.json({
+    export: {
+      exportedAt: at,
+      account: safeUser(user),
+      tenantId: user.tenantId || null,
+      rounds,
+      friendships: shares.friendships,
+      feedEvents: shares.feedEvents,
+      inbox: shares.inbox,
+      invitations: shares.invitations,
+      grants: shares.grants,
+    },
+    entry,
+  });
 });
 
 // Art. 17: erase the account AND its tenant's round data, then delete the stored
