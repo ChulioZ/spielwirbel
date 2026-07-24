@@ -205,9 +205,9 @@ function renderRegalTab(round, activeGames) {
     moveBtn.addEventListener('click', () => showMoveGames(round));
     foot.appendChild(moveBtn);
   }
-  // Invite an account to share this round (#207) — only in accounts mode; the
-  // route 404s otherwise, and legacy prod has no accounts to address.
-  if (accountsActive()) {
+  // Invite an account to share this round (#207) — only in accounts mode, and
+  // not on a SHARED round (only the owner invites; the route 404s a grantee).
+  if (accountsActive() && !round.shared) {
     const inviteBtn = h(`<button class="link-btn"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('invite.link'))}</button>`);
     inviteBtn.addEventListener('click', () => showInvite(round));
     foot.appendChild(inviteBtn);
@@ -515,15 +515,19 @@ function renderChronikTab(round, activities) {
   renderTimeline();
 
   // Utility footer: deleting the round lives with its history, out of the way.
-  const footer = h('<div class="round-footer"></div>');
-  const delBtn = h(`<button class="link-btn round-footer__danger">${esc(t('round.deleteRound'))}</button>`);
-  delBtn.addEventListener('click', async () => {
-    if (!confirm(t('round.deleteConfirm', { name: round.name }))) return;
-    await api('DELETE', '/api/rounds/' + rid);
-    showHome();
-  });
-  footer.appendChild(delBtn);
-  app.appendChild(footer);
+  // Hidden on a SHARED round (#207): a grantee cannot delete the owner's round
+  // (the route answers 403 not_owner), so it isn't offered.
+  if (!round.shared) {
+    const footer = h('<div class="round-footer"></div>');
+    const delBtn = h(`<button class="link-btn round-footer__danger">${esc(t('round.deleteRound'))}</button>`);
+    delBtn.addEventListener('click', async () => {
+      if (!confirm(t('round.deleteConfirm', { name: round.name }))) return;
+      await api('DELETE', '/api/rounds/' + rid);
+      showHome();
+    });
+    footer.appendChild(delBtn);
+    app.appendChild(footer);
+  }
 }
 
 // --- Pokale tab: hall of fame — member podium and fun stats, all computed

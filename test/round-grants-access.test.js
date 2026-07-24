@@ -57,11 +57,15 @@ test('a grantee reaches exactly the granted round — read, write, no delete, no
   // Seed the grant: the grantee may act on `shared`, owned by the owner's tenant.
   await repo.createGrant({ roundId: shared.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id });
 
-  // READ: the grantee sees the owner's shared round and its game.
+  // READ: the grantee sees the owner's shared round and its game, and the payload
+  // is flagged `shared` (reached via a grant, not ownership).
   const read = await request(app).get(`/api/rounds/${shared.id}`).set(auth(grantee.token));
   assert.equal(read.status, 200);
   assert.equal(read.body.name, 'Freitagsrunde');
   assert.deepEqual(read.body.games.map((g) => g.title), ['Catan']);
+  assert.equal(read.body.shared, true);
+  // The OWNER reading their own round gets no `shared` flag (unchanged payload).
+  assert.equal('shared' in (await request(app).get(`/api/rounds/${shared.id}`).set(auth(owner.token))).body, false);
 
   // WRITE: the grantee adds a game, and it lands in the OWNER's round (the owner sees it).
   const add = await request(app).post(`/api/rounds/${shared.id}/games`).set(auth(grantee.token))
@@ -79,10 +83,14 @@ test('a grantee reaches exactly the granted round — read, write, no delete, no
   assert.equal(del.body.error, 'not_owner');
   assert.equal((await request(app).get(`/api/rounds/${shared.id}`).set(auth(owner.token))).status, 200); // still there
 
-  // HOME LIST is own-tenant only (home-merge is a later slice): the shared round
-  // is NOT in the grantee's round list — proof the re-scope is per-:rid, not leaking into the list.
+  // HOME LIST (since the #207 home-merge): the grantee's list now includes the
+  // shared round, flagged `shared` — and ONLY that one, not the owner's private
+  // round (proof the merge fetches exactly the granted rounds).
   const list = await request(app).get('/api/rounds').set(auth(grantee.token));
-  assert.equal(list.body.some((r) => r.id === shared.id), false);
+  const sharedEntry = list.body.find((r) => r.id === shared.id);
+  assert.ok(sharedEntry, 'the shared round appears on the grantee home');
+  assert.equal(sharedEntry.shared, true);
+  assert.equal(list.body.some((r) => r.id === private_.id), false); // the owner's private round never leaks in
 
   // A NON-grantee cannot reach the round at all.
   assert.equal((await request(app).get(`/api/rounds/${shared.id}`).set(auth(outsider.token))).status, 404);

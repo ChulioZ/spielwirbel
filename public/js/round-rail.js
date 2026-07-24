@@ -158,8 +158,9 @@ function buildRoundRail(round, activeTab, sub) {
       onClick: () => showMoveGames(round),
     }));
   }
-  // Invite an account to share this round (#207) — accounts mode only.
-  if (accountsActive()) {
+  // Invite an account to share this round (#207) — accounts mode only, and not
+  // on a shared round (only the owner invites).
+  if (accountsActive() && !round.shared) {
     settings.appendChild(railAction({
       icon: 'ti-users', label: t('invite.link'),
       onClick: () => showInvite(round),

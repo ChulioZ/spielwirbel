@@ -269,6 +269,30 @@ module.exports = function repoContract(repo) {
     assert.equal(again.background.page, '#eee');
   });
 
+  test('getRoundSummary returns one round in the listRoundSummaries shape; wrong id/tenant is null', async () => {
+    const round = await freshRound({ name: 'Solo' });
+    const active = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    const old = await repo.createGame(T, round.id, gameFields({ title: 'Old' }));
+    await repo.retireGame(T, round.id, old.id, true);
+    const played = await repo.createSession(T, round.id, {
+      createdAt: '2026-03-03T10:00:00.000Z', gameIds: [active.id], votes: {}, chosenGameId: active.id,
+      chosenAt: '2026-03-03T10:00:00.000Z', finished: true, finishedAt: '2026-03-03T10:00:00.000Z',
+      winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    assert.ok(played);
+
+    // Byte-for-byte the same object the list read produces for this round.
+    const fromList = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    const one = await repo.getRoundSummary(T, round.id);
+    assert.deepEqual(one, fromList);
+    assert.equal(one.gameCount, 1); // the retired game is excluded, like the list
+    assert.equal(one.lastPlayed.gameTitle, 'Catan');
+
+    // Missing round, or another tenant's round, is null.
+    assert.equal(await repo.getRoundSummary(T, 'nope'), null);
+    assert.equal(await repo.getRoundSummary(OTHER, round.id), null);
+  });
+
   test('deleteRound is refused across tenants and frees nothing', async () => {
     const round = await freshRound();
     await repo.createGame(T, round.id, gameFields({ image: '/uploads/kept-280.jpg' }));
