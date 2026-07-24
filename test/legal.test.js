@@ -75,7 +75,7 @@ test('configured: the privacy policy covers the real processors and no ODR link'
     'eigenständige Verantwortliche',             // …their classification pinned in the DE text too
     'geekdo-images.com', 'steamstatic.com',      // hotlinked cover hosts disclosed (#172)
     'Nutzungsereignisse',                        // product-event logging (#261) disclosed
-    'Mandanten-Kennung',                         // feedback stores the tenant id — no false anonymity
+    'keine Konto- oder Mandanten-Kennung',       // feedback is anonymous since #321 — pin the §11 disclosure
     'Aktionsprotokoll',                          // moderation log + erasure-record retention
     '§ 25', 'TDDDG',                             // consent-free storage position
     'Art. 77',                                   // right to lodge a complaint

@@ -1,6 +1,6 @@
 # Accessibility criteria
 
-- **last-researched:** never
+- **last-researched:** 2026-07-24
 - **cadence:** 180 days
 
 Seeded 2026-07-23 from `.claude/rules/accessibility-contrast-and-modals.md`,
@@ -177,11 +177,23 @@ see A-R05. AA is held here as the product bar regardless.
   *cannot* be fixed without a framework before this reopens.
 
 ### A-R05 — "The EAA/BFSG makes WCAG conformance legally binding on this app"
-- **Status:** rejected · 2026-07-23 — **provisional, first research pass must settle it**
-- **Why:** Unverified, and the applicability is genuinely doubtful: the German BFSG
-  implementation exempts microenterprises providing services (broadly <10 staff and
-  ≤€2m turnover), and a solo-operated, donation-funded service plausibly falls outside
-  the covered-service definition entirely. Held as *rejected pending verification*
-  rather than adopted, because asserting a binding legal duty we have not verified is
-  worse than asserting none. This does not lower the product bar: AA is the target
-  either way. Route the verification through `legal-audit`, not here.
+- **Status:** rejected · 2026-07-24 — settled (verified via `legal-audit`, first research pass)
+- **Why:** Verified 2026-07-24: § 3 Abs. 3 BFSG exempts service-providing
+  microenterprises (<10 heads, ≤€2M turnover), which covers this solo-operated,
+  donation-funded service — no binding accessibility duty today. Context for a later
+  re-check: EN 301 549 V4.1.1 (incorporating WCAG 2.2) is expected in the OJEU around
+  Oct 2026, and the EAA/EN-301-549 harmonisation is still pending. Re-open only if the
+  operator grows past the microenterprise thresholds or a paid tier changes the
+  service classification. This does not lower the product bar: AA is the target
+  either way. The legal side is recorded as `legal-audit` L-R05.
+
+### A-R06 — "Replace the hand-rolled sheets with native `<dialog>` / Invoker Commands"
+- **Status:** rejected · 2026-07-24
+- **Why:** First research pass surfaced the platform's new modality primitives
+  (`<dialog>`, Popover API, `command`/`commandfor` — Baseline 2025; `closedby` still
+  limited availability mid-2026). WCAG requires the *outcome* — focus containment,
+  restore-on-close, Escape — and `openSheet`/`trapFocus` already deliver exactly that
+  (audited under A-004). A rewrite is an implementation choice with migration risk
+  (history-marker integration, #333) and zero conformance gain. Reconsider only if
+  A-004 audits start failing or `closedby` reaches Baseline and the sheets need its
+  semantics.

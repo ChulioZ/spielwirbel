@@ -1,3 +1,18 @@
+---
+paths:
+  - "lib/providers/**"
+  - "routes/lookup.js"
+  - "routes/games.js"
+  - "public/js/views-round-lookup.js"
+  - "public/js/lookup-score.js"
+  - "public/js/lookup-cover.js"
+  - "public/js/lookup-group.js"
+  - "public/js/lookup-title.js"
+  - "test/providers*.test.js"
+  - "test/lookup*.test.js"
+  - "test/provider-*.test.js"
+---
+
 # Add-game lookup providers (PS Store, Steam, Nintendo, Xbox, BGG) — how they work
 
 The add-game title field is a search-as-you-type lookup (`lib/providers/`,

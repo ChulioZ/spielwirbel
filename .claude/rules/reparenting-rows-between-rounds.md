@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/repo/**"
+  - "routes/games.js"
+  - "test/support/repo-contract.js"
+---
+
 # Moving games between rounds (#253) — three things that fail silently
 
 `moveGames(tenant, rid, targetRid, limits)` reparents every game of one round

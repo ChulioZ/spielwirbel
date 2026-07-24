@@ -6,7 +6,7 @@ and the traps that cost effort:
 - **Routes never call round methods on the module-level repo.** The tenant
   middleware (`lib/tenant.js`, mounted on `/api` after the auth gate) resolves
   the caller's tenant — accounts enabled + valid Bearer token → the user's
-  `tenantId`, otherwise `'default'` (today's whole production instance) — and
+  `tenantId`, otherwise `'default'` (the legacy shared-password tenant) — and
   sets `req.repo = repo.forTenant(tid)`. Handlers use **`req.repo`** for
   everything round-scoped; only the *global* user methods
   (`getUserById`, `createUser`, …) stay on `require('../lib/repo')`. A new

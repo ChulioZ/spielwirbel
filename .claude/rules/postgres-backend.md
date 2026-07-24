@@ -1,3 +1,11 @@
+---
+paths:
+  - "lib/repo/**"
+  - "knexfile.js"
+  - "test/repo*.test.js"
+  - "test/migrate*.test.js"
+---
+
 # The PostgreSQL data-access backend (lib/repo/postgres.js) — gotchas
 
 Issue #127 added a second data-access backend behind `DATABASE_URL`

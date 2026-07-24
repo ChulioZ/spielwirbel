@@ -50,7 +50,7 @@ or an OR into the tenant policy.
 
 4. **`req.userId` gates the whole thing.** Legacy mode (accounts off) and
    unauthenticated callers have no `req.userId`, so `resolveRoundGrant` is a
-   no-op and today's single-tenant production is byte-for-byte unchanged. The
+   no-op and a password-only (accounts-off) instance is byte-for-byte unchanged. The
    feature is also **inert until a grant exists** — there is no grant-creation
    route yet (invitation accept, a later slice of #207, calls `createGrant` +
    `createMember`).

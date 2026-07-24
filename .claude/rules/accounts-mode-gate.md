@@ -57,8 +57,8 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
 - **The cookie is short-lived and self-healing.** Its maxAge is the 15-min access
   TTL; every `/refresh` re-sets it. So a cover load right after the token expires
   can 401 (blank cover) until the next `/api` call refreshes and re-sets the
-  cookie. That's an accepted limitation (accounts mode is off in prod, and a
-  brand-new onboarding account has no covers yet). Per-tenant `/uploads` isolation
+  cookie. That's an accepted limitation (transient — it self-heals on the next
+  `/api` call). Per-tenant `/uploads` isolation
   is still follow-up (#207/#137) — today any valid account passes the uploads gate.
 
 - **In accounts mode the SPA shell is ALWAYS served** (never `login.html`). The

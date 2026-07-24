@@ -38,7 +38,7 @@ build-free. Non-obvious things that will bite if you forget them:
 
 - **The built `sw.js` gets a content-derived `CACHE`.** `deriveCache` hashes the
   set of hashed filenames, so a built deploy self-invalidates the service-worker
-  shell cache; the manual `spieleabend-shell-vN` bump in the *source* `sw.js` only
+  shell cache; the manual `spielwirbel-shell-vN` bump in the *source* `sw.js` only
   matters for the unbuilt path (see `pwa-service-worker.md`). The `SHELL`↔
   `index.html` parity the pwa test guards is about the **source** files; the build
   derives the built `SHELL` from them.
