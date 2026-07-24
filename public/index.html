@@ -63,10 +63,13 @@
         the centred content column so its width lines up with .app above it. -->
    <div class="site-footer__inner">
     <div class="site-footer__links" id="footerLinks" hidden>
-      <a href="/kontakt.html" id="footerKontakt"></a>
-      <a href="/impressum" id="footerImpressum"></a>
-      <a href="/datenschutz" id="footerPrivacy"></a>
-      <a href="/nutzungsbedingungen" id="footerTerms"></a>
+      <!-- These pages live outside the SPA; open them in a new tab so a footer
+           click doesn't tear down app state (#390, matching the register
+           screen's target="_blank" on the same pages in account.js). -->
+      <a href="/kontakt.html" id="footerKontakt" target="_blank" rel="noopener"></a>
+      <a href="/impressum" id="footerImpressum" target="_blank" rel="noopener"></a>
+      <a href="/datenschutz" id="footerPrivacy" target="_blank" rel="noopener"></a>
+      <a href="/nutzungsbedingungen" id="footerTerms" target="_blank" rel="noopener"></a>
     </div>
     <!-- Trust claims (#323): two verifiable statements — EU hosting / GDPR and
          no tracking/ads/third-party scripts. Gated on the SAME cfg.footer flag

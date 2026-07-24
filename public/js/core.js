@@ -276,7 +276,9 @@ function initFooter() {
         fb.hidden = false;
         fb.addEventListener('click', () => {
           const q = new URLSearchParams({ category: 'feedback', path: location.pathname });
-          location.assign('/kontakt.html?' + q.toString());
+          // Open in a new tab (#390) so the SPA stays loaded behind the contact
+          // page; noopener prevents a window.opener leak.
+          window.open('/kontakt.html?' + q.toString(), '_blank', 'noopener');
         });
       }
       // Support link (#173): same config fetch, same degradation — no URL (or
