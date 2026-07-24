@@ -205,6 +205,13 @@ function renderRegalTab(round, activeGames) {
     moveBtn.addEventListener('click', () => showMoveGames(round));
     foot.appendChild(moveBtn);
   }
+  // Invite an account to share this round (#207) — only in accounts mode, and
+  // not on a SHARED round (only the owner invites; the route 404s a grantee).
+  if (accountsActive() && !round.shared) {
+    const inviteBtn = h(`<button class="link-btn"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('invite.link'))}</button>`);
+    inviteBtn.addEventListener('click', () => showInvite(round));
+    foot.appendChild(inviteBtn);
+  }
   app.appendChild(foot);
 }
 
@@ -276,6 +283,78 @@ async function showMoveGames(round) {
   });
 }
 
+// Invite an account to share this round (#207). The OWNER fixes the seat here —
+// take over a specific user-less member, or create a fresh one — so the invitee
+// can't pick the wrong person. Accounts mode only (the entry points gate on
+// accountsActive(); the route 404s otherwise). A grantee who somehow reaches this
+// fails safely: the send route 404s a round they don't own.
+async function showInvite(round) {
+  const rid = round.id;
+  const freeSeats = (round.members || []).filter((m) => !m.userId);
+
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('invite.title'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('invite.title'))}</h2>
+          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <p class="muted">${esc(t('invite.intro', { round: round.name }))}</p>
+        <div class="field">
+          <label for="inviteUser">${esc(t('invite.username'))}</label>
+          <input id="inviteUser" class="input" type="text" autocomplete="off" spellcheck="false" placeholder="${esc(t('invite.usernamePlaceholder'))}">
+        </div>
+        <div class="field">
+          <label for="inviteSeat">${esc(t('invite.seat'))}</label>
+          <select id="inviteSeat" class="input">
+            <option value="">${esc(t('invite.newMember'))}</option>
+            ${freeSeats.map((m) => `<option value="${esc(m.id)}">${esc(t('invite.takeOver', { name: m.name }))}</option>`).join('')}
+          </select>
+        </div>
+        <div class="toolbar sheet__actions">
+          <button id="inviteGo" class="btn btn--primary btn--lg"><i class="ti ti-mail" aria-hidden="true"></i> ${esc(t('invite.submit'))}</button>
+        </div>
+      </div>
+    </div>`);
+  const form = backdrop.querySelector('.sheet');
+  document.body.appendChild(backdrop);
+
+  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  document.addEventListener('keydown', onKey, true);
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+  form.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+
+  const go = form.querySelector('#inviteGo');
+  go.addEventListener('click', async () => {
+    const username = form.querySelector('#inviteUser').value.trim();
+    const memberId = form.querySelector('#inviteSeat').value || null;
+    if (!username) { form.querySelector('#inviteUser').focus(); return; }
+    go.disabled = true;
+    try {
+      await accountApi('POST', '/invitations', { roundId: rid, username, memberId });
+      toast(t('invite.toast.sent', { user: username }));
+      closeSheet();
+    } catch (e) {
+      go.disabled = false;
+      toast(inviteError(e.message));
+    }
+  });
+}
+
+// Map a send-route error code to a localized message.
+function inviteError(code) {
+  const map = {
+    user_not_found: 'invite.err.userNotFound',
+    cannot_invite_self: 'invite.err.self',
+    already_member: 'invite.err.alreadyMember',
+    already_invited: 'invite.err.alreadyInvited',
+    invalid_seat: 'invite.err.seatGone',
+    seat_taken: 'invite.err.seatTaken',
+    round_not_found: 'invite.err.roundGone',
+  };
+  return t(map[code] || 'invite.err.generic');
+}
+
 // --- Chronik tab: one timeline of sessions and shelf changes. The activity
 // feed arrives as its own argument (fetched per visit by showRound, #197) —
 // it is no longer part of the round payload.
@@ -302,7 +381,10 @@ function renderChronikTab(round, activities) {
       games_moved_in: { icon: 'ti-arrow-left', text: tn(a.count, 'activity.gamesMovedInOne', 'activity.gamesMovedIn', { round: a.roundName }) },
     }[a.type];
     if (!meta) return;
-    entries.push({ kind: 'activity', at: a.at, id: a.id, gameId: a.gameId, type: a.type, ...meta });
+    // Who did it (#207): resolve the actor's member seat to a name (like
+    // winnerNames). Absent on single-actor rounds, so nothing is shown there.
+    const by = a.actorMemberId && (round.members.find((m) => m.id === a.actorMemberId) || {}).name;
+    entries.push({ kind: 'activity', at: a.at, id: a.id, gameId: a.gameId, type: a.type, by, ...meta });
   });
   entries.sort((a, b) => String(b.at).localeCompare(String(a.at)));
 
@@ -383,9 +465,11 @@ function renderChronikTab(round, activities) {
     // and a <button> inside an <a> is invalid markup. So the text carries the
     // href — new tab, copy address, link semantics — while the row keeps the
     // generous click target it always had around it.
+    const by = e.by ? `<span class="tl-act__by">${esc(t('activity.by', { name: e.by }))}</span>` : '';
     const row = h(`<div class="tl-act${target ? ' tl-act--link' : ''}">
          <span class="tl-act__icon"><i class="ti ${e.icon}" aria-hidden="true"></i></span>
          ${target ? `<a class="tl-act__text">${esc(e.text)}</a>` : `<span class="tl-act__text">${esc(e.text)}</span>`}
+         ${by}
          <span class="tl-act__time">${fmtDateTime(e.at)}</span>
          <button class="tl-act__del" title="${esc(t('activity.delete'))}" aria-label="${esc(t('activity.delete'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
        </div>`);
@@ -436,14 +520,29 @@ function renderChronikTab(round, activities) {
   renderTimeline();
 
   // Utility footer: deleting the round lives with its history, out of the way.
+  // On a SHARED round (#207) the owner-only delete is replaced by "leave" — a
+  // grantee gives up their own access; the owner's round and their seat's
+  // history stay.
   const footer = h('<div class="round-footer"></div>');
-  const delBtn = h(`<button class="link-btn round-footer__danger">${esc(t('round.deleteRound'))}</button>`);
-  delBtn.addEventListener('click', async () => {
-    if (!confirm(t('round.deleteConfirm', { name: round.name }))) return;
-    await api('DELETE', '/api/rounds/' + rid);
-    showHome();
-  });
-  footer.appendChild(delBtn);
+  if (round.shared) {
+    const leaveBtn = h(`<button class="link-btn round-footer__danger">${esc(t('share.leave'))}</button>`);
+    leaveBtn.addEventListener('click', async () => {
+      if (!confirm(t('share.leaveConfirm', { name: round.name }))) return;
+      try {
+        await api('DELETE', `/api/rounds/${rid}/shares/${accountUser.id}`);
+        showHome();
+      } catch (e) { toast(e.message); }
+    });
+    footer.appendChild(leaveBtn);
+  } else {
+    const delBtn = h(`<button class="link-btn round-footer__danger">${esc(t('round.deleteRound'))}</button>`);
+    delBtn.addEventListener('click', async () => {
+      if (!confirm(t('round.deleteConfirm', { name: round.name }))) return;
+      await api('DELETE', '/api/rounds/' + rid);
+      showHome();
+    });
+    footer.appendChild(delBtn);
+  }
   app.appendChild(footer);
 }
 
