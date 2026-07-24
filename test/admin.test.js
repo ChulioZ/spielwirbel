@@ -1112,6 +1112,76 @@ test('the error-log card (#359) returns buffered warn/error lines, newest first'
   });
 });
 
+test('claim-default moves the legacy default data to a fresh owner account (#266)', async (t) => {
+  const cookie = await adminCookie();
+  const owner = await makeAccount('claim-owner@example.com'); // a fresh, empty account
+
+  // A round under the legacy 'default' tenant — the pre-tenancy data that becomes
+  // unreachable once accounts mode is on, until it is claimed.
+  const legacy = await repo.createRound('default', { name: 'Family shelf', members: ['Mum', 'Dad'] });
+
+  await t.test('gated like the rest of the surface', async () => {
+    const res = await request(app).post(`/api/admin/users/${owner.user.id}/claim-default`).send({ reason: 'x' });
+    assert.equal(res.status, 401);
+    assert.equal(res.body.error, 'admin_auth_required');
+  });
+
+  await t.test('requires a reason and refuses an unknown account', async () => {
+    const noReason = await request(app)
+      .post(`/api/admin/users/${owner.user.id}/claim-default`).set('Cookie', cookie).send({});
+    assert.equal(noReason.status, 400);
+    const unknown = await request(app)
+      .post('/api/admin/users/nope/claim-default').set('Cookie', cookie).send({ reason: 'go-live' });
+    assert.equal(unknown.status, 404);
+  });
+
+  await t.test('refuses an account that already holds rounds (target_not_empty)', async () => {
+    const busy = await makeAccount('claim-busy@example.com');
+    const r = await request(app).post('/api/rounds').set('Authorization', `Bearer ${busy.token}`)
+      .send({ name: 'Already mine', members: ['Me'] });
+    assert.equal(r.status, 201);
+    const res = await request(app)
+      .post(`/api/admin/users/${busy.user.id}/claim-default`).set('Cookie', cookie).send({ reason: 'go-live' });
+    assert.equal(res.status, 409);
+    assert.equal(res.body.error, 'target_not_empty');
+  });
+
+  await t.test('refuses an account already on the default tenant (already_default)', async () => {
+    const onDefault = await makeAccount('claim-legacy@example.com');
+    await repo.updateUser(onDefault.user.id, { tenantId: 'default' });
+    const res = await request(app)
+      .post(`/api/admin/users/${onDefault.user.id}/claim-default`).set('Cookie', cookie).send({ reason: 'go-live' });
+    assert.equal(res.status, 409);
+    assert.equal(res.body.error, 'already_default');
+  });
+
+  await t.test('moves the default data into the empty owner account, logged, and now visible to the owner', async () => {
+    const res = await request(app)
+      .post(`/api/admin/users/${owner.user.id}/claim-default`)
+      .set('Cookie', cookie).send({ reason: 'Go-live claim 2026-07-24' });
+    assert.equal(res.status, 200);
+    assert.ok(res.body.rounds >= 1);
+    assert.equal(res.body.entry.action, 'default_tenant_claimed');
+    assert.equal(res.body.entry.tenantId, owner.user.tenantId);
+
+    // The owner can now SEE the legacy round through their OWN account token —
+    // the whole point of the claim (acceptance: "see the existing family rounds").
+    const rounds = await request(app).get('/api/rounds').set('Authorization', `Bearer ${owner.token}`);
+    assert.equal(rounds.status, 200);
+    assert.ok(rounds.body.some((r) => r.id === legacy.id && r.name === 'Family shelf'));
+    // …and it is gone from 'default'.
+    assert.equal(await repo.getRound('default', legacy.id), null);
+  });
+
+  await t.test('a second claim finds nothing left to move (nothing_to_claim)', async () => {
+    const late = await makeAccount('claim-late@example.com');
+    const res = await request(app)
+      .post(`/api/admin/users/${late.user.id}/claim-default`).set('Cookie', cookie).send({ reason: 'too late' });
+    assert.equal(res.status, 409);
+    assert.equal(res.body.error, 'nothing_to_claim');
+  });
+});
+
 test('with no ADMIN_PASSWORD the whole surface 404s', async () => {
   const saved = process.env.ADMIN_PASSWORD;
   delete process.env.ADMIN_PASSWORD;

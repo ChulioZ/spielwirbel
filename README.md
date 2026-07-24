@@ -306,9 +306,10 @@ routes/
                                              notices inbox + decisions, Art. 17
                                              statements of reasons,
                                              account suspend/restore, GDPR
-                                             export + erasure, filterable action
-                                             log, user feedback, recent
-                                             warn/error logs —
+                                             export + erasure, claim the 'default'
+                                             tenant into an account (#266),
+                                             filterable action log, user feedback,
+                                             recent warn/error logs —
                                              404 unless ADMIN_PASSWORD)
   lookup.js          …/lookup               (search/game — provider proxy: PS Store, BGG, Steam, Nintendo, Xbox;
                                              round-scoped, refuses a provider the round disabled)
@@ -518,10 +519,19 @@ shows an in-app onboarding flow — register → confirm e-mail → log in, plus
 reset and a first-run empty state — and the `/api` data routes require a valid
 account token (there is no anonymous access, and each account sees only its own
 tenant's rounds, #136). With accounts **off** (the default, and today's
-production) the shared-password gate above is unchanged. Enabling accounts in
-production is a deliberate step (it replaces the shared gate and starts sending
-mail); *inviting other people into a shared tenant is still follow-up work (#207),
-as are roles (#137)*.
+production) the shared-password gate above is unchanged. *Roles within a shared
+tenant are still follow-up work (#137).*
+
+**Layered mode** (issue #266): the shared-password gate and accounts can run at the
+**same time** — set `AUTH_PASSWORD` **and** `ACCOUNTS_ENABLED` (with a dedicated
+`SESSION_SECRET`). The instance stays sealed behind the shared password (register
+and login sit behind it, so it is **not** public sign-up) while everyone inside
+uses real accounts. This is the recommended go-live path: run layered until every
+account flow is proven, then simply **remove `AUTH_PASSWORD`** to open public
+registration. One go-live chore has an admin-panel button rather than a script:
+**„Standard-Daten übernehmen"** on a fresh account (operator panel → Konten)
+re-tenants the pre-accounts `default` rounds into that account, so the owner still
+sees them once accounts are on. See [`docs/deploy-railway.md`](docs/deploy-railway.md).
 
 Operator moderation (issues #268/#272/#273/#274/#275): setting `ADMIN_PASSWORD`
 exposes `/admin.html` + `/api/admin`, the standalone operator panel for acting

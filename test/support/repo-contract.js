@@ -1920,6 +1920,42 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.getUserById(user.id), null);
   });
 
+  test('claimDefaultTenant moves every default-tenant round (and children) to the target, leaves others', async () => {
+    const target = uniq();
+    const other = uniq();
+
+    // Two rounds under the legacy 'default' tenant, one carrying a game so we can
+    // prove children follow the round; and one unrelated round under `other`.
+    const d1 = await repo.createRound('default', { name: 'Legacy 1', members: ['Ann'] });
+    await repo.createGame('default', d1.id, gameFields({ title: 'Kept' }));
+    const d2 = await repo.createRound('default', { name: 'Legacy 2', members: ['Bo'] });
+    const keep = await repo.createRound(other, { name: 'Untouched', members: ['Cy'] });
+
+    // Robust against a persistent DB: the count is whatever 'default' held (mine +
+    // any strays), so assert against that rather than a hard-coded 2.
+    const before = (await repo.listRounds('default')).length;
+    assert.ok(before >= 2);
+
+    const out = await repo.claimDefaultTenant(target);
+    assert.equal(out.rounds, before);
+
+    // The rounds — with their members and games — now live under the target, and
+    // are gone from 'default'.
+    const moved = await repo.getRound(target, d1.id);
+    assert.equal(moved.name, 'Legacy 1');
+    assert.equal(moved.members[0].name, 'Ann');
+    assert.equal(moved.games[0].title, 'Kept');
+    assert.ok(await repo.getRound(target, d2.id));
+    assert.equal(await repo.getRound('default', d1.id), null);
+    assert.deepEqual(await repo.listRounds('default'), []);
+
+    // The unrelated tenant is untouched.
+    assert.equal((await repo.getRound(other, keep.id)).name, 'Untouched');
+
+    // Re-running is a harmless no-op: 'default' is now empty.
+    assert.deepEqual(await repo.claimDefaultTenant(target), { rounds: 0 });
+  });
+
   test('updateMember links and unlinks a user', async () => {
     const user = await repo.createUser(userFields({ email: 'fixed@example.com' }));
 

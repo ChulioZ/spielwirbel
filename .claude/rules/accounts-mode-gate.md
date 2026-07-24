@@ -20,6 +20,40 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
   is byte-for-byte unchanged. Don't collapse the two gates into one "Bearer or
   cookie" gate: that would let the cookie authenticate `/api` and reintroduce CSRF.
 
+- **LAYERED mode (#266): AUTH_PASSWORD *and* accounts on at the same time.** Two
+  independent switches — `auth.authEnabled()` (AUTH_PASSWORD) and
+  `accounts.accountsEnabled()` — give **four** modes, not two: open, password-only
+  (today's prod), accounts-only (the public end state), and **layered** (both).
+  In layered mode the instance stays sealed behind the shared password while
+  everyone inside uses real accounts; go-live (#219) then shrinks to *removing*
+  AUTH_PASSWORD. The wiring lives in `lib/app.js` and is built so the three
+  pre-existing modes stay byte-for-byte unchanged — only the both-on path is new:
+  - `apiGate` / `uploadGate` compose `auth.requireAuth` (a no-op unless
+    AUTH_PASSWORD is set) **in front of** the account gate, so `/api` and
+    `/uploads` require the shared session **and** the account credential when both
+    are configured. `/api` stays Bearer-only; `/uploads` still takes Bearer-or-`sa`.
+  - The account routers (`/api/account`, `…/invitations`, `…/friends`) sit behind
+    **`requireSharedIfLayered`**, so "accounts on" is **not** public sign-up on a
+    sealed box. It gates on **both** switches (not just `requireAuth`) so
+    password-only mode keeps answering the account routes' own **404
+    `accounts_disabled`** rather than a 401 — that mode must not change. `/api/auth`
+    (the shared login) and the public `/api/contact` + legal surfaces are
+    deliberately NOT fronted — a logged-out visitor must still reach them.
+  - The SPA fallback checks the shared gate **first** (before serving the shell),
+    so an unauthenticated visitor in layered mode gets `login.html`, not the shell.
+    (This is the hole layering closes: before #266 the `accountsEnabled()` branch
+    short-circuited to `index.html`, letting ACCOUNTS_ENABLED bypass `login.html`.)
+  `test/layered-auth.test.js` pins the layered path and the two most fragile
+  unchanged behaviours (password-only's 404, accounts-only's shell).
+
+- **Claiming the `'default'` tenant is an admin-panel action (#266), not a CLI
+  step.** Flipping accounts on freezes the pre-tenancy `'default'` data out of
+  reach (no request acts as `'default'` in layered mode), so the owner would log
+  into an empty app. `POST /api/admin/users/:uid/claim-default` re-tenants every
+  `'default'` round into a chosen fresh account. It re-tenants the ROWS (not the
+  user), via a dedicated RLS write escape — see
+  `.claude/rules/retenant-rls-escape.md`.
+
 - **The cookie is short-lived and self-healing.** Its maxAge is the 15-min access
   TTL; every `/refresh` re-sets it. So a cover load right after the token expires
   can 401 (blank cover) until the next `/api` call refreshes and re-sets the
