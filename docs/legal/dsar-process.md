@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-07-21
+**Stand:** 2026-07-25
 
 ## Eingang & Identitätsprüfung
 
@@ -21,6 +21,11 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
 - Betreiber-Panel → Konto suchen → **Export** (#273): liefert die gespeicherten
   Konto- und Rundendaten als maschinenlesbare Datei. Zusammen mit den Angaben
   der Datenschutzerklärung (Zwecke, Empfänger, Fristen) als Antwort senden.
+- Der Export enthält neben Konto und Runden auch die kontobezogenen Daten in den
+  globalen Speichern (#397): **Freundschaften, Freundeskreis-Feed-Ereignisse,
+  Postfach (Inbox), Einladungen und Runden-Freigaben (Grants)** — genau die
+  Kategorien, die die Kontolöschung (Art. 17) ebenfalls entfernt. Auskunft und
+  Löschung decken damit dieselben Datensätze ab.
 - Feedback ist kontounabhängig gespeichert; nur bei angegebener E-Mail
   zuordenbar — dann mit exportieren.
 

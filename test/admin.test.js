@@ -442,6 +442,15 @@ test('export answers an access request; erasure cascades and is logged (#273)', 
     .set('Authorization', `Bearer ${bystander.token}`)
     .send({ name: 'Untouched', members: ['Zoe'] });
 
+  // Seed one row in each of the five global stores for the subject (#397), so the
+  // export is proven to carry them and not just the rounds. Written straight to the
+  // global repo methods (there's no user-facing route for every store yet).
+  await repo.createGrant({ roundId: rid, ownerTenantId: subject.user.tenantId, userId: bystander.user.id });
+  await repo.createInvitation({ roundId: rid, ownerTenantId: subject.user.tenantId, inviterUserId: subject.user.id, inviteeUserId: bystander.user.id });
+  await repo.addInboxItem(subject.user.id, { type: 'round_invitation', payload: { roundId: rid } });
+  await repo.createFriendRequest({ requesterUserId: subject.user.id, addresseeUserId: bystander.user.id });
+  await repo.addFeedEvent(subject.user.id, { type: 'game_added', title: 'Azul' });
+
   await t.test('both new routes are gated like the rest of the surface', async () => {
     for (const path of [`/api/admin/users/${subject.user.id}/export`, `/api/admin/users/${subject.user.id}/erase`]) {
       const res = await request(app).post(path).send({ reason: 'x' });
@@ -474,6 +483,17 @@ test('export answers an access request; erasure cascades and is logged (#273)', 
     assert.equal(dump.rounds[0].name, 'Their whole life');
     assert.equal(dump.rounds[0].games[0].title, 'A game');
     assert.ok(Array.isArray(dump.rounds[0].activities));
+
+    // #397: the account's rows in the global stores that live outside its rounds —
+    // what erasure already deletes, the export now returns. One seeded row each.
+    assert.equal(dump.grants.length, 1);
+    assert.equal(dump.invitations.length, 1);
+    assert.equal(dump.inbox.length, 1);
+    assert.equal(dump.friendships.length, 1);
+    // >= 1: adding the game above already produced a real `game_added` feed event
+    // (#325), so the seeded one is not the only row — which is exactly the point.
+    assert.ok(dump.feedEvents.length >= 1);
+    assert.ok(dump.feedEvents.some((e) => e.title === 'Azul'));
 
     // The same secret-stripping the account list applies — an export is handed
     // to the data subject, so a password hash in it would be a disclosure.
