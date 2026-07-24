@@ -1631,6 +1631,26 @@ module.exports = function repoContract(repo) {
     assert.equal(typeof (await repo.countFeedback()), 'number');
   });
 
+  // Deletion (#389): freely deletable, no retention duty. The repo removes any
+  // id and reports the deleted row vs. null, mirroring the other admin methods.
+  test('deleteFeedback removes one entry; unknown id is null (#389)', async () => {
+    const before = await repo.countFeedback();
+    const entry = await repo.createFeedback({
+      message: 'delete me',
+      context: { path: '/', locale: 'de', tenantId: T },
+      createdAt: '2026-07-25T09:00:00.000Z',
+    });
+    assert.equal(await repo.countFeedback(), before + 1);
+
+    const removed = await repo.deleteFeedback(entry.id);
+    assert.equal(removed.id, entry.id);
+    assert.equal(removed.message, 'delete me');
+    assert.equal(await repo.countFeedback(), before);
+    // Gone now: a repeat delete and an unknown id both report not-found (null).
+    assert.equal(await repo.deleteFeedback(entry.id), null);
+    assert.equal(await repo.deleteFeedback('doesnotexist'), null);
+  });
+
   // Contact notices (#272) follow the feedback pattern: global, un-scoped,
   // newest-first — the store behind POST /api/contact and the panel's
   // Meldungen inbox.
@@ -1699,6 +1719,32 @@ module.exports = function repoContract(repo) {
 
     assert.equal(await repo.setContactNoticeStatus('doesnotexist', { status: 'rejected' }), null);
     assert.equal(await repo.getContactNotice('doesnotexist'), null);
+  });
+
+  // Deletion (#389): the repo removes ANY notice, including a decided one — the
+  // Art. 17 retention guard is a ROUTE concern (routes/admin.js reads decidedAt
+  // and demands ?force=1), deliberately not baked into the store.
+  test('deleteContactNotice removes any notice; unknown id is null (#389)', async () => {
+    const notice = await repo.createContactNotice({
+      createdAt: '2026-07-25T09:30:00.000Z',
+      name: null, email: null, subject: null, message: 'to delete',
+      category: 'other', url: null, goodFaith: null,
+      status: 'open', decidedAt: null, decisionNote: null, decisionSentAt: null,
+    });
+    // A decided notice is still deletable at the repo layer — proving the guard
+    // is not here.
+    await repo.setContactNoticeStatus(notice.id, {
+      status: 'actioned', decidedAt: '2026-07-25T10:00:00.000Z',
+      decisionNote: null, decisionSentAt: null,
+    });
+
+    const removed = await repo.deleteContactNotice(notice.id);
+    assert.equal(removed.id, notice.id);
+    assert.equal(removed.message, 'to delete');
+    // Gone: the read and a repeat delete are both not-found (null).
+    assert.equal(await repo.getContactNotice(notice.id), null);
+    assert.equal(await repo.deleteContactNotice(notice.id), null);
+    assert.equal(await repo.deleteContactNotice('doesnotexist'), null);
   });
 
   // The Art. 17 statement flow (#272): load one entry, mark its statement sent.

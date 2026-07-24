@@ -72,6 +72,9 @@ test('the admin gate refuses everything without a valid operator session', async
       // The exports must be no more reachable than the cards they mirror (#288).
       ['get', '/api/admin/log.csv'],
       ['get', '/api/admin/feedback.csv'],
+      // Per-entry deletion (#389).
+      ['delete', '/api/admin/feedback/x'],
+      ['delete', '/api/admin/notices/x'],
       // The Meldungen inbox + Art. 17 statement flow (#272).
       ['get', '/api/admin/notices'],
       ['get', '/api/admin/notices.csv'],
@@ -329,6 +332,70 @@ test('the Meldungen inbox lists stored notices and the decision closes the loop 
     assert.match(csv.text, /Kategorie/);
     assert.match(csv.text, /copyright/);
     assert.match(csv.text, /Cover entfernt/);
+  });
+});
+
+test('an operator can delete feedback and notices, decided notices protected (#389)', async (t) => {
+  const cookie = await adminCookie();
+
+  await t.test('a feedback entry is freely deletable and leaves the list', async () => {
+    const entry = await repo.createFeedback({
+      message: 'test submission to clear',
+      context: { path: '/', locale: 'de', tenantId: 'default' },
+      createdAt: new Date().toISOString(),
+    });
+    const before = (await request(app).get('/api/admin/feedback').set('Cookie', cookie)).body.total;
+
+    const del = await request(app).delete(`/api/admin/feedback/${entry.id}`).set('Cookie', cookie);
+    assert.equal(del.status, 200);
+    assert.equal(del.body.ok, true);
+
+    const after = await request(app).get('/api/admin/feedback').set('Cookie', cookie);
+    assert.equal(after.body.total, before - 1);
+    assert.equal(after.body.entries.some((f) => f.id === entry.id), false);
+
+    // A repeat delete is a 404, not a silent success. (Net effect on the table:
+    // zero, so the #288 paging test's "owns the feedback table" assumption holds.)
+    const again = await request(app).delete(`/api/admin/feedback/${entry.id}`).set('Cookie', cookie);
+    assert.equal(again.status, 404);
+  });
+
+  await t.test('an OPEN notice is freely deletable', async () => {
+    const notice = await repo.createContactNotice({
+      createdAt: new Date().toISOString(),
+      name: null, email: null, subject: null, message: 'open test notice',
+      category: 'other', url: null, goodFaith: null,
+      status: 'open', decidedAt: null, decisionNote: null, decisionSentAt: null,
+    });
+    const del = await request(app).delete(`/api/admin/notices/${notice.id}`).set('Cookie', cookie);
+    assert.equal(del.status, 200);
+    assert.equal(await repo.getContactNotice(notice.id), null);
+  });
+
+  await t.test('a DECIDED notice is protected — 409 without ?force, deletes with it', async () => {
+    const notice = await repo.createContactNotice({
+      createdAt: new Date().toISOString(),
+      name: 'R', email: 'r@example.com', subject: null, message: 'decided notice',
+      category: 'copyright', url: null, goodFaith: true,
+      status: 'actioned', decidedAt: new Date().toISOString(),
+      decisionNote: 'entfernt', decisionSentAt: null,
+    });
+
+    const blocked = await request(app).delete(`/api/admin/notices/${notice.id}`).set('Cookie', cookie);
+    assert.equal(blocked.status, 409);
+    assert.equal(blocked.body.error, 'notice_decided');
+    // The retention evidence was not touched.
+    assert.ok(await repo.getContactNotice(notice.id));
+
+    const forced = await request(app).delete(`/api/admin/notices/${notice.id}?force=1`).set('Cookie', cookie);
+    assert.equal(forced.status, 200);
+    assert.equal(await repo.getContactNotice(notice.id), null);
+  });
+
+  await t.test('an unknown id is a 404 for both, a malformed id a 400', async () => {
+    assert.equal((await request(app).delete('/api/admin/feedback/doesnotexist').set('Cookie', cookie)).status, 404);
+    assert.equal((await request(app).delete('/api/admin/notices/doesnotexist').set('Cookie', cookie)).status, 404);
+    assert.equal((await request(app).delete('/api/admin/feedback/has%20space').set('Cookie', cookie)).status, 400);
   });
 });
 

@@ -709,6 +709,18 @@ router.get('/feedback.csv', async (req, res) => {
   });
 });
 
+// Delete one feedback entry (issue #389). Feedback carries no retention duty —
+// the privacy policy (§11) even promises it is deleted once no longer needed —
+// so it is freely deletable, unlike a decided Meldung below.
+router.delete('/feedback/:id', async (req, res) => {
+  const parsed = idSchema.safeParse(req.params.id);
+  if (!parsed.success) return res.status(400).json({ error: 'Not a valid id' });
+  const removed = await repo.deleteFeedback(parsed.data);
+  if (!removed) return res.status(404).json({ error: 'not_found' });
+  logger.info({ event: 'admin_feedback_deleted' });
+  res.json({ ok: true });
+});
+
 /* ------------------------------ notices (#272) ------------------------------ */
 
 // The Meldungen inbox: every stored contact-form submission / DSA Art. 16
@@ -810,6 +822,28 @@ router.post('/notices/:nid/decision', async (req, res) => {
 
   logger.info({ event: 'admin_notice_decided', status: body.status });
   res.json({ ok: true, notice: updated });
+});
+
+// Delete one notice (issue #389). A DECIDED notice (it carries a decidedAt) is
+// the evidence behind an Art. 17 statement of reasons and is kept for 3 years
+// (privacy policy §13, docs/legal/notice-and-action.md), so deleting it is
+// blocked with 409 `notice_decided` unless the operator explicitly overrides
+// with `?force=1` — deleting retention evidence must never happen by accident.
+// An OPEN notice (all test data) is freely deletable.
+router.delete('/notices/:nid', async (req, res) => {
+  const parsed = idSchema.safeParse(req.params.nid);
+  if (!parsed.success) return res.status(400).json({ error: 'Not a valid id' });
+  const notice = await repo.getContactNotice(parsed.data);
+  if (!notice) return res.status(404).json({ error: 'not_found' });
+
+  const decided = Boolean(notice.decidedAt);
+  const force = req.query.force === '1' || req.query.force === 'true';
+  if (decided && !force) return res.status(409).json({ error: 'notice_decided' });
+
+  const removed = await repo.deleteContactNotice(parsed.data);
+  if (!removed) return res.status(404).json({ error: 'not_found' });
+  logger.info({ event: 'admin_notice_deleted', decided });
+  res.json({ ok: true });
 });
 
 /* ----------------------------- statement (#272) ----------------------------- */

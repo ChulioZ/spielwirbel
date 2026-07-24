@@ -177,3 +177,15 @@ render "≥" rather than a wrong total; unreadable objects are skipped.
 - **The page is German-only, outside the i18n system** (operator tool,
   `login.html` precedent — no `lang/*.js` parity obligation), and links no web
   manifest, so it never becomes installable or offline-cached.
+- **Deleting a Meldung / Feedback (#389): the retention guard is in the ROUTE,
+  not the repo.** `deleteFeedback`/`deleteContactNotice` (both backends,
+  un-scoped/no-RLS — no `atx()`/plain-role subtlety) remove *any* id; the
+  contract suite pins that they delete even a decided notice, precisely to prove
+  the guard is not baked into the store. `DELETE /api/admin/notices/:nid` reads
+  the notice first and refuses a **decided** one (`decidedAt` set — Art. 17
+  3-year retention evidence, §8's reasoning) with **409 `notice_decided`** unless
+  the operator passes **`?force=1`**. Don't move the guard into the repo (it
+  would then also block the legitimate override and the retention purge #311) and
+  don't drop the `decidedAt` check — deleting a decided notice silently defeats
+  the published retention promise. Feedback carries no such duty (policy §11
+  promises its deletion) and is freely deletable.
