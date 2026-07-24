@@ -62,3 +62,36 @@ and the traps that cost effort:
   owner adds), so a single-owner tenant is a complete product without either.
   There is intentionally **no tenants table** yet — the first issue that gives
   a tenant fields (name, settings, quotas #139) adds the entity.
+
+## For any future cross-tenant WRITE (two PostgreSQL facts, verified on PG 16)
+
+A cross-tenant *read* escape (moderation, #268) is a separate additive
+`FOR SELECT` policy — see `.claude/rules/admin-moderation-surface.md` §2. A
+cross-tenant *write* (moving rows between tenants) is harder, and two non-obvious
+facts — measured empirically, the docs read as if neither were true — decide how
+the escape must be shaped. Get either wrong and you watch `UPDATE 0` or "new row
+violates row-level security policy" with no clue why:
+
+1. **An UPDATE's WHERE triggers the SELECT policies, and a moved row must be
+   VISIBLE, not just pass WITH CHECK.** `UPDATE … SET tenant_id = X WHERE
+   tenant_id = 'default'` reads columns in its `WHERE`, so the scan applies the
+   SELECT policies — a `FOR UPDATE`-only escape sees zero rows and the UPDATE
+   silently matches nothing. And separately, a policy `USING (tenant_id =
+   app.tenant_id) WITH CHECK (true)` **rejects** the move (the new `tenant_id`
+   fails the scoped `USING`), while `USING (true) WITH CHECK (true)` allows it. So
+   a cross-tenant mover needs cross-tenant **SELECT** as well as UPDATE.
+2. **You cannot "relax only the WITH CHECK" of the tenant policy with a sibling
+   policy.** Permissive policies OR-combine for `USING`, but adding a second
+   permissive policy whose `WITH CHECK` is `true` does **not** OR-relax the tenant
+   policy's scoped `WITH CHECK` away — the new row is still rejected. The reliable
+   shape is a **self-contained** escape that admits the move on its own, never an
+   edit to the tenant policy (which would reopen the cross-tenant-DELETE hole
+   `admin-moderation-surface.md` §2 warns about). And because such an escape also
+   widens SELECT, the *method's* `WHERE` — not the policy — is what scopes the
+   move to the source; an unqualified UPDATE under it would move every tenant.
+
+This is the reasoning the one-time `'default'`-tenant claim (#266) used; that
+escape and its `claimDefaultTenant` caller were removed after the go-live (#405).
+The full write-up (with the shape that worked and the plain-role verification)
+lives in git history — the removed `.claude/rules/retenant-rls-escape.md` and
+migration `20260724130000_retenant.js`.

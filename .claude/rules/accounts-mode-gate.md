@@ -46,13 +46,19 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
   `test/layered-auth.test.js` pins the layered path and the two most fragile
   unchanged behaviours (password-only's 404, accounts-only's shell).
 
-- **Claiming the `'default'` tenant is an admin-panel action (#266), not a CLI
-  step.** Flipping accounts on freezes the pre-tenancy `'default'` data out of
-  reach (no request acts as `'default'` in layered mode), so the owner would log
-  into an empty app. `POST /api/admin/users/:uid/claim-default` re-tenants every
-  `'default'` round into a chosen fresh account. It re-tenants the ROWS (not the
-  user), via a dedicated RLS write escape — see
-  `.claude/rules/retenant-rls-escape.md`.
+- **Claiming the `'default'` tenant was a one-time admin-panel action (#266),
+  now REMOVED (#405).** Flipping accounts on freezes the pre-tenancy `'default'`
+  data out of reach (no request acts as `'default'` in layered mode), so an owner
+  migrating pre-accounts data would log into an empty app. `POST
+  /api/admin/users/:uid/claim-default` re-tenanted every `'default'` round into a
+  chosen fresh account, via a dedicated RLS write escape. It ran on production
+  during the 2026-07-24 go-live (#219) and was then removed together with its
+  escape policies (#405) — a standing cross-tenant write escape has no purpose on
+  a public instance. A self-hoster migrating an existing shared-password instance
+  later should run the claim from a revision before #405 (present from #266/PR
+  #394 through the go-live); see `docs/deploy-railway.md` "Going live". The
+  cross-tenant-write RLS facts it relied on are folded into
+  `.claude/rules/tenancy-rls.md`.
 
 - **The cookie is short-lived and self-healing.** Its maxAge is the 15-min access
   TTL; every `/refresh` re-sets it. So a cover load right after the token expires

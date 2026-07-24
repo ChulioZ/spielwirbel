@@ -60,11 +60,6 @@
     mail_failed: 'E-Mail-Versand fehlgeschlagen. Nichts wurde gespeichert — bitte erneut versuchen.',
     invalid_email: 'Keine gültige E-Mail-Adresse.',
     already_neutral: 'Der Nutzername ist bereits neutralisiert.',
-    already_default: 'Dieses Konto besitzt bereits den „default“-Tenant — nichts zu übernehmen.',
-    target_not_empty: 'Abgebrochen: Dieses Konto hat schon eigene Runden. '
-      + 'Die „default“-Daten nur in ein frisch registriertes, leeres Konto übernehmen.',
-    nothing_to_claim: 'Es gibt keine „default“-Daten zu übernehmen (bereits übernommen '
-      + 'oder diese Instanz hatte nie Daten aus der Zeit vor den Konten).',
   };
   const message = (err) => MESSAGES[err.message] || err.message;
 
@@ -714,13 +709,6 @@
         ['Exportieren', 'small ghost', () => exportUser(u)],
         ['Löschen', 'small danger', () => eraseUser(u)],
       ];
-      // Go-live one-off (#266): offered only for a real account tenant, never the
-      // legacy 'default' one (which has nothing to claim into itself). The server
-      // still enforces every guard — this filter only hides a button that would
-      // always answer already_default.
-      if (u.tenantId && u.tenantId !== 'default') {
-        items.push(['Standard-Daten übernehmen', 'small ghost', () => claimDefault(u)]);
-      }
       for (const [label, cls, run] of items) {
         const btn = document.createElement('button');
         btn.className = cls;
@@ -838,37 +826,6 @@
       refreshLog();
       show($('usersError'),
         `Gelöscht: ${out.rounds} Runde(n), ${out.imagesRemoved} Bild(er)${failed}.`, 'ok');
-    } catch (err) {
-      show($('usersError'), message(err), 'err');
-    }
-  }
-
-  // ---- claim the 'default' tenant (#266) -----------------------------------
-
-  // Move the legacy 'default'-tenant data (every round from before accounts) into
-  // this account, so the owner sees it once accounts mode is on. Not destructive,
-  // but the server refuses unless the account is fresh and empty (target_not_empty)
-  // — a guard against silently merging two datasets — so it is a confirmed,
-  // reason-logged action like the others. A go-live one-off (#219/#266).
-  async function claimDefault(user) {
-    if (!window.confirm(
-      'Die bestehenden „default“-Daten (alle Runden aus der Zeit vor den Konten) '
-      + 'diesem Konto zuordnen?\n\n'
-      + 'Nur für ein frisch registriertes Besitzer-Konto gedacht — das Konto muss '
-      + 'noch leer sein.',
-    )) return;
-    const reason = askReason('Standard-Daten übernehmen');
-    if (!reason) return;
-
-    try {
-      const out = await api(`/users/${encodeURIComponent(user.id)}/claim-default`, {
-        method: 'POST',
-        body: JSON.stringify({ reason }),
-      });
-      // Refresh BEFORE reporting: loadUsers() clears this same message element.
-      await loadUsers();
-      refreshLog();
-      show($('usersError'), `${out.rounds} Runde(n) übernommen.`, 'ok');
     } catch (err) {
       show($('usersError'), message(err), 'err');
     }
