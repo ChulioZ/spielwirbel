@@ -140,7 +140,7 @@ const isAuthPath = (p) => p === '/verify-email' || p === '/reset-password';
 // Resolve the mode + login state, then decide the first screen. Called last from
 // main.js so i18n/core/views are all loaded.
 async function bootApp() {
-  await initAccounts();
+  if ((await initAccounts()) === 'rate_limited') return showRateLimited();
   const path = location.pathname;
   if (path === '/verify-email') return renderVerifyLanding();
   if (path === '/reset-password') return renderResetLanding();
@@ -156,7 +156,18 @@ async function bootApp() {
 }
 
 async function initAccounts() {
-  const res = await probeMe();
+  let res = await probeMe();
+  if (res.status === 429) {
+    // A rate-limited probe says NOTHING about the auth mode, so it must not
+    // fall into the legacy branch below: against an accounts-mode server the
+    // "legacy" client's first data fetch 401s, legacy api() answers that with a
+    // location.assign reload, and the reload re-runs this probe against the
+    // still-tripped limiter — an infinite reload loop (#399). One short retry,
+    // then a visible retry screen instead of a guessed mode.
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    res = await probeMe();
+    if (res.status === 429) return 'rate_limited';
+  }
   // Only a definitive answer from the (pre-gate) account router flips on accounts
   // mode: 200 = logged in, 401 = accounts on but not logged in. A 404 means
   // accounts are disabled, and anything else (a boot-time network hiccup) is
@@ -243,7 +254,7 @@ function showLogin() {
       if (!email.value.trim() || !pw.value) return setError(card, t('auth.error.missing'));
       submit.disabled = true;
       try {
-        const { ok, status, data } = await authFetch('/login', { email: email.value.trim(), password: pw.value });
+        const { ok, data } = await authFetch('/login', { email: email.value.trim(), password: pw.value });
         if (ok) {
           setTokens(data.accessToken, data.refreshToken);
           // A different account than the cache's owner may be logging in on
@@ -253,8 +264,7 @@ function showLogin() {
           enterApp();
           return;
         }
-        setError(card, status === 403 && data.error === 'email_not_verified'
-          ? t('auth.error.notVerified') : t('auth.error.badCredentials'));
+        setError(card, t(authErrorKey('login', data.error)));
       } catch { setError(card, t('auth.error.network')); }
       submit.disabled = false;
     });
@@ -317,14 +327,10 @@ function showRegister() {
         const { ok, data } = await authFetch('/register', { email: email.value.trim(), username, password: pw.value });
         // Register answers ok even for an existing e-mail (anti-enumeration) — a
         // 400/409 only comes back for a malformed field or a taken username,
-        // which IS reported openly (a public handle; see routes/account.js).
+        // which IS reported openly (a public handle; see routes/account.js) —
+        // plus the cross-cutting 429/401 refusals authErrorKey maps (#399).
         if (ok) return showAuthDone('auth.register.doneTitle', 'auth.register.doneSub');
-        const messages = {
-          invalid_email: 'auth.error.invalidEmail',
-          invalid_username: 'auth.error.invalidUsername',
-          username_taken: 'auth.error.usernameTaken',
-        };
-        setError(card, t(messages[data.error] || 'auth.error.shortPassword'));
+        setError(card, t(authErrorKey('register', data.error)));
       } catch { setError(card, t('auth.error.network')); }
       submit.disabled = false;
     });
@@ -356,8 +362,21 @@ function showForgot() {
       authError(card).hidden = true;
       if (!email.value.trim()) return setError(card, t('auth.error.missing'));
       submit.disabled = true;
-      // Always answers ok (anti-enumeration) — show the same confirmation either way.
-      try { await authFetch('/forgot-password', { email: email.value.trim() }); } catch {}
+      // The handler itself always answers ok (anti-enumeration), so a !ok can
+      // only be a cross-cutting refusal (rate limiter, layered shared gate) —
+      // reporting it honestly reveals nothing about any account (#399).
+      try {
+        const { ok, data } = await authFetch('/forgot-password', { email: email.value.trim() });
+        if (!ok) {
+          setError(card, t(authErrorKey('forgot', data.error)));
+          submit.disabled = false;
+          return;
+        }
+      } catch {
+        setError(card, t('auth.error.network'));
+        submit.disabled = false;
+        return;
+      }
       showAuthDone('auth.forgot.doneTitle', 'auth.forgot.doneSub');
     });
     email.focus();
@@ -374,6 +393,19 @@ function showAuthDone(titleKey, subKey) {
       <button class="btn btn--primary btn--block" type="button" id="toLogin">${esc(t('auth.backToLogin'))}</button>
     </div>`, (card) => {
     card.querySelector('#toLogin').addEventListener('click', showLogin);
+  });
+}
+
+// Boot found the auth rate limiter tripped (#399): the mode is unknowable, so
+// show a plain retry screen instead of guessing one. Reload re-runs the probe.
+function showRateLimited() {
+  openAuth(showRateLimited, `<div class="auth__card">
+      <div class="auth__logo"><i class="ti ti-hourglass" aria-hidden="true"></i></div>
+      <h1 class="auth__title">${esc(t('auth.limited.title'))}</h1>
+      <p class="auth__sub muted">${esc(t('auth.limited.sub'))}</p>
+      <button class="btn btn--primary btn--block" type="button" id="limitedRetry">${esc(t('auth.limited.retry'))}</button>
+    </div>`, (card) => {
+    card.querySelector('#limitedRetry').addEventListener('click', () => window.location.reload());
   });
 }
 
@@ -430,9 +462,11 @@ function renderResetLanding() {
       authError(card).hidden = true;
       if (pw.value.length < 8) return setError(card, t('auth.error.shortPassword'));
       submit.disabled = true;
-      const { ok } = uid && token ? await authFetch('/reset-password', { uid, token, password: pw.value }) : { ok: false };
+      const { ok, data } = uid && token
+        ? await authFetch('/reset-password', { uid, token, password: pw.value })
+        : { ok: false, data: { error: 'invalid_token' } };
       if (ok) { toast(t('auth.reset.done')); return showLogin(); }
-      setError(card, t('auth.reset.invalid'));
+      setError(card, t(authErrorKey('reset', data.error)));
       submit.disabled = false;
     });
     pw.focus();

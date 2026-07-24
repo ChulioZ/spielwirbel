@@ -83,7 +83,16 @@ async function api(method, url, body, _retried) {
         // Locked out of the shared-password gate: drop the persisted cache
         // before bouncing, so the login page never fronts stale round data.
         invalidateRoundCache();
-        window.location.assign('/');
+        // Loop breaker (#399): a client that mis-detected legacy mode against
+        // an accounts-mode server gets a 401 here on its first data fetch, and
+        // the reload re-runs boot into the same 401 — endlessly. One bounce per
+        // 10s; within that window, surface the thrown error instead.
+        let lastBounce = 0;
+        try { lastBounce = Number(sessionStorage.getItem('authBounceAt')) || 0; } catch { /* storage off */ }
+        if (Date.now() - lastBounce > 10000) {
+          try { sessionStorage.setItem('authBounceAt', String(Date.now())); } catch { /* storage off */ }
+          window.location.assign('/');
+        }
       }
     }
     throw new Error(msg);

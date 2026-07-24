@@ -499,7 +499,7 @@ the whole app behind a single shared password — an unauthenticated visitor get
 login page and the API returns `401`. Leave `AUTH_PASSWORD` unset and the app
 stays open with no access control (the default for a bare local checkout — the
 maintainer's hosted instance sets it). Tune the login brute-force
-limit with `AUTH_RATE_LIMIT_MAX` (attempts per 15 min, default 20). The session is
+limit with `AUTH_RATE_LIMIT_MAX` (attempts per 15 min, default 100). The session is
 a signed, httpOnly cookie (marked `Secure` automatically behind a TLS proxy).
 
 User accounts (issue #135): the token-first account model — register with

@@ -60,6 +60,7 @@ const frontendGlobals = {
   getAccessToken: 'readonly', getRefreshToken: 'readonly',
   setTokens: 'readonly', clearTokens: 'readonly',
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
+  authErrorKey: 'readonly',
   probeMe: 'readonly', refreshAccessToken: 'readonly', onSessionLost: 'readonly',
   logout: 'readonly', isAuthPath: 'readonly', bootApp: 'readonly',
   initAccounts: 'readonly', enterApp: 'readonly', authScreen: 'readonly',

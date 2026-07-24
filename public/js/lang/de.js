@@ -547,6 +547,12 @@ I18N.de = {
   'auth.error.shortPassword': 'Das Passwort muss mindestens 8 Zeichen haben.',
   'auth.error.invalidUsername': 'Der Nutzername braucht 3–30 Zeichen und darf nur Buchstaben, Ziffern, _ und - enthalten.',
   'auth.error.usernameTaken': 'Dieser Nutzername ist schon vergeben. Bitte wähle einen anderen.',
+  'auth.error.rateLimited': 'Zu viele Versuche. Bitte warte kurz und versuche es dann erneut.',
+  'auth.error.sessionExpired': 'Deine Sitzung ist abgelaufen. Bitte lade die Seite neu und versuche es erneut.',
+  'auth.error.accountDisabled': 'Dieses Konto wurde gesperrt. Bei Fragen melde dich gerne über das Kontaktformular.',
+  'auth.limited.title': 'Zu viele Anfragen',
+  'auth.limited.sub': 'Der Server hat vorübergehend zu viele Anfragen von deiner Verbindung erhalten. Bitte warte einen Moment und versuche es dann erneut.',
+  'auth.limited.retry': 'Erneut versuchen',
 
   // Logged-out landing page (#322): the marketing front door before registration.
   'landing.hero.title': 'Eure Spielrunde, ein Ort.',
