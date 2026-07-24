@@ -15,6 +15,7 @@ I18N.en = {
 
   'home.greeting': 'Good to see you.',
   'home.sub': 'Which round is playing today?',
+  'home.shared': 'Shared',
   'home.newRound': 'Start a new round',
   'home.empty.title': 'No game round yet.',
   'home.empty.sub': 'Start your first round below and get everyone to the table.',

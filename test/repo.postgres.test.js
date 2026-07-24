@@ -154,6 +154,11 @@ if (!process.env.DATABASE_URL) {
         const sums = await probe.query(native(READ_SQL.summaries), ['rls-probe']);
         assert.deepEqual(sums.rows[0].summaries.map((s) => s.id), [round.id]);
         assert.equal(sums.rows[0].summaries[0].memberCount, 1);
+        // The single-round summary (#207 home-merge) shares the SUMMARY_OBJ body,
+        // so it carries the same embedded-set_config-before-scan contract.
+        const oneSum = await probe.query(native(READ_SQL.summary), ['rls-probe', round.id]);
+        assert.equal(oneSum.rows[0].s.id, round.id);
+        assert.equal(oneSum.rows[0].s.memberCount, 1);
         // The light validation reads follow the same embedded-set_config
         // contract as the assembled reads.
         const meta = await probe.query(native(READ_SQL.meta), ['rls-probe', round.id, round.id]);

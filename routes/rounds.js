@@ -4,6 +4,7 @@
 
 const express = require('express');
 const { z } = require('zod');
+const repo = require('../lib/repo');
 const storage = require('../lib/storage');
 const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
@@ -30,13 +31,30 @@ const createRoundSchema = z.object({
 // answer it in one small statement instead of assembling every game/session of
 // the tenant just to count them — the response shape is unchanged.
 router.get('/', async (req, res) => {
-  res.json(await req.repo.listRoundSummaries());
+  const own = await req.repo.listRoundSummaries();
+  // #207 home-merge: append the rounds the caller has been GRANTED (each fetched
+  // as its own single-round summary under the OWNER tenant, so we never read the
+  // owner's other rounds), flagged `shared` so the UI can mark them and hide
+  // owner-only actions. req.userId is set only in accounts mode, so legacy mode
+  // returns own rounds exactly as before. A grant whose round is gone (owner
+  // deleted it) yields null and is skipped.
+  const shared = [];
+  if (req.userId) {
+    for (const g of await repo.listGrantsForUser(req.userId)) {
+      const summary = await repo.forTenant(g.ownerTenantId).getRoundSummary(g.roundId);
+      if (summary) shared.push({ ...summary, shared: true });
+    }
+  }
+  res.json([...own, ...shared]);
 });
 
 router.get('/:rid', async (req, res) => {
   const round = await req.repo.getRound(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
-  res.json(round);
+  // Tell the client when it reached this round through a GRANT rather than owning
+  // it (resolveRoundGrant sets req.grant), so the UI marks it shared and hides
+  // owner-only actions. Owners get the round unchanged (no extra key).
+  res.json(req.grant ? { ...round, shared: true } : round);
 });
 
 router.post('/', async (req, res) => {

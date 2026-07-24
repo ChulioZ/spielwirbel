@@ -15,6 +15,7 @@ I18N.de = {
 
   'home.greeting': 'Schön, dass ihr da seid.',
   'home.sub': 'Welche Runde spielt heute?',
+  'home.shared': 'Geteilt',
   'home.newRound': 'Neue Runde gründen',
   'home.empty.title': 'Noch keine Spielrunde angelegt.',
   'home.empty.sub': 'Gründet unten eure erste Runde und holt alle an den Tisch.',
