@@ -459,6 +459,12 @@ I18N.en = {
   'invite.err.seatTaken': 'That seat is already taken.',
   'invite.err.roundGone': 'Round not found.',
   'invite.err.generic': 'Couldn’t send the invitation.',
+  // Revoke / leave a share (issue #207)
+  'share.linked': 'This seat is linked to an account.',
+  'share.revoke': 'Remove access',
+  'share.revokeConfirm': 'Remove {name}’s access to this round?',
+  'share.leave': 'Leave round',
+  'share.leaveConfirm': 'Leave “{name}”? You’ll lose access to this shared round.',
   'auth.email': 'E-mail',
   'auth.username': 'Username',
   'auth.password': 'Password',

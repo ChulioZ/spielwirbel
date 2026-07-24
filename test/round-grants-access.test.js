@@ -111,3 +111,65 @@ test('the owner is unaffected: they read, edit and delete their own round normal
   assert.equal(del.body.ok, true);
   assert.equal((await request(app).get(`/api/rounds/${round.id}`).set(auth(owner.token))).status, 404); // gone
 });
+
+// Seed a shared round: owner's round, one member linked to the grantee + a grant.
+async function seedShare(owner, grantee, seatName = 'Anna') {
+  const round = (await request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Geteilt', members: [seatName, 'Bob'] })).body;
+  const seat = round.members[0];
+  await repo.forTenant(owner.user.tenantId).updateMember(round.id, seat.id, { userId: grantee.user.id });
+  await repo.createGrant({ roundId: round.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id, memberId: seat.id });
+  return { round, seatId: seat.id };
+}
+
+test('revoke / leave a share: access ends, the seat is unlinked but kept', async () => {
+  const owner = await makeAccount('rev-owner@example.com');
+  const grantee = await makeAccount('rev-grantee@example.com');
+  const other = await makeAccount('rev-other@example.com');
+
+  // OWNER revokes the grantee.
+  let s = await seedShare(owner, grantee);
+  assert.equal((await request(app).get(`/api/rounds/${s.round.id}`).set(auth(grantee.token))).status, 200); // has access
+  const rev = await request(app).delete(`/api/rounds/${s.round.id}/shares/${grantee.user.id}`).set(auth(owner.token));
+  assert.equal(rev.status, 204);
+  assert.equal((await request(app).get(`/api/rounds/${s.round.id}`).set(auth(grantee.token))).status, 404); // access ended
+  assert.equal((await request(app).get('/api/rounds').set(auth(grantee.token))).body.some((r) => r.id === s.round.id), false); // off home
+  // The seat is KEPT, just unlinked — its ratings/history stay on the round.
+  const membersAfter = (await request(app).get(`/api/rounds/${s.round.id}`).set(auth(owner.token))).body.members;
+  assert.equal(membersAfter.length, 2);
+  assert.ok(!membersAfter.find((m) => m.id === s.seatId).userId); // unlinked (null), seat kept
+
+  // GRANTEE leaves on their own.
+  s = await seedShare(owner, grantee);
+  const leave = await request(app).delete(`/api/rounds/${s.round.id}/shares/${grantee.user.id}`).set(auth(grantee.token));
+  assert.equal(leave.status, 204);
+  assert.equal((await request(app).get(`/api/rounds/${s.round.id}`).set(auth(grantee.token))).status, 404);
+
+  // A grantee may NOT revoke a different account's share, only their own.
+  s = await seedShare(owner, grantee);
+  await repo.createGrant({ roundId: s.round.id, ownerTenantId: owner.user.tenantId, userId: other.user.id });
+  assert.equal((await request(app).delete(`/api/rounds/${s.round.id}/shares/${other.user.id}`).set(auth(grantee.token))).status, 403);
+  // Revoking someone who holds no share is a 404.
+  assert.equal((await request(app).delete(`/api/rounds/${s.round.id}/shares/${'ffffffffffffffff'}`).set(auth(owner.token))).status, 404);
+});
+
+test('deleting a round revokes its grants and cancels its pending invitations', async () => {
+  const owner = await makeAccount('del-owner@example.com');
+  const grantee = await makeAccount('del-grantee@example.com');
+  const invited = await makeAccount('del-invited@example.com');
+
+  const s = await seedShare(owner, grantee);
+  // A pending invitation to a THIRD account (lands an inbox item).
+  await request(app).post('/api/account/invitations').set(auth(owner.token))
+    .send({ roundId: s.round.id, username: 'del-invited' });
+  assert.equal((await request(app).get('/api/account/inbox').set(auth(invited.token))).body.items
+    .some((i) => i.type === 'round_invitation'), true);
+
+  // Owner deletes the round.
+  assert.equal((await request(app).delete(`/api/rounds/${s.round.id}`).set(auth(owner.token))).status, 200);
+
+  // The grantee's grant is gone (home empty), and the invitee's stale invite is cleared.
+  assert.equal((await request(app).get('/api/rounds').set(auth(grantee.token))).body.some((r) => r.id === s.round.id), false);
+  assert.equal((await request(app).get('/api/account/inbox').set(auth(invited.token))).body.items
+    .some((i) => i.type === 'round_invitation'), false);
+});

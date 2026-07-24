@@ -1722,6 +1722,30 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.eraseAccount('nope'), null);
   });
 
+  test('eraseAccount also removes the account\'s sharing rows (grants, invitations, inbox)', async () => {
+    const oTenant = `shr-o-${Math.random().toString(16).slice(2)}`;
+    const owner = await repo.createUser(userFields({ tenantId: oTenant }));
+    const grantee = await repo.createUser(userFields({ tenantId: `shr-g-${Math.random().toString(16).slice(2)}` }));
+    const round = await repo.createRound(oTenant, { name: 'Shared', members: ['Ann'] });
+
+    // The grantee holds a grant, has an inbox item, and was invited.
+    await repo.createGrant({ roundId: round.id, ownerTenantId: oTenant, userId: grantee.id });
+    await repo.addInboxItem(grantee.id, { type: 'round_invitation', payload: { roundId: round.id } });
+    await repo.createInvitation({ roundId: round.id, ownerTenantId: oTenant, inviterUserId: owner.id, inviteeUserId: grantee.id });
+
+    // Erasing the GRANTEE clears their grant, inbox and the invite addressed to them.
+    await repo.eraseAccount(grantee.id);
+    assert.deepEqual(await repo.listGrantsForUser(grantee.id), []);
+    assert.deepEqual(await repo.listInbox(grantee.id), []);
+    assert.deepEqual(await repo.listInvitationsForRound(round.id), []);
+
+    // Erasing the OWNER clears the grants sitting on their (now-deleted) round.
+    const g2 = await repo.createUser(userFields({ tenantId: `shr-g2-${Math.random().toString(16).slice(2)}` }));
+    await repo.createGrant({ roundId: round.id, ownerTenantId: oTenant, userId: g2.id });
+    await repo.eraseAccount(owner.id);
+    assert.deepEqual(await repo.listGrantsForRound(round.id), []);
+  });
+
   test('eraseAccount refuses when a second account shares the tenant', async () => {
     const tenant = `shared-${Math.random().toString(16).slice(2)}`;
     const a = await repo.createUser(userFields({ tenantId: tenant }));

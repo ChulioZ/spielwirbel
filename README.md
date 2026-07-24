@@ -299,7 +299,9 @@ routes/
                                              404 unless ADMIN_PASSWORD)
   lookup.js          …/lookup               (search/game — provider proxy: PS Store, BGG, Steam, Nintendo, Xbox;
                                              round-scoped, refuses a provider the round disabled)
-  rounds.js          /api/rounds            (list, detail, create, delete)
+  rounds.js          /api/rounds            (list — incl. granted rounds (#207);
+                                             detail, create, delete; revoke/leave
+                                             a share via …/:rid/shares/:userId)
   games.js           …/games                (add [+cover hotlink/source],
                                              edit [+link to provider],
                                              retire/restore, complete/restore,
