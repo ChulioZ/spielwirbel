@@ -101,11 +101,12 @@ to one replica, so it can't scale horizontally. Prefer R2 for the product path.)
 ### 4. Set the proxy + protect the instance
 
 - `TRUST_PROXY=1` — **required** behind Railway's edge (see above).
-- **Gate the app until accounts land.** The app has **no authentication yet** (the
-  account model is #135) — a public URL would expose the group's data to anyone.
-  Until then, set `AUTH_PASSWORD` (the single shared-login gate, #129) **and** a
-  long random `SESSION_SECRET` so an unauthenticated visitor only gets the login
-  page. Don't put this instance on the public internet without it.
+- **Gate the app with the shared password.** Set `AUTH_PASSWORD` (the single
+  shared-login gate, #129) **and** a long random `SESSION_SECRET` so an
+  unauthenticated visitor only gets the login page. Don't put this instance on the
+  public internet without it. Accounts have since shipped (#135/#136/#138); opening
+  public registration is a deliberate later step — see *Going live* below, which
+  layers accounts behind this gate first (#266) rather than swapping it out.
 
 ### 5. Custom domain
 
@@ -121,7 +122,8 @@ certificate automatically — this completes #156.
 | `DATABASE_SSL` | `true` (public endpoint) | TLS to the DB |
 | `S3_BUCKET` / `S3_ENDPOINT` / `S3_REGION` / `S3_FORCE_PATH_STYLE` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | R2 bucket + token | Cover-image storage (#128) |
 | `TRUST_PROXY` | `1` | Real client IP behind Railway's proxy (#156) |
-| `AUTH_PASSWORD` / `SESSION_SECRET` | your choice / long random | Interim gate until accounts (#135) |
+| `AUTH_PASSWORD` / `SESSION_SECRET` | your choice / long random | Shared-password gate (#129); with `ACCOUNTS_ENABLED` also set → layered mode (#266). `SESSION_SECRET` must be its own dedicated secret, not `AUTH_PASSWORD` |
+| `ACCOUNTS_ENABLED` | `true` to layer real accounts behind the gate (#266) | Off = shared-password-only. See *Going live* |
 | `BGG_API_TOKEN` | bearer token from your registered BGG application | BoardGameGeek lookup (#117) — unset means board-game search silently returns nothing |
 | `PORT` | *(injected by Railway)* | The app already honours it |
 
@@ -141,6 +143,37 @@ These need an account or a credential I can't create or hold:
       [Applications → Tokens](https://boardgamegeek.com/applications), and set
       `BGG_API_TOKEN` (the operator status card flags it while it's missing).
 - [ ] Add the **custom domain** and its DNS record.
+
+## Going live: opening public registration (#219/#266)
+
+Don't flip the instance from shared-password to public accounts in one step — that
+would swap the auth model, drop the only perimeter, and activate quotas all at
+once against real data, on a day nothing rolls back gently. Use **layered mode**
+(#266) so it's two small, separately verifiable moves:
+
+1. **Prerequisites.** Brevo mail is configured (#226 — verification links must
+   actually deliver), and `SESSION_SECRET` is its **own** dedicated secret, *not*
+   equal to `AUTH_PASSWORD` (it signs access-token JWTs; the shared password is
+   known to the whole group). `ADMIN_PASSWORD` is set (a separate secret again),
+   so the operator panel is reachable.
+2. **Turn on layered mode.** Set `ACCOUNTS_ENABLED=true` while keeping
+   `AUTH_PASSWORD`. The instance stays sealed behind the shared password, and
+   everyone inside now registers → verifies e-mail → logs in with a real account
+   (their own tenant). Exercise every account flow for as long as you like.
+3. **Claim the `'default'` data — in the admin panel, not via SQL.** Enabling
+   accounts freezes the pre-tenancy `'default'` rounds out of reach (no request
+   acts as `'default'` in layered mode), so the owner would otherwise log into an
+   empty app. In **`/admin.html` → Konten**, register the owner's account first
+   (leave it empty), then click **„Standard-Daten übernehmen"** on that row and
+   confirm with a reason. It re-tenants every `'default'` round into that account.
+   It refuses if the account already holds rounds (`target_not_empty`) — so run it
+   on a fresh account — and is a no-op once `'default'` is empty. Verify the owner
+   now sees the family rounds.
+4. **Open registration.** Once the account flows are proven and the claim is done,
+   **remove `AUTH_PASSWORD`** (and `AUTH_RATE_LIMIT_MAX` if you tuned it). That is
+   the whole go-live change: the SPA fallback stops serving `login.html`, and
+   `/api/account/register` becomes reachable without the shared session. Quotas
+   (#139) were already active in layered mode, so nothing new switches on here.
 
 ## CD note
 
