@@ -160,16 +160,20 @@ once against real data, on a day nothing rolls back gently. Use **layered mode**
    `AUTH_PASSWORD`. The instance stays sealed behind the shared password, and
    everyone inside now registers → verifies e-mail → logs in with a real account
    (their own tenant). Exercise every account flow for as long as you like.
-3. **Claim the `'default'` data — in the admin panel, not via SQL.** Enabling
-   accounts freezes the pre-tenancy `'default'` rounds out of reach (no request
-   acts as `'default'` in layered mode), so the owner would otherwise log into an
-   empty app. In **`/admin.html` → Konten**, register the owner's account first
-   (leave it empty), then click **„Standard-Daten übernehmen"** on that row and
-   confirm with a reason. It re-tenants every `'default'` round into that account.
-   It refuses if the account already holds rounds (`target_not_empty`) — so run it
-   on a fresh account — and is a no-op once `'default'` is empty. Verify the owner
-   now sees the family rounds.
-4. **Open registration.** Once the account flows are proven and the claim is done,
+3. **Claim the `'default'` data (only if migrating an existing shared-password
+   instance).** Enabling accounts freezes the pre-tenancy `'default'` rounds out
+   of reach (no request acts as `'default'` in layered mode), so an owner with
+   pre-accounts data would otherwise log into an empty app. A **one-time
+   „Standard-Daten übernehmen" admin action** re-tenanted that data into a fresh
+   owner account; it shipped in #266 (PR #394) and was executed on this
+   deployment during the 2026-07-24 go-live, then **removed in #405** (its
+   standing cross-tenant RLS write-escape had no further purpose on a public
+   instance). A fresh deployment with no pre-accounts data needs nothing here. A
+   self-hoster migrating an *existing* shared-password instance to accounts mode
+   should check out a revision that still includes the tool (it was present from
+   #266/PR #394 through the #219 go-live, i.e. any commit before #405 merged —
+   e.g. `e2d581e`), register the owner account, run the claim there, then upgrade.
+4. **Open registration.** Once the account flows are proven and any claim is done,
    **remove `AUTH_PASSWORD`** (and `AUTH_RATE_LIMIT_MAX` if you tuned it). That is
    the whole go-live change: the SPA fallback stops serving `login.html`, and
    `/api/account/register` becomes reachable without the shared session. Quotas

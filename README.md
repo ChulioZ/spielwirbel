@@ -306,8 +306,7 @@ routes/
                                              notices inbox + decisions, Art. 17
                                              statements of reasons,
                                              account suspend/restore, GDPR
-                                             export + erasure, claim the 'default'
-                                             tenant into an account (#266),
+                                             export + erasure,
                                              filterable action log, user feedback,
                                              recent warn/error logs —
                                              404 unless ADMIN_PASSWORD)

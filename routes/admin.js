@@ -538,55 +538,6 @@ router.post('/users/:uid/erase', async (req, res) => {
   res.json({ ok: true, rounds: result.rounds, imagesRemoved: removed, imagesFailed: failed, entry });
 });
 
-/* ---------------------- claim the 'default' tenant (#266) ------------------- */
-
-// Point a freshly-registered OWNER account at the legacy 'default' data: move
-// every 'default'-tenant round (and its children) into the account's own tenant,
-// so it becomes visible once accounts mode is on. The go-live counterpart to
-// enabling accounts (#266) — flipping ACCOUNTS_ENABLED freezes the pre-tenancy
-// 'default' data out of reach (no request ever acts as 'default' in layered mode),
-// so without this the owner logs into an EMPTY app that looks like data loss.
-//
-// A reason is required and logged like every other action. The move is refused
-// unless the target is a genuinely fresh, EMPTY account, so the legacy data can
-// never be silently merged into an account that already holds rounds — the one
-// mistake here that has no clean undo. Run it right after the owner registers.
-router.post('/users/:uid/claim-default', async (req, res) => {
-  const body = validateBody(z.object({ reason: reasonSchema }), req, res);
-  if (!body) return;
-
-  const user = await repo.getUserById(req.params.uid);
-  if (!user) return res.status(404).json({ error: 'not_found' });
-
-  const target = user.tenantId || null;
-  // The account already IS the default tenant (or carries none) — nothing to
-  // claim, and a self-move would report a misleading count.
-  if (!target || target === 'default') return res.status(409).json({ error: 'already_default' });
-  // Only ever claim INTO an empty account. listRoundSummaries is the light read
-  // (no games/sessions payload) and is enough to know whether the target holds any
-  // round of its own.
-  const existing = await repo.listRoundSummaries(target);
-  if (existing.length) return res.status(409).json({ error: 'target_not_empty' });
-
-  const { rounds } = await repo.claimDefaultTenant(target);
-  // 'default' held nothing — the claim already happened, or this instance never
-  // had pre-tenancy data. A distinct code, not a hollow success.
-  if (!rounds) return res.status(409).json({ error: 'nothing_to_claim' });
-
-  const entry = await repo.logModeration({
-    action: 'default_tenant_claimed',
-    target: user.id,
-    reason: body.reason,
-    at: new Date().toISOString(),
-    tenantId: target,
-    email: user.email,
-    rounds,
-  });
-
-  logger.info({ event: 'admin_default_tenant_claimed', tenantId: target });
-  res.json({ ok: true, rounds, entry });
-});
-
 /* ------------------------------ paging & export ---------------------------- */
 
 // Both list routes below page with the same (limit, offset) and report a total,

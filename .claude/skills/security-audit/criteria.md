@@ -87,15 +87,19 @@ that a generic scanner does not know about.
 - **Enforced by:** `test/repo.postgres.test.js` (plain-role probes)
 
 ### S-007 — Cross-tenant escapes widen reads only, admit their own writes, and are transaction-local
-- **Status:** adopted · 2026-07-24
-- **Source:** `.claude/rules/admin-moderation-surface.md` §2, `retenant-rls-escape.md`, `round-grant-resolver.md`
+- **Status:** adopted · 2026-07-24 · updated 2026-07-24 (retenant escape removed, #405)
+- **Source:** `.claude/rules/admin-moderation-surface.md` §2, `.claude/rules/tenancy-rls.md`
+  ("for any future cross-tenant write"), `round-grant-resolver.md`
 - **Check:** The moderation escape is a separate `FOR SELECT` policy, never `OR`-ed onto
   the tenant policy (an `OR` silently permits cross-tenant `DELETE`, which is governed by
-  `USING` alone). The retenant escape is a self-contained `FOR SELECT`+`FOR UPDATE` pair
-  gated on a tx-local flag, never an edit to the tenant policy. A grantee *acts as* the
-  owner tenant (re-scoped `req.repo`) keyed on **this** round's id — RLS stays un-widened.
-  Every flag dies at COMMIT.
-- **Enforced by:** `test/repo.postgres.test.js` (plain-role DELETE/INSERT refusals)
+  `USING` alone). The one-time retenant write escape (#266) was removed after go-live
+  (#405) — no standing cross-tenant write escape should exist; a future one must be a
+  self-contained pair gated on a tx-local flag, never an edit to the tenant policy (the two
+  PG facts are folded into `tenancy-rls.md`). A grantee *acts as* the owner tenant
+  (re-scoped `req.repo`) keyed on **this** round's id — RLS stays un-widened. Every flag
+  dies at COMMIT.
+- **Enforced by:** `test/repo.postgres.test.js` (plain-role DELETE/INSERT refusals; the
+  retenant escape is proven *gone*)
 
 ### S-008 — A grant is not authority to delete; owner-only actions stay owner-only
 - **Status:** adopted · 2026-07-24

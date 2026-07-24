@@ -379,29 +379,18 @@ if (!process.env.DATABASE_URL) {
     }
   });
 
-  // The re-tenant WRITE escape (#266). claimDefaultTenant moves rows BETWEEN
-  // tenants, the one thing the tenant-isolation policy forbids under any single
-  // app.tenant_id. It is a FOR SELECT + FOR UPDATE escape pair gated on
-  // app.retenant (both needed: under FORCE RLS the moved row must be VISIBLE, not
-  // merely pass WITH CHECK). Like the moderation escape it must widen NARROWLY:
-  //   1. flag on -> a bulk UPDATE may re-label rows across tenants (the claim),
-  //      and the WHERE — not the policy — scopes it to the source.
-  //   2. flag on WIDENS SELECT too (so an unqualified UPDATE would move everyone —
-  //      why the method's WHERE is load-bearing), but INSERT and — critically —
-  //      DELETE ignore a FOR SELECT/FOR UPDATE policy, so both still consult ONLY
-  //      the tenant policy: the dangerous cross-tenant DELETE stays closed.
-  //   3. the flag is transaction-local — the next statement is fail-closed.
-  // Only a PLAIN ROLE proves any of this: the contract suite's connection is a
-  // superuser and bypasses RLS entirely, so it would pass even with a broken
-  // policy (and claimDefaultTenant runs its UPDATE regardless there).
-  test('the re-tenant escape widens SELECT+UPDATE only, never INSERT or DELETE', async () => {
+  // The re-tenant WRITE escape (#266) has been REMOVED (#405): the one-time
+  // claim-'default'-tenant action ran during the #219 go-live and is gone, so the
+  // standing cross-tenant SELECT+UPDATE escape pair (dropped by migration
+  // 20260724140000_drop_retenant.js) has no remaining caller. This probes, through
+  // a PLAIN ROLE, that the escape is genuinely gone — with app.retenant='on' set
+  // (what rtx() used to do), a cross-tenant UPDATE now moves ZERO rows and a
+  // cross-tenant SELECT sees nothing (RLS fails closed with no app.tenant_id). Only
+  // a non-superuser proves it: the contract suite's connection bypasses RLS.
+  test('the re-tenant escape is gone: app.retenant no longer widens SELECT or UPDATE', async () => {
     const assert = require('node:assert/strict');
-    let movedRoundId;
-    // The source (a 'default' round) and a BYSTANDER in another tenant, so the
-    // "no cross-tenant DELETE" check has a real, present row to fail against.
+    // A 'default' round the (now non-existent) escape would once have moved.
     const src = await repo.createRound('default', { name: 'Legacy', members: ['Z'] });
-    movedRoundId = src.id;
-    const other = await repo.createRound('rt-other', { name: 'Bystander', members: ['Y'] });
 
     const admin = new Client({
       connectionString: process.env.DATABASE_URL,
@@ -422,76 +411,32 @@ if (!process.env.DATABASE_URL) {
         ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
       });
       await probe.connect();
-      // Set the flag — exactly what rtx() does (no tenant scope needed).
+      // Set the flag exactly as the removed rtx() did. With the escape policies
+      // dropped, the flag is now inert.
       const beginFlag = async () => {
         await probe.query('BEGIN');
         await probe.query("SELECT set_config('app.retenant', 'on', true)");
       };
       try {
-        // 1. flag on: the WHERE-scoped UPDATE re-labels the 'default' row and
-        //    leaves the bystander alone — the move the tenant policy forbids.
-        await beginFlag();
-        const moved = await probe.query("UPDATE rounds SET tenant_id = 'rt-target' WHERE tenant_id = 'default'");
-        assert.equal(moved.rowCount, 1, 'the escape must permit re-labelling a source row');
-        await probe.query('ROLLBACK'); // leave the data as it was
-
-        // 2. flag on WIDENS SELECT (the read the scan needs) — a tenant the role
-        //    is not scoped to is visible. This is why the method's WHERE, not the
-        //    policy, scopes the move. (Filtered to the two rows under test; the
-        //    contract suite leaves many other tenants' rows in this shared DB.)
+        // The escape no longer widens SELECT: without a tenant scope, RLS fails
+        // closed, so the 'default' row is invisible even with the flag set.
         await beginFlag();
         const seen = await probe.query(
-          "SELECT DISTINCT tenant_id FROM rounds WHERE tenant_id IN ('default', 'rt-other') ORDER BY tenant_id",
+          "SELECT count(*)::int AS n FROM rounds WHERE tenant_id = 'default'",
         );
-        assert.deepEqual(seen.rows.map((r) => r.tenant_id), ['default', 'rt-other'],
-          'the escape must widen reads across tenants');
+        assert.equal(seen.rows[0].n, 0, 'the retenant flag must no longer widen reads');
         await probe.query('ROLLBACK');
 
-        // 3. …but DELETE cannot reach the bystander — DELETE ignores a FOR
-        //    SELECT/FOR UPDATE policy, so it consults only the tenant policy (no
-        //    app.tenant_id -> zero rows). This catches a FOR ALL escape mistake.
+        // And it no longer permits the cross-tenant re-label: the WHERE scan sees
+        // no rows (no SELECT escape) and there is no FOR UPDATE escape either, so
+        // the UPDATE matches zero rows — the move is impossible now.
         await beginFlag();
-        const del = await probe.query('DELETE FROM rounds WHERE id = $1', [other.id]);
-        assert.equal(del.rowCount, 0, 'the escape must NOT permit a cross-tenant delete');
+        const moved = await probe.query("UPDATE rounds SET tenant_id = 'rt-target' WHERE tenant_id = 'default'");
+        assert.equal(moved.rowCount, 0, 'the retenant flag must no longer permit a cross-tenant re-label');
         await probe.query('ROLLBACK');
-
-        // 4. …and INSERT into a tenant is refused — INSERT also ignores the escape,
-        //    so its WITH CHECK is the tenant policy's alone.
-        await beginFlag();
-        await assert.rejects(
-          () => probe.query("INSERT INTO rounds(id, tenant_id, name) VALUES ('rt_x', 'rt-other', 'X')"),
-          /row-level security/,
-          'the escape must NOT permit a cross-tenant insert',
-        );
-        await probe.query('ROLLBACK');
-
-        // 5. The flag is transaction-local: the next statement on the same pooled
-        //    connection is back to fail-closed (sees no rows without a scope).
-        const afterAll = await probe.query('SELECT count(*)::int AS n FROM rounds');
-        assert.equal(afterAll.rows[0].n, 0);
       } finally {
         await probe.end();
       }
-
-      // The decisive step (admin-moderation-surface.md §3): run claimDefaultTenant
-      // ITSELF as the plain role, in a child process where lib/repo/postgres.js
-      // builds its knex against the probe connection. The contract suite runs it
-      // as a superuser (RLS bypassed), so only this proves the bulk UPDATE lands
-      // under FORCE RLS. It claims the 'default' round seeded above into
-      // 'rt-target'; under a broken policy the UPDATE matches zero rows and the
-      // after-assertions below go red. (The 'rt-other' bystander is untouched.)
-      const url2 = new URL(process.env.DATABASE_URL);
-      url2.username = 'gs_rt_probe';
-      url2.password = 'probe';
-      const child = execFileSync(process.execPath, ['-e', `
-        const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
-        repo.claimDefaultTenant('rt-target')
-          .then((out) => { console.log('RESULT:' + JSON.stringify(out)); return repo.end(); })
-          .catch((err) => { console.error(err.stack); process.exit(1); });
-      `], { env: { ...process.env, DATABASE_URL: url2.toString() }, encoding: 'utf8' });
-      const line = child.split('\n').find((l) => l.startsWith('RESULT:'));
-      assert.ok(line, `the probe child produced no result: ${child}`);
-      assert.equal(JSON.parse(line.slice('RESULT:'.length)).rounds, 1);
     } finally {
       await admin.query('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM gs_rt_probe').catch(() => {});
       await admin.query('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM gs_rt_probe').catch(() => {});
@@ -499,12 +444,8 @@ if (!process.env.DATABASE_URL) {
       await admin.end();
     }
 
-    // The move must actually have LANDED as a non-superuser, not merely been
-    // reported: the round now lives under 'rt-target' and is gone from 'default'.
-    // The bystander in 'rt-other' is untouched.
-    assert.ok(await repo.getRound('rt-target', movedRoundId));
-    assert.equal(await repo.getRound('default', movedRoundId), null);
-    assert.equal((await repo.getRound('rt-other', other.id)).name, 'Bystander');
+    // The source round is untouched — it still lives under 'default'.
+    assert.equal((await repo.getRound('default', src.id)).name, 'Legacy');
   });
 
   // Redaction (#275) is the third operator WRITE, after takedown (#268) and

@@ -32,10 +32,10 @@ list nothing that is not actually in place.
   **Row-Level Security (FORCE)** in PostgreSQL als Backstop (#136,
   `.claude/rules/tenancy-rls.md`).
 - Betreiber-Lesezugriff für Moderation ist eine separate, **nur-lesende**
-  RLS-Policy; Schreibzugriffe bleiben mandantengebunden (#268/#275). Einzige
-  Ausnahme: die transaktionslokal aktivierte Umzugs-Policy für das einmalige
-  Übertragen der Alt-Daten in ein Konto (#266, nur SELECT/UPDATE auf
-  `tenant_id`, kein INSERT/DELETE — `.claude/rules/retenant-rls-escape.md`).
+  RLS-Policy; Schreibzugriffe bleiben mandantengebunden (#268/#275). Die
+  transaktionslokale Umzugs-Policy für das einmalige Übertragen der Alt-Daten
+  in ein Konto (#266) wurde nach ihrer Ausführung wieder **entfernt** (#405),
+  sodass keine mandantenübergreifende Schreib-Policy mehr besteht.
 
 ## Härtung & Missbrauchsabwehr
 
