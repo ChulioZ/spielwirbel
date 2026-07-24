@@ -547,6 +547,12 @@ I18N.en = {
   'auth.error.shortPassword': 'Password must be at least 8 characters.',
   'auth.error.invalidUsername': 'The username needs 3–30 characters and may only contain letters, digits, _ and -.',
   'auth.error.usernameTaken': 'That username is already taken. Please pick another one.',
+  'auth.error.rateLimited': 'Too many attempts. Please wait a moment and try again.',
+  'auth.error.sessionExpired': 'Your session has expired. Please reload the page and try again.',
+  'auth.error.accountDisabled': 'This account has been suspended. If you have questions, please use the contact form.',
+  'auth.limited.title': 'Too many requests',
+  'auth.limited.sub': 'The server temporarily received too many requests from your connection. Please wait a moment and try again.',
+  'auth.limited.retry': 'Try again',
 
   // Logged-out landing page (#322): the marketing front door before registration.
   'landing.hero.title': 'Your game group, all in one place.',
