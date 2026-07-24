@@ -768,6 +768,25 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.listActivities(T, 'missing'), null);
   });
 
+  test('an activity records the acting member (#207) — actorMemberId, absent when none', async () => {
+    const round = await freshRound(); // members: Alice, Bob
+    const alice = round.members[0];
+
+    // No actor passed → the key is ABSENT (a single-actor round's feed is unchanged).
+    await repo.createGame(T, round.id, gameFields({ title: 'Solo' }));
+    assert.equal('actorMemberId' in (await repo.listActivities(T, round.id))[0], false);
+
+    // With an actor → the member seat is recorded on game_added…
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'ByAlice' }), alice.id);
+    const added = (await repo.listActivities(T, round.id)).find((a) => a.title === 'ByAlice');
+    assert.equal(added.actorMemberId, alice.id);
+    // …and on retire / complete / delete.
+    await repo.retireGame(T, round.id, g.id, true, alice.id);
+    assert.equal((await repo.listActivities(T, round.id)).find((a) => a.type === 'game_retired').actorMemberId, alice.id);
+    await repo.deleteGame(T, round.id, g.id, alice.id);
+    assert.equal((await repo.listActivities(T, round.id)).find((a) => a.type === 'game_deleted').actorMemberId, alice.id);
+  });
+
   test('deleteActivity removes a feed entry by id', async () => {
     const round = await freshRound();
     await repo.createGame(T, round.id, gameFields());

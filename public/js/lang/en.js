@@ -106,6 +106,7 @@ I18N.en = {
   'activity.delete': 'Delete activity',
   'activity.deleteConfirm': 'Delete this activity?',
   'activity.deleted': 'Activity deleted',
+  'activity.by': '· by {name}',
   'activity.gameAdded': '“{title}” added',
   'activity.gameRetired': '“{title}” retired',
   'activity.gameRestored': '“{title}” brought back',

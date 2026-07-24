@@ -173,3 +173,16 @@ test('deleting a round revokes its grants and cancels its pending invitations', 
   assert.equal((await request(app).get('/api/account/inbox').set(auth(invited.token))).body.items
     .some((i) => i.type === 'round_invitation'), false);
 });
+
+test('a game a grantee adds to a shared round is attributed to their member seat (#207)', async () => {
+  const owner = await makeAccount('attr-owner@example.com');
+  const grantee = await makeAccount('attr-grantee@example.com');
+  const s = await seedShare(owner, grantee); // grantee is linked to the seat s.seatId
+
+  await request(app).post(`/api/rounds/${s.round.id}/games`).set(auth(grantee.token))
+    .send({ title: 'Catan', minPlayers: 2, maxPlayers: 4 });
+
+  const feed = (await request(app).get(`/api/rounds/${s.round.id}/activities`).set(auth(owner.token))).body;
+  const added = feed.find((a) => a.type === 'game_added' && a.title === 'Catan');
+  assert.equal(added.actorMemberId, s.seatId); // recorded as the grantee's seat
+});

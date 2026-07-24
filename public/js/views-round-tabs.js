@@ -381,7 +381,10 @@ function renderChronikTab(round, activities) {
       games_moved_in: { icon: 'ti-arrow-left', text: tn(a.count, 'activity.gamesMovedInOne', 'activity.gamesMovedIn', { round: a.roundName }) },
     }[a.type];
     if (!meta) return;
-    entries.push({ kind: 'activity', at: a.at, id: a.id, gameId: a.gameId, type: a.type, ...meta });
+    // Who did it (#207): resolve the actor's member seat to a name (like
+    // winnerNames). Absent on single-actor rounds, so nothing is shown there.
+    const by = a.actorMemberId && (round.members.find((m) => m.id === a.actorMemberId) || {}).name;
+    entries.push({ kind: 'activity', at: a.at, id: a.id, gameId: a.gameId, type: a.type, by, ...meta });
   });
   entries.sort((a, b) => String(b.at).localeCompare(String(a.at)));
 
@@ -462,9 +465,11 @@ function renderChronikTab(round, activities) {
     // and a <button> inside an <a> is invalid markup. So the text carries the
     // href — new tab, copy address, link semantics — while the row keeps the
     // generous click target it always had around it.
+    const by = e.by ? `<span class="tl-act__by">${esc(t('activity.by', { name: e.by }))}</span>` : '';
     const row = h(`<div class="tl-act${target ? ' tl-act--link' : ''}">
          <span class="tl-act__icon"><i class="ti ${e.icon}" aria-hidden="true"></i></span>
          ${target ? `<a class="tl-act__text">${esc(e.text)}</a>` : `<span class="tl-act__text">${esc(e.text)}</span>`}
+         ${by}
          <span class="tl-act__time">${fmtDateTime(e.at)}</span>
          <button class="tl-act__del" title="${esc(t('activity.delete'))}" aria-label="${esc(t('activity.delete'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
        </div>`);
