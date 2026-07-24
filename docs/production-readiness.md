@@ -28,9 +28,10 @@
 - **The three hard blockers — all shipped (2026-07-19):** (1) authentication +
   authorization on every route, (2) a real database replacing the
   process-local in-memory store, (3) transport security + production hosting
-  (#127–#133, live on Railway — see §12's shipped list). What remains before opening
-  **public** sign-up is the legal pack (Impressum #134, blocked externally;
-  ToS/DPAs #140); per-tenant quotas (#139) shipped 2026-07-19 — see §12.
+  (#127–#133, live on Railway — see §12's shipped list). **Public sign-up is
+  LIVE since 2026-07-24** (#219): layered mode (#266) exercised the real
+  account flows behind the shared password, the `'default'` tenant was
+  claimed, and removing `AUTH_PASSWORD` opened registration — see §12.
 - **Kept the stack, no rewrite.** Node/Express, the no-build vanilla frontend,
   and hand-rolled-but-tested logic all proved out in production — see §2.
 - **The goal is a website *and* native iOS/Android store apps**, not just
@@ -512,6 +513,14 @@ most hobby projects and a real launch asset.
 
 ## 12. Roadmap: shipped, go-live dependencies, and everything else
 
+> **Go-live executed 2026-07-24 (#219): public registration is open on
+> production.** The two-step #266 process ran as designed — layered mode
+> (accounts + shared password together), owner registration, the
+> `'default'`-tenant claim via the admin panel, private smoke tests (which
+> caught and fixed the #399 auth-limiter reload loop before opening), then
+> removing `AUTH_PASSWORD` as the actual trigger. The blocking relations
+> below stay as the historical record of what gated it.
+
 **No more "phases."** This section used to group work into numbered phases
 (0–4); that framing was retired 2026-07-22 in favor of what actually
 determines build order: **GitHub's native issue-blocking relations** on
@@ -562,9 +571,10 @@ truth.
 | Brand name + domain registration | S | Low | **shipped** (#147) — see §10 |
 
 *Exit (reached):* the group's data runs in the cloud, gated, on TLS, on a real
-DB, with backups and monitoring. Public multi-tenant sign-up needed the
-remaining go-live blockers below plus a deliberate decision to flip
-`ACCOUNTS_ENABLED` in production.
+DB, with backups and monitoring. Public multi-tenant sign-up followed on
+2026-07-24 via the layered two-step (#266): `ACCOUNTS_ENABLED=true` behind the
+shared password first, then — after the `'default'` claim and the smoke
+tests — removing `AUTH_PASSWORD` as the actual go-live trigger (#219).
 
 **Also shipped — battle-tested-dependency hardening batch** (recommended, was
 never a go-live blocker; see §7 for the reasoning behind each):
@@ -576,12 +586,13 @@ never a go-live blocker; see §7 for the reasoning behind each):
 | **Centralized request validation** — `zod` at the router boundary | M | Low | #213 |
 | **Identity/token issuance** — access-token JWTs via `jsonwebtoken` | M | Med | #214 |
 
-### Blocks go-live — #219 is blocked by these
+### Blocked go-live — #219 was blocked by these (all closed; executed 2026-07-24)
 
 | Issue | What | Notes |
 |---|---|---|
-| **#226** | Set up Brevo (transactional e-mail) and configure it on the Live instance | Ops-only, waiting on the rented postal address; see the issue for current status |
-| **#266** | Allow accounts mode behind the shared-password gate (layered auth) + claim the `'default'` tenant | Itself blocked by #226; de-risks go-live by exercising the real account flows behind the existing shared-password gate before removing it |
+| **#226** | Set up Brevo (transactional e-mail) and configure it on the Live instance | **Shipped/closed** — mail + operator identity configured in production |
+| **#266** | Allow accounts mode behind the shared-password gate (layered auth) + claim the `'default'` tenant | **Shipped** (PR #394) and executed: layered mode exercised the account flows privately, the claim preserved the pre-accounts data |
+| **#399** | Auth-limiter 429 reload loop + misleading auth-form errors | Found live in the go-live smoke test, **fixed** (PR #400) before opening registration |
 
 ### Waits for go-live — blocked by #219
 
