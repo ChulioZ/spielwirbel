@@ -76,6 +76,15 @@ async function showHome() {
   navLink(newCard, '/round/new', () => showNewRound());
   list.appendChild(newCard);
   app.appendChild(list);
+
+  // Compact Freundeskreis feed (#325): a placeholder the friends module fills in
+  // (only in accounts mode with >= 1 friend) or removes. Not awaited — it must not
+  // delay the (SWR-instant) home render, and it self-guards against a re-render.
+  if (accountsActive() && isLoggedIn()) {
+    const friends = h('<section class="home-friends" id="homeFriends"></section>');
+    app.appendChild(friends);
+    renderHomeFriends(friends);
+  }
 }
 
 // =================== New round ===================

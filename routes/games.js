@@ -12,6 +12,7 @@ const { getProvider, providerCoverUrl } = require('../lib/providers');
 const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
 const { trackEvent } = require('../lib/observability');
+const { emitFeedEvent } = require('../lib/feed');
 
 const router = express.Router({ mergeParams: true });
 
@@ -131,6 +132,10 @@ router.post('/', upload.single('image'), async (req, res) => {
   }, actorSeat(round, req.userId));
   if (!game) return res.status(404).json({ error: 'Round not found' });
   trackEvent('game_added', { tenantId: req.tenantId });
+  // Freundeskreis feed (#325): "‹user› hat ‹Spiel› ins Regal gestellt". Attributed
+  // to the acting account (req.userId, set only in accounts mode); title + cover
+  // snapshot only — no round or member data. Best-effort, after the mutation.
+  await emitFeedEvent(req.userId, { type: 'game_added', title: game.title, coverUrl: game.image });
   res.status(201).json(game);
 });
 

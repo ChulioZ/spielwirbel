@@ -55,10 +55,12 @@ function afterRemove() {
   if (!app.querySelector('.inbox-row')) showInbox();
 }
 
-// Dispatch on the item type. Round invitations (#207) are the first typed item,
-// with accept/decline actions; anything else renders as a generic notification.
+// Dispatch on the item type. Round invitations (#207) and friend requests (#325)
+// are typed items with accept/decline actions (the friend one lives in
+// views-friends.js); anything else renders as a generic notification.
 function renderInboxItem(item) {
   if (item.type === 'round_invitation') return renderInvitationItem(item);
+  if (item.type === 'friend_request') return renderFriendRequestItem(item);
   return renderGenericItem(item);
 }
 

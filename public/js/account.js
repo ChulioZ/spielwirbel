@@ -454,6 +454,10 @@ function setupAccountUi() {
     el.appendChild(h(`<div class="popover__head">${
       username ? `<strong>${esc(username)}</strong>` : ''
     }${esc((accountUser && accountUser.email) || '')}</div>`));
+    // Freundeskreis (#325): the entry point to the dedicated friends view.
+    const friends = h(`<button class="popover__opt"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('friends.menu'))}</button>`);
+    friends.addEventListener('click', () => { close(); showFriends(); });
+    el.appendChild(friends);
     const out = h(`<button class="popover__opt"><i class="ti ti-logout" aria-hidden="true"></i> ${esc(t('auth.logout'))}</button>`);
     out.addEventListener('click', () => { close(); logout(); });
     el.appendChild(out);
