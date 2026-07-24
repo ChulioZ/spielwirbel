@@ -7,10 +7,23 @@ paths:
 
 # Moving games between rounds (#253) — three things that fail silently
 
-`moveGames(tenant, rid, targetRid, limits)` reparents every game of one round
-into another and merges the two rounds' tags by name. Three parts of it are
-non-obvious, and each fails *quietly* — wrong order, wrong count, or a deadlock
-under concurrency, none of which throws.
+`moveGames(tenant, rid, targetRid, limits, gameIds)` reparents games of one
+round into another and merges the two rounds' tags by name. Three parts of it
+are non-obvious, and each fails *quietly* — wrong order, wrong count, or a
+deadlock under concurrency, none of which throws.
+
+**`gameIds` is the #402 subset, and absent ≠ empty** (the same discipline as
+`.claude/rules/round-provider-config.md`): null/undefined moves the **whole
+shelf** — #253's behaviour, still what an old client sends — while an array
+moves exactly those games. The route rejects `[]` at the schema (nothing to
+move is a client error, not a no-op) and dedupes before calling down. Membership
+is checked in the **repo**, not the route, and returns the marker
+`'unknown_game'` → 400: the shelf is already loaded inside the move's own
+transaction, so the check is atomic instead of racing a snapshot read. Both
+backends filter the loaded shelf in JS — Postgres deliberately does **not** use
+a `whereIn`, because the refusal is a *count* comparison (`moving.length !==
+want.size`) and a `whereIn` would need a second query to tell "not yours" from
+"doesn't exist".
 
 ## 1. Postgres must take a FRESH `seq` per reparented row, or the backends diverge
 
@@ -68,10 +81,14 @@ shelf has no undo.
 
 ## Smaller things worth keeping
 
-- **The source round's session history does not survive.** Every game moves, so
-  every session's `gameIds` empties, and an empty session is dropped — the exact
-  rule `deleteGame` already applies. This is inherent to "move *all* games", not
-  a bug; the confirm dialog says so before the user commits.
+- **A moved game drops out of the source's sessions.** Each session's `gameIds`
+  loses the moved ids, and a session left with none is dropped — the exact rule
+  `deleteGame` already applies. Moving the *whole* shelf therefore takes the
+  round's whole history with it; a #402 subset move leaves the sessions that
+  still hold a kept game, scrubbed. The sheet's confirm reflects that: it warns
+  about history **only when a selected game actually appears in a session**
+  (`round.sessions` is already on the snapshot it holds), because a warning that
+  cries wolf on a tidy-up of never-played games gets clicked through.
 - **A reused tag keeps the TARGET's spelling and icon.** Matching is trimmed and
   case-insensitive, but the target round is never renamed or restyled by a move —
   same reasoning as `addTag` refusing to restyle on a duplicate name (#255).
@@ -83,6 +100,12 @@ shelf has no undo.
   written back when tags are actually created, so a quota-refused move cannot
   leave `tags: []` on a round that had no tags (the Postgres column would still
   be NULL — see `.claude/rules/postgres-backend.md`).
+- **The sheet always sends an explicit `gameIds`, even when everything is
+  checked.** It could omit the key and get the same result via the "all" default
+  — but then the count the user just confirmed is not what the server moves: a
+  game added from another device since the sheet opened would ride along
+  unseen. The absent-means-all default exists for *older/other* clients, not as
+  the UI's happy path.
 - **The Regal entry point is gated on `round.games.length`, not `activeGames`** —
   archived games move too, so a round holding nothing but retired games must
   still offer the action — **and on `!round.shared`**: moving is owner-only

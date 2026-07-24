@@ -582,6 +582,45 @@ test('POST games/move-to rejects a missing, blank or identical target', async ()
   assert.equal((await request(app).post('/api/rounds/nope/games/move-to').send({ targetRoundId: src.id })).status, 404);
 });
 
+test('POST games/move-to moves only the games named in gameIds (#402)', async () => {
+  const src = await createRound(request);
+  const dst = await createRound(request);
+  const a = (await addGame(src.id, { title: 'A' })).body;
+  const b = (await addGame(src.id, { title: 'B' })).body;
+  const c = (await addGame(src.id, { title: 'C' })).body;
+
+  // Duplicates in the request are deduped, not counted twice.
+  const res = await request(app).post(`/api/rounds/${src.id}/games/move-to`)
+    .send({ targetRoundId: dst.id, gameIds: [a.id, c.id, a.id] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.movedGames, 2);
+
+  const after = (await request(app).get(`/api/rounds/${src.id}`)).body;
+  assert.deepEqual(after.games.map((g) => g.id), [b.id]);
+  const target = (await request(app).get(`/api/rounds/${dst.id}`)).body;
+  assert.deepEqual(target.games.map((g) => g.title), ['A', 'C']);
+});
+
+test('POST games/move-to rejects an empty or unknown gameIds selection (#402)', async () => {
+  const src = await createRound(request);
+  const dst = await createRound(request);
+  const a = (await addGame(src.id, { title: 'A' })).body;
+
+  // Absent = move all (unchanged); [] is a client error, not a silent no-op.
+  const empty = await request(app).post(`/api/rounds/${src.id}/games/move-to`)
+    .send({ targetRoundId: dst.id, gameIds: [] });
+  assert.equal(empty.status, 400);
+
+  const unknown = await request(app).post(`/api/rounds/${src.id}/games/move-to`)
+    .send({ targetRoundId: dst.id, gameIds: [a.id, 'nope'] });
+  assert.equal(unknown.status, 400);
+  assert.equal(unknown.body.error, 'Unknown game');
+
+  // Refused whole: the valid id in that request did not move either.
+  assert.deepEqual((await request(app).get(`/api/rounds/${src.id}`)).body.games.map((g) => g.id), [a.id]);
+  assert.deepEqual((await request(app).get(`/api/rounds/${dst.id}`)).body.games, []);
+});
+
 test('POST games/move-to scrubs the source round\'s session history', async () => {
   const src = await createRound(request);
   const dst = await createRound(request);

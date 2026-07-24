@@ -2412,6 +2412,31 @@ body.auth-screen .topbar__context { display: none; }
 .provider-row__logo { width: 22px; height: 22px; flex: none; display: inline-flex; }
 .provider-row__logo svg { width: 100%; height: 100%; display: block; }
 .provider-row__box { width: 18px; height: 18px; accent-color: var(--brand); cursor: pointer; }
+/* Move-games selection rows (#402). The list deliberately does NOT scroll on
+   its own: the `.sheet` is already a scroll container, and a second one inside
+   it means the user scrolls the sheet to reach the list and then scrolls again
+   within it. So the sheet owns the scroll, the submit button stays reachable on
+   its existing sticky bar, and the count + select-all toggle pin to the top of
+   the list so the running selection is visible however far down you are.
+   NOT a `.field`: every row here is a <label>, and `.field label` (0,1,1) beats
+   `.ds-row` (0,1,0) with `display: block` — which silently stacked each row's
+   checkbox under its title. Its own wrapper carries the same bottom margin. */
+.move-picker { margin-bottom: 18px; }
+.move-list__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0 6px;
+  background: var(--page-bg);
+}
+.move-row { flex-wrap: nowrap; cursor: pointer; }
+.move-row .ds-row__main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.move-row__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.move-row__state { flex: none; font-size: 14px; }
 .ds-row__meta .score-pill { position: static; }
 .ds-row__meta .sort-flag { margin: 0; }
 
