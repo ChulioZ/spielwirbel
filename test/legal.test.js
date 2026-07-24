@@ -158,3 +158,51 @@ test('renderAddress: trims, drops blank lines, handles real newlines', () => {
   assert.equal(legal.renderAddress('A 1\\nB 2'), 'A 1<br>B 2');
   assert.equal(legal.renderAddress('x & <y>'), 'x &amp; &lt;y&gt;');
 });
+
+// #388: a *ladungsfähige Anschrift* served through a receiving service (the
+// ZERODOX / anschrift.net "c/o" format) already leads with the operator's name,
+// so the identity blocks must NOT prepend it again — the name must appear
+// exactly once per language (DE + EN), never the "Julian Zenker\nJulian Zenker"
+// doubling that shipped to production.
+const countName = (text) => text.split(legal.OPERATOR_NAME).length - 1;
+
+test('#388: an address that leads with the operator name is not doubled', async () => {
+  process.env.IMPRESSUM_ADDRESS = `${legal.OPERATOR_NAME}\\nc/o ZERODOX\\nGartenstraße 1\\n12345 Musterstadt`;
+  process.env.IMPRESSUM_EMAIL = IDENTITY.IMPRESSUM_EMAIL;
+  for (const path of ['/impressum', '/datenschutz']) {
+    const res = await request(app).get(path);
+    assert.equal(res.status, 200, `${path} renders`);
+    assert.ok(!res.text.includes(`${legal.OPERATOR_NAME}<br>${legal.OPERATOR_NAME}`),
+      `${path}: name not doubled`);
+    assert.ok(res.text.includes(`${legal.OPERATOR_NAME}<br>c/o ZERODOX`),
+      `${path}: name once, then the address`);
+    // Once in the DE identity block + once in the EN one = 2, never 4.
+    assert.equal(countName(res.text), 2, `${path}: name appears exactly once per language`);
+  }
+});
+
+test('#388: a plain address (no leading name) still shows the name once', async () => {
+  Object.assign(process.env, IDENTITY); // 'Musterweg 1\nc/o Empfangsservice\n…' — no leading name
+  for (const path of ['/impressum', '/datenschutz']) {
+    const res = await request(app).get(path);
+    assert.equal(res.status, 200, `${path} renders`);
+    assert.ok(res.text.includes(`${legal.OPERATOR_NAME}<br>Musterweg 1`),
+      `${path}: name prepended to a nameless address`);
+    assert.equal(countName(res.text), 2, `${path}: name once per language`);
+  }
+});
+
+test('nameAndAddress: dedupes a leading name (trimmed, case-insensitive), else prepends', () => {
+  // c/o address already leads with the name → rendered once, no prepend.
+  assert.equal(
+    legal.nameAndAddress('Julian Zenker\\nc/o ZERODOX\\n12345 Musterstadt'),
+    'Julian Zenker<br>c/o ZERODOX<br>12345 Musterstadt',
+  );
+  // The match is trimmed + case-insensitive; the address' own text renders verbatim.
+  assert.equal(legal.nameAndAddress('  julian zenker  \\nStraße 1'), 'julian zenker<br>Straße 1');
+  // A plain street/city value → the operator name is prepended.
+  assert.equal(
+    legal.nameAndAddress('Musterweg 1\\n12345 Musterstadt'),
+    'Julian Zenker<br>Musterweg 1<br>12345 Musterstadt',
+  );
+});
