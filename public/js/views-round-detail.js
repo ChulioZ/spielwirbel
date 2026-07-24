@@ -49,7 +49,7 @@ async function showBackground(rid) {
   const swatches = h('<div class="theme-cards"></div>');
   THEMES.forEach((th) => {
     const active = th.std ? !currentPage : currentPage === th.page.toLowerCase();
-    const sw = h(`<button class="theme-card${active ? ' is-active' : ''}" style="background:${th.page}" title="${esc(t(th.labelKey))}">
+    const sw = h(`<button class="theme-card${active ? ' is-active' : ''}" aria-pressed="${active}" style="background:${th.page}" title="${esc(t(th.labelKey))}">
          <span class="theme-card__bar" style="background:${th.accent}"></span>
          <span class="theme-card__line"></span>
          <span class="theme-card__line theme-card__line--short"></span>
@@ -63,8 +63,12 @@ async function showBackground(rid) {
       try {
         const saved = await api('POST', `/api/rounds/${rid}/background`, payload);
         applyBackground(saved.background);
-        swatches.querySelectorAll('.theme-card').forEach((el) => el.classList.remove('is-active'));
+        swatches.querySelectorAll('.theme-card').forEach((el) => {
+          el.classList.remove('is-active');
+          el.setAttribute('aria-pressed', 'false');
+        });
         sw.classList.add('is-active');
+        sw.setAttribute('aria-pressed', 'true');
         toast(t('design.toast.set'));
       } catch (e) { toast(e.message); }
     });

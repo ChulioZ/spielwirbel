@@ -272,7 +272,7 @@ function startVoting(round, session, games, members) {
       const card = h(`<div class="handover" style="background:${color}">
           ${progressBar()}
           <span class="handover__avatar" style="color:${color}">${esc(initials(step.member.name))}</span>
-          <div class="handover__name">${esc(t('vote.turn', { name: step.member.name }))}</div>
+          <h1 class="handover__name">${esc(t('vote.turn', { name: step.member.name }))}</h1>
           <div class="handover__sub"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>
           <button class="handover__go" id="goBtn" style="color:${color}">${esc(t('vote.go'))}</button>
           ${idx > 0 ? `<button class="handover__back" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>` : ''}
@@ -299,7 +299,7 @@ function startVoting(round, session, games, members) {
         ${progressBar()}
         <div class="vote__who">${esc(t('vote.who'))} <strong style="color:${color}">${esc(member.name)}</strong></div>
         <div class="vote__img" ${imgStyle}>${fallback}</div>
-        <div class="vote__title">${esc(game.title)}</div>
+        <h1 class="vote__title">${esc(game.title)}</h1>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
