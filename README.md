@@ -9,13 +9,13 @@ and digital games, decide what to play in a session, and track how much everyone
 liked each game. The user interface is available in **German and English**; the
 code and documentation are in English.
 
-> ℹ️ **Status: live in production, heading toward public multi-tenant SaaS.**
-> The maintainer's instance runs hosted (managed PostgreSQL, object storage,
-> TLS, an auth gate, and a token-first account model — see "Environment
-> variables" below); public sign-up isn't open yet. **Self-hosting still
-> defaults to local-only with no authentication** unless you set the env vars
-> below — if you run it that way, keep it on a trusted network you control,
-> since there's no access control until you configure one.
+> ℹ️ **Status: live as a public multi-tenant SaaS** — registration is open at
+> [spielwirbel.app](https://spielwirbel.app) (since 2026-07-24). The
+> maintainer's instance runs hosted (managed PostgreSQL, object storage, TLS,
+> and a token-first account model — see "Environment variables" below).
+> **Self-hosting still defaults to local-only with no authentication** unless
+> you set the env vars below — if you run it that way, keep it on a trusted
+> network you control, since there's no access control until you configure one.
 
 ## Features
 
