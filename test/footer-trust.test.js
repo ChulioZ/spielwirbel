@@ -57,6 +57,9 @@ test('index.html and login.html load no third-party script, style or font', () =
     const html = fs.readFileSync(path.join(ROOT, 'public', file), 'utf8');
     for (const m of html.matchAll(/<(script|link)\b[^>]*>/gi)) {
       const tag = m[0];
+      // <link rel="canonical"> (#430) declares a URL, it never fetches one, so
+      // the absolute form it requires is not a third-party load.
+      if (/rel="canonical"/i.test(tag)) continue;
       const attr = m[1].toLowerCase() === 'script' ? 'src' : 'href';
       const am = tag.match(new RegExp(`${attr}="([^"]*)"`, 'i'));
       if (!am) continue; // inline <script> without a src — first-party, fine
