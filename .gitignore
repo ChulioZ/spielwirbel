@@ -9,6 +9,11 @@ dist/
 # Never publish it.
 data/
 
+# Throwaway dataset for the `dev-temp-data` preview config (.claude/launch.json).
+# Generated locally so browser/preview verification never runs against the real
+# data/ — see .claude/rules/no-reading-production-data.md. Safe to delete.
+.devdata/
+
 *.bak
 *.log
 .DS_Store

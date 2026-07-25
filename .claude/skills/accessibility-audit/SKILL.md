@@ -45,21 +45,25 @@ Three things will each independently ruin an audit. Do all three before probing.
 
 ### 1. Never audit against production data
 
-`.claude/launch.json` points `npm start` at the real `data/` folder — the group's
-private rounds, members and ratings. A screenshot or `read_page` of that is the
-same leak as reading the file (`.claude/rules/no-reading-production-data.md`).
+A bare `npm start` — and the `production-data` launch config — uses the real
+`data/` folder: the group's private rounds, members and ratings. A screenshot or
+`read_page` of that is the same leak as reading the file
+(`.claude/rules/no-reading-production-data.md`).
 
-Seed a throwaway dataset (`test-data` skill) and launch against it:
+Launch the committed **`dev-temp-data`** config instead, which runs on port 3100
+against a gitignored `.devdata/` folder with accounts and the admin panel on:
 
-```bash
-export AUDIT_DATA_DIR=$(mktemp -d)
+```
+preview_start {name: "dev-temp-data"}
 ```
 
-Add a temporary `.claude/launch.json` entry pointing `DATA_DIR` at that folder,
-or start the server yourself with `DATA_DIR` set and open the port with
-`preview_start {url}`. **Revert `launch.json` before committing anything** — it is
-tracked, and leaving an audit config in it changes how everyone else's preview
-runs.
+Then seed it through the API with the `test-data` skill. Don't add your own
+throwaway `launch.json` entry — reverting one is what previously left the file
+with a single production config, and a `preview_start` naming a config that
+doesn't exist then **silently starts that lone entry** instead of failing
+(`no-reading-production-data.md`). If you seed a *separate* folder by hand, start
+the server yourself with `DATA_DIR` set and open the port with
+`preview_start {url}`.
 
 The dataset must cover every screen you intend to measure: an empty Pokale tab
 renders an empty state and measures nothing, which reads exactly like a passing
@@ -154,6 +158,8 @@ They were each decided deliberately; re-reporting them wastes the user's review:
 
 ## Cleanup
 
-Remove the throwaway `launch.json` entry, stop the preview server, and delete the
-temp `DATA_DIR`. Confirm `git status` is clean of audit scaffolding before any
-commit.
+Stop the preview server and delete the audit dataset (`.devdata/` is gitignored,
+so it never shows up in a commit either way). Leave `.claude/launch.json`
+untouched — the `dev-temp-data` entry is permanent and must not be removed. If
+you did create scaffolding of your own, confirm `git status` is clean of it
+before any commit.

@@ -2,7 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "game-sessions",
+      "name": "dev-temp-data",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "mkdir -p .devdata && DATA_DIR=.devdata ACCOUNTS_ENABLED=true SESSION_SECRET=dev-only-not-a-secret ADMIN_PASSWORD=dev-only-not-a-secret PORT=3100 npm start"
+      ],
+      "port": 3100
+    },
+    {
+      "name": "production-data",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start"],
       "port": 3000,
