@@ -79,9 +79,9 @@ test('LAYERED mode: the shared gate fronts everything, then real accounts work i
     .send({ email: 'owner@example.com', username: 'owner', password: PASSWORD });
   assert.equal(reg.status, 200);
   const mailText = outbox[outbox.length - 1].text;
-  const m = mailText.match(/\/verify-email\?uid=([0-9a-f]+)&token=([A-Za-z0-9_-]+)/);
+  const m = mailText.match(/\/v\?t=(v1\.[0-9a-f]+\.[A-Za-z0-9_-]+)/);
   assert.ok(m, 'the verify-email mail links to the in-app landing');
-  await agent.post('/api/account/verify-email').send({ uid: m[1], token: m[2] });
+  await agent.post('/api/account/verify-email').send({ token: m[1] });
   const login = await agent.post('/api/account/login').send({ email: 'owner@example.com', password: PASSWORD });
   assert.equal(login.status, 200);
   const token = login.body.accessToken;

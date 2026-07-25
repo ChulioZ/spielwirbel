@@ -139,15 +139,27 @@ async function logout() {
 
 /* --------------------------------- boot ----------------------------------- */
 
-const isAuthPath = (p) => p === '/verify-email' || p === '/reset-password';
+// '/v' and '/r' are the short links the account mails carry (#434); the long
+// '/verify-email' and '/reset-password' forms are the pre-#434 shape, kept
+// because a link already sitting in someone's inbox stays valid for up to 24 h.
+const isAuthPath = (p) => p === '/v' || p === '/r'
+  || p === '/verify-email' || p === '/reset-password';
+
+// The one-time token from either link shape: '?t=' carries the combined
+// "<version>.<uid>.<secret>" token, the legacy pair a separate uid.
+function linkToken() {
+  const params = new URLSearchParams(location.search);
+  const combined = params.get('t');
+  return combined ? { token: combined } : { uid: params.get('uid'), token: params.get('token') };
+}
 
 // Resolve the mode + login state, then decide the first screen. Called last from
 // main.js so i18n/core/views are all loaded.
 async function bootApp() {
   if ((await initAccounts()) === 'rate_limited') return showRateLimited();
   const path = location.pathname;
-  if (path === '/verify-email') return renderVerifyLanding();
-  if (path === '/reset-password') return renderResetLanding();
+  if (path === '/v' || path === '/verify-email') return renderVerifyLanding();
+  if (path === '/r' || path === '/reset-password') return renderResetLanding();
   if (accountsActive() && !isLoggedIn()) {
     // A cold visitor on "/" gets the marketing landing (issue #322); a deep link
     // (a shared /round/… URL &c.) already has context and wants in fast, so it
@@ -464,12 +476,10 @@ function showRateLimited() {
   });
 }
 
-// Landing for the e-mail-verification link (/verify-email?uid&token): POST the
-// token, then show success/failure with a button to login.
+// Landing for the e-mail-verification link (/v?t=…): POST the token, then show
+// success/failure with a button to login.
 function renderVerifyLanding() {
-  const params = new URLSearchParams(location.search);
-  const uid = params.get('uid');
-  const token = params.get('token');
+  const cred = linkToken();
   openAuth(renderVerifyLanding, `<div class="auth__card">
       <div class="auth__logo"><i class="ti ti-mail-check" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.verify.working'))}</h1>
@@ -480,13 +490,13 @@ function renderVerifyLanding() {
     const toLogin = card.querySelector('#toLogin');
     toLogin.addEventListener('click', showLogin);
     (async () => {
-      const { ok } = uid && token ? await authFetch('/verify-email', { uid, token }) : { ok: false };
+      const { ok } = cred.token ? await authFetch('/verify-email', cred) : { ok: false };
       card.querySelector('.auth__title').textContent = t(ok ? 'auth.verify.okTitle' : 'auth.verify.failTitle');
       card.querySelector('#verifyMsg').textContent = t(ok ? 'auth.verify.okSub' : 'auth.verify.failSub');
       // An expired or already-used link is the OTHER stuck-signup dead end (#435)
       // — logging in with an unverified account is refused and offers nothing —
       // so the failure branch carries the recovery. The landing knows only
-      // uid+token, never the address, hence the field variant.
+      // the token, never the address, hence the field variant.
       if (ok) card.querySelector('#resendHost').remove();
       else buildResend(card.querySelector('#resendHost'), null);
       toLogin.textContent = t('auth.backToLogin');
@@ -495,12 +505,10 @@ function renderVerifyLanding() {
   });
 }
 
-// Landing for the password-reset link (/reset-password?uid&token): a new-password
-// form that posts the token.
+// Landing for the password-reset link (/r?t=…): a new-password form that posts
+// the token.
 function renderResetLanding() {
-  const params = new URLSearchParams(location.search);
-  const uid = params.get('uid');
-  const token = params.get('token');
+  const cred = linkToken();
   openAuth(renderResetLanding, `<form class="auth__card" autocomplete="on">
       <div class="auth__logo"><i class="ti ti-lock" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.reset.title'))}</h1>
@@ -524,8 +532,8 @@ function renderResetLanding() {
       authError(card).hidden = true;
       if (pw.value.length < 8) return setError(card, t('auth.error.shortPassword'));
       submit.disabled = true;
-      const { ok, data } = uid && token
-        ? await authFetch('/reset-password', { uid, token, password: pw.value })
+      const { ok, data } = cred.token
+        ? await authFetch('/reset-password', { ...cred, password: pw.value })
         : { ok: false, data: { error: 'invalid_token' } };
       if (ok) { toast(t('auth.reset.done')); return showLogin(); }
       setError(card, t(authErrorKey('reset', data.error)));

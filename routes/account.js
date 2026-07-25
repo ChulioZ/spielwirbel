@@ -77,9 +77,11 @@ function sendSafe(msg) {
 // .claude/rules/transactional-mail-provider.md).
 const MAIL_COOLDOWN_MS = 60 * 1000;
 
-// The stored verification challenge for a freshly minted raw token. `sentAt` is
-// what MAIL_COOLDOWN_MS measures from; records written before #435 lack it,
-// which reads as "long ago" and allows an immediate resend.
+// The stored verification challenge for a freshly minted link secret. `sentAt`
+// is what MAIL_COOLDOWN_MS measures from; records written before #435 lack it,
+// which reads as "long ago" and allows an immediate resend. Only the secret is
+// hashed — never the assembled link token — so this shape survived #434
+// unchanged and a legacy link still matches.
 const verificationRecord = (raw) => ({
   tokenHash: accounts.hashToken(raw),
   expiresAt: iso(Date.now() + accounts.VERIFY_TTL_MS),
@@ -103,12 +105,25 @@ const mailThrottled = (record) => {
   return Number.isFinite(sentAt) && Date.now() - sentAt < MAIL_COOLDOWN_MS;
 };
 
+// Resolve a mailed one-time link to { userId, hash }, accepting BOTH shapes:
+// the short combined token (#434) and the legacy `uid=` + bare-token pair. The
+// legacy branch is not dead code — a verification mail stays valid for 24 h, so
+// links already in someone's inbox at deploy time must keep working.
+function linkCredentials(version, uid, token) {
+  return accounts.parseLinkToken(version, token)
+    || { userId: String(uid || ''), hash: accounts.hashToken(token) };
+}
+
 // Register and resend-verification both mail this, so the body and the link
 // shape can't drift apart. Lands on the in-app onboarding page (#138), which
 // POSTs the token and then routes to login — not the bare JSON GET endpoint
 // (still served for clients).
-function mailVerification(to, uid, raw) {
-  const link = `${baseUrl()}/verify-email?uid=${uid}&token=${raw}`;
+//
+// The path is a terse `/v` and the uid rides inside the token, because the whole
+// URL must fit on one quoted-printable line — see lib/accounts.js. Measure the
+// result, don't eyeball it: test/account.test.js pins the length.
+function mailVerification(to, uid, secret) {
+  const link = `${baseUrl()}/v?t=${accounts.mintLinkToken(accounts.VERIFY_TOKEN_VERSION, uid, secret)}`;
   return sendSafe({
     to,
     subject: 'Spielwirbel: E-Mail-Adresse bestätigen / Confirm your e-mail',
@@ -133,7 +148,7 @@ router.post('/register', async (req, res) => {
   if (!validUsername(username)) return res.status(400).json({ error: 'invalid_username' });
   if (!validPassword(password)) return res.status(400).json({ error: 'invalid_password' });
 
-  const verifyRaw = accounts.newRawToken();
+  const verifyRaw = accounts.newLinkSecret();
   const user = await repo.createUser({
     email,
     // The public handle (#320), stored as typed and matched case-insensitively.
@@ -193,7 +208,7 @@ router.post('/resend-verification', async (req, res) => {
   // invariants in .claude/rules/user-accounts.md do not allow.
   if (user && !user.emailVerified) {
     if (!mailThrottled(user.verification)) {
-      const raw = accounts.newRawToken();
+      const raw = accounts.newLinkSecret();
       // Replaces the previous challenge, so an older link stops working — a
       // resend must not leave two valid tokens outstanding.
       await repo.updateUser(user.id, { verification: verificationRecord(raw) });
@@ -206,10 +221,11 @@ router.post('/resend-verification', async (req, res) => {
 /* ----------------------------- e-mail verification -------------------------- */
 
 async function verifyEmail(uid, token) {
-  const user = await repo.getUserById(String(uid || ''));
+  const cred = linkCredentials(accounts.VERIFY_TOKEN_VERSION, uid, token);
+  const user = await repo.getUserById(cred.userId);
   const v = user && user.verification;
   if (!v || Date.parse(v.expiresAt) <= Date.now()) return false;
-  if (!accounts.safeEqual(v.tokenHash, accounts.hashToken(token))) return false;
+  if (!accounts.safeEqual(v.tokenHash, cred.hash)) return false;
   await repo.updateUser(user.id, { emailVerified: true, verification: null });
   return true;
 }
@@ -321,9 +337,10 @@ router.post('/forgot-password', async (req, res) => {
   // an address that HAS a password account can ever reach this branch.
   if (user && (user.identities || []).some((i) => i.type === 'password')
       && !mailThrottled(user.reset)) {
-    const raw = accounts.newRawToken();
+    const raw = accounts.newLinkSecret();
     await repo.updateUser(user.id, { reset: resetRecord(raw) });
-    const link = `${baseUrl()}/reset-password?uid=${user.id}&token=${raw}`;
+    // Same one-QP-line constraint as the verification link (#434).
+    const link = `${baseUrl()}/r?t=${accounts.mintLinkToken(accounts.RESET_TOKEN_VERSION, user.id, raw)}`;
     await sendSafe({
       to: user.email,
       subject: 'Spielwirbel: Passwort zurücksetzen / Reset your password',
@@ -337,10 +354,11 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
   const { uid, token, password } = req.body || {};
   if (!validPassword(password)) return res.status(400).json({ error: 'invalid_password' });
-  const user = await repo.getUserById(String(uid || ''));
+  const cred = linkCredentials(accounts.RESET_TOKEN_VERSION, uid, token);
+  const user = await repo.getUserById(cred.userId);
   const r = user && user.reset;
   if (!r || Date.parse(r.expiresAt) <= Date.now()
-      || !accounts.safeEqual(r.tokenHash, accounts.hashToken(token))) {
+      || !accounts.safeEqual(r.tokenHash, cred.hash)) {
     return res.status(400).json({ error: 'invalid_token' });
   }
   const identities = (user.identities || []).filter((i) => i.type !== 'password');
