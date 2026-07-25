@@ -32,13 +32,46 @@ user *other than* the requesting user (`gh api user --jq .login`), stop and
 confirm with the user before doing anything — an assignee means someone has
 claimed it, and building it would collide with their work. Two cases are fine to
 proceed on without asking: an **unassigned** issue, and one **already assigned to
-the requesting user**. A third — a foreign assignment that has gone **stale** (its
-`updatedAt` is more than **5 days** ago *and* it has no linked open PR, so the
-assignee never actually started) — is *reclaimable*, but taking it over is still
-outward-facing: surface it and get the user's go-ahead (they may want to unassign
-or ping the current assignee first) rather than silently reassigning. `pick-issue`
-already applies this same staleness filter when it picks; `implement` can be
-invoked directly on an issue number, so it repeats the check here.
+the requesting user**.
+
+A foreign assignment is **reclaimable** once it has gone idle for long enough —
+and "long enough" scales with what waiting costs, rather than being one fixed
+timer:
+
+| What the issue is | Reclaimable after |
+|---|---|
+| A **live security exposure** or **broken core functionality** (a main flow wrong or unusable) | **immediately** — no idle requirement |
+| The **clear top priority** — `pick-issue` handed it over as its decisive top pick, or the user has said this is the thing that most needs doing | **3 days** idle |
+| Anything else | **5 days** idle |
+
+Being pointed at an issue is *not* by itself the middle tier — a casual "do #42"
+is a choice of task, not a statement that it outranks the whole backlog, and
+reading it as one would collapse the bottom tier into the middle one. When it's
+genuinely unclear which tier applies, ask as part of the confirmation you already
+owe the user below, rather than assuming the shorter wait.
+
+Two things sit outside the ladder. An issue with a **linked open PR** is never
+reclaimable at any age — the work exists as a diff, so review that PR
+(`review-pr`) instead of rebuilding it. And measure the idle time from the
+**assignee's own** last activity, not from `updatedAt`, which a label edit or a
+passer-by's comment resets while the assignee has done nothing:
+
+```bash
+gh api "repos/{owner}/{repo}/issues/<N>/timeline" --jq '.[-10:] | .[] | {event, actor: .actor.login, at: .created_at}'
+```
+
+Clearing the bar makes a reclaim *permissible*, never automatic. Taking over
+someone's issue is outward-facing, so **surface it and get the user's explicit
+go-ahead** — they may prefer to ping or unassign the current assignee first. State
+the assignee, how long they've been idle, and which tier cleared it, and be
+especially plain in the immediate tier: an override-grade reclaim can land on an
+issue someone touched an hour ago and duplicate live work, which is a trade the
+user makes, not one you make for them.
+
+`pick-issue` applies the same ladder when it picks (deriving the middle tier from
+its own ranking), and hands a reclaim over labelled as one — but its hand-off is
+*not* a substitute for this confirmation, and `implement` can also be invoked
+directly on an issue number, so the check runs here either way.
 
 ## Scope the whole issue — interview for decisions, don't defer them
 
@@ -85,8 +118,8 @@ git switch -c <type>/<short-slug>    # e.g. feat/session-export, fix/vote-tie
 - Pick a descriptive branch name. If implementing an issue, include its number
   (`feat/42-session-export`) so the PR links back.
 - **Claim the issue.** For a real GitHub issue — and only after the assignee
-  guard above passed — assign it to the requesting user so it's marked as taken
-  and both people and `pick-issue` skip it while you work:
+  guard above passed — assign it to the requesting user so it reads as taken to
+  anyone else looking at the backlog while you work:
 
   ```bash
   gh issue edit <N> --add-assignee @me
@@ -95,10 +128,12 @@ git switch -c <type>/<short-slug>    # e.g. feat/session-export, fix/vote-tie
   Assigning yourself an issue already assigned to you is a harmless no-op. If the
   assignment fails (e.g. the account lacks the permission), note it and carry on —
   it shouldn't block the build. Skip this for a non-issue change (a directly
-  described fix with no issue number). If this is a **reclaimed stale issue**
-  (foreign assignee, confirmed above), only *add* yourself here — whether to also
-  `--remove-assignee` the previous, inactive assignee is the user's call from that
-  confirmation, not something to do automatically.
+  described fix with no issue number). If this is a **reclaim** (foreign assignee,
+  confirmed above), only *add* yourself here — whether to also `--remove-assignee`
+  the previous assignee is the user's call from that confirmation, not something to
+  do automatically. That matters most in the immediate tier, where the other
+  assignee may still be active: leaving them assigned is what lets them notice the
+  collision.
 
 ## 2. Implement — prod code plus tests
 

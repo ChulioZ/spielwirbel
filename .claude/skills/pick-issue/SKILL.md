@@ -91,25 +91,6 @@ Partition the PRs by author, then sort into candidate types:
 
 Skip (leave out of the pool entirely):
 
-- **Any issue assigned to a *different* GitHub user — unless the assignment has
-  gone stale.** A foreign assignee (its `assignees`, fetched above, names a login
-  that isn't the requesting user — `gh api user --jq .login`) normally means
-  someone has claimed it, so picking it would collide with their work: skip it.
-  **But an assignment must not block an issue forever if the assignee never
-  actually works on it.** Treat a foreign-assigned issue as *stale, and pickable
-  again*, when **both** hold:
-    - **no sign of active work** — its `updatedAt` is **more than 5 days** ago (no
-      comments, commits, or edits since); **and**
-    - **no linked open PR.** A PR that closes the issue is already handled above
-      (the issue is dropped from the pool and the PR reviewed instead), so an
-      in-progress PR means "genuinely being worked on — never reclaim".
-
-  A stale-assigned issue re-enters the pool and is ranked normally, but **flag it
-  in the shortlist** (e.g. "assigned to @x, stale 5d") so the hand-off to
-  `implement` knows it is a *reclaim*, not a free issue. An **unassigned** issue,
-  or one already assigned to the requesting user, is always pickable regardless of
-  age. (All of this applies to issues, not PRs — a contributor's PR is expected to
-  have a non-you author and is handled by `review-pr`.)
 - Issues labeled `wontfix`, `invalid`, `duplicate`, or `question` awaiting the
   user's answer.
 - **Draft PRs** (`isDraft: true`) — not ready for review yet.
@@ -120,6 +101,37 @@ Skip (leave out of the pool entirely):
   its label already rides in the gather payload above, so this needs no
   comment-reading. Re-evaluating whether the blocker has cleared is the
   `dependabot` skill's job on a dedicated sweep, not pick-issue's.
+
+### A foreign-assigned issue is *provisional*, not skipped
+
+A foreign assignee (its `assignees`, fetched above, names a login that isn't the
+requesting user — `gh api user --jq .login`) means someone has claimed it, so
+building it would normally collide with their work. But an assignment must not
+block an issue **forever** if the assignee never actually works on it — and how
+long to wait should depend on **what waiting costs**, which you can't know until
+you've ranked it. So don't drop it here. Carry it into phases 2–3 tagged
+`reclaim — assigned @x, idle Nd`, and let **phase 3's ladder** decide whether it
+may actually be picked.
+
+One case still leaves the pool outright: an issue with a **linked open PR**. The
+work already exists as a diff, and that PR is handled above — the issue drops out
+and the PR is reviewed instead. That's routing, not a reclaim question.
+
+**Measuring the idle time.** `updatedAt` is the starting point, but it bumps on
+*any* touch — a label edit or a passer-by's comment resets it while the assignee
+has done nothing, which makes an abandoned issue look fresh. For the one candidate
+you actually intend to reclaim, check whose activity that was and measure from the
+**assignee's** last sign of work, not the last touch by anyone:
+
+```bash
+gh api "repos/{owner}/{repo}/issues/<N>/timeline" \
+  --jq '.[-10:] | .[] | {event, actor: .actor.login, at: .created_at}'
+```
+
+An **unassigned** issue, or one already assigned to the requesting user, is always
+pickable regardless of age. (All of this applies to issues, not PRs — a
+contributor's PR is expected to have a non-you author and is handled by
+`review-pr`.)
 
 If there's nothing open, say so and stop.
 
@@ -250,11 +262,48 @@ win outright; a small, safe, moderately useful change usually beats a large risk
 one; but don't pick a purely cosmetic change over a genuinely valuable feature
 just because it's smaller.
 
+### Reclaiming a foreign-assigned issue: the wait scales with what waiting costs
+
+Rank a provisional candidate (phase 1) exactly like everything else — carrying
+someone else's assignment neither helps nor hurts its value-for-effort. Once you
+know where it landed, it must clear an **idle-time bar set by that rank**:
+
+| Where it ranked | Reclaimable after |
+|---|---|
+| Hits an **override** — a live security exposure, or broken core functionality | **immediately** — no idle requirement |
+| Would be the **clear top pick** — decisively better value-for-effort than the best unassigned candidate, not a photo finish | **3 days** idle |
+| Anything else — it ranks inside the normal pack | **5 days** idle |
+
+The principle is **opportunity cost, not impatience**. A fixed timer asks the
+wrong question ("how long has this sat?") when the one that matters is "what does
+another few days of sitting actually cost?" So the bar collapses to nothing when
+production is exposed right now, shortens when the entire backlog is queued behind
+this one issue, and stays at the old five days when picking something else instead
+costs almost nothing. Judge the middle tier honestly: "clear top pick" means a
+decisive margin you could defend in one sentence, not a nose ahead — a near-tie
+resolves to the free candidate, which is the whole point of having a bar at all.
+
+An override-grade reclaim can therefore land on an issue the assignee touched an
+hour ago, which *will* collide with in-flight work if they really are on it. That
+is deliberate — a live hole outranks a duplicated afternoon — but it makes the
+hand-off note load-bearing rather than cosmetic: say plainly how recently the
+assignee was active (`assigned @x, active 1 h ago`) so `implement`'s confirmation
+is a real decision and the user can choose to ping them instead.
+
+A provisional candidate that **doesn't** clear its bar is simply not picked this
+round — fall through to the best free candidate. Name it in the report anyway
+("#N would have won but is assigned to @x and only 2 d idle"), so the user can
+ping the assignee if they want it moving. Silently dropping it is what let the old
+fixed timer hide work for days at a time.
+
 ## 4. Present the pick, then hand off
 
 Show the user a short ranked shortlist (top ~3) as a compact list: for each,
 `#number — title`, its rough value and effort, and a one-line reason. Then state
-**the winner** and *why it beat the runner-up* in one or two sentences.
+**the winner** and *why it beat the runner-up* in one or two sentences. Mark any
+provisional candidate as a **reclaim** with its assignee and idle time (`reclaim —
+assigned @x, idle 6 d`), including one that failed its bar, so the shortlist shows
+what the ladder decided rather than just its verdict.
 
 Then **hand off to the builder automatically in the same turn** (phase 5) — don't
 stop to ask for a go-ahead on the *choice*. The user invoked this skill to get the
@@ -289,7 +338,12 @@ Invoke the appropriate skill with the chosen item:
   clear spec. Any decisions the issue merely *needs from* the user (a host, an
   approach, a value) are for `implement` to **drive to completion via interview**,
   not a reason for it to ship a partial and defer the rest — see `implement`'s
-  "Scope the whole issue" section.
+  "Scope the whole issue" section. If the pick is a **reclaim**, hand it off as
+  one — pass the assignee, the idle time, and which tier of the ladder cleared it.
+  `implement` asks the user before taking a foreign-assigned issue over, and that
+  confirmation is the **single gate** on the whole reclaim path; don't add a second
+  one here, and don't let it arrive as a plain issue number that hides the
+  reassignment.
 - **A Dependabot PR →** invoke the **`dependabot`** skill (it reviews and merges
   the safe ones). Don't try to "implement" a dependency bump by hand.
 - **A standalone PR →** invoke the **`review-pr`** skill on it (pass the PR
@@ -359,6 +413,8 @@ it by ranking or implementing an issue.
 State what you picked and why, the shortlist you considered, and which builder
 skill you handed it to (with the issue/PR number). Call out any issue **or PR** you
 flagged as **suspicious** (per phase 2) separately — that's a safety signal for the
-user, not a ranked candidate. If nothing was actionable (empty backlog, or everything
-blocked/underspecified/flagged), say that plainly and, if useful, suggest filing a
-fresh issue via `create-issue`.
+user, not a ranked candidate. Also name every provisional candidate the ladder
+**held back** (`#N — assigned @x, idle 2 d, needed 3`) — the user is the one who
+can ping the assignee, and that is only possible if they hear about it. If nothing
+was actionable (empty backlog, or everything blocked/underspecified/flagged), say
+that plainly and, if useful, suggest filing a fresh issue via `create-issue`.
