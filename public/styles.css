@@ -2115,6 +2115,9 @@ body.auth-screen .topbar__context { display: none; }
 .gd-info h1 { margin: 0 0 14px; font-size: 26px; line-height: 1.5; }
 
 /* --- Inline editing on the game detail page --- */
+/* Stays a <span> (with role=button + tabindex, #424) precisely because of
+   box-decoration-break: it is inline text that wraps mid-line, which an atomic
+   inline-block <button> cannot do. Also used on the member page. */
 .gd-title {
   cursor: text;
   border-radius: 6px;
@@ -2132,17 +2135,44 @@ body.auth-screen .topbar__context { display: none; }
   vertical-align: middle;
 }
 
-/* Tags become clickable edit controls. */
-.tag--edit { cursor: pointer; transition: filter 0.12s, box-shadow 0.12s; }
+/* Tags become edit controls — real <button>s since #424, so the UA chrome has to
+   go. Only what the .tag family doesn't already declare itself: background and
+   color come from .tag--players/--custom/--empty, font-size and weight from .tag
+   (a `font` shorthand here would reset both to the <h1>'s 26px). `line-height:
+   inherit` keeps the pill the height it was as a span — the UA's `normal` is
+   ~4px shorter at 13px — and `border` is reset separately so it never competes
+   with .tag--empty's dashed one; on equal specificity that would come down to
+   source order (.claude/rules/label-rows-lose-to-field-label.md). */
+.tag--edit { cursor: pointer; transition: filter 0.12s, box-shadow 0.12s; font-family: inherit; line-height: inherit; }
+.tag--edit:not(.tag--empty) { border: 0; }
 .tag--edit:hover { filter: brightness(0.96); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16); }
+/* Same ring as .game-link/.member-link, so a keyboard user sees one indicator
+   style across the app. The UA default would do, but not consistently. */
+.tag--edit:focus-visible,
+.gd-title:focus-visible,
+.gd-img--edit:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .tag--empty {
   background: transparent;
   border: 1px dashed var(--brand-edge, var(--line));
   color: var(--ink-soft);
 }
 
-/* Cover image: hover overlay hinting it can be changed. */
-.gd-img--edit { position: relative; cursor: pointer; overflow: hidden; }
+/* Cover image: hover overlay hinting it can be changed. A <button> since #424 —
+   `font-family`/`text-align`/`color` are inherited back (the UA centres a
+   button's text, which would shift the overlay label) but NOT `font-size`:
+   .gd-img sets 64px for the placeholder glyph and a `font` shorthand here would
+   win over it and shrink it. */
+.gd-img--edit {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  line-height: inherit;
+  color: inherit;
+  text-align: inherit;
+}
 .gd-img__edit {
   position: absolute;
   left: 0;

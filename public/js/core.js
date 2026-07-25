@@ -615,12 +615,21 @@ function themeAccent(bg) {
 let activePopover = null;
 function closePopover() {
   if (!activePopover) return;
-  activePopover.el.remove();
+  const { el, restoreTo } = activePopover;
+  // Hand focus back to the control that opened it, the way trapFocus does for a
+  // sheet (#145) — without it a keyboard user who closes a popover is dropped to
+  // <body> and restarts from the top of the document (#424). Only when focus is
+  // still *inside* the popover (or nowhere): once the user has clicked into some
+  // other control, yanking it back would fight them for it. Read before the
+  // remove() below, which moves focus to <body> on its own.
+  const held = el.contains(document.activeElement) || !document.activeElement || document.activeElement === document.body;
+  el.remove();
   document.removeEventListener('mousedown', activePopover.onDoc, true);
   document.removeEventListener('keydown', activePopover.onKey, true);
   window.removeEventListener('resize', activePopover.onGone, true);
   window.removeEventListener('scroll', activePopover.onScroll, true);
   activePopover = null;
+  if (held && restoreTo && document.contains(restoreTo) && typeof restoreTo.focus === 'function') restoreTo.focus();
 }
 // `build(el, close)` may return a callback, which runs once the popover is in
 // the document AND positioned. Anything that needs a live element — above all
@@ -628,6 +637,9 @@ function closePopover() {
 // focus() call in it is a silent no-op, which is why the tags/players editors'
 // autofocus never worked on any platform (#422).
 function openPopover(anchor, build) {
+  // Captured before the replace-close below, so THIS popover's opener is the
+  // restore target even when it replaces one that was already open.
+  const restoreTo = document.activeElement;
   closePopover();
   const el = h('<div class="popover"></div>');
   const close = () => closePopover();
@@ -658,7 +670,7 @@ function openPopover(anchor, build) {
   document.addEventListener('keydown', onKey, true);
   window.addEventListener('resize', onGone, true);
   window.addEventListener('scroll', onScroll, true);
-  activePopover = { el, onDoc, onKey, onGone, onScroll };
+  activePopover = { el, restoreTo, onDoc, onKey, onGone, onScroll };
   if (typeof attached === 'function') attached();
   return { el, close };
 }
@@ -778,11 +790,3 @@ const playersText = (min, max) => {
     ? tn(min, 'players.one', 'players.single', { n: min })
     : t('players.range', { min, max });
 };
-
-// Games from before the player-count feature could lack the fields -> no tag.
-const playersTag = (min, max) => {
-  const text = playersText(min, max);
-  if (!text) return '';
-  return `<span class="tag tag--players"><i class="ti ti-users" aria-hidden="true"></i> ${text}</span>`;
-};
-
