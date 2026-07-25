@@ -70,6 +70,29 @@ cannot drift at all. (Its frontend comment says the scripts "can't `require()`
 it" — true of the browser, but the *route* can require the frontend file, which
 is the direction this rule uses.)
 
+## The second one: when sharing the file is not available at all (#391)
+
+`public/kontakt.html` declares its own `:root` copy of the app's design tokens
+(`--brand`, `--page-bg`, `--ink`, the two font stacks …). This is **not** a
+violation of the rule above, because the cheap fix does not exist here: the page
+is a standalone document outside the SPA, and the only way to "import" the real
+tokens is `<link href="/styles.css">`, which drags the entire 2400-line SPA
+stylesheet — including its own `body`, `.card` and `.input` rules — onto a page
+that has no round context and must render for a logged-out visitor. There is no
+smaller unit to share; `:root` in `styles.css` is also where a **per-round theme**
+gets written, which this page must never inherit.
+
+So it takes the TAG_ICONS shape deliberately: a copy plus
+`test/contact-page-brand.test.js`, which walks every custom property the page
+declares and asserts `styles.css` still declares the same value. Retune `--brand`
+in one file and it goes red naming both values. **The test is the licence for the
+copy** — if you add another token to the page, it is covered automatically; if you
+ever make the page stop declaring them, delete the test with it.
+
+Use this as precedent only under the same condition: *sharing is structurally
+impossible*, not merely inconvenient. A copy that could have been a `require()`
+is still the palette bug.
+
 **Related:** `.claude/rules/frontend-helper-modules-and-coverage.md` (why the
 shared constant gets its own small file rather than an export from `core.js` —
 that one is a hard `coverage:ci` constraint).
