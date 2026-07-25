@@ -1076,6 +1076,26 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The owner-seat marker (#421) is its OWN line, not a suffix on the name:
+   `.nr-seat__name` is 64px with an ellipsis, so "devuser (du)" clipped the
+   marker away entirely — measured, not guessed. */
+.nr-seat__you {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brand);
+  line-height: 1;
+}
+/* "Ich spiele mit" (#421). Sits OUTSIDE the members .field on purpose — inside
+   it, `.field label` (0,1,1) would win and make this a 600-weight block. */
+.nr-owner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -8px 0 18px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  cursor: pointer;
+}
 
 /* ---- New round: import-games card ---- */
 .import-card {

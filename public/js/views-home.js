@@ -134,6 +134,8 @@ async function showNewRound() {
           <button id="addMember" class="btn">${esc(t('newRound.add'))}</button>
         </div>
       </div>
+      ${/* Outside the .field on purpose: `.field label` is (0,1,1) and would win — see label-rows-lose-to-field-label.md */ ''}
+      ${isLoggedIn() ? `<label class="nr-owner"><input type="checkbox" id="ownerSeat" checked /> <span>${esc(t('newRound.ownerSeatPlaying'))}</span></label>` : ''}
       ${importField}
       <div class="toolbar">
         <button id="createRound" class="btn btn--primary btn--lg"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('newRound.create'))}</button>
@@ -146,35 +148,56 @@ async function showNewRound() {
   const memberInput = form.querySelector('#memberInput');
   const table = form.querySelector('.nr-table');
   const tableCenter = form.querySelector('.nr-table__center');
+  // #421: in accounts mode the table starts with one seat already taken — yours.
+  // The typed names are the OTHER players. Removable (there is no add-member
+  // route after creation, so an owner who doesn't play must not be stuck with a
+  // phantom member) and restorable via the checkbox.
+  const ownerBox = form.querySelector('#ownerSeat');
+  const hasOwnerSeat = () => !!ownerBox && ownerBox.checked;
 
-  // Seats sit evenly on an ellipse around the table: all members plus one
-  // dashed empty seat that focuses the name input.
+  // Seats sit evenly on an ellipse around the table: the owner's seat (if any)
+  // first, then all typed members, plus one dashed empty seat that focuses the
+  // name input.
   function renderMembers() {
     table.querySelectorAll('.nr-seat').forEach((el) => el.remove());
-    tableCenter.textContent = members.length
-      ? t('newRound.tableCount', { n: members.length })
+    // Each entry: { name, owner } — the owner seat is index 0 exactly as the
+    // server prepends it, so the position-derived avatar colours line up with
+    // what the round will actually render.
+    const taken = [
+      // 'Gast' matches the server's own fallback, so the preview names the seat
+      // exactly what createRound will store.
+      ...(hasOwnerSeat() ? [{ name: currentUsername() || 'Gast', owner: true }] : []),
+      ...members.map((nm) => ({ name: nm, owner: false })),
+    ];
+    tableCenter.textContent = taken.length
+      ? t('newRound.tableCount', { n: taken.length })
       : t('newRound.tableEmpty');
     const cx = 140, cy = 118, rx = 112, ry = 92;
-    const seats = members.length + 1; // + empty seat
+    const seats = taken.length + 1; // + empty seat
     for (let i = 0; i < seats; i++) {
       const angle = ((-90 + (i * 360) / seats) * Math.PI) / 180;
       const x = cx + rx * Math.cos(angle);
       const y = cy + ry * Math.sin(angle);
-      const isEmpty = i === members.length;
+      const isEmpty = i === taken.length;
       const seat = isEmpty
         ? h(`<button type="button" class="nr-seat nr-seat--empty" title="${esc(t('newRound.add'))}">
                <span class="nr-seat__avatar"><i class="ti ti-plus" aria-hidden="true"></i></span>
              </button>`)
         : h(`<button type="button" class="nr-seat" title="${esc(t('newRound.removeHint'))}">
-               <span class="nr-seat__avatar" style="background:${MEMBER_COLORS[i % MEMBER_COLORS.length]}">${esc(initials(members[i]))}</span>
-               <span class="nr-seat__name">${esc(members[i])}</span>
+               <span class="nr-seat__avatar" style="background:${MEMBER_COLORS[i % MEMBER_COLORS.length]}">${esc(initials(taken[i].name))}</span>
+               <span class="nr-seat__name">${esc(taken[i].name)}</span>
+               ${taken[i].owner ? `<span class="nr-seat__you">${esc(t('newRound.ownerSeatYou'))}</span>` : ''}
              </button>`);
       seat.style.left = x + 'px';
       seat.style.top = y - 23 + 'px';
       if (isEmpty) {
         seat.addEventListener('click', () => memberInput.focus());
+      } else if (taken[i].owner) {
+        // The seat is the affordance, the checkbox is the undo — shipping one
+        // without the other leaves the seat unrecoverable.
+        seat.addEventListener('click', () => { ownerBox.checked = false; renderMembers(); });
       } else {
-        const idx = i;
+        const idx = i - (hasOwnerSeat() ? 1 : 0);
         seat.addEventListener('click', () => {
           members.splice(idx, 1);
           renderMembers();
@@ -184,6 +207,7 @@ async function showNewRound() {
     }
   }
   renderMembers();
+  if (ownerBox) ownerBox.addEventListener('change', renderMembers);
   function addMember() {
     const v = memberInput.value.trim();
     if (!v) return;
@@ -200,9 +224,13 @@ async function showNewRound() {
   form.querySelector('#createRound').addEventListener('click', async () => {
     const name = nameInput.value.trim();
     if (!name) return toast(t('newRound.toast.needName'));
-    if (members.length === 0) return toast(t('newRound.toast.needMember'));
+    // Relaxed with the server (#421): only a genuinely EMPTY table is refused.
+    // Guarding on typed members alone would block the solo round the API allows.
+    if (members.length === 0 && !hasOwnerSeat()) return toast(t('newRound.toast.needMember'));
     const importSel = form.querySelector('#importSel');
     const body = { name, members };
+    // Omit the flag when the seat is wanted — the server defaults to seating you.
+    if (ownerBox && !ownerBox.checked) body.ownerSeat = false;
     if (importSel && importSel.value) body.importFromRoundId = importSel.value;
     try {
       const round = await api('POST', '/api/rounds', body);

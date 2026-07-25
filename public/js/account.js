@@ -42,6 +42,10 @@ function clearTokens() {
 // Read by core.js api() and by the view code: which mode, and are we logged in.
 function accountsActive() { return accountsMode; }
 function isLoggedIn() { return accountsMode && !!getAccessToken(); }
+// Who am I (#421) — accessors rather than views reaching into `accountUser`,
+// which is a module-scoped `let` and may be null between boot and probeMe().
+function currentUserId() { return (accountUser && accountUser.id) || null; }
+function currentUsername() { return (accountUser && accountUser.username) || ''; }
 
 // Auth endpoints are called with a plain fetch (not api()): they carry no Bearer
 // token, and a 401 here means "bad credentials", not "session expired" — so they

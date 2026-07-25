@@ -22,7 +22,11 @@ code and documentation are in English.
 - **Rounds** – a group with a name and any number of members. The home screen
   is a lobby of round cards (members, game/session counts, last result); a new
   round is set up on a playful "seats around the table" screen, optionally
-  importing the games list from an existing round.
+  importing the games list from an existing round. With accounts on, the seat at
+  the head of that table is **yours** — the creator is seated automatically (opt
+  out with "Ich spiele mit"), and on any other round a member page offers
+  „Das bin ich" so your account can take its own seat. A claimed seat is what
+  puts your name on your actions in the Chronik.
 - **Games** – each game has a title, a required player range (min–max), any
   number of custom round **tags** (see below), and an optional cover image (paste
   from clipboard or pick a file). When adding a
@@ -324,7 +328,8 @@ routes/
                                              retire/restore, complete/restore,
                                              delete, move some/all to another
                                              round)
-  members.js         …/members              (edit name / avatar color)
+  members.js         …/members              (edit name / avatar color,
+                                             claim/release your own seat)
   sessions.js        …/sessions             (start, results, choice, finish,
                                              cancel, delete, remove one game)
   activities.js      …/activities           (list the feed [GET], delete an entry)

@@ -13,15 +13,20 @@ const { trackEvent, logger } = require('../lib/observability');
 const router = express.Router();
 
 // Create-round body. `members` is normalized (each entry stringified, trimmed,
-// blanks dropped) before the non-empty check, mirroring the old hand-rolled
-// clean-then-validate. `importFromRoundId` is passed through untouched.
+// blanks dropped), and `importFromRoundId` is passed through untouched.
+// `members` carries no `min(1)` since #421: the creator is seated automatically
+// in accounts mode, so a round with only them is legitimate (and the common way
+// to start one). "At least one member" is checked in the HANDLER instead, where
+// the owner seat is known — the schema alone cannot see it.
 const createRoundSchema = z.object({
   name: z.preprocess((v) => String(v || '').trim(), z.string().min(1, 'Round name is missing')),
   members: z
     .preprocess(
       (v) => (Array.isArray(v) ? v.map((m) => String(m || '').trim()).filter(Boolean) : []),
-      z.array(z.string()).min(1, 'At least one member is required')
+      z.array(z.string())
     ),
+  // #421 opt-out, default on: only an explicit `false` suppresses the seat.
+  ownerSeat: z.boolean().optional(),
   importFromRoundId: z.unknown().optional(),
 });
 
@@ -74,11 +79,27 @@ router.post('/', async (req, res) => {
     }
   }
 
+  // #421: seat the creator. Before this, NO creation path ever linked a member
+  // to an account (only invitation-accept did), so every round's owner sat in an
+  // unlinked seat — blank Chronik attribution, and their own chair offered in the
+  // invite dialog's free-seat picker. The name is resolved SERVER-side (same
+  // convention and 'Gast' fallback as invitation-accept) so a client can never
+  // dictate the seat's name. req.userId is unset in legacy mode, so that mode
+  // writes no owner and a member stays byte-identical to before: { id, name }.
+  let owner = null;
+  if (req.userId && body.ownerSeat !== false) {
+    const user = await repo.getUserById(req.userId);
+    owner = { name: (user && user.username) || 'Gast', userId: req.userId };
+  }
+  if (!owner && body.members.length === 0)
+    return res.status(400).json({ error: 'At least one member is required' });
+
   // The data layer mints ids and (optionally) copies the games list
   // (title/type/image only) from an existing round.
   const round = await req.repo.createRound({
     name: body.name,
     members: body.members,
+    owner,
     importFromRoundId: body.importFromRoundId || null,
   });
   trackEvent('round_created', { tenantId: req.tenantId });

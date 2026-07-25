@@ -194,11 +194,39 @@ async function showMember(rid, mid) {
   cards.appendChild(favCard);
   app.appendChild(statsSec);
 
-  // #207: a seat linked to an account (a shared grantee) — the OWNER can revoke
-  // that account's access here. The seat itself stays (its ratings/history are
-  // part of the round); only the account link is removed. Not offered to a
-  // grantee (round.shared) or on an unlinked seat.
-  if (!round.shared && member.userId) {
+  // Who sits here? Three mutually exclusive states, and the split matters:
+  //   - MY seat (#421) → „Das bin ich nicht", which only nulls the link.
+  //   - someone ELSE's account (a shared grantee, #207) → the owner revokes
+  //     their access; the seat and its ratings/history stay.
+  //   - unlinked → „Das bin ich" (#421).
+  // Before #421 the first two were one branch, so an owner-claimed seat would
+  // have offered „Zugriff entfernen" and hit DELETE …/shares/:userId, which
+  // finds no grant and 404s.
+  const me = currentUserId();
+  const mine = !!me && member.userId === me;
+  const seatPatch = async (userId) => {
+    try {
+      await api('PATCH', `/api/rounds/${rid}/members/${mid}`, { userId });
+      showMember(rid, mid); // re-render into the other state
+    } catch (e) {
+      toast(e.message === 'seat_taken' ? t('member.toast.seatTaken')
+        : e.message === 'already_seated' ? t('member.toast.alreadySeated')
+          : e.message);
+    }
+  };
+
+  if (mine) {
+    const sec = h(`<div class="round-footer">
+        <p class="muted">${esc(t('member.claimed'))}</p>
+      </div>`);
+    // No confirm, deliberately: this only nulls the link and the button one
+    // click later puts it back. Unlike „Zugriff entfernen" below, which cuts
+    // another person's access to the round and they cannot undo it themselves.
+    const btn = h(`<button class="link-btn">${esc(t('member.unclaim'))}</button>`);
+    btn.addEventListener('click', () => seatPatch(null));
+    sec.appendChild(btn);
+    app.appendChild(sec);
+  } else if (!round.shared && member.userId) {
     const shareSec = h(`<div class="round-footer">
         <p class="muted">${esc(t('share.linked'))}</p>
       </div>`);
@@ -212,6 +240,16 @@ async function showMember(rid, mid) {
     });
     shareSec.appendChild(revokeBtn);
     app.appendChild(shareSec);
+  } else if (!member.userId && !round.shared && isLoggedIn() && me
+      && !round.members.some((m) => m.userId === me)) {
+    // Holding a seat elsewhere in this round hides the button entirely — moving
+    // seats is a deliberate two-step (release, then claim), so that a claim can
+    // never silently unlink a chair you aren't looking at and make it invitable.
+    const sec = h('<div class="round-footer"></div>');
+    const btn = h(`<button class="link-btn">${esc(t('member.claim'))}</button>`);
+    btn.addEventListener('click', () => seatPatch(me));
+    sec.appendChild(btn);
+    app.appendChild(sec);
   }
 
   app.appendChild(backRow(() => showRound(rid)));

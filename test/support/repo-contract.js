@@ -55,6 +55,27 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(fetched, created);
   });
 
+  // #421: the creator's seat. The absent-key half is the fragile part — a
+  // Postgres default or a `userId: null` on the typed members would drift the
+  // two backends apart (see .claude/rules/postgres-backend.md).
+  test('createRound links ONLY the owner seat, and puts it first', async () => {
+    const withOwner = await repo.createRound(T, {
+      name: 'Seated', members: ['Ann', 'Bo'], owner: { name: 'chulio', userId: 'user-1' },
+    });
+    assert.equal(withOwner.members.length, 3);
+    assert.deepEqual(withOwner.members.map((m) => m.name), ['chulio', 'Ann', 'Bo']);
+    assert.equal(withOwner.members[0].userId, 'user-1');
+    assert.equal('userId' in withOwner.members[1], false);
+    assert.equal('userId' in withOwner.members[2], false);
+    // The order has to survive a re-read, not just the create's return value.
+    const fetched = await repo.getRound(T, withOwner.id);
+    assert.deepEqual(fetched.members, withOwner.members);
+
+    // Without an owner, a member is byte-identical to pre-#421: { id, name }.
+    const plain = await repo.createRound(T, { name: 'Unseated', members: ['Ann'] });
+    assert.deepEqual(Object.keys(plain.members[0]).sort(), ['id', 'name']);
+  });
+
   test('getRound returns a snapshot: mutating it does not change the store', async () => {
     const round = await freshRound();
     const snap = await repo.getRound(T, round.id);

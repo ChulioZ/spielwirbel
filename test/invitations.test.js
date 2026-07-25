@@ -37,8 +37,12 @@ async function makeAccount(email) {
   const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
   return { token: login.body.accessToken, user: await repo.getUserByEmail(email), username: handle(email) };
 }
+// ownerSeat: false — these specs are about invitations, not seating (#421), so
+// the rounds keep exactly the members each test names. That the creator's own
+// auto-seat is NOT invitable is covered in test/account.test.js.
 const makeRound = (owner, members) =>
-  request(app).post('/api/rounds').set(auth(owner.token)).send({ name: 'Runde', members }).then((r) => r.body);
+  request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Runde', members, ownerSeat: false }).then((r) => r.body);
 const inbox = (acct) => request(app).get('/api/account/inbox').set(auth(acct.token)).then((r) => r.body.items);
 const send = (owner, body) => request(app).post('/api/account/invitations').set(auth(owner.token)).send(body);
 
@@ -121,8 +125,11 @@ test('accept re-validates the seat: a seat taken between send and accept is refu
   await send(owner, { roundId: round.id, username: invitee.username, memberId: bobId });
   const item = (await inbox(invitee)).find((i) => i.type === 'round_invitation');
 
-  // The owner links Bob's seat to someone else BEFORE the invitee accepts.
-  await request(app).patch(`/api/rounds/${round.id}/members/${bobId}`).set(auth(owner.token)).send({ userId: other.user.id });
+  // Bob's seat goes to someone else BEFORE the invitee accepts. Written through
+  // the repo because since #421 no HTTP route will link a stranger's account to
+  // a seat — the point here is accept's re-validation, not how the seat got taken.
+  const ownerTenant = (await repo.getUserById(owner.user.id)).tenantId;
+  await repo.forTenant(ownerTenant).updateMember(round.id, bobId, { userId: other.user.id });
 
   // Accept must REFUSE (distinct code), never silently create a fresh member.
   const accept = await request(app).post(`/api/account/invitations/${item.payload.invitationId}/accept`).set(auth(invitee.token));

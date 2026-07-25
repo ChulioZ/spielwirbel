@@ -103,7 +103,7 @@ test('tenant isolation across accounts and the default (gate-only) caller', asyn
   await t.test('the round is still fully there for account A', async () => {
     const res = await request(app).get(`/api/rounds/${roundId}`).set('Authorization', `Bearer ${a.token}`);
     assert.equal(res.status, 200);
-    assert.equal(res.body.members.length, 1);
+    assert.equal(res.body.members.length, 2); // the typed member + A's own seat (#421)
   });
 });
 
