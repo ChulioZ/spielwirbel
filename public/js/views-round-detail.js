@@ -259,6 +259,58 @@ async function showProviders(rid) {
   app.appendChild(backRow(() => showRound(rid)));
 }
 
+// The three game-detail editors (tags, players, cover) have ONE builder each
+// and two presentations (#422): an anchored popover from 860px up, a bottom
+// sheet below it. The anchored form is unusable on a phone — focusing its input
+// makes the browser scroll the page to reveal it, and `openPopover`'s own
+// page-scroll teardown then closes the popover out from under the keyboard, so
+// there was no way to tag a game from a phone at all.
+//
+// 860px is the existing dock/strip breakpoint (.claude/rules/responsive-hub-tabs.md),
+// deliberately reused rather than a new number. `build(container, close)` is
+// presentation-agnostic and may return a callback to run once the container is
+// live — see openPopover in core.js.
+const EDITOR_SHEET_BELOW = 860;
+function usesEditorSheet() {
+  return !window.matchMedia(`(min-width: ${EDITOR_SHEET_BELOW}px)`).matches;
+}
+function openEditor(anchor, variant, title, build) {
+  if (!usesEditorSheet()) {
+    return openPopover(anchor, (el, close) => {
+      el.classList.add('popover--' + variant);
+      return build(el, close);
+    });
+  }
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+        <div class="sheet__head">
+          <h2>${esc(title)}</h2>
+          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="editor editor--${esc(variant)}"></div>
+      </div>
+    </div>`);
+  const body = backdrop.querySelector('.editor');
+  // None of the three navigates on success — they PATCH and re-render in place —
+  // so a plain closeSheet() is right; no closeSheet(next) deferral is needed
+  // (.claude/rules/sheet-history-back-dismissal.md).
+  const attached = build(body, () => closeSheet());
+  document.body.appendChild(backdrop);
+  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  document.addEventListener('keydown', onKey, true);
+  // Must go through openSheet for the focus trap (#145) and Back-dismissal
+  // (#333) — never assign activeSheet directly.
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+  backdrop.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+  // After openSheet, not before: trapFocus captures document.activeElement as
+  // the restore target, so focusing first would "restore" focus into the sheet
+  // itself. iOS only raises the keyboard for a focus() inside the user gesture,
+  // and this whole path is synchronous from the button's click handler.
+  if (typeof attached === 'function') attached();
+  return { el: body, close: () => closeSheet() };
+}
+
 // =================== Game detail ===================
 
 async function showGameDetail(rid, gameId) {
@@ -336,10 +388,9 @@ async function showGameDetail(rid, gameId) {
     });
   }
 
-  // Min–max player inputs in a popover.
+  // Min–max player inputs, as a popover or a sheet (see openEditor).
   function openPlayersPopover(anchor) {
-    openPopover(anchor, (el, close) => {
-      el.classList.add('popover--players');
+    openEditor(anchor, 'players', t('detail.onboard.players'), (el, close) => {
       const min = h('<input class="input" inputmode="numeric" />');
       const max = h('<input class="input" inputmode="numeric" />');
       if (Number.isInteger(game.minPlayers)) min.value = game.minPlayers;
@@ -368,8 +419,7 @@ async function showGameDetail(rid, gameId) {
       row.appendChild(max);
       row.appendChild(okBtn);
       el.appendChild(row);
-      min.focus();
-      min.select();
+      return () => { min.focus(); min.select(); };
     });
   }
 
@@ -377,8 +427,7 @@ async function showGameDetail(rid, gameId) {
   // create a new one inline, then OK applies the whole selection at once (like
   // the players popover — one PATCH, one re-render).
   function openTagsPopover(anchor) {
-    openPopover(anchor, (el, close) => {
-      el.classList.add('popover--tags');
+    openEditor(anchor, 'tags', t('detail.onboard.tags'), (el, close) => {
       const selected = new Set(game.tagIds || []);
       const tags = (round.tags || []).slice(); // local copy; never mutate the cached round
       const chipsWrap = h('<div class="filter-chips"></div>');
@@ -440,14 +489,13 @@ async function showGameDetail(rid, gameId) {
       row.appendChild(okBtn);
       el.appendChild(row);
       el.appendChild(picker.grid);
-      input.focus();
+      return () => input.focus();
     });
   }
 
   // Paste a new cover image, or remove the current one.
   function openImagePopover(anchor) {
-    openPopover(anchor, (el, close) => {
-      el.classList.add('popover--image');
+    openEditor(anchor, 'image', t('detail.onboard.cover'), (el, close) => {
       const paste = h(`<button class="btn btn--primary">${esc(t('detail.pasteImage'))}</button>`);
       paste.addEventListener('click', async () => {
         const blob = await readClipboardImage();
