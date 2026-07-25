@@ -45,6 +45,31 @@ specification** and fetches nothing, so it is skipped explicitly there. If you
 add another declarative `<link>` (`alternate`, `manifest` variants…), decide
 consciously whether it loads anything before widening that exemption.
 
+## 5. helmet's CORP breaks the image on every client-side preview renderer
+
+The card shipped with helmet's default `Cross-Origin-Resource-Policy:
+same-origin` on the PNG, and the image came back **broken** on opengraph.xyz —
+while `curl -I` returned a perfectly healthy `200 image/png`. That combination is
+the signature: CORP is enforced by the **browser**, not the server, so it is
+invisible to any command-line check.
+
+It splits preview consumers in two:
+
+- **Server-side scrapers** (Facebook/WhatsApp, Telegram, Slack, Discord, Twitter)
+  fetch the image from their own backends and re-host a thumbnail. They never
+  evaluate CORP, so the card looked fine there.
+- **Anything that renders the preview in a page** (opengraph.xyz and other
+  validators, embedded preview widgets) loads our URL as a cross-origin
+  subresource — and a `same-origin` CORP makes the browser drop it.
+
+`assetCacheHeaders` in `lib/app.js` therefore sets
+`Cross-Origin-Resource-Policy: cross-origin` for **`og-image.png` only**. Keep
+that scope: `/uploads/` is auth-gated user data and the PWA icons are only ever
+loaded by our own origin, so both keep the restrictive default. The paired test
+asserts the opt-out on the card *and* that `icon-512.png` still answers
+`same-origin` — the second assertion is what keeps the first from being
+vacuously true.
+
 ## Redrawing `public/icons/og-image.png`
 
 There is no image tooling in the repo (same stance as the PWA icons — generated
@@ -87,8 +112,10 @@ because `/index.html` *is* in `SHELL` — see
 ## Verifying for real
 
 Nothing local proves a card renders: the tests prove the tags exist, are
-absolute, and that the image path is servable (a 404 there yields a card with a
-blank image and no error anywhere). The actual check is after deploy — paste the
+absolute, that the image path is servable (a 404 there yields a card with a blank
+image and no error anywhere) and that it carries the CORP opt-out. Note §5 —
+`curl` cannot see the header that broke this once, because CORP is enforced in
+the browser. The actual check is after deploy — paste the
 link into a chat with yourself, plus one validator (opengraph.xyz, the Facebook
 Sharing Debugger, Telegram's @WebpageBot). **WhatsApp and Facebook cache scrapes
 aggressively**, so a second attempt after a fix needs a cache-busting query
