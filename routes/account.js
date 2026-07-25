@@ -68,22 +68,40 @@ function sendSafe(msg) {
     logger.warn({ event: 'account_mail_failed', to: msg.to, message: e.message }));
 }
 
-// How long a freshly mailed verification link suppresses another send (#435).
+// How long a freshly mailed link suppresses another send to the same account —
+// resend-verification (#435) and forgot-password (#447) share the one number.
 // This is a per-ACCOUNT cooldown and it is the real defence: the authLimiter in
 // lib/app.js counts requests per IP, so rotating addresses would otherwise let
 // anyone flood a known victim's inbox — and burn the operator mailbox's own
 // sending quota with it, which would break registration for everyone (see
 // .claude/rules/transactional-mail-provider.md).
-const RESEND_COOLDOWN_MS = 60 * 1000;
+const MAIL_COOLDOWN_MS = 60 * 1000;
 
 // The stored verification challenge for a freshly minted raw token. `sentAt` is
-// what RESEND_COOLDOWN_MS measures from; records written before #435 lack it,
+// what MAIL_COOLDOWN_MS measures from; records written before #435 lack it,
 // which reads as "long ago" and allows an immediate resend.
 const verificationRecord = (raw) => ({
   tokenHash: accounts.hashToken(raw),
   expiresAt: iso(Date.now() + accounts.VERIFY_TTL_MS),
   sentAt: iso(Date.now()),
 });
+
+// The stored reset challenge, same shape and same `sentAt` semantics (#447):
+// a record written before that change carries none, which must read as "long
+// ago" so an existing account is never locked out of its own password reset.
+const resetRecord = (raw) => ({
+  tokenHash: accounts.hashToken(raw),
+  expiresAt: iso(Date.now() + accounts.RESET_TTL_MS),
+  sentAt: iso(Date.now()),
+});
+
+// Shared by both mailing endpoints. `|| ''` is load-bearing: Date.parse('') is
+// NaN, so an absent sentAt falls through to "send". Never `|| 0` — Date.parse(0)
+// coerces to the string '0' and resolves to the year 2000, a real timestamp.
+const mailThrottled = (record) => {
+  const sentAt = Date.parse((record || {}).sentAt || '');
+  return Number.isFinite(sentAt) && Date.now() - sentAt < MAIL_COOLDOWN_MS;
+};
 
 // Register and resend-verification both mail this, so the body and the link
 // shape can't drift apart. Lands on the in-app onboarding page (#138), which
@@ -174,9 +192,7 @@ router.post('/resend-verification', async (req, res) => {
   // endpoint is a perfect account-existence probe, which the anti-enumeration
   // invariants in .claude/rules/user-accounts.md do not allow.
   if (user && !user.emailVerified) {
-    const sentAt = Date.parse((user.verification || {}).sentAt || '');
-    const throttled = Number.isFinite(sentAt) && Date.now() - sentAt < RESEND_COOLDOWN_MS;
-    if (!throttled) {
+    if (!mailThrottled(user.verification)) {
       const raw = accounts.newRawToken();
       // Replaces the previous challenge, so an older link stops working — a
       // resend must not leave two valid tokens outstanding.
@@ -298,11 +314,15 @@ router.post('/logout', async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   const email = normalizeEmail((req.body || {}).email);
   const user = validEmail(email) ? await repo.getUserByEmail(email) : null;
-  if (user && (user.identities || []).some((i) => i.type === 'password')) {
+  // The cooldown (#447) skips the MINT as well as the send, deliberately: a user
+  // who double-submits the form keeps the link they were already mailed instead
+  // of one their own second click silently invalidated. Being throttled is also
+  // silent — a 429 here would be a perfect account-existence probe, since only
+  // an address that HAS a password account can ever reach this branch.
+  if (user && (user.identities || []).some((i) => i.type === 'password')
+      && !mailThrottled(user.reset)) {
     const raw = accounts.newRawToken();
-    await repo.updateUser(user.id, {
-      reset: { tokenHash: accounts.hashToken(raw), expiresAt: iso(Date.now() + accounts.RESET_TTL_MS) },
-    });
+    await repo.updateUser(user.id, { reset: resetRecord(raw) });
     const link = `${baseUrl()}/reset-password?uid=${user.id}&token=${raw}`;
     await sendSafe({
       to: user.email,
