@@ -12,6 +12,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const CORE = fs.readFileSync(path.join(ROOT, 'public/js/core.js'), 'utf8');
+const PALETTE = fs.readFileSync(path.join(ROOT, 'public/js/member-colors.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public/styles.css'), 'utf8');
 
 // --- WCAG 2.1 relative luminance + contrast ratio ---------------------------
@@ -96,8 +97,8 @@ test('every rating clears AA-large as ring text on each theme page', () => {
 // --- member avatar palette --------------------------------------------------
 
 function memberColors() {
-  const block = /const MEMBER_COLORS = \[([\s\S]*?)\];/.exec(CORE);
-  assert.ok(block, 'MEMBER_COLORS should be a literal array in core.js');
+  const block = /const MEMBER_COLORS = \[([\s\S]*?)\];/.exec(PALETTE);
+  assert.ok(block, 'MEMBER_COLORS should be a literal array in member-colors.js');
   const found = block[1].match(/#[0-9a-f]{6}/gi) || [];
   assert.equal(found.length, 8, 'the palette should still hold 8 colors');
   return found;

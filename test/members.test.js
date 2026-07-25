@@ -5,8 +5,11 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const { app, createRound } = require('./helpers');
 
-// The palette shared with the frontend (public/js/core.js / routes/members.js).
-const A_VALID_COLOR = '#7f77dd';
+// The one palette the UI offers and the route validates against — required from
+// its real source, so a stale hand-copied constant can't make this suite pass
+// against colours the UI stopped offering (#420).
+const { MEMBER_COLORS } = require('../public/js/member-colors');
+const A_VALID_COLOR = MEMBER_COLORS[0];
 
 test('PATCH member updates the name', async () => {
   const round = await createRound(request);
@@ -52,6 +55,22 @@ test('PATCH member rejects an empty name', async () => {
     .patch(`/api/rounds/${round.id}/members/${member.id}`)
     .send({ name: '   ' });
   assert.equal(res.status, 400);
+});
+
+// Every swatch the member view renders comes from MEMBER_COLORS, so every entry
+// must be accepted — testing one colour is what let six of the eight rot (#420).
+test('PATCH member accepts every color of the shared palette', async () => {
+  const round = await createRound(request);
+  const member = round.members[0];
+  const rejected = [];
+  for (const color of MEMBER_COLORS) {
+    const res = await request(app)
+      .patch(`/api/rounds/${round.id}/members/${member.id}`)
+      .send({ color });
+    if (res.status !== 200 || res.body.color !== color) rejected.push(`${color} → ${res.status}`);
+  }
+  assert.deepEqual(rejected, [], 'every palette color the UI offers must be storable');
+  assert.equal(MEMBER_COLORS.length, 8, 'the palette should still hold 8 colors');
 });
 
 test('PATCH member rejects a color outside the palette', async () => {

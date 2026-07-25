@@ -534,23 +534,8 @@ function avgColor(avg) {
   return `hsl(${hue}, 60%, 30%)`;
 }
 
-// Fixed, friendly palette for member avatars. A member keeps "their" color
-// everywhere in the app; assignment is by position in round.members, which is
-// append-only, so colors stay stable for the life of the round.
-// Every entry carries white initials (.avatar, .nr-seat__avatar), so each one is
-// tuned to clear 4.5:1 against white (#145 — the original palette sat at
-// 3.4–3.9:1). Hues are the originals; six were darkened 7–15% to reach the bar,
-// slate blue and berry already cleared it. Keep any new color at ≥4.5:1 on white.
-const MEMBER_COLORS = [
-  '#c6522c', // coral
-  '#198663', // teal
-  '#726bc7', // violet
-  '#a66815', // amber
-  '#c34d74', // pink
-  '#2f6f9e', // slate blue
-  '#54821d', // green
-  '#993556', // berry
-];
+// The avatar palette itself lives in member-colors.js — one source of truth
+// shared with routes/members.js, which validates against it (#420).
 function memberColor(round, memberId) {
   const idx = round.members.findIndex((m) => m.id === memberId);
   // A stored color (set on the member's detail page) wins; otherwise the color
