@@ -151,7 +151,7 @@ would swap the auth model, drop the only perimeter, and activate quotas all at
 once against real data, on a day nothing rolls back gently. Use **layered mode**
 (#266) so it's two small, separately verifiable moves:
 
-1. **Prerequisites.** Brevo mail is configured (#226 — verification links must
+1. **Prerequisites.** Scaleway mail is configured (#226 — verification links must
    actually deliver), and `SESSION_SECRET` is its **own** dedicated secret, *not*
    equal to `AUTH_PASSWORD` (it signs access-token JWTs; the shared password is
    known to the whole group). `ADMIN_PASSWORD` is set (a separate secret again),

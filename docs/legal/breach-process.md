@@ -10,7 +10,7 @@ stress by one person.
 - Auffälligkeit ernst nehmen: unerwartete Logs, fremde Moderations-Aktionen,
   Hinweise per Kontaktformular/E-Mail, Anbieter-Benachrichtigung.
 - Sofortmaßnahmen je nach Fall: betroffene Secrets rotieren (`SESSION_SECRET`,
-  `ADMIN_PASSWORD`, `BREVO_API_KEY`, DB-Zugang via Railway), verdächtige Konten
+  `ADMIN_PASSWORD`, `SCW_SECRET_KEY`, DB-Zugang via Railway), verdächtige Konten
   sperren (Admin-Panel), notfalls `ACCOUNTS_ENABLED` abschalten oder den Dienst
   pausieren (Railway).
 - Nichts vorschnell löschen — Logs und Zustand für die Bewertung sichern

@@ -3,7 +3,7 @@
 /*
  * User accounts (issue #135): register -> verify -> login -> refresh -> reset,
  * plus the feature flag, anti-enumeration behaviour, and member linking.
- * No network: BREVO_API_KEY stays unset, so lib/mail.js captures every message
+ * No network: SCW_SECRET_KEY stays unset, so lib/mail.js captures every message
  * in its in-memory outbox and the tests read tokens out of the mail text —
  * exactly the delivery-degraded path a self-hoster without email runs.
  */
