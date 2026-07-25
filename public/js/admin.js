@@ -77,6 +77,85 @@
     return el;
   }
 
+  // A single line of a long free-text field for the table cell; the full wording
+  // (with its own line breaks) is in the row's detail dialog.
+  function truncate(text, max) {
+    const flat = String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+    return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
+  }
+
+  // ---- detail dialogs (#403) -----------------------------------------------
+
+  // Every table row opens this one native <dialog>: rows stay a single line and
+  // the full record plus all its actions live here, instead of 4–5 inline
+  // buttons wrapping into a wall inside a table cell.
+  //
+  // A spec is { title, pairs: [[label, value]], text, actions: [[label, cls, run]] }.
+  // A null/undefined pair value is dropped, so a caller can list every possible
+  // field without branching around the absent ones.
+  const detailDialog = $('detailDialog');
+
+  function openDetail(spec) {
+    $('detailTitle').textContent = spec.title;
+
+    const body = $('detailBody');
+    body.replaceChildren();
+    const dl = document.createElement('dl');
+    for (const [label, value] of spec.pairs) {
+      if (value == null) continue;
+      const dt = document.createElement('dt');
+      dt.textContent = label;
+      const dd = document.createElement('dd');
+      // textContent like everywhere else on this page — an e-mail, a username or
+      // a report body is attacker-chosen text and this page runs with operator
+      // privileges.
+      dd.textContent = value;
+      dl.append(dt, dd);
+    }
+    body.appendChild(dl);
+
+    if (spec.text) {
+      const block = document.createElement('p');
+      block.className = 'detail__text';
+      block.textContent = spec.text;
+      body.appendChild(block);
+    }
+
+    const bar = $('detailActions');
+    bar.replaceChildren();
+    const actions = spec.actions || [];
+    for (const [label, cls, run] of actions) {
+      const btn = document.createElement('button');
+      btn.className = cls;
+      btn.textContent = label;
+      // Close BEFORE running: every action either reloads the list underneath
+      // (which would leave the dialog showing a stale record) or scrolls to
+      // another card, and a modal blocks both. <dialog> restores focus to the
+      // row on close, so the operator lands back where they were.
+      btn.addEventListener('click', () => { detailDialog.close(); run(); });
+      bar.appendChild(btn);
+    }
+    bar.hidden = !actions.length;
+
+    detailDialog.showModal();
+  }
+
+  // A table row that opens `spec`'s dialog. Focusable and Enter/Space-activatable
+  // so the actions are reachable without a mouse; deliberately no role="button"
+  // — that would detach the cells from their row for a screen reader.
+  function detailRow(spec) {
+    const row = document.createElement('tr');
+    row.className = 'clickable';
+    row.tabIndex = 0;
+    row.addEventListener('click', () => openDetail(spec));
+    row.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault(); // Space would scroll the page
+      openDetail(spec);
+    });
+    return row;
+  }
+
   // ---- login ---------------------------------------------------------------
 
   loginForm.addEventListener('submit', async (e) => {
@@ -107,7 +186,7 @@
     loadStatus();
     loadLogs();
     loadNotices();
-    loadUsers();
+    // Konten is deliberately NOT loaded here (#403) — see loadUsers().
     loadFeedback();
     refreshLog();
   }
@@ -535,7 +614,7 @@
     }
 
     const head = document.createElement('tr');
-    ['Art', 'Text', ''].forEach((h) => cell(head, h, { head: true }));
+    ['Art', 'Text'].forEach((h) => cell(head, h, { head: true }));
     body.appendChild(head);
 
     for (const [label, kind, id, text] of [
@@ -544,14 +623,15 @@
       ...content.games.map((g) => ['Spiel', 'game', g.id, g.title]),
       ...content.tags.map((tg) => ['Tag', 'tag', tg.id, tg.name]),
     ]) {
-      const row = document.createElement('tr');
+      const row = detailRow({
+        title: label,
+        pairs: [['Art', label], ['ID', id]],
+        text: text == null ? '—' : text,
+        actions: [['Redigieren', 'small danger',
+          () => redact({ kind, roundId: content.roundId, id }, text)]],
+      });
       cell(row, label);
-      cell(row, text == null ? '—' : text).style.wordBreak = 'break-word';
-      const btn = document.createElement('button');
-      btn.className = 'small danger';
-      btn.textContent = 'Redigieren';
-      btn.addEventListener('click', () => redact({ kind, roundId: content.roundId, id }, text));
-      cell(row, '').appendChild(btn);
+      cell(row, truncate(text == null ? '—' : text, 90)).style.wordBreak = 'break-word';
       body.appendChild(row);
     }
   }
@@ -670,31 +750,68 @@
 
   // ---- users ---------------------------------------------------------------
 
+  // The full account record and every action that applies to it. (The
+  // „Standard-Daten übernehmen" claim that used to sit alongside these went with
+  // #405 — the 'default' tenant was claimed once during the go-live and the
+  // route is gone.)
+  const userDetail = (u) => ({
+    title: u.username || u.email,
+    pairs: [
+      ['E-Mail', u.email],
+      ['Nutzername', u.username || '—'],
+      ['Tenant', u.tenantId || '—'],
+      ['Registriert', fmt(u.createdAt)],
+      ['E-Mail bestätigt', u.emailVerified ? 'ja' : 'nein'],
+      ['Status', u.disabled ? `gesperrt seit ${fmt(u.disabledAt)}` : 'aktiv'],
+      ['Sperrgrund', u.disabled ? (u.disabledReason || '—') : null],
+      ['Konto-ID', u.id],
+    ],
+    actions: [
+      [u.disabled ? 'Entsperren' : 'Sperren', u.disabled ? 'small ghost' : 'small danger', () => toggleUser(u)],
+      ['Name neutralisieren', 'small ghost', () => renameUser(u)],
+      ['Exportieren', 'small ghost', () => exportUser(u)],
+      ['Löschen', 'small danger', () => eraseUser(u)],
+    ],
+  });
+
+  // Search-first (#403): nothing is requested — so no e-mail address leaves the
+  // server at all — until the operator asks for a specific account. `null` means
+  // "no search has been run yet", which is why loadUsers() is not called on
+  // login; `''` is the deliberate "Alle anzeigen" overview. Every action's
+  // refresh re-runs whichever of the two is current.
+  let userQuery = null;
+
   async function loadUsers() {
+    if (userQuery === null) return;
     const body = $('usersTable').querySelector('tbody');
     body.replaceChildren();
     hide($('usersError'));
     let users;
     try {
-      ({ users } = await api('/users'));
+      ({ users } = await api(`/users${userQuery ? `?q=${encodeURIComponent(userQuery)}` : ''}`));
     } catch (err) {
       show($('usersError'), message(err), 'err');
       return;
     }
 
     const head = document.createElement('tr');
-    ['Nutzername', 'E-Mail', 'Tenant', 'Status', ''].forEach((h) => cell(head, h, { head: true }));
+    ['Nutzername', 'E-Mail', 'Tenant', 'Status'].forEach((h) => cell(head, h, { head: true }));
     body.appendChild(head);
+
+    $('usersCount').textContent = `${users.length} ${users.length === 1 ? 'Konto' : 'Konten'}`;
+    $('usersCount').hidden = false;
 
     if (!users.length) {
       const row = document.createElement('tr');
-      cell(row, 'Keine Konten (Accounts sind auf dieser Instanz nicht aktiv).', { colSpan: 5 });
+      cell(row, userQuery
+        ? 'Keine Treffer.'
+        : 'Keine Konten (Accounts sind auf dieser Instanz nicht aktiv).', { colSpan: 4 });
       body.appendChild(row);
       return;
     }
 
     for (const u of users) {
-      const row = document.createElement('tr');
+      const row = detailRow(userDetail(u));
       // Attacker-chosen free text — cell() uses textContent, so a handle full of
       // markup renders as the characters it is.
       cell(row, u.username || '—');
@@ -706,34 +823,28 @@
       pill.className = u.disabled ? 'pill pill--off' : 'pill';
       pill.textContent = u.disabled ? 'gesperrt' : 'aktiv';
       status.appendChild(pill);
-      if (u.disabled && u.disabledReason) {
-        const why = document.createElement('div');
-        why.className = 'subtext';
-        why.textContent = u.disabledReason;
-        status.appendChild(why);
-      }
-
-      const action = cell(row, '');
-      const actions = document.createElement('div');
-      actions.className = 'row';
-      const items = [
-        [u.disabled ? 'Entsperren' : 'Sperren', u.disabled ? 'small ghost' : 'small danger', () => toggleUser(u)],
-        ['Name neutralisieren', 'small ghost', () => renameUser(u)],
-        ['Exportieren', 'small ghost', () => exportUser(u)],
-        ['Löschen', 'small danger', () => eraseUser(u)],
-      ];
-      for (const [label, cls, run] of items) {
-        const btn = document.createElement('button');
-        btn.className = cls;
-        btn.textContent = label;
-        btn.addEventListener('click', run);
-        actions.appendChild(btn);
-      }
-      action.appendChild(actions);
 
       body.appendChild(row);
     }
   }
+
+  $('usersForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const term = $('usersQuery').value.trim();
+    // An empty box is not a search: falling through to the unfiltered list would
+    // make the full account list — every e-mail address — one stray Enter away,
+    // which is the thing search-first exists to prevent. "Alle anzeigen" is the
+    // deliberate path.
+    if (!term) return;
+    userQuery = term;
+    loadUsers();
+  });
+
+  $('usersAll').addEventListener('click', () => {
+    $('usersQuery').value = '';
+    userQuery = '';
+    loadUsers();
+  });
 
   async function toggleUser(user) {
     const disabling = !user.disabled;
@@ -1116,6 +1227,42 @@
     }
   }
 
+  // The whole notice, and exactly the actions that can apply to it: the image /
+  // account hand-offs only when the report actually names one, the decision pair
+  // only while it is still open.
+  const noticeDetail = (n) => {
+    const path = uploadsPath(n.url);
+    const actions = [];
+    if (path) actions.push(['Bild zuordnen', 'small ghost', () => assignNotice(n, path)]);
+    if (n.reportedUsername) {
+      actions.push(['Konto suchen', 'small ghost', () => lookupUsername(n.reportedUsername)]);
+    }
+    if (n.status === 'open') {
+      actions.push(['Erledigt', 'small', () => decideNotice(n, 'actioned')]);
+      actions.push(['Abgelehnt', 'small ghost', () => decideNotice(n, 'rejected')]);
+    }
+    actions.push(['Löschen', 'small danger', () => deleteNotice(n)]);
+
+    const [, label] = NOTICE_STATUS[n.status] || ['', n.status];
+    return {
+      title: n.category ? (CATEGORY_LABELS[n.category] || n.category) : 'Allgemein',
+      pairs: [
+        ['Zeitpunkt', fmt(n.createdAt)],
+        ['Status', label],
+        ['Betreff', n.subject || null],
+        ['Gemeldete URL', n.url || null],
+        ['Gemeldeter Nutzername', n.reportedUsername ? `@${n.reportedUsername}` : null],
+        // Anonymous is a legitimate state (CSAM reports, Art. 16(3)), not
+        // missing data.
+        ['Kontakt', [n.name, n.email].filter(Boolean).join(' · ') || 'anonym'],
+        ['Entschieden', n.decidedAt ? fmt(n.decidedAt) : null],
+        ['Entscheidungsnotiz', n.decisionNote || null],
+      ],
+      text: n.message,
+      actions,
+    };
+  };
+
   const loadNotices = listCard({
     path: '/notices',
     name: 'meldungen',
@@ -1124,31 +1271,18 @@
     more: 'noticesMore',
     csv: 'noticesCsv',
     error: 'noticesError',
-    headers: ['Zeitpunkt', 'Kategorie', 'Meldung', 'Kontakt', 'Status', ''],
+    headers: ['Zeitpunkt', 'Kategorie', 'Meldung', 'Status'],
     empty: 'Keine Meldungen.',
     row: (n) => {
-      const row = document.createElement('tr');
+      const row = detailRow(noticeDetail(n));
       cell(row, fmt(n.createdAt));
       cell(row, n.category ? (CATEGORY_LABELS[n.category] || n.category) : 'Allgemein');
 
-      // Subject + message + reported URL/username, all attacker-controlled free
-      // text — cell() uses textContent, so nothing renders as markup or a live
-      // link.
-      const msg = cell(row, '');
-      msg.style.whiteSpace = 'pre-wrap';
-      msg.style.wordBreak = 'break-word';
-      msg.textContent = n.subject ? `${n.subject} — ${n.message}` : n.message;
-      for (const line of [n.url, n.reportedUsername ? `@${n.reportedUsername}` : null]) {
-        if (!line) continue;
-        const sub = document.createElement('div');
-        sub.className = 'subtext';
-        sub.textContent = line;
-        msg.appendChild(sub);
-      }
-
-      // Anonymous is a legitimate state (CSAM reports, Art. 16(3)), not missing
-      // data.
-      cell(row, [n.name, n.email].filter(Boolean).join(' · ') || 'anonym');
+      // Subject + message, attacker-controlled free text — cell() uses
+      // textContent, so nothing renders as markup or a live link. The full
+      // wording, the reported URL/username and the contact are in the dialog.
+      cell(row, truncate(n.subject ? `${n.subject} — ${n.message}` : n.message, 90))
+        .style.wordBreak = 'break-word';
 
       const status = cell(row, '');
       const [verdict, label] = NOTICE_STATUS[n.status] || ['', n.status];
@@ -1156,33 +1290,6 @@
       pill.className = verdict ? `pill pill--${verdict}` : 'pill';
       pill.textContent = label;
       status.appendChild(pill);
-      if (n.decisionNote) {
-        const why = document.createElement('div');
-        why.className = 'subtext';
-        why.textContent = n.decisionNote;
-        status.appendChild(why);
-      }
-
-      const action = cell(row, '');
-      const actions = document.createElement('div');
-      actions.className = 'row';
-      const path = uploadsPath(n.url);
-      const buttons = [];
-      if (path) buttons.push(['Bild zuordnen', 'small ghost', () => assignNotice(n, path)]);
-      if (n.reportedUsername) buttons.push(['Konto suchen', 'small ghost', () => lookupUsername(n.reportedUsername)]);
-      if (n.status === 'open') {
-        buttons.push(['Erledigt', 'small', () => decideNotice(n, 'actioned')]);
-        buttons.push(['Abgelehnt', 'small ghost', () => decideNotice(n, 'rejected')]);
-      }
-      buttons.push(['Löschen', 'small danger', () => deleteNotice(n)]);
-      for (const [text, cls, run] of buttons) {
-        const btn = document.createElement('button');
-        btn.className = cls;
-        btn.textContent = text;
-        btn.addEventListener('click', run);
-        actions.appendChild(btn);
-      }
-      action.appendChild(actions);
 
       return row;
     },
@@ -1201,30 +1308,33 @@
     more: 'feedbackMore',
     csv: 'feedbackCsv',
     error: 'feedbackError',
-    headers: ['Zeitpunkt', 'Nachricht', 'Kontext', 'Kontakt', ''],
+    headers: ['Zeitpunkt', 'Nachricht', 'Kontext', 'Kontakt'],
     empty: 'Noch kein Feedback.',
     row: (f) => {
       const ctx = f.context || {};
-      const row = document.createElement('tr');
+      const row = detailRow({
+        title: `Feedback vom ${fmt(f.createdAt)}`,
+        pairs: [
+          ['Pfad', ctx.path || null],
+          ['Sprache', ctx.locale || null],
+          ['Tenant', ctx.tenantId || null],
+          // Only present when the submitter explicitly opted in; anonymous is
+          // the default, so an em dash here is the normal case, not missing data.
+          ['Kontakt', ctx.email || '—'],
+        ],
+        text: f.message,
+        actions: [
+          ['Redigieren', 'small danger', () => redactFeedback(f)],
+          ['Löschen', 'small danger', () => deleteFeedback(f)],
+        ],
+      });
       cell(row, fmt(f.createdAt));
       // The message is user-authored free text — cell() uses textContent, so it
-      // is never interpreted as markup on this privileged page. `pre-wrap` keeps
-      // the submitter's own line breaks readable.
-      cell(row, f.message).style.whiteSpace = 'pre-wrap';
+      // is never interpreted as markup on this privileged page. The full wording,
+      // with the submitter's own line breaks, is in the dialog.
+      cell(row, truncate(f.message, 90)).style.wordBreak = 'break-word';
       cell(row, [ctx.path, ctx.locale, ctx.tenantId].filter(Boolean).join(' · ') || '—');
-      // Only present when the submitter explicitly opted in; anonymous is the
-      // default, so an em dash here is the normal case, not missing data.
       cell(row, ctx.email || '—');
-      const actions = document.createElement('div');
-      actions.className = 'row';
-      for (const [text, run] of [['Redigieren', () => redactFeedback(f)], ['Löschen', () => deleteFeedback(f)]]) {
-        const btn = document.createElement('button');
-        btn.className = 'small danger';
-        btn.textContent = text;
-        btn.addEventListener('click', run);
-        actions.appendChild(btn);
-      }
-      cell(row, '').appendChild(actions);
       return row;
     },
   });

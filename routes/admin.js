@@ -352,9 +352,21 @@ const safeUser = (u) => ({
   disabledReason: u.disabledReason || null,
 });
 
-// The account list.
+// The account list, optionally filtered by `?q=` (case-insensitive substring
+// over e-mail, username and tenant id). Since #403 the panel is search-first, so
+// the ordinary request carries a `q` and only the matching accounts' e-mail
+// addresses ever leave the server — data protection by default (Art. 25 DSGVO).
+// No `q` still returns everything, which is what the panel's deliberate
+// "Alle anzeigen" asks for.
 router.get('/users', async (req, res) => {
-  res.json({ users: (await repo.listUsers()).map(safeUser) });
+  const q = String(req.query.q || '').trim().toLowerCase();
+  const users = (await repo.listUsers()).map(safeUser);
+  res.json({
+    users: q
+      ? users.filter((u) => [u.email, u.username, u.tenantId]
+        .some((v) => v && String(v).toLowerCase().includes(q)))
+      : users,
+  });
 });
 
 // Suspend or restore an account WITHOUT deleting anything, so evidence survives
