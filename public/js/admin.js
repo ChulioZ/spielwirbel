@@ -142,11 +142,14 @@
 
   // A table row that opens `spec`'s dialog. Focusable and Enter/Space-activatable
   // so the actions are reachable without a mouse; deliberately no role="button"
-  // — that would detach the cells from their row for a screen reader.
+  // — that would detach the cells from their row for a screen reader. The row
+  // replaced labelled per-row buttons, so without aria-haspopup a keyboard user
+  // would land on a focusable row with nothing saying it opens anything.
   function detailRow(spec) {
     const row = document.createElement('tr');
     row.className = 'clickable';
     row.tabIndex = 0;
+    row.setAttribute('aria-haspopup', 'dialog');
     row.addEventListener('click', () => openDetail(spec));
     row.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;

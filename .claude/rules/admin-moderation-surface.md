@@ -193,10 +193,14 @@ Two smaller things about the dialog itself:
   and **focus restoration to the opener** natively, which is why the rows are
   `tabIndex = 0` — a row that was never focusable would "restore" focus to
   `<body>`.
-- **The row gets `tabindex` + a keydown handler, never `role="button"`.** The
-  role would detach the cells from their row for a screen reader (a `<td>` whose
-  parent is no longer a `row`), trading a real semantic loss for an affordance
-  the tabindex already provides.
+- **The row gets `tabindex` + `aria-haspopup="dialog"` + a keydown handler, never
+  `role="button"`.** The role would detach the cells from their row for a screen
+  reader (a `<td>` whose parent is no longer a `row`), trading a real semantic
+  loss for an affordance the tabindex already provides. `aria-haspopup` is the
+  part that must not be dropped: the rows *replaced* labelled per-row buttons, so
+  without it a keyboard user tabs onto a focusable row with nothing announcing
+  that Enter opens anything — a discoverability regression against the design it
+  replaced, invisible to every automated check.
 - **Actions close the dialog BEFORE running.** Every one of them either reloads
   the list underneath (leaving the dialog on a stale record) or scrolls to the
   Zuordnen card (`assignNotice`/`lookupUsername`), and a modal blocks the latter
