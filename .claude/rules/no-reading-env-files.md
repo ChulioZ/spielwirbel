@@ -3,7 +3,7 @@
 Local env files — `.env`, `.env.local`, `.env.*.local`, or any file the running
 process loads via `--env-file` / `--env-file-if-exists` — hold **secrets**, in
 particular `SESSION_SECRET` (which signs account access tokens), `DATABASE_URL`,
-and the S3/Brevo credentials. They are gitignored precisely so they never leave
+and the S3/Scaleway credentials. They are gitignored precisely so they never leave
 this machine.
 
 **Rule:** agents must **not** read, open, `cat`, `grep`, copy, print, or

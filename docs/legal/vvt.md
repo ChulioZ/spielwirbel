@@ -9,7 +9,7 @@ konfigurierte Empfangsanschrift; E-Mail: `IMPRESSUM_EMAIL`). Kein Vertreter,
 kein Datenschutzbeauftragter (nicht benannt; keine Pflicht nach § 38 BDSG —
 keine 20 Personen, kein besonderes Risiko).
 
-**Stand:** 2026-07-24
+**Stand:** 2026-07-25
 
 | # | Verarbeitung | Kategorien betroffener Personen | Datenkategorien | Zweck | Rechtsgrundlage | Empfänger / Auftragsverarbeiter | Drittland | Löschfrist |
 |---|---|---|---|---|---|---|---|---|
@@ -17,8 +17,8 @@ keine 20 Personen, kein besonderes Risiko).
 | 2 | Konten (Registrierung/Login) | Registrierte Nutzer | E-Mail, frei gewählter dienstweit eindeutiger Nutzername (#320), Passwort-Hash (Argon2id), gehashte Verifikations-/Reset-/Refresh-Token, Sperrstatus | Kontoverwaltung, Authentifizierung | Art. 6 (1) b | Railway (DB) | USA (EU-Region; SCC) | bis Kontolöschung |
 | 3 | Runden-/Spieldaten | Nutzer + von ihnen eingetragene Mitglieder | Rundennamen, Spieltitel, Mitgliedsnamen, Stimmen/Bewertungen, Tags, Aktivitäten | Kernfunktion des Dienstes | Art. 6 (1) b | Railway (DB) | USA (EU-Region; SCC) | bis Löschung durch Nutzer / Kontolöschung |
 | 4 | Hochgeladene Cover-Bilder | Nutzer | Bilddateien | Kernfunktion | Art. 6 (1) b | Cloudflare, Inc. (R2, AVV; DPF-zertifiziert) | USA (DPF/SCC) | bis Löschung des Spiels/Kontos |
-| 5 | Transaktions-E-Mails | Registrierte Nutzer, Kontaktformular-Nutzer | Empfänger-Adresse, Betreff, Inhalt | Verifikation, Passwort-Reset, Kontakt-Zustellung | Art. 6 (1) b | Brevo (Sendinblue SAS), Paris (AVV) | nein (EU) | Versandprotokolle des Anbieters |
-| 6 | Kontaktformular / E-Mail-Kontakt | Absender **und ggf. gemeldete Dritte** | Nachricht, optional E-Mail/Name/Betreff (E-Mail seit #321 bei jeder Kategorie freiwillig); bei Meldungen Kategorie, gemeldete URL, optional Nutzername des gemeldeten Kontos (#320), Richtigkeitserklärung (#272) | Bearbeitung von Anfragen; DSA Notice-and-Action (Eingangs-Nachweis, Art. 16) | Art. 6 (1) b/f | Brevo (Zustellung + Eingangs-/Entscheidungs-Mails), Betreiber-Postfach bei Heinlein Hosting GmbH (mailbox.org, AVV), Railway (DB — gespeicherte Meldungen, #272) | USA (EU-Region; SCC) für die DB-Kopie, sonst nein (DE/EU) | bis Abschluss der Bearbeitung; DSA-Meldungen 3 Jahre (`retention.md`) — gilt für Postfach und DB-Kopie |
+| 5 | Transaktions-E-Mails | Registrierte Nutzer, Kontaktformular-Nutzer | Empfänger-Adresse, Betreff, Inhalt | Verifikation, Passwort-Reset, Kontakt-Zustellung | Art. 6 (1) b | Scaleway SAS, Paris (AVV; Server in Frankreich) | nein (EU) | Versandprotokolle des Anbieters |
+| 6 | Kontaktformular / E-Mail-Kontakt | Absender **und ggf. gemeldete Dritte** | Nachricht, optional E-Mail/Name/Betreff (E-Mail seit #321 bei jeder Kategorie freiwillig); bei Meldungen Kategorie, gemeldete URL, optional Nutzername des gemeldeten Kontos (#320), Richtigkeitserklärung (#272) | Bearbeitung von Anfragen; DSA Notice-and-Action (Eingangs-Nachweis, Art. 16) | Art. 6 (1) b/f | Scaleway (Zustellung + Eingangs-/Entscheidungs-Mails), Betreiber-Postfach bei Heinlein Hosting GmbH (mailbox.org, AVV), Railway (DB — gespeicherte Meldungen, #272) | USA (EU-Region; SCC) für die DB-Kopie, sonst nein (DE/EU) | bis Abschluss der Bearbeitung; DSA-Meldungen 3 Jahre (`retention.md`) — gilt für Postfach und DB-Kopie |
 | 7 | In-App-Feedback (über das Kontaktformular, #321) | Nutzer (anonym, E-Mail optional) | Nachricht, optional E-Mail, App-Bereich, Sprache (keine Tenant-Id — Formular ist ohne Anmeldung erreichbar) | Produktverbesserung | Art. 6 (1) f | Railway (DB) | USA (EU-Region; SCC) | nach Bearbeitung gelöscht |
 | 8 | Produkt-Ereignisse (Logs) | Nutzer (nur Tenant-Id) | Ereignisname + Tenant-Id, keine Inhalte | Nutzungsüberblick ohne Analytics | Art. 6 (1) f | Railway (Logs) | USA (EU-Region; SCC) | wie Zeile 1 |
 | 9 | Anbieter-Cover (Hotlinking) | Besucher, deren Runde Cover verknüpft hat | IP + Browser-Header (durch den Browser des Besuchers) | Anzeige verknüpfter Cover ohne eigene Vervielfältigung | Art. 6 (1) f | Sony, Valve, Nintendo, Microsoft, BoardGameGeek (eigene Verantwortliche, keine AV) | USA/Japan | keine Speicherung bei uns |
@@ -30,16 +30,27 @@ keine 20 Personen, kein besonderes Risiko).
 
 **Hinweise**
 
-- Auftragsverarbeitungsverträge — **alle vier wirksam** (Stand 2026-07-24,
-  #219): Railway (railway.com/legal/dpa, inkl. SCC; per Self-Service-DocuSign
+- **Kein Tracking im E-Mail-Versand (#440).** Der Versanddienstleister setzt
+  keine Zählpixel, misst keine Öffnungen oder Klicks und schreibt keine Links
+  um. Der bis 2026-07-25 eingesetzte Anbieter (Brevo) tat dies bauartbedingt
+  und ohne Abschaltmöglichkeit; die Verarbeitung entfällt mit dem Wechsel
+  ersatzlos und ist daher in Zeile 5 nicht mehr zu führen.
+
+- Auftragsverarbeitungsverträge — **drei wirksam, eines (Scaleway) in Klärung**
+  (Stand 2026-07-25, #219/#440): Railway (railway.com/legal/dpa, inkl. SCC; per Self-Service-DocuSign
   **gezeichnet 2026-07-24**), Cloudflare (Customer DPA; EU-US Data Privacy
   Framework — kraft Einbeziehung in die Self-Serve Subscription Agreement
-  wirksam), Brevo (DPA als Annex 2 der akzeptierten Nutzungsbedingungen
-  wirksam), Heinlein Hosting GmbH / mailbox.org (Betreiber-Postfach; **AVV
+  wirksam), Scaleway SAS (Data Processing Agreement, veröffentlicht unter
+  scaleway.com/en/contracts/ als eigenes Dokument neben den General Terms of
+  Services — Versand seit #440, zuvor Brevo/Sendinblue; **Wirksamwerden noch zu
+  bestätigen**: zu prüfen ist, ob das DPA kraft Einbeziehung in die akzeptierten
+  Nutzungsbedingungen gilt oder aktiv zu zeichnen ist. Bis zur Klärung nicht als
+  aktiv gezeichnet zählen),
+  Heinlein Hosting GmbH / mailbox.org (Betreiber-Postfach; **AVV
   abgeschlossen 2026-07-21**, Verarbeitung vertraglich ausschließlich EU/EWR,
   Subunternehmer nur deutsche Rechenzentrums-Infrastruktur — #307). Zwei sind
   aktiv gezeichnet (Railway, Heinlein), zwei kraft Einbeziehung in die
-  akzeptierten Vertragswerke wirksam (Cloudflare, Brevo). Die eigenen
+  akzeptierten Vertragswerke wirksam (Cloudflare); Scaleway siehe oben. Die eigenen
   Nachweiskopien (AVV/SCC, Subunternehmer-Listen, TOMs, Zertifikate, bei
   Cloudflare der DPF-Nachweis) liegen beim Verantwortlichen.
 - Der Anschriften-Dienstleister **ZERODOX (Christian Jahnke), Koblenz**

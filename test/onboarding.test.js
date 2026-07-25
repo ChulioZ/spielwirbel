@@ -12,7 +12,7 @@
  *  - login sets the access cookie, and the verify-email mail links to the in-app
  *    /verify-email landing.
  *
- * No network: BREVO_API_KEY stays unset, so mail lands in the in-memory outbox.
+ * No network: SCW_SECRET_KEY stays unset, so mail lands in the in-memory outbox.
  */
 
 process.env.ACCOUNTS_ENABLED = 'true';
