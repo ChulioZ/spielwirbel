@@ -67,7 +67,7 @@ test('configured: the privacy policy covers the real processors and no ODR link'
   const res = await request(app).get('/datenschutz');
   assert.equal(res.status, 200);
   for (const marker of [
-    'Railway', 'Cloudflare', 'Scaleway',         // the three platform processors
+    'Railway', 'Cloudflare', 'Mailjet',          // the three platform processors
     'Heinlein',                                  // operator-mailbox host (#307)
     'ZERODOX',                                   // address-service recipient — separate controller, no AVV (#226)
     'eigenständiger Verantwortlicher',           // …and the classification itself is pinned in the DE text

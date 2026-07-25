@@ -229,9 +229,9 @@
         : null]);
 
     rows.push(['E-Mail-Versand', s.mail.configured ? 'ok' : 'off',
-      s.mail.configured ? 'Scaleway konfiguriert' : 'nur Outbox (kein Versand)',
+      s.mail.configured ? 'Mailjet konfiguriert' : 'nur Outbox (kein Versand)',
       s.mail.configured ? null
-        : 'Ohne SCW_SECRET_KEY + SCW_PROJECT_ID landen Verifizierungs- und Reset-Mails im Speicher und werden nie zugestellt.']);
+        : 'Ohne MJ_APIKEY_PUBLIC + MJ_APIKEY_PRIVATE landen Verifizierungs- und Reset-Mails im Speicher und werden nie zugestellt.']);
 
     rows.push(['MAIL_FROM / APP_BASE_URL',
       s.mail.fromSet && s.mail.baseUrlSet ? 'ok' : 'warn',

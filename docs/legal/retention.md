@@ -28,7 +28,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Server-Request-Logs, Produkt-Ereignisse | Logrotation der Plattform (Railway) | automatisch |
 | In-App-Feedback | nach Bearbeitung löschen | Panel-Löschung geplant (#389); bis dahin direkter DB-Zugriff |
 | Kontakt-/Support-Korrespondenz (Postfach) | bis Abschluss der Bearbeitung, danach löschen — spätestens bei der Jahresprüfung | manuell (Postfach) |
-| Transaktions-E-Mails (Versandprotokolle bei Scaleway) | Aufbewahrungsfenster des Anbieters; keine eigene Speicherung | automatisch (Scaleway) |
+| Transaktions-E-Mails (Versandprotokolle bei Mailjet) | Aufbewahrungsfenster des Anbieters; keine eigene Speicherung | automatisch (Mailjet) |
 | Briefpost an die Empfangsanschrift (weitergeleitet) | nach Bearbeitung vernichten — spätestens bei der Jahresprüfung | manuell |
 | DSA-Meldungen + Bescheide (Postfach-Ordner `Meldungen`) | **3 Jahre** ab Jahresende der Entscheidung (wie Moderations-Log) | manuell, Jahresprüfung |
 | Gespeicherte Kontakt-Meldungen (Datenbank `contact_notices`, #272) | wie Postfach: Allgemeine Anfragen nach Bearbeitung, DSA-Meldungen **3 Jahre** ab Jahresende der Entscheidung | manuell (DB), Jahresprüfung |

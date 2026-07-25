@@ -25,7 +25,7 @@ const { instanceStatus } = require('../lib/status');
 // Save/restore so one case can't bleed into the next.
 const VARS = [
   'ACCOUNTS_ENABLED', 'SESSION_SECRET', 'AUTH_PASSWORD', 'ADMIN_PASSWORD',
-  'SCW_SECRET_KEY', 'SCW_PROJECT_ID', 'MAIL_FROM', 'APP_BASE_URL', 'CANONICAL_HOST', 'REDIRECT_HOSTS',
+  'MJ_APIKEY_PRIVATE', 'MJ_APIKEY_PUBLIC', 'MAIL_FROM', 'APP_BASE_URL', 'CANONICAL_HOST', 'REDIRECT_HOSTS',
   'MAX_ROUNDS_PER_TENANT', 'MAX_GAMES_PER_ROUND', 'MAX_TAGS_PER_ROUND',
   'RAILWAY_GIT_COMMIT_SHA', 'GIT_COMMIT_SHA', 'SOURCE_COMMIT', 'NODE_ENV',
   'IMPRESSUM_ADDRESS', 'IMPRESSUM_EMAIL',
@@ -99,25 +99,25 @@ test('a secret equal to AUTH_PASSWORD is reported as not distinct', async (t) =>
 
 test('mail reports outbox-only when unconfigured', async () => {
   const off = await withEnv(
-    { SCW_SECRET_KEY: undefined, SCW_PROJECT_ID: undefined, MAIL_FROM: undefined, APP_BASE_URL: undefined },
+    { MJ_APIKEY_PRIVATE: undefined, MJ_APIKEY_PUBLIC: undefined, MAIL_FROM: undefined, APP_BASE_URL: undefined },
     instanceStatus,
   );
   assert.deepEqual(off.mail, { configured: false, fromSet: false, baseUrlSet: false });
 
   const on = await withEnv(
     {
-      SCW_SECRET_KEY: 'scw-abc', SCW_PROJECT_ID: 'proj-123',
+      MJ_APIKEY_PRIVATE: 'scw-abc', MJ_APIKEY_PUBLIC: 'proj-123',
       MAIL_FROM: 'no-reply@example.com', APP_BASE_URL: 'https://example.com',
     },
     instanceStatus,
   );
   assert.deepEqual(on.mail, { configured: true, fromSet: true, baseUrlSet: true });
 
-  // A key without a project id delivers nothing (Scaleway rejects the send), so
+  // A key without a project id delivers nothing (Mailjet rejects the send), so
   // the card must not call it configured — the #440 failure mode this row exists
   // to catch.
   const halfConfigured = await withEnv(
-    { SCW_SECRET_KEY: 'scw-abc', SCW_PROJECT_ID: undefined, MAIL_FROM: 'no-reply@example.com' },
+    { MJ_APIKEY_PRIVATE: 'scw-abc', MJ_APIKEY_PUBLIC: undefined, MAIL_FROM: 'no-reply@example.com' },
     instanceStatus,
   );
   assert.equal(halfConfigured.mail.configured, false);
@@ -215,8 +215,8 @@ test('no secret value ever appears in the response', async () => {
     AUTH_PASSWORD: 'SECRETVALUE-auth',
     SESSION_SECRET: 'SECRETVALUE-session',
     ADMIN_PASSWORD: 'SECRETVALUE-admin',
-    SCW_SECRET_KEY: 'SECRETVALUE-scwkey',
-    SCW_PROJECT_ID: 'SECRETVALUE-scwproj',
+    MJ_APIKEY_PRIVATE: 'SECRETVALUE-scwkey',
+    MJ_APIKEY_PUBLIC: 'SECRETVALUE-scwproj',
     BGG_API_TOKEN: 'SECRETVALUE-bgg',
     // Not secrets forever (they end up in the public Impressum), but before
     // launch they must not leak early through a panel screenshot — presence only.
