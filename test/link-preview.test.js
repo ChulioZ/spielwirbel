@@ -51,6 +51,22 @@ test('the preview image is actually served, as a PNG', async () => {
   assert.match(res.headers['content-type'], /image\/png/);
 });
 
+test('the preview image may be rendered from another origin', async () => {
+  // helmet's default Cross-Origin-Resource-Policy: same-origin makes a browser
+  // refuse to paint this image on a foreign origin, which is where a preview
+  // card lives by definition. Shipped that way once (#430) and every
+  // client-side preview renderer showed a broken image.
+  const res = await request(app).get('/icons/og-image.png');
+  assert.equal(res.headers['cross-origin-resource-policy'], 'cross-origin');
+});
+
+test('the opt-out does not leak to the other static assets', async () => {
+  // Only the preview card is meant to be embeddable elsewhere.
+  const res = await request(app).get('/icons/icon-512.png');
+  assert.equal(res.status, 200);
+  assert.equal(res.headers['cross-origin-resource-policy'], 'same-origin');
+});
+
 test('the declared image dimensions match the committed file', () => {
   // PNG IHDR: 8-byte signature + 4 length + 4 type, then width/height as BE32.
   const buf = fs.readFileSync(OG_IMAGE);
