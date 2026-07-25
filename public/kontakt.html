@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kontakt · Spielwirbel</title>
   <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="theme-color" content="#14161c" />
+  <meta name="theme-color" content="#f4f1ea" />
   <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
   <!-- Standalone public contact page (issue #224), reachable WITHOUT login (it is
@@ -15,6 +15,37 @@
        'unsafe-inline'); the script must be an external file because script-src is
        'self' only. -->
   <style>
+    /* The tokens below mirror public/styles.css so this page reads as the same
+       product as the app (issue #391). They are COPIED, not imported: styles.css
+       is the whole SPA and its :root carries a per-round *theme*, which this page
+       has no context for — it must render for a logged-out visitor with no round.
+       So the values here are the app's DEFAULTS. Keep them in step if the brand
+       palette changes. */
+    :root {
+      --page-bg: #f4f1ea;
+      --brand: #c2410c;
+      --surface: #ffffff;
+      --ink: #2b2620;
+      --ink-soft: #6b6358;
+      /* AA-checked in test/a11y-contrast.test.js against the app's themes. */
+      --good: #117c38;
+      --danger: #d02424;
+      --line: color-mix(in srgb, var(--page-bg), #000 9%);
+      --brand-dark: color-mix(in srgb, var(--brand), #000 18%);
+      --page-glow: color-mix(in srgb, var(--brand) 7%, transparent);
+      --radius: 18px;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+      --font: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-display: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    /* Only the three weights this page actually uses (the app declares seven).
+       Same self-hosted files under /fonts/ — no new origin, so the CSP is
+       untouched, and the build copies fonts through unhashed so these paths hold
+       in dist/ too. */
+    @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/nunito-latin-400-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/nunito-latin-600-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/baloo-2-latin-700-normal.woff2') format('woff2'); }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -22,33 +53,46 @@
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      background: #14161c;
-      color: #e8eaf0;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      /* The app's backdrop: a soft accent glow falling from the top over a
+         barely-there paper grain (the `body` rule in public/styles.css). */
+      background-color: var(--page-bg);
+      background-image:
+        radial-gradient(120% 70% at 50% 0%, var(--page-glow), transparent 70%),
+        url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%3E%3Cfilter%20id='g'%20x='0'%20y='0'%20width='100%25'%20height='100%25'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='2'%20seed='7'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200.06%200'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23g)'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+      color: var(--ink);
+      font-family: var(--font);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
       padding: 2rem 1.5rem;
     }
     .card {
       width: 100%;
       max-width: 480px;
-      background: #1e222c;
-      border: 1px solid #2c3240;
-      border-radius: 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
       padding: 2rem 1.75rem;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      box-shadow: var(--shadow);
     }
     .topline { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
-    .logo { font-size: 1.6rem; }
+    /* The app's brand lockup (mark + wordmark), so the page identifies itself as
+       Spielwirbel. Deliberately not a link: /kontakt.html already carries a
+       "back to the app" link in its footer, and this issue changes no behaviour. */
+    .brand { display: flex; align-items: center; gap: 0.5rem; }
+    .brand img { display: block; width: 32px; height: 32px; border-radius: 9px; }
+    .brand span { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: var(--brand); }
     .langs { font-size: 0.85rem; }
     .langs button {
-      background: none; border: 0; color: #aab2c4; cursor: pointer;
+      background: none; border: 0; color: var(--ink-soft); cursor: pointer;
       font: inherit; padding: 0.2rem 0.35rem; border-radius: 6px;
     }
-    .langs button[aria-pressed='true'] { color: #e8eaf0; font-weight: 600; text-decoration: underline; }
-    h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.4rem; }
-    .intro { font-size: 0.9rem; color: #aab2c4; margin: 0 0 1.4rem; }
-    label { display: block; font-size: 0.85rem; margin: 1rem 0 0.4rem; color: #aab2c4; }
+    .langs button[aria-pressed='true'] { color: var(--ink); font-weight: 600; text-decoration: underline; }
+    h1 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin: 0 0 0.4rem; }
+    .intro { font-size: 0.9rem; color: var(--ink-soft); margin: 0 0 1.4rem; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin: 1rem 0 0.4rem; color: var(--ink-soft); }
     /* Art. 16(2) report fields (#272): revealed by the category select. */
-    .hint { font-size: 0.82rem; color: #8b93a6; margin: 0.75rem 0 0; }
+    .hint { font-size: 0.82rem; color: var(--ink-soft); margin: 0.75rem 0 0; }
     .check { display: flex; gap: 0.6rem; align-items: flex-start; margin-top: 1rem; }
     .check input { width: auto; margin-top: 0.2rem; }
     .check label { margin: 0; font-size: 0.85rem; }
@@ -57,41 +101,50 @@
       padding: 0.7rem 0.85rem;
       font-size: 1rem;
       font-family: inherit;
-      border-radius: 10px;
-      border: 1px solid #2c3240;
-      background: #14161c;
-      color: #e8eaf0;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
     }
     textarea { min-height: 8rem; resize: vertical; }
-    select:focus, input:focus, textarea:focus { outline: 2px solid #6c7ae0; outline-offset: 1px; }
+    select:focus, input:focus, textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); }
     /* Honeypot: off-screen, not tab-reachable, hidden from assistive tech. Real
        users never fill it; a non-empty value is treated as a bot server-side. */
     .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    /* The app's primary button (.btn--primary): display face, and the thick
+       bottom border that "presses in" on :active. */
     button.submit {
       width: 100%;
       margin-top: 1.4rem;
-      padding: 0.75rem;
-      font-size: 1rem;
-      font-weight: 600;
-      border: 0;
-      border-radius: 10px;
-      background: #6c7ae0;
+      padding: 0.7rem;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: 1.5px solid var(--brand-dark);
+      border-bottom-width: 4px;
+      border-radius: 14px;
+      background: var(--brand);
       color: #fff;
       cursor: pointer;
     }
+    button.submit:hover { background: var(--brand-dark); }
+    button.submit:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: 2.5px; }
     button.submit:disabled { opacity: 0.6; cursor: default; }
     .msg { margin-top: 1rem; font-size: 0.88rem; text-align: center; }
     .msg[hidden] { display: none; }
-    .msg.ok { color: #7dd0a0; }
-    .msg.err { color: #ff8a8a; }
+    .msg.ok { color: var(--good); }
+    .msg.err { color: var(--danger); }
     .foot { margin-top: 1.5rem; text-align: center; font-size: 0.85rem; }
-    .foot a { color: #aab2c4; }
+    .foot a { color: var(--ink-soft); }
   </style>
 </head>
 <body>
   <form class="card" id="contactForm" novalidate>
     <div class="topline">
-      <div class="logo" aria-hidden="true">🌀</div>
+      <div class="brand">
+        <img src="/icons/icon-192.png" alt="" width="32" height="32" />
+        <span>Spielwirbel</span>
+      </div>
       <div class="langs" role="group" aria-label="Language">
         <button type="button" data-lang="de" aria-pressed="true">DE</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
