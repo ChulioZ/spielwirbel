@@ -57,7 +57,7 @@ same PR — the „Stand"-Zeile is part of the Art. 13 transparency, and a reade
 the pages still said „Stand: 2026-07-22" (caught by the audit).
 
 `test/legal.test.js` pins marker strings for every named processor (Railway,
-Cloudflare, Scaleway, Heinlein) — so *removing/renaming* one in the policy fails
+Cloudflare, Heinlein) — so *removing/renaming* one in the policy fails
 loudly, but *adding* a processor in code without disclosing it fails no test.
 Direction 1 is on you; when you add a processor, also add its marker there.
 

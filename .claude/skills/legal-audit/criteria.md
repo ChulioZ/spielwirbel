@@ -28,7 +28,7 @@ than an acknowledged gap.
   connections, `lib/mail.js`, `lib/storage/`, the `DATABASE_URL` host, `lib/providers/*`,
   the donation target. Each must appear in the policy's processor section **and** the
   recipient list in **both** DE and EN, with a `docs/legal/vvt.md` row and an AVV
-  inventory entry. Currently disclosed: Railway, Cloudflare, Scaleway, Heinlein/mailbox.org,
+  inventory entry. Currently disclosed: Railway, Cloudflare, Heinlein/mailbox.org,
   Ko-fi (+ Stripe, PayPal), BoardGameGeek, Sony, Microsoft, Nintendo, Valve.
 - **Enforced by:** `test/legal.test.js` pins markers for named processors — which catches
   *removing* one, never *adding* one in code. This direction is the manual half.

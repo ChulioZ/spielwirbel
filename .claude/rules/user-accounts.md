@@ -43,9 +43,9 @@ the shared-password gate. Things that will bite if you forget them:
   forgot-password answer identically for known/unknown e-mails; login burns
   the same Argon2 work via a dummy hash when the account doesn't exist.
 
-- **Mail (lib/mail.js) degrades by design.** No SCW_SECRET_KEY → messages go to
+- **Mail (lib/mail.js) degrades by design.** No SMTP_PASS → messages go to
   the in-memory `outbox` (tests read tokens out of it — never set a real key
-  in tests; stub `fetch` for the Scaleway path). Account routes wrap sends in
+  in tests; stub `fetch` for the mailbox.org path). Account routes wrap sends in
   `sendSafe`: a mail failure logs but never 500s the flow.
 
 - **`data.users` is top-level in data.json** (a sibling of `rounds`, defaulted

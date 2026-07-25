@@ -7,7 +7,7 @@
  * matter:
  *
  *  1. `footer` is all-or-nothing — true only when mail can deliver
- *     (SCW_SECRET_KEY + SCW_PROJECT_ID + MAIL_FROM) AND the Impressum identity is set
+ *     (SMTP_HOST + SMTP_USER + SMTP_PASS + MAIL_FROM) AND the Impressum identity is set
  *     (IMPRESSUM_ADDRESS + IMPRESSUM_EMAIL, the same condition that makes the
  *     legal pages exist — lib/legal.js) — so a half-configured instance shows
  *     no public footer rather than a broken one.
@@ -30,11 +30,11 @@ const request = require('supertest');
 const { app } = require('./helpers');
 const { createApp } = require('../lib/app');
 
-const MAIL_ENV = { SCW_SECRET_KEY: 'test-key', SCW_PROJECT_ID: 'proj-123', MAIL_FROM: 'no-reply@example.com' };
+const MAIL_ENV = { SMTP_HOST: 'smtp.example.test', SMTP_USER: 'u', SMTP_PASS: 'p', MAIL_FROM: 'no-reply@example.com' };
 const OFF = { footer: false, donateUrl: null };
 
 test.afterEach(() => {
-  for (const k of ['SCW_SECRET_KEY', 'SCW_PROJECT_ID', 'MAIL_FROM', 'IMPRESSUM_ADDRESS', 'IMPRESSUM_EMAIL',
+  for (const k of ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'MAIL_FROM', 'IMPRESSUM_ADDRESS', 'IMPRESSUM_EMAIL',
     'AUTH_PASSWORD', 'ACCOUNTS_ENABLED', 'SESSION_SECRET', 'ADMIN_PASSWORD',
     'BGG_API_TOKEN', 'DONATE_URL']) {
     delete process.env[k];
@@ -137,8 +137,7 @@ test('no secret value ever appears in the response', async () => {
     AUTH_PASSWORD: 'SECRETVALUE-auth',
     SESSION_SECRET: 'SECRETVALUE-session',
     ADMIN_PASSWORD: 'SECRETVALUE-admin',
-    SCW_SECRET_KEY: 'SECRETVALUE-scwkey',
-    SCW_PROJECT_ID: 'SECRETVALUE-scwproj',
+    SMTP_PASS: 'SECRETVALUE-smtppass',
     BGG_API_TOKEN: 'SECRETVALUE-bgg',
   };
   Object.assign(process.env, secrets);
