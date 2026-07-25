@@ -1,7 +1,7 @@
-# An unauthenticated endpoint that SENDS MAIL needs a per-ACCOUNT cooldown (#435)
+# An unauthenticated endpoint that SENDS MAIL needs a per-ACCOUNT cooldown (#435, #447)
 
 `POST /api/account/resend-verification` mails a fresh verification link to any
-address a caller names. Three endpoints now have that shape — `register`,
+address a caller names. Three endpoints have that shape — `register`,
 `forgot-password` and `resend-verification` — and they share a constraint that is
 easy to miss because the obvious protection is already in place and does not
 actually protect anything here.
@@ -25,15 +25,26 @@ Two things make that worse than ordinary spam here:
   everyone**, because verification mail is the only way through signup.
 - The send is **awaited in the request path**, so a flood costs server time too.
 
-So the cooldown is stored **on the account** (`verification.sentAt`, compared
-against `RESEND_COOLDOWN_MS` = 60 s in `routes/account.js`). Rotating IPs cannot
-move it, because it is keyed to the thing being protected rather than the thing
-doing the protecting.
+So the cooldown is stored **on the account** — `verification.sentAt` and
+`reset.sentAt`, both compared against `MAIL_COOLDOWN_MS` = 60 s in
+`routes/account.js` via the shared `mailThrottled(record)` helper. Rotating IPs
+cannot move it, because it is keyed to the thing being protected rather than the
+thing doing the protecting.
 
-**`forgot-password` still has no such cooldown** and has the same property — one
-request mails a reset link to any address that has an account. It was left alone
-as out of scope for #435, not because it is safe. Fix it the same way if it ever
-matters; don't read its absence as a decision.
+**`forgot-password` got the same cooldown in #447**, having been left out of #435
+as out of scope. One thing there is worth keeping deliberately: the throttled
+request skips the **mint** as well as the send. Every call used to replace the
+`reset` token, so a user who double-submitted the form invalidated the link in
+the mail they had just been sent, by their own second click. Skipping the whole
+block is what makes that impossible — `test/account.test.js` pins it by reset­ting
+with the pre-throttle link *after* a throttled call.
+
+**`register` is NOT fixable this way, and that is not an oversight** (#448): a
+second registration for the same address hits `email_taken` and mails nothing, so
+there is no prior record to throttle against on the one request that does send.
+Its residual risk is breadth (one mail each to many addresses, plus address and
+username squatting), which needs a different mechanism — a per-IP cap on that
+route, a global send budget, or reaping expired unverified accounts.
 
 ## Every skip must stay silent — including the cooldown one
 
@@ -59,8 +70,8 @@ cooldown must treat that as *expired* — not as *just now*, which would make th
 one recovery path permanently unavailable to exactly the accounts that predate it.
 
 ```js
-const sentAt = Date.parse((user.verification || {}).sentAt || '');   // NaN when absent
-const throttled = Number.isFinite(sentAt) && Date.now() - sentAt < RESEND_COOLDOWN_MS;
+const sentAt = Date.parse((record || {}).sentAt || '');   // NaN when absent
+return Number.isFinite(sentAt) && Date.now() - sentAt < MAIL_COOLDOWN_MS;
 ```
 
 `Date.parse('')` is `NaN` and the `Number.isFinite` guard makes the absent case
@@ -70,16 +81,24 @@ years in the past, which happens to give the right answer for a cooldown and the
 wrong one for anything comparing forwards (an expiry check would read it as long
 expired). It is a live footgun in any `Date.parse(x || 0)`.
 
-`test/account.test.js` pins the legacy shape explicitly by rewriting a
-`verification` record down to `{ tokenHash, expiresAt }`.
+`test/account.test.js` pins the legacy shape for **both** endpoints, by rewriting
+a `verification` record and a `reset` record down to `{ tokenHash, expiresAt }`.
+Note what those tests do and don't catch: a fallback that reads as *"just now"*
+(`|| new Date().toISOString()`) turns them red, but `|| 0` does **not** — the year
+2000 is comfortably outside a 60 s cooldown, which is exactly why that footgun
+survives a green suite here and would only bite a forward-looking comparison.
 
 ## Verifying it
 
-Both new assertions were checked by breaking the production code on purpose and
-watching them go red (the discipline in
-`.claude/rules/admin-moderation-surface.md` §3) — `const throttled = false`
-fails the cooldown test, and a `404` for an unknown address fails the
-identical-answers test. Back the file up to the scratchpad first; `git checkout`
+Every assertion here was checked by breaking the production code on purpose and
+watching it go red (the discipline in
+`.claude/rules/admin-moderation-surface.md` §3) — a `mailThrottled` stubbed to
+`false` fails the cooldown tests on **both** endpoints (which is also how you
+confirm the shared helper is really wired to each), re-minting the token inside
+the throttled branch fails the still-valid-link assertion, an absent-`sentAt`
+fallback of "now" fails both legacy-record tests, and a `404` for an unknown
+address fails the identical-answers test. Back the file up to the scratchpad
+first; `git checkout`
 restores from the index and discards the whole uncommitted change
 (`.claude/rules/css-text-assertions-strip-comments.md`).
 

@@ -364,6 +364,100 @@ test('resend-verification recovers a lost mail without leaking who has an accoun
   });
 });
 
+/* ------------------------------ forgot password ----------------------------- */
+
+// Backdate the stored reset challenge so the per-account cooldown (#447) has
+// lapsed — the reset-side twin of clearResendCooldown above.
+async function clearResetCooldown(uid) {
+  const user = await repo.getUserById(uid);
+  await repo.updateUser(uid, {
+    reset: { ...user.reset, sentAt: new Date(Date.now() - 10 * 60 * 1000).toISOString() },
+  });
+}
+
+test('forgot-password is throttled per account, silently (#447)', async (t) => {
+  const email = 'forgot@example.com';
+  await request(app).post('/api/account/register')
+    .send({ email, username: handle(), password: PASSWORD });
+  const { uid } = lastMailTokens();
+
+  await t.test('a second request inside the cooldown mails nothing and says nothing', async () => {
+    const first = await request(app).post('/api/account/forgot-password').send({ email });
+    assert.equal(first.status, 200);
+    const mailed = lastMailTokens();
+
+    const before = outbox.length;
+    const throttled = await request(app).post('/api/account/forgot-password').send({ email });
+    assert.equal(throttled.status, 200);
+    assert.deepEqual(throttled.body, { ok: true }); // indistinguishable from a real send
+    assert.equal(outbox.length, before, 'no mail while the cooldown runs');
+
+    // The skip must not have re-minted: the already-mailed link still works.
+    // (Checked last — reset-password burns the token and revokes the sessions.)
+    const still = await request(app).post('/api/account/reset-password')
+      .send({ uid: mailed.uid, token: mailed.token, password: 'a whole new password' });
+    assert.equal(still.status, 200, 'a throttled request must not invalidate the link already sent');
+  });
+
+  await t.test('once the cooldown lapses the same request mails a fresh working link', async () => {
+    // reset-password above cleared `reset` to null, so there is no sentAt left to
+    // backdate — that absent case is the next subtest's subject. Mail one first.
+    const seed = await request(app).post('/api/account/forgot-password').send({ email });
+    assert.equal(seed.status, 200);
+    const stale = lastMailTokens();
+
+    await clearResetCooldown(uid);
+    const before = outbox.length;
+    const res = await request(app).post('/api/account/forgot-password').send({ email });
+    assert.equal(res.status, 200);
+    assert.equal(outbox.length, before + 1);
+
+    const next = lastMailTokens();
+    assert.equal(next.uid, uid);
+    assert.notEqual(next.token, stale.token); // a genuinely fresh challenge
+
+    const ok = await request(app).post('/api/account/reset-password')
+      .send({ uid: next.uid, token: next.token, password: PASSWORD });
+    assert.equal(ok.status, 200);
+  });
+
+  await t.test('a reset record predating #447 carries no sentAt and still mails', async () => {
+    await request(app).post('/api/account/forgot-password').send({ email });
+    const user = await repo.getUserById(uid);
+    // Exactly the shape the handler wrote before this change: no sentAt at all.
+    await repo.updateUser(uid, {
+      reset: { tokenHash: user.reset.tokenHash, expiresAt: user.reset.expiresAt },
+    });
+
+    const before = outbox.length;
+    const res = await request(app).post('/api/account/forgot-password').send({ email });
+    assert.equal(res.status, 200);
+    assert.equal(outbox.length, before + 1, 'a missing sentAt must read as "long ago", not "just now"');
+  });
+
+  await t.test('unknown, malformed and password-less accounts answer identically and mail nothing', async () => {
+    // An account with no password identity: registered, then its identities
+    // emptied — forgot-password has nothing to reset for it.
+    const noPw = 'nopassword@example.com';
+    await request(app).post('/api/account/register')
+      .send({ email: noPw, username: handle(), password: PASSWORD });
+    const other = await repo.getUserByEmail(noPw);
+    await repo.updateUser(other.id, { identities: [] });
+
+    for (const probe of ['ghost@example.com', 'not-an-email', noPw]) {
+      const before = outbox.length;
+      const res = await request(app).post('/api/account/forgot-password').send({ email: probe });
+      assert.equal(res.status, 200, probe);
+      assert.deepEqual(res.body, { ok: true }, probe);
+      assert.equal(outbox.length, before, `no mail for ${probe}`);
+    }
+    // A missing body must not 400 either — that alone would be a probe.
+    const empty = await request(app).post('/api/account/forgot-password').send({});
+    assert.equal(empty.status, 200);
+    assert.deepEqual(empty.body, { ok: true });
+  });
+});
+
 /* ------------------------------ member linking ------------------------------ */
 
 test('a seat can be claimed and released by its own account (#421)', async () => {
