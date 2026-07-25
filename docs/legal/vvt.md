@@ -9,7 +9,7 @@ konfigurierte Empfangsanschrift; E-Mail: `IMPRESSUM_EMAIL`). Kein Vertreter,
 kein Datenschutzbeauftragter (nicht benannt; keine Pflicht nach § 38 BDSG —
 keine 20 Personen, kein besonderes Risiko).
 
-**Stand:** 2026-07-24
+**Stand:** 2026-07-25
 
 | # | Verarbeitung | Kategorien betroffener Personen | Datenkategorien | Zweck | Rechtsgrundlage | Empfänger / Auftragsverarbeiter | Drittland | Löschfrist |
 |---|---|---|---|---|---|---|---|---|
@@ -36,17 +36,21 @@ keine 20 Personen, kein besonderes Risiko).
   und ohne Abschaltmöglichkeit; die Verarbeitung entfällt mit dem Wechsel
   ersatzlos und ist daher in Zeile 5 nicht mehr zu führen.
 
-- Auftragsverarbeitungsverträge — **alle vier wirksam** (Stand 2026-07-25,
-  #219/#440): Railway (railway.com/legal/dpa, inkl. SCC; per Self-Service-DocuSign
+- Auftragsverarbeitungsverträge — **drei wirksam, eines (Scaleway) in Klärung**
+  (Stand 2026-07-25, #219/#440): Railway (railway.com/legal/dpa, inkl. SCC; per Self-Service-DocuSign
   **gezeichnet 2026-07-24**), Cloudflare (Customer DPA; EU-US Data Privacy
   Framework — kraft Einbeziehung in die Self-Serve Subscription Agreement
-  wirksam), Scaleway SAS (DPA als Bestandteil der akzeptierten
-  Nutzungsbedingungen wirksam — Versand seit #440, zuvor Brevo/Sendinblue),
+  wirksam), Scaleway SAS (Data Processing Agreement, veröffentlicht unter
+  scaleway.com/en/contracts/ als eigenes Dokument neben den General Terms of
+  Services — Versand seit #440, zuvor Brevo/Sendinblue; **Wirksamwerden noch zu
+  bestätigen**: zu prüfen ist, ob das DPA kraft Einbeziehung in die akzeptierten
+  Nutzungsbedingungen gilt oder aktiv zu zeichnen ist. Bis zur Klärung nicht als
+  aktiv gezeichnet zählen),
   Heinlein Hosting GmbH / mailbox.org (Betreiber-Postfach; **AVV
   abgeschlossen 2026-07-21**, Verarbeitung vertraglich ausschließlich EU/EWR,
   Subunternehmer nur deutsche Rechenzentrums-Infrastruktur — #307). Zwei sind
   aktiv gezeichnet (Railway, Heinlein), zwei kraft Einbeziehung in die
-  akzeptierten Vertragswerke wirksam (Cloudflare, Scaleway). Die eigenen
+  akzeptierten Vertragswerke wirksam (Cloudflare); Scaleway siehe oben. Die eigenen
   Nachweiskopien (AVV/SCC, Subunternehmer-Listen, TOMs, Zertifikate, bei
   Cloudflare der DPF-Nachweis) liegen beim Verantwortlichen.
 - Der Anschriften-Dienstleister **ZERODOX (Christian Jahnke), Koblenz**
