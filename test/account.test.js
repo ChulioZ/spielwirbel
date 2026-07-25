@@ -274,6 +274,96 @@ test('full account lifecycle', async (t) => {
   });
 });
 
+/* --------------------------- resend verification ---------------------------- */
+
+// Backdate the stored challenge so the per-account cooldown (#435) has lapsed,
+// without making the test sleep for it.
+async function clearResendCooldown(uid) {
+  const user = await repo.getUserById(uid);
+  await repo.updateUser(uid, {
+    verification: { ...user.verification, sentAt: new Date(Date.now() - 10 * 60 * 1000).toISOString() },
+  });
+}
+
+test('resend-verification recovers a lost mail without leaking who has an account (#435)', async (t) => {
+  const email = 'resend@example.com';
+  await request(app).post('/api/account/register')
+    .send({ email, username: handle(), password: PASSWORD });
+  const first = lastMailTokens();
+
+  await t.test('a resend mails a NEW working link and invalidates the old one', async () => {
+    await clearResendCooldown(first.uid);
+    const before = outbox.length;
+    const res = await request(app).post('/api/account/resend-verification').send({ email });
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, { ok: true });
+    assert.equal(outbox.length, before + 1);
+
+    const next = lastMailTokens();
+    assert.equal(next.uid, first.uid);
+    assert.notEqual(next.token, first.token); // a fresh challenge, not a re-send of the old one
+
+    // The superseded link must be dead — a resend may not leave two valid tokens.
+    const stale = await request(app).get(`/api/account/verify-email?uid=${first.uid}&token=${first.token}`);
+    assert.equal(stale.status, 400);
+
+    const ok = await request(app).get(`/api/account/verify-email?uid=${next.uid}&token=${next.token}`);
+    assert.equal(ok.status, 200);
+  });
+
+  // The account above is verified from here on, which is exactly one of the three
+  // cases that must be indistinguishable.
+  await t.test('unknown, malformed and already-verified addresses answer identically and mail nothing', async () => {
+    for (const probe of ['ghost@example.com', 'not-an-email', email]) {
+      const before = outbox.length;
+      const res = await request(app).post('/api/account/resend-verification').send({ email: probe });
+      assert.equal(res.status, 200, probe);
+      assert.deepEqual(res.body, { ok: true }, probe);
+      assert.equal(outbox.length, before, `no mail for ${probe}`);
+    }
+    // A missing body must not 400 either — that alone would be a probe.
+    const empty = await request(app).post('/api/account/resend-verification').send({});
+    assert.equal(empty.status, 200);
+    assert.deepEqual(empty.body, { ok: true });
+  });
+
+  await t.test('a second resend inside the cooldown is silently skipped', async () => {
+    const pending = 'cooldown@example.com';
+    await request(app).post('/api/account/register')
+      .send({ email: pending, username: handle(), password: PASSWORD });
+
+    // Registration has just mailed a link, so the cooldown is running.
+    const before = outbox.length;
+    const throttled = await request(app).post('/api/account/resend-verification').send({ email: pending });
+    assert.equal(throttled.status, 200);
+    assert.deepEqual(throttled.body, { ok: true }); // indistinguishable from a real send
+    assert.equal(outbox.length, before, 'no mail while the cooldown runs');
+
+    // …and once it lapses, the same request does send.
+    const user = await repo.getUserByEmail(pending);
+    await clearResendCooldown(user.id);
+    const res = await request(app).post('/api/account/resend-verification').send({ email: pending });
+    assert.equal(res.status, 200);
+    assert.equal(outbox.length, before + 1);
+  });
+
+  await t.test('a verification record predating #435 carries no sentAt and still resends', async () => {
+    const legacy = 'legacy@example.com';
+    await request(app).post('/api/account/register')
+      .send({ email: legacy, username: handle(), password: PASSWORD });
+    const user = await repo.getUserByEmail(legacy);
+    // Exactly the shape register wrote before this feature: no sentAt at all.
+    await repo.updateUser(user.id, {
+      verification: { tokenHash: user.verification.tokenHash, expiresAt: user.verification.expiresAt },
+    });
+
+    const before = outbox.length;
+    const res = await request(app).post('/api/account/resend-verification').send({ email: legacy });
+    assert.equal(res.status, 200);
+    assert.equal(outbox.length, before + 1, 'a missing sentAt must read as "long ago", not "just now"');
+  });
+});
+
 /* ------------------------------ member linking ------------------------------ */
 
 test('a seat can be claimed and released by its own account (#421)', async () => {
