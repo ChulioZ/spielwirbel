@@ -333,7 +333,9 @@ function showRegister() {
         // 400/409 only comes back for a malformed field or a taken username,
         // which IS reported openly (a public handle; see routes/account.js) —
         // plus the cross-cutting 429/401 refusals authErrorKey maps (#399).
-        if (ok) return showAuthDone('auth.register.doneTitle', 'auth.register.doneSub');
+        // The address is handed on so the done screen can offer a resend (#435)
+        // without asking for it again.
+        if (ok) return showAuthDone('auth.register.doneTitle', 'auth.register.doneSub', email.value.trim());
         setError(card, t(authErrorKey('register', data.error)));
       } catch { setError(card, t('auth.error.network')); }
       submit.disabled = false;
@@ -387,15 +389,64 @@ function showForgot() {
   });
 }
 
+// Fill `host` with the "send me another verification mail" affordance (#435) and
+// wire it. Two shapes, because only one of the two callers knows the address:
+// the post-register screen passes it (so: a button), the expired-link landing
+// does not (so: a field plus a button).
+function buildResend(host, presetEmail) {
+  const known = typeof presetEmail === 'string' && presetEmail !== '';
+  host.innerHTML = `${known ? '' : `<div class="field">
+        <label for="resendEmail">${esc(t('auth.email'))}</label>
+        <input id="resendEmail" class="input" type="email" autocomplete="username" inputmode="email" />
+      </div>`}
+      <button class="btn btn--block" type="button" id="resendBtn">${esc(t('auth.resend.action'))}</button>
+      <p class="auth__sub muted" id="resendMsg" hidden></p>`;
+  const btn = host.querySelector('#resendBtn');
+  const input = host.querySelector('#resendEmail');
+  const msg = host.querySelector('#resendMsg');
+  btn.addEventListener('click', async () => {
+    const email = known ? presetEmail : input.value.trim();
+    if (!email) return input.focus(); // the empty field is its own prompt
+    btn.disabled = true;
+    msg.hidden = true;
+    try {
+      const { ok, data } = await authFetch('/resend-verification', { email });
+      // The handler always answers ok for ANY address (anti-enumeration), so a
+      // !ok can only be a cross-cutting refusal — the rate limiter or, in
+      // layered mode, the shared gate (#399). Reporting it reveals nothing.
+      if (ok) {
+        // Terminal on success: the next step is in their inbox, not here. Said
+        // conditionally ("falls ein Konto existiert") because we are not told
+        // whether anything was actually sent.
+        btn.remove();
+        if (input) input.closest('.field').remove();
+        msg.textContent = t('auth.resend.done');
+      } else {
+        msg.textContent = t(authErrorKey('resend', data.error));
+        btn.disabled = false;
+      }
+    } catch {
+      msg.textContent = t('auth.error.network');
+      btn.disabled = false;
+    }
+    msg.hidden = false;
+  });
+}
+
 // A terminal "check your e-mail" style panel (after register / forgot-password),
-// with a single way back to login.
-function showAuthDone(titleKey, subKey) {
-  openAuth(() => showAuthDone(titleKey, subKey), `<div class="auth__card">
+// with a single way back to login. `resendEmail` is registration-only: passing it
+// adds the resend affordance (#435). Forgot-password must NOT grow one — a reset
+// link is not a verification link, and the screen is shared.
+function showAuthDone(titleKey, subKey, resendEmail) {
+  openAuth(() => showAuthDone(titleKey, subKey, resendEmail), `<div class="auth__card">
       <div class="auth__logo"><i class="ti ti-mail-check" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t(titleKey))}</h1>
       <p class="auth__sub muted">${esc(t(subKey))}</p>
+      <div id="resendHost"></div>
       <button class="btn btn--primary btn--block" type="button" id="toLogin">${esc(t('auth.backToLogin'))}</button>
     </div>`, (card) => {
+    const host = card.querySelector('#resendHost');
+    if (resendEmail) buildResend(host, resendEmail); else host.remove();
     card.querySelector('#toLogin').addEventListener('click', showLogin);
   });
 }
@@ -423,6 +474,7 @@ function renderVerifyLanding() {
       <div class="auth__logo"><i class="ti ti-mail-check" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.verify.working'))}</h1>
       <p class="auth__sub muted" id="verifyMsg">…</p>
+      <div id="resendHost"></div>
       <button class="btn btn--primary btn--block" type="button" id="toLogin" hidden></button>
     </div>`, (card) => {
     const toLogin = card.querySelector('#toLogin');
@@ -431,6 +483,12 @@ function renderVerifyLanding() {
       const { ok } = uid && token ? await authFetch('/verify-email', { uid, token }) : { ok: false };
       card.querySelector('.auth__title').textContent = t(ok ? 'auth.verify.okTitle' : 'auth.verify.failTitle');
       card.querySelector('#verifyMsg').textContent = t(ok ? 'auth.verify.okSub' : 'auth.verify.failSub');
+      // An expired or already-used link is the OTHER stuck-signup dead end (#435)
+      // — logging in with an unverified account is refused and offers nothing —
+      // so the failure branch carries the recovery. The landing knows only
+      // uid+token, never the address, hence the field variant.
+      if (ok) card.querySelector('#resendHost').remove();
+      else buildResend(card.querySelector('#resendHost'), null);
       toLogin.textContent = t('auth.backToLogin');
       toLogin.hidden = false;
     })();

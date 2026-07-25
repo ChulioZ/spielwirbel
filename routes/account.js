@@ -68,6 +68,36 @@ function sendSafe(msg) {
     logger.warn({ event: 'account_mail_failed', to: msg.to, message: e.message }));
 }
 
+// How long a freshly mailed verification link suppresses another send (#435).
+// This is a per-ACCOUNT cooldown and it is the real defence: the authLimiter in
+// lib/app.js counts requests per IP, so rotating addresses would otherwise let
+// anyone flood a known victim's inbox — and burn the operator mailbox's own
+// sending quota with it, which would break registration for everyone (see
+// .claude/rules/transactional-mail-provider.md).
+const RESEND_COOLDOWN_MS = 60 * 1000;
+
+// The stored verification challenge for a freshly minted raw token. `sentAt` is
+// what RESEND_COOLDOWN_MS measures from; records written before #435 lack it,
+// which reads as "long ago" and allows an immediate resend.
+const verificationRecord = (raw) => ({
+  tokenHash: accounts.hashToken(raw),
+  expiresAt: iso(Date.now() + accounts.VERIFY_TTL_MS),
+  sentAt: iso(Date.now()),
+});
+
+// Register and resend-verification both mail this, so the body and the link
+// shape can't drift apart. Lands on the in-app onboarding page (#138), which
+// POSTs the token and then routes to login — not the bare JSON GET endpoint
+// (still served for clients).
+function mailVerification(to, uid, raw) {
+  const link = `${baseUrl()}/verify-email?uid=${uid}&token=${raw}`;
+  return sendSafe({
+    to,
+    subject: 'Spielwirbel: E-Mail-Adresse bestätigen / Confirm your e-mail',
+    text: `Hallo!\n\nBitte bestätige deine E-Mail-Adresse für Spielwirbel, indem du diesen Link öffnest (gültig 24 Stunden):\n${link}\n\nFalls du dich nicht registriert hast, ignoriere diese E-Mail einfach.\n\n---\n\nHi!\n\nPlease confirm your e-mail address for Spielwirbel by opening this link (valid for 24 hours):\n${link}\n\nIf you didn't sign up, simply ignore this e-mail.`,
+  });
+}
+
 // The whole feature is env-gated (see header) — a 404 keeps the surface
 // invisible on deployments that haven't opted in.
 router.use((req, res, next) => {
@@ -98,7 +128,7 @@ router.post('/register', async (req, res) => {
     tenantId: crypto.randomBytes(8).toString('hex'),
     emailVerified: false,
     identities: [{ type: 'password', hash: await accounts.hashPassword(password) }],
-    verification: { tokenHash: accounts.hashToken(verifyRaw), expiresAt: iso(Date.now() + accounts.VERIFY_TTL_MS) },
+    verification: verificationRecord(verifyRaw),
     reset: null,
     refreshTokens: [],
     // Operator suspension (#268). Always present (null when unset) so both
@@ -124,14 +154,36 @@ router.post('/register', async (req, res) => {
     return res.json({ ok: true });
   }
 
-  // Land on the in-app onboarding page (#138), which POSTs the token and then
-  // routes to login — not the bare JSON GET endpoint (still served for clients).
-  const link = `${baseUrl()}/verify-email?uid=${user.id}&token=${verifyRaw}`;
-  await sendSafe({
-    to: email,
-    subject: 'Spielwirbel: E-Mail-Adresse bestätigen / Confirm your e-mail',
-    text: `Hallo!\n\nBitte bestätige deine E-Mail-Adresse für Spielwirbel, indem du diesen Link öffnest (gültig 24 Stunden):\n${link}\n\nFalls du dich nicht registriert hast, ignoriere diese E-Mail einfach.\n\n---\n\nHi!\n\nPlease confirm your e-mail address for Spielwirbel by opening this link (valid for 24 hours):\n${link}\n\nIf you didn't sign up, simply ignore this e-mail.`,
-  });
+  await mailVerification(email, user.id, verifyRaw);
+  res.json({ ok: true });
+});
+
+/* --------------------------- resend verification ---------------------------- */
+
+// A verification mail that never arrives (spam folder, deleted, 24 h expiry) used
+// to be a permanently stuck signup (#435): re-registering answers `{ ok: true }`
+// without sending anything (the email_taken branch above), and the address stays
+// occupied until the token expires. This is the only recovery path that does not
+// need the operator.
+router.post('/resend-verification', async (req, res) => {
+  const email = normalizeEmail((req.body || {}).email);
+  const user = validEmail(email) ? await repo.getUserByEmail(email) : null;
+
+  // Every skip below is SILENT — an unknown address, an already-verified account
+  // and a throttled resend all answer exactly like a real send. Without that this
+  // endpoint is a perfect account-existence probe, which the anti-enumeration
+  // invariants in .claude/rules/user-accounts.md do not allow.
+  if (user && !user.emailVerified) {
+    const sentAt = Date.parse((user.verification || {}).sentAt || '');
+    const throttled = Number.isFinite(sentAt) && Date.now() - sentAt < RESEND_COOLDOWN_MS;
+    if (!throttled) {
+      const raw = accounts.newRawToken();
+      // Replaces the previous challenge, so an older link stops working — a
+      // resend must not leave two valid tokens outstanding.
+      await repo.updateUser(user.id, { verification: verificationRecord(raw) });
+      await mailVerification(user.email, user.id, raw);
+    }
+  }
   res.json({ ok: true });
 });
 

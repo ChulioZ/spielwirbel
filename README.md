@@ -289,10 +289,10 @@ lib/
 routes/
   auth.js            /api/auth              (shared-password login/logout/status)
   account.js         /api/account           (user accounts: register, verify
-                                             e-mail, login, refresh, logout,
-                                             forgot/reset password, me, and the
-                                             per-user notification inbox (#207) —
-                                             404 unless ACCOUNTS_ENABLED)
+                                             e-mail (+ resend), login, refresh,
+                                             logout, forgot/reset password, me,
+                                             and the per-user notification inbox
+                                             (#207) — 404 unless ACCOUNTS_ENABLED)
   invitations.js     /api/account/invitations (round-sharing: send / accept /
                                              decline; the inviter fixes the
                                              member-seat take-over (#207) —

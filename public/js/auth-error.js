@@ -25,8 +25,8 @@ const AUTH_ERROR_KEYS = {
     invalid_token: 'auth.reset.invalid',
     invalid_password: 'auth.error.shortPassword',
   },
-  // 'forgot' has no per-form codes: its handler always answers ok
-  // (anti-enumeration), so only the cross-cutting codes below can reach it.
+  // 'forgot' and 'resend' have no per-form codes: their handlers always answer
+  // ok (anti-enumeration), so only the cross-cutting codes below can reach them.
 };
 
 // Map a failed auth call to the i18n key of an honest error message.

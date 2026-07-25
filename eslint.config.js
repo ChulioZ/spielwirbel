@@ -67,7 +67,7 @@ const frontendGlobals = {
   initAccounts: 'readonly', enterApp: 'readonly', authScreen: 'readonly',
   openAuth: 'readonly', authError: 'readonly', setError: 'readonly',
   showLogin: 'readonly', showRegister: 'readonly', showForgot: 'readonly',
-  showAuthDone: 'readonly', renderVerifyLanding: 'readonly',
+  showAuthDone: 'readonly', buildResend: 'readonly', renderVerifyLanding: 'readonly',
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',
   accountApi: 'readonly', setupInboxUi: 'readonly', setInboxDot: 'readonly',
   refreshInboxBadge: 'readonly',
