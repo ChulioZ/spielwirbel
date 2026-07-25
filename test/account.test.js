@@ -31,12 +31,22 @@ const PASSWORD = 'correct horse battery';
 let handleSeq = 0;
 const handle = () => `probe${(handleSeq += 1)}`;
 
-// Pull the uid/token pair out of the latest captured mail.
+// Pull the one-time token out of the latest captured mail. Since #434 the link
+// carries a single combined "<version>.<uid>.<secret>" token; `uid` is returned
+// too (parsed back out of it) so callers that pass both keep working — the
+// server ignores a separate uid whenever the token already names its user.
 function lastMailTokens() {
   const text = outbox[outbox.length - 1].text;
-  const m = text.match(/uid=([0-9a-f]+)&token=([A-Za-z0-9_-]+)/);
-  assert.ok(m, 'mail contains a uid/token link');
-  return { uid: m[1], token: m[2] };
+  const m = text.match(/\/[vr]\?t=([a-z0-9]+\.([0-9a-f]+)\.[A-Za-z0-9_-]+)/);
+  assert.ok(m, 'mail contains a short one-time link');
+  return { uid: m[2], token: m[1] };
+}
+
+// The line the link sits on, as the mail carries it.
+function lastMailLinkLine() {
+  const line = outbox[outbox.length - 1].text.split('\n').find((l) => l.includes('://'));
+  assert.ok(line, 'mail contains a link line');
+  return line;
 }
 
 /* ------------------------------ feature flag -------------------------------- */
@@ -455,6 +465,113 @@ test('forgot-password is throttled per account, silently (#447)', async (t) => {
     const empty = await request(app).post('/api/account/forgot-password').send({});
     assert.equal(empty.status, 200);
     assert.deepEqual(empty.body, { ok: true });
+  });
+});
+
+/* ----------------------------- mailed link shape ---------------------------- */
+
+// #434: the reported bug was a verification link arriving cut in half. The mail
+// body is quoted-printable (the German text has umlauts) and QP wraps at 76
+// columns with a '=' soft break — which landed INSIDE the 107-character URL.
+// A compliant client rejoins it, but the body carries a bare text URL, so
+// whether it stays clickable is up to the receiving client's auto-linkifier
+// spanning that break. The reporter's did not.
+//
+// RFC 2045: a QP line may be at most 76 characters INCLUDING the trailing '=',
+// so 75 characters of content is the last width that is never broken. The link
+// sits alone on its line, and every character of it is QP-safe (hex uid,
+// base64url secret, no '='), so the encoded width equals the literal width.
+const QP_SAFE_LINE = 75;
+
+// The tests otherwise run without APP_BASE_URL, i.e. against a short
+// http://localhost:3000 — which would pass this assertion no matter how long
+// the link grew. Measure against the real production origin.
+async function withProdBaseUrl(fn) {
+  const prev = process.env.APP_BASE_URL;
+  process.env.APP_BASE_URL = 'https://spielwirbel.app';
+  try { return await fn(); } finally {
+    if (prev === undefined) delete process.env.APP_BASE_URL; else process.env.APP_BASE_URL = prev;
+  }
+}
+
+test('the mailed links fit on one quoted-printable line (#434)', async (t) => {
+  const email = 'qp@example.com';
+
+  await t.test('the verification link is short enough never to be soft-broken', async () => {
+    await withProdBaseUrl(() => request(app).post('/api/account/register')
+      .send({ email, username: handle(), password: PASSWORD }));
+
+    const line = lastMailLinkLine();
+    assert.ok(line.length <= QP_SAFE_LINE,
+      `verification link line is ${line.length} chars, must be <= ${QP_SAFE_LINE}: ${line}`);
+    // The uid rides inside the token now; a second parameter is what made the
+    // old URL too long in the first place.
+    assert.match(line, /^https:\/\/spielwirbel\.app\/v\?t=v1\./);
+    assert.doesNotMatch(line, /uid=/);
+  });
+
+  await t.test('the password-reset link is too', async () => {
+    await withProdBaseUrl(() => request(app).post('/api/account/forgot-password').send({ email }));
+
+    const line = lastMailLinkLine();
+    assert.ok(line.length <= QP_SAFE_LINE,
+      `reset link line is ${line.length} chars, must be <= ${QP_SAFE_LINE}: ${line}`);
+    assert.match(line, /^https:\/\/spielwirbel\.app\/r\?t=p1\./);
+    assert.doesNotMatch(line, /uid=/);
+  });
+
+  // The two prefixes exist so one mail's token can never be spent on the other
+  // endpoint: both hash into the same `tokenHash` field, so without the version
+  // check a verification link would double as a password-reset link.
+  await t.test('a verification token cannot be spent on reset-password, or vice versa', async () => {
+    const user = await repo.getUserByEmail(email);
+    const verify = accounts.mintLinkToken(accounts.VERIFY_TOKEN_VERSION, user.id, 'secret');
+    const reset = accounts.mintLinkToken(accounts.RESET_TOKEN_VERSION, user.id, 'secret');
+    // Plant one known secret in BOTH records, so only the prefix separates them.
+    await repo.updateUser(user.id, {
+      verification: { tokenHash: accounts.hashToken('secret'), expiresAt: new Date(Date.now() + 60000).toISOString() },
+      reset: { tokenHash: accounts.hashToken('secret'), expiresAt: new Date(Date.now() + 60000).toISOString() },
+    });
+
+    const crossed = await request(app).post('/api/account/reset-password')
+      .send({ token: verify, password: 'crossing the streams' });
+    assert.equal(crossed.status, 400, 'a verification token must not reset a password');
+
+    const other = await request(app).get(`/api/account/verify-email?token=${encodeURIComponent(reset)}`);
+    assert.equal(other.status, 400, 'a reset token must not verify an e-mail');
+
+    // ...while each one still works on its own endpoint, so the refusals above
+    // are the prefix check and not some unrelated breakage.
+    const ok = await request(app).get(`/api/account/verify-email?token=${encodeURIComponent(verify)}`);
+    assert.equal(ok.status, 200);
+  });
+});
+
+// A verification mail stays valid for 24 h and a reset mail for 1 h, so links in
+// the pre-#434 shape were still landing in inboxes at deploy time. They must keep
+// working; this is the only thing pinning that fallback.
+test('a pre-#434 uid=/token= link still verifies and still resets (#434)', async (t) => {
+  const email = 'legacy-link@example.com';
+  await request(app).post('/api/account/register')
+    .send({ email, username: handle(), password: PASSWORD });
+  const user = await repo.getUserByEmail(email);
+  const legacy = accounts.newRawToken(); // the old 32-byte bare token
+
+  await t.test('verify-email accepts the separate uid and bare token', async () => {
+    await repo.updateUser(user.id, {
+      verification: { tokenHash: accounts.hashToken(legacy), expiresAt: new Date(Date.now() + 60000).toISOString() },
+    });
+    const res = await request(app).get(`/api/account/verify-email?uid=${user.id}&token=${legacy}`);
+    assert.equal(res.status, 200);
+  });
+
+  await t.test('reset-password does too', async () => {
+    await repo.updateUser(user.id, {
+      reset: { tokenHash: accounts.hashToken(legacy), expiresAt: new Date(Date.now() + 60000).toISOString() },
+    });
+    const res = await request(app).post('/api/account/reset-password')
+      .send({ uid: user.id, token: legacy, password: 'a legacy-link password' });
+    assert.equal(res.status, 200);
   });
 });
 

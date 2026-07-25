@@ -1,7 +1,7 @@
 /* Spielwirbel – logged-out landing page (issue #322): the marketing "front door"
    a cold visitor sees at GET / in accounts mode, before being asked to register.
    bootApp() (account.js) routes here for a logged-out accounts-mode visitor on
-   the "/" path; every other path (deep links, /verify-email, /reset-password)
+   the "/" path; every other path (deep links, the /v and /r mail links)
    still goes straight to the auth screens.
 
    Part of the frontend's shared global scope. Loads after core.js, account.js

@@ -36,8 +36,11 @@ const ADMIN_PW = 'operator-secret-pw';
 
 async function makeAccount(email) {
   await request(app).post('/api/account/register').send({ email, username: handle(email), password: PASSWORD });
-  const m = outbox[outbox.length - 1].text.match(/uid=([0-9a-f]+)&token=([A-Za-z0-9_-]+)/);
-  await request(app).post('/api/account/verify-email').send({ uid: m[1], token: m[2] });
+  // The mailed link is one combined token since #434; assert the match so a
+  // future shape change fails here loudly instead of throwing on m[1].
+  const m = outbox[outbox.length - 1].text.match(/\/v\?t=(v1\.[0-9a-f]+\.[A-Za-z0-9_-]+)/);
+  assert.ok(m, 'verification mail carries a /v?t= link');
+  await request(app).post('/api/account/verify-email').send({ token: m[1] });
   const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
   assert.equal(login.status, 200);
   const user = await repo.getUserByEmail(email);

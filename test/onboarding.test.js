@@ -37,9 +37,9 @@ async function makeAccount(email) {
   const reg = await request(app).post('/api/account/register').send({ email, username: handle(email), password: PASSWORD });
   assert.equal(reg.status, 200);
   const mail = outbox[outbox.length - 1].text;
-  const m = mail.match(/\/verify-email\?uid=([0-9a-f]+)&token=([A-Za-z0-9_-]+)/);
-  assert.ok(m, 'verification mail links to the in-app /verify-email landing');
-  await request(app).post('/api/account/verify-email').send({ uid: m[1], token: m[2] });
+  const m = mail.match(/\/v\?t=(v1\.[0-9a-f]+\.[A-Za-z0-9_-]+)/);
+  assert.ok(m, 'verification mail links to the in-app /v landing');
+  await request(app).post('/api/account/verify-email').send({ token: m[1] });
   const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
   assert.equal(login.status, 200);
   return { token: login.body.accessToken, setCookie: login.headers['set-cookie'] || [] };
@@ -48,8 +48,8 @@ async function makeAccount(email) {
 test('the verify-email mail links to the in-app landing, not the JSON endpoint', async () => {
   await request(app).post('/api/account/register').send({ email: 'link@example.com', username: 'link', password: PASSWORD });
   const mail = outbox[outbox.length - 1].text;
-  assert.match(mail, /\/verify-email\?uid=/);
-  assert.doesNotMatch(mail, /\/api\/account\/verify-email\?/);
+  assert.match(mail, /\/v\?t=/);
+  assert.doesNotMatch(mail, /\/api\/account\/verify-email/);
 });
 
 test('login sets the access cookie (so cover <img> GETs authenticate)', async () => {
