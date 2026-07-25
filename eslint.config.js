@@ -114,6 +114,7 @@ const frontendGlobals = {
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   activeSheet: 'writable', closeSheet: 'readonly', openSheet: 'readonly',
   handleSheetPop: 'readonly',
+  openEditor: 'readonly', usesEditorSheet: 'readonly', EDITOR_SHEET_BELOW: 'readonly',
   startDirectSession: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   enabledProviders: 'readonly', lookupDetail: 'readonly',

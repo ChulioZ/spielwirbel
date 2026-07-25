@@ -637,11 +637,16 @@ function closePopover() {
   window.removeEventListener('scroll', activePopover.onScroll, true);
   activePopover = null;
 }
+// `build(el, close)` may return a callback, which runs once the popover is in
+// the document AND positioned. Anything that needs a live element — above all
+// `input.focus()` — belongs there: build() itself runs on a detached node, so a
+// focus() call in it is a silent no-op, which is why the tags/players editors'
+// autofocus never worked on any platform (#422).
 function openPopover(anchor, build) {
   closePopover();
   const el = h('<div class="popover"></div>');
   const close = () => closePopover();
-  build(el, close);
+  const attached = build(el, close);
   document.body.appendChild(el);
 
   // Prefer below the anchor; flip above if it wouldn't fit. Clamp horizontally.
@@ -669,6 +674,7 @@ function openPopover(anchor, build) {
   window.addEventListener('resize', onGone, true);
   window.addEventListener('scroll', onScroll, true);
   activePopover = { el, onDoc, onKey, onGone, onScroll };
+  if (typeof attached === 'function') attached();
   return { el, close };
 }
 

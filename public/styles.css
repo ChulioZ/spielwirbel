@@ -2300,16 +2300,22 @@ body.auth-screen .topbar__context { display: none; }
 }
 .popover__opt:hover { background: var(--brand-tint); }
 .popover__opt.is-current { border-color: var(--brand); background: var(--brand-tint); }
-.popover--players .pp-row { display: flex; align-items: center; gap: 8px; }
-.popover--players .pp-row .input { width: 68px; }
+/* Below 860px the same three editors are presented as a bottom sheet instead
+   (#422) — `.editor` is that sheet's body, and it mirrors `.popover`'s stacking
+   so one builder can fill either. Only the rules that size the FLOATING card
+   (max-width/min-width above) stay popover-only; every inner layout rule below
+   is shared via :is(), which keeps the (0,2,0) specificity these already had. */
+.editor { display: flex; flex-direction: column; gap: 6px; }
+:is(.popover--players, .editor--players) .pp-row { display: flex; align-items: center; gap: 8px; }
+:is(.popover--players, .editor--players) .pp-row .input { width: 68px; }
 .popover--tags { max-width: 340px; }
-.popover--tags .filter-chips { margin-bottom: 10px; }
+:is(.popover--tags, .editor--tags) .filter-chips { margin-bottom: 10px; }
 /* Wraps because the icon-picker trigger (#293) joined this row — four controls
    don't always fit 340px, and squeezing the name input is worse than a wrap. */
-.popover--tags .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+:is(.popover--tags, .editor--tags) .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 /* The 120px basis is what makes the wrap above trigger: without a floor the
    input just shrinks to a few characters instead of the buttons moving down. */
-.popover--tags .pp-row .input { min-width: 0; flex: 1 1 120px; }
+:is(.popover--tags, .editor--tags) .pp-row .input { min-width: 0; flex: 1 1 120px; }
 .popover--image { min-width: 220px; }
 .popover__hint { font-size: 13px; }
 
