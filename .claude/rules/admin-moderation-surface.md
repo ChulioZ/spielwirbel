@@ -161,6 +161,51 @@ name and report a stranger's bytes. The route sizes at most `SIZE_SAMPLE_MAX`
 (500) objects and reports `{ count, sized, bytes, complete }` so the panel can
 render "≥" rather than a wrong total; unreadable objects are skipped.
 
+## 11. Search-first Konten is a DATA-PROTECTION invariant, not a UI preference (#403)
+
+The panel's tables are row-click → one shared native `<dialog>`, and the Konten
+card fetches **nothing** until the operator searches. Three parts of that are
+load-bearing and all three fail silently if "tidied up":
+
+- **`enterPanel()` must NOT call `loadUsers()`.** Re-adding it looks like an
+  obvious omission (every other card loads there) and quietly restores the thing
+  the issue removed: `GET /api/admin/users` shipping **every** user's e-mail
+  address to the browser on every panel visit, whatever the operator came to do
+  (Art. 25 DSGVO, minimisation by default). The `userQuery === null` guard in
+  `loadUsers()` is the second half of the same fence — it makes an accidental
+  call a no-op rather than a full fetch.
+- **An empty search box must not fall through to the unfiltered list.** `''` is
+  the *deliberate* "Alle anzeigen" value, so a submit handler that just assigns
+  `input.value.trim()` puts the whole address list one stray Enter away. The
+  submit handler bails on an empty term; only the button sets `''`.
+- **The filter is server-side (`?q=`), not a client-side `Array.filter`.** The
+  point is that non-matching accounts' e-mail addresses never leave the server;
+  filtering in the browser would satisfy the *UI* half and none of the privacy
+  half. `test/admin.test.js` ("the account list can be filtered by ?q=") pins
+  both the filtering and the unchanged no-`q` behaviour.
+
+Two smaller things about the dialog itself:
+
+- **Use `<dialog>` + `showModal()` here, NOT the SPA's `openSheet`.** `admin.html`
+  is a standalone page — `views-round-detail.js` and `focus-trap.js` are not
+  loaded, so `.claude/rules/accessibility-contrast-and-modals.md` §2's machinery
+  simply isn't there. `showModal()` brings Esc, the backdrop, focus containment
+  and **focus restoration to the opener** natively, which is why the rows are
+  `tabIndex = 0` — a row that was never focusable would "restore" focus to
+  `<body>`.
+- **The row gets `tabindex` + `aria-haspopup="dialog"` + a keydown handler, never
+  `role="button"`.** The role would detach the cells from their row for a screen
+  reader (a `<td>` whose parent is no longer a `row`), trading a real semantic
+  loss for an affordance the tabindex already provides. `aria-haspopup` is the
+  part that must not be dropped: the rows *replaced* labelled per-row buttons, so
+  without it a keyboard user tabs onto a focusable row with nothing announcing
+  that Enter opens anything — a discoverability regression against the design it
+  replaced, invisible to every automated check.
+- **Actions close the dialog BEFORE running.** Every one of them either reloads
+  the list underneath (leaving the dialog on a stale record) or scrolls to the
+  Zuordnen card (`assignNotice`/`lookupUsername`), and a modal blocks the latter
+  outright.
+
 ## Smaller things
 
 - **Suspension is enforced in `lib/tenant.js`** (which already loads the user

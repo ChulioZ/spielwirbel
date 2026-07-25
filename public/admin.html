@@ -132,6 +132,34 @@
     .totals { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin: 0.75rem 0 0; color: var(--muted); font-size: 0.85rem; }
     .totals b { color: var(--ink); font-weight: 600; }
     code { background: var(--sunken); padding: 0.1rem 0.35rem; border-radius: 6px; font-size: 0.85em; }
+    /* Row → detail dialog (#403). The row is focusable and Enter/Space-activatable
+       so the actions are reachable without a mouse, but it keeps its table
+       semantics — no role="button", which would detach the cells from their row
+       for a screen reader. */
+    tr.clickable { cursor: pointer; }
+    tr.clickable:hover td { background: var(--sunken); }
+    tr.clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    dialog {
+      width: min(42rem, calc(100vw - 2rem)); padding: 1.5rem; color: var(--ink);
+      background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+      box-shadow: 0 18px 48px rgba(31, 36, 48, 0.24);
+    }
+    dialog::backdrop { background: rgba(31, 36, 48, 0.45); }
+    .detail__close { float: right; margin: -0.4rem -0.4rem 0 0.6rem; }
+    /* On a phone the two-column dl leaves the value ~190px, so an e-mail address
+       breaks mid-word (dd is word-break: break-all for long ids). Stacking the
+       label above the value gives it the full width instead. */
+    @media (max-width: 520px) {
+      #detailBody dl { grid-template-columns: 1fr; gap: 0.15rem; }
+      #detailBody dt { margin-top: 0.5rem; }
+    }
+    /* The record's own free text (a report, a feedback message): its line breaks
+       are part of what was written, so they are preserved rather than collapsed. */
+    .detail__text {
+      white-space: pre-wrap; word-break: break-word; margin: 1rem 0 0;
+      background: var(--sunken); border: 1px solid var(--line);
+      border-radius: 10px; padding: 0.7rem 0.85rem; font-size: 0.9rem;
+    }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -211,6 +239,18 @@
 
         <section class="card">
           <h2>Konten</h2>
+          <p class="sub" style="margin-bottom: 0.9rem;">
+            Suchen zuerst: E-Mail-Adressen werden erst geladen, wenn eine Suche sie
+            anfordert (Datenschutz durch Voreinstellung, Art. 25 DSGVO). Eine Zeile
+            anklicken öffnet das Konto mit allen Aktionen.
+          </p>
+          <form class="row filters" id="usersForm">
+            <input id="usersQuery" placeholder="E-Mail, Nutzername oder Tenant"
+                   aria-label="Konten durchsuchen" />
+            <button class="small" type="submit">Suchen</button>
+            <button class="ghost small" type="button" id="usersAll">Alle anzeigen</button>
+          </form>
+          <p class="sub count" id="usersCount" hidden></p>
           <div class="scroll"><table id="usersTable"><tbody></tbody></table></div>
           <p class="msg msg--err" id="usersError" role="alert" hidden></p>
         </section>
@@ -297,6 +337,21 @@
       </aside>
     </div>
   </div>
+
+  <!-- One shared detail dialog for every table (#403). Rows stay a single line
+       and the full record plus ALL its actions live here. A native <dialog> is
+       used rather than the SPA's openSheet(): this page is standalone, so
+       views-round-detail.js and focus-trap.js are not loaded — and showModal()
+       brings Esc, the backdrop, focus containment and focus restoration for
+       free. -->
+  <dialog id="detailDialog" aria-labelledby="detailTitle">
+    <form method="dialog" class="detail__close">
+      <button class="ghost small" aria-label="Schließen">✕</button>
+    </form>
+    <h2 id="detailTitle"></h2>
+    <div id="detailBody"></div>
+    <div class="row" id="detailActions" style="margin-top: 1.1rem;" hidden></div>
+  </dialog>
 
   <script src="/js/admin.js"></script>
 </body>

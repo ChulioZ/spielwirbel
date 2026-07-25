@@ -1089,6 +1089,50 @@ test('the moderation log filters by tenant, action and date (#275)', async (t) =
 });
 
 /*
+ * #403: the panel is search-first, so the account list is filterable server-side
+ * — the point being that the e-mail addresses of accounts the operator did not
+ * ask about never leave the server at all (Art. 25 DSGVO).
+ */
+test('the account list can be filtered by ?q= (#403)', async (t) => {
+  const cookie = await adminCookie();
+  const alpha = await makeAccount('needle-alpha@example.com'); // username 'needle-alpha'
+  await makeAccount('unrelated-beta@example.com');
+
+  const list = (query) => request(app)
+    .get(`/api/admin/users${query}`).set('Cookie', cookie);
+
+  await t.test('a term matches e-mail, username and tenant id, case-insensitively', async () => {
+    for (const term of ['needle-alpha@example.com', 'NEEDLE', 'needle-alpha', alpha.user.tenantId]) {
+      const res = await list(`?q=${encodeURIComponent(term)}`);
+      assert.equal(res.status, 200, term);
+      assert.deepEqual(res.body.users.map((u) => u.email), ['needle-alpha@example.com'], term);
+    }
+  });
+
+  await t.test('a non-matching term returns nothing — not the whole list', async () => {
+    const res = await list('?q=nobody-by-that-name');
+    assert.deepEqual(res.body.users, []);
+  });
+
+  await t.test('the projection still strips secrets', async () => {
+    const [row] = (await list('?q=needle-alpha')).body.users;
+    for (const key of ['identities', 'refreshTokens', 'verification', 'reset', 'password']) {
+      assert.equal(key in row, false, `${key} must be stripped`);
+    }
+  });
+
+  // The deliberate "Alle anzeigen" path — unfiltered behaviour is unchanged, so
+  // nothing that predates #403 (or a stale tab) breaks.
+  await t.test('no q, or an empty q, still returns every account', async () => {
+    for (const query of ['', '?q=', '?q=%20%20']) {
+      const emails = (await list(query)).body.users.map((u) => u.email);
+      assert.ok(emails.includes('needle-alpha@example.com'), query);
+      assert.ok(emails.includes('unrelated-beta@example.com'), query);
+    }
+  });
+});
+
+/*
  * #320: a username is the only identifier an outside reporter can legitimately
  * hold, so the panel has to be able to start from one — and to act on it when
  * the name itself is the abuse.

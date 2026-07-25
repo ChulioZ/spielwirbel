@@ -573,9 +573,18 @@ returned**. A **Feedback** card shows what users sent through the contact form's
 Feedback category (with the sender's address only where they provided one).
 The Feedback and Protokoll cards page rather than truncate (`100 von 342`,
 **Mehr laden**) and export *every* entry as UTF-8 CSV (BOM included, so Excel
-renders umlauts correctly). Individual **Feedback** entries and **Meldungen** can
-be deleted from their rows — feedback freely, while a *decided* notice is
-protected (it is Art. 17 retention evidence) behind an explicit confirmation.
+renders umlauts correctly).
+
+The tables themselves are **search-first and row-click** (issue #403). The
+**Konten** card fetches nothing until the operator searches (by partial e-mail,
+username or tenant id — `GET /api/admin/users?q=…` filters server-side), so no
+account's e-mail address leaves the server just because the panel was opened;
+an explicit **„Alle anzeigen"** still lists everything. Rows across Konten,
+Meldungen, Feedback and Texte der Runde carry no inline buttons: clicking one
+(or focusing it and pressing Enter) opens a dialog holding the full record and
+every action that applies to it. Individual **Feedback** entries and
+**Meldungen** are deleted from there — feedback freely, while a *decided* notice
+is protected (it is Art. 17 retention evidence) behind an explicit confirmation.
 
 `ADMIN_PASSWORD` must be a **separate** secret from `AUTH_PASSWORD`: the latter
 is shared with everyone using the instance, while these powers cross tenant
