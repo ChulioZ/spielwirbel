@@ -358,6 +358,8 @@ public/
     cover.js         deterministic per-title gradient for games with no cover
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
+    member-colors.js the curated avatar palette — the single source of truth
+                     routes/members.js validates against (issue #420)
     swr.js           stale-while-revalidate cache: views render instantly from
                      the last known data while a background fetch refreshes
     lookup-group.js  collapses same-title provider hits into one multi-badge row

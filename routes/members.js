@@ -6,16 +6,13 @@
 
 const express = require('express');
 const repo = require('../lib/repo');
+// The curated avatar palette, shared verbatim with the frontend rather than
+// copied — a hand-kept copy drifted from it once already and rejected six of the
+// eight swatches the UI offers (#420). Color is stored only when the user picks
+// one; otherwise it is derived from the member's position at read time.
+const { MEMBER_COLORS } = require('../public/js/member-colors');
 
 const router = express.Router({ mergeParams: true });
-
-// Keep in sync with MEMBER_COLORS in public/js/core.js: the curated avatar
-// palette. Color is stored only when the user picks one; otherwise it is
-// derived from the member's position at read time.
-const MEMBER_COLORS = [
-  '#d85a30', '#1d9e75', '#7f77dd', '#ba7517',
-  '#d4537e', '#2f6f9e', '#639922', '#993556',
-];
 
 // Edit a member's name and/or avatar color, or link/unlink an account (#135).
 // Accepts any subset of { name, color, userId } — userId must be an existing
