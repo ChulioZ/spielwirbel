@@ -532,10 +532,15 @@ tenant are still follow-up work (#137).*
 and login sit behind it, so it is **not** public sign-up) while everyone inside
 uses real accounts. This is the recommended go-live path: run layered until every
 account flow is proven, then simply **remove `AUTH_PASSWORD`** to open public
-registration. One go-live chore has an admin-panel button rather than a script:
-**„Standard-Daten übernehmen"** on a fresh account (operator panel → Konten)
-re-tenants the pre-accounts `default` rounds into that account, so the owner still
-sees them once accounts are on. See [`docs/deploy-railway.md`](docs/deploy-railway.md).
+registration. Migrating an instance that already holds pre-accounts data needed
+one extra chore — a one-time **„Standard-Daten übernehmen"** admin action that
+re-tenanted the `default` rounds into a fresh owner account. It ran on this
+deployment during the 2026-07-24 go-live and was **removed again in #405**, since
+a standing cross-tenant write escape has no purpose on a public instance; a fresh
+deployment never needed it. A self-hoster migrating an existing shared-password
+instance should run the claim from a revision that still has it (any commit
+before #405) and then upgrade — see
+[`docs/deploy-railway.md`](docs/deploy-railway.md).
 
 Operator moderation (issues #268/#272/#273/#274/#275): setting `ADMIN_PASSWORD`
 exposes `/admin.html` + `/api/admin`, the standalone operator panel for acting

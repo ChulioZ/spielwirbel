@@ -80,8 +80,8 @@ message is still a reported mutation.
 ## Auditing this app again
 
 Drive it against a generated dataset in a temp `DATA_DIR`, never the real
-`data/` (`no-reading-production-data.md`) — the committed `.claude/launch.json`
-uses the production folder, so add a throwaway config and revert it. The
+`data/` (`no-reading-production-data.md`) — use the committed `dev-temp-data`
+launch config (`preview_start {name: "dev-temp-data"}`), not `production-data`. The
 Browser pane can report `innerWidth === 0`/`innerHeight === 0` after
 navigations, making every element measure `width: 0` — that's the pane
 artifact family in `preview-pane-paint-artifacts.md`; `resize_window` to a

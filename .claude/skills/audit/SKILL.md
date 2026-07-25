@@ -28,9 +28,9 @@ merge.
   and `npm audit`; that stays inside its own subagent.)
 - **`accessibility-audit` runs in the main agent, on its own.** It drives the
   Browser pane, and **there is one pane per session** — a subagent driving it
-  while anything else does would contend for the same tabs. It also needs a temp
-  `DATA_DIR`, a throwaway `launch.json` entry and a preview server, so keeping it
-  in the main agent keeps that setup and its cleanup in one place.
+  while anything else does would contend for the same tabs. It also needs a
+  seeded dataset and a preview server (the committed `dev-temp-data` config), so
+  keeping it in the main agent keeps that setup and its cleanup in one place.
 
 Start the three subagents first, then do the accessibility pass yourself while
 they work. Collect their reports when they land.
@@ -95,5 +95,6 @@ One summary: which domains ran, which did a research pass and which skipped on
 cadence, the finding count by severity and domain, any confirmed exploitable hole
 called out first, what became issues (with numbers), what became PRs, what was
 dropped and why, and — separately — the legal reading list. Confirm the
-accessibility scaffolding is cleaned up (`launch.json` reverted, preview stopped,
-temp `DATA_DIR` deleted).
+accessibility scaffolding is cleaned up (preview stopped, audit dataset deleted;
+`.claude/launch.json` should be **unmodified** — its `dev-temp-data` entry is
+permanent).

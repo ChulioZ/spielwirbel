@@ -20,24 +20,55 @@ into responses, commits, logs, or anywhere else.
   task seems to *require* reading the real data, stop and ask the user instead.
 
 **Running the app for browser/preview verification counts too — never against
-the real data.** `npm start` (and the `game-sessions` `.claude/launch.json`
-config, and any `preview_start`) default to the production `data/`, so a
-screenshot, `read_page`, `get_page_text`, or console/network dump of that running
-app **renders the group's real rounds, members and ratings into the transcript** —
+the real data.** A bare `npm start` (and the `production-data`
+`.claude/launch.json` config) uses the production `data/`, so a screenshot,
+`read_page`, `get_page_text`, or console/network dump of that running app
+**renders the group's real rounds, members and ratings into the transcript** —
 the same leak as reading the file, just laundered through the UI. So when you
 launch the app to *see a change work* (preview tools, the `run` skill,
 a manual `curl`):
 
-- **Point it at an isolated temp `DATA_DIR`** seeded with your own generated data
-  (`test-data` skill), e.g. `DATA_DIR=$(mktemp -d) npm start` — never the default.
-  A launch.json/preview that would use the real `data/` must get `DATA_DIR`
-  overridden to a temp folder first.
+- **Use the committed `dev-temp-data` launch config** — `preview_start {name:
+  "dev-temp-data"}`. It runs on port 3100 against a gitignored `.devdata/`
+  folder (created on first start), with accounts and the admin panel enabled so
+  those surfaces are reachable rather than 404. Seed it with your own generated
+  data (`test-data` skill). It is the **first** entry in `launch.json` on
+  purpose — see below.
+- Equivalently by hand: `DATA_DIR=$(mktemp -d) npm start` — never the default.
+  Anything else that would use the real `data/` must get `DATA_DIR` overridden
+  to a temp folder first.
+- **Never point the Browser pane at the `production-data` config.** It exists
+  for the rare case of reproducing something in the user's own data at their
+  explicit request (see the last bullet of this section); it is named that way
+  so choosing it is a conscious act.
 - Only the empty/generated dataset should ever appear in a screenshot or page
   read. If you realize you've already captured real data, say so to the user and
   don't repeat it.
 - Verifying against real data is only acceptable if the user explicitly asks you
   to reproduce something in *their* data — then keep it in the running UI and
   don't paste its contents.
+
+## `launch.json` must keep MORE THAN ONE entry — a lone config is a silent fallback
+
+Verified 2026-07-25, and it is the reason `dev-temp-data` is committed rather
+than added-and-reverted per session:
+
+- With **two or more** configurations, `preview_start {name: "typo"}` **fails
+  loudly**, listing the valid names. Nothing starts.
+- With **exactly one** configuration, a name that doesn't match is **silently
+  ignored and that single config starts anyway** — the result even reports the
+  config's own name back, so it looks like it did what you asked.
+
+That is how a session asking for its own throwaway config got the production one
+instead: the throwaway entry had already been reverted, leaving `launch.json`
+with a single production entry, and the mistyped name fell through to it. The
+old advice here — "add a throwaway config and revert it" — *created* that state
+at the exact moment a session was most likely to re-launch.
+
+So: **do not reduce `launch.json` to a single configuration**, and prefer the
+committed `dev-temp-data` entry over a per-session throwaway. If you do add a
+temporary entry, removing it afterwards must not leave only `production-data`
+behind.
 
 **Why:** it is private user data with no authentication guarding it; the
 whole point of keeping it out of git is that it stays local and unseen. An agent

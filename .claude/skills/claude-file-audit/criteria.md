@@ -129,10 +129,15 @@ research at all.
 ### C-013 — Anything that launches the app overrides `DATA_DIR`
 - **Status:** adopted · 2026-07-23
 - **Source:** `no-reading-production-data.md`
-- **Check:** `.claude/launch.json` points at the production `data/` folder by design. So
-  every skill, rule or doc that tells a session to start the app for verification must say
-  to override `DATA_DIR` to a temp folder first. A skill that says "run `npm start` and
-  screenshot it" is a data-leak instruction.
+- **Check:** a bare `npm start` (and `launch.json`'s `production-data` config) uses the
+  production `data/` folder. So every skill, rule or doc that tells a session to start the
+  app for verification must point at the committed `dev-temp-data` config, or otherwise
+  override `DATA_DIR` to a temp folder first. A skill that says "run `npm start` and
+  screenshot it" is a data-leak instruction. Also check `.claude/launch.json` still holds
+  **at least two** configurations: with exactly one, a `preview_start` naming a
+  non-existent config silently starts that lone entry instead of failing
+  (`no-reading-production-data.md`), so a file reduced to `production-data` alone is a
+  live foot-gun.
 - **Enforced by:** — (manual)
 
 ---

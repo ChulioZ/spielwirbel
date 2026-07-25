@@ -136,8 +136,8 @@ silently restoring one column; only the column count notices.
   (`.claude/rules/preview-pane-paint-artifacts.md`); screenshot only right after
   a fresh `navigate`; clear the service worker before believing any
   `styles.css` edit (`.claude/rules/pwa-service-worker.md`); and drive it
-  against a generated dataset in a temp `DATA_DIR` — the committed
-  `.claude/launch.json` points at the production folder
+  against a generated dataset in a temp `DATA_DIR` — use the committed
+  `dev-temp-data` launch config, never `production-data`
   (`.claude/rules/no-reading-production-data.md`).
 
 ## The cover budget, for when width does change

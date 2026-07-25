@@ -147,6 +147,11 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
 ## Running & verifying
 
 - Start: `npm start` (serves on `http://localhost:3000`; `PORT` env to change).
+  **A bare `npm start` uses the production `data/`** — to *look at* the running
+  app, launch the committed `dev-temp-data` preview config instead
+  (`preview_start {name: "dev-temp-data"}`): port 3100, gitignored `.devdata/`,
+  accounts + admin panel on. Never point the Browser pane at `production-data`.
+  See `.claude/rules/no-reading-production-data.md`.
 - Tests: `npm test` (Node's built-in `node --test`; specs in `test/*.test.js`).
   Add/update tests with new features and keep them green — see `.claude/rules/`.
 - Lint: `npm run lint` (ESLint flat config in `eslint.config.js`). Keep it green;
