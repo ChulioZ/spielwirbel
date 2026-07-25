@@ -4,6 +4,38 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spielwirbel</title>
+  <meta name="description" content="Spiele sammeln, abstimmen was heute auf den Tisch kommt, und festhalten wie’s war – alles an einem Platz für eure Runde." />
+  <!-- Link preview (issue #430): what a messenger/social scraper shows when the
+       link is shared. These are STATIC on purpose:
+       - Scrapers do not run JS, so nothing views-landing.js renders is visible
+         to them — the card has to live in the served HTML.
+       - This one document is also the SPA fallback for every deep link, so a
+         shared /round/… URL shows this same generic card. That is deliberate:
+         round, member and game names are private tenant data and must never
+         end up in a preview scraped by a third party.
+       - The URLs are absolute because several scrapers (WhatsApp among them)
+         do not resolve a root-relative og:image. The origin is the canonical
+         host from lib/canonical.js (#230) — every branded domain 301s there.
+         A fork self-hosting under another domain edits it here. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Spielwirbel" />
+  <meta property="og:locale" content="de_DE" />
+  <meta property="og:url" content="https://spielwirbel.app/" />
+  <meta property="og:title" content="Spielwirbel – Eure Spielrunde, ein Ort." />
+  <meta property="og:description" content="Spiele sammeln, abstimmen was heute auf den Tisch kommt, und festhalten wie’s war – alles an einem Platz für eure Runde." />
+  <meta property="og:image" content="https://spielwirbel.app/icons/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Spielwirbel – das Wirbel-Logo auf orangem Grund" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Spielwirbel – Eure Spielrunde, ein Ort." />
+  <meta name="twitter:description" content="Spiele sammeln, abstimmen was heute auf den Tisch kommt, und festhalten wie’s war – alles an einem Platz für eure Runde." />
+  <meta name="twitter:image" content="https://spielwirbel.app/icons/og-image.png" />
+  <!-- Every SPA route is served from this document; the routes behind the login
+       hold private data and are not indexable anyway, so the canonical is the
+       public front door. -->
+  <link rel="canonical" href="https://spielwirbel.app/" />
   <!-- PWA (issue #142): installable + offline. theme-color matches --brand. -->
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#c2410c" />

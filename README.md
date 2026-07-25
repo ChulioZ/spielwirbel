@@ -151,6 +151,11 @@ code and documentation are in English.
   **offline** (the shell and static assets are cached; live round data still
   needs the network). In keeping with the no-build-step stance, the manifest,
   service worker and icons are plain static files.
+- **Link previews** – sharing the app's URL in a messenger or on social media
+  renders a card (title, description and a 1200×630 brand image) instead of a
+  bare link. The Open Graph/Twitter tags live statically in `index.html` because
+  scrapers don't run JavaScript; every deep link shows the same generic card, so
+  no round or member name ever ends up in a preview.
 - **Feedback** – a button in the top bar opens the contact form with a
   **Feedback** category preselected, together with the screen it was written on
   (issue #321). Submissions are **anonymous by default**: giving an e-mail
@@ -345,8 +350,9 @@ public/
   manifest.webmanifest  PWA manifest (installable app metadata + icons)
   sw.js              service worker: precache the app shell, offline fallback
   fonts/             self-hosted fonts + Tabler icon set
-  icons/             PWA / home-screen app icons (192, 512, apple-touch) and the
-                     "Powered by BGG" attribution logo shown in the footer
+  icons/             PWA / home-screen app icons (192, 512, apple-touch), the
+                     "Powered by BGG" attribution logo shown in the footer, and
+                     og-image.png (the 1200×630 card link previews show)
   js/
     login.js         login.html's own script — an IIFE, not part of the
                      shared global scope below (only loaded by login.html)
