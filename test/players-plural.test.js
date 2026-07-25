@@ -2,7 +2,7 @@
 
 /*
  * The player-count tag must read grammatically for a count of 1 ("1 Person" /
- * "1 player", not "1 Personen" / "1 players"). playersTag (public/js/core.js)
+ * "1 player", not "1 Personen" / "1 players"). playersText (public/js/core.js)
  * picks the key via the tn() plural helper, so we load the real i18n.js and the
  * two language files in a vm sandbox and assert the rendered strings.
  */

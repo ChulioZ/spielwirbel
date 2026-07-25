@@ -51,3 +51,12 @@ Two follow-on habits from the same bug:
 And always break the production code on purpose once to confirm the assertion
 actually goes red — a CSS-text test gives you no other signal that it is wired
 to anything real.
+
+**Back the files up before that loop — not with `git checkout`.** The obvious
+"revert my deliberate break" is `git checkout <file>`, and it restores from the
+**index**: with nothing staged, that is the HEAD version, so it silently discards
+the *whole* uncommitted fix along with the break. It cost a full re-implementation
+of #424's three source files, and the tell is easy to misread — the suite reports
+*more* failures than the one you engineered, which looks like a cascade rather
+than a wiped working tree. Copy the files to the scratchpad first (or `git stash`
+/ commit before breaking), and revert from that copy.

@@ -53,7 +53,7 @@ const frontendGlobals = {
   readClipboardImage: 'readonly', shuffled: 'readonly', iconText: 'readonly',
   createCoverLoader: 'readonly',
   makeGameLink: 'readonly', makeMemberLink: 'readonly',
-  GAME_ICON: 'readonly', playersTag: 'readonly', playersText: 'readonly',
+  GAME_ICON: 'readonly', playersText: 'readonly',
   // account.js (issue #138): onboarding + token wiring, shared with core.js api()
   accountsMode: 'writable', accountUser: 'writable',
   SA_ACCESS: 'readonly', SA_REFRESH: 'readonly', saStore: 'readonly',

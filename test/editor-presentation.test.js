@@ -131,6 +131,108 @@ test('the editors focus via the attach callback, not inline in build()', () => {
   }
 });
 
+/* ---- #424: the four triggers that OPEN those editors are keyboard-reachable ----
+
+   Until #424 every one of them was a click-only <span>/<div>: Tab skipped all
+   four, so a keyboard user could not change a game's cover, title, player range
+   or tags at all. Three are now real <button>s and the title is a
+   role=button/tabindex span (it is inline text that wraps mid-line, which an
+   atomic inline-block button cannot do).
+
+   As above, none of this is observable from Node — it is DOM built by a view
+   function that cannot be required (requiring a view file sinks the coverage
+   gate, .claude/rules/frontend-helper-modules-and-coverage.md). So the markup is
+   pinned as source text and the un-button-ing CSS via the stylesheet. What a
+   regression looks like: the chips quietly go back to spans, Tab skips them
+   again, and every test stays green. */
+
+test('all four game-detail editor triggers are keyboard-focusable', () => {
+  const body = bodyOfFn(DETAIL, 'showGameDetail');
+
+  // The cover and the chips: real buttons, so Enter *and* Space and focus
+  // restoration come from the platform rather than a hand-rolled keydown.
+  assert.match(body, /<button type="button" class="gd-img gd-img--edit"/,
+    'the cover is not a <button> — Tab would skip it again (#424)');
+  const chip = bodyOfFn(DETAIL, 'editableTag');
+  assert.match(chip, /<button type="button" class="tag tag--edit/,
+    'editableTag no longer builds a <button> — every chip loses keyboard access at once (#424)');
+
+  // The title keeps its span, so it needs both halves explicitly: focusable AND
+  // activatable. A tabindex with no keydown is a focus stop that does nothing.
+  assert.match(body, /class="gd-title" role="button" tabindex="0"/,
+    'the title span lost role=button/tabindex — it is unreachable by Tab (#424)');
+  assert.match(body, /e\.key === 'Enter' \|\| e\.key === ' '/,
+    'the title has no Enter/Space handler — Tab reaches a control that cannot be activated');
+});
+
+test('every editable chip goes through the one editableTag chokepoint', () => {
+  // Four variants (players/tags × filled/empty) and one builder: a call site
+  // that hand-rolls its own chip is how one of them silently stays a span.
+  const body = bodyOfFn(DETAIL, 'showGameDetail');
+  // The declaration lives inside showGameDetail too, hence the lookbehind.
+  assert.equal((body.match(/(?<!function )editableTag\(/g) || []).length, 4,
+    'expected exactly four editableTag() call sites (players/tags × filled/empty)');
+  assert.doesNotMatch(body, /<span class="tag tag--(players|custom)/,
+    'a chip is still built as a plain <span> — it would be mouse-only (#424)');
+});
+
+test('the title cancel path hands focus back to the trigger', () => {
+  // Escape puts the span back; without the focus() a keyboard user is dropped to
+  // <body> and restarts from the top of the document.
+  const body = bodyOfFn(DETAIL, 'startTitleEdit');
+  assert.match(body, /Escape'\s*\)\s*\{[^}]*replaceWith\(spanEl\);\s*spanEl\.focus\(\)/,
+    'Escape out of the title editor no longer restores focus to the title (#424)');
+});
+
+test('closing a popover restores focus to the control that opened it', () => {
+  // The sheet presentation gets this from trapFocus (#145); the popover had no
+  // equivalent, so on a desktop closing an editor dropped focus to <body>.
+  const open = bodyOfFn(CORE, 'openPopover');
+  const close = bodyOfFn(CORE, 'closePopover');
+  assert.match(open, /const restoreTo = document\.activeElement;\s*closePopover\(\)/,
+    'openPopover must capture its restore target BEFORE the replace-close, or it captures the previous popover\'s opener');
+  assert.match(close, /restoreTo\.focus\(\)/, 'closePopover no longer restores focus (#424)');
+  // Read while the popover is still in the document: el.remove() moves focus to
+  // <body> on its own, so a check made afterwards is always true.
+  const held = close.indexOf('el.contains(document.activeElement)');
+  const remove = close.indexOf('el.remove()');
+  assert.notEqual(held, -1, 'closePopover no longer checks whether it still holds focus before stealing it back');
+  assert.ok(held < remove, 'closePopover reads the focus-held check after el.remove(), which always reports body');
+});
+
+test('the button triggers keep their pill/frame look, and .tag--empty keeps its dashed border', () => {
+  const edit = bodyOf('.tag--edit');
+  assert.ok(edit, '.tag--edit rule not found');
+  // font-family only — a `font` shorthand would reset .tag's 13px/700 to the
+  // inherited 26px of the <h1> the chips live in.
+  assert.match(edit, /font-family:\s*inherit/, '.tag--edit does not inherit the font — chips would render in the UA button font');
+  assert.doesNotMatch(edit, /font:\s/, '.tag--edit uses the `font` shorthand — it would blow away .tag\'s font-size/weight');
+  assert.match(edit, /line-height:\s*inherit/, '.tag--edit does not inherit line-height — the pill is ~4px shorter than as a span');
+  assert.doesNotMatch(edit, /(^|;)\s*color:/, '.tag--edit sets color — it would override .tag--players/--custom/--empty on source order');
+
+  // Scoped with :not() on purpose: an unscoped `border: 0` ties with
+  // .tag--empty's dashed border on specificity and wins or loses purely on where
+  // the blocks sit in the file.
+  assert.ok(bodyOf('.tag--edit:not(.tag--empty)'), '.tag--edit:not(.tag--empty) not found — the border reset now competes with .tag--empty');
+  assert.match(bodyOf('.tag--edit:not(.tag--empty)'), /border:\s*0/);
+  assert.match(bodyOf('.tag--empty'), /border:\s*1px dashed/, '.tag--empty lost its dashed border');
+
+  const img = bodyOf('.gd-img--edit');
+  assert.ok(img, '.gd-img--edit rule not found');
+  for (const decl of [/border:\s*0/, /padding:\s*0/, /font-family:\s*inherit/, /text-align:\s*inherit/]) {
+    assert.match(img, decl, `.gd-img--edit is missing ${decl} — the UA button chrome shows through`);
+  }
+  assert.doesNotMatch(img, /font:\s/, '.gd-img--edit uses the `font` shorthand — it would override .gd-img\'s 64px placeholder glyph');
+
+  // A focus indicator on each of the three; the cover additionally reveals its
+  // existing overlay, which was written for a focusable frame before one existed.
+  const ring = bodyOf('.tag--edit:focus-visible,\n.gd-title:focus-visible,\n.gd-img--edit:focus-visible');
+  assert.ok(ring, 'the shared :focus-visible ring for the three triggers is gone');
+  assert.match(ring, /outline:\s*2px solid var\(--brand\)/);
+  assert.ok(bodyOf('.gd-img--edit:hover .gd-img__edit,\n.gd-img--edit:focus-visible .gd-img__edit'),
+    'the cover overlay no longer reveals on focus');
+});
+
 test('the editors\' inner layout rules are shared by both presentations', () => {
   // One builder, two containers: a rule scoped to `.popover--tags` alone leaves
   // the sheet unstyled (and vice versa). `:is()` keeps the original (0,2,0)

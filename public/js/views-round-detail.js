@@ -356,14 +356,20 @@ async function showGameDetail(rid, gameId) {
     }
   }
 
-  // Turn a tag into a click-to-edit control.
-  function makeEditableTag(el, onClick) {
-    el.classList.add('tag--edit');
-    el.title = t('detail.editHint');
-    el.addEventListener('click', onClick);
+  // A tag chip that opens an editor (#424). A real <button>, not a span with a
+  // click handler: Tab reaches it, Enter *and* Space activate it, and closing
+  // the editor restores focus to it — all from the platform, which is the
+  // direction .claude/rules/in-app-nav-links.md took for links. Safe to do here
+  // because a chip is already an atomic inline-block/inline-flex pill, so
+  // becoming a button changes none of its layout. The single chokepoint for all
+  // four chip variants (players/tags × filled/empty).
+  function editableTag(cls, inner, onOpen) {
+    const el = h(`<button type="button" class="tag tag--edit ${cls}" title="${esc(t('detail.editHint'))}">${inner}</button>`);
+    el.addEventListener('click', () => onOpen(el));
+    return el;
   }
 
-  // Click the title → inline input; Enter/blur saves, Escape cancels.
+  // Activate the title → inline input; Enter/blur saves, Escape cancels.
   function startTitleEdit(spanEl) {
     const input = h('<input class="input gd-title-input" />');
     input.value = game.title;
@@ -384,7 +390,11 @@ async function showGameDetail(rid, gameId) {
     input.addEventListener('blur', commit);
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-      else if (e.key === 'Escape') { handled = true; input.replaceWith(spanEl); }
+      // Escape puts the trigger back, so put focus back on it too — otherwise a
+      // keyboard user who cancels is dropped to <body> and restarts from the top
+      // of the document. Removing the focused input fires no blur, and `handled`
+      // keeps commit() out of it either way.
+      else if (e.key === 'Escape') { handled = true; input.replaceWith(spanEl); spanEl.focus(); }
     });
   }
 
@@ -557,8 +567,11 @@ async function showGameDetail(rid, gameId) {
        ${sparse ? '' : `<div class="gd-stats">${scoreRing}${sortLine}</div>`}
      </div>`);
 
-  // Editable cover image (click to paste a new one or remove it).
-  const imgEl = h(`<div class="gd-img gd-img--edit" ${imgStyle} title="${esc(t('detail.changeImage'))}">${fallback}<span class="gd-img__edit">${esc(t('detail.changeImage'))}</span></div>`);
+  // Editable cover image (activate to paste a new one or remove it). A <button>
+  // for the same reason as the chips (#424); its fixed 240px box means the UA's
+  // inline-block is no change, and the `.gd-img--edit:focus-visible` overlay
+  // rule was already written for a focusable frame.
+  const imgEl = h(`<button type="button" class="gd-img gd-img--edit" ${imgStyle} title="${esc(t('detail.changeImage'))}">${fallback}<span class="gd-img__edit">${esc(t('detail.changeImage'))}</span></button>`);
   imgEl.addEventListener('click', () => openImagePopover(imgEl));
   head.prepend(imgEl);
 
@@ -566,8 +579,18 @@ async function showGameDetail(rid, gameId) {
   const h1 = head.querySelector('h1');
   const space = () => document.createTextNode(' ');
 
-  const titleEl = h(`<span class="gd-title" title="${esc(t('detail.editName'))}">${esc(game.title)}</span>`);
+  // The one trigger that is NOT a button (#424): the title is inline text that
+  // wraps mid-line — that is what `box-decoration-break: clone` on `.gd-title`
+  // is for — and a <button> is an atomic inline-block, so a long title would
+  // take the whole line and push the chips below it instead of sitting beside
+  // its last line. `role="button"` is what tells a screen reader Enter does
+  // something; a bare focusable span announces only its text.
+  const titleEl = h(`<span class="gd-title" role="button" tabindex="0" title="${esc(t('detail.editName'))}">${esc(game.title)}</span>`);
   titleEl.addEventListener('click', () => startTitleEdit(titleEl));
+  titleEl.addEventListener('keydown', (e) => {
+    // preventDefault on Space, or the page scrolls under the editor.
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startTitleEdit(titleEl); }
+  });
   h1.append(titleEl, space());
 
   // On a sparse page the dashed "set …" chips are suppressed: the onboarding
@@ -576,9 +599,8 @@ async function showGameDetail(rid, gameId) {
   const hasPl = Number.isInteger(game.minPlayers) && Number.isInteger(game.maxPlayers);
   if (hasPl || !sparse) {
     const plEl = hasPl
-      ? h(playersTag(game.minPlayers, game.maxPlayers))
-      : h(`<span class="tag tag--players tag--empty">${esc(t('detail.setPlayers'))}</span>`);
-    makeEditableTag(plEl, () => openPlayersPopover(plEl));
+      ? editableTag('tag--players', iconText('ti-users', playersText(game.minPlayers, game.maxPlayers)), openPlayersPopover)
+      : editableTag('tag--players tag--empty', esc(t('detail.setPlayers')), openPlayersPopover);
     h1.append(plEl);
   }
 
@@ -589,13 +611,11 @@ async function showGameDetail(rid, gameId) {
   if (assignedTagIds.length) {
     assignedTagIds.forEach((x) => {
       const tg = roundTags.find((q) => q.id === x);
-      const tagEl = h(`<span class="tag tag--custom"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</span>`);
-      makeEditableTag(tagEl, () => openTagsPopover(tagEl));
+      const tagEl = editableTag('tag--custom', `<i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}`, openTagsPopover);
       h1.append(space(), tagEl);
     });
   } else if (!sparse) {
-    const tagEl = h(`<span class="tag tag--custom tag--empty">${esc(t('detail.setTags'))}</span>`);
-    makeEditableTag(tagEl, () => openTagsPopover(tagEl));
+    const tagEl = editableTag('tag--custom tag--empty', esc(t('detail.setTags')), openTagsPopover);
     h1.append(space(), tagEl);
   }
   if (game.retired) h1.append(space(), h(`<span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`));
