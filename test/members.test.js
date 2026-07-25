@@ -93,3 +93,24 @@ test('PATCH member 404s for an unknown round or member', async () => {
     404
   );
 });
+
+// #421: without accounts there is no "me", so no seat can be claimed. Legacy
+// mode must stay byte-identical — an unlinked seat, and no route that links one.
+test('PATCH member refuses any userId in legacy (accounts-off) mode', async () => {
+  const round = await createRound(request);
+  const member = round.members[0];
+  assert.equal('userId' in member, false); // no owner seat is written either
+
+  for (const body of [{ userId: null }, { userId: 'someone' }]) {
+    const res = await request(app)
+      .patch(`/api/rounds/${round.id}/members/${member.id}`)
+      .send(body);
+    assert.equal(res.status, 403, JSON.stringify(body));
+    assert.equal(res.body.error, 'not_self');
+  }
+  // The refusal is scoped to the link: name/colour still work in the same mode.
+  assert.equal(
+    (await request(app).patch(`/api/rounds/${round.id}/members/${member.id}`).send({ name: 'Ok' })).status,
+    200
+  );
+});

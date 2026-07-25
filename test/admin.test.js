@@ -855,7 +855,7 @@ test('lookup resolves a tenant by round, e-mail or tenant id (#275)', async (t) 
 
     const row = res.body.summary.rounds.find((r) => r.id === rid);
     assert.equal(row.games, 1);
-    assert.equal(row.members, 2);
+    assert.equal(row.members, 3); // Zoe, Ann + the creator's own seat (#421)
     assert.equal(res.body.summary.totals.rounds, 1);
   });
 
@@ -899,7 +899,9 @@ test('lookup resolves a tenant by round, e-mail or tenant id (#275)', async (t) 
     assert.equal(res.status, 200);
     assert.equal(res.body.content.roundName, 'Findable');
     assert.deepEqual(res.body.content.games.map((g) => g.title), ['Catan']);
-    assert.deepEqual(res.body.content.members.map((m) => m.name), ['Zoe', 'Ann']);
+    // The creator's own seat (#421) is first and is user-authored text like any
+    // other member name, so the moderation view lists it too.
+    assert.deepEqual(res.body.content.members.map((m) => m.name), ['lookup', 'Zoe', 'Ann']);
 
     const missing = await request(app).get('/api/admin/content?round=deadbeef').set('Cookie', cookie);
     assert.equal(missing.status, 404);

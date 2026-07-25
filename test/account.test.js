@@ -276,9 +276,9 @@ test('full account lifecycle', async (t) => {
 
 /* ------------------------------ member linking ------------------------------ */
 
-test('a member can be linked to a user and unlinked again', async () => {
-  // Accounts are on in this file (#138 gate), so the round is created and edited
-  // with an account's Bearer token, and the member is linked to that account.
+test('a seat can be claimed and released by its own account (#421)', async () => {
+  // Accounts are on in this file (#138 gate), so the round is created with an
+  // account's Bearer token — which since #421 seats the creator at index 0.
   const email = 'linkme@example.com';
   await request(app).post('/api/account/register').send({ email, username: 'linkme', password: PASSWORD });
   const { uid, token: vtok } = lastMailTokens();
@@ -291,18 +291,131 @@ test('a member can be linked to a user and unlinked again', async () => {
     .post('/api/rounds').set('Authorization', bearer)
     .send({ name: 'Test round', members: ['Alice', 'Bob'] });
   const round = created.body;
-  const mid = round.members[0].id;
+  assert.deepEqual(round.members.map((m) => m.name), ['linkme', 'Alice', 'Bob']);
+  assert.equal(round.members[0].userId, user.id);
+  const own = round.members[0].id;
+  const alice = round.members[1].id;
 
-  const bogus = await request(app).patch(`/api/rounds/${round.id}/members/${mid}`).set('Authorization', bearer).send({ userId: 'nope' });
-  assert.equal(bogus.status, 400);
+  // Release the auto-seat, then claim Alice's chair instead: the deliberate
+  // two-step move (a claim never silently unlinks the seat you already hold).
+  const released = await request(app).patch(`/api/rounds/${round.id}/members/${own}`)
+    .set('Authorization', bearer).send({ userId: null });
+  assert.equal(released.status, 200);
+  assert.equal(released.body.userId, null);
 
-  const linked = await request(app).patch(`/api/rounds/${round.id}/members/${mid}`).set('Authorization', bearer).send({ userId: user.id });
-  assert.equal(linked.status, 200);
-  assert.equal(linked.body.userId, user.id);
+  const claimed = await request(app).patch(`/api/rounds/${round.id}/members/${alice}`)
+    .set('Authorization', bearer).send({ userId: user.id });
+  assert.equal(claimed.status, 200);
+  assert.equal(claimed.body.userId, user.id);
+  // The seat keeps its own name — claiming links an account, it doesn't rename.
+  assert.equal(claimed.body.name, 'Alice');
+});
 
-  const unlinked = await request(app).patch(`/api/rounds/${round.id}/members/${mid}`).set('Authorization', bearer).send({ userId: null });
-  assert.equal(unlinked.status, 200);
-  assert.equal(unlinked.body.userId, null);
+// The payoff for the auto-seat: actorSeat (routes/games.js) resolves the acting
+// account to a member by m.userId, so before #421 an owner's own actions carried
+// no actorMemberId and the Chronik showed no „von …" for them, ever.
+test('the creator is attributed in the activity feed from the first action (#421)', async () => {
+  const email = 'attrib@example.com';
+  await request(app).post('/api/account/register').send({ email, username: 'attrib', password: PASSWORD });
+  const { uid, token: vtok } = lastMailTokens();
+  await request(app).post('/api/account/verify-email').send({ uid, token: vtok });
+  const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+  const bearer = `Bearer ${login.body.accessToken}`;
+
+  const round = (await request(app).post('/api/rounds').set('Authorization', bearer)
+    .send({ name: 'Attributed', members: ['Ann'] })).body;
+  await request(app).post(`/api/rounds/${round.id}/games`).set('Authorization', bearer)
+    .send({ title: 'Catan', minPlayers: 2, maxPlayers: 4 });
+
+  const feed = (await request(app).get(`/api/rounds/${round.id}/activities`).set('Authorization', bearer)).body;
+  const added = feed.find((a) => a.type === 'game_added');
+  assert.equal(added.actorMemberId, round.members[0].id);
+  assert.equal(round.members[0].name, 'attrib');
+});
+
+test('the owner seat can be opted out of, and a solo round needs no typed members (#421)', async () => {
+  const email = 'solo@example.com';
+  await request(app).post('/api/account/register').send({ email, username: 'solo', password: PASSWORD });
+  const { uid, token: vtok } = lastMailTokens();
+  await request(app).post('/api/account/verify-email').send({ uid, token: vtok });
+  const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+  const bearer = `Bearer ${login.body.accessToken}`;
+  const post = (body) => request(app).post('/api/rounds').set('Authorization', bearer).send(body);
+
+  // Just me: the common way to start a round now, and it used to be a 400.
+  const solo = await post({ name: 'Solo', members: [] });
+  assert.equal(solo.status, 201);
+  assert.deepEqual(solo.body.members.map((m) => m.name), ['solo']);
+
+  // Opted out: byte-identical to pre-#421 — no seat, and no `userId` key at all.
+  const optedOut = await post({ name: 'No seat', members: ['Ann'], ownerSeat: false });
+  assert.equal(optedOut.status, 201);
+  assert.deepEqual(optedOut.body.members.map((m) => m.name), ['Ann']);
+  assert.deepEqual(Object.keys(optedOut.body.members[0]).sort(), ['id', 'name']);
+
+  // Opted out AND nothing typed leaves an empty table, which is still refused.
+  const empty = await post({ name: 'Nobody', members: [], ownerSeat: false });
+  assert.equal(empty.status, 400);
+  assert.equal(empty.body.error, 'At least one member is required');
+});
+
+test('the seat link is self-claim only: strangers, taken seats and second seats are refused (#421)', async () => {
+  const mk = async (handleName) => {
+    const email = `${handleName}@example.com`;
+    await request(app).post('/api/account/register').send({ email, username: handleName, password: PASSWORD });
+    const { uid, token: vtok } = lastMailTokens();
+    await request(app).post('/api/account/verify-email').send({ uid, token: vtok });
+    const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+    return { bearer: `Bearer ${login.body.accessToken}`, user: await repo.getUserByEmail(email) };
+  };
+  const owner = await mk('claimowner');
+  const other = await mk('claimother');
+
+  const created = await request(app).post('/api/rounds').set('Authorization', owner.bearer)
+    .send({ name: 'Claims', members: ['Alice', 'Bob'] });
+  const round = created.body;
+  const [ownSeat, alice, bob] = round.members.map((m) => m.id);
+  const patch = (mid, body) =>
+    request(app).patch(`/api/rounds/${round.id}/members/${mid}`).set('Authorization', owner.bearer).send(body);
+
+  // Never link a STRANGER's account — the pre-#421 route took any existing user
+  // id from anyone with round access, which is what made this reachable.
+  const stranger = await patch(alice, { userId: other.user.id });
+  assert.equal(stranger.status, 403);
+  assert.equal(stranger.body.error, 'not_self');
+
+  // An unknown id is refused the same way: it is simply not the caller. (It used
+  // to be a 400 'Unknown user', which also answered "does this id exist?".)
+  assert.equal((await patch(alice, { userId: 'nope' })).status, 403);
+
+  // One seat per account per round — actorSeat/seatOf both .find(), so two seats
+  // for one account is undefined behaviour.
+  const second = await patch(alice, { userId: owner.user.id });
+  assert.equal(second.status, 400);
+  assert.equal(second.body.error, 'already_seated');
+
+  // Releasing a seat that is not yours is refused. This is the case that used to
+  // strand a grantee with full access and no chair, their old seat re-offered in
+  // the invite dialog.
+  const ownerTenant = (await repo.getUserById(owner.user.id)).tenantId;
+  await repo.forTenant(ownerTenant).updateMember(round.id, bob, { userId: other.user.id });
+  const alienRelease = await patch(bob, { userId: null });
+  assert.equal(alienRelease.status, 403);
+  assert.equal(alienRelease.body.error, 'not_self');
+  assert.equal((await repo.forTenant(ownerTenant).getRoundMeta(round.id))
+    .members.find((m) => m.id === bob).userId, other.user.id);
+
+  // A seat held by another account cannot be claimed either — 409, distinct from
+  // the 403s so the UI can say which of the two happened.
+  await patch(ownSeat, { userId: null }); // free myself up first
+  const taken = await patch(bob, { userId: owner.user.id });
+  assert.equal(taken.status, 409);
+  assert.equal(taken.body.error, 'seat_taken');
+
+  // Name/colour edits are untouched by the tightening.
+  const renamed = await patch(bob, { name: 'Bobby' });
+  assert.equal(renamed.status, 200);
+  assert.equal(renamed.body.name, 'Bobby');
 });
 
 /* --------------------------- token primitive edges -------------------------- */

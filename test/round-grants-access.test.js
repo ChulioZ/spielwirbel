@@ -158,11 +158,39 @@ test('moving games out of a shared round is owner-only (#411)', async () => {
 async function seedShare(owner, grantee, seatName = 'Anna') {
   const round = (await request(app).post('/api/rounds').set(auth(owner.token))
     .send({ name: 'Geteilt', members: [seatName, 'Bob'] })).body;
-  const seat = round.members[0];
+  // By NAME, not index — since #421 members[0] is the owner's own auto-seat, and
+  // seating the grantee there would make this fixture quietly nonsensical.
+  const seat = round.members.find((m) => m.name === seatName);
   await repo.forTenant(owner.user.tenantId).updateMember(round.id, seat.id, { userId: grantee.user.id });
   await repo.createGrant({ roundId: round.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id, memberId: seat.id });
   return { round, seatId: seat.id };
 }
+
+// #421: the seat link is the one member field a grantee may not touch. Their
+// seat is linked at accept and released by DELETE …/shares/:userId, which drops
+// the grant and the link together — patching it here would desync
+// round_grants.memberId from the seat.
+test('a grantee may rename their seat but not re-link it (#421)', async () => {
+  const owner = await makeAccount('seat-owner@example.com');
+  const grantee = await makeAccount('seat-grantee@example.com');
+  const s = await seedShare(owner, grantee);
+  const patch = (body) => request(app).patch(`/api/rounds/${s.round.id}/members/${s.seatId}`)
+    .set(auth(grantee.token)).send(body);
+
+  const rename = await patch({ name: 'Annika' });
+  assert.equal(rename.status, 200);
+  assert.equal(rename.body.name, 'Annika');
+
+  for (const body of [{ userId: null }, { userId: grantee.user.id }, { userId: owner.user.id }]) {
+    const res = await patch(body);
+    assert.equal(res.status, 403, JSON.stringify(body));
+    assert.equal(res.body.error, 'not_owner');
+  }
+  // Still seated, still granted: nothing above half-applied.
+  const seat = (await request(app).get(`/api/rounds/${s.round.id}`).set(auth(grantee.token)))
+    .body.members.find((m) => m.id === s.seatId);
+  assert.equal(seat.userId, grantee.user.id);
+});
 
 test('revoke / leave a share: access ends, the seat is unlinked but kept', async () => {
   const owner = await makeAccount('rev-owner@example.com');
@@ -178,7 +206,8 @@ test('revoke / leave a share: access ends, the seat is unlinked but kept', async
   assert.equal((await request(app).get('/api/rounds').set(auth(grantee.token))).body.some((r) => r.id === s.round.id), false); // off home
   // The seat is KEPT, just unlinked — its ratings/history stay on the round.
   const membersAfter = (await request(app).get(`/api/rounds/${s.round.id}`).set(auth(owner.token))).body.members;
-  assert.equal(membersAfter.length, 2);
+  assert.equal(membersAfter.length, 3); // owner's own seat (#421) + 'Owner' + the grantee's
+
   assert.ok(!membersAfter.find((m) => m.id === s.seatId).userId); // unlinked (null), seat kept
 
   // GRANTEE leaves on their own.
