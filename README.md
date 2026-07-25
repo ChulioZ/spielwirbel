@@ -262,8 +262,8 @@ lib/
                      ADMIN_PASSWORD; 404s unless set — issue #268)
   accounts.js        user-account primitives: Argon2id passwords, access/refresh
                      tokens (issue #135; off unless ACCOUNTS_ENABLED)
-  mail.js            outbound e-mail (Scaleway TEM when SCW_SECRET_KEY is set,
-                     else logged to an in-memory outbox)
+  mail.js            outbound e-mail (SMTP via nodemailer when SMTP_HOST is
+                     set, else logged to an in-memory outbox)
   csv.js             RFC 4180 CSV writer for the operator panel's exports
                      (issue #288) — quotes every field, so a feedback message
                      with commas/quotes/newlines cannot corrupt the file, and
@@ -471,11 +471,11 @@ report may be anonymous), which is acknowledged to the notifier by mail
 (Art. 16(4)). Every accepted submission is **also stored** (the operator
 panel's Meldungen inbox), so a lost mail can never mean a notice left no
 record — storing happens before sending. Delivery goes to `CONTACT_TO` (falling
-back to `MAIL_FROM`) via the same Scaleway setup as the account mails. It has its
+back to `MAIL_FROM`) via the same SMTP setup as the account mails. It has its
 own low rate limit and a server-side honeypot for spam, and in
 `NODE_ENV=production` it **fails loud** (`502` with a fallback e-mail) rather
 than silently dropping a message when mail is unconfigured — so configure
-`SCW_SECRET_KEY` + `SCW_PROJECT_ID` + `MAIL_FROM` + `CONTACT_TO`
+`SMTP_HOST` + `SMTP_USER` + `SMTP_PASS` + `MAIL_FROM` + `CONTACT_TO`
 before relying on it in production. A shared site footer links to it — but the
 footer (and the form itself) only appears once the public `GET /api/config`
 reports the instance ready: mail configured **and** the Impressum identity set
@@ -528,9 +528,10 @@ typed) chosen at registration and not self-renamable: it is how an account is
 named in an abuse report and how invitations (#207) will find it, so no account
 can exist without one. It is **off by default**: set `ACCOUNTS_ENABLED=true` *and* a
 strong `SESSION_SECRET` to expose it. Verification/reset mails go out via
-Scaleway Transactional Email (`SCW_SECRET_KEY`, `SCW_PROJECT_ID`, `MAIL_FROM`,
-links built from `APP_BASE_URL`); without a key they are logged instead of sent.
-These mails carry no tracking pixel and no rewritten links (#440).
+plain SMTP (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, links built
+from `APP_BASE_URL`); unconfigured, they are logged instead of sent. Production
+sends through the operator's own mailbox rather than a transactional provider,
+so the mails carry no tracking pixel and no rewritten links (#440).
 
 When accounts are enabled the app runs in **accounts mode** (issue #138): the SPA
 shows an in-app onboarding flow — register → confirm e-mail → log in, plus password

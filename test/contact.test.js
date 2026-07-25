@@ -2,9 +2,9 @@
 
 /*
  * Public contact form (issue #224): POST /api/contact and the standalone
- * /kontakt.html page. No network ever — with SCW_SECRET_KEY unset lib/mail.js
- * captures messages in its in-memory outbox (the Scaleway path, when exercised, is
- * a stubbed global fetch). Covers: happy path + reply-to, the honeypot, input
+ * /kontakt.html page. No network ever — with SMTP_HOST unset lib/mail.js
+ * captures messages in its in-memory outbox (the SMTP path, when exercised, is
+ * a stubbed nodemailer transport). Covers: happy path + reply-to, the honeypot, input
  * validation, the dedicated rate limit, reachability without auth (both gates),
  * and the fail-loud paths (production-unconfigured, send failure).
  */
@@ -14,18 +14,21 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const { app } = require('./helpers');
 const { createApp } = require('../lib/app');
+const nodemailer = require('nodemailer');
 const { outbox } = require('../lib/mail');
 const repo = require('../lib/repo');
 
 const lastNotice = async () => (await repo.listContactNotices(1))[0];
 
 const realFetch = global.fetch;
+const realCreateTransport = nodemailer.createTransport;
 
 afterEach(() => {
   global.fetch = realFetch;
+  nodemailer.createTransport = realCreateTransport;
   // These are read per request by the route / gates, so a test that sets one
   // must not leak it into the shared app used by later tests.
-  for (const k of ['CONTACT_TO', 'SCW_SECRET_KEY', 'SCW_PROJECT_ID', 'MAIL_FROM', 'NODE_ENV',
+  for (const k of ['CONTACT_TO', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'MAIL_FROM', 'NODE_ENV',
     'AUTH_PASSWORD', 'ACCOUNTS_ENABLED', 'SESSION_SECRET']) {
     delete process.env[k];
   }
@@ -228,7 +231,7 @@ test('an unknown feedback locale is dropped but the message is kept (#321)', asy
 
 test('feedback works in production with mail unconfigured — never the 502 guard (#321)', async () => {
   process.env.NODE_ENV = 'production';
-  // No SCW_SECRET_KEY / MAIL_FROM → mail.isConfigured() is false, which 502s a
+  // No SMTP credentials / MAIL_FROM → mail.isConfigured() is false, which 502s a
   // report but must never block store-only feedback.
   const res = await request(app).post('/api/contact')
     .send({ message: 'prod feedback', category: 'feedback' });
@@ -307,7 +310,7 @@ test('the endpoint is reachable without a token in accounts mode', async () => {
 test('in production with mail unconfigured it fails loud (502) instead of black-holing', async () => {
   process.env.NODE_ENV = 'production';
   process.env.CONTACT_TO = 'ops@example.com';
-  // No SCW_SECRET_KEY / MAIL_FROM → mail.isConfigured() is false.
+  // No SMTP credentials / MAIL_FROM → mail.isConfigured() is false.
   const before = outbox.length;
   const res = await request(app).post('/api/contact').send(valid);
   assert.equal(res.status, 502);
@@ -317,11 +320,15 @@ test('in production with mail unconfigured it fails loud (502) instead of black-
 });
 
 test('a send failure returns 502 with the fallback email — but keeps the stored notice', async () => {
-  process.env.SCW_SECRET_KEY = 'test-key';
-  process.env.SCW_PROJECT_ID = 'proj-123';
+  process.env.SMTP_HOST = 'smtp.example.test';
+  process.env.SMTP_USER = 'u';
+  process.env.SMTP_PASS = 'p';
   process.env.MAIL_FROM = 'no-reply@example.com';
   process.env.CONTACT_TO = 'ops@example.com';
-  global.fetch = async () => ({ ok: false, status: 500 }); // Scaleway error → mail.send rejects
+  // SMTP submission refused → mail.send rejects.
+  nodemailer.createTransport = () => ({
+    sendMail: async () => { throw new Error('535 Authentication failed'); },
+  });
   const countBefore = await repo.countContactNotices();
   const res = await request(app).post('/api/contact').send({ ...valid, message: 'survives the mail outage' });
   assert.equal(res.status, 502);

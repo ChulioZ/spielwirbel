@@ -13,7 +13,7 @@
  * test/auth.test.js and test/security.test.js do. Requiring ./helpers sets
  * DATA_DIR, raises the limiter ceilings, and silences the request logger; the
  * middleware reads the auth env per request, so each app sees the env its test set.
- * No network: SCW_SECRET_KEY stays unset, so mail lands in the in-memory outbox.
+ * No network: SMTP_PASS stays unset, so mail lands in the in-memory outbox.
  */
 
 const { test, afterEach } = require('node:test');

@@ -67,7 +67,10 @@ test('configured: the privacy policy covers the real processors and no ODR link'
   const res = await request(app).get('/datenschutz');
   assert.equal(res.status, 200);
   for (const marker of [
-    'Railway', 'Cloudflare', 'Scaleway',         // the three platform processors
+    'Railway', 'Cloudflare',                     // the two platform processors
+    // Since #440 mail is sent through the operator's own mailbox, so there is
+    // no separate delivery provider to name — Heinlein below covers both
+    // directions. A new marker belongs here if one is ever reintroduced.
     'Heinlein',                                  // operator-mailbox host (#307)
     'ZERODOX',                                   // address-service recipient — separate controller, no AVV (#226)
     'eigenständiger Verantwortlicher',           // …and the classification itself is pinned in the DE text

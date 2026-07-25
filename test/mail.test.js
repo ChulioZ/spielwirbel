@@ -1,27 +1,48 @@
 'use strict';
 
 /*
- * lib/mail.js — both delivery paths, no network ever: the Scaleway path runs
- * against a stubbed global fetch (the same boundary-stub pattern as the lookup
- * provider tests), the unconfigured path against the in-memory outbox.
+ * lib/mail.js — both delivery paths, no network ever: the SMTP path runs
+ * against a stubbed nodemailer transport (the same boundary-stub pattern the
+ * lookup provider tests use for fetch), the unconfigured path against the
+ * in-memory outbox.
+ *
+ * Stubbing works because lib/mail.js calls nodemailer.createTransport() at SEND
+ * time, not at require time, and both files resolve to the same module
+ * instance — so replacing the property here is seen there.
  */
 
 const { test, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
+const nodemailer = require('nodemailer');
 
 const mail = require('../lib/mail');
 
-const realFetch = global.fetch;
+const realCreateTransport = nodemailer.createTransport;
 afterEach(() => {
-  global.fetch = realFetch;
-  delete process.env.SCW_SECRET_KEY;
-  delete process.env.SCW_PROJECT_ID;
-  delete process.env.SCW_REGION;
-  delete process.env.MAIL_FROM;
+  nodemailer.createTransport = realCreateTransport;
+  for (const k of ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'MAIL_FROM', 'MAIL_FROM_NAME']) {
+    delete process.env[k];
+  }
 });
 
-test('without SCW_SECRET_KEY nothing is sent; the message lands in the outbox', async () => {
-  global.fetch = async () => { throw new Error('must not fetch'); };
+const configure = () => {
+  process.env.SMTP_HOST = 'smtp.example.test';
+  process.env.SMTP_USER = 'no-reply@example.test';
+  process.env.SMTP_PASS = 'app-password';
+};
+
+// Captures both what the transport was built with and what was handed to it.
+function stubTransport() {
+  const seen = {};
+  nodemailer.createTransport = (opts) => {
+    seen.opts = opts;
+    return { sendMail: async (msg) => { seen.msg = msg; return { messageId: '<x@example.test>' }; } };
+  };
+  return seen;
+}
+
+test('without SMTP config nothing is sent; the message lands in the outbox', async () => {
+  nodemailer.createTransport = () => { throw new Error('must not build a transport'); };
   const before = mail.outbox.length;
   const res = await mail.send({ to: 'a@example.com', subject: 'S', text: 'T' });
   assert.deepEqual(res, { delivered: false });
@@ -29,77 +50,89 @@ test('without SCW_SECRET_KEY nothing is sent; the message lands in the outbox', 
   assert.deepEqual(mail.outbox[mail.outbox.length - 1], { to: 'a@example.com', subject: 'S', text: 'T' });
 });
 
-test('with SCW_SECRET_KEY it POSTs the Scaleway payload with the auth-token header', async () => {
-  process.env.SCW_SECRET_KEY = 'test-key';
-  process.env.SCW_PROJECT_ID = 'proj-123';
-  process.env.MAIL_FROM = 'sender@example.com';
-  let captured;
-  global.fetch = async (url, opts) => {
-    captured = { url, opts };
-    return { ok: true, status: 200 };
-  };
+test('configured, it submits the message over SMTP', async () => {
+  configure();
+  process.env.MAIL_FROM = 'no-reply@example.test';
+  process.env.MAIL_FROM_NAME = 'Spielwirbel';
+  const seen = stubTransport();
   const res = await mail.send({ to: 'b@example.com', subject: 'Betreff', text: 'Inhalt' });
   assert.deepEqual(res, { delivered: true });
-  assert.equal(captured.url, 'https://api.scaleway.com/transactional-email/v1alpha1/regions/fr-par/emails');
-  assert.equal(captured.opts.headers['X-Auth-Token'], 'test-key');
-  const body = JSON.parse(captured.opts.body);
-  assert.equal(body.from.email, 'sender@example.com');
-  assert.deepEqual(body.to, [{ email: 'b@example.com' }]);
-  assert.equal(body.project_id, 'proj-123');
-  assert.equal(body.subject, 'Betreff');
-  assert.equal(body.text, 'Inhalt');
+  assert.equal(seen.opts.host, 'smtp.example.test');
+  assert.deepEqual(seen.opts.auth, { user: 'no-reply@example.test', pass: 'app-password' });
+  assert.deepEqual(seen.msg.from, { address: 'no-reply@example.test', name: 'Spielwirbel' });
+  assert.equal(seen.msg.to, 'b@example.com');
+  assert.equal(seen.msg.subject, 'Betreff');
+  assert.equal(seen.msg.text, 'Inhalt');
 });
 
-// The region is read per call (not bound at module load), so a redeploy in
-// another region needs only the env var — same reasoning as lib/app.js's
-// rate-limit ceilings.
-test('SCW_REGION overrides the fr-par default in the endpoint', async () => {
-  process.env.SCW_SECRET_KEY = 'test-key';
-  process.env.SCW_PROJECT_ID = 'proj-123';
-  process.env.SCW_REGION = 'nl-ams';
-  let url;
-  global.fetch = async (u) => { url = u; return { ok: true, status: 200 }; };
+// A text/plain body cannot carry a tracking pixel. #439/#440 exist because a
+// provider injected one into HTML; never grow an html part without re-reading
+// that history.
+test('the message is text-only — no html part is ever sent', async () => {
+  configure();
+  const seen = stubTransport();
   await mail.send({ to: 'b@example.com', subject: 'S', text: 'T' });
-  assert.match(url, /regions\/nl-ams\/emails$/);
+  assert.equal('html' in seen.msg, false);
 });
 
-// Scaleway has no dedicated reply-to field, so the contact form's Reply-To
-// (#224) rides in additional_headers. If this shape ever regresses, replies to
-// a contact message would go to the no-reply sender instead of the visitor.
-test('replyTo becomes a Reply-To entry in additional_headers', async () => {
-  process.env.SCW_SECRET_KEY = 'test-key';
-  process.env.SCW_PROJECT_ID = 'proj-123';
-  let body;
-  global.fetch = async (_u, opts) => { body = JSON.parse(opts.body); return { ok: true, status: 200 }; };
+// 465 is implicit TLS, 587 upgrades via STARTTLS. Getting `secure` wrong against
+// 465 hangs until the connection timeout rather than failing clearly.
+test('secure follows the port: 465 implicit TLS, 587 STARTTLS', async () => {
+  configure();
+  let seen = stubTransport();
+  await mail.send({ to: 'b@example.com', subject: 'S', text: 'T' });
+  assert.equal(seen.opts.port, 465, 'defaults to 465');
+  assert.equal(seen.opts.secure, true);
+
+  process.env.SMTP_PORT = '587';
+  seen = stubTransport();
+  await mail.send({ to: 'b@example.com', subject: 'S', text: 'T' });
+  assert.equal(seen.opts.port, 587);
+  assert.equal(seen.opts.secure, false);
+});
+
+// The send is awaited before the HTTP response, so an unbounded connection
+// would hold a registration open until the client gives up.
+test('every connection phase is bounded by a timeout', async () => {
+  configure();
+  const seen = stubTransport();
+  await mail.send({ to: 'b@example.com', subject: 'S', text: 'T' });
+  for (const k of ['connectionTimeout', 'greetingTimeout', 'socketTimeout']) {
+    assert.ok(seen.opts[k] > 0, `${k} must be set`);
+  }
+});
+
+// If this regresses, replies to a contact message go to the no-reply sender
+// instead of the visitor (#224).
+test('replyTo is passed through, and omitted entirely when unset', async () => {
+  configure();
+  let seen = stubTransport();
   await mail.send({ to: 'op@example.com', subject: 'S', text: 'T', replyTo: 'visitor@example.com' });
-  assert.deepEqual(body.additional_headers, [{ key: 'Reply-To', value: 'visitor@example.com' }]);
-});
+  assert.equal(seen.msg.replyTo, 'visitor@example.com');
 
-test('without replyTo no additional_headers are sent at all', async () => {
-  process.env.SCW_SECRET_KEY = 'test-key';
-  process.env.SCW_PROJECT_ID = 'proj-123';
-  let body;
-  global.fetch = async (_u, opts) => { body = JSON.parse(opts.body); return { ok: true, status: 200 }; };
+  seen = stubTransport();
   await mail.send({ to: 'op@example.com', subject: 'S', text: 'T' });
-  assert.equal('additional_headers' in body, false);
+  assert.equal('replyTo' in seen.msg, false);
 });
 
-test('a non-ok Scaleway response rejects (callers decide whether that is fatal)', async () => {
-  process.env.SCW_SECRET_KEY = 'test-key';
-  process.env.SCW_PROJECT_ID = 'proj-123';
-  global.fetch = async () => ({ ok: false, status: 401 });
-  await assert.rejects(() => mail.send({ to: 'c@example.com', subject: 'S', text: 'T' }), /HTTP 401/);
+test('a failed submission rejects (callers decide whether that is fatal)', async () => {
+  configure();
+  nodemailer.createTransport = () => ({
+    sendMail: async () => { throw new Error('535 Authentication failed'); },
+  });
+  await assert.rejects(() => mail.send({ to: 'c@example.com', subject: 'S', text: 'T' }), /535/);
 });
 
-// A key without a project id is not a working configuration — Scaleway rejects
-// the send — so isConfigured() must not report it as one. The contact form
-// (#224) keys its fail-loud 502 off exactly this.
-test('isConfigured() requires key, project id and MAIL_FROM together', async () => {
+// Credentials without MAIL_FROM is not a working configuration. The contact
+// form (#224) keys its fail-loud 502 off exactly this.
+test('isConfigured() requires host, user, pass and MAIL_FROM together', async () => {
   assert.equal(mail.isConfigured(), false);
-  process.env.SCW_SECRET_KEY = 'test-key';
+  process.env.SMTP_HOST = 'smtp.example.test';
   assert.equal(mail.isConfigured(), false);
-  process.env.SCW_PROJECT_ID = 'proj-123';
+  process.env.SMTP_USER = 'u';
   assert.equal(mail.isConfigured(), false);
-  process.env.MAIL_FROM = 'sender@example.com';
+  process.env.SMTP_PASS = 'p';
+  assert.equal(mail.isConfigured(), false);
+  process.env.MAIL_FROM = 'no-reply@example.test';
   assert.equal(mail.isConfigured(), true);
 });
