@@ -571,8 +571,8 @@ I18N.en = {
   'auth.limited.retry': 'Try again',
 
   // Logged-out landing page (#322): the marketing front door before registration.
-  'landing.hero.title': 'Your game group, all in one place.',
-  'landing.hero.sub': 'Collect your games, vote on what to play tonight, and remember how it went – all in one place for your group.',
+  'landing.hero.title': 'The game collection for your group.',
+  'landing.hero.sub': 'Board games and video games in one place – with a vote on what to play tonight, and a chronicle of how it went.',
   'landing.hero.ctaPrimary': 'Sign up free',
   'landing.hero.ctaSecondary': 'Log in',
   'landing.features.title': 'Everything for game night',
