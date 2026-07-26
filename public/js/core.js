@@ -419,12 +419,17 @@ function randomOrderedGames(round, activeGames) {
   return order.map((id) => activeGames.find((g) => g.id === id)).filter(Boolean);
 }
 
-// Rating stats of a game within ONE session.
+// Rating stats of a game within ONE session. Iterates the session's PEOPLE, not
+// the round's members, so a guest's rating counts too (#458) — a guest actually
+// played the game, and leaving their vote out would make this screen and the
+// game's own average silently disagree. A guest can carry no `retire` flag (the
+// vote card offers none, and the server strips one), so `sortCount` needs no
+// guest exclusion.
 function gameStatsForSession(round, session, gameId) {
   const ratings = [];
   let sortCount = 0;
-  round.members.forEach((m) => {
-    const v = (session.votes[m.id] || {})[gameId];
+  sessionPeople(round, session).forEach((p) => {
+    const v = (session.votes[p.id] || {})[gameId];
     if (!v) return;
     if (v.retire) sortCount++;
     if (typeof v.rating === 'number') ratings.push(v.rating);
@@ -444,8 +449,9 @@ function gameStats(round, gameId) {
   round.sessions.forEach((s) => {
     if (!s.gameIds.includes(gameId)) return;
     sessions++;
-    round.members.forEach((m) => {
-      const v = (s.votes[m.id] || {})[gameId];
+    // Guests included, for the same reason as gameStatsForSession above (#458).
+    sessionPeople(round, s).forEach((p) => {
+      const v = (s.votes[p.id] || {})[gameId];
       if (!v) return;
       votesCast++;
       if (v.retire) sortCount++;
@@ -545,6 +551,19 @@ function memberColor(round, memberId) {
   return MEMBER_COLORS[(idx >= 0 ? idx : 0) % MEMBER_COLORS.length];
 }
 
+// Colour for one session participant (sessionPeople shape). A guest is not a
+// round member, so memberColor() would find no row and hand every guest member
+// #0's swatch (#458) — they get the neutral ink instead, which also reads as
+// "not one of us" and reinforces the (Gast) label.
+// It has to be a DARK tone, not the light dashed one `.avatar--guest` paints
+// with: this value becomes the handover card's full-bleed background (white text
+// on it) and the voter's name colour on the page. --ink-soft clears 4.5:1 both
+// under white and on the darkest theme page, which is the bar every text colour
+// here has to meet (.claude/rules/accessibility-contrast-and-modals.md §1).
+function personColor(round, person) {
+  return person.guest ? 'var(--ink-soft)' : memberColor(round, person.id);
+}
+
 // Initials for an avatar: first letters of the first two words, or the first
 // two letters of a single-word name.
 function initials(name) {
@@ -555,10 +574,14 @@ function initials(name) {
 
 // Seat-picker around a table: tap a member to toggle whether they join tonight.
 // `joining` is a Set of member ids, mutated in place; at least one member must
-// stay in. `onChange` (optional) runs after a toggle. Returns the table element
-// to append where needed. Shared by the start-session screen and the "Jetzt
-// spielen" sheet.
-function renderSeatPicker(round, joining, onChange) {
+// stay in. `onChange` (optional) runs after a toggle. `extraCount` (optional) is
+// a function returning further players who are at the table but hold no seat —
+// the session's guests (#458) — so the centre count matches the player count the
+// draw pool is actually filtered by. Returns the table element to append where
+// needed, carrying a `refreshSeats()` so a caller whose `extraCount` changed can
+// redraw it (the guest list lives outside the picker). Shared by the
+// start-session screen and the "Jetzt spielen" sheet.
+function renderSeatPicker(round, joining, onChange, extraCount) {
   const table = h(`<div class="nr-table">
       <div class="nr-table__ring"></div>
       <div class="nr-table__center"></div>
@@ -566,7 +589,8 @@ function renderSeatPicker(round, joining, onChange) {
   const tableCenter = table.querySelector('.nr-table__center');
   function render() {
     table.querySelectorAll('.nr-seat').forEach((el) => el.remove());
-    tableCenter.textContent = t('startSession.tableCount', { n: joining.size });
+    const extra = typeof extraCount === 'function' ? extraCount() : 0;
+    tableCenter.textContent = t('startSession.tableCount', { n: joining.size + extra });
     const cx = 140, cy = 118, rx = 112, ry = 92;
     round.members.forEach((m, i) => {
       const angle = ((-90 + (i * 360) / round.members.length) * Math.PI) / 180;
@@ -598,6 +622,7 @@ function renderSeatPicker(round, joining, onChange) {
     });
   }
   render();
+  table.refreshSeats = render;
   return table;
 }
 

@@ -750,8 +750,11 @@ async function showGameDetail(rid, gameId) {
       const picked = s.chosenGameId === gameId;
       let status;
       if (picked) {
+        // Session people, not round members, so a guest winner still resolves
+        // (marked as a guest) rather than vanishing from the line (#458).
+        const sPeople = sessionPeople(round, s);
         const names = (s.winnerIds || [])
-          .map((wid) => (round.members.find((m) => m.id === wid) || {}).name)
+          .map((wid) => personLabel(sPeople.find((p) => p.id === wid)))
           .filter(Boolean);
         status = s.finished
           ? `${esc(t('detail.played'))}${names.length ? ' · <i class="ti ti-trophy" aria-hidden="true"></i> ' + names.map(esc).join(', ') : ''}`

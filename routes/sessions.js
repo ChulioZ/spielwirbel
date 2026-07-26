@@ -4,13 +4,34 @@
    finish/winners, cancel, delete.
    Mounted under /api/rounds/:rid/sessions (mergeParams for rid). */
 
+const crypto = require('crypto');
 const express = require('express');
 const { z } = require('zod');
 const { validateBody } = require('../lib/validate');
 const { trackEvent } = require('../lib/observability');
 const { emitFeedEvent } = require('../lib/feed');
+// The cap lives with the frontend helper that also enforces it on the setup
+// screen — one source of truth across the boundary (#458, see
+// .claude/rules/shared-constants-across-the-stack.md).
+const { MAX_SESSION_GUESTS, GUEST_NAME_MAX } = require('../public/js/session-people');
 
 const router = express.Router({ mergeParams: true });
+
+// Resolve the client's guest NAMES into stored `{ id, name }` records (#458).
+// A too-long name is truncated rather than rejected, matching the lenient style
+// of the start-session schema (and the setup screen's own input maxlength, which
+// reads the same constant).
+// The ids are minted here on purpose: a guest id becomes a key in the vote map
+// and in `winnerIds`, so letting a client dictate one would let it collide with
+// a member id or with another session's guest. Names are trimmed, blanks
+// dropped, and the list capped — lenient throughout, like its schema siblings.
+function resolveGuests(names) {
+  return names
+    .map((n) => n.trim().slice(0, GUEST_NAME_MAX))
+    .filter(Boolean)
+    .slice(0, MAX_SESSION_GUESTS)
+    .map((name) => ({ id: crypto.randomBytes(8).toString('hex'), name }));
+}
 
 // Start-session body. Every field is lenient (unknown -> default), exactly like
 // the old hand-rolled normalization: memberIds are coerced to a string array
@@ -23,6 +44,8 @@ const startSessionSchema = z.object({
   count: z.preprocess((v) => parseInt(v, 10), z.number().catch(NaN)),
   tagIds: z.preprocess((v) => (Array.isArray(v) ? v.map(String) : []), z.array(z.string())),
   excludeTagIds: z.preprocess((v) => (Array.isArray(v) ? v.map(String) : []), z.array(z.string())),
+  // Guests (#458) arrive as NAMES; resolveGuests() mints their ids below.
+  guests: z.preprocess((v) => (Array.isArray(v) ? v.map(String) : []), z.array(z.string())),
   gameId: z.unknown().optional(),
 });
 
@@ -34,9 +57,10 @@ const saveResultsSchema = z.object({
   votes: z.record(z.string(), z.unknown()).catch({}),
 });
 
-// Finish body: winnerIds coerced to a string array (filtered against the round's
-// members in the handler). `finished` is a tri-state default (true unless
-// explicitly false), read from req.body where that reads clearest.
+// Finish body: winnerIds coerced to a string array (filtered in the handler
+// against the round's members plus this session's guests). `finished` is a
+// tri-state default (true unless explicitly false), read from req.body where
+// that reads clearest.
 const finishSchema = z.object({
   winnerIds: z.preprocess((v) => (Array.isArray(v) ? v.map(String) : []), z.array(z.string())),
 });
@@ -69,7 +93,8 @@ router.post('/', async (req, res) => {
   const members = round.members.filter((m) => memberIds.includes(m.id));
 
   // Direct-pick mode: the user explicitly chose one game, so there is no draw
-  // and no voting. Ignore count and the player-range pool.
+  // and no voting. Ignore count, the player-range pool — and guests, which that
+  // flow deliberately doesn't offer (#458).
   if (body.gameId != null) {
     const game = round.games.find((g) => g.id === String(body.gameId));
     if (!game) return res.status(400).json({ error: 'Game does not belong to this round' });
@@ -112,7 +137,12 @@ router.post('/', async (req, res) => {
     .filter((x) => roundTagIds.has(x) && !(tagIds && tagIds.includes(x)));
   if (excludeTagIds.length === 0) excludeTagIds = null;
 
-  const playerCount = memberIds.length;
+  // Guests sit at the table too, so they count toward the player range the pool
+  // is filtered by — the client-side preview in showStartSession() applies the
+  // identical arithmetic and the two must agree
+  // (.claude/rules/active-games-filter-sites.md).
+  const guests = resolveGuests(body.guests);
+  const playerCount = memberIds.length + guests.length;
 
   const pool = round.games.filter(
     (g) =>
@@ -140,13 +170,17 @@ router.post('/', async (req, res) => {
     excludeTagIds, // null = no exclude filter (#241)
     requestedCount: count,
     memberIds, // members who joined this session
+    // Guests (#458) only when there are some: a guestless session must grow no
+    // `guests` key, so the JSON and Postgres blobs stay byte-identical
+    // (.claude/rules/postgres-backend.md). Absent and [] mean the same on read.
+    ...(guests.length ? { guests } : {}),
     gameIds: picked.map((g) => g.id),
-    votes: {}, // votes[memberId][gameId] = { rating: 1..5|null, retire: bool }
+    votes: {}, // votes[personId][gameId] = { rating: 1..5|null, retire: bool }
     chosenGameId: null, // which game ends up being played
     chosenAt: null, // when a game was chosen
     finished: false, // whether the game was played/finished
     finishedAt: null, // when it was finished
-    winnerIds: [], // winners (member ids, multiple allowed)
+    winnerIds: [], // winners (member or guest ids, multiple allowed)
     cancelled: false, // final state: no game appealed, nothing was played
     cancelledAt: null, // when it was cancelled
     done: false,
@@ -155,21 +189,47 @@ router.post('/', async (req, res) => {
   // Both start modes (direct-pick above, draw here) are one created session.
   trackEvent('session_created', { tenantId: req.tenantId });
 
-  // Convenience for the frontend: send the picked games right away.
-  res.status(201).json({ session, games: picked, members });
+  // Convenience for the frontend: send the picked games right away, plus the
+  // resolved guests (whose ids only exist server-side until now).
+  res.status(201).json({ session, games: picked, members, guests });
 });
+
+// Strip `retire` from every guest's vote entries (#458). A guest's rating is an
+// opinion about the game and counts, but deciding a game should leave the shelf
+// is the permanent group governing its own collection — so the vote card renders
+// no retire control for a guest at all. This drops what a hand-crafted request
+// could otherwise inject, which is why gameStats() needs no guest exclusion:
+// there is simply never a guest `retire` flag to exclude.
+function dropGuestRetireFlags(votes, session) {
+  const guestIds = new Set((session.guests || []).map((g) => g.id));
+  if (!guestIds.size) return votes;
+  Object.keys(votes).forEach((pid) => {
+    if (!guestIds.has(pid)) return;
+    const byGame = votes[pid];
+    if (!byGame || typeof byGame !== 'object') return;
+    Object.keys(byGame).forEach((gid) => {
+      const v = byGame[gid];
+      if (v && typeof v === 'object') delete v.retire;
+    });
+  });
+  return votes;
+}
 
 // Save a session's complete result (hot-seat: all at once at the end).
 router.post('/:sid/results', async (req, res) => {
-  // Light probe: this route only needs "does the round exist" (the mutator's
-  // null return already yields the session 404 below) — not every game and
-  // vote map of the round.
+  // Light probe: this route only needs "does the round exist" — not every game
+  // and vote map of the round.
   const round = await req.repo.getRoundMeta(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
+  // The session itself is read for its guest ids (#458), which decide whose
+  // retire flags get dropped below.
+  const stored = await req.repo.getSession(req.params.rid, req.params.sid);
+  if (!stored) return res.status(404).json({ error: 'Session not found' });
 
   const body = validateBody(saveResultsSchema, req, res);
   if (!body) return;
-  const session = await req.repo.saveSessionResults(req.params.rid, req.params.sid, body.votes);
+  const votes = dropGuestRetireFlags(body.votes, stored);
+  const session = await req.repo.saveSessionResults(req.params.rid, req.params.sid, votes);
   if (!session) return res.status(404).json({ error: 'Session not found' });
   res.json(session);
 });
@@ -194,7 +254,8 @@ router.post('/:sid/choice', async (req, res) => {
 
 // Mark the game as played/finished and record winners (finished:false resets it).
 router.post('/:sid/finish', async (req, res) => {
-  // Meta carries the members, which is all the winner validation needs.
+  // Meta carries the members; the session read below supplies its guests, and
+  // together they are the whole winner allowlist.
   const round = await req.repo.getRoundMeta(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
   const session = await req.repo.getSession(req.params.rid, req.params.sid);
@@ -207,8 +268,12 @@ router.post('/:sid/finish', async (req, res) => {
   if (finished) {
     if (session.cancelled)
       return res.status(400).json({ error: 'Session is cancelled' });
-    const memberIds = new Set(round.members.map((m) => m.id));
-    winnerIds = body.winnerIds.filter((mid) => memberIds.has(mid));
+    // A guest can genuinely win the game, so the allowlist is the round's
+    // members ∪ THIS session's guests (#458) — never another session's, which is
+    // why it is rebuilt per request from the stored blob rather than cached.
+    const allowed = new Set(round.members.map((m) => m.id));
+    (session.guests || []).forEach((g) => allowed.add(g.id));
+    winnerIds = body.winnerIds.filter((wid) => allowed.has(wid));
   }
   const updated = await req.repo.finishSession(req.params.rid, req.params.sid, { finished, winnerIds });
   if (!updated) return res.status(404).json({ error: 'Session not found' });

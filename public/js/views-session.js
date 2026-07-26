@@ -26,6 +26,15 @@ function showStartSession(round) {
         <div id="seatMount"></div>
         <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
       </div>
+      <div class="field">
+        <label for="guestName">${esc(t('startSession.guestsLabel'))}</label>
+        <div class="guest-list" id="guestList"></div>
+        <div class="row">
+          <input id="guestName" class="input" maxlength="${GUEST_NAME_MAX}" placeholder="${esc(t('startSession.guestPlaceholder'))}" />
+          <button type="button" class="btn" id="guestAdd">${iconText('ti-plus', t('startSession.guestAdd'))}</button>
+        </div>
+        <div class="muted field__hint">${esc(t('startSession.guestsNote'))}</div>
+      </div>
       <div class="field" id="gamesFilterField" hidden>
         <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
         <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
@@ -60,17 +69,24 @@ function showStartSession(round) {
       .filter((x) => known.has(x) && !selectedTags.has(x))
       .forEach((x) => selectedTags.set(x, 'exclude'));
   }
-  // All members join by default; the number of joining members filters the
-  // games by their player count.
+  // All members join by default; the number of people joining filters the games
+  // by their player count.
   const joining = new Set(round.members.map((m) => m.id));
+  // Guests (#458): plain names, held only here until the draw POSTs them — the
+  // server mints their ids. Frozen at the draw, exactly like the seat selection.
+  const guests = [];
+  const playerCount = () => joining.size + guests.length;
 
   // Games matching the tag filter, whose player range fits the joining count.
+  // Guests sit at the table, so they count here — and the server applies the
+  // identical arithmetic to the real pool
+  // (.claude/rules/active-games-filter-sites.md).
   const pool = () =>
     activeGames.filter(
       (g) =>
         matchesTagFilter(selectedTags, g.tagIds) &&
-        (typeof g.minPlayers !== 'number' || joining.size >= g.minPlayers) &&
-        (typeof g.maxPlayers !== 'number' || joining.size <= g.maxPlayers)
+        (typeof g.minPlayers !== 'number' || playerCount() >= g.minPlayers) &&
+        (typeof g.maxPlayers !== 'number' || playerCount() <= g.maxPlayers)
     );
 
   // Live pool preview: count plus a few cover thumbnails.
@@ -93,11 +109,51 @@ function showStartSession(round) {
   // Seats around the table: tap a member to toggle whether they join tonight.
   // The group attributes go on the table itself, not on #seatMount — replaceWith
   // swaps the mount out, so anything set on it in the markup would be lost.
-  const seatTable = renderSeatPicker(round, joining, updateHint);
+  const seatTable = renderSeatPicker(round, joining, updateHint, () => guests.length);
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   form.querySelector('#seatMount').replaceWith(seatTable);
   updateHint();
+
+  // Guest chips: one removable pill per named guest, re-rendered whole on every
+  // change (the list is at most MAX_SESSION_GUESTS long). The table's centre
+  // count and the pool preview both follow, since a guest changes the player
+  // count exactly like a seat does.
+  const guestList = form.querySelector('#guestList');
+  const guestInput = form.querySelector('#guestName');
+  const renderGuests = () => {
+    guestList.innerHTML = '';
+    guests.forEach((name, i) => {
+      const chip = h(`<span class="guest-chip">
+           <span class="guest-chip__name">${esc(t('people.guest', { name }))}</span>
+           <button type="button" class="guest-chip__del" aria-label="${esc(t('startSession.guestRemove', { name }))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+         </span>`);
+      chip.querySelector('.guest-chip__del').addEventListener('click', () => {
+        guests.splice(i, 1);
+        renderGuests();
+        guestInput.focus();
+      });
+      guestList.appendChild(chip);
+    });
+    seatTable.refreshSeats();
+    updateHint();
+  };
+  const addGuest = () => {
+    const name = guestInput.value.trim();
+    if (!name) return toast(t('startSession.toast.guestName'));
+    if (guests.length >= MAX_SESSION_GUESTS)
+      return toast(t('startSession.toast.guestMax', { n: MAX_SESSION_GUESTS }));
+    guests.push(name);
+    guestInput.value = '';
+    renderGuests();
+    guestInput.focus();
+  };
+  form.querySelector('#guestAdd').addEventListener('click', addGuest);
+  // Enter in the name field adds, so a guest can be typed without reaching for
+  // the button. There is no surrounding <form>, so nothing submits by default.
+  guestInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); addGuest(); }
+  });
 
   // Custom-tag chips (#238, tri-state #241) are the only game filter now (#242).
   // Clicking cycles ignore -> include -> exclude -> ignore. With no round tags
@@ -145,27 +201,32 @@ function showStartSession(round) {
         tagIds: [...selectedTags].filter(([, s]) => s === 'include').map(([id]) => id),
         excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
         memberIds: [...joining],
+        guests, // names only; the server mints the ids (#458)
       });
       // Straight into the first handover — the drawn games stay secret until
-      // each person rates them.
-      startVoting(round, data.session, data.games, data.members);
+      // each person rates them. The participant list is resolved through the one
+      // resolver, off the stored session, so it matches every later screen.
+      startVoting(round, data.session, data.games, sessionPeople(round, data.session));
     } catch (e) { toast(e.message); }
   });
 }
 
 // =================== Voting (hot-seat) ===================
 
-function startVoting(round, session, games, members) {
-  // votes[memberId][gameId] = { rating, retire }
+// `people` is the sessionPeople() shape ({ id, name, guest }), so a guest takes
+// their hot-seat turn exactly like a member (#458) — only their vote card
+// differs, see the retire control below.
+function startVoting(round, session, games, people) {
+  // votes[personId][gameId] = { rating, retire }
   const votes = {};
-  members.forEach((m) => (votes[m.id] = {}));
+  people.forEach((p) => (votes[p.id] = {}));
 
-  // Members in random order; a "you're up" screen before each person.
-  const order = shuffled(members);
+  // Everyone in random order; a "you're up" screen before each person.
+  const order = shuffled(people);
   const steps = [];
-  order.forEach((m) => {
-    steps.push({ type: 'intro', member: m });
-    games.forEach((g) => steps.push({ type: 'vote', member: m, game: g }));
+  order.forEach((p) => {
+    steps.push({ type: 'intro', person: p });
+    games.forEach((g) => steps.push({ type: 'vote', person: p, game: g }));
   });
 
   let idx = 0;
@@ -249,14 +310,14 @@ function startVoting(round, session, games, members) {
   // context label is the locale-independent round name, so it needs no refresh.
   currentView = () => { render(); };
 
-  // Segmented progress: one segment per member, filled in their color.
-  const perMember = games.length + 1; // intro + one card per game
+  // Segmented progress: one segment per person, filled in their color.
+  const perPerson = games.length + 1; // intro + one card per game
   function progressBar() {
     return `<div class="vote-progress">${order
-      .map((m, mi) => {
-        const done = Math.max(0, Math.min(perMember, idx - mi * perMember));
-        const pct = Math.round((done / perMember) * 100);
-        return `<span class="vote-progress__seg"><span style="width:${pct}%;background:${memberColor(round, m.id)}"></span></span>`;
+      .map((p, pi) => {
+        const done = Math.max(0, Math.min(perPerson, idx - pi * perPerson));
+        const pct = Math.round((done / perPerson) * 100);
+        return `<span class="vote-progress__seg"><span style="width:${pct}%;background:${personColor(round, p)}"></span></span>`;
       })
       .join('')}</div>`;
   }
@@ -265,14 +326,14 @@ function startVoting(round, session, games, members) {
     const step = steps[idx];
     const total = steps.length;
 
-    // Handover screen: full color card in the member's color.
+    // Handover screen: full color card in the person's color.
     if (step.type === 'intro') {
-      const color = memberColor(round, step.member.id);
+      const color = personColor(round, step.person);
       app.innerHTML = '';
       const card = h(`<div class="handover" style="background:${color}">
           ${progressBar()}
-          <span class="handover__avatar" style="color:${color}">${esc(initials(step.member.name))}</span>
-          <h1 class="handover__name">${esc(t('vote.turn', { name: step.member.name }))}</h1>
+          <span class="handover__avatar" style="color:${color}">${esc(initials(step.person.name))}</span>
+          <h1 class="handover__name">${esc(t('vote.turn', { name: personLabel(step.person) }))}</h1>
           <div class="handover__sub"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>
           <button class="handover__go" id="goBtn" style="color:${color}">${esc(t('vote.go'))}</button>
           ${idx > 0 ? `<button class="handover__back" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>` : ''}
@@ -287,9 +348,16 @@ function startVoting(round, session, games, members) {
       return;
     }
 
-    const { member, game } = step;
-    const current = votes[member.id][game.id] || { rating: null, retire: false };
-    const color = memberColor(round, member.id);
+    const { person, game } = step;
+    const current = votes[person.id][game.id] || { rating: null, retire: false };
+    const color = personColor(round, person);
+    // A guest rates the game but does not get to vote it off the shelf (#458):
+    // that is the permanent group governing its own collection, and a one-off
+    // visitor shouldn't nudge a game toward the retire recommendation. The
+    // control is not rendered at all rather than cast and filtered later — so
+    // gameStats() needs no guest exclusion, and the "rate or flag before
+    // continuing" guard below becomes rating-only for them.
+    const mayRetire = !person.guest;
 
     const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
     const fallback = coverPlaceholder(game);
@@ -297,15 +365,15 @@ function startVoting(round, session, games, members) {
     app.innerHTML = '';
     const card = h(`<div class="vote vote--split">
         ${progressBar()}
-        <div class="vote__who">${esc(t('vote.who'))} <strong style="color:${color}">${esc(member.name)}</strong></div>
+        <div class="vote__who">${esc(t('vote.who'))} <strong style="color:${color}">${esc(personLabel(person))}</strong></div>
         <div class="vote__img" ${imgStyle}>${fallback}</div>
         <h1 class="vote__title">${esc(game.title)}</h1>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
-        <div class="vote__sort">
+        ${mayRetire ? `<div class="vote__sort">
           <button class="sortBtn ${current.retire ? 'is-selected' : ''}" aria-pressed="${!!current.retire}"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('vote.suggestRetire'))}</button>
-        </div>
+        </div>` : ''}
         <div class="vote__nav">
           <button class="btn" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
           <button class="btn btn--primary" id="nextBtn">${idx === total - 1 ? esc(t('vote.finish')) + ' <i class="ti ti-chevron-right" aria-hidden="true"></i>' : esc(t('vote.next'))}</button>
@@ -330,26 +398,30 @@ function startVoting(round, session, games, members) {
         b.style.borderColor = avgColor(n);
       }
       b.addEventListener('click', () => {
-        votes[member.id][game.id] = { rating: n, retire: current.retire };
+        votes[person.id][game.id] = { rating: n, retire: current.retire };
         render();
       });
       ratingEl.appendChild(b);
     }
 
     const sortBtn = card.querySelector('.sortBtn');
-    sortBtn.addEventListener('click', () => {
-      votes[member.id][game.id] = { rating: current.rating, retire: !current.retire };
-      render();
-    });
+    if (sortBtn) {
+      sortBtn.addEventListener('click', () => {
+        votes[person.id][game.id] = { rating: current.rating, retire: !current.retire };
+        render();
+      });
+    }
 
     const backBtn = card.querySelector('#backBtn');
     backBtn.disabled = idx === 0;
     backBtn.addEventListener('click', () => history.back());
 
     card.querySelector('#nextBtn').addEventListener('click', () => {
-      const v = votes[member.id][game.id];
-      if (!v || (v.rating === null && !v.retire)) {
-        return toast(t('vote.toast.needRating'));
+      const v = votes[person.id][game.id];
+      // A member may continue on either a rating or a retire flag; a guest has
+      // no flag to give, so for them the rating is the only way through.
+      if (!v || (v.rating === null && !(mayRetire && v.retire))) {
+        return toast(t(mayRetire ? 'vote.toast.needRating' : 'vote.toast.needRatingOnly'));
       }
       if (idx === total - 1) finish();
       else go(idx + 1);
@@ -390,9 +462,7 @@ function showFinale(round, session, games) {
   syncUrl(sessionFinalePath(round.id, session.id));
   setContext(round.name);
 
-  const voters = Array.isArray(session.memberIds)
-    ? round.members.filter((m) => session.memberIds.includes(m.id))
-    : round.members;
+  const voters = sessionPeople(round, session);
 
   app.innerHTML = '';
   const stage = h(`<div class="stage">
@@ -404,12 +474,12 @@ function showFinale(round, session, games) {
       <div class="stage__sub">${esc(t('finale.sub'))}</div>
       <div class="stage__voters">${voters
         .map(
-          (m) => `<span class="stage__voter">
+          (p) => `<span class="stage__voter">
              <span class="stage__voter-avatar">
-               <span class="avatar" style="background:${memberColor(round, m.id)}">${esc(initials(m.name))}</span>
+               <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${esc(initials(p.name))}</span>
                <span class="stage__voter-check"><i class="ti ti-check" aria-hidden="true"></i></span>
              </span>
-             <span class="stage__voter-name">${esc(m.name)}</span>
+             <span class="stage__voter-name">${esc(personLabel(p))}</span>
            </span>`
         )
         .join('')}</div>
@@ -438,18 +508,17 @@ async function showResults(round, session, gamesHint, reveal) {
   const games = session.gameIds
     .map((gid) => round.games.find((g) => g.id === gid) || (gamesHint || []).find((g) => g.id === gid))
     .filter(Boolean);
-  // Only the members who joined the session (older sessions have no list, so
-  // fall back to all members of the round).
-  const members = Array.isArray(session.memberIds)
-    ? round.members.filter((m) => session.memberIds.includes(m.id))
-    : round.members;
+  // Everyone who took part: the members who joined plus this session's guests
+  // (#458). Older sessions have no member list, so sessionPeople falls back to
+  // all members of the round, and no `guests` key means none.
+  const people = sessionPeople(round, session);
 
   // Tally per game.
   const rows = games.map((g) => {
     const ratings = [];
     let sortCount = 0;
-    members.forEach((m) => {
-      const v = (session.votes[m.id] || {})[g.id];
+    people.forEach((p) => {
+      const v = (session.votes[p.id] || {})[g.id];
       if (!v) return;
       if (v.retire) sortCount++;
       if (typeof v.rating === 'number') ratings.push(v.rating);
@@ -479,24 +548,27 @@ async function showResults(round, session, gamesHint, reveal) {
   app.appendChild(head);
   const titleEl = head.querySelector('.result-title');
 
-  // Who joined this session — the members whose votes make up the result.
-  if (members.length) {
-    const people = h(`<div class="result-people">
+  // Who took part in this session — the people whose votes make up the result.
+  if (people.length) {
+    // A guest has no member page, so their entry is a <span>, not an <a>: an
+    // anchor with no href is neither focusable nor styled as a link, so emitting
+    // one would leave dead markup behind (.claude/rules/in-app-nav-links.md).
+    const peopleEl = h(`<div class="result-people">
          <span class="result-people__label">${esc(t('result.participants'))}</span>
-         <span class="result-people__list">${members
+         <span class="result-people__list">${people
            .map(
-             (m) => `<a class="result-people__person" data-mid="${esc(m.id)}">
-                <span class="avatar" style="background:${memberColor(round, m.id)}">${esc(initials(m.name))}</span>
-                <span class="result-people__name">${esc(m.name)}</span>
-              </a>`
+             (p) => `<${p.guest ? 'span' : 'a'} class="result-people__person"${p.guest ? '' : ` data-mid="${esc(p.id)}"`}>
+                <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${esc(initials(p.name))}</span>
+                <span class="result-people__name">${esc(personLabel(p))}</span>
+              </${p.guest ? 'span' : 'a'}>`
            )
            .join('')}</span>
        </div>`);
-    // Each participant opens that member's detail page.
-    people.querySelectorAll('.result-people__person[data-mid]').forEach((el) => {
+    // Each member participant opens that member's detail page.
+    peopleEl.querySelectorAll('.result-people__person[data-mid]').forEach((el) => {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
-    app.appendChild(people);
+    app.appendChild(peopleEl);
   }
 
   // Podium: the top three *places* as a stage. Tied games share a place, so a
@@ -545,7 +617,7 @@ async function showResults(round, session, gamesHint, reveal) {
       const g = games.find((x) => x.id === chosenId);
       const gname = g ? g.title : '';
       const names = winnerIds
-        .map((wid) => (members.find((m) => m.id === wid) || {}).name)
+        .map((wid) => personLabel(people.find((p) => p.id === wid)))
         .filter(Boolean);
       if (names.length === 0) {
         titleEl.textContent = t('result.titlePlayed', { game: gname });
@@ -756,13 +828,15 @@ async function showResults(round, session, gamesHint, reveal) {
       h(`<div class="muted" style="margin-bottom:10px">${esc(t('result.whoWon', { game: chosenGame ? chosenGame.title : '' }))}</div>`)
     );
 
+    // Guests can win too (#458) — they played the game. They just never enter
+    // the round-level standings; see the Pokale tab.
     const chips = h('<div class="winner-chips"></div>');
-    members.forEach((m) => {
-      const sel = winnerIds.includes(m.id);
-      const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${esc(m.name)}</button>`);
+    people.forEach((p) => {
+      const sel = winnerIds.includes(p.id);
+      const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${esc(personLabel(p))}</button>`);
       // Each toggle persists right away — no separate save button in this state.
       chip.addEventListener('click', () => saveWinners(
-        winnerIds.includes(m.id) ? winnerIds.filter((x) => x !== m.id) : [...winnerIds, m.id]
+        winnerIds.includes(p.id) ? winnerIds.filter((x) => x !== p.id) : [...winnerIds, p.id]
       ));
       chips.appendChild(chip);
     });
@@ -788,7 +862,7 @@ async function showResults(round, session, gamesHint, reveal) {
     finishWrap.appendChild(actions);
 
     const names = winnerIds
-      .map((wid) => (members.find((m) => m.id === wid) || {}).name)
+      .map((wid) => personLabel(people.find((p) => p.id === wid)))
       .filter(Boolean);
     const inner = names.length
       ? iconText('ti-trophy', t('result.winners', { names: names.join(', ') }))

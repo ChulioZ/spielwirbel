@@ -441,6 +441,20 @@ h1, h2, h3 { font-family: var(--font-display); }
   flex: none;
   border: 2px solid var(--surface);
 }
+/* A session guest (#458) is not a round member, so they have no palette swatch —
+   memberColor() would find no row and hand every guest member #0's colour. This
+   neutral, dashed treatment (the one .nr-seat--empty already uses for a free
+   seat) reads as "not one of us" at a glance and reinforces the (Gast) label.
+   The tones are the page-derived neutrals, never a hardcoded hex
+   (.claude/rules/theme-derived-colors.md). Declared AFTER .avatar so the border
+   longhands beat its `border` shorthand — the dark finale stage, where these
+   page neutrals disappear, overrides them again further down. */
+.avatar--guest {
+  background: var(--sunken);
+  color: var(--ink-soft);
+  border-style: dashed;
+  border-color: var(--placeholder);
+}
 .hero__chips { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
 /* The one big accent action of the Start tab. */
@@ -3054,6 +3068,44 @@ kbd {
   opacity: 0.7;
 }
 .nr-seat--out .nr-seat__name { opacity: 0.6; }
+
+/* ---- Session setup: guests (#458) ----
+   Named here and frozen at the draw, so the list is a plain row of removable
+   pills. The dashed edge is the same "not a member of the round" signal
+   `.nr-seat--empty` and `.avatar--guest` use. */
+.guest-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.guest-list:empty { display: none; }
+.guest-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 5px 5px 12px;
+  border-radius: 999px;
+  border: 2px dashed var(--placeholder);
+  background: var(--sunken-soft);
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 700;
+  max-width: 100%;
+}
+.guest-chip__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guest-chip__del {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-soft);
+  font-family: inherit;
+  cursor: pointer;
+}
+.guest-chip__del:hover { background: var(--line); color: var(--ink); }
+.guest-chip__del .ti { font-size: 15px; }
+
 .pool-hint {
   display: flex;
   align-items: center;
@@ -3225,6 +3277,15 @@ kbd {
 .stage__voter { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .stage__voter-avatar { position: relative; }
 .stage__voter-avatar .avatar { width: 46px; height: 46px; font-size: 16px; border-color: var(--stage-raised); }
+/* A guest avatar (#458) on the dark curtain: the page-derived neutrals it uses
+   elsewhere would be a near-white disc here, so it takes the stage's own family.
+   (0,2,0) like the rule above it and declared after it, so it wins on order for
+   `border-color` — the only property the two compete for. */
+.stage__voter-avatar .avatar--guest {
+  background: var(--stage-raised);
+  color: var(--stage-muted);
+  border-color: var(--stage-line);
+}
 .stage__voter-check {
   position: absolute;
   right: -5px;

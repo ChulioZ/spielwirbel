@@ -289,11 +289,23 @@ I18N.en = {
   'linkProvider.apply': 'Link game',
   'linkProvider.linked': 'Game linked to provider',
 
+  // The guest marker (#458). Used app-wide through personLabel(), so every
+  // screen showing a session's participants marks a guest the same way — the
+  // one thing distinguishing a one-evening visitor from a member of the group.
+  'people.guest': '{name} (guest)',
   'startSession.crumb': 'Session',
   'startSession.title': 'New session',
   'startSession.membersLabel': 'Who’s playing?',
   'startSession.membersNote': 'The number of players filters the games.',
   'startSession.tableCount': '{n} playing',
+  // Guests (#458): session-only participants, named here and frozen at the draw.
+  'startSession.guestsLabel': 'Guests along tonight?',
+  'startSession.guestsNote': 'Guests vote with you but never join the round.',
+  'startSession.guestPlaceholder': 'Guest’s name',
+  'startSession.guestAdd': 'Add',
+  'startSession.guestRemove': 'Remove guest {name}',
+  'startSession.toast.guestName': 'Please enter a name for the guest',
+  'startSession.toast.guestMax': 'At most {n} guests per session',
   'startSession.whichGames': 'Which games?',
   'startSession.countLabel': 'How many games to draw?',
   'startSession.available': '{n} games in the pot',
@@ -323,6 +335,8 @@ I18N.en = {
   'vote.next': 'Next ›',
   'vote.finish': 'Done',
   'vote.toast.needRating': 'Please choose a rating (or “retire”)',
+  // A guest gets no retire control, so a rating is the only way on (#458).
+  'vote.toast.needRatingOnly': 'Please choose a rating',
   'vote.toast.saved': 'Results saved',
 
   'finale.crumb': 'Finale',

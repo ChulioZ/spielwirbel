@@ -304,3 +304,153 @@ test('direct pick with only unknown member ids falls back to everyone', async ()
   assert.equal(res.status, 201);
   assert.equal(res.body.session.memberIds.length, round.members.length);
 });
+
+/* ---------------------------- Guests (#458) -------------------------------- */
+
+// The client sends names only. A guest id becomes a key in the vote map and in
+// winnerIds, so letting a client dictate one would let it collide with a member
+// id or with another session's guest.
+test('guest ids are minted server-side; a client-supplied id is ignored', async () => {
+  const round = await createRound(request);
+  await addGame(round.id, { title: 'A' });
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, guests: ['Dana', { id: 'chosen-by-client', name: 'Eli' }] });
+
+  assert.equal(res.status, 201);
+  const guests = res.body.session.guests;
+  assert.equal(guests.length, 2);
+  assert.deepEqual(guests.map((g) => g.name).slice(0, 1), ['Dana']);
+  guests.forEach((g) => {
+    assert.match(g.id, /^[0-9a-f]{16}$/);
+    assert.notEqual(g.id, 'chosen-by-client');
+    // Nor may a mint collide with one of the round's own member ids.
+    assert.ok(!round.members.some((m) => m.id === g.id));
+  });
+  // The 201 repeats them so the wizard doesn't have to dig them out of the blob.
+  assert.deepEqual(res.body.guests, guests);
+});
+
+test('guest names are trimmed and truncated, empties dropped and the list capped', async () => {
+  const { MAX_SESSION_GUESTS, GUEST_NAME_MAX } = require('../public/js/session-people');
+  const round = await createRound(request);
+  // maxPlayers has to clear 2 members + the full guest cap, or the pool filter
+  // (which guests count toward) empties and the draw 400s before the cap shows.
+  await addGame(round.id, { title: 'A', maxPlayers: String(MAX_SESSION_GUESTS + 5) });
+  const long = 'L'.repeat(GUEST_NAME_MAX + 40);
+  const names = ['  Dana  ', '', '   ', long,
+    ...Array.from({ length: MAX_SESSION_GUESTS + 5 }, (_, i) => `G${i}`)];
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, guests: names });
+
+  assert.equal(res.status, 201);
+  const guests = res.body.session.guests;
+  assert.equal(guests.length, MAX_SESSION_GUESTS);
+  assert.equal(guests[0].name, 'Dana');
+  // Truncated, not rejected — and to the same constant the setup screen puts on
+  // its input's maxlength, so the two can't drift.
+  assert.equal(guests[1].name.length, GUEST_NAME_MAX);
+});
+
+// Absent, not []: the session blob is stored verbatim in both backends, so a
+// defaulted key would split their stored shape (see the repo contract suite).
+test('a session started without guests grows no guests key', async () => {
+  const round = await createRound(request);
+  await addGame(round.id, { title: 'A' });
+  const drawn = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1 });
+  assert.equal('guests' in drawn.body.session, false);
+
+  // Same for an empty list, and for the direct-pick flow, which ignores guests
+  // entirely (out of scope: it has no voting phase).
+  const empty = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1, guests: [] });
+  assert.equal('guests' in empty.body.session, false);
+  const game = drawn.body.games[0];
+  const direct = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ gameId: game.id, guests: ['Dana'] });
+  assert.equal(direct.status, 201);
+  assert.equal('guests' in direct.body.session, false);
+});
+
+// Guests sit at the table, so they count toward the player range — the whole
+// reason a guest is better than leaving the visitor out of the vote. The
+// client-side preview in showStartSession() applies the identical arithmetic.
+test('guests count toward the player range of the draw pool', async () => {
+  const round = await createRound(request); // Alice + Bob
+  await addGame(round.id, { title: 'Four', minPlayers: '4', maxPlayers: '4' });
+
+  const without = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1 });
+  assert.equal(without.status, 400); // 2 players, the game needs 4
+
+  const withOne = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, guests: ['Dana'] });
+  assert.equal(withOne.status, 400); // 3 — still short
+
+  const withTwo = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, guests: ['Dana', 'Eli'] });
+  assert.equal(withTwo.status, 201);
+  assert.equal(withTwo.body.games.length, 1);
+});
+
+test('a guest can be recorded as a winner; another session\'s guest cannot', async () => {
+  const round = await createRound(request);
+  await addGame(round.id, { title: 'A' });
+  const mine = (await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, guests: ['Dana'] })).body;
+  const other = (await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, guests: ['Stranger'] })).body;
+
+  const guest = mine.session.guests[0];
+  const outsider = other.session.guests[0];
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${mine.session.id}/finish`)
+    .send({ finished: true, winnerIds: [guest.id, round.members[0].id, outsider.id, 'ghost'] });
+
+  assert.equal(res.status, 200);
+  // The allowlist is this round's members ∪ THIS session's guests — nothing else.
+  assert.deepEqual(res.body.winnerIds, [guest.id, round.members[0].id]);
+});
+
+// The vote card renders no retire control for a guest, so a guest `retire` flag
+// can only come from a hand-crafted request. Dropping it here is what lets
+// gameStats() skip guest-exclusion logic entirely.
+test('a guest vote cannot carry a retire flag, even hand-crafted', async () => {
+  const round = await createRound(request);
+  await addGame(round.id, { title: 'A' });
+  const started = (await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, guests: ['Dana'] })).body;
+  const gid = started.games[0].id;
+  const guest = started.session.guests[0];
+  const member = round.members[0];
+
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${started.session.id}/results`)
+    .send({
+      votes: {
+        [member.id]: { [gid]: { rating: 4, retire: true } },
+        [guest.id]: { [gid]: { rating: 2, retire: true } },
+      },
+    });
+
+  assert.equal(res.status, 200);
+  // The guest's rating is kept — they played the game — only the flag goes.
+  assert.equal(res.body.votes[guest.id][gid].rating, 2);
+  assert.equal('retire' in res.body.votes[guest.id][gid], false);
+  // A member's flag is untouched.
+  assert.equal(res.body.votes[member.id][gid].retire, true);
+});
+
+test('saving results still 404s for an unknown session', async () => {
+  const round = await createRound(request);
+  await addGame(round.id, { title: 'A' });
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions/nope/results`)
+    .send({ votes: {} });
+  assert.equal(res.status, 404);
+});
