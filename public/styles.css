@@ -1558,16 +1558,24 @@ body.auth-screen .topbar__context { display: none; }
   flex-direction: column;
   gap: 60px;
 }
+/* The hero is a stacked band since #438: centred copy, then one full-width
+   product screenshot. It used to be a two-column row with a ~300px decorative
+   column — too narrow for a screenshot that has to show how the app works, and
+   the abstract gradients that fitted there showed nothing. Centred at every
+   width, so the ≤720px block below no longer has to re-centre it. */
 .landing-hero {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 44px;
+  gap: 36px;
   padding-top: 16px;
+  text-align: center;
 }
-.landing-hero__text { flex: 1 1 340px; }
+.landing-hero__text { max-width: 40em; }
 .landing-hero__brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   font-family: var(--font-display);
   font-weight: 700;
@@ -1586,26 +1594,51 @@ body.auth-screen .topbar__context { display: none; }
   font-size: 18px;
   line-height: 1.5;
   color: var(--ink-soft);
-  margin: 0 0 26px;
+  margin: 0 auto 26px;
   max-width: 30em;
 }
-.landing-hero__cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.landing-hero__cta { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
-.landing-hero__visual { flex: 0 1 300px; }
-.landing-shelf {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  transform: rotate(-3deg);
-}
-.landing-shelf__cover {
-  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
-  overflow: hidden;
-  aspect-ratio: 3 / 4;
-  border-radius: 12px;
+.landing-hero__visual { width: 100%; }
+
+/* A product screenshot, framed as a window onto the app (#438). Shared by the
+   hero shelf shot and the how-it-works vote shot. `height: auto` beside the
+   intrinsic width/height attributes is what lets the box be reserved from the
+   real aspect ratio and still scale down — without it the attributes would pin
+   the rendered height to the asset's pixel height. */
+.landing-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
   border: 1px solid var(--line);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.09);
-  font-size: 26px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.12);
+  background: var(--surface);
+}
+/* The phone-shaped shelf shot would otherwise fill the whole column on a phone
+   and push the "how it works" section far below the fold. */
+.landing-hero__visual .landing-shot { max-width: 300px; margin: 0 auto; }
+@media (min-width: 720px) {
+  /* From here the hero shows the DESKTOP shot, which wants the full column. */
+  .landing-hero__visual .landing-shot { max-width: none; }
+}
+
+/* Steps beside the voting screenshot, so "wie es funktioniert" is shown as well
+   as told. Stacks below 720px — the same breakpoint the <picture> switches on. */
+.landing-how {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+/* Scoped to (0,2,0) so it BEATS `.landing-shot { width: 100% }` on specificity
+   rather than on source order — the same "your rule will lose" trap
+   .claude/rules/responsive-content-width.md documents. Unscoped it ties, and
+   whoever moves a block later silently stretches the shot to the full column. */
+.landing-how .landing-how__shot { flex: none; width: 260px; }
+@media (max-width: 719px) {
+  .landing-how { flex-direction: column; gap: 32px; }
+  .landing-how .landing-how__shot { width: 240px; }
 }
 
 .landing-section__title {
@@ -1650,6 +1683,7 @@ body.auth-screen .topbar__context { display: none; }
   margin: 0 auto;
   padding: 0;
   max-width: 620px;
+  flex: 1 1 auto; /* fill what the vote screenshot beside it leaves (#438) */
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -1703,13 +1737,19 @@ body.auth-screen .topbar__context { display: none; }
 
 .landing-close { text-align: center; }
 
-@media (max-width: 720px) {
+/* The hero is centred and stacked at every width since #438, so this block no
+   longer has to rebuild it below the breakpoint — only the vertical rhythm and
+   the screenshot's order change. The visual leads on a phone: it is the thing
+   that says what the app is before any copy is read.
+
+   719, not 720: it must tile with the `min-width: 720px` block above and with
+   the <picture>'s own `(min-width: 720px)` switch, or at exactly 720px the hero
+   shows the DESKTOP screenshot while still ordering it above the copy. Same
+   adjacency discipline as .claude/rules/responsive-hub-tabs.md §2. */
+@media (max-width: 719px) {
   .landing { gap: 48px; }
-  .landing-hero { flex-direction: column; text-align: center; gap: 32px; }
-  .landing-hero__brand { justify-content: center; }
-  .landing-hero__sub { margin-inline: auto; }
-  .landing-hero__cta { justify-content: center; }
-  .landing-hero__visual { order: -1; flex-basis: auto; width: 230px; }
+  .landing-hero { gap: 28px; }
+  .landing-hero__visual { order: -1; }
 }
 
 .topbar__acct {

@@ -4,10 +4,10 @@
    the "/" path; every other path (deep links, the /v and /r mail links)
    still goes straight to the auth screens.
 
-   Part of the frontend's shared global scope. Loads after core.js, account.js
-   (showLogin/showRegister) and cover.js (coverPlaceholder), before router.js —
-   see index.html. Cross-file names (showRegister/showLogin) are referenced only
-   inside click handlers, i.e. at call time, per
+   Part of the frontend's shared global scope. Loads after core.js and
+   account.js (showLogin/showRegister), before router.js — see index.html.
+   Cross-file names (showRegister/showLogin) are referenced only inside click
+   handlers, i.e. at call time, per
    .claude/rules/frontend-script-load-order.md. */
 
 'use strict';
@@ -27,11 +27,36 @@ const LANDING_FEATURES = [
 // The three how-it-works steps, numbered 1–3 in render order.
 const LANDING_STEPS = ['landing.how.step1', 'landing.how.step2', 'landing.how.step3'];
 
-// Seed strings for the decorative hero shelf. coverPlaceholder() hashes each into
-// a deterministic gradient (cover.js); the strings themselves are never shown
-// (the mock covers are aria-hidden and carry no title text), so these are just
-// hue seeds picked from the app's own vocabulary for varied, on-theme colours.
-const LANDING_SHELF = ['Spielwirbel', 'Runde', 'Session', 'Pokal', 'Chronik', 'Regal'];
+// Real product screenshots (#438). The hero used to show six abstract
+// coverPlaceholder() gradients, which told a visitor nothing about the app they
+// were being asked to register for — "man erkennt nicht, wie es funktioniert".
+//
+// Committed static assets, generated once with headless Chrome against a
+// throwaway seeded dataset, exactly like public/icons/og-image.png — there is no
+// image tooling in this repo and no build step here (see the regeneration recipe
+// in .claude/rules/landing-product-screenshots.md). Three things about them are
+// load-bearing:
+//
+//  - The shelf ships in TWO widths because a 1280px-wide desktop screenshot
+//    scaled into a 375px phone column is illegible; <picture> downloads only the
+//    one that matches, so the phone never pays for the desktop pixels.
+//  - Every declared width/height is the asset's REAL pixel size, so the hero
+//    reserves its box before the image lands (no layout shift above the fold).
+//    test/landing-shots.test.js reads the dimensions back out of the files.
+//  - The games in them carry NO cover art: their titles are invented and their
+//    covers are the app's own deterministic gradients. A provider's cover art in
+//    a committed marketing image would be re-hosting someone else's copyrighted
+//    artwork — the exact thing .claude/rules/provider-cover-hotlinking.md avoids.
+const LANDING_SHOTS = {
+  shelfWide: { src: '/img/landing-shelf-wide.webp', w: 1600, h: 988 },
+  shelfPhone: { src: '/img/landing-shelf-phone.webp', w: 624, h: 1248 },
+  vote: { src: '/img/landing-vote.webp', w: 624, h: 1248 },
+};
+
+// The width at which the hero swaps the phone shelf shot for the desktop one.
+// Same 720px the stylesheet's landing breakpoint uses — they must agree, or the
+// wide screenshot renders in the stacked one-column layout.
+const LANDING_SHOT_BP = '(min-width: 720px)';
 
 // Memoized /api/config, used to gate the operator-only trust claim (below). The
 // same unauthenticated endpoint initFooter() reads; cached so a language-switch
@@ -83,8 +108,17 @@ function showLanding() {
         </div>
       </li>`).join('');
 
-  const shelf = LANDING_SHELF.map((seed) => `
-        <div class="landing-shelf__cover">${coverPlaceholder({ title: seed })}</div>`).join('');
+  // Informative images, not decoration: each carries real alt text (localized,
+  // even though the screenshots themselves are German — the app's product
+  // language), so the page still explains itself to a screen reader.
+  const shelfShot = `
+      <picture>
+        <source media="${LANDING_SHOT_BP}" srcset="${LANDING_SHOTS.shelfWide.src}"
+                width="${LANDING_SHOTS.shelfWide.w}" height="${LANDING_SHOTS.shelfWide.h}" />
+        <img class="landing-shot" src="${LANDING_SHOTS.shelfPhone.src}"
+             width="${LANDING_SHOTS.shelfPhone.w}" height="${LANDING_SHOTS.shelfPhone.h}"
+             alt="${esc(t('landing.shot.shelfAlt'))}" />
+      </picture>`;
 
   const view = h(`<div class="landing">
     <section class="landing-hero">
@@ -99,9 +133,7 @@ function showLanding() {
           <button class="btn btn--lg" id="landingLogin">${esc(t('landing.hero.ctaSecondary'))}</button>
         </div>
       </div>
-      <div class="landing-hero__visual" aria-hidden="true">
-        <div class="landing-shelf">${shelf}</div>
-      </div>
+      <div class="landing-hero__visual">${shelfShot}</div>
     </section>
 
     <section class="landing-section">
@@ -111,7 +143,12 @@ function showLanding() {
 
     <section class="landing-section">
       <h2 class="landing-section__title">${esc(t('landing.how.title'))}</h2>
-      <ol class="landing-steps">${steps}</ol>
+      <div class="landing-how">
+        <ol class="landing-steps">${steps}</ol>
+        <img class="landing-shot landing-how__shot" src="${LANDING_SHOTS.vote.src}"
+             width="${LANDING_SHOTS.vote.w}" height="${LANDING_SHOTS.vote.h}"
+             alt="${esc(t('landing.shot.voteAlt'))}" />
+      </div>
     </section>
 
     <section class="landing-section landing-trust">

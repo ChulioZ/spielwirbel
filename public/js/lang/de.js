@@ -576,6 +576,8 @@ I18N.de = {
   'landing.hero.sub': 'Brettspiele und Videospiele an einem Ort – mit Abstimmung, was heute gespielt wird, und Chronik, wie’s war.',
   'landing.hero.ctaPrimary': 'Kostenlos registrieren',
   'landing.hero.ctaSecondary': 'Anmelden',
+  'landing.shot.shelfAlt': 'Screenshot: das Spielregal einer Runde in Spielwirbel – Spiele als Kacheln mit Durchschnittsbewertung, daneben die Navigation zu Start, Regal, Chronik und Pokalen.',
+  'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala von 1 bis 5.',
   'landing.features.title': 'Alles für den Spieleabend',
   'landing.features.shelf.title': 'Euer Spielregal',
   'landing.features.shelf.desc': 'Legt eure Spiele an – mit Covern direkt aus der Store-Suche: BoardGameGeek, Steam, PlayStation, Nintendo und Xbox.',

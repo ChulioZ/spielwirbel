@@ -353,6 +353,9 @@ public/
   icons/             PWA / home-screen app icons (192, 512, apple-touch), the
                      "Powered by BGG" attribution logo shown in the footer, and
                      og-image.png (the 1200×630 card link previews show)
+  img/               product screenshots on the logged-out landing page — the
+                     shelf in two widths plus the voting screen, generated once
+                     from throwaway data and committed (see .claude/rules/)
   js/
     login.js         login.html's own script — an IIFE, not part of the
                      shared global scope below (only loaded by login.html)
