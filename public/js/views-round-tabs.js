@@ -283,7 +283,6 @@ async function showMoveGames(round) {
   const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
   document.addEventListener('keydown', onKey, true);
   openSheet(backdrop, onKey);
-  
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   form.querySelector('.sheet__close').addEventListener('click', closeSheet);
 
@@ -383,7 +382,7 @@ async function showInvite(round) {
   const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
   document.addEventListener('keydown', onKey, true);
   openSheet(backdrop, onKey);
-  setTimeout(() => form.querySelector('#inviteUser').focus(), 0);
+form.querySelector('#inviteUser').focus();
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   form.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 
@@ -403,11 +402,11 @@ async function showInvite(round) {
     }
   });
   form.querySelector('#inviteUser').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    go.click();
-  }
-});
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      go.click();
+    }
+  });
 }
 
 // Map a send-route error code to a localized message.
