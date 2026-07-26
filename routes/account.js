@@ -106,15 +106,6 @@ const mailThrottled = (record) => {
   return Number.isFinite(sentAt) && Date.now() - sentAt < MAIL_COOLDOWN_MS;
 };
 
-// Resolve a mailed one-time link to { userId, hash }, accepting BOTH shapes:
-// the short combined token (#434) and the legacy `uid=` + bare-token pair. The
-// legacy branch is not dead code — a verification mail stays valid for 24 h, so
-// links already in someone's inbox at deploy time must keep working.
-function linkCredentials(version, uid, token) {
-  return accounts.parseLinkToken(version, token)
-    || { userId: String(uid || ''), hash: accounts.hashToken(token) };
-}
-
 // Register and resend-verification both mail this, so the body and the link
 // shape can't drift apart. Lands on the in-app onboarding page (#138), which
 // POSTs the token and then routes to login — not the bare JSON GET endpoint
@@ -221,8 +212,9 @@ router.post('/resend-verification', async (req, res) => {
 
 /* ----------------------------- e-mail verification -------------------------- */
 
-async function verifyEmail(uid, token) {
-  const cred = linkCredentials(accounts.VERIFY_TOKEN_VERSION, uid, token);
+async function verifyEmail(token) {
+  const cred = accounts.parseLinkToken(accounts.VERIFY_TOKEN_VERSION, token);
+  if (!cred) return false;
   const user = await repo.getUserById(cred.userId);
   const v = user && user.verification;
   if (!v || Date.parse(v.expiresAt) <= Date.now()) return false;
@@ -234,14 +226,16 @@ async function verifyEmail(uid, token) {
 // GET serves the link clicked in the mail (JSON for now; the in-app landing
 // page is #138's onboarding work). POST is the API form for clients.
 router.get('/verify-email', async (req, res) => {
-  const ok = await verifyEmail(req.query.uid, req.query.token);
+  const ok = await verifyEmail(req.query.token);
   if (!ok) return res.status(400).json({ error: 'invalid_token' });
   res.json({ ok: true });
 });
 
+// A stray `uid` in the body is accepted and ignored — it was part of the
+// documented request shape before #434 and costs nothing to keep tolerating.
 router.post('/verify-email', async (req, res) => {
-  const { uid, token } = req.body || {};
-  const ok = await verifyEmail(uid, token);
+  const { token } = req.body || {};
+  const ok = await verifyEmail(token);
   if (!ok) return res.status(400).json({ error: 'invalid_token' });
   res.json({ ok: true });
 });
@@ -365,9 +359,10 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 router.post('/reset-password', async (req, res) => {
-  const { uid, token, password } = req.body || {};
+  const { token, password } = req.body || {};
   if (!validPassword(password)) return res.status(400).json({ error: 'invalid_password' });
-  const cred = linkCredentials(accounts.RESET_TOKEN_VERSION, uid, token);
+  const cred = accounts.parseLinkToken(accounts.RESET_TOKEN_VERSION, token);
+  if (!cred) return res.status(400).json({ error: 'invalid_token' });
   const user = await repo.getUserById(cred.userId);
   const r = user && user.reset;
   if (!r || Date.parse(r.expiresAt) <= Date.now()
