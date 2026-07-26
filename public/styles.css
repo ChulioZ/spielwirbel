@@ -62,7 +62,19 @@
   --gold-deep: #92400e;
   --gold-soft: #fef3c7;
   --gold-edge: #d97706;
-  --radius: 18px;
+  /* Corner radii. One scale, so a component can't invent its own — the tell
+     that this was needed: `.hub-cta` carried a literal `18px` that silently
+     duplicated the old `--radius`, and pills were spelled BOTH `999px` (19
+     rules) and `99px` (4), so a grep for the pill radius missed four of them.
+     2/6/10/14/16/22px stragglers are deliberately NOT folded in here — each is
+     a per-component judgement call, and collapsing them blind is how a
+     "tidy-up" becomes a redesign. test/design-tokens.test.js pins the two
+     defects above so neither can come back. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
   /* Room the floating hub dock needs at the page bottom. It is used by BOTH
      things that end up under it — .app's own padding and the site footer that
      follows .app (#324) — so the two can't drift apart if the dock is ever
@@ -83,7 +95,39 @@
   --w-read: 900px;     /* prose/rows inside the pane, so text keeps a measure */
   --rail-w: 260px;
   --rail-gap: 32px;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+  /* Elevation: a 3-step ramp, resting -> raised -> overlay. Three is where
+     Fluent 2, Material, Atlassian and Polaris independently land — enough to
+     name the levels, few enough that each reads as distinct. Each step layers a
+     sharp KEY shadow (defines the edge) over a soft AMBIENT one (implies
+     distance).
+
+     --shadow-2 is byte-identical to the old `--shadow`, so the 11 rules that
+     used it are unchanged; only the 6 genuine one-off elevations moved onto the
+     ramp. Before this, the app had 8 ad-hoc recipes and the hierarchy was
+     inverted at both ends: the largest blur in the app sat on a STATIC
+     `.auth__card`, while the topmost surface — `.sheet` — had no shadow at all.
+
+     Not every box-shadow is elevation, and the rest are deliberately left
+     alone: the `0 0 0 3px var(--brand-edge)` focus rings (an accessibility
+     floor, never restyle them for looks), `.ticket--live`'s inset accent edge,
+     and `0 0 0 1px var(--line)` used as a hairline. */
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.10), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-3: 0 4px 12px rgba(0, 0, 0, 0.10), 0 18px 44px rgba(0, 0, 0, 0.12);
+
+  /* Motion. The same card-lift hover was written three ways before this
+     (transform at 0.08s in five rules, 0.1s in another, and the pair reordered
+     in a third), so one card lifted at a different speed than its neighbour.
+     Durations now come from here. */
+  --dur-fast: 0.08s;
+  --dur-base: 0.15s;
+  --dur-slow: 0.25s;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* This scale is for MICRO-interactions (hover, press, open). The signature
+     long-form motion is deliberately NOT on it and must not be "unified" onto
+     it: the finale seal pulse (1.8s), the podium rise (0.55s) and the confetti
+     (1.7s) are the app's character moments, and a 0.25s ceiling would flatten
+     exactly the thing worth keeping. */
   --font: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -466,7 +510,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   gap: 10px;
   font-size: 21px;
   padding: 18px;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   margin: 4px 0 18px;
 }
 .hub-cta .ti { font-size: 24px; }
@@ -485,12 +529,18 @@ h1, h2, h3 { font-family: var(--font-display); }
   color: var(--ink);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 0;
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.08s ease;
+  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
-.ticket:hover { box-shadow: var(--shadow); transform: translateY(-2px) rotate(-0.3deg); }
+.ticket:hover { box-shadow: var(--shadow-2); transform: translateY(-2px) rotate(-0.3deg); }
+/* Tickets own their own rhythm. Before this, the ONLY thing separating two
+   stacked tickets was `.ticket__discard`'s margin — a link that exists solely
+   when there is an abandoned draw — so the running and last-played tickets
+   abutted at exactly 0px, doubling their 1px borders into a seam and colliding
+   their 18px corners. Measured bottom 342 / top 342 at 1440, 646 / 646 at 390. */
+.ticket + .ticket, .ticket__discard + .ticket { margin-top: 14px; }
 .ticket__main {
   display: flex;
   align-items: center;
@@ -504,7 +554,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   overflow: hidden;
   width: 56px;
   height: 56px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--sunken) center/cover no-repeat;
   display: flex;
   align-items: center;
@@ -538,8 +588,12 @@ h1, h2, h3 { font-family: var(--font-display); }
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-width: 110px;
-  max-width: 170px;
+  /* FIXED width, not content-sized. The perforation is the signature motif of
+     the Start tab, and when the stub sized itself to its label ("Fortsetzen"
+     vs "Weiter abstimmen" vs a winner list) the dashed line landed at a
+     different x on each ticket in the same stack — measured 1057 / 1101 / 1055
+     at 1440. A stack of tickets has to share one perforation line. */
+  flex: 0 0 156px;
   padding: 12px 16px;
   border-left: 2px dashed var(--line);
   color: var(--brand-dark);
@@ -592,9 +646,9 @@ h1, h2, h3 { font-family: var(--font-display); }
   gap: 4px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 6px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-2);
   z-index: 20;
 }
 .dock__item {
@@ -603,7 +657,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   align-items: center;
   gap: 2px;
   padding: 7px 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: none;
   background: none;
   cursor: pointer;
@@ -684,8 +738,9 @@ h1, h2, h3 { font-family: var(--font-display); }
   .ticket__stub {
     flex-direction: row;
     width: 100%;
-    min-width: 0;
-    max-width: none;
+    /* The base rule's `flex: 0 0 156px` is a WIDTH there and would become a
+       fixed 156px HEIGHT here, where .ticket is a column. Reset it. */
+    flex: 0 0 auto;
     border-left: none;
     border-top: 2px dashed var(--line);
     padding: 12px 16px;
@@ -727,7 +782,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   font-size: 15px;
   font-weight: 600;
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   white-space: nowrap;
 }
 .section-toggle:hover { background: var(--brand-tint); }
@@ -739,7 +794,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   gap: 8px;
   background: var(--surface);
   border: 1.5px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 7px 14px;
   color: var(--ink-soft);
 }
@@ -763,7 +818,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   color: var(--ink-soft);
   background: var(--surface);
   border: 1.5px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 8px 12px;
   cursor: pointer;
 }
@@ -782,7 +837,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1.5px solid var(--line);
   background: var(--surface);
   font-family: var(--font-display);
@@ -790,7 +845,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   font-weight: 700;
   color: var(--ink-soft);
   cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
 }
 .chip .ti { font-size: 15px; }
 .chip:hover { border-color: var(--brand-edge); }
@@ -818,7 +873,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1.5px solid var(--line);
   background: var(--surface);
   font-family: var(--font-display);
@@ -838,7 +893,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--brand);
   color: #fff;
   font-size: 12px;
@@ -872,7 +927,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   background: var(--surface);
   color: var(--ink);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
 }
 .btn:hover { background: var(--brand-tint-soft); border-color: var(--brand-edge); }
 .btn .ti { vertical-align: -2px; }
@@ -917,15 +972,15 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 20px;
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.08s ease;
+  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.card:hover { box-shadow: var(--shadow); transform: translateY(-2px) rotate(-0.3deg); }
+.card:hover { box-shadow: var(--shadow-2); transform: translateY(-2px) rotate(-0.3deg); }
 .card :is(h2, h3) { font-size: 20px; margin: 0; text-transform: none; letter-spacing: 0; color: var(--ink); }
 .card__meta { color: var(--ink-soft); font-size: 15px; }
 .card__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -946,7 +1001,13 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .round-card {
   display: flex;
-  align-items: center;
+  /* Top-aligned, NOT centred. The lobby is a grid, so every card stretches to
+     the tallest in its row; centring then floated each card's content to its
+     own middle and the three titles in one row sat at y=209 / 233 / 252 —
+     a 43px spread across identical boxes. The emblem and chevron opt back into
+     centring below, since they are single fixed-size marks rather than a
+     column of content. */
+  align-items: flex-start;
   gap: 16px;
   width: 100%;
   text-align: left;
@@ -955,13 +1016,14 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   color: var(--ink);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 16px 18px;
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.08s ease;
+  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
-.round-card:hover { box-shadow: var(--shadow); transform: translateY(-2px) rotate(-0.3deg); }
+.round-card:hover { box-shadow: var(--shadow-2); transform: translateY(-2px) rotate(-0.3deg); }
 .round-card__emblem {
+  align-self: center;
   width: 56px;
   height: 56px;
   border-radius: 16px;
@@ -979,7 +1041,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .round-card__shared {
   display: inline-flex; align-items: center; gap: 3px;
   font-size: 12px; font-weight: 700; color: var(--brand);
-  background: var(--brand-tint-soft); border-radius: 999px;
+  background: var(--brand-tint-soft); border-radius: var(--radius-pill);
   padding: 1px 8px; vertical-align: middle; white-space: nowrap;
 }
 .round-card__shared .ti { font-size: 13px; }
@@ -991,7 +1053,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   align-items: center;
   gap: 5px;
   padding: 4px 11px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--sunken-soft);
   font-size: 13px;
   font-weight: 700;
@@ -1006,7 +1068,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   gap: 6px;
 }
 .round-card__last .ti { color: var(--gold); }
-.round-card__chev { font-size: 22px; color: var(--brand-edge); flex: none; }
+.round-card__chev { align-self: center; font-size: 22px; color: var(--brand-edge); flex: none; }
 .round-card--new {
   justify-content: center;
   gap: 10px;
@@ -1118,7 +1180,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   align-items: flex-start;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 14px 16px;
 }
 .import-card__icon { font-size: 22px; color: var(--ink-soft); margin-top: 4px; }
@@ -1178,12 +1240,12 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   padding: 8px 14px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   font-size: 15px;
   color: var(--ink-soft);
 }
 .tl-act--link { cursor: pointer; }
-.tl-act--link:hover { box-shadow: var(--shadow); }
+.tl-act--link:hover { box-shadow: var(--shadow-2); }
 .tl-act__icon { flex: none; display: flex; align-items: center; min-height: 1.5em; opacity: 0.75; }
 .tl-act__icon .ti { font-size: 16px; }
 .tl-act__text { flex: 1; min-width: 0; }
@@ -1200,7 +1262,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   cursor: pointer;
   line-height: 1;
   padding: 5px 7px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .tl-act__del .ti { font-size: 13px; }
 .tl-act__del:hover { background: color-mix(in srgb, var(--danger) 10%, var(--surface)); color: var(--danger); }
@@ -1215,18 +1277,18 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   font-family: inherit;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 10px 12px;
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.08s ease;
+  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
-.session-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.session-card:hover { box-shadow: var(--shadow-2); transform: translateY(-2px); }
 .session-card__img {
   position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
   overflow: hidden;
   width: 54px;
   height: 54px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--sunken) center/cover no-repeat;
   display: flex;
   align-items: center;
@@ -1251,7 +1313,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .game-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1365,21 +1427,21 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   opacity: 0.72;
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.18));
 }
-.game-card--clickable { cursor: pointer; transition: box-shadow 0.15s ease, transform 0.08s ease; }
-.game-card--clickable:hover { box-shadow: var(--shadow); transform: translateY(-2px) rotate(-0.3deg); }
+.game-card--clickable { cursor: pointer; transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out); }
+.game-card--clickable:hover { box-shadow: var(--shadow-2); transform: translateY(-2px) rotate(-0.3deg); }
 
 /* Game titles/covers that link to the detail page (results + Pokale).
    Shared affordance: pointer cursor and a keyboard focus ring; per-element
    hover cues are defined next to each element. */
 .game-link { cursor: pointer; }
-.game-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
+.game-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--radius-sm); }
 /* Text titles underline on hover; image/tile targets get a brand ring. */
 .result-row__title.game-link:hover,
 .pokale-game__title.game-link:hover {
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--brand) 60%, transparent);
 }
-.result-row__img.game-link { transition: box-shadow 0.15s ease; }
+.result-row__img.game-link { transition: box-shadow var(--dur-base) var(--ease-out); }
 .result-row__img.game-link:hover,
 .result-podium__col.game-link:hover .result-podium__img {
   box-shadow: 0 0 0 3px var(--brand-edge);
@@ -1388,10 +1450,10 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 /* Member links: avatars get a brand ring, name text underlines on hover. */
 .member-link { cursor: pointer; }
 .member-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 50%; }
-.avatar.member-link { transition: box-shadow 0.15s ease; }
+.avatar.member-link { transition: box-shadow var(--dur-base) var(--ease-out); }
 .avatar.member-link:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .result-people__person.member-link:focus-visible,
-.podium__rest-name.member-link:focus-visible { border-radius: 8px; }
+.podium__rest-name.member-link:focus-visible { border-radius: var(--radius-sm); }
 .result-people__person.member-link:hover .result-people__name,
 .podium__rest-name.member-link:hover {
   text-decoration: underline;
@@ -1408,8 +1470,8 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   font-weight: 700;
   font-size: 14px;
   padding: 3px 10px;
-  border-radius: 999px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-1);
 }
 .score-pill--none {
   background: color-mix(in srgb, var(--page-bg), #000 10%);
@@ -1430,12 +1492,12 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .game-card__badges .score-pill { position: static; }
 .img-badge {
   background: rgba(255, 255, 255, 0.88);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 4px 7px 2px;
   font-size: 14px;
   line-height: 1.3;
   color: var(--ink-soft);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-1);
 }
 .game-card__body { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
 .game-card__title { font-weight: 700; font-size: 17px; }
@@ -1446,16 +1508,24 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   font-size: 13px;
   font-weight: 700;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 .tag .ti { font-size: 12px; vertical-align: -1px; }
-.tag--digital { background: #dbeafe; color: #1e40af; }
-.tag--analog { background: #dcfce7; color: #166534; }
-.tag--duration { background: #ede9fe; color: #5b21b6; }
-.tag--players { background: #e0f2fe; color: #075985; }
-/* Platform pill: neutral (theme-derived) surface; the brand glyph carries the
-   only color, so no per-platform hardcoded tones (see theme-derived-colors). */
-.tag--platform { background: var(--sunken); color: var(--ink-soft); }
+/* Neutral (theme-derived) metadata pill. It used to be a fixed `#e0f2fe`/
+   `#075985` blue, which sat right next to the accent-derived `.tag--custom` on
+   the game-detail head — one chip following the round's theme, its neighbour
+   staying blue on all eight of them. The retired `.tag--platform` two lines
+   below carried a comment citing theme-derived-colors.md for exactly this
+   reason; this pill was simply missed in that pass.
+
+   Deriving a *blue* instead would be worse, not better: it would collide with
+   the accent on Blaugrau and Schiefer. Going neutral also leaves the round's
+   own tags as the only coloured chip, which is the hierarchy we want.
+
+   (`.tag--digital/--analog/--duration/--platform` lived here until this pass —
+   four rules, three of them hardcoded hex, for the platform/duration/type
+   concepts retired in #242. Nothing referenced them.) */
+.tag--players { background: var(--sunken); color: var(--ink-soft); }
 /* Custom round tags (#238): accent-derived so they follow the theme. */
 .tag--custom { background: var(--brand-tint); color: var(--brand-dark); }
 /* inline-flex (not the base .tag's inline-block) so the leading icon (#255)
@@ -1472,7 +1542,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .add-tile {
   border: 2px dashed var(--brand-edge);
   background: transparent;
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1485,7 +1555,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   font-size: 15px;
   font-weight: 700;
   padding: 16px;
-  transition: background 0.12s ease;
+  transition: background var(--dur-base) var(--ease-out);
 }
 .add-tile .ti { font-size: 28px; }
 .add-tile:hover { background: var(--brand-tint-soft); }
@@ -1496,7 +1566,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   color: var(--ink-soft);
   background: var(--surface);
   border: 2px dashed var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
 }
 .empty p { font-size: 18px; }
 
@@ -1511,7 +1581,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   font-size: 18px;
   padding: 12px 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--ink);
 }
@@ -1544,9 +1614,9 @@ body.auth-screen .topbar__context { display: none; }
   max-width: 380px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 30px 28px;
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-2);
 }
 .auth__logo { font-size: 34px; line-height: 1; color: var(--brand); text-align: center; }
 .auth__title { font-family: var(--font-display); font-size: 24px; margin: 10px 0 4px; text-align: center; }
@@ -1626,7 +1696,7 @@ body.auth-screen .topbar__context { display: none; }
   height: auto;
   border-radius: 16px;
   border: 1px solid var(--line);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-3);
   background: var(--surface);
 }
 /* The phone-shaped shelf shot would otherwise fill the whole column on a phone
@@ -1674,7 +1744,7 @@ body.auth-screen .topbar__context { display: none; }
 .landing-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 22px 20px;
 }
 .landing-card__icon {
@@ -1683,7 +1753,7 @@ body.auth-screen .topbar__context { display: none; }
   justify-content: center;
   width: 46px;
   height: 46px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--brand-tint);
   color: var(--brand-dark);
   font-size: 24px;
@@ -1734,7 +1804,7 @@ body.auth-screen .topbar__context { display: none; }
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--sunken-soft);
   border: 1px solid var(--line);
   color: var(--ink);
@@ -1824,7 +1894,7 @@ body.auth-screen .topbar__context { display: none; }
   gap: 12px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 10px 14px;
 }
 .feed-item__img {
@@ -1833,7 +1903,7 @@ body.auth-screen .topbar__context { display: none; }
   flex: none;
   width: 46px;
   height: 46px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--sunken) center/cover no-repeat;
   display: grid;
   place-items: center;
@@ -1866,8 +1936,8 @@ body.auth-screen .topbar__context { display: none; }
 .vote {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
   overflow: hidden;
   max-width: 560px;
   margin: 0 auto;
@@ -1882,7 +1952,7 @@ body.auth-screen .topbar__context { display: none; }
 .vote__img {
   position: relative;
   margin: 16px 20px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   aspect-ratio: 4 / 3;
   background: var(--sunken);
   overflow: hidden;
@@ -1900,7 +1970,7 @@ body.auth-screen .topbar__context { display: none; }
 .sortBtn {
   width: 100%;
   padding: 14px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 2px dashed var(--warn);
   background: transparent;
   color: var(--warn);
@@ -1947,7 +2017,7 @@ body.auth-screen .topbar__context { display: none; }
 .result-row {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 16px 18px;
   margin-bottom: 14px;
   display: grid;
@@ -1958,7 +2028,7 @@ body.auth-screen .topbar__context { display: none; }
 .result-row__img {
   position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
   overflow: hidden;
-  width: 64px; height: 64px; border-radius: 12px;
+  width: 64px; height: 64px; border-radius: var(--radius-md);
   background: var(--sunken) center/cover no-repeat;
   display: flex; align-items: center; justify-content: center; font-size: 28px;
 }
@@ -1998,7 +2068,7 @@ body.auth-screen .topbar__context { display: none; }
 .chosen-banner {
   margin: 4px 0 18px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--sunken-soft);
   color: var(--ink-soft);
   font-size: 16px;
@@ -2031,7 +2101,7 @@ body.auth-screen .topbar__context { display: none; }
   background: color-mix(in srgb, var(--warn) 9%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--warn) 30%, var(--surface));
   border-left: 5px solid var(--warn);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 10px 14px;
 }
 .rec-banner__bar {
@@ -2047,7 +2117,7 @@ body.auth-screen .topbar__context { display: none; }
   color: var(--ink-soft);
   font-size: 18px;
   line-height: 1;
-  transition: transform 0.2s ease;
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 .rec-banner.is-open .rec-banner__caret { transform: rotate(180deg); }
 .rec-banner__dismiss {
@@ -2058,7 +2128,7 @@ body.auth-screen .topbar__context { display: none; }
   font-size: 14px;
   line-height: 1;
   padding: 4px 7px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .rec-banner__dismiss:hover { background: rgba(0, 0, 0, 0.06); color: var(--ink); }
 .rec-banner__body { margin-top: 12px; }
@@ -2071,7 +2141,7 @@ body.auth-screen .topbar__context { display: none; }
   gap: 12px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 10px 14px;
 }
 .recommend-item__info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -2118,7 +2188,7 @@ body.auth-screen .topbar__context { display: none; }
   font-size: 17px;
   font-weight: 600;
   padding: 10px 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 2px solid var(--line);
   background: var(--surface);
   color: var(--ink-soft);
@@ -2137,7 +2207,7 @@ body.auth-screen .topbar__context { display: none; }
   font-size: 17px;
   font-weight: 600;
   padding: 10px 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 2px solid var(--line);
   background: var(--surface);
   color: var(--ink);
@@ -2152,7 +2222,7 @@ body.auth-screen .topbar__context { display: none; }
 .winner-result {
   margin-top: 14px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--gold-soft);
   color: var(--gold-deep);
   font-weight: 700;
@@ -2171,7 +2241,7 @@ body.auth-screen .topbar__context { display: none; }
   width: 240px;
   max-width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   background: var(--sunken);
   overflow: hidden;
   display: flex;
@@ -2198,7 +2268,7 @@ body.auth-screen .topbar__context { display: none; }
   padding: 0 4px;
   margin: 0 -4px;
   box-decoration-break: clone;
-  transition: background 0.12s;
+  transition: background var(--dur-base) var(--ease-out);
 }
 .gd-title:hover { background: var(--brand-tint); }
 .gd-title-input {
@@ -2217,9 +2287,9 @@ body.auth-screen .topbar__context { display: none; }
    ~4px shorter at 13px — and `border` is reset separately so it never competes
    with .tag--empty's dashed one; on equal specificity that would come down to
    source order (.claude/rules/label-rows-lose-to-field-label.md). */
-.tag--edit { cursor: pointer; transition: filter 0.12s, box-shadow 0.12s; font-family: inherit; line-height: inherit; }
+.tag--edit { cursor: pointer; transition: filter var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out); font-family: inherit; line-height: inherit; }
 .tag--edit:not(.tag--empty) { border: 0; }
-.tag--edit:hover { filter: brightness(0.96); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16); }
+.tag--edit:hover { filter: brightness(0.96); box-shadow: var(--shadow-1); }
 /* Same ring as .game-link/.member-link, so a keyboard user sees one indicator
    style across the app. The UA default would do, but not consistently. */
 .tag--edit:focus-visible,
@@ -2258,7 +2328,7 @@ body.auth-screen .topbar__context { display: none; }
   color: #fff;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
   opacity: 0;
-  transition: opacity 0.14s;
+  transition: opacity var(--dur-base) var(--ease-out);
   pointer-events: none;
 }
 .gd-img--edit:hover .gd-img__edit,
@@ -2273,7 +2343,7 @@ body.auth-screen .topbar__context { display: none; }
 .gd-onboard {
   margin-top: 18px;
   padding: 20px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   background: var(--brand-tint-soft);
   border: 1px solid var(--brand-edge);
 }
@@ -2322,7 +2392,7 @@ body.auth-screen .topbar__context { display: none; }
   height: 44px;
   padding: 0 8px;
   border: 1.5px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--ink-soft);
   cursor: pointer;
@@ -2341,7 +2411,7 @@ body.auth-screen .topbar__context { display: none; }
   justify-content: center;
   aspect-ratio: 1;
   border: 1.5px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--ink-soft);
   cursor: pointer;
@@ -2367,7 +2437,7 @@ body.auth-screen .topbar__context { display: none; }
   align-items: center;
   justify-content: center;
   color: #fff;
-  transition: box-shadow 0.15s ease, transform 0.1s ease;
+  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .member-swatch .ti { font-size: 20px; opacity: 0; }
 .member-swatch:hover { transform: translateY(-1px); }
@@ -2381,8 +2451,8 @@ body.auth-screen .topbar__context { display: none; }
   z-index: 100;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-3);
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -2395,7 +2465,7 @@ body.auth-screen .topbar__context { display: none; }
   text-align: left;
   border: 1px solid transparent;
   background: transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 8px 12px;
   font: inherit;
   font-weight: 700;
@@ -2485,7 +2555,7 @@ body.auth-screen .topbar__context { display: none; }
   cursor: pointer;
   line-height: 1;
   padding: 6px 8px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .tag-act .ti { font-size: 15px; display: block; }
 .tag-act:hover { background: var(--sunken); color: var(--ink); }
@@ -2497,11 +2567,11 @@ body.auth-screen .topbar__context { display: none; }
   gap: 12px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   cursor: pointer;
 }
-.ds-row:hover { box-shadow: var(--shadow); }
+.ds-row:hover { box-shadow: var(--shadow-2); }
 .ds-row--picked { border-color: var(--brand); background: var(--brand-tint-soft); }
 .ds-row__date { font-weight: 700; }
 .ds-row__status { font-size: 15px; margin-top: 2px; }
@@ -2559,8 +2629,8 @@ body.auth-screen .topbar__context { display: none; }
   position: fixed;
   bottom: 24px; left: 50%; transform: translateX(-50%);
   background: var(--ink); color: #fff;
-  padding: 12px 22px; border-radius: 999px;
-  box-shadow: var(--shadow); font-weight: 600;
+  padding: 12px 22px; border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-2); font-weight: 600;
   z-index: 50;
   display: none;
 }
@@ -2587,7 +2657,7 @@ img.preview { max-width: 120px; border-radius: 10px; margin-top: 8px; display: b
   text-align: center;
   padding: 18px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
 }
 .paste-zone:focus { outline: none; border-color: var(--brand); background: var(--brand-tint); }
 .paste-zone.has-image { border-style: solid; padding: 12px; }
@@ -2687,8 +2757,8 @@ kbd {
   z-index: 50;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-3);
   padding: 6px;
   max-height: 340px;
   overflow-y: auto;
@@ -2708,7 +2778,7 @@ kbd {
   text-align: left;
   border: 1px solid transparent;
   background: transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 7px 8px;
   font: inherit;
   font-weight: 600;
@@ -2730,7 +2800,7 @@ kbd {
   border: 1px solid var(--brand-edge);
   background: var(--brand-tint-soft);
   color: var(--brand-dark);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 3px 9px;
   font: inherit;
   font-size: 12px;
@@ -2773,7 +2843,7 @@ kbd {
 .stepper__btn {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 1.5px solid var(--line);
   border-bottom-width: 3px;
   background: var(--surface);
@@ -2795,7 +2865,7 @@ kbd {
   color: var(--ink);
   background: var(--surface);
   border: 1.5px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 7px 4px;
 }
 .stepper__val:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
@@ -2844,7 +2914,7 @@ kbd {
 .pokale-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -2880,11 +2950,11 @@ kbd {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--brand-edge);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--brand-tint);
   color: var(--brand-dark);
   cursor: pointer;
-  transition: background 0.15s, transform 0.05s;
+  transition: background var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .pokale-game__play .ti { font-size: 16px; }
 .pokale-game__play:hover { background: var(--brand-tint-soft); }
@@ -2915,7 +2985,9 @@ kbd {
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(43, 38, 32, 0.45);
+  /* --ink at 45%. This was the literal `rgba(43, 38, 32, 0.45)` — the token's
+     own value hand-expanded, so retuning --ink left the backdrop behind. */
+  background: color-mix(in srgb, var(--ink) 45%, transparent);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -2938,8 +3010,13 @@ kbd {
      .claude/rules/lookup-menu-fixed-position.md. */
   overflow-y: auto;
   background: var(--page-bg);
-  border-radius: 24px 24px 0 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   border: 1px solid var(--line);
+  /* The topmost surface in the app, and until the ramp landed it was the only
+     overlay with NO shadow — a merely hovered card read as more raised than the
+     modal above it. The backdrop does most of the separating; this puts the
+     sheet's own edge on the same ramp as the popover it shares the tier with. */
+  box-shadow: var(--shadow-3);
   border-bottom: none;
   /* Vertical padding lives on the sticky head/actions instead, so they can sit
      flush against the scrollport edges with nothing peeking above or below. */
@@ -2953,7 +3030,7 @@ kbd {
   width: calc(100% - 32px);
   max-width: 460px;
   max-height: min(80vh, 560px);
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   border-bottom: 1px solid var(--line);
 }
 /* Wide viewports: every sheet becomes a centered, fully-rounded card with a
@@ -2963,12 +3040,12 @@ kbd {
   .sheet-backdrop { align-items: center; padding: 24px; }
   .sheet-backdrop--center { padding-bottom: 120px; }
   .sheet {
-    border-radius: 24px;
+    border-radius: var(--radius-xl);
     border-bottom: 1px solid var(--line);
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .sheet { animation: sheet-up 0.25s ease-out; }
+  .sheet { animation: sheet-up var(--dur-slow) var(--ease-out); }
   @keyframes sheet-up {
     from { transform: translateY(40px); opacity: 0.4; }
     to { transform: translateY(0); opacity: 1; }
@@ -3044,7 +3121,7 @@ kbd {
   color: var(--ink-soft);
   cursor: pointer;
   opacity: 0.75;
-  transition: all 0.12s ease;
+  transition: opacity var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
 }
 .opt-card .ti { font-size: 26px; }
 .opt-card__logo { width: 26px; height: 26px; display: block; }
@@ -3080,7 +3157,7 @@ kbd {
   align-items: center;
   gap: 4px;
   padding: 5px 5px 5px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 2px dashed var(--placeholder);
   background: var(--sunken-soft);
   color: var(--ink-soft);
@@ -3113,7 +3190,7 @@ kbd {
   flex-wrap: wrap;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 12px 16px;
   margin-bottom: 18px;
 }
@@ -3143,11 +3220,11 @@ kbd {
 .vote-progress__seg {
   flex: 1;
   height: 7px;
-  border-radius: 99px;
+  border-radius: var(--radius-pill);
   background: rgba(0, 0, 0, 0.14);
   overflow: hidden;
 }
-.vote-progress__seg > span { display: block; height: 100%; border-radius: 99px; transition: width 0.25s ease; }
+.vote-progress__seg > span { display: block; height: 100%; border-radius: var(--radius-pill); transition: width var(--dur-slow) var(--ease-out); }
 
 .handover {
   max-width: 560px;
@@ -3214,7 +3291,7 @@ kbd {
   align-items: center;
   justify-content: center;
   gap: 1px;
-  transition: transform 0.1s ease;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 .mood .ti { font-size: 28px; }
 .mood__n { font-family: var(--font-display); font-size: 12px; font-weight: 700; }
@@ -3240,7 +3317,7 @@ kbd {
   position: relative;
   width: 104px;
   height: 104px;
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   background: var(--stage-raised);
   border: 2px solid var(--stage-line);
   display: flex;
@@ -3411,7 +3488,7 @@ kbd {
   flex-wrap: wrap;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 12px 16px;
 }
 .archive-row__img {
@@ -3419,7 +3496,7 @@ kbd {
   overflow: hidden;
   width: 56px;
   height: 56px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--sunken) center/cover no-repeat;
   display: flex;
   align-items: center;
@@ -3451,11 +3528,11 @@ kbd {
   align-items: flex-start;
   gap: 7px;
   text-align: left;
-  transition: transform 0.08s ease, box-shadow 0.15s ease;
+  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
-.theme-card:hover { transform: translateY(-2px) rotate(-0.3deg); box-shadow: var(--shadow); }
-.theme-card__bar { width: 56%; height: 14px; border-radius: 99px; }
-.theme-card__line { width: 80%; height: 7px; border-radius: 99px; background: rgba(0, 0, 0, 0.12); }
+.theme-card:hover { transform: translateY(-2px) rotate(-0.3deg); box-shadow: var(--shadow-2); }
+.theme-card__bar { width: 56%; height: 14px; border-radius: var(--radius-pill); }
+.theme-card__line { width: 80%; height: 7px; border-radius: var(--radius-pill); background: rgba(0, 0, 0, 0.12); }
 .theme-card__line--short { width: 55%; }
 .theme-card__name { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-top: 4px; }
 .theme-card__check {
