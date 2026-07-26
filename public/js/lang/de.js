@@ -571,8 +571,8 @@ I18N.de = {
   'auth.limited.retry': 'Erneut versuchen',
 
   // Logged-out landing page (#322): the marketing front door before registration.
-  'landing.hero.title': 'Eure Spielrunde, ein Ort.',
-  'landing.hero.sub': 'Spiele sammeln, abstimmen was heute auf den Tisch kommt, und festhalten wie’s war – alles an einem Platz für eure Runde.',
+  'landing.hero.title': 'Die Spielesammlung für eure Runde.',
+  'landing.hero.sub': 'Brettspiele und Videospiele an einem Ort – mit Abstimmung, was heute gespielt wird, und Chronik, wie’s war.',
   'landing.hero.ctaPrimary': 'Kostenlos registrieren',
   'landing.hero.ctaSecondary': 'Anmelden',
   'landing.features.title': 'Alles für den Spieleabend',
