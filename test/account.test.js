@@ -628,11 +628,12 @@ test('the mailed links fit on one quoted-printable line (#434)', async (t) => {
 });
 
 // #451: the pre-#434 `uid=` + bare-token pair was carried by a fallback in
-// linkCredentials() so links already in inboxes at deploy time kept working. A
-// verification mail lives 24 h and a reset mail 1 h, so from 2026-07-26 no such
-// link could still match a live record and the fallback was removed. Pin the
-// removal — a bare token must now be refused even against a matching record, so
-// nobody "restores" the branch by reading it as a bug.
+// linkCredentials() so links already in inboxes at deploy time kept working.
+// Removed once that transition was over — #434 deployed 2026-07-25T23:59Z, reset
+// links (1 h) were long dead, and the last verification links (24 h) were let go
+// ~16 h early by operator decision: they fall back to resend-verification. Pin
+// the removal — a bare token must now be refused even against a matching record,
+// so nobody "restores" the branch by reading it as a bug.
 test('a pre-#434 uid=/token= link is refused (#451)', async (t) => {
   const email = 'legacy-link@example.com';
   await request(app).post('/api/account/register')

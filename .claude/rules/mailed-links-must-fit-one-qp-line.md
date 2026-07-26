@@ -50,9 +50,21 @@ tokens. Three parts of that are load-bearing:
   dead code at the time: a verification mail is valid for 24 h, so links in the
   pre-#434 shape were still sitting in inboxes when #434 shipped on 2026-07-25,
   and deleting it then would have stranded exactly the users who signed up just
-  before the deploy. **It was removed in #451 on 2026-07-26**, the first day on
-  which no such link could still match a live record — the transitional-code
-  discipline in `CLAUDE.md`. `verifyEmail()` and the `reset-password` handler now
+  before the deploy. **It was removed in #451 on 2026-07-26** under the
+  transitional-code discipline in `CLAUDE.md`.
+
+  **Mind the arithmetic if you ever date a removal like this again.** #451's
+  issue reasoned "#434 merged on 2026-07-25, so from 2026-07-26 no old link can
+  still verify" — which quietly assumed the deploy landed early in the day. It
+  landed at **2026-07-25T23:59:10Z**, 50 seconds before midnight UTC, so the last
+  legacy links actually lived until **2026-07-26T23:59Z**. The removal shipped
+  that morning, ~16 h early, as a deliberate operator decision: the residual
+  cohort (registered in the 24 h before the deploy, still unverified) gets
+  `invalid_token` and recovers through resend-verification, which mails a fresh
+  short link. A removal gated on a TTL expiring must be measured from the
+  **deploy timestamp + TTL**, not from the merge *date*.
+
+  `verifyEmail()` and the `reset-password` handler now
   call `accounts.parseLinkToken` directly and answer `400 invalid_token` when it
   returns null; `test/account.test.js` pins the refusal so the branch does not
   come back as a "bug fix". A stray `uid` in the *request body* is still accepted
