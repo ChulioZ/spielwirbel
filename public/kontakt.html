@@ -33,8 +33,8 @@
       --line: color-mix(in srgb, var(--page-bg), #000 9%);
       --brand-dark: color-mix(in srgb, var(--brand), #000 18%);
       --page-glow: color-mix(in srgb, var(--brand) 7%, transparent);
-      --radius: 18px;
-      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+      --radius-lg: 18px;
+      --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
       --font: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-display: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
     }
@@ -71,9 +71,9 @@
       max-width: 480px;
       background: var(--surface);
       border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border-radius: var(--radius-lg);
       padding: 2rem 1.75rem;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-2);
     }
     .topline { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
     /* The app's brand lockup (mark + wordmark), so the page identifies itself as
