@@ -85,7 +85,7 @@ const frontendGlobals = {
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
   // views-landing.js (issue #322): logged-out landing page
   showLanding: 'readonly', LANDING_FEATURES: 'readonly', LANDING_STEPS: 'readonly',
-  LANDING_SHELF: 'readonly', landingCfg: 'writable',
+  LANDING_SHOTS: 'readonly', LANDING_SHOT_BP: 'readonly', landingCfg: 'writable',
   landingRevealOperatorClaims: 'readonly',
   // ranking.js + lookup-group.js + lookup-cover.js + lookup-title.js +
   // lookup-score.js + cover.js + tag-icons.js (also CommonJS modules for

@@ -576,6 +576,8 @@ I18N.en = {
   'landing.hero.sub': 'Board games and video games in one place – with a vote on what to play tonight, and a chronicle of how it went.',
   'landing.hero.ctaPrimary': 'Sign up free',
   'landing.hero.ctaSecondary': 'Log in',
+  'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their average rating, next to the navigation for Start, shelf, chronicle and trophies.',
+  'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale from 1 to 5.',
   'landing.features.title': 'Everything for game night',
   'landing.features.shelf.title': 'Your game shelf',
   'landing.features.shelf.desc': 'Add your games – with covers straight from the store search: BoardGameGeek, Steam, PlayStation, Nintendo and Xbox.',
