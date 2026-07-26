@@ -55,10 +55,12 @@ const walk = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true
     return e.name.endsWith('.js') ? [rel] : [];
   });
 
+const sourceFiles = SOURCE_DIRS.flatMap((d) => walk(d));
+const sourceBasenames = new Set(sourceFiles.map((rel) => path.basename(rel)));
+
 test('every source module appears in the README architecture tree', () => {
   const names = entryNames(treeBlock());
-  const undocumented = SOURCE_DIRS
-    .flatMap(walk)
+  const undocumented = sourceFiles
     .filter((rel) => !names.has(path.basename(rel)))
     .sort();
 
@@ -70,17 +72,19 @@ test('the README architecture tree names no module that was deleted', () => {
   // The other direction: a removed module leaves a tree entry pointing at
   // nothing, which is how a session ends up looking for `lib/ai.js` (removed
   // with the AI surface in #264) and concluding the checkout is broken.
-  const tree = treeBlock();
   const stale = [];
 
-  for (const line of tree.split('\n')) {
-    const name = line.trim().split(/\s+/)[0];
-    if (!name || !/^[a-z0-9_-]+\.js$/i.test(name)) continue;
+  for (const line of treeBlock().split('\n')) {
+    const token = line.trim().split(/\s+/)[0];
+    if (!token || !/\.js$/.test(token)) continue;
+    // Compare on the basename: a few entries carry a directory prefix
+    // (`lang/en.js`), and those must be checked too rather than skipped.
+    const name = path.basename(token);
     // An entry is fine as long as SOME source dir holds a file by that name —
     // the tree is indented ASCII, so the owning directory is not machine-readable.
-    const exists = SOURCE_DIRS.flatMap(walk).some((rel) => path.basename(rel) === name)
+    const exists = sourceBasenames.has(name)
       || ['', 'scripts', 'public'].some((d) => fs.existsSync(path.join(ROOT, d, name)));
-    if (!exists) stale.push(name);
+    if (!exists) stale.push(token);
   }
 
   assert.deepEqual(stale, [],
