@@ -126,14 +126,23 @@ test('the <picture> breakpoint and the stylesheet agree on 720px', () => {
   // ordering it above the copy. Same adjacency rule as the dock clearance
   // (.claude/rules/responsive-hub-tabs.md §2), and just as invisible.
   const wide = Number(bp[1]);
+  let checked = 0;
   for (const m of css.matchAll(/@media \(max-width: (\d+)px\)\s*\{/g)) {
+    // Inner rules are indented, so a newline followed by an unindented `}` is
+    // the @media block's own close.
     const body = css.slice(m.index + m[0].length, css.indexOf('\n}', m.index));
     if (!/\.landing[\w-]*\s*\{|\.landing[\w-]*\s+\./.test(body)) continue;
+    checked++;
     assert.equal(
       Number(m[1]), wide - 1,
       `a landing @media (max-width: ${m[1]}px) block must end at ${wide - 1}px to tile with ${wide}px`
     );
   }
+  // Without this the loop passes vacuously the moment the stylesheet's
+  // formatting changes enough that the slice above stops matching — the exact
+  // silent-green failure .claude/rules/css-text-assertions-strip-comments.md
+  // describes, in a test whose whole job is catching an invisible 1px straddle.
+  assert.ok(checked > 0, 'found at least one narrow landing @media block to check');
 });
 
 test('the screenshots are informative images, not decoration', () => {
