@@ -145,8 +145,12 @@ about what the deployment *is* today, and none of it is derivable from the code.
   (security reports go to the advisory form; complaints about content *inside*
   the hosted app go through `docs/legal/notice-and-action.md`).
 
-`.claude/rules/ops-only-changes-still-stale-the-docs.md` holds the same file
-list, because these facts change through ops actions that produce no diff.
+`.claude/rules/ops-only-changes-still-stale-the-docs.md` carries the overlapping
+**instance-state** list — every file whose claims change through an ops action
+that produces no diff. It is not the same set as this section's: it drops
+`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` and `LICENSE` (which assert process, not
+instance state) and picks up two rule files, `audit-loop.md` and three of the
+`.github/` files from §6. Read both; neither is a subset of the other.
 
 ### 6. The community-health files under `.github/` → C-018
 

@@ -67,8 +67,9 @@ body:
     attributes:
       label: Auth mode
       description: >-
-        Only relevant for self-hosted instances — spielwirbel.app runs
-        accounts-only. See `.claude/rules/accounts-mode-gate.md`.
+        Only relevant for self-hosted instances, and set by the ACCOUNTS_ENABLED
+        and AUTH_PASSWORD environment variables (see the README).
+        spielwirbel.app runs accounts-only.
       options:
         - Not sure / hosted user
         - Accounts only (ACCOUNTS_ENABLED, no AUTH_PASSWORD)
