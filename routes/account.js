@@ -11,10 +11,11 @@
  * and onboarding (#138) switch the app over to accounts.
  *
  * Anti-enumeration: register and forgot-password answer identically whether or
- * not the e-mail has an account; login burns the same Argon2 work for unknown
- * e-mails and answers a generic 401. The username (#320) is the deliberate
- * exception — a public handle, so `username_taken` is answered openly; the repo
- * checks it ahead of the e-mail so that openness can't leak the hidden one.
+ * not the e-mail has an account; login burns the same Argon2 work for an
+ * unknown identifier — e-mail or username (#431) — and answers a generic 401.
+ * The username (#320) is the deliberate exception — a public handle, so
+ * `username_taken` is answered openly; the repo checks it ahead of the e-mail
+ * so that openness can't leak the hidden one.
  * E-mails are bilingual (DE first — the UI language — then EN) since the server
  * has no locale context; the in-app pages that consume these links arrive
  * with #138.
@@ -265,8 +266,20 @@ async function issueTokens(user) {
 }
 
 router.post('/login', async (req, res) => {
-  const { email: rawEmail, password } = req.body || {};
-  const user = await repo.getUserByEmail(normalizeEmail(rawEmail));
+  const { login, email, password } = req.body || {};
+  // The identifier is an e-mail address OR the public handle (#431). The two
+  // namespaces are disjoint by construction — usernameSchema forbids '@' and
+  // EMAIL_RE requires one — so this classifies rather than guessing, and no
+  // username can shadow somebody's address. `email` stays accepted as an alias
+  // because the SPA shell is served cache-first: a browser on a stale
+  // account.js keeps POSTing it until its cache turns over.
+  const raw = String(login ?? email ?? '').trim();
+  // Exactly ONE repo lookup on either branch, so the two paths stay
+  // timing-comparable (.claude/rules/user-accounts.md). getUserByUsername trims
+  // and matches case-insensitively, so don't mangle the raw value first.
+  const user = raw.includes('@')
+    ? await repo.getUserByEmail(normalizeEmail(raw))
+    : await repo.getUserByUsername(raw);
   const identity = user && (user.identities || []).find((i) => i.type === 'password');
 
   if (!identity) {
