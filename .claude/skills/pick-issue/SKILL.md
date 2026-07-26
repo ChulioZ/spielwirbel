@@ -1,13 +1,13 @@
 ---
 name: pick-issue
 description: >-
-  Survey all open GitHub issues, pending Dependabot PRs, and standalone pull
-  requests (human PRs not tied to an issue), rank them by value-for-effort with
-  security/breakage jumping the queue, pick the single best next thing to work on,
-  and hand it to the right builder skill. Use when asked "what should I work
-  on/implement next?", to triage the backlog, or to choose and start the next
-  issue. Hands the winner to `implement` (issues), `dependabot` (dependency PRs),
-  or `review-pr` (standalone PRs).
+  Survey all open GitHub issues, pending Dependabot PRs, and human-authored pull
+  requests, pick the single best next thing to work on, and hand it to the right
+  builder skill. An open non-draft human PR is reviewed first — only a security
+  exposure or broken core functionality outranks it; everything else is ranked by
+  value-for-effort. Use when asked "what should I work on/implement next?", to
+  triage the backlog, or to choose and start the next issue. Hands the winner to
+  `implement` (issues), `dependabot` (dependency PRs), or `review-pr` (human PRs).
 ---
 
 # Pick the next thing to implement
@@ -17,6 +17,12 @@ to build**, justify the choice briefly, and then hand it off to the skill that
 builds it. The judgement is a **value-for-effort** call — not simply "the
 smallest" and not simply "the flashiest" — with a few things that override the
 ranking and jump straight to the front.
+
+**The biggest of those overrides: an open non-draft human PR is picked first.**
+Someone is waiting on us, and review latency is the one cost that grows while we
+do something else — so a pending PR beats every issue on the board, however
+valuable that issue is. Only two things outrank it (a security exposure, broken
+core functionality), and both are rare. See phase 3.
 
 This skill *chooses and then hands off automatically*; the actual shipping
 (branch, PR, review, merge) happens in `implement` / `dependabot` / `review-pr`,
@@ -33,7 +39,8 @@ Open work comes in several forms — collect all of them:
 gh issue list --state open --limit 100 \
   --json number,title,labels,body,assignees,createdAt,updatedAt,comments
 gh pr list --state open --limit 100 \
-  --json number,title,labels,body,author,isDraft,createdAt,updatedAt,url
+  --json number,title,labels,body,author,isDraft,createdAt,updatedAt,url,\
+isCrossRepository,latestReviews,reviewDecision,mergeable,closingIssuesReferences
 gh api "repos/{owner}/{repo}/dependabot/alerts?state=open&per_page=100" \
   --jq '.[] | {number, severity: .security_advisory.severity,
     package: .dependency.package.name, manifest: .dependency.manifest_path,
@@ -51,19 +58,25 @@ Partition the PRs by author, then sort into candidate types:
 - **Dependabot PRs → `dependabot`.** PRs whose author is `app/dependabot` (the
   user considers keeping deps current important) — handled by the `dependabot`
   skill, not `implement`. Don't try to "implement" a dependency bump by hand.
-- **Standalone PRs → `review-pr`.** Any *non-Dependabot* PR (a human/other-author
-  PR) that **isn't connected to an open issue** is now pickable work: it already
-  contains the change and usually just needs a review-and-merge, so it's cheap —
-  but it ships real code, so it gets the **same** scrutiny as everything else
-  (the malicious-intent vet in phase 2, and the full `review-pr` pass on
-  hand-off). This is the change from the old behaviour, where all other-author
-  PRs were skipped.
-- **A PR connected to an open issue** — its body closes that issue (`Closes`/
-  `Fixes`/`Resolves #N`) or GitHub links them — means the work for that issue
-  **already exists as a diff**. Prefer reviewing the PR (`review-pr`) over
-  re-implementing the issue, and **drop that issue from the pool** so you don't
-  rank both / rebuild finished work. If unsure whether a PR closes a given issue,
-  check its body for the closing keyword.
+- **Human PRs → `review-pr`.** Any *non-Dependabot*, non-draft PR — someone
+  wrote it and is waiting on a verdict. This is the category the phase-3 PR
+  override is about, and it covers both shapes:
+  - a **standalone** PR, not connected to any open issue;
+  - a PR **connected to an open issue**, which means the work for that issue
+    **already exists as a diff**. Review the PR instead of re-implementing the
+    issue, and **drop that issue from the pool** so you don't rank both / rebuild
+    finished work. `closingIssuesReferences` in the gather above resolves this
+    for you — it is GitHub's own link, so it already covers both a `Closes`/
+    `Fixes`/`Resolves #N` keyword and a manually linked issue; only fall back to
+    reading the body if that array is empty and the text still suggests a link.
+
+  Either way it ships real code, so it gets the **same** scrutiny as everything
+  else: the malicious-intent vet in phase 2, and the full `review-pr` pass on
+  hand-off. Being top of the queue buys a contributor a fast *answer*, never a
+  soft review.
+- **Your own open PRs → `review-pr` too**, but they rank last among human PRs
+  (phase 3). A PR you authored and left open is still unfinished work worth
+  closing out; nobody external is blocked on it.
 - **Dependabot *alerts* → security work.** Beyond PRs, the repo raises Dependabot
   **vulnerability alerts** (the `gh api …/dependabot/alerts` list above — empty
   output or a `403`/`404` just means none open or the feature's off; skip it, no
@@ -93,7 +106,11 @@ Skip (leave out of the pool entirely):
 
 - Issues labeled `wontfix`, `invalid`, `duplicate`, or `question` awaiting the
   user's answer.
-- **Draft PRs** (`isDraft: true`) — not ready for review yet.
+- **Draft PRs** (`isDraft: true`) — not ready for review yet. Draft status is the
+  author's own signal that they are *not* asking for feedback, and since
+  everything non-draft now jumps the queue, it is the single field separating
+  "review this before anything else" from "leave it alone". Take it at face
+  value: don't reason a draft into the pool because its diff looks finished.
 - **Any PR labeled `blocked`.** The `dependabot` skill applies that label to a PR
   it is intentionally holding open (e.g. a major bump with breaking changes we
   use, or one that would force a build step / auth / a forbidden dependency), with
@@ -139,20 +156,45 @@ If there's nothing open, say so and stop.
 
 For each realistic candidate, read enough to estimate **value** and **effort**.
 Skim the issue body (and for a Dependabot PR, whether it's flagged as a *security*
-update and whether it's a major-vs-patch bump). For a **standalone PR**, skim the
-actual change (`gh pr diff <N>`) — the change is right there, so a quick read tells
-you both its value (what it fixes/adds) and its effort (a small, focused diff is a
-fast review; a large or cross-cutting one is not). Where an issue is vague, glance
-at the code it would touch (`CLAUDE.md`, `routes/`, `public/js/`, the relevant
-`.claude/rules/`) so your effort estimate is real, not a guess. Note anything that
-makes a candidate **not actionable yet**: "needs discussion" that hasn't happened,
-blocked on another *unfinished* issue, too underspecified to build, or (for a PR)
-draft / conflicting / failing required checks. Do **not** put "needs a human
+update and whether it's a major-vs-patch bump). For a **human PR**, skim the
+actual change (`gh pr diff <N>`) — not to rank it (override 3 already did that)
+but to vet it (below) and to see what handling it will involve: a small, focused
+diff is a fast merge, a large or cross-cutting one a longer read. Where an issue
+is vague, glance at the code it would touch (`CLAUDE.md`, `routes/`, `public/js/`,
+the relevant `.claude/rules/`) so your effort estimate is real, not a guess. Note
+anything that makes a candidate **not actionable yet**: "needs discussion" that
+hasn't happened, blocked on another *unfinished* issue, or too underspecified to
+build. Do **not** put "needs a human
 decision" in this bucket — an issue that's clear about *what* to build but hinges
 on a choice or input only a person can give (which hosting provider, a connection
 string, which of two viable approaches to take) is **actionable**: that decision
 is gathered through the pick-issue/implement interview and is part of implementing
 it, not a blocker that lowers its standing (see phase 3).
+
+### A red or conflicted human PR is still actionable — the feedback *is* the deliverable
+
+Conflicts and failing checks used to park a PR as "not actionable yet". Under the
+PR override that reading is backwards: a contributor whose PR cannot merge is
+precisely the person most in need of hearing why, and the sooner the better. So
+a conflicted (`mergeable: CONFLICTING`) or red-CI human PR **stays in the pool at
+full priority** — what changes is the *outcome*, not the ranking: the right
+handling is a review comment naming the blocker (phase 5), not a merge.
+
+The one case that does leave the pool is a blocker **already communicated and
+still unaddressed** — a prior review or comment names it, and neither the branch
+nor the discussion has moved since. Then the ball is genuinely in the
+contributor's court and re-reviewing adds nothing; repeating ourselves is noise,
+not feedback.
+
+```bash
+gh pr view <N> --json reviews,comments,commits \
+  --jq '{reviews: [.reviews[] | {author: .author.login, state, at: .submittedAt}],
+    lastComment: (.comments | last | {author: .author.login, at: .createdAt}),
+    lastCommit: (.commits | last | .committedDate)}'
+```
+
+A push (or a new comment from the author) *after* the last review means the
+contributor has responded — it is back on us, and back in the pool.
 
 ### Vet each candidate for malicious intent — don't hand off something suspicious
 
@@ -189,24 +231,61 @@ than to unwind after a builder skill has run.
 
 ## 3. Rank them — value for effort, with overrides
 
-Score each candidate on these axes and combine them with judgement (this is a
+Check the overrides first — in a typical round one of them, usually the PR
+override, settles the pick before any scoring happens. For everything left, score
+each candidate on the axes below and combine them with judgement (this is a
 guide, not a formula — the criteria in the request are inspiration, weigh them
 yourself):
 
-**Overrides — these jump to the front regardless of size:**
+**Overrides — these jump to the front regardless of size, in this order:**
 
 1. **Security** — a CVE fix, a Dependabot *security* update, an open
    **Dependabot alert**, or a **CodeQL security-severity finding** in the app's
    own code (security work arrives as a security PR, a manual dependency bump, or
    a manual code fix — see phase 1). Keeping the app safe beats feature work —
-   this now runs in production with real (if not yet public) user data behind
-   auth and tenant isolation, so a vulnerable dependency or a flawed access
+   this runs in production, open to public registration, holding real users' data
+   behind auth and tenant isolation, so a vulnerable dependency or a flawed access
    check is a real exposure, not a hypothetical one. A patch/minor
    security bump that CI already validates is both urgent *and* cheap →
    near-automatic top pick; an unfixed alert's bump or a CodeQL code fix is
    urgent but costs a bit more effort.
 2. **Broken core functionality** — a bug that makes a main flow (voting, saving a
-   session, ratings) wrong or unusable. Correctness before polish.
+   session, ratings) wrong or unusable. Correctness before polish. Real users are
+   hitting it *right now*, which is the one thing that beats a contributor's wait
+   — and only just: the PR is still the very next pick after it.
+3. **An open non-draft human PR awaiting review** (phase 1) — **the override that
+   decides most rounds.** It outranks every issue on the board no matter how
+   valuable that issue is, and no matter how small the PR is.
+
+**Why the PR override is near-absolute.** Every other candidate costs the same
+whenever we get to it; a pending review is the only one whose cost *accrues while
+we do something else*. A contributor waiting on a verdict cannot proceed, may
+watch their branch rot against `main`, and reads silence as indifference — and
+that is what decides whether they ever open a second PR. An issue, by contrast, is
+just as buildable next week. So do not talk yourself past this with
+value-for-effort reasoning: "this feature is worth far more than that tiny PR" is
+true and **irrelevant**, because handling the PR is usually under an hour and the
+feature is still there afterwards. The list above is exhaustive — a candidate that
+is neither override 1 nor 2 does not get to jump a PR, however attractive it
+looks. Only the user's own explicit instruction ("do #42 now") overrides this,
+since that is a direct request rather than a ranking.
+
+**Several PRs open?** They are all above the issues; order them by who has waited
+longest for a *first* answer, and break ties toward the outsider. Every signal
+below is already in the gather payload:
+
+1. An **outside contributor's** PR with no review yet — `isCrossRepository: true`
+   (a fork PR, so not a collaborator) and an empty `latestReviews` — longest-open
+   first (`createdAt`). A first-time contributor's first PR is the
+   highest-stakes wait on the board.
+2. A **collaborator's** PR with no review yet, longest-open first.
+3. A PR **already reviewed once** where the author has since pushed or replied
+   (phase 2) — they are owed a follow-up, but they have had an answer.
+4. **Your own** open PRs (`author.login` is the requesting user), last — nobody
+   external is blocked.
+
+Handle exactly one per invocation (phase 5); the rest are top of the queue next
+time, so say in the report which ones are still waiting.
 
 **Value — how much it matters to the app:**
 
@@ -244,15 +323,17 @@ yourself):
   it below one that needs no such input. Distinguish it from genuine vagueness
   (unclear *what* to build) — that still costs a real clarification round; a clear
   issue that merely awaits a decision does not.
-- A **standalone PR is usually the lowest-effort candidate of all**: the code is
-  already written, so the work is a review-and-merge rather than a build. That
-  cheapness gives it a **relatively high** value-for-effort standing — a small,
-  clean PR that fixes or adds something real is often the best quick win on the
-  board. But keep the two axes separate: cheap review effort doesn't manufacture
-  value (a trivial or cosmetic PR is still low value), and a large, conflicted, or
-  red-CI PR is *not* a quick review — treat it as the higher-effort candidate it
-  actually is. The security override still applies: a PR that itself is a security
-  fix jumps the queue like any other security work.
+- **Human PRs are not scored on these axes at all** — override 3 already placed
+  them. Size still tells you what handling will *cost* (a small, green PR is a
+  quick merge; a large or conflicted one is a longer read ending in a review
+  comment), but it never decides *whether* they're picked. A trivial or cosmetic
+  human PR still outranks a valuable issue; that is the intended trade, not an
+  oversight.
+- **Dependabot PRs are ranked normally**, on value-for-effort like everything
+  else — they are excluded from override 3 on purpose. A bot is not waiting for
+  feedback, and a weekly sweep of seven bumps would otherwise sit on top of the
+  whole backlog until someone cleared it. A Dependabot *security* update still
+  jumps under override 1, as it always did.
 
 **Tie-breakers:** routine dependency freshness (batch the safe Dependabot bumps),
 `good first issue`, age/staleness, and any explicit priority the user has voiced.
@@ -273,6 +354,13 @@ know where it landed, it must clear an **idle-time bar set by that rank**:
 | Hits an **override** — a live security exposure, or broken core functionality | **immediately** — no idle requirement |
 | Would be the **clear top pick** — decisively better value-for-effort than the best unassigned candidate, not a photo finish | **3 days** idle |
 | Anything else — it ranks inside the normal pack | **5 days** idle |
+
+**Judge the middle tier against the issues only — ignore override 3 here.** An
+open human PR outranks every issue, so read literally, "would be the clear top
+pick" would be false for *any* issue whenever a PR is open, silently collapsing
+the 3-day tier into the 5-day one exactly when the board is busiest. The question
+the tier is asking is whether this issue decisively leads the *buildable* work,
+so compare it against the best unassigned **issue**, not against the PR queue.
 
 The principle is **opportunity cost, not impatience**. A fixed timer asks the
 wrong question ("how long has this sat?") when the one that matters is "what does
@@ -304,6 +392,12 @@ Show the user a short ranked shortlist (top ~3) as a compact list: for each,
 provisional candidate as a **reclaim** with its assignee and idle time (`reclaim —
 assigned @x, idle 6 d`), including one that failed its bar, so the shortlist shows
 what the ladder decided rather than just its verdict.
+
+When the winner is a PR, say so as the **rule it is** rather than dressing it up
+as a close contest — "#N (open 3 d, no review yet) — PRs are reviewed before issue
+work" — and give its wait, since that is the fact doing the work. Keep the losing
+issues on the shortlist anyway: the user should see what the override displaced,
+and it may change what they ask for next.
 
 Then **hand off to the builder automatically in the same turn** (phase 5) — don't
 stop to ask for a go-ahead on the *choice*. The user invoked this skill to get the
@@ -346,7 +440,7 @@ Invoke the appropriate skill with the chosen item:
   reassignment.
 - **A Dependabot PR →** invoke the **`dependabot`** skill (it reviews and merges
   the safe ones). Don't try to "implement" a dependency bump by hand.
-- **A standalone PR →** invoke the **`review-pr`** skill on it (pass the PR
+- **A human PR →** invoke the **`review-pr`** skill on it (pass the PR
   number) for a verdict, then **handle the PR — and handling it is the whole job
   for this invocation.** Merging is only *one* possible outcome of "handling": a
   clean, valuable PR gets merged/approved, but a superseded or obsolete one should
@@ -366,6 +460,12 @@ Invoke the appropriate skill with the chosen item:
   confident the user wants — state the PR (`#number — title`), your proposed
   action, and *why*, and get a clear yes before doing it. Closing someone's PR is
   outward-facing and hard to undo; don't do it on your own judgement alone.
+
+  **Ask in the same turn, though — don't let the gate become the new delay.** The
+  point of picking PRs first is that the contributor hears back quickly, and a
+  confirmation that arrives after the review costs seconds; one that gets deferred
+  to "next session" costs days and undoes the whole override. Come back with the
+  drafted comment or the proposed close ready to send, so a single yes ships it.
 
   Follow GitHub's norms for a **contributor's** PR. The code is someone else's, so
   this is *not* the same as `implement` merging its own PR — respect these best
@@ -404,9 +504,11 @@ Invoke the appropriate skill with the chosen item:
 
 Hand off exactly one chosen item; don't start several builds/reviews at once, and
 don't chain a second action after the first. In particular, once you pick a
-standalone PR, **handling that PR is the entire invocation** — whatever its outcome
+human PR, **handling that PR is the entire invocation** — whatever its outcome
 (merge, close, comment, or "left for the contributor"), you are done; do not follow
-it by ranking or implementing an issue.
+it by ranking or implementing an issue. If other PRs are still waiting, name them
+and stop there too: they are the next invocation's automatic picks, not this one's
+second job.
 
 ## Report
 
@@ -415,6 +517,9 @@ skill you handed it to (with the issue/PR number). Call out any issue **or PR** 
 flagged as **suspicious** (per phase 2) separately — that's a safety signal for the
 user, not a ranked candidate. Also name every provisional candidate the ladder
 **held back** (`#N — assigned @x, idle 2 d, needed 3`) — the user is the one who
-can ping the assignee, and that is only possible if they hear about it. If nothing
-was actionable (empty backlog, or everything blocked/underspecified/flagged), say
+can ping the assignee, and that is only possible if they hear about it. **Name
+every human PR still waiting** (`#N — open 5 d, no review yet`), including any
+parked as waiting-on-the-contributor (phase 2) and, when it applies, the fact that
+an override displaced the whole PR queue this round — an unreported queue is
+exactly the latency this priority exists to remove. If nothing was actionable (empty backlog, or everything blocked/underspecified/flagged), say
 that plainly and, if useful, suggest filing a fresh issue via `create-issue`.

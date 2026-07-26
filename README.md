@@ -449,6 +449,8 @@ docker-compose.yml   one-command run with a persistent /data volume
 knexfile.js          Knex config (Postgres) shared by the app + the migrate CLI
 railway.json         Railway build/deploy config (see docs/deploy-railway.md)
 .github/workflows/   CI: tests, lint, secret scan, Docker image build + publish
+.github/             dependabot.yml, FUNDING.yml, and the contributor-facing
+                     ISSUE_TEMPLATE/ forms + PULL_REQUEST_TEMPLATE.md
 ```
 
 The frontend files are plain `<script>`s that share one global scope; **load
@@ -790,7 +792,7 @@ trigger. Each is self-contained and enforces this repo's constraints.
 | Skill | What it does |
 | --- | --- |
 | **`create-issue`** | Interviews you and files a GitHub issue specific enough to implement without follow-up questions, grounded in this repo's architecture. |
-| **`pick-issue`** | Surveys open issues (and pending Dependabot PRs), ranks them by value-for-effort, and hands the best next one to the right builder skill. |
+| **`pick-issue`** | Surveys open issues, Dependabot PRs and human PRs, and hands the best next one to the right builder skill. An open non-draft human PR is picked first — only a security exposure or broken core functionality outranks it — so contributors get feedback fast; everything else is ranked by value-for-effort. |
 | **`implement`** | Takes a change end-to-end: branch from up-to-date `main`, write the code **plus tests**, review locally, open a PR, review it, and merge only if it's safe — then watch `main`'s CI and clean up. |
 | **`review-pr`** | Reviews a pull request (human or bot) against this repo's constraints and returns a `SAFE TO MERGE` / `NOT SAFE` verdict with concrete blockers. |
 | **`dependabot`** | Triages open Dependabot PRs, merging what passes review and commenting on what doesn't. |
@@ -804,7 +806,10 @@ trigger. Each is self-contained and enforces this repo's constraints.
 
 A typical flow: **`create-issue`** to capture the work → **`pick-issue`** to
 choose what's next → **`implement`** to ship it (it calls `review-pr` before
-merging). For dependency bumps, **`dependabot`** handles the batch. The five
+merging). If a pull request is open, though, `pick-issue` sends you to
+**`review-pr`** instead — an unanswered PR outranks the backlog, because the wait
+is the only cost that grows while you build something else. For dependency bumps,
+**`dependabot`** handles the batch. The five
 **`*-audit`** skills (and the **`audit`** umbrella) run a research → self-critique
 → audit loop over accessibility, legal, security, UI and the repo's own Claude
 files; each keeps its criteria in a versioned `criteria.md` that changes only via

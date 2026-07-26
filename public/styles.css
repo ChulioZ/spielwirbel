@@ -1646,7 +1646,8 @@ body.auth-screen .topbar__context { display: none; }
    product screenshot. It used to be a two-column row with a ~300px decorative
    column — too narrow for a screenshot that has to show how the app works, and
    the abstract gradients that fitted there showed nothing. Centred at every
-   width, so the ≤720px block below no longer has to re-centre it. */
+   width, so the narrow block at the end of this section no longer has to
+   re-centre it — nor to reorder it (#473). */
 .landing-hero {
   display: flex;
   flex-direction: column;
@@ -1822,18 +1823,25 @@ body.auth-screen .topbar__context { display: none; }
 .landing-close { text-align: center; }
 
 /* The hero is centred and stacked at every width since #438, so this block no
-   longer has to rebuild it below the breakpoint — only the vertical rhythm and
-   the screenshot's order change. The visual leads on a phone: it is the thing
-   that says what the app is before any copy is read.
+   longer has to rebuild it below the breakpoint — only the vertical rhythm
+   changes.
+
+   It deliberately sets NO `order` (#473). #438 put the visual first here, on the
+   reasoning that "the image says what the app is before any copy is read" — but
+   the phone shot is 300x600 once capped, so on a 390x844 phone it filled the
+   whole first viewport and pushed the title, the subline and both CTA buttons
+   below the fold. A landing page whose call to action is unreachable without
+   scrolling loses the visitor it exists for. Every width now follows the DOM
+   order views-landing.js emits: brand → title → subline → CTA → screenshot.
 
    719, not 720: it must tile with the `min-width: 720px` block above and with
-   the <picture>'s own `(min-width: 720px)` switch, or at exactly 720px the hero
-   shows the DESKTOP screenshot while still ordering it above the copy. Same
-   adjacency discipline as .claude/rules/responsive-hub-tabs.md §2. */
+   the <picture>'s own `(min-width: 720px)` switch, or at exactly 720px the
+   DESKTOP screenshot — un-capped by that block — is laid out on the phone's
+   tighter vertical rhythm. Same adjacency discipline as
+   .claude/rules/responsive-hub-tabs.md §2. */
 @media (max-width: 719px) {
   .landing { gap: 48px; }
   .landing-hero { gap: 28px; }
-  .landing-hero__visual { order: -1; }
 }
 
 .topbar__acct {

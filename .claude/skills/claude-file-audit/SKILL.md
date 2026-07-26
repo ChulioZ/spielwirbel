@@ -2,13 +2,15 @@
 name: claude-file-audit
 description: >-
   Audit the repo's own documentation — CLAUDE.md, README.md, CONTRIBUTING.md,
-  SECURITY.md, LICENSE and every committed file under .claude/ (rules, skills,
-  launch config) — for staleness, contradictions and drift from the code, and
-  periodically refresh the criteria from current Claude Code/harness
-  capabilities. Use when asked to audit or review the Claude files, rules,
-  skills, CLAUDE.md or the root docs, to check whether the repo's own docs still
-  match reality, or to clean up the agent-facing documentation. Produces a ranked
-  report; files issues only with your approval.
+  SECURITY.md, CODE_OF_CONDUCT.md, LICENSE, the community-health files under
+  .github/ (issue forms, PR template, FUNDING.yml) and every committed file under
+  .claude/ (rules, skills, launch config) — for staleness, contradictions and
+  drift from the code, and periodically refresh the criteria from current Claude
+  Code/harness capabilities. Use when asked to audit or review the Claude files,
+  rules, skills, CLAUDE.md, the root docs or the GitHub issue/PR templates, to
+  check whether the repo's own docs still match reality, or to clean up the
+  agent-facing documentation. Produces a ranked report; files issues only with
+  your approval.
 ---
 
 # Claude-file audit
@@ -21,17 +23,24 @@ no longer exists. Finding those is the main job.
 ## Scope
 
 `CLAUDE.md`, everything committed under `.claude/` (rules, skills,
-`launch.json`), and the four root documents: **`README.md`, `CONTRIBUTING.md`,
-`SECURITY.md`, `LICENSE`**.
+`launch.json`), the five root documents — **`README.md`, `CONTRIBUTING.md`,
+`SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE`** — and the committed
+**community-health files under `.github/`**: `ISSUE_TEMPLATE/` (the issue forms
+and `config.yml`), `PULL_REQUEST_TEMPLATE.md` and `FUNDING.yml`.
 
-The root docs are in scope because **no other skill owns them** and they drift
-the same way: `legal-audit` covers the published legal pages and `docs/legal/`,
+All of them are in scope because **no other skill owns them** and they drift the
+same way: `legal-audit` covers the published legal pages and `docs/legal/`,
 `security-audit` covers code controls (it *cites* `SECURITY.md` as a norm without
 ever checking it), and `implement`/`review-pr` *consume* `CONTRIBUTING.md`'s DCO
 rule rather than auditing it. They are also the highest-stakes drift in the repo:
 `SECURITY.md` calibrates how an external reporter rates a vulnerability, and it
 spent the days after the 2026-07-24 go-live telling researchers registration was
 closed and the user data wasn't public.
+
+The `.github/` files joined on 2026-07-26, when they were created. They are
+contributor-facing rather than agent-facing, but they fail in the same silent
+way — a PR-template checklist that has drifted from the real merge gate teaches
+a contributor the wrong rules, and nothing renders an error.
 
 **Read `.claude/skills/audit/audit-loop.md` first** — it owns the loop. This file
 owns the domain.
@@ -117,9 +126,9 @@ stopped being true.
 
 ### 5. The root documents → C-016
 
-`README.md`, `CONTRIBUTING.md`, `SECURITY.md` and `LICENSE`. The check that
-matters is **instance state**: each asserts something about what the deployment
-*is* today, and none of it is derivable from the code.
+`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md` and
+`LICENSE`. The check that matters is **instance state**: each asserts something
+about what the deployment *is* today, and none of it is derivable from the code.
 
 - `SECURITY.md` — the "Project stage" section is the threat model an external
   reporter calibrates severity against. Verify the auth mode, whether
@@ -131,11 +140,43 @@ matters is **instance state**: each asserts something about what the deployment
   gates a merge (branch protection requires `ci-passed`, i.e. `test` **and**
   `coverage` **and** `postgres`), and the licensing terms must match `LICENSE`
   and `package.json`'s `license` field.
+- `CODE_OF_CONDUCT.md` — the enforcement contact must still be reachable, and it
+  must not have quietly become the channel for something it does not handle
+  (security reports go to the advisory form; complaints about content *inside*
+  the hosted app go through `docs/legal/notice-and-action.md`).
 
-`.claude/rules/ops-only-changes-still-stale-the-docs.md` holds the same file
-list, because these facts change through ops actions that produce no diff.
+`.claude/rules/ops-only-changes-still-stale-the-docs.md` carries the overlapping
+**instance-state** list — every file whose claims change through an ops action
+that produces no diff. It is not the same set as this section's: it drops
+`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` and `LICENSE` (which assert process, not
+instance state) and picks up two rule files, `audit-loop.md` and three of the
+`.github/` files from §6. Read both; neither is a subset of the other.
 
-### 6. Hygiene → C-004, C-007, C-008, C-011, C-012, C-013
+### 6. The community-health files under `.github/` → C-018
+
+Four specific drifts, each invisible until a contributor is misled by it:
+
+- **`PULL_REQUEST_TEMPLATE.md` vs. the real merge gate.** Diff its checklist
+  against `CONTRIBUTING.md`'s pre-PR list *and* against what branch protection
+  actually requires (`gh api repos/{owner}/{repo}/branches/main/protection`).
+  A template naming a check that no longer gates — or missing one that does,
+  `coverage:ci` being the one people forget — trains contributors wrongly.
+- **The issue forms asking about things that no longer exist.** `bug_report.yml`
+  enumerates storage backends and the four auth modes. If a mode or backend is
+  ever removed (`.claude/rules/accounts-mode-gate.md` is the source of truth for
+  the modes), the dropdown keeps offering it and the answers become noise.
+- **`FUNDING.yml`'s handle vs. the live donation page.** It must match what the
+  app actually serves — `curl -s https://spielwirbel.app/api/config` returns
+  `donateUrl`, which is the authoritative value (#173).
+- **`ISSUE_TEMPLATE/config.yml`'s contact links 404ing.** Both are external URLs
+  the repo cannot verify by existence check: the advisory form depends on private
+  vulnerability reporting still being *enabled*
+  (`gh api repos/{owner}/{repo}/private-vulnerability-reporting`), and the Q&A
+  link depends on that Discussions category still existing under that slug
+  (`gh api graphql` → `discussionCategories`). Check both by request, not by
+  reading the file.
+
+### 7. Hygiene → C-004, C-007, C-008, C-011, C-012, C-013
 
 Rule shape (one learning, says why), skill frontmatter quality, trigger overlap
 between skills, no secrets or real data anywhere, no hedged half-true rules, and —

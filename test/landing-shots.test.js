@@ -122,9 +122,10 @@ test('the <picture> breakpoint and the stylesheet agree on 720px', () => {
 
   // …and every narrow landing block must stop one pixel BELOW it. A block left
   // at `max-width: 720px` overlaps the wide branch by exactly 1px, so at a
-  // viewport of exactly 720 the hero renders the desktop screenshot while still
-  // ordering it above the copy. Same adjacency rule as the dock clearance
-  // (.claude/rules/responsive-hub-tabs.md §2), and just as invisible.
+  // viewport of exactly 720 the hero renders the desktop screenshot — un-capped
+  // by the wide block — on the phone's tighter vertical rhythm. Same adjacency
+  // rule as the dock clearance (.claude/rules/responsive-hub-tabs.md §2), and
+  // just as invisible.
   const wide = Number(bp[1]);
   let checked = 0;
   for (const m of css.matchAll(/@media \(max-width: (\d+)px\)\s*\{/g)) {

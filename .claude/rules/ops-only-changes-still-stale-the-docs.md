@@ -49,11 +49,16 @@ files that assert live instance state, and they are the whole list as of
 | `.claude/rules/user-accounts.md` | whether accounts are live or staged |
 | `.claude/skills/audit/audit-loop.md` §C | the repo description all four audits test findings against |
 | `docs/production-readiness.md` | go-live status and the blocker list |
+| `.github/FUNDING.yml` | the donation handle — must equal the live `DONATE_URL` (`GET /api/config`) |
+| `.github/ISSUE_TEMPLATE/config.yml` | that private vulnerability reporting is on and the Discussions Q&A category exists at that slug — **repo settings, not files** |
+| `.github/ISSUE_TEMPLATE/bug_report.yml` | that spielwirbel.app runs accounts-only, in the auth-mode dropdown's help text |
 
 Qualifying changes: adding/removing/retuning an **env var in production**,
 switching a **provider or host**, moving a **region**, acquiring or dropping a
 **domain**, opening or closing **registration**, changing a **plan** that gates a
-capability (Railway Pro for SMTP).
+capability (Railway Pro for SMTP), and — for the three `.github/` rows —
+**flipping a repo setting** (disabling Discussions or renaming a category,
+turning private vulnerability reporting off).
 
 Two things make this cheap: the list above is the sweep (not a memory exercise),
 and the follow-up PR is docs-only, so it needs no coordination with the ops
