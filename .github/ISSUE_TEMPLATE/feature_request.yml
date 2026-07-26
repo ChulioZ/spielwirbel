@@ -1,0 +1,60 @@
+name: Feature request
+description: Suggest a change or an addition to the app.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the [open issues](https://github.com/ChulioZ/spielwirbel/issues)
+        first — the backlog is long and the idea may already be there. Open-ended
+        ideas you'd rather discuss than propose fit better in
+        [Discussions → Ideas](https://github.com/ChulioZ/spielwirbel/discussions/categories/ideas).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the problem?
+      description: >-
+        Describe the situation you run into, not the solution you have in mind.
+        What are you trying to do, and where does the app get in the way?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+      description: Your proposed behaviour. Rough is fine.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the app?
+      options:
+        - Voting sessions (the draw, the hot-seat flow, results)
+        - Regal (the game shelf, covers, provider lookup)
+        - Chronik (history)
+        - Pokale (stats, rankings)
+        - Accounts, sharing and invitations
+        - Self-hosting, deployment or configuration
+        - Translations / wording
+        - Something else
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: implementing
+    attributes:
+      label: Would you like to implement it?
+      description: >-
+        Entirely optional — the maintainer is happy to pick it up. If you do
+        want to, read
+        [CONTRIBUTING.md](https://github.com/ChulioZ/spielwirbel/blob/main/CONTRIBUTING.md)
+        first:
+        contributions are licensed inbound under Apache-2.0 and every commit
+        must be signed off (`git commit -s`).
+      options:
+        - label: I'd like to open a pull request for this
+          required: false

@@ -1,0 +1,109 @@
+name: Bug report
+description: Something in the app behaves incorrectly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this.
+
+        **Not a bug report?** Security problems go to the
+        [private advisory form](https://github.com/ChulioZ/spielwirbel/security/advisories/new),
+        never here. Questions and self-hosting help belong in
+        [Discussions Q&A](https://github.com/ChulioZ/spielwirbel/discussions/categories/q-a).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected instead.
+      placeholder: |
+        I clicked "Session wirbeln" and …
+        I expected …
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The shortest path from a fresh page load to the problem.
+      placeholder: |
+        1. Open a round
+        2. Go to Regal
+        3. …
+    validations:
+      required: true
+
+  - type: dropdown
+    id: instance
+    attributes:
+      label: Which instance?
+      description: The hosted app, or your own?
+      options:
+        - spielwirbel.app (the hosted instance)
+        - Self-hosted (my own deployment)
+        - Local development checkout
+    validations:
+      required: true
+
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Storage backend
+      description: >-
+        Postgres when `DATABASE_URL` is set, otherwise the JSON file. On
+        spielwirbel.app this is Postgres — pick "Not sure" if you're a hosted
+        user and don't want to think about it.
+      options:
+        - Not sure / hosted user
+        - JSON file (data/data.json — the default)
+        - PostgreSQL (DATABASE_URL is set)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: auth-mode
+    attributes:
+      label: Auth mode
+      description: >-
+        Only relevant for self-hosted instances, and set by the ACCOUNTS_ENABLED
+        and AUTH_PASSWORD environment variables (see the README).
+        spielwirbel.app runs accounts-only.
+      options:
+        - Not sure / hosted user
+        - Accounts only (ACCOUNTS_ENABLED, no AUTH_PASSWORD)
+        - Shared password only (AUTH_PASSWORD)
+        - Both (layered)
+        - No authentication (neither is set)
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Safari 18 on iOS 18 / Chrome 126 on Windows 11
+    validations:
+      required: true
+
+  - type: dropdown
+    id: locale
+    attributes:
+      label: UI language
+      options:
+        - Deutsch
+        - English
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors (optional)
+      description: >-
+        Anything red in the browser's developer console. Please redact e-mail
+        addresses, tokens and other people's names before pasting.
+      render: text
+    validations:
+      required: false

@@ -4,6 +4,18 @@ Thanks for your interest in improving this project. Contributions are welcome â€
 please read this file first, especially the **[Contribution licensing](#contribution-licensing)**
 section, because opening a pull request means agreeing to those terms.
 
+Everyone taking part is expected to follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Where to start
+
+Issues labelled
+**[`good first issue`](https://github.com/ChulioZ/spielwirbel/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)**
+are the ones scoped small enough to land without a tour of the whole codebase.
+If nothing there appeals, anything in the
+[open backlog](https://github.com/ChulioZ/spielwirbel/issues) is fair game â€”
+comment on the issue first so two people don't build the same thing.
+
 ## How to contribute
 
 This repository is built and maintained with

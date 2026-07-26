@@ -41,7 +41,7 @@ const read = (rel) => [rel, fs.readFileSync(path.join(ROOT, rel), 'utf8')];
 const ruleDocs = fs.readdirSync(path.join(ROOT, '.claude', 'rules'))
   .filter((f) => f.endsWith('.md'))
   .map((f) => read(`.claude/rules/${f}`));
-const rootDocs = ['CLAUDE.md', 'README.md', 'CONTRIBUTING.md', 'SECURITY.md'].map(read);
+const rootDocs = ['CLAUDE.md', 'README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'CODE_OF_CONDUCT.md'].map(read);
 
 // The YAML-ish frontmatter block, or null when the file opens without one.
 const frontmatter = (text) => {
@@ -98,6 +98,7 @@ test('every repo path a rule, skill or root doc cites actually exists', () => {
     `(?:\\.claude/(?:rules|skills)/${P}\\.md`
     + `|(?:test|lib|routes|scripts)/${P}\\.js`
     + `|public/${P}\\.(?:js|css|html)`
+    + `|\\.github/${P}\\.(?:yml|yaml|md)`
     + `|docs/${P}\\.md)`,
     'g',
   );

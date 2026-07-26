@@ -8,9 +8,12 @@ Seeded 2026-07-23 from `CLAUDE.md` (the "Capturing learnings" contract),
 `.claude/rules/token-friendly-source-files.md` — **not** from research.
 
 Scope: `CLAUDE.md`, everything committed under `.claude/` (the rule files, the
-skills, `launch.json`), and the four root documents — `README.md`,
-`CONTRIBUTING.md`, `SECURITY.md`, `LICENSE`. The root docs joined on 2026-07-26
-because no other skill owns them (see `SKILL.md` → Scope).
+skills, `launch.json`), the five root documents — `README.md`, `CONTRIBUTING.md`,
+`SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE` — and the community-health files
+under `.github/` (`ISSUE_TEMPLATE/`, `PULL_REQUEST_TEMPLATE.md`, `FUNDING.yml`).
+The root docs joined on 2026-07-26 because no other skill owns them, and the
+`.github/` files on the same day, when they were created (see `SKILL.md` →
+Scope).
 
 **The premise:** these files are *instructions to future sessions*. A stale one is
 worse than a missing one — it actively misdirects, and nothing in CI checks any of
@@ -153,7 +156,10 @@ research at all.
   calibrates how an external reporter rates a vulnerability, and it claimed
   registration was closed and the data non-public for two days after the go-live.
   Also check `CONTRIBUTING.md`'s pre-PR checklist names every check that gates a
-  merge, and that its licensing terms match `LICENSE` + `package.json`.
+  merge, that its licensing terms match `LICENSE` + `package.json`, and that
+  `CODE_OF_CONDUCT.md`'s enforcement contact is still reachable and still points
+  elsewhere for the two things it does not handle (security → the advisory form;
+  content inside the hosted app → `docs/legal/notice-and-action.md`).
 - **Enforced by:** — (manual, and unmechanizable: the facts are about a remote
   instance no test can observe)
 
@@ -167,6 +173,24 @@ research at all.
   durable output is the cause, not the corrected line: five stale lines fixed without
   causes yields five more next run. Record the cause per finding in the report.
 - **Enforced by:** — (manual; `SKILL.md` § "Then ask why each finding was possible")
+
+### C-018 — The `.github/` community-health files match the process they describe
+- **Status:** adopted · 2026-07-26
+- **Source:** operator instruction, 2026-07-26 (filed with the files themselves)
+- **Check:** Four drifts, none of which renders an error:
+  (a) `PULL_REQUEST_TEMPLATE.md`'s checklist vs. `CONTRIBUTING.md`'s pre-PR list
+  **and** vs. what branch protection actually requires — a template that names a
+  retired check, or omits a live one, teaches contributors the wrong gate;
+  (b) `ISSUE_TEMPLATE/bug_report.yml`'s storage-backend and auth-mode dropdowns
+  vs. the modes the app still has (`.claude/rules/accounts-mode-gate.md`);
+  (c) `FUNDING.yml`'s handle vs. the live `donateUrl` from `GET /api/config`;
+  (d) `ISSUE_TEMPLATE/config.yml`'s two contact links, which depend on *repo
+  settings* rather than on files — private vulnerability reporting still enabled,
+  and the Discussions Q&A category still existing at that slug. Check (c) and (d)
+  by request, not by reading the file.
+- **Enforced by:** `test/skills.test.js` (path existence for cited `.github/`
+  paths only — every check above is manual, because each compares a file against
+  something outside the repo)
 
 ---
 

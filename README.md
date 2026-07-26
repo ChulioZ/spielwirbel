@@ -449,6 +449,8 @@ docker-compose.yml   one-command run with a persistent /data volume
 knexfile.js          Knex config (Postgres) shared by the app + the migrate CLI
 railway.json         Railway build/deploy config (see docs/deploy-railway.md)
 .github/workflows/   CI: tests, lint, secret scan, Docker image build + publish
+.github/             dependabot.yml, FUNDING.yml, and the contributor-facing
+                     ISSUE_TEMPLATE/ forms + PULL_REQUEST_TEMPLATE.md
 ```
 
 The frontend files are plain `<script>`s that share one global scope; **load
