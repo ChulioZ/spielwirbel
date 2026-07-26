@@ -136,3 +136,79 @@ test('isConfigured() requires host, user, pass and MAIL_FROM together', async ()
   process.env.MAIL_FROM = 'no-reply@example.test';
   assert.equal(mail.isConfigured(), true);
 });
+
+/* --------------------- global daily send budget (#448) ---------------------- */
+
+// The counter is per-process and deliberately has no reset hook (an idle
+// process holds no timer; the reset is lazy on the first send of a new UTC
+// day). So every test here sizes its ceiling RELATIVE to what this file has
+// already sent, rather than assuming a clean slate.
+const budgetFor = (headroom) => {
+  process.env.MAIL_DAILY_MAX = String(mail.budgetState().sent + headroom);
+};
+
+test('the daily budget refuses further sends once it is spent (#448)', async () => {
+  nodemailer.createTransport = () => { throw new Error('must not build a transport'); };
+  budgetFor(2);
+  try {
+    // Everything up to the ceiling is delivered normally …
+    assert.deepEqual(await mail.send({ to: 'a@example.com', subject: 'S', text: 'T' }), { delivered: false });
+    assert.deepEqual(await mail.send({ to: 'b@example.com', subject: 'S', text: 'T' }), { delivered: false });
+    // … and the next one is refused rather than silently dropped, so a caller
+    // can tell the difference (contact.js 502s; sendSafe log-and-continues).
+    const before = mail.outbox.length;
+    await assert.rejects(
+      () => mail.send({ to: 'c@example.com', subject: 'S', text: 'T' }),
+      /mail_daily_budget_exhausted/,
+    );
+    assert.equal(mail.outbox.length, before, 'a refused send must not reach the outbox');
+  } finally {
+    delete process.env.MAIL_DAILY_MAX;
+  }
+});
+
+// The breaker exists to protect the SMTP quota, so the refusal has to happen
+// BEFORE the transport is built — otherwise it would still open a connection
+// (and, against a real host, still count against the account's limit).
+test('a refused send never reaches the transport (#448)', async () => {
+  configure();
+  process.env.MAIL_FROM = 'no-reply@example.test';
+  let built = 0;
+  nodemailer.createTransport = () => { built += 1; return { sendMail: async () => ({}) }; };
+  budgetFor(1);
+  try {
+    await mail.send({ to: 'a@example.com', subject: 'S', text: 'T' });
+    assert.equal(built, 1);
+    await assert.rejects(() => mail.send({ to: 'b@example.com', subject: 'S', text: 'T' }));
+    assert.equal(built, 1, 'the refused send must not build a transport');
+  } finally {
+    delete process.env.MAIL_DAILY_MAX;
+  }
+});
+
+// Read per call, never bound at module load — otherwise a deployment could not
+// re-tune the ceiling and this very test could not drive it
+// (.claude/rules/security-middleware.md).
+test('the budget ceiling is read from env per send (#448)', async () => {
+  nodemailer.createTransport = () => { throw new Error('must not build a transport'); };
+  budgetFor(0);
+  try {
+    await assert.rejects(() => mail.send({ to: 'a@example.com', subject: 'S', text: 'T' }));
+    // Raising the ceiling takes effect immediately, with no rebuild of anything.
+    budgetFor(1);
+    assert.deepEqual(await mail.send({ to: 'a@example.com', subject: 'S', text: 'T' }), { delivered: false });
+  } finally {
+    delete process.env.MAIL_DAILY_MAX;
+  }
+});
+
+test('budgetState() reports the day, the count and the limit, and no secret (#448)', async () => {
+  nodemailer.createTransport = () => { throw new Error('must not build a transport'); };
+  delete process.env.MAIL_DAILY_MAX;
+  const before = mail.budgetState();
+  assert.deepEqual(Object.keys(before).sort(), ['day', 'limit', 'sent']);
+  assert.equal(before.day, new Date().toISOString().slice(0, 10), 'the day is a UTC date');
+  assert.equal(before.limit, 200, 'the committed default');
+  await mail.send({ to: 'a@example.com', subject: 'S', text: 'T' });
+  assert.equal(mail.budgetState().sent, before.sent + 1);
+});

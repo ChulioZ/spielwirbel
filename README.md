@@ -459,8 +459,9 @@ or the AWS default provider chain. Unset, images stay under `DATA_DIR/uploads` a
 before. See the S3 block in `.env.example`.
 
 Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
-the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min)
-and `CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5).
+the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
+`CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5) and
+`REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below).
 
 Contact form (issues #224/#272): a public, login-free page at `/kontakt.html`
 with a bilingual form that POSTs to `/api/contact`, which e-mails the operator —
@@ -532,6 +533,15 @@ plain SMTP (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, links built
 from `APP_BASE_URL`); unconfigured, they are logged instead of sent. Production
 sends through the operator's own mailbox rather than a transactional provider,
 so the mails carry no tracking pixel and no rewritten links (#440).
+
+Two bounds keep bulk registration from draining that mailbox's sending quota
+(#448) — which matters because verification mail is the only way through signup,
+so an exhausted quota breaks registration for *everyone*: a tighter per-IP cap on
+`POST /api/account/register` (`REGISTER_RATE_LIMIT_MAX`, default 10 per 15 min)
+and a global daily circuit breaker on all outbound mail (`MAIL_DAILY_MAX`,
+default 200 per UTC day). Past the budget, sends are refused and logged as
+`mail_daily_budget_exhausted` rather than delivered; set it below your mail
+provider's own daily limit. Both counters are per process and in memory.
 
 When accounts are enabled the app runs in **accounts mode** (issue #138): the SPA
 shows an in-app onboarding flow — register → confirm e-mail → log in, plus password

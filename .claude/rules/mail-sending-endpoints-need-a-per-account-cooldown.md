@@ -43,8 +43,13 @@ with the pre-throttle link *after* a throttled call.
 second registration for the same address hits `email_taken` and mails nothing, so
 there is no prior record to throttle against on the one request that does send.
 Its residual risk is breadth (one mail each to many addresses, plus address and
-username squatting), which needs a different mechanism — a per-IP cap on that
-route, a global send budget, or reaping expired unverified accounts.
+username squatting), which needed a different mechanism. **#448 resolved it with
+two bounds** — a tighter per-IP cap on that one route
+(`REGISTER_RATE_LIMIT_MAX`) plus a global daily send budget in `lib/mail.js`
+(`MAIL_DAILY_MAX`) that bounds the mailbox quota itself rather than the mechanism
+abusing it. See `.claude/rules/bounding-bulk-registration-mail.md`. The third
+option, reaping expired unverified accounts, was **not** taken: the squatting
+half is still open.
 
 ## Every skip must stay silent — including the cooldown one
 

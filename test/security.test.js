@@ -104,3 +104,43 @@ test('the auth limiter skips GET /api/account/me but still guards the rest', asy
     }
   }
 });
+
+// #448: registration mails a verification link to any address a caller names,
+// and re-registering the same address sends nothing — so a per-account cooldown
+// (the #435/#447 defence) has nothing to throttle against here. This tighter
+// per-IP cap is the first of the two bounds; the second is MAIL_DAILY_MAX in
+// lib/mail.js, which protects the mailbox quota an IP-rotating attacker can
+// still reach.
+test('registration has its own tighter per-IP cap on top of the auth limiter (#448)', async () => {
+  const saved = {};
+  for (const k of ['RATE_LIMIT_MAX', 'AUTH_RATE_LIMIT_MAX', 'REGISTER_RATE_LIMIT_MAX',
+    'ACCOUNTS_ENABLED', 'SESSION_SECRET']) saved[k] = process.env[k];
+  process.env.RATE_LIMIT_MAX = '1000000';
+  // Deliberately far above the register cap, so a 429 below can only come from
+  // the new limiter — otherwise this passes even if it was never mounted.
+  process.env.AUTH_RATE_LIMIT_MAX = '1000000';
+  process.env.REGISTER_RATE_LIMIT_MAX = '2';
+  process.env.ACCOUNTS_ENABLED = 'true';
+  process.env.SESSION_SECRET = 'security-test-secret';
+  try {
+    const limited = createApp();
+    const post = (n) => request(limited).post('/api/account/register')
+      .send({ email: `reg${n}@example.com`, username: `reg_user_${n}`, password: 'correct horse battery' });
+
+    assert.equal((await post(1)).status, 200);
+    assert.equal((await post(2)).status, 200);
+    const blocked = await post(3);
+    assert.equal(blocked.status, 429);
+    assert.deepEqual(blocked.body, { error: 'rate_limited' });
+
+    // Scoped to /register: the rest of the account surface is untouched by it
+    // (login still answers on its own, much higher, auth ceiling).
+    const login = await request(limited).post('/api/account/login')
+      .send({ email: 'reg1@example.com', password: 'wrong-password' });
+    assert.equal(login.status, 401);
+  } finally {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k]; else process.env[k] = v;
+    }
+  }
+});

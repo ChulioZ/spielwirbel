@@ -776,3 +776,60 @@ test('pushRefreshToken drops expired entries and caps the list at the oldest end
   assert.ok(!next.some((t) => t.tokenHash === 't0')); // oldest evicted
   assert.equal(next[next.length - 1].tokenHash, 'newest');
 });
+
+/* ------------------- the daily send budget stays silent (#448) -------------- */
+
+// The global mail breaker (lib/mail.js) must never become an oracle. Register
+// answers `{ ok: true }` whether it mailed, hit `email_taken`, or was refused by
+// the budget — sendSafe() swallows the rejection, so all three are one response.
+// A distinct code here would be a perfect account-existence probe, exactly as
+// .claude/rules/mail-sending-endpoints-need-a-per-account-cooldown.md warns for
+// the cooldown skips.
+test('an exhausted mail budget does not change what register answers (#448)', async () => {
+  const mail = require('../lib/mail');
+  const saved = process.env.MAIL_DAILY_MAX;
+  // Zero headroom: the very next send is refused.
+  process.env.MAIL_DAILY_MAX = String(mail.budgetState().sent);
+  try {
+    const before = outbox.length;
+    const fresh = await request(app).post('/api/account/register')
+      .send({ email: 'budget-probe@example.com', username: handle(), password: PASSWORD });
+    assert.equal(fresh.status, 200);
+    assert.deepEqual(fresh.body, { ok: true });
+    assert.equal(outbox.length, before, 'nothing was mailed');
+
+    // …and the answer is byte-for-byte the one a taken address gets, which is
+    // the pairing that makes the endpoint useless as a probe.
+    const taken = await request(app).post('/api/account/register')
+      .send({ email: EMAIL, username: handle(), password: PASSWORD });
+    assert.equal(taken.status, fresh.status);
+    assert.deepEqual(taken.body, fresh.body);
+  } finally {
+    if (saved === undefined) delete process.env.MAIL_DAILY_MAX; else process.env.MAIL_DAILY_MAX = saved;
+  }
+});
+
+// A refused verification mail must not leave a half-built account: the row is
+// committed before the send (sendSafe never fails the flow), so the standing
+// recovery path (#435) is what gets the user unstuck.
+//
+// Note the account's `verification.sentAt` is stamped at creation even though
+// nothing went out, so the 60 s per-account cooldown briefly suppresses a
+// resend. That is harmless rather than a bug worth fixing: the budget is a
+// whole-UTC-day breaker, so by the time a resend could actually deliver, the
+// cooldown has long lapsed — it is never the binding constraint. Don't "fix" it
+// by moving the mint after the send; #447 pins that the mint and the send stay
+// together, or a double-submit invalidates the link already in the inbox.
+test('a refused verification mail still leaves a usable, unverified account (#448)', async () => {
+  const user = await repo.getUserByEmail('budget-probe@example.com');
+  assert.ok(user, 'the account was committed even though its mail was refused');
+  assert.equal(user.emailVerified, false);
+  assert.ok(user.verification && user.verification.tokenHash, 'it holds a live challenge');
+
+  // And the recovery endpoint stays silent either way — throttled, sent, or
+  // unknown address are one answer (see the rule file above).
+  const res = await request(app).post('/api/account/resend-verification')
+    .send({ email: 'budget-probe@example.com' });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, { ok: true });
+});

@@ -23,6 +23,15 @@ process.env.AUTH_RATE_LIMIT_MAX = '1000000';
 // Same reasoning for the contact-form limiter (#224), whose default is 5/window
 // and covers feedback too since #321 (the separate feedback route is retired).
 process.env.CONTACT_RATE_LIMIT_MAX = '1000000';
+// And for registration's own tighter cap (#448, default 10/window) — the
+// account specs register many accounts per file. Its real behaviour is covered
+// by test/security.test.js on a throwaway app.
+process.env.REGISTER_RATE_LIMIT_MAX = '1000000';
+// Same reasoning for the global daily send budget (#448, default 200/day):
+// lib/mail.js counts every send, including the outbox path the suite uses, so
+// a long account spec would otherwise trip the breaker on its own traffic.
+// test/mail.test.js drives the real ceiling itself.
+process.env.MAIL_DAILY_MAX = '1000000';
 
 // Keep the observability request logger quiet during the ordinary suite so test
 // output isn't buried under one JSON line per request. test/observability.test.js
