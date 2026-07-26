@@ -1,21 +1,37 @@
 ---
 name: claude-file-audit
 description: >-
-  Audit CLAUDE.md, README.md and every committed file under .claude/ (rules,
-  skills, launch config) for staleness, contradictions and drift from the code,
-  and periodically refresh the criteria from current Claude Code/harness
+  Audit the repo's own documentation — CLAUDE.md, README.md, CONTRIBUTING.md,
+  SECURITY.md, LICENSE and every committed file under .claude/ (rules, skills,
+  launch config) — for staleness, contradictions and drift from the code, and
+  periodically refresh the criteria from current Claude Code/harness
   capabilities. Use when asked to audit or review the Claude files, rules,
-  skills or CLAUDE.md, to check whether the repo's own docs still match reality,
-  or to clean up the agent-facing documentation. Produces a ranked report; files
-  issues only with your approval.
+  skills, CLAUDE.md or the root docs, to check whether the repo's own docs still
+  match reality, or to clean up the agent-facing documentation. Produces a ranked
+  report; files issues only with your approval.
 ---
 
 # Claude-file audit
 
-These files are the repo's instructions to future sessions, and **nothing in CI
-checks a word of them**. A rule that quietly stopped being true is worse than no
-rule: it reads authoritative and sends the next session down a path that no longer
-exists. Finding those is the main job.
+These files are the repo's instructions to future sessions, and **almost nothing
+in CI checks a word of them**. A rule that quietly stopped being true is worse
+than no rule: it reads authoritative and sends the next session down a path that
+no longer exists. Finding those is the main job.
+
+## Scope
+
+`CLAUDE.md`, everything committed under `.claude/` (rules, skills,
+`launch.json`), and the four root documents: **`README.md`, `CONTRIBUTING.md`,
+`SECURITY.md`, `LICENSE`**.
+
+The root docs are in scope because **no other skill owns them** and they drift
+the same way: `legal-audit` covers the published legal pages and `docs/legal/`,
+`security-audit` covers code controls (it *cites* `SECURITY.md` as a norm without
+ever checking it), and `implement`/`review-pr` *consume* `CONTRIBUTING.md`'s DCO
+rule rather than auditing it. They are also the highest-stakes drift in the repo:
+`SECURITY.md` calibrates how an external reporter rates a vulnerability, and it
+spent the days after the 2026-07-24 go-live telling researchers registration was
+closed and the user data wasn't public.
 
 **Read `.claude/skills/audit/audit-loop.md` first** — it owns the loop. This file
 owns the domain.
@@ -90,15 +106,62 @@ revert, the #207 co-tenancy reversal).
 Run the `keep-readme-current.md` checklist properly: features and views, the
 architecture tree, routes, scripts, env vars, and the skills table (which this very
 change had to update). Then diff `process.env.*` across `lib/`, `routes/`,
-`scripts/` and `server.js` against `.env.example` — entries there are commented
-out, so match on the name, not on an assignment.
+`scripts/`, `server.js` **and `knexfile.js`** against `.env.example` — entries
+there are commented out, so match on the name, not on an assignment. (Miss
+`knexfile.js` and `DATABASE_SSL` reads as an orphan entry; the platform-injected
+`NODE_ENV`/`RAILWAY_GIT_COMMIT_SHA` family is deliberately absent.)
 
-### 5. Hygiene → C-004, C-007, C-008, C-011, C-012, C-013
+The README tree and the cited paths are pinned by `test/readme-tree.test.js` and
+`test/skills.test.js` — check what those don't cover: prose that has quietly
+stopped being true.
+
+### 5. The root documents → C-016
+
+`README.md`, `CONTRIBUTING.md`, `SECURITY.md` and `LICENSE`. The check that
+matters is **instance state**: each asserts something about what the deployment
+*is* today, and none of it is derivable from the code.
+
+- `SECURITY.md` — the "Project stage" section is the threat model an external
+  reporter calibrates severity against. Verify the auth mode, whether
+  registration is open, and whether it still claims anything is "not yet"
+  shipped.
+- `README.md` — the `AUTH_PASSWORD` paragraph and the accounts-mode paragraph
+  both describe what the maintainer's hosted instance runs.
+- `CONTRIBUTING.md` — the pre-PR checklist must name every check that actually
+  gates a merge (branch protection requires `ci-passed`, i.e. `test` **and**
+  `coverage` **and** `postgres`), and the licensing terms must match `LICENSE`
+  and `package.json`'s `license` field.
+
+`.claude/rules/ops-only-changes-still-stale-the-docs.md` holds the same file
+list, because these facts change through ops actions that produce no diff.
+
+### 6. Hygiene → C-004, C-007, C-008, C-011, C-012, C-013
 
 Rule shape (one learning, says why), skill frontmatter quality, trigger overlap
 between skills, no secrets or real data anywhere, no hedged half-true rules, and —
 the one with real consequences — that nothing instructs a session to launch the app
 without overriding `DATA_DIR`.
+
+## Then ask why each finding was possible — and fix that too
+
+**Do this before the report, for every finding.** A stale line is a symptom; the
+durable output of this audit is the reason it survived. Sort each finding:
+
+1. **A rule already covered it** → an *adherence* failure. Don't reword the rule
+   — it was right and got skipped anyway. **Mechanize it** if the claim is
+   checkable against the repo (that is where `test/readme-tree.test.js` came
+   from: `keep-readme-current.md` already named the file tree as a trigger, and
+   it was still missed eight times).
+2. **No rule covered it** → a *gap*. Write the rule, in the same PR as the fix.
+   Two real gaps found this way: nothing watched `SECURITY.md` at all, and
+   nothing said that an ops-only change stales the docs.
+3. **A rule covered it but pointed at the wrong place** → the pointer moved with
+   a refactor. Fix the pointer, and check whether the *class* needs writing down
+   (`token-friendly-source-files.md` grew its "moving code invalidates a rule
+   that cites it" section exactly this way).
+
+State the cause per finding in the report. A run that fixes five stale lines and
+explains none of them will find five more next time.
 
 ## Remedies, in order of preference
 

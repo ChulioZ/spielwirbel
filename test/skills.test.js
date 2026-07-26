@@ -35,6 +35,14 @@ const docs = dirs.flatMap((d) => fs.readdirSync(path.join(SKILLS, d))
   .filter((f) => f.endsWith('.md'))
   .map((f) => [`.claude/skills/${d}/${f}`, fs.readFileSync(path.join(SKILLS, d, f), 'utf8')]));
 
+// The rule files and the root docs cite paths just as heavily as the skills do,
+// and drift the same way — so the reference check below covers all of them.
+const read = (rel) => [rel, fs.readFileSync(path.join(ROOT, rel), 'utf8')];
+const ruleDocs = fs.readdirSync(path.join(ROOT, '.claude', 'rules'))
+  .filter((f) => f.endsWith('.md'))
+  .map((f) => read(`.claude/rules/${f}`));
+const rootDocs = ['CLAUDE.md', 'README.md', 'CONTRIBUTING.md', 'SECURITY.md'].map(read);
+
 // The YAML-ish frontmatter block, or null when the file opens without one.
 const frontmatter = (text) => {
   const m = /^---\n([\s\S]*?)\n---/.exec(text);
@@ -69,15 +77,35 @@ test('each SKILL.md declares a name matching its directory and a real descriptio
   }
 });
 
-test('every repo path a skill cites actually exists', () => {
-  // Deliberately narrow: the three families that get renamed and stranded in
-  // practice. Paths under data/ and dist/ are excluded — neither is committed,
-  // so asserting on them would fail in CI while the reference is perfectly fine.
-  const PATH_RE = /(?:\.claude\/(?:rules|skills)\/[A-Za-z0-9_./-]+\.md|test\/[A-Za-z0-9_./-]+\.js|docs\/[A-Za-z0-9_./-]+\.md)/g;
+// References that name a file which was deliberately DELETED, kept as history.
+// `.claude/rules/` is allowed to say "the removed X" — that is the documented
+// remedy in criteria C-012 (a rule whose mechanism is gone gets deleted, and the
+// rules that pointed at it explain where the reasoning went). Each entry here is
+// a conscious exemption, not a TODO; adding one should take an argument.
+const DELETED_ON_PURPOSE = new Set([
+  '.claude/rules/retenant-rls-escape.md', // removed with the cross-tenant write escape (#405)
+]);
+
+test('every repo path a rule, skill or root doc cites actually exists', () => {
+  // Deliberately literal: only concrete paths, never globs. `lib/repo/{json,
+  // postgres}.js` and `public/js/*.js` contain characters outside the class, so
+  // they simply don't match rather than failing — the check trades completeness
+  // for zero false positives. Paths under data/ and dist/ are excluded too:
+  // neither is committed, so asserting on them would fail in CI while the
+  // reference is perfectly fine.
+  const P = '[A-Za-z0-9_./-]+';
+  const PATH_RE = new RegExp(
+    `(?:\\.claude/(?:rules|skills)/${P}\\.md`
+    + `|(?:test|lib|routes|scripts)/${P}\\.js`
+    + `|public/${P}\\.(?:js|css|html)`
+    + `|docs/${P}\\.md)`,
+    'g',
+  );
 
   const missing = [];
-  for (const [file, text] of docs) {
+  for (const [file, text] of [...docs, ...ruleDocs, ...rootDocs]) {
     for (const ref of new Set(text.match(PATH_RE) || [])) {
+      if (DELETED_ON_PURPOSE.has(ref)) continue;
       if (!fs.existsSync(path.join(ROOT, ref))) missing.push(`${file} -> ${ref}`);
     }
   }

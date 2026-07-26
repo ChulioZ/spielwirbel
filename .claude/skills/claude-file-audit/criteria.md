@@ -7,8 +7,10 @@ Seeded 2026-07-23 from `CLAUDE.md` (the "Capturing learnings" contract),
 `.claude/rules/keep-readme-current.md` and
 `.claude/rules/token-friendly-source-files.md` — **not** from research.
 
-Scope: `CLAUDE.md`, `README.md`, and everything committed under `.claude/`
-(the rule files, the skills, `launch.json`).
+Scope: `CLAUDE.md`, everything committed under `.claude/` (the rule files, the
+skills, `launch.json`), and the four root documents — `README.md`,
+`CONTRIBUTING.md`, `SECURITY.md`, `LICENSE`. The root docs joined on 2026-07-26
+because no other skill owns them (see `SKILL.md` → Scope).
 
 **The premise:** these files are *instructions to future sessions*. A stale one is
 worse than a missing one — it actively misdirects, and nothing in CI checks any of
@@ -139,6 +141,32 @@ research at all.
   (`no-reading-production-data.md`), so a file reduced to `production-data` alone is a
   live foot-gun.
 - **Enforced by:** — (manual)
+
+### C-016 — The root documents state the live instance's actual state
+- **Status:** adopted · 2026-07-26
+- **Source:** the 2026-07-26 audit · `.claude/rules/ops-only-changes-still-stale-the-docs.md`
+- **Check:** `SECURITY.md`'s "Project stage", `README.md`'s `AUTH_PASSWORD` and
+  accounts-mode paragraphs, and `CLAUDE.md`'s "Current stage" each assert what the
+  production deployment *is* — auth mode, whether registration is open, what a change
+  reaches. Verify against reality, not against the code (the code supports all four
+  auth modes; only the env says which one runs). `SECURITY.md` is the sharpest: it
+  calibrates how an external reporter rates a vulnerability, and it claimed
+  registration was closed and the data non-public for two days after the go-live.
+  Also check `CONTRIBUTING.md`'s pre-PR checklist names every check that gates a
+  merge, and that its licensing terms match `LICENSE` + `package.json`.
+- **Enforced by:** — (manual, and unmechanizable: the facts are about a remote
+  instance no test can observe)
+
+### C-017 — Every finding gets a root cause, and the cause gets fixed
+- **Status:** adopted · 2026-07-26
+- **Source:** operator instruction, 2026-07-26
+- **Check:** For each finding, decide which applies — (a) a rule already covered it
+  and was skipped → mechanize it with a test rather than rewording it; (b) no rule
+  covered it → write one in the same PR; (c) a rule covered it but its pointer moved
+  → fix the pointer and consider whether the class needs writing down. The audit's
+  durable output is the cause, not the corrected line: five stale lines fixed without
+  causes yields five more next run. Record the cause per finding in the report.
+- **Enforced by:** — (manual; `SKILL.md` § "Then ask why each finding was possible")
 
 ---
 

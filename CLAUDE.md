@@ -8,17 +8,17 @@ A self-hosted web app for any group or gaming round to
 manage their games, run "what should we play?" voting sessions, and track ratings. UI language is
 **German**; code, comments here, and docs are **English**.
 
-**Current stage — live production, heading toward public multi-tenant SaaS.**
+**Current stage — a live, PUBLIC multi-tenant SaaS.**
 The app started as a local-only, no-auth MVP for a trusted home network; that
-stage is over. It now runs in production on Railway (managed PostgreSQL, R2
+stage is over. It runs in production on Railway (managed PostgreSQL, R2
 object storage, TLS — see `docs/deploy-railway.md`), and the token-first
 account model, tenant isolation, and onboarding UI (issues #135/#136/#138) are
-shipped. Since layered auth (#266) they can run in production alongside the
-shared-password gate; the go-live step for public registration is now REMOVING
-`AUTH_PASSWORD`, not flipping a feature on (see
-`.claude/rules/accounts-mode-gate.md` and issue #219). Full status and
-remaining launch work:
-`docs/production-readiness.md`.
+shipped. **Go-live executed 2026-07-24 (#219): `AUTH_PASSWORD` was removed and
+public registration is open at spielwirbel.app.** So production runs
+**accounts-only** — anyone can register, and the shared-password gate is code
+that only a self-hosted instance still uses (see
+`.claude/rules/accounts-mode-gate.md`). Treat every change as reaching real,
+public users. Full status: `docs/production-readiness.md`.
 
 **What this changes about how to work here.** Priority has shifted from
 *staying minimal* to *production-ready*: correctness under concurrent/
@@ -176,4 +176,7 @@ code and cost effort to discover — **write it down as a short rule file in
 - One learning per file: `.claude/rules/<kebab-case-topic>.md`.
 - Keep it short: what the rule is, and *why* (the symptom/trap it prevents).
 - Add new rules as you find them; update or remove a rule if it becomes wrong.
+- **A new rule often supersedes part of an old one — edit that part in the same
+  PR** and cross-link both ways. Writing the new file feels like the whole act,
+  so the now-wrong paragraph next door survives and contradicts it.
 - These rules are committed to the repo (unlike `.claude/settings.local.json`).

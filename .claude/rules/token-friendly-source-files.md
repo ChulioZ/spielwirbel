@@ -35,6 +35,33 @@ in `eslint.config.js`, and kept clear of the load-order trap (see
 `frontend-script-load-order.md` and `eslint-frontend-shared-scope.md`). Split
 when the concern boundary is real, not reflexively by size.
 
+**Moving or renaming code also invalidates any RULE that cites its old home.**
+`.claude/rules/**` is full of precise pointers (`routes/rounds.js` `gameCount`,
+`core.js` `gameStats`, …), and those pointers are what make a rule actionable —
+so a move turns the rule into a wrong map without touching a line of it. Nothing
+catches it: the code still works, every test stays green, and the rule still
+*reads* authoritative.
+
+It has happened. #301's summary-read work moved `gameCount` out of
+`routes/rounds.js` into `listRoundSummaries` in both repo backends;
+`active-games-filter-sites.md` kept naming the route file, and that rule exists
+precisely to enumerate the filter sites — so the one pointer it got wrong was the
+one a future session most needed. Nobody looked, because #301 was a *performance*
+change while the rule is about *archived-game filtering*: **the rule a move
+invalidates is usually on a different topic than the PR doing the moving**, which
+is why it never occurs to anyone to check.
+
+So when you move or rename a function, `const` or file, grep the rules for the
+old name and fix every hit in the same PR:
+
+```bash
+grep -rn "gameCount\|routes/rounds.js" .claude/rules/
+```
+
+`test/skills.test.js` catches a moved **file** — it asserts every repo path cited
+anywhere in `.claude/**`, `CLAUDE.md` and `README.md` still exists. It cannot
+catch a moved **function**, so that grep is on you.
+
 **Why:** the codebase was assessed against these four dimensions (issue #38). The
 backend (`routes/`, `lib/`, providers) and most frontend files were already
 token-friendly. The one clear outlier was `public/js/views-round.js` (~2237

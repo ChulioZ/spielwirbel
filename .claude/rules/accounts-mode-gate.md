@@ -22,11 +22,12 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
 
 - **LAYERED mode (#266): AUTH_PASSWORD *and* accounts on at the same time.** Two
   independent switches — `auth.authEnabled()` (AUTH_PASSWORD) and
-  `accounts.accountsEnabled()` — give **four** modes, not two: open, password-only
-  (today's prod), accounts-only (the public end state), and **layered** (both).
+  `accounts.accountsEnabled()` — give **four** modes, not two: open,
+  password-only, **accounts-only (today's prod)**, and **layered** (both).
   In layered mode the instance stays sealed behind the shared password while
-  everyone inside uses real accounts; go-live (#219) then shrinks to *removing*
-  AUTH_PASSWORD. The wiring lives in `lib/app.js` and is built so the three
+  everyone inside uses real accounts; production ran layered until the go-live
+  (#219) *removed* AUTH_PASSWORD on 2026-07-24, which is what left it
+  accounts-only. The wiring lives in `lib/app.js` and is built so the three
   pre-existing modes stay byte-for-byte unchanged — only the both-on path is new:
   - `apiGate` / `uploadGate` compose `auth.requireAuth` (a no-op unless
     AUTH_PASSWORD is set) **in front of** the account gate, so `/api` and
@@ -89,5 +90,7 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
   order (core → account → main) is safe — see frontend-script-load-order.md.
 
 - **What #138 did NOT do:** invitations / tenant-sharing (a second user can't see
-  your rounds under RLS — that's #207) and roles (#137). Enabling accounts in
-  production is a deliberate ops step, not something this code turns on.
+  your rounds under RLS — that's #207, shipped since) and roles (#137, still
+  open). Which mode an instance runs in is an ops decision, not something this
+  code turns on — production has been accounts-only since the 2026-07-24
+  go-live, and a self-hosted checkout is whatever its env says.
