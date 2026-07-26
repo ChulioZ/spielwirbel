@@ -244,8 +244,13 @@ function showLogin() {
       <h1 class="auth__title">${esc(t('auth.login.title'))}</h1>
       <p class="auth__sub muted">${esc(t('auth.login.sub'))}</p>
       <div class="field">
-        <label for="authEmail">${esc(t('auth.email'))}</label>
-        <input id="authEmail" class="input" type="email" autocomplete="username" inputmode="email" />
+        <label for="authEmail">${esc(t('auth.emailOrUsername'))}</label>
+        <!-- Not type="email"/inputmode="email" since #431: either identifier is
+             accepted, so browser validation must not reject a handle and the
+             phone keyboard must not lead with '@'. autocomplete="username" is
+             finally literally accurate. -->
+        <input id="authEmail" class="input" type="text" autocomplete="username"
+               spellcheck="false" autocapitalize="none" />
       </div>
       <div class="field">
         <label for="authPassword">${esc(t('auth.password'))}</label>
@@ -259,7 +264,7 @@ function showLogin() {
       </div>
     </form>`, (card) => {
     const form = card.closest('.auth').querySelector('form');
-    const email = card.querySelector('#authEmail');
+    const ident = card.querySelector('#authEmail');
     const pw = card.querySelector('#authPassword');
     const submit = card.querySelector('button[type=submit]');
     card.querySelector('#toForgot').addEventListener('click', showForgot);
@@ -267,10 +272,10 @@ function showLogin() {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       authError(card).hidden = true;
-      if (!email.value.trim() || !pw.value) return setError(card, t('auth.error.missing'));
+      if (!ident.value.trim() || !pw.value) return setError(card, t('auth.error.missing'));
       submit.disabled = true;
       try {
-        const { ok, data } = await authFetch('/login', { email: email.value.trim(), password: pw.value });
+        const { ok, data } = await authFetch('/login', { login: ident.value.trim(), password: pw.value });
         if (ok) {
           setTokens(data.accessToken, data.refreshToken);
           // A different account than the cache's owner may be logging in on
@@ -284,7 +289,7 @@ function showLogin() {
       } catch { setError(card, t('auth.error.network')); }
       submit.disabled = false;
     });
-    email.focus();
+    ident.focus();
   });
 }
 
@@ -299,11 +304,13 @@ function showRegister() {
       </div>
       <div class="field">
         <label for="regUser">${esc(t('auth.username'))}</label>
-        <!-- 'nickname', NOT 'username': login authenticates by E-MAIL, and the
-             login form's address field owns autocomplete="username". Claiming
-             that token here would make a password manager store the handle as
-             the credential's username and then autofill it into the login
-             e-mail box on the next visit. -->
+        <!-- 'nickname', NOT 'username': the login form's identifier field owns
+             autocomplete="username". Claiming that token here too would make a
+             password manager store the handle as the credential's username and
+             then autofill it into the login box on the next visit, over
+             whichever identifier the user actually logs in with. (Login accepts
+             the handle as well since #431 — but only one field can own the
+             token, and it is the one on the login form.) -->
         <input id="regUser" class="input" type="text" autocomplete="nickname"
                maxlength="30" spellcheck="false" autocapitalize="none" />
         <div class="field__hint muted">${esc(t('auth.register.userHint'))}</div>

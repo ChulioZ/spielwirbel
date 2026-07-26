@@ -169,6 +169,10 @@ test('full account lifecycle', async (t) => {
     const res = await request(app).post('/api/account/login').send({ email: EMAIL, password: PASSWORD });
     assert.equal(res.status, 403);
     assert.equal(res.body.error, 'email_not_verified');
+    // The username path (#431) must not walk past the same guard.
+    const byName = await request(app).post('/api/account/login').send({ login: USERNAME, password: PASSWORD });
+    assert.equal(byName.status, 403);
+    assert.equal(byName.body.error, 'email_not_verified');
   });
 
   await t.test('verify-email rejects a wrong token, accepts the mailed one once', async () => {
@@ -196,6 +200,47 @@ test('full account lifecycle', async (t) => {
     assert.equal(res.body.user.email, EMAIL);
     assert.equal(res.body.user.username, USERNAME); // the SPA shows it in the account menu
     tokens = res.body;
+  });
+
+  await t.test('the username logs in too, case-insensitively (#431)', async () => {
+    const byName = await request(app).post('/api/account/login').send({ login: USERNAME, password: PASSWORD });
+    assert.equal(byName.status, 200);
+    assert.ok(byName.body.accessToken && byName.body.refreshToken);
+    assert.equal(byName.body.user.email, EMAIL); // same account, same response shape
+
+    // Registered as 'user_one'; the handle is matched case-insensitively in both
+    // backends, so shouting it still works.
+    const shouted = await request(app).post('/api/account/login')
+      .send({ login: USERNAME.toUpperCase(), password: PASSWORD });
+    assert.equal(shouted.status, 200);
+    assert.equal(shouted.body.user.username, USERNAME);
+
+    // An unknown handle is the generic 401, never a distinct "no such user" and
+    // never a 500 from a null user.
+    const ghost = await request(app).post('/api/account/login')
+      .send({ login: 'nobody_at_all', password: PASSWORD });
+    assert.equal(ghost.status, 401);
+    assert.equal(ghost.body.error, 'invalid_credentials');
+
+    const wrongPw = await request(app).post('/api/account/login')
+      .send({ login: USERNAME, password: 'wrong password' });
+    assert.equal(wrongPw.status, 401);
+    assert.equal(wrongPw.body.error, 'invalid_credentials');
+
+    // An empty identifier must fall through to the same generic answer rather
+    // than resolving a user (getUserByUsername('') is null by contract).
+    const blank = await request(app).post('/api/account/login').send({ login: '', password: PASSWORD });
+    assert.equal(blank.status, 401);
+    assert.equal(blank.body.error, 'invalid_credentials');
+  });
+
+  await t.test('the legacy { email } body still logs in (stale cached shell)', async () => {
+    // The SPA shell is served cache-first, so a browser on a pre-#431 account.js
+    // keeps POSTing `email` after the deploy. Dropping the alias would break
+    // login for exactly those users until their cache turns over.
+    const res = await request(app).post('/api/account/login').send({ email: EMAIL, password: PASSWORD });
+    assert.equal(res.status, 200);
+    assert.ok(res.body.accessToken && res.body.refreshToken);
   });
 
   await t.test('/me works with the access token, 401s without', async () => {
@@ -282,6 +327,41 @@ test('full account lifecycle', async (t) => {
     const res = await request(app).get(`/api/account/verify-email?uid=${uid}&token=${token}`);
     assert.equal(res.status, 400);
   });
+});
+
+/* -------------------- login by username: the guards it keeps ---------------- */
+
+test('username login keeps the suspension guard, and forgot-password ignores handles (#431)', async () => {
+  const email = 'byname@example.com';
+  const username = 'by_name';
+  await request(app).post('/api/account/register').send({ email, username, password: PASSWORD });
+  const { uid, token } = lastMailTokens();
+  await request(app).post('/api/account/verify-email').send({ uid, token });
+
+  const ok = await request(app).post('/api/account/login').send({ login: username, password: PASSWORD });
+  assert.equal(ok.status, 200);
+
+  // An operator suspension (#268) must bite on the username path exactly as it
+  // does on the e-mail one — and still only AFTER the password check, so it
+  // stays unreachable for anyone who hasn't proven ownership.
+  await repo.updateUser(uid, { disabled: true });
+  const suspended = await request(app).post('/api/account/login').send({ login: username, password: PASSWORD });
+  assert.equal(suspended.status, 403);
+  assert.equal(suspended.body.error, 'account_disabled');
+  const suspendedWrongPw = await request(app).post('/api/account/login')
+    .send({ login: username, password: 'wrong password' });
+  assert.equal(suspendedWrongPw.status, 401, 'suspension must not leak before the password check');
+  assert.equal(suspendedWrongPw.body.error, 'invalid_credentials');
+  await repo.updateUser(uid, { disabled: false });
+
+  // forgot-password stays e-mail-only ON PURPOSE: accepting the public handle
+  // there would let anyone aim reset mail at a stranger's inbox knowing only
+  // their username. It answers ok either way, so assert on the mail.
+  const before = outbox.length;
+  const forgot = await request(app).post('/api/account/forgot-password').send({ email: username });
+  assert.equal(forgot.status, 200);
+  assert.deepEqual(forgot.body, { ok: true }); // silent, like every unknown address
+  assert.equal(outbox.length, before, 'a username must not trigger reset mail');
 });
 
 /* --------------------------- resend verification ---------------------------- */

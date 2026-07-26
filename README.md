@@ -523,11 +523,13 @@ a signed, httpOnly cookie (marked `Secure` automatically behind a TLS proxy).
 User accounts (issue #135): the token-first account model — register with
 e-mail + username + password (Argon2id-hashed), e-mail verification, login issuing
 short-lived access tokens + rotating refresh tokens, and password reset — lives under
-`/api/account`. The **username** (issue #320) is an app-wide unique public handle
+`/api/account`. Login accepts **either the e-mail address or the username** as the
+identifier (issue #431); password reset stays e-mail-only, since the link has to
+reach an inbox. The **username** (issue #320) is an app-wide unique public handle
 (3–30 characters of `a–z A–Z 0–9 _ -`, matched case-insensitively but stored as
 typed) chosen at registration and not self-renamable: it is how an account is
-named in an abuse report and how invitations (#207) will find it, so no account
-can exist without one. It is **off by default**: set `ACCOUNTS_ENABLED=true` *and* a
+named in an abuse report, how invitations (#207) find it, and how it logs in, so
+no account can exist without one. It is **off by default**: set `ACCOUNTS_ENABLED=true` *and* a
 strong `SESSION_SECRET` to expose it. Verification/reset mails go out via
 plain SMTP (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, links built
 from `APP_BASE_URL`); unconfigured, they are logged instead of sent. Production
