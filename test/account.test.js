@@ -33,8 +33,8 @@ const handle = () => `probe${(handleSeq += 1)}`;
 
 // Pull the one-time token out of the latest captured mail. Since #434 the link
 // carries a single combined "<version>.<uid>.<secret>" token; `uid` is returned
-// too (parsed back out of it) so callers that pass both keep working — the
-// server ignores a separate uid whenever the token already names its user.
+// too (parsed back out of it) so callers that pass both keep working — since
+// #451 the server ignores a separate uid entirely, it does not resolve links.
 function lastMailTokens() {
   const text = outbox[outbox.length - 1].text;
   const m = text.match(/\/[vr]\?t=([a-z0-9]+\.([0-9a-f]+)\.[A-Za-z0-9_-]+)/);
@@ -627,31 +627,42 @@ test('the mailed links fit on one quoted-printable line (#434)', async (t) => {
   });
 });
 
-// A verification mail stays valid for 24 h and a reset mail for 1 h, so links in
-// the pre-#434 shape were still landing in inboxes at deploy time. They must keep
-// working; this is the only thing pinning that fallback.
-test('a pre-#434 uid=/token= link still verifies and still resets (#434)', async (t) => {
+// #451: the pre-#434 `uid=` + bare-token pair was carried by a fallback in
+// linkCredentials() so links already in inboxes at deploy time kept working. A
+// verification mail lives 24 h and a reset mail 1 h, so from 2026-07-26 no such
+// link could still match a live record and the fallback was removed. Pin the
+// removal — a bare token must now be refused even against a matching record, so
+// nobody "restores" the branch by reading it as a bug.
+test('a pre-#434 uid=/token= link is refused (#451)', async (t) => {
   const email = 'legacy-link@example.com';
   await request(app).post('/api/account/register')
     .send({ email, username: handle(), password: PASSWORD });
   const user = await repo.getUserByEmail(email);
   const legacy = accounts.newRawToken(); // the old 32-byte bare token
 
-  await t.test('verify-email accepts the separate uid and bare token', async () => {
+  await t.test('verify-email refuses the separate uid and bare token', async () => {
     await repo.updateUser(user.id, {
       verification: { tokenHash: accounts.hashToken(legacy), expiresAt: new Date(Date.now() + 60000).toISOString() },
     });
     const res = await request(app).get(`/api/account/verify-email?uid=${user.id}&token=${legacy}`);
-    assert.equal(res.status, 200);
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, 'invalid_token');
+    // Still unverified: the refusal is a refusal, not a silent success.
+    assert.equal((await repo.getUserById(user.id)).emailVerified, false);
   });
 
-  await t.test('reset-password does too', async () => {
+  await t.test('reset-password does too, leaving the password unchanged', async () => {
     await repo.updateUser(user.id, {
       reset: { tokenHash: accounts.hashToken(legacy), expiresAt: new Date(Date.now() + 60000).toISOString() },
     });
     const res = await request(app).post('/api/account/reset-password')
       .send({ uid: user.id, token: legacy, password: 'a legacy-link password' });
-    assert.equal(res.status, 200);
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, 'invalid_token');
+    const stored = await repo.getUserById(user.id);
+    const identity = (stored.identities || []).find((i) => i.type === 'password');
+    assert.ok(await accounts.verifyPassword(identity.hash, PASSWORD),
+      'the original password must survive a refused legacy reset');
   });
 });
 

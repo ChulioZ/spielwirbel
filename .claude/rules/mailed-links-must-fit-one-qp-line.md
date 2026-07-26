@@ -44,11 +44,20 @@ tokens. Three parts of that are load-bearing:
   token that is single-use, time-limited (24 h / 1 h) *and* behind the auth rate
   limiter — don't "harden" it back to 32 and silently re-break the link.
 - **The stored record shape did NOT change.** Only the *secret* is hashed into
-  `tokenHash`, never the assembled token — which is what lets a legacy
-  `?uid=…&token=…` link still verify. That fallback (`linkCredentials` in
-  `routes/account.js`) is **not dead code**: a verification mail is valid for
-  24 h, so links in the pre-#434 shape were still sitting in inboxes at deploy
-  time. Deleting it strands exactly the users who signed up just before a deploy.
+  `tokenHash`, never the assembled token — so the record never encoded which link
+  shape produced it, and a legacy `?uid=…&token=…` link kept verifying across the
+  deploy. That fallback (`linkCredentials` in `routes/account.js`) was **not**
+  dead code at the time: a verification mail is valid for 24 h, so links in the
+  pre-#434 shape were still sitting in inboxes when #434 shipped on 2026-07-25,
+  and deleting it then would have stranded exactly the users who signed up just
+  before the deploy. **It was removed in #451 on 2026-07-26**, the first day on
+  which no such link could still match a live record — the transitional-code
+  discipline in `CLAUDE.md`. `verifyEmail()` and the `reset-password` handler now
+  call `accounts.parseLinkToken` directly and answer `400 invalid_token` when it
+  returns null; `test/account.test.js` pins the refusal so the branch does not
+  come back as a "bug fix". A stray `uid` in the *request body* is still accepted
+  and ignored — that was the documented client API, and only credential
+  resolution changed.
 - **`v1.` and `p1.` are distinct on purpose.** Both records hash into the same
   `tokenHash` field, so without the version check a verification link would
   double as a working password-reset link. `parseLinkToken` takes the expected
@@ -77,8 +86,9 @@ escaping would encode wider than it measures — re-derive the budget rather tha
 trusting the number.
 
 Verified by reinstating the pre-#434 long link on purpose and watching the
-assertion go red (and separately: stubbing out the legacy fallback reddens the
-back-compat tests, and dropping the version check reddens the cross-token one).
+assertion go red (and separately: dropping the version check reddens the
+cross-token test, and re-adding the removed legacy fallback reddens #451's
+refusal test — which is what that test is for).
 Back the files up to the scratchpad first — `git checkout` restores from the
 index and discards the whole uncommitted change
 (`.claude/rules/css-text-assertions-strip-comments.md`).

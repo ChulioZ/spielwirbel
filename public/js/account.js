@@ -140,13 +140,18 @@ async function logout() {
 /* --------------------------------- boot ----------------------------------- */
 
 // '/v' and '/r' are the short links the account mails carry (#434); the long
-// '/verify-email' and '/reset-password' forms are the pre-#434 shape, kept
-// because a link already sitting in someone's inbox stays valid for up to 24 h.
+// '/verify-email' and '/reset-password' forms are the pre-#434 shape. Since #451
+// the server no longer resolves those links (their records have long expired),
+// but the paths are kept so a bookmarked or copy-pasted old URL still renders the
+// "link expired" screen with its resend recovery instead of a blank page.
 const isAuthPath = (p) => p === '/v' || p === '/r'
   || p === '/verify-email' || p === '/reset-password';
 
 // The one-time token from either link shape: '?t=' carries the combined
-// "<version>.<uid>.<secret>" token, the legacy pair a separate uid.
+// "<version>.<uid>.<secret>" token, the legacy pair a separate uid. The uid is
+// still sent for a legacy URL and still accepted by the API — it is simply
+// ignored now (#451), so such a link resolves to nothing and the landing shows
+// the expired-link recovery.
 function linkToken() {
   const params = new URLSearchParams(location.search);
   const combined = params.get('t');
