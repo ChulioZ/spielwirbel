@@ -1,12 +1,13 @@
 # UI criteria
 
-- **last-researched:** never
+- **last-researched:** 2026-07-26
 - **cadence:** 90 days
 
 Seeded 2026-07-26 from `public/styles.css`, the `THEMES` table
 (`public/js/views-round-detail.js`), `.claude/rules/theme-derived-colors.md`,
-`tiles-vs-lists.md`, `responsive-content-width.md` and the redesign memory —
-**not** from research. The first run must do a full research pass.
+`tiles-vs-lists.md`, `responsive-content-width.md` and the redesign memory.
+The first research pass ran the same day and added **U-014**, sharpened **U-003**
+and **U-005** with measured state, and rejected **U-R07/R08/R09**.
 
 **Goal.** Make the app *visually* excellent — something people want to open and
 enjoy looking at. Beautiful, polished, characterful. This is the one audit whose
@@ -62,11 +63,19 @@ is not a UI finding, it is a rejected idea.
 - **Status:** adopted · 2026-07-26
 - **Source:** `public/styles.css`
 - **Check:** Shadows, borders and surface tints express a **single, legible hierarchy**
-  (page → card → raised → overlay), with a small set of shadow tokens rather than ad-hoc
-  `box-shadow` values per component. Cards, sheets, popovers, the dock and pills should
-  agree on what "one level up" looks like. Depth should feel intentional and soft, in
-  keeping with the warm brand — not five unrelated shadow recipes.
-- **Enforced by:** — (manual)
+  (page → card → raised → overlay), expressed as a **3-step ramp** (`--shadow-1/2/3`)
+  rather than ad-hoc `box-shadow` values per component. Three is the number Fluent 2,
+  Material, Atlassian Design and Polaris all independently converge on — enough to say
+  resting / raised / overlay, few enough that each step reads as a distinct level. Each
+  step layers a sharp *key* shadow (defines the edge) over a soft *ambient* one (implies
+  distance), which is what the existing `--shadow` already does. Cards, sheets, popovers,
+  the dock and pills must agree on what "one level up" looks like. Depth should feel
+  intentional and soft, in keeping with the warm brand — not five unrelated recipes.
+  **State as of 2026-07-26:** one `--shadow` token (11 uses) plus **8 ad-hoc values**, and
+  the ramp is inverted at both ends — the largest blur in the app sits on a *static*
+  `.auth__card` (`0 14px 44px`), while the topmost surface, `.sheet`, has **none**, and
+  `.dock` matches a merely *hovered* card.
+- **Enforced by:** — (manual; `grep -o 'box-shadow:[^;]*;' public/styles.css | sort -u`)
 
 ### U-004 — Consistent radii, borders and surface treatment
 - **Status:** adopted · 2026-07-26
@@ -85,7 +94,38 @@ is not a UI finding, it is a rejected idea.
   and Nunito (body) are paired with intent — display for identity/headings, body for
   content — and line-height/measure keep text comfortable. Flag competing sizes that are
   almost-but-not-quite equal, or a screen where everything is the same weight.
-- **Enforced by:** — (manual)
+  The scale must exist as **named tokens** (`--text-*`), not as hardcoded px values
+  scattered through the sheet — otherwise there is no scale, only a habit.
+  **Fluid `clamp()` sizing is in scope for display/hero type only**: never for body text
+  (a `vw`-driven body size shrinks exactly where reading is hardest), and never below a
+  size's current value — see **U-R04**, the floor is not negotiable.
+  **State as of 2026-07-26:** **22 distinct hardcoded sizes**, no tokens, covering every
+  integer from 10px to 22px; 14/15/16/17px alone account for 91 declarations — four
+  body sizes no reader can tell apart as hierarchy levels.
+- **Enforced by:** — (manual; `grep -o 'font-size: *[0-9.]*px' public/styles.css | sort -u`)
+
+### U-014 — Colour mixing happens in a perceptually uniform space
+- **Status:** adopted · 2026-07-26
+- **Source:** MDN [`<color-interpolation-method>`](https://developer.mozilla.org/en-US/docs/Web/CSS/color-interpolation-method)
+  · CSS Color 5 · [w3c/csswg-drafts#10484](https://github.com/w3c/csswg-drafts/issues/10484)
+  (should `color-mix()` default to oklab). Baseline in every major browser since 2023
+  (Chrome 111, Safari 15.4, Firefox 113, Edge 111); >93% global as of mid-2025.
+- **Check:** `color-mix()` interpolates in **`oklab`** — or `oklch` where hue travel is
+  the point, e.g. a multi-stop ramp — **not `srgb`**. sRGB is neither linear-light nor
+  perceptually uniform, so mixes toward black/white darken unevenly and mixes between
+  distant hues pass through a muddy, desaturated middle. Since this app *derives its
+  entire palette* by mixing (`--sunken`, `--line`, `--brand-tint*`, `--brand-edge`, the
+  whole `--stage-*` family), the interpolation space is a design decision, not a detail.
+  **State as of 2026-07-26:** all **31** `color-mix()` calls in `public/styles.css` are
+  `in srgb`.
+- **Caveat — this is not a find-and-replace.** Changing the space **changes the rendered
+  colour** of every derived token: an oklab mix toward `#000` at the same percentage
+  lands lighter than the sRGB one, so the percentages have to be re-tuned by eye, not
+  just the keyword swapped. Any migration must re-run **`test/a11y-contrast.test.js`**
+  and re-check the derived tones against the darkest theme page (Schiefer `#e9eef3`),
+  per `.claude/rules/accessibility-contrast-and-modals.md` §1. A migration that keeps
+  the numbers and only edits the keyword is a regression, not an improvement.
+- **Enforced by:** — (manual; `grep -c 'color-mix(in srgb' public/styles.css`)
 
 ## Layout & composition (visual, not IA)
 
@@ -171,6 +211,16 @@ is not a UI finding, it is a rejected idea.
   less.
 - **Enforced by:** — (manual; the judgement criterion the others serve)
 
+> **Note (2026-07-26 research pass) — the trend is coming *toward* this app.** The
+> 2026 "neo-minimalism" material (warmth, paper/linen texture, film grain, anti-flat
+> tactile surfaces, character over sterile minimalism) was reviewed and produced
+> **no criteria change**: the sources are trend listicles and fail the authority test
+> in `audit-loop.md` phase C step 1, so none of it is adoptable as a criterion. It is
+> recorded here because it *independently validates U-013* — the paper-grain backdrop,
+> the warm earthy palette and the rounded display face are precisely what that trend is
+> reaching for, and this app already ships them. Read it as a reason to hold the line
+> on U-013, not as a licence to chase the listicles.
+
 ---
 
 ## Rejected — settled, do not re-litigate
@@ -219,3 +269,44 @@ is not a UI finding, it is a rejected idea.
   placeholder gradient. Polishing the placeholder, the icons and the CSS backdrop is in
   scope; introducing an illustration set or a stock-image dependency is a new,
   heavyweight decision for the user, not a UI-audit remedy.
+
+### U-R07 — "Adopt the View Transitions API / CSS scroll-driven animations"
+- **Status:** rejected · 2026-07-26
+- **Why:** Both reached Baseline in 2026, both run on the compositor and ship zero KB of
+  JS, and neither is a bad idea — this rejection is about **scope, not quality**. A
+  same-document view transition means wiring `document.startViewTransition()` into
+  `public/js/router.js`, i.e. new JavaScript in the one file that carries the delicate
+  popstate/flow contract (`.claude/rules/session-flow-history.md`,
+  `sheet-history-back-dismissal.md`), and it changes **how screens appear as you move
+  between them** — new motion where there was none. U-012 deliberately scopes this skill
+  to the visual quality of *existing* motion, not to adding animated flows. So this is a
+  **feature proposal to put to the user** (via `create-issue`), never a finding this
+  audit files on its own. Same for scroll-driven animation: a scroll-linked reveal is a
+  new behaviour, not a polish pass on an old one.
+
+### U-R08 — "Use container queries for component-level layout"
+- **Status:** rejected · 2026-07-26
+- **Why:** Container queries are well-supported in 2026 and genuinely useful in general —
+  but they key a component's layout off **its own box**, and this repo has a deliberate,
+  test-pinned rule that layout widths derive from the **viewport only**
+  (`.claude/rules/responsive-content-width.md`; `test/content-width.test.js` fails any
+  rule that picks a width from content via `:has()`, a state class or an attribute
+  selector). That rule exists because a content-selected width shipped once (#332) and
+  moved the navigation 220px sideways between sibling tabs. A container query is not
+  literally what that test forbids, but it sits close enough that adopting one as a
+  *criterion* would invite exactly the class of change the rule was written to stop.
+  Concretely: the layout defects this audit actually measures are **alignment and
+  rhythm** (a 43px title spread, a 46px perforation offset, a zero-px gap) — none of
+  which a container query addresses. Revisit only if a finding genuinely requires
+  component-box-driven sizing, and take it to the user with the rule in hand.
+
+### U-R09 — "Adopt Material 3 Expressive: spring physics, the 35-shape library, shape morphing"
+- **Status:** rejected · 2026-07-26
+- **Why:** M3 Expressive's core moves don't port. Replacing duration+easing with
+  **spring physics** (stiffness/damping) needs a JS animation runtime to integrate the
+  springs — CSS has no spring primitive — and **shape morphing** ships as a Jetpack
+  Compose / Figma library, not as CSS. Both land squarely in **U-R01** (no framework, no
+  build step). The one genuinely transferable idea, *emphasized typography* as a
+  hierarchy device, is already **U-005** and needs no new entry. Don't re-raise this as
+  "just the shapes" either: 35 squircle/scallop/burst variants is a rebrand of the app's
+  geometry (**U-R02**), not a refinement of it.
