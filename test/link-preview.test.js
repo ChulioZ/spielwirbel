@@ -31,6 +31,12 @@ function meta(html, attr, key) {
   return m && m[1];
 }
 
+/** Reads the served document's <title> text. */
+function title(html) {
+  const m = html.match(/<title>([^<]*)<\/title>/);
+  return m && m[1];
+}
+
 test('the shell serves the preview card a scraper reads', async () => {
   const res = await request(app).get('/');
   assert.equal(res.status, 200);
@@ -111,6 +117,21 @@ test('the static card copy still matches the German hero copy it duplicates', as
   }
 });
 
+test('the shell title is descriptive enough to be a SERP headline (#436)', async () => {
+  // The <title> is the one string a search result headline is built from, and
+  // it is also the tab and bookmark label. It shipped as the bare brand word
+  // "Spielwirbel" (11 chars), which told a first-time visitor nothing and
+  // wasted most of the SERP width.
+  const text = title((await request(app).get('/')).text);
+  assert.ok(text, 'the shell needs a <title>');
+  assert.ok(
+    text.length >= 40,
+    `<title> is ${text.length} chars — too short for a SERP headline, aim at 50–60`,
+  );
+  // Brand first, so a truncated tab label still reads "Spielwirbel…".
+  assert.match(text, /^Spielwirbel/, '<title> must keep the brand as its prefix');
+});
+
 test('a deep link previews as the generic card, never as round data', async () => {
   // The SPA fallback serves this same document for every route, so a shared
   // /round/… URL must not carry anything tenant-specific in its meta tags.
@@ -121,5 +142,9 @@ test('a deep link previews as the generic card, never as round data', async () =
     meta(deep.text, 'property', 'og:title'),
     meta(home.text, 'property', 'og:title'),
   );
+  // Same for the <title> (#436): it is the browser-history and bookmark label
+  // as well as the SERP headline, so a per-route title would leak round names
+  // into a shared screenshot just as an og:title would leak them to a scraper.
+  assert.equal(title(deep.text), title(home.text));
   assert.doesNotMatch(deep.text, /some-round-id/);
 });
