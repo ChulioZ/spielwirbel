@@ -289,11 +289,21 @@ I18N.de = {
   'linkProvider.apply': 'Spiel verknüpfen',
   'linkProvider.linked': 'Spiel mit Anbieter verknüpft',
 
+  // Die Gast-Markierung (#458) – siehe en.js.
+  'people.guest': '{name} (Gast)',
   'startSession.crumb': 'Session',
   'startSession.title': 'Neue Session',
   'startSession.membersLabel': 'Wer spielt mit?',
   'startSession.membersNote': 'Die Anzahl der Personen filtert die Spiele.',
   'startSession.tableCount': '{n} spielen mit',
+  // Gäste (#458): nur für diese Session, beim Auslosen eingefroren.
+  'startSession.guestsLabel': 'Sind Gäste dabei?',
+  'startSession.guestsNote': 'Gäste stimmen mit ab, gehören aber nicht zur Runde.',
+  'startSession.guestPlaceholder': 'Name des Gasts',
+  'startSession.guestAdd': 'Hinzufügen',
+  'startSession.guestRemove': 'Gast {name} entfernen',
+  'startSession.toast.guestName': 'Bitte einen Namen für den Gast eingeben',
+  'startSession.toast.guestMax': 'Höchstens {n} Gäste pro Session',
   'startSession.whichGames': 'Welche Spiele?',
   'startSession.countLabel': 'Wie viele Spiele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
@@ -323,6 +333,9 @@ I18N.de = {
   'vote.next': 'Weiter ›',
   'vote.finish': 'Fertig',
   'vote.toast.needRating': 'Bitte eine Bewertung wählen (oder „Aussortieren“)',
+  // Gäste haben keinen Aussortieren-Schalter, also führt nur die Bewertung
+  // weiter (#458).
+  'vote.toast.needRatingOnly': 'Bitte eine Bewertung wählen',
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
   'finale.crumb': 'Finale',

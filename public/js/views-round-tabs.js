@@ -475,8 +475,11 @@ function renderChronikTab(round, activities) {
   function buildSessionCard(s) {
     const when = fmtDateTime(s.createdAt);
     const chosen = s.chosenGameId && round.games.find((g) => g.id === s.chosenGameId);
+    // Against the session's own people, so a guest winner is listed with its
+    // marker rather than silently dropped (#458).
+    const sPeople = sessionPeople(round, s);
     const winnerNames = (s.winnerIds || [])
-      .map((wid) => (round.members.find((m) => m.id === wid) || {}).name)
+      .map((wid) => personLabel(sPeople.find((p) => p.id === wid)))
       .filter(Boolean);
 
     // Thumbnail: the chosen game's cover, or an icon for the session's state.
@@ -621,7 +624,10 @@ function renderPokaleTab(round) {
     return;
   }
 
-  // Wins per member (a night can have several winners).
+  // Wins per member (a night can have several winners). Keyed by round member,
+  // so a guest win is dropped by the `wid in wins` guard below — deliberately:
+  // the standings are the permanent group's leaderboard, and a one-evening
+  // visitor in it would be noise (#458).
   const wins = {};
   round.members.forEach((m) => (wins[m.id] = 0));
   finished.forEach((s) =>
@@ -765,9 +771,17 @@ function renderPokaleTab(round) {
   // Streak: how many of the latest nights in a row one member won alone.
   // Chronological by `createdAt` (when the night happened), like the Chronik —
   // `finishedAt` moves when an old session is re-finished.
-  const chrono = [...finished].sort((a, b) =>
-    String(a.createdAt).localeCompare(String(b.createdAt))
-  );
+  // A night any guest won is skipped entirely (#458): a session-only visitor
+  // must neither break nor extend a member's streak, and treating their win as
+  // an ordinary sole win would silently blank the card (there is no member row
+  // behind the id) — which is breaking it by another name.
+  const wonByGuest = (s) => {
+    const gids = new Set((s.guests || []).map((g) => g.id));
+    return gids.size > 0 && (s.winnerIds || []).some((wid) => gids.has(wid));
+  };
+  const chrono = [...finished]
+    .filter((s) => !wonByGuest(s))
+    .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
   let streakMember = null;
   let streak = 0;
   for (let i = chrono.length - 1; i >= 0; i--) {

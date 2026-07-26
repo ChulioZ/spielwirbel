@@ -512,6 +512,46 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteSession(T, round.id, session.id), false);
   });
 
+  // Guests (#458) live inside the session blob, so neither backend needed a
+  // schema change — which is exactly what makes absent-key parity the thing that
+  // can silently break. A `guests: []` written onto a guestless session (or a
+  // Postgres column default) would split the two backends' stored shape.
+  test('a session carries guests through the blob and grows no key without them', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const base = {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    };
+
+    const plain = await repo.createSession(T, round.id, base);
+    assert.equal('guests' in plain, false);
+    const storedPlain = await repo.getSession(T, round.id, plain.id);
+    assert.equal('guests' in storedPlain, false);
+
+    const guests = [{ id: 'gst1', name: 'Dana' }, { id: 'gst2', name: 'Eli' }];
+    const withGuests = await repo.createSession(T, round.id, { ...base, guests });
+    const storedGuests = await repo.getSession(T, round.id, withGuests.id);
+    assert.deepEqual(storedGuests.guests, guests);
+
+    // A guest is a first-class vote-map and winnerIds key, so both survive the
+    // ordinary mutators untouched.
+    await repo.saveSessionResults(T, round.id, withGuests.id, {
+      m1: { [g.id]: { rating: 4, retire: false } },
+      gst1: { [g.id]: { rating: 2, retire: true } },
+    });
+    await repo.finishSession(T, round.id, withGuests.id, { finished: true, winnerIds: ['gst2', 'm1'] });
+    const after = await repo.getSession(T, round.id, withGuests.id);
+    assert.deepEqual(after.guests, guests);
+    assert.deepEqual(after.winnerIds, ['gst2', 'm1']);
+    assert.equal(after.votes.gst1[g.id].rating, 2);
+    // The store takes whatever it is handed, guest retire flag included: that
+    // guard lives in the ROUTE (`dropGuestRetireFlags`), and pinning it here is
+    // what proves it was not quietly baked into the data layer instead — where
+    // it would also rewrite history on any future re-save path.
+    assert.equal(after.votes.gst1[g.id].retire, true);
+  });
+
   test('setBackground returns the previous design and stores the new one', async () => {
     const round = await freshRound();
     const first = await repo.setBackground(T, round.id, { type: 'theme', page: 'p', accent: 'a' });

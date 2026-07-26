@@ -123,6 +123,13 @@ code and documentation are in English.
   confirms. The device is then passed around: a handover screen names whose
   turn it is, and each member rates every drawn game **1–5** or proposes to
   retire it (member order is randomized).
+- **Guests** – a visitor who isn't part of the group can be named on the setup
+  screen: they count toward the player range the draw filters by, take their own
+  hot-seat turn, can be recorded as a winner, and stay in that session's record
+  marked as a guest — but they never join the round, so they leave the member
+  list, the Pokale standings and the win streak untouched. A guest rates games
+  but gets no "retire" vote: throwing a game off the shelf is the permanent
+  group's call.
 - **Jetzt spielen** (play now) – when the group already knows what they want,
   launch a session for **one specific game** straight from its detail page or a
   Pokale tile: pick who joins and skip the vote entirely, landing directly on
@@ -391,6 +398,9 @@ public/
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
                      routes/members.js validates against (issue #420)
+    session-people.js who took part in ONE session (members who joined + that
+                     session's guests) and how a guest name is labelled; also
+                     holds the guest cap routes/sessions.js enforces (issue #458)
     swr.js           stale-while-revalidate cache: views render instantly from
                      the last known data while a background fetch refreshes
     lookup-group.js  collapses same-title provider hits into one multi-badge row

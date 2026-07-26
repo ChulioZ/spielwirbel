@@ -47,7 +47,11 @@ const frontendGlobals = {
   STANDARD_ACCENT: 'readonly',
   applyBackground: 'readonly', avgColor: 'readonly',
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', initials: 'readonly',
+  personColor: 'readonly',
   renderSeatPicker: 'readonly',
+  // session-people.js (issue #458)
+  MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly',
+  sessionPeople: 'readonly', personLabel: 'readonly',
   themeAccent: 'readonly', resolveAccent: 'readonly',
   activePopover: 'writable', closePopover: 'readonly', openPopover: 'readonly',
   readClipboardImage: 'readonly', shuffled: 'readonly', iconText: 'readonly',

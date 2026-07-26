@@ -193,9 +193,9 @@ function renderStartTab(round, activeGames) {
         const drawn = session.gameIds
           .map((gid) => round.games.find((g) => g.id === gid))
           .filter(Boolean);
-        const voters = Array.isArray(session.memberIds)
-          ? round.members.filter((m) => session.memberIds.includes(m.id))
-          : round.members;
+        // The abandoned draw's own participants, guests included (#458) — they
+        // were frozen into the session at draw time, so resuming picks them up.
+        const voters = sessionPeople(round, session);
         // Games or members can have been deleted since the draw was abandoned,
         // leaving nothing to vote on — say so rather than opening an empty
         // wizard; the discard below is then the only sensible action.
@@ -263,8 +263,11 @@ function renderStartTab(round, activeGames) {
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
   if (lastPlayed) {
     const game = round.games.find((g) => g.id === lastPlayed.chosenGameId);
+    // Winners resolve against the session's own people, so a guest winner shows
+    // up here too — marked as a guest (#458).
+    const lastPeople = sessionPeople(round, lastPlayed);
     const winnerNames = (lastPlayed.winnerIds || [])
-      .map((wid) => (round.members.find((m) => m.id === wid) || {}).name)
+      .map((wid) => personLabel(lastPeople.find((p) => p.id === wid)))
       .filter(Boolean);
     const sst = gameStatsForSession(round, lastPlayed, game.id);
     const when = fmtDateTime(lastPlayed.createdAt);
