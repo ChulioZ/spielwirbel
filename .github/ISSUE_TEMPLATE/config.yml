@@ -1,0 +1,18 @@
+# Blank issues are off so that security reports and support questions reach the
+# right channel instead of a public issue: a vulnerability filed in the open is
+# disclosed by the act of filing it (SECURITY.md), and a self-hosting question
+# gets better answers in Discussions than in a tracker nobody subscribes to.
+blank_issues_enabled: false
+
+contact_links:
+  - name: Security vulnerability (report privately)
+    url: https://github.com/ChulioZ/spielwirbel/security/advisories/new
+    about: >-
+      Never open a public issue for a security problem. This opens a private
+      advisory visible only to you and the maintainer — see SECURITY.md.
+
+  - name: Question, or help self-hosting
+    url: https://github.com/ChulioZ/spielwirbel/discussions/categories/q-a
+    about: >-
+      Setup, deployment, configuration and "how do I…" questions belong in
+      Discussions Q&A.

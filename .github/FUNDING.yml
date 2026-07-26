@@ -1,0 +1,5 @@
+# Adds the "Sponsor" button to the repository. The handle must match the live
+# DONATE_URL the app serves at GET /api/config — see issue #173 and README's
+# "Support link" paragraph. Donations are unconditional: nothing in the app is
+# gated behind them.
+ko_fi: spielwirbel
