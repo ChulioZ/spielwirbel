@@ -80,8 +80,9 @@ For each candidate, answer in order. The first "no" ends it.
 2. **Does it bind *this* app?** Spielwirbel is: a German+English PWA, no frontend
    framework and no build step beyond the optional cache-busting one; an Express
    backend with JSON and Postgres backends; running in production on Railway (EU)
-   with Cloudflare R2; operated by **one person**, funded by voluntary donations,
-   currently behind a shared-password gate with public registration not yet open;
+   with Cloudflare R2; operated by **one person**, funded by voluntary donations;
+   **public since the 2026-07-24 go-live (#219) — registration is open to anyone
+   at spielwirbel.app and production runs accounts-only, no shared password**;
    multi-tenant with per-tenant RLS; no native app shipped yet (#143/#144 open);
    no analytics, no ads, no third-party scripts, no consent-based processing.
    A criterion aimed at employers, large platforms, ad-funded services, native

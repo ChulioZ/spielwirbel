@@ -50,8 +50,10 @@ code and documentation are in English.
   off is allowed too and simply leaves the title field a plain text input.
   **Provider cover art is hotlinked, not copied:** the picture is loaded straight
   from the store's own servers rather than downloaded onto this instance, because
-  re-hosting third-party box art on a public service needs a licence we don't
-  have (issue #172). Your own uploaded covers are stored normally. One
+  re-hosting the four digital stores' box art on a public service needs a licence
+  they don't offer (issue #172). BoardGameGeek *does* grant one with its XML API
+  token (#117), so BGG covers stay hotlinked only for want of an image-resizing
+  pipeline. Your own uploaded covers are stored normally. One
   consequence to expect: if a store moves or removes an image, that cover stops
   showing — re-link the game or upload your own picture.
   Details can be edited inline on the game's detail page. A game added by hand
@@ -262,8 +264,19 @@ lib/
                      ADMIN_PASSWORD; 404s unless set — issue #268)
   accounts.js        user-account primitives: Argon2id passwords, access/refresh
                      tokens (issue #135; off unless ACCOUNTS_ENABLED)
+  quota.js           per-tenant state caps — rounds/tenant, games/round,
+                     tags/round (issue #139; inert unless ACCOUNTS_ENABLED)
+  feed.js            the Freundeskreis activity feed's allowlisted events (#325)
   mail.js            outbound e-mail (SMTP via nodemailer when SMTP_HOST is
-                     set, else logged to an in-memory outbox)
+                     set, else logged to an in-memory outbox), plus the global
+                     daily send budget (MAIL_DAILY_MAX, issue #448)
+  legal.js           server-rendered Impressum / privacy policy /
+                     Nutzungsbedingungen in DE + EN (issues #134/#140)
+  canonical.js       301s the branded non-canonical domains onto one origin
+                     (issue #230; an allowlist, never an inverse rule)
+  validate.js        zod request-body schemas applied at the router boundary
+  tag-icons.js       the curated tag-icon set (mirrored by public/js/tag-icons.js,
+                     with a test asserting the two stay identical)
   csv.js             RFC 4180 CSV writer for the operator panel's exports
                      (issue #288) — quotes every field, so a feedback message
                      with commas/quotes/newlines cannot corrupt the file, and
@@ -368,6 +381,10 @@ public/
     lang/de.js       German strings
     core.js          DOM/API helpers, stats, design, language picker  (loads first)
     account.js       onboarding + auth UI (login/register/verify/reset), token wiring
+    auth-error.js    maps an auth API error code to the localized message each
+                     form shows (issue #399)
+    support.js       the donation/support sheet (issue #173; hidden unless
+                     DONATE_URL is set)
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
     cover.js         deterministic per-title gradient for games with no cover
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
@@ -518,8 +535,9 @@ default, single-tenant deploy) these are inert. See the quotas block in `.env.ex
 Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate
 the whole app behind a single shared password — an unauthenticated visitor gets a
 login page and the API returns `401`. Leave `AUTH_PASSWORD` unset and the app
-stays open with no access control (the default for a bare local checkout — the
-maintainer's hosted instance sets it). Tune the login brute-force
+stays open with no access control (the default for a bare local checkout; the
+maintainer's hosted instance instead runs the account model below, with no shared
+password). Tune the login brute-force
 limit with `AUTH_RATE_LIMIT_MAX` (attempts per 15 min, default 100). The session is
 a signed, httpOnly cookie (marked `Secure` automatically behind a TLS proxy).
 
@@ -552,9 +570,11 @@ When accounts are enabled the app runs in **accounts mode** (issue #138): the SP
 shows an in-app onboarding flow — register → confirm e-mail → log in, plus password
 reset and a first-run empty state — and the `/api` data routes require a valid
 account token (there is no anonymous access, and each account sees only its own
-tenant's rounds, #136). With accounts **off** (the default, and today's
-production) the shared-password gate above is unchanged. *Roles within a shared
-tenant are still follow-up work (#137).*
+tenant's rounds, #136). **This is what the maintainer's hosted instance runs**:
+public registration opened on 2026-07-24 (#219) and `AUTH_PASSWORD` was removed,
+so production is accounts-only. With accounts **off** (still the default for a
+fresh checkout) the shared-password gate above is unchanged. *Roles within a
+shared tenant are still follow-up work (#137).*
 
 **Layered mode** (issue #266): the shared-password gate and accounts can run at the
 **same time** — set `AUTH_PASSWORD` **and** `ACCOUNTS_ENABLED` (with a dedicated

@@ -2,20 +2,22 @@
 
 ## Project stage
 
-This app runs **live in production** (Railway, managed PostgreSQL, TLS — see
-[`docs/deploy-railway.md`](docs/deploy-railway.md)), gated behind a
-shared-password login and/or a token-first account model with per-tenant data
-isolation ([`CLAUDE.md`](CLAUDE.md), [`.claude/rules/tenancy-rls.md`](.claude/rules/tenancy-rls.md)).
-**Public self-registration is not open yet** — `ACCOUNTS_ENABLED` is a
-deliberate ops switch the maintainer hasn't flipped in production, pending the
-legal pack (see `docs/production-readiness.md` §9, §12). A bare local checkout
+This app runs **live in production** at <https://spielwirbel.app> (Railway,
+managed PostgreSQL, TLS — see
+[`docs/deploy-railway.md`](docs/deploy-railway.md)) on a token-first account
+model with per-tenant data isolation ([`CLAUDE.md`](CLAUDE.md),
+[`.claude/rules/tenancy-rls.md`](.claude/rules/tenancy-rls.md)).
+**Public self-registration is open** — it went live on 2026-07-24, when
+`AUTH_PASSWORD` was removed, so there is no shared-password gate in front of the
+production instance and anyone can create an account. A bare local checkout
 still defaults to no authentication (same as any self-hosted instance you run
 without setting `AUTH_PASSWORD`) — that default is documented, not a bug, and
 is expected to run on a trusted network if left as-is.
 
-Please keep this context in mind when assessing severity: reports assuming a
-still-local-only, un-hosted MVP no longer apply — treat this as a real,
-internet-facing production service with real (if not-yet-public) user data.
+Please keep this context in mind when assessing severity: treat this as a real,
+internet-facing production service, open to the public, holding real user data
+across many independent tenants. An attacker needs nothing but a self-service
+registration to reach the authenticated surface.
 
 Security issues especially relevant given the current architecture:
 

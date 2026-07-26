@@ -11,20 +11,17 @@ the shared-password gate. Things that will bite if you forget them:
   and unlike lib/auth.js it must
   NOT fall back to AUTH_PASSWORD — the shared password is known to the whole
   group, so falling back would let any group member forge any user's tokens.
-  Enabling accounts in production is still a deliberate ops step (not
-  automatic just because the code supports it — see accounts-mode-gate.md),
-  but the earlier reason to hold off is gone: onboarding (#138) shipped
-  2026-07-19, so there's now a real UI that sends the Bearer token, and
-  tenancy (#136) scopes /api data per registration. Tenant-*sharing*
-  (invites/#207) is **not** a prerequisite for opening registration — a
-  single-owner tenant with name-only members (today's model) is a complete
-  product on its own; see the 2026-07-19 note on #207 and
-  docs/production-readiness.md §12 (#207 carries no GitHub blocking relation
-  to the go-live issue #219 in either direction).
+  **Accounts have been ON in production since the 2026-07-24 go-live (#219)**,
+  which also removed AUTH_PASSWORD — so this is the live auth model, not a
+  staged one. Which mode an instance runs in stays an ops decision (see
+  accounts-mode-gate.md). Tenant-*sharing* (invites/#207) was **not** a
+  prerequisite for opening registration — a single-owner tenant with name-only
+  members is a complete product on its own; it shipped afterwards anyway.
 
-- **Coexistence, not replacement (yet).** lib/auth.js (shared gate) still
-  protects the instance's data; /api/account mounts *before* the gate (like
-  /api/auth) behind the same AUTH_RATE_LIMIT_MAX limiter. test/helpers.js
+- **Coexistence, not replacement.** lib/auth.js (the shared gate) still exists
+  for instances that set AUTH_PASSWORD — production no longer does, but a
+  self-hosted checkout may, alone or layered. /api/account mounts *before* the
+  gate (like /api/auth) behind the same AUTH_RATE_LIMIT_MAX limiter. test/helpers.js
   raises that ceiling for the shared test app — an account-flow test making
   >20 requests would otherwise flake with 429s (see security-middleware.md).
 

@@ -32,20 +32,20 @@ button" (#434) would have silently switched click tracking on for a
 security-sensitive one-time link. If you ever add an HTML part, check what the
 provider does to anchors **before** shipping it.
 
-**2. A long URL breaks across a quoted-printable soft line break.** `Content-Transfer-Encoding:
-quoted-printable` wraps at 76 columns, and our 108-character verification link
-lands a `=`-terminated soft break mid-token:
+**2. A long URL breaks across a quoted-printable soft line break — FIXED in #434,
+and the constraint is permanent.** `Content-Transfer-Encoding: quoted-printable`
+wraps at 76 columns, and the pre-#434 108-character verification link landed a
+`=`-terminated soft break mid-token, so clients whose auto-linkifier doesn't run
+across the break showed the link "cut in half". **That was ours, not the
+provider's** — it survived all three migrations unchanged, which is why no
+provider change could have fixed it.
 
-```
-…verify-email?uid=3De3c6fbf42291bfcc&token=3D0EdimFR=
-JWyDONW54GoOtTrpXMao91AUQyVt4_-NA30U
-```
-
-A compliant client reassembles it, but a bare text URL then depends on the
-client's auto-linkifier running across that break — and some don't, which is the
-"link was cut in half" bug users report. **This is ours, not the provider's**: it
-survived the migration unchanged. The fix is a link short enough to fit one QP
-line (#434), not a provider change.
+The link is now 70 characters (`/v?t=v1.<uid>.<secret>`, `routes/account.js`) and
+`test/account.test.js` pins every mailed line at ≤75 characters. Anything that
+lengthens one of these links re-breaks it — the full budget, the reasoning behind
+the shortened token, and how to verify a real send live in
+`.claude/rules/mailed-links-must-fit-one-qp-line.md`. Read that before touching
+the link shape.
 
 **3. `curl -I` cannot see any of this.** The pixel, the headers and the rewriting
 are all in the message body/headers as delivered, not in anything the server
@@ -96,6 +96,8 @@ question stayed unproven.
 - **Never add an `html` part.** A `text/plain` body cannot carry a tracking pixel.
   #439/#440 exist because a provider injected one into HTML.
 
-**Related:** `.claude/rules/keep-legal-docs-current.md` (the processor change
+**Related:** `.claude/rules/mailed-links-must-fit-one-qp-line.md` (§2's fix, and
+the one-line budget every mailed link must keep),
+`.claude/rules/keep-legal-docs-current.md` (the processor change
 this drove through the policy + VVT), `.claude/rules/user-accounts.md` (the
 outbox fallback the test suite depends on).

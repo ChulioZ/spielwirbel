@@ -5,15 +5,21 @@ mean *"in the active collection"* had to become `!g.retired && !g.completed`.
 The trap: the filter is **not** centralized, and the two most consequential
 sites are on the **server**, where no view test would catch a miss.
 
-The full set as of #250 — grep `retired` in `routes/`, `lib/` and `public/js/`
+The full set — grep `retired` in `routes/`, `lib/` and `public/js/`
 before assuming you have them all:
 
 **Server (the ones that bite silently):**
-- `routes/rounds.js` `gameCount` — the home-screen count **and** the import
-  dropdown's "n games". `createRound`'s import skips both archives, so a
-  `gameCount` that counts an archived game **promises more games than the copy
-  delivers**. These two must stay in agreement; `test/rounds.test.js` asserts
+- `lib/repo/{json,postgres}.js` `listRoundSummaries` `gameCount` — the
+  home-screen count **and** the import dropdown's "n games". `createRound`'s
+  import skips both archives, so a `gameCount` that counts an archived game
+  **promises more games than the copy delivers**. These two must stay in
+  agreement; `test/rounds.test.js` asserts
   `copy.games.length === entry.gameCount` for exactly that reason.
+  (It lived in `routes/rounds.js` when #250 wrote this rule; #301's summary
+  read moved it down into the repo, where each backend now filters on its own —
+  `json.js` with `!g.retired && !g.completed`, `postgres.js` with two
+  `IS NOT TRUE` clauses in the `listRoundSummaries` SQL. Both must change
+  together.)
 - `routes/sessions.js` — **two** guards, easy to fix one and miss the other:
   the draw `pool` filter *and* the direct-pick `if (game.retired)` 400. Miss the
   latter and an archived game stays playable by id even though it is invisible
