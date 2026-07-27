@@ -202,6 +202,46 @@ health check at `/readyz` would make a transient database blip fail the deploy a
 restart-loop the container — the same flapping trap the canonical-host redirect
 avoids for Railway's probe host.
 
+### Testing that the alerting works — NOT with a made-up path
+
+Setting up a monitor and never seeing it fire is how you discover on incident day
+that the push permission was off. But the obvious test does not work on this host,
+and it fails in the direction that looks like success:
+
+```
+GET https://spielwirbel.app/nope-does-not-exist  ->  200, text/html, ~11 KB
+```
+
+The app is a client-side-routed SPA, so **every unmatched GET falls through to the
+SPA fallback and is answered with `index.html` and a 200**. There is no invented
+path on this host that 404s, so a monitor pointed at one sits green and proves
+nothing. (Same mechanism as the asset-name trap in
+[`.claude/rules/security-middleware.md`](../.claude/rules/security-middleware.md),
+where `/made-up.js` also returns the whole shell.)
+
+Two tests that do fail:
+
+- **`https://does-not-exist.spielwirbel.app`** — no DNS record for that subdomain,
+  so the check fails at resolution. It exercises the whole detect → alert → phone
+  chain without touching the app or spending any of its rate-limit budget. Delete
+  the monitor once the notification lands.
+- Your monitoring service's own **"send test notification"** button — quicker, but
+  it only proves delivery, not detection.
+
+Don't test by pointing a monitor at `/api/…`: it does answer a real `401`, but
+every poll spends from the global per-IP rate limit for a fake purpose. And don't
+test by breaking production.
+
+**Keyword monitoring is optional defense-in-depth.** If your monitoring plan
+offers a keyword/body check, requiring `"status":"ok"` is strictly better than a
+status-code check — it also catches a `/readyz` that has silently become the HTML
+shell. It is *not* worth paying or switching services for:
+[`test/observability.test.js`](../test/observability.test.js)
+drives both probes over HTTP and asserts the parsed body, so a removed or renamed
+route turns CI red long before it could reach production. The two failures that
+actually happen — database down (a real `503`) and app unreachable (no response) —
+are caught by a plain HTTP(S) monitor.
+
 ### Error alerting
 
 `ERROR_WEBHOOK_URL` POSTs a compact `{"text": …}` on any unhandled 500. It covers
@@ -246,8 +286,22 @@ These need an account or a credential I can't create or hold:
       check is what would have caught the 2026-07-26 degradation, which never
       became a hard outage. A monitor polling only these endpoints receives no
       personal data, so it is not a processor and needs no privacy-policy change.
-- [ ] Turn on Railway's own **deploy-failure and crash notifications** for the
-      service.
+      It must run **off this infrastructure**: self-hosting the monitor beside the
+      app means it dies in the incident it exists to report, and silence looks
+      exactly like "all fine". Then verify it fires — see *Testing that the
+      alerting works* above, and note the made-up-path test does **not** work here.
+      *(Set up 2026-07-27: UptimeRobot.)*
+- [ ] Point Railway's **project-level webhook** at your alerting channel, for
+      deploy failures. Railway exposes this under **Project → Settings** only:
+      there is no service-level alerting and no e-mail toggle to turn on (checked
+      2026-07-27), so the webhook is the whole mechanism. Note the payload is
+      deploy metadata — project, service, environment, commit, status — and
+      carries **no personal data**, so unlike `ERROR_WEBHOOK_URL` a third-party
+      chat/push destination here adds no recipient of user data and needs no AVV.
+      The tidiest destination is an *incoming* webhook on the uptime monitor you
+      just set up, so a failed deploy arrives as the same phone push as an outage.
+      Lowest-priority item on this list: a failed deploy leaves the previous build
+      serving, so production stays up either way.
 - [ ] *(Optional)* Set `ERROR_WEBHOOK_URL` — see **Monitoring** above for the
       destination trade-offs and the legal follow-through a third party needs.
 
