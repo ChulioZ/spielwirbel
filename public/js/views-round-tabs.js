@@ -382,7 +382,10 @@ async function showInvite(round) {
   const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
   document.addEventListener('keydown', onKey, true);
   openSheet(backdrop, onKey);
-form.querySelector('#inviteUser').focus();
+  // Synchronous, and after openSheet: iOS only raises the soft keyboard for a
+  // focus() inside the opening gesture, and trapFocus captures the pre-open
+  // activeElement as its restore target. Don't defer this into a timeout.
+  form.querySelector('#inviteUser').focus();
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   form.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 
