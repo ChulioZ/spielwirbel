@@ -753,7 +753,8 @@ auto-deploys on push to `main`. Pair it with **managed PostgreSQL** (Railway
 plugin → `DATABASE_URL`, the #127 backend) and **Cloudflare R2** for cover images
 (S3-compatible → the #128 backend via `S3_ENDPOINT`); Railway terminates TLS at
 its edge, so set `TRUST_PROXY=2` (Railway has two proxy hops — verify it, a wrong
-count silently collapses every per-IP rate limit into one shared bucket). The full step-by-step — EU region, custom
+count silently collapses every per-IP rate limit into one shared bucket). The
+full step-by-step — EU region, custom
 domain, and the account/secret steps only you can do — is in
 [`docs/deploy-railway.md`](docs/deploy-railway.md).
 
