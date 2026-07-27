@@ -2650,7 +2650,11 @@ body.auth-screen .topbar__context { display: none; }
    NOT a `.field`: every row here is a <label>, and `.field label` (0,1,1) beats
    `.ds-row` (0,1,0) with `display: block` — which silently stacked each row's
    checkbox under its title. Its own wrapper carries the same bottom margin. */
-.move-picker { margin-bottom: 18px; }
+/* The BGG collection import (#481) reuses this whole shape — a scroll-free
+   checkbox list with a sticky count + select-all head — so the rules are shared
+   with :is() rather than copied. :is() takes the specificity of its most
+   specific argument, so nothing else in the cascade shifts. */
+:is(.move-picker, .bgg-import__picker) { margin-bottom: 18px; }
 .move-list__head {
   position: sticky;
   top: 0;
@@ -2662,10 +2666,16 @@ body.auth-screen .topbar__context { display: none; }
   padding: 4px 0 6px;
   background: var(--page-bg);
 }
-.move-row { flex-wrap: nowrap; cursor: pointer; }
-.move-row .ds-row__main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-.move-row__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.move-row__state { flex: none; font-size: 14px; }
+:is(.move-row, .bgg-import__row) { flex-wrap: nowrap; cursor: pointer; }
+:is(.move-row, .bgg-import__row) .ds-row__main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+:is(.move-row__name, .bgg-import__name) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(.move-row__state, .bgg-import__state) { flex: none; font-size: 14px; }
+/* A game already on the shelf: shown, checked and disabled rather than hidden,
+   so the list still reads as the user's whole collection instead of looking as
+   if the import had lost half of it. Dimmed so the selectable rows lead. */
+.bgg-import__row.is-present { cursor: default; opacity: 0.55; }
+.bgg-import__msg { padding: 8px 0 4px; }
+.bgg-import__msg p { margin: 0 0 6px; }
 .ds-row__meta .score-pill { position: static; }
 .ds-row__meta .sort-flag { margin: 0; }
 

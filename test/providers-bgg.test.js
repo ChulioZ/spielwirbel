@@ -40,6 +40,34 @@ const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
   </item>
 </items>`;
 
+// A /xmlapi2/collection?…&stats=1 answer. Structurally UNLIKE the two above:
+// the name is a text node, not a `value` attribute, and the player counts are
+// attributes of the <stats> child (see parseCollection).
+const COLLECTION_XML = `<?xml version="1.0" encoding="utf-8"?>
+<items totalitems="3" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+  <item objecttype="thing" objectid="13" subtype="boardgame" collid="1">
+    <name sortindex="1">CATAN</name>
+    <yearpublished>1995</yearpublished>
+    <image>https://cf.geekdo-images.com/abc__original/img/uvw=/0x0/pic9156909.png</image>
+    <thumbnail>https://cf.geekdo-images.com/abc__thumb/img/xyz=/fit-in/200x150/pic9156909.png</thumbnail>
+    <stats minplayers="3" maxplayers="4" playingtime="120">
+      <rating value="N/A"><average value="7.1"/></rating>
+    </stats>
+    <status own="1" prevowned="0"/>
+    <numplays>4</numplays>
+  </item>
+  <item objecttype="thing" objectid="822" subtype="boardgame" collid="2">
+    <name sortindex="1">Tigris &amp; Euphrates</name>
+    <stats minplayers="0" maxplayers="0"/>
+    <status own="1"/>
+  </item>
+  <item objecttype="thing" objectid="2093" subtype="boardgameaccessory" collid="3">
+    <name sortindex="1">Spielbrett</name>
+    <stats minplayers="1" maxplayers="6"/>
+    <status own="1"/>
+  </item>
+</items>`;
+
 // --- decodeXml -----------------------------------------------------------
 
 test('decodeXml resolves named and numeric entities, and leaves unknown ones alone', () => {
@@ -196,6 +224,141 @@ test('parseThing treats BGG "0"/unknown numbers as null', () => {
   const d = bgg.parseThing(xml, '1');
   assert.equal(d.minPlayers, null);
   assert.equal(d.maxPlayers, null);
+});
+
+// --- parseCollection (#481) ----------------------------------------------
+
+test('parseCollection reads the collection shape into the same record parseThing produces', () => {
+  const { invalidUser, items } = bgg.parseCollection(COLLECTION_XML);
+  assert.equal(invalidUser, false);
+  assert.equal(items.length, 3);
+  assert.deepEqual(items[0], {
+    provider: 'bgg',
+    externalId: '13',
+    title: 'CATAN',
+    minPlayers: 3,
+    maxPlayers: 4,
+    type: 'analog',
+    imageUrl: 'https://cf.geekdo-images.com/abc__thumb/img/xyz=/fit-in/200x150/pic9156909.png',
+    url: 'https://boardgamegeek.com/boardgame/13',
+  });
+  // The name is a TEXT node here, so an entity in it must still be decoded, and
+  // BGG's "0 = unknown" player counts must read as null exactly as in parseThing.
+  assert.equal(items[1].title, 'Tigris & Euphrates');
+  assert.equal(items[1].minPlayers, null);
+  assert.equal(items[1].maxPlayers, null);
+  assert.equal(items[1].imageUrl, null);
+  // The item's own subtype keeps the link canonical rather than assuming /boardgame/.
+  assert.equal(items[2].url, 'https://boardgamegeek.com/boardgameaccessory/2093');
+});
+
+test('parseCollection skips junk and dupes, and never throws on an empty body', () => {
+  const xml = `<items>
+    <item objectid="13" subtype="boardgame"><name>Catan</name></item>
+    <item objectid="13" subtype="boardgame"><name>Catan (dupe collid)</name></item>
+    <item objectid="x9" subtype="boardgame"><name>Bad id</name></item>
+    <item objectid="42" subtype="boardgame"></item>
+  </items>`;
+  assert.deepEqual(bgg.parseCollection(xml).items.map((g) => g.externalId), ['13']);
+  assert.deepEqual(bgg.parseCollection('').items, []);
+  assert.deepEqual(bgg.parseCollection(null).items, []);
+});
+
+test('parseCollection tells an unknown username apart from an empty collection', () => {
+  // BGG serves this with HTTP 200, so it parses to zero items and is otherwise
+  // indistinguishable from a real collection with nothing marked as owned — and
+  // the two need opposite messages.
+  const err = '<?xml version="1.0"?><errors><error><message>Invalid username specified</message></error></errors>';
+  assert.equal(bgg.parseCollection(err).invalidUser, true);
+  assert.equal(bgg.parseCollection('<items totalitems="0"></items>').invalidUser, false);
+  // A title containing the word cannot fake the error document: '<' is encoded
+  // inside every text node and attribute.
+  const safe = '<items><item objectid="7" subtype="boardgame"><name>Error 404: The Game</name></item></items>';
+  assert.equal(bgg.parseCollection(safe).invalidUser, false);
+  assert.equal(bgg.parseCollection(safe).items.length, 1);
+});
+
+// --- collection() transport (#481) ---------------------------------------
+//
+// The four outcomes the import UI has to tell apart. `fetch` is stubbed, so no
+// test here touches the network.
+
+test('collection() maps the BGG answers onto its four states', async (t) => {
+  const realFetch = global.fetch;
+  const realToken = process.env.BGG_API_TOKEN;
+  t.after(() => {
+    global.fetch = realFetch;
+    if (realToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = realToken;
+  });
+  process.env.BGG_API_TOKEN = 'test-token';
+
+  let seenUrl = '';
+  global.fetch = async (url) => {
+    seenUrl = String(url);
+    return { status: 200, text: async () => COLLECTION_XML };
+  };
+  const ok = await bgg.collection('someuser');
+  assert.equal(ok.state, 'ok');
+  assert.equal(ok.items.length, 3);
+  // Owned base games only: an expansion-laden shelf would otherwise bury the
+  // games it belongs to in a bulk import.
+  assert.match(seenUrl, /\/collection\?/);
+  assert.match(seenUrl, /username=someuser/);
+  assert.match(seenUrl, /own=1/);
+  assert.match(seenUrl, /excludesubtype=boardgameexpansion/);
+  assert.match(seenUrl, /stats=1/);
+
+  global.fetch = async () => ({
+    status: 200,
+    text: async () => '<errors><error><message>Invalid username specified</message></error></errors>',
+  });
+  assert.equal((await bgg.collection('nobody')).state, 'invalid_user');
+
+  global.fetch = async () => ({ status: 200, text: async () => '<items totalitems="0"></items>' });
+  const empty = await bgg.collection('someuser');
+  assert.equal(empty.state, 'ok');
+  assert.deepEqual(empty.items, []);
+
+  // A genuine upstream failure still throws, so the route can answer 502.
+  global.fetch = async () => ({ status: 500, text: async () => '' });
+  await assert.rejects(() => bgg.collection('someuser'));
+});
+
+test('collection() answers "queued" while BGG is still building the export', async (t) => {
+  const realFetch = global.fetch;
+  const realToken = process.env.BGG_API_TOKEN;
+  t.after(() => {
+    global.fetch = realFetch;
+    if (realToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = realToken;
+  });
+  process.env.BGG_API_TOKEN = 'test-token';
+  // 202 is retried inside the shared 8 s budget and, if it never resolves, must
+  // surface as its own state — NOT as an outage, and not by widening the budget
+  // every search shares.
+  global.fetch = async () => ({ status: 202, text: async () => '' });
+  const res = await bgg.collection('someuser');
+  assert.equal(res.state, 'queued');
+  assert.deepEqual(res.items, []);
+});
+
+test('collection() degrades to an empty list without a token, and never calls out', async (t) => {
+  const realFetch = global.fetch;
+  const realToken = process.env.BGG_API_TOKEN;
+  t.after(() => {
+    global.fetch = realFetch;
+    if (realToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = realToken;
+  });
+  delete process.env.BGG_API_TOKEN;
+  let called = false;
+  global.fetch = async () => { called = true; return { status: 200, text: async () => '' }; };
+  assert.deepEqual(await bgg.collection('someuser'), { state: 'ok', items: [] });
+  // An empty username is the same no-op — the route resolves it from the
+  // account, so a user who never linked one must not produce a request.
+  assert.deepEqual(await bgg.collection(''), { state: 'ok', items: [] });
+  assert.equal(called, false);
 });
 
 // --- pickImage -----------------------------------------------------------

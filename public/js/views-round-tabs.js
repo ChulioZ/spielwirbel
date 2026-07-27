@@ -36,11 +36,27 @@ function renderRegalTab(round, activeGames) {
      </button>`);
   addTile.addEventListener('click', () => showAddGame(round));
 
+  // Bulk-import a linked BoardGameGeek collection (#481). Filling a shelf one
+  // game at a time is the most tedious part of setting a round up, so the entry
+  // point is offered where that tedium is felt: as a tile beside "add a game"
+  // while the Regal is empty, and as a persistent header action once it isn't.
+  const importTile = h(`<button class="add-tile">
+       <i class="ti ti-download" aria-hidden="true"></i>
+       <span>${esc(t('bggImport.tile'))}</span>
+     </button>`);
+  importTile.addEventListener('click', () => showBggImport(round));
+
   if (activeGames.length === 0) {
     gamesSec.appendChild(h(`<div class="empty"><p>${esc(t('games.empty'))}</p></div>`));
     grid.appendChild(addTile);
+    if (canImportBgg(round)) grid.appendChild(importTile);
     gamesSec.appendChild(grid);
   } else {
+    if (canImportBgg(round)) {
+      const importBtn = h(`<button class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.link'))}</button>`);
+      importBtn.addEventListener('click', () => showBggImport(round));
+      gamesTools.appendChild(importBtn);
+    }
     // Average per game (from the already computed stats) for pill and sorting.
     const avgMap = {};
     activeGames.forEach((g) => (avgMap[g.id] = statsByGame[g.id].avg));
@@ -450,6 +466,10 @@ function renderChronikTab(round, activities) {
       // count and the other round's name, not a game title.
       games_moved_out: { icon: 'ti-arrow-right', text: tn(a.count, 'activity.gamesMovedOutOne', 'activity.gamesMovedOut', { round: a.roundName }) },
       games_moved_in: { icon: 'ti-arrow-left', text: tn(a.count, 'activity.gamesMovedInOne', 'activity.gamesMovedIn', { round: a.roundName }) },
+      // One bulk entry per collection import (#481) — a count, not a title, for
+      // the same reason as the two moves above: an import is routinely 100+
+      // games and a row each would bury every other event on the round.
+      games_imported: { icon: 'ti-download', text: tn(a.count, 'activity.gamesImportedOne', 'activity.gamesImported') },
     }[a.type];
     if (!meta) return;
     // Who did it (#207): resolve the actor's member seat to a name (like

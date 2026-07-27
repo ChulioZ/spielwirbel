@@ -230,6 +230,9 @@ function showAddGame(round) {
           </div>
           <div class="muted field__hint">${esc(t('addGame.searchHint'))}</div>
         </div>
+        ${canImportBgg(round) ? `<div class="toolbar" style="margin:-8px 0 18px">
+          <button type="button" id="bggImportFromAdd" class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.link'))}</button>
+        </div>` : ''}
         <div class="field">
           <label>${esc(t('addGame.playersLabel'))}</label>
           <div class="stepper-row">
@@ -296,6 +299,14 @@ function showAddGame(round) {
     if (e.target === backdrop) dismiss();
   });
   form.querySelector('.sheet__close').addEventListener('click', dismiss);
+
+  // Switching to the bulk import replaces this sheet rather than stacking on it.
+  // openSheet tears the old one down synchronously and reuses its history marker,
+  // so Back still dismisses exactly one sheet — a leading closeSheet() here would
+  // queue a pop that lands AFTER the import sheet opens and dismisses it
+  // (.claude/rules/sheet-history-back-dismissal.md §2).
+  const importFromAdd = form.querySelector('#bggImportFromAdd');
+  if (importFromAdd) importFromAdd.addEventListener('click', () => showBggImport(round));
 
   // Custom round tags (#238): toggle the round's existing tags onto the new
   // game, or create one inline (added to the round's tag list immediately; a
@@ -729,4 +740,211 @@ function startDirectSession(round, game) {
       closeSheet(() => showResults(round, data.session, data.games));
     } catch (e) { toast(e.message); }
   });
+}
+
+/* ---------------------- BGG collection import (#481) ----------------------- */
+
+// Whether this round can offer the one-shot BoardGameGeek collection import.
+// Accounts only (the handle hangs off the account), and only where the round
+// still queries BGG (#294) — the route 403s a disabled provider, so an entry
+// point that ignored the setting would just produce an error on click.
+function canImportBgg(round) {
+  return accountsActive() && enabledProviders(round).includes('bgg');
+}
+
+// Import a linked BoardGameGeek collection into this round's Regal.
+//
+// The sheet opens immediately and fills in afterwards: a collection fetch is far
+// heavier than a search (BGG may even queue it), so opening only once the answer
+// is in would read as a dead button for several seconds.
+async function showBggImport(round) {
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('bggImport.title'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('bggImport.title'))}</h2>
+          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="bgg-import"></div>
+      </div>
+    </div>`);
+  const sheet = backdrop.querySelector('.sheet');
+  const body = backdrop.querySelector('.bgg-import');
+  document.body.appendChild(backdrop);
+
+  // Games added while the sheet was open are only visible once the Regal behind
+  // it re-renders, so every close path has to refresh — and the navigation goes
+  // THROUGH closeSheet, never on the line after it, or the queued history pop
+  // races the push (.claude/rules/sheet-history-back-dismissal.md).
+  let imported = false;
+  const dismiss = () => closeSheet(imported ? () => showRound(round.id, 'regal') : undefined);
+
+  const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
+  document.addEventListener('keydown', onKey, true);
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) dismiss(); });
+  sheet.querySelector('.sheet__close').addEventListener('click', dismiss);
+
+  // --- the states -----------------------------------------------------------
+
+  const msg = (text, hint) => h(`<div class="bgg-import__msg">
+      <p>${esc(text)}</p>${hint ? `<p class="muted">${esc(hint)}</p>` : ''}
+    </div>`);
+
+  // Link (or correct) the BGG handle without leaving the sheet. The Konto screen
+  // owns the same field, but sending a user there mid-import and expecting them
+  // to come back is a flow nobody completes.
+  function renderLinkForm(current, errorText) {
+    body.replaceChildren();
+    if (errorText) body.appendChild(msg(errorText));
+    const form = h(`<form class="bgg-import__link">
+        <div class="field">
+          <label for="bggName">${esc(t('bggImport.handleLabel'))}</label>
+          <input id="bggName" class="input" autocomplete="off" spellcheck="false" value="${esc(current || '')}" />
+          <p class="field__hint muted">${esc(t('bggImport.handleHint'))}</p>
+        </div>
+        <div class="toolbar sheet__actions">
+          <button class="btn btn--primary btn--lg" type="submit">${esc(t('bggImport.handleSave'))}</button>
+        </div>
+      </form>`);
+    body.appendChild(form);
+    const input = form.querySelector('#bggName');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = input.value.trim();
+      if (!name) return;
+      try {
+        await accountApi('PATCH', '/me', { bggUsername: name });
+      } catch (ex) {
+        if (ex.message === 'auth') return; // accountApi already bounced a dead session
+        return toast(ex.message === 'invalid_bgg_username' ? t('bggImport.toast.badHandle') : ex.message);
+      }
+      load();
+    });
+    input.focus();
+  }
+
+  // The candidate list. Everything is preselected — the common case is "import
+  // my shelf" — while games already linked to a BGG record show checked and
+  // disabled, so the list still reads as the user's whole collection rather than
+  // looking as if the import had lost half of it.
+  function renderPicker(games) {
+    const fresh = games.filter((g) => !g.present);
+    body.replaceChildren(h(`<p class="muted">${esc(tn(games.length, 'bggImport.introOne', 'bggImport.intro'))}</p>`));
+
+    if (!fresh.length) {
+      body.appendChild(msg(t('bggImport.allPresent')));
+      return;
+    }
+
+    const picker = h(`<div class="bgg-import__picker">
+        <div class="move-list__head">
+          <span class="bgg-import__count muted" aria-live="polite"></span>
+          <button class="link-btn bgg-import__toggle" type="button"></button>
+        </div>
+        <div class="ds-list bgg-import__list" role="group" aria-label="${esc(t('bggImport.games'))}"></div>
+      </div>`);
+    const list = picker.querySelector('.bgg-import__list');
+    // NOT wrapped in a .field: `.field label` beats `.ds-row` on specificity and
+    // silently flattens every row (.claude/rules/label-rows-lose-to-field-label.md).
+    games.forEach((g) => {
+      const players = g.minPlayers
+        ? t('bggImport.players', { min: g.minPlayers, max: g.maxPlayers || g.minPlayers })
+        : '';
+      list.appendChild(h(`<label class="ds-row bgg-import__row${g.present ? ' is-present' : ''}">
+          <div class="ds-row__main">
+            <span class="bgg-import__name" title="${esc(g.title)}">${esc(g.title)}</span>
+            ${g.present
+    ? `<span class="muted bgg-import__state">${esc(t('bggImport.present'))}</span>`
+    : players ? `<span class="muted bgg-import__state">${esc(players)}</span>` : ''}
+          </div>
+          <div class="ds-row__meta">
+            <input type="checkbox" class="provider-row__box" value="${esc(g.externalId)}" checked ${g.present ? 'disabled' : ''} />
+          </div>
+        </label>`));
+    });
+
+    const go = h(`<div class="toolbar sheet__actions">
+        <button class="btn btn--primary btn--lg bgg-import__go"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.submit'))}</button>
+      </div>`);
+    body.appendChild(picker);
+    body.appendChild(go);
+
+    const boxes = [...list.querySelectorAll('input:not([disabled])')];
+    const countEl = picker.querySelector('.bgg-import__count');
+    const toggle = picker.querySelector('.bgg-import__toggle');
+    const submit = go.querySelector('.bgg-import__go');
+    const picked = () => boxes.filter((b) => b.checked).map((b) => b.value);
+
+    const sync = () => {
+      const n = picked().length;
+      countEl.textContent = tn(n, 'bggImport.selectedOne', 'bggImport.selected');
+      toggle.textContent = n === boxes.length ? t('moveGames.selectNone') : t('moveGames.selectAll');
+      submit.disabled = n === 0;
+    };
+    boxes.forEach((b) => b.addEventListener('change', sync));
+    toggle.addEventListener('click', () => {
+      const all = picked().length === boxes.length;
+      boxes.forEach((b) => { b.checked = !all; });
+      sync();
+    });
+    sync();
+
+    submit.addEventListener('click', async () => {
+      const ids = picked();
+      if (!ids.length) return;
+      submit.disabled = true;
+      try {
+        const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg`, { externalIds: ids });
+        imported = imported || res.imported > 0;
+        toast(tn(res.imported, 'bggImport.toast.doneOne', 'bggImport.toast.done'));
+        dismiss();
+      } catch (e) {
+        submit.disabled = false;
+        toast(bggImportError(e.message));
+      }
+    });
+  }
+
+  // --- load -----------------------------------------------------------------
+
+  async function load() {
+    body.replaceChildren(h(`<p class="muted">${esc(t('bggImport.loading'))}</p>`));
+    let res;
+    try {
+      res = await api('GET', `/api/rounds/${round.id}/lookup/collection?provider=bgg`);
+    } catch (e) {
+      body.replaceChildren(msg(bggImportError(e.message)));
+      return;
+    }
+    if (res.state === 'no_username') return renderLinkForm('', null);
+    if (res.state === 'invalid_user') return renderLinkForm('', t('bggImport.unknownUser'));
+    if (res.state === 'queued') {
+      body.replaceChildren(msg(t('bggImport.queued'), t('bggImport.queuedHint')));
+      const retry = h(`<div class="toolbar sheet__actions"><button class="btn btn--primary btn--lg">${esc(t('bggImport.retry'))}</button></div>`);
+      retry.querySelector('button').addEventListener('click', () => load());
+      body.appendChild(retry);
+      return;
+    }
+    if (!res.games.length) {
+      body.replaceChildren(msg(t('bggImport.empty'), t('bggImport.emptyHint')));
+      return;
+    }
+    renderPicker(res.games);
+  }
+
+  load();
+}
+
+// Map the import's server error codes to localized text. Anything unrecognised
+// falls through as-is, matching how the other sheets surface a raw message.
+function bggImportError(code) {
+  const known = {
+    quota_games: 'bggImport.toast.quota',
+    provider_disabled: 'bggImport.toast.disabled',
+    provider_unreachable: 'bggImport.toast.unreachable',
+    no_bgg_username: 'bggImport.toast.noHandle',
+    queued: 'bggImport.queued',
+    invalid_user: 'bggImport.unknownUser',
+  }[code];
+  return known ? t(known) : code;
 }

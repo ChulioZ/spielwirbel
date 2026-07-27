@@ -1061,3 +1061,68 @@ test('change-password is gated with the rest of the account surface (#482)', asy
     process.env.ACCOUNTS_ENABLED = flag;
   }
 });
+
+/* ---------------------------- BGG handle (#481) ----------------------------- */
+
+const patchMe = (accessToken, body) => request(app)
+  .patch('/api/account/me')
+  .set('Authorization', `Bearer ${accessToken}`)
+  .send(body);
+
+const getMe = (accessToken) => request(app)
+  .get('/api/account/me')
+  .set('Authorization', `Bearer ${accessToken}`);
+
+test('the BGG handle round-trips through /me and can be cleared (#481)', async () => {
+  const acc = await freshAccount('bgg-handle@example.com');
+
+  // A fresh account has the key present and empty, so a client never has to
+  // distinguish "never set" from "cleared".
+  const before = await getMe(acc.accessToken);
+  assert.equal(before.status, 200);
+  assert.equal(before.body.bggUsername, null);
+
+  const set = await patchMe(acc.accessToken, { bggUsername: '  BoardGamer_42  ' });
+  assert.equal(set.status, 200);
+  assert.equal(set.body.bggUsername, 'BoardGamer_42', 'trimmed, stored as typed');
+  assert.equal((await getMe(acc.accessToken)).body.bggUsername, 'BoardGamer_42');
+
+  // A blank string is the form's own "clear it", and so is an explicit null.
+  assert.equal((await patchMe(acc.accessToken, { bggUsername: '   ' })).body.bggUsername, null);
+  await patchMe(acc.accessToken, { bggUsername: 'again' });
+  assert.equal((await patchMe(acc.accessToken, { bggUsername: null })).body.bggUsername, null);
+});
+
+test('PATCH /me refuses an unusable BGG handle and leaves the stored one alone (#481)', async () => {
+  const acc = await freshAccount('bgg-handle-bad@example.com');
+  await patchMe(acc.accessToken, { bggUsername: 'Keeper' });
+
+  const TAB = String.fromCharCode(9);
+  const NUL = String.fromCharCode(0);
+  for (const bad of ['has space', 'x'.repeat(61), 'a' + TAB + 'b', 'a' + NUL + 'b']) {
+    const res = await patchMe(acc.accessToken, { bggUsername: bad });
+    assert.equal(res.status, 400, `expected 400 for ${JSON.stringify(bad)}`);
+    assert.equal(res.body.error, 'invalid_bgg_username');
+  }
+  assert.equal((await getMe(acc.accessToken)).body.bggUsername, 'Keeper', 'a refusal writes nothing');
+});
+
+test('PATCH /me leaves the handle alone when the key is absent, and never exposes secrets (#481)', async () => {
+  const acc = await freshAccount('bgg-handle-absent@example.com');
+  await patchMe(acc.accessToken, { bggUsername: 'Stays' });
+
+  // Absent key = "leave it alone", so a client that knows nothing about this
+  // field cannot blank it by omission.
+  const res = await patchMe(acc.accessToken, { somethingElse: 1 });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.bggUsername, 'Stays');
+
+  // The shared projection is what keeps the stored record's secrets out of the
+  // response — asserted here so a field added to the user shape later cannot
+  // ride out of /me unnoticed.
+  assert.deepEqual(Object.keys(res.body).sort(),
+    ['bggUsername', 'createdAt', 'email', 'emailVerified', 'id', 'username']);
+
+  // An unauthenticated caller gets nowhere near it.
+  assert.equal((await request(app).patch('/api/account/me').send({ bggUsername: 'x' })).status, 401);
+});
