@@ -42,6 +42,15 @@ code and documentation are in English.
   view). The lookup is optional — manual entry works exactly as before, and the
   app degrades gracefully when a source is unreachable (one provider failing
   still shows the others' results).
+- **Import a BoardGameGeek collection** – filling a shelf one game at a time is
+  the slow part of setting a round up, so link your BGG username once under
+  **Konto** and the Regal can pull in everything you have marked as *owned*
+  there in one go. You get a checklist to confirm (everything preselected, games
+  already on the shelf marked and skipped), and the games arrive with their
+  titles, player ranges, covers and a link back to BGG. It is **one-shot and on
+  demand** — never a background sync — and it needs no BGG password: a username
+  is enough, and you can unlink it again at any time. Accounts mode only, and
+  only for rounds that still have BoardGameGeek among their providers.
 - **Providers per round** – each round chooses which of the five databases its
   lookups query (a "Provider" screen next to Tags in the round hub). A
   board-games-only group can switch the four digital stores off so their hits
@@ -299,8 +308,9 @@ lib/
     index.js         provider registry + image-host allowlist
     psstore.js       PlayStation Store: search + detail via the store's
                      server-rendered page data (digital games)
-    bgg.js           BoardGameGeek: search + detail via BGG's official XML API2
-                     under an application token (board games)
+    bgg.js           BoardGameGeek: search + detail + owned-collection import
+                     via BGG's official XML API2 under an application token
+                     (board games)
     steam.js         Steam: search + detail via the store's public JSON
                      endpoints (storesearch / appdetails) (digital games)
     nintendo.js      Nintendo eShop: search + detail via Nintendo of Europe's

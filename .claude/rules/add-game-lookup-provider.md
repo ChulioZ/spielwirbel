@@ -71,6 +71,12 @@ as commercial, see #173):
   `<minplayers>`/`<maxplayers>` (attribute strings, "0" = unknown → null),
   `<thumbnail>`, and the item `type` the canonical link is built from.
 
+**Since #481 there is a THIRD hop, `collection(username)`** — the one-shot Regal
+import — and it is *not* a third copy of these two: its items shape the name and
+the player counts differently, an unknown username arrives as an HTTP 200 error
+document, and its `202` "queued" answer must never be cached. All of that lives
+in `.claude/rules/bgg-collection-import.md`; read it before touching that path.
+
 Four things about it bite:
 
 - **No `www.`, ever.** BGG's docs are explicit that `www.boardgamegeek.com`

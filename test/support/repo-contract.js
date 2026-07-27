@@ -345,6 +345,106 @@ module.exports = function repoContract(repo) {
     assert.equal(feed.filter((a) => a.type === 'game_added').length, 1);
   });
 
+  // #481: the bulk create behind the BGG collection import. Its whole reason to
+  // exist over a loop of createGame is what is asserted here — ONE activity, ONE
+  // quota decision, and a dedupe that makes a re-run a no-op.
+  const bggFields = (externalId, over = {}) => gameFields({
+    title: `Game ${externalId}`,
+    source: { provider: 'bgg', externalId, url: `https://boardgamegeek.com/boardgame/${externalId}` },
+    ...over,
+  });
+
+  test('createGames imports many games under ONE activity carrying a count (#481)', async () => {
+    const round = await freshRound();
+    const res = await repo.createGames(T, round.id, [bggFields('13'), bggFields('822'), bggFields('9209')]);
+    assert.equal(res.created.length, 3);
+    assert.equal(res.skipped, 0);
+    assert.deepEqual(res.created.map((g) => g.title), ['Game 13', 'Game 822', 'Game 9209']);
+
+    // Full game records, not stubs — the import path and the lookup path must
+    // produce identical rows.
+    const stored = await repo.getRound(T, round.id);
+    assert.equal(stored.games.length, 3);
+    assert.deepEqual(stored.games.map((g) => g.title), ['Game 13', 'Game 822', 'Game 9209']);
+    assert.equal(stored.games[0].source.provider, 'bgg');
+    assert.equal(stored.games[0].source.externalId, '13');
+    assert.equal(stored.games[0].retired, false);
+    assert.equal(stored.games[0].completed, false);
+
+    // One Chronik row for the lot. A loop over createGame would leave three
+    // `game_added` rows here, which is the flood this method exists to avoid.
+    const feed = await repo.listActivities(T, round.id);
+    assert.equal(feed.filter((a) => a.type === 'game_added').length, 0);
+    const imported = feed.filter((a) => a.type === 'games_imported');
+    assert.equal(imported.length, 1);
+    assert.equal(imported[0].count, 3);
+
+    assert.equal(await repo.createGames(T, 'missing', [bggFields('1')]), null);
+    assert.equal(await repo.createGames(OTHER, round.id, [bggFields('1')]), null);
+  });
+
+  test('createGames skips games already linked to the same provider record (#481)', async () => {
+    const round = await freshRound();
+    await repo.createGames(T, round.id, [bggFields('13'), bggFields('822')]);
+
+    // Re-running an unchanged collection adds nothing and writes no activity —
+    // a "0 imported" row every time someone re-checks would be pure noise.
+    const again = await repo.createGames(T, round.id, [bggFields('13'), bggFields('822')]);
+    assert.deepEqual(again, { created: [], skipped: 2 });
+    assert.equal((await repo.getRound(T, round.id)).games.length, 2);
+    assert.equal((await repo.listActivities(T, round.id)).filter((a) => a.type === 'games_imported').length, 1);
+
+    // A grown collection imports only the delta.
+    const grown = await repo.createGames(T, round.id, [bggFields('13'), bggFields('9209')]);
+    assert.equal(grown.created.length, 1);
+    assert.equal(grown.skipped, 1);
+    assert.equal(grown.created[0].source.externalId, '9209');
+
+    // A candidate list that repeats an id cannot slip two copies past the check,
+    // because each candidate is compared against the shelf AS IT GROWS.
+    const dupes = await repo.createGames(T, round.id, [bggFields('555'), bggFields('555')]);
+    assert.equal(dupes.created.length, 1);
+    assert.equal(dupes.skipped, 1);
+
+    // A game with no source link is never matched by the dedupe (it belongs to
+    // no provider record), so two unlinked games both land.
+    const plain = await repo.createGames(T, round.id, [gameFields({ title: 'P1' }), gameFields({ title: 'P2' })]);
+    assert.equal(plain.created.length, 2);
+  });
+
+  test('createGames refuses the WHOLE import over quota, writing nothing (#481)', async () => {
+    const round = await freshRound();
+    await repo.createGames(T, round.id, [bggFields('1'), bggFields('2')]);
+
+    // Checked against the resulting total, before any write: a capped round must
+    // never be left half-imported, since there is no undo for a bulk add.
+    const refused = await repo.createGames(T, round.id, [bggFields('3'), bggFields('4')], undefined, { maxGames: 3 });
+    assert.equal(refused, 'quota_games');
+    assert.equal((await repo.getRound(T, round.id)).games.length, 2, 'nothing was written');
+    assert.equal((await repo.listActivities(T, round.id)).filter((a) => a.type === 'games_imported').length, 1);
+
+    // Already-present candidates do not count toward the total, so a re-run of a
+    // collection that fits stays possible at the cap.
+    const fits = await repo.createGames(T, round.id, [bggFields('1'), bggFields('3')], undefined, { maxGames: 3 });
+    assert.equal(fits.created.length, 1);
+    assert.equal(fits.skipped, 1);
+  });
+
+  test('createGames records the acting member on its one activity (#481)', async () => {
+    const round = await freshRound();
+    const seat = round.members[0].id;
+    await repo.createGames(T, round.id, [bggFields('13')], seat);
+    const entry = (await repo.listActivities(T, round.id)).find((a) => a.type === 'games_imported');
+    assert.equal(entry.actorMemberId, seat);
+
+    // Absent — not null — without one, matching every other activity writer.
+    await repo.createGames(T, round.id, [bggFields('822')]);
+    const anon = (await repo.listActivities(T, round.id))
+      .filter((a) => a.type === 'games_imported')
+      .find((a) => a.count === 1 && !a.actorMemberId);
+    assert.equal('actorMemberId' in anon, false);
+  });
+
   test('updateGame applies only the given patch; unknown round/game -> null', async () => {
     const round = await freshRound();
     const game = await repo.createGame(T, round.id, gameFields({ minPlayers: 2, maxPlayers: 2 }));

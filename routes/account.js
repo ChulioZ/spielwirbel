@@ -53,6 +53,18 @@ const passwordSchema = z.string().min(PASSWORD_MIN).max(PASSWORD_MAX);
 // string a stranger types into an abuse report and that invitations (#207)
 // resolve: it has to be unambiguous to transcribe and not homoglyph-spoofable.
 const usernameSchema = z.string().regex(/^[a-zA-Z0-9_-]{3,30}$/);
+// The BoardGameGeek handle whose owned collection the Regal import reads (#481).
+// Deliberately NOT usernameSchema: this one names an account on somebody else's
+// service, so its character set is theirs to define and narrowing it to ours
+// would reject perfectly valid BGG users. Length-capped, and free of whitespace
+// and of every Unicode "other" category (control, format, surrogate, unassigned)
+// so it stays a single storable, loggable token. It needs no injection guard
+// beyond that: URLSearchParams encodes it into the provider query.
+const bggUsernameSchema = z
+  .string()
+  .min(1)
+  .max(60)
+  .refine((s) => !/[\s\p{C}]/u.test(s));
 
 const iso = (ms) => new Date(ms).toISOString();
 const baseUrl = () =>
@@ -62,6 +74,7 @@ const normalizeEmail = (raw) => String(raw || '').trim().toLowerCase();
 const validEmail = (email) => emailSchema.safeParse(email).success;
 const validPassword = (pw) => passwordSchema.safeParse(pw).success;
 const validUsername = (name) => usernameSchema.safeParse(name).success;
+const validBggUsername = (name) => bggUsernameSchema.safeParse(name).success;
 
 // Mail failures must never fail the account flow (registration/reset still
 // succeed); they are logged for the operator instead.
@@ -164,6 +177,9 @@ router.post('/register', async (req, res) => {
     disabled: false,
     disabledAt: null,
     disabledReason: null,
+    // The optional BoardGameGeek handle the Regal import reads (#481) — present
+    // from the start for the same absent-key parity reason as the three above.
+    bggUsername: null,
   });
 
   // Answered OPENLY, unlike email_taken: a username is a public identifier by
@@ -429,16 +445,59 @@ router.post('/change-password', accounts.requireUser, async (req, res) => {
 
 /* ----------------------------------- me ------------------------------------ */
 
+// The account fields a client may see. Both /me handlers answer through this one
+// projection so they cannot drift — and, more importantly, so a field added to
+// the stored user shape is never exposed by accident: the stored record also
+// holds password hashes, refresh tokens and the verification/reset challenges.
+const meProjection = (user) => ({
+  id: user.id,
+  email: user.email,
+  username: user.username || null,
+  emailVerified: user.emailVerified,
+  createdAt: user.createdAt,
+  // Accounts predating #481 carry no key at all, so the projection — not the
+  // stored shape — is what guarantees the client always sees the field.
+  bggUsername: user.bggUsername || null,
+});
+
 router.get('/me', accounts.requireUser, async (req, res) => {
   const user = await repo.getUserById(req.userId);
   if (!user) return res.status(401).json({ error: 'invalid_token' }); // account deleted
-  res.json({
-    id: user.id,
-    email: user.email,
-    username: user.username || null,
-    emailVerified: user.emailVerified,
-    createdAt: user.createdAt,
-  });
+  res.json(meProjection(user));
+});
+
+// Edit the settable parts of the account. Only the BGG handle so far (#481):
+// e-mail and username are deliberately immutable here (the first needs a
+// re-verification flow, the second is a public handle other accounts address),
+// and the password has its own re-authenticating endpoint above.
+//
+// An ABSENT key means "leave it alone" while an explicit `null` clears the link,
+// so a client that only knows about future fields can't blank this one by
+// omission.
+router.patch('/me', accounts.requireUser, async (req, res) => {
+  const body = req.body || {};
+  const patch = {};
+
+  if (body.bggUsername !== undefined) {
+    if (body.bggUsername === null) {
+      patch.bggUsername = null;
+    } else {
+      const name = String(body.bggUsername).trim();
+      // A blank string is the form's own "clear it" — treating it as invalid
+      // would leave emptying the field impossible from the UI that sets it.
+      if (!name) patch.bggUsername = null;
+      else if (!validBggUsername(name)) return res.status(400).json({ error: 'invalid_bgg_username' });
+      else patch.bggUsername = name;
+    }
+  }
+
+  // Nothing recognised: answer the current record rather than writing an empty
+  // patch, so an unknown field is a no-op instead of a 400 the UI can't explain.
+  const user = Object.keys(patch).length
+    ? await repo.updateUser(req.userId, patch)
+    : await repo.getUserById(req.userId);
+  if (!user) return res.status(401).json({ error: 'invalid_token' });
+  res.json(meProjection(user));
 });
 
 /* --------------------------------- inbox ----------------------------------- */

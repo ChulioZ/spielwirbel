@@ -79,6 +79,7 @@
 .ti-star::before { content: "\eb2e"; }
 .ti-player-play::before { content: "\ed46"; }
 .ti-external-link::before { content: "\ea99"; }
+.ti-download::before { content: "\ea96"; }
 .ti-link::before { content: "\eade"; }
 .ti-unlink::before { content: "\eb46"; }
 .ti-heart::before { content: "\eabe"; }

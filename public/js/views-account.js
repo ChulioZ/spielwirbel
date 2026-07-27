@@ -45,8 +45,53 @@ async function showAccount() {
   facts.appendChild(renderKontoFact(t('auth.username'), me.username || '—'));
   app.appendChild(facts);
 
+  app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgg.title'))}</h2>`));
+  app.appendChild(buildBggForm(me.bggUsername));
+
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.pw.title'))}</h2>`));
   app.appendChild(buildPasswordForm());
+}
+
+// The linked BoardGameGeek handle (#481) — the one settable identity field, and
+// the only place to remove it. Editable here unlike e-mail and username above,
+// because it names an account on someone else's service: nothing in this app
+// addresses it, so changing it costs nothing and needs no verification.
+function buildBggForm(current) {
+  const form = h(`<form class="konto-pw">
+      <div class="field">
+        <label for="kBgg">${esc(t('konto.bgg.label'))}</label>
+        <input id="kBgg" class="input" autocomplete="off" spellcheck="false" value="${esc(current || '')}" />
+        <p class="field__hint muted">${esc(t('konto.bgg.hint'))}</p>
+      </div>
+      <p class="konto-error" hidden></p>
+      <button class="btn btn--primary" type="submit">${esc(t('konto.bgg.submit'))}</button>
+    </form>`);
+
+  const input = form.querySelector('#kBgg');
+  const err = form.querySelector('.konto-error');
+  const submit = form.querySelector('button[type=submit]');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.hidden = true;
+    submit.disabled = true;
+    try {
+      // A blank field clears the link — the server reads '' as null, so this is
+      // also how someone unlinks without a separate destructive-looking button.
+      const data = await accountApi('PATCH', '/me', { bggUsername: input.value.trim() });
+      input.value = data.bggUsername || '';
+      toast(data.bggUsername ? t('konto.bgg.done') : t('konto.bgg.cleared'));
+    } catch (ex) {
+      if (ex.message !== 'auth') {
+        setKontoError(err, ex.message === 'invalid_bgg_username'
+          ? t('bggImport.toast.badHandle')
+          : t('auth.error.network'));
+      }
+    }
+    submit.disabled = false;
+  });
+
+  return form;
 }
 
 // One read-only label/value pair. Not a .ds-row: that component is a click
