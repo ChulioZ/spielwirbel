@@ -665,7 +665,7 @@ I18N.de = {
   'landing.features.vote.title': 'Die Runde entscheidet',
   'landing.features.vote.desc': 'Spielwirbel lost aus, das Gerät geht reihum, jeder bewertet für sich. Keine Viertelstunde Diskussion mehr.',
   'landing.features.ratings.title': 'Jede Stimme zählt doppelt',
-  'landing.features.ratings.desc': 'Dieselbe Bewertung entscheidet den Abend und bleibt: Schnitt pro Spiel, Lieblingsspiele, Staubfänger.',
+  'landing.features.ratings.desc': 'Dieselbe Bewertung entscheidet die Session und bleibt: Schnitt pro Spiel, Lieblingsspiele, Staubfänger.',
   'landing.features.chronicle.title': 'Eure Spielhistorie',
   'landing.features.chronicle.desc': 'Jede Session bleibt festgehalten – wer dabei war, was gespielt wurde, wie es ankam.',
   'landing.features.noAccounts.title': 'Nur du brauchst ein Konto',
