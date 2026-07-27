@@ -213,7 +213,11 @@ router.post('/import', async (req, res) => {
   const body = validateBody(importSchema, req, res);
   if (!body) return;
 
-  const round = await req.repo.getRound(req.params.rid);
+  // Light read: existence + the member seats, nothing more. The shelf itself is
+  // re-read inside createGames' own transaction (that is what makes the
+  // already-present check atomic), so pulling it here as well would load the
+  // whole collection twice — on the one route built for large ones.
+  const round = await req.repo.getRoundMeta(req.params.rid);
   if (!round) return res.status(404).json({ error: 'Round not found' });
 
   let result;
