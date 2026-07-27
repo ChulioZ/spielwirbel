@@ -136,16 +136,24 @@ it is.
   planned: a second full frontend codebase to build and maintain forever, not
   warranted for this UX.
 
-**Why native was dropped.** Push notifications are the substantive reason to
-go native, and a 2026-07-27 competitor analysis found push matters enormously
-for *scheduling* — reaching people who are not looking at the app — and very
-little for this product's actual moment: a group already sitting at one table
-passing one device around. Going native would also give up "no install, just a
-URL" as a positioning line, which is one of the few structural asymmetries
-against an app requiring every participant to install it. The real
-counterargument — that store listings are a genuine *discovery* channel — was
-weighed and rejected on cost: a forum presence and a sharpened landing page
-reach the same users far more cheaply.
+**Why native was dropped.** Push notifications are the substantive reason to go
+native, and this app has little use for them. Its core moment is a group already
+sitting together, passing one device around — nobody needs to be alerted to
+something they are in the middle of doing. There is no scheduling, no
+asynchronous flow, and no background state change a user would want to be told
+about while away from the app. The installed PWA already covers the home-screen
+case, so what a native shell would actually add is push we do not need plus store
+listings.
+
+Not needing an install is also a property worth keeping rather than trading away:
+a round works from a URL, for participants who hold no account and may never open
+the app again.
+
+The honest counterargument, recorded so it is not lost: app-store listings are a
+genuine **discovery** channel. It was weighed and rejected on cost — two paid
+developer accounts, store compliance, a separate release pipeline and ongoing
+review overhead is a large standing commitment for a project maintained by one
+person.
 
 **What this does *not* invalidate.** The backend is API-first (every operation
 a JSON call under `/api/*`) and auth is token-first (#135). Both were noted at
