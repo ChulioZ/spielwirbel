@@ -83,7 +83,8 @@ For each candidate, answer in order. The first "no" ends it.
    with Cloudflare R2; operated by **one person**, funded by voluntary donations;
    **public since the 2026-07-24 go-live (#219) — registration is open to anyone
    at spielwirbel.app and production runs accounts-only, no shared password**;
-   multi-tenant with per-tenant RLS; no native app shipped yet (#143/#144 open);
+   multi-tenant with per-tenant RLS; **web + installable PWA only — native store
+   apps were evaluated and dropped on 2026-07-27 (#143/#144 closed won't-do-now)**;
    no analytics, no ads, no third-party scripts, no consent-based processing.
    A criterion aimed at employers, large platforms, ad-funded services, native
    apps, or framework-specific tooling does not automatically apply — say why it
