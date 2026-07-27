@@ -34,9 +34,9 @@
   claimed, and removing `AUTH_PASSWORD` opened registration — see §12.
 - **Kept the stack, no rewrite.** Node/Express, the no-build vanilla frontend,
   and hand-rolled-but-tested logic all proved out in production — see §2.
-- **The goal is a website *and* native iOS/Android store apps**, not just
-  responsive web. The PWA step shipped (#142); reaching the app stores is
-  **Capacitor wrapping the existing web UI**, not a rewrite — still open, see
+- **The delivery target is the web app plus the installable PWA** (#142,
+  shipped). Native iOS/Android store apps were evaluated and **dropped on
+  2026-07-27** (#143/#144 closed won't-do-now, deliberately reversible) — see
   §2.4.
 - **Data lives in managed PostgreSQL** (§3) with S3-compatible object storage
   for cover images — both shipped, both non-negotiable once there's more than
@@ -118,37 +118,48 @@ rolling deploys. Running more than one process isn't done yet (not needed at
 current traffic) — see the rate-limit-store caveat in §7 item 5 (#215) before
 it is.
 
-### 2.4 Delivery: web, PWA, and native iOS/Android apps
-
-The stated goal is a hosted website **and** native store apps, not just
-responsive web — so delivery is a first-class question. The backend is
-API-first (every operation a JSON call under `/api/*`), the hard prerequisite
-for any native client; no backend rewrite is needed to go native.
+### 2.4 Delivery: web and PWA (native store apps dropped)
 
 **Status:**
 - **PWA — shipped** (#142, see
   [`.claude/rules/pwa-service-worker.md`](../.claude/rules/pwa-service-worker.md)):
   manifest + service worker, installable, offline app shell, reusing 100% of
   the existing UI. Not itself an App Store / Play Store listing (Android
-  installs it well; iOS support is partial).
-- **Capacitor wrapper → App Store + Play Store — not started, still the
-  recommended path.** Wrap the *existing web frontend* in a native shell (one
-  thin native project per platform loading the same HTML/JS/CSS); unlocks push
-  (APNs/FCM) and camera/barcode scanning; ships real `.ipa`/`.aab` bundles.
-  Lowest-effort route to the stores given what's built.
+  installs it well; iOS support is partial). **This is the delivery target.**
+- **Capacitor wrapper → App Store + Play Store — dropped 2026-07-27**
+  (#143/#144 closed won't-do-now). It remained the right *technical* route if
+  the stores were ever wanted — a thin native shell per platform loading the
+  same HTML/JS/CSS, no frontend rewrite — but the destination itself was
+  dropped. Deliberately reversible; the reopen conditions are recorded on
+  #143.
 - **Native/cross-platform rewrite (React Native/Flutter) — rejected,** as
   planned: a second full frontend codebase to build and maintain forever, not
   warranted for this UX.
 
-**What going native still cascades into, when picked up (#143/#144, both waiting on go-live #219 — see §12):**
-- Auth is already token-first (#135), so web and native can share it without
-  rework.
-- Store compliance: Apple App Review + Google Play policies, privacy nutrition
-  labels/Data Safety, an age rating, a public privacy-policy URL, and (per
-  Apple) in-app account deletion — the API already supports a clean delete.
-- Paid developer accounts (Apple ~$99/yr, Google ~$25 one-time), app signing,
-  mobile release CI — a pipeline separate from the web deploy.
-- Push infrastructure (APNs/FCM), if wanted — new, optional.
+**Why native was dropped.** Push notifications are the substantive reason to
+go native, and a 2026-07-27 competitor analysis found push matters enormously
+for *scheduling* — reaching people who are not looking at the app — and very
+little for this product's actual moment: a group already sitting at one table
+passing one device around. Going native would also give up "no install, just a
+URL" as a positioning line, which is one of the few structural asymmetries
+against an app requiring every participant to install it. The real
+counterargument — that store listings are a genuine *discovery* channel — was
+weighed and rejected on cost: a forum presence and a sharpened landing page
+reach the same users far more cheaply.
+
+**What this does *not* invalidate.** The backend is API-first (every operation
+a JSON call under `/api/*`) and auth is token-first (#135). Both were noted at
+the time as native prerequisites, but neither was built *solely* for that —
+they are the right shape for a web SPA talking to its own API, and they remain
+so. Nothing needs undoing, and nothing blocks a future reversal.
+
+**What a reversal would still cascade into** (kept for whoever reopens #143):
+store compliance (Apple App Review + Google Play policies, privacy nutrition
+labels/Data Safety, an age rating, a public privacy-policy URL, and per Apple
+in-app account deletion — the API already supports a clean delete); paid
+developer accounts (Apple ~$99/yr, Google ~$25 one-time), app signing and a
+mobile release CI pipeline separate from the web deploy; and push
+infrastructure (APNs/FCM).
 
 ---
 
@@ -503,8 +514,8 @@ most hobby projects and a real launch asset.
   theme system, see
   [`.claude/rules/theme-derived-colors.md`](../.claude/rules/theme-derived-colors.md)).
 - **Mobile web — still open, verify.** The app is used on a couch; mobile is
-  likely the primary device. Separate from the **native apps** covered in
-  §2.4.
+  likely the primary device — and since native store apps were dropped (§2.4),
+  mobile *web* is the only mobile experience there is.
 - **Legal surfaces in-product — shipped (#134):** the gated site footer links
   Kontakt, `/impressum` and `/datenschutz` on the SPA, the login page and the
   contact page; everything appears together once the go-live env is set (#219).
@@ -531,8 +542,10 @@ The rule is simple and machine-checkable via `gh issue view <N>` /
 - **Blocks go-live** — #219 is "blocked by" the issue; it must land before
   public sign-up opens.
 - **Waits for go-live** — the issue is "blocked by" #219; it must not land
-  before public sign-up opens (e.g. shipping native store apps before the
-  web launch would mean running two go-lives in parallel).
+  before public sign-up opens. (The only members were the native-app issues —
+  shipping store apps before the web launch would have meant two go-lives in
+  parallel — and both were later dropped outright, so the category is currently
+  empty.)
 - **No relation to #219 either way** — genuinely optional relative to
   launch: build it before, after, or never, purely on value-for-effort.
   `pick-issue` no longer down-ranks these just for being "post-launch" —
@@ -558,7 +571,7 @@ truth.
 | Central error handler, `/healthz`, structured logging, error tracking | M | Low | **shipped** (#132); see §7 for the follow-up (real error tracking, not the webhook stand-in) |
 | Harden file uploads (content sniff/re-encode, safe extension) | S–M | Med | **shipped** (#133) |
 | Impressum + privacy policy | S (+external) | Med | Required if not "purely private" (§9) — **implemented** (#134, self-reviewed per its revised completion bar); pages activate when the rented address is configured at go-live (#219/#226) |
-| Account model (users, email verify, password reset) — built **token-first** so native apps share it (§2.4/§5) | **L** | **High** | Blocker for public sign-up (§5) — **shipped** (#135) |
+| Account model (users, email verify, password reset) — built **token-first** (§2.4/§5; native clients were a motivation at the time, but it is the right shape for the web SPA regardless) | **L** | **High** | Blocker for public sign-up (§5) — **shipped** (#135) |
 | **Tenant model + isolation** (`tenant_id` everywhere, central enforcement, RLS) | **L** | **Very High** | Blocker — cross-tenant leak is catastrophic (§6) — **shipped** (#136) |
 | Onboarding / first-run flow + empty states | M | Med | Blocker for usable sign-up (§11) — **shipped** (#138) |
 | Per-tenant quotas (rounds, games, tags) | S–M | Med | Cost/abuse control — **shipped** (#139) |
@@ -594,16 +607,16 @@ never a go-live blocker; see §7 for the reasoning behind each):
 | **#266** | Allow accounts mode behind the shared-password gate (layered auth) + claim the `'default'` tenant | **Shipped** (PR #394) and executed: layered mode exercised the account flows privately, the claim preserved the pre-accounts data |
 | **#399** | Auth-limiter 429 reload loop + misleading auth-form errors | Found live in the go-live smoke test, **fixed** (PR #400) before opening registration |
 
-### Waits for go-live — blocked by #219
+### Dropped — native store apps
 
 | Issue | What | Notes |
 |---|---|---|
-| **#143** | Ship native iOS/Android apps via Capacitor (§2.4) | Also blocks #144 |
-| **#144** | App-store compliance & mobile release pipeline (§2.4/§9) | Also blocked by #143 |
+| **#143** | Ship native iOS/Android apps via Capacitor (§2.4) | **Closed won't-do-now 2026-07-27**; reopen conditions recorded on the issue |
+| **#144** | App-store compliance & mobile release pipeline (§2.4/§9) | **Closed with #143** — no purpose without the native shell it exists to ship |
 
-Shipping the native apps or doing store setup before the website's public
-launch would mean running two go-lives in parallel — the web launch comes
-first.
+These waited on go-live #219 while it was open, and were dropped outright
+afterwards rather than picked up. The reasoning is in §2.4; the decision is
+deliberately reversible.
 
 ### No relation to go-live either way — build anytime, purely on merit
 
@@ -648,10 +661,10 @@ shipped**, along with the legal pack, quotas, and the battle-tested-dependency
 hardening batch (§7, §12). What's left to open **public multi-tenant**
 sign-up is exactly the two issues §12 lists as blocking go-live (#226, the
 Brevo mail setup; #266, layering accounts mode behind the shared-password
-gate) — check `gh issue view 219` for the current, authoritative list. The
-product also targets **native iOS/Android apps**: the PWA step
-shipped, and reaching the stores is Capacitor wrapping the existing web UI
-(§2.4), not a native rewrite. Legal work (Impressum under DDG, DSGVO privacy
+gate) — check `gh issue view 219` for the current, authoritative list.
+Delivery is the **web app plus the installable PWA** (#142); native store apps
+were evaluated and dropped on 2026-07-27 (§2.4), reversibly. Legal work
+(Impressum under DDG, DSGVO privacy
 policy) is a real must once strangers' data is hosted (§9), but the app's
 no-tracking, self-hosted-fonts, `localStorage`-only design likely **needs no
 cookie banner**. Branding (§10) remains the one open, undecided item with no

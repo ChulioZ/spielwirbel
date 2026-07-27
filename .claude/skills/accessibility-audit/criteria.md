@@ -160,7 +160,8 @@ see A-R05. AA is held here as the product bar regardless.
 - **Why:** 44px is the AAA figure (SC 2.5.5) and an Apple HIG convention. The AA bar this
   app targets is SC 2.5.8's 24px **with a spacing exception**, which the two small targets
   already satisfy. Adopting 44 would report compliant UI as broken. Revisit only if the
-  target level moves to AAA or a native app ships (#143/#144).
+  target level moves to AAA — the native-app trigger lapsed when #143/#144 were closed
+  won't-do-now on 2026-07-27 (reversibly; see `docs/production-readiness.md` §2.4).
 
 ### A-R03 — "`role="dialog" aria-modal="true"` is sufficient for a modal"
 - **Status:** rejected · 2026-07-23
