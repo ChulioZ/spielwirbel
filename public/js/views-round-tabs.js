@@ -382,6 +382,7 @@ async function showInvite(round) {
   const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
   document.addEventListener('keydown', onKey, true);
   openSheet(backdrop, onKey);
+form.querySelector('#inviteUser').focus();
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   form.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 
@@ -398,6 +399,12 @@ async function showInvite(round) {
     } catch (e) {
       go.disabled = false;
       toast(inviteError(e.message));
+    }
+  });
+  form.querySelector('#inviteUser').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      go.click();
     }
   });
 }
