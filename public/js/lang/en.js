@@ -18,7 +18,7 @@ I18N.en = {
   'home.shared': 'Shared',
   'home.newRound': 'Start a new round',
   'home.empty.title': 'No game round yet.',
-  'home.empty.sub': 'Start your first round below and get everyone to the table.',
+  'home.empty.sub': 'Start your first round here and get everyone to the table.',
   'home.chip.gamesOne': '{n} game',
   'home.chip.games': '{n} games',
   'home.chip.sessionsOne': '{n} session',
@@ -498,7 +498,7 @@ I18N.en = {
   'tags.icons.sparkles': 'Sparkles',
 
   'home.onboard.title': 'Welcome to Spielwirbel!',
-  'home.onboard.sub': 'Create your first round below and get everyone to the table.',
+  'home.onboard.sub': 'Create your first round here and get everyone to the table.',
 
   // Inbox (issue #207)
   'inbox.title': 'Inbox',

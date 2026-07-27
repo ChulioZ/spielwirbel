@@ -1082,6 +1082,62 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .round-card--new:hover { background: var(--brand-tint-soft); box-shadow: none; transform: none; }
 
+/* The home empty state (#358): the welcome area itself, as the create-round CTA.
+
+   It is deliberately NOT part of `.lobby-list`, and that is the whole fix. With
+   no rounds the grid held exactly one item — the dashed `.round-card--new` —
+   and `auto-fill` packs items into the leftmost track, so it rendered ~360px
+   wide against the left edge of an up-to-1800px shell while the welcome text
+   above it stayed capped and centred. As a plain `.app` child this instead
+   inherits the reading-measure cap and the no-rail `margin-inline: auto` from
+   the 1280px block, so it centres at every width with no rule of its own.
+
+   Keep it out of the grid exemption list up there: naming it would lift the cap
+   and stretch the CTA across the full shell, which is the same defect wearing a
+   different shape. */
+.lobby-cta {
+  display: block;
+  text-align: center;
+  padding: 44px 20px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 2px dashed var(--brand-edge);
+  border-radius: var(--radius-lg);
+  transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
+}
+.lobby-cta__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: 30px;
+}
+.lobby-cta__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.lobby-cta__sub { display: block; margin-top: 6px; font-size: 17px; }
+/* The explicit create affordance, so the card reads as an action rather than as
+   a notice that happens to be clickable. */
+.lobby-cta__action {
+  display: inline-block;
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--brand);
+}
+.lobby-cta:hover { background: var(--brand-tint-soft); border-color: var(--brand); }
+.lobby-cta:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
 /* ---- New round: members take seats around the table ---- */
 .nr-table { position: relative; width: 280px; height: 240px; margin: 10px auto 16px; }
 .nr-table__ring {

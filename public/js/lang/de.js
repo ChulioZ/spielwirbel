@@ -18,7 +18,7 @@ I18N.de = {
   'home.shared': 'Geteilt',
   'home.newRound': 'Neue Runde gründen',
   'home.empty.title': 'Noch keine Spielrunde angelegt.',
-  'home.empty.sub': 'Gründet unten eure erste Runde und holt alle an den Tisch.',
+  'home.empty.sub': 'Hier gründet ihr eure erste Runde und holt alle an den Tisch.',
   'home.chip.gamesOne': '{n} Spiel',
   'home.chip.games': '{n} Spiele',
   'home.chip.sessionsOne': '{n} Session',
@@ -497,7 +497,7 @@ I18N.de = {
   'tags.icons.sparkles': 'Funkeln',
 
   'home.onboard.title': 'Willkommen bei Spielwirbel!',
-  'home.onboard.sub': 'Erstelle unten deine erste Runde und hol alle an den Tisch.',
+  'home.onboard.sub': 'Hier gründest du deine erste Runde und holst alle an den Tisch.',
 
   // Inbox (issue #207)
   'inbox.title': 'Postfach',
