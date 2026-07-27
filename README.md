@@ -492,8 +492,16 @@ Backblaze B2 or MinIO; credentials come from `S3_ACCESS_KEY_ID`/`S3_SECRET_ACCES
 or the AWS default provider chain. Unset, images stay under `DATA_DIR/uploads` as
 before. See the S3 block in `.env.example`.
 
-Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
-the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
+Behind a TLS-terminating proxy: `TRUST_PROXY=<hops> npm start` (so rate limiting
+sees the real client IP). The value is the **number of proxy hops** between the
+internet and the app — not a boolean, and not always 1: on Railway it is **2**.
+Too low and `req.ip` resolves to your own proxy, silently turning every per-IP
+limit into one bucket shared by everyone behind it; `true` is worse, since the
+client can then spoof `X-Forwarded-For` and evade the limits. Verify it after
+setting it — see [`docs/deploy-railway.md`](docs/deploy-railway.md)
+("Verifying `TRUST_PROXY`").
+
+Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
 `CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5) and
 `REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below).
 
@@ -725,7 +733,8 @@ persistent volume. Data (rounds, sessions, uploaded covers) lives on the mounted
 it serves the content-hashed build (`dist/`).
 
 **TLS is not in the image** — terminate it at a reverse proxy or managed platform
-in front of the container, then set `TRUST_PROXY=1` (see issue #156). On merge to
+in front of the container, then set `TRUST_PROXY` to the number of proxy hops in
+front of it (see issue #156; it is **2** on Railway). On merge to
 `main`, CI publishes the image to the GitHub Container Registry
 (`ghcr.io/chulioz/spielwirbel`), so a host can pull it instead of building.
 
@@ -743,7 +752,9 @@ The production target is [Railway](https://railway.com): it builds the
 auto-deploys on push to `main`. Pair it with **managed PostgreSQL** (Railway
 plugin → `DATABASE_URL`, the #127 backend) and **Cloudflare R2** for cover images
 (S3-compatible → the #128 backend via `S3_ENDPOINT`); Railway terminates TLS at
-its edge, so set `TRUST_PROXY=1`. The full step-by-step — EU region, custom
+its edge, so set `TRUST_PROXY=2` (Railway has two proxy hops — verify it, a wrong
+count silently collapses every per-IP rate limit into one shared bucket). The
+full step-by-step — EU region, custom
 domain, and the account/secret steps only you can do — is in
 [`docs/deploy-railway.md`](docs/deploy-railway.md).
 
