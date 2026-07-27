@@ -925,3 +925,139 @@ test('a refused verification mail still leaves a usable, unverified account (#44
   assert.equal(res.status, 200);
   assert.deepEqual(res.body, { ok: true });
 });
+
+/* ------------------------------ change password ----------------------------- */
+
+// Register + verify + log in a throwaway account; returns its tokens and id.
+// Deliberately its own account per call: these specs replace the password, so
+// sharing one with the suite's EMAIL/PASSWORD fixtures would couple them.
+async function freshAccount(email) {
+  const reg = await request(app).post('/api/account/register')
+    .send({ email, username: handle(), password: PASSWORD });
+  assert.equal(reg.status, 200);
+  const { uid, token } = lastMailTokens();
+  await request(app).post('/api/account/verify-email').send({ token });
+  const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+  assert.equal(login.status, 200);
+  return { uid, accessToken: login.body.accessToken, refreshToken: login.body.refreshToken };
+}
+
+const changePassword = (accessToken, body) => request(app)
+  .post('/api/account/change-password')
+  .set('Authorization', `Bearer ${accessToken}`)
+  .send(body);
+
+test('change-password swaps the credential, evicts other sessions and keeps the caller in (#482)', async (t) => {
+  const email = 'changer@example.com';
+  const NEW = 'a brand new secret';
+  const acc = await freshAccount(email);
+
+  // A second, independent session — the one the change must evict.
+  const other = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+  assert.equal(other.status, 200);
+
+  await t.test('a wrong current password refuses with 401 and changes nothing', async () => {
+    const res = await changePassword(acc.accessToken, { currentPassword: 'not it', newPassword: NEW });
+    assert.equal(res.status, 401);
+    assert.equal(res.body.error, 'invalid_credentials');
+    const still = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+    assert.equal(still.status, 200, 'the old password still works');
+  });
+
+  await t.test('a too-short new password is refused with the same code as register/reset', async () => {
+    const res = await changePassword(acc.accessToken, { currentPassword: PASSWORD, newPassword: 'short' });
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, 'invalid_password');
+    const still = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+    assert.equal(still.status, 200);
+  });
+
+  await t.test('an unauthenticated call is refused by the token guard', async () => {
+    const res = await request(app).post('/api/account/change-password')
+      .send({ currentPassword: PASSWORD, newPassword: NEW });
+    assert.equal(res.status, 401);
+    assert.equal(res.body.error, 'invalid_token');
+  });
+
+  await t.test('the change succeeds, mails a notification and hands back a live token pair', async () => {
+    const before = outbox.length;
+    const res = await changePassword(acc.accessToken, { currentPassword: PASSWORD, newPassword: NEW });
+    assert.equal(res.status, 200);
+    assert.ok(res.body.accessToken && res.body.refreshToken, 'the caller is handed a fresh pair');
+    assert.equal(outbox.length, before + 1, 'the owner is told their password changed');
+    assert.match(outbox[outbox.length - 1].text, /Passwort/);
+    assert.equal(outbox[outbox.length - 1].to, email);
+
+    // The caller stays signed in: the pair it was just handed still refreshes.
+    const mine = await request(app).post('/api/account/refresh')
+      .send({ refreshToken: res.body.refreshToken });
+    assert.equal(mine.status, 200);
+  });
+
+  await t.test('the old password is dead and the new one works', async () => {
+    const old = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+    assert.equal(old.status, 401);
+    const now = await request(app).post('/api/account/login').send({ email, password: NEW });
+    assert.equal(now.status, 200);
+  });
+
+  await t.test('every OTHER session was evicted', async () => {
+    // The whole point of clearing refreshTokens: a stolen session must not
+    // outlive the change that was meant to end it.
+    const res = await request(app).post('/api/account/refresh')
+      .send({ refreshToken: other.body.refreshToken });
+    assert.equal(res.status, 401);
+    assert.equal(res.body.error, 'invalid_refresh_token');
+  });
+});
+
+test('change-password kills a pending reset link (#482)', async () => {
+  const email = 'changer-reset@example.com';
+  const acc = await freshAccount(email);
+
+  // Somebody triggered a reset; the owner instead changes the password in-app.
+  await request(app).post('/api/account/forgot-password').send({ email });
+  const { token } = lastMailTokens();
+
+  const changed = await changePassword(acc.accessToken, {
+    currentPassword: PASSWORD, newPassword: 'chosen deliberately',
+  });
+  assert.equal(changed.status, 200);
+
+  const reset = await request(app).post('/api/account/reset-password')
+    .send({ token, password: 'attacker chosen pw' });
+  assert.equal(reset.status, 400, 'the outstanding link died with the deliberate change');
+  assert.equal(reset.body.error, 'invalid_token');
+});
+
+test('a failed notification mail does not 500 a completed change (#482)', async () => {
+  const email = 'changer-mailfail@example.com';
+  const NEW = 'still changed anyway';
+  const acc = await freshAccount(email);
+
+  const mail = require('../lib/mail');
+  const real = mail.send;
+  mail.send = () => Promise.reject(new Error('smtp down'));
+  try {
+    const res = await changePassword(acc.accessToken, { currentPassword: PASSWORD, newPassword: NEW });
+    assert.equal(res.status, 200);
+  } finally {
+    mail.send = real;
+  }
+  // The change itself is persisted — the mail is a notification, not a step.
+  const now = await request(app).post('/api/account/login').send({ email, password: NEW });
+  assert.equal(now.status, 200);
+});
+
+test('change-password is gated with the rest of the account surface (#482)', async () => {
+  const flag = process.env.ACCOUNTS_ENABLED;
+  delete process.env.ACCOUNTS_ENABLED;
+  try {
+    const res = await request(app).post('/api/account/change-password')
+      .send({ currentPassword: PASSWORD, newPassword: 'whatever it is' });
+    assert.equal(res.status, 404);
+    assert.equal(res.body.error, 'accounts_disabled');
+  } finally {
+    process.env.ACCOUNTS_ENABLED = flag;
+  }
+});

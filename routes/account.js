@@ -2,9 +2,10 @@
 
 /*
  * User-account endpoints (issue #135): register, e-mail verification, login,
- * token refresh/logout, password reset, and /me. Token/crypto primitives live
- * in lib/accounts.js; outbound mail in lib/mail.js. Mounted under /api/account
- * in createApp() *before* the shared-password gate (like /api/auth) and behind
+ * token refresh/logout, password reset, change-password (#482), and /me.
+ * Token/crypto primitives live in lib/accounts.js; outbound mail in
+ * lib/mail.js. Mounted under /api/account in createApp() *before* the
+ * shared-password gate (like /api/auth) and behind
  * the same strict auth rate limiter — but every handler here is a 404 no-op
  * unless ACCOUNTS_ENABLED=true and SESSION_SECRET are configured, so the
  * current gated single-instance deployment is untouched until tenancy (#136)
@@ -374,6 +375,56 @@ router.post('/reset-password', async (req, res) => {
   // Single-use token, and every existing session is revoked with the password.
   await repo.updateUser(user.id, { identities, reset: null, refreshTokens: [] });
   res.json({ ok: true });
+});
+
+/* ------------------------------ change password ----------------------------- */
+
+// The logged-IN counterpart to forgot/reset (#482). Until this existed, a user
+// who simply wanted a new password had to log out, claim they had forgotten it
+// and wait for mail — a round-trip for something that needs none.
+router.post('/change-password', accounts.requireUser, async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  // Same strength rule as register and reset, reached through the same schema so
+  // the three paths cannot drift apart.
+  if (!validPassword(newPassword)) return res.status(400).json({ error: 'invalid_password' });
+
+  const user = await repo.getUserById(req.userId);
+  const identity = user && (user.identities || []).find((i) => i.type === 'password');
+  // A valid access token is NOT enough to replace the credential — it may be
+  // sitting on an unattended device. Re-authenticating is the whole point of the
+  // endpoint over a bare "set password" one.
+  if (!identity || !(await accounts.verifyPassword(identity.hash, String(currentPassword || '')))) {
+    return res.status(401).json({ error: 'invalid_credentials' });
+  }
+
+  const identities = (user.identities || []).filter((i) => i.type !== 'password');
+  identities.push({ type: 'password', hash: await accounts.hashPassword(newPassword) });
+  // Any outstanding reset link dies here: whoever requested it, the owner has
+  // just chosen a password deliberately. `refreshTokens: []` is belt-and-braces
+  // — the eviction below is what actually decides the stored list — so that a
+  // throw between these two writes leaves ZERO sessions rather than the old
+  // ones, which is the safe direction to fail in.
+  await repo.updateUser(user.id, { identities, reset: null, refreshTokens: [] });
+
+  // Every other session dies with the old password (a stolen one must not
+  // outlive the change meant to evict it), but not the caller's own: emptying
+  // the local snapshot before issueTokens — which pushes onto it and persists
+  // the result — leaves the freshly minted pair as the only survivor. So the
+  // person who just changed their password is not bounced to the login screen.
+  user.refreshTokens = [];
+  const tokens = await issueTokens(user);
+  accounts.setAccessCookie(res, req, tokens.accessToken);
+
+  // The standard defence against a silent takeover: the owner of the address
+  // hears about it even if they weren't the one at the keyboard. sendSafe, so a
+  // mail failure never 500s a change that has already been persisted.
+  await sendSafe({
+    to: user.email,
+    subject: 'Spielwirbel: Passwort geändert / Password changed',
+    text: `Hallo!\n\nDas Passwort deines Spielwirbel-Kontos wurde soeben geändert. Alle anderen angemeldeten Geräte wurden abgemeldet.\n\nFalls du das nicht warst, setze dein Passwort über „Passwort vergessen?“ sofort zurück.\n\n---\n\nHi!\n\nThe password for your Spielwirbel account was just changed. All other signed-in devices have been logged out.\n\nIf this wasn't you, reset your password immediately via "Forgot password?".`,
+  });
+
+  res.json({ ok: true, ...tokens });
 });
 
 /* ----------------------------------- me ------------------------------------ */

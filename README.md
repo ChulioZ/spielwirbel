@@ -312,7 +312,8 @@ routes/
   auth.js            /api/auth              (shared-password login/logout/status)
   account.js         /api/account           (user accounts: register, verify
                                              e-mail (+ resend), login, refresh,
-                                             logout, forgot/reset password, me,
+                                             logout, forgot/reset password,
+                                             change password (#482), me,
                                              and the per-user notification inbox
                                              (#207) — 404 unless ACCOUNTS_ENABLED)
   invitations.js     /api/account/invitations (round-sharing: send / accept /
@@ -432,6 +433,7 @@ public/
     views-session.js session setup, voting (hot-seat), finale, results
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
     views-friends.js Freundeskreis view + home feed section (#325; accounts mode only)
+    views-account.js Konto settings: identity + change password (#482; accounts mode only)
     router.js        URL ↔ view routing (History API): deep links, reloads
     main.js          bootstrap: route from the current URL              (loads last)
     pwa.js           registers the service worker (installable + offline)
@@ -568,7 +570,10 @@ e-mail + username + password (Argon2id-hashed), e-mail verification, login issui
 short-lived access tokens + rotating refresh tokens, and password reset — lives under
 `/api/account`. Login accepts **either the e-mail address or the username** as the
 identifier (issue #431); password reset stays e-mail-only, since the link has to
-reach an inbox. The **username** (issue #320) is an app-wide unique public handle
+reach an inbox. A logged-in account changes its password on the **Konto** screen
+(`/konto`, issue #482) instead of going through that recovery flow: it
+re-authenticates with the current password, then signs every *other* device out
+and mails the owner a notification. The **username** (issue #320) is an app-wide unique public handle
 (3–30 characters of `a–z A–Z 0–9 _ -`, matched case-insensitively but stored as
 typed) chosen at registration and not self-renamable: it is how an account is
 named in an abuse report, how invitations (#207) find it, and how it logs in, so

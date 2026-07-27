@@ -585,6 +585,17 @@ I18N.en = {
   'auth.limited.sub': 'The server temporarily received too many requests from your connection. Please wait a moment and try again.',
   'auth.limited.retry': 'Try again',
 
+  // Konto settings screen (#482)
+  'konto.title': 'Account',
+  'konto.menu': 'Account',
+  'konto.identity': 'Your details',
+  'konto.pw.title': 'Change password',
+  'konto.pw.current': 'Current password',
+  'konto.pw.new': 'New password',
+  'konto.pw.submit': 'Change password',
+  'konto.pw.done': 'Password changed. All other devices have been signed out.',
+  'konto.pw.wrongCurrent': 'Your current password is incorrect.',
+
   // Logged-out landing page (#322). Rewritten in #483 to lead with what the app
   // is FOR — the decision at the table, and the record the votes leave behind —
   // instead of enumerating features. Three things the old copy never said out

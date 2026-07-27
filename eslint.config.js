@@ -61,6 +61,7 @@ const frontendGlobals = {
   // account.js (issue #138): onboarding + token wiring, shared with core.js api()
   accountsMode: 'writable', accountUser: 'writable',
   SA_ACCESS: 'readonly', SA_REFRESH: 'readonly', saStore: 'readonly',
+  HANDLER_401: 'readonly',
   getAccessToken: 'readonly', getRefreshToken: 'readonly',
   setTokens: 'readonly', clearTokens: 'readonly',
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
@@ -85,6 +86,9 @@ const frontendGlobals = {
   renderIncomingRequest: 'readonly', renderOutgoingRequest: 'readonly',
   renderFriendRow: 'readonly', friendAvatar: 'readonly', friendName: 'readonly',
   feedText: 'readonly', friendSendError: 'readonly',
+  // views-account.js (issue #482)
+  showAccount: 'readonly', renderKontoFact: 'readonly',
+  buildPasswordForm: 'readonly', setKontoError: 'readonly',
   // support.js (issue #173)
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
   // views-landing.js (issue #322): logged-out landing page

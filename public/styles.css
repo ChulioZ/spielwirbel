@@ -1621,7 +1621,12 @@ body.auth-screen .topbar__context { display: none; }
 .auth__logo { font-size: 34px; line-height: 1; color: var(--brand); text-align: center; }
 .auth__title { font-family: var(--font-display); font-size: 24px; margin: 10px 0 4px; text-align: center; }
 .auth__sub { text-align: center; margin: 0 0 22px; }
-.auth__error { color: var(--danger); font-size: 14px; margin: -8px 0 12px; }
+/* The inline form-error line, shared by the auth cards and the Konto screen's
+   change-password form (#482). Deliberately declares NO `display`, so the
+   `hidden` attribute the JS toggles keeps working — an author `display` rule
+   beats the UA's `[hidden] { display: none }` and would pin it visible
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.auth__error, .konto-error { color: var(--danger); font-size: 14px; margin: -8px 0 12px; }
 .auth__links { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
 .auth__links .link-btn { font-size: 15px; }
 /* Terms-of-use notice under the register button (#140). */
@@ -1894,8 +1899,10 @@ body.auth-screen .topbar__context { display: none; }
 /* Add-friend row: a username field + submit, above the feed and lists. */
 .friends-add { display: flex; gap: 8px; margin: 4px 0 22px; }
 .friends-add .input { flex: 1; min-width: 0; }
-/* Section headings inside the friends view / on the home feed section. */
+/* Section headings inside a per-account view (friends, Konto #482) / on the
+   home feed section. */
 .friends-section__h,
+.konto-section__h,
 .home-friends__head h2 { font-size: 17px; margin: 24px 0 10px; }
 /* A friend / request row reuses .ds-row; its main side pairs avatar + name. */
 .friend-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -1932,6 +1939,33 @@ body.auth-screen .topbar__context { display: none; }
 .home-friends { margin-top: 30px; }
 .home-friends__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .home-friends__head h2 { margin: 0; }
+
+/* ===== Konto settings screen (#482) ===== */
+/* Read-only identity rows (e-mail, username). Deliberately NOT .ds-row: that
+   component is a click target (cursor: pointer) and these rows do nothing. */
+.konto-facts { display: flex; flex-direction: column; gap: 10px; }
+.konto-fact {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+.konto-fact__label { color: var(--ink-soft); font-size: 14px; flex: none; }
+.konto-fact__value { font-weight: 600; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+/* The change-password form sits under its own heading; the trailing button
+   needs no extra top margin because the last .field already carries 18px. */
+.konto-pw { margin-bottom: 30px; }
+/* The app-wide `.field label` inherits the 18px body size, which is LARGER than
+   the 17px .konto-section__h above it — so the labels visually outranked their
+   own heading. Scoped down here rather than globally (every other form's labels
+   sit under no competing heading), and at (0,2,1) so it beats `.field label`
+   (0,1,1) on specificity rather than on source order — the trap in
+   .claude/rules/label-rows-lose-to-field-label.md. */
+.konto-pw .field label { font-size: 15px; }
 
 /* Account menu header (username + e-mail) above the logout item in the shared
    popover. The username (#320) leads: it is the account's public identity, the

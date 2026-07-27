@@ -584,6 +584,17 @@ I18N.de = {
   'auth.limited.sub': 'Der Server hat vorübergehend zu viele Anfragen von deiner Verbindung erhalten. Bitte warte einen Moment und versuche es dann erneut.',
   'auth.limited.retry': 'Erneut versuchen',
 
+  // Konto settings screen (#482)
+  'konto.title': 'Konto',
+  'konto.menu': 'Konto',
+  'konto.identity': 'Deine Daten',
+  'konto.pw.title': 'Passwort ändern',
+  'konto.pw.current': 'Aktuelles Passwort',
+  'konto.pw.new': 'Neues Passwort',
+  'konto.pw.submit': 'Passwort ändern',
+  'konto.pw.done': 'Passwort geändert. Alle anderen Geräte wurden abgemeldet.',
+  'konto.pw.wrongCurrent': 'Das aktuelle Passwort ist falsch.',
+
   // Logged-out landing page (#322). Rewritten in #483 to lead with what the app
   // is FOR — the decision at the table, and the record the votes leave behind —
   // instead of enumerating features. Three things the old copy never said out
