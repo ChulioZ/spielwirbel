@@ -30,6 +30,11 @@ const PORT = process.env.PORT || 3000;
 // Prepare the data backend before serving (Postgres ensures its schema here;
 // the JSON backend's init() is a no-op), then listen.
 repo.init().then(() => {
+  // Background jobs (#427: purging expired guest demos). Started HERE and
+  // nowhere else — lib/app.js is imported by the test suite dozens of times, and
+  // a timer started there would keep the runner's process alive after the last
+  // assertion. See lib/scheduler.js.
+  require('./lib/scheduler').start();
   app.listen(PORT, () => {
     console.log(`\n  🌀  Spielwirbel running at  http://localhost:${PORT}\n`);
     console.log(`      Persistence:          ${process.env.DATABASE_URL ? 'PostgreSQL (DATABASE_URL)' : DATA_FILE}`);

@@ -2112,6 +2112,65 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(after.find((u) => u.id === u1.id), u1);
   });
 
+  /* ------------------------- Guest demo accounts (#427) ---------------------- */
+
+  test('the demo live-count and expiry-list are exact complements', async () => {
+    // Both are measured as DELTAS against whatever the store already holds, so
+    // the case works against a persistent database and in any file order.
+    const now = new Date().toISOString();
+    const past = new Date(Date.now() - 60_000).toISOString();
+    const future = new Date(Date.now() + 60_000).toISOString();
+
+    const liveBefore = await repo.countLiveDemoUsers(now);
+    const expiredBefore = (await repo.listExpiredDemoUsers(now)).length;
+
+    const live = await repo.createUser(userFields({ demo: true, demoExpiresAt: future }));
+    const dead = await repo.createUser(userFields({ demo: true, demoExpiresAt: past }));
+    // A demo row with NO expiry must read as expired, never as live: counted as
+    // live it would hold a capacity slot forever, and never listed it would leak
+    // rows indefinitely. Both backends decide this the same way.
+    const broken = await repo.createUser(userFields({ demo: true, demoExpiresAt: null }));
+    // Not a demo at all — the sweep keys on the flag, so this must be invisible
+    // to both methods even though it is far older than any TTL.
+    const real = await repo.createUser(userFields());
+
+    assert.equal(await repo.countLiveDemoUsers(now), liveBefore + 1);
+    // A count crosses the JSON-number / pg-bigint-string boundary, where the two
+    // backends silently disagree unless the value is coerced.
+    assert.equal(typeof (await repo.countLiveDemoUsers(now)), 'number');
+
+    const expired = await repo.listExpiredDemoUsers(now);
+    assert.equal(expired.length, expiredBefore + 2);
+    assert.ok(expired.includes(dead.id));
+    assert.ok(expired.includes(broken.id));
+    assert.ok(!expired.includes(live.id));
+    assert.ok(!expired.includes(real.id));
+  });
+
+  test('a demo account erases like any other, freeing its tenant and covers', async () => {
+    // The purge job reuses eraseAccount rather than writing a second deletion
+    // path, so what it relies on is pinned here rather than only over HTTP.
+    const tenant = `demo-${Math.random().toString(16).slice(2)}`;
+    const user = await repo.createUser(userFields({
+      tenantId: tenant,
+      demo: true,
+      demoExpiresAt: new Date(Date.now() - 1000).toISOString(),
+    }));
+    const round = await repo.createRound(tenant, { name: 'Demo', members: ['A'] });
+    await repo.createGame(tenant, round.id, {
+      title: 'With a cover',
+      minPlayers: null,
+      maxPlayers: null,
+      image: '/uploads/demo-cover.jpg',
+    });
+
+    const result = await repo.eraseAccount(user.id);
+    assert.equal(result.rounds, 1);
+    assert.deepEqual(result.images, ['/uploads/demo-cover.jpg']);
+    assert.equal(await repo.getUserById(user.id), null);
+    assert.deepEqual(await repo.listRounds(tenant), []);
+  });
+
   /* ---------------------- Erasure & export (#273) ---------------------------- */
   /*
    * These use their own throwaway tenants rather than T: eraseAccount deletes

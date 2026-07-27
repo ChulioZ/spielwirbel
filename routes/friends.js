@@ -20,6 +20,7 @@ const express = require('express');
 const { z } = require('zod');
 const repo = require('../lib/repo');
 const accounts = require('../lib/accounts');
+const demo = require('../lib/demo');
 const quota = require('../lib/quota');
 const { validateBody } = require('../lib/validate');
 
@@ -93,7 +94,10 @@ router.get('/feed', accounts.requireUser, async (req, res) => {
 /* ---------------------------------- send ----------------------------------- */
 const sendSchema = z.object({ username: z.string().min(1) });
 
-router.post('/', accounts.requireUser, async (req, res) => {
+// refuseDemoAccount (#427): a throwaway demo account must not be able to send a
+// friend request to a named stranger — see lib/demo.js for why that guard is
+// here rather than only absent from the UI.
+router.post('/', accounts.requireUser, demo.refuseDemoAccount, async (req, res) => {
   const body = validateBody(sendSchema, req, res);
   if (!body) return;
 

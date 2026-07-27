@@ -46,6 +46,10 @@ function isLoggedIn() { return accountsMode && !!getAccessToken(); }
 // which is a module-scoped `let` and may be null between boot and probeMe().
 function currentUserId() { return (accountUser && accountUser.id) || null; }
 function currentUsername() { return (accountUser && accountUser.username) || ''; }
+// Guest demo mode (#427). Read from /me, so it survives a reload rather than
+// living only in the POST /demo response — the banner has to come back when the
+// visitor refreshes or follows a deep link inside their demo.
+function isDemoAccount() { return !!(accountUser && accountUser.demo); }
 
 // Auth endpoints are called with a plain fetch (not api()): they carry no Bearer
 // token, and a 401 here means "bad credentials", not "session expired" — so they
@@ -175,6 +179,12 @@ async function bootApp() {
   const path = location.pathname;
   if (path === '/v' || path === '/verify-email') return renderVerifyLanding();
   if (path === '/r' || path === '/reset-password') return renderResetLanding();
+  // The /demo deep link (#427), so a launch post can point straight into a
+  // running demo. Handled here rather than in resolveRoute because it is not a
+  // view: it performs a side effect and then routes to Home. Someone who is
+  // already logged in falls through and simply lands in their own app — starting
+  // a demo over a real session would log them out of it.
+  if (path === '/demo' && accountsActive() && !isLoggedIn()) return startDemo();
   if (accountsActive() && !isLoggedIn()) {
     // A cold visitor on "/" gets the marketing landing (issue #322); a deep link
     // (a shared /round/… URL &c.) already has context and wants in fast, so it
@@ -565,11 +575,102 @@ function renderResetLanding() {
   });
 }
 
+/* --------------------------------- guest demo ------------------------------- */
+
+// Start a guest demo (#427): mint a throwaway seeded account and drop the
+// visitor straight into it. Wired to the landing CTA and to the /demo deep link
+// so a launch post can link people directly into a running demo.
+//
+// `busy` is the button the click came from (if any) — disabled for the duration,
+// because seeding a whole round is not instantaneous and a second click would
+// mint a second demo tenant and abandon the first.
+async function startDemo(busy) {
+  // `disabled` is the whole busy state — .btn:disabled already dims it, and
+  // seeding a round takes a moment, so a second click would mint a second demo
+  // tenant and abandon the first.
+  if (busy) busy.disabled = true;
+  // A failure has to leave the visitor looking at SOMETHING. When the click came
+  // from the landing page (`busy` is its button) that page is already rendered
+  // and a toast is enough — but the /demo deep link reaches here with nothing
+  // drawn at all, because bootApp() returned before choosing a screen. Without
+  // this, a 503 at the ceiling turns a shared launch link into a blank page.
+  const fail = (key) => {
+    if (busy) busy.disabled = false;
+    else { history.replaceState({}, '', '/'); showLanding(); }
+    toast(t(key));
+  };
+
+  let res;
+  try {
+    res = await authFetch('/demo', { locale: getLocale() });
+  } catch {
+    return fail('demo.start.failed');
+  }
+  const { ok, data } = res;
+  if (!ok || !data || !data.accessToken) {
+    // The capacity refusal is its own message: "try again shortly" is true and
+    // actionable, while the generic failure text would read as the app being
+    // broken at exactly the moment we are asking someone to judge it.
+    const code = (data && data.error) || '';
+    if (code === 'demo_unavailable') return fail('demo.start.busy');
+    if (code === 'demo_disabled') return fail('demo.start.disabled');
+    return fail('demo.start.failed');
+  }
+  setTokens(data.accessToken, data.refreshToken);
+  accountUser = data.user || null;
+  // Land on Home rather than on whatever path the visitor arrived at: /demo is
+  // not a view, and enterApp() would otherwise try to route to it.
+  history.replaceState({}, '', '/');
+  authScreen(false);
+  setupAccountUi();
+  routeTo('/');
+}
+
+// The persistent "this is a demo" marker. Deliberately NOT a toast(): a toast is
+// the confirmation/error channel and disappears, while this has to keep being
+// true for as long as the demo lasts — the visitor must never be surprised that
+// their round was deleted.
+//
+// The element lives permanently in index.html and is toggled with the `hidden`
+// attribute. That attribute only hides via the UA stylesheet, so styles.css
+// carries an explicit `.demo-banner[hidden] { display: none }` — without it the
+// component's own `display` wins and the banner shows for everyone
+// (.claude/rules/hidden-attribute-vs-display-rule.md).
+function setupDemoBanner() {
+  const bar = document.getElementById('demoBanner');
+  if (!bar) return;
+  const on = accountsActive() && isLoggedIn() && isDemoAccount();
+  bar.hidden = !on;
+  document.body.classList.toggle('has-demo-banner', on);
+  if (!on) return;
+  const text = document.getElementById('demoBannerText');
+  const cta = document.getElementById('demoBannerCta');
+  if (text) text.textContent = t('demo.banner.text');
+  if (cta) {
+    cta.textContent = t('demo.banner.cta');
+    // Registering from inside a demo starts a FRESH account — nothing carries
+    // over (#427 rules that out: it would need the cross-tenant re-tenanting
+    // write path removed in #405). So drop the demo's tokens first, or the new
+    // visitor to the register screen is still holding a logged-in session.
+    cta.onclick = () => {
+      clearTokens();
+      accountUser = null;
+      setupDemoBanner();
+      setupAccountUi();
+      showRegister();
+    };
+  }
+}
+
 /* ----------------------------- top-bar account ----------------------------- */
 
 // Reveal (accounts mode + logged in) or hide the top-bar account button, and wire
 // its menu (e-mail + logout). Called on boot, login, and logout.
 function setupAccountUi() {
+  // Tracks exactly the same login transitions as the account button (boot,
+  // login, logout, session-lost), which is why it hangs off this function
+  // rather than being called from each of those sites separately.
+  setupDemoBanner();
   const btn = document.getElementById('accountBtn');
   if (!btn) return;
   const loggedIn = accountsActive() && isLoggedIn();

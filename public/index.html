@@ -78,6 +78,20 @@
     <button id="accountBtn" class="topbar__acct" type="button" hidden aria-label="Account"><i class="ti ti-user" aria-hidden="true"></i></button>
   </header>
 
+  <!-- Guest demo marker (issue #427): states that this account is a throwaway
+       demo that will be deleted, and offers registration. Permanently in the
+       tree and toggled with the `hidden` attribute by setupDemoBanner()
+       (js/account.js) — which is why styles.css must carry an explicit
+       `.demo-banner[hidden] { display: none }`: the attribute only hides via the
+       UA stylesheet, so the component's own `display` would otherwise win and
+       show this to every visitor
+       (.claude/rules/hidden-attribute-vs-display-rule.md). -->
+  <div class="demo-banner" id="demoBanner" hidden>
+    <i class="ti ti-clock" aria-hidden="true"></i>
+    <span class="demo-banner__text" id="demoBannerText"></span>
+    <button class="demo-banner__cta" id="demoBannerCta" type="button"></button>
+  </div>
+
   <main id="app" class="app">
     <!-- Content is rendered by the js/* files -->
   </main>

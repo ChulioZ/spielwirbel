@@ -21,6 +21,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 |---|---|---|
 | Runden-/Spiel-/Mitgliedsdaten, Cover | bis Löschung durch Nutzer bzw. Kontolöschung | Nutzeraktion / `eraseAccount` (#273) |
 | Konten | bis Kontolöschung (formlose Anfrage) | `eraseAccount` (#273) |
+| **Gast-Demo-Konten (#427)** samt Runden und hochgeladenen Bildern | **24 h** ab Erstellung (`DEMO_TTL_HOURS`) | **automatisch**: Hintergrundjob `purgeExpiredDemos` (`lib/scheduler.js`), ruft `eraseAccount` — der einzige Bestand mit vollautomatischer Löschfrist |
 | Einladungen (Runden-Freigaben, #207) | bis Annahme/Ablehnung bzw. Widerruf | Nutzeraktion / `eraseAccount` |
 | Freigaben (`round_grants`, #207) | bis Widerruf/Verlassen bzw. Konto- oder Rundenlöschung | Nutzeraktion / `eraseAccount` |
 | Freundschaften + Freundeskreis-Feed (#325) | bis Entfreunden bzw. Kontolöschung; Feed je Konto auf 50 Einträge begrenzt (älteste werden verdrängt) | Nutzeraktion / automatisch / `eraseAccount` |

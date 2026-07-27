@@ -20,6 +20,7 @@ const express = require('express');
 const { z } = require('zod');
 const repo = require('../lib/repo');
 const accounts = require('../lib/accounts');
+const demo = require('../lib/demo');
 const { validateBody } = require('../lib/validate');
 
 const router = express.Router();
@@ -53,7 +54,9 @@ async function dismissInvitationInbox(userId, invitationId) {
 /* ---------------------------------- send ----------------------------------- */
 // The round's OWNER invites an account by username, choosing the seat. Owner-only:
 // ownership is proven by the round being visible in the caller's OWN tenant.
-router.post('/', accounts.requireUser, async (req, res) => {
+// refuseDemoAccount (#427): same reasoning as the friend-request send — a demo
+// round is throwaway, so inviting a real account into it must not be possible.
+router.post('/', accounts.requireUser, demo.refuseDemoAccount, async (req, res) => {
   const body = validateBody(sendSchema, req, res);
   if (!body) return;
 

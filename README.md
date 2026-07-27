@@ -288,6 +288,12 @@ lib/
   quota.js           per-tenant state caps — rounds/tenant, games/round,
                      tags/round (issue #139; inert unless ACCOUNTS_ENABLED)
   feed.js            the Freundeskreis activity feed's allowlisted events (#325)
+  demo.js            guest demo mode: mints, seeds and purges throwaway demo
+                     accounts (issue #427; off unless DEMO_ENABLED)
+  demo-seed.js       the content a demo tenant is seeded with — games (hotlinked
+                     provider covers), tags and per-locale text
+  scheduler.js       background jobs, started from server.js only: today the
+                     expired-demo purge (issue #427)
   mail.js            outbound e-mail (SMTP via nodemailer when SMTP_HOST is
                      set, else logged to an in-memory outbox), plus the global
                      daily send budget (MAIL_DAILY_MAX, issue #448)
@@ -520,8 +526,9 @@ setting it — see [`docs/deploy-railway.md`](docs/deploy-railway.md)
 ("Verifying `TRUST_PROXY`").
 
 Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
-`CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5) and
-`REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below).
+`CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5),
+`REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below) and
+`DEMO_RATE_LIMIT_MAX` (guest demos, per 15 min, default 5 — see below).
 
 Contact form (issues #224/#272): a public, login-free page at `/kontakt.html`
 with a bilingual form that POSTs to `/api/contact`, which e-mails the operator —
@@ -565,6 +572,27 @@ button that opens the donation sheet (see Features). The URL is opaque to the
 app and is served to the client through the public `GET /api/config` (as
 `donateUrl`, `null` when unset), so the button also works before login. Unset
 (the default) the feature does not exist.
+
+Guest demo mode (issue #427): set `DEMO_ENABLED=true` (on top of
+`ACCOUNTS_ENABLED`) and the landing page offers **"Ohne Anmeldung ausprobieren"**
+alongside registering, plus a `/demo` deep link so a launch post can point
+straight into a running demo. One click mints a throwaway account with its own
+tenant, seeded with a ready-to-play round — nine games with real provider covers,
+four seats and two finished sessions, so Chronik and Pokale have content on
+arrival — and drops the visitor into the app with no e-mail and no password.
+
+The account is strictly disposable: a persistent in-app banner says so, it holds
+no password identity (so it can never be logged back into), it cannot send friend
+requests or round invitations, and registering afterwards starts a fresh, empty
+account — nothing carries over. Expired demos are deleted together with their
+rounds and any uploaded covers by a background job (`lib/scheduler.js`, started
+from `server.js`).
+
+Tune it with `DEMO_TTL_HOURS` (how long a demo lives, default 24) and
+`MAX_LIVE_DEMOS` (how many exist at once, default 100 — past it the endpoint
+answers a friendly "try again shortly" rather than minting without limit). Unset,
+`POST /api/account/demo` 404s and the landing page shows no demo button, so a
+self-hosted instance is unchanged.
 
 Per-tenant quotas (issue #139): in the public multi-tenant mode (`ACCOUNTS_ENABLED=true`)
 each tenant is capped on rounds (`MAX_ROUNDS_PER_TENANT`, default 10), games per

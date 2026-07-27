@@ -1120,8 +1120,13 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // The shared projection is what keeps the stored record's secrets out of the
   // response — asserted here so a field added to the user shape later cannot
   // ride out of /me unnoticed.
+  // `demo`/`demoExpiresAt` (#427) are present on EVERY account, not just demo
+  // ones — the projection normalizes them (false/null here), which is what lets
+  // the client decide whether to show the demo banner without a second call.
   assert.deepEqual(Object.keys(res.body).sort(),
-    ['bggUsername', 'createdAt', 'email', 'emailVerified', 'id', 'username']);
+    ['bggUsername', 'createdAt', 'demo', 'demoExpiresAt', 'email', 'emailVerified', 'id', 'username']);
+  assert.equal(res.body.demo, false);
+  assert.equal(res.body.demoExpiresAt, null);
 
   // An unauthenticated caller gets nowhere near it.
   assert.equal((await request(app).patch('/api/account/me').send({ bggUsername: 'x' })).status, 401);

@@ -89,6 +89,20 @@ function landingRevealOperatorClaims(root) {
     if (cfg && cfg.footer) {
       root.querySelectorAll('[data-operator-only]').forEach((el) => { el.hidden = false; });
     }
+    // The demo CTA (#427), gated on its own flag rather than cfg.footer: an
+    // instance can perfectly well have its legal surfaces configured and the
+    // demo switched off, and a button that answers 404 is worse than no button.
+    if (cfg && cfg.demo) {
+      root.querySelectorAll('[data-demo-only]').forEach((el) => { el.hidden = false; });
+      // Promote the demo to THE primary action and demote registering, because
+      // "try it without signing up" is the offer this page is making. Done here
+      // rather than in the markup so an instance without the demo keeps its
+      // existing single primary CTA, byte-for-byte.
+      const demoBtn = root.querySelector('#landingDemo');
+      const registerBtn = root.querySelector('#landingRegister');
+      if (demoBtn) demoBtn.classList.add('btn--primary');
+      if (registerBtn) registerBtn.classList.remove('btn--primary');
+    }
   };
   if (landingCfg) { apply(landingCfg); return; }
   fetch('/api/config')
@@ -145,9 +159,16 @@ function showLanding() {
         <h1 class="landing-hero__title">${esc(t('landing.hero.title'))}</h1>
         <p class="landing-hero__sub">${esc(t('landing.hero.sub'))}</p>
         <div class="landing-hero__cta">
+          <!-- The demo (#427) leads, ahead of registering: the whole point is
+               that a visitor can judge the app before being asked for anything.
+               Hidden until /api/config reports the demo is enabled, so a
+               self-hosted instance that hasn't opted in shows no dead button —
+               the reveal is in landingRevealOperatorClaims(). -->
+          <button class="btn btn--lg" id="landingDemo" data-demo-only hidden>${esc(t('landing.hero.ctaDemo'))}</button>
           <button class="btn btn--primary btn--lg" id="landingRegister">${esc(t('landing.hero.ctaPrimary'))}</button>
           <button class="btn btn--lg" id="landingLogin">${esc(t('landing.hero.ctaSecondary'))}</button>
         </div>
+        <p class="landing-hero__demo-note muted" data-demo-only hidden>${esc(t('landing.hero.demoNote'))}</p>
       </div>
       <div class="landing-hero__visual">${shelfShot}</div>
     </section>
@@ -185,6 +206,11 @@ function showLanding() {
   </div>`);
 
   app.appendChild(view);
+  // startDemo lives in account.js, which loads BEFORE this file — and it is
+  // referenced inside a handler either way, so it resolves at click time
+  // (.claude/rules/frontend-script-load-order.md).
+  const demoBtn = view.querySelector('#landingDemo');
+  demoBtn.addEventListener('click', () => startDemo(demoBtn));
   view.querySelector('#landingRegister').addEventListener('click', () => showRegister());
   view.querySelector('#landingRegisterClose').addEventListener('click', () => showRegister());
   view.querySelector('#landingLogin').addEventListener('click', () => showLogin());

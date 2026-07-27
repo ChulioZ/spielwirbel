@@ -31,7 +31,12 @@ const { app } = require('./helpers');
 const { createApp } = require('../lib/app');
 
 const MAIL_ENV = { SMTP_HOST: 'smtp.example.test', SMTP_USER: 'u', SMTP_PASS: 'p', MAIL_FROM: 'no-reply@example.com' };
-const OFF = { footer: false, donateUrl: null };
+// The guest demo (#427) is off in this file: the shared app's env has no
+// DEMO_ENABLED, so every response carries `demo: false`. Spelled into each
+// expectation rather than loosened to a subset match — the whole point of the
+// deepEqual assertions here is that a newly added key cannot slip into this
+// public, ungated response unnoticed.
+const OFF = { footer: false, donateUrl: null, demo: false };
 
 test.afterEach(() => {
   for (const k of ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'MAIL_FROM', 'IMPRESSUM_ADDRESS', 'IMPRESSUM_EMAIL',
@@ -80,7 +85,7 @@ test('mail + full identity enable the footer; env is read per request', async ()
   process.env.IMPRESSUM_ADDRESS = 'Musterweg 1, 12345 Musterstadt';
   process.env.IMPRESSUM_EMAIL = 'kontakt@example.test';
   const on = await request(app).get('/api/config');
-  assert.deepEqual(on.body, { footer: true, donateUrl: null });
+  assert.deepEqual(on.body, { footer: true, donateUrl: null, demo: false });
   // Same app instance, no rebuild: unsetting one input flips it back off.
   delete process.env.IMPRESSUM_ADDRESS;
   const off = await request(app).get('/api/config');
@@ -90,7 +95,7 @@ test('mail + full identity enable the footer; env is read per request', async ()
 test('DONATE_URL is echoed as donateUrl, independent of the footer (#173)', async () => {
   process.env.DONATE_URL = 'https://ko-fi.com/spielwirbel';
   const on = await request(app).get('/api/config');
-  assert.deepEqual(on.body, { footer: false, donateUrl: 'https://ko-fi.com/spielwirbel' });
+  assert.deepEqual(on.body, { footer: false, donateUrl: 'https://ko-fi.com/spielwirbel', demo: false });
   // Read per request: unsetting it hides the button again without a rebuild.
   delete process.env.DONATE_URL;
   const off = await request(app).get('/api/config');
@@ -112,7 +117,7 @@ test('reachable without a session under the shared-password gate', async () => {
   assert.equal(gated.status, 401);
   const res = await request(gatedApp).get('/api/config');
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, { footer: false, donateUrl: 'https://ko-fi.com/spielwirbel' });
+  assert.deepEqual(res.body, { footer: false, donateUrl: 'https://ko-fi.com/spielwirbel', demo: false });
 });
 
 test('reachable without a token in accounts mode', async () => {
@@ -124,7 +129,7 @@ test('reachable without a token in accounts mode', async () => {
   assert.equal(gated.status, 401);
   const res = await request(accountsApp).get('/api/config');
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, { footer: false, donateUrl: 'https://ko-fi.com/spielwirbel' });
+  assert.deepEqual(res.body, { footer: false, donateUrl: 'https://ko-fi.com/spielwirbel', demo: false });
 });
 
 // The guard that survives future edits (same idea as test/status.test.js):

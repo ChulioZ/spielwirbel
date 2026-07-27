@@ -658,6 +658,11 @@ I18N.en = {
   'landing.hero.sub': 'One device goes around the table and everyone rates the drawn games, from board games to video games. You end up with tonight’s pick – and, with every session, a sharper picture of what your group likes to play.',
   'landing.hero.ctaPrimary': 'Sign up free',
   'landing.hero.ctaSecondary': 'Log in',
+  // Guest demo (#427). The CTA leads the hero when the instance has it enabled,
+  // so the note beneath it has to answer the two questions a "no signup" button
+  // immediately raises: how long does it last, and is my stuff kept.
+  'landing.hero.ctaDemo': 'Try it without signing up',
+  'landing.hero.demoNote': 'Start straight away, no e-mail needed. The demo round comes pre-filled and is deleted after 24 hours.',
   'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their average rating, next to the navigation for Start, shelf, chronicle and trophies.',
   'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale from 1 to 5.',
   'landing.features.title': 'What you get',
@@ -689,6 +694,21 @@ I18N.en = {
   'landing.trust.source': 'Code out in the open',
   'landing.trust.eu': 'Hosted in the EU, GDPR-compliant',
   'landing.cta.title': 'Next time, nobody argues about it.',
+
+  // Guest demo mode (#427). The banner is PERSISTENT (not a toast), so its
+  // wording has to stay true for the whole session and must never let the
+  // deletion come as a surprise. It deliberately does not count down the exact
+  // remaining time: the TTL is env-tunable, and a precise clock invites the
+  // reading that data is safe until it runs out.
+  'demo.banner.text': 'You are trying Spielwirbel in a demo round. It is deleted automatically — nothing here is kept.',
+  'demo.banner.cta': 'Sign up for free',
+  'demo.start.busy': 'A lot of demos are open right now. Please try again shortly — or sign up for free.',
+  'demo.start.disabled': 'The demo is not available on this instance.',
+  'demo.start.failed': 'The demo could not be started. Please try again.',
+  // Shown on the Konto screen INSTEAD of the password form: a demo account holds
+  // no password identity, so that form could never succeed.
+  'konto.demo.title': 'Demo account',
+  'konto.demo.note': 'This account is a demo: it has no e-mail address and no password, and is deleted automatically. Sign up for free to keep a round for good — that creates a new, empty account.',
 
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
   'a11y.home': 'Go to home screen',

@@ -657,6 +657,11 @@ I18N.de = {
   'landing.hero.sub': 'Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele, vom Brettspiel bis zum Videospiel. Heraus kommt das Spiel für heute – und mit jeder Session ein schärferes Bild davon, was eure Runde gern spielt.',
   'landing.hero.ctaPrimary': 'Kostenlos registrieren',
   'landing.hero.ctaSecondary': 'Anmelden',
+  // Guest demo (#427). The CTA leads the hero when the instance has it enabled,
+  // so the note beneath it has to answer the two questions a "no signup" button
+  // immediately raises: how long does it last, and is my stuff kept.
+  'landing.hero.ctaDemo': 'Ohne Anmeldung ausprobieren',
+  'landing.hero.demoNote': 'Sofort loslegen, ohne E-Mail. Die Demo-Runde ist schon gefüllt und wird nach 24 Stunden gelöscht.',
   'landing.shot.shelfAlt': 'Screenshot: das Spielregal einer Runde in Spielwirbel – Spiele als Kacheln mit Durchschnittsbewertung, daneben die Navigation zu Start, Regal, Chronik und Pokalen.',
   'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala von 1 bis 5.',
   'landing.features.title': 'Was ihr davon habt',
@@ -688,6 +693,21 @@ I18N.de = {
   'landing.trust.source': 'Code öffentlich einsehbar',
   'landing.trust.eu': 'EU-Hosting, DSGVO-konform',
   'landing.cta.title': 'Beim nächsten Mal wird nicht diskutiert.',
+
+  // Guest demo mode (#427). The banner is PERSISTENT (not a toast), so its
+  // wording has to stay true for the whole session and must never let the
+  // deletion come as a surprise. It deliberately does not count down the exact
+  // remaining time: the TTL is env-tunable, and a precise clock invites the
+  // reading that data is safe until it runs out.
+  'demo.banner.text': 'Du testest Spielwirbel in einer Demo-Runde. Sie wird automatisch gelöscht – nichts hiervon bleibt erhalten.',
+  'demo.banner.cta': 'Kostenlos registrieren',
+  'demo.start.busy': 'Gerade sind sehr viele Demos offen. Bitte versuch es gleich noch einmal – oder registriere dich kostenlos.',
+  'demo.start.disabled': 'Die Demo ist auf dieser Instanz nicht verfügbar.',
+  'demo.start.failed': 'Die Demo konnte nicht gestartet werden. Bitte versuch es noch einmal.',
+  // Shown on the Konto screen INSTEAD of the password form: a demo account holds
+  // no password identity, so that form could never succeed.
+  'konto.demo.title': 'Demo-Konto',
+  'konto.demo.note': 'Dieses Konto ist eine Demo: Es hat keine E-Mail-Adresse und kein Passwort und wird automatisch gelöscht. Registriere dich kostenlos, um eine Runde dauerhaft zu behalten — dabei entsteht ein neues, leeres Konto.',
 
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
   'a11y.home': 'Zur Startseite',
