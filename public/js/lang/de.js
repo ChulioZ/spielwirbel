@@ -654,7 +654,7 @@ I18N.de = {
   // NOTE: hero.title/hero.sub are duplicated as static meta tags in index.html
   // (a scraper runs no JS) — test/link-preview.test.js pins the two in sync.
   'landing.hero.title': 'Was spielen wir heute?',
-  'landing.hero.sub': 'Ein Handy wandert um den Tisch, alle bewerten die ausgelosten Spiele – analog wie digital. Am Ende steht nicht nur das Spiel für heute, sondern euer Geschmack.',
+  'landing.hero.sub': 'Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele, vom Brettspiel bis zum Videospiel. Heraus kommt das Spiel für heute – und mit jeder Session ein schärferes Bild davon, was eure Runde gern spielt.',
   'landing.hero.ctaPrimary': 'Kostenlos registrieren',
   'landing.hero.ctaSecondary': 'Anmelden',
   'landing.shot.shelfAlt': 'Screenshot: das Spielregal einer Runde in Spielwirbel – Spiele als Kacheln mit Durchschnittsbewertung, daneben die Navigation zu Start, Regal, Chronik und Pokalen.',
@@ -663,7 +663,7 @@ I18N.de = {
   'landing.features.shelf.title': 'Ein Regal für alles',
   'landing.features.shelf.desc': 'Brettspiele und Videospiele nebeneinander – mit Covern aus BoardGameGeek, Steam, PlayStation, Nintendo und Xbox.',
   'landing.features.vote.title': 'Die Runde entscheidet',
-  'landing.features.vote.desc': 'Spielwirbel lost aus, das Handy geht reihum, jeder bewertet für sich. Keine Viertelstunde Diskussion mehr.',
+  'landing.features.vote.desc': 'Spielwirbel lost aus, das Gerät geht reihum, jeder bewertet für sich. Keine Viertelstunde Diskussion mehr.',
   'landing.features.ratings.title': 'Jede Stimme zählt doppelt',
   'landing.features.ratings.desc': 'Dieselbe Bewertung entscheidet den Abend und bleibt: Schnitt pro Spiel, Lieblingsspiele, Staubfänger.',
   'landing.features.chronicle.title': 'Eure Spielhistorie',
@@ -678,7 +678,7 @@ I18N.de = {
   'landing.how.step2.title': 'Runde einrichten',
   'landing.how.step2.desc': 'Tragt eure Spiele ein und gebt jedem am Tisch einen Platz.',
   'landing.how.step3.title': 'Session wirbeln',
-  'landing.how.step3.desc': 'Handy weiterreichen, abstimmen, spielen.',
+  'landing.how.step3.desc': 'Gerät weiterreichen, abstimmen, spielen.',
   'landing.trust.title': 'Fair und datensparsam',
   'landing.trust.free': 'Kostenlos & werbefrei',
   'landing.trust.noTracking': 'Kein Tracking, keine Fremd-Skripte',
