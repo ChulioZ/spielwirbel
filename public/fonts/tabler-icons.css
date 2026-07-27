@@ -75,6 +75,12 @@
 .ti-lock::before { content: "\eae2"; }
 .ti-mail::before { content: "\eae5"; }
 .ti-arrows-shuffle::before { content: "\f000"; }
+/* Rückblick (#484). Codepoints read from this bundle's own cmap, not tabler.io
+   — they differ, and a wrong-but-present one renders a plausible other glyph
+   with no error (.claude/rules/tabler-icon-codepoints.md). */
+.ti-mood-empty::before { content: "\eeb5"; }
+.ti-arrows-split::before { content: "\edb5"; }
+.ti-archive::before { content: "\ea0b"; }
 .ti-medal::before { content: "\ec78"; }
 .ti-star::before { content: "\eb2e"; }
 .ti-player-play::before { content: "\ed46"; }

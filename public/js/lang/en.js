@@ -92,6 +92,18 @@ I18N.en = {
   'pokale.dustyAt': 'last played in {when}',
   'pokale.dustyNever': 'never played yet',
 
+  'recap.title': 'Recap',
+  'recap.lead': 'What your shelf says about you — from every rating in this round.',
+  'recap.ratingsOne': '{n} rating',
+  'recap.ratings': '{n} ratings',
+  'recap.archived': '{n} archived',
+  'recap.worstRated': 'Worst rated',
+  'recap.divisive': 'Most divisive',
+  'recap.divisiveSub': '{high} Ø {highAvg} · {low} Ø {lowAvg}',
+  'recap.favourites': 'Favourites',
+  'recap.favSub': 'Ø {avg}',
+  'recap.thin': 'Not enough ratings for a picture yet — keep playing, it will come.',
+
   'rec.title': 'Retirement suggested ({n})',
   'rec.sub': 'Unpopular or often suggested for retirement.',
   'rec.reasonSort': '{n}× “retire” ({pct} %)',

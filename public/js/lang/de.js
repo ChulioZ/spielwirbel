@@ -92,6 +92,18 @@ I18N.de = {
   'pokale.dustyAt': 'zuletzt im {when}',
   'pokale.dustyNever': 'noch nie gespielt',
 
+  'recap.title': 'Rückblick',
+  'recap.lead': 'Was euer Regal über euch verrät — aus allen Wertungen dieser Runde.',
+  'recap.ratingsOne': '{n} Wertung',
+  'recap.ratings': '{n} Wertungen',
+  'recap.archived': '{n} aussortiert',
+  'recap.worstRated': 'Schlechtestbewertet',
+  'recap.divisive': 'Größte Uneinigkeit',
+  'recap.divisiveSub': '{high} Ø {highAvg} · {low} Ø {lowAvg}',
+  'recap.favourites': 'Lieblingsspiele',
+  'recap.favSub': 'Ø {avg}',
+  'recap.thin': 'Noch zu wenig gewertet für ein Bild — spielt weiter, das kommt von allein.',
+
   'rec.title': 'Aussortieren empfohlen ({n})',
   'rec.sub': 'Wenig beliebt oder oft zum Aussortieren vorgeschlagen.',
   'rec.reasonSort': '{n}× „Aussortieren“ ({pct} %)',
