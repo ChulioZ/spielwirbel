@@ -22,15 +22,43 @@ async function showHome() {
   );
 
   if (rounds.length === 0) {
+    // #358: with no rounds the welcome area IS the create-round CTA, and the
+    // `.lobby-list` grid is not rendered at all. It used to be a text block with
+    // a separate `.round-card--new` card below it — but that card was then the
+    // grid's only item, so `auto-fill` packed it into the leftmost track and
+    // stranded it ~360px wide against the left edge of an up-to-1800px shell,
+    // misaligned with the centred welcome text above it. Merging the two leaves
+    // no stray card to pack, rather than fighting the grid over where to put it.
+    //
     // A logged-in account with no rounds yet gets a first-run welcome (#138);
     // the shared-password / legacy world keeps the neutral empty state.
     const onboard = accountsActive() && isLoggedIn();
-    app.appendChild(
-      h(`<div class="empty"><p>${esc(t(onboard ? 'home.onboard.title' : 'home.empty.title'))}</p>
-           <p class="muted">${esc(t(onboard ? 'home.onboard.sub' : 'home.empty.sub'))}</p></div>`)
-    );
+    const cta = h(`<a class="lobby-cta">
+         <span class="lobby-cta__icon"><i class="ti ti-plus" aria-hidden="true"></i></span>
+         <span class="lobby-cta__title">${esc(t(onboard ? 'home.onboard.title' : 'home.empty.title'))}</span>
+         <span class="lobby-cta__sub">${esc(t(onboard ? 'home.onboard.sub' : 'home.empty.sub'))}</span>
+         <span class="lobby-cta__action">${esc(t('home.newRound'))}</span>
+       </a>`);
+    navLink(cta, '/round/new', () => showNewRound());
+    app.appendChild(cta);
+  } else {
+    app.appendChild(renderLobbyList(rounds));
   }
 
+  // Compact Freundeskreis feed (#325): a placeholder the friends module fills in
+  // (only in accounts mode with >= 1 friend) or removes. Not awaited — it must not
+  // delay the (SWR-instant) home render, and it self-guards against a re-render.
+  if (accountsActive() && isLoggedIn()) {
+    const friends = h('<section class="home-friends" id="homeFriends"></section>');
+    app.appendChild(friends);
+    renderHomeFriends(friends);
+  }
+}
+
+// The populated lobby: one rich card per round, plus the dashed new-round card
+// at the end. Only ever called with >= 1 round — the empty state is its own
+// centred CTA (#358), so this grid never renders holding just the new card.
+function renderLobbyList(rounds) {
   const list = h('<div class="lobby-list"></div>');
   rounds.forEach((r) => {
     // Members ride along in the summary so the avatars get their colors.
@@ -75,16 +103,7 @@ async function showHome() {
   );
   navLink(newCard, '/round/new', () => showNewRound());
   list.appendChild(newCard);
-  app.appendChild(list);
-
-  // Compact Freundeskreis feed (#325): a placeholder the friends module fills in
-  // (only in accounts mode with >= 1 friend) or removes. Not awaited — it must not
-  // delay the (SWR-instant) home render, and it self-guards against a re-render.
-  if (accountsActive() && isLoggedIn()) {
-    const friends = h('<section class="home-friends" id="homeFriends"></section>');
-    app.appendChild(friends);
-    renderHomeFriends(friends);
-  }
+  return list;
 }
 
 // =================== New round ===================
