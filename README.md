@@ -212,7 +212,8 @@ code and documentation are in English.
 - **Hardening:** [helmet](https://helmetjs.github.io/) sets security headers
   (CSP, `X-Content-Type-Options`, frame options, HSTS) and
   [express-rate-limit](https://express-rate-limit.mintlify.app/) caps requests
-  with a generous global limit.
+  with a generous global limit, which the static shell assets are exempt from
+  (#464) so a page load costs one request rather than ~50.
   Mutating request bodies are validated at the router boundary with
   [zod](https://zod.dev/) schemas (via `lib/validate.js`).
   TLS is expected to terminate at a reverse proxy (`TRUST_PROXY` then forwards
