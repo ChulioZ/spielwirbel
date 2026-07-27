@@ -1,4 +1,4 @@
-# Production readiness: status, decisions & roadmap
+# Production readiness: the decisions and why
 
 > Originated as issue #40's gap analysis for "local-only → publicly hosted."
 > The going-live spine and the SaaS blockers below (the hard blockers) have
@@ -6,9 +6,16 @@
 > and why, kept current as work lands, not a one-off report. Sections
 > describing already-shipped work are deliberately short **pointers to the
 > code / `.claude/rules/` file that now owns the operative detail** — read
-> those, not this doc, for how something works today. Sections describing
-> still-open decisions (legal, branding, the remaining go-live blockers) stay
-> in full, since nothing else captures that reasoning yet.
+> those, not this doc, for how something works today. **Go-live happened on
+> 2026-07-24 (#219) and the legal and branding questions are settled**, so the
+> sections that once tracked them are now records of what was decided rather
+> than open items. The reasoning is kept in full where nothing else captures it.
+>
+> **This document does not track live status.** For what is open, blocked or
+> next, read GitHub — `gh issue view 219` and the issues' own
+> blocked-by/blocking relations are authoritative
+> ([`.claude/rules/`](../.claude/rules/), `pick-issue`). Any status claim
+> written here will drift; it has three times already.
 >
 > The Legal section (§9) is **research, not legal advice**; the Branding
 > section's (§10) domain-availability checks are a snapshot, **not** a
@@ -47,12 +54,15 @@
   identity and stay 404 until it is configured at go-live (#219). A
   cookie-consent banner is **not required today** (no non-essential cookies,
   `localStorage`-only, § 25 Abs. 2 TDDDG); re-check if that ever changes.
-- **Brand:** "Spieleabend" is generic German for "game night" — descriptively
-  weak and unregistrable as-is (§10). No rebrand has happened; still an open
-  decision, not blocking anything already shipped.
+- **Brand: rebranded to "Spielwirbel"** on 2026-07-19 (#147), with the
+  operational surfaces following in #230 — `spielwirbel.de`/`.com`/`.app` are
+  registered and `spielwirbel.app` is canonical. The old working name
+  "Spieleabend" was generic German for "game night", i.e. descriptively weak and
+  unregistrable as-is (§10). A formal DPMA + EUIPO trademark clearance is still
+  **deferred**, not done — advisable before brand spend, effectively mandatory
+  before a paid tier.
 
-The rest of this document is the reasoning behind each of these, and the
-current status of what's still open.
+The rest of this document is the reasoning behind each of these.
 
 ---
 
@@ -399,7 +409,7 @@ to mandatory.
   home-address exposure is solved by the **rented service address** (#134
   decision), consumed at runtime via `IMPRESSUM_ADDRESS`.
 
-### 9.2 GDPR/DSGVO — legal must (once hosting real users' data) — open (#140)
+### 9.2 GDPR/DSGVO — legal must (once hosting real users' data) — implemented (#134/#140)
 
 - The app stores **personal data**: member names, ratings/opinions tied to
   people, and (with accounts) emails; server logs contain **IP addresses**.
@@ -457,7 +467,7 @@ optional post-launch hardening, effectively mandatory before any paid tier
 
 ---
 
-## 10. Branding, name & domain — open, undecided
+## 10. Branding, name & domain — decided and executed (#147/#230)
 
 > Availability is a **snapshot** (checked via authoritative RDAP: Verisign for
 > `.com`, DENIC for `.de`, registry bootstrap via `rdap.org` for `.app`) and is
@@ -493,9 +503,13 @@ pronounceable in German *and* English, with `.com` **and** `.de` **and**
 | `spielwahl` | DE "game choice" | Descriptive in German (weaker mark). |
 | ~~`meeplevote`~~ | meeple + vote | **Avoid** — "meeple" is a registered EU/DE trademark (Hans im Glück / Carcassonne), real conflict risk despite the domain being free. |
 
-**Recommendation, still open.** Lead with **`rundenwahl`** or **`ludopick`**.
-**Register the domain set early** (they go fast) but **get the attorney
-trademark clearance (DPMA + EUIPO) before spending on brand assets.**
+**Outcome.** None of the shortlist above was taken — a further search wave
+produced **"Spielwirbel"**, which won on being distinctive, pronounceable in
+German, and free across `.de`/`.com`/`.app`; all three were registered and
+`spielwirbel.app` is canonical (#147, #230). The table is kept as the record of
+what was considered and why. **The attorney trademark clearance (DPMA + EUIPO)
+was not done and remains deferred** — advisable before spending on brand assets,
+effectively mandatory before a paid tier (#173).
 **Rejected: keep "Spieleabend" as the public brand** — unregistrable,
 undifferentiated, SEO-invisible against the generic term; fine as a friendly
 subtitle, not the brand to build on.
@@ -636,12 +650,12 @@ same as anything else.
 
 | Issue | What | Notes |
 |---|---|---|
-| **#137** | Roles & permissions | Only matters once #207 lets multiple accounts share a tenant |
-| **#173** | Voluntary donations support link | Legally invisible (unconditional, no AGB/Widerruf) — independent of launch |
-| **#207** | Invitations & tenant-sharing (multi-user rounds) | Real product value, layered on a working single-owner launch |
-| **#209** | Per-device voting | Depends on #207 landing first |
-| **#215** | Move `express-rate-limit` to a shared Redis store | Prerequisite for horizontal scaling, not for launch |
-| **#311** | Automate the 3-year moderation-log retention purge | Extremely low priority until ~2029 (year-end cutoff math) |
+| **#137** | Roles & permissions | **Open.** Round sharing (#207) shipped, so "which grantee may do what" is now a real question rather than a hypothetical one |
+| **#173** | Voluntary donations support link | **Shipped** 2026-07-22 — legally invisible (unconditional, no AGB/Widerruf) |
+| **#207** | Invitations & round sharing (multi-user rounds) | **Shipped** 2026-07-24 as per-round grants, *not* co-tenancy — see [`.claude/rules/round-grant-resolver.md`](../.claude/rules/round-grant-resolver.md) |
+| **#209** | Per-device voting | **Open**, and deliberately deprioritised — the group needing no accounts is a defining property, so this stays opt-in and never the default |
+| **#215** | Move `express-rate-limit` to a shared Redis store | **Open.** Prerequisite for horizontal scaling |
+| **#311** | Automate the 3-year moderation-log retention purge | **Open.** Extremely low priority until ~2029 (year-end cutoff math) |
 | — | Horizontal scaling (multi-process behind LB — enabled by stateless tier) | Not yet filed as its own issue; depends on #215 |
 | — | Mobile-web responsiveness pass | Not yet filed as its own issue |
 | — | Localize server-side error messages if user-facing surfaces grow | Not yet filed as its own issue |
@@ -652,9 +666,9 @@ same as anything else.
 (§3/§2.3), authentication (§5), TLS + security headers + rate limiting (§4),
 production hosting + deploy (§8), tenant isolation (§6), accounts (§5), the
 legal pack (§9), per-tenant quotas (§6), the cover-art rights decision (§4).
-**What's left before public sign-up:** exactly the two issues in "Blocks
-go-live" above (#226, #266) — check `gh issue view 219` for the current,
-authoritative list of open blockers.
+**Public sign-up opened on 2026-07-24** (#219), so there is nothing left before
+launch — the table above is a record, not a queue. What to work on next is a
+`pick-issue` question answered from GitHub, not from this file.
 
 ---
 
@@ -666,15 +680,16 @@ architecture problem; it was an **operations, security, and data-model**
 problem, concentrated in four hard blockers — a real database + stateless
 tier, authentication, transport/edge security, and production hosting — **all
 shipped**, along with the legal pack, quotas, and the battle-tested-dependency
-hardening batch (§7, §12). What's left to open **public multi-tenant**
-sign-up is exactly the two issues §12 lists as blocking go-live (#226, the
-Brevo mail setup; #266, layering accounts mode behind the shared-password
-gate) — check `gh issue view 219` for the current, authoritative list.
+hardening batch (§7, §12). **Public multi-tenant sign-up opened on 2026-07-24**
+(#219), so every question this document was written to answer is now closed.
 Delivery is the **web app plus the installable PWA** (#142); native store apps
-were evaluated and dropped on 2026-07-27 (§2.4), reversibly. Legal work
-(Impressum under DDG, DSGVO privacy
-policy) is a real must once strangers' data is hosted (§9), but the app's
-no-tracking, self-hosted-fonts, `localStorage`-only design likely **needs no
-cookie banner**. Branding (§10) remains the one open, undecided item with no
-code dependency — pick a distinctive name and get trademark clearance before
-spending on it.
+were evaluated and dropped on 2026-07-27 (§2.4), reversibly. The legal musts
+(Impressum under DDG, DSGVO privacy policy, the SaaS pack) are implemented
+(#134/#140), and the app's no-tracking, self-hosted-fonts, `localStorage`-only
+design **needs no cookie banner** — re-check only if non-essential tracking is
+ever added (§9.3). Branding is settled: **Spielwirbel** (#147/#230), with a
+formal DPMA + EUIPO clearance still deferred (§10).
+
+What remains of this document's value is the **reasoning** — why the stack was
+kept, why there is no framework and no third persistence backend, why covers are
+hotlinked, why native was dropped. Status belongs on GitHub.
