@@ -20,8 +20,11 @@ holds no state and can be redeployed/scaled freely:
   ever stores the `/uploads/<key>` path and streams bytes through itself, so
   nothing changes but where the bytes live.
 - **TLS + real client IP** — Railway serves the app over HTTPS at its edge and
-  forwards plain HTTP to the container. Set `TRUST_PROXY=1` so the rate limiter
-  and the `Secure` session cookie key off the real client IP (#156).
+  forwards plain HTTP to the container. Set `TRUST_PROXY=2` so the rate limiter
+  and the `Secure` session cookie key off the real client IP (#156). **Two**, not
+  one: Railway puts two proxy hops in front of the container, and the value is a
+  hop *count* — see "Verifying TRUST_PROXY" below for why a wrong number fails
+  silently.
 
 Everything is configured with the same env vars documented in
 [`.env.example`](../.env.example) — no code changes to switch backends.
@@ -100,13 +103,50 @@ to one replica, so it can't scale horizontally. Prefer R2 for the product path.)
 
 ### 4. Set the proxy + protect the instance
 
-- `TRUST_PROXY=1` — **required** behind Railway's edge (see above).
+- `TRUST_PROXY=2` — **required** behind Railway's edge (see above), and verify it
+  (below) rather than assuming it took.
 - **Gate the app with the shared password.** Set `AUTH_PASSWORD` (the single
   shared-login gate, #129) **and** a long random `SESSION_SECRET` so an
   unauthenticated visitor only gets the login page. Don't put this instance on the
   public internet without it. Accounts have since shipped (#135/#136/#138); opening
   public registration is a deliberate later step — see *Going live* below, which
   layers accounts behind this gate first (#266) rather than swapping it out.
+
+#### Verifying `TRUST_PROXY` (do this — a wrong value fails silently)
+
+`TRUST_PROXY` is a **hop count**, not a boolean, and getting it wrong produces no
+error, no failed check and no visible symptom. It broke production once (fixed
+2026-07-27): the value was `1` — as every doc here used to say — while Railway
+actually has **two** hops, so Express resolved `req.ip` to Railway's own edge
+proxy instead of the visitor. Every visitor arriving through the same edge proxy
+then counted as **one caller**, and all four rate-limit ceilings became shared
+buckets: a handful of requests could exhaust the contact-form or registration
+limit for *everybody*.
+
+The app already logs what you need — `requestLogger` emits `ip: req.ip` on every
+request (`lib/observability.js`). So:
+
+1. Request any path, e.g. `https://<your-domain>/trustproxy-check`.
+2. In the **deploy logs** (the container's stdout — the pino JSON lines with
+   `"event":"request"`, *not* Railway's HTTP/edge logs, which show the true client
+   IP by construction and so can't reveal this), find that path.
+3. Compare its `ip` field with your own public address (`curl https://api.ipify.org`).
+
+- **They match** → correct.
+- **They differ**, especially if you see only one or two recurring addresses across
+  many visitors → the count is too low and `req.ip` is a proxy. Raise it by one and
+  repeat.
+
+Two symptoms of the broken state, if you ever meet them again: `RateLimit-Remaining`
+on consecutive identical requests **increases** as well as decreases (you are being
+bounced between one bucket per proxy), and the number of distinct buckets equals the
+number of edge proxies rather than anything about your app.
+
+Don't "fix" a wrong count with `TRUST_PROXY=true`. That trusts the entire
+`X-Forwarded-For` chain, and its leftmost entry is supplied by the *client* — so
+anyone can send a random header per request and evade the limits completely.
+A correct hop count is immune: a forged entry lands further up the chain than the
+address the proxy itself recorded, so counting back a fixed number never reaches it.
 
 ### 5. Custom domain
 
@@ -121,7 +161,7 @@ certificate automatically — this completes #156.
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | Managed Postgres backend (#127) |
 | `DATABASE_SSL` | `true` (public endpoint) | TLS to the DB |
 | `S3_BUCKET` / `S3_ENDPOINT` / `S3_REGION` / `S3_FORCE_PATH_STYLE` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | R2 bucket + token | Cover-image storage (#128) |
-| `TRUST_PROXY` | `1` | Real client IP behind Railway's proxy (#156) |
+| `TRUST_PROXY` | `2` | Real client IP behind Railway's proxy (#156). Hop count — Railway is 2, not 1 |
 | `AUTH_PASSWORD` / `SESSION_SECRET` | your choice / long random | Shared-password gate (#129); with `ACCOUNTS_ENABLED` also set → layered mode (#266). `SESSION_SECRET` must be its own dedicated secret, not `AUTH_PASSWORD` |
 | `ACCOUNTS_ENABLED` | `true` to layer real accounts behind the gate (#266) | Off = shared-password-only. See *Going live* |
 | `BGG_API_TOKEN` | bearer token from your registered BGG application | BoardGameGeek lookup (#117) — unset means board-game search silently returns nothing |
@@ -194,7 +234,8 @@ These need an account or a credential I can't create or hold:
 - [ ] Create the **Railway** account + project; connect this repo; pick an **EU region**.
 - [ ] Add the **PostgreSQL** service and reference `DATABASE_URL` in the app.
 - [ ] Create the **Cloudflare R2** bucket + API token; set the `S3_*` vars.
-- [ ] Set `TRUST_PROXY=1`, and `AUTH_PASSWORD` + `SESSION_SECRET` before any public URL.
+- [ ] Set `TRUST_PROXY=2` (then **verify** it, see below), and `AUTH_PASSWORD` +
+      `SESSION_SECRET` before any public URL.
 - [ ] Register the **BoardGameGeek application**, create a token under
       [Applications → Tokens](https://boardgamegeek.com/applications), and set
       `BGG_API_TOKEN` (the operator status card flags it while it's missing).

@@ -1,7 +1,7 @@
 # helmet CSP + rate limiting gotchas (lib/app.js)
 
 Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired in
-`createApp()` (issue #130). Four things are non-obvious and cost effort:
+`createApp()` (issue #130). Five things are non-obvious and cost effort:
 
 - **Don't let helmet's default CSP emit `upgrade-insecure-requests`.** helmet's
   default CSP includes it, which tells the browser to upgrade every request to
@@ -29,6 +29,13 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   Note this is *not* a widening to arbitrary hosts — it's exactly the download
   allowlist (no wildcards to third parties). A same-origin image proxy is the
   tighter alternative for a hardened hosted deploy; deferred to the hosting work.
+
+- **The ceilings are meaningless if `req.ip` isn't the caller — see
+  `.claude/rules/trust-proxy-is-a-hop-count.md`.** Every limiter here keys on
+  `req.ip`, which is decided by `TRUST_PROXY` (a hop *count*). Production ran one
+  too low, so `req.ip` was Railway's edge proxy and all four ceilings were buckets
+  shared by every visitor behind it. Check `req.ip` against a real client address
+  before trusting any per-IP reasoning about these limits.
 
 - **Read the rate-limit ceilings *inside* `createApp()`, not at module load.**
   `const LIMIT = Number(process.env.RATE_LIMIT_MAX)` at the top of `lib/app.js`
