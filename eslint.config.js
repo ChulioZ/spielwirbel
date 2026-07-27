@@ -85,6 +85,9 @@ const frontendGlobals = {
   renderIncomingRequest: 'readonly', renderOutgoingRequest: 'readonly',
   renderFriendRow: 'readonly', friendAvatar: 'readonly', friendName: 'readonly',
   feedText: 'readonly', friendSendError: 'readonly',
+  // views-account.js (issue #482)
+  showAccount: 'readonly', renderKontoFact: 'readonly',
+  buildPasswordForm: 'readonly', setKontoError: 'readonly',
   // support.js (issue #173)
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
   // views-landing.js (issue #322): logged-out landing page

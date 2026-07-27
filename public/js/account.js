@@ -97,13 +97,20 @@ function onSessionLost() {
   showLogin();
 }
 
+// 401 codes a HANDLER produced rather than the token guard (#482). Every other
+// 401 — including one whose body we cannot read — still means the session is
+// over, so forgetting to list a new one degrades to the old behaviour instead of
+// leaving a dead session live.
+const HANDLER_401 = ['invalid_credentials']; // change-password: wrong current password
+
 // Authenticated JSON request to an account-scoped data route (/api/account/*
 // behind requireUser — e.g. the inbox #207, friend requests #325). Attaches the
-// access token and, on a 401, refreshes once and retries before giving up to the
-// login screen. Deliberately separate from core.js api(): those requireUser
-// routes answer 'invalid_token', which api() does NOT auto-refresh (it only
-// refreshes the data gate's 'auth_required'). Returns parsed JSON (null on 204);
-// throws on any non-2xx so callers can degrade gracefully.
+// access token and, on a 401 from the token guard, refreshes once and retries
+// before giving up to the login screen. Deliberately separate from core.js
+// api(): those requireUser routes answer 'invalid_token', which api() does NOT
+// auto-refresh (it only refreshes the data gate's 'auth_required'). Returns
+// parsed JSON (null on 204); throws on any non-2xx so callers can degrade
+// gracefully.
 async function accountApi(method, path, body, _retried) {
   const token = getAccessToken();
   const opts = { method, headers: {} };
@@ -113,16 +120,19 @@ async function accountApi(method, path, body, _retried) {
     opts.body = JSON.stringify(body);
   }
   const res = await fetch('/api/account' + path, opts);
-  if (res.status === 401) {
-    if (!_retried && (await refreshAccessToken())) return accountApi(method, path, body, true);
-    onSessionLost();
-    throw new Error('auth');
-  }
   if (!res.ok) {
     // Surface the server's error code (like core.js api()) so callers can map it
     // to a specific message — e.g. the invitation accept's 'seat_unavailable'.
     let code = 'request_failed';
     try { code = (await res.json()).error || code; } catch {}
+    // A 401 the handler decided is an ordinary refusal, not a dead session:
+    // treating change-password's wrong-current-password as one would log the
+    // user out over a typo.
+    if (res.status === 401 && !HANDLER_401.includes(code)) {
+      if (!_retried && (await refreshAccessToken())) return accountApi(method, path, body, true);
+      onSessionLost();
+      throw new Error('auth');
+    }
     throw new Error(code);
   }
   return res.status === 204 ? null : res.json();
@@ -574,6 +584,11 @@ function setupAccountUi() {
     const friends = h(`<button class="popover__opt"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('friends.menu'))}</button>`);
     friends.addEventListener('click', () => { close(); showFriends(); });
     el.appendChild(friends);
+    // Konto (#482): account settings — password change today, passkeys (#418)
+    // and account deletion (#419) later.
+    const konto = h(`<button class="popover__opt"><i class="ti ti-user" aria-hidden="true"></i> ${esc(t('konto.menu'))}</button>`);
+    konto.addEventListener('click', () => { close(); showAccount(); });
+    el.appendChild(konto);
     const out = h(`<button class="popover__opt"><i class="ti ti-logout" aria-hidden="true"></i> ${esc(t('auth.logout'))}</button>`);
     out.addEventListener('click', () => { close(); logout(); });
     el.appendChild(out);

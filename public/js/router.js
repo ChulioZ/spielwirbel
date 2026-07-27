@@ -116,6 +116,7 @@ function resolveRoute(pathname) {
   if (parts.length === 0) return () => showHome();
   if (parts[0] === 'inbox') return () => showInbox(); // #207; showInbox sends a logged-out visitor Home
   if (parts[0] === 'freunde') return () => showFriends(); // #325; showFriends sends a logged-out visitor Home
+  if (parts[0] === 'konto') return () => showAccount(); // #482; showAccount sends a logged-out visitor Home
   if (parts[0] === 'round') {
     if (parts[1] === 'new') return () => showNewRound();
     const rid = parts[1];

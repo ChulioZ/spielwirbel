@@ -25,6 +25,13 @@ const AUTH_ERROR_KEYS = {
     invalid_token: 'auth.reset.invalid',
     invalid_password: 'auth.error.shortPassword',
   },
+  // The logged-IN password change (#482). `invalid_credentials` means the
+  // CURRENT password was wrong, not the login — so it needs its own wording
+  // rather than login's "Anmeldedaten oder Passwort sind falsch".
+  changePassword: {
+    invalid_credentials: 'konto.pw.wrongCurrent',
+    invalid_password: 'auth.error.shortPassword',
+  },
   // 'forgot' and 'resend' have no per-form codes: their handlers always answer
   // ok (anti-enumeration), so only the cross-cutting codes below can reach them.
 };
