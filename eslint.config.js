@@ -61,6 +61,7 @@ const frontendGlobals = {
   // account.js (issue #138): onboarding + token wiring, shared with core.js api()
   accountsMode: 'writable', accountUser: 'writable',
   SA_ACCESS: 'readonly', SA_REFRESH: 'readonly', saStore: 'readonly',
+  HANDLER_401: 'readonly',
   getAccessToken: 'readonly', getRefreshToken: 'readonly',
   setTokens: 'readonly', clearTokens: 'readonly',
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
