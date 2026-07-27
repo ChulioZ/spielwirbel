@@ -643,7 +643,8 @@ reset and a first-run empty state — and the `/api` data routes require a valid
 account token (there is no anonymous access, and each account sees only its own
 tenant's rounds, #136). **This is what the maintainer's hosted instance runs**:
 public registration opened on 2026-07-24 (#219) and `AUTH_PASSWORD` was removed,
-so production is accounts-only. With accounts **off** (still the default for a
+so production is accounts-only — plus the guest demo below, enabled there since
+2026-07-27, so the app can also be tried without registering. With accounts **off** (still the default for a
 fresh checkout) the shared-password gate above is unchanged. *Roles within a
 shared tenant are still follow-up work (#137).*
 

@@ -14,10 +14,20 @@ still defaults to no authentication (same as any self-hosted instance you run
 without setting `AUTH_PASSWORD`) — that default is documented, not a bug, and
 is expected to run on a trusted network if left as-is.
 
+**A guest demo is enabled** (#427, live since 2026-07-27): a single
+unauthenticated `POST /api/account/demo` mints a throwaway account with its own
+tenant and returns a valid token pair — no e-mail, no password, no verification
+step. The account is bounded (a live-demo ceiling plus a per-IP limiter), holds
+no password identity, cannot send friend requests or round invitations, and is
+purged automatically after 24 h.
+
 Please keep this context in mind when assessing severity: treat this as a real,
 internet-facing production service, open to the public, holding real user data
-across many independent tenants. An attacker needs nothing but a self-service
-registration to reach the authenticated surface.
+across many independent tenants. **Reaching the authenticated surface costs an
+attacker nothing at all** — not even a self-service registration, since the demo
+endpoint hands out working tokens to an anonymous caller. Anything exploitable
+from inside an ordinary account should be assessed as reachable with no setup,
+no identity and no rate-limited signup step in front of it.
 
 Security issues especially relevant given the current architecture:
 

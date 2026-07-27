@@ -17,7 +17,11 @@ shipped. **Go-live executed 2026-07-24 (#219): `AUTH_PASSWORD` was removed and
 public registration is open at spielwirbel.app.** So production runs
 **accounts-only** — anyone can register, and the shared-password gate is code
 that only a self-hosted instance still uses (see
-`.claude/rules/accounts-mode-gate.md`). Treat every change as reaching real,
+`.claude/rules/accounts-mode-gate.md`). **Since 2026-07-27 `DEMO_ENABLED` is
+also on in production (#427)**: anyone can get a seeded, fully writable
+throwaway account without registering at all, so an unauthenticated visitor
+reaches the authenticated surface in one request (see
+`.claude/rules/guest-demo-accounts.md`). Treat every change as reaching real,
 public users. Full status: `docs/production-readiness.md`.
 
 **What this changes about how to work here.** Priority has shifted from
