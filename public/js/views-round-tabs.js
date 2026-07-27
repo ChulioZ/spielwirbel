@@ -640,8 +640,62 @@ function renderChronikTab(round, activities) {
   app.appendChild(footer);
 }
 
+// --- The two stat-card builders, shared by the Pokale tab and the Rückblick
+// section below it. They were closures inside renderPokaleTab until #484 gave
+// them a second caller; `round` is the only thing they lost by moving out.
+
+// One stat card. `linkMid` turns the value into a link to that
+// member's page (the streak card, the one stat here that names a person).
+// Without it the value stays a plain <span> on purpose: an <a> carrying no href
+// is neither focusable nor styled, so emitting one unconditionally would leave
+// dead markup behind for every future stat that isn't a link.
+function pokaleStatCard(round, icon, label, value, sub, linkMid) {
+  const card = h(`<div class="pokale-card">
+       <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
+       <span class="pokale-card__label">${esc(label)}</span>
+       ${linkMid ? `<a class="pokale-card__value">${esc(value)}</a>` : `<span class="pokale-card__value">${esc(value)}</span>`}
+       <span class="pokale-card__sub">${esc(sub)}</span>
+     </div>`);
+  if (linkMid) makeMemberLink(card.querySelector('.pokale-card__value'), round.id, linkMid);
+  return card;
+}
+
+// Like pokaleStatCard but the value is one or more games, each listed on its own
+// row with a "Jetzt spielen" launcher (icon-only; omitted for an archived game —
+// retired or completed, neither is in the active collection any more).
+function pokaleGameCard(round, icon, label, games, sub) {
+  const card = h(`<div class="pokale-card">
+       <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
+       <span class="pokale-card__label">${esc(label)}</span>
+       <span class="pokale-card__games"></span>
+       <span class="pokale-card__sub">${esc(sub)}</span>
+     </div>`);
+  const list = card.querySelector('.pokale-card__games');
+  games.forEach((g) => {
+    const row = h(`<span class="pokale-game">
+         <a class="pokale-game__title">${esc(g.title)}</a>
+       </span>`);
+    // The game name opens its detail page (archived games too — the detail
+    // view supports them; only the "Jetzt spielen" launcher is omitted).
+    makeGameLink(row.querySelector('.pokale-game__title'), round.id, g.id);
+    if (!g.retired && !g.completed) {
+      const btn = h(`<button class="pokale-game__play" title="${esc(t('directPlay.button'))}" aria-label="${esc(t('directPlay.button'))}"><i class="ti ti-player-play" aria-hidden="true"></i></button>`);
+      btn.addEventListener('click', () => startDirectSession(round, g));
+      row.appendChild(btn);
+    }
+    list.appendChild(row);
+  });
+  return card;
+}
+
+// Resolve stat ids back to the games they name, dropping any that no longer
+// exist (recap.js already ignores deleted ids; this keeps the view honest for
+// anything it is handed).
+const recapGames = (round, ids) => ids.map((id) => round.games.find((g) => g.id === id)).filter(Boolean);
+
 // --- Pokale tab: hall of fame — member podium and fun stats, all computed
 // on demand from sessions (single source of truth, like the rating averages).
+// The Rückblick (#484) is appended as a second section at the end.
 function renderPokaleTab(round) {
   const finished = round.sessions.filter((s) => s.finished);
 
@@ -653,6 +707,11 @@ function renderPokaleTab(round) {
     app.appendChild(sec);
     return;
   }
+
+  // The group's accumulated taste, derived on demand from the session votes
+  // (#484). Read here for the best-rated card and again by the Rückblick
+  // section appended at the end of this tab.
+  const recap = roundRecap(round, sessionPeople);
 
   // Wins per member (a night can have several winners). Keyed by round member,
   // so a guest win is dropped by the `wid in wins` guard below — deliberately:
@@ -720,48 +779,6 @@ function renderPokaleTab(round) {
     sec.appendChild(restEl);
   }
 
-  // `linkMid` turns the value into a link to that member's page (the streak
-  // card, the one stat here that names a person). Without it the value stays a
-  // plain <span> on purpose: an <a> carrying no href is neither focusable nor
-  // styled, so emitting one unconditionally would leave dead markup behind for
-  // every future stat that isn't a link.
-  const statCard = (icon, label, value, sub, linkMid) => {
-    const card = h(`<div class="pokale-card">
-         <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
-         <span class="pokale-card__label">${esc(label)}</span>
-         ${linkMid ? `<a class="pokale-card__value">${esc(value)}</a>` : `<span class="pokale-card__value">${esc(value)}</span>`}
-         <span class="pokale-card__sub">${esc(sub)}</span>
-       </div>`);
-    if (linkMid) makeMemberLink(card.querySelector('.pokale-card__value'), round.id, linkMid);
-    return card;
-  };
-  // Like statCard but the value is one or more games, each listed on its own row
-  // with a "Jetzt spielen" launcher (icon-only; omitted for an archived game —
-  // retired or completed, neither is in the active collection any more).
-  const gameStatCard = (icon, label, games, sub) => {
-    const card = h(`<div class="pokale-card">
-         <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
-         <span class="pokale-card__label">${esc(label)}</span>
-         <span class="pokale-card__games"></span>
-         <span class="pokale-card__sub">${esc(sub)}</span>
-       </div>`);
-    const list = card.querySelector('.pokale-card__games');
-    games.forEach((g) => {
-      const row = h(`<span class="pokale-game">
-           <a class="pokale-game__title">${esc(g.title)}</a>
-         </span>`);
-      // The game name opens its detail page (archived games too — the detail
-      // view supports them; only the "Jetzt spielen" launcher is omitted).
-      makeGameLink(row.querySelector('.pokale-game__title'), round.id, g.id);
-      if (!g.retired && !g.completed) {
-        const btn = h(`<button class="pokale-game__play" title="${esc(t('directPlay.button'))}" aria-label="${esc(t('directPlay.button'))}"><i class="ti ti-player-play" aria-hidden="true"></i></button>`);
-        btn.addEventListener('click', () => startDirectSession(round, g));
-        row.appendChild(btn);
-      }
-      list.appendChild(row);
-    });
-    return card;
-  };
   const cards = h('<div class="pokale-cards"></div>');
 
   // Most played: chosen most often across finished nights (game must exist).
@@ -779,23 +796,18 @@ function renderPokaleTab(round) {
     .map((gid) => round.games.find((x) => x.id === gid));
   if (mostGames.length) {
     cards.appendChild(
-      gameStatCard('ti-flame', t('pokale.mostPlayed'), mostGames, tn(maxPlays, 'home.chip.sessionsOne', 'home.chip.sessions'))
+      pokaleGameCard(round, 'ti-flame', t('pokale.mostPlayed'), mostGames, tn(maxPlays, 'home.chip.sessionsOne', 'home.chip.sessions'))
     );
   }
 
   // Best rated: highest overall average with a bit of data behind it; ties
-  // share the tile.
-  const rated = round.games
-    .filter((g) => !g.retired && !g.completed)
-    .map((g) => {
-      const st = gameStats(round, g.id);
-      return { g, avg: st.avg, count: st.count };
-    })
-    .filter((x) => x.avg !== null && x.count >= 3);
-  if (rated.length) {
-    const bestAvg = Math.max(...rated.map((x) => x.avg));
-    const bestGames = rated.filter((x) => x.avg === bestAvg).map((x) => x.g);
-    cards.appendChild(gameStatCard('ti-star', t('pokale.bestRated'), bestGames, `Ø ${bestAvg.toFixed(1)}`));
+  // share the tile. Computed by recap.js (#484) rather than inline, so it and
+  // the Rückblick's worst-rated card below cannot drift apart on the evidence
+  // threshold or on how ties are handled — they are one aggregation read twice.
+  if (recap.best) {
+    cards.appendChild(
+      pokaleGameCard(round, 'ti-star', t('pokale.bestRated'), recapGames(round, recap.best.gameIds), `Ø ${recap.best.avg.toFixed(1)}`)
+    );
   }
 
   // Streak: how many of the latest nights in a row one member won alone.
@@ -828,7 +840,7 @@ function renderPokaleTab(round) {
   if (streakM && streak >= 2) {
     // The member name links to their detail page, like the podium above.
     cards.appendChild(
-      statCard('ti-bolt', t('pokale.streak'), streakM.name, t('pokale.streakN', { n: streak }), streakMember)
+      pokaleStatCard(round, 'ti-bolt', t('pokale.streak'), streakM.name, t('pokale.streakN', { n: streak }), streakMember)
     );
   }
 
@@ -854,7 +866,8 @@ function renderPokaleTab(round) {
     : null;
   if (dusty && active.length > 1) {
     cards.appendChild(
-      gameStatCard(
+      pokaleGameCard(
+        round,
         'ti-sparkles',
         t('pokale.dusty'),
         [dusty.g],
@@ -865,6 +878,101 @@ function renderPokaleTab(round) {
 
   if (cards.children.length) sec.appendChild(cards);
   app.appendChild(sec);
+  app.appendChild(renderRecapSection(round, recap));
+}
+
+/*
+ * The Rückblick (#484): what a round's accumulated ratings say about the group's
+ * taste, as a second section under the standings rather than a screen of its own
+ * — the record belongs beside the trophies it is made of, and a surface nobody
+ * navigates to is not more legible than one nobody scrolls to.
+ *
+ * Everything here comes from `roundRecap` (recap.js); this function only renders.
+ * It always returns a section: with thin data it shows the totals plus a
+ * "keep going" line, because a round two sessions in has genuinely accumulated
+ * something and must not read as a broken screen.
+ */
+function renderRecapSection(round, recap) {
+  const sec = h('<div class="section recap"></div>');
+  sec.appendChild(h(`<div class="section-head"><h2>${esc(t('recap.title'))}</h2></div>`));
+  sec.appendChild(h(`<p class="muted recap__lead">${esc(t('recap.lead'))}</p>`));
+
+  const chip = (icon, text) =>
+    h(`<span class="stat-chip"><i class="ti ${icon}" aria-hidden="true"></i>${esc(text)}</span>`);
+  const totals = h('<div class="recap__totals"></div>');
+  totals.appendChild(chip('ti-confetti', tn(recap.totals.sessions, 'home.chip.sessionsOne', 'home.chip.sessions')));
+  totals.appendChild(chip('ti-cards', tn(recap.totals.games, 'home.chip.gamesOne', 'home.chip.games')));
+  totals.appendChild(chip('ti-star', tn(recap.totals.ratings, 'recap.ratingsOne', 'recap.ratings')));
+  // Only when there is an archive — "0 aussortiert" is noise on a young round.
+  if (recap.totals.archived) totals.appendChild(chip('ti-archive', t('recap.archived', { n: recap.totals.archived })));
+  sec.appendChild(totals);
+
+  const cards = h('<div class="pokale-cards"></div>');
+
+  if (recap.worst) {
+    cards.appendChild(
+      pokaleGameCard(round, 'ti-mood-empty', t('recap.worstRated'), recapGames(round, recap.worst.gameIds), `Ø ${recap.worst.avg.toFixed(1)}`)
+    );
+  }
+
+  // The disagreement card names two people and a game, so it is built here
+  // rather than through pokaleStatCard, which carries at most one member link.
+  if (recap.divisive) {
+    const game = round.games.find((g) => g.id === recap.divisive.gameId);
+    const nameOf = (mid) => (round.members.find((m) => m.id === mid) || {}).name || '';
+    if (game) {
+      const card = h(`<div class="pokale-card">
+           <span class="pokale-card__icon"><i class="ti ti-arrows-split" aria-hidden="true"></i></span>
+           <span class="pokale-card__label">${esc(t('recap.divisive'))}</span>
+           <a class="pokale-card__value">${esc(game.title)}</a>
+           <span class="pokale-card__sub">${esc(t('recap.divisiveSub', {
+             high: nameOf(recap.divisive.high.memberId),
+             highAvg: recap.divisive.high.avg.toFixed(1),
+             low: nameOf(recap.divisive.low.memberId),
+             lowAvg: recap.divisive.low.avg.toFixed(1),
+           }))}</span>
+         </div>`);
+      makeGameLink(card.querySelector('.pokale-card__value'), round.id, game.id);
+      cards.appendChild(card);
+    }
+  }
+
+  if (cards.children.length) sec.appendChild(cards);
+
+  // Each member's own favourite, one card per person who has rated anything.
+  if (recap.favourites.length) {
+    const group = h(`<div class="recap__group">
+         <h3 class="recap__sub">${esc(t('recap.favourites'))}</h3>
+       </div>`);
+    const favs = h('<div class="pokale-cards"></div>');
+    recap.favourites.forEach((fav) => {
+      const member = round.members.find((m) => m.id === fav.memberId);
+      const game = round.games.find((g) => g.id === fav.gameId);
+      if (!member || !game) return;
+      const card = h(`<div class="pokale-card recap-fav">
+           <span class="recap-fav__who">
+             <a class="avatar" style="background:${memberColor(round, member.id)}">${esc(initials(member.name))}</a>
+             <span class="recap-fav__name">${esc(member.name)}</span>
+           </span>
+           <a class="pokale-card__value">${esc(game.title)}</a>
+           <span class="pokale-card__sub">${esc(t('recap.favSub', { avg: fav.avg.toFixed(1) }))}</span>
+         </div>`);
+      makeMemberLink(card.querySelector('.recap-fav__who .avatar'), round.id, member.id);
+      makeGameLink(card.querySelector('.pokale-card__value'), round.id, game.id);
+      favs.appendChild(card);
+    });
+    if (favs.children.length) {
+      group.appendChild(favs);
+      sec.appendChild(group);
+    }
+  }
+
+  // Thin data reads as "keep going", never as an empty screen: the totals above
+  // already say something real, and this says what would make it say more.
+  if (!cards.children.length && !recap.favourites.length) {
+    sec.appendChild(h(`<p class="muted recap__thin">${esc(t('recap.thin'))}</p>`));
+  }
+  return sec;
 }
 
 // =================== Archives: retired & completed games ===================

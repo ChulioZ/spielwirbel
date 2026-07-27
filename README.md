@@ -123,7 +123,10 @@ code and documentation are in English.
     games added / retired / restored and session outcomes.
   - **Pokale** (trophies) – a winners' podium (ties share a step) plus stat
     tiles: most played, best rated, current winning streak, and the
-    "Staubfänger" — the game gathering dust the longest.
+    "Staubfänger" — the game gathering dust the longest. Below the standings,
+    a **Rückblick** turns the round's accumulated ratings into a readable
+    record: totals, the worst-rated game, the one the group disagrees about
+    most, and every member's own favourite.
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally filter
   the collection by custom tags, and draw a random set of candidate games —
   only games whose player range fits the number of joining members are
@@ -406,6 +409,9 @@ public/
     support.js       the donation/support sheet (issue #173; hidden unless
                      DONATE_URL is set)
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
+    recap.js         the round's taste record behind the Pokale tab's Rückblick:
+                     best/worst rated, the most divisive game and each member's
+                     favourite, all derived from session votes (issue #484)
     cover.js         deterministic per-title gradient for games with no cover
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)

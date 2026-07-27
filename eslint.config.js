@@ -99,6 +99,8 @@ const frontendGlobals = {
   // lookup-score.js + cover.js + tag-icons.js (also CommonJS modules for
   // tests — hence `module`)
   computePlaces: 'readonly', groupLookupHits: 'readonly', module: 'readonly',
+  // recap.js (issue #484)
+  RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
@@ -123,6 +125,8 @@ const frontendGlobals = {
   buildRoundRail: 'readonly',
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
+  pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
+  renderRecapSection: 'readonly',
   activeSheet: 'writable', closeSheet: 'readonly', openSheet: 'readonly',
   handleSheetPop: 'readonly',
   openEditor: 'readonly', usesEditorSheet: 'readonly', EDITOR_SHEET_BELOW: 'readonly',

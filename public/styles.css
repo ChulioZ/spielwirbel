@@ -3019,6 +3019,36 @@ kbd {
 .pokale-game__play:hover { background: var(--brand-tint-soft); }
 .pokale-game__play:active { transform: scale(0.94); }
 
+/* ---- Rückblick: the round's taste record, under the standings (#484) ----
+   Reuses .pokale-cards / .pokale-card wholesale, so the grid, the tile chrome
+   and the >=1280px width exemption all come for free; only the totals strip and
+   the per-member favourite tile need anything of their own. */
+.recap__lead { margin: -4px 0 12px; }
+.recap__totals { display: flex; flex-wrap: wrap; gap: 8px; }
+.recap__group { margin-top: 20px; }
+.recap__sub {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 2px;
+}
+.recap__thin { margin-top: 14px; }
+/* The member replaces the icon slot on a favourite tile, so the avatar carries
+   the identity a `.pokale-card__icon` would otherwise. */
+.recap-fav__who { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.recap-fav__who .avatar { width: 26px; height: 26px; font-size: 11px; }
+.recap-fav__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ---- Game detail: score ring ---- */
 .gd-ring { position: relative; width: 88px; height: 88px; }
 .gd-ring svg { width: 100%; height: 100%; display: block; }
