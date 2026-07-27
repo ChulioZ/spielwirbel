@@ -67,6 +67,10 @@
 .ti-mood-smile::before { content: "\eaf7"; }
 .ti-mood-crazy-happy::before { content: "\ed90"; }
 .ti-eye-off::before { content: "\ecf0"; }
+/* #483: the landing page's "code out in the open" trust chip. Codepoint read
+   out of THIS bundle's own cmap, not from tabler.io, per
+   .claude/rules/tabler-icon-codepoints.md. */
+.ti-code::before { content: "\ea77"; }
 .ti-copy::before { content: "\ea7a"; }
 .ti-lock::before { content: "\eae2"; }
 .ti-mail::before { content: "\eae5"; }

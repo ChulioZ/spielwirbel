@@ -585,38 +585,48 @@ I18N.en = {
   'auth.limited.sub': 'The server temporarily received too many requests from your connection. Please wait a moment and try again.',
   'auth.limited.retry': 'Try again',
 
-  // Logged-out landing page (#322): the marketing front door before registration.
-  'landing.hero.title': 'The game collection for your group.',
-  'landing.hero.sub': 'Board games and video games in one place – with a vote on what to play tonight, and a chronicle of how it went.',
+  // Logged-out landing page (#322). Rewritten in #483 to lead with what the app
+  // is FOR — the decision at the table, and the record the votes leave behind —
+  // instead of enumerating features. Three things the old copy never said out
+  // loud are now explicit: the vote is also a measurement, the shelf covers
+  // digital games, and nobody but the round owner needs an account.
+  // NOTE: the link-preview meta tags in index.html duplicate the GERMAN hero
+  // copy only (a scraper has no locale) — see .claude/rules/link-preview-card.md.
+  'landing.hero.title': 'What are we playing tonight?',
+  'landing.hero.sub': 'One phone goes around the table and everyone rates the drawn games – analog and digital alike. What you end up with is tonight’s pick, and your group’s taste.',
   'landing.hero.ctaPrimary': 'Sign up free',
   'landing.hero.ctaSecondary': 'Log in',
   'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their average rating, next to the navigation for Start, shelf, chronicle and trophies.',
   'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale from 1 to 5.',
-  'landing.features.title': 'Everything for game night',
-  'landing.features.shelf.title': 'Your game shelf',
-  'landing.features.shelf.desc': 'Add your games – with covers straight from the store search: BoardGameGeek, Steam, PlayStation, Nintendo and Xbox.',
-  'landing.features.vote.title': 'Vote instead of debate',
-  'landing.features.vote.desc': 'Start a session and let the group decide: what are we playing today?',
-  'landing.features.ratings.title': 'Ratings & trophies',
-  'landing.features.ratings.desc': 'Rate every game and crown your favourites in the trophy case.',
-  'landing.features.chronicle.title': 'The chronicle',
-  'landing.features.chronicle.desc': 'Every session you play is kept – your shared game history.',
-  'landing.features.themes.title': 'A theme per group',
-  'landing.features.themes.desc': 'Give each group its own look with a matching colour theme.',
+  'landing.features.title': 'What you get',
+  'landing.features.shelf.title': 'One shelf for everything',
+  'landing.features.shelf.desc': 'Board games and video games side by side – with covers from BoardGameGeek, Steam, PlayStation, Nintendo and Xbox.',
+  'landing.features.vote.title': 'The group decides',
+  'landing.features.vote.desc': 'Spielwirbel draws the candidates, the phone goes around, everyone rates on their own. No more quarter-hour debate.',
+  'landing.features.ratings.title': 'Every vote counts twice',
+  'landing.features.ratings.desc': 'The same rating picks tonight and then stays: an average per game, your favourites, your shelf-warmers.',
+  'landing.features.chronicle.title': 'Your play history',
+  'landing.features.chronicle.desc': 'Every session is kept – who was there, what you played, how it landed.',
+  'landing.features.noAccounts.title': 'Only you need an account',
+  'landing.features.noAccounts.desc': 'Players are names in your group, not logins. One device is enough for the whole table.',
   'landing.features.pwa.title': 'Installable as an app',
-  'landing.features.pwa.desc': 'Install Spielwirbel on your phone and keep your groups with you.',
+  'landing.features.pwa.desc': 'Install it on your phone and have it at hand while you play.',
   'landing.how.title': 'Up and running in three steps',
-  'landing.how.step1.title': 'Sign up',
-  'landing.how.step1.desc': 'Create your free account in under a minute.',
+  'landing.how.step1.title': 'Create an account',
+  'landing.how.step1.desc': 'Free, and done in a minute – just you, not the whole group.',
   'landing.how.step2.title': 'Set up your group',
-  'landing.how.step2.desc': 'Add your games and your players.',
+  'landing.how.step2.desc': 'Add your games and give everyone at the table a seat.',
   'landing.how.step3.title': 'Spin up a session',
-  'landing.how.step3.desc': 'Start a vote and off you go.',
+  'landing.how.step3.desc': 'Pass the phone around, vote, play.',
   'landing.trust.title': 'Fair and privacy-first',
   'landing.trust.free': 'Free & ad-free',
   'landing.trust.noTracking': 'No tracking, no third-party scripts',
+  // Phrased as what it buys the reader, deliberately with no licence term: the
+  // repo is source-available (PolyForm Noncommercial), NOT open source, and
+  // that word must never appear in user-facing copy about Spielwirbel.
+  'landing.trust.source': 'Code out in the open',
   'landing.trust.eu': 'Hosted in the EU, GDPR-compliant',
-  'landing.cta.title': 'Ready for your next game night?',
+  'landing.cta.title': 'Next time, nobody argues about it.',
 
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
   'a11y.home': 'Go to home screen',
