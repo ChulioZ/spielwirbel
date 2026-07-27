@@ -1890,6 +1890,63 @@ body.auth-screen .topbar__context { display: none; }
 
 .landing-close { text-align: center; }
 
+/* The note under the hero CTAs explaining what the demo is (#427). Same
+   `[hidden]` pairing as the trust chip above — the element ships hidden and is
+   revealed only when /api/config reports the demo is on, so the author `display`
+   here must be undone for the hidden state or every instance shows it. */
+.landing-hero__demo-note { margin-top: 12px; font-size: 14px; }
+.landing-hero__demo-note[hidden] { display: none; }
+/* #landingDemo ships hidden too, and `.btn` declares its own display. */
+.btn[hidden] { display: none; }
+
+/* ---------------------------------------------------------------------------
+   Guest demo banner (#427)
+
+   A persistent strip between the top bar and the content, stating that this
+   account is a throwaway. Deliberately NOT a toast: a toast is the
+   confirmation/error channel and disappears, while this has to keep being true
+   for as long as the demo lasts.
+
+   Colours come from the theme families rather than a fixed amber
+   (.claude/rules/theme-derived-colors.md) — the banner sits above a round whose
+   page background is theme-chosen, so a hardcoded pastel clashes on the cool
+   themes. --warn is theme-independent by design and is the right semantic here:
+   this is a caveat, not an error.
+   --------------------------------------------------------------------------- */
+.demo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--warn) 14%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--warn) 35%, var(--surface));
+}
+/* Load-bearing: the `hidden` attribute only hides through the UA stylesheet, so
+   the `display: flex` above would otherwise win and show this to every visitor,
+   logged in or not (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.demo-banner[hidden] { display: none; }
+.demo-banner .ti { color: var(--warn); }
+.demo-banner__text { max-width: 60ch; }
+.demo-banner__cta {
+  font: inherit;
+  font-weight: 700;
+  color: var(--brand);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.demo-banner__cta:hover { color: var(--brand-dark); }
+/* The banner is hidden on the auth screens: showRegister() from the banner's own
+   CTA clears the demo session, and a "you are in a demo" strip above a register
+   form would contradict the screen it sits on. */
+body.auth-screen .demo-banner { display: none; }
+
 /* The hero is centred and stacked at every width since #438, so this block no
    longer has to rebuild it below the breakpoint — only the vertical rhythm
    changes.

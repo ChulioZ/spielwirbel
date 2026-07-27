@@ -27,6 +27,7 @@ const express = require('express');
 const { z } = require('zod');
 const repo = require('../lib/repo');
 const accounts = require('../lib/accounts');
+const demo = require('../lib/demo');
 const mail = require('../lib/mail');
 const { logger } = require('../lib/observability');
 
@@ -315,6 +316,45 @@ router.post('/login', async (req, res) => {
   res.json({ ok: true, ...tokens, user: { id: user.id, email: user.email, username: user.username || null } });
 });
 
+/* ----------------------------------- demo ----------------------------------- */
+
+// Mint a throwaway, pre-seeded account so a visitor can try the app without
+// registering (#427). Answers the same token pair as /login, so the client's
+// existing "I am now logged in" path needs no special case.
+//
+// Gated on DEMO_ENABLED *and* accountsEnabled() — a 404 keeps the surface
+// invisible on an instance that hasn't opted in, matching how the whole router
+// answers when accounts are off. It sits AFTER the router-level accounts gate
+// above, so that check is already done; the demo gate re-reads both because it
+// is the env var, not the mode, that this endpoint hangs off.
+//
+// Note this is the one endpoint here that CREATES an account for an entirely
+// unauthenticated caller, which is why it is bounded twice: a dedicated per-IP
+// limiter in lib/app.js, and the live-demo ceiling inside createDemoAccount.
+router.post('/demo', async (req, res) => {
+  if (!demo.demoEnabled()) return res.status(404).json({ error: 'demo_disabled' });
+
+  // The locale decides the seeded round/member/tag wording. Taken from the body
+  // (the client knows its active locale) and falling back to German inside
+  // demo-seed.js, so an absent or unknown value is never an error.
+  const user = await demo.createDemoAccount(String((req.body || {}).locale || ''));
+
+  // A capacity answer, not a fault: 503 with a distinct code the client turns
+  // into "very busy right now, try again shortly" while leaving the register CTA
+  // in place. Deliberately NOT 429 — that is the rate limiter's code and the two
+  // mean different things to the visitor.
+  if (user === 'unavailable') return res.status(503).json({ error: 'demo_unavailable' });
+
+  const tokens = await issueTokens(user);
+  accounts.setAccessCookie(res, req, tokens.accessToken);
+  logger.info({ event: 'demo_started' });
+  res.json({
+    ok: true,
+    ...tokens,
+    user: { id: user.id, email: user.email, username: user.username, demo: true },
+  });
+});
+
 /* ------------------------------ refresh / logout ---------------------------- */
 
 router.post('/refresh', async (req, res) => {
@@ -458,6 +498,12 @@ const meProjection = (user) => ({
   // Accounts predating #481 carry no key at all, so the projection — not the
   // stored shape — is what guarantees the client always sees the field.
   bggUsername: user.bggUsername || null,
+  // #427. The client renders the persistent "this is a demo" banner off this,
+  // so it has to survive a reload — which is exactly why it belongs on /me and
+  // not only on the POST /demo response. Coerced to a real boolean: every other
+  // account answers `false` here rather than `undefined`.
+  demo: user.demo === true,
+  demoExpiresAt: user.demo === true ? user.demoExpiresAt || null : null,
 });
 
 router.get('/me', accounts.requireUser, async (req, res) => {
