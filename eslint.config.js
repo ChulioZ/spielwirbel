@@ -99,8 +99,13 @@ const frontendGlobals = {
   // lookup-score.js + cover.js + tag-icons.js (also CommonJS modules for
   // tests — hence `module`)
   computePlaces: 'readonly', groupLookupHits: 'readonly', module: 'readonly',
-  // recap.js (issue #484)
-  RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly',
+  // recap.js (issue #484). The internal helpers are listed too, like every
+  // other helper module's: they share the one global scope whether or not
+  // another file calls them, and no-redeclare is off — so an unlisted name is
+  // a future silent collision rather than a private one.
+  RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly', recapMean: 'readonly',
+  collectRatings: 'readonly', bestAndWorst: 'readonly', mostDivisive: 'readonly',
+  memberFavourites: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
