@@ -1975,6 +1975,12 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.redactText({ kind: 'feedback', roundId: null, id: 'nope' }, '[x]'), null);
   });
 
+  test('ping resolves on a healthy backend (the /readyz probe, #462)', async () => {
+    // Takes no tenant: it is a global method, and must stay out of
+    // TENANT_METHODS (asserted on the facade in test/observability.test.js).
+    assert.equal(await repo.ping(), true);
+  });
+
   test('migrationStatus reports the schema state in a backend-agnostic shape', async () => {
     const status = await repo.migrationStatus();
     assert.ok(['json', 'postgres'].includes(status.backend));

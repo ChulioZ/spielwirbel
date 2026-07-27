@@ -220,7 +220,8 @@ code and documentation are in English.
   the real client IP); see the env vars below. Responses are gzip-compressed
   ([compression](https://github.com/expressjs/compression)), and content-hashed
   build assets are served immutable (`sw.js` stays no-cache so updates roll out).
-- **Observability:** a `/healthz` liveness/readiness probe, structured JSON
+- **Observability:** a `/healthz` liveness probe and a `/readyz` readiness probe
+  that checks the data backend, structured JSON
   request/error logs to stdout (`LOG_LEVEL`, no bodies or personal data), and a
   central error handler so unexpected throws never leak a stack trace — they
   return a generic 500 and are logged (and optionally forwarded to
@@ -290,7 +291,7 @@ lib/
                      with commas/quotes/newlines cannot corrupt the file, and
                      neutralizes leading =/+/-/@ so it cannot become an Excel
                      formula
-  observability.js   structured logging, /healthz, central error handler
+  observability.js   structured logging, /healthz + /readyz, central error handler
   status.js          derived instance configuration for the operator panel's
                      status card (issue #274) — booleans/enums only, never a
                      secret value
@@ -670,9 +671,24 @@ board-game search simply returns nothing.
 
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and
-`ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook. The
-`/healthz` endpoint returns `{ status: 'ok', uptime, timestamp }` for uptime
-monitors.
+`ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook (a
+non-2xx reply from it is logged at `warn`, so a misconfigured webhook can't fail
+silently).
+
+Two probe endpoints, both unauthenticated and exempt from rate limiting so a
+monitor can poll them freely, and both excluded from the request log:
+
+| Endpoint | Answers | Use it for |
+|---|---|---|
+| `/healthz` | `{ status: 'ok', uptime, timestamp }` — always 200 while the process is up | liveness; the container health check |
+| `/readyz` | `200 {"status":"ok"}`, or **`503 {"status":"degraded"}`** when the data backend is unreachable | uptime monitoring / alerting |
+
+`/healthz` deliberately never touches the database, so it answers 200 straight
+through a database outage — which is exactly when every data route is failing.
+That is why `/readyz` exists; point external alerting at it. The readiness result
+is cached for a few seconds, so polling it cannot drive database load. Don't make
+`/readyz` the *deploy* health check: a transient database blip would then
+restart-loop the container.
 
 ### Configuration via a `.env` file
 
