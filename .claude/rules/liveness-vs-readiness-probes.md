@@ -81,6 +81,35 @@ rather than re-derived. Note in particular that routing alerts through
 send budget `MAIL_DAILY_MAX` protects for *registration* mail
 (`.claude/rules/bounding-bulk-registration-mail.md`).
 
+## You cannot test a monitor with a made-up path — the SPA fallback 200s it
+
+Verified on production 2026-07-27, and it cost real time: the natural way to prove
+an uptime monitor actually alerts is to point a throwaway one at a URL that
+"obviously" 404s. **On this host nothing does.** Every unmatched GET falls through
+to the SPA fallback and is answered with `index.html`:
+
+```
+GET https://spielwirbel.app/nope-does-not-exist  ->  200, text/html, ~11 KB
+```
+
+So the test monitor sits **green**, which reads as "my monitoring is broken" when
+it is in fact reporting correctly. Same mechanism as the asset-name trap in
+`.claude/rules/security-middleware.md` (`GET /made-up.js` → 200, the whole shell),
+which is the other place this fallback surprises someone.
+
+Test with something that fails *before* reaching the app — a subdomain with no DNS
+record (`does-not-exist.spielwirbel.app`) — or the monitoring service's own
+send-test-notification button. Not `/api/…`: it answers a real 401, but each poll
+spends from the global per-IP rate limit.
+
+The same fallback means a **keyword/body check is strictly better than a
+status-code check** for these probes (require `"status":"ok"`; the shell does not
+contain that string) — a `/readyz` that had silently become the HTML shell would
+otherwise stay green. Treat it as optional defense-in-depth, not a requirement:
+the tests below drive both probes over HTTP and assert the *parsed body*, so a
+removed or renamed route reddens CI long before production, and the failures that
+actually occur (a real 503, or no response at all) need no keyword to be caught.
+
 ## Testing note
 
 The shared test app from `test/helpers.js` runs **accounts-off**, so `/api/rounds`

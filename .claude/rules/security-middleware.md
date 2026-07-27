@@ -75,6 +75,12 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   the design, not by review; the naive version passed every test written for it
   until the made-up-name case was added.
 
+  **The same fallback bites outside the limiter**, so it is worth knowing as a
+  fact about the host rather than a fact about this skip: *no* invented path on
+  this origin 404s on a GET. That is why an uptime monitor cannot be tested by
+  pointing it at a made-up URL — it sits green and proves nothing. See
+  `.claude/rules/liveness-vs-readiness-probes.md`.
+
   An exact set also dissolves three carve-outs the extension version needed, all
   of which fail silently: **`/uploads`** (cover keys are `<id><ext>`, so they are
   indistinguishable from assets by extension, and they are auth-gated user bytes
