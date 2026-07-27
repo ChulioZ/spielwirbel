@@ -584,38 +584,48 @@ I18N.de = {
   'auth.limited.sub': 'Der Server hat vorübergehend zu viele Anfragen von deiner Verbindung erhalten. Bitte warte einen Moment und versuche es dann erneut.',
   'auth.limited.retry': 'Erneut versuchen',
 
-  // Logged-out landing page (#322): the marketing front door before registration.
-  'landing.hero.title': 'Die Spielesammlung für eure Runde.',
-  'landing.hero.sub': 'Brettspiele und Videospiele an einem Ort – mit Abstimmung, was heute gespielt wird, und Chronik, wie’s war.',
+  // Logged-out landing page (#322). Rewritten in #483 to lead with what the app
+  // is FOR — the decision at the table, and the record the votes leave behind —
+  // instead of enumerating features. Three things the old copy never said out
+  // loud are now explicit: the vote is also a measurement, the shelf covers
+  // digital games, and nobody but the round owner needs an account.
+  // NOTE: hero.title/hero.sub are duplicated as static meta tags in index.html
+  // (a scraper runs no JS) — test/link-preview.test.js pins the two in sync.
+  'landing.hero.title': 'Was spielen wir heute?',
+  'landing.hero.sub': 'Ein Handy wandert um den Tisch, alle bewerten die ausgelosten Spiele – analog wie digital. Am Ende steht nicht nur das Spiel für heute, sondern euer Geschmack.',
   'landing.hero.ctaPrimary': 'Kostenlos registrieren',
   'landing.hero.ctaSecondary': 'Anmelden',
   'landing.shot.shelfAlt': 'Screenshot: das Spielregal einer Runde in Spielwirbel – Spiele als Kacheln mit Durchschnittsbewertung, daneben die Navigation zu Start, Regal, Chronik und Pokalen.',
   'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala von 1 bis 5.',
-  'landing.features.title': 'Alles für den Spieleabend',
-  'landing.features.shelf.title': 'Euer Spielregal',
-  'landing.features.shelf.desc': 'Legt eure Spiele an – mit Covern direkt aus der Store-Suche: BoardGameGeek, Steam, PlayStation, Nintendo und Xbox.',
-  'landing.features.vote.title': 'Abstimmen statt diskutieren',
-  'landing.features.vote.desc': 'Startet eine Session und lasst die Runde entscheiden: Was spielen wir heute?',
-  'landing.features.ratings.title': 'Bewertungen & Pokale',
-  'landing.features.ratings.desc': 'Bewertet jede Partie und kürt eure Lieblingsspiele in den Pokalen.',
-  'landing.features.chronicle.title': 'Die Chronik',
-  'landing.features.chronicle.desc': 'Jede gespielte Session bleibt festgehalten – eure gemeinsame Spielhistorie.',
-  'landing.features.themes.title': 'Themes je Runde',
-  'landing.features.themes.desc': 'Gebt jeder Runde ihren eigenen Look mit einem passenden Farbthema.',
+  'landing.features.title': 'Was ihr davon habt',
+  'landing.features.shelf.title': 'Ein Regal für alles',
+  'landing.features.shelf.desc': 'Brettspiele und Videospiele nebeneinander – mit Covern aus BoardGameGeek, Steam, PlayStation, Nintendo und Xbox.',
+  'landing.features.vote.title': 'Die Runde entscheidet',
+  'landing.features.vote.desc': 'Spielwirbel lost aus, das Handy geht reihum, jeder bewertet für sich. Keine Viertelstunde Diskussion mehr.',
+  'landing.features.ratings.title': 'Jede Stimme zählt doppelt',
+  'landing.features.ratings.desc': 'Dieselbe Bewertung entscheidet den Abend und bleibt: Schnitt pro Spiel, Lieblingsspiele, Staubfänger.',
+  'landing.features.chronicle.title': 'Eure Spielhistorie',
+  'landing.features.chronicle.desc': 'Jede Session bleibt festgehalten – wer dabei war, was gespielt wurde, wie es ankam.',
+  'landing.features.noAccounts.title': 'Nur du brauchst ein Konto',
+  'landing.features.noAccounts.desc': 'Mitspieler sind Namen in eurer Runde, kein Login. Ein Gerät reicht für den ganzen Tisch.',
   'landing.features.pwa.title': 'Als App installierbar',
-  'landing.features.pwa.desc': 'Installiert Spielwirbel aufs Handy und habt eure Runden immer dabei.',
+  'landing.features.pwa.desc': 'Aufs Handy installieren und beim Spielen sofort griffbereit haben.',
   'landing.how.title': 'In drei Schritten los',
-  'landing.how.step1.title': 'Registrieren',
-  'landing.how.step1.desc': 'Erstelle in einer Minute dein kostenloses Konto.',
+  'landing.how.step1.title': 'Konto anlegen',
+  'landing.how.step1.desc': 'In einer Minute kostenlos angelegt – nur von dir, nicht von der ganzen Runde.',
   'landing.how.step2.title': 'Runde einrichten',
-  'landing.how.step2.desc': 'Legt eure Spiele und Mitspieler an.',
+  'landing.how.step2.desc': 'Tragt eure Spiele ein und gebt jedem am Tisch einen Platz.',
   'landing.how.step3.title': 'Session wirbeln',
-  'landing.how.step3.desc': 'Startet eine Abstimmung und legt los.',
+  'landing.how.step3.desc': 'Handy weiterreichen, abstimmen, spielen.',
   'landing.trust.title': 'Fair und datensparsam',
   'landing.trust.free': 'Kostenlos & werbefrei',
   'landing.trust.noTracking': 'Kein Tracking, keine Fremd-Skripte',
+  // Phrased as what it buys the reader, deliberately with no licence term: the
+  // repo is source-available (PolyForm Noncommercial), NOT open source, and
+  // that word must never appear in user-facing copy about Spielwirbel.
+  'landing.trust.source': 'Code öffentlich einsehbar',
   'landing.trust.eu': 'EU-Hosting, DSGVO-konform',
-  'landing.cta.title': 'Bereit für den nächsten Spieleabend?',
+  'landing.cta.title': 'Beim nächsten Mal wird nicht diskutiert.',
 
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
   'a11y.home': 'Zur Startseite',

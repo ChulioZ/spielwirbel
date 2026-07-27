@@ -1813,6 +1813,13 @@ body.auth-screen .topbar__context { display: none; }
   font-weight: 600;
 }
 .landing-chip .ti { color: var(--brand-dark); font-size: 18px; }
+/* The source-code chip is the one chip that is a link (#483). An anchor arrives
+   browser-blue and underlined, which no chip ever wanted — and `color` must be
+   named explicitly rather than inherited, because the anchor's UA colour would
+   otherwise win over .landing-chip's. Hover mirrors .landing-chip's own resting
+   surface rather than inventing a tone (.claude/rules/theme-derived-colors.md). */
+.landing-chip--link { color: var(--ink); text-decoration: none; }
+.landing-chip--link:hover { border-color: var(--brand-edge); background: var(--brand-tint-soft); }
 /* The operator-gated EU-hosting claim ships with the `hidden` attribute and is
    un-hidden by JS only on the configured operator instance (views-landing.js).
    An author `display` rule beats the UA `[hidden] { display: none }`, so without

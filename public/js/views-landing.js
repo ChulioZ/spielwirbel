@@ -12,15 +12,20 @@
 
 'use strict';
 
-// Feature highlight cards: [icon class, i18n key prefix]. Every icon is declared
-// in the bundled tabler subset (public/fonts/tabler-icons.css) — no new codepoint
-// to verify (.claude/rules/tabler-icon-codepoints.md).
+// The "what you get" cards: [icon class, i18n key prefix]. Every icon is
+// declared in the bundled tabler subset (public/fonts/tabler-icons.css) — an
+// undeclared class renders NOTHING, silently (.claude/rules/tabler-icon-codepoints.md).
+//
+// #483 replaced the per-round themes card with `noAccounts`: "nobody but the
+// round owner needs an account" is one of the app's defining design choices and
+// the copy never said it, while a colour theme is the most cosmetic thing here.
+// Six stays a clean grid — .landing-cards is auto-fill from 240px.
 const LANDING_FEATURES = [
   ['ti-cards', 'landing.features.shelf'],
   ['ti-tornado', 'landing.features.vote'],
   ['ti-trophy', 'landing.features.ratings'],
   ['ti-history', 'landing.features.chronicle'],
-  ['ti-palette', 'landing.features.themes'],
+  ['ti-users', 'landing.features.noAccounts'],
   ['ti-rocket', 'landing.features.pwa'],
 ];
 
@@ -52,6 +57,17 @@ const LANDING_SHOTS = {
   shelfPhone: { src: '/img/landing-shelf-phone.webp', w: 624, h: 1248 },
   vote: { src: '/img/landing-vote.webp', w: 624, h: 1248 },
 };
+
+// The public repository, linked from the "code out in the open" trust chip
+// (#483). The chip claims the code can be inspected, so it has to be reachable
+// — an unverifiable claim is worth less than no claim. Hardcoded like the
+// canonical origin in index.html: this is a fact of this deployment, and a fork
+// edits it here rather than through a templating layer.
+//
+// Deliberately says nothing about the LICENCE: the repo is source-available
+// (PolyForm Noncommercial), not open source, and that term must never appear in
+// user-facing copy. The chip is phrased as a benefit, so it needs no term at all.
+const LANDING_REPO_URL = 'https://github.com/ChulioZ/spielwirbel';
 
 // The width at which the hero swaps the phone shelf shot for the desktop one.
 // Same 720px the stylesheet's landing breakpoint uses — they must agree, or the
@@ -156,6 +172,8 @@ function showLanding() {
       <ul class="landing-trust__chips">
         <li class="landing-chip"><i class="ti ti-heart" aria-hidden="true"></i>${esc(t('landing.trust.free'))}</li>
         <li class="landing-chip"><i class="ti ti-eye-off" aria-hidden="true"></i>${esc(t('landing.trust.noTracking'))}</li>
+        <li><a class="landing-chip landing-chip--link" href="${LANDING_REPO_URL}"
+               target="_blank" rel="noopener noreferrer"><i class="ti ti-code" aria-hidden="true"></i>${esc(t('landing.trust.source'))}</a></li>
         <li class="landing-chip" data-operator-only hidden><i class="ti ti-shield" aria-hidden="true"></i>${esc(t('landing.trust.eu'))}</li>
       </ul>
     </section>
