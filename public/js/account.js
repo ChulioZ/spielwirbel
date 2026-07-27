@@ -585,14 +585,17 @@ function renderResetLanding() {
 // because seeding a whole round is not instantaneous and a second click would
 // mint a second demo tenant and abandon the first.
 async function startDemo(busy) {
-  if (busy) { busy.disabled = true; busy.classList.add('is-busy'); }
+  // `disabled` is the whole busy state — .btn:disabled already dims it, and
+  // seeding a round takes a moment, so a second click would mint a second demo
+  // tenant and abandon the first.
+  if (busy) busy.disabled = true;
   // A failure has to leave the visitor looking at SOMETHING. When the click came
   // from the landing page (`busy` is its button) that page is already rendered
   // and a toast is enough — but the /demo deep link reaches here with nothing
   // drawn at all, because bootApp() returned before choosing a screen. Without
   // this, a 503 at the ceiling turns a shared launch link into a blank page.
   const fail = (key) => {
-    if (busy) { busy.disabled = false; busy.classList.remove('is-busy'); }
+    if (busy) busy.disabled = false;
     else { history.replaceState({}, '', '/'); showLanding(); }
     toast(t(key));
   };

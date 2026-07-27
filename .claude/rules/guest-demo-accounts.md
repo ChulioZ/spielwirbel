@@ -128,6 +128,14 @@ suffices), the deep link passes nothing.
   not a control — the endpoints are reachable by hand with the demo's own token,
   and a throwaway account that is purged within the day is an unattributable spam
   channel into a real user's inbox.
+- **A demo has no password identity, so the Konto screen must not offer the
+  password form.** `change-password` answers `invalid_credentials` whatever is
+  typed — i.e. *"your current password is wrong"* about a password that never
+  existed, which a visitor cannot possibly act on. `showAccount()` branches on
+  `me.demo` and shows an explanation instead. The same screen shows `—` rather
+  than the synthetic `…@demo.invalid` address, which would otherwise read as an
+  e-mail the visitor never gave. Any future account surface needs the same check:
+  the demo is a real account row with two things deliberately missing.
 - **Tests must build their own app.** `test/helpers.js` runs accounts-OFF, so a
   demo spec written against the shared app asserts something simply false rather
   than failing usefully — the same trap

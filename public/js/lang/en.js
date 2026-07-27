@@ -705,6 +705,10 @@ I18N.en = {
   'demo.start.busy': 'A lot of demos are open right now. Please try again shortly — or sign up for free.',
   'demo.start.disabled': 'The demo is not available on this instance.',
   'demo.start.failed': 'The demo could not be started. Please try again.',
+  // Shown on the Konto screen INSTEAD of the password form: a demo account holds
+  // no password identity, so that form could never succeed.
+  'konto.demo.title': 'Demo account',
+  'konto.demo.note': 'This account is a demo: it has no e-mail address and no password, and is deleted automatically. Sign up for free to keep a round for good — that creates a new, empty account.',
 
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
   'a11y.home': 'Go to home screen',

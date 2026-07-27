@@ -41,12 +41,27 @@ async function showAccount() {
 
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.identity'))}</h2>`));
   const facts = h('<div class="konto-facts"></div>');
-  facts.appendChild(renderKontoFact(t('auth.email'), me.email));
+  // A guest demo (#427) has no e-mail — the stored address is a synthetic,
+  // unroutable placeholder that exists only to keep the uniqueness constraint
+  // satisfiable. Showing it would invite "why do I have an address I never
+  // gave?", so the honest answer is a dash.
+  facts.appendChild(renderKontoFact(t('auth.email'), me.demo ? '—' : me.email));
   facts.appendChild(renderKontoFact(t('auth.username'), me.username || '—'));
   app.appendChild(facts);
 
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgg.title'))}</h2>`));
   app.appendChild(buildBggForm(me.bggUsername));
+
+  // The password form is STRUCTURALLY unusable for a demo account: it holds no
+  // password identity, so change-password answers `invalid_credentials` whatever
+  // is typed — i.e. "your current password is wrong" about a password that never
+  // existed. Offering a form that cannot succeed is worse than offering none, so
+  // a demo gets the explanation instead.
+  if (me.demo) {
+    app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.demo.title'))}</h2>`));
+    app.appendChild(h(`<p class="muted">${esc(t('konto.demo.note'))}</p>`));
+    return;
+  }
 
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.pw.title'))}</h2>`));
   app.appendChild(buildPasswordForm());

@@ -704,6 +704,10 @@ I18N.de = {
   'demo.start.busy': 'Gerade sind sehr viele Demos offen. Bitte versuch es gleich noch einmal – oder registriere dich kostenlos.',
   'demo.start.disabled': 'Die Demo ist auf dieser Instanz nicht verfügbar.',
   'demo.start.failed': 'Die Demo konnte nicht gestartet werden. Bitte versuch es noch einmal.',
+  // Shown on the Konto screen INSTEAD of the password form: a demo account holds
+  // no password identity, so that form could never succeed.
+  'konto.demo.title': 'Demo-Konto',
+  'konto.demo.note': 'Dieses Konto ist eine Demo: Es hat keine E-Mail-Adresse und kein Passwort und wird automatisch gelöscht. Registriere dich kostenlos, um eine Runde dauerhaft zu behalten — dabei entsteht ein neues, leeres Konto.',
 
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
   'a11y.home': 'Zur Startseite',
