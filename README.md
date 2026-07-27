@@ -212,14 +212,16 @@ code and documentation are in English.
 - **Hardening:** [helmet](https://helmetjs.github.io/) sets security headers
   (CSP, `X-Content-Type-Options`, frame options, HSTS) and
   [express-rate-limit](https://express-rate-limit.mintlify.app/) caps requests
-  with a generous global limit.
+  with a generous global limit, which the static shell assets are exempt from
+  (#464) so a page load costs one request rather than ~50.
   Mutating request bodies are validated at the router boundary with
   [zod](https://zod.dev/) schemas (via `lib/validate.js`).
   TLS is expected to terminate at a reverse proxy (`TRUST_PROXY` then forwards
   the real client IP); see the env vars below. Responses are gzip-compressed
   ([compression](https://github.com/expressjs/compression)), and content-hashed
   build assets are served immutable (`sw.js` stays no-cache so updates roll out).
-- **Observability:** a `/healthz` liveness/readiness probe, structured JSON
+- **Observability:** a `/healthz` liveness probe and a `/readyz` readiness probe
+  that checks the data backend, structured JSON
   request/error logs to stdout (`LOG_LEVEL`, no bodies or personal data), and a
   central error handler so unexpected throws never leak a stack trace — they
   return a generic 500 and are logged (and optionally forwarded to
@@ -289,7 +291,7 @@ lib/
                      with commas/quotes/newlines cannot corrupt the file, and
                      neutralizes leading =/+/-/@ so it cannot become an Excel
                      formula
-  observability.js   structured logging, /healthz, central error handler
+  observability.js   structured logging, /healthz + /readyz, central error handler
   status.js          derived instance configuration for the operator panel's
                      status card (issue #274) — booleans/enums only, never a
                      secret value
@@ -490,8 +492,16 @@ Backblaze B2 or MinIO; credentials come from `S3_ACCESS_KEY_ID`/`S3_SECRET_ACCES
 or the AWS default provider chain. Unset, images stay under `DATA_DIR/uploads` as
 before. See the S3 block in `.env.example`.
 
-Behind a TLS-terminating proxy: `TRUST_PROXY=1 npm start` (so rate limiting sees
-the real client IP). Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
+Behind a TLS-terminating proxy: `TRUST_PROXY=<hops> npm start` (so rate limiting
+sees the real client IP). The value is the **number of proxy hops** between the
+internet and the app — not a boolean, and not always 1: on Railway it is **2**.
+Too low and `req.ip` resolves to your own proxy, silently turning every per-IP
+limit into one bucket shared by everyone behind it; `true` is worse, since the
+client can then spoof `X-Forwarded-For` and evade the limits. Verify it after
+setting it — see [`docs/deploy-railway.md`](docs/deploy-railway.md)
+("Verifying `TRUST_PROXY`").
+
+Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
 `CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5) and
 `REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below).
 
@@ -669,9 +679,24 @@ board-game search simply returns nothing.
 
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and
-`ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook. The
-`/healthz` endpoint returns `{ status: 'ok', uptime, timestamp }` for uptime
-monitors.
+`ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook (a
+non-2xx reply from it is logged at `warn`, so a misconfigured webhook can't fail
+silently).
+
+Two probe endpoints, both unauthenticated and exempt from rate limiting so a
+monitor can poll them freely, and both excluded from the request log:
+
+| Endpoint | Answers | Use it for |
+|---|---|---|
+| `/healthz` | `{ status: 'ok', uptime, timestamp }` — always 200 while the process is up | liveness; the container health check |
+| `/readyz` | `200 {"status":"ok"}`, or **`503 {"status":"degraded"}`** when the data backend is unreachable | uptime monitoring / alerting |
+
+`/healthz` deliberately never touches the database, so it answers 200 straight
+through a database outage — which is exactly when every data route is failing.
+That is why `/readyz` exists; point external alerting at it. The readiness result
+is cached for a few seconds, so polling it cannot drive database load. Don't make
+`/readyz` the *deploy* health check: a transient database blip would then
+restart-loop the container.
 
 ### Configuration via a `.env` file
 
@@ -708,7 +733,8 @@ persistent volume. Data (rounds, sessions, uploaded covers) lives on the mounted
 it serves the content-hashed build (`dist/`).
 
 **TLS is not in the image** — terminate it at a reverse proxy or managed platform
-in front of the container, then set `TRUST_PROXY=1` (see issue #156). On merge to
+in front of the container, then set `TRUST_PROXY` to the number of proxy hops in
+front of it (see issue #156; it is **2** on Railway). On merge to
 `main`, CI publishes the image to the GitHub Container Registry
 (`ghcr.io/chulioz/spielwirbel`), so a host can pull it instead of building.
 
@@ -726,7 +752,9 @@ The production target is [Railway](https://railway.com): it builds the
 auto-deploys on push to `main`. Pair it with **managed PostgreSQL** (Railway
 plugin → `DATABASE_URL`, the #127 backend) and **Cloudflare R2** for cover images
 (S3-compatible → the #128 backend via `S3_ENDPOINT`); Railway terminates TLS at
-its edge, so set `TRUST_PROXY=1`. The full step-by-step — EU region, custom
+its edge, so set `TRUST_PROXY=2` (Railway has two proxy hops — verify it, a wrong
+count silently collapses every per-IP rate limit into one shared bucket). The
+full step-by-step — EU region, custom
 domain, and the account/secret steps only you can do — is in
 [`docs/deploy-railway.md`](docs/deploy-railway.md).
 

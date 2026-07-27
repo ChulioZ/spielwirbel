@@ -64,6 +64,72 @@ test('the global rate limit returns 429 once the ceiling is exceeded', async () 
   assert.deepEqual(blocked.body, { error: 'rate_limited' });
 });
 
+// #464: the shell's ~50 requests per cold load must not share the API's budget.
+// The strong form of the assertion is that an asset storm well past the ceiling
+// leaves the API budget *completely untouched* — a `skip` that merely raised the
+// cost of an asset would still pass a "did the asset 200" check.
+test('static shell assets are exempt from the global limiter (#464)', async () => {
+  const saved = process.env.RATE_LIMIT_MAX;
+  process.env.RATE_LIMIT_MAX = '3';
+  try {
+    const limited = createApp();
+    // Well past the ceiling, across the extensions a real page load pulls.
+    for (const asset of ['/js/core.js', '/styles.css', '/sw.js', '/manifest.webmanifest']) {
+      for (let i = 0; i < 5; i++) {
+        const res = await request(limited).get(asset);
+        assert.equal(res.status, 200, `${asset} stayed served (request ${i + 1})`);
+      }
+    }
+    // …and the API still has its full ceiling, i.e. the storm cost nothing.
+    for (let i = 0; i < 3; i++) {
+      assert.equal((await request(limited).get('/api/rounds')).status, 200);
+    }
+    const blocked = await request(limited).get('/api/rounds');
+    assert.equal(blocked.status, 429);
+    assert.deepEqual(blocked.body, { error: 'rate_limited' });
+  } finally {
+    if (saved === undefined) delete process.env.RATE_LIMIT_MAX; else process.env.RATE_LIMIT_MAX = saved;
+  }
+});
+
+// What the exemption must NOT cover. All three look asset-ish from the outside,
+// and an extension-based skip would wrongly exempt every one of them.
+test('the asset exemption does not cover /uploads, navigations or made-up asset names (#464)', async () => {
+  const saved = process.env.RATE_LIMIT_MAX;
+  process.env.RATE_LIMIT_MAX = '2';
+  try {
+    // /uploads: auth-gated user cover bytes streamed from object storage. Keys
+    // are `<id><ext>`, so these are indistinguishable from assets by extension.
+    const uploads = createApp();
+    for (let i = 0; i < 2; i++) {
+      assert.equal((await request(uploads).get('/uploads/nope.png')).status, 404);
+    }
+    assert.equal((await request(uploads).get('/uploads/nope.png')).status, 429);
+
+    // A deep link is answered by the SPA fallback — one request per page load,
+    // and the thing actually worth capping.
+    const nav = createApp();
+    for (let i = 0; i < 2; i++) {
+      assert.equal((await request(nav).get('/round/abc/regal')).status, 200);
+    }
+    assert.equal((await request(nav).get('/round/abc/regal')).status, 429);
+
+    // A path that merely LOOKS like an asset matches no file and falls through
+    // to the fallback, which answers it with the whole ~10 KB shell at 200. If
+    // the skip were extension-based, an unlimited number of made-up names would
+    // be free — swapping this issue's self-lockout for an amplification vector.
+    const madeUp = createApp();
+    for (let i = 0; i < 2; i++) {
+      const res = await request(madeUp).get(`/made-up-${i}.js`);
+      assert.equal(res.status, 200);
+      assert.match(res.headers['content-type'], /text\/html/);
+    }
+    assert.equal((await request(madeUp).get('/made-up-2.js')).status, 429);
+  } finally {
+    if (saved === undefined) delete process.env.RATE_LIMIT_MAX; else process.env.RATE_LIMIT_MAX = saved;
+  }
+});
+
 // #399: the credential-free boot probe GET /api/account/me must not sit behind
 // the auth brute-force limiter — every hard page load spends one request on it,
 // so shared-IP browsing could trip the ceiling, and a 429 there sent the client

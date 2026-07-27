@@ -15,9 +15,11 @@ const express = require('express');
 const { EventEmitter } = require('node:events');
 
 const { app, createRound } = require('./helpers');
+const { createApp } = require('../lib/app');
 const {
   logger,
   requestLogger,
+  createReadyz,
   captureError,
   errorHandler,
   trackEvent,
@@ -236,6 +238,139 @@ test('request logger skips /healthz (no log even on finish)', async () => {
   assert.equal(reqLines.length, 0);
 });
 
+test('request logger skips /readyz too (a 1/min monitor must not flood the logs)', async () => {
+  const { req, res } = fakeReqRes('/readyz');
+  const lines = await withEnv('LOG_LEVEL', 'info', () =>
+    captureStdout(() => {
+      requestLogger(req, res, () => {});
+      res.emit('finish');
+    })
+  );
+  const reqLines = parseLogLines(lines).filter((o) => o.event === 'request');
+  assert.equal(reqLines.length, 0);
+});
+
+/* ---------------------------------------------------------------------------
+ * Readiness probe (issue #462). /healthz answers 200 straight through a database
+ * outage — that is by design (railway.json health-checks it, and failing the
+ * DEPLOY check on a blip would restart-loop the container), which is exactly why
+ * /readyz exists and must answer 503 instead.
+ * ------------------------------------------------------------------------- */
+
+// A throwaway app carrying just the probe, so a failing backend can be injected
+// without a real database. `pings` counts the queries the handler actually
+// issues — the cache assertions are about that number, not about the responses.
+function readyzApp(pingImpl, opts) {
+  const pings = [];
+  const a = express();
+  a.get('/readyz', createReadyz({
+    ping: async () => {
+      pings.push(Date.now());
+      return pingImpl();
+    },
+  }, opts));
+  return { app: a, pings };
+}
+
+test('GET /readyz returns 200 ok against a healthy backend', async () => {
+  const res = await request(app).get('/readyz');
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, { status: 'ok' });
+});
+
+test('/readyz needs no credential — it answers ahead of the auth gate', async () => {
+  // The shared app is accounts-off, so build one in the mode production runs:
+  // /api is Bearer-only there, and a monitor holds no token — a probe behind the
+  // gate would alert permanently instead of reporting the backend.
+  Object.assign(process.env, { ACCOUNTS_ENABLED: 'true', SESSION_SECRET: 'readyz-secret' });
+  try {
+    const gated = createApp();
+    assert.equal((await request(gated).get('/api/rounds')).status, 401);
+    const res = await request(gated).get('/readyz');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, { status: 'ok' });
+  } finally {
+    delete process.env.ACCOUNTS_ENABLED;
+    delete process.env.SESSION_SECRET;
+  }
+});
+
+test('GET /readyz returns 503 degraded when the backend is unreachable, and warns', async () => {
+  const { app: a } = readyzApp(() => {
+    throw new Error('connection refused');
+  });
+  let res;
+  const lines = await withEnv('LOG_LEVEL', 'info', () =>
+    captureStdout(async () => {
+      res = await request(a).get('/readyz');
+    })
+  );
+  assert.equal(res.status, 503);
+  assert.deepEqual(res.body, { status: 'degraded' });
+  // The warn is what puts the degradation into stdout and the #359 ring buffer;
+  // the request itself is deliberately not logged, so this is the only trace.
+  const warns = parseLogLines(lines).filter((o) => o.event === 'readiness_failed');
+  assert.equal(warns.length, 1);
+  assert.equal(warns[0].level, 'warn');
+  assert.equal(warns[0].message, 'connection refused');
+});
+
+test('a failing readiness probe lands in the ring buffer', async () => {
+  clearLogs();
+  const { app: a } = readyzApp(() => {
+    throw new Error('db gone');
+  });
+  await withEnv('LOG_LEVEL', 'silent', () => request(a).get('/readyz'));
+  const entry = recentLogs().find((e) => e.event === 'readiness_failed');
+  assert.ok(entry, 'the degradation must be visible in the admin panel');
+  assert.equal(entry.level, 'warn');
+});
+
+test('repeated /readyz polls inside the cache window issue no extra query', async () => {
+  const { app: a, pings } = readyzApp(() => true);
+  for (let i = 0; i < 5; i++) {
+    assert.equal((await request(a).get('/readyz')).status, 200);
+  }
+  assert.equal(pings.length, 1, 'poll frequency must not drive database load');
+});
+
+test('concurrent /readyz polls share ONE in-flight query', async () => {
+  // A cache check alone only dedupes SEQUENTIAL polls: without sharing the
+  // in-flight promise, every request arriving before the first resolves issues
+  // its own query — which is the shape a monitor burst actually has.
+  const { app: a, pings } = readyzApp(
+    () => new Promise((resolve) => setTimeout(() => resolve(true), 20))
+  );
+  const all = await Promise.all([1, 2, 3, 4].map(() => request(a).get('/readyz')));
+  assert.deepEqual(all.map((r) => r.status), [200, 200, 200, 200]);
+  assert.equal(pings.length, 1);
+});
+
+test('/readyz recovers once the cache window lapses', async () => {
+  // The cached result must expire, or a blip would pin the endpoint at 503 for
+  // the life of the process.
+  let healthy = false;
+  const { app: a, pings } = readyzApp(() => {
+    if (!healthy) throw new Error('still down');
+    return true;
+  }, { ttlMs: 5 });
+  await withEnv('LOG_LEVEL', 'silent', async () => {
+    assert.equal((await request(a).get('/readyz')).status, 503);
+    healthy = true;
+    await new Promise((r) => setTimeout(r, 15));
+    assert.equal((await request(a).get('/readyz')).status, 200);
+  });
+  assert.equal(pings.length, 2);
+});
+
+test('repo.ping is global — absent from the tenant facade', async () => {
+  // It takes no tenant, so listing it in TENANT_METHODS would both break it and
+  // put a probe on every request handler's req.repo.
+  const repo = require('../lib/repo');
+  assert.equal(typeof repo.ping, 'function');
+  assert.equal(repo.forTenant('some-tenant').ping, undefined);
+});
+
 // A throwaway app that reproduces createApp's error wiring around a route that
 // throws — sync or async — so we can assert the central handler's behaviour.
 function throwingApp() {
@@ -309,6 +444,31 @@ test('captureError makes no network call when ERROR_WEBHOOK_URL is unset', async
     global.fetch = realFetch;
   }
   assert.equal(called, false);
+});
+
+test('a non-2xx webhook response is logged instead of vanishing silently', async () => {
+  // fetch only rejects on a TRANSPORT failure, so a rejected or misconfigured
+  // webhook (404, 401, Discord 400ing our {text:…} payload) resolves normally
+  // and never reaches the catch — before #462 that made a broken alerting
+  // channel completely invisible, which is worse than having none configured.
+  const realFetch = global.fetch;
+  global.fetch = async () => ({ ok: false, status: 404 });
+  let lines;
+  try {
+    lines = await withEnv('LOG_LEVEL', 'info', () =>
+      withEnv('ERROR_WEBHOOK_URL', 'https://hooks.example/gone?token=SECRET', () =>
+        captureStdout(() => captureError(new Error('boom'), { method: 'GET', path: '/x' }))
+      )
+    );
+  } finally {
+    global.fetch = realFetch;
+  }
+  const warns = parseLogLines(lines).filter((o) => o.event === 'error_webhook_failed');
+  assert.equal(warns.length, 1);
+  assert.equal(warns[0].status, 404);
+  // Status only: the URL can embed a token and the body is the destination's,
+  // so neither may reach the log line.
+  assert.equal(lines.join('').includes('SECRET'), false);
 });
 
 test('captureError never throws even if the webhook fetch rejects', async () => {
