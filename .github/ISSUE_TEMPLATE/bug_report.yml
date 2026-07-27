@@ -67,11 +67,15 @@ body:
     attributes:
       label: Auth mode
       description: >-
-        Only relevant for self-hosted instances, and set by the ACCOUNTS_ENABLED
-        and AUTH_PASSWORD environment variables (see the README).
-        spielwirbel.app runs accounts-only.
+        On a self-hosted instance this is set by the ACCOUNTS_ENABLED and
+        AUTH_PASSWORD environment variables (see the README).
+        spielwirbel.app runs accounts-only, and also offers a guest demo — if you
+        were trying it without signing up, pick "Guest demo" below. Note a demo
+        round is deleted automatically after 24 hours, so content disappearing
+        after a day is expected there rather than a bug.
       options:
         - Not sure / hosted user
+        - Guest demo on spielwirbel.app (no sign-up)
         - Accounts only (ACCOUNTS_ENABLED, no AUTH_PASSWORD)
         - Shared password only (AUTH_PASSWORD)
         - Both (layered)

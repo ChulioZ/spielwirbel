@@ -82,7 +82,9 @@ For each candidate, answer in order. The first "no" ends it.
    backend with JSON and Postgres backends; running in production on Railway (EU)
    with Cloudflare R2; operated by **one person**, funded by voluntary donations;
    **public since the 2026-07-24 go-live (#219) — registration is open to anyone
-   at spielwirbel.app and production runs accounts-only, no shared password**;
+   at spielwirbel.app and production runs accounts-only, no shared password, and
+   since 2026-07-27 a guest demo (#427) hands an anonymous caller a working
+   throwaway account + tenant with no e-mail or password**;
    multi-tenant with per-tenant RLS; **web + installable PWA only — native store
    apps were evaluated and dropped on 2026-07-27 (#143/#144 closed won't-do-now)**;
    no analytics, no ads, no third-party scripts, no consent-based processing.
