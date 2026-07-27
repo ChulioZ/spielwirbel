@@ -655,7 +655,7 @@ I18N.en = {
   // NOTE: the link-preview meta tags in index.html duplicate the GERMAN hero
   // copy only (a scraper has no locale) — see .claude/rules/link-preview-card.md.
   'landing.hero.title': 'What are we playing tonight?',
-  'landing.hero.sub': 'One phone goes around the table and everyone rates the drawn games – analog and digital alike. What you end up with is tonight’s pick, and your group’s taste.',
+  'landing.hero.sub': 'One device goes around the table and everyone rates the drawn games, from board games to video games. You end up with tonight’s pick – and, with every session, a sharper picture of what your group likes to play.',
   'landing.hero.ctaPrimary': 'Sign up free',
   'landing.hero.ctaSecondary': 'Log in',
   'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their average rating, next to the navigation for Start, shelf, chronicle and trophies.',
@@ -664,7 +664,7 @@ I18N.en = {
   'landing.features.shelf.title': 'One shelf for everything',
   'landing.features.shelf.desc': 'Board games and video games side by side – with covers from BoardGameGeek, Steam, PlayStation, Nintendo and Xbox.',
   'landing.features.vote.title': 'The group decides',
-  'landing.features.vote.desc': 'Spielwirbel draws the candidates, the phone goes around, everyone rates on their own. No more quarter-hour debate.',
+  'landing.features.vote.desc': 'Spielwirbel draws the candidates, the device goes around, everyone rates on their own. No more quarter-hour debate.',
   'landing.features.ratings.title': 'Every vote counts twice',
   'landing.features.ratings.desc': 'The same rating picks tonight and then stays: an average per game, your favourites, your shelf-warmers.',
   'landing.features.chronicle.title': 'Your play history',
@@ -679,7 +679,7 @@ I18N.en = {
   'landing.how.step2.title': 'Set up your group',
   'landing.how.step2.desc': 'Add your games and give everyone at the table a seat.',
   'landing.how.step3.title': 'Spin up a session',
-  'landing.how.step3.desc': 'Pass the phone around, vote, play.',
+  'landing.how.step3.desc': 'Pass the device around, vote, play.',
   'landing.trust.title': 'Fair and privacy-first',
   'landing.trust.free': 'Free & ad-free',
   'landing.trust.noTracking': 'No tracking, no third-party scripts',
