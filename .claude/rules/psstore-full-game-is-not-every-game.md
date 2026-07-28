@@ -49,6 +49,17 @@ ranking absorbs the extra rows on its own: for "Split Fiction" the game scores 5
   and **every** Fortnite entry report `isFree: true`. Filtering on it would
   re-break precisely the two queries this fix repaired.
 
+**The one cost, so it isn't rediscovered as a regression:** `parseSearch` slices
+to `limit` (8) **before** anything ranks the hits — `scoreHit` runs later, client
+side, across providers. Admitting a second classification therefore lets a
+`GAME_BUNDLE` hit consume a slot and push a lower-relevance `FULL_GAME` hit off
+the end. Measured on "Astro Bot": ASTROSMASH and Bot Gaiden dropped out in favour
+of two Astroneer editions, while the top hit was untouched. That is the right
+trade — blob order is roughly relevance order, so what gets displaced is the
+tail, not the answer — but it does mean **a title can disappear from the dropdown
+without being dropped by the filter**. Check the slice before blaming
+`GAME_CLASSIFICATIONS`.
+
 ## The residual, which is a *ranking* issue and not this one
 
 For "It Takes Two" the game ("It Takes Two PS4™ & PS5™") and the Freunde-Pass
