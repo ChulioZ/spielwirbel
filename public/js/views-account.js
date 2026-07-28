@@ -65,6 +65,121 @@ async function showAccount() {
 
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.pw.title'))}</h2>`));
   app.appendChild(buildPasswordForm());
+
+  // Last, and visually separated: the one irreversible thing on this screen
+  // (#419). A demo returned above — its erasure is „Demo beenden“ in the account
+  // menu, and it holds no password to re-authenticate with anyway.
+  app.appendChild(h(`<h2 class="konto-section__h konto-section__h--danger">${esc(t('konto.delete.title'))}</h2>`));
+  app.appendChild(buildDeleteSection(me));
+}
+
+// The entry point to deletion. Deliberately a button that opens a confirmation
+// rather than a form that deletes: the counts it shows are fetched at that
+// moment, so what the user confirms is what is actually there.
+function buildDeleteSection(me) {
+  const wrap = h(`<div class="konto-danger">
+      <p class="muted">${esc(t('konto.delete.intro'))}</p>
+      <button class="btn btn--danger" type="button">${esc(t('konto.delete.cta'))}</button>
+    </div>`);
+  wrap.querySelector('button').addEventListener('click', () => openDeleteSheet(me));
+  return wrap;
+}
+
+// The confirmation sheet. Through openSheet so it inherits the focus trap (#145)
+// and Back-dismissal (#333) rather than hand-rolling either.
+async function openDeleteSheet(me) {
+  let counts;
+  try {
+    counts = await accountApi('GET', '/deletion-preview');
+  } catch (ex) {
+    if (ex.message !== 'auth') toast(t('auth.error.network'));
+    return;
+  }
+
+  const row = (label, value) => `<div class="konto-fact">
+      <span class="konto-fact__label">${esc(label)}</span>
+      <span class="konto-fact__value">${esc(String(value))}</span>
+    </div>`;
+
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('konto.delete.sheetTitle'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('konto.delete.sheetTitle'))}</h2>
+          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <p>${esc(t('konto.delete.lead'))}</p>
+        <div class="konto-facts">
+          ${row(t('konto.delete.rounds'), counts.rounds)}
+          ${row(t('konto.delete.games'), counts.games)}
+          ${row(t('konto.delete.sessions'), counts.sessions)}
+          ${row(t('konto.delete.images'), counts.images)}
+        </div>
+        ${counts.sharedWith
+    // A consequence to a THIRD party, so it is stated rather than left to be
+    // discovered by the people who lose access.
+    ? `<p class="konto-danger__third">${esc(tn(counts.sharedWith, 'konto.delete.sharedOne', 'konto.delete.shared'))}</p>`
+    : ''}
+        <div class="field">
+          <label for="kdUser">${esc(t('konto.delete.confirmLabel', { username: me.username || '' }))}</label>
+          <input id="kdUser" class="input" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        </div>
+        <div class="field">
+          <label for="kdPw">${esc(t('konto.delete.password'))}</label>
+          <input id="kdPw" class="input" type="password" autocomplete="current-password" />
+        </div>
+        <p class="konto-error" hidden></p>
+        <div class="toolbar sheet__actions">
+          <button id="kdGo" class="btn btn--danger btn--lg" type="button"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('konto.delete.submit'))}</button>
+        </div>
+      </div>
+    </div>`);
+
+  const sheet = backdrop.querySelector('.sheet');
+  document.body.appendChild(backdrop);
+
+  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  document.addEventListener('keydown', onKey, true);
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+  sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+
+  const user = sheet.querySelector('#kdUser');
+  const pw = sheet.querySelector('#kdPw');
+  const err = sheet.querySelector('.konto-error');
+  const go = sheet.querySelector('#kdGo');
+
+  go.addEventListener('click', async () => {
+    err.hidden = true;
+    // Client-side first, so an obvious slip costs no request — and no Argon2
+    // verify on the server.
+    if (!user.value.trim() || !pw.value) return setKontoError(err, t('auth.error.missing'));
+    go.disabled = true;
+    try {
+      await accountApi('DELETE', '', { password: pw.value, confirmUsername: user.value.trim() });
+      // The account is gone, so nothing cached about it may survive — least of
+      // all the round data in localStorage, which belongs to a tenant that no
+      // longer exists.
+      clearTokens();
+      invalidateRoundCache();
+      accountUser = null;
+      setupAccountUi();
+      // Pass the navigation to closeSheet rather than calling it on the next
+      // line: history.back() is async, so the two would race and leave the URL
+      // and the DOM disagreeing (.claude/rules/sheet-history-back-dismissal.md).
+      closeSheet(() => {
+        showLanding();
+        toast(t('konto.delete.done'));
+      });
+      return;
+    } catch (ex) {
+      if (ex.message !== 'auth') setKontoError(err, t(authErrorKey('deleteAccount', ex.message)));
+    }
+    go.disabled = false;
+  });
+
+  // Focus AFTER openSheet — trapFocus captures document.activeElement as its
+  // restore target, so focusing first would "restore" focus into the sheet.
+  user.focus();
 }
 
 // The linked BoardGameGeek handle (#481) — the one settable identity field, and

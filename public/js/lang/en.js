@@ -647,6 +647,26 @@ I18N.en = {
   'konto.bgg.done': 'BoardGameGeek account linked.',
   'konto.bgg.cleared': 'Link removed.',
 
+  // Self-service account deletion (#419) — Art. 17 GDPR without the operator.
+  'konto.delete.title': 'Delete account',
+  'konto.delete.intro': 'Deletes your account along with every round, game, session and uploaded image. This cannot be undone.',
+  'konto.delete.cta': 'Delete account …',
+  'konto.delete.sheetTitle': 'Permanently delete account',
+  'konto.delete.lead': 'This will permanently delete:',
+  'konto.delete.rounds': 'Rounds',
+  'konto.delete.games': 'Games',
+  'konto.delete.sessions': 'Sessions',
+  'konto.delete.images': 'Uploaded images',
+  'konto.delete.sharedOne': '{n} other person will also lose access to one of your shared rounds.',
+  'konto.delete.shared': '{n} other people will also lose access to your shared rounds.',
+  'konto.delete.confirmLabel': 'Type your username “{username}” to confirm',
+  'konto.delete.password': 'Your password',
+  'konto.delete.submit': 'Permanently delete account',
+  'konto.delete.done': 'Your account has been deleted.',
+  'konto.delete.mismatch': 'That username does not match.',
+  'konto.delete.wrongPassword': 'That password is incorrect.',
+  'konto.delete.tenantShared': 'This account shares its data with another account and so cannot delete itself. Please get in touch via the contact form.',
+
   // Logged-out landing page (#322). Rewritten in #483 to lead with what the app
   // is FOR — the decision at the table, and the record the votes leave behind —
   // instead of enumerating features. Three things the old copy never said out

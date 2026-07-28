@@ -32,6 +32,14 @@ const AUTH_ERROR_KEYS = {
     invalid_credentials: 'konto.pw.wrongCurrent',
     invalid_password: 'auth.error.shortPassword',
   },
+  // Self-service account deletion (#419). `tenant_shared` is a real refusal, not
+  // a fault: the erasure would cascade a tenant a second account still lives on,
+  // so it must read as an explained "not this way" rather than a generic error.
+  deleteAccount: {
+    invalid_credentials: 'konto.delete.wrongPassword',
+    confirm_mismatch: 'konto.delete.mismatch',
+    tenant_shared: 'konto.delete.tenantShared',
+  },
   // 'forgot' and 'resend' have no per-form codes: their handlers always answer
   // ok (anti-enumeration), so only the cross-cutting codes below can reach them.
 };

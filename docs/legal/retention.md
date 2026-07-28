@@ -34,7 +34,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | DSA-Meldungen + Bescheide (Postfach-Ordner `Meldungen`) | **3 Jahre** ab Jahresende der Entscheidung (wie Moderations-Log) | manuell, Jahresprüfung |
 | Gespeicherte Kontakt-Meldungen (Datenbank `contact_notices`, #272) | wie Postfach: Allgemeine Anfragen nach Bearbeitung, DSA-Meldungen **3 Jahre** ab Jahresende der Entscheidung | manuell (DB), Jahresprüfung |
 | **Moderations-Log-Einträge mit personenbezogenen Daten** (E-Mail-Adressen, redigierte Texte als `previous`-Nachweis) | **3 Jahre ab Ende des Jahres der Maßnahme** | Jahresprüfung (unten) |
-| Löschnachweise (`eraseAccount`-Einträge — ohne E-Mail-Adresse by design) | dauerhaft (Art. 17 Abs. 3 lit. b/e DSGVO) | — |
+| Löschnachweise (`eraseAccount`-Einträge — ohne E-Mail-Adresse by design): Aktionen **`user_erased`** (betreiberseitig, #273) **und `account_deleted`** (Selbstbedienung, #419) | dauerhaft (Art. 17 Abs. 3 lit. b/e DSGVO) | — |
 | Backups | Backup-Zyklus der Plattform (Railway Managed Postgres) | automatisch |
 
 **Warum 3 Jahre:** die regelmäßige Verjährungsfrist (§ 195 BGB) beginnt mit
@@ -58,7 +58,13 @@ nicht stillschweigend auf 10 Jahre „korrigieren".
    Januar 2030 → Einträge bis 31.12.2026) exportieren (CSV, falls ein
    Aufbewahrungsgrund im Einzelfall fortbesteht — z. B. laufender Streit —
    sonst nicht) und anschließend löschen bzw. die personenbezogenen Felder
-   anonymisieren. Löschnachweise (`erase`-Einträge) bleiben.
+   anonymisieren. **Löschnachweise bleiben — und das sind ZWEI Aktionen:**
+   `user_erased` (betreiberseitige Löschung, #273) und `account_deleted`
+   (Selbstbedienung über die Kontoeinstellungen, #419). Beide sind
+   Art.-17-Nachweise; die zweite Aktion ist seit #419 der Regelfall, weil die
+   meisten Löschungen ohne den Betreiber ablaufen. Ein Purge, der nur auf
+   `user_erased` ausnimmt (so der Vorschlag in #311), löscht also genau die
+   Nachweise, um die es überwiegend geht.
    *Tooling-Hinweis:* ein Lösch-/Anonymisier-Endpunkt für alte Log-Einträge
    existiert noch nicht (#275 §6 lieferte Filter/Export); bis dahin per
    direktem DB-Zugriff löschen und den Vorgang im Log der Prüfung vermerken.
