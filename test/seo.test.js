@@ -20,6 +20,38 @@ const { app } = require('./helpers');
 
 const ROOT = path.join(__dirname, '..');
 
+/** The `Disallow:` paths in a robots.txt body, comments stripped. */
+function disallowRules(body) {
+  return body
+    .split('\n')
+    .map((l) => l.replace(/#.*$/, '').trim())
+    .filter((l) => /^Disallow:/i.test(l))
+    .map((l) => l.slice('Disallow:'.length).trim())
+    .filter(Boolean);
+}
+
+/*
+ * Does a robots.txt rule match a path? A rule is a PREFIX, with `*` as a
+ * wildcard for any run of characters.
+ *
+ * Deliberately plain string walking rather than building a RegExp out of the
+ * rule: escaping a pattern for reuse as a pattern is the thing CodeQL's
+ * js/incomplete-sanitization flags, and it was right to — the first version
+ * escaped `/` but not `\`. There is nothing to get wrong here.
+ */
+function robotsRuleMatches(rule, urlPath) {
+  const parts = rule.split('*');
+  if (!urlPath.startsWith(parts[0])) return false;
+  let at = parts[0].length;
+  for (const part of parts.slice(1)) {
+    if (part === '') continue;
+    const found = urlPath.indexOf(part, at);
+    if (found === -1) return false;
+    at = found + part.length;
+  }
+  return true;
+}
+
 /** Loads a lang table the way i18n-parity does — they are browser scripts. */
 function loadLocale(name) {
   const context = { I18N: {} };
@@ -43,9 +75,9 @@ test('robots.txt disallows the surfaces that have no head of their own', async (
   // canonical already points at the front door). Anything that IS an HTML page
   // we ship uses noindex instead — see the next test for why.
   const res = await request(app).get('/robots.txt');
+  const rules = disallowRules(res.text);
   for (const p of ['/api/', '/uploads/', '/round/']) {
-    assert.match(res.text, new RegExp(`^Disallow: ${p.replace(/[/]/g, '\\/')}$`, 'm'),
-      `robots.txt should disallow ${p}`);
+    assert.ok(rules.includes(p), `robots.txt should disallow ${p} (has: ${rules.join(', ')})`);
   }
 });
 
@@ -75,18 +107,9 @@ test('robots.txt disallows NO page that carries a noindex (#510)', async () => {
     `expected at least login/kontakt/admin to be noindex, found ${noindexPages.join(', ')}`);
 
   const res = await request(app).get('/robots.txt');
-  const rules = res.text
-    .split('\n')
-    .map((l) => l.replace(/#.*$/, '').trim())
-    .filter((l) => /^Disallow:/i.test(l))
-    .map((l) => l.slice('Disallow:'.length).trim())
-    .filter(Boolean);
-
   for (const page of noindexPages) {
-    for (const rule of rules) {
-      // A robots.txt path is a prefix match, with `*` as a wildcard.
-      const re = new RegExp('^' + rule.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*'));
-      assert.ok(!re.test(page),
+    for (const rule of disallowRules(res.text)) {
+      assert.ok(!robotsRuleMatches(rule, page),
         `robots.txt rule "Disallow: ${rule}" blocks ${page} — its noindex can then never be read`);
     }
   }
@@ -146,12 +169,24 @@ test('the raw HTML of GET / carries the hero as crawlable BODY text (#510)', asy
 
   const main = res.text.match(/<main id="app"[\s\S]*?<\/main>/);
   assert.ok(main, 'the served shell still has a <main id="app">');
-  const body = main[0].replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, ' ');
 
+  // Read the two elements' own text rather than stripping comments and tags out
+  // of the block. Both are `[^<]*`, so a comment can never be mistaken for
+  // content (which is what CodeQL's js/incomplete-multi-character-sanitization
+  // flagged about the strip-then-search version), and the assertion gets
+  // stricter: the copy has to be THE HEADING, not merely present somewhere.
   const de = loadLocale('de');
-  assert.ok(body.includes(de['landing.hero.title']),
+  const el = (re, what) => {
+    const m = main[0].match(re);
+    assert.ok(m, `the served <main> has no ${what} — the crawlable hero is gone`);
+    return m[1].trim();
+  };
+
+  assert.equal(el(/<h1 class="landing-hero__title">([^<]*)<\/h1>/, 'hero heading'),
+    de['landing.hero.title'],
     'the hero heading must be real body text, not only a <title>/<meta> value');
-  assert.ok(body.includes(de['landing.hero.sub']),
+  assert.equal(el(/<p class="landing-hero__sub">([^<]*)<\/p>/, 'hero sub-line'),
+    de['landing.hero.sub'],
     'the hero sub-line must be real body text, not only a <meta description> value');
 });
 
