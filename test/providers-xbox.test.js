@@ -76,6 +76,64 @@ test('parseSearch keeps only game suggestions and maps them to normalized result
   assert.equal(out[1].providerId, '9PP5G1F0C2GV');
 });
 
+test('parseSearch keeps games whose Source is LOCALIZED (#505)', () => {
+  // Microsoft localizes the `Source` field itself. Captured live 2026-07-28 on
+  // one query across markets: 'Game' for de-de/en-us/nl-nl, but 'Jeu' (fr-fr),
+  // 'Juego' (es-es), 'Gioco' (it-it), 'Jogo' (pt-br) — while the sibling
+  // `Metas.ProductType` stays 'Games'/'Devices' everywhere.
+  //
+  // So a Source === 'Game' filter returns ZERO Xbox results for four of the
+  // seven languages the moment the locale becomes per-request, silently: the
+  // fetch is a clean 200 and the provider just contributes nothing.
+  const localized = (source) => ({
+    ResultSets: [
+      {
+        Suggests: [
+          {
+            Source: source,
+            Title: 'Forza Horizon 6',
+            Metas: [
+              { Key: 'BigCatalogId', Value: '9N4XW3N02MNJ' },
+              { Key: 'ProductType', Value: 'Games' },
+            ],
+          },
+          {
+            // The device suggest alongside it — localized too, still excluded.
+            Source: 'Appareil',
+            Title: 'Manette sans fil',
+            Metas: [
+              { Key: 'BigCatalogId', Value: '8MZBMMCJZPB0' },
+              { Key: 'ProductType', Value: 'Devices' },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+  for (const source of ['Game', 'Jeu', 'Juego', 'Gioco', 'Jogo', 'Spiel']) {
+    const out = xbox.parseSearch(localized(source));
+    assert.equal(out.length, 1, source);
+    assert.equal(out[0].providerId, '9N4XW3N02MNJ', source);
+  }
+});
+
+test('parseSearch falls back to Source when an entry carries no ProductType', () => {
+  // Keeps an autosuggest shape that predates the ProductType check readable.
+  const json = {
+    ResultSets: [
+      {
+        Suggests: [
+          { Source: 'Game', Title: 'Old shape', Metas: [{ Key: 'BigCatalogId', Value: 'ID1' }] },
+          { Source: 'App', Title: 'An app', Metas: [{ Key: 'BigCatalogId', Value: 'ID2' }] },
+        ],
+      },
+    ],
+  };
+  const out = xbox.parseSearch(json);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].providerId, 'ID1');
+});
+
 test('parseSearch respects the limit and tolerates a missing/empty payload', () => {
   assert.equal(xbox.parseSearch(SEARCH_JSON, 1).length, 1);
   assert.deepEqual(xbox.parseSearch({}), []);

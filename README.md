@@ -255,11 +255,14 @@ code and documentation are in English.
   Without it the board-game search silently returns nothing and the other four
   providers carry on — nothing logs and nothing errors, so check the env var
   itself if board games stop being found. Because
-  BGG answers a search with the name that *matched*, typing a German title finds
-  and fills in the German name. The PS Store locale defaults to `de-de` (`PSSTORE_LOCALE`); Steam
-  defaults to the German store, `de`/`german` (`STEAM_CC` / `STEAM_LOCALE`); the
-  Nintendo eShop defaults to the German store, `de` (`NINTENDO_LOCALE`); the
-  Xbox / Microsoft Store defaults to the German store, `de-de` (`XBOX_LOCALE`).
+  BGG answers a search with the name that *matched*, typing a title in your own
+  language finds and fills in that name. The four **digital storefronts** answer
+  in the language the app is set to (the top-bar picker), so an English UI gets
+  English titles and English store links and a German one gets German — no
+  configuration needed. `PSSTORE_LOCALE`, `STEAM_CC` / `STEAM_LOCALE`,
+  `NINTENDO_LOCALE` and `XBOX_LOCALE` remain as the **fallback** a self-hosted
+  instance can pin (they still default to the German store), used only for a
+  language none of those stores serves.
 
 ```
 server.js            starts the HTTP server (the only place that listens)
@@ -319,6 +322,9 @@ lib/
                      counts only, never a secret value and never personal data
   providers/         external game-database providers for the add-game lookup
     index.js         provider registry + image-host allowlist
+    locales.js       maps a request's UI locale onto each storefront's own
+                     spelling of it, through a closed table (never
+                     interpolated — it reaches a fetched URL path)
     psstore.js       PlayStation Store: search + detail via the store's
                      server-rendered page data (digital games)
     bgg.js           BoardGameGeek: search + detail + owned-collection import

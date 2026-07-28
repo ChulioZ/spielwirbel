@@ -111,8 +111,17 @@ BGG answers a search with the name that matched, so a German query yields the
 German alternate name — while `/thing` always reports the primary (usually
 original-language) name. `pickedTitle()` (`public/js/lookup-title.js`)
 therefore keeps the search hit's title for `bgg` and lets detail win for every
-other provider. There is **no `lang` parameter anywhere any more**: no provider
-takes one, so the route, the cache key and the client query string dropped it.
+other provider. **BGG itself still takes no locale** — it accepts the argument
+every provider now receives and ignores it, and its `resolveLocale()` returns a
+constant so its cache stays at one entry. Adding a real one would at best do
+nothing and at worst re-break this.
+
+**`lang` came BACK in #505 — for the four storefronts only.** #117 removed it
+from the route, the cache key and the client query string because *BGG* had
+stopped needing it; that removal was never about the storefronts, which had been
+answering in one deployment-wide language the whole time. Don't read the
+reinstated parameter as a revert of #117. See
+`.claude/rules/storefront-lookup-locale.md`.
 
 **XML is parsed by a small scanner, not a dependency.** Two details are
 load-bearing: an attribute value may legally contain a raw `>` (game titles do,
