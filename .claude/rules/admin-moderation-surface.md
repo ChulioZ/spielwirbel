@@ -2,7 +2,7 @@
 
 `ADMIN_PASSWORD` turns on `/admin.html` + `/api/admin`: lookup/takedown/
 redaction, account suspend/restore, GDPR export/erasure, the action log, the
-status card. `lib/admin.js` · `routes/admin.js` · `public/admin.html` +
+Kennzahlen card. `lib/admin.js` · `routes/admin.js` · `public/admin.html` +
 `public/js/admin.js`. Every trap below fails *silently* or *dangerously* if
 undone.
 
@@ -63,7 +63,7 @@ stayed green.
 `findImageOwner`, `takedownImage`, `logModeration`, `listModeration`,
 `listUsers`, `exportTenant`/`eraseAccount` (#273),
 `findRoundOwner`/`tenantSummary`/`roundContent`/`redactText`/
-`moderationActions` (#275) and `migrationStatus` are **absent** from
+`moderationActions` (#275) and `instanceMetrics` (#404) are **absent** from
 `TENANT_METHODS` (`lib/repo/index.js`). That absence is the enforcement:
 handlers only hold `req.repo`, so they cannot reach cross-tenant methods; only
 the admin-gated `routes/admin.js` requires the module-level repo. Adding one
@@ -88,7 +88,22 @@ route demands the account's own e-mail as `confirmEmail`, checked server-side.
 Sharper related trap: `.claude/rules/erased-account-token-fallback.md` — the
 stateless access token outlives the deleted row.
 
-## 6. The status card (#274) reports DERIVED values — the sweep test is the guard
+## 6. The Kennzahlen card (#274 → #404) reports COUNTS — the sweep test is the guard
+
+`lib/status.js` began as a go-live checklist ("is `ACCOUNTS_ENABLED` really on?
+is `ADMIN_PASSWORD` distinct? did this deploy migrate?"). **#404 removed all of
+that**: once registration opened, every config row answered the same way on
+every deploy forever, and nobody read them. What the card carries now is
+`quotas` (the ceilings) + `metrics` (aggregate usage, from the new global repo
+method `instanceMetrics`). The accepted losses — pending migrations, the
+deployed commit, built assets, mail degrading to the outbox, the two
+secret-distinctness checks, the BGG token — go back to Railway's env vars and
+logs.
+
+**The endpoint, the file name and the DOM ids deliberately did not change**
+(`GET /api/admin/status`, `lib/status.js`, `#statusGrid`/`#statusError`, the
+`.status` grid CSS). Rules and tests cite them and a rename buys nothing
+(`.claude/rules/token-friendly-source-files.md`).
 
 `lib/status.js` must never let a secret reach the response — not truncated,
 not hashed (the panel is password-gated, and a screenshot of it must be
@@ -96,22 +111,41 @@ harmless). Enforced generically: `test/status.test.js` plants recognisable
 values in the secret env vars, serializes the whole response, and asserts none
 appears — plus no long hex blob, which catches "I'll just show a hash". A new
 leaking field fails without anyone extending the test; keep the sweep generic.
+**Since #404 a second generic sweep does the same job for personal data**: it
+seeds rounds/accounts with recognisable names and asserts every field of
+`metrics` is a `number`. A row that "just shows the biggest tenant's name" fails
+without anyone remembering it exists.
 
-- `distinct(a, b)` (the "ADMIN_PASSWORD equals AUTH_PASSWORD?" check) uses the
-  bare length-check + `timingSafeEqual` idiom and returns only the verdict.
-  **Don't "harden" it by hashing the operands first** — a SHA-256 there made
-  CodeQL fail the PR with high-severity `js/insufficient-password-hash`, and
-  the un-hashed form is better code anyway (the only thing the length
-  short-circuit reveals is whether two secrets share a length, to an operator
-  who is handed the equality verdict itself).
+- **The secret-comparison idiom is `safeEqual` in `lib/admin.js`** (also
+  `lib/auth.js`) — bare length check, then `timingSafeEqual`. **Don't "harden"
+  it by hashing the operands first**: a SHA-256 there made CodeQL fail a PR with
+  high-severity `js/insufficient-password-hash`. (`lib/status.js` carried its own
+  copy as `distinct()` until #404 deleted the rows that used it; the trap is a
+  property of the idiom, not of that file.)
 - The server reports facts; the ok/warn/off opinions live in `statusRows()`
-  (`public/js/admin.js`), so changing an opinion never changes the API shape.
-- `assetsBuilt()` lives in `lib/status.js` and `lib/app.js`'s `assetDir()`
-  calls it — one copy. Direction matters: `status.js` must never require
-  `lib/app.js` (cycle: app → routes/admin → status).
-- `migrationStatus()` exists on both backends; JSON answers
-  `{ backend:'json', latest:null, pending:0 }` instead of throwing.
-  `pending > 0` means the code shipped but the schema did not.
+  (`public/js/admin.js`), so changing an opinion never changes the API shape. A
+  **null** verdict is the neutral pill and is what a plain count gets — a green
+  one would read as an all-clear about a number nobody graded.
+- **`instanceMetrics` must read the round tables under `atx()`.**
+  rounds/games/sessions are RLS-scoped, so a plain query under a non-superuser
+  role returns **0 rows, not an error** — the card would report a healthy-looking
+  zero on production while every superuser test stayed green (§5's silent shape,
+  in read form). `test/repo.postgres.test.js` pins it with a plain-role
+  child-process probe, per §3. The un-scoped, no-RLS tables it also reads
+  (`users`, `round_grants`, `invitations`, `friendships`) take plain `knex`.
+- **Demo tenants are excluded from every metric except the demo row**, by the
+  `demo-` tenant prefix (`.claude/rules/guest-demo-accounts.md` §1). `demo.live`
+  is deliberately assembled in `lib/status.js` from the existing
+  `countLiveDemoUsers` rather than inside `instanceMetrics`: it must stay the
+  number the `MAX_LIVE_DEMOS` cap itself enforces, and a second liveness
+  definition in the repo could drift from it.
+- **`metrics.peaks` is keyed exactly like `quotas`** (`roundsPerTenant` /
+  `gamesPerRound` / `tagsPerRound`) so the panel can zip the two without a
+  mapping — that pairing is the whole point of the row: the ceiling alone never
+  said whether anyone was near it.
+- `assetsBuilt()` moved **into `lib/app.js`** with the assets row (#404); it has
+  one caller there. The old "`status.js` must never require `lib/app.js`" cycle
+  warning is moot — `lib/app.js` no longer requires `lib/status.js` at all.
 
 ## 7. Redaction (#275): reads are cross-tenant, writes are NOT
 

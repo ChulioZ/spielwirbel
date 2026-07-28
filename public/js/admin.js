@@ -194,105 +194,73 @@
     refreshLog();
   }
 
-  // ---- instance status (#274) ----------------------------------------------
+  // ---- instance metrics (#274, reshaped by #404) ----------------------------
 
-  // Each row is [label, verdict, value, note?]. The verdict drives the pill
-  // colour: 'ok' = as intended, 'warn' = works but probably not what you meant,
-  // 'off' = a real misconfiguration. Deriving it HERE rather than server-side is
-  // deliberate — the server reports facts, the panel interprets them, so a new
-  // opinion about what "good" looks like never changes the API.
-  function statusRows(s) {
-    const yesNo = (b) => (b ? 'ja' : 'nein');
-    const rows = [];
+  // Each row is [label, verdict, value, note?]. A NULL verdict renders the
+  // neutral pill — which is what a plain count gets, since "42 accounts" is not
+  // good or bad. Only the two rows measured against a ceiling carry an opinion,
+  // and deriving it HERE rather than server-side is deliberate: the server
+  // reports facts, the panel interprets them, so a new opinion about what "good"
+  // looks like never changes the API.
 
-    // Accounts: the flag being on while `enabled` is false means SESSION_SECRET
-    // is missing — the app silently stays in legacy mode.
-    rows.push(['Accounts (Registrierung)',
-      s.accounts.enabled ? 'ok' : (s.accounts.flagSet ? 'off' : 'warn'),
-      s.accounts.enabled ? 'aktiv' : 'aus',
-      s.accounts.flagSet && !s.accounts.enabled
-        ? 'ACCOUNTS_ENABLED ist gesetzt, aber SESSION_SECRET fehlt — die Instanz läuft weiter im Alt-Modus.'
-        : null]);
+  const VERDICT_RANK = { ok: 0, warn: 1, off: 2 };
 
-    rows.push(['SESSION_SECRET',
-      !s.accounts.sessionSecretSet ? 'warn' : (s.accounts.sessionSecretDistinct ? 'ok' : 'off'),
-      !s.accounts.sessionSecretSet ? 'nicht gesetzt' : (s.accounts.sessionSecretDistinct ? 'eigenständig' : 'gleich AUTH_PASSWORD'),
-      s.accounts.sessionSecretSet && !s.accounts.sessionSecretDistinct
-        ? 'Muss ein eigenes Geheimnis sein — sonst kann jedes Gruppenmitglied Tokens fälschen.'
-        : null]);
-
-    rows.push(['ADMIN_PASSWORD',
-      !s.admin.enabled ? 'warn' : (s.admin.secretDistinct ? 'ok' : 'off'),
-      !s.admin.enabled ? 'nicht gesetzt' : (s.admin.secretDistinct ? 'eigenständig' : 'gleich AUTH_PASSWORD'),
-      s.admin.enabled && !s.admin.secretDistinct
-        ? 'Rechteausweitung: Jede Person mit dem App-Passwort hätte Operator-Rechte.'
-        : null]);
-
-    rows.push(['E-Mail-Versand', s.mail.configured ? 'ok' : 'off',
-      s.mail.configured ? 'SMTP konfiguriert' : 'nur Outbox (kein Versand)',
-      s.mail.configured ? null
-        : 'Ohne SMTP_HOST + SMTP_USER + SMTP_PASS landen Verifizierungs- und Reset-Mails im Speicher und werden nie zugestellt.']);
-
-    rows.push(['MAIL_FROM / APP_BASE_URL',
-      s.mail.fromSet && s.mail.baseUrlSet ? 'ok' : 'warn',
-      `${yesNo(s.mail.fromSet)} / ${yesNo(s.mail.baseUrlSet)}`]);
-
-    // Second half of the footer gate (#224/#134): the public footer (Kontakt +
-    // Rechtliches) renders — and /impressum + /datenschutz exist — only when
-    // mail works AND both identity vars are set.
-    const legalOk = s.legal.impressumAddressSet && s.legal.impressumEmailSet;
-    rows.push(['Impressum-Adresse / -E-Mail', legalOk ? 'ok' : 'off',
-      `${yesNo(s.legal.impressumAddressSet)} / ${yesNo(s.legal.impressumEmailSet)}`,
-      legalOk ? null
-        : 'Ohne IMPRESSUM_ADDRESS + IMPRESSUM_EMAIL bleiben Impressum/Datenschutz 404 und der öffentliche Footer (Kontakt + Rechtliches) verborgen.']);
-
-    rows.push(['Bild-Speicher', s.storage.images === 's3' ? 'ok' : 'warn',
-      s.storage.images === 's3' ? 'S3 / R2' : 'lokale Festplatte',
-      s.storage.images === 's3' ? null
-        : 'Ohne S3_BUCKET liegen Cover im Container und sind nach dem nächsten Deploy weg.']);
-
-    rows.push(['Datenspeicher', s.storage.data === 'postgres' ? 'ok' : 'warn',
-      s.storage.data === 'postgres' ? 'PostgreSQL' : 'data.json',
-      s.storage.data === 'postgres' ? null
-        : 'Ohne DATABASE_URL liegen die Runden in einer Datei im Container.']);
-
-    rows.push(['Migrationen',
-      s.migrations.pending ? 'off' : 'ok',
-      s.migrations.backend === 'json'
-        ? 'entfällt (JSON)'
-        : `${s.migrations.latest || 'keine'}${s.migrations.pending ? ` · ${s.migrations.pending} offen` : ''}`,
-      s.migrations.pending ? 'Der Code ist neuer als das Schema — dieser Deploy hat nicht migriert.' : null]);
-
-    rows.push(['Kontingente', s.quotas.enforced ? 'ok' : 'warn',
-      s.quotas.enforced ? 'aktiv' : 'inaktiv (Accounts aus)',
-      `Runden/Tenant ${s.quotas.roundsPerTenant} · Spiele/Runde ${s.quotas.gamesPerRound} · Tags/Runde ${s.quotas.tagsPerRound}`]);
-
-    rows.push(['Kanonische Domain', 'ok', s.hosts.canonical,
-      s.hosts.redirects.length ? `Weiterleitung: ${s.hosts.redirects.join(', ')}` : 'keine Weiterleitungen']);
-
-    rows.push(['Assets', s.assets.built ? 'ok' : 'warn',
-      s.assets.built ? 'gebautes dist/' : 'public/ (ungebaut)',
-      s.assets.built ? null : 'Ohne Build greift kein Cache-Busting — Clients können alte JS/CSS behalten.']);
-
-    rows.push(['BGG-Lookup', s.lookup.bggTokenSet ? 'ok' : 'warn',
-      s.lookup.bggTokenSet ? 'Token gesetzt' : 'BGG_API_TOKEN fehlt',
-      s.lookup.bggTokenSet ? null : 'Ohne Token liefert die Brettspiel-Suche stumm keine Treffer; die übrigen Anbieter laufen weiter.']);
-
-    rows.push(['Version', 'ok',
-      `${s.app.version || '—'}${s.app.commit ? ` · ${s.app.commit}` : ''}`,
-      `NODE_ENV: ${s.app.nodeEnv || '—'} · Laufzeit: ${formatUptime(s.app.uptimeSeconds)}`]);
-
-    return rows;
+  // Usage against a ceiling: red at or past the cap, amber from 80 %. The same
+  // thresholds quotaPill uses on the tenant-lookup card — one idiom for "how
+  // close is this to refusing someone", not two.
+  function capVerdict(used, limit) {
+    const ratio = limit > 0 ? used / limit : 0;
+    if (ratio >= 1) return 'off';
+    if (ratio >= 0.8) return 'warn';
+    return 'ok';
   }
 
-  function formatUptime(seconds) {
-    if (!Number.isFinite(seconds)) return '—';
-    const d = Math.floor(seconds / 86400);
-    const h = Math.floor((seconds % 86400) / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    if (d) return `${d} d ${h} h`;
-    if (h) return `${h} h ${m} min`;
-    return `${m} min`;
+  function statusRows(s) {
+    const m = s.metrics;
+    const rows = [];
+
+    rows.push(['Konten', null, String(m.accounts.total),
+      `${m.accounts.verified} bestätigt · ${m.accounts.total - m.accounts.verified} unbestätigt`
+      + ` · ${m.accounts.disabled} gesperrt`]);
+
+    rows.push(['Neue Konten', null, `${m.accounts.new7d} / ${m.accounts.new30d}`,
+      'letzte 7 / 30 Tage']);
+
+    rows.push(['Aktivierung', null, `${m.rounds.tenants} / ${m.accounts.total}`,
+      'Konten mit mindestens einer Runde']);
+
+    rows.push(['Runden', null, String(m.rounds.total)]);
+
+    rows.push(['Spiele', null, String(m.content.games)]);
+
+    rows.push(['Sessions', null, String(m.content.sessions),
+      `${m.content.sessionsFinished} abgeschlossen · ${m.content.sessions30d} in den letzten 30 Tagen`]);
+
+    rows.push(['Demo-Konten', capVerdict(m.demo.live, m.demo.max),
+      `${m.demo.live} / ${m.demo.max}`, 'aktiv gegen MAX_LIVE_DEMOS']);
+
+    rows.push(['Teilen & Freunde', null,
+      `${m.social.sharedRounds} · ${m.social.invitationsOpen} · ${m.social.friendships}`,
+      'geteilte Runden · offene Einladungen · Freundschaften']);
+
+    // The quota row pairs each ceiling with the highest value anyone currently
+    // holds, so "is someone about to be refused?" is answerable without a
+    // database console — the pill goes amber/red as soon as ANY of the three
+    // crosses its threshold, and the note says which. With accounts off the
+    // ceilings are inert (.claude/rules/per-tenant-quotas.md), so the peaks are
+    // shown without a verdict that implies a refusal that cannot happen.
+    const peakVerdict = s.quotas.enforced
+      ? ['roundsPerTenant', 'gamesPerRound', 'tagsPerRound']
+        .map((k) => capVerdict(m.peaks[k], s.quotas[k]))
+        .reduce((worst, v) => (VERDICT_RANK[v] > VERDICT_RANK[worst] ? v : worst), 'ok')
+      : 'warn';
+    rows.push(['Kontingente', peakVerdict,
+      s.quotas.enforced ? 'aktiv' : 'inaktiv (Accounts aus)',
+      `Höchstwerte: Runden/Konto ${m.peaks.roundsPerTenant} / ${s.quotas.roundsPerTenant}`
+      + ` · Spiele/Runde ${m.peaks.gamesPerRound} / ${s.quotas.gamesPerRound}`
+      + ` · Tags/Runde ${m.peaks.tagsPerRound} / ${s.quotas.tagsPerRound}`]);
+
+    return rows;
   }
 
   async function loadStatus() {
@@ -318,7 +286,9 @@
       item.appendChild(head);
 
       const pill = document.createElement('span');
-      pill.className = `pill pill--${verdict}`;
+      // No verdict = the neutral pill: a bare count is neither good nor bad, and
+      // a green one would read as an all-clear about a number nobody graded.
+      pill.className = verdict ? `pill pill--${verdict}` : 'pill';
       pill.textContent = value;
       item.appendChild(pill);
 

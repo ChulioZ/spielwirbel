@@ -22,7 +22,7 @@ list nothing that is not actually in place.
 - Anti-Enumeration: Registrierung/Passwort-vergessen antworten für bekannte und
   unbekannte Adressen identisch; Login verbrennt konstante Argon2-Arbeit.
 - Betreiber-Panel hinter eigenem `ADMIN_PASSWORD` (nie gleich dem App-Passwort,
-  domain-separierte Token — `lib/admin.js`); Statuskarte prüft die Trennung.
+  domain-separierte Token — `lib/admin.js`).
 - Uploads sind zugriffsgeschützt (Cookie/Bearer-Gate auf `/uploads`); kein
   öffentlicher Bucket-Zugriff (Read-through-Proxy, #128).
 

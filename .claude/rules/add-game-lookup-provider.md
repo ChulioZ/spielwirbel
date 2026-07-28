@@ -86,9 +86,12 @@ Four things about it bite:
 - **No token ⇒ `search()` returns `[]` and `detail()` returns the null-shaped
   product** — never a throw. The frontend merges providers with
   `Promise.allSettled`, so a 502 here would render as "couldn't reach provider"
-  across the whole dropdown; an empty list leaves the other four clean. The
-  silence is why `lib/status.js` reports `lookup.bggTokenSet` — otherwise a
-  missing token is invisible to the operator.
+  across the whole dropdown; an empty list leaves the other four clean. Note the
+  cost of that silence: a missing token is invisible to the operator — nothing
+  logs, nothing 500s, the board-game search simply never finds anything. The
+  admin panel used to surface it (`lookup.bggTokenSet`) until #404 dropped every
+  configuration row from that card, so the only check now is the Railway env
+  var. `docs/deploy-railway.md`'s go-live list says so.
 - **Throttling is a status code, not a queue.** BGG answers `500`/`503` when
   too busy (`202` on some endpoints, `429` generically). `fetchXml` retries
   exactly those, twice, inside one 8 s budget; every other status (notably

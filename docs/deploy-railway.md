@@ -278,7 +278,8 @@ These need an account or a credential I can't create or hold:
       `SESSION_SECRET` before any public URL.
 - [ ] Register the **BoardGameGeek application**, create a token under
       [Applications → Tokens](https://boardgamegeek.com/applications), and set
-      `BGG_API_TOKEN` (the operator status card flags it while it's missing).
+      `BGG_API_TOKEN` — without it the board-game search answers every query
+      with an empty list, silently, so nothing else will tell you it is missing.
 - [ ] Add the **custom domain** and its DNS record.
 - [ ] Set up an **external uptime monitor** (~1 min interval, alerting to your
       phone) with two checks: `/healthz` for liveness and `/readyz` for the

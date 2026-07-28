@@ -2081,18 +2081,128 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.ping(), true);
   });
 
-  test('migrationStatus reports the schema state in a backend-agnostic shape', async () => {
-    const status = await repo.migrationStatus();
-    assert.ok(['json', 'postgres'].includes(status.backend));
-    assert.equal(typeof status.pending, 'number');
-    // A freshly initialised store is fully migrated either way.
-    assert.equal(status.pending, 0);
-    if (status.backend === 'json') {
-      assert.equal(status.latest, null);
-    } else {
-      // init() ran migrate.latest(), so a real migration name must be recorded.
-      assert.match(status.latest, /^\d+_/);
-    }
+  // The operator's Kennzahlen card (#404). Global like every other operator
+  // method, so it takes no tenant and stays out of TENANT_METHODS.
+  //
+  // The suite shares one store, so every assertion here is a DELTA against a
+  // baseline taken at the top of the case — an absolute count would pass alone
+  // and fail in file order.
+  test('instanceMetrics counts the instance, excluding demo tenants', async (t) => {
+    const NOW = '2026-07-28T12:00:00.000Z';
+    const daysAgo = (n) => new Date(Date.parse(NOW) - n * 86400000).toISOString();
+    const before = await repo.instanceMetrics(NOW);
+
+    const tenant = `metrics-${Math.random().toString(16).slice(2)}`;
+    const round = await repo.createRound(tenant, { name: 'Zählrunde', members: ['Ann', 'Bo'] });
+    const g1 = await repo.createGame(tenant, round.id, {
+      title: 'Eins', minPlayers: 1, maxPlayers: 4, image: null, source: null,
+    });
+    await repo.createGame(tenant, round.id, {
+      title: 'Zwei', minPlayers: 1, maxPlayers: 4, image: null, source: null,
+    });
+    await repo.addTag(tenant, round.id, 'Kurz', null);
+    await repo.createSession(tenant, round.id, {
+      gameIds: [g1.id], votes: {}, createdAt: daysAgo(2), finished: true,
+    });
+    await repo.createSession(tenant, round.id, {
+      gameIds: [g1.id], votes: {}, createdAt: daysAgo(90), finished: false,
+    });
+
+    await t.test('rounds, games, sessions and their maxima all move', async () => {
+      const m = await repo.instanceMetrics(NOW);
+      assert.equal(m.rounds.total, before.rounds.total + 1);
+      assert.equal(m.rounds.tenants, before.rounds.tenants + 1);
+      assert.equal(m.content.games, before.content.games + 2);
+      assert.equal(m.content.sessions, before.content.sessions + 2);
+      assert.equal(m.content.sessionsFinished, before.content.sessionsFinished + 1);
+      // Only the 2-day-old one is inside the 30-day window; the 90-day-old one
+      // is the boundary's other side.
+      assert.equal(m.content.sessions30d, before.content.sessions30d + 1);
+      assert.ok(m.peaks.gamesPerRound >= 2);
+      assert.ok(m.peaks.tagsPerRound >= 1);
+      assert.ok(m.peaks.roundsPerTenant >= 1);
+      // Postgres count() is a bigint pg hands back as a STRING; every number
+      // here must have been coerced or the two backends disagree.
+      for (const n of [m.rounds.total, m.content.games, m.peaks.gamesPerRound, m.social.friendships]) {
+        assert.equal(typeof n, 'number');
+      }
+    });
+
+    await t.test('a demo tenant contributes to nothing', async () => {
+      const mid = await repo.instanceMetrics(NOW);
+      const demoTenant = `demo-${Math.random().toString(16).slice(2)}`;
+      const demoRound = await repo.createRound(demoTenant, { name: 'Demo', members: ['Gast'] });
+      await repo.createGame(demoTenant, demoRound.id, {
+        title: 'Demo-Spiel', minPlayers: 1, maxPlayers: 4, image: null, source: null,
+      });
+      await repo.createSession(demoTenant, demoRound.id, {
+        gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true,
+      });
+      await repo.createUser({ ...userFields(), tenantId: demoTenant, demo: true, createdAt: daysAgo(1) });
+
+      const m = await repo.instanceMetrics(NOW);
+      assert.deepEqual(m.rounds, mid.rounds);
+      assert.deepEqual(m.content, mid.content);
+      assert.deepEqual(m.accounts, mid.accounts);
+    });
+
+    await t.test('the social counts see accepted rows only, never a demo one', async () => {
+      const mid = await repo.instanceMetrics(NOW);
+      const demoTenant = `demo-${Math.random().toString(16).slice(2)}`;
+      const real = await repo.createUser({ ...userFields(), tenantId: `t-${Math.random().toString(16).slice(2)}` });
+      const guest = await repo.createUser({ ...userFields(), tenantId: demoTenant, demo: true });
+
+      // Two grants on ONE round: a round shared with two people is still one
+      // shared round.
+      const shared = `sr-${Math.random().toString(16).slice(2)}`;
+      await repo.createGrant({ roundId: shared, ownerTenantId: tenant, userId: real.id });
+      await repo.createGrant({ roundId: shared, ownerTenantId: tenant, userId: guest.id });
+      // A grant owned by a demo tenant is not a shared round of this instance.
+      await repo.createGrant({ roundId: `sr-${Math.random().toString(16).slice(2)}`, ownerTenantId: demoTenant, userId: real.id });
+
+      await repo.createInvitation({
+        roundId: shared, ownerTenantId: tenant, inviterUserId: real.id, inviteeUserId: guest.id,
+      });
+      const demoInv = await repo.createInvitation({
+        roundId: 'r-demo', ownerTenantId: demoTenant, inviterUserId: guest.id, inviteeUserId: real.id,
+      });
+      // A resolved invitation is not an open one.
+      await repo.resolveInvitation(demoInv.id, 'declined');
+
+      // Pending is not a friendship; and one involving a demo account never is.
+      const pending = await repo.createFriendRequest({ requesterUserId: real.id, addresseeUserId: guest.id });
+      const withDemo = await repo.createFriendRequest({ requesterUserId: guest.id, addresseeUserId: real.id });
+      assert.equal(withDemo, 'request_pending', 'the pair already exists in the other direction');
+      await repo.acceptFriendRequest(pending.id, guest.id);
+
+      const m = await repo.instanceMetrics(NOW);
+      assert.equal(m.social.sharedRounds, mid.social.sharedRounds + 1);
+      assert.equal(m.social.invitationsOpen, mid.social.invitationsOpen + 1);
+      assert.equal(m.social.friendships, mid.social.friendships, 'a demo friendship must not count');
+    });
+
+    await t.test('accounts count by state, and by the 7/30-day windows', async () => {
+      const mid = await repo.instanceMetrics(NOW);
+      await repo.createUser({
+        ...userFields(), tenantId: `t-${Math.random().toString(16).slice(2)}`,
+        createdAt: daysAgo(3), emailVerified: true,
+      });
+      await repo.createUser({
+        ...userFields(), tenantId: `t-${Math.random().toString(16).slice(2)}`,
+        createdAt: daysAgo(20), emailVerified: false, disabled: true,
+      });
+      await repo.createUser({
+        ...userFields(), tenantId: `t-${Math.random().toString(16).slice(2)}`,
+        createdAt: daysAgo(200), emailVerified: true,
+      });
+
+      const m = await repo.instanceMetrics(NOW);
+      assert.equal(m.accounts.total, mid.accounts.total + 3);
+      assert.equal(m.accounts.verified, mid.accounts.verified + 2);
+      assert.equal(m.accounts.disabled, mid.accounts.disabled + 1);
+      assert.equal(m.accounts.new7d, mid.accounts.new7d + 1);
+      assert.equal(m.accounts.new30d, mid.accounts.new30d + 2);
+    });
   });
 
   // The suite shares one store across cases, so assert on the delta, not on an

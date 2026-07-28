@@ -201,15 +201,17 @@ that a generic scanner does not know about.
 
 ## Storage, logging & disclosure
 
-### S-017 — No secret or personal data reaches logs, the status card, or any error body
-- **Status:** adopted · 2026-07-24
+### S-017 — No secret or personal data reaches logs, the Kennzahlen card, or any error body
+- **Status:** adopted · 2026-07-24 (card reshaped by #404, 2026-07-28)
 - **Source:** `.claude/rules/product-event-logging.md`, `admin-moderation-surface.md` §6
 - **Check:** `requestLogger` logs method/path/status/timing/ip only — never bodies, query
   strings, headers or cookies. `trackEvent` logs `event` + `tenantId` only and drops any
-  other field. `lib/status.js` reports derived facts, never a secret (not even hashed).
+  other field. `lib/status.js` reports quota ceilings and aggregate counts — never a
+  secret (not even hashed), and never a name, address or id.
   `listUsers()` returns raw user rows *including secrets* — the admin route must project
   down to safe fields; never respond with it directly.
-- **Enforced by:** `test/status.test.js` (generic secret sweep) · the logging allowlists are manual
+- **Enforced by:** `test/status.test.js` (two generic sweeps: planted secret values, and
+  "every metric is a number") · the logging allowlists are manual
 
 ### S-018 — The uploads/cover object lifecycle frees bytes and never serves them unauthenticated
 - **Status:** adopted · 2026-07-24

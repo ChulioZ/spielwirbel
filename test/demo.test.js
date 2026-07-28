@@ -411,10 +411,21 @@ test('demo tenants are excluded from the product counters, real ones are not', a
   assert.strictEqual(tracked[0].tenantId, 'a1b2c3d4e5f60718');
 });
 
-test('the demo tenant prefix is the same string in both modules', () => {
-  // observability.js duplicates the literal to avoid a require cycle, so nothing
-  // but this pins them together — and a drift silently un-excludes demo traffic.
-  assert.strictEqual(demo.DEMO_TENANT_PREFIX, observability.DEMO_TENANT_PREFIX);
+test('the demo tenant prefix has exactly one definition in the repo', () => {
+  // It used to be a literal in lib/demo.js plus a hand-copied one in
+  // lib/observability.js (which cannot require lib/demo.js — that pulls in the
+  // repo, i.e. a cycle), pinned together by an equality assertion. #404 added a
+  // third and fourth consumer (both repo backends), so the shared leaf module
+  // lib/demo-tenant.js replaced the copy: it cannot drift at all. This asserts
+  // the copy has not come back.
+  const sources = ['../lib/demo.js', '../lib/observability.js', '../lib/repo/json.js', '../lib/repo/postgres.js']
+    .map((rel) => fs.readFileSync(path.join(__dirname, rel), 'utf8'));
+  for (const src of sources) {
+    // Quote-agnostic: a re-introduced copy is just as wrong in double quotes.
+    assert.equal(/=\s*['"`]demo-['"`]/.test(src), false,
+      'the prefix literal was re-introduced outside lib/demo-tenant.js');
+  }
+  assert.strictEqual(demo.DEMO_TENANT_PREFIX, require('../lib/demo-tenant').DEMO_TENANT_PREFIX);
 });
 
 test('a minted demo tenant actually carries the prefix', () => {
