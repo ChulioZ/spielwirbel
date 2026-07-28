@@ -23,6 +23,7 @@ const request = require('supertest');
 
 const { app } = require('./helpers');
 const repo = require('../lib/repo');
+const demo = require('../lib/demo');
 const { outbox } = require('../lib/mail');
 const { logger, clearLogs } = require('../lib/observability');
 
@@ -1133,6 +1134,56 @@ test('the account list can be filtered by ?q= (#403)', async (t) => {
       const emails = (await list(query)).body.users.map((u) => u.email);
       assert.ok(emails.includes('needle-alpha@example.com'), query);
       assert.ok(emails.includes('unrelated-beta@example.com'), query);
+    }
+  });
+});
+
+/*
+ * #506: a guest demo (#427) mints a real account row per visitor, so once the
+ * demo is public the Konten list fills with throwaway rows the scheduler purges
+ * on its own — noise in the operator's moderation surface, and no moderation
+ * action against one is meaningful anyway. They are excluded from the listing
+ * AND from any `?q=`, so a search term can never surface one either.
+ *
+ * Minted through demo.createDemoAccount directly rather than POST
+ * /api/account/demo: the route is gated on DEMO_ENABLED, which this file does
+ * not set, and the mint itself is what the exclusion keys on. A null ipHash
+ * skips the per-IP live cap (.claude/rules/per-ip-live-caps.md).
+ */
+test('the account list never shows a guest-demo account (#506)', async (t) => {
+  const cookie = await adminCookie();
+  const real = await makeAccount('konten-real@example.com'); // username 'konten-real'
+  const guest = await demo.createDemoAccount('de', null);
+  assert.notEqual(guest, 'unavailable', 'the demo mint must succeed for this test to mean anything');
+  assert.ok(demo.isDemoTenant(guest.tenantId), 'the minted account really is a demo');
+
+  const list = (query) => request(app)
+    .get(`/api/admin/users${query}`).set('Cookie', cookie);
+
+  await t.test('"Alle anzeigen" omits it', async () => {
+    for (const query of ['', '?q=', '?q=%20%20']) {
+      const users = (await list(query)).body.users;
+      assert.equal(users.some((u) => u.id === guest.id), false, query);
+      // The same request still carries the real account, so the filter cannot
+      // be passing by having emptied the list.
+      assert.ok(users.some((u) => u.email === 'konten-real@example.com'), query);
+    }
+  });
+
+  // Each of these matches the demo row exactly, so an unfiltered search would
+  // return it and nothing else — the strongest form of the assertion.
+  await t.test('no search term reaches it, not even an exact identifier', async () => {
+    for (const term of [guest.email, guest.username, guest.tenantId, 'demo-']) {
+      const res = await list(`?q=${encodeURIComponent(term)}`);
+      assert.equal(res.status, 200, term);
+      assert.deepEqual(res.body.users.map((u) => u.id), [], term);
+    }
+  });
+
+  await t.test('a real account is still searchable by every identifier', async () => {
+    for (const term of ['konten-real@example.com', 'KONTEN-REAL', 'konten-real', real.user.tenantId]) {
+      const emails = (await list(`?q=${encodeURIComponent(term)}`)).body.users.map((u) => u.email);
+      assert.deepEqual(emails, ['konten-real@example.com'], term);
     }
   });
 });

@@ -728,7 +728,9 @@ The tables themselves are **search-first and row-click** (issue #403). The
 **Konten** card fetches nothing until the operator searches (by partial e-mail,
 username or tenant id — `GET /api/admin/users?q=…` filters server-side), so no
 account's e-mail address leaves the server just because the panel was opened;
-an explicit **„Alle anzeigen"** still lists everything. Rows across Konten,
+an explicit **„Alle anzeigen"** still lists every registered account. Guest-demo
+accounts are never listed and never match a search (issue #506) — they are
+throwaway rows the scheduler purges on its own. Rows across Konten,
 Meldungen, Feedback and Texte der Runde carry no inline buttons: clicking one
 (or focusing it and pressing Enter) opens a dialog holding the full record and
 every action that applies to it. Individual **Feedback** entries and

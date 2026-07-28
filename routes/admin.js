@@ -27,6 +27,7 @@ const repo = require('../lib/repo');
 const storage = require('../lib/storage');
 const mail = require('../lib/mail');
 const quota = require('../lib/quota');
+const demo = require('../lib/demo');
 const { instanceStatus } = require('../lib/status');
 const { CSV_BOM, toCsv } = require('../lib/csv');
 const { logger, recentLogs } = require('../lib/observability');
@@ -358,9 +359,20 @@ const safeUser = (u) => ({
 // addresses ever leave the server — data protection by default (Art. 25 DSGVO).
 // No `q` still returns everything, which is what the panel's deliberate
 // "Alle anzeigen" asks for.
+//
+// Guest-demo accounts (#427) are dropped BEFORE the `?q=` filter (#506), so a
+// search term can never surface one either. They are throwaway rows the
+// scheduler purges on its own, have no password identity and cannot invite or
+// befriend anyone, so no moderation action against one is meaningful — they are
+// pure noise in the operator's account list. Classified by tenant prefix via
+// demo.isDemoTenant, the one tested predicate for it, exactly as
+// lib/observability.js keeps demo traffic out of the product-event counts
+// (.claude/rules/guest-demo-accounts.md).
 router.get('/users', async (req, res) => {
   const q = String(req.query.q || '').trim().toLowerCase();
-  const users = (await repo.listUsers()).map(safeUser);
+  const users = (await repo.listUsers())
+    .filter((u) => !demo.isDemoTenant(u.tenantId))
+    .map(safeUser);
   res.json({
     users: q
       ? users.filter((u) => [u.email, u.username, u.tenantId]

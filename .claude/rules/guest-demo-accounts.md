@@ -29,6 +29,16 @@ almost everything (a cycle). `test/demo.test.js` asserts the two strings are equ
 — that assertion is the entire licence for the copy, exactly as
 `.claude/rules/shared-constants-across-the-stack.md` allows for `TAG_ICONS`.
 
+**Everything else requires `isDemoTenant` instead of re-deriving the check.** The
+cycle is specific to `observability.js`; a `routes/*.js` file can require
+`lib/demo` freely (`account.js`, `friends.js`, `invitations.js` and, since #506,
+`admin.js` all do). The second consumer is the admin **Konten** list: `GET
+/api/admin/users` drops demo rows *before* the `?q=` filter, so a search term
+cannot surface one either — same reasoning as the counters, since a demo is
+purged on its own and no moderation action against one is meaningful. Prefer the
+predicate over `user.demo` or the `@demo.invalid` address shape: those are three
+ways to spell one fact, and only the tenant prefix is the tested one.
+
 ## 2. A demo account NEEDS a unique synthetic e-mail — `null === null`
 
 `createUser` refuses a duplicate address, and the JSON backend compares with
