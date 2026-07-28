@@ -37,24 +37,43 @@ test('GET /robots.txt is a real text/plain policy, not the app shell', async () 
   assert.match(res.text, /^Sitemap: https:\/\/spielwirbel\.app\/sitemap\.xml$/m);
 });
 
-test('robots.txt disallows the private surfaces', async () => {
+test('robots.txt disallows the surfaces that have no head of their own', async () => {
+  // Only paths that cannot carry a per-page noindex: the API, user uploads, and
+  // the unbounded /round/ id space (all served the identical shell, whose
+  // canonical already points at the front door). Anything that IS an HTML page
+  // we ship uses noindex instead — see the next test for why.
   const res = await request(app).get('/robots.txt');
-  for (const p of ['/api/', '/uploads/', '/admin.html', '/round/']) {
+  for (const p of ['/api/', '/uploads/', '/round/']) {
     assert.match(res.text, new RegExp(`^Disallow: ${p.replace(/[/]/g, '\\/')}$`, 'm'),
       `robots.txt should disallow ${p}`);
   }
 });
 
-test('robots.txt does NOT disallow the two noindex pages (#510)', async () => {
+test('robots.txt disallows NO page that carries a noindex (#510)', async () => {
   // The trap this pins, and the reason the two mechanisms are not
   // interchangeable: a Disallow stops the fetch, so the crawler never reads the
   // page's `noindex` and the existing index entry survives indefinitely.
   // Crawl-allowed + noindex is the only pair that REMOVES an indexed page, and
   // removing login.html's entry is the entire point of the issue.
   //
-  // Written as a scan of every Disallow rather than two literal assertions, so a
-  // future `Disallow: /*.html` or `Disallow: /login*` is caught too — the
+  // The page list is DERIVED from the files rather than written out, so a page
+  // that gains a noindex later is covered without anyone remembering this test —
+  // that is how admin.html was caught: it has carried a noindex since #268 and
+  // was nonetheless disallowed here in this issue's first draft, which would
+  // have frozen its entry had it ever been indexed (and advertised the admin
+  // path in a file crawlers and scanners both read).
+  //
+  // Matching is a scan of every Disallow rather than a literal per-page check,
+  // so a future `Disallow: /*.html` or `Disallow: /login*` is caught too — the
   // mistake reappears as a pattern far more easily than as an exact path.
+  const noindexPages = fs.readdirSync(path.join(ROOT, 'public'))
+    .filter((f) => f.endsWith('.html'))
+    .filter((f) => /<meta name="robots" content="noindex/.test(
+      fs.readFileSync(path.join(ROOT, 'public', f), 'utf8')))
+    .map((f) => '/' + f);
+  assert.ok(noindexPages.length >= 3,
+    `expected at least login/kontakt/admin to be noindex, found ${noindexPages.join(', ')}`);
+
   const res = await request(app).get('/robots.txt');
   const rules = res.text
     .split('\n')
@@ -63,7 +82,7 @@ test('robots.txt does NOT disallow the two noindex pages (#510)', async () => {
     .map((l) => l.slice('Disallow:'.length).trim())
     .filter(Boolean);
 
-  for (const page of ['/login.html', '/kontakt.html']) {
+  for (const page of noindexPages) {
     for (const rule of rules) {
       // A robots.txt path is a prefix match, with `*` as a wildcard.
       const re = new RegExp('^' + rule.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*'));
@@ -73,8 +92,8 @@ test('robots.txt does NOT disallow the two noindex pages (#510)', async () => {
   }
 });
 
-test('the two standalone pages carry a noindex', async () => {
-  for (const page of ['/login.html', '/kontakt.html']) {
+test('the standalone pages served on every instance carry a noindex', async () => {
+  for (const page of ['/login.html', '/kontakt.html', '/admin.html']) {
     const res = await request(app).get(page);
     assert.equal(res.status, 200, `${page} is still served`);
     assert.match(res.text, /<meta name="robots" content="noindex, nofollow"\s*\/?>/,

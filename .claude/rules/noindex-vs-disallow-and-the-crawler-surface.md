@@ -22,14 +22,26 @@ A crawler can only obey a `noindex` it is **allowed to fetch**. Disallow the URL
 and the crawler never re-reads the page, never sees the directive, and the
 existing entry survives indefinitely — a disallowed-but-already-indexed URL can
 even stay listed as a bare link with no snippet. **Crawl-allowed + noindex is the
-only combination that removes an already-indexed page**, so `login.html` and
-`kontakt.html` carry the meta tag and are deliberately *absent* from
-`public/robots.txt`, with a comment there saying so.
+only combination that removes an already-indexed page.**
 
-`test/seo.test.js` pins it as a scan over **every** `Disallow` rule, evaluated as
-the prefix-plus-`*` match robots.txt actually uses — not two literal string
-checks. A future `Disallow: /*.html` is the far likelier way this comes back, and
-it is caught (verified: both the literal and the wildcard form redden it).
+So the policy split is: **`Disallow` only for what has no head of its own to
+carry a directive** (`/api/`, `/uploads/`, and the unbounded `/round/` id space,
+which is served the same shell and already points its canonical at the front
+door). Every HTML page we ship uses `noindex` instead and stays crawl-allowed.
+
+**This is easy to get wrong even while writing the rule.** #510's own first draft
+listed `Disallow: /admin.html` — a page that has carried a `noindex` since #268.
+That entry did nothing for indexing, would have frozen the entry had the page
+ever been indexed, and advertised the admin path in the one file every crawler
+and vulnerability scanner reads. Caught in review, not by the tests as first
+written.
+
+Hence `test/seo.test.js` **derives** the protected list by scanning
+`public/*.html` for the meta tag, rather than naming pages — a page that gains a
+`noindex` later is covered with nobody remembering this test exists. It then
+scans **every** `Disallow` rule, evaluated as the prefix-plus-`*` match
+robots.txt actually uses, so a future `Disallow: /*.html` is caught as well as a
+literal path (verified: both forms redden it).
 
 ## 2. The SPA fallback answers `/robots.txt` with `200 text/html`
 

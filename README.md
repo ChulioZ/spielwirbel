@@ -391,7 +391,7 @@ public/
   admin.html         standalone operator moderation page (needs ADMIN_PASSWORD)
   styles.css
   manifest.webmanifest  PWA manifest (installable app metadata + icons)
-  robots.txt         crawl policy; the noindex'd pages stay crawl-ALLOWED (#510)
+  robots.txt         crawl policy; every noindex page stays crawl-ALLOWED (#510)
   sitemap.xml        the four public URLs, on the canonical host
   sw.js              service worker: precache the app shell, offline fallback
   fonts/             self-hosted fonts + Tabler icon set

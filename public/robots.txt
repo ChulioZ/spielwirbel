@@ -2,16 +2,21 @@
 # the SPA fallback answered /robots.txt with the app shell at 200 text/html, so
 # "no robots.txt" looked exactly like a working one.
 #
-# NOTE: /login.html and /kontakt.html are deliberately NOT disallowed here. Both
-# carry <meta name="robots" content="noindex">, and a crawler can only act on a
-# noindex it is allowed to fetch — disallowing them would freeze their existing
-# index entries in place forever. Crawl-allowed + noindex is the only
-# combination that removes an already-indexed page.
+# NOTE: no page that carries <meta name="robots" content="noindex"> may be
+# listed below — today that is login.html, kontakt.html and admin.html. A
+# crawler can only act on a noindex it is allowed to FETCH, so disallowing one
+# would freeze its existing index entry in place forever. Crawl-allowed +
+# noindex is the only combination that removes an already-indexed page.
+# test/seo.test.js derives that list from the files themselves and fails if any
+# rule here matches one.
+#
+# So the rules below cover only what has no head of its own to carry a noindex:
+# the API, user uploads, and the round routes (an unbounded id space, all served
+# the same shell, which already points its canonical at the front door).
 
 User-agent: *
 Disallow: /api/
 Disallow: /uploads/
-Disallow: /admin.html
 Disallow: /round/
 
 Sitemap: https://spielwirbel.app/sitemap.xml
