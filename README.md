@@ -253,7 +253,8 @@ code and documentation are in English.
   bearer token in `BGG_API_TOKEN` (create one at
   [boardgamegeek.com/applications](https://boardgamegeek.com/applications)).
   Without it the board-game search silently returns nothing and the other four
-  providers carry on; the operator status panel flags the missing token. Because
+  providers carry on — nothing logs and nothing errors, so check the env var
+  itself if board games stop being found. Because
   BGG answers a search with the name that *matched*, typing a German title finds
   and fills in the German name. The PS Store locale defaults to `de-de` (`PSSTORE_LOCALE`); Steam
   defaults to the German store, `de`/`german` (`STEAM_CC` / `STEAM_LOCALE`); the
