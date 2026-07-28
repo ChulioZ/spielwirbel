@@ -332,7 +332,8 @@ routes/
   account.js         /api/account           (user accounts: register, verify
                                              e-mail (+ resend), login, refresh,
                                              logout, forgot/reset password,
-                                             change password (#482), me,
+                                             change password (#482), delete the
+                                             account itself (#419), me,
                                              and the per-user notification inbox
                                              (#207) — 404 unless ACCOUNTS_ENABLED)
   invitations.js     /api/account/invitations (round-sharing: send / accept /
@@ -629,7 +630,14 @@ identifier (issue #431); password reset stays e-mail-only, since the link has to
 reach an inbox. A logged-in account changes its password on the **Konto** screen
 (`/konto`, issue #482) instead of going through that recovery flow: it
 re-authenticates with the current password, then signs every *other* device out
-and mails the owner a notification. The **username** (issue #320) is an app-wide unique public handle
+and mails the owner a notification. The same screen is where an account
+**deletes itself** (issue #419): `DELETE /api/account` erases the account, its
+tenant's whole round data and its uploaded cover objects, gated on the current
+password *plus* the account's own username typed out, and preceded by a
+confirmation naming the real counts (rounds, games, sessions, images, and how
+many other accounts lose access to shared rounds). It is immediate and has no
+undo — the operator-side erasure (#273) stays for assisted and DSA-driven cases.
+The **username** (issue #320) is an app-wide unique public handle
 (3–30 characters of `a–z A–Z 0–9 _ -`, matched case-insensitively but stored as
 typed) chosen at registration and not self-renamable: it is how an account is
 named in an abuse report, how invitations (#207) find it, and how it logs in, so

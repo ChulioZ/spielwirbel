@@ -2079,6 +2079,26 @@ body.auth-screen .demo-banner { display: none; }
    (0,1,1) on specificity rather than on source order — the trap in
    .claude/rules/label-rows-lose-to-field-label.md. */
 .konto-pw .field label { font-size: 15px; }
+/* Self-service account deletion (#419). The one irreversible control on this
+   screen, so it is set apart rather than styled like the forms above it: its own
+   heading tone plus a tinted, outlined block. Every colour is mixed from
+   --danger and --surface (.claude/rules/theme-derived-colors.md) so it follows
+   the round-independent semantic family instead of a hardcoded pastel. */
+.konto-section__h--danger { color: var(--danger); }
+.konto-danger {
+  background: color-mix(in srgb, var(--danger) 5%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--surface));
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 30px;
+}
+.konto-danger p { margin: 0 0 12px; }
+/* The third-party consequence inside the confirmation sheet: someone else loses
+   access, which must read as a warning rather than as another muted fact. */
+.konto-danger__third { color: var(--danger); font-weight: 600; }
+/* The count rows are reused inside the confirmation sheet, where they are
+   followed by the two input fields and need the same 18px gap a .field carries. */
+.sheet .konto-facts { margin-bottom: 18px; }
 
 /* Account menu header (username + e-mail) above the logout item in the shared
    popover. The username (#320) leads: it is the account's public identity, the

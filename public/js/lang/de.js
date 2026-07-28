@@ -646,6 +646,26 @@ I18N.de = {
   'konto.bgg.done': 'BoardGameGeek-Konto verknüpft.',
   'konto.bgg.cleared': 'Verknüpfung entfernt.',
 
+  // Self-service Kontolöschung (#419) — Art. 17 DSGVO ohne den Betreiber.
+  'konto.delete.title': 'Konto löschen',
+  'konto.delete.intro': 'Löscht dein Konto mit allen Runden, Spielen, Sessions und hochgeladenen Bildern. Das lässt sich nicht rückgängig machen.',
+  'konto.delete.cta': 'Konto löschen …',
+  'konto.delete.sheetTitle': 'Konto endgültig löschen',
+  'konto.delete.lead': 'Endgültig gelöscht werden:',
+  'konto.delete.rounds': 'Runden',
+  'konto.delete.games': 'Spiele',
+  'konto.delete.sessions': 'Sessions',
+  'konto.delete.images': 'Hochgeladene Bilder',
+  'konto.delete.sharedOne': 'Außerdem verliert {n} weitere Person den Zugriff auf eine deiner geteilten Runden.',
+  'konto.delete.shared': 'Außerdem verlieren {n} weitere Personen den Zugriff auf deine geteilten Runden.',
+  'konto.delete.confirmLabel': 'Tippe zur Bestätigung deinen Nutzernamen „{username}“ ein',
+  'konto.delete.password': 'Dein Passwort',
+  'konto.delete.submit': 'Konto endgültig löschen',
+  'konto.delete.done': 'Dein Konto wurde gelöscht.',
+  'konto.delete.mismatch': 'Der eingegebene Nutzername stimmt nicht überein.',
+  'konto.delete.wrongPassword': 'Das Passwort ist falsch.',
+  'konto.delete.tenantShared': 'Dieses Konto teilt sich seine Daten mit einem weiteren Konto und kann deshalb nicht selbst gelöscht werden. Bitte wende dich über das Kontaktformular an uns.',
+
   // Logged-out landing page (#322). Rewritten in #483 to lead with what the app
   // is FOR — the decision at the table, and the record the votes leave behind —
   // instead of enumerating features. Three things the old copy never said out

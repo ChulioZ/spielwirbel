@@ -521,6 +521,163 @@ router.post('/change-password', accounts.requireUser, async (req, res) => {
   res.json({ ok: true, ...tokens });
 });
 
+/* ---------------------------- account deletion ------------------------------ */
+
+// Self-service Art. 17 (#419). The operator-side erasure (#273,
+// POST /api/admin/users/:uid/erase) stays for assisted and DSA-driven cases;
+// this is the same erasure reached by its own owner, so it reuses
+// repo.eraseAccount rather than implementing a second cascade.
+
+// What the confirmation promises, in real numbers rather than "all your data".
+// Read fresh when the sheet opens, so the figures are the ones true at the
+// moment of confirmation and not at page load.
+//
+// tenantSummary and exportAccountData are GLOBAL methods (not in
+// TENANT_METHODS), so they come off the module-level repo, never req.repo —
+// and this router is mounted ahead of the tenant middleware anyway.
+router.get('/deletion-preview', accounts.requireUser, async (req, res) => {
+  const user = await repo.getUserById(req.userId);
+  if (!user) return res.status(401).json({ error: 'invalid_token' });
+  const tenantId = user.tenantId || null;
+
+  const summary = await repo.tenantSummary(tenantId);
+  const totals = (summary && summary.totals) || { rounds: 0, games: 0, sessions: 0 };
+  // Only covers WE host are ours to delete and ours to promise. A hotlinked
+  // provider URL (#172) has no bytes of ours behind it, so counting it would
+  // promise a deletion that never happens — storage.remove() ignores it by
+  // design (.claude/rules/provider-cover-hotlinking.md).
+  const images = ((summary && summary.images) || []).filter(storage.isHostedImage);
+
+  // Deleting your account revokes every grant sitting on your rounds — a
+  // consequence to a THIRD party, so it must not be a surprise. Counted as
+  // distinct accounts: one person invited to two of your rounds loses access
+  // once, not twice. exportAccountData is the same enumeration the erasure
+  // deletes, so the preview and the deletion cannot disagree about what goes.
+  const shares = await repo.exportAccountData(user.id, tenantId);
+  const sharedWith = new Set(
+    (shares.grants || [])
+      .filter((g) => tenantId && g.ownerTenantId === tenantId && g.userId !== user.id)
+      .map((g) => g.userId),
+  );
+
+  res.json({
+    rounds: totals.rounds,
+    games: totals.games,
+    sessions: totals.sessions,
+    images: images.length,
+    sharedWith: sharedWith.size,
+  });
+});
+
+// Erase the caller's own account, its tenant's round data and its stored cover
+// objects. Irreversible, so it is deliberately awkward in the same way the
+// operator route is: the current password (a valid access token may be sitting
+// on an unattended device) PLUS the account's own username typed out, which is
+// what separates "I meant this" from a mis-click on a destructive control.
+router.delete('/', accounts.requireUser, async (req, res) => {
+  const body = req.body || {};
+  const user = await repo.getUserById(req.userId);
+  if (!user) return res.status(401).json({ error: 'invalid_token' });
+
+  // A demo (#427) holds no password identity, so the re-authentication below
+  // could only ever answer "your current password is wrong" about a password
+  // that never existed — the trap .claude/rules/guest-demo-accounts.md names for
+  // the change-password form. DELETE /api/account/demo is its erasure path.
+  if (user.demo === true) return res.status(403).json({ error: 'demo_account' });
+
+  // The cheap deterministic check first, so an obvious typo costs no Argon2
+  // verify. It leaks nothing: the caller is already authenticated as this
+  // account and the screen shows them the username they must type.
+  const confirm = String(body.confirmUsername || '').trim();
+  // min-length matters for the same reason confirmEmail's does on the admin
+  // route: without it an empty confirmation would "match" an account that
+  // somehow carries no username, turning the guard off exactly when the data is
+  // already odd.
+  if (!confirm || confirm.toLowerCase() !== String(user.username || '').toLowerCase()) {
+    return res.status(400).json({ error: 'confirm_mismatch' });
+  }
+
+  const identity = (user.identities || []).find((i) => i.type === 'password');
+  if (!identity) {
+    // Burn the same Argon2 work as a real check, as login does.
+    await accounts.verifyPassword(await accounts.DUMMY_HASH_PROMISE, String(body.password || ''));
+    return res.status(401).json({ error: 'invalid_credentials' });
+  }
+  if (!(await accounts.verifyPassword(identity.hash, String(body.password || '')))) {
+    return res.status(401).json({ error: 'invalid_credentials' });
+  }
+
+  // Captured BEFORE the erasure — the row it lives on is about to be gone, and
+  // the farewell mail still has to reach it. The tenant comes back off the
+  // erasure result instead, which is the authoritative answer for what was
+  // actually cascaded.
+  const email = user.email;
+
+  const result = await repo.eraseAccount(user.id);
+  // Unreachable today (registration mints a personal tenant, and #207 grants
+  // keep tenants 1:1) but this is the one mistake that cannot be walked back, so
+  // it is answered as a real refusal the UI renders rather than a generic error.
+  if (result === 'tenant_shared') return res.status(409).json({ error: 'tenant_shared' });
+  if (!result) return res.status(404).json({ error: 'not_found' });
+
+  // Rows first, bytes second, exactly as the admin erase and /takedown do: the
+  // references are already gone, so a failed object delete leaves an orphaned
+  // file, never a broken cover. One failure must not abort an erasure that has
+  // already happened in the database — count and report honestly instead
+  // (.claude/rules/deletion-paths-must-free-cover-objects.md).
+  //
+  // Filtered to hosted paths so the counts mean what the confirmation promised;
+  // storage.remove() would silently ignore a hotlink and inflate `removed`.
+  let removed = 0;
+  let failed = 0;
+  for (const image of result.images.filter(storage.isHostedImage)) {
+    try {
+      await storage.remove(image);
+      removed += 1;
+    } catch (err) {
+      failed += 1;
+      logger.error({ event: 'account_delete_object_failed', err: err.message });
+    }
+  }
+
+  // Deliberately NO e-mail address and no round or game names: this record
+  // outlives the erasure, so copying the erased person's data into it would
+  // defeat the erasure it evidences (.claude/rules/admin-moderation-surface.md
+  // §5). The account id, tenant, date and counts are what prove the request was
+  // honoured, which is the record's only job.
+  //
+  // A distinct action from the operator route's `user_erased`, so the panel's
+  // derived action filter separates self-service from assisted erasures. Both
+  // are Art. 17(3)(b)/(e) Löschnachweise and BOTH are exempt from the 3-year
+  // moderation-log purge — see docs/legal/retention.md, which #311 implements.
+  await repo.logModeration({
+    action: 'account_deleted',
+    target: user.id,
+    reason: 'self-service',
+    at: new Date().toISOString(),
+    tenantId: result.tenantId,
+    rounds: result.rounds,
+    imagesRemoved: removed,
+    imagesFailed: failed,
+  });
+
+  // The address is in memory from before the erasure and is not retained.
+  // sendSafe, so a mail failure never 500s a deletion that has already happened.
+  await sendSafe({
+    to: email,
+    subject: 'Spielwirbel: Konto gelöscht / Account deleted',
+    text: `Hallo!\n\nDein Spielwirbel-Konto wurde soeben auf deinen Wunsch hin gelöscht — mit allen Runden, Spielen, Sessions und hochgeladenen Bildern. Diese E-Mail-Adresse ist damit wieder frei; du kannst dich jederzeit neu registrieren.\n\nWir haben deine Adresse nicht gespeichert.\n\n---\n\nHi!\n\nYour Spielwirbel account was just deleted at your request — along with every round, game, session and uploaded image. This e-mail address is free again; you can sign up any time.\n\nWe have not kept your address on file.`,
+  });
+
+  // Best-effort like /logout: the erased account's still-valid access token
+  // resolves to ERASED -> 401 -> the SPA bounces to login anyway
+  // (.claude/rules/erased-account-token-fallback.md), so this never has to race
+  // the client.
+  accounts.clearAccessCookie(res, req);
+  logger.info({ event: 'account_self_deleted', tenantId: result.tenantId, rounds: result.rounds });
+  res.json({ ok: true, rounds: result.rounds, imagesRemoved: removed, imagesFailed: failed });
+});
+
 /* ----------------------------------- me ------------------------------------ */
 
 // The account fields a client may see. Both /me handlers answer through this one

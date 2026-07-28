@@ -37,10 +37,22 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
 ## Löschung (Art. 17)
 
 - Selbstbedienung: Spiele/Runden löschen wirkt durchgängig (inkl. Cover).
-- Ganzes Konto: Betreiber-Panel → **Löschung** (#273; erfordert Bestätigung der
-  Konto-E-Mail, exportiert vorher auf Wunsch). Entfernt Konto, Runden, Bilder
-  und macht Tokens ungültig. Das Moderations-Log behält nur den Nachweis ohne
-  Personendaten.
+- **Ganzes Konto, durch die betroffene Person selbst (#419):** Kontoeinstellungen
+  (`/konto`) → **„Konto löschen"**. Erfordert Nutzername + Passwort und zeigt
+  vorher die tatsächlichen Zahlen (Runden, Spiele, Sessions, Bilder sowie die
+  Zahl der Konten, die den Zugriff auf geteilte Runden verlieren). Wirkt sofort
+  und vollständig — dieselbe Kaskade wie unten, nur ohne Betreiber. **Das ist
+  seit #419 der Regelweg;** eine per Kontaktformular eingehende
+  Löschungsaufforderung darf darauf verwiesen werden, muss aber weiterhin
+  beantwortet und auf Wunsch betreiberseitig ausgeführt werden (Art. 12 Abs. 2
+  DSGVO — die Ausübung darf nicht an eine bestimmte Form gebunden werden).
+- Ganzes Konto, betreiberseitig: Betreiber-Panel → **Löschung** (#273; erfordert
+  Bestätigung der Konto-E-Mail, exportiert vorher auf Wunsch). Bleibt für
+  assistierte Fälle, DSA-Anlässe und Konten ohne Zugriff auf die eigene
+  Anmeldung. Entfernt Konto, Runden, Bilder und macht Tokens ungültig.
+- Das Moderations-Log behält in beiden Fällen nur den Nachweis ohne
+  Personendaten — betreiberseitig als `user_erased`, per Selbstbedienung als
+  `account_deleted` (beide dauerhaft, siehe `retention.md`).
 - Einzelne Inhalte auf Zuruf: Takedown/Redaktion über das Panel (#268/#275).
 
 ## Einschränkung & Widerspruch (Art. 18, 21)
