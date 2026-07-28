@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Issue #510. Only the publicly meaningful, crawlable URLs: the landing page
+     and the three legal pages. Everything else this origin answers is either
+     private tenant data behind a login or a noindex'd standalone page.
+
+     The host is hardcoded to the canonical origin, matching <link
+     rel="canonical"> in index.html and DEFAULT_CANONICAL in lib/canonical.js —
+     the .de/.com domains 301 onto it (#230), so a sitemap on any other host
+     would advertise URLs that redirect. A fork self-hosting elsewhere edits it
+     here, the same deal as the og tags.
+
+     No <lastmod>/<changefreq>/<priority>: a hardcoded lastmod in a static file
+     is a date that silently stops being true, and Google ignores the other two
+     outright. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://spielwirbel.app/</loc></url>
+  <url><loc>https://spielwirbel.app/impressum</loc></url>
+  <url><loc>https://spielwirbel.app/datenschutz</loc></url>
+  <url><loc>https://spielwirbel.app/nutzungsbedingungen</loc></url>
+</urlset>

@@ -20,6 +20,7 @@ const { bodyOf } = require('./support/css');
 
 const ROOT = path.join(__dirname, '..');
 const VIEW = fs.readFileSync(path.join(ROOT, 'public/js/views-landing.js'), 'utf8');
+const INDEX = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
 
 /** Loads a lang table the way i18n-parity does — they are browser scripts. */
 function loadLocale(name) {
@@ -102,6 +103,50 @@ test('.landing-hero__demo[hidden] undoes its own display (#503)', () => {
   const guard = bodyOf('.landing-hero__demo[hidden]');
   assert.ok(guard, '.landing-hero__demo[hidden] rule not found');
   assert.match(guard, /display:\s*none/);
+});
+
+test('the static crawlable hero in index.html matches lang/de.js (#510)', () => {
+  // index.html carries a copy of the hero because the served HTML otherwise has
+  // no body text at all and a crawler that runs no JS sees an empty document.
+  // It is a genuine duplicate with no way to share the source — index.html is
+  // static, with no templating (the same bind as public/kontakt.html's design
+  // tokens) — so this parity test IS the licence for the copy
+  // (.claude/rules/shared-constants-across-the-stack.md). Retune the German
+  // hero copy in one place and this goes red naming both values.
+  //
+  // Drift here is silent in the worst way: the page still renders correctly for
+  // every human visitor, because showLanding() overwrites the static markup on
+  // boot. Only the crawler — the one audience this markup exists for — keeps
+  // reading the stale wording.
+  const de = loadLocale('de');
+  const text = (re, what) => {
+    const m = INDEX.match(re);
+    assert.ok(m, `index.html: no static ${what} found — the crawlable hero is gone`);
+    return m[1].trim();
+  };
+
+  assert.equal(text(/<h1 class="landing-hero__title">([\s\S]*?)<\/h1>/, 'hero title'),
+    de['landing.hero.title']);
+  assert.equal(text(/<p class="landing-hero__sub">([\s\S]*?)<\/p>/, 'hero sub-line'),
+    de['landing.hero.sub']);
+  assert.equal(text(/<div class="landing-hero__brand">[\s\S]*?<span>([\s\S]*?)<\/span>/, 'hero brand'),
+    de['app.title']);
+});
+
+test('the static hero carries no config-gated claim (#510)', () => {
+  // The static markup cannot be gated on GET /api/config, so anything
+  // operator- or demo-conditional would be published unconditionally — including
+  // on a self-hoster's non-EU box. That is precisely the failure
+  // .claude/rules/hidden-attribute-vs-display-rule.md exists to prevent, and it
+  // would be invisible here: the claim is replaced by the real, correctly gated
+  // hero milliseconds later, so only a crawler (or a screenshot of the first
+  // paint) would ever show it.
+  const main = INDEX.match(/<main id="app"[\s\S]*?<\/main>/);
+  assert.ok(main, 'index.html still has a <main id="app">');
+  assert.doesNotMatch(main[0], /data-operator-only/, 'no operator-gated claim in the static hero');
+  assert.doesNotMatch(main[0], /data-demo-only/, 'no demo-gated CTA in the static hero');
+  // Buttons would be dead until main.js boots and wires them.
+  assert.doesNotMatch(main[0], /<button/, 'the static hero holds no controls — nothing wires them yet');
 });
 
 test('the hero demo block takes every colour from the theme variables (#503)', () => {
