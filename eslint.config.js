@@ -129,7 +129,7 @@ const frontendGlobals = {
   showArchive: 'readonly', ARCHIVES: 'readonly', THEMES: 'readonly',
   showBackground: 'readonly', showGameDetail: 'readonly', showAddGame: 'readonly',
   showTags: 'readonly', showMoveGames: 'readonly', showProviders: 'readonly',
-  showInvite: 'readonly', inviteError: 'readonly',
+  showInvite: 'readonly', inviteError: 'readonly', insertFriendPicker: 'readonly',
   showBggImport: 'readonly', canImportBgg: 'readonly', bggImportError: 'readonly',
   buildBggForm: 'readonly',
   HUB_TABS: 'readonly', HUB_TAB_OF: 'readonly', hubTabOwning: 'readonly',

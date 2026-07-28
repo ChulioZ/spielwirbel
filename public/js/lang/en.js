@@ -553,6 +553,8 @@ I18N.en = {
   'invite.link': 'Invite',
   'invite.title': 'Invite to the round',
   'invite.intro': 'Invite an account to share “{round}”.',
+  'invite.friendLabel': 'Friends',
+  'invite.friendPick': 'Pick a friend …',
   'invite.username': 'Username',
   'invite.usernamePlaceholder': 'e.g. anna_91',
   'invite.seat': 'Member seat',

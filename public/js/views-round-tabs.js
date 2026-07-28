@@ -426,6 +426,46 @@ async function showInvite(round) {
       go.click();
     }
   });
+
+  // The Freundeskreis picker (#466) is fetched only AFTER the sheet is up:
+  // typing a username must never wait on a network call. A failed fetch simply
+  // leaves the picker out — the username field is the whole feature without it,
+  // and accountApi already handles a dead session itself. The sheet may be gone
+  // (or replaced) by the time this resolves, hence the isConnected check.
+  try {
+    const { friends } = await accountApi('GET', '/friends');
+    if (backdrop.isConnected) insertFriendPicker(form, round, friends);
+  } catch { /* no picker; inviting by username is unaffected */ }
+}
+
+// Offer the caller's accepted friends above the username field (#466), so an
+// owner doesn't have to remember a handle they saw once in another view.
+// Dropped: friends already holding a seat here (they would only ever produce
+// `already_member`) and any whose username didn't resolve (nothing to address).
+// When that leaves nothing, no field is inserted at all — the sheet then looks
+// exactly as it did before. Inserting after openSheet is safe for the focus
+// trap: focusables() is recomputed on every Tab, so the select joins the tab
+// order at its DOM position (focus-trap.js).
+function insertFriendPicker(form, round, friends) {
+  const seated = new Set((round.members || []).map((m) => m.userId).filter(Boolean));
+  const eligible = (friends || []).filter((f) => f.username && !seated.has(f.userId));
+  if (!eligible.length) return;
+
+  const field = h(`<div class="field">
+      <label for="inviteFriend">${esc(t('invite.friendLabel'))}</label>
+      <select id="inviteFriend" class="input">
+        <option value="">${esc(t('invite.friendPick'))}</option>
+        ${eligible.map((f) => `<option value="${esc(f.username)}">${esc(f.username)}</option>`).join('')}
+      </select>
+    </div>`);
+
+  const user = form.querySelector('#inviteUser');
+  user.closest('.field').before(field);
+  // Fill the input rather than replacing it: it stays editable, so a non-friend
+  // can still be invited by hand and the submit path reads one field as before.
+  field.querySelector('#inviteFriend').addEventListener('change', (e) => {
+    if (e.target.value) user.value = e.target.value;
+  });
 }
 
 // Map a send-route error code to a localized message.
