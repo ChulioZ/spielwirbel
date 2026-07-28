@@ -138,8 +138,14 @@ No official API; the provider fetches the store's server-rendered pages and
 reads the embedded `__NEXT_DATA__` JSON (Next.js/Apollo cache), no auth:
 
 - **search:** `store.playstation.com/{locale}/search/{q}` → Apollo `Product`
-  objects with `storeDisplayClassification === 'FULL_GAME'` (drops
-  DLC/bundles) → `{ providerId, title, thumbnail }`.
+  objects whose `storeDisplayClassification` is in `GAME_CLASSIFICATIONS`
+  (`FULL_GAME` **or `GAME_BUNDLE`**, dropping add-ons and storefront noise) →
+  `{ providerId, title, thumbnail }`. **`GAME_BUNDLE` is not a DLC bundle** —
+  Sony files many standard editions under it, and filtering it out lost Split
+  Fiction, Gran Turismo 7 and It Takes Two while returning *nothing* for EA
+  SPORTS FC 25 and Fortnite. Read
+  `.claude/rules/psstore-full-game-is-not-every-game.md` before narrowing this
+  set again.
 - **detail:** `…/product/{id}` → same blob for the title, **plus a regex over
   the rendered HTML** for the player count (`compatText">1 - 4 players`) — it
   isn't in the JSON.
