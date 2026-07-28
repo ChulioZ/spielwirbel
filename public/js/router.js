@@ -117,6 +117,14 @@ function resolveRoute(pathname) {
   if (parts[0] === 'inbox') return () => showInbox(); // #207; showInbox sends a logged-out visitor Home
   if (parts[0] === 'freunde') return () => showFriends(); // #325; showFriends sends a logged-out visitor Home
   if (parts[0] === 'konto') return () => showAccount(); // #482; showAccount sends a logged-out visitor Home
+  // The three auth screens (#501). Each show*() guards itself the way
+  // showInbox/showAccount do, only inverted: a logged-IN visitor goes Home, as
+  // does anyone on a legacy (accounts-off) instance, which has no auth screens
+  // at all. '/' is deliberately NOT here — it stays showHome(), which hands a
+  // logged-out visitor to the landing page (views-home.js).
+  if (parts[0] === 'login') return () => showLogin();
+  if (parts[0] === 'register') return () => showRegister();
+  if (parts[0] === 'forgot-password') return () => showForgot();
   if (parts[0] === 'round') {
     if (parts[1] === 'new') return () => showNewRound();
     const rid = parts[1];

@@ -4,6 +4,12 @@
 // =================== Home: lobby ===================
 
 async function showHome() {
+  // In accounts mode a logged-out visitor has no home to render — every read
+  // below 401s — so '/' belongs to the marketing landing (#322/#501). This is
+  // what makes Back out of /login or /register land on the landing page instead
+  // of a screen that immediately bounces to login, and it equally catches the
+  // `return showHome()` fallback in showInbox/showFriends/showAccount.
+  if (accountsActive() && !isLoggedIn()) return showLanding();
   currentView = () => showHome();
   syncUrl('/');
   setContext(''); // home: no round context

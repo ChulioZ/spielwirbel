@@ -40,13 +40,25 @@ Two follow-on habits:
   `#app`, detaching every node you were holding — subsequent `querySelector`s
   return the *new* tree and any element reference you captured is dead. The
   symptom is a result object where half the keys are missing, not an error.
-- **`window.*` cannot wrap the view functions.** `showGameDetail`, `showRetired`
-  &c. are top-level `const`/`function` in a classic script, so they live in the
-  script's global *lexical* scope, **not** on `window` — assigning
-  `window.showGameDetail = wrapper` silently creates a new, unread property and
-  your call counter stays at zero. Count `history.pushState` instead (a real
-  object method every navigation goes through via `syncUrl`); that is also what
-  reveals a double-navigation.
+- **`window.*` cannot wrap a view declared with `const`.** `showRetired`,
+  `showCompleted` &c. are top-level **`const` arrows**, which live in the
+  script's global *lexical* scope and are **not** properties of `window` —
+  assigning `window.showRetired = wrapper` silently creates a new, unread
+  property and your call counter stays at zero. Count `history.pushState`
+  instead (a real object method every navigation goes through via `syncUrl`);
+  that is also what reveals a double-navigation.
+
+  **The declaration kind decides this, and the two are mixed in this codebase**
+  — measured on #501, where an earlier version of this bullet named
+  `showGameDetail` as an example and was wrong about it. A top-level
+  **`function` declaration** in a classic script *is* var-scoped, so it **does**
+  become a `window` property: `showGameDetail`, `showHome`, `showLanding`,
+  `showLogin`, `logout`, `enterApp` and `routeTo` are all callable as
+  `window.<name>()` from `javascript_tool`, which makes them the cheapest way to
+  drive a state machine the pane cannot click its way into (a logged-in guard, a
+  dead session, a terminal auth screen). `grep -n '^function <name>'` before
+  assuming either way; wrapping still deserves the `pushState` counter, since a
+  same-file caller may hold the binding directly.
 
 ## 2. `.nav-link` must sit EARLY in styles.css
 

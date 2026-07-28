@@ -72,9 +72,11 @@ const frontendGlobals = {
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
   authErrorKey: 'readonly',
   probeMe: 'readonly', refreshAccessToken: 'readonly', onSessionLost: 'readonly',
-  logout: 'readonly', isAuthPath: 'readonly', linkToken: 'readonly', bootApp: 'readonly',
+  logout: 'readonly', linkToken: 'readonly', bootApp: 'readonly',
   initAccounts: 'readonly', enterApp: 'readonly', authScreen: 'readonly',
   openAuth: 'readonly', authError: 'readonly', setError: 'readonly',
+  // routed auth screens (issue #501)
+  isAuthRoute: 'readonly', pendingPath: 'writable', authScreensAvailable: 'readonly',
   showLogin: 'readonly', showRegister: 'readonly', showForgot: 'readonly',
   showAuthDone: 'readonly', buildResend: 'readonly', renderVerifyLanding: 'readonly',
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',

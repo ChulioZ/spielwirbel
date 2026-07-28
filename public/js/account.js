@@ -158,18 +158,30 @@ async function logout() {
   invalidateRoundCache(); // the next login may be a different account/tenant
   accountUser = null;
   setupAccountUi();
-  showLogin();
+  // The landing page, not the login card (#501). A deliberate logout is a
+  // departure, and showLanding() owns '/', so the address bar stops naming the
+  // round that was just left behind. An EXPIRED session still goes to
+  // showLogin() (onSessionLost): that user was working and wants back in, so
+  // marketing copy they have already read would be a detour.
+  showLanding();
 }
 
 /* --------------------------------- boot ----------------------------------- */
 
-// '/v' and '/r' are the short links the account mails carry (#434); the long
-// '/verify-email' and '/reset-password' forms are the pre-#434 shape. Since #451
-// the server no longer resolves those links (their records have long expired),
-// but the paths are kept so a bookmarked or copy-pasted old URL still renders the
-// "link expired" screen with its resend recovery instead of a blank page.
-const isAuthPath = (p) => p === '/v' || p === '/r'
-  || p === '/verify-email' || p === '/reset-password';
+// Is this path one of the three auth screens' own URLs (#501)? Used by bootApp
+// to tell a visitor who cold-loaded onto /register (render it) from one who
+// cold-loaded a deep link (remember it, then show login). Trailing slashes are
+// stripped the way resolveRoute strips them, so /login/ is /login.
+const isAuthRoute = (p) => ['/login', '/register', '/forgot-password'].includes(p.replace(/\/+$/, ''));
+
+// Where to continue after a successful login: the deep link a logged-out visitor
+// arrived on, captured by bootApp() before it hands them to /login and consumed
+// by enterApp(). It lives in memory rather than in the URL because the auth
+// screens now own their URLs, so the address bar has nowhere left to park it —
+// which means a reload of /login forgets it and login lands Home. That is the
+// accepted trade: a `?next=` parameter would be an open-redirect surface bolted
+// onto a one-screen convenience.
+let pendingPath = null;
 
 // The one-time token from either link shape: '?t=' carries the combined
 // "<version>.<uid>.<secret>" token, the legacy pair a separate uid. The uid is
@@ -187,6 +199,11 @@ function linkToken() {
 async function bootApp() {
   if ((await initAccounts()) === 'rate_limited') return showRateLimited();
   const path = location.pathname;
+  // '/v' and '/r' are the short links the account mails carry (#434); the long
+  // '/verify-email' and '/reset-password' forms are the pre-#434 shape. Since
+  // #451 the server no longer resolves those links (their records have long
+  // expired), but the paths are kept so a bookmarked or copy-pasted old URL still
+  // renders the "link expired" screen with its resend recovery, not a blank page.
   if (path === '/v' || path === '/verify-email') return renderVerifyLanding();
   if (path === '/r' || path === '/reset-password') return renderResetLanding();
   // The /demo deep link (#427), so a launch post can point straight into a
@@ -196,10 +213,19 @@ async function bootApp() {
   // a demo over a real session would log them out of it.
   if (path === '/demo' && accountsActive() && !isLoggedIn()) return startDemo();
   if (accountsActive() && !isLoggedIn()) {
-    // A cold visitor on "/" gets the marketing landing (issue #322); a deep link
-    // (a shared /round/… URL &c.) already has context and wants in fast, so it
-    // goes straight to login and continues to the deep link after (enterApp).
-    return path === '/' ? showLanding() : showLogin();
+    // A cold visitor on "/" gets the marketing landing (issue #322), and one who
+    // cold-loaded an auth screen's own URL gets that screen (#501). Any other
+    // deep link (a shared /round/… URL &c.) already has context and wants in
+    // fast, so it is remembered and the visitor is sent to login, continuing
+    // there after (enterApp).
+    if (path === '/') return showLanding();
+    if (isAuthRoute(path)) return routeTo(path);
+    pendingPath = path;
+    // routeTo() rather than showLogin() directly: it sets `routing`, which makes
+    // the login screen's syncUrl REPLACE the deep link's history entry instead
+    // of pushing on top of it. That URL was never a rendered view, so a pushed
+    // entry would leave Back pointing at a path that renders nothing.
+    return routeTo('/login');
   }
   authScreen(false);
   setupAccountUi();
@@ -236,13 +262,15 @@ async function initAccounts() {
 }
 
 // Enter the app after a successful login: leave the auth UI, reveal the account
-// menu, and route to the deep link the user arrived on (or Home if that was an
-// auth landing).
+// menu, and continue to the deep link the visitor arrived on — or Home when
+// there was none, which now covers the mail landings and a reloaded /login alike
+// (#501). Reading location.pathname here would send them back to /login.
 function enterApp() {
   authScreen(false);
   setupAccountUi();
-  const path = location.pathname;
-  routeTo(isAuthPath(path) ? '/' : path);
+  const next = pendingPath || '/';
+  pendingPath = null;
+  routeTo(next);
 }
 
 /* ------------------------------- auth screens ------------------------------ */
@@ -255,8 +283,15 @@ function authScreen(on) { document.body.classList.toggle('auth-screen', !!on); }
 // Shared scaffold for an auth screen: clears the view, sets the auth layout, and
 // appends the built card. `build(card)` wires the specific form. `render` is the
 // function itself so a language switch re-renders it (via currentView).
-function openAuth(render, innerHtml, build) {
+//
+// `path` is the screen's own URL when it has one (#501). Only the three
+// entry screens pass it; the terminal ones — showAuthDone, showRateLimited and
+// the two mail landings — deliberately stay URL-less, because each holds
+// one-shot state (a submitted address, a link token) that a cold load cannot
+// rebuild, the same reasoning that keeps the session-flow paths unresolvable.
+function openAuth(render, innerHtml, build, path) {
   currentView = render;
+  if (path) syncUrl(path);
   authScreen(true);
   setContext('');
   applyBackground(null);
@@ -273,7 +308,17 @@ function setError(card, msg) {
   el.hidden = false;
 }
 
+// The three routable auth screens (#501). Each guards itself rather than
+// relying on its route, so every call site is covered: a visitor who is already
+// logged in has no business on them (a stale /login bookmark, or the "back to
+// login" button on a mail landing they opened while signed in), and a legacy
+// accounts-off instance has no auth screens at all. Safe everywhere it already
+// gets called — onSessionLost() and the demo banner's register CTA both
+// clearTokens() first, so isLoggedIn() is already false by then.
+const authScreensAvailable = () => accountsActive() && !isLoggedIn();
+
 function showLogin() {
+  if (!authScreensAvailable()) return showHome();
   openAuth(showLogin, `<form class="auth__card" autocomplete="on">
       <div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.login.title'))}</h1>
@@ -325,10 +370,11 @@ function showLogin() {
       submit.disabled = false;
     });
     ident.focus();
-  });
+  }, '/login');
 }
 
 function showRegister() {
+  if (!authScreensAvailable()) return showHome();
   openAuth(showRegister, `<form class="auth__card" autocomplete="on">
       <div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.register.title'))}</h1>
@@ -395,10 +441,11 @@ function showRegister() {
       submit.disabled = false;
     });
     email.focus();
-  });
+  }, '/register');
 }
 
 function showForgot() {
+  if (!authScreensAvailable()) return showHome();
   openAuth(showForgot, `<form class="auth__card" autocomplete="on">
       <div class="auth__logo"><i class="ti ti-lock-question" aria-hidden="true"></i></div>
       <h1 class="auth__title">${esc(t('auth.forgot.title'))}</h1>
@@ -440,7 +487,7 @@ function showForgot() {
       showAuthDone('auth.forgot.doneTitle', 'auth.forgot.doneSub');
     });
     email.focus();
-  });
+  }, '/forgot-password');
 }
 
 // Fill `host` with the "send me another verification mail" affordance (#435) and
@@ -621,7 +668,12 @@ async function startDemo(busy) {
   // this, a 503 at the ceiling turns a shared launch link into a blank page.
   const fail = (key) => {
     if (busy) busy.disabled = false;
-    else { history.replaceState({}, '', '/'); showLanding(); }
+    // routeTo('/') rather than showLanding(): both land on the landing page for
+    // a logged-out visitor (views-home.js), but routeTo REPLACES the /demo entry
+    // instead of pushing '/' on top of it — /demo is a side effect, never a view
+    // Back should return to. Since #501 that also supersedes the manual
+    // history.replaceState this used to do before showLanding().
+    else routeTo('/');
     toast(t(key));
   };
 
