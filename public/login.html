@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Anmelden · Spielwirbel</title>
+  <!-- Keep this page out of search results (#510). It is only ever rendered by a
+       self-hosted instance that sets AUTH_PASSWORD, yet express.static serves the
+       file unconditionally — so Google indexed it, and its title and „Falsches
+       Passwort" text were the search result for the whole public app long after
+       the go-live removed the shared-password gate.
+       robots.txt deliberately does NOT disallow this path: a page that may not be
+       fetched can never shed its index entry, because the noindex below is what
+       does the removing and a disallowed crawler never reads it. -->
+  <meta name="robots" content="noindex, nofollow" />
   <!-- PWA (issue #142): same manifest/icons so an install from the login screen
        is branded too. theme-color matches this page's dark background. -->
   <link rel="manifest" href="/manifest.webmanifest" />

@@ -93,7 +93,35 @@
   </div>
 
   <main id="app" class="app">
-    <!-- Content is rendered by the js/* files -->
+    <!-- Content is rendered by the js/* files. The one exception is the hero
+         below (#510): everything on the landing page comes from
+         js/views-landing.js, so the served HTML carried no body text at all and
+         a crawler that runs no JS saw an empty document — which is why the
+         search result stayed on the retired login screen instead of moving here.
+         showLanding() overwrites this on boot, so the JS path is unchanged.
+
+         German only, like <title> and the og tags above: a crawler has no
+         locale. It deliberately carries NO config-gated claim — not the
+         operator-only EU-hosting chip, not the demo CTA. Static markup cannot be
+         gated on GET /api/config, and publishing an operator claim on a
+         self-hoster's instance is exactly what
+         .claude/rules/hidden-attribute-vs-display-rule.md exists to prevent.
+         The three strings are duplicated from lang/de.js with no way to share
+         them (index.html is static, with no templating), so
+         test/landing-copy.test.js pins them against the lang table — that
+         parity test is the licence for the copy
+         (.claude/rules/shared-constants-across-the-stack.md). -->
+    <div class="landing">
+      <section class="landing-hero">
+        <div class="landing-hero__text">
+          <div class="landing-hero__brand">
+            <i class="ti ti-tornado" aria-hidden="true"></i><span>Spielwirbel</span>
+          </div>
+          <h1 class="landing-hero__title">Was spielen wir heute?</h1>
+          <p class="landing-hero__sub">Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele, vom Brettspiel bis zum Videospiel. Heraus kommt das Spiel für heute – und mit jeder Session ein schärferes Bild davon, was eure Runde gern spielt.</p>
+        </div>
+      </section>
+    </div>
   </main>
 
 <!-- Shared site footer, two independent parts:

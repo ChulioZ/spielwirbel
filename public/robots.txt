@@ -1,0 +1,17 @@
+# Crawl policy (issue #510). Served as a real static file — before this existed
+# the SPA fallback answered /robots.txt with the app shell at 200 text/html, so
+# "no robots.txt" looked exactly like a working one.
+#
+# NOTE: /login.html and /kontakt.html are deliberately NOT disallowed here. Both
+# carry <meta name="robots" content="noindex">, and a crawler can only act on a
+# noindex it is allowed to fetch — disallowing them would freeze their existing
+# index entries in place forever. Crawl-allowed + noindex is the only
+# combination that removes an already-indexed page.
+
+User-agent: *
+Disallow: /api/
+Disallow: /uploads/
+Disallow: /admin.html
+Disallow: /round/
+
+Sitemap: https://spielwirbel.app/sitemap.xml

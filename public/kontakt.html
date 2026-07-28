@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kontakt · Spielwirbel</title>
+  <!-- Keep this page out of search results (#510): a thin form page that would
+       otherwise compete with the landing page for the brand query. It stays
+       crawl-ALLOWED in robots.txt on purpose — see the note there; the § 5 DDG
+       requirement is that the channel is publicly reachable, which noindex does
+       not affect. -->
+  <meta name="robots" content="noindex, nofollow" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#f4f1ea" />
   <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />

@@ -1,0 +1,150 @@
+'use strict';
+
+// The crawler surface (issue #510): robots.txt, sitemap.xml, the noindex on the
+// two standalone pages, and the static hero in the served shell.
+//
+// Everything here is asserted over HTTP rather than against the files, because
+// the defect this fixes was a SERVING one: no robots.txt existed, so the SPA
+// fallback answered /robots.txt with the app shell at `200 text/html`. A file
+// that is present but shadowed, and a file that is absent, both look like a
+// working robots.txt from anywhere except the response's content type — which
+// is why the type is pinned as hard as the body.
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const request = require('supertest');
+const { app } = require('./helpers');
+
+const ROOT = path.join(__dirname, '..');
+
+/** Loads a lang table the way i18n-parity does — they are browser scripts. */
+function loadLocale(name) {
+  const context = { I18N: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'public/js/lang', `${name}.js`), 'utf8'), context);
+  return context.I18N[name];
+}
+
+test('GET /robots.txt is a real text/plain policy, not the app shell', async () => {
+  const res = await request(app).get('/robots.txt');
+  assert.equal(res.status, 200);
+  // The whole point: before #510 this was `text/html` and ~11 KB of index.html.
+  assert.match(res.headers['content-type'], /^text\/plain/);
+  assert.doesNotMatch(res.text, /<html/i);
+  assert.match(res.text, /^User-agent: \*$/m);
+  assert.match(res.text, /^Sitemap: https:\/\/spielwirbel\.app\/sitemap\.xml$/m);
+});
+
+test('robots.txt disallows the private surfaces', async () => {
+  const res = await request(app).get('/robots.txt');
+  for (const p of ['/api/', '/uploads/', '/admin.html', '/round/']) {
+    assert.match(res.text, new RegExp(`^Disallow: ${p.replace(/[/]/g, '\\/')}$`, 'm'),
+      `robots.txt should disallow ${p}`);
+  }
+});
+
+test('robots.txt does NOT disallow the two noindex pages (#510)', async () => {
+  // The trap this pins, and the reason the two mechanisms are not
+  // interchangeable: a Disallow stops the fetch, so the crawler never reads the
+  // page's `noindex` and the existing index entry survives indefinitely.
+  // Crawl-allowed + noindex is the only pair that REMOVES an indexed page, and
+  // removing login.html's entry is the entire point of the issue.
+  //
+  // Written as a scan of every Disallow rather than two literal assertions, so a
+  // future `Disallow: /*.html` or `Disallow: /login*` is caught too — the
+  // mistake reappears as a pattern far more easily than as an exact path.
+  const res = await request(app).get('/robots.txt');
+  const rules = res.text
+    .split('\n')
+    .map((l) => l.replace(/#.*$/, '').trim())
+    .filter((l) => /^Disallow:/i.test(l))
+    .map((l) => l.slice('Disallow:'.length).trim())
+    .filter(Boolean);
+
+  for (const page of ['/login.html', '/kontakt.html']) {
+    for (const rule of rules) {
+      // A robots.txt path is a prefix match, with `*` as a wildcard.
+      const re = new RegExp('^' + rule.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*'));
+      assert.ok(!re.test(page),
+        `robots.txt rule "Disallow: ${rule}" blocks ${page} — its noindex can then never be read`);
+    }
+  }
+});
+
+test('the two standalone pages carry a noindex', async () => {
+  for (const page of ['/login.html', '/kontakt.html']) {
+    const res = await request(app).get(page);
+    assert.equal(res.status, 200, `${page} is still served`);
+    assert.match(res.text, /<meta name="robots" content="noindex, nofollow"\s*\/?>/,
+      `${page} must be noindex — it is served on every instance regardless of auth mode`);
+  }
+});
+
+test('GET /sitemap.xml is valid XML listing the public pages', async () => {
+  const res = await request(app).get('/sitemap.xml');
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'], /xml/);
+  assert.doesNotMatch(res.text, /<html/i);
+  assert.match(res.text, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
+
+  const locs = [...res.text.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  assert.deepEqual(locs, [
+    'https://spielwirbel.app/',
+    'https://spielwirbel.app/impressum',
+    'https://spielwirbel.app/datenschutz',
+    'https://spielwirbel.app/nutzungsbedingungen',
+  ]);
+  // Every entry must be on the canonical host, or the sitemap advertises URLs
+  // that 301 (lib/canonical.js consolidates .de/.com onto .app).
+  for (const loc of locs) assert.match(loc, /^https:\/\/spielwirbel\.app\//);
+});
+
+test('the sitemap lists no private or noindex URL', async () => {
+  const res = await request(app).get('/sitemap.xml');
+  const locs = [...res.text.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  for (const loc of locs) {
+    assert.doesNotMatch(loc, /\/round\/|\/api\/|\/uploads\/|login\.html|kontakt\.html|admin\.html/,
+      `${loc} must not be in the sitemap`);
+  }
+});
+
+test('the raw HTML of GET / carries the hero as crawlable BODY text (#510)', async () => {
+  // The served bytes, with no JS run — exactly what a non-rendering crawler
+  // sees. Before #510 this document's <body> held no prose at all.
+  //
+  // Scoped to <main id="app">, and that scoping is the whole test. Both hero
+  // strings ALSO occur in the head — `landing.hero.title` inside <title>, and
+  // `landing.hero.sub` verbatim as <meta name="description"> and og:description
+  // (#436/#430) — so the obvious `res.text.includes(…)` is vacuously true
+  // against a document with no body content whatsoever. Verified: it passed with
+  // the static hero deleted outright, which is precisely the regression it is
+  // supposed to catch.
+  const res = await request(app).get('/');
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'], /text\/html/);
+
+  const main = res.text.match(/<main id="app"[\s\S]*?<\/main>/);
+  assert.ok(main, 'the served shell still has a <main id="app">');
+  const body = main[0].replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, ' ');
+
+  const de = loadLocale('de');
+  assert.ok(body.includes(de['landing.hero.title']),
+    'the hero heading must be real body text, not only a <title>/<meta> value');
+  assert.ok(body.includes(de['landing.hero.sub']),
+    'the hero sub-line must be real body text, not only a <meta description> value');
+});
+
+test('a deep link still serves the same generic shell (#430 stays true)', async () => {
+  // The static hero rides the SPA fallback, so it is now returned for /round/…
+  // too. That must stay as generic as the link-preview card: no round id, no
+  // tenant data. Pinned here because #510 is what put body text on that
+  // response for the first time.
+  const res = await request(app).get('/round/some-round-id/regal');
+  assert.equal(res.status, 200);
+  assert.ok(!res.text.includes('some-round-id'), 'the shell must not echo the requested path');
+
+  const home = await request(app).get('/');
+  assert.equal(res.text, home.text, 'every route is served the identical document');
+});
