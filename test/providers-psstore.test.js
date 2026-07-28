@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const ps = require('../lib/providers/psstore');
 
 // A minimal store page: the __NEXT_DATA__ blob holds an Apollo cache with a mix
-// of full games and a DLC (which must be filtered out).
+// of playable games and add-on noise (which must be filtered out).
 function pageHtml(apolloState, extraBody = '') {
   const next = { props: { pageProps: { apolloState } } };
   return `<!doctype html><html><head></head><body>${extraBody}
@@ -40,7 +40,7 @@ const SEARCH_STATE = {
   },
 };
 
-test('parseSearch returns only full games, with best cover thumbnail', () => {
+test('parseSearch returns playable games, with best cover thumbnail', () => {
   const out = ps.parseSearch(pageHtml(SEARCH_STATE));
   assert.equal(out.length, 2); // DLC filtered out
   assert.deepEqual(out[0], {
@@ -49,6 +49,48 @@ test('parseSearch returns only full games, with best cover thumbnail', () => {
     thumbnail: 'https://image.api.playstation.com/vulcan/witcher.png', // cover role beats screenshot
   });
   assert.equal(out[1].title, 'Rocket League');
+});
+
+// Sony files a large share of ordinary standard editions under GAME_BUNDLE
+// ("Spielpaket"), not FULL_GAME — measured live on Split Fiction, Gran Turismo 7,
+// It Takes Two, EA SPORTS FC 25 and Fortnite, the last two of which returned an
+// empty PlayStation list entirely. Keeping only FULL_GAME silently loses them:
+// there is no error, the dropdown just fills with unrelated near-matches.
+// See .claude/rules/psstore-full-game-is-not-every-game.md.
+test('parseSearch keeps GAME_BUNDLE standard editions, drops add-on classes', () => {
+  const state = {
+    // Shaped after the live blob for the query "Split Fiction".
+    'Product:SPLIT': {
+      __typename: 'Product',
+      id: 'UP0006-PPSA08560_00-SPLITSTANDARDED0',
+      name: 'Split Fiction',
+      storeDisplayClassification: 'GAME_BUNDLE',
+      media: [
+        { __typename: 'Media', role: 'GAMEHUB_COVER_ART', type: 'IMAGE', url: 'https://image.api.playstation.com/vulcan/split.png' },
+      ],
+    },
+    'Product:COIN': {
+      __typename: 'Product',
+      id: 'COIN',
+      name: 'SPLITGATE - 100 Splitcoin',
+      storeDisplayClassification: 'VIRTUAL_CURRENCY',
+      media: [],
+    },
+    'Product:PACK': {
+      __typename: 'Product',
+      id: 'PACK',
+      name: 'Splitgate - Starter Weapon Pack',
+      // PREMIUM_EDITION also carries plain DLC, so it stays excluded.
+      storeDisplayClassification: 'PREMIUM_EDITION',
+      media: [],
+    },
+  };
+  const out = ps.parseSearch(pageHtml(state));
+  assert.deepEqual(
+    out.map((h) => h.title),
+    ['Split Fiction']
+  );
+  assert.equal(out[0].thumbnail, 'https://image.api.playstation.com/vulcan/split.png');
 });
 
 test('parseSearch respects the limit and tolerates a missing blob', () => {
