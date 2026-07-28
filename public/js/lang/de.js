@@ -552,6 +552,8 @@ I18N.de = {
   'invite.link': 'Einladen',
   'invite.title': 'Zur Runde einladen',
   'invite.intro': 'Lade ein Konto ein, „{round}“ mitzuspielen.',
+  'invite.friendLabel': 'Freundeskreis',
+  'invite.friendPick': 'Freund*in wählen …',
   'invite.username': 'Nutzername',
   'invite.usernamePlaceholder': 'z. B. anna_91',
   'invite.seat': 'Mitglieds-Platz',
