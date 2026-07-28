@@ -567,4 +567,70 @@ if (!process.env.DATABASE_URL) {
     assert.equal((await repo.tenantSummary(tenant)).totals.games, 1);
     assert.equal((await repo.roundContent(round.id)).games[0].title, '[entfernt]');
   });
+
+  // instanceMetrics (#404) is the fourth cross-tenant operator READ, and it
+  // fails in the quietest way of all of them: rounds/games/sessions are
+  // RLS-scoped, so without atx() a non-superuser connection sees ZERO rows —
+  // no error, no exception, just a Kennzahlen card reporting a perfectly
+  // plausible 0 rounds / 0 games on a production instance full of data.
+  //
+  // The contract suite cannot catch it (superuser connection, RLS bypassed), so
+  // this runs the method itself as a plain role in a child process, where
+  // lib/repo/postgres.js builds its knex against the probe connection.
+  test('instanceMetrics reads the round tables under the admin escape', async () => {
+    const assert = require('node:assert/strict');
+    const tenant = `pg-metrics-${Math.random().toString(16).slice(2)}`;
+    const round = await repo.createRound(tenant, { name: 'Gezählt', members: ['Ann'] });
+    await repo.createGame(tenant, round.id, {
+      title: 'Gezähltes Spiel', minPlayers: 1, maxPlayers: 4, image: null, source: null,
+    });
+    await repo.createSession(tenant, round.id, {
+      gameIds: [], votes: {}, createdAt: new Date().toISOString(), finished: true,
+    });
+
+    const admin = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    });
+    await admin.connect();
+    let out;
+    try {
+      await admin.query('DROP ROLE IF EXISTS gs_metrics_probe');
+      await admin.query("CREATE ROLE gs_metrics_probe LOGIN PASSWORD 'probe'");
+      await admin.query('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO gs_metrics_probe');
+      await admin.query('GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO gs_metrics_probe');
+
+      const url = new URL(process.env.DATABASE_URL);
+      url.username = 'gs_metrics_probe';
+      url.password = 'probe';
+      const child = execFileSync(process.execPath, ['-e', `
+        const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
+        repo.instanceMetrics()
+          .then((m) => { console.log('RESULT:' + JSON.stringify(m)); return repo.end(); })
+          .catch((err) => { console.error(err.stack); process.exit(1); });
+      `], { env: { ...process.env, DATABASE_URL: url.toString() }, encoding: 'utf8' });
+
+      const line = child.split('\n').find((l) => l.startsWith('RESULT:'));
+      assert.ok(line, `the probe child produced no result: ${child}`);
+      out = JSON.parse(line.slice('RESULT:'.length));
+    } finally {
+      await admin.query('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM gs_metrics_probe').catch(() => {});
+      await admin.query('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM gs_metrics_probe').catch(() => {});
+      await admin.query('DROP ROLE IF EXISTS gs_metrics_probe').catch(() => {});
+      await admin.end();
+    }
+
+    // The rows belong to a tenant the probe never scoped itself to, so a
+    // non-zero count is only reachable through the FOR SELECT admin escape.
+    assert.ok(out.rounds.total >= 1, 'rounds were invisible without the admin escape');
+    assert.ok(out.rounds.tenants >= 1, 'tenants were invisible without the admin escape');
+    assert.ok(out.content.games >= 1, 'games were invisible without the admin escape');
+    assert.ok(out.content.sessions >= 1, 'sessions were invisible without the admin escape');
+    assert.ok(out.peaks.gamesPerRound >= 1, 'the games peak was invisible without the admin escape');
+    // pg returns count() as a bigint STRING; a missing ::int would make this
+    // backend answer '1' where the JSON one answers 1.
+    for (const n of [out.rounds.total, out.content.games, out.social.friendships, out.peaks.tagsPerRound]) {
+      assert.equal(typeof n, 'number');
+    }
+  });
 }

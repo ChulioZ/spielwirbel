@@ -23,21 +23,33 @@ So the classification rides on the tenant id itself — `demo-<16 hex>` versus a
 real tenant's bare 16 hex, which cannot collide — and `trackEvent` skips it in one
 line. No call site knows demo mode exists.
 
-**The literal is duplicated** in `lib/observability.js` rather than required from
-`lib/demo.js`, because demo.js pulls in the repo and observability is required by
-almost everything (a cycle). `test/demo.test.js` asserts the two strings are equal
-— that assertion is the entire licence for the copy, exactly as
-`.claude/rules/shared-constants-across-the-stack.md` allows for `TAG_ICONS`.
+**The prefix lives in `lib/demo-tenant.js`** — a dependency-free leaf module
+exporting `DEMO_TENANT_PREFIX` + `isDemoTenant()`, required by `lib/demo.js`,
+`lib/observability.js` and **both repo backends**. It used to be a literal in
+demo.js plus a hand-copied one in observability.js (which cannot require demo.js:
+that pulls in the repo, and observability is required by almost everything — a
+cycle), pinned together by an equality assertion. #404's `instanceMetrics` made
+the repo backends a third and fourth consumer — and a copy that *cannot* drift
+beats one that merely *must not*, which is the shape
+`.claude/rules/shared-constants-across-the-stack.md` prefers over a
+copy-plus-parity-test. `test/demo.test.js` now asserts the **literal has not come
+back** in any of the four, rather than that two copies agree.
+
+Keep `lib/demo-tenant.js` dependency-free — that is the only reason it can be
+required from anywhere, including the repo.
 
 **Everything else requires `isDemoTenant` instead of re-deriving the check.** The
-cycle is specific to `observability.js`; a `routes/*.js` file can require
-`lib/demo` freely (`account.js`, `friends.js`, `invitations.js` and, since #506,
-`admin.js` all do). The second consumer is the admin **Konten** list: `GET
+cycle is specific to `observability.js` and the repo; a `routes/*.js` file can
+require `lib/demo` freely (`account.js`, `friends.js`, `invitations.js` and,
+since #506, `admin.js` all do). The second consumer is the admin **Konten** list: `GET
 /api/admin/users` drops demo rows *before* the `?q=` filter, so a search term
 cannot surface one either — same reasoning as the counters, since a demo is
-purged on its own and no moderation action against one is meaningful. Prefer the
-predicate over `user.demo` or the `@demo.invalid` address shape: those are three
-ways to spell one fact, and only the tenant prefix is the tested one.
+purged on its own and no moderation action against one is meaningful. The third
+is `repo.instanceMetrics()` (#404), which excludes demo tenants from **every**
+count on the panel's Kennzahlen card except the demo row itself — same reasoning
+again, and the card's own sub-line states it. Prefer the predicate over
+`user.demo` or the `@demo.invalid` address shape: those are three ways to spell
+one fact, and only the tenant prefix is the tested one.
 
 ## 2. A demo account NEEDS a unique synthetic e-mail — `null === null`
 

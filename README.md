@@ -292,6 +292,9 @@ lib/
                      accounts (issue #427; off unless DEMO_ENABLED)
   demo-seed.js       the content a demo tenant is seeded with — games (hotlinked
                      provider covers), tags and per-locale text
+  demo-tenant.js     the one definition of the `demo-` tenant-id prefix that
+                     classifies a tenant as a demo, dependency-free so the repo
+                     backends and the logger can require it without a cycle
   scheduler.js       background jobs, started from server.js only: today the
                      expired-demo purge (issue #427)
   mail.js            outbound e-mail (SMTP via nodemailer when SMTP_HOST is
@@ -310,9 +313,9 @@ lib/
                      neutralizes leading =/+/-/@ so it cannot become an Excel
                      formula
   observability.js   structured logging, /healthz + /readyz, central error handler
-  status.js          derived instance configuration for the operator panel's
-                     status card (issue #274) — booleans/enums only, never a
-                     secret value
+  status.js          aggregate usage metrics + the quota ceilings for the
+                     operator panel's Kennzahlen card (issues #274/#404) —
+                     counts only, never a secret value and never personal data
   providers/         external game-database providers for the add-game lookup
     index.js         provider registry + image-host allowlist
     psstore.js       PlayStation Store: search + detail via the store's
@@ -713,12 +716,15 @@ by tenant, action and date range; the erasure entry records only ids, date,
 reason and counts, never the erased content, since the log outlives the erasure
 it evidences.
 
-The panel opens with an **Instanz-Status** card: how the running instance is
-*actually* configured — accounts mode, whether the secrets are distinct, mail
-delivery, image/data backends, pending migrations, quota ceilings, canonical
-host, whether built `dist/` assets are served, and the running version. Every
-field is a derived boolean, enum or number — **no secret value is ever
-returned**. A **Feedback** card shows what users sent through the contact form's
+The panel opens with a **Kennzahlen** card: how much this instance is being used
+— accounts (verified / unverified / suspended, plus new ones in the last 7 and
+30 days), how many of them own at least one round, rounds, games, sessions
+(finished, and in the last 30 days), live guest demos against their cap, shared
+rounds / open invitations / friendships, and the **quota ceilings paired with
+the highest value anyone currently holds** against each, so "is someone about to
+be refused?" is answerable without a database console. Every field is a count —
+**no secret value and no personal data is ever returned**, and demo tenants are
+excluded from everything but their own row. A **Feedback** card shows what users sent through the contact form's
 Feedback category (with the sender's address only where they provided one).
 The Feedback and Protokoll cards page rather than truncate (`100 von 342`,
 **Mehr laden**) and export *every* entry as UTF-8 CSV (BOM included, so Excel

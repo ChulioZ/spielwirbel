@@ -668,28 +668,38 @@ test('export answers an access request; erasure cascades and is logged (#273)', 
   });
 });
 
-// The panel's go-live checklist card (#274). The interesting assertions are the
-// negative ones: the response must describe THIS process, and must not carry a
-// secret. test/status.test.js pins the derivation down field by field; this is
-// about the route.
+// The panel's Kennzahlen card (#274, reshaped by #404). The interesting
+// assertions are the negative ones: the response must describe THIS process,
+// and must not carry a secret. test/status.test.js pins the derivation down
+// field by field; this is about the route.
 test('the status endpoint reports the running instance without leaking secrets (#274)', async (t) => {
   const cookie = await adminCookie();
   const res = await request(app).get('/api/admin/status').set('Cookie', cookie);
   assert.equal(res.status, 200);
   const { status } = res.body;
 
-  await t.test('it describes the configuration this test process runs with', async () => {
+  await t.test('it carries the quota ceilings and the usage metrics', async () => {
     // This file sets ACCOUNTS_ENABLED + SESSION_SECRET + ADMIN_PASSWORD at the
-    // top, and the suite runs on the default backends.
-    assert.equal(status.accounts.enabled, true);
-    assert.equal(status.accounts.sessionSecretSet, true);
-    assert.equal(status.admin.enabled, true);
+    // top, so the ceilings are enforced.
     assert.equal(status.quotas.enforced, true);
-    assert.equal(status.storage.images, 'disk');
-    assert.equal(status.storage.data, 'json');
-    assert.equal(status.migrations.backend, 'json');
-    // Mail is deliberately unconfigured in tests (lib/mail.js's outbox path).
-    assert.equal(status.mail.configured, false);
+    assert.equal(typeof status.quotas.roundsPerTenant, 'number');
+    for (const block of ['accounts', 'rounds', 'content', 'demo', 'social', 'peaks']) {
+      assert.equal(typeof status.metrics[block], 'object', `metrics.${block} is missing`);
+    }
+    assert.equal(typeof status.metrics.accounts.total, 'number');
+    // Each ceiling is paired with the highest value anyone currently holds, so
+    // the card can answer "is someone about to be refused?".
+    assert.equal(typeof status.metrics.peaks.roundsPerTenant, 'number');
+    assert.equal(typeof status.metrics.peaks.gamesPerRound, 'number');
+    assert.equal(typeof status.metrics.peaks.tagsPerRound, 'number');
+  });
+
+  await t.test('the retired go-live configuration rows are gone (#404)', async () => {
+    // They answered the same way on every deploy once registration opened, and
+    // several of them reported on secrets. Nothing may quietly put them back.
+    for (const key of ['app', 'accounts', 'admin', 'mail', 'legal', 'storage', 'hosts', 'assets', 'lookup', 'migrations']) {
+      assert.equal(key in status, false, `${key} came back onto the status payload`);
+    }
   });
 
   await t.test('no configured secret is echoed back', async () => {
