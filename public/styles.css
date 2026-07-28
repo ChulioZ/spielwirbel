@@ -1890,13 +1890,42 @@ body.auth-screen .topbar__context { display: none; }
 
 .landing-close { text-align: center; }
 
-/* The note under the hero CTAs explaining what the demo is (#427). Same
-   `[hidden]` pairing as the trust chip above — the element ships hidden and is
-   revealed only when /api/config reports the demo is on, so the author `display`
-   here must be undone for the hidden state or every instance shows it. */
-.landing-hero__demo-note { margin-top: 12px; font-size: 14px; }
-.landing-hero__demo-note[hidden] { display: none; }
-/* #landingDemo ships hidden too, and `.btn` declares its own display. */
+/* The demo CTA and the note explaining what the demo is (#427), as ONE tinted
+   group (#503). The note used to follow `.landing-hero__cta`, which is a
+   centred wrapping row — so at 375px (all three buttons stacked) and at 1600px
+   („Anmelden" wrapping to a second line) it sat directly beneath „Anmelden",
+   reading as a claim that *logging in* needs no e-mail. Grouping is the whole
+   fix; the copy is untouched.
+
+   Tinted from the brand family rather than a fixed pastel
+   (.claude/rules/theme-derived-colors.md), reusing the --brand-tint-soft +
+   --brand-edge pairing `.btn:hover` already uses so the surface reads as one
+   piece with the button it holds. Deliberately softer than `.demo-banner`,
+   which is a warning strip; this one only has to group. */
+.landing-hero__demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-tint-soft);
+  border: 1px solid var(--brand-edge);
+}
+/* Load-bearing, exactly like `.landing-chip[hidden]` above: the wrapper ships
+   `hidden` and the `display: flex` here beats the UA `[hidden]` rule, so
+   without this every instance — including a self-hosted one with DEMO_ENABLED
+   unset — renders a dead button under a promise of a demo that does not exist
+   (.claude/rules/hidden-attribute-vs-display-rule.md). With it the group
+   collapses whole, leaving the hero byte-for-byte its pre-#503 single row.
+   `test/landing-copy.test.js` pins it. */
+.landing-hero__demo[hidden] { display: none; }
+/* No `[hidden]` pairing needed here since #503 — the note no longer ships
+   hidden on its own, it rides the wrapper above. */
+.landing-hero__demo-note { margin: 0; font-size: 14px; max-width: 34em; }
+/* #toLogin (account.js) and #clearImg (the add-game sheet) ship hidden, and
+   `.btn` declares its own display. */
 .btn[hidden] { display: none; }
 
 /* ---------------------------------------------------------------------------

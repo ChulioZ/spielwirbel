@@ -163,17 +163,25 @@ function showLanding() {
         </div>
         <h1 class="landing-hero__title">${esc(t('landing.hero.title'))}</h1>
         <p class="landing-hero__sub">${esc(t('landing.hero.sub'))}</p>
+        <!-- The demo (#427) leads, ahead of registering: the whole point is
+             that a visitor can judge the app before being asked for anything.
+             Its note lives INSIDE this block rather than under the button row
+             (#503): the row wraps, so „Sofort loslegen, ohne E-Mail" ended up
+             directly beneath „Anmelden" at both 375px and 1600px — a promise of
+             no-e-mail attached to the two actions that require one.
+             The data-demo-only/hidden pair sits on the wrapper alone, so the
+             whole group collapses on an instance whose /api/config reports the
+             demo off and the hero keeps its pre-#503 single row — the reveal is
+             in landingRevealOperatorClaims(). (No backticks in here: this
+             comment is inside a template literal.) -->
+        <div class="landing-hero__demo" data-demo-only hidden>
+          <button class="btn btn--lg" id="landingDemo">${esc(t('landing.hero.ctaDemo'))}</button>
+          <p class="landing-hero__demo-note muted">${esc(t('landing.hero.demoNote'))}</p>
+        </div>
         <div class="landing-hero__cta">
-          <!-- The demo (#427) leads, ahead of registering: the whole point is
-               that a visitor can judge the app before being asked for anything.
-               Hidden until /api/config reports the demo is enabled, so a
-               self-hosted instance that hasn't opted in shows no dead button —
-               the reveal is in landingRevealOperatorClaims(). -->
-          <button class="btn btn--lg" id="landingDemo" data-demo-only hidden>${esc(t('landing.hero.ctaDemo'))}</button>
           <button class="btn btn--primary btn--lg" id="landingRegister">${esc(t('landing.hero.ctaPrimary'))}</button>
           <button class="btn btn--lg" id="landingLogin">${esc(t('landing.hero.ctaSecondary'))}</button>
         </div>
-        <p class="landing-hero__demo-note muted" data-demo-only hidden>${esc(t('landing.hero.demoNote'))}</p>
       </div>
       <div class="landing-hero__visual">${shelfShot}</div>
     </section>
