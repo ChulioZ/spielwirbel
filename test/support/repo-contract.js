@@ -2121,10 +2121,17 @@ module.exports = function repoContract(repo) {
       assert.ok(m.peaks.gamesPerRound >= 2);
       assert.ok(m.peaks.tagsPerRound >= 1);
       assert.ok(m.peaks.roundsPerTenant >= 1);
-      // Postgres count() is a bigint pg hands back as a STRING; every number
-      // here must have been coerced or the two backends disagree.
-      for (const n of [m.rounds.total, m.content.games, m.peaks.gamesPerRound, m.social.friendships]) {
-        assert.equal(typeof n, 'number');
+      // Postgres count() is a bigint pg hands back as a STRING, so EVERY count
+      // needs its ::int (or a Number()) or the two backends disagree — '3' here
+      // where the other answers 3. Swept over every field rather than a
+      // hand-picked list: half of any such list is vacuous, because a value that
+      // is reduced or Number()-ed in JS is a number whatever SQL returned, and
+      // the fields that would actually catch a dropped cast are the ones nobody
+      // remembers to add.
+      for (const [name, block] of Object.entries(m)) {
+        for (const [field, value] of Object.entries(block)) {
+          assert.equal(typeof value, 'number', `${name}.${field} is not a number`);
+        }
       }
     });
 
