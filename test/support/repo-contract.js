@@ -2147,6 +2147,48 @@ module.exports = function repoContract(repo) {
     assert.ok(!expired.includes(real.id));
   });
 
+  test('the per-IP live-demo cap counts only live demos from that exact hash', async () => {
+    // #502. Deltas again, for the same reason as the case above.
+    const now = new Date().toISOString();
+    const past = new Date(Date.now() - 60_000).toISOString();
+    const future = new Date(Date.now() + 60_000).toISOString();
+    const mine = `hash-${uniq()}`;
+    const theirs = `hash-${uniq()}`;
+
+    assert.equal(await repo.countLiveDemoUsersByIp(now, mine), 0);
+
+    await repo.createUser(userFields({ demo: true, demoExpiresAt: future, demoIpHash: mine }));
+    await repo.createUser(userFields({ demo: true, demoExpiresAt: future, demoIpHash: mine }));
+    // Expired: the cap must free the slot the moment the purge could take it,
+    // so the two predicates stay exact complements the way the count above does.
+    await repo.createUser(userFields({ demo: true, demoExpiresAt: past, demoIpHash: mine }));
+    // Another source, and an unattributable mint — neither may land in `mine`.
+    await repo.createUser(userFields({ demo: true, demoExpiresAt: future, demoIpHash: theirs }));
+    const anon = await repo.createUser(userFields({ demo: true, demoExpiresAt: future, demoIpHash: null }));
+
+    assert.equal(await repo.countLiveDemoUsersByIp(now, mine), 2);
+    assert.equal(await repo.countLiveDemoUsersByIp(now, theirs), 1);
+    // pg hands a count back as a STRING; the JSON backend answers a number.
+    assert.equal(typeof (await repo.countLiveDemoUsersByIp(now, mine)), 'number');
+
+    // An empty hash must answer 0, NEVER match the rows that stored null. Both
+    // backends fence this, because counting on null would collapse every
+    // unattributable visitor into one bucket that refuses the next one overall.
+    assert.equal(await repo.countLiveDemoUsersByIp(now, null), 0);
+    assert.equal(await repo.countLiveDemoUsersByIp(now, ''), 0);
+    // …and that row is a perfectly ordinary live demo for the global ceiling.
+    assert.equal((await repo.getUserById(anon.id)).demoIpHash, null);
+  });
+
+  test('demoIpHash keeps absent-key parity on a user that never had one', async () => {
+    // The field is present-but-null on a demo and ABSENT on everyone else. A
+    // column default or a blanket null on the Postgres side would split the two
+    // backends here (.claude/rules/postgres-backend.md) — and this is the check
+    // that catches it, since nothing else reads the key on a real account.
+    const real = await repo.createUser(userFields());
+    assert.equal('demoIpHash' in (await repo.getUserById(real.id)), false);
+  });
+
   test('a demo account erases like any other, freeing its tenant and covers', async () => {
     // The purge job reuses eraseAccount rather than writing a second deletion
     // path, so what it relies on is pinned here rather than only over HTTP.

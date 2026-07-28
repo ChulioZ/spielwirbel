@@ -123,6 +123,16 @@ suffices), the deep link passes nothing.
   the defence: rotating IPs walk around it, and `MAX_LIVE_DEMOS` is what actually
   holds. The refusal is **503 `demo_unavailable`**, deliberately not the limiter's
   429: the client shows a different message for capacity than for rate limiting.
+
+  **#502 added a THIRD bound between those two** — `MAX_LIVE_DEMOS_PER_IP`
+  (default 3), a per-source *live count* rather than a rate. It exists because the
+  reasoning above had a hole: an honest visitor needed no IP rotation at all to
+  drain the pool, since leaving a demo froze its slot for the full TTL and a
+  second click minted another. Ending a demo (`DELETE /api/account/demo`) and
+  browser-local resume landed with it. All three share the one 503, so a test that
+  drives one must put the other two out of reach or it can pass vacuously — see
+  `.claude/rules/per-ip-live-caps.md`, which also covers why adding that default
+  broke a dozen unrelated specs in `test/demo.test.js`.
 - **Demo accounts cannot send friend requests or round invitations**
   (`demo.refuseDemoAccount` on those two POSTs). "We didn't build a UI for it" is
   not a control — the endpoints are reachable by hand with the demo's own token,

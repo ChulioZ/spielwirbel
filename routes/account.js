@@ -28,6 +28,7 @@ const { z } = require('zod');
 const repo = require('../lib/repo');
 const accounts = require('../lib/accounts');
 const demo = require('../lib/demo');
+const storage = require('../lib/storage'); // ending a demo frees its cover objects (#502)
 const mail = require('../lib/mail');
 const { logger } = require('../lib/observability');
 
@@ -337,7 +338,14 @@ router.post('/demo', async (req, res) => {
   // The locale decides the seeded round/member/tag wording. Taken from the body
   // (the client knows its active locale) and falling back to German inside
   // demo-seed.js, so an absent or unknown value is never an error.
-  const user = await demo.createDemoAccount(String((req.body || {}).locale || ''));
+  //
+  // The hashed address bounds how many live demos one source may hold (#502) —
+  // it is a BOUND, never an identity: resuming a demo by IP would drop two
+  // strangers behind the same NAT into one account.
+  const user = await demo.createDemoAccount(
+    String((req.body || {}).locale || ''),
+    demo.hashIp(req.ip),
+  );
 
   // A capacity answer, not a fault: 503 with a distinct code the client turns
   // into "very busy right now, try again shortly" while leaving the register CTA
@@ -353,6 +361,36 @@ router.post('/demo', async (req, res) => {
     ...tokens,
     user: { id: user.id, email: user.email, username: user.username, demo: true },
   });
+});
+
+// End a demo the visitor is done with (#502), freeing its slot immediately
+// instead of holding it for the rest of the TTL.
+//
+// This is the ONE exit we can actually recognise. Every other way of leaving —
+// the banner's register CTA, a closed tab, navigating away — is either
+// indistinguishable from a reload or never reaches the server at all, so those
+// keep the demo alive and the client re-enters it from its own resume marker;
+// the TTL purge remains the backstop for both.
+//
+// requireUser, then an explicit demo check: this erases an account outright, so
+// it must be impossible to reach for a real one even with a valid token.
+router.delete('/demo', accounts.requireUser, async (req, res) => {
+  const user = await repo.getUserById(req.userId);
+  if (!user || user.demo !== true) return res.status(403).json({ error: 'not_demo' });
+
+  const result = await demo.endDemo(user.id, storage);
+  // Unreachable for a demo (its tenant is 1:1 by construction) but answered
+  // honestly rather than reported as a success that did not happen.
+  if (result === 'tenant_shared') return res.status(409).json({ error: 'tenant_shared' });
+  if (!result) return res.status(404).json({ error: 'not_found' });
+
+  // Best-effort like /logout: the client is leaving either way, and the erased
+  // account's still-valid access token resolves to ERASED -> 401 -> the SPA
+  // bounces to login (.claude/rules/erased-account-token-fallback.md), so this
+  // never has to race the client.
+  accounts.clearAccessCookie(res, req);
+  logger.info({ event: 'demo_ended', rounds: result.rounds });
+  res.json({ ok: true, rounds: result.rounds });
 });
 
 /* ------------------------------ refresh / logout ---------------------------- */

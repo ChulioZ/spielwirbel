@@ -662,6 +662,8 @@ I18N.en = {
   // so the note beneath it has to answer the two questions a "no signup" button
   // immediately raises: how long does it last, and is my stuff kept.
   'landing.hero.ctaDemo': 'Try it without signing up',
+  // Shown instead of ctaDemo when this browser already holds a live demo (#502).
+  'landing.hero.ctaResume': 'Resume demo',
   'landing.hero.demoNote': 'Start straight away, no e-mail needed. The demo round comes pre-filled and is deleted after 24 hours.',
   'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their average rating, next to the navigation for Start, shelf, chronicle and trophies.',
   'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale from 1 to 5.',
@@ -702,6 +704,9 @@ I18N.en = {
   // reading that data is safe until it runs out.
   'demo.banner.text': 'You are trying Spielwirbel in a demo round. It is deleted automatically — nothing here is kept.',
   'demo.banner.cta': 'Sign up for free',
+  // Replaces "Log out" in the account menu of a demo account (#502): a demo has
+  // no password to log back in with, so ending it erases it and frees its slot.
+  'demo.end.menu': 'End demo',
   'demo.start.busy': 'A lot of demos are open right now. Please try again shortly — or sign up for free.',
   'demo.start.disabled': 'The demo is not available on this instance.',
   'demo.start.failed': 'The demo could not be started. Please try again.',

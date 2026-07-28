@@ -26,6 +26,13 @@ process.env.LOG_LEVEL = 'silent';
 // test pass even if the demo limiter had never been mounted.
 process.env.AUTH_RATE_LIMIT_MAX = '1000000';
 process.env.RATE_LIMIT_MAX = '1000000';
+// Likewise out of reach (#502): every spec here mints from the SAME supertest
+// source address, so the default per-IP live cap of 3 would refuse every mint
+// from the twelfth test onward — and because the refusal is a polite 503, the
+// symptom is `res.body.user` being undefined in a dozen unrelated specs rather
+// than anything naming the cap. The two specs that exercise the cap set their
+// own ceiling.
+process.env.MAX_LIVE_DEMOS_PER_IP = '1000000';
 
 const { createApp } = require('../lib/app');
 const repo = require('../lib/repo');
@@ -296,6 +303,70 @@ test('the demo endpoint has its own per-IP limiter', async () => {
   });
 });
 
+test('one source cannot hold more than MAX_LIVE_DEMOS_PER_IP live demos', async () => {
+  // The defect (#502): the per-IP RATE limiter bounds how fast one visitor may
+  // mint, but nothing bounded how many they could hold — and leaving a demo
+  // (logout, the register CTA, a closed tab) frees no slot, so start -> leave ->
+  // start again strands them one at a time until the pool is empty.
+  //
+  // MAX_LIVE_DEMOS is left out of reach so a refusal here can only be the
+  // per-IP cap: both answer the identical 503 demo_unavailable, so a low global
+  // ceiling would let this pass with the per-IP check never wired up at all.
+  //
+  // TRUST_PROXY makes req.ip follow X-Forwarded-For, which lets this spec own a
+  // source address nothing else in the file uses. That matters more than it
+  // looks: every other spec mints from the one supertest loopback address, so a
+  // cap sized against *that* bucket would pass alone and fail in file order —
+  // the trap .claude/rules/guest-demo-accounts.md warns about, here in its
+  // per-IP form.
+  await withDemo({ MAX_LIVE_DEMOS_PER_IP: '2', MAX_LIVE_DEMOS: '1000000', TRUST_PROXY: '1' }, async () => {
+    const app = createApp();
+    const from = (ip) => request(app).post('/api/account/demo').set('X-Forwarded-For', ip).send({});
+
+    assert.strictEqual((await from('198.51.100.10')).status, 200);
+    assert.strictEqual((await from('198.51.100.10')).status, 200);
+
+    const third = await from('198.51.100.10');
+    assert.strictEqual(third.status, 503);
+    assert.strictEqual(third.body.error, 'demo_unavailable');
+
+    // A different source is unaffected — this is what proves the cap is keyed on
+    // the address at all, rather than being a second global ceiling.
+    assert.strictEqual((await from('198.51.100.11')).status, 200);
+  });
+});
+
+test('the stored IP value is a keyed hash, never the address itself', async () => {
+  await withDemo({}, async () => {
+    const app = createApp();
+    const res = await startDemo(app, {});
+    const user = await repo.getUserById(res.body.user.id);
+
+    assert.match(user.demoIpHash, /^[0-9a-f]{64}$/); // HMAC-SHA-256, hex
+    // supertest drives ::ffff:127.0.0.1 — whatever it is, it must not be stored.
+    assert.ok(!String(user.demoIpHash).includes('127.0.0.1'));
+    // Keyed with SESSION_SECRET: a bare digest of the address would be trivially
+    // reversible by hashing the IPv4 space.
+    const bare = require('crypto').createHash('sha256').update('127.0.0.1').digest('hex');
+    assert.notStrictEqual(user.demoIpHash, bare);
+  });
+});
+
+test('an unattributable mint stores null and never shares a bucket', async () => {
+  // hashIp returns null with no address, and createDemoAccount must then SKIP
+  // the per-IP check rather than pass null down: both backends compare the
+  // stored field exactly, so counting on null would fold every such row into
+  // one bucket and refuse the next visitor overall.
+  await withDemo({}, async () => {
+    assert.strictEqual(demo.hashIp(''), null);
+    assert.strictEqual(demo.hashIp(undefined), null);
+
+    const now = new Date().toISOString();
+    assert.strictEqual(await repo.countLiveDemoUsersByIp(now, null), 0);
+    assert.strictEqual(await repo.countLiveDemoUsersByIp(now, ''), 0);
+  });
+});
+
 test('a demo account cannot send friend requests or round invitations', async () => {
   // "We didn't build a UI for it" is not a control — these endpoints are
   // reachable by hand with the demo's own token, and a throwaway account is an
@@ -350,6 +421,109 @@ test('a minted demo tenant actually carries the prefix', () => {
   // The exclusion above is worthless if the ids it keys on don't have it.
   assert.ok(demo.isDemoTenant(`${demo.DEMO_TENANT_PREFIX}deadbeef`));
   assert.ok(!demo.isDemoTenant('a1b2c3d4e5f60718'));
+});
+
+/* --------------------------- ending a demo (#502) --------------------------- */
+
+test('ending a demo erases it and frees its slot immediately', async () => {
+  await withDemo({}, async () => {
+    const app = createApp();
+    const res = await startDemo(app, {});
+    const uid = res.body.user.id;
+    const tenant = (await repo.getUserById(uid)).tenantId;
+
+    // A DELTA: this file shares one DATA_DIR, so other specs' demos are live too.
+    const before = await repo.countLiveDemoUsers(new Date().toISOString());
+
+    const ended = await request(app).delete('/api/account/demo').set(...auth(res));
+    assert.strictEqual(ended.status, 200);
+    assert.strictEqual(ended.body.rounds, 1);
+
+    // The whole point of the issue: the slot is back NOW, not in 24 h.
+    assert.strictEqual(await repo.countLiveDemoUsers(new Date().toISOString()), before - 1);
+    assert.strictEqual(await repo.getUserById(uid), null);
+    assert.deepStrictEqual(await repo.listRounds(tenant), []);
+
+    // Same erased-token path the purge relies on, so ending never has to race
+    // the client (.claude/rules/erased-account-token-fallback.md).
+    const after = await request(app).get('/api/rounds').set(...auth(res));
+    assert.strictEqual(after.status, 401);
+    assert.strictEqual(after.body.error, 'auth_required');
+  });
+});
+
+test('ending frees the ending source\'s per-IP slot too', async () => {
+  // The cap counts LIVE demos, so the two predicates have to agree: a visitor who
+  // ends one demo must be able to start another, or "Demo beenden" would punish
+  // exactly the people doing the right thing.
+  await withDemo({ MAX_LIVE_DEMOS_PER_IP: '1', MAX_LIVE_DEMOS: '1000000', TRUST_PROXY: '1' }, async () => {
+    const app = createApp();
+    // Its own address, for the reason the spec above explains.
+    const from = () => request(app).post('/api/account/demo').set('X-Forwarded-For', '198.51.100.20').send({});
+
+    const first = await from();
+    assert.strictEqual(first.status, 200);
+    assert.strictEqual((await from()).status, 503);
+
+    assert.strictEqual((await request(app).delete('/api/account/demo').set(...auth(first))).status, 200);
+    assert.strictEqual((await from()).status, 200);
+  });
+});
+
+test('DELETE /demo refuses a real account and an anonymous caller', async () => {
+  // This route ERASES an account, so reaching it with a real one must be
+  // impossible even holding a perfectly valid token.
+  await withDemo({}, async () => {
+    const app = createApp();
+    assert.strictEqual((await request(app).delete('/api/account/demo')).status, 401);
+
+    await request(app)
+      .post('/api/account/register')
+      .send({ email: 'notademo@example.com', username: 'notademo', password: 'correct-horse' });
+    const real = await repo.getUserByEmail('notademo@example.com');
+    await repo.updateUser(real.id, { emailVerified: true });
+    const login = await request(app)
+      .post('/api/account/login')
+      .send({ email: 'notademo@example.com', password: 'correct-horse' });
+    assert.strictEqual(login.status, 200);
+
+    const refused = await request(app)
+      .delete('/api/account/demo')
+      .set('Authorization', `Bearer ${login.body.accessToken}`);
+    assert.strictEqual(refused.status, 403);
+    assert.strictEqual(refused.body.error, 'not_demo');
+    // …and the account is untouched.
+    assert.ok(await repo.getUserById(real.id));
+  });
+});
+
+test('the ended demo\'s refresh token stops working, so a stale marker cannot resume it', async () => {
+  // The client keeps a resume marker holding the demo's refresh token. Ending the
+  // demo must make that marker dead server-side as well, so a browser that still
+  // holds one fails forward into a fresh demo rather than into a half-alive one.
+  await withDemo({}, async () => {
+    const app = createApp();
+    const res = await startDemo(app, {});
+    const refreshToken = res.body.refreshToken;
+
+    // It works while the demo is live — the resume path in one call.
+    const ok = await request(app).post('/api/account/refresh').send({ refreshToken });
+    assert.strictEqual(ok.status, 200);
+    assert.ok(ok.body.accessToken);
+
+    // Rotation: the presented token is spent and replaced. This is what the
+    // marker has to follow (see test/demo-marker.test.js) — the OLD one is dead
+    // from here on, which is why a marker left un-rewritten mints a second demo.
+    const stale = await request(app).post('/api/account/refresh').send({ refreshToken });
+    assert.strictEqual(stale.status, 401);
+    assert.strictEqual(stale.body.error, 'invalid_refresh_token');
+
+    await request(app).delete('/api/account/demo').set(...auth(res));
+    const dead = await request(app)
+      .post('/api/account/refresh')
+      .send({ refreshToken: ok.body.refreshToken });
+    assert.strictEqual(dead.status, 401);
+  });
 });
 
 /* ----------------------------------- purge ---------------------------------- */

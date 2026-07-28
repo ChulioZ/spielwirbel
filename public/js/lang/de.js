@@ -661,6 +661,8 @@ I18N.de = {
   // so the note beneath it has to answer the two questions a "no signup" button
   // immediately raises: how long does it last, and is my stuff kept.
   'landing.hero.ctaDemo': 'Ohne Anmeldung ausprobieren',
+  // Shown instead of ctaDemo when this browser already holds a live demo (#502).
+  'landing.hero.ctaResume': 'Demo fortsetzen',
   'landing.hero.demoNote': 'Sofort loslegen, ohne E-Mail. Die Demo-Runde ist schon gefüllt und wird nach 24 Stunden gelöscht.',
   'landing.shot.shelfAlt': 'Screenshot: das Spielregal einer Runde in Spielwirbel – Spiele als Kacheln mit Durchschnittsbewertung, daneben die Navigation zu Start, Regal, Chronik und Pokalen.',
   'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala von 1 bis 5.',
@@ -701,6 +703,9 @@ I18N.de = {
   // reading that data is safe until it runs out.
   'demo.banner.text': 'Du testest Spielwirbel in einer Demo-Runde. Sie wird automatisch gelöscht – nichts hiervon bleibt erhalten.',
   'demo.banner.cta': 'Kostenlos registrieren',
+  // Replaces "Abmelden" in the account menu of a demo account (#502): a demo has
+  // no password to log back in with, so ending it erases it and frees its slot.
+  'demo.end.menu': 'Demo beenden',
   'demo.start.busy': 'Gerade sind sehr viele Demos offen. Bitte versuch es gleich noch einmal – oder registriere dich kostenlos.',
   'demo.start.disabled': 'Die Demo ist auf dieser Instanz nicht verfügbar.',
   'demo.start.failed': 'Die Demo konnte nicht gestartet werden. Bitte versuch es noch einmal.',

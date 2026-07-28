@@ -28,10 +28,20 @@ const SA_REFRESH = 'sa_refresh';
 const saStore = () => { try { return window.localStorage; } catch { return null; } };
 function getAccessToken() { try { const s = saStore(); return s ? s.getItem(SA_ACCESS) : null; } catch { return null; } }
 function getRefreshToken() { try { const s = saStore(); return s ? s.getItem(SA_REFRESH) : null; } catch { return null; } }
+// The demo resume marker (#502) — see public/js/demo-marker.js. Survives
+// clearTokens() on purpose: leaving a demo without ending it keeps it alive on
+// the server, so the browser has to remember which demo is its own.
+function getDemoToken() { try { const s = saStore(); return s ? s.getItem(SA_DEMO) : null; } catch { return null; } }
+function setDemoToken(token) { try { const s = saStore(); if (s && token) s.setItem(SA_DEMO, token); } catch {} }
+function clearDemoToken() { try { const s = saStore(); if (s) s.removeItem(SA_DEMO); } catch {} }
 function setTokens(access, refresh) {
   const s = saStore();
   if (!s) return;
+  // Read BEFORE the write below: once SA_REFRESH holds the new token the
+  // comparison can no longer tell whose rotation this was.
+  const follows = refresh && demoMarkerFollowsRotation(getDemoToken(), getRefreshToken());
   try { if (access) s.setItem(SA_ACCESS, access); if (refresh) s.setItem(SA_REFRESH, refresh); } catch {}
+  if (follows) setDemoToken(refresh);
 }
 function clearTokens() {
   const s = saStore();
@@ -589,6 +599,21 @@ async function startDemo(busy) {
   // seeding a round takes a moment, so a second click would mint a second demo
   // tenant and abandon the first.
   if (busy) busy.disabled = true;
+
+  // Prefer the demo this browser already holds (#502). Without this, a visitor
+  // who left without ending it strands that demo's slot for the rest of its TTL
+  // and takes a second one — repeatable, so one visitor can drain the pool.
+  //
+  // resumeDemo() clears the marker on a definitive refusal, so falling through
+  // to a fresh mint here IS the fail-forward path: a purged, expired or spent
+  // marker never leaves the visitor at a dead end.
+  if (getDemoToken()) {
+    const resumed = await resumeDemo();
+    if (resumed) {
+      accountUser = resumed;
+      return enterDemo();
+    }
+  }
   // A failure has to leave the visitor looking at SOMETHING. When the click came
   // from the landing page (`busy` is its button) that page is already rendered
   // and a toast is enough — but the /demo deep link reaches here with nothing
@@ -617,13 +642,73 @@ async function startDemo(busy) {
     return fail('demo.start.failed');
   }
   setTokens(data.accessToken, data.refreshToken);
+  // The mint is one of the two places the marker is written EXPLICITLY: there is
+  // no previous refresh token to match against, so setTokens' rotation rule
+  // cannot recognise this as a demo (see public/js/demo-marker.js).
+  setDemoToken(data.refreshToken);
   accountUser = data.user || null;
-  // Land on Home rather than on whatever path the visitor arrived at: /demo is
-  // not a view, and enterApp() would otherwise try to route to it.
+  return enterDemo();
+}
+
+// Land in the demo. Home rather than whatever path the visitor arrived at:
+// /demo is not a view, and enterApp() would otherwise try to route to it.
+function enterDemo() {
   history.replaceState({}, '', '/');
   authScreen(false);
   setupAccountUi();
   routeTo('/');
+}
+
+// Re-enter the demo this browser already holds (#502) by exchanging the stashed
+// refresh token for a fresh pair. Returns the demo's user object, or null when
+// the marker no longer resolves — the caller then mints a fresh demo.
+async function resumeDemo() {
+  const token = getDemoToken();
+  if (!token) return null;
+  let res;
+  try {
+    res = await authFetch('/refresh', { refreshToken: token });
+  } catch {
+    // A network error is NOT proof the demo is gone, so the marker survives it.
+    return null;
+  }
+  if (!res.ok || !res.data.accessToken) {
+    // Purged, expired, or already spent: a definitive refusal, so drop the
+    // marker and let the caller mint a fresh demo in the same click.
+    clearDemoToken();
+    return null;
+  }
+  setTokens(res.data.accessToken, res.data.refreshToken);
+  // The second explicit write: the refresh above SPENT the stashed token, and
+  // setTokens could not match it because SA_REFRESH was cleared when the visitor
+  // left. From here on the two are equal and rotations carry the marker along.
+  setDemoToken(res.data.refreshToken);
+
+  const me = await probeMe();
+  // The marker must only ever resume a DEMO. Anything else (a purge landing
+  // mid-flight, a marker that somehow points at a real account) is treated as no
+  // marker at all rather than logging the visitor into it.
+  if (me.status !== 200 || me.data.demo !== true) {
+    clearTokens();
+    clearDemoToken();
+    return null;
+  }
+  return me.data;
+}
+
+// End a demo deliberately (#502): erase it server-side so its slot is freed
+// immediately, then leave to the landing page. This is the one exit the server
+// can recognise — every other one keeps the demo alive for the resume above.
+async function endDemo() {
+  // Best-effort: the visitor is leaving either way, and the TTL purge is the
+  // backstop if the call never lands.
+  try { await accountApi('DELETE', '/demo'); } catch {}
+  clearTokens();
+  clearDemoToken(); // nothing left to resume — the CTA must offer a fresh demo
+  invalidateRoundCache();
+  accountUser = null;
+  setupAccountUi();
+  showLanding();
 }
 
 // The persistent "this is a demo" marker. Deliberately NOT a toast(): a toast is
@@ -652,6 +737,10 @@ function setupDemoBanner() {
     // over (#427 rules that out: it would need the cross-tenant re-tenanting
     // write path removed in #405). So drop the demo's tokens first, or the new
     // visitor to the register screen is still holding a logged-in session.
+    //
+    // The resume MARKER deliberately survives (#502): this exit abandons the
+    // demo without ending it, so it stays alive server-side and the landing CTA
+    // must offer to re-enter it rather than minting a second one.
     cta.onclick = () => {
       clearTokens();
       accountUser = null;
@@ -690,9 +779,18 @@ function setupAccountUi() {
     const konto = h(`<button class="popover__opt"><i class="ti ti-user" aria-hidden="true"></i> ${esc(t('konto.menu'))}</button>`);
     konto.addEventListener('click', () => { close(); showAccount(); });
     el.appendChild(konto);
-    const out = h(`<button class="popover__opt"><i class="ti ti-logout" aria-hidden="true"></i> ${esc(t('auth.logout'))}</button>`);
-    out.addEventListener('click', () => { close(); logout(); });
-    el.appendChild(out);
+    // A demo has nothing to log back INTO — it holds no password identity, so
+    // "Abmelden" would strand the account alive and unreachable, holding a
+    // capacity slot for the rest of its TTL (#502). Ending it erases it instead.
+    if (isDemoAccount()) {
+      const end = h(`<button class="popover__opt"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('demo.end.menu'))}</button>`);
+      end.addEventListener('click', () => { close(); endDemo(); });
+      el.appendChild(end);
+    } else {
+      const out = h(`<button class="popover__opt"><i class="ti ti-logout" aria-hidden="true"></i> ${esc(t('auth.logout'))}</button>`);
+      out.addEventListener('click', () => { close(); logout(); });
+      el.appendChild(out);
+    }
   });
   setupInboxUi();
 }
