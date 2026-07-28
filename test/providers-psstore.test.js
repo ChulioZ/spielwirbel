@@ -133,6 +133,47 @@ test('parsePlayers handles the German store (Spieler + en-dash) and skips online
   );
 });
 
+// The store's own wording, captured live from store.playstation.com on
+// 2026-07-28 (It Takes Two: EP0006-PPSA02343_00-ITTAKESTWORETAIL for the
+// European locales, UP0006-PPSA02342_00-ITTAKESTWORETAIL for en-us/pt-br).
+// Hand-written fixtures are worthless here — the point is what Sony ACTUALLY
+// renders, and it varies in the separator, not just the noun (#505).
+const CAPTURED = {
+  'de-de': { local: '1 – 2 Spieler', online: 'Unterstützt bis zu 2 Online-Spieler mit PS Plus' },
+  'en-us': { local: '1 - 2 players', online: 'Supports up to 2 online players with PS Plus' },
+  'fr-fr': { local: 'De 1 à 2 joueurs', online: 'Prend en charge jusqu’à 2 joueurs en ligne avec PS Plus' },
+  'es-es': { local: '1/2 jugadores', online: 'Admite hasta 2 jugadores online que tengan PS Plus' },
+  'it-it': { local: '1 - 2 giocatori', online: 'Supporta fino a 2 giocatori online con PS Plus' },
+  'nl-nl': { local: '1 - 2 spelers', online: 'Speel met maximaal 2 onlinespelers met PS Plus' },
+  'pt-br': { local: '1 a 2 jogadores', online: 'Compatível com até 2 jogadores online com o PS Plus' },
+};
+const compat = (s) => `<span class="compatText">${s}</span>`;
+
+test('parsePlayers reads the real player spec in every supported storefront language', () => {
+  for (const [locale, { local }] of Object.entries(CAPTURED)) {
+    assert.deepEqual(ps.parsePlayers(compat(local)), { min: 1, max: 2 }, locale);
+  }
+});
+
+test('parsePlayers ignores the ONLINE-play notice in every language', () => {
+  // Each of these embeds "<n> <players-word>" inside a sentence — Spanish even
+  // adjacently ("hasta 2 jugadores online"). They are excluded because the count
+  // must follow `compatText">` immediately and every one of them opens with a
+  // word, which is what keeps the widened language set from reading an online
+  // cap as the local player count.
+  for (const [locale, { online }] of Object.entries(CAPTURED)) {
+    assert.deepEqual(ps.parsePlayers(compat(online)), { min: null, max: null }, locale);
+  }
+});
+
+test('parsePlayers picks the local spec out of a full localized notice block', () => {
+  // The real page order: the online notices come first, the local count last.
+  for (const [locale, { local, online }] of Object.entries(CAPTURED)) {
+    const html = compat(online) + compat('Remote Play') + compat(local);
+    assert.deepEqual(ps.parsePlayers(html), { min: 1, max: 2 }, locale);
+  }
+});
+
 test('parseProduct maps the matching product + players, digital', () => {
   const html = pageHtml(
     { 'Product:CCC': SEARCH_STATE['Product:CCC'] },

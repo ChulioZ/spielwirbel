@@ -73,13 +73,32 @@ async function resolveProvider(req) {
   return { provider };
 }
 
+// The cache-key component for this request's language (#505). The four
+// storefronts answer in the caller's UI language, so a cache keyed on the query
+// alone would serve a French user a German user's hits for the whole TTL.
+//
+// It keys on the EFFECTIVE provider locale, never on the raw `?lang=`: two UI
+// locales that map to the same storefront locale then share one entry, and BGG —
+// which ignores the locale entirely — stays at a single entry instead of
+// fragmenting seven ways for byte-identical results.
+//
+// Note the raw value still reaches provider.search/detail, which map it
+// themselves. That is deliberate: mapping lives in exactly one place per
+// provider, so no caller can construct a URL from an unmapped value.
+function localeKey(provider, req) {
+  return provider.resolveLocale(req.query.lang);
+}
+
 router.get('/search', async (req, res) => {
   const { provider, status, error } = await resolveProvider(req);
   if (!provider) return res.status(status).json({ error });
   const q = String(req.query.q || '').trim();
   if (q.length < 2) return res.json({ results: [] });
   try {
-    const results = await cached(`${provider.id}:search:${q.toLowerCase()}`, () => provider.search(q));
+    const results = await cached(
+      `${provider.id}:search:${localeKey(provider, req)}:${q.toLowerCase()}`,
+      () => provider.search(q, 8, req.query.lang)
+    );
     res.json({ results });
   } catch {
     res.status(502).json({ error: 'provider_unreachable' });
@@ -92,7 +111,10 @@ router.get('/game', async (req, res) => {
   const id = String(req.query.id || '').trim();
   if (!id) return res.status(400).json({ error: 'Missing id' });
   try {
-    const game = await cached(`${provider.id}:game:${id}`, () => provider.detail(id));
+    const game = await cached(
+      `${provider.id}:game:${localeKey(provider, req)}:${id}`,
+      () => provider.detail(id, req.query.lang)
+    );
     if (!game) return res.status(404).json({ error: 'Not found' });
     res.json(game);
   } catch {

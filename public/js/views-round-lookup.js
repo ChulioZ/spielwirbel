@@ -54,14 +54,23 @@ function enabledProviders(round) {
   return LOOKUP_PROVIDERS.filter((p) => ids.includes(p));
 }
 
+// The four storefronts answer in whatever language they are asked for, so both
+// hops carry the ACTIVE UI locale (#505) — otherwise an English user gets German
+// titles and German store links from Sony, Microsoft, Valve and Nintendo.
+//
+// It is the app's own locale, deliberately not the browser's Accept-Language:
+// a user who switched the picker would otherwise still get their OS language.
+// The server maps it through a closed per-provider table, so an invented value
+// only ever falls back — see lib/providers/locales.js. BGG ignores it (#117).
 async function searchProvider(rid, provider, q) {
-  const res = await api('GET', `/api/rounds/${rid}/lookup/search?provider=${provider}&q=${encodeURIComponent(q)}`);
+  const lang = encodeURIComponent(getLocale());
+  const res = await api('GET', `/api/rounds/${rid}/lookup/search?provider=${provider}&q=${encodeURIComponent(q)}&lang=${lang}`);
   return ((res && res.results) || []).map((r) => Object.assign({ provider }, r));
 }
 
 // Fetch one provider's detail for a round, honouring its enabled list server-side.
 function lookupDetail(rid, r) {
-  return api('GET', `/api/rounds/${rid}/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}`);
+  return api('GET', `/api/rounds/${rid}/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}&lang=${encodeURIComponent(getLocale())}`);
 }
 
 // Wire search-as-you-type merged provider suggestions onto an input + menu.

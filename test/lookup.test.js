@@ -405,3 +405,113 @@ test('xbox search returns 502 when the provider is unreachable', async () => {
   assert.equal(res.status, 502);
   assert.equal(res.body.error, 'provider_unreachable');
 });
+
+// --- per-user storefront language (#505) ------------------------------------
+//
+// The four storefronts answer in whatever language the request asks for, so the
+// caller's UI locale is threaded through as ?lang= and mapped, per provider,
+// onto that store's own spelling. Every query below uses a distinct search term
+// so it cannot be answered from an earlier test's 10-minute cache entry.
+
+test('a ?lang= locale reaches the storefront URL, mapped to its own spelling', async () => {
+  const seen = [];
+  stubFetch((url) => { seen.push(url); return htmlRes(page({})); });
+
+  await request(app).get(L('/search?provider=psstore&q=langmapde&lang=de'));
+  await request(app).get(L('/search?provider=psstore&q=langmapen&lang=en'));
+  assert.match(seen[0], /store\.playstation\.com\/de-de\/search\//);
+  assert.match(seen[1], /store\.playstation\.com\/en-us\/search\//);
+});
+
+test('each storefront maps the SAME locale to its own spelling', async () => {
+  const byProvider = {};
+  stubFetch((url) => {
+    byProvider[/playstation/.test(url) ? 'psstore' : /steampowered/.test(url) ? 'steam'
+      : /nintendo-europe/.test(url) ? 'nintendo' : 'xbox'] = url;
+    return /playstation/.test(url) ? htmlRes(page({})) : jsonRes({});
+  });
+  for (const provider of ['psstore', 'steam', 'nintendo', 'xbox']) {
+    await request(app).get(L(`/search?provider=${provider}&q=spellingfr&lang=fr`));
+  }
+  assert.match(byProvider.psstore, /\/fr-fr\/search\//);
+  assert.match(byProvider.steam, /[?&]cc=fr(&|$)/);
+  assert.match(byProvider.steam, /[?&]l=french(&|$)/); // an English WORD, not a code
+  assert.match(byProvider.nintendo, /nintendo-europe\.com\/fr\/select/);
+  assert.match(byProvider.xbox, /[?&]market=fr-fr(&|$)/);
+});
+
+test('a hand-rolled ?lang= can never influence the fetched URL', async () => {
+  // The security-relevant one: PSSTORE/XBOX interpolate the locale into a URL
+  // PATH, so an unmapped request value would be a request-forgery primitive.
+  const hostile = ['../../etc/passwd', 'https://evil.example.com/', '//evil.example.com', 'de-de/../../x', 'zz'];
+  for (const [i, lang] of hostile.entries()) {
+    let seen = null;
+    stubFetch((url) => { seen = url; return htmlRes(page({})); });
+    const res = await request(app).get(
+      L(`/search?provider=psstore&q=hostile${i}&lang=${encodeURIComponent(lang)}`)
+    );
+    assert.equal(res.status, 200, lang);
+    // Falls back to the deployment default, and nothing of the input survives.
+    assert.equal(seen, `https://store.playstation.com/de-de/search/hostile${i}`, lang);
+  }
+});
+
+test('two locales issue two upstream requests; two that map alike share one', async () => {
+  let calls = 0;
+  stubFetch(() => { calls += 1; return htmlRes(page({})); });
+
+  await request(app).get(L('/search?provider=psstore&q=cachesplit&lang=de'));
+  assert.equal(calls, 1);
+  await request(app).get(L('/search?provider=psstore&q=cachesplit&lang=en'));
+  assert.equal(calls, 2, 'a different storefront locale must not reuse the cached hits');
+  await request(app).get(L('/search?provider=psstore&q=cachesplit&lang=de'));
+  assert.equal(calls, 2, 'the same locale must still hit the cache');
+
+  // 'de' and an unmapped value both resolve to the deployment default (de-de),
+  // so they share one entry rather than fragmenting it.
+  await request(app).get(L('/search?provider=psstore&q=cachesplit&lang=zz'));
+  assert.equal(calls, 2, 'two locales resolving to the same storefront locale share an entry');
+});
+
+test('the detail hop is locale-keyed too, and localizes the store link', async () => {
+  let calls = 0;
+  stubFetch((url) => {
+    calls += 1;
+    return htmlRes(page({ 'Product:X': PROD }, /\/en-us\//.test(url)
+      ? '<span class="compatText">1 - 4 players</span>'
+      : '<span class="compatText">1 – 4 Spieler</span>'));
+  });
+
+  // Its own product id: the whole file shares one 10-minute cache, and the
+  // earlier detail test already populated the default locale's entry for PROD.
+  const id = 'EP0006-PPSA02343_00-LOCALEKEYEDCASE1';
+  const de = await request(app).get(L(`/game?provider=psstore&id=${id}&lang=de`));
+  const en = await request(app).get(L(`/game?provider=psstore&id=${id}&lang=en`));
+  assert.equal(calls, 2);
+  assert.match(de.body.url, /\/de-de\/product\//);
+  assert.match(en.body.url, /\/en-us\/product\//);
+  // Both localizations of the player notice parse identically.
+  assert.equal(de.body.minPlayers, 1);
+  assert.equal(de.body.maxPlayers, 4);
+  assert.deepEqual([en.body.minPlayers, en.body.maxPlayers], [1, 4]);
+});
+
+test('BGG ignores the locale entirely and keeps ONE cache entry', async () => {
+  await withToken('test-token', async () => {
+    let calls = 0;
+    global.fetch = async () => { calls += 1; return htmlRes(BGG_SEARCH_XML); };
+
+    const de = await request(app).get(L('/search?provider=bgg&q=bgglocale&lang=de'));
+    const en = await request(app).get(L('/search?provider=bgg&q=bgglocale&lang=en'));
+    assert.equal(calls, 1, 'a locale must not fragment BGG’s cache — its answers are identical');
+    assert.deepEqual(de.body.results, en.body.results);
+  });
+});
+
+test('a request with no ?lang= at all keeps the deployment default', async () => {
+  // Backwards compatibility: a stale client, or a hand-rolled call.
+  let seen = null;
+  stubFetch((url) => { seen = url; return htmlRes(page({})); });
+  await request(app).get(L('/search?provider=psstore&q=nolangatall'));
+  assert.match(seen, /\/de-de\/search\//);
+});
