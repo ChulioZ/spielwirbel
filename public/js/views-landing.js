@@ -122,6 +122,11 @@ function landingRevealOperatorClaims(root) {
 // currentView so a language switch re-renders it in place (core.js langPicker).
 function showLanding() {
   currentView = showLanding;
+  // The landing owns '/' (#501). Without this a deliberate logout would swap the
+  // card while the address bar still named the round the user just left — the
+  // bug would move rather than be fixed. Callers that must REPLACE the entry
+  // they came from (a failed /demo deep link) go through routeTo() instead.
+  syncUrl('/');
   authScreen(true);
   setContext('');
   applyBackground(null);
