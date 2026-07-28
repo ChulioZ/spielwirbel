@@ -412,6 +412,10 @@ public/
     account.js       onboarding + auth UI (login/register/verify/reset), token wiring
     auth-error.js    maps an auth API error code to the localized message each
                      form shows (issue #399)
+    demo-marker.js   the browser-local marker that lets a returning visitor
+                     re-enter their own guest demo instead of minting a second
+                     one, and the rule that keeps it valid across token
+                     rotation (issue #502)
     support.js       the donation/support sheet (issue #173; hidden unless
                      DONATE_URL is set)
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
@@ -588,9 +592,17 @@ account — nothing carries over. Expired demos are deleted together with their
 rounds and any uploaded covers by a background job (`lib/scheduler.js`, started
 from `server.js`).
 
-Tune it with `DEMO_TTL_HOURS` (how long a demo lives, default 24) and
+A visitor keeps **one** demo rather than accumulating them (issue #502). The
+account menu offers **"Demo beenden"**, which erases the demo immediately and
+frees its slot; every other way of leaving (registering, closing the tab) keeps it
+alive, and a return visit to the landing page offers **"Demo fortsetzen"** to
+re-enter that same demo instead of minting a second one.
+
+Tune it with `DEMO_TTL_HOURS` (how long a demo lives, default 24),
 `MAX_LIVE_DEMOS` (how many exist at once, default 100 — past it the endpoint
-answers a friendly "try again shortly" rather than minting without limit). Unset,
+answers a friendly "try again shortly" rather than minting without limit) and
+`MAX_LIVE_DEMOS_PER_IP` (how many one source may hold at once, default 3; stored
+as an HMAC of the address, never the address itself). Unset,
 `POST /api/account/demo` 404s and the landing page shows no demo button, so a
 self-hosted instance is unchanged.
 

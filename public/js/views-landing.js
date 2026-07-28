@@ -102,6 +102,11 @@ function landingRevealOperatorClaims(root) {
       const registerBtn = root.querySelector('#landingRegister');
       if (demoBtn) demoBtn.classList.add('btn--primary');
       if (registerBtn) registerBtn.classList.remove('btn--primary');
+      // A visitor who already holds a live demo re-enters it rather than
+      // minting a second (#502), so the CTA has to say so — "ausprobieren"
+      // would read as starting over, which is exactly what it no longer does.
+      // getDemoToken lives in account.js, which loads before this file.
+      if (demoBtn && getDemoToken()) demoBtn.textContent = t('landing.hero.ctaResume');
     }
   };
   if (landingCfg) { apply(landingCfg); return; }
