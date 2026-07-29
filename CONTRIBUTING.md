@@ -33,8 +33,14 @@ In short, before opening a PR:
 - Read `CLAUDE.md` and skim the relevant `.claude/rules/` for the area you touch.
 - Add or update tests for testable changes, and add any new user-facing string to
   **every** `public/js/lang/*.js` file (key parity is enforced by a test).
+- Make `npm test`, `npm run lint`, `npm run check:syntax` and
+  `npm run coverage:ci` all pass. The coverage one is easy to forget and it
+  **gates the merge**: CI's required `ci-passed` check fails if line coverage
+  drops below the floor, even with every test green.
+- Update `README.md` in the same PR when the change adds or renames a user-facing
+  feature, alters the file tree, or changes routes, scripts, or env vars.
 
-### Translations
+## Translations
 
 The UI ships German and English. **Correcting a translation is a one-line
 change**: find the key in `public/js/lang/<code>.js`, fix the wording, open a PR.
@@ -60,12 +66,6 @@ are **not** part of the UI language files.
 Native speakers are very welcome to correct wording — machine-drafted phrasing
 that is merely *correct* is exactly what we would like replaced with phrasing
 that sounds natural.
-- Make `npm test`, `npm run lint`, `npm run check:syntax` and
-  `npm run coverage:ci` all pass. The coverage one is easy to forget and it
-  **gates the merge**: CI's required `ci-passed` check fails if line coverage
-  drops below the floor, even with every test green.
-- Update `README.md` in the same PR when the change adds or renames a user-facing
-  feature, alters the file tree, or changes routes, scripts, or env vars.
 
 ## Contribution licensing
 
