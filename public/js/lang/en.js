@@ -314,6 +314,8 @@ I18N.en = {
   'lookup.noResults': 'No matches found',
   'lookup.error': 'Couldn’t reach the game database',
   'lookup.fillFrom': 'Fill from {provider}',
+  // Names the suggestion listbox for screen readers; never rendered on screen.
+  'lookup.suggestions': 'Search suggestions',
 
   'detail.viewSource': 'View on {provider}',
   'detail.linkProvider': 'Link to provider',

@@ -119,6 +119,8 @@ const frontendGlobals = {
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
   COVER_HERO: 'readonly', COVER_RESIZERS: 'readonly',
   providerMatchCover: 'readonly', pickedTitle: 'readonly',
+  // lookup-nav.js (issue #542)
+  nextLookupIndex: 'readonly', lookupOptionIndex: 'readonly',
   TAG_ICONS: 'readonly', tagIconClass: 'readonly',
   // views-home.js
   showHome: 'readonly', showNewRound: 'readonly',

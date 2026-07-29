@@ -35,6 +35,13 @@ Gotchas baked into `positionMenu()` / `openMenu()`:
   positioning + listener binding always happen — both `showMenuMsg` and the
   results `render()` use it.
 
+- **Scrolling a row into view must not go through `scrollIntoView()`.** Because
+  the menu is fixed, it is its own rows' offsetParent and the browser may satisfy
+  the request by scrolling the *sheet* (or the page) behind it instead — which
+  then trips the reposition listeners above. The keyboard highlight (#542) sets
+  `menu.scrollTop` from the row's `offsetTop`/`offsetHeight` for that reason; see
+  `.claude/rules/lookup-menu-keyboard-combobox.md`.
+
 **Why the caveat matters:** a fixed element is positioned relative to the nearest
 ancestor with a `transform`/`filter`/`will-change`, which would re-clip it. The
 `.sheet` open animation uses a `transform`, but the menu only appears after the
