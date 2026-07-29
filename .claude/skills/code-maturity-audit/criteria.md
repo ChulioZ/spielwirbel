@@ -1,6 +1,6 @@
 # Code-maturity criteria
 
-- **last-researched:** never
+- **last-researched:** 2026-07-29
 - **cadence:** 90 days
 
 Seeded 2026-07-29 from `CLAUDE.md` (the production-readiness mindset shift and
@@ -82,6 +82,11 @@ not a finding; the rejected entries below are that ledger.
   job; this asks whether the dependency should *exist*.
 - **Enforced by:** Dependabot (versions only) — the survival question is
   research-phase manual
+- **2026-07-29 (first research pass):** all 14 pass. knex is actively
+  maintained again (3.2.x releases through 2026-05). The slowest-moving is
+  **jsonwebtoken** (last release 2023-08; not deprecated, no unpatched
+  advisory; the ecosystem default has shifted to `jose`) — re-check it first
+  each pass, and see the rejected M-R08 before proposing the swap.
 
 ## Multi-process & in-memory state
 
@@ -224,3 +229,13 @@ not a finding; the rejected entries below are that ledger.
   replaced; a dependency must earn its supply-chain and maintenance surface.
   "Too many deps" and "not enough real libraries" are both taste claims until
   they name a concrete instance that fails one of those two tests.
+
+### M-R08 — "Swap jsonwebtoken for jose"
+- **Status:** rejected · 2026-07-29 (first research pass)
+- **Why:** The usage here is narrow and hardened: HS256 only, the algorithm is
+  pinned at verify time, and the token payloads are domain-separated
+  (`.claude/rules/admin-moderation-surface.md` §1). jsonwebtoken's last release
+  is 2023-08 but it is not deprecated and carries no unpatched advisory; `jose`
+  is ESM-first, which frictions this CommonJS repo for zero behavioural gain.
+  Re-open on a formal deprecation, an unpatched CVE, or a real need for an
+  algorithm/feature jsonwebtoken lacks.
