@@ -198,6 +198,47 @@ test('#520: Nutzungsbedingungen §1 covers demo accounts in both languages', asy
   assert.ok(res.text.includes('created\nwithout registration'), 'EN explains a demo needs no registration');
 });
 
+test('#520: §3 does not claim every account needs an e-mail address', async () => {
+  Object.assign(process.env, IDENTITY);
+  const res = await request(app).get('/nutzungsbedingungen');
+  assert.equal(res.status, 200);
+  // A demo account holds a synthetic `demo-<hex>@demo.invalid` address the
+  // visitor never supplies and NO password identity (lib/demo.js), so the old
+  // blanket "an account with a valid e-mail address is required" was simply
+  // untrue of the one path an anonymous visitor actually takes.
+  assert.ok(
+    !/ist ein Konto mit einer gültigen E-Mail-Adresse\s+erforderlich/.test(res.text),
+    'DE §3 must not require an e-mail address for EVERY account'
+  );
+  assert.ok(
+    !/requires an account with a valid e-mail address/.test(res.text),
+    'EN §3 must not require an e-mail address for EVERY account'
+  );
+  // Prose spans source line breaks, so match against a whitespace-normalized
+  // copy — otherwise the assertion encodes the current wrapping and goes red on
+  // a harmless re-flow rather than on a meaning change.
+  const flat = res.text.replace(/\s+/g, ' ');
+  assert.ok(flat.includes('ohne E-Mail-Adresse und ohne Passwort'), 'DE §3 names what a demo lacks');
+  assert.ok(flat.includes('without an e-mail address and without a password'), 'EN §3 names what a demo lacks');
+});
+
+test('#520: §3 offers the self-service deletion the app actually has', async () => {
+  Object.assign(process.env, IDENTITY);
+  const res = await request(app).get('/nutzungsbedingungen');
+  assert.equal(res.status, 200);
+  // DELETE /api/account (#419, with its own Konto screen) and DELETE
+  // /api/account/demo (#502, „Demo beenden") both exist, so naming the operator
+  // contact channels as the ONLY route understates the user's own controls.
+  const flat = res.text.replace(/\s+/g, ' ');
+  assert.ok(flat.includes('selbst in der App löschen'), 'DE §3 names in-app deletion');
+  assert.ok(flat.includes('delete your account yourself in the app'), 'EN §3 names in-app deletion');
+  assert.ok(flat.includes('in der App beenden'), 'DE §3 names ending a demo');
+  assert.ok(flat.includes('a demo account can be ended'), 'EN §3 names ending a demo');
+  // …without dropping the informal contact route, which is still offered.
+  assert.ok(flat.includes('im Impressum genannten Kontaktwege'), 'DE §3 keeps the informal route');
+  assert.ok(flat.includes('contact channels in the legal notice'), 'EN §3 keeps the informal route');
+});
+
 test('#520: both links to /nutzungsbedingungen ship hidden (fail closed)', () => {
   const html = fs.readFileSync(path.join(REPO, 'public/index.html'), 'utf8');
   const banner = /<a class="demo-banner__terms" id="demoBannerTerms"[^>]*>/.exec(html);
