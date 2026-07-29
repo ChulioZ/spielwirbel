@@ -44,3 +44,18 @@ test('tagIconClass maps a known key and falls back for anything else', () => {
   assert.equal(tagIconClass(undefined), 'ti-tags');
   assert.equal(tagIconClass('not-a-real-icon'), 'ti-tags');
 });
+
+test('every icon key has a picker label in the lang tables', () => {
+  // The icon picker labels each swatch with t('tags.icons.<key>'). A key
+  // without a label makes t() fall back to the raw key string in the
+  // aria-label — no error, no red test anywhere else. en/de parity is already
+  // pinned by test/i18n-parity.test.js, so checking en covers de too.
+  const vm = require('node:vm');
+  const context = { I18N: {} };
+  vm.runInNewContext(
+    fs.readFileSync(path.join(ROOT, 'public/js/lang/en.js'), 'utf8'),
+    context
+  );
+  const unlabeled = serverIcons.filter((k) => !context.I18N.en[`tags.icons.${k}`]);
+  assert.deepEqual(unlabeled, [], `icons without a tags.icons.* label: ${unlabeled.join(', ')}`);
+});

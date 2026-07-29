@@ -293,3 +293,27 @@ test('tag icons: create with one, patch it, clear it, reject bad input', async (
     assert.deepEqual(dup.body, styled.body);
   });
 });
+
+test('the client maxlength on both tag inputs equals the server TAG_NAME_MAX', () => {
+  // TAG_NAME_MAX in routes/tags.js carries a literal "keep in sync" comment
+  // pointing at the two tag inputs in views-round-detail.js — the exact
+  // hand-copied-constant shape that produced the #420 palette bug. Neither
+  // side exports the number (the route constant is module-local, the inputs
+  // are template literals), so this is the licensed-copy model of
+  // test/contact-page-brand.test.js: parse both sources and compare.
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const routeSrc = fs.readFileSync(path.join(__dirname, '..', 'routes', 'tags.js'), 'utf8');
+  const viewSrc = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'js', 'views-round-detail.js'), 'utf8');
+
+  const serverMax = Number((routeSrc.match(/const TAG_NAME_MAX = (\d+)/) || [])[1]);
+  assert.ok(Number.isFinite(serverMax), 'TAG_NAME_MAX not found in routes/tags.js');
+
+  // Only the tag inputs (identified by their shared placeholder key) — an
+  // unrelated maxlength elsewhere in the view must not join this assertion.
+  const clientMaxes = [...viewSrc.matchAll(/maxlength="(\d+)"[^>]*tags\.addPlaceholder/g)]
+    .map((m) => Number(m[1]));
+  assert.equal(clientMaxes.length, 2, 'expected exactly two tag inputs with a maxlength');
+  for (const max of clientMaxes) assert.equal(max, serverMax);
+});
