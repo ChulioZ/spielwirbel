@@ -501,7 +501,7 @@ order matters** (see `index.html`).
 
 ## Requirements
 
-- **Node.js 18 or newer.** If you don't have it, download the latest LTS
+- **Node.js 22 or newer.** If you don't have it, download the latest LTS
   installer from <https://nodejs.org/> and run it — that's the only prerequisite.
   (Developed and tested on Node 26.)
 
