@@ -10,6 +10,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
+// Comment-stripped, brace-matched parsing for the one assertion that has to find
+// a rule inside a media query — `.claude/rules/css-text-assertions-strip-comments.md`.
+const { rulesOf, bodyOf, mediaBlocks, whole } = require('./support/css');
+
 const ROOT = path.join(__dirname, '..');
 const CORE = fs.readFileSync(path.join(ROOT, 'public/js/core.js'), 'utf8');
 const PALETTE = fs.readFileSync(path.join(ROOT, 'public/js/member-colors.js'), 'utf8');
@@ -37,6 +41,13 @@ const hsl = (h, s, l) => {
 };
 
 const WHITE = [255, 255, 255];
+
+// The declared value of a plain-hex custom property in :root.
+const rootHex = (name) => {
+  const m = new RegExp(`\\${name}:\\s*(#[0-9a-f]{6});`, 'i').exec(CSS);
+  assert.ok(m, `${name} should be a plain hex in :root`);
+  return m[1];
+};
 
 // Every theme a round can pick, read out of views-round-detail.js so a new theme
 // is measured automatically instead of silently escaping these checks.
@@ -143,4 +154,53 @@ test('the semantic colours clear AA as text on white AND on the darkest theme pa
     }
   }
   assert.deepEqual(failures, [], 'used as text on --surface and directly on --page-bg');
+});
+
+// --- the lobby hero band (#543) ---------------------------------------------
+
+/* Composite `fg` over `bg` at `alpha` — what a translucent wash actually paints,
+   and therefore the background the text on it is really measured against. */
+const composite = (fg, bg, alpha) =>
+  hex(fg).map((v, i) => Math.round(v * alpha + hex(bg)[i] * (1 - alpha)));
+
+test('the lobby hero band keeps its heading AND its muted sub-line at AA', () => {
+  /* The signed-in greeting sits on a brand wash since #543, so its two lines no
+     longer land on the bare page. Deepening that wash renders nothing wrong —
+     the text just quietly drops below the bar — which is exactly the invisible
+     class of regression this file exists for. Measured: the sub-line is `.muted`
+     (--ink-soft) and clears AA by 0.14 at the shipped strength, but sits at
+     4.28:1 on Schiefer at 13% brand. */
+  const band = mediaBlocks()
+    .filter(([query]) => /min-width:\s*1280px/.test(query))
+    .flatMap(([, css]) => rulesOf(css))
+    .find(([sel, body]) => whole('.lobby-head').test(sel) && /background-color:/.test(body));
+  assert.ok(band, 'the lobby hero band rule was not found');
+
+  /* Pinned to the TOKEN, not to a percentage. The band's whole licence is that
+     it is no darker than the halo `body` already paints over the top of every
+     page — so a literal color-mix here would let someone retune the band past
+     the ceiling these numbers were measured against, with this test still
+     green because it had checked the literal it was handed. */
+  assert.match(band[1], /background-color:\s*var\(--page-glow\)/,
+    'the band no longer tints with --page-glow, so the ceiling measured below does not apply to it');
+
+  const glow = /--page-glow:\s*color-mix\(in srgb,\s*var\(--brand\)\s*(\d+)%/.exec(bodyOf(':root'));
+  assert.ok(glow, '--page-glow should be a color-mix of --brand with transparent');
+  // Any further accent layer in the same rule stacks on top of the wash.
+  const extra = [...band[1].matchAll(/var\(--brand\)\s*(\d+)%/g)]
+    .reduce((sum, m) => sum + Number(m[1]) / 100, 0);
+  const alpha = Number(glow[1]) / 100 + extra;
+
+  const failures = [];
+  for (const { page, accent } of THEMES) {
+    const bg = composite(accent, page, alpha);
+    for (const name of ['--ink', '--ink-soft']) {
+      const ratio = contrast(hex(rootHex(name)), bg);
+      if (ratio < AA_TEXT) {
+        failures.push(`${name} on the band over ${page} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures, [],
+    '.lobby-head sits on this wash: its heading in --ink, its sub-line in --ink-soft');
 });

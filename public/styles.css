@@ -335,6 +335,44 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: none;
   }
 
+  /* The lobby greeting INTRODUCES a grid instead of containing one, so neither
+     selector above reaches it — `.lobby-head` is a sibling of `.lobby-list`, not
+     its wrapper. Capped, it centred at the 900px measure while the grid it
+     labels spanned the pane: the heading's left edge at x=270 over cards
+     starting at x=20, i.e. 250px between a label and the thing it labels
+     (measured at 1440, 2026-07-29 UI audit).
+
+     Conditioned on the grid actually being there. With no rounds the lobby
+     renders `.lobby-cta` instead of `.lobby-list` (#358), and that CTA is still
+     capped and centred — so an unconditional exemption would recreate this exact
+     misalignment one screen over, on the first-run view. Deciding it by content
+     is safe for the same reason the cap's own exemption is: it changes no width
+     the navigation depends on, and home renders no navigation at all
+     (`.claude/rules/responsive-content-width.md`).
+
+     (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app:has(.lobby-list) > *:not(.rail):not(.dock):is(.lobby-head) {
+    max-width: none;
+    padding: 28px 30px;
+    border-radius: var(--radius-lg);
+    /* The wash is --page-glow, i.e. EXACTLY the tint the body's own halo already
+       lays over the top of every page — so the band introduces no darker surface
+       than the app already ships everywhere, and the muted sub-line keeps the
+       contrast it has today.
+
+       Don't deepen it. `.lobby-head__sub` is `.muted` (--ink-soft), which clears
+       AA at this strength by 0.14 (4.64:1 on Schiefer) and FAILS at 13% brand
+       (4.28:1) — and nothing renders wrong when it does, which is why
+       test/a11y-contrast.test.js pins the ceiling. The second layer is a light
+       bloom, not more accent: it only raises contrast. */
+    background-color: var(--page-glow);
+    background-image: radial-gradient(70% 130% at 8% 0%,
+      color-mix(in srgb, var(--surface) 60%, transparent), transparent 70%);
+  }
+  /* Display step for the band. Hardcoded because the type scale does not exist
+     yet — #470 is the issue that would give this a --text-* token. */
+  .app:has(.lobby-list) > .lobby-head h1 { font-size: 40px; }
+
   /* On a screen WITHOUT a rail — home, the new-round form, the session wizard —
      capped content centres instead. Beside a rail, a left edge is anchored and
      reads as deliberate; with no rail it is just a column shoved against the

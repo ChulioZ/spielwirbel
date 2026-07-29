@@ -77,6 +77,40 @@ Text still needs a measure inside a 1450px pane, so `.app > *` caps at
 precisely because it changes no width the navigation depends on — which is the
 distinction the test encodes.
 
+### A block that INTRODUCES a grid is not caught by either exemption (#543)
+
+The two exemption selectors match a child that **is** a grid or **contains** one.
+A block that merely *labels* the grid next to it is neither — it is a **sibling**
+— so it stays capped and centred while the grid beside it spans the pane. That is
+how the lobby greeting came to sit at x=270 over cards starting at x=20: a 250px
+gap between a heading and the thing it heads, on the first screen every
+registered user sees. The tell is a heading that looks *indented* rather than
+misaligned, which reads as deliberate until you measure it.
+
+**Exempt such a block on the condition that the grid is actually there**
+(`.app:has(.lobby-list) > …`), never unconditionally. The empty state renders
+`.lobby-cta` instead of `.lobby-list` (#358) and is still capped and centred, so
+a blanket exemption doesn't fix the misalignment — it **moves** it, opening the
+identical 250px gap on the first-run view where the head would span 1400px above
+a 900px centred CTA. Measured both ways before shipping; the numbers are
+symmetric, which is what makes the unconditional version look correct in the one
+state anyone tests.
+
+Note this is a *fourth* specificity trap on top of the three below: the cap is
+(0,3,0), so a natural-looking `.app:has(.lobby-list) > .lobby-head` is (0,3,0)
+too and wins or loses on source order alone. Repeat the cap's `:not()`s the way
+the existing exemption does.
+
+**A tint added to such a block has an AA ceiling set by its *quietest* line.**
+The lobby band's wash is `--page-glow` — deliberately the exact tint `body`
+already lays over the top of every page, so the band introduces no darker surface
+than ships everywhere. It cannot simply be deepened to taste: the sub-line is
+`.muted` (`--ink-soft`), which clears AA by 0.14 at 7% brand (4.64:1 on Schiefer)
+and **fails at 13%** (4.28:1). Nothing renders wrong when it does — the text just
+drops below the bar — so `test/a11y-contrast.test.js` composites the wash over
+every theme page and pins both lines, keyed to the token rather than to a
+percentage a future edit could raise past what was measured.
+
 ## Hiding something the rail replaced: your rule will lose
 
 The rail hides five things the column used to carry — the dock, the Start tab's
