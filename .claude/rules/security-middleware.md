@@ -50,9 +50,10 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
 - **A per-IP cap counts PAGE LOADS, not just calls — so the shell is exempt
   (#464).** The global limiter is mounted ~115 lines ahead of `express.static`,
   so before #464 every script, font and stylesheet spent one request from the
-  same 1000-per-15-min budget as an API write. `index.html` pulls **35
-  `<script src>` + 6 `<link>`**, plus 8 woff2 faces and the icons, so a load
-  missing both the HTTP cache and the service worker costs **~50 requests** — and
+  same 1000-per-15-min budget as an API write. `index.html` pulled **35
+  `<script src>` + 6 `<link>`** when #464 was measured (the script count grows
+  with the app — 38 as of 2026-07-29), plus 8 woff2 faces and the icons, so a
+  load missing both the HTTP cache and the service worker cost **~50 requests** — and
   a hard reload (`Cmd+Shift+R`) bypasses both. That put the lockout at **~20 hard
   reloads**, i.e. squarely inside what an operator does while diagnosing an
   incident: the app degrades, they reload, they trip their own DoS defence, and
