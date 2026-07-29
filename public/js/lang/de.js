@@ -728,6 +728,10 @@ I18N.de = {
   // reading that data is safe until it runs out.
   'demo.banner.text': 'Du testest Spielwirbel in einer Demo-Runde. Sie wird automatisch gelöscht – nichts hiervon bleibt erhalten.',
   'demo.banner.cta': 'Kostenlos registrieren',
+  // Express reference to the terms for a path that never passes the register
+  // form (#520). The whole sentence is the link text, so it stands on its own
+  // next to the banner copy and carries no dangling punctuation.
+  'demo.banner.terms': 'Es gelten die Nutzungsbedingungen.',
   // Replaces "Abmelden" in the account menu of a demo account (#502): a demo has
   // no password to log back in with, so ending it erases it and frees its slot.
   'demo.end.menu': 'Demo beenden',

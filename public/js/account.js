@@ -49,6 +49,27 @@ function clearTokens() {
   try { s.removeItem(SA_ACCESS); s.removeItem(SA_REFRESH); } catch {}
 }
 
+// Memoized GET /api/config, used to gate the two links to /nutzungsbedingungen
+// this file renders (#520): the register form's terms line and the demo banner's
+// terms reference. Both point at a page that answers a hard 404 until the
+// operator identity is configured (routes/legal.js), so on a self-hosted
+// instance without IMPRESSUM_ADDRESS/IMPRESSUM_EMAIL an ungated link is a
+// promise of a document that does not exist. Same `footer` flag and same
+// degradation as initFooter() (core.js) and the landing's operator claims: a
+// plain fetch, never api() — the endpoint is public and a failure must not
+// bounce to login — and on any error the links simply stay hidden.
+//
+// Callers pass a callback rather than awaiting, because both consumers render
+// synchronously and reveal their link when the answer arrives.
+let accountCfg = null;
+function withAppConfig(cb) {
+  if (accountCfg) { cb(accountCfg); return; }
+  fetch('/api/config')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((cfg) => { if (cfg) accountCfg = cfg; cb(cfg); })
+    .catch(() => {});
+}
+
 // Read by core.js api() and by the view code: which mode, and are we logged in.
 function accountsActive() { return accountsMode; }
 function isLoggedIn() { return accountsMode && !!getAccessToken(); }
@@ -403,7 +424,15 @@ function showRegister() {
       </div>
       <p class="auth__error" hidden></p>
       <button class="btn btn--primary btn--block" type="submit">${esc(t('auth.register.submit'))}</button>
-      <p class="auth__terms muted">${esc(t('auth.register.termsPre'))}
+      <!-- Both links here point at pages that hard-404 until the operator
+           identity is configured (routes/legal.js), so the whole line ships
+           hidden and is revealed below only when /api/config reports footer:true
+           — the same gate the site footer's legal links use. Pre-#520 this
+           paragraph was unconditional, so a self-hosted instance without
+           IMPRESSUM_ADDRESS/IMPRESSUM_EMAIL pointed its register form at two
+           404s. NB: no backticks in here — this sits inside a template literal,
+           so one would terminate the string mid-comment. -->
+      <p class="auth__terms muted" hidden>${esc(t('auth.register.termsPre'))}
         <a href="/nutzungsbedingungen" target="_blank" rel="noopener">${esc(t('auth.register.termsLinkLabel'))}</a>.
         ${esc(t('auth.register.privacyPre'))}
         <a href="/datenschutz" target="_blank" rel="noopener">${esc(t('auth.register.privacyLinkLabel'))}</a>.</p>
@@ -417,6 +446,9 @@ function showRegister() {
     const pw = card.querySelector('#regPw');
     const submit = card.querySelector('button[type=submit]');
     card.querySelector('#toLogin').addEventListener('click', showLogin);
+    // Reveal the legal line only where those pages resolve (see the markup above).
+    const termsLine = card.querySelector('.auth__terms');
+    if (termsLine) withAppConfig((cfg) => { termsLine.hidden = !(cfg && cfg.footer); });
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       authError(card).hidden = true;
@@ -783,6 +815,19 @@ function setupDemoBanner() {
   const text = document.getElementById('demoBannerText');
   const cta = document.getElementById('demoBannerCta');
   if (text) text.textContent = t('demo.banner.text');
+  // The express reference to the terms (#520). A demo account is created without
+  // registration, so its user never sees the register form's terms line — and
+  // this banner is the only surface BOTH demo entry points share (the landing
+  // CTA and the /demo deep link, which bootApp() handles as a side effect
+  // without rendering the landing page at all). Revealed only on an instance
+  // whose legal pages actually resolve. Re-localized here with the text and CTA
+  // — which is why applyStaticTexts() (core.js) now calls this function on a
+  // language switch; before #520 none of the three followed the picker.
+  const terms = document.getElementById('demoBannerTerms');
+  if (terms) {
+    terms.textContent = t('demo.banner.terms');
+    withAppConfig((cfg) => { terms.hidden = !(cfg && cfg.footer); });
+  }
   if (cta) {
     cta.textContent = t('demo.banner.cta');
     // Registering from inside a demo starts a FRESH account — nothing carries

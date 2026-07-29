@@ -16,11 +16,16 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const request = require('supertest');
 
 const { app } = require('./helpers');
 const { createApp } = require('../lib/app');
 const legal = require('../lib/legal');
+const { bodyOf } = require('./support/css');
+
+const REPO = path.join(__dirname, '..');
 
 const IDENTITY = {
   IMPRESSUM_ADDRESS: 'Musterweg 1\\nc/o Empfangsservice\\n12345 Musterstadt',
@@ -154,6 +159,69 @@ test('reachable without a session under the shared-password gate', async () => {
   assert.equal((await request(gatedApp).get('/impressum')).status, 200);
   assert.equal((await request(gatedApp).get('/datenschutz')).status, 200);
   assert.equal((await request(gatedApp).get('/nutzungsbedingungen')).status, 200);
+});
+
+/* --------------------------------------------------------------------------
+   #520: the terms must bind demo users, and nothing may link to a 404 legal page
+
+   There are exactly two account-creation paths. `POST /api/account/register`
+   renders the register form's terms line; `POST /api/account/demo` renders
+   nothing — a demo account is created without registration, so §1's old
+   registration-only acceptance never covered the one visitor who reaches a
+   fully writable account anonymously, in one click.
+
+   The three assertions below pin the halves a browser cannot: the amended §1 in
+   BOTH languages, and the fail-closed default of the two links that point at
+   /nutzungsbedingungen — a page that hard-404s until the operator identity is
+   configured. Whether they are correctly REVEALED on a configured instance is
+   `withAppConfig()`'s job and is verified in a browser.
+   -------------------------------------------------------------------------- */
+
+test('#520: Nutzungsbedingungen §1 covers demo accounts in both languages', async () => {
+  Object.assign(process.env, IDENTITY);
+  const res = await request(app).get('/nutzungsbedingungen');
+  assert.equal(res.status, 200);
+  // Acceptance is no longer tied to registration alone. Matched as whole
+  // sentences rather than on the word "Demo" — that appears elsewhere in the
+  // document, so a bare-word assertion would stay green against a reverted §1.
+  assert.ok(
+    /Mit der Registrierung eines Kontos\s+oder dem Start eines Demo-Kontos akzeptierst du diese Bedingungen/.test(res.text),
+    'DE §1 ties acceptance to registration OR starting a demo'
+  );
+  assert.ok(
+    /By registering an account or\s+starting a demo account you accept these terms/.test(res.text),
+    'EN §1 ties acceptance to registration OR starting a demo'
+  );
+  // …and the document says plainly that a demo needs no registration, so a
+  // reader cannot conclude §1 only ever meant the registered path.
+  assert.ok(res.text.includes('entsteht ohne Registrierung'), 'DE explains a demo needs no registration');
+  assert.ok(res.text.includes('created\nwithout registration'), 'EN explains a demo needs no registration');
+});
+
+test('#520: both links to /nutzungsbedingungen ship hidden (fail closed)', () => {
+  const html = fs.readFileSync(path.join(REPO, 'public/index.html'), 'utf8');
+  const banner = /<a class="demo-banner__terms" id="demoBannerTerms"[^>]*>/.exec(html);
+  assert.ok(banner, 'the demo banner carries a terms anchor');
+  assert.ok(banner[0].includes('href="/nutzungsbedingungen"'), 'it points at the terms');
+  assert.ok(/\bhidden\b/.test(banner[0]), 'it ships hidden — revealed only where the page resolves');
+
+  // The register form's legal line is built in account.js, not in the shell.
+  const js = fs.readFileSync(path.join(REPO, 'public/js/account.js'), 'utf8');
+  assert.ok(
+    /<p class="auth__terms muted" hidden>/.test(js),
+    'the register form ships its legal line hidden'
+  );
+});
+
+test('#520: each hidden legal link undoes its own display', () => {
+  // The `hidden` attribute hides only through the UA stylesheet, so any author
+  // `display` on these selectors beats it and republishes a link to a 404 with
+  // no error anywhere (.claude/rules/hidden-attribute-vs-display-rule.md).
+  for (const selector of ['.demo-banner__terms[hidden]', '.auth__terms[hidden]']) {
+    const body = bodyOf(selector);
+    assert.ok(body, `${selector} rule not found`);
+    assert.match(body, /display:\s*none/, `${selector} must set display: none`);
+  }
 });
 
 test('renderAddress: trims, drops blank lines, handles real newlines', () => {

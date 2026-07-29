@@ -1700,6 +1700,11 @@ body.auth-screen .topbar__context { display: none; }
 /* Terms-of-use notice under the register button (#140). */
 .auth__terms { text-align: center; font-size: 13px; margin: 10px 0 0; }
 .auth__terms a { color: var(--brand); }
+/* Ships `hidden` and is revealed only where the legal pages resolve (#520). The
+   paragraph declares no `display` today, so the UA `[hidden]` rule already wins
+   — this pins that, so adding a `display` here later cannot silently republish
+   two links to 404s (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.auth__terms[hidden] { display: none; }
 
 /* ---- Logged-out landing page (issue #322) ---- */
 /* Renders in accounts mode for a logged-out visitor at GET /. Reuses the
@@ -1972,6 +1977,14 @@ body.auth-screen .topbar__context { display: none; }
 .demo-banner[hidden] { display: none; }
 .demo-banner .ti { color: var(--warn); }
 .demo-banner__text { max-width: 60ch; }
+/* The terms reference (#520). Same `hidden`-attribute trap as the banner itself:
+   this anchor ships hidden and is revealed only on a configured instance, so it
+   needs its own `[hidden]` rule — `.nav-link`-style anchors carry no `display`,
+   but `a` picks one up from any later component rule and the attribute would
+   silently lose (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.demo-banner__terms { color: var(--brand); text-decoration: underline; }
+.demo-banner__terms:hover { color: var(--brand-dark); }
+.demo-banner__terms[hidden] { display: none; }
 .demo-banner__cta {
   font: inherit;
   font-weight: 700;

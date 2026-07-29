@@ -733,6 +733,10 @@ I18N.en = {
   // reading that data is safe until it runs out.
   'demo.banner.text': 'You are trying Spielwirbel in a demo round. It is deleted automatically — nothing here is kept.',
   'demo.banner.cta': 'Sign up for free',
+  // Express reference to the terms for a path that never passes the register
+  // form (#520). The whole sentence is the link text, so it stands on its own
+  // next to the banner copy and carries no dangling punctuation.
+  'demo.banner.terms': 'Our terms of use apply.',
   // Replaces "Log out" in the account menu of a demo account (#502): a demo has
   // no password to log back in with, so ending it erases it and frees its slot.
   'demo.end.menu': 'End demo',
