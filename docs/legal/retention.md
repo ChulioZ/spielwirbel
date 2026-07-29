@@ -27,7 +27,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Freundschaften + Freundeskreis-Feed (#325) | bis Entfreunden bzw. Kontolöschung; Feed je Konto auf 50 Einträge begrenzt (älteste werden verdrängt) | Nutzeraktion / automatisch / `eraseAccount` |
 | Postfach-Benachrichtigungen (Inbox, #207) | je Konto auf 100 Einträge begrenzt (älteste werden verdrängt); Kontolöschung räumt vollständig | automatisch / `eraseAccount` |
 | Server-Request-Logs, Produkt-Ereignisse | Logrotation der Plattform (Railway) | automatisch |
-| In-App-Feedback | nach Bearbeitung löschen | Panel-Löschung geplant (#389); bis dahin direkter DB-Zugriff |
+| In-App-Feedback | nach Bearbeitung löschen | Panel-Löschung im Admin-Panel (#389, seit 2026-07-24) |
 | Kontakt-/Support-Korrespondenz (Postfach) | bis Abschluss der Bearbeitung, danach löschen — spätestens bei der Jahresprüfung | manuell (Postfach) |
 | Transaktions-E-Mails (Versandprotokolle bei mailbox.org) | Aufbewahrungsfenster des Anbieters; keine eigene Speicherung | automatisch (mailbox.org) |
 | Briefpost an die Empfangsanschrift (weitergeleitet) | nach Bearbeitung vernichten — spätestens bei der Jahresprüfung | manuell |
@@ -73,8 +73,8 @@ nicht stillschweigend auf 10 Jahre „korrigieren".
    `contact_notices`-Tabelle (Panel-Karte „Meldungen“, #272) nach demselben
    Stichtag per direktem DB-Zugriff löschen — ein Lösch-Endpunkt existiert
    (wie beim Moderations-Log) noch nicht.
-3. Bearbeitete Feedback-Einträge löschen (Panel-Löschung: #389; bis dahin per
-   direktem DB-Zugriff, wie beim Moderations-Log).
+3. Bearbeitete Feedback-Einträge löschen (Panel-Löschung im Admin-Panel,
+   #389).
 4. Prüfung mit Datum in diesem Dokument unter „Durchgeführte Prüfungen"
    vermerken.
 
