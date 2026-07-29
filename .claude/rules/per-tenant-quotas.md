@@ -15,9 +15,10 @@ them:
 
 - **State caps count current data; deleting frees the slot.** The rounds cap
   counts `req.repo.listRounds().length` (tenant-scoped) and the games cap counts
-  `round.games.length` (**active + retired** — both hold a row and a possible
-  cover). They're checked *before* persisting: the games check sits after the
-  round-404 check but before `saveUploadedImage`/`downloadCover`, so a refused add
+  `round.games.length` (**active + archived**, i.e. retired *and* completed —
+  every state holds a row and a possible cover). They're checked *before*
+  persisting: the games check sits after the
+  round-404 check but before `saveUploadedImage`, so a refused add
   leaves no orphan file even though multer already buffered the upload in memory.
   There is deliberately no `countRounds` repo method — reusing `listRounds` avoids
   widening the repo contract for a ≤10-row count.
