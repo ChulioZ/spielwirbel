@@ -23,7 +23,16 @@ const { MEMBER_COLORS } = require('../public/js/member-colors');
 A backend file requiring out of `public/js/` looks wrong at first glance — it is
 the deliberate shape here, and the alternative ("duplicate + a parity test") was
 rejected: a parity test still needs someone to remember the second copy exists,
-and it is the copy nobody remembers that rots. Wire the new file into all four
+and it is the copy nobody remembers that rots.
+
+**The second instance is `public/js/locales.js`** (#504): the shipped UI locales,
+offered by the language picker and validated by `routes/contact.js` for the
+feedback-metadata `locale`. It replaced a hand-copied `['de', 'en']` in that
+route — which had the palette bug's exact failure mode waiting, one locale
+further on: feedback sent from any language nobody remembered to add there loses
+the very field needed to route a "this wording is wrong" report. See
+`.claude/rules/locale-set-is-data.md` for why a test over that list is *vacuous*
+until you register a synthetic locale. Wire the new file into all four
 places `.claude/rules/frontend-helper-modules-and-coverage.md` lists (script tag,
 `SHELL`, `CACHE` bump, eslint globals — the last is a no-op if the name is
 already listed).

@@ -24,6 +24,8 @@ function loadI18n() {
     navigator: { language: 'en' },
   };
   vm.createContext(context);
+  // locales.js first — i18n.js reads SUPPORTED_LOCALES/localeTag from it.
+  vm.runInContext(read('locales.js'), context);
   vm.runInContext(read('i18n.js'), context);
   vm.runInContext(read('lang/en.js'), context);
   vm.runInContext(read('lang/de.js'), context);

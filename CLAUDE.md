@@ -107,9 +107,21 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
 
 ## Internationalization
 
-- The UI is German + English. **Never hard-code user-facing text in views.**
-  Add a key to **both** `public/js/lang/en.js` and `public/js/lang/de.js`, then
-  use `t('key', { params })` (see `js/i18n.js`). Keep the two files in key parity.
+- The UI ships German + English today. **Never hard-code user-facing text in
+  views.** Add a key to **every** `public/js/lang/*.js` file (en and de today),
+  then use `t('key', { params })` (see `js/i18n.js`). They must stay in key
+  parity — `test/i18n-parity.test.js` enforces it, deriving the locale set so a
+  new language is covered automatically.
+- **The locale set is data, not code** (#504): `public/js/locales.js` holds one
+  row per language (code, native label, BCP-47 tag) and everything else derives
+  from it — the picker, `Intl.PluralRules` in `tn()`, date/month formatting, and
+  the feedback-metadata allowlist in `routes/contact.js` (a backend file
+  requiring out of `public/js/` on purpose — see
+  `.claude/rules/shared-constants-across-the-stack.md`). Adding a language is a
+  row there plus a `lang/<code>.js` file, wired into `index.html`, `sw.js`'s
+  `SHELL` and a `CACHE` bump. Don't reintroduce a hardcoded `['de', 'en']`
+  anywhere; `tn()` stays a one/other pair, so a language with `few`/`many`
+  plural categories (Polish, Czech, Russian) needs more than a data file.
 - The active locale follows the system language and is overridable via the top-bar
   picker (stored in `localStorage`). Changing it re-renders the current screen via
   the `currentView` callback that each `show*` view sets at its start.

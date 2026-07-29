@@ -31,6 +31,11 @@ const mail = require('../lib/mail');
 const repo = require('../lib/repo');
 const { validateBody } = require('../lib/validate');
 const { logger } = require('../lib/observability');
+// The UI locales the app ships, required straight out of the frontend's shared
+// scope — one source of truth with the picker that produced the value
+// (.claude/rules/shared-constants-across-the-stack.md). A copy here would drop
+// the locale of feedback sent from every language nobody remembered to add.
+const { SUPPORTED_LOCALES } = require('../public/js/locales');
 
 const router = express.Router();
 
@@ -94,7 +99,7 @@ const contactSchema = z.object({
     z.string(),
   ).optional(),
   locale: z.preprocess(
-    (v) => (['de', 'en'].includes(String(v || '').toLowerCase())
+    (v) => (SUPPORTED_LOCALES.includes(String(v || '').toLowerCase())
       ? String(v).toLowerCase()
       : undefined),
     z.string().optional(),

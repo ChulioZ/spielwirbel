@@ -418,7 +418,9 @@ public/
                      not part of the shared global scope (only loaded there)
     admin.js         admin.html's own script — likewise an IIFE outside the
                      shared scope, so no privileged code ships in the SPA
-    i18n.js          translation engine (t(), locale detection)
+    locales.js       the set of shipped UI locales (code, native label, BCP-47
+                     tag) — shared with the backend, which requires it
+    i18n.js          translation engine (t(), locale detection, plural rules)
     lang/en.js       English strings
     lang/de.js       German strings
     core.js          DOM/API helpers, stats, design, language picker  (loads first)
