@@ -1,19 +1,19 @@
 ---
 name: audit
 description: >-
-  Run the full audit sweep — accessibility, legal, security, UI, and Claude-file —
-  in one pass and merge the results into a single ranked report with one approval
-  step. Use when asked to audit the app/project/repo generally, for a health
-  check or compliance sweep, before a release or before opening public
-  registration, or when more than one of the five domains is wanted. For a single
-  domain, invoke accessibility-audit, legal-audit, security-audit, ui-audit or
-  claude-file-audit directly.
+  Run the full audit sweep — accessibility, legal, security, UI, Claude-file,
+  and code-maturity — in one pass and merge the results into a single ranked
+  report with one approval step. Use when asked to audit the app/project/repo
+  generally, for a health check or compliance sweep, before a release or before
+  opening public registration, or when more than one of the six domains is
+  wanted. For a single domain, invoke accessibility-audit, legal-audit,
+  security-audit, ui-audit, claude-file-audit or code-maturity-audit directly.
 ---
 
 # Full audit
 
-A thin orchestrator over the five domain audits. It exists so the user reviews
-**one** ranked list and approves **one** batch of issues, instead of five of each.
+A thin orchestrator over the six domain audits. It exists so the user reviews
+**one** ranked list and approves **one** batch of issues, instead of six of each.
 
 It adds no criteria of its own. Every judgement lives in the domain skills and
 `audit-loop.md`; this file only decides what runs where, and how the results
@@ -24,11 +24,12 @@ merge.
 The split is driven by one hard constraint: **there is one Browser pane per
 session**, and two audits drive it.
 
-- **`legal-audit`, `security-audit` and `claude-file-audit` run as three parallel
-  subagents.** They are independent, read-only sweeps over disjoint file sets —
-  exactly the case parallel subagents are for. Launch all three in a single
-  message. (`security-audit` may itself invoke the built-in `/security-review`
-  and `npm audit`; that stays inside its own subagent.)
+- **`legal-audit`, `security-audit`, `claude-file-audit` and
+  `code-maturity-audit` run as four parallel subagents.** They are independent,
+  read-only sweeps over largely disjoint file sets — exactly the case parallel
+  subagents are for. Launch all four in a single message. (`security-audit` may
+  itself invoke the built-in `/security-review` and `npm audit`; that stays
+  inside its own subagent.)
 - **`accessibility-audit` and `ui-audit` run in the main agent, one after the
   other — never as subagents, and never at the same time as each other.** Both
   drive the Browser pane and both need the seeded `dev-temp-data` instance, so a
@@ -37,14 +38,20 @@ session**, and two audits drive it.
   `dev-temp-data` once, do the accessibility pass, then the UI pass (or vice
   versa), then tear the preview down once at the end.
 
-Start the three subagents first. Then, while they work, do the two browser passes
+Start the four subagents first. Then, while they work, do the two browser passes
 yourself back-to-back on the shared preview. Collect the subagents' reports when
 they land.
 
-Two seams to attribute correctly:
+Three seams to attribute correctly:
 - `security-audit` and `accessibility-audit` both touch tenant isolation from
   different angles (RLS/gate enforcement vs. the auth-screen UI); `security-audit`
   overlaps `claude-file-audit` on the CI-tooling and env-file rules.
+- **`code-maturity-audit` and `security-audit` both read hand-rolled
+  auth/limiter/token code** — attribution by remedy owner: an *exploitable
+  weakness* is security's even when a library swap would also fix it; *fragile
+  or unmaintainable but not exploitable* is maturity's. `code-maturity-audit`
+  also borders `claude-file-audit`: a stale document about code is
+  claude-file's, the code itself is maturity's.
 - **`ui-audit` and `accessibility-audit` both look at the visual UI** — the
   cleanest split in the set: anything about contrast, focus, target size, ARIA,
   keyboard or reduced-motion *compliance* is accessibility's (A-001..A-016);
@@ -59,9 +66,9 @@ Attribute every shared finding to the domain that owns the *remedy*.
 Each subagent starts cold, so brief it completely the first time — a re-brief
 costs another full context load. Each brief must carry:
 
-- The skill to invoke (`legal-audit` / `security-audit` / `claude-file-audit`) and
-  that it must read `.claude/skills/audit/audit-loop.md` and its own `criteria.md`
-  first.
+- The skill to invoke (`legal-audit` / `security-audit` / `claude-file-audit` /
+  `code-maturity-audit`) and that it must read
+  `.claude/skills/audit/audit-loop.md` and its own `criteria.md` first.
 - Whether research is in scope this run (pass `--research` through, or say
   "cadence decides").
 - **Report only — file nothing, open no PR, change no file.** The merge, the
@@ -72,11 +79,13 @@ costs another full context load. Each brief must carry:
 
 ## Merging
 
-1. **Dedupe across domains.** The five overlap by design at a few seams — the
+1. **Dedupe across domains.** The six overlap by design at a few seams — the
    EAA/BFSG applicability question is recorded in both `accessibility-audit`
    (A-R05, deferred) and `legal-audit`; a stale reference in a rule about
    accessibility belongs to `claude-file-audit`; a tenant-isolation gap is
    `security-audit`'s even if `accessibility-audit` walked past the auth screen;
+   hand-rolled security-relevant code splits by remedy owner (exploitable →
+   `security-audit`, fragile-but-not-exploitable → `code-maturity-audit`);
    and `ui-audit`/`accessibility-audit` both see the visual UI — the visual defect
    is UI's, the contrast/focus/target/ARIA defect is accessibility's (see the run
    order). One finding, one entry, attributed to the domain that owns the remedy.
