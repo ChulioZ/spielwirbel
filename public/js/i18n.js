@@ -1,12 +1,15 @@
 /* Spielwirbel – internationalization (i18n).
-   Loads before all other scripts. Translations live in js/lang/<locale>.js,
+   Loads immediately after js/locales.js (whose globals it reads) and before all
+   other scripts. Translations live in js/lang/<locale>.js,
    each registering into the global I18N object (one "properties file" per
    language). The active locale follows the system language by default and can
    be overridden via the picker in the top bar (stored in localStorage). */
 
 const I18N = {};
-const SUPPORTED_LOCALES = ['en', 'de'];
-const LOCALE_LABELS = { en: 'English', de: 'Deutsch' };
+
+// SUPPORTED_LOCALES / LOCALE_LABELS / LOCALE_TAGS / localeTag come from
+// js/locales.js, which loads first — it is shared with the backend
+// (routes/contact.js requires it), so it cannot live here.
 
 let locale = 'en';
 
@@ -45,19 +48,45 @@ function t(key, params) {
   return s;
 }
 
+// One Intl.PluralRules per locale — constructing one is not cheap and tn() runs
+// on every card render.
+const pluralRules = {};
+
+// Which CLDR plural category `n` falls into for the active locale.
+//
+// The naive `n === 1` this replaced is right for German and English and wrong
+// elsewhere: French and Portuguese put 0 in the SINGULAR ("0 jeu", "0 jogo"),
+// so a hardcoded comparison mis-renders every zero state in those languages
+// with nothing to notice — the string is still grammatical German logic applied
+// to French words.
+//
+// Intl.PluralRules has existed in every browser this app supports; the guard is
+// for a stray non-Intl environment (and for Node's vm sandbox in the tests),
+// where falling back to the old rule is exactly right for de/en.
+function pluralCategory(n) {
+  const num = Number(n);
+  if (!Number.isFinite(num) || typeof Intl === 'undefined' || !Intl.PluralRules) {
+    return num === 1 ? 'one' : 'other';
+  }
+  if (!pluralRules[locale]) pluralRules[locale] = new Intl.PluralRules(localeTag(locale));
+  return pluralRules[locale].select(num);
+}
+
 // Plural helper: choose the "one" or "other" key based on n.
+//
+// Deliberately two-way. Languages with `few`/`many` categories (Polish, Czech,
+// Russian) cannot be expressed by a one/other key pair and are out of scope for
+// that reason — they need more keys, not a smarter helper here.
 function tn(n, keyOne, keyOther, params) {
-  return t(n === 1 ? keyOne : keyOther, Object.assign({ n }, params || {}));
+  return t(pluralCategory(n) === 'one' ? keyOne : keyOther, Object.assign({ n }, params || {}));
 }
 
 // Locale-aware date/time formatting (uses the matching BCP-47 tag).
 function fmtDateTime(iso) {
-  const tag = locale === 'de' ? 'de-DE' : 'en-US';
-  return new Date(iso).toLocaleString(tag, { dateStyle: 'medium', timeStyle: 'short' });
+  return new Date(iso).toLocaleString(localeTag(locale), { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 // Month + year, for timeline group labels ("Juli 2026").
 function fmtMonth(iso) {
-  const tag = locale === 'de' ? 'de-DE' : 'en-US';
-  return new Date(iso).toLocaleString(tag, { month: 'long', year: 'numeric' });
+  return new Date(iso).toLocaleString(localeTag(locale), { month: 'long', year: 'numeric' });
 }

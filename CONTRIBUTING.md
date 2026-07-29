@@ -32,13 +32,40 @@ In short, before opening a PR:
   name like `feat/session-export` or `fix/vote-tie`.
 - Read `CLAUDE.md` and skim the relevant `.claude/rules/` for the area you touch.
 - Add or update tests for testable changes, and add any new user-facing string to
-  **both** `public/js/lang/en.js` and `de.js` (key parity is enforced by a test).
+  **every** `public/js/lang/*.js` file (key parity is enforced by a test).
 - Make `npm test`, `npm run lint`, `npm run check:syntax` and
   `npm run coverage:ci` all pass. The coverage one is easy to forget and it
   **gates the merge**: CI's required `ci-passed` check fails if line coverage
   drops below the floor, even with every test green.
 - Update `README.md` in the same PR when the change adds or renames a user-facing
   feature, alters the file tree, or changes routes, scripts, or env vars.
+
+## Translations
+
+The UI ships German and English. **Correcting a translation is a one-line
+change**: find the key in `public/js/lang/<code>.js`, fix the wording, open a PR.
+Nothing else needs touching — the key already exists in every other language, and
+`npm test` checks that the files stay in key parity.
+
+**Adding a language** is a little more, and all of it is data:
+
+1. Add a row to `public/js/locales.js` — the code (two letters, so the browser's
+   system language matches it), the name in that language, and its BCP-47 tag.
+2. Copy `public/js/lang/en.js` to `public/js/lang/<code>.js` and translate the
+   values. Keep every key; the parity test will tell you if one is missing.
+3. Register the file in `public/index.html` (next to the other `lang/` scripts),
+   add it to `SHELL` in `public/sw.js`, and bump that file's `CACHE` version.
+
+Plural forms, date and month formatting and the language picker all follow from
+step 1 — there is no code to change. Translate the product vocabulary
+consistently rather than literally, keep the brand name **Spielwirbel**
+untranslated, and note that the legal pages (Impressum, privacy policy, terms)
+are deliberately German-authoritative with an English courtesy translation and
+are **not** part of the UI language files.
+
+Native speakers are very welcome to correct wording — machine-drafted phrasing
+that is merely *correct* is exactly what we would like replaced with phrasing
+that sounds natural.
 
 ## Contribution licensing
 

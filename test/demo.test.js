@@ -127,15 +127,26 @@ test('the seeded shelf can actually be drawn from at the seeded table size', () 
   assert.ok(drawable.length >= 3, `only ${drawable.length} of ${seed.DEMO_GAMES.length} games are drawable at ${seats} players`);
 });
 
-test('both locales seed the same number of fellow players', () => {
-  assert.strictEqual(seed.DEMO_TEXT.de.members.length, seed.DEMO_TEXT.en.members.length);
+test('every seeded locale seeds the same number of fellow players', () => {
+  // The seat count is what the draw pool's player ranges are sized against
+  // (see the drawable-games spec above), so it must not vary by language.
+  const counts = seed.DEMO_LOCALES.map((loc) => seed.DEMO_TEXT[loc].members.length);
+  assert.ok(counts.length >= 2, 'expected at least two seeded locales');
+  assert.deepEqual([...new Set(counts)], [counts[0]], `fellow-player counts differ by locale: ${counts.join(', ')}`);
 });
 
-test('an unknown locale falls back to German rather than throwing', () => {
-  assert.strictEqual(seed.textFor('fr'), seed.DEMO_TEXT.de);
-  assert.strictEqual(seed.textFor(''), seed.DEMO_TEXT.de);
-  assert.strictEqual(seed.textFor(undefined), seed.DEMO_TEXT.de);
+test('a locale with no seed text falls back to English rather than throwing', () => {
+  // English, not German (#504): a UI locale may ship before its demo text, and
+  // handing an Italian or Dutch visitor a German round is the half-translated
+  // impression the per-locale seed exists to avoid.
+  assert.strictEqual(seed.textFor('it'), seed.DEMO_TEXT.en);
+  assert.strictEqual(seed.textFor(''), seed.DEMO_TEXT.en);
+  assert.strictEqual(seed.textFor(undefined), seed.DEMO_TEXT.en);
+  assert.strictEqual(seed.tagNameFor('party', 'it'), seed.DEMO_TAGS.party.en);
+  // A locale that DOES have text still gets its own, region tag and all.
   assert.strictEqual(seed.textFor('en-GB'), seed.DEMO_TEXT.en);
+  assert.strictEqual(seed.textFor('de'), seed.DEMO_TEXT.de);
+  assert.strictEqual(seed.tagNameFor('party', 'de'), seed.DEMO_TAGS.party.de);
 });
 
 /* --------------------------------- the gate --------------------------------- */
@@ -234,7 +245,9 @@ test('the seeded round is immediately usable: Chronik and Pokale have content, a
 test('the seed is localized, and the visitor holds the owner seat', async () => {
   await withDemo({}, async () => {
     const app = createApp();
-    for (const locale of ['de', 'en']) {
+    // Derived from the seed's own locale set, so a language that gains demo
+    // text is covered without anyone remembering this loop exists.
+    for (const locale of seed.DEMO_LOCALES) {
       const res = await startDemo(app, { locale });
       const list = await request(app).get('/api/rounds').set(...auth(res));
       const round = await request(app).get(`/api/rounds/${list.body[0].id}`).set(...auth(res));

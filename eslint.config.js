@@ -13,10 +13,14 @@ const globals = require('globals');
 // (referencing something not yet defined) without flagging the legitimate
 // cross-file calls. 'writable' = reassigned somewhere; 'readonly' = not.
 const frontendGlobals = {
+  // locales.js
+  LOCALES: 'readonly', SUPPORTED_LOCALES: 'readonly', LOCALE_LABELS: 'readonly',
+  LOCALE_TAGS: 'readonly', localeTag: 'readonly',
   // i18n.js
-  I18N: 'writable', SUPPORTED_LOCALES: 'readonly', LOCALE_LABELS: 'readonly',
+  I18N: 'writable',
   locale: 'writable', detectLocale: 'readonly', initLocale: 'readonly',
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
+  pluralRules: 'readonly', pluralCategory: 'readonly',
   fmtDateTime: 'readonly', fmtMonth: 'readonly',
   // core.js
   app: 'readonly', context: 'readonly', toastEl: 'readonly',

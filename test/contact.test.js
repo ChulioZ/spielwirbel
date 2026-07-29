@@ -17,6 +17,7 @@ const { createApp } = require('../lib/app');
 const nodemailer = require('nodemailer');
 const { outbox } = require('../lib/mail');
 const repo = require('../lib/repo');
+const { SUPPORTED_LOCALES } = require('../public/js/locales');
 
 const lastNotice = async () => (await repo.listContactNotices(1))[0];
 
@@ -224,9 +225,41 @@ test('feedback keeps a typed e-mail but needs no good-faith statement (#321)', a
 
 test('an unknown feedback locale is dropped but the message is kept (#321)', async () => {
   const res = await request(app).post('/api/contact')
-    .send({ message: 'Odd locale feedback', category: 'feedback', locale: 'fr' });
+    // 'zz' is not a language code at all, so this stays an unknown locale as the
+    // app ships more of them — 'fr' (the old value here) becomes a real one.
+    .send({ message: 'Odd locale feedback', category: 'feedback', locale: 'zz' });
   assert.equal(res.status, 200);
   assert.equal((await storedFeedback('Odd locale feedback')).context.locale, null);
+});
+
+test('every locale the UI can be set to is kept on the feedback it produces (#504)', async () => {
+  // Losing the locale loses exactly the field needed to route a "this wording is
+  // wrong" report to the right language — silently, with the message still 200.
+  for (const locale of SUPPORTED_LOCALES) {
+    const message = `locale round-trip ${locale}`;
+    const res = await request(app).post('/api/contact')
+      .send({ message, category: 'feedback', locale });
+    assert.equal(res.status, 200);
+    assert.equal((await storedFeedback(message)).context.locale, locale);
+  }
+});
+
+test('the feedback locale allowlist is READ from the shared list, not copied (#504)', async () => {
+  // The loop above cannot prove this while the app ships exactly the two locales
+  // the old hand-copied ['de', 'en'] happened to name — it would pass against the
+  // copy too. So register a locale the way a translation issue (#534-#538) does
+  // and assert the route accepts it with no change of its own. Mutating the
+  // shared array works because the route resolves it per request, inside the
+  // schema's preprocess; a copy taken at require time would refuse this.
+  SUPPORTED_LOCALES.push('zx');
+  try {
+    const res = await request(app).post('/api/contact')
+      .send({ message: 'newly shipped locale', category: 'feedback', locale: 'zx' });
+    assert.equal(res.status, 200);
+    assert.equal((await storedFeedback('newly shipped locale')).context.locale, 'zx');
+  } finally {
+    SUPPORTED_LOCALES.pop();
+  }
 });
 
 test('feedback works in production with mail unconfigured — never the 502 guard (#321)', async () => {
