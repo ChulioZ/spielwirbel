@@ -86,10 +86,13 @@ is not a UI finding, it is a rejected idea.
   distance), which is what the existing `--shadow` already does. Cards, sheets, popovers,
   the dock and pills must agree on what "one level up" looks like. Depth should feel
   intentional and soft, in keeping with the warm brand — not five unrelated recipes.
-  **State as of 2026-07-26:** one `--shadow` token (11 uses) plus **8 ad-hoc values**, and
-  the ramp is inverted at both ends — the largest blur in the app sits on a *static*
-  `.auth__card` (`0 14px 44px`), while the topmost surface, `.sheet`, has **none**, and
-  `.dock` matches a merely *hovered* card.
+  **State as of 2026-07-29: SHIPPED.** `--shadow-1/2/3` are defined in `:root` (with the
+  key+ambient rationale in a comment) and every elevation site uses them — `.sheet` sits
+  on `--shadow-3`, the old inversions are gone. The remaining non-token `box-shadow`s are
+  deliberately off-ramp: focus/selection rings (`0 0 0 3px var(--brand-edge)` etc.),
+  `.ticket--live`'s inset accent edge, and a `0 0 0 1px var(--line)` hairline — those are
+  not elevation. Audit against drift (a new ad-hoc elevation value), not against the old
+  gap. (Previously: one `--shadow` token plus 8 ad-hoc values, inverted at both ends.)
 - **Enforced by:** — (manual; `grep -o 'box-shadow:[^;]*;' public/styles.css | sort -u`)
 
 ### U-004 — Consistent radii, borders and surface treatment
