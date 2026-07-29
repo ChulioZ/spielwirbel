@@ -362,6 +362,7 @@ I18N.de = {
   'directPlay.button': 'Jetzt spielen',
   'directPlay.title': '„{title}“ spielen',
   'directPlay.start': 'Los geht’s',
+  'directPlay.guestsNote': 'Gäste spielen mit, gehören aber nicht zur Runde.',
 
   'vote.crumb': 'Abstimmung',
   'vote.leaveConfirm': 'Abstimmung verlassen? Die bisher abgegebenen Bewertungen gehen verloren.',

@@ -364,6 +364,11 @@ I18N.en = {
   'directPlay.button': 'Play now',
   'directPlay.title': 'Play “{title}”',
   'directPlay.start': 'Start',
+  // The direct-play flow has no voting phase, so its guests cannot vote — they
+  // are recorded as present and can be picked as the winner (#532). Hence a
+  // wording of its own rather than reusing startSession.guestsNote, which
+  // promises a vote this screen never offers.
+  'directPlay.guestsNote': 'Guests play along but never join the round.',
 
   'vote.crumb': 'Voting',
   'vote.leaveConfirm': 'Leave the vote? The ratings entered so far will be lost.',

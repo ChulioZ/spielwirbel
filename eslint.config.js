@@ -48,7 +48,7 @@ const frontendGlobals = {
   applyBackground: 'readonly', avgColor: 'readonly',
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', initials: 'readonly',
   personColor: 'readonly',
-  renderSeatPicker: 'readonly',
+  renderSeatPicker: 'readonly', renderGuestPicker: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',

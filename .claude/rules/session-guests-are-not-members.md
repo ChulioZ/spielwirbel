@@ -107,8 +107,12 @@ Two consequences follow and both are load-bearing:
 - **`renderSeatPicker` grew `extraCount` + `refreshSeats`.** The centre count has
   to include guests, but the guest list lives outside the picker — so the picker
   takes a *function* and exposes its own `render` on the returned element for the
-  caller to re-run. The "Jetzt spielen" sheet passes neither and is byte-for-byte
-  unchanged (guests are deliberately out of scope there: no voting phase).
+  caller to re-run. **Since #532 the "Jetzt spielen" sheet passes both** — it
+  offers guests too, and the guest field itself is shared by the two screens as
+  `renderGuestPicker` (`public/js/guest-picker.js`), which returns the whole
+  `.field` with the live names on `el.guests`, the same element-with-a-method
+  shape. Its hint text is a **parameter**, because the draw flow's note promises
+  a vote the direct-play flow does not have.
 - **A guest participant is a `<span>`, not an `<a>`** — there is no member page to
   link to, and an anchor with no href is neither focusable nor styled
   (`.claude/rules/in-app-nav-links.md`). The round-member surfaces (hero, rail,
@@ -137,6 +141,26 @@ Two consequences follow and both are load-bearing:
 - The service worker serves `public/js/**` cache-first, so clear it before
   believing **any** of the above (`.claude/rules/pwa-service-worker.md`).
 
-**Deliberately not built** (possible follow-ups, unfiled): guests in the "Jetzt
-spielen" sheet, editing the guest list after the draw, and promoting a guest to a
-permanent member.
+## The three follow-ups, now decided
+
+All three were filed and reviewed on 2026-07-29; none is still open as a
+"possible follow-up".
+
+- **Guests in the "Jetzt spielen" sheet — BUILT (#532).** The payoff is not the
+  vote (there is no voting phase) but **winner attribution**: the results
+  screen's finish + winner picker draws its chips from `sessionPeople()`, so
+  before this a guest who won a directly-started game could not be recorded at
+  all, and the only workarounds were to make them a permanent member or to use
+  the draw flow instead. The server side was mostly *deleting* a special case —
+  `resolveGuests` now runs for both modes. The player range is still **not**
+  consulted in direct-pick mode, so guests gain no filtering role there; a spec
+  pins that a chosen game stays playable however many guests are named.
+- **Editing the guest list after the draw — WON'T DO (#533).** Round *members*
+  cannot be added to a session after the draw either, so who is at the table is
+  a setup-time decision for every participant. That is also why #532 belongs in
+  the sheet rather than on the results screen.
+- **Promoting a guest to a permanent member — WON'T DO (#531).** Guest ids are
+  minted **per session** (see the `resolveGuests` note above), so there is no
+  stable guest identity to re-attribute history along: "the same Dana" across
+  three sessions is three unrelated ids, and nothing in the data says they are
+  one person.

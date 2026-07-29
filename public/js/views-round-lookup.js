@@ -884,6 +884,7 @@ function startDirectSession(round, game) {
           <label>${esc(t('startSession.membersLabel'))}</label>
           <div id="seatMount"></div>
         </div>
+        <div id="guestMount"></div>
         <div class="toolbar sheet__actions">
           <button id="startDirect" class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.start'))}</button>
         </div>
@@ -893,7 +894,17 @@ function startDirectSession(round, game) {
   document.body.appendChild(backdrop);
 
   const joining = new Set(round.members.map((m) => m.id));
-  sheet.querySelector('#seatMount').replaceWith(renderSeatPicker(round, joining));
+  // Guests (#532). The field is always visible, like the setup screen's — the
+  // sheet roughly doubles in height, which is the accepted price of the two ways
+  // into a session looking the same. There is no voting phase here, so a guest
+  // is a participation record and, above all, a pickable winner: the results
+  // screen's winner chips come from sessionPeople(), members ∪ guests.
+  // No pool preview to refresh either (direct-pick consults no player range),
+  // so the only thing following the count is the table's centre.
+  const guestPicker = renderGuestPicker(t('directPlay.guestsNote'), () => seatTable.refreshSeats());
+  const seatTable = renderSeatPicker(round, joining, null, () => guestPicker.guests.length);
+  sheet.querySelector('#seatMount').replaceWith(seatTable);
+  sheet.querySelector('#guestMount').replaceWith(guestPicker);
 
   const dismiss = () => closeSheet();
   const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
@@ -910,6 +921,7 @@ function startDirectSession(round, game) {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         gameId: game.id,
         memberIds: [...joining],
+        guests: guestPicker.guests, // names only; the server mints the ids (#458)
       });
       closeSheet(() => showResults(round, data.session, data.games));
     } catch (e) { toast(e.message); }
