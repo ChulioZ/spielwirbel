@@ -89,6 +89,17 @@
   <div class="demo-banner" id="demoBanner" hidden>
     <i class="ti ti-clock" aria-hidden="true"></i>
     <span class="demo-banner__text" id="demoBannerText"></span>
+    <!-- Express reference to the Nutzungsbedingungen (#520). A demo account is
+         created without registration, so the register form's terms line never
+         runs for these users — this banner is the only surface both demo entry
+         points share (the landing CTA and the /demo deep link, which bootApp()
+         handles without ever rendering the landing page). Ships `hidden` and is
+         revealed by setupDemoBanner() only when GET /api/config reports
+         `footer`, because /nutzungsbedingungen hard-404s until the operator
+         identity is configured — hence the paired
+         `.demo-banner__terms[hidden]` rule in styles.css. -->
+    <a class="demo-banner__terms" id="demoBannerTerms" href="/nutzungsbedingungen"
+       target="_blank" rel="noopener" hidden></a>
     <button class="demo-banner__cta" id="demoBannerCta" type="button"></button>
   </div>
 

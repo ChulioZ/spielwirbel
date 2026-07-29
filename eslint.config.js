@@ -63,6 +63,8 @@ const frontendGlobals = {
   SA_ACCESS: 'readonly', SA_REFRESH: 'readonly', saStore: 'readonly',
   SA_DEMO: 'readonly', demoMarkerFollowsRotation: 'readonly',
   HANDLER_401: 'readonly',
+  // memoized /api/config, gating the two links to the legal pages (issue #520)
+  accountCfg: 'writable', withAppConfig: 'readonly',
   getAccessToken: 'readonly', getRefreshToken: 'readonly',
   setTokens: 'readonly', clearTokens: 'readonly',
   getDemoToken: 'readonly', setDemoToken: 'readonly', clearDemoToken: 'readonly',

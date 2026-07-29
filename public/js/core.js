@@ -243,6 +243,15 @@ function applyStaticTexts() {
   // Trust claims (#323), same re-localization as the links above.
   document.getElementById('footerTrustHosting').textContent = t('footer.trustHosting');
   document.getElementById('footerTrustNoTracking').textContent = t('footer.trustNoTracking');
+  // The demo banner is static chrome too, and was NOT re-localized on a language
+  // switch — its text and CTA stayed in the boot language while the footer above
+  // switched correctly (pre-existing; found verifying #520). That matters more
+  // now the banner carries the express reference to the Nutzungsbedingungen: a
+  // legal reference shown in a language the reader did not choose is a weaker
+  // one. setupDemoBanner lives in the later-loaded account.js — safe here, since
+  // this runs long after every script has loaded, and it is a no-op (it just
+  // re-hides the banner) whenever the session is not a demo.
+  setupDemoBanner();
 }
 
 // Shared footer LINK visibility (issues #224/#134). The links start hidden in
