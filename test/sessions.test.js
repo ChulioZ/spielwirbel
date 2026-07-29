@@ -392,6 +392,10 @@ test('the direct-pick flow stores guests, and one can be recorded as the winner'
   const guest = started.body.session.guests[0];
   assert.equal(guest.name, 'Dana');
   assert.match(guest.id, /^[0-9a-f]{16}$/);
+  // Both start modes report the minted guests at the top level, not just inside
+  // the session blob — the ids exist nowhere client-side until this response, so
+  // a shape that differed by mode would strand one of them.
+  assert.deepEqual(started.body.guests, started.body.session.guests);
 
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${started.body.session.id}/finish`)

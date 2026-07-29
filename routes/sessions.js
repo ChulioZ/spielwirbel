@@ -126,7 +126,9 @@ router.post('/', async (req, res) => {
       done: true,
     });
     trackEvent('session_created', { tenantId: req.tenantId });
-    return res.status(201).json({ session, games: [game], members });
+    // Same convenience shape as the draw path below — the minted guest ids only
+    // exist server-side until this response, so both modes report them.
+    return res.status(201).json({ session, games: [game], members, guests });
   }
 
   let count = body.count;
