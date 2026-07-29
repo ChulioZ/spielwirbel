@@ -5,6 +5,13 @@ const assert = require('node:assert/strict');
 const bgg = require('../lib/providers/bgg');
 
 // Sample bodies in the exact shape BGG's XML API2 returns (#117).
+// PROVENANCE: hand-written when #117 moved the provider onto the licensed XML
+// API2 (2026-07-22) — NOT a live capture. Load-bearing premises: /search and
+// /thing carry names/counts as `value` ATTRIBUTES while /collection uses text
+// nodes + `objectid` (see test/bgg-import.test.js and
+// .claude/rules/bgg-collection-import.md §1), and an unknown username is an
+// HTTP 200 error document. A fixture can only prove the parser, never what BGG
+// serves today — probe live when touching it.
 
 const SEARCH_XML = `<?xml version="1.0" encoding="utf-8"?>
 <items total="3" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">

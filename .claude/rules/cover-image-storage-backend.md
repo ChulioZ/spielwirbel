@@ -45,9 +45,9 @@ Other gotchas baked in:
 - **`save`/`remove`/`saveUploadedImage` are async now.** `saveUploadedImage`
   (`lib/upload.js`) returns a Promise; its two callers in `routes/games.js` must
   `await` it. A rejected `save` on a *user upload* surfaces as a 500 (Express 5
-  forwards it) — same as a disk write failing; a rejected `save` inside
-  `downloadCover` (a *provider* cover) is swallowed to null so it never blocks
-  adding the game.
+  forwards it) — same as a disk write failing. (A provider cover involves no
+  `save` at all since #172 — it is hotlinked, never downloaded; the old
+  `downloadCover` path is gone.)
 - **Testing needs no network or bucket.** `lib/storage/s3.js` is a factory
   (`createS3Storage({ client, bucket, prefix })`); tests inject a fake client whose
   `send(cmd)` branches on `cmd.constructor.name` (`Put/Get/DeleteObjectCommand`).

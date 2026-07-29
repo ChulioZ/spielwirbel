@@ -40,8 +40,8 @@ Security issues especially relevant given the current architecture:
   [`.claude/rules/user-accounts.md`](.claude/rules/user-accounts.md)).
 - Ways to read or write files outside the app's data directory (path
   traversal), including via the S3-compatible object-storage backend.
-- Server-side request forgery (SSRF) through the cover-image download or the
-  add-game lookup providers.
+- Server-side request forgery (SSRF) through the add-game lookup providers or
+  the BoardGameGeek collection import.
 - Injection or remote code execution reachable from a request (including SQL
   injection against the Postgres backend).
 - Leaking secrets (`SESSION_SECRET`, `DATABASE_URL`, S3/mailbox.org credentials) or

@@ -6,6 +6,8 @@
    Adding/removing members after round creation is intentionally out of scope. */
 
 const express = require('express');
+const { z } = require('zod');
+const { validateBody } = require('../lib/validate');
 // The curated avatar palette, shared verbatim with the frontend rather than
 // copied — a hand-kept copy drifted from it once already and rejected six of the
 // eight swatches the UI offers (#420). Color is stored only when the user picks
@@ -13,6 +15,19 @@ const express = require('express');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
 
 const router = express.Router({ mergeParams: true });
+
+// Shape validation only (#213); the userId value's authorization matrix stays
+// in the handler below — it depends on req.grant/req.userId, not on the body.
+const patchMemberSchema = z.object({
+  name: z.preprocess(
+    (v) => (v === undefined ? undefined : String(v).trim()),
+    z.string().min(1, 'Name is missing')
+  ).optional(),
+  color: z.unknown()
+    .refine((v) => v === undefined || MEMBER_COLORS.includes(v), { message: 'Invalid color' })
+    .optional(),
+  userId: z.unknown().optional(),
+});
 
 // Edit a member's name and/or avatar color, or claim/release the seat as your
 // own (#421). Accepts any subset of { name, color, userId } — userId may only
@@ -23,19 +38,12 @@ router.patch('/:mid', async (req, res) => {
   const member = round.members.find((m) => m.id === req.params.mid);
   if (!member) return res.status(404).json({ error: 'Member not found' });
 
-  const b = req.body;
+  const b = validateBody(patchMemberSchema, req, res);
+  if (!b) return;
   const patch = {};
 
-  if (b.name !== undefined) {
-    const name = String(b.name).trim();
-    if (!name) return res.status(400).json({ error: 'Name is missing' });
-    patch.name = name;
-  }
-  if (b.color !== undefined) {
-    if (!MEMBER_COLORS.includes(b.color))
-      return res.status(400).json({ error: 'Invalid color' });
-    patch.color = b.color;
-  }
+  if (b.name !== undefined) patch.name = b.name;
+  if (b.color !== undefined) patch.color = b.color;
   // #421: the account link is SELF-CLAIM ONLY. Before this the route took any
   // existing user's id from anyone with round access, so a hand-crafted request
   // could seat a stranger — or, worse, null out a GRANTEE's seat, which leaves

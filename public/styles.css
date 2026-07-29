@@ -136,6 +136,13 @@
 
 body {
   margin: 0;
+  /* Column flex + min-height so the footer sits at the viewport bottom on
+     short pages (the lobby at desktop ended mid-screen with the footer
+     floating above ~340px of bare page — 2026-07-29 UI audit). .app grows to
+     fill; fixed-position overlays (dock, sheets, toast) are unaffected. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
   font-family: var(--font);
   color: var(--ink);
   /* Calm, theme-derived backdrop: a soft accent glow falling from the top and
@@ -221,6 +228,11 @@ h1, h2, h3 { font-family: var(--font-display); }
   /* Ordinary bottom padding. Room for the floating dock is added separately,
      conditioned on one actually being rendered — see the hub-tabs section. */
   padding: 24px 20px 40px;
+  /* Grow to push the footer to the viewport bottom on short pages (body is a
+     column flex). width:100% because a stretched flex item with max-width
+     would otherwise shrink-to-fit; the margin auto keeps it centered. */
+  flex: 1 0 auto;
+  width: 100%;
 }
 /* Shared site footer (issue #224). Muted, theme-derived link colour (no
    hardcoded tones — .claude/rules/theme-derived-colors.md).
