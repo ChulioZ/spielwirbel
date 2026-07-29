@@ -34,9 +34,13 @@ the whole reason it can be trusted to touch a live product's look:
 
 1. **Visual, never UX.** In scope: colour, layout, spacing, type, depth,
    radii/borders, iconography, imagery treatment, motion-as-polish, empty-state
-   *visuals*. Out of scope: flows, step order, screen structure, navigation, what
-   a control *does*, and copy/wording. Test: *does the fix change what the user
-   sees, or what the user does?* Only the first is yours (U-R03).
+   *visuals*. Out of scope: flows, step order, information architecture,
+   navigation, what a control *does*, and copy/wording. Test: *does the fix
+   change what the user sees, or what the user does?* Only the first is yours
+   (U-R03). **This fence bounds the kind of change, not its size:** recomposing
+   the *same* content — its size, weight, placement, framing, backdrop — is
+   visual and in scope however dramatic the visual difference; changing *which*
+   content or controls a screen has, or their order of use, is UX.
 2. **Evolution, never rebrand.** Stay within `--brand` (`#c2410c`), the 8 `THEMES`,
    and the `color-mix`-derived token families. The app must be recognizably itself
    tomorrow. Refine a ramp; never swap the palette or default to dark (U-R02, U-R05).
@@ -133,15 +137,43 @@ Every surface, because inconsistency between them is the commonest finding:
   instance), and the legal/contact pages, which have their own token copy
   (`shared-constants-across-the-stack.md`) — check they still match the app.
 
+## The big-picture pass — mandatory, after the walk
+
+Detail findings (a drifted radius, a stray gap, a fifth shadow value) fall out of
+the walk on their own; **courage does not**, so it is required explicitly. After
+walking the screens, go back over each major surface and answer one question:
+*what single change would most lift this screen?* Judge the screen as a
+composition — does something lead (U-015)? do its large surfaces do any
+atmospheric work, or is the background just there (U-016)? does it carry the
+app's character, or could it belong to any app (U-013)? A screen can pass every
+consistency criterion and still be dull — that dullness **is a finding**, not a
+vibe to swallow because no grep can measure it.
+
+**The report must contain at least one screen-level proposal per run** — or an
+explicit, argued statement that no screen currently warrants one. "None
+warranted" is a claim to defend screen by screen, never a default reached by
+having spent the time on nits.
+
+Two things keep this honest rather than reckless:
+
+- **Bold ≠ out of bounds.** The Rejected ledger rejects *mechanisms* (a
+  framework, a palette swap, new JS in the router) — it does not reject
+  ambition. A bold recomposition of one screen using the existing tokens,
+  existing CSS and existing markup is squarely in scope; the fences bound what
+  *kind* of change is allowed, never how much it may improve a screen.
+- **A screen-level proposal is a proposal, not a unilateral change.** It ships
+  as evidence + mockup for the user to judge (issue via `create-issue`), so
+  being ambitious costs the backlog nothing until the user says yes.
+
 ## Remedies — a tight polish PR, a token, or an issue
 
-Most UI findings are small CSS changes that batch well:
+Two co-equal output classes, plus the token/rule fix that serves both:
 
-1. **A polish PR through `implement`** — the default. Group the small, high-confidence
-   fixes (unify the shadow ramp, align the gutters, regularize the radii, tighten
-   the type scale) into one reviewable change. Every change goes **through the
-   tokens**, never a raw hex (U-001/U-R05), and stays inside `styles.css` — no new
-   dependency, no framework.
+1. **A polish PR through `implement`** — the default *for detail findings*. Group
+   the small, high-confidence fixes (unify the shadow ramp, align the gutters,
+   regularize the radii, tighten the type scale) into one reviewable change. Every
+   change goes **through the tokens**, never a raw hex (U-001/U-R05), and stays
+   inside `styles.css` — no new dependency, no framework.
 2. **A design-token or a rule** — when the finding is really "there is no single
    source for X". Adding a `--shadow-1/2/3` elevation ramp or an `--radius-*` set to
    `:root` and migrating components onto it is the highest-leverage kind of fix, and
@@ -150,16 +182,22 @@ Most UI findings are small CSS changes that batch well:
    set) is a good mechanizable guard in the spirit of `test/content-width.test.js` —
    and if you add one, **break the CSS on purpose once** to watch it go red
    (`css-text-assertions-strip-comments.md`).
-3. **A GitHub issue through `create-issue`** — for a larger visual redesign of one
-   surface that needs its own review, labelled `audit` and `ui`, deduped against
-   open and closed issues first.
+3. **A screen-level proposal through `create-issue`** — the expected vehicle for
+   the big-picture pass's output, **not** an escalation path for oversized nits.
+   One issue per surface, labelled `audit` and `ui`, deduped against open and
+   closed issues first, carrying the mockup evidence below so the user judges a
+   picture, not an adjective.
 
 **Every finding carries before/after evidence.** A screenshot of the current state
 and either a screenshot of the proposed state (make the edit on your throwaway
 instance, clear the SW, capture) or a precise description of the change. An
 aesthetic claim with no picture is not reviewable — and a UI change is exactly the
 case where a human does the final visual sign-off, so give them something to look
-at.
+at. For a **screen-level proposal**, a mockup made by injecting CSS overrides into
+the throwaway instance (via `javascript_tool`, no source edit needed) is
+sufficient "after" evidence — the evidence bar exists to make findings judgeable,
+and it must never act as a size filter that lets through only what is cheap to
+photograph.
 
 ## Do not report these
 
@@ -170,3 +208,9 @@ flow/UX/copy change (U-R03), anything that trades away the accessibility floor
 pipeline (U-R06). Also do not relitigate the settled layout calls — the single
 column width (`responsive-content-width.md`) and the tiles-vs-lists decisions
 (`tiles-vs-lists.md`) — those are composition constraints you work within.
+
+**Do not over-read the ledger.** Every entry above rejects a *mechanism* or a
+*category of change* — none of them rejects ambition, and none is a precedent for
+"keep findings small". Timidity is the failure mode this skill is most prone to:
+a run that returns only spacing and radius nits while every screen stays visually
+ordinary has not respected the ledger, it has ignored the big-picture pass.

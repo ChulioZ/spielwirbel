@@ -8,14 +8,29 @@ Seeded 2026-07-26 from `public/styles.css`, the `THEMES` table
 `tiles-vs-lists.md`, `responsive-content-width.md` and the redesign memory.
 The first research pass ran the same day and added **U-014**, sharpened **U-003**
 and **U-005** with measured state, and rejected **U-R07/R08/R09**.
+On 2026-07-29 (operator direction, outside the research cadence) **U-015** and
+**U-016** were added and **U-013** sharpened, so the audit judges screen-level
+composition and character coverage, not only token/consistency discipline — see
+"The big-picture pass" in SKILL.md.
 
 **Goal.** Make the app *visually* excellent — something people want to open and
 enjoy looking at. Beautiful, polished, characterful. This is the one audit whose
 findings are partly aesthetic, so the criteria are written to be as **concrete and
 observable** as an aesthetic judgement can be: a consistent spacing scale, one
 elevation ramp, a clear type hierarchy, disciplined use of the token system.
-"Make it prettier" is never a finding; "these six cards use five different shadow
-values — unify them into a 3-step ramp" is.
+"Make it prettier" is never a finding — but **two** finding shapes are:
+
+- the **detail finding** — "these six cards use five different shadow values —
+  unify them into a 3-step ramp";
+- the **screen-level composition finding** — "the Chronik reads as an
+  undifferentiated list with no visual anchor; here is a mocked recomposition
+  within the tokens".
+
+Both are equally legitimate outputs. A run that produces only the first kind has
+under-delivered — the consistency criteria (U-001..U-008) can *only* yield
+convergence nits, so the screen-level judgement (U-013/U-015/U-016, driven by the
+mandatory big-picture pass in SKILL.md) is where the audit earns its "make it
+genuinely beautiful" mandate.
 
 **Two hard fences — see the Rejected ledger before every run:**
 - **Visual only, never UX (U-R03).** Colours, layout, type, spacing, depth,
@@ -158,6 +173,22 @@ is not a UI finding, it is a rejected idea.
   hand.
 - **Enforced by:** — (manual)
 
+### U-015 — Every major screen has a deliberate focal point
+- **Status:** adopted · 2026-07-29
+- **Source:** operator direction 2026-07-29 (the audit must judge compositions, not only
+  consistency) · Refactoring UI's hierarchy principles
+- **Check:** Judge each major surface **as a composition, not as a sum of conforming
+  parts**: something on the screen should lead — a hero, a dominant card, a strong
+  heading block, the cover art — and the rest should visibly rank below it. A screen
+  that is a uniform stack of equal-weight blocks is a finding **even when every block
+  individually passes U-001..U-008**; passing the consistency criteria is not evidence
+  the screen is good, and "every nit fixed, still dull" is precisely the state this
+  criterion exists to name. Remedies recompose the *same* content — size, weight,
+  placement, framing, backdrop — and never add/remove content, controls or steps
+  (U-R03), and stay inside the settled layout calls (`responsive-content-width.md`,
+  `tiles-vs-lists.md`).
+- **Enforced by:** — (manual; the big-picture pass in SKILL.md)
+
 ## Polish, character & delight
 
 ### U-009 — Empty and loading states are designed, not blank
@@ -200,8 +231,23 @@ is not a UI finding, it is a rejected idea.
   goal).
 - **Enforced by:** — (manual)
 
+### U-016 — Backgrounds and large surfaces do atmospheric work
+- **Status:** adopted · 2026-07-29
+- **Source:** operator direction 2026-07-29 · the existing backdrop (the `body` accent
+  glow + paper grain, `.claude/rules/theme-derived-colors.md`)
+- **Check:** The accent glow, the grain and the theme-derived tint families are
+  *composed per screen*, not merely present globally: a large flat expanse of bare
+  `--page-bg` — or bare `--surface` inside an oversized card — with nothing doing
+  atmospheric work is a finding. "This screen's background is boring" is exactly the
+  class of observation this criterion admits; the remedy makes it concrete (a derived
+  wash, a scoped glow, a tinted band that anchors a section). Every new tone is derived
+  via `color-mix()` on `--page-bg`/`--brand` or an existing family (U-001/U-R05) so the
+  treatment holds on all 8 themes, and it stays above the contrast floor (U-R04) —
+  atmosphere goes *behind* content, never into competition with reading it.
+- **Enforced by:** — (manual; the big-picture pass in SKILL.md)
+
 ### U-013 — The app has a distinct, warm personality — amplify it, don't flatten it
-- **Status:** adopted · 2026-07-26
+- **Status:** adopted · 2026-07-26 · sharpened 2026-07-29 (offensive half added)
 - **Source:** the brand (`Spielwirbel`, Baloo 2, `#c2410c`, the paper-grain backdrop)
 - **Check:** The app should feel like a warm, friendly, slightly playful board-game
   companion — not generic minimalist SaaS. When research offers a trend, ask whether it
@@ -209,7 +255,14 @@ is not a UI finding, it is a rejected idea.
   the trophy gold are personality carriers; a "cleaner" change that erases them is a
   regression, not an improvement. Beauty here means *more* character, executed well — not
   less.
-- **Enforced by:** — (manual; the judgement criterion the others serve)
+  **This criterion fires in both directions.** The defensive half above (don't let a
+  change erase character) is not the whole check: walk every major surface and flag the
+  screens carrying **none** of the personality carriers — *absence* of character on a
+  screen is a finding exactly as erasure is. A functional-but-anonymous screen that
+  could belong to any generic app is what this criterion exists to catch, not only the
+  trend that would flatten a good one.
+- **Enforced by:** — (manual; the judgement criterion the others serve, driven per
+  screen by the big-picture pass in SKILL.md)
 
 > **Note (2026-07-26 research pass) — the trend is coming *toward* this app.** The
 > 2026 "neo-minimalism" material (warmth, paper/linen texture, film grain, anti-flat
