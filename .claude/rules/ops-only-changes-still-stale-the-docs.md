@@ -38,7 +38,7 @@ Neither is reachable from any diff, because there was no diff.
 **After an ops-only change — anything that alters what the live instance *is*
 without producing a commit — walk this list in a follow-up PR.** These are the
 files that assert live instance state, and they are the whole list as of
-2026-07-26:
+2026-07-29:
 
 | File | What it asserts |
 |---|---|
@@ -49,6 +49,7 @@ files that assert live instance state, and they are the whole list as of
 | `.claude/rules/user-accounts.md` | whether accounts are live or staged |
 | `.claude/skills/audit/audit-loop.md` §C | the repo description all four audits test findings against |
 | `docs/production-readiness.md` | go-live status and the blocker list |
+| `lib/legal.js` — the published privacy policy (both languages) | any aside about what *this instance* runs (auth mode, cookies in use, providers); a change here also bumps `REVISION` (`keep-legal-docs-current.md`) — missed after #219, found 2026-07-29: §14 still said "solange die Registrierung noch nicht geöffnet ist" five days past a REVISION bump |
 | `.github/FUNDING.yml` | the donation handle — must equal the live `DONATE_URL` (`GET /api/config`) |
 | `.github/ISSUE_TEMPLATE/config.yml` | that private vulnerability reporting is on and the Discussions Q&A category exists at that slug — **repo settings, not files** |
 | `.github/ISSUE_TEMPLATE/bug_report.yml` | that spielwirbel.app runs accounts-only, in the auth-mode dropdown's help text |
