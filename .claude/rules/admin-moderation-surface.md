@@ -65,8 +65,15 @@ stayed green.
 `findRoundOwner`/`tenantSummary`/`roundContent`/`redactText`/
 `moderationActions` (#275) and `instanceMetrics` (#404) are **absent** from
 `TENANT_METHODS` (`lib/repo/index.js`). That absence is the enforcement:
-handlers only hold `req.repo`, so they cannot reach cross-tenant methods; only
-the admin-gated `routes/admin.js` requires the module-level repo. Adding one
+handlers only hold `req.repo`, so they cannot reach cross-tenant methods.
+Since #419 the admin-gated `routes/admin.js` is no longer the *only* caller of
+the module-level repo: `routes/account.js` reaches `eraseAccount`,
+`tenantSummary` and `exportAccountData` for **self-service** deletion/export —
+that is safe because every such call is bound to the authenticated caller's
+own uid/tenant behind `requireUser` plus a password re-auth, never to a
+request-supplied id. The invariant is therefore: a global repo method is
+reachable outside `routes/admin.js` **only when bound to the caller's own
+account**. Adding one
 to `TENANT_METHODS` would both break it (no tenant argument) and expose
 cross-tenant reads to every route. Also: `listUsers()` returns the raw stored
 user shape **including secrets** — `routes/admin.js` projects it down to the
