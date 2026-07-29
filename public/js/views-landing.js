@@ -52,11 +52,43 @@ const LANDING_STEPS = ['landing.how.step1', 'landing.how.step2', 'landing.how.st
 //    covers are the app's own deterministic gradients. A provider's cover art in
 //    a committed marketing image would be re-hosting someone else's copyrighted
 //    artwork — the exact thing .claude/rules/provider-cover-hotlinking.md avoids.
+//
+// One set per shipped locale (#457), keyed by locale code. Everything else on
+// this page switches language — headline, cards, steps, chips — so a German
+// screenshot under English copy was the one part of the page that stayed
+// half-translated, on the page whose whole job is "what is this and how does it
+// work". Each set is shot against its own seed, so the *content* is localized
+// too (round name, member names, game titles), not just the app's chrome; the
+// two seeds live in the regeneration recipe.
+//
+// The dimensions stay PER ASSET rather than per family: they are asserted
+// against the real files, so re-shooting one locale may legitimately change one
+// height (a title that wraps to two lines moves the crop) without touching the
+// other.
 const LANDING_SHOTS = {
-  shelfWide: { src: '/img/landing-shelf-wide.webp', w: 1600, h: 988 },
-  shelfPhone: { src: '/img/landing-shelf-phone.webp', w: 624, h: 1248 },
-  vote: { src: '/img/landing-vote.webp', w: 624, h: 1248 },
+  de: {
+    shelfWide: { src: '/img/landing-shelf-wide.de.webp', w: 1600, h: 988 },
+    shelfPhone: { src: '/img/landing-shelf-phone.de.webp', w: 624, h: 1248 },
+    vote: { src: '/img/landing-vote.de.webp', w: 624, h: 1248 },
+  },
+  en: {
+    shelfWide: { src: '/img/landing-shelf-wide.en.webp', w: 1600, h: 988 },
+    shelfPhone: { src: '/img/landing-shelf-phone.en.webp', w: 624, h: 1248 },
+    vote: { src: '/img/landing-vote.en.webp', w: 624, h: 1248 },
+  },
 };
+
+// The set for the active locale, resolved at RENDER time — showLanding() sets
+// currentView, and the top-bar picker re-runs it after setLocale(), so reading
+// getLocale() here is the whole language-switch mechanism.
+//
+// Falls back to the first shipped locale rather than rendering a broken src,
+// matching how t() falls back: a locale that ships a language file but no
+// screenshots yet shows somebody else's product, which is a great deal better
+// than an empty box in the hero.
+function landingShots() {
+  return LANDING_SHOTS[getLocale()] || LANDING_SHOTS[SUPPORTED_LOCALES[0]];
+}
 
 // The public repository, linked from the "code out in the open" trust chip
 // (#483). The chip claims the code can be inspected, so it has to be reachable
@@ -148,15 +180,15 @@ function showLanding() {
         </div>
       </li>`).join('');
 
-  // Informative images, not decoration: each carries real alt text (localized,
-  // even though the screenshots themselves are German — the app's product
-  // language), so the page still explains itself to a screen reader.
+  // Informative images, not decoration: each carries real alt text, so the page
+  // still explains itself to a screen reader.
+  const shots = landingShots();
   const shelfShot = `
       <picture>
-        <source media="${LANDING_SHOT_BP}" srcset="${LANDING_SHOTS.shelfWide.src}"
-                width="${LANDING_SHOTS.shelfWide.w}" height="${LANDING_SHOTS.shelfWide.h}" />
-        <img class="landing-shot" src="${LANDING_SHOTS.shelfPhone.src}"
-             width="${LANDING_SHOTS.shelfPhone.w}" height="${LANDING_SHOTS.shelfPhone.h}"
+        <source media="${LANDING_SHOT_BP}" srcset="${shots.shelfWide.src}"
+                width="${shots.shelfWide.w}" height="${shots.shelfWide.h}" />
+        <img class="landing-shot" src="${shots.shelfPhone.src}"
+             width="${shots.shelfPhone.w}" height="${shots.shelfPhone.h}"
              alt="${esc(t('landing.shot.shelfAlt'))}" />
       </picture>`;
 
@@ -200,8 +232,8 @@ function showLanding() {
       <h2 class="landing-section__title">${esc(t('landing.how.title'))}</h2>
       <div class="landing-how">
         <ol class="landing-steps">${steps}</ol>
-        <img class="landing-shot landing-how__shot" src="${LANDING_SHOTS.vote.src}"
-             width="${LANDING_SHOTS.vote.w}" height="${LANDING_SHOTS.vote.h}"
+        <img class="landing-shot landing-how__shot" src="${shots.vote.src}"
+             width="${shots.vote.w}" height="${shots.vote.h}"
              alt="${esc(t('landing.shot.voteAlt'))}" />
       </div>
     </section>
