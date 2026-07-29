@@ -6,6 +6,12 @@ const nintendo = require('../lib/providers/nintendo');
 
 // A Solr search response: docs carry fs_id, title, player counts, cover images
 // and a store path — everything the lookup needs in one hop.
+// PROVENANCE: hand-written in the shape searching.nintendo-europe.com returned
+// when the provider shipped — NOT a live capture (last shape check against the
+// live service: #505, 2026-07-28: `players_from`/`players_to` are unlocalized;
+// an unknown locale answers 200 with an empty doc set). A fixture can only
+// prove the parser, never what Nintendo serves today — probe live when
+// touching the parser (.claude/rules/psstore-full-game-is-not-every-game.md).
 const SEARCH_JSON = {
   response: {
     numFound: 2,
