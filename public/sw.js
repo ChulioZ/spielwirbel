@@ -22,17 +22,19 @@
  * deploy). See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v86';
+const CACHE = 'spielwirbel-shell-v87';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
 // (cache.addAll rejects on any 404). Fonts' own woff2 files are picked up lazily
 // by the cache-first handler on first use rather than listed here.
 //
-// The landing-page screenshots (/img/landing-*.webp, #438) are deliberately NOT
-// listed, for the same reason as icons/og-image.png: only a logged-OUT visitor
-// ever sees the landing page, and precaching them would cost every installed
-// user ~120 KB of downloads for images their app will never render.
+// The landing-page screenshots (/img/landing-*.<locale>.webp, #438/#457) are
+// deliberately NOT listed, for the same reason as icons/og-image.png: only a
+// logged-OUT visitor ever sees the landing page, and precaching them would cost
+// every installed user ~120 KB of downloads for images their app will never
+// render. Since #457 there is a set per locale, so listing them would cost that
+// again per language — the reasoning got stronger, not weaker.
 const SHELL = [
   '/index.html',
   '/styles.css',

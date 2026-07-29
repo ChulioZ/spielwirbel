@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * Landing-page product screenshots (issue #438).
+ * Landing-page product screenshots (issues #438, #457).
  *
  * The hero and the how-it-works section render committed static images. Nothing
  * else in the suite would notice if one of them broke, and both failure modes are
@@ -16,7 +16,15 @@
  *
  * The weight cap is the third half of the issue's constraint ("budget it like a
  * cover"): it stops a future regeneration from quietly dropping a multi-megabyte
- * PNG into the hero.
+ * PNG into the hero. Since #457 it bounds ONE LOCALE's set — what a single
+ * visitor actually downloads — because a flat total across every locale gets
+ * laxer per visitor with each language added, which is the wrong direction for
+ * the one budget guarding the page's first paint.
+ *
+ * #457's own guarantee is the parity one: every shipped locale has a COMPLETE
+ * set. It is the direct analogue of i18n-parity.test.js, and without it a third
+ * language ships English copy wrapped around English screenshots — silently,
+ * because the fallback in landingShots() renders a perfectly valid page.
  */
 
 const { test } = require('node:test');
@@ -26,26 +34,42 @@ const fs = require('fs');
 const path = require('path');
 
 const { app } = require('./helpers');
+const { SUPPORTED_LOCALES } = require('../public/js/locales');
 
 const ROOT = path.join(__dirname, '..');
 const VIEW = fs.readFileSync(path.join(ROOT, 'public/js/views-landing.js'), 'utf8');
 
-// Total committed weight of the landing imagery. Generous next to today's ~120 KB
-// so an honest re-crop never trips it, small enough that a full-resolution
-// screenshot does.
-const WEIGHT_BUDGET = 400 * 1024;
+// Per-locale weight budget: what one visitor's landing page can cost. Generous
+// next to today's ~120 KB per set so an honest re-crop never trips it, small
+// enough that a full-resolution screenshot does.
+const WEIGHT_BUDGET = 200 * 1024;
+
+// The three entries every locale owes. Named here rather than derived from one
+// locale's set, or a locale missing `vote` would define the requirement as "the
+// two I happen to have".
+const REQUIRED_SHOTS = ['shelfWide', 'shelfPhone', 'vote'];
 
 // The LANDING_SHOTS table, read out of the view rather than restated here — a
 // test constant hand-copied from the thing under test proves nothing
-// (.claude/rules/shared-constants-across-the-stack.md).
+// (.claude/rules/shared-constants-across-the-stack.md). Returns
+// { <locale>: [{ name, src, w, h }] }.
 function declaredShots() {
-  const table = VIEW.match(/const LANDING_SHOTS = \{([\s\S]*?)\n\};/);
+  const table = VIEW.match(/const LANDING_SHOTS = \{([\s\S]*?)\n\};\n/);
   assert.ok(table, 'views-landing.js still declares a LANDING_SHOTS table');
-  const shots = [...table[1].matchAll(
-    /(\w+):\s*\{\s*src:\s*'([^']+)',\s*w:\s*(\d+),\s*h:\s*(\d+)\s*\}/g
-  )].map(([, name, src, w, h]) => ({ name, src, w: Number(w), h: Number(h) }));
-  assert.ok(shots.length >= 3, 'every LANDING_SHOTS entry parsed');
-  return shots;
+  const byLocale = {};
+  for (const [, locale, body] of table[1].matchAll(/(\w+):\s*\{([\s\S]*?)\n {2}\},/g)) {
+    byLocale[locale] = [...body.matchAll(
+      /(\w+):\s*\{\s*src:\s*'([^']+)',\s*w:\s*(\d+),\s*h:\s*(\d+)\s*\}/g
+    )].map(([, name, src, w, h]) => ({ name, src, w: Number(w), h: Number(h) }));
+  }
+  assert.ok(Object.keys(byLocale).length > 0, 'at least one locale set parsed');
+  return byLocale;
+}
+
+// Flattened, for the assertions that don't care which locale an asset belongs to.
+function allShots() {
+  return Object.entries(declaredShots())
+    .flatMap(([locale, shots]) => shots.map((s) => ({ ...s, locale })));
 }
 
 // Minimal WebP dimension reader — enough for the chunk types Chrome's encoder
@@ -72,8 +96,29 @@ function webpSize(buf) {
   throw new Error(`unsupported WebP chunk ${fourcc}`);
 }
 
+test('every supported locale has a complete screenshot set', () => {
+  const byLocale = declaredShots();
+  for (const locale of SUPPORTED_LOCALES) {
+    const shots = byLocale[locale];
+    assert.ok(shots, `LANDING_SHOTS has no set for the shipped locale '${locale}'`);
+    assert.deepEqual(
+      shots.map((s) => s.name).sort(),
+      [...REQUIRED_SHOTS].sort(),
+      `the '${locale}' set must declare exactly ${REQUIRED_SHOTS.join(', ')}`
+    );
+  }
+  // …and nothing may ship a set for a locale the app does not offer: that asset
+  // is dead weight in the repo and nothing would ever render it.
+  for (const locale of Object.keys(byLocale)) {
+    assert.ok(
+      SUPPORTED_LOCALES.includes(locale),
+      `LANDING_SHOTS declares a set for '${locale}', which is not a shipped locale`
+    );
+  }
+});
+
 test('every landing screenshot the view references is actually served', async () => {
-  for (const shot of declaredShots()) {
+  for (const shot of allShots()) {
     const res = await request(app).get(shot.src);
     assert.equal(res.status, 200, `${shot.src} is served`);
     assert.match(res.headers['content-type'], /^image\//, `${shot.src} is served as an image`);
@@ -81,7 +126,7 @@ test('every landing screenshot the view references is actually served', async ()
 });
 
 test('the declared width/height match the real pixels, so the hero reserves its box', () => {
-  for (const shot of declaredShots()) {
+  for (const shot of allShots()) {
     const buf = fs.readFileSync(path.join(ROOT, 'public', shot.src));
     const real = webpSize(buf);
     assert.deepEqual(
@@ -92,16 +137,20 @@ test('the declared width/height match the real pixels, so the hero reserves its 
   }
 });
 
-test('the landing imagery stays inside its weight budget', () => {
-  const shots = declaredShots();
-  const bytes = shots.reduce(
-    (sum, s) => sum + fs.statSync(path.join(ROOT, 'public', s.src)).size,
-    0
-  );
-  assert.ok(
-    bytes <= WEIGHT_BUDGET,
-    `landing screenshots total ${(bytes / 1024).toFixed(0)} KB, budget is ${WEIGHT_BUDGET / 1024} KB`
-  );
+test("each locale's screenshot set stays inside its weight budget", () => {
+  // Per locale, because that is what a visitor downloads — of which <picture>
+  // then fetches only the matching width. Budgeting the committed total instead
+  // would halve this cap's strictness with every language added.
+  for (const [locale, shots] of Object.entries(declaredShots())) {
+    const bytes = shots.reduce(
+      (sum, s) => sum + fs.statSync(path.join(ROOT, 'public', s.src)).size,
+      0
+    );
+    assert.ok(
+      bytes <= WEIGHT_BUDGET,
+      `the '${locale}' screenshots total ${(bytes / 1024).toFixed(0)} KB, budget is ${WEIGHT_BUDGET / 1024} KB`
+    );
+  }
 });
 
 test('the <picture> breakpoint and the stylesheet agree on 720px', () => {
@@ -144,6 +193,21 @@ test('the <picture> breakpoint and the stylesheet agree on 720px', () => {
   // silent-green failure .claude/rules/css-text-assertions-strip-comments.md
   // describes, in a test whose whole job is catching an invisible 1px straddle.
   assert.ok(checked > 0, 'found at least one narrow landing @media block to check');
+});
+
+test('the render sites read the set through the locale resolver, never a fixed one', () => {
+  // The whole feature is that getLocale() decides at render time. A single
+  // `LANDING_SHOTS.de.shelfWide` left behind renders a valid page in the wrong
+  // language — no error, no broken image, just the half-translated result #457
+  // exists to remove. So: the table is read exactly once, by the resolver.
+  assert.match(
+    VIEW,
+    /function landingShots\(\)\s*\{\s*\n\s*return LANDING_SHOTS\[getLocale\(\)\]/,
+    'landingShots() resolves the set from getLocale()'
+  );
+  const uses = [...VIEW.matchAll(/LANDING_SHOTS\[/g)];
+  assert.equal(uses.length, 2, 'LANDING_SHOTS is subscripted only inside landingShots()');
+  assert.doesNotMatch(VIEW, /LANDING_SHOTS\.\w/, 'no render site reaches into a fixed locale');
 });
 
 test('the screenshots are informative images, not decoration', () => {

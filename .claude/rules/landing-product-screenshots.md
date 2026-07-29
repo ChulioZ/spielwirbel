@@ -1,11 +1,12 @@
-# Regenerating the landing-page product screenshots (#438)
+# Regenerating the landing-page product screenshots (#438, #457)
 
 The logged-out landing hero shows real screenshots of the app
-(`public/img/landing-*.webp`, referenced from `LANDING_SHOTS` in
-`public/js/views-landing.js`). They are **generated once and committed**, the same
-stance as `public/icons/og-image.png` and the PWA icons — there is no image
-tooling in this repo and no build step here. The full capture script lives in git
-history alongside this rule's PR; the parts worth not rediscovering are below.
+(`public/img/landing-<shot>.<locale>.webp`, referenced from `LANDING_SHOTS` in
+`public/js/views-landing.js` — **one set per shipped locale** since #457). They
+are **generated once and committed**, the same stance as
+`public/icons/og-image.png` and the PWA icons — there is no image tooling in this
+repo and no build step here. The full capture script lives in git history
+alongside this rule's PRs; the parts worth not rediscovering are below.
 
 ## 1. `chrome --screenshot` CANNOT take a phone-width screenshot
 
@@ -67,6 +68,35 @@ Seed the data through the real API against a throwaway `DATA_DIR`
 the round the **standard theme**, which is the palette the landing page itself
 renders on, so the screenshot sits in the hero instead of clashing with it.
 
+## 3b. Per locale: set it BEFORE boot, and seed the CONTENT too (#457)
+
+Two things, and the first one has no visible failure mode other than a German
+screenshot on an English page:
+
+- **`localStorage.setItem('locale', …)` must land before the app boots.**
+  `initLocale()` reads the key once at load, so setting it on a rendered page and
+  screenshotting gives the *previous* locale. localStorage needs an origin, so
+  the sequence is: navigate to `/` once (throwaway), set the key, then navigate to
+  the screen being captured. Assert `document.documentElement.lang` in the same
+  `Runtime.evaluate` that reads the geometry — it is the one cheap proof the
+  capture is in the language you think.
+- **Translating the chrome is not translating the screenshot.** The English set
+  gets its **own seed pass** — English round name, English-reading member names,
+  invented English game titles — because an English page showing a round called
+  „Donnerstagsrunde" holding „Die Krähenbrücke" is exactly the half-translated
+  impression #457 removed. Keep both seeds the same *shape* (12 games, 4 members,
+  2 finished sessions, 4 tags) so the two sets show the same badges and counts.
+
+The two finished sessions are **direct picks** (`POST …/sessions` with a
+`gameId`), not draws: a draw is random, so the set of rated games — and therefore
+which cards show a `Ø` badge rather than "new" — would change every run. One
+direct-pick session per rated game makes the shelf reproducible. Four ratings of
+`4,5,4,5` and `4,4,5,4` give the committed **Ø 4.5** and **Ø 4.3** (4.25 rounds
+up in `toFixed(1)`).
+
+Note that only the *round* content is seeded per locale — the app's own chrome
+follows the locale key, so nothing else needs duplicating.
+
 ## 4. Measure the crop height; don't guess it
 
 A crop that slices through a **label** looks broken; one that slices through
@@ -78,10 +108,18 @@ so read the geometry out of the page rather than eyeballing screenshots:
 [...document.querySelectorAll('.rail a, .rail button')].map((e) => e.getBoundingClientRect().bottom)
 ```
 
-At 1280 CSS wide that gave: rail ends **781**, card row 2 ends **707**, row 3's
-cover art spans **723–891**. Hence the committed height of **790** — the only
-band where the whole rail fits *and* the cut lands inside artwork. Re-measure
-after any rail or card change; the number is not portable.
+At 1280 CSS wide that gave (2026-07-26): rail ends **781**, card row 2 ends
+**707**, row 3's cover art spans **723–891**. Hence the committed height of
+**790** — the only band where the whole rail fits *and* the cut lands inside
+artwork. Re-measure after any rail or card change; the number is not portable.
+
+Re-measured for #457 (2026-07-29) it had already moved: rail **781**, card row 2
+ends **682**, row 3 ends **916**. 790 still works — it clears the rail and lands
+~90px into row 3's artwork — but row 2's bottom shifted 25px in three days,
+purely because the English titles fit on one line where two German ones wrapped.
+**The band is narrower than it looks and it moves with the seed content**, so
+re-run the geometry probe for every set you shoot rather than reusing a number
+from the other locale.
 
 ## 5. Two widths, because one cannot work
 
@@ -97,26 +135,58 @@ phone, 1.79× at ≥1280px, where `--w-read` caps the column at 900px). That is 
 decode-memory budget from `.claude/rules/provider-cover-sizing.md` applied to one
 big image instead of many small ones.
 
+The committed sizes come out of exactly two `Emulation.setDeviceMetricsOverride`
+calls, and they are worth writing down because the ratios are not round numbers:
+
+| Asset | CSS viewport | `deviceScaleFactor` | File |
+|---|---|---|---|
+| `landing-shelf-wide` | 1280 × 790 | 1.25 | 1600 × 988 |
+| `landing-shelf-phone`, `landing-vote` | 390 × 780 | 1.6 | 624 × 1248 |
+
+(988 rather than 987.5: Chrome rounds the raster up. Declare what the file says,
+which is what `test/landing-shots.test.js` reads back out of the WebP header.)
+
 ## 6. What the test can and cannot see
 
 `test/landing-shots.test.js` parses `LANDING_SHOTS` out of the view (never a
 hand-copied duplicate — `.claude/rules/shared-constants-across-the-stack.md`) and
 asserts each path is served, that the declared `width`/`height` equal the file's
-**real** pixels (it parses the WebP header; Chrome writes the **VP8X** extended
-chunk, whose canvas size is two 24-bit LE values at offsets 24 and 27), and that
-the total weight stays under budget. All four assertions were verified by
-breaking the code on purpose.
+**real** pixels, that **every** `SUPPORTED_LOCALES` entry has a complete set of
+three (and that no set exists for a locale the app doesn't offer), that the
+render sites go through `landingShots()` rather than a hardcoded locale, and that
+each locale's weight stays under budget. All were verified by breaking the code
+on purpose.
+
+Three details in there are load-bearing:
+
+- **Chrome does not always write the same WebP chunk.** The phone captures come
+  out `VP8X` (extended: canvas size as two 24-bit LE values at offsets 24 and 27)
+  and the wide one `VP8 ` (lossy simple: 14-bit width/height after the start
+  code). The reader handles `VP8X`/`VP8 `/`VP8L` and **throws** on anything else
+  rather than guessing — a silently mis-read header would fail the dimension
+  assertion for a reason that has nothing to do with the image.
+- **The weight budget is per locale, not a committed total.** A flat total gets
+  laxer per visitor with each language added, which is backwards for the one
+  number guarding the page's first paint. Today: ~118 KB (en), ~120 KB (de)
+  against a 200 KB cap; a `<picture>` fetches only one of the two shelf widths,
+  so the real download is smaller again.
+- **The parity test is what a third language trips.** Adding a `lang/fr.js` and a
+  `LOCALES` row without shooting the screenshots would otherwise ship French copy
+  around German images — `landingShots()` falls back rather than breaking, so
+  nothing renders wrong enough to notice.
 
 It cannot see whether the screenshot depicts anything sensible — a capture of an
-error page passes every assertion. **Look at the image** before committing.
+error page, or of the *wrong locale*, passes every assertion. **Look at every
+image** before committing.
 
 ## 7. These images are deliberately NOT in the service worker's `SHELL`
 
 Only a logged-**out** visitor ever sees the landing page, so precaching them
 would cost every installed user ~120 KB for images their app never renders — the
-same reasoning that keeps `og-image.png` out. But editing `styles.css` or
-`views-landing.js` **does** require the `CACHE` bump
-(`.claude/rules/pwa-service-worker.md`), since both *are* in `SHELL`.
+same reasoning that keeps `og-image.png` out. Since #457 that is ~120 KB **per
+locale**, of which any one visitor renders at most one set, so the argument only
+got stronger. But editing `styles.css` or `views-landing.js` **does** require the
+`CACHE` bump (`.claude/rules/pwa-service-worker.md`), since both *are* in `SHELL`.
 
 **Related:** `.claude/rules/provider-cover-hotlinking.md` (why no real cover art),
 `.claude/rules/preview-pane-paint-artifacts.md` (why the Browser pane cannot
