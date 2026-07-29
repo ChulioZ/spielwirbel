@@ -314,6 +314,8 @@ I18N.de = {
   'lookup.noResults': 'Keine Treffer gefunden',
   'lookup.error': 'Spieldatenbank nicht erreichbar',
   'lookup.fillFrom': 'Von {provider} übernehmen',
+  // Names the suggestion listbox for screen readers; never rendered on screen.
+  'lookup.suggestions': 'Suchvorschläge',
 
   'detail.viewSource': 'Auf {provider} ansehen',
   'detail.linkProvider': 'Mit Anbieter verknüpfen',

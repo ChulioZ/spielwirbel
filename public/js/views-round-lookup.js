@@ -73,22 +73,56 @@ function lookupDetail(rid, r) {
   return api('GET', `/api/rounds/${rid}/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}&lang=${encodeURIComponent(getLocale())}`);
 }
 
+// Unique per attached lookup, so the option ids `aria-activedescendant` points
+// at can never collide (both sheets hard-code the same `#lookupMenu` id).
+let lookupSeq = 0;
+
 // Wire search-as-you-type merged provider suggestions onto an input + menu.
 // onPick(result) fires when a suggestion is chosen; onInput() (optional) fires
-// on every manual edit. Returns { closeMenu, search }: closeMenu dismisses the
-// menu programmatically (e.g. after a pick), search(q) runs a lookup immediately
-// (e.g. for a prefilled value on open). Shared by showAddGame and showLinkProvider
-// so the two lookups stay in sync.
+// on every manual edit. Returns { closeMenu, search, isOpen }: closeMenu dismisses
+// the menu programmatically (e.g. after a pick), search(q) runs a lookup immediately
+// (e.g. for a prefilled value on open), isOpen() reports whether the menu is
+// showing — the sheets ask before letting Escape through (see below). Shared by
+// showAddGame and showLinkProvider so the two lookups stay in sync.
+//
+// Keyboard model (#542): this is an APG *editable combobox with a listbox
+// popup*. DOM focus stays in the input at all times and ArrowDown/ArrowUp move
+// an `aria-activedescendant` highlight, which is what makes the whole menu
+// operable without touching the mousedown-before-blur race the mouse path needs
+// — Tab moving focus into the menu would blur the input and destroy the very
+// row being reached, so every menu element is `tabindex="-1"` and stays out of
+// the tab order (and out of the sheet's focus trap).
 function attachLookup(round, input, menu, onPick, onInput) {
   const rid = round.id;
   const active = enabledProviders(round);
   // Zero providers enabled is a legitimate configuration (#294): the field stays
   // a plain title input with no dropdown. Return inert stubs so callers can keep
-  // calling closeMenu()/search() unconditionally.
-  if (!active.length) return { closeMenu() {}, search() {} };
+  // calling closeMenu()/search()/isOpen() unconditionally.
+  if (!active.length) return { closeMenu() {}, search() {}, isOpen: () => false };
 
   let searchTimer;
   let searchSeq = 0; // guards against out-of-order responses
+  const uid = ++lookupSeq;
+
+  // Combobox wiring. The menu keeps whatever id the sheet gave it; only the
+  // option ids need to be unique across sheet opens.
+  if (!menu.id) menu.id = 'lookupMenu-' + uid;
+  menu.setAttribute('role', 'listbox');
+  menu.setAttribute('aria-label', t('lookup.suggestions'));
+  input.setAttribute('role', 'combobox');
+  input.setAttribute('aria-expanded', 'false');
+  input.setAttribute('aria-controls', menu.id);
+  input.setAttribute('aria-autocomplete', 'list');
+
+  // One entry per pickable provider, in visual order: { el, key, provider, pick }.
+  // A merged row contributes its primary (the title button) plus one entry per
+  // *additional* provider badge — badge 0 is the primary again, so including it
+  // would make Down stop twice on the same choice.
+  let options = [];
+  let activeIdx = -1;
+  // The identity of the active option, so a re-render can find it again — see
+  // lookupOptionIndex in lookup-nav.js.
+  let activeRef = null;
 
   // The menu is `position: fixed` (see styles.css), so it floats free of the
   // sheet's scroll box and can't be clipped by it. That means we place it
@@ -125,6 +159,7 @@ function attachLookup(round, input, menu, onPick, onInput) {
   const reposition = () => { if (!menu.hidden) positionMenu(); };
   function openMenu() {
     menu.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
     positionMenu();
     window.addEventListener('scroll', reposition, true);
     window.addEventListener('resize', reposition);
@@ -133,12 +168,57 @@ function attachLookup(round, input, menu, onPick, onInput) {
   function closeMenu() {
     menu.hidden = true;
     menu.innerHTML = '';
+    // Clear the highlight with the DOM it pointed at: a stale
+    // aria-activedescendant names an element that no longer exists, which some
+    // screen readers report as the still-current option.
+    options = [];
+    activeIdx = -1;
+    activeRef = null;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
     window.removeEventListener('scroll', reposition, true);
     window.removeEventListener('resize', reposition);
   }
+  const isOpen = () => !menu.hidden;
   function showMenuMsg(msg) {
-    menu.innerHTML = `<div class="lookup__msg muted">${esc(msg)}</div>`;
+    // role="presentation" so a status line never joins the listbox as a
+    // pickable option — the menu must contain options and nothing else.
+    menu.innerHTML = `<div class="lookup__msg muted" role="presentation">${esc(msg)}</div>`;
+    options = [];
+    activeIdx = -1;
+    input.removeAttribute('aria-activedescendant');
     openMenu();
+  }
+
+  // Keep the active row visible without touching any other scroll container:
+  // the menu is `position: fixed`, so it is the offsetParent of its rows, and
+  // scrollIntoView() here could scroll the sheet (or the page) behind it.
+  function scrollIntoMenu(el) {
+    const row = el.closest('.lookup__opt') || el;
+    const top = row.offsetTop;
+    const bottom = top + row.offsetHeight;
+    if (top < menu.scrollTop) menu.scrollTop = top;
+    else if (bottom > menu.scrollTop + menu.clientHeight) menu.scrollTop = bottom - menu.clientHeight;
+  }
+
+  function setActive(idx) {
+    const prev = options[activeIdx];
+    if (prev) {
+      prev.el.classList.remove('is-active');
+      prev.el.setAttribute('aria-selected', 'false');
+    }
+    activeIdx = idx;
+    const next = options[idx];
+    if (!next) {
+      activeRef = null;
+      input.removeAttribute('aria-activedescendant');
+      return;
+    }
+    next.el.classList.add('is-active');
+    next.el.setAttribute('aria-selected', 'true');
+    input.setAttribute('aria-activedescendant', next.el.id);
+    activeRef = { key: next.key, provider: next.provider };
+    scrollIntoMenu(next.el);
   }
 
   function runSearch(q) {
@@ -160,36 +240,64 @@ function attachLookup(round, input, menu, onPick, onInput) {
         return showMenuMsg(anyFulfilled ? t('lookup.noResults') : t('lookup.error'));
       }
       menu.innerHTML = '';
-      groups.forEach((g) => {
+      options = [];
+      // Both events, because the two input modes need different ones and each is
+      // useless for the other: mousedown fires before the input's blur tears the
+      // menu down (a click listener alone never runs for a mouse pick), while a
+      // keyboard/AT activation only ever dispatches click. `done` keeps a real
+      // pointer click — which fires both — from picking twice.
+      const bindPick = (el, member) => {
+        let done = false;
+        const fire = (e) => {
+          e.preventDefault();
+          if (done) return;
+          done = true;
+          onPick(member);
+        };
+        el.addEventListener('mousedown', fire);
+        el.addEventListener('click', fire);
+        return fire;
+      };
+      groups.forEach((g, gi) => {
         const thumb = g.thumbnail
           ? `<img class="lookup__thumb" src="${esc(g.thumbnail)}" alt="" loading="lazy" />`
           : `<span class="lookup__thumb lookup__thumb--none" aria-hidden="true"><i class="ti ${g.primary.provider === 'bgg' ? 'ti-dice-3' : 'ti-device-gamepad-2'}"></i></span>`;
-        const row = h(`<div class="lookup__opt">
-            <button type="button" class="lookup__pick">${thumb}<span class="lookup__title">${esc(g.title)}</span></button>
-            <span class="lookup__badges"></span>
+        // The row is presentational: a listbox's children must be its options,
+        // and here the options are the title button plus the provider badges.
+        const row = h(`<div class="lookup__opt" role="presentation">
+            <button type="button" class="lookup__pick" id="lk${uid}-${gi}-0" role="option" aria-selected="false" tabindex="-1">${thumb}<span class="lookup__title">${esc(g.title)}</span></button>
+            <span class="lookup__badges" role="presentation"></span>
           </div>`);
-        // mousedown (not click) so it fires before the input's blur closes the
-        // menu. The title/thumb picks the highest-priority provider…
-        row.querySelector('.lookup__pick')
-          .addEventListener('mousedown', (e) => { e.preventDefault(); onPick(g.primary); });
+        // The title/thumb picks the highest-priority provider…
+        const pickBtn = row.querySelector('.lookup__pick');
+        options.push({ el: pickBtn, key: g.key, provider: g.primary.provider, pick: bindPick(pickBtn, g.primary) });
         // …and each badge picks that specific provider's hit.
         const badges = row.querySelector('.lookup__badges');
-        g.members.forEach((m) => {
+        g.members.forEach((m, mi) => {
           const name = t('lookup.fillFrom', { provider: providerLabel(m.provider) });
           const logo = providerLogo(m.provider);
           // Logo badges for known providers; a text pill still labels any
           // provider without a bundled mark. Either way the button is labelled.
+          const attrs = `id="lk${uid}-${gi}-${mi + 1}" role="option" aria-selected="false" tabindex="-1" title="${esc(name)}" aria-label="${esc(name)}"`;
           const badge = logo
-            ? h(`<button type="button" class="lookup__badge lookup__badge--logo" title="${esc(name)}" aria-label="${esc(name)}">${logo}</button>`)
-            : h(`<button type="button" class="lookup__badge" title="${esc(name)}" aria-label="${esc(name)}">${esc(providerLabel(m.provider))}</button>`);
-          badge.addEventListener('mousedown', (e) => { e.preventDefault(); onPick(m); });
+            ? h(`<button type="button" class="lookup__badge lookup__badge--logo" ${attrs}>${logo}</button>`)
+            : h(`<button type="button" class="lookup__badge" ${attrs}>${esc(providerLabel(m.provider))}</button>`);
+          const fire = bindPick(badge, m);
+          // Badge 0 is the primary — the same choice the title button above
+          // already offers — so it is a mouse shortcut, not a second keyboard
+          // stop. Every *further* provider is a distinct choice and joins the
+          // vertical list, which is what gives the badges a keyboard path at all.
+          if (mi > 0) options.push({ el: badge, key: g.key, provider: m.provider, pick: fire });
           badges.appendChild(badge);
         });
         menu.appendChild(row);
       });
       // A muted, non-clickable hint while a slower provider is still pending.
-      if (pending > 0) menu.appendChild(h(`<div class="lookup__msg muted">${esc(t('lookup.loadingMore'))}</div>`));
+      if (pending > 0) menu.appendChild(h(`<div class="lookup__msg muted" role="presentation">${esc(t('lookup.loadingMore'))}</div>`));
       openMenu();
+      // Re-locate the highlight by identity, never by index: this re-render may
+      // have inserted a faster provider's rows above it or re-sorted around it.
+      setActive(lookupOptionIndex(options, activeRef));
     }
 
     active.forEach((provider, prio) => {
@@ -204,12 +312,43 @@ function attachLookup(round, input, menu, onPick, onInput) {
 
   input.addEventListener('input', () => {
     if (onInput) onInput();
+    // Typing invalidates the highlight — the next render's rows answer a
+    // different query, so carrying a selection into them would pick a game the
+    // user is no longer looking at.
+    activeRef = null;
     const q = input.value.trim();
     clearTimeout(searchTimer);
     if (q.length < 2) return closeMenu();
     searchTimer = setTimeout(() => runSearch(q), 300);
   });
   input.addEventListener('blur', () => setTimeout(closeMenu, 150));
+
+  // Keyboard operation (#542). Focus never leaves the input, so this one handler
+  // owns the whole menu.
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      // Only when the menu is actually open — with it closed, Escape still
+      // belongs to the sheet. The sheets' own handler runs first (document,
+      // capture phase) and defers to isOpen(), so this is the fallback for any
+      // caller that isn't a sheet.
+      if (!isOpen()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu();
+      return;
+    }
+    if (e.key === 'Enter') {
+      const opt = options[activeIdx];
+      if (opt) opt.pick(e); // preventDefault is the pick handler's own job
+      return;
+    }
+    if (!isOpen()) return;
+    const next = nextLookupIndex(activeIdx, options.length, e.key);
+    // null = not a key this widget owns; leave the caret keys alone.
+    if (next === null) return;
+    e.preventDefault(); // ArrowUp/Down would otherwise jump the caret
+    setActive(next);
+  });
 
   // Kick off a search immediately (no debounce), respecting the same
   // minimum-length guard as typing. Used to search a prefilled value on open.
@@ -220,7 +359,7 @@ function attachLookup(round, input, menu, onPick, onInput) {
     runSearch(q);
   }
 
-  return { closeMenu, search };
+  return { closeMenu, search, isOpen };
 }
 
 // Opens as a bottom sheet over the current screen (usually the Regal).
@@ -299,8 +438,23 @@ function showAddGame(round) {
     closeSheet(addedWhileOpen ? () => showRound(round.id, 'regal') : undefined);
   };
 
+  // Assigned below by attachLookup; the Escape handler asks it whether the
+  // lookup menu is open (it can only fire long after that assignment).
+  let lookup = null;
   const onKey = (e) => {
-    if (e.key === 'Escape') dismiss();
+    if (e.key !== 'Escape') return;
+    // The open lookup menu owns Escape (#542) — dismissing a dropdown must not
+    // tear down the whole sheet and discard everything typed into it. This
+    // handler is on document/capture, so it runs BEFORE the input's own keydown
+    // listener and has to make the decision here rather than letting the lookup
+    // stop the event; stopPropagation then keeps the two from both acting.
+    if (lookup && lookup.isOpen()) {
+      e.preventDefault();
+      e.stopPropagation();
+      lookup.closeMenu();
+      return;
+    }
+    dismiss();
   };
   document.addEventListener('keydown', onKey, true);
   openSheet(backdrop, onKey);
@@ -449,7 +603,6 @@ function showAddGame(round) {
   // --- Search-as-you-type suggestions (PlayStation Store + BoardGameGeek + Steam) ---
   const titleInput = form.querySelector('#title');
   const menu = form.querySelector('#lookupMenu');
-  let lookup; // set below via attachLookup; pickSuggestion uses it to close the menu
 
   // Fill the player controls from a provider detail object.
   function applyDetail(d) {
@@ -559,7 +712,19 @@ function showLinkProvider(round, game) {
   const form = backdrop.querySelector('.sheet');
   document.body.appendChild(backdrop);
 
-  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  // See showAddGame: an open lookup menu owns Escape, so it can be dismissed
+  // without losing the sheet (#542).
+  let lookup = null;
+  const onKey = (e) => {
+    if (e.key !== 'Escape') return;
+    if (lookup && lookup.isOpen()) {
+      e.preventDefault();
+      e.stopPropagation();
+      lookup.closeMenu();
+      return;
+    }
+    closeSheet();
+  };
   document.addEventListener('keydown', onKey, true);
   openSheet(backdrop, onKey);
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
@@ -571,7 +736,7 @@ function showLinkProvider(round, game) {
   input.value = game.title;
 
   // Wire the shared lookup; a manual edit clears the pending match panel.
-  const lookup = attachLookup(round, input, menu, pickSuggestion, () => { resultBox.innerHTML = ''; });
+  lookup = attachLookup(round, input, menu, pickSuggestion, () => { resultBox.innerHTML = ''; });
   // The title is already filled in, so search for it right away — setting
   // input.value above doesn't fire an 'input' event, so trigger it explicitly.
   lookup.search(game.title);

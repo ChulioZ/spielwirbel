@@ -12,11 +12,12 @@ const assert = require('node:assert/strict');
 const { trapFocus, FOCUSABLE } = require('../public/js/focus-trap');
 
 // --- minimal DOM double -----------------------------------------------------
-function makeEl(name, { focusable = true, hidden = false } = {}) {
+function makeEl(name, { focusable = true, hidden = false, tabindex = null } = {}) {
   return {
     name, focusable, hidden,
     offsetParent: hidden ? null : {},
     getBoundingClientRect: () => (hidden ? { width: 0, height: 0 } : { width: 10, height: 10 }),
+    getAttribute: (attr) => (attr === 'tabindex' ? tabindex : null),
     closest: () => null,
     focus() { global.document.activeElement = this; },
   };
@@ -107,6 +108,26 @@ test('hidden controls are skipped, so Tab wraps across the visible ones', () => 
   press('Tab');
   assert.equal(global.document.activeElement, a);
   // …and `gone` is never the wrap target going backwards either.
+  global.document.activeElement = a;
+  press('Tab', true);
+  assert.equal(global.document.activeElement, c);
+});
+
+// The FOCUSABLE selector spells `:not([tabindex="-1"])` out only in its last
+// entry, so a *native* control carrying it — `button:not([disabled])` — matched
+// anyway. The lookup menu's options are exactly that shape (#542): buttons the
+// browser never tabs to. Counting one as the container's last element would put
+// the wrap target on an element Tab can never reach, letting a Tab escape the
+// sheet before the next one pulls focus back.
+test('a control with tabindex="-1" is not a wrap target', () => {
+  const a = makeEl('a');
+  const c = makeEl('c');
+  const opt = makeEl('lookup-option', { tabindex: '-1' });
+  const { press } = install([a, c, opt]);
+  global.document.activeElement = c;
+  assert.equal(press('Tab'), true, 'c is the real last element, so Tab must wrap');
+  assert.equal(global.document.activeElement, a);
+  // …and backwards from the first element, the wrap target skips it too.
   global.document.activeElement = a;
   press('Tab', true);
   assert.equal(global.document.activeElement, c);

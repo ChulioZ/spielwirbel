@@ -451,6 +451,8 @@ public/
                      cross-provider ranking; folds punctuation + diacritics)
     lookup-title.js  which title a picked provider match fills in (BGG keeps the
                      matched name, so a German search stays German)
+    lookup-nav.js    which suggestion the keyboard has active in the lookup
+                     dropdown, and how it survives a re-render (issue #542)
     focus-trap.js    keeps Tab inside an open sheet + restores focus on close
     session-path.js  URLs for the transient session-flow screens, so browser/OS
                      Back steps through the vote wizard (issue #329)

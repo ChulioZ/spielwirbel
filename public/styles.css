@@ -3017,7 +3017,12 @@ kbd {
   font-weight: 600;
   cursor: pointer;
 }
-.lookup__pick:hover { background: var(--brand-tint); }
+/* `.is-active` is the keyboard highlight (#542): DOM focus stays in the input,
+   so there is no :focus-visible ring to rely on — the active option has to look
+   picked on its own. Same tint as hover, deliberately, so both input modes point
+   at the row the same way. */
+.lookup__pick:hover,
+.lookup__pick.is-active { background: var(--brand-tint); }
 /* One badge per contributing provider on a merged (same-title) row; clicking a
    badge fills the sheet from that provider. Compact brand-logo chips, so the
    title keeps most of the row width. */
@@ -3056,8 +3061,10 @@ kbd {
   background: var(--surface);
 }
 .lookup__badge--logo svg { width: 100%; height: 100%; display: block; }
-.lookup__badge:hover { background: var(--brand-tint); border-color: var(--brand); }
-.lookup__badge--logo:hover { background: var(--brand-tint-soft); border-color: var(--brand); }
+.lookup__badge:hover,
+.lookup__badge.is-active { background: var(--brand-tint); border-color: var(--brand); }
+.lookup__badge--logo:hover,
+.lookup__badge--logo.is-active { background: var(--brand-tint-soft); border-color: var(--brand); }
 .lookup__thumb {
   flex: none;
   width: 40px;

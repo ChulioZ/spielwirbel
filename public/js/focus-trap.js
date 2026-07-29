@@ -28,6 +28,13 @@ const FOCUSABLE = [
 // here, since nothing in the app sets a positive tabindex.
 function focusables(root) {
   return [...root.querySelectorAll(FOCUSABLE)].filter((el) => {
+    // `tabindex="-1"` is only spelled out in the LAST selector above, so a
+    // native control carrying it (a button, an input) still matches one of the
+    // element selectors and would be counted. It must not be: the trap's first/
+    // last elements decide where Tab wraps, and the browser never stops on a
+    // -1 element — so an out-of-order edge lets one Tab escape the sheet. The
+    // lookup menu's options are exactly this shape (#542).
+    if (el.getAttribute && el.getAttribute('tabindex') === '-1') return false;
     if (el.closest('[aria-hidden="true"]')) return false;
     // offsetParent is null for display:none subtrees; position:fixed elements
     // report null too, hence the rect fallback (the lookup menu is fixed).
