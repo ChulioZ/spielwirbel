@@ -71,8 +71,9 @@ nicht stillschweigend auf 10 Jahre „korrigieren".
 2. Postfach: Ordner `Meldungen` nach demselben Stichtag aufräumen; erledigte
    Support-Korrespondenz löschen. Ebenso die **gespeicherten Meldungen** der
    `contact_notices`-Tabelle (Panel-Karte „Meldungen“, #272) nach demselben
-   Stichtag per direktem DB-Zugriff löschen — ein Lösch-Endpunkt existiert
-   (wie beim Moderations-Log) noch nicht.
+   Stichtag im Panel löschen (#389; eine **entschiedene** Meldung verlangt
+   `?force=1` — genau der Fall der Jahresprüfung, siehe
+   `.claude/rules/admin-moderation-surface.md`).
 3. Bearbeitete Feedback-Einträge löschen (Panel-Löschung im Admin-Panel,
    #389).
 4. Prüfung mit Datum in diesem Dokument unter „Durchgeführte Prüfungen"
