@@ -6,6 +6,12 @@ const steam = require('../lib/providers/steam');
 
 // A storesearch response mixes full games (type 'app') with a bundle (type
 // 'sub'), which must be filtered out.
+// PROVENANCE: hand-written in the shape store.steampowered.com returned when
+// the provider shipped — NOT a live capture. Load-bearing premise: category
+// *ids* (multiplayer/co-op) are stable across locales while their description
+// strings are localized (re-confirmed in #505's live sweep, 2026-07-28). A
+// fixture can only prove the parser, never what Steam serves today — probe
+// live when touching it (.claude/rules/psstore-full-game-is-not-every-game.md).
 const SEARCH_JSON = {
   total: 3,
   items: [
