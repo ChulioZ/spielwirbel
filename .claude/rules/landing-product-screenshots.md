@@ -80,12 +80,19 @@ screenshot on an English page:
   the screen being captured. Assert `document.documentElement.lang` in the same
   `Runtime.evaluate` that reads the geometry — it is the one cheap proof the
   capture is in the language you think.
-- **Translating the chrome is not translating the screenshot.** The English set
-  gets its **own seed pass** — English round name, English-reading member names,
-  invented English game titles — because an English page showing a round called
-  „Donnerstagsrunde" holding „Die Krähenbrücke" is exactly the half-translated
-  impression #457 removed. Keep both seeds the same *shape* (12 games, 4 members,
-  2 finished sessions, 4 tags) so the two sets show the same badges and counts.
+- **Translating the chrome is not translating the screenshot.** Each locale gets
+  its **own seed pass** — localized round name, member names and invented game
+  titles — because an English page showing a round called „Donnerstagsrunde"
+  holding „Die Krähenbrücke" is exactly the half-translated impression #457
+  removed. Keep every seed the same *shape* (12 games, 4 members, 2 finished
+  sessions, 4 tags) so all sets show the same badges and counts.
+
+**Reshoot every locale in one run.** #457 re-captured the German set alongside the
+new English one even though #438's assets were correct, so both come from the same
+build — otherwise the sets drift apart one PR at a time, and the next person
+cannot tell whether a difference between two locales is the app or the seed (§4).
+The seeds therefore live in the script for *all* locales, not just the one being
+added.
 
 The two finished sessions are **direct picks** (`POST …/sessions` with a
 `gameId`), not draws: a draw is random, so the set of rated games — and therefore
@@ -113,13 +120,18 @@ At 1280 CSS wide that gave (2026-07-26): rail ends **781**, card row 2 ends
 **790** — the only band where the whole rail fits *and* the cut lands inside
 artwork. Re-measure after any rail or card change; the number is not portable.
 
-Re-measured for #457 (2026-07-29) it had already moved: rail **781**, card row 2
-ends **682**, row 3 ends **916**. 790 still works — it clears the rail and lands
-~90px into row 3's artwork — but row 2's bottom shifted 25px in three days,
-purely because the English titles fit on one line where two German ones wrapped.
-**The band is narrower than it looks and it moves with the seed content**, so
-re-run the geometry probe for every set you shoot rather than reusing a number
-from the other locale.
+Re-measured for #457 (2026-07-30) the English set reads: rail **781**, card row 2
+ends **682**, row 3 ends **916** — 25px above the numbers above. 790 still works
+(it clears the rail and lands ~90px into row 3's artwork), and the shift is
+**seed content, not app drift**: reshooting the German set in the same run
+reproduced row 2 at exactly **707** again, because two German titles wrap to a
+second line where the English ones fit on one.
+
+That is the lesson — **the band moves with the content, not just with the code**,
+so re-run the probe for every set you shoot rather than reusing the other
+locale's number. It also makes the reshoot cheap insurance: capturing both
+locales in one run is the only way to know whether a difference between them is
+the app changing or the words changing.
 
 ## 5. Two widths, because one cannot work
 
