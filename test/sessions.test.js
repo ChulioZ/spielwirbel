@@ -361,16 +361,63 @@ test('a session started without guests grows no guests key', async () => {
   const drawn = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1 });
   assert.equal('guests' in drawn.body.session, false);
 
-  // Same for an empty list, and for the direct-pick flow, which ignores guests
-  // entirely (out of scope: it has no voting phase).
+  // Same for an empty list — and for the direct-pick flow, which since #532
+  // takes guests too and so has to observe the identical discipline.
   const empty = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1, guests: [] });
   assert.equal('guests' in empty.body.session, false);
   const game = drawn.body.games[0];
   const direct = await request(app)
     .post(`/api/rounds/${round.id}/sessions`)
-    .send({ gameId: game.id, guests: ['Dana'] });
+    .send({ gameId: game.id, guests: [] });
   assert.equal(direct.status, 201);
   assert.equal('guests' in direct.body.session, false);
+});
+
+// #532. The direct-play sheet has no voting phase, so the payoff is not the vote
+// but WINNER ATTRIBUTION: the results screen's winner chips come from
+// sessionPeople() (members ∪ guests), so before this a guest who won a
+// directly-started game could not be recorded at all — the only workarounds were
+// to make them a permanent member or to use the draw flow instead.
+test('the direct-pick flow stores guests, and one can be recorded as the winner', async () => {
+  const round = await createRound(request);
+  const game = await addGame(round.id, { title: 'A' });
+  const started = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ gameId: game.id, guests: ['  Dana  ', ''] });
+
+  assert.equal(started.status, 201);
+  // Trimmed, blanks dropped and the id minted server-side, exactly like the draw
+  // path — both modes go through the one resolveGuests().
+  assert.equal(started.body.session.guests.length, 1);
+  const guest = started.body.session.guests[0];
+  assert.equal(guest.name, 'Dana');
+  assert.match(guest.id, /^[0-9a-f]{16}$/);
+  // Both start modes report the minted guests at the top level, not just inside
+  // the session blob — the ids exist nowhere client-side until this response, so
+  // a shape that differed by mode would strand one of them.
+  assert.deepEqual(started.body.guests, started.body.session.guests);
+
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${started.body.session.id}/finish`)
+    .send({ finished: true, winnerIds: [guest.id] });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.winnerIds, [guest.id]);
+});
+
+// Guests count toward the draw pool's player range, and it would be an easy
+// slip to let that arithmetic leak into direct-pick — where there is no pool to
+// filter and the user has already named the game they are playing. A guest must
+// never be able to make a chosen game unplayable.
+test('a guest does not filter the direct-pick game by its player range', async () => {
+  const round = await createRound(request); // Alice + Bob
+  const game = await addGame(round.id, { title: 'Two', minPlayers: '2', maxPlayers: '2' });
+
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ gameId: game.id, guests: ['Dana', 'Eli'] }); // 4 at a 2-player game
+
+  assert.equal(res.status, 201);
+  assert.equal(res.body.session.guests.length, 2);
 });
 
 // Guests sit at the table, so they count toward the player range — the whole

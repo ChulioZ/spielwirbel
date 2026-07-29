@@ -443,6 +443,8 @@ public/
     session-people.js who took part in ONE session (members who joined + that
                      session's guests) and how a guest name is labelled; also
                      holds the guest cap routes/sessions.js enforces (issue #458)
+    guest-picker.js  the guest name field (chips + input), shared by the two
+                     screens that start a session (issue #532)
     swr.js           stale-while-revalidate cache: views render instantly from
                      the last known data while a background fetch refreshes
     lookup-group.js  collapses same-title provider hits into one multi-badge row

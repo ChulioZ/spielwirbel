@@ -26,15 +26,7 @@ function showStartSession(round) {
         <div id="seatMount"></div>
         <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
       </div>
-      <div class="field">
-        <label for="guestName">${esc(t('startSession.guestsLabel'))}</label>
-        <div class="guest-list" id="guestList"></div>
-        <div class="row">
-          <input id="guestName" class="input" maxlength="${GUEST_NAME_MAX}" placeholder="${esc(t('startSession.guestPlaceholder'))}" />
-          <button type="button" class="btn" id="guestAdd">${iconText('ti-plus', t('startSession.guestAdd'))}</button>
-        </div>
-        <div class="muted field__hint">${esc(t('startSession.guestsNote'))}</div>
-      </div>
+      <div id="guestMount"></div>
       <div class="field" id="gamesFilterField" hidden>
         <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
         <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
@@ -74,7 +66,14 @@ function showStartSession(round) {
   const joining = new Set(round.members.map((m) => m.id));
   // Guests (#458): plain names, held only here until the draw POSTs them — the
   // server mints their ids. Frozen at the draw, exactly like the seat selection.
-  const guests = [];
+  // The field is shared with the direct-play sheet (#532); its callback names
+  // `seatTable` and `updateHint`, both declared below, which is safe because it
+  // only ever runs on a click (.claude/rules/frontend-script-load-order.md).
+  const guestPicker = renderGuestPicker(t('startSession.guestsNote'), () => {
+    seatTable.refreshSeats();
+    updateHint();
+  });
+  const guests = guestPicker.guests;
   const playerCount = () => joining.size + guests.length;
 
   // Games matching the tag filter, whose player range fits the joining count.
@@ -113,47 +112,8 @@ function showStartSession(round) {
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   form.querySelector('#seatMount').replaceWith(seatTable);
+  form.querySelector('#guestMount').replaceWith(guestPicker);
   updateHint();
-
-  // Guest chips: one removable pill per named guest, re-rendered whole on every
-  // change (the list is at most MAX_SESSION_GUESTS long). The table's centre
-  // count and the pool preview both follow, since a guest changes the player
-  // count exactly like a seat does.
-  const guestList = form.querySelector('#guestList');
-  const guestInput = form.querySelector('#guestName');
-  const renderGuests = () => {
-    guestList.innerHTML = '';
-    guests.forEach((name, i) => {
-      const chip = h(`<span class="guest-chip">
-           <span class="guest-chip__name">${esc(t('people.guest', { name }))}</span>
-           <button type="button" class="guest-chip__del" aria-label="${esc(t('startSession.guestRemove', { name }))}"><i class="ti ti-x" aria-hidden="true"></i></button>
-         </span>`);
-      chip.querySelector('.guest-chip__del').addEventListener('click', () => {
-        guests.splice(i, 1);
-        renderGuests();
-        guestInput.focus();
-      });
-      guestList.appendChild(chip);
-    });
-    seatTable.refreshSeats();
-    updateHint();
-  };
-  const addGuest = () => {
-    const name = guestInput.value.trim();
-    if (!name) return toast(t('startSession.toast.guestName'));
-    if (guests.length >= MAX_SESSION_GUESTS)
-      return toast(t('startSession.toast.guestMax', { n: MAX_SESSION_GUESTS }));
-    guests.push(name);
-    guestInput.value = '';
-    renderGuests();
-    guestInput.focus();
-  };
-  form.querySelector('#guestAdd').addEventListener('click', addGuest);
-  // Enter in the name field adds, so a guest can be typed without reaching for
-  // the button. There is no surrounding <form>, so nothing submits by default.
-  guestInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); addGuest(); }
-  });
 
   // Custom-tag chips (#238, tri-state #241) are the only game filter now (#242).
   // Clicking cycles ignore -> include -> exclude -> ignore. With no round tags

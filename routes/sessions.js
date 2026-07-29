@@ -92,9 +92,13 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'At least one member must join' });
   const members = round.members.filter((m) => memberIds.includes(m.id));
 
+  // Guests (#458) arrive as names and are minted here for BOTH modes (#532).
+  const guests = resolveGuests(body.guests);
+
   // Direct-pick mode: the user explicitly chose one game, so there is no draw
-  // and no voting. Ignore count, the player-range pool — and guests, which that
-  // flow deliberately doesn't offer (#458).
+  // and no voting. Ignore count and the player-range pool — but not guests: they
+  // sat at the table and the results screen's winner picker draws its chips from
+  // members ∪ guests, so without them a guest who won cannot be recorded (#532).
   if (body.gameId != null) {
     const game = round.games.find((g) => g.id === String(body.gameId));
     if (!game) return res.status(400).json({ error: 'Game does not belong to this round' });
@@ -107,6 +111,9 @@ router.post('/', async (req, res) => {
       excludeTagIds: null, // nor an exclude filter (#241)
       requestedCount: 1,
       memberIds,
+      // Same absent-key discipline as the draw path below: a guestless session
+      // grows no `guests` key (.claude/rules/postgres-backend.md).
+      ...(guests.length ? { guests } : {}),
       gameIds: [game.id],
       votes: {}, // no voting phase in direct-pick mode
       chosenGameId: game.id, // the game is chosen up front
@@ -119,7 +126,9 @@ router.post('/', async (req, res) => {
       done: true,
     });
     trackEvent('session_created', { tenantId: req.tenantId });
-    return res.status(201).json({ session, games: [game], members });
+    // Same convenience shape as the draw path below — the minted guest ids only
+    // exist server-side until this response, so both modes report them.
+    return res.status(201).json({ session, games: [game], members, guests });
   }
 
   let count = body.count;
@@ -140,8 +149,8 @@ router.post('/', async (req, res) => {
   // Guests sit at the table too, so they count toward the player range the pool
   // is filtered by — the client-side preview in showStartSession() applies the
   // identical arithmetic and the two must agree
-  // (.claude/rules/active-games-filter-sites.md).
-  const guests = resolveGuests(body.guests);
+  // (.claude/rules/active-games-filter-sites.md). Direct-pick consults no player
+  // range, which is why only this mode uses the count.
   const playerCount = memberIds.length + guests.length;
 
   const pool = round.games.filter(
