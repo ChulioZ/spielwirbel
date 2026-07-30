@@ -230,6 +230,107 @@ test('short-entry lists tile, and their rows may wrap inside a tile', () => {
     `a ${spec.floor}px floor is wider than a 320px phone's content box, so the grid would overflow`);
 });
 
+/* The two setup forms (session setup, new round) lay themselves out in two
+   columns from 860px up. Three things about that opt-out fail silently. */
+test('a setup form and its page head opt out of the reading measure TOGETHER', () => {
+  /* The #543 lesson, one screen over. `.page-head` is a SIBLING of `.setup-grid`,
+     not its wrapper, so neither of the grid exemptions above reaches it — exempt
+     only the grid and the screen's own <h1> stays capped at --w-read and centred
+     while the form beside it spans --w-setup, leaving the heading indented from
+     the content it heads. Both must take the SAME variable, or they drift the
+     moment one of the two numbers is re-tuned (the shared --dock-clearance
+     reasoning, applied to a width). */
+  const exemptions = RULES.filter(([sel, body]) =>
+    whole('.setup-grid').test(sel) && /max-width:/.test(body));
+  assert.ok(exemptions.length,
+    'nothing exempts .setup-grid from the reading measure, so a two-column form is NARROWER at 1280 than at 1279');
+
+  exemptions.forEach(([sel, body]) => {
+    assert.ok(whole('.page-head').test(sel),
+      `"${sel}" widens the setup grid without widening the page head, which leaves the screen's own heading indented from its content`);
+    // Conditioned on a setup grid being present: unconditionally, every OTHER
+    // screen's page head would lose its reading measure too.
+    assert.match(sel, /:has\(\.setup-grid\)/,
+      `"${sel}" is not conditioned on a setup grid being present, so it widens every screen's page head`);
+    // One variable for both, and it must be a variable — a literal px here
+    // drifts from whatever the grid gets.
+    const vars = [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]);
+    assert.equal(vars.length, 1,
+      `"${sel}" does not take its width from a single custom property`);
+    // The cap it competes with is (0,3,0); winning on source order alone breaks
+    // silently when someone moves a block.
+    const classes = (sel.match(/\.[\w-]+/g) || []).length;
+    assert.ok(classes > 3,
+      `"${sel}" has ${classes} class components and does not out-rank the (0,3,0) reading-measure cap`);
+  });
+});
+
+test('the setup width is WIDER than the reading measure it replaces', () => {
+  // Pinned as arithmetic, not as "a --w-setup exists": set it to 880 and every
+  // selector assertion above stays green while the exemption silently makes the
+  // screen narrower than the cap it exists to escape.
+  const setup = rootPx('--w-setup');
+  const read = rootPx('--w-read');
+  assert.ok(setup, ':root does not declare --w-setup');
+  assert.ok(setup > read,
+    `--w-setup (${setup}px) is not wider than --w-read (${read}px), so the exemption buys nothing`);
+  assert.ok(setup <= rootPx('--w-shell'), '--w-setup exceeds the shell it sits in');
+});
+
+test('a setup form is two columns from its breakpoint, with room for a tile row', () => {
+  /* The grid must actually become two columns, and the preview panel inside the
+     narrower of them must still fit more than one tile — a floor nudged up
+     leaves a one-tile column, which looks like the panel is broken rather than
+     like a number changed. */
+  const hit = mediaBlocks()
+    .map(([query, css]) => ({ query, body: bodyOf('.setup-grid', rulesOf(css)) }))
+    .find((b) => b.body && /grid-template-columns/.test(b.body));
+  assert.ok(hit, '.setup-grid never becomes a multi-column grid');
+
+  const from = Number(hit.query.match(/min-width:\s*(\d+)px/)[1]);
+  const tracks = hit.body.match(/grid-template-columns:([^;]+);/)[1];
+  assert.equal((tracks.match(/minmax\(/g) || []).length, 2,
+    `.setup-grid declares "${tracks.trim()}" rather than two tracks`);
+  // minmax(0, …): a bare `1fr` track has an auto (min-content) minimum, so a
+  // long game title would push its column wider than half the grid.
+  assert.ok(!/minmax\(\s*(?!0)/.test(tracks),
+    'a track without a 0 minimum lets its content blow the grid out');
+
+  const gap = Number(hit.body.match(/column-gap:\s*(\d+)px/)[1]);
+  const column = (from - 2 * sidePadding(bodyOf('.app')) - gap) / 2;
+  // rulesUnder() flattens every block matching the query, so the panel is found
+  // whether or not it shares a block with the grid today.
+  const panel = bodyOf('.setup-panel', rulesUnder(/min-width:\s*860px/));
+  assert.ok(panel, 'the pool panel is never shown at the breakpoint the grid uses');
+  const panelPad = Number(panel.match(/padding:\s*\d+px\s+(\d+)px/)[1]);
+  const tiles = columnsIn(column - 2 * panelPad, gridSpec(bodyOf('.setup-panel__body')));
+  assert.ok(tiles >= 2,
+    `at its own ${from}px breakpoint the pool panel fits ${tiles} tile(s) per row`);
+});
+
+test('the pool panel and the compact strip are never both on', () => {
+  /* Two presentations of one thing, picked by width (the rail/dock shape). The
+     panel must default to HIDDEN and be switched on inside the query — a panel
+     that defaults to visible renders on every phone the moment someone adds a
+     narrower breakpoint above it, on top of the strip it replaces. */
+  const base = bodyOf('.setup-panel');
+  assert.ok(base, 'no base .setup-panel rule');
+  assert.match(base, /display:\s*none/,
+    '.setup-panel does not default to hidden, so it can leak onto narrow screens beside the strip it replaces');
+
+  const strip = RULES.filter(([sel, body]) =>
+    whole('.pool-hint').test(sel) && /display:\s*none/.test(body));
+  assert.ok(strip.length,
+    'nothing hides the compact pool strip where the panel takes over, so both render at once');
+  strip.forEach(([sel]) => {
+    // `.pool-hint { display: flex }` is (0,1,0) and is declared further down the
+    // sheet, so a one-class hide wins only by position.
+    const classes = (sel.match(/\.[\w-]+/g) || []).length;
+    assert.ok(classes >= 2,
+      `"${sel}" is one class (0,1,0) and ties \`.pool-hint { display: flex }\`, which is declared later`);
+  });
+});
+
 test('the home lobby tiles once there is room for a second round card', () => {
   /* The lobby is a stack of full-width rows on a phone and a grid above the
      strip breakpoint. A floor set too high leaves it a one-column grid — which

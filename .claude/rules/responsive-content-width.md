@@ -96,6 +96,17 @@ a 900px centred CTA. Measured both ways before shipping; the numbers are
 symmetric, which is what makes the unconditional version look correct in the one
 state anyone tests.
 
+**This has since happened a second time, so treat it as the norm rather than as
+one screen's quirk.** #577 gave the two setup forms a two-column layout and
+exempted `.setup-grid` alone; the `.page-head` above it — again a *sibling*, not
+a wrapper — stayed capped and centred, indenting each screen's own `<h1>` ~170px
+from the form it heads. Same fix, same condition (`:has(.setup-grid)`), and the
+two now share one custom property so their edges cannot drift. See
+`.claude/rules/setup-screens-two-column-layout.md`, which also records the one
+argument that lets those two screens select a width by content at all: they
+render **no navigation**, so there is nothing inside the column for a width
+change to move.
+
 Note this is a *fourth* specificity trap on top of the three below: the cap is
 (0,3,0), so a natural-looking `.app:has(.lobby-list) > .lobby-head` is (0,3,0)
 too and wins or loses on source order alone. Repeat the cap's `:not()`s the way

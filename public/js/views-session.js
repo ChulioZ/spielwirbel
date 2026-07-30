@@ -20,28 +20,49 @@ function showStartSession(round) {
   // <div class="label">, not <label> (#145): a <label> with no `for` and no
   // wrapped input labels nothing at all. `aria-labelledby` on the group is what
   // actually ties the text to the seats/chips.
-  const form = h(`<div>
-      <div class="field">
-        <div class="field__label" id="seatsLabel">${esc(t('startSession.membersLabel'))}</div>
-        <div id="seatMount"></div>
-        <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
-      </div>
-      <div id="guestMount"></div>
-      <div class="field" id="gamesFilterField" hidden>
-        <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
-        <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
-      </div>
-      <div class="field">
-        <label for="count">${esc(t('startSession.countLabel'))}</label>
-        <div class="stepper">
-          <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
-          <input id="count" class="stepper__val" inputmode="numeric" value="3" />
-          <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+  //
+  // `.setup-grid` splits the screen along the two questions it actually asks:
+  // WHO is at the table (left) and WHAT gets drawn (right — the two controls
+  // that shape the pool, the resulting pool itself, and the button that draws
+  // from it). From 860px up that is two columns; below it the grid is a plain
+  // block, so the DOM order below IS the phone order — and it is byte-for-byte
+  // the order this screen already had, so nothing moves on a phone.
+  //
+  // The pool is rendered twice on purpose — a tile panel beside the form, the
+  // compact overlapping strip below it — and CSS picks one by width, the same
+  // "render both, let the viewport decide" shape the rail and dock use. Both are
+  // filled by the one updateHint() below, so they cannot drift.
+  const form = h(`<div class="setup-grid">
+      <div class="setup-grid__main">
+        <div class="field">
+          <div class="field__label" id="seatsLabel">${esc(t('startSession.membersLabel'))}</div>
+          <div id="seatMount"></div>
+          <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
         </div>
+        <div id="guestMount"></div>
+        <div id="teamMount"></div>
       </div>
-      <div class="pool-hint" id="poolHint"></div>
-      <div class="toolbar">
-        <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-tornado" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
+      <div class="setup-grid__aside">
+        <div class="field" id="gamesFilterField" hidden>
+          <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
+          <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
+        </div>
+        <div class="field">
+          <label for="count">${esc(t('startSession.countLabel'))}</label>
+          <div class="stepper">
+            <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+            <input id="count" class="stepper__val" inputmode="numeric" value="3" />
+            <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <div class="setup-panel">
+          <h2 class="setup-panel__title" id="poolTitle"></h2>
+          <div class="setup-panel__body" id="poolGrid"></div>
+        </div>
+        <div class="pool-hint" id="poolHint"></div>
+        <div class="toolbar">
+          <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-tornado" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
+        </div>
       </div>
     </div>`);
   app.appendChild(form);
@@ -71,15 +92,21 @@ function showStartSession(round) {
   // only ever runs on a click (.claude/rules/frontend-script-load-order.md).
   const guestPicker = renderGuestPicker(t('startSession.guestsNote'), () => {
     seatTable.refreshSeats();
+    teamPicker.refreshTeams();
     updateHint();
   });
   const guests = guestPicker.guests;
-  const playerCount = () => joining.size + guests.length;
+  // Teams (#575): two or more of the people above playing as one party. Frozen
+  // at the draw like the seats and the guests, and the reason the pool count
+  // below is not simply a headcount.
+  const teamPicker = renderTeamPicker(round, joining, guestPicker, t('startSession.teamsNote'), () => updateHint());
+  const playerCount = () =>
+    joining.size + guests.length - teamPicker.teamedPeopleCount() + teamPicker.teamCount();
 
   // Games matching the tag filter, whose player range fits the joining count.
-  // Guests sit at the table, so they count here — and the server applies the
-  // identical arithmetic to the real pool
-  // (.claude/rules/active-games-filter-sites.md).
+  // Guests sit at the table, so they count here, and a team counts once however
+  // many people it holds (#575) — the server applies the identical arithmetic to
+  // the real pool (.claude/rules/active-games-filter-sites.md).
   const pool = () =>
     activeGames.filter(
       (g) =>
@@ -88,31 +115,57 @@ function showStartSession(round) {
         (typeof g.maxPlayers !== 'number' || playerCount() <= g.maxPlayers)
     );
 
-  // Live pool preview: count plus a few cover thumbnails.
+  // Live pool preview, in the two presentations described above. The wide panel
+  // lists EVERY matching game (its own scroll box bounds it), so it needs no
+  // "+n" overflow chip and the two representations share no counting logic
+  // beyond the one headline string.
   const hint = form.querySelector('#poolHint');
+  const poolTitle = form.querySelector('#poolTitle');
+  const poolGrid = form.querySelector('#poolGrid');
+  const coverStyle = (g, w) =>
+    g.image ? ` style="background-image:url('${coverUrl(g.image, w)}')"` : '';
   const updateHint = () => {
     const games = pool();
+    // Resolved once: both presentations must always report the same number, and
+    // two tn() calls is two places for that to stop being true.
+    const headline = tn(games.length, 'startSession.availableOne', 'startSession.available');
+
+    // Compact strip (below 860px): the first six covers, overlapping, + a count.
     const thumbs = games
       .slice(0, 6)
-      .map((g) => {
-        const style = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
-        const fb = coverPlaceholder(g);
-        return `<span class="pool-thumb"${style} title="${esc(g.title)}">${fb}</span>`;
-      })
+      .map((g) => `<span class="pool-thumb"${coverStyle(g, COVER_THUMB)} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
       .join('');
     const more = games.length > 6 ? `<span class="pool-thumb pool-thumb--more">+${games.length - 6}</span>` : '';
-    hint.innerHTML = `<span class="pool-hint__text">${esc(
-      tn(games.length, 'startSession.availableOne', 'startSession.available')
-    )}</span><span class="pool-thumbs">${thumbs}${more}</span>`;
+    hint.innerHTML = `<span class="pool-hint__text">${esc(headline)}</span><span class="pool-thumbs">${thumbs}${more}</span>`;
+
+    // Tile panel (860px up). An empty pool needs its own line: a grid with no
+    // tiles reads as a broken panel rather than as "nothing matches yet".
+    poolTitle.textContent = headline;
+    poolGrid.innerHTML = games.length
+      ? games
+          .map(
+            (g) => `<span class="pool-tile" title="${esc(g.title)}">
+                 <span class="pool-tile__img"${coverStyle(g, COVER_CARD)}>${coverPlaceholder(g)}</span>
+                 <span class="pool-tile__name">${esc(g.title)}</span>
+               </span>`
+          )
+          .join('')
+      : `<p class="muted setup-panel__empty">${esc(t('startSession.poolEmpty'))}</p>`;
   };
   // Seats around the table: tap a member to toggle whether they join tonight.
   // The group attributes go on the table itself, not on #seatMount — replaceWith
   // swaps the mount out, so anything set on it in the markup would be lost.
-  const seatTable = renderSeatPicker(round, joining, updateHint, () => guests.length);
+  // Taking a member out of the session must also take them out of their team
+  // (#575) — the picker drops them and dissolves a team left with one person.
+  const seatTable = renderSeatPicker(round, joining, () => {
+    teamPicker.refreshTeams();
+    updateHint();
+  }, () => guests.length);
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   form.querySelector('#seatMount').replaceWith(seatTable);
   form.querySelector('#guestMount').replaceWith(guestPicker);
+  form.querySelector('#teamMount').replaceWith(teamPicker);
   updateHint();
 
   // Custom-tag chips (#238, tri-state #241) are the only game filter now (#242).
@@ -162,6 +215,7 @@ function showStartSession(round) {
         excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
         memberIds: [...joining],
         guests, // names only; the server mints the ids (#458)
+        teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
       });
       // Straight into the first handover — the drawn games stay secret until
       // each person rates them. The participant list is resolved through the one
@@ -472,6 +526,10 @@ async function showResults(round, session, gamesHint, reveal) {
   // (#458). Older sessions have no member list, so sessionPeople falls back to
   // all members of the round, and no `guests` key means none.
   const people = sessionPeople(round, session);
+  // The same people grouped into playing parties (#575): one entry per team plus
+  // one per un-teamed person. Drives the winner picker below, so a team is
+  // recorded in one tap and nobody is offered twice.
+  const parties = sessionParties(round, session);
 
   // Tally per game.
   const rows = games.map((g) => {
@@ -529,6 +587,25 @@ async function showResults(round, session, gamesHint, reveal) {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
     app.appendChild(peopleEl);
+  }
+
+  // Who played together (#575). Listed as its own row rather than folded into
+  // the participants above: that row answers "who was here", which is still one
+  // entry per person, and a team is a different fact about the same people.
+  const teamParties = parties.filter((p) => p.team);
+  if (teamParties.length) {
+    app.appendChild(
+      h(`<div class="result-people">
+           <span class="result-people__label">${esc(t('result.teams'))}</span>
+           <span class="result-people__list">${teamParties
+             .map(
+               (party) => `<span class="team-card team-card--flat">
+                  <span class="team-card__name">${iconText('ti-users', party.name)}</span>
+                </span>`
+             )
+             .join('')}</span>
+         </div>`)
+    );
   }
 
   // Podium: the top three *places* as a stage. Tied games share a place, so a
@@ -790,13 +867,24 @@ async function showResults(round, session, gamesHint, reveal) {
 
     // Guests can win too (#458) — they played the game. They just never enter
     // the round-level standings; see the Pokale tab.
+    //
+    // One chip per PARTY (#575), so a team is recorded in a single tap. What is
+    // stored stays a flat list of person ids: a team win is a win for each of
+    // its people, which is what lets the Pokale standings, the Chronik and the
+    // recap keep reading `winnerIds` with no idea teams exist.
     const chips = h('<div class="winner-chips"></div>');
-    people.forEach((p) => {
-      const sel = winnerIds.includes(p.id);
-      const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${esc(personLabel(p))}</button>`);
+    parties.forEach((party) => {
+      const ids = party.people.map((p) => p.id);
+      // A team counts as selected only when ALL of its people are in — a
+      // partially-set list (hand-crafted, or written before the team existed)
+      // reads as not selected, so one tap completes it rather than clearing it.
+      const sel = ids.every((id) => winnerIds.includes(id));
+      const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${party.team ? '<i class="ti ti-users" aria-hidden="true"></i> ' : ''}${esc(party.name)}</button>`);
       // Each toggle persists right away — no separate save button in this state.
       chip.addEventListener('click', () => saveWinners(
-        winnerIds.includes(p.id) ? winnerIds.filter((x) => x !== p.id) : [...winnerIds, p.id]
+        sel
+          ? winnerIds.filter((x) => !ids.includes(x))
+          : [...winnerIds, ...ids.filter((id) => !winnerIds.includes(id))]
       ));
       chips.appendChild(chip);
     });

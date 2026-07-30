@@ -677,6 +677,38 @@ module.exports = function repoContract(repo) {
     assert.equal(after.votes.gst1[g.id].retire, true);
   });
 
+  // Teams (#575) ride in the same blob and take the same absent-key discipline.
+  // Worth its own case rather than a line in the guest one: the two keys are
+  // written by separate spreads in the route, so a default added to either is
+  // invisible from the other's assertions.
+  test('a session carries teams through the blob and grows no key without them', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const base = {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    };
+
+    const plain = await repo.createSession(T, round.id, base);
+    assert.equal('teams' in plain, false);
+    assert.equal('teams' in (await repo.getSession(T, round.id, plain.id)), false);
+
+    const teams = [{ id: 'tm1', personIds: ['m1', 'gst1'] }];
+    const withTeams = await repo.createSession(T, round.id, { ...base, teams });
+    assert.deepEqual((await repo.getSession(T, round.id, withTeams.id)).teams, teams);
+
+    // A team is not a vote-map key — its people vote individually — but the
+    // grouping must survive the mutators that rewrite the rest of the blob, or
+    // finishing the session would quietly un-team everyone.
+    await repo.saveSessionResults(T, round.id, withTeams.id, {
+      m1: { [g.id]: { rating: 4, retire: false } },
+    });
+    await repo.finishSession(T, round.id, withTeams.id, { finished: true, winnerIds: ['m1', 'gst1'] });
+    const after = await repo.getSession(T, round.id, withTeams.id);
+    assert.deepEqual(after.teams, teams);
+    assert.deepEqual(after.winnerIds, ['m1', 'gst1']);
+  });
+
   test('setBackground returns the previous design and stores the new one', async () => {
     const round = await freshRound();
     const first = await repo.setBackground(T, round.id, { type: 'theme', page: 'p', accent: 'a' });
