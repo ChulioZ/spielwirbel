@@ -31,7 +31,15 @@ not a finding; the rejected entries below are that ledger.
   `lang` tables). A split must respect the frontend load order and the four
   wiring points `frontend-helper-modules-and-coverage.md` lists — a finding
   here names the seam, not just the size.
-- **Enforced by:** — (manual)
+  **`test/token-budget.test.js` now holds the 700-line line**, with an allowlist
+  whose entries are split `judged` (measured against the seam test and kept) and
+  `recorded` (over budget, never actually judged). **The `recorded` entries are this
+  criterion's worklist** — the test deliberately cannot tell the two apart, so
+  reading them and either judging or splitting them is the manual half that stays
+  here. A file arriving over budget with no entry fails CI, so the audit no longer
+  has to catch growth; it only has to catch a bad seam.
+- **Enforced by:** `test/token-budget.test.js` (the threshold and the allowlist);
+  the seam judgement is manual
 
 ### M-002 — A value the client offers and the server validates has one source of truth
 - **Status:** adopted · 2026-07-29

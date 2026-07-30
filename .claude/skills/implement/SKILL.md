@@ -186,6 +186,22 @@ npm run coverage:ci
   (`.claude/rules/frontend-helper-modules-and-coverage.md`, where one export cost
   11 percentage points). Nothing in `npm test`'s output hints at it, which is why
   it belongs here rather than being discovered on the PR.
+- **If the diff moved or renamed a function, `const` or file, grep the rules for
+  the old name and fix every pointer in the same PR** (the command is in
+  `.claude/rules/token-friendly-source-files.md`). `test/skills.test.js` catches a
+  moved *file*; a moved **function** is invisible to it, and the rule left pointing
+  at the wrong place still reads authoritative. The reason this belongs here rather
+  than only in the rule: the rule a move invalidates is almost always on a
+  *different topic* than the PR doing the moving, so it never occurs to anyone to
+  look — which is exactly how `active-games-filter-sites.md` came to name the wrong
+  file for the one pointer a future session most needed.
+- **If the diff pushed a file past its budget, `test/token-budget.test.js` fails** —
+  700 lines for source, 150 for a rule, 250 for a `SKILL.md`. That is not an
+  instruction to trim: apply the seam test (several *independently editable*
+  concerns, not raw length), split along a real boundary if there is one, and
+  otherwise add the allowlist entry with a written reason. A `public/js` split is
+  not free — it needs the four wiring points in
+  `.claude/rules/frontend-helper-modules-and-coverage.md`.
 - For **substantial** UI changes (new views/layouts, non-trivial interaction or
   state, anything easy to get visibly wrong), verify in a real browser via the
   preview workflow (the `run` skill / preview tools), not tests alone. For
