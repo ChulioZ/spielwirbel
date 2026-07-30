@@ -13,6 +13,14 @@ const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
 const { trackEvent } = require('../lib/observability');
 const { emitFeedEvent } = require('../lib/feed');
+// The seat the acting account holds in this round (#207) — the actor for the four
+// game-lifecycle activities below. Undefined when the caller holds no seat (an
+// owner who never took one, or accounts-off mode), so a single-actor round's feed
+// carries no actor at all. This was a local copy until #563, when it turned out to
+// be missing its uid guard and to have been crediting all four activities to the
+// round's FIRST member whenever accounts are off
+// (.claude/rules/actor-seat-needs-a-uid-guard.md).
+const { actorSeat } = require('../lib/actor-seat');
 
 const router = express.Router({ mergeParams: true });
 
@@ -82,13 +90,6 @@ function buildSource(body) {
     url: /^https?:\/\//.test(url) ? url : null,
   };
 }
-
-// The member seat the acting account holds in this round, if any (#207) — used
-// to attribute the game-lifecycle activity these routes write. Undefined when the
-// caller isn't linked to a seat (an owner who never took one, or legacy mode), so
-// a single-actor round's feed carries no actor at all. The round is already
-// fetched for the 404/validation, so this costs nothing extra.
-const actorSeat = (round, uid) => (round.members.find((m) => m.userId === uid) || {}).id;
 
 router.post('/', upload.single('image'), async (req, res) => {
   // Light read: existence + tags. Only the quota branch below counts games,

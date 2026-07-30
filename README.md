@@ -291,8 +291,11 @@ lib/
   accounts.js        user-account primitives: Argon2id passwords, access/refresh
                      tokens (issue #135; off unless ACCOUNTS_ENABLED)
   quota.js           per-tenant state caps — rounds/tenant, games/round,
-                     tags/round (issue #139; inert unless ACCOUNTS_ENABLED)
+                     tags/round, members/round (issue #139; inert unless
+                     ACCOUNTS_ENABLED)
   feed.js            the Freundeskreis activity feed's allowlisted events (#325)
+  actor-seat.js      which member seat to attribute a round activity to; one
+                     definition shared by the games and members routes (#563)
   demo.js            guest demo mode: mints, seeds and purges throwaway demo
                      accounts (issue #427; off unless DEMO_ENABLED)
   demo-seed.js       the content a demo tenant is seeded with — games (hotlinked

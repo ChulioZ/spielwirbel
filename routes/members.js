@@ -12,6 +12,11 @@ const express = require('express');
 const { z } = require('zod');
 const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
+// Who to attribute the new seat's activity to. Shared with routes/games.js
+// rather than copied — the copy that used to live in each of them is exactly how
+// games.js came to credit its activities to the wrong member
+// (.claude/rules/actor-seat-needs-a-uid-guard.md).
+const { actorSeat } = require('../lib/actor-seat');
 // The curated avatar palette, shared verbatim with the frontend rather than
 // copied — a hand-kept copy drifted from it once already and rejected six of the
 // eight swatches the UI offers (#420). Color is stored only when the user picks
@@ -19,19 +24,6 @@ const quota = require('../lib/quota');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
 
 const router = express.Router({ mergeParams: true });
-
-// The acting account's own seat in this round, when it has one — the actor the
-// new seat's activity entry is attributed to. Undefined in legacy mode or for an
-// owner who never claimed a seat, which addActivity then simply omits.
-//
-// The `uid ?` guard is load-bearing and is why this is not a verbatim copy of
-// routes/games.js's helper: an unclaimed seat has NO userId key, so `m.userId`
-// is `undefined`, and without the guard a call with no uid (legacy mode, or any
-// unauthenticated caller) matches the FIRST unlinked seat and attributes the
-// action to whoever happens to sit there. games.js has that defect today — every
-// game added with accounts off shows "· von <first member>" in the Chronik —
-// tracked separately rather than fixed here.
-const actorSeat = (round, uid) => (uid ? round.members.find((m) => m.userId === uid) || {} : {}).id;
 
 // Add-member body. `name` reuses the exact shape createRoundSchema normalizes
 // each member entry with (stringify → trim → non-empty), so creating a round and

@@ -639,3 +639,30 @@ test('POST games/move-to scrubs the source round\'s session history', async () =
   const target = (await request(app).get(`/api/rounds/${dst.id}`)).body;
   assert.equal(target.games[0].id, game.id);
 });
+
+// Regression (#563): the local actorSeat copy in routes/games.js had no uid guard,
+// so `m.userId === undefined` matched the first UNLINKED seat and every
+// game-lifecycle activity was credited to the round's first member in accounts-off
+// mode ("· von Alice" for something Alice did not do).
+//
+// The assertion has to be `in`, not a truthiness or null check: the bug produced a
+// REAL member id, so `assert.ok(!entry.actorMemberId)` passes against it.
+test('game activities carry no actorMemberId with accounts off (never the first seat)', async () => {
+  const round = await createRound(request); // Alice, Bob — neither linked to an account
+  // addGame resolves to the RESPONSE, not the game — the id is on .body.
+  const game = (await addGame(round.id, { title: 'Attribution' })).body;
+  await request(app).post(`/api/rounds/${round.id}/games/${game.id}/retire`).send({ retired: true });
+  await request(app).post(`/api/rounds/${round.id}/games/${game.id}/complete`).send({ completed: true });
+
+  const feed = (await request(app).get(`/api/rounds/${round.id}/activities`)).body;
+  const seatIds = round.members.map((m) => m.id);
+  const credited = feed.filter((a) => 'actorMemberId' in a);
+  assert.deepEqual(
+    credited.map((a) => `${a.type} → ${seatIds.indexOf(a.actorMemberId)}`),
+    [],
+    'no activity may name a seat when no account is acting'
+  );
+  // The feed is genuinely populated, so the assertion above is not vacuous.
+  assert.ok(feed.some((a) => a.type === 'game_added'), 'the feed should hold the add');
+  assert.ok(feed.length >= 3, `expected add+retire+complete, got ${feed.length}`);
+});
