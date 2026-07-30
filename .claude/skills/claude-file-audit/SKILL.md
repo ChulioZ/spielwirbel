@@ -46,7 +46,7 @@ a contributor the wrong rules, and nothing renders an error.
 owns the domain.
 
 Pass `--research` to force a research pass; otherwise the cadence in `criteria.md`
-decides (30 days — the fastest-moving of the three domains).
+decides (30 days — the shortest cadence of the six audit domains).
 
 ## Research sources (phase B) — in-harness first
 
@@ -145,12 +145,21 @@ about what the deployment *is* today, and none of it is derivable from the code.
   (security reports go to the advisory form; complaints about content *inside*
   the hosted app go through `docs/legal/notice-and-action.md`).
 
-`.claude/rules/ops-only-changes-still-stale-the-docs.md` carries the overlapping
-**instance-state** list — every file whose claims change through an ops action
-that produces no diff. It is not the same set as this section's: it drops
-`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` and `LICENSE` (which assert process, not
-instance state) and picks up two rule files, `audit-loop.md` and three of the
-`.github/` files from §6. Read both; neither is a subset of the other.
+**The instance-state list itself lives in exactly one place:**
+`.claude/rules/ops-only-changes-still-stale-the-docs.md`'s table — every file whose
+claims change through an ops action that produces no diff. Read it here; it is
+wider than this section (it picks up two rule files, `audit-loop.md`, `lib/legal.js`,
+`lib/quota.js` and three `.github/` files) and narrower in one respect: it excludes
+`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` and `LICENSE`, which assert **process**
+rather than instance state, so this section owns those three and the rule owns the
+rest.
+
+That single-source split is deliberate. Until 2026-07-30 the list existed in three
+overlapping copies — here, in criteria C-016, and in the rule — with this file
+saying "neither is a subset of the other"; the 2026-07-30 audit then found a stale
+count inside one of the copies, which is the drift the repo's own
+`shared-constants-across-the-stack.md` doctrine predicts. Don't restate the table
+again: add a row to the rule.
 
 ### 6. The community-health files under `.github/` → C-018
 

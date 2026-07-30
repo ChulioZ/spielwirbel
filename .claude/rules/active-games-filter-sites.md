@@ -29,7 +29,12 @@ before assuming you have them all:
 
 **Frontend:** `views-round.js` `activeGames`, `views-session.js` `activeGames`,
 `views-round-tabs.js` (the Pokale "best rated" list, the stats scope, and the
-per-row "Jetzt spielen" launcher at the `gameStatCard` level).
+per-row "Jetzt spielen" launcher at the `gameStatCard` level),
+`round-rail.js` `activeGames` (the desktop rail's counts), and `recap.js`
+**twice** — its game pool, plus an active/archived split whose two halves sit on
+adjacent lines and must be edited as a pair (`!retired && !completed` for one
+count, `retired || completed` for the other). `views-session.js` also carries an
+inverse check of that second shape, gating the per-game "Aussortieren" button.
 
 **Deliberately NOT filtered — don't "fix" these:**
 - The games quota (`routes/games.js`, `lib/quota.js`) counts **every** game
