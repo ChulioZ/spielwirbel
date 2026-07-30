@@ -2,6 +2,10 @@
 
 I18N.de = {
   'app.title': 'Spielwirbel',
+  // The browser tab. Byte-identical to the static <title> in index.html, which
+  // stays German for the crawlers (#436/#510) — so a German visitor sees no
+  // change when i18n.js overwrites it at boot.
+  'app.tabTitle': 'Spielwirbel – Was spielen wir heute? Abstimmen und bewerten',
   'footer.contact': 'Kontakt',
   'footer.impressum': 'Impressum',
   'footer.privacy': 'Datenschutz',

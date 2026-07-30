@@ -2,6 +2,9 @@
 
 I18N.en = {
   'app.title': 'Spielwirbel',
+  // Mirrors the German tab title; brand first so a truncated tab still reads
+  // "Spielwirbel…", and the question matches landing.hero.title.
+  'app.tabTitle': 'Spielwirbel – What are we playing tonight? Vote and rate',
   'footer.contact': 'Contact',
   'footer.impressum': 'Legal notice',
   'footer.privacy': 'Privacy',
