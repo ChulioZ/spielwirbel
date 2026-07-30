@@ -22,11 +22,11 @@
     "migrate:rollback": "knex migrate:rollback"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1094.0",
+    "@aws-sdk/client-s3": "^3.1098.0",
     "argon2": "^0.45.1",
     "compression": "^1.8.1",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.6.0",
+    "express-rate-limit": "^8.6.1",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "knex": "^3.3.0",
@@ -40,8 +40,8 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "esbuild": "0.28.1",
-    "eslint": "^10.7.0",
-    "globals": "^17.7.0",
+    "eslint": "^10.8.0",
+    "globals": "^17.8.0",
     "supertest": "^7.2.2"
   }
 }
