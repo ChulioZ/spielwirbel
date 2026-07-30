@@ -51,6 +51,26 @@ test('POST members rejects an empty or whitespace-only name', async () => {
   assert.equal(detail.body.members.length, 2);
 });
 
+// The security property the route rests on: seat→account linking is SELF-claim
+// (#421), enforced by the PATCH matrix. A hand-crafted POST must not be able to
+// seat a stranger's account, or that whole matrix is bypassable by adding a seat
+// pre-linked to someone else. Two layers hold: zod strips unknown keys, and the
+// handler forwards only `{ name }`.
+test('POST members ignores a userId or color smuggled into the body', async () => {
+  const round = await createRound(request);
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/members`)
+    .send({ name: 'Mallory', userId: 'some-stranger-account', color: '#000000' });
+  assert.equal(res.status, 201);
+  assert.deepEqual(res.body, { id: res.body.id, name: 'Mallory' });
+
+  const detail = await request(app).get(`/api/rounds/${round.id}`);
+  const seat = detail.body.members.at(-1);
+  assert.deepEqual(seat, { id: res.body.id, name: 'Mallory' });
+  assert.equal('userId' in seat, false);
+  assert.equal('color' in seat, false);
+});
+
 test('POST members 404s for an unknown round', async () => {
   const res = await request(app).post('/api/rounds/nope/members').send({ name: 'X' });
   assert.equal(res.status, 404);
