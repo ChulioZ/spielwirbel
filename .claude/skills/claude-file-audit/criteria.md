@@ -104,7 +104,8 @@ research at all.
   *accurate*, and it always was — every section was correct and several were
   test-pinned — so 985 lines of correct-but-misaimed prose passed audit after audit
   unexamined. Size and audience fit are a separate question from correctness, and
-  nothing was asking it. The sibling budget for the agent-facing file is C-015.
+  nothing was asking it. The sibling budgets for the agent-facing files are C-015
+  (`CLAUDE.md`), C-021 (rules) and C-023 (skills).
 - **Enforced by:** — (manual; the line count is one command)
 
 ### C-007 — Every skill has frontmatter that will actually trigger it
@@ -233,7 +234,8 @@ research at all.
   deploys, data-directory handling) stays unconditional — a scoped rule that fails to
   load when needed silently loses its protection, so when in doubt, stay global. When
   adding a rule, decide the scope explicitly; when auditing, check that scoped rules'
-  globs still match the files their traps live in.
+  globs still match the files their traps live in. **The trial itself is C-022** — it
+  has an outcome to reach, and 9-of-82 two months in is a result to act on either way.
 - **Enforced by:** — (manual)
 
 ### C-015 — `CLAUDE.md` stays within the documented adherence budget
@@ -242,7 +244,61 @@ research at all.
 - **Check:** `wc -l CLAUDE.md` stays around or under 200 (171 at adoption, 203 on
   2026-07-30). Growth beyond that is a signal to move content into a scoped rule or a
   skill, not to restructure (C-R03 still holds).
-- **Enforced by:** — (manual)
+- **Enforced by:** `test/token-budget.test.js` (allowlisted at 203 — the entry has to
+  be dropped when the trim happens, so the overshoot cannot be forgotten)
+
+### C-021 — Rule files stay within a size budget, and the corpus is measured
+- **Status:** adopted · 2026-07-30
+- **Source:** the 2026-07-30 review of what governs token cost · `C-020`'s reasoning,
+  applied one directory over · `token-friendly-source-files.md`
+- **Check:** Each rule stays around or under **150 lines**; the whole corpus gets a
+  measurement each run, so growth is visible rather than cumulative:
+  ```bash
+  wc -l .claude/rules/*.md | sort -rn | head        # per file
+  cat .claude/rules/*.md | wc -c                    # corpus (427 KB / 82 files on 2026-07-30)
+  ```
+  The remedy for an over-budget rule is the one `C-004` already prescribes — it holds
+  several learnings, so split it — or the narrative has outgrown the trap it exists to
+  prevent, in which case cut the narrative, never the trap or the *why*.
+  **Why it needed its own criterion, and why C-004 was not enough:** C-004 asks whether
+  a rule is *correct and single-concern*, never whether it is *affordable*. That is
+  exactly the blind spot C-020 was written for after 985 lines of accurate README
+  survived audit after audit — the same failure mode, in the files that load far more
+  often. Five rules were longer than the entire `CLAUDE.md` budget when this was
+  adopted. Note the budget is a **signal, not a ceiling**: a genuinely irreducible
+  learning may exceed it, and the allowlist entry is where that gets said out loud.
+- **Enforced by:** `test/token-budget.test.js` (the per-file budget + the allowlist;
+  the corpus figure is manual)
+
+### C-022 — The `paths:` scoping trial is concluded, not left running
+- **Status:** adopted · 2026-07-30
+- **Source:** `C-014`, adopted 2026-07-24 as an explicit **trial** and never closed
+- **Check:** Report the ratio (`grep -l '^paths:' .claude/rules/*.md | wc -l` against
+  the total — **9 of 82** on 2026-07-30, i.e. 383 KB of the 427 KB corpus loads
+  unconditionally). Then either conclude the trial or say why it is still running.
+  A rule whose every trap lives in a known file set carries `paths:`; one whose trap
+  surfaces through a tool or a situation stays global. C-014's "when in doubt, stay
+  global" is the safety valve and is not being narrowed here — the point is that the
+  decision gets *made*, once, per rule, rather than defaulting to global by omission.
+  Candidates visible at adoption: `session-teams.md`, `session-guests-are-not-members.md`,
+  `member-seat-self-claim.md`, `locale-set-is-data.md`, `bgg-collection-import.md`,
+  `storefront-lookup-locale.md`, `setup-screens-two-column-layout.md`, `tiles-vs-lists.md`.
+- **Enforced by:** — (manual; scoping is a judgement, and a wrongly scoped rule fails
+  *silently* by not loading, which is why nothing asserts a target ratio)
+
+### C-023 — A `SKILL.md` stays within a size budget; `criteria.md` is exempt
+- **Status:** adopted · 2026-07-30
+- **Source:** the 2026-07-30 review · `C-015`'s reasoning applied to skills
+- **Check:** A `SKILL.md` stays around or under **250 lines** — it is loaded whole on
+  invocation, so its length is a per-use cost. The split the audit skills already
+  demonstrate (`SKILL.md` = the loop, `criteria.md` = the catalogue) is the remedy;
+  `pick-issue/SKILL.md` at 525 lines is the standing candidate. **`criteria.md` files
+  are deliberately exempt**: a catalogue of independent entries is the flat-data-table
+  case `token-friendly-source-files.md` carves out, and splitting one would only add
+  indirection. Lower severity than C-021 — a skill loads on invocation, a rule can load
+  on every session — so do not trade a skill's trigger surface or its handoffs (C-007,
+  C-R04) for lines.
+- **Enforced by:** `test/token-budget.test.js`
 
 ### C-019 — An absolute prohibition names the failure mode it prevents
 - **Status:** adopted · 2026-07-30

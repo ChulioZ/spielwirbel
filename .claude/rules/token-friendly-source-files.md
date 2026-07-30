@@ -60,7 +60,47 @@ grep -rn "gameCount\|routes/rounds.js" .claude/rules/
 
 `test/skills.test.js` catches a moved **file** — it asserts every repo path cited
 anywhere in `.claude/**`, `CLAUDE.md` and `README.md` still exists. It cannot
-catch a moved **function**, so that grep is on you.
+catch a moved **function**, so that grep is on you. It is also a bullet in
+`implement`'s review phase, because the rule was already right and got skipped
+anyway — the adherence-failure remedy is a check that cannot be skipped, not a
+reworded rule.
+
+## The budget is a signal, not a ceiling — `test/token-budget.test.js`
+
+Everything above is a **judgement**, so nothing can assert it. What *can* be
+asserted is that a file crossed a threshold **without anyone noticing**, which is
+the failure that actually happens: between the 90-day `M-001` audits, a file
+could double with no signal at all.
+
+So there is a budget per file class, plus an allowlist where each entry carries a
+written reason:
+
+| Class | Budget | Where the number comes from |
+|---|---|---|
+| source (`lib/`, `routes/`, `public/js/`, `scripts/`, `test/`, `server.js`) | **700** | the "rough smell" above |
+| a rule file | **150** | half of `CLAUDE.md`'s ~200 (a one-learning file should never be the larger document) |
+| a `SKILL.md` | **250** | loaded whole on invocation |
+| `CLAUDE.md` | **200** | the harness's own adherence guidance |
+
+Three things about that shape are deliberate:
+
+- **Crossing the budget is not a failure — crossing it silently is.** The remedy
+  for a red test is the seam test, and if the file is genuinely one concern, the
+  allowlist entry *is* the answer. Trimming a file to hit a number, at the cost of
+  a `why` comment or a load-bearing constraint, is the outcome this rule exists to
+  prevent, not to cause.
+- **Allowlist entries are `judged` or `recorded`**, and the test cannot tell them
+  apart. `recorded` means "over budget, nobody has applied the seam test yet" —
+  writing that down is the whole point, because otherwise it is indistinguishable
+  from "this one is fine". They are `M-001`'s worklist.
+- **An entry must stay over budget or be removed.** A file that shrinks back under
+  its budget fails the test until its entry goes, so the list cannot rot into
+  names nobody has looked at — the anti-vacuous half, and the reason the list is
+  worth trusting at all.
+
+`public/js/lang/**` is excluded outright rather than allowlisted: it is the
+flat-data-table case, so it is not an outlier to record. `criteria.md` files are
+excluded for the same reason — a catalogue of independent entries.
 
 **Why:** the codebase was assessed against these four dimensions (issue #38). The
 backend (`routes/`, `lib/`, providers) and most frontend files were already
