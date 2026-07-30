@@ -360,6 +360,12 @@ I18N.de = {
   'startSession.guestRemove': 'Gast {name} entfernen',
   'startSession.toast.guestName': 'Bitte einen Namen für den Gast eingeben',
   'startSession.toast.guestMax': 'Höchstens {n} Gäste pro Session',
+  // Teams (#575): Mitglieder und Gäste beliebig gemischt, nur für diese Session.
+  'startSession.teamsLabel': 'Spielt jemand im Team?',
+  'startSession.teamsNote': 'Ein Team zählt beim Auslosen als eine Partei – und gewinnt gemeinsam.',
+  'startSession.teamMake': 'Team bilden',
+  'startSession.teamDissolve': 'Team {name} auflösen',
+  'startSession.toast.teamMin': 'Ein Team braucht mindestens {n} Personen',
   'startSession.whichGames': 'Welche Spiele?',
   'startSession.countLabel': 'Wie viele Spiele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
@@ -372,6 +378,7 @@ I18N.de = {
   'directPlay.title': '„{title}“ spielen',
   'directPlay.start': 'Los geht’s',
   'directPlay.guestsNote': 'Gäste spielen mit, gehören aber nicht zur Runde.',
+  'directPlay.teamsNote': 'Teams spielen zusammen – und gewinnen zusammen.',
 
   'vote.crumb': 'Abstimmung',
   'vote.leaveConfirm': 'Abstimmung verlassen? Die bisher abgegebenen Bewertungen gehen verloren.',
@@ -405,6 +412,7 @@ I18N.de = {
   'result.title': 'Ergebnis',
   'result.subtitle': '{when} · {n} Spiele',
   'result.participants': 'Wer dabei war',
+  'result.teams': 'Im Team',
   'result.titleWonOne': '„{game}“ wurde gespielt. {names} hat gewonnen!',
   'result.titleWonMany': '„{game}“ wurde gespielt. {names} haben gewonnen!',
   'result.titlePlayed': '„{game}“ wurde gespielt.',

@@ -128,6 +128,12 @@ What the app does, in detail. For a short overview see the
   list, the Pokale standings and the win streak untouched. A guest rates games
   but gets no "retire" vote: throwing a game off the shelf is the permanent
   group's call.
+- **Teams** – two or more of the people joining a session — members and guests
+  in any mix — can be grouped into a team that plays and wins together, for that
+  session only. A team counts as **one player** when the draw matches a game's
+  player range, so six people in three pairs can draw a three-player game, and
+  the winner picker offers the team as a single chip: recording it credits every
+  member individually, so the standings and the history read as before.
 - **Jetzt spielen** (play now) – when the group already knows what they want,
   launch a session for **one specific game** straight from its detail page or a
   Pokale tile: pick who joins and skip the vote entirely, landing directly on

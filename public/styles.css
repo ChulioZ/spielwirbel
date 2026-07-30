@@ -3521,6 +3521,69 @@ kbd {
 .guest-chip__del:hover { background: var(--line); color: var(--ink); }
 .guest-chip__del .ti { font-size: 15px; }
 
+/* Teams (#575): the pool of people still to be grouped, and the formed teams
+   above it. Both live inside a `.field`, so nothing here may be a `.ds-row` —
+   `.field label` (0,1,1) beats it and flattens the row
+   (.claude/rules/label-rows-lose-to-field-label.md). */
+.team-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.team-list:empty { display: none; }
+.team-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 5px 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--brand-edge);
+  background: var(--brand-tint-soft);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  max-width: 100%;
+}
+/* On the results screen the team is a read-only fact, so there is no delete
+   button to leave room for. */
+.team-card--flat { padding-right: 12px; }
+.team-card__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.team-card__name .ti { color: var(--brand); }
+.team-card__del {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-soft);
+  font-family: inherit;
+  cursor: pointer;
+}
+.team-card__del:hover { background: var(--line); color: var(--ink); }
+.team-card__del .ti { font-size: 15px; }
+
+.team-pool { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.team-pool[hidden] { display: none; }
+.team-chip {
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.team-chip:hover { border-color: var(--brand-edge); }
+/* The tick is carried by aria-pressed as well (#145) — this is only its
+   visible half. */
+.team-chip.is-selected {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
 .pool-hint {
   display: flex;
   align-items: center;

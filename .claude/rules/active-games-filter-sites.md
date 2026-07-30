@@ -23,7 +23,10 @@ before assuming you have them all:
 - `routes/sessions.js` — **two** guards, easy to fix one and miss the other:
   the draw `pool` filter *and* the direct-pick `if (game.retired)` 400. Miss the
   latter and an archived game stays playable by id even though it is invisible
-  in the UI that would offer it.
+  in the UI that would offer it. The same `pool` filter also carries the
+  **player-count** arithmetic, which is mirrored in `showStartSession()`'s live
+  preview and has had a team term in it since #575 — see
+  `.claude/rules/session-teams.md` §2; the two copies must move together.
 - `lib/repo/{json,postgres}.js` `createRound` import filter (Postgres needs a
   second `whereRaw`, the JSON one a second `&&`).
 
