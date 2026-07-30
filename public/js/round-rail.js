@@ -61,7 +61,7 @@ function buildRoundRail(round, activeTab, sub) {
   // --- Identity. The hero this mirrors stays on the Start tab for narrow
   // screens, where there is no rail to carry it; CSS hides it here instead.
   const id = h(`<div class="rail__id">
-       <div class="rail__name">${esc(round.name)}</div>
+       <div class="rail__name"></div>
        <div class="rail__members">${round.members
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${esc(initials(m.name))}</a>`)
          .join('')}</div>
@@ -70,6 +70,10 @@ function buildRoundRail(round, activeTab, sub) {
          <span class="stat-chip"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(tn(playedCount, 'home.chip.sessionsOne', 'home.chip.sessions'))}</span>
        </div>
      </div>`);
+  // Rename (#562). The hero this mirrors is hidden at rail widths, so without the
+  // affordance here it would exist only below 1280px — the same reason the "+"
+  // seat below is repeated.
+  id.querySelector('.rail__name').appendChild(editableRoundName(round));
   id.querySelectorAll('.rail__members .avatar').forEach((el, i) => {
     const m = round.members[i];
     if (m) makeMemberLink(el, rid, m.id);

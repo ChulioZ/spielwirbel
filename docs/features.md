@@ -7,7 +7,10 @@ What the app does, in detail. For a short overview see the
 - **Rounds** – a group with a name and any number of members. The home screen
   is a lobby of round cards (members, game/session counts, last result); a new
   round is set up on a playful "seats around the table" screen, optionally
-  importing the games list from an existing round. Groups change, so a further
+  importing the games list from an existing round. The **name can be corrected
+  later** — click it on the round's Start screen (or in the desktop rail) and
+  type; the change is noted in the Chronik, so on a shared round everyone can
+  see who renamed it. Groups change, so a further
   seat can be added later from the "+" in the round's member strip. With accounts on, the seat at
   the head of that table is **yours** — the creator is seated automatically (opt
   out with "Ich spiele mit"), and on any other round a member page offers

@@ -164,6 +164,58 @@ test('GET /api/rounds/:rid 404s for an unknown round', async () => {
   assert.equal(res.status, 404);
 });
 
+// #562: the round's name was immutable for its whole life — there was no PATCH
+// route at all, and the only workaround (recreate, import, delete) threw away the
+// session history.
+test('PATCH /api/rounds/:rid renames the round', async () => {
+  const round = await createRound(request, { name: 'Tippfehlerrunde' });
+  const res = await request(app).patch(`/api/rounds/${round.id}`).send({ name: '  Freitagsrunde  ' });
+  assert.equal(res.status, 200);
+  // Trimmed by the same schema creation uses.
+  assert.equal(res.body.name, 'Freitagsrunde');
+  // It is the round that came back, not a stub — and it is persisted.
+  assert.deepEqual(res.body.members.map((m) => m.name), ['Alice', 'Bob']);
+  assert.equal((await request(app).get(`/api/rounds/${round.id}`)).body.name, 'Freitagsrunde');
+  // The lobby card reads the summary, not the round — it must follow too.
+  const entry = (await request(app).get('/api/rounds')).body.find((r) => r.id === round.id);
+  assert.equal(entry.name, 'Freitagsrunde');
+});
+
+// The name rules must be the ONE schema (#562), so a rename can never accept
+// what creation rejects. Both refusals carry creation's own message.
+test('PATCH /api/rounds/:rid rejects an empty or whitespace-only name', async () => {
+  const round = await createRound(request);
+  for (const name of ['', '   ', undefined]) {
+    const res = await request(app).patch(`/api/rounds/${round.id}`).send({ name });
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, 'Round name is missing');
+  }
+  assert.equal((await request(app).get(`/api/rounds/${round.id}`)).body.name, 'Test round');
+});
+
+test('PATCH /api/rounds/:rid 404s for an unknown round', async () => {
+  const res = await request(app).patch('/api/rounds/does-not-exist').send({ name: 'X' });
+  assert.equal(res.status, 404);
+});
+
+// The Chronik entry is what lets an owner see that (and who) renamed a round
+// they share. A rename to the identical name writes none — that feed has to
+// stay readable.
+test('PATCH /api/rounds/:rid logs one round_renamed activity, none for a no-op', async () => {
+  const round = await createRound(request, { name: 'Alt' });
+  await request(app).patch(`/api/rounds/${round.id}`).send({ name: 'Neu' });
+  await request(app).patch(`/api/rounds/${round.id}`).send({ name: 'Neu' });
+
+  const acts = (await request(app).get(`/api/rounds/${round.id}/activities`)).body
+    .filter((a) => a.type === 'round_renamed');
+  assert.equal(acts.length, 1);
+  assert.equal(acts[0].name, 'Neu');
+  // Accounts are off in this suite, so nobody is acting — the key must be absent
+  // rather than naming the first unlinked seat
+  // (.claude/rules/actor-seat-needs-a-uid-guard.md).
+  assert.equal('actorMemberId' in acts[0], false);
+});
+
 test('DELETE /api/rounds/:rid removes the round', async () => {
   const round = await createRound(request);
   const del = await request(app).delete(`/api/rounds/${round.id}`);

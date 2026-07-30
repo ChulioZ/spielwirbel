@@ -150,6 +150,7 @@ const frontendGlobals = {
   RAIL_OWN_ENTRY: 'readonly', railItem: 'readonly', railAction: 'readonly',
   buildRoundRail: 'readonly',
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
+  editableRoundName: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
   renderRecapSection: 'readonly',

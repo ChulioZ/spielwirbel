@@ -1,6 +1,6 @@
 'use strict';
 
-/* Routes for rounds: list, detail, create (optionally importing games), delete. */
+/* Routes for rounds: list, detail, create (optionally importing games), rename, delete. */
 
 const express = require('express');
 const { z } = require('zod');
@@ -8,9 +8,19 @@ const repo = require('../lib/repo');
 const storage = require('../lib/storage');
 const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
+const { actorSeat } = require('../lib/actor-seat');
 const { trackEvent, logger } = require('../lib/observability');
 
 const router = express.Router();
+
+// The round's name — declared once and shared by create and rename (#562), so
+// the two cannot drift into different rules for the same field. A rename that
+// accepted what creation rejects (or the reverse) is the silent kind of
+// inconsistency .claude/rules/shared-constants-across-the-stack.md is about.
+const roundNameSchema = z.preprocess(
+  (v) => String(v || '').trim(),
+  z.string().min(1, 'Round name is missing')
+);
 
 // Create-round body. `members` is normalized (each entry stringified, trimmed,
 // blanks dropped), and `importFromRoundId` is passed through untouched.
@@ -19,7 +29,7 @@ const router = express.Router();
 // to start one). "At least one member" is checked in the HANDLER instead, where
 // the owner seat is known — the schema alone cannot see it.
 const createRoundSchema = z.object({
-  name: z.preprocess((v) => String(v || '').trim(), z.string().min(1, 'Round name is missing')),
+  name: roundNameSchema,
   members: z
     .preprocess(
       (v) => (Array.isArray(v) ? v.map((m) => String(m || '').trim()).filter(Boolean) : []),
@@ -29,6 +39,10 @@ const createRoundSchema = z.object({
   ownerSeat: z.boolean().optional(),
   importFromRoundId: z.unknown().optional(),
 });
+
+// Rename body: the name and nothing else. Members, design and the shelf each
+// have their own routes, so this stays a single-field patch.
+const renameRoundSchema = z.object({ name: roundNameSchema });
 
 // Compact list for the home screen: identity, live counts, the round's design
 // and a "last played" highlight so the lobby cards can tell each round's story.
@@ -104,6 +118,34 @@ router.post('/', async (req, res) => {
   });
   trackEvent('round_created', { tenantId: req.tenantId });
   res.status(201).json(round);
+});
+
+// Rename a round (#562). The name was typed once at creation and was then
+// immutable for the round's whole life, although it is the most visible string
+// the round owns (lobby card, top-bar context, rail identity, Start heading) and
+// everything else — member names, game titles, tags, the design — is editable.
+//
+// Deliberately NOT owner-only, unlike DELETE below. .claude/rules/round-grant-resolver.md
+// draws that line at destroying the round or reparenting its shelf; renaming is
+// acting WITHIN the round, the same class as editing a member name or a game
+// title, both of which a grantee can already do. Hence no `if (req.grant)` guard
+// here — the rename is instead recorded in the round's activity feed, so an
+// owner can always see who changed it (operator decision, #562).
+router.patch('/:rid', async (req, res) => {
+  const body = validateBody(renameRoundSchema, req, res);
+  if (!body) return;
+
+  // The light read (no games/sessions payload) — it gives both the round-vs-
+  // nothing 404 and the members the actor's seat is resolved against.
+  const meta = await req.repo.getRoundMeta(req.params.rid);
+  if (!meta) return res.status(404).json({ error: 'Round not found' });
+
+  const round = await req.repo.renameRound(req.params.rid, body.name, actorSeat(meta, req.userId));
+  if (!round) return res.status(404).json({ error: 'Round not found' });
+  // Same `shared` flag GET /:rid sets, for the same reason: a client that
+  // replaces its round object with this response must not silently lose the
+  // marker that hides owner-only actions from a grantee.
+  res.json(req.grant ? { ...round, shared: true } : round);
 });
 
 router.delete('/:rid', async (req, res) => {
