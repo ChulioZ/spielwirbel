@@ -116,11 +116,15 @@ What the app does, in detail. For a short overview see the
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally filter
   the collection by custom tags, and draw a random set of candidate games —
   only games whose player range fits the number of joining members are
-  eligible. The tags and count a round was last drawn with are remembered and
-  preselected the next time, so a group that always draws the same way just
-  confirms. The device is then passed around: a handover screen names whose
-  turn it is, and each member rates every drawn game **1–5** or proposes to
-  retire it (member order is randomized).
+  eligible. From a tablet width up the setup screen splits in two: who is at the
+  table on the left, and on the right the tag filter, the draw count and a live
+  panel showing exactly which games are currently in the pot, so seating one
+  more player or excluding a tag visibly changes the shelf beside it. The tags
+  and count a round was last drawn with are remembered and preselected the next
+  time, so a group that always draws the same way just confirms. The device is
+  then passed around: a handover screen names whose turn it is, and each member
+  rates every drawn game **1–5** or proposes to retire it (member order is
+  randomized).
 - **Guests** – a visitor who isn't part of the group can be named on the setup
   screen: they count toward the player range the draw filters by, take their own
   hot-seat turn, can be recorded as a winner, and stay in that session's record
@@ -128,6 +132,12 @@ What the app does, in detail. For a short overview see the
   list, the Pokale standings and the win streak untouched. A guest rates games
   but gets no "retire" vote: throwing a game off the shelf is the permanent
   group's call.
+- **Teams** – two or more of the people joining a session — members and guests
+  in any mix — can be grouped into a team that plays and wins together, for that
+  session only. A team counts as **one player** when the draw matches a game's
+  player range, so six people in three pairs can draw a three-player game, and
+  the winner picker offers the team as a single chip: recording it credits every
+  member individually, so the standings and the history read as before.
 - **Jetzt spielen** (play now) – when the group already knows what they want,
   launch a session for **one specific game** straight from its detail page or a
   Pokale tile: pick who joins and skip the vote entirely, landing directly on

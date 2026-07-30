@@ -442,6 +442,180 @@ test('guests count toward the player range of the draw pool', async () => {
   assert.equal(withTwo.body.games.length, 1);
 });
 
+/* ------------------------------- Teams (#575) ------------------------------ */
+
+// The wire format names a member by id but a guest by POSITION, and it has to:
+// guest ids are minted in this very request, so the client cannot know one.
+test('a team resolves member ids and guest positions into one party', async () => {
+  const round = await createRound(request); // Alice + Bob
+  await addGame(round.id, { title: 'A', maxPlayers: '8' });
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({
+      count: 1,
+      guests: ['Dana', 'Eli'],
+      teams: [{ memberIds: [round.members[0].id], guestIndices: [1] }],
+    });
+
+  assert.equal(res.status, 201);
+  const { teams, guests } = res.body.session;
+  assert.equal(teams.length, 1);
+  // Position 1 is Eli, not Dana — an off-by-one here would silently pair the
+  // wrong people, which nothing downstream could detect.
+  assert.deepEqual(teams[0].personIds, [round.members[0].id, guests[1].id]);
+  assert.equal(guests[1].name, 'Eli');
+  // Minted server-side like a guest id, and reported at the top level too, since
+  // the id exists nowhere client-side until this response.
+  assert.match(teams[0].id, /^[0-9a-f]{16}$/);
+  assert.deepEqual(res.body.teams, teams);
+});
+
+// A team holds one hand between its members, so six people in three pairs are
+// looking for a three-player game. The client-side pool preview applies the
+// identical arithmetic (.claude/rules/active-games-filter-sites.md).
+test('a team counts as ONE player in the draw pool', async () => {
+  const round = await createRound(request); // Alice + Bob
+  await addGame(round.id, { title: 'Three', minPlayers: '3', maxPlayers: '3' });
+  const [alice, bob] = round.members;
+
+  // 2 members + 2 guests = 4 bodies: too many for a 3-player game.
+  const flat = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, guests: ['Dana', 'Eli'] });
+  assert.equal(flat.status, 400);
+
+  // Pair Alice with Dana and the same four people are three parties.
+  const paired = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({
+      count: 1,
+      guests: ['Dana', 'Eli'],
+      teams: [{ memberIds: [alice.id], guestIndices: [0] }],
+    });
+  assert.equal(paired.status, 201);
+
+  // And pairing everyone drops it to two parties, which is short again — so the
+  // count really follows the teams rather than merely tolerating them.
+  const bothPaired = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({
+      count: 1,
+      guests: ['Dana', 'Eli'],
+      teams: [
+        { memberIds: [alice.id], guestIndices: [0] },
+        { memberIds: [bob.id], guestIndices: [1] },
+      ],
+    });
+  assert.equal(bothPaired.status, 400);
+});
+
+// Lenient like every sibling schema: nothing here 400s, it is all dropped.
+test('teams drop non-joining people, doubles and anything left too small', async () => {
+  const round = await createRound(request, { members: ['Alice', 'Bob', 'Cleo'] });
+  await addGame(round.id, { title: 'A', minPlayers: '1', maxPlayers: '8' });
+  const [alice, bob, cleo] = round.members;
+
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({
+      count: 1,
+      memberIds: [alice.id, bob.id, cleo.id],
+      guests: ['Dana'],
+      teams: [
+        // A member who did not join, and a guest position that does not exist.
+        { memberIds: [alice.id, 'nobody'], guestIndices: [0, 9] },
+        // Alice is already taken, so this one is left with just Bob — too small.
+        { memberIds: [alice.id, bob.id.slice(0, -1) + 'x'], guestIndices: [] },
+        { memberIds: [bob.id, cleo.id], guestIndices: [] },
+        // Not an object at all: dropped by the schema before resolution.
+        'nope',
+      ],
+    });
+
+  assert.equal(res.status, 201);
+  const { teams, guests } = res.body.session;
+  assert.deepEqual(teams.map((tm) => tm.personIds), [
+    [alice.id, guests[0].id],
+    [bob.id, cleo.id],
+  ]);
+});
+
+// The order of those two rules decides this, and only a dropped team followed by
+// a valid one wanting the same person can see it: claiming before the size check
+// lets a team that is about to be discarded take its people out of the next one,
+// so both vanish and the pair silently plays as two solo parties.
+test('a team dropped for being too small does not claim its people', async () => {
+  const round = await createRound(request); // Alice + Bob
+  await addGame(round.id, { title: 'A', minPlayers: '1', maxPlayers: '8' });
+  const [alice, bob] = round.members;
+
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({
+      count: 1,
+      teams: [
+        { memberIds: [alice.id, 'nobody'], guestIndices: [] }, // one person -> dropped
+        { memberIds: [alice.id, bob.id], guestIndices: [] }, // must still get Alice
+      ],
+    });
+
+  assert.equal(res.status, 201);
+  assert.deepEqual(res.body.session.teams.map((tm) => tm.personIds), [[alice.id, bob.id]]);
+});
+
+// Absent, not [] — the session blob is stored verbatim in both backends, so a
+// defaulted key would split their stored shape (see the repo contract suite).
+test('a session started without teams grows no teams key', async () => {
+  const round = await createRound(request);
+  await addGame(round.id, { title: 'A' });
+  const drawn = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1 });
+  assert.equal('teams' in drawn.body.session, false);
+
+  const empty = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, teams: [] });
+  assert.equal('teams' in empty.body.session, false);
+
+  // A team of one is a solo player, so it leaves nothing behind either.
+  const solo = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, teams: [{ memberIds: [round.members[0].id], guestIndices: [] }] });
+  assert.equal('teams' in solo.body.session, false);
+
+  const direct = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ gameId: drawn.body.games[0].id, teams: [] });
+  assert.equal(direct.status, 201);
+  assert.equal('teams' in direct.body.session, false);
+});
+
+// The direct-play sheet has no pool to filter, so teams are there purely for
+// winner attribution — the same argument that brought guests to it in #532.
+test('the direct-pick flow stores teams, and a team win records every member', async () => {
+  const round = await createRound(request); // Alice + Bob
+  const game = await addGame(round.id, { title: 'Two', minPlayers: '2', maxPlayers: '2' });
+  const [alice] = round.members;
+
+  const started = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({
+      gameId: game.id,
+      guests: ['Dana'],
+      teams: [{ memberIds: [alice.id], guestIndices: [0] }],
+    });
+  assert.equal(started.status, 201);
+  const team = started.body.session.teams[0];
+
+  // A team win is stored as a win for EACH of its people — that flat list is
+  // what lets the Pokale standings and the Chronik keep reading winnerIds with
+  // no idea teams exist.
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${started.body.session.id}/finish`)
+    .send({ finished: true, winnerIds: team.personIds });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.winnerIds, team.personIds);
+});
+
 test('a guest can be recorded as a winner; another session\'s guest cannot', async () => {
   const round = await createRound(request);
   await addGame(round.id, { title: 'A' });
