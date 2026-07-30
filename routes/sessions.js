@@ -13,7 +13,7 @@ const { emitFeedEvent } = require('../lib/feed');
 // The cap lives with the frontend helper that also enforces it on the setup
 // screen — one source of truth across the boundary (#458, see
 // .claude/rules/shared-constants-across-the-stack.md).
-const { MAX_SESSION_GUESTS, GUEST_NAME_MAX } = require('../public/js/session-people');
+const { MAX_SESSION_GUESTS, GUEST_NAME_MAX, MIN_TEAM_SIZE } = require('../public/js/session-people');
 
 const router = express.Router({ mergeParams: true });
 
@@ -33,6 +33,53 @@ function resolveGuests(names) {
     .map((name) => ({ id: crypto.randomBytes(8).toString('hex'), name }));
 }
 
+// Resolve the client's team declarations into stored `{ id, personIds }` records
+// (#575).
+//
+// The wire format names a member by id but a guest by POSITION in the same
+// request's `guests` array, and it has to: guest ids are minted here, moments
+// ago, so the client cannot possibly know one. Positions are resolved against
+// the already-minted `guests`, which is why this runs after resolveGuests().
+//
+// Lenient like every sibling — this never 400s. In order: drop people who did
+// not join this session, drop a person an earlier team already claimed (nobody
+// plays in two parties), then drop any team left below MIN_TEAM_SIZE, a group of
+// one being a solo player rather than a team. No separate cap is needed: every
+// team must hold two distinct joined people, and the participants are already
+// bounded by MAX_SESSION_GUESTS and the per-round members quota.
+function resolveTeams(raw, memberIds, guests) {
+  const joined = new Set(memberIds);
+  const guestById = guests.map((g) => g.id);
+  const claimed = new Set();
+  const teams = [];
+  raw.forEach((team) => {
+    const personIds = [];
+    const take = (pid) => {
+      if (!pid || claimed.has(pid) || personIds.includes(pid)) return;
+      personIds.push(pid);
+    };
+    team.memberIds.forEach((mid) => { if (joined.has(mid)) take(mid); });
+    team.guestIndices.forEach((i) => { take(Number.isInteger(i) ? guestById[i] : undefined); });
+    // Claim only once the team survives, or a team dropped for being too small
+    // would take its people out of a later, valid one.
+    if (personIds.length < MIN_TEAM_SIZE) return;
+    personIds.forEach((pid) => claimed.add(pid));
+    teams.push({ id: crypto.randomBytes(8).toString('hex'), personIds });
+  });
+  return teams;
+}
+
+// One declared team on the wire. Both lists are coerced the same lenient way as
+// their siblings above; `resolveTeams` does the real filtering, which needs the
+// round and the minted guests.
+const teamSchema = z.object({
+  memberIds: z.preprocess((v) => (Array.isArray(v) ? v.map(String) : []), z.array(z.string())),
+  guestIndices: z.preprocess(
+    (v) => (Array.isArray(v) ? v.map((x) => parseInt(x, 10)).filter(Number.isInteger) : []),
+    z.array(z.number())
+  ),
+});
+
 // Start-session body. Every field is lenient (unknown -> default), exactly like
 // the old hand-rolled normalization: memberIds are coerced to a string array
 // (round-membership filtering still happens in the handler, which needs the
@@ -46,6 +93,12 @@ const startSessionSchema = z.object({
   excludeTagIds: z.preprocess((v) => (Array.isArray(v) ? v.map(String) : []), z.array(z.string())),
   // Guests (#458) arrive as NAMES; resolveGuests() mints their ids below.
   guests: z.preprocess((v) => (Array.isArray(v) ? v.map(String) : []), z.array(z.string())),
+  // Teams (#575). Non-object entries are dropped here so the schema itself can
+  // never reject the request; resolveTeams() applies the real rules.
+  teams: z.preprocess(
+    (v) => (Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && !Array.isArray(x)) : []),
+    z.array(teamSchema)
+  ),
   gameId: z.unknown().optional(),
 });
 
@@ -94,6 +147,10 @@ router.post('/', async (req, res) => {
 
   // Guests (#458) arrive as names and are minted here for BOTH modes (#532).
   const guests = resolveGuests(body.guests);
+  // Teams (#575), likewise for both modes: the draw filters its pool by the
+  // number of parties, and direct-pick needs them so the results screen's winner
+  // picker can record "Anna & Dana won" in one tap.
+  const teams = resolveTeams(body.teams, memberIds, guests);
 
   // Direct-pick mode: the user explicitly chose one game, so there is no draw
   // and no voting. Ignore count and the player-range pool — but not guests: they
@@ -112,8 +169,10 @@ router.post('/', async (req, res) => {
       requestedCount: 1,
       memberIds,
       // Same absent-key discipline as the draw path below: a guestless session
-      // grows no `guests` key (.claude/rules/postgres-backend.md).
+      // grows no `guests` key (.claude/rules/postgres-backend.md), and a
+      // teamless one no `teams` key (#575).
       ...(guests.length ? { guests } : {}),
+      ...(teams.length ? { teams } : {}),
       gameIds: [game.id],
       votes: {}, // no voting phase in direct-pick mode
       chosenGameId: game.id, // the game is chosen up front
@@ -126,9 +185,9 @@ router.post('/', async (req, res) => {
       done: true,
     });
     trackEvent('session_created', { tenantId: req.tenantId });
-    // Same convenience shape as the draw path below — the minted guest ids only
-    // exist server-side until this response, so both modes report them.
-    return res.status(201).json({ session, games: [game], members, guests });
+    // Same convenience shape as the draw path below — the minted guest and team
+    // ids only exist server-side until this response, so both modes report them.
+    return res.status(201).json({ session, games: [game], members, guests, teams });
   }
 
   let count = body.count;
@@ -151,7 +210,12 @@ router.post('/', async (req, res) => {
   // identical arithmetic and the two must agree
   // (.claude/rules/active-games-filter-sites.md). Direct-pick consults no player
   // range, which is why only this mode uses the count.
-  const playerCount = memberIds.length + guests.length;
+  //
+  // A TEAM counts as ONE player (#575): its members hold one hand between them,
+  // so six people in three pairs are looking for a three-player game. Hence
+  // headcount minus everyone who is in a team, plus one per team.
+  const teamedCount = teams.reduce((n, tm) => n + tm.personIds.length, 0);
+  const playerCount = memberIds.length + guests.length - teamedCount + teams.length;
 
   const pool = round.games.filter(
     (g) =>
@@ -183,6 +247,8 @@ router.post('/', async (req, res) => {
     // `guests` key, so the JSON and Postgres blobs stay byte-identical
     // (.claude/rules/postgres-backend.md). Absent and [] mean the same on read.
     ...(guests.length ? { guests } : {}),
+    // Teams (#575) follow the same rule: absent means none.
+    ...(teams.length ? { teams } : {}),
     gameIds: picked.map((g) => g.id),
     votes: {}, // votes[personId][gameId] = { rating: 1..5|null, retire: bool }
     chosenGameId: null, // which game ends up being played
@@ -199,8 +265,8 @@ router.post('/', async (req, res) => {
   trackEvent('session_created', { tenantId: req.tenantId });
 
   // Convenience for the frontend: send the picked games right away, plus the
-  // resolved guests (whose ids only exist server-side until now).
-  res.status(201).json({ session, games: picked, members, guests });
+  // resolved guests and teams (whose ids only exist server-side until now).
+  res.status(201).json({ session, games: picked, members, guests, teams });
 });
 
 // Strip `retire` from every guest's vote entries (#458). A guest's rating is an

@@ -885,6 +885,7 @@ function startDirectSession(round, game) {
           <div id="seatMount"></div>
         </div>
         <div id="guestMount"></div>
+        <div id="teamMount"></div>
         <div class="toolbar sheet__actions">
           <button id="startDirect" class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.start'))}</button>
         </div>
@@ -901,10 +902,19 @@ function startDirectSession(round, game) {
   // screen's winner chips come from sessionPeople(), members ∪ guests.
   // No pool preview to refresh either (direct-pick consults no player range),
   // so the only thing following the count is the table's centre.
-  const guestPicker = renderGuestPicker(t('directPlay.guestsNote'), () => seatTable.refreshSeats());
-  const seatTable = renderSeatPicker(round, joining, null, () => guestPicker.guests.length);
+  const guestPicker = renderGuestPicker(t('directPlay.guestsNote'), () => {
+    seatTable.refreshSeats();
+    teamPicker.refreshTeams();
+  });
+  // Teams (#575). Nothing here is filtered by a player range — direct-pick
+  // consults none — so a team changes no pool: it is here so a team that wins
+  // can be recorded in one tap, the same argument that brought guests to this
+  // sheet in #532. Hence its own note, which promises no filtering.
+  const teamPicker = renderTeamPicker(round, joining, guestPicker, t('directPlay.teamsNote'), null);
+  const seatTable = renderSeatPicker(round, joining, () => teamPicker.refreshTeams(), () => guestPicker.guests.length);
   sheet.querySelector('#seatMount').replaceWith(seatTable);
   sheet.querySelector('#guestMount').replaceWith(guestPicker);
+  sheet.querySelector('#teamMount').replaceWith(teamPicker);
 
   const dismiss = () => closeSheet();
   const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
@@ -922,6 +932,7 @@ function startDirectSession(round, game) {
         gameId: game.id,
         memberIds: [...joining],
         guests: guestPicker.guests, // names only; the server mints the ids (#458)
+        teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
       });
       closeSheet(() => showResults(round, data.session, data.games));
     } catch (e) { toast(e.message); }

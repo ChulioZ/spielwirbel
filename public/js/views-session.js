@@ -27,6 +27,7 @@ function showStartSession(round) {
         <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
       </div>
       <div id="guestMount"></div>
+      <div id="teamMount"></div>
       <div class="field" id="gamesFilterField" hidden>
         <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
         <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
@@ -71,15 +72,21 @@ function showStartSession(round) {
   // only ever runs on a click (.claude/rules/frontend-script-load-order.md).
   const guestPicker = renderGuestPicker(t('startSession.guestsNote'), () => {
     seatTable.refreshSeats();
+    teamPicker.refreshTeams();
     updateHint();
   });
   const guests = guestPicker.guests;
-  const playerCount = () => joining.size + guests.length;
+  // Teams (#575): two or more of the people above playing as one party. Frozen
+  // at the draw like the seats and the guests, and the reason the pool count
+  // below is not simply a headcount.
+  const teamPicker = renderTeamPicker(round, joining, guestPicker, t('startSession.teamsNote'), () => updateHint());
+  const playerCount = () =>
+    joining.size + guests.length - teamPicker.teamedPeopleCount() + teamPicker.teamCount();
 
   // Games matching the tag filter, whose player range fits the joining count.
-  // Guests sit at the table, so they count here — and the server applies the
-  // identical arithmetic to the real pool
-  // (.claude/rules/active-games-filter-sites.md).
+  // Guests sit at the table, so they count here, and a team counts once however
+  // many people it holds (#575) — the server applies the identical arithmetic to
+  // the real pool (.claude/rules/active-games-filter-sites.md).
   const pool = () =>
     activeGames.filter(
       (g) =>
@@ -108,11 +115,17 @@ function showStartSession(round) {
   // Seats around the table: tap a member to toggle whether they join tonight.
   // The group attributes go on the table itself, not on #seatMount — replaceWith
   // swaps the mount out, so anything set on it in the markup would be lost.
-  const seatTable = renderSeatPicker(round, joining, updateHint, () => guests.length);
+  // Taking a member out of the session must also take them out of their team
+  // (#575) — the picker drops them and dissolves a team left with one person.
+  const seatTable = renderSeatPicker(round, joining, () => {
+    teamPicker.refreshTeams();
+    updateHint();
+  }, () => guests.length);
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   form.querySelector('#seatMount').replaceWith(seatTable);
   form.querySelector('#guestMount').replaceWith(guestPicker);
+  form.querySelector('#teamMount').replaceWith(teamPicker);
   updateHint();
 
   // Custom-tag chips (#238, tri-state #241) are the only game filter now (#242).
@@ -162,6 +175,7 @@ function showStartSession(round) {
         excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
         memberIds: [...joining],
         guests, // names only; the server mints the ids (#458)
+        teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
       });
       // Straight into the first handover — the drawn games stay secret until
       // each person rates them. The participant list is resolved through the one
@@ -472,6 +486,10 @@ async function showResults(round, session, gamesHint, reveal) {
   // (#458). Older sessions have no member list, so sessionPeople falls back to
   // all members of the round, and no `guests` key means none.
   const people = sessionPeople(round, session);
+  // The same people grouped into playing parties (#575): one entry per team plus
+  // one per un-teamed person. Drives the winner picker below, so a team is
+  // recorded in one tap and nobody is offered twice.
+  const parties = sessionParties(round, session);
 
   // Tally per game.
   const rows = games.map((g) => {
@@ -529,6 +547,25 @@ async function showResults(round, session, gamesHint, reveal) {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
     app.appendChild(peopleEl);
+  }
+
+  // Who played together (#575). Listed as its own row rather than folded into
+  // the participants above: that row answers "who was here", which is still one
+  // entry per person, and a team is a different fact about the same people.
+  const teamParties = parties.filter((p) => p.team);
+  if (teamParties.length) {
+    app.appendChild(
+      h(`<div class="result-people">
+           <span class="result-people__label">${esc(t('result.teams'))}</span>
+           <span class="result-people__list">${teamParties
+             .map(
+               (party) => `<span class="team-card team-card--flat">
+                  <span class="team-card__name">${iconText('ti-users', party.name)}</span>
+                </span>`
+             )
+             .join('')}</span>
+         </div>`)
+    );
   }
 
   // Podium: the top three *places* as a stage. Tied games share a place, so a
@@ -790,13 +827,24 @@ async function showResults(round, session, gamesHint, reveal) {
 
     // Guests can win too (#458) — they played the game. They just never enter
     // the round-level standings; see the Pokale tab.
+    //
+    // One chip per PARTY (#575), so a team is recorded in a single tap. What is
+    // stored stays a flat list of person ids: a team win is a win for each of
+    // its people, which is what lets the Pokale standings, the Chronik and the
+    // recap keep reading `winnerIds` with no idea teams exist.
     const chips = h('<div class="winner-chips"></div>');
-    people.forEach((p) => {
-      const sel = winnerIds.includes(p.id);
-      const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${esc(personLabel(p))}</button>`);
+    parties.forEach((party) => {
+      const ids = party.people.map((p) => p.id);
+      // A team counts as selected only when ALL of its people are in — a
+      // partially-set list (hand-crafted, or written before the team existed)
+      // reads as not selected, so one tap completes it rather than clearing it.
+      const sel = ids.every((id) => winnerIds.includes(id));
+      const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${party.team ? '<i class="ti ti-users" aria-hidden="true"></i> ' : ''}${esc(party.name)}</button>`);
       // Each toggle persists right away — no separate save button in this state.
       chip.addEventListener('click', () => saveWinners(
-        winnerIds.includes(p.id) ? winnerIds.filter((x) => x !== p.id) : [...winnerIds, p.id]
+        sel
+          ? winnerIds.filter((x) => !ids.includes(x))
+          : [...winnerIds, ...ids.filter((id) => !winnerIds.includes(id))]
       ));
       chips.appendChild(chip);
     });

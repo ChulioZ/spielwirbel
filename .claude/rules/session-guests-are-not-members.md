@@ -97,6 +97,21 @@ Two consequences follow and both are load-bearing:
 - The "rate or flag to continue" guard becomes rating-only for a guest, hence the
   separate `vote.toast.needRatingOnly` key.
 
+## 4b. Teams (#575) reuse this resolver — and add a second unit above the person
+
+`sessionParties()` groups the people above into **playing parties**: one entry per
+team plus one per un-teamed person. Two things here bear on this file directly:
+
+- **The guest tone and `personColor` are unchanged** — a team has no colour of
+  its own, and a guest inside a team keeps their marker, because the team's name
+  is built from `personLabel()`.
+- **A team win is a shared win**, so it breaks a streak exactly as §3 describes,
+  and a team holding a guest makes `wonByGuest` skip the whole session. Neither
+  is new behaviour; both are now reachable one step more easily.
+
+The rest — the positional wire format, the party-count arithmetic and why
+`winnerIds` stays flat — is in `.claude/rules/session-teams.md`.
+
 ## 5. Smaller things
 
 - **`guests` is absent, never `[]`.** The route spreads
