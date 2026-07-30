@@ -43,6 +43,14 @@ const ruleDocs = fs.readdirSync(path.join(ROOT, '.claude', 'rules'))
   .map((f) => read(`.claude/rules/${f}`));
 const rootDocs = ['CLAUDE.md', 'README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'CODE_OF_CONDUCT.md'].map(read);
 
+// The user-facing docs under docs/ (not docs/legal/, which cites no code paths).
+// They joined on 2026-07-30, when the README's reference material moved into them:
+// docs/architecture.md alone names ~90 source files, so after that move the majority
+// of the repo's cited paths lived in files this check could not see.
+const userDocs = fs.readdirSync(path.join(ROOT, 'docs'))
+  .filter((f) => f.endsWith('.md'))
+  .map((f) => read(`docs/${f}`));
+
 // The YAML-ish frontmatter block, or null when the file opens without one.
 const frontmatter = (text) => {
   const m = /^---\n([\s\S]*?)\n---/.exec(text);
@@ -104,7 +112,7 @@ test('every repo path a rule, skill or root doc cites actually exists', () => {
   );
 
   const missing = [];
-  for (const [file, text] of [...docs, ...ruleDocs, ...rootDocs]) {
+  for (const [file, text] of [...docs, ...ruleDocs, ...rootDocs, ...userDocs]) {
     for (const ref of new Set(text.match(PATH_RE) || [])) {
       if (DELETED_ON_PURPOSE.has(ref)) continue;
       if (!fs.existsSync(path.join(ROOT, ref))) missing.push(`${file} -> ${ref}`);

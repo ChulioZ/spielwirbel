@@ -46,7 +46,8 @@ checklist instead of a constant):
 | File | What it asserts |
 |---|---|
 | `CLAUDE.md` — "Current stage" | auth mode, whether registration is public, what a change reaches |
-| `README.md` — the `AUTH_PASSWORD` paragraph + the accounts-mode paragraph | what "the maintainer's hosted instance" runs |
+| `README.md` — the status callout | whether registration is open, and what self-hosting defaults to |
+| `docs/configuration.md` — the `AUTH_PASSWORD`, accounts-mode and layered-mode paragraphs | what "the maintainer's hosted instance" runs (these moved out of `README.md` on 2026-07-30) |
 | `SECURITY.md` — "Project stage" | the threat model an external reporter calibrates against |
 | `.claude/rules/accounts-mode-gate.md` | which of the four modes is "today's prod" |
 | `.claude/rules/user-accounts.md` | whether accounts are live or staged |

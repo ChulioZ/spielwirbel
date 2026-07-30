@@ -22,8 +22,7 @@ This repository is built and maintained with
 [Claude Code](https://claude.com/claude-code), and it ships the workflow with it:
 **skills** in `.claude/skills/` and **rules** in `.claude/rules/` that encode how
 work gets done here. Whether you contribute by prompting Claude Code or by hand,
-that is the intended path — start there rather than improvising. The README's
-[Contributing](README.md#contributing) section walks through the skill workflow;
+that is the intended path — start there rather than improvising.
 `CLAUDE.md` states the constraints you must work within.
 
 In short, before opening a PR:
@@ -37,8 +36,55 @@ In short, before opening a PR:
   `npm run coverage:ci` all pass. The coverage one is easy to forget and it
   **gates the merge**: CI's required `ci-passed` check fails if line coverage
   drops below the floor, even with every test green.
-- Update `README.md` in the same PR when the change adds or renames a user-facing
-  feature, alters the file tree, or changes routes, scripts, or env vars.
+- Update the docs in the same PR when the change adds or renames a user-facing
+  feature ([`docs/features.md`](docs/features.md)), alters the file tree
+  ([`docs/architecture.md`](docs/architecture.md) — a test enforces this one), or
+  changes routes, scripts or env vars
+  ([`docs/configuration.md`](docs/configuration.md)). See
+  `.claude/rules/keep-readme-current.md`.
+
+### Before you start
+
+- Read `CLAUDE.md` — it states the current stage, the architecture you must work
+  within (no frontend build step, no framework, no ORM; German UI, English code),
+  and the production-readiness mindset that applies to new work.
+- Skim `.claude/rules/` — one short file per hard-won gotcha (frontend script load
+  order, the shared-global-scope lint setup, theme-derived colours, why you must
+  never read the production `data/` folder, …). When you touch an area a rule
+  covers, follow it. Found a new gotcha? Add a rule file for it.
+
+### The skill workflow
+
+The skills chain into a backlog-to-merge pipeline. Invoke a skill in Claude Code
+by name (e.g. `/implement`), or just describe the task and let the matching skill
+trigger. Each is self-contained and enforces this repo's constraints.
+
+| Skill | What it does |
+| --- | --- |
+| **`create-issue`** | Interviews you and files a GitHub issue specific enough to implement without follow-up questions, grounded in this repo's architecture. |
+| **`pick-issue`** | Surveys open issues, Dependabot PRs and human PRs, and hands the best next one to the right builder skill. An open non-draft human PR is picked first — only a security exposure or broken core functionality outranks it — so contributors get feedback fast; everything else is ranked by value-for-effort. |
+| **`implement`** | Takes a change end-to-end: branch from up-to-date `main`, write the code **plus tests**, review locally, open a PR, review it, and merge only if it's safe — then watch `main`'s CI and clean up. |
+| **`review-pr`** | Reviews a pull request (human or bot) against this repo's constraints and returns a `SAFE TO MERGE` / `NOT SAFE` verdict with concrete blockers. |
+| **`dependabot`** | Triages open Dependabot PRs, merging what passes review and commenting on what doesn't. |
+| **`test-data`** | Creates isolated, throwaway data in a temp `DATA_DIR` for tests or manual runs — the safe alternative to ever touching the real `data/`. |
+| **`audit`** | Runs the full audit sweep — accessibility, legal, security, UI, Claude-file, and code-maturity — in one pass, merges the results into one ranked report, and files issues only with your approval. |
+| **`accessibility-audit`** | Audits the running UI against a maintained WCAG-based criteria list (drives the app in a browser over generated data), and periodically refreshes the criteria from current standards. |
+| **`legal-audit`** | Checks the privacy policy, Impressum, Nutzungsbedingungen and `docs/legal/` records against what the code actually does, and surfaces recent legal developments as a sourced reading list (never adopting a legal duty on its own). |
+| **`security-audit`** | Audits the security surface — auth, tenant isolation/RLS, transport/CSRF/cookies, injection/SSRF, uploads, secrets and CI tooling — against a maintained criteria list; composes with the built-in `/security-review` and CodeQL rather than duplicating them. |
+| **`ui-audit`** | Judges the app's *visual* design — colour, layout, spacing, type, depth, iconography, motion polish — in a browser and drives it toward beautiful-and-characterful within the brand. Plain UI only (not UX, not accessibility). |
+| **`claude-file-audit`** | Audits the repo's own documentation — `CLAUDE.md`, `README.md`, the root docs (`CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE`), the `.github/` community files and everything under `.claude/` — for staleness, dangling references and contradictions, and refreshes its criteria from current harness capabilities. |
+| **`code-maturity-audit`** | Audits the codebase's production maturity — structure smells, hand-rolled code that should become a mature dependency, single-process in-memory-state assumptions, and test-suite maturity — continuing the build-vs-buy ledger that produced the Knex/pino/zod/JWT adoptions. |
+
+A typical flow: **`create-issue`** to capture the work → **`pick-issue`** to
+choose what's next → **`implement`** to ship it (it calls `review-pr` before
+merging). If a pull request is open, though, `pick-issue` sends you to
+**`review-pr`** instead — an unanswered PR outranks the backlog, because the wait
+is the only cost that grows while you build something else. For dependency bumps,
+**`dependabot`** handles the batch. The six **`*-audit`** skills (and the
+**`audit`** umbrella) run a research → self-critique → audit loop over
+accessibility, legal, security, UI, code maturity and the repo's own Claude
+files; each keeps its criteria in a versioned `criteria.md` that changes only via
+a reviewable PR.
 
 ## Translations
 

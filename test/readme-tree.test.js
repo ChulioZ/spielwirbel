@@ -1,17 +1,24 @@
 'use strict';
 
-/* README.md's architecture tree is the repo's file map — the thing a new
-   contributor (or a new session) reads to find out what a module is for. It
-   drifts in exactly one direction: someone adds `lib/<new>.js`, documents the
-   *feature* in the surrounding prose, and never touches the tree. The omission
+/* The architecture tree in `docs/architecture.md` is the repo's file map — the
+   thing a new contributor (or a new session) reads to find out what a module is
+   for. It drifts in exactly one direction: someone adds `lib/<new>.js`, documents
+   the *feature* in the surrounding prose, and never touches the tree. The omission
    is invisible, because a tree listing ~60 siblings reads as complete.
 
-   `.claude/rules/keep-readme-current.md` already names "changes the file/folder
-   structure shown in the README's architecture tree" as a trigger, and it was
-   still missed eight times (six `lib/` modules and two `public/js/` ones, found
-   by the 2026-07-26 claude-file-audit). A correct rule that gets skipped that
-   often does not need rewording — it needs a check that cannot be skipped, which
-   is this file.
+   `.claude/rules/keep-readme-current.md` already names the file tree as a trigger,
+   and it was still missed eight times (six `lib/` modules and two `public/js/`
+   ones, found by the 2026-07-26 claude-file-audit). A correct rule that gets
+   skipped that often does not need rewording — it needs a check that cannot be
+   skipped, which is this file.
+
+   The tree lived in `README.md` until 2026-07-30, when the README became a landing
+   page and the reference material moved into `docs/`. Note how that move went: the
+   fence regex stopped matching and this file failed **loudly** with "could not find
+   the architecture tree fence", rather than passing vacuously over a document that
+   no longer contained a tree. Keep that property — assert the block was found
+   before reading it, so relocating the tree again can never silently disarm the
+   guard.
 
    Deliberately a presence check on the entry name, not a structural parse of the
    ASCII tree: it catches the real failure (a module nobody documented) without
@@ -25,10 +32,11 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 
 // The architecture tree is the one fenced block that starts with `server.js`.
+const TREE_DOC = 'docs/architecture.md';
 const treeBlock = () => {
-  const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
-  const block = /```\n(server\.js[\s\S]*?)```/.exec(readme);
-  assert.ok(block, 'README.md: could not find the architecture tree fence (it starts with `server.js`)');
+  const doc = fs.readFileSync(path.join(ROOT, TREE_DOC), 'utf8');
+  const block = /```\n(server\.js[\s\S]*?)```/.exec(doc);
+  assert.ok(block, `${TREE_DOC}: could not find the architecture tree fence (it starts with \`server.js\`)`);
   return block[1];
 };
 
@@ -58,17 +66,17 @@ const walk = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true
 const sourceFiles = SOURCE_DIRS.flatMap((d) => walk(d));
 const sourceBasenames = new Set(sourceFiles.map((rel) => path.basename(rel)));
 
-test('every source module appears in the README architecture tree', () => {
+test('every source module appears in the architecture tree', () => {
   const names = entryNames(treeBlock());
   const undocumented = sourceFiles
     .filter((rel) => !names.has(path.basename(rel)))
     .sort();
 
   assert.deepEqual(undocumented, [],
-    `these modules exist but are missing from README.md's architecture tree:\n  ${undocumented.join('\n  ')}`);
+    `these modules exist but are missing from ${TREE_DOC}'s architecture tree:\n  ${undocumented.join('\n  ')}`);
 });
 
-test('the README architecture tree names no module that was deleted', () => {
+test('the architecture tree names no module that was deleted', () => {
   // The other direction: a removed module leaves a tree entry pointing at
   // nothing, which is how a session ends up looking for `lib/ai.js` (removed
   // with the AI surface in #264) and concluding the checkout is broken.
@@ -88,5 +96,5 @@ test('the README architecture tree names no module that was deleted', () => {
   }
 
   assert.deepEqual(stale, [],
-    `README.md's architecture tree names modules that no longer exist:\n  ${stale.join('\n  ')}`);
+    `${TREE_DOC}'s architecture tree names modules that no longer exist:\n  ${stale.join('\n  ')}`);
 });

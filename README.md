@@ -4,982 +4,130 @@
 [![Lint](https://github.com/ChulioZ/spielwirbel/actions/workflows/lint.yml/badge.svg)](https://github.com/ChulioZ/spielwirbel/actions/workflows/lint.yml)
 [![Secret Scan](https://github.com/ChulioZ/spielwirbel/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/ChulioZ/spielwirbel/actions/workflows/secret-scan.yml)
 
-A self-hosted web app for any group or gaming round to manage their board
-and digital games, decide what to play in a session, and track how much everyone
-liked each game. The user interface is available in **German and English**; the
-code and documentation are in English.
+**"What should we play tonight?"** — Spielwirbel draws a few games from your
+group's shelf, passes one device around the table so everyone rates them, and
+remembers what your round actually likes. Board games and video games together.
 
-> ℹ️ **Status: live as a public multi-tenant SaaS** — registration is open at
-> [spielwirbel.app](https://spielwirbel.app) (since 2026-07-24). The
-> maintainer's instance runs hosted (managed PostgreSQL, object storage, TLS,
-> and a token-first account model — see "Environment variables" below).
-> **Self-hosting still defaults to local-only with no authentication** unless
-> you set the env vars below — if you run it that way, keep it on a trusted
-> network you control, since there's no access control until you configure one.
+<p align="center">
+  <img src="public/img/landing-shelf-wide.en.webp" alt="The Regal — a round's game shelf as a card grid, with tag filter chips and the desktop navigation rail" width="820">
+</p>
 
-## Features
+Self-hostable, German + English UI, no tracking. Try it without an account at
+**[spielwirbel.app](https://spielwirbel.app)**.
 
-- **Rounds** – a group with a name and any number of members. The home screen
-  is a lobby of round cards (members, game/session counts, last result); a new
-  round is set up on a playful "seats around the table" screen, optionally
-  importing the games list from an existing round. Groups change, so a further
-  seat can be added later from the "+" in the round's member strip. With accounts on, the seat at
-  the head of that table is **yours** — the creator is seated automatically (opt
-  out with "Ich spiele mit"), and on any other round a member page offers
-  „Das bin ich" so your account can take its own seat. A claimed seat is what
-  puts your name on your actions in the Chronik.
-- **Games** – each game has a title, a required player range (min–max), any
-  number of custom round **tags** (see below), and an optional cover image (paste
-  from clipboard or pick a file). When adding a
-  game, the title field doubles as a **search-as-you-type lookup**: it queries
-  the **PlayStation Store**, **Steam**, the **Nintendo eShop** and the
-  **Xbox / Microsoft Store** (digital games) and **BoardGameGeek** (board games)
-  together and merges the hits into one
-  dropdown. When several stores return the **same title** (e.g. a cross-platform
-  game), they collapse into a **single row with one badge per store** — click
-  a badge to fill from that store, or the title to use the top match. Pick a
-  suggestion to auto-fill the title, cover art and player range, and store a link
-  back to the source page (shown on the game's detail
-  view). The lookup is optional — manual entry works exactly as before, and the
-  app degrades gracefully when a source is unreachable (one provider failing
-  still shows the others' results).
-- **Import a BoardGameGeek collection** – filling a shelf one game at a time is
-  the slow part of setting a round up, so link your BGG username once under
-  **Konto** and the Regal can pull in everything you have marked as *owned*
-  there in one go. You get a checklist to confirm (everything preselected, games
-  already on the shelf marked and skipped), and the games arrive with their
-  titles, player ranges, covers and a link back to BGG. It is **one-shot and on
-  demand** — never a background sync — and it needs no BGG password: a username
-  is enough, and you can unlink it again at any time. Accounts mode only, and
-  only for rounds that still have BoardGameGeek among their providers.
-- **Providers per round** – each round chooses which of the five databases its
-  lookups query (a "Provider" screen next to Tags in the round hub). A
-  board-games-only group can switch the four digital stores off so their hits
-  stop crowding the dropdown — and the requests stop being made at all. A round
-  that never configures it queries all five, as before; turning *every* provider
-  off is allowed too and simply leaves the title field a plain text input.
-  **Provider cover art is hotlinked, not copied:** the picture is loaded straight
-  from the store's own servers rather than downloaded onto this instance, because
-  re-hosting the four digital stores' box art on a public service needs a licence
-  they don't offer (issue #172). BoardGameGeek *does* grant one with its XML API
-  token (#117), so BGG covers stay hotlinked only for want of an image-resizing
-  pipeline. Your own uploaded covers are stored normally. One
-  consequence to expect: if a store moves or removes an image, that cover stops
-  showing — re-link the game or upload your own picture.
-  Details can be edited inline on the game's detail page. A game added by hand
-  (with no source link) can be **linked to a provider after the fact** from its
-  detail page: search the providers, pick the match, and choose which differing
-  fields (name, cover, player count) to take from it — the source
-  link is always saved. A link can also be **removed again** from the same
-  detail page if the match turns out to be wrong; a hotlinked provider cover is
-  cleared with it (your own uploaded cover is kept). Games are never lost by accident:
-  instead of deleting, they are **archived** — kept with a timestamp in a
-  browsable archive and restorable any time. There are two archives, because
-  the reason matters: **retired** ("Aussortiert") means the group wants rid of
-  the game, **completed** ("Durchgespielt") means they finished its content — a
-  campaign, a legacy box, a story-driven video game. A game is active, retired
-  or completed, never two at once, and either archive can be reached from the
-  round hub's footer. Only an already-archived game can be permanently
-  deleted. Games can be **moved between rounds**: "Spiele verschieben" in the
-  shelf's footer lists the round's games — archived ones included, labelled —
-  each pre-checked, so confirming untouched consolidates the whole round while
-  unchecking splits off just part of the shelf. Moved games keep their covers,
-  provider links and tags, and same-named tags are merged into the target. The
-  source round stays behind; a moved game drops out of its sessions, since a
-  session cannot reference games that now live elsewhere (a session left with
-  no games at all is dropped). Moving is owner-only — the action is not offered
-  on a round that was shared with you.
-- **Tags** – every round can define its own free-form tags (e.g. "outside",
-  "quick lunch break", "digital", "co-op") on a dedicated screen, reached from
-  the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign
-  any number of tags to a game — in the add-game sheet or later from the game's
-  detail page, creating new tags inline — and filter both the Regal and the
-  session draw by them (tri-state chips: off / include / exclude; included tags
-  combine with AND, excluded tags reject any match). Each tag can carry an
-  **icon** picked from a curated set, shown next to its name everywhere the tag
-  appears; a tag without one keeps the default tag glyph, and the icon can be
-  changed later from the Tags screen.
-  Deleting a tag simply unassigns it from every game.
-- **Members** – each member has a detail page (opened from the Start hero row,
-  the Pokale podium, or a session's participant list) with their stats — wins,
-  sessions joined, win rate, average rating given, and favorite game — and lets
-  you rename them and pick their avatar color from the curated palette.
-- **Round hub** – each round is a small app of its own, with four sections
-  presented per screen size: a floating bottom dock on phones, a tab strip at
-  the top of the content column on tablets, and from 1280px a persistent left
-  rail carrying the round's identity, the "start session" action, the four
-  sections, both archives and the settings screens. All three stay visible on
-  the round's sub-screens, marking the section they belong to:
-  - **Start** – the launchpad: hero with the members, a big "start session"
-    button, resumable in-progress sessions, the last played result, and gentle
-    retire recommendations for games that are rated low or often proposed for
-    retirement.
-  - **Regal** (shelf) – the game collection as a card grid with custom-tag
-    filter chips, a search pill, sorting
-    (random / name / rating),
-    and the add-game sheet. Each card opens the game's detail page
-    ("Spielepass") with its score ring, editable details, a **Jetzt spielen**
-    launcher, and the history of sessions it appeared in.
-  - **Chronik** – one month-grouped timeline of everything that happened:
-    games added / retired / restored and session outcomes.
-  - **Pokale** (trophies) – a winners' podium (ties share a step) plus stat
-    tiles: most played, best rated, current winning streak, and the
-    "Staubfänger" — the game gathering dust the longest. Below the standings,
-    a **Rückblick** turns the round's accumulated ratings into a readable
-    record: totals, the worst-rated game, the one the group disagrees about
-    most, and every member's own favourite.
-- **Sessions (hot-seat voting)** – pick who is playing tonight, optionally filter
-  the collection by custom tags, and draw a random set of candidate games —
-  only games whose player range fits the number of joining members are
-  eligible. The tags and count a round was last drawn with are remembered and
-  preselected the next time, so a group that always draws the same way just
-  confirms. The device is then passed around: a handover screen names whose
-  turn it is, and each member rates every drawn game **1–5** or proposes to
-  retire it (member order is randomized).
-- **Guests** – a visitor who isn't part of the group can be named on the setup
-  screen: they count toward the player range the draw filters by, take their own
-  hot-seat turn, can be recorded as a winner, and stay in that session's record
-  marked as a guest — but they never join the round, so they leave the member
-  list, the Pokale standings and the win streak untouched. A guest rates games
-  but gets no "retire" vote: throwing a game off the shelf is the permanent
-  group's call.
-- **Jetzt spielen** (play now) – when the group already knows what they want,
-  launch a session for **one specific game** straight from its detail page or a
-  Pokale tile: pick who joins and skip the vote entirely, landing directly on
-  the results screen with that game chosen.
-- **Finale & results** – votes stay sealed until everyone is done, then a
-  little show reveals the results: per-game average (colored by score), rating
-  distribution, medals for the favourites, and retirement proposals. Pick the
-  game you actually played and mark it finished; recording the winner(s) is an
-  optional follow-up step afterwards — or
-  cancel the session if nothing appealed. Sessions can be deleted later, and a
-  single game can be removed from a session's results.
-- **Ratings on demand** – a game's average is always computed live from all
-  session votes, so deleting a session automatically corrects every average.
-- **Designs** – per round, pick a colour scheme (page tone + accent); the
-  whole UI derives from it — surfaces, shadows, even the dark "stage" of the
-  finale.
-- **Languages** – German and English, following the system language by
-  default, switchable any time via the picker in the top bar.
-- **Shareable links & reload-safe navigation** – the URL reflects the current
-  screen (home, a round tab, a game, a member, a session result, …), so a
-  reload keeps you where you were and any stable view can be bookmarked or
-  linked to. Browser Back/Forward move between visited views.
-- **Denser lists on small screens** – a phone shows two shelf columns instead of
-  one, roughly halving the scroll of a full shelf, and the home lobby tiles its
-  round cards once there is room for a second one.
-- **Installable app (PWA)** – a web app manifest and a service worker make the
-  app installable to a phone or desktop home screen and let the app shell load
-  **offline** (the shell and static assets are cached; live round data still
-  needs the network). In keeping with the no-build-step stance, the manifest,
-  service worker and icons are plain static files.
-- **Link previews** – sharing the app's URL in a messenger or on social media
-  renders a card (title, description and a 1200×630 brand image) instead of a
-  bare link. The Open Graph/Twitter tags live statically in `index.html` because
-  scrapers don't run JavaScript; every deep link shows the same generic card, so
-  no round or member name ever ends up in a preview.
-- **Feedback** – a button in the top bar opens the contact form with a
-  **Feedback** category preselected, together with the screen it was written on
-  (issue #321). Submissions are **anonymous by default**: giving an e-mail
-  address so the operator can reply is optional, for every category. The operator
-  reads what comes in from the moderation panel (see below) — there is no
-  third-party feedback service and no analytics script involved.
-- **Support link (donations)** – when the operator sets `DONATE_URL`, a heart
-  button in the top bar opens a small sheet whose single action is a plain
-  link to the operator's donation page (new tab). Donations are voluntary and
-  unlock nothing; the app contains no payment code and embeds no third-party
-  widget — nothing is loaded from (or sent to) the donation platform until the
-  link is clicked. With `DONATE_URL` unset the button does not exist.
-- **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
-  request to another account by its **username**; the recipient accepts or
-  declines it in the in-app inbox. Friends then see each other's activity in a
-  **Freundeskreis feed** (a compact section on the home screen plus a dedicated
-  view at `/freunde`): only "*added a game*" and "*played a game*" notes with the
-  **game title and cover** — never member names, ratings, votes or round names,
-  and only for activity after you became friends. A friendship shares **no round
-  data**; it is purely social. Unfriending is unilateral and immediate in both
-  directions. With accounts off the whole feature is inert.
+> ℹ️ **Status: live as a public multi-tenant SaaS** — registration has been open
+> at [spielwirbel.app](https://spielwirbel.app) since 2026-07-24, and a guest
+> demo lets you look around without signing up at all.
+> **Self-hosting defaults to local-only with no authentication** — if you run it
+> that way, keep it on a trusted network you control, since there is no access
+> control until you configure one
+> ([`docs/configuration.md`](docs/configuration.md)).
 
-## Tech & architecture
+## Quick start
 
-- **Backend:** Node.js + [Express](https://expressjs.com/). Routes read and write
-  through a small **data-access layer** (`lib/repo/`) with two interchangeable
-  backends: by default a single `data/data.json` file (loaded into memory, written
-  atomically on every change — zero-dependency, right for local/home use), or
-  **PostgreSQL** when `DATABASE_URL` is set (the stateless path for a hosted
-  deployment; the app ensures its schema on startup). All round data is
-  **tenant-scoped** (issue #136): every request resolves to a tenant (the single
-  `default` tenant unless user accounts are enabled) and the data layer only
-  ever sees that tenant's rounds — on Postgres additionally enforced by
-  row-level security in the database itself. Cover images go through a
-  matching storage seam (`lib/storage/`): files under `data/uploads/` by default,
-  or **S3-compatible object storage** when `S3_BUCKET` is set (so uploads survive
-  an ephemeral/scaled host). Only the `/uploads/<key>` path is persisted either
-  way.
-- **Frontend:** plain HTML/CSS/vanilla JS under `public/` — **no build step for
-  development** (`npm start` serves `public/` directly). An *optional*
-  cache-busting build (`npm run build`, issue #141) mirrors `public/` into
-  `dist/` with content-hashed, minified JS/CSS for production; the server serves
-  it only under `NODE_ENV=production`. It exists purely to bust stale asset
-  caches after a deploy — not a bundler or framework.
-- **Hardening:** [helmet](https://helmetjs.github.io/) sets security headers
-  (CSP, `X-Content-Type-Options`, frame options, HSTS) and
-  [express-rate-limit](https://express-rate-limit.mintlify.app/) caps requests
-  with a generous global limit, which the static shell assets are exempt from
-  (#464) so a page load costs one request rather than ~50.
-  Mutating request bodies are validated at the router boundary with
-  [zod](https://zod.dev/) schemas (via `lib/validate.js`).
-  TLS is expected to terminate at a reverse proxy (`TRUST_PROXY` then forwards
-  the real client IP); see the env vars below. Responses are gzip-compressed
-  ([compression](https://github.com/expressjs/compression)), and content-hashed
-  build assets are served immutable (`sw.js` stays no-cache so updates roll out).
-- **Observability:** a `/healthz` liveness probe and a `/readyz` readiness probe
-  that checks the data backend, structured JSON
-  request/error logs to stdout (`LOG_LEVEL`, no bodies or personal data), and a
-  central error handler so unexpected throws never leak a stack trace — they
-  return a generic 500 and are logged (and optionally forwarded to
-  `ERROR_WEBHOOK_URL`). The same logger also emits a handful of product-usage
-  events (round/session/game/tag created, session finished) carrying only the
-  event name and tenant id — no analytics service, no cookies, no client-side
-  tracking. See `lib/observability.js`.
-- **Runs entirely on your machine.** Fonts and the icon set are self-hosted
-  under `public/fonts/`, and the subtle background grain is an inline SVG in the
-  stylesheet — no CDNs. The only runtime external calls are **opt-in**: the
-  add-game lookup queries the PlayStation Store, Steam, the Nintendo eShop, the
-  Xbox / Microsoft Store and BoardGameGeek server-side (via
-  `/api/rounds/:rid/lookup/*`, and only the providers that round enabled) only
-  when you type a title to search; it sends just the search text, and the app
-  works fully without it. The four digital stores need no key or account.
-  **BoardGameGeek does:** its XML API requires a registered application and a
-  bearer token in `BGG_API_TOKEN` (create one at
-  [boardgamegeek.com/applications](https://boardgamegeek.com/applications)).
-  Without it the board-game search silently returns nothing and the other four
-  providers carry on — nothing logs and nothing errors, so check the env var
-  itself if board games stop being found. Because
-  BGG answers a search with the name that *matched*, typing a title in your own
-  language finds and fills in that name. The four **digital storefronts** answer
-  in the language the app is set to (the top-bar picker), so an English UI gets
-  English titles and English store links and a German one gets German — no
-  configuration needed. `PSSTORE_LOCALE`, `STEAM_CC` / `STEAM_LOCALE`,
-  `NINTENDO_LOCALE` and `XBOX_LOCALE` remain as the **fallback** a self-hosted
-  instance can pin (they still default to the German store), used only for a
-  language none of those stores serves.
-
-```
-server.js            starts the HTTP server (the only place that listens)
-lib/
-  app.js             builds the Express app: static files + route modules,
-                     plus the SPA fallback (serves index.html for frontend
-                     routes so deep links / reloads work)
-  repo/              data-access layer: the async API every route reads/writes
-                     through (getRound + typed mutators). One seam, two backends:
-    index.js         picks the backend (DATABASE_URL ? postgres : json)
-    json.js          default backend — the data/data.json store below
-    postgres.js      PostgreSQL backend (Knex query builder), used when DATABASE_URL set
-    migrations/      versioned Knex schema migrations (npm run migrate)
-  tenant.js          resolves each request's tenant and scopes the repo to it
-  store.js           the JSON backend's engine: in-memory data + atomic
-                     load/save to the data/ folder, id/activity helpers
-  storage/           cover-image storage: one seam, two backends
-    index.js         picks the backend (S3_BUCKET ? s3 : disk)
-    disk.js          default backend — files under DATA_DIR/uploads
-    s3.js            S3-compatible object storage, used when S3_BUCKET set
-  upload.js          multer image-upload config (persists via lib/storage)
-  auth.js            shared-password gate (active when AUTH_PASSWORD is set)
-  admin.js           operator gate for the moderation surface (separate
-                     ADMIN_PASSWORD; 404s unless set — issue #268)
-  accounts.js        user-account primitives: Argon2id passwords, access/refresh
-                     tokens (issue #135; off unless ACCOUNTS_ENABLED)
-  quota.js           per-tenant state caps — rounds/tenant, games/round,
-                     tags/round, members/round (issue #139; inert unless
-                     ACCOUNTS_ENABLED)
-  feed.js            the Freundeskreis activity feed's allowlisted events (#325)
-  actor-seat.js      which member seat to attribute a round activity to; one
-                     definition shared by the games and members routes (#563)
-  demo.js            guest demo mode: mints, seeds and purges throwaway demo
-                     accounts (issue #427; off unless DEMO_ENABLED)
-  demo-seed.js       the content a demo tenant is seeded with — games (hotlinked
-                     provider covers), tags and per-locale text
-  demo-tenant.js     the one definition of the `demo-` tenant-id prefix that
-                     classifies a tenant as a demo, dependency-free so the repo
-                     backends and the logger can require it without a cycle
-  scheduler.js       background jobs, started from server.js only: today the
-                     expired-demo purge (issue #427)
-  mail.js            outbound e-mail (SMTP via nodemailer when SMTP_HOST is
-                     set, else logged to an in-memory outbox), plus the global
-                     daily send budget (MAIL_DAILY_MAX, issue #448)
-  legal.js           server-rendered Impressum / privacy policy /
-                     Nutzungsbedingungen in DE + EN (issues #134/#140)
-  canonical.js       301s the branded non-canonical domains onto one origin
-                     (issue #230; an allowlist, never an inverse rule)
-  validate.js        zod request-body schemas applied at the router boundary
-  tag-icons.js       the curated tag-icon set (mirrored by public/js/tag-icons.js,
-                     with a test asserting the two stay identical)
-  csv.js             RFC 4180 CSV writer for the operator panel's exports
-                     (issue #288) — quotes every field, so a feedback message
-                     with commas/quotes/newlines cannot corrupt the file, and
-                     neutralizes leading =/+/-/@ so it cannot become an Excel
-                     formula
-  observability.js   structured logging, /healthz + /readyz, central error handler
-  status.js          aggregate usage metrics + the quota ceilings for the
-                     operator panel's Kennzahlen card (issues #274/#404) —
-                     counts only, never a secret value and never personal data
-  providers/         external game-database providers for the add-game lookup
-    index.js         provider registry + image-host allowlist
-    locales.js       maps a request's UI locale onto each storefront's own
-                     spelling of it, through a closed table (never
-                     interpolated — it reaches a fetched URL path)
-    psstore.js       PlayStation Store: search + detail via the store's
-                     server-rendered page data (digital games)
-    bgg.js           BoardGameGeek: search + detail + owned-collection import
-                     via BGG's official XML API2 under an application token
-                     (board games)
-    steam.js         Steam: search + detail via the store's public JSON
-                     endpoints (storesearch / appdetails) (digital games)
-    nintendo.js      Nintendo eShop: search + detail via Nintendo of Europe's
-                     public Solr endpoint (Switch games)
-    xbox.js          Xbox / Microsoft Store: search via the storefront
-                     autosuggest API, detail via the public catalog service
-                     (digital games)
-routes/
-  auth.js            /api/auth              (shared-password login/logout/status)
-  account.js         /api/account           (user accounts: register, verify
-                                             e-mail (+ resend), login, refresh,
-                                             logout, forgot/reset password,
-                                             change password (#482), delete the
-                                             account itself (#419), me,
-                                             and the per-user notification inbox
-                                             (#207) — 404 unless ACCOUNTS_ENABLED)
-  invitations.js     /api/account/invitations (round-sharing: send / accept /
-                                             decline; the inviter fixes the
-                                             member-seat take-over (#207) —
-                                             404 unless ACCOUNTS_ENABLED)
-  friends.js         /api/account/friends   (friendships + Freundeskreis feed:
-                                             send / accept / decline / unfriend,
-                                             list, feed (#325) —
-                                             404 unless ACCOUNTS_ENABLED)
-  contact.js         /api/contact           (public contact form / DSA notice
-                                             intake → stores every submission +
-                                             e-mails the operator + acknowledges
-                                             reports; also the 'feedback' category
-                                             (#321), stored-only via the feedback
-                                             store, no mail; no auth, own rate
-                                             limit, honeypot; fails loud in prod)
-  legal.js           /impressum, /datenschutz,
-                     /nutzungsbedingungen    (server-rendered legal pages,
-                                             identity from IMPRESSUM_* env;
-                                             404 until configured)
-  admin.js           /api/admin             (operator moderation: instance
-                                             status, lookup by image/round/
-                                             e-mail/tenant, per-tenant summary,
-                                             round text + redaction, takedown,
-                                             notices inbox + decisions, Art. 17
-                                             statements of reasons,
-                                             account suspend/restore, GDPR
-                                             export + erasure,
-                                             filterable action log, user feedback,
-                                             recent warn/error logs —
-                                             404 unless ADMIN_PASSWORD)
-  lookup.js          …/lookup               (search/game — provider proxy: PS Store, BGG, Steam, Nintendo, Xbox;
-                                             round-scoped, refuses a provider the round disabled)
-  rounds.js          /api/rounds            (list — incl. granted rounds (#207);
-                                             detail, create, delete; revoke/leave
-                                             a share via …/:rid/shares/:userId)
-  games.js           …/games                (add [+cover hotlink/source],
-                                             edit [+link to provider],
-                                             retire/restore, complete/restore,
-                                             delete, move some/all to another
-                                             round)
-  members.js         …/members              (add a seat, edit name / avatar
-                                             color, claim/release your own seat)
-  sessions.js        …/sessions             (start, results, choice, finish,
-                                             cancel, delete, remove one game)
-  activities.js      …/activities           (list the feed [GET], delete an entry)
-  background.js      …/background           (set the design)
-  tags.js            …/tags                 (create a custom tag [deduped], set its icon, delete one)
-  providers.js       …/providers            (set which lookup providers this round queries)
-public/
-  index.html
-  login.html         standalone login page (shown only when AUTH_PASSWORD is set)
-  kontakt.html       standalone public contact form (bilingual, no login needed)
-  admin.html         standalone operator moderation page (needs ADMIN_PASSWORD)
-  styles.css
-  manifest.webmanifest  PWA manifest (installable app metadata + icons)
-  robots.txt         crawl policy; every noindex page stays crawl-ALLOWED (#510)
-  sitemap.xml        the four public URLs, on the canonical host
-  sw.js              service worker: precache the app shell, offline fallback
-  fonts/             self-hosted fonts + Tabler icon set
-  icons/             PWA / home-screen app icons (192, 512, apple-touch), the
-                     "Powered by BGG" attribution logo shown in the footer, and
-                     og-image.png (the 1200×630 card link previews show)
-  img/               product screenshots on the logged-out landing page — the
-                     shelf in two widths plus the voting screen, one set per UI
-                     locale (landing-*.<locale>.webp), generated once from
-                     throwaway data and committed (see .claude/rules/)
-  js/
-    login.js         login.html's own script — an IIFE, not part of the
-                     shared global scope below (only loaded by login.html)
-    kontakt.js       kontakt.html's own script — an IIFE (bilingual form),
-                     not part of the shared global scope (only loaded there)
-    admin.js         admin.html's own script — likewise an IIFE outside the
-                     shared scope, so no privileged code ships in the SPA
-    locales.js       the set of shipped UI locales (code, native label, BCP-47
-                     tag) — shared with the backend, which requires it
-    i18n.js          translation engine (t(), locale detection, plural rules)
-    lang/en.js       English strings
-    lang/de.js       German strings
-    core.js          DOM/API helpers, stats, design, language picker  (loads first)
-    account.js       onboarding + auth UI (login/register/verify/reset), token wiring
-    auth-error.js    maps an auth API error code to the localized message each
-                     form shows (issue #399)
-    demo-marker.js   the browser-local marker that lets a returning visitor
-                     re-enter their own guest demo instead of minting a second
-                     one, and the rule that keeps it valid across token
-                     rotation (issue #502)
-    support.js       the donation/support sheet (issue #173; hidden unless
-                     DONATE_URL is set)
-    ranking.js       tie-aware podium places ("1, 2, 2, 4")
-    recap.js         the round's taste record behind the Pokale tab's Rückblick:
-                     best/worst rated, the most divisive game and each member's
-                     favourite, all derived from session votes (issue #484)
-    cover.js         deterministic per-title gradient for games with no cover
-    cover-size.js    rewrites provider cover URLs to a frame-appropriate size
-    tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
-    member-colors.js the curated avatar palette — the single source of truth
-                     routes/members.js validates against (issue #420)
-    session-people.js who took part in ONE session (members who joined + that
-                     session's guests) and how a guest name is labelled; also
-                     holds the guest cap routes/sessions.js enforces (issue #458)
-    guest-picker.js  the guest name field (chips + input), shared by the two
-                     screens that start a session (issue #532)
-    swr.js           stale-while-revalidate cache: views render instantly from
-                     the last known data while a background fetch refreshes
-    lookup-group.js  collapses same-title provider hits into one multi-badge row
-    lookup-cover.js  which cover image a picked provider match yields
-    lookup-score.js  how well a hit's title answers the query (drives the
-                     cross-provider ranking; folds punctuation + diacritics)
-    lookup-title.js  which title a picked provider match fills in (BGG keeps the
-                     matched name, so a German search stays German)
-    lookup-nav.js    which suggestion the keyboard has active in the lookup
-                     dropdown, and how it survives a re-render (issue #542)
-    focus-trap.js    keeps Tab inside an open sheet + restores focus on close
-    session-path.js  URLs for the transient session-flow screens, so browser/OS
-                     Back steps through the vote wizard (issue #329)
-    nav-link.js      turns a nav element into a real <a href> that still routes
-                     in-app on a plain click, so Cmd/middle-click opens a new
-                     tab and "Copy link address" works (issue #330)
-    round-rail.js    the desktop navigation rail (from 1280px): round identity,
-                     the four sections, both archives and the settings screens
-    views-landing.js logged-out marketing landing page shown at / in accounts
-                     mode before registration (issue #322)
-    views-home.js    lobby + new round
-    views-round.js        round hub (Start/Regal/Chronik/Pokale tabs) + Start tab
-    views-round-tabs.js   Regal, Chronik, Pokale tabs + the two archive
-                          screens (retired / completed)
-    views-round-detail.js game detail, design picker, tags + providers screens,
-                          sheet helpers
-    views-round-lookup.js provider lookup, add game, link provider
-    views-member.js  member detail page (stats, name/color editing)
-    views-session.js session setup, voting (hot-seat), finale, results
-    views-inbox.js   per-user notification inbox (#207; accounts mode only)
-    views-friends.js Freundeskreis view + home feed section (#325; accounts mode only)
-    views-account.js Konto settings: identity + change password (#482; accounts mode only)
-    router.js        URL ↔ view routing (History API): deep links, reloads
-    main.js          bootstrap: route from the current URL              (loads last)
-    pwa.js           registers the service worker (installable + offline)
-scripts/
-  build.js           optional cache-busting build: mirrors public/ into dist/
-                     with content-hashed, minified js/css (npm run build)
-test/                automated tests (node --test + supertest)
-data/                all user data (git-ignored)
-  data.json          created on first run
-  uploads/           cover images
-dist/                optional build output (git-ignored; npm run build)
-Dockerfile           production container image (node:22-slim, non-root,
-                     writes to DATA_DIR=/data; no VOLUME instruction — Railway's
-                     builder rejects it, see .claude/rules/)
-.dockerignore        keeps secrets + user data out of the build context
-docker-compose.yml   one-command run with a persistent /data volume
-knexfile.js          Knex config (Postgres) shared by the app + the migrate CLI
-railway.json         Railway build/deploy config (see docs/deploy-railway.md)
-.github/workflows/   CI: tests, lint, secret scan, Docker image build + publish
-.github/             dependabot.yml, FUNDING.yml, and the contributor-facing
-                     ISSUE_TEMPLATE/ forms + PULL_REQUEST_TEMPLATE.md
-```
-
-The frontend files are plain `<script>`s that share one global scope; **load
-order matters** (see `index.html`).
-
-## Requirements
-
-- **Node.js 22 or newer.** If you don't have it, download the latest LTS
-  installer from <https://nodejs.org/> and run it — that's the only prerequisite.
-  (Developed and tested on Node 26.)
-
-## Running
+**Node.js 22 or newer** is the only prerequisite (get it from
+<https://nodejs.org/>; developed and tested on Node 26).
 
 ```bash
 npm install
 npm start          # or: node server.js
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:3000> — that's it. From another device on your network,
+use `http://<your-computer-ip>:3000` (find the IP with e.g.
+`ipconfig getifaddr en0` on macOS).
 
-From other devices on your home network: `http://<your-computer-ip>:3000`
-(find the IP with e.g. `ipconfig getifaddr en0` on macOS).
+Use a different port or data folder: `PORT=8080 npm start`,
+`DATA_DIR=/path/to/data npm start`.
 
-Use a different port: `PORT=8080 npm start`
-Use a different data folder: `DATA_DIR=/path/to/data npm start`
+Everything else — PostgreSQL, object storage for covers, user accounts, the
+guest demo, rate limits, the operator panel, Docker and deploying — is optional
+and documented in [`docs/configuration.md`](docs/configuration.md).
 
-Use PostgreSQL instead of the JSON file: `DATABASE_URL=postgres://… npm start` (the
-app runs its Knex migrations on start, so the schema is created/updated
-automatically; add `DATABASE_SSL=true` for managed Postgres that requires TLS).
-Unset, it uses `DATA_DIR/data.json` as before. Migrations can also be run
-explicitly with `npm run migrate` (and authored with `npm run migrate:make -- <name>`).
+## What it does
 
-Store cover images in S3-compatible object storage instead of on local disk (for
-a stateless, scalable app tier): `S3_BUCKET=my-bucket npm start`. Set `S3_ENDPOINT`
-(+ usually `S3_FORCE_PATH_STYLE=true`) for non-AWS stores like Cloudflare R2,
-Backblaze B2 or MinIO; credentials come from `S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`
-or the AWS default provider chain. Unset, images stay under `DATA_DIR/uploads` as
-before. See the S3 block in `.env.example`.
+- **Rounds** — a group with a name and any number of member seats.
+- **Games** — title, player range, custom tags, cover art. Adding one searches
+  **BoardGameGeek**, the **PlayStation Store**, **Steam**, the **Nintendo
+  eShop** and the **Xbox Store** at once and fills in the details; or import
+  your whole *owned* BoardGameGeek collection in one go.
+- **Sessions (hot-seat voting)** — pick who's playing, draw candidate games that
+  fit the player count, then pass the device around: everyone rates each game
+  1–5. Votes stay sealed until the reveal.
+- **Guests** — someone outside the group can join one session without becoming a
+  member.
+- **Ratings & trophies** — averages are computed live from session votes, with a
+  winners' podium, streaks, a "gathering dust" tile and a taste retrospective.
+- **Two archives** — games are never deleted by accident: *retired* (done with
+  it) and *completed* (finished its content), both restorable.
+- **Per-round design**, custom tags, an installable **PWA** that works offline,
+  shareable deep links, and a **Freundeskreis** feed between accounts.
 
-Behind a TLS-terminating proxy: `TRUST_PROXY=<hops> npm start` (so rate limiting
-sees the real client IP). The value is the **number of proxy hops** between the
-internet and the app — not a boolean, and not always 1: on Railway it is **2**.
-Too low and `req.ip` resolves to your own proxy, silently turning every per-IP
-limit into one bucket shared by everyone behind it; `true` is worse, since the
-client can then spoof `X-Forwarded-For` and evade the limits. Verify it after
-setting it — see [`docs/deploy-railway.md`](docs/deploy-railway.md)
-("Verifying `TRUST_PROXY`").
+→ Full detail in [`docs/features.md`](docs/features.md).
 
-Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
-`CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5),
-`REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below) and
-`DEMO_RATE_LIMIT_MAX` (guest demos, per 15 min, default 5 — see below).
+## Documentation
 
-Contact form (issues #224/#272): a public, login-free page at `/kontakt.html`
-with a bilingual form that POSTs to `/api/contact`, which e-mails the operator —
-the phone-free second communication channel a German Impressum (§ 5 DDG) relies
-on, and the DSA notice-and-action channel: a category select turns a message
-into a structured Art. 16 report (reported URL + good-faith statement; a CSAM
-report may be anonymous), which is acknowledged to the notifier by mail
-(Art. 16(4)). Every accepted submission is **also stored** (the operator
-panel's Meldungen inbox), so a lost mail can never mean a notice left no
-record — storing happens before sending. Delivery goes to `CONTACT_TO` (falling
-back to `MAIL_FROM`) via the same SMTP setup as the account mails. It has its
-own low rate limit and a server-side honeypot for spam, and in
-`NODE_ENV=production` it **fails loud** (`502` with a fallback e-mail) rather
-than silently dropping a message when mail is unconfigured — so configure
-`SMTP_HOST` + `SMTP_USER` + `SMTP_PASS` + `MAIL_FROM` + `CONTACT_TO`
-before relying on it in production. A shared site footer links to it — but the
-footer (and the form itself) only appears once the public `GET /api/config`
-reports the instance ready: mail configured **and** the Impressum identity set
-(all-or-nothing, so a half-configured deploy shows no public footer rather than
-a broken one).
-
-Legal pages (issues #134/#140): `GET /impressum`, `GET /datenschutz` and
-`GET /nutzungsbedingungen` serve the server-rendered DDG Impressum, the DSGVO
-privacy policy and the terms of use / DSA content rules (German authoritative,
-English courtesy translation on the same page). The operator identity comes from
-env at request time — `IMPRESSUM_ADDRESS` (postal address, may be multi-line)
-and `IMPRESSUM_EMAIL` — so no address ever lives in the repo; while either is
-unset all three routes answer 404 and the site footer stays hidden. The
-registration form links the terms; the internal notice-and-action workflow and
-retention schedule live in `docs/legal/`.
-
-Serving one deployment under several domains: `CANONICAL_HOST` + `REDIRECT_HOSTS`
-(issue #230) 301 the branded non-canonical domains onto a single canonical origin
-(default: `spielwirbel.de`/`.com` + `www` → `spielwirbel.app`). It's an
-allowlist, so it never touches the canonical host, a platform domain like
-`*.up.railway.app`, or a load-balancer health-check host. Point them at your own
-domains, or set `REDIRECT_HOSTS` empty to disable. See the block in `.env.example`.
-
-Support link (issue #173): set `DONATE_URL=https://…` to show the top-bar heart
-button that opens the donation sheet (see Features). The URL is opaque to the
-app and is served to the client through the public `GET /api/config` (as
-`donateUrl`, `null` when unset), so the button also works before login. Unset
-(the default) the feature does not exist.
-
-Guest demo mode (issue #427): set `DEMO_ENABLED=true` (on top of
-`ACCOUNTS_ENABLED`) and the landing page offers **"Ohne Anmeldung ausprobieren"**
-alongside registering, plus a `/demo` deep link so a launch post can point
-straight into a running demo. One click mints a throwaway account with its own
-tenant, seeded with a ready-to-play round — nine games with real provider covers,
-four seats and two finished sessions, so Chronik and Pokale have content on
-arrival — and drops the visitor into the app with no e-mail and no password.
-
-The account is strictly disposable: a persistent in-app banner says so, it holds
-no password identity (so it can never be logged back into), it cannot send friend
-requests or round invitations, and registering afterwards starts a fresh, empty
-account — nothing carries over. Expired demos are deleted together with their
-rounds and any uploaded covers by a background job (`lib/scheduler.js`, started
-from `server.js`).
-
-A visitor keeps **one** demo rather than accumulating them (issue #502). The
-account menu offers **"Demo beenden"**, which erases the demo immediately and
-frees its slot; every other way of leaving (registering, closing the tab) keeps it
-alive, and a return visit to the landing page offers **"Demo fortsetzen"** to
-re-enter that same demo instead of minting a second one.
-
-Tune it with `DEMO_TTL_HOURS` (how long a demo lives, default 24),
-`MAX_LIVE_DEMOS` (how many exist at once, default 100 — past it the endpoint
-answers a friendly "try again shortly" rather than minting without limit) and
-`MAX_LIVE_DEMOS_PER_IP` (how many one source may hold at once, default 3; stored
-as an HMAC of the address, never the address itself). Unset,
-`POST /api/account/demo` 404s and the landing page shows no demo button, so a
-self-hosted instance is unchanged.
-
-Per-tenant quotas (issue #139): in the public multi-tenant mode (`ACCOUNTS_ENABLED=true`)
-each tenant is capped on rounds (`MAX_ROUNDS_PER_TENANT`, default 10), games per
-round (`MAX_GAMES_PER_ROUND`, default 1000), custom tags per round
-(`MAX_TAGS_PER_ROUND`, default 30), and member seats per round
-(`MAX_MEMBERS_PER_ROUND`, default 50). With accounts off (the
-default, single-tenant deploy) these are inert. See the quotas block in `.env.example`.
-
-Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate
-the whole app behind a single shared password — an unauthenticated visitor gets a
-login page and the API returns `401`. Leave `AUTH_PASSWORD` unset and the app
-stays open with no access control (the default for a bare local checkout; the
-maintainer's hosted instance instead runs the account model below, with no shared
-password). Tune the login brute-force
-limit with `AUTH_RATE_LIMIT_MAX` (attempts per 15 min, default 100). The session is
-a signed, httpOnly cookie (marked `Secure` automatically behind a TLS proxy).
-
-User accounts (issue #135): the token-first account model — register with
-e-mail + username + password (Argon2id-hashed), e-mail verification, login issuing
-short-lived access tokens + rotating refresh tokens, and password reset — lives under
-`/api/account`. Login accepts **either the e-mail address or the username** as the
-identifier (issue #431); password reset stays e-mail-only, since the link has to
-reach an inbox. A logged-in account changes its password on the **Konto** screen
-(`/konto`, issue #482) instead of going through that recovery flow: it
-re-authenticates with the current password, then signs every *other* device out
-and mails the owner a notification. The same screen is where an account
-**deletes itself** (issue #419): `DELETE /api/account` erases the account, its
-tenant's whole round data and its uploaded cover objects, gated on the current
-password *plus* the account's own username typed out, and preceded by a
-confirmation naming the real counts (rounds, games, sessions, images, and how
-many other accounts lose access to shared rounds). It is immediate and has no
-undo — the operator-side erasure (#273) stays for assisted and DSA-driven cases.
-The **username** (issue #320) is an app-wide unique public handle
-(3–30 characters of `a–z A–Z 0–9 _ -`, matched case-insensitively but stored as
-typed) chosen at registration and not self-renamable: it is how an account is
-named in an abuse report, how invitations (#207) find it, and how it logs in, so
-no account can exist without one. It is **off by default**: set `ACCOUNTS_ENABLED=true` *and* a
-strong `SESSION_SECRET` to expose it. Verification/reset mails go out via
-plain SMTP (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, links built
-from `APP_BASE_URL`); unconfigured, they are logged instead of sent. Production
-sends through the operator's own mailbox rather than a transactional provider,
-so the mails carry no tracking pixel and no rewritten links (#440).
-
-Two bounds keep bulk registration from draining that mailbox's sending quota
-(#448) — which matters because verification mail is the only way through signup,
-so an exhausted quota breaks registration for *everyone*: a tighter per-IP cap on
-`POST /api/account/register` (`REGISTER_RATE_LIMIT_MAX`, default 10 per 15 min)
-and a global daily circuit breaker on all outbound mail (`MAIL_DAILY_MAX`,
-default 200 per UTC day). Past the budget, sends are refused and logged as
-`mail_daily_budget_exhausted` rather than delivered; set it below your mail
-provider's own daily limit. Both counters are per process and in memory.
-
-When accounts are enabled the app runs in **accounts mode** (issue #138): the SPA
-shows an in-app onboarding flow — register → confirm e-mail → log in, plus password
-reset and a first-run empty state — and the `/api` data routes require a valid
-account token (there is no anonymous access, and each account sees only its own
-tenant's rounds, #136). **This is what the maintainer's hosted instance runs**:
-public registration opened on 2026-07-24 (#219) and `AUTH_PASSWORD` was removed,
-so production is accounts-only — plus the guest demo below, enabled there since
-2026-07-27, so the app can also be tried without registering. With accounts **off** (still the default for a
-fresh checkout) the shared-password gate above is unchanged. *Roles within a
-shared tenant are still follow-up work (#137).*
-
-**Layered mode** (issue #266): the shared-password gate and accounts can run at the
-**same time** — set `AUTH_PASSWORD` **and** `ACCOUNTS_ENABLED` (with a dedicated
-`SESSION_SECRET`). The instance stays sealed behind the shared password (register
-and login sit behind it, so it is **not** public sign-up) while everyone inside
-uses real accounts. This is the recommended go-live path: run layered until every
-account flow is proven, then simply **remove `AUTH_PASSWORD`** to open public
-registration. Migrating an instance that already holds pre-accounts data needed
-one extra chore — a one-time **„Standard-Daten übernehmen"** admin action that
-re-tenanted the `default` rounds into a fresh owner account. It ran on this
-deployment during the 2026-07-24 go-live and was **removed again in #405**, since
-a standing cross-tenant write escape has no purpose on a public instance; a fresh
-deployment never needed it. A self-hoster migrating an existing shared-password
-instance should run the claim from a revision that still has it (any commit
-before #405) and then upgrade — see
-[`docs/deploy-railway.md`](docs/deploy-railway.md).
-
-Operator moderation (issues #268/#272/#273/#274/#275): setting `ADMIN_PASSWORD`
-exposes `/admin.html` + `/api/admin`, the standalone operator panel for acting
-on abuse notices and data-subject requests. It shows the stored contact
-submissions as a **Meldungen inbox** (a reported `/uploads/…` path hands off to
-the image lookup with the takedown reason prefilled; deciding a notice records
-the outcome and can notify the notifier with redress information, Art. 16(5));
-it can resolve a notice by reported
-cover path, round link, username, e-mail address or tenant id (with a per-tenant
-summary shown against the quota ceilings); take a cover image down (deletes the object
-*and* clears every reference) — after which the panel generates the DSA
-**Art. 17 statement of reasons** from the log entry, copyable or sent by mail
-with the delivery recorded on the entry; **redact** any user-authored text — round name,
-game title, member name, tag name, feedback message — by overwriting the field
-with `[entfernt]` while preserving the original wording on the log entry a DSA
-Art. 17 statement of reasons has to quote (redaction never deletes a row);
-suspend or restore an account without deleting anything, effective immediately
-(existing access tokens stop working); replace an unlawful **username** with a
-neutral handle derived from the account id, keeping the previous one on the log
-entry (#320); **export** everything held for one
-account as JSON (GDPR Art. 15/20); and perform an Art. 17 **erasure** — the
-account, its tenant's rounds and the stored cover objects — which demands a
-reason plus the account's own e-mail typed as confirmation and refuses if a
-second account still shares the tenant. Every action lands in a log filterable
-by tenant, action and date range; the erasure entry records only ids, date,
-reason and counts, never the erased content, since the log outlives the erasure
-it evidences.
-
-The panel opens with a **Kennzahlen** card: how much this instance is being used
-— accounts (verified / unverified / suspended, plus new ones in the last 7 and
-30 days), how many of them own at least one round, rounds, games, sessions
-(finished, and in the last 30 days), live guest demos against their cap, shared
-rounds / open invitations / friendships, and the **quota ceilings paired with
-the highest value anyone currently holds** against each, so "is someone about to
-be refused?" is answerable without a database console. Every field is a count —
-**no secret value and no personal data is ever returned**, and demo tenants are
-excluded from everything but their own row. A **Feedback** card shows what users sent through the contact form's
-Feedback category (with the sender's address only where they provided one).
-The Feedback and Protokoll cards page rather than truncate (`100 von 342`,
-**Mehr laden**) and export *every* entry as UTF-8 CSV (BOM included, so Excel
-renders umlauts correctly).
-
-The tables themselves are **search-first and row-click** (issue #403). The
-**Konten** card fetches nothing until the operator searches (by partial e-mail,
-username or tenant id — `GET /api/admin/users?q=…` filters server-side), so no
-account's e-mail address leaves the server just because the panel was opened;
-an explicit **„Alle anzeigen"** still lists every registered account. Guest-demo
-accounts are never listed and never match a search (issue #506) — they are
-throwaway rows the scheduler purges on its own. Rows across Konten,
-Meldungen, Feedback and Texte der Runde carry no inline buttons: clicking one
-(or focusing it and pressing Enter) opens a dialog holding the full record and
-every action that applies to it. Individual **Feedback** entries and
-**Meldungen** are deleted from there — feedback freely, while a *decided* notice
-is protected (it is Art. 17 retention evidence) behind an explicit confirmation.
-
-`ADMIN_PASSWORD` must be a **separate** secret from `AUTH_PASSWORD`: the latter
-is shared with everyone using the instance, while these powers cross tenant
-boundaries. Optionally set `ADMIN_SESSION_SECRET` to sign the admin cookie
-(otherwise `SESSION_SECRET`, then the password itself). Leave `ADMIN_PASSWORD`
-unset — the default — and the entire surface `404`s.
-
-Add-game lookup: the four digital stores work out of the box, but BoardGameGeek
-needs `BGG_API_TOKEN` — a bearer token from a registered application
-([boardgamegeek.com/applications](https://boardgamegeek.com/applications), see
-[Using the XML API](https://boardgamegeek.com/using_the_xml_api)). Requests are
-made server-side and cached, as BGG's terms ask, and the app displays the
-required linked "Powered by BGG" logo in its footer. Leave the token unset and
-board-game search simply returns nothing.
-
-Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
-(`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and
-`ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook (a
-non-2xx reply from it is logged at `warn`, so a misconfigured webhook can't fail
-silently).
-
-Two probe endpoints, both unauthenticated and exempt from rate limiting so a
-monitor can poll them freely, and both excluded from the request log:
-
-| Endpoint | Answers | Use it for |
-|---|---|---|
-| `/healthz` | `{ status: 'ok', uptime, timestamp }` — always 200 while the process is up | liveness; the container health check |
-| `/readyz` | `200 {"status":"ok"}`, or **`503 {"status":"degraded"}`** when the data backend is unreachable | uptime monitoring / alerting |
-
-`/healthz` deliberately never touches the database, so it answers 200 straight
-through a database outage — which is exactly when every data route is failing.
-That is why `/readyz` exists; point external alerting at it. The readiness result
-is cached for a few seconds, so polling it cannot drive database load. Don't make
-`/readyz` the *deploy* health check: a transient database blip would then
-restart-loop the container.
-
-### Configuration via a `.env` file
-
-All settings above are plain environment variables (see `.env.example` for the
-full list). To keep them in a file instead of the command line, copy the
-template and start with `start:env`:
-
-```bash
-cp .env.example .env      # then edit .env and fill in what you need
-npm run start:env         # loads .env, then runs the server
-```
-
-`start:env` uses Node's built-in `--env-file-if-exists` (Node ≥ 20.12; a missing
-`.env` is fine), so there is no extra dependency. **`.env` is gitignored** — it
-may hold your `SESSION_SECRET` and provider credentials, so never commit it.
-Plain `npm start` ignores
-`.env` and reads only real environment variables.
-
-### With Docker
-
-A production container image is provided (`Dockerfile`, `node:22-slim`, runs as a
-non-root user). Build and run it directly:
-
-```bash
-docker build -t spieleabend .
-docker run -p 3000:3000 -v spieleabend-data:/data spieleabend
-```
-
-Or use Compose — `docker compose up` builds the image and wires the same
-persistent volume. Data (rounds, sessions, uploaded covers) lives on the mounted
-**`/data`** volume, so it survives restarts and redeploys; point `DATABASE_URL` /
-`S3_BUCKET` elsewhere for a stateless app tier. Configure everything via
-`-e`/`environment:` (see `.env.example`). The image sets `NODE_ENV=production`, so
-it serves the content-hashed build (`dist/`).
-
-**TLS is not in the image** — terminate it at a reverse proxy or managed platform
-in front of the container, then set `TRUST_PROXY` to the number of proxy hops in
-front of it (see issue #156; it is **2** on Railway). On merge to
-`main`, CI publishes the image to the GitHub Container Registry
-(`ghcr.io/chulioz/spielwirbel`), so a host can pull it instead of building.
-
-> ⚠️ **Self-hosters: the image moved.** With the Spielwirbel rebrand (#230) the
-> repository was renamed `game-sessions` → `spielwirbel`, so the published image
-> is now **`ghcr.io/chulioz/spielwirbel`**. GHCR packages do **not** auto-redirect
-> like repo URLs, so the old `ghcr.io/chulioz/game-sessions` tags are frozen and
-> receive no new builds. Update your `docker-compose.yml`/`docker run` to pull the
-> new path.
-
-### Deploying to Railway (production)
-
-The production target is [Railway](https://railway.com): it builds the
-`Dockerfile` (config in `railway.json`, health-checked at `/healthz`) and
-auto-deploys on push to `main`. Pair it with **managed PostgreSQL** (Railway
-plugin → `DATABASE_URL`, the #127 backend) and **Cloudflare R2** for cover images
-(S3-compatible → the #128 backend via `S3_ENDPOINT`); Railway terminates TLS at
-its edge, so set `TRUST_PROXY=2` (Railway has two proxy hops — verify it, a wrong
-count silently collapses every per-IP rate limit into one shared bucket). The
-full step-by-step — EU region, custom
-domain, and the account/secret steps only you can do — is in
-[`docs/deploy-railway.md`](docs/deploy-railway.md).
+| Document | What's in it |
+| --- | --- |
+| [`docs/features.md`](docs/features.md) | Every feature in detail |
+| [`docs/architecture.md`](docs/architecture.md) | How it's built, and what every file is for |
+| [`docs/configuration.md`](docs/configuration.md) | All environment variables, Docker, deployment |
+| [`docs/deploy-railway.md`](docs/deploy-railway.md) | Step-by-step production deploy |
+| [`CLAUDE.md`](CLAUDE.md) | The architecture constraints new work must respect |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to contribute, and the licensing terms |
+| [`SECURITY.md`](SECURITY.md) | Reporting a vulnerability |
+| [`docs/legal/`](docs/legal/) | Operator records: DSA workflow, retention, DSAR |
 
 ## Development
 
 ```bash
 npm test              # automated tests (Node's built-in runner + supertest)
-npm run coverage      # tests with a coverage report (built-in, no extra deps)
+npm run coverage:ci   # tests + the coverage thresholds CI gates on
 npm run lint          # ESLint (flat config)
 npm run check:syntax  # node --check over all JS files
 npm run build         # optional: content-hash + minify js/css into dist/
 npm run migrate       # apply pending Postgres migrations (needs DATABASE_URL)
-npm run migrate:make -- <name>  # scaffold a new Postgres migration file
 ```
 
-`coverage` uses Node's built-in `--experimental-test-coverage`, so it needs no
-extra dependency. CI also runs `coverage:ci`, which adds line/function/branch
-thresholds and fails the build if coverage drops below them (Node ≥ 22.8).
-
-`build` (issue #141) is **optional** and only for production: it writes a
-`dist/` mirror of `public/` with content-hashed, minified JS/CSS (via
-[`esbuild`](https://esbuild.github.io/)) so a changed asset gets a fresh URL and
-never serves stale after a deploy. The server uses `dist/` only under
-`NODE_ENV=production`; plain `npm start` always serves the live-editable
-`public/` tree, so day-to-day development stays build-free. Delete `dist/` (or
-just don't build) to go back to serving `public/`.
-
-CI runs the test suite plus a coverage check, lint, and syntax checks on every
-push and pull request, and a gitleaks secret scan fails the build if a credential
-is ever committed; Dependabot keeps dependencies updated via weekly PRs.
+There is **no build step for development** — `npm start` serves `public/`
+directly. `npm run build` is optional and only for production; see
+[`docs/architecture.md`](docs/architecture.md).
 
 ## Contributing
 
-This project is built and maintained with [Claude Code](https://claude.com/claude-code),
-and the repository ships the workflow with it: a set of **skills** in
-`.claude/skills/` and **rules** in `.claude/rules/` that encode how work gets
-done here. Whether you contribute by prompting Claude Code or by hand, these are
-the intended path — start there rather than improvising.
+This project is built and maintained with
+[Claude Code](https://claude.com/claude-code), and the repository ships the
+workflow with it: **skills** in `.claude/skills/` and **rules** in
+`.claude/rules/` that encode how work gets done here. Whether you contribute by
+prompting Claude Code or by hand, that is the intended path.
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the ground rules and the
-**contribution-licensing terms** — inbound contributions are licensed under
-Apache-2.0 (so the project can stay commercially relicensable) and every commit
-must be signed off under the Developer Certificate of Origin (`git commit -s`).
-
-### Before you start
-
-- Read `CLAUDE.md` — it states the current stage (live in production, heading
-  toward public multi-tenant SaaS — see `docs/production-readiness.md`), the
-  architecture you must work within (no frontend build step, no framework, no
-  ORM; German UI, English code), and the production-readiness mindset that now
-  applies to new work.
-- Skim `.claude/rules/` — one short file per hard-won gotcha (frontend script
-  load order, the shared-global-scope lint setup, theme-derived colours, why you
-  must never read the production `data/` folder, …). When you touch an area a
-  rule covers, follow it. Found a new gotcha? Add a rule file for it.
-
-### The skill workflow
-
-The skills chain into a backlog-to-merge pipeline. Invoke a skill in Claude Code
-by name (e.g. `/implement`), or just describe the task and let the matching skill
-trigger. Each is self-contained and enforces this repo's constraints.
-
-| Skill | What it does |
-| --- | --- |
-| **`create-issue`** | Interviews you and files a GitHub issue specific enough to implement without follow-up questions, grounded in this repo's architecture. |
-| **`pick-issue`** | Surveys open issues, Dependabot PRs and human PRs, and hands the best next one to the right builder skill. An open non-draft human PR is picked first — only a security exposure or broken core functionality outranks it — so contributors get feedback fast; everything else is ranked by value-for-effort. |
-| **`implement`** | Takes a change end-to-end: branch from up-to-date `main`, write the code **plus tests**, review locally, open a PR, review it, and merge only if it's safe — then watch `main`'s CI and clean up. |
-| **`review-pr`** | Reviews a pull request (human or bot) against this repo's constraints and returns a `SAFE TO MERGE` / `NOT SAFE` verdict with concrete blockers. |
-| **`dependabot`** | Triages open Dependabot PRs, merging what passes review and commenting on what doesn't. |
-| **`test-data`** | Creates isolated, throwaway data in a temp `DATA_DIR` for tests or manual runs — the safe alternative to ever touching the real `data/`. |
-| **`audit`** | Runs the full audit sweep — accessibility, legal, security, UI, Claude-file, and code-maturity — in one pass, merges the results into one ranked report, and files issues only with your approval. |
-| **`accessibility-audit`** | Audits the running UI against a maintained WCAG-based criteria list (drives the app in a browser over generated data), and periodically refreshes the criteria from current standards. |
-| **`legal-audit`** | Checks the privacy policy, Impressum, Nutzungsbedingungen and `docs/legal/` records against what the code actually does, and surfaces recent legal developments as a sourced reading list (never adopting a legal duty on its own). |
-| **`security-audit`** | Audits the security surface — auth, tenant isolation/RLS, transport/CSRF/cookies, injection/SSRF, uploads, secrets and CI tooling — against a maintained criteria list; composes with the built-in `/security-review` and CodeQL rather than duplicating them. |
-| **`ui-audit`** | Judges the app's *visual* design — colour, layout, spacing, type, depth, iconography, motion polish — in a browser and drives it toward beautiful-and-characterful within the brand. Plain UI only (not UX, not accessibility). |
-| **`claude-file-audit`** | Audits the repo's own documentation — `CLAUDE.md`, `README.md`, the root docs (`CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE`), the `.github/` community files and everything under `.claude/` — for staleness, dangling references and contradictions, and refreshes its criteria from current harness capabilities. |
-| **`code-maturity-audit`** | Audits the codebase's production maturity — structure smells, hand-rolled code that should become a mature dependency, single-process in-memory-state assumptions, and test-suite maturity — continuing the build-vs-buy ledger that produced the Knex/pino/zod/JWT adoptions. |
-
-A typical flow: **`create-issue`** to capture the work → **`pick-issue`** to
-choose what's next → **`implement`** to ship it (it calls `review-pr` before
-merging). If a pull request is open, though, `pick-issue` sends you to
-**`review-pr`** instead — an unanswered PR outranks the backlog, because the wait
-is the only cost that grows while you build something else. For dependency bumps,
-**`dependabot`** handles the batch. The six
-**`*-audit`** skills (and the **`audit`** umbrella) run a research → self-critique
-→ audit loop over accessibility, legal, security, UI, code maturity and the
-repo's own Claude files; each keeps its criteria in a versioned `criteria.md`
-that changes only via a reviewable PR.
-
-### Doing it by hand
-
-If you'd rather not drive Claude Code, the same expectations apply:
-
-- Branch off an up-to-date `main` (never commit on `main`); use a descriptive
-  name like `feat/session-export` or `fix/vote-tie`.
-- Add or update tests for testable changes, and add any new user-facing string
-  to **both** `public/js/lang/en.js` and `de.js` (key parity is enforced by a
-  test).
-- Make `npm test`, `npm run lint`, and `npm run check:syntax` all pass before
-  opening a PR.
-- Update `README.md` in the same PR when the change adds/renames a user-facing
-  feature, alters the file tree above, or changes routes, scripts, or env vars.
+See **[`CONTRIBUTING.md`](CONTRIBUTING.md)** for where to start, the skill
+workflow, translations, and the **contribution-licensing terms** — inbound
+contributions are licensed under Apache-2.0 and every commit must be signed off
+under the Developer Certificate of Origin (`git commit -s`).
 
 ## Data & backup
 
 Everything lives in the `data/` folder (`data.json` + `uploads/`) — copy it to
-back up, delete it to reset. The whole folder is git-ignored so your group's
+back up, delete it to reset. The whole folder is git-ignored, so your group's
 data is never committed.
 
 ## About this project
 
-This project was **developed entirely by Claude** (Anthropic's AI models,
-via Claude Code), through an interactive, conversational process: a human described the
-desired features and gave feedback, and Claude designed and wrote all of the
-code, comments, and documentation. It stands as a small example of what
-agentic, AI-assisted development can produce end to end.
+This project was **developed entirely by Claude** (Anthropic's AI models, via
+Claude Code), through an interactive, conversational process: a human described
+the desired features and gave feedback, and Claude designed and wrote all of the
+code, comments and documentation. It stands as a small example of what agentic,
+AI-assisted development can produce end to end.
 
-Note the distinction from the "runs entirely on your machine" point above: the
-app's *development* was AI-driven, but the app itself contains no AI and sends
-no data anywhere when you run it.
+Note the distinction: the app's *development* was AI-driven, but the app itself
+contains no AI and sends no data anywhere when you run it.
 
 ## License
 
 [PolyForm Noncommercial License 1.0.0](LICENSE), © 2026 Julian Zenker — the sole
 rights holder and licensor. The source is public and you are free to use, study,
-modify, and share it for **noncommercial** purposes (personal use, hobby
+modify and share it for **noncommercial** purposes (personal use, hobby
 projects, education, research). Commercial use — including running it as a paid
 or revenue-generating hosted service — is not granted by this license; contact
 the maintainer for commercial terms.
