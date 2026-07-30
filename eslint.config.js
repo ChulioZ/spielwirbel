@@ -19,6 +19,7 @@ const frontendGlobals = {
   // i18n.js
   I18N: 'writable',
   locale: 'writable', detectLocale: 'readonly', initLocale: 'readonly',
+  applyTabTitle: 'readonly',
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
   fmtDateTime: 'readonly', fmtMonth: 'readonly',

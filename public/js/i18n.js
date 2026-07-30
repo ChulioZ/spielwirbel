@@ -21,9 +21,21 @@ function detectLocale() {
   return SUPPORTED_LOCALES.includes(sys) ? sys : 'en';
 }
 
+// The tab title is written from the active locale (#566), never from the static
+// <title> in index.html — that one stays German on purpose, because crawlers and
+// link-preview scrapers run no JS and have no locale (see
+// .claude/rules/link-preview-card.md). Writing it here is invisible to them by
+// construction, so it closes the visitor-facing gap without touching the crawler
+// surface. Safe to call t() at this point: initLocale/setLocale both run long
+// after the lang tables have registered into I18N.
+function applyTabTitle() {
+  document.title = t('app.tabTitle');
+}
+
 function initLocale() {
   locale = detectLocale();
   document.documentElement.lang = locale;
+  applyTabTitle();
 }
 
 function getLocale() {
@@ -35,6 +47,7 @@ function setLocale(loc) {
   locale = loc;
   localStorage.setItem('locale', loc);
   document.documentElement.lang = loc;
+  applyTabTitle();
 }
 
 // Translate a key; falls back to English, then to the key itself. Replaces

@@ -100,6 +100,55 @@ test('a locale registered at runtime gets its own plural rule — 0 is singular 
   assert.equal(ctx.tn(2, 'players.one', 'players.single'), '2 joueurs');
 });
 
+/* ------------------------------- tab title -------------------------------- */
+
+// i18n.js declares its own `const I18N`, a LEXICAL binding that never lands on
+// the context object — so the `I18N: {}` handed to the sandbox stays empty and
+// the lang tables are only reachable from inside.
+const tabTitle = (ctx, loc) => vm.runInContext(`I18N['${loc}']['app.tabTitle']`, ctx);
+
+test('initLocale writes the tab title from the active locale (#566)', () => {
+  const ctx = loadI18n();
+  // The sandbox document starts with no title at all, so a missing write leaves
+  // this undefined rather than passing against a stale value.
+  assert.equal(ctx.document.title, undefined, 'precondition: nothing has written a title yet');
+
+  ctx.initLocale();
+  // navigator.language is 'en' and localStorage is empty, so detectLocale() -> en.
+  assert.equal(ctx.document.title, tabTitle(ctx, 'en'));
+});
+
+test('switching the locale updates the tab title in both directions (#566)', () => {
+  const ctx = loadI18n();
+
+  // Asserted against the dictionaries rather than against literals: the copy is
+  // free to tune, the coupling to the active locale is not. The inequality is
+  // what stops a `document.title = 'Spielwirbel'` constant from passing both.
+  assert.notEqual(tabTitle(ctx, 'de'), tabTitle(ctx, 'en'),
+    'the two tab titles must differ, or this test proves nothing');
+
+  ctx.setLocale('de');
+  assert.equal(ctx.document.title, tabTitle(ctx, 'de'));
+  ctx.setLocale('en');
+  assert.equal(ctx.document.title, tabTitle(ctx, 'en'));
+  ctx.setLocale('de');
+  assert.equal(ctx.document.title, tabTitle(ctx, 'de'), 'switching back must move it back');
+});
+
+test('a locale registered at runtime gets its own tab title (#566)', () => {
+  const ctx = loadI18n();
+  vm.runInContext(`
+    SUPPORTED_LOCALES.push('fr');
+    LOCALE_TAGS.fr = 'fr-FR';
+    I18N.fr = { 'app.tabTitle': 'Spielwirbel – On joue à quoi ce soir ?' };
+  `, ctx);
+
+  ctx.setLocale('fr');
+  // Would read the English (t()'s fallback) if the title were picked with a
+  // de/en ternary rather than through t().
+  assert.equal(ctx.document.title, 'Spielwirbel – On joue à quoi ce soir ?');
+});
+
 /* ---------------------------- date formatting ----------------------------- */
 
 test('dates and months render in the active locale, not an en-US fallback', () => {

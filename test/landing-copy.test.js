@@ -133,6 +133,22 @@ test('the static crawlable hero in index.html matches lang/de.js (#510)', () => 
     de['app.title']);
 });
 
+test('lang/de.js reproduces the static <title> byte for byte (#566)', () => {
+  // Same licensed-duplicate shape as the hero test above, one element further up
+  // the document. The <title> stays static German because a crawler runs no JS
+  // and has no locale (#436/#510); i18n.js then overwrites it client-side from
+  // 'app.tabTitle'. Those two must agree exactly, or a German visitor watches the
+  // tab flicker to a different wording on boot — the one audience this feature is
+  // NOT for, and the only one who would notice.
+  //
+  // Nothing else looks at both: the SEO tests read the served bytes and the
+  // parity test reads the lang tables, so the two could drift indefinitely.
+  const de = loadLocale('de');
+  const m = INDEX.match(/<title>([\s\S]*?)<\/title>/);
+  assert.ok(m, 'index.html still has a static <title>');
+  assert.equal(m[1].trim(), de['app.tabTitle']);
+});
+
 test('the static hero carries no config-gated claim (#510)', () => {
   // The static markup cannot be gated on GET /api/config, so anything
   // operator- or demo-conditional would be published unconditionally — including

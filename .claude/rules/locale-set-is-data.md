@@ -64,6 +64,26 @@ the console is clean. Clear the service worker first
 bundle will happily serve the old `i18n.js` alongside the new `locales.js` and
 manufacture exactly the collision you are checking for.
 
+### The sandbox's `I18N` is NOT the one the lang tables register into
+
+Worth knowing before writing another spec against `loadI18n()`: `i18n.js` declares
+`const I18N = {}`, and a **`const` in a script run through `vm.runInContext` is a
+lexical binding that never lands on the context object**. So the `I18N: {}` seeded
+into the sandbox stays empty forever, while the lang files register into the
+lexical one. Reading a dictionary from the *outside* —
+
+```js
+ctx.I18N.en['app.tabTitle']        // undefined -> TypeError
+vm.runInContext("I18N['en']['app.tabTitle']", ctx)   // the real table
+```
+
+— is the difference between a spec and a `Cannot read properties of undefined`
+that reads like the lang file failed to load. (The existing tests never hit it
+because they mutate `I18N` from *inside* `vm.runInContext`, where the name
+resolves correctly, and otherwise go through `ctx.t()`.) Note `let locale` has the
+same property, while the `function` declarations — `setLocale`, `tn`, `initLocale`
+— *are* exposed, which is why `ctx.setLocale(...)` works and hides the asymmetry.
+
 ## 3. `tn()` is a one/other pair, which is a real cap on which languages are addable
 
 `Intl.PluralRules` returns CLDR categories (`zero`/`one`/`two`/`few`/`many`/
