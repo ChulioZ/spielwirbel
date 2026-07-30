@@ -133,6 +133,7 @@ I18N.de = {
   'activity.gamesMovedIn': '{n} Spiele aus „{round}“ übernommen',
   'activity.gamesImportedOne': '{n} Spiel aus der BGG-Sammlung übernommen',
   'activity.gamesImported': '{n} Spiele aus der BGG-Sammlung übernommen',
+  'activity.memberAdded': '{name} ist dabei',
 
   'games.title': 'Spiele ({n})',
   'games.empty': 'Noch keine Spiele. Füge euer erstes Spiel hinzu!',
@@ -276,6 +277,10 @@ I18N.de = {
   'member.claim': 'Das bin ich',
   'member.unclaim': 'Das bin ich nicht',
   'member.claimed': 'Dieser Platz ist mit deinem Konto verknüpft.',
+  'member.add': 'Mitspieler hinzufügen',
+  'member.addPlaceholder': 'Name',
+  'member.toast.added': '{name} ist dabei',
+  'member.toast.quota': 'Limit an Mitspielern für diese Runde erreicht.',
   'member.toast.needName': 'Bitte einen Namen eingeben',
   'member.toast.seatTaken': 'Dieser Platz gehört schon zu einem anderen Konto.',
   'member.toast.alreadySeated': 'Du hast in dieser Runde schon einen Platz.',

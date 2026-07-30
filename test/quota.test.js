@@ -15,6 +15,10 @@ process.env.SESSION_SECRET = 'test-session-secret';
 process.env.MAX_ROUNDS_PER_TENANT = '2';
 process.env.MAX_GAMES_PER_ROUND = '2';
 process.env.MAX_TAGS_PER_ROUND = '2';
+// 3, not 2: in accounts mode createRound seats the creator itself (#421), so a
+// round asked for one member already holds two — a ceiling of 2 would refuse the
+// very first add and the spec could not tell a working cap from an off-by-one.
+process.env.MAX_MEMBERS_PER_ROUND = '3';
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -196,6 +200,37 @@ test('tags-per-round cap (#238)', async (t) => {
   });
 });
 
+test('members-per-round cap (#563)', async (t) => {
+  const a = await makeAccount('members-a@example.com');
+  const round = await request(app).post('/api/rounds').set(auth(a.token))
+    .send({ name: 'SeatRound', members: ['Alice'] });
+  const rid = round.body.id;
+  // The owner seat counts toward the cap: it is a row and an avatar like any
+  // other. Two seats already, ceiling 3, so exactly one add fits.
+  assert.equal(round.body.members.length, 2);
+
+  await t.test('adds up to the limit, then 403 quota_members', async () => {
+    const ok = await request(app).post(`/api/rounds/${rid}/members`).set(auth(a.token)).send({ name: 'Bob' });
+    assert.equal(ok.status, 201);
+
+    const over = await request(app).post(`/api/rounds/${rid}/members`).set(auth(a.token)).send({ name: 'Carol' });
+    assert.equal(over.status, 403);
+    assert.equal(over.body.error, 'quota_members');
+    assert.equal(over.body.limit, 3);
+
+    // Nothing was appended by the refusal.
+    const d = await request(app).get(`/api/rounds/${rid}`).set(auth(a.token));
+    assert.deepEqual(d.body.members.map((m) => m.name).slice(1), ['Alice', 'Bob']);
+  });
+
+  await t.test('a blank name is still a 400 on a full round, not a quota 403', async () => {
+    // Validation runs before the cap, so the caller hears about the actual defect
+    // in their request rather than a limit they did not hit yet.
+    const res = await request(app).post(`/api/rounds/${rid}/members`).set(auth(a.token)).send({ name: '  ' });
+    assert.equal(res.status, 400);
+  });
+});
+
 test('quotas are inert when accounts are off (single-tenant deploy is unchanged)', async (t) => {
   // Build a fresh app with accounts disabled; the gate falls back to the (unset,
   // so no-op) shared password, and quota.enforced() is false. The tiny
@@ -217,5 +252,13 @@ test('quotas are inert when accounts are off (single-tenant deploy is unchanged)
   for (let i = 0; i < 4; i++) {
     const res = await request(openApp).post(`/api/rounds/${rid}/tags`).send({ name: `T${i}` });
     assert.equal(res.status, 201, `tag ${i} should be created with quotas inert`);
+  }
+
+  // And the members cap (MAX_MEMBERS_PER_ROUND=3 above), #563. Legacy mode writes
+  // no owner seat, so this round holds one member — four adds take it to five,
+  // well past the ceiling.
+  for (let i = 0; i < 4; i++) {
+    const res = await request(openApp).post(`/api/rounds/${rid}/members`).send({ name: `M${i}` });
+    assert.equal(res.status, 201, `member ${i} should be added with quotas inert`);
   }
 });

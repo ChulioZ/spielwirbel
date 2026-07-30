@@ -510,6 +510,10 @@ function renderChronikTab(round, activities) {
       // the same reason as the two moves above: an import is routinely 100+
       // games and a row each would bury every other event on the round.
       games_imported: { icon: 'ti-download', text: tn(a.count, 'activity.gamesImportedOne', 'activity.gamesImported') },
+      // A new seat (#563) — carries the member's NAME, not a game title. Written
+      // for both an added seat and an accepted invitation (#207), since either way
+      // a new person is in the round.
+      member_added: { icon: 'ti-user-plus', text: t('activity.memberAdded', { name: a.name }) },
     }[a.type];
     if (!meta) return;
     // Who did it (#207): resolve the actor's member seat to a name (like

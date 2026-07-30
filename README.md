@@ -22,7 +22,8 @@ code and documentation are in English.
 - **Rounds** – a group with a name and any number of members. The home screen
   is a lobby of round cards (members, game/session counts, last result); a new
   round is set up on a playful "seats around the table" screen, optionally
-  importing the games list from an existing round. With accounts on, the seat at
+  importing the games list from an existing round. Groups change, so a further
+  seat can be added later from the "+" in the round's member strip. With accounts on, the seat at
   the head of that table is **yours** — the creator is seated automatically (opt
   out with "Ich spiele mit"), and on any other round a member page offers
   „Das bin ich" so your account can take its own seat. A claimed seat is what
@@ -386,8 +387,8 @@ routes/
                                              retire/restore, complete/restore,
                                              delete, move some/all to another
                                              round)
-  members.js         …/members              (edit name / avatar color,
-                                             claim/release your own seat)
+  members.js         …/members              (add a seat, edit name / avatar
+                                             color, claim/release your own seat)
   sessions.js        …/sessions             (start, results, choice, finish,
                                              cancel, delete, remove one game)
   activities.js      …/activities           (list the feed [GET], delete an entry)
@@ -628,8 +629,9 @@ self-hosted instance is unchanged.
 
 Per-tenant quotas (issue #139): in the public multi-tenant mode (`ACCOUNTS_ENABLED=true`)
 each tenant is capped on rounds (`MAX_ROUNDS_PER_TENANT`, default 10), games per
-round (`MAX_GAMES_PER_ROUND`, default 1000), and custom tags per round
-(`MAX_TAGS_PER_ROUND`, default 30). With accounts off (the
+round (`MAX_GAMES_PER_ROUND`, default 1000), custom tags per round
+(`MAX_TAGS_PER_ROUND`, default 30), and member seats per round
+(`MAX_MEMBERS_PER_ROUND`, default 50). With accounts off (the
 default, single-tenant deploy) these are inert. See the quotas block in `.env.example`.
 
 Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate

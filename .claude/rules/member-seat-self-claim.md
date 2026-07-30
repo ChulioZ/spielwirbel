@@ -72,6 +72,30 @@ only place that can see both the typed names and the owner seat.
 There is **no backfill** for existing rounds — claiming is the manual fix, one
 seat at a time (CLAUDE.md: no permanent migration code).
 
+## 2b. `POST …/members` (#563) is a THIRD writer of seats — and writes no `userId`
+
+The member list is no longer frozen at creation: `POST /api/rounds/:rid/members`
+adds a name-only seat. Two invariants above extend to it unchanged, and both fail
+silently if a future edit "helpfully" accepts a `userId` there:
+
+- **The body is `{ name }` only.** Linking stays self-claim through the PATCH
+  matrix in §1, so the add route never takes an account id — not even the
+  caller's. A seat is created unlinked and its owner claims it afterwards.
+- **Absent-key parity (§2, third bullet) is what that protects.** The new seat
+  must be exactly `{ id, name }`; a `userId: null` would split the backends.
+  `test/members.test.js` asserts `'userId' in body === false` on the response.
+
+It **appends**, for the reason the owner seat **prepends**: `memberColor()`
+derives an unset avatar colour from the seat's *position*, so a prepend would
+recolour every existing member. The contract suite and a route test both pin the
+resulting order, and the route test pins that the existing seats come back
+byte-identical.
+
+`createMember` is therefore shared by invitation-accept and this route, which is
+why its `member_added` activity is written in the **repo** rather than either
+caller — see `.claude/rules/actor-seat-needs-a-uid-guard.md` for the attribution
+trap that shares.
+
 ## 3. Moving seats is deliberately a two-step, and silent
 
 While you hold a seat, no *other* member's page offers „Das bin ich" — and it
