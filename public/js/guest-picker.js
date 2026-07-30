@@ -23,6 +23,8 @@
 // The live names hang off the returned element as `el.guests`, read at submit
 // time, in the same element-with-a-method shape renderSeatPicker uses for
 // `refreshSeats`. Only NAMES travel to the server; it mints the ids (#458).
+// `el.guestKeys` is the index-aligned sibling the team picker holds on to
+// (#575) — see the declaration below for why a position will not do.
 function renderGuestPicker(note, onChange) {
   const field = h(`<div class="field">
       <label for="guestName">${esc(t('startSession.guestsLabel'))}</label>
@@ -35,6 +37,14 @@ function renderGuestPicker(note, onChange) {
     </div>`);
 
   const guests = [];
+  // Stable client-side keys for the names above, index-aligned with them and
+  // mutated in the same two places (add, and the chip's remove handler). The
+  // team picker (#575) references a guest by key rather than by position,
+  // because removing a guest shifts every later index out from under it — while
+  // the wire format can only be positional, since the ids are minted server-side
+  // and do not exist yet. Keys never leave the browser.
+  const guestKeys = [];
+  let seq = 0;
   const list = field.querySelector('#guestList');
   const input = field.querySelector('#guestName');
 
@@ -49,6 +59,7 @@ function renderGuestPicker(note, onChange) {
          </span>`);
       chip.querySelector('.guest-chip__del').addEventListener('click', () => {
         guests.splice(i, 1);
+        guestKeys.splice(i, 1);
         render();
         input.focus();
       });
@@ -63,6 +74,7 @@ function renderGuestPicker(note, onChange) {
     if (guests.length >= MAX_SESSION_GUESTS)
       return toast(t('startSession.toast.guestMax', { n: MAX_SESSION_GUESTS }));
     guests.push(name);
+    guestKeys.push('g' + ++seq);
     input.value = '';
     render();
     input.focus();
@@ -75,5 +87,6 @@ function renderGuestPicker(note, onChange) {
   });
 
   field.guests = guests;
+  field.guestKeys = guestKeys;
   return field;
 }

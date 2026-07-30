@@ -361,10 +361,20 @@ I18N.en = {
   'startSession.guestRemove': 'Remove guest {name}',
   'startSession.toast.guestName': 'Please enter a name for the guest',
   'startSession.toast.guestMax': 'At most {n} guests per session',
+  // Teams (#575): members and guests in any mix, for this session only. A team
+  // counts as ONE party when the draw matches a game's player range, which is
+  // why the note says so — it is the only visible explanation of a pool that
+  // shrank or grew when a team was formed.
+  'startSession.teamsLabel': 'Anyone playing as a team?',
+  'startSession.teamsNote': 'A team counts as one party in the draw — and wins together.',
+  'startSession.teamMake': 'Form a team',
+  'startSession.teamDissolve': 'Dissolve team {name}',
+  'startSession.toast.teamMin': 'A team needs at least {n} people',
   'startSession.whichGames': 'Which games?',
   'startSession.countLabel': 'How many games to draw?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',
+  'startSession.poolEmpty': 'No game matches these settings yet.',
   'startSession.draw': 'Start the vote',
   'startSession.toast.noGames': 'No matching games available',
   'startSession.toast.noMembers': 'At least one player must join',
@@ -377,6 +387,8 @@ I18N.en = {
   // wording of its own rather than reusing startSession.guestsNote, which
   // promises a vote this screen never offers.
   'directPlay.guestsNote': 'Guests play along but never join the round.',
+  // No draw here, so no pool to filter — this note may not promise one (#575).
+  'directPlay.teamsNote': 'Teams play together — and win together.',
 
   'vote.crumb': 'Voting',
   'vote.leaveConfirm': 'Leave the vote? The ratings entered so far will be lost.',
@@ -409,6 +421,8 @@ I18N.en = {
   'result.title': 'Result',
   'result.subtitle': '{when} · {n} games',
   'result.participants': 'Who played',
+  // The teams of this session (#575), listed next to the participants row.
+  'result.teams': 'As a team',
   'result.titleWonOne': '“{game}” was played. {names} won!',
   'result.titleWonMany': '“{game}” was played. {names} won!',
   'result.titlePlayed': '“{game}” was played.',

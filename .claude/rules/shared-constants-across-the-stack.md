@@ -37,9 +37,9 @@ places `.claude/rules/frontend-helper-modules-and-coverage.md` lists (script tag
 `SHELL`, `CACHE` bump, eslint globals — the last is a no-op if the name is
 already listed).
 
-**The third is `public/js/session-people.js`** (#458): `MAX_SESSION_GUESTS` and
-`GUEST_NAME_MAX`, offered by the guest picker and required by
-`routes/sessions.js`. It is the sharpest case of the three, because the server is
+**The third is `public/js/session-people.js`** (#458, #575): `MAX_SESSION_GUESTS`,
+`GUEST_NAME_MAX` and `MIN_TEAM_SIZE`, offered by the guest and team pickers and
+required by `routes/sessions.js`. It is the sharpest case of the three, because the server is
 deliberately **lenient** — it truncates an over-long guest list and an over-long
 name instead of 400ing — so a drifted client copy would silently drop guests and
 clip names with **no error anywhere**, i.e. the palette bug's failure mode minus
