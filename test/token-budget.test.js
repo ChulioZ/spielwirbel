@@ -43,7 +43,15 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 
-const lineCount = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8').split('\n').length;
+/* `wc -l` semantics, deliberately — that is the command every criterion tells the
+   auditor to run, and a count that disagrees with it by one would fail a file
+   sitting exactly on its budget while the documented check said it was fine.
+   A naive `split('\n').length` is that off-by-one: it counts the empty string
+   after the trailing newline every file here ends with. */
+const lineCount = (rel) => {
+  const lines = fs.readFileSync(path.join(ROOT, rel), 'utf8').split('\n');
+  return lines[lines.length - 1] === '' ? lines.length - 1 : lines.length;
+};
 
 // Every file under `dir` matching `keep`, repo-relative, recursing into subdirectories.
 const walk = (dir, keep, acc = []) => {
