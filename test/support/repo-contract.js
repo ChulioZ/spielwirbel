@@ -254,6 +254,31 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.createMember(OTHER, round.id, { name: 'X' }), null);
   });
 
+  // #563: a new seat is logged, because a new person in the round is real history
+  // (unlike the name/colour tweaks updateMember deliberately leaves unlogged).
+  // Written in the repo so BOTH callers get it — the add-member route and
+  // invitation-accept (#207) — which is why it is pinned here rather than only
+  // over HTTP.
+  test('createMember logs a member_added activity, with the actor only when given', async () => {
+    const round = await freshRound();
+    const anon = await repo.createMember(T, round.id, { name: 'Charlie' });
+    const byAlice = await repo.createMember(T, round.id, { name: 'Dana' }, round.members[0].id);
+
+    const acts = await repo.listActivities(T, round.id);
+    const forCharlie = acts.find((a) => a.type === 'member_added' && a.name === 'Charlie');
+    const forDana = acts.find((a) => a.type === 'member_added' && a.name === 'Dana');
+    assert.ok(forCharlie && forDana, 'both adds should be logged');
+    // The payload carries the NAME, not a gameId/title like the shelf activities.
+    assert.equal('gameId' in forCharlie, false);
+    // Absent-key parity on the actor: omitted entirely when no seat was passed
+    // (the invitation path), never written as null.
+    assert.equal('actorMemberId' in forCharlie, false);
+    assert.equal(forDana.actorMemberId, round.members[0].id);
+    // The seats themselves are unaffected by the logging.
+    assert.deepEqual(anon, { id: anon.id, name: 'Charlie' });
+    assert.deepEqual(byAlice, { id: byAlice.id, name: 'Dana' });
+  });
+
   test('listRoundSummaries: lastPlayed picks the newest finished session by createdAt and follows the design', async () => {
     const round = await freshRound();
     const a = await repo.createGame(T, round.id, gameFields({ title: 'First' }));

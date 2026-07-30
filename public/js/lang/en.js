@@ -131,6 +131,7 @@ I18N.en = {
   'activity.gamesMovedOut': '{n} games moved to “{round}”',
   'activity.gamesImportedOne': '{n} game imported from the BGG collection',
   'activity.gamesImported': '{n} games imported from the BGG collection',
+  'activity.memberAdded': '{name} joined',
   'activity.gamesMovedInOne': '{n} game taken over from “{round}”',
   'activity.gamesMovedIn': '{n} games taken over from “{round}”',
 
@@ -276,6 +277,10 @@ I18N.en = {
   'member.claim': "That's me",
   'member.unclaim': "That's not me",
   'member.claimed': 'This seat is linked to your account.',
+  'member.add': 'Add player',
+  'member.addPlaceholder': 'Name',
+  'member.toast.added': '{name} joined',
+  'member.toast.quota': 'Player limit for this round reached.',
   'member.toast.needName': 'Please enter a name',
   'member.toast.seatTaken': 'This seat already belongs to another account.',
   'member.toast.alreadySeated': 'You already hold a seat in this round.',

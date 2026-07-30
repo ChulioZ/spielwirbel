@@ -160,6 +160,7 @@ const frontendGlobals = {
   PROVIDER_LABELS: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
   // views-member.js
   showMember: 'readonly', memberStats: 'readonly',
+  openAddMember: 'readonly', addMemberBtn: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly',

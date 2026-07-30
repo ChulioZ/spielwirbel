@@ -74,6 +74,9 @@ function buildRoundRail(round, activeTab, sub) {
     const m = round.members[i];
     if (m) makeMemberLink(el, rid, m.id);
   });
+  // Add a seat (#563). The hero this mirrors is hidden at rail widths, so without
+  // an entry here the action would exist only below 1280px.
+  id.querySelector('.rail__members').appendChild(addMemberBtn(round));
   rail.appendChild(id);
 
   // --- The one big action, reachable from every section rather than only from

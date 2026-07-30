@@ -146,11 +146,16 @@ function renderStartTab(round, activeGames) {
        </div>
      </div>`);
   app.appendChild(hero);
-  // Each hero avatar opens that member's detail page.
+  // Each hero avatar opens that member's detail page. Queried before the "+" is
+  // appended, so the index-to-member mapping cannot pick it up.
   hero.querySelectorAll('.hero__members .avatar').forEach((el, i) => {
     const m = round.members[i];
     if (m) makeMemberLink(el, rid, m.id);
   });
+  // Add a seat (#563), right where the seats are listed. A real <button>, not a
+  // focusable span: it is not inline text sharing a line, so the platform gives
+  // focus, Enter and Space for free (.claude/rules/native-button-vs-focusable-span.md).
+  hero.querySelector('.hero__members').appendChild(addMemberBtn(round));
 
   const startBtn = h(
     `<button class="btn btn--primary hub-cta rail-owned"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`

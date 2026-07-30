@@ -549,6 +549,23 @@ h1, h2, h3 { font-family: var(--font-display); }
   border-style: dashed;
   border-color: var(--placeholder);
 }
+/* The "+" seat that opens the add-member editor (#563), in both member strips.
+   It is a real <button>, so it needs the UA `padding` reset — .avatar already
+   supplies font, border, colours and centring, but a button's own padding would
+   blow the 34px circle out. Dashed like .avatar--guest above, for the same
+   reason and with the same cascade caveat: declared AFTER .avatar so these border
+   longhands beat its `border` shorthand. Larger font-size than a seat's initials
+   because the glyph is alone in the circle. */
+.avatar--add {
+  padding: 0;
+  cursor: pointer;
+  font-size: 16px;
+  background: var(--sunken);
+  color: var(--ink-soft);
+  border-style: dashed;
+  border-color: var(--placeholder);
+}
+.avatar--add:hover { color: var(--brand); border-color: var(--brand); }
 .hero__chips { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
 /* The one big accent action of the Start tab. */
