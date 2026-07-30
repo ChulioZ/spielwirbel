@@ -4,7 +4,12 @@
 BCP-47 tag). Everything else derives from it: the picker, `Intl.PluralRules` in
 `tn()`, `fmtDateTime`/`fmtMonth`, and the feedback-metadata allowlist in
 `routes/contact.js`. Adding a language is that row plus a `lang/<code>.js` file,
-wired into `index.html`, `sw.js`'s `SHELL` and a `CACHE` bump.
+wired into `index.html`, `sw.js`'s `SHELL` and a `CACHE` bump — **and a set of
+three landing screenshots for the new locale** (#457), which
+`test/landing-shots.test.js` requires for every `SUPPORTED_LOCALES` entry. That
+last step is the one this checklist used to omit: skip it and the suite goes red
+pointing at a missing `.webp`, with nothing saying that shooting it is a manual
+job (`.claude/rules/landing-product-screenshots.md` is the recipe).
 
 Three things about making it data are non-obvious, and the first one is the trap
 that makes the other two matter.

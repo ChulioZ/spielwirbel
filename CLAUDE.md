@@ -118,8 +118,9 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   the feedback-metadata allowlist in `routes/contact.js` (a backend file
   requiring out of `public/js/` on purpose — see
   `.claude/rules/shared-constants-across-the-stack.md`). Adding a language is a
-  row there plus a `lang/<code>.js` file, wired into `index.html`, `sw.js`'s
-  `SHELL` and a `CACHE` bump. Don't reintroduce a hardcoded `['de', 'en']`
+  row there, a `lang/<code>.js` file wired into `index.html` + `sw.js`'s `SHELL`
+  + a `CACHE` bump, and a landing-screenshot set per locale (#457 — required by
+  `test/landing-shots.test.js`). Don't reintroduce a hardcoded `['de', 'en']`
   anywhere; `tn()` stays a one/other pair, so a language with `few`/`many`
   plural categories (Polish, Czech, Russian) needs more than a data file.
 - The active locale follows the system language and is overridable via the top-bar
@@ -168,14 +169,18 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   (`preview_start {name: "dev-temp-data"}`): port 3100, gitignored `.devdata/`,
   accounts + admin panel on. Never point the Browser pane at `production-data`.
   See `.claude/rules/no-reading-production-data.md`.
-- Tests: `npm test` (Node's built-in `node --test`; specs in `test/*.test.js`).
+- Tests: `npm test` (Node's built-in `node --test`; specs in `test/*.test.js`) plus
+  `npm run coverage:ci` (90% line floor — **gates the merge and can fail with every
+  test green**, `.claude/rules/frontend-helper-modules-and-coverage.md`).
   Add/update tests with new features and keep them green — see `.claude/rules/`.
-- Lint: `npm run lint` (ESLint flat config in `eslint.config.js`). Keep it green;
-  the frontend shared-global-scope pattern needs care — see `.claude/rules/`.
-- Quick syntax check: `node --check <file>`, or `npm run check:syntax` for all.
-- CI runs `npm test` (CI workflow) plus lint + syntax (Lint workflow) on every
-  push/PR; Dependabot (`.github/dependabot.yml`) opens weekly dependency-update
-  PRs, which those workflows then validate.
+- Lint: `npm run lint` (ESLint flat config in `eslint.config.js`), syntax:
+  `node --check <file>` or `npm run check:syntax`. Keep both green; the frontend
+  shared-global-scope pattern needs care — see `.claude/rules/`.
+- CI runs `test` (Node matrix) + `coverage` + `postgres` (the repo contract on a
+  real DB), plus lint/syntax/gitleaks; branch protection requires the aggregate
+  `ci-passed`, not the individual jobs (`.claude/rules/ci-aggregate-gate.md`).
+  Dependabot (`.github/dependabot.yml`) opens weekly dependency-update PRs, which
+  those workflows then validate.
 - API smoke tests: `curl` against `http://localhost:3000/api/...`.
 - For UI changes, verify in a real browser. Note: a non-painted/headless preview
   tab may not flush `requestAnimationFrame`, so grid contents that render via

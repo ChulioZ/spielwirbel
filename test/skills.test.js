@@ -139,3 +139,33 @@ test('every audit skill carries a criteria file the loop can read', () => {
   assert.ok(fs.existsSync(path.join(SKILLS, 'audit', 'audit-loop.md')),
     '.claude/skills/audit/audit-loop.md is missing');
 });
+
+test("a criterion's Status matches the section it sits in", () => {
+  // Found on 2026-07-30: two ADOPTED criteria (C-014, C-015) had been appended
+  // under the "## Rejected — settled, do not re-litigate" header. Nothing renders
+  // wrong, and both entries still read correctly on their own — but a run that
+  // trusts the section header (which is the whole point of having one) skips
+  // exactly the checks filed there. The inverse is just as bad: a rejected entry
+  // above the line gets audited against as if it were a live belief.
+  const problems = [];
+  for (const d of dirs.filter((x) => x.endsWith('-audit'))) {
+    const rel = `.claude/skills/${d}/criteria.md`;
+    const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    const cut = text.search(/^## Rejected/m);
+    if (cut < 0) continue; // the section's existence is asserted above
+
+    // Split on entry headings, keeping each entry's offset so its side is known.
+    for (const m of text.matchAll(/^### (\S+)[^\n]*\n([\s\S]*?)(?=^### |^## |$)/gm)) {
+      const [, id, body] = m;
+      const status = /\*\*Status:\*\*\s*(\w+)/.exec(body);
+      if (!status) { problems.push(`${rel}: ${id} has no Status line`); continue; }
+      const rejected = status[1] === 'rejected';
+      const belowCut = m.index > cut;
+      if (rejected !== belowCut) {
+        problems.push(`${rel}: ${id} is "${status[1]}" but sits `
+          + `${belowCut ? 'below' : 'above'} the Rejected header`);
+      }
+    }
+  }
+  assert.deepEqual(problems, [], `misfiled criteria:\n  ${problems.join('\n  ')}`);
+});

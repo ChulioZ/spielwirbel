@@ -174,10 +174,18 @@ git diff
 npm test
 npm run lint
 npm run check:syntax
+npm run coverage:ci
 ```
 
-- All three must pass. Read the diff critically for correctness, edge cases, and
+- All four must pass. Read the diff critically for correctness, edge cases, and
   the repo constraints above — not just "tests are green."
+- **`coverage:ci` is not optional, and it is the one that surprises you.** Branch
+  protection requires the aggregate `ci-passed` check, which fails on a coverage
+  drop with **every test green** — and the usual cause is not a missing test but a
+  newly `require`d view file dragging the global figure under the 90% floor
+  (`.claude/rules/frontend-helper-modules-and-coverage.md`, where one export cost
+  11 percentage points). Nothing in `npm test`'s output hints at it, which is why
+  it belongs here rather than being discovered on the PR.
 - For **substantial** UI changes (new views/layouts, non-trivial interaction or
   state, anything easy to get visibly wrong), verify in a real browser via the
   preview workflow (the `run` skill / preview tools), not tests alone. For

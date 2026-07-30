@@ -37,6 +37,21 @@ places `.claude/rules/frontend-helper-modules-and-coverage.md` lists (script tag
 `SHELL`, `CACHE` bump, eslint globals — the last is a no-op if the name is
 already listed).
 
+**The third is `public/js/session-people.js`** (#458): `MAX_SESSION_GUESTS` and
+`GUEST_NAME_MAX`, offered by the guest picker and required by
+`routes/sessions.js`. It is the sharpest case of the three, because the server is
+deliberately **lenient** — it truncates an over-long guest list and an over-long
+name instead of 400ing — so a drifted client copy would silently drop guests and
+clip names with **no error anywhere**, i.e. the palette bug's failure mode minus
+even the eventual 400 that exposed it. See
+`.claude/rules/session-guests-are-not-members.md`.
+
+Each new instance must be named in this inventory — the three paragraphs above.
+`test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
+`routes/` and `lib/` appears in it, because the list had already gone stale by one
+before anyone noticed. The check reads only the inventory section, so mentioning a
+module further down this file does not satisfy it.
+
 ## Why no test caught it, and what a real one looks like
 
 Both of the obvious guards were present and both were blind:

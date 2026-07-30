@@ -2,6 +2,12 @@
 
 - **last-researched:** 2026-07-24
 - **cadence:** 30 days
+- **last-scoped-pass:** 2026-07-30 — one operator-supplied source (Anthropic's
+  "new rules of context engineering for Claude 5-generation models"), which
+  yielded C-019 and C-R04. **This deliberately does not advance
+  `last-researched`:** a single-source pass is not the broad sweep the cadence
+  exists to schedule, and letting it reset the clock would suppress the next full
+  pass (due ~2026-08-23) on the strength of one blog post.
 
 Seeded 2026-07-23 from `CLAUDE.md` (the "Capturing learnings" contract),
 `.claude/rules/keep-readme-current.md` and
@@ -148,14 +154,17 @@ research at all.
 ### C-016 — The root documents state the live instance's actual state
 - **Status:** adopted · 2026-07-26
 - **Source:** the 2026-07-26 audit · `.claude/rules/ops-only-changes-still-stale-the-docs.md`
-- **Check:** `SECURITY.md`'s "Project stage", `README.md`'s `AUTH_PASSWORD` and
-  accounts-mode paragraphs, and `CLAUDE.md`'s "Current stage" each assert what the
+- **Check:** Walk the **canonical** instance-state table in
+  `.claude/rules/ops-only-changes-still-stale-the-docs.md`, deliberately not
+  restated here — it existed in three overlapping copies until 2026-07-30 and one
+  of them had drifted. Every row asserts what the
   production deployment *is* — auth mode, whether registration is open, what a change
   reaches. Verify against reality, not against the code (the code supports all four
   auth modes; only the env says which one runs). `SECURITY.md` is the sharpest: it
   calibrates how an external reporter rates a vulnerability, and it claimed
   registration was closed and the data non-public for two days after the go-live.
-  Also check `CONTRIBUTING.md`'s pre-PR checklist names every check that gates a
+  Then the three **process** documents that table excludes (they assert process, not
+  instance state): check `CONTRIBUTING.md`'s pre-PR checklist names every check that gates a
   merge, that its licensing terms match `LICENSE` + `package.json`, and that
   `CODE_OF_CONDUCT.md`'s enforcement contact is still reachable and still points
   elsewhere for the two things it does not handle (security → the advisory form;
@@ -192,6 +201,41 @@ research at all.
   paths only — every check above is manual, because each compares a file against
   something outside the repo)
 
+### C-014 — Rule files are scoped deliberately: `paths:` when file-scoped, global when tool-triggered
+- **Status:** adopted · 2026-07-24 (operator decision: trial)
+- **Source:** official Claude Code memory docs (`paths:` frontmatter, retrieved 2026-07-24)
+- **Check:** A rule whose every trap requires reading or editing a specific file set
+  carries `paths:` frontmatter scoping it to those files; a rule whose trap surfaces
+  through tools or situations (browser pane artifacts, service-worker caching, git/CI,
+  deploys, data-directory handling) stays unconditional — a scoped rule that fails to
+  load when needed silently loses its protection, so when in doubt, stay global. When
+  adding a rule, decide the scope explicitly; when auditing, check that scoped rules'
+  globs still match the files their traps live in.
+- **Enforced by:** — (manual)
+
+### C-015 — `CLAUDE.md` stays within the documented adherence budget
+- **Status:** adopted · 2026-07-24
+- **Source:** official Claude Code guidance (target under ~200 lines per CLAUDE.md)
+- **Check:** `wc -l CLAUDE.md` stays around or under 200 (171 at adoption, 203 on
+  2026-07-30). Growth beyond that is a signal to move content into a scoped rule or a
+  skill, not to restructure (C-R03 still holds).
+- **Enforced by:** — (manual)
+
+### C-019 — An absolute prohibition names the failure mode it prevents
+- **Status:** adopted · 2026-07-30
+- **Source:** ["The new rules of context engineering for Claude 5-generation models"](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models)
+  (Anthropic, retrieved 2026-07-30)
+- **Check:** The post's central shift is from rigid constraint to contextual judgment —
+  it replaced "default to writing no comments. Never write multi-paragraph docstrings"
+  with "match its comment density, naming, and idiom". So: a **never/always** in an
+  agent-facing file must be backed by a named symptom, measurement or incident (the
+  overwhelming majority here are — a leaked secret, a silent 400, a broken deploy,
+  a measured 442 MB of decoded bitmap). A prohibition that only encodes taste gets
+  reframed as judgment instead. This is a **regression guard, not a rewrite backlog**:
+  `CLAUDE.md`'s Conventions section already opens with "Match the surrounding style",
+  and the audit found no taste-only absolutes to convert.
+- **Enforced by:** — (manual)
+
 ---
 
 ## Rejected — settled, do not re-litigate
@@ -218,22 +262,12 @@ research at all.
   which a generic template drops. Reorganise only for a defect that costs a session real
   effort, and say what that defect was.
 
-### C-014 — Rule files are scoped deliberately: `paths:` when file-scoped, global when tool-triggered
-- **Status:** adopted · 2026-07-24 (operator decision: trial)
-- **Source:** official Claude Code memory docs (`paths:` frontmatter, retrieved 2026-07-24)
-- **Check:** A rule whose every trap requires reading or editing a specific file set
-  carries `paths:` frontmatter scoping it to those files; a rule whose trap surfaces
-  through tools or situations (browser pane artifacts, service-worker caching, git/CI,
-  deploys, data-directory handling) stays unconditional — a scoped rule that fails to
-  load when needed silently loses its protection, so when in doubt, stay global. When
-  adding a rule, decide the scope explicitly; when auditing, check that scoped rules'
-  globs still match the files their traps live in.
-- **Enforced by:** — (manual)
-
-### C-015 — `CLAUDE.md` stays within the documented adherence budget
-- **Status:** adopted · 2026-07-24
-- **Source:** official Claude Code guidance (target under ~200 lines per CLAUDE.md)
-- **Check:** `wc -l CLAUDE.md` stays around or under 200 (171 at adoption). Growth
-  beyond that is a signal to move content into a scoped rule or a skill, not to
-  restructure (C-R03 still holds).
-- **Enforced by:** — (manual)
+### C-R04 — "Strip the trigger phrasing / examples from skill descriptions"
+- **Status:** rejected · 2026-07-30
+- **Why:** The same post removes example-based instruction from tool definitions,
+  because examples "constrain them to a certain exploration space". That targets
+  **worked examples inside instructions**, not trigger surface: a skill's
+  "Use when asked to review a PR…" clause is what makes the skill *fire at all*,
+  and C-007 requires it in the words a user would actually type. Deleting those
+  clauses would silently stop skills triggering — a routing failure with no error.
+  Recorded so a future run reading that post doesn't strip them.
