@@ -80,10 +80,12 @@ Two consequences worth knowing rather than rediscovering:
 
 ## 4. Claim the people only AFTER the size check, or a dropped team steals them
 
-Both resolvers — `resolveTeams` in the route (on the way in) and the one in
-`session-people.js` (on every read) — enforce the same two rules: nobody is in
-two teams, and a team below `MIN_TEAM_SIZE` is dropped. The order is what makes
-them compose:
+Both resolvers — `resolveTeams` in the route (wire → stored records) and
+`teamsForPeople` in `session-people.js` (stored records → resolved people, on
+every read) — enforce the same two rules: nobody is in two teams, and a team
+below `MIN_TEAM_SIZE` is dropped. They are named apart on purpose: one grep must
+not return two functions with different shapes. The order is what makes them
+compose:
 
 ```js
 if (personIds.length < MIN_TEAM_SIZE) return;   // drop first …

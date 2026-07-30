@@ -80,7 +80,7 @@ function partyName(people) {
 // that person shows up twice on the winner picker. A person already claimed by
 // an earlier team is skipped rather than shared, so the parties below stay a
 // partition of the participants however the stored blob looks.
-function resolveTeams(people, session) {
+function teamsForPeople(people, session) {
   const byId = new Map(people.map((p) => [p.id, p]));
   const claimed = new Set();
   const teams = [];
@@ -105,7 +105,7 @@ function resolveTeams(people, session) {
 }
 
 function sessionTeams(round, session) {
-  return resolveTeams(sessionPeople(round, session), session);
+  return teamsForPeople(sessionPeople(round, session), session);
 }
 
 // Everyone at the table as PLAYING PARTIES (#575): one entry per team plus one
@@ -114,7 +114,7 @@ function sessionTeams(round, session) {
 // person who is in a team never appears on their own as well.
 function sessionParties(round, session) {
   const people = sessionPeople(round, session);
-  const teams = resolveTeams(people, session);
+  const teams = teamsForPeople(people, session);
   const teamOf = new Map();
   teams.forEach((tm) => tm.personIds.forEach((pid) => teamOf.set(pid, tm)));
   const seen = new Set();

@@ -57,7 +57,8 @@ const frontendGlobals = {
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
-  partyName: 'readonly', sessionTeams: 'readonly', sessionParties: 'readonly',
+  partyName: 'readonly', teamsForPeople: 'readonly',
+  sessionTeams: 'readonly', sessionParties: 'readonly',
   TEAM_TOKEN_MEMBER: 'readonly', TEAM_TOKEN_GUEST: 'readonly',
   themeAccent: 'readonly', resolveAccent: 'readonly',
   activePopover: 'writable', closePopover: 'readonly', openPopover: 'readonly',
