@@ -60,6 +60,9 @@ I18N.de = {
   'round.startSession': 'Session wirbeln',
   'round.startSessionDisabled': 'Erst Spiele hinzufügen',
   'round.addGame': 'Spiel hinzufügen',
+  'round.editName': 'Zum Umbenennen klicken',
+  'round.toast.needName': 'Bitte einen Namen eingeben',
+  'round.toast.renamed': 'Runde umbenannt',
   'round.deleteRound': 'Diese Runde löschen',
   'round.deleteConfirm': 'Runde „{name}“ mit allen Spielen und Sessions löschen?',
   'round.lastPlayedLabel': 'Zuletzt gespielt',
@@ -138,6 +141,7 @@ I18N.de = {
   'activity.gamesImportedOne': '{n} Spiel aus der BGG-Sammlung übernommen',
   'activity.gamesImported': '{n} Spiele aus der BGG-Sammlung übernommen',
   'activity.memberAdded': '{name} ist dabei',
+  'activity.roundRenamed': 'Runde in „{name}“ umbenannt',
 
   'games.title': 'Spiele ({n})',
   'games.empty': 'Noch keine Spiele. Füge euer erstes Spiel hinzu!',

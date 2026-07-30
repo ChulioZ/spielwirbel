@@ -59,6 +59,9 @@ I18N.en = {
   'round.startSession': 'Start session',
   'round.startSessionDisabled': 'Add games first',
   'round.addGame': 'Add a game',
+  'round.editName': 'Click to rename',
+  'round.toast.needName': 'Please enter a name',
+  'round.toast.renamed': 'Round renamed',
   'round.deleteRound': 'Delete this round',
   'round.deleteConfirm': 'Delete round “{name}” with all its games and sessions?',
   'round.lastPlayedLabel': 'Last played',
@@ -135,6 +138,7 @@ I18N.en = {
   'activity.gamesImportedOne': '{n} game imported from the BGG collection',
   'activity.gamesImported': '{n} games imported from the BGG collection',
   'activity.memberAdded': '{name} joined',
+  'activity.roundRenamed': 'Round renamed to “{name}”',
   'activity.gamesMovedInOne': '{n} game taken over from “{round}”',
   'activity.gamesMovedIn': '{n} games taken over from “{round}”',
 

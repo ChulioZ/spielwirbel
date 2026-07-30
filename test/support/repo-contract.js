@@ -339,6 +339,52 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.getRoundSummary(OTHER, round.id), null);
   });
 
+  // #562. The two conditional halves are what make this worth pinning in both
+  // backends: an unchanged name must write NO activity (the feed is the audit
+  // trail for a shared round and has to stay readable), and the entry carries
+  // the new name only — never the previous one, which would outlive a
+  // `redactText` of the round's name.
+  test('renameRound renames, returns the round and logs one activity', async () => {
+    const round = await freshRound({ name: 'Alt' });
+    const [alice] = round.members;
+
+    const renamed = await repo.renameRound(T, round.id, 'Neu', alice.id);
+    assert.equal(renamed.name, 'Neu');
+    // The full round shape, exactly as getRound answers it.
+    assert.deepEqual(renamed, await repo.getRound(T, round.id));
+
+    const acts = (await repo.listActivities(T, round.id)).filter((a) => a.type === 'round_renamed');
+    assert.equal(acts.length, 1);
+    assert.equal(acts[0].name, 'Neu');
+    assert.equal(acts[0].actorMemberId, alice.id);
+    // Never the previous name (redaction of the round's name cannot reach here).
+    assert.equal('previous' in acts[0], false);
+
+    // Renaming to the SAME name is a no-op: still the round, still one entry.
+    const again = await repo.renameRound(T, round.id, 'Neu');
+    assert.equal(again.name, 'Neu');
+    assert.equal((await repo.listActivities(T, round.id)).filter((a) => a.type === 'round_renamed').length, 1);
+  });
+
+  test('renameRound is refused across tenants and for a missing round', async () => {
+    const round = await freshRound({ name: 'Original' });
+    assert.equal(await repo.renameRound(T, 'nope', 'X'), null);
+    assert.equal(await repo.renameRound(OTHER, round.id, 'Fremd'), null);
+    // The wrong-tenant call changed nothing.
+    assert.equal((await repo.getRound(T, round.id)).name, 'Original');
+    assert.equal((await repo.listActivities(T, round.id)).some((a) => a.type === 'round_renamed'), false);
+  });
+
+  // An unlinked seat carries no `userId`, so a rename with no actor must leave
+  // the key ABSENT rather than crediting whoever sits in the first chair
+  // (.claude/rules/actor-seat-needs-a-uid-guard.md).
+  test('renameRound omits actorMemberId when nobody is named', async () => {
+    const round = await freshRound();
+    await repo.renameRound(T, round.id, 'Anonym');
+    const entry = (await repo.listActivities(T, round.id)).find((a) => a.type === 'round_renamed');
+    assert.equal('actorMemberId' in entry, false);
+  });
+
   test('deleteRound is refused across tenants and frees nothing', async () => {
     const round = await freshRound();
     await repo.createGame(T, round.id, gameFields({ image: '/uploads/kept-280.jpg' }));

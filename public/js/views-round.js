@@ -126,6 +126,82 @@ function renderSubScreenTabs(round, sub) {
   renderHubTabs(round, hubTabOwning(sub), sub);
 }
 
+// The round's name as an inline-editable heading (#562). Until then it was typed
+// once in showNewRound() and immutable for the round's whole life — the one
+// string the round owns that could not be corrected, while member names, game
+// titles, tags and the design all could.
+//
+// Rendered in TWO places, so the builder is shared exactly like addMemberBtn
+// (#563): the Start tab's hero below 1280px, and the rail's identity block above
+// it, where CSS hides the hero. An affordance on the hero alone would simply not
+// exist on a desktop.
+//
+// A focusable <span>, not a <button>. `.gd-title` is the app's existing
+// inline-title-edit component (game detail #424, member page) and already
+// carries the hover tint and the focus ring, whereas a <button> here would need
+// its UA chrome reset against two different heading types — the hero's 30px <h1>
+// and the rail's 22px display face — which is exactly the font/line-height reset
+// whose silent failures .claude/rules/native-button-vs-focusable-span.md
+// documents. What a span owes in exchange is `role` + `tabindex` + an explicit
+// Enter/Space handler; all three are here, and each is useless without the
+// others. (Note views-member.js's copy predates #424 and has none of them — copy
+// the game-detail shape, not that one.)
+function editableRoundName(round) {
+  const el = h(`<span class="gd-title" role="button" tabindex="0" title="${esc(t('round.editName'))}">${esc(round.name)}</span>`);
+
+  const startEdit = () => {
+    const input = h('<input class="input rn-title-input" />');
+    input.value = round.name;
+    el.replaceWith(input);
+    input.focus();
+    input.select();
+    let handled = false;
+    const commit = async () => {
+      if (handled) return;
+      handled = true;
+      const name = input.value.trim();
+      // Blank is refused here so it never round-trips (the route validates the
+      // same shape as the backstop), and an unchanged name is not sent at all:
+      // the server would answer 200 having written nothing, but the toast would
+      // still claim a rename happened.
+      if (!name) {
+        toast(t('round.toast.needName'));
+        input.replaceWith(el);
+        return;
+      }
+      if (name === round.name) return input.replaceWith(el);
+      try {
+        await api('PATCH', `/api/rounds/${round.id}`, { name });
+        toast(t('round.toast.renamed'));
+        // currentView() rather than a fixed showRound(): the rail carries this
+        // heading on every round screen, so the edit can be started from the
+        // Regal, the Chronik or a sub-screen too (#563's reasoning). It also
+        // refreshes the top-bar context label, which shows the round's name.
+        currentView();
+      } catch (e) {
+        toast(e.message);
+        input.replaceWith(el);
+      }
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      // Escape restores the trigger, so restore focus to it as well — otherwise a
+      // keyboard user who cancels is dropped to <body> and starts again from the
+      // top of the document. Removing the focused input fires no blur, and
+      // `handled` keeps commit() out of it either way.
+      else if (e.key === 'Escape') { handled = true; input.replaceWith(el); el.focus(); }
+    });
+  };
+
+  el.addEventListener('click', startEdit);
+  el.addEventListener('keydown', (e) => {
+    // preventDefault on Space, or the page scrolls under the editor.
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startEdit(); }
+  });
+  return el;
+}
+
 // --- Start tab: the launchpad — identity, the one big CTA, the latest story.
 function renderStartTab(round, activeGames) {
   const rid = round.id;
@@ -136,7 +212,7 @@ function renderStartTab(round, activeGames) {
 
   const playedCount = round.sessions.filter((s) => s.finished).length;
   const hero = h(`<div class="hero rail-owned">
-       <h1>${esc(round.name)}</h1>
+       <h1></h1>
        <div class="hero__members">${round.members
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${esc(initials(m.name))}</a>`)
          .join('')}</div>
@@ -145,6 +221,9 @@ function renderStartTab(round, activeGames) {
          <span class="stat-chip"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(tn(playedCount, 'home.chip.sessionsOne', 'home.chip.sessions'))}</span>
        </div>
      </div>`);
+  // The name is inline-editable (#562); the rail's copy of this heading carries
+  // the same affordance for widths where CSS hides the hero.
+  hero.querySelector('h1').appendChild(editableRoundName(round));
   app.appendChild(hero);
   // Each hero avatar opens that member's detail page. Queried before the "+" is
   // appended, so the index-to-member mapping cannot pick it up.

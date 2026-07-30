@@ -112,6 +112,54 @@ test('the owner is unaffected: they read, edit and delete their own round normal
   assert.equal((await request(app).get(`/api/rounds/${round.id}`).set(auth(owner.token))).status, 404); // gone
 });
 
+// #562 — the deliberate counterpart to the owner-only guards above, and the one
+// product decision in that issue. Renaming is acting WITHIN the round (the class
+// of editing a member name or a game title, both already open to a grantee), not
+// destroying it or reparenting its shelf — so it carries NO `if (req.grant)`
+// guard. Pinned here so re-adding one, which would look like a consistency fix
+// next to DELETE and move-to, fails loudly.
+test('renaming a shared round is allowed for a grantee, and attributed to their seat (#562)', async () => {
+  const owner = await makeAccount('rename-owner@example.com');
+  const grantee = await makeAccount('rename-grantee@example.com');
+  const outsider = await makeAccount('rename-outsider@example.com');
+
+  const shared = (await request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Alte Runde', members: ['Owner'] })).body;
+  // Seat the grantee and grant them access, exactly as invitation-accept does
+  // (there is no route to create a grant here — see this file's header). The
+  // seat must carry `userId`, or the rename has no actor to attribute to: a
+  // grantee cannot claim a seat themselves (PATCH …/members answers 403
+  // not_owner for them — .claude/rules/member-seat-self-claim.md).
+  const seat = await repo.forTenant(owner.user.tenantId)
+    .createMember(shared.id, { name: 'Grantee', userId: grantee.user.id });
+  await repo.createGrant({
+    roundId: shared.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id, memberId: seat.id,
+  });
+
+  const res = await request(app).patch(`/api/rounds/${shared.id}`)
+    .set(auth(grantee.token)).send({ name: 'Neue Runde' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.name, 'Neue Runde');
+  // The response keeps the `shared` marker GET sets, so a client replacing its
+  // round object with it cannot silently start offering owner-only actions.
+  assert.equal(res.body.shared, true);
+
+  // It landed in the OWNER's round, and the owner sees who did it.
+  const ownerView = await request(app).get(`/api/rounds/${shared.id}`).set(auth(owner.token));
+  assert.equal(ownerView.body.name, 'Neue Runde');
+  assert.equal('shared' in ownerView.body, false);
+  const acts = (await request(app).get(`/api/rounds/${shared.id}/activities`).set(auth(owner.token))).body
+    .filter((a) => a.type === 'round_renamed');
+  assert.equal(acts.length, 1);
+  assert.equal(acts[0].actorMemberId, seat.id);
+
+  // An outsider still cannot rename it — the round is simply not there for them.
+  const denied = await request(app).patch(`/api/rounds/${shared.id}`)
+    .set(auth(outsider.token)).send({ name: 'Gekapert' });
+  assert.equal(denied.status, 404);
+  assert.equal((await request(app).get(`/api/rounds/${shared.id}`).set(auth(owner.token))).body.name, 'Neue Runde');
+});
+
 test('moving games out of a shared round is owner-only (#411)', async () => {
   const owner = await makeAccount('move-owner@example.com');
   const grantee = await makeAccount('move-grantee@example.com');

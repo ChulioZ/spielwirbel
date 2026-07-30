@@ -28,3 +28,9 @@ This extends the CLAUDE.md note about non-painted preview tabs and rAF: the
 pane can also fail to produce fresh frames after synthetic scrolls, and its
 input pipeline can wedge per-session (a reload/re-navigate recovers painting;
 input may stay broken) — while the page itself is fine in a real browser.
+
+**The pane lies about focus as well as about pixels.** `document.hasFocus()` is
+permanently false there, so `element.blur()` moves `document.activeElement`
+without dispatching any `blur`/`focusout` event — which makes every
+commit-on-blur inline editor look completely dead. See
+`.claude/rules/blur-events-never-fire-in-the-preview-pane.md`.

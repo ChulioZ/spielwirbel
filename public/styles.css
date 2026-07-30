@@ -2593,6 +2593,24 @@ body.auth-screen .demo-banner { display: none; }
   max-width: 100%;
   vertical-align: middle;
 }
+/* The round-name editor (#562). The heading it replaces is rendered at two very
+   different sizes — the hero's 30px <h1> below 1280px, the rail's 22px display
+   face above it — so it takes its type from whichever it stands in for instead
+   of the one fixed size .gd-title-input can afford on screens that have a single
+   heading. Never the `font` shorthand: `.input` already supplies
+   `font-family: inherit`, and the shorthand would reset it along with the rest
+   (.claude/rules/native-button-vs-focusable-span.md).
+   `.input.rn-title-input` is (0,2,0) so it beats `.input`'s font-size and padding
+   on SPECIFICITY rather than on sitting later in the file
+   (.claude/rules/label-rows-lose-to-field-label.md). */
+.input.rn-title-input {
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  padding: 2px 6px;
+  max-width: 100%;
+  vertical-align: middle;
+}
 
 /* Tags become edit controls — real <button>s since #424, so the UA chrome has to
    go. Only what the .tag family doesn't already declare itself: background and
