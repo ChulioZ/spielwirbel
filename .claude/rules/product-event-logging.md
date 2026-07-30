@@ -16,8 +16,9 @@ unknown name is **dropped** and logged as `unknown_product_event`, so a typo
 can't silently create a new event stream. Adding an event means adding it to
 `EVENTS` *and* to this list. That instruction was skipped once (#481 added its
 event to the allowlist only), so `test/rule-enumerations.test.js` now asserts the
-two agree — and it reads **only the list above**, so naming a member anywhere else
-in this file cannot satisfy it.
+two agree. It reads **only this `## The events` section**, so a member named
+further down the file cannot satisfy it — and by the same token, don't name a
+member in prose up here, or the check stops proving the list holds it.
 
 (#261 also specified a `recommendation_run` event. It was **not** implemented:
 buy-next and all AI surface were removed in #264, so it has no call site.)

@@ -50,15 +50,17 @@ const filesIn = (dir) => fs.readdirSync(path.join(ROOT, dir))
   .filter((f) => f.endsWith('.js'))
   .map((f) => [`${dir}/${f}`, src(`${dir}/${f}`)]);
 
-// The slice of a rule between two headings — its enumeration region. `from` is a
-// heading's text, `to` the next heading that ends the region; both must be found, so
-// renaming a heading fails loudly instead of silently widening or emptying the scope.
-const section = (text, rel, from, to) => {
-  const start = text.indexOf(from);
-  assert.ok(start >= 0, `${rel}: heading "${from}" is gone — re-scope this check`);
-  const end = text.indexOf(to, start + from.length);
-  assert.ok(end > start, `${rel}: heading "${to}" is gone — re-scope this check`);
-  return text.slice(start, end);
+// One `##` section of a rule — the region holding its enumeration. Ends at the next
+// `##` heading, so only the section's OWN heading is a fixed string: renaming that
+// fails loudly ("is gone"), while editing anything downstream cannot silently widen,
+// empty or invalidate the scope. Keyed on a heading rather than on a paragraph for
+// exactly that reason.
+const section = (text, rel, heading) => {
+  const start = text.indexOf(heading);
+  assert.ok(start >= 0, `${rel}: heading "${heading}" is gone — re-scope this check`);
+  const rest = text.slice(start + heading.length);
+  const next = rest.search(/^## /m);
+  return next < 0 ? rest : rest.slice(0, next);
 };
 
 // The members of a `const NAME = new Set([ 'a', 'b' ])` literal. Parsed out of the
@@ -76,7 +78,7 @@ test('every product event in the EVENTS allowlist is named in its rule', () => {
   assert.ok(events.length >= 6, `expected at least 6 product events, parsed ${events.length}`);
 
   const rel = '.claude/rules/product-event-logging.md';
-  const rule = section(src(rel), rel, '## The events', '\n(#261');
+  const rule = section(src(rel), rel, '## The events');
   const missing = events.filter((e) => !rule.includes(e));
   assert.deepEqual(missing, [],
     `product-event-logging.md does not name: ${missing.join(', ')}`
@@ -108,7 +110,7 @@ test('every constant the backend shares out of public/js is named in its rule', 
   assert.ok(shared.size >= 3, `expected at least 3 shared frontend modules, found ${shared.size}`);
 
   const rel = '.claude/rules/shared-constants-across-the-stack.md';
-  const rule = section(src(rel), rel, '## The rule', '## Why no test caught it');
+  const rule = section(src(rel), rel, '## The rule');
   const missing = [...shared].filter((n) => !rule.includes(n)).sort();
   assert.deepEqual(missing, [],
     `shared-constants-across-the-stack.md does not name: ${missing.join(', ')}`
