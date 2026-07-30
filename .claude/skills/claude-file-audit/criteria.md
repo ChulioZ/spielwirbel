@@ -75,14 +75,37 @@ research at all.
   #207 co-tenancy reversal are both live examples of the shape).
 - **Enforced by:** — (manual)
 
-### C-006 — README reflects the shipped app
-- **Status:** adopted · 2026-07-23
+### C-006 — The user docs reflect the shipped app
+- **Status:** adopted · 2026-07-23 (rescoped 2026-07-30)
 - **Source:** `keep-readme-current.md`
 - **Check:** Features and views, the architecture tree, API routes, npm scripts, env vars,
   Node/runtime requirements, and the skills table. The README drifted wholesale once
   before (it described the pre-redesign app months after the redesign shipped), which is
-  why that rule exists.
-- **Enforced by:** — (manual)
+  why that rule exists. **Since 2026-07-30 this spans four documents, not one** —
+  `README.md` (landing page), `docs/features.md`, `docs/architecture.md`,
+  `docs/configuration.md` — plus the skills table, which moved into
+  `CONTRIBUTING.md`. Check the file the change belongs to, per the routing table in
+  `keep-readme-current.md`; a feature documented only in the README's one-liner list
+  is as stale as one documented nowhere.
+- **Enforced by:** `test/readme-tree.test.js` (the architecture tree, both directions),
+  `test/skills.test.js` (cited paths) — prose is manual
+
+### C-020 — The README stays a landing page, not a manual
+- **Status:** adopted · 2026-07-30
+- **Source:** operator observation, 2026-07-30 ("it currently feels huge to me") ·
+  `keep-readme-current.md`
+- **Check:** `wc -l README.md` stays at roughly 100–150 (133 after the 2026-07-30
+  restructure, down from **985**). Reference material belongs in `docs/`; the README's
+  job is to tell a first-time visitor what the app is, show it, get it running, and
+  point at the right document. Watch for the specific regression this criterion
+  exists for: a section that starts as a summary and accretes back into a full
+  reference — the env-var list and the file tree are the two that did it before.
+  **Why it needed its own criterion:** C-006 only ever asked whether the README was
+  *accurate*, and it always was — every section was correct and several were
+  test-pinned — so 985 lines of correct-but-misaimed prose passed audit after audit
+  unexamined. Size and audience fit are a separate question from correctness, and
+  nothing was asking it. The sibling budget for the agent-facing file is C-015.
+- **Enforced by:** — (manual; the line count is one command)
 
 ### C-007 — Every skill has frontmatter that will actually trigger it
 - **Status:** adopted · 2026-07-23
