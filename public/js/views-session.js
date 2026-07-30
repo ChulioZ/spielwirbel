@@ -20,29 +20,49 @@ function showStartSession(round) {
   // <div class="label">, not <label> (#145): a <label> with no `for` and no
   // wrapped input labels nothing at all. `aria-labelledby` on the group is what
   // actually ties the text to the seats/chips.
-  const form = h(`<div>
-      <div class="field">
-        <div class="field__label" id="seatsLabel">${esc(t('startSession.membersLabel'))}</div>
-        <div id="seatMount"></div>
-        <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
-      </div>
-      <div id="guestMount"></div>
-      <div id="teamMount"></div>
-      <div class="field" id="gamesFilterField" hidden>
-        <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
-        <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
-      </div>
-      <div class="field">
-        <label for="count">${esc(t('startSession.countLabel'))}</label>
-        <div class="stepper">
-          <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
-          <input id="count" class="stepper__val" inputmode="numeric" value="3" />
-          <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+  //
+  // `.setup-grid` splits the screen along the two questions it actually asks:
+  // WHO is at the table (left) and WHAT gets drawn (right — the two controls
+  // that shape the pool, the resulting pool itself, and the button that draws
+  // from it). From 860px up that is two columns; below it the grid is a plain
+  // block, so the DOM order below IS the phone order — and it is byte-for-byte
+  // the order this screen already had, so nothing moves on a phone.
+  //
+  // The pool is rendered twice on purpose — a tile panel beside the form, the
+  // compact overlapping strip below it — and CSS picks one by width, the same
+  // "render both, let the viewport decide" shape the rail and dock use. Both are
+  // filled by the one updateHint() below, so they cannot drift.
+  const form = h(`<div class="setup-grid">
+      <div class="setup-grid__main">
+        <div class="field">
+          <div class="field__label" id="seatsLabel">${esc(t('startSession.membersLabel'))}</div>
+          <div id="seatMount"></div>
+          <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
         </div>
+        <div id="guestMount"></div>
+        <div id="teamMount"></div>
       </div>
-      <div class="pool-hint" id="poolHint"></div>
-      <div class="toolbar">
-        <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-tornado" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
+      <div class="setup-grid__aside">
+        <div class="field" id="gamesFilterField" hidden>
+          <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
+          <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
+        </div>
+        <div class="field">
+          <label for="count">${esc(t('startSession.countLabel'))}</label>
+          <div class="stepper">
+            <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+            <input id="count" class="stepper__val" inputmode="numeric" value="3" />
+            <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <div class="setup-panel">
+          <h2 class="setup-panel__title" id="poolTitle"></h2>
+          <div class="setup-panel__body" id="poolGrid"></div>
+        </div>
+        <div class="pool-hint" id="poolHint"></div>
+        <div class="toolbar">
+          <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-tornado" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
+        </div>
       </div>
     </div>`);
   app.appendChild(form);
@@ -95,22 +115,42 @@ function showStartSession(round) {
         (typeof g.maxPlayers !== 'number' || playerCount() <= g.maxPlayers)
     );
 
-  // Live pool preview: count plus a few cover thumbnails.
+  // Live pool preview, in the two presentations described above. The wide panel
+  // lists EVERY matching game (its own scroll box bounds it), so it needs no
+  // "+n" overflow chip and the two representations share no counting logic
+  // beyond the one headline string.
   const hint = form.querySelector('#poolHint');
+  const poolTitle = form.querySelector('#poolTitle');
+  const poolGrid = form.querySelector('#poolGrid');
+  const coverStyle = (g, w) =>
+    g.image ? ` style="background-image:url('${coverUrl(g.image, w)}')"` : '';
   const updateHint = () => {
     const games = pool();
+    // Resolved once: both presentations must always report the same number, and
+    // two tn() calls is two places for that to stop being true.
+    const headline = tn(games.length, 'startSession.availableOne', 'startSession.available');
+
+    // Compact strip (below 860px): the first six covers, overlapping, + a count.
     const thumbs = games
       .slice(0, 6)
-      .map((g) => {
-        const style = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
-        const fb = coverPlaceholder(g);
-        return `<span class="pool-thumb"${style} title="${esc(g.title)}">${fb}</span>`;
-      })
+      .map((g) => `<span class="pool-thumb"${coverStyle(g, COVER_THUMB)} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
       .join('');
     const more = games.length > 6 ? `<span class="pool-thumb pool-thumb--more">+${games.length - 6}</span>` : '';
-    hint.innerHTML = `<span class="pool-hint__text">${esc(
-      tn(games.length, 'startSession.availableOne', 'startSession.available')
-    )}</span><span class="pool-thumbs">${thumbs}${more}</span>`;
+    hint.innerHTML = `<span class="pool-hint__text">${esc(headline)}</span><span class="pool-thumbs">${thumbs}${more}</span>`;
+
+    // Tile panel (860px up). An empty pool needs its own line: a grid with no
+    // tiles reads as a broken panel rather than as "nothing matches yet".
+    poolTitle.textContent = headline;
+    poolGrid.innerHTML = games.length
+      ? games
+          .map(
+            (g) => `<span class="pool-tile" title="${esc(g.title)}">
+                 <span class="pool-tile__img"${coverStyle(g, COVER_CARD)}>${coverPlaceholder(g)}</span>
+                 <span class="pool-tile__name">${esc(g.title)}</span>
+               </span>`
+          )
+          .join('')
+      : `<p class="muted setup-panel__empty">${esc(t('startSession.poolEmpty'))}</p>`;
   };
   // Seats around the table: tap a member to toggle whether they join tonight.
   // The group attributes go on the table itself, not on #seatMount — replaceWith

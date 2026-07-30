@@ -143,27 +143,42 @@ async function showNewRound() {
   app.innerHTML = '';
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('newRound.title'))}</h1></div>`));
 
-  const form = h(`<div>
-      <div class="field">
-        <label for="roundName">${esc(t('newRound.nameLabel'))}</label>
-        <input id="roundName" class="input" placeholder="${esc(t('newRound.namePlaceholder'))}" />
-      </div>
-      <div class="field">
-        <label>${esc(t('newRound.membersLabel'))}</label>
-        <div class="nr-table">
-          <div class="nr-table__ring"></div>
-          <div class="nr-table__center"></div>
+  // Same two-column setup layout as the session screen (`.setup-grid`): what the
+  // round IS on the left (its name, the shelf it starts from), who sits at it on
+  // the right. Below 860px the grid is a plain block, so this DOM order is also
+  // the phone order — visual order and tab order therefore never disagree, which
+  // is why the columns are built as real DOM groups rather than with CSS `order`.
+  //
+  // That does move the optional import card ABOVE the table on a phone (it used
+  // to sit between the seats and the CTA). Deliberate: it groups the two
+  // round-level settings, and the CTA stays last, which is the position that
+  // actually matters. The seat table has to be the LAST block either way — it is
+  // what the CTA rides with.
+  const form = h(`<div class="setup-grid">
+      <div class="setup-grid__main">
+        <div class="field">
+          <label for="roundName">${esc(t('newRound.nameLabel'))}</label>
+          <input id="roundName" class="input" placeholder="${esc(t('newRound.namePlaceholder'))}" />
         </div>
-        <div class="row">
-          <input id="memberInput" class="input" placeholder="${esc(t('newRound.memberPlaceholder'))}" />
-          <button id="addMember" class="btn">${esc(t('newRound.add'))}</button>
-        </div>
+        ${importField}
       </div>
-      ${/* Outside the .field on purpose: `.field label` is (0,1,1) and would win — see label-rows-lose-to-field-label.md */ ''}
-      ${isLoggedIn() ? `<label class="nr-owner"><input type="checkbox" id="ownerSeat" checked /> <span>${esc(t('newRound.ownerSeatPlaying'))}</span></label>` : ''}
-      ${importField}
-      <div class="toolbar">
-        <button id="createRound" class="btn btn--primary btn--lg"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('newRound.create'))}</button>
+      <div class="setup-grid__aside">
+        <div class="field">
+          <label for="memberInput">${esc(t('newRound.membersLabel'))}</label>
+          <div class="nr-table">
+            <div class="nr-table__ring"></div>
+            <div class="nr-table__center"></div>
+          </div>
+          <div class="row">
+            <input id="memberInput" class="input" placeholder="${esc(t('newRound.memberPlaceholder'))}" />
+            <button id="addMember" class="btn">${esc(t('newRound.add'))}</button>
+          </div>
+        </div>
+        ${/* Outside the .field on purpose: `.field label` is (0,1,1) and would win — see label-rows-lose-to-field-label.md */ ''}
+        ${isLoggedIn() ? `<label class="nr-owner"><input type="checkbox" id="ownerSeat" checked /> <span>${esc(t('newRound.ownerSeatPlaying'))}</span></label>` : ''}
+        <div class="toolbar">
+          <button id="createRound" class="btn btn--primary btn--lg"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('newRound.create'))}</button>
+        </div>
       </div>
     </div>`);
   app.appendChild(form);
