@@ -93,6 +93,10 @@
   --w-content: 1000px;
   --w-shell: 1800px;   /* rail + content pane, from 1280px up */
   --w-read: 900px;     /* prose/rows inside the pane, so text keeps a measure */
+  /* The two-column setup forms (.setup-grid) inside that pane. Wider than the
+     reading measure because two form columns need it, narrower than the shell
+     because a 780px-wide column of form fields reads as a wall. */
+  --w-setup: 1240px;
   --rail-w: 260px;
   --rail-gap: 32px;
   /* Elevation: a 3-step ramp, resting -> raised -> overlay. Three is where
@@ -372,6 +376,26 @@ h1, h2, h3 { font-family: var(--font-display); }
   /* Display step for the band. Hardcoded because the type scale does not exist
      yet — #470 is the issue that would give this a --text-* token. */
   .app:has(.lobby-list) > .lobby-head h1 { font-size: 40px; }
+
+  /* The two setup forms (session setup, new round) are already two columns from
+     860px up, so the reading measure would make them NARROWER at 1280 than at
+     1279 — the cap is meant to keep prose readable, and a two-column form is not
+     prose. They opt out to --w-setup.
+
+     The page head opts out WITH them, and that half is the one that fails
+     silently: `.page-head` is a SIBLING of the grid, not its wrapper, so neither
+     exemption selector above reaches it (the #543 lesson, one screen over).
+     Capped, it would centre at 900px while the grid it introduces spans 1240px,
+     leaving the screen's own <h1> indented ~170px from the content it heads.
+     Both take the SAME variable so their edges cannot drift apart, and the
+     rail-less `margin-inline: auto` below centres both.
+
+     Conditioned on a setup grid actually being present, so no other screen's
+     head is touched. (0,5,0) against the cap's (0,3,0) — specificity, never
+     source order. */
+  .app:has(.setup-grid) > *:not(.rail):not(.dock):is(.page-head, .setup-grid) {
+    max-width: var(--w-setup);
+  }
 
   /* On a screen WITHOUT a rail — home, the new-round form, the session wizard —
      capped content centres instead. Beside a rail, a left edge is anchored and
@@ -3473,6 +3497,107 @@ kbd {
   background: var(--brand);
   color: #fff;
   opacity: 1;
+}
+
+/* ---- Setup screens: the two-column form + preview panel ----
+
+   The session-setup and new-round screens are the app's two setup forms, and
+   both were one ~900px column however wide the screen got: at 1600x1000 the
+   session form measured 900px of content at x=350 — ~350px of dead gutter on
+   each side — while still scrolling to 1346px, so its primary action sat below
+   the fold. The column was doing neither job well.
+
+   Two columns from 860px: what you configure on the left, what that produces on
+   the right (the eligible game pool / the table filling up), with the primary
+   action under the preview. 860 is the breakpoint the dock, the lobby grid and
+   `.vote--split` already use, so this introduces no new number, and below it the
+   grid is a plain block — the DOM order IS the phone order and nothing moves.
+
+   Selecting this layout by content is safe here, unlike #332: neither screen
+   renders any navigation (neither has a rail), so no persistent element can be
+   moved by it, and the width itself still comes from a media query and a
+   variable. See .claude/rules/responsive-content-width.md. */
+.setup-grid { display: block; }
+/* The preview panel and the compact strip it replaces are BOTH rendered, and
+   CSS picks one by width — the same "no JS width branch, so a resize needs no
+   re-render" shape the rail and dock use (round-rail.js). The panel defaults to
+   hidden and is switched on inside the query, never the reverse: a panel that
+   defaulted to visible would leak onto every phone the moment someone added a
+   narrower breakpoint above it (the `.rail` lesson). */
+.setup-panel { display: none; }
+
+/* One block per breakpoint, deliberately: the grid and the panel switch on
+   together, and splitting them left two `min-width: 860px` blocks that read as
+   independent and could drift to different numbers. */
+@media (min-width: 860px) {
+  .setup-grid {
+    display: grid;
+    /* Equal columns: the form side carries the round table (a fixed 280px
+       graphic) and the preview side a cover grid, and both want the same room.
+       minmax(0, …) so a long game title can shrink its track instead of
+       blowing the grid out — a `1fr` track's min is auto, i.e. min-content. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 32px;
+    /* Top-aligned: the columns are different heights by nature, and stretching
+       the shorter one drags its action button to the taller one's baseline. */
+    align-items: start;
+  }
+  .setup-panel {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    margin-bottom: 18px;
+  }
+  /* Qualified to (0,2,0) so it beats `.pool-hint { display: flex }` (0,1,0) on
+     SPECIFICITY rather than on source order — that rule sits ~100 lines below
+     this one today, and a rule that wins only by position breaks silently when
+     someone moves a block (.claude/rules/responsive-content-width.md). */
+  .setup-grid .pool-hint { display: none; }
+}
+.setup-panel__title {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+.setup-panel__body {
+  display: grid;
+  /* auto-fill, so the panel needs no breakpoint of its own: 2 tiles across in a
+     464px column at 860px, 4 in the 604px column the 1240px shell gives. */
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  /* Bounded, or a 60-game shelf pushes the CTA straight back below the fold —
+     which is the defect this whole layout exists to fix. Three tile rows fit
+     before the panel starts scrolling on its own. */
+  max-height: 420px;
+  overflow-y: auto;
+}
+/* Spans every track: the body is a tile grid, so without this the empty line
+   becomes one 110px grid item and wraps after two or three words. */
+.setup-panel__empty { grid-column: 1 / -1; margin: 4px 0; font-size: 14px; }
+.pool-tile { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pool-tile__img {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+  background: var(--sunken) center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--placeholder);
+  font-size: 22px;
+}
+/* Deliberately NOT joined to the blurred-backdrop frames (.game-card__img &c.,
+   #181): at 110px a contained cover leaves more bar than picture, so these crop
+   like the .pool-thumb chips they replace. */
+.pool-tile__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ---- Session setup: pool preview + inactive seats ---- */

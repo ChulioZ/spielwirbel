@@ -370,6 +370,7 @@ I18N.de = {
   'startSession.countLabel': 'Wie viele Spiele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
   'startSession.availableOne': '{n} Spiel im Topf',
+  'startSession.poolEmpty': 'Zu diesen Einstellungen passt noch kein Spiel.',
   'startSession.draw': 'Loswirbeln',
   'startSession.toast.noGames': 'Keine passenden Spiele zum Wirbeln',
   'startSession.toast.noMembers': 'Mindestens eine Person muss mitspielen',

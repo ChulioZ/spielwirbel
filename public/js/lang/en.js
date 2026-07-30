@@ -374,6 +374,7 @@ I18N.en = {
   'startSession.countLabel': 'How many games to draw?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',
+  'startSession.poolEmpty': 'No game matches these settings yet.',
   'startSession.draw': 'Start the vote',
   'startSession.toast.noGames': 'No matching games available',
   'startSession.toast.noMembers': 'At least one player must join',

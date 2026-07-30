@@ -116,11 +116,15 @@ What the app does, in detail. For a short overview see the
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally filter
   the collection by custom tags, and draw a random set of candidate games —
   only games whose player range fits the number of joining members are
-  eligible. The tags and count a round was last drawn with are remembered and
-  preselected the next time, so a group that always draws the same way just
-  confirms. The device is then passed around: a handover screen names whose
-  turn it is, and each member rates every drawn game **1–5** or proposes to
-  retire it (member order is randomized).
+  eligible. From a tablet width up the setup screen splits in two: who is at the
+  table on the left, and on the right the tag filter, the draw count and a live
+  panel showing exactly which games are currently in the pot, so seating one
+  more player or excluding a tag visibly changes the shelf beside it. The tags
+  and count a round was last drawn with are remembered and preselected the next
+  time, so a group that always draws the same way just confirms. The device is
+  then passed around: a handover screen names whose turn it is, and each member
+  rates every drawn game **1–5** or proposes to retire it (member order is
+  randomized).
 - **Guests** – a visitor who isn't part of the group can be named on the setup
   screen: they count toward the player range the draw filters by, take their own
   hot-seat turn, can be recorded as a winner, and stay in that session's record
