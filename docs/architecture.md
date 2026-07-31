@@ -283,6 +283,8 @@ public/
                           screens (retired / completed)
     views-round-detail.js game detail, design picker, tags + providers screens,
                           sheet helpers
+    views-round-settings.js round Einstellungen screen: the round-level actions
+                          (invite, move games, delete/leave) in one place (#561)
     views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, voting (hot-seat), finale, results

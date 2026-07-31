@@ -29,7 +29,7 @@
 // Round sub-screens that have their OWN rail entry. On these, that entry is
 // marked current and no section is — the alternative (highlighting the section
 // that owns them, as the strip must) would light up two things at once.
-const RAIL_OWN_ENTRY = ['retired', 'completed', 'tags', 'providers', 'design'];
+const RAIL_OWN_ENTRY = ['retired', 'completed', 'tags', 'providers', 'design', 'settings'];
 
 // One rail row. `sub` decides the current marker: an entry for the screen you
 // are ON is "page" and click-inert, exactly like the active hub tab (#330/#331).
@@ -174,6 +174,15 @@ function buildRoundRail(round, activeTab, sub) {
       onClick: () => showInvite(round),
     }));
   }
+  // The round's Einstellungen screen (#561). The five rows above keep their
+  // one-click shortcuts — this is not a replacement for them but the only way in
+  // to the round's danger zone, which deliberately lives on that screen and NOT
+  // here: a destructive control in persistent navigation is one misclick away at
+  // all times, and the screen is then its single home at every width.
+  settings.appendChild(railItem({
+    icon: 'ti-settings', label: t('rail.settings'), path: roundPath(rid, 'settings'),
+    onNav: () => showRoundSettings(rid), current: ownEntry === 'settings',
+  }));
   rail.appendChild(settings);
 
   return rail;

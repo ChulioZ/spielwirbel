@@ -2149,6 +2149,7 @@ body.auth-screen .demo-banner { display: none; }
    home feed section. */
 .friends-section__h,
 .konto-section__h,
+.rs-section__h,
 .home-friends__head h2 { font-size: 17px; margin: 24px 0 10px; }
 /* A friend / request row reuses .ds-row; its main side pairs avatar + name. */
 .friend-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -2217,21 +2218,51 @@ body.auth-screen .demo-banner { display: none; }
    heading tone plus a tinted, outlined block. Every colour is mixed from
    --danger and --surface (.claude/rules/theme-derived-colors.md) so it follows
    the round-independent semantic family instead of a hardcoded pastel. */
-.konto-section__h--danger { color: var(--danger); }
-.konto-danger {
+.konto-section__h--danger,
+.rs-section__h--danger { color: var(--danger); }
+.konto-danger,
+.rs-danger {
   background: color-mix(in srgb, var(--danger) 5%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--surface));
   border-radius: var(--radius-md);
   padding: 16px;
   margin-bottom: 30px;
 }
-.konto-danger p { margin: 0 0 12px; }
+.konto-danger p,
+.rs-danger p { margin: 0 0 12px; }
 /* The third-party consequence inside the confirmation sheet: someone else loses
    access, which must read as a warning rather than as another muted fact. */
 .konto-danger__third { color: var(--danger); font-weight: 600; }
 /* The count rows are reused inside the confirmation sheet, where they are
    followed by the two input fields and need the same 18px gap a .field carries. */
 .sheet .konto-facts { margin-bottom: 18px; }
+
+/* ===== Round Einstellungen screen (#561) ===== */
+/* Its headings and its danger zone deliberately share the Konto screen's rules
+   above (`.rs-section__h`, `.rs-section__h--danger`, `.rs-danger`) rather than
+   restating them — the same grouping `.friends-section__h` already uses. Only
+   the rows are new here.
+
+   `.ds-row` is the app's click-target component and already owns its own
+   background, border, radius and padding; the two sheet actions render it as a
+   real <button> (they open a sheet, so they are not links — #330), which arrives
+   with UA chrome on top of that. Reset only what the component does not own, and
+   NEVER via the `font` shorthand: it would tie with the component's own sizing
+   and win on source order (.claude/rules/native-button-vs-focusable-span.md). */
+.rs-row {
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  color: inherit;
+}
+/* Icon + label on ONE line. Scoped, because the bare `.ds-row__main` stacks its
+   children on purpose — the Chronik rows put a date over a status, so making it
+   a flex row globally would lay those out side by side (the same reasoning that
+   scopes `.provider-row .ds-row__main` below). */
+.rs-row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rs-row .ds-row__meta { color: var(--ink-soft); }
 
 /* Account menu header (username + e-mail) above the logout item in the shared
    popover. The username (#320) leads: it is the account's public identity, the

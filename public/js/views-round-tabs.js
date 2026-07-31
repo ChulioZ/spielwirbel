@@ -212,24 +212,10 @@ function renderRegalTab(round, activeGames) {
   const completedBtn = h(`<a class="link-btn"><i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('completed.link', { n: completedGames.length }))}</a>`);
   navLink(completedBtn, roundPath(round.id, 'completed'), () => showCompleted(round.id));
   foot.appendChild(completedBtn);
-
-  // Consolidate two rounds (#253). Gated on the WHOLE shelf, not activeGames:
-  // archived games move too, so a round with nothing but retired games must
-  // still offer this. Hidden entirely when there is nothing to move — and on a
-  // SHARED round, where moving is owner-only (#411; the route 403s a grantee),
-  // like the invite action below.
-  if (round.games.length && !round.shared) {
-    const moveBtn = h(`<button class="link-btn"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${esc(t('moveGames.link'))}</button>`);
-    moveBtn.addEventListener('click', () => showMoveGames(round));
-    foot.appendChild(moveBtn);
-  }
-  // Invite an account to share this round (#207) — only in accounts mode, and
-  // not on a SHARED round (only the owner invites; the route 404s a grantee).
-  if (accountsActive() && !round.shared) {
-    const inviteBtn = h(`<button class="link-btn"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('invite.link'))}</button>`);
-    inviteBtn.addEventListener('click', () => showInvite(round));
-    foot.appendChild(inviteBtn);
-  }
+  // "Spiele verschieben" and "Einladen" used to sit here too. Neither is a shelf
+  // concern — one consolidates two rounds, the other shares the round — and both
+  // were findable only by scrolling past the whole game grid, so they moved to
+  // the round's Einstellungen screen (#561).
   app.appendChild(foot);
 }
 
@@ -662,32 +648,11 @@ function renderChronikTab(round, activities) {
     });
   }
   renderTimeline();
-
-  // Utility footer: deleting the round lives with its history, out of the way.
-  // On a SHARED round (#207) the owner-only delete is replaced by "leave" — a
-  // grantee gives up their own access; the owner's round and their seat's
-  // history stay.
-  const footer = h('<div class="round-footer"></div>');
-  if (round.shared) {
-    const leaveBtn = h(`<button class="link-btn round-footer__danger">${esc(t('share.leave'))}</button>`);
-    leaveBtn.addEventListener('click', async () => {
-      if (!confirm(t('share.leaveConfirm', { name: round.name }))) return;
-      try {
-        await api('DELETE', `/api/rounds/${rid}/shares/${accountUser.id}`);
-        showHome();
-      } catch (e) { toast(e.message); }
-    });
-    footer.appendChild(leaveBtn);
-  } else {
-    const delBtn = h(`<button class="link-btn round-footer__danger">${esc(t('round.deleteRound'))}</button>`);
-    delBtn.addEventListener('click', async () => {
-      if (!confirm(t('round.deleteConfirm', { name: round.name }))) return;
-      await api('DELETE', '/api/rounds/' + rid);
-      showHome();
-    });
-    footer.appendChild(delBtn);
-  }
-  app.appendChild(footer);
+  // Deleting (or leaving) the round used to end this timeline, and it was the one
+  // round action with no good home at any width: unlike the Regal's footer this
+  // one was not `rail-owned`, so it stayed below the whole history on desktop too,
+  // while the rail carried no entry for it. It is the danger zone of the round's
+  // Einstellungen screen now (#561) — deleting a round is not a history concern.
 }
 
 // --- The two stat-card builders, shared by the Pokale tab and the Rückblick

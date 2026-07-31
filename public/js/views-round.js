@@ -19,7 +19,7 @@ const HUB_TABS = ['start', 'regal', 'chronik', 'pokale'];
 const HUB_TAB_OF = {
   regal: ['game', 'retired', 'completed'],
   chronik: ['session'],
-  start: ['member', 'design', 'tags', 'providers'],
+  start: ['member', 'design', 'tags', 'providers', 'settings'],
 };
 const hubTabOwning = (sub) =>
   HUB_TABS.find((tab) => (HUB_TAB_OF[tab] || []).includes(sub)) || 'start';
@@ -452,24 +452,18 @@ function renderStartTab(round, activeGames) {
     `<button class="btn"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('round.addGame'))}</button>`
   );
   addGameBtn.addEventListener('click', () => showAddGame(round));
-  // Tags / Provider / Design are routed screens, so they are links (#330);
-  // "Spiel hinzufügen" opens a sheet and stays a button.
-  const tagsBtn = h(
-    `<a class="btn rail-owned"><i class="ti ti-tags" aria-hidden="true"></i> ${esc(t('round.tags'))}</a>`
+  // One "Einstellungen" entry rather than the three separate Tags/Provider/Design
+  // links this used to carry (#561): those three now live INSIDE that screen,
+  // together with the round-level actions that were stranded in the Regal and
+  // Chronik footers — so a phone reaches every one of them in two taps from here.
+  // It is a routed screen, so it is a link (#330); "Spiel hinzufügen" opens a
+  // sheet and stays a button. `rail-owned`, because ≥1280px the rail carries it.
+  const settingsBtn = h(
+    `<a class="btn rail-owned"><i class="ti ti-settings" aria-hidden="true"></i> ${esc(t('rail.settings'))}</a>`
   );
-  navLink(tagsBtn, roundPath(rid, 'tags'), () => showTags(rid));
-  const providersBtn = h(
-    `<a class="btn rail-owned"><i class="ti ti-world-search" aria-hidden="true"></i> ${esc(t('round.providers'))}</a>`
-  );
-  navLink(providersBtn, roundPath(rid, 'providers'), () => showProviders(rid));
-  const bgBtn = h(
-    `<a class="btn rail-owned"><i class="ti ti-palette" aria-hidden="true"></i> ${esc(t('round.design'))}</a>`
-  );
-  navLink(bgBtn, roundPath(rid, 'design'), () => showBackground(rid));
+  navLink(settingsBtn, roundPath(rid, 'settings'), () => showRoundSettings(rid));
   actions.appendChild(addGameBtn);
-  actions.appendChild(tagsBtn);
-  actions.appendChild(providersBtn);
-  actions.appendChild(bgBtn);
+  actions.appendChild(settingsBtn);
   app.appendChild(actions);
 }
 
