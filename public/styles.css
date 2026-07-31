@@ -3058,8 +3058,12 @@ body.auth-screen .demo-banner { display: none; }
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--surface);
+  /* A fresh component, so the `font` shorthand is safe here — the caveat in
+     .claude/rules/native-button-vs-focusable-span.md is about un-button-ing an
+     EXISTING component whose own rule declares a size/weight the shorthand
+     would then tie with and beat on source order. Nothing else targets
+     .cover-pick. */
   font: inherit;
-  font-family: inherit;
   text-align: inherit;
   cursor: pointer;
 }
@@ -3080,6 +3084,7 @@ body.auth-screen .demo-banner { display: none; }
      keeps the tiles a uniform height so the grid stays a grid. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
