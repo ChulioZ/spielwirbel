@@ -690,6 +690,14 @@ function closePopover() {
   activePopover = null;
   if (held && restoreTo && document.contains(restoreTo) && typeof restoreTo.focus === 'function') restoreTo.focus();
 }
+// Re-place the open popover after its content changed height. A no-op when no
+// popover is open, which is what lets a component that may live in EITHER
+// presentation — the edition-cover picker sits in a popover on desktop, a sheet
+// on a phone and inline in the add-game form — call it unconditionally.
+function repositionPopover() {
+  if (activePopover && activePopover.place) activePopover.place();
+}
+
 // `build(el, close)` may return a callback, which runs once the popover is in
 // the document AND positioned. Anything that needs a live element — above all
 // `input.focus()` — belongs there: build() itself runs on a detached node, so a
@@ -704,18 +712,37 @@ function openPopover(anchor, build) {
   const close = () => closePopover();
   const attached = build(el, close);
   document.body.appendChild(el);
+  place();
 
   // Prefer below the anchor; flip above if it wouldn't fit. Clamp horizontally.
-  const r = anchor.getBoundingClientRect();
-  const margin = 8;
-  const below = window.scrollY + r.bottom + 6;
-  const above = window.scrollY + r.top - el.offsetHeight - 6;
-  const fitsBelow = r.bottom + el.offsetHeight + 6 <= window.innerHeight;
-  el.style.top = (fitsBelow || above < window.scrollY ? below : above) + 'px';
-  let left = window.scrollX + r.left;
-  const maxLeft = window.scrollX + document.documentElement.clientWidth - el.offsetWidth - margin;
-  left = Math.max(window.scrollX + margin, Math.min(left, maxLeft));
-  el.style.left = left + 'px';
+  //
+  // Re-runnable, and re-run through repositionPopover() whenever the content
+  // changes size (#519): the placement is decided from `el.offsetHeight`, so a
+  // popover that GROWS after it was placed — the edition-cover grid expanding —
+  // keeps a `top` chosen for its old height and can run off the bottom of the
+  // viewport. There is no recovering from that by scrolling either: a page
+  // scroll closes the popover (onScroll below), so the overflow is simply
+  // unreachable. Placement is idempotent, so re-running it is safe.
+  //
+  // A ResizeObserver would do this with no caller involvement and was tried
+  // first. It is not used because it cannot be VERIFIED here: the Claude Code
+  // Browser pane never fires one at all — measured on a plain div whose height
+  // was changed 50px -> 200px, zero callbacks — the same dead-observer artifact
+  // that stops IntersectionObserver working there
+  // (.claude/rules/preview-pane-paint-artifacts.md). An explicit call is
+  // deterministic and testable; an untestable mechanism is not worth its silence.
+  function place() {
+    const r = anchor.getBoundingClientRect();
+    const margin = 8;
+    const below = window.scrollY + r.bottom + 6;
+    const above = window.scrollY + r.top - el.offsetHeight - 6;
+    const fitsBelow = r.bottom + el.offsetHeight + 6 <= window.innerHeight;
+    el.style.top = (fitsBelow || above < window.scrollY ? below : above) + 'px';
+    let left = window.scrollX + r.left;
+    const maxLeft = window.scrollX + document.documentElement.clientWidth - el.offsetWidth - margin;
+    left = Math.max(window.scrollX + margin, Math.min(left, maxLeft));
+    el.style.left = left + 'px';
+  }
 
   const onDoc = (e) => { if (!el.contains(e.target) && !anchor.contains(e.target)) close(); };
   const onKey = (e) => { if (e.key === 'Escape') close(); };
@@ -729,7 +756,7 @@ function openPopover(anchor, build) {
   document.addEventListener('keydown', onKey, true);
   window.addEventListener('resize', onGone, true);
   window.addEventListener('scroll', onScroll, true);
-  activePopover = { el, restoreTo, onDoc, onKey, onGone, onScroll };
+  activePopover = { el, restoreTo, onDoc, onKey, onGone, onScroll, place };
   if (typeof attached === 'function') attached();
   return { el, close };
 }

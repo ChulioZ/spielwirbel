@@ -285,6 +285,181 @@ test('parseCollection tells an unknown username apart from an empty collection',
   assert.equal(bgg.parseCollection(safe).items.length, 1);
 });
 
+// --- parseVersions (#519) -------------------------------------------------
+
+// PROVENANCE: captured live from
+// `GET /xmlapi2/thing?id=342942&versions=1` (Ark Nova) on 2026-07-28 with this
+// repo's BGG_API_TOKEN, then trimmed to six versions — the real body carries 37.
+// The whitespace soup between elements is BGG's own and is kept deliberately:
+// it is what a text-node scanner has to survive.
+//
+// The trimmed set keeps every shape the parser has to handle: a German edition,
+// an English one, a non-Latin one, a version whose thumbnail is MISSING (10 of
+// 145 on Catan), two versions sharing ONE thumbnail URL (Ark Nova's 35 covers
+// are 19 distinct URLs), and a `yearpublished value="0"` unknown year.
+const VERSIONS_XML = `<?xml version="1.0" encoding="utf-8"?>
+<items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse"><item type="boardgame" id="342942">
+      <thumbnail>https://cf.geekdo-images.com/SoU8p28Sk1s8MSvoM4N8pQ__small/img/x=/fit-in/200x150/filters:strip_icc()/pic6293412.jpg</thumbnail>
+      <image>https://cf.geekdo-images.com/SoU8p28Sk1s8MSvoM4N8pQ__original/img/y=/0x0/pic6293412.jpg</image>
+      <name type="primary" sortindex="1" value="Ark Nova" />
+      <minplayers value="1" />
+      <maxplayers value="4" />
+      <versions><item type="boardgameversion" id="591904">
+         <thumbnail>https://cf.geekdo-images.com/tCZw__small/img/a=/fit-in/200x150/filters:strip_icc()/pic6569437.jpg</thumbnail>
+      <image>https://cf.geekdo-images.com/tCZw__original/img/b=/0x0/pic6569437.jpg</image>
+   \t\t\t<canonicalname value="方舟动物园"></canonicalname>
+
+\t\t\t\t\t<link type="boardgameversion" id="342942" value="Ark Nova" inbound="true"/>
+
+\t\t\t\t<name type="primary" sortindex="1" value="Chinese edition" />
+
+\t\t\t\t\t<link type="boardgamepublisher" id="12540" value="Game Harbor" />
+
+\t\t\t\t<yearpublished value="2021" />
+\t\t\t\t<productcode value="" />
+
+\t\t\t\t\t<link type="language" id="2181" value="Chinese" />
+
+</item>
+<item type="boardgameversion" id="623699">
+         <thumbnail>https://cf.geekdo-images.com/4YNq__small/img/c=/fit-in/200x150/filters:strip_icc()/pic7100185.jpg</thumbnail>
+      <image>https://cf.geekdo-images.com/4YNq__original/img/d=/0x0/pic7100185.jpg</image>
+\t\t\t\t<name type="primary" sortindex="1" value="German edition, fifth printing" />
+\t\t\t\t<yearpublished value="2022" />
+\t\t\t\t\t<link type="language" id="2188" value="German" />
+</item>
+<item type="boardgameversion" id="623700">
+         <thumbnail>https://cf.geekdo-images.com/4YNq__small/img/c=/fit-in/200x150/filters:strip_icc()/pic7100185.jpg</thumbnail>
+\t\t\t\t<name type="primary" sortindex="1" value="German edition, eigth printing" />
+\t\t\t\t<yearpublished value="2023" />
+\t\t\t\t\t<link type="language" id="2188" value="German" />
+</item>
+<item type="boardgameversion" id="789012">
+   \t\t\t<canonicalname value="Ark Nova"></canonicalname>
+\t\t\t\t<name type="primary" sortindex="1" value="English 2.1 edition" />
+\t\t\t\t<yearpublished value="2025" />
+\t\t\t\t\t<link type="language" id="2184" value="English" />
+</item>
+<item type="boardgameversion" id="591905">
+         <thumbnail>https://cf.geekdo-images.com/eNgL__small/img/e=/fit-in/200x150/filters:strip_icc()/pic5000001.jpg</thumbnail>
+\t\t\t\t<name type="primary" sortindex="1" value="English first edition" />
+\t\t\t\t<yearpublished value="2021" />
+\t\t\t\t\t<link type="language" id="2184" value="English" />
+</item>
+<item type="boardgameversion" id="591906">
+         <thumbnail>https://cf.geekdo-images.com/uKNw__small/img/f=/fit-in/200x150/filters:strip_icc()/pic5000002.jpg</thumbnail>
+\t\t\t\t<name type="primary" sortindex="1" value="Multilingual first edition" />
+\t\t\t\t<yearpublished value="0" />
+\t\t\t\t\t<link type="language" id="2184" value="English" />
+\t\t\t\t\t<link type="language" id="2188" value="German" />
+</item>
+</versions>
+</item>
+</items>`;
+
+test('parseVersions reads every edition of a real versions=1 body', () => {
+  const versions = bgg.parseVersions(VERSIONS_XML);
+  // The game's own <thumbnail>/<name> sit OUTSIDE <versions> and must not arrive
+  // here as a sixth "edition". Note what does and does not prove the slice: on
+  // THIS body parseItems already loses the game item (that IS the trap, pinned
+  // below), so dropping the slice changes nothing here — what the slice actually
+  // buys is the empty answer for a body with no <versions> at all, which the
+  // fourth test pins and which does go red without it. Verified by removing the
+  // slice on purpose.
+  assert.deepEqual(versions.map((v) => v.edition), [
+    'Chinese edition',
+    'German edition, fifth printing',
+    'German edition, eigth printing',
+    'English first edition',
+    'Multilingual first edition',
+  ]);
+  assert.equal(versions.every((v) => !/pic6293412/.test(v.imageUrl)), true);
+  assert.deepEqual(versions[1], {
+    imageUrl: 'https://cf.geekdo-images.com/4YNq__small/img/c=/fit-in/200x150/filters:strip_icc()/pic7100185.jpg',
+    edition: 'German edition, fifth printing',
+    year: 2022,
+    languages: ['German'],
+  });
+  // A version may be published in more than one language.
+  assert.deepEqual(versions[4].languages, ['English', 'German']);
+});
+
+test('parseVersions drops versions with no thumbnail, and treats year "0" as unknown', () => {
+  const versions = bgg.parseVersions(VERSIONS_XML);
+  // "English 2.1 edition" has no <thumbnail> — measured 10 of 145 on Catan.
+  // Kept, it renders as an empty tile.
+  assert.equal(versions.some((v) => v.edition === 'English 2.1 edition'), false);
+  assert.equal(versions.every((v) => typeof v.imageUrl === 'string' && v.imageUrl), true);
+  assert.equal(versions.find((v) => v.edition === 'Multilingual first edition').year, null);
+});
+
+test('parseVersions takes the thumbnail, never the untouchable full-size master', () => {
+  // Same reasoning as pickImage: geekdo signs its resize paths, so a stored
+  // <image> master (68 KB – 2.0 MB) can never be shrunk at render time.
+  assert.equal(bgg.parseVersions(VERSIONS_XML).every((v) => v.imageUrl.includes('__small/')), true);
+});
+
+test('parseVersions never throws, and yields [] for a body with no <versions>', () => {
+  // A plain /thing body — the shape every other hop gets — must produce nothing
+  // rather than mistaking the game for one of its own editions.
+  assert.deepEqual(bgg.parseVersions(THING_XML), []);
+  assert.deepEqual(bgg.parseVersions(''), []);
+  assert.deepEqual(bgg.parseVersions(null), []);
+  assert.deepEqual(bgg.parseVersions('<items><versions>'), []); // truncated
+});
+
+test('parseThing is unchanged by the versions body it must never be handed', () => {
+  // The trap this whole slice exists for: parseItems handles a FLAT item list,
+  // so on a versions=1 body the nested items overwrite `current` and the game
+  // item disappears entirely — parseThing would then report a VERSION's title
+  // as the game's. Reproduced live on 2026-07-28 (Catan: 145 items, first one a
+  // boardgameversion, no game item anywhere).
+  const items = bgg.parseItems(VERSIONS_XML);
+  assert.equal(items[0].attrs.type, 'boardgameversion');
+  assert.equal(items.some((i) => i.attrs.type === 'boardgame'), false);
+  // parseThing's own contract on a PLAIN body is untouched by #519.
+  assert.equal(bgg.parseThing(THING_XML, '13').title, 'CATAN');
+});
+
+// --- covers() transport (#519) --------------------------------------------
+
+test('covers() asks for versions=1 and normalizes the answer', async (t) => {
+  const realFetch = global.fetch;
+  const realToken = process.env.BGG_API_TOKEN;
+  t.after(() => {
+    global.fetch = realFetch;
+    if (realToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = realToken;
+  });
+  process.env.BGG_API_TOKEN = 'test-token';
+  let seenUrl = '';
+  global.fetch = async (url) => {
+    seenUrl = String(url);
+    return { status: 200, text: async () => VERSIONS_XML };
+  };
+  const covers = await bgg.covers('342942');
+  assert.equal(covers.length, 5);
+  assert.match(seenUrl, /\/thing\?/);
+  assert.match(seenUrl, /id=342942/);
+  // Without this the answer is the ordinary detail body and the picker is empty.
+  assert.match(seenUrl, /versions=1/);
+});
+
+test('covers() degrades to an empty list without a token, and never calls out', async (t) => {
+  const realFetch = global.fetch;
+  const realToken = process.env.BGG_API_TOKEN;
+  t.after(() => {
+    global.fetch = realFetch;
+    if (realToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = realToken;
+  });
+  delete process.env.BGG_API_TOKEN;
+  let called = false;
+  global.fetch = async () => { called = true; return { status: 200, text: async () => VERSIONS_XML }; };
+  assert.deepEqual(await bgg.covers('342942'), []);
+  assert.equal(called, false);
+});
+
 // --- collection() transport (#481) ---------------------------------------
 //
 // The four outcomes the import UI has to tell apart. `fetch` is stubbed, so no

@@ -15,7 +15,12 @@
  *       -> { provider, externalId, title, minPlayers, maxPlayers, type,
  *            duration, imageUrl, url }
  *
- * Plus the one-shot collection import (#481), BGG-only today:
+ * Plus two BGG-only capabilities. The per-edition cover list (#519):
+ *
+ *   GET /api/rounds/:rid/lookup/covers?provider=bgg&id=13
+ *       -> { covers: [{ imageUrl, edition, year, languages }] }
+ *
+ * and the one-shot collection import (#481):
  *
  *   GET  /api/rounds/:rid/lookup/collection?provider=bgg
  *       -> { state, games: [{ …, present }] }
@@ -114,14 +119,63 @@ router.get('/game', async (req, res) => {
   }
 });
 
+/* ------------------------- edition covers (#519) --------------------------- */
+
+// Every cover BGG holds for one game's editions, so the user can pick the
+// printing on their own shelf instead of the item's default image. An OPTIONAL
+// provider capability, like collection(): the four storefronts expose no
+// per-edition image set, so a provider without it answers 400 rather than the
+// route pretending every provider has one.
+//
+// Cached like the sibling hops (10 min, keyed on the id). No locale in the key:
+// BGG's resolveLocale() returns a constant and the version list is the same in
+// every language — which of them sorts first is a client concern.
+//
+// Every URL goes through providerCoverUrl before it leaves, so a host outside
+// IMAGE_HOSTS can never be offered as something to store, and the client can
+// send one back on save without the server having to trust it.
+router.get('/covers', async (req, res) => {
+  const { provider, status, error } = await resolveProvider(req);
+  if (!provider) return res.status(status).json({ error });
+  if (typeof provider.covers !== 'function') {
+    return res.status(400).json({ error: 'covers_unsupported' });
+  }
+  const id = String(req.query.id || '').trim();
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+  try {
+    const covers = await cached(`${provider.id}:covers:${id}`, () => provider.covers(id));
+    res.json({
+      covers: covers
+        .map((c) => ({ ...c, imageUrl: providerCoverUrl(c.imageUrl) }))
+        .filter((c) => c.imageUrl),
+    });
+  } catch {
+    res.status(502).json({ error: 'provider_unreachable' });
+  }
+});
+
 /* ------------------------- collection import (#481) ------------------------ */
 
 // Which games to import, by the provider id the collection listed them under.
-// Never titles or cover URLs: re-resolving each id against the fetched
-// collection server-side is what keeps a hand-rolled request from writing an
-// arbitrary title or an arbitrary image URL into someone's Regal.
+// The TITLE and the player range are never taken from the request: re-resolving
+// each id against the fetched collection server-side is what keeps a hand-rolled
+// request from writing an arbitrary title into someone's Regal.
+//
+// `covers` is the one exception, and only since #519 let the import screen offer
+// a per-game edition cover: a chosen URL rides along keyed by external id, and
+// the server accepts it only through providerCoverUrl — i.e. exactly the host
+// allowlist that already gates the `imageUrl` a single POST /games may carry
+// (.claude/rules/add-game-lookup-provider.md, "the cover-host allowlist is the
+// trust boundary"). Anything else falls back to the collection's own cover, so a
+// rejected URL costs the *choice*, never the cover.
+//
+// Bounded to the same 2000 ids the list is, so the body cannot grow unbounded.
 const importSchema = z.object({
   externalIds: z.array(z.string().min(1)).min(1, 'externalIds must not be empty').max(2000),
+  covers: z
+    .record(z.string(), z.string().max(2048))
+    .refine((m) => Object.keys(m).length <= 2000, 'too many covers')
+    .optional(),
 });
 
 // Resolve the collection provider for this round, plus the ACTING account's
@@ -204,7 +258,13 @@ router.get('/collection', async (req, res) => {
       title: g.title,
       minPlayers: g.minPlayers,
       maxPlayers: g.maxPlayers,
-      imageUrl: g.imageUrl,
+      // Through the same gate the import itself applies, for two reasons: the
+      // listing then previews exactly what would be stored (a cover the
+      // allowlist refuses shows as the placeholder rather than as a preview
+      // that silently vanishes on import), and since #519 the client renders
+      // this into `background-image: url('…')` — the CSS-injection context
+      // COVER_UNSAFE_RE exists for.
+      imageUrl: providerCoverUrl(g.imageUrl),
       url: g.url,
       present: present.has(g.externalId),
     })),
@@ -246,6 +306,7 @@ router.post('/import', async (req, res) => {
   // the user just saw, and an id that is not in the collection is ignored rather
   // than trusted.
   const want = new Set(body.externalIds);
+  const chosen = body.covers || {};
   const games = result.items
     .filter((g) => want.has(g.externalId))
     .map((g) => ({
@@ -254,8 +315,11 @@ router.post('/import', async (req, res) => {
       maxPlayers: g.maxPlayers,
       // Hotlinked, never re-hosted (#172), and only from a host the provider
       // vouches for — providerCoverUrl returns null for anything else, which
-      // costs a cover rather than the whole import.
-      image: providerCoverUrl(g.imageUrl),
+      // costs a cover rather than the whole import. An edition cover the user
+      // picked on the import screen (#519) wins where it survives that gate.
+      image:
+        providerCoverUrl(Object.prototype.hasOwnProperty.call(chosen, g.externalId) ? chosen[g.externalId] : null) ||
+        providerCoverUrl(g.imageUrl),
       source: {
         provider: provider.id,
         externalId: g.externalId,

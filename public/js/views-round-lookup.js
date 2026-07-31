@@ -421,6 +421,7 @@ function showAddGame(round) {
             <button type="button" id="pasteBtn" class="btn"><i class="ti ti-clipboard" aria-hidden="true"></i> ${esc(t('addGame.pasteBtn'))}</button>
             <button type="button" id="clearImg" class="btn btn--ghost" hidden>${esc(t('addGame.removeImage'))}</button>
           </div>
+          <div id="coverPickerSlot"></div>
         </div>
         <div class="toolbar sheet__actions">
           <button id="save" class="btn btn--primary btn--lg"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('addGame.save'))}</button>
@@ -542,6 +543,10 @@ function showAddGame(round) {
   // or a manual title edit clears them (see setImage / the lookup input handler).
   let chosenImageUrl = null;
   let chosenSource = null;
+  // Declared up here, not next to setCoverPicker below: setImage() reads it and
+  // is a hoisted function declaration, so a `let` further down would be a TDZ
+  // trap the moment anything called it earlier.
+  let coverPicker = null;
   const pasteZone = form.querySelector('#pasteZone');
   const preview = form.querySelector('.paste-zone__preview');
   const clearBtn = form.querySelector('#clearImg');
@@ -549,6 +554,7 @@ function showAddGame(round) {
   function setImage(blob) {
     if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
     chosenImageUrl = null; // a pasted/cleared image overrides a provider cover
+    if (coverPicker) coverPicker.setCurrent(null);
     pastedBlob = blob;
     if (blob) {
       preview.src = URL.createObjectURL(blob);
@@ -599,6 +605,25 @@ function showAddGame(round) {
     preview.hidden = false;
     pasteZone.classList.add('has-image');
     clearBtn.hidden = false;
+    if (coverPicker) coverPicker.setCurrent(url);
+  }
+
+  // Edition covers (#519), offered once a BoardGameGeek suggestion has been
+  // picked — it is the only provider with a per-edition image set.
+  //
+  // Rendered INLINE in this field, never as a second sheet: openSheet tears down
+  // an already-open sheet synchronously, so a picker sheet opened from here
+  // would destroy this form and everything typed into it
+  // (.claude/rules/sheet-history-back-dismissal.md §2).
+  const pickerSlot = form.querySelector('#coverPickerSlot');
+  function setCoverPicker(source) {
+    if (coverPicker) { coverPicker.remove(); coverPicker = null; }
+    if (!source || source.provider !== 'bgg') return;
+    coverPicker = editionCoverPicker(round.id, source.externalId, chosenImageUrl, (c) => {
+      showProviderImage(c.imageUrl);
+      toast(t('coverPicker.toast.picked'));
+    });
+    pickerSlot.appendChild(coverPicker);
   }
 
   // --- Search-as-you-type suggestions (PlayStation Store + BoardGameGeek + Steam) ---
@@ -649,6 +674,9 @@ function showAddGame(round) {
     // already own.
     refreshDupHint();
     chosenSource = { provider: r.provider, externalId: r.providerId, url: '' };
+    // Offer this game's edition covers straight away (BGG only) — the grid
+    // itself stays unfetched until the user expands it.
+    setCoverPicker(chosenSource);
     // A store cover comes from the search thumbnail; a BGG cover arrives with the
     // detail call.
     if (r.thumbnail && !pastedBlob) showProviderImage(r.thumbnail);
@@ -667,8 +695,12 @@ function showAddGame(round) {
     toast(t('addGame.toast.filled', { provider: providerLabel(r.provider) }));
   }
 
-  // A manual edit no longer matches the picked suggestion.
-  lookup = attachLookup(round, titleInput, menu, pickSuggestion, () => { chosenSource = null; });
+  // A manual edit no longer matches the picked suggestion — so the edition
+  // covers of the game that was picked no longer belong to what is being typed.
+  lookup = attachLookup(round, titleInput, menu, pickSuggestion, () => {
+    chosenSource = null;
+    setCoverPicker(null);
+  });
 
   async function save(again) {
     const title = form.querySelector('#title').value.trim();
@@ -703,6 +735,7 @@ function showAddGame(round) {
         // Mark dirty so dismissing the sheet re-renders the Regal (issue #34).
         addedWhileOpen = true;
         chosenSource = null;
+        setCoverPicker(null);
         lookup.closeMenu();
         form.querySelector('#title').value = '';
         refreshDupHint();
@@ -1074,23 +1107,52 @@ async function showBggImport(round) {
         <div class="ds-list bgg-import__list" role="group" aria-label="${esc(t('bggImport.games'))}"></div>
       </div>`);
     const list = picker.querySelector('.bgg-import__list');
+    // Per-game cover choices, keyed by external id, sent with the import (#519).
+    // Only what the user actually changed goes on the wire; everything else
+    // keeps the cover the collection itself reported.
+    const chosenCovers = {};
     // NOT wrapped in a .field: `.field label` beats `.ds-row` on specificity and
     // silently flattens every row (.claude/rules/label-rows-lose-to-field-label.md).
     games.forEach((g) => {
       const players = g.minPlayers
         ? t('bggImport.players', { min: g.minPlayers, max: g.maxPlayers || g.minPlayers })
         : '';
-      list.appendChild(h(`<label class="ds-row bgg-import__row${g.present ? ' is-present' : ''}">
-          <div class="ds-row__main">
-            <span class="bgg-import__name" title="${esc(g.title)}">${esc(g.title)}</span>
-            ${g.present
+      // The row is a <label> so the whole line toggles its checkbox — which is
+      // exactly why the thumbnail and the cover picker are SIBLINGS of it rather
+      // than children: a click inside the label would otherwise (un)select the
+      // game every time the user reached for a cover.
+      const item = h(`<div class="bgg-import__item">
+          <div class="bgg-import__lead">
+            <span class="bgg-import__thumb">${coverPlaceholder({ image: g.imageUrl, title: g.title })}</span>
+            <label class="ds-row bgg-import__row${g.present ? ' is-present' : ''}">
+              <div class="ds-row__main">
+                <span class="bgg-import__name" title="${esc(g.title)}">${esc(g.title)}</span>
+                ${g.present
     ? `<span class="muted bgg-import__state">${esc(t('bggImport.present'))}</span>`
     : players ? `<span class="muted bgg-import__state">${esc(players)}</span>` : ''}
+              </div>
+              <div class="ds-row__meta">
+                <input type="checkbox" class="provider-row__box" value="${esc(g.externalId)}" checked ${g.present ? 'disabled' : ''} />
+              </div>
+            </label>
           </div>
-          <div class="ds-row__meta">
-            <input type="checkbox" class="provider-row__box" value="${esc(g.externalId)}" checked ${g.present ? 'disabled' : ''} />
-          </div>
-        </label>`));
+        </div>`);
+      const thumb = item.querySelector('.bgg-import__thumb');
+      const paintThumb = (url) => {
+        thumb.style.backgroundImage = url ? `url('${url}')` : '';
+        thumb.classList.toggle('has-image', !!url);
+      };
+      paintThumb(g.imageUrl);
+
+      // A game already on the shelf is not imported, so a cover choice for it
+      // would be silently discarded — offer it only where it does something.
+      if (!g.present) {
+        item.appendChild(editionCoverPicker(round.id, g.externalId, g.imageUrl, (c) => {
+          chosenCovers[g.externalId] = c.imageUrl;
+          paintThumb(c.imageUrl);
+        }));
+      }
+      list.appendChild(item);
     });
 
     const go = h(`<div class="toolbar sheet__actions">
@@ -1124,7 +1186,11 @@ async function showBggImport(round) {
       if (!ids.length) return;
       submit.disabled = true;
       try {
-        const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg`, { externalIds: ids });
+        // Only the covers of games actually being imported ride along — a
+        // choice made and then deselected must not reach the server.
+        const covers = {};
+        ids.forEach((id) => { if (chosenCovers[id]) covers[id] = chosenCovers[id]; });
+        const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg`, { externalIds: ids, covers });
         imported = imported || res.imported > 0;
         toast(tn(res.imported, 'bggImport.toast.doneOne', 'bggImport.toast.done'));
         dismiss();

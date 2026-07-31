@@ -222,6 +222,17 @@ I18N.en = {
   'bggImport.toast.noHandle': 'Link your BoardGameGeek username first.',
   'bggImport.toast.badHandle': 'That does not look like a BGG username.',
 
+  // Edition covers (#519): BoardGameGeek holds the box art of every edition, so
+  // the printing actually sitting on the shelf can be picked.
+  'coverPicker.open': 'Pick an edition cover',
+  'coverPicker.close': 'Close the cover list',
+  'coverPicker.groupLabel': 'Edition covers',
+  'coverPicker.loading': 'Loading editions …',
+  'coverPicker.empty': 'BoardGameGeek has no edition covers for this game.',
+  'coverPicker.error': 'The editions could not be loaded.',
+  'coverPicker.tileFallback': 'Unnamed edition',
+  'coverPicker.toast.picked': 'Cover applied.',
+
   'retired.link': 'Retired ({n})',
   'retired.crumb': 'Retired',
   'retired.title': 'Retired',

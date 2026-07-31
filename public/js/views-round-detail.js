@@ -553,6 +553,22 @@ async function showGameDetail(rid, gameId) {
         el.appendChild(fetchBtn);
       }
 
+      // Pick one of the game's BGG edition covers (#519) — the printing on this
+      // group's table rather than whatever /thing serves as the item's default.
+      // BGG only: the four storefronts expose no per-edition image set, and the
+      // route answers 400 for a provider without the capability, so offering it
+      // for one would only produce an error on expand.
+      if (game.source && game.source.provider === 'bgg' && enabledProviders(round).includes('bgg')) {
+        // Widens the floating card: three tiles of box art do not fit the
+        // 300px `.popover` default. Compounded in CSS so it beats `.popover`
+        // on specificity rather than on source order.
+        el.classList.add('has-covers');
+        el.appendChild(editionCoverPicker(rid, game.source.externalId, game.image || null, async (c) => {
+          close();
+          await updateGame({ imageUrl: c.imageUrl });
+        }));
+      }
+
       if (game.image) {
         const rm = h(`<button class="btn btn--ghost">${esc(t('addGame.removeImage'))}</button>`);
         rm.addEventListener('click', () => { close(); updateGame({ removeImage: true }); });

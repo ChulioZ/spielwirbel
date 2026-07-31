@@ -188,6 +188,111 @@ test('bgg detail without a token still yields a working BoardGameGeek link', asy
   });
 });
 
+// --- edition covers (#519) ------------------------------------------------
+//
+// NOTE the cache: this file shares one 10-minute provider cache, keyed
+// `bgg:covers:<id>`, so every spec below uses its OWN id or it is silently
+// answered from an earlier one and proves nothing
+// (.claude/rules/bgg-collection-import.md §4).
+
+const BGG_VERSIONS_XML = `<?xml version="1.0" encoding="utf-8"?>
+<items><item type="boardgame" id="13">
+    <thumbnail>https://cf.geekdo-images.com/game__thumb/img/y=/fit-in/200x150/pic.png</thumbnail>
+    <name type="primary" value="CATAN"/>
+    <versions>
+      <item type="boardgameversion" id="1">
+        <thumbnail>https://cf.geekdo-images.com/de__thumb/img/y=/fit-in/200x150/pic1.png</thumbnail>
+        <image>https://cf.geekdo-images.com/de__original/img/z=/0x0/pic1.png</image>
+        <name type="primary" value="German edition"/>
+        <yearpublished value="2015"/>
+        <link type="language" id="2188" value="German"/>
+      </item>
+      <item type="boardgameversion" id="2">
+        <thumbnail>https://evil.example.com/not-a-bgg-host.png</thumbnail>
+        <name type="primary" value="Off-allowlist edition"/>
+        <yearpublished value="2016"/>
+        <link type="language" id="2184" value="English"/>
+      </item>
+    </versions>
+  </item>
+</items>`;
+
+test('GET …/lookup/covers?provider=bgg returns the edition covers, versions=1', async () => {
+  await withToken('test-token', async () => {
+    let seen = '';
+    stubFetch((url) => { seen = url; return htmlRes(BGG_VERSIONS_XML); });
+    const res = await request(app).get(L('/covers?provider=bgg&id=cov1'));
+    assert.equal(res.status, 200);
+    assert.match(seen, /^https:\/\/boardgamegeek\.com\/xmlapi2\/thing\?/);
+    // Without versions=1 the answer is the plain detail body and the picker is
+    // empty — the one parameter the whole feature rests on.
+    assert.match(seen, /versions=1/);
+    // The off-allowlist host is dropped by providerCoverUrl, so nothing the
+    // client could send back on save is ever offered here; the game item's own
+    // cover is not an edition and must not appear either.
+    assert.deepEqual(res.body.covers, [{
+      imageUrl: 'https://cf.geekdo-images.com/de__thumb/img/y=/fit-in/200x150/pic1.png',
+      edition: 'German edition',
+      year: 2015,
+      languages: ['German'],
+    }]);
+  });
+});
+
+test('covers is cached separately from the detail hop for the same id', async () => {
+  await withToken('test-token', async () => {
+    let versionCalls = 0;
+    stubFetch((url) => {
+      if (/versions=1/.test(url)) { versionCalls += 1; return htmlRes(BGG_VERSIONS_XML); }
+      return htmlRes(BGG_THING_XML);
+    });
+    // A shared cache key would make one of these answer with the other's body.
+    const detail = await request(app).get(L('/game?provider=bgg&id=cov2'));
+    assert.equal(detail.body.title, 'CATAN');
+    const covers = await request(app).get(L('/covers?provider=bgg&id=cov2'));
+    assert.equal(covers.body.covers.length, 1);
+    // And the second identical call is served from the cache, not from BGG.
+    await request(app).get(L('/covers?provider=bgg&id=cov2'));
+    assert.equal(versionCalls, 1);
+  });
+});
+
+test('covers refuses a provider that has no edition-cover capability', async () => {
+  let called = false;
+  stubFetch(() => { called = true; return htmlRes(page({})); });
+  const res = await request(app).get(L('/covers?provider=psstore&id=UP1'));
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, 'covers_unsupported');
+  assert.equal(called, false);
+});
+
+test('covers rejects a missing id and an unknown provider', async () => {
+  const noId = await request(app).get(L('/covers?provider=bgg'));
+  assert.equal(noId.status, 400);
+  const unknown = await request(app).get(L('/covers?provider=nope&id=13'));
+  assert.equal(unknown.status, 400);
+});
+
+test('covers returns 502 when BGG is unreachable', async () => {
+  await withToken('test-token', async () => {
+    stubFetch(() => { throw new Error('network down'); });
+    const res = await request(app).get(L('/covers?provider=bgg&id=cov3'));
+    assert.equal(res.status, 502);
+    assert.equal(res.body.error, 'provider_unreachable');
+  });
+});
+
+test('covers degrades to an empty list without a token, and never calls out', async () => {
+  await withToken(null, async () => {
+    let called = false;
+    stubFetch(() => { called = true; return htmlRes(BGG_VERSIONS_XML); });
+    const res = await request(app).get(L('/covers?provider=bgg&id=cov4'));
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.covers, []);
+    assert.equal(called, false);
+  });
+});
+
 test('bgg retries a throttled answer within its budget, then succeeds', async () => {
   await withToken('test-token', async () => {
     let calls = 0;

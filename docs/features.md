@@ -34,12 +34,21 @@ What the app does, in detail. For a short overview see the
   round, the sheet says so — separately for the shelf and for the archive — but
   never stops you saving it, since a second copy is sometimes exactly what you
   mean.
+- **Pick the cover of your edition** – a board game is usually printed in a dozen
+  languages, and the picture BoardGameGeek serves by default is rarely the box on
+  your shelf. So wherever a game is linked to BGG you can open its **edition
+  covers** and choose one: while adding the game, on its detail page, and for each
+  game in the collection import. Editions in your own UI language come first,
+  then English, then the rest; each tile names the edition and its year. The list
+  is only fetched when you open it, and — like every other provider picture — the
+  cover stays a link to BGG's own servers rather than a copy on this instance.
 - **Import a BoardGameGeek collection** – filling a shelf one game at a time is
   the slow part of setting a round up, so link your BGG username once under
   **Konto** and the Regal can pull in everything you have marked as *owned*
   there in one go. You get a checklist to confirm (everything preselected, games
   already on the shelf marked and skipped), and the games arrive with their
-  titles, player ranges, covers and a link back to BGG. It is **one-shot and on
+  titles, player ranges, covers and a link back to BGG. Each row shows the cover
+  it would import and lets you swap in a different edition's before you confirm. It is **one-shot and on
   demand** — never a background sync — and it needs no BGG password: a username
   is enough, and you can unlink it again at any time. Accounts mode only, and
   only for rounds that still have BoardGameGeek among their providers.
