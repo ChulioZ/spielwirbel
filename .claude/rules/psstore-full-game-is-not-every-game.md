@@ -60,18 +60,49 @@ tail, not the answer — but it does mean **a title can disappear from the dropd
 without being dropped by the filter**. Check the slice before blaming
 `GAME_CLASSIFICATIONS`.
 
-## The residual, which is a *ranking* issue and not this one
+## The residual — fixed in #527, and NOT with the signal you expect
 
 For "It Takes Two" the game ("It Takes Two PS4™ & PS5™") and the Freunde-Pass
-both score **4** — each is a prefix match after folding — so nothing in our
-ranking separates them and **Sony's blob order decides**. That order is not
-stable: two fetches minutes apart put the Freunde-Pass first and then the game
-first. So the free pass can still surface above the game, and a single green
-spot-check does not prove otherwise.
+both score **4** — each is a prefix match after folding — so nothing separated
+them and **Sony's blob order decided**. That order is not stable: two fetches
+minutes apart put the pass first and then the game first, so a single green
+spot-check proved nothing.
 
-The game is at least *present* now, which it was not. If the tie is ever worth
-breaking, do it in `scoreHit` (`public/js/lookup-score.js`) — not by re-narrowing
-the classification filter, and not on `price.isFree` (see above).
+**The classification cannot break that tie, and it fails in two different
+directions** — measured live on 2026-07-31, which is the finding worth keeping:
+
+| Query | The game | Its free pass |
+|---|---|---|
+| It Takes Two | `GAME_BUNDLE`, €39,99 | **`FULL_GAME`**, Kostenlos |
+| Split Fiction | `GAME_BUNDLE` | **`GAME_BUNDLE`** |
+
+So "prefer `FULL_GAME`" — the obvious tiebreak, and the one #527's own issue text
+proposed — ranks **both passes above the game** for It Takes Two, and separates
+**nothing** for Split Fiction. It is not a weak signal, it is an inverted one.
+`test/providers-psstore.test.js` pins the fixture so the trap is visible before
+someone re-derives it. There is no structural alternative on the node either: a
+`Product` carries only `id, name, npTitleId, (localized)storeDisplayClassification,
+platforms, price, skus, media, personalizedMeta`, and `skus[].type` is `STANDARD`
+for the game *and* the pass.
+
+**What shipped instead: shortest title wins at equal score**, in the final group
+sort in `public/js/lookup-group.js`. A companion SKU is its base game's title
+plus a qualifier, so at equal relevance the shorter title is the closer answer to
+what was typed — the same rule `parseSearch` in `lib/providers/bgg.js` already
+applies within its own results, lifted to the cross-provider merge. It is
+title-shape, not a word match, so it survives all seven storefront locales
+(`.claude/rules/storefront-lookup-locale.md`).
+
+**The term sits AFTER `prio`, and that placement is the whole safety argument.**
+`prio` is the provider's index in the active list, so two groups whose best
+members come from different providers always differ there and never reach the
+length term — it can only ever reorder two hits of the *same* provider, and no
+provider's rows move relative to another's. Move it before `prio` and provider
+priority stops deciding the cross-provider order.
+
+Still not `price.isFree`, for the reason above: it separates these two cases
+correctly and would demote EA SPORTS FC 25's standard edition and every Fortnite
+entry, which report `isFree: true`.
 
 ## The `Concept` node is not the alternative
 

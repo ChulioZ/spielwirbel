@@ -29,8 +29,10 @@ others' results (`Promise.allSettled`).
 
 `scoreHit` (`public/js/lookup-score.js`) tiers each hit by how well its title
 answers the query; `groupLookupHits` then breaks **ties** by `LOOKUP_PROVIDERS`
-position. So provider priority is only ever meant to order *equally relevant*
-hits — which makes any bug that collapses distinct relevance to a shared `0`
+position, and any tie *within* one provider by the shorter title (#527 — see
+`.claude/rules/psstore-full-game-is-not-every-game.md` for why that term sits
+after the priority one). So provider priority is only ever meant to order
+*equally relevant* hits — which makes any bug that collapses distinct relevance to a shared `0`
 present itself as **"the wrong provider wins"**, and hides the real cause.
 
 That is exactly what happened: the word-boundary and loose tiers split on

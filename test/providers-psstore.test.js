@@ -93,6 +93,52 @@ test('parseSearch keeps GAME_BUNDLE standard editions, drops add-on classes', ()
   assert.equal(out[0].thumbnail, 'https://image.api.playstation.com/vulcan/split.png');
 });
 
+// #527 — captured live from store.playstation.com/de-de on 2026-07-31 for the
+// query "It Takes Two". This fixture pins a NEGATIVE result, which is why it is
+// worth keeping: `storeDisplayClassification` cannot tell a game from its free
+// companion pass, so the ranking tiebreak must not be built on it.
+//
+// Note which way round it is — the obvious reading is backwards. The GAME is
+// the GAME_BUNDLE ("Spielpaket", €39,99) and both PASSES are FULL_GAME
+// ("Vollversion", Kostenlos), so preferring FULL_GAME would rank the two passes
+// ABOVE the game. And it does not even fail consistently: for "Split Fiction"
+// (the fixture above) the game and its pass are both GAME_BUNDLE, so there the
+// same signal separates nothing at all. The tiebreak that actually works lives
+// in public/js/lookup-group.js and keys on title length.
+const IT_TAKES_TWO_STATE = {
+  'Product:GAME': {
+    __typename: 'Product',
+    id: 'EP0006-PPSA02343_00-ITTAKESTWORETAIL',
+    name: 'It Takes Two PS4™ & PS5™',
+    storeDisplayClassification: 'GAME_BUNDLE',
+    media: [
+      { __typename: 'Media', role: 'GAMEHUB_COVER_ART', type: 'IMAGE', url: 'https://image.api.playstation.com/vulcan/itt.png' },
+    ],
+  },
+  'Product:PASS5': {
+    __typename: 'Product',
+    id: 'EP0006-PPSA02343_00-HAZELIGHTNUTS000',
+    name: 'It Takes Two – Freunde-Pass PS5™',
+    storeDisplayClassification: 'FULL_GAME',
+    media: [],
+  },
+};
+
+test('#527 parseSearch keeps both a game and its free pass — only ranking can separate them', () => {
+  const out = ps.parseSearch(pageHtml(IT_TAKES_TWO_STATE));
+  // Both survive the classification filter, and correctly so: the pass really is
+  // a product someone may want. That is precisely why the provider layer cannot
+  // fix this and the tie has to be broken client-side, at equal scoreHit.
+  assert.deepEqual(out.map((h) => h.title), [
+    'It Takes Two PS4™ & PS5™',
+    'It Takes Two – Freunde-Pass PS5™',
+  ]);
+  // Guard the trap itself: were anyone to re-narrow the filter to FULL_GAME, the
+  // game — not the pass — is what would disappear.
+  assert.equal(IT_TAKES_TWO_STATE['Product:GAME'].storeDisplayClassification, 'GAME_BUNDLE');
+  assert.equal(IT_TAKES_TWO_STATE['Product:PASS5'].storeDisplayClassification, 'FULL_GAME');
+});
+
 test('parseSearch respects the limit and tolerates a missing blob', () => {
   assert.equal(ps.parseSearch(pageHtml(SEARCH_STATE), 1).length, 1);
   assert.deepEqual(ps.parseSearch('<html>no next data</html>'), []);
