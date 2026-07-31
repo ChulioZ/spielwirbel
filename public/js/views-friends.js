@@ -143,7 +143,7 @@ function renderFeedEvent(ev) {
 /* ----------------------------- request/friend rows ------------------------- */
 
 function renderIncomingRequest(r) {
-  const row = h(`<div class="ds-row">
+  const row = h(`<div class="ds-row ds-row--static">
       <div class="ds-row__main friend-row__main">${friendAvatar(r.username)}<span class="friend-row__name">${friendName(r.username)}</span></div>
       <div class="ds-row__meta">
         <button class="btn btn--primary friend-req__accept" type="button">${esc(t('friends.accept'))}</button>
@@ -169,7 +169,7 @@ function renderIncomingRequest(r) {
 }
 
 function renderOutgoingRequest(r) {
-  const row = h(`<div class="ds-row">
+  const row = h(`<div class="ds-row ds-row--static">
       <div class="ds-row__main friend-row__main">${friendAvatar(r.username)}<span class="friend-row__name">${friendName(r.username)}</span></div>
       <div class="ds-row__meta">
         <span class="muted friend-req__pending">${esc(t('friends.pending'))}</span>
@@ -184,7 +184,7 @@ function renderOutgoingRequest(r) {
 }
 
 function renderFriendRow(f) {
-  const row = h(`<div class="ds-row">
+  const row = h(`<div class="ds-row ds-row--static">
       <div class="ds-row__main friend-row__main">${friendAvatar(f.username)}<span class="friend-row__name">${friendName(f.username)}</span></div>
       <div class="ds-row__meta">
         <button class="link-btn friend-row__remove" type="button">${esc(t('friends.unfriend'))}</button>
@@ -238,7 +238,7 @@ async function renderHomeFriends(section) {
 // the row is removed either way. Dispatched from views-inbox.js renderInboxItem.
 function renderFriendRequestItem(item) {
   const p = item.payload || {};
-  const row = h(`<div class="ds-row inbox-row${item.read ? '' : ' inbox-row--unread'}">
+  const row = h(`<div class="ds-row ds-row--static inbox-row${item.read ? '' : ' inbox-row--unread'}">
       <div class="ds-row__main">
         <div class="ds-row__date">${unreadDot(item)}${esc(t('inbox.friend.title', { user: p.requesterUsername || '?' }))}</div>
       </div>

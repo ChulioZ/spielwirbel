@@ -2936,6 +2936,18 @@ body.auth-screen .demo-banner { display: none; }
   cursor: pointer;
 }
 .ds-row:hover { box-shadow: var(--shadow-2); }
+/* A row that reuses .ds-row for its LAYOUT but has no row-level handler — only
+   the buttons at its right edge respond (#557). The base component is the app's
+   click target, so it hands out `cursor: pointer` + a hover lift; without this
+   opt-out those rows promise an interaction that does not exist (`.konto-fact`
+   avoids it by not being a .ds-row at all).
+
+   Compounded — (0,2,0) and (0,2,1) — so it wins on SPECIFICITY, not source
+   order: a bare `.ds-row--static` ties with `.ds-row`, and `.ds-row--static:hover`
+   ties with `.ds-row:hover`, so both would silently stop working if either block
+   moved (`.claude/rules/label-rows-lose-to-field-label.md`). */
+.ds-row.ds-row--static { cursor: default; }
+.ds-row.ds-row--static:hover { box-shadow: none; }
 .ds-row--picked { border-color: var(--brand); background: var(--brand-tint-soft); }
 .ds-row__date { font-weight: 700; }
 .ds-row__status { font-size: 15px; margin-top: 2px; }

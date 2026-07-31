@@ -142,7 +142,7 @@ async function showTags(rid) {
     const list = h('<div class="ds-list ds-list--tiles"></div>');
     tags.forEach((tg) => {
       const n = round.games.filter((g) => (g.tagIds || []).includes(tg.id)).length;
-      const row = h(`<div class="ds-row tag-row">
+      const row = h(`<div class="ds-row ds-row--static tag-row">
            <div class="ds-row__main"><span class="tag tag--custom"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</span></div>
            <div class="ds-row__meta"><span class="muted tag-row__count">${esc(tn(n, 'tags.gamesOne', 'tags.games'))}</span></div>
          </div>`);

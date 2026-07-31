@@ -70,7 +70,7 @@ function renderInboxItem(item) {
 function renderInvitationItem(item) {
   const p = item.payload || {};
   const seat = p.memberName ? t('inbox.invite.asMember', { name: p.memberName }) : t('inbox.invite.asNew');
-  const row = h(`<div class="ds-row inbox-row${item.read ? '' : ' inbox-row--unread'}">
+  const row = h(`<div class="ds-row ds-row--static inbox-row${item.read ? '' : ' inbox-row--unread'}">
       <div class="ds-row__main">
         <div class="ds-row__date">${unreadDot(item)}${esc(t('inbox.invite.title', { round: p.roundName || '' }))}</div>
         <div class="ds-row__status muted">${esc(t('inbox.invite.from', { user: p.inviterUsername || '?' }))} · ${esc(seat)}</div>
@@ -111,8 +111,14 @@ function renderInvitationItem(item) {
 
 // A generic notification: a title, its timestamp, a read/unread mark, and a
 // dismiss button. Clicking an unread row marks it read.
+//
+// The only row here whose click affordance is CONDITIONAL (#557): the handler
+// below is bound for an unread item only, so an already-read row is as inert as
+// its neighbours and opts out of the pointer/hover affordance from the start.
+// A row read while the user is looking at it crosses from one state to the
+// other, so the handler adds the modifier as it removes the unread mark.
 function renderGenericItem(item) {
-  const row = h(`<div class="ds-row inbox-row${item.read ? '' : ' inbox-row--unread'}">
+  const row = h(`<div class="ds-row${item.read ? ' ds-row--static' : ''} inbox-row${item.read ? '' : ' inbox-row--unread'}">
       <div class="ds-row__main">
         <div class="ds-row__date">${unreadDot(item)}${esc(t('inbox.item'))}</div>
         <div class="ds-row__status muted">${esc(fmtDateTime(item.createdAt))}</div>
@@ -129,6 +135,7 @@ function renderGenericItem(item) {
         await accountApi('POST', `/inbox/${item.id}/read`);
         item.read = true;
         row.classList.remove('inbox-row--unread');
+        row.classList.add('ds-row--static'); // it just stopped being a click target
         const d = row.querySelector('.inbox-row__dot');
         if (d) d.remove();
         refreshInboxBadge();
