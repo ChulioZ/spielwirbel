@@ -79,6 +79,10 @@
    .claude/rules/tabler-icon-codepoints.md. */
 .ti-code::before { content: "\ea77"; }
 .ti-copy::before { content: "\ea7a"; }
+/* #526: the results screen's „Teilen" button. Codepoint read out of THIS
+   bundle's own cmap (`share` -> eb21, verified alongside the already-declared
+   `copy` -> ea7a), not from tabler.io — .claude/rules/tabler-icon-codepoints.md. */
+.ti-share::before { content: "\eb21"; }
 .ti-lock::before { content: "\eae2"; }
 .ti-mail::before { content: "\eae5"; }
 .ti-arrows-shuffle::before { content: "\f000"; }

@@ -96,7 +96,17 @@ Two traps met doing exactly that:
   `endFlow()` or a fresh `navigate` between probes.
 - **A `.rating .mood` click selects a rating, it does not advance the step.** A
   loop that clicks it expecting to walk the wizard spins until the 30 s
-  `javascript_tool` timeout and looks like a hang in the app.
+  `javascript_tool` timeout and looks like a hang in the app. (`#nextBtn` is what
+  advances it, and `#goBtn` clears each hot-seat handover.)
+- **Calling `setLocale()` directly does NOT re-render the screen** — the *picker*
+  calls `currentView()` afterwards, `setLocale` itself only sets the locale and
+  the tab title. So every label already on screen stays in the old language while
+  anything built *after* the call comes out in the new one. Met on #526: the
+  shared text switched to English while the button that produced it still read
+  „Teilen", which reads exactly like a label that forgot to follow the locale.
+  Drive the real `<select>` (`sel.value = 'en'` + a bubbling `change` event) when
+  the question is whether rendered copy follows a language switch; keep
+  `setLocale` for driving the title, which it does update.
 
 **Related:** `.claude/rules/frontend-helper-modules-and-coverage.md` (why
 `doc-title.js` is its own file — the pure half is unit-tested there and the DOM
