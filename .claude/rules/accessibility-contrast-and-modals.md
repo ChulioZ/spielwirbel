@@ -58,12 +58,30 @@ applied to newer controls). Toggles get `aria-pressed`, the current tab
 
 ## 4. A live region must already be in the tree
 
-`toast()` is the only channel for confirmations *and* errors. `role="status"`
+`toast()` is the main channel for confirmations *and* errors. `role="status"`
 alone is not enough: a live region inserted — or un-`hidden` — **with its text
 already in place is never announced**. The toast element stays permanently in
 the tree; visibility is a **class** (`.toast.is-on`), never the `hidden`
 attribute, and `toast()` clears the text on hide so re-showing the same
 message is still a reported mutation.
+
+**There is a second live region since #584** — the add-game duplicate-title hint
+`#dupHint` (`showAddGame`, `views-round-lookup.js`). It shipped in #524 toggled
+with `hidden` *and* assigned its text in the same statement, i.e. the exact shape
+above, so it was silent for a year's worth of releases while looking finished.
+Adding `aria-live` to it as it stood would have changed nothing audible.
+
+Two things to carry to a third one:
+
+- **`display: none` also removes the element from the tree**, so "visibility is a
+  class" is not on its own the fix — `.toast`'s own class *is* a display toggle,
+  which is in tension with the "stays permanently in the tree" reason given
+  above. `#dupHint` is therefore rendered at all times and its **empty state is
+  the hidden state**; `.is-on` carries only spacing. Prefer that shape.
+- **An always-rendered empty hint must cost no layout space**, or the sheet gains
+  a permanent gap. `#dupHint` gets that free today from margin collapsing (zero
+  height, last child of `.field`), which is an accident worth knowing rather than
+  relying on — see the comment on `.field__hint--dup` in `styles.css`.
 
 ## Things that are fine — don't "fix" them
 
