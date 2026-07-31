@@ -40,22 +40,29 @@ function shareRatingLines(rows, t) {
 // message opens with what the reader would see on the screen it came from.
 // Returns null while the session has no outcome yet (nothing chosen, not
 // cancelled) — then the ratings alone are the whole message.
-function shareHeadline(result, t) {
+//
+// `join` is core.js's `joinNames` — injected, like `t`, because that is where it
+// lives and this file cannot require() a sibling. It matters that it is the real
+// one: the h1 reads "Anna und Ben", so a local `names.join(', ')` here would put
+// a subtly different sentence in the chat than the one on screen, and would be
+// worse German besides. The comma fallback exists only so the builder stays
+// callable without it.
+function shareHeadline(result, t, join) {
   if (result.cancelled) return t('result.titleCancelled');
   if (!result.playedTitle) return null;
   const names = result.winnerNames || [];
   if (!names.length) return t('result.titlePlayed', { game: result.playedTitle });
   return t(names.length === 1 ? 'result.titleWonOne' : 'result.titleWonMany', {
     game: result.playedTitle,
-    names: result.winnerNames.join(', '),
+    names: (join || ((xs) => xs.join(', ')))(names),
   });
 }
 
 // The full message. `result` is
 // { roundName, when, cancelled, playedTitle, winnerNames, rows: [{ title, avg, count, place }] }.
-function sessionShareText(result, t) {
+function sessionShareText(result, t, join) {
   const blocks = [t('share.header', { round: result.roundName, when: result.when })];
-  const headline = shareHeadline(result, t);
+  const headline = shareHeadline(result, t, join);
   if (headline) blocks[0] += '\n' + headline;
   const lines = shareRatingLines(result.rows || [], t);
   // A cancelled session still carries ratings — the group rated the games, they

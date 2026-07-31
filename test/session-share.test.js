@@ -43,6 +43,20 @@ function translator(loc) {
   return (key, params) => ctx.t(key, params);
 }
 
+// core.js's joinNames, which the view injects. It cannot be required here: it
+// lives in a DOM view file, and requiring one drags its whole body into the
+// coverage report (.claude/rules/frontend-helper-modules-and-coverage.md). The
+// conjunction itself is read from the real lang table, so only the two-line join
+// shape is restated — and the assertions pin the exact rendered sentence, which
+// is what would catch it drifting from the h1.
+function joinNames(loc) {
+  const tr = translator(loc);
+  return (names) =>
+    names.length <= 1
+      ? names[0] || ''
+      : names.slice(0, -1).join(', ') + ' ' + tr('list.and') + ' ' + names[names.length - 1];
+}
+
 // The view model showResults hands over: rows already sorted and placed.
 const model = (over = {}) => ({
   roundName: 'Donnerstagsrunde',
@@ -85,11 +99,26 @@ test('the summary is localized, not German with the numbers swapped', () => {
 test('several winners take the plural headline; none takes the played-only one', () => {
   const de = translator('de');
   assert.match(
-    sessionShareText(model({ winnerNames: ['Anna', 'Ben'] }), de),
-    /Anna, Ben haben gewonnen!/
+    sessionShareText(model({ winnerNames: ['Anna', 'Ben'] }), de, joinNames('de')),
+    /Anna und Ben haben gewonnen!/
   );
   assert.match(sessionShareText(model({ winnerNames: [] }), de), /„Catan“ wurde gespielt\.\n/);
   assert.ok(!/gewonnen/.test(sessionShareText(model({ winnerNames: [] }), de)));
+});
+
+test('the headline joins winners exactly as the screen\'s h1 does, in each language', () => {
+  // The h1 uses core.js's joinNames ("Anna und Ben"). A local names.join(', ')
+  // in the builder would put a subtly different — and worse — sentence in the
+  // chat than the one the user is looking at, in every language at once.
+  const three = { winnerNames: ['Anna', 'Ben', 'Clara'] };
+  assert.match(
+    sessionShareText(model(three), translator('de'), joinNames('de')),
+    /Anna, Ben und Clara haben gewonnen!/
+  );
+  assert.match(
+    sessionShareText(model(three), translator('en'), joinNames('en')),
+    /Anna, Ben and Clara won!/
+  );
 });
 
 test('a cancelled session says so and STILL carries its ratings', () => {

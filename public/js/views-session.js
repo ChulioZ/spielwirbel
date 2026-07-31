@@ -1002,7 +1002,9 @@ function canShareResult() {
 // in, and the fallback only writes the clipboard. That is what keeps this free
 // of any new privacy disclosure — don't add an auto-send of any kind.
 async function shareResult(model) {
-  const text = sessionShareText(model, t);
+  // joinNames is passed in so the shared headline is byte-identical to the h1
+  // above it ("Anna und Ben", not "Anna, Ben") — see session-share.js.
+  const text = sessionShareText(model, t, joinNames);
   if (navigator.share) {
     try {
       await navigator.share({ text });

@@ -124,11 +124,11 @@ const frontendGlobals = {
   // other helper module's: they share the one global scope whether or not
   // another file calls them, and no-redeclare is off — so an unlisted name is
   // a future silent collision rather than a private one.
-  // session-share.js (issue #526) — internal helpers listed for the same reason.
-  sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
   RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly', recapMean: 'readonly',
   collectRatings: 'readonly', bestAndWorst: 'readonly', mostDivisive: 'readonly',
   memberFavourites: 'readonly',
+  // session-share.js (issue #526) — internal helpers listed for the same reason.
+  sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly', existingTitleState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
