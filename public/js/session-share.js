@@ -21,7 +21,21 @@
 
 'use strict';
 
-// One line per rated game, in the screen's order: "1. Catan · Ø 4.5".
+// The medals mirror the screen's own `rank-medal--gold/silver/bronze`, which it
+// awards to places 1-3 and to nothing else — so a tie for 2nd correctly yields
+// two silvers, and place 4 falls back to a plain "4.", exactly as the rows below
+// the podium do.
+//
+// These live here rather than in lang/*.js on purpose: they are language-
+// independent symbols, not copy, so translating them would be meaningless and
+// having every locale carry a copy is how one of them ends up different. (They
+// are the app's only emoji — the lang tables deliberately have none. A chat
+// message is not app chrome, and the whole point of the button is to produce
+// something that reads as a message rather than as a log dump.)
+const SHARE_MEDALS = ['🥇', '🥈', '🥉'];
+const SHARE_TROPHY = '🏆';
+
+// One line per rated game, in the screen's order: "🥇 Catan · Ø 4.5".
 //
 // Unrated games are skipped rather than rendered as the screen's "–": a bare
 // dash carries no information in a chat message, and computePlaces gives such a
@@ -33,13 +47,24 @@
 function shareRatingLines(rows, t) {
   return rows
     .filter((r) => r.place && r.count)
-    .map((r) => t('share.row', { place: r.place, title: r.title, avg: r.avg.toFixed(1) }));
+    .map((r) =>
+      t('share.row', {
+        rank: SHARE_MEDALS[r.place - 1] || r.place + '.',
+        title: r.title,
+        avg: r.avg.toFixed(1),
+      })
+    );
 }
 
-// The headline: the same sentence the results screen puts in its <h1>, so the
+// The headline: the same SENTENCE the results screen puts in its <h1>, so the
 // message opens with what the reader would see on the screen it came from.
 // Returns null while the session has no outcome yet (nothing chosen, not
 // cancelled) — then the ratings alone are the whole message.
+//
+// The trophy leads that sentence only when somebody actually won. A cancelled
+// session and a played-but-unrecorded one both get none: a trophy over „Session
+// abgebrochen" would be reading the room badly, and the emoji is here to mark a
+// result, not to decorate every message.
 //
 // `join` is core.js's `joinNames` — injected, like `t`, because that is where it
 // lives and this file cannot require() a sibling. It matters that it is the real
@@ -52,7 +77,7 @@ function shareHeadline(result, t, join) {
   if (!result.playedTitle) return null;
   const names = result.winnerNames || [];
   if (!names.length) return t('result.titlePlayed', { game: result.playedTitle });
-  return t(names.length === 1 ? 'result.titleWonOne' : 'result.titleWonMany', {
+  return SHARE_TROPHY + ' ' + t(names.length === 1 ? 'result.titleWonOne' : 'result.titleWonMany', {
     game: result.playedTitle,
     names: (join || ((xs) => xs.join(', ')))(names),
   });
@@ -73,5 +98,5 @@ function sessionShareText(result, t, join) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { sessionShareText, shareRatingLines, shareHeadline };
+  module.exports = { sessionShareText, shareRatingLines, shareHeadline, SHARE_MEDALS, SHARE_TROPHY };
 }

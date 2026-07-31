@@ -129,6 +129,7 @@ const frontendGlobals = {
   memberFavourites: 'readonly',
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
+  SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly', existingTitleState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',

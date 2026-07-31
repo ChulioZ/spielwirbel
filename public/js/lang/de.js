@@ -480,7 +480,7 @@ I18N.de = {
   'share.button': 'Teilen',
   'share.header': '{round} · {when}',
   'share.ratings': 'Bewertungen:',
-  'share.row': '{place}. {title} · Ø {avg}',
+  'share.row': '{rank} {title} · Ø {avg}',
   'share.toast.copied': 'Ergebnis in die Zwischenablage kopiert',
   'share.toast.failed': 'Teilen hat nicht geklappt',
 

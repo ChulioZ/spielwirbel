@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const { sessionShareText } = require('../public/js/session-share');
+const { sessionShareText, SHARE_MEDALS, SHARE_TROPHY } = require('../public/js/session-share');
 
 function loadI18n() {
   const dir = path.join(__dirname, '..', 'public', 'js');
@@ -77,12 +77,12 @@ test('the summary carries the headline and every rated game, in screen order', (
   assert.equal(
     text,
     'Donnerstagsrunde · 29.07.2026, 20:00\n' +
-      '„Catan“ wurde gespielt. Anna hat gewonnen!\n' +
+      '🏆 „Catan“ wurde gespielt. Anna hat gewonnen!\n' +
       '\n' +
       'Bewertungen:\n' +
-      '1. Catan · Ø 4.5\n' +
-      '2. Azul · Ø 4.0\n' +
-      '3. Splendor · Ø 3.3'
+      '🥇 Catan · Ø 4.5\n' +
+      '🥈 Azul · Ø 4.0\n' +
+      '🥉 Splendor · Ø 3.3'
   );
 });
 
@@ -126,7 +126,7 @@ test('a cancelled session says so and STILL carries its ratings', () => {
   // here would throw away the only content such a message has.
   const text = sessionShareText(model({ cancelled: true, playedTitle: null, winnerNames: [] }), translator('de'));
   assert.match(text, /Session abgebrochen/);
-  assert.match(text, /1\. Catan · Ø 4\.5/);
+  assert.match(text, /🥇 Catan · Ø 4\.5/);
 });
 
 test('a session with no outcome yet shares the ratings alone — no empty headline line', () => {
@@ -165,7 +165,36 @@ test('tied games share a place number, exactly as the screen prints it', () => {
     }),
     translator('de')
   );
-  assert.match(text, /2\. Azul · Ø 4\.0\n2\. Splendor · Ø 4\.0/);
+  assert.match(text, /🥈 Azul · Ø 4\.0\n🥈 Splendor · Ø 4\.0/);
+});
+
+test('places past bronze fall back to a plain number, as the screen does', () => {
+  // The screen medals places 1-3 and nothing else (rank-medal--gold/silver/
+  // bronze), so a fourth game must not invent a medal or drop out of the list.
+  const text = sessionShareText(
+    model({
+      rows: [
+        { title: 'Catan', avg: 4.5, count: 3, place: 1 },
+        { title: 'Azul', avg: 4, count: 3, place: 2 },
+        { title: 'Splendor', avg: 3.5, count: 3, place: 3 },
+        { title: 'Carcassonne', avg: 3, count: 3, place: 4 },
+      ],
+    }),
+    translator('de')
+  );
+  assert.match(text, /^4\. Carcassonne · Ø 3\.0$/m);
+  assert.equal(SHARE_MEDALS.length, 3, 'a fourth medal would silently change the fallback');
+});
+
+test('the trophy marks a win and nothing else', () => {
+  const de = translator('de');
+  const has = (over) => sessionShareText(model(over), de).includes(SHARE_TROPHY);
+  assert.ok(has({}), 'a recorded win should carry the trophy');
+  // A trophy over „Session abgebrochen" would be reading the room badly, and a
+  // played-but-unrecorded session has no result to crown yet.
+  assert.ok(!has({ cancelled: true, playedTitle: null, winnerNames: [] }), 'cancelled');
+  assert.ok(!has({ winnerNames: [] }), 'played, no winner recorded');
+  assert.ok(!has({ playedTitle: null, winnerNames: [] }), 'no outcome yet');
 });
 
 test('the summary contains no cover art, link or footer — only the group\'s own words', () => {

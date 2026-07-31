@@ -489,7 +489,7 @@ I18N.en = {
   'share.button': 'Share',
   'share.header': '{round} · {when}',
   'share.ratings': 'Ratings:',
-  'share.row': '{place}. {title} · Ø {avg}',
+  'share.row': '{rank} {title} · Ø {avg}',
   'share.toast.copied': 'Result copied to the clipboard',
   'share.toast.failed': 'Sharing did not work',
 
