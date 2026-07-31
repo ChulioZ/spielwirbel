@@ -329,6 +329,8 @@ I18N.de = {
   'addGame.toast.pasteFail': 'Einfügen nicht möglich – bitte ⌘V benutzen',
   'addGame.toast.useShortcut': 'Bitte ⌘V zum Einfügen benutzen',
   'addGame.searchHint': 'Tippen für Vorschläge.',
+  'addGame.dupHint.active': 'Ist schon im Regal. Speichern geht trotzdem.',
+  'addGame.dupHint.archived': 'Ist im Archiv dieser Runde. Speichern geht trotzdem.',
   'addGame.toast.filled': 'Details von {provider} übernommen',
   'lookup.searching': 'Suche läuft …',
   'lookup.loadingMore': 'Weitere Ergebnisse werden geladen …',

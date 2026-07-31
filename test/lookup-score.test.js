@@ -3,7 +3,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { scoreHit, foldTitle } = require('../public/js/lookup-score');
+const { scoreHit, foldTitle, existingTitleState } = require('../public/js/lookup-score');
 const { groupLookupHits } = require('../public/js/lookup-group');
 
 // The reported repro (#317): the query carries a stray " - " the title spells
@@ -73,4 +73,70 @@ test('foldTitle keeps non-Latin scripts instead of stripping them', () => {
 test('diacritics fold in both directions', () => {
   assert.ok(scoreHit('Café International', 'cafe international') > 0);
   assert.ok(scoreHit('Cafe International', 'café international') > 0);
+});
+
+// ---- existingTitleState: the add-game duplicate hint (#524) ----
+
+const SHELF = [
+  { title: 'Catan' },
+  { title: 'Azul', retired: true },
+  { title: 'Wingspan', completed: true },
+];
+
+test('existingTitleState reports an active shelf game', () => {
+  assert.equal(existingTitleState(SHELF, 'Catan'), 'active');
+});
+
+test('existingTitleState reports both archives as archived', () => {
+  // retired and completed are two archives, one hint — the person typing only
+  // needs to know the game is already in this round, not which shelf it left by.
+  assert.equal(existingTitleState(SHELF, 'Azul'), 'archived');
+  assert.equal(existingTitleState(SHELF, 'Wingspan'), 'archived');
+});
+
+test('existingTitleState answers null for a title nobody has', () => {
+  assert.equal(existingTitleState(SHELF, 'Hades'), null);
+});
+
+test('existingTitleState matches case, whitespace, diacritics and punctuation', () => {
+  // The near-misses a person actually types. A missed hint is the whole defect;
+  // an over-eager one costs nothing, because the hint never blocks saving.
+  assert.equal(existingTitleState(SHELF, '  cATAn '), 'active');
+  assert.equal(existingTitleState([{ title: 'Café International' }], 'Cafe International'), 'active');
+  assert.equal(existingTitleState([{ title: 'Straße des Ruhms' }], 'Strasse des Ruhms'), 'active');
+  assert.equal(existingTitleState([{ title: 'Catan: Seefahrer' }], 'Catan Seefahrer'), 'active');
+});
+
+test('existingTitleState prefers active over archived whatever the shelf order', () => {
+  // Returning on the first hit would make the answer depend on array order —
+  // and "it is in the archive" is the wrong thing to tell someone whose shelf
+  // already shows the game.
+  const archivedFirst = [{ title: 'Catan', retired: true }, { title: 'Catan' }];
+  const activeFirst = [{ title: 'Catan' }, { title: 'Catan', completed: true }];
+  assert.equal(existingTitleState(archivedFirst, 'Catan'), 'active');
+  assert.equal(existingTitleState(activeFirst, 'Catan'), 'active');
+});
+
+test('existingTitleState answers null for an empty or unmatchable title', () => {
+  assert.equal(existingTitleState(SHELF, ''), null);
+  assert.equal(existingTitleState(SHELF, '   '), null);
+  assert.equal(existingTitleState(SHELF, ' - : , '), null);
+});
+
+test('an empty title does not match a game whose title also folds to nothing', () => {
+  // This is what the `if (!key) return null` guard is actually for, and it is
+  // reachable: the server accepts any non-empty trimmed string as a title, so
+  // "..." is storable and folds to ''. Without the guard an empty field — which
+  // is where the sheet opens, and where it lands again after "Speichern &
+  // weiteres" — would match that row and show the hint permanently.
+  const oddShelf = [{ title: '...' }];
+  assert.equal(existingTitleState(oddShelf, ''), null);
+  assert.equal(existingTitleState(oddShelf, '   '), null);
+  // ...while a real title on that same shelf still answers honestly.
+  assert.equal(existingTitleState(oddShelf.concat({ title: 'Catan' }), 'Catan'), 'active');
+});
+
+test('existingTitleState tolerates a missing games list and malformed rows', () => {
+  assert.equal(existingTitleState(undefined, 'Catan'), null);
+  assert.equal(existingTitleState([null, {}, { title: null }], 'Catan'), null);
 });

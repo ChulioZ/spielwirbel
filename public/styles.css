@@ -3072,6 +3072,12 @@ kbd {
 
 /* ---- Shared small helpers ---- */
 .field__hint { margin-top: 6px; font-size: 14px; }
+/* The duplicate-title hint (#524) is toggled with the `hidden` attribute, so it
+   deliberately declares NO display — the UA stylesheet's [hidden] is what hides
+   it. Adding one here (e.g. flex, for an icon) silently beats [hidden] and
+   leaves the hint permanently visible; pair it with
+   `.field__hint--dup[hidden] { display: none }` if you ever do. */
+.field__hint--dup { color: var(--warn); }
 
 /* The in-app feedback sheet (#260) was retired in #321 — the feedback button now
    opens the public contact form, so its .feedback__* styles were removed here. */
