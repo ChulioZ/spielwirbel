@@ -25,8 +25,9 @@
 // - thumbnail: the highest-priority member that has a thumbnail (else null).
 //
 // Groups are ranked by their *best* member (max score, then best priority, then
-// earliest order), so a game's row rank is its strongest provider's rank. When
-// `max` is a number the result is sliced to that many groups (rows).
+// shortest title, then earliest order), so a game's row rank is its strongest
+// provider's rank. When `max` is a number the result is sliced to that many
+// groups (rows).
 function groupLookupHits(hits, max) {
   // Relevance order (best first): score desc, then provider priority, then the
   // provider's own order. Priority/badge order ignores score (pure priority).
@@ -60,8 +61,33 @@ function groupLookupHits(hits, max) {
     });
   });
 
+  // Shortest title breaks a tie that score and provider priority leave open
+  // (#527). A companion SKU — a free "friend's pass", a soundtrack, an edition —
+  // is its base game's title plus a qualifier, so at equal query relevance the
+  // shorter title is the closer answer to what was typed. This is the same rule
+  // parseSearch in lib/providers/bgg.js already applies *within* its own results
+  // ("prefers the shorter title on a tie"), lifted to the cross-provider merge.
+  //
+  // Placed AFTER prio, which is what confines it: prio is the provider's index
+  // in the active list, so two groups whose best members come from different
+  // providers always differ there and never reach this term. It can therefore
+  // only ever reorder two hits of the SAME provider — no provider's rows move
+  // relative to another's.
+  //
+  // Why not the obvious PS Store signals — both measured live on 2026-07-31,
+  // and both are why this is a title rule rather than a provider one:
+  //   - `storeDisplayClassification` does not discriminate. For "It Takes Two"
+  //     the game is GAME_BUNDLE and its two Freunde-Pässe are FULL_GAME, so
+  //     preferring FULL_GAME ranks the passes FIRST; for "Split Fiction" the
+  //     game and its pass are BOTH GAME_BUNDLE, so it separates nothing.
+  //   - `price.isFree` is ruled out by
+  //     .claude/rules/psstore-full-game-is-not-every-game.md — EA SPORTS FC 25's
+  //     standard edition and every Fortnite entry report isFree: true, so it
+  //     demotes exactly the free-to-play games it looks like it would rescue.
+  const titleLen = (g) => (g.best.title || '').trim().length;
   result.sort((a, b) =>
-    b.best.score - a.best.score || a.best.prio - b.best.prio || a.best.order - b.best.order);
+    b.best.score - a.best.score || a.best.prio - b.best.prio ||
+    titleLen(a) - titleLen(b) || a.best.order - b.best.order);
   return typeof max === 'number' ? result.slice(0, max) : result;
 }
 

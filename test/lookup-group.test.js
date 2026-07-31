@@ -93,6 +93,55 @@ test('duplicate hits from the same provider yield a single badge (strongest kept
   assert.equal(groups[0].primary.providerId, 'strong');
 });
 
+// #527 — the free companion SKU must not outrank its base game. The titles are
+// the live ones from store.playstation.com/de-de (2026-07-31); both fold to a
+// prefix match on "It Takes Two", so scoreHit tiers them identically at 4 and
+// only the tiebreak separates them.
+const IT_TAKES_TWO = 'It Takes Two PS4™ & PS5™';
+const FRIEND_PASS = 'It Takes Two – Freunde-Pass PS5™';
+
+test('#527 at equal score the shorter title wins, so the game outranks its free pass', () => {
+  const groups = groupLookupHits([
+    hit('psstore', FRIEND_PASS, { prio: 0, score: 4, order: 0 }),
+    hit('psstore', IT_TAKES_TWO, { prio: 0, score: 4, order: 1 }),
+  ]);
+  assert.deepEqual(groups.map((g) => g.title), [IT_TAKES_TWO, FRIEND_PASS]);
+});
+
+test('#527 the tiebreak is deterministic — Sony\'s unstable blob order cannot decide it', () => {
+  // The whole defect is that `order` came from Sony's result order, which is not
+  // stable between fetches. Feeding both orders must give the same ranking; the
+  // pre-#527 comparator returns the input order for each and so fails one of them.
+  const both = [
+    [hit('psstore', IT_TAKES_TWO, { prio: 0, score: 4, order: 0 }),
+      hit('psstore', FRIEND_PASS, { prio: 0, score: 4, order: 1 })],
+    [hit('psstore', FRIEND_PASS, { prio: 0, score: 4, order: 0 }),
+      hit('psstore', IT_TAKES_TWO, { prio: 0, score: 4, order: 1 })],
+  ].map((hits) => groupLookupHits(hits).map((g) => g.title));
+  assert.deepEqual(both[0], [IT_TAKES_TWO, FRIEND_PASS]);
+  assert.deepEqual(both[0], both[1]);
+});
+
+test('#527 the tiebreak never reorders one provider against another', () => {
+  // A shorter title on the LOWER-priority provider must not jump the queue:
+  // prio is compared first, so hits of different providers never reach the
+  // length term. Without that ordering, 'Hades' (steam, 5 chars) would outrank
+  // the longer psstore row despite psstore's higher priority.
+  const groups = groupLookupHits([
+    hit('psstore', 'Hades: Definitive Bundle', { prio: 0, score: 4, order: 0 }),
+    hit('steam', 'Hades', { prio: 2, score: 4, order: 0 }),
+  ]);
+  assert.deepEqual(groups.map((g) => g.title), ['Hades: Definitive Bundle', 'Hades']);
+});
+
+test('#527 equal-length titles still fall back to the provider\'s own order', () => {
+  const groups = groupLookupHits([
+    hit('bgg', 'Catan B', { prio: 1, score: 4, order: 1 }),
+    hit('bgg', 'Catan A', { prio: 1, score: 4, order: 0 }),
+  ]);
+  assert.deepEqual(groups.map((g) => g.title), ['Catan A', 'Catan B']);
+});
+
 test('empty / whitespace-only titles are dropped', () => {
   const groups = groupLookupHits([
     hit('psstore', '   ', { prio: 0 }),
