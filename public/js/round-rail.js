@@ -2,7 +2,7 @@
 
    From 1280px up, a round's navigation lives in a persistent left rail instead
    of the in-flow tab strip: identity, the one big CTA, the four sections, the
-   two archives and the settings screens.
+   two archives and one entry for the round's Einstellungen screen.
 
    WHY IT IS A RAIL. The strip lives inside `.app`, so the column's width and the
    strip's position are coupled: giving grid screens a wider column moved the
@@ -26,26 +26,33 @@
 
 'use strict';
 
+// The Einstellungen screen and the three routed screens reached FROM it. They
+// share one rail row (#581): duplicating Tags/Provider/Design — and the two
+// sheet actions — beside an entry that already contains all five made the rail
+// disagree with every narrow width, where one entry has always been the only
+// way in. So the row stands for the whole group.
+const RAIL_SETTINGS_SUB = ['settings', 'tags', 'providers', 'design'];
+
 // Round sub-screens that have their OWN rail entry. On these, that entry is
 // marked current and no section is — the alternative (highlighting the section
 // that owns them, as the strip must) would light up two things at once.
-const RAIL_OWN_ENTRY = ['retired', 'completed', 'tags', 'providers', 'design', 'settings'];
+const RAIL_OWN_ENTRY = ['retired', 'completed', ...RAIL_SETTINGS_SUB];
 
-// One rail row. `sub` decides the current marker: an entry for the screen you
-// are ON is "page" and click-inert, exactly like the active hub tab (#330/#331).
-function railItem({ icon, label, path, onNav, current }) {
-  const el = h(`<a class="rail__item${current ? ' is-active' : ''}"${current ? ' aria-current="page"' : ''}>
+// One rail row. `sub` decides the marker, and the two states are NOT
+// interchangeable — the same distinction the sections below draw (#331):
+//   current -> you are ON this screen: "page", and click-inert, like the active
+//              hub tab (#330/#331).
+//   inside  -> you are on a screen this entry OWNS (Tags, reached from
+//              Einstellungen): "true", highlighted, and deliberately still a
+//              LIVE link, because clicking it is how you get back up to it.
+// Marking `inside` as current instead would leave a desktop user on Tags with
+// no rail route back to the screen that owns it.
+function railItem({ icon, label, path, onNav, current, inside }) {
+  const mark = current ? 'page' : inside ? 'true' : '';
+  const el = h(`<a class="rail__item${current || inside ? ' is-active' : ''}"${mark ? ` aria-current="${mark}"` : ''}>
        <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span>
      </a>`);
   return navLink(el, path, current ? null : onNav);
-}
-
-function railAction({ icon, label, onClick }) {
-  const el = h(`<button class="rail__item">
-       <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span>
-     </button>`);
-  el.addEventListener('click', onClick);
-  return el;
 }
 
 function buildRoundRail(round, activeTab, sub) {
@@ -140,48 +147,23 @@ function buildRoundRail(round, activeTab, sub) {
   }));
   rail.appendChild(archive);
 
-  // --- Settings. Three routed screens that used to sit among the Start tab's
-  // quick actions, plus the move action that lived in the Regal's footer.
-  const settings = h(`<div class="rail__group">
-       <div class="rail__label">${esc(t('rail.settings'))}</div>
-     </div>`);
-  settings.appendChild(railItem({
-    icon: 'ti-tags', label: t('round.tags'), path: roundPath(rid, 'tags'),
-    onNav: () => showTags(rid), current: ownEntry === 'tags',
-  }));
-  settings.appendChild(railItem({
-    icon: 'ti-world-search', label: t('round.providers'), path: roundPath(rid, 'providers'),
-    onNav: () => showProviders(rid), current: ownEntry === 'providers',
-  }));
-  settings.appendChild(railItem({
-    icon: 'ti-palette', label: t('round.design'), path: roundPath(rid, 'design'),
-    onNav: () => showBackground(rid), current: ownEntry === 'design',
-  }));
-  // Gated on the WHOLE shelf, not activeGames: archived games move too, so a
-  // round holding nothing but retired games must still offer it (#253) — and not
-  // on a shared round, where moving is owner-only (#411), like the invite below.
-  if (round.games.length && !round.shared) {
-    settings.appendChild(railAction({
-      icon: 'ti-arrow-right', label: t('moveGames.link'),
-      onClick: () => showMoveGames(round),
-    }));
-  }
-  // Invite an account to share this round (#207) — accounts mode only, and not
-  // on a shared round (only the owner invites).
-  if (accountsActive() && !round.shared) {
-    settings.appendChild(railAction({
-      icon: 'ti-users', label: t('invite.link'),
-      onClick: () => showInvite(round),
-    }));
-  }
-  // The round's Einstellungen screen (#561). The five rows above keep their
-  // one-click shortcuts — this is not a replacement for them but the only way in
-  // to the round's danger zone, which deliberately lives on that screen and NOT
-  // here: a destructive control in persistent navigation is one misclick away at
-  // all times, and the screen is then its single home at every width.
+  // --- Settings: ONE row, standing for the whole group (#581). It briefly held
+  // six — Tags, Provider, Design, Spiele verschieben, Einladen and the screen
+  // that already contains all five — which made the rail a second, longer
+  // navigation model competing with the one every narrow width uses, and put
+  // two of the round's actions in a place a phone user never sees them.
+  //
+  // No `rail__label` here: it would read "EINSTELLUNGEN" directly above a single
+  // row named "Einstellungen". The group still provides the separation.
+  //
+  // The danger zone stays OFF the rail deliberately: a destructive control in
+  // persistent navigation is one misclick away on every screen of the round.
+  const settings = h('<div class="rail__group"></div>');
   settings.appendChild(railItem({
     icon: 'ti-settings', label: t('rail.settings'), path: roundPath(rid, 'settings'),
-    onNav: () => showRoundSettings(rid), current: ownEntry === 'settings',
+    onNav: () => showRoundSettings(rid),
+    current: sub === 'settings',
+    inside: !!sub && sub !== 'settings' && RAIL_SETTINGS_SUB.includes(sub),
   }));
   rail.appendChild(settings);
 

@@ -274,7 +274,7 @@ public/
                      in-app on a plain click, so Cmd/middle-click opens a new
                      tab and "Copy link address" works (issue #330)
     round-rail.js    the desktop navigation rail (from 1280px): round identity,
-                     the four sections, both archives and the settings screens
+                     the four sections, both archives and one Einstellungen entry
     views-landing.js logged-out marketing landing page shown at / in accounts
                      mode before registration (issue #322)
     views-home.js    lobby + new round

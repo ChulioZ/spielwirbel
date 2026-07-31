@@ -8,7 +8,7 @@ only the placement was ever a phone convention.
 > **Since the rail landed there is a THIRD presentation.** From 1280px up the
 > dock is `display: none` and navigation moves out of the content column into
 > `.rail` (`public/js/round-rail.js`), which also carries the round's identity,
-> both archives and the settings screens. Everything below still describes the
+> both archives and one Einstellungen entry. Everything below still describes the
 > two narrow presentations exactly — they are unchanged under 1280px — but
 > "the dock is the nav" is only true below that. See
 > `.claude/rules/responsive-content-width.md` for why the rail exists at all

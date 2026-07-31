@@ -100,16 +100,56 @@ test('the owner-only gating moved across intact', () => {
 test('the screen is routed, and both navs agree on which section owns it', () => {
   assert.match(ROUTER, /sub === 'settings'\) return \(\) => showRoundSettings\(rid\)/, '/round/:rid/settings does not resolve');
   assert.match(ROUND, /start: \[[^\]]*'settings'/, "the strip does not know the Start tab owns 'settings'");
-  assert.match(RAIL, /RAIL_OWN_ENTRY = \[[^\]]*'settings'/, 'the rail cannot mark its own settings row current');
+  // 'settings' reaches RAIL_OWN_ENTRY through the spread of RAIL_SETTINGS_SUB
+  // (#581), so assert the membership rather than a literal in that array.
+  assert.match(RAIL, /RAIL_SETTINGS_SUB = \[[^\]]*'settings'/, 'the rail cannot mark its own settings row current');
   assert.match(RAIL, /showRoundSettings\(rid\)/, 'the rail has no way into the settings screen');
 });
 
-/* Deliberate: the rail keeps one-click shortcuts for the five harmless things
-   and NO destructive control. A delete sitting in persistent navigation is one
-   misclick away on every screen of the round; the danger zone on the settings
-   screen is its single home at every width. */
+/* Deliberate: the rail carries NO destructive control. A delete sitting in
+   persistent navigation is one misclick away on every screen of the round; the
+   danger zone on the settings screen is its single home at every width. */
 test('the rail carries no destructive round action', () => {
   assert.doesNotMatch(RAIL, /round\.deleteRound|round\.deleteConfirm|share\.leave/, 'a destructive action was added to the persistent rail (#561)');
+});
+
+/* #581: the settings group is ONE row. It briefly held six — the three routed
+   screens, both sheet actions, and the screen that already contains all five —
+   so the rail was a second, longer navigation model competing with the single
+   entry every width below 1280px uses. */
+test('the rail settings group is a single Einstellungen entry', () => {
+  const rail = bodyOfFn(RAIL, 'buildRoundRail');
+  assert.match(rail, /roundPath\(rid, 'settings'\)/, 'the rail lost its way into the settings screen');
+  for (const [needle, what] of [
+    [/roundPath\(rid, 'tags'\)/, 'Tags'],
+    [/roundPath\(rid, 'providers'\)/, 'Provider'],
+    [/roundPath\(rid, 'design'\)/, 'Design'],
+    [/showMoveGames\(/, 'Spiele verschieben'],
+    [/showInvite\(/, 'Einladen'],
+  ]) {
+    assert.doesNotMatch(rail, needle, `the rail duplicates "${what}", which lives inside the settings screen (#581)`);
+  }
+  // Anti-vacuous: the archives are NOT part of that group and must survive.
+  assert.match(rail, /roundPath\(rid, 'retired'\)/, 'the rail lost its retired archive');
+  assert.match(rail, /roundPath\(rid, 'completed'\)/, 'the rail lost its completed archive');
+});
+
+/* The two marker states are not interchangeable. On Tags the entry must be
+   highlighted AND still clickable — marking it `current` makes railItem drop its
+   onNav, which would leave a desktop user on Tags with no rail route back to the
+   screen that owns it. */
+test('the settings entry stays a live link on the screens it owns', () => {
+  assert.match(RAIL, /RAIL_SETTINGS_SUB = \[[^\]]*'settings'[^\]]*'tags'[^\]]*'providers'[^\]]*'design'/, 'the settings entry no longer owns the three screens reached from it');
+  assert.match(RAIL, /RAIL_OWN_ENTRY = \[[^\]]*\.\.\.RAIL_SETTINGS_SUB/, 'the own-entry list no longer derives from the settings group — a screen with no row would highlight nothing at all');
+  // NOT bodyOfFn here: railItem destructures its argument, so the first `{`
+  // after the paren is the parameter pattern and the helper brace-matches that
+  // instead of the body — it returns `{ icon, label, … }` and every assertion
+  // against it fails for the wrong reason.
+  assert.match(RAIL, /inside \? 'true'/, 'railItem lost the inside marker');
+  assert.match(RAIL, /navLink\(el, path, current \? null : onNav\)/, 'railItem now inerts the entry on the screens it owns, stranding a desktop user there (#581)');
+  // The call site must pass the two states apart, not conflate them.
+  assert.match(RAIL, /current: sub === 'settings'/, 'the settings entry is no longer inert on its own screen');
+  assert.match(RAIL, /inside: !!sub && sub !== 'settings' && RAIL_SETTINGS_SUB\.includes\(sub\)/, 'the settings entry no longer marks the screens it owns');
 });
 
 test('the Start tab points at the settings screen instead of three separate links', () => {
