@@ -27,7 +27,8 @@ download-and-cache**, however tempting the reliability argument is.
   handed, so `remove('https://cf.geekdo-images.com/x/pic123.jpg')` would compute
   the key `pic123.jpg` and **delete OUR object of that name** — someone else's
   cover, silently. The guard lives in `lib/storage/index.js` (one chokepoint) so
-  every deletion path — games PATCH/DELETE, admin takedown, account erasure — is
+  every deletion path — games PATCH/DELETE, the #518 cover refresh, admin
+  takedown, account erasure — is
   safe by construction rather than by each call site remembering.
   `test/provider-covers.test.js` pins it down with a deliberately colliding
   basename.

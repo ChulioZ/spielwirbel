@@ -56,7 +56,9 @@ What the app does, in detail. For a short overview see the
   token (#117), so BGG covers stay hotlinked only for want of an image-resizing
   pipeline. Your own uploaded covers are stored normally. One
   consequence to expect: if a store moves or removes an image, that cover stops
-  showing — re-link the game or upload your own picture.
+  showing. A linked game's cover editor therefore offers **"Titelbild von
+  \<Anbieter\> holen"**, which re-asks the provider for the current picture —
+  one click, whether the game lost its cover or never had one (issue #518).
   Details can be edited inline on the game's detail page. A game added by hand
   (with no source link) can be **linked to a provider after the fact** from its
   detail page: search the providers, pick the match, and choose which differing

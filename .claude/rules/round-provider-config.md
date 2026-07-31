@@ -19,9 +19,15 @@ So a "harmless" tidy-up — defaulting the column to `'[]'`, writing
 off. Nothing throws; the dropdown just stops appearing, which reads as "the
 lookup broke" rather than "someone changed a default". `enabledProviders()`
 (`public/js/views-round-lookup.js`) is the single place that decodes the absent
-case on the client; the server does it inline in `resolveProvider()`
-(`routes/lookup.js`). Both check `Array.isArray`, deliberately — not
-truthiness, which would fold `[]` back into "all".
+case on the client; **`roundAllowsProvider()` (`lib/providers/index.js`) is the
+single place on the server** — it lived inline in `resolveProvider()`
+(`routes/lookup.js`) until #518 added a second consumer, the cover refresh in
+`routes/games.js`, and a hand-copied second decode is precisely how the
+absent-means-all default gets silently defaulted away
+(`.claude/rules/shared-constants-across-the-stack.md`). Both check
+`Array.isArray`, deliberately — not truthiness, which would fold `[]` back into
+"all". `test/provider-cover-refresh.test.js` pins all three states directly;
+`test/providers.test.js` pins them over HTTP.
 
 The contract suite pins all three states down in both backends, including that a
 fresh round grows **no** `providers` key. Absent-key parity is the usual
