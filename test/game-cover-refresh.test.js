@@ -23,6 +23,7 @@ const { app, store, createRound } = require('./helpers');
 const { providers: registry } = require('../lib/providers');
 
 const BGG_COVER = 'https://cf.geekdo-images.com/x/fresh.jpg';
+const PS_COVER = 'https://image.api.playstation.com/vulcan/ap/rnd/hades.png';
 const coverPath = (rid, gid) => `/api/rounds/${rid}/games/${gid}/cover/provider`;
 
 // A minimal 1x1 PNG (signature + IHDR + IDAT + IEND), enough for the upload
@@ -39,12 +40,19 @@ async function addGame(rid, fields = {}) {
   return req;
 }
 
+// Every spec needs its OWN external id: the provider hop is cached for ten
+// minutes keyed on provider+locale+id (lib/provider-cache.js), so two specs
+// sharing an id would answer each other and prove nothing — the trap
+// .claude/rules/storefront-lookup-locale.md records for test/lookup.test.js.
+let nextId = 100;
+const freshId = () => String(nextId++);
+
 // A game linked to BGG, optionally carrying its hotlinked cover.
-async function addLinkedGame(rid, image = 'https://cf.geekdo-images.com/x/pic.jpg') {
+async function addLinkedGame(rid, image = 'https://cf.geekdo-images.com/x/pic.jpg', externalId = freshId()) {
   const fields = {
     sourceProvider: 'bgg',
-    sourceExternalId: '13',
-    sourceUrl: 'https://boardgamegeek.com/boardgame/13/catan',
+    sourceExternalId: externalId,
+    sourceUrl: `https://boardgamegeek.com/boardgame/${externalId}/catan`,
   };
   if (image) fields.imageUrl = image;
   return (await addGame(rid, fields)).body;
@@ -59,7 +67,7 @@ async function addLinkedGameWithUpload(rid, title = 'Catan') {
     .field('minPlayers', '2')
     .field('maxPlayers', '4')
     .field('sourceProvider', 'bgg')
-    .field('sourceExternalId', '13')
+    .field('sourceExternalId', freshId())
     .attach('image', PNG_BYTES, { filename: 'cover.png', contentType: 'image/png' });
   return res.body;
 }
@@ -88,7 +96,7 @@ test('the cover refresh stores the provider cover as a hotlink', async () => {
     assert.equal(res.status, 200);
     assert.equal(res.body.image, BGG_COVER);
     // The provider was asked about the STORED id, in the caller's language.
-    assert.deepEqual(calls, [{ hop: 'detail', id: '13', lang: 'en' }]);
+    assert.deepEqual(calls, [{ hop: 'detail', id: game.source.externalId, lang: 'en' }]);
   });
 
   const after = await request(app).get(`/api/rounds/${round.id}`);
@@ -208,4 +216,76 @@ test('refreshing keeps an uploaded cover another round still references', async 
   // Other specs assert the shared upload dir is empty; clear what this one
   // deliberately left behind.
   fs.unlinkSync(key);
+});
+
+// --- The provider hop is cached, but only when it resolved ---
+
+test('a repeated refresh of the same game costs one upstream call', async () => {
+  const round = await createRound(request);
+  const a = await addLinkedGame(round.id, null, 'shared-id');
+  // A second game on the same provider id — the cache is keyed on the id, not
+  // on our game, so this must be free too.
+  const b = await addLinkedGame(round.id, null, 'shared-id');
+
+  await withStubbedBgg({ detail: { title: 'Catan', imageUrl: BGG_COVER } }, async (calls) => {
+    for (const g of [a, b, a]) {
+      const res = await request(app).post(coverPath(round.id, g.id));
+      assert.equal(res.status, 200);
+      assert.equal(res.body.image, BGG_COVER);
+    }
+    assert.equal(calls.length, 1, `three refreshes, one hop — got ${calls.length}`);
+  });
+});
+
+// The button exists to REPAIR a missing cover, so "there is none" must never be
+// cached: the user's retry has to ask the provider again, not our own Map. Same
+// rule as fetchCollection's 'queued' (.claude/rules/bgg-collection-import.md §3).
+test('a failed resolve is not cached, so a retry can succeed', async () => {
+  const round = await createRound(request);
+  const game = await addLinkedGame(round.id, null);
+
+  await withStubbedBgg({ detail: { title: 'Catan', imageUrl: null }, search: [] }, async (calls) => {
+    assert.equal((await request(app).post(coverPath(round.id, game.id))).status, 404);
+    assert.equal((await request(app).post(coverPath(round.id, game.id))).status, 404);
+    assert.equal(calls.length, 4, 'both attempts really asked upstream (detail + search each)');
+  });
+
+  // The provider now has a cover — the retry must see it rather than the 404.
+  await withStubbedBgg({ detail: { title: 'Catan', imageUrl: BGG_COVER } }, async () => {
+    const res = await request(app).post(coverPath(round.id, game.id));
+    assert.equal(res.status, 200, 'a cached null would have kept answering 404');
+    assert.equal(res.body.image, BGG_COVER);
+  });
+});
+
+// Two UI locales that map to different storefront locales must not share an
+// entry — a French user would otherwise be served the German answer for the
+// whole TTL (#505). BGG maps every locale to one constant, so the storefront
+// case is what this asserts, via the key the route builds.
+test('two UI locales that map to different store locales do not share an entry', async () => {
+  const round = await createRound(request);
+  const externalId = 'EP-LOCALE-1';
+  const game = (await addGame(round.id, {
+    title: 'Hades', sourceProvider: 'psstore', sourceExternalId: externalId,
+  })).body;
+
+  const psstore = registry.psstore;
+  // Precondition: these two really do resolve to different storefront locales,
+  // or the test proves nothing about the key.
+  assert.notEqual(psstore.resolveLocale('de'), psstore.resolveLocale('fr'));
+
+  const real = psstore.detail;
+  const langs = [];
+  psstore.detail = async (id, lang) => { langs.push(lang); return { title: 'Hades', imageUrl: PS_COVER }; };
+  try {
+    for (const lang of ['de', 'fr', 'de']) {
+      const res = await request(app).post(coverPath(round.id, game.id)).query({ lang });
+      assert.equal(res.status, 200);
+      assert.equal(res.body.image, PS_COVER);
+    }
+    // de fetched, fr fetched (a different locale), de served from the cache.
+    assert.deepEqual(langs, ['de', 'fr']);
+  } finally {
+    psstore.detail = real;
+  }
 });

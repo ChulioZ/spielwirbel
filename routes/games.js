@@ -14,6 +14,7 @@ const {
   roundAllowsProvider,
   resolveProviderCover,
 } = require('../lib/providers');
+const { cachedIf } = require('../lib/provider-cache');
 const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
 const { trackEvent } = require('../lib/observability');
@@ -326,9 +327,24 @@ router.post('/:gid/cover/provider', async (req, res) => {
   if (!roundAllowsProvider(round, provider.id))
     return res.status(403).json({ error: 'provider_disabled' });
 
+  // Cached like the lookup hops, keyed on the EFFECTIVE provider locale so two
+  // UI locales mapping to one storefront locale share an entry (#505) — a click
+  // on a game whose cover we just resolved costs nothing upstream, and neither
+  // does refreshing several games that share a provider.
+  //
+  // Only a RESOLVED cover is stored, never a null. This is the fetchCollection
+  // rule (.claude/rules/bgg-collection-import.md §3) and it matters more here:
+  // the button exists to REPAIR a missing cover, so caching "there is none"
+  // would answer the user's retry from our own cache for ten minutes instead of
+  // asking the provider whether anything had changed — which is precisely the
+  // state they are trying to get out of.
   let resolved;
   try {
-    resolved = await resolveProviderCover(provider, source.externalId, game.title, req.query.lang);
+    resolved = await cachedIf(
+      `${provider.id}:cover:${provider.resolveLocale(req.query.lang)}:${source.externalId}`,
+      () => resolveProviderCover(provider, source.externalId, game.title, req.query.lang),
+      (url) => !!url
+    );
   } catch {
     return res.status(502).json({ error: 'provider_unreachable' });
   }

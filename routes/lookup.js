@@ -37,19 +37,10 @@ const { emitFeedEvent } = require('../lib/feed');
 
 const router = express.Router({ mergeParams: true });
 
-// Tiny in-memory cache to be polite to the provider (debounced typing still
-// repeats the same queries). Keyed per provider+kind+key, short TTL.
-const cache = new Map();
-const TTL_MS = 10 * 60 * 1000;
-
-function cached(key, fn) {
-  const hit = cache.get(key);
-  if (hit && hit.expires > Date.now()) return Promise.resolve(hit.value);
-  return Promise.resolve(fn()).then((value) => {
-    cache.set(key, { value, expires: Date.now() + TTL_MS });
-    return value;
-  });
-}
+// The tiny in-memory cache that keeps us polite to the providers (debounced
+// typing repeats the same queries) lives in lib/provider-cache.js since #518
+// made routes/games.js a second consumer. Keyed per provider+kind+key.
+const { cached, cachedIf } = require('../lib/provider-cache');
 
 // Resolve the requested provider against BOTH the registry and the round's
 // enabled list (#294). Answers with the provider, or an { status, error } the
@@ -164,13 +155,12 @@ async function resolveCollection(req) {
 // Caching 'queued' would make "BGG is still building it, try again shortly" a
 // lie for the next ten minutes: the retry the message asks for would be answered
 // from the cache instead of asking BGG whether it had finished.
-async function fetchCollection(provider, username) {
-  const key = `${provider.id}:collection:${username.toLowerCase()}`;
-  const hit = cache.get(key);
-  if (hit && hit.expires > Date.now()) return hit.value;
-  const value = await provider.collection(username);
-  if (value.state === 'ok') cache.set(key, { value, expires: Date.now() + TTL_MS });
-  return value;
+function fetchCollection(provider, username) {
+  return cachedIf(
+    `${provider.id}:collection:${username.toLowerCase()}`,
+    () => provider.collection(username),
+    (value) => value.state === 'ok'
+  );
 }
 
 // The candidate list for the import sheet. Every outcome the user can act on is

@@ -126,8 +126,13 @@ lib/
   status.js          aggregate usage metrics + the quota ceilings for the
                      operator panel's Kennzahlen card (issues #274/#404) —
                      counts only, never a secret value and never personal data
+  provider-cache.js  the shared 10-minute cache for provider hops (search,
+                     detail, collection, cover refresh), so a repeated click
+                     or a debounced keystroke costs nothing upstream
   providers/         external game-database providers for the add-game lookup
-    index.js         provider registry + image-host allowlist
+    index.js         provider registry + image-host allowlist, the round's
+                     enabled-provider decode, and cover resolution for a
+                     stored source link (issue #518)
     locales.js       maps a request's UI locale onto each storefront's own
                      spelling of it, through a closed table (never
                      interpolated — it reaches a fetched URL path)
