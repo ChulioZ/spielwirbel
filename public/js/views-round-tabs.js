@@ -1031,6 +1031,8 @@ async function showArchive(rid, kind) {
   catch { return showHome(); }
   applyBackground(round.background);
   setContext(round.name);
+  // `kind` keys the i18n namespace, so both archives are covered by one line.
+  setDocTitle(t(`${kind}.title`), round.name);
 
   // Newest first.
   const games = round.games

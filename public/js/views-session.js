@@ -11,6 +11,7 @@ function showStartSession(round) {
   endFlow();
   syncUrl(sessionSetupPath(round.id));
   setContext(round.name);
+  setDocTitle(t('startSession.title'), round.name);
   app.innerHTML = '';
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('startSession.title'))}</h1></div>`));
 
@@ -339,6 +340,13 @@ function startVoting(round, session, games, people) {
   function render() {
     const step = steps[idx];
     const total = steps.length;
+    // Inside render(), not next to the currentView assignment above: unlike the
+    // context label — which is the locale-independent round name and says so —
+    // this title has a translated part, so it has to be re-applied when the
+    // language picker re-runs the current step. It is deliberately the same on
+    // every step: a tab reading "Voting" must not leak whose turn it is or
+    // which game is on screen to anyone glancing at the handover device.
+    setDocTitle(t('vote.crumb'), round.name);
 
     // Handover screen: full color card in the person's color.
     if (step.type === 'intro') {
@@ -475,6 +483,7 @@ function showFinale(round, session, games) {
   // wizard's flow (still registered) lets this one go without asking.
   syncUrl(sessionFinalePath(round.id, session.id));
   setContext(round.name);
+  setDocTitle(t('finale.crumb'), round.name);
 
   const voters = sessionPeople(round, session);
 
@@ -517,6 +526,7 @@ async function showResults(round, session, gamesHint, reveal) {
   currentView = () => showResults(round, session, gamesHint);
   syncUrl(resultsPath(round.id, session.id));
   setContext(round.name);
+  setDocTitle(t('result.title'), round.name);
 
   // Resolve the session's game objects.
   const games = session.gameIds

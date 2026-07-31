@@ -28,6 +28,7 @@ async function showRoundSettings(rid) {
   catch { return showHome(); }
   applyBackground(round.background);
   setContext(round.name);
+  setDocTitle(t('rail.settings'), round.name);
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'settings');

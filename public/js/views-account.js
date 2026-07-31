@@ -26,6 +26,7 @@ async function showAccount() {
   currentView = () => showAccount();
   syncUrl('/konto');
   setContext(t('konto.title'));
+  setDocTitle(t('konto.title'));
   applyBackground(null);
   app.innerHTML = '<p class="muted">…</p>';
 

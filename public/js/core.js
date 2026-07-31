@@ -195,6 +195,31 @@ function setContext(label) {
   context.textContent = label || '';
 }
 
+// The browser tab / window title for the current screen (#522), the sibling of
+// setContext above: both write app chrome from inside a view, and both are
+// re-run on a language switch because every view re-applies them from its
+// `currentView` re-render.
+//
+// Variadic, most specific first: setDocTitle(t('hub.tab.regal'), round.name).
+// The joining is docTitle() in js/doc-title.js — pure, so it is unit-tested
+// there; what stays here is the one line that touches the DOM and therefore
+// cannot be (.claude/rules/frontend-helper-modules-and-coverage.md).
+//
+// Call it AFTER the view's data has loaded, not next to `currentView` at the
+// top: a round's name only exists once fetchRound resolves, and naming a screen
+// before it can name its subject just puts a bare screen label in the tab for a
+// moment and then replaces it.
+//
+// Names are passed RAW, never through esc() — the odd one out in a codebase
+// that escapes every interpolation. The `document.title` setter takes a plain
+// string and parses no markup (verified: an <img onerror> in a round name adds
+// no node and runs nothing), exactly like setContext's textContent. Escaping
+// here would not harden anything and would put a literal "&amp;" in the tab of
+// every round with an ampersand in its name.
+function setDocTitle(...parts) {
+  document.title = docTitle(parts, t('app.title'));
+}
+
 /* The centred "back" block that seven round sub-screens end with — game detail,
    member, tags, providers, design, both archives and the session results. It
    was seven byte-identical copies; `fallback` is the only thing that ever

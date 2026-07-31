@@ -31,6 +31,7 @@ async function showBackground(rid) {
   catch { return showHome(); }
   applyBackground(round.background);
   setContext(round.name);
+  setDocTitle(t('round.design'), round.name);
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'design');
@@ -94,6 +95,7 @@ async function showTags(rid) {
   catch { return showHome(); }
   applyBackground(round.background);
   setContext(round.name);
+  setDocTitle(t('tags.title'), round.name);
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'tags');
@@ -203,6 +205,7 @@ async function showProviders(rid) {
   catch { return showHome(); }
   applyBackground(round.background);
   setContext(round.name);
+  setDocTitle(t('providers.title'), round.name);
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'providers');
@@ -324,6 +327,7 @@ async function showGameDetail(rid, gameId) {
   const game = round.games.find((g) => g.id === gameId);
   if (!game) return showRound(rid);
   setContext(round.name);
+  setDocTitle(game.title, round.name);
 
   const st = gameStats(round, gameId);
   const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';

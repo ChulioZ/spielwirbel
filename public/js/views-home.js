@@ -13,6 +13,7 @@ async function showHome() {
   currentView = () => showHome();
   syncUrl('/');
   setContext(''); // home: no round context
+  setDocTitle(t('home.docTitle'));
   applyBackground(null); // home: default background
   app.innerHTML = '<p class="muted">…</p>';
   // SWR: renders instantly from the cached summary (a background refresh
@@ -118,6 +119,7 @@ async function showNewRound() {
   currentView = () => showNewRound();
   syncUrl('/round/new');
   setContext(''); // creating a round, not inside one yet
+  setDocTitle(t('newRound.title'));
   applyBackground(null);
   app.innerHTML = '<p class="muted">…</p>';
 

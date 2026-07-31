@@ -17,6 +17,9 @@ I18N.de = {
   'common.ok': 'OK',
   'common.close': 'Schließen',
 
+  // Der Tab-Titel der Lobby (#522). Nicht 'home.greeting' — das ist eine
+  // Begrüßung und sagt nicht, welcher Tab das ist.
+  'home.docTitle': 'Meine Runden',
   'home.greeting': 'Schön, dass ihr da seid.',
   'home.sub': 'Welche Runde spielt heute?',
   'home.shared': 'Geteilt',

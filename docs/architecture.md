@@ -267,6 +267,8 @@ public/
                      matched name, so a German search stays German)
     lookup-nav.js    which suggestion the keyboard has active in the lookup
                      dropdown, and how it survives a re-render (issue #542)
+    doc-title.js     joins a screen's browser-tab title, most specific part
+                     first, ahead of the brand (issue #522)
     focus-trap.js    keeps Tab inside an open sheet + restores focus on close
     session-path.js  URLs for the transient session-flow screens, so browser/OS
                      Back steps through the vote wizard (issue #329)
