@@ -149,7 +149,7 @@ const frontendGlobals = {
   buildBggForm: 'readonly',
   HUB_TABS: 'readonly', HUB_TAB_OF: 'readonly', hubTabOwning: 'readonly',
   // round-rail.js
-  RAIL_OWN_ENTRY: 'readonly', railItem: 'readonly', railAction: 'readonly',
+  RAIL_OWN_ENTRY: 'readonly', RAIL_SETTINGS_SUB: 'readonly', railItem: 'readonly',
   buildRoundRail: 'readonly',
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
   editableRoundName: 'readonly',

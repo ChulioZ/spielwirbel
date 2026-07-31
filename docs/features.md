@@ -96,7 +96,7 @@ What the app does, in detail. For a short overview see the
   presented per screen size: a floating bottom dock on phones, a tab strip at
   the top of the content column on tablets, and from 1280px a persistent left
   rail carrying the round's identity, the "start session" action, the four
-  sections, both archives and the settings screens. All three stay visible on
+  sections, both archives and one Einstellungen entry. All three stay visible on
   the round's sub-screens, marking the section they belong to:
   - **Start** – the launchpad: hero with the members, a big "start session"
     button, resumable in-progress sessions, the last played result, and gentle
