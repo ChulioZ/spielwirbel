@@ -507,7 +507,8 @@ async function showGameDetail(rid, gameId) {
     });
   }
 
-  // Paste a new cover image, or remove the current one.
+  // Paste a new cover image, take it from the linked provider, or remove the
+  // current one.
   function openImagePopover(anchor) {
     openEditor(anchor, 'image', t('detail.onboard.cover'), (el, close) => {
       const paste = h(`<button class="btn btn--primary">${esc(t('detail.pasteImage'))}</button>`);
@@ -518,6 +519,40 @@ async function showGameDetail(rid, gameId) {
         updateGame({ imageBlob: blob });
       });
       el.appendChild(paste);
+
+      // Re-fetch the cover from the provider this game is linked to (#518).
+      // Offered whether or not there is a cover today, so it doubles as a repair
+      // for a hotlink the provider has since moved. Hidden when the round has
+      // switched that provider off — the route refuses it anyway (403), this
+      // just doesn't offer what it would refuse.
+      //
+      // `enabledProviders` lives in views-round-lookup.js, which loads AFTER
+      // this file. Safe because this runs on click, never at load time — keep it
+      // that way (.claude/rules/frontend-script-load-order.md).
+      if (game.source && enabledProviders(round).includes(game.source.provider)) {
+        const prov = providerLabel(game.source.provider);
+        const fetchBtn = h(`<button class="btn">${esc(t('detail.coverFromProvider', { provider: prov }))}</button>`);
+        fetchBtn.addEventListener('click', async () => {
+          close();
+          try {
+            await api('POST', `/api/rounds/${rid}/games/${gameId}/cover/provider?lang=${encodeURIComponent(getLocale())}`);
+            toast(t('detail.toast.coverFetched', { provider: prov }));
+            showGameDetail(rid, gameId);
+          } catch (e) {
+            // Each refusal says something the user can act on; anything else
+            // falls through as-is, like the other sheets (bggImportError).
+            const known = {
+              no_cover: 'detail.toast.noProviderCover',
+              no_source: 'detail.toast.coverNoSource',
+              provider_disabled: 'detail.toast.coverDisabled',
+              provider_unreachable: 'detail.toast.coverUnreachable',
+            }[e.message];
+            toast(known ? t(known, { provider: prov }) : e.message);
+          }
+        });
+        el.appendChild(fetchBtn);
+      }
+
       if (game.image) {
         const rm = h(`<button class="btn btn--ghost">${esc(t('addGame.removeImage'))}</button>`);
         rm.addEventListener('click', () => { close(); updateGame({ removeImage: true }); });

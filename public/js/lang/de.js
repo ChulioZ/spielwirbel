@@ -349,6 +349,12 @@ I18N.de = {
   'detail.unlinkConfirm': 'Verknüpfung mit {provider} lösen?',
   'detail.unlinkConfirmCover': 'Verknüpfung mit {provider} lösen? Das Titelbild von {provider} wird dabei ebenfalls entfernt.',
   'detail.toast.unlinked': 'Verknüpfung gelöst',
+  'detail.coverFromProvider': 'Titelbild von {provider} holen',
+  'detail.toast.coverFetched': 'Titelbild von {provider} übernommen',
+  'detail.toast.noProviderCover': '{provider} hat kein Titelbild für dieses Spiel.',
+  'detail.toast.coverNoSource': 'Dieses Spiel ist mit keinem Anbieter verknüpft.',
+  'detail.toast.coverDisabled': '{provider} ist in dieser Runde deaktiviert.',
+  'detail.toast.coverUnreachable': '{provider} ist gerade nicht erreichbar.',
 
   'linkProvider.title': 'Mit Anbieter verknüpfen',
   'linkProvider.searchLabel': 'Spiel bei einem Anbieter finden',

@@ -29,7 +29,7 @@
 const express = require('express');
 const { z } = require('zod');
 const repo = require('../lib/repo');
-const { getProvider, providerCoverUrl } = require('../lib/providers');
+const { getProvider, providerCoverUrl, roundAllowsProvider } = require('../lib/providers');
 const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
 const { trackEvent } = require('../lib/observability');
@@ -66,8 +66,9 @@ async function resolveProvider(req) {
   const round = await req.repo.getRoundMeta(req.params.rid);
   if (!round) return { status: 404, error: 'Round not found' };
   // Absent = never configured = every provider enabled (pre-#294 behaviour).
-  const enabled = round.providers;
-  if (Array.isArray(enabled) && !enabled.includes(provider.id)) {
+  // The three-state decode lives in lib/providers (roundAllowsProvider) since
+  // #518 added a second server-side consumer — routes/games.js' cover refresh.
+  if (!roundAllowsProvider(round, provider.id)) {
     return { status: 403, error: 'provider_disabled' };
   }
   return { provider };

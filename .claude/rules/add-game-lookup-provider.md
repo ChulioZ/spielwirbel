@@ -165,7 +165,11 @@ stub (no `media` array); only the search page's entries have it. PS Store is
 the **only** provider like this, so any flow offering a provider cover must
 fall back to the search hit's `thumbnail` — `providerMatchCover(r, d)` in
 `public/js/lookup-cover.js` is that chokepoint for the link-provider sheet;
-the add-game flow shows `r.thumbnail` inline. Both URLs come from the same
+the add-game flow shows `r.thumbnail` inline. **A flow that starts from a
+STORED source link holds no search hit and must produce one**, which is what
+`resolveProviderCover()` (`lib/providers/index.js`, #518's cover refresh) does —
+detail first, then a search matched back to the **exact** external id, never
+`hits[0]`. Both URLs come from the same
 `pickImage()`/`IMAGE_HOSTS`, so the server allowlist accepts either.
 Forgetting the fallback fails silently and asymmetrically (covers just never
 render for Sony). Guarded by `test/provider-match-cover.test.js` against the

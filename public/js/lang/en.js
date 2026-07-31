@@ -348,6 +348,12 @@ I18N.en = {
   'detail.unlinkConfirm': 'Remove the link to {provider}?',
   'detail.unlinkConfirmCover': 'Remove the link to {provider}? The cover image from {provider} will be removed as well.',
   'detail.toast.unlinked': 'Link removed',
+  'detail.coverFromProvider': 'Get cover from {provider}',
+  'detail.toast.coverFetched': 'Cover taken from {provider}',
+  'detail.toast.noProviderCover': '{provider} has no cover for this game.',
+  'detail.toast.coverNoSource': 'This game is not linked to a provider.',
+  'detail.toast.coverDisabled': '{provider} is switched off in this round.',
+  'detail.toast.coverUnreachable': '{provider} could not be reached.',
 
   'linkProvider.title': 'Link to provider',
   'linkProvider.searchLabel': 'Find the game at a provider',

@@ -8,7 +8,12 @@ const express = require('express');
 const { z } = require('zod');
 const storage = require('../lib/storage');
 const { upload, saveUploadedImage } = require('../lib/upload');
-const { getProvider, providerCoverUrl } = require('../lib/providers');
+const {
+  getProvider,
+  providerCoverUrl,
+  roundAllowsProvider,
+  resolveProviderCover,
+} = require('../lib/providers');
 const { validateBody } = require('../lib/validate');
 const quota = require('../lib/quota');
 const { trackEvent } = require('../lib/observability');
@@ -286,6 +291,59 @@ router.patch('/:gid', upload.single('image'), async (req, res) => {
   const updated = await req.repo.updateGame(req.params.rid, req.params.gid, patch);
   if (!updated) return res.status(404).json({ error: 'Game not found' });
   if (oldImage && oldImage !== newImage && !(await req.repo.isImageReferenced(oldImage))) {
+    await storage.remove(oldImage);
+  }
+  res.json(updated);
+});
+
+// Re-fetch a provider-linked game's cover from its provider (#518). Offered for
+// any linked game — with a cover (it doubles as a repair for a rotted hotlink)
+// or without one, which is the case that had no way back at all: unlinking is
+// what drops a hotlinked cover, so the only route to a new one was to unlink,
+// re-search and re-link.
+//
+// The request carries nothing but ?lang= — provider, external id and title all
+// come from the STORED game, so a hand-rolled call cannot make us fetch an
+// arbitrary title or write an arbitrary image URL onto a game (the same
+// reasoning as the collection import's account-supplied BGG handle,
+// .claude/rules/bgg-collection-import.md).
+//
+// A grantee may use it, like the PATCH above: this is an in-round edit, not a
+// destructive round-level action (.claude/rules/round-grant-resolver.md §3).
+router.post('/:gid/cover/provider', async (req, res) => {
+  const round = await req.repo.getRoundMeta(req.params.rid);
+  if (!round) return res.status(404).json({ error: 'Round not found' });
+  const game = await req.repo.getGame(req.params.rid, req.params.gid);
+  if (!game) return res.status(404).json({ error: 'Game not found' });
+
+  const source = game.source || null;
+  if (!source || !source.externalId) return res.status(400).json({ error: 'no_source' });
+  const provider = getProvider(source.provider);
+  if (!provider) return res.status(400).json({ error: 'Unknown provider' });
+  // A round that switched this provider off has said "don't query it", and #294
+  // made that enforced rather than advisory. The client hides the action in that
+  // case, so this is only reachable from a stale tab.
+  if (!roundAllowsProvider(round, provider.id))
+    return res.status(403).json({ error: 'provider_disabled' });
+
+  let resolved;
+  try {
+    resolved = await resolveProviderCover(provider, source.externalId, game.title, req.query.lang);
+  } catch {
+    return res.status(502).json({ error: 'provider_unreachable' });
+  }
+  // Hotlinked, never re-hosted (#172), and only from a host the provider vouches
+  // for. A provider that legitimately has no cover for this id is a 404 the UI
+  // can state honestly rather than a generic failure.
+  const image = providerCoverUrl(resolved);
+  if (!image) return res.status(404).json({ error: 'no_cover' });
+
+  const oldImage = game.image;
+  const updated = await req.repo.updateGame(req.params.rid, req.params.gid, { image });
+  if (!updated) return res.status(404).json({ error: 'Game not found' });
+  // Free the replaced cover unless another game still shows it — a no-op for a
+  // hotlink, and the point for an '/uploads/' cover the member had uploaded.
+  if (oldImage && oldImage !== image && !(await req.repo.isImageReferenced(oldImage))) {
     await storage.remove(oldImage);
   }
   res.json(updated);
