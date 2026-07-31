@@ -3072,12 +3072,26 @@ kbd {
 
 /* ---- Shared small helpers ---- */
 .field__hint { margin-top: 6px; font-size: 14px; }
-/* The duplicate-title hint (#524) is toggled with the `hidden` attribute, so it
-   deliberately declares NO display — the UA stylesheet's [hidden] is what hides
-   it. Adding one here (e.g. flex, for an icon) silently beats [hidden] and
-   leaves the hint permanently visible; pair it with
-   `.field__hint--dup[hidden] { display: none }` if you ever do. */
+/* The duplicate-title hint (#524) is an ANNOUNCED live region since #584, so it
+   must stay in the accessibility tree permanently: no `hidden` attribute and no
+   `display: none`, either of which makes the browser reveal a region whose text
+   is already in place — which is never announced
+   (`.claude/rules/accessibility-contrast-and-modals.md` §4). Its empty state is
+   therefore a real, rendered, zero-height element, and the only thing that may
+   change is its text.
+   The empty state must therefore cost no SPACE. Today it already costs none
+   WITHOUT the reset below — the hint is `.field`'s last child and has zero
+   height, so its 6px margin collapses through into `.field`'s own 18px
+   margin-bottom (measured: removing the reset moves nothing). The reset is what
+   keeps that true rather than what makes it true: give `.field` a padding-bottom
+   or a border and collapsing stops, at which case every add-game sheet gains a
+   6px gap under the search hint whether or not a duplicate was typed (measured
+   at exactly 6px). Cheap insurance for an invariant no test can see, so don't
+   delete it as dead weight. `.is-on` buys the margin back, at (0,2,0) against
+   `.field__hint`'s (0,1,0) — it wins on specificity, not source order.
+   Don't "simplify" any of this into a display toggle. */
 .field__hint--dup { color: var(--warn); }
+.field__hint--dup:not(.is-on) { margin-top: 0; }
 
 /* The in-app feedback sheet (#260) was retired in #321 — the feedback button now
    opens the public contact form, so its .feedback__* styles were removed here. */

@@ -373,11 +373,11 @@ function showAddGame(round) {
         <div class="field">
           <label for="title">${esc(t('addGame.titleLabel'))}</label>
           <div class="lookup" id="lookup">
-            <input id="title" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" />
+            <input id="title" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" aria-describedby="dupHint" />
             <div class="lookup__menu" id="lookupMenu" hidden></div>
           </div>
           <div class="muted field__hint">${esc(t('addGame.searchHint'))}</div>
-          <div class="field__hint field__hint--dup" id="dupHint" hidden></div>
+          <div class="field__hint field__hint--dup" id="dupHint" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
         ${canImportBgg(round) ? `<div class="toolbar" style="margin:-8px 0 18px">
           <button type="button" id="bggImportFromAdd" class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.link'))}</button>
@@ -611,12 +611,22 @@ function showAddGame(round) {
   // into `round`, which is the caller's cached object and must not be mutated —
   // without them the hint would go blind in exactly the bulk-adding flow where
   // duplicates are most likely.
+  // It is also the one announced live region outside toast() (#584): it is the
+  // only signal that a duplicate is about to be created, so it has to reach a
+  // screen reader too. That is why it is never `hidden` and never display:none
+  // — a region revealed with its text already in place is NOT announced
+  // (`.claude/rules/accessibility-contrast-and-modals.md` §4). It sits in the
+  // tree permanently and empty; only its text changes, which is the mutation
+  // aria-live listens for. `.is-on` carries the spacing, not the existence.
   const dupHint = form.querySelector('#dupHint');
   const addedGames = [];
   function refreshDupHint() {
     const state = existingTitleState((round.games || []).concat(addedGames), titleInput.value);
-    dupHint.hidden = !state;
+    // Clear the text when there is no duplicate, so re-typing the same title is
+    // still a change the live region reports rather than a no-op mutation —
+    // same reason toast() blanks itself on hide.
     dupHint.textContent = state ? t(`addGame.dupHint.${state}`) : '';
+    dupHint.classList.toggle('is-on', !!state);
   }
   titleInput.addEventListener('input', refreshDupHint);
 
