@@ -129,14 +129,13 @@ test('#527 parseSearch keeps both a game and its free pass — only ranking can 
   // Both survive the classification filter, and correctly so: the pass really is
   // a product someone may want. That is precisely why the provider layer cannot
   // fix this and the tie has to be broken client-side, at equal scoreHit.
+  // Order matters as much as membership: this is blob order, so the pass really
+  // can arrive first. Re-narrowing the filter to FULL_GAME reddens this — and
+  // note it is the GAME that disappears, not the pass.
   assert.deepEqual(out.map((h) => h.title), [
     'It Takes Two PS4™ & PS5™',
     'It Takes Two – Freunde-Pass PS5™',
   ]);
-  // Guard the trap itself: were anyone to re-narrow the filter to FULL_GAME, the
-  // game — not the pass — is what would disappear.
-  assert.equal(IT_TAKES_TWO_STATE['Product:GAME'].storeDisplayClassification, 'GAME_BUNDLE');
-  assert.equal(IT_TAKES_TWO_STATE['Product:PASS5'].storeDisplayClassification, 'FULL_GAME');
 });
 
 test('parseSearch respects the limit and tolerates a missing blob', () => {
