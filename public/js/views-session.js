@@ -576,6 +576,29 @@ async function showResults(round, session, gamesHint, reveal) {
   app.appendChild(head);
   const titleEl = head.querySelector('.result-title');
 
+  // „Teilen": hand the group chat what this screen says, as plain text (#526).
+  // Hidden outright where neither API exists — which is a real case, not a
+  // theoretical one: `navigator.clipboard` is undefined outside a secure
+  // context, so a self-hosted plain-HTTP instance shows no button rather than a
+  // dead one. `.page-head` is already a space-between flex row, so appending the
+  // button as its second child parks it at the right edge with no new CSS.
+  if (canShareResult()) {
+    const shareBtn = h(`<button class="btn btn--ghost">${iconText('ti-share', t('share.button'))}</button>`);
+    // The model is built at CLICK time, never up front: choosing a game,
+    // finishing, recording winners and cancelling all mutate this closure's
+    // state in place (updateChosen/renderFinish re-render only fragments), so a
+    // text captured at render would share a result the user has since changed.
+    shareBtn.addEventListener('click', () => shareResult({
+      roundName: round.name,
+      when,
+      cancelled,
+      playedTitle: chosenId ? (games.find((g) => g.id === chosenId) || {}).title || null : null,
+      winnerNames: winnerIds.map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),
+      rows: rows.map((r) => ({ title: r.game.title, avg: r.avg, count: r.count, place: r.place })),
+    }));
+    head.appendChild(shareBtn);
+  }
+
   // Who took part in this session — the people whose votes make up the result.
   if (people.length) {
     // A guest has no member page, so their entry is a <span>, not an <a>: an
@@ -965,4 +988,39 @@ async function showResults(round, session, gamesHint, reveal) {
 
   // The most relevant info (chosen game, results) is at the top.
   window.scrollTo(0, 0);
+}
+
+// Can this browser share a result at all? The share sheet is a mobile API and
+// `navigator.clipboard` needs a secure context, so both may genuinely be absent
+// — in which case the button is never rendered rather than shown and inert.
+function canShareResult() {
+  return !!(navigator.share || (navigator.clipboard && navigator.clipboard.writeText));
+}
+
+// Share the summary the user is looking at. Text only, and never sent anywhere
+// by us: `navigator.share` hands it to a picker the *user* chooses a recipient
+// in, and the fallback only writes the clipboard. That is what keeps this free
+// of any new privacy disclosure — don't add an auto-send of any kind.
+async function shareResult(model) {
+  // joinNames is passed in so the shared headline is byte-identical to the h1
+  // above it ("Anna und Ben", not "Anna, Ben") — see session-share.js.
+  const text = sessionShareText(model, t, joinNames);
+  if (navigator.share) {
+    try {
+      await navigator.share({ text });
+      return;
+    } catch (e) {
+      // Dismissing the sheet is a normal outcome, not a failure — reporting it
+      // would toast at a user who simply changed their mind.
+      if (e && e.name === 'AbortError') return;
+      // Anything else (a browser that advertises the API but refuses the call)
+      // falls through to the clipboard rather than dead-ending.
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(t('share.toast.copied'));
+  } catch {
+    toast(t('share.toast.failed'));
+  }
 }

@@ -477,6 +477,13 @@ I18N.de = {
   'result.removeGameConfirm': '„{title}“ aus dieser Session entfernen? Alle Bewertungen dafür werden gelöscht.',
   'result.toast.gameRemoved': '„{title}“ aus der Session entfernt',
 
+  'share.button': 'Teilen',
+  'share.header': '{round} · {when}',
+  'share.ratings': 'Bewertungen:',
+  'share.row': '{rank} {title} · Ø {avg}',
+  'share.toast.copied': 'Ergebnis in die Zwischenablage kopiert',
+  'share.toast.failed': 'Teilen hat nicht geklappt',
+
   'design.crumb': 'Design',
   'design.title': 'Design',
   'design.scheme': 'Farbschema',

@@ -246,6 +246,9 @@ public/
     support.js       the donation/support sheet (issue #173; hidden unless
                      DONATE_URL is set)
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
+    session-share.js the plain-text summary behind the results screen's „Teilen"
+                     button — built from the view model the screen just rendered,
+                     so the two cannot drift (issue #526)
     recap.js         the round's taste record behind the Pokale tab's Rückblick:
                      best/worst rated, the most divisive game and each member's
                      favourite, all derived from session votes (issue #484)

@@ -127,6 +127,9 @@ const frontendGlobals = {
   RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly', recapMean: 'readonly',
   collectRatings: 'readonly', bestAndWorst: 'readonly', mostDivisive: 'readonly',
   memberFavourites: 'readonly',
+  // session-share.js (issue #526) — internal helpers listed for the same reason.
+  sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
+  SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly', existingTitleState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
@@ -172,7 +175,7 @@ const frontendGlobals = {
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
-  showFinale: 'readonly',
+  showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
   // router.js
   routing: 'writable', navIndex: 'writable', roundPath: 'readonly',
   gamePath: 'readonly', memberPath: 'readonly', resultsPath: 'readonly',

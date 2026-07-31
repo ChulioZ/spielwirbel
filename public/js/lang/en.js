@@ -486,6 +486,13 @@ I18N.en = {
   'result.removeGameConfirm': 'Remove “{title}” from this session? All votes for it are deleted.',
   'result.toast.gameRemoved': '“{title}” removed from the session',
 
+  'share.button': 'Share',
+  'share.header': '{round} · {when}',
+  'share.ratings': 'Ratings:',
+  'share.row': '{rank} {title} · Ø {avg}',
+  'share.toast.copied': 'Result copied to the clipboard',
+  'share.toast.failed': 'Sharing did not work',
+
   'design.crumb': 'Design',
   'design.title': 'Design',
   'design.scheme': 'Color scheme',
