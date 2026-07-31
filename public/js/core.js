@@ -209,6 +209,13 @@ function setContext(label) {
 // top: a round's name only exists once fetchRound resolves, and naming a screen
 // before it can name its subject just puts a bare screen label in the tab for a
 // moment and then replaces it.
+//
+// Names are passed RAW, never through esc() — the odd one out in a codebase
+// that escapes every interpolation. The `document.title` setter takes a plain
+// string and parses no markup (verified: an <img onerror> in a round name adds
+// no node and runs nothing), exactly like setContext's textContent. Escaping
+// here would not harden anything and would put a literal "&amp;" in the tab of
+// every round with an ampersand in its name.
 function setDocTitle(...parts) {
   document.title = docTitle(parts, t('app.title'));
 }
