@@ -125,7 +125,7 @@ const frontendGlobals = {
   RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly', recapMean: 'readonly',
   collectRatings: 'readonly', bestAndWorst: 'readonly', mostDivisive: 'readonly',
   memberFavourites: 'readonly',
-  scoreHit: 'readonly', foldTitle: 'readonly',
+  scoreHit: 'readonly', foldTitle: 'readonly', existingTitleState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
   COVER_HERO: 'readonly', COVER_RESIZERS: 'readonly',

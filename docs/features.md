@@ -30,7 +30,10 @@ What the app does, in detail. For a short overview see the
   back to the source page (shown on the game's detail
   view). The lookup is optional — manual entry works exactly as before, and the
   app degrades gracefully when a source is unreachable (one provider failing
-  still shows the others' results).
+  still shows the others' results). If the title you type is already in the
+  round, the sheet says so — separately for the shelf and for the archive — but
+  never stops you saving it, since a second copy is sometimes exactly what you
+  mean.
 - **Import a BoardGameGeek collection** – filling a shelf one game at a time is
   the slow part of setting a round up, so link your BGG username once under
   **Konto** and the Regal can pull in everything you have marked as *owned*

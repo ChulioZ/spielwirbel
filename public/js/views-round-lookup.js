@@ -377,6 +377,7 @@ function showAddGame(round) {
             <div class="lookup__menu" id="lookupMenu" hidden></div>
           </div>
           <div class="muted field__hint">${esc(t('addGame.searchHint'))}</div>
+          <div class="field__hint field__hint--dup" id="dupHint" hidden></div>
         </div>
         ${canImportBgg(round) ? `<div class="toolbar" style="margin:-8px 0 18px">
           <button type="button" id="bggImportFromAdd" class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.link'))}</button>
@@ -604,6 +605,21 @@ function showAddGame(round) {
   const titleInput = form.querySelector('#title');
   const menu = form.querySelector('#lookupMenu');
 
+  // Duplicate-title hint (#524): advisory only — it never blocks saving, since a
+  // second row is sometimes intended (two physical copies, a standalone edition).
+  // Games added via "Speichern & weiteres" are tracked locally rather than pushed
+  // into `round`, which is the caller's cached object and must not be mutated —
+  // without them the hint would go blind in exactly the bulk-adding flow where
+  // duplicates are most likely.
+  const dupHint = form.querySelector('#dupHint');
+  const addedGames = [];
+  function refreshDupHint() {
+    const state = existingTitleState((round.games || []).concat(addedGames), titleInput.value);
+    dupHint.hidden = !state;
+    dupHint.textContent = state ? t(`addGame.dupHint.${state}`) : '';
+  }
+  titleInput.addEventListener('input', refreshDupHint);
+
   // Fill the player controls from a provider detail object.
   function applyDetail(d) {
     if (Number.isInteger(d.minPlayers)) minInput.value = d.minPlayers;
@@ -618,6 +634,10 @@ function showAddGame(round) {
   async function pickSuggestion(r) {
     lookup.closeMenu();
     titleInput.value = r.title;
+    // Assigning .value fires no input event, so the hint has to be nudged by
+    // hand — and a lookup pick is the likeliest way to land on a game you
+    // already own.
+    refreshDupHint();
     chosenSource = { provider: r.provider, externalId: r.providerId, url: '' };
     // A store cover comes from the search thumbnail; a BGG cover arrives with the
     // detail call.
@@ -630,6 +650,7 @@ function showAddGame(round) {
       return;
     }
     titleInput.value = pickedTitle(r, d) || titleInput.value;
+    refreshDupHint();
     chosenSource.url = d.url || '';
     applyDetail(d);
     if (d.imageUrl && !pastedBlob) showProviderImage(d.imageUrl);
@@ -664,7 +685,8 @@ function showAddGame(round) {
       if (chosenSource.url) fd.append('sourceUrl', chosenSource.url);
     }
     try {
-      await api('POST', `/api/rounds/${round.id}/games`, fd);
+      const created = await api('POST', `/api/rounds/${round.id}/games`, fd);
+      addedGames.push({ title: (created && created.title) || title });
       toast(t('addGame.toast.saved'));
       if (again) {
         // Keep the sheet open for the next game; the player range stays.
@@ -673,6 +695,7 @@ function showAddGame(round) {
         chosenSource = null;
         lookup.closeMenu();
         form.querySelector('#title').value = '';
+        refreshDupHint();
         setImage(null);
         form.querySelector('#title').focus();
       } else {

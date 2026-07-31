@@ -328,6 +328,8 @@ I18N.en = {
   'addGame.toast.pasteFail': 'Couldn’t paste – please use ⌘V',
   'addGame.toast.useShortcut': 'Please use ⌘V to paste',
   'addGame.searchHint': 'Start typing to get suggestions.',
+  'addGame.dupHint.active': 'Already on the shelf. You can still save it.',
+  'addGame.dupHint.archived': 'Already in this round’s archive. You can still save it.',
   'addGame.toast.filled': 'Details filled in from {provider}',
   'lookup.searching': 'Searching…',
   'lookup.loadingMore': 'Loading more results…',
