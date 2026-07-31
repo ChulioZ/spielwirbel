@@ -68,7 +68,8 @@ function confirmLeave() {
 // deliberately not resolvable, so they are not link targets either.)
 
 // A round, or one of its sub-screens — the four hub tabs plus retired /
-// completed / design / tags / providers. The Start tab has the bare round URL.
+// completed / design / tags / providers / settings. The Start tab has the bare
+// round URL.
 function roundPath(rid, sub) {
   return sub && sub !== 'start' ? `/round/${rid}/${sub}` : `/round/${rid}`;
 }
@@ -137,6 +138,7 @@ function resolveRoute(pathname) {
     if (sub === 'design') return () => showBackground(rid);
     if (sub === 'tags') return () => showTags(rid);
     if (sub === 'providers') return () => showProviders(rid);
+    if (sub === 'settings') return () => showRoundSettings(rid);
     if (sub === 'game' && parts[3]) return () => showGameDetail(rid, parts[3]);
     if (sub === 'member' && parts[3]) return () => showMember(rid, parts[3]);
     if (sub === 'session' && parts[3]) {

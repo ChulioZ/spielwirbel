@@ -86,6 +86,14 @@ I18N.en = {
   'rail.archive': 'Archive',
   'rail.settings': 'Settings',
 
+  // The round's settings screen (#561). It reuses 'rail.settings' as its own
+  // title rather than adding a near-duplicate string.
+  'roundSettings.config': 'Set up this round',
+  'roundSettings.manage': 'Manage this round',
+  'roundSettings.danger': 'Danger zone',
+  'roundSettings.deleteIntro': 'Deletes this round along with every game, session and rating. This cannot be undone.',
+  'roundSettings.leaveIntro': 'Gives up your access to this shared round. The round itself stays.',
+
   'pokale.title': 'Hall of fame',
   'pokale.empty': 'No trophies yet — the first session will decide.',
   'pokale.winsOne': '{n} win',

@@ -136,8 +136,10 @@ const frontendGlobals = {
   // views-home.js
   showHome: 'readonly', showNewRound: 'readonly',
   // views-round.js (hub + Start tab) and its siblings loaded right after it:
-  // views-round-tabs.js, views-round-detail.js, views-round-lookup.js. They
+  // views-round-tabs.js, views-round-detail.js, views-round-settings.js,
+  // views-round-lookup.js. They
   // share one global scope, so all their top-level names are listed together.
+  showRoundSettings: 'readonly',
   showRound: 'readonly', showRetired: 'readonly', showCompleted: 'readonly',
   showArchive: 'readonly', ARCHIVES: 'readonly', THEMES: 'readonly',
   showBackground: 'readonly', showGameDetail: 'readonly', showAddGame: 'readonly',

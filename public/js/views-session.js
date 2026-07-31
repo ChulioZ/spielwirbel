@@ -937,9 +937,9 @@ async function showResults(round, session, gamesHint, reveal) {
 
   updateChosen();
 
-  app.appendChild(backRow(() => showRound(round.id)));
-
-  // Delete session (subtle, at the bottom – like deleting a round)
+  // Delete session — subtle, but ABOVE the terminal "Zurück" row (#561). It used
+  // to sit below it, copying the round delete that ended the Chronik timeline;
+  // that placement is gone, and nothing belongs after a back link.
   const del = h(`<div class="section center"><button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button></div>`);
   del.querySelector('button').addEventListener('click', async () => {
     if (!confirm(t('sessions.deleteConfirm', { when }))) return;
@@ -950,6 +950,8 @@ async function showResults(round, session, gamesHint, reveal) {
     } catch (e) { toast(e.message); }
   });
   app.appendChild(del);
+
+  app.appendChild(backRow(() => showRound(round.id)));
 
   // The most relevant info (chosen game, results) is at the top.
   window.scrollTo(0, 0);

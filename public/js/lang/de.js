@@ -87,6 +87,14 @@ I18N.de = {
   'rail.archive': 'Archiv',
   'rail.settings': 'Einstellungen',
 
+  // The round's Einstellungen screen (#561). It reuses 'rail.settings' as its
+  // own title rather than adding a near-duplicate string.
+  'roundSettings.config': 'Runde einrichten',
+  'roundSettings.manage': 'Runde verwalten',
+  'roundSettings.danger': 'Gefahrenzone',
+  'roundSettings.deleteIntro': 'Löscht diese Runde mit allen Spielen, Sessions und Wertungen. Das lässt sich nicht rückgängig machen.',
+  'roundSettings.leaveIntro': 'Du gibst deinen Zugriff auf diese geteilte Runde ab. Die Runde selbst bleibt bestehen.',
+
   'pokale.title': 'Ruhmeshalle',
   'pokale.empty': 'Noch keine Pokale vergeben — die erste Session entscheidet.',
   'pokale.winsOne': '{n} Sieg',
