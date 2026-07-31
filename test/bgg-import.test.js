@@ -229,6 +229,79 @@ test('importing writes full game records, ONE Chronik entry and one product even
   assert.equal(feed.body.filter((x) => x.type === 'game_added').length, 0);
 });
 
+test('the listing never offers a cover the import would refuse to store (#519)', async () => {
+  const a = await makeAccount('imp-listing-cover@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerListing');
+  // A thumbnail on a host no provider vouches for. The client renders this into
+  // `background-image: url('…')`, so an ungated value is a CSS-injection
+  // context as well as a cover that would vanish on import.
+  stubBgg(collectionXml(`
+    <item objecttype="thing" objectid="13" subtype="boardgame" collid="c13">
+      <name sortindex="1">CATAN</name>
+      <thumbnail>https://evil.example.com/a'); background:url(x</thumbnail>
+      <stats minplayers="2" maxplayers="4"/>
+      <status own="1"/>
+    </item>`, item('822', 'Carcassonne')));
+
+  const res = await request(app).get(`/api/rounds/${round.id}/lookup/collection?provider=bgg`)
+    .set(auth(a.token));
+  assert.equal(res.status, 200);
+  const byTitle = Object.fromEntries(res.body.games.map((g) => [g.title, g]));
+  assert.equal(byTitle.CATAN.imageUrl, null);
+  // Anti-vacuous: a legitimate BGG cover still comes through.
+  assert.equal(byTitle.Carcassonne.imageUrl, 'https://cf.geekdo-images.com/x__thumb/img/y=/fit-in/200x150/pic822.png');
+});
+
+test('a per-game edition cover picked on the import screen is stored (#519)', async () => {
+  const a = await makeAccount('imp-cover@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerCover');
+  stubBgg(THREE);
+
+  const chosen = 'https://cf.geekdo-images.com/de__thumb/img/y=/fit-in/200x150/german-edition.png';
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token))
+    .send({ externalIds: ['13', '822'], covers: { 13: chosen } });
+  assert.equal(res.status, 200);
+
+  const full = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  const byTitle = Object.fromEntries(full.body.games.map((g) => [g.title, g]));
+  assert.equal(byTitle.CATAN.image, chosen);
+  // A game the user did not touch keeps the cover the collection reported —
+  // the choice is per game, never a blanket override.
+  assert.equal(byTitle.Carcassonne.image, 'https://cf.geekdo-images.com/x__thumb/img/y=/fit-in/200x150/pic822.png');
+  // Only the cover is client-supplied: the title and the player range are still
+  // re-resolved against the collection server-side.
+  assert.equal(byTitle.CATAN.minPlayers, 2);
+});
+
+test('an import cover outside the allowlist costs the CHOICE, never the cover', async () => {
+  const a = await makeAccount('imp-cover-bad@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerCoverBad');
+  stubBgg(THREE);
+
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token))
+    .send({
+      externalIds: ['13', '822', '9209'],
+      covers: {
+        13: 'https://evil.example.com/tracker.png',      // wrong host
+        822: 'http://cf.geekdo-images.com/pic.png',      // not https
+        9209: "https://cf.geekdo-images.com/a'); x.png", // CSS-injection shape
+      },
+    });
+  assert.equal(res.status, 200);
+
+  const full = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  // Each falls back to the collection's own cover rather than to nothing, so a
+  // refused URL never leaves the game coverless.
+  for (const g of full.body.games) {
+    assert.match(g.image, /^https:\/\/cf\.geekdo-images\.com\/x__thumb\//);
+  }
+});
+
 test('re-running an unchanged collection adds nothing', async () => {
   const a = await makeAccount('imp-idempotent@example.com');
   const round = await makeRound(a.token);

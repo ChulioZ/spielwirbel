@@ -29,6 +29,15 @@ pane can also fail to produce fresh frames after synthetic scrolls, and its
 input pipeline can wedge per-session (a reload/re-navigate recovers painting;
 input may stay broken) — while the page itself is fine in a real browser.
 
+**The pane fires NO ResizeObserver, either** — measured on a plain detached-then-
+appended div whose height was changed 50px → 200px: **zero callbacks**, with no
+app code involved. Same root cause as the dead IntersectionObserver
+(`.claude/rules/provider-cover-sizing.md`): the reported viewport is 0×0 and the
+observer pipeline never advances. The tell is that whatever runs on *setup* is
+correct and only the update is missing, which reads exactly like a mis-wired
+callback. See `.claude/rules/anchored-popover-is-placed-once.md`, where it
+decided the shape of a fix.
+
 **The pane lies about focus as well as about pixels.** `document.hasFocus()` is
 permanently false there, so `element.blur()` moves `document.activeElement`
 without dispatching any `blur`/`focusout` event — which makes every

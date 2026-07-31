@@ -80,6 +80,12 @@ the player counts differently, an unknown username arrives as an HTTP 200 error
 document, and its `202` "queued" answer must never be cached. All of that lives
 in `.claude/rules/bgg-collection-import.md`; read it before touching that path.
 
+**And since #519 a FOURTH, `covers(externalId)`** — the game's per-edition box
+arts, from `/thing?…&versions=1`. Its body is **nested**, which `parseItems`
+cannot handle: run over the whole document it returns the versions and silently
+**loses the game item**, so `parseThing` on such a body reports a version's title
+as the game's. See `.claude/rules/bgg-edition-covers.md` before touching it.
+
 Four things about it bite:
 
 - **No `www.`, ever.** BGG's docs are explicit that `www.boardgamegeek.com`

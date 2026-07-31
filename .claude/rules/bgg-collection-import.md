@@ -90,6 +90,17 @@ Two placement decisions are load-bearing:
 Already-present candidates do **not** count toward the total, so re-running a
 collection that fits stays possible at the cap.
 
+## The one client-supplied field (#519)
+
+The import screen now offers a **per-game edition cover**, so `covers:
+{ <externalId>: url }` rides in alongside `externalIds` — the single exception to
+"never titles or cover URLs" above. It is gated by `providerCoverUrl`, i.e.
+exactly the host allowlist a single `POST /games` already applies to its
+`imageUrl`, and a refused URL falls back to the collection's own cover. Titles and
+player ranges are still re-resolved server-side. See
+`.claude/rules/bgg-edition-covers.md`, including why the picker has to be a
+sibling of the `<label>` row rather than a child of it.
+
 ## The handle comes from the ACCOUNT, never from the request
 
 `resolveCollection` reads `bggUsername` off `req.userId`'s account. Taking it from

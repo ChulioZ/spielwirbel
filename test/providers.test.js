@@ -95,6 +95,22 @@ test('a disabled provider is refused server-side and never reaches upstream', as
   assert.equal(called, false);
 });
 
+test('a round with BGG switched off is refused the edition covers too (#519)', async () => {
+  const round = await createRound(request);
+  await setProviders(round.id, ['steam']);
+
+  let called = false;
+  global.fetch = async () => { called = true; return { ok: true, text: async () => '' }; };
+
+  const res = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/covers?provider=bgg&id=13`);
+  // 403, not the capability 400: the round setting is enforced BEFORE the
+  // capability check, so a disabled provider never reveals what it can do.
+  assert.equal(res.status, 403);
+  assert.equal(res.body.error, 'provider_disabled');
+  assert.equal(called, false);
+});
+
 test('an enabled provider still answers on a configured round', async () => {
   const round = await createRound(request);
   await setProviders(round.id, ['bgg']);

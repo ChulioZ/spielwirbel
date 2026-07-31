@@ -275,6 +275,12 @@ public/
                      matched name, so a German search stays German)
     lookup-nav.js    which suggestion the keyboard has active in the lookup
                      dropdown, and how it survives a re-render (issue #542)
+    bgg-covers.js    which of a game's BGG edition covers is offered first
+                     (the reader's language, then English) and which duplicate
+                     box arts are dropped (issue #519)
+    cover-picker.js  the collapsible grid of those covers, shared by the three
+                     screens that offer it: the add-game sheet, the game-detail
+                     cover editor and the collection-import list
     doc-title.js     joins a screen's browser-tab title, most specific part
                      first, ahead of the brand (issue #522)
     focus-trap.js    keeps Tab inside an open sheet + restores focus on close

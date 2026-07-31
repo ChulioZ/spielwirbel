@@ -223,6 +223,17 @@ I18N.de = {
   'bggImport.toast.noHandle': 'Verknüpfe zuerst deinen BoardGameGeek-Nutzernamen.',
   'bggImport.toast.badHandle': 'Dieser Nutzername sieht nicht wie ein BGG-Name aus.',
 
+  // Cover der Ausgabe (#519): BoardGameGeek kennt zu jedem Spiel die Schachteln
+  // aller Ausgaben — so lässt sich die Ausgabe wählen, die wirklich im Regal steht.
+  'coverPicker.open': 'Cover der Ausgabe wählen',
+  'coverPicker.close': 'Coverauswahl schließen',
+  'coverPicker.groupLabel': 'Cover der Ausgaben',
+  'coverPicker.loading': 'Ausgaben werden geladen …',
+  'coverPicker.empty': 'BoardGameGeek hat zu diesem Spiel keine Cover der Ausgaben.',
+  'coverPicker.error': 'Die Ausgaben konnten nicht geladen werden.',
+  'coverPicker.tileFallback': 'Ausgabe ohne Namen',
+  'coverPicker.toast.picked': 'Cover übernommen.',
+
   'retired.link': 'Aussortiert ({n})',
   'retired.crumb': 'Aussortiert',
   'retired.title': 'Aussortiert',

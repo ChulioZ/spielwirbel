@@ -64,6 +64,7 @@ const frontendGlobals = {
   TEAM_TOKEN_MEMBER: 'readonly', TEAM_TOKEN_GUEST: 'readonly',
   themeAccent: 'readonly', resolveAccent: 'readonly',
   activePopover: 'writable', closePopover: 'readonly', openPopover: 'readonly',
+  repositionPopover: 'readonly',
   readClipboardImage: 'readonly', shuffled: 'readonly', iconText: 'readonly',
   createCoverLoader: 'readonly',
   makeGameLink: 'readonly', makeMemberLink: 'readonly',
@@ -137,6 +138,10 @@ const frontendGlobals = {
   providerMatchCover: 'readonly', pickedTitle: 'readonly',
   // lookup-nav.js (issue #542)
   nextLookupIndex: 'readonly', lookupOptionIndex: 'readonly',
+  // bgg-covers.js + cover-picker.js (issue #519)
+  BGG_LANGUAGES: 'readonly', bggCoverLanguage: 'readonly', coverRank: 'readonly',
+  sortEditionCovers: 'readonly', coverCaption: 'readonly',
+  editionCoverPicker: 'readonly',
   TAG_ICONS: 'readonly', tagIconClass: 'readonly',
   // views-home.js
   showHome: 'readonly', showNewRound: 'readonly',
