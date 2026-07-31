@@ -46,6 +46,10 @@ async function showRound(rid, tab) {
   } catch { return showHome(); }
   applyBackground(round.background);
   setContext(round.name);
+  // The four hub tabs share one view, so they share one title line and differ
+  // only in the tab label — which is what makes them distinguishable in a tab
+  // strip or a history list, where the round name alone would repeat four times.
+  setDocTitle(t('hub.tab.' + activeTab), round.name);
 
   app.innerHTML = '';
   const activeGames = round.games.filter((g) => !g.retired && !g.completed);

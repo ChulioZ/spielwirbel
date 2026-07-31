@@ -60,6 +60,7 @@ async function showMember(rid, mid) {
   const member = round.members.find((m) => m.id === mid);
   if (!member) return showRound(rid);
   setContext(round.name);
+  setDocTitle(member.name, round.name);
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'member');

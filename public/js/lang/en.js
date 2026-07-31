@@ -16,6 +16,9 @@ I18N.en = {
   'common.ok': 'OK',
   'common.close': 'Close',
 
+  // The lobby's tab title (#522). Not 'home.greeting' — that one is a welcome
+  // ("Good to see you."), which says nothing about which tab it is.
+  'home.docTitle': 'My rounds',
   'home.greeting': 'Good to see you.',
   'home.sub': 'Which round is playing today?',
   'home.shared': 'Shared',

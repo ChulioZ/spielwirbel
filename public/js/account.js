@@ -301,6 +301,14 @@ function enterApp() {
 // card.
 function authScreen(on) { document.body.classList.toggle('auth-screen', !!on); }
 
+// Title an auth screen from its own `<h1 class="auth__title">` (#522). `root` is
+// anything containing it — openAuth passes the wrapper it built, a screen
+// re-titling itself passes its card.
+function setAuthDocTitle(root) {
+  const heading = root.querySelector('.auth__title');
+  setDocTitle(heading && heading.textContent);
+}
+
 // Shared scaffold for an auth screen: clears the view, sets the auth layout, and
 // appends the built card. `build(card)` wires the specific form. `render` is the
 // function itself so a language switch re-renders it (via currentView).
@@ -319,6 +327,15 @@ function openAuth(render, innerHtml, build, path) {
   app.innerHTML = '';
   const wrap = h(`<div class="auth">${innerHtml}</div>`);
   app.appendChild(wrap);
+  // Every one of the seven auth screens gets its title read back off the card it
+  // just rendered (#522), rather than passing a key in per screen: the heading is
+  // already there, always translated, and cannot drift from what is on screen,
+  // because it *is* what is on screen. The next auth screen added here inherits a
+  // correct title with nothing to remember.
+  //
+  // A screen that REPLACES its heading later must re-apply it — renderVerifyLanding
+  // swaps "Verifying…" for the outcome after an await, and does so.
+  setAuthDocTitle(wrap);
   build(wrap.querySelector('.auth__card'));
 }
 
@@ -613,6 +630,9 @@ function renderVerifyLanding() {
     (async () => {
       const { ok } = cred.token ? await authFetch('/verify-email', cred) : { ok: false };
       card.querySelector('.auth__title').textContent = t(ok ? 'auth.verify.okTitle' : 'auth.verify.failTitle');
+      // The heading openAuth titled the tab from is gone now — re-read it, or the
+      // tab keeps saying "Verifying…" on a screen that has finished either way.
+      setAuthDocTitle(card);
       card.querySelector('#verifyMsg').textContent = t(ok ? 'auth.verify.okSub' : 'auth.verify.failSub');
       // An expired or already-used link is the OTHER stuck-signup dead end (#435)
       // — logging in with an unverified account is refused and offers nothing —

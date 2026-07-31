@@ -161,6 +161,12 @@ function showLanding() {
   syncUrl('/');
   authScreen(true);
   setContext('');
+  // The one screen that keeps the DEFAULT tab title rather than naming itself
+  // (#522): this is the front door, and its title is the app's own pitch —
+  // the same string the static <title> carries for crawlers. applyTabTitle()
+  // rather than setDocTitle(), because that pitch is 'app.tabTitle', not the
+  // bare brand a part-less setDocTitle() would produce.
+  applyTabTitle();
   applyBackground(null);
   app.innerHTML = '';
 

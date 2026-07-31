@@ -19,6 +19,7 @@ async function showInbox() {
   currentView = () => showInbox();
   syncUrl('/inbox');
   setContext(t('inbox.title'));
+  setDocTitle(t('inbox.title'));
   applyBackground(null);
   app.innerHTML = '<p class="muted">…</p>';
 

@@ -21,6 +21,7 @@ async function showFriends() {
   currentView = () => showFriends();
   syncUrl('/freunde');
   setContext(t('friends.title'));
+  setDocTitle(t('friends.title'));
   applyBackground(null);
   app.innerHTML = '<p class="muted">…</p>';
 

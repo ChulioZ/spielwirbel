@@ -26,8 +26,10 @@ const frontendGlobals = {
   // core.js
   app: 'readonly', context: 'readonly', toastEl: 'readonly',
   currentView: 'writable', h: 'readonly', esc: 'readonly', toastTimer: 'writable',
-  toast: 'readonly', api: 'readonly', setContext: 'readonly', backRow: 'readonly',
-  joinNames: 'readonly',
+  toast: 'readonly', api: 'readonly', setContext: 'readonly', setDocTitle: 'readonly',
+  backRow: 'readonly', joinNames: 'readonly',
+  // doc-title.js
+  docTitle: 'readonly', DOC_TITLE_SEP: 'readonly', DOC_TITLE_BRAND_SEP: 'readonly',
   fetchRound: 'readonly', invalidateRoundCache: 'readonly',
   fetchActivities: 'readonly', fetchRoundList: 'readonly', fetchRoundFresh: 'readonly',
   swrStore: 'readonly', swrRenderToken: 'writable', uiBusy: 'readonly',
@@ -84,7 +86,7 @@ const frontendGlobals = {
   probeMe: 'readonly', refreshAccessToken: 'readonly', onSessionLost: 'readonly',
   logout: 'readonly', linkToken: 'readonly', bootApp: 'readonly',
   initAccounts: 'readonly', enterApp: 'readonly', authScreen: 'readonly',
-  openAuth: 'readonly', authError: 'readonly', setError: 'readonly',
+  openAuth: 'readonly', setAuthDocTitle: 'readonly', authError: 'readonly', setError: 'readonly',
   // routed auth screens (issue #501)
   isAuthRoute: 'readonly', pendingPath: 'writable', authScreensAvailable: 'readonly',
   showLogin: 'readonly', showRegister: 'readonly', showForgot: 'readonly',
