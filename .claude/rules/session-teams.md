@@ -43,7 +43,8 @@ failure is a silently mis-paired team, not an error.
 
 ## 2. A team counts as ONE player, and the arithmetic lives in two places
 
-The draw's pool filter matches a game's `minPlayers`/`maxPlayers` against the
+The draw's pool filter (`drawPool`, `lib/draw.js` since #486) matches a game's
+`minPlayers`/`maxPlayers` against the
 number of **parties**, not bodies — six people in three pairs are looking for a
 three-player game, which is often exactly why teams were formed:
 
@@ -52,7 +53,10 @@ playerCount = memberIds.length + guests.length - teamedPeople + teams.length
 ```
 
 `lib/routes/sessions.js` computes it for the real pool and `showStartSession()` for
-the live preview, and **the two must move together** — the standing constraint in
+the live preview, and **the two must move together**. The count stays in the
+route on purpose — `drawPool` takes it as a parameter rather than re-deriving it
+from `round.members`, which would silently drop the guests and flatten the teams.
+It is the standing constraint in — the standing constraint in
 `.claude/rules/active-games-filter-sites.md`, now with a second term in it.
 
 Direct-pick mode consults no player range at all (pinned by a spec since #532),

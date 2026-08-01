@@ -1,6 +1,7 @@
 ---
 paths:
   - "lib/repo/**"
+  - "lib/draw.js"
   - "lib/routes/sessions.js"
   - "lib/routes/games.js"
   - "public/js/views-round*.js"
@@ -32,10 +33,15 @@ before assuming you have them all:
   `json.js` with `!g.retired && !g.completed`, `postgres.js` with two
   `IS NOT TRUE` clauses in the `listRoundSummaries` SQL. Both must change
   together.)
-- `lib/routes/sessions.js` — **two** guards, easy to fix one and miss the other:
-  the draw `pool` filter *and* the direct-pick `if (game.retired)` 400. Miss the
-  latter and an archived game stays playable by id even though it is invisible
-  in the UI that would offer it. The same `pool` filter also carries the
+- `lib/draw.js` `isActiveGame` — the draw `pool` filter *and* `lib/routes/sessions.js`'s
+  direct-pick 400 both go through this **one** predicate since #486. They used to
+  be two inline copies in the route, "easy to fix one and miss the other" — miss
+  the direct-pick one and an archived game stays playable by id even though it is
+  invisible in the UI that would offer it. A third archive state is now one edit
+  here, and `test/draw.test.js` unit-tests the predicate directly rather than only
+  through an HTTP round-trip. The route still spells the *message* per archive
+  ("Game is retired" / "Game is completed"), so that branch survives — but the
+  400 itself no longer can be missed. `drawPool` also carries the
   **player-count** arithmetic, which is mirrored in `showStartSession()`'s live
   preview and has had a team term in it since #575 — see
   `.claude/rules/session-teams.md` §2; the two copies must move together.

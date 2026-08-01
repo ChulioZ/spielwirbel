@@ -81,7 +81,7 @@ what makes it genuinely disposable rather than an unadvertised permanent account
 
 ## 3. The seeded games' PLAYER RANGES must fit the seeded seat count
 
-The draw pool filters on `minPlayers`/`maxPlayers` (`lib/routes/sessions.js`). The
+The draw pool filters on `minPlayers`/`maxPlayers` (`drawPool`, `lib/draw.js`). The
 demo seats four — the visitor's own owner seat (#421) plus three — so a shelf of
 games capping at 2 makes the visitor's **first action** answer *"No matching games
 in this round"*. On the one screen the demo exists to demonstrate, that reads as
