@@ -261,6 +261,7 @@ function applyStaticTexts() {
   document.getElementById('accountBtn').setAttribute('aria-label', t('a11y.account'));
   // Shared site footer (issues #224/#134): link labels, re-localized on
   // language change like the aria-labels above.
+  document.getElementById('footerFaq').textContent = t('footer.faq');
   document.getElementById('footerKontakt').textContent = t('footer.contact');
   document.getElementById('footerImpressum').textContent = t('footer.impressum');
   document.getElementById('footerPrivacy').textContent = t('footer.privacy');

@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Issue #510. Only the publicly meaningful, crawlable URLs: the landing page
-     and the three legal pages. Everything else this origin answers is either
-     private tenant data behind a login or a noindex'd standalone page.
+<!-- Issue #510. Only the publicly meaningful, crawlable URLs: the landing page,
+     the three legal pages and the FAQ (#489). Everything else this origin
+     answers is either private tenant data behind a login or a noindex'd
+     standalone page.
+
+     The FAQ is listed rather than noindex'd — unlike /kontakt.html it is real
+     prose a searcher may be looking for („ist Spielwirbel kostenlos"), it does
+     not compete with the landing page for the brand query, and it is
+     server-rendered, so a crawler reads the whole thing without running JS.
 
      The host is hardcoded to the canonical origin, matching <link
      rel="canonical"> in index.html and DEFAULT_CANONICAL in lib/canonical.js —
@@ -14,6 +20,7 @@
      outright. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://spielwirbel.app/</loc></url>
+  <url><loc>https://spielwirbel.app/faq</loc></url>
   <url><loc>https://spielwirbel.app/impressum</loc></url>
   <url><loc>https://spielwirbel.app/datenschutz</loc></url>
   <url><loc>https://spielwirbel.app/nutzungsbedingungen</loc></url>

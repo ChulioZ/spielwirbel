@@ -119,8 +119,17 @@ ever make the page stop declaring them, delete the test with it.
 
 **`public/login.html` joined it in #595**, which is why the test is parameterized
 over a `PAGES` list rather than named after one page: covering a third standalone
-document is one array entry, not a near-identical second file. Two properties of
-that generalization are load-bearing and each fails silently:
+document is one array entry, not a near-identical second file.
+
+**`lib/faq.js` joined it in #489 — not an `.html` file at all**, but a
+server-rendered page whose `<style>` lives in a template literal. The assertions
+transfer because they read the file as text; the constraint that adds is that its
+CSS must stay **inline in the template**, never hoisted into a `const`, or the
+third assertion scans `${STYLE}` and passes vacuously. See
+`.claude/rules/instance-specific-claims-must-be-server-rendered.md`.
+
+Two properties of the `PAGES` generalization are load-bearing and each fails
+silently:
 
 - **The anti-vacuous floor is asserted PER PAGE** (`page.size >= 10`), never over
   the union — otherwise one well-populated page satisfies it for a page that

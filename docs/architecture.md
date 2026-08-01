@@ -95,6 +95,8 @@ lib/
   quota.js           per-tenant state caps — rounds/tenant, games/round,
                      tags/round, members/round (issue #139; inert unless
                      ACCOUNTS_ENABLED)
+  faq.js             the server-rendered FAQ page, DE + EN, with each answer an
+                     instance cannot honestly give gated out (issue #489)
   feed.js            the Freundeskreis activity feed's allowlisted events (#325)
   actor-seat.js      which member seat to attribute a round activity to; one
                      definition shared by the games and members routes (#563)
@@ -188,6 +190,9 @@ lib/
                      /nutzungsbedingungen    (server-rendered legal pages,
                                              identity from IMPRESSUM_* env;
                                              404 until configured)
+    faq.js           /faq                   (the FAQ page — public, login-free
+                                             and never 404s, unlike the legal
+                                             pages above; issue #489)
     admin.js         /api/admin             (operator moderation: instance
                                              status, lookup by image/round/
                                              e-mail/tenant, per-tenant summary,
