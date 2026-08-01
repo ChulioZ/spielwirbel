@@ -30,6 +30,7 @@ const frontendGlobals = {
   backRow: 'readonly', joinNames: 'readonly',
   // doc-title.js
   docTitle: 'readonly', DOC_TITLE_SEP: 'readonly', DOC_TITLE_BRAND_SEP: 'readonly',
+  // report-link.js
   feedReportUrl: 'readonly', setContactAvailable: 'readonly',
   REPORT_SUBJECT_MAX: 'readonly', REPORT_USERNAME_MAX: 'readonly',
   fetchRound: 'readonly', invalidateRoundCache: 'readonly',
