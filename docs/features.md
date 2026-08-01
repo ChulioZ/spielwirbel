@@ -211,3 +211,12 @@ What the app does, in detail. For a short overview see the
   and only for activity after you became friends. A friendship shares **no round
   data**; it is purely social. Unfriending is unilateral and immediate in both
   directions. With accounts off the whole feature is inert.
+- **Account profiles** – *accounts mode only* (issue #558). Every account has a
+  profile at `/u/‹username›`, reachable by clicking a name in the Freundeskreis
+  and usable to check you have the right person **before** sending a request.
+  It shows the username, its avatar, "member since ‹month›" and the one friend
+  action your current relationship allows (send / cancel / accept+decline /
+  unfriend) — plus that account's feed, but **only between accepted friends**
+  and still only for activity after you became friends. Nothing tenant-private
+  is shown: no e-mail address, no shelf, no sessions, no ratings. Signing in is
+  required, so profiles are not public web pages and are not crawlable.

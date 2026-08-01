@@ -106,6 +106,9 @@ const frontendGlobals = {
   renderIncomingRequest: 'readonly', renderOutgoingRequest: 'readonly',
   renderFriendRow: 'readonly', friendAvatar: 'readonly', friendName: 'readonly',
   feedText: 'readonly', friendSendError: 'readonly',
+  // views-friends.js — account profile (issue #558)
+  showProfile: 'readonly', renderProfileCta: 'readonly',
+  friendRowMain: 'readonly', wireFriendRowMain: 'readonly',
   // views-account.js (issue #482)
   showAccount: 'readonly', renderKontoFact: 'readonly',
   buildPasswordForm: 'readonly', setKontoError: 'readonly',
@@ -185,6 +188,7 @@ const frontendGlobals = {
   // router.js
   routing: 'writable', navIndex: 'writable', roundPath: 'readonly',
   gamePath: 'readonly', memberPath: 'readonly', resultsPath: 'readonly',
+  profilePath: 'readonly',
   syncUrl: 'readonly', navBack: 'readonly', resolveRoute: 'readonly',
   routeTo: 'readonly', showResultsById: 'readonly',
   activeFlow: 'writable', activeGuard: 'writable',
