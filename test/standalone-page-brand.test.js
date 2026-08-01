@@ -1,11 +1,20 @@
 'use strict';
 
-/* The standalone pages outside the SPA — the contact page (#391) and the
-   shared-password login page (#595) — style themselves from a COPY of the app's
-   design tokens. They cannot share the real thing: linking public/styles.css
-   would pull the whole SPA stylesheet — including its own `body`, `.card` and
-   `.input` rules — onto pages that have no round context and must render
-   logged-out.
+/* The pages outside the SPA — the contact page (#391), the shared-password login
+   page (#595) and the server-rendered FAQ (#489) — style themselves from a COPY
+   of the app's design tokens. They cannot share the real thing: linking
+   public/styles.css would pull the whole SPA stylesheet — including its own
+   `body`, `.card` and `.input` rules — onto pages that have no round context and
+   must render logged-out.
+
+   The FAQ is a `lib/` module rather than a file under `public/`, and it is
+   covered by exactly the same three assertions: they read the file as TEXT and
+   pull the declarations out of its `<style>` block, so whether that block sits
+   in an .html document or in a template literal makes no difference. It does
+   impose one constraint on lib/faq.js — the CSS must be written inline in the
+   template, never hoisted into a `const` the tag interpolates, or the third
+   assertion below scans an interpolation instead of rules and passes vacuously.
+   That constraint is written down at its end of the wire too.
 
    A hand-copied constant across two files is precisely the drift that
    .claude/rules/shared-constants-across-the-stack.md exists about, and there the
@@ -28,7 +37,7 @@ const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel) => strip(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 
 const CSS = read('public/styles.css');
-const PAGES = ['public/kontakt.html', 'public/login.html'];
+const PAGES = ['public/kontakt.html', 'public/login.html', 'lib/faq.js'];
 
 // Custom properties declared in the first :root block of a stylesheet.
 function rootVars(css) {

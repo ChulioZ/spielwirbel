@@ -1985,6 +1985,12 @@ body.auth-screen .topbar__context { display: none; }
 .landing-chip[hidden] { display: none; }
 
 .landing-close { text-align: center; }
+/* The FAQ line under the closing CTA (#489). Subordinate to the button above it
+   — smaller, muted — so it reads as a way out for the undecided rather than as a
+   competing action. Colour comes from --brand via the token, never a fixed hex
+   (.claude/rules/theme-derived-colors.md). */
+.landing-close__faq { margin: 14px 0 0; font-size: 14px; }
+.landing-close__faq a { color: var(--brand-dark); }
 
 /* The demo CTA and the note explaining what the demo is (#427), as ONE tinted
    group (#503). The note used to follow `.landing-hero__cta`, which is a

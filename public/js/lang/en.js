@@ -5,6 +5,7 @@ I18N.en = {
   // Mirrors the German tab title; brand first so a truncated tab still reads
   // "Spielwirbel…", and the question matches landing.hero.title.
   'app.tabTitle': 'Spielwirbel – What are we playing tonight? Vote and rate',
+  'footer.faq': 'FAQ',
   'footer.contact': 'Contact',
   'footer.impressum': 'Legal notice',
   'footer.privacy': 'Privacy',
@@ -803,6 +804,8 @@ I18N.en = {
   'landing.trust.source': 'Code out in the open',
   'landing.trust.eu': 'Hosted in the EU, GDPR-compliant',
   'landing.cta.title': 'Next time, nobody argues about it.',
+  'landing.faq.q': 'Still wondering?',
+  'landing.faq.link': 'Read the FAQ',
 
   // Guest demo mode (#427). The banner is PERSISTENT (not a toast), so its
   // wording has to stay true for the whole session and must never let the

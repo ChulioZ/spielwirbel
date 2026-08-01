@@ -258,6 +258,13 @@ function showLanding() {
     <section class="landing-section landing-close">
       <h2 class="landing-section__title">${esc(t('landing.cta.title'))}</h2>
       <button class="btn btn--primary btn--lg" id="landingRegisterClose">${esc(t('landing.hero.ctaPrimary'))}</button>
+      <!-- The FAQ (#489) is ungated on purpose, unlike the site footer's copy of
+           this link: GET /faq answers on every instance, and this is the only
+           entry point a logged-out visitor on an unconfigured one would have.
+           A real <a> rather than a routed button — the page lives outside the
+           SPA, so it opens in a new tab like the footer's legal links (#390). -->
+      <p class="landing-close__faq muted">${esc(t('landing.faq.q'))}
+        <a href="/faq" target="_blank" rel="noopener">${esc(t('landing.faq.link'))}</a></p>
     </section>
   </div>`);
 

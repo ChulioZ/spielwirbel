@@ -181,6 +181,12 @@
       <!-- These pages live outside the SPA; open them in a new tab so a footer
            click doesn't tear down app state (#390, matching the register
            screen's target="_blank" on the same pages in account.js). -->
+      <!-- The FAQ (#489) rides the same cfg.footer gate as its neighbours even
+           though GET /faq itself never 404s. That is deliberate: this row is
+           all-or-nothing, and an unconfigured instance still reaches the page
+           from the landing screen's ungated link, so nothing becomes
+           unreachable — only this one entry point waits for the gate. -->
+      <a href="/faq" id="footerFaq" target="_blank" rel="noopener"></a>
       <a href="/kontakt.html" id="footerKontakt" target="_blank" rel="noopener"></a>
       <a href="/impressum" id="footerImpressum" target="_blank" rel="noopener"></a>
       <a href="/datenschutz" id="footerPrivacy" target="_blank" rel="noopener"></a>

@@ -134,6 +134,9 @@ test('GET /sitemap.xml is valid XML listing the public pages', async () => {
   const locs = [...res.text.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
   assert.deepEqual(locs, [
     'https://spielwirbel.app/',
+    // The FAQ (#489) is server-rendered prose, so a crawler reads it whole
+    // without running JS — the one page besides these that is worth indexing.
+    'https://spielwirbel.app/faq',
     'https://spielwirbel.app/impressum',
     'https://spielwirbel.app/datenschutz',
     'https://spielwirbel.app/nutzungsbedingungen',

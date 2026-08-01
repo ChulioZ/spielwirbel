@@ -196,6 +196,17 @@ What the app does, in detail. For a short overview see the
   address so the operator can reply is optional, for every category. The operator
   reads what comes in from the moderation panel (see below) — there is no
   third-party feedback service and no analytics script involved.
+- **FAQ** – a public page at `/faq` (issue #489), linked from the site footer and
+  from the bottom of the logged-out landing page, answering what people ask
+  before signing up: whether everyone needs an account, whether it is really
+  free, whether there is an app, whether it does more than board games, and what
+  happens to the data. German (authoritative) and English in one document. It is
+  **server-rendered**, and that is what keeps it honest on a self-hosted
+  instance: an answer that instance cannot truthfully give — donations where
+  `DONATE_URL` is unset, the account answers with accounts off, the data answers
+  where no privacy policy is published — is left out of the page entirely rather
+  than hidden with JavaScript a crawler never runs. Questions touching personal
+  data link `/datenschutz` instead of restating it.
 - **Support link (donations)** – when the operator sets `DONATE_URL`, a heart
   button in the top bar opens a small sheet whose single action is a plain
   link to the operator's donation page (new tab). Donations are voluntary and

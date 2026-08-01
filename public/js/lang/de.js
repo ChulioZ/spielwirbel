@@ -6,6 +6,7 @@ I18N.de = {
   // stays German for the crawlers (#436/#510) — so a German visitor sees no
   // change when i18n.js overwrites it at boot.
   'app.tabTitle': 'Spielwirbel – Was spielen wir heute? Abstimmen und bewerten',
+  'footer.faq': 'FAQ',
   'footer.contact': 'Kontakt',
   'footer.impressum': 'Impressum',
   'footer.privacy': 'Datenschutz',
@@ -791,6 +792,11 @@ I18N.de = {
   'landing.trust.source': 'Code öffentlich einsehbar',
   'landing.trust.eu': 'EU-Hosting, DSGVO-konform',
   'landing.cta.title': 'Beim nächsten Mal wird nicht diskutiert.',
+  // The FAQ link under the closing CTA (#489). Deliberately the only extra
+  // destination on this page: the landing stays focused on what the app is for,
+  // and the questions it does not answer get one clearly-labelled way out.
+  'landing.faq.q': 'Noch Fragen?',
+  'landing.faq.link': 'Häufige Fragen lesen',
 
   // Guest demo mode (#427). The banner is PERSISTENT (not a toast), so its
   // wording has to stay true for the whole session and must never let the
