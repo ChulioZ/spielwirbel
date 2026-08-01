@@ -255,12 +255,50 @@ Merging is **never automatic**. Two gates must both clear: your review must pass
 - If the verdict is **NOT SAFE**: do **not** merge. Address each blocker (go back
   to phase 2/3, push fixes, re-review) or, if it's out of your hands, report what
   needs to happen and stop.
-- If **SAFE TO MERGE** and required checks are green: **ask the user for
-  permission to merge** (`AskUserQuestion`) — name the PR, the review verdict, and
-  that CI is green — then wait for a clear yes. Don't merge on your own
-  initiative; the repo's branch-protection settings would block an un-approved
-  merge anyway, so asking is both the rule here and the only path that actually
-  goes through.
+- If **SAFE TO MERGE** and required checks are green: **write the walkthrough
+  below, then ask for permission to merge** (`AskUserQuestion`) — name the PR, the
+  review verdict, and that CI is green — and wait for a clear yes. Don't merge on
+  your own initiative; the repo's branch-protection settings would block an
+  un-approved merge anyway, so asking is both the rule here and the only path that
+  actually goes through.
+
+### Always write the walkthrough BEFORE asking — never wait to be asked
+
+The user is being asked to approve something they have not read. A bare "CI is
+green, may I merge?" asks them to rubber-stamp it, and the review verdict does
+not substitute: it says *nothing blocks this*, not *here is what it does*. So
+produce the walkthrough as part of the ask, every time — not on request, not only
+for large diffs. It costs one message and it is the only point where a decision
+is actually possible.
+
+Write it for someone deciding whether to merge, not as a diff restatement (they
+can read the diff; they cannot read your reasoning). Cover:
+
+- **The problem** — what was broken or missing, concretely. For a legal or
+  policy-facing change, quote the promise that was unkept.
+- **What changed, grouped by concern**, not file by file. A reader should be able
+  to follow it without opening the diff.
+- **The non-obvious decisions and why**: traps avoided, alternatives rejected and
+  what ruled them out, anything where the natural implementation is wrong. This is
+  the part that has no other home — it is invisible in the diff.
+- **What you found mid-build that the issue did not mention** — a bug in adjacent
+  code, a gap the spec missed, a wrong assumption you had to correct. Say so
+  plainly; discovering it is not a reason to hide it.
+- **Honest limits**: what is *not* covered, which assertions are vacuous today and
+  why, anything verified by eye rather than by test. If a test cannot see
+  something, say which one and what it would take.
+- **How it was verified** — break-on-purpose results, browser checks, and what
+  each actually proved.
+
+**Surface the weaknesses rather than selling the change.** A walkthrough that
+reads as advocacy is worse than none: it spends the user's trust to skip their
+judgement. If part of the work is thin, or you followed the issue's spec without
+questioning a choice you now doubt, that belongs here — the user may well have
+context you don't, and this is the last cheap moment to use it.
+
+Keep the same discipline when the answer is not a plain yes: if they push back or
+ask for a change, **do not merge on the strength of the earlier approval** —
+re-verify, re-state what moved, and ask again.
 - Once the user says yes, do a **normal** squash merge — no admin override, no
   `--admin`, no bypassing branch protection:
 
@@ -328,7 +366,10 @@ and check, don't force-delete.
 
 Summarize what shipped: the branch, the PR (link + merge state), test coverage
 added, the review verdict, main's CI status, the Railway deployment status, and
-confirmation the local branch is cleaned up. If you stopped early at any gate, say exactly where and why. If the
+confirmation the local branch is cleaned up. This is the *outcome* report — it
+does not repeat the phase-6 walkthrough, which the user has already read; note
+only what changed since then (a fix pushed after review, a surprise in the
+deploy). If you stopped early at any gate, say exactly where and why. If the
 issue closed only partially (a genuine hard limit or a split the user agreed to),
 say which part shipped and which remains, and give the exact remaining actions
 only the user can take.
