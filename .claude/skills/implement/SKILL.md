@@ -247,29 +247,40 @@ Review your own PR honestly — the fact that you wrote it is not evidence it's
 correct. Wait for CI (`gh pr checks <PR> --watch`) so the verdict reflects real
 check results, not pending ones.
 
-## 6. Merge — ask first, then merge normally
+## 6. Walk the user through the change, THEN ask to merge
 
-Merging is **never automatic**. Two gates must both clear: your review must pass
-*and* the user must give an explicit go-ahead.
+Merging is **never automatic**. Three gates must clear, **in this order**: your
+review must pass, the user must have been given a **walkthrough**, and the user
+must give an explicit go-ahead.
 
 - If the verdict is **NOT SAFE**: do **not** merge. Address each blocker (go back
   to phase 2/3, push fixes, re-review) or, if it's out of your hands, report what
   needs to happen and stop.
-- If **SAFE TO MERGE** and required checks are green: **write the walkthrough
-  below, then ask for permission to merge** (`AskUserQuestion`) — name the PR, the
-  review verdict, and that CI is green — and wait for a clear yes. Don't merge on
-  your own initiative; the repo's branch-protection settings would block an
-  un-approved merge anyway, so asking is both the rule here and the only path that
-  actually goes through.
+- If **SAFE TO MERGE** and required checks are green, do **6a then 6b below, in
+  one message, in that order**. Don't merge on your own initiative; the repo's
+  branch-protection settings would block an un-approved merge anyway, so asking
+  is both the rule here and the only path that actually goes through.
 
-### Always write the walkthrough BEFORE asking — never wait to be asked
+### 6a. Write the walkthrough — never wait to be asked for it
 
 The user is being asked to approve something they have not read. A bare "CI is
 green, may I merge?" asks them to rubber-stamp it, and the review verdict does
 not substitute: it says *nothing blocks this*, not *here is what it does*. So
-produce the walkthrough as part of the ask, every time — not on request, not only
-for large diffs. It costs one message and it is the only point where a decision
-is actually possible.
+produce the walkthrough every time — not on request, not only for large diffs.
+It costs one message and it is the only point where a decision is actually
+possible.
+
+> **Gate — check this before you call `AskUserQuestion`.** Look at the message
+> you are about to send. If it contains only a verdict, a check count and a
+> question, you have skipped 6a: stop and write the walkthrough first.
+>
+> This explicit check exists because 6a is **the one step in this skill with no
+> artifact behind it** — no file appears, no test goes red, and the merge
+> question reads as complete without it, so skipping it is invisible. It was
+> skipped on #558 / PR #593 exactly that way: the instruction was present and
+> emphatic, but it sat in prose between two bullets that chained "ask" directly
+> to "merge", and the phase heading named only those two actions. Reformatting
+> alone would not have caught it — a check you have to perform does.
 
 Write it for someone deciding whether to merge, not as a diff restatement (they
 can read the diff; they cannot read your reasoning). Cover:
@@ -296,20 +307,29 @@ judgement. If part of the work is thin, or you followed the issue's spec without
 questioning a choice you now doubt, that belongs here — the user may well have
 context you don't, and this is the last cheap moment to use it.
 
+### 6b. Ask for the go-ahead, in the same message
+
+Call `AskUserQuestion` naming the PR, the review verdict, and that CI is green,
+and wait for a clear yes.
+
 Keep the same discipline when the answer is not a plain yes: if they push back or
 ask for a change, **do not merge on the strength of the earlier approval** —
-re-verify, re-state what moved, and ask again.
-- Once the user says yes, do a **normal** squash merge — no admin override, no
-  `--admin`, no bypassing branch protection:
+re-verify, re-state what moved, and ask again. An answer that grants permission
+*conditionally* ("after you fix X") is not a yes to merging now.
 
-  ```bash
-  gh pr merge <PR> --squash --delete-branch
-  ```
+### 6c. Merge
 
-  `--delete-branch` removes the remote branch. Squash keeps `main` history to one
-  commit per change. If a plain merge is still refused, report what protection
-  requires (a missing approval, a red or pending check) and stop — never force it
-  through with `--admin`.
+Once the user says yes, do a **normal** squash merge — no admin override, no
+`--admin`, no bypassing branch protection:
+
+```bash
+gh pr merge <PR> --squash --delete-branch
+```
+
+`--delete-branch` removes the remote branch. Squash keeps `main` history to one
+commit per change. If a plain merge is still refused, report what protection
+requires (a missing approval, a red or pending check) and stop — never force it
+through with `--admin`.
 
 ## 7. Monitor main's CI and the Railway deployment
 
