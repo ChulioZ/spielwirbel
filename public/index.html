@@ -118,7 +118,12 @@
   <div class="terms-banner" id="termsBanner" hidden>
     <i class="ti ti-file-text" aria-hidden="true"></i>
     <span class="terms-banner__text" id="termsBannerText"></span>
-    <a class="terms-banner__link" id="termsBannerLink" href="/nutzungsbedingungen"
+    <!-- Deep-links to the „Änderungshistorie" section, not to the top of the
+         document: the label promises the CHANGES, so landing the reader on 1000
+         unchanged lines would be a label that lies. setupTermsBanner() swaps the
+         fragment for the reader's own locale (the page carries a DE and an EN
+         section); this static value is the DE fallback. -->
+    <a class="terms-banner__link" id="termsBannerLink" href="/nutzungsbedingungen#aenderungen"
        target="_blank" rel="noopener" hidden></a>
     <button class="terms-banner__dismiss" id="termsBannerDismiss" type="button"></button>
   </div>

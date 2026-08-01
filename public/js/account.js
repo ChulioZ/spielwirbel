@@ -899,6 +899,12 @@ function setupTermsBanner() {
   const link = document.getElementById('termsBannerLink');
   if (link) {
     link.textContent = t('terms.updated.link');
+    // Land the reader on the change summary in THEIR language. The document
+    // carries a German section (authoritative, id="aenderungen") followed by an
+    // English one (id="changes-en"); without this an English reader would be
+    // dropped onto the German summary with the English one far below. Re-applied
+    // on every call, so it follows the language picker like the label above.
+    link.href = `/nutzungsbedingungen#${getLocale() === 'en' ? 'changes-en' : 'aenderungen'}`;
     withAppConfig((cfg) => { link.hidden = !(cfg && cfg.footer); });
   }
   const dismiss = document.getElementById('termsBannerDismiss');

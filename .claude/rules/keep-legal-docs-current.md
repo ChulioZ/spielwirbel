@@ -74,6 +74,24 @@ fires a false notice or silently fails to fire a real one.
 `test/legal.test.js` pins that each page renders its own constant, and
 `test/account.test.js` that only a `TERMS_REVISION` bump raises the notice.
 
+**A `TERMS_REVISION` bump also needs a `TERMS_CHANGELOG` entry, same PR.** The
+notice links to the rendered „Änderungshistorie" section
+(`/nutzungsbedingungen#aenderungen`), so without an entry the link says
+„Änderungen ansehen" and delivers a thousand unchanged lines. `test/legal.test.js`
+enforces it: once `TERMS_REVISION` moves off `LEGACY_TERMS_REVISION`, the
+changelog must be non-empty **and its newest entry must name the current
+revision** — so bumping without saying what changed fails the suite, and so does
+leaving a stale entry behind on a second bump.
+
+Two constraints on the entry itself:
+
+- **It is informational, never normative.** The rendered section says so in both
+  languages, and it must stay true: a summary that states a rule the body does
+  not creates an ambiguity construed against us (§ 305c Abs. 2 BGB). Summarise
+  what moved; don't paraphrase obligations.
+- **Both languages, and keep the list to roughly five entries.** It sits inside
+  the document and must not grow to dwarf the terms.
+
 **`LEGACY_TERMS_REVISION` is NOT a fourth date to bump — it is frozen.** It
 records the terms revision live when `acceptedTermsRevision` was introduced, so
 accounts predating that key read as up to date today and correctly fall behind on
