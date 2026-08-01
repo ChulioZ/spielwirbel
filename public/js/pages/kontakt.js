@@ -137,6 +137,11 @@
   const params = new URLSearchParams(location.search);
   const initialCategory = params.get('category') || '';
   const feedbackPath = (params.get('path') || '').slice(0, 200);
+  // The feed's report button (#559) additionally prefills who and what is being
+  // reported. Both are capped exactly like contactSchema caps them, so a
+  // hand-edited deep link can't produce a form whose submit can only 400.
+  const initialReported = (params.get('reportedUsername') || '').slice(0, 60);
+  const initialSubject = (params.get('subject') || '').slice(0, 200);
 
   // Flipped by the /api/config probe below when the channel is not configured
   // yet (mail unset / Impressum address missing — the same all-or-nothing gate
@@ -279,6 +284,13 @@
     fields.category.value = initialCategory;
     applyCategory();
   }
+
+  // Prefill the report fields (#559). After applyCategory(), so the fields the
+  // report category reveals are already visible — and after applyLang(), which
+  // rebuilds only the category <select>, so these two survive a language toggle
+  // and the reporter's own edits are never overwritten.
+  if (initialReported) fields.reportedUsername.value = initialReported;
+  if (initialSubject) fields.subject.value = initialSubject;
 
   // Availability gate (#224): a direct visit while the channel cannot deliver
   // yet should say so up front instead of offering a form whose submit can only

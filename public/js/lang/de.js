@@ -598,6 +598,8 @@ I18N.de = {
   'friends.unknownUser': '(unbekannt)',
   'friends.feed.played': '{user} hat {game} gespielt',
   'friends.feed.added': '{user} hat {game} ins Regal gestellt',
+  'friends.feed.report': 'Diesen Eintrag melden',
+  'friends.feed.reportSubject': 'Feed-Eintrag: {user} — {game} ({date})',
   'friends.home.title': 'Freundeskreis',
   'friends.home.all': 'Alle anzeigen',
   'friends.toast.sent': 'Anfrage an {user} gesendet.',

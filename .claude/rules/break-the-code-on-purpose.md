@@ -102,6 +102,34 @@ so a test-first author would have seen that assertion **green before writing the
 hero at all**. Route 2 eventually caught it. Route 1 would have caught it first,
 for free.
 
+## A test that SETS the state it asserts cannot see a wrong default
+
+Module-level state (`let contactAvailable = false` in `public/js/report-link.js`)
+has a default, and the default is usually the safe one — closed, off, empty. The
+natural test opens by establishing the state it is about to check:
+
+```js
+setContactAvailable(false);                       // ← blinds the test
+assert.equal(feedReportUrl({ username: 'ada' }), null);
+```
+
+That asserts the **setter**, never the default. Found on #559 by flipping the
+default to `true` and watching the suite stay green: the feed's report button
+would have rendered on an instance whose contact channel is unconfigured — the
+one state the gate exists to prevent — with a named test claiming to guard it.
+
+**So one test per defaulted flag must touch nothing**, and it has to run before
+any sibling mutates the shared module state:
+
+```js
+// MUST be first in the file, and must NOT call the setter.
+test('the gate is closed until /api/config opens it', () => { … });
+```
+
+Note Route 1 does not reach this either: test-first, the assertion goes red
+because the *module* does not exist yet, which is satisfied just as well by the
+blinded version. Only the deliberate break discriminates.
+
 ## History
 
 This lived in `.claude/rules/admin-cross-tenant-escape.md` §4 by accident — it was

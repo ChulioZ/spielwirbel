@@ -312,6 +312,13 @@ function initFooter() {
         // (initFooter runs a single time from main.js).
         const fb = document.getElementById('feedbackBtn');
         fb.hidden = false;
+        // In-context DSA notice entry point (#559): the Freundeskreis feed's
+        // per-item report button opens the same contact form, so it rides the
+        // SAME gate — a button that opens a page saying the channel is
+        // unavailable is worse than no button. Module state rather than a
+        // stashed cfg, so views read it at render time and stay clear of the
+        // load-order trap (.claude/rules/frontend-script-load-order.md).
+        setContactAvailable(true);
         fb.addEventListener('click', () => {
           const q = new URLSearchParams({ category: 'feedback', path: location.pathname });
           // Open in a new tab (#390) so the SPA stays loaded behind the contact

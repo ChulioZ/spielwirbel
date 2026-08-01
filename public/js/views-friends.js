@@ -312,13 +312,41 @@ function feedText(ev) {
 function renderFeedEvent(ev) {
   const imgStyle = ev.coverUrl ? ` style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"` : '';
   const fallback = ev.coverUrl ? '' : '<i class="ti ti-cards" aria-hidden="true"></i>';
-  return h(`<div class="feed-item">
+  const item = h(`<div class="feed-item">
       <span class="feed-item__img"${imgStyle}>${fallback}</span>
       <div class="feed-item__body">
         <div class="feed-item__text">${feedText(ev)}</div>
         <div class="feed-item__time muted">${esc(fmtDateTime(ev.at))}</div>
       </div>
     </div>`);
+
+  // Report this item to the operator (#559). The feed is the only screen where
+  // one user sees another's free text, so the DSA Art. 16(1) notice channel gets
+  // an entry point here rather than only in the footer. The URL is built at
+  // render time and is null when the contact channel is unconfigured or the
+  // event names no account — then no button is rendered at all.
+  //
+  // The subject goes in UNESCAPED, unlike feedText's interpolations: it is a
+  // query-string value the reporter will see and may edit in a plain text
+  // field, not markup.
+  const url = feedReportUrl({
+    username: ev.username,
+    subject: t('friends.feed.reportSubject', {
+      user: ev.username || '',
+      game: ev.title || '',
+      date: fmtDateTime(ev.at),
+    }),
+  });
+  if (url) {
+    const btn = h(`<button class="feed-item__report" type="button"
+        aria-label="${esc(t('friends.feed.report'))}" title="${esc(t('friends.feed.report'))}">
+        <i class="ti ti-flag" aria-hidden="true"></i></button>`);
+    // New tab (#390), matching the feedback button, so the SPA stays loaded
+    // behind the contact page; noopener prevents a window.opener leak.
+    btn.addEventListener('click', () => window.open(url, '_blank', 'noopener'));
+    item.appendChild(btn);
+  }
+  return item;
 }
 
 /* ----------------------------- request/friend rows ------------------------- */
