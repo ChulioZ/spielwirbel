@@ -55,10 +55,13 @@ So: Route 1 for behaviour you are adding, Route 2 to prove an assertion is
 
 ## Where Route 1 is not available at all
 
-- **Text-matching assertions** — CSS strings, HTML, regexes over files. The
+- **Text-matching assertions** — CSS strings, regexes over files. The
   stylesheet already exists; you are adding a guard to it
   (`.claude/rules/css-text-assertions-strip-comments.md`,
-  `.claude/rules/responsive-hub-tabs.md`).
+  `.claude/rules/responsive-hub-tabs.md`). Note this shrank in #602: a view's
+  **rendered HTML** is no longer in this bucket, because
+  `.claude/rules/testing-views-under-jsdom.md` lets a spec run the view and
+  assert the DOM. CSS stays here — jsdom applies no external stylesheet.
 - **Tests over a corpus that already exists** — `test/rule-scope.test.js`,
   `test/token-budget.test.js`, `test/skills.test.js`.
 - **Characterization tests** added to code that shipped long ago.

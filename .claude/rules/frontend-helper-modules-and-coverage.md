@@ -52,6 +52,12 @@ file must be wired into all four places or it breaks something silently:
 `test/pwa.test.js` guards (1)+(2) by parsing `SHELL` and asserting each entry is
 served. Nothing guards (3) — bump it by hand.
 
+**This is also why the jsdom view harness loads scripts through `vm` rather
+than `require`** — same gate, same failure mode, and it is the single constraint
+that shapes `test/support/dom.js`. See
+`.claude/rules/testing-views-under-jsdom.md`; a spec that reaches for `require`
+on a view reintroduces exactly the −11 points measured above.
+
 **Corollary for diagnosing a red `coverage` check:** when the test job is green
 and only `coverage` is red, don't hunt for a missing test. Look at the per-file
 table for a file that has no business being there at all — a newly `require`d

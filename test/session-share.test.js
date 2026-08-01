@@ -13,35 +13,11 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
 
 const { sessionShareText, SHARE_MEDALS, SHARE_TROPHY } = require('../public/js/session-share');
-
-function loadI18n() {
-  const dir = path.join(__dirname, '..', 'public', 'js');
-  const read = (p) => fs.readFileSync(path.join(dir, p), 'utf8');
-  const context = {
-    I18N: {},
-    localStorage: { getItem: () => null, setItem: () => {} },
-    document: { documentElement: {} },
-    navigator: { language: 'en' },
-  };
-  vm.createContext(context);
-  vm.runInContext(read('locales.js'), context);
-  vm.runInContext(read('i18n.js'), context);
-  vm.runInContext(read('lang/en.js'), context);
-  vm.runInContext(read('lang/de.js'), context);
-  return context;
-}
-
-// A translate function bound to one locale, exactly as the view passes `t` in.
-function translator(loc) {
-  const ctx = loadI18n();
-  ctx.setLocale(loc);
-  return (key, params) => ctx.t(key, params);
-}
+// A translate function bound to one locale, exactly as the view passes `t` in
+// (test/support/dom.js — shared with i18n-locales and players-plural).
+const { translator } = require('./support/dom');
 
 // core.js's joinNames, which the view injects. It cannot be required here: it
 // lives in a DOM view file, and requiring one drags its whole body into the

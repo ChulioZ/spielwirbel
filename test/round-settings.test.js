@@ -28,6 +28,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { bodyOf } = require('./support/css');
+const { loadApp } = require('./support/dom');
 
 const ROOT = path.join(__dirname, '..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
@@ -35,8 +36,6 @@ const strip = (src) => src
   .replace(/\/\*[\s\S]*?\*\//g, '')
   .replace(/^\s*\/\/.*$/gm, '');
 
-const SETTINGS = strip(read('public/js/views-round-settings.js'));
-const TABS = strip(read('public/js/views-round-tabs.js'));
 const ROUND = strip(read('public/js/views-round.js'));
 const RAIL = strip(read('public/js/round-rail.js'));
 const ROUTER = strip(read('public/js/router.js'));
@@ -56,45 +55,103 @@ function bodyOfFn(src, name) {
   throw new Error(`unbalanced braces in ${name}`);
 }
 
-const SCREEN = bodyOfFn(SETTINGS, 'showRoundSettings');
-const REGAL = bodyOfFn(TABS, 'renderRegalTab');
-const CHRONIK = bodyOfFn(TABS, 'renderChronikTab');
+/* ------------- what each screen actually renders (#602) ---------------------
 
-test('the round-level actions are gone from the Regal footer, which keeps its archives', () => {
-  assert.doesNotMatch(REGAL, /showMoveGames\(/, '"Spiele verschieben" is back under the game grid (#561)');
-  assert.doesNotMatch(REGAL, /showInvite\(/, '"Einladen" is back under the game grid (#561)');
+   These four used to slice the three functions out of their files and match
+   identifiers in the text. They now RENDER each screen and read the controls,
+   which is what the issue was ever about — where an action sits, and who is
+   offered it. The navigation wiring below (router, rail, strip) stays
+   source-matched: it is about which module knows which path, not about anything
+   a rendered screen shows. */
+
+const roundFixture = (over = {}) => ({
+  id: 1,
+  name: 'Donnerstagsrunde',
+  shared: false,
+  games: [{ id: 7, title: 'Catan', retired: false, completed: false }],
+  members: [],
+  sessions: [],
+  activity: [],
+  tags: [],
+  providers: [],
+  ...over,
+});
+
+/** The Einstellungen screen for an owned (default) or a shared round. */
+async function settingsScreen(t, over) {
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', async () => roundFixture(over));
+  dom.set('accountsActive', () => true);
+  await dom.call('showRoundSettings', 1);
+  return dom;
+}
+
+/** Every control label on the screen, flattened for `includes` checks. */
+const labels = (root) => [...root.querySelectorAll('button, a')]
+  .map((el) => (el.textContent || '').replace(/\s+/g, ' ').trim())
+  .filter(Boolean);
+
+test('the round-level actions are gone from the Regal footer, which keeps its archives', (t) => {
+  const dom = loadApp();
+  t.after(() => dom.close());
+  // The tab renderers append to the global `app` rather than returning a node.
+  dom.call('renderRegalTab', roundFixture(), roundFixture().games);
+  const found = labels(dom.app);
+
+  assert.ok(!found.includes('Spiele verschieben'), `"Spiele verschieben" is back under the game grid (#561): ${found}`);
+  assert.ok(!found.includes('Einladen'), `"Einladen" is back under the game grid (#561): ${found}`);
   // Anti-vacuous: the footer itself must still be there. Without this the two
-  // assertions above pass just as happily against a deleted footer.
-  assert.match(REGAL, /showRetired\(/, 'the Regal footer lost its retired-archive link');
-  assert.match(REGAL, /showCompleted\(/, 'the Regal footer lost its completed-archive link');
+  // assertions above pass just as happily against a tab that renders nothing.
+  assert.ok(found.some((l) => l.startsWith('Aussortiert')), `the Regal footer lost its retired-archive link: ${found}`);
+  assert.ok(found.some((l) => l.startsWith('Durchgespielt')), `the Regal footer lost its completed-archive link: ${found}`);
 });
 
-test('the Chronik carries no round deletion, and still renders its timeline', () => {
-  // `round.`-qualified: the timeline legitimately keeps `activity.deleteConfirm`
-  // for deleting a single entry, which a bare /deleteConfirm/ would match.
-  assert.doesNotMatch(CHRONIK, /round\.deleteRound|round\.deleteConfirm/, 'deleting the round is back under the history (#561)');
-  assert.doesNotMatch(CHRONIK, /share\.leave/, 'leaving the round is back under the history (#561)');
-  assert.match(CHRONIK, /renderTimeline\(\)/, 'the Chronik lost its timeline');
+test('the Chronik carries no round deletion, and still renders its timeline', (t) => {
+  const dom = loadApp();
+  t.after(() => dom.close());
+  const activities = [{ id: 1, type: 'game_added', at: '2026-08-01T10:00:00Z', gameTitle: 'Catan' }];
+  dom.call('renderChronikTab', roundFixture(), activities);
+
+  const found = labels(dom.app);
+  assert.ok(!found.includes('Diese Runde löschen'), `deleting the round is back under the history (#561): ${found}`);
+  assert.ok(!found.includes('Runde verlassen'), `leaving the round is back under the history (#561): ${found}`);
+  assert.ok(dom.app.querySelector('.tl-act'), 'the Chronik lost its timeline');
 });
 
-test('the settings screen offers all three actions it took over', () => {
-  assert.match(SCREEN, /showMoveGames\(round\)/, 'the settings screen cannot move games');
-  assert.match(SCREEN, /showInvite\(round\)/, 'the settings screen cannot invite');
-  assert.match(SCREEN, /'DELETE', '\/api\/rounds\/' \+ rid/, 'the settings screen cannot delete the round');
-  assert.match(SCREEN, /shares\/\$\{accountUser\.id\}/, 'the settings screen cannot leave a shared round');
+test('the settings screen offers all three actions it took over', async (t) => {
+  const dom = await settingsScreen(t);
+  const found = labels(dom.app);
+  for (const action of ['Spiele verschieben', 'Einladen', 'Diese Runde löschen']) {
+    assert.ok(found.includes(action), `the settings screen is missing "${action}": ${found}`);
+  }
 });
 
 /* The gating is the half that is dangerous to lose: both sheet actions are
    owner-only (#207/#411 — the routes 403/404 a grantee), so offering either on a
    shared round would hand a grantee a button that cannot work. The delete/leave
-   split is the same fact seen from the other side. */
-test('the owner-only gating moved across intact', () => {
-  assert.match(SCREEN, /round\.games\.length && !round\.shared/, 'move-games lost its owner/shelf gate');
-  assert.match(SCREEN, /accountsActive\(\) && !round\.shared/, 'invite lost its accounts/owner gate');
-  assert.match(SCREEN, /round\.shared \?[\s\S]*?leaveIntro/, 'the intro no longer distinguishes leaving from deleting');
-  // The destructive branch is picked by round.shared, not by anything else: a
-  // grantee must never be offered delete, nor an owner "leave".
-  assert.match(SCREEN, /if \(round\.shared\) \{/, 'the delete/leave branch is no longer keyed on round.shared');
+   split is the same fact seen from the other side. And unlike the regexes this
+   replaced, rendering both states proves the branch is actually taken — a gate
+   whose condition is present in the source but never reached looks identical. */
+test('a grantee is offered none of the owner-only actions, and leaves instead', async (t) => {
+  const owner = labels((await settingsScreen(t)).app);
+  const grantee = labels((await settingsScreen(t, { shared: true })).app);
+
+  for (const ownerOnly of ['Spiele verschieben', 'Einladen', 'Diese Runde löschen']) {
+    assert.ok(!grantee.includes(ownerOnly), `a grantee is offered "${ownerOnly}", which the route 403s: ${grantee}`);
+  }
+  assert.ok(grantee.includes('Runde verlassen'), `a grantee cannot leave the round: ${grantee}`);
+  // The mirror: an owner must never be offered "leave", or the two states have
+  // simply merged rather than being kept apart.
+  assert.ok(!owner.includes('Runde verlassen'), `an owner is offered "Runde verlassen": ${owner}`);
+});
+
+test('a round with an empty shelf offers no move-games action', async (t) => {
+  // The other half of the move-games gate (`round.games.length && !round.shared`),
+  // which the shared/owner pair above cannot distinguish on its own.
+  const found = labels((await settingsScreen(t, { games: [] })).app);
+  assert.ok(!found.includes('Spiele verschieben'), `an empty shelf still offers "Spiele verschieben": ${found}`);
+  assert.ok(found.includes('Diese Runde löschen'), 'the empty-shelf round lost its delete action, so the assertion above is vacuous');
 });
 
 test('the screen is routed, and both navs agree on which section owns it', () => {
