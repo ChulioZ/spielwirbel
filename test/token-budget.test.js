@@ -160,7 +160,7 @@ const RULE_ALLOW = {
   '.claude/rules/responsive-content-width.md': 'judged — one learning (width keys off the viewport, never content) whose evidence IS the #332 revert. Drop the evidence and it becomes an assertion nobody can re-derive, which is how #332 shipped the first time',
   '.claude/rules/guest-demo-accounts.md': 'judged — five failure modes of ONE feature, every one reachable from a single edit to lib/demo.js; whoever touches the demo needs all five',
   '.claude/rules/session-guests-are-not-members.md': 'judged — one learning ("a guest is a person without a member row") plus the ~10 sites that assumed otherwise. The enumeration is the rule, not padding around it',
-  '.claude/rules/session-teams.md': 'judged — four traps over one feature, 16 lines over; no seam, and each trap is meaningless without the positional wire format in §1',
+  '.claude/rules/session-teams.md': 'judged — four traps over one feature, 18 lines over; no seam, and each trap is meaningless without the positional wire format in §1',
   '.claude/rules/noindex-vs-disallow-and-the-crawler-surface.md': 'judged — three mechanisms that are only correct TOGETHER (noindex vs Disallow, the SPA fallback, the vacuous assertion); separating them re-creates the trap the file exists to prevent',
 };
 

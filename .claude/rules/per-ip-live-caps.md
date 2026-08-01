@@ -60,7 +60,8 @@ construction rather than by each backend's accidental semantics.
 **The verification consequence is the part worth remembering:** removing the
 guard reddens the contract suite on JSON and leaves Postgres **fully green**. A
 green Postgres run is therefore not evidence that line does anything — measured,
-104/104 passing with it deleted. Don't delete it on that basis.
+104/104 passing with it deleted. Don't delete it on that basis
+(`.claude/rules/break-the-code-on-purpose.md`).
 
 ## 3. The two liveness predicates must stay exact complements
 

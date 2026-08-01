@@ -60,8 +60,10 @@ events are also only assembled inside the `accepted` branch, so a stranger's
 profile carries no `events` key at all rather than an empty array — the two are
 easy to conflate and only the first is provably right.
 
-Verified by breaking both on purpose: removing the cutoff reddens the feed test,
-and hoisting the `feedFor` call above the friendship branch reddens **two**.
+Verified by breaking both on purpose
+(`.claude/rules/break-the-code-on-purpose.md`): removing the cutoff reddens the
+feed test, and hoisting the `feedFor` call above the friendship branch reddens
+**two**.
 
 ## 3. The four friendship states are derived from the CALLER's rows
 

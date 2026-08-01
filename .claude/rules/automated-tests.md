@@ -29,3 +29,9 @@ done. The non-obvious parts below are why this is easy to get wrong:
 - **i18n parity is tested.** `test/i18n-parity.test.js` fails if `en.js` and
   `de.js` drift out of key parity or have an empty value — so adding a key to only
   one file will (correctly) break the suite. Add it to both.
+
+- **A green new test is not yet evidence it works.** Break the code it guards on
+  purpose once and watch that named test go red, or you cannot tell an assertion
+  that holds from one that asserts nothing —
+  `.claude/rules/break-the-code-on-purpose.md` has the habits and the worked
+  examples of vacuous greens this repo has actually shipped.

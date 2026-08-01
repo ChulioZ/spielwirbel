@@ -124,7 +124,9 @@ teams: [{ personIds: ['m1', 'gone'] },   // resolves to one -> dropped
 Broken, the second team keeps only `m2`, falls below the minimum too, and *both*
 vanish — so a pair that played together silently becomes two solo parties. The
 first version of this test used a lone one-person team and stayed **green against
-the broken code**; it was the break-on-purpose loop that exposed it, not review.
+the broken code**; it was the break-on-purpose loop that exposed it, not review
+(`.claude/rules/break-the-code-on-purpose.md`, which carries this as a worked
+example of a fixture too small to fail).
 Both suites now pin the two-team shape (`test/session-people.test.js`,
 `test/sessions.test.js`).
 
