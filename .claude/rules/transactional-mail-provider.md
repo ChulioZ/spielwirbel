@@ -40,7 +40,7 @@ across the break showed the link "cut in half". **That was ours, not the
 provider's** — it survived all three migrations unchanged, which is why no
 provider change could have fixed it.
 
-The link is now 70 characters (`/v?t=v1.<uid>.<secret>`, `routes/account.js`) and
+The link is now 70 characters (`/v?t=v1.<uid>.<secret>`, `lib/routes/account.js`) and
 `test/account.test.js` pins every mailed line at ≤75 characters. Anything that
 lengthens one of these links re-breaks it — the full budget, the reasoning behind
 the shortened token, and how to verify a real send live in

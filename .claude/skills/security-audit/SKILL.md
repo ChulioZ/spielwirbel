@@ -143,7 +143,7 @@ The highest-consequence area. Check that new round-scoped repo methods are in
 (never `OR`ed onto the tenant policy — that silently opens cross-tenant `DELETE`).
 
 ```bash
-grep -rnE "require\('\.\./lib/repo'\)|pool\.query|knex\.raw|forTenant|TENANT_METHODS" routes/ lib/repo/
+grep -rnE "require\('\.\./lib/repo'\)|pool\.query|knex\.raw|forTenant|TENANT_METHODS" lib/routes/ lib/repo/
 ```
 
 The plain-role probes in `test/repo.postgres.test.js` are the only thing that
@@ -198,9 +198,9 @@ an attacker a cheap exploit." Sweep for the shapes S-021 lists:
 # security decisions that live only in the client (must be re-enforced server-side)
 grep -rnE "role|isAdmin|owner|permission|can[A-Z]|allow|token|secret" public/js/ | grep -viE "aria|colour|color|css" | head -40
 # hardcoded values that could act as a de-facto secret or bypass
-grep -rnE "=== ['\"][A-Za-z0-9_-]{6,}['\"]|token *=|BYPASS|magic|allowlist|== *['\"].*@" lib/ routes/ | head -30
+grep -rnE "=== ['\"][A-Za-z0-9_-]{6,}['\"]|token *=|BYPASS|magic|allowlist|== *['\"].*@" lib/ lib/routes/ | head -30
 # identifier-generation schemes (are the ids the ONLY guard on a resource?)
-grep -rnE "randomBytes|uuid|\bid\b *=|basename|nextval|seq" lib/ routes/ | head -30
+grep -rnE "randomBytes|uuid|\bid\b *=|basename|nextval|seq" lib/ lib/routes/ | head -30
 ```
 
 For each hit, apply the S-021 test: name the concrete cheap exploit the disclosure

@@ -27,7 +27,7 @@ Two things make that worse than ordinary spam here:
 
 So the cooldown is stored **on the account** — `verification.sentAt` and
 `reset.sentAt`, both compared against `MAIL_COOLDOWN_MS` = 60 s in
-`routes/account.js` via the shared `mailThrottled(record)` helper. Rotating IPs
+`lib/routes/account.js` via the shared `mailThrottled(record)` helper. Rotating IPs
 cannot move it, because it is keyed to the thing being protected rather than the
 thing doing the protecting.
 

@@ -43,7 +43,7 @@ Before interviewing, spend a few tool calls learning what the change would
 actually touch, so your questions are concrete and the issue can name real files.
 Read `CLAUDE.md` and the relevant `.claude/rules/`, and locate the affected area:
 
-- Which layer? Backend (`server.js`, `lib/*.js`, `routes/*.js`) vs. frontend
+- Which layer? Backend (`server.js`, `lib/*.js`, `lib/routes/*.js`) vs. frontend
   (`public/js/*.js` in their fixed load order) vs. both.
 - Does it touch data shape (`lib/store.js`)? User-facing text (needs i18n keys in
   **both** `lang/en.js` and `lang/de.js`)? A route? A view (`views-*.js`)?
@@ -51,7 +51,7 @@ Read `CLAUDE.md` and the relevant `.claude/rules/`, and locate the affected area
   concept, "Session" naming, theme-derived colors, no frontend framework, no
   third persistence backend, tenant isolation)?
 
-This is what lets the issue say "add a route under `routes/sessions.js` and a key
+This is what lets the issue say "add a route under `lib/routes/sessions.js` and a key
 `session.export` to both lang files" instead of "add an export feature".
 
 ## 3. Interview to erase the uncertainties

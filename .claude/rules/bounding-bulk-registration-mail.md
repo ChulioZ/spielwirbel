@@ -40,7 +40,7 @@ stays healthy and the operator gets a log line instead of a flagged account.
   (it does, to 1e6) or a long account spec trips the breaker on its own traffic —
   the same reasoning as the rate-limit ceilings there.
 - **The refusal must stay silent at the route.** `send()` *throws*, `sendSafe()`
-  in `routes/account.js` already log-and-continues, so register still answers
+  in `lib/routes/account.js` already log-and-continues, so register still answers
   `{ ok: true }`. A distinct code would be a perfect account-existence probe —
   the anti-enumeration invariants in `.claude/rules/user-accounts.md` bind here
   exactly as they do for the cooldown skips. `test/account.test.js` pins that the

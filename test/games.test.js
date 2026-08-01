@@ -640,7 +640,7 @@ test('POST games/move-to scrubs the source round\'s session history', async () =
   assert.equal(target.games[0].id, game.id);
 });
 
-// Regression (#563): the local actorSeat copy in routes/games.js had no uid guard,
+// Regression (#563): the local actorSeat copy in lib/routes/games.js had no uid guard,
 // so `m.userId === undefined` matched the first UNLINKED seat and every
 // game-lifecycle activity was credited to the round's first member in accounts-off
 // mode ("· von Alice" for something Alice did not do).

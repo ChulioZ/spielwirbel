@@ -52,7 +52,7 @@ Derive, don't recall:
 
 ```bash
 # server-side network egress
-grep -rnE "fetch\(|https?://" lib/ routes/ --include=*.js | grep -v "^.*test" | head -40
+grep -rnE "fetch\(|https?://" lib/ lib/routes/ --include=*.js | grep -v "^.*test" | head -40
 grep -nE '"[a-z0-9@/-]+":' package.json          # runtime deps that talk to a network
 # browser-side egress: the CSP is the machine-readable inventory
 grep -nE "img-src|connect-src|script-src|frame-src|font-src" lib/app.js

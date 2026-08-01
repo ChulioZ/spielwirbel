@@ -224,6 +224,7 @@ module.exports = [
     // Everything else recommended (no-dupe-keys on the lang tables, no-undef for
     // real typos, no-unreachable, valid-typeof, …) stays on.
     files: ['public/js/**/*.js'],
+    ignores: ['public/js/pages/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'script',
@@ -232,6 +233,22 @@ module.exports = [
     rules: {
       'no-redeclare': 'off',
       'no-unused-vars': ['error', { vars: 'local', args: 'after-used', caughtErrors: 'all' }],
+    },
+  },
+  {
+    // Standalone-page scripts (public/js/pages/**): each is a self-contained IIFE
+    // loaded by its OWN html document only, so it shares nothing with the SPA's
+    // global scope — no `frontendGlobals`, and the two rules relaxed above stay
+    // ON. That is what makes the directory boundary real rather than a
+    // convention: a page script reaching for an SPA global (`t`, `api`,
+    // `showHome`) is a `no-undef` error here, and a genuinely unused top-level
+    // name inside one of these IIFEs is reported instead of being excused as
+    // "used from another file" — it cannot be, because nothing else loads it.
+    files: ['public/js/pages/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: { ...globals.browser },
     },
   },
   {

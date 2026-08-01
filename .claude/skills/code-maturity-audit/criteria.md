@@ -57,7 +57,7 @@ not a finding; the rejected entries below are that ledger.
 ### M-003 — Mutating routes validate through the shared zod boundary
 - **Status:** adopted · 2026-07-29
 - **Source:** `docs/production-readiness.md` §7 item 3 (#213) · `lib/validate.js`
-- **Check:** Every mutating route in `routes/*.js` runs its body through the
+- **Check:** Every mutating route in `lib/routes/*.js` runs its body through the
   shared `lib/validate.js` schema pattern. A new route hand-rolling
   `typeof`/`Array.isArray` checks is a regression to the pre-#213 shape —
   uniformity at the router boundary is the point, not zod for its own sake.
@@ -103,12 +103,12 @@ not a finding; the rejected entries below are that ledger.
 - **Source:** `.claude/rules/guest-demo-accounts.md` §1 (production runs two
   replicas) · `docs/production-readiness.md` §7 item 5
 - **Check:** Sweep module-level mutable state (module-scope counters, Maps,
-  caches) in `lib/` and `routes/`. Classify each instance: (a) correct
+  caches) in `lib/` and `lib/routes/`. Classify each instance: (a) correct
   per-process by design; (b) a **documented accepted trade-off** — the
   in-memory rate-limiter stores (#215 tracks the Redis store as a scaling
   prerequisite), the `MAIL_DAILY_MAX` budget in `lib/mail.js` (per-process by
   documented decision, `bounding-bulk-registration-mail.md`), the 10-minute
-  lookup cache in `routes/lookup.js`, the `/readyz` result cache in
+  lookup cache in `lib/routes/lookup.js`, the `/readyz` result cache in
   `lib/observability.js`; or (c) a finding — state whose *correctness* (not
   merely efficiency) assumes one process. The done-right model is the demo
   machinery: liveness counts and cooldowns are read from the store per request,

@@ -10,7 +10,7 @@ cost of the feature was that every screen resolved an id against
 session)` → `[{ id, name, guest }]`, `personLabel(person)` → `"Anna (Gast)"`. It
 gets its own file for the `coverage:ci` reason in
 `.claude/rules/frontend-helper-modules-and-coverage.md`, and it also holds the two
-limits `routes/sessions.js` **requires out of it** — `MAX_SESSION_GUESTS` and
+limits `lib/routes/sessions.js` **requires out of it** — `MAX_SESSION_GUESTS` and
 `GUEST_NAME_MAX` (`.claude/rules/shared-constants-across-the-stack.md`). Both are
 shared rather than duplicated because the server is deliberately *lenient*: it
 truncates the list and each name instead of 400ing, so a drifted client copy would
@@ -88,7 +88,7 @@ Omitting the control rather than casting and filtering the flag is what lets
 guest-specific exclusion at all** — there is simply never a guest `retire` flag.
 Two consequences follow and both are load-bearing:
 
-- `dropGuestRetireFlags()` in `routes/sessions.js` strips one from a hand-crafted
+- `dropGuestRetireFlags()` in `lib/routes/sessions.js` strips one from a hand-crafted
   `POST …/results`, so the invariant holds for data too, not just for the UI.
 - The guard in `POST …/results` is in the **route, not the repo** — the contract
   suite pins that the store happily persists a guest `retire`, which is what

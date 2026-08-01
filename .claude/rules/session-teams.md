@@ -9,7 +9,7 @@ and each fails quietly.
 ## 1. The client CANNOT name a guest by id, so the wire format is positional
 
 Guest ids are minted server-side inside the very request that starts the session
-(`resolveGuests`, `routes/sessions.js`), so at POST time no guest id exists
+(`resolveGuests`, `lib/routes/sessions.js`), so at POST time no guest id exists
 anywhere in the browser. A team therefore arrives as
 
 ```jsonc
@@ -42,7 +42,7 @@ three-player game, which is often exactly why teams were formed:
 playerCount = memberIds.length + guests.length - teamedPeople + teams.length
 ```
 
-`routes/sessions.js` computes it for the real pool and `showStartSession()` for
+`lib/routes/sessions.js` computes it for the real pool and `showStartSession()` for
 the live preview, and **the two must move together** — the standing constraint in
 `.claude/rules/active-games-filter-sites.md`, now with a second term in it.
 

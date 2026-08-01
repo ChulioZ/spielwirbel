@@ -709,7 +709,7 @@ test('a seat can be claimed and released by its own account (#421)', async () =>
   assert.equal(claimed.body.name, 'Alice');
 });
 
-// The payoff for the auto-seat: actorSeat (routes/games.js) resolves the acting
+// The payoff for the auto-seat: actorSeat (lib/routes/games.js) resolves the acting
 // account to a member by m.userId, so before #421 an owner's own actions carried
 // no actorMemberId and the Chronik showed no „von …" for them, ever.
 test('the creator is attributed in the activity feed from the first action (#421)', async () => {

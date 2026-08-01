@@ -1314,7 +1314,7 @@ module.exports = function repoContract(repo) {
   });
 
   test('a taken username outranks a taken e-mail, so the open error cannot probe the hidden one', async () => {
-    // routes/account.js answers username_taken openly (a public handle) but hides
+    // lib/routes/account.js answers username_taken openly (a public handle) but hides
     // email_taken behind { ok: true }. If a row colliding on BOTH reported the
     // e-mail, an attacker holding one taken username could ask "does this address
     // exist?" and read the answer off which error came back. The repo therefore
@@ -2098,7 +2098,7 @@ module.exports = function repoContract(repo) {
   });
 
   // Deletion (#389): the repo removes ANY notice, including a decided one — the
-  // Art. 17 retention guard is a ROUTE concern (routes/admin.js reads decidedAt
+  // Art. 17 retention guard is a ROUTE concern (lib/routes/admin.js reads decidedAt
   // and demands ?force=1), deliberately not baked into the store.
   test('deleteContactNotice removes any notice; unknown id is null (#389)', async () => {
     const notice = await repo.createContactNotice({

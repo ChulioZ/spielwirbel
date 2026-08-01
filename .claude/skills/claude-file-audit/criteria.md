@@ -139,7 +139,7 @@ research at all.
 ### C-010 — `.env.example` matches the env vars the code reads
 - **Status:** adopted · 2026-07-23
 - **Source:** `no-reading-env-files.md`
-- **Check:** Extract `process.env.X` across `lib/`, `routes/`, `scripts/`, `server.js` and
+- **Check:** Extract `process.env.X` across `lib/`, `lib/routes/`, `scripts/`, `server.js` and
   diff against the (commented-out) entries in `.env.example`. It is the only sanctioned
   description of the app's configuration surface, since the real `.env` is unreadable.
 - **Enforced by:** — (manual)

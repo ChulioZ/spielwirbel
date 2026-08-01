@@ -1,7 +1,7 @@
 ---
 paths:
   - "lib/repo/**"
-  - "routes/games.js"
+  - "lib/routes/games.js"
   - "test/support/repo-contract.js"
 ---
 

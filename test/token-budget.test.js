@@ -74,8 +74,7 @@ const CLAUDE_MD_BUDGET = 200;
 // the lang tables as the flat-data-table case, so they are not outliers to record.
 const sourceFiles = () => [
   'server.js',
-  ...walk('lib', (f) => f.endsWith('.js')),
-  ...walk('routes', (f) => f.endsWith('.js')),
+  ...walk('lib', (f) => f.endsWith('.js')),   // recursive, so it covers lib/routes
   ...walk('scripts', (f) => f.endsWith('.js')),
   ...walk('public/js', (f) => f.endsWith('.js') && !f.startsWith('public/js/lang/')),
   ...walk('test', (f) => f.endsWith('.js')),
@@ -110,12 +109,12 @@ const SOURCE_ALLOW = {
   // recorded — not yet judged against the seam test
   'public/js/views-round-tabs.js': 'recorded 2026-07-30 — holds Regal, Chronik, Pokale and the two archive screens; the most likely real seam in the tree',
   'public/js/views-round-lookup.js': 'recorded 2026-07-30 — the add-game/link-provider sheets plus the shared lookup menu',
-  'public/js/admin.js': 'recorded 2026-07-30 — the whole operator panel as one IIFE on its own standalone page',
+  'public/js/pages/admin.js': 'recorded 2026-07-30 — the whole operator panel as one IIFE on its own standalone page',
   'public/js/account.js': 'recorded 2026-07-30 — auth screens, token handling and the account screen',
   'public/js/core.js': 'recorded 2026-07-30 — the shared helper surface every view loads',
   'public/js/views-round-detail.js': 'recorded 2026-07-30 — game detail plus the sheet/editor machinery',
-  'routes/admin.js': 'recorded 2026-07-30 — one router, but the widest surface of any',
-  'routes/account.js': 'recorded 2026-07-30 — register/verify/login/refresh/reset plus self-service export and deletion',
+  'lib/routes/admin.js': 'recorded 2026-07-30 — one router, but the widest surface of any',
+  'lib/routes/account.js': 'recorded 2026-07-30 — register/verify/login/refresh/reset plus self-service export and deletion',
 };
 
 const RULE_ALLOW = {

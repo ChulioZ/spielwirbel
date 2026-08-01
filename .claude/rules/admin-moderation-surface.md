@@ -2,8 +2,8 @@
 
 `ADMIN_PASSWORD` turns on `/admin.html` + `/api/admin`: lookup/takedown/
 redaction, account suspend/restore, GDPR export/erasure, the action log, the
-Kennzahlen card. `lib/admin.js` · `routes/admin.js` · `public/admin.html` +
-`public/js/admin.js`. Every trap below fails *silently* or *dangerously* if
+Kennzahlen card. `lib/admin.js` · `lib/routes/admin.js` · `public/admin.html` +
+`public/js/pages/admin.js`. Every trap below fails *silently* or *dangerously* if
 undone.
 
 ## 1. ADMIN_PASSWORD must never be AUTH_PASSWORD
@@ -66,17 +66,17 @@ stayed green.
 `moderationActions` (#275) and `instanceMetrics` (#404) are **absent** from
 `TENANT_METHODS` (`lib/repo/index.js`). That absence is the enforcement:
 handlers only hold `req.repo`, so they cannot reach cross-tenant methods.
-Since #419 the admin-gated `routes/admin.js` is no longer the *only* caller of
-the module-level repo: `routes/account.js` reaches `eraseAccount`,
+Since #419 the admin-gated `lib/routes/admin.js` is no longer the *only* caller of
+the module-level repo: `lib/routes/account.js` reaches `eraseAccount`,
 `tenantSummary` and `exportAccountData` for **self-service** deletion/export —
 that is safe because every such call is bound to the authenticated caller's
 own uid/tenant behind `requireUser` plus a password re-auth, never to a
 request-supplied id. The invariant is therefore: a global repo method is
-reachable outside `routes/admin.js` **only when bound to the caller's own
+reachable outside `lib/routes/admin.js` **only when bound to the caller's own
 account**. Adding one
 to `TENANT_METHODS` would both break it (no tenant argument) and expose
 cross-tenant reads to every route. Also: `listUsers()` returns the raw stored
-user shape **including secrets** — `routes/admin.js` projects it down to the
+user shape **including secrets** — `lib/routes/admin.js` projects it down to the
 safe fields; never respond with it directly.
 
 ## 5. Erasure & export (#273) run tenant-scoped — the admin escape cannot delete
@@ -130,7 +130,7 @@ without anyone remembering it exists.
   copy as `distinct()` until #404 deleted the rows that used it; the trap is a
   property of the idiom, not of that file.)
 - The server reports facts; the ok/warn/off opinions live in `statusRows()`
-  (`public/js/admin.js`), so changing an opinion never changes the API shape. A
+  (`public/js/pages/admin.js`), so changing an opinion never changes the API shape. A
   **null** verdict is the neutral pill and is what a plain count gets — a green
   one would read as an all-clear about a number nobody graded.
 - **`instanceMetrics` must read the round tables under `atx()`.**
@@ -253,7 +253,7 @@ Two smaller things about the dialog itself:
   row per `/api` request), so it bites immediately rather than after the
   15-min access-token TTL. It also clears `refreshTokens`, so a suspended
   refresh answers `invalid_refresh_token`; the `account_disabled` guard in
-  `routes/account.js` stays as defence in depth.
+  `lib/routes/account.js` stays as defence in depth.
 - **Takedown clears the DB reference before deleting the bytes** — the reverse
   order leaves a permanently broken cover on partial failure. `cleared: 0` is
   reported honestly rather than as an error.

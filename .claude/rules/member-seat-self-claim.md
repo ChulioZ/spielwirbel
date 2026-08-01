@@ -19,7 +19,7 @@ with no "is that you" check. Two consequences, neither of which throws:
   it can be handed to someone else.
 
 So the guard is about *whose* seat this is, never about the value being
-well-formed. The matrix, in `routes/members.js`:
+well-formed. The matrix, in `lib/routes/members.js`:
 
 | Request | Answer |
 |---|---|
@@ -32,8 +32,8 @@ well-formed. The matrix, in `routes/members.js`:
 
 An unknown id is deliberately folded into `not_self` rather than kept as the old
 400 `Unknown user` — that answer doubled as "does this id exist?".
-`already_seated` exists because `actorSeat` (`routes/games.js`) and `seatOf`
-(`routes/invitations.js`) both `.find()`, so two seats for one account is
+`already_seated` exists because `actorSeat` (`lib/routes/games.js`) and `seatOf`
+(`lib/routes/invitations.js`) both `.find()`, so two seats for one account is
 undefined behaviour. Name and colour edits stay open to grantees; only the link
 is restricted.
 

@@ -49,7 +49,7 @@ and the traps that cost effort:
 - **`TRUNCATE` is not subject to RLS** (it's table-level, needs its own
   privilege) — that's why the Postgres test files' cleanup keeps working as-is.
 
-- **Registration mints a personal tenant** (`routes/account.js`): each new user
+- **Registration mints a personal tenant** (`lib/routes/account.js`): each new user
   gets a fresh `tenantId`, and the tenant stays **1:1 with an account** — round
   sharing (#207) does **not** put two accounts in one tenant. Instead a grantee
   *acts as* the owner's tenant for the duration of a request to a granted round

@@ -87,7 +87,7 @@ test('every product event in the EVENTS allowlist is named in its rule', () => {
 
 test('every quota refusal code a route emits is named in its rule', () => {
   const codes = new Set();
-  for (const [, text] of filesIn('routes')) {
+  for (const [, text] of filesIn('lib/routes')) {
     for (const m of text.matchAll(/'(quota_[a-z_]+)'/g)) codes.add(m[1]);
   }
   assert.ok(codes.size >= 6, `expected at least 6 quota codes, found ${codes.size}`);
@@ -104,8 +104,12 @@ test('every constant the backend shares out of public/js is named in its rule', 
   // the client offers and the server validates. Each instance must be listed, or
   // the rule stops being the inventory a future session checks against.
   const shared = new Set();
-  for (const [, text] of [...filesIn('routes'), ...filesIn('lib')]) {
-    for (const m of text.matchAll(/require\('\.\.\/public\/js\/([A-Za-z0-9_-]+)'\)/g)) shared.add(m[1]);
+  // `filesIn` is non-recursive, so `lib/routes` is named separately from `lib`.
+  // The depth-agnostic `(?:\.\.\/)+` matters: the routers reach public/js with
+  // `../../` since they moved under lib/, and a `\.\.\/`-only regex would have
+  // silently matched nothing and left `shared` empty rather than failing.
+  for (const [, text] of [...filesIn('lib/routes'), ...filesIn('lib')]) {
+    for (const m of text.matchAll(/require\('(?:\.\.\/)+public\/js\/([A-Za-z0-9_-]+)'\)/g)) shared.add(m[1]);
   }
   assert.ok(shared.size >= 3, `expected at least 3 shared frontend modules, found ${shared.size}`);
 

@@ -448,7 +448,7 @@ test('suspending an account blocks it immediately without deleting data', async 
     // is already gone by the time the disabled check would run — hence
     // invalid_refresh_token rather than account_disabled. Both refuse; this is
     // the stronger of the two, since the token cannot be reused even if the
-    // account is later restored. (routes/account.js keeps the disabled guard as
+    // account is later restored. (lib/routes/account.js keeps the disabled guard as
     // defence in depth, for a row disabled directly in the DB.)
     const refresh = await request(app)
       .post('/api/account/refresh')

@@ -8,7 +8,7 @@
  * side behind the #268 admin gate, plus proof the old route is gone.
  *
  * Feedback is seeded straight through repo.createFeedback (global, un-scoped) —
- * exactly what routes/contact.js now calls — so these tests need no app account.
+ * exactly what lib/routes/contact.js now calls — so these tests need no app account.
  */
 
 process.env.ADMIN_PASSWORD = 'operator-secret-pw';

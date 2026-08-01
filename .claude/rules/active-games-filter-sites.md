@@ -5,7 +5,7 @@ mean *"in the active collection"* had to become `!g.retired && !g.completed`.
 The trap: the filter is **not** centralized, and the two most consequential
 sites are on the **server**, where no view test would catch a miss.
 
-The full set — grep `retired` in `routes/`, `lib/` and `public/js/`
+The full set — grep `retired` in `lib/routes/`, `lib/` and `public/js/`
 before assuming you have them all:
 
 **Server (the ones that bite silently):**
@@ -15,12 +15,12 @@ before assuming you have them all:
   **promises more games than the copy delivers**. These two must stay in
   agreement; `test/rounds.test.js` asserts
   `copy.games.length === entry.gameCount` for exactly that reason.
-  (It lived in `routes/rounds.js` when #250 wrote this rule; #301's summary
+  (It lived in `lib/routes/rounds.js` when #250 wrote this rule; #301's summary
   read moved it down into the repo, where each backend now filters on its own —
   `json.js` with `!g.retired && !g.completed`, `postgres.js` with two
   `IS NOT TRUE` clauses in the `listRoundSummaries` SQL. Both must change
   together.)
-- `routes/sessions.js` — **two** guards, easy to fix one and miss the other:
+- `lib/routes/sessions.js` — **two** guards, easy to fix one and miss the other:
   the draw `pool` filter *and* the direct-pick `if (game.retired)` 400. Miss the
   latter and an archived game stays playable by id even though it is invisible
   in the UI that would offer it. The same `pool` filter also carries the
@@ -40,7 +40,7 @@ count, `retired || completed` for the other). `views-session.js` also carries an
 inverse check of that second shape, gating the per-game "Aussortieren" button.
 
 **Deliberately NOT filtered — don't "fix" these:**
-- The games quota (`routes/games.js`, `lib/quota.js`) counts **every** game
+- The games quota (`lib/routes/games.js`, `lib/quota.js`) counts **every** game
   regardless of state: an archived game still holds a row and a possible cover.
 - The game **detail page** renders archived games fine (that is how you restore
   one); only the actions change.

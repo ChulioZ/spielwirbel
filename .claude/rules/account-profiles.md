@@ -20,7 +20,7 @@ browsable is a hole in the moderation surface
 (`.claude/rules/admin-moderation-surface.md`), and nothing about the route's own
 code hints that the guard it needs lives two mounts away.
 
-So `routes/profile.js` checks `target.disabled` itself, and answers the
+So `lib/routes/profile.js` checks `target.disabled` itself, and answers the
 **identical** `404 user_not_found` as an unknown handle:
 
 ```js
@@ -60,7 +60,7 @@ and hoisting the `feedFor` call above the friendship branch reddens **two**.
 
 `incoming` vs `outgoing` is not a property of the friendship — it is a property
 of *who is asking*. Both come from one `listFriendships(me)` read and the same
-`otherParty` definition `routes/friends.js` uses, so the two surfaces cannot
+`otherParty` definition `lib/routes/friends.js` uses, so the two surfaces cannot
 drift on what "incoming" means. The test asserts the same row reads `outgoing`
 for the sender and `incoming` for the addressee **and** that both report the same
 `friendshipId`, which is what makes it a statement about one row rather than two

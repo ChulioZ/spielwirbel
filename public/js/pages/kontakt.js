@@ -84,7 +84,7 @@
     },
   };
 
-  // Select values match the server's CATEGORIES allowlist (routes/contact.js);
+  // Select values match the server's CATEGORIES allowlist (lib/routes/contact.js);
   // '' is an ordinary contact message, 'feedback' is store-only product feedback
   // (#321), and the remaining six are DSA Art. 16 reports.
   const CATEGORY_OPTIONS = [

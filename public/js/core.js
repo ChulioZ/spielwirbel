@@ -579,7 +579,7 @@ function avgColor(avg) {
 }
 
 // The avatar palette itself lives in member-colors.js — one source of truth
-// shared with routes/members.js, which validates against it (#420).
+// shared with lib/routes/members.js, which validates against it (#420).
 function memberColor(round, memberId) {
   const idx = round.members.findIndex((m) => m.id === memberId);
   // A stored color (set on the member's detail page) wins; otherwise the color

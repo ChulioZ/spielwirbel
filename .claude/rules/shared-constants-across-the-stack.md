@@ -1,7 +1,7 @@
 # A constant the client offers and the server validates must be ONE file
 
 The member avatar palette lived twice: `MEMBER_COLORS` in `public/js/core.js`
-(what the swatches render) and a hand-copied array in `routes/members.js` (what
+(what the swatches render) and a hand-copied array in `lib/routes/members.js` (what
 `PATCH …/members/:mid` validates), with a comment on the copy saying "keep in
 sync". #145 darkened six of the eight hexes for WCAG AA and updated only the
 frontend. Result (#420): **six of the eight colours the UI offered were rejected
@@ -16,7 +16,7 @@ against it, they get one source of truth: a small, dependency-free file under
 `index.html` **and** `require`d by the route.
 
 ```js
-// routes/members.js
+// lib/routes/members.js
 const { MEMBER_COLORS } = require('../public/js/member-colors');
 ```
 
@@ -26,7 +26,7 @@ rejected: a parity test still needs someone to remember the second copy exists,
 and it is the copy nobody remembers that rots.
 
 **The second instance is `public/js/locales.js`** (#504): the shipped UI locales,
-offered by the language picker and validated by `routes/contact.js` for the
+offered by the language picker and validated by `lib/routes/contact.js` for the
 feedback-metadata `locale`. It replaced a hand-copied `['de', 'en']` in that
 route — which had the palette bug's exact failure mode waiting, one locale
 further on: feedback sent from any language nobody remembered to add there loses
@@ -39,7 +39,7 @@ already listed).
 
 **The third is `public/js/session-people.js`** (#458, #575): `MAX_SESSION_GUESTS`,
 `GUEST_NAME_MAX` and `MIN_TEAM_SIZE`, offered by the guest and team pickers and
-required by `routes/sessions.js`. It is the sharpest case of the three, because the server is
+required by `lib/routes/sessions.js`. It is the sharpest case of the three, because the server is
 deliberately **lenient** — it truncates an over-long guest list and an over-long
 name instead of 400ing — so a drifted client copy would silently drop guests and
 clip names with **no error anywhere**, i.e. the palette bug's failure mode minus
@@ -48,7 +48,7 @@ even the eventual 400 that exposed it. See
 
 Each new instance must be named in this inventory — the three paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
-`routes/` and `lib/` appears in it, because the list had already gone stale by one
+`lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a
 module further down this file does not satisfy it.
 
