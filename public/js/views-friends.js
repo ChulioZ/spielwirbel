@@ -98,7 +98,7 @@ async function showFriends() {
 // The public account profile at /u/:username (#558). Deliberately thin: a
 // friendship shares no round data, so everything a profile might "obviously"
 // show (shelf, sessions, ratings) is across a tenant boundary and is out of
-// scope — see routes/profile.js. What is here is the username, the registration
+// scope — see lib/routes/profile.js. What is here is the username, the registration
 // month, the viewer's own friendship state, and — only between accepted friends
 // — that account's feed.
 async function showProfile(username) {
@@ -144,7 +144,7 @@ async function showProfile(username) {
   app.appendChild(renderProfileCta(p, username));
 
   // The friend's own feed, between accepted friends only. The server applies
-  // the acceptedAt cutoff (routes/profile.js), so nothing predating the
+  // the acceptedAt cutoff (lib/routes/profile.js), so nothing predating the
   // friendship can arrive here.
   if (p.friendship === 'friends') {
     app.appendChild(h(`<h2 class="friends-section__h">${esc(t('profile.feedTitle'))}</h2>`));

@@ -86,7 +86,7 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   - `lib/upload.js` is the multer config for cover images (persisted via the
     `lib/storage/` seam — disk under `data/uploads/` by default, S3 when
     `S3_BUCKET` is set; only the `/uploads/<key>` path is saved in the data).
-  - `routes/*.js` are Express routers, one per resource, mounted under
+  - `lib/routes/*.js` are Express routers, one per resource, mounted under
     `/api/rounds/...`. Nested routers use `{ mergeParams: true }` for `:rid`.
 - **Frontend:** `public/js/*.js` are plain classic `<script>`s sharing one global
   scope, loaded in a fixed order. The **authoritative list is the `<script>`
@@ -95,8 +95,12 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   available everywhere), small dependency-free helper modules and `core.js`
   (shared helpers/state) load before the `views-*.js` files, and
   `router.js` → `main.js` → `pwa.js` come last (`main.js` bootstraps).
-  (`login.js`, `kontakt.js` and `admin.js` are separate IIFEs loaded only by
-  their own standalone HTML pages, outside this shared scope.)
+  **`public/js/pages/*.js` are NOT part of that scope**: each is a separate IIFE
+  loaded only by its own standalone HTML page (`login.js`, `kontakt.js`,
+  `admin.js`). They get their own `eslint.config.js` block with no SPA globals,
+  so a page script reaching for `t()`/`api()` is a `no-undef` error rather than
+  a silent runtime failure — don't add one to `index.html`, and don't put a
+  shared-scope file in there.
   - **Load-order trap:** a top-level statement in an earlier file must not
     reference a function/`const` defined in a later file at *load time* (it isn't
     defined yet). Defer such references (e.g. wrap in an arrow that runs on
@@ -115,7 +119,7 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
 - **The locale set is data, not code** (#504): `public/js/locales.js` holds one
   row per language (code, native label, BCP-47 tag) and everything else derives
   from it — the picker, `Intl.PluralRules` in `tn()`, date/month formatting, and
-  the feedback-metadata allowlist in `routes/contact.js` (a backend file
+  the feedback-metadata allowlist in `lib/routes/contact.js` (a backend file
   requiring out of `public/js/` on purpose — see
   `.claude/rules/shared-constants-across-the-stack.md`). Adding a language is a
   row there, a `lang/<code>.js` file wired into `index.html` + `sw.js`'s `SHELL`

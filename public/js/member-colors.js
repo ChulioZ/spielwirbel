@@ -1,6 +1,6 @@
 /* Spielwirbel – the curated member-avatar palette.
    Its own file so it can be the SINGLE source of truth: the frontend loads it as
-   a shared-scope script (before core.js) and routes/members.js requires it as a
+   a shared-scope script (before core.js) and lib/routes/members.js requires it as a
    CommonJS module to validate PATCH ../members/:mid. It used to be hand-copied
    into both, and #145 darkened only the frontend copy — so six of the eight
    swatches the UI offered were rejected with `400 Invalid color` (#420).

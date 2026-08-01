@@ -1,7 +1,7 @@
 ---
 paths:
   - "lib/repo/**"
-  - "routes/account.js"
+  - "lib/routes/account.js"
   - "test/support/repo-contract.js"
   - "test/account.test.js"
 ---
@@ -16,7 +16,7 @@ answers have opposite disclosure rules:
 - `username_taken` is returned **openly** (409) — a username is a public
   identifier by design.
 - `email_taken` is deliberately **hidden** behind `{ ok: true }`
-  (`routes/account.js` anti-enumeration).
+  (`lib/routes/account.js` anti-enumeration).
 
 So mapping a violation to the wrong one is not cosmetic: answering
 `email_taken` for a taken username turns the open error into a probe for the

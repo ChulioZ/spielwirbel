@@ -1,8 +1,8 @@
 ---
 paths:
   - "lib/providers/**"
-  - "routes/lookup.js"
-  - "routes/games.js"
+  - "lib/routes/lookup.js"
+  - "lib/routes/games.js"
   - "public/js/views-round-lookup.js"
   - "public/js/lookup-score.js"
   - "public/js/lookup-cover.js"
@@ -16,7 +16,7 @@ paths:
 # Add-game lookup providers (PS Store, Steam, Nintendo, Xbox, BGG) — how they work
 
 The add-game title field is a search-as-you-type lookup (`lib/providers/`,
-`routes/lookup.js`, `showAddGame`/`attachLookup` in
+`lib/routes/lookup.js`, `showAddGame`/`attachLookup` in
 `public/js/views-round-lookup.js`). Provider endpoints have no CORS headers, so
 **all provider calls run server-side** through `/api/rounds/:rid/lookup/*`; the
 browser never calls a provider. The frontend queries every provider **the round

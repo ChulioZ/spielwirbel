@@ -200,7 +200,7 @@ test('the feedback category is stored in the feedback store, not as a notice, an
   assert.equal(res.body.ok, true);
 
   // Stored as feedback with its context, no tenant (the endpoint is public) and
-  // no e-mail (none was typed) — the retired routes/feedback.js store shape.
+  // no e-mail (none was typed) — the retired lib/routes/feedback.js store shape.
   const entry = await storedFeedback('The Regal filter is confusing');
   assert.ok(entry);
   assert.equal(entry.context.path, '/round/abc/regal');

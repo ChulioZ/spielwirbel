@@ -29,11 +29,11 @@ game through `POST /api/rounds/:rid/games`:
 
 So on a self-hosted, password-gated instance every shelf change read
 **"· von <first member>"** in the Chronik, naming someone who did nothing — all
-four of `routes/games.js`'s activities (`game_added`, `game_retired`,
+four of `lib/routes/games.js`'s activities (`game_added`, `game_retired`,
 `game_completed`, `game_deleted`).
 
 **Fixed in #563.** There is now exactly one definition, `lib/actor-seat.js`,
-required by both `routes/games.js` and `routes/members.js`:
+required by both `lib/routes/games.js` and `lib/routes/members.js`:
 
 ```js
 function actorSeat(round, uid) {
@@ -45,7 +45,7 @@ function actorSeat(round, uid) {
 
 It is shared rather than copied deliberately: a per-route copy is precisely how
 the two drifted, and the drift is invisible (`.claude/rules/shared-constants-across-the-stack.md`).
-**`seatOf` in `routes/invitations.js` is a different helper and is safe as it
+**`seatOf` in `lib/routes/invitations.js` is a different helper and is safe as it
 stands** — it returns the member rather than an id, and both call sites are
 either behind `accounts.requireUser` (so `req.userId` is guaranteed) or pass a
 resolved `invitee.id`. Don't fold it in; do keep the precondition in mind if a

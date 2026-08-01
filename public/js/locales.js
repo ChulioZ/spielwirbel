@@ -1,7 +1,7 @@
 /* Spielwirbel – the set of UI locales the app ships.
    Its own file so it can be the SINGLE source of truth: the frontend loads it as
    a shared-scope script (before i18n.js, which reads these globals) and
-   routes/contact.js requires it as a CommonJS module to validate the feedback
+   lib/routes/contact.js requires it as a CommonJS module to validate the feedback
    metadata. That allowlist used to be a hand-copied ['de', 'en'] — the exact
    shape .claude/rules/shared-constants-across-the-stack.md exists to prevent,
    and one that silently drops the `locale` of feedback submitted from any locale

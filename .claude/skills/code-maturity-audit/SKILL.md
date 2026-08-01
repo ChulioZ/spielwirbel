@@ -117,7 +117,7 @@ findings; dedupe against them.
 
 ### 3. Multi-process state → M-006
 
-Sweep module-level mutable state in `lib/` and `routes/` and classify each
+Sweep module-level mutable state in `lib/` and `lib/routes/` and classify each
 instance: correct per-process by design, a documented accepted trade-off, or a
 finding. Production runs **two replicas** (`guest-demo-accounts.md` §1 records
 the class), so "works on my one process" is the sharpest hobby-vs-SaaS smell

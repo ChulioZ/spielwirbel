@@ -52,7 +52,9 @@ const entryNames = (tree) => new Set(
 // Source files a reader should be able to look up. Migrations are excluded: the
 // tree documents `migrations/` as a directory on purpose — they are versioned,
 // append-only, and listing each one would make the tree useless within a year.
-const SOURCE_DIRS = ['lib', 'routes', 'public/js'];
+// `walk` recurses, so `lib` covers `lib/routes` (the routers moved under lib/ so
+// the backend's concerns live in one package rather than app.js reaching upward).
+const SOURCE_DIRS = ['lib', 'public/js'];
 const SKIP = [path.join('lib', 'repo', 'migrations')];
 
 const walk = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })

@@ -79,7 +79,7 @@ test('personLabel answers an empty string for a missing person', () => {
   assert.equal(personLabel(null), '');
 });
 
-// Both are shared with routes/sessions.js (which requires this file) and with
+// Both are shared with lib/routes/sessions.js (which requires this file) and with
 // the setup screen's own input, so they have to stay usable as plain numbers.
 test('the guest cap and name limit are positive integers', () => {
   assert.ok(Number.isInteger(MAX_SESSION_GUESTS) && MAX_SESSION_GUESTS > 0);

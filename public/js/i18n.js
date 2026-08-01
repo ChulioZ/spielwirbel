@@ -9,7 +9,7 @@ const I18N = {};
 
 // SUPPORTED_LOCALES / LOCALE_LABELS / LOCALE_TAGS / localeTag come from
 // js/locales.js, which loads first — it is shared with the backend
-// (routes/contact.js requires it), so it cannot live here.
+// (lib/routes/contact.js requires it), so it cannot live here.
 
 let locale = 'en';
 

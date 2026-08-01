@@ -871,7 +871,7 @@
   }
 
   // Art. 15/20. The response is JSON rather than a download URL because the
-  // required reason travels in the request body (see routes/admin.js) — so the
+  // required reason travels in the request body (see lib/routes/admin.js) — so the
   // file is assembled here and saved via an object URL.
   async function exportUser(user) {
     const reason = askReason('Export');
@@ -1108,7 +1108,7 @@
 
   // ---- notices (#272) ------------------------------------------------------
 
-  // German labels for the stored category values (routes/contact.js CATEGORIES).
+  // German labels for the stored category values (lib/routes/contact.js CATEGORIES).
   const CATEGORY_LABELS = {
     copyright: 'Urheberrecht',
     csam: 'Missbrauchsdarstellungen',

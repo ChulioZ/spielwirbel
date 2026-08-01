@@ -21,8 +21,8 @@ lookup broke" rather than "someone changed a default". `enabledProviders()`
 (`public/js/views-round-lookup.js`) is the single place that decodes the absent
 case on the client; **`roundAllowsProvider()` (`lib/providers/index.js`) is the
 single place on the server** — it lived inline in `resolveProvider()`
-(`routes/lookup.js`) until #518 added a second consumer, the cover refresh in
-`routes/games.js`, and a hand-copied second decode is precisely how the
+(`lib/routes/lookup.js`) until #518 added a second consumer, the cover refresh in
+`lib/routes/games.js`, and a hand-copied second decode is precisely how the
 absent-means-all default gets silently defaulted away
 (`.claude/rules/shared-constants-across-the-stack.md`). Both check
 `Array.isArray`, deliberately — not truthiness, which would fold `[]` back into

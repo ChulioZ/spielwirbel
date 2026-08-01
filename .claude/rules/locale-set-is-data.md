@@ -3,7 +3,7 @@
 `public/js/locales.js` holds one row per shipped UI language (code, native label,
 BCP-47 tag). Everything else derives from it: the picker, `Intl.PluralRules` in
 `tn()`, `fmtDateTime`/`fmtMonth`, and the feedback-metadata allowlist in
-`routes/contact.js`. Adding a language is that row plus a `lang/<code>.js` file,
+`lib/routes/contact.js`. Adding a language is that row plus a `lang/<code>.js` file,
 wired into `index.html`, `sw.js`'s `SHELL` and a `CACHE` bump — **and a set of
 three landing screenshots for the new locale** (#457), which
 `test/landing-shots.test.js` requires for every `SUPPORTED_LOCALES` entry. That
@@ -34,7 +34,7 @@ The same applies to a parity test whose locale set is derived, and to any
 translation issue does:
 
 ```js
-SUPPORTED_LOCALES.push('zx');           // routes/contact.js resolves it per request
+SUPPORTED_LOCALES.push('zx');           // lib/routes/contact.js resolves it per request
 try { /* assert the route now accepts 'zx' */ } finally { SUPPORTED_LOCALES.pop(); }
 ```
 
@@ -45,7 +45,7 @@ uses the same move to prove the plural and date paths: it pushes a synthetic
 `fr` with its tag and a two-key dictionary, then asserts `0` renders **singular**
 (`0 joueur`), which the pre-#504 `n === 1` rule gets wrong.
 
-It only holds if the consumer resolves the list **per call**. `routes/contact.js`
+It only holds if the consumer resolves the list **per call**. `lib/routes/contact.js`
 reads it inside the zod `preprocess` closure, so it does; a module-level
 `const LOCALES = [...SUPPORTED_LOCALES]` copy taken at require time would refuse
 the synthetic locale — which is itself the bug, correctly caught.
@@ -126,7 +126,7 @@ assume the plurals follow.
   shipped set — that would re-pin a French user to German store results.
 
 **Related:** `.claude/rules/shared-constants-across-the-stack.md` (why
-`routes/contact.js` requires out of `public/js/`),
+`lib/routes/contact.js` requires out of `public/js/`),
 `.claude/rules/frontend-helper-modules-and-coverage.md` (why `locales.js` is its
 own file and the four places a new one must be wired into),
 `.claude/rules/frontend-script-load-order.md`,

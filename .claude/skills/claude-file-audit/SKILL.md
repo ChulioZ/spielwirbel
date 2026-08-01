@@ -87,7 +87,7 @@ grep -rhoE '`?[a-z_.-]+/[A-Za-z0-9_./-]+\.(js|md|json|css|html)`?' \
 
 Feed that list through an existence check and report the misses. Do the same for
 `.claude/rules/<name>.md` cross-links, npm scripts (against `package.json`), and
-routes (against `routes/`). Renames are the common cause, deletions the loud one.
+routes (against `lib/routes/`). Renames are the common cause, deletions the loud one.
 
 ### 2. Is each rule still *true*? → C-002
 
@@ -114,7 +114,7 @@ revert, the #207 co-tenancy reversal).
 
 Run the `keep-readme-current.md` checklist properly: features and views, the
 architecture tree, routes, scripts, env vars, and the skills table (which this very
-change had to update). Then diff `process.env.*` across `lib/`, `routes/`,
+change had to update). Then diff `process.env.*` across `lib/`, `lib/routes/`,
 `scripts/`, `server.js` **and `knexfile.js`** against `.env.example` — entries
 there are commented out, so match on the name, not on an assignment. (Miss
 `knexfile.js` and `DATABASE_SSL` reads as an orphan entry; the platform-injected

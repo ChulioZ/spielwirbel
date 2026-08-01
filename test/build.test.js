@@ -76,14 +76,14 @@ test('service worker precaches the hashed shell with a content-derived cache', (
 
 test('login.html reference is rewritten too', () => {
   const dist = read('login.html');
-  assert.ok(!dist.includes('"/js/login.js"'), 'no un-hashed login.js');
-  assert.ok(dist.includes(`"${manifest['/js/login.js']}"`), 'login.html points at hashed login.js');
+  assert.ok(!dist.includes('"/js/pages/login.js"'), 'no un-hashed login.js');
+  assert.ok(dist.includes(`"${manifest['/js/pages/login.js']}"`), 'login.html points at hashed login.js');
 });
 
 test('kontakt.html reference is rewritten too', () => {
   const dist = read('kontakt.html');
-  assert.ok(!dist.includes('"/js/kontakt.js"'), 'no un-hashed kontakt.js');
-  assert.ok(dist.includes(`"${manifest['/js/kontakt.js']}"`), 'kontakt.html points at hashed kontakt.js');
+  assert.ok(!dist.includes('"/js/pages/kontakt.js"'), 'no un-hashed kontakt.js');
+  assert.ok(dist.includes(`"${manifest['/js/pages/kontakt.js']}"`), 'kontakt.html points at hashed kontakt.js');
 });
 
 test('does not rename shared top-level identifiers (no minifyIdentifiers)', () => {

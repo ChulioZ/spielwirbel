@@ -2,7 +2,7 @@
 
 The verification link arrived **cut in half** for a real user, who had to copy
 and paste the two halves together by hand. The cause is not the mail provider,
-not the client, and not anything visible in the source of `routes/account.js` —
+not the client, and not anything visible in the source of `lib/routes/account.js` —
 it is an interaction between the body's encoding and the URL's length, and it
 survived three provider migrations in one day untouched.
 
@@ -46,7 +46,7 @@ tokens. Three parts of that are load-bearing:
 - **The stored record shape did NOT change.** Only the *secret* is hashed into
   `tokenHash`, never the assembled token — so the record never encoded which link
   shape produced it, and a legacy `?uid=…&token=…` link kept verifying across the
-  deploy. That fallback (`linkCredentials` in `routes/account.js`) was **not**
+  deploy. That fallback (`linkCredentials` in `lib/routes/account.js`) was **not**
   dead code at the time: a verification mail is valid for 24 h, so links in the
   pre-#434 shape were still sitting in inboxes when #434 shipped on 2026-07-25,
   and deleting it then would have stranded exactly the users who signed up just

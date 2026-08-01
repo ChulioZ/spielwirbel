@@ -148,9 +148,12 @@ lib/
     xbox.js          Xbox / Microsoft Store: search via the storefront
                      autosuggest API, detail via the public catalog service
                      (digital games)
-routes/
-  auth.js            /api/auth              (shared-password login/logout/status)
-  account.js         /api/account           (user accounts: register, verify
+  routes/            Express routers, one per resource; mounted by app.js
+                     above. Under lib/ so every backend concern lives in one
+                     package and app.js never reaches upward out of its own
+                     package to find them
+    auth.js          /api/auth              (shared-password login/logout/status)
+    account.js       /api/account           (user accounts: register, verify
                                              e-mail (+ resend), login, refresh,
                                              logout, forgot/reset password,
                                              change password (#482), delete the
@@ -158,31 +161,31 @@ routes/
                                              acknowledge a terms change (#521),
                                              and the per-user notification inbox
                                              (#207) — 404 unless ACCOUNTS_ENABLED)
-  invitations.js     /api/account/invitations (round-sharing: send / accept /
+    invitations.js   /api/account/invitations (round-sharing: send / accept /
                                              decline; the inviter fixes the
                                              member-seat take-over (#207) —
                                              404 unless ACCOUNTS_ENABLED)
-  friends.js         /api/account/friends   (friendships + Freundeskreis feed:
+    friends.js       /api/account/friends   (friendships + Freundeskreis feed:
                                              send / accept / decline / unfriend,
                                              list, feed (#325) —
                                              404 unless ACCOUNTS_ENABLED)
-  profile.js         /api/account/profile   (public account profile by username:
+    profile.js       /api/account/profile   (public account profile by username:
                                              handle, registration month, the
                                              caller's friendship state, and the
                                              friends-only feed (#558) —
                                              404 unless ACCOUNTS_ENABLED)
-  contact.js         /api/contact           (public contact form / DSA notice
+    contact.js       /api/contact           (public contact form / DSA notice
                                              intake → stores every submission +
                                              e-mails the operator + acknowledges
                                              reports; also the 'feedback' category
                                              (#321), stored-only via the feedback
                                              store, no mail; no auth, own rate
                                              limit, honeypot; fails loud in prod)
-  legal.js           /impressum, /datenschutz,
+    legal.js         /impressum, /datenschutz,
                      /nutzungsbedingungen    (server-rendered legal pages,
                                              identity from IMPRESSUM_* env;
                                              404 until configured)
-  admin.js           /api/admin             (operator moderation: instance
+    admin.js         /api/admin             (operator moderation: instance
                                              status, lookup by image/round/
                                              e-mail/tenant, per-tenant summary,
                                              round text + redaction, takedown,
@@ -193,24 +196,24 @@ routes/
                                              filterable action log, user feedback,
                                              recent warn/error logs —
                                              404 unless ADMIN_PASSWORD)
-  lookup.js          …/lookup               (search/game — provider proxy: PS Store, BGG, Steam, Nintendo, Xbox;
+    lookup.js        …/lookup               (search/game — provider proxy: PS Store, BGG, Steam, Nintendo, Xbox;
                                              round-scoped, refuses a provider the round disabled)
-  rounds.js          /api/rounds            (list — incl. granted rounds (#207);
+    rounds.js        /api/rounds            (list — incl. granted rounds (#207);
                                              detail, create, delete; revoke/leave
                                              a share via …/:rid/shares/:userId)
-  games.js           …/games                (add [+cover hotlink/source],
+    games.js         …/games                (add [+cover hotlink/source],
                                              edit [+link to provider],
                                              retire/restore, complete/restore,
                                              delete, move some/all to another
                                              round)
-  members.js         …/members              (add a seat, edit name / avatar
+    members.js       …/members              (add a seat, edit name / avatar
                                              color, claim/release your own seat)
-  sessions.js        …/sessions             (start, results, choice, finish,
+    sessions.js      …/sessions             (start, results, choice, finish,
                                              cancel, delete, remove one game)
-  activities.js      …/activities           (list the feed [GET], delete an entry)
-  background.js      …/background           (set the design)
-  tags.js            …/tags                 (create a custom tag [deduped], set its icon, delete one)
-  providers.js       …/providers            (set which lookup providers this round queries)
+    activities.js    …/activities           (list the feed [GET], delete an entry)
+    background.js    …/background           (set the design)
+    tags.js          …/tags                 (create a custom tag [deduped], set its icon, delete one)
+    providers.js     …/providers            (set which lookup providers this round queries)
 public/
   index.html
   login.html         standalone login page (shown only when AUTH_PASSWORD is set)
@@ -230,12 +233,15 @@ public/
                      locale (landing-*.<locale>.webp), generated once from
                      throwaway data and committed (see .claude/rules/)
   js/
-    login.js         login.html's own script — an IIFE, not part of the
-                     shared global scope below (only loaded by login.html)
-    kontakt.js       kontakt.html's own script — an IIFE (bilingual form),
-                     not part of the shared global scope (only loaded there)
-    admin.js         admin.html's own script — likewise an IIFE outside the
-                     shared scope, so no privileged code ships in the SPA
+    pages/           scripts for the standalone HTML pages above. Each is a
+                     self-contained IIFE loaded by its OWN document only, so it
+                     shares nothing with the SPA's single global scope below —
+                     enforced by its own eslint block (no SPA globals, and the
+                     two rules the shared scope relaxes stay on)
+      login.js       login.html's own script (only when AUTH_PASSWORD is set)
+      kontakt.js     kontakt.html's own script (the bilingual contact form)
+      admin.js       admin.html's own script, so no privileged code ships in
+                     the SPA
     locales.js       the set of shipped UI locales (code, native label, BCP-47
                      tag) — shared with the backend, which requires it
     i18n.js          translation engine (t(), locale detection, plural rules)
@@ -262,11 +268,11 @@ public/
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
-                     routes/members.js validates against (issue #420)
+                     lib/routes/members.js validates against (issue #420)
     session-people.js who took part in ONE session (members who joined + that
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds
-                     the guest cap routes/sessions.js enforces (issue #458)
+                     the guest cap lib/routes/sessions.js enforces (issue #458)
     guest-picker.js  the guest name field (chips + input), shared by the two
                      screens that start a session (issue #532)
     team-picker.js   the team field: group two or more of those people into one

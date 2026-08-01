@@ -39,7 +39,7 @@ Keep `lib/demo-tenant.js` dependency-free — that is the only reason it can be
 required from anywhere, including the repo.
 
 **Everything else requires `isDemoTenant` instead of re-deriving the check.** The
-cycle is specific to `observability.js` and the repo; a `routes/*.js` file can
+cycle is specific to `observability.js` and the repo; a `lib/routes/*.js` file can
 require `lib/demo` freely (`account.js`, `friends.js`, `invitations.js` and,
 since #506, `admin.js` all do). The second consumer is the admin **Konten** list: `GET
 /api/admin/users` drops demo rows *before* the `?q=` filter, so a search term
@@ -69,7 +69,7 @@ what makes it genuinely disposable rather than an unadvertised permanent account
 
 ## 3. The seeded games' PLAYER RANGES must fit the seeded seat count
 
-The draw pool filters on `minPlayers`/`maxPlayers` (`routes/sessions.js`). The
+The draw pool filters on `minPlayers`/`maxPlayers` (`lib/routes/sessions.js`). The
 demo seats four — the visitor's own owner seat (#421) plus three — so a shelf of
 games capping at 2 makes the visitor's **first action** answer *"No matching games
 in this round"*. On the one screen the demo exists to demonstrate, that reads as

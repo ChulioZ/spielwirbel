@@ -11,7 +11,7 @@
 
 // How many guests one session may take. The server caps the list at this number
 // and the setup screen refuses to add past it, so this file is required by
-// routes/sessions.js as the single source of truth — a hand-copied second number
+// lib/routes/sessions.js as the single source of truth — a hand-copied second number
 // would drift and the excess guests would be dropped silently
 // (.claude/rules/shared-constants-across-the-stack.md).
 const MAX_SESSION_GUESTS = 10;

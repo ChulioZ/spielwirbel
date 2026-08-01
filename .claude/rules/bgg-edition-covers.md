@@ -71,7 +71,7 @@ capability and the client fetches only when the grid is expanded. `test/lookup.t
 pins that opening the editor issues nothing.
 
 It is an **optional** capability, like `collection()`: the four storefronts expose
-no per-edition image set, so `routes/lookup.js` answers `400 covers_unsupported`
+no per-edition image set, so `lib/routes/lookup.js` answers `400 covers_unsupported`
 for a provider without one — after the round's provider setting is enforced, so a
 disabled provider still gets `403 provider_disabled` and never reveals what it
 can do.

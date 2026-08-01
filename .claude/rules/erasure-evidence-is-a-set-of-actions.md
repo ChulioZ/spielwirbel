@@ -14,8 +14,8 @@ Since #419 there are **two** erasure actions, not one:
 
 | Action | Written by | Path |
 |---|---|---|
-| `user_erased` | `routes/admin.js` | operator-assisted (#273) |
-| `account_deleted` | `routes/account.js` | self-service from `/konto` (#419) |
+| `user_erased` | `lib/routes/admin.js` | operator-assisted (#273) |
+| `account_deleted` | `lib/routes/account.js` | self-service from `/konto` (#419) |
 
 **The one the naive exemption drops is the common one.** Most people delete their
 own account rather than writing to the operator, so a purge exempting only

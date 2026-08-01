@@ -57,7 +57,7 @@ that a generic scanner does not know about.
 
 ### S-004 — Anti-enumeration answers are identical for known and unknown identifiers
 - **Status:** adopted · 2026-07-24
-- **Source:** `.claude/rules/unique-violation-reports-one-constraint.md` · `routes/account.js`
+- **Source:** `.claude/rules/unique-violation-reports-one-constraint.md` · `lib/routes/account.js`
 - **Check:** Register and forgot-password answer the same for known/unknown e-mails.
   `email_taken` stays hidden behind `{ ok: true }`; `username_taken` is openly a 409 by
   design. A 23505 on both indexes at once names `users_email_idx` — so the mapping must
@@ -169,11 +169,11 @@ that a generic scanner does not know about.
 
 ### S-014 — Request bodies are validated by a zod schema before use
 - **Status:** adopted · 2026-07-24
-- **Source:** `lib/validate.js` · `routes/*.js`
+- **Source:** `lib/validate.js` · `lib/routes/*.js`
 - **Check:** State-changing routes run `validateBody(schema, req, res)` and reject shape
   violations with the route's own message. Unknown fields are stripped, not trusted.
   A new write route that reads `req.body.x` without a schema is a finding. The two
-  pre-zod routes that validate inline (`routes/members.js`, `routes/background.js` —
+  pre-zod routes that validate inline (`lib/routes/members.js`, `lib/routes/background.js` —
   every field checked before use) are accepted as-is; converting them is optional
   consistency work, not a finding (audit 2026-07-24).
 - **Enforced by:** `test/validate.test.js`, per-route validation specs

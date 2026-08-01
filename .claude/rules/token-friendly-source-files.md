@@ -23,7 +23,7 @@ tokens):
   add boilerplate that inflates every read without adding information. The current
   code already does this well — keep it that way.
 - **Consistency — one shape, generalized once.** Match the established patterns so
-  an agent learns the shape once and reuses it: `routes/*.js` (`'use strict'`,
+  an agent learns the shape once and reuses it: `lib/routes/*.js` (`'use strict'`,
   header comment, data access via `req.repo`, an `express.Router`), providers
   (`search`/`detail` + pure `parse*` exports), and the frontend `show*` view
   convention. A new file that invents its own layout costs a re-learn every visit.
@@ -36,14 +36,14 @@ in `eslint.config.js`, and kept clear of the load-order trap (see
 when the concern boundary is real, not reflexively by size.
 
 **Moving or renaming code also invalidates any RULE that cites its old home.**
-`.claude/rules/**` is full of precise pointers (`routes/rounds.js` `gameCount`,
+`.claude/rules/**` is full of precise pointers (`lib/routes/rounds.js` `gameCount`,
 `core.js` `gameStats`, …), and those pointers are what make a rule actionable —
 so a move turns the rule into a wrong map without touching a line of it. Nothing
 catches it: the code still works, every test stays green, and the rule still
 *reads* authoritative.
 
 It has happened. #301's summary-read work moved `gameCount` out of
-`routes/rounds.js` into `listRoundSummaries` in both repo backends;
+`lib/routes/rounds.js` into `listRoundSummaries` in both repo backends;
 `active-games-filter-sites.md` kept naming the route file, and that rule exists
 precisely to enumerate the filter sites — so the one pointer it got wrong was the
 one a future session most needed. Nobody looked, because #301 was a *performance*
@@ -55,7 +55,7 @@ So when you move or rename a function, `const` or file, grep the rules for the
 old name and fix every hit in the same PR:
 
 ```bash
-grep -rn "gameCount\|routes/rounds.js" .claude/rules/
+grep -rn "gameCount\|lib/routes/rounds.js" .claude/rules/
 ```
 
 `test/skills.test.js` catches a moved **file** — it asserts every repo path cited
@@ -77,7 +77,7 @@ written reason:
 
 | Class | Budget | Where the number comes from |
 |---|---|---|
-| source (`lib/`, `routes/`, `public/js/`, `scripts/`, `test/`, `server.js`) | **700** | the "rough smell" above |
+| source (`lib/` incl. `lib/routes/`, `public/js/`, `scripts/`, `test/`, `server.js`) | **700** | the "rough smell" above |
 | a rule file | **150** | half of `CLAUDE.md`'s ~200 (a one-learning file should never be the larger document) |
 | a `SKILL.md` | **250** | loaded whole on invocation |
 | `CLAUDE.md` | **200** | the harness's own adherence guidance |
@@ -103,7 +103,7 @@ flat-data-table case, so it is not an outlier to record. `criteria.md` files are
 excluded for the same reason — a catalogue of independent entries.
 
 **Why:** the codebase was assessed against these four dimensions (issue #38). The
-backend (`routes/`, `lib/`, providers) and most frontend files were already
+backend (`lib/routes/`, the rest of `lib/`, providers) and most frontend files were already
 token-friendly. The one clear outlier was `public/js/views-round.js` (~2237
 lines spanning ten unrelated screens — a one-line change forced loading
 everything). It has since been split along its real seams into `views-round.js`

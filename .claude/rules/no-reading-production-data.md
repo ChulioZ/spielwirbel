@@ -11,7 +11,7 @@ and `data/uploads/`. Treat it as strictly off-limits. Do not paste its contents
 into responses, commits, logs, or anywhere else.
 
 - You may reference the data **schema/shape** from code (`lib/store.js`,
-  `routes/*.js`, tests) — never from the live file.
+  `lib/routes/*.js`, tests) — never from the live file.
 - When you need real-looking data to develop or test against, **generate your
   own** in an isolated `DATA_DIR` temp folder — see the `test-data` skill and
   `automated-tests.md`. Never copy the production file.

@@ -160,7 +160,7 @@ update and whether it's a major-vs-patch bump). For a **human PR**, skim the
 actual change (`gh pr diff <N>`) — not to rank it (override 3 already did that)
 but to vet it (below) and to see what handling it will involve: a small, focused
 diff is a fast merge, a large or cross-cutting one a longer read. Where an issue
-is vague, glance at the code it would touch (`CLAUDE.md`, `routes/`, `public/js/`,
+is vague, glance at the code it would touch (`CLAUDE.md`, `lib/routes/`, `public/js/`,
 the relevant `.claude/rules/`) so your effort estimate is real, not a guess. Note
 anything that makes a candidate **not actionable yet**: "needs discussion" that
 hasn't happened, blocked on another *unfinished* issue, or too underspecified to

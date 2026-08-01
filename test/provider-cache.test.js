@@ -1,7 +1,7 @@
 'use strict';
 
 // lib/provider-cache.js — the shared 10-minute cache for provider hops,
-// extracted from routes/lookup.js when the #518 cover refresh became a second
+// extracted from lib/routes/lookup.js when the #518 cover refresh became a second
 // consumer. The conditional variant is what keeps an unsettled answer ('queued'
 // for a collection, "no cover yet" for a refresh) out of the cache, so the
 // retry those states invite actually reaches the provider.

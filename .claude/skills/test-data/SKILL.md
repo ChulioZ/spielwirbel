@@ -54,7 +54,7 @@ await request(app)                                        // add a game
 
 Routes you'll typically chain (all under `/api/rounds/:rid/...`): `POST games`,
 `POST sessions`, `POST sessions/:sid/results|choice|finish`, `POST games/:gid/retire`.
-Grep `routes/*.js` for the exact shapes rather than guessing.
+Grep `lib/routes/*.js` for the exact shapes rather than guessing.
 
 ### Only reach into `store.data` when the API can't express the state
 

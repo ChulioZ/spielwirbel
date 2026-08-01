@@ -52,7 +52,7 @@ function clearTokens() {
 // Memoized GET /api/config, used to gate the two links to /nutzungsbedingungen
 // this file renders (#520): the register form's terms line and the demo banner's
 // terms reference. Both point at a page that answers a hard 404 until the
-// operator identity is configured (routes/legal.js), so on a self-hosted
+// operator identity is configured (lib/routes/legal.js), so on a self-hosted
 // instance without IMPRESSUM_ADDRESS/IMPRESSUM_EMAIL an ungated link is a
 // promise of a document that does not exist. Same `footer` flag and same
 // degradation as initFooter() (core.js) and the landing's operator claims: a
@@ -442,7 +442,7 @@ function showRegister() {
       <p class="auth__error" hidden></p>
       <button class="btn btn--primary btn--block" type="submit">${esc(t('auth.register.submit'))}</button>
       <!-- Both links here point at pages that hard-404 until the operator
-           identity is configured (routes/legal.js), so the whole line ships
+           identity is configured (lib/routes/legal.js), so the whole line ships
            hidden and is revealed below only when /api/config reports footer:true
            — the same gate the site footer's legal links use. Pre-#520 this
            paragraph was unconditional, so a self-hosted instance without
@@ -471,7 +471,7 @@ function showRegister() {
       authError(card).hidden = true;
       const username = user.value.trim();
       if (!email.value.trim() || !username) return setError(card, t('auth.error.missing'));
-      // Mirrors usernameSchema in routes/account.js — the server is still the
+      // Mirrors usernameSchema in lib/routes/account.js — the server is still the
       // authority; this only saves a round trip on an obviously bad handle.
       if (!/^[a-zA-Z0-9_-]{3,30}$/.test(username)) return setError(card, t('auth.error.invalidUsername'));
       if (pw.value.length < 8) return setError(card, t('auth.error.shortPassword'));
@@ -480,7 +480,7 @@ function showRegister() {
         const { ok, data } = await authFetch('/register', { email: email.value.trim(), username, password: pw.value });
         // Register answers ok even for an existing e-mail (anti-enumeration) — a
         // 400/409 only comes back for a malformed field or a taken username,
-        // which IS reported openly (a public handle; see routes/account.js) —
+        // which IS reported openly (a public handle; see lib/routes/account.js) —
         // plus the cross-cutting 429/401 refusals authErrorKey maps (#399).
         // The address is handed on so the done screen can offer a resend (#435)
         // without asking for it again.
@@ -893,7 +893,7 @@ function setupTermsBanner() {
 
   const text = document.getElementById('termsBannerText');
   if (text) text.textContent = t('terms.updated.text');
-  // Gated on cfg.footer like the rest of the legal surface: routes/legal.js
+  // Gated on cfg.footer like the rest of the legal surface: lib/routes/legal.js
   // hard-404s until the operator identity is configured, so on such an instance
   // the notice states the change without offering a link that would break.
   const link = document.getElementById('termsBannerLink');

@@ -7,12 +7,12 @@ groups:
 
 | Cap | Checked in | Refusal | Since |
 |---|---|---|---|
-| rounds per tenant | `routes/rounds.js` | `quota_rounds` | #139 |
-| games per round | `routes/games.js`, `routes/lookup.js` | `quota_games` | #139 |
-| tags per round | `routes/tags.js`, `routes/games.js` | `quota_tags` | #238 |
-| members per round | `routes/members.js` | `quota_members` | #563 |
-| accepted friends per user | `routes/friends.js` | `quota_friends` | #325 |
-| open outgoing friend requests per user | `routes/friends.js` | `quota_requests` | #325 |
+| rounds per tenant | `lib/routes/rounds.js` | `quota_rounds` | #139 |
+| games per round | `lib/routes/games.js`, `lib/routes/lookup.js` | `quota_games` | #139 |
+| tags per round | `lib/routes/tags.js`, `lib/routes/games.js` | `quota_tags` | #238 |
+| members per round | `lib/routes/members.js` | `quota_members` | #563 |
+| accepted friends per user | `lib/routes/friends.js` | `quota_friends` | #325 |
+| open outgoing friend requests per user | `lib/routes/friends.js` | `quota_requests` | #325 |
 
 The last two are per **account**, not per tenant — the friendship layer is a
 cross-account social surface rather than tenant data — but they take the same
@@ -22,7 +22,7 @@ off.
 
 **This list has gone stale twice** (#325 and #563 each added caps without
 updating it), so `test/rule-enumerations.test.js` now asserts every `quota_*`
-code emitted under `routes/` is named in this file. Add the row when you add a
+code emitted under `lib/routes/` is named in this file. Add the row when you add a
 cap; the test tells you if you forget.
 
 Things that will bite if you forget them:
