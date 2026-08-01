@@ -393,17 +393,25 @@ test('#521: only a TERMS bump raises the change notice', () => {
   const legacyUser = {};                                   // predates #521
   const currentUser = { acceptedTermsRevision: legal.TERMS_REVISION };
 
+  // Mirrors what setupTermsBanner (public/js/account.js) does with the two
+  // fields /me hands it — the comparison lives on the CLIENT, so there is no
+  // server-side predicate to call here.
+  const behind = (mod, user) => {
+    const { acceptedTermsRevision, termsRevision } = mod.termsAcceptanceOf(user);
+    return acceptedTermsRevision !== termsRevision;
+  };
+
   // Nothing changed: neither account is behind.
-  assert.equal(legal.termsChangedFor(legacyUser), false);
-  assert.equal(legal.termsChangedFor(currentUser), false);
+  assert.equal(behind(legal, legacyUser), false);
+  assert.equal(behind(legal, currentUser), false);
 
   // The assertion that proves the split is real rather than cosmetic: bumping
   // either of the OTHER two documents must leave the notice silent.
   for (const constant of ['IMPRESSUM_REVISION', 'PRIVACY_REVISION']) {
     const patched = loadLegalWith({ [constant]: '2099-01-01' });
-    assert.equal(patched.termsChangedFor(legacyUser), false,
+    assert.equal(behind(patched, legacyUser), false,
       `${constant} must not raise the terms notice`);
-    assert.equal(patched.termsChangedFor(currentUser), false,
+    assert.equal(behind(patched, currentUser), false,
       `${constant} must not raise the terms notice`);
   }
 
@@ -411,8 +419,8 @@ test('#521: only a TERMS bump raises the change notice', () => {
   // the whole point of LEGACY_TERMS_REVISION being frozen: were the fallback
   // `|| TERMS_REVISION`, an account with the key absent would stay silent here.
   const bumped = loadLegalWith({ TERMS_REVISION: '2099-01-01' });
-  assert.equal(bumped.termsChangedFor(legacyUser), true);
-  assert.equal(bumped.termsChangedFor(currentUser), true);
+  assert.equal(behind(bumped, legacyUser), true);
+  assert.equal(behind(bumped, currentUser), true);
   assert.equal(bumped.termsAcceptanceOf(legacyUser).acceptedTermsRevision,
     legal.LEGACY_TERMS_REVISION, 'an absent key resolves to the frozen rollout revision');
 });
