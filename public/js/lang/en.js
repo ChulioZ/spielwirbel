@@ -787,7 +787,7 @@ I18N.en = {
   'landing.features.noAccounts.title': 'Only you need an account',
   'landing.features.noAccounts.desc': 'Players are names in your group, not logins. One device is enough for the whole table.',
   'landing.features.pwa.title': 'Installable as an app',
-  'landing.features.pwa.desc': 'Install it on your phone and have it at hand while you play.',
+  'landing.features.pwa.desc': 'Install it on your device and have it at hand while you play.',
   'landing.how.title': 'Up and running in three steps',
   'landing.how.step1.title': 'Create an account',
   'landing.how.step1.desc': 'Free, and done in a minute – just you, not the whole group.',
