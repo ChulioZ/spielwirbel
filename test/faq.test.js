@@ -23,10 +23,21 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 const request = require('supertest');
 
 const { app } = require('./helpers');
 const faq = require('../lib/faq');
+const { SUPPORTED_LOCALES } = require('../public/js/locales');
+
+// The lang tables are browser scripts registering into a global I18N, so they
+// load in a vm sandbox — the same shape test/i18n-parity.test.js uses.
+function loadLocale(name) {
+  const file = path.join(__dirname, '..', 'public', 'js', 'lang', `${name}.js`);
+  const context = { I18N: {} };
+  vm.runInNewContext(fs.readFileSync(file, 'utf8'), context);
+  return context.I18N[name];
+}
 
 const IDENTITY = {
   IMPRESSUM_ADDRESS: 'Musterweg 1\\n12345 Musterstadt',
@@ -102,6 +113,55 @@ test('the repo URL matches the landing page\'s source chip', () => {
   const m = /const LANDING_REPO_URL = '([^']+)'/.exec(landing);
   assert.ok(m, 'LANDING_REPO_URL not found — did views-landing.js move or rename it?');
   assert.equal(faq.REPO_URL, m[1]);
+});
+
+test('user-facing copy says "device", never a specific kind of device', async () => {
+  // Operator decision: a round runs from ONE device, and a computer is as valid
+  // as a phone or a tablet — the PWA installs on a desktop too. Naming one kind
+  // quietly tells everyone else the app is not for them. Covers the FAQ and both
+  // lang tables, because the wording regressed in two places at once (the FAQ's
+  // "Handy oder Tablet" and the landing page's "Aufs Handy installieren").
+  const banned = /\b(Handy|Handys|Smartphones?|Tablets?|phones?)\b/i;
+
+  // Scan QUESTIONS, not the SERVED page: most answers are gated, and the shared
+  // test app runs accounts-off + legal-unconfigured, so a request renders only
+  // three of the eight. Asserting over the response passed happily with
+  // "Handy oder Tablet" sitting in the gated accounts answer — verified by
+  // reinstating exactly that and watching this test stay green.
+  const offending = [];
+  for (const q of faq.QUESTIONS) {
+    for (const lang of ['de', 'en']) {
+      for (const field of ['q', 'a']) {
+        if (banned.test(q[lang][field])) offending.push(`${q.id}.${lang}.${field}`);
+      }
+    }
+  }
+  assert.deepEqual(offending, [], 'these FAQ answers name a specific device kind');
+
+  for (const locale of SUPPORTED_LOCALES) {
+    const dict = loadLocale(locale);
+    const offenders = Object.entries(dict)
+      .filter(([, v]) => typeof v === 'string' && banned.test(v))
+      .map(([k, v]) => `${locale}:${k} = ${v}`);
+    assert.deepEqual(offenders, [], 'say "Gerät"/"device" instead');
+  }
+});
+
+test('the donations answer leads with what donations do NOT buy', async () => {
+  // The "why" paragraph (what the money and time go into) is allowed; it must
+  // never displace the unconditional statement. If a future edit puts the appeal
+  // first, the answer starts reading as a pitch — see lib/faq.js's content rules.
+  process.env.DONATE_URL = 'https://ko-fi.com/example';
+  const html = (await request(app).get('/faq')).text;
+  const section = faqSection(html, 'donations');
+  assert.ok(section, 'the donations answer should render with DONATE_URL set');
+  assert.ok(
+    section.indexOf('schalten <strong>nichts</strong> frei') < section.indexOf('Wohin es geht'),
+    'the "unlocks nothing" sentence must come before the "where it goes" one',
+  );
+  // Nothing may suggest the service is at risk without money, which is the line
+  // between explaining costs and manufacturing pressure.
+  assert.doesNotMatch(section, /angewiesen|ohne (Spenden|deine Hilfe)|depends on donations|keep the lights/i);
 });
 
 /* ---------------------------- the honesty gates ---------------------------- */

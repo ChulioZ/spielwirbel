@@ -775,7 +775,7 @@ I18N.de = {
   'landing.features.noAccounts.title': 'Nur du brauchst ein Konto',
   'landing.features.noAccounts.desc': 'Mitspieler sind Namen in eurer Runde, kein Login. Ein Gerät reicht für den ganzen Tisch.',
   'landing.features.pwa.title': 'Als App installierbar',
-  'landing.features.pwa.desc': 'Aufs Handy installieren und beim Spielen sofort griffbereit haben.',
+  'landing.features.pwa.desc': 'Aufs Gerät installieren und beim Spielen sofort griffbereit haben.',
   'landing.how.title': 'In drei Schritten los',
   'landing.how.step1.title': 'Konto anlegen',
   'landing.how.step1.desc': 'In einer Minute kostenlos angelegt – nur von dir, nicht von der ganzen Runde.',
