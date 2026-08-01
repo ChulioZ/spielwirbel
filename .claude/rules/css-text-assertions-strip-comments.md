@@ -26,7 +26,7 @@ fix plus the neighbouring `.site-footer__links {` selector.
 **Why this is worse than a normal flaky regex:** the false match makes the test
 pass against a stylesheet where the thing it guards has been **deleted**. Caught
 only because the fix was removed on purpose to watch the probe fail (the
-discipline `.claude/rules/admin-cross-tenant-escape.md` §4 prescribes) — one
+discipline `.claude/rules/break-the-code-on-purpose.md` prescribes) — one
 assertion stayed green against the broken file. A test whose whole job is to
 catch a silent visual regression, silently not catching it, is the worst
 possible outcome.

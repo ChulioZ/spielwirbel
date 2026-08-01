@@ -128,7 +128,7 @@ app produces an assertion that is simply false rather than one that fails
 usefully.
 
 Every assertion above was verified by breaking the production code on purpose
-(the discipline in `.claude/rules/admin-cross-tenant-escape.md` §4): dropping
+(the discipline in `.claude/rules/break-the-code-on-purpose.md`): dropping
 `/readyz` from `PROBE_PATHS`, removing the in-flight sharing, deleting the
 `!res.ok` warn, and adding `ping` to `TENANT_METHODS` each redden exactly one
 test and nothing else. Back the files up to the scratchpad first — `git checkout`

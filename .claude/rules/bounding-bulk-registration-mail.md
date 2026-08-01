@@ -84,7 +84,7 @@ double-submit invalidates the link already sitting in the user's inbox.
   mounted — a vacuous green.
 
 Both assertions were verified by breaking the production code on purpose (the
-discipline in `.claude/rules/admin-cross-tenant-escape.md` §4): stubbing the
+discipline in `.claude/rules/break-the-code-on-purpose.md`): stubbing the
 `budget.sent >= dailyMax()` check reddens 3 mail tests + the anti-enumeration
 one, and deleting the limiter's `app.use` line reddens the security test. Back
 the files up to the scratchpad first — `git checkout` restores from the index and

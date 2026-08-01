@@ -103,11 +103,11 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   `test/security.test.js` asserts an asset storm well past the ceiling leaves the
   API budget **completely untouched** — the weaker "did the asset 200" form would
   pass against a skip that merely made assets cheaper. Both tests were verified
-  by breaking the production code on purpose: removing the `skip` reddens the
+  by breaking the production code on purpose
+  (`.claude/rules/break-the-code-on-purpose.md`): removing the `skip` reddens the
   exemption test, and substituting the naive extension regex reddens the
   made-up-name test. Back the files up to the scratchpad first — `git checkout`
-  restores from the index and discards the whole uncommitted change
-  (`.claude/rules/css-text-assertions-strip-comments.md`).
+  restores from the index and discards the whole uncommitted change.
 
 **Why the suite is structured this way:** the limiter store is per-app-instance
 and per-process. `node --test` isolates files, but *within* a file the shared

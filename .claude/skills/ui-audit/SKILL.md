@@ -181,7 +181,7 @@ Two co-equal output classes, plus the token/rule fix that serves both:
    token-adherence assertion (no orphan accent/neutral hex; radii/shadows from the
    set) is a good mechanizable guard in the spirit of `test/content-width.test.js` —
    and if you add one, **break the CSS on purpose once** to watch it go red
-   (`css-text-assertions-strip-comments.md`).
+   (`break-the-code-on-purpose.md`, `css-text-assertions-strip-comments.md`).
 3. **A screen-level proposal through `create-issue`** — the expected vehicle for
    the big-picture pass's output, **not** an escalation path for oversized nits.
    One issue per surface, labelled `audit` and `ui`, deduped against open and

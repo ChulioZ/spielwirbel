@@ -141,8 +141,8 @@ belongs there as an assertion, not in an issue. Structural findings that read fr
 matches inside a comment (`css-text-assertions-strip-comments.md`).
 
 Whatever you add, **break the production code once on purpose** and watch the
-assertion go red. A CSS-text or DOM-shape test gives no other signal that it is
-wired to anything real.
+assertion go red (`.claude/rules/break-the-code-on-purpose.md`). A CSS-text or
+DOM-shape test gives no other signal that it is wired to anything real.
 
 ## Do not report these
 

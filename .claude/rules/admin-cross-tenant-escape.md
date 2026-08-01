@@ -84,29 +84,15 @@ through a dedicated non-superuser role:
 **Rule:** any future operator write gets an end-to-end plain-role probe, not just
 a hand-written-SQL policy probe.
 
-### This section is the canonical home of the break-on-purpose discipline
+### The RLS instance of the break-on-purpose discipline
 
-Stated generally, because ~8 rules across the corpus cite it and none of them is
-about RLS: **break the production code on purpose once and watch the probe fail.**
-A test you have never seen red is not evidence — it may assert nothing, assert it
-vacuously, or not be wired to the thing it names.
-
-Verified here on #275: with `redactText` deliberately rewritten onto `atx()`,
-everything except that one child-process assertion stayed green. The same loop has
-since caught a vacuous landing-page assertion
-(`.claude/rules/noindex-vs-disallow-and-the-crawler-surface.md` §3) and a team
-resolver whose test passed against the broken ordering
-(`.claude/rules/session-teams.md` §4).
-
-Two habits that go with it, both learned the hard way:
-
-- **Confirm the break actually landed** (`grep -c` for what you removed) before
-  reading a green suite as evidence — a `perl` pattern that guessed the wrong
-  indentation once reported success while changing nothing.
-- **Back the files up to the scratchpad first.** `git checkout <file>` restores
-  from the *index*, so with nothing staged it silently discards the whole
-  uncommitted change along with the break
-  (`.claude/rules/css-text-assertions-strip-comments.md`).
+These probes were verified the way every probe in this repo should be — by
+breaking the production code on purpose and watching one named test go red
+(`.claude/rules/break-the-code-on-purpose.md`, which is the general rule and used
+to live here). Measured on #275: with `redactText` deliberately rewritten onto
+`atx()`, **everything except that one child-process assertion stayed green** — so
+the plain-role child process is not belt-and-braces, it is the only thing in the
+suite that can see the failure at all.
 
 **Related:** `.claude/rules/admin-moderation-surface.md` (the surface these
 methods serve, and its remaining traps),

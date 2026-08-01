@@ -119,7 +119,8 @@ they are lexically scoped consts, not `window` properties
 
 And break the CSS on purpose once to watch the clearance assertions go red — a
 CSS-text test gives no other signal that it is wired to anything real
-(`.claude/rules/css-text-assertions-strip-comments.md`).
+(`.claude/rules/break-the-code-on-purpose.md`,
+`.claude/rules/css-text-assertions-strip-comments.md`).
 
 **Related:** `.claude/rules/in-app-nav-links.md` (the `navLink` contract these
 tabs are built on), `.claude/rules/css-text-assertions-strip-comments.md` (how
