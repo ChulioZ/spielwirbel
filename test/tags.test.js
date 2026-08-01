@@ -300,7 +300,7 @@ test('the client maxlength on both tag inputs equals the server TAG_NAME_MAX', (
   // hand-copied-constant shape that produced the #420 palette bug. Neither
   // side exports the number (the route constant is module-local, the inputs
   // are template literals), so this is the licensed-copy model of
-  // test/contact-page-brand.test.js: parse both sources and compare.
+  // test/standalone-page-brand.test.js: parse both sources and compare.
   const fs = require('node:fs');
   const path = require('node:path');
   const routeSrc = fs.readFileSync(path.join(__dirname, '..', 'lib', 'routes', 'tags.js'), 'utf8');
