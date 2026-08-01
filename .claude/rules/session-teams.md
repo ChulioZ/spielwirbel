@@ -5,6 +5,7 @@ paths:
   - "lib/routes/sessions.js"
   - "test/session-people.test.js"
   - "test/sessions.test.js"
+  - "public/js/views-session.js"
 ---
 # A session team (#575) is addressed by POSITION on the wire — and a team win stays a flat list
 

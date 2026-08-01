@@ -5,6 +5,7 @@ paths:
   - "lib/routes/rounds.js"
   - "lib/routes/games.js"
   - "test/round-grants-access.test.js"
+  - "test/repo.postgres.test.js"
 ---
 # Grant-based round access (#207): a grantee ACTS AS the owner tenant — RLS stays un-widened
 

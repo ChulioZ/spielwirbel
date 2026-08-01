@@ -5,6 +5,7 @@ paths:
   - "lib/routes/account.js"
   - "test/account.test.js"
   - "test/mail.test.js"
+  - "test/helpers.js"
 ---
 # Bound the RESOURCE, not just the mechanism: registration mail (#448)
 

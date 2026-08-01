@@ -7,6 +7,8 @@ paths:
   - "lib/routes/account.js"
   - "public/js/views-landing.js"
   - "test/demo.test.js"
+  - "lib/observability.js"
+  - "lib/routes/sessions.js"
 ---
 # The guest demo (#427): five things that fail silently
 

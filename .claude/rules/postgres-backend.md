@@ -4,6 +4,7 @@ paths:
   - "knexfile.js"
   - "test/repo*.test.js"
   - "test/migrate*.test.js"
+  - "test/support/repo-contract.js"
 ---
 
 # The PostgreSQL data-access backend (lib/repo/postgres.js) — gotchas

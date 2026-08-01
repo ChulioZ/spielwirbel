@@ -4,6 +4,7 @@ paths:
   - "lib/repo/**"
   - "lib/app.js"
   - "test/tenant.test.js"
+  - "test/repo.postgres.test.js"
 ---
 # Tenancy (#136): routes use req.repo; Postgres RLS binds non-superusers only
 

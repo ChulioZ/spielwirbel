@@ -3,6 +3,7 @@ paths:
   - "lib/quota.js"
   - "lib/routes/**"
   - "test/quota.test.js"
+  - "test/rule-enumerations.test.js"
 ---
 # Per-tenant quotas (lib/quota.js, issue #139) — gotchas
 

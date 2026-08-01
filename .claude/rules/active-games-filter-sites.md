@@ -6,6 +6,9 @@ paths:
   - "public/js/views-round*.js"
   - "public/js/round-rail.js"
   - "public/js/recap.js"
+  - "lib/quota.js"
+  - "lib/routes/rounds.js"
+  - "test/support/repo-contract.js"
 ---
 # "Active games" is filtered in ~10 places — two of them server-side (#250)
 

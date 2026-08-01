@@ -3,6 +3,7 @@ paths:
   - "public/styles.css"
   - "public/js/views-round.js"
   - "test/dock-footer-clearance.test.js"
+  - "public/js/round-rail.js"
 ---
 # The hub tabs branch on WIDTH alone (#331) — and the clearance follows the dock
 

@@ -5,6 +5,8 @@ paths:
   - "public/js/lang/**"
   - "lib/routes/contact.js"
   - "test/i18n-locales.test.js"
+  - "lib/providers/locales.js"
+  - "lib/demo-seed.js"
 ---
 # The locale set is data (#504) — and a test over it is VACUOUS at two locales
 
