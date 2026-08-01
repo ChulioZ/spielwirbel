@@ -868,6 +868,68 @@ function setupDemoBanner() {
   }
 }
 
+// The terms-change notice (#521): Nutzungsbedingungen §11 promises we inform
+// users of material changes "im Dienst oder per E-Mail", and until now nothing
+// did — a published promise the implementation could not keep.
+//
+// The decision is a comparison of two fields the server sends TOGETHER on /me
+// (see meProjection): the account's resolved accepted revision and the current
+// one. Both come from one response, so this can never read a stale pair, and the
+// LEGACY_TERMS_REVISION fallback for accounts predating #521 is applied
+// server-side — the client deliberately knows nothing about it.
+//
+// Like the demo banner, the element lives permanently in index.html and is
+// toggled with the `hidden` attribute, which is why styles.css carries an
+// explicit `.terms-banner[hidden] { display: none }`
+// (.claude/rules/hidden-attribute-vs-display-rule.md).
+function setupTermsBanner() {
+  const bar = document.getElementById('termsBanner');
+  if (!bar) return;
+  const on = accountsActive() && isLoggedIn() && !!accountUser
+    && !!accountUser.termsRevision
+    && accountUser.acceptedTermsRevision !== accountUser.termsRevision;
+  bar.hidden = !on;
+  if (!on) return;
+
+  const text = document.getElementById('termsBannerText');
+  if (text) text.textContent = t('terms.updated.text');
+  // Gated on cfg.footer like the rest of the legal surface: routes/legal.js
+  // hard-404s until the operator identity is configured, so on such an instance
+  // the notice states the change without offering a link that would break.
+  const link = document.getElementById('termsBannerLink');
+  if (link) {
+    link.textContent = t('terms.updated.link');
+    // Land the reader on the change summary in THEIR language. The document
+    // carries a German section (authoritative, id="aenderungen") followed by an
+    // English one (id="changes-en"); without this an English reader would be
+    // dropped onto the German summary with the English one far below. Re-applied
+    // on every call, so it follows the language picker like the label above.
+    link.href = `/nutzungsbedingungen#${getLocale() === 'en' ? 'changes-en' : 'aenderungen'}`;
+    withAppConfig((cfg) => { link.hidden = !(cfg && cfg.footer); });
+  }
+  const dismiss = document.getElementById('termsBannerDismiss');
+  if (dismiss) {
+    dismiss.textContent = t('terms.updated.dismiss');
+    dismiss.onclick = async () => {
+      // Hide immediately: the click is the acknowledgement, and leaving the
+      // strip up until a round trip lands reads as the button being broken.
+      bar.hidden = true;
+      try {
+        // accountApi resolves to the PARSED BODY (it throws on a non-2xx), so
+        // this is the fresh meProjection — not a { status, data } envelope.
+        // Re-seating it is load-bearing rather than tidy: setupTermsBanner runs
+        // again on every language switch, and against a stale `accountUser` it
+        // would re-show the notice the user just dismissed.
+        const me = await accountApi('POST', '/accept-terms');
+        if (me && me.termsRevision) accountUser = me;
+      } catch {
+        // A failed write just means the notice returns on the next load, which
+        // is the right failure direction for something that must be seen.
+      }
+    };
+  }
+}
+
 /* ----------------------------- top-bar account ----------------------------- */
 
 // Reveal (accounts mode + logged in) or hide the top-bar account button, and wire
@@ -877,6 +939,7 @@ function setupAccountUi() {
   // login, logout, session-lost), which is why it hangs off this function
   // rather than being called from each of those sites separately.
   setupDemoBanner();
+  setupTermsBanner(); // #521, same transitions
   const btn = document.getElementById('accountBtn');
   if (!btn) return;
   const loggedIn = accountsActive() && isLoggedIn();

@@ -101,7 +101,7 @@ const SOURCE_ALLOW = {
   // judged
   'lib/repo/postgres.js': 'judged — one file per repo backend, paired with json.js against the shared contract; splitting one without the other is what drifts them (data-access-layer.md)',
   'lib/repo/json.js': 'judged — the other half of the same pair',
-  'lib/legal.js': 'judged — flat data: the rendered legal texts, DE + EN, kept in one file so a REVISION bump touches one place (keep-legal-docs-current.md)',
+  'lib/legal.js': 'judged — flat data: the rendered legal texts, DE + EN, kept in one file so a revision bump touches one place (keep-legal-docs-current.md)',
   'public/js/views-session.js': 'judged — a single cohesive flow (start -> vote -> finale -> results), named as the non-finding in token-friendly-source-files.md',
   'test/support/repo-contract.js': 'judged — one shared contract both backends run; splitting it lets a case exist for one backend only',
   'test/admin.test.js': 'judged — one suite per subject, and the admin surface is the largest',

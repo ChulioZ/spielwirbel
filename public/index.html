@@ -103,6 +103,31 @@
     <button class="demo-banner__cta" id="demoBannerCta" type="button"></button>
   </div>
 
+  <!-- Terms-change notice (issue #521): delivers the in-service notification
+       Nutzungsbedingungen §11 promises, shown when the account's stored
+       acceptedTermsRevision is behind the server's current one. A SIBLING of the
+       demo banner rather than a shared component: that one's `body.auth-screen`
+       hide rule and register-CTA behaviour are load-bearing, and the two say
+       unrelated things.
+
+       Same `hidden`-attribute trap as the banner above — it needs its own
+       explicit `.terms-banner[hidden] { display: none }` in styles.css, or the
+       component's `display` wins and every visitor sees it
+       (.claude/rules/hidden-attribute-vs-display-rule.md). The link ships hidden
+       too and is revealed only where /nutzungsbedingungen resolves. -->
+  <div class="terms-banner" id="termsBanner" hidden>
+    <i class="ti ti-file-text" aria-hidden="true"></i>
+    <span class="terms-banner__text" id="termsBannerText"></span>
+    <!-- Deep-links to the „Änderungshistorie" section, not to the top of the
+         document: the label promises the CHANGES, so landing the reader on 1000
+         unchanged lines would be a label that lies. setupTermsBanner() swaps the
+         fragment for the reader's own locale (the page carries a DE and an EN
+         section); this static value is the DE fallback. -->
+    <a class="terms-banner__link" id="termsBannerLink" href="/nutzungsbedingungen#aenderungen"
+       target="_blank" rel="noopener" hidden></a>
+    <button class="terms-banner__dismiss" id="termsBannerDismiss" type="button"></button>
+  </div>
+
   <main id="app" class="app">
     <!-- Content is rendered by the js/* files. The one exception is the hero
          below (#510): everything on the landing page comes from
