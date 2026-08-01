@@ -30,8 +30,10 @@ done. The non-obvious parts below are why this is easy to get wrong:
   `de.js` drift out of key parity or have an empty value — so adding a key to only
   one file will (correctly) break the suite. Add it to both.
 
-- **A green new test is not yet evidence it works.** Break the code it guards on
-  purpose once and watch that named test go red, or you cannot tell an assertion
-  that holds from one that asserts nothing —
-  `.claude/rules/break-the-code-on-purpose.md` has the habits and the worked
-  examples of vacuous greens this repo has actually shipped.
+- **A green new test is not yet evidence it works.** You have to have seen it
+  red. Prefer writing it **first** — for a new feature, and especially for a bug
+  fix, where the test should reproduce the bug before you fix it; that red is
+  free. When the behaviour already works (a guard over existing code, a CSS/HTML
+  text assertion), break the code on purpose instead and watch one *named* test
+  go red. `.claude/rules/break-the-code-on-purpose.md` has both routes, what each
+  one's red actually proves, and the vacuous greens this repo has shipped.
