@@ -94,7 +94,7 @@ cannot drift at all. (Its frontend comment says the scripts "can't `require()`
 it" — true of the browser, but the *route* can require the frontend file, which
 is the direction this rule uses.)
 
-## The second one: when sharing the file is not available at all (#391)
+## The second one: when sharing the file is not available at all (#391, #595)
 
 `public/kontakt.html` declares its own `:root` copy of the app's design tokens
 (`--brand`, `--page-bg`, `--ink`, the two font stacks …). This is **not** a
@@ -107,11 +107,26 @@ smaller unit to share; `:root` in `styles.css` is also where a **per-round theme
 gets written, which this page must never inherit.
 
 So it takes the TAG_ICONS shape deliberately: a copy plus
-`test/contact-page-brand.test.js`, which walks every custom property the page
+`test/standalone-page-brand.test.js`, which walks every custom property the page
 declares and asserts `styles.css` still declares the same value. Retune `--brand`
 in one file and it goes red naming both values. **The test is the licence for the
 copy** — if you add another token to the page, it is covered automatically; if you
 ever make the page stop declaring them, delete the test with it.
+
+**`public/login.html` joined it in #595**, which is why the test is parameterized
+over a `PAGES` list rather than named after one page: covering a third standalone
+document is one array entry, not a near-identical second file. Two properties of
+that generalization are load-bearing and each fails silently:
+
+- **The anti-vacuous floor is asserted PER PAGE** (`page.size >= 10`), never over
+  the union — otherwise one well-populated page satisfies it for a page that
+  declares nothing at all, and the copy it is meant to license goes unchecked.
+- **A third assertion sweeps the page's own rules for a palette hex** outside the
+  `:root` copy. Parity alone cannot see the failure that actually happened here:
+  `login.html` declared a full blue-violet palette *and no tokens*, so there was
+  nothing to compare and the page sat four releases past the #147 rebrand looking
+  like a different product. `#fff`/`#000` stay allowed — the app's own rules use
+  those two inline.
 
 Use this as precedent only under the same condition: *sharing is structurally
 impossible*, not merely inconvenient. A copy that could have been a `require()`

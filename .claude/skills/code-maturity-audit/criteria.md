@@ -48,7 +48,7 @@ not a finding; the rejected entries below are that ledger.
 - **Check:** Grep for "keep in sync" comments and hand-copied cross-boundary
   constants. Every duplicate either becomes a shared file the route `require`s
   out of `public/js/`, or carries a parity test as its explicit licence
-  (`test/tag-icons.test.js`, `test/contact-page-brand.test.js`,
+  (`test/tag-icons.test.js`, `test/standalone-page-brand.test.js`,
   `test/landing-copy.test.js` are the sanctioned instances). A copy that could
   have been a `require()` is the bug waiting to happen.
 - **Enforced by:** the named parity tests for the existing licensed copies —

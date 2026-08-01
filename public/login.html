@@ -14,9 +14,12 @@
        does the removing and a disallowed crawler never reads it. -->
   <meta name="robots" content="noindex, nofollow" />
   <!-- PWA (issue #142): same manifest/icons so an install from the login screen
-       is branded too. theme-color matches this page's dark background. -->
+       is branded too. theme-color must therefore match index.html and the
+       manifest's own theme_color (#595) — this page used to declare its own dark
+       #14161c, so installing from here yielded a different-coloured app than
+       installing from the SPA. -->
   <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="theme-color" content="#14161c" />
+  <meta name="theme-color" content="#c2410c" />
   <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
   <!-- Standalone login page (issue #129), intentionally independent of the SPA:
@@ -25,6 +28,41 @@
        by the CSP (style-src 'unsafe-inline'); the script must be an external
        file because script-src is 'self' only. -->
   <style>
+    /* The tokens below mirror public/styles.css so this page reads as the same
+       product as the app (issue #595, following the #391 contact-page
+       precedent). They are COPIED, not imported: styles.css is the whole SPA and
+       its :root carries a per-round *theme*, which this page has no context for
+       — it renders before any round exists. So the values here are the app's
+       DEFAULTS, and test/standalone-page-brand.test.js pins them against
+       styles.css so a retuned palette can't leave this page behind. */
+    :root {
+      --page-bg: #f4f1ea;
+      --brand: #c2410c;
+      --surface: #ffffff;
+      --ink: #2b2620;
+      --ink-soft: #6b6358;
+      /* AA-checked in test/a11y-contrast.test.js against the app's themes. This
+         page has no per-round theme, so its own --surface is the only backdrop
+         these have to clear here. */
+      --danger: #d02424;
+      --line: color-mix(in srgb, var(--page-bg), #000 9%);
+      --brand-dark: color-mix(in srgb, var(--brand), #000 18%);
+      --page-glow: color-mix(in srgb, var(--brand) 7%, transparent);
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+      --font: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-display: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    /* Only the three weights this page actually uses (the app declares seven).
+       Same self-hosted files under /fonts/ — no new origin, so the CSP is
+       untouched and the "no third-party fonts" claim test/footer-trust.test.js
+       guards stays true; the build copies fonts through unhashed, so these paths
+       hold in dist/ too. */
+    @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/nunito-latin-400-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/nunito-latin-600-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/baloo-2-latin-700-normal.woff2') format('woff2'); }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -32,60 +70,89 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #14161c;
-      color: #e8eaf0;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      /* The app's backdrop: a soft accent glow falling from the top over a
+         barely-there paper grain (the `body` rule in public/styles.css). */
+      background-color: var(--page-bg);
+      background-image:
+        radial-gradient(120% 70% at 50% 0%, var(--page-glow), transparent 70%),
+        url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%3E%3Cfilter%20id='g'%20x='0'%20y='0'%20width='100%25'%20height='100%25'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='2'%20seed='7'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200.06%200'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23g)'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+      color: var(--ink);
+      font-family: var(--font);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
       padding: 1.5rem;
     }
     .card {
       width: 100%;
       max-width: 340px;
-      background: #1e222c;
-      border: 1px solid #2c3240;
-      border-radius: 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
       padding: 2rem 1.75rem;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      box-shadow: var(--shadow-2);
     }
-    .logo { font-size: 2rem; text-align: center; margin-bottom: 0.5rem; }
-    h1 { font-size: 1.15rem; font-weight: 600; text-align: center; margin: 0 0 1.5rem; }
-    label { display: block; font-size: 0.85rem; margin-bottom: 0.4rem; color: #aab2c4; }
+    /* The brand lockup, stacked and centred — this is a single-purpose card, not
+       a form page with a header, so it keeps its own vertical layout rather than
+       kontakt.html's side-by-side top line. */
+    .logo { display: block; width: 56px; height: 56px; margin: 0 auto 0.6rem; border-radius: 16px; }
+    h1 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--brand);
+      margin: 0 0 1.5rem;
+    }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--ink-soft); }
     input {
       width: 100%;
       padding: 0.7rem 0.85rem;
       font-size: 1rem;
-      border-radius: 10px;
-      border: 1px solid #2c3240;
-      background: #14161c;
-      color: #e8eaf0;
+      font-family: inherit;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
     }
-    input:focus { outline: 2px solid #6c7ae0; outline-offset: 1px; }
+    input:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); }
+    /* The app's primary button (.btn--primary): display face, and the thick
+       bottom border that "presses in" on :active. */
     button {
       width: 100%;
-      margin-top: 1.1rem;
-      padding: 0.75rem;
-      font-size: 1rem;
-      font-weight: 600;
-      border: 0;
-      border-radius: 10px;
-      background: #6c7ae0;
+      margin-top: 1.4rem;
+      padding: 0.7rem;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: 1.5px solid var(--brand-dark);
+      border-bottom-width: 4px;
+      border-radius: 14px;
+      background: var(--brand);
       color: #fff;
       cursor: pointer;
     }
+    button:hover { background: var(--brand-dark); }
+    button:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: 2.5px; }
     button:disabled { opacity: 0.6; cursor: default; }
     .error {
       margin-top: 1rem;
-      font-size: 0.85rem;
-      color: #ff8a8a;
+      font-size: 0.88rem;
+      color: var(--danger);
       text-align: center;
     }
     .error[hidden] { display: none; }
-    .foot { margin-top: 1.25rem; text-align: center; font-size: 0.85rem; }
-    .foot a { color: #aab2c4; }
+    .foot { margin-top: 1.5rem; text-align: center; font-size: 0.85rem; }
+    .foot a { color: var(--ink-soft); }
   </style>
 </head>
 <body>
   <form class="card" id="loginForm">
-    <div class="logo" aria-hidden="true">🌀</div>
+    <!-- The real app icon, the same file the PWA, the home screen and
+         kontakt.html use. It replaced a U+1F300 emoji (#595), which was never a
+         brand asset — it only passed for one because Apple renders that
+         codepoint in blue. -->
+    <img class="logo" src="/icons/icon-192.png" alt="" width="56" height="56" />
     <h1>Spielwirbel</h1>
     <label for="password">Passwort</label>
     <input id="password" name="password" type="password" autocomplete="current-password"

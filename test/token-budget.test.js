@@ -17,7 +17,7 @@
    a budget per file class plus an allowlist, where every entry carries a written
    reason. Crossing the budget is not a failure — crossing it *silently* is. The
    allowlist is the same "the test is the licence" idiom as
-   `test/tag-icons.test.js` and `test/contact-page-brand.test.js`.
+   `test/tag-icons.test.js` and `test/standalone-page-brand.test.js`.
 
    The entries are also asserted to be **still over budget**, so the list cannot
    rot into a set of names nobody has looked at: a file that shrinks back under
