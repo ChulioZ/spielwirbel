@@ -9,8 +9,9 @@ look identical from a passing suite.
 
 This lived in `.claude/rules/admin-cross-tenant-escape.md` §4 by accident of
 history (it was first written up for an RLS policy) until #599 gave it its own
-file. It is the most-cited idea in this corpus and only two of its twelve citing
-files are about databases.
+file. Twelve files cite the discipline, and **not one of the eight citing rules
+is about databases** — which is why it could not stay filed under an RLS heading
+once `paths:` scoping made that heading decide who gets to read it.
 
 ## The four habits, each learned the hard way
 
