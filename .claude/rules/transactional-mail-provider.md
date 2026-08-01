@@ -1,3 +1,9 @@
+---
+paths:
+  - "lib/mail.js"
+  - "lib/routes/account.js"
+  - "test/mail.test.js"
+---
 # Transactional mail: three providers in one day, and why it ended at plain SMTP
 
 `lib/mail.js` submits over **plain SMTP via nodemailer** since #440 — in

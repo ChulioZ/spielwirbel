@@ -1,5 +1,9 @@
 # A change with NO DIFF still stales the docs — and nothing will remind you
 
+<!-- scope: global — fires on a change with NO diff at all, so no path could ever trigger it -->
+
+<!-- scope: global — fires on a change with NO diff at all, so no path could ever trigger it -->
+
 Every doc-currency rule in this repo is **diff-triggered**:
 `.claude/rules/keep-readme-current.md` fires "in the `implement` skill's review
 phase, before committing"; `.claude/rules/keep-legal-docs-current.md` fires

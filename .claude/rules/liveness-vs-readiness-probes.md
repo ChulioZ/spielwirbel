@@ -1,3 +1,11 @@
+---
+paths:
+  - "lib/observability.js"
+  - "lib/app.js"
+  - "lib/repo/**"
+  - "railway.json"
+  - "test/observability.test.js"
+---
 # `/healthz` and `/readyz` are two probes on purpose — never point the DEPLOY check at the thorough one (#462)
 
 `lib/app.js` mounts both, ahead of the rate limiter and the auth gates:
@@ -120,7 +128,7 @@ app produces an assertion that is simply false rather than one that fails
 usefully.
 
 Every assertion above was verified by breaking the production code on purpose
-(the discipline in `.claude/rules/admin-moderation-surface.md` §3): dropping
+(the discipline in `.claude/rules/admin-cross-tenant-escape.md` §4): dropping
 `/readyz` from `PROBE_PATHS`, removing the in-flight sharing, deleting the
 `!res.ok` warn, and adding `ping` to `TENANT_METHODS` each redden exactly one
 test and nothing else. Back the files up to the scratchpad first — `git checkout`

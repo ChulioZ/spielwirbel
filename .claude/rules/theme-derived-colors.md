@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/styles.css"
+  - "public/js/views-round-detail.js"
+  - "public/js/core.js"
+---
 # Derive UI colors from the theme variables, don't hardcode them
 
 Each round picks a design (page background + accent). The whole UI must follow

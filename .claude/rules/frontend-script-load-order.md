@@ -1,3 +1,8 @@
+---
+paths:
+  - "public/js/**"
+  - "public/index.html"
+---
 # Frontend script load order (shared global scope)
 
 `public/js/*.js` are plain classic `<script>`s, not modules. They share one

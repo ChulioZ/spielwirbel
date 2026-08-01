@@ -1,3 +1,8 @@
+---
+paths:
+  - "public/styles.css"
+  - "public/js/**"
+---
 # A `hidden` attribute loses to any author `display` rule — gate visibility with `[hidden]`
 
 The `hidden` HTML attribute hides an element only via the **UA stylesheet's**

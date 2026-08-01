@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/img/**"
+  - "public/js/views-landing.js"
+  - "test/landing-shots.test.js"
+---
 # Regenerating the landing-page product screenshots (#438, #457)
 
 The logged-out landing hero shows real screenshots of the app

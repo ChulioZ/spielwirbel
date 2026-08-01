@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/styles.css"
+  - "public/js/**"
+  - "test/ds-row-affordance.test.js"
+---
 # `.ds-row` is a CLICK TARGET — reusing it for layout alone lies to the user (#557)
 
 `.ds-row` is the app's row component, and it does not merely lay a row out: it

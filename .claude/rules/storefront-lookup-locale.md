@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/providers/**"
+  - "lib/routes/lookup.js"
+  - "test/providers-*.test.js"
+  - "test/provider-locales.test.js"
+---
 # The storefronts answer in the USER's language (#505) — three premises that were wrong
 
 The four digital storefronts (Steam, Xbox, Nintendo eShop, PS Store) used to be

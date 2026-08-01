@@ -1,5 +1,9 @@
 # Add tests with new features; keep the suite green
 
+<!-- scope: global — a discipline that applies to every change, not a file set -->
+
+<!-- scope: global — a discipline that applies to every change, not a file set -->
+
 There is an automated test suite: `npm test` (runs `node --test`, Node's built-in
 runner — no framework, no build). Tests live in `test/*.test.js`; `supertest` is
 the only test dependency and drives the Express app in-process (no port opened).

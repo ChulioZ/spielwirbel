@@ -1,3 +1,11 @@
+---
+paths:
+  - "public/index.html"
+  - "public/icons/**"
+  - "lib/app.js"
+  - "test/link-preview.test.js"
+  - "test/footer-trust.test.js"
+---
 # The link-preview card (#430): static tags, absolute URLs, and how to redraw it
 
 Sharing `https://spielwirbel.app/` in a messenger renders a card built from the

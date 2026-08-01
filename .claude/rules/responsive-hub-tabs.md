@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/styles.css"
+  - "public/js/views-round.js"
+  - "test/dock-footer-clearance.test.js"
+---
 # The hub tabs branch on WIDTH alone (#331) — and the clearance follows the dock
 
 The four hub tabs (Start / Regal / Chronik / Pokale) are one element with two

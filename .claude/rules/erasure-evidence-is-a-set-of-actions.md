@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/routes/admin.js"
+  - "lib/routes/account.js"
+  - "docs/legal/retention.md"
+  - "test/account-deletion.test.js"
+---
 # A new moderation-log action inherits the 3-year purge — erasure evidence must opt OUT (#419)
 
 `docs/legal/retention.md` deletes moderation-log entries **3 years after the end
@@ -59,7 +66,7 @@ names, no member names**. `test/account-deletion.test.js` sweeps the serialized
 entry for each of those, which is what stops a future field being added "for
 context". The record's only job is proving the request was honoured.
 
-**Related:** `.claude/rules/admin-moderation-surface.md` §5 (the operator-side
+**Related:** `.claude/rules/admin-cross-tenant-escape.md` §2 (the operator-side
 erasure this mirrors, and why its log entry omits the address),
 `.claude/rules/keep-legal-docs-current.md` (the two-directional check that should
 catch this at implementation time),

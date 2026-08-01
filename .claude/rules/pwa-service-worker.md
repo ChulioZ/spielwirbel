@@ -1,5 +1,9 @@
 # The PWA service worker (public/sw.js) — gotchas
 
+<!-- scope: global — cited by a dozen rules as a VERIFICATION situation ("clear the SW first"); scoping it to public/sw.js would drop it exactly when someone is checking a styles.css change -->
+
+<!-- scope: global — cited by a dozen rules as a VERIFICATION situation ("clear the SW first"); scoping it to public/sw.js would drop it exactly when someone is checking a styles.css change -->
+
 Issue #142 made the app installable + offline with a plain, no-build service
 worker (`public/sw.js`), a web manifest (`public/manifest.webmanifest`), a tiny
 registration IIFE (`public/js/pwa.js`), and home-screen icons (`public/icons/`).

@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/styles.css"
+  - "public/js/round-rail.js"
+  - "test/content-width.test.js"
+---
 # The column's width may key off the VIEWPORT, never off what a screen renders
 
 `.app` is capped at `--w-content` (1000px) below 1280px and at `--w-shell`

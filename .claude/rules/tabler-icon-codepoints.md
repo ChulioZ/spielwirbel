@@ -1,5 +1,9 @@
 # Adding a Tabler icon: map the codepoint from the bundled font, not upstream
 
+<!-- scope: global — the "a ti-* class does not mean it is declared" trap surfaces anywhere an icon is used, and its check is a repo-wide grep -->
+
+<!-- scope: global — the "a ti-* class does not mean it is declared" trap surfaces anywhere an icon is used, and its check is a repo-wide grep -->
+
 `public/fonts/tabler-icons.css` is a **curated subset** — only the `.ti-X::before
 { content: "\hhhh"; }` lines the app actually uses are declared, though the
 committed `tabler-icons.woff2` holds the **full** glyph set (~5000 glyphs). To use

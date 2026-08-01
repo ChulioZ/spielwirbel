@@ -1,3 +1,9 @@
+---
+paths:
+  - "lib/quota.js"
+  - "lib/routes/**"
+  - "test/quota.test.js"
+---
 # Per-tenant quotas (lib/quota.js, issue #139) — gotchas
 
 Issue #139 added per-tenant cost/abuse caps. They are all **state caps** — they

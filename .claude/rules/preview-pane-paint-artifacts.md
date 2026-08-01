@@ -1,5 +1,9 @@
 # Preview-pane blank screenshots & scroll timeouts are (often) not app bugs
 
+<!-- scope: global — a Browser-pane artifact — it surfaces while verifying, whatever file is under test -->
+
+<!-- scope: global — a Browser-pane artifact — it surfaces while verifying, whatever file is under test -->
+
 Discovered verifying #198 (lazy covers + `content-visibility`): in the Claude
 Code Browser pane, the app's Regal grid produced **blank screenshots after any
 programmatic scroll** (`scrollTo`/`scrollBy`), and `computer` **scroll/input

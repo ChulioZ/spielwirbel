@@ -1,3 +1,10 @@
+---
+paths:
+  - "public/styles.css"
+  - "public/js/views-session.js"
+  - "public/js/views-round.js"
+  - "test/content-width.test.js"
+---
 # A screen that opts out of `--w-read` must take its PAGE HEAD with it (#577)
 
 The session-setup and new-round screens are the app's two setup forms, and both

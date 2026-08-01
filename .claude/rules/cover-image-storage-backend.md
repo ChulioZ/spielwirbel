@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/storage/**"
+  - "lib/upload.js"
+  - "lib/routes/games.js"
+  - "test/storage.test.js"
+---
 # Cover-image storage is a read-through proxy, not public bucket URLs
 
 Issue #128 added a second cover-image storage backend behind `S3_BUCKET`

@@ -1,3 +1,8 @@
+---
+paths:
+  - "public/js/views-round-detail.js"
+  - "public/js/router.js"
+---
 # Back dismisses a sheet (#333): the pop is async, so navigate through closeSheet
 
 Every modal sheet (add game, link provider, move games, feedback, support) goes

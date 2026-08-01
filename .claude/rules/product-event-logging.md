@@ -1,3 +1,9 @@
+---
+paths:
+  - "lib/observability.js"
+  - "lib/routes/**"
+  - "test/rule-enumerations.test.js"
+---
 # Product-usage events (trackEvent, issue #261) — the allowlist is the point
 
 `lib/observability.js` exports **`trackEvent(name, { tenantId })`**: a handful of

@@ -1,5 +1,9 @@
 # A red `gitleaks` check can be a transient license-probe flake, not a leaked secret
 
+<!-- scope: global — a CI situation — a red check with no diff to explain it -->
+
+<!-- scope: global — a CI situation — a red check with no diff to explain it -->
+
 `gitleaks/gitleaks-action@v3` (the `gitleaks` required check, `.github/workflows/`)
 is **free for personal-account repos**, and it decides "personal vs org" at
 runtime by calling `https://api.github.com/users/<owner>`. When that probe hits a

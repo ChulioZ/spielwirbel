@@ -1,3 +1,10 @@
+---
+paths:
+  - "public/js/doc-title.js"
+  - "public/js/core.js"
+  - "public/js/i18n.js"
+  - "public/js/views-*.js"
+---
 # The tab title has THREE owners (#522) — pick the right one for a new screen
 
 `setDocTitle(...parts)` (core.js, joining via `docTitle()` in `js/doc-title.js`)

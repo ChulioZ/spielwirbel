@@ -1,3 +1,11 @@
+---
+paths:
+  - "public/robots.txt"
+  - "public/sitemap.xml"
+  - "public/*.html"
+  - "test/seo.test.js"
+  - "test/landing-copy.test.js"
+---
 # `noindex` and `Disallow` do OPPOSITE things — and "no robots.txt" looks like a working one (#510)
 
 For four days after the go-live, the Google result for the public app was the
@@ -86,7 +94,7 @@ deleted outright, i.e. against exactly the regression it exists to catch. Scope
 the match to the `<main id="app">` block, strip comments and tags, then compare.
 
 **This was found by the break-on-purpose loop, not by review** (the discipline in
-`.claude/rules/admin-moderation-surface.md` §3) — and one of the breaks in that
+`.claude/rules/admin-cross-tenant-escape.md` §4) — and one of the breaks in that
 loop silently did not apply, because a `perl` pattern guessed the wrong
 indentation and reported success. Confirm the break actually landed (`grep -c`
 for the thing you removed) before reading a green suite as evidence, the same

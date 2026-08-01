@@ -1,3 +1,10 @@
+---
+paths:
+  - "public/js/views-session.js"
+  - "public/js/router.js"
+  - "public/js/session-path.js"
+  - "public/js/core.js"
+---
 # The session flow owns history entries (#329) — guard the EXIT, not a path
 
 The hot-seat wizard (setup → vote steps → finale) pushes a real history entry

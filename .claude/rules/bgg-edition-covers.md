@@ -1,3 +1,11 @@
+---
+paths:
+  - "lib/providers/bgg.js"
+  - "lib/routes/lookup.js"
+  - "public/js/bgg-covers.js"
+  - "public/js/cover-picker.js"
+  - "test/bgg-covers.test.js"
+---
 # BGG edition covers (#519): `parseItems` LOSES the game item on a versions body
 
 `GET /xmlapi2/thing?id=<id>&versions=1` carries a game's per-edition box arts —

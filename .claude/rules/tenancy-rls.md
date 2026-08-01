@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/tenant.js"
+  - "lib/repo/**"
+  - "lib/app.js"
+  - "test/tenant.test.js"
+---
 # Tenancy (#136): routes use req.repo; Postgres RLS binds non-superusers only
 
 Issue #136 made every piece of round data tenant-scoped. How it hangs together,
@@ -66,7 +73,7 @@ and the traps that cost effort:
 ## For any future cross-tenant WRITE (two PostgreSQL facts, verified on PG 16)
 
 A cross-tenant *read* escape (moderation, #268) is a separate additive
-`FOR SELECT` policy — see `.claude/rules/admin-moderation-surface.md` §2. A
+`FOR SELECT` policy — see `.claude/rules/admin-cross-tenant-escape.md` §1. A
 cross-tenant *write* (moving rows between tenants) is harder, and two non-obvious
 facts — measured empirically, the docs read as if neither were true — decide how
 the escape must be shaped. Get either wrong and you watch `UPDATE 0` or "new row
@@ -86,7 +93,7 @@ violates row-level security policy" with no clue why:
    policy's scoped `WITH CHECK` away — the new row is still rejected. The reliable
    shape is a **self-contained** escape that admits the move on its own, never an
    edit to the tenant policy (which would reopen the cross-tenant-DELETE hole
-   `admin-moderation-surface.md` §2 warns about). And because such an escape also
+   `.claude/rules/admin-cross-tenant-escape.md` §1 warns about). And because such an escape also
    widens SELECT, the *method's* `WHERE` — not the policy — is what scopes the
    move to the source; an unqualified UPDATE under it would move every tenant.
 

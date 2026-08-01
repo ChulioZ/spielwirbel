@@ -1,3 +1,9 @@
+---
+paths:
+  - "lib/app.js"
+  - "lib/providers/index.js"
+  - "test/security.test.js"
+---
 # helmet CSP + rate limiting gotchas (lib/app.js)
 
 Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired in

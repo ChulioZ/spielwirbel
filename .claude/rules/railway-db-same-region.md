@@ -1,5 +1,9 @@
 # A `railway.internal` DB hostname does NOT mean the DB is nearby
 
+<!-- scope: global — a deploy-topology fact; the symptom is latency, not a file -->
+
+<!-- scope: global — a deploy-topology fact; the symptom is latency, not a file -->
+
 Found investigating the post-#203 production slowness (2026-07-20): every data
 endpoint still took 150–600 ms although the hot reads were long since one
 single round trip (#203), query execution measured 1–4 ms on a

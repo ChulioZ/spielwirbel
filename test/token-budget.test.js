@@ -49,8 +49,36 @@ const ROOT = path.join(__dirname, '..');
    A naive `split('\n').length` is that off-by-one: it counts the empty string
    after the trailing newline every file here ends with. */
 const lineCount = (rel) => {
-  const lines = fs.readFileSync(path.join(ROOT, rel), 'utf8').split('\n');
+  const lines = body(fs.readFileSync(path.join(ROOT, rel), 'utf8')).split('\n');
   return lines[lines.length - 1] === '' ? lines.length - 1 : lines.length;
+};
+
+/* Scope frontmatter is NOT content, so it does not spend the budget.
+
+   The budget asks "how much does a reader — or an agent — have to take in".
+   A `paths:` block is the opposite of that: it exists so the file is *not*
+   loaded when it is irrelevant (`test/rule-scope.test.js`, criteria C-014/C-022).
+   Counting it against the content budget penalises the one edit that reduces
+   context cost, which is backwards.
+
+   Not hypothetical: concluding the scoping trial pushed `bgg-collection-import.md`
+   to 151 and `psstore-full-game-is-not-every-game.md` to 152 — both over budget
+   on metadata alone, having gained no content. The honest fix is to measure the
+   right thing rather than to allowlist two files for a rounding artefact.
+
+   `wc -l` semantics below are deliberate — that is the command every criterion
+   tells the auditor to run, and a count that disagrees with it by one would fail
+   a file sitting exactly on its budget while the documented check said it was
+   fine. (An auditor running bare `wc -l` on a scoped rule now reads a few lines
+   high; that is the trade, and it errs toward looking *at* a file rather than
+   away from one.) */
+const body = (text) => {
+  let t = text;
+  if (t.startsWith('---\n')) {
+    const end = t.indexOf('\n---', 3);
+    if (end >= 0) t = t.slice(end + 4).replace(/^\n/, '');
+  }
+  return t.replace(/^\s*<!--\s*scope: global[\s\S]*?-->\n?/m, '');
 };
 
 // Every file under `dir` matching `keep`, repo-relative, recursing into subdirectories.
@@ -117,17 +145,23 @@ const SOURCE_ALLOW = {
   'lib/routes/account.js': 'recorded 2026-07-30 — register/verify/login/refresh/reset plus self-service export and deletion',
 };
 
+/* All eight were `recorded` — "over budget, nobody has looked" — from 2026-07-30
+   until 2026-08-01, when each was put through the seam test (C-004: several
+   *unrelated* learnings, not raw length). One had a real seam and was split; the
+   other seven are one learning whose length is its evidence, and splitting them
+   would scatter something a single reader needs at once. There are no `recorded`
+   rule entries left; a new one means a file grew past 150 and nobody has judged
+   it yet. */
 const RULE_ALLOW = {
-  // recorded — each is one learning by C-004, but each has grown a long
-  // narrative; C-021 re-examines them at audit cadence.
-  '.claude/rules/admin-moderation-surface.md': 'recorded 2026-07-30 — 11 numbered sections over one surface; the clearest split candidate',
-  '.claude/rules/add-game-lookup-provider.md': 'recorded 2026-07-30 — the provider contract plus five providers\' quirks',
-  '.claude/rules/landing-product-screenshots.md': 'recorded 2026-07-30 — a regeneration procedure, which is long by nature',
-  '.claude/rules/responsive-content-width.md': 'recorded 2026-07-30 — carries the #332 revert reasoning, which is the rule',
-  '.claude/rules/guest-demo-accounts.md': 'recorded 2026-07-30 — five numbered traps plus the smaller ones',
-  '.claude/rules/session-guests-are-not-members.md': 'recorded 2026-07-30 — the ~10 sites that assumed member == person',
-  '.claude/rules/session-teams.md': 'recorded 2026-07-30 — four traps over one feature',
-  '.claude/rules/noindex-vs-disallow-and-the-crawler-surface.md': 'recorded 2026-07-30 — three mechanisms that only make sense together',
+  // judged 2026-08-01
+  '.claude/rules/admin-moderation-surface.md': 'judged — SPLIT: 277 -> 161. The two seams with their own file sets left as admin-cross-tenant-escape.md (RLS: reads widen, writes never) and admin-kennzahlen-card.md (lib/status.js + its two generic sweeps). What remains is one surface\'s operator checklist, read together',
+  '.claude/rules/add-game-lookup-provider.md': 'judged — the provider CONTRACT plus a per-provider reference table; adding or debugging a provider needs both at once, and per-provider discoveries already split off on their own (psstore-full-game-is-not-every-game, storefront-lookup-locale, provider-cover-*). Five thin files would scatter one lookup',
+  '.claude/rules/landing-product-screenshots.md': 'judged — a sequential regeneration procedure, read start to finish when run; whoever runs it opens every piece anyway, so a split adds indirection and no saving',
+  '.claude/rules/responsive-content-width.md': 'judged — one learning (width keys off the viewport, never content) whose evidence IS the #332 revert. Drop the evidence and it becomes an assertion nobody can re-derive, which is how #332 shipped the first time',
+  '.claude/rules/guest-demo-accounts.md': 'judged — five failure modes of ONE feature, every one reachable from a single edit to lib/demo.js; whoever touches the demo needs all five',
+  '.claude/rules/session-guests-are-not-members.md': 'judged — one learning ("a guest is a person without a member row") plus the ~10 sites that assumed otherwise. The enumeration is the rule, not padding around it',
+  '.claude/rules/session-teams.md': 'judged — four traps over one feature, 16 lines over; no seam, and each trap is meaningless without the positional wire format in §1',
+  '.claude/rules/noindex-vs-disallow-and-the-crawler-surface.md': 'judged — three mechanisms that are only correct TOGETHER (noindex vs Disallow, the SPA fallback, the vacuous assertion); separating them re-creates the trap the file exists to prevent',
 };
 
 const SKILL_ALLOW = {

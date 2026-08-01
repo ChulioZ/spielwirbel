@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/tenant.js"
+  - "lib/accounts.js"
+  - "lib/routes/admin.js"
+  - "test/admin.test.js"
+---
 # A valid token for a DELETED user must 401 — never fall back to 'default'
 
 `lib/tenant.js` resolves a request's tenant. Its fallback chain is deliberate and

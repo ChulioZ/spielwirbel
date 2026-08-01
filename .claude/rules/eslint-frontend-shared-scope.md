@@ -1,3 +1,8 @@
+---
+paths:
+  - "eslint.config.js"
+  - "public/js/**"
+---
 # Linting the frontend's shared-global-scope scripts
 
 `public/js/*.js` are classic `<script>`s that hand-roll a "module system" over

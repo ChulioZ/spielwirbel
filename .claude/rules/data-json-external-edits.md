@@ -1,5 +1,9 @@
 # Stop all servers before editing data/data.json externally
 
+<!-- scope: global — data-directory handling; the trap is running a script while a server holds the file -->
+
+<!-- scope: global — data-directory handling; the trap is running a script while a server holds the file -->
+
 The server loads `data.json` into memory once at startup and rewrites the
 whole file on every mutation (`saveData()`). Any external edit to the file
 (migration script, manual fix) is silently lost the next time a running

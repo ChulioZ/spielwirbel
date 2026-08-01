@@ -1,3 +1,9 @@
+---
+paths:
+  - "lib/canonical.js"
+  - "lib/app.js"
+  - "test/canonical.test.js"
+---
 # Canonical-host redirect must be an allowlist (or it flaps the Railway deploy)
 
 Issue #230 added a canonical-host 301 (`lib/canonical.js`, wired in `lib/app.js`):

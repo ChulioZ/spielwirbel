@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/index.html"
+  - "lib/app.js"
+  - "test/spa-fallback.test.js"
+---
 # SPA fallback needs root-absolute asset paths in index.html
 
 The server serves `public/index.html` for any non-`/api`, non-static frontend

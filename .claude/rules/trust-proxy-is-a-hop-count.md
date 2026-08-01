@@ -1,5 +1,9 @@
 # `TRUST_PROXY` is a HOP COUNT — one too low makes every per-IP limit a shared bucket
 
+<!-- scope: global — an env-var/ops fact whose symptom appears in production logs -->
+
+<!-- scope: global — an env-var/ops fact whose symptom appears in production logs -->
+
 Production ran with `TRUST_PROXY=1` behind Railway, which has **two** proxy hops.
 Express therefore resolved `req.ip` to Railway's own edge proxy rather than to the
 visitor, so **every visitor arriving through the same edge proxy counted as one

@@ -1,3 +1,10 @@
+---
+paths:
+  - "public/js/views-round-detail.js"
+  - "public/js/core.js"
+  - "public/styles.css"
+  - "test/editor-presentation.test.js"
+---
 # Make a click target a real `<button>` — except when it is inline text that wraps (#424)
 
 Four controls on the game-detail screen were click-only `<span>`/`<div>`s until

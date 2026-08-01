@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/repo/**"
+  - "lib/routes/**"
+  - "lib/store.js"
+  - "test/support/repo-contract.js"
+---
 # Routes go through lib/repo/ — the data-access layer (never lib/store.js)
 
 Issue #127 introduced `lib/repo/`: the async API that **every route reads and

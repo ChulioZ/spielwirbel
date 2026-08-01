@@ -1,3 +1,11 @@
+---
+paths:
+  - "lib/repo/**"
+  - "lib/storage/**"
+  - "lib/routes/games.js"
+  - "lib/routes/rounds.js"
+  - "lib/routes/admin.js"
+---
 # Any row deletion that can hold a cover must hand the image paths back (#280)
 
 A cover object's storage key exists in exactly **one** place: the `image` field

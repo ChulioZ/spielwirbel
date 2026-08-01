@@ -1,3 +1,12 @@
+---
+paths:
+  - "lib/app.js"
+  - "lib/accounts.js"
+  - "lib/auth.js"
+  - "lib/tenant.js"
+  - "public/js/account.js"
+  - "test/layered-auth.test.js"
+---
 # Accounts mode: the /api + /uploads gate and the SPA shell (issue #138)
 
 Issue #138 built the onboarding/auth UI and flipped the app between two auth
