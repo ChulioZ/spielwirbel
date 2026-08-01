@@ -277,6 +277,10 @@ function applyStaticTexts() {
   // this runs long after every script has loaded, and it is a no-op (it just
   // re-hides the banner) whenever the session is not a demo.
   setupDemoBanner();
+  // The terms-change notice (#521) is static chrome for the same reason and
+  // carries a legal reference too, so it follows the picker as well. Also a
+  // no-op whenever the account is up to date.
+  setupTermsBanner();
 }
 
 // Shared footer LINK visibility (issues #224/#134). The links start hidden in

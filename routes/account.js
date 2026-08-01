@@ -30,6 +30,9 @@ const accounts = require('../lib/accounts');
 const demo = require('../lib/demo');
 const storage = require('../lib/storage'); // ending a demo frees its cover objects (#502)
 const mail = require('../lib/mail');
+// The terms-change notice (#521). No rendering happens here — this is the
+// current revision plus the resolver that applies the legacy fallback.
+const { TERMS_REVISION, termsAcceptanceOf } = require('../lib/legal');
 const { logger } = require('../lib/observability');
 
 const router = express.Router();
@@ -182,6 +185,11 @@ router.post('/register', async (req, res) => {
     // The optional BoardGameGeek handle the Regal import reads (#481) — present
     // from the start for the same absent-key parity reason as the three above.
     bggUsername: null,
+    // Which revision of the Nutzungsbedingungen this account has seen (#521).
+    // Written at creation so the change notice has something to compare against;
+    // accounts predating this fall back to LEGACY_TERMS_REVISION in the
+    // projection below rather than being migrated (CLAUDE.md: no migration code).
+    acceptedTermsRevision: TERMS_REVISION,
   });
 
   // Answered OPENLY, unlike email_taken: a username is a public identifier by
@@ -314,7 +322,20 @@ router.post('/login', async (req, res) => {
   // Mirror the access token into a cookie so browser-native /uploads GETs (cover
   // images) authenticate; fetch/XHR still use the Bearer token (see lib/app.js).
   accounts.setAccessCookie(res, req, tokens.accessToken);
-  res.json({ ok: true, ...tokens, user: { id: user.id, email: user.email, username: user.username || null } });
+  // The terms fields ride along (#521) because the client seats `accountUser`
+  // straight from this response: without them the change notice would stay
+  // hidden until the next cold load — i.e. exactly when someone logs in after a
+  // terms change, which is the case the notice exists for.
+  res.json({
+    ok: true,
+    ...tokens,
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username || null,
+      ...termsAcceptanceOf(user),
+    },
+  });
 });
 
 /* ----------------------------------- demo ----------------------------------- */
@@ -359,7 +380,16 @@ router.post('/demo', async (req, res) => {
   res.json({
     ok: true,
     ...tokens,
-    user: { id: user.id, email: user.email, username: user.username, demo: true },
+    // Same fields as the login response (#521), so `accountUser` has a uniform
+    // shape whichever way the session started. A demo is minted at the current
+    // revision, so these can only ever be equal — it is never "behind".
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      demo: true,
+      ...termsAcceptanceOf(user),
+    },
   });
 });
 
@@ -699,6 +729,19 @@ const meProjection = (user) => ({
   // account answers `false` here rather than `undefined`.
   demo: user.demo === true,
   demoExpiresAt: user.demo === true ? user.demoExpiresAt || null : null,
+  // The terms-change notice (#521), delivering what Nutzungsbedingungen §11
+  // promises. BOTH values ride here, and the client shows the banner when they
+  // differ:
+  //
+  //  - the RESOLVED accepted revision, so the client never re-implements the
+  //    LEGACY_TERMS_REVISION fallback (an absent key means "registered under the
+  //    text live at rollout", i.e. up to date today and correctly behind after
+  //    the next bump);
+  //  - the CURRENT revision, deliberately on this per-user projection rather
+  //    than on the public GET /api/config. Both arrive in one response, so the
+  //    comparison cannot straddle two requests and read a stale pair — and the
+  //    ungated config response keeps the exact shape test/config.test.js pins.
+  ...termsAcceptanceOf(user),
 });
 
 router.get('/me', accounts.requireUser, async (req, res) => {
@@ -737,6 +780,22 @@ router.patch('/me', accounts.requireUser, async (req, res) => {
   const user = Object.keys(patch).length
     ? await repo.updateUser(req.userId, patch)
     : await repo.getUserById(req.userId);
+  if (!user) return res.status(401).json({ error: 'invalid_token' });
+  res.json(meProjection(user));
+});
+
+// Acknowledge the current Nutzungsbedingungen revision (#521) — what dismissing
+// the change banner calls.
+//
+// It takes NO body: the server decides the value, so a client cannot claim to
+// have accepted a revision that does not exist (nor pin itself to an old one to
+// keep the banner up). This only records that the notice was seen — §11 informs,
+// it does not gate the app, so nothing anywhere refuses a caller who is behind.
+//
+// A demo account is not special-cased: it is created with the current revision,
+// so it can never be behind, and writing the field again is a harmless no-op.
+router.post('/accept-terms', accounts.requireUser, async (req, res) => {
+  const user = await repo.updateUser(req.userId, { acceptedTermsRevision: TERMS_REVISION });
   if (!user) return res.status(401).json({ error: 'invalid_token' });
   res.json(meProjection(user));
 });
