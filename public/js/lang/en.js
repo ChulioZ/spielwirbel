@@ -619,6 +619,16 @@ I18N.en = {
   'friends.err.quotaFriends': 'You’ve reached the maximum number of friends.',
   'friends.err.quotaRequests': 'Too many open requests. Wait for some to be answered.',
   'friends.err.generic': 'The request couldn’t be sent.',
+  // Public account profile at /u/:username (issue #558)
+  'profile.title': 'Profile',
+  'profile.memberSince': 'Member since {when}',
+  'profile.friendsSince': 'Friends since {when}',
+  'profile.notFound': 'No account with that username.',
+  'profile.self': 'That’s you.',
+  'profile.incoming': 'This account would like to be friends with you.',
+  'profile.demoNote': 'You can’t send friend requests from the demo. Register to add someone.',
+  'profile.feedTitle': 'Activity',
+  'profile.feedEmpty': 'No activity since your friendship started.',
   // Round-sharing invitations — send sheet (issue #207)
   'invite.link': 'Invite',
   'invite.title': 'Invite to the round',

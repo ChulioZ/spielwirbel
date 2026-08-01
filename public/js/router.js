@@ -73,6 +73,10 @@ function confirmLeave() {
 function roundPath(rid, sub) {
   return sub && sub !== 'start' ? `/round/${rid}/${sub}` : `/round/${rid}`;
 }
+// A public account profile (#558). The username is the path segment, so it is
+// encoded here rather than at each link site — usernames are user-chosen and
+// need not be URL-safe.
+const profilePath = (username) => `/u/${encodeURIComponent(username)}`;
 const gamePath = (rid, gid) => `/round/${rid}/game/${gid}`;
 const memberPath = (rid, mid) => `/round/${rid}/member/${mid}`;
 const resultsPath = (rid, sid) => `/round/${rid}/session/${sid}`;
@@ -118,6 +122,10 @@ function resolveRoute(pathname) {
   if (parts[0] === 'inbox') return () => showInbox(); // #207; showInbox sends a logged-out visitor Home
   if (parts[0] === 'freunde') return () => showFriends(); // #325; showFriends sends a logged-out visitor Home
   if (parts[0] === 'konto') return () => showAccount(); // #482; showAccount sends a logged-out visitor Home
+  // A public account profile (#558); showProfile sends a logged-out visitor
+  // Home. The segment is decoded here because resolveRoute splits the raw
+  // pathname — profilePath encoded it.
+  if (parts[0] === 'u' && parts[1]) return () => showProfile(decodeURIComponent(parts[1]));
   // The three auth screens (#501). Each show*() guards itself the way
   // showInbox/showAccount do, only inverted: a logged-IN visitor goes Home, as
   // does anyone on a legacy (accounts-off) instance, which has no auth screens

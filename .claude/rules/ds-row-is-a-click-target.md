@@ -52,9 +52,22 @@ every row, and it is not hypothetical — sprinkling it onto the move-games
 So **a row that should become clickable should become an `<a>` or a `<button>`**,
 not a div that quietly re-earns the affordance — which is the direction
 `.claude/rules/native-button-vs-focusable-span.md` and
-`.claude/rules/in-app-nav-links.md` already set. When #558 gives the friends rows
-real profile targets they become anchors and drop the modifier, and the test
-follows along with no edit.
+`.claude/rules/in-app-nav-links.md` already set.
+
+**This file used to predict that #558 would turn the three Freundeskreis rows
+into anchors and drop the modifier. It did not, and the prediction was wrong for
+a structural reason worth keeping:** those rows hold action buttons, and a
+`<button>` inside an `<a>` is invalid HTML, so the row can never *become* the
+link. Only its `.ds-row__main` half did (`friendRowMain`, `views-friends.js`),
+and the row therefore **keeps `ds-row--static`** — it is genuinely not a click
+target, and the anchor inside it carries the whole affordance. The test above
+needed no edit either way, because it scans `ds-row` as a whole class and
+`ds-row__main` never matched it.
+
+The general form: **a row with its own actions splits into a linked half and an
+inert remainder, not into a clickable row.** Only a row with nothing else in it
+can take the native element wholesale. See
+`.claude/rules/account-profiles.md`.
 
 The one **conditional** case is the generic inbox item: its handler is bound only
 while unread (clicking marks it read). It interpolates the modifier for the read

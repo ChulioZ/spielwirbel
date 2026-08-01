@@ -2204,6 +2204,25 @@ body.auth-screen .terms-banner { display: none; }
 .friend-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .friend-row__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .friend-req__pending { font-size: 14px; }
+/* The avatar+name half links to the account's profile (#558). The ROW stays
+   inert (ds-row--static), so this anchor carries the whole affordance: navLink
+   strips the browser-blue via .nav-link, and the underline on hover is what
+   says it leads somewhere. min-width:0 keeps the name's ellipsis working. */
+.friend-row__link { min-width: 0; text-decoration: none; }
+.friend-row__link:hover .friend-row__name,
+.friend-row__link:focus-visible .friend-row__name { text-decoration: underline; }
+
+/* ===== Account profile /u/:username (#558) ===== */
+.profile-head { display: flex; align-items: center; gap: 16px; margin: 4px 0 18px; }
+.profile-head__text { min-width: 0; }
+.profile-head__text h1 { margin: 0 0 2px; overflow-wrap: anywhere; }
+.profile-head__text p { margin: 2px 0 0; font-size: 14px; }
+/* The profile's avatar is the row avatar at hero size — same deterministic
+   colour + initials, so an account looks the same here as in a row. */
+.profile-head .avatar { width: 64px; height: 64px; font-size: 24px; flex: none; }
+/* One relationship action (plus, for an incoming request, its decline). */
+.profile-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.profile-actions p { margin: 0; }
 /* The feed: one row per event, a small square cover thumb + the line + time. */
 .feed-list { display: flex; flex-direction: column; gap: 10px; }
 .feed-item {

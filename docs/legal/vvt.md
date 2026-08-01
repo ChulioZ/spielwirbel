@@ -9,12 +9,12 @@ konfigurierte Empfangsanschrift; E-Mail: `IMPRESSUM_EMAIL`). Kein Vertreter,
 kein Datenschutzbeauftragter (nicht benannt; keine Pflicht nach § 38 BDSG —
 keine 20 Personen, kein besonderes Risiko).
 
-**Stand:** 2026-07-25
+**Stand:** 2026-08-01
 
 | # | Verarbeitung | Kategorien betroffener Personen | Datenkategorien | Zweck | Rechtsgrundlage | Empfänger / Auftragsverarbeiter | Drittland | Löschfrist |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Server-Request-Logs | Alle Besucher | IP, Methode, Pfad, Status, Dauer | Sicherer Betrieb, Missbrauchserkennung, Ratenbegrenzung | Art. 6 (1) f | Railway Corp. (Hosting, AVV + SCC) | USA (EU-Region; SCC) | kurzfristig (Plattform-Logrotation) |
-| 2 | Konten (Registrierung/Login) | Registrierte Nutzer | E-Mail, frei gewählter dienstweit eindeutiger Nutzername (#320), Passwort-Hash (Argon2id), gehashte Verifikations-/Reset-/Refresh-Token, Sperrstatus | Kontoverwaltung, Authentifizierung | Art. 6 (1) b | Railway (DB) | USA (EU-Region; SCC) | bis Kontolöschung — seit #419 vom Nutzer selbst in den Kontoeinstellungen auslösbar (sofortige Kaskade), alternativ betreiberseitig (#273); es bleibt nur der Löschnachweis nach Zeile 10 |
+| 2 | Konten (Registrierung/Login) | Registrierte Nutzer | E-Mail, frei gewählter dienstweit eindeutiger Nutzername (#320), Registrierungszeitpunkt, Passwort-Hash (Argon2id), gehashte Verifikations-/Reset-/Refresh-Token, Sperrstatus | Kontoverwaltung, Authentifizierung | Art. 6 (1) b | Railway (DB). Seit #558 sind **Nutzername und Registrierungsmonat** zusätzlich anderen **angemeldeten** Konten auf dem Kontoprofil (`/u/:username`) sichtbar — E-Mail-Adresse, Runden-/Spieldaten und Sperrstatus **nicht**; kein Zugriff für nicht angemeldete Besucher oder Suchmaschinen | USA (EU-Region; SCC) | bis Kontolöschung — seit #419 vom Nutzer selbst in den Kontoeinstellungen auslösbar (sofortige Kaskade), alternativ betreiberseitig (#273); es bleibt nur der Löschnachweis nach Zeile 10 |
 | 3 | Runden-/Spieldaten | Nutzer + von ihnen eingetragene Mitglieder | Rundennamen, Spieltitel, Mitgliedsnamen, Gästenamen (nur zu einer Session eingetragene Personen, #458), Stimmen/Bewertungen, Tags, Aktivitäten | Kernfunktion des Dienstes | Art. 6 (1) b | Railway (DB) | USA (EU-Region; SCC) | bis Löschung durch Nutzer / Kontolöschung |
 | 4 | Hochgeladene Cover-Bilder | Nutzer | Bilddateien | Kernfunktion | Art. 6 (1) b | Cloudflare, Inc. (R2, AVV; DPF-zertifiziert) | USA (DPF/SCC) | bis Löschung des Spiels/Kontos |
 | 5 | Transaktions-E-Mails | Registrierte Nutzer, Kontaktformular-Nutzer | Empfänger-Adresse, Betreff, Inhalt | Verifikation, Passwort-Reset, Kontakt-Zustellung | Art. 6 (1) b | Heinlein Hosting GmbH (mailbox.org), Berlin (AVV, s. Zeile 6) — **kein gesonderter Versanddienstleister** | nein (DE) | Versandprotokolle des Anbieters |

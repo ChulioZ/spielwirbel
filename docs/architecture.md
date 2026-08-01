@@ -166,6 +166,11 @@ routes/
                                              send / accept / decline / unfriend,
                                              list, feed (#325) —
                                              404 unless ACCOUNTS_ENABLED)
+  profile.js         /api/account/profile   (public account profile by username:
+                                             handle, registration month, the
+                                             caller's friendship state, and the
+                                             friends-only feed (#558) —
+                                             404 unless ACCOUNTS_ENABLED)
   contact.js         /api/contact           (public contact form / DSA notice
                                              intake → stores every submission +
                                              e-mails the operator + acknowledges
@@ -306,7 +311,8 @@ public/
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, voting (hot-seat), finale, results
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
-    views-friends.js Freundeskreis view + home feed section (#325; accounts mode only)
+    views-friends.js Freundeskreis view + home feed section (#325) and the
+                     account profile at /u/:username (#558; accounts mode only)
     views-account.js Konto settings: identity + change password (#482; accounts mode only)
     router.js        URL ↔ view routing (History API): deep links, reloads
     main.js          bootstrap: route from the current URL              (loads last)

@@ -610,6 +610,16 @@ I18N.de = {
   'friends.err.quotaFriends': 'Du hast die maximale Zahl an Freunden erreicht.',
   'friends.err.quotaRequests': 'Zu viele offene Anfragen. Warte, bis einige beantwortet werden.',
   'friends.err.generic': 'Anfrage konnte nicht gesendet werden.',
+  // Public account profile at /u/:username (issue #558)
+  'profile.title': 'Profil',
+  'profile.memberSince': 'Mitglied seit {when}',
+  'profile.friendsSince': 'Befreundet seit {when}',
+  'profile.notFound': 'Kein Konto mit diesem Nutzernamen.',
+  'profile.self': 'Das bist du.',
+  'profile.incoming': 'Dieses Konto möchte mit dir befreundet sein.',
+  'profile.demoNote': 'In der Demo kannst du keine Freundschaftsanfragen senden. Registriere dich, um jemanden hinzuzufügen.',
+  'profile.feedTitle': 'Aktivitäten',
+  'profile.feedEmpty': 'Noch keine Aktivitäten seit Beginn eurer Freundschaft.',
   // Round-sharing invitations — send sheet (issue #207)
   'invite.link': 'Einladen',
   'invite.title': 'Zur Runde einladen',
