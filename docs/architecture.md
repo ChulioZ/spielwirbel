@@ -328,7 +328,8 @@ public/
 scripts/
   build.js           optional cache-busting build: mirrors public/ into dist/
                      with content-hashed, minified js/css (npm run build)
-test/                automated tests (node --test + supertest)
+test/                automated tests (node --test + supertest); view specs
+                     run the real frontend under jsdom (test/support/dom.js)
 data/                all user data (git-ignored)
   data.json          created on first run
   uploads/           cover images
@@ -352,6 +353,8 @@ order matters** (see `index.html`).
 
 ```bash
 npm test              # automated tests (Node's built-in runner + supertest)
+                      # view specs run the real frontend under jsdom, see
+                      # test/support/dom.js and .claude/rules/
 npm run coverage      # tests with a coverage report (built-in, no extra deps)
 npm run lint          # ESLint (flat config)
 npm run check:syntax  # node --check over all JS files

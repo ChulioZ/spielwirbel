@@ -13,31 +13,16 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
+// Still needed directly: the runtime-locale tests below evaluate code INSIDE the
+// sandbox to register a synthetic locale, which is the whole point of them.
+const vm = require('node:vm');
 
 const locales = require('../public/js/locales');
-
-// The real i18n.js over the real locales.js, in a sandbox with the few browser
-// globals it touches. Returns the context so a test can drive setLocale/tn/fmt*.
-function loadI18n() {
-  const dir = path.join(__dirname, '..', 'public', 'js');
-  const read = (p) => fs.readFileSync(path.join(dir, p), 'utf8');
-  const context = {
-    I18N: {},
-    localStorage: { getItem: () => null, setItem: () => {} },
-    document: { documentElement: {} },
-    navigator: { language: 'en' },
-    Intl,
-  };
-  vm.createContext(context);
-  vm.runInContext(read('locales.js'), context);
-  vm.runInContext(read('i18n.js'), context);
-  vm.runInContext(read('lang/en.js'), context);
-  vm.runInContext(read('lang/de.js'), context);
-  return context;
-}
+/* The real i18n.js over the real locales.js, in a sandbox with the few browser
+   globals it touches. Returns the context so a test can drive setLocale/tn/fmt*.
+   Shared with players-plural and session-share (test/support/dom.js) — it used
+   to be a hand-copied copy in each of the three. */
+const { loadI18n } = require('./support/dom');
 
 /* ------------------------------- the table -------------------------------- */
 

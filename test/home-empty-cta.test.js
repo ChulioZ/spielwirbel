@@ -29,9 +29,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const { RULES, bodyOf, mediaBlocks, whole } = require('./support/css');
+const { loadApp } = require('./support/dom');
 
 const ROOT = path.join(__dirname, '..');
-const VIEW = fs.readFileSync(path.join(ROOT, 'public/js/views-home.js'), 'utf8');
 
 /** Loads a lang table the way i18n-parity does — they are browser scripts. */
 function loadLocale(name) {
@@ -40,44 +40,56 @@ function loadLocale(name) {
   return context.I18N[name];
 }
 
-test('the empty state renders a .lobby-cta anchor and no lobby grid', () => {
-  // The `rounds.length === 0` branch, up to the `else` that renders the grid.
-  const branch = VIEW.match(/rounds\.length === 0\)\s*\{([\s\S]*?)\n\s*\}\s*else\s*\{/);
-  assert.ok(branch, 'showHome no longer has an `if (rounds.length === 0) { … } else {` shape');
-  /* Strip comments first — the same trap as the stylesheet parsing: the branch's
-     own comment explains the fix by NAMING `.lobby-list`, so a raw text search
-     matches prose and reports the grid as present. */
-  const empty = branch[1]
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '');
+/** The home screen over a given round list, rendered for real (#602). */
+async function home(t, rounds) {
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', async () => rounds);
+  dom.set('accountsActive', () => false);
+  dom.set('isLoggedIn', () => false);
+  await dom.call('showHome');
+  return dom;
+}
 
-  assert.match(empty, /<a class="lobby-cta"/, 'the empty state does not build an <a class="lobby-cta">');
-  // A real link, not a click-handler div: Cmd/Ctrl/middle-click must work.
-  assert.match(
-    empty,
-    /navLink\(\s*cta\s*,\s*'\/round\/new'/,
-    'the empty-state CTA is not wired through navLink() to /round/new',
-  );
+test('the empty state renders a .lobby-cta anchor and no lobby grid', async (t) => {
+  /* This used to slice showHome's `rounds.length === 0` branch out of the file
+     and match strings in it. It now renders the screen, which removes the whole
+     class of ways that could be wrong — a branch that stops being taken, a
+     helper renamed, markup moved behind a call the slice does not span. */
+  const { document } = await home(t, []);
+
+  const cta = document.querySelector('.lobby-cta');
+  assert.ok(cta, 'the empty state does not render a .lobby-cta');
+  // A real link, not a click-handler div: Cmd/Ctrl/middle-click must work
+  // (`.claude/rules/in-app-nav-links.md`), which needs a genuine href.
+  assert.equal(cta.tagName, 'A', `the CTA is a <${cta.tagName.toLowerCase()}>, so a modified click cannot open it in a new tab`);
+  assert.equal(cta.getAttribute('href'), '/round/new');
+  // navLink() stamps this class on what it wires; without it the anchor is a
+  // full page reload rather than an in-app route.
+  assert.ok(cta.classList.contains('nav-link'), 'the empty-state CTA is not wired through navLink()');
+
   /* The whole point: no grid in this state, so there is no lone card to pack
-     left. Both spellings are checked — the markup, and the helper that builds
-     it. `renderLobbyList` does NOT contain the string "lobby-list", so a class
-     search alone stays green against the single most likely regression (calling
-     the helper unconditionally again). Verified by making exactly that edit. */
-  assert.doesNotMatch(
-    empty,
-    /renderLobbyList/,
-    'the empty state calls renderLobbyList() — the lone new-round card will pack to the left',
-  );
-  assert.doesNotMatch(
-    empty,
-    whole('lobby-list'),
-    'the empty state builds a .lobby-list again — the lone new-round card will pack to the left',
-  );
-  assert.doesNotMatch(
-    empty,
-    whole('round-card--new'),
-    'the empty state renders the separate dashed new-round card again',
-  );
+     left against an 1800px shell. */
+  assert.equal(document.querySelector('.lobby-list'), null,
+    'the empty state renders a .lobby-list again — the lone new-round card will pack to the left');
+  assert.equal(document.querySelector('.round-card--new'), null,
+    'the empty state renders the separate dashed new-round card again');
+});
+
+test('a non-empty home still renders the grid — and no CTA', async (t) => {
+  /* The control that makes the test above non-vacuous. Every assertion up
+     there is satisfied by a showHome that renders nothing at all, or that
+     threw early; only the other branch proves the grid still exists and that
+     the two states are genuinely distinct. */
+  // The shape listRoundSummaries returns (lib/repo/json.js), not an invented one.
+  const { document } = await home(t, [{
+    id: 1, name: 'Donnerstagsrunde', members: [], memberCount: 0,
+    gameCount: 3, sessionCount: 1, playedCount: 1, background: null, lastPlayed: null,
+  }]);
+
+  assert.ok(document.querySelector('.lobby-list'), 'the populated home lost its round grid');
+  assert.ok(document.querySelector('.round-card--new'), 'the populated home lost its dashed new-round card');
+  assert.equal(document.querySelector('.lobby-cta'), null, 'the empty-state CTA renders on a home that has rounds');
 });
 
 test('.lobby-cta is declared and keeps the CTA inside a readable, centred column', () => {

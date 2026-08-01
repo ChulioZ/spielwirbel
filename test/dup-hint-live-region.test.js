@@ -13,97 +13,125 @@
    pinned is the MECHANISM, not the presence of the attributes: the element must
    stay rendered and empty, and only its text may change.
 
-   None of that is observable from Node — there is no accessibility tree — and
-   the Browser pane cannot prove an announcement either. So it is pinned as
-   source text, the way editor-presentation.test.js and ds-row-affordance.test.js
-   pin their own silent invariants. A regression here is invisible: the hint
-   still appears, still reads correctly, still never blocks saving, and every
-   other test stays green. Only the announcement dies.
+   No test can prove an ANNOUNCEMENT happened — there is no accessibility tree
+   in Node and the Browser pane cannot observe one either. But the mechanism
+   that decides whether one can happen is ordinary DOM, so since #602 the sheet
+   is rendered and the element inspected: it must be in the tree from the start,
+   empty, and only its text may change. A regression here is otherwise
+   invisible: the hint still appears, still reads correctly, still never blocks
+   saving, and every other test stays green. Only the announcement dies.
 
-   Comments are stripped before matching — a regex over raw source binds inside
-   a comment that merely MENTIONS the thing it is looking for
-   (`.claude/rules/css-text-assertions-strip-comments.md`). */
+   The CSS half stays source-matched — jsdom applies no external stylesheet, so
+   a `display: none` that removes the region from the tree is exactly what it
+   cannot see (parsed via test/support/css.js, which strips comments first:
+   `.claude/rules/css-text-assertions-strip-comments.md`). */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 
-const { ROOT, bodyOf, RULES, whole } = require('./support/css');
+const { bodyOf, RULES, whole } = require('./support/css');
+const { loadApp } = require('./support/dom');
 
-const strip = (src) => src
-  .replace(/\/\*[\s\S]*?\*\//g, '')
-  .replace(/^\s*\/\/.*$/gm, '');
+/* ------------------- the rendered sheet (#602) ------------------------------ */
 
-const LOOKUP = strip(fs.readFileSync(path.join(ROOT, 'public/js/views-round-lookup.js'), 'utf8'));
+const ROUND = {
+  id: 1,
+  name: 'Donnerstagsrunde',
+  games: [{ id: 7, title: 'Catan', retired: false, completed: false }],
+  tags: [],
+  providers: [],
+  members: [],
+  sessions: [],
+  activity: [],
+};
 
-// A function's body, brace-matched from its declaration.
-function bodyOfFn(src, name) {
-  const start = src.indexOf(`function ${name}(`);
-  assert.notEqual(start, -1, `function ${name} not found`);
-  const open = src.indexOf('{', start);
-  let depth = 0;
-  for (let i = open; i < src.length; i++) {
-    if (src[i] === '{') depth++;
-    else if (src[i] === '}' && --depth === 0) return src.slice(open, i + 1);
-  }
-  throw new Error(`unbalanced braces in ${name}`);
+/** The add-game sheet, opened for real, with its title field and hint. */
+async function addGameSheet(t) {
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', async () => ROUND);
+  await dom.call('showAddGame', ROUND);
+  const title = dom.document.getElementById('title');
+  const hint = dom.document.getElementById('dupHint');
+  assert.ok(title && hint, 'the add-game sheet rendered without its title field or duplicate hint');
+  // Typing, as the user does — `.value =` alone fires no input event.
+  const type = (text) => {
+    title.value = text;
+    title.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  };
+  return { dom, title, hint, type };
 }
 
-// The `<div … id="dupHint" …>` tag as written in showAddGame's template.
-function dupHintTag() {
-  const m = LOOKUP.match(/<div[^>]*\bid="dupHint"[^>]*>/);
-  assert.ok(m, 'the #dupHint element was not found in views-round-lookup.js');
-  return m[0];
-}
-
-test('the duplicate hint is an announced live region', () => {
-  const tag = dupHintTag();
-  assert.match(tag, /\brole="status"/, `#dupHint must carry role="status": ${tag}`);
-  assert.match(tag, /\baria-live="polite"/, `#dupHint must carry aria-live="polite": ${tag}`);
+test('the duplicate hint is an announced live region', async (t) => {
+  const { hint } = await addGameSheet(t);
+  assert.equal(hint.getAttribute('role'), 'status', '#dupHint must carry role="status"');
+  assert.equal(hint.getAttribute('aria-live'), 'polite', '#dupHint must carry aria-live="polite"');
   /* aria-atomic, so the whole hint is read rather than only the words that
      changed between "Ist schon im Regal." and "Ist im Archiv dieser Runde." */
-  assert.match(tag, /\baria-atomic="true"/, `#dupHint must carry aria-atomic="true": ${tag}`);
+  assert.equal(hint.getAttribute('aria-atomic'), 'true', '#dupHint must carry aria-atomic="true"');
 });
 
-test('the duplicate hint is never removed from the accessibility tree', () => {
-  /* The `hidden` attribute is the exact shape #584 replaced: it takes the
-     region out of the tree, so un-hiding it re-inserts it with its text already
-     in place and nothing is announced. */
-  assert.doesNotMatch(dupHintTag(), /\shidden(?=[\s/>=])/, '#dupHint must not ship the `hidden` attribute');
+test('the hint is in the tree from the start, and empty', async (t) => {
+  /* The exact shape #584 replaced: a region revealed WITH its text already in
+     place is never announced. So it must be present before anything is typed
+     (the `hidden` attribute and `display: none` both take it out of the tree)
+     and it must be empty, or the first real duplicate is not a mutation. */
+  const { hint } = await addGameSheet(t);
+  assert.equal(hint.hasAttribute('hidden'), false, '#dupHint must not ship the `hidden` attribute');
+  assert.equal(hint.textContent, '', 'the hint starts with text in place — the first duplicate would announce nothing');
+});
 
-  const body = bodyOfFn(LOOKUP, 'refreshDupHint');
-  assert.doesNotMatch(body, /\.hidden\s*=/, 'refreshDupHint must not assign the `hidden` property');
+test('typing a duplicate fills the hint; typing past it empties the SAME node', async (t) => {
+  /* The mechanism, end to end. The old version asserted that refreshDupHint's
+     source contained a `? … : ''` ternary — which is true of a function that
+     writes to the wrong element, is never wired to the input, or removes the
+     node on the way. */
+  const { hint, type } = await addGameSheet(t);
 
-  /* CSS is the other way out of the tree, and it is the one a later "tidy-up"
-     reaches for — `display: none` on the empty state looks equivalent and is
-     not. Check every rule whose selector names the hint, not just the base one,
-     so a `.field__hint--dup:not(.is-on) { display: none }` is caught too. */
+  /* `hidden` is re-checked after every transition, not only at first render:
+     refreshDupHint runs on input, so a `dupHint.hidden = !state` reintroduced
+     inside it leaves the initial markup untouched and only takes the region out
+     of the tree once the user starts typing — i.e. exactly when it matters, and
+     invisibly to a check made before the first keystroke. (Found by making that
+     edit on purpose: the render-time assertion alone stayed green.) */
+  const inTree = (where) => {
+    assert.equal(hint.isConnected, true, `the hint left the document ${where} — it cannot be announced`);
+    assert.equal(hint.hasAttribute('hidden'), false, `the hint was hidden ${where}, which removes it from the tree`);
+  };
+
+  type('Catan');
+  assert.notEqual(hint.textContent, '', 'typing a title already in the round announced nothing');
+  assert.equal(hint.classList.contains('is-on'), true, 'the hint has text but is not shown');
+  inTree('while showing a duplicate');
+
+  type('Azul');
+  assert.equal(hint.textContent, '', 'the hint kept its text for a title that is not a duplicate');
+  assert.equal(hint.classList.contains('is-on'), false, 'the hint stayed visible with nothing to say');
+  /* Blanking rather than removing is what makes re-typing the SAME title a
+     reported mutation rather than a no-op — the reason toast() does it too. */
+  inTree('once the duplicate cleared');
+
+  type('Catan');
+  assert.notEqual(hint.textContent, '', 'the same duplicate a second time no longer announces');
+});
+
+test('the title field points at the hint with aria-describedby', async (t) => {
+  const { title, hint } = await addGameSheet(t);
+  assert.equal(title.getAttribute('aria-describedby'), 'dupHint', '#title must describe itself with the hint');
+  assert.equal(hint.id, 'dupHint');
+});
+
+test('CSS must not take the live region out of the tree', () => {
+  /* jsdom applies no external stylesheet, so this is the one half the rendered
+     tests above cannot see — and `display: none` on the empty state is exactly
+     what a later "tidy-up" reaches for, because it looks equivalent to the
+     class toggle and is not. Every rule naming the hint is checked, so a
+     `.field__hint--dup:not(.is-on) { display: none }` is caught too. */
   const hintRules = RULES.filter(([sel]) => whole('field__hint--dup').test(sel));
   assert.ok(hintRules.length >= 2, `expected >= 2 .field__hint--dup rules, found ${hintRules.length}`);
   for (const [sel, css] of hintRules) {
     assert.doesNotMatch(css, /display\s*:\s*none/, `${sel} must not hide the live region with display: none`);
   }
-});
-
-test('the duplicate hint clears its text when there is no duplicate', () => {
-  const body = bodyOfFn(LOOKUP, 'refreshDupHint');
-  /* Blanking on hide is what makes re-typing the SAME title a reported mutation
-     rather than a no-op — the reason toast() does it too. The ternary's empty
-     branch is that blanking. */
-  assert.match(
-    body,
-    /textContent\s*=\s*state\s*\?[^;]*:\s*''/,
-    'refreshDupHint must clear textContent when there is no duplicate state',
-  );
-  // Visibility is a class, which is all that is left once `hidden` is gone.
-  assert.match(body, /classList\.toggle\('is-on'/, 'refreshDupHint must toggle visibility with a class');
-});
-
-test('the title field points at the hint with aria-describedby', () => {
-  const m = LOOKUP.match(/<input[^>]*\bid="title"[^>]*>/);
-  assert.ok(m, 'the #title input was not found in views-round-lookup.js');
-  assert.match(m[0], /\baria-describedby="dupHint"/, `#title must describe itself with the hint: ${m[0]}`);
 });
 
 test('the empty hint costs no vertical space', () => {
