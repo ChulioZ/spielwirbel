@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/js/core.js"
+  - "public/js/cover-picker.js"
+  - "public/styles.css"
+---
 # An anchored popover is placed ONCE — content that grows later hangs off the fold (#519)
 
 `openPopover` (`public/js/core.js`) decides a popover's `top` from

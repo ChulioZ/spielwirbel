@@ -1,3 +1,12 @@
+---
+paths:
+  - "lib/accounts.js"
+  - "lib/routes/account.js"
+  - "lib/app.js"
+  - "test/account.test.js"
+  - "lib/mail.js"
+  - "lib/auth.js"
+---
 # The user-account layer (lib/accounts.js, lib/routes/account.js) — gotchas
 
 Issue #135 added the token-first account model (register / e-mail verification /

@@ -1,3 +1,10 @@
+---
+paths:
+  - "public/styles.css"
+  - "public/js/**"
+  - "test/a11y-contrast.test.js"
+  - "test/focus-trap.test.js"
+---
 # A11y (#145): measure contrast against the PAGE, and every sheet needs a focus trap
 
 The #145 audit's findings cluster into traps that produce no error, no failing

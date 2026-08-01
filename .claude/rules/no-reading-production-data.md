@@ -1,5 +1,9 @@
 # Never read the production data directory
 
+<!-- scope: global — a data-handling policy that binds every session regardless of the file open -->
+
+<!-- scope: global — a data-handling policy that binds every session regardless of the file open -->
+
 The `data/` folder (default location, or wherever `DATA_DIR` points for a live
 instance) holds the group's **real, private** data: `data/data.json` (rounds,
 sessions, members, ratings) and `data/uploads/` (cover images). It is gitignored

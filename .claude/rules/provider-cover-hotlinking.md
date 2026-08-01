@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/providers/**"
+  - "lib/storage/**"
+  - "lib/app.js"
+  - "test/provider-covers.test.js"
+---
 # Provider cover art is HOTLINKED, never re-hosted (#172)
 
 Adding a game from the lookup used to **download** the provider's cover image and

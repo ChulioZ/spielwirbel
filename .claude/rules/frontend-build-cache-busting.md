@@ -1,3 +1,10 @@
+---
+paths:
+  - "scripts/build.js"
+  - "lib/app.js"
+  - "public/sw.js"
+  - "test/build.test.js"
+---
 # The optional cache-busting build (scripts/build.js, #141) — gotchas
 
 Issue #141 added the app's one sanctioned build step: `npm run build`

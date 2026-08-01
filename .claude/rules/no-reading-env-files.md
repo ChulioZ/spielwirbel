@@ -1,5 +1,9 @@
 # Never read local environment files
 
+<!-- scope: global — a data-handling policy that binds every session regardless of the file open -->
+
+<!-- scope: global — a data-handling policy that binds every session regardless of the file open -->
+
 Local env files — `.env`, `.env.local`, `.env.*.local`, or any file the running
 process loads via `--env-file` / `--env-file-if-exists` — hold **secrets**, in
 particular `SESSION_SECRET` (which signs account access tokens), `DATABASE_URL`,

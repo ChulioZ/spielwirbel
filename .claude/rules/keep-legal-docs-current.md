@@ -1,5 +1,9 @@
 # Check every change against the legal documents — in BOTH directions
 
+<!-- scope: global — fires on the meaning of a change, not its path — a new processor can arrive from anywhere -->
+
+<!-- scope: global — fires on the meaning of a change, not its path — a new processor can arrive from anywhere -->
+
 The repo ships real legal commitments: the Impressum + privacy policy +
 Nutzungsbedingungen rendered by `lib/legal.js` (DE **and** EN, env-gated —
 #134/PR #308, #140) and the internal records under `docs/legal/` (`vvt.md`,

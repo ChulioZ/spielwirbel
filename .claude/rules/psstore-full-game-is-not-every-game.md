@@ -1,3 +1,9 @@
+---
+paths:
+  - "lib/providers/psstore.js"
+  - "public/js/lookup-group.js"
+  - "test/providers-psstore.test.js"
+---
 # `FULL_GAME` is not every game — PS Store files standard editions as `GAME_BUNDLE`
 
 `parseSearch` (`lib/providers/psstore.js`) kept only products whose

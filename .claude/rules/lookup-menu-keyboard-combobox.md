@@ -1,3 +1,10 @@
+---
+paths:
+  - "public/js/views-round-lookup.js"
+  - "public/js/lookup-nav.js"
+  - "public/js/focus-trap.js"
+  - "test/lookup-nav.test.js"
+---
 # The lookup dropdown is an editable combobox (#542) — the sheet has to ASK about Escape
 
 The add-game / link-provider suggestion menu (`attachLookup`,

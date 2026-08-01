@@ -1,5 +1,9 @@
 # The `feedback` table is readable by an agent — when the user asks (#260)
 
+<!-- scope: global — a data-handling policy — it governs when an agent may read, not what it edits -->
+
+<!-- scope: global — a data-handling policy — it governs when an agent may read, not what it edits -->
+
 `.claude/rules/no-reading-production-data.md` blocks agents from reading real
 round/session data, and that stays absolutely true. In-app user feedback
 (issue #260) is the **one narrow, deliberate exception**, and this file is the

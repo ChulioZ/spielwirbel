@@ -1,5 +1,9 @@
 # Check whether a change warrants a user-docs update — and WHICH file
 
+<!-- scope: global — a review-phase discipline for every change -->
+
+<!-- scope: global — a review-phase discipline for every change -->
+
 The user-facing description of the app is spread over four documents since
 2026-07-30, when `README.md` became a ~130-line landing page and its reference
 material moved into `docs/`. **Most of what used to be a "README update" is now a

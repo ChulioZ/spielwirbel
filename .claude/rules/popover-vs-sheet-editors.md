@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/js/views-round-detail.js"
+  - "public/js/core.js"
+  - "public/styles.css"
+---
 # An anchored popover cannot hold a text input on a phone (#422)
 
 The three game-detail editors (tags, players, cover) are one builder each with

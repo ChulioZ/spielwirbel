@@ -1,3 +1,11 @@
+---
+paths:
+  - "public/js/nav-link.js"
+  - "public/js/router.js"
+  - "public/js/views-*.js"
+  - "public/styles.css"
+  - "test/nav-link.test.js"
+---
 # In-app navigation is `<a href>` (#330) — and a synthetic click cannot test it
 
 Every route-changing control is a real anchor built by `navLink(el, path, onNav)`

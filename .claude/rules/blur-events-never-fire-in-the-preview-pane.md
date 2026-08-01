@@ -1,5 +1,9 @@
 # The Browser pane fires NO blur event — a commit-on-blur editor looks completely inert
 
+<!-- scope: global — a Browser-pane artifact — it surfaces while verifying, whatever file is under test -->
+
+<!-- scope: global — a Browser-pane artifact — it surfaces while verifying, whatever file is under test -->
+
 The app's inline editors (the game title, the member name, and the round name
 since #562) all save on **blur**: `keydown` Enter calls `input.blur()`, and a
 `blur` listener does the work. Verifying one of those in the Claude Code Browser

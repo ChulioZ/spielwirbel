@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/routes/account.js"
+  - "lib/accounts.js"
+  - "lib/mail.js"
+  - "test/account.test.js"
+---
 # A mailed link must fit on ONE quoted-printable line (#434)
 
 The verification link arrived **cut in half** for a real user, who had to copy

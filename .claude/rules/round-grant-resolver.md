@@ -1,3 +1,12 @@
+---
+paths:
+  - "lib/tenant.js"
+  - "lib/app.js"
+  - "lib/routes/rounds.js"
+  - "lib/routes/games.js"
+  - "test/round-grants-access.test.js"
+  - "test/repo.postgres.test.js"
+---
 # Grant-based round access (#207): a grantee ACTS AS the owner tenant — RLS stays un-widened
 
 Round sharing (#207) lets a second account act on a round they don't own, via a
@@ -19,7 +28,7 @@ ownerTenantId`. No grant → left untouched (own tenant).
 **Why re-scope instead of widening RLS.** A grantee's request then runs with
 `app.tenant_id = the OWNER`, i.e. the grantee *acts as the owner tenant* for that
 request. So the RLS policies need **no change at all** — this is the same
-discipline `admin-moderation-surface.md` §2 prescribes (widen by running under
+discipline `.claude/rules/admin-cross-tenant-escape.md` §1 prescribes (widen by running under
 the owning tenant, never by OR-ing the tenant policy, which silently permits
 cross-tenant `DELETE`). Do **not** "simplify" this into a user-keyed RLS predicate
 or an OR into the tenant policy.
@@ -94,6 +103,6 @@ HTTP test's guarantee transfers; the RLS backstop is proven separately as a plai
 role in `test/repo.postgres.test.js`.
 
 **Related:** `.claude/rules/tenancy-rls.md` (which pointed here — grants are the
-sharing model it deferred), `.claude/rules/admin-moderation-surface.md` §2 (the
+sharing model it deferred), `.claude/rules/admin-cross-tenant-escape.md` §1 (the
 "run under the owning tenant, never widen the policy" discipline this follows),
 `.claude/rules/postgres-backend.md` (why `round_grants` is a global store).

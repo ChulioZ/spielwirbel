@@ -1,3 +1,8 @@
+---
+paths:
+  - "public/styles.css"
+  - "public/js/**"
+---
 # Tiles vs lists: decide by the CONTENT, not by how much room is left over
 
 Wide screens make every full-width row look wasteful, so the reflex once the

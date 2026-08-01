@@ -1,3 +1,15 @@
+---
+paths:
+  - "lib/repo/**"
+  - "lib/routes/sessions.js"
+  - "lib/routes/games.js"
+  - "public/js/views-round*.js"
+  - "public/js/round-rail.js"
+  - "public/js/recap.js"
+  - "lib/quota.js"
+  - "lib/routes/rounds.js"
+  - "test/support/repo-contract.js"
+---
 # "Active games" is filtered in ~10 places — two of them server-side (#250)
 
 Adding the `completed` state (#250) meant every place that used `!g.retired` to

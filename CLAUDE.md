@@ -200,6 +200,11 @@ code and cost effort to discover — **write it down as a short rule file in
 
 - One learning per file: `.claude/rules/<kebab-case-topic>.md`.
 - Keep it short: what the rule is, and *why* (the symptom/trap it prevents).
+- **Declare its scope — this is checked** (`test/rule-scope.test.js`). Either
+  `paths:` frontmatter listing the files whose editing surfaces the trap, or
+  `<!-- scope: global — <reason> -->` under the H1 when the trap surfaces through
+  a tool, an ops action or a discipline instead. When in doubt, global: a scoped
+  rule that fails to load loses its protection silently.
 - Add new rules as you find them; update or remove a rule if it becomes wrong.
 - **A new rule often supersedes part of an old one — edit that part in the same
   PR** and cross-link both ways. Writing the new file feels like the whole act,

@@ -1,3 +1,11 @@
+---
+paths:
+  - "lib/providers/bgg.js"
+  - "lib/routes/lookup.js"
+  - "lib/repo/**"
+  - "public/js/views-round-lookup.js"
+  - "test/bgg-import.test.js"
+---
 # The BGG collection import (#481): four traps, three of them silent
 
 `GET /api/rounds/:rid/lookup/collection` + `POST …/lookup/import` pull a user's

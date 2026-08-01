@@ -1,5 +1,9 @@
 # A constant the client offers and the server validates must be ONE file
 
+<!-- scope: global — fires whenever a value crosses the client/server boundary, from either side -->
+
+<!-- scope: global — fires whenever a value crosses the client/server boundary, from either side -->
+
 The member avatar palette lived twice: `MEMBER_COLORS` in `public/js/core.js`
 (what the swatches render) and a hand-copied array in `lib/routes/members.js` (what
 `PATCH …/members/:mid` validates), with a comment on the copy saying "keep in

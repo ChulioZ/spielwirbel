@@ -234,9 +234,15 @@ research at all.
   deploys, data-directory handling) stays unconditional — a scoped rule that fails to
   load when needed silently loses its protection, so when in doubt, stay global. When
   adding a rule, decide the scope explicitly; when auditing, check that scoped rules'
-  globs still match the files their traps live in. **The trial itself is C-022** — it
-  has an outcome to reach, and 9-of-82 two months in is a result to act on either way.
-- **Enforced by:** — (manual)
+  globs still match the files their traps live in. **The trial was C-022, concluded
+  2026-08-01**: every rule now declares one or the other, and a new rule declaring
+  neither fails the suite.
+- **Enforced by:** `test/rule-scope.test.js` — that a declaration *exists* (either
+  form), that no rule declares both, that a global marker states a reason, and that
+  every `paths:` glob still matches a tracked file. **Which** files a rule should name
+  is a judgement and stays manual; that the files it names exist is not, and a glob
+  gone stale after a rename is the silent failure worth catching (the rule simply
+  never loads).
 
 ### C-015 — `CLAUDE.md` stays within the documented adherence budget
 - **Status:** adopted · 2026-07-24
@@ -271,20 +277,27 @@ research at all.
   the corpus figure is manual)
 
 ### C-022 — The `paths:` scoping trial is concluded, not left running
-- **Status:** adopted · 2026-07-30
+- **Status:** concluded · 2026-08-01 (adopted 2026-07-30)
 - **Source:** `C-014`, adopted 2026-07-24 as an explicit **trial** and never closed
-- **Check:** Report the ratio (`grep -l '^paths:' .claude/rules/*.md | wc -l` against
-  the total — **9 of 82** on 2026-07-30, i.e. 383 KB of the 427 KB corpus loads
-  unconditionally). Then either conclude the trial or say why it is still running.
-  A rule whose every trap lives in a known file set carries `paths:`; one whose trap
-  surfaces through a tool or a situation stays global. C-014's "when in doubt, stay
-  global" is the safety valve and is not being narrowed here — the point is that the
-  decision gets *made*, once, per rule, rather than defaulting to global by omission.
-  Candidates visible at adoption: `session-teams.md`, `session-guests-are-not-members.md`,
-  `member-seat-self-claim.md`, `locale-set-is-data.md`, `bgg-collection-import.md`,
-  `storefront-lookup-locale.md`, `setup-screens-two-column-layout.md`, `tiles-vs-lists.md`.
-- **Enforced by:** — (manual; scoping is a judgement, and a wrongly scoped rule fails
-  *silently* by not loading, which is why nothing asserts a target ratio)
+- **Outcome:** every rule now declares its scope — **70 scoped, 18 global** — and the
+  decision is no longer skippable: a rule with neither declaration fails
+  `test/rule-scope.test.js`. The trial had stalled at 9 of 88 for over a month, and
+  the reason is worth keeping: a rule with no frontmatter is indistinguishable from a
+  rule nobody decided about, so the corpus could not report its own progress. That is
+  the defect the marker fixes, not the ratio.
+- **Check:** Nothing to re-derive routinely — the test holds the invariant. When
+  auditing, spot-check that scoped rules' globs still name the files their traps
+  actually live in (the test proves the files *exist*, never that they are the right
+  ones), and that nothing has drifted global-by-default under a thin reason.
+  C-014's "when in doubt, stay global" is the safety valve and was **not** narrowed:
+  the 18 global rules are tool artifacts (the Browser pane), ops facts
+  (`TRUST_PROXY`, the DB region), data-handling policy, and disciplines that fire on
+  every change (`keep-readme-current`, `token-friendly-source-files`).
+  `pwa-service-worker` is the instructive one — it looks file-scoped to `public/sw.js`
+  and is deliberately global, because a dozen rules cite it as a *verification*
+  situation ("clear the SW first"), so scoping it would drop it exactly when someone
+  is checking a `styles.css` change.
+- **Enforced by:** `test/rule-scope.test.js` (see C-014)
 
 ### C-023 — A `SKILL.md` stays within a size budget; `criteria.md` is exempt
 - **Status:** adopted · 2026-07-30

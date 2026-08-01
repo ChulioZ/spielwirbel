@@ -1,3 +1,10 @@
+---
+paths:
+  - "public/js/**"
+  - "public/index.html"
+  - "public/sw.js"
+  - "eslint.config.js"
+---
 # A testable frontend helper needs its OWN small file — the coverage gate says so
 
 To unit-test a pure helper from `public/js/**`, the file holding it gets a

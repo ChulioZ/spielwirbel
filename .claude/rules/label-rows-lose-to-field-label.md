@@ -1,3 +1,8 @@
+---
+paths:
+  - "public/styles.css"
+  - "public/js/**"
+---
 # A `<label>` row inside a `.field` is `display: block` — `.field label` outruns `.ds-row`
 
 `.ds-row` is the app's row component (`display: flex`, main left, meta right).

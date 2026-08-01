@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/demo.js"
+  - "lib/repo/**"
+  - "public/js/demo-marker.js"
+  - "test/demo.test.js"
+---
 # A per-IP LIVE-COUNT cap (#502): three things that fail quietly
 
 `MAX_LIVE_DEMOS_PER_IP` bounds how many guest demos one source may **hold at

@@ -88,7 +88,7 @@ that a generic scanner does not know about.
 
 ### S-007 — Cross-tenant escapes widen reads only, admit their own writes, and are transaction-local
 - **Status:** adopted · 2026-07-24 · updated 2026-07-24 (retenant escape removed, #405)
-- **Source:** `.claude/rules/admin-moderation-surface.md` §2, `.claude/rules/tenancy-rls.md`
+- **Source:** `.claude/rules/admin-cross-tenant-escape.md` §1, `.claude/rules/tenancy-rls.md`
   ("for any future cross-tenant write"), `round-grant-resolver.md`
 - **Check:** The moderation escape is a separate `FOR SELECT` policy, never `OR`-ed onto
   the tenant policy (an `OR` silently permits cross-tenant `DELETE`, which is governed by
@@ -203,7 +203,7 @@ that a generic scanner does not know about.
 
 ### S-017 — No secret or personal data reaches logs, the Kennzahlen card, or any error body
 - **Status:** adopted · 2026-07-24 (card reshaped by #404, 2026-07-28)
-- **Source:** `.claude/rules/product-event-logging.md`, `admin-moderation-surface.md` §6
+- **Source:** `.claude/rules/product-event-logging.md`, `.claude/rules/admin-kennzahlen-card.md`
 - **Check:** `requestLogger` logs method/path/status/timing/ip only — never bodies, query
   strings, headers or cookies. `trackEvent` logs `event` + `tenantId` only and drops any
   other field. `lib/status.js` reports quota ceilings and aggregate counts — never a

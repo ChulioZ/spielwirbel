@@ -1,5 +1,9 @@
 # Branch protection requires `ci-passed`, not the individual matrix contexts (#364)
 
+<!-- scope: global — branch protection is a repo setting, reachable from no file in the tree -->
+
+<!-- scope: global — branch protection is a repo setting, reachable from no file in the tree -->
+
 Branch protection on `main` used to require CI checks **by exact job name** —
 `test (18.x)  test (20.x)  test (22.x)  dco`. Two silent gaps followed: the
 `test (24.x)`/`(26.x)` matrix versions ran on every PR but never gated (job

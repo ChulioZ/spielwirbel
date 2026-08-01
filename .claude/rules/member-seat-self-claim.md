@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/routes/members.js"
+  - "lib/routes/invitations.js"
+  - "lib/repo/**"
+  - "test/members.test.js"
+---
 # `member.userId` is SELF-claim only, and the creator's seat is created, not migrated (#421)
 
 `member.userId` links a round seat to an account. It is **attribution, not

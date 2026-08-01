@@ -148,7 +148,7 @@ grep -rnE "require\('\.\./lib/repo'\)|pool\.query|knex\.raw|forTenant|TENANT_MET
 
 The plain-role probes in `test/repo.postgres.test.js` are the only thing that
 tests the policy (CI's superuser bypasses RLS) — a change here must extend them,
-and be verified by breaking the policy on purpose once (`admin-moderation-surface.md` §3).
+and be verified by breaking the policy on purpose once (`.claude/rules/admin-cross-tenant-escape.md` §4).
 
 ### 3. Transport, CSRF, cookies → S-009..S-012
 
@@ -243,7 +243,7 @@ This repo pins security invariants with tests
 `test/repo.postgres.test.js`, `test/admin.test.js`), and that is the right home
 for anything mechanizable. When you add or extend one, **break the production code
 on purpose once** and watch it go red — a security assertion that passes against a
-deliberately-broken control is worse than none (`admin-moderation-surface.md` §3
+deliberately-broken control is worse than none (`.claude/rules/admin-cross-tenant-escape.md` §4
 and `css-text-assertions-strip-comments.md` both learned this the hard way).
 
 - **A live dependency advisory** → hand to `dependabot`, not a fresh issue.

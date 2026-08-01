@@ -1,3 +1,13 @@
+---
+paths:
+  - "public/js/locales.js"
+  - "public/js/i18n.js"
+  - "public/js/lang/**"
+  - "lib/routes/contact.js"
+  - "test/i18n-locales.test.js"
+  - "lib/providers/locales.js"
+  - "lib/demo-seed.js"
+---
 # The locale set is data (#504) — and a test over it is VACUOUS at two locales
 
 `public/js/locales.js` holds one row per shipped UI language (code, native label,

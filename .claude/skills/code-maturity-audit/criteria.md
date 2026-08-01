@@ -132,7 +132,7 @@ not a finding; the rejected entries below are that ledger.
 ### M-008 — Text-matching assertions are proven capable of going red
 - **Status:** adopted · 2026-07-29
 - **Source:** `.claude/rules/css-text-assertions-strip-comments.md` ·
-  `.claude/rules/admin-moderation-surface.md` §3 (the break-on-purpose
+  `.claude/rules/admin-cross-tenant-escape.md` §4 (the break-on-purpose
   discipline)
 - **Check:** A test that matches source *text* (CSS strings, HTML, regexes
   over files) gives no signal that it is wired to anything real until the

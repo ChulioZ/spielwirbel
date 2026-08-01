@@ -1,5 +1,9 @@
 # Keep source files token-friendly for agentic editing
 
+<!-- scope: global — a discipline for every file added, moved or renamed -->
+
+<!-- scope: global — a discipline for every file added, moved or renamed -->
+
 Agents pay tokens every time they read or edit a file. A file that must be loaded
 whole for a one-line change, that hides the right spot, that repeats boilerplate,
 or that has its own idiosyncratic shape makes every routine change slower and more

@@ -1,3 +1,9 @@
+---
+paths:
+  - "lib/routes/account.js"
+  - "lib/mail.js"
+  - "test/account.test.js"
+---
 # An unauthenticated endpoint that SENDS MAIL needs a per-ACCOUNT cooldown (#435, #447)
 
 `POST /api/account/resend-verification` mails a fresh verification link to any
@@ -97,7 +103,7 @@ survives a green suite here and would only bite a forward-looking comparison.
 
 Every assertion here was checked by breaking the production code on purpose and
 watching it go red (the discipline in
-`.claude/rules/admin-moderation-surface.md` §3) — a `mailThrottled` stubbed to
+`.claude/rules/admin-cross-tenant-escape.md` §4) — a `mailThrottled` stubbed to
 `false` fails the cooldown tests on **both** endpoints (which is also how you
 confirm the shared helper is really wired to each), re-minting the token inside
 the throttled branch fails the still-valid-link assertion, an absent-`sentAt`

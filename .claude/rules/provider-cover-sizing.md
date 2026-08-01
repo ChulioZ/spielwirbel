@@ -1,3 +1,9 @@
+---
+paths:
+  - "public/js/cover-size.js"
+  - "lib/providers/**"
+  - "test/cover-size.test.js"
+---
 # Provider covers are print-resolution masters — size them at RENDER time (#298)
 
 Since #172 a provider cover is hotlinked, so `game.image` holds whatever URL the

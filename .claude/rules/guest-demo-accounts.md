@@ -1,3 +1,15 @@
+---
+paths:
+  - "lib/demo.js"
+  - "lib/demo-seed.js"
+  - "lib/demo-tenant.js"
+  - "lib/scheduler.js"
+  - "lib/routes/account.js"
+  - "public/js/views-landing.js"
+  - "test/demo.test.js"
+  - "lib/observability.js"
+  - "lib/routes/sessions.js"
+---
 # The guest demo (#427): five things that fail silently
 
 `POST /api/account/demo` mints a throwaway, pre-seeded account so a visitor can

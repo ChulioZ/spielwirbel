@@ -1,3 +1,10 @@
+---
+paths:
+  - "lib/routes/profile.js"
+  - "lib/routes/friends.js"
+  - "public/js/views-friends.js"
+  - "test/profile.test.js"
+---
 # The account profile (#558) sits AHEAD of the tenant gate — so it re-checks suspension itself
 
 `GET /api/account/profile/:username` renders `/u/:username`. It is mounted on

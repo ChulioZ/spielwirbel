@@ -1,3 +1,12 @@
+---
+paths:
+  - "public/js/session-people.js"
+  - "lib/routes/sessions.js"
+  - "public/js/views-session.js"
+  - "public/js/guest-picker.js"
+  - "test/session-people.test.js"
+  - "test/repo.test.js"
+---
 # A session guest (#458) is a PERSON without a member row — and ~10 sites assumed those are the same thing
 
 `session.guests = [{ id, name }]` adds participants who vote in one session and

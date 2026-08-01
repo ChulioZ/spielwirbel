@@ -1,3 +1,11 @@
+---
+paths:
+  - "lib/actor-seat.js"
+  - "lib/routes/games.js"
+  - "lib/routes/members.js"
+  - "test/games.test.js"
+  - "test/members.test.js"
+---
 # `actorSeat(round, undefined)` matches the FIRST UNLINKED seat — attribution needs a uid guard
 
 Activity entries carry an optional `actorMemberId` ("· von Anna" in the Chronik),

@@ -1,3 +1,11 @@
+---
+paths:
+  - "public/js/router.js"
+  - "public/js/account.js"
+  - "public/js/views-home.js"
+  - "lib/app.js"
+  - "test/auth-routes.test.js"
+---
 # The auth screens own URLs (#501) — and `/` is what makes Back work
 
 `/login`, `/register` and `/forgot-password` are real routes since #501. The

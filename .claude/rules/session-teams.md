@@ -1,3 +1,12 @@
+---
+paths:
+  - "public/js/session-people.js"
+  - "public/js/team-picker.js"
+  - "lib/routes/sessions.js"
+  - "test/session-people.test.js"
+  - "test/sessions.test.js"
+  - "public/js/views-session.js"
+---
 # A session team (#575) is addressed by POSITION on the wire — and a team win stays a flat list
 
 `session.teams = [{ id, personIds }]` groups two or more of a session's

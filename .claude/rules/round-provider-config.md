@@ -1,3 +1,11 @@
+---
+paths:
+  - "lib/providers/index.js"
+  - "lib/routes/lookup.js"
+  - "lib/routes/games.js"
+  - "public/js/views-round-lookup.js"
+  - "test/providers.test.js"
+---
 # Per-round lookup providers (#294): absent ≠ empty, and the lookup is round-scoped
 
 A round's `providers` field lists which lookup providers it queries. Two things
