@@ -82,6 +82,7 @@ const frontendGlobals = {
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
   currentUserId: 'readonly', currentUsername: 'readonly',
   isDemoAccount: 'readonly', startDemo: 'readonly', setupDemoBanner: 'readonly',
+  setupTermsBanner: 'readonly',
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
   authErrorKey: 'readonly',
   probeMe: 'readonly', refreshAccessToken: 'readonly', onSessionLost: 'readonly',

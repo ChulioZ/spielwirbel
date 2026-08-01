@@ -18,6 +18,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 const request = require('supertest');
 
 const { app } = require('./helpers');
@@ -258,7 +259,12 @@ test('#520: each hidden legal link undoes its own display', () => {
   // The `hidden` attribute hides only through the UA stylesheet, so any author
   // `display` on these selectors beats it and republishes a link to a 404 with
   // no error anywhere (.claude/rules/hidden-attribute-vs-display-rule.md).
-  for (const selector of ['.demo-banner__terms[hidden]', '.auth__terms[hidden]']) {
+  // #521 adds two more: the terms-change notice itself (it ships hidden and is
+  // revealed only for an account that is behind) and its link to the terms.
+  for (const selector of [
+    '.demo-banner__terms[hidden]', '.auth__terms[hidden]',
+    '.terms-banner[hidden]', '.terms-banner__link[hidden]',
+  ]) {
     const body = bodyOf(selector);
     assert.ok(body, `${selector} rule not found`);
     assert.match(body, /display:\s*none/, `${selector} must set display: none`);
@@ -317,4 +323,96 @@ test('nameAndAddress: dedupes a leading name (trimmed, case-insensitive), else p
     legal.nameAndAddress('Musterweg 1\\n12345 Musterstadt'),
     'Julian Zenker<br>Musterweg 1<br>12345 Musterstadt',
   );
+});
+
+/* ------------------------- per-document revisions (#521) -------------------- */
+
+/*
+ * The three "Stand" dates were ONE shared `REVISION` until #521. The split is
+ * load-bearing rather than tidiness: `TERMS_REVISION` is what the in-app change
+ * notice keys off, so under a shared constant a typo fix in the Impressum would
+ * tell every user the *terms* had changed — training people to dismiss the one
+ * channel Nutzungsbedingungen §11 has.
+ *
+ * All three hold the same date today, which makes the obvious assertion
+ * ("the page shows 2026-07-29") VACUOUS — it passes just as well against a
+ * single shared constant, i.e. against exactly the regression it exists to
+ * catch. So these specs load a PATCHED copy of lib/legal.js with one constant
+ * moved on and assert that only that document's date follows. lib/legal.js
+ * requires nothing, so a standalone copy of its source runs fine in a sandbox.
+ */
+function loadLegalWith(overrides) {
+  let src = fs.readFileSync(path.join(REPO, 'lib/legal.js'), 'utf8');
+  for (const [name, value] of Object.entries(overrides)) {
+    const decl = new RegExp(`const ${name} = '[^']*';`);
+    // Confirm the patch actually LANDED before trusting anything it proves —
+    // a regex that silently matched nothing would make every assertion below
+    // pass against unmodified source (.claude/rules/noindex-vs-disallow-…).
+    assert.match(src, decl, `patch target ${name} not found in lib/legal.js`);
+    src = src.replace(decl, `const ${name} = '${value}';`);
+  }
+  const sandbox = { module: { exports: {} }, process, require, console };
+  sandbox.exports = sandbox.module.exports;
+  vm.runInNewContext(src, sandbox, { filename: 'legal.patched.js' });
+  return sandbox.module.exports;
+}
+
+const standOf = (html) => (html.match(/Stand: ([\d-]+)/) || [])[1];
+
+test('#521: each document renders its OWN revision constant', () => {
+  Object.assign(process.env, IDENTITY);
+  const BUMPED = '2099-01-01';
+
+  // Baseline: unpatched, all three agree, so a mistake here is invisible.
+  const base = loadLegalWith({});
+  assert.equal(standOf(base.renderImpressum()), legal.IMPRESSUM_REVISION);
+  assert.equal(standOf(base.renderDatenschutz()), legal.PRIVACY_REVISION);
+  assert.equal(standOf(base.renderNutzungsbedingungen()), legal.TERMS_REVISION);
+
+  // Move ONE constant at a time; only its own document may follow.
+  const cases = [
+    ['IMPRESSUM_REVISION', 'renderImpressum'],
+    ['PRIVACY_REVISION', 'renderDatenschutz'],
+    ['TERMS_REVISION', 'renderNutzungsbedingungen'],
+  ];
+  for (const [constant, renderer] of cases) {
+    const patched = loadLegalWith({ [constant]: BUMPED });
+    for (const [, other] of cases) {
+      const stand = standOf(patched[other]());
+      if (other === renderer) {
+        assert.equal(stand, BUMPED, `${constant} must move ${other}`);
+      } else {
+        assert.notEqual(stand, BUMPED,
+          `${constant} must NOT move ${other} — the constants are shared again`);
+      }
+    }
+  }
+});
+
+test('#521: only a TERMS bump raises the change notice', () => {
+  const legacyUser = {};                                   // predates #521
+  const currentUser = { acceptedTermsRevision: legal.TERMS_REVISION };
+
+  // Nothing changed: neither account is behind.
+  assert.equal(legal.termsChangedFor(legacyUser), false);
+  assert.equal(legal.termsChangedFor(currentUser), false);
+
+  // The assertion that proves the split is real rather than cosmetic: bumping
+  // either of the OTHER two documents must leave the notice silent.
+  for (const constant of ['IMPRESSUM_REVISION', 'PRIVACY_REVISION']) {
+    const patched = loadLegalWith({ [constant]: '2099-01-01' });
+    assert.equal(patched.termsChangedFor(legacyUser), false,
+      `${constant} must not raise the terms notice`);
+    assert.equal(patched.termsChangedFor(currentUser), false,
+      `${constant} must not raise the terms notice`);
+  }
+
+  // A terms bump raises it for BOTH — including the legacy account, which is
+  // the whole point of LEGACY_TERMS_REVISION being frozen: were the fallback
+  // `|| TERMS_REVISION`, an account with the key absent would stay silent here.
+  const bumped = loadLegalWith({ TERMS_REVISION: '2099-01-01' });
+  assert.equal(bumped.termsChangedFor(legacyUser), true);
+  assert.equal(bumped.termsChangedFor(currentUser), true);
+  assert.equal(bumped.termsAcceptanceOf(legacyUser).acceptedTermsRevision,
+    legal.LEGACY_TERMS_REVISION, 'an absent key resolves to the frozen rollout revision');
 });

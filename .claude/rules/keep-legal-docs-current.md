@@ -50,11 +50,35 @@ duties, Art. 5 Abs. 2 accountability).
    ships with it — never silently after.
 
 **And bump the published date with the text:** any content change to the
-policy/terms markup in `lib/legal.js` bumps its `REVISION` constant in the
-same PR — the „Stand"-Zeile is part of the Art. 13 transparency, and a reader
+policy/terms markup in `lib/legal.js` bumps that document's revision constant in
+the same PR — the „Stand"-Zeile is part of the Art. 13 transparency, and a reader
 (or authority) must be able to see that the text changed. Missed on
 2026-07-24: #207/#325 added two §5 processing paragraphs and rewrote §15 while
 the pages still said „Stand: 2026-07-22" (caught by the audit).
+
+**Since #521 there are THREE constants, one per document — bump the right one:**
+
+| Changed document | Constant |
+|---|---|
+| Impressum | `IMPRESSUM_REVISION` |
+| Datenschutzerklärung | `PRIVACY_REVISION` |
+| Nutzungsbedingungen | `TERMS_REVISION` |
+
+They were one shared `REVISION` until #521, and the split is **load-bearing, not
+tidiness**: `TERMS_REVISION` is what the in-app change notice keys off
+(Nutzungsbedingungen §11, `setupTermsBanner()` in `public/js/account.js`). Under
+a shared constant a typo fix in the Impressum would notify every user that the
+*terms* changed — and a banner people learn to dismiss unread destroys the only
+channel §11 has. So bumping the wrong one is not a cosmetic slip: it either
+fires a false notice or silently fails to fire a real one.
+`test/legal.test.js` pins that each page renders its own constant, and
+`test/account.test.js` that only a `TERMS_REVISION` bump raises the notice.
+
+**`LEGACY_TERMS_REVISION` is NOT a fourth date to bump — it is frozen.** It
+records the terms revision live when `acceptedTermsRevision` was introduced, so
+accounts predating that key read as up to date today and correctly fall behind on
+the next terms change. Moving it forward with `TERMS_REVISION` would make those
+accounts permanently silent.
 
 `test/legal.test.js` pins marker strings for every named processor (Railway,
 Cloudflare, Heinlein) — so *removing/renaming* one in the policy fails

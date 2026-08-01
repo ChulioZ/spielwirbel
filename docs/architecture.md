@@ -155,6 +155,7 @@ routes/
                                              logout, forgot/reset password,
                                              change password (#482), delete the
                                              account itself (#419), me,
+                                             acknowledge a terms change (#521),
                                              and the per-user notification inbox
                                              (#207) — 404 unless ACCOUNTS_ENABLED)
   invitations.js     /api/account/invitations (round-sharing: send / accept /

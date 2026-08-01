@@ -639,3 +639,22 @@ test('the TTL and cap are read per call, so a live re-tune needs no restart', ()
     assert.strictEqual(demo.maxLiveDemos(), demo.DEFAULT_MAX_LIVE);
   });
 });
+
+test('#521: a demo account carries the terms revision, for absent-key parity', async () => {
+  // A demo is purged within the day and will never see a terms change, so the
+  // VALUE is irrelevant here — the point is that the two account-creation sites
+  // (register and this one) write the same key set. A field written by only one
+  // of them makes the two repo backends disagree on absent-key parity
+  // (.claude/rules/postgres-backend.md), which is invisible on the JSON backend
+  // that most of the suite runs against.
+  await withDemo({}, async () => {
+    const res = await startDemo(createApp(), { locale: 'de' });
+    assert.strictEqual(res.status, 200);
+    const { TERMS_REVISION } = require('../lib/legal');
+    assert.strictEqual(res.body.user.acceptedTermsRevision, TERMS_REVISION);
+    assert.strictEqual(res.body.user.termsRevision, TERMS_REVISION);
+    // Stored, not merely projected — a demo must never be "behind".
+    const stored = await repo.getUserById(res.body.user.id);
+    assert.strictEqual(stored.acceptedTermsRevision, TERMS_REVISION);
+  });
+});

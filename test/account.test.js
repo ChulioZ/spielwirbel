@@ -20,6 +20,11 @@ const request = require('supertest');
 const { app } = require('./helpers');
 const repo = require('../lib/repo');
 const accounts = require('../lib/accounts');
+const legal = require('../lib/legal');
+// The JSON backend's engine, reached directly by the #521 legacy-account spec:
+// updateUser is an Object.assign, so it cannot REMOVE a key, and an absent key
+// is precisely the shape that spec is about.
+const store = require('../lib/store');
 const { outbox } = require('../lib/mail');
 
 const EMAIL = 'user@example.com';
@@ -1123,11 +1128,137 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // `demo`/`demoExpiresAt` (#427) are present on EVERY account, not just demo
   // ones — the projection normalizes them (false/null here), which is what lets
   // the client decide whether to show the demo banner without a second call.
+  // `acceptedTermsRevision`/`termsRevision` (#521) likewise ride on every
+  // account: the client decides whether to show the terms-change notice by
+  // comparing the two, so both have to arrive in this one response.
   assert.deepEqual(Object.keys(res.body).sort(),
-    ['bggUsername', 'createdAt', 'demo', 'demoExpiresAt', 'email', 'emailVerified', 'id', 'username']);
+    ['acceptedTermsRevision', 'bggUsername', 'createdAt', 'demo', 'demoExpiresAt',
+      'email', 'emailVerified', 'id', 'termsRevision', 'username']);
   assert.equal(res.body.demo, false);
   assert.equal(res.body.demoExpiresAt, null);
 
   // An unauthenticated caller gets nowhere near it.
   assert.equal((await request(app).patch('/api/account/me').send({ bggUsername: 'x' })).status, 401);
+});
+
+/* ---------------------- terms-change notice (#521) ------------------------- */
+
+/*
+ * Nutzungsbedingungen §11 promises we inform users of material changes "im
+ * Dienst oder per E-Mail". Nothing did until #521 — a published promise the
+ * implementation could not keep.
+ *
+ * The banner decision is client-side, but everything it decides on comes from
+ * /me: the account's RESOLVED accepted revision (legacy fallback already
+ * applied) and the current one. These specs pin the HTTP surface; the
+ * behaviour of the comparison across an actual revision bump is pinned in
+ * test/legal.test.js, which can patch the constants — here they are necessarily
+ * all the same date, so an assertion that they differ would be untestable.
+ */
+const acceptTerms = (accessToken) => request(app)
+  .post('/api/account/accept-terms')
+  .set('Authorization', `Bearer ${accessToken}`)
+  .send();
+
+test('#521: a new account stores the current terms revision and /me reports it', async () => {
+  const acc = await freshAccount('terms-fresh@example.com');
+
+  const stored = await repo.getUserById(acc.uid);
+  assert.equal(stored.acceptedTermsRevision, legal.TERMS_REVISION,
+    'register must write the field — the notice has nothing to compare against otherwise');
+
+  const me = await getMe(acc.accessToken);
+  assert.equal(me.status, 200);
+  assert.equal(me.body.acceptedTermsRevision, legal.TERMS_REVISION);
+  assert.equal(me.body.termsRevision, legal.TERMS_REVISION);
+  // Up to date, so the client renders nothing.
+  assert.equal(me.body.acceptedTermsRevision, me.body.termsRevision);
+});
+
+test('#521: an account predating the field resolves to the FROZEN rollout revision', async () => {
+  const acc = await freshAccount('terms-legacy@example.com');
+
+  // A real legacy row: the key is absent, not null. updateUser is Object.assign,
+  // so it cannot remove a key — go through the store to get the genuine shape.
+  const record = store.data.users.find((u) => u.id === acc.uid);
+  delete record.acceptedTermsRevision;
+  store.saveData();
+  assert.equal('acceptedTermsRevision' in
+    store.data.users.find((u) => u.id === acc.uid), false, 'the key is really gone');
+
+  const me = await getMe(acc.accessToken);
+  assert.equal(me.status, 200);
+  // Resolved server-side, so the client never re-implements the fallback.
+  assert.equal(me.body.acceptedTermsRevision, legal.LEGACY_TERMS_REVISION);
+  assert.equal(me.body.termsRevision, legal.TERMS_REVISION);
+
+  // What this spec can and cannot see: LEGACY_TERMS_REVISION and
+  // TERMS_REVISION hold the same date today, so the assertion above passes just
+  // as well against the `|| TERMS_REVISION` footgun. Verified by making that
+  // substitution on purpose — this file stays green, and only
+  // test/legal.test.js ("only a TERMS bump raises the change notice") reddens,
+  // because it can patch the constants apart. What IS pinned here is the HTTP
+  // shape: an absent key resolves to something rather than leaking `undefined`
+  // to the client, which would make the comparison silently always-true.
+  assert.equal(typeof me.body.acceptedTermsRevision, 'string');
+});
+
+test('#521: accept-terms records the current revision and survives a reload', async () => {
+  const acc = await freshAccount('terms-accept@example.com');
+
+  // Put the account behind, the way a real terms bump would.
+  await repo.updateUser(acc.uid, { acceptedTermsRevision: '2000-01-01' });
+  let me = await getMe(acc.accessToken);
+  assert.equal(me.body.acceptedTermsRevision, '2000-01-01');
+  assert.notEqual(me.body.acceptedTermsRevision, me.body.termsRevision,
+    'the account must actually be behind, or this spec proves nothing');
+
+  const res = await acceptTerms(acc.accessToken);
+  assert.equal(res.status, 200);
+  assert.equal(res.body.acceptedTermsRevision, legal.TERMS_REVISION,
+    'the response re-seats the projection so the banner goes immediately');
+
+  // "Stays gone across a reload" — the whole reason this is stored server-side
+  // rather than in localStorage.
+  me = await getMe(acc.accessToken);
+  assert.equal(me.body.acceptedTermsRevision, legal.TERMS_REVISION);
+  assert.equal(me.body.acceptedTermsRevision, me.body.termsRevision);
+});
+
+test('#521: accept-terms takes no client-supplied revision and needs a session', async () => {
+  const acc = await freshAccount('terms-server-decides@example.com');
+  await repo.updateUser(acc.uid, { acceptedTermsRevision: '2000-01-01' });
+
+  // The server decides the value: a client cannot claim acceptance of a
+  // revision that does not exist, nor pin itself to an old one.
+  const res = await request(app).post('/api/account/accept-terms')
+    .set('Authorization', `Bearer ${acc.accessToken}`)
+    .send({ acceptedTermsRevision: '2099-01-01' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.acceptedTermsRevision, legal.TERMS_REVISION);
+  assert.equal((await repo.getUserById(acc.uid)).acceptedTermsRevision, legal.TERMS_REVISION);
+
+  // And it is behind the account gate like every other /me route.
+  assert.equal((await request(app).post('/api/account/accept-terms').send()).status, 401);
+});
+
+test('#521: the login response carries the terms fields, so the notice shows at once', async () => {
+  // The client seats `accountUser` straight from this response. Without these
+  // two fields the banner stays hidden until the next cold load — which is
+  // precisely the "logs in after a terms change" case the notice exists for, and
+  // it fails invisibly (the app works, the notice merely never appears).
+  const email = 'terms-login@example.com';
+  const reg = await request(app).post('/api/account/register')
+    .send({ email, username: handle(), password: PASSWORD });
+  assert.equal(reg.status, 200);
+  const { uid, token } = lastMailTokens();
+  await request(app).post('/api/account/verify-email').send({ token });
+  await repo.updateUser(uid, { acceptedTermsRevision: '2000-01-01' }); // fell behind
+
+  const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+  assert.equal(login.status, 200);
+  assert.equal(login.body.user.acceptedTermsRevision, '2000-01-01');
+  assert.equal(login.body.user.termsRevision, legal.TERMS_REVISION);
+  assert.notEqual(login.body.user.acceptedTermsRevision, login.body.user.termsRevision,
+    'the two must differ here, or the client has nothing to render the notice from');
 });

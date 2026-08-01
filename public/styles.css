@@ -2080,6 +2080,55 @@ body.auth-screen .topbar__context { display: none; }
    form would contradict the screen it sits on. */
 body.auth-screen .demo-banner { display: none; }
 
+/* ---------------------------------------------------------------------------
+   Terms-change notice (#521) — the in-service notification Nutzungsbedingungen
+   §11 promises. A sibling of the demo banner rather than a variant of it: the
+   two say unrelated things and that one's auth-screen/CTA behaviour is
+   load-bearing.
+
+   Tinted with --brand rather than --warn: nothing is wrong and nothing is
+   expiring, so the demo banner's caution colour would overstate it. Colours are
+   theme-derived (.claude/rules/theme-derived-colors.md) — the strip sits above a
+   round whose page background is theme-chosen.
+   --------------------------------------------------------------------------- */
+.terms-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--brand-tint-soft);
+  border-bottom: 1px solid var(--brand-edge);
+}
+/* Load-bearing, same trap as .demo-banner: the `hidden` attribute only hides
+   through the UA stylesheet, so the `display: flex` above would otherwise win and
+   show this to everyone (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.terms-banner[hidden] { display: none; }
+.terms-banner .ti { color: var(--brand); }
+.terms-banner__text { max-width: 60ch; }
+/* Ships hidden and is revealed only where /nutzungsbedingungen resolves, so it
+   needs its own `[hidden]` rule for the same reason as the anchor above. */
+.terms-banner__link { color: var(--brand); text-decoration: underline; }
+.terms-banner__link:hover { color: var(--brand-dark); }
+.terms-banner__link[hidden] { display: none; }
+.terms-banner__dismiss {
+  font: inherit;
+  font-weight: 700;
+  color: var(--brand);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.terms-banner__dismiss:hover { color: var(--brand-dark); }
+/* Hidden on the auth screens for the same reason as the demo banner: those
+   screens render logged-out, where there is no account to be behind. */
+body.auth-screen .terms-banner { display: none; }
+
 /* The hero is centred and stacked at every width since #438, so this block no
    longer has to rebuild it below the breakpoint — only the vertical rhythm
    changes.

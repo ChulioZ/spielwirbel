@@ -800,6 +800,12 @@ I18N.en = {
   // form (#520). The whole sentence is the link text, so it stands on its own
   // next to the banner copy and carries no dangling punctuation.
   'demo.banner.terms': 'Our terms of use apply.',
+  // The in-service notice Nutzungsbedingungen §11 promises (#521). States the
+  // change and points at the text; it deliberately does not ask for consent —
+  // §11 informs, and the app is never gated on the acknowledgement.
+  'terms.updated.text': 'Our terms of use have changed.',
+  'terms.updated.link': 'Review the changes',
+  'terms.updated.dismiss': 'Got it',
   // Replaces "Log out" in the account menu of a demo account (#502): a demo has
   // no password to log back in with, so ending it erases it and frees its slot.
   'demo.end.menu': 'End demo',
