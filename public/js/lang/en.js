@@ -607,6 +607,11 @@ I18N.en = {
   'friends.unknownUser': '(unknown)',
   'friends.feed.played': '{user} played {game}',
   'friends.feed.added': '{user} added {game} to the shelf',
+  // Per-item report control (#559) — opens the contact form as a DSA notice.
+  // The subject is prefilled into an editable field the reporter sees, so it
+  // names the entry precisely enough for the operator to find it again.
+  'friends.feed.report': 'Report this entry',
+  'friends.feed.reportSubject': 'Feed entry: {user} — {game} ({date})',
   'friends.home.title': 'Friends',
   'friends.home.all': 'See all',
   'friends.toast.sent': 'Request sent to {user}.',

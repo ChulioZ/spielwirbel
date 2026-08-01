@@ -2250,6 +2250,23 @@ body.auth-screen .terms-banner { display: none; }
 .feed-item__body { min-width: 0; flex: 1; }
 .feed-item__text { font-size: 15px; line-height: 1.35; }
 .feed-item__time { font-size: 13px; margin-top: 2px; }
+/* Report this entry to the operator (#559). Always visible, never hover-only —
+   hover is unreachable on touch, which is this app's primary platform. Quiet by
+   default (it must not compete with the entry it sits beside) and 32x32, which
+   clears WCAG 2.2 SC 2.5.8 without the spacing exception. */
+.feed-item__report {
+  flex: none;
+  align-self: center;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  line-height: 1;
+  padding: 8px 9px;
+  border-radius: var(--radius-sm);
+}
+.feed-item__report .ti { font-size: 15px; display: block; }
+.feed-item__report:hover { background: var(--sunken); color: var(--ink); }
 /* Home compact section: a heading with a "see all" link, then a few feed rows. */
 .home-friends { margin-top: 30px; }
 .home-friends__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }

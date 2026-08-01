@@ -24,6 +24,11 @@ die Begründung (unten) zeigt auf die konkrete Ziffer.
 ## Kanäle (Art. 16 Abs. 1)
 
 - Kontaktformular `/kontakt.html` → `CONTACT_TO`-Postfach (Heinlein/mailbox.org).
+- Melde-Button an jedem Eintrag des Freundeskreis-Feeds (#559) — öffnet dasselbe
+  Formular mit Kategorie „Sonstiges" und vorbelegtem gemeldetem Konto/Betreff.
+  Kein eigener Kanal, sondern ein zweiter Zugang zum obigen: der Feed ist die
+  einzige Oberfläche, auf der Nutzer fremden freien Text sehen (Art. 16 Abs. 1:
+  „leicht zugänglich").
 - E-Mail an `IMPRESSUM_EMAIL` (Alias `abuse@` läuft auf dasselbe Postfach, #307).
 - Beides ist ohne Login erreichbar; die Nutzungsbedingungen §6 nennen die
   Bestandteile einer guten Meldung (Art. 16 Abs. 2: Begründung, exakte URL —

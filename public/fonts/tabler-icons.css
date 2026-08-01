@@ -108,6 +108,8 @@
 .ti-message::before { content: "\eaef"; }
 /* The terms-change notice (#521). Codepoint read from this bundle's own cmap. */
 .ti-file-text::before { content: "\eaa2"; }
+/* The feed's report control (#559). Same: cmap, not tabler.io. */
+.ti-flag::before { content: "\eaa6"; }
 
 /* Tag icons (#255) — codepoints read from this bundle's own cmap via fontTools,
    NOT from tabler.io (they differ; see .claude/rules/tabler-icon-codepoints.md). */
