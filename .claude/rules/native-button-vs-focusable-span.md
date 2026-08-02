@@ -53,9 +53,12 @@ Enter does something — a bare focusable span announces only its text.
 The chips and the cover kept their exact look (verified 0px delta, below). What
 that needed, and the two traps:
 
-- **Never the `font` shorthand.** `.tag` declares `font-size: 13px` and
+- **Never the `font` shorthand.** `.tag` declares `font-size: var(--text-sm)`
+  (14px — it was a literal 13px until the #470 type scale) and
   `font-weight: 700`; `.gd-img` declares `font-size: 64px` for the cover
-  placeholder glyph. A `font: inherit` in the editable variant's rule ties on
+  placeholder glyph — one of the literals #470 deliberately did **not** put on
+  the scale, because it sizes a glyph inside a fixed box rather than naming a
+  hierarchy level. A `font: inherit` in the editable variant's rule ties on
   specificity and, being later in the file, wins — so the chips render at the
   `<h1>`'s 26px and the cover's glyph shrinks. Use `font-family: inherit` alone
   (what `.link-btn` and `.tag-act` have always done here).

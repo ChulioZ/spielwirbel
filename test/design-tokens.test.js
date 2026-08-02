@@ -22,14 +22,95 @@ const { CSS, RULES, bodyOf } = require('./support/css');
 const ROOT = bodyOf(':root');
 const decls = (prop) => [...CSS.matchAll(new RegExp(`${prop}:\\s*([^;]+);`, 'g'))].map((m) => m[1].trim());
 
+const TEXT_STEPS = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl'];
+
 test('the :root block declares the full token scale', () => {
   for (const name of [
     '--shadow-1', '--shadow-2', '--shadow-3',
     '--radius-sm', '--radius-md', '--radius-lg', '--radius-xl', '--radius-pill',
     '--dur-fast', '--dur-base', '--dur-slow', '--ease-out',
+    ...TEXT_STEPS.map((s) => `--text-${s}`),
   ]) {
     assert.match(ROOT, new RegExp(`${name}\\s*:`), `${name} is missing from :root`);
   }
+});
+
+/* ---- Type scale (#470) ----
+   22 hardcoded sizes, every integer from 10 to 22, with 14/15/16/17px alone
+   carrying 109 declarations — four body sizes no reader can tell apart. */
+
+const textPx = (step) => {
+  const m = ROOT.match(new RegExp(`--text-${step}:\\s*(\\d+)px`));
+  assert.ok(m, `--text-${step} should be declared in px`);
+  return Number(m[1]);
+};
+
+test('the type scale ascends', () => {
+  const px = TEXT_STEPS.map(textPx);
+  for (let i = 1; i < px.length; i++) {
+    assert.ok(px[i] > px[i - 1], `--text-${TEXT_STEPS[i]} (${px[i]}) must exceed --text-${TEXT_STEPS[i - 1]} (${px[i - 1]})`);
+  }
+});
+
+/* U-R04: body and UI text may never get SMALLER. The four steps at or below
+   18px are where all the reading text lives, so each carries a floor — a
+   future retune may open the scale out, never tighten it downward. Above 18px
+   there is deliberately no floor: display type may round down. */
+test('the four reading steps never fall below the accessibility floor', () => {
+  for (const [step, floor] of [['xs', 12], ['sm', 14], ['md', 16], ['lg', 18]]) {
+    assert.ok(
+      textPx(step) >= floor,
+      `--text-${step} is ${textPx(step)}px — below the ${floor}px floor. Shrinking body text is ` +
+      'the commonest way a redesign regresses accessibility (U-R04).',
+    );
+  }
+});
+
+/* The survivors, each marked `glyph, not type` in the stylesheet: a font-size
+   that sizes a GLYPH inside a fixed box (avatar initials, a cover placeholder,
+   the finale seal) is a fraction of that box, not a hierarchy level. Putting
+   one on the scale would resize it inside an unchanged box the next time a
+   step is retuned. The list is exhaustive on purpose — any OTHER bare px fails
+   the assertion below, so a new literal cannot slip in beside them. */
+const GLYPH_LITERALS = [
+  // avatar initials, sized to the circle
+  '.avatar', '.avatar--add', '.recap-fav__who .avatar', '.result-people__person .avatar',
+  '.stage__voter-avatar .avatar', '.nr-seat__avatar', '.nr-seat--empty .nr-seat__avatar',
+  '.podium__avatar', '.profile-head .avatar', '.member-avatar', '.handover__avatar',
+  // placeholder glyphs centred in a cover / thumb / tile box
+  '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon',
+  '.landing-card__icon', '.landing-step__num', '.feed-item__img', '.result-row__img',
+  '.pool-thumb', '.pool-thumb .ti', '.pool-tile__img', '.game-card__img', '.vote__img',
+  '.gd-img', '.lookup__thumb--none .ti', '.archive-row__img .ti', '.result-podium__img .ti',
+  // a glyph or number sized to its own small box
+  '.result-row__bars .bar', '.stage__voter-check .ti', '.stage__seal > .ti', '.mood .ti',
+  '.filter-toggle__badge',
+  // large standalone marks
+  '.auth__logo', '.paste-zone__icon',
+];
+
+const fontSizes = RULES.flatMap(([sel, body]) =>
+  [...body.matchAll(/font-size:\s*([^;]+)/g)].map((m) => [sel, m[1].trim()]));
+
+test('every font-size draws from the type scale, except the named glyph literals', () => {
+  const exempt = new Set(GLYPH_LITERALS);
+  const offenders = fontSizes
+    // `inherit` and the one `em` are relative by design, not a size choice.
+    .filter(([, v]) => !v.includes('var(--text-') && v !== 'inherit' && !/^[\d.]+em$/.test(v))
+    .filter(([sel]) => !exempt.has(sel))
+    .map(([sel, v]) => `${sel} { font-size: ${v} }`);
+
+  assert.deepEqual(offenders, [], `bare font-size (use a --text-* token): ${offenders.join(' | ')}`);
+});
+
+/* The anti-vacuous half: an exemption list nobody re-checks rots into names
+   that no longer exist, and every stale entry silently widens the assertion
+   above. Each must still be a real rule carrying a real bare px. */
+test('no glyph exemption is stale', () => {
+  const literal = new Set(fontSizes.filter(([, v]) => /^\d+px$/.test(v)).map(([sel]) => sel));
+  const stale = GLYPH_LITERALS.filter((sel) => !literal.has(sel));
+
+  assert.deepEqual(stale, [], `exempted but no longer a bare-px rule — delete these: ${stale.join(', ')}`);
 });
 
 /* Elevation is the one that regressed hardest, so it gets the strict form: a
