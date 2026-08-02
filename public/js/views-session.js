@@ -42,6 +42,7 @@ function showStartSession(round) {
         </div>
         <div id="guestMount"></div>
         <div id="teamMount"></div>
+        <div id="deviceVoteMount"></div>
       </div>
       <div class="setup-grid__aside">
         <div class="field" id="gamesFilterField" hidden>
@@ -153,6 +154,57 @@ function showStartSession(round) {
           .join('')
       : `<p class="muted setup-panel__empty">${esc(t('startSession.poolEmpty'))}</p>`;
   };
+  // Per-device voting (#209). The toggle OPENS the session to votes from other
+  // devices; it never takes this one away, so nobody has to be predicted into a
+  // place before the draw — whoever is in the room votes here from the lobby,
+  // whoever is not votes from their phone. That is why this is one session-wide
+  // switch rather than a per-person setting.
+  //
+  // Rendered only in accounts mode: on a password-only instance there are no
+  // accounts to link a seat to, so the control could never become usable and a
+  // permanently dead switch is worse than none. Within accounts mode it is
+  // always shown and disables itself instead of disappearing, so the feature is
+  // discoverable before anyone has linked a seat.
+  //
+  // Its own wrapper, NOT a `.field`: the row is a <label>, and `.field label`
+  // (0,1,1) would beat `.ds-row` (0,1,0) and flatten it
+  // (.claude/rules/label-rows-lose-to-field-label.md).
+  const deviceVote = isLoggedIn()
+    ? h(`<div class="device-vote">
+        <label class="ds-row device-vote__row">
+          <div class="ds-row__main">
+            <span class="device-vote__name">${esc(t('startSession.deviceVoting'))}</span>
+            <span class="muted device-vote__note"></span>
+          </div>
+          <div class="ds-row__meta">
+            <input type="checkbox" class="provider-row__box" id="deviceVoting" />
+          </div>
+        </label>
+      </div>`)
+    : null;
+  // Who could actually use it: a joining member whose seat is linked to an
+  // account that is not the one holding this device. Deliberately "other": if
+  // the only linked seat is yours, opening the session distributes nothing —
+  // you are already at the device you would vote on.
+  const remoteVoters = () => {
+    const me = currentUserId();
+    return round.members.filter((m) => m.userId && m.userId !== me && joining.has(m.id));
+  };
+  const updateDeviceVote = () => {
+    if (!deviceVote) return;
+    const others = remoteVoters();
+    const box = deviceVote.querySelector('#deviceVoting');
+    box.disabled = others.length === 0;
+    // An unusable session must not stay armed from an earlier seat selection —
+    // a checked-but-disabled box would submit deviceVoting for a session where
+    // nobody can vote remotely, stranding the lobby with no way in.
+    if (box.disabled) box.checked = false;
+    deviceVote.classList.toggle('is-disabled', box.disabled);
+    deviceVote.querySelector('.device-vote__note').textContent = others.length
+      ? t('startSession.deviceVotingNote', { names: joinNames(others.map((m) => m.name)) })
+      : t('startSession.deviceVotingUnavailable');
+  };
+
   // Seats around the table: tap a member to toggle whether they join tonight.
   // The group attributes go on the table itself, not on #seatMount — replaceWith
   // swaps the mount out, so anything set on it in the markup would be lost.
@@ -161,13 +213,18 @@ function showStartSession(round) {
   const seatTable = renderSeatPicker(round, joining, () => {
     teamPicker.refreshTeams();
     updateHint();
+    // A linked member leaving the table can be the last remote voter, so the
+    // toggle has to re-evaluate on every seat change, not only at first render.
+    updateDeviceVote();
   }, () => guests.length);
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   form.querySelector('#seatMount').replaceWith(seatTable);
   form.querySelector('#guestMount').replaceWith(guestPicker);
   form.querySelector('#teamMount').replaceWith(teamPicker);
+  if (deviceVote) form.querySelector('#deviceVoteMount').replaceWith(deviceVote);
   updateHint();
+  updateDeviceVote();
 
   // Custom-tag chips (#238, tri-state #241) are the only game filter now (#242).
   // Clicking cycles ignore -> include -> exclude -> ignore. With no round tags
@@ -217,7 +274,14 @@ function showStartSession(round) {
         memberIds: [...joining],
         guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
+        // #209. Read off the live box rather than a captured value: the seat
+        // picker can have disabled it since the last render.
+        deviceVoting: !!(deviceVote && deviceVote.querySelector('#deviceVoting').checked),
       });
+      // A per-device session opens the lobby instead: its votes arrive one
+      // person at a time, from wherever those people are, so there is no single
+      // hot-seat run to start. The lobby is where anyone in the room votes.
+      if (data.session.deviceVoting) return showSessionLobby(round, data.session);
       // Straight into the first handover — the drawn games stay secret until
       // each person rates them. The participant list is resolved through the one
       // resolver, off the stored session, so it matches every later screen.
@@ -231,16 +295,29 @@ function showStartSession(round) {
 // `people` is the sessionPeople() shape ({ id, name, guest }), so a guest takes
 // their hot-seat turn exactly like a member (#458) — only their vote card
 // differs, see the retire control below.
-function startVoting(round, session, games, people) {
+// `opts` (#209) lets the per-device lobby reuse this wizard for ONE person at a
+// time instead of duplicating it. Everything subtle here — the history entry per
+// step, the #329 leave guard, the beforeunload block — is machinery a second
+// implementation would have to get right again, so the hot-seat run and a single
+// person's run are the same code path with two knobs:
+//   opts.saveVotes(votes) – async; replaces the one POST /results at the end
+//   opts.onSaved()        – where to go afterwards, instead of the finale
+//   opts.skipIntro        – drop the "you're up, don't peek" handover screen
+// Absent opts is the original hot-seat behaviour, byte for byte.
+function startVoting(round, session, games, people, opts = {}) {
   // votes[personId][gameId] = { rating, retire }
   const votes = {};
   people.forEach((p) => (votes[p.id] = {}));
 
   // Everyone in random order; a "you're up" screen before each person.
+  //
+  // The handover screen is skipped when someone is voting on their OWN device:
+  // "pass the device on, no peeking" is advice about a shared phone, and showing
+  // it to a person alone with their own is just a screen in the way.
   const order = shuffled(people);
   const steps = [];
   order.forEach((p) => {
-    steps.push({ type: 'intro', person: p });
+    if (!opts.skipIntro) steps.push({ type: 'intro', person: p });
     games.forEach((g) => steps.push({ type: 'vote', person: p, game: g }));
   });
 
@@ -326,7 +403,7 @@ function startVoting(round, session, games, people) {
   currentView = () => { render(); };
 
   // Segmented progress: one segment per person, filled in their color.
-  const perPerson = games.length + 1; // intro + one card per game
+  const perPerson = games.length + (opts.skipIntro ? 0 : 1); // (intro +) one card per game
   function progressBar() {
     return `<div class="vote-progress">${order
       .map((p, pi) => {
@@ -455,6 +532,18 @@ function startVoting(round, session, games, people) {
 
   async function finish() {
     try {
+      // Per-device run (#209): the caller writes the columns its own way (one
+      // request per person) and decides where to go next. The teardown in
+      // between is identical, and doing it HERE rather than in the callback is
+      // what keeps the two runs from drifting on the part that actually bites —
+      // a wizard left registered as the active flow swallows the next Back.
+      if (opts.saveVotes) {
+        await opts.saveVotes(votes);
+        saved = true;
+        window.removeEventListener('beforeunload', unloadGuard);
+        endFlow();
+        return opts.onSaved && opts.onSaved();
+      }
       await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/results`, { votes });
       // From here on there is nothing left to lose, so the leave guards go
       // quiet — a Back out of the finale must not ask about discarding votes

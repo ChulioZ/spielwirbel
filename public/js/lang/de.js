@@ -77,6 +77,10 @@ I18N.de = {
   'round.draftTitleOne': '{n} Spiel ausgelost',
   'round.draftTitle': '{n} Spiele ausgelost',
   'round.resumeVote': 'Weiter abstimmen',
+  // Per-Gerät-Session (#209): nichts wurde unterbrochen, es wird gerade
+  // woanders abgestimmt — deshalb nicht „weiter", sondern „jetzt".
+  'round.liveLabel': 'Abstimmung läuft',
+  'round.liveVote': 'Jetzt abstimmen',
   'round.draftDiscard': 'Abstimmung verwerfen',
   'round.draftDiscardConfirm': 'Diese begonnene Abstimmung verwerfen? Die Auslosung wird gelöscht.',
   'round.toast.draftDiscarded': 'Abstimmung verworfen',
@@ -401,6 +405,12 @@ I18N.de = {
   'startSession.teamMake': 'Team bilden',
   'startSession.teamDissolve': 'Team {name} auflösen',
   'startSession.toast.teamMin': 'Ein Team braucht mindestens {n} Personen',
+  // Per-Gerät-Abstimmung (#209). Der Hinweis beschreibt, was die Funktion tut —
+  // auch im deaktivierten Zustand. Er darf nie klingen, als fehle der Runde
+  // etwas: eine Runde aus Namen ohne Konten ist die normale Konfiguration.
+  'startSession.deviceVoting': 'Am eigenen Gerät abstimmen',
+  'startSession.deviceVotingNote': '{names} können dann am eigenen Gerät abstimmen. Alle anderen stimmen hier ab.',
+  'startSession.deviceVotingUnavailable': 'Dafür ist in dieser Session außer dir niemand mit einem Konto verknüpft.',
   'startSession.whichGames': 'Welche Spiele?',
   'startSession.countLabel': 'Wie viele Spiele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
@@ -409,6 +419,20 @@ I18N.de = {
   'startSession.draw': 'Loswirbeln',
   'startSession.toast.noGames': 'Keine passenden Spiele zum Wirbeln',
   'startSession.toast.noMembers': 'Mindestens eine Person muss mitspielen',
+  // Die Lobby einer Per-Gerät-Session (#209): zeigt WER abgestimmt hat,
+  // niemals WAS — die Wertungen bleiben bis zum Finale geheim.
+  'lobby.crumb': 'Abstimmung',
+  'lobby.title': 'Abstimmung läuft',
+  'lobby.sub': '{n} Spiele ausgelost. Alle stimmen ab, dann kommt das Finale.',
+  'lobby.subOne': '{n} Spiel ausgelost. Alle stimmen ab, dann kommt das Finale.',
+  'lobby.voted': 'abgestimmt',
+  'lobby.waiting': 'offen',
+  'lobby.voteNow': 'Jetzt abstimmen',
+  'lobby.yourVoteIn': 'Deine Stimme ist da. Fehlen noch die anderen.',
+  'lobby.hereLabel': 'An diesem Gerät abstimmen',
+  'lobby.voteHere': 'Für {name}',
+  'lobby.close': 'Abstimmung beenden',
+  'lobby.closeConfirm': 'Es fehlen noch {n} Stimmen. Abstimmung trotzdem beenden?',
 
   'directPlay.button': 'Jetzt spielen',
   'directPlay.title': '„{title}“ spielen',

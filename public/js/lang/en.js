@@ -76,6 +76,10 @@ I18N.en = {
   'round.draftTitleOne': '{n} game drawn',
   'round.draftTitle': '{n} games drawn',
   'round.resumeVote': 'Continue voting',
+  // A per-device session (#209): nothing was interrupted, voting is simply
+  // still running elsewhere — hence "now" rather than "continue".
+  'round.liveLabel': 'Vote in progress',
+  'round.liveVote': 'Vote now',
   'round.draftDiscard': 'Discard this vote',
   'round.draftDiscardConfirm': 'Discard this started vote? The draw will be deleted.',
   'round.toast.draftDiscarded': 'Vote discarded',
@@ -405,6 +409,12 @@ I18N.en = {
   'startSession.teamMake': 'Form a team',
   'startSession.teamDissolve': 'Dissolve team {name}',
   'startSession.toast.teamMin': 'A team needs at least {n} people',
+  // Per-device voting (#209). The note describes what the feature does, in the
+  // disabled state too. It must never read as though the round were missing
+  // something: a round of names without accounts is the normal configuration.
+  'startSession.deviceVoting': 'Vote on your own device',
+  'startSession.deviceVotingNote': '{names} can then vote on their own device. Everyone else votes here.',
+  'startSession.deviceVotingUnavailable': 'Nobody else in this session has an account linked to their seat.',
   'startSession.whichGames': 'Which games?',
   'startSession.countLabel': 'How many games to draw?',
   'startSession.available': '{n} games in the pot',
@@ -413,6 +423,20 @@ I18N.en = {
   'startSession.draw': 'Start the vote',
   'startSession.toast.noGames': 'No matching games available',
   'startSession.toast.noMembers': 'At least one player must join',
+  // The lobby of a per-device session (#209): it shows WHO has voted, never
+  // WHAT — the ratings stay secret until the finale.
+  'lobby.crumb': 'Voting',
+  'lobby.title': 'Voting in progress',
+  'lobby.sub': '{n} games drawn. Once everyone has voted, the finale begins.',
+  'lobby.subOne': '{n} game drawn. Once everyone has voted, the finale begins.',
+  'lobby.voted': 'voted',
+  'lobby.waiting': 'waiting',
+  'lobby.voteNow': 'Vote now',
+  'lobby.yourVoteIn': 'Your vote is in. Waiting for the others.',
+  'lobby.hereLabel': 'Vote on this device',
+  'lobby.voteHere': 'For {name}',
+  'lobby.close': 'End voting',
+  'lobby.closeConfirm': '{n} votes are still missing. End voting anyway?',
 
   'directPlay.button': 'Play now',
   'directPlay.title': 'Play “{title}”',

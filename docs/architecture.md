@@ -103,6 +103,10 @@ lib/
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
+  session-votes.js   vote secrecy for a session collecting votes from several
+                     devices: strips the ratings already cast out of the round
+                     payload while voting is open, leaving only who has voted
+                     (issue #209)
   demo.js            guest demo mode: mints, seeds and purges throwaway demo
                      accounts (issue #427; off unless DEMO_ENABLED)
   demo-seed.js       the content a demo tenant is seeded with — games (hotlinked
@@ -326,6 +330,9 @@ public/
     views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, voting (hot-seat), finale, results
+    views-session-live.js the per-device voting lobby: who has voted, vote for
+                     yourself or for anyone still open on this device, and end
+                     the voting (issue #209)
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
     views-friends.js Freundeskreis view + home feed section (#325) and the
                      account profile at /u/:username (#558; accounts mode only)

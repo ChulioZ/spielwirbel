@@ -183,8 +183,28 @@ async function showResultsById(rid, sid) {
   } catch {
     return showHome();
   }
-  const session = round.sessions.find((s) => s.id === sid);
+  let session = round.sessions.find((s) => s.id === sid);
+  // `fetchRound` is stale-while-revalidate, so a session created on ANOTHER
+  // device is missing from this one's cache until the background refresh lands —
+  // and by then this function has already given up and rendered the hub. Cheap
+  // because it only runs when the lookup actually failed, and it is what makes a
+  // shared session URL work on first open: the per-device lobby (#209) is
+  // reached by exactly such a link.
+  if (!session) {
+    try {
+      round = await fetchRoundFresh(rid);
+    } catch { return showRound(rid, 'start'); }
+    session = round.sessions.find((s) => s.id === sid);
+  }
   if (!session) return showRound(rid, 'start');
+  // A per-device session that is still collecting votes (#209) shows the lobby
+  // at this URL instead of results — there are no results yet, and the lobby is
+  // where every participant's device belongs while voting is open. It is safe to
+  // resolve on a cold load precisely because its state is all server-side, which
+  // is what separates it from the wizard's transient step paths above.
+  if (session.deviceVoting && !session.done && !session.cancelled) {
+    return showSessionLobby(round, session);
+  }
   showResults(round, session);
 }
 

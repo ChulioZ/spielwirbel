@@ -755,6 +755,63 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(after.winnerIds, ['m1', 'gst1']);
   });
 
+  // Per-device voting (#209) writes ONE person's column at a time instead of
+  // replacing the whole map. Both backends do it through their `withSession`
+  // read-modify-write, which is what makes two people submitting at the same
+  // moment safe (Postgres takes FOR UPDATE) — so the contract has to pin that a
+  // second write leaves the first one's column standing.
+  test('saveSessionPersonVotes writes one column without disturbing the others', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const base = {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    };
+
+    const plain = await repo.createSession(T, round.id, base);
+    assert.equal('deviceVoting' in plain, false); // absent-key parity, like guests/teams
+    const session = await repo.createSession(T, round.id, { ...base, deviceVoting: true });
+    assert.equal((await repo.getSession(T, round.id, session.id)).deviceVoting, true);
+
+    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 5, retire: false } });
+    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm2', { [g.id]: { rating: 2, retire: true } });
+    const both = await repo.getSession(T, round.id, session.id);
+    assert.equal(both.votes.m1[g.id].rating, 5);
+    assert.equal(both.votes.m2[g.id].rating, 2);
+    // Still open: writing a column must not finish the session by itself.
+    assert.equal(both.done, false);
+
+    // Re-writing one column replaces that column only.
+    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 1, retire: false } });
+    const revised = await repo.getSession(T, round.id, session.id);
+    assert.equal(revised.votes.m1[g.id].rating, 1);
+    assert.equal(revised.votes.m2[g.id].rating, 2);
+
+    assert.equal(await repo.saveSessionPersonVotes(T, round.id, 'missing', 'm1', {}), null);
+  });
+
+  // closeSessionVoting is deliberately NOT saveSessionResults: it must flip the
+  // session to done while leaving every collected column exactly as written.
+  test('closeSessionVoting finishes the session and keeps the collected votes', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const session = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null,
+      done: false, deviceVoting: true,
+    });
+    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 4, retire: false } });
+
+    const closed = await repo.closeSessionVoting(T, round.id, session.id);
+    assert.equal(closed.done, true);
+    const after = await repo.getSession(T, round.id, session.id);
+    assert.equal(after.done, true);
+    assert.equal(after.votes.m1[g.id].rating, 4);
+    assert.equal(after.deviceVoting, true);
+
+    assert.equal(await repo.closeSessionVoting(T, round.id, 'missing'), null);
+  });
+
   test('setBackground returns the previous design and stores the new one', async () => {
     const round = await freshRound();
     const first = await repo.setBackground(T, round.id, { type: 'theme', page: 'p', accent: 'a' });
