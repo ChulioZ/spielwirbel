@@ -683,7 +683,7 @@ test('the status endpoint reports the running instance without leaking secrets (
     // top, so the ceilings are enforced.
     assert.equal(status.quotas.enforced, true);
     assert.equal(typeof status.quotas.roundsPerTenant, 'number');
-    for (const block of ['accounts', 'rounds', 'content', 'demo', 'social', 'peaks']) {
+    for (const block of ['accounts', 'rounds', 'content', 'demo', 'social', 'peaks', 'mail']) {
       assert.equal(typeof status.metrics[block], 'object', `metrics.${block} is missing`);
     }
     assert.equal(typeof status.metrics.accounts.total, 'number');

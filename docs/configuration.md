@@ -155,7 +155,8 @@ so an exhausted quota breaks registration for *everyone*: a tighter per-IP cap o
 and a global daily circuit breaker on all outbound mail (`MAIL_DAILY_MAX`,
 default 200 per UTC day). Past the budget, sends are refused and logged as
 `mail_daily_budget_exhausted` rather than delivered; set it below your mail
-provider's own daily limit. Both counters are per process and in memory.
+provider's own daily limit. Both counters are per process and in memory. How
+much of the day's budget is spent shows on the admin panel's Kennzahlen card.
 
 When accounts are enabled the app runs in **accounts mode** (issue #138): the SPA
 shows an in-app onboarding flow — register → confirm e-mail → log in, plus password
@@ -214,7 +215,10 @@ it evidences.
 The panel opens with a **Kennzahlen** card: how much this instance is being used
 — accounts (verified / unverified / suspended, plus new ones in the last 7 and
 30 days), how many of them own at least one round, rounds, games, sessions
-(finished, and in the last 30 days), live guest demos against their cap, shared
+(finished, and in the last 30 days), live guest demos against their cap, the
+day's outbound mail against the `MAIL_DAILY_MAX` budget (a per-process counter —
+with several replicas the card shows the answering process's share, not a
+global sum), shared
 rounds / open invitations / friendships, and the **quota ceilings paired with
 the highest value anyone currently holds** against each, so "is someone about to
 be refused?" is answerable without a database console. Every field is a count —
