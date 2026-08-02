@@ -151,6 +151,12 @@ What the app does, in detail. For a short overview see the
   holding a device votes with it — and the ratings stay secret until someone
   ends the voting, which anyone in the round can do, so a missing player or a
   flat battery never strands the evening.
+- **What happened in a session** – every session keeps a short record of who
+  started it, whose votes were submitted by whom, who ended the voting and who
+  recorded the result, shown while voting runs and again under the results. It
+  names the account that acted, not the device: "Anna voted for Ben" is something
+  the app can actually know, "Ben voted on Anna's device" is not. Shared-device
+  sessions keep it too, so the list always reads as complete.
 - **Guests** – a visitor who isn't part of the group can be named on the setup
   screen: they count toward the player range the draw filters by, take their own
   hot-seat turn, can be recorded as a winner, and stay in that session's record

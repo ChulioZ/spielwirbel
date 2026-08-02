@@ -2,17 +2,21 @@
 paths:
   - "lib/routes/sessions.js"
   - "lib/session-votes.js"
+  - "lib/session-events.js"
+  - "public/js/session-log.js"
   - "lib/routes/rounds.js"
   - "public/js/views-session-live.js"
   - "public/js/views-session.js"
   - "public/js/router.js"
 ---
-# Per-device voting (#209): the hot-seat flow was hiding four things for free
+# Per-device voting (#209): the hot-seat flow was hiding five things for free
 
 A `deviceVoting` session collects each person's column as they submit it
 (`POST …/sessions/:sid/votes/:pid`) and is closed by `…/close`, instead of the
-wizard POSTing one whole map to `…/results` at the end. Four properties the old
-shape provided **by accident** stop holding the moment writes become incremental.
+wizard POSTing one whole map to `…/results` at the end. Five properties the old
+shape provided **by accident** stop holding the moment writes become incremental
+— the last of them being that nobody had to ask who did what, because there was
+only ever one device and one person holding it.
 
 ## 1. Vote secrecy was a side effect of writing once, at the end
 
@@ -76,6 +80,34 @@ now refetches once with `fetchRoundFresh` before giving up.
 Reproducing it needs a genuinely stale cache: create the session with `fetch()`
 (not through the app), confirm `swrStore.get('round:'+rid)` does **not** hold it,
 then cold-load the session URL.
+
+## 5. The session LOG is what makes a hybrid evening legible — and it names accounts
+
+Once votes can arrive from several accounts, "who did what" stops being derivable
+from the session at all. `public/js/session-log.js` + `lib/session-events.js`
+record it, rendered in the lobby and again on the results screen.
+
+Three things about it are load-bearing:
+
+- **It records the ACCOUNT, never the device.** The server sees which account
+  sent a request; it cannot know who was holding the hardware, and Anna handing
+  her phone to Ben is indistinguishable from Anna tapping it herself. So the
+  wording is „Anna hat für Ben abgestimmt", not „Ben hat an Annas Gerät
+  abgestimmt" — the same accountability without a claim we cannot back. Do not
+  "improve" the copy toward devices.
+- **Entries are appended inside `withSession`**, not by a second call afterwards.
+  A separate append can fail on its own, leaving a session whose state moved with
+  no entry saying so — and a log that is quietly incomplete is worse than none,
+  because it is read as authoritative.
+- **The type list and the phrasing live in ONE file**, which the backend requires
+  out of `public/js/`. The server writes types and the client renders them, so a
+  type with no phrase renders as **nothing at all** — no error, no 400, just a
+  shorter history. That inversion (server writes, client renders) is why it is
+  the fourth entry in `.claude/rules/shared-constants-across-the-stack.md`.
+
+The log is shown for shared-device sessions too, where it says little. That is
+deliberate: a reader should not have to know which kind of session they are
+looking at in order to know the list is complete.
 
 ## Smaller things
 
