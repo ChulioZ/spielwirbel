@@ -3,6 +3,7 @@ paths:
   - "public/styles.css"
   - "public/js/views-round-detail.js"
   - "public/js/core.js"
+  - "public/index.html"
 ---
 # Derive UI colors from the theme variables, don't hardcode them
 
@@ -32,6 +33,39 @@ silver/bronze are intentionally fixed — they encode meaning, not theme.
 
 Also note: the page backdrop (soft accent glow + paper grain) lives entirely in
 the `body` rule in `styles.css`. There is no JS texture generation anymore —
-`applyBackground()` only sets/removes the two variables, and stored round
-designs are just `{ type: 'theme', page, accent }` (a legacy `pattern` field in
-old data is ignored).
+`applyBackground()` sets/removes the two variables plus the browser chrome
+(below), and stored round designs are just `{ type: 'theme', page, accent }` (a
+legacy `pattern` field in old data is ignored).
+
+## The one themed colour that is NOT a CSS variable: the browser chrome (#523)
+
+`<meta name="theme-color">` tints the mobile browser toolbar and the installed
+PWA's chrome. It is an **HTML attribute**, so no amount of `color-mix()` reaches
+it — `applyBackground()` writes it directly (`setThemeColor`), which is why that
+function is the only place a theme colour is applied imperatively. Adding a
+themed surface? Check whether it lives outside the stylesheet before reaching
+for a variable.
+
+It follows the **accent**, not `--page-bg`, and the reason is continuity: the
+static default in `index.html` is `#c2410c`, which *is* `THEMES[0].accent`, so
+home, the landing and unthemed rounds keep exactly that value and the chrome
+never flips between a saturated tone and a pale one mid-navigation. Tracking the
+page colour instead would have flipped it (and the toolbar's icon colours with
+it) on every round entry and exit. That choice also settles the sibling question
+in #597: `theme-color` is brand chrome here, so a standalone page's value aligns
+on the manifest's `theme_color`, not on its own background.
+
+Two constraints on any change here:
+
+- **The meta and `--brand` are set from the same local**, never re-derived
+  independently. `themeAccent(bg)` looks like it would do — it normalizes more
+  loosely (no `bg.page` requirement), so on malformed data it can disagree with
+  what `applyBackground` actually painted. The tag must state the applied accent
+  or it is worse than a stale one.
+- **The static default and `STANDARD_ACCENT` must stay equal.**
+  `test/theme-color.test.js` parses both out rather than restating a hex, so
+  editing one alone goes red.
+
+Verification is a DOM probe (`document.querySelector('meta[name=theme-color]')
+.content`), never a screenshot: the Browser pane renders no browser chrome, so a
+capture is the same picture whether the change works or not.

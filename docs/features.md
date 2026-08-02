@@ -169,8 +169,8 @@ What the app does, in detail. For a short overview see the
 - **Ratings on demand** – a game's average is always computed live from all
   session votes, so deleting a session automatically corrects every average.
 - **Designs** – per round, pick a colour scheme (page tone + accent); the
-  whole UI derives from it — surfaces, shadows, even the dark "stage" of the
-  finale.
+  whole UI derives from it — surfaces, shadows, the dark "stage" of the
+  finale, and the mobile browser / installed-app chrome around the page.
 - **Languages** – German and English, following the system language by
   default, switchable any time via the picker in the top bar.
 - **Shareable links & reload-safe navigation** – the URL reflects the current

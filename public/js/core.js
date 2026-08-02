@@ -553,22 +553,39 @@ function resolveAccent(bg) {
   return theme ? theme.accent : bg.accent;
 }
 
+// The mobile browser toolbar and the installed PWA's chrome are tinted from
+// <meta name="theme-color">, which index.html ships at the standard accent — so
+// inside a Schiefer or Blaugrau round the frame around the app stayed
+// brand-orange (#523). It follows the ACCENT rather than the page colour: the
+// standard theme's accent IS that static default, so the chrome is a saturated
+// brand tone at every moment and nothing flips when a round is entered or left.
+// Keep this in lockstep with the --brand the caller just applied, never with a
+// re-derivation — the two must not be able to disagree.
+function setThemeColor(accent) {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', accent);
+}
+
 // Apply the round's design: page background + accent color. Everything else —
 // placeholders, borders, accent surfaces, the page glow and the finale stage —
 // derives from these two custom properties via CSS color-mix (see styles.css).
 function applyBackground(bg) {
   const root = document.documentElement.style;
   if (bg && bg.type === 'theme' && bg.page && bg.accent) {
+    const accent = resolveAccent(bg);
     root.setProperty('--page-bg', bg.page);
-    root.setProperty('--brand', resolveAccent(bg));
+    root.setProperty('--brand', accent);
+    setThemeColor(accent);
   } else if (bg && bg.type === 'color' && bg.color) {
     // Legacy stored design: only a page color, standard accent.
     root.setProperty('--page-bg', bg.color);
     root.removeProperty('--brand');
+    setThemeColor(STANDARD_ACCENT);
   } else {
     // No design -> fall back to the :root defaults.
     root.removeProperty('--page-bg');
     root.removeProperty('--brand');
+    setThemeColor(STANDARD_ACCENT);
   }
 }
 
