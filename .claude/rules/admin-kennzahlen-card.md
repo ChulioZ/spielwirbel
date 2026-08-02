@@ -73,6 +73,16 @@ maintained by the same person who just added the leak.
   `gamesPerRound` / `tagsPerRound`) so the panel can zip the two without a mapping
   — that pairing is the whole point of the row: the ceiling alone never said
   whether anyone was near it.
+- **`metrics.mail` is the #448 daily send budget (`mail.budgetState()`), and it
+  is PROCESS state, not database state** — each replica books its own counter,
+  so the card shows the answering process's share and the row's note must keep
+  saying so. It is not the retired "mail degrades to the outbox" config row
+  coming back: that reported *configuration* (same answer on every deploy),
+  this reports *usage today*. Two shape constraints: it stays **inside
+  `metrics`** (the payload's top-level keys are pinned to `metrics` + `quotas`,
+  and a top-level `mail` block is explicitly asserted gone), and it stays
+  **numbers-only** (`sent`/`limit`, never `budgetState()`'s `day` string — the
+  personal-data sweep types every metrics field as a number).
 - `assetsBuilt()` moved **into `lib/app.js`** with the assets row (#404); it has
   one caller there. The old "`status.js` must never require `lib/app.js`" cycle
   warning is moot — `lib/app.js` no longer requires `lib/status.js` at all.

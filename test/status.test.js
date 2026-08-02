@@ -26,13 +26,14 @@ const assert = require('node:assert/strict');
 require('./helpers'); // isolates DATA_DIR before the store is required
 const { instanceStatus } = require('../lib/status');
 const repo = require('../lib/repo');
+const mail = require('../lib/mail');
 
 // Save/restore so one case can't bleed into the next.
 const VARS = [
   'ACCOUNTS_ENABLED', 'SESSION_SECRET', 'AUTH_PASSWORD', 'ADMIN_PASSWORD',
   'SMTP_PASS', 'BGG_API_TOKEN', 'IMPRESSUM_ADDRESS', 'IMPRESSUM_EMAIL',
   'MAX_ROUNDS_PER_TENANT', 'MAX_GAMES_PER_ROUND', 'MAX_TAGS_PER_ROUND',
-  'MAX_LIVE_DEMOS', 'DEMO_ENABLED',
+  'MAX_LIVE_DEMOS', 'DEMO_ENABLED', 'MAIL_DAILY_MAX',
 ];
 
 async function withEnv(overrides, fn) {
@@ -162,6 +163,29 @@ test('the demo row reports the live count against the cap it is enforced by', as
   const s = await withEnv({ MAX_LIVE_DEMOS: '42' }, instanceStatus);
   assert.equal(s.metrics.demo.max, 42);
   assert.equal(typeof s.metrics.demo.live, 'number');
+});
+
+// The mail row surfaces the #448 daily send budget as sent/limit — the one
+// process-local number on the card (each replica carries its own counter, and
+// the panel reports whichever process answered). budgetState()'s `day` string
+// stays out on purpose: the PII sweep below pins every metrics field to a
+// number, and the value is always "today UTC" by construction anyway.
+test('the mail budget is reported as sent against the daily ceiling', async (t) => {
+  await t.test('the ceiling is read per call, never bound at module load', async () => {
+    const s = await withEnv({ MAIL_DAILY_MAX: '42' }, instanceStatus);
+    assert.equal(s.metrics.mail.limit, 42);
+    assert.equal(typeof s.metrics.mail.sent, 'number');
+  });
+
+  await t.test('a booked send moves the counter', async () => {
+    // Relative to the current count, never absolute: the counter is per-process
+    // with no reset hook, so sibling files' sends must not matter here
+    // (.claude/rules/bounding-bulk-registration-mail.md).
+    const before = (await instanceStatus()).metrics.mail.sent;
+    await mail.send({ to: 'budget@example.test', subject: 'Budget', text: 'Zähler' });
+    const after = (await instanceStatus()).metrics.mail.sent;
+    assert.equal(after, before + 1);
+  });
 });
 
 // The go-live checklist rows the card carried until #404. They answered the same

@@ -198,7 +198,7 @@
 
   // Each row is [label, verdict, value, note?]. A NULL verdict renders the
   // neutral pill — which is what a plain count gets, since "42 accounts" is not
-  // good or bad. Only the two rows measured against a ceiling carry an opinion,
+  // good or bad. Only the rows measured against a ceiling carry an opinion,
   // and deriving it HERE rather than server-side is deliberate: the server
   // reports facts, the panel interprets them, so a new opinion about what "good"
   // looks like never changes the API.
@@ -238,6 +238,13 @@
 
     rows.push(['Demo-Konten', capVerdict(m.demo.live, m.demo.max),
       `${m.demo.live} / ${m.demo.max}`, 'aktiv gegen MAX_LIVE_DEMOS']);
+
+    // The one process-local number on the card: each replica books its own
+    // budget (lib/mail.js), so this is the answering process's counter, not a
+    // sum over replicas — the note says so, or "17 / 200" reads as global.
+    rows.push(['Mail-Budget', capVerdict(m.mail.sent, m.mail.limit),
+      `${m.mail.sent} / ${m.mail.limit}`,
+      'gesendet heute (UTC) gegen MAIL_DAILY_MAX · zählt nur den antwortenden Prozess, nicht alle Replicas']);
 
     rows.push(['Teilen & Freunde', null,
       `${m.social.sharedRounds} · ${m.social.invitationsOpen} · ${m.social.friendships}`,
