@@ -73,7 +73,10 @@ function renderSessionLog(round, session) {
 
   const wrap = h(`<section class="session-log">
       <h2 class="session-log__title">${esc(t('log.title'))}</h2>
-      <ol class="session-log__list"></ol>
+      <!-- reversed: the rows run newest-first, so the implicit numbering counts
+           down. No marker is rendered (list-style: none), but the semantics are
+           free and a screen reader announces the positions correctly. -->
+      <ol class="session-log__list" reversed></ol>
     </section>`);
   const list = wrap.querySelector('.session-log__list');
   lines.forEach((line) => {

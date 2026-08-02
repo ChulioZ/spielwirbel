@@ -78,10 +78,11 @@ test('a deleted person or game degrades to a placeholder, never to a missing lin
       // vanished row would silently shorten the history.
       { at: 't', type: 'voted', actor: 'gone', personId: 'alsogone' },
     ]),
+    // Newest first, so this reads bottom-up against the input above.
     [
-      'log.votedFor(actor=Anna,name=log.someone)',
-      'log.chose(actor=Anna,game=log.aGame)',
       'log.votedFor(actor=log.someone,name=log.someone)',
+      'log.chose(actor=Anna,game=log.aGame)',
+      'log.votedFor(actor=Anna,name=log.someone)',
     ]
   );
 });
@@ -91,6 +92,21 @@ test('every declared event type renders a line', () => {
   const out = lines(events);
   assert.equal(out.length, Object.keys(SESSION_EVENTS).length);
   assert.equal(out.some((x) => x === '' || x.includes('undefined')), false, out.join(' | '));
+});
+
+// Newest first: the log is consulted to answer "what just happened", and on a
+// running session the newest line is the one the reader is waiting for. Stored
+// order stays append-order — the cap depends on it — so this is a display
+// concern and belongs in the builder.
+test('lines come back newest first', () => {
+  assert.deepEqual(
+    lines([
+      { at: '2026-08-02T18:00:00.000Z', type: 'started', actor: 'm1' },
+      { at: '2026-08-02T18:05:00.000Z', type: 'voted', actor: 'm1', personId: 'm1' },
+      { at: '2026-08-02T18:09:00.000Z', type: 'voting_closed', actor: 'm2' },
+    ]),
+    ['log.closed(actor=Ben)', 'log.votedSelf(name=Anna)', 'log.started(actor=Anna)']
+  );
 });
 
 // The silent half of client/server drift: a type the renderer has no phrase for

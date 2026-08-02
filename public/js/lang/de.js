@@ -409,6 +409,7 @@ I18N.de = {
   // auch im deaktivierten Zustand. Er darf nie klingen, als fehle der Runde
   // etwas: eine Runde aus Namen ohne Konten ist die normale Konfiguration.
   'startSession.deviceVoting': 'Am eigenen Gerät abstimmen',
+  'startSession.deviceVotingNoteOne': '{names} kann dann am eigenen Gerät abstimmen. Alle anderen stimmen hier ab.',
   'startSession.deviceVotingNote': '{names} können dann am eigenen Gerät abstimmen. Alle anderen stimmen hier ab.',
   'startSession.deviceVotingUnavailable': 'Dafür ist in dieser Session außer dir niemand mit einem Konto verknüpft.',
   'startSession.whichGames': 'Welche Spiele?',

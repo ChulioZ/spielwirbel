@@ -201,7 +201,11 @@ function showStartSession(round) {
     if (box.disabled) box.checked = false;
     deviceVote.classList.toggle('is-disabled', box.disabled);
     deviceVote.querySelector('.device-vote__note').textContent = others.length
-      ? t('startSession.deviceVotingNote', { names: joinNames(others.map((m) => m.name)) })
+      // tn(), not t(): German needs a singular verb for one name and a plural one
+      // for several, and a single string cannot carry both. English differs too
+      // (one device vs several).
+      ? tn(others.length, 'startSession.deviceVotingNoteOne', 'startSession.deviceVotingNote',
+        { names: joinNames(others.map((m) => m.name)) })
       : t('startSession.deviceVotingUnavailable');
   };
 

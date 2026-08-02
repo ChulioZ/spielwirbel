@@ -413,7 +413,8 @@ I18N.en = {
   // disabled state too. It must never read as though the round were missing
   // something: a round of names without accounts is the normal configuration.
   'startSession.deviceVoting': 'Vote on your own device',
-  'startSession.deviceVotingNote': '{names} can then vote on their own device. Everyone else votes here.',
+  'startSession.deviceVotingNoteOne': '{names} can then vote on their own device. Everyone else votes here.',
+  'startSession.deviceVotingNote': '{names} can then vote on their own devices. Everyone else votes here.',
   'startSession.deviceVotingUnavailable': 'Nobody else in this session has an account linked to their seat.',
   'startSession.whichGames': 'Which games?',
   'startSession.countLabel': 'How many games to draw?',
