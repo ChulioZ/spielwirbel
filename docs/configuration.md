@@ -273,6 +273,33 @@ is cached for a few seconds, so polling it cannot drive database load. Don't mak
 `/readyz` the *deploy* health check: a transient database blip would then
 restart-loop the container.
 
+### A filled local dev instance
+
+A fresh clone starts empty, so a UI change gets verified against a blank Regal,
+an empty Chronik and empty Pokale. `scripts/seed-dev.js` fills a **throwaway**
+dataset with the same content the guest demo uses — curated games with real
+cover art, tags, four seats and two finished sessions with votes:
+
+```bash
+node scripts/seed-dev.js        # seeds .devdata/ (German); `en` for English
+DATA_DIR=/tmp/x node scripts/seed-dev.js   # or any other throwaway folder
+```
+
+It refuses three things: a set **`DATABASE_URL`** (which would route the seed
+into Postgres, where `DATA_DIR` protects nothing), the default **`data/`**
+directory (which on a maintainer's machine can hold a real instance's data), and
+a target that already holds rounds or accounts (delete it and re-run rather than
+seeding on top). Stop any server running against the target first — a live
+server holds the dataset in memory and overwrites the file on its next save.
+
+It also creates one local account, `dev@spielwirbel.invalid` /
+`spielwirbel-dev`, whose tenant is the same `default` one the round belongs to.
+That is what makes the seed visible in **both** auth modes: unauthenticated when
+accounts are off, and after logging in as that account when they are on (which
+is what the committed `dev-temp-data` preview config runs). The credentials are
+deliberately worthless — they only ever exist inside a gitignored throwaway
+dataset, so never point the script at a dataset anyone else can reach.
+
 ### Configuration via a `.env` file
 
 All settings above are plain environment variables (see `.env.example` for the

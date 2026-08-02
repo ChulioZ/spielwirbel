@@ -45,6 +45,11 @@ In short, before opening a PR:
 
 ### Before you start
 
+- Run `node scripts/seed-dev.js` once. A fresh clone starts empty, so without it
+  you would verify UI changes against a blank app; it fills a throwaway
+  `.devdata/` (never the real `data/`, which it refuses) with a demo round and a
+  local login. Details in
+  [`docs/configuration.md`](docs/configuration.md#a-filled-local-dev-instance).
 - Read `CLAUDE.md` — it states the current stage, the architecture you must work
   within (no frontend build step, no framework, no ORM; German UI, English code),
   and the production-readiness mindset that applies to new work.
