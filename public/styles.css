@@ -4116,6 +4116,102 @@ kbd {
 .mood:hover { border-color: var(--brand); transform: translateY(-2px); }
 .mood.is-selected { color: #fff; transform: scale(1.08); }
 
+/* ---- Per-device voting (#209) ----
+   The setup toggle and the lobby that replaces the hot-seat wizard for a session
+   collecting votes from several devices. Named `live-vote`, deliberately NOT
+   `lobby-*`: that prefix is the HOME screen's round list (.lobby-list /
+   .lobby-head / .lobby-cta), and two unrelated "lobbies" in one stylesheet is
+   how a selector ends up styling the wrong screen. */
+
+/* Its own wrapper carrying the spacing a `.field` would have given it — the row
+   is a <label>, and `.field label` (0,1,1) beats `.ds-row` (0,1,0) and would
+   flatten it (.claude/rules/label-rows-lose-to-field-label.md). Same shape and
+   the same reason as .move-picker. */
+.device-vote { margin-bottom: 18px; }
+.device-vote__row { flex-wrap: nowrap; cursor: pointer; }
+.device-vote__row .ds-row__main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.device-vote__name { font-weight: 700; }
+.device-vote__note { font-size: var(--text-sm); }
+/* Both selectors repeat .device-vote so they are (0,3,0)/(0,3,1) and outrank
+   `.ds-row`/`.ds-row:hover` outright rather than tying and depending on source
+   order — the compounding lesson from .claude/rules/ds-row-is-a-click-target.md.
+   A disabled control must not keep promising a click. */
+.device-vote.is-disabled .ds-row { cursor: default; opacity: 0.55; }
+.device-vote.is-disabled .ds-row:hover { box-shadow: none; }
+
+.live-vote__people {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.live-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  min-width: 0;
+}
+/* A vote that is in should read as settled at a glance across the table, so the
+   whole chip takes the accent edge rather than only its state line. */
+.live-person.is-voted { border-color: var(--brand); background: var(--brand-tint-soft); }
+.live-person__avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  font-size: var(--text-sm);
+}
+.live-person__avatar--sm { width: 24px; height: 24px; font-size: var(--text-xs); }
+.live-person__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.live-person__state {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.live-person.is-voted .live-person__state { color: var(--brand-dark); }
+
+/* The session activity log. Deliberately quiet — it is a record you consult,
+   not something competing with the podium above it on the results screen. */
+.session-log { margin: 28px 0 8px; }
+.session-log__title { font-size: var(--text-lg); margin: 0 0 8px; }
+.session-log__list { list-style: none; margin: 0; padding: 0; }
+.session-log__row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 5px 0;
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+}
+/* Fixed, non-shrinking timestamp column so the sentences line up as a column of
+   their own rather than starting at a different x on every row. */
+.session-log__when { flex: none; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.session-log__what { min-width: 0; }
+
+.live-vote__actions { display: flex; flex-direction: column; gap: 12px; }
+.live-vote__done { margin: 0; }
+.live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }
+.live-vote__hotseat-btn { display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
+
 /* ---- Finale: the dark stage before the reveal ----
    All tones derive from the round's accent (see --stage-* in :root), so the
    curtain matches whatever design the round uses. */

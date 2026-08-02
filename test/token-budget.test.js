@@ -162,6 +162,7 @@ const RULE_ALLOW = {
   '.claude/rules/session-guests-are-not-members.md': 'judged — one learning ("a guest is a person without a member row") plus the ~10 sites that assumed otherwise. The enumeration is the rule, not padding around it',
   '.claude/rules/session-teams.md': 'judged — four traps over one feature, 18 lines over; no seam, and each trap is meaningless without the positional wire format in §1',
   '.claude/rules/noindex-vs-disallow-and-the-crawler-surface.md': 'judged — three mechanisms that are only correct TOGETHER (noindex vs Disallow, the SPA fallback, the vacuous assertion); separating them re-creates the trap the file exists to prevent',
+  '.claude/rules/shared-constants-across-the-stack.md': 'recorded 2026-08-03 — 161 lines, crossed by #209 adding the fourth inventory entry. A seam IS visible: the last two sections (the licensed TAG_ICONS copy, and the standalone-page design tokens with their PAGES parity test) are about when a COPY is acceptable, over a different file set (kontakt.html, login.html, lib/faq.js, test/standalone-page-brand.test.js) than the require-the-shared-file rule above them. Not split here because the file is cited by a dozen rules and a mid-feature split is the wrong PR for it — this entry is M-001\'s worklist item, not a shrug',
 };
 
 const SKILL_ALLOW = {

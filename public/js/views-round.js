@@ -263,21 +263,30 @@ function renderStartTab(round, activeGames) {
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
     .forEach((session) => {
       const n = (session.gameIds || []).length;
+      // A per-device session (#209) reads differently from an abandoned draw:
+      // nothing was interrupted, voting is simply still running somewhere else.
+      // Same ticket, two vocabularies — "resume" would be wrong on one of them.
+      const live = !!session.deviceVoting;
       const ticket = h(`<button class="ticket ticket--live">
            <span class="ticket__main">
              <span class="ticket__img"><i class="ti ti-tornado" aria-hidden="true"></i></span>
              <span class="ticket__info">
-               <span class="ticket__label">${esc(t('round.draftLabel'))}</span>
+               <span class="ticket__label">${esc(t(live ? 'round.liveLabel' : 'round.draftLabel'))}</span>
                <span class="ticket__title">${esc(tn(n, 'round.draftTitleOne', 'round.draftTitle'))}</span>
                <span class="ticket__meta">${esc(fmtDateTime(session.createdAt))}</span>
              </span>
            </span>
            <span class="ticket__stub">
              <i class="ti ti-player-play" aria-hidden="true"></i>
-             <span class="ticket__names">${esc(t('round.resumeVote'))}</span>
+             <span class="ticket__names">${esc(t(live ? 'round.liveVote' : 'round.resumeVote'))}</span>
            </span>
          </button>`);
       ticket.addEventListener('click', () => {
+        // A per-device session (#209) is not resumed — it was never abandoned.
+        // Its votes are on the server, arriving from whoever is voting where, so
+        // the ticket opens the lobby. This is the entry point every participant
+        // uses: open the app, tap the round, tap the ticket, vote.
+        if (session.deviceVoting) return showSessionLobby(round, session);
         const drawn = session.gameIds
           .map((gid) => round.games.find((g) => g.id === gid))
           .filter(Boolean);

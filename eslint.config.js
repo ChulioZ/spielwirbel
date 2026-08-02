@@ -62,6 +62,8 @@ const frontendGlobals = {
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
+  // session-log.js
+  SESSION_EVENTS: 'readonly', SESSION_LOG_MAX: 'readonly', sessionLogLines: 'readonly',
   partyName: 'readonly', teamsForPeople: 'readonly',
   sessionTeams: 'readonly', sessionParties: 'readonly',
   TEAM_TOKEN_MEMBER: 'readonly', TEAM_TOKEN_GUEST: 'readonly',
@@ -188,6 +190,10 @@ const frontendGlobals = {
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
+  // views-session-live.js
+  showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
+  sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',
+  renderSessionLog: 'readonly',
   // router.js
   routing: 'writable', navIndex: 'writable', roundPath: 'readonly',
   gamePath: 'readonly', memberPath: 'readonly', resultsPath: 'readonly',

@@ -103,6 +103,13 @@ lib/
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
+  session-votes.js   vote secrecy for a session collecting votes from several
+                     devices: strips the ratings already cast out of the round
+                     payload while voting is open, leaving only who has voted
+                     (issue #209)
+  session-events.js  writes the session activity log: builds one entry and
+                     appends it inside the repo mutator's own read-modify-write,
+                     so the log cannot drift from what it records (issue #209)
   demo.js            guest demo mode: mints, seeds and purges throwaway demo
                      accounts (issue #427; off unless DEMO_ENABLED)
   demo-seed.js       the content a demo tenant is seeded with — games (hotlinked
@@ -277,6 +284,9 @@ public/
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
                      lib/routes/members.js validates against (issue #420)
+    session-log.js   the session activity log's event types and their phrasing —
+                     one list, written by lib/session-events.js and rendered by
+                     the lobby and the results screen (issue #209)
     session-people.js who took part in ONE session (members who joined + that
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds
@@ -326,6 +336,9 @@ public/
     views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, voting (hot-seat), finale, results
+    views-session-live.js the per-device voting lobby: who has voted, vote for
+                     yourself or for anyone still open on this device, and end
+                     the voting (issue #209)
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
     views-friends.js Freundeskreis view + home feed section (#325) and the
                      account profile at /u/:username (#558; accounts mode only)

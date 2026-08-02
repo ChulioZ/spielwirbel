@@ -142,6 +142,21 @@ What the app does, in detail. For a short overview see the
   then passed around: a handover screen names whose turn it is, and each member
   rates every drawn game **1–5** or proposes to retire it (member order is
   randomized).
+- **Voting from your own device** – optional per session, off unless switched on
+  at the draw. Instead of one device going round the table, the session opens a
+  lobby that shows who has voted and who has not: anyone whose seat is linked to
+  their account can open the round on their own phone and rate the drawn games
+  there, while everyone else votes on the device the session was started from,
+  exactly as before. Nobody has to be assigned a place beforehand — whoever is
+  holding a device votes with it — and the ratings stay secret until someone
+  ends the voting, which anyone in the round can do, so a missing player or a
+  flat battery never strands the evening.
+- **What happened in a session** – every session keeps a short record of who
+  started it, whose votes were submitted by whom, who ended the voting and who
+  recorded the result, shown while voting runs and again under the results. It
+  names the account that acted, not the device: "Anna voted for Ben" is something
+  the app can actually know, "Ben voted on Anna's device" is not. Shared-device
+  sessions keep it too, so the list always reads as complete.
 - **Guests** – a visitor who isn't part of the group can be named on the setup
   screen: they count toward the player range the draw filters by, take their own
   hot-seat turn, can be recorded as a winner, and stay in that session's record

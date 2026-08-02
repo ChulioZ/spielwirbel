@@ -50,7 +50,18 @@ clip names with **no error anywhere**, i.e. the palette bug's failure mode minus
 even the eventual 400 that exposed it. See
 `.claude/rules/session-guests-are-not-members.md`.
 
-Each new instance must be named in this inventory — the three paragraphs above.
+**The fourth is `public/js/session-log.js`** (#209): `SESSION_EVENTS`, the session
+activity log's event types mapped to the i18n keys that phrase them, written by
+`lib/session-events.js` and rendered by the lobby and the results screen. It
+inverts the direction of the three above — here the **server writes** the value
+and the **client renders** it — and that inversion is what makes it belong here
+rather than being left as two lists: an event type the client has no phrase for
+renders as **nothing at all**, so the session log would quietly lose entries with
+no error, no 400, and a screen that still looks finished. The write end drops an
+unknown type for the same reason `trackEvent` does
+(`.claude/rules/product-event-logging.md`).
+
+Each new instance must be named in this inventory — the four paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

@@ -76,6 +76,10 @@ I18N.en = {
   'round.draftTitleOne': '{n} game drawn',
   'round.draftTitle': '{n} games drawn',
   'round.resumeVote': 'Continue voting',
+  // A per-device session (#209): nothing was interrupted, voting is simply
+  // still running elsewhere — hence "now" rather than "continue".
+  'round.liveLabel': 'Vote in progress',
+  'round.liveVote': 'Vote now',
   'round.draftDiscard': 'Discard this vote',
   'round.draftDiscardConfirm': 'Discard this started vote? The draw will be deleted.',
   'round.toast.draftDiscarded': 'Vote discarded',
@@ -405,6 +409,12 @@ I18N.en = {
   'startSession.teamMake': 'Form a team',
   'startSession.teamDissolve': 'Dissolve team {name}',
   'startSession.toast.teamMin': 'A team needs at least {n} people',
+  // Per-device voting (#209). The note describes what the feature does, in the
+  // disabled state too. It must never read as though the round were missing
+  // something: a round of names without accounts is the normal configuration.
+  'startSession.deviceVoting': 'Vote on your own device',
+  'startSession.deviceVotingNote': '{names} can then vote on their own device. Everyone else votes here.',
+  'startSession.deviceVotingUnavailable': 'Nobody else in this session has an account linked to their seat.',
   'startSession.whichGames': 'Which games?',
   'startSession.countLabel': 'How many games to draw?',
   'startSession.available': '{n} games in the pot',
@@ -413,6 +423,38 @@ I18N.en = {
   'startSession.draw': 'Start the vote',
   'startSession.toast.noGames': 'No matching games available',
   'startSession.toast.noMembers': 'At least one player must join',
+  // The lobby of a per-device session (#209): it shows WHO has voted, never
+  // WHAT — the ratings stay secret until the finale.
+  'lobby.crumb': 'Voting',
+  'lobby.title': 'Voting in progress',
+  'lobby.sub': '{n} games drawn. Once everyone has voted, the finale begins.',
+  'lobby.subOne': '{n} game drawn. Once everyone has voted, the finale begins.',
+  'lobby.voted': 'voted',
+  'lobby.waiting': 'waiting',
+  'lobby.voteNow': 'Vote now',
+  'lobby.yourVoteIn': 'Your vote is in. Waiting for the others.',
+  'lobby.hereLabel': 'Vote on this device',
+  'lobby.voteHere': 'For {name}',
+  'lobby.close': 'End voting',
+  'lobby.closeConfirm': '{n} votes are still missing. End voting anyway?',
+  // The session log (#209). It names the ACCOUNT, never the device: the server
+  // sees which account sent a request and cannot know who was holding the
+  // hardware. "Anna voted for Ben" is therefore something we can stand behind;
+  // "Ben voted on Anna's device" is not.
+  'log.title': 'What happened',
+  'log.someone': 'Someone',
+  'log.aGame': 'a game',
+  'log.started': '{actor} started the session',
+  'log.votedSelf': '{name} voted',
+  'log.votedFor': '{actor} voted for {name}',
+  'log.closed': '{actor} ended the voting',
+  'log.chose': '{actor} picked {game}',
+  'log.unchose': '{actor} undid the game pick',
+  'log.removedGame': '{actor} removed {game} from the session',
+  'log.finished': '{actor} recorded the result',
+  'log.unfinished': '{actor} undid the result',
+  'log.cancelled': '{actor} cancelled the session',
+  'log.uncancelled': '{actor} undid the cancellation',
 
   'directPlay.button': 'Play now',
   'directPlay.title': 'Play “{title}”',
@@ -779,7 +821,7 @@ I18N.en = {
   'landing.features.shelf.title': 'One shelf for everything',
   'landing.features.shelf.desc': 'Board games and video games side by side – with covers from BoardGameGeek, Steam, PlayStation, Nintendo and Xbox.',
   'landing.features.vote.title': 'The group decides',
-  'landing.features.vote.desc': 'Spielwirbel draws the candidates, the device goes around, everyone rates on their own. No more quarter-hour debate.',
+  'landing.features.vote.desc': 'Spielwirbel draws the candidates, the device goes around, everyone rates on their own. No more quarter-hour debate. Anyone with an account can rate from their own device instead.',
   'landing.features.ratings.title': 'Every vote counts twice',
   'landing.features.ratings.desc': 'The same rating picks tonight and then stays: an average per game, your favourites, your shelf-warmers.',
   'landing.features.chronicle.title': 'Your play history',
