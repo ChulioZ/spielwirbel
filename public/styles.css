@@ -4189,6 +4189,24 @@ kbd {
 }
 .live-person.is-voted .live-person__state { color: var(--brand-dark); }
 
+/* The session activity log. Deliberately quiet — it is a record you consult,
+   not something competing with the podium above it on the results screen. */
+.session-log { margin: 28px 0 8px; }
+.session-log__title { font-size: var(--text-lg); margin: 0 0 8px; }
+.session-log__list { list-style: none; margin: 0; padding: 0; }
+.session-log__row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 5px 0;
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+}
+/* Fixed, non-shrinking timestamp column so the sentences line up as a column of
+   their own rather than starting at a different x on every row. */
+.session-log__when { flex: none; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.session-log__what { min-width: 0; }
+
 .live-vote__actions { display: flex; flex-direction: column; gap: 12px; }
 .live-vote__done { margin: 0; }
 .live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }

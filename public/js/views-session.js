@@ -1059,6 +1059,15 @@ async function showResults(round, session, gamesHint, reveal) {
 
   updateChosen();
 
+  // What happened during this session (#209), between the games and the
+  // destructive action: a hybrid evening's votes can come from several people's
+  // accounts, so the results are only half the story without it. Rendered by
+  // views-session-live.js — a later file in the load order, which is fine
+  // because this runs on navigation, never at load time
+  // (.claude/rules/frontend-script-load-order.md).
+  const sessionLog = renderSessionLog(round, session);
+  if (sessionLog) app.appendChild(sessionLog);
+
   // Delete session — subtle, but ABOVE the terminal "Zurück" row (#561). It used
   // to sit below it, copying the round delete that ended the Chronik timeline;
   // that placement is gone, and nothing belongs after a back link.

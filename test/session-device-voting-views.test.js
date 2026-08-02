@@ -172,6 +172,73 @@ test('the close button is offered to everyone, seat or not', async (t) => {
   assert.ok(dom.app.querySelector('.live-vote__close'));
 });
 
+// ------------------------------------------------------------ the activity log
+
+const LOG_EVENTS = [
+  { at: '2026-08-02T18:00:00.000Z', type: 'started', actor: 'm1' },
+  { at: '2026-08-02T18:05:00.000Z', type: 'voted', actor: 'm1', personId: 'm1' },
+  { at: '2026-08-02T18:07:00.000Z', type: 'voted', actor: 'm1', personId: 'm3' },
+  { at: '2026-08-02T18:09:00.000Z', type: 'voted', actor: 'm2', personId: 'm2' },
+];
+
+test('the lobby shows what has happened so far', async (t) => {
+  const dom = await lobby(t, { session: sessionFixture({ events: LOG_EVENTS, votedIds: ['m1', 'm2', 'm3'] }) });
+  const rows = [...dom.app.querySelectorAll('.session-log__row .session-log__what')].map(textOf);
+  assert.deepEqual(rows, [
+    'Anna hat die Session gestartet',
+    'Anna hat abgestimmt',
+    // The distinction the log exists for: Anna submitted Chris's column…
+    'Anna hat für Chris abgestimmt',
+    // …while Ben's came from Ben's own account.
+    'Ben hat abgestimmt',
+  ]);
+});
+
+// It is a record, not a live surface — the timestamps are what let someone
+// reconstruct the evening, so each row must carry one.
+test('every log row carries a timestamp', async (t) => {
+  const dom = await lobby(t, { session: sessionFixture({ events: LOG_EVENTS }) });
+  const stamps = [...dom.app.querySelectorAll('.session-log__when')].map(textOf);
+  assert.equal(stamps.length, LOG_EVENTS.length);
+  assert.equal(stamps.every((s) => s && s.length > 4), true, stamps.join(' | '));
+});
+
+// A session drawn before this shipped has no `events` key at all; the section
+// must be absent rather than an empty heading with nothing under it.
+test('a session with no log renders no log section', async (t) => {
+  const dom = await lobby(t, { session: sessionFixture() });
+  assert.equal(dom.app.querySelector('.session-log'), null);
+});
+
+// The operator asked for it on the results screen too, and specifically before
+// the destructive action rather than after it.
+test('the results screen carries the same log, above the delete link', async (t) => {
+  const round = roundFixture();
+  const session = sessionFixture({
+    events: LOG_EVENTS, done: true, votes: { m1: { g1: { rating: 5, retire: false } } },
+  });
+  round.sessions = [session];
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', async () => round);
+  dom.set('isLoggedIn', () => true);
+  dom.set('currentUserId', () => ME);
+  await dom.call('showResults', round, session);
+
+  const log = dom.app.querySelector('.session-log');
+  assert.ok(log, 'expected the log on the results screen');
+  assert.equal(log.querySelectorAll('.session-log__row').length, 4);
+
+  // Placement: the log must precede the delete affordance in document order.
+  const del = [...dom.app.querySelectorAll('.link-btn')].find((b) => /löschen/i.test(b.textContent));
+  assert.ok(del, 'expected the delete-session link');
+  assert.equal(
+    log.compareDocumentPosition(del) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING,
+    dom.window.Node.DOCUMENT_POSITION_FOLLOWING,
+    'the log should come before the delete link, not after it',
+  );
+});
+
 // ------------------------------------------------------------ the setup toggle
 
 test('the toggle is enabled and names who could vote remotely', async (t) => {

@@ -437,6 +437,24 @@ I18N.en = {
   'lobby.voteHere': 'For {name}',
   'lobby.close': 'End voting',
   'lobby.closeConfirm': '{n} votes are still missing. End voting anyway?',
+  // The session log (#209). It names the ACCOUNT, never the device: the server
+  // sees which account sent a request and cannot know who was holding the
+  // hardware. "Anna voted for Ben" is therefore something we can stand behind;
+  // "Ben voted on Anna's device" is not.
+  'log.title': 'What happened',
+  'log.someone': 'Someone',
+  'log.aGame': 'a game',
+  'log.started': '{actor} started the session',
+  'log.votedSelf': '{name} voted',
+  'log.votedFor': '{actor} voted for {name}',
+  'log.closed': '{actor} ended the voting',
+  'log.chose': '{actor} picked {game}',
+  'log.unchose': '{actor} undid the game pick',
+  'log.removedGame': '{actor} removed {game} from the session',
+  'log.finished': '{actor} recorded the result',
+  'log.unfinished': '{actor} undid the result',
+  'log.cancelled': '{actor} cancelled the session',
+  'log.uncancelled': '{actor} undid the cancellation',
 
   'directPlay.button': 'Play now',
   'directPlay.title': 'Play “{title}”',

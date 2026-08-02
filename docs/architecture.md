@@ -107,6 +107,9 @@ lib/
                      devices: strips the ratings already cast out of the round
                      payload while voting is open, leaving only who has voted
                      (issue #209)
+  session-events.js  writes the session activity log: builds one entry and
+                     appends it inside the repo mutator's own read-modify-write,
+                     so the log cannot drift from what it records (issue #209)
   demo.js            guest demo mode: mints, seeds and purges throwaway demo
                      accounts (issue #427; off unless DEMO_ENABLED)
   demo-seed.js       the content a demo tenant is seeded with — games (hotlinked
@@ -281,6 +284,9 @@ public/
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
                      lib/routes/members.js validates against (issue #420)
+    session-log.js   the session activity log's event types and their phrasing —
+                     one list, written by lib/session-events.js and rendered by
+                     the lobby and the results screen (issue #209)
     session-people.js who took part in ONE session (members who joined + that
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds

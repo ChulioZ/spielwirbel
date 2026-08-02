@@ -433,6 +433,24 @@ I18N.de = {
   'lobby.voteHere': 'Für {name}',
   'lobby.close': 'Abstimmung beenden',
   'lobby.closeConfirm': 'Es fehlen noch {n} Stimmen. Abstimmung trotzdem beenden?',
+  // Der Session-Verlauf (#209). Er benennt das KONTO, nicht das Gerät: der
+  // Server sieht, welcher Account eine Anfrage geschickt hat, und kann nicht
+  // wissen, wer das Gerät gerade in der Hand hielt. „Anna hat für Ben
+  // abgestimmt" ist deshalb belegbar, „Ben hat an Annas Gerät abgestimmt" nicht.
+  'log.title': 'Verlauf',
+  'log.someone': 'Jemand',
+  'log.aGame': 'ein Spiel',
+  'log.started': '{actor} hat die Session gestartet',
+  'log.votedSelf': '{name} hat abgestimmt',
+  'log.votedFor': '{actor} hat für {name} abgestimmt',
+  'log.closed': '{actor} hat die Abstimmung beendet',
+  'log.chose': '{actor} hat {game} ausgewählt',
+  'log.unchose': '{actor} hat die Spielauswahl zurückgenommen',
+  'log.removedGame': '{actor} hat {game} aus der Session entfernt',
+  'log.finished': '{actor} hat das Ergebnis eingetragen',
+  'log.unfinished': '{actor} hat das Ergebnis zurückgenommen',
+  'log.cancelled': '{actor} hat die Session abgebrochen',
+  'log.uncancelled': '{actor} hat den Abbruch zurückgenommen',
 
   'directPlay.button': 'Jetzt spielen',
   'directPlay.title': '„{title}“ spielen',

@@ -47,6 +47,44 @@ function sessionGames(round, session) {
   return (session.gameIds || []).map((gid) => round.games.find((g) => g.id === gid)).filter(Boolean);
 }
 
+/* The session activity log (#209), rendered identically in the lobby and at the
+   foot of the results screen — one builder, so a session reads the same during
+   and after it.
+
+   Shown for EVERY session, not only per-device ones. On a shared-device evening
+   it says little ("Julian started the session, Julian voted for Anna, …") and
+   that is the point: the reader should not have to know which kind of session
+   they are looking at to know that the list is complete.
+
+   Names are resolved from the round's members plus this session's guests, and
+   the ACTOR may be a member who is not playing at all (someone can draw a
+   session they sit out), which is why the lookup is not simply sessionPeople().
+   Anything since deleted falls back to a neutral placeholder rather than
+   disappearing — a missing line would silently shorten the history. */
+function renderSessionLog(round, session) {
+  const byId = new Map((round.members || []).map((m) => [m.id, m.name]));
+  (session.guests || []).forEach((g) => byId.set(g.id, personLabel({ name: g.name, guest: true })));
+  const lines = sessionLogLines(session, {
+    name: (id) => byId.get(id) || null,
+    title: (gid) => (round.games.find((g) => g.id === gid) || {}).title || null,
+    t,
+  });
+  if (!lines.length) return null;
+
+  const wrap = h(`<section class="session-log">
+      <h2 class="session-log__title">${esc(t('log.title'))}</h2>
+      <ol class="session-log__list"></ol>
+    </section>`);
+  const list = wrap.querySelector('.session-log__list');
+  lines.forEach((line) => {
+    list.appendChild(h(`<li class="session-log__row">
+        <span class="session-log__when">${esc(fmtDateTime(line.at))}</span>
+        <span class="session-log__what">${esc(line.text)}</span>
+      </li>`));
+  });
+  return wrap;
+}
+
 function showSessionLobby(round, session) {
   currentView = () => showSessionLobby(round, session);
   // Arriving here always ends any wizard: either we just came out of one, or we
@@ -186,6 +224,10 @@ function showSessionLobby(round, session) {
     }
   });
   actions.appendChild(close);
+
+  // Below the actions: what you can do comes first, what already happened after.
+  const log = renderSessionLog(round, session);
+  if (log) root.appendChild(log);
 
   app.appendChild(root);
 

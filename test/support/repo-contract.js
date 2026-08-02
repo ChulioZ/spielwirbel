@@ -812,6 +812,43 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.closeSessionVoting(T, round.id, 'missing'), null);
   });
 
+  // The session activity log (#209) is appended by `withSession` itself, so it
+  // rides along with EVERY session mutator rather than being written by one of
+  // them. That is what makes it atomic with what it records — and it is also why
+  // it needs a contract case: a backend whose withSession forgot the append
+  // would still pass every other session assertion in this file.
+  test('session events append through the mutators and survive them', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const session = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null,
+      done: false, deviceVoting: true,
+      events: [{ at: 't0', type: 'started', actor: 'm1' }],
+    });
+    assert.deepEqual((await repo.getSession(T, round.id, session.id)).events.map((e) => e.type), ['started']);
+
+    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 4, retire: false } },
+      { at: 't1', type: 'voted', actor: 'm1', personId: 'm1' });
+    await repo.closeSessionVoting(T, round.id, session.id, { at: 't2', type: 'voting_closed', actor: 'm2' });
+    await repo.setSessionChoice(T, round.id, session.id, g.id, { at: 't3', type: 'game_chosen', actor: 'm1', gameId: g.id });
+
+    const after = await repo.getSession(T, round.id, session.id);
+    assert.deepEqual(after.events.map((e) => e.type), ['started', 'voted', 'voting_closed', 'game_chosen']);
+    // The payloads have to round-trip too, or the log renders placeholders.
+    assert.equal(after.events[1].personId, 'm1');
+    assert.equal(after.events[2].actor, 'm2');
+    assert.equal(after.events[3].gameId, g.id);
+    // The mutation itself still happened alongside its entry.
+    assert.equal(after.done, true);
+    assert.equal(after.chosenGameId, g.id);
+
+    // A mutator called with no event leaves the log exactly as it was — which is
+    // every pre-#209 call site, and every session drawn before this shipped.
+    await repo.cancelSession(T, round.id, session.id, true);
+    assert.equal((await repo.getSession(T, round.id, session.id)).events.length, 4);
+  });
+
   test('setBackground returns the previous design and stores the new one', async () => {
     const round = await freshRound();
     const first = await repo.setBackground(T, round.id, { type: 'theme', page: 'p', accent: 'a' });
