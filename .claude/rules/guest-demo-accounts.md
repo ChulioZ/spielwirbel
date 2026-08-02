@@ -26,10 +26,11 @@ them. The obvious implementation passes a flag from each call site into
 
 - **A call site can forget.** There are five today and the next one is written by
   someone who has never heard of demo mode.
-- **In-memory state classifies inconsistently.** Production runs **two replicas**
-  (#215), so a registry of demo tenant ids built at mint time is only known to the
-  replica that minted it; the same tenant would be excluded or not depending on
-  which replica answered the request.
+- **In-memory state classifies inconsistently.** The deployment can run
+  **multiple replicas** (#215 — and has; the replica count is an ops dial, not a
+  code fact), so a registry of demo tenant ids built at mint time would only be
+  known to the replica that minted it; the same tenant would be excluded or not
+  depending on which replica answered the request.
 
 So the classification rides on the tenant id itself — `demo-<16 hex>` versus a
 real tenant's bare 16 hex, which cannot collide — and `trackEvent` skips it in one
@@ -150,8 +151,8 @@ suffices), the deep link passes nothing.
   `createApp()` dozens of times; a timer there keeps `node --test` alive after the
   last assertion — a hung CI run with no failing test pointing at it. Jobs are
   exported and directly runnable (`runJob(name)`) so a test never waits on a timer.
-- **The purge is idempotent**, which is what makes two replicas both running it
-  safe rather than merely tolerated: it re-reads what is expired each tick, and
+- **The purge is idempotent**, which is what makes multiple replicas all running
+  it safe rather than merely tolerated: it re-reads what is expired each tick, and
   `eraseAccount` on an already-erased id answers null.
 - **A demo row with no `demoExpiresAt` reads as EXPIRED, never live.** Counted as
   live it would hold a capacity slot forever; never listed it would leak rows. The

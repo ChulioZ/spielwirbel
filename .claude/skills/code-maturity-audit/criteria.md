@@ -100,8 +100,8 @@ not a finding; the rejected entries below are that ledger.
 
 ### M-006 — State that must be correct across the deployment lives in the store, not process memory
 - **Status:** adopted · 2026-07-29
-- **Source:** `.claude/rules/guest-demo-accounts.md` §1 (production runs two
-  replicas) · `docs/production-readiness.md` §7 item 5
+- **Source:** `.claude/rules/guest-demo-accounts.md` §1 (the deployment can run
+  multiple replicas) · `docs/production-readiness.md` §7 item 5
 - **Check:** Sweep module-level mutable state (module-scope counters, Maps,
   caches) in `lib/` and `lib/routes/`. Classify each instance: (a) correct
   per-process by design; (b) a **documented accepted trade-off** — the
@@ -222,11 +222,11 @@ not a finding; the rejected entries below are that ledger.
 
 ### M-R06 — "Adopt <enterprise pattern> because production SaaS" — meta-criterion
 - **Status:** rejected · 2026-07-29
-- **Why:** The scale anchor is one operator, two replicas, a ~€25–50/month cost
-  envelope. Kubernetes, microservices, an IdP migration, event sourcing, CQRS,
-  a service mesh — each becomes a criterion only when it solves a problem this
-  app has *at its actual scale*, and the research phase must name that
-  problem. The mirror of claude-file-audit's C-R02: a capability is not a
+- **Why:** The scale anchor is one operator, a single-digit replica count, a
+  ~€25–50/month cost envelope. Kubernetes, microservices, an IdP migration,
+  event sourcing, CQRS, a service mesh — each becomes a criterion only when it
+  solves a problem this app has *at its actual scale*, and the research phase
+  must name that problem. The mirror of claude-file-audit's C-R02: a capability is not a
   requirement. §8 of `docs/production-readiness.md` already rejected the
   infrastructure tier of this list explicitly.
 
