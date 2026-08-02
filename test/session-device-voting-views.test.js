@@ -184,13 +184,15 @@ const LOG_EVENTS = [
 test('the lobby shows what has happened so far', async (t) => {
   const dom = await lobby(t, { session: sessionFixture({ events: LOG_EVENTS, votedIds: ['m1', 'm2', 'm3'] }) });
   const rows = [...dom.app.querySelectorAll('.session-log__row .session-log__what')].map(textOf);
+  // Newest first: on a running session the latest line is the one being waited
+  // for, so it must not be at the bottom of a list that grows all evening.
   assert.deepEqual(rows, [
-    'Anna hat die Session gestartet',
-    'Anna hat abgestimmt',
-    // The distinction the log exists for: Anna submitted Chris's column…
-    'Anna hat für Chris abgestimmt',
-    // …while Ben's came from Ben's own account.
+    // Ben's came from Ben's own account…
     'Ben hat abgestimmt',
+    // …while Anna submitted Chris's column.
+    'Anna hat für Chris abgestimmt',
+    'Anna hat abgestimmt',
+    'Anna hat die Session gestartet',
   ]);
 });
 
@@ -247,12 +249,32 @@ test('the toggle is enabled and names who could vote remotely', async (t) => {
   assert.ok(box, 'expected the per-device toggle to render');
   assert.equal(box.disabled, false);
   // Ben is linked and is not me; Anna is my own seat, Chris is name-only.
-  assert.match(textOf(dom.app.querySelector('.device-vote__note')), /Ben/);
+  // ONE other person, so the German has to be singular — „Ben kann", not
+  // „Ben können", which is what a naive single string produces.
+  assert.equal(
+    textOf(dom.app.querySelector('.device-vote__note')),
+    'Ben kann dann am eigenen Gerät abstimmen. Alle anderen stimmen hier ab.'
+  );
   assert.equal(dom.app.querySelector('.device-vote').classList.contains('is-disabled'), false);
 });
 
 // The gate: with no OTHER linked seat there is nothing to distribute, because
 // the only linked person is already holding this device.
+test('two other linked members make the note plural', async (t) => {
+  const round = roundFixture({
+    members: [
+      { id: 'm1', name: 'Anna', userId: ME },
+      { id: 'm2', name: 'Ben', userId: FRIEND },
+      { id: 'm3', name: 'Chris', userId: 'user-third' },
+    ],
+  });
+  const dom = await setup(t, { round });
+  assert.equal(
+    textOf(dom.app.querySelector('.device-vote__note')),
+    'Ben und Chris können dann am eigenen Gerät abstimmen. Alle anderen stimmen hier ab.'
+  );
+});
+
 test('the toggle disables itself when nobody else is linked', async (t) => {
   const round = roundFixture({
     members: [{ id: 'm1', name: 'Anna', userId: ME }, { id: 'm2', name: 'Ben' }],

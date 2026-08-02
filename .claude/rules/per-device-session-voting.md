@@ -109,6 +109,12 @@ The log is shown for shared-device sessions too, where it says little. That is
 deliberate: a reader should not have to know which kind of session they are
 looking at in order to know the list is complete.
 
+**It renders newest-first, and the reversal belongs in the BUILDER.** The stored
+array must stay append-ordered, because `pushSessionEvents` bounds it with
+`slice(-MAX)` — reverse it at the write end and the cap starts dropping the
+newest entries instead of the oldest, which is invisible until a session runs
+long enough to hit 200.
+
 ## Smaller things
 
 - **The lobby's poll teardown is DOM containment.** There is no unmount hook, so
