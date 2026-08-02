@@ -132,6 +132,32 @@ test('refuses the default data/ directory given as an absolute path', () => {
   assert.match(res.stderr, /refusing to seed the default data/);
 });
 
+test('refuses to run against a Postgres backend', () => {
+  // The sharpest failure mode this script has. lib/repo picks the POSTGRES
+  // backend whenever DATABASE_URL is set, and then DATA_DIR addresses nothing:
+  // both guards above inspect a JSON file that the run would never touch, so an
+  // empty/absent one waves the seed straight through into a live database —
+  // planting a round and, worse, an account whose credentials are published in
+  // this repo. Refuse before requiring anything.
+  const dir = tempTarget();
+  try {
+    const res = spawnSync(process.execPath, [SCRIPT], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      // A syntactically valid URL pointing nowhere: if the guard is missing, the
+      // run gets far enough to try connecting, which is exactly the reach this
+      // test denies. Asserting only on a non-zero exit would pass VACUOUSLY on
+      // that connection error, so the message is the real assertion.
+      env: { ...process.env, DATA_DIR: dir, DATABASE_URL: 'postgres://u:p@127.0.0.1:1/nope' },
+    });
+    assert.notEqual(res.status, 0);
+    assert.match(res.stderr, /DATABASE_URL/,
+      'must refuse by naming DATABASE_URL, not fail later on a connection error');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('refuses a target that already holds data', () => {
   const dir = tempTarget();
   try {

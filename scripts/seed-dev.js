@@ -81,6 +81,19 @@ function existingData(dir) {
 
 async function main() {
   const locale = (process.argv[2] || 'de').toLowerCase();
+
+  // FIRST, because it decides whether the rest of this function means anything.
+  // lib/repo picks the Postgres backend whenever DATABASE_URL is set, and then
+  // DATA_DIR addresses nothing at all: both guards below inspect a JSON file the
+  // run would never touch, so an empty one waves the seed into a live database —
+  // planting a round and an account whose password is published in this repo.
+  // This script is a JSON-backend, local-dev tool by construction.
+  if (process.env.DATABASE_URL) {
+    fail('DATABASE_URL is set, which routes every write to the Postgres backend —\n'
+      + '  where the DATA_DIR guards below cannot protect anything. This script only\n'
+      + '  ever seeds a local JSON dataset. Unset DATABASE_URL and re-run.');
+  }
+
   const target = path.resolve(process.env.DATA_DIR || DEFAULT_TARGET);
 
   if (target === FORBIDDEN_TARGET) {

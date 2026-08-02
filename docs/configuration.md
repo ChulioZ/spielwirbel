@@ -285,11 +285,12 @@ node scripts/seed-dev.js        # seeds .devdata/ (German); `en` for English
 DATA_DIR=/tmp/x node scripts/seed-dev.js   # or any other throwaway folder
 ```
 
-It **refuses the default `data/` directory**, which on a maintainer's machine
-can hold a real instance's data, and refuses a target that already holds
-rounds or accounts (delete it and re-run rather than seeding on top). Stop any
-server running against the target first — a live server holds the dataset in
-memory and overwrites the file on its next save.
+It refuses three things: a set **`DATABASE_URL`** (which would route the seed
+into Postgres, where `DATA_DIR` protects nothing), the default **`data/`**
+directory (which on a maintainer's machine can hold a real instance's data), and
+a target that already holds rounds or accounts (delete it and re-run rather than
+seeding on top). Stop any server running against the target first — a live
+server holds the dataset in memory and overwrites the file on its next save.
 
 It also creates one local account, `dev@spielwirbel.invalid` /
 `spielwirbel-dev`, whose tenant is the same `default` one the round belongs to.
