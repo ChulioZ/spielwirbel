@@ -89,6 +89,8 @@ npm run lint          # ESLint (flat config)
 npm run check:syntax  # node --check over all JS files
 npm run build         # optional: content-hash + minify js/css into dist/
 npm run migrate       # apply pending Postgres migrations (needs DATABASE_URL)
+
+node scripts/seed-dev.js   # fill a throwaway .devdata/ with a demo round
 ```
 
 There is **no build step for development** — `npm start` serves `public/`

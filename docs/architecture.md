@@ -336,6 +336,12 @@ public/
 scripts/
   build.js           optional cache-busting build: mirrors public/ into dist/
                      with content-hashed, minified js/css (npm run build)
+  seed-dev.js        fills a throwaway DATA_DIR (.devdata/ by default) with the
+                     guest demo's round + a local dev account, so a fresh clone
+                     has something to look at; refuses the real data/
+  resolve-demo-covers.js
+                     re-resolves the demo seed's cover hotlinks against the
+                     providers and prints a DEMO_GAMES block for lib/demo-seed.js
 test/                automated tests (node --test + supertest); view specs
                      run the real frontend under jsdom (test/support/dom.js)
 data/                all user data (git-ignored)
