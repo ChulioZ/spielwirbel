@@ -41,7 +41,9 @@
        hold private data and are not indexable anyway, so the canonical is the
        public front door. -->
   <link rel="canonical" href="https://spielwirbel.app/" />
-  <!-- PWA (issue #142): installable + offline. theme-color matches --brand. -->
+  <!-- PWA (issue #142): installable + offline. theme-color matches --brand —
+       the value below is the standard accent, and applyBackground() (core.js)
+       moves it to the round's accent and back (#523). -->
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#c2410c" />
   <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />

@@ -55,7 +55,7 @@ const frontendGlobals = {
   gameStatsForSession: 'readonly', gameStats: 'readonly',
   retireRecommendations: 'readonly', minimizedRecs: 'readonly',
   STANDARD_ACCENT: 'readonly',
-  applyBackground: 'readonly', avgColor: 'readonly',
+  applyBackground: 'readonly', setThemeColor: 'readonly', avgColor: 'readonly',
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', initials: 'readonly',
   personColor: 'readonly',
   renderSeatPicker: 'readonly', renderGuestPicker: 'readonly', renderTeamPicker: 'readonly',
