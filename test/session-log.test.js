@@ -94,8 +94,6 @@ test('every declared event type renders a line', () => {
   assert.equal(out.some((x) => x === '' || x.includes('undefined')), false, out.join(' | '));
 });
 
-// The silent half of client/server drift: a type the renderer has no phrase for
-// would simply not appear, with no error anywhere.
 // Newest first: the log is consulted to answer "what just happened", and on a
 // running session the newest line is the one the reader is waiting for. Stored
 // order stays append-order — the cap depends on it — so this is a display
@@ -111,6 +109,8 @@ test('lines come back newest first', () => {
   );
 });
 
+// The silent half of client/server drift: a type the renderer has no phrase for
+// would simply not appear, with no error anywhere.
 test('an unknown event type is dropped rather than rendered blank', () => {
   assert.deepEqual(lines([{ at: 't', type: 'teleported', actor: 'm1' }]), []);
 });

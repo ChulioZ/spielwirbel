@@ -55,11 +55,12 @@ const SESSION_LOG_MAX = 200;
 
 /* One line per event, NEWEST FIRST.
 
-   The stored array stays append-ordered - `pushSessionEvents` bounds it with
-   `slice(-MAX)`, which only drops the oldest while that holds - so the reversal
+   The stored array stays append-ordered — `pushSessionEvents` bounds it with
+   `slice(-MAX)`, which only drops the oldest while that holds — so the reversal
    is a display concern and lives here rather than at the write end. On a running
    session the newest line is the one the reader is waiting for, and a list that
    grows all evening must not push it further down the screen each time.
+
    `name(id)` resolves a member or guest id to a label, `title(gid)` a game id;
    both may return null for something deleted since, which the fallbacks cover.
 
