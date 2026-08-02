@@ -86,6 +86,34 @@ test('two people write their own columns without clobbering each other', async (
   assert.equal(stored.votes[bob.id][a.id].rating, 3);
 });
 
+// The sequential case above proves the columns are independent; this one is the
+// case that actually happens at a table — four phones submitting at once. The
+// guarantee comes from `withSession` being a single read-modify-write per row
+// (Postgres takes FOR UPDATE), so this spec is what makes the `postgres` CI job
+// exercise it against a real database rather than only against the JSON backend.
+test('four people submitting at the same moment all land', async () => {
+  const round = await createRound(request, { members: ['A', 'B', 'C', 'D'] });
+  const game = await addGame(round.id, 'G');
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 1, deviceVoting: true });
+  const sid = res.body.session.id;
+
+  // Fired together, deliberately not awaited in turn.
+  await Promise.all(
+    round.members.map((m, i) =>
+      request(app)
+        .post(`/api/rounds/${round.id}/sessions/${sid}/votes/${m.id}`)
+        .send({ votes: { [game.id]: { rating: i + 1, retire: false } } })
+    )
+  );
+
+  await request(app).post(`/api/rounds/${round.id}/sessions/${sid}/close`).send({});
+  const stored = sessionOf(await getRound(round.id), sid);
+  assert.equal(Object.keys(stored.votes).length, 4, 'every column must survive');
+  round.members.forEach((m, i) => assert.equal(stored.votes[m.id][game.id].rating, i + 1));
+});
+
 // The write is the only route a mid-session voter's device calls, so its
 // response must not carry what the round read redacts.
 test('the vote write does not echo the session back', async () => {

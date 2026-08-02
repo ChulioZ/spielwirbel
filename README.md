@@ -54,6 +54,9 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
 - **Sessions (hot-seat voting)** — pick who's playing, draw candidate games that
   fit the player count, then pass the device around: everyone rates each game
   1–5. Votes stay sealed until the reveal.
+- **Voting from your own device** — optional per session: anyone whose seat is
+  linked to their account can rate from wherever they are, while everyone else
+  votes on the shared device exactly as above.
 - **Guests** — someone outside the group can join one session without becoming a
   member.
 - **Teams** — members and guests can pair up for a session: a team counts as one
