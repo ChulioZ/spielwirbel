@@ -3,7 +3,7 @@ name: code-maturity-audit
 description: >-
   Audit the codebase's production maturity — repo-wide structure/refactoring
   smells, hand-rolled code that should become a mature dependency,
-  single-process in-memory-state assumptions under the multi-replica
+  single-process in-memory-state assumptions under a multi-replica
   deployment, and test-suite maturity (hand-copied constants, vacuous
   assertions, undated fixtures) — against a maintained criteria list, and
   periodically re-check the build-vs-buy calculus against the library
@@ -44,7 +44,8 @@ every time).
 Both failure modes produce confident, useless findings; kill them in phase C.
 
 - **Enterprise cargo-cult.** The scale anchor is real and small: one operator,
-  two Railway replicas, a ~€25–50/month cost envelope, a curated backlog.
+  a single-digit Railway replica count, a ~€25–50/month cost envelope, a
+  curated backlog.
   Kubernetes, microservices, an IdP migration, event sourcing, a service mesh —
   a criterion must name the problem *this app at this scale* has, or it is
   rejected (M-R06 is the standing meta-rejection, the mirror of
@@ -119,11 +120,11 @@ findings; dedupe against them.
 
 Sweep module-level mutable state in `lib/` and `lib/routes/` and classify each
 instance: correct per-process by design, a documented accepted trade-off, or a
-finding. Production runs **two replicas** (`guest-demo-accounts.md` §1 records
-the class), so "works on my one process" is the sharpest hobby-vs-SaaS smell
-this repo has. The done-right model is the demo machinery: liveness counts and
-cooldowns are read from the store per request, so replicas agree by
-construction.
+finding. The deployment can run **multiple replicas** (`guest-demo-accounts.md`
+§1 records the class; the count is an ops dial), so "works on my one process"
+is the sharpest hobby-vs-SaaS smell this repo has. The done-right model is the
+demo machinery: liveness counts and cooldowns are read from the store per
+request, so replicas agree by construction.
 
 ### 4. Test-suite maturity → M-007..M-010
 
