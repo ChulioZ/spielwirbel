@@ -37,6 +37,7 @@ test('per-form codes map to their specific messages', () => {
   assert.equal(authErrorKey('register', 'invalid_username'), 'auth.error.invalidUsername');
   assert.equal(authErrorKey('register', 'invalid_password'), 'auth.error.shortPassword');
   assert.equal(authErrorKey('register', 'username_taken'), 'auth.error.usernameTaken');
+  assert.equal(authErrorKey('register', 'username_reserved'), 'auth.error.reservedUsername');
   assert.equal(authErrorKey('login', 'invalid_credentials'), 'auth.error.badCredentials');
   assert.equal(authErrorKey('login', 'email_not_verified'), 'auth.error.notVerified');
   assert.equal(authErrorKey('login', 'account_disabled'), 'auth.error.accountDisabled');

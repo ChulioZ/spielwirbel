@@ -26,6 +26,10 @@ const legal = require('../lib/legal');
 // is precisely the shape that spec is about.
 const store = require('../lib/store');
 const { outbox } = require('../lib/mail');
+// The reserved-handle policy the register route applies, imported from the same
+// file the route requires — a hand-copied list here would pass against a route
+// that had drifted away from it (.claude/rules/shared-constants-across-the-stack.md).
+const { USERNAME_MIN, USERNAME_MAX, RESERVED_USERNAMES } = require('../public/js/username-policy');
 
 const EMAIL = 'user@example.com';
 const USERNAME = 'user_one';
@@ -97,8 +101,8 @@ test('register validates email shape, username policy and password length', asyn
   // No account may exist without a handle (#320) — that is what makes a backfill
   // unnecessary and what an abuse report needs to be able to name.
   for (const username of [
-    undefined, '', '  ', 'ab', // absent / blank / under 3
-    'a'.repeat(31), // over 30
+    undefined, '', '  ', 'a'.repeat(USERNAME_MIN - 1), // absent / blank / too short
+    'a'.repeat(USERNAME_MAX + 1), // too long
     'has space', 'has.dot', 'exclaim!', 'ümläut', // outside the charset
   ]) {
     const res = await post({ email: EMAIL, username, password: PASSWORD });
@@ -107,7 +111,7 @@ test('register validates email shape, username policy and password length', asyn
   }
 
   // The full allowed charset, at both length bounds, is accepted.
-  for (const username of ['a-B_9', 'abc', 'z'.repeat(30)]) {
+  for (const username of ['a-B_9', 'abc', 'z'.repeat(USERNAME_MAX)]) {
     const res = await post({ email: `${username}@example.com`, username, password: PASSWORD });
     assert.equal(res.status, 200, `username ${username} must be accepted`);
   }
@@ -135,6 +139,40 @@ test('a taken username is refused openly — and cannot be used to probe for e-m
   const both = await post({ email: 'taken-owner@example.com', username: 'takenname', password: PASSWORD });
   assert.equal(both.status, 409);
   assert.equal(both.body.error, 'username_taken');
+});
+
+test('a handle that would read as an official account is refused', async () => {
+  const post = (body) => request(app).post('/api/account/register').send(body);
+
+  // The whole list, not a sample: the policy module is imported rather than
+  // hand-copied here, so a loop over one entry would prove only that the route
+  // calls *something*. Registration is refused before the password is hashed, so
+  // every entry costs a 400 and nothing else.
+  let n = 0;
+  for (const word of RESERVED_USERNAMES) {
+    for (const spelling of [word, word.toUpperCase(), `${word}-2026`]) {
+      n += 1;
+      const res = await post({ email: `reserved${n}@example.com`, username: spelling, password: PASSWORD });
+      assert.equal(res.status, 400, `username ${spelling} must be refused`);
+      assert.equal(res.body.error, 'username_reserved');
+    }
+  }
+  // The brand, which is refused anywhere in a handle rather than only whole.
+  for (const spelling of ['spielwirbel', 'Spielwirbel-Team', 'der_spielwirbel_support']) {
+    n += 1;
+    const res = await post({ email: `reserved${n}@example.com`, username: spelling, password: PASSWORD });
+    assert.equal(res.status, 400, `username ${spelling} must be refused`);
+    assert.equal(res.body.error, 'username_reserved');
+  }
+
+  // …and the policy narrows nothing else: a handle that merely contains a
+  // reserved word still registers. Without this half, refusing everything would
+  // satisfy the loops above.
+  for (const spelling of ['badminton', 'admin-gaming', 'GameModder']) {
+    n += 1;
+    const res = await post({ email: `reserved${n}@example.com`, username: spelling, password: PASSWORD });
+    assert.equal(res.status, 200, `username ${spelling} must be accepted`);
+  }
 });
 
 /* ------------------------- register -> verify -> login ---------------------- */
