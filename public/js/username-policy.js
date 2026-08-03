@@ -1,12 +1,31 @@
-/* Spielwirbel – handles nobody may register, because they would read as the
-   service itself rather than as one of its users. Pure and dependency-free, so it
-   works both as a shared-scope frontend script (browser global) and as the
-   CommonJS module lib/routes/account.js requires — the register form offers the
-   check and the route enforces it, so the two must be ONE file
+/* Spielwirbel – what a username may be: its shape (#320), and the handles nobody
+   may register because they would read as the service itself rather than as one
+   of its users. Pure and dependency-free, so it works both as a shared-scope
+   frontend script (browser global) and as the CommonJS module
+   lib/routes/account.js requires — the register form offers both checks and the
+   route enforces them, so the two must be ONE file
    (.claude/rules/shared-constants-across-the-stack.md).
    Load order: see index.html. */
 
 'use strict';
+
+// The public handle's shape. Deliberately narrow — ASCII letters, digits, '_'
+// and '-' only, no dots, spaces or unicode — because this is the string a
+// stranger types into an abuse report and that invitations (#207) resolve: it has
+// to be unambiguous to transcribe and not homoglyph-spoofable.
+//
+// The bounds are constants and the pattern is BUILT from them, so the two numbers
+// exist once. They are read by the register form (its `maxlength`, its own
+// pre-flight check, and the two hint/error messages that state them in prose) and
+// by the zod schema in lib/routes/account.js — six places that used to hold a
+// hand-copy of "30" between them.
+const USERNAME_MIN = 3;
+const USERNAME_MAX = 30;
+const USERNAME_RE = new RegExp(`^[a-zA-Z0-9_-]{${USERNAME_MIN},${USERNAME_MAX}}$`);
+
+// Whether a handle is well-formed. Says nothing about whether it is free (the
+// repo answers that) or allowed (below).
+const isValidUsername = (name) => USERNAME_RE.test(String(name || ''));
 
 // A handle is matched in its NORMALISED form: lower-cased and stripped of
 // everything the username charset allows besides letters, i.e. '_', '-' and
@@ -18,7 +37,7 @@
 // lower-case letters only, and at least the 3 characters registration demands. An
 // entry like 'no-reply' or 'Admin' can never equal a normalised handle, so it
 // would silently protect nothing while making the list look longer than it is.
-// test/reserved-usernames.test.js asserts the shape of every entry for that reason.
+// test/username-policy.test.js asserts the shape of every entry for that reason.
 const normalizeUsername = (name) => String(name || '').toLowerCase().replace(/[^a-z]/g, '');
 
 // Matched WHOLE, never as a substring. Ordinary words contain these — 'badminton'
@@ -68,5 +87,14 @@ function isReservedUsername(name) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { RESERVED_USERNAMES, RESERVED_FRAGMENTS, normalizeUsername, isReservedUsername };
+  module.exports = {
+    USERNAME_MIN,
+    USERNAME_MAX,
+    USERNAME_RE,
+    isValidUsername,
+    RESERVED_USERNAMES,
+    RESERVED_FRAGMENTS,
+    normalizeUsername,
+    isReservedUsername,
+  };
 }

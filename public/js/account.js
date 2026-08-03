@@ -431,8 +431,8 @@ function showRegister() {
              the handle as well since #431 — but only one field can own the
              token, and it is the one on the login form.) -->
         <input id="regUser" class="input" type="text" autocomplete="nickname"
-               maxlength="30" spellcheck="false" autocapitalize="none" />
-        <div class="field__hint muted">${esc(t('auth.register.userHint'))}</div>
+               maxlength="${USERNAME_MAX}" spellcheck="false" autocapitalize="none" />
+        <div class="field__hint muted">${esc(t('auth.register.userHint', { min: USERNAME_MIN, max: USERNAME_MAX }))}</div>
       </div>
       <div class="field">
         <label for="regPw">${esc(t('auth.password'))}</label>
@@ -471,11 +471,12 @@ function showRegister() {
       authError(card).hidden = true;
       const username = user.value.trim();
       if (!email.value.trim() || !username) return setError(card, t('auth.error.missing'));
-      // Mirrors usernameSchema in lib/routes/account.js — the server is still the
-      // authority; this only saves a round trip on an obviously bad handle.
-      if (!/^[a-zA-Z0-9_-]{3,30}$/.test(username)) return setError(card, t('auth.error.invalidUsername'));
-      // Shares its list with the route that enforces it (reserved-usernames.js),
-      // so this can only ever be early, never stricter or laxer than the server.
+      // Both checks share their definition with the route that enforces them
+      // (username-policy.js), so this can only ever be early — never stricter or
+      // laxer than the server, which stays the authority.
+      if (!isValidUsername(username)) {
+        return setError(card, t('auth.error.invalidUsername', { min: USERNAME_MIN, max: USERNAME_MAX }));
+      }
       if (isReservedUsername(username)) return setError(card, t('auth.error.reservedUsername'));
       if (pw.value.length < 8) return setError(card, t('auth.error.shortPassword'));
       submit.disabled = true;

@@ -29,7 +29,7 @@ const { outbox } = require('../lib/mail');
 // The reserved-handle policy the register route applies, imported from the same
 // file the route requires — a hand-copied list here would pass against a route
 // that had drifted away from it (.claude/rules/shared-constants-across-the-stack.md).
-const { RESERVED_USERNAMES } = require('../public/js/reserved-usernames');
+const { USERNAME_MIN, USERNAME_MAX, RESERVED_USERNAMES } = require('../public/js/username-policy');
 
 const EMAIL = 'user@example.com';
 const USERNAME = 'user_one';
@@ -101,8 +101,8 @@ test('register validates email shape, username policy and password length', asyn
   // No account may exist without a handle (#320) — that is what makes a backfill
   // unnecessary and what an abuse report needs to be able to name.
   for (const username of [
-    undefined, '', '  ', 'ab', // absent / blank / under 3
-    'a'.repeat(31), // over 30
+    undefined, '', '  ', 'a'.repeat(USERNAME_MIN - 1), // absent / blank / too short
+    'a'.repeat(USERNAME_MAX + 1), // too long
     'has space', 'has.dot', 'exclaim!', 'ümläut', // outside the charset
   ]) {
     const res = await post({ email: EMAIL, username, password: PASSWORD });
@@ -111,7 +111,7 @@ test('register validates email shape, username policy and password length', asyn
   }
 
   // The full allowed charset, at both length bounds, is accepted.
-  for (const username of ['a-B_9', 'abc', 'z'.repeat(30)]) {
+  for (const username of ['a-B_9', 'abc', 'z'.repeat(USERNAME_MAX)]) {
     const res = await post({ email: `${username}@example.com`, username, password: PASSWORD });
     assert.equal(res.status, 200, `username ${username} must be accepted`);
   }

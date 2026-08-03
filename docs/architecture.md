@@ -266,11 +266,11 @@ public/
     account.js       onboarding + auth UI (login/register/verify/reset), token wiring
     auth-error.js    maps an auth API error code to the localized message each
                      form shows (issue #399)
-    reserved-usernames.js
-                     handles registration refuses because they would read as an
-                     official account (admin, moderator, anything containing the
-                     brand) — the single source of truth lib/routes/account.js
-                     enforces
+    username-policy.js
+                     what a username may be: the charset/length pattern, and the
+                     handles refused because they would read as an official
+                     account (admin, moderator, anything containing the brand) —
+                     the single source of truth lib/routes/account.js enforces
     demo-marker.js   the browser-local marker that lets a returning visitor
                      re-enter their own guest demo instead of minting a second
                      one, and the rule that keeps it valid across token

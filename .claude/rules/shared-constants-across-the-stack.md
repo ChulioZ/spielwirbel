@@ -61,15 +61,19 @@ no error, no 400, and a screen that still looks finished. The write end drops an
 unknown type for the same reason `trackEvent` does
 (`.claude/rules/product-event-logging.md`).
 
-**The fifth is `public/js/reserved-usernames.js`**: the handles registration
-refuses as impersonations of an official account, offered by the register form
-and enforced by `lib/routes/account.js`. Its own trap is one layer down from
-drift — the list is matched against a **normalised** handle (lower-case, `_`,
-`-` and digits stripped), so an entry that is not itself in that form
-(`no-reply`, `Admin`, a two-letter word) can never match and silently protects
-nothing while making the list look longer than it is.
-`test/reserved-usernames.test.js` asserts the shape of every entry for that
-reason, and loops the *whole* set through the route rather than a sample.
+**The fifth is `public/js/username-policy.js`**: what a username may be — the
+charset/length pattern **and** the handles reserved as impersonations of an
+official account — offered by the register form and enforced by
+`lib/routes/account.js`. The shape half is the ordinary case (the bounds had been
+hand-copied into six places, down to the input's `maxlength` and the two messages
+that state them in prose, which is why the prose now takes `{min}`/`{max}`
+params). The reserved half has a trap one layer *down* from drift: the list is
+matched against a **normalised** handle (lower-case, `_`, `-` and digits
+stripped), so an entry that is not itself in that form (`no-reply`, `Admin`, a
+two-letter word) can never match and silently protects nothing while making the
+list look longer than it is. `test/username-policy.test.js` asserts the shape of
+every entry for that reason, and loops the *whole* set through the route rather
+than a sample.
 
 Each new instance must be named in this inventory — the five paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under

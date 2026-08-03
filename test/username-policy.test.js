@@ -1,36 +1,69 @@
 'use strict';
 
-/* The reserved-handle policy itself (public/js/reserved-usernames.js), unit-tested
-   away from the register route that applies it.
+/* The username policy itself (public/js/username-policy.js), unit-tested
+   away from the register route and the register form that both apply it.
  *
  * The assertion that matters most here is the boring one: every entry of
  * RESERVED_USERNAMES is compared against a NORMALISED handle, so an entry that is
- * not itself normalised (a capital, a hyphen, a digit, or fewer than the 3
- * characters registration demands) can never match anything and silently protects
- * nothing. That failure is invisible from the route's side — the list looks longer
- * than it is, and every test over the entries it *can* match stays green.
+ * not itself normalised (a capital, a hyphen, a digit, or fewer than the
+ * USERNAME_MIN characters registration demands) can never match anything and
+ * silently protects nothing. That failure is invisible from the route's side —
+ * the list looks longer than it is, and every test over the entries it *can*
+ * match stays green.
  */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
+const { translator } = require('./support/dom');
 const {
+  USERNAME_MIN,
+  USERNAME_MAX,
+  isValidUsername,
   RESERVED_USERNAMES,
   RESERVED_FRAGMENTS,
   normalizeUsername,
   isReservedUsername,
-} = require('../public/js/reserved-usernames');
+} = require('../public/js/username-policy');
+
+test('the shape check holds exactly at its bounds', () => {
+  assert.equal(isValidUsername('a'.repeat(USERNAME_MIN)), true);
+  assert.equal(isValidUsername('a'.repeat(USERNAME_MIN - 1)), false);
+  assert.equal(isValidUsername('a'.repeat(USERNAME_MAX)), true);
+  assert.equal(isValidUsername('a'.repeat(USERNAME_MAX + 1)), false);
+  assert.equal(isValidUsername('a-B_9'), true);
+  for (const bad of ['has space', 'has.dot', 'exclaim!', 'ümläut', '', null, undefined]) {
+    assert.equal(isValidUsername(bad), false, `${JSON.stringify(bad)} must be malformed`);
+  }
+});
+
+test('the messages that state the bounds are filled from the same constants', () => {
+  // The two strings used to spell "3–30" by hand, in four language entries. They
+  // take params now, so a retune of USERNAME_MAX cannot leave the form telling
+  // people a limit the server no longer enforces — and this asserts the params are
+  // really wired, since an un-interpolated string would still render fine.
+  for (const locale of ['de', 'en']) {
+    const t = translator(locale);
+    for (const key of ['auth.error.invalidUsername', 'auth.register.userHint']) {
+      const text = t(key, { min: USERNAME_MIN, max: USERNAME_MAX });
+      assert.ok(text.includes(String(USERNAME_MIN)), `${locale} ${key} lost {min}`);
+      assert.ok(text.includes(String(USERNAME_MAX)), `${locale} ${key} lost {max}`);
+      assert.ok(!text.includes('{'), `${locale} ${key} has an unfilled placeholder: ${text}`);
+    }
+  }
+});
 
 test('every reserved word is in the form a normalised handle can actually equal', () => {
   // Anti-vacuous: a gutted list would satisfy every for-of below by iterating zero
   // times, and the route would still answer 200 for `admin`.
   assert.ok(RESERVED_USERNAMES.size >= 20, `expected a real list, got ${RESERVED_USERNAMES.size} entries`);
 
+  const shape = new RegExp(`^[a-z]{${USERNAME_MIN},${USERNAME_MAX}}$`);
   for (const word of RESERVED_USERNAMES) {
-    assert.match(word, /^[a-z]{3,30}$/, `"${word}" can never match a normalised handle`);
+    assert.match(word, shape, `"${word}" can never match a normalised handle`);
   }
   for (const fragment of RESERVED_FRAGMENTS) {
-    assert.match(fragment, /^[a-z]{3,30}$/, `fragment "${fragment}" can never match a normalised handle`);
+    assert.match(fragment, shape, `fragment "${fragment}" can never match a normalised handle`);
   }
 });
 
@@ -76,11 +109,11 @@ test('a handle that merely CONTAINS a reserved word is left alone', () => {
     // Handles the rest of the suite registers, plus the two length bounds of the
     // charset — this policy must not narrow what #320 accepts beyond its own list.
     'ada', 'abc', 'a-B_9', 'probe1', 'owner', 'TakenName', 'Anna_91',
-    'realuser', 'reg_user_1', 'someone-else', 'notademo', 'z'.repeat(30),
+    'realuser', 'reg_user_1', 'someone-else', 'notademo',
     // Neither a demo account's generated handle nor the operator's forced rename
     // may collide: both are written straight through the repo, so a collision
     // would not fail — it would just make this list quietly wrong about itself.
-    'demo-a1b2c3d4', 'demo-12345678', 'user-3b58bac60038176b',
+    'demo-a1b2c3d4', 'demo-12345678', 'user-3b58bac60038176b', 'z'.repeat(USERNAME_MAX),
     '', '   ', '123',
   ]) {
     assert.equal(isReservedUsername(name), false, `"${name}" must stay available`);

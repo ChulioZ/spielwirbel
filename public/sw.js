@@ -52,7 +52,7 @@ const SHELL = [
   '/js/session-path.js',
   '/js/nav-link.js',
   '/js/auth-error.js',
-  '/js/reserved-usernames.js',
+  '/js/username-policy.js',
   '/js/demo-marker.js',
   '/js/member-colors.js',
   '/js/session-people.js',
