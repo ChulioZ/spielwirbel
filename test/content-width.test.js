@@ -176,28 +176,27 @@ test('a 390 viewport gets two Regal columns, not one', () => {
     `a 390px phone gets ${columns} Regal column(s); the 22-game shelf needs two to halve its scroll`);
 });
 
-test('the desktop back-button hide is scoped to .back-row, never .section.center', () => {
-  /* Seven sub-screens end with a centred "Zurück" that the rail makes
-     redundant, so it is hidden from the rail breakpoint up.
+test('nothing hides .section.center wholesale — that is the results screen\'s delete', () => {
+  /* This block used to guard a `.app .back-row { display: none }` in the
+     >= 1280px media query, and specifically that it was scoped to `.back-row`
+     rather than to the wrapper. #623 deleted that hide outright — the rail is
+     "up" and the control is "back", so hiding it left eight sub-screens with no
+     in-app way back on a desktop. The inverse assertion (nothing hides the
+     control at ANY width) lives in test/back-control.test.js, next to the
+     screens it protects.
 
-     The scoping is the whole risk. The session results screen ends with a
-     "Session löschen" block in a BYTE-IDENTICAL `.section.center` wrapper, so a
-     hide written against that wrapper would take the delete action with it —
-     silently, on one screen, with no error and nothing in the DOM to suggest a
-     control is missing. Hence the dedicated `.back-row` class. */
+     What survives here is the other half, which was always the sharper one and
+     is now independent of the back control: "Session löschen" sits in a
+     `.section.center` wrapper on the results screen, so a hide written against
+     that wrapper would silently take a destructive action off one screen — no
+     error, nothing in the DOM to suggest a control is missing. */
+  const declared = RULES.filter(([sel]) => /\.section(?![\w-])/.test(sel) || /\.center(?![\w-])/.test(sel));
+  assert.ok(declared.length, 'neither .section nor .center is declared any more — this guard now watches nothing');
+
   const hides = RULES.filter(([, body]) => /display:\s*none/.test(body));
-
-  const backHide = hides.filter(([sel]) => whole('.back-row').test(sel));
-  assert.ok(backHide.length, 'nothing hides the redundant back row');
-  backHide.forEach(([sel]) => {
-    const classes = (sel.match(/\.[\w-]+/g) || []).length;
-    assert.ok(classes >= 2, `"${sel}" is one class and can lose to a later component rule`);
-  });
-
   const tooBroad = hides
     .map(([sel]) => sel)
-    .filter((sel) => /\.section(?![\w-])/.test(sel) && /\.center(?![\w-])/.test(sel)
-      && !whole('.back-row').test(sel));
+    .filter((sel) => /\.section(?![\w-])/.test(sel) && /\.center(?![\w-])/.test(sel));
   assert.deepEqual(tooBroad, [],
     'these rules hide every .section.center, which takes "Session löschen" with it');
 });

@@ -35,6 +35,7 @@ async function showBackground(rid) {
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'design');
+  app.appendChild(backRow(() => showRound(rid)));
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('design.title'))}</h1></div>`));
 
   const sec = h(`<div class="section"><h2>${esc(t('design.scheme'))}</h2></div>`);
@@ -77,8 +78,6 @@ async function showBackground(rid) {
   });
   sec.appendChild(swatches);
   app.appendChild(sec);
-
-  app.appendChild(backRow(() => showRound(rid)));
 }
 
 // =================== Tags (custom round tags, #238) ===================
@@ -99,6 +98,7 @@ async function showTags(rid) {
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'tags');
+  app.appendChild(backRow(() => showRound(rid)));
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('tags.title'))}</h1></div>`));
 
   const sec = h('<div class="section"></div>');
@@ -188,8 +188,6 @@ async function showTags(rid) {
     sec.appendChild(list);
   }
   app.appendChild(sec);
-
-  app.appendChild(backRow(() => showRound(rid)));
 }
 
 // =================== Lookup providers (#294) ===================
@@ -209,6 +207,7 @@ async function showProviders(rid) {
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'providers');
+  app.appendChild(backRow(() => showRound(rid)));
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('providers.title'))}</h1></div>`));
 
   const sec = h('<div class="section"></div>');
@@ -258,8 +257,6 @@ async function showProviders(rid) {
   renderHint();
   sec.appendChild(hint);
   app.appendChild(sec);
-
-  app.appendChild(backRow(() => showRound(rid)));
 }
 
 // The three game-detail editors (tags, players, cover) have ONE builder each
@@ -334,6 +331,7 @@ async function showGameDetail(rid, gameId) {
   const fallback = coverPlaceholder(game);
   app.innerHTML = '';
   renderSubScreenTabs(round, 'game');
+  app.appendChild(backRow(() => showRound(rid, 'regal')));
 
   // Send a partial update, then re-render the page from fresh data.
   async function updateGame(updates) {
@@ -839,8 +837,6 @@ async function showGameDetail(rid, gameId) {
     sec.appendChild(list);
   }
   if (!sparse) app.appendChild(sec);
-
-  app.appendChild(backRow(() => showRound(rid, 'regal')));
 }
 
 // =================== Add game (bottom sheet) ===================

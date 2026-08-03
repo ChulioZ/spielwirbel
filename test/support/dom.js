@@ -119,6 +119,14 @@ function loadApp(opts = {}) {
      an un-stubbed call then names itself in the failure. */
   ctx.fetch = () => Promise.reject(new Error('dom.js: unstubbed fetch — pass an `api`/`accountApi` stub'));
 
+  /* jsdom has no layout and no scrolling: its window.scrollTo() only prints a
+     "Not implemented" line and does nothing. Since syncUrl resets scroll on
+     every forward navigation (#623) that is a line per pushed view — so replace
+     it with a recorder, which silences the noise AND is the only observable a
+     spec has for the reset (`.claude/rules/scroll-reset-on-forward-navigation.md`). */
+  const scrolls = [];
+  dom.window.scrollTo = (...args) => { scrolls.push(args); };
+
   for (const { name, code } of SOURCES) {
     vm.runInContext(code, ctx, { filename: `public/js/${name}` });
   }
@@ -169,6 +177,8 @@ function loadApp(opts = {}) {
     get: (name) => run(name),
     /** The `#app` container every view renders into. */
     get app() { return dom.window.document.getElementById('app'); },
+    /** Every window.scrollTo() call so far, as its argument list. */
+    scrolls,
     close: () => dom.window.close(),
   };
 }

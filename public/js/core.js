@@ -220,19 +220,26 @@ function setDocTitle(...parts) {
   document.title = docTitle(parts, t('app.title'));
 }
 
-/* The centred "back" block that seven round sub-screens end with — game detail,
-   member, tags, providers, design, both archives and the session results. It
-   was seven byte-identical copies; `fallback` is the only thing that ever
-   differed (which tab to land on when there is no in-app history to go back
-   through, see navBack in router.js).
+/* The one way back from a screen that persistent chrome does not reach (#623):
+   the nine round sub-screens — eight call sites, since the two archives share a
+   renderer — plus `/u/:username` and `/round/new`. It goes at the TOP of the
+   content column, at every width. `fallback` is the only thing that differs per
+   call site: where to land when there is no in-app history to go back through
+   (see navBack in router.js).
 
-   The `back-row` class is not decoration: from the rail breakpoint up this
-   control is redundant — the rail carries every section — so CSS hides it
-   there, and it must be distinguishable from the
+   Top of the content, and not hidden anywhere, are both corrections rather than
+   preferences. The rail is "up", not "back": HUB_TAB_OF maps each sub-screen to
+   exactly ONE owning section, so opening a game from Pokale and clicking Regal
+   is a different — usually wrong — destination. And below 860px a sub-screen
+   renders no dock either (`.dock--sub { display: none }`), so this control is
+   the only navigation on the screen.
+
+   The `back-row` class is not decoration: it must stay distinguishable from the
    OTHER `.section.center` blocks (the results screen's "delete session" sits in
-   an identical wrapper and must keep rendering). */
+   a byte-identical wrapper), which is what a width-scoped hide once got wrong
+   by a hair — see test/content-width.test.js. */
 function backRow(fallback) {
-  const row = h(`<div class="section center back-row"><button class="btn btn--lg">${esc(t('common.back'))}</button></div>`);
+  const row = h(`<div class="back-row"><button type="button" class="back-link"><i class="ti ti-chevron-left" aria-hidden="true"></i>${esc(t('common.back'))}</button></div>`);
   row.querySelector('button').addEventListener('click', () => navBack(fallback));
   return row;
 }
