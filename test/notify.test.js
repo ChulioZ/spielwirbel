@@ -137,11 +137,17 @@ test('every line of a notification mail fits on one quoted-printable line (#618)
   assert.deepEqual(long, [], `these lines would be soft-broken: ${JSON.stringify(long)}`);
   // Both links are absolute against the real origin (a relative one is not
   // followable from a mail client at all) and each sits ALONE on its line, which
-  // is what lets a client's auto-linkifier find it. Matched as whole lines rather
-  // than with `text.includes(url)` — the stronger assertion, and the substring
-  // form is what CodeQL's js/incomplete-url-substring-sanitization warns about.
-  assert.ok(lines.includes('https://spielwirbel.app/inbox'), 'the inbox link is a line of its own');
-  assert.ok(lines.includes('https://spielwirbel.app/konto'), 'the opt-out link is a line of its own');
+  // is what lets a client's auto-linkifier find it.
+  //
+  // Compared with `===` rather than any form of `.includes` — CodeQL's
+  // js/incomplete-url-substring-sanitization flags a URL substring test wherever
+  // it appears, and exact comparison is both its prescribed remedy and the
+  // stronger assertion. The expected count is TWO: the body is bilingual, so each
+  // link appears once per language half, and asserting the count is what stops a
+  // German-only regression from passing on the strength of the English half.
+  const linesEqualTo = (url) => lines.filter((l) => l === url).length;
+  assert.equal(linesEqualTo('https://spielwirbel.app/inbox'), 2, 'the inbox link stands alone in both halves');
+  assert.equal(linesEqualTo('https://spielwirbel.app/konto'), 2, 'the opt-out link stands alone in both halves');
 });
 
 /* ------------------------ throttle, then coalescing ------------------------- */
