@@ -766,6 +766,13 @@ I18N.de = {
   'konto.bgg.submit': 'Speichern',
   'konto.bgg.done': 'BoardGameGeek-Konto verknüpft.',
   'konto.bgg.cleared': 'Verknüpfung entfernt.',
+  // E-Mail zu Postfach-Einträgen (#618)
+  'konto.notify.title': 'Benachrichtigungen',
+  'konto.notify.intro': 'Wir schicken dir eine E-Mail, wenn jemand etwas von dir möchte — höchstens eine pro Stunde. Für alles andere melden wir uns nicht.',
+  'konto.notify.invitations': 'Einladung zu einer Runde',
+  'konto.notify.friends': 'Freundschaftsanfrage',
+  'konto.notify.on': 'E-Mails eingeschaltet.',
+  'konto.notify.off': 'E-Mails ausgeschaltet.',
 
   // Self-service Kontolöschung (#419) — Art. 17 DSGVO ohne den Betreiber.
   'konto.delete.title': 'Konto löschen',

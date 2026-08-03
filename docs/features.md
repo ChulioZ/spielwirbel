@@ -237,6 +237,20 @@ What the app does, in detail. For a short overview see the
   and only for activity after you became friends. A friendship shares **no round
   data**; it is purely social. Unfriending is unilateral and immediate in both
   directions. With accounts off the whole feature is inert.
+- **E-mail for actionable inbox items** – *accounts mode only* (issue #618). A
+  round invitation or a friend request is also **e-mailed** to its recipient, not
+  only dropped in the in-app inbox — an invitation exists to reach someone who is
+  *not* in the app, so in-app-only delivery meant an invited stranger saw it
+  whenever they next happened to log in. Only those two item types are mailed
+  (an explicit allowlist, so a future inbox type mails nobody until someone
+  decides it should), and nothing about the Freundeskreis feed ever is. Both can
+  be switched off individually under **Konto → Benachrichtigungen**; the mail
+  links there. Bounded three ways: at most **one message per recipient per
+  hour** (several requests inside the window are combined into one that names
+  the count), a quarter of the daily send budget reserved for verification and
+  password mail that notifications may never touch, and no mail at all to guest
+  demo accounts or unverified addresses. The body names the sender's public
+  username and the kind of request — never a round name or any other free text.
 - **Account profiles** – *accounts mode only* (issue #558). Every account has a
   profile at `/u/‹username›`, reachable by clicking a name in the Freundeskreis
   and usable to check you have the right person **before** sending a request.

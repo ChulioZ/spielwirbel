@@ -124,6 +124,8 @@ const frontendGlobals = {
   buildPasswordForm: 'readonly', setKontoError: 'readonly',
   // self-service account deletion (issue #419)
   buildDeleteSection: 'readonly', openDeleteSheet: 'readonly',
+  // inbox-mail opt-outs (issue #618)
+  buildNotifyForm: 'readonly',
   // support.js (issue #173)
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
   // views-landing.js (issue #322): logged-out landing page

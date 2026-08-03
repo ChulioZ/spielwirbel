@@ -778,6 +778,13 @@ I18N.en = {
   'konto.bgg.submit': 'Save',
   'konto.bgg.done': 'BoardGameGeek account linked.',
   'konto.bgg.cleared': 'Link removed.',
+  // E-mail for inbox items (#618)
+  'konto.notify.title': 'Notifications',
+  'konto.notify.intro': 'We e-mail you when someone needs an answer from you — at most one message an hour. We stay quiet about everything else.',
+  'konto.notify.invitations': 'Round invitation',
+  'konto.notify.friends': 'Friend request',
+  'konto.notify.on': 'E-mails turned on.',
+  'konto.notify.off': 'E-mails turned off.',
 
   // Self-service account deletion (#419) — Art. 17 GDPR without the operator.
   'konto.delete.title': 'Delete account',
