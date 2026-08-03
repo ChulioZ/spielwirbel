@@ -158,6 +158,15 @@ default 200 per UTC day). Past the budget, sends are refused and logged as
 provider's own daily limit. Both counters are per process and in memory. How
 much of the day's budget is spent shows on the admin panel's Kennzahlen card.
 
+Since #618 that budget has **two classes**, derived from the same number rather
+than from a second env var. The **last quarter** of `MAIL_DAILY_MAX` is reserved
+for *critical* mail — verification, password reset, contact-form delivery — so
+the inbox notifications (round invitations, friend requests) can never spend the
+headroom signup depends on. A notification refused by the reserve logs
+`mail_notification_budget_reserved`, deliberately a different event from
+`mail_daily_budget_exhausted`: the first means the breaker is doing its job, the
+second means registration is affected right now.
+
 When accounts are enabled the app runs in **accounts mode** (issue #138): the SPA
 shows an in-app onboarding flow — register → confirm e-mail → log in, plus password
 reset and a first-run empty state — and the `/api` data routes require a valid

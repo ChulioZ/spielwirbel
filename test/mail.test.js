@@ -202,6 +202,28 @@ test('the budget ceiling is read from env per send (#448)', async () => {
   }
 });
 
+// The reserve's END-TO-END behaviour lives in test/notify.test.js; what is pinned
+// here is the mail-layer contract it rests on: an omitted or unrecognised `kind`
+// must behave exactly as before #618, or a typo at a call site silently stops
+// that mail going out.
+test('an absent or unknown mail kind spends the whole ceiling, as before (#618)', async () => {
+  nodemailer.createTransport = () => { throw new Error('must not build a transport'); };
+  budgetFor(2);
+  try {
+    // With one send left in the day, the reserve would refuse a notification —
+    // but neither of these is one.
+    assert.deepEqual(await mail.send({ to: 'a@example.com', subject: 'S', text: 'T' }), { delivered: false });
+    budgetFor(1);
+    assert.deepEqual(
+      await mail.send({ to: 'b@example.com', subject: 'S', text: 'T', kind: 'typo-not-a-class' }),
+      { delivered: false },
+      'an unrecognised class must not be quietly downgraded to notification',
+    );
+  } finally {
+    delete process.env.MAIL_DAILY_MAX;
+  }
+});
+
 test('budgetState() reports the day, the count and the limit, and no secret (#448)', async () => {
   nodemailer.createTransport = () => { throw new Error('must not build a transport'); };
   delete process.env.MAIL_DAILY_MAX;

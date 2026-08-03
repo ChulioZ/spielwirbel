@@ -121,7 +121,12 @@ lib/
                      expired-demo purge (issue #427)
   mail.js            outbound e-mail (SMTP via nodemailer when SMTP_HOST is
                      set, else logged to an in-memory outbox), plus the global
-                     daily send budget (MAIL_DAILY_MAX, issue #448)
+                     daily send budget (MAIL_DAILY_MAX, issue #448) and its
+                     critical/notification split (issue #618)
+  notify.js          e-mails an actionable inbox item to its recipient (round
+                     invitations, friend requests — issue #618): a per-type
+                     allowlist, the two per-account opt-outs, a one-per-hour
+                     per-recipient throttle and coalescing
   legal.js           server-rendered Impressum / privacy policy /
                      Nutzungsbedingungen in DE + EN (issues #134/#140)
   canonical.js       301s the branded non-canonical domains onto one origin

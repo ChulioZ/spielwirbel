@@ -1169,9 +1169,13 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // `acceptedTermsRevision`/`termsRevision` (#521) likewise ride on every
   // account: the client decides whether to show the terms-change notice by
   // comparing the two, so both have to arrive in this one response.
+  // `notifyRoundInvitations`/`notifyFriendRequests` (#618) ride on every account
+  // too, as real booleans: an account predating them carries neither key, and the
+  // projection is what guarantees the client never has to re-derive the default.
   assert.deepEqual(Object.keys(res.body).sort(),
     ['acceptedTermsRevision', 'bggUsername', 'createdAt', 'demo', 'demoExpiresAt',
-      'email', 'emailVerified', 'id', 'termsRevision', 'username']);
+      'email', 'emailVerified', 'id', 'notifyFriendRequests', 'notifyRoundInvitations',
+      'termsRevision', 'username']);
   assert.equal(res.body.demo, false);
   assert.equal(res.body.demoExpiresAt, null);
 

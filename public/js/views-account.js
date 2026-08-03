@@ -64,6 +64,12 @@ async function showAccount() {
     return;
   }
 
+  // Below the demo return on purpose (#618): a guest demo's stored address is a
+  // synthetic `…@demo.invalid` placeholder, so lib/notify.js never mails one —
+  // offering it a switch over mail that cannot be sent would be a lie.
+  app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.notify.title'))}</h2>`));
+  app.appendChild(buildNotifyForm(me));
+
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.pw.title'))}</h2>`));
   app.appendChild(buildPasswordForm());
 
@@ -223,6 +229,52 @@ function buildBggForm(current) {
   });
 
   return form;
+}
+
+// The two inbox-mail opt-outs (#618): e-mail me when a round invitation or a
+// friend request arrives. Both default ON server-side, and /me always answers a
+// real boolean, so this never has to re-implement the absent-key default.
+//
+// Each row is a <label> so the whole row toggles its checkbox, and the group gets
+// its OWN wrapper rather than a `.field` — `.field label` is (0,1,1) and would
+// beat `.ds-row` (0,1,0), flattening both rows
+// (.claude/rules/label-rows-lose-to-field-label.md).
+function buildNotifyForm(me) {
+  const wrap = h(`<div class="konto-notify">
+      <p class="muted konto-notify__intro">${esc(t('konto.notify.intro'))}</p>
+    </div>`);
+
+  const addRow = (field, label) => {
+    const row = h(`<label class="ds-row konto-notify__row">
+        <div class="ds-row__main"><span>${esc(label)}</span></div>
+        <div class="ds-row__meta">
+          <input type="checkbox" class="provider-row__box"${me[field] ? ' checked' : ''} />
+        </div>
+      </label>`);
+    const box = row.querySelector('input');
+    // Saves on change rather than behind a submit button — there is nothing to
+    // review, and a toggle that needs confirming reads as not having worked.
+    box.addEventListener('change', async () => {
+      const want = box.checked;
+      box.disabled = true;
+      try {
+        const data = await accountApi('PATCH', '/me', { [field]: want });
+        // Follow the SERVER's answer, not the click: if it refused or coerced,
+        // the checkbox must show what is actually stored.
+        box.checked = data[field];
+        toast(t(want ? 'konto.notify.on' : 'konto.notify.off'));
+      } catch (ex) {
+        box.checked = !want; // put it back — nothing was saved
+        if (ex.message !== 'auth') toast(t('auth.error.network'));
+      }
+      box.disabled = false;
+    });
+    wrap.appendChild(row);
+  };
+
+  addRow('notifyRoundInvitations', t('konto.notify.invitations'));
+  addRow('notifyFriendRequests', t('konto.notify.friends'));
+  return wrap;
 }
 
 // One read-only label/value pair. Not a .ds-row: that component is a click

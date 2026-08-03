@@ -2334,6 +2334,15 @@ body.auth-screen .terms-banner { display: none; }
    (0,1,1) on specificity rather than on source order — the trap in
    .claude/rules/label-rows-lose-to-field-label.md. */
 .konto-pw .field label { font-size: var(--text-md); }
+/* The two inbox-mail opt-outs (#618). Its OWN wrapper rather than a `.field`,
+   because each row is a <label>: `.field label` (0,1,1) would beat `.ds-row`
+   (0,1,0) and flatten every row
+   (.claude/rules/label-rows-lose-to-field-label.md). The rows keep `.ds-row`'s
+   pointer affordance on purpose — a <label> row really is a click target
+   (.claude/rules/ds-row-is-a-click-target.md), so no `ds-row--static` here. */
+.konto-notify { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+.konto-notify__intro { margin: 0 0 2px; }
+.konto-notify__row { flex-wrap: nowrap; }
 /* Self-service account deletion (#419). The one irreversible control on this
    screen, so it is set apart rather than styled like the forms above it: its own
    heading tone plus a tinted, outlined block. Every colour is mixed from
