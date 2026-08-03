@@ -1041,6 +1041,7 @@ async function showArchive(rid, kind) {
 
   app.innerHTML = '';
   renderSubScreenTabs(round, kind);
+  app.appendChild(backRow(() => showRound(rid, 'regal')));
   app.appendChild(
     h(`<div class="page-head"><div>
          <h1>${esc(t(`${kind}.title`))}</h1>
@@ -1087,8 +1088,6 @@ async function showArchive(rid, kind) {
     });
     app.appendChild(list);
   }
-
-  app.appendChild(backRow(() => showRound(rid, 'regal')));
 }
 
 // =================== Design ===================

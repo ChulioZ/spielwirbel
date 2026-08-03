@@ -95,6 +95,23 @@ function syncUrl(path) {
   } else {
     navIndex += 1;
     history.pushState({ path, idx: navIndex }, '', path);
+    /* A forward navigation lands at the top of the new screen (#623).
+       `pushState` does not touch scroll, so without this the offset carries over
+       and the browser merely clamps it to the new document — measured: a Regal
+       (8871px) at 2600 opening a game detail (2080px) landed at 2080, the very
+       bottom of it, past the cover, the title and every chip.
+
+       Two things here are load-bearing and both fail silently:
+
+       - **AFTER pushState, never before.** The browser records the OUTGOING
+         entry's scroll position at navigation time, so resetting first writes 0
+         into that entry and destroys back-restoration. Measured in isolation:
+         push-then-scroll restores 2600, scroll-then-push restores 0.
+       - **This branch only.** The replace branch is also how a screen re-renders
+         itself in place (updateGame() -> showGameDetail() after every PATCH, and
+         the same shape in showMember/showFriends), where jumping to the top on
+         every rename would be wrong. */
+    window.scrollTo(0, 0);
   }
 }
 

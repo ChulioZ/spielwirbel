@@ -32,6 +32,7 @@ async function showRoundSettings(rid) {
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'settings');
+  app.appendChild(backRow(() => showRound(rid)));
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('rail.settings'))}</h1></div>`));
 
   // --- The three routed configuration screens. Real <a href> via navLink (#330);
@@ -107,6 +108,4 @@ async function showRoundSettings(rid) {
     danger.appendChild(delBtn);
   }
   app.appendChild(danger);
-
-  app.appendChild(backRow(() => showRound(rid)));
 }

@@ -122,6 +122,10 @@ async function showProfile(username) {
     // a typo'd URL is the likeliest way to get here.
     if (err.message !== 'user_not_found') return; // accountApi handled a dead session
     app.innerHTML = '';
+    // The likeliest way to reach this screen is a typo'd URL, so it is the one
+    // that most needs a way out — and it is the only branch a `backRow` added to
+    // the happy path below would miss (#623).
+    app.appendChild(backRow(() => showFriends()));
     app.appendChild(h(`<div class="lobby-head"><h1>${esc(t('profile.title'))}</h1></div>`));
     app.appendChild(h(`<p class="muted empty-note">${esc(t('profile.notFound'))}</p>`));
     return;
@@ -130,6 +134,11 @@ async function showProfile(username) {
   app.innerHTML = '';
   setContext(p.username || t('friends.unknownUser'));
   setDocTitle(p.username || t('friends.unknownUser'), t('profile.title'));
+
+  // A profile is reached from the Freundeskreis, the feed and a shared link, and
+  // no persistent chrome points at it — so it needs its own way back (#623). The
+  // fallback is the Freundeskreis, the only screen that lists accounts.
+  app.appendChild(backRow(() => showFriends()));
 
   const head = h(`<div class="profile-head">
       ${friendAvatar(p.username)}

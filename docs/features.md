@@ -191,7 +191,12 @@ What the app does, in detail. For a short overview see the
 - **Shareable links & reload-safe navigation** – the URL reflects the current
   screen (home, a round tab, a game, a member, a session result, …), so a
   reload keeps you where you were and any stable view can be bookmarked or
-  linked to. Browser Back/Forward move between visited views.
+  linked to. Browser Back/Forward move between visited views. Every screen the
+  persistent navigation does *not* reach — a game, a member, a session's
+  results, the archives, the round's settings screens, a profile, the new-round
+  form — opens with a back control at the top of the content, which returns you
+  where you came from rather than to a fixed parent. Opening a screen always
+  lands you at its top; going back restores the position you left.
 - **Denser lists on small screens** – a phone shows two shelf columns instead of
   one, roughly halving the scroll of a full shelf, and the home lobby tiles its
   round cards once there is room for a second one.

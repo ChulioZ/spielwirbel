@@ -64,6 +64,7 @@ async function showMember(rid, mid) {
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'member');
+  app.appendChild(backRow(() => showRound(rid)));
 
   // Persist a partial update, then re-render the page from fresh data so the
   // new name/color is reflected here and everywhere it is derived from.
@@ -252,8 +253,6 @@ async function showMember(rid, mid) {
     sec.appendChild(btn);
     app.appendChild(sec);
   }
-
-  app.appendChild(backRow(() => showRound(rid)));
 }
 
 // The "+" trigger for the member strips, built in one place so the hero and the

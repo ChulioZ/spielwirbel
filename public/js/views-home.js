@@ -143,6 +143,9 @@ async function showNewRound() {
     : '';
 
   app.innerHTML = '';
+  // The form is a dead end without this (#623): it renders no dock and no rail,
+  // and nothing in the top bar leads back to the lobby it was opened from.
+  app.appendChild(backRow(() => showHome()));
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('newRound.title'))}</h1></div>`));
 
   // Same two-column setup layout as the session screen (`.setup-grid`): what the

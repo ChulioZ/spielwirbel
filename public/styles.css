@@ -446,16 +446,13 @@ h1, h2, h3 { font-family: var(--font-display); }
      win, and specificity is the one that cannot be broken by moving code. */
   .app .rail-owned { display: none; }
 
-  /* The seven sub-screens' centred bottom "Zurück" is redundant once the rail
-     is there: every section is one click away in it and the breadcrumb sits at
-     the top, while this control requires scrolling to the END of the content to
-     reach the way out. It stays below the breakpoint, where the rail does not
-     exist. Scoped to `.back-row`, NOT `.section.center` — the results screen's
-     "delete session" sits in an identical wrapper and must keep rendering.
-
-     This is only the desktop half of the back-affordance problem; consolidating
-     the three competing affordances, and putting sheets into history, is #333. */
-  .app .back-row { display: none; }
+  /* NOTHING hides `.back-row` here any more (#623). This block used to, on the
+     reasoning that the rail makes it redundant — but the rail is "up" (it maps
+     each sub-screen to one owning section) while the control is "back", and the
+     two differ for every screen with more than one origin. The result was that
+     from 1280px up nine sub-screens had no in-app way back at all. It now sits
+     at the top of the content column at every width; see `backRow` in core.js
+     and test/back-control.test.js. */
 }
 
 .rail { display: none; }
@@ -552,6 +549,36 @@ h1, h2, h3 { font-family: var(--font-display); }
    don't fade it into the background. */
 .site-footer__bgg { display: inline-flex; }
 .site-footer__bgg img { display: block; width: 132px; height: auto; }
+/* The back control every non-main screen opens with (#623, `backRow` in
+   core.js). Deliberately quiet and deliberately unconditional: it is the only
+   navigation a phone sub-screen renders (`.dock--sub` is hidden below 860px)
+   and the only "back" a desktop one has (the rail is "up"), so no media query
+   may hide it — test/back-control.test.js pins that over the whole sheet.
+
+   The negative inline margin pulls the button's own padding back so the label
+   optically aligns with the page head below it, while the padding itself keeps
+   the target comfortably past the 24px WCAG 2.2 SC 2.5.8 floor. */
+.back-row { margin-bottom: 10px; }
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: -8px;
+  padding: 6px 10px 6px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink-soft);
+  /* Never the `font` shorthand: it would also reset the size to the inherited
+     16px and the weight to normal (.claude/rules/native-button-vs-focusable-span.md). */
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.back-link:hover { background: var(--sunken); color: var(--ink); }
+.back-link .ti { font-size: var(--text-md); }
+
 .page-head {
   display: flex;
   align-items: center;

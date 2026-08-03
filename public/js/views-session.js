@@ -447,7 +447,6 @@ function startVoting(round, session, games, people, opts = {}) {
       // same movement rather than two disagreeing ones.
       if (back) back.addEventListener('click', () => history.back());
       app.appendChild(card);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -530,8 +529,11 @@ function startVoting(round, session, games, people, opts = {}) {
       else go(idx + 1);
     });
 
+    /* No scroll reset here. `render()` also runs from onPopstate (a Back, where
+       the browser is restoring the position) and from currentView on a language
+       switch (where nothing navigated) — the forward case is `go()`, which goes
+       through syncUrl and resets there (#623, router.js). */
     app.appendChild(card);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function finish() {
@@ -610,7 +612,6 @@ function showFinale(round, session, games) {
     showResults(round, session, games, true);
   });
   app.appendChild(stage);
-  window.scrollTo(0, 0);
 }
 
 // =================== Results ===================
@@ -661,6 +662,7 @@ async function showResults(round, session, gamesHint, reveal) {
   // screen (unlike the wizard's transient steps, which deliberately resolve to
   // nothing and so get no strip).
   renderSubScreenTabs(round, 'session');
+  app.appendChild(backRow(() => showRound(round.id)));
   const when = fmtDateTime(session.createdAt);
   const head = h(`<div class="page-head"><div>
          <h1 class="result-title">${esc(t('result.title'))}</h1>
@@ -1072,9 +1074,10 @@ async function showResults(round, session, gamesHint, reveal) {
   const sessionLog = renderSessionLog(round, session);
   if (sessionLog) app.appendChild(sessionLog);
 
-  // Delete session — subtle, but ABOVE the terminal "Zurück" row (#561). It used
-  // to sit below it, copying the round delete that ended the Chronik timeline;
-  // that placement is gone, and nothing belongs after a back link.
+  // Delete session — subtle, and last on the screen. It sat above the terminal
+  // "Zurück" row until #623 moved that control to the top of the content, so
+  // this is now simply the final block; the #561 constraint it was phrased
+  // against ("nothing belongs after a back link") is satisfied by construction.
   const del = h(`<div class="section center"><button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button></div>`);
   del.querySelector('button').addEventListener('click', async () => {
     if (!confirm(t('sessions.deleteConfirm', { when }))) return;
@@ -1085,11 +1088,6 @@ async function showResults(round, session, gamesHint, reveal) {
     } catch (e) { toast(e.message); }
   });
   app.appendChild(del);
-
-  app.appendChild(backRow(() => showRound(round.id)));
-
-  // The most relevant info (chosen game, results) is at the top.
-  window.scrollTo(0, 0);
 }
 
 // Can this browser share a result at all? The share sheet is a mobile API and

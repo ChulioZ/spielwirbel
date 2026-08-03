@@ -220,20 +220,28 @@ test('the Start tab points at the settings screen instead of three separate link
 });
 
 /* `views-session.js:854` used to read "like deleting a round" and put the
-   session's delete BELOW the terminal back row — the placement this issue
-   removed, propagating. Nothing belongs after a back link. */
-test('the results screen deletes above the back row, not below it', () => {
+   session's delete BELOW a terminal back row — the placement this issue
+   removed, propagating. #623 then moved the back control to the TOP of the
+   content, which inverts the order this pins and satisfies #561's own phrasing
+   ("nothing belongs after a back link") by construction: the delete is simply
+   the last block on the screen now. What still needs pinning is that the two
+   have not swapped back, and that neither has been lost in the move. */
+test('the results screen opens with the back control and ends with the delete', () => {
   const results = bodyOfFn(SESSION, 'showResults');
   // The APPEND order, not where the string literal happens to sit: `const del =
-  // h(...)` is declared well above either append, so comparing the literal's
-  // index passes even with the two appends swapped — i.e. against exactly the
-  // regression this pins. (Measured: it did.)
+  // h(...)` is declared well above its append, so comparing the literal's index
+  // passes even with the appends swapped — i.e. against exactly the regression
+  // this pins. (Measured: it did.)
   const del = results.indexOf('app.appendChild(del)');
   const back = results.indexOf('app.appendChild(backRow(');
   assert.notEqual(del, -1, 'the results screen lost its delete-session control');
-  assert.notEqual(back, -1, 'the results screen lost its back row');
+  assert.notEqual(back, -1, 'the results screen lost its back control');
   assert.match(results, /result\.deleteSession/, 'the delete-session control no longer names its own label');
-  assert.ok(del < back, 'delete-session is appended below the terminal back row again (#561)');
+  assert.ok(back < del, 'the back control is appended after the delete — it belongs at the top of the content (#623)');
+  // Last, not merely after the back control: a block appended below it would
+  // put something after the screen's terminal destructive action again.
+  assert.equal(results.indexOf('app.appendChild(', del + 1), -1,
+    'something is appended after delete-session, which is meant to end the screen');
 });
 
 /* A `ti-*` class whose rule is missing renders NOTHING — no tofu, no console
