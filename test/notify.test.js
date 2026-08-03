@@ -132,12 +132,16 @@ test('every line of a notification mail fits on one quoted-printable line (#618)
   await withProdBaseUrl(() => sendFriendRequest(alice, bob.username));
 
   const last = mailsTo(bob)[mailsTo(bob).length - 1];
-  const long = last.text.split('\n').filter((l) => l.length > QP_SAFE_LINE);
+  const lines = last.text.split('\n');
+  const long = lines.filter((l) => l.length > QP_SAFE_LINE);
   assert.deepEqual(long, [], `these lines would be soft-broken: ${JSON.stringify(long)}`);
-  // Both links are absolute against the real origin — a relative one would not be
-  // followable from a mail client at all.
-  assert.ok(last.text.includes('https://spielwirbel.app/inbox'));
-  assert.ok(last.text.includes('https://spielwirbel.app/konto'));
+  // Both links are absolute against the real origin (a relative one is not
+  // followable from a mail client at all) and each sits ALONE on its line, which
+  // is what lets a client's auto-linkifier find it. Matched as whole lines rather
+  // than with `text.includes(url)` — the stronger assertion, and the substring
+  // form is what CodeQL's js/incomplete-url-substring-sanitization warns about.
+  assert.ok(lines.includes('https://spielwirbel.app/inbox'), 'the inbox link is a line of its own');
+  assert.ok(lines.includes('https://spielwirbel.app/konto'), 'the opt-out link is a line of its own');
 });
 
 /* ------------------------ throttle, then coalescing ------------------------- */
