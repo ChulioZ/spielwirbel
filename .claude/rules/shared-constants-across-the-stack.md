@@ -61,7 +61,17 @@ no error, no 400, and a screen that still looks finished. The write end drops an
 unknown type for the same reason `trackEvent` does
 (`.claude/rules/product-event-logging.md`).
 
-Each new instance must be named in this inventory — the four paragraphs above.
+**The fifth is `public/js/reserved-usernames.js`**: the handles registration
+refuses as impersonations of an official account, offered by the register form
+and enforced by `lib/routes/account.js`. Its own trap is one layer down from
+drift — the list is matched against a **normalised** handle (lower-case, `_`,
+`-` and digits stripped), so an entry that is not itself in that form
+(`no-reply`, `Admin`, a two-letter word) can never match and silently protects
+nothing while making the list look longer than it is.
+`test/reserved-usernames.test.js` asserts the shape of every entry for that
+reason, and loops the *whole* set through the route rather than a sample.
+
+Each new instance must be named in this inventory — the five paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

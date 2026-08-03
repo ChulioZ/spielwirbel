@@ -474,6 +474,9 @@ function showRegister() {
       // Mirrors usernameSchema in lib/routes/account.js — the server is still the
       // authority; this only saves a round trip on an obviously bad handle.
       if (!/^[a-zA-Z0-9_-]{3,30}$/.test(username)) return setError(card, t('auth.error.invalidUsername'));
+      // Shares its list with the route that enforces it (reserved-usernames.js),
+      // so this can only ever be early, never stricter or laxer than the server.
+      if (isReservedUsername(username)) return setError(card, t('auth.error.reservedUsername'));
       if (pw.value.length < 8) return setError(card, t('auth.error.shortPassword'));
       submit.disabled = true;
       try {

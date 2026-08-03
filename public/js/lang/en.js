@@ -754,6 +754,7 @@ I18N.en = {
   'auth.error.shortPassword': 'Password must be at least 8 characters.',
   'auth.error.invalidUsername': 'The username needs 3–30 characters and may only contain letters, digits, _ and -.',
   'auth.error.usernameTaken': 'That username is already taken. Please pick another one.',
+  'auth.error.reservedUsername': 'That username is reserved — it could be mistaken for an official Spielwirbel account. Please pick another one.',
   'auth.error.rateLimited': 'Too many attempts. Please wait a moment and try again.',
   'auth.error.sessionExpired': 'Your session has expired. Please reload the page and try again.',
   'auth.error.accountDisabled': 'This account has been suspended. If you have questions, please use the contact form.',

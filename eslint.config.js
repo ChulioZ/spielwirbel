@@ -59,6 +59,9 @@ const frontendGlobals = {
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', initials: 'readonly',
   personColor: 'readonly',
   renderSeatPicker: 'readonly', renderGuestPicker: 'readonly', renderTeamPicker: 'readonly',
+  // reserved-usernames.js
+  RESERVED_USERNAMES: 'readonly', RESERVED_FRAGMENTS: 'readonly',
+  normalizeUsername: 'readonly', isReservedUsername: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',

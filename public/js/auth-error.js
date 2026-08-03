@@ -15,6 +15,10 @@ const AUTH_ERROR_KEYS = {
     invalid_username: 'auth.error.invalidUsername',
     invalid_password: 'auth.error.shortPassword',
     username_taken: 'auth.error.usernameTaken',
+    // Well-formed and free, but refused as an impersonation risk. It needs its
+    // own message: "already taken" would send the person off inventing variants
+    // of a handle no variant of which will be accepted.
+    username_reserved: 'auth.error.reservedUsername',
   },
   login: {
     invalid_credentials: 'auth.error.badCredentials',
