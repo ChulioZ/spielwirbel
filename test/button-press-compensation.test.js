@@ -7,7 +7,7 @@
    rather than added to: `.hub-cta`'s 18px became 2.5px and the whole Start tab
    below the CTA jumped up ~15.5px for the duration of the press.
 
-   The compensation is additive now, through `--btn-mb`. This pins the
+   The compensation is additive now, through `--press-mb`. This pins the
    arithmetic — pressed margin === resting margin + the border shrink — so a
    future retune of the press effect cannot silently reintroduce the clobber.
    CSS-text test; see `.claude/rules/css-text-assertions-strip-comments.md`. */
@@ -17,7 +17,7 @@ const assert = require('node:assert');
 
 const { RULES, bodyOf } = require('./support/css');
 
-const MB = '--btn-mb';
+const MB = '--press-mb';
 
 // A single declaration's value out of a rule body, e.g. decl(body, 'margin-bottom').
 const decl = (body, prop) => {
@@ -41,24 +41,47 @@ function shorthandBottom(value) {
   return px(parts[2]);
 }
 
-/* Every button variant that declares its own `:active` margin, with where its
-   resting and pressed bottom border widths come from. A variant that declares
+/* The two independent pressable families. `.handover__go` is deliberately not a
+   `.btn` (white on the dark handover stage, its own radius and border) but
+   copies the same border-shrink mechanic, so it is subject to the same bug. */
+const PRESSABLE_ROOTS = ['.btn', '.handover__go'];
+
+// Matches a `:active` rule belonging to either family, incl. compounds.
+const ACTIVE_RULE = /^\.(?:btn[\w-]*|handover__go)(?::active|\.[\w-]+:active)$/;
+
+/* Every pressable that declares its own `:active` margin, with where its resting
+   and pressed bottom border widths come from. A `.btn` variant that declares
    neither inherits `.btn:active` wholesale, so its arithmetic is the base one. */
 const VARIANTS = [
   { rest: '.btn', active: '.btn:active' },
   { rest: '.btn--ghost', active: '.btn--ghost:active' },
   { rest: '.btn--sm', active: '.btn--sm:active' },
+  { rest: '.handover__go', active: '.handover__go:active' },
 ];
 
 const borderOf = (selector, fallback) => {
-  const own = decl(bodyOf(selector), 'border-bottom-width');
-  return own ? px(own) : fallback;
+  const body = bodyOf(selector);
+  const own = decl(body, 'border-bottom-width');
+  if (own) return px(own);
+  /* `.handover__go` spells its resting width as the `border-bottom: 4px solid …`
+     shorthand. Without this branch it would silently fall back to `.btn`'s 4px —
+     the same number today, so the assertion would look derived while actually
+     being a coincidence, and would stop tracking the moment either changes. */
+  const shorthand = decl(body, 'border-bottom');
+  const width = shorthand && shorthand.match(/(-?[\d.]+)px/);
+  return width ? Number(width[1]) : fallback;
 };
 
-test('.btn declares the --btn-mb default, so an unstyled button compensates from 0', () => {
-  const value = decl(bodyOf('.btn'), MB);
-  assert.ok(value, `.btn must declare ${MB}`);
-  assert.strictEqual(px(value), 0, `${MB} must default to 0px`);
+test('every pressable declares its own --press-mb default', () => {
+  /* Custom properties INHERIT, so a component outside the `.btn` tree has no
+     value to read. `calc(var(--press-mb) + 2.5px)` would then be invalid at
+     computed-value time and margin-bottom would fall back to 0 — silently
+     REMOVING the compensation rather than making it additive. */
+  for (const selector of PRESSABLE_ROOTS) {
+    const value = decl(bodyOf(selector), MB);
+    assert.ok(value, `${selector} must declare its own ${MB} default`);
+    assert.strictEqual(px(value), 0, `${selector}'s ${MB} must default to 0px`);
+  }
 });
 
 test('every :active margin compensates the border shrink ADDITIVELY, never absolutely', () => {
@@ -82,17 +105,23 @@ test('every :active margin compensates the border shrink ADDITIVELY, never absol
   }
 });
 
-test('no button :active rule sets an absolute bottom margin', () => {
+test('no pressable :active rule sets an absolute bottom margin', () => {
   /* The generalized form of the bug: any absolute value here replaces whatever
-     bottom margin the component declared. Catches a fourth variant added later
-     without reading the two tests above. */
+     bottom margin the component declared. Catches a new variant added later
+     without reading the two tests above — in either family. */
+  let checked = 0;
   for (const [selector, body] of RULES) {
-    if (!/^\.btn[\w-]*(:active|\.[\w-]+:active)$/.test(selector)) continue;
+    if (!ACTIVE_RULE.test(selector)) continue;
     const value = decl(body, 'margin-bottom');
     if (value === null) continue;
+    checked += 1;
     assert.match(value, new RegExp(`var\\(${MB}\\)`),
       `${selector} sets margin-bottom: ${value} — it must be relative to var(${MB})`);
   }
+  /* Anti-vacuous: a regex that stopped matching anything would pass this loop
+     silently, which is exactly how a guard like this rots. */
+  assert.ok(checked >= VARIANTS.length,
+    `only ${checked} :active margin rules matched, expected at least ${VARIANTS.length}`);
 });
 
 test('no button component declares what .btn also declares — such a rule is dead', () => {
@@ -138,14 +167,14 @@ test('.hub-cta keeps display at (0,1,0), so the desktop rail hide still outranks
     '.btn.hub-cta must NOT set display — (0,2,0) would beat the .app .rail-owned hide on source order');
 });
 
-test('.hub-cta: its --btn-mb equals the resting bottom margin it must preserve', () => {
+test('.hub-cta: its --press-mb equals the resting bottom margin it must preserve', () => {
   /* The two numbers live in two declarations and have to agree; if they drift,
      the press either still jumps (too small) or pushes down (too large). */
   const resting = shorthandBottom(decl(bodyOf('.hub-cta'), 'margin'));
   assert.ok(resting > 0,
     '.hub-cta must declare a resting bottom margin — without one this whole spec is vacuous');
 
-  /* Compounded on purpose: `.btn` also declares --btn-mb and is declared LATER
+  /* Compounded on purpose: `.btn` also declares --press-mb and is declared LATER
      in the sheet, so a bare `.hub-cta` would tie at (0,1,0) and lose on source
      order, silently resetting the CTA's compensation to 0.
      See `.claude/rules/ds-row-is-a-click-target.md` for the same shape. */

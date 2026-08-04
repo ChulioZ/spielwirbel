@@ -35,29 +35,29 @@ may also declare must express the adjustment **relative to a custom property the
 component can set**, never as a literal:
 
 ```css
-.btn            { --btn-mb: 0px; }                              /* the default */
-.btn:active     { margin-bottom: calc(var(--btn-mb) + 2.5px); } /* 4px -> 1.5px */
-.btn--ghost:active { margin-bottom: var(--btn-mb); }            /* 1.5px, no shrink */
-.btn--sm:active    { margin-bottom: calc(var(--btn-mb) + 1.5px); } /* 3px -> 1.5px */
-.btn.hub-cta    { --btn-mb: 18px; }
+.btn            { --press-mb: 0px; }                              /* the default */
+.btn:active     { margin-bottom: calc(var(--press-mb) + 2.5px); } /* 4px -> 1.5px */
+.btn--ghost:active { margin-bottom: var(--press-mb); }            /* 1.5px, no shrink */
+.btn--sm:active    { margin-bottom: calc(var(--press-mb) + 1.5px); } /* 3px -> 1.5px */
+.btn.hub-cta    { --press-mb: 18px; }
 ```
 
 `.btn--ghost` is the instructive one: its border is already 1.5px at rest, so it
-compensates by **nothing** — but it must still restate `var(--btn-mb)`. Writing a
+compensates by **nothing** — but it must still restate `var(--press-mb)`. Writing a
 bare `0` there (which is what it had) is the identical bug one variant over,
 waiting for the first ghost button with a margin.
 
 ## Two ways to get the fix itself wrong, both silent
 
-**1. The override must be COMPOUNDED.** `.btn` declares the `--btn-mb` default
-and sits ~450 lines *below* `.hub-cta` in the sheet. A bare `.hub-cta { --btn-mb:
+**1. The override must be COMPOUNDED.** `.btn` declares the `--press-mb` default
+and sits ~450 lines *below* `.hub-cta` in the sheet. A bare `.hub-cta { --press-mb:
 18px }` ties at (0,1,0) and **loses on source order**, resetting the compensation
 to zero with the fix apparently in place. `.btn.hub-cta` is (0,2,0) and wins
 outright — the same remedy as `.ds-row.ds-row--static`.
 
 **2. Leave the resting margin where it is.** Moving it into the custom property
-(`.hub-cta { --btn-mb: 18px; margin: 4px 0 0 }` + `.btn { margin-bottom:
-var(--btn-mb) }`) reads better — one number, one place — and creates a *second*
+(`.hub-cta { --press-mb: 18px; margin: 4px 0 0 }` + `.btn { margin-bottom:
+var(--press-mb) }`) reads better — one number, one place — and creates a *second*
 (0,1,0) tie, this time deciding the app's primary CTA's **resting** look by block
 order. Keeping the 18px in the shorthand means only `:active` (0,2,0) ever reads
 the property, so the resting geometry cannot be affected at all. The cost is that
@@ -102,13 +102,31 @@ Nothing errors; there are simply two CTAs. Hence the split: layout properties
 stay at (0,1,0) in `.hub-cta`, and only what must beat `.btn` moves into
 `.btn.hub-cta`. Both halves have their own test.
 
-## The one that got away
+## The second family: the property INHERITS, so it needs a default per root
 
-`.handover__go:active` carries its own hand-copied `margin-bottom: 2.5px` and is
-**not** a `.btn`, so `--btn-mb` does not reach it — and being outside the family,
-the test above does not see it either. It is correct today only because
-`.handover__go` declares no resting margin. Give it one and the bug is back, with
-none of the above protecting it.
+`.handover__go` (the handover screen's Go button) copies the same border-shrink
+mechanic but is deliberately **not** a `.btn` — white on the dark stage, its own
+radius and border. It carried the same hand-copied `margin-bottom: 2.5px`.
+
+Converting it is not a copy-paste, and the trap is the opposite of the one above:
+**custom properties inherit**, so a component outside the `.btn` tree has no value
+to read. `calc(var(--press-mb) + 2.5px)` is then *invalid at computed-value time*,
+and `margin-bottom` — not an inherited property — falls back to its initial `0`.
+The conversion would have **removed** the compensation while looking like it
+added flexibility. Measured, with no default in scope: `0px`; with
+`.handover__go { --press-mb: 0px }`: `2.5px`, i.e. exactly the literal it
+replaced.
+
+So every pressable **root** declares its own `--press-mb: 0px`. That is also why
+the property is not named `--btn-mb`: two unrelated families use it.
+
+The test list is therefore roots plus variants, and its `:active` sweep matches
+both families. One subtlety worth keeping: `.handover__go` spells its resting
+width as the `border-bottom: 4px solid …` **shorthand**, so the test parses that
+too — without it the lookup falls through to `.btn`'s 4px, which is the same
+number today, so the assertion would look derived while being a coincidence and
+would stop tracking the moment either value changed. Verified by retuning the
+handover border to 3px and watching the arithmetic assertion demand `+1.5px`.
 
 ## Verifying this without a real press
 
@@ -121,7 +139,7 @@ every rule, so this exercises real layout — and measure what must not move:
 const before = ticket.getBoundingClientRect().top;
 cta.style.transform = 'translateY(2px)';
 cta.style.borderBottomWidth = '1.5px';
-cta.style.marginBottom = 'calc(var(--btn-mb) + 2.5px)';   // vs '2.5px' for the old behaviour
+cta.style.marginBottom = 'calc(var(--press-mb) + 2.5px)';   // vs '2.5px' for the old behaviour
 ticket.getBoundingClientRect().top - before;               // 0 fixed, -18 before
 ```
 
