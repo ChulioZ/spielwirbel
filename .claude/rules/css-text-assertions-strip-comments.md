@@ -48,6 +48,34 @@ Two follow-on habits from the same bug:
   makes that collision the norm, not the exception. Use a trailing guard:
   `/\.site-footer(?![\w-])/`.
 
+## In HTML strip too — in JS, assert UNIQUENESS instead (#637)
+
+The trap is the *first match*, not CSS, so it follows the same regex into any
+file read as text. Two of them were found matching source that is not CSS:
+
+- **HTML** — `test/theme-color.test.js` read `index.html` for
+  `<meta name="theme-color">`. Strip `/<!--[\s\S]*?-->/g` first, exactly as
+  above. The failure it hides is the nasty direction: a commented-out tag
+  carrying the *right* value above a live tag that drifted, so the test passes
+  while the app's mobile chrome is wrong. Measured — with the live tag set to
+  `#000000` under a commented-out `#c2410c`, the un-stripped assertion was
+  **green**.
+- **JS — do NOT strip, the remedy is wrong here.** `test/faq.test.js`
+  (`LANDING_REPO_URL`) and `test/phone-width-overflow.test.js` (`MOODS`) match
+  declarations out of `public/js/*.js`. A line-comment strip would eat the `//`
+  in `'https://github.com/…'`, i.e. destroy the value being read — the fix
+  breaking the test worse than the bug. Match with a **global** regex and assert
+  exactly one hit instead:
+
+  ```js
+  const found = [...src.matchAll(/const LANDING_REPO_URL = '([^']+)'/g)];
+  assert.equal(found.length, 1, `declared ${found.length} times, expected 1`);
+  ```
+
+  It is strictly stronger than stripping: a second *live* declaration is caught
+  too, and there is no parser to get wrong. Prefer it wherever the value cannot
+  legally repeat.
+
 And always break the production code on purpose once to confirm the assertion
 actually goes red — a CSS-text test gives you no other signal that it is wired
 to anything real.

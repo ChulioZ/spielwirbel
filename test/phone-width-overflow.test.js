@@ -180,9 +180,13 @@ test('two tracks are ARITHMETICALLY enough for the results row at 320px', () => 
   const barGap = px(barsBody, 'gap');
   const barW = px(bodyOf('.result-row__bars .bar'), 'width');
   const view = fs.readFileSync(path.join(ROOT, 'public/js/views-session.js'), 'utf8');
-  const moods = view.match(/const MOODS = \[([^\]]+)\]/);
-  assert.ok(moods, 'MOODS not found — the rating scale drives the bar count');
-  const bars = moods[1].split(',').length;
+  // The UNIQUE declaration, not the first one — a commented-out copy above the
+  // live line would otherwise decide the bar count
+  // (`.claude/rules/css-text-assertions-strip-comments.md`, in JS).
+  const moods = [...view.matchAll(/const MOODS = \[([^\]]+)\]/g)];
+  assert.equal(moods.length, 1,
+    `views-session.js declares MOODS ${moods.length} times, expected exactly 1 — the rating scale drives the bar count`);
+  const bars = moods[0][1].split(',').length;
 
   for (const [name, v] of Object.entries({ appSide, rowSide, rowGap, cover, barGap, barW })) {
     assert.ok(Number.isFinite(v) && v > 0, `could not read ${name} out of styles.css`);

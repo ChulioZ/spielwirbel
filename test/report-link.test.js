@@ -75,6 +75,12 @@ test('truncates the subject to the schema cap so the form stays submittable', ()
   const subject = new URL(feedReportUrl({ username: 'ada', subject: long }), 'https://x.test')
     .searchParams.get('subject');
   assert.equal(subject.length, REPORT_SUBJECT_MAX);
+  /* A hand-copy of `contactSchema`'s cap, which on its own would only pin this
+     file to itself. What makes it real lives in `test/feed-report.test.js` —
+     'the untruncated subject is what the server rejects' and 'an over-long
+     handle would be rejected too': both POST the UNtruncated value at the live
+     route and require a 400, so if the schema's caps ever moved off 200/60 they
+     go red and name this file. Don't delete either without the other. */
   assert.equal(REPORT_SUBJECT_MAX, 200); // contactSchema: subject.max(200)
   assert.ok(subject.endsWith('…'), 'truncation is visible to the reporter');
 });

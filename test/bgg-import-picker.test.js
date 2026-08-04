@@ -17,14 +17,44 @@
  * frontend through `vm`, so the view stays out of the coverage report; a
  * `require()` of it would red `coverage:ci` with every test green
  * (`.claude/rules/testing-views-under-jsdom.md`).
+ *
+ * The LAST spec is the exception: it drives the real collection route over
+ * supertest, because the fixture every spec above renders is a hand-written copy
+ * of that route's payload and nothing else would notice it drifting.
  */
 
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
+// Flags before the app is required: the last spec in this file drives the real
+// collection route, whose handle is read off the ACTING ACCOUNT (never the
+// request), so an accounts-off instance could only reach the 'no_username'
+// state and would answer with no games at all.
+process.env.ACCOUNTS_ENABLED = 'true';
+process.env.SESSION_SECRET = 'test-session-secret';
+process.env.BGG_API_TOKEN = 'test-token';
 
+const { test, afterEach } = require('node:test');
+const assert = require('node:assert/strict');
+const request = require('supertest');
+
+const { app } = require('./helpers');
+const { outbox } = require('../lib/mail');
 const { loadApp } = require('./support/dom');
 const { bodyOf } = require('./support/css');
 
+// Only the last spec stubs the network at this level; the jsdom ones stub `api`
+// inside the vm context. Restoring after every test keeps that true.
+const realFetch = global.fetch;
+afterEach(() => { global.fetch = realFetch; });
+
+/* One candidate in the shape `GET /api/rounds/:rid/lookup/collection` emits,
+   field for field (`lib/routes/lookup.js`). Captured from a real response on
+   2026-08-05 — and pinned against one by the last spec in this file rather than
+   trusted, because a hand-written copy of a server payload is the shape that
+   rots in silence: rename `present` to `owned` in the route and the picker
+   breaks in production while every spec here stays green, since the fixture
+   goes on answering with the old name.
+
+   `url` is the one field the route emits that this omits, deliberately: the
+   picker never reads it, so the pin below is a subset check, not equality. */
 const game = (id, title, present) => ({
   externalId: String(id),
   title,
@@ -116,11 +146,20 @@ test('the section sits between the actionable list and the sticky actions bar', 
 
 test('the intro names both the collection total and how many are not on the shelf, in every locale', async (t) => {
   for (const locale of ['de', 'en']) {
-    const { body } = await openImport(t, MIXED, locale);
+    const { dom, body } = await openImport(t, MIXED, locale);
     const intro = body.querySelector('p.muted').textContent;
-    assert.match(intro, /(^|\D)5(\D|$)/, `${locale}: the intro drops the collection total`);
-    assert.match(intro, /(^|\D)2(\D|$)/, `${locale}: the intro drops the not-yet-imported count`);
-    assert.doesNotMatch(intro, /\{[nm]\}/, `${locale}: an unreplaced placeholder reached the screen`);
+
+    /* Built through the same i18n call the view makes, but with the two counts
+       supplied INDEPENDENTLY here: the total drives the plural pick, the fresh
+       count fills {m}. Two position-free number regexes could not tell the
+       slots apart — the sentence's only digits ARE the two slots, so swapping
+       them in the view kept both green. Comparing the whole string also fails
+       on an unreplaced {n}/{m}, which the regexes needed a third assertion for. */
+    const expected = dom.run(
+      `tn(${MIXED.length}, 'bggImport.introOne', 'bggImport.intro', { m: ${FRESH.length} })`,
+    );
+    assert.equal(intro, expected,
+      `${locale}: the intro must name ${MIXED.length} in the collection and ${FRESH.length} not yet imported, in that order`);
   }
 });
 
@@ -148,4 +187,58 @@ test('the summary carries a visible focus indicator', () => {
   const focus = bodyOf('.bgg-import__present-head:focus-visible');
   assert.ok(focus, 'no :focus-visible rule for the disclosure summary');
   assert.match(focus, /outline:\s*\d/, 'the focus rule must draw an outline');
+});
+
+/* ------------------------ the fixture's provenance ------------------------- */
+
+const PASSWORD = 'correct horse battery';
+const auth = (token) => ({ Authorization: `Bearer ${token}` });
+
+/* The one spec here that leaves jsdom, and the reason `game()` above may be
+   hand-written at all: it drives the REAL route and checks that every field
+   name the fixture declares is one the server actually emits. */
+test('the fixture speaks the collection route\'s own field names', async () => {
+  const email = 'picker-fixture@example.com';
+  const username = 'pickerfixture';
+  await request(app).post('/api/account/register').send({ email, username, password: PASSWORD });
+  const m = outbox[outbox.length - 1].text.match(/\/v\?t=(v1\.[0-9a-f]+\.[A-Za-z0-9_-]+)/);
+  assert.ok(m, 'verification mail carries a /v?t= link');
+  await request(app).post('/api/account/verify-email').send({ token: m[1] });
+  const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+  assert.equal(login.status, 200);
+  const token = login.body.accessToken;
+
+  const round = await request(app).post('/api/rounds').set(auth(token)).send({ name: 'R', members: ['Alice'] });
+  assert.equal(round.status, 201);
+  await request(app).patch('/api/account/me').set(auth(token)).send({ bggUsername: 'PickerFixture' });
+
+  // A collection item: the name is a TEXT node and the player counts live on
+  // <stats>, unlike search/thing (`.claude/rules/bgg-collection-import.md` §1).
+  global.fetch = async () => ({
+    status: 200,
+    text: async () => `<?xml version="1.0" encoding="utf-8"?>
+<items totalitems="1">
+  <item objecttype="thing" objectid="13" subtype="boardgame" collid="c13">
+    <name sortindex="1">CATAN</name>
+    <thumbnail>https://cf.geekdo-images.com/x__thumb/img/y=/fit-in/200x150/pic13.png</thumbnail>
+    <stats minplayers="2" maxplayers="4"/>
+    <status own="1"/>
+  </item>
+</items>`,
+  });
+
+  const res = await request(app)
+    .get(`/api/rounds/${round.body.id}/lookup/collection?provider=bgg`)
+    .set(auth(token));
+  assert.equal(res.status, 200);
+  const real = res.body.games[0];
+  // Without this the loop below would pass over an empty list, i.e. prove
+  // nothing at all — the exact vacuous shape this spec exists to close.
+  assert.ok(real, `the route returned no candidate (state: ${res.body.state}), so the check below would be vacuous`);
+
+  for (const field of Object.keys(game(13, 'CATAN', false))) {
+    assert.ok(field in real,
+      `the picker fixture declares '${field}', which GET …/lookup/collection does not emit — `
+      + `it answers with ${Object.keys(real).join(', ')}`);
+  }
 });

@@ -110,9 +110,17 @@ test('the repo URL matches the landing page\'s source chip', () => {
   const landing = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'js', 'views-landing.js'), 'utf8',
   );
-  const m = /const LANDING_REPO_URL = '([^']+)'/.exec(landing);
-  assert.ok(m, 'LANDING_REPO_URL not found — did views-landing.js move or rename it?');
-  assert.equal(faq.REPO_URL, m[1]);
+  /* Matched as the UNIQUE declaration, not the first one: a commented-out copy
+     above the live line would otherwise be what this pins
+     (`.claude/rules/css-text-assertions-strip-comments.md`, in JS). Stripping
+     comments — the remedy that rule prescribes for CSS — is the wrong tool
+     here, because the value itself contains `//` and a naive line-comment strip
+     would eat the URL out of the very declaration being read. */
+  const found = [...landing.matchAll(/const LANDING_REPO_URL = '([^']+)'/g)];
+  assert.equal(found.length, 1,
+    `views-landing.js declares LANDING_REPO_URL ${found.length} times, expected exactly 1 `
+    + '— did it move, get renamed, or gain a commented-out copy?');
+  assert.equal(faq.REPO_URL, found[0][1]);
 });
 
 test('user-facing copy says "device", never a specific kind of device', async () => {
