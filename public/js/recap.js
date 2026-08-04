@@ -88,13 +88,30 @@ function bestAndWorst(round, index) {
   return { best: pick(top), worst: bottom < top ? pick(bottom) : null };
 }
 
-// The ids of games the group has RETIRED. This is deliberately not the "active"
-// filter used by bestAndWorst above (`!retired && !completed`): the two archives
-// part company for the cards that merely *name* a game (#643). Retiring is the
-// user saying the game has left the collection, so naming it afterwards
-// contradicts the act; completing is not — the game was played through and stays
-// part of the record. Don't collapse the two back into one "archived" predicate.
-const retiredIds = (round) => new Set(round.games.filter((g) => g.retired).map((g) => g.id));
+// May a stat about the group's TASTE name this game? (#643)
+//
+// This is deliberately not the "active" filter used by bestAndWorst above
+// (`!retired && !completed`): the two archives part company here. Retiring is
+// the user saying the game has left the collection — so calling it a favourite
+// afterwards asserts a preference they have withdrawn. Completing is not: the
+// game was played through, the opinions still stand, and it stays. Don't
+// collapse the two back into one "archived" predicate.
+//
+// It is a shared function rather than a `!g.retired` check repeated per site
+// because the member page computes its own Lieblingsspiel from the raw sessions
+// (`memberStats`, views-member.js) instead of going through this file's index —
+// two implementations of one rule, which is the drift
+// `.claude/rules/shared-constants-across-the-stack.md` is about. A game must not
+// be able to vanish from the Pokale favourites while still sitting on the
+// member's own page.
+//
+// NOT used by the Meistgespielt tally, which counts every night including a
+// retired game's: that card is a record of what happened, not a claim of taste.
+const isNameableGame = (game) => !game.retired;
+
+// The ids this round may not name, as a Set for the per-game scans below.
+const retiredIds = (round) =>
+  new Set(round.games.filter((g) => !isNameableGame(g)).map((g) => g.id));
 
 // The game two members disagree about most: the largest gap between any two
 // members' own averages for it. Needs two members who both rated it, plus the
@@ -180,5 +197,5 @@ function roundRecap(round, peopleOf) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { RECAP_MIN_RATINGS, roundRecap };
+  module.exports = { RECAP_MIN_RATINGS, roundRecap, isNameableGame };
 }

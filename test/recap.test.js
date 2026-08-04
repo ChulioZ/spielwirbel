@@ -3,7 +3,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { RECAP_MIN_RATINGS, roundRecap } = require('../public/js/recap');
+const { RECAP_MIN_RATINGS, roundRecap, isNameableGame } = require('../public/js/recap');
 // The real resolver, not a stand-in: the member/guest split is the thing most of
 // these assertions are about, so a simplified fake would test the wrong rules
 // (.claude/rules/session-guests-are-not-members.md).
@@ -141,6 +141,21 @@ test("a guest's rating moves the average, so the recap cannot contradict the gam
   const rec = recapOf(round({ sessions: [withGuest] }));
   assert.equal(rec.totals.ratings, 3, 'the guest vote counts');
   assert.equal(rec.best.avg, 4, '(5 + 5 + 2) / 3');
+});
+
+// ---- what a taste stat may name -------------------------------------------
+
+// The rule itself, not one of its consumers. It is a shared function because
+// views-member.js computes the member page's Lieblingsspiel from the raw
+// sessions rather than through this file's index, so without it the same rule
+// would exist twice (.claude/rules/shared-constants-across-the-stack.md).
+test('only retiring takes a game out of the taste stats — completing does not', () => {
+  assert.equal(isNameableGame({ id: 'g1', title: 'Catan' }), true);
+  assert.equal(isNameableGame({ id: 'g2', title: 'Alt', retired: true }), false);
+  assert.equal(isNameableGame({ id: 'g3', title: 'Fertig', completed: true }), true);
+  // A game cannot be both (the repo enforces exclusivity), but if one ever were,
+  // retired must still win — otherwise the withdrawn preference gets named.
+  assert.equal(isNameableGame({ id: 'g4', retired: true, completed: true }), false);
 });
 
 // ---- most divisive --------------------------------------------------------

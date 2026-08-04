@@ -110,25 +110,30 @@ const cardByLabel = (root, label) =>
 
 // ---- the Pokale tab -------------------------------------------------------
 
-test('no card on the Pokale tab names a retired game', async (t) => {
+test('the only card that may name a retired game is Meistgespielt', async (t) => {
   const dom = bootApp(t);
   await dom.call('showRound', RID, 'pokale');
   assert.ok(namedGames(dom.app).length >= 3, 'the tab must actually have rendered its cards');
+  const elsewhere = [...dom.app.querySelectorAll('.pokale-card')]
+    .filter((c) => c !== cardByLabel(dom.app, dom.run("t('pokale.mostPlayed')")))
+    .flatMap((c) => namedGames(c));
   assert.ok(
-    !namedGames(dom.app).includes('Azul'),
-    'Azul is retired, yet the tab still names it somewhere'
+    !elsewhere.includes('Azul'),
+    'Azul is retired, yet a taste card still names it'
   );
 });
 
-test('Meistgespielt skips a retired game and crowns the most-played one that is left', async (t) => {
+test('Meistgespielt still counts a retired game\'s nights — the sessions happened', async (t) => {
   const dom = bootApp(t);
   await dom.call('showRound', RID, 'pokale');
   const card = cardByLabel(dom.app, dom.run("t('pokale.mostPlayed')"));
-  // Azul was chosen on 3 nights and Cascadia on 2, so naming Cascadia proves the
-  // retired game's nights stopped counting — and that a COMPLETED game's did not
-  // (filtering both archives would leave Catan, on one night).
-  assert.deepEqual(namedGames(card), ['Cascadia']);
-  assert.equal(card.querySelector('.pokale-card__sub').textContent, dom.run("tn(2, 'home.chip.sessionsOne', 'home.chip.sessions')"));
+  // Azul was chosen on 3 nights, Cascadia on 2, Catan on 1. Retiring Azul does
+  // not unmake those three evenings, so it still tops this card (operator
+  // decision, 2026-08-04) — this card is a record of what happened, not a claim
+  // about the current shelf. The taste cards below behave the opposite way, and
+  // this pair is what keeps the two from being "tidied" into one rule.
+  assert.deepEqual(namedGames(card), ['Azul']);
+  assert.equal(card.querySelector('.pokale-card__sub').textContent, dom.run("tn(3, 'home.chip.sessionsOne', 'home.chip.sessions')"));
 });
 
 test('Größte Uneinigkeit skips a retired game but keeps a completed one', async (t) => {
@@ -156,12 +161,10 @@ test('a member whose top-rated game is retired keeps their next-best favourite',
   );
 });
 
-test('Meistgespielt is omitted, not blank, when every game ever played is retired', async (t) => {
-  // A newly reachable state: before #643 an empty tally meant "no finished
-  // session ever chose a game", and the only way there was a round with no
-  // sessions. Now a round with plenty of history can empty it. The card must
-  // drop out (the existing empty-tally behaviour) rather than render a heading
-  // over nothing, or crash on a `find` that returns undefined.
+test('a round whose whole shelf is retired still renders, naming no taste card', async (t) => {
+  // The far edge of the split: every taste card drops out while Meistgespielt
+  // keeps its record. The tab must still read as a screen rather than collapsing
+  // — an omitted card must not take the section with it.
   const dom = loadApp();
   t.after(() => dom.close());
   const round = {
@@ -177,9 +180,9 @@ test('Meistgespielt is omitted, not blank, when every game ever played is retire
   dom.set('accountsActive', () => false);
   dom.set('isLoggedIn', () => false);
   await dom.call('showRound', RID, 'pokale');
-  assert.equal(cardByLabel(dom.app, dom.run("t('pokale.mostPlayed')")), undefined);
-  assert.deepEqual(namedGames(dom.app), [], 'no card may name a game when every game is retired');
-  // The tab still renders — an omitted card must not take the screen with it.
+  assert.deepEqual(namedGames(cardByLabel(dom.app, dom.run("t('pokale.mostPlayed')"))), ['Azul']);
+  assert.equal(cardByLabel(dom.app, dom.run("t('recap.divisive')")), undefined);
+  assert.equal(dom.app.querySelectorAll('.recap-fav').length, 0);
   assert.ok(dom.app.querySelector('.recap__totals'), 'the Rückblick totals still render');
 });
 
