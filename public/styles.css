@@ -3250,10 +3250,37 @@ body.auth-screen .terms-banner { display: none; }
 :is(.move-row, .bgg-import__row) .ds-row__main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 :is(.move-row__name, .bgg-import__name) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 :is(.move-row__state, .bgg-import__state) { flex: none; font-size: var(--text-sm); }
-/* A game already on the shelf: shown, checked and disabled rather than hidden,
-   so the list still reads as the user's whole collection instead of looking as
-   if the import had lost half of it. Dimmed so the selectable rows lead. */
-.bgg-import__row.is-present { cursor: default; opacity: 0.55; }
+/* Games already on the shelf are still shown — never dropped, the list is the
+   user's own collection — but they are inert, so as of #625 they sit in their
+   own collapsed section below the actionable list instead of interleaved with
+   it. A native <details>, so keyboard focus and Enter/Space toggling come from
+   the platform; the SPA declares no other details/summary rules, hence the
+   focus style here. The disclosure marker is the UA's own, which paints in
+   `currentColor` and therefore follows every theme for free. */
+.bgg-import__present { margin-bottom: 18px; }
+.bgg-import__present-head {
+  cursor: pointer;
+  padding: 6px 0;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.bgg-import__present-head:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.bgg-import__present-list { margin: 0; padding: 2px 0 2px 22px; list-style: none; }
+/* Title-only: the heading above carries the "already on the shelf" meaning, so
+   a per-row state label would repeat it once per line. */
+.bgg-import__present-item {
+  padding: 4px 0;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .bgg-import__msg { padding: 8px 0 4px; }
 .bgg-import__msg p { margin: 0 0 6px; }
 /* Each import candidate is a wrapper, not a bare row (#519): the row itself is a

@@ -5,6 +5,7 @@ paths:
   - "lib/repo/**"
   - "public/js/views-round-lookup.js"
   - "test/bgg-import.test.js"
+  - "test/bgg-import-picker.test.js"
 ---
 # The BGG collection import (#481): four traps, three of them silent
 
@@ -129,9 +130,19 @@ browser contacts nothing new.
 - **Expansions are excluded here** (`excludesubtype=boardgameexpansion`) although
   the *search* offers them deliberately — a bulk import is the one place where 50
   expansions of one game are noise rather than choice.
-- **Games already on the shelf are shown, checked and disabled — not hidden.** The
-  list is the user's own collection; silently dropping half of it reads as the
-  import having lost games.
+- **Games already on the shelf are still SHOWN — never dropped — but out of the
+  actionable list** (#625 changed the *placement*, not that reasoning: hiding
+  half the user's own collection reads as the import having lost games). They
+  used to render checked and disabled **inside** the one list to act on, so a
+  mostly-imported shelf meant hunting past inert rows; they now sit below it in a
+  collapsed `.bgg-import__present`, and no `is-present` row or disabled checkbox
+  exists any more. It is a **native** `<details>`/`<summary>` (focus + Enter/Space
+  from the platform, `.claude/rules/native-button-vs-focusable-span.md`) holding a
+  plain `<ul>`, not a `.ds-row` — that would promise a click target that is not
+  there (`.claude/rules/ds-row-is-a-click-target.md`) — and it is appended
+  **before** `.sheet__actions`, which is `sticky; bottom: 0` and opaque, so
+  anything after it scrolls under the submit button.
+  `test/bgg-import-picker.test.js` runs the view in jsdom and pins all of it.
 - **The picker must not be wrapped in a `.field`** — `.field label` (0,1,1) beats
   `.ds-row` (0,1,0) and silently flattens every row
   (`.claude/rules/label-rows-lose-to-field-label.md`). Verified in a browser:
