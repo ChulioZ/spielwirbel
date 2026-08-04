@@ -119,6 +119,10 @@ lib/
                      backends and the logger can require it without a cycle
   scheduler.js       background jobs, started from server.js only: today the
                      expired-demo purge (issue #427)
+  shutdown.js        the SIGTERM/SIGINT drain server.js installs — stops the
+                     scheduler, lets in-flight requests finish, destroys the
+                     pool, with a force-exit fallback. A factory taking its
+                     collaborators, so it is testable without opening a port
   mail.js            outbound e-mail (SMTP via nodemailer when SMTP_HOST is
                      set, else logged to an in-memory outbox), plus the global
                      daily send budget (MAIL_DAILY_MAX, issue #448) and its

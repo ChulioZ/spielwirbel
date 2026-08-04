@@ -19,6 +19,8 @@
 const { DATA_FILE, UPLOAD_DIR } = require('./lib/store');
 const { createApp } = require('./lib/app');
 const repo = require('./lib/repo');
+const { logger } = require('./lib/observability');
+const { createShutdown } = require('./lib/shutdown');
 
 const imagesLocation = process.env.S3_BUCKET
   ? `S3 object storage (bucket ${process.env.S3_BUCKET})`
@@ -34,12 +36,20 @@ repo.init().then(() => {
   // nowhere else — lib/app.js is imported by the test suite dozens of times, and
   // a timer started there would keep the runner's process alive after the last
   // assertion. See lib/scheduler.js.
-  require('./lib/scheduler').start();
-  app.listen(PORT, () => {
+  const scheduler = require('./lib/scheduler');
+  scheduler.start();
+  const server = app.listen(PORT, () => {
     console.log(`\n  🌀  Spielwirbel running at  http://localhost:${PORT}\n`);
     console.log(`      Persistence:          ${process.env.DATABASE_URL ? 'PostgreSQL (DATABASE_URL)' : DATA_FILE}`);
     console.log(`      Images are stored in: ${imagesLocation}\n`);
   });
+
+  // Drain instead of dying: Node's default SIGTERM action is an immediate exit,
+  // which on every Railway deploy would cut in-flight requests mid-response and
+  // leave the pool to be destroyed by process death. See lib/shutdown.js.
+  const shutdown = createShutdown({ server, repo, scheduler, logger });
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }).catch((err) => {
   console.error('Failed to initialise the data backend:', err.message);
   process.exit(1);

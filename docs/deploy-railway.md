@@ -62,7 +62,44 @@ Everything is configured with the same env vars documented in
 3. Add `DATABASE_SSL=true` only if you connect over Railway's **public** Postgres
    endpoint (managed Postgres over the internet requires TLS); over the project's
    **private** network leave it unset — the handshake is pure per-connection cost.
-4. *(Optional hardening, #136)* the round tables are protected by **Row-Level
+   Once you are on the private network, **disable the public TCP proxy** in the
+   database service's Networking tab and delete the leftover
+   `DATABASE_PUBLIC_URL` variable — nothing in the app reads it (the app reads
+   `DATABASE_URL` only), so it is a dead credential-bearing string that outlives
+   the endpoint it names.
+4. **Size the volume — the default is the *trial* ceiling, not a considered
+   number.** Railway's per-plan volume maximums are 0.5 GB (Free/Trial), 5 GB
+   (Hobby) and 50 GB (Pro), and a volume created on a lower plan **does not grow
+   when the plan does**. This deployment ran a live public instance on a 0.5 GB
+   volume long after moving to Pro (found 2026-08-04). Grow it from the volume's
+   **Size → Live resize** control (that button *is* the grow action — there is no
+   separate one), and do it early: a resize below 100% is performed live, but at
+   100% Railway forces an **offline** resize that restarts the service. You are
+   charged for data stored rather than capacity allocated, so headroom is free;
+   a volume can never be shrunk again.
+
+   Read the usage before extrapolating from the percentage — most of a small
+   number is fixed cost (catalog + WAL), and the guest demo (#427) churns up to
+   `MAX_LIVE_DEMOS` seeded accounts *per day* through the same tables, which sets
+   a floor unrelated to how many real users you have:
+
+   ```sql
+   SELECT pg_size_pretty(pg_database_size(current_database())) AS db,
+          (SELECT pg_size_pretty(sum(size)) FROM pg_ls_waldir()) AS wal;
+   ```
+
+   ```sql
+   SELECT relname, pg_size_pretty(pg_total_relation_size(relid)) AS total,
+          n_live_tup, n_dead_tup, last_autovacuum
+   FROM pg_stat_user_tables ORDER BY pg_total_relation_size(relid) DESC;
+   ```
+
+   A stale or null `last_autovacuum` next to a large `n_dead_tup` on
+   `rounds`/`games`/`sessions`/`activities` is the one way this grows without user
+   growth. Run these in the **Database** tab — the Console tab is a container
+   shell, where SQL is a bash syntax error
+   (`.claude/rules/railway-postgres-floating-major.md`).
+5. *(Optional hardening, #136)* the round tables are protected by **Row-Level
    Security**, but Postgres **superusers bypass RLS entirely** — and Railway's
    default `postgres` user is one. The app's own queries are tenant-filtered
    either way; for the database-level backstop to actually bind, run the app as
@@ -96,6 +133,14 @@ Everything is configured with the same env vars documented in
    - `S3_REGION` = `auto`
    - `S3_FORCE_PATH_STYLE` = `true`
    - `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` = the R2 token pair
+
+3. **Decide the bucket's recovery story — R2 has none by default.** Cover images
+   are user data with no second copy anywhere: object versioning is off unless you
+   turn it on, and unlike the database there is nothing to restore from. A bad
+   delete path or a leaked token loses them permanently. Enable **object
+   versioning**, or add a lifecycle/replication rule to a second bucket. Scope the
+   API token to the one bucket while you are there — an account-wide token is a
+   much wider blast radius than the app needs.
 
 *(Simplest-start alternative: attach a Railway **volume** mounted at `/data` and
 skip R2 — uploads then live on the volume. It works, but a volume pins the service
@@ -170,6 +215,42 @@ certificate automatically — this completes #156.
 `NODE_ENV=production` is baked into the image (serves the hashed `dist/` build).
 Other optional tuning (`LOG_LEVEL`, `RATE_LIMIT_MAX`, `ERROR_WEBHOOK_URL`, …) is in
 [`.env.example`](../.env.example).
+
+## Deploy settings that are pinned in code, not the dashboard
+
+`railway.json`'s `deploy` block carries three settings that look like ordinary
+dashboard dials and are not. Railway's config-as-code takes precedence over the
+dashboard, so editing them means editing the file:
+
+| Key | Value | Why it is pinned |
+|---|---|---|
+| `healthcheckPath` | `/healthz` | The shallow probe. Pointing the *deploy* check at `/readyz` restart-loops the container on a database blip ([`liveness-vs-readiness-probes.md`](../.claude/rules/liveness-vs-readiness-probes.md)) |
+| `numReplicas` | `1` | The rate limiters and the `MAIL_DAILY_MAX` budget are per process and in memory, so a second replica silently doubles every ceiling. **#215** (shared Redis store) is the prerequisite for raising it |
+| `sleepApplication` | `false` | A sleeping container runs no demo-purge tick (`lib/scheduler.js`) |
+
+`test/docker.test.js` asserts all three, so a change goes red rather than quiet.
+The full reasoning — including why `numReplicas: 1` does **not** mean "only ever
+one process" — is in
+[`.claude/rules/deploy-invariants-are-pinned-in-code.md`](../.claude/rules/deploy-invariants-are-pinned-in-code.md).
+
+**The container shuts down gracefully.** Railway sends `SIGTERM` to the outgoing
+container on every deploy; `server.js` installs the handler from `lib/shutdown.js`,
+which stops the scheduler, drains in-flight requests (`server.close()`) and
+destroys the knex pool before exiting, with a 10 s force-exit fallback. Without it
+Node's default action is an immediate exit, cutting whatever was in flight.
+
+## Account-level settings (nothing in the repo can see these)
+
+- **Set a hard usage limit with an alert threshold below it.** Railway *shuts
+  services down* when the hard limit is reached, so an unset limit risks a
+  runaway bill and a too-tight one is a self-inflicted outage.
+- **Protect the account itself.** A passkey is a stronger floor than TOTP, but
+  check that no weaker login method is still enabled alongside it, and that
+  recovery does not dead-end on a single device. Railway, the domain registrar,
+  Cloudflare and the operator mailbox all gate production, and account recovery
+  for several of them loops through that mailbox.
+- **PR environments off** unless you want a service + database per pull request;
+  CI already covers PRs.
 
 ## Monitoring (#462)
 
