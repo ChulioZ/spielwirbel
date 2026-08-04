@@ -2,6 +2,7 @@
 paths:
   - "lib/repo/**"
   - "lib/draw.js"
+  - "public/js/draw-pool.js"
   - "lib/routes/sessions.js"
   - "lib/routes/games.js"
   - "public/js/views-round*.js"
@@ -34,22 +35,32 @@ before assuming you have them all:
   `json.js` with `!g.retired && !g.completed`, `postgres.js` with two
   `IS NOT TRUE` clauses in the `listRoundSummaries` SQL. Both must change
   together.)
-- `lib/draw.js` `isActiveGame` — the draw `pool` filter *and* `lib/routes/sessions.js`'s
-  direct-pick 400 both go through this **one** predicate since #486. They used to
-  be two inline copies in the route, "easy to fix one and miss the other" — miss
-  the direct-pick one and an archived game stays playable by id even though it is
-  invisible in the UI that would offer it. A third archive state is now one edit
-  here, and `test/draw.test.js` unit-tests the predicate directly rather than only
-  through an HTTP round-trip. The route still spells the *message* per archive
-  ("Game is retired" / "Game is completed"), so that branch survives — but the
-  400 itself no longer can be missed. `drawPool` also carries the
-  **player-count** arithmetic, which is mirrored in `showStartSession()`'s live
-  preview and has had a team term in it since #575 — see
-  `.claude/rules/session-teams.md` §2; the two copies must move together.
+- **`public/js/draw-pool.js` `isActiveGame`** — the draw `pool` filter *and*
+  `lib/routes/sessions.js`'s direct-pick 400 both go through this **one**
+  predicate since #486. They used to be two inline copies in the route, "easy to
+  fix one and miss the other" — miss the direct-pick one and an archived game
+  stays playable by id even though it is invisible in the UI that would offer it.
+  A third archive state is now one edit here, and `test/draw.test.js` unit-tests
+  the predicate directly rather than only through an HTTP round-trip. The route
+  still spells the *message* per archive ("Game is retired" / "Game is
+  completed"), so that branch survives — but the 400 itself no longer can be
+  missed.
+
+  **It lived in `lib/draw.js` until #634**, which moved it (with the player-range
+  clause, now `fitsPlayerCount`) into a shared `public/js/` module so the setup
+  screen's live preview applies the server's own predicate instead of a
+  hand-synced copy — `lib/draw.js` requires it and re-exports `isActiveGame`, so
+  the route's import is unchanged. That collapses two of the frontend sites below
+  and is why this bullet no longer names a filter that a `grep retired` in `lib/`
+  would find. The **player-count arithmetic** still lives per caller and still has
+  a team term in it since #575 (`.claude/rules/session-teams.md` §2) — only the
+  *range check* it feeds is shared.
 - `lib/repo/{json,postgres}.js` `createRound` import filter (Postgres needs a
   second `whereRaw`, the JSON one a second `&&`).
 
-**Frontend:** `views-round.js` `activeGames`, `views-session.js` `activeGames`,
+**Frontend:** `views-round.js` `activeGames`, `views-session.js` `activeGames`
+(the one site that is **not** a copy — it passes the shared `isActiveGame`
+straight to `filter`, and its pool preview uses `fitsPlayerCount` too, #634),
 `views-round-tabs.js` (the Pokale "best rated" list, the stats scope, and the
 per-row "Jetzt spielen" launcher at the `gameStatCard` level),
 `round-rail.js` `activeGames` (the desktop rail's counts), and `recap.js`

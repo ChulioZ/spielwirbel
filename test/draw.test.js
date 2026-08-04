@@ -12,6 +12,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { drawPool, isActiveGame, shuffle } = require('../lib/draw');
+const shared = require('../public/js/draw-pool');
 
 // One game per state/shape the filter cares about. Player ranges are left off
 // unless the case is about them — an absent min/max means "any table size".
@@ -43,6 +44,19 @@ test('isActiveGame is false for either archive and true for a plain game', () =>
   assert.equal(isActiveGame({ completed: true }), false);
   // Exclusivity is enforced in the repo, but the predicate must not depend on it.
   assert.equal(isActiveGame({ retired: true, completed: true }), false);
+});
+
+test('lib/draw re-exports the SHARED predicates rather than holding copies', () => {
+  // Identity, not behaviour: an inlined second copy of either predicate passes
+  // every other test in this file while being exactly the drift #634 removed.
+  // lib/routes/sessions.js imports isActiveGame from here, so the re-export is
+  // load-bearing and not a convenience.
+  assert.equal(isActiveGame, shared.isActiveGame, 'isActiveGame must BE public/js/draw-pool.js\'s');
+  assert.equal(
+    drawPool({ games: [{ minPlayers: 5 }] }, { playerCount: 2 }).length,
+    0,
+    'the pool must apply the shared range predicate',
+  );
 });
 
 test('included tags use AND semantics — a game must carry every one', () => {

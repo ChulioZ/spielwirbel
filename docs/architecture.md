@@ -298,6 +298,10 @@ public/
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
                      lib/routes/members.js validates against (issue #420)
+    draw-pool.js     which games a draw may pick from: the active-collection
+                     check and the player-range fit, required by lib/draw.js so
+                     the setup screen's live preview and the real draw apply one
+                     predicate (issue #634)
     session-log.js   the session activity log's event types and their phrasing —
                      one list, written by lib/session-events.js and rendered by
                      the lobby and the results screen (issue #209)

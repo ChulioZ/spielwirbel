@@ -15,7 +15,7 @@ function showStartSession(round) {
   app.innerHTML = '';
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('startSession.title'))}</h1></div>`));
 
-  const activeGames = round.games.filter((g) => !g.retired && !g.completed);
+  const activeGames = round.games.filter(isActiveGame);
 
   // These two headings label a group of buttons, not a form control, so they are
   // <div class="label">, not <label> (#145): a <label> with no `for` and no
@@ -107,14 +107,14 @@ function showStartSession(round) {
 
   // Games matching the tag filter, whose player range fits the joining count.
   // Guests sit at the table, so they count here, and a team counts once however
-  // many people it holds (#575) — the server applies the identical arithmetic to
-  // the real pool (.claude/rules/active-games-filter-sites.md).
+  // many people it holds (#575). The range clause and the active filter above are
+  // the SERVER's own (draw-pool.js, required by lib/draw.js), so this preview
+  // cannot promise a pool the draw would not produce — only the tag filter is
+  // expressed differently here, over the chip map instead of resolved id lists
+  // (.claude/rules/active-games-filter-sites.md).
   const pool = () =>
     activeGames.filter(
-      (g) =>
-        matchesTagFilter(selectedTags, g.tagIds) &&
-        (typeof g.minPlayers !== 'number' || playerCount() >= g.minPlayers) &&
-        (typeof g.maxPlayers !== 'number' || playerCount() <= g.maxPlayers)
+      (g) => matchesTagFilter(selectedTags, g.tagIds) && fitsPlayerCount(g, playerCount())
     );
 
   // Live pool preview, in the two presentations described above. The wide panel
