@@ -472,7 +472,16 @@ h1, h2, h3 { font-family: var(--font-display); }
   .rail__name { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; line-height: 1.2; }
   .rail__members { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
   .rail__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .rail__cta { width: 100%; font-size: var(--text-md); padding: 12px 16px; gap: 8px; }
+  /* No font-size/padding here on purpose (#615): both are `.btn`'s job. This
+     rule is (0,1,0) and so is `.btn`, which declares them and sits ~650 lines
+     later, so anything named in both silently resolves to `.btn`'s value — the
+     `var(--text-md)`/`12px 16px` that used to sit here had never once applied.
+     The rail CTA renders at `.btn`'s 18px / 11px 20px, and that is now the
+     decision rather than the accident (operator call, 2026-08-04: the primary
+     action should read a step above the 16px section links beside it).
+     Anything that must beat `.btn` needs a compounded `.btn.rail__cta` — see
+     `.claude/rules/state-rules-clobber-component-values.md`. */
+  .rail__cta { width: 100%; gap: 8px; }
   .rail__group { display: flex; flex-direction: column; gap: 2px; }
   .rail__label {
     font-size: var(--text-xs);

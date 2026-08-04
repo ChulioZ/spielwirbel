@@ -79,9 +79,19 @@ for `18px` / 22px / 18px, and the tell was visible on screen the whole time:
 `.hub-cta .ti` *is* more specific, so the icon sized at 26px next to a label that
 never got past 18px.
 
-So the compounded rule carries all four properties, and `test/button-press-
-compensation.test.js` asserts the general form — **`.hub-cta` may declare nothing
-that `.btn` also declares** — rather than listing the three.
+`.rail__cta` (the ≥1280px rail's copy of the CTA) had it too — a
+`var(--text-md)`/`12px 16px` that never once applied. Being inside a media block
+buys a rule no specificity.
+
+**The two were resolved in opposite directions, and both are correct.** The phone
+CTA's declarations moved into `.btn.hub-cta` and now apply; the rail's were
+**deleted**, so `.btn`'s 18px/`11px 20px` becomes the decision rather than the
+accident (operator call: the primary action should read a step above the 16px
+section links beside it). Either answer is fine — what is not fine is leaving a
+declaration that looks live and is not. So the test asserts the invariant both
+satisfy — **no button component may declare what `.btn` also declares** — over a
+list of *selectors*, not of properties, so a new dead declaration in either block
+is caught without editing it.
 
 **But do NOT promote the whole block to (0,2,0) to fix this.** `.hub-cta`'s
 `display: flex` is competing with `.app .rail-owned { display: none }` (0,2,0),
@@ -94,18 +104,11 @@ stay at (0,1,0) in `.hub-cta`, and only what must beat `.btn` moves into
 
 ## The one that got away
 
-Two, both left alone deliberately:
-
-- **`.handover__go:active`** carries its own hand-copied `margin-bottom: 2.5px`
-  and is **not** a `.btn`, so `--btn-mb` does not reach it. Correct today only
-  because `.handover__go` declares no resting margin. Give it one and the bug is
-  back, with none of the above protecting it.
-- **`.rail__cta`** (the ≥1280px rail's copy of the CTA) has the dead-declaration
-  half, measured: it computes `.btn`'s 18px / `11px 20px` rather than its own
-  `var(--text-md)` / `12px 16px`. Being inside a media block buys it no
-  specificity. It was left out of #615 because making those live *shrinks* a
-  desktop control — a visual decision, not a bug fix — but it is the same tie and
-  the fix is the same compounding.
+`.handover__go:active` carries its own hand-copied `margin-bottom: 2.5px` and is
+**not** a `.btn`, so `--btn-mb` does not reach it — and being outside the family,
+the test above does not see it either. It is correct today only because
+`.handover__go` declares no resting margin. Give it one and the bug is back, with
+none of the above protecting it.
 
 ## Verifying this without a real press
 

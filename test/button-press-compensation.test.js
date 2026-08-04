@@ -95,20 +95,34 @@ test('no button :active rule sets an absolute bottom margin', () => {
   }
 });
 
-test('.hub-cta declares nothing that .btn also declares — such a rule is dead', () => {
-  /* The general form of the second half of #615. `.hub-cta` and `.btn` are both
-     (0,1,0) and `.btn` is declared ~450 lines LATER, so every property named in
-     both resolves to `.btn`'s value. font-size, padding and border-radius sat
-     there dead from the day the CTA was built — it rendered at ordinary button
-     size while its own rule asked for a larger one, with nothing to show for it.
-     Anything that must beat `.btn` belongs in `.btn.hub-cta`. */
+test('no button component declares what .btn also declares — such a rule is dead', () => {
+  /* The general form of the second half of #615. A component rule on a `.btn`
+     element is (0,1,0) and so is `.btn`, which is declared LAST of the three, so
+     every property named in both resolves to `.btn`'s value.
+
+     Both CTAs had this. `.hub-cta`'s font-size/padding/border-radius sat dead
+     from the day it was built — it rendered at ordinary button size while its
+     own rule asked for a larger one — and `.rail__cta` carried a
+     `var(--text-md)`/`12px 16px` that had never once applied. They were resolved
+     in opposite directions (the phone CTA's moved into `.btn.hub-cta` and now
+     apply; the rail's were deleted, so `.btn`'s values are the decision), and
+     this asserts the invariant both answers satisfy: nothing dead is left behind.
+
+     Anything that must beat `.btn` goes in a COMPOUNDED rule. Note the list is
+     the selectors, not the properties — a fourth property added to either block
+     tomorrow is caught without editing this test. */
   const props = (selector) => new Set(
     [...bodyOf(selector).matchAll(/(?:^|;)\s*([a-z-]+)\s*:/g)].map((m) => m[1]),
   );
   const btn = props('.btn');
-  const dead = [...props('.hub-cta')].filter((p) => btn.has(p));
-  assert.deepStrictEqual(dead, [],
-    `.hub-cta declares ${dead.join(', ')}, which .btn also declares and wins — move to .btn.hub-cta`);
+  for (const selector of ['.hub-cta', '.rail__cta']) {
+    const body = bodyOf(selector);
+    assert.ok(body, `${selector} must exist for this assertion to mean anything`);
+    const dead = [...props(selector)].filter((p) => btn.has(p));
+    assert.deepStrictEqual(dead, [],
+      `${selector} declares ${dead.join(', ')}, which .btn also declares and wins — `
+      + `move to a compounded .btn${selector} rule, or delete it`);
+  }
 });
 
 test('.hub-cta keeps display at (0,1,0), so the desktop rail hide still outranks it', () => {
