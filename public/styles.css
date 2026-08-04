@@ -472,7 +472,16 @@ h1, h2, h3 { font-family: var(--font-display); }
   .rail__name { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; line-height: 1.2; }
   .rail__members { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
   .rail__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .rail__cta { width: 100%; font-size: var(--text-md); padding: 12px 16px; gap: 8px; }
+  /* No font-size/padding here on purpose (#615): both are `.btn`'s job. This
+     rule is (0,1,0) and so is `.btn`, which declares them and sits ~650 lines
+     later, so anything named in both silently resolves to `.btn`'s value — the
+     `var(--text-md)`/`12px 16px` that used to sit here had never once applied.
+     The rail CTA renders at `.btn`'s 18px / 11px 20px, and that is now the
+     decision rather than the accident (operator call, 2026-08-04: the primary
+     action should read a step above the 16px section links beside it).
+     Anything that must beat `.btn` needs a compounded `.btn.rail__cta` — see
+     `.claude/rules/state-rules-clobber-component-values.md`. */
+  .rail__cta { width: 100%; gap: 8px; }
   .rail__group { display: flex; flex-direction: column; gap: 2px; }
   .rail__label {
     font-size: var(--text-xs);
@@ -645,17 +654,44 @@ h1, h2, h3 { font-family: var(--font-display); }
 .avatar--add:hover { color: var(--brand); border-color: var(--brand); }
 .hero__chips { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
-/* The one big accent action of the Start tab. */
+/* The one big accent action of the Start tab.
+
+   Everything here must stay at (0,1,0) — in particular `display`, which is
+   competing with `.app .rail-owned { display: none }` (0,2,0, declared ~200
+   lines ABOVE). Raise this block's specificity to (0,2,0) and that hide becomes
+   a tie decided by source order, which this rule wins — so the phone CTA would
+   render on desktop beside the rail's own. Anything that has to outrank `.btn`
+   goes in the `.btn.hub-cta` rule below instead. */
 .hub-cta {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  margin: 4px 0 18px;
+}
+/* Everything the CTA has to win from `.btn`, which declares all four of these
+   and sits ~450 lines further down: at (0,1,0) they tie and `.btn` wins on
+   source order, so each one is silently DEAD in the block above. Compounded to
+   (0,2,0), they apply. Two things this fixes (#615):
+
+   - --press-mb, the press compensation. Uncompounded it resolves to `.btn`'s 0px
+     and the fix above is a no-op — the CTA keeps jumping on press.
+   - font-size/padding/border-radius, which had been dead since the CTA was
+     built: it rendered at ordinary `.btn` size (11px 20px / 18px / 14px) while
+     `.hub-cta .ti` — more specific, so live — sized its icon at 26px for the
+     22px label that never applied.
+
+   The resting `margin: 4px 0 18px` deliberately stays at (0,1,0) above: moving
+   it here would make `.btn { margin-bottom: var(--press-mb) }` the only other
+   declaration of it, i.e. a fresh tie settled by source order, this time over
+   the CTA's resting look. Only `:active` (0,2,0) reads --press-mb.
+   test/button-press-compensation.test.js pins all of it. */
+.btn.hub-cta {
+  --press-mb: 18px;
   font-size: var(--text-xl);
   padding: 18px;
   border-radius: var(--radius-lg);
-  margin: 4px 0 18px;
 }
 .hub-cta .ti { font-size: var(--text-2xl); }
 
@@ -1108,8 +1144,16 @@ h1, h2, h3 { font-family: var(--font-display); }
 /* ---- Buttons ----
    Chunky and pressable: a thicker bottom border acts as the button's "base";
    pressing pushes the face down onto it. The :active margin compensates the
-   shrinking border so surrounding layout doesn't shift. */
+   shrinking border so surrounding layout doesn't shift.
+
+   That compensation is ADDITIVE, via --press-mb (#615). An absolute value here
+   outranks any component rule — `.btn:active` is (0,2,0) — so it REPLACED the
+   bottom margin of a button that declared one instead of adding to it, and the
+   page below jumped by the difference for the duration of the press. A button
+   with its own bottom margin restates it in --press-mb; see `.btn.hub-cta`.
+   test/button-press-compensation.test.js pins the arithmetic. */
 .btn {
+  --press-mb: 0px;
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 700;
@@ -1124,7 +1168,7 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 .btn:hover { background: var(--brand-tint-soft); border-color: var(--brand-edge); }
 .btn .ti { vertical-align: -2px; }
-.btn:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: 2.5px; }
+.btn:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: calc(var(--press-mb) + 2.5px); }
 .btn--primary {
   background: var(--brand);
   border-color: var(--brand-dark);
@@ -1132,11 +1176,14 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 .btn--primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
 .btn--ghost { background: transparent; border-bottom-width: 1.5px; }
-.btn--ghost:active { transform: translateY(1px); margin-bottom: 0; }
+/* A ghost button's border is already 1.5px at rest, so nothing shrinks and it
+   compensates by nothing — but it must still restate the resting margin. A
+   bare `0` here is the #615 bug, one variant over. */
+.btn--ghost:active { transform: translateY(1px); margin-bottom: var(--press-mb); }
 .btn--danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 25%, var(--surface)); }
 .btn--lg { font-size: var(--text-xl); padding: 15px 28px; }
 .btn--sm { font-size: var(--text-sm); font-weight: 600; padding: 6px 12px; border-radius: 10px; border-bottom-width: 3px; }
-.btn--sm:active { margin-bottom: 1.5px; }
+.btn--sm:active { margin-bottom: calc(var(--press-mb) + 1.5px); }   /* 3px -> 1.5px */
 .btn--block { width: 100%; }
 /* .btn on an <a> (the support sheet's outbound CTA #173, and since #330 the
    Start tab's Tags/Provider/Design links): a button element is inline-block by
@@ -4170,7 +4217,14 @@ kbd {
 }
 .handover__name { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 700; line-height: 1.2; margin: 0; }
 .handover__sub { font-size: var(--text-lg); font-weight: 700; opacity: 0.9; margin: 8px 0 28px; }
+/* The handover screen's own pressable, deliberately NOT a `.btn` (white on the
+   dark stage, its own radius and border). It therefore needs its own --press-mb
+   default: the property inherits, and this button has no `.btn` ancestor, so
+   without this `calc(var(--press-mb) + 2.5px)` would be invalid at
+   computed-value time and margin-bottom would fall back to 0 — silently
+   REMOVING the compensation instead of making it additive. */
 .handover__go {
+  --press-mb: 0px;
   background: #fff;
   border: none;
   border-bottom: 4px solid rgba(0, 0, 0, 0.25);
@@ -4181,7 +4235,7 @@ kbd {
   padding: 14px 40px;
   cursor: pointer;
 }
-.handover__go:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: 2.5px; }
+.handover__go:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: calc(var(--press-mb) + 2.5px); }
 .handover__back {
   margin-top: 18px;
   background: none;

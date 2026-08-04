@@ -102,7 +102,10 @@ Clear the service worker first (`.claude/rules/pwa-service-worker.md`); the shel
 is cache-first, so a stale `styles.css` makes the fix look inert.
 
 **Related:** `.claude/rules/label-rows-lose-to-field-label.md` (the other
-`.ds-row` cascade trap), `.claude/rules/tiles-vs-lists.md` (when a `.ds-row` list
+`.ds-row` cascade trap),
+`.claude/rules/state-rules-clobber-component-values.md` (which borrows the
+compounded-selector remedy above, and records the second tie it has to avoid to
+do so), `.claude/rules/tiles-vs-lists.md` (when a `.ds-row` list
 becomes a tile grid, and the wrap it needs there),
 `.claude/rules/native-button-vs-focusable-span.md` (why a click target is a real
 element), `.claude/rules/hidden-attribute-vs-display-rule.md` (the sibling "probe
