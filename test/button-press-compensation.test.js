@@ -95,6 +95,35 @@ test('no button :active rule sets an absolute bottom margin', () => {
   }
 });
 
+test('.hub-cta declares nothing that .btn also declares — such a rule is dead', () => {
+  /* The general form of the second half of #615. `.hub-cta` and `.btn` are both
+     (0,1,0) and `.btn` is declared ~450 lines LATER, so every property named in
+     both resolves to `.btn`'s value. font-size, padding and border-radius sat
+     there dead from the day the CTA was built — it rendered at ordinary button
+     size while its own rule asked for a larger one, with nothing to show for it.
+     Anything that must beat `.btn` belongs in `.btn.hub-cta`. */
+  const props = (selector) => new Set(
+    [...bodyOf(selector).matchAll(/(?:^|;)\s*([a-z-]+)\s*:/g)].map((m) => m[1]),
+  );
+  const btn = props('.btn');
+  const dead = [...props('.hub-cta')].filter((p) => btn.has(p));
+  assert.deepStrictEqual(dead, [],
+    `.hub-cta declares ${dead.join(', ')}, which .btn also declares and wins — move to .btn.hub-cta`);
+});
+
+test('.hub-cta keeps display at (0,1,0), so the desktop rail hide still outranks it', () => {
+  /* `.app .rail-owned { display: none }` (0,2,0) is what removes this button
+     from the desktop layout, and it is declared ~200 lines ABOVE. Promoting the
+     rule that sets the CTA's `display` to (0,2,0) makes that a tie decided by
+     source order — which this one wins — so the phone CTA renders on desktop
+     beside the rail's own. Nothing errors; there are simply two CTAs.
+     See `.claude/rules/responsive-content-width.md`. */
+  assert.match(bodyOf('.hub-cta'), /(?:^|;)\s*display\s*:/,
+    '.hub-cta must be the rule that sets display, at a bare (0,1,0)');
+  assert.strictEqual(bodyOf('.btn.hub-cta') && /(?:^|;)\s*display\s*:/.test(bodyOf('.btn.hub-cta')), false,
+    '.btn.hub-cta must NOT set display — (0,2,0) would beat the .app .rail-owned hide on source order');
+});
+
 test('.hub-cta: its --btn-mb equals the resting bottom margin it must preserve', () => {
   /* The two numbers live in two declarations and have to agree; if they drift,
      the press either still jumps (too small) or pushes down (too large). */

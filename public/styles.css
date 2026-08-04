@@ -645,29 +645,45 @@ h1, h2, h3 { font-family: var(--font-display); }
 .avatar--add:hover { color: var(--brand); border-color: var(--brand); }
 .hero__chips { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
-/* The one big accent action of the Start tab. */
+/* The one big accent action of the Start tab.
+
+   Everything here must stay at (0,1,0) — in particular `display`, which is
+   competing with `.app .rail-owned { display: none }` (0,2,0, declared ~200
+   lines ABOVE). Raise this block's specificity to (0,2,0) and that hide becomes
+   a tie decided by source order, which this rule wins — so the phone CTA would
+   render on desktop beside the rail's own. Anything that has to outrank `.btn`
+   goes in the `.btn.hub-cta` rule below instead. */
 .hub-cta {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  margin: 4px 0 18px;
+}
+/* Everything the CTA has to win from `.btn`, which declares all four of these
+   and sits ~450 lines further down: at (0,1,0) they tie and `.btn` wins on
+   source order, so each one is silently DEAD in the block above. Compounded to
+   (0,2,0), they apply. Two things this fixes (#615):
+
+   - --btn-mb, the press compensation. Uncompounded it resolves to `.btn`'s 0px
+     and the fix above is a no-op — the CTA keeps jumping on press.
+   - font-size/padding/border-radius, which had been dead since the CTA was
+     built: it rendered at ordinary `.btn` size (11px 20px / 18px / 14px) while
+     `.hub-cta .ti` — more specific, so live — sized its icon at 26px for the
+     22px label that never applied.
+
+   The resting `margin: 4px 0 18px` deliberately stays at (0,1,0) above: moving
+   it here would make `.btn { margin-bottom: var(--btn-mb) }` the only other
+   declaration of it, i.e. a fresh tie settled by source order, this time over
+   the CTA's resting look. Only `:active` (0,2,0) reads --btn-mb.
+   test/button-press-compensation.test.js pins all of it. */
+.btn.hub-cta {
+  --btn-mb: 18px;
   font-size: var(--text-xl);
   padding: 18px;
   border-radius: var(--radius-lg);
-  margin: 4px 0 18px;
 }
-/* The one button in the app with a bottom margin of its own, so the only one
-   that has to restate it for the press compensation (#615). Two constraints:
-
-   - COMPOUNDED with `.btn`, which also declares --btn-mb and sits ~450 lines
-     further down — a bare `.hub-cta` ties at (0,1,0) and loses on source order,
-     resetting the compensation to 0 with nothing to show for it.
-   - The 18px above stays where it is. Moving the resting margin into --btn-mb
-     would make `.btn { margin-bottom: var(--btn-mb) }` the only declaration of
-     it, i.e. another (0,1,0) tie settled by position — this way the resting
-     geometry is untouched and only `:active` (0,2,0) reads the property. */
-.btn.hub-cta { --btn-mb: 18px; }
 .hub-cta .ti { font-size: var(--text-2xl); }
 
 /* Quieter secondary tasks under the launchpad content. */

@@ -68,12 +68,44 @@ That test also pins the arithmetic per variant (pressed margin === resting margi
 + the border shrink, derived from the declared border widths), so a future retune
 of the press effect cannot silently reintroduce the clobber.
 
+## The same tie without a state rule: declarations that are simply DEAD
+
+`.hub-cta` and `.btn` are both (0,1,0) and `.btn` is declared ~450 lines later,
+so **every property named in both resolves to `.btn`'s value**. That is not
+specific to `:active` — it had also been quietly discarding the CTA's own
+`font-size`, `padding` and `border-radius` since the button was built. It
+rendered at ordinary `.btn` size (`11px 20px` / 18px / 14px) while its rule asked
+for `18px` / 22px / 18px, and the tell was visible on screen the whole time:
+`.hub-cta .ti` *is* more specific, so the icon sized at 26px next to a label that
+never got past 18px.
+
+So the compounded rule carries all four properties, and `test/button-press-
+compensation.test.js` asserts the general form — **`.hub-cta` may declare nothing
+that `.btn` also declares** — rather than listing the three.
+
+**But do NOT promote the whole block to (0,2,0) to fix this.** `.hub-cta`'s
+`display: flex` is competing with `.app .rail-owned { display: none }` (0,2,0),
+declared ~200 lines *above* it, which is what removes the phone CTA from the
+desktop layout. Raise the block and that hide becomes a tie this rule wins on
+source order — so the phone CTA renders on desktop **beside the rail's own**.
+Nothing errors; there are simply two CTAs. Hence the split: layout properties
+stay at (0,1,0) in `.hub-cta`, and only what must beat `.btn` moves into
+`.btn.hub-cta`. Both halves have their own test.
+
 ## The one that got away
 
-`.handover__go:active` carries its own hand-copied `margin-bottom: 2.5px` and is
-**not** a `.btn`, so `--btn-mb` does not reach it. It is correct today only
-because `.handover__go` declares no resting margin. Give it one and the bug is
-back, with none of the above protecting it.
+Two, both left alone deliberately:
+
+- **`.handover__go:active`** carries its own hand-copied `margin-bottom: 2.5px`
+  and is **not** a `.btn`, so `--btn-mb` does not reach it. Correct today only
+  because `.handover__go` declares no resting margin. Give it one and the bug is
+  back, with none of the above protecting it.
+- **`.rail__cta`** (the ≥1280px rail's copy of the CTA) has the dead-declaration
+  half, measured: it computes `.btn`'s 18px / `11px 20px` rather than its own
+  `var(--text-md)` / `12px 16px`. Being inside a media block buys it no
+  specificity. It was left out of #615 because making those live *shrinks* a
+  desktop control — a visual decision, not a bug fix — but it is the same tie and
+  the fix is the same compounding.
 
 ## Verifying this without a real press
 
