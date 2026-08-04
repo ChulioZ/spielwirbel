@@ -1086,18 +1086,45 @@ async function showBggImport(round) {
     input.focus();
   }
 
-  // The candidate list. Everything is preselected — the common case is "import
-  // my shelf" — while games already linked to a BGG record show checked and
-  // disabled, so the list still reads as the user's whole collection rather than
-  // looking as if the import had lost half of it.
+  // The candidate list, in two halves (#625). Everything importable is
+  // preselected — the common case is "import my shelf" — and the games already
+  // on the shelf follow in a collapsed section instead of sitting inert in the
+  // middle of the one list the user is meant to act on. They are still SHOWN,
+  // never dropped: the list is the user's own collection, and losing half of it
+  // reads as the import having failed (.claude/rules/bgg-collection-import.md).
   function renderPicker(games) {
     const fresh = games.filter((g) => !g.present);
-    body.replaceChildren(h(`<p class="muted">${esc(tn(games.length, 'bggImport.introOne', 'bggImport.intro'))}</p>`));
+    const present = games.filter((g) => g.present);
+
+    // A native <details>: focusable, Enter/Space-activated and toggled by the
+    // platform, all of which a hand-rolled disclosure would have to
+    // re-implement (.claude/rules/native-button-vs-focusable-span.md). Compact
+    // and title-only — the heading carries the "already on the shelf" meaning,
+    // so no per-row state label — and collapsed on load at every width.
+    const presentSection = () => {
+      const sec = h(`<details class="bgg-import__present">
+          <summary class="bgg-import__present-head">${esc(t('bggImport.presentSection'))}</summary>
+          <ul class="bgg-import__present-list"></ul>
+        </details>`);
+      const ul = sec.querySelector('.bgg-import__present-list');
+      // NOT a .ds-row: these are not click targets, and that component promises
+      // one through `cursor: pointer` + a hover lift
+      // (.claude/rules/ds-row-is-a-click-target.md).
+      present.forEach((g) => {
+        ul.appendChild(h(`<li class="bgg-import__present-item" title="${esc(g.title)}">${esc(g.title)}</li>`));
+      });
+      return sec;
+    };
 
     if (!fresh.length) {
-      body.appendChild(msg(t('bggImport.allPresent')));
+      // The message already says everything the intro would, so it replaces it
+      // rather than following a line reading "… 0 noch nicht im Regal".
+      body.replaceChildren(msg(t('bggImport.allPresent')));
+      body.appendChild(presentSection());
       return;
     }
+
+    body.replaceChildren(h(`<p class="muted">${esc(tn(games.length, 'bggImport.introOne', 'bggImport.intro', { m: fresh.length }))}</p>`));
 
     const picker = h(`<div class="bgg-import__picker">
         <div class="move-list__head">
@@ -1113,7 +1140,7 @@ async function showBggImport(round) {
     const chosenCovers = {};
     // NOT wrapped in a .field: `.field label` beats `.ds-row` on specificity and
     // silently flattens every row (.claude/rules/label-rows-lose-to-field-label.md).
-    games.forEach((g) => {
+    fresh.forEach((g) => {
       const players = g.minPlayers
         ? t('bggImport.players', { min: g.minPlayers, max: g.maxPlayers || g.minPlayers })
         : '';
@@ -1124,15 +1151,13 @@ async function showBggImport(round) {
       const item = h(`<div class="bgg-import__item">
           <div class="bgg-import__lead">
             <span class="bgg-import__thumb">${coverPlaceholder({ image: g.imageUrl, title: g.title })}</span>
-            <label class="ds-row bgg-import__row${g.present ? ' is-present' : ''}">
+            <label class="ds-row bgg-import__row">
               <div class="ds-row__main">
                 <span class="bgg-import__name" title="${esc(g.title)}">${esc(g.title)}</span>
-                ${g.present
-    ? `<span class="muted bgg-import__state">${esc(t('bggImport.present'))}</span>`
-    : players ? `<span class="muted bgg-import__state">${esc(players)}</span>` : ''}
+                ${players ? `<span class="muted bgg-import__state">${esc(players)}</span>` : ''}
               </div>
               <div class="ds-row__meta">
-                <input type="checkbox" class="provider-row__box" value="${esc(g.externalId)}" checked ${g.present ? 'disabled' : ''} />
+                <input type="checkbox" class="provider-row__box" value="${esc(g.externalId)}" checked />
               </div>
             </label>
           </div>
@@ -1144,14 +1169,10 @@ async function showBggImport(round) {
       };
       paintThumb(g.imageUrl);
 
-      // A game already on the shelf is not imported, so a cover choice for it
-      // would be silently discarded — offer it only where it does something.
-      if (!g.present) {
-        item.appendChild(editionCoverPicker(round.id, g.externalId, g.imageUrl, (c) => {
-          chosenCovers[g.externalId] = c.imageUrl;
-          paintThumb(c.imageUrl);
-        }));
-      }
+      item.appendChild(editionCoverPicker(round.id, g.externalId, g.imageUrl, (c) => {
+        chosenCovers[g.externalId] = c.imageUrl;
+        paintThumb(c.imageUrl);
+      }));
       list.appendChild(item);
     });
 
@@ -1159,9 +1180,12 @@ async function showBggImport(round) {
         <button class="btn btn--primary btn--lg bgg-import__go"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.submit'))}</button>
       </div>`);
     body.appendChild(picker);
+    // Before the actions bar, which is `position: sticky; bottom: 0` — anything
+    // after it scrolls underneath its opaque background.
+    if (present.length) body.appendChild(presentSection());
     body.appendChild(go);
 
-    const boxes = [...list.querySelectorAll('input:not([disabled])')];
+    const boxes = [...list.querySelectorAll('input')];
     const countEl = picker.querySelector('.bgg-import__count');
     const toggle = picker.querySelector('.bgg-import__toggle');
     const submit = go.querySelector('.bgg-import__go');

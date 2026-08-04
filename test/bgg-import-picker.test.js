@@ -1,0 +1,151 @@
+'use strict';
+
+/* The BGG collection-import picker's candidate list (#625).
+ *
+ * The list used to render the whole collection in BGG's own order, with the
+ * games already on the shelf sitting inert (checked + disabled) between the ones
+ * that can actually be imported — so a mostly-imported shelf meant scrolling a
+ * long list hunting for the handful of rows that do something. They are now
+ * split: importable games lead, already-present ones follow in a collapsed
+ * section. Never *dropped*, which is the constraint the original design was
+ * protecting (`.claude/rules/bgg-collection-import.md`): the list is the user's
+ * own collection, and losing half of it reads as the import having failed.
+ *
+ * This runs the real view in jsdom rather than matching its source, because
+ * every defect here is a DOM one — a row in the wrong list, a section that
+ * starts expanded, a game silently missing from the sheet. The harness loads the
+ * frontend through `vm`, so the view stays out of the coverage report; a
+ * `require()` of it would red `coverage:ci` with every test green
+ * (`.claude/rules/testing-views-under-jsdom.md`).
+ */
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+
+const { loadApp } = require('./support/dom');
+const { bodyOf } = require('./support/css');
+
+const game = (id, title, present) => ({
+  externalId: String(id),
+  title,
+  present,
+  imageUrl: null,
+  minPlayers: 2,
+  maxPlayers: 4,
+});
+
+/* BGG returns one alphabetical list with a `present` flag per item, so the
+   fixture interleaves the two kinds — a split that only works on a
+   conveniently pre-sorted list is the bug, not the fix. */
+const MIXED = [
+  game(1, 'Azul', true),
+  game(2, 'Brass', false),
+  game(3, 'Cascadia', true),
+  game(4, 'Dune', false),
+  game(5, 'Everdell', true),
+];
+const FRESH = ['Brass', 'Dune'];
+const PRESENT = ['Azul', 'Cascadia', 'Everdell'];
+
+/* Open the import sheet against a stubbed collection. `showBggImport` kicks off
+   its own `load()` without awaiting it, so the render lands a few microtasks
+   after the call resolves — hence the macrotask flush. */
+async function openImport(t, games, locale = 'de') {
+  const dom = loadApp({ locale });
+  t.after(() => dom.close());
+  dom.set('api', async (method, path) => {
+    assert.match(path, /\/lookup\/collection\?provider=bgg$/, `unexpected api call: ${method} ${path}`);
+    return { state: 'ok', games };
+  });
+  await dom.call('showBggImport', { id: 7, name: 'Freitagsrunde' });
+  await new Promise((resolve) => setImmediate(resolve));
+  const body = dom.document.querySelector('.bgg-import');
+  assert.ok(body, 'the import sheet rendered no body');
+  return { dom, body };
+}
+
+const texts = (nodes) => [...nodes].map((n) => n.textContent.trim());
+
+test('only the importable games render in the actionable list, in collection order', async (t) => {
+  const { body } = await openImport(t, MIXED);
+
+  assert.deepEqual(texts(body.querySelectorAll('.bgg-import__list .bgg-import__name')), FRESH);
+  /* The `is-present` row is gone rather than merely relocated: a disabled
+     checkbox in the one list the user acts on is exactly the noise this
+     removed, and the selection logic counts `input`s. */
+  assert.equal(body.querySelectorAll('.bgg-import__list input').length, FRESH.length);
+  assert.equal(body.querySelectorAll('input[disabled]').length, 0, 'no disabled checkbox may survive anywhere in the sheet');
+  assert.equal(body.querySelectorAll('.is-present').length, 0);
+});
+
+test('the already-present games sit in a section that is collapsed on load and lists every one of them', async (t) => {
+  const { body } = await openImport(t, MIXED);
+
+  const sec = body.querySelector('.bgg-import__present');
+  assert.ok(sec, 'no already-present section rendered');
+  assert.equal(sec.tagName, 'DETAILS');
+  assert.equal(sec.open, false, 'the section must start collapsed — it is the half nobody came for');
+
+  /* A native <summary>, so Tab reaches it and Enter/Space toggle it with no
+     handler of our own (`.claude/rules/native-button-vs-focusable-span.md`). */
+  const head = sec.querySelector('.bgg-import__present-head');
+  assert.equal(head.tagName, 'SUMMARY');
+  assert.equal(head.parentElement, sec);
+
+  // Nothing is dropped from the sheet — the whole reason it is a collapse and
+  // not a filter.
+  assert.deepEqual(texts(sec.querySelectorAll('.bgg-import__present-item')), PRESENT);
+  /* Not .ds-row: these are not click targets, and that component promises one
+     (`.claude/rules/ds-row-is-a-click-target.md`). */
+  assert.equal(sec.querySelectorAll('.ds-row').length, 0);
+});
+
+test('the section sits between the actionable list and the sticky actions bar', async (t) => {
+  const { body } = await openImport(t, MIXED);
+  const order = [...body.children].map((el) => el.className.split(' ')[0]);
+
+  const picker = order.indexOf('bgg-import__picker');
+  const present = order.indexOf('bgg-import__present');
+  const actions = order.indexOf('toolbar');
+  assert.ok(picker >= 0 && present >= 0 && actions >= 0, `missing a block: ${order.join(', ')}`);
+  assert.ok(picker < present, 'the importable games must lead');
+  /* `.sheet__actions` is `position: sticky; bottom: 0` with an opaque
+     background, so anything after it scrolls underneath the submit button. */
+  assert.ok(present < actions, 'the collapsed section must precede the actions bar');
+});
+
+test('the intro names both the collection total and how many are not on the shelf, in every locale', async (t) => {
+  for (const locale of ['de', 'en']) {
+    const { body } = await openImport(t, MIXED, locale);
+    const intro = body.querySelector('p.muted').textContent;
+    assert.match(intro, /(^|\D)5(\D|$)/, `${locale}: the intro drops the collection total`);
+    assert.match(intro, /(^|\D)2(\D|$)/, `${locale}: the intro drops the not-yet-imported count`);
+    assert.doesNotMatch(intro, /\{[nm]\}/, `${locale}: an unreplaced placeholder reached the screen`);
+  }
+});
+
+test('with nothing left to import the sheet shows the message plus the section, and no submit', async (t) => {
+  const all = PRESENT.map((title, i) => game(i + 1, title, true));
+  const { dom, body } = await openImport(t, all);
+
+  assert.equal(body.querySelector('.bgg-import__msg p').textContent, dom.run("t('bggImport.allPresent')"));
+  assert.equal(body.querySelector('.bgg-import__picker'), null, 'nothing is selectable, so there is no picker');
+  assert.equal(body.querySelector('.bgg-import__go'), null, 'nothing is selectable, so there is no submit button');
+
+  // The user can still confirm WHICH games it means — the message alone asks
+  // them to take the sheet's word for it.
+  const sec = body.querySelector('.bgg-import__present');
+  assert.ok(sec, 'the all-present state must still list the collection');
+  assert.equal(sec.open, false);
+  assert.deepEqual(texts(sec.querySelectorAll('.bgg-import__present-item')), PRESENT);
+});
+
+/* jsdom applies no external stylesheet, so the focus indicator is asserted
+   against the parsed CSS text rather than a computed style
+   (`.claude/rules/testing-views-under-jsdom.md`). It is load-bearing: the SPA
+   declares no other `summary` rules, so this control has nothing to inherit. */
+test('the summary carries a visible focus indicator', () => {
+  const focus = bodyOf('.bgg-import__present-head:focus-visible');
+  assert.ok(focus, 'no :focus-visible rule for the disclosure summary');
+  assert.match(focus, /outline:\s*\d/, 'the focus rule must draw an outline');
+});

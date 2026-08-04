@@ -45,9 +45,10 @@ What the app does, in detail. For a short overview see the
 - **Import a BoardGameGeek collection** – filling a shelf one game at a time is
   the slow part of setting a round up, so link your BGG username once under
   **Konto** and the Regal can pull in everything you have marked as *owned*
-  there in one go. You get a checklist to confirm (everything preselected, games
-  already on the shelf marked and skipped), and the games arrive with their
-  titles, player ranges, covers and a link back to BGG. Each row shows the cover
+  there in one go. You get a checklist to confirm — everything preselected, and
+  the games already on your shelf tucked into a collapsed section below it, so
+  the list you act on holds only what can actually be added — and the games
+  arrive with their titles, player ranges, covers and a link back to BGG. Each row shows the cover
   it would import and lets you swap in a different edition's before you confirm. It is **one-shot and on
   demand** — never a background sync — and it needs no BGG password: a username
   is enough, and you can unlink it again at any time. Accounts mode only, and
