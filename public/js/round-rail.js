@@ -67,8 +67,23 @@ function buildRoundRail(round, activeTab, sub) {
 
   // --- Identity. The hero this mirrors stays on the Start tab for narrow
   // screens, where there is no rail to carry it; CSS hides it here instead.
+  //
+  // Which is why the round name is a real <h1> on Start and a plain <div>
+  // everywhere else (#638). The hero holds that screen's only h1 and is
+  // `rail-owned`, so from 1280px up the Start screen had NO heading at all —
+  // alone among the four tabs, since Regal/Chronik/Pokale each render their own
+  // section h1 in the content column, as does every sub-screen's `page-head`.
+  // Promoting this unconditionally would therefore fix Start by giving all the
+  // others a second h1; the two states are complementary, not additive.
+  //
+  // Below 1280px the whole rail is `display: none`, so the <h1> here is out of
+  // the accessibility tree exactly where the hero's is in it — one heading at
+  // every width, never two. That complementarity is asserted in CSS as well as
+  // in the DOM (test/a11y-names-and-headings.test.js); jsdom has no stylesheet
+  // and so cannot see it on its own.
+  const nameTag = activeTab === 'start' && !sub ? 'h1' : 'div';
   const id = h(`<div class="rail__id">
-       <div class="rail__name"></div>
+       <${nameTag} class="rail__name"></${nameTag}>
        <div class="rail__members">${round.members
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${esc(initials(m.name))}</a>`)
          .join('')}</div>

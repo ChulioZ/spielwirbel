@@ -469,7 +469,11 @@ h1, h2, h3 { font-family: var(--font-display); }
     top: 84px;
     align-self: start;
   }
-  .rail__name { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; line-height: 1.2; }
+  /* `margin: 0` is load-bearing, not tidiness: on the Start tab this element is
+     an <h1> (#638), so without it the UA's `0.67em 0` opens a gap above the
+     round name that appears on exactly one of the four tabs. The other three
+     declarations already override the UA's heading font-size/weight. */
+  .rail__name { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; line-height: 1.2; margin: 0; }
   .rail__members { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
   .rail__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   /* No font-size/padding here on purpose (#615): both are `.btn`'s job. This

@@ -35,9 +35,15 @@ async function showFriends() {
   app.appendChild(h(`<div class="lobby-head"><h1>${esc(t('friends.title'))}</h1></div>`));
 
   // Add a friend by username.
+  // The placeholder is not the label (WCAG 2.2 SC 3.3.2/4.1.2): it disappears on
+  // the first keystroke and screen readers announce an unnamed edit field. There
+  // is no visible label to point a <label for> at — the form is one row — so the
+  // name goes on the control itself, and says what the field is FOR rather than
+  // restating the placeholder's "Nutzername".
   const addForm = h(`<form class="friends-add">
       <input class="input" id="friendUser" type="text" autocomplete="off" spellcheck="false"
-             autocapitalize="none" maxlength="30" placeholder="${esc(t('friends.addPlaceholder'))}" />
+             autocapitalize="none" maxlength="30" aria-label="${esc(t('friends.addLabel'))}"
+             placeholder="${esc(t('friends.addPlaceholder'))}" />
       <button class="btn btn--primary" type="submit">${esc(t('friends.addSubmit'))}</button>
     </form>`);
   addForm.addEventListener('submit', async (e) => {
