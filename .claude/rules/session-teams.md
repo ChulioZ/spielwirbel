@@ -48,15 +48,15 @@ The draw's pool filter (`drawPool`, `lib/draw.js` since #486) matches a game's
 number of **parties**, not bodies — six people in three pairs are looking for a
 three-player game, which is often exactly why teams were formed:
 
-**Since #634 the two places are the COUNT only.** The comparison it feeds is
-`fitsPlayerCount` in `public/js/draw-pool.js`, which both sides require — so the
-half that used to be two hand-synced expressions is now one, and what remains
-duplicated below is the arithmetic that produces the number, which genuinely
-differs per caller (a stored session versus three live pickers).
-
 ```js
 playerCount = memberIds.length + guests.length - teamedPeople + teams.length
 ```
+
+**Since #634 the two places are the COUNT only.** The comparison it feeds is
+`fitsPlayerCount` in `public/js/draw-pool.js`, which both sides require — so the
+half that used to be two hand-synced expressions is now one, and what remains
+duplicated is the arithmetic above, which genuinely differs per caller (a stored
+session versus three live pickers).
 
 `lib/routes/sessions.js` computes it for the real pool and `showStartSession()` for
 the live preview, and **the two must move together**. The count stays in the
