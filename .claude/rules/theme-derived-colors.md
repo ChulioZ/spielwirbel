@@ -31,6 +31,35 @@ they clashed badly — three color worlds on one screen. The fix was exactly thi
 derivation; don't regress it. Category tags (`.tag--digital` etc.) and medal
 silver/bronze are intentionally fixed — they encode meaning, not theme.
 
+## `--brand` ON a brand tint does not clear AA — reach for `--brand-dark` (#633)
+
+The natural way to draw an accent chip is `background: var(--brand-tint); color:
+var(--brand)`. Measured across all eight themes, that lands at **4.28–4.96:1** —
+so four of the eight (Sonnenuntergang 4.28, Salbei 4.37, Pfirsich 4.37, Sand
+4.38) sit **below the 4.5 text bar**, while the other four pass. `--brand-dark`
+on the same tint is 5.80–6.57 everywhere, for free.
+
+Two things make this worth writing down rather than leaving to a measurement:
+
+- **The failure is theme-dependent**, so whichever theme you happen to be looking
+  at is a coin flip — the Chronik's milestone chip was verified on Standard,
+  which is one of the *failing* four only because its accent is the warmest.
+- **The bar that binds may not be the bar a reader assumes.** These glyphs are
+  `aria-hidden` decoration whose meaning the adjacent label already carries, so
+  1.4.11 (non-text, 3.0) is what actually applies and `var(--brand)` passes it.
+  Pinning the *strict* bar anyway is the cheaper call: it costs one token swap
+  and removes a judgement someone would otherwise have to re-derive.
+
+`test/a11y-contrast.test.js` composites both tints over every theme accent and
+pins the row wash (`--ink`/`--ink-soft`) and the chip glyph, keyed to the tokens
+rather than to percentages a retune could raise past what was measured.
+
+**Reuse the prepared tints rather than minting a mix.** `--brand-tint-soft` *is*
+`color-mix(… var(--brand) 7%, var(--surface))` and `--brand-tint` the 13% one, so
+a new tinted surface that spells its own `color-mix` adds a fresh srgb mix for
+#544's oklab migration to chase while resolving to a colour that already had a
+name.
+
 Also note: the page backdrop (soft accent glow + paper grain) lives entirely in
 the `body` rule in `styles.css`. There is no JS texture generation anymore —
 `applyBackground()` sets/removes the two variables plus the browser chrome

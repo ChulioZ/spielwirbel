@@ -185,6 +185,7 @@ const frontendGlobals = {
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
   editableRoundName: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
+  CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
   renderRecapSection: 'readonly',
   activeSheet: 'writable', closeSheet: 'readonly', openSheet: 'readonly',
