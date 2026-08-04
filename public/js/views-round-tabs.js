@@ -799,10 +799,16 @@ function renderPokaleTab(round) {
 
   const cards = h('<div class="pokale-cards"></div>');
 
-  // Most played: chosen most often across finished nights (game must exist).
+  // Most played: chosen most often across finished nights (game must exist and
+  // must not be retired). A retired game's nights stop counting entirely (#643),
+  // so the card names the most-played game the round still HAS — retiring is the
+  // user saying it left the collection, and crowning it afterwards contradicts
+  // that. Completed games keep counting: they were played through, which is
+  // exactly what this card measures. (Not the `!retired && !completed` active
+  // filter — see the comment on `retiredIds` in recap.js.)
   const playCount = {};
   finished.forEach((s) => {
-    if (s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
+    if (s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId && !g.retired))
       playCount[s.chosenGameId] = (playCount[s.chosenGameId] || 0) + 1;
   });
   let maxPlays = 0;

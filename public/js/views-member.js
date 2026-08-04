@@ -16,7 +16,13 @@ function memberStats(round, mid) {
   const winRate = joined.length ? wins / joined.length : null;
 
   // Every numeric rating this member has given, and the per-game averages used
-  // to find their favorite game (only games that still exist in the round).
+  // to find their favorite game (only games that still exist in the round and
+  // are not retired). `allRatings` — and so `avgGiven` — deliberately counts
+  // every rating, retired games included: it measures how this member rates,
+  // not what is on the shelf. Only the favourite is filtered (#643), matching
+  // the Pokale tab's Lieblingsspiele card so a game cannot vanish there while
+  // still sitting on this page. Completed games still count; retiring is the
+  // one that takes a game out of the collection.
   const allRatings = [];
   const perGame = {}; // gameId -> [ratings]
   round.sessions.forEach((s) => {
@@ -25,7 +31,8 @@ function memberStats(round, mid) {
       const r = votes[gid] && votes[gid].rating;
       if (typeof r !== 'number') return;
       allRatings.push(r);
-      if (round.games.some((g) => g.id === gid)) (perGame[gid] = perGame[gid] || []).push(r);
+      if (round.games.some((g) => g.id === gid && !g.retired))
+        (perGame[gid] = perGame[gid] || []).push(r);
     });
   });
   const avgGiven = allRatings.length

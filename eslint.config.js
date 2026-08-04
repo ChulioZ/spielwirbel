@@ -146,7 +146,7 @@ const frontendGlobals = {
   // a future silent collision rather than a private one.
   RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly', recapMean: 'readonly',
   collectRatings: 'readonly', bestAndWorst: 'readonly', mostDivisive: 'readonly',
-  memberFavourites: 'readonly',
+  memberFavourites: 'readonly', retiredIds: 'readonly',
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
   SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly',

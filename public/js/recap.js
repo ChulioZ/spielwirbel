@@ -88,10 +88,19 @@ function bestAndWorst(round, index) {
   return { best: pick(top), worst: bottom < top ? pick(bottom) : null };
 }
 
+// The ids of games the group has RETIRED. This is deliberately not the "active"
+// filter used by bestAndWorst above (`!retired && !completed`): the two archives
+// part company for the cards that merely *name* a game (#643). Retiring is the
+// user saying the game has left the collection, so naming it afterwards
+// contradicts the act; completing is not — the game was played through and stays
+// part of the record. Don't collapse the two back into one "archived" predicate.
+const retiredIds = (round) => new Set(round.games.filter((g) => g.retired).map((g) => g.id));
+
 // The game two members disagree about most: the largest gap between any two
 // members' own averages for it. Needs two members who both rated it, plus the
-// same evidence bar as best/worst. Archived games count — a game the group
-// argued about is part of the record whether or not it is still on the shelf.
+// same evidence bar as best/worst. Completed games count — a game the group
+// argued about and played through is part of the record; retired ones are
+// skipped (see retiredIds above).
 // Ties go to the game with more ratings behind it, so the answer is stable
 // rather than dependent on which session happened to be indexed first.
 // No membership filter is needed here, and adding one back would be dead code:
@@ -100,8 +109,10 @@ function bestAndWorst(round, index) {
 // byMember names a member who is still in the round. A vote cast by someone who
 // has since been removed is never even read.
 function mostDivisive(round, index) {
+  const retired = retiredIds(round);
   let found = null;
   index.games.forEach((entry, gid) => {
+    if (retired.has(gid)) return;
     if (entry.all.length < RECAP_MIN_RATINGS) return;
     const per = [];
     entry.byMember.forEach((ratings, mid) => {
@@ -121,17 +132,21 @@ function mostDivisive(round, index) {
   return found;
 }
 
-// Each member's own favourite: the game they personally rate highest. Every
-// game that still exists counts, archived ones included — this is a
-// retrospective record of taste, and someone's favourite should not disappear
-// because the group finished or retired the game. Members who have not rated
-// anything yet are simply left out. Ties go to the game they rated more often,
-// then to the one indexed first.
+// Each member's own favourite: the game they personally rate highest. Completed
+// games count — this is a retrospective record of taste, and someone's favourite
+// should not disappear because the group played it through. RETIRED ones do not
+// (#643, see retiredIds): the skip happens inside the per-member scan, so a
+// member whose top game was retired keeps a card naming their best remaining
+// game, and only drops out once nothing non-retired is left. Members who have
+// not rated anything yet are simply left out. Ties go to the game they rated
+// more often, then to the one indexed first.
 function memberFavourites(round, index) {
+  const retired = retiredIds(round);
   return round.members
     .map((m) => {
       let best = null;
       index.games.forEach((entry, gid) => {
+        if (retired.has(gid)) return;
         const mine = entry.byMember.get(m.id);
         if (!mine || !mine.length) return;
         const avg = recapMean(mine);

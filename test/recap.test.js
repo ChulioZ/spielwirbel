@@ -175,6 +175,62 @@ test('a guest never appears in the disagreement — their id is session-scoped',
   assert.equal(recapOf(r).divisive, null, 'members agree; only the guest differs');
 });
 
+// The two archives part company here (#643): a retired game is out of the
+// group's collection, so naming it is a contradiction of the act of retiring it;
+// a completed one was played through and stays part of the record. The pair is
+// deliberately kept side by side so the distinction cannot collapse back into a
+// single "archived" filter without one of them going red.
+test('a retired game is never the most divisive — the next-widest gap wins instead', () => {
+  const r = round({
+    games: [
+      { id: 'g1', title: 'Catan', retired: true },
+      { id: 'g2', title: 'Azul' },
+    ],
+    members: [
+      { id: 'm1', name: 'Anna' },
+      { id: 'm2', name: 'Ben' },
+      { id: 'm3', name: 'Cem' },
+    ],
+    sessions: [
+      session({ m1: { g1: 5, g2: 3 }, m2: { g1: 1, g2: 4 }, m3: { g1: 3, g2: 3 } }),
+    ],
+  });
+  const d = recapOf(r).divisive;
+  assert.equal(d.gameId, 'g2', 'g1 has the wider spread but is retired');
+  assert.equal(d.spread, 1);
+});
+
+test('a completed game may still be the most divisive — it was played through', () => {
+  const r = round({
+    games: [
+      { id: 'g1', title: 'Catan', completed: true },
+      { id: 'g2', title: 'Azul' },
+    ],
+    members: [
+      { id: 'm1', name: 'Anna' },
+      { id: 'm2', name: 'Ben' },
+      { id: 'm3', name: 'Cem' },
+    ],
+    sessions: [
+      session({ m1: { g1: 5, g2: 3 }, m2: { g1: 1, g2: 4 }, m3: { g1: 3, g2: 3 } }),
+    ],
+  });
+  assert.equal(recapOf(r).divisive.gameId, 'g1');
+});
+
+test('a round whose only divisive game is retired has no disagreement to show', () => {
+  const r = round({
+    games: [{ id: 'g1', title: 'Catan', retired: true }],
+    members: [
+      { id: 'm1', name: 'Anna' },
+      { id: 'm2', name: 'Ben' },
+      { id: 'm3', name: 'Cem' },
+    ],
+    sessions: [session({ m1: { g1: 5 }, m2: { g1: 1 }, m3: { g1: 3 } })],
+  });
+  assert.equal(recapOf(r).divisive, null);
+});
+
 test('a game everyone agrees on is not divisive at all', () => {
   const members = ['m1', 'm2', 'm3'];
   const r = round({
@@ -223,7 +279,11 @@ test('a favourite averages that member across sessions', () => {
   assert.equal(fav.avg, 4);
 });
 
-test('an archived game may still be a favourite — the record is retrospective', () => {
+// This pair replaces a single spec that asserted the opposite for BOTH archives
+// ("an archived game may still be a favourite — the record is retrospective").
+// #643 split them: retiring is the user saying the game has left the collection,
+// so it must not be named; completing is not, so it still may be.
+test('a retired game is skipped — the member keeps their best non-retired favourite', () => {
   const r = round({
     games: [
       { id: 'g1', title: 'Catan' },
@@ -231,7 +291,35 @@ test('an archived game may still be a favourite — the record is retrospective'
     ],
     sessions: [session({ m1: { g1: 3, g2: 5 } })],
   });
+  const [fav] = recapOf(r).favourites;
+  assert.equal(fav.gameId, 'g1', 'g2 rates higher but is retired');
+  assert.equal(fav.avg, 3);
+});
+
+test('a completed game may still be a favourite — the record is retrospective', () => {
+  const r = round({
+    games: [
+      { id: 'g1', title: 'Catan' },
+      { id: 'g2', title: 'Fertig', completed: true },
+    ],
+    sessions: [session({ m1: { g1: 3, g2: 5 } })],
+  });
   assert.equal(recapOf(r).favourites[0].gameId, 'g2');
+});
+
+test('a member who has rated nothing but retired games drops out of the favourites', () => {
+  const r = round({
+    games: [
+      { id: 'g1', title: 'Catan' },
+      { id: 'g2', title: 'Alt', retired: true },
+    ],
+    sessions: [session({ m1: { g1: 4 }, m2: { g2: 5 } })],
+  });
+  assert.deepEqual(
+    recapOf(r).favourites.map((f) => f.memberId),
+    ['m1'],
+    'Ben rated only a retired game, so he has no favourite left to name'
+  );
 });
 
 test('members who have not rated anything are left out', () => {

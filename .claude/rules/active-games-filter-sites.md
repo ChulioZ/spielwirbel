@@ -5,6 +5,7 @@ paths:
   - "lib/routes/sessions.js"
   - "lib/routes/games.js"
   - "public/js/views-round*.js"
+  - "public/js/views-member.js"
   - "public/js/round-rail.js"
   - "public/js/recap.js"
   - "lib/quota.js"
@@ -56,6 +57,35 @@ per-row "Jetzt spielen" launcher at the `gameStatCard` level),
 adjacent lines and must be edited as a pair (`!retired && !completed` for one
 count, `retired || completed` for the other). `views-session.js` also carries an
 inverse check of that second shape, gating the per-game "Aussortieren" button.
+
+## A THIRD semantics since #643: retired-only, where completed still counts
+
+The two archives are **not** interchangeable for a card that merely *names* a
+game. Retiring is the user saying the game has left the collection, so naming it
+afterwards contradicts the act; completing is not — the game was played through
+and stays part of the record. Four sites therefore filter on `retired` **alone**,
+and reading them as the `!retired && !completed` shape above is wrong in the
+direction that silently drops completed games:
+
+- `recap.js` `retiredIds` — the shared `Set`, consumed by **`mostDivisive`**
+  (Größte Uneinigkeit) and **`memberFavourites`** (Lieblingsspiele). The skip in
+  `memberFavourites` sits inside the per-member scan on purpose: that is what
+  makes a member fall through to their best remaining game instead of vanishing.
+- `views-round-tabs.js` `renderPokaleTab` — the **Meistgespielt** tally
+  (`round.games.some((g) => g.id === s.chosenGameId && !g.retired)`).
+- `views-member.js` `memberStats` — the member page's **Lieblingsspiel**, which
+  must agree with the Pokale card or a game vanishes from one while sitting on
+  the other.
+
+Deliberately **not** in this set, though they are one line away: `bestAndWorst`
+(Bestbewertet/Schlechtbewertet) and the Staubfänger keep the active-only filter —
+they answer "what should we reach for", which only a game still on the shelf can.
+And `collectRatings` / `recap.totals.ratings` / `memberStats`'s `avgGiven` filter
+**nothing**: they measure how much the group has rated, not what is on the shelf.
+
+`test/pokale-retired.test.js` pins all four sites with a fixture whose retired
+game leads on every metric and whose runner-up is a **completed** game, so it
+fails both when a filter is missing and when one is widened to both archives.
 
 **Deliberately NOT filtered — don't "fix" these:**
 - The games quota (`lib/routes/games.js`, `lib/quota.js`) counts **every** game
