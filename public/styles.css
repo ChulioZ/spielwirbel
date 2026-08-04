@@ -894,6 +894,33 @@ h1, h2, h3 { font-family: var(--font-display); }
   .ticket__stub::after { top: -8px; left: auto; right: -8px; }
   /* With the stub full-width, the winner name has room to wrap in full. */
   .ticket__names { white-space: normal; }
+
+  /* Swap every section-tools label to its short spelling (#621). At 320px the
+     content column is 280px, and "Von BoardGameGeek übernehmen" alone measures
+     ~269px — it fits, but it eats a whole line above the search row.
+
+     The reveal is compounded to (0,2,0) because `.tools-label--short { display:
+     none }` is declared ~40 lines BELOW this block: at (0,1,0) it ties and wins
+     on source order, so BOTH spellings stayed hidden and the control rendered as
+     a bare icon with no accessible name — measured, and nothing reports it. */
+  .tools-label--long { display: none; }
+  .section-tools .tools-label--short { display: inline; }
+
+  /* The results row's three tracks need ~306px of a 256px content box at 320px,
+     and none of it can shrink: the cover is a fixed 64px and the rating bars are
+     five 22px bars with 4px gaps (#621). So the score/action block wraps onto its
+     own line under the title rather than being pushed out of the card. It keeps
+     column 2 — aligned under the title it belongs to, with the cover's column
+     reading as an indent — and drops the right-alignment that only made sense
+     while it sat at the row's right edge.
+
+     The score rule is compounded to (0,2,0) on purpose: `.result-row__score {
+     text-align: right }` is declared ~1600 lines further down, so a bare class
+     ties and loses on source order — the block stayed right-aligned with no
+     error anywhere (`.claude/rules/responsive-content-width.md`, "your rule
+     will lose"). */
+  .result-row { grid-template-columns: 64px minmax(0, 1fr); }
+  .result-row .result-row__score { grid-column: 2; text-align: left; }
 }
 
 .section { margin-top: 32px; }
@@ -930,7 +957,20 @@ h1, h2, h3 { font-family: var(--font-display); }
   white-space: nowrap;
 }
 .section-toggle:hover { background: var(--brand-tint); }
-.section-tools { display: flex; align-items: center; gap: 8px; flex: none; flex-wrap: wrap; }
+/* `flex: 0 1 auto`, NOT `flex: none` (#621). `none` is `0 0 auto`, which sizes
+   the row at max-content and forbids shrinking — so its own `flex-wrap: wrap`
+   could never engage and the Regal's three tools (~540px) ran straight out of a
+   280px content column at phone widths. The two declarations contradicted each
+   other and `flex: none` won. Shrinking is enough to make the wrap work; do not
+   let it GROW (`1 1 auto`), or on desktop the row fills the space `.section-head`'s
+   `space-between` currently uses to push it to the right edge. */
+.section-tools { display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0; flex-wrap: wrap; }
+/* One label, two spellings (#621): the full wording, plus a short one that the
+   <=520px block below swaps in. Both are rendered and CSS picks — `display: none`
+   also drops the unused one from the accessibility tree, so the control never
+   announces both. Same shape as `.topbar__word`, which is hidden at that width
+   for the same reason. */
+.tools-label--short { display: none; }
 /* Search as a friendly pill with a leading icon. */
 .search-pill {
   display: inline-flex;
@@ -941,6 +981,10 @@ h1, h2, h3 { font-family: var(--font-display); }
   border-radius: var(--radius-pill);
   padding: 7px 14px;
   color: var(--ink-soft);
+  /* A flex item's automatic minimum size is its min-content width, which the
+     150px input below would pin at ~205px — so without this the pill cannot
+     shrink at all and overflows a narrow column instead (#621). */
+  min-width: 0;
 }
 .search-pill:focus-within { border-color: var(--brand); }
 .search-pill .ti { font-size: var(--text-md); flex: none; }
@@ -950,7 +994,12 @@ h1, h2, h3 { font-family: var(--font-display); }
   font-family: inherit;
   font-size: var(--text-md);
   color: var(--ink);
-  width: 150px;
+  /* A flex BASIS of 150px rather than `width: 150px` (#621): identical at rest
+     (measured 0px delta at 1000px), but it may shrink when the pill is squeezed.
+     No grow factor — with one, the input would take its max-content width
+     (~178px) wherever the pill has slack and widen the whole desktop row. */
+  flex: 0 1 150px;
+  min-width: 0;
   max-width: 100%;
   outline: none;
   padding: 0;
