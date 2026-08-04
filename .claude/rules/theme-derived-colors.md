@@ -93,7 +93,12 @@ Two constraints on any change here:
   or it is worse than a stale one.
 - **The static default and `STANDARD_ACCENT` must stay equal.**
   `test/theme-color.test.js` parses both out rather than restating a hex, so
-  editing one alone goes red.
+  editing one alone goes red. That discipline now covers the whole file (#637):
+  the stale-accent spec reads Sand's current `page`/`accent` off `THEMES` too,
+  so a legitimate contrast retune needs no hand-edit there. Only the **pre-#145**
+  hex it feeds in stays a literal — that one is history and lives nowhere in the
+  code, and the spec asserts it still differs from Sand's current accent, or it
+  would be resolving nothing.
 
 Verification is a DOM probe (`document.querySelector('meta[name=theme-color]')
 .content`), never a screenshot: the Browser pane renders no browser chrome, so a

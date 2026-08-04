@@ -109,8 +109,24 @@ function bootApp(t, { loggedIn = true, profile = null } = {}) {
    this way rather than as `app.firstChild` is what lets one assertion cover
    both the round sub-screens (which render navigation) and `/round/new` and
    `/u/:username` (which do not). */
-function firstContentChild(app) {
-  return [...app.children].find((el) => !el.classList.contains('rail') && !el.classList.contains('dock'));
+function contentChildren(app) {
+  return [...app.children].filter((el) => !el.classList.contains('rail') && !el.classList.contains('dock'));
+}
+
+const firstContentChild = (app) => contentChildren(app)[0];
+
+/* Proof that a screen actually rendered, for the loops below whose real
+   assertion is about ABSENCE. Every screen here puts exactly one <h1> in its
+   content column, and the rail carries one of its own — hence the content-only
+   scope: on a round sub-screen the rail's heading would otherwise stand in for
+   a body that rendered nothing at all. */
+function assertRendered(app, name) {
+  const content = contentChildren(app);
+  assert.ok(content.length, `the ${name} screen rendered no content at all — check the fixture`);
+  assert.ok(
+    content.some((el) => el.matches('h1') || el.querySelector('h1')),
+    `the ${name} screen's content column carries no heading, so it did not really render`,
+  );
 }
 
 /** Every screen that must offer exactly one way back, and how to render it. */
@@ -148,8 +164,8 @@ for (const [name, render] of NON_MAIN) {
     const rows = dom.app.querySelectorAll('.back-row');
     assert.equal(rows.length, 1, `the ${name} screen renders ${rows.length} back controls, expected exactly 1`);
 
+    assertRendered(dom.app, name);
     const first = firstContentChild(dom.app);
-    assert.ok(first, `the ${name} screen rendered no content at all — check the fixture`);
     assert.ok(
       first.classList.contains('back-row'),
       `the ${name} screen's first content element is .${[...first.classList].join('.')}, `
@@ -169,6 +185,11 @@ for (const [name, render] of MAIN) {
   test(`the ${name} screen renders no back control — chrome reaches it`, async (t) => {
     const { dom } = bootApp(t);
     await render(dom);
+    /* An absence check is vacuously true on a screen that rendered NOTHING — a
+       stub gap or a swallowed rejection would pass this loop while the app is
+       broken. So prove the screen is really there first, exactly as the
+       NON_MAIN loop does. */
+    assertRendered(dom.app, name);
     /* The control that keeps the block above from being satisfied by a
        `backRow()` sprayed onto every screen: a main page's way "up" is the
        persistent chrome, and a second affordance there is noise. */

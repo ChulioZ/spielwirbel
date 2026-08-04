@@ -15,12 +15,32 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { JSDOM } = require('jsdom');
 const { loadApp } = require('./support/dom');
 
-const INDEX_HTML = fs.readFileSync(
-  path.join(__dirname, '..', 'public', 'index.html'),
-  'utf8',
-);
+/* PARSED, not matched as text. A commented-out <meta name="theme-color"> above
+   the live tag would be the first match of any regex, so the assertion below
+   would pin a dead value while the real tag drifted
+   (`.claude/rules/css-text-assertions-strip-comments.md`, in HTML). A comment is
+   not an element, so a parser cannot make that mistake at all.
+
+   Stripping `<!--…-->` out of the text first would fix it too — but CodeQL reads
+   that replace as sanitization and flags it `js/incomplete-multi-character-
+   sanitization` (HIGH), correctly: one pass over `<!<!-- -->--` leaves `<!--`
+   behind. Using the real parser is both the stronger tool and the quiet one.
+
+   A bare JSDOM of the file, not the harness's document: the question is what the
+   markup declares, which must stay separable from anything a script does to the
+   tag after load. Nothing is executed here (no `runScripts`). */
+const INDEX_THEME_COLORS = [...new JSDOM(
+  fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8'),
+).window.document.querySelectorAll('meta[name="theme-color"]')]
+  .map((el) => el.getAttribute('content'));
+
+// Sand's accent before #145 darkened it for contrast. Deliberately a literal:
+// it is a value rounds still carry in their stored design and that the code
+// deliberately no longer holds anywhere.
+const STALE_SAND_ACCENT = '#a2701d';
 
 const metaColor = (dom) =>
   dom.document.querySelector('meta[name="theme-color"]').getAttribute('content');
@@ -33,8 +53,12 @@ test('the static default in index.html is the standard accent core.js falls back
 
   // Not a literal on either side: the markup's value is parsed out and compared
   // to the constant the code restores, so the two cannot drift apart.
-  const declared = INDEX_HTML.match(/<meta name="theme-color" content="([^"]+)"/)[1];
-  assert.equal(declared, dom.get('STANDARD_ACCENT'));
+  // Exactly one, so no second tag further down can silently win in the browser
+  // while this reads the first — and so a live tag that went missing is a
+  // failure rather than a value read off some commented-out remnant.
+  assert.equal(INDEX_THEME_COLORS.length, 1,
+    `index.html declares ${INDEX_THEME_COLORS.length} live theme-color tags, expected exactly 1`);
+  assert.equal(INDEX_THEME_COLORS[0], dom.get('STANDARD_ACCENT'));
 });
 
 test('a themed round moves the chrome to its accent, in lockstep with --brand', (t) => {
@@ -50,11 +74,20 @@ test('a stale stored accent is resolved against the current THEMES', (t) => {
   const dom = loadApp();
   t.after(() => dom.close());
 
-  // Sand's pre-#145 accent, still carried by rounds that picked it back then.
-  // The page paints with the corrected value, so the chrome has to as well.
-  dom.call('applyBackground', { type: 'theme', page: '#f6efe2', accent: '#a2701d' });
-  assert.equal(metaColor(dom), '#91641a');
-  assert.equal(brandVar(dom), '#91641a');
+  /* Sand's pre-#145 accent, still carried by rounds that picked it back then.
+     The page paints with the corrected value, so the chrome has to as well.
+
+     Only the STALE hex is a literal here — it is history and exists nowhere in
+     the code. Sand's current page and accent are read off THEMES, so the next
+     legitimate contrast retune needs no hand-edit in this file
+     (`.claude/rules/theme-derived-colors.md`). */
+  const sand = JSON.parse(dom.run("JSON.stringify(THEMES.find((x) => x.labelKey === 'theme.sand'))"));
+  assert.notEqual(sand.accent, STALE_SAND_ACCENT,
+    'Sand\'s accent is back at its pre-#145 value, so this test no longer resolves anything');
+
+  dom.call('applyBackground', { type: 'theme', page: sand.page, accent: STALE_SAND_ACCENT });
+  assert.equal(metaColor(dom), sand.accent);
+  assert.equal(brandVar(dom), sand.accent);
 });
 
 test('a legacy plain-color design keeps the standard accent', (t) => {
