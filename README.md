@@ -1,4 +1,11 @@
-# 🌀 Spielwirbel
+<p align="center">
+  <img src="public/icons/icon-192.png"
+       width="96"
+       height="96"
+       alt="">
+</p>
+
+<h1 align="center">Spielwirbel</h1>
 
 [![CI](https://github.com/ChulioZ/spielwirbel/actions/workflows/ci.yml/badge.svg)](https://github.com/ChulioZ/spielwirbel/actions/workflows/ci.yml)
 [![Lint](https://github.com/ChulioZ/spielwirbel/actions/workflows/lint.yml/badge.svg)](https://github.com/ChulioZ/spielwirbel/actions/workflows/lint.yml)
