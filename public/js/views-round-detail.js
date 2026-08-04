@@ -869,8 +869,15 @@ function openSheet(backdrop, onKey) {
   // Replacing an already-open sheet (a showX opened while one is up) reuses its
   // marker — tear the old one down here, synchronously, rather than via a
   // leading closeSheet() whose async history.back() would arrive AFTER the new
-  // sheet is open and wrongly dismiss it.
-  if (activeSheet) teardownSheet();
+  // sheet is open and wrongly dismiss it. `keepLock` because the page is staying
+  // covered throughout: unlocking would restore the scroll offset and the
+  // re-lock below would freeze it again, a visible jump on every replace.
+  if (activeSheet) teardownSheet({ keepLock: true });
+  // Freeze the page behind the backdrop (#622), and stop a swipe across the
+  // exposed backdrop area from arriving as a dismissing tap now that it no
+  // longer scrolls anything.
+  lockPage();
+  guardDragDismiss(backdrop);
   const release = trapFocus(backdrop);
   activeSheet = { el: backdrop, onKey, release };
   if (!sheetHistory) {
@@ -883,12 +890,17 @@ function openSheet(backdrop, onKey) {
 // (#145): release AFTER removing the sheet, because the trap restores focus to
 // the opener and focusing an element inside a still-attached, about-to-vanish
 // dialog would be undone a moment later.
-function teardownSheet() {
+function teardownSheet(opts) {
   if (!activeSheet) return;
   document.removeEventListener('keydown', activeSheet.onKey, true);
   activeSheet.el.remove();
   if (activeSheet.release) activeSheet.release();
   activeSheet = null;
+  // Every path OUT of the sheet layer comes through here — the × button, Escape,
+  // a backdrop tap, a successful submit, and Back via handleSheetPop — so this is
+  // the one place the page lock has to be released. `keepLock` is passed by the
+  // openSheet replace path above, and by nothing else.
+  if (!(opts && opts.keepLock)) unlockPage();
 }
 
 // Programmatic close (Escape, backdrop, the × button, a successful submit).

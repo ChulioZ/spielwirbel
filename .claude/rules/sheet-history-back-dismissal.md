@@ -52,6 +52,11 @@ calls were removed and `openSheet` tears down any already-open sheet itself
 (reusing its marker, fully synchronous). Don't reintroduce a leading
 `closeSheet()` before building a sheet — let `openSheet` handle the replace.
 
+**That replace path is also why `teardownSheet` takes a `keepLock` option**
+(#622): the page lock behind an open sheet must survive it, or every
+sheet-over-sheet open restores the scroll offset and re-freezes it — a visible
+jump. See `.claude/rules/overlay-page-lock.md` §2.
+
 ## Verifying a change here
 
 Same as the session flow (`.claude/rules/session-flow-history.md`): the Browser

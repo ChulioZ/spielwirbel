@@ -326,6 +326,8 @@ public/
     report-link.js   builds the contact-form deep link behind the Freundeskreis
                      feed's per-item report button (issue #559)
     focus-trap.js    keeps Tab inside an open sheet + restores focus on close
+    page-lock.js     freezes the page behind an open sheet, so it can't scroll
+                     away underneath it (issue #622)
     session-path.js  URLs for the transient session-flow screens, so browser/OS
                      Back steps through the vote wizard (issue #329)
     nav-link.js      turns a nav element into a real <a href> that still routes
