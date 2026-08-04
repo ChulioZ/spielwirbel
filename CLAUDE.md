@@ -4,9 +4,9 @@ Guidance for Claude Code (and other AI assistants) working in this repository.
 
 ## What this is
 
-A self-hosted web app for any group or gaming round to
-manage their games, run "what should we play?" voting sessions, and track ratings. UI language is
-**German**; code, comments here, and docs are **English**.
+A self-hosted web app for any group or gaming round to manage their games,
+run "what should we play?" voting sessions, and track ratings. The UI ships
+**German + English**; code, comments here, and docs are **English**.
 
 **Current stage — a live, PUBLIC multi-tenant SaaS.**
 The app started as a local-only, no-auth MVP for a trusted home network; that
@@ -28,12 +28,12 @@ public users. Full status: `docs/production-readiness.md`.
 *staying minimal* to *production-ready*: correctness under concurrent/
 multi-tenant load, security, observability, and long-term maintainability now
 outweigh keeping the dependency count low for its own sake. Where a mature,
-widely-used dependency solves a problem this codebase currently hand-rolls
-(schema migrations, structured logging/error tracking, request validation —
-see `docs/production-readiness.md` §7 for the current shortlist), prefer
-adopting it over growing the homegrown version further. This does **not**
-relax discipline elsewhere: still build roadmap work deliberately when asked,
-not as a side effect of an unrelated change.
+widely-used dependency solves a problem this codebase hand-rolls, prefer
+adopting it over growing the homegrown version further — already done for
+migrations, logging, validation and token issuance (#211–#214). Real **error
+tracking** is the last `docs/production-readiness.md` §7 item still
+hand-rolled. This does **not** relax discipline elsewhere: still build roadmap
+work deliberately when asked, not as a side effect of an unrelated change.
 
 The architecture calls below were re-examined under this lens on 2026-07-19
 and still hold on their own merits (with one revision: "no ORM" became "Knex,

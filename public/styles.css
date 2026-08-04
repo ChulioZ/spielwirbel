@@ -399,8 +399,7 @@ h1, h2, h3 { font-family: var(--font-display); }
     background-image: radial-gradient(70% 130% at 8% 0%,
       color-mix(in srgb, var(--surface) 60%, transparent), transparent 70%);
   }
-  /* Display step for the band. Hardcoded because the type scale does not exist
-     yet — #470 is the issue that would give this a --text-* token. */
+  /* Display step for the band, on the --text-* scale (#470). */
   .app:has(.lobby-list) > .lobby-head h1 { font-size: var(--text-4xl); }
 
   /* The two setup forms (session setup, new round) are already two columns from
