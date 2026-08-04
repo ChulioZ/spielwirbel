@@ -194,6 +194,17 @@ Cover images moved to S3-compatible object storage (#128, see
 so the app tier is stateless. Managed Postgres gives automated backups +
 point-in-time recovery for free.
 
+> **Correction (2026-08-04) — that last sentence was wrong, and it was
+> load-bearing.** Railway's managed Postgres ships with PITR **off**, no backup
+> schedule and no snapshots; both layers must be enabled explicitly. Nothing was
+> backed up for the entire public life of the instance. The premise went
+> unchecked *because* it was written down as settled here, and it propagated into
+> the Art. 32 record (`docs/legal/toms.md`) and `docs/legal/retention.md`, which
+> both then asserted platform backups that did not exist. Backups were configured
+> on 2026-08-04 (manual snapshot → PITR → daily schedule kept 6 days). Left in
+> place rather than rewritten, because a decision record should show what was
+> believed — see `.claude/rules/railway-postgres-floating-major.md` §5.
+
 **Why Postgres, over the rejected alternatives — still the right call:**
 relational data (round → games/sessions → votes) maps naturally to tables,
 with `JSONB` for the messier bits (votes maps, activity payloads), so the

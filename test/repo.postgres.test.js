@@ -10,7 +10,7 @@
  * contract (test/support/repo-contract.js) sees a clean store.
  *
  * Run locally, e.g.:
- *   docker run -d -e POSTGRES_PASSWORD=postgres -p 5433:5432 postgres:16
+ *   docker run -d -e POSTGRES_PASSWORD=postgres -p 5433:5432 postgres:18
  *   DATABASE_URL=postgres://postgres:postgres@localhost:5433/postgres \
  *     node --test test/repo.postgres.test.js
  */

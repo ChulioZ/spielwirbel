@@ -62,8 +62,11 @@ checklist instead of a constant):
 | `.github/ISSUE_TEMPLATE/config.yml` | that private vulnerability reporting is on and the Discussions Q&A category exists at that slug — **repo settings, not files** |
 | `.github/ISSUE_TEMPLATE/bug_report.yml` | that spielwirbel.app runs accounts-only, in the auth-mode dropdown's help text |
 | `lib/quota.js` — the header comment | which mode is "today's production"; it described prod as sitting "behind the shared-password gate" for six days past the go-live (found 2026-07-30). A *code comment* asserting instance state is the easiest row to forget, because no docs sweep looks in `lib/` |
+| `docs/legal/toms.md` — „Verfügbarkeit & Wiederherstellung" | which backup and recovery measures actually exist — an **Art. 32 Abs. 1 lit. c** statement. It claimed „Managed PostgreSQL (Railway) mit Plattform-Backups" from the day it was written while the Railway project had **none configured at all**: PITR off, no schedule, zero snapshots. Nobody had *removed* anything — the line was written assuming the platform backs up managed Postgres by default, and it does not. Found 2026-08-04 when the operator opened the Backups tab; fixed the same day by configuring backups, not by softening the text |
+| `docs/legal/retention.md` — the `Backups` row | how long deleted personal data survives in a backup — the Art. 17 backup carve-out. Asserted an automatic „Backup-Zyklus der Plattform" with the same wrong premise, so the one document that says when data really disappears was wrong in the direction that flatters us |
 
 Qualifying changes: adding/removing/retuning an **env var in production**,
+enabling, reconfiguring or losing a **backup / recovery / monitoring** setting,
 switching a **provider or host**, moving a **region**, acquiring or dropping a
 **domain**, opening or closing **registration**, changing a **plan** that gates a
 capability (Railway Pro for SMTP), and — for the three `.github/` rows —

@@ -115,9 +115,14 @@ under the Developer Certificate of Origin (`git commit -s`).
 
 ## Data & backup
 
-Everything lives in the `data/` folder (`data.json` + `uploads/`) — copy it to
-back up, delete it to reset. The whole folder is git-ignored, so your group's
-data is never committed.
+By default everything lives in the `data/` folder (`data.json` + `uploads/`) —
+copy it to back up, delete it to reset. The whole folder is git-ignored, so your
+group's data is never committed.
+
+Set `DATABASE_URL` (and optionally `S3_BUCKET`) and your data lives in Postgres
+and object storage instead — then **backups are your provider's job, and they are
+usually not switched on by default.** Check, rather than assuming a managed
+database backs itself up; see [`docs/configuration.md`](docs/configuration.md).
 
 ## About this project
 
