@@ -56,6 +56,12 @@ that silently misses the trap. Two orderings are load-bearing:
 - **Release AFTER removing the sheet** — restoring focus to the opener while
   the dialog is still attached gets undone a moment later.
 
+`openSheet` is now the choke point for a **second** thing a hand-rolled dialog
+has to do and a native `<dialog>` gets free: freezing the page behind it, so a
+drag on the backdrop doesn't scroll the screen away underneath the sheet (#622,
+`.claude/rules/overlay-page-lock.md`). Same reasoning as the trap — routing every
+sheet through one function is what makes it impossible to add one that misses.
+
 ## 3. State conveyed by colour alone
 
 The seat picker, rating buttons and hub tabs signalled state with a class +

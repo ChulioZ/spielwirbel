@@ -35,6 +35,11 @@ sheet below 860px. If you add a fourth editor, route it through `openEditor`
 rather than `openPopover`. A popover holding only buttons (the top-bar account
 menu, `account.js`) is fine at every width — it raises no keyboard.
 
+That same self-teardown is why a popover is **exempt from the page lock** every
+sheet gets (#622): freezing the document would defeat the scroll listener that
+keeps it on its anchor. It gets `overscroll-behavior` on its inner scroll box
+instead — see `.claude/rules/overlay-page-lock.md` §3.
+
 ## 2. `build()` runs on a DETACHED node — `focus()` in it is a silent no-op
 
 `openPopover` called `build(el, close)` *before* `document.body.appendChild(el)`.

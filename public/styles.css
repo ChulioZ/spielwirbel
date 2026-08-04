@@ -3254,6 +3254,11 @@ body.auth-screen .terms-banner { display: none; }
      really is 0 tall). One row is always better than none. */
   max-height: max(160px, min(264px, 38vh));
   overflow-y: auto;
+  /* 126 Catan editions scroll a long way, and the box lives in a popover, a
+     sheet or the add-game form — none of which want the gesture handed on when
+     it reaches the last row (#622). It matters most in the popover: a page
+     scroll CLOSES a popover, so chaining there dismissed the picker outright. */
+  overscroll-behavior: contain;
   padding: 2px;
 }
 .cover-pick {
@@ -3464,6 +3469,9 @@ kbd {
   padding: 6px;
   max-height: 340px;
   overflow-y: auto;
+  /* Reaching the end of the suggestions must not start scrolling the sheet
+     underneath the menu, let alone the page behind that (#622). */
+  overscroll-behavior: contain;
 }
 .lookup__opt {
   display: flex;
@@ -3748,6 +3756,10 @@ kbd {
      only fires while this element is what scrolls. See
      .claude/rules/lookup-menu-fixed-position.md. */
   overflow-y: auto;
+  /* Scrolling past the sheet's own top or bottom edge used to continue into the
+     page behind it, so dismissing the sheet left the user somewhere else (#622).
+     The exposed backdrop area is the other half of that, and is locked in JS. */
+  overscroll-behavior: contain;
   background: var(--page-bg);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   border: 1px solid var(--line);

@@ -40,6 +40,9 @@ const frontendGlobals = {
   createSwrStore: 'readonly',
   // focus-trap.js
   trapFocus: 'readonly', focusables: 'readonly', FOCUSABLE: 'readonly',
+  // page-lock.js
+  lockPage: 'readonly', unlockPage: 'readonly',
+  guardDragDismiss: 'readonly', DRAG_SLOP: 'readonly',
   // session-path.js
   sessionSetupPath: 'readonly', sessionStepPath: 'readonly',
   sessionFinalePath: 'readonly', parseSessionPath: 'readonly',
