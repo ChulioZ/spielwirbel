@@ -62,7 +62,7 @@ session versus three live pickers).
 the live preview, and **the two must move together**. The count stays in the
 route on purpose — `drawPool` takes it as a parameter rather than re-deriving it
 from `round.members`, which would silently drop the guests and flatten the teams.
-It is the standing constraint in — the standing constraint in
+It is the standing constraint in
 `.claude/rules/active-games-filter-sites.md`, now with a second term in it.
 
 Direct-pick mode consults no player range at all (pinned by a spec since #532),

@@ -33,7 +33,7 @@
      `criteria.md` files are deliberately exempt: they are catalogues of
      independent entries, i.e. the rule's own flat-data-table carve-out.
    - 200 lines for `CLAUDE.md` — `C-015`, straight from the harness guidance.
-     It is 203 today, so it starts out allowlisted: recording the overshoot is
+     It is over that today, so it is allowlisted: recording the overshoot is
      the point, and the entry has to be removed when the trim happens. */
 
 const { test } = require('node:test');
@@ -173,7 +173,7 @@ const SKILL_ALLOW = {
 };
 
 const CLAUDE_MD_ALLOW = {
-  'CLAUDE.md': 'recorded 2026-07-30 — 203 lines against C-015\'s ~200 target; the overshoot is small and real, so it is recorded rather than trimmed in an unrelated PR',
+  'CLAUDE.md': 'recorded 2026-08-05 — 212 lines against C-015\'s ~200 target. It was recorded at 203 on 2026-07-30 and drifted +9 through #594/#598 without anyone noticing, which the 2026-08-04 claude-file audit found and #635 refreshed. The overshoot is still small and real: every candidate line is a live constraint, so trimming to the number would cost a `why` this file exists to carry — the outcome this budget explicitly does not want. Left as M-001 worklist',
 };
 
 // --- The assertions, applied identically to all four classes.

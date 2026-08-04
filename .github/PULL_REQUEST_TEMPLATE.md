@@ -19,8 +19,10 @@
 - [ ] Tests added or updated for the change (when it's testable)
 - [ ] New user-facing strings added to **both** `public/js/lang/en.js` and
       `public/js/lang/de.js` (key parity is enforced by a test)
-- [ ] `README.md` updated if this adds or renames a user-facing feature, alters
-      the file tree, or changes routes, scripts or env vars
+- [ ] Docs updated in this PR for what the change touches — `docs/features.md`
+      if it adds or renames a user-facing feature, `docs/architecture.md` if it
+      alters the file tree (a test enforces that one), `docs/configuration.md`
+      if it changes routes, scripts or env vars
       (`.claude/rules/keep-readme-current.md`)
 - [ ] Every commit is signed off — `git commit -s` (Developer Certificate of
       Origin, checked by the `DCO` workflow)
