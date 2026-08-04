@@ -91,9 +91,16 @@ function bootApp(t) {
   return dom;
 }
 
-/** Every element on a rendered screen that names a game. */
+/* Every element on a rendered screen that names a GAME.
+   `.pokale-card__value` alone is not that test: pokaleStatCard uses the same
+   class for the streak, whose value is a MEMBER name, so a naive selector
+   reports "Anna" as a named game and quietly weakens every assertion built on
+   it. Both game-naming builders route their link through makeGameLink, so the
+   href is what actually distinguishes them (`gamePath`, router.js:80). */
 const namedGames = (root) =>
-  [...root.querySelectorAll('.pokale-game__title, .pokale-card__value')].map((el) => el.textContent);
+  [...root.querySelectorAll('.pokale-game__title, .pokale-card__value')]
+    .filter((el) => !el.classList.contains('pokale-card__value') || /\/game\//.test(el.getAttribute('href') || ''))
+    .map((el) => el.textContent);
 
 /** One stat card, found by the label it renders. */
 const cardByLabel = (root, label) =>
@@ -147,6 +154,33 @@ test('a member whose top-rated game is retired keeps their next-best favourite',
     dom.run("t('recap.favSub', { avg: '4.0' })"),
     'the average shown must be the one for the game named, not the retired favourite'
   );
+});
+
+test('Meistgespielt is omitted, not blank, when every game ever played is retired', async (t) => {
+  // A newly reachable state: before #643 an empty tally meant "no finished
+  // session ever chose a game", and the only way there was a round with no
+  // sessions. Now a round with plenty of history can empty it. The card must
+  // drop out (the existing empty-tally behaviour) rather than render a heading
+  // over nothing, or crash on a `find` that returns undefined.
+  const dom = loadApp();
+  t.after(() => dom.close());
+  const round = {
+    ...ROUND,
+    games: ROUND.games.map((g) => ({ ...g, retired: true, completed: false })),
+  };
+  dom.set('api', async (method, url) => {
+    if (/\/activities$/.test(url)) return [];
+    if (/^\/api\/rounds\/[^/]+$/.test(url)) return round;
+    if (url === '/api/rounds') return [];
+    return {};
+  });
+  dom.set('accountsActive', () => false);
+  dom.set('isLoggedIn', () => false);
+  await dom.call('showRound', RID, 'pokale');
+  assert.equal(cardByLabel(dom.app, dom.run("t('pokale.mostPlayed')")), undefined);
+  assert.deepEqual(namedGames(dom.app), [], 'no card may name a game when every game is retired');
+  // The tab still renders — an omitted card must not take the screen with it.
+  assert.ok(dom.app.querySelector('.recap__totals'), 'the Rückblick totals still render');
 });
 
 // ---- what must NOT have changed -------------------------------------------
