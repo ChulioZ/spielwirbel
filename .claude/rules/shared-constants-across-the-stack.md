@@ -75,7 +75,22 @@ list look longer than it is. `test/username-policy.test.js` asserts the shape of
 every entry for that reason, and loops the *whole* set through the route rather
 than a sample.
 
-Each new instance must be named in this inventory — the five paragraphs above.
+**The sixth is `public/js/draw-pool.js`** (#634): `isActiveGame` and
+`fitsPlayerCount`, the two predicates deciding which games a session draw may pick
+from — applied by `lib/draw.js` to build the real pool and by `showStartSession()`
+to render the live preview of that pool. It is the first instance that shares
+**logic rather than a value**, and it earns the shape for the same reason the
+others do: the two sides answer one question, so a drifted copy makes the preview
+promise a pool the draw will not produce (or hide games it would) with no error
+anywhere — and the preview is precisely where the user decides whether to draw at
+all. Note what deliberately stayed duplicated: the **tag** clauses, because the
+server filters on resolved include/exclude id lists while the client holds a
+tri-state chip map, so one shared function would need a third representation
+invented for it. Sharing the clauses that are genuinely identical is the rule;
+forcing the ones that are not is how a shared file grows a parameter nobody can
+explain.
+
+Each new instance must be named in this inventory — the six paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a
