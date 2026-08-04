@@ -56,3 +56,18 @@ test('railway.json builds the Dockerfile and health-checks the real /healthz', (
   // Must match the unauthenticated probe the app actually serves (lib/app.js).
   assert.equal(cfg.deploy.healthcheckPath, '/healthz');
 });
+
+test('railway.json pins the single replica the in-memory limiter stores require', () => {
+  const cfg = JSON.parse(read('railway.json'));
+  // Config-as-code beats the dashboard, so this is what stops a second replica
+  // being added with a slider. express-rate-limit's default store is per
+  // process, so a second one silently doubles all four rate-limit ceilings and
+  // the MAIL_DAILY_MAX budget — no error, no failing test, the controls just
+  // stop binding. Raising this needs the shared Redis store (#215) first.
+  // See .claude/rules/deploy-invariants-are-pinned-in-code.md.
+  assert.equal(cfg.deploy.numReplicas, 1);
+  // App sleeping would stop the 15-minute demo-purge tick (lib/scheduler.js),
+  // so expired guest demos would pile up against MAX_LIVE_DEMOS until a request
+  // happened to wake the container.
+  assert.equal(cfg.deploy.sleepApplication, false);
+});

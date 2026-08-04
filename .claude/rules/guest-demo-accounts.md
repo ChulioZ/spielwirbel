@@ -26,11 +26,15 @@ them. The obvious implementation passes a flag from each call site into
 
 - **A call site can forget.** There are five today and the next one is written by
   someone who has never heard of demo mode.
-- **In-memory state classifies inconsistently.** The deployment can run
-  **multiple replicas** (#215 — and has; the replica count is an ops dial, not a
-  code fact), so a registry of demo tenant ids built at mint time would only be
-  known to the replica that minted it; the same tenant would be excluded or not
-  depending on which replica answered the request.
+- **In-memory state classifies inconsistently.** More than one process can serve
+  at once, so a registry of demo tenant ids built at mint time would only be
+  known to the process that minted it; the same tenant would be excluded or not
+  depending on which one answered the request. Note this still holds now that
+  `railway.json` pins `numReplicas: 1` (2026-08-04): Railway's zero-downtime
+  deploy **overlaps** the outgoing and incoming containers, so two processes run
+  concurrently on every deploy regardless of the replica count — and raising that
+  count at all is gated on #215. See
+  `.claude/rules/deploy-invariants-are-pinned-in-code.md`.
 
 So the classification rides on the tenant id itself — `demo-<16 hex>` versus a
 real tenant's bare 16 hex, which cannot collide — and `trackEvent` skips it in one
