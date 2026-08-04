@@ -15,14 +15,19 @@
  *
  * CACHE version: bump it whenever a shell asset changes, so the cache-first
  * assets don't serve stale JS/CSS — a new name re-precaches the shell and
- * `activate` drops the old cache. NOTE: the optional production build
- * (`npm run build`, #141) content-hashes the js/css AND rewrites this literal to
- * a content-derived name, so a *built* deploy self-invalidates. This manual `vN`
- * bump only matters when serving the unbuilt public/ tree (dev / a non-prod
- * deploy). See .claude/rules/frontend-build-cache-busting.md.
+ * `activate` drops the old cache. The optional production build (`npm run
+ * build`, #141) content-hashes the js/css AND rewrites this literal to a
+ * content-derived name, so a *built* deploy self-invalidates a js/css change on
+ * its own. It does NOT for anything copied through unhashed (this manifest,
+ * icons, fonts, tabler-icons.css): no hashed filename moves, so the digest — and
+ * the whole built sw.js — would come out byte-identical and no browser would
+ * ever see an update. The build therefore mixes THIS literal into the derived
+ * name (#617), which makes the manual `vN` bump the only working invalidation
+ * for those assets, in production as well as dev. Bump it for any shell asset.
+ * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v116';
+const CACHE = 'spielwirbel-shell-v117';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails

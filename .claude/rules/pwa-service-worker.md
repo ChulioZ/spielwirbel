@@ -16,15 +16,28 @@ Non-obvious things that will bite if you forget them:
   sees). `test/pwa.test.js` guards this: it parses `SHELL` out of `sw.js` and
   asserts every entry is actually served.
 
-- **Bump `CACHE` when any shell asset changes** *for the unbuilt path.* Assets are
+- **Bump `CACHE` when any shell asset changes — in production too.** Assets are
   served **cache-first**, so a changed `styles.css`/`*.js` would be served stale
   until the cache version name changes. Bumping `CACHE` (`spielwirbel-shell-vN`)
   re-precaches the shell and `activate` deletes the old cache. **Since #141** the
   optional production build (`npm run build`) content-hashes the js/css *and*
   rewrites the `SHELL` paths + the `CACHE` literal to a content-derived name, so a
-  **built** deploy (`NODE_ENV=production`) self-invalidates and this manual bump is
-  a no-op there. The manual `vN` bump only matters when serving the raw `public/`
-  tree (dev / a non-prod deploy). See
+  **built** deploy (`NODE_ENV=production`) self-invalidates **a js/css change**.
+
+  It does **not** self-invalidate anything the build copies through unhashed —
+  `manifest.webmanifest`, icons, fonts, `fonts/tabler-icons.css`. Only `js/**` +
+  `styles.css` are hashed, so a change confined to one of those files moves no
+  hashed filename, the derived digest is unchanged, and the built `sw.js` comes
+  out **byte-identical** to the previous deploy. Browsers detect a service-worker
+  update by byte-comparing `sw.js`, so nothing installs and the cache-first shell
+  serves the stale asset indefinitely. Measured on #617: a manifest-only change
+  produced the same `spielwirbel-shell-b4335061` and the same sha256 before and
+  after.
+
+  **The fix, and why the manual bump now always matters:** `deriveCache` mixes
+  the source `CACHE` literal into the digest (#617), so bumping `vN` changes the
+  built name too instead of being silently overwritten. Treat the bump as
+  required for **every** shell asset, not just the unbuilt path. See
   `.claude/rules/frontend-build-cache-busting.md`.
 
 - **Never cache `/api/` or `/uploads/`.** The fetch handler skips both: API

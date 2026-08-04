@@ -44,11 +44,22 @@ build-free. Non-obvious things that will bite if you forget them:
   content-hashed). `.DS_Store` and other dotfiles are skipped in the mirror.
 
 - **The built `sw.js` gets a content-derived `CACHE`.** `deriveCache` hashes the
-  set of hashed filenames, so a built deploy self-invalidates the service-worker
-  shell cache; the manual `spielwirbel-shell-vN` bump in the *source* `sw.js` only
-  matters for the unbuilt path (see `pwa-service-worker.md`). The `SHELL`↔
-  `index.html` parity the pwa test guards is about the **source** files; the build
-  derives the built `SHELL` from them.
+  set of hashed filenames **plus the source `CACHE` literal**, so a built deploy
+  self-invalidates the service-worker shell cache. The `SHELL`↔`index.html`
+  parity the pwa test guards is about the **source** files; the build derives the
+  built `SHELL` from them.
+
+  **The literal is in that digest for a reason — don't drop it as redundant
+  (#617).** Only `js/**` + `styles.css` are hashed, so a change confined to a
+  copied-through asset (`manifest.webmanifest`, icons, fonts,
+  `fonts/tabler-icons.css`) moves no hashed filename. Without the literal the
+  digest is unchanged, the built `sw.js` is **byte-identical** to the previous
+  deploy, no browser detects a service-worker update, and the cache-first shell
+  serves the stale asset forever — a silent no-op deploy. So the manual
+  `spielwirbel-shell-vN` bump matters on the **built** path too, and for those
+  assets it is the *only* invalidation there is.
+  `test/build.test.js` pins it: two builds differing only in the manifest and the
+  literal must emit different `sw.js` bytes.
 
 - **HTTP cache headers pair with the hashing (`assetCacheHeaders`, lib/app.js).**
   Static serving marks only `name.<8-hex>.js/.css` files `immutable, max-age=1y`
