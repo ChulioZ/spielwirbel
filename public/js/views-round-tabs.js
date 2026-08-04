@@ -53,7 +53,10 @@ function renderRegalTab(round, activeGames) {
     gamesSec.appendChild(grid);
   } else {
     if (canImportBgg(round)) {
-      const importBtn = h(`<button class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.link'))}</button>`);
+      // Two spellings of one label, switched by width in CSS (#621) — the full
+      // wording is ~269px, most of a 320px phone's content column. Both strings
+      // already exist for the empty-Regal tile, so this needs no new i18n key.
+      const importBtn = h(`<button class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> <span class="tools-label tools-label--long">${esc(t('bggImport.link'))}</span><span class="tools-label tools-label--short">${esc(t('bggImport.tile'))}</span></button>`);
       importBtn.addEventListener('click', () => showBggImport(round));
       gamesTools.appendChild(importBtn);
     }

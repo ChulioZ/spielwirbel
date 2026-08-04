@@ -153,6 +153,13 @@ own rules with a comment saying why it lives there.
 `test/content-width.test.js` pins all three, and each assertion was verified by
 reintroducing the exact bug and watching it go red.
 
+**The same trap exists at the other end of the axis, and #621 hit it twice.**
+The `@media (max-width: 520px)` block is declared ~line 876, *above* most of the
+components it overrides — so a phone override that ties its base rule loses on
+source order just as surely as the rail's hides did. One of the two losses left a
+control with no accessible name at all. Same remedy, same reason:
+`.claude/rules/flex-none-cancels-flex-wrap.md`.
+
 ## What survived from #332, and why
 
 - **The phone Regal is two columns.** A 220px floor needs 456px for two, so
