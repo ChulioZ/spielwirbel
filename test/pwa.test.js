@@ -34,6 +34,19 @@ test('the manifest declares the fields browsers need to install', async () => {
   assert.ok(sizes.includes('512x512'), 'needs a 512 icon');
 });
 
+// A captured link (scope is "/", so an installed WebAPK captures every app URL,
+// incl. the mailed verify/reset links) must navigate the RUNNING window. The
+// default `auto` opens a second app window on Chromium, leaving the window the
+// user was already looking at logged out. The exact mode is the point, not just
+// the member's presence: `focus-existing` would raise the old window without
+// following the link, which is a different — and for an auth link, wrong —
+// behaviour. See issue #617.
+test('the manifest routes captured links into the running window', async () => {
+  const res = await request(app).get('/manifest.webmanifest');
+  const m = JSON.parse(res.text);
+  assert.equal(m.launch_handler?.client_mode, 'navigate-existing');
+});
+
 test('serves the service worker as JavaScript, not the HTML shell', async () => {
   const res = await request(app).get('/sw.js');
   assert.equal(res.status, 200);

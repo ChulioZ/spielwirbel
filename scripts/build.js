@@ -17,7 +17,9 @@
  * worker's CACHE name is re-derived from the hashed set so a new build
  * auto-invalidates the old shell cache. Everything else (fonts, icons, the
  * manifest, tabler-icons.css) is copied through unchanged — only js + styles.css
- * are in scope.
+ * are in scope. Because those copied-through files are NOT in the hashed set,
+ * the derived name also mixes in the source sw.js CACHE literal, so the manual
+ * `spielwirbel-shell-vN` bump still invalidates them here (see deriveCache).
  *
  * lib/app.js serves dist/ when dist/index.html exists, else public/. So building
  * is opt-in: don't build and you get the live-editable public/ tree; build and
@@ -96,10 +98,30 @@ function rewriteRefs(text, manifest) {
   return text;
 }
 
+// The source sw.js `CACHE` literal, read before the rewrite loop replaces it.
+function sourceCache(outDir) {
+  const abs = path.join(outDir, 'sw.js');
+  if (!fs.existsSync(abs)) return '';
+  const m = fs.readFileSync(abs, 'utf8').match(/const CACHE = '([^']*)';/);
+  return m ? m[1] : '';
+}
+
 // A cache name derived from the hashed asset set, so any content change yields a
 // new service-worker cache and `activate` drops the stale one automatically.
-function deriveCache(manifest) {
-  const digest = sha8(Object.values(manifest).sort().join('\n'));
+//
+// `src` is the source sw.js CACHE literal, and it is load-bearing rather than
+// belt-and-braces: only js/** + styles.css are hashed, so a change confined to a
+// copied-through shell asset (manifest.webmanifest, icons, fonts,
+// tabler-icons.css) leaves every hashed filename identical — the digest, and
+// therefore the whole built sw.js, comes out BYTE-IDENTICAL to the previous
+// deploy. Browsers detect a service-worker update by byte-comparing sw.js, so no
+// install/activate fires and the cache-first shell keeps serving the old asset
+// forever. Mixing the literal in makes the manual `spielwirbel-shell-vN` bump
+// the working invalidation for those assets in a built deploy too, instead of
+// being silently overwritten here. Found on #617, where a manifest-only change
+// would otherwise never have reached an installed PWA.
+function deriveCache(manifest, src = '') {
+  const digest = sha8([...Object.values(manifest).sort(), src].join('\n'));
   return `spielwirbel-shell-${digest}`;
 }
 
@@ -121,7 +143,7 @@ function build({ srcDir = DEFAULT_SRC, outDir = DEFAULT_OUT } = {}) {
     manifest['/' + rel] = '/' + hRel;
   }
 
-  const cache = deriveCache(manifest);
+  const cache = deriveCache(manifest, sourceCache(outDir));
   for (const name of REWRITE_FILES) {
     const abs = path.join(outDir, name);
     if (!fs.existsSync(abs)) continue;

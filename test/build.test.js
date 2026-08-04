@@ -107,4 +107,48 @@ test('deriveCache is deterministic and content-derived', () => {
   const b = { '/styles.css': '/styles.bbbbbbbb.css' };
   assert.equal(deriveCache(a), deriveCache(a));
   assert.notEqual(deriveCache(a), deriveCache(b));
+  // The source CACHE literal participates too — see the #617 test below for why.
+  assert.equal(deriveCache(a, 'v1'), deriveCache(a, 'v1'));
+  assert.notEqual(deriveCache(a, 'v1'), deriveCache(a, 'v2'));
+});
+
+// The #617 regression. Only js/** + styles.css are hashed, so a change confined
+// to a copied-through shell asset (manifest.webmanifest, an icon, a font) leaves
+// every hashed filename identical. Without the source CACHE literal in the
+// digest the built sw.js then came out BYTE-IDENTICAL to the previous deploy —
+// browsers byte-compare sw.js to detect a service-worker update, so none fired
+// and the cache-first shell served the stale asset indefinitely. A manual
+// `spielwirbel-shell-vN` bump must therefore change the built output.
+const TMP_617 = fs.mkdtempSync(path.join(os.tmpdir(), 'build-617-'));
+after(() => fs.rmSync(TMP_617, { recursive: true, force: true }));
+
+test('a copied-through asset change plus a CACHE bump changes the built sw.js (#617)', () => {
+  const mkSrc = (name, cacheName, manifestBody) => {
+    const dir = path.join(TMP_617, name);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'styles.css'), 'body{color:red}');
+    fs.writeFileSync(path.join(dir, 'sw.js'), `const CACHE = '${cacheName}';\n`);
+    fs.writeFileSync(path.join(dir, 'manifest.webmanifest'), manifestBody);
+    return dir;
+  };
+
+  const before = build({
+    srcDir: mkSrc('src-before', 'spielwirbel-shell-v1', '{"name":"S"}'),
+    outDir: path.join(TMP_617, 'out-before'),
+  });
+  const afterBump = build({
+    srcDir: mkSrc('src-after', 'spielwirbel-shell-v2',
+      '{"name":"S","launch_handler":{"client_mode":"navigate-existing"}}'),
+    outDir: path.join(TMP_617, 'out-after'),
+  });
+
+  // Sanity: this is genuinely the hard case — no hashed filename moved at all,
+  // so the digest has nothing but the literal to distinguish the two builds.
+  assert.deepEqual(before.manifest, afterBump.manifest, 'no hashed asset changed');
+  assert.notEqual(before.cache, afterBump.cache, 'the bump must change the derived cache name');
+  assert.notEqual(
+    fs.readFileSync(path.join(TMP_617, 'out-before', 'sw.js'), 'utf8'),
+    fs.readFileSync(path.join(TMP_617, 'out-after', 'sw.js'), 'utf8'),
+    'the built sw.js must differ, or no browser ever detects a service-worker update'
+  );
 });
