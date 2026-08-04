@@ -634,6 +634,7 @@ I18N.en = {
   'friends.title': 'Friends',
   'friends.menu': 'Friends',
   'friends.addPlaceholder': 'Username',
+  'friends.addLabel': 'Username to send a friend request to',
   'friends.addSubmit': 'Send request',
   'friends.needUsername': 'Please enter a username.',
   'friends.feedTitle': 'Friends’ activity',

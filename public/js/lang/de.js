@@ -625,6 +625,10 @@ I18N.de = {
   'friends.title': 'Freundeskreis',
   'friends.menu': 'Freundeskreis',
   'friends.addPlaceholder': 'Nutzername',
+  // The input's accessible name (#638). Deliberately not the placeholder's bare
+  // „Nutzername" — a screen reader reads this in place of a visible label, so it
+  // has to say which username and what happens with it.
+  'friends.addLabel': 'Nutzername für die Freundschaftsanfrage',
   'friends.addSubmit': 'Anfrage senden',
   'friends.needUsername': 'Bitte einen Nutzernamen eingeben.',
   'friends.feedTitle': 'Neues aus dem Freundeskreis',
