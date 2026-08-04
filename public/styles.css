@@ -657,6 +657,17 @@ h1, h2, h3 { font-family: var(--font-display); }
   border-radius: var(--radius-lg);
   margin: 4px 0 18px;
 }
+/* The one button in the app with a bottom margin of its own, so the only one
+   that has to restate it for the press compensation (#615). Two constraints:
+
+   - COMPOUNDED with `.btn`, which also declares --btn-mb and sits ~450 lines
+     further down — a bare `.hub-cta` ties at (0,1,0) and loses on source order,
+     resetting the compensation to 0 with nothing to show for it.
+   - The 18px above stays where it is. Moving the resting margin into --btn-mb
+     would make `.btn { margin-bottom: var(--btn-mb) }` the only declaration of
+     it, i.e. another (0,1,0) tie settled by position — this way the resting
+     geometry is untouched and only `:active` (0,2,0) reads the property. */
+.btn.hub-cta { --btn-mb: 18px; }
 .hub-cta .ti { font-size: var(--text-2xl); }
 
 /* Quieter secondary tasks under the launchpad content. */
@@ -1108,8 +1119,16 @@ h1, h2, h3 { font-family: var(--font-display); }
 /* ---- Buttons ----
    Chunky and pressable: a thicker bottom border acts as the button's "base";
    pressing pushes the face down onto it. The :active margin compensates the
-   shrinking border so surrounding layout doesn't shift. */
+   shrinking border so surrounding layout doesn't shift.
+
+   That compensation is ADDITIVE, via --btn-mb (#615). An absolute value here
+   outranks any component rule — `.btn:active` is (0,2,0) — so it REPLACED the
+   bottom margin of a button that declared one instead of adding to it, and the
+   page below jumped by the difference for the duration of the press. A button
+   with its own bottom margin restates it in --btn-mb; see `.btn.hub-cta`.
+   test/button-press-compensation.test.js pins the arithmetic. */
 .btn {
+  --btn-mb: 0px;
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 700;
@@ -1124,7 +1143,7 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 .btn:hover { background: var(--brand-tint-soft); border-color: var(--brand-edge); }
 .btn .ti { vertical-align: -2px; }
-.btn:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: 2.5px; }
+.btn:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: calc(var(--btn-mb) + 2.5px); }
 .btn--primary {
   background: var(--brand);
   border-color: var(--brand-dark);
@@ -1132,11 +1151,14 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 .btn--primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
 .btn--ghost { background: transparent; border-bottom-width: 1.5px; }
-.btn--ghost:active { transform: translateY(1px); margin-bottom: 0; }
+/* A ghost button's border is already 1.5px at rest, so nothing shrinks and it
+   compensates by nothing — but it must still restate the resting margin. A
+   bare `0` here is the #615 bug, one variant over. */
+.btn--ghost:active { transform: translateY(1px); margin-bottom: var(--btn-mb); }
 .btn--danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 25%, var(--surface)); }
 .btn--lg { font-size: var(--text-xl); padding: 15px 28px; }
 .btn--sm { font-size: var(--text-sm); font-weight: 600; padding: 6px 12px; border-radius: 10px; border-bottom-width: 3px; }
-.btn--sm:active { margin-bottom: 1.5px; }
+.btn--sm:active { margin-bottom: calc(var(--btn-mb) + 1.5px); }   /* 3px -> 1.5px */
 .btn--block { width: 100%; }
 /* .btn on an <a> (the support sheet's outbound CTA #173, and since #330 the
    Start tab's Tags/Provider/Design links): a button element is inline-block by

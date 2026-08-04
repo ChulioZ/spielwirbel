@@ -56,8 +56,11 @@ Same family as `.claude/rules/hidden-attribute-vs-display-rule.md`, where
 `el.hidden` reported `true` on a fully visible element: in both cases the IDL/DOM
 answer is right about the DOM and wrong about the pixels.
 
-**Related:** `.claude/rules/responsive-content-width.md` ("your rule will lose" —
-the same win-on-specificity-not-source-order lesson for the rail's hides),
+**Related:** `.claude/rules/state-rules-clobber-component-values.md` (the same
+shape one component over: `.btn:active`'s absolute margin replacing the one
+`.hub-cta` declared), `.claude/rules/responsive-content-width.md` ("your rule
+will lose" — the same win-on-specificity-not-source-order lesson for the rail's
+hides),
 `.claude/rules/tiles-vs-lists.md` (the `.ds-row` wrap trap in a narrow tile),
 `.claude/rules/ds-row-is-a-click-target.md` (the other `.ds-row` cascade fight:
 its `cursor`/hover affordance, and why the opt-out must be compounded to beat the
