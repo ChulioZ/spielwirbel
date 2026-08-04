@@ -1526,14 +1526,24 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   border: 2px solid var(--page-bg);
 }
 .tl-dot--session { background: var(--brand); width: 12px; height: 12px; left: -24px; }
+/* A milestone takes the accent but NOT the session's larger size (#633): the
+   rail's size axis stays "is this a session?", so sessions keep reading as the
+   primary events. Colour alone is enough here because the row beside it already
+   carries the wash. */
+.tl-dot.tl-dot--milestone { background: var(--brand); }
 
 /* Quiet shelf-change rows on the timeline. align-items: flex-start keeps the
    icon, timestamp and delete button pinned to the FIRST line of the label, so a
    label that wraps on a narrow viewport doesn't leave them floating in the
    vertical middle. Each side item is sized to one label line (1.5em on the icon,
-   an equivalent line-height on the timestamp) so they still read as centered on
-   single-line rows. */
+   --tl-act-line on the timestamp) so they still read as centered on single-line
+   rows. */
 .tl-act {
+  /* One label line: the row's own font at the inherited line-height 1.5. It is a
+     variable because .tl-act--add re-sizes the row, and the two side items below
+     have to follow it — they were a hardcoded `calc(1.5 * 15px)`, already 1.5px
+     stale since the #470 type scale moved the row off 15px. */
+  --tl-act-line: calc(1.5 * var(--text-md));
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -1549,11 +1559,13 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .tl-act__icon { flex: none; display: flex; align-items: center; min-height: 1.5em; opacity: 0.75; }
 .tl-act__icon .ti { font-size: var(--text-md); }
 .tl-act__text { flex: 1; min-width: 0; }
-/* line-height = one label line (row line-height 1.5 × row font 15px), so the
-   smaller timestamp still centers on the label's first line under flex-start. */
-.tl-act__time { color: var(--ink-soft); font-size: var(--text-xs); opacity: 0.8; white-space: nowrap; flex: none; line-height: calc(1.5 * 15px); }
+/* line-height = one label line, so the smaller timestamp still centers on the
+   label's first line under flex-start. The fallback is only reached if one of
+   these ever renders outside a .tl-act, where the custom property would be
+   invalid at computed-value time and line-height would fall back to `normal`. */
+.tl-act__time { color: var(--ink-soft); font-size: var(--text-xs); opacity: 0.8; white-space: nowrap; flex: none; line-height: var(--tl-act-line, calc(1.5 * var(--text-md))); }
 /* Actor attribution (#207): trailing "· von <name>", styled like the timestamp. */
-.tl-act__by { color: var(--ink-soft); font-size: var(--text-xs); opacity: 0.8; white-space: nowrap; flex: none; line-height: calc(1.5 * 15px); }
+.tl-act__by { color: var(--ink-soft); font-size: var(--text-xs); opacity: 0.8; white-space: nowrap; flex: none; line-height: var(--tl-act-line, calc(1.5 * var(--text-md))); }
 .tl-act__del {
   flex: none;
   border: none;
@@ -1566,6 +1578,47 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .tl-act__del .ti { font-size: var(--text-sm); }
 .tl-act__del:hover { background: color-mix(in srgb, var(--danger) 10%, var(--surface)); color: var(--danger); }
+
+/* Three visual tiers on the timeline (#633). The "Alles" view rendered a
+   milestone ("X durchgespielt") and a routine add as the same white pill with
+   the same grey dot, so the history had no anchors — the session cards beside
+   them already had the treatment, the shelf events just never got it.
+
+   Both modifiers are COMPOUNDED against .tl-act on purpose: a bare
+   .tl-act--milestone is (0,1,0), a tie with .tl-act decided by source order
+   alone, which is the silent-loss shape responsive-content-width.md records
+   three instances of. The tier comes from the event TYPE in views-round-tabs.js,
+   never from the icon class — `ti-trash` is also `game_deleted`, which is a
+   deletion, not a milestone.
+
+   Every tone reuses an existing token rather than minting a new color-mix
+   (theme-derived-colors.md): --brand-tint-soft IS the 7% wash and --brand-tint
+   the 13% chip, so #544's oklab migration retunes these two along with the rest
+   instead of finding two fresh srgb mixes to chase. */
+.tl-act.tl-act--milestone {
+  background: var(--brand-tint-soft);
+  border-color: var(--brand-edge);
+  color: var(--ink);
+}
+/* A circular chip, sized to one label line so it stays flush with the first line
+   of a label that wraps. --brand-dark, not --brand: the plain accent lands at
+   4.28:1 on the chip for four of the eight themes (test/a11y-contrast.test.js). */
+.tl-act--milestone .tl-act__icon {
+  width: var(--tl-act-line);
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+  opacity: 1;
+}
+/* Routine adds recede: one step down the type scale, which --tl-act-line tracks
+   so the timestamp and actor line stay centered on the shorter label. */
+.tl-act.tl-act--add {
+  --tl-act-line: calc(1.5 * var(--text-sm));
+  font-size: var(--text-sm);
+}
+.tl-act--add .tl-act__icon { opacity: 0.55; }
+.tl-act--add .tl-act__icon .ti { font-size: var(--text-sm); }
 
 /* Past-session cards, anchored by the chosen game's cover thumbnail. */
 .session-card {

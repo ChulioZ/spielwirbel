@@ -204,3 +204,64 @@ test('the lobby hero band keeps its heading AND its muted sub-line at AA', () =>
   assert.deepEqual(failures, [],
     '.lobby-head sits on this wash: its heading in --ink, its sub-line in --ink-soft');
 });
+
+// --- the Chronik milestone rows (#633) --------------------------------------
+
+test('the Chronik milestone row keeps its label, its meta line AND its icon at AA', () => {
+  /* Milestone shelf events (played through / retired / back on the shelf) sit
+     on a brand wash since #633, so their three ink levels no longer land on the
+     bare white --surface every other timeline row uses. Unlike the lobby band
+     above, this wash is OPAQUE — `--brand-tint*` mixes the accent into
+     `--surface`, not into transparency — so it does not vary with the page
+     colour, only with the accent.
+
+     The icon is measured at the strict TEXT bar even though it is an
+     aria-hidden glyph whose meaning the adjacent label already carries (1.4.11
+     non-text, 3.0, is what actually binds it). That is deliberate: at
+     `var(--brand)` four of the eight accents land 4.28-4.38, i.e. they pass the
+     bar that binds and fail the one a reader would assume, which is precisely
+     the reading someone retuning this later would have to re-derive. Pinning
+     the strict bar makes `--brand-dark` the thing that has to stay. */
+  const rowBg = bodyOf('.tl-act.tl-act--milestone');
+  assert.ok(rowBg, 'the .tl-act.tl-act--milestone rule was not found');
+  assert.match(rowBg, /background:\s*var\(--brand-tint-soft\)/,
+    'the milestone row no longer washes with --brand-tint-soft, so the numbers below do not apply to it');
+
+  const chip = bodyOf('.tl-act--milestone .tl-act__icon');
+  assert.ok(chip, 'the .tl-act--milestone .tl-act__icon rule was not found');
+  assert.match(chip, /background:\s*var\(--brand-tint\)/,
+    'the icon chip no longer washes with --brand-tint, so the numbers below do not apply to it');
+  assert.match(chip, /color:\s*var\(--brand-dark\)/,
+    'the icon glyph must stay --brand-dark: plain --brand drops to 4.28:1 on Sonnenuntergang');
+
+  // Both tints mix the accent into --surface, so read their strengths from the
+  // tokens rather than restating them — a retune of either lands here.
+  const strength = (token) => {
+    const m = new RegExp(`\\${token}:\\s*color-mix\\(in srgb,\\s*var\\(--brand\\)\\s*(\\d+)%,\\s*var\\(--surface\\)\\)`)
+      .exec(bodyOf(':root'));
+    assert.ok(m, `${token} should be a color-mix of --brand into --surface`);
+    return Number(m[1]) / 100;
+  };
+  const surface = rootHex('--surface');
+  const wash = strength('--brand-tint-soft');
+  const chipMix = strength('--brand-tint');
+  // --brand-dark is 82% accent over black; mirrors the :root color-mix.
+  const darkMix = /--brand-dark:\s*color-mix\(in srgb,\s*var\(--brand\),\s*#000\s*(\d+)%\)/.exec(bodyOf(':root'));
+  assert.ok(darkMix, '--brand-dark should be a color-mix of --brand toward #000');
+  const darken = 1 - Number(darkMix[1]) / 100;
+
+  const failures = [];
+  for (const { accent } of THEMES) {
+    const rowBgPx = composite(accent, surface, wash);
+    // The label goes to --ink, the timestamp and the actor line stay --ink-soft.
+    for (const name of ['--ink', '--ink-soft']) {
+      const ratio = contrast(hex(rootHex(name)), rowBgPx);
+      if (ratio < AA_TEXT) failures.push(`${name} on the milestone wash under ${accent} = ${ratio.toFixed(2)}:1`);
+    }
+    const glyph = composite(accent, '#000000', darken);
+    const ratio = contrast(glyph, composite(accent, surface, chipMix));
+    if (ratio < AA_TEXT) failures.push(`the chip glyph under ${accent} = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    'a milestone row draws --ink on the wash, --ink-soft for its meta, --brand-dark on the chip');
+});

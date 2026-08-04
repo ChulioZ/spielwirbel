@@ -474,6 +474,15 @@ function inviteError(code) {
 // --- Chronik tab: one timeline of sessions and shelf changes. The activity
 // feed arrives as its own argument (fetched per visit by showRound, #197) —
 // it is no longer part of the round payload.
+// The timeline's visual tiers (#633). Keyed on the event TYPE, never on the icon
+// class the row happens to render: `ti-trash` is `game_retired` AND
+// `game_deleted`, so an icon-based match would wash a deletion as a milestone.
+// Everything not listed here keeps the neutral middle tier — a move, an import,
+// a new seat and a rename are bookkeeping, not moments in the round's history.
+const CHRONIK_MILESTONES = ['game_retired', 'game_completed', 'game_restored', 'game_uncompleted'];
+const chronikTier = (type) =>
+  CHRONIK_MILESTONES.includes(type) ? 'milestone' : type === 'game_added' ? 'add' : '';
+
 function renderChronikTab(round, activities) {
   const rid = round.id;
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
@@ -599,7 +608,8 @@ function renderChronikTab(round, activities) {
     // href — new tab, copy address, link semantics — while the row keeps the
     // generous click target it always had around it.
     const by = e.by ? `<span class="tl-act__by">${esc(t('activity.by', { name: e.by }))}</span>` : '';
-    const row = h(`<div class="tl-act${target ? ' tl-act--link' : ''}">
+    const tier = chronikTier(e.type);
+    const row = h(`<div class="tl-act${target ? ' tl-act--link' : ''}${tier ? ` tl-act--${tier}` : ''}">
          <span class="tl-act__icon"><i class="ti ${e.icon}" aria-hidden="true"></i></span>
          ${target ? `<a class="tl-act__text">${esc(e.text)}</a>` : `<span class="tl-act__text">${esc(e.text)}</span>`}
          ${by}
@@ -645,7 +655,9 @@ function renderChronikTab(round, activities) {
         lastMonth = month;
         tl.appendChild(h(`<div class="tl-month">${esc(month)}</div>`));
       }
-      const item = h(`<div class="tl-item"><span class="tl-dot${e.kind === 'session' ? ' tl-dot--session' : ''}"></span></div>`);
+      const dot = e.kind === 'session' ? ' tl-dot--session'
+        : chronikTier(e.type) === 'milestone' ? ' tl-dot--milestone' : '';
+      const item = h(`<div class="tl-item"><span class="tl-dot${dot}"></span></div>`);
       item.appendChild(e.kind === 'session' ? buildSessionCard(e.session) : buildActivityRow(e));
       tl.appendChild(item);
     });
