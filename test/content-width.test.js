@@ -27,6 +27,8 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const { RULES, rulesOf, bodyOf, mediaBlocks, whole, rootPx, gridSpec, columnsIn } =
   require('./support/css');
@@ -176,7 +178,7 @@ test('a 390 viewport gets two Regal columns, not one', () => {
     `a 390px phone gets ${columns} Regal column(s); the 22-game shelf needs two to halve its scroll`);
 });
 
-test('nothing hides .section.center wholesale — that is the results screen\'s delete', () => {
+test('nothing hides the results footer wholesale — that is "Session löschen"', () => {
   /* This block used to guard a `.app .back-row { display: none }` in the
      >= 1280px media query, and specifically that it was scoped to `.back-row`
      rather than to the wrapper. #623 deleted that hide outright — the rail is
@@ -186,19 +188,29 @@ test('nothing hides .section.center wholesale — that is the results screen\'s 
      screens it protects.
 
      What survives here is the other half, which was always the sharper one and
-     is now independent of the back control: "Session löschen" sits in a
-     `.section.center` wrapper on the results screen, so a hide written against
-     that wrapper would silently take a destructive action off one screen — no
-     error, nothing in the DOM to suggest a control is missing. */
-  const declared = RULES.filter(([sel]) => /\.section(?![\w-])/.test(sel) || /\.center(?![\w-])/.test(sel));
-  assert.ok(declared.length, 'neither .section nor .center is declared any more — this guard now watches nothing');
+     is now independent of the back control: a hide written against the wrapper
+     carrying "Session löschen" would silently take a destructive action off one
+     screen — no error, nothing in the DOM to suggest a control is missing.
+
+     THE WRAPPER MOVED IN #614. It used to be `.section.center`, which the
+     results screen shared byte-for-byte with the back row — and that shared,
+     generic spelling was the whole reason the trap existed. The cancel control
+     joined the delete in a dedicated `.section.result-footer` row, and
+     `class="section center"` now appears nowhere in `public/js` at all, so the
+     old assertion had stopped watching anything: its anti-vacuous floor checks
+     that the CSS still DECLARES `.section`/`.center` (it does, for other rules),
+     never that a screen still uses them. Hence the floor below counts the
+     wrapper's real uses in the view instead. */
+  const view = fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session.js'), 'utf8');
+  assert.match(view, /class="section result-footer"/,
+    'the results screen no longer renders a .result-footer — this guard now watches nothing');
 
   const hides = RULES.filter(([, body]) => /display:\s*none/.test(body));
   const tooBroad = hides
     .map(([sel]) => sel)
-    .filter((sel) => /\.section(?![\w-])/.test(sel) && /\.center(?![\w-])/.test(sel));
+    .filter((sel) => /\.result-footer(?![\w-])/.test(sel));
   assert.deepEqual(tooBroad, [],
-    'these rules hide every .section.center, which takes "Session löschen" with it');
+    'these rules hide the whole results footer, which takes "Session löschen" with it');
 });
 
 test('short-entry lists tile, and their rows may wrap inside a tile', () => {

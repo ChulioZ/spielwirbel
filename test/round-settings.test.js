@@ -225,23 +225,32 @@ test('the Start tab points at the settings screen instead of three separate link
    content, which inverts the order this pins and satisfies #561's own phrasing
    ("nothing belongs after a back link") by construction: the delete is simply
    the last block on the screen now. What still needs pinning is that the two
-   have not swapped back, and that neither has been lost in the move. */
+   have not swapped back, and that neither has been lost in the move.
+
+   #614 put the session-cancel control in that same last block, so the terminal
+   append is now the shared `.result-footer` row rather than the delete wrapper
+   alone. The three properties this pins are unchanged — back first, the
+   destructive block last, and nothing after it — and the DOM-level assertions
+   about what is IN that row live in `test/session-results-footer.test.js`. */
 test('the results screen opens with the back control and ends with the delete', () => {
   const results = bodyOfFn(SESSION, 'showResults');
-  // The APPEND order, not where the string literal happens to sit: `const del =
-  // h(...)` is declared well above its append, so comparing the literal's index
-  // passes even with the appends swapped — i.e. against exactly the regression
-  // this pins. (Measured: it did.)
-  const del = results.indexOf('app.appendChild(del)');
+  // The APPEND order, not where the string literal happens to sit: the wrapper
+  // is declared well above its append, so comparing the literal's index passes
+  // even with the appends swapped — i.e. against exactly the regression this
+  // pins. (Measured: it did.)
+  const footer = results.indexOf('app.appendChild(footer)');
   const back = results.indexOf('app.appendChild(backRow(');
-  assert.notEqual(del, -1, 'the results screen lost its delete-session control');
+  assert.notEqual(footer, -1, 'the results screen lost its terminal footer row');
   assert.notEqual(back, -1, 'the results screen lost its back control');
   assert.match(results, /result\.deleteSession/, 'the delete-session control no longer names its own label');
-  assert.ok(back < del, 'the back control is appended after the delete — it belongs at the top of the content (#623)');
+  // Delete must still be IN that row — the footer landing last means nothing if
+  // the control it is supposed to carry was dropped on the way.
+  assert.match(results, /footer\.appendChild\(delBtn\)/, 'delete-session is no longer part of the footer row');
+  assert.ok(back < footer, 'the back control is appended after the footer — it belongs at the top of the content (#623)');
   // Last, not merely after the back control: a block appended below it would
   // put something after the screen's terminal destructive action again.
-  assert.equal(results.indexOf('app.appendChild(', del + 1), -1,
-    'something is appended after delete-session, which is meant to end the screen');
+  assert.equal(results.indexOf('app.appendChild(', footer + 1), -1,
+    'something is appended after the footer row, which is meant to end the screen');
 });
 
 /* A `ti-*` class whose rule is missing renders NOTHING — no tofu, no console

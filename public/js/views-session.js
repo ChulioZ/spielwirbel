@@ -803,8 +803,11 @@ async function showResults(round, session, gamesHint, reveal) {
   app.appendChild(banner);
 
   // Cancel session (the alternative to choosing a game; see renderCancel).
+  // Created here because updateChosen() -> renderCancel() runs below while the
+  // footer that holds it is built later still; only the appendChild moves down
+  // (#614). Writing into a detached node is fine — it is in the document by the
+  // time anything can click it.
   const cancelWrap = h('<div class="cancel-area"></div>');
-  app.appendChild(cancelWrap);
 
   const medalRanks = ['gold', 'silver', 'bronze'];
   const maxBar = Math.max(1, ...rows.map((r) => Math.max(...r.dist)));
@@ -930,12 +933,14 @@ async function showResults(round, session, gamesHint, reveal) {
   let winnerIds = Array.isArray(session.winnerIds) ? session.winnerIds.slice() : [];
 
   // Cancel is the alternative final state: only offered while no game is
-  // chosen, and undoable like the finish reset.
+  // chosen, and undoable like the finish reset. Rendered as a `link-btn` in the
+  // footer next to „Session löschen" (#614) — the rare escape hatch, not a peer
+  // of the podium it used to sit above.
   function renderCancel() {
     cancelWrap.innerHTML = '';
     if (finished || chosenId) return;
     if (cancelled) {
-      const undo = h(`<button class="btn btn--ghost">${esc(t('result.cancelUndo'))}</button>`);
+      const undo = h(`<button class="link-btn">${esc(t('result.cancelUndo'))}</button>`);
       undo.addEventListener('click', async () => {
         try {
           await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/cancel`, { cancelled: false });
@@ -948,7 +953,7 @@ async function showResults(round, session, gamesHint, reveal) {
       });
       cancelWrap.appendChild(undo);
     } else {
-      const btn = h(`<button class="btn btn--ghost">${iconText('ti-x', t('result.cancel'))}</button>`);
+      const btn = h(`<button class="link-btn">${iconText('ti-x', t('result.cancel'))}</button>`);
       btn.addEventListener('click', async () => {
         if (!confirm(t('result.cancelConfirm'))) return;
         try {
@@ -1074,12 +1079,17 @@ async function showResults(round, session, gamesHint, reveal) {
   const sessionLog = renderSessionLog(round, session);
   if (sessionLog) app.appendChild(sessionLog);
 
-  // Delete session — subtle, and last on the screen. It sat above the terminal
-  // "Zurück" row until #623 moved that control to the top of the content, so
-  // this is now simply the final block; the #561 constraint it was phrased
-  // against ("nothing belongs after a back link") is satisfied by construction.
-  const del = h(`<div class="section center"><button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button></div>`);
-  del.querySelector('button').addEventListener('click', async () => {
+  // The two ways to get rid of this session, together and last on the screen:
+  // cancel (reversible, destroys nothing) before delete (permanent). Both sit
+  // below the games and the log so reading the results never means scrolling
+  // past the way to throw them away (#614). It sat above the terminal "Zurück"
+  // row until #623 moved that control to the top of the content, so this is now
+  // simply the final block; the #561 constraint it was phrased against
+  // ("nothing belongs after a back link") is satisfied by construction.
+  const footer = h('<div class="section result-footer"></div>');
+  footer.appendChild(cancelWrap);
+  const delBtn = h(`<button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button>`);
+  delBtn.addEventListener('click', async () => {
     if (!confirm(t('sessions.deleteConfirm', { when }))) return;
     try {
       await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
@@ -1087,7 +1097,8 @@ async function showResults(round, session, gamesHint, reveal) {
       showRound(round.id);
     } catch (e) { toast(e.message); }
   });
-  app.appendChild(del);
+  footer.appendChild(delBtn);
+  app.appendChild(footer);
 }
 
 // Can this browser share a result at all? The share sheet is a mobile API and

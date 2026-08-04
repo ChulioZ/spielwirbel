@@ -72,12 +72,27 @@ source order (`.claude/rules/responsive-content-width.md`).
 
 ## `.back-row` is a dedicated class, and that is load-bearing
 
-The results screen's „Session löschen" sits in a **byte-identical**
-`.section.center` wrapper. Any rule written against that wrapper takes a
-destructive action off one screen, silently — no error, nothing in the DOM to
-suggest a control is missing. `test/content-width.test.js` still guards it even
-though nothing hides `.back-row` any more, because the trap belongs to the
-wrapper, not to the back control.
+A control that matters needs a wrapper only it uses. The results screen's
+„Session löschen" used to sit in a **byte-identical** `.section.center` wrapper,
+so any rule written against that generic spelling would take a destructive action
+off one screen, silently — no error, nothing in the DOM to suggest a control is
+missing. `test/content-width.test.js` guards that even though nothing hides
+`.back-row` any more, because the trap belongs to the wrapper, not to the back
+control.
+
+**#614 moved that wrapper**, and the move is the rule rather than an exception to
+it: the session-cancel control joined the delete in a dedicated
+`.section.result-footer` row, and `class="section center"` now appears **nowhere**
+in `public/js`. So the destructive action finally has its own class, exactly like
+`.back-row` — and the guard in `content-width.test.js` is retargeted at
+`.result-footer`.
+
+**Its anti-vacuous floor had to change with it, and that is the transferable
+part.** The floor asserted that the stylesheet still *declares* `.section` and
+`.center`. Both are still declared, for other rules — so when the last screen
+using the wrapper stopped using it, the guard went on passing while watching
+nothing at all. A floor over a **CSS declaration** cannot see a **view** that
+walked away from it; assert against the file that renders the wrapper.
 
 ## The branch a `backRow` on the happy path misses
 

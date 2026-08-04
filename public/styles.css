@@ -2685,7 +2685,17 @@ body.auth-screen .terms-banner { display: none; }
   border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--surface));
   font-size: var(--text-lg);
 }
-.cancel-area { text-align: center; margin: -6px 0 18px; }
+/* The results footer: cancel and delete side by side, centered, wrapping to two
+   lines on a narrow phone. `.cancel-area:empty` is load-bearing — a chosen or
+   finished session renders no cancel control, and `display:none` takes it out of
+   the flex flow entirely so „Session löschen" stays centered with no stray gap
+   beside it (#614). */
+.result-footer {
+  display: flex; flex-wrap: wrap;
+  justify-content: center; align-items: center;
+  gap: 10px 20px;
+}
+.cancel-area { text-align: center; }
 .cancel-area:empty { display: none; }
 .play-btn { margin-top: 8px; padding: 8px 14px; font-size: var(--text-md); }
 .result-row.is-chosen {
