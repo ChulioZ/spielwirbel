@@ -103,7 +103,19 @@ test('exits non-zero instead of hanging when the server never finishes closing',
   const h = harness({ close: 'hang' });
   build(h, { timeoutMs: 5 })('SIGTERM');
 
-  assert.equal(await h.exited, 1);
+  // The force-exit timer is unref'd in production so it can never be the reason
+  // a drained process lingers. In the real server the open socket and the pool
+  // keep the loop alive so it still fires — but here every collaborator is a
+  // double, so that timer is the ONLY pending work and the loop can empty
+  // before it runs. Node's runner then reports "Promise resolution is still
+  // pending but the event loop has already resolved" and cancels the REST of
+  // the file, which reads as four unrelated failures. Hold the loop open for
+  // the wait. (Green on this machine, red on all three CI Node versions.)
+  const keepAlive = setInterval(() => {}, 1000);
+  const code = await h.exited;
+  clearInterval(keepAlive);
+
+  assert.equal(code, 1);
   assert.ok(
     h.logged.some((l) => l.level === 'warn' && l.event === 'shutdown_timeout'),
     'the forced exit must be logged, not silent',
