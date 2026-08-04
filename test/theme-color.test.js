@@ -15,16 +15,27 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { JSDOM } = require('jsdom');
 const { loadApp } = require('./support/dom');
 
-/* Comments are stripped before anything is matched out of this: a commented-out
-   <meta name="theme-color"> above the live tag would be the FIRST match and the
-   assertion below would then be pinning a dead value
-   (`.claude/rules/css-text-assertions-strip-comments.md`, in HTML). */
-const INDEX_HTML = fs.readFileSync(
-  path.join(__dirname, '..', 'public', 'index.html'),
-  'utf8',
-).replace(/<!--[\s\S]*?-->/g, '');
+/* PARSED, not matched as text. A commented-out <meta name="theme-color"> above
+   the live tag would be the first match of any regex, so the assertion below
+   would pin a dead value while the real tag drifted
+   (`.claude/rules/css-text-assertions-strip-comments.md`, in HTML). A comment is
+   not an element, so a parser cannot make that mistake at all.
+
+   Stripping `<!--…-->` out of the text first would fix it too — but CodeQL reads
+   that replace as sanitization and flags it `js/incomplete-multi-character-
+   sanitization` (HIGH), correctly: one pass over `<!<!-- -->--` leaves `<!--`
+   behind. Using the real parser is both the stronger tool and the quiet one.
+
+   A bare JSDOM of the file, not the harness's document: the question is what the
+   markup declares, which must stay separable from anything a script does to the
+   tag after load. Nothing is executed here (no `runScripts`). */
+const INDEX_THEME_COLORS = [...new JSDOM(
+  fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8'),
+).window.document.querySelectorAll('meta[name="theme-color"]')]
+  .map((el) => el.getAttribute('content'));
 
 // Sand's accent before #145 darkened it for contrast. Deliberately a literal:
 // it is a value rounds still carry in their stored design and that the code
@@ -42,11 +53,12 @@ test('the static default in index.html is the standard accent core.js falls back
 
   // Not a literal on either side: the markup's value is parsed out and compared
   // to the constant the code restores, so the two cannot drift apart.
-  const tags = [...INDEX_HTML.matchAll(/<meta name="theme-color" content="([^"]+)"/g)];
-  // Exactly one, so no second (live) tag further down can silently win in the
-  // browser while this reads the first.
-  assert.equal(tags.length, 1, `index.html declares ${tags.length} theme-color tags, expected exactly 1`);
-  assert.equal(tags[0][1], dom.get('STANDARD_ACCENT'));
+  // Exactly one, so no second tag further down can silently win in the browser
+  // while this reads the first — and so a live tag that went missing is a
+  // failure rather than a value read off some commented-out remnant.
+  assert.equal(INDEX_THEME_COLORS.length, 1,
+    `index.html declares ${INDEX_THEME_COLORS.length} live theme-color tags, expected exactly 1`);
+  assert.equal(INDEX_THEME_COLORS[0], dom.get('STANDARD_ACCENT'));
 });
 
 test('a themed round moves the chrome to its accent, in lockstep with --brand', (t) => {
