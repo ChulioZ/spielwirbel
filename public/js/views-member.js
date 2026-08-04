@@ -16,7 +16,12 @@ function memberStats(round, mid) {
   const winRate = joined.length ? wins / joined.length : null;
 
   // Every numeric rating this member has given, and the per-game averages used
-  // to find their favorite game (only games that still exist in the round).
+  // to find their favorite game (only games that still exist in the round and
+  // that a taste stat may name — `isNameableGame`, recap.js, which this page
+  // shares with the Pokale Lieblingsspiele card so a game cannot vanish there
+  // while still sitting here). `allRatings` — and so `avgGiven` — deliberately
+  // counts EVERY rating, retired games included: it measures how this member
+  // rates, not what is on the shelf, so the filter must not reach it (#643).
   const allRatings = [];
   const perGame = {}; // gameId -> [ratings]
   round.sessions.forEach((s) => {
@@ -25,7 +30,8 @@ function memberStats(round, mid) {
       const r = votes[gid] && votes[gid].rating;
       if (typeof r !== 'number') return;
       allRatings.push(r);
-      if (round.games.some((g) => g.id === gid)) (perGame[gid] = perGame[gid] || []).push(r);
+      if (round.games.some((g) => g.id === gid && isNameableGame(g)))
+        (perGame[gid] = perGame[gid] || []).push(r);
     });
   });
   const avgGiven = allRatings.length

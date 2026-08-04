@@ -83,7 +83,11 @@ What the app does, in detail. For a short overview see the
   the game, **completed** ("Durchgespielt") means they finished its content — a
   campaign, a legacy box, a story-driven video game. A game is active, retired
   or completed, never two at once, and either archive can be reached from the
-  round hub's footer. Only an already-archived game can be permanently
+  round hub's footer. The distinction carries through to the Pokale tab: a
+  retired game stops being named as anyone's favourite or as the game the group
+  disagrees about, because retiring it withdraws that preference — while the
+  nights you actually played it still count toward "Meistgespielt". A completed
+  game keeps counting everywhere. Only an already-archived game can be permanently
   deleted. Games can be **moved between rounds**: "Spiele verschieben" in the
   shelf's footer lists the round's games — archived ones included, labelled —
   each pre-checked, so confirming untouched consolidates the whole round while

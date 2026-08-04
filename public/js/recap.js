@@ -88,10 +88,36 @@ function bestAndWorst(round, index) {
   return { best: pick(top), worst: bottom < top ? pick(bottom) : null };
 }
 
+// May a stat about the group's TASTE name this game? (#643)
+//
+// This is deliberately not the "active" filter used by bestAndWorst above
+// (`!retired && !completed`): the two archives part company here. Retiring is
+// the user saying the game has left the collection — so calling it a favourite
+// afterwards asserts a preference they have withdrawn. Completing is not: the
+// game was played through, the opinions still stand, and it stays. Don't
+// collapse the two back into one "archived" predicate.
+//
+// It is a shared function rather than a `!g.retired` check repeated per site
+// because the member page computes its own Lieblingsspiel from the raw sessions
+// (`memberStats`, views-member.js) instead of going through this file's index —
+// two implementations of one rule, which is the drift
+// `.claude/rules/shared-constants-across-the-stack.md` is about. A game must not
+// be able to vanish from the Pokale favourites while still sitting on the
+// member's own page.
+//
+// NOT used by the Meistgespielt tally, which counts every night including a
+// retired game's: that card is a record of what happened, not a claim of taste.
+const isNameableGame = (game) => !game.retired;
+
+// The ids this round may not name, as a Set for the per-game scans below.
+const retiredIds = (round) =>
+  new Set(round.games.filter((g) => !isNameableGame(g)).map((g) => g.id));
+
 // The game two members disagree about most: the largest gap between any two
 // members' own averages for it. Needs two members who both rated it, plus the
-// same evidence bar as best/worst. Archived games count — a game the group
-// argued about is part of the record whether or not it is still on the shelf.
+// same evidence bar as best/worst. Completed games count — a game the group
+// argued about and played through is part of the record; retired ones are
+// skipped (see retiredIds above).
 // Ties go to the game with more ratings behind it, so the answer is stable
 // rather than dependent on which session happened to be indexed first.
 // No membership filter is needed here, and adding one back would be dead code:
@@ -100,8 +126,10 @@ function bestAndWorst(round, index) {
 // byMember names a member who is still in the round. A vote cast by someone who
 // has since been removed is never even read.
 function mostDivisive(round, index) {
+  const retired = retiredIds(round);
   let found = null;
   index.games.forEach((entry, gid) => {
+    if (retired.has(gid)) return;
     if (entry.all.length < RECAP_MIN_RATINGS) return;
     const per = [];
     entry.byMember.forEach((ratings, mid) => {
@@ -121,17 +149,21 @@ function mostDivisive(round, index) {
   return found;
 }
 
-// Each member's own favourite: the game they personally rate highest. Every
-// game that still exists counts, archived ones included — this is a
-// retrospective record of taste, and someone's favourite should not disappear
-// because the group finished or retired the game. Members who have not rated
-// anything yet are simply left out. Ties go to the game they rated more often,
-// then to the one indexed first.
+// Each member's own favourite: the game they personally rate highest. Completed
+// games count — this is a retrospective record of taste, and someone's favourite
+// should not disappear because the group played it through. RETIRED ones do not
+// (#643, see retiredIds): the skip happens inside the per-member scan, so a
+// member whose top game was retired keeps a card naming their best remaining
+// game, and only drops out once nothing non-retired is left. Members who have
+// not rated anything yet are simply left out. Ties go to the game they rated
+// more often, then to the one indexed first.
 function memberFavourites(round, index) {
+  const retired = retiredIds(round);
   return round.members
     .map((m) => {
       let best = null;
       index.games.forEach((entry, gid) => {
+        if (retired.has(gid)) return;
         const mine = entry.byMember.get(m.id);
         if (!mine || !mine.length) return;
         const avg = recapMean(mine);
@@ -165,5 +197,5 @@ function roundRecap(round, peopleOf) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { RECAP_MIN_RATINGS, roundRecap };
+  module.exports = { RECAP_MIN_RATINGS, roundRecap, isNameableGame };
 }

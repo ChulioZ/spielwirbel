@@ -800,6 +800,16 @@ function renderPokaleTab(round) {
   const cards = h('<div class="pokale-cards"></div>');
 
   // Most played: chosen most often across finished nights (game must exist).
+  //
+  // ARCHIVED GAMES COUNT HERE, retired ones included — deliberately, and against
+  // the reflex that #643 set up next door. This card is a factual record of
+  // nights that happened, not a statement about the current shelf: retiring a
+  // game does not unmake the evenings the group spent on it, so those sessions
+  // keep counting and a retired game may still top the card (operator decision,
+  // 2026-08-04). The cards that DO drop retired games — Größte Uneinigkeit and
+  // Lieblingsspiele, via `retiredIds` in recap.js — are about taste, which is a
+  // claim the group has withdrawn. Don't unify the two; see
+  // `.claude/rules/active-games-filter-sites.md`.
   const playCount = {};
   finished.forEach((s) => {
     if (s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
