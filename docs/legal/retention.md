@@ -6,7 +6,7 @@ den Prüf-Rhythmus fest; die veröffentlichte Datenschutzerklärung
 Frist, die hier steht, aber nicht gelebt oder nicht veröffentlicht wird, ist
 schlimmer als keine.
 
-**Stand:** 2026-07-24
+**Stand:** 2026-08-04
 
 ## Grundsatz
 
@@ -35,7 +35,35 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Gespeicherte Kontakt-Meldungen (Datenbank `contact_notices`, #272) | wie Postfach: Allgemeine Anfragen nach Bearbeitung, DSA-Meldungen **3 Jahre** ab Jahresende der Entscheidung | manuell (DB), Jahresprüfung |
 | **Moderations-Log-Einträge mit personenbezogenen Daten** (E-Mail-Adressen, redigierte Texte als `previous`-Nachweis) | **3 Jahre ab Ende des Jahres der Maßnahme** | Jahresprüfung (unten) |
 | Löschnachweise (`eraseAccount`-Einträge — ohne E-Mail-Adresse by design): Aktionen **`user_erased`** (betreiberseitig, #273) **und `account_deleted`** (Selbstbedienung, #419) | dauerhaft (Art. 17 Abs. 3 lit. b/e DSGVO) | — |
-| Backups | Backup-Zyklus der Plattform (Railway Managed Postgres) | automatisch |
+| **Backups** (Railway Managed Postgres, eingerichtet 2026-08-04) | **Volume-Sicherungen: 6 Tage** (täglicher Lauf); **Point-in-Time-Recovery: Vorhaltefenster des WAL-Archivs — noch zu bestätigen**, siehe „Offen" unten | automatisch |
+
+**Backups und Art. 17 (Löschung).** Eine Löschung wirkt im Live-Bestand sofort
+und vollständig. In den Sicherungen bleiben die Daten dagegen bis zum Ablauf des
+jeweiligen Aufbewahrungsfensters erhalten (oben: 6 Tage für die
+Volume-Sicherungen, das PITR-Fenster für das WAL-Archiv). Das ist der anerkannte
+**Backup-Vorbehalt**: Sicherungen werden nicht gezielt durchsucht, um einzelne
+Datensätze zu entfernen — sie laufen aus. Eine Wiederherstellung erfolgt nur als
+Ganzes und nur im Katastrophenfall; wird eine Sicherung eingespielt, **sind
+zwischenzeitlich ausgeführte Löschungen erneut auszuführen**.
+
+Diese Fenster sind bewusst **interne Betriebsgrößen** und stehen nicht in der
+veröffentlichten Datenschutzerklärung (Betreiber-Entscheidung 2026-08-04): die
+Erklärung sagt zu, *dass* eine Löschung endgültig ist und vom Betreiber nicht
+rückgängig gemacht wird — was zutrifft, denn PITR stellt in eine **neue**
+Instanz wieder her und ist kein Werkzeug, um einzelne gelöschte Datensätze
+zurückzuholen. Der Satz „beide zusammen ändern" oben bezieht sich auf die
+veröffentlichten **Löschfristen je Datenbestand**, nicht auf die
+Backup-Mechanik. Wird die Backup-Mechanik künftig doch veröffentlicht, gilt die
+Kopplung wieder (dann mit `PRIVACY_REVISION`-Bump, siehe
+`.claude/rules/keep-legal-docs-current.md`).
+
+**Offen (Stand 2026-08-04):** Die Länge des PITR-Fensters ist noch **nicht
+bestätigt** — Railway dokumentiert sie nicht, und das Archiv lief zum Zeitpunkt
+der Einrichtung erst wenige Minuten. Sobald der linke Rand des
+Wiederherstellungsfensters im Railway-Dashboard stabil ist: hier in der Tabelle
+und in `toms.md` eintragen und diesen Absatz entfernen. **Bis dahin keine Zahl
+schätzen** — eine erfundene Frist in einem Rechenschaftsdokument ist schlimmer
+als eine offen als offen markierte.
 
 **Warum 3 Jahre:** die regelmäßige Verjährungsfrist (§ 195 BGB) beginnt mit
 dem Schluss des Jahres, in dem der Anspruch entstand (§ 199 Abs. 1 BGB) —

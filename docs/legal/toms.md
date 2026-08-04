@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-07-21
+**Stand:** 2026-08-04
 
 ## Verschlüsselung & Transport
 
@@ -54,9 +54,20 @@ list nothing that is not actually in place.
 
 ## Verfügbarkeit & Wiederherstellung
 
-- Managed PostgreSQL (Railway) mit Plattform-Backups; Deployment reproduzierbar
-  aus dem Repo (Dockerfile); Objektspeicher repliziert bei Cloudflare.
-- Health-Check (`/healthz`) + Deploy-Status je Commit.
+- Managed PostgreSQL (Railway) mit **zwei getrennten Sicherungsebenen**, beide
+  seit dem 2026-08-04 eingerichtet:
+  - **Point-in-Time-Recovery**: fortlaufende WAL-Archivierung; Wiederherstellung
+    auf einen beliebigen Zeitpunkt innerhalb des Vorhaltefensters, und zwar in
+    eine **neue** Datenbankinstanz (die laufende bleibt unberührt). Länge des
+    Fensters: siehe `retention.md`.
+  - **Tägliche Volume-Sicherungen** mit 6 Tagen Aufbewahrung, dazu manuelle
+    Sicherungen auf Anforderung.
+- Deployment reproduzierbar aus dem Repo (Dockerfile); Objektspeicher repliziert
+  bei Cloudflare.
+- Health-Check (`/healthz`, ohne Datenbankzugriff) + Bereitschafts-Check
+  (`/readyz`, prüft die Datenbank und antwortet 503, wenn sie nicht erreichbar
+  ist — #462) + externes Uptime-Monitoring, das den Verantwortlichen alarmiert;
+  Deploy-Status je Commit.
 
 ## Löschkonzept
 

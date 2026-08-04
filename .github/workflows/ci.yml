@@ -57,7 +57,13 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        # Must track the MAJOR that production runs. Railway's Postgres service
+        # follows the floating tag ghcr.io/railwayapp-templates/postgres-ssl:18
+        # with auto-updates, so its minor moves on its own overnight — pinning CI
+        # to an older major here proves the data-access contract against a
+        # database production isn't running, and the gap widens with nobody
+        # touching the repo. See .claude/rules/railway-postgres-floating-major.md.
+        image: postgres:18
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: gamesessions

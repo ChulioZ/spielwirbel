@@ -27,7 +27,8 @@ address is free, `{ ok: true }` means it exists").
 
 A failed INSERT reports **exactly one** `e.constraint`, and when the row
 violates **both** indexes, which one it names is not the order your code checks.
-Measured against Postgres 16 on this schema:
+Measured against Postgres 16 **and re-verified on 18.4** (2026-08-04, when CI
+moved to the major production runs) on this schema:
 
 | Colliding on | `e.code` | `e.constraint` |
 |---|---|---|
