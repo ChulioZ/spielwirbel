@@ -50,7 +50,15 @@ before assuming you have them all:
   clause, now `fitsPlayerCount`) into a shared `public/js/` module so the setup
   screen's live preview applies the server's own predicate instead of a
   hand-synced copy — `lib/draw.js` requires it and re-exports `isActiveGame`, so
-  the route's import is unchanged. That collapses two of the frontend sites below
+  the route's import is unchanged.
+
+  **`fitsPlayerCount` grew a second term in #653**: the range a game admits is
+  now the base box's *union* the ranges of the expansions the round owns for it,
+  so a 3–4 game with a 5–6 extension is drawn at six. It is still one edit in one
+  file — but note it is a union and **not** a widened interval, and that an
+  absent range means the opposite thing on an expansion than it does on the base
+  game. Both traps produce a plausible pool rather than an error; see
+  `.claude/rules/expansions-widen-by-union.md` before touching it. That collapses two of the frontend sites below
   and is why this bullet no longer names a filter that a `grep retired` in `lib/`
   would find. The **player-count arithmetic** still lives per caller and still has
   a team term in it since #575 (`.claude/rules/session-teams.md` §2) — only the

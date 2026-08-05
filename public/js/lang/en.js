@@ -152,6 +152,11 @@ I18N.en = {
   'activity.gamesImported': '{n} games imported from the BGG collection',
   'activity.memberAdded': '{name} joined',
   'activity.roundRenamed': 'Round renamed to “{name}”',
+  // One entry per SAVE carrying a count (#653), like the two moves and the
+  // import above: ticking ten boxes at once must not bury the round's feed.
+  // The expansion's own name stays on the game row and out of the payload.
+  'activity.expansionAddedOne': '{n} expansion recorded for “{title}”',
+  'activity.expansionAdded': '{n} expansions recorded for “{title}”',
   'activity.gamesMovedInOne': '{n} game taken over from “{round}”',
   'activity.gamesMovedIn': '{n} games taken over from “{round}”',
 
@@ -368,6 +373,29 @@ I18N.en = {
   'detail.toast.coverDisabled': '{provider} is switched off in this round.',
   'detail.toast.coverUnreachable': '{provider} could not be reached.',
 
+  'detail.expansionsTitle': 'Expansions',
+  'detail.expansionsEmpty': 'No expansions recorded yet.',
+  'detail.expansionAdd': 'Add expansion',
+  'detail.expansionRemove': 'Remove',
+  'detail.expansionRemoveConfirm': 'Remove “{title}” from your expansions?',
+  'detail.expansionPickTitle': 'From {provider}',
+  'detail.expansionPickEmpty': '{provider} knows no further expansions for this game.',
+  'detail.expansionPickError': '{provider} could not be reached.',
+  'detail.expansionOwnTitle': 'Your own expansion',
+  'detail.expansionNamePlaceholder': 'Expansion name',
+  'detail.expansionRangeHint': 'The expansion\u2019s player count \u2014 fill in both or neither, or it changes nothing.',
+  'detail.expansionNoRange': 'no player count',
+  'detail.toast.expansionsSaved': 'Expansions saved',
+  'detail.toast.expansionNeedsBoth': 'Please fill in both player counts \u2014 or leave both empty.',
+  'detail.toast.expansionRange': 'The highest player count must be at least the lowest.',
+  'detail.toast.expansionQuota': 'This game already has too many expansions recorded.',
+  // Appended to the players chip when what the round OWNS seats more (or fewer)
+  // people than the base box does.
+  'detail.expansionUpTo': 'up to {n} with an expansion',
+  'detail.expansionFrom': 'from {n} with an expansion',
+  'detail.expansionsBadgeOne': '{n} expansion',
+  'detail.expansionsBadge': '{n} expansions',
+
   'linkProvider.title': 'Link to provider',
   'linkProvider.searchLabel': 'Find the game at a provider',
   'linkProvider.searchHint': 'Start typing to get suggestions. Picking a match saves the link.',
@@ -526,6 +554,9 @@ I18N.en = {
   'result.barTitle': '{c}× rating {r}',
   'result.sortFlag': '{n}× suggested for retirement',
   'result.retireNow': '— retire now',
+  // Named on the results screen when the winning game only seats this table
+  // because the round owns an expansion for it (#653).
+  'result.needsExpansion': 'Needs an expansion: {names}',
   'result.retireNowConfirm': 'Retire “{title}” now? It is removed from the round’s games list.',
   'result.retiredTag': 'retired',
   'result.completedTag': 'completed',

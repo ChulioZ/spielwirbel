@@ -576,6 +576,110 @@ async function showGameDetail(rid, gameId) {
     });
   }
 
+  // --- Expansions (#653) ---------------------------------------------------
+  //
+  // Owned expansions are a list on the game row, never an entity: they are not
+  // voted on, drawn, rated or tagged. The one place they reach into the app is
+  // the player range, through the shared `fitsPlayerCount` in draw-pool.js.
+  const owned = game.expansions || [];
+
+  // Send the whole list — the route replaces it wholesale, because "here is the
+  // set we own" is what the tick-list expresses.
+  async function saveExpansions(list) {
+    try {
+      await api('PUT', `/api/rounds/${rid}/games/${gameId}/expansions`, { expansions: list });
+      toast(t('detail.toast.expansionsSaved'));
+      showGameDetail(rid, gameId);
+    } catch (e) {
+      toast(e.message === 'quota_expansions' ? t('detail.toast.expansionQuota') : e.message);
+    }
+  }
+
+  // Add: the provider's own list as a tick-list, plus a free-text field. The
+  // candidates cost no extra upstream request — they ride on the /thing body the
+  // detail hop already fetched (lib/routes/lookup.js).
+  function openExpansionEditor(anchor) {
+    openEditor(anchor, 'expansions', t('detail.expansionAdd'), (el, close) => {
+      const keep = owned.map((e) => ({ id: e.id }));
+      const picked = new Set();
+      const canPick = game.source && typeof game.source.externalId === 'string'
+        && game.source.provider === 'bgg' && enabledProviders(round).includes('bgg');
+
+      if (canPick) {
+        const prov = providerLabel(game.source.provider);
+        const list = h(`<div class="exp-pick"><div class="exp-pick__head muted">${esc(t('detail.expansionPickTitle', { provider: prov }))}</div><div class="exp-pick__body muted">…</div></div>`);
+        el.appendChild(list);
+        const body = list.querySelector('.exp-pick__body');
+        api('GET', `/api/rounds/${rid}/lookup/expansions?provider=${encodeURIComponent(game.source.provider)}&id=${encodeURIComponent(game.source.externalId)}`)
+          .then((res) => {
+            const have = new Set(owned.map((e) => (e.source || {}).externalId).filter(Boolean));
+            const fresh = (res.expansions || []).filter((c) => !have.has(c.providerId));
+            body.innerHTML = '';
+            if (!fresh.length) {
+              body.className = 'exp-pick__body muted';
+              body.textContent = t('detail.expansionPickEmpty', { provider: prov });
+              return;
+            }
+            body.className = 'exp-pick__body';
+            fresh.forEach((c) => {
+              // A <label> row, so the whole line toggles its checkbox — and it
+              // must NOT sit inside a `.field`, where `.field label` (0,1,1)
+              // would flatten it (.claude/rules/label-rows-lose-to-field-label.md).
+              const row = h(`<label class="ds-row exp-pick__row"><span class="ds-row__main">${esc(c.title)}</span><span class="ds-row__meta"><input type="checkbox" /></span></label>`);
+              row.querySelector('input').addEventListener('change', (ev) => {
+                if (ev.target.checked) picked.add(c.providerId);
+                else picked.delete(c.providerId);
+              });
+              body.appendChild(row);
+            });
+          })
+          .catch(() => {
+            body.className = 'exp-pick__body muted';
+            body.textContent = t('detail.expansionPickError', { provider: prov });
+          });
+      }
+
+      const own = h(`<div class="exp-own">
+           <div class="exp-own__head muted">${esc(t('detail.expansionOwnTitle'))}</div>
+           <input class="input exp-own__name" maxlength="${EXPANSION_TITLE_MAX}" placeholder="${esc(t('detail.expansionNamePlaceholder'))}" />
+           <div class="pp-row exp-own__range"></div>
+           <div class="muted popover__hint">${esc(t('detail.expansionRangeHint'))}</div>
+         </div>`);
+      const nameEl = own.querySelector('.exp-own__name');
+      const min = h('<input class="input" inputmode="numeric" />');
+      const max = h('<input class="input" inputmode="numeric" />');
+      [min, max].forEach((inp) => inp.addEventListener('input', () => {
+        const digits = inp.value.replace(/\D/g, '');
+        if (inp.value !== digits) inp.value = digits;
+      }));
+      const range = own.querySelector('.exp-own__range');
+      range.append(min, h('<span>–</span>'), max);
+      el.appendChild(own);
+
+      const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
+      okBtn.addEventListener('click', () => {
+        const list = [...keep, ...[...picked].map((providerId) => ({ providerId }))];
+        const title = nameEl.value.trim();
+        if (title) {
+          const mn = min.value.trim() === '' ? null : parseInt(min.value, 10);
+          const mx = max.value.trim() === '' ? null : parseInt(max.value, 10);
+          // Both bounds or neither: a lone bound states no interval, and an
+          // expansion widens nothing at all unless it declares one in full.
+          if ((mn === null) !== (mx === null)) return toast(t('detail.toast.expansionNeedsBoth'));
+          if (mn !== null && (!Number.isInteger(mn) || !Number.isInteger(mx) || mn < 1 || mx < mn))
+            return toast(t('detail.toast.expansionRange'));
+          list.push({ title, minPlayers: mn, maxPlayers: mx });
+        } else if (!picked.size) {
+          return close(); // nothing to do
+        }
+        close();
+        saveExpansions(list);
+      });
+      el.appendChild(okBtn);
+      return () => { if (!canPick) { nameEl.focus(); } };
+    });
+  }
+
   // Related sessions (those that drew this game) – newest first. Computed up
   // here, not at its own section below, because `sparse` needs it.
   const related = round.sessions
@@ -651,8 +755,22 @@ async function showGameDetail(rid, gameId) {
   // affordances for one action is what made the old layout feel scattered.
   const hasPl = Number.isInteger(game.minPlayers) && Number.isInteger(game.maxPlayers);
   if (hasPl || !sparse) {
+    // What the round can actually seat, once its expansions are counted (#653).
+    // Only a FULLY declared expansion range widens anything — a lone bound
+    // states no interval — which is why both bounds are required here as well.
+    const widen = owned.filter((e) => Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers));
+    const extra = [];
+    if (hasPl && widen.length) {
+      const up = Math.max(game.maxPlayers, ...widen.map((e) => e.maxPlayers));
+      const down = Math.min(game.minPlayers, ...widen.map((e) => e.minPlayers));
+      if (up > game.maxPlayers) extra.push(t('detail.expansionUpTo', { n: up }));
+      if (down < game.minPlayers) extra.push(t('detail.expansionFrom', { n: down }));
+    }
+    const plText = hasPl
+      ? playersText(game.minPlayers, game.maxPlayers) + (extra.length ? ` (${extra.join(', ')})` : '')
+      : '';
     const plEl = hasPl
-      ? editableTag('tag--players', iconText('ti-users', playersText(game.minPlayers, game.maxPlayers)), openPlayersPopover)
+      ? editableTag('tag--players', iconText('ti-users', plText), openPlayersPopover)
       : editableTag('tag--players tag--empty', esc(t('detail.setPlayers')), openPlayersPopover);
     h1.append(plEl);
   }
@@ -787,6 +905,44 @@ async function showGameDetail(rid, gameId) {
     link.querySelector('button').addEventListener('click', () => showLinkProvider(round, game));
     app.appendChild(link);
   }
+
+  // What the round owns for this game (#653). Rendered on a sparse page too:
+  // it is one of the few things you CAN record about a game nobody has played,
+  // and it is the answer to "do we still have Seefahrer?".
+  const expSec = h(`<div class="section gd-expansions"><h2>${esc(t('detail.expansionsTitle'))}</h2></div>`);
+  if (!owned.length) {
+    expSec.appendChild(h(`<div class="muted">${esc(t('detail.expansionsEmpty'))}</div>`));
+  } else {
+    const list = h('<div class="ds-list"></div>');
+    owned.forEach((e) => {
+      const range = Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
+        ? playersText(e.minPlayers, e.maxPlayers)
+        : t('detail.expansionNoRange');
+      // A plain <div> row, so it must carry `ds-row--static` — `.ds-row`
+      // declares cursor:pointer and a hover lift, i.e. it promises a click
+      // target (.claude/rules/ds-row-is-a-click-target.md). The remove button
+      // inside it is the only thing here that is clickable.
+      const row = h(`<div class="ds-row ds-row--static">
+           <div class="ds-row__main">
+             <div class="ds-row__title">${esc(e.title)}</div>
+             <div class="muted">${esc(range)}</div>
+           </div>
+           <div class="ds-row__meta">
+             <button class="link-btn exp-row__remove">${iconText('ti-trash', t('detail.expansionRemove'))}</button>
+           </div>
+         </div>`);
+      row.querySelector('.exp-row__remove').addEventListener('click', () => {
+        if (!confirm(t('detail.expansionRemoveConfirm', { title: e.title }))) return;
+        saveExpansions(owned.filter((x) => x.id !== e.id).map((x) => ({ id: x.id })));
+      });
+      list.appendChild(row);
+    });
+    expSec.appendChild(list);
+  }
+  const addExp = h(`<button class="link-out link-out--btn"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('detail.expansionAdd'))}</button>`);
+  addExp.addEventListener('click', () => openExpansionEditor(addExp));
+  expSec.appendChild(addExp);
+  app.appendChild(expSec);
 
   // Related sessions (`related` is computed near the top — `sparse` needs it).
   // On a sparse page the section is omitted entirely: the onboarding panel

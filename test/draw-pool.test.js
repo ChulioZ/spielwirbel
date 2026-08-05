@@ -17,7 +17,7 @@
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { isActiveGame, fitsPlayerCount } = require('../public/js/draw-pool');
+const { isActiveGame, fitsPlayerCount, requiredExpansions } = require('../public/js/draw-pool');
 const { drawPool } = require('../lib/draw');
 const { loadApp } = require('./support/dom');
 
@@ -44,6 +44,82 @@ test('an absent bound means "any table size" — not zero and not infinity', () 
   for (const n of [1, 4, 99]) {
     assert.equal(fitsPlayerCount({}, n), true, `a game with no range fits ${n}`);
   }
+});
+
+/* ---- owned expansions widen the range (#653) --------------------------------
+   The union of the base box and every owned expansion, never their hull. The
+   two traps are asserted directly below because both produce a plausible pool
+   rather than an error — see .claude/rules/expansions-widen-by-union.md. */
+
+test('an owned expansion makes its game drawable at the counts it admits', () => {
+  const catan = {
+    minPlayers: 3,
+    maxPlayers: 4,
+    expansions: [{ title: '5–6 Spieler', minPlayers: 5, maxPlayers: 6 }],
+  };
+  assert.equal(fitsPlayerCount(catan, 4), true, 'the base box still fits');
+  assert.equal(fitsPlayerCount(catan, 5), true, 'the expansion admits five');
+  assert.equal(fitsPlayerCount(catan, 6), true);
+  assert.equal(fitsPlayerCount(catan, 7), false, 'nothing owned admits seven');
+  assert.equal(fitsPlayerCount(catan, 2), false, 'and the base minimum still binds');
+});
+
+test('the widening is a UNION, not a hull — a solo expansion does not admit two', () => {
+  // The case that separates the two implementations: hulling 3–4 with 1–1 gives
+  // 1–4, which admits a table of 2 that no box in the cupboard supports.
+  const game = {
+    minPlayers: 3,
+    maxPlayers: 4,
+    expansions: [{ title: 'Solo', minPlayers: 1, maxPlayers: 1 }],
+  };
+  assert.deepEqual(
+    [1, 2, 3, 4, 5].map((n) => fitsPlayerCount(game, n)),
+    [true, false, true, true, false]
+  );
+});
+
+test('an absent range means the OPPOSITE thing on an expansion', () => {
+  // On the base game it means "any table size" (asserted above). On an
+  // expansion it must widen nothing, or one expansion BGG has no numbers for
+  // makes its game drawable at every count.
+  const vague = { minPlayers: 3, maxPlayers: 4, expansions: [{ title: 'Unbekannt' }] };
+  assert.equal(fitsPlayerCount(vague, 6), false, 'no numbers, no widening');
+  assert.equal(fitsPlayerCount(vague, 1), false);
+  assert.equal(fitsPlayerCount(vague, 3), true, 'the base box is untouched');
+
+  // A HALF-declared range is the same case: it widens only over a range it
+  // states in full, so a stray bound can never open one end to infinity.
+  const halfMax = { minPlayers: 3, maxPlayers: 4, expansions: [{ maxPlayers: 6 }] };
+  assert.equal(fitsPlayerCount(halfMax, 6), false, 'a bare maximum states no minimum');
+  assert.equal(fitsPlayerCount(halfMax, 1), false, 'and must not open the bottom end');
+  const halfMin = { minPlayers: 3, maxPlayers: 4, expansions: [{ minPlayers: 5 }] };
+  assert.equal(fitsPlayerCount(halfMin, 5), false, 'a bare minimum states no maximum');
+  assert.equal(fitsPlayerCount(halfMin, 99), false);
+});
+
+test('a base game with no range keeps fitting everything, expansions or not', () => {
+  const g = { expansions: [{ title: 'Solo', minPlayers: 1, maxPlayers: 1 }] };
+  for (const n of [1, 4, 99]) assert.equal(fitsPlayerCount(g, n), true);
+});
+
+test('requiredExpansions names only what the BASE box cannot seat', () => {
+  const game = {
+    minPlayers: 3,
+    maxPlayers: 4,
+    expansions: [
+      { id: 'e1', title: '5–6 Spieler', minPlayers: 5, maxPlayers: 6 },
+      { id: 'e2', title: 'Seefahrer', minPlayers: 3, maxPlayers: 6 },
+      { id: 'e3', title: 'Ohne Angabe' },
+    ],
+  };
+  assert.deepEqual(requiredExpansions(game, 4), [], 'the base box fits — nothing is required');
+  assert.deepEqual(
+    requiredExpansions(game, 5).map((e) => e.id),
+    ['e1', 'e2'],
+    'both owned expansions that admit five are named'
+  );
+  assert.deepEqual(requiredExpansions(game, 9), [], 'a count nothing admits names nothing');
+  assert.deepEqual(requiredExpansions({ minPlayers: 3, maxPlayers: 4 }, 5), []);
 });
 
 /* ---- the cross-boundary parity check ---------------------------------------

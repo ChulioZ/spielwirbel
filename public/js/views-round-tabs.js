@@ -144,9 +144,15 @@ function renderRegalTab(round, activeGames) {
         avg !== null
           ? `<span class="score-pill" style="background:${avgColor(avg)}">Ø ${avg.toFixed(1)}</span>`
           : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
+      // What the round owns for this game (#653) — no badge at zero, so a shelf
+      // of plain base boxes looks exactly as it always did.
+      const expCount = (g.expansions || []).length;
+      const expBadge = expCount
+        ? `<span class="exp-pill" title="${esc(tn(expCount, 'detail.expansionsBadgeOne', 'detail.expansionsBadge', { n: expCount }))}">+${expCount}</span>`
+        : '';
       const gc = h(`<a class="game-card game-card--clickable">
            <div class="game-card__img">${fallback}
-             <div class="game-card__badges">${scorePill}</div>
+             <div class="game-card__badges">${expBadge}${scorePill}</div>
            </div>
            <div class="game-card__body">
              <div class="game-card__title">${esc(g.title)}</div>
@@ -518,6 +524,11 @@ function renderChronikTab(round, activities) {
       // previous name is deliberately not stored: it would outlive a moderation
       // redaction of the round's name.
       round_renamed: { icon: 'ti-pencil', text: t('activity.roundRenamed', { name: a.name }) },
+      // Owned expansions (#653) — a count plus the GAME's title, for the same
+      // reason the three bulk entries above carry counts: one save can tick ten
+      // boxes. A quiet row, deliberately not a CHRONIK_MILESTONES entry: adding
+      // an expansion is not on the level of retiring a game.
+      game_expansion_added: { icon: 'ti-puzzle', text: tn(a.count, 'activity.expansionAddedOne', 'activity.expansionAdded', { title: a.title }) },
     }[a.type];
     if (!meta) return;
     // Who did it (#207): resolve the actor's member seat to a name (like

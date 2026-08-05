@@ -75,20 +75,31 @@ list look longer than it is. `test/username-policy.test.js` asserts the shape of
 every entry for that reason, and loops the *whole* set through the route rather
 than a sample.
 
-**The sixth is `public/js/draw-pool.js`** (#634): `isActiveGame` and
-`fitsPlayerCount`, the two predicates deciding which games a session draw may pick
-from — applied by `lib/draw.js` to build the real pool and by `showStartSession()`
-to render the live preview of that pool. It is the first instance that shares
-**logic rather than a value**, and it earns the shape for the same reason the
-others do: the two sides answer one question, so a drifted copy makes the preview
-promise a pool the draw will not produce (or hide games it would) with no error
-anywhere — and the preview is precisely where the user decides whether to draw at
-all. Note what deliberately stayed duplicated: the **tag** clauses, because the
-server filters on resolved include/exclude id lists while the client holds a
-tri-state chip map, so one shared function would need a third representation
-invented for it. Sharing the clauses that are genuinely identical is the rule;
-forcing the ones that are not is how a shared file grows a parameter nobody can
-explain.
+**The sixth is `public/js/draw-pool.js`** (#634, extended by #653):
+`isActiveGame` and `fitsPlayerCount`, the two predicates deciding which games a
+session draw may pick from — applied by `lib/draw.js` to build the real pool and
+by `showStartSession()` to render the live preview of that pool. It is the first
+instance that shares **logic rather than a value**, and it earns the shape for the
+same reason the others do: the two sides answer one question, so a drifted copy
+makes the preview promise a pool the draw will not produce (or hide games it
+would) with no error anywhere — and the preview is precisely where the user
+decides whether to draw at all. Note what deliberately stayed duplicated: the
+**tag** clauses, because the server filters on resolved include/exclude id lists
+while the client holds a tri-state chip map, so one shared function would need a
+third representation invented for it. Sharing the clauses that are genuinely
+identical is the rule; forcing the ones that are not is how a shared file grows a
+parameter nobody can explain.
+
+It gained two more exports with owned expansions (#653), each for a different
+half of this rule. **`requiredExpansions`** is the logic half again: the results
+screen's „Braucht Erweiterung: …" line has to name the same set that made the
+game drawable, so it is derived from the very predicate the pool used rather than
+from a second "which ones are bigger" rule. **`EXPANSION_TITLE_MAX`** is the
+plain value half — the free-text input's `maxlength` and the route's zod
+`.max()`, i.e. the original palette shape. It sits here rather than in
+`lib/quota.js` because the client *offers* it; the per-game **cap** is a quota,
+which the client never states and only ever learns about from a 403.
+See `.claude/rules/expansions-widen-by-union.md`.
 
 Each new instance must be named in this inventory — the six paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under

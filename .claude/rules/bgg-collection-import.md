@@ -129,7 +129,12 @@ browser contacts nothing new.
 
 - **Expansions are excluded here** (`excludesubtype=boardgameexpansion`) although
   the *search* offers them deliberately — a bulk import is the one place where 50
-  expansions of one game are noise rather than choice.
+  expansions of one game are noise rather than choice. **That still holds now
+  that the app HAS a concept of an owned expansion (#653)**, and the reason is
+  unchanged rather than merely grandfathered: an expansion is recorded on the
+  game it belongs to, from that game's own detail page, so importing 50 of them
+  as shelf entries would create exactly the noise this exclusion prevents *and*
+  the wrong kind of row. See `.claude/rules/expansions-widen-by-union.md`.
 - **Games already on the shelf are still SHOWN — never dropped — but out of the
   actionable list** (#625 changed the *placement*, not that reasoning: hiding
   half the user's own collection reads as the import having lost games). They

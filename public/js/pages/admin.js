@@ -602,6 +602,9 @@
       ...content.members.map((m) => ['Mitglied', 'member', m.id, m.name]),
       ...content.games.map((g) => ['Spiel', 'game', g.id, g.title]),
       ...content.tags.map((tg) => ['Tag', 'tag', tg.id, tg.name]),
+      // Flat across the shelf (#653) — an expansion title is user-authored text
+      // like every other row here, and its id is unique instance-wide.
+      ...(content.expansions || []).map((e) => ['Erweiterung', 'expansion', e.id, e.title]),
     ]) {
       const row = detailRow({
         title: label,

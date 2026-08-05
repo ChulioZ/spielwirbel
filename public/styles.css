@@ -1842,6 +1842,20 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   gap: 4px;
 }
 .game-card__badges .score-pill { position: static; }
+/* "+2" — how many expansions the round owns for this game (#653). Sits above
+   the score pill in the same badge column. Brand-dark under white rather than
+   `--brand`, which lands below 4.5:1 on four of the eight themes
+   (.claude/rules/theme-derived-colors.md). */
+.exp-pill {
+  background: var(--brand-dark);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-1);
+}
 .img-badge {
   background: rgba(255, 255, 255, 0.88);
   border-radius: var(--radius-pill);
@@ -2759,6 +2773,14 @@ body.auth-screen .terms-banner { display: none; }
   border: 1px solid var(--brand-edge);
   font-size: var(--text-lg);
 }
+/* "Braucht Erweiterung: …" (#653) — the winning game only seats this table
+   because the round owns an expansion for it, so the group has to bring the
+   right box. A quieter second line inside the banner, not a peer of it. */
+.chosen-banner__note {
+  margin-top: 6px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
 .chosen-banner.is-cancelled {
   background: color-mix(in srgb, var(--danger) 6%, var(--surface));
   color: var(--danger);
@@ -3198,6 +3220,34 @@ body.auth-screen .terms-banner { display: none; }
    input just shrinks to a few characters instead of the buttons moving down. */
 :is(.popover--tags, .editor--tags) .pp-row .input { min-width: 0; flex: 1 1 120px; }
 .popover--image { min-width: 220px; }
+/* Expansions (#653). Wider than the 300px default like the tags editor: the
+   tick-list holds full expansion names, which a narrow card wraps to three
+   lines each. */
+.popover--expansions { max-width: 360px; }
+:is(.popover--expansions, .editor--expansions) .exp-pick { margin-bottom: 10px; }
+:is(.popover--expansions, .editor--expansions) .exp-pick__head,
+:is(.popover--expansions, .editor--expansions) .exp-own__head {
+  font-size: var(--text-sm);
+  margin-bottom: 6px;
+}
+/* A game can have 100+ expansions, so the list is a bounded scroll box. It
+   lives inside an overlay, so it must not chain its scroll into the page
+   behind it (.claude/rules/overlay-page-lock.md §5). */
+:is(.popover--expansions, .editor--expansions) .exp-pick__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* A compact row: the editor is a 360px card, not a 900px page, so the default
+   `.ds-row` padding would leave room for about three names. */
+:is(.popover--expansions, .editor--expansions) .exp-pick__row { padding: 8px 10px; }
+:is(.popover--expansions, .editor--expansions) .exp-own { margin-bottom: 8px; }
+:is(.popover--expansions, .editor--expansions) .exp-own__name { margin-bottom: 8px; }
+:is(.popover--expansions, .editor--expansions) .exp-own__range { display: flex; align-items: center; gap: 8px; }
+:is(.popover--expansions, .editor--expansions) .exp-own__range .input { width: 68px; }
 .popover__hint { font-size: var(--text-sm); }
 
 .ds-list { display: flex; flex-direction: column; gap: 10px; }
