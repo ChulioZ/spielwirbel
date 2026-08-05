@@ -74,34 +74,52 @@ Route 1 (test-first) does not reach this either: before the route exists every
 one of these 404s anyway. Only the deliberate break discriminates —
 `.claude/rules/break-the-code-on-purpose.md`.
 
-## A secret in the PATH meets a logger that logs paths
+## Event-driven deletion has a hole the events cannot reach: ABANDONMENT
 
-Every other credential in this app rides in a header, a cookie or a body, all of
-which `requestLogger` already refuses to record. A capability token rides in the
-**path** — and the path is one of the five fields `customProps` records *by
-design* (`.claude/rules/product-event-logging.md`). So the ordinary, correct
-logger writes a **working ballot credential** into every log line, where it
-outlives the session and is readable by anyone with log access.
+The five deletions (voting closed, cancelled, session deleted, round deleted,
+account erased) all key off something *happening*. A session that is drawn,
+shared and then simply **abandoned** — nobody closes it, the round stays, the
+account stays — hits none of them. And since `openBallot` refuses only `done` and
+`cancelled`, that link kept working **forever**.
 
-Nothing catches it: no error, no failing check, the feature works perfectly, and
-the leak is invisible unless you go and read the logs. Found reviewing #652 —
-against the issue's own explicit "never logged" requirement, which had been
-written down and then not implemented.
+Abandoned draws are ordinary here: the Start tab renders a ticket for one.
 
-`reqPath()` therefore redacts that one segment to `/api/vote/:token`, keeping the
-route shape so log search still answers "how much is this used" — log the count,
-never the secret. `errorHandler` uses `reqPath()` too rather than `req.path`,
-because that value is forwarded to `ERROR_WEBHOOK_URL`, i.e. to a third party.
+It also made `docs/legal/retention.md`'s "deleted when voting ends" **untrue** for
+exactly that case, which is what turns this from tidying into a correctness fix —
+a retention statement has to describe what actually happens.
 
-**Test both directions.** The obvious test only pins that the token is gone,
-which a redaction that eats *every* path satisfies just as well — turning a leak
-into a logger that records nothing useful. So the spec also asserts ordinary paths
-come through untouched and that `/api/voters/x` is not swallowed by a loose
-prefix. Both breaks redden it.
+So there is a max age (`VOTE_LINK_TTL_DAYS`, default 30 days), in **two** places
+that must not be collapsed into one:
 
-**The general form:** before putting a secret in a URL path, grep for what logs
-paths — the request logger, the error forwarder, any analytics — and redact at
-each. A secret in a header is safe by default here; one in a path is not.
+- **`openBallot` checks the age**, so the link stops working at the cutoff rather
+  than whenever the sweep next runs. This is the control.
+- **A 15-minute sweep** (`lib/scheduler.js`) deletes the rows. This is what makes
+  the retention record true.
+
+Both read the same cutoff, so the sweep can only ever delete rows the gate is
+already refusing — deleting a row can never revoke access the gate would have
+granted.
+
+**Two things fail silently here.** A TTL of `0` or less would expire every link
+the instant it was minted — silently disabling the feature through a config typo
+— so `ttlDays()` falls back to the default rather than honouring it. And in
+Postgres, `data->>'createdAt' < ?` answers NULL for a row missing the field, so
+without the explicit `IS NULL` arm a malformed row would survive every sweep
+forever while the JSON backend deleted it: the two backends disagreeing precisely
+where a row can never be reached again (the `demoIpHash` shape,
+`.claude/rules/per-ip-live-caps.md` §2).
+
+**Test the sweep on the ROW, not the count.** The contract suite shares a dataset,
+so "it deleted ≥1" is satisfied by deleting somebody else's row. And assert that a
+*live* link survives — otherwise "delete everything" passes, which is the break
+that actually happens.
+
+## The token also had to be kept OUT OF THE LOGS
+
+It rides in the path, and the path is a field the request logger records by
+design — so the ordinary logger wrote a working ballot credential into every
+line. That trap generalises past this feature and has its own file:
+`.claude/rules/secrets-in-paths-reach-the-logs.md`.
 
 ## Smaller things that fail quietly
 

@@ -36,6 +36,14 @@ Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
 `VOTE_LINK_RATE_LIMIT_MAX` (the public vote link `/api/vote/…`, per 15 min,
 default 60 — higher because it is an ordinary user action, not a signup).
 
+Voting by shared link (issue #652): a per-device session can be shared as
+`/vote/<token>` so people **without an account** vote from their own phone.
+`VOTE_LINK_TTL_DAYS` (default 30) is the backstop on how long such a link stays
+valid — a link normally dies the moment voting closes, but a session that is
+abandoned rather than closed reaches none of the event-driven deletions, so
+without a max age its link would never expire. The link stops working at that
+cutoff (checked in the route) and a 15-minute sweep deletes the rows.
+
 Contact form (issues #224/#272): a public, login-free page at `/kontakt.html`
 with a bilingual form that POSTs to `/api/contact`, which e-mails the operator —
 the phone-free second communication channel a German Impressum (§ 5 DDG) relies

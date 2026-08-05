@@ -389,6 +389,100 @@ test('a token cannot be pointed at another round by a crafted path', async () =>
   assert.equal(JSON.stringify(res.body).includes(otherSession.body.session.id), false);
 });
 
+/* ------------------------------ Expiry (TTL) ------------------------------- */
+
+/* The gap the five event-driven deletions cannot close: a session that is drawn,
+   shared and then simply ABANDONED — never closed, never cancelled, its round and
+   account still there — reaches none of them. `openBallot` refuses only `done`
+   and `cancelled`, so without an age limit that link keeps working forever, and
+   `docs/legal/retention.md`'s "deleted when voting ends" would be untrue for it.
+
+   These specs drive the TTL to something tiny rather than waiting 30 days; the
+   ceiling is read per call, exactly like every other one in this app. */
+test('an abandoned session\'s link stops working once it is older than the TTL', async (t) => {
+  const prev = process.env.VOTE_LINK_TTL_DAYS;
+  t.after(() => { process.env.VOTE_LINK_TTL_DAYS = prev; });
+
+  const { round, a, session, token } = await setup();
+  const [alice] = round.members;
+
+  // The session is deliberately left OPEN — this is the abandoned case, so none
+  // of the five deletion paths has fired and the row is still there.
+  assert.equal((await request(app).get(`/api/vote/${token}`)).status, 200);
+
+  // A TTL small enough that the link just minted is already past it. Expressed in
+  // days because that is the unit the operator tunes.
+  process.env.VOTE_LINK_TTL_DAYS = String(1 / (24 * 60 * 60 * 1000)); // ~1ms
+  await new Promise((r) => setTimeout(r, 5));
+
+  const read = await request(app).get(`/api/vote/${token}`);
+  assert.equal(read.status, 404, 'an expired link must not open a ballot');
+  assert.deepEqual(read.body, { error: 'invalid_link' }, 'and must be indistinguishable from any other dead link');
+
+  const write = await request(app)
+    .post(`/api/vote/${token}/votes/${alice.id}`)
+    .send({ votes: { [a.id]: { rating: 5 } } });
+  assert.equal(write.status, 404, 'nor accept a vote');
+  assert.deepEqual(write.body, { error: 'invalid_link' });
+
+  // The GATE is what refused it, not the sweep: the row is still in the store.
+  // That ordering is the whole point — the link dies at the cutoff, not whenever
+  // the 15-minute tick next happens to run.
+  const repo = require('../lib/repo');
+  assert.ok(await repo.findSessionVoteLink(token), 'the row is still present; the gate refused it');
+
+  // Restore the real ceiling and it works again — proving the refusal was the age
+  // and not some other state the test wandered into.
+  process.env.VOTE_LINK_TTL_DAYS = '30';
+  assert.equal((await request(app).get(`/api/vote/${token}`)).status, 200);
+  // …and that the session is genuinely still open, i.e. this really was the
+  // abandoned case rather than a closed session refusing for the usual reason.
+  const stored = sessionOf(await getRound(round.id), session.id);
+  assert.equal(stored.done, false);
+  assert.equal(stored.cancelled, false);
+});
+
+test('the scheduled sweep deletes expired link rows, and leaves live ones', async (t) => {
+  const prev = process.env.VOTE_LINK_TTL_DAYS;
+  t.after(() => { process.env.VOTE_LINK_TTL_DAYS = prev; });
+  const repo = require('../lib/repo');
+  const { runJob } = require('../lib/scheduler');
+
+  const stale = await setup();
+  process.env.VOTE_LINK_TTL_DAYS = String(1 / (24 * 60 * 60 * 1000)); // ~1ms
+  await new Promise((r) => setTimeout(r, 5));
+  // Minted AFTER the tiny TTL is in force, so it is still inside its own window
+  // only once the ceiling goes back up — which is what the second half asserts.
+  const removedCount = await runJob('purgeExpiredVoteLinks');
+  assert.ok(removedCount >= 1, `the sweep reported ${removedCount}`);
+  assert.equal(await repo.findSessionVoteLink(stale.token), null);
+
+  // With a realistic ceiling a freshly minted link survives the sweep — the half
+  // that stops "delete everything" from passing this test.
+  process.env.VOTE_LINK_TTL_DAYS = '30';
+  const live = await setup();
+  await runJob('purgeExpiredVoteLinks');
+  assert.ok(await repo.findSessionVoteLink(live.token), 'a live link must survive the sweep');
+  assert.equal((await request(app).get(`/api/vote/${live.token}`)).status, 200);
+});
+
+test('the TTL ceiling refuses a value that would disable the feature', () => {
+  const prev = process.env.VOTE_LINK_TTL_DAYS;
+  const { ttlDays, DEFAULT_TTL_DAYS } = require('../lib/vote-link');
+  try {
+    // 0 or a negative would expire every link the instant it is minted — i.e.
+    // silently turn the feature off through a config typo. Fall back instead.
+    for (const bad of ['0', '-5', 'abc', '']) {
+      process.env.VOTE_LINK_TTL_DAYS = bad;
+      assert.equal(ttlDays(), DEFAULT_TTL_DAYS, `${JSON.stringify(bad)} should fall back`);
+    }
+    process.env.VOTE_LINK_TTL_DAYS = '7';
+    assert.equal(ttlDays(), 7, 'a real value is honoured');
+  } finally {
+    process.env.VOTE_LINK_TTL_DAYS = prev;
+  }
+});
+
 /* --------------------------- The token in the logs ------------------------- */
 
 // The token is the app's only credential that travels in the PATH — which is the

@@ -1631,6 +1631,28 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteSessionVoteLink('vl-r1', 'vl-s1'), null);
   });
 
+  test('the vote-link TTL sweep drops only rows older than the cutoff', async () => {
+    const t = `vlx-${Math.random().toString(16).slice(2)}`;
+    const fresh = await repo.createSessionVoteLink({ tenantId: t, roundId: `${t}-r`, sessionId: 'x-new' });
+
+    // Everything minted before "now" is expired under a cutoff of now — including
+    // the row above — so the cutoff has to be a moment the fixtures straddle.
+    // Sweeping with a cutoff in the distant PAST must therefore delete nothing.
+    assert.equal(await repo.deleteExpiredSessionVoteLinks('2000-01-01T00:00:00.000Z'), 0);
+    assert.ok(await repo.findSessionVoteLink(fresh.id), 'a fresh link survives a past cutoff');
+
+    // …and a cutoff in the future sweeps it. Asserted on the ROW rather than only
+    // on the count: a count is satisfied by deleting somebody else's row, and this
+    // suite shares a dataset across tests.
+    const removed = await repo.deleteExpiredSessionVoteLinks('2999-01-01T00:00:00.000Z');
+    assert.ok(removed >= 1);
+    assert.equal(await repo.findSessionVoteLink(fresh.id), null, 'an aged link is swept');
+
+    // Idempotent: a second sweep over the same window finds nothing left of ours.
+    await repo.deleteExpiredSessionVoteLinks('2999-01-01T00:00:00.000Z');
+    assert.equal(await repo.findSessionVoteLink(fresh.id), null);
+  });
+
   test('deleting a round takes its vote links with it, and only its own', async () => {
     const tenant = `vld-${Math.random().toString(16).slice(2)}`;
     const round = await repo.createRound(tenant, { name: 'Linked', members: ['Ann'] });

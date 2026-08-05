@@ -117,8 +117,14 @@ lib/
   demo-tenant.js     the one definition of the `demo-` tenant-id prefix that
                      classifies a tenant as a demo, dependency-free so the repo
                      backends and the logger can require it without a cycle
-  scheduler.js       background jobs, started from server.js only: today the
-                     expired-demo purge (issue #427)
+  vote-link.js       the vote link's TTL (issue #652): the age half of the
+                     public route's gate, plus the sweep that deletes rows past
+                     it. Exists because an ABANDONED session — never closed,
+                     never cancelled — reaches none of the five event-driven
+                     deletions, so without a max age its link never expires
+  scheduler.js       background jobs, started from server.js only: the
+                     expired-demo purge (issue #427) and the expired-vote-link
+                     sweep (issue #652)
   shutdown.js        the SIGTERM/SIGINT drain server.js installs — stops the
                      scheduler, lets in-flight requests finish, destroys the
                      pool, with a force-exit fallback. A factory taking its
