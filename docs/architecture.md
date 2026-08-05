@@ -344,6 +344,9 @@ public/
                      first, ahead of the brand (issue #522)
     report-link.js   builds the contact-form deep link behind the Freundeskreis
                      feed's per-item report button (issue #559)
+    install-prompt.js stashes the browser's install event and decides which
+                     install affordance a screen may offer — a real button, the
+                     iOS Share-sheet steps, or nothing (issue #616)
     focus-trap.js    keeps Tab inside an open sheet + restores focus on close
     page-lock.js     freezes the page behind an open sheet, so it can't scroll
                      away underneath it (issue #622)

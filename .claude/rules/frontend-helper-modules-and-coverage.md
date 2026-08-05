@@ -58,6 +58,34 @@ that shapes `test/support/dom.js`. See
 `.claude/rules/testing-views-under-jsdom.md`; a spec that reaches for `require`
 on a view reintroduces exactly the −11 points measured above.
 
+## A helper backed by a browser API cannot have its DEFAULT asserted from Node
+
+The `require`-it-into-Node half only works for genuinely pure functions. A helper
+that reads a browser store is written defensively —
+
+```js
+function installOfferDismissed() {                       // install-prompt.js, #616
+  try { return localStorage.getItem(KEY) === '1'; } catch { return false; }
+}
+```
+
+— and Node has no `localStorage`, so the `catch` fires and it returns the
+fallback **whatever the body says**. A Node test pinning the default is therefore
+green against the flag written the wrong way round, which is precisely the
+assertion `.claude/rules/break-the-code-on-purpose.md` demands for a defaulted
+flag. Verified on #616: inverted to `!== '1'`, the Node form stays green and the
+jsdom form reddens by name.
+
+**So the default goes through `loadApp()`** (`.claude/rules/testing-views-under-jsdom.md`),
+where jsdom gives a real per-instance store — `dom.run('installOfferDismissed()')`
+— and only the argument-taking helpers are required into Node. Splitting a file's
+tests across both harnesses is the normal shape here, not a smell.
+
+Note the file's coverage figure drops as a result (61% for `install-prompt.js`):
+the `vm`-run half contributes none, by design. That is fine — the gate is the
+**global** figure, and jsdom coverage would cost the −11 points this whole rule is
+about.
+
 **Corollary for diagnosing a red `coverage` check:** when the test job is green
 and only `coverage` is red, don't hunt for a missing test. Look at the per-file
 table for a file that has no business being there at all — a newly `require`d

@@ -900,6 +900,17 @@ I18N.en = {
   'konto.demo.title': 'Demo account',
   'konto.demo.note': 'This account is a demo: it has no e-mail address and no password, and is deleted automatically. Sign up for free to keep a round for good — that creates a new, empty account.',
 
+  // Installing as an app (#616). Two presentations: a real button where the
+  // browser offered an install event, otherwise the Share-menu steps — on iOS
+  // there is no other route.
+  'install.title': 'Install the app',
+  'install.intro': 'Add Spielwirbel to your home screen: it starts faster, without a browser bar, and works offline.',
+  'install.cta': 'Install',
+  'install.ios.steps': 'Tap “Share” at the bottom, then “Add to Home Screen”.',
+  'install.offer.title': 'Spielwirbel as an app?',
+  'install.offer.dismiss': 'No thanks',
+  'install.done': 'Spielwirbel has been installed.',
+
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
   'a11y.home': 'Go to home screen',
   'a11y.language': 'Language',
