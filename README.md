@@ -12,7 +12,8 @@
 [![Secret Scan](https://github.com/ChulioZ/spielwirbel/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/ChulioZ/spielwirbel/actions/workflows/secret-scan.yml)
 
 **"What should we play tonight?"** — Spielwirbel draws a few games from your
-group's shelf, passes one device around the table so everyone rates them, and
+group's shelf, collects everyone's rating — on one shared device, on their own
+phones, or through a link — and
 remembers what your round actually likes. Board games and video games together.
 
 <p align="center">
@@ -58,12 +59,10 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
   **BoardGameGeek**, the **PlayStation Store**, **Steam**, the **Nintendo
   eShop** and the **Xbox Store** at once and fills in the details; or import
   your whole *owned* BoardGameGeek collection in one go.
-- **Sessions (hot-seat voting)** — pick who's playing, draw candidate games that
-  fit the player count, then pass the device around: everyone rates each game
-  1–5. Votes stay sealed until the reveal.
-- **Voting from your own device** — optional per session: anyone whose seat is
-  linked to their account can rate from wherever they are, while everyone else
-  votes on the shared device exactly as above.
+- **Sessions** — pick who's playing, draw candidate games that fit the player
+  count, then everyone rates them 1–5. Pass one device around the table, rate
+  from your own phone, or send a link to people with no account — mix all three
+  in one evening. Votes stay sealed until the reveal.
 - **Guests** — someone outside the group can join one session without becoming a
   member.
 - **Teams** — members and guests can pair up for a session: a team counts as one

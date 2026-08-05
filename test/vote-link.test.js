@@ -36,7 +36,7 @@ async function setup(over = {}) {
   const b = await addGame(round.id, 'B');
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions`)
-    .send({ count: 5, deviceVoting: true, ...(over.session || {}) });
+    .send({ count: 5, ...(over.session || {}) });
   const session = res.body.session;
   const mint = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/vote-link`)
@@ -66,15 +66,32 @@ test('minting returns a token, and minting again returns the SAME one', async ()
   assert.equal(again.body.token, token);
 });
 
-test('a hot-seat session cannot be shared as a link', async () => {
+// #655 removed the opt-in, so this is the claim that replaced "a hot-seat
+// session cannot be shared": every drawn session can be, with no setup at all.
+test('any drawn session can be shared as a link, with no opt-in', async () => {
   const round = await createRound(request);
   await addGame(round.id, 'A');
   const res = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1 });
   const mint = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${res.body.session.id}/vote-link`)
     .send({});
+  assert.equal(mint.status, 201);
+  assert.match(mint.body.token, /^[A-Za-z0-9_-]{32}$/);
+  assert.equal((await request(app).get(`/api/vote/${mint.body.token}`)).status, 200);
+});
+
+// Direct-pick is the one session kind with no ballot: it is born `done`.
+test('a direct-pick session cannot be shared as a link', async () => {
+  const round = await createRound(request);
+  const game = await addGame(round.id, 'A');
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions`)
+    .send({ gameId: game.id });
+  const mint = await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${res.body.session.id}/vote-link`)
+    .send({});
   assert.equal(mint.status, 400);
-  assert.equal(mint.body.error, 'not_device_voting');
+  assert.equal(mint.body.error, 'voting_closed');
 });
 
 test('a closed or cancelled session cannot be shared as a link', async () => {
@@ -296,17 +313,18 @@ test('a STALE link row is inert — the gate re-reads the session, so cleanup is
   await request(app).post(`/api/rounds/${cancelled.round.id}/sessions/${cancelled.session.id}/cancel`).send({});
   cases.push({ label: 'cancelled', ...cancelled, link: await revive(cancelled.round.id, cancelled.session.id) });
 
-  // A hot-seat session, which the mint refuses outright — but a row could exist
-  // by other means, and this file must hold on its own.
-  const hotRound = await createRound(request);
-  const hotGame = await addGame(hotRound.id, 'A');
-  const hot = await request(app).post(`/api/rounds/${hotRound.id}/sessions`).send({ count: 1 });
+  // A row pointing at a session that no longer exists — the gate's other arm,
+  // and the one a missed cascade on round-delete would leave behind.
+  const goneRound = await createRound(request);
+  const goneGame = await addGame(goneRound.id, 'A');
+  const gone = await request(app).post(`/api/rounds/${goneRound.id}/sessions`).send({ count: 1 });
+  await request(app).delete(`/api/rounds/${goneRound.id}/sessions/${gone.body.session.id}`).send({});
   cases.push({
-    label: 'hot-seat',
-    round: hotRound,
-    a: hotGame,
-    session: hot.body.session,
-    link: await revive(hotRound.id, hot.body.session.id),
+    label: 'session gone',
+    round: goneRound,
+    a: goneGame,
+    session: gone.body.session,
+    link: await revive(goneRound.id, gone.body.session.id),
   });
 
   for (const c of cases) {

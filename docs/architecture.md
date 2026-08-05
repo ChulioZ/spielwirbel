@@ -366,8 +366,8 @@ public/
                           (invite, move games, delete/leave) in one place (#561)
     views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)
-    views-session.js session setup, voting (hot-seat), finale, results
-    views-session-live.js the per-device voting lobby: who has voted, vote for
+    views-session.js session setup, the rating cards, finale, results
+    views-session-live.js the voting lobby every session opens (#655): who has voted, vote for
                      yourself or for anyone still open on this device, and end
                      the voting (issue #209)
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name

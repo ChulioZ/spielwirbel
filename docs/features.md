@@ -144,28 +144,33 @@ What the app does, in detail. For a short overview see the
   panel showing exactly which games are currently in the pot, so seating one
   more player or excluding a tag visibly changes the shelf beside it. The tags
   and count a round was last drawn with are remembered and preselected the next
-  time, so a group that always draws the same way just confirms. The device is
-  then passed around: a handover screen names whose turn it is, and each member
-  rates every drawn game **1–5** or proposes to retire it (member order is
-  randomized).
-- **Voting from your own device** – optional per session, off unless switched on
-  at the draw. Instead of one device going round the table, the session opens a
-  lobby that shows who has voted and who has not: anyone whose seat is linked to
-  their account can open the round on their own phone and rate the drawn games
-  there, while everyone else votes on the device the session was started from,
-  exactly as before. Nobody has to be assigned a place beforehand — whoever is
-  holding a device votes with it — and the ratings stay secret until someone
-  ends the voting, which anyone in the round can do, so a missing player or a
-  flat battery never strands the evening.
-- **Voting by shared link, without an account** – a running per-device session
-  can be shared as one URL (a "share" button in the lobby, mint-on-demand). Its
-  holder opens it, claims their own name from the session's participant list and
-  rates the drawn games on their phone — no sign-up, nothing to install. The link
-  is a capability for exactly that one session: it shows the round name, the drawn
+  time, so a group that always draws the same way just confirms.
+- **Voting** – the draw opens a **lobby** showing who has voted and who has not.
+  There is nothing to configure and no mode to pick: every session works the same
+  way, and each person's ratings are saved the moment they give them (**1–5** per
+  drawn game, plus an optional "retire this" for members). Three ways in, freely
+  mixed within one evening:
+  - **pass the device around** – tap whoever is next, a handover screen names
+    them so nobody peeks, and when they are done the lobby leads with the next
+    person still open;
+  - **from your own phone** – anyone whose seat is linked to their account opens
+    the round and rates from wherever they are;
+  - **from a shared link** – see below.
+
+  Nobody has to be assigned a place beforehand — whoever is holding a device
+  votes with it. Ratings stay secret until someone ends the voting, which anyone
+  in the round can do, so a missing player or a flat battery never strands the
+  evening. Because votes are saved as they are given rather than held until the
+  end, an interrupted evening loses at most the card someone was on.
+- **Voting by shared link, without an account** – any running session can be
+  shared as one URL (a "share" button in the lobby, mint-on-demand). Its holder
+  opens it, claims their own name from the session's participant list and rates
+  the drawn games on their phone — no sign-up, nothing to install. The link is a
+  capability for exactly that one session: it shows the round name, the drawn
   games and who has voted so far, and never a single rating, the result, or
   anything else about the round. It cannot add players (the draw already filtered
-  the pool by the player count), and it stops working the moment voting closes or
-  the session is cancelled or deleted.
+  the pool by the player count), and it stops working the moment voting closes,
+  the session is cancelled or deleted, or 30 days pass.
 - **What happened in a session** – every session keeps a short record of who
   started it, whose votes were submitted by whom, who ended the voting and who
   recorded the result, shown while voting runs and again under the results. It

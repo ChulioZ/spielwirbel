@@ -7,7 +7,14 @@ paths:
 ---
 # The session flow owns history entries (#329) — guard the EXIT, not a path
 
-The hot-seat wizard (setup → vote steps → finale) pushes a real history entry
+**Scope note (#655):** the wizard now walks **one person's cards**, not the whole
+table — every session lands in the lobby and each column is saved as it is given
+(`.claude/rules/per-device-session-voting.md`). So what an unguarded exit costs is
+one person's ratings rather than the evening. Everything below still applies at
+that smaller scale, and the two entry points in §1 are now the lobby's own
+"vote for X" buttons rather than a setup screen and a resume ticket.
+
+The vote wizard (vote steps → finale) pushes a real history entry
 per screen, so browser/OS Back steps *within* it. Those screens still can't be
 rebuilt from a URL — votes live only in the `startVoting` closure until the one
 POST at the end — so `router.js` grew a **flow**: `beginFlow(onPopstate, guard)`

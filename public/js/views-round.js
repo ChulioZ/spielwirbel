@@ -263,42 +263,28 @@ function renderStartTab(round, activeGames) {
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
     .forEach((session) => {
       const n = (session.gameIds || []).length;
-      // A per-device session (#209) reads differently from an abandoned draw:
-      // nothing was interrupted, voting is simply still running somewhere else.
-      // Same ticket, two vocabularies — "resume" would be wrong on one of them.
-      const live = !!session.deviceVoting;
+      // One vocabulary since #655: every open session's votes live on the
+      // server as they are given, so none of them is an "abandoned draw" to be
+      // resumed — voting is simply still running, here or on someone's phone.
       const ticket = h(`<button class="ticket ticket--live">
            <span class="ticket__main">
              <span class="ticket__img"><i class="ti ti-tornado" aria-hidden="true"></i></span>
              <span class="ticket__info">
-               <span class="ticket__label">${esc(t(live ? 'round.liveLabel' : 'round.draftLabel'))}</span>
+               <span class="ticket__label">${esc(t('round.liveLabel'))}</span>
                <span class="ticket__title">${esc(tn(n, 'round.draftTitleOne', 'round.draftTitle'))}</span>
                <span class="ticket__meta">${esc(fmtDateTime(session.createdAt))}</span>
              </span>
            </span>
            <span class="ticket__stub">
              <i class="ti ti-player-play" aria-hidden="true"></i>
-             <span class="ticket__names">${esc(t(live ? 'round.liveVote' : 'round.resumeVote'))}</span>
+             <span class="ticket__names">${esc(t('round.liveVote'))}</span>
            </span>
          </button>`);
-      ticket.addEventListener('click', () => {
-        // A per-device session (#209) is not resumed — it was never abandoned.
-        // Its votes are on the server, arriving from whoever is voting where, so
-        // the ticket opens the lobby. This is the entry point every participant
-        // uses: open the app, tap the round, tap the ticket, vote.
-        if (session.deviceVoting) return showSessionLobby(round, session);
-        const drawn = session.gameIds
-          .map((gid) => round.games.find((g) => g.id === gid))
-          .filter(Boolean);
-        // The abandoned draw's own participants, guests included (#458) — they
-        // were frozen into the session at draw time, so resuming picks them up.
-        const voters = sessionPeople(round, session);
-        // Games or members can have been deleted since the draw was abandoned,
-        // leaving nothing to vote on — say so rather than opening an empty
-        // wizard; the discard below is then the only sensible action.
-        if (!drawn.length || !voters.length) return toast(t('round.toast.draftGone'));
-        startVoting(round, session, drawn, voters);
-      });
+      // The lobby is the entry point every participant uses: open the app, tap
+      // the round, tap the ticket, vote. It needs no guard against a deleted game
+      // or member — unlike the wizard it used to open, it renders whatever the
+      // session still has and offers the actions that fit.
+      ticket.addEventListener('click', () => showSessionLobby(round, session));
       app.appendChild(ticket);
 
       const discard = h(`<div class="center ticket__discard"><button class="link-btn">${esc(t('round.draftDiscard'))}</button></div>`);

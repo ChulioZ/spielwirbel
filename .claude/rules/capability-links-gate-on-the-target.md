@@ -21,8 +21,9 @@ and **every one of them is a live ballot if it is missed** — no error, no fail
 test, just a token that still works after the group thought it was done.
 
 So the row is not the authority. `openBallot()` re-reads the session on **every**
-request and refuses unless it exists, is `deviceVoting`, and is neither `done` nor
-`cancelled`. Both handlers go through it. A stale row is therefore **inert by
+request and refuses unless it exists and is neither `done` nor `cancelled` (the
+`deviceVoting` arm went with #655, which made every session votable this way).
+Both handlers go through it. A stale row is therefore **inert by
 construction**, and the deletions become retention hygiene — worth doing (a row
 naming a round and a tenant must not outlive them) but not load-bearing.
 
@@ -49,8 +50,7 @@ session, delete the round — and asserts the answers are indistinguishable. It
 looks like a thorough test of the gate. It is not: **each of those paths also
 deletes the row**, so `findSessionVoteLink` returns null and the 404 comes from
 the lookup, never reaching the state check. Measured on #652 — deleting the
-`!session.deviceVoting || session.done || session.cancelled` line outright left
-all 15 route specs green.
+`session.done || session.cancelled` line outright left all 15 route specs green.
 
 Two causes, one output — the same shape as
 `.claude/rules/trust-proxy-is-a-hop-count.md`'s `RateLimit-Remaining` split, and

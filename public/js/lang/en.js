@@ -72,10 +72,8 @@ I18N.en = {
   'round.inProgressLabel': 'In progress',
   'round.inProgressDeciding': 'Choosing a game',
   'round.resume': 'Resume',
-  'round.draftLabel': 'Vote in progress',
   'round.draftTitleOne': '{n} game drawn',
   'round.draftTitle': '{n} games drawn',
-  'round.resumeVote': 'Continue voting',
   // A per-device session (#209): nothing was interrupted, voting is simply
   // still running elsewhere — hence "now" rather than "continue".
   'round.liveLabel': 'Vote in progress',
@@ -83,7 +81,6 @@ I18N.en = {
   'round.draftDiscard': 'Discard this vote',
   'round.draftDiscardConfirm': 'Discard this started vote? The draw will be deleted.',
   'round.toast.draftDiscarded': 'Vote discarded',
-  'round.toast.draftGone': 'The drawn games no longer exist – discard this vote.',
 
   'hub.tab.start': 'Start',
   'hub.tab.regal': 'Shelf',
@@ -412,10 +409,6 @@ I18N.en = {
   // Per-device voting (#209). The note describes what the feature does, in the
   // disabled state too. It must never read as though the round were missing
   // something: a round of names without accounts is the normal configuration.
-  'startSession.deviceVoting': 'Vote on your own device',
-  'startSession.deviceVotingNoteOne': '{names} can then vote on their own device. Everyone else votes here.',
-  'startSession.deviceVotingNote': '{names} can then vote on their own devices. Everyone else votes here.',
-  'startSession.deviceVotingUnavailable': 'Nobody else in this session has an account linked to their seat.',
   'startSession.whichGames': 'Which games?',
   'startSession.countLabel': 'How many games to draw?',
   'startSession.available': '{n} games in the pot',
@@ -436,6 +429,7 @@ I18N.en = {
   'lobby.yourVoteIn': 'Your vote is in. Waiting for the others.',
   'lobby.hereLabel': 'Vote on this device',
   'lobby.voteHere': 'For {name}',
+  'lobby.next': 'Next: {name}',
   'lobby.close': 'End voting',
   'lobby.closeConfirm': '{n} votes are still missing. End voting anyway?',
   // Voting by link (#652): anyone without an account votes from their own device
