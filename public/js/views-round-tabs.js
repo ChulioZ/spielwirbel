@@ -209,11 +209,13 @@ function renderRegalTab(round, activeGames) {
   }
   app.appendChild(gamesSec);
 
-  // Quiet footer: the ways into the two archives — retired ("Aussortiert") and
-  // completed ("Durchgespielt", #250). Both take a game out of the active
-  // collection; they are kept apart because the reason differs.
+  // Quiet footer: the ways off the active shelf — the two archives, retired
+  // ("Aussortiert") and completed ("Durchgespielt", #250), plus the Wunschliste
+  // (#560). All three are kept apart because the reason differs: two are games
+  // the group had, the third is games they want.
   const retiredGames = round.games.filter((g) => g.retired);
   const completedGames = round.games.filter((g) => g.completed);
+  const wishGames = round.games.filter((g) => g.wish);
   const foot = h('<div class="round-footer rail-owned"></div>');
   const retiredBtn = h(`<a class="link-btn"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.link', { n: retiredGames.length }))}</a>`);
   navLink(retiredBtn, roundPath(round.id, 'retired'), () => showRetired(round.id));
@@ -221,6 +223,9 @@ function renderRegalTab(round, activeGames) {
   const completedBtn = h(`<a class="link-btn"><i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('completed.link', { n: completedGames.length }))}</a>`);
   navLink(completedBtn, roundPath(round.id, 'completed'), () => showCompleted(round.id));
   foot.appendChild(completedBtn);
+  const wishBtn = h(`<a class="link-btn"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('wish.link', { n: wishGames.length }))}</a>`);
+  navLink(wishBtn, roundPath(round.id, 'wishlist'), () => showWishlist(round.id));
+  foot.appendChild(wishBtn);
   // "Spiele verschieben" and "Einladen" used to sit here too. Neither is a shelf
   // concern — one consolidates two rounds, the other shares the round — and both
   // were findable only by scrolling past the whole game grid, so they moved to
@@ -246,7 +251,11 @@ async function showMoveGames(round) {
   // Archived games move too, so they are listed — but labelled, since they are
   // invisible on the Regal the user is looking at and would otherwise be a
   // surprise in the count.
-  const stateOf = (g) => (g.retired ? t('retired.crumb') : g.completed ? t('completed.crumb') : '');
+  const stateOf = (g) =>
+    g.retired ? t('retired.crumb')
+      : g.completed ? t('completed.crumb')
+        : g.wish ? t('wish.crumb')
+          : '';
 
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('moveGames.title'))}">
@@ -719,7 +728,7 @@ function pokaleGameCard(round, icon, label, games, sub) {
     // The game name opens its detail page (archived games too — the detail
     // view supports them; only the "Jetzt spielen" launcher is omitted).
     makeGameLink(row.querySelector('.pokale-game__title'), round.id, g.id);
-    if (!g.retired && !g.completed) {
+    if (!g.retired && !g.completed && !g.wish) {
       const btn = h(`<button class="pokale-game__play" title="${esc(t('directPlay.button'))}" aria-label="${esc(t('directPlay.button'))}"><i class="ti ti-player-play" aria-hidden="true"></i></button>`);
       btn.addEventListener('click', () => startDirectSession(round, g));
       row.appendChild(btn);
@@ -902,7 +911,7 @@ function renderPokaleTab(round) {
     const at = s.createdAt;
     if (!lastAt[s.chosenGameId] || at > lastAt[s.chosenGameId]) lastAt[s.chosenGameId] = at;
   });
-  const active = round.games.filter((g) => !g.retired && !g.completed);
+  const active = round.games.filter((g) => !g.retired && !g.completed && !g.wish);
   // Find the earliest last-played timestamp ('' = never played sorts first),
   // then pick a random game among all that tie for it, so the same game isn't
   // always highlighted.
@@ -1026,14 +1035,21 @@ function renderRecapSection(round, recap) {
   return sec;
 }
 
-// =================== Archives: retired & completed games ===================
+// ============ Off-shelf screens: retired, completed & wished-for ============
 /*
- * Two parallel archive screens (#250). Both take a game out of the active
- * collection and offer the same two actions (restore / delete permanently);
- * only the wording, the icon and the flag differ — retiring means "we don't
- * want this any more", completing means "we finished it". They share one
- * renderer so the pair can't drift apart, with ARCHIVES holding everything
- * that is genuinely per-kind.
+ * Three parallel screens. All hold games that are NOT in the active collection
+ * and offer the same two actions (move back onto the shelf / delete
+ * permanently); only the wording, the icon and the flag differ — retiring means
+ * "we don't want this any more", completing means "we finished it", wishing
+ * means "we don't own it yet" (#250, #560). They share one renderer so they
+ * can't drift apart, with ARCHIVES holding everything genuinely per-kind.
+ *
+ * The wish list is not an archive — it is the one entry here that points
+ * forwards rather than back — but it is structurally identical, so giving it
+ * its own near-copy of this renderer would be the drift this table prevents.
+ * Its two real differences are declared as data: `restoreIcon` (a game arriving
+ * on the shelf is not a restoration) and `importStatus`, which is what puts the
+ * BGG button on this screen and on neither archive.
  */
 const ARCHIVES = {
   retired: {
@@ -1050,24 +1066,42 @@ const ARCHIVES = {
     endpoint: (rid, gid) => `/api/rounds/${rid}/games/${gid}/complete`,
     body: { completed: false },
   },
+  wish: {
+    icon: 'ti-heart',
+    flag: (g) => g.wish,
+    at: (g) => g.wishAt,
+    endpoint: (rid, gid) => `/api/rounds/${rid}/games/${gid}/wish`,
+    body: { wish: false },
+    // The Regal's own icon (the hub tab uses it too), because that is literally
+    // where the button sends the game — "restore" (ti-arrow-back-up) would claim
+    // it is going back somewhere it has never been.
+    restoreIcon: 'ti-cards',
+    importStatus: 'wishlist',
+    canAdd: true,
+  },
 };
 
 const showRetired = (rid) => showArchive(rid, 'retired');
 const showCompleted = (rid) => showArchive(rid, 'completed');
+// The route segment is 'wishlist' while the i18n/ARCHIVES key is 'wish', which
+// is also the data field — so the URL reads as a place and the code reads as a
+// game state.
+const showWishlist = (rid) => showArchive(rid, 'wish', 'wishlist');
 
-// `kind` keys both ARCHIVES and the i18n namespace (retired.* / completed.*),
-// so the two stay in lockstep by construction.
-async function showArchive(rid, kind) {
+// `kind` keys both ARCHIVES and the i18n namespace (retired.* / completed.* /
+// wish.*), so the two stay in lockstep by construction. `seg` is the URL
+// segment, which differs from `kind` only for the wish list.
+async function showArchive(rid, kind, seg = kind) {
   const a = ARCHIVES[kind];
-  currentView = () => showArchive(rid, kind);
-  syncUrl(roundPath(rid, kind));
+  currentView = () => showArchive(rid, kind, seg);
+  syncUrl(roundPath(rid, seg));
   app.innerHTML = '<p class="muted">…</p>';
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
   applyBackground(round.background);
   setContext(round.name);
-  // `kind` keys the i18n namespace, so both archives are covered by one line.
+  // `kind` keys the i18n namespace, so all three screens are covered by one line.
   setDocTitle(t(`${kind}.title`), round.name);
 
   // Newest first.
@@ -1076,14 +1110,29 @@ async function showArchive(rid, kind) {
     .sort((x, y) => String(a.at(y) || '').localeCompare(String(a.at(x) || '')));
 
   app.innerHTML = '';
-  renderSubScreenTabs(round, kind);
+  // The URL segment, not `kind` — it is what HUB_TAB_OF is keyed by.
+  renderSubScreenTabs(round, seg);
   app.appendChild(backRow(() => showRound(rid, 'regal')));
-  app.appendChild(
-    h(`<div class="page-head"><div>
+  const head = h(`<div class="page-head"><div>
          <h1>${esc(t(`${kind}.title`))}</h1>
          <div class="muted">${esc(round.name)}</div>
-       </div></div>`)
-  );
+       </div><div class="section-tools"></div></div>`);
+  // Adding by hand and importing in bulk both live on the wish list only: a game
+  // enters an archive by being taken off the shelf, never by being created there.
+  if (a.canAdd) {
+    const addBtn = h(`<button class="link-btn"><i class="ti ti-plus" aria-hidden="true"></i> <span class="tools-label">${esc(t('wish.add'))}</span></button>`);
+    addBtn.addEventListener('click', () => showAddGame(round, { wish: true }));
+    head.querySelector('.section-tools').appendChild(addBtn);
+  }
+  // The BGG import pulls the same account's `wishlist=1` shelf that the Regal's
+  // own button pulls with `own=1` (#560). Two spellings of the label, switched
+  // by width in CSS, exactly like the Regal's (#621).
+  if (a.importStatus && canImportBgg(round)) {
+    const importBtn = h(`<button class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> <span class="tools-label tools-label--long">${esc(t('bggImport.wishLink'))}</span><span class="tools-label tools-label--short">${esc(t('bggImport.wishTile'))}</span></button>`);
+    importBtn.addEventListener('click', () => showBggImport(round, a.importStatus));
+    head.querySelector('.section-tools').appendChild(importBtn);
+  }
+  app.appendChild(head);
 
   if (games.length === 0) {
     app.appendChild(h(`<div class="empty"><p>${esc(t(`${kind}.empty`))}</p></div>`));
@@ -1100,7 +1149,7 @@ async function showArchive(rid, kind) {
              <div class="muted archive-row__meta"><i class="ti ${a.icon}" aria-hidden="true"></i> ${esc(t(`${kind}.at`, { when }))}</div>
            </div>
            <div class="archive-row__actions">
-             <button class="btn" data-act="restore"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
+             <button class="btn" data-act="restore"><i class="ti ${a.restoreIcon || 'ti-arrow-back-up'}" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
              <button class="btn btn--danger" data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>
            </div>
          </div>`);
@@ -1109,7 +1158,7 @@ async function showArchive(rid, kind) {
         try {
           await api('POST', a.endpoint(rid, g.id), a.body);
           toast(t(`${kind}.restored`, { title: g.title }));
-          showArchive(rid, kind);
+          showArchive(rid, kind, seg);
         } catch (e) { toast(e.message); }
       });
       row.querySelector('[data-act="delete"]').addEventListener('click', async () => {
@@ -1117,7 +1166,7 @@ async function showArchive(rid, kind) {
         try {
           await api('DELETE', `/api/rounds/${rid}/games/${g.id}`);
           toast(t(`${kind}.deleted`, { title: g.title }));
-          showArchive(rid, kind);
+          showArchive(rid, kind, seg);
         } catch (e) { toast(e.message); }
       });
       list.appendChild(row);

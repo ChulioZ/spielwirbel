@@ -77,12 +77,14 @@ doesn't have to be redone.
   two-column restructure would need the view rebuilt (cover and facts live
   inside one `.gd-head`, the rest are flat siblings of `.app`) to turn a
   ~550px-tall page into a ~400px one.
-- **The two archives** (`.archive-list` / `.archive-row`, retired and
-  completed) — they look like the next tiling candidate after tags and
+- **The two archives and the Wunschliste** (`.archive-list` / `.archive-row` —
+  retired, completed and, since #560, wished-for, all through one renderer) —
+  they look like the next tiling candidate after tags and
   providers, and they are not: a row carries a cover thumb, a title, a
   timestamp and two buttons, so it is *rich* by the table above, and the list
-  is ordered by when each game was archived. Both halves of the rule point the
-  same way. They keep the reading measure.
+  is ordered by when each game was archived (for a wish, by when it was wished
+  for). Both halves of the rule point the same way. They keep the reading
+  measure.
 - **Chronik** — a month-grouped timeline, i.e. the ordering case in its purest
   form. It stays a list at the reading measure, and that is the settled answer
   rather than a deferral (operator decision, 2026-07-23).

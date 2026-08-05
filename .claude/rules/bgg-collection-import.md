@@ -65,14 +65,34 @@ does **not** use `cached()` — it stores only a settled `state === 'ok'`.
 Found by a test, not by review: the five-states spec went red because states 2–5
 were all answered from state 2's cache entry.
 
-## 4. The cache key is the BGG HANDLE, so tests must not share one
+## 4. The cache key is the BGG HANDLE **plus the shelf**, so tests must not share one
 
-Keyed by handle alone, on purpose — the collection belongs to that BGG user, not
-to our account, so two of our accounts linking the same handle correctly share one
-fetch. The consequence for the suite is that **every spec needs its own handle**:
-reuse one and the first spec's stubbed body answers the next one, which presents
-as "my `global.fetch` stub is being ignored". Three specs in
+The handle is in the key on purpose — the collection belongs to that BGG user,
+not to our account, so two of our accounts linking the same handle correctly
+share one fetch. The consequence for the suite is that **every spec needs its own
+handle**: reuse one and the first spec's stubbed body answers the next one, which
+presents as "my `global.fetch` stub is being ignored". Three specs in
 `test/bgg-import.test.js` failed exactly that way before each got its own.
+
+**#560 added the `status` component, and it is load-bearing.** One handle now has
+two shelves — `own=1` (the Regal import) and `wishlist=1` (the Wunschliste one) —
+which are *different BGG documents*. Keyed on the handle alone, whichever ran
+first answers the other for the remaining ten minutes: a full, plausible,
+completely wrong list, indistinguishable from the user having an odd collection.
+So the key is `bgg:collection:<status>:<handle>`, a spec needs its own handle
+**and** the right status, and `collection(username, status)` takes the shelf.
+
+The status is an **allowlist lookup, never interpolated** (`COLLECTION_STATUS`, a
+`Map` so `__proto__` reaches nothing): it lands in a fetched URL's query string,
+i.e. the `resolveLocale` shape in
+`.claude/rules/storefront-lookup-locale.md` §1.
+
+Two things about the wishlist import that are easy to get backwards: it is
+**silent** (no `games_imported`, no `trackEvent`, no feed event — the group has
+acquired nothing; see `.claude/rules/active-games-filter-sites.md`), and its
+`present` set is deliberately **not** filtered by game state, so a game already
+on the shelf shows as present here too — which is what stops the import re-adding
+a game the group has since bought.
 
 ## The bulk write is a repo method, not a loop — and the dedupe lives in it
 

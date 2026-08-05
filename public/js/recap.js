@@ -74,7 +74,7 @@ function collectRatings(round, peopleOf) {
 // worst thing the group owns, which reads as a bug rather than as thin data.
 function bestAndWorst(round, index) {
   const rated = round.games
-    .filter((g) => !g.retired && !g.completed)
+    .filter((g) => !g.retired && !g.completed && !g.wish)
     .map((g) => {
       const entry = index.games.get(g.id);
       const ratings = entry ? entry.all : [];
@@ -185,7 +185,11 @@ function roundRecap(round, peopleOf) {
       // Finished sessions only, matching the count the home screen and the rail
       // already show; an abandoned draw is not a night the group played.
       sessions: round.sessions.filter((s) => s.finished).length,
-      games: round.games.filter((g) => !g.retired && !g.completed).length,
+      // These two are deliberately NOT complements since #560: a wish is
+      // neither owned (so not `games`) nor something the group ever had (so not
+      // `archived`). A game they do not own belongs in neither half of a recap
+      // of their year.
+      games: round.games.filter((g) => !g.retired && !g.completed && !g.wish).length,
       archived: round.games.filter((g) => g.retired || g.completed).length,
       ratings: index.total,
     },

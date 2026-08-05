@@ -36,7 +36,7 @@ const RAIL_SETTINGS_SUB = ['settings', 'tags', 'providers', 'design'];
 // Round sub-screens that have their OWN rail entry. On these, that entry is
 // marked current and no section is — the alternative (highlighting the section
 // that owns them, as the strip must) would light up two things at once.
-const RAIL_OWN_ENTRY = ['retired', 'completed', ...RAIL_SETTINGS_SUB];
+const RAIL_OWN_ENTRY = ['retired', 'completed', 'wishlist', ...RAIL_SETTINGS_SUB];
 
 // One rail row. `sub` decides the marker, and the two states are NOT
 // interchangeable — the same distinction the sections below draw (#331):
@@ -57,7 +57,7 @@ function railItem({ icon, label, path, onNav, current, inside }) {
 
 function buildRoundRail(round, activeTab, sub) {
   const rid = round.id;
-  const activeGames = round.games.filter((g) => !g.retired && !g.completed);
+  const activeGames = round.games.filter((g) => !g.retired && !g.completed && !g.wish);
   const playedCount = round.sessions.filter((s) => s.finished).length;
   // A sub-screen with its own entry claims the current marker, so the section
   // list stays unhighlighted rather than lighting up two rows at once.
@@ -141,8 +141,11 @@ function buildRoundRail(round, activeTab, sub) {
   });
   rail.appendChild(nav);
 
-  // --- Archives. Counted here rather than on the Regal, where they were a
+  // --- Off the shelf. Counted here rather than on the Regal, where they were a
   // link at the very bottom of the grid and effectively undiscoverable (#334).
+  // The Wunschliste (#560) joins the two archives: it is not one, but it is the
+  // third place a game can sit while not being on the shelf, and it is reached
+  // the same way.
   const archive = h(`<div class="rail__group">
        <div class="rail__label">${esc(t('rail.archive'))}</div>
      </div>`);
@@ -159,6 +162,13 @@ function buildRoundRail(round, activeTab, sub) {
     path: roundPath(rid, 'completed'),
     onNav: () => showCompleted(rid),
     current: ownEntry === 'completed',
+  }));
+  archive.appendChild(railItem({
+    icon: 'ti-heart',
+    label: t('wish.link', { n: round.games.filter((g) => g.wish).length }),
+    path: roundPath(rid, 'wishlist'),
+    onNav: () => showWishlist(rid),
+    current: ownEntry === 'wishlist',
   }));
   rail.appendChild(archive);
 

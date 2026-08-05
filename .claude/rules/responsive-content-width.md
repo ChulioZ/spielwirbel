@@ -64,8 +64,9 @@ them, and neither does any of the alternatives that look promising:
 ## How the rail resolved it
 
 Navigation moved **out** of the content column: from 1280px up, `.rail`
-(`public/js/round-rail.js`) carries the round's identity, its four sections,
-both archives and one Einstellungen entry, and the dock is `display: none`. With
+(`public/js/round-rail.js`) carries the round's identity, its four sections, the
+three off-shelf lists (both archives + the Wunschliste, #560) and one
+Einstellungen entry, and the dock is `display: none`. With
 nothing persistent left inside the column, its width is free to depend on the
 viewport — and because it depends on *only* the viewport, every screen at a
 given size gets the same pane and nothing moves as you navigate.

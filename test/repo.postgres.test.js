@@ -78,6 +78,54 @@ if (!process.env.DATABASE_URL) {
   // dedicated plain role instead of reusing the test connection's superuser —
   // and why production should run the app as a non-superuser
   // (docs/deploy-railway.md).
+  /* A game row that predates #560 carries NO `wish` key at all, and every repo
+     creation path writes one — so this case cannot be built through the repo
+     API, which is why the shared contract deliberately does not try. It matters
+     because the exclusion is SQL here, not JS: `(data->>'wish')::boolean IS NOT
+     TRUE` has to answer TRUE for a missing key, or every game added before this
+     release vanishes from its round's shelf, its home-screen count and its draw
+     pool the moment the migration-free deploy lands.
+     `data->>'wish'` is NULL for an absent key and `NULL::boolean IS NOT TRUE` is
+     true — which reads as obviously fine and is exactly the shape that is wrong
+     if someone "tidies" it to `= false` or `IS FALSE`. So it is pinned against a
+     real row, inserted through knex to get the key genuinely absent. */
+  test('a game row with NO wish key still counts as an active game', async () => {
+    const assert = require('node:assert/strict');
+    const T = 'legacy-wish-probe';
+    const round = await repo.createRound(T, { name: 'Legacy', members: ['M'] });
+
+    const admin = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    });
+    await admin.connect();
+    try {
+      // The pre-#560 shape, verbatim: retired/completed present, wish absent.
+      await admin.query(
+        `INSERT INTO games (id, round_id, tenant_id, data)
+         VALUES ($1, $2, $3, $4::jsonb)`,
+        ['legacywish1', round.id, T, JSON.stringify({
+          title: 'Ancient', minPlayers: 2, maxPlayers: 4, image: null,
+          retired: false, retiredAt: null, completed: false, completedAt: null,
+        })]
+      );
+      // The insert really is key-less — otherwise everything below is vacuous.
+      const stored = await admin.query("SELECT data ? 'wish' AS has FROM games WHERE id = 'legacywish1'");
+      assert.equal(stored.rows[0].has, false, 'the probe row must carry no wish key');
+    } finally {
+      await admin.end();
+    }
+
+    assert.equal((await repo.getRoundSummary(T, round.id)).gameCount, 1,
+      'a key-less game must still count toward the home screen');
+    const row = (await repo.tenantSummary(T)).rounds.find((r) => r.id === round.id);
+    assert.equal(row.activeGames, 1, 'a key-less game must still count as active');
+
+    // And it must still be copyable into a new round, which filters the same way.
+    const copy = await repo.createRound(T, { name: 'Copy', members: ['M'], importFromRoundId: round.id });
+    assert.deepEqual(copy.games.map((g) => g.title), ['Ancient']);
+  });
+
   test('RLS is enforced (fail-closed) for a non-superuser without a tenant setting', async () => {
     const assert = require('node:assert/strict');
     const round = await repo.createRound('rls-probe', { name: 'Hidden', members: ['M'] });

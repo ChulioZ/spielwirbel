@@ -71,6 +71,8 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
   winners' podium, streaks, a "gathering dust" tile and a taste retrospective.
 - **Two archives** — games are never deleted by accident: *retired* (done with
   it) and *completed* (finished its content), both restorable.
+- **A Wunschliste** — games the group wants but does not own yet, kept beside the
+  shelf without ever turning up in a vote, and importable from a BGG wishlist.
 - **Per-round design**, custom tags, an installable **PWA** that works offline,
   shareable deep links, and a **Freundeskreis** feed between accounts.
 

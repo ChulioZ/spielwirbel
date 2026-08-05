@@ -79,15 +79,22 @@ const PRESENT = ['Azul', 'Cascadia', 'Everdell'];
 
 /* Open the import sheet against a stubbed collection. `showBggImport` kicks off
    its own `load()` without awaiting it, so the render lands a few microtasks
-   after the call resolves — hence the macrotask flush. */
-async function openImport(t, games, locale = 'de') {
+   after the call resolves — hence the macrotask flush.
+
+   The stub asserts the FULL query string, `status` included (#560). That is not
+   pedantry: the two shelves are separate BGG documents behind one 10-minute
+   cache keyed on the handle, so a client that stopped sending the status would
+   be answered from whichever shelf was fetched first — a completely plausible
+   wrong list, with no error (`.claude/rules/bgg-collection-import.md`). */
+async function openImport(t, games, { locale = 'de', status = 'own' } = {}) {
   const dom = loadApp({ locale });
   t.after(() => dom.close());
   dom.set('api', async (method, path) => {
-    assert.match(path, /\/lookup\/collection\?provider=bgg$/, `unexpected api call: ${method} ${path}`);
+    assert.equal(path, `/api/rounds/7/lookup/collection?provider=bgg&status=${status}`,
+      `unexpected api call: ${method} ${path}`);
     return { state: 'ok', games };
   });
-  await dom.call('showBggImport', { id: 7, name: 'Freitagsrunde' });
+  await dom.call('showBggImport', { id: 7, name: 'Freitagsrunde' }, status === 'own' ? undefined : status);
   await new Promise((resolve) => setImmediate(resolve));
   const body = dom.document.querySelector('.bgg-import');
   assert.ok(body, 'the import sheet rendered no body');
@@ -146,7 +153,7 @@ test('the section sits between the actionable list and the sticky actions bar', 
 
 test('the intro names both the collection total and how many are not on the shelf, in every locale', async (t) => {
   for (const locale of ['de', 'en']) {
-    const { dom, body } = await openImport(t, MIXED, locale);
+    const { dom, body } = await openImport(t, MIXED, { locale });
     const intro = body.querySelector('p.muted').textContent;
 
     /* Built through the same i18n call the view makes, but with the two counts

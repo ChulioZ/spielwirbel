@@ -89,7 +89,9 @@ I18N.de = {
   'hub.tab.pokale': 'Pokale',
 
   // Group headings in the desktop navigation rail (from 1280px up).
-  'rail.archive': 'Archiv',
+  // Steht über den drei Listen, die NICHT das Regal sind: die zwei Archive und
+  // die Wunschliste (#560). Nicht mehr „Archiv“ — eine Wunschliste ist keins.
+  'rail.archive': 'Nicht im Regal',
   'rail.settings': 'Einstellungen',
 
   // The round's Einstellungen screen (#561). It reuses 'rail.settings' as its
@@ -229,6 +231,12 @@ I18N.de = {
   'bggImport.toast.unreachable': 'BoardGameGeek ist gerade nicht erreichbar.',
   'bggImport.toast.noHandle': 'Verknüpfe zuerst deinen BoardGameGeek-Nutzernamen.',
   'bggImport.toast.badHandle': 'Dieser Nutzername sieht nicht wie ein BGG-Name aus.',
+  // Dieselbe Übernahme, aber von der BGG-Wunschliste statt der Sammlung (#560).
+  'bggImport.wishTitle': 'BGG-Wunschliste übernehmen',
+  'bggImport.wishLink': 'Wunschliste von BoardGameGeek übernehmen',
+  'bggImport.wishTile': 'Wunschliste von BGG',
+  'bggImport.wishEmpty': 'Auf deiner BGG-Wunschliste steht nichts.',
+  'bggImport.wishEmptyHint': 'Setze Spiele auf boardgamegeek.com auf deine Wunschliste und versuche es dann noch einmal.',
 
   // Cover der Ausgabe (#519): BoardGameGeek kennt zu jedem Spiel die Schachteln
   // aller Ausgaben — so lässt sich die Ausgabe wählen, die wirklich im Regal steht.
@@ -263,6 +271,20 @@ I18N.de = {
   'completed.delete': 'Endgültig löschen',
   'completed.deleteConfirm': '„{title}“ endgültig löschen? Auch alle Bewertungen aus früheren Sessions werden entfernt. Das kann nicht rückgängig gemacht werden.',
   'completed.deleted': '„{title}“ endgültig gelöscht',
+
+  // Wunschliste (#560): Spiele, die die Runde noch nicht besitzt. Gleiche
+  // Schlüssel wie die beiden Archive, damit ein Renderer alle drei bedient.
+  'wish.link': 'Wunschliste ({n})',
+  'wish.crumb': 'Wunschliste',
+  'wish.title': 'Wunschliste',
+  'wish.empty': 'Auf der Wunschliste steht noch nichts.',
+  'wish.at': 'Auf der Wunschliste seit {when}',
+  'wish.restore': 'Ins Regal',
+  'wish.restored': '„{title}“ steht jetzt im Regal',
+  'wish.delete': 'Von der Liste nehmen',
+  'wish.deleteConfirm': '„{title}“ von der Wunschliste nehmen?',
+  'wish.deleted': '„{title}“ von der Wunschliste genommen',
+  'wish.add': 'Wunsch hinzufügen',
 
   'sessions.rated': '{n} Spiele bewertet',
   'sessions.played': 'Gespielt',
@@ -323,6 +345,7 @@ I18N.de = {
   'member.toast.alreadySeated': 'Du hast in dieser Runde schon einen Platz.',
 
   'addGame.title': 'Spiel hinzufügen',
+  'addGame.wishTitle': 'Wunsch hinzufügen',
   'addGame.titleLabel': 'Titel',
   'addGame.titlePlaceholder': 'z. B. Die Siedler von Catan',
   'players.one': '1 Person',
@@ -344,6 +367,7 @@ I18N.de = {
   'addGame.toast.needPlayers': 'Bitte minimale und maximale Personenzahl angeben',
   'addGame.toast.playersRange': 'Die maximale Personenzahl darf nicht kleiner als die minimale sein',
   'addGame.toast.saved': 'Spiel gespeichert',
+  'addGame.toast.savedWish': 'Auf die Wunschliste gesetzt',
   'addGame.toast.quota': 'Spiellimit für diese Runde erreicht.',
   'addGame.toast.pasted': 'Bild eingefügt',
   'addGame.toast.noImage': 'Kein Bild in der Zwischenablage',

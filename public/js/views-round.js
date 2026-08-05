@@ -17,7 +17,7 @@ const HUB_TABS = ['start', 'regal', 'chronik', 'pokale'];
 // router names them (resolveRoute in router.js), so a new sub-screen that
 // forgets its entry here simply renders no strip rather than a wrong one.
 const HUB_TAB_OF = {
-  regal: ['game', 'retired', 'completed'],
+  regal: ['game', 'retired', 'completed', 'wishlist'],
   chronik: ['session'],
   start: ['member', 'design', 'tags', 'providers', 'settings'],
 };
@@ -52,7 +52,7 @@ async function showRound(rid, tab) {
   setDocTitle(t('hub.tab.' + activeTab), round.name);
 
   app.innerHTML = '';
-  const activeGames = round.games.filter((g) => !g.retired && !g.completed);
+  const activeGames = round.games.filter((g) => !g.retired && !g.completed && !g.wish);
   if (activeTab === 'regal') renderRegalTab(round, activeGames);
   else if (activeTab === 'chronik') renderChronikTab(round, activities);
   else if (activeTab === 'pokale') renderPokaleTab(round);

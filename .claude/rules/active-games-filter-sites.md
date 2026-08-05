@@ -7,18 +7,27 @@ paths:
   - "lib/routes/games.js"
   - "public/js/views-round*.js"
   - "public/js/views-member.js"
+  - "public/js/views-session.js"
   - "public/js/round-rail.js"
   - "public/js/recap.js"
   - "lib/quota.js"
   - "lib/routes/rounds.js"
   - "test/support/repo-contract.js"
 ---
-# "Active games" is filtered in ~10 places — two of them server-side (#250)
+# "Active games" is filtered in ~10 places — two of them server-side (#250, #560)
 
 Adding the `completed` state (#250) meant every place that used `!g.retired` to
 mean *"in the active collection"* had to become `!g.retired && !g.completed`.
+**#560 added a third, `wish`** — the Wunschliste, games the round wants but does
+not own — so the clause is now `!g.retired && !g.completed && !g.wish`
+(Postgres: a third `(data->>'wish')::boolean IS NOT TRUE`).
 The trap: the filter is **not** centralized, and the two most consequential
 sites are on the **server**, where no view test would catch a miss.
+
+**`wish` is the sharpest of the three:** retired and completed games were *once*
+on the shelf, so a missed filter merely surfaces something the group really
+owns. A wish is a game they **do not own at all**, so a missed filter offers a
+night with a box nobody can put on the table.
 
 The full set — grep `retired` in `lib/routes/`, `lib/` and `public/js/`
 before assuming you have them all:
@@ -63,8 +72,12 @@ before assuming you have them all:
   would find. The **player-count arithmetic** still lives per caller and still has
   a team term in it since #575 (`.claude/rules/session-teams.md` §2) — only the
   *range check* it feeds is shared.
-- `lib/repo/{json,postgres}.js` `createRound` import filter (Postgres needs a
-  second `whereRaw`, the JSON one a second `&&`).
+- `lib/repo/{json,postgres}.js` `createRound` import filter (Postgres needs one
+  `whereRaw` per state, the JSON one a `&&` per state).
+- `lib/repo/{json,postgres}.js` `tenantSummary` → `activeGames`, the operator
+  panel's per-round row. Easy to miss because it sits among *count* fields that
+  deliberately do **not** filter: the sibling `games` counts every state, since
+  the quota does (`.claude/rules/per-tenant-quotas.md`).
 
 **Frontend:** `views-round.js` `activeGames`, `views-session.js` `activeGames`
 (the one site that is **not** a copy — it passes the shared `isActiveGame`
@@ -72,10 +85,19 @@ straight to `filter`, and its pool preview uses `fitsPlayerCount` too, #634),
 `views-round-tabs.js` (the Pokale "best rated" list, the stats scope, and the
 per-row "Jetzt spielen" launcher at the `gameStatCard` level),
 `round-rail.js` `activeGames` (the desktop rail's counts), and `recap.js`
-**twice** — its game pool, plus an active/archived split whose two halves sit on
-adjacent lines and must be edited as a pair (`!retired && !completed` for one
-count, `retired || completed` for the other). `views-session.js` also carries an
-inverse check of that second shape, gating the per-game "Aussortieren" button.
+**twice** — its game pool, plus an active/archived split on adjacent lines.
+
+**Those two recap halves stopped being complements in #560, and that is the
+point.** `games` is `!retired && !completed && !wish`; `archived` stays
+`retired || completed` and must **not** grow a wish arm. A game the round does
+not own belongs in neither half of a recap of their year — it is not on the
+shelf, and it is not something they had and moved on from. Widening `archived`
+to "everything not active" is the natural tidy-up and it is wrong.
+
+`views-session.js` carries an inverse check of that second shape, gating the
+results row's per-game "Aussortieren" button — and it **does** take the wish
+arm (`retired || completed || wish`), because offering it would claim the group
+is discarding a game they never owned.
 
 ## A THIRD semantics since #643: TASTE stats drop retired games only
 
@@ -129,18 +151,34 @@ filter is missing and when one is widened to both archives.
 - The game **detail page** renders archived games fine (that is how you restore
   one); only the actions change.
 
-## Related: the delete guard covers both archives
+## Related: the delete guard covers everything off the shelf
 
 `deleteGame`'s refusal marker was renamed `'not_retired'` → **`'not_archived'`**
-in both backends, and the route message to "Only retired or completed games can
-be deleted". If you add a third archived state, that guard and this list are
-what need editing — the marker name is asserted in
-`test/support/repo-contract.js`, so a rename fails loudly rather than silently
-letting active games be deleted.
+in both backends. The guard is `!retired && !completed && !wish`, i.e. *"not in
+the active collection"* rather than *"in one of the two archives"* — a wish must
+be removable or the list could never be tidied. The **marker name kept its
+`archived` spelling on purpose**: it is asserted in
+`test/support/repo-contract.js`, and renaming it to match the widened meaning
+would be a rename with no behaviour behind it. The route *message* did widen
+("Only retired, completed or wished-for games can be deleted").
 
-## Exclusivity is enforced in the repo, not the UI
+## Exclusivity is enforced in the repo, not the UI — and it is now THREE-WAY
 
-`retireGame` clears `completed`/`completedAt` and `completeGame` clears
-`retired`/`retiredAt`, in **both** backends. Doing it only in the views would
-let a client that calls both endpoints produce a game listed in two archives at
-once. The contract suite pins the round-trip in both directions.
+`retireGame`, `completeGame` and `wishGame` each clear the other two states'
+flags, in **both** backends. Doing it only in the views would let a client that
+calls two endpoints produce a game that is both wished-for and retired — a game
+the round simultaneously wants and has thrown out. The contract suite pins every
+direction.
+
+**`wishGame` breaks the other two's symmetry in exactly one way, deliberately:
+only the ACQUISITION is an event.** `wishGame(…, false)` ("Ins Regal") writes the
+ordinary `game_added` activity plus the `trackEvent` and the feed event, so a
+game reaching the shelf via the wish list is indistinguishable from one added
+directly. Setting the flag, creating with `wish: true`, and the whole
+`wishlist=1` bulk import write **nothing** — no activity, no product event, no
+Freundeskreis line. Wanting a game is not something the round did; buying it is.
+
+That silence is also what makes the list safe to fill in bulk (a 200-game BGG
+wishlist would otherwise be 200 announcements that the group acquired nothing),
+and it is why `createGame`/`createGames` take the flag and decide the activity
+**inside the repo** — a caller cannot get the pairing wrong.

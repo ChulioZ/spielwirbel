@@ -356,13 +356,14 @@ public/
                      in-app on a plain click, so Cmd/middle-click opens a new
                      tab and "Copy link address" works (issue #330)
     round-rail.js    the desktop navigation rail (from 1280px): round identity,
-                     the four sections, both archives and one Einstellungen entry
+                     the four sections, the two archives + the Wunschliste, and
+                     one Einstellungen entry
     views-landing.js logged-out marketing landing page shown at / in accounts
                      mode before registration (issue #322)
     views-home.js    lobby + new round
     views-round.js        round hub (Start/Regal/Chronik/Pokale tabs) + Start tab
-    views-round-tabs.js   Regal, Chronik, Pokale tabs + the two archive
-                          screens (retired / completed)
+    views-round-tabs.js   Regal, Chronik, Pokale tabs + the three off-shelf
+                          screens (retired / completed / Wunschliste)
     views-round-detail.js game detail, design picker, tags + providers screens,
                           sheet helpers
     views-round-settings.js round Einstellungen screen: the round-level actions

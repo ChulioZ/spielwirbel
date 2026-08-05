@@ -50,9 +50,9 @@ const listFriends = (a) => request(app).get('/api/account/friends').set(auth(a.t
 const getFeed = (a) => request(app).get('/api/account/friends/feed').set(auth(a.token)).then((r) => r.body);
 const makeRound = (a, members) =>
   request(app).post('/api/rounds').set(auth(a.token)).send({ name: 'Runde', members }).then((r) => r.body);
-async function addGame(a, rid, title) {
+async function addGame(a, rid, title, extra = {}) {
   const req = request(app).post(`/api/rounds/${rid}/games`).set(auth(a.token));
-  for (const [k, v] of Object.entries({ title, minPlayers: '2', maxPlayers: '4' })) req.field(k, v);
+  for (const [k, v] of Object.entries({ title, minPlayers: '2', maxPlayers: '4', ...extra })) req.field(k, v);
   return req.then((r) => r.body);
 }
 
@@ -160,6 +160,46 @@ test('feed: shows a friend\'s game title + username, only post-friendship, no ro
   const aliceFeed = await getFeed(alice);
   assert.equal(aliceFeed.friendCount, 1);
   assert.equal(aliceFeed.events.length, 0);
+});
+
+/* A wish (#560) is a game the group does NOT own, so it must not be announced
+   to anyone's Freundeskreis as "‹Alice› hat ‹Spiel› ins Regal gestellt" — the
+   line the feed renders for a `game_added`. The event fires later, once the game
+   actually reaches the shelf.
+
+   This needs accounts and a real friendship, which is why it lives here rather
+   than beside the other wish specs in test/games.test.js: `emitFeedEvent` is a
+   no-op without `req.userId`, so an accounts-off spec asserting "no event" would
+   pass against a route that emits one unconditionally. */
+test('feed: a wish is not announced; putting it on the shelf is', async () => {
+  const alice = await makeAccount('wish-alice@example.com');
+  const bob = await makeAccount('wish-bob@example.com');
+  const round = await makeRound(alice, ['Anna']);
+
+  await sendReq(alice, bob.username);
+  const fid = (await inbox(bob)).find((i) => i.type === 'friend_request').payload.friendshipId;
+  await request(app).post(`/api/account/friends/${fid}/accept`).set(auth(bob.token));
+  await sleep(20);
+
+  const wish = await addGame(alice, round.id, 'Wanted', { wish: 'true' });
+  assert.equal(wish.wish, true, 'the fixture really created a wish');
+  // Anti-vacuous: an ordinary add in the same window DOES reach the feed, so a
+  // silent feed below cannot be the friendship or the timing being wrong.
+  await addGame(alice, round.id, 'Owned');
+
+  let titles = (await getFeed(bob)).events.map((e) => e.title);
+  assert.equal(titles.includes('Owned'), true, 'an ordinary add must reach the feed');
+  assert.equal(titles.includes('Wanted'), false, 'a wish must not be announced to friends');
+
+  await sleep(20);
+  await request(app)
+    .post(`/api/rounds/${round.id}/games/${wish.id}/wish`)
+    .set(auth(alice.token))
+    .send({ wish: false });
+
+  titles = (await getFeed(bob)).events.map((e) => e.title);
+  assert.equal(titles.filter((x) => x === 'Wanted').length, 1,
+    'reaching the shelf announces it exactly once');
 });
 
 test('caps: open outgoing requests are bounded with a distinct 403', async () => {
