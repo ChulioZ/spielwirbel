@@ -64,6 +64,14 @@ async function showAccount() {
     return;
   }
 
+  // Below the demo return on purpose (#616), for a reason of its own: a guest
+  // demo self-erases on a TTL (#427/#502), so putting its icon on someone's home
+  // screen points at an account that will be gone. Placed first among the
+  // below-the-return sections so it still reads as following the BGG block, the
+  // order the issue asked for.
+  const installSection = buildInstallSection();
+  if (installSection) app.appendChild(installSection);
+
   // Below the demo return on purpose (#618): a guest demo's stored address is a
   // synthetic `…@demo.invalid` placeholder, so lib/notify.js never mails one —
   // offering it a switch over mail that cannot be sent would be a lie.
@@ -78,6 +86,37 @@ async function showAccount() {
   // menu, and it holds no password to re-authenticate with anyway.
   app.appendChild(h(`<h2 class="konto-section__h konto-section__h--danger">${esc(t('konto.delete.title'))}</h2>`));
   app.appendChild(buildDeleteSection(me));
+}
+
+/* „App installieren" (#616), or nothing at all.
+
+   Returns null in the two states with nothing to say — already installed, and a
+   browser that can neither prompt nor be instructed — rather than an empty
+   heading over a blank panel. The two live states are genuinely different
+   controls, not one control with a fallback label: where the browser handed us
+   a `beforeinstallprompt` we can open the real dialog, and on iOS no such call
+   exists, so a button there would be a control that cannot work. */
+function buildInstallSection() {
+  const state = installState();
+  if (state !== 'prompt' && state !== 'ios') return null;
+
+  const wrap = h(`<div class="install-section">
+      <h2 class="konto-section__h">${esc(t('install.title'))}</h2>
+      <p class="muted">${esc(t('install.intro'))}</p>
+    </div>`);
+  if (state === 'ios') {
+    wrap.appendChild(h(`<p class="muted">${esc(t('install.ios.steps'))}</p>`));
+  } else {
+    const btn = h(`<button class="btn install-cta" type="button">${iconText('ti-download', t('install.cta'))}</button>`);
+    btn.addEventListener('click', async () => {
+      if (await runInstallPrompt() === 'accepted') toast(t('install.done'));
+    });
+    wrap.appendChild(btn);
+  }
+  // Installing while this screen is open must not leave a live install offer on
+  // it; the section is the whole panel, so one removal covers the heading too.
+  hideOnInstalled(wrap);
+  return wrap;
 }
 
 // The entry point to deletion. Deliberately a button that opens a confirmation

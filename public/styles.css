@@ -2546,6 +2546,30 @@ body.auth-screen .terms-banner { display: none; }
    followed by the two input fields and need the same 18px gap a .field carries. */
 .sheet .konto-facts { margin-bottom: 18px; }
 
+/* The install nudge (#616). One panel look for both placements — the permanent
+   Konto section and the one-off card after a finished session — so the offer
+   reads as an aside beside the results rather than as another result.
+   Both tones reuse the prepared accent family instead of minting a fresh mix
+   (theme-derived-colors.md), which is also what keeps #544's oklab migration
+   from acquiring two more srgb color-mixes to retune. */
+.install-section,
+.install-offer {
+  background: var(--brand-tint-soft);
+  border: 1px solid var(--brand-edge);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.install-section { margin: 24px 0 30px; }
+.install-offer { margin-top: 32px; }
+/* Beats .konto-section__h's own 24px/10px (0,1,0) on specificity, not on source
+   order — the heading sits INSIDE the panel here, where that margin would push
+   it off its own background (label-rows-lose-to-field-label.md). */
+.install-section h2,
+.install-offer h2 { margin: 0 0 8px; font-size: var(--text-lg); }
+.install-section p,
+.install-offer p { margin: 0 0 12px; }
+.install-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
 /* ===== Round Einstellungen screen (#561) ===== */
 /* Its headings and its danger zone deliberately share the Konto screen's rules
    above (`.rs-section__h`, `.rs-section__h--danger`, `.rs-danger`) rather than

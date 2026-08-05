@@ -224,7 +224,11 @@ What the app does, in detail. For a short overview see the
   app installable to a phone or desktop home screen and let the app shell load
   **offline** (the shell and static assets are cached; live round data still
   needs the network). In keeping with the no-build-step stance, the manifest,
-  service worker and icons are plain static files.
+  service worker and icons are plain static files. Two places offer the install
+  rather than leaving it to be discovered (issue #616): a permanent section on
+  the Konto screen, and one dismissible card after a session is finished. Where
+  the browser supports it that section opens the real install dialog; on iOS,
+  which has no such API, it shows the two Share-menu steps instead.
 - **Link previews** – sharing the app's URL in a messenger or on social media
   renders a card (title, description and a 1200×630 brand image) instead of a
   bare link. The Open Graph/Twitter tags live statically in `index.html` because

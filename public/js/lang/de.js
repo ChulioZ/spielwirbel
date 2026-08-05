@@ -894,6 +894,17 @@ I18N.de = {
   'konto.demo.title': 'Demo-Konto',
   'konto.demo.note': 'Dieses Konto ist eine Demo: Es hat keine E-Mail-Adresse und kein Passwort und wird automatisch gelöscht. Registriere dich kostenlos, um eine Runde dauerhaft zu behalten — dabei entsteht ein neues, leeres Konto.',
 
+  // Die Installation als App (#616). Zwei Darstellungen: ein echter Button, wo
+  // der Browser ein Installationsangebot gemacht hat, sonst die Schritte über
+  // das Teilen-Menü — auf iOS gibt es keinen anderen Weg.
+  'install.title': 'App installieren',
+  'install.intro': 'Füg Spielwirbel zum Startbildschirm hinzu: startet schneller, ohne Browserleiste, und funktioniert auch offline.',
+  'install.cta': 'Installieren',
+  'install.ios.steps': 'Tippe unten auf „Teilen“ und dann auf „Zum Home-Bildschirm“.',
+  'install.offer.title': 'Spielwirbel als App?',
+  'install.offer.dismiss': 'Nein danke',
+  'install.done': 'Spielwirbel wurde installiert.',
+
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
   'a11y.home': 'Zur Startseite',
   'a11y.language': 'Sprache',

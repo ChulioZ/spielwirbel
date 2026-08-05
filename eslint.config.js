@@ -33,6 +33,10 @@ const frontendGlobals = {
   // report-link.js
   feedReportUrl: 'readonly', setContactAvailable: 'readonly',
   REPORT_SUBJECT_MAX: 'readonly', REPORT_USERNAME_MAX: 'readonly',
+  // install-prompt.js (issue #616)
+  INSTALL_DISMISSED_KEY: 'readonly', isIosDevice: 'readonly', installStateFrom: 'readonly',
+  installEnv: 'readonly', installState: 'readonly', runInstallPrompt: 'readonly',
+  installOfferDismissed: 'readonly', dismissInstallOffer: 'readonly', hideOnInstalled: 'readonly',
   fetchRound: 'readonly', invalidateRoundCache: 'readonly',
   fetchActivities: 'readonly', fetchRoundList: 'readonly', fetchRoundFresh: 'readonly',
   swrStore: 'readonly', swrRenderToken: 'writable', uiBusy: 'readonly',

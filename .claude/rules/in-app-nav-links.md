@@ -68,6 +68,15 @@ Two follow-on habits:
   assuming either way; wrapping still deserves the `pushState` counter, since a
   same-file caller may hold the binding directly.
 
+  **You may overwrite such a global but you can never `delete` it.** The property
+  is writable and **non-configurable**, so `delete window.installState` returns
+  `false` and changes nothing — the stub stays installed and every later probe
+  keeps measuring it. Met on #616: a probe that stubbed `installState`,
+  dispatched `appinstalled`, then "restored" the real one still read `'prompt'`,
+  which looks exactly like the module ignoring the install event. Re-`navigate`
+  to get the real implementation back, or — to check it while a stub is live —
+  call the unstubbed functions it composes (`installStateFrom(installEnv())`).
+
 ## 2. `.nav-link` must sit EARLY in styles.css
 
 `navLink` adds a `nav-link` class carrying `color: inherit; text-decoration: none`

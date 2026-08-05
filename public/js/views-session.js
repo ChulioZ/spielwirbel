@@ -1027,6 +1027,12 @@ async function showResults(round, session, gamesHint, reveal) {
   const sessionLog = renderSessionLog(round, session);
   if (sessionLog) app.appendChild(sessionLog);
 
+  // One install nudge (#616), at the one moment the app has just delivered
+  // something. Above the footer, because the footer's two controls are how you
+  // throw this evening away and nothing may push them off the end of the screen.
+  const installOffer = buildInstallOffer(reveal);
+  if (installOffer) app.appendChild(installOffer);
+
   // The two ways to get rid of this session, together and last on the screen:
   // cancel (reversible, destroys nothing) before delete (permanent). Both sit
   // below the games and the log so reading the results never means scrolling
@@ -1047,6 +1053,54 @@ async function showResults(round, session, gamesHint, reveal) {
   });
   footer.appendChild(delBtn);
   app.appendChild(footer);
+}
+
+/* The one post-session install offer (#616), or null.
+
+   `reveal` is the whole gate on *when*. Its three callers are all the same
+   moment — the session just closed while this device was watching: the finale's
+   own reveal button, and the two lobby paths that land here when voting was
+   closed from somewhere else (`views-session-live.js`, since #655 the ordinary
+   route). Every OTHER way in passes it undefined — `showResultsById` on a cold
+   load, the Chronik rows, the Start tickets, the round-detail list — so looking
+   an old evening up never produces the card. The localStorage flag is the gate
+   on *how often*: answered once, gone for good on that device.
+
+   Kept out of showResults' body: it closes over nothing there, and the view is
+   long enough already (token-friendly-source-files.md). */
+function buildInstallOffer(reveal) {
+  if (!reveal) return null;
+  // A demo self-erases on a TTL, so its icon on a home screen would point at an
+  // account that stops existing — same reasoning as the Konto section.
+  if (isDemoAccount()) return null;
+  if (installOfferDismissed()) return null;
+  const state = installState();
+  if (state !== 'prompt' && state !== 'ios') return null;
+
+  const card = h(`<div class="install-offer">
+       <h2>${esc(t('install.offer.title'))}</h2>
+       <p class="muted">${esc(t('install.intro'))}</p>
+     </div>`);
+  const actions = h('<div class="install-actions"></div>');
+  if (state === 'ios') {
+    card.appendChild(h(`<p class="muted">${esc(t('install.ios.steps'))}</p>`));
+  } else {
+    const btn = h(`<button class="btn btn--primary install-cta" type="button">${iconText('ti-download', t('install.cta'))}</button>`);
+    btn.addEventListener('click', async () => {
+      // Remembered BEFORE the dialog and regardless of its outcome: opening it
+      // is an answer, and re-offering after someone declined the browser's own
+      // prompt is the nagging this one-shot card exists to avoid.
+      dismissInstallOffer();
+      if (await runInstallPrompt() === 'accepted') toast(t('install.done'));
+    });
+    actions.appendChild(btn);
+  }
+  const no = h(`<button class="link-btn install-offer__dismiss" type="button">${esc(t('install.offer.dismiss'))}</button>`);
+  no.addEventListener('click', () => { dismissInstallOffer(); card.remove(); });
+  actions.appendChild(no);
+  card.appendChild(actions);
+  hideOnInstalled(card);
+  return card;
 }
 
 // Can this browser share a result at all? The share sheet is a mobile API and
