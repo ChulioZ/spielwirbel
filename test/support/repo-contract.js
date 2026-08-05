@@ -1582,6 +1582,94 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteGrant('round-1', 'user-x'), null);
   });
 
+  /* --------------------------- Session vote links --------------------------- */
+  /*
+   * Vote links (#652). Global and un-scoped like grants, and for a sharper reason:
+   * the caller is unauthenticated, so resolving the token is what PRODUCES the
+   * tenant. Pins the token's shape, the mint's idempotency and both cascades.
+   */
+
+  test('session vote links: unguessable token, one per session, resolvable by token', async () => {
+    const link = await repo.createSessionVoteLink({ tenantId: 'vl-t', roundId: 'vl-r1', sessionId: 'vl-s1' });
+    // 24 random bytes as base64url — 32 chars, no padding, URL-safe alphabet only.
+    // Asserted as a SHAPE rather than a length alone: a token that came out of
+    // `id()` (16 hex chars) would pass a bare truthiness check while carrying half
+    // the entropy this capability rests on.
+    assert.match(link.id, /^[A-Za-z0-9_-]{32}$/, `token was ${JSON.stringify(link.id)}`);
+    assert.equal(link.tenantId, 'vl-t');
+    assert.equal(link.roundId, 'vl-r1');
+    assert.equal(link.sessionId, 'vl-s1');
+    assert.match(link.createdAt, /^\d{4}-\d\d-\d\dT.*Z$/);
+
+    // Two mints for the SAME session return the SAME token: the link already in
+    // the group chat must keep working rather than being silently replaced.
+    const again = await repo.createSessionVoteLink({ tenantId: 'vl-t', roundId: 'vl-r1', sessionId: 'vl-s1' });
+    assert.equal(again.id, link.id);
+
+    // A different session of the same round gets its own, distinct token.
+    const other = await repo.createSessionVoteLink({ tenantId: 'vl-t', roundId: 'vl-r1', sessionId: 'vl-s2' });
+    assert.notEqual(other.id, link.id);
+
+    // Resolving by token yields the three ids the public route needs, and nothing
+    // it does not: there is no listing, by design.
+    const found = await repo.findSessionVoteLink(link.id);
+    assert.equal(found.tenantId, 'vl-t');
+    assert.equal(found.roundId, 'vl-r1');
+    assert.equal(found.sessionId, 'vl-s1');
+    assert.equal(typeof repo.listSessionVoteLinks, 'undefined', 'a listing would leak capabilities into a screen');
+
+    // An unknown token resolves to null — never a throw, never a near-match.
+    assert.equal(await repo.findSessionVoteLink('does-not-exist'), null);
+    assert.equal(await repo.findSessionVoteLink(link.id.slice(0, -1)), null);
+
+    // Deleting one link leaves the round's other session alone, and re-deleting
+    // reports null rather than pretending to have removed something.
+    const removed = await repo.deleteSessionVoteLink('vl-r1', 'vl-s1');
+    assert.equal(removed.id, link.id);
+    assert.equal(await repo.findSessionVoteLink(link.id), null);
+    assert.equal((await repo.findSessionVoteLink(other.id)).sessionId, 'vl-s2');
+    assert.equal(await repo.deleteSessionVoteLink('vl-r1', 'vl-s1'), null);
+  });
+
+  test('the vote-link TTL sweep drops only rows older than the cutoff', async () => {
+    const t = `vlx-${Math.random().toString(16).slice(2)}`;
+    const fresh = await repo.createSessionVoteLink({ tenantId: t, roundId: `${t}-r`, sessionId: 'x-new' });
+
+    // Everything minted before "now" is expired under a cutoff of now — including
+    // the row above — so the cutoff has to be a moment the fixtures straddle.
+    // Sweeping with a cutoff in the distant PAST must therefore delete nothing.
+    assert.equal(await repo.deleteExpiredSessionVoteLinks('2000-01-01T00:00:00.000Z'), 0);
+    assert.ok(await repo.findSessionVoteLink(fresh.id), 'a fresh link survives a past cutoff');
+
+    // …and a cutoff in the future sweeps it. Asserted on the ROW rather than only
+    // on the count: a count is satisfied by deleting somebody else's row, and this
+    // suite shares a dataset across tests.
+    const removed = await repo.deleteExpiredSessionVoteLinks('2999-01-01T00:00:00.000Z');
+    assert.ok(removed >= 1);
+    assert.equal(await repo.findSessionVoteLink(fresh.id), null, 'an aged link is swept');
+
+    // Idempotent: a second sweep over the same window finds nothing left of ours.
+    await repo.deleteExpiredSessionVoteLinks('2999-01-01T00:00:00.000Z');
+    assert.equal(await repo.findSessionVoteLink(fresh.id), null);
+  });
+
+  test('deleting a round takes its vote links with it, and only its own', async () => {
+    const tenant = `vld-${Math.random().toString(16).slice(2)}`;
+    const round = await repo.createRound(tenant, { name: 'Linked', members: ['Ann'] });
+    const keeper = await repo.createRound(tenant, { name: 'Kept', members: ['Bo'] });
+    const doomed = await repo.createSessionVoteLink({ tenantId: tenant, roundId: round.id, sessionId: 'sv-1' });
+    const survivor = await repo.createSessionVoteLink({ tenantId: tenant, roundId: keeper.id, sessionId: 'sv-2' });
+
+    assert.ok(await repo.deleteRound(tenant, round.id));
+    assert.equal(await repo.findSessionVoteLink(doomed.id), null, 'the deleted round\'s link must not outlive it');
+    assert.ok(await repo.findSessionVoteLink(survivor.id), 'a sibling round\'s link is untouched');
+
+    // A wrong-tenant delete removes nothing at all — including the links, which
+    // are keyed by round id alone and would otherwise be reachable across tenants.
+    assert.equal(await repo.deleteRound(`${tenant}-x`, keeper.id), null);
+    assert.ok(await repo.findSessionVoteLink(survivor.id));
+  });
+
   /* ------------------------------ Invitations ------------------------------- */
   /*
    * Round-sharing invitations (#207). Global and un-scoped like grants. The
@@ -2667,6 +2755,21 @@ module.exports = function repoContract(repo) {
     await repo.createGrant({ roundId: round.id, ownerTenantId: oTenant, userId: g2.id });
     await repo.eraseAccount(owner.id);
     assert.deepEqual(await repo.listGrantsForRound(round.id), []);
+  });
+
+  test('eraseAccount also removes the tenant\'s vote links (#652)', async () => {
+    const tenant = `vle-${Math.random().toString(16).slice(2)}`;
+    const neighbour = `vln-${Math.random().toString(16).slice(2)}`;
+    const user = await repo.createUser(userFields({ tenantId: tenant }));
+    await repo.createUser(userFields({ tenantId: neighbour }));
+    const round = await repo.createRound(tenant, { name: 'Erased', members: ['Ann'] });
+    const kept = await repo.createRound(neighbour, { name: 'Kept', members: ['Bo'] });
+    const mine = await repo.createSessionVoteLink({ tenantId: tenant, roundId: round.id, sessionId: 'e-1' });
+    const theirs = await repo.createSessionVoteLink({ tenantId: neighbour, roundId: kept.id, sessionId: 'e-2' });
+
+    await repo.eraseAccount(user.id);
+    assert.equal(await repo.findSessionVoteLink(mine.id), null, 'an erased tenant\'s link must not survive');
+    assert.ok(await repo.findSessionVoteLink(theirs.id), 'a neighbouring tenant\'s link is untouched');
   });
 
   test('eraseAccount also removes the account\'s friendships and feed events (#325)', async () => {

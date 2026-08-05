@@ -105,7 +105,8 @@ const frontendGlobals = {
   initAccounts: 'readonly', enterApp: 'readonly', authScreen: 'readonly',
   openAuth: 'readonly', setAuthDocTitle: 'readonly', authError: 'readonly', setError: 'readonly',
   // routed auth screens (issue #501)
-  isAuthRoute: 'readonly', pendingPath: 'writable', authScreensAvailable: 'readonly',
+  isAuthRoute: 'readonly', isVoteLinkRoute: 'readonly',
+  pendingPath: 'writable', authScreensAvailable: 'readonly',
   showLogin: 'readonly', showRegister: 'readonly', showForgot: 'readonly',
   showAuthDone: 'readonly', buildResend: 'readonly', renderVerifyLanding: 'readonly',
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',
@@ -207,10 +208,16 @@ const frontendGlobals = {
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',
   renderSessionLog: 'readonly',
+  // views-vote-link.js
+  showVoteLink: 'readonly', renderVoteLinkClaim: 'readonly',
+  renderVoteLinkCards: 'readonly', renderVoteLinkDone: 'readonly',
+  renderVoteLinkDead: 'readonly', voteLinkClaim: 'readonly',
+  setVoteLinkClaim: 'readonly', voteLinkColor: 'readonly',
+  VOTE_LINK_CLAIM_KEY: 'readonly',
   // router.js
   routing: 'writable', navIndex: 'writable', roundPath: 'readonly',
   gamePath: 'readonly', memberPath: 'readonly', resultsPath: 'readonly',
-  profilePath: 'readonly',
+  profilePath: 'readonly', votePath: 'readonly',
   syncUrl: 'readonly', navBack: 'readonly', resolveRoute: 'readonly',
   routeTo: 'readonly', showResultsById: 'readonly',
   activeFlow: 'writable', activeGuard: 'writable',
