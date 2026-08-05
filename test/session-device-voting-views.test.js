@@ -1,14 +1,15 @@
 'use strict';
 
-/* Per-device voting (#209), the two screens: the setup toggle that opens a
-   session to other devices, and the lobby that replaces the hot-seat wizard
-   while it is running.
+/* The voting lobby (#209, made universal in #655) — the screen every session
+   lands on after the draw.
 
    Rendered for real through the jsdom harness rather than regex-matched over the
    view source (.claude/rules/testing-views-under-jsdom.md), because what matters
-   here is state-dependent: the toggle has to DISABLE itself when nobody could
-   use it, and the lobby has to offer a different set of actions depending on who
-   is looking at it. A source regex cannot see either. */
+   here is state-dependent: the lobby offers a different set of actions depending
+   on who is looking at it and on whether this device just handed a vote on. A
+   source regex cannot see either.
+
+   The setup toggle this file used to cover as well went away with #655. */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -45,7 +46,6 @@ function sessionFixture(over = {}) {
     memberIds: ['m1', 'm2', 'm3'],
     votes: {},
     votedIds: [],
-    deviceVoting: true,
     done: false,
     cancelled: false,
     finished: false,
@@ -56,25 +56,14 @@ function sessionFixture(over = {}) {
 }
 
 /** Render the lobby as `userId` (null = logged out / no linked seat). */
-async function lobby(t, { round = roundFixture(), session = sessionFixture(), userId = ME } = {}) {
+async function lobby(t, { round = roundFixture(), session = sessionFixture(), userId = ME, handedOn = false } = {}) {
   const dom = loadApp();
   t.after(() => dom.close());
   // The poll would otherwise reach the harness's rejecting fetch after 5s.
   dom.set('api', async () => round);
   dom.set('isLoggedIn', () => !!userId);
   dom.set('currentUserId', () => userId);
-  await dom.call('showSessionLobby', round, session);
-  return dom;
-}
-
-/** Render the session-setup screen as `userId`. */
-async function setup(t, { round = roundFixture(), userId = ME, loggedIn = true } = {}) {
-  const dom = loadApp();
-  t.after(() => dom.close());
-  dom.set('api', async () => round);
-  dom.set('isLoggedIn', () => loggedIn);
-  dom.set('currentUserId', () => userId);
-  await dom.call('showStartSession', round);
+  await dom.call('showSessionLobby', round, session, handedOn);
   return dom;
 }
 
@@ -241,85 +230,75 @@ test('the results screen carries the same log, above the delete link', async (t)
   );
 });
 
-// ------------------------------------------------------------ the setup toggle
+/* The setup toggle's own block used to live here — five specs over an "enabled /
+   disabled / armed" state machine. #655 deleted the control: every session opens
+   this lobby, so there is no mode left to choose before the draw and nothing to
+   enable. What replaced them is the hand-on spec in the lobby block above, which
+   covers the behaviour the toggle used to gate. */
 
-test('the toggle is enabled and names who could vote remotely', async (t) => {
-  const dom = await setup(t);
-  const box = dom.app.querySelector('#deviceVoting');
-  assert.ok(box, 'expected the per-device toggle to render');
-  assert.equal(box.disabled, false);
-  // Ben is linked and is not me; Anna is my own seat, Chris is name-only.
-  // ONE other person, so the German has to be singular — „Ben kann", not
-  // „Ben können", which is what a naive single string produces.
-  assert.equal(
-    textOf(dom.app.querySelector('.device-vote__note')),
-    'Ben kann dann am eigenen Gerät abstimmen. Alle anderen stimmen hier ab.'
-  );
-  assert.equal(dom.app.querySelector('.device-vote').classList.contains('is-disabled'), false);
-});
+/* ------------------------------------------------- the hand-on (#655)
 
-// The gate: with no OTHER linked seat there is nothing to distribute, because
-// the only linked person is already holding this device.
-test('two other linked members make the note plural', async (t) => {
-  const round = roundFixture({
-    members: [
-      { id: 'm1', name: 'Anna', userId: ME },
-      { id: 'm2', name: 'Ben', userId: FRIEND },
-      { id: 'm3', name: 'Chris', userId: 'user-third' },
-    ],
+   #655 deleted the guided multi-person wizard, so without this a five-person
+   table would pay one tap per voter PLUS the effort of noticing who is left.
+   After a vote lands on this device the lobby leads with the next person still
+   open, which puts the tap count back to roughly one per person — the one real
+   UX cost of unifying the flows, paid down.
+
+   It is deliberately conditional on having just handed a vote on: arriving cold,
+   or watching someone else's vote land, is not a hand-over and must not push a
+   name at you. */
+
+test('after a vote on this device the lobby leads with the next person still open', async (t) => {
+  // Anna (my own seat) has voted; Ben and Chris have not.
+  const dom = await lobby(t, {
+    session: sessionFixture({ votedIds: ['m1'] }),
+    handedOn: true,
   });
-  const dom = await setup(t, { round });
-  assert.equal(
-    textOf(dom.app.querySelector('.device-vote__note')),
-    'Ben und Chris können dann am eigenen Gerät abstimmen. Alle anderen stimmen hier ab.'
-  );
+  const lead = dom.app.querySelector('.live-vote__mine');
+  assert.ok(lead, 'expected a leading action');
+  assert.match(textOf(lead), /Ben/, 'the next person still open should lead');
+
+  // …and they are not ALSO listed below, which would put the same action on the
+  // screen twice under two labels.
+  const others = [...dom.app.querySelectorAll('.live-vote__hotseat-btn')].map(textOf);
+  assert.deepEqual(others.map((x) => /Ben/.test(x)), [false], 'Ben must not be listed twice');
+  assert.match(others[0], /Chris/);
 });
 
-test('the toggle disables itself when nobody else is linked', async (t) => {
-  const round = roundFixture({
-    members: [{ id: 'm1', name: 'Anna', userId: ME }, { id: 'm2', name: 'Ben' }],
+test('arriving at the lobby cold pushes nobody', async (t) => {
+  // The identical state, minus the hand-over. Anna's seat is used, so there is
+  // no personal vote button either — the screen must simply offer the list.
+  const dom = await lobby(t, { session: sessionFixture({ votedIds: ['m1'] }) });
+  assert.equal(dom.app.querySelector('.live-vote__mine'), null, 'nothing should lead');
+  const others = [...dom.app.querySelectorAll('.live-vote__hotseat-btn')].map(textOf);
+  assert.equal(others.length, 2, 'both open people stay in the plain list');
+  assert.match(others[0], /Ben/);
+  assert.match(others[1], /Chris/);
+});
+
+test('with nobody left the hand-on falls through to ending the vote', async (t) => {
+  const dom = await lobby(t, {
+    session: sessionFixture({ votedIds: ['m1', 'm2', 'm3'] }),
+    handedOn: true,
   });
-  const dom = await setup(t, { round });
-  const box = dom.app.querySelector('#deviceVoting');
-  assert.equal(box.disabled, true);
-  assert.equal(dom.app.querySelector('.device-vote').classList.contains('is-disabled'), true);
+  assert.equal(dom.app.querySelector('.live-vote__mine'), null, 'there is nobody to hand on to');
+  assert.equal(dom.app.querySelectorAll('.live-vote__hotseat-btn').length, 0);
+  // The close button is already the primary action in this state, so the
+  // hand-on needs no special empty case of its own.
+  const close = dom.app.querySelector('.live-vote__close');
+  assert.ok(close);
+  assert.ok(close.classList.contains('btn--primary'), 'ending the vote should lead');
 });
 
-// The wording is the scope constraint made testable: the disabled state states
-// a fact about this session, never that the round is missing something.
-test('the disabled note describes the session, not a deficiency', async (t) => {
-  const round = roundFixture({ members: [{ id: 'm1', name: 'Anna', userId: ME }] });
-  const dom = await setup(t, { round });
-  const note = textOf(dom.app.querySelector('.device-vote__note'));
-  assert.match(note, /niemand mit einem Konto verknüpft/);
-  for (const word of ['noch', 'registrier', 'Registrier']) {
-    assert.equal(note.includes(word), false, `the note must not read as "not yet" / a call to register (${word})`);
-  }
-});
-
-// A password-only instance has no accounts at all, so the control could never
-// become usable there — a permanently dead switch is worse than none.
-test('a logged-out (accounts-off) instance renders no toggle at all', async (t) => {
-  const dom = await setup(t, { userId: null, loggedIn: false });
-  assert.equal(dom.app.querySelector('#deviceVoting'), null);
-  assert.equal(dom.app.querySelector('.device-vote'), null);
-});
-
-// The one that fails silently: a box left CHECKED while becoming disabled would
-// submit deviceVoting for a session in which nobody can vote remotely, opening a
-// lobby with no way into it.
-test('deselecting the last remote voter unchecks the armed toggle', async (t) => {
-  const dom = await setup(t);
-  const box = dom.app.querySelector('#deviceVoting');
-  box.checked = true;
-  assert.equal(box.disabled, false);
-
-  // Take Ben — the only other linked member — out of the session.
-  const ben = [...dom.app.querySelectorAll('.nr-seat')].find((s) => s.getAttribute('title') === 'Ben');
-  assert.ok(ben, 'expected a seat for Ben');
-  ben.click();
-
-  const after = dom.app.querySelector('#deviceVoting');
-  assert.equal(after.disabled, true);
-  assert.equal(after.checked, false, 'an unusable toggle must not stay armed');
+test('the hand-on never offers your own unused seat to yourself', async (t) => {
+  // Ben voted from his phone; my own seat (Anna) is still open. The leading
+  // action must be my own "vote now", not a hand-over to myself.
+  const dom = await lobby(t, {
+    session: sessionFixture({ votedIds: ['m2'] }),
+    handedOn: true,
+  });
+  const lead = dom.app.querySelector('.live-vote__mine');
+  assert.ok(lead);
+  assert.match(textOf(lead), /Jetzt abstimmen|Vote now/, 'my own seat leads, not a hand-on');
+  assert.equal(/Anna/.test(textOf(lead)), false);
 });

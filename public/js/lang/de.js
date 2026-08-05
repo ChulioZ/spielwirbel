@@ -73,10 +73,8 @@ I18N.de = {
   'round.inProgressLabel': 'Läuft gerade',
   'round.inProgressDeciding': 'Spiel wird gewählt',
   'round.resume': 'Fortsetzen',
-  'round.draftLabel': 'Abstimmung läuft',
   'round.draftTitleOne': '{n} Spiel ausgelost',
   'round.draftTitle': '{n} Spiele ausgelost',
-  'round.resumeVote': 'Weiter abstimmen',
   // Per-Gerät-Session (#209): nichts wurde unterbrochen, es wird gerade
   // woanders abgestimmt — deshalb nicht „weiter", sondern „jetzt".
   'round.liveLabel': 'Abstimmung läuft',
@@ -84,7 +82,6 @@ I18N.de = {
   'round.draftDiscard': 'Abstimmung verwerfen',
   'round.draftDiscardConfirm': 'Diese begonnene Abstimmung verwerfen? Die Auslosung wird gelöscht.',
   'round.toast.draftDiscarded': 'Abstimmung verworfen',
-  'round.toast.draftGone': 'Die ausgelosten Spiele gibt es nicht mehr – verwerft die Abstimmung.',
 
   'hub.tab.start': 'Start',
   'hub.tab.regal': 'Regal',
@@ -408,10 +405,6 @@ I18N.de = {
   // Per-Gerät-Abstimmung (#209). Der Hinweis beschreibt, was die Funktion tut —
   // auch im deaktivierten Zustand. Er darf nie klingen, als fehle der Runde
   // etwas: eine Runde aus Namen ohne Konten ist die normale Konfiguration.
-  'startSession.deviceVoting': 'Am eigenen Gerät abstimmen',
-  'startSession.deviceVotingNoteOne': '{names} kann dann am eigenen Gerät abstimmen. Alle anderen stimmen hier ab.',
-  'startSession.deviceVotingNote': '{names} können dann am eigenen Gerät abstimmen. Alle anderen stimmen hier ab.',
-  'startSession.deviceVotingUnavailable': 'Dafür ist in dieser Session außer dir niemand mit einem Konto verknüpft.',
   'startSession.whichGames': 'Welche Spiele?',
   'startSession.countLabel': 'Wie viele Spiele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
@@ -432,6 +425,7 @@ I18N.de = {
   'lobby.yourVoteIn': 'Deine Stimme ist da. Fehlen noch die anderen.',
   'lobby.hereLabel': 'An diesem Gerät abstimmen',
   'lobby.voteHere': 'Für {name}',
+  'lobby.next': 'Weiter zu {name}',
   'lobby.close': 'Abstimmung beenden',
   'lobby.closeConfirm': 'Es fehlen noch {n} Stimmen. Abstimmung trotzdem beenden?',
   // Abstimmen per Link (#652): wer keinen Account hat, stimmt über die geteilte

@@ -1,11 +1,18 @@
-/* Spielwirbel – the per-device voting lobby (#209). Part of the frontend; all
-   files share one global script scope.
+/* Spielwirbel – the voting lobby (#209, made universal in #655). Part of the
+   frontend; all files share one global script scope.
 
-   A session drawn with `deviceVoting` collects each person's votes separately,
-   as they submit them, instead of running one hot-seat wizard to the end. This
-   screen is what stands in for that wizard: it shows who has voted and who has
-   not, lets whoever is holding the device vote — for themselves or for anyone
-   still open — and closes the voting when the group is ready.
+   EVERY session lands here after the draw. Each person's votes are written the
+   moment they submit them — from this device, from their own phone, or through a
+   shared vote link (#652) — instead of one hot-seat wizard holding the whole
+   table's ratings in a closure until the end. The screen shows who has voted and
+   who has not, lets whoever is holding the device vote for anyone still open,
+   offers the shareable link, and closes the voting when the group is ready.
+
+   #655 removed the `deviceVoting` toggle that used to decide between this screen
+   and that wizard. Two things came out of that beyond the deleted branch: an
+   interrupted evening now costs one person's card rather than the whole table's,
+   and the group is no longer asked to predict before the draw who will want to
+   vote from their own phone.
 
    It is ONE screen for everybody. There is no host view and no guest view: the
    device the session was drawn on has no special standing (any invitee can draw
@@ -88,8 +95,19 @@ function renderSessionLog(round, session) {
   return wrap;
 }
 
-function showSessionLobby(round, session) {
-  currentView = () => showSessionLobby(round, session);
+/* `handedOn` is true when we have just come back from someone voting ON THIS
+   DEVICE. It is what turns the lobby from a list you organise into a flow that
+   keeps driving: the next person still open is offered as the primary action
+   („Weiter zu Ben") instead of the screen simply returning to a plain roster.
+
+   That matters because #655 removed the guided multi-person wizard. Without it a
+   five-person table would pay one tap per voter plus the effort of noticing who
+   is left; with it the tap count is back to roughly one per person, and the one
+   real cost of unifying the flows is paid down. It degrades on its own: with
+   nobody left there is no next person, and „Abstimmung beenden" is already the
+   leading action in that state. */
+function showSessionLobby(round, session, handedOn) {
+  currentView = () => showSessionLobby(round, session, handedOn);
   // Arriving here always ends any wizard: either we just came out of one, or we
   // never had one. Leaving it registered would let it swallow the next Back.
   endFlow();
@@ -157,10 +175,40 @@ function showSessionLobby(round, session) {
         // person was rating; then the reveal is where they belong, not here.
         if (!s) return showRound(round.id, 'start');
         if (s.done) return showResults(fresh, s, games, true);
-        showSessionLobby(fresh, s);
+        // `true`: this device just handed the vote on, so the lobby leads with
+        // whoever is next rather than making the holder find them.
+        showSessionLobby(fresh, s, true);
       },
     });
   };
+
+  // Anyone still open who could take this device next. Your own seat is excluded
+  // when the "vote now" button below already offers it — listed twice you appear
+  // on one screen under two labels for the same action.
+  const hotseat = pending.filter((p) => !mine || p.id !== mine.id);
+
+  // The hand-on (#655): after someone votes here, the next person still open
+  // leads. Two conditions, and both are load-bearing:
+  //
+  // - Only after a vote on THIS device. Arriving at the lobby cold, or watching
+  //   someone else's vote land, is not a hand-over and must not push a name at
+  //   you.
+  // - Only when your own seat is not already leading. An unused personal seat is
+  //   the app's established "your turn" affordance, and burying it under a
+  //   hand-on to somebody else asks you to pass the phone on while you still
+  //   have not voted yourself.
+  const iLead = !!(mine && !iVoted);
+  const nextUp = handedOn && !iLead && hotseat.length ? hotseat[0] : null;
+  if (nextUp) {
+    const btn = h(`<button class="btn btn--primary btn--lg live-vote__mine">
+        <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, nextUp)}">${esc(initials(nextUp.name))}</span>
+        ${esc(t('lobby.next', { name: personLabel(nextUp) }))}
+      </button>`);
+    // With the handover screen: on this device the next person really is being
+    // handed a phone, which is exactly what that screen is for.
+    btn.addEventListener('click', () => voteFor(nextUp, false));
+    actions.appendChild(btn);
+  }
 
   // Your own seat leads, when you have one and have not used it. No handover
   // screen: you are alone with your own phone.
@@ -183,15 +231,14 @@ function showSessionLobby(round, session) {
   // configuring who sits where before the draw: name-only members and people in
   // the room use this device, everyone else uses their own.
   //
-  // Your own seat is left out when the button above already offers it: listed in
-  // both places you appear twice on one screen, under two labels, for what is
-  // the same action bar the handover screen.
-  const hotseat = pending.filter((p) => !mine || p.id !== mine.id);
-  if (hotseat.length) {
+  // Everyone else who can vote here. `nextUp` is dropped for the same reason the
+  // own seat is: it is already the leading button.
+  const rest = hotseat.filter((p) => !nextUp || p.id !== nextUp.id);
+  if (rest.length) {
     const list = h(`<div class="live-vote__hotseat">
         <div class="field__label">${esc(t('lobby.hereLabel'))}</div>
       </div>`);
-    hotseat.forEach((p) => {
+    rest.forEach((p) => {
       const btn = h(`<button class="btn live-vote__hotseat-btn">
           <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, p)}">${esc(initials(p.name))}</span>
           ${esc(t('lobby.voteHere', { name: personLabel(p) }))}
@@ -290,7 +337,11 @@ function showSessionLobby(round, session) {
       // fight the user's scroll position and drop focus for no reason.
       const before = (session.votedIds || []).join(',');
       const after = (s.votedIds || []).join(',');
-      if (before !== after) showSessionLobby(fresh, s);
+      // `handedOn` rides along: somebody else's vote landing must not silently
+      // drop the "next person" button out from under the device that is
+      // mid-hand-over. Whoever it names may now have voted, which the re-render
+      // resolves on its own — `nextUp` is recomputed from the fresh pending list.
+      if (before !== after) showSessionLobby(fresh, s, handedOn);
     } catch { /* a failed poll is not worth a toast; the next tick retries */ }
   }, LOBBY_POLL_MS);
 }

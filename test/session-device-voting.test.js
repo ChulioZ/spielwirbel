@@ -32,7 +32,7 @@ async function setup(over = {}) {
   const b = await addGame(round.id, 'B');
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions`)
-    .send({ count: 5, deviceVoting: true, ...over });
+    .send({ count: 5, ...over });
   return { round, a, b, session: res.body.session, guests: res.body.guests, res };
 }
 
@@ -47,20 +47,22 @@ test('an ordinary session grows no deviceVoting key at all (absent-key parity)',
   assert.equal('deviceVoting' in res.body.session, false);
 });
 
-test('a per-device draw stores deviceVoting: true', async () => {
-  const { session } = await setup();
-  assert.equal(session.deviceVoting, true);
-});
-
-// Direct-pick skips the vote phase entirely, so there is no voting to open.
-test('direct-pick ignores deviceVoting', async () => {
+// Direct-pick has no voting phase at all — it is born `done` — which is what
+// keeps it out of the lobby now that every DRAWN session lands there (#655).
+test('direct-pick opens no voting phase, so it takes no votes', async () => {
   const round = await createRound(request);
   const game = await addGame(round.id, 'A');
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions`)
-    .send({ gameId: game.id, deviceVoting: true });
+    .send({ gameId: game.id });
   assert.equal(res.status, 201);
-  assert.equal('deviceVoting' in res.body.session, false);
+  assert.equal(res.body.session.done, true);
+
+  const vote = await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${res.body.session.id}/votes/${round.members[0].id}`)
+    .send({ votes: { [game.id]: { rating: 4, retire: false } } });
+  assert.equal(vote.status, 400);
+  assert.equal(vote.body.error, 'voting_closed');
 });
 
 // The core of the feature: two people, two devices, two separate requests —
@@ -174,20 +176,40 @@ test('an ordinary session is never redacted', async () => {
   assert.equal(stored.votes[alice.id][game.id].rating, 4);
 });
 
-test('an ordinary session refuses an incremental vote write', async () => {
+// #655: there is no opt-in any more, so a session drawn with no options at all
+// takes incremental writes and redacts while open, exactly like any other.
+test('every drawn session takes an incremental vote write and redacts while open', async () => {
   const round = await createRound(request);
   const game = await addGame(round.id, 'A');
   const started = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1 });
+  const sid = started.body.session.id;
+  const alice = round.members[0];
+
   const res = await request(app)
-    .post(`/api/rounds/${round.id}/sessions/${started.body.session.id}/votes/${round.members[0].id}`)
+    .post(`/api/rounds/${round.id}/sessions/${sid}/votes/${alice.id}`)
     .send({ votes: { [game.id]: { rating: 4, retire: false } } });
-  assert.equal(res.status, 400);
-  assert.equal(res.body.error, 'not_device_voting');
+  assert.equal(res.status, 200);
+
+  // Open: who voted, never what they voted. This is the assertion that carries
+  // the widened redaction — before #655 this session would have shipped the
+  // rating in full, because the flag it keyed on was absent.
+  const open = sessionOf(await getRound(round.id), sid);
+  assert.deepEqual(open.votes, {});
+  assert.deepEqual(open.votedIds, [alice.id]);
+
+  // Closed: the reveal.
+  await request(app).post(`/api/rounds/${round.id}/sessions/${sid}/close`).send({});
+  const closed = sessionOf(await getRound(round.id), sid);
+  assert.equal(closed.votes[alice.id][game.id].rating, 4);
 });
 
-// The destructive one: /results REPLACES the whole map, so letting a stale
-// client call it on a per-device session would discard everyone else's votes.
-test('the bulk results write refuses a per-device session', async () => {
+/* The legacy bulk write (#655). Only a client still holding the pre-#655 bundle
+   calls it, and that client believes it holds every vote — which it no longer
+   does, because someone may have voted from the lobby or a shared link while it
+   ran. So it MERGES rather than replaces: its own columns win for the people it
+   collected, everyone else's survive. Replacing would erase them silently, with
+   the stale client reporting success. */
+test('the legacy bulk write merges into columns already collected, never clobbers', async () => {
   const { round, a, session } = await setup();
   const [alice, bob] = round.members;
   await request(app)
@@ -197,12 +219,12 @@ test('the bulk results write refuses a per-device session', async () => {
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/results`)
     .send({ votes: { [bob.id]: { [a.id]: { rating: 1, retire: false } } } });
-  assert.equal(res.status, 400);
-  assert.equal(res.body.error, 'device_voting');
+  assert.equal(res.status, 200);
 
-  await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/close`).send({});
   const stored = sessionOf(await getRound(round.id), session.id);
-  assert.equal(stored.votes[alice.id][a.id].rating, 5, "Alice's vote must have survived");
+  assert.equal(stored.votes[alice.id][a.id].rating, 5, "Alice's lobby vote must have survived");
+  assert.equal(stored.votes[bob.id][a.id].rating, 1, "and Bob's bulk vote must have landed");
+  assert.equal(stored.done, true, 'the bulk write still closes the session');
 });
 
 test('voting after the session is closed is refused', async () => {
@@ -297,15 +319,15 @@ test('closing an already-closed session is idempotent', async () => {
   assert.equal(second.body.done, true);
 });
 
-test('closing an ordinary session is refused', async () => {
+test('any drawn session can be closed', async () => {
   const round = await createRound(request);
   await addGame(round.id, 'A');
   const started = await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 1 });
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${started.body.session.id}/close`)
     .send({});
-  assert.equal(res.status, 400);
-  assert.equal(res.body.error, 'not_device_voting');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.done, true);
 });
 
 test('a per-device session in an unknown round 404s', async () => {
