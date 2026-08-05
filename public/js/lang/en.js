@@ -383,7 +383,7 @@ I18N.en = {
   'detail.expansionPickError': '{provider} could not be reached.',
   'detail.expansionOwnTitle': 'Your own expansion',
   'detail.expansionNamePlaceholder': 'Expansion name',
-  'detail.expansionRangeHint': 'The expansion\u2019s player count \u2014 fill in both or neither, or it changes nothing.',
+  'detail.expansionRangeHint': 'Player count: both fields or neither.',
   'detail.expansionNoRange': 'no player count',
   'detail.toast.expansionsSaved': 'Expansions saved',
   'detail.toast.expansionNeedsBoth': 'Please fill in both player counts \u2014 or leave both empty.',

@@ -37,6 +37,35 @@ untestable mechanism whose whole failure mode is silence is not worth having;
 this is the same call `.claude/rules/psstore-full-game-is-not-every-game.md`
 records for a trailing regex anchor that survived nothing.
 
+## The second instance (#653), and why an ASYNC fill is the sharper case
+
+The expansion editor hit this within a day of shipping. Its BGG tick-list is
+fetched when the editor opens, so `openPopover` measures a card that still says
+"…" — there is no user action between the placement and the growth at all,
+which makes it strictly easier to hit than the cover picker's expand-on-click.
+Measured on an 800px viewport with a low anchor: the card grew **379px → 592px**,
+kept `top: 315`, and the OK button landed at **y=898** — 98px below the fold.
+
+Two things generalise from the fix:
+
+- **Re-place from `.finally()`, not `.then()`.** The empty-list and the failure
+  branches also swap the placeholder for a one-line message, so they change the
+  height too. A `.then()`-only call leaves the *error* path mis-placed, which is
+  the path nobody looks at.
+- **A tall card needs a cap as well as a correct placement.** Right placement
+  only guarantees the card is *anchored*; it can still be taller than the
+  viewport. `.popover--expansions` therefore caps itself and lets the tick-list
+  be the flex item that gives way, so the action button is always the last
+  visible thing. That needs `min-height: 0` on the intermediate flex item — a
+  flex item's default `min-height: auto` is its content size, so the cap is
+  silently inert without it.
+
+**And the `max()` floor below is not optional — it was got wrong here first.**
+A bare `max-height: min(78vh, 620px)` on the card computed to **0** in the pane
+and collapsed it to **18px tall with its own children rendering outside it**,
+the OK button 200px past its bottom edge. Exactly the `min()` trap the next
+section records for `.cover-picker__grid`, one element up.
+
 ## The pane never fires a ResizeObserver at all
 
 New member of the artifact family in

@@ -384,7 +384,7 @@ I18N.de = {
   'detail.expansionPickError': '{provider} ist gerade nicht erreichbar.',
   'detail.expansionOwnTitle': 'Eigene Erweiterung',
   'detail.expansionNamePlaceholder': 'Name der Erweiterung',
-  'detail.expansionRangeHint': 'Spielerzahl der Erweiterung — nur zusammen ausfüllen, sonst ändert sie nichts.',
+  'detail.expansionRangeHint': 'Spielerzahl: beide Felder oder keins.',
   'detail.expansionNoRange': 'ohne Spielerzahl',
   'detail.toast.expansionsSaved': 'Erweiterungen gespeichert',
   'detail.toast.expansionNeedsBoth': 'Bitte beide Spielerzahlen ausfüllen — oder beide leer lassen.',
