@@ -195,6 +195,12 @@ async function logout() {
 // stripped the way resolveRoute strips them, so /login/ is /login.
 const isAuthRoute = (p) => ['/login', '/register', '/forgot-password'].includes(p.replace(/\/+$/, ''));
 
+// A public vote link (#652): `/vote/<token>` with a non-empty token. Matched on
+// the path shape rather than by trying to resolve the token — the client cannot
+// know whether a token is real, and it does not need to: the screen itself asks
+// the server and shows the dead-link state when the answer is no.
+const isVoteLinkRoute = (p) => /^\/vote\/[^/]+\/*$/.test(p);
+
 // Where to continue after a successful login: the deep link a logged-out visitor
 // arrived on, captured by bootApp() before it hands them to /login and consumed
 // by enterApp(). It lives in memory rather than in the URL because the auth
@@ -241,6 +247,13 @@ async function bootApp() {
     // there after (enterApp).
     if (path === '/') return showLanding();
     if (isAuthRoute(path)) return routeTo(path);
+    // A shared vote link (#652) is the one deep link a logged-out visitor is
+    // MEANT to land on, so it must not be parked in pendingPath and swapped for
+    // the login screen — its whole point is that the holder has no account, and
+    // being asked to register is exactly the wall this feature removes. Routed
+    // rather than called directly so the cold-loaded entry is replaced, not
+    // pushed (same reasoning as the auth screens above).
+    if (isVoteLinkRoute(path)) return routeTo(path);
     pendingPath = path;
     // routeTo() rather than showLogin() directly: it sets `routing`, which makes
     // the login screen's syncUrl REPLACE the deep link's history entry instead

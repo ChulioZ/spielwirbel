@@ -204,6 +204,46 @@ function showSessionLobby(round, session) {
     actions.appendChild(list);
   }
 
+  // Share the session as a link (#652), so people WITHOUT an account can vote
+  // from their own phone. Offered above the close button and below the voting
+  // actions: it is what you reach for while people are still arriving, not what
+  // ends the evening.
+  //
+  // The link is minted on demand rather than with the draw — most sessions never
+  // need one, and a token that exists is a token that can leak.
+  if (pending.length) {
+    const share = h(`<button class="btn live-vote__share">
+        <i class="ti ti-link" aria-hidden="true"></i> ${esc(t('lobby.share'))}
+      </button>`);
+    share.addEventListener('click', async () => {
+      share.disabled = true;
+      try {
+        const { token } = await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/vote-link`, {});
+        const url = location.origin + votePath(token);
+        // navigator.share is the phone-native path (it opens the chat app the
+        // group actually uses); the clipboard is the desktop fallback. Both are
+        // behind a user gesture, which is what makes either permissible at all.
+        // A cancelled share sheet rejects — it is not an error worth a toast.
+        if (navigator.share) {
+          try { await navigator.share({ text: t('lobby.shareText', { round: round.name }), url }); } catch { /* dismissed */ }
+        } else if (navigator.clipboard) {
+          await navigator.clipboard.writeText(url);
+          toast(t('lobby.shareCopied'));
+        } else {
+          // No share sheet and no clipboard (an insecure origin, an old browser):
+          // show the URL so it can at least be copied by hand, rather than
+          // reporting a success that did not happen.
+          prompt(t('lobby.shareCopied'), url);
+        }
+      } catch (e) {
+        toast(e.message);
+      } finally {
+        share.disabled = false;
+      }
+    });
+    actions.appendChild(share);
+  }
+
   // Closing is available at every point, not only once everyone is in: someone
   // who never turns up must not be able to hold the evening hostage. It leads
   // only when there is nothing left to wait for.

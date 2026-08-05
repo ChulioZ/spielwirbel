@@ -157,6 +157,15 @@ What the app does, in detail. For a short overview see the
   holding a device votes with it — and the ratings stay secret until someone
   ends the voting, which anyone in the round can do, so a missing player or a
   flat battery never strands the evening.
+- **Voting by shared link, without an account** – a running per-device session
+  can be shared as one URL (a "share" button in the lobby, mint-on-demand). Its
+  holder opens it, claims their own name from the session's participant list and
+  rates the drawn games on their phone — no sign-up, nothing to install. The link
+  is a capability for exactly that one session: it shows the round name, the drawn
+  games and who has voted so far, and never a single rating, the result, or
+  anything else about the round. It cannot add players (the draw already filtered
+  the pool by the player count), and it stops working the moment voting closes or
+  the session is cancelled or deleted.
 - **What happened in a session** – every session keeps a short record of who
   started it, whose votes were submitted by whom, who ended the voting and who
   recorded the result, shown while voting runs and again under the results. It

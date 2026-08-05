@@ -6,7 +6,7 @@ den Prüf-Rhythmus fest; die veröffentlichte Datenschutzerklärung
 Frist, die hier steht, aber nicht gelebt oder nicht veröffentlicht wird, ist
 schlimmer als keine.
 
-**Stand:** 2026-08-04
+**Stand:** 2026-08-05
 
 ## Grundsatz
 
@@ -26,6 +26,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Freigaben (`round_grants`, #207) | bis Widerruf/Verlassen bzw. Konto- oder Rundenlöschung | Nutzeraktion / `eraseAccount` |
 | Freundschaften + Freundeskreis-Feed (#325) | bis Entfreunden bzw. Kontolöschung; Feed je Konto auf 50 Einträge begrenzt (älteste werden verdrängt) | Nutzeraktion / automatisch / `eraseAccount` |
 | Postfach-Benachrichtigungen (Inbox, #207) | je Konto auf 100 Einträge begrenzt (älteste werden verdrängt); Kontolöschung räumt vollständig | automatisch / `eraseAccount` |
+| Abstimmungs-Links ohne Konto (#652) | mit dem Ende der Abstimmung, spätestens beim Abbrechen/Löschen der Session oder der Runde; Kontolöschung räumt vollständig. Die Kennung wird ohnehin unbrauchbar, sobald die Session geschlossen ist — die Zeile beschreibt das Löschen der Zeile selbst | automatisch (Route + `deleteRound`/`eraseAccount`) |
 | Server-Request-Logs, Produkt-Ereignisse | Logrotation der Plattform (Railway) | automatisch |
 | In-App-Feedback | nach Bearbeitung löschen | Panel-Löschung im Admin-Panel (#389, seit 2026-07-24) |
 | Kontakt-/Support-Korrespondenz (Postfach) | bis Abschluss der Bearbeitung, danach löschen — spätestens bei der Jahresprüfung | manuell (Postfach) |

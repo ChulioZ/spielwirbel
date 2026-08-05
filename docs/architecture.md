@@ -233,7 +233,12 @@ lib/
     members.js       …/members              (add a seat, edit name / avatar
                                              color, claim/release your own seat)
     sessions.js      …/sessions             (start, results, choice, finish,
-                                             cancel, delete, remove one game)
+                                             cancel, delete, remove one game,
+                                             mint the public vote link (#652))
+    vote-link.js     /api/vote/:token       (PUBLIC, outside the auth gate: read
+                                             one session's ballot and submit one
+                                             claimed participant's votes — the
+                                             account-free half of #209/#612)
     activities.js    …/activities           (list the feed [GET], delete an entry)
     background.js    …/background           (set the design)
     tags.js          …/tags                 (create a custom tag [deduped], set its icon, delete one)
@@ -359,6 +364,9 @@ public/
     views-session-live.js the per-device voting lobby: who has voted, vote for
                      yourself or for anyone still open on this device, and end
                      the voting (issue #209)
+    views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
+                     from the participant list and rate the drawn games without
+                     an account — the only view that runs logged out
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
     views-friends.js Freundeskreis view + home feed section (#325) and the
                      account profile at /u/:username (#558; accounts mode only)

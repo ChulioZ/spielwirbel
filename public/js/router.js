@@ -77,6 +77,10 @@ function roundPath(rid, sub) {
 // encoded here rather than at each link site — usernames are user-chosen and
 // need not be URL-safe.
 const profilePath = (username) => `/u/${encodeURIComponent(username)}`;
+// The public vote link (#652). The token is base64url, which is already
+// path-safe, but it is encoded here for the same reason profilePath encodes a
+// username: the builder, not each call site, owns that question.
+const votePath = (token) => `/vote/${encodeURIComponent(token)}`;
 const gamePath = (rid, gid) => `/round/${rid}/game/${gid}`;
 const memberPath = (rid, mid) => `/round/${rid}/member/${mid}`;
 const resultsPath = (rid, sid) => `/round/${rid}/session/${sid}`;
@@ -148,6 +152,14 @@ function resolveRoute(pathname) {
   // does anyone on a legacy (accounts-off) instance, which has no auth screens
   // at all. '/' is deliberately NOT here — it stays showHome(), which hands a
   // logged-out visitor to the landing page (views-home.js).
+  // Voting by shared link (#652) — the app's one PUBLIC view. It guards nothing
+  // itself: the token is the whole credential, and the server decides whether it
+  // still opens a ballot. Reachable logged-in as well as logged-out (a
+  // participant may hold an account without having claimed the round's seat), so
+  // it sits here in the ordinary table rather than being an auth-screen special
+  // case — bootApp only has to make sure a logged-out visitor gets here instead
+  // of the login screen.
+  if (parts[0] === 'vote' && parts[1]) return () => showVoteLink(decodeURIComponent(parts[1]));
   if (parts[0] === 'login') return () => showLogin();
   if (parts[0] === 'register') return () => showRegister();
   if (parts[0] === 'forgot-password') return () => showForgot();

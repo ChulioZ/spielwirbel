@@ -32,6 +32,11 @@ process.env.REGISTER_RATE_LIMIT_MAX = '1000000';
 // a long account spec would otherwise trip the breaker on its own traffic.
 // test/mail.test.js drives the real ceiling itself.
 process.env.MAIL_DAILY_MAX = '1000000';
+// And for the public vote link's own limiter (#652, default 60/window): its spec
+// drives dozens of unauthenticated requests from the one loopback source, so the
+// default would refuse them part-way through with a 429 that looks like a broken
+// ballot. test/security.test.js drives the real ceiling on a throwaway app.
+process.env.VOTE_LINK_RATE_LIMIT_MAX = '1000000';
 
 // Keep the observability request logger quiet during the ordinary suite so test
 // output isn't buried under one JSON line per request. test/observability.test.js

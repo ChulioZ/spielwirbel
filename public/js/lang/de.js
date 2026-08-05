@@ -434,6 +434,25 @@ I18N.de = {
   'lobby.voteHere': 'Für {name}',
   'lobby.close': 'Abstimmung beenden',
   'lobby.closeConfirm': 'Es fehlen noch {n} Stimmen. Abstimmung trotzdem beenden?',
+  // Abstimmen per Link (#652): wer keinen Account hat, stimmt über die geteilte
+  // Adresse vom eigenen Gerät ab.
+  'lobby.share': 'Link zum Abstimmen teilen',
+  'lobby.shareText': 'Stimm mit ab, was wir bei {round} spielen:',
+  'lobby.shareCopied': 'Link kopiert — teile ihn mit der Runde.',
+  'voteLink.loading': 'Abstimmung wird geladen …',
+  'voteLink.title': 'Mitstimmen',
+  'voteLink.sub': 'Bei {round} wird gerade ausgewählt, was gespielt wird.',
+  'voteLink.pick': 'Wer bist du?',
+  'voteLink.progressOne': '{n} von {total} hat schon abgestimmt.',
+  'voteLink.progress': '{n} von {total} haben schon abgestimmt.',
+  'voteLink.overwriteConfirm': 'Für {name} liegt schon eine Stimme vor. Überschreiben?',
+  'voteLink.youAre': 'Du stimmst ab als',
+  'voteLink.doneTitle': 'Danke!',
+  'voteLink.doneSub': 'Deine Stimme für {name} ist angekommen.',
+  'voteLink.doneProgress': '{n} von {total} haben abgestimmt. Das Ergebnis zeigt die Runde am Tisch.',
+  'voteLink.revise': 'Stimme ändern',
+  'voteLink.deadTitle': 'Dieser Link führt ins Leere',
+  'voteLink.deadBody': 'Die Abstimmung ist vorbei, oder der Link stimmt nicht. Frag am besten in der Runde nach.',
   // Der Session-Verlauf (#209). Er benennt das KONTO, nicht das Gerät: der
   // Server sieht, welcher Account eine Anfrage geschickt hat, und kann nicht
   // wissen, wer das Gerät gerade in der Hand hielt. „Anna hat für Ben

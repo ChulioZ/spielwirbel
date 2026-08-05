@@ -438,6 +438,25 @@ I18N.en = {
   'lobby.voteHere': 'For {name}',
   'lobby.close': 'End voting',
   'lobby.closeConfirm': '{n} votes are still missing. End voting anyway?',
+  // Voting by link (#652): anyone without an account votes from their own device
+  // through the shared address.
+  'lobby.share': 'Share a voting link',
+  'lobby.shareText': 'Help pick what we play at {round}:',
+  'lobby.shareCopied': 'Link copied — share it with the group.',
+  'voteLink.loading': 'Loading the vote …',
+  'voteLink.title': 'Join the vote',
+  'voteLink.sub': '{round} is picking what to play.',
+  'voteLink.pick': 'Who are you?',
+  'voteLink.progressOne': '{n} of {total} has voted so far.',
+  'voteLink.progress': '{n} of {total} have voted so far.',
+  'voteLink.overwriteConfirm': '{name} has already voted. Replace their votes?',
+  'voteLink.youAre': 'You are voting as',
+  'voteLink.doneTitle': 'Thank you!',
+  'voteLink.doneSub': 'Your vote for {name} is in.',
+  'voteLink.doneProgress': '{n} of {total} have voted. The group reveals the result at the table.',
+  'voteLink.revise': 'Change my vote',
+  'voteLink.deadTitle': 'This link leads nowhere',
+  'voteLink.deadBody': 'Voting is over, or the link is wrong. Best to ask the group.',
   // The session log (#209). It names the ACCOUNT, never the device: the server
   // sees which account sent a request and cannot know who was holding the
   // hardware. "Anna voted for Ben" is therefore something we can stand behind;

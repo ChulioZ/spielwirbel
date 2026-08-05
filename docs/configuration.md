@@ -32,7 +32,9 @@ setting it — see [`deploy-railway.md`](deploy-railway.md)
 Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
 `CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5),
 `REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below) and
-`DEMO_RATE_LIMIT_MAX` (guest demos, per 15 min, default 5 — see below).
+`DEMO_RATE_LIMIT_MAX` (guest demos, per 15 min, default 5 — see below), and
+`VOTE_LINK_RATE_LIMIT_MAX` (the public vote link `/api/vote/…`, per 15 min,
+default 60 — higher because it is an ordinary user action, not a signup).
 
 Contact form (issues #224/#272): a public, login-free page at `/kontakt.html`
 with a bilingual form that POSTs to `/api/contact`, which e-mails the operator —
