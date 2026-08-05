@@ -421,3 +421,134 @@ test('another account cannot import into a round it does not own', async () => {
   const list = await request(app).get(`/api/rounds/${round.id}/lookup/collection?provider=bgg`).set(auth(b.token));
   assert.equal(list.status, 404);
 });
+
+/* -------------------------- the wishlist import (#560) --------------------- */
+
+/* The same two hops against BGG's OTHER shelf. Three things separate it from
+   the owned import above, and each fails silently:
+   the query parameter, the 10-minute cache key, and the fact that the created
+   games must land outside the active collection. */
+
+test('the wishlist import asks BGG for wishlist=1 and creates wishes, silently', async () => {
+  const a = await makeAccount('imp-wish@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerWish');
+
+  const urls = stubBgg(THREE);
+  const list = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`)
+    .set(auth(a.token));
+  assert.equal(list.status, 200);
+  assert.deepEqual(list.body.games.map((g) => g.title), ['CATAN', 'Carcassonne', 'Ticket to Ride']);
+  assert.equal(urls.length, 1);
+  assert.match(urls[0], /wishlist=1/);
+  assert.equal(/[?&]own=1/.test(urls[0]), false, 'the wishlist hop must not also ask for the owned shelf');
+  // Expansions stay excluded here too — a bulk import is where 50 of them are
+  // noise, whichever shelf they came from.
+  assert.match(urls[0], /excludesubtype=boardgameexpansion/);
+
+  // Re-stubbed for the import hop; the listing's URLs have been asserted above.
+  stubBgg(THREE);
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/lookup/import?provider=bgg&status=wishlist`)
+    .set(auth(a.token)).send({ externalIds: ['13', '9209'] });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, { imported: 2, skipped: 0 });
+
+  const full = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  assert.deepEqual(full.body.games.map((g) => g.title), ['CATAN', 'Ticket to Ride']);
+  full.body.games.forEach((g) => {
+    assert.equal(g.wish, true, `${g.title} must be a wish`);
+    assert.ok(g.wishAt);
+    assert.equal(g.retired, false);
+    assert.equal(g.completed, false);
+  });
+  // Invisible to the shelf's own count.
+  const home = (await request(app).get('/api/rounds').set(auth(a.token))).body.find((r) => r.id === round.id);
+  assert.equal(home.gameCount, 0);
+
+  // And silent: no bulk Chronik entry, no per-game one either. The group has
+  // acquired nothing, so there is nothing for the round to report.
+  const feed = await request(app).get(`/api/rounds/${round.id}/activities`).set(auth(a.token));
+  assert.equal(feed.body.filter((x) => x.type === 'games_imported').length, 0);
+  assert.equal(feed.body.filter((x) => x.type === 'game_added').length, 0);
+});
+
+/* THE CACHE-KEY TRAP. The two shelves are different BGG documents for one
+   handle, behind a 10-minute cache. Keyed on the handle alone, whichever import
+   ran first answers the other for the rest of the window — a full, plausible,
+   completely wrong list with no error anywhere.
+
+   The two shelves here share no game at all, so a leak is unmistakable; and the
+   second stub returns a DIFFERENT body, so being served the first one is the
+   only way the wrong titles could appear. */
+test('the owned and wishlist shelves do not share a cache entry', async () => {
+  const a = await makeAccount('imp-wish-cache@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerBothShelves');
+
+  stubBgg(collectionXml(item('13', 'CATAN')));
+  const owned = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg`).set(auth(a.token));
+  assert.deepEqual(owned.body.games.map((g) => g.title), ['CATAN']);
+
+  const urls = stubBgg(collectionXml(item('9209', 'Ticket to Ride')));
+  const wished = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`).set(auth(a.token));
+  assert.equal(urls.length, 1, 'the wishlist must be fetched, not served from the owned entry');
+  assert.deepEqual(wished.body.games.map((g) => g.title), ['Ticket to Ride']);
+
+  // ...and the owned shelf is still cached rather than refetched, so the key
+  // gained a component instead of being defeated altogether.
+  const again = stubBgg(collectionXml(item('999', 'Wrong')));
+  const owned2 = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg`).set(auth(a.token));
+  assert.equal(again.length, 0, 'the owned shelf must still come from its own cache entry');
+  assert.deepEqual(owned2.body.games.map((g) => g.title), ['CATAN']);
+});
+
+/* A game the round already holds is "present" whatever state it is in — so the
+   wishlist import cannot re-add a game the group has since bought, which would
+   land as a wish for something already on their own shelf. */
+test('a game already on the shelf shows as present in the wishlist import and is skipped', async () => {
+  const a = await makeAccount('imp-wish-present@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerPresentWish');
+
+  // Buy it first, through the ordinary owned import.
+  stubBgg(collectionXml(item('13', 'CATAN')));
+  await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token)).send({ externalIds: ['13'] });
+
+  stubBgg(collectionXml(item('13', 'CATAN'), item('822', 'Carcassonne')));
+  const list = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`).set(auth(a.token));
+  const catan = list.body.games.find((g) => g.externalId === '13');
+  assert.equal(catan.present, true, 'a game already owned must show as present on the wish list');
+
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg&status=wishlist`)
+    .set(auth(a.token)).send({ externalIds: ['13', '822'] });
+  assert.deepEqual(res.body, { imported: 1, skipped: 1 });
+
+  const full = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  const stored = full.body.games.find((g) => g.title === 'CATAN');
+  assert.equal(stored.wish, false, 'the owned copy must stay on the shelf, not become a wish');
+  assert.equal(full.body.games.find((g) => g.title === 'Carcassonne').wish, true);
+});
+
+/* An unrecognised status must fall back to the owned shelf rather than reaching
+   BGG's query string: the value is interpolated into a fetched URL. */
+test('an unknown status falls back to the owned shelf', async () => {
+  const a = await makeAccount('imp-wish-status@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerOddStatus');
+
+  const urls = stubBgg(THREE);
+  const res = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=__proto__`).set(auth(a.token));
+  assert.equal(res.status, 200);
+  assert.equal(urls.length, 1);
+  assert.match(urls[0], /own=1/);
+  assert.equal(/wishlist/.test(urls[0]), false);
+  assert.equal(/__proto__/.test(urls[0]), false, 'a request value must never reach the provider URL');
+});

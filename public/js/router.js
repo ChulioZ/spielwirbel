@@ -172,6 +172,7 @@ function resolveRoute(pathname) {
     if (['regal', 'chronik', 'pokale'].includes(sub)) return () => showRound(rid, sub);
     if (sub === 'retired') return () => showRetired(rid);
     if (sub === 'completed') return () => showCompleted(rid);
+    if (sub === 'wishlist') return () => showWishlist(rid);
     if (sub === 'design') return () => showBackground(rid);
     if (sub === 'tags') return () => showTags(rid);
     if (sub === 'providers') return () => showProviders(rid);

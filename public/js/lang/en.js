@@ -88,7 +88,9 @@ I18N.en = {
   'hub.tab.pokale': 'Trophies',
 
   // Group headings in the desktop navigation rail (from 1280px up).
-  'rail.archive': 'Archive',
+  // Heads the three lists that are NOT the shelf: the two archives and the wish
+  // list (#560). No longer "Archive" — a wish list is not one.
+  'rail.archive': 'Off the shelf',
   'rail.settings': 'Settings',
 
   // The round's settings screen (#561). It reuses 'rail.settings' as its own
@@ -228,6 +230,12 @@ I18N.en = {
   'bggImport.toast.unreachable': 'BoardGameGeek cannot be reached right now.',
   'bggImport.toast.noHandle': 'Link your BoardGameGeek username first.',
   'bggImport.toast.badHandle': 'That does not look like a BGG username.',
+  // The same import, but from the BGG wishlist rather than the collection (#560).
+  'bggImport.wishTitle': 'Import your BGG wish list',
+  'bggImport.wishLink': 'Import your wish list from BoardGameGeek',
+  'bggImport.wishTile': 'Wish list from BGG',
+  'bggImport.wishEmpty': 'There is nothing on your BGG wish list.',
+  'bggImport.wishEmptyHint': 'Put games on your wish list at boardgamegeek.com, then try again.',
 
   // Edition covers (#519): BoardGameGeek holds the box art of every edition, so
   // the printing actually sitting on the shelf can be picked.
@@ -262,6 +270,20 @@ I18N.en = {
   'completed.delete': 'Delete permanently',
   'completed.deleteConfirm': 'Permanently delete “{title}”? Its ratings are removed from all past sessions as well. This cannot be undone.',
   'completed.deleted': '“{title}” permanently deleted',
+
+  // Wish list (#560): games the round does not own yet. Same key shape as the
+  // two archives, so one renderer serves all three.
+  'wish.link': 'Wish list ({n})',
+  'wish.crumb': 'Wish list',
+  'wish.title': 'Wish list',
+  'wish.empty': 'Nothing on the wish list yet.',
+  'wish.at': 'On the wish list since {when}',
+  'wish.restore': 'Onto the shelf',
+  'wish.restored': '“{title}” is on the shelf now',
+  'wish.delete': 'Take off the list',
+  'wish.deleteConfirm': 'Take “{title}” off the wish list?',
+  'wish.deleted': '“{title}” taken off the wish list',
+  'wish.add': 'Add a wish',
 
   'sessions.rated': '{n} games rated',
   'sessions.played': 'Played',
@@ -322,6 +344,7 @@ I18N.en = {
   'member.toast.alreadySeated': 'You already hold a seat in this round.',
 
   'addGame.title': 'Add game',
+  'addGame.wishTitle': 'Add a wish',
   'addGame.titleLabel': 'Title',
   'addGame.titlePlaceholder': 'e.g. Catan',
   'players.one': '1 player',
@@ -343,6 +366,7 @@ I18N.en = {
   'addGame.toast.needPlayers': 'Please enter min and max players',
   'addGame.toast.playersRange': 'Max players must not be less than min players',
   'addGame.toast.saved': 'Game saved',
+  'addGame.toast.savedWish': 'Added to the wish list',
   'addGame.toast.quota': 'Game limit for this round reached.',
   'addGame.toast.pasted': 'Image pasted',
   'addGame.toast.noImage': 'No image in the clipboard',

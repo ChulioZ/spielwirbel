@@ -778,10 +778,12 @@ async function showResults(round, session, gamesHint, reveal) {
         ? ` <span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`
         : '';
     // "Suggested for retirement" line; with a direct action only while the game
-    // is still active — an already-archived game has nothing left to retire.
+    // is still active — an already-archived game has nothing left to retire, and
+    // neither has one that has since moved to the Wunschliste (#560), where
+    // retiring it would claim the group is discarding a game they do not own.
     const sortFlag = r.sortCount
       ? `<div class="sort-flag"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('result.sortFlag', { n: r.sortCount }))}${
-          g.retired || g.completed ? '' : ` <button class="link-btn sortflag-btn">${esc(t('result.retireNow'))}</button>`
+          g.retired || g.completed || g.wish ? '' : ` <button class="link-btn sortflag-btn">${esc(t('result.retireNow'))}</button>`
         }</div>`
       : '';
     const medal = r.place && r.place <= 3 ? `<span class="rank-medal rank-medal--${medalRanks[r.place - 1]}"><i class="ti ti-medal" aria-hidden="true"></i></span>` : '';

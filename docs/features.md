@@ -86,14 +86,20 @@ What the app does, in detail. For a short overview see the
   browsable archive and restorable any time. There are two archives, because
   the reason matters: **retired** ("Aussortiert") means the group wants rid of
   the game, **completed** ("Durchgespielt") means they finished its content — a
-  campaign, a legacy box, a story-driven video game. A game is active, retired
-  or completed, never two at once, and either archive can be reached from the
-  round hub's footer. The distinction carries through to the Pokale tab: a
+  campaign, a legacy box, a story-driven video game. Alongside them sits the
+  **Wunschliste** — games the group wants but does not own yet, added by hand
+  through the same add-game sheet or pulled in one shot from a linked
+  BoardGameGeek **wishlist**. A wish never turns up in a vote, a draw or any
+  count of the shelf, because the group cannot put it on the table; "Ins Regal"
+  moves it across the day they buy it, and that is when the round's Chronik and
+  the Freundeskreis feed report it — wanting a game is not news, getting it is.
+  A game is active, retired, completed or wished-for, never two at once, and all
+  three lists are reached from the round hub's footer. The distinction carries through to the Pokale tab: a
   retired game stops being named as anyone's favourite or as the game the group
   disagrees about, because retiring it withdraws that preference — while the
   nights you actually played it still count toward "Meistgespielt". A completed
-  game keeps counting everywhere. Only an already-archived game can be permanently
-  deleted. Games can be **moved between rounds**: "Spiele verschieben" in the
+  game keeps counting everywhere. Only a game that is already off the shelf —
+  archived or wished-for — can be permanently deleted. Games can be **moved between rounds**: "Spiele verschieben" in the
   shelf's footer lists the round's games — archived ones included, labelled —
   each pre-checked, so confirming untouched consolidates the whole round while
   unchecking splits off just part of the shelf. Moved games keep their covers,
@@ -121,7 +127,8 @@ What the app does, in detail. For a short overview see the
   presented per screen size: a floating bottom dock on phones, a tab strip at
   the top of the content column on tablets, and from 1280px a persistent left
   rail carrying the round's identity, the "start session" action, the four
-  sections, both archives and one Einstellungen entry. All three stay visible on
+  sections, the two archives, the Wunschliste and one Einstellungen entry. All
+  three stay visible on
   the round's sub-screens, marking the section they belong to:
   - **Start** – the launchpad: hero with the members, a big "start session"
     button, resumable in-progress sessions, the last played result, and gentle

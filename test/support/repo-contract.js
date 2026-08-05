@@ -734,6 +734,136 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.completeGame(T, 'missing', game.id, true), null);
   });
 
+  // #560: the Wunschliste is the THIRD state, and the exclusivity is three-way.
+  // Each of the three mutators has to clear the other two, in both backends —
+  // a game listed as both wished-for and retired is a game the round both wants
+  // and has thrown out.
+  test('wishGame is mutually exclusive with BOTH archives, in both directions', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Ark Nova' }));
+    assert.equal(game.wish, false);
+    assert.equal(game.wishAt, null);
+
+    const wished = await repo.wishGame(T, round.id, game.id, true);
+    assert.equal(wished.wish, true);
+    assert.ok(wished.wishAt, 'a wish timestamp is stamped');
+
+    // Retiring a wish clears it — and so does completing one.
+    const retired = await repo.retireGame(T, round.id, game.id, true);
+    assert.equal(retired.retired, true);
+    assert.equal(retired.wish, false);
+    assert.equal(retired.wishAt, null);
+
+    await repo.wishGame(T, round.id, game.id, true);
+    const done = await repo.completeGame(T, round.id, game.id, true);
+    assert.equal(done.completed, true);
+    assert.equal(done.wish, false);
+    assert.equal(done.wishAt, null);
+
+    // ...and wishing for an archived game clears whichever archive it was in.
+    const again = await repo.wishGame(T, round.id, game.id, true);
+    assert.equal(again.wish, true);
+    assert.equal(again.completed, false);
+    assert.equal(again.completedAt, null);
+    assert.equal(again.retired, false);
+    assert.equal(again.retiredAt, null);
+
+    assert.equal(await repo.wishGame(T, round.id, 'missing', true), null);
+    assert.equal(await repo.wishGame(T, 'missing', game.id, true), null);
+  });
+
+  // Only the ACQUISITION is an event: clearing the flag writes the ordinary
+  // `game_added` activity, so a game reaching the shelf via the wish list is
+  // indistinguishable from one added directly. Setting it writes nothing —
+  // wanting a game is not something the Chronik reports.
+  test('a wish is silent; putting it on the shelf writes game_added', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Wingspan', wish: true }));
+    assert.equal(game.wish, true);
+    assert.ok(game.wishAt);
+    assert.equal(
+      (await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_added').length, 0,
+      'creating a wish must write no Chronik entry',
+    );
+
+    await repo.wishGame(T, round.id, game.id, false);
+    const added = (await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_added');
+    assert.equal(added.length, 1, 'reaching the shelf writes exactly one game_added');
+    assert.equal(added[0].title, 'Wingspan');
+
+    // Going back onto the list writes nothing further.
+    await repo.wishGame(T, round.id, game.id, true);
+    assert.equal((await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_added').length, 1);
+  });
+
+  // Absent-key parity (.claude/rules/postgres-backend.md): every creation path
+  // writes both keys, so the two backends agree, and a PRE-EXISTING game that
+  // carries neither still reads as a non-wish everywhere.
+  test('wish/wishAt are written by every creation path, and absent reads as false', async () => {
+    const round = await freshRound();
+    const one = await repo.createGame(T, round.id, gameFields({ title: 'Solo' }));
+    assert.equal(one.wish, false);
+    assert.equal(one.wishAt, null);
+
+    const bulk = await repo.createGames(T, round.id, [gameFields({ title: 'Bulk' })], undefined, null);
+    assert.equal(bulk.created[0].wish, false);
+    assert.equal(bulk.created[0].wishAt, null);
+
+    const wishes = await repo.createGames(T, round.id, [gameFields({ title: 'Wanted' })], undefined, null, true);
+    assert.equal(wishes.created[0].wish, true);
+    assert.ok(wishes.created[0].wishAt);
+    assert.equal(
+      (await repo.listActivities(T, round.id)).filter((a) => a.type === 'games_imported').length, 1,
+      'only the OWNED import writes a games_imported entry',
+    );
+
+    // The copy a new round takes writes them too — and takes no wishes with it.
+    const copy = await repo.createRound(T, { name: 'Copy', members: ['A'], importFromRoundId: round.id });
+    assert.deepEqual(copy.games.map((g) => g.title).sort(), ['Bulk', 'Solo']);
+    copy.games.forEach((g) => {
+      assert.equal(g.wish, false);
+      assert.equal(g.wishAt, null);
+    });
+    assert.equal((await repo.getRoundSummary(T, copy.id)).gameCount, 2);
+  });
+
+  // The GAME PREDATING #560 carries neither key, and no repo method can produce
+  // one — every creation path writes both — so it is deliberately NOT tested
+  // here. `updateGame(…, { wish: undefined })` looks like it would, and does
+  // not: JSON.stringify drops an undefined value, so the Postgres patch is `{}`
+  // and the stored `false` survives, i.e. the assertion would pass without ever
+  // seeing an absent key on the backend that actually runs in production.
+  // `test/repo.postgres.test.js` inserts a legacy-shaped row through knex
+  // instead, which is the only way to construct the case at all.
+
+  // A wish counts as neither an active game nor an archived one: the home
+  // screen's gameCount and the operator summary's activeGames both drop it.
+  test('a wish is excluded from gameCount and from tenantSummary activeGames', async () => {
+    const round = await freshRound();
+    await repo.createGame(T, round.id, gameFields({ title: 'Owned' }));
+    const want = await repo.createGame(T, round.id, gameFields({ title: 'Wanted' }));
+
+    assert.equal((await repo.getRoundSummary(T, round.id)).gameCount, 2);
+    await repo.wishGame(T, round.id, want.id, true);
+    assert.equal((await repo.getRoundSummary(T, round.id)).gameCount, 1);
+
+    const summary = await repo.tenantSummary(T);
+    const row = summary.rounds.find((r) => r.id === round.id);
+    assert.equal(row.games, 2, 'a wish still holds a row (the quota counts it)');
+    assert.equal(row.activeGames, 1);
+  });
+
+  // A wish is deletable exactly like an archived game — the guard is "not in the
+  // active collection", not "in one of the two archives".
+  test('deleteGame accepts a wish', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Wanted', image: '/uploads/w.png' }));
+    assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_archived');
+    await repo.wishGame(T, round.id, game.id, true);
+    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/w.png' });
+    assert.equal((await repo.getRound(T, round.id)).games.length, 0);
+  });
+
   // A completed game is deletable exactly like a retired one — the delete guard
   // covers both archives, not just `retired`.
   test('deleteGame accepts a completed game', async () => {

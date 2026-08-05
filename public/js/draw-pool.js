@@ -15,14 +15,16 @@
 
 'use strict';
 
-// A game is in the active collection when it sits in NEITHER archive (#250).
-// The draw pool, the direct-pick guard in the sessions route and the setup
-// screen's preview all share this predicate, so a third archive state added here
-// closes every draw path at once rather than leaving the archived game playable
-// by id. It is NOT the whole of "active" everywhere — the taste stats drop
-// retired games only (.claude/rules/active-games-filter-sites.md).
+// A game is in the active collection when it sits in neither archive (#250) and
+// is not merely wished for (#560). The draw pool, the direct-pick guard in the
+// sessions route and the setup screen's preview all share this predicate, so a
+// further state added here closes every draw path at once rather than leaving
+// the game playable by id — which is how the wish list stays a list of things
+// the group does NOT own. It is NOT the whole of "active" everywhere: the taste
+// stats drop retired games only
+// (.claude/rules/active-games-filter-sites.md).
 function isActiveGame(game) {
-  return !game.retired && !game.completed;
+  return !game.retired && !game.completed && !game.wish;
 }
 
 // Whether the game's OWN box admits a table of `playerCount`, ignoring anything

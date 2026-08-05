@@ -363,11 +363,18 @@ function attachLookup(round, input, menu, onPick, onInput) {
 }
 
 // Opens as a bottom sheet over the current screen (usually the Regal).
-function showAddGame(round) {
+//
+// `wish` (#560) creates onto the Wunschliste instead of the shelf. It is the same
+// sheet throughout — the lookup, the cover, the player range and the tags are
+// exactly as useful for a game the group wants as for one they own — so only the
+// wording, the POST field and where dismissing returns to differ.
+function showAddGame(round, { wish = false } = {}) {
+  const sheetTitle = wish ? t('addGame.wishTitle') : t('addGame.title');
+  const back = wish ? () => showWishlist(round.id) : () => showRound(round.id, 'regal');
   const backdrop = h(`<div class="sheet-backdrop">
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t('addGame.title'))}">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(sheetTitle)}">
         <div class="sheet__head">
-          <h2>${esc(t('addGame.title'))}</h2>
+          <h2>${esc(sheetTitle)}</h2>
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <div class="field">
@@ -380,7 +387,7 @@ function showAddGame(round) {
           <div class="field__hint field__hint--dup" id="dupHint" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
         ${canImportBgg(round) ? `<div class="toolbar" style="margin:-8px 0 18px">
-          <button type="button" id="bggImportFromAdd" class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.link'))}</button>
+          <button type="button" id="bggImportFromAdd" class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(wish ? t('bggImport.wishLink') : t('bggImport.link'))}</button>
         </div>` : ''}
         <div class="field">
           <label>${esc(t('addGame.playersLabel'))}</label>
@@ -437,7 +444,7 @@ function showAddGame(round) {
   // whether any game was added while open and refresh on every close path.
   let addedWhileOpen = false;
   const dismiss = () => {
-    closeSheet(addedWhileOpen ? () => showRound(round.id, 'regal') : undefined);
+    closeSheet(addedWhileOpen ? back : undefined);
   };
 
   // Assigned below by attachLookup; the Escape handler asks it whether the
@@ -471,7 +478,7 @@ function showAddGame(round) {
   // queue a pop that lands AFTER the import sheet opens and dismisses it
   // (.claude/rules/sheet-history-back-dismissal.md §2).
   const importFromAdd = form.querySelector('#bggImportFromAdd');
-  if (importFromAdd) importFromAdd.addEventListener('click', () => showBggImport(round));
+  if (importFromAdd) importFromAdd.addEventListener('click', () => showBggImport(round, wish ? 'wishlist' : 'own'));
 
   // Custom round tags (#238): toggle the round's existing tags onto the new
   // game, or create one inline (added to the round's tag list immediately; a
@@ -715,6 +722,10 @@ function showAddGame(round) {
     fd.append('minPlayers', minPlayers);
     fd.append('maxPlayers', maxPlayers);
     selectedTagIds.forEach((x) => fd.append('tagIds', x));
+    // Only sent when true: the route coerces anything unrecognised to false, so
+    // an omitted field and 'false' mean the same thing, and omitting keeps the
+    // ordinary add-game request byte-identical to what it has always been.
+    if (wish) fd.append('wish', 'true');
     if (pastedBlob) {
       const ext = (pastedBlob.type && pastedBlob.type.split('/')[1]) || 'png';
       fd.append('image', pastedBlob, 'pasted.' + ext);
@@ -729,7 +740,7 @@ function showAddGame(round) {
     try {
       const created = await api('POST', `/api/rounds/${round.id}/games`, fd);
       addedGames.push({ title: (created && created.title) || title });
-      toast(t('addGame.toast.saved'));
+      toast(wish ? t('addGame.toast.savedWish') : t('addGame.toast.saved'));
       if (again) {
         // Keep the sheet open for the next game; the player range stays.
         // Mark dirty so dismissing the sheet re-renders the Regal (issue #34).
@@ -742,7 +753,7 @@ function showAddGame(round) {
         setImage(null);
         form.querySelector('#title').focus();
       } else {
-        closeSheet(() => showRound(round.id, 'regal'));
+        closeSheet(back);
       }
     } catch (e) { toast(e.message === 'quota_games' ? t('addGame.toast.quota') : e.message); }
   }
@@ -1015,16 +1026,22 @@ function canImportBgg(round) {
   return accountsActive() && enabledProviders(round).includes('bgg');
 }
 
-// Import a linked BoardGameGeek collection into this round's Regal.
+// Import a linked BoardGameGeek collection into this round — the OWNED shelf
+// into the Regal (`status: 'own'`, #481) or the WISHLIST into the Wunschliste
+// (`status: 'wishlist'`, #560). One sheet for both: the two differ in the query
+// parameter, the title and where they return to, and giving the second its own
+// near-copy is how the picker, the five states and the cover choice would drift.
 //
 // The sheet opens immediately and fills in afterwards: a collection fetch is far
 // heavier than a search (BGG may even queue it), so opening only once the answer
 // is in would read as a dead button for several seconds.
-async function showBggImport(round) {
+async function showBggImport(round, status = 'own') {
+  const wish = status === 'wishlist';
+  const title = wish ? t('bggImport.wishTitle') : t('bggImport.title');
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('bggImport.title'))}">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(title)}">
         <div class="sheet__head">
-          <h2>${esc(t('bggImport.title'))}</h2>
+          <h2>${esc(title)}</h2>
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <div class="bgg-import"></div>
@@ -1038,8 +1055,12 @@ async function showBggImport(round) {
   // it re-renders, so every close path has to refresh — and the navigation goes
   // THROUGH closeSheet, never on the line after it, or the queued history pop
   // races the push (.claude/rules/sheet-history-back-dismissal.md).
+  // A wishlist import returns to the wish list, not to the Regal — the games it
+  // just created are invisible on the shelf, so landing there would read as the
+  // import having done nothing.
   let imported = false;
-  const dismiss = () => closeSheet(imported ? () => showRound(round.id, 'regal') : undefined);
+  const back = wish ? () => showWishlist(round.id) : () => showRound(round.id, 'regal');
+  const dismiss = () => closeSheet(imported ? back : undefined);
 
   const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
   document.addEventListener('keydown', onKey, true);
@@ -1214,7 +1235,7 @@ async function showBggImport(round) {
         // choice made and then deselected must not reach the server.
         const covers = {};
         ids.forEach((id) => { if (chosenCovers[id]) covers[id] = chosenCovers[id]; });
-        const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg`, { externalIds: ids, covers });
+        const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg&status=${status}`, { externalIds: ids, covers });
         imported = imported || res.imported > 0;
         toast(tn(res.imported, 'bggImport.toast.doneOne', 'bggImport.toast.done'));
         dismiss();
@@ -1231,7 +1252,7 @@ async function showBggImport(round) {
     body.replaceChildren(h(`<p class="muted">${esc(t('bggImport.loading'))}</p>`));
     let res;
     try {
-      res = await api('GET', `/api/rounds/${round.id}/lookup/collection?provider=bgg`);
+      res = await api('GET', `/api/rounds/${round.id}/lookup/collection?provider=bgg&status=${status}`);
     } catch (e) {
       body.replaceChildren(msg(bggImportError(e.message)));
       return;
@@ -1246,7 +1267,11 @@ async function showBggImport(round) {
       return;
     }
     if (!res.games.length) {
-      body.replaceChildren(msg(t('bggImport.empty'), t('bggImport.emptyHint')));
+      // The empty state has to name the shelf it looked at, or "nothing marked
+      // as owned" is simply wrong advice for someone whose wishlist is empty.
+      body.replaceChildren(wish
+        ? msg(t('bggImport.wishEmpty'), t('bggImport.wishEmptyHint'))
+        : msg(t('bggImport.empty'), t('bggImport.emptyHint')));
       return;
     }
     renderPicker(res.games);

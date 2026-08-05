@@ -31,8 +31,9 @@ const ME = 'user-me';
 
 /* The round every screen below is rendered against. One fixture covers all of
    them because each screen reads a different slice: an active game for the
-   Regal and the game detail, one retired and one completed game so both
-   archives have a row, a finished session for the results and the Chronik. */
+   Regal and the game detail, one retired, one completed and one wished-for game
+   so all three off-shelf screens have a row rather than their empty state, a
+   finished session for the results and the Chronik. */
 function roundFixture(over = {}) {
   return {
     id: RID,
@@ -48,6 +49,7 @@ function roundFixture(over = {}) {
       { id: 'g1', title: 'Catan', minPlayers: 3, maxPlayers: 4, tagIds: [] },
       { id: 'g2', title: 'Azul', retired: true, retiredAt: '2026-07-01T10:00:00.000Z', tagIds: [] },
       { id: 'g3', title: 'Cascadia', completed: true, completedAt: '2026-07-02T10:00:00.000Z', tagIds: [] },
+      { id: 'g4', title: 'Ark Nova', wish: true, wishAt: '2026-07-03T10:00:00.000Z', tagIds: [] },
     ],
     sessions: [SESSION],
     ...over,
@@ -139,6 +141,7 @@ const NON_MAIN = [
   ['round settings', (dom) => dom.call('showRoundSettings', RID)],
   ['retired archive', (dom) => dom.call('showRetired', RID)],
   ['completed archive', (dom) => dom.call('showCompleted', RID)],
+  ['wish list', (dom) => dom.call('showWishlist', RID)],
   ['session results', (dom, round) => dom.call('showResults', round, SESSION)],
   ['profile', (dom) => dom.call('showProfile', 'ada')],
   ['new round', (dom) => dom.call('showNewRound')],
