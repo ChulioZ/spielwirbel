@@ -81,8 +81,14 @@ function installState() {
 
 // Show the browser's own install dialog. Resolves to the user's answer, or
 // 'unavailable' when there is no stashed event — a caller must never assume the
-// dialog appeared. The event is single-use, so it is dropped either way;
-// declining leaves the state at 'none' rather than re-offering a spent prompt.
+// dialog appeared.
+//
+// The event is single-use per the spec, so it is dropped either way. KNOWN ROUGH
+// EDGE: a user who opens the dialog and cancels leaves the already-rendered
+// Konto button on screen with nothing behind it — a second click returns
+// 'unavailable' and does nothing until Chrome fires a fresh event on a later
+// load. Re-rendering instead would make the section vanish under their finger,
+// which reads worse; left as is deliberately rather than overlooked.
 async function runInstallPrompt() {
   const evt = deferredInstallPrompt;
   if (!evt) return 'unavailable';
@@ -115,9 +121,13 @@ function dismissInstallOffer() {
   } catch { /* storage unavailable — the offer simply comes back next time */ }
 }
 
-// Remove `el` if the app is installed while it is on screen. `once` matters:
-// `appinstalled` fires at most once per page load, so the listener cannot
-// accumulate across re-renders.
+// Remove `el` if the app is installed while it is on screen.
+//
+// One listener per rendered panel, so they do accumulate across re-renders (a
+// language switch re-runs the view) until the event fires or the page unloads —
+// bounded, and each holds one small detached node. `once` is what stops them
+// surviving *after* the event, which is the case that would otherwise grow
+// without limit across a long session.
 function hideOnInstalled(el) {
   if (typeof window === 'undefined' || !el) return;
   window.addEventListener('appinstalled', () => el.remove(), { once: true });
