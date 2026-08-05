@@ -20,8 +20,8 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Datenbestand | Frist | Mechanismus |
 |---|---|---|
 | Runden-/Spiel-/Mitgliedsdaten, Cover | bis Löschung durch Nutzer bzw. Kontolöschung | Nutzeraktion / `eraseAccount` (#273) |
-| Konten | bis Kontolöschung (formlose Anfrage) | `eraseAccount` (#273) |
-| **Gast-Demo-Konten (#427)** samt Runden und hochgeladenen Bildern | **24 h** ab Erstellung (`DEMO_TTL_HOURS`) | **automatisch**: Hintergrundjob `purgeExpiredDemos` (`lib/scheduler.js`), ruft `eraseAccount` — der einzige Bestand mit vollautomatischer Löschfrist |
+| Konten — **mit allen am Konto hängenden Feldern**: Anmeldedaten samt zuletzt bestätigter Fassung der Nutzungsbedingungen (`vvt.md` Zeile 2), verknüpfter BoardGameGeek-Nutzername (Zeile 15), Benachrichtigungs-Schalter und Zeitpunkt der letzten Benachrichtigung (Zeile 18) | bis Kontolöschung — seit #419 vom Nutzer selbst in den Kontoeinstellungen auslösbar, alternativ betreiberseitig auf formlose Anfrage | `eraseAccount` (#273/#419) |
+| **Gast-Demo-Konten (#427)** samt Runden, hochgeladenen Bildern und der gehashten IP-Adresse des Demo-Starts (#502, `vvt.md` Zeile 17 — kein eigener Aufbewahrungslauf) | **24 h** ab Erstellung (`DEMO_TTL_HOURS`) | **automatisch**: Hintergrundjob `purgeExpiredDemos` (`lib/scheduler.js`), ruft `eraseAccount` — der einzige Bestand mit vollautomatischer Löschfrist |
 | Einladungen (Runden-Freigaben, #207) | bis Annahme/Ablehnung bzw. Widerruf | Nutzeraktion / `eraseAccount` |
 | Freigaben (`round_grants`, #207) | bis Widerruf/Verlassen bzw. Konto- oder Rundenlöschung | Nutzeraktion / `eraseAccount` |
 | Freundschaften + Freundeskreis-Feed (#325) | bis Entfreunden bzw. Kontolöschung; Feed je Konto auf 50 Einträge begrenzt (älteste werden verdrängt) | Nutzeraktion / automatisch / `eraseAccount` |
@@ -32,6 +32,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Kontakt-/Support-Korrespondenz (Postfach) | bis Abschluss der Bearbeitung, danach löschen — spätestens bei der Jahresprüfung | manuell (Postfach) |
 | Transaktions-E-Mails (Versandprotokolle bei mailbox.org) | Aufbewahrungsfenster des Anbieters; keine eigene Speicherung | automatisch (mailbox.org) |
 | Briefpost an die Empfangsanschrift (weitergeleitet) | nach Bearbeitung vernichten — spätestens bei der Jahresprüfung | manuell |
+| Spenden (`vvt.md` Zeile 12) | Dashboard-Daten bei Ko-fi/Stripe/PayPal nach deren Regime — die App speichert selbst nichts; eigene Aufzeichnungen: solange steuerlich erforderlich | beim Anbieter / manuell |
 | DSA-Meldungen + Bescheide (Postfach-Ordner `Meldungen`) | **3 Jahre** ab Jahresende der Entscheidung (wie Moderations-Log) | manuell, Jahresprüfung |
 | Gespeicherte Kontakt-Meldungen (Datenbank `contact_notices`, #272) | wie Postfach: Allgemeine Anfragen nach Bearbeitung, DSA-Meldungen **3 Jahre** ab Jahresende der Entscheidung | manuell (DB), Jahresprüfung |
 | **Moderations-Log-Einträge mit personenbezogenen Daten** (E-Mail-Adressen, redigierte Texte als `previous`-Nachweis) | **3 Jahre ab Ende des Jahres der Maßnahme** | Jahresprüfung (unten) |
