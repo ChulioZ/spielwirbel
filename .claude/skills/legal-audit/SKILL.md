@@ -104,9 +104,23 @@ code, since a service can be moved without a commit (`railway-db-same-region.md`
 Run the L-007 trigger list against everything that shipped since the last audit:
 consent-based processing, a paid tier, public dissemination of user content,
 child-directed features. Any one of them reopens the age-clause question *and*
-usually more. Open issues matter here too — #322 (public landing page), #325/#338
-(friendships, cross-round voting) and #207 (round sharing) move toward
-dissemination, so flag them as *forthcoming* triggers, not current violations.
+usually more. Open issues matter here too — flag them as *forthcoming* triggers,
+not current violations. The live ones as of 2026-08-05 (the previous exemplars
+#322, #325/#338 and #207 had all shipped by 2026-07-27, so this list needs
+re-checking each sweep rather than being read as fixed):
+
+- **#564** — instance-wide game statistics on the logged-out landing page and a
+  new `/entdecken` screen. The clearest dissemination trigger on the board: it
+  publishes aggregates to an unauthenticated surface. Note its own mitigation —
+  every published game name is resolved from the **provider**, never from the
+  user-typed `game.title` — which is what keeps user-authored bytes off the
+  public front door structurally rather than by moderation.
+- **#560** — the Wunschliste and its BGG **wishlist** import: a new category of
+  data imported from a third party (see also L-001's recipient question).
+- **#418** — passkeys (WebAuthn): new authentication data, so a categories and
+  retention question rather than a dissemination one.
+- **#463** — durable, searchable log retention: changes how long request logs
+  live and where, which touches `retention.md` and the `vvt.md` rows directly.
 
 ## Two hard limits on what you may read
 
