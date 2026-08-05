@@ -298,3 +298,118 @@ test('… and says nothing when the base box already seats the table', async (t)
   assert.ok(dom.app.querySelector('.chosen-banner.is-set'), 'the banner is there');
   assert.equal(dom.app.querySelector('.chosen-banner__note'), null);
 });
+
+/* --------- the editor's anchored variant must be RE-PLACED (#653) ----------
+   The candidate list arrives asynchronously, so `openPopover` measures the card
+   while it still says "…" and the placement it picks is for that height. Left
+   alone the grown card hangs off the bottom of the viewport — and there is no
+   recovering from that by scrolling, because a page scroll CLOSES a popover
+   (.claude/rules/anchored-popover-is-placed-once.md).
+
+   Measured before the fix, on an 800px viewport with a low anchor: the card
+   grew 379px -> 592px, kept `top: 315`, and the OK button landed at y=898 —
+   98px below the fold, unreachable. */
+
+test('the expansion editor re-places its popover once the candidates arrive', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const round = roundFixture(null);
+  round.games[0].source = { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' };
+  // NOT the fixture's `[]`, which means "query nothing" rather than "all"
+  // (.claude/rules/round-provider-config.md).
+  round.providers = ['bgg'];
+
+  let resolveLookup;
+  const pending = new Promise((r) => { resolveLookup = r; });
+  dom.set('api', async (method, url) => {
+    if (/\/activities$/.test(url)) return [];
+    if (/\/lookup\/expansions/.test(url)) return pending;
+    if (/^\/api\/rounds\/[^/]+$/.test(url)) return round;
+    return {};
+  });
+  dom.set('isLoggedIn', () => false);
+  // The desktop branch: jsdom's matchMedia never matches, so the editor would
+  // otherwise present as a sheet, which scrolls itself and needs no placement.
+  dom.set('usesEditorSheet', () => false);
+  let placements = 0;
+  dom.set('repositionPopover', () => { placements += 1; });
+
+  await dom.call('showGameDetail', 'r1', 'g1');
+  dom.app.querySelector('.gd-expansions button.link-out').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(placements, 0, 'nothing to re-place while the list is still loading');
+
+  resolveLookup({ expansions: [{ providerId: '325', title: 'Seefahrer' }] });
+  await new Promise((r) => setTimeout(r, 0));
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(placements, 1, 'the card changed height, so it must be placed again');
+});
+
+test('… and re-places even when the lookup FAILS or comes back empty', async () => {
+  // Both branches also change the card's height (a one-line message replaces
+  // the "…" placeholder), and the failure branch is the one a `.then()`-only
+  // fix would silently miss.
+  for (const outcome of ['empty', 'error']) {
+    const dom = loadApp({ locale: 'de' });
+    const round = roundFixture(null);
+    round.games[0].source = { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' };
+    // NOT the fixture's `[]`, which means "query nothing" rather than "all"
+    // (.claude/rules/round-provider-config.md) — with it the tick-list is never
+    // built and the branch under test does not run at all.
+    round.providers = ['bgg'];
+    dom.set('api', async (method, url) => {
+      if (/\/activities$/.test(url)) return [];
+      if (/\/lookup\/expansions/.test(url)) {
+        if (outcome === 'error') throw new Error('provider_unreachable');
+        return { expansions: [] };
+      }
+      if (/^\/api\/rounds\/[^/]+$/.test(url)) return round;
+      return {};
+    });
+    dom.set('isLoggedIn', () => false);
+    dom.set('usesEditorSheet', () => false);
+    let placements = 0;
+    dom.set('repositionPopover', () => { placements += 1; });
+
+    await dom.call('showGameDetail', 'r1', 'g1');
+    dom.app.querySelector('.gd-expansions button.link-out').click();
+    for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0));
+    assert.equal(placements, 1, `the ${outcome} branch must re-place too`);
+    dom.close();
+  }
+});
+
+/* ------------ the editor card is bounded by the VIEWPORT (#653) -------------
+   Asserted over the stylesheet text, because jsdom applies no external
+   stylesheet and the Claude Code Browser pane's viewport height is degenerate —
+   there `78vh` resolves to 0, which is precisely the failure the floor exists
+   to prevent, so the pane cannot measure the real behaviour either. */
+
+const { bodyOf } = require('./support/css');
+
+test('the anchored expansion editor is capped, WITH a floor', () => {
+  const card = bodyOf('.popover--expansions');
+  assert.ok(card, 'the rule exists');
+  assert.match(card, /max-height:\s*max\(/,
+    'a bare min(…vh, …) computes to 0 on a degenerate viewport and collapses the card '
+    + 'to nothing, leaving its own children rendering outside it — measured at 18px tall '
+    + 'with the OK button 200px past its bottom edge');
+  assert.match(card, /vh/, 'and it must actually track the viewport, not just a constant');
+});
+
+test('the tick-list is the part that gives way, so the OK button stays visible', () => {
+  const list = bodyOf(':is(.popover--expansions, .editor--expansions) .exp-pick__body');
+  assert.ok(list, 'the rule exists');
+  // Without `flex: 1 1 auto` the list keeps its natural height and the card's
+  // cap pushes the free-text form and the button out of the card instead.
+  assert.match(list, /flex:\s*1\s+1\s+auto/);
+  assert.match(list, /overflow-y:\s*auto/);
+  // Reaching the end of the list must not chain into the page: a page scroll
+  // closes the popover outright.
+  assert.match(list, /overscroll-behavior:\s*contain/);
+
+  // A flex item's default `min-height: auto` is its CONTENT size, so the cap on
+  // the card is inert without this — the two only work as a pair.
+  const pick = bodyOf(':is(.popover--expansions, .editor--expansions) .exp-pick');
+  assert.match(pick, /min-height:\s*0/);
+});

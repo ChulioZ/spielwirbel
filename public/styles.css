@@ -3223,8 +3223,31 @@ body.auth-screen .terms-banner { display: none; }
 /* Expansions (#653). Wider than the 300px default like the tags editor: the
    tick-list holds full expansion names, which a narrow card wraps to three
    lines each. */
-.popover--expansions { max-width: 360px; }
-:is(.popover--expansions, .editor--expansions) .exp-pick { margin-bottom: 10px; }
+/* The anchored variant is also capped to the VIEWPORT, and the tick-list is the
+   part that gives way (#653). Two reasons the cap is not optional: a popover
+   cannot be scrolled into view — a page scroll closes it — so anything past the
+   fold is unreachable, and a game like Carcassonne has dozens of candidates,
+   which pushed the OK button ~100px below the bottom of an 800px viewport.
+   Only `.popover--expansions`: the sheet variant scrolls itself.
+
+   The `max()` floor is NOT decoration: a bare `min(78vh, 620px)` computes to
+   **0** wherever the viewport height is degenerate, which collapses the card to
+   nothing and leaves its own children rendering outside it — measured, 18px
+   tall with the OK button 200px below its bottom edge. Same trap, same remedy
+   as `.cover-picker__grid` (.claude/rules/anchored-popover-is-placed-once.md). */
+.popover--expansions {
+  max-width: 360px;
+  max-height: max(280px, min(78vh, 620px));
+}
+:is(.popover--expansions, .editor--expansions) .exp-pick {
+  margin-bottom: 10px;
+  /* A flex item's default `min-height: auto` is its content size, so without
+     this the card's max-height would be ignored and the button pushed out
+     anyway — the cap and this line only work as a pair. */
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 :is(.popover--expansions, .editor--expansions) .exp-pick__head,
 :is(.popover--expansions, .editor--expansions) .exp-own__head {
   font-size: var(--text-sm);
@@ -3237,8 +3260,17 @@ body.auth-screen .terms-banner { display: none; }
   display: flex;
   flex-direction: column;
   gap: 6px;
+  /* Absorbs the shrink so the free-text form and the OK button below keep their
+     natural size and stay visible. The floor is deliberate — one row of
+     candidates is always better than none — and it is what stops a short
+     viewport collapsing the list to nothing, the same call
+     .cover-picker__grid makes. */
+  flex: 1 1 auto;
+  min-height: 96px;
   max-height: 240px;
   overflow-y: auto;
+  /* Reaching the end of the list must not chain into the page, because a page
+     scroll closes the popover outright (.claude/rules/overlay-page-lock.md §3). */
   overscroll-behavior: contain;
 }
 /* A compact row: the editor is a 360px card, not a 900px page, so the default

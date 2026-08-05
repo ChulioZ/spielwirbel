@@ -636,7 +636,13 @@ async function showGameDetail(rid, gameId) {
           .catch(() => {
             body.className = 'exp-pick__body muted';
             body.textContent = t('detail.expansionPickError', { provider: prov });
-          });
+          })
+          // The candidates arrive AFTER openPopover measured the card, so the
+          // anchored variant is still placed for its loading height and would
+          // hang off the fold — with no way back, since a page scroll closes a
+          // popover. Placement is idempotent and this is a no-op for the sheet
+          // and when no popover is open (.claude/rules/anchored-popover-is-placed-once.md).
+          .finally(() => repositionPopover());
       }
 
       const own = h(`<div class="exp-own">
