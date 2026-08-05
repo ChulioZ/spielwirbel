@@ -866,6 +866,14 @@ async function showResults(round, session, gamesHint, reveal) {
       const g = games.find((x) => x.id === chosenId);
       const icon = `<i class="ti ${GAME_ICON}" aria-hidden="true"></i> `;
       banner.innerHTML = icon + t('result.bannerChosen', { title: '<strong>' + esc(g ? g.title : '') + '</strong>' });
+      // Say so when the base box does NOT seat this table and an owned
+      // expansion is what made the game drawable at all (#653) — otherwise the
+      // group carries the wrong box to the table. Derived from the same
+      // predicate the draw used, so the warning can never name a different set.
+      const needed = g ? requiredExpansions(g, parties.length) : [];
+      if (needed.length) {
+        banner.innerHTML += `<div class="chosen-banner__note">${esc(t('result.needsExpansion', { names: needed.map((e) => e.title).join(', ') }))}</div>`;
+      }
       banner.classList.add('is-set');
     } else {
       banner.textContent = t('result.bannerPrompt');

@@ -9,7 +9,7 @@ paths:
 
 Issue #139 added per-tenant cost/abuse caps. They are all **state caps** — they
 count current data rather than metering a rate — and `lib/quota.js`'s own header
-comment is the authoritative list. Today it holds **six** ceilings, in two
+comment is the authoritative list. Today it holds **seven** ceilings, in two
 groups:
 
 | Cap | Checked in | Refusal | Since |
@@ -18,6 +18,7 @@ groups:
 | games per round | `lib/routes/games.js`, `lib/routes/lookup.js` | `quota_games` | #139 |
 | tags per round | `lib/routes/tags.js`, `lib/routes/games.js` | `quota_tags` | #238 |
 | members per round | `lib/routes/members.js` | `quota_members` | #563 |
+| expansions per game | `lib/routes/games.js` | `quota_expansions` | #653 |
 | accepted friends per user | `lib/routes/friends.js` | `quota_friends` | #325 |
 | open outgoing friend requests per user | `lib/routes/friends.js` | `quota_requests` | #325 |
 

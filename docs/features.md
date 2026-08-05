@@ -18,7 +18,12 @@ What the app does, in detail. For a short overview see the
   puts your name on your actions in the Chronik.
 - **Games** – each game has a title, a required player range (min–max), any
   number of custom round **tags** (see below), and an optional cover image (paste
-  from clipboard or pick a file). When adding a
+  from clipboard or pick a file). A game's detail page can also record the
+  **expansions the round owns** for it — ticked off the list BoardGameGeek
+  already knows for the base game, or typed in by hand — so "do we still have
+  Seefahrer?" is answered by the app. An expansion that seats more (or fewer)
+  people widens the range the draw filters by, which is how the 5–6-player
+  extension stops a six-person evening from hiding the game you own. When adding a
   game, the title field doubles as a **search-as-you-type lookup**: it queries
   the **PlayStation Store**, **Steam**, the **Nintendo eShop** and the
   **Xbox / Microsoft Store** (digital games) and **BoardGameGeek** (board games)

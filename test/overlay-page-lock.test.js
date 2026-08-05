@@ -30,6 +30,9 @@ const CONTAINED = [
   '.sheet',              // every one of the app's ten bottom sheets
   '.lookup__menu',       // the add-game suggestion dropdown
   '.cover-picker__grid', // the edition-cover picker
+  // The expansion tick-list (#653) — a game can have 100+ expansions, so the
+  // list is bounded, and it sits in the popover/sheet editor.
+  ':is(.popover--expansions, .editor--expansions) .exp-pick__body',
 ];
 const CHAINS = [
   // The session-setup game list sits INLINE on the page, not in an overlay.

@@ -620,3 +620,66 @@ test('a request with no ?lang= at all keeps the deployment default', async () =>
   await request(app).get(L('/search?provider=psstore&q=nolangatall'));
   assert.match(seen, /\/de-de\/search\//);
 });
+
+/* --------------------------- expansions (#653) ---------------------------- */
+
+// A /thing body carrying the expansion links parseThing has always had access
+// to. The `id` here has to be unique per spec: this file shares one 10-minute
+// cache, so a reused id is answered from an earlier test's entry and the stub
+// silently proves nothing (.claude/rules/bgg-collection-import.md §4).
+const EXPANSIONS_XML = `<items><item type="boardgame" id="exp1">
+  <name type="primary" value="CATAN"/>
+  <minplayers value="3"/><maxplayers value="4"/>
+  <link type="boardgameexpansion" id="325" value="Seafarers"/>
+  <link type="boardgameexpansion" id="99" value="Basis" inbound="true"/>
+</item></items>`;
+
+test('GET …/lookup/expansions lists what BGG knows, dropping the inbound link', async () => {
+  await withToken('test-token', async () => {
+    stubFetch(() => htmlRes(EXPANSIONS_XML));
+    const res = await request(app).get(L('/expansions?provider=bgg&id=exp1'));
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.expansions, [{ providerId: '325', title: 'Seafarers' }]);
+  });
+});
+
+test('the expansion list reuses the detail hop’s cache entry — no extra request', async () => {
+  await withToken('test-token', async () => {
+    let calls = 0;
+    global.fetch = async () => { calls += 1; return htmlRes(EXPANSIONS_XML.replace('exp1', 'exp2')); };
+
+    await request(app).get(L('/game?provider=bgg&id=exp2'));
+    assert.equal(calls, 1);
+    const res = await request(app).get(L('/expansions?provider=bgg&id=exp2'));
+    assert.equal(calls, 1, 'the same /thing body answers both — that is the whole point');
+    assert.equal(res.body.expansions.length, 1);
+  });
+});
+
+test('expansions are an OPTIONAL capability: a storefront answers 400, never a fetch', async () => {
+  let called = false;
+  stubFetch(() => { called = true; return htmlRes(page({})); });
+  const res = await request(app).get(L('/expansions?provider=psstore&id=X'));
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, 'expansions_unsupported');
+  assert.equal(called, false, 'refused before any upstream call');
+
+  assert.equal((await request(app).get(L('/expansions?provider=bgg'))).status, 400, 'missing id');
+  assert.equal((await request(app).get(L('/expansions?provider=nope&id=1'))).status, 400);
+});
+
+test('expansions degrade to an empty list without a token, and 502 on an outage', async () => {
+  await withToken(null, async () => {
+    let called = false;
+    stubFetch(() => { called = true; return htmlRes(EXPANSIONS_XML); });
+    const res = await request(app).get(L('/expansions?provider=bgg&id=exp3'));
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.expansions, []);
+    assert.equal(called, false);
+  });
+  await withToken('test-token', async () => {
+    stubFetch(() => { throw new Error('network down'); });
+    const res = await request(app).get(L('/expansions?provider=bgg&id=exp4'));
+    assert.equal(res.status, 502);
+  });
+});

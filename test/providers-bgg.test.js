@@ -44,6 +44,8 @@ const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
     <minplaytime value="60"/>
     <maxplaytime value="120"/>
     <link type="boardgamecategory" id="1015" value="Civilization"/>
+    <link type="boardgameexpansion" id="325" value="CATAN: Seafarers"/>
+    <link type="boardgameexpansion" id="926" value="CATAN: Cities &amp; Knights"/>
   </item>
 </items>`;
 
@@ -206,7 +208,95 @@ test('parseThing normalizes a BGG item (analog, players, cover, url)', () => {
     type: 'analog',
     imageUrl: 'https://cf.geekdo-images.com/abc__thumb/img/xyz=/fit-in/200x150/filters:strip_icc()/pic9156909.png',
     url: 'https://boardgamegeek.com/boardgame/13',
+    expansions: [
+      { providerId: '325', title: 'CATAN: Seafarers' },
+      { providerId: '926', title: 'CATAN: Cities & Knights' },
+    ],
   });
+});
+
+// --- expansions (#653) ----------------------------------------------------
+
+test('parseThing drops the INBOUND expansion link, so a game is never its own expansion', () => {
+  // What /thing?id=<an expansion> answers: the same link type, pointing BACK at
+  // the base game. Without the filter, opening the tick-list for an expansion
+  // offers the base game as one of its expansions.
+  const xml = `<items><item type="boardgameexpansion" id="926">
+    <name type="primary" value="Cities &amp; Knights"/>
+    <link type="boardgameexpansion" id="13" value="CATAN" inbound="true"/>
+    <link type="boardgameexpansion" id="2000" value="Cities &amp; Knights: 5-6 Player Extension"/>
+  </item></items>`;
+  assert.deepEqual(bgg.parseThing(xml, '926').expansions, [
+    { providerId: '2000', title: 'Cities & Knights: 5-6 Player Extension' },
+  ]);
+});
+
+test('parseThing reports an empty expansion list rather than omitting the key', () => {
+  // The token-absent and empty-body paths answer with this shape too, so the
+  // client can render the section without a presence check.
+  assert.deepEqual(bgg.parseThing('', '13').expansions, []);
+  const bare = '<items><item type="boardgame" id="1"><name type="primary" value="X"/></item></items>';
+  assert.deepEqual(bgg.parseThing(bare, '1').expansions, []);
+});
+
+test('parseExpansionDetails reads a MULTI-item /thing body into stored-expansion shape', () => {
+  // One request for every ticked box: /thing?id=325,926 answers both items.
+  const xml = `<items>
+    <item type="boardgameexpansion" id="325">
+      <name type="primary" value="CATAN: Seafarers"/>
+      <minplayers value="3"/><maxplayers value="4"/>
+    </item>
+    <item type="boardgameexpansion" id="2000">
+      <name type="alternate" value="Nur alternativ"/>
+      <minplayers value="0"/><maxplayers value="0"/>
+    </item>
+  </items>`;
+  assert.deepEqual(bgg.parseExpansionDetails(xml), [
+    {
+      providerId: '325',
+      title: 'CATAN: Seafarers',
+      minPlayers: 3,
+      maxPlayers: 4,
+      url: 'https://boardgamegeek.com/boardgameexpansion/325',
+    },
+    {
+      // BGG's "0 = unknown" must read as null — and a null range widens NOTHING
+      // on an expansion, which is the opposite of what it means on a base game.
+      providerId: '2000',
+      title: 'Nur alternativ',
+      minPlayers: null,
+      maxPlayers: null,
+      url: 'https://boardgamegeek.com/boardgameexpansion/2000',
+    },
+  ]);
+  assert.deepEqual(bgg.parseExpansionDetails(''), []);
+  assert.deepEqual(bgg.parseExpansionDetails('not xml'), []);
+});
+
+test('expansionDetails batches every id into ONE request and degrades without a token', async () => {
+  const calls = [];
+  const original = global.fetch;
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    return { ok: true, status: 200, text: async () => '<items></items>' };
+  };
+  const originalToken = process.env.BGG_API_TOKEN;
+  try {
+    process.env.BGG_API_TOKEN = 'tok';
+    await bgg.expansionDetails(['325', '926', '325', '', null]);
+    assert.equal(calls.length, 1, 'one request for the whole batch');
+    // Deduped, and the ids ride in one comma-separated `id` parameter.
+    assert.equal(new URL(calls[0]).searchParams.get('id'), '325,926');
+
+    delete process.env.BGG_API_TOKEN;
+    assert.deepEqual(await bgg.expansionDetails(['325']), []);
+    assert.deepEqual(await bgg.expansionDetails([]), []);
+    assert.equal(calls.length, 1, 'neither made a request');
+  } finally {
+    global.fetch = original;
+    if (originalToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = originalToken;
+  }
 });
 
 test('parseThing links an expansion under its own BGG path', () => {

@@ -553,6 +553,150 @@ module.exports = function repoContract(repo) {
     assert.equal(reread.image, null);
   });
 
+  /* ------------------------- expansions (#653) ------------------------------ */
+
+  const expFields = (over = {}) => ({ title: 'Seefahrer', source: null, minPlayers: null, maxPlayers: null, ...over });
+
+  test('setGameExpansions mints ids + addedAt and leaves the key ABSENT until used', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields());
+    // Absent-key parity: a game that never had expansions must not grow the key
+    // in either backend (a Postgres column default or a `[]` here would split
+    // them — .claude/rules/postgres-backend.md).
+    assert.equal('expansions' in game, false);
+    assert.equal('expansions' in (await repo.getRound(T, round.id)).games[0], false);
+
+    const saved = await repo.setGameExpansions(T, round.id, game.id, [
+      expFields({ title: '5–6 Spieler', minPlayers: 5, maxPlayers: 6 }),
+      expFields(),
+    ]);
+    assert.equal(saved.expansions.length, 2);
+    assert.ok(saved.expansions.every((e) => /^[0-9a-f]{16}$/.test(e.id)), 'ids are minted server-side');
+    assert.ok(saved.expansions.every((e) => typeof e.addedAt === 'string'));
+    assert.equal(saved.expansions[0].maxPlayers, 6);
+
+    const reread = (await repo.getRound(T, round.id)).games[0];
+    assert.deepEqual(reread.expansions, saved.expansions, 'and it survives a re-read');
+
+    assert.equal(await repo.setGameExpansions(T, round.id, 'missing', []), null);
+    assert.equal(await repo.setGameExpansions(T, 'missing', game.id, []), null);
+    assert.equal(await repo.setGameExpansions(OTHER, round.id, game.id, []), null);
+  });
+
+  test('a re-save keeps a kept expansion\'s id and addedAt, and mints only for new ones', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields());
+    const first = await repo.setGameExpansions(T, round.id, game.id, [expFields({ title: 'Seefahrer' })]);
+    const kept = first.expansions[0];
+
+    // Plant a distinguishable stored timestamp before re-saving. Comparing two
+    // freshly minted ones instead would be VACUOUS: they land in the same
+    // millisecond, so the assertion passes just as well against a merge that
+    // re-stamps every entry (measured — the break was silent).
+    const OLD = '2020-01-01T00:00:00.000Z';
+    await repo.updateGame(T, round.id, game.id, { expansions: [{ ...kept, addedAt: OLD }] });
+
+    // The client sends back the id it already holds; anything else is new. A
+    // client-supplied id that is NOT on this game must not be honoured either.
+    const second = await repo.setGameExpansions(T, round.id, game.id, [
+      { ...expFields({ title: 'Seefahrer' }), id: kept.id },
+      { ...expFields({ title: 'Städte & Ritter' }), id: 'not-a-real-id', addedAt: '1999-01-01T00:00:00.000Z' },
+    ]);
+    assert.equal(second.expansions[0].id, kept.id);
+    assert.equal(second.expansions[0].addedAt, OLD, 'a kept entry does not look re-added');
+    assert.notEqual(second.expansions[1].id, 'not-a-real-id', 'a caller cannot dictate an id');
+    assert.notEqual(second.expansions[1].addedAt, '1999-01-01T00:00:00.000Z');
+
+    // Dropping one is a plain replace.
+    const third = await repo.setGameExpansions(T, round.id, game.id, [{ ...expFields({ title: 'Seefahrer' }), id: kept.id }]);
+    assert.deepEqual(third.expansions.map((e) => e.title), ['Seefahrer']);
+  });
+
+  test('one count-carrying activity per save, and none when nothing was added', async () => {
+    const round = await freshRound();
+    const seat = round.members[0].id;
+    const game = await repo.createGame(T, round.id, gameFields());
+
+    // Two ticked at once is ONE row, not two — the games_imported reasoning.
+    const saved = await repo.setGameExpansions(T, round.id, game.id, [expFields({ title: 'A' }), expFields({ title: 'B' })], seat);
+    let feed = await repo.listActivities(T, round.id);
+    let acts = feed.filter((a) => a.type === 'game_expansion_added');
+    assert.equal(acts.length, 1);
+    assert.equal(acts[0].count, 2);
+    assert.equal(acts[0].title, game.title, 'the GAME\'s title — expansion titles stay on the game row');
+    assert.equal(acts[0].gameId, game.id);
+    assert.equal(acts[0].actorMemberId, seat);
+    // Anti-vacuous: the feed really does hold the game_added too, so a filter
+    // that matched nothing could not pass the assertions above.
+    assert.equal(feed.filter((a) => a.type === 'game_added').length, 1);
+
+    // A re-save of the same set adds nothing, so it is not an event.
+    await repo.setGameExpansions(T, round.id, game.id, saved.expansions, seat);
+    // Neither is a removal.
+    await repo.setGameExpansions(T, round.id, game.id, [], seat);
+    feed = await repo.listActivities(T, round.id);
+    acts = feed.filter((a) => a.type === 'game_expansion_added');
+    assert.equal(acts.length, 1, 'still just the one');
+
+    // Absent, not null, without an actor — matching every other activity writer.
+    await repo.setGameExpansions(T, round.id, game.id, [expFields({ title: 'C' })]);
+    const anon = (await repo.listActivities(T, round.id))
+      .filter((a) => a.type === 'game_expansion_added')
+      .find((a) => !a.actorMemberId);
+    assert.equal('actorMemberId' in anon, false);
+  });
+
+  test('expansions survive a move between rounds and a round copy, on fresh ids', async () => {
+    const src = await freshRound();
+    const dst = await freshRound({ name: 'Ziel' });
+    const game = await repo.createGame(T, src.id, gameFields({ title: 'Catan' }));
+    const saved = await repo.setGameExpansions(T, src.id, game.id, [expFields({ minPlayers: 5, maxPlayers: 6 })]);
+
+    // A copy takes them along on FRESH ids — a shared id would alias the two
+    // rounds in the JSON backend and make a redaction ambiguous in both.
+    const copy = await repo.createRound(T, { name: 'Copy', members: ['Z'], importFromRoundId: src.id });
+    assert.equal(copy.games[0].expansions.length, 1);
+    assert.equal(copy.games[0].expansions[0].title, 'Seefahrer');
+    assert.notEqual(copy.games[0].expansions[0].id, saved.expansions[0].id);
+
+    // A move is a true reparent, so the game keeps its own row and its ids.
+    await repo.moveGames(T, src.id, dst.id);
+    const moved = (await repo.getRound(T, dst.id)).games.find((g) => g.title === 'Catan');
+    assert.deepEqual(moved.expansions, saved.expansions);
+  });
+
+  test('an expansion title is redactable, and the expansion itself survives (#653)', async () => {
+    const round = await freshRound();
+    const other = await repo.createGame(T, round.id, gameFields({ title: 'Azul' }));
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    const saved = await repo.setGameExpansions(T, round.id, game.id, [
+      expFields({ title: 'Seefahrer', minPlayers: 3, maxPlayers: 6 }),
+      expFields({ title: 'Städte & Ritter' }),
+    ]);
+    const target = saved.expansions[0];
+
+    // The operator picks from a flat list, so the surface has to offer them.
+    const content = await repo.roundContent(round.id);
+    assert.deepEqual(content.expansions.map((e) => e.title), ['Seefahrer', 'Städte & Ritter']);
+    assert.equal(content.expansions[0].id, target.id);
+    assert.equal(other.id !== game.id, true);
+
+    const done = await repo.redactText({ kind: 'expansion', roundId: round.id, id: target.id }, '[entfernt]');
+    assert.equal(done.previous, 'Seefahrer');
+    assert.equal(done.kind, 'expansion');
+    assert.equal(done.roundId, round.id);
+
+    const reread = (await repo.getRound(T, round.id)).games.find((g) => g.id === game.id);
+    assert.equal(reread.expansions[0].title, '[entfernt]');
+    // Like a tag, the row survives: the id and the player range it widens by are
+    // untouched, so redacting a name never silently shrinks a draw pool.
+    assert.equal(reread.expansions[0].id, target.id);
+    assert.equal(reread.expansions[0].maxPlayers, 6);
+    assert.equal(reread.expansions[1].title, 'Städte & Ritter', 'its sibling is untouched');
+
+    assert.equal(await repo.redactText({ kind: 'expansion', roundId: round.id, id: 'nope' }, 'x'), null);
+  });
+
   // #250: Active / Retired / Completed are mutually exclusive, and the data
   // layer — not just the UI — is what enforces it, so a client that calls both
   // endpoints can never produce a game that is in two archives at once.

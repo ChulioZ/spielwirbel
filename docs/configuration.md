@@ -119,8 +119,9 @@ self-hosted instance is unchanged.
 Per-tenant quotas (issue #139): in the public multi-tenant mode (`ACCOUNTS_ENABLED=true`)
 each tenant is capped on rounds (`MAX_ROUNDS_PER_TENANT`, default 10), games per
 round (`MAX_GAMES_PER_ROUND`, default 1000), custom tags per round
-(`MAX_TAGS_PER_ROUND`, default 30), and member seats per round
-(`MAX_MEMBERS_PER_ROUND`, default 50). With accounts off (the
+(`MAX_TAGS_PER_ROUND`, default 30), member seats per round
+(`MAX_MEMBERS_PER_ROUND`, default 50), and expansions per game
+(`MAX_EXPANSIONS_PER_GAME`, default 40). With accounts off (the
 default, single-tenant deploy) these are inert. See the quotas block in `.env.example`.
 
 Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate

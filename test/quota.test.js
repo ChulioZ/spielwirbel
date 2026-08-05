@@ -19,6 +19,7 @@ process.env.MAX_TAGS_PER_ROUND = '2';
 // round asked for one member already holds two — a ceiling of 2 would refuse the
 // very first add and the spec could not tell a working cap from an off-by-one.
 process.env.MAX_MEMBERS_PER_ROUND = '3';
+process.env.MAX_EXPANSIONS_PER_GAME = '2';
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -261,4 +262,32 @@ test('quotas are inert when accounts are off (single-tenant deploy is unchanged)
     const res = await request(openApp).post(`/api/rounds/${rid}/members`).send({ name: `M${i}` });
     assert.equal(res.status, 201, `member ${i} should be added with quotas inert`);
   }
+});
+
+test('expansions-per-game cap (#653)', async (t) => {
+  const a = await makeAccount('exp-a@example.com');
+  const round = await request(app).post('/api/rounds').set(auth(a.token))
+    .send({ name: 'ExpRound', members: ['Alice'] });
+  const rid = round.body.id;
+  const game = (await request(app).post(`/api/rounds/${rid}/games`).set(auth(a.token))
+    .field('title', 'Catan').field('minPlayers', '3').field('maxPlayers', '4')).body;
+  const put = (expansions) => request(app).put(`/api/rounds/${rid}/games/${game.id}/expansions`)
+    .set(auth(a.token)).send({ expansions });
+
+  await t.test('accepts up to the limit, then 403 quota_expansions', async () => {
+    const ok = await put([{ title: 'E1' }, { title: 'E2' }]);
+    assert.equal(ok.status, 200);
+    assert.equal(ok.body.expansions.length, 2);
+
+    const over = await put([{ title: 'E1' }, { title: 'E2' }, { title: 'E3' }]);
+    assert.equal(over.status, 403);
+    assert.equal(over.body.error, 'quota_expansions');
+    assert.equal(over.body.limit, 2);
+
+    // Refused WHOLE, never truncated: a silently clipped list is how a group
+    // would lose an expansion with no error anywhere.
+    const stored = await request(app).get(`/api/rounds/${rid}`).set(auth(a.token));
+    assert.equal(stored.body.games[0].expansions.length, 2);
+    assert.deepEqual(stored.body.games[0].expansions.map((e) => e.title), ['E1', 'E2']);
+  });
 });

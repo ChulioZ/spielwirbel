@@ -70,9 +70,21 @@ returns the previous value.
   `Vorher` column — after blanking it is the only remaining evidence, which is
   precisely what an Art. 17 statement of reasons must quote.
 
+- An **expansion** (#653) is redacted by title only, for the same reason as a
+  tag: the row survives, so the player range it widens is untouched and a
+  redaction can never silently shrink a draw pool. It is the one kind the
+  `{ kind, roundId, id }` API cannot locate under its parent, so `roundContent`
+  flattens every game's expansions into one list and the lookup scans the shelf
+  — sound only because expansion ids are minted per entry and re-minted on a
+  round copy. See `.claude/rules/expansions-widen-by-union.md`.
+
 There are **no rating comments** (votes are numeric), so user-authored text is
-exactly: round name, game title, member name, tag name, feedback message.
-Feedback is global/un-scoped → it redacts by id alone, no tenant transaction.
+exactly: round name, game title, member name, tag name, expansion title,
+feedback message. **Adding a sixth means adding a `REDACT_KINDS` entry, both
+backends' `redactText`, the `roundContent` list and one line in the panel's flat
+row builder** — a new free-text field with no takedown path is a DSA answer the
+operator cannot give. Feedback is global/un-scoped → it redacts by id alone, no
+tenant transaction.
 
 ## 4. Inclusive date bounds are load-bearing, and asymmetric
 

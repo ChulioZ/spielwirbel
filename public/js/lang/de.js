@@ -155,6 +155,11 @@ I18N.de = {
   'activity.gamesImported': '{n} Spiele aus der BGG-Sammlung übernommen',
   'activity.memberAdded': '{name} ist dabei',
   'activity.roundRenamed': 'Runde in „{name}“ umbenannt',
+  // One entry per SAVE carrying a count (#653), like the two moves and the
+  // import above: ticking ten boxes at once must not bury the round's feed.
+  // The expansion's own name stays on the game row and out of the payload.
+  'activity.expansionAddedOne': '{n} Erweiterung zu „{title}“ eingetragen',
+  'activity.expansionAdded': '{n} Erweiterungen zu „{title}“ eingetragen',
 
   'games.title': 'Spiele ({n})',
   'games.empty': 'Noch keine Spiele. Füge euer erstes Spiel hinzu!',
@@ -369,6 +374,29 @@ I18N.de = {
   'detail.toast.coverDisabled': '{provider} ist in dieser Runde deaktiviert.',
   'detail.toast.coverUnreachable': '{provider} ist gerade nicht erreichbar.',
 
+  'detail.expansionsTitle': 'Erweiterungen',
+  'detail.expansionsEmpty': 'Noch keine Erweiterung eingetragen.',
+  'detail.expansionAdd': 'Erweiterung hinzufügen',
+  'detail.expansionRemove': 'Entfernen',
+  'detail.expansionRemoveConfirm': '„{title}“ aus euren Erweiterungen entfernen?',
+  'detail.expansionPickTitle': 'Von {provider}',
+  'detail.expansionPickEmpty': '{provider} kennt keine weiteren Erweiterungen für dieses Spiel.',
+  'detail.expansionPickError': '{provider} ist gerade nicht erreichbar.',
+  'detail.expansionOwnTitle': 'Eigene Erweiterung',
+  'detail.expansionNamePlaceholder': 'Name der Erweiterung',
+  'detail.expansionRangeHint': 'Spielerzahl der Erweiterung — nur zusammen ausfüllen, sonst ändert sie nichts.',
+  'detail.expansionNoRange': 'ohne Spielerzahl',
+  'detail.toast.expansionsSaved': 'Erweiterungen gespeichert',
+  'detail.toast.expansionNeedsBoth': 'Bitte beide Spielerzahlen ausfüllen — oder beide leer lassen.',
+  'detail.toast.expansionRange': 'Die höchste Spielerzahl muss mindestens so groß sein wie die niedrigste.',
+  'detail.toast.expansionQuota': 'Für dieses Spiel sind schon zu viele Erweiterungen eingetragen.',
+  // Appended to the players chip when what the round OWNS seats more (or fewer)
+  // people than the base box does.
+  'detail.expansionUpTo': 'mit Erweiterung bis {n}',
+  'detail.expansionFrom': 'mit Erweiterung ab {n}',
+  'detail.expansionsBadgeOne': '{n} Erweiterung',
+  'detail.expansionsBadge': '{n} Erweiterungen',
+
   'linkProvider.title': 'Mit Anbieter verknüpfen',
   'linkProvider.searchLabel': 'Spiel bei einem Anbieter finden',
   'linkProvider.searchHint': 'Tippen für Vorschläge. Ein Treffer speichert die Verknüpfung.',
@@ -517,6 +545,9 @@ I18N.de = {
   'result.barTitle': '{c}× die Note {r}',
   'result.sortFlag': '{n}× Aussortieren vorgeschlagen',
   'result.retireNow': '— jetzt aussortieren',
+  // Named on the results screen when the winning game only seats this table
+  // because the round owns an expansion for it (#653).
+  'result.needsExpansion': 'Braucht Erweiterung: {names}',
   'result.retireNowConfirm': '„{title}“ jetzt aussortieren? Es wird aus der Spieleliste der Runde entfernt.',
   'result.retiredTag': 'aussortiert',
   'result.completedTag': 'durchgespielt',
