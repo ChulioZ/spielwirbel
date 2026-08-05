@@ -135,6 +135,23 @@ browser contacts nothing new.
   game it belongs to, from that game's own detail page, so importing 50 of them
   as shelf entries would create exactly the noise this exclusion prevents *and*
   the wrong kind of row. See `.claude/rules/expansions-widen-by-union.md`.
+
+  **Importing them AS CHILDREN of their base game was proposed and declined
+  (operator decision, 2026-08-05) — the blocker is in BGG's data, not in our
+  UI.** A collection item's children are `name`, `yearpublished`, `image`,
+  `thumbnail`, `stats`, `status`, `numplays` and **no `<link>` elements at
+  all**; `/collection` has no links parameter. So the response says *that* an
+  item is an expansion (`subtype`, which `parseCollection` already reads) but
+  never *which base game it belongs to*. Building the tree needs a second hop —
+  `/thing?id=<every owned expansion id>`, read the `inbound="true"`
+  boardgameexpansion link, i.e. the inverse of the link `parseExpansionLinks`
+  filters out — in batches, against the shared 8 s budget. Three product
+  questions ride on top and none has an obvious answer: an expansion's `inbound`
+  links are a **list** (a promo fitting two base games has no single parent), an
+  expansion whose base game is not in the collection needs a visible
+  unimportable state rather than being dropped, and the write stops being atomic
+  because a newly created parent has no id until `createGames` returns. Don't
+  re-derive this; if it is ever revisited, start from those three.
 - **Games already on the shelf are still SHOWN — never dropped — but out of the
   actionable list** (#625 changed the *placement*, not that reasoning: hiding
   half the user's own collection reads as the import having lost games). They
