@@ -138,6 +138,27 @@ test('a stored expansion is kept verbatim by id, and dropped by omission', async
   assert.equal(feed.body.filter((a) => a.type === 'game_expansion_added').length, 1);
 });
 
+test('a repeated id is kept once — a stored list must never hold one id twice', async () => {
+  // The UI cannot produce this; a hand-rolled request can. Two entries with one
+  // id would make removing either ambiguous and break the uniqueness the
+  // operator's expansion redaction relies on (it locates an entry by id alone
+  // across the whole shelf — see .claude/rules/expansions-widen-by-union.md).
+  const round = await createRound(request);
+  const game = (await addGame(round.id)).body;
+  const first = (await request(app).put(PUT_EXP(round.id, game.id))
+    .send({ expansions: [{ title: 'Seefahrer' }] })).body;
+  const kept = first.expansions[0];
+
+  const res = await request(app).put(PUT_EXP(round.id, game.id))
+    .send({ expansions: [{ id: kept.id }, { id: kept.id }, { id: kept.id }] });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.expansions.map((e) => e.id), [kept.id]);
+
+  // And it really is the stored state, not just the response.
+  const stored = (await request(app).get(`/api/rounds/${round.id}`)).body.games[0];
+  assert.equal(stored.expansions.length, 1);
+});
+
 test('PUT expansions 404s for an unknown round or game and clears with an empty list', async () => {
   const round = await createRound(request);
   const game = (await addGame(round.id)).body;
