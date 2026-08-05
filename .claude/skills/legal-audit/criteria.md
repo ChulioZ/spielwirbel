@@ -89,6 +89,15 @@ than an acknowledged gap.
   newsletter, any Art. 6(1)(a) purpose), a **paid tier** (§§ 104 ff. BGB), **public
   dissemination of user content** (public rounds/sharing moves the service toward the DSA
   platform tier and Art. 28's minors duties), or **child-directed features**.
+
+  **"Sign-in-gated" is not a dissemination barrier here** (added 2026-08-04, first applied
+  to the #558 profiles). `DEMO_ENABLED` has been on in production since 2026-07-27 (#427),
+  so any visitor gets a seeded, fully writable account **in one request, without
+  registering** — a gate that anyone can walk through on demand keeps nothing out. So when
+  judging whether a surface counts as public dissemination, weigh **how thin the disclosed
+  data is**, never the fact that a login sits in front of it. An argument of the form "only
+  logged-in users can see it" is invalid on this instance and should be treated as a
+  finding in its own right if a document leans on it.
 - **Enforced by:** — (manual)
 
 ### L-008 — The internal records still describe the running system

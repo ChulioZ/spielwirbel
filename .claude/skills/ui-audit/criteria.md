@@ -117,10 +117,19 @@ is not a UI finding, it is a rejected idea.
   **Fluid `clamp()` sizing is in scope for display/hero type only**: never for body text
   (a `vw`-driven body size shrinks exactly where reading is hardest), and never below a
   size's current value — see **U-R04**, the floor is not negotiable.
-  **State as of 2026-07-26:** **22 distinct hardcoded sizes**, no tokens, covering every
-  integer from 10px to 22px; 14/15/16/17px alone account for 91 declarations — four
-  body sizes no reader can tell apart as hierarchy levels.
-- **Enforced by:** — (manual; `grep -o 'font-size: *[0-9.]*px' public/styles.css | sort -u`)
+  **State as of 2026-08-05 (#470 shipped, closed 2026-08-02 — this is now a *done*
+  criterion, not a debt list):** the scale exists as **8 tokens** (`--text-xs` 12px →
+  `--text-4xl` 40px, each carrying the sizes it absorbed as a comment) with **226**
+  `var(--text-*)` uses. The old note read "22 distinct hardcoded sizes, no tokens".
+  The residual is **35 hardcoded px `font-size` declarations — and all 35 carry the
+  marker `/* glyph, not type */`**, i.e. they size a Tabler `.ti` glyph or an avatar
+  initial, which are *artwork* and correctly outside the type scale. **Zero unannotated
+  px sizes remain** (measured, not estimated). So do not re-raise the residual as
+  partial migration; the finding to look for now is the *new* one that skipped the
+  scale.
+- **Enforced by:** — (manual, but the marker makes it a one-liner: any hit from
+  `grep -E 'font-size:\s*[0-9.]+px' public/styles.css | grep -v 'glyph, not type'`
+  is a finding. It returns nothing today.)
 
 ### U-014 — Colour mixing happens in a perceptually uniform space
 - **Status:** adopted · 2026-07-26
@@ -134,8 +143,12 @@ is not a UI finding, it is a rejected idea.
   distant hues pass through a muddy, desaturated middle. Since this app *derives its
   entire palette* by mixing (`--sunken`, `--line`, `--brand-tint*`, `--brand-edge`, the
   whole `--stage-*` family), the interpolation space is a design decision, not a detail.
-  **State as of 2026-07-26:** all **31** `color-mix()` calls in `public/styles.css` are
-  `in srgb`.
+  **State as of 2026-08-05:** all **37** `color-mix()` calls in `public/styles.css` are
+  still `in srgb` and **none** is `oklab`/`oklch` — the count was 31 when this criterion
+  was measured on 2026-07-26, so new derived tones keep being minted in the non-uniform
+  space while the migration waits. **#544 owns the migration**; re-measuring the count
+  here is not a new finding, it is that issue's scope — route it there rather than
+  re-filing it each sweep.
 - **Caveat — this is not a find-and-replace.** Changing the space **changes the rendered
   colour** of every derived token: an oklab mix toward `#000` at the same percentage
   lands lighter than the sRGB one, so the percentages have to be re-tuned by eye, not

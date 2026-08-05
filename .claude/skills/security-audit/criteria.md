@@ -172,10 +172,17 @@ that a generic scanner does not know about.
 - **Source:** `lib/validate.js` · `lib/routes/*.js`
 - **Check:** State-changing routes run `validateBody(schema, req, res)` and reject shape
   violations with the route's own message. Unknown fields are stripped, not trusted.
-  A new write route that reads `req.body.x` without a schema is a finding. The two
-  pre-zod routes that validate inline (`lib/routes/members.js`, `lib/routes/background.js` —
-  every field checked before use) are accepted as-is; converting them is optional
-  consistency work, not a finding (audit 2026-07-24).
+  A new write route that reads `req.body.x` without a schema is a finding. #547 finished
+  the #213 sweep, so every write route now reaches zod — but **three deliberate shapes do
+  not go through `validateBody`, and none of them is a finding** (audit 2026-08-04):
+  `lib/routes/background.js` parses a `.catch({ type: 'none' })` union and therefore
+  **never 400s** (a malformed design falls back to "default" — the pre-zod behaviour, kept
+  on purpose); `lib/routes/account.js` applies its field schemas through `safeParse`
+  helpers (`validEmail`/`validPassword`/`validUsername`/`validBggUsername`) because it
+  validates fields independently, not one body shape; and `lib/routes/auth.js` reads the
+  single `password` field straight into `passwordMatches`, which is a comparison rather
+  than a shape. Judge a route by *whether hostile input can reach the store unchecked*,
+  not by whether it calls `validateBody`.
 - **Enforced by:** `test/validate.test.js`, per-route validation specs
 
 ### S-015 — Server-side fetch is confined to an allowlist of provider hosts (SSRF)
@@ -237,11 +244,26 @@ that a generic scanner does not know about.
 ### S-020 — CI security tooling stays wired and green
 - **Status:** adopted · 2026-07-24
 - **Source:** `.github/workflows/` · `.claude/rules/ci-aggregate-gate.md`, `gitleaks-license-flake.md`
-- **Check:** CodeQL (javascript-typescript + actions), gitleaks and the secret scan run on
-  every PR and gate merge. `npm audit` is clean and Dependabot alerts are zero — a new
-  advisory is a finding routed to the `dependabot` skill. A red gitleaks with only a
-  license-probe message is the documented transient flake (re-run), not a leak.
-- **Enforced by:** CI (CodeQL, gitleaks, secret-scan)
+- **Check:** All three run, but **only one of them gates a merge** — don't state or assume
+  otherwise (operator decision, 2026-08-04):
+  - **gitleaks** is the `gitleaks` job in `.github/workflows/secret-scan.yml`, and it *is*
+    a required status check. Branch protection requires exactly
+    `dco, ci-passed, eslint, syntax, gitleaks` — nothing else blocks a merge.
+    (The workflow is titled "Secret Scan" and its only job is `gitleaks`, so the two are
+    one thing, not two.)
+  - **GitHub secret scanning** with **push protection** is enabled repo-wide. It blocks at
+    `git push` time rather than as a status check — a real gate, a different mechanism.
+  - **CodeQL** runs as **default setup** (no workflow file; `actions` +
+    `javascript-typescript`, default query suite, on push/PR plus weekly). Its alerts are
+    reviewed and a security-severity finding is a finding — but it is **not** in the
+    required contexts, so **CodeQL does not gate merges**. A criterion or report claiming
+    it does is itself the finding.
+
+  `npm audit` is clean and Dependabot alerts are zero — a new advisory is a finding routed
+  to the `dependabot` skill. A red gitleaks with only a license-probe message is the
+  documented transient flake (re-run), not a leak.
+- **Enforced by:** CI (`gitleaks` — the one required context); CodeQL default setup and
+  secret-scanning push protection run outside the required-check set
 
 ## Public-repo disclosure risk
 

@@ -49,10 +49,16 @@ not a finding; the rejected entries below are that ledger.
   constants. Every duplicate either becomes a shared file the route `require`s
   out of `public/js/`, or carries a parity test as its explicit licence
   (`test/tag-icons.test.js`, `test/standalone-page-brand.test.js`,
-  `test/landing-copy.test.js` are the sanctioned instances). A copy that could
-  have been a `require()` is the bug waiting to happen.
-- **Enforced by:** the named parity tests for the existing licensed copies —
-  new duplicates are manual
+  `test/landing-copy.test.js` and `test/tags.test.js` — the `TAG_NAME_MAX`
+  client-`maxlength`-vs-server assertion, which licenses the literal "keep in
+  sync" comment in `lib/routes/tags.js` — are the sanctioned instances). A copy
+  that could have been a `require()` is the bug waiting to happen. Note the
+  shared-file *inventory* in the rule is itself enforced, by
+  `test/rule-enumerations.test.js`: a new `require('../public/js/…')` under
+  `lib/` that never gets listed fails the suite, so the inventory cannot rot into
+  a subset presented as the whole set.
+- **Enforced by:** the named parity tests for the existing licensed copies;
+  `test/rule-enumerations.test.js` for the inventory — new duplicates are manual
 
 ### M-003 — Mutating routes validate through the shared zod boundary
 - **Status:** adopted · 2026-07-29
@@ -108,7 +114,10 @@ not a finding; the rejected entries below are that ledger.
   in-memory rate-limiter stores (#215 tracks the Redis store as a scaling
   prerequisite), the `MAIL_DAILY_MAX` budget in `lib/mail.js` (per-process by
   documented decision, `bounding-bulk-registration-mail.md`), the 10-minute
-  lookup cache in `lib/routes/lookup.js`, the `/readyz` result cache in
+  provider-hop cache in `lib/provider-cache.js` (extracted from
+  `lib/routes/lookup.js` by #518/PR #587 once `lib/routes/games.js` became a
+  second consumer — it is one shared Map now, not one per route), the
+  `/readyz` result cache in
   `lib/observability.js`; or (c) a finding — state whose *correctness* (not
   merely efficiency) assumes one process. The done-right model is the demo
   machinery: liveness counts and cooldowns are read from the store per request,
