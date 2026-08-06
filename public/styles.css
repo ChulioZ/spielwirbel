@@ -2708,6 +2708,68 @@ body.auth-screen .terms-banner { display: none; }
   .vote--split .vote__nav { align-self: end; }
 }
 
+/* Phones (#666): the same "fits without scrolling" requirement the split layout
+   above solves by going two-column — but below 860px there is only one column,
+   so it has to be met on the HEIGHT axis instead. Measured at 390x640 before
+   this block: a 720px card starting at y=82, i.e. „Weiter" 82px below the fold
+   on EVERY game, so the voter scrolled once per rating for a whole session.
+
+   The cover is the elastic part, and it is deliberately the only one: it gives
+   way first, down to a 110px floor (the placeholder's own glyph line box is
+   96px, so a shorter frame clips the empty state). Everything else contributes
+   a fixed trim to padding and type. The mood buttons are NOT shrunk here —
+   they are the last resort and are not needed to make it fit.
+
+   `height` + `aspect-ratio: auto`, rather than keeping the ratio and capping it
+   with `max-height`: with `aspect-ratio: 4 / 3` still in force a definite
+   max-height is transferred BACK through the ratio and shrinks the box's WIDTH
+   — measured 147px wide instead of 320px, i.e. a thumbnail adrift in the card.
+   A free height distorts nothing, because the ::before/::after layers already
+   letterbox any cover into whatever box they get (blurred `cover` under sharp
+   `contain`, see the .vote__img::before rule).
+
+   The 480px is everything on the page that is NOT the cover, at a phone width:
+   top bar (66) + .app's top padding (16) + the card's other rows and the
+   cover's own margins (~354) + ~44 of slack. That slack is not breathing room
+   for its own sake — it is the allowance for a game title that wraps to a
+   second line (37px), which is common and which nothing else here absorbs.
+
+   `svh`, never `dvh`/`vh`: Firefox for Android (where this was reported) hides
+   its toolbar as you scroll, so `dvh` would reflow the card mid-session, and
+   the case that has to fit is the toolbar-SHOWN one, which is what `svh` is.
+   The max()/min() wrapper keeps a degenerate 0-height viewport from collapsing
+   the frame to nothing (the Claude Code Browser pane reports exactly that — see
+   .claude/rules/anchored-popover-is-placed-once.md) and caps the cover at the
+   height it has today, so a tall phone stretches it no further than 4/3.
+
+   Every selector is compounded (`.vote .x`, not `.x`) on purpose: the base
+   rules these override are declared FURTHER DOWN the sheet, where an equal
+   specificity override loses on source order — silently. That is not
+   hypothetical here; see the `.rating .mood` note in the <=520px block.
+
+   This styles the shared-link voting card (`views-vote-link.js`, #652) too —
+   it reuses the same `.vote` markup, and is if anything MORE phone-bound, being
+   a link someone opens from a group chat. */
+@media (max-width: 859px) {
+  .vote .vote-progress { padding-top: 10px; }
+  .vote .vote__who { padding-top: 10px; }
+  /* One line rather than two. At 77px stacked this was the tallest row on the
+     card after the cover; inline it costs 34px, the single biggest trim here. */
+  .vote .vote__who strong { display: inline; margin-top: 0; font-size: var(--text-lg); }
+  .vote .vote__img {
+    aspect-ratio: auto;
+    height: max(110px, min(240px, calc(100svh - 480px)));
+    margin: 10px 20px 6px;
+  }
+  .vote .vote__title { padding: 2px 20px; font-size: var(--text-xl); }
+  .vote .vote__q { margin: 2px 20px; font-size: var(--text-md); }
+  .vote .rating { padding: 6px 20px 2px; }
+  .vote .rating-scale { padding-top: 0; }
+  .vote .vote__sort { padding: 10px 20px 12px; }
+  .vote .sortBtn { padding: 10px; font-size: var(--text-md); }
+  .vote .vote__nav { padding: 0 20px 14px; }
+}
+
 
 /* ---- Ergebnisse ---- */
 .result-row {
@@ -3628,7 +3690,15 @@ kbd {
      the `:has(.dock…)` rule in the hub-tabs section, which is more specific
      than this shorthand and so still wins on a hub tab. */
   .app { padding: 16px 14px 40px; }
-  .mood { width: 56px; height: 60px; }
+  /* Compounded, because a bare `.mood` here is DEAD: this block sits ~770 lines
+     above `.mood`'s own rule, they tie at (0,1,0), and source order therefore
+     hands the phone every rating face at the desktop 64x68 — measured, and it
+     had been that way since the block was written. `.rating .mood` is (0,2,0)
+     and wins outright (.claude/rules/flex-none-cancels-flex-wrap.md). Both
+     surfaces that render a face put it inside `.rating`. The 8px this gives
+     back is real budget on the vote card (#666), but the rule is older than
+     that and stands on its own: a face is a phone-sized target here. */
+  .rating .mood { width: 56px; height: 60px; }
 }
 
 /* ---- Shared small helpers ---- */

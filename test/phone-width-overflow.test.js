@@ -32,7 +32,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { ROOT, RULES, rulesOf, bodyOf, mediaBlocks } = require('./support/css');
+const { ROOT, RULES, rulesOf, bodyOf, mediaBlocks, outranks } = require('./support/css');
 
 // The phone block this issue's overrides live in. Reversed so a lookup returns
 // the LAST declaration, i.e. the one the cascade actually applies.
@@ -41,22 +41,9 @@ const PHONE = mediaBlocks()
   .flatMap(([, css]) => rulesOf(css))
   .reverse();
 
-/* Specificity of the simple selectors involved here, as [ids, classes,
-   elements]. Enough for `.a`, `.a .b` and `.a.b`; it does not model :is()/:has()
-   and does not need to — every selector this file compares is a plain class
-   sequence, and a future one that isn't should be compared deliberately rather
-   than by a silently-wrong number. */
-function specificity(sel) {
-  const ids = (sel.match(/#[\w-]+/g) || []).length;
-  const classes = (sel.match(/[.:[][\w-]+/g) || []).length;
-  const els = (sel.replace(/[.#:[][\w-]+/g, '').match(/[a-z]+/g) || []).length;
-  return [ids, classes, els];
-}
-const outranks = (a, b) => {
-  const [x, y] = [specificity(a), specificity(b)];
-  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i];
-  return false; // a tie loses to source order, which is the bug being guarded
-};
+/* `specificity`/`outranks` moved to test/support/css.js when the vote card's
+   phone block needed the same comparison — the trap is the stylesheet's, not
+   this file's. */
 
 // `flex: <grow> <shrink> <basis>` (or the `none` keyword) out of a rule body.
 function flexOf(body) {
