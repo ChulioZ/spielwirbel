@@ -100,28 +100,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Verify all CI jobs succeeded
-        # Every dependency is compared against 'success' BY NAME. This is an
-        # allowlist on purpose, and the denylist it replaced was not merely
-        # untidy — it was broken:
-        #
-        #   contains(needs.*.result, 'failure') || … 'cancelled' || … 'skipped'
-        #
-        # shipped from #364 until 2026-08-06 and was observed reporting SUCCESS
-        # while `postgres` had FAILED (main, run 31114551171 attempt 1). A job
-        # that dies during "Set up job" — a runner or service-container failure,
-        # before any step runs — contributes no 'failure' entry to the
-        # `needs.*.result` object filter, and is neither 'cancelled' nor
-        # 'skipped', so all three arms missed it. Branch protection requires only
-        # this context, so that was a red build anyone could merge.
-        #
-        # `!= 'success'` catches an absent or empty result and anything nobody
-        # has thought of yet, which is the whole point of stating the ONE value
-        # that may pass rather than enumerating the ones that may not.
-        #
-        # Each job is named individually because `needs.*.result` is exactly the
-        # construct that cannot see an absent entry. test/ci-workflow.test.js
-        # asserts every job in `needs` appears here, so a new CI job cannot be
-        # wired into the gate and forgotten in the condition.
+        # needs.*.result is the array of dependency results. A plain `needs:` gate
+        # SUCCEEDS when a dependency is skipped, which would silently reopen the
+        # gap this job closes — so treat any non-success (failure/cancelled/
+        # skipped) as a gate failure. None of test/coverage/postgres skip
+        # conditionally today; the `skipped` guard is defence for a future change.
         if: >-
           contains(needs.*.result, 'failure') ||
           contains(needs.*.result, 'cancelled') ||
