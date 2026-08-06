@@ -4,6 +4,7 @@ paths:
   - "lib/routes/lookup.js"
   - "lib/repo/**"
   - "public/js/views-round-lookup.js"
+  - "public/js/wish-expansion.js"
   - "test/bgg-import.test.js"
   - "test/bgg-import-picker.test.js"
 ---
@@ -147,31 +148,60 @@ browser contacts nothing new.
 
 ## Smaller things
 
-- **Expansions are excluded here** (`excludesubtype=boardgameexpansion`) although
-  the *search* offers them deliberately — a bulk import is the one place where 50
-  expansions of one game are noise rather than choice. **That still holds now
-  that the app HAS a concept of an owned expansion (#653)**, and the reason is
-  unchanged rather than merely grandfathered: an expansion is recorded on the
-  game it belongs to, from that game's own detail page, so importing 50 of them
-  as shelf entries would create exactly the noise this exclusion prevents *and*
-  the wrong kind of row. See `.claude/rules/expansions-widen-by-union.md`.
+- **The two shelves differ on expansions, and the split is the whole point
+  (#664).** `excludesubtype=boardgameexpansion` is applied to `own` **only**:
 
-  **Importing them AS CHILDREN of their base game was proposed and declined
-  (operator decision, 2026-08-05) — the blocker is in BGG's data, not in our
-  UI.** A collection item's children are `name`, `yearpublished`, `image`,
-  `thumbnail`, `stats`, `status`, `numplays` and **no `<link>` elements at
-  all**; `/collection` has no links parameter. So the response says *that* an
-  item is an expansion (`subtype`, which `parseCollection` already reads) but
-  never *which base game it belongs to*. Building the tree needs a second hop —
-  `/thing?id=<every owned expansion id>`, read the `inbound="true"`
-  boardgameexpansion link, i.e. the inverse of the link `parseExpansionLinks`
-  filters out — in batches, against the shared 8 s budget. Three product
-  questions ride on top and none has an obvious answer: an expansion's `inbound`
-  links are a **list** (a promo fitting two base games has no single parent), an
-  expansion whose base game is not in the collection needs a visible
-  unimportable state rather than being dropped, and the write stops being atomic
-  because a newly created parent has no id until `createGames` returns. Don't
-  re-derive this; if it is ever revisited, start from those three.
+  - **OWNED stays excluded.** A bulk shelf import is the one place where 50
+    expansions of one game are noise rather than choice, and an expansion is
+    recorded *on the game it belongs to* — so importing them as shelf entries
+    would create that noise **and** the wrong kind of row. Unchanged by #653
+    rather than grandfathered.
+  - **WISHLIST includes them**, because there an expansion is exactly what the
+    group means to record ("we own Catan, we want Seefahrer"). Excluding them
+    silently dropped a large share of every wishlist import — half a list with no
+    indication anything was left out.
+
+  A wished expansion is a **game row with `wish: true` plus `expansionOf`**, the
+  base games BGG names for it. `expansionOf`'s *presence* is what marks a row as
+  an expansion, so it must stay **absent** on an ordinary game (absent-key
+  parity) and may legitimately be **`[]`** — see the orphan case below.
+
+  **#664 therefore partially reverses the 2026-08-05 operator decision** recorded
+  here, which declined nesting imported expansions under their base game. Two of
+  its three blockers are weaker on a wishlist: a wishlist is small, so "50
+  expansions is noise" does not apply, and the atomicity worry disappears because
+  a wished expansion needs no parent row while it is still a wish. The third
+  (multi-parent) is handled by asking. **It does not reverse the owned half**, and
+  that asymmetry is deliberate rather than drift.
+
+- **The parents need a SECOND hop, and it degrades rather than failing.** A
+  collection item's children are `name`, `yearpublished`, `image`, `thumbnail`,
+  `stats`, `status`, `numplays` and **no `<link>` elements at all**;
+  `/collection` has no links parameter. So the body says *that* an item is an
+  expansion (`subtype`, which `parseCollection` reads into `expansion`) and never
+  *which base game it expands*. `expansionParents(ids)` fills that in from
+  `/thing?id=…`, reading the `inbound="true"` boardgameexpansion links — the exact
+  inverse of what `parseExpansionLinks` filters out.
+
+  Three things about it fail quietly if changed:
+
+  - **Its cache key is the exact ID SET** (`bgg:expparents:<sorted ids>`), not the
+    handle. Keyed on the handle, a wishlist that changed between two fetches would
+    be answered from the previous set's entry — the §4 trap one level in.
+  - **Every failure degrades to "no parents known"**, never to an error. The
+    collection itself already arrived, and an expansion with no parent is a
+    perfectly good unattached wish; failing the whole listing because the optional
+    hop stumbled is a strictly worse answer.
+  - **An orphan is kept, not dropped.** BGG does not always report an inbound
+    link, so `expansionOf: []` is a real state the UI must show — it is the one
+    where "Ins Regal" stops and asks the user to file the expansion by hand.
+
+- **The `present` set must include ACQUIRED expansions**, which do not live in
+  `round.games` at all but on a base game's `expansions`. Without that arm the
+  wishlist import offers an expansion the group already owns on every re-run and
+  re-adds it as a fresh wish — the game-state-unfiltered reasoning above, one
+  level down. See `.claude/rules/expansions-widen-by-union.md` for the acquire
+  itself.
 - **Games already on the shelf are still SHOWN — never dropped — but out of the
   actionable list** (#625 changed the *placement*, not that reasoning: hiding
   half the user's own collection reads as the import having lost games). They

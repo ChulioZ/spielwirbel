@@ -99,6 +99,10 @@ test('the collection lists the account\'s owned games and marks what is already 
     imageUrl: 'https://cf.geekdo-images.com/x__thumb/img/y=/fit-in/200x150/pic13.png',
     url: 'https://boardgamegeek.com/boardgame/13',
     present: false,
+    // Uniform on both shelves (#664), and false by construction on this one —
+    // the owned hop still asks BGG to exclude expansions.
+    expansion: false,
+    expansionOf: [],
   });
 
   // The handle came from the ACCOUNT, and only owned base games were requested.
@@ -443,9 +447,11 @@ test('the wishlist import asks BGG for wishlist=1 and creates wishes, silently',
   assert.equal(urls.length, 1);
   assert.match(urls[0], /wishlist=1/);
   assert.equal(/[?&]own=1/.test(urls[0]), false, 'the wishlist hop must not also ask for the owned shelf');
-  // Expansions stay excluded here too — a bulk import is where 50 of them are
-  // noise, whichever shelf they came from.
-  assert.match(urls[0], /excludesubtype=boardgameexpansion/);
+  // Expansions are NOT excluded here (#664, reversing what #560 shipped): on a
+  // wishlist an expansion is exactly what the group means to record, so
+  // filtering them out silently dropped a large share of every import. The
+  // OWNED shelf still excludes them — asserted in the listing spec above.
+  assert.equal(/excludesubtype/.test(urls[0]), false);
 
   // Re-stubbed for the import hop; the listing's URLs have been asserted above.
   stubBgg(THREE);
@@ -472,6 +478,118 @@ test('the wishlist import asks BGG for wishlist=1 and creates wishes, silently',
   const feed = await request(app).get(`/api/rounds/${round.id}/activities`).set(auth(a.token));
   assert.equal(feed.body.filter((x) => x.type === 'games_imported').length, 0);
   assert.equal(feed.body.filter((x) => x.type === 'game_added').length, 0);
+});
+
+/* --------------- expansions on the wish list (#664) ------------------------ */
+
+// A wishlist item that IS an expansion. Only the subtype differs — a collection
+// body carries no <link> elements at all, which is the whole reason the parents
+// need a second hop.
+const expansionItem = (objectid, name) => `
+  <item objecttype="thing" objectid="${objectid}" subtype="boardgameexpansion" collid="c${objectid}">
+    <name sortindex="1">${name}</name>
+    <stats minplayers="5" maxplayers="6"/>
+    <status wishlist="1"/>
+  </item>`;
+
+// The /thing answer for those expansions: inbound="true" is "expands X".
+const PARENTS_XML = `<items>
+  <item type="boardgameexpansion" id="325">
+    <name type="primary" value="CATAN: Seafarers"/>
+    <link type="boardgameexpansion" id="13" value="CATAN" inbound="true"/>
+  </item>
+  <item type="boardgameexpansion" id="4002">
+    <name type="primary" value="Orphan Promo"/>
+  </item>
+</items>`;
+
+const WISH_WITH_EXPANSIONS = collectionXml(
+  item('13', 'CATAN'), expansionItem('325', 'CATAN: Seafarers'), expansionItem('4002', 'Orphan Promo'));
+
+// Route by endpoint: the wishlist hop needs the collection AND the /thing parent
+// resolution, which the single-body stub above cannot express.
+function stubBggRouted(bodies) {
+  const urls = [];
+  global.fetch = async (url) => {
+    const u = String(url);
+    urls.push(u);
+    return { status: 200, text: async () => (u.includes('/collection?') ? bodies.collection : bodies.thing) };
+  };
+  return urls;
+}
+
+test('a wished expansion is listed with the base game it belongs to (#664)', async () => {
+  const a = await makeAccount('imp-exp-list@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerExpList');
+
+  const urls = stubBggRouted({ collection: WISH_WITH_EXPANSIONS, thing: PARENTS_XML });
+  const res = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`)
+    .set(auth(a.token));
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.games.map((g) => g.expansion), [false, true, true]);
+  assert.deepEqual(res.body.games[1].expansionOf, [{ providerId: '13', title: 'CATAN' }]);
+  // BGG reported no inbound link for this one — an empty list, never a dropped
+  // candidate: it is still a game the group wants.
+  assert.deepEqual(res.body.games[2].expansionOf, []);
+  assert.equal(res.body.games[0].expansion, false, 'a base game on the wishlist is not an expansion');
+
+  // The parent hop asked for exactly the expansions, in ONE request.
+  const thing = urls.filter((u) => u.includes('/thing?'));
+  assert.equal(thing.length, 1);
+  assert.equal(new URL(thing[0]).searchParams.get('id'), '325,4002');
+});
+
+test('importing a wished expansion stores its base games, resolved SERVER-side', async () => {
+  const a = await makeAccount('imp-exp-write@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerExpWrite');
+
+  stubBggRouted({ collection: WISH_WITH_EXPANSIONS, thing: PARENTS_XML });
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/lookup/import?provider=bgg&status=wishlist`)
+    .set(auth(a.token))
+    // The body names an arbitrary parent; the route must ignore it entirely, or
+    // a hand-rolled request could graft a row onto any game of the round.
+    .send({ externalIds: ['13', '325', '4002'], expansionOf: [{ providerId: '9999', title: 'Evil' }] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.imported, 3);
+
+  const full = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  const byTitle = Object.fromEntries(full.body.games.map((g) => [g.title, g]));
+  assert.deepEqual(byTitle['CATAN: Seafarers'].expansionOf, [{ providerId: '13', title: 'CATAN' }]);
+  assert.deepEqual(byTitle['Orphan Promo'].expansionOf, []);
+  // The key marks a row as an expansion, so a plain wished game must not have it.
+  assert.equal('expansionOf' in byTitle.CATAN, false);
+  // The expansion's own range rides along — it is what widens the base game's
+  // pool once the expansion is acquired.
+  assert.equal(byTitle['CATAN: Seafarers'].minPlayers, 5);
+  assert.equal(byTitle['CATAN: Seafarers'].maxPlayers, 6);
+});
+
+test('an expansion the round has already ACQUIRED shows as present, not as a fresh wish', async () => {
+  const a = await makeAccount('imp-exp-present@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerExpPresent');
+
+  // Catan on the shelf, with Seafarers already recorded on its row — which is
+  // where an acquired expansion lives, so the plain game-level `present` check
+  // cannot see it.
+  const base = (await request(app).post(`/api/rounds/${round.id}/games`).set(auth(a.token))
+    .field('title', 'Catan').field('minPlayers', '3').field('maxPlayers', '4')
+    .field('sourceProvider', 'bgg').field('sourceExternalId', '13')).body;
+  await repo.forTenant((await repo.getUserByEmail('imp-exp-present@example.com')).tenantId)
+    .setGameExpansions(round.id, base.id, [{
+      title: 'CATAN: Seafarers', minPlayers: 5, maxPlayers: 6,
+      source: { provider: 'bgg', externalId: '325', url: null },
+    }]);
+
+  stubBggRouted({ collection: WISH_WITH_EXPANSIONS, thing: PARENTS_XML });
+  const res = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`)
+    .set(auth(a.token));
+  assert.deepEqual(res.body.games.map((g) => g.present), [true, true, false]);
 });
 
 /* THE CACHE-KEY TRAP. The two shelves are different BGG documents for one

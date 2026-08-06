@@ -237,6 +237,8 @@ I18N.de = {
   'bggImport.wishTile': 'Wunschliste von BGG',
   'bggImport.wishEmpty': 'Auf deiner BGG-Wunschliste steht nichts.',
   'bggImport.wishEmptyHint': 'Setze Spiele auf boardgamegeek.com auf deine Wunschliste und versuche es dann noch einmal.',
+  'bggImport.expansionOf': 'Erweiterung zu {titles}',
+  'bggImport.expansionUnknown': 'Erweiterung',
 
   // Cover der Ausgabe (#519): BoardGameGeek kennt zu jedem Spiel die Schachteln
   // aller Ausgaben — so lässt sich die Ausgabe wählen, die wirklich im Regal steht.
@@ -285,6 +287,15 @@ I18N.de = {
   'wish.deleteConfirm': '„{title}“ von der Wunschliste nehmen?',
   'wish.deleted': '„{title}“ von der Wunschliste genommen',
   'wish.add': 'Wunsch hinzufügen',
+  'wish.expansionOf': 'Erweiterung zu {titles}',
+  'wish.expansionOfUnknown': 'Erweiterung – BoardGameGeek nennt kein Grundspiel',
+  'wish.acquireConfirm': '„{title}“ als Erweiterung von „{base}“ eintragen?',
+  'wish.acquireBothConfirm': '„{base}“ steht noch auf der Wunschliste. Ins Regal stellen und „{title}“ als Erweiterung dazu eintragen?',
+  'wish.acquireWithBaseConfirm': '„{base}“ ist noch nicht in dieser Runde. Hinzufügen und „{title}“ als Erweiterung dazu eintragen?',
+  'wish.acquired': '„{title}“ gehört jetzt zu „{base}“',
+  'wish.pickBase': 'Zu welchem Spiel gehört „{title}“?',
+  'wish.pickParent': 'Welches Spiel soll für „{title}“ angelegt werden?',
+  'wish.noBase': 'Lege zuerst das Grundspiel in dieser Runde an.',
   'wish.tag': 'Wunschliste',
 
   'sessions.rated': '{n} Spiele bewertet',

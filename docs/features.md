@@ -89,10 +89,16 @@ What the app does, in detail. For a short overview see the
   campaign, a legacy box, a story-driven video game. Alongside them sits the
   **Wunschliste** — games the group wants but does not own yet, added by hand
   through the same add-game sheet or pulled in one shot from a linked
-  BoardGameGeek **wishlist**. A wish never turns up in a vote, a draw or any
-  count of the shelf, because the group cannot put it on the table; "Ins Regal"
-  moves it across the day they buy it, and that is when the round's Chronik and
-  the Freundeskreis feed report it — wanting a game is not news, getting it is.
+  BoardGameGeek **wishlist**. That import carries **expansions** too, which is
+  most of what a real wishlist holds — you own Catan, you want Seefahrer — and
+  each one says which game it belongs to. A wish never turns up in a vote, a draw
+  or any count of the shelf, because the group cannot put it on the table; "Ins
+  Regal" moves it across the day they buy it, and that is when the round's
+  Chronik and the Freundeskreis feed report it — wanting a game is not news,
+  getting it is. "Ins Regal" on a wished expansion instead records it on its base
+  game's expansion list, bringing that game along if the round does not have it
+  yet, so the expansion widens what the game can be drawn at rather than becoming
+  a box of its own that nobody can play.
   A game is active, retired, completed or wished-for, never two at once, and all
   three lists are reached from the round hub's footer. Every row on those lists
   opens the game's own detail page, so a game keeps its full editing surface —
