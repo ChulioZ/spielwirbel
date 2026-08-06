@@ -1153,12 +1153,13 @@ async function showArchive(rid, kind, seg = kind) {
     games.forEach((g) => {
       const fallback = coverPlaceholder(g);
       const when = a.at(g) ? fmtDateTime(a.at(g)) : '?';
+      const note = a.note ? a.note(g) : null;
       const row = h(`<div class="archive-row">
            <a class="archive-row__img">${fallback}</a>
            <div class="archive-row__body">
              <a class="archive-row__title">${esc(g.title)}</a>
              <div class="muted archive-row__meta"><i class="ti ${a.icon}" aria-hidden="true"></i> ${esc(t(`${kind}.at`, { when }))}</div>
-             ${a.note && a.note(g) ? `<div class="muted archive-row__meta">${esc(a.note(g))}</div>` : ''}
+             ${note ? `<div class="muted archive-row__meta">${esc(note)}</div>` : ''}
            </div>
            <div class="archive-row__actions">
              <button class="btn" data-act="restore"><i class="ti ${a.restoreIcon || 'ti-arrow-back-up'}" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
@@ -1319,7 +1320,11 @@ function pickExpansionBase(title, options) {
   backdrop.querySelector('.sheet__close').addEventListener('click', dismiss);
 
   options.forEach((opt) => {
-    const row = h(`<button type="button" class="ds-row wish-pick__row">
+    // `class` FIRST, like every other .ds-row site: test/ds-row-affordance.test.js
+    // finds construction sites with `<button\s+class="ds-row…"`, so an attribute
+    // in front of it makes the row invisible to the guard — it would pass
+    // vacuously rather than pinning that this row keeps the affordance.
+    const row = h(`<button class="ds-row wish-pick__row" type="button">
         <span class="ds-row__main">${esc(opt.label)}</span>
         <span class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></span>
       </button>`);
