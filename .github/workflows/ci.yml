@@ -63,7 +63,7 @@ jobs:
         # to an older major here proves the data-access contract against a
         # database production isn't running, and the gap widens with nobody
         # touching the repo. See .claude/rules/railway-postgres-floating-major.md.
-        image: postgres:18
+        image: postgres:18-this-tag-does-not-exist-664
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: gamesessions
