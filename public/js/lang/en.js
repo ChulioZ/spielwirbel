@@ -284,6 +284,7 @@ I18N.en = {
   'wish.deleteConfirm': 'Take “{title}” off the wish list?',
   'wish.deleted': '“{title}” taken off the wish list',
   'wish.add': 'Add a wish',
+  'wish.tag': 'wish list',
 
   'sessions.rated': '{n} games rated',
   'sessions.played': 'Played',

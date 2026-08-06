@@ -94,7 +94,10 @@ What the app does, in detail. For a short overview see the
   moves it across the day they buy it, and that is when the round's Chronik and
   the Freundeskreis feed report it — wanting a game is not news, getting it is.
   A game is active, retired, completed or wished-for, never two at once, and all
-  three lists are reached from the round hub's footer. The distinction carries through to the Pokale tab: a
+  three lists are reached from the round hub's footer. Every row on those lists
+  opens the game's own detail page, so a game keeps its full editing surface —
+  title, cover, player range, tags — after it has left the shelf; the page then
+  offers only the way back onto it. The distinction carries through to the Pokale tab: a
   retired game stops being named as anyone's favourite or as the game the group
   disagrees about, because retiring it withdraws that preference — while the
   nights you actually played it still count toward "Meistgespielt". A completed

@@ -205,6 +205,46 @@ test('the lobby hero band keeps its heading AND its muted sub-line at AA', () =>
     '.lobby-head sits on this wash: its heading in --ink, its sub-line in --ink-soft');
 });
 
+// --- the game detail page's Wunschliste state chip (#663) -------------------
+
+test('the Wunschliste state chip clears AA on every theme', () => {
+  /* The third state chip beside a game's title. Its two siblings encode a
+     semantic (--warn for aussortiert, --good for durchgespielt); wanting a game
+     is neither a warning nor an achievement, so this one takes the round's own
+     accent — which puts it on exactly the token pair the milestone chip below
+     had to reason its way to, and for the same reason: `--brand` ON a brand tint
+     lands 4.28-4.96 and misses AA on four of the eight accents.
+
+     Unlike that chip this is real TEXT, not an aria-hidden glyph, so the strict
+     bar is the one that binds rather than the one we choose to hold. Asserting
+     the tokens is what makes the arithmetic below apply to the shipped chip: a
+     retune to bare `var(--brand)` reddens here instead of dropping four themes
+     under AA in silence. */
+  const chip = bodyOf('.tag--wish');
+  assert.ok(chip, 'the .tag--wish rule was not found');
+  assert.match(chip, /background:\s*var\(--brand-tint\)/,
+    'the wish chip no longer washes with --brand-tint, so the numbers below do not apply to it');
+  assert.match(chip, /color:\s*var\(--brand-dark\)/,
+    'the wish chip label must stay --brand-dark: plain --brand drops to 4.28:1 on Sonnenuntergang');
+
+  // Read both mixes out of :root rather than restating them, so a retune of
+  // either token lands here instead of leaving a stale number behind.
+  const tint = /--brand-tint:\s*color-mix\(in srgb,\s*var\(--brand\)\s*(\d+)%,\s*var\(--surface\)\)/.exec(bodyOf(':root'));
+  assert.ok(tint, '--brand-tint should be a color-mix of --brand into --surface');
+  const darkMix = /--brand-dark:\s*color-mix\(in srgb,\s*var\(--brand\),\s*#000\s*(\d+)%\)/.exec(bodyOf(':root'));
+  assert.ok(darkMix, '--brand-dark should be a color-mix of --brand toward #000');
+
+  const surface = rootHex('--surface');
+  const failures = [];
+  for (const { accent } of THEMES) {
+    const label = composite(accent, '#000000', 1 - Number(darkMix[1]) / 100);
+    const bg = composite(accent, surface, Number(tint[1]) / 100);
+    const ratio = contrast(label, bg);
+    if (ratio < AA_TEXT) failures.push(`the wish chip under ${accent} = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [], 'the Wunschliste chip draws --brand-dark on --brand-tint');
+});
+
 // --- the Chronik milestone rows (#633) --------------------------------------
 
 test('the Chronik milestone row keeps its label, its meta line AND its icon at AA', () => {

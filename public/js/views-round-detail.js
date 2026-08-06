@@ -331,7 +331,17 @@ async function showGameDetail(rid, gameId) {
   const fallback = coverPlaceholder(game);
   app.innerHTML = '';
   renderSubScreenTabs(round, 'game');
-  app.appendChild(backRow(() => showRound(rid, 'regal')));
+  // The fallback destination is derived from the GAME's state, not from an
+  // origin argument (#663). Real history still wins — backRow feeds navBack —
+  // so this is the deep-link case, and a page reached by URL has no origin to
+  // pass: a game belongs to whichever screen lists it, whether it was opened
+  // from a shared link, a session results row or the Pokale cards.
+  app.appendChild(backRow(() => {
+    if (game.retired) return showRetired(rid);
+    if (game.completed) return showCompleted(rid);
+    if (game.wish) return showWishlist(rid);
+    return showRound(rid, 'regal');
+  }));
 
   // Send a partial update, then re-render the page from fresh data.
   async function updateGame(updates) {
@@ -797,16 +807,25 @@ async function showGameDetail(rid, gameId) {
   }
   if (game.retired) h1.append(space(), h(`<span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`));
   if (game.completed) h1.append(space(), h(`<span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`));
+  // The third chip (#663). Its key is `wish.tag`, not a fourth `result.*` one:
+  // the two above are shared with the session results rows, and a wish can never
+  // appear on one — the round does not own the game, so it was never played.
+  if (game.wish) h1.append(space(), h(`<span class="tag tag--wish">${iconText('ti-heart', t('wish.tag'))}</span>`));
 
   app.appendChild(head);
 
-  // Archive actions right from here. A game is Active, Retired or Completed
-  // (#250), so the three branches are exclusive: an archived game offers only
-  // the way back, an active one both ways out.
+  // Off-shelf actions right from here. A game is Active, Retired, Completed
+  // (#250) or Wished-for (#560), and the repo enforces that those four are
+  // mutually exclusive — so the branches are too: a game that is off the shelf
+  // offers only the way onto it, an active one both ways out.
   const actionWrap = h('<div class="toolbar" style="margin-top:18px"></div>');
-  // Restore out of whichever archive the game is in.
-  const restoreFrom = (kind, endpoint, body) => {
-    const restore = h(`<button class="btn"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('detail.restore'))}</button>`);
+  // Move the game onto the shelf, out of whichever state it is in. `opts` exists
+  // for the wish list alone (see its branch below); the two archives take the
+  // defaults.
+  const restoreFrom = (kind, endpoint, body, opts = {}) => {
+    const icon = opts.icon || 'ti-arrow-back-up';
+    const label = opts.label || t('detail.restore');
+    const restore = h(`<button class="btn"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
     restore.addEventListener('click', async () => {
       try {
         await api('POST', `/api/rounds/${rid}/games/${gameId}/${endpoint}`, body);
@@ -820,6 +839,18 @@ async function showGameDetail(rid, gameId) {
     restoreFrom('retired', 'retire', { retired: false });
   } else if (game.completed) {
     restoreFrom('completed', 'complete', { completed: false });
+  } else if (game.wish) {
+    // „Ins Regal" with the Regal's own icon, never „Wiederherstellen": the game
+    // is arriving on the shelf for the first time, so "restore" would claim it
+    // is going back somewhere it has never been. Same reasoning — and the same
+    // two values — as ARCHIVES.wish.restoreIcon in views-round-tabs.js.
+    //
+    // This branch is what keeps the active `else` below off a wished-for game.
+    // Without it a wish was offered „Direkt spielen", which the server refuses
+    // with a 400 `Game is on the wishlist` (the shared isActiveGame predicate,
+    // active-games-filter-sites.md) — so the user got a seat picker, a start
+    // button and an English server error.
+    restoreFrom('wish', 'wish', { wish: false }, { icon: 'ti-cards', label: t('wish.restore') });
   } else {
     // Direct launch: skip the vote and play this game right away.
     const play = h(`<button class="btn btn--primary"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>`);

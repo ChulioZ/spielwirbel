@@ -285,6 +285,7 @@ I18N.de = {
   'wish.deleteConfirm': '„{title}“ von der Wunschliste nehmen?',
   'wish.deleted': '„{title}“ von der Wunschliste genommen',
   'wish.add': 'Wunsch hinzufügen',
+  'wish.tag': 'Wunschliste',
 
   'sessions.rated': '{n} Spiele bewertet',
   'sessions.played': 'Gespielt',
