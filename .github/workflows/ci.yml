@@ -123,7 +123,7 @@ jobs:
         # asserts every job in `needs` appears here, so a new CI job cannot be
         # wired into the gate and forgotten in the condition.
         if: >-
-          needs.test.result != 'success' ||
-          needs.coverage.result != 'success' ||
-          needs.postgres.result != 'success'
+          contains(needs.*.result, 'failure') ||
+          contains(needs.*.result, 'cancelled') ||
+          contains(needs.*.result, 'skipped')
         run: exit 1
