@@ -366,9 +366,26 @@ function startVoting(round, session, games, people, opts = {}) {
       .join('')}</div>`;
   }
 
+  // Which control the pending re-render was triggered from, so focus can be put
+  // back on its rebuilt counterpart (#667). render() replaces the whole card, so
+  // a rating tap otherwise detaches the focused button and drops the keyboard
+  // user on <body> — a full Tab through the card again, once per game per voter,
+  // on the app's central action.
+  //
+  // Only the two in-place handlers set it; go(), onPopstate and the language
+  // switch leave it null on purpose, so *arriving* on a step never yanks focus
+  // into the middle of the card.
+  let refocus = null;
+
   function render() {
     const step = steps[idx];
     const total = steps.length;
+    // Consumed here rather than at the end: every path out of this function,
+    // including the intro's early return, must clear it, or a stale intent
+    // would fire on the next unrelated render.
+    const wanted = refocus;
+    refocus = null;
+    let restore = null;
     // Inside render(), not next to the currentView assignment above: unlike the
     // context label — which is the locale-independent round name and says so —
     // this title has a translated part, so it has to be re-applied when the
@@ -447,8 +464,10 @@ function startVoting(round, session, games, people, opts = {}) {
         b.style.background = avgColor(n);
         b.style.borderColor = avgColor(n);
       }
+      if (wanted && wanted.kind === 'mood' && wanted.n === n) restore = b;
       b.addEventListener('click', () => {
         votes[person.id][game.id] = { rating: n, retire: current.retire };
+        refocus = { kind: 'mood', n };
         render();
       });
       ratingEl.appendChild(b);
@@ -456,8 +475,10 @@ function startVoting(round, session, games, people, opts = {}) {
 
     const sortBtn = card.querySelector('.sortBtn');
     if (sortBtn) {
+      if (wanted && wanted.kind === 'sort') restore = sortBtn;
       sortBtn.addEventListener('click', () => {
         votes[person.id][game.id] = { rating: current.rating, retire: !current.retire };
+        refocus = { kind: 'sort' };
         render();
       });
     }
@@ -482,6 +503,12 @@ function startVoting(round, session, games, people, opts = {}) {
        switch (where nothing navigated) — the forward case is `go()`, which goes
        through syncUrl and resets there (#623, router.js). */
     app.appendChild(card);
+
+    // After the append, never before: focus() on a detached node is a no-op.
+    // A pointer user sees nothing change — the browser already focused the
+    // button on mousedown, and a scripted focus() does not turn on
+    // :focus-visible (`.claude/rules/accessibility-contrast-and-modals.md`).
+    if (restore) restore.focus();
   }
 
   async function finish() {
