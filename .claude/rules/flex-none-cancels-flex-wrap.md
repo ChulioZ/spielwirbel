@@ -3,6 +3,7 @@ paths:
   - "public/styles.css"
   - "public/js/views-round-tabs.js"
   - "test/phone-width-overflow.test.js"
+  - "test/vote-card-viewport-fit.test.js"
 ---
 
 # `flex: none` and `flex-wrap: wrap` on the same rule contradict each other — `none` wins
@@ -55,16 +56,27 @@ This bit twice in one PR:
 |---|---|---|
 | `.tools-label--short { display: inline }` | `.tools-label--short { display: none }` (~40 lines below) | **both** spellings hidden → the BGG import control rendered as a bare icon with **no accessible name** |
 | `.result-row__score { text-align: left }` | `.result-row__score { text-align: right }` (~1600 lines below) | the block stayed right-aligned under a left-aligned title |
+| `.mood { width: 56px; height: 60px }` | `.mood { width: 64px; height: 68px }` (~770 lines below) | every phone rendered the rating faces at the **desktop** size, for the life of the block |
+
+**The third one is the instructive one: it was already there while #621 was being
+fixed, and #621 did not find it.** Both of its own losses were caught by *looking
+at* the affected control; a face that is 8px too tall looks like a design choice,
+so the only way it surfaced was measuring `getComputedStyle` for an unrelated
+reason (#666's height budget, where the 8px was real money). So when you find one
+of these, **sweep the block** — `getComputedStyle` every declaration in it and
+diff against what it says — rather than fixing the one you tripped over.
 
 Compound them (`.section-tools .tools-label--short`, `.result-row
-.result-row__score`) so they win on specificity. This is
+.result-row__score`, `.rating .mood`) so they win on specificity. This is
 `.claude/rules/responsive-content-width.md`'s "your rule will lose" — same
 lesson, opposite end of the viewport axis; that file records it for the ≥1280px
 rail block, where three of five hides lost on the first try.
 
 `test/phone-width-overflow.test.js` compares the two selectors' specificity
 rather than asserting a rule exists, because "the rule is there" is exactly what
-is true in the broken state.
+is true in the broken state. `test/vote-card-viewport-fit.test.js` does the same
+for `.mood` and for every override in the vote card's own phone block; the shared
+`specificity`/`outranks` helper lives in `test/support/css.js`.
 
 ## Verifying overflow: `clientWidth` is honest, `window.innerWidth` is not
 

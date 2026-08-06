@@ -61,6 +61,29 @@ function mediaBlocks(css = CSS) {
 const whole = (cls) =>
   new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w-])');
 
+/* Specificity as [ids, classes, elements]. Enough for `.a`, `.a .b` and `.a.b`;
+   it does not model :is()/:has() and does not need to — every selector compared
+   through it is a plain class sequence, and a future one that isn't should be
+   compared deliberately rather than by a silently-wrong number.
+
+   This lives here rather than in one test because the question it answers comes
+   up wherever a media block overrides a component: several of this sheet's
+   media blocks are declared ABOVE the components they re-style, so an override
+   at equal specificity loses on source order — silently, and more than once for
+   real (`.claude/rules/flex-none-cancels-flex-wrap.md`). */
+function specificity(sel) {
+  const ids = (sel.match(/#[\w-]+/g) || []).length;
+  const classes = (sel.match(/[.:[][\w-]+/g) || []).length;
+  const els = (sel.replace(/[.#:[][\w-]+/g, '').match(/[a-z]+/g) || []).length;
+  return [ids, classes, els];
+}
+
+const outranks = (a, b) => {
+  const [x, y] = [specificity(a), specificity(b)];
+  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i];
+  return false; // a tie loses to source order, which is the bug being guarded
+};
+
 // The declared value of a custom property in :root, e.g. px('--w-wide') -> 1440.
 function rootPx(name) {
   const root = bodyOf(':root');
@@ -81,4 +104,7 @@ function gridSpec(body) {
    box: n columns need floor*n + gap*(n-1) <= width. */
 const columnsIn = (width, { floor, gap }) => Math.floor((width + gap) / (floor + gap));
 
-module.exports = { ROOT, CSS, RULES, rulesOf, bodyOf, mediaBlocks, whole, rootPx, gridSpec, columnsIn };
+module.exports = {
+  ROOT, CSS, RULES, rulesOf, bodyOf, mediaBlocks, whole, rootPx, gridSpec, columnsIn,
+  specificity, outranks,
+};
