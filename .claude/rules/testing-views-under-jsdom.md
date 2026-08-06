@@ -89,6 +89,29 @@ Also note `showGameDetail` suppresses the dashed chips on a **sparse** game and
 renders the onboarding panel instead — a bare fixture has no chips at all, and
 every selector misses for a reason unrelated to the test.
 
+## Scope a selector to the screen — the RAIL is in `dom.app` too
+
+`renderSubScreenTabs` prepends the desktop rail into `#app`, and the rail carries
+its own `<h1>` **and its own `.gd-title`** (the round-name editor,
+`views-round.js`). So `dom.app.querySelector('.gd-title')` on a game-detail spec
+returns the *round* name — and clicking it opens the round editor, which builds a
+`.rn-title-input`. The assertion that follows finds no `.gd-title-input` and
+reports "clicking the title opened no editor", i.e. it names the feature under
+test as broken while the real one was never touched. Met on #663.
+
+Scope to the screen's own container (`.gd-head .gd-title`, `.gd-head h1 .tag--…`).
+`test/back-control.test.js` filters `.rail`/`.dock` out of `#app` for the same
+reason — treat that as the norm, not as one spec's quirk.
+
+## `deepStrictEqual` fails on anything the VIEW constructed
+
+An object a view built — a request body handed to a stubbed `api` — is created
+inside the vm context, so it carries **that** realm's `Object.prototype`.
+`assert/strict`'s deep equality compares prototypes, so it reports "Values have
+same structure but are not reference-equal" on two objects that print
+identically. Spread it into this realm first (`{ ...calls[0].body }`), or assert
+field by field.
+
 ## The pane's falsehoods do NOT apply here
 
 jsdom is not the Claude Code Browser pane. `blur`/`focusout` **do** fire

@@ -1789,12 +1789,15 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .game-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--radius-sm); }
 /* Text titles underline on hover; image/tile targets get a brand ring. */
 .result-row__title.game-link:hover,
-.pokale-game__title.game-link:hover {
+.pokale-game__title.game-link:hover,
+.archive-row__title.game-link:hover {
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--brand) 60%, transparent);
 }
-.result-row__img.game-link { transition: box-shadow var(--dur-base) var(--ease-out); }
+.result-row__img.game-link,
+.archive-row__img.game-link { transition: box-shadow var(--dur-base) var(--ease-out); }
 .result-row__img.game-link:hover,
+.archive-row__img.game-link:hover,
 .result-podium__col.game-link:hover .result-podium__img {
   box-shadow: 0 0 0 3px var(--brand-edge);
 }
@@ -2751,6 +2754,17 @@ body.auth-screen .terms-banner { display: none; }
 .tag--completed {
   background: color-mix(in srgb, var(--good) 14%, var(--surface));
   color: var(--good);
+}
+/* The third state chip (#663, #560). The Wunschliste is neither a warning nor
+   an achievement, so it takes the round's own accent instead of a semantic
+   colour — via the PREPARED --brand-tint rather than a fresh color-mix, which
+   would only be another srgb mix for #544 to chase. --brand-dark, not --brand:
+   the accent on its own tint measures 4.28–4.96:1 and misses AA on four of the
+   eight themes, while --brand-dark clears it everywhere
+   (theme-derived-colors.md). */
+.tag--wish {
+  background: var(--brand-tint);
+  color: var(--brand-dark);
 }
 .rank-medal { font-size: var(--text-xl); margin-right: 6px; vertical-align: middle; }
 .rank-medal--gold { color: var(--gold); }
@@ -4770,7 +4784,10 @@ kbd {
 }
 .archive-row__img .ti { font-size: 24px; /* glyph, not type */ }
 .archive-row__body { flex: 1; min-width: 200px; }
-.archive-row__title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
+/* An <a> since #663, so `display: block` restores the block box the slot used to
+   hold — same shape as .result-row__title, which is an anchor for the same
+   reason. Colour and underline come from .nav-link. */
+.archive-row__title { display: block; font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
 .archive-row__meta { font-size: var(--text-sm); font-weight: 600; margin-top: 3px; }
 .archive-row__actions { display: flex; gap: 8px; flex: none; flex-wrap: wrap; }
 .archive-row__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }

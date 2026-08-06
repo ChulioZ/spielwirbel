@@ -1143,9 +1143,9 @@ async function showArchive(rid, kind, seg = kind) {
       const fallback = coverPlaceholder(g);
       const when = a.at(g) ? fmtDateTime(a.at(g)) : '?';
       const row = h(`<div class="archive-row">
-           <div class="archive-row__img">${fallback}</div>
+           <a class="archive-row__img">${fallback}</a>
            <div class="archive-row__body">
-             <div class="archive-row__title">${esc(g.title)}</div>
+             <a class="archive-row__title">${esc(g.title)}</a>
              <div class="muted archive-row__meta"><i class="ti ${a.icon}" aria-hidden="true"></i> ${esc(t(`${kind}.at`, { when }))}</div>
            </div>
            <div class="archive-row__actions">
@@ -1154,6 +1154,17 @@ async function showArchive(rid, kind, seg = kind) {
            </div>
          </div>`);
       if (g.image) loadCover(row.querySelector('.archive-row__img'), coverUrl(g.image, COVER_THUMB));
+      // The way back INTO a game that has left the shelf (#663): until these
+      // three screens linked their rows, an off-shelf game's detail page — where
+      // its title, cover, range and tags are edited — was reachable by URL only.
+      // The row itself must NOT become the link: it holds the Restore and Delete
+      // buttons, and a <button> inside an <a> is invalid HTML, so this is the
+      // "linked half + inert remainder" shape ds-row-is-a-click-target.md
+      // records. The cover is flagged redundant — it targets the same game as
+      // the title beside it, so it stays mouse-clickable but leaves the tab order
+      // and the accessibility tree rather than announcing as a nameless control.
+      makeGameLink(row.querySelector('.archive-row__title'), rid, g.id);
+      makeGameLink(row.querySelector('.archive-row__img'), rid, g.id, { redundant: true });
       row.querySelector('[data-act="restore"]').addEventListener('click', async () => {
         try {
           await api('POST', a.endpoint(rid, g.id), a.body);

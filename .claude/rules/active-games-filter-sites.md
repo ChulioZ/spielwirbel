@@ -148,8 +148,14 @@ filter is missing and when one is widened to both archives.
 **Deliberately NOT filtered — don't "fix" these:**
 - The games quota (`lib/routes/games.js`, `lib/quota.js`) counts **every** game
   regardless of state: an archived game still holds a row and a possible cover.
-- The game **detail page** renders archived games fine (that is how you restore
-  one); only the actions change.
+- The game **detail page** renders every off-shelf game fine (that is how you
+  restore one); only the actions change. **Since #663 that is a linked path
+  rather than a URL-only one** — the rows on all three off-shelf screens open it
+  — so the page carries a branch per state: retired and completed offer
+  „Wiederherstellen", a wish offers „Ins Regal", and only an active game is
+  offered „Direkt spielen". That last branch is the load-bearing one: the direct
+  pick goes through `isActiveGame` above, so offering it for a wish hands the
+  user a seat picker and an English 400.
 
 ## Related: the delete guard covers everything off the shelf
 
