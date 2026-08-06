@@ -83,6 +83,21 @@ the *other* workflows: `eslint`, `syntax`, `gitleaks`, `dco`).
   bad states" is only as good as the enumeration, and an infrastructure failure
   is exactly the state nobody enumerates.
 
+  **Verifying a change to this condition costs a scratch branch, and a clean
+  before/after is hard to get.** CI runs only on `push` to `main` and on
+  `pull_request`, so a scratch branch triggers nothing — it needs a **draft PR**
+  to fire at all. Force the failure with an unpullable service image
+  (`image: postgres:18-this-tag-does-not-exist`). Measured with the allowlist in
+  place: `postgres` fails and `ci-passed` fails **with its guard step executing**,
+  where the pre-fix run recorded that same step as `skipped`. The *control* —
+  the old condition against the same break — could not be isolated: two further
+  independent `Set up job` flakes hit `test` mid-experiment and tripped the
+  denylist for an unrelated reason. So the last inch rests on construction rather
+  than measurement, which is sound here because
+  `{failure, cancelled, skipped} ⊂ {≠ 'success'}` — the new condition fires
+  everywhere the old one did, and then some. **Delete the scratch branch and
+  close the draft PR afterwards.**
+
 ## Part B is an ops step, not code
 
 Requiring `ci-passed` is a repo-admin change in GitHub branch-protection
