@@ -10,8 +10,10 @@ paths:
   - "public/js/views-round-detail.js"
   - "public/js/views-session.js"
   - "public/js/views-round-tabs.js"
+  - "public/js/wish-expansion.js"
   - "test/draw-pool.test.js"
   - "test/game-expansions.test.js"
+  - "test/wish-expansion.test.js"
 ---
 
 # An owned expansion widens a game's range by UNION, and an absent range means the OPPOSITE thing on it
@@ -83,9 +85,13 @@ box *not* fitting, and both live in the one shared file.
 
 Worth stating, because each looks like an omission:
 
-- **The BGG collection import still excludes expansions**
+- **The OWNED BGG collection import still excludes expansions**
   (`excludesubtype=boardgameexpansion`). A bulk shelf import is the one place 50
   expansions of one game are noise — `.claude/rules/bgg-collection-import.md`.
+  **The WISHLIST import does not** (#664): there an expansion is the thing being
+  recorded, so it imports as a `wish` row carrying `expansionOf`. That row is not
+  an exception to anything below — it is a *wish*, and it becomes an expansion
+  only when it is acquired (next section).
 - **No `trackEvent`.** Adding a product counter is a deliberate act, not symmetry
   with `game_added` (`.claude/rules/product-event-logging.md`).
 - **No feed event, no Home surface, no rating, no tag, no cover, no vote.** An
@@ -95,6 +101,40 @@ Worth stating, because each looks like an omission:
   game's expansions widen nothing until someone re-enters its range — the
   inventory value ("do we have Seefahrer?") is what survives the copy, and that
   is the half worth having there.
+
+## An expansion has a SECOND way in: acquiring a wish (#664)
+
+`PUT …/games/:gid/expansions` is no longer the only writer. A wished expansion
+("we want Seefahrer") reaches its base game through
+`POST …/games/:gid/acquire-expansion { baseGameId }` → `acquireWishExpansion`,
+which appends the entry **and deletes the wish row in one transaction**.
+
+Three things about that route are load-bearing, and each is a bug the natural
+implementation ships:
+
+- **"Ins Regal" on an expansion must NOT go through `/wish { wish: false }`.**
+  That is the flat action every other wish row takes, and on an expansion it puts
+  a box on the shelf that can never be voted on, drawn or rated — the state this
+  whole rule exists to prevent. The Wunschliste branches on
+  `Array.isArray(g.expansionOf)`; `public/js/wish-expansion.js` owns the
+  "which game does it join?" decision so the branching is unit-tested rather than
+  living in a DOM handler.
+- **The two halves cannot be two calls.** A wish row that survives a successful
+  append is a duplicate of something the game now owns; a lost append leaves the
+  group having acquired nothing. Hence one repo method, one transaction, and a
+  quota refusal that leaves the wish **standing** — the wish is the only record
+  that the group wanted it, and a half-applied acquire has no undo.
+- **`expansionOf` is the guard, not `wish`.** The route refuses a row without it
+  (`not_wish`), which is what stops a hand-rolled request folding an ordinary
+  wished *game* into another game's expansion list — where it would silently stop
+  being votable with no way back. That is also why the key must stay absent on an
+  ordinary game rather than defaulting to `[]`.
+
+The acquire is **silent on the two non-Chronik channels** — no `trackEvent`, no
+feed event — unlike `/wish`'s acquisition, which fires both. That is the bullet
+above applied consistently, not an omission: an expansion has no product counter
+and no feed line anywhere. It writes the ordinary `game_expansion_added` Chronik
+entry, the same one a tick on the detail page produces.
 
 ## A stored expansion is IMMUTABLE, and that is a licence constraint
 

@@ -290,4 +290,28 @@ test('expansions-per-game cap (#653)', async (t) => {
     assert.equal(stored.body.games[0].expansions.length, 2);
     assert.deepEqual(stored.body.games[0].expansions.map((e) => e.title), ['E1', 'E2']);
   });
+
+  // The SECOND way an expansion reaches a game (#664) — acquiring a wished one —
+  // must hit the same ceiling, or the cap is bypassable by taking the long road.
+  await t.test('acquiring a wished expansion is refused at the same cap', async () => {
+    const tenant = repo.forTenant((await repo.getUserByEmail('exp-a@example.com')).tenantId);
+    const { created } = await tenant.createGames(rid, [{
+      title: 'Seefahrer', minPlayers: 5, maxPlayers: 6, image: null,
+      source: { provider: 'bgg', externalId: '325', url: null },
+      expansionOf: [{ providerId: '13', title: 'CATAN' }],
+    }], undefined, null, true);
+    const wish = created[0];
+
+    const over = await request(app).post(`/api/rounds/${rid}/games/${wish.id}/acquire-expansion`)
+      .set(auth(a.token)).send({ baseGameId: game.id });
+    assert.equal(over.status, 403);
+    assert.equal(over.body.error, 'quota_expansions');
+    assert.equal(over.body.limit, 2);
+
+    // The wish is the only record that the group wanted it, so a refusal must
+    // leave it standing — a half-applied acquire has no undo.
+    const stored = await request(app).get(`/api/rounds/${rid}`).set(auth(a.token));
+    assert.ok(stored.body.games.some((g) => g.id === wish.id), 'the refused wish was deleted anyway');
+    assert.equal(stored.body.games.find((g) => g.id === game.id).expansions.length, 2);
+  });
 });

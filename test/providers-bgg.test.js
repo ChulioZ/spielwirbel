@@ -299,6 +299,105 @@ test('expansionDetails batches every id into ONE request and degrades without a 
   }
 });
 
+// --- parseExpansionParents / expansionParents (#664) ----------------------
+
+test('parseExpansionParents reads the INBOUND links, i.e. the inverse of parseExpansionLinks', () => {
+  // On an expansion item BGG marks the "expands X" relation with inbound="true"
+  // and the SAME type it uses for "is expanded by Y" on a base game. Reading
+  // both would report an expansion's own sub-expansion as its base game.
+  const xml = `<items>
+    <item type="boardgameexpansion" id="325">
+      <name type="primary" value="CATAN: Seafarers"/>
+      <link type="boardgameexpansion" id="13" value="CATAN" inbound="true"/>
+      <link type="boardgameexpansion" id="99999" value="Seafarers Scenario Pack"/>
+      <link type="boardgamecategory" id="1029" value="City Building" inbound="true"/>
+    </item>
+    <item type="boardgameexpansion" id="4001">
+      <name type="primary" value="Promo fitting two games"/>
+      <link type="boardgameexpansion" id="13" value="CATAN" inbound="true"/>
+      <link type="boardgameexpansion" id="822" value="Tigris &amp; Euphrates" inbound="true"/>
+    </item>
+    <item type="boardgameexpansion" id="4002">
+      <name type="primary" value="Orphan"/>
+    </item>
+  </items>`;
+  assert.deepEqual(bgg.parseExpansionParents(xml), [
+    { providerId: '325', parents: [{ providerId: '13', title: 'CATAN' }] },
+    // An expansion's inbound links are a LIST — a promo can fit two base games,
+    // so all of them are kept and the acquire flow asks which one it belongs to.
+    {
+      providerId: '4001',
+      parents: [
+        { providerId: '13', title: 'CATAN' },
+        { providerId: '822', title: 'Tigris & Euphrates' },
+      ],
+    },
+    // No inbound link at all: an UNATTACHED wish, never dropped from the import.
+    { providerId: '4002', parents: [] },
+  ]);
+  assert.deepEqual(bgg.parseExpansionParents(''), []);
+  assert.deepEqual(bgg.parseExpansionParents('not xml'), []);
+});
+
+test('expansionParents batches ids and degrades to [] without a token', async () => {
+  const calls = [];
+  const original = global.fetch;
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    return { ok: true, status: 200, text: async () => '<items></items>' };
+  };
+  const originalToken = process.env.BGG_API_TOKEN;
+  try {
+    process.env.BGG_API_TOKEN = 'tok';
+    await bgg.expansionParents(['325', '926', '325', '', null]);
+    assert.equal(calls.length, 1, 'one request for the whole batch');
+    assert.equal(new URL(calls[0]).searchParams.get('id'), '325,926');
+
+    // Over one batch it splits rather than building an unbounded URL.
+    calls.length = 0;
+    await bgg.expansionParents(Array.from({ length: 61 }, (_, i) => String(i + 1)));
+    assert.equal(calls.length, 2, 'a 61-id list is two requests, not one');
+    assert.equal(new URL(calls[0]).searchParams.get('id').split(',').length, 60);
+    assert.equal(new URL(calls[1]).searchParams.get('id'), '61');
+
+    delete process.env.BGG_API_TOKEN;
+    calls.length = 0;
+    assert.deepEqual(await bgg.expansionParents(['325']), []);
+    assert.deepEqual(await bgg.expansionParents([]), []);
+    assert.equal(calls.length, 0, 'neither made a request');
+  } finally {
+    global.fetch = original;
+    if (originalToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = originalToken;
+  }
+});
+
+test('collection() excludes expansions from the OWNED shelf only (#664)', async (t) => {
+  const calls = [];
+  t.mock.method(global, 'fetch', async (url) => {
+    calls.push(new URL(String(url)));
+    return { ok: true, status: 200, text: async () => '<items></items>' };
+  });
+  const originalToken = process.env.BGG_API_TOKEN;
+  process.env.BGG_API_TOKEN = 'tok';
+  t.after(() => {
+    if (originalToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = originalToken;
+  });
+
+  await bgg.collection('someone', 'own');
+  assert.equal(calls[0].searchParams.get('excludesubtype'), 'boardgameexpansion');
+  // The wishlist is where an expansion is exactly what the group means to record
+  // ("we own Catan, we want Seefahrer"), so it must NOT be filtered out.
+  await bgg.collection('someone', 'wishlist');
+  assert.equal(calls[1].searchParams.get('wishlist'), '1');
+  assert.equal(calls[1].searchParams.get('excludesubtype'), null);
+  // An unrecognised status still falls back to the owned shelf, filter included.
+  await bgg.collection('someone', '__proto__');
+  assert.equal(calls[2].searchParams.get('own'), '1');
+  assert.equal(calls[2].searchParams.get('excludesubtype'), 'boardgameexpansion');
+});
+
 test('parseThing links an expansion under its own BGG path', () => {
   const xml = '<items><item type="boardgameexpansion" id="926"><name type="primary" value="Cities &amp; Knights"/></item></items>';
   assert.equal(bgg.parseThing(xml, '926').url, 'https://boardgamegeek.com/boardgameexpansion/926');
@@ -338,6 +437,7 @@ test('parseCollection reads the collection shape into the same record parseThing
     type: 'analog',
     imageUrl: 'https://cf.geekdo-images.com/abc__thumb/img/xyz=/fit-in/200x150/pic9156909.png',
     url: 'https://boardgamegeek.com/boardgame/13',
+    expansion: false,
   });
   // The name is a TEXT node here, so an entity in it must still be decoded, and
   // BGG's "0 = unknown" player counts must read as null exactly as in parseThing.
@@ -347,6 +447,21 @@ test('parseCollection reads the collection shape into the same record parseThing
   assert.equal(items[1].imageUrl, null);
   // The item's own subtype keeps the link canonical rather than assuming /boardgame/.
   assert.equal(items[2].url, 'https://boardgamegeek.com/boardgameaccessory/2093');
+});
+
+test('parseCollection marks which items are expansions (#664)', () => {
+  // A collection item names its own subtype, which is the ONLY thing the
+  // response says about an expansion — it carries no <link> elements at all, so
+  // *which* game it expands needs the separate /thing hop below.
+  const xml = `<items>
+    <item objectid="13" subtype="boardgame"><name>CATAN</name></item>
+    <item objectid="325" subtype="boardgameexpansion"><name>CATAN: Seafarers</name></item>
+    <item objectid="2093" subtype="boardgameaccessory"><name>Spielbrett</name></item>
+  </items>`;
+  assert.deepEqual(bgg.parseCollection(xml).items.map((g) => g.expansion), [false, true, false]);
+  // Absent subtype falls back to 'boardgame', so it must not read as an expansion.
+  const bare = '<items><item objectid="7"><name>Ohne Subtype</name></item></items>';
+  assert.equal(bgg.parseCollection(bare).items[0].expansion, false);
 });
 
 test('parseCollection skips junk and dupes, and never throws on an empty body', () => {
