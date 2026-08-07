@@ -77,6 +77,12 @@ const frontendGlobals = {
   registrationToJson: 'readonly', assertionToJson: 'readonly',
   passkeysSupported: 'readonly', isPasskeyCancel: 'readonly',
   createPasskey: 'readonly', getPasskey: 'readonly',
+  // ...and the view-side halves (account.js, views-account.js). Used only
+  // within their own files today, so lint would not flag their absence — they
+  // are listed because every sibling helper in those files is, and the list is
+  // what turns a future cross-file typo into an error rather than a silent
+  // runtime failure (.claude/rules/eslint-frontend-shared-scope.md).
+  wirePasskeyLogin: 'readonly', buildPasskeySection: 'readonly', renderPasskeyRow: 'readonly',
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
   isActiveGame: 'readonly', fitsPlayerCount: 'readonly', requiredExpansions: 'readonly',
   EXPANSION_TITLE_MAX: 'readonly',
