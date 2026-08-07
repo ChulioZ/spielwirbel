@@ -104,6 +104,11 @@
 .ti-lock-question::before { content: "\f931"; }
 .ti-mail-check::before { content: "\f939"; }
 .ti-logout::before { content: "\eba8"; }
+/* Passkeys (#418). Codepoint read from THIS bundle's own cmap via fontTools,
+   not from tabler.io — the two disagree, and a wrong-but-present codepoint
+   renders a plausible other glyph with no error anywhere
+   (.claude/rules/tabler-icon-codepoints.md). */
+.ti-fingerprint::before { content: "\ebd1"; }
 .ti-calendar::before { content: "\ea53"; }
 .ti-message::before { content: "\eaef"; }
 /* The terms-change notice (#521). Codepoint read from this bundle's own cmap. */

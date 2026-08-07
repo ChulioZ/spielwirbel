@@ -864,6 +864,11 @@ I18N.en = {
   'auth.error.rateLimited': 'Too many attempts. Please wait a moment and try again.',
   'auth.error.sessionExpired': 'Your session has expired. Please reload the page and try again.',
   'auth.error.accountDisabled': 'This account has been suspended. If you have questions, please use the contact form.',
+  // Passkeys (#418) — the password-free way in.
+  'auth.passkey.login': 'Sign in with a passkey',
+  'auth.passkey.or': 'or',
+  'auth.passkey.error.noMatch': "That didn't work. Have you set up a passkey for Spielwirbel on this device yet?",
+
   'auth.limited.title': 'Too many requests',
   'auth.limited.sub': 'The server temporarily received too many requests from your connection. Please wait a moment and try again.',
   'auth.limited.retry': 'Try again',
@@ -898,6 +903,31 @@ I18N.en = {
   'konto.notify.friends': 'Friend request',
   'konto.notify.on': 'E-mails turned on.',
   'konto.notify.off': 'E-mails turned off.',
+
+  // Passkeys (#418). In addition to the password, never instead of it — which
+  // is why the intro says so outright.
+  'konto.passkey.title': 'Passkeys',
+  'konto.passkey.intro': 'A passkey signs you in with your fingerprint, face or device PIN — no password. Your password stays in place, so you can still sign in with it.',
+  'konto.passkey.privacy': 'Your fingerprint or face never leaves your device. We only store a public key, which cannot unlock anything.',
+  'konto.passkey.add': 'Add a passkey',
+  'konto.passkey.empty': 'No passkey set up yet.',
+  'konto.passkey.unnamed': 'Unnamed passkey',
+  'konto.passkey.added': 'Added on {date}',
+  'konto.passkey.lastUsed': 'Last used on {date}',
+  'konto.passkey.neverUsed': 'Not used yet',
+  'konto.passkey.rename': 'Rename',
+  'konto.passkey.renamePrompt': 'Name for this passkey',
+  'konto.passkey.remove': 'Remove',
+  'konto.passkey.removeConfirm': 'Remove this passkey? You can still sign in with your password.',
+  'konto.passkey.done': 'Passkey added.',
+  'konto.passkey.renamed': 'Passkey renamed.',
+  'konto.passkey.removed': 'Passkey removed.',
+  'konto.passkey.unsupported': 'This device or browser does not support passkeys.',
+  'konto.passkey.error.quota': 'You have reached the maximum number of passkeys. Remove one first.',
+  'konto.passkey.error.exists': 'This passkey is already set up for your account.',
+  'konto.passkey.error.taken': 'This passkey already belongs to another account.',
+  'konto.passkey.error.invalid': 'The passkey could not be verified. Please try again.',
+  'konto.passkey.error.demo': 'Passkeys cannot be set up on a demo account.',
 
   // Self-service account deletion (#419) — Art. 17 GDPR without the operator.
   'konto.delete.title': 'Delete account',

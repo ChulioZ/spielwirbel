@@ -121,7 +121,10 @@ each tenant is capped on rounds (`MAX_ROUNDS_PER_TENANT`, default 10), games per
 round (`MAX_GAMES_PER_ROUND`, default 1000), custom tags per round
 (`MAX_TAGS_PER_ROUND`, default 30), member seats per round
 (`MAX_MEMBERS_PER_ROUND`, default 50), and expansions per game
-(`MAX_EXPANSIONS_PER_GAME`, default 40). With accounts off (the
+(`MAX_EXPANSIONS_PER_GAME`, default 40). Per **account** rather than per
+tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
+friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50) and passkeys
+(`MAX_PASSKEYS_PER_USER`, default 20, issue #418). With accounts off (the
 default, single-tenant deploy) these are inert. See the quotas block in `.env.example`.
 
 Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate
@@ -158,6 +161,24 @@ plain SMTP (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, links built
 from `APP_BASE_URL`); unconfigured, they are logged instead of sent. Production
 sends through the operator's own mailbox rather than a transactional provider,
 so the mails carry no tracking pixel and no rewritten links (#440).
+
+**Passkeys** (issue #418) are a second credential on the same account, added on
+the Konto screen and used from the login screen's "Mit Passkey anmelden" button.
+They live under `/api/account/passkeys` (register/list/rename/remove), with the
+usernameless login pair at `…/passkeys/login` — the only unauthenticated part,
+because signing in with a passkey has no session yet. That flow deliberately
+takes **no identifier at all**: an e-mail-first passkey login would have to
+answer "does this address have credentials?", which register and forgot-password
+are carefully built never to answer.
+
+A passkey never replaces the password — losing every device must not lock anyone
+out — so the mailed reset path stays exactly as it is. `WEBAUTHN_RP_ID` is the
+domain a credential is bound to (default: `CANONICAL_HOST`); treat it as
+permanent once anyone has registered one, since changing it silently invalidates
+every existing passkey. Set it to `localhost` for local development, and use
+`WEBAUTHN_ORIGIN` only when the origin is not simply `https://<rp-id>` (a port,
+a staging host). Verification uses `@simplewebauthn/server`; the browser half is
+dependency-free.
 
 Two bounds keep bulk registration from draining that mailbox's sending quota
 (#448) — which matters because verification mail is the only way through signup,

@@ -92,6 +92,10 @@ lib/
                      ADMIN_PASSWORD; 404s unless set — issue #268)
   accounts.js        user-account primitives: Argon2id passwords, access/refresh
                      tokens (issue #135; off unless ACCOUNTS_ENABLED)
+  webauthn.js        passkey primitives (issue #418): the RP identity and the
+                     stateless, scope-separated signed challenge. The
+                     attestation/assertion crypto itself is
+                     @simplewebauthn/server's; this is the policy around it
   quota.js           per-tenant state caps — rounds/tenant, games/round,
                      tags/round, members/round (issue #139; inert unless
                      ACCOUNTS_ENABLED)
@@ -218,6 +222,12 @@ lib/
                                              caller's friendship state, and the
                                              friends-only feed (#558) —
                                              404 unless ACCOUNTS_ENABLED)
+    passkeys.js      /api/account/passkeys  (WebAuthn: registration options +
+                                             verify, list, rename, remove, plus
+                                             the usernameless login pair under
+                                             .../passkeys/login, which is the one
+                                             unauthenticated part (#418) —
+                                             404 unless ACCOUNTS_ENABLED)
     contact.js       /api/contact           (public contact form / DSA notice
                                              intake → stores every submission +
                                              e-mails the operator + acknowledges
@@ -308,6 +318,10 @@ public/
                      handles refused because they would read as an official
                      account (admin, moderator, anything containing the brand) —
                      the single source of truth lib/routes/account.js enforces
+    passkey.js       WebAuthn browser glue (issue #418): the base64url ⇄
+                     ArrayBuffer conversions every credential crossing the wire
+                     needs, plus thin create()/get() wrappers and the feature
+                     detection the login button is gated on
     demo-marker.js   the browser-local marker that lets a returning visitor
                      re-enter their own guest demo instead of minting a second
                      one, and the rule that keeps it valid across token

@@ -99,6 +99,14 @@ function fmtDateTime(iso) {
   return new Date(iso).toLocaleString(localeTag(locale), { dateStyle: 'medium', timeStyle: 'short' });
 }
 
+// Date only, for stamps where the time of day carries no information — the
+// passkey list's added/last-used dates (#418). Deliberately not fmtDateTime:
+// "added on 7 Aug 2026, 15:04" invites the reader to compare minutes that mean
+// nothing to them.
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString(localeTag(locale), { dateStyle: 'medium' });
+}
+
 // Month + year, for timeline group labels ("Juli 2026").
 function fmtMonth(iso) {
   return new Date(iso).toLocaleString(localeTag(locale), { month: 'long', year: 'numeric' });

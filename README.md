@@ -76,7 +76,9 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
   from a BGG wishlist, and — where the instance enables it — showing what each
   one costs right now.
 - **Per-round design**, custom tags, an installable **PWA** that works offline,
-  shareable deep links, and a **Freundeskreis** feed between accounts.
+  shareable deep links, a **Freundeskreis** feed between accounts, and
+  **passkey** sign-in (fingerprint, face or device PIN — alongside the password,
+  never instead of it).
 
 → Full detail in [`docs/features.md`](docs/features.md).
 

@@ -855,6 +855,11 @@ I18N.de = {
   'auth.error.rateLimited': 'Zu viele Versuche. Bitte warte kurz und versuche es dann erneut.',
   'auth.error.sessionExpired': 'Deine Sitzung ist abgelaufen. Bitte lade die Seite neu und versuche es erneut.',
   'auth.error.accountDisabled': 'Dieses Konto wurde gesperrt. Bei Fragen melde dich gerne über das Kontaktformular.',
+  // Passkeys (#418) — der Login-Weg ohne Passwort.
+  'auth.passkey.login': 'Mit Passkey anmelden',
+  'auth.passkey.or': 'oder',
+  'auth.passkey.error.noMatch': 'Das hat nicht geklappt. Hast du auf diesem Gerät schon einen Passkey für Spielwirbel eingerichtet?',
+
   'auth.limited.title': 'Zu viele Anfragen',
   'auth.limited.sub': 'Der Server hat vorübergehend zu viele Anfragen von deiner Verbindung erhalten. Bitte warte einen Moment und versuche es dann erneut.',
   'auth.limited.retry': 'Erneut versuchen',
@@ -889,6 +894,31 @@ I18N.de = {
   'konto.notify.friends': 'Freundschaftsanfrage',
   'konto.notify.on': 'E-Mails eingeschaltet.',
   'konto.notify.off': 'E-Mails ausgeschaltet.',
+
+  // Passkeys (#418). Zusätzlich zum Passwort, nie an seiner Stelle — deshalb
+  // sagt der Einleitungstext ausdrücklich, dass das Passwort bestehen bleibt.
+  'konto.passkey.title': 'Passkeys',
+  'konto.passkey.intro': 'Mit einem Passkey meldest du dich per Fingerabdruck, Gesicht oder Geräte-PIN an — ohne Passwort. Dein Passwort bleibt bestehen, du kannst dich also weiterhin damit anmelden.',
+  'konto.passkey.privacy': 'Dein Fingerabdruck oder Gesicht verlässt dein Gerät nie. Wir speichern nur einen öffentlichen Schlüssel, mit dem sich nichts entsperren lässt.',
+  'konto.passkey.add': 'Passkey hinzufügen',
+  'konto.passkey.empty': 'Noch kein Passkey eingerichtet.',
+  'konto.passkey.unnamed': 'Unbenannter Passkey',
+  'konto.passkey.added': 'Hinzugefügt am {date}',
+  'konto.passkey.lastUsed': 'Zuletzt genutzt am {date}',
+  'konto.passkey.neverUsed': 'Noch nicht genutzt',
+  'konto.passkey.rename': 'Umbenennen',
+  'konto.passkey.renamePrompt': 'Name für diesen Passkey',
+  'konto.passkey.remove': 'Entfernen',
+  'konto.passkey.removeConfirm': 'Diesen Passkey entfernen? Du kannst dich weiterhin mit deinem Passwort anmelden.',
+  'konto.passkey.done': 'Passkey hinzugefügt.',
+  'konto.passkey.renamed': 'Passkey umbenannt.',
+  'konto.passkey.removed': 'Passkey entfernt.',
+  'konto.passkey.unsupported': 'Dieses Gerät oder dieser Browser unterstützt keine Passkeys.',
+  'konto.passkey.error.quota': 'Du hast die maximale Anzahl an Passkeys erreicht. Entferne zuerst einen.',
+  'konto.passkey.error.exists': 'Dieser Passkey ist für dein Konto schon eingerichtet.',
+  'konto.passkey.error.taken': 'Dieser Passkey gehört bereits zu einem anderen Konto.',
+  'konto.passkey.error.invalid': 'Der Passkey konnte nicht überprüft werden. Bitte versuche es erneut.',
+  'konto.passkey.error.demo': 'Im Demo-Konto lassen sich keine Passkeys einrichten.',
 
   // Self-service Kontolöschung (#419) — Art. 17 DSGVO ohne den Betreiber.
   'konto.delete.title': 'Konto löschen',

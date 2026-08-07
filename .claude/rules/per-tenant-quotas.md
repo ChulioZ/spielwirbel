@@ -21,12 +21,18 @@ groups:
 | expansions per game | `lib/routes/games.js` | `quota_expansions` | #653 |
 | accepted friends per user | `lib/routes/friends.js` | `quota_friends` | #325 |
 | open outgoing friend requests per user | `lib/routes/friends.js` | `quota_requests` | #325 |
+| passkeys per user | `lib/routes/passkeys.js` | `quota_passkeys` | #418 |
 
-The last two are per **account**, not per tenant — the friendship layer is a
-cross-account social surface rather than tenant data — but they take the same
-shape (env-tunable, read per call, distinct 403 → localized toast). They need no
-`enforced()` gate of their own: the friend routes 404 outright when accounts are
-off.
+The last three are per **account**, not per tenant — a friendship is a
+cross-account social surface and a passkey is a credential, neither of which is
+tenant data — but they take the same shape (env-tunable, read per call, distinct
+403 → localized toast). They need no `enforced()` gate of their own: the friend
+and passkey routes 404 outright when accounts are off.
+
+`quota_passkeys` differs from the other two in *where* it is checked: at the
+**options** step as well as at the verify, so the ceremony is refused before the
+OS asks for a fingerprint rather than after. A cap that only bit on the way back
+would make the user authenticate for nothing.
 
 **This list has gone stale twice** (#325 and #563 each added caps without
 updating it), so `test/rule-enumerations.test.js` now asserts every `quota_*`

@@ -22,7 +22,7 @@ const frontendGlobals = {
   applyTabTitle: 'readonly',
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
-  fmtDateTime: 'readonly', fmtMonth: 'readonly', fmtMoney: 'readonly',
+  fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMoney: 'readonly',
   // core.js
   app: 'readonly', context: 'readonly', toastEl: 'readonly',
   currentView: 'writable', h: 'readonly', esc: 'readonly', toastTimer: 'writable',
@@ -71,6 +71,12 @@ const frontendGlobals = {
   isValidUsername: 'readonly',
   RESERVED_USERNAMES: 'readonly', RESERVED_FRAGMENTS: 'readonly',
   normalizeUsername: 'readonly', isReservedUsername: 'readonly',
+  // passkey.js (issue #418)
+  b64urlToBytes: 'readonly', bytesToB64url: 'readonly',
+  toCreateOptions: 'readonly', toRequestOptions: 'readonly',
+  registrationToJson: 'readonly', assertionToJson: 'readonly',
+  passkeysSupported: 'readonly', isPasskeyCancel: 'readonly',
+  createPasskey: 'readonly', getPasskey: 'readonly',
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
   isActiveGame: 'readonly', fitsPlayerCount: 'readonly', requiredExpansions: 'readonly',
   EXPANSION_TITLE_MAX: 'readonly',
