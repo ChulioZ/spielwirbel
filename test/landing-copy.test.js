@@ -16,6 +16,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { JSDOM } = require('jsdom');
 const { bodyOf } = require('./support/css');
 
 const ROOT = path.join(__dirname, '..');
@@ -157,12 +158,28 @@ test('the static hero carries no config-gated claim (#510)', () => {
   // would be invisible here: the claim is replaced by the real, correctly gated
   // hero milliseconds later, so only a crawler (or a screenshot of the first
   // paint) would ever show it.
-  const main = INDEX.match(/<main id="app"[\s\S]*?<\/main>/);
+  // PARSED, not regex-matched over the raw text. `/<main id="app"[\s\S]*?<\/main>/`
+  // binds to the first occurrence of that string in the file — and a COMMENT
+  // mentioning `<main id="app">` is one, so the block then starts several lines
+  // early and sweeps in whatever precedes the real element. #525 detonated
+  // exactly that: its <noscript> is documented in prose naming the tag, and the
+  // widened block swallowed the demo and terms banners, whose <button>s made
+  // this assertion fail against markup that is entirely correct.
+  //
+  // Parsing is the remedy .claude/rules/css-text-assertions-strip-comments.md
+  // prescribes for HTML specifically — a comment is not an element, so the
+  // mistake becomes unrepresentable, where a `<!--…-->` strip would buy a
+  // high-severity CodeQL js/incomplete-multi-character-sanitization alert for a
+  // regex. A bare JSDOM of the file: nothing runs, so this is the served markup.
+  const main = new JSDOM(INDEX).window.document.querySelector('main#app');
   assert.ok(main, 'index.html still has a <main id="app">');
-  assert.doesNotMatch(main[0], /data-operator-only/, 'no operator-gated claim in the static hero');
-  assert.doesNotMatch(main[0], /data-demo-only/, 'no demo-gated CTA in the static hero');
+  assert.equal(main.querySelector('[data-operator-only]'), null,
+    'no operator-gated claim in the static hero');
+  assert.equal(main.querySelector('[data-demo-only]'), null,
+    'no demo-gated CTA in the static hero');
   // Buttons would be dead until main.js boots and wires them.
-  assert.doesNotMatch(main[0], /<button/, 'the static hero holds no controls — nothing wires them yet');
+  assert.equal(main.querySelector('button'), null,
+    'the static hero holds no controls — nothing wires them yet');
 });
 
 test('the hero demo block takes every colour from the theme variables (#503)', () => {

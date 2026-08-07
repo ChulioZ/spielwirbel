@@ -2257,6 +2257,40 @@ body.auth-screen .topbar__context { display: none; }
 .btn[hidden] { display: none; }
 
 /* ---------------------------------------------------------------------------
+   No-JS fallback (#525)
+
+   Same strip shape and the same --warn tint as the demo banner below, because
+   it says the same KIND of thing in the same slot: a standing caveat about the
+   session, not an error. They can never render together — the demo banner is
+   revealed by js/account.js, which is exactly what is not running here — so
+   sharing the tone costs nothing and keeps the page one shape.
+
+   This is the one banner on the page that needs NO `[hidden]` companion rule,
+   and for a stronger reason than the neighbours have: with scripting enabled
+   the parser stores the <noscript> contents as a text node instead of parsing
+   them, so .noscript-banner is not an element and this rule matches nothing.
+   The `display: flex` therefore cannot leak to a JS-enabled visitor the way
+   .demo-banner's would (.claude/rules/hidden-attribute-vs-display-rule.md).
+
+   Do NOT reach for getComputedStyle(noscript).display to check that: Chrome
+   reports `block` there while the element is not rendered at all (measured —
+   offsetHeight 0, checkVisibility() false, and no rule in document.styleSheets
+   matches `noscript`). Probe checkVisibility()/offsetHeight instead.
+   --------------------------------------------------------------------------- */
+.noscript-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 20px;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--warn) 14%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--warn) 35%, var(--surface));
+}
+.noscript-banner p { margin: 0; }
+
+/* ---------------------------------------------------------------------------
    Guest demo banner (#427)
 
    A persistent strip between the top bar and the content, stating that this
