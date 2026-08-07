@@ -203,6 +203,55 @@ test('a passkey registers, appears in the list, and never exposes its public key
   assert.ok(stored.identities.some((i) => i.type === 'password'));
 });
 
+test('a junk transports value is sanitized before it reaches the store', async () => {
+  resetStub();
+  const session = await signIn();
+
+  // The library passes `transports` through RAW from the client's response —
+  // verifyRegistrationResponse does no runtime shape check on it — so this is
+  // the one client-shaped value that would otherwise reach the store unchecked
+  // (S-014). Simulate a hostile client: wrong types, oversize strings, and far
+  // too many entries.
+  hooks.verifyRegistrationResponse = async (o) => ({
+    verified: true,
+    registrationInfo: {
+      credential: {
+        id: (o.response && o.response.id) || 'cred-default',
+        publicKey: FAKE_PUBLIC_KEY,
+        counter: 0,
+        transports: ['internal', 42, { evil: 'x' }, null, 'x'.repeat(500),
+          ...Array.from({ length: 40 }, (_, i) => `pad-${i}`)],
+      },
+    },
+  });
+  const { res } = await addPasskey(session, 'cred-junk-transports');
+  assert.equal(res.status, 201);
+
+  const stored = (await repo.getUserById(session.uid)).identities
+    .find((i) => i.type === 'passkey');
+  // Strings only, each bounded, the list capped — and the honest entries kept.
+  assert.ok(Array.isArray(stored.transports));
+  assert.ok(stored.transports.length <= 10, `capped, got ${stored.transports.length}`);
+  assert.ok(stored.transports.every((t) => typeof t === 'string' && t.length <= 32));
+  assert.equal(stored.transports[0], 'internal');
+
+  // A non-array survives as an empty list rather than round-tripping.
+  hooks.verifyRegistrationResponse = async (o) => ({
+    verified: true,
+    registrationInfo: {
+      credential: {
+        id: (o.response && o.response.id) || 'cred-default',
+        publicKey: FAKE_PUBLIC_KEY, counter: 0, transports: { not: 'an array' },
+      },
+    },
+  });
+  const second = await addPasskey(session, 'cred-object-transports');
+  assert.equal(second.res.status, 201);
+  const other = (await repo.getUserById(session.uid)).identities
+    .find((i) => i.credentialId === 'cred-object-transports');
+  assert.deepEqual(other.transports, []);
+});
+
 test('the registration verify is given the signed challenge, the origin and the RP ID', async () => {
   resetStub();
   const session = await signIn();
