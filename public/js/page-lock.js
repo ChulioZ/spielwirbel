@@ -1,8 +1,8 @@
 /* Spielwirbel – freeze the page behind an open overlay (issue #622).
 
    Why it exists: nothing locked the page while a sheet was up. `.sheet-backdrop`
-   is `position: fixed; inset: 0` but is not a scroll container, and `.sheet` is
-   capped at `min(85vh, 660px)` — so there is always exposed backdrop, and a drag
+   is `position: fixed; inset: 0` but is not a scroll container, and `.sheet` can
+   never fill it — so there is always exposed backdrop, and a drag
    there went straight to the document. Dismissing the sheet then dropped the
    user at a different scroll position than they opened it from. (The other path,
    a scroll continued past a bounded box's own edge, is closed in CSS with

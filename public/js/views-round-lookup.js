@@ -1039,7 +1039,7 @@ async function showBggImport(round, status = 'own') {
   const wish = status === 'wishlist';
   const title = wish ? t('bggImport.wishTitle') : t('bggImport.title');
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="sheet sheet--dialog sheet--list" role="dialog" aria-modal="true" aria-label="${esc(title)}">
         <div class="sheet__head">
           <h2>${esc(title)}</h2>
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
