@@ -73,9 +73,9 @@ whole module — found only by accident, via a hit inside a stale
 it, and nothing can go red over it.
 
 `test/skills.test.js` catches a moved **file** — it asserts every repo path cited
-anywhere in `.claude/**`, `CLAUDE.md` and `README.md` still exists. It cannot see
-a moved **function**, a stale value, or anything cited from a source comment
-(wrong file set, and it checks paths only), so that grep is on you. It is also a
+in `.claude/rules/`, `.claude/skills/` or the five root docs still exists. It
+cannot see a moved **function**, a stale value, or anything cited from a source
+comment (wrong file set, and it checks paths only), so that grep is on you. It is also a
 bullet in `implement`'s review phase, because the rule was already right and got
 skipped anyway — the adherence-failure remedy is a check that cannot be skipped,
 not a reworded rule.
