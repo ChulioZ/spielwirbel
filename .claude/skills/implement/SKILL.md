@@ -355,13 +355,33 @@ gh api repos/{owner}/{repo}/commits/$(git rev-parse origin/main)/status \
 The Railway context is `spielwirbel - spielwirbel` (both the Railway *project*
 and *service* were renamed from `game-sessions` in #230 — verified against the
 live deploy status); a build + deploy
-typically takes a few minutes, so poll until the state is `success`. If it ends
+typically takes a few minutes, so poll until the state leaves `pending`. If it ends
 `failure`/`error`, GitHub only shows "Deployment failed" — the real reason is in
 the Railway **Build/Deploy Logs** (the status's `target_url`); see
 `.claude/rules/railway-no-dockerfile-volume.md` for a known build-parse trap.
 A merge whose deploy fails leaves production on the old build — treat it like a
 red `main` workflow: investigate, fix forward on a new branch through this same
 workflow, and report it either way.
+
+**A `success` there is NOT evidence the deploy took effect — finish on the
+artifact.** On 2026-08-06 that status went green while the deployment record for
+the same SHA ended `inactive` and production served the previous build for 14
+hours; the session that had followed this phase reported a shipped feature that
+was not shipped. The shell's `CACHE` name is content-derived, so what is actually
+deployed is directly observable:
+
+```bash
+curl -s "https://spielwirbel.app/sw.js?cb=$(date +%s)" | grep -m1 '^const CACHE'
+```
+
+Compare it against a local build of the merge commit — equal means deployed,
+different means it never landed. Where the digest can't answer (a change that
+moved no `js/**` or `styles.css`), read the **deployment record** instead, which
+is the signal that disagreed. Both commands, both caveats and the newest-record
+trap are in `.claude/rules/verify-the-deployed-artifact-not-the-status.md`. **Do
+not close this phase on the commit status alone**, and be especially suspicious
+of every green aggregate signal during a GitHub incident — the same one took out
+`ci-passed` on the same merge (#675).
 
 If a workflow fails on `main`, treat it as urgent: investigate the failure and
 open a follow-up fix (a new branch through this same workflow). Report it either
@@ -385,8 +405,9 @@ and check, don't force-delete.
 ## Report
 
 Summarize what shipped: the branch, the PR (link + merge state), test coverage
-added, the review verdict, main's CI status, the Railway deployment status, and
-confirmation the local branch is cleaned up. This is the *outcome* report — it
+added, the review verdict, main's CI status, the Railway deployment — the
+artifact check from phase 7, not just the commit status — and confirmation the
+local branch is cleaned up. This is the *outcome* report — it
 does not repeat the phase-6 walkthrough, which the user has already read; note
 only what changed since then (a fix pushed after review, a surprise in the
 deploy). If you stopped early at any gate, say exactly where and why. If the

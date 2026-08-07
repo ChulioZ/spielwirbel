@@ -697,6 +697,146 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.redactText({ kind: 'expansion', roundId: round.id, id: 'nope' }, 'x'), null);
   });
 
+  /* ------------------ wished expansions (#664) ------------------------------ */
+
+  // A wishlist import row for an expansion: an ordinary game row plus the base
+  // games BGG says it belongs to. `wish` is the sixth argument to createGames.
+  const wishExpansion = (externalId, parents, over = {}) =>
+    bggFields(externalId, { expansionOf: parents, ...over });
+
+  const importWish = (rid, fields) => repo.createGames(T, rid, fields, undefined, null, true);
+
+  test('createGames persists expansionOf, and leaves the key ABSENT on a plain game', async () => {
+    const round = await freshRound();
+    const res = await importWish(round.id, [
+      wishExpansion('325', [{ providerId: '13', title: 'CATAN' }]),
+      bggFields('9209'),
+    ]);
+    assert.deepEqual(res.created[0].expansionOf, [{ providerId: '13', title: 'CATAN' }]);
+    // Absent-key parity: an ordinary imported game must not grow the key in
+    // either backend — and it is the key's PRESENCE that marks a row as an
+    // expansion, so a `[]` default would make every wished game acquirable onto
+    // another game (.claude/rules/postgres-backend.md).
+    assert.equal('expansionOf' in res.created[1], false);
+    const games = (await repo.getRound(T, round.id)).games;
+    assert.deepEqual(games[0].expansionOf, [{ providerId: '13', title: 'CATAN' }]);
+    assert.equal('expansionOf' in games[1], false, 'and it survives a re-read absent');
+    // An empty parent list is a real state — BGG does not always report an
+    // inbound link — and must round-trip as [] rather than collapsing to absent.
+    const orphan = await importWish(round.id, [wishExpansion('4002', [])]);
+    assert.deepEqual(orphan.created[0].expansionOf, []);
+  });
+
+  test('acquireWishExpansion moves the wish onto its base game in ONE step', async () => {
+    const round = await freshRound();
+    const seat = round.members[0].id;
+    const base = await repo.createGame(T, round.id, gameFields({
+      title: 'Catan',
+      source: { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' },
+    }));
+    const { created } = await importWish(round.id, [
+      wishExpansion('325', [{ providerId: '13', title: 'CATAN' }], { minPlayers: 5, maxPlayers: 6 }),
+    ]);
+    const wish = created[0];
+
+    const res = await repo.acquireWishExpansion(T, round.id, wish.id, base.id, null, seat);
+    assert.equal(res.game.id, base.id);
+    assert.equal(res.game.expansions.length, 1);
+    // The stored entry is the shape PUT …/expansions produces, so an expansion
+    // that arrived through the wish list is indistinguishable from a ticked one.
+    const entry = res.game.expansions[0];
+    assert.match(entry.id, /^[0-9a-f]{16}$/);
+    assert.equal(entry.title, 'Game 325');
+    assert.equal(entry.minPlayers, 5);
+    assert.equal(entry.maxPlayers, 6);
+    assert.deepEqual(entry.source, wish.source);
+    assert.ok(typeof entry.addedAt === 'string');
+    assert.equal('image' in entry, false, 'an expansion carries no cover anywhere in the app');
+
+    // BOTH halves, or the operation was not atomic: the row is gone AND the
+    // entry is on the base game, after a fresh read.
+    const reread = await repo.getRound(T, round.id);
+    assert.deepEqual(reread.games.map((g) => g.title), ['Catan']);
+    assert.deepEqual(reread.games[0].expansions, res.game.expansions);
+
+    // The acquisition IS the event — the same activity a tick on the detail page
+    // writes, naming the GAME rather than the expansion.
+    const acts = (await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_expansion_added');
+    assert.equal(acts.length, 1);
+    assert.equal(acts[0].count, 1);
+    assert.equal(acts[0].title, 'Catan');
+    assert.equal(acts[0].gameId, base.id);
+    assert.equal(acts[0].actorMemberId, seat);
+    // Wanting it was silent, so there must be exactly ONE game_added: the base
+    // game's own. Anti-vacuous for the filter above too.
+    assert.equal((await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_added').length, 1);
+  });
+
+  test('acquireWishExpansion refuses anything that is not a wished expansion', async () => {
+    const round = await freshRound();
+    const base = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    const { created } = await importWish(round.id, [
+      wishExpansion('325', [{ providerId: '13', title: 'CATAN' }]),
+      bggFields('9209'),
+    ]);
+    const [wish, plainWish] = created;
+
+    assert.equal(await repo.acquireWishExpansion(T, round.id, 'missing', base.id, null), null);
+    assert.equal(await repo.acquireWishExpansion(T, 'missing', wish.id, base.id, null), null);
+    assert.equal(await repo.acquireWishExpansion(OTHER, round.id, wish.id, base.id, null), null);
+    // A wished GAME has no expansionOf key, so it can never be folded into
+    // another game's expansion list — where it would stop being votable with no
+    // way back.
+    assert.equal(await repo.acquireWishExpansion(T, round.id, plainWish.id, base.id, null), 'not_wish');
+    // Neither can a game that is on the shelf.
+    assert.equal(await repo.acquireWishExpansion(T, round.id, base.id, plainWish.id, null), 'not_wish');
+    assert.equal(await repo.acquireWishExpansion(T, round.id, wish.id, 'nope', null), 'unknown_base');
+    assert.equal(await repo.acquireWishExpansion(T, round.id, wish.id, wish.id, null), 'unknown_base');
+
+    // Every refusal left the shelf exactly as it was.
+    const reread = await repo.getRound(T, round.id);
+    assert.deepEqual(reread.games.map((g) => g.title).sort(), ['Catan', 'Game 325', 'Game 9209']);
+    assert.equal('expansions' in reread.games.find((g) => g.title === 'Catan'), false);
+  });
+
+  test('acquireWishExpansion refuses over quota WHOLE, keeping the wish', async () => {
+    const round = await freshRound();
+    const base = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    await repo.setGameExpansions(T, round.id, base.id, [expFields({ title: 'Städte & Ritter' })]);
+    const { created } = await importWish(round.id, [
+      wishExpansion('325', [{ providerId: '13', title: 'CATAN' }]),
+    ]);
+    const wish = created[0];
+
+    const refused = await repo.acquireWishExpansion(T, round.id, wish.id, base.id, { maxExpansions: 1 });
+    assert.equal(refused, 'quota_expansions');
+    // The wish is the only record that the group wanted this, so a refusal has
+    // to leave it standing — a half-applied acquire has no undo.
+    const reread = await repo.getRound(T, round.id);
+    assert.ok(reread.games.some((g) => g.id === wish.id), 'the refused wish was deleted anyway');
+    assert.equal(reread.games.find((g) => g.id === base.id).expansions.length, 1);
+
+    // Room for one more goes through.
+    const ok = await repo.acquireWishExpansion(T, round.id, wish.id, base.id, { maxExpansions: 2 });
+    assert.equal(ok.game.expansions.length, 2);
+  });
+
+  test('acquiring an expansion the game already owns drops the wish without duplicating it', async () => {
+    const round = await freshRound();
+    const base = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    const source = { provider: 'bgg', externalId: '325', url: 'https://boardgamegeek.com/boardgameexpansion/325' };
+    await repo.setGameExpansions(T, round.id, base.id, [expFields({ title: 'Seefahrer', source })]);
+    const { created } = await importWish(round.id, [
+      wishExpansion('325', [{ providerId: '13', title: 'CATAN' }]),
+    ]);
+
+    const res = await repo.acquireWishExpansion(T, round.id, created[0].id, base.id, null);
+    assert.equal(res.game.expansions.length, 1, 'the same provider record must not land twice');
+    assert.equal(res.game.expansions[0].title, 'Seefahrer', 'and the stored entry is untouched');
+    const reread = await repo.getRound(T, round.id);
+    assert.equal(reread.games.length, 1, 'the wish row still goes — the group has it either way');
+  });
+
   // #250: Active / Retired / Completed are mutually exclusive, and the data
   // layer — not just the UI — is what enforces it, so a client that calls both
   // endpoints can never produce a game that is in two archives at once.

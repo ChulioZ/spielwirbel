@@ -74,6 +74,7 @@ const frontendGlobals = {
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
   isActiveGame: 'readonly', fitsPlayerCount: 'readonly', requiredExpansions: 'readonly',
   EXPANSION_TITLE_MAX: 'readonly',
+  expansionBaseCandidates: 'readonly', expansionAcquirePlan: 'readonly', acquirableBases: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',

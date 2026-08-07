@@ -61,6 +61,13 @@ build-free. Non-obvious things that will bite if you forget them:
   `test/build.test.js` pins it: two builds differing only in the manifest and the
   literal must emit different `sw.js` bytes.
 
+  **That derived name is also how you tell which commit production is running** —
+  `curl` the live `sw.js`, compare to a local build. It is the cheapest
+  credential-free view of the deployed build (`index.html`'s hashed `<script>`
+  names answer the same question one file at a time), and it caught a Railway
+  deploy that reported `success` and never took effect
+  (`.claude/rules/verify-the-deployed-artifact-not-the-status.md`).
+
 - **HTTP cache headers pair with the hashing (`assetCacheHeaders`, lib/app.js).**
   Static serving marks only `name.<8-hex>.js/.css` files `immutable, max-age=1y`
   (their URL changes when their bytes do), and `sw.js` explicitly `no-cache` — a

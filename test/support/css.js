@@ -37,6 +37,17 @@ const bodyOf = (selector, rules = RULES) => {
   return hit ? hit[1] : null;
 };
 
+/* The body of a rule that names `selector` as ONE MEMBER of its selector group.
+   A shared reset written as `.a,\n.b { … }` is invisible to bodyOf(), which
+   compares the whole selector text — and the resulting failure reads as the rule
+   having been DELETED rather than regrouped, which is a confusing signal for a
+   test whose job is to notice a deletion. Use this whenever the rule under test
+   may legitimately be shared by a second component. */
+const bodyOfIn = (selector, rules = RULES) => {
+  const hit = rules.find(([sel]) => sel.split(',').map((s) => s.trim()).includes(selector));
+  return hit ? hit[1] : null;
+};
+
 /* Top-level @media blocks as [query, css]. Brace-matched, because rulesOf()
    cannot tell you which block a rule came from — and that distinction is
    load-bearing for anything scoped to a width range. */
@@ -105,6 +116,6 @@ function gridSpec(body) {
 const columnsIn = (width, { floor, gap }) => Math.floor((width + gap) / (floor + gap));
 
 module.exports = {
-  ROOT, CSS, RULES, rulesOf, bodyOf, mediaBlocks, whole, rootPx, gridSpec, columnsIn,
+  ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, whole, rootPx, gridSpec, columnsIn,
   specificity, outranks,
 };

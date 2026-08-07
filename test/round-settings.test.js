@@ -27,7 +27,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { bodyOf } = require('./support/css');
+const { bodyOfIn } = require('./support/css');
 const { loadApp } = require('./support/dom');
 
 const ROOT = path.join(__dirname, '..');
@@ -268,11 +268,14 @@ test('ti-settings is declared at its cmap-verified codepoint', () => {
    component's own sizing and win on source order
    (`.claude/rules/native-button-vs-focusable-span.md`). */
 test('the row button reset never uses the font shorthand', () => {
-  const row = bodyOf('.rs-row');
+  // bodyOfIn, not bodyOf: the reset is shared with the wished-expansion picker
+  // (#664) as a selector GROUP, and an exact-text lookup reports a regrouped
+  // rule as a missing one.
+  const row = bodyOfIn('.rs-row');
   assert.ok(row, '.rs-row is not declared — the sheet actions render at the UA button size');
   assert.match(row, /font-family:\s*inherit/, '.rs-row does not inherit the app font');
   assert.doesNotMatch(row, /(^|[;\s])font:\s/, '.rs-row uses the `font` shorthand, which beats the component on source order');
   // Icon + label share one line only because .ds-row__main is made flex HERE;
   // the bare component stacks its children on purpose (the Chronik rows).
-  assert.ok(bodyOf('.rs-row .ds-row__main'), 'the settings rows lost their one-line icon/label layout');
+  assert.ok(bodyOfIn('.rs-row .ds-row__main'), 'the settings rows lost their one-line icon/label layout');
 });
