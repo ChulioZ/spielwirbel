@@ -52,7 +52,8 @@ function capSpec(body) {
 }
 
 const baseCap = capSpec(bodyOf('.sheet'));
-const wideCap = capSpec(bodyOf('.sheet', WIDE));
+const WIDE_CAP_SEL = '.sheet-backdrop .sheet';
+const wideCap = capSpec(bodyOf(WIDE_CAP_SEL, WIDE));
 
 // `min(<pct><unit>, 100%)` out of the base ceiling.
 function phoneCeiling() {
@@ -74,6 +75,16 @@ function wideGutter() {
 test('the base cap is a floored, viewport-derived expression', () => {
   assert.ok(baseCap, '.sheet declares no `max-height: max(<floor>px, …)`');
   assert.ok(phoneCeiling(), `.sheet's ceiling is not min(<n>dvh, 100%): ${baseCap.ceiling}`);
+});
+
+test('the desktop cap wins on SPECIFICITY, not on source order', () => {
+  /* A bare `.sheet` in the media block ties the base rule and wins only because
+     it happens to sit lower in the file. Losing that tie is silent — the sheet
+     just comes out ~15% short of the room it has — so the override is
+     compounded (.claude/rules/responsive-content-width.md). */
+  assert.ok(wideCap, `${WIDE_CAP_SEL} declares no floored cap inside the >=640px block`);
+  assert.ok(outranks(WIDE_CAP_SEL, '.sheet'),
+    `${WIDE_CAP_SEL} does not outrank .sheet — the desktop cap would ride on source order`);
 });
 
 test('NO absolute px survives in either ceiling — only in the floor', () => {
