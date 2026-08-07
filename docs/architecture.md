@@ -397,6 +397,10 @@ scripts/
   resolve-demo-covers.js
                      re-resolves the demo seed's cover hotlinks against the
                      providers and prints a DEMO_GAMES block for lib/demo-seed.js
+  capture-landing-shots.js
+                     regenerates the committed landing-page product screenshots
+                     (public/img/landing-*.webp) — seeds a throwaway dataset and
+                     drives headless Chrome over CDP, one run for every locale
 test/                automated tests (node --test + supertest); view specs
                      run the real frontend under jsdom (test/support/dom.js)
 data/                all user data (git-ignored)
