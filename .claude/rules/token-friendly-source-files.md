@@ -2,8 +2,6 @@
 
 <!-- scope: global — a discipline for every file added, moved or renamed -->
 
-<!-- scope: global — a discipline for every file added, moved or renamed -->
-
 Agents pay tokens every time they read or edit a file. A file that must be loaded
 whole for a one-line change, that hides the right spot, that repeats boilerplate,
 or that has its own idiosyncratic shape makes every routine change slower and more
@@ -39,7 +37,8 @@ in `eslint.config.js`, and kept clear of the load-order trap (see
 `frontend-script-load-order.md` and `eslint-frontend-shared-scope.md`). Split
 when the concern boundary is real, not reflexively by size.
 
-**Moving or renaming code also invalidates any RULE that cites its old home.**
+**Moving or renaming code also invalidates any RULE that cites its old home** —
+and changing a **value** does the same to whatever states it as a premise.
 `.claude/rules/**` is full of precise pointers (`lib/routes/rounds.js` `gameCount`,
 `core.js` `gameStats`, …), and those pointers are what make a rule actionable —
 so a move turns the rule into a wrong map without touching a line of it. Nothing
@@ -55,19 +54,31 @@ change while the rule is about *archived-game filtering*: **the rule a move
 invalidates is usually on a different topic than the PR doing the moving**, which
 is why it never occurs to anyone to check.
 
-So when you move or rename a function, `const` or file, grep the rules for the
-old name and fix every hit in the same PR:
+So when you move or rename a function, `const` or file — or change a **value**
+another file's prose cites — grep for the old name across source and docs, not
+just the rules, and fix every hit in the same PR:
 
 ```bash
-grep -rn "gameCount\|lib/routes/rounds.js" .claude/rules/
+grep -rn --exclude-dir=node_modules --exclude-dir=worktrees \
+  "gameCount\|min(85vh, 660px)" .claude/ lib/ public/ docs/ *.md
 ```
 
+**The class `.claude/rules/` alone misses is a code comment citing a value or
+invariant owned by another file.** #678 moved `.sheet`'s `max-height` off
+`min(85vh, 660px)`, and two places held that value as a load-bearing premise:
+`.claude/rules/overlay-page-lock.md`, which the narrow grep finds, and
+`public/js/page-lock.js`'s header comment, where it is the justification for the
+whole module — found only by accident, via a hit inside a stale
+`.claude/worktrees/` checkout. A comment reads as documentation, so nobody greps
+it, and nothing can go red over it.
+
 `test/skills.test.js` catches a moved **file** — it asserts every repo path cited
-anywhere in `.claude/**`, `CLAUDE.md` and `README.md` still exists. It cannot
-catch a moved **function**, so that grep is on you. It is also a bullet in
-`implement`'s review phase, because the rule was already right and got skipped
-anyway — the adherence-failure remedy is a check that cannot be skipped, not a
-reworded rule.
+anywhere in `.claude/**`, `CLAUDE.md` and `README.md` still exists. It cannot see
+a moved **function**, a stale value, or anything cited from a source comment
+(wrong file set, and it checks paths only), so that grep is on you. It is also a
+bullet in `implement`'s review phase, because the rule was already right and got
+skipped anyway — the adherence-failure remedy is a check that cannot be skipped,
+not a reworded rule.
 
 ## The budget is a signal, not a ceiling — `test/token-budget.test.js`
 

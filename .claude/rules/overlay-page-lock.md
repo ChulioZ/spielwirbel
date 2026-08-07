@@ -134,4 +134,8 @@ cached stylesheet.
 other thing `openSheet` exists to make impossible to forget),
 `.claude/rules/popover-vs-sheet-editors.md` (the presentation split, and why the
 popover is exempt), `.claude/rules/preview-pane-paint-artifacts.md` (the
-`innerWidth === 0` family).
+`innerWidth === 0` family),
+`.claude/rules/token-friendly-source-files.md` ("Moving or renaming code…" — the
+pre-#678 `.sheet` cap was cited as a premise both here and in
+`public/js/page-lock.js`'s header comment, and the second was nearly missed; that
+grep now covers source, not just the rules).
