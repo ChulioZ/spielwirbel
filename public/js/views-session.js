@@ -1020,6 +1020,7 @@ async function showResults(round, session, gamesHint, reveal) {
         winnerIds = [];
         session.finished = false;
         session.winnerIds = [];
+        session.finishedAt = null; // the server clears it too; keep the copy honest
         toast(t('result.toast.reset'));
         renderFinish();
       } catch (e) { toast(e.message); }
@@ -1034,6 +1035,29 @@ async function showResults(round, session, gamesHint, reveal) {
       ? iconText('ti-trophy', t('result.winners', { names: names.join(', ') }))
       : iconText('ti-check', t('result.playedNoWinner'));
     finishWrap.appendChild(h(`<div class="winner-result">${inner}</div>`));
+
+    // „An BG Stats übergeben" (#485): the whole play as one tappable link.
+    //
+    // Rendered only for an account that opted in (Konto → BG Stats), because a
+    // website cannot detect whether the app is installed and the vendor's own
+    // guidance is to let the user enable the button rather than dead-end
+    // everyone else. Built here rather than at click time because renderFinish()
+    // re-runs after every winner toggle, so the href is never stale — and a real
+    // anchor is long-pressable and copyable, which a JS click is not.
+    //
+    // `noreferrer` as well as `noopener`: the referrer would otherwise carry
+    // this round's and session's ids to a third party that has no use for them
+    // (.claude/rules/secrets-in-paths-reach-the-logs.md, same reasoning one hop
+    // further out).
+    const pushUrl = bgStatsEnabled()
+      ? bgStatsPlayUrl({ session, game: chosenGame, people, parties, winnerIds })
+      : null;
+    if (pushUrl) {
+      const push = h(`<div class="toolbar" style="margin-top:14px">
+           <a class="btn btn--ghost" target="_blank" rel="noopener noreferrer" href="${esc(pushUrl)}">${iconText('ti-external-link', t('result.bgStats'))}</a>
+         </div>`);
+      finishWrap.appendChild(push);
+    }
   }
 
   // Marks the session finished with the given winners (possibly none) and
@@ -1048,6 +1072,11 @@ async function showResults(round, session, gamesHint, reveal) {
       winnerIds = saved.winnerIds.slice(); // filtered server-side
       session.finished = true;
       session.winnerIds = winnerIds.slice();
+      // The server stamps this, and the BG Stats push (#485) sends it as the
+      // play's date — without the sync it would fall back to createdAt, i.e.
+      // report the evening as having happened when the draw started, until the
+      // next reload.
+      session.finishedAt = saved.finishedAt || session.finishedAt;
       toast(t('result.toast.saved'));
       renderFinish();
     } catch (e) { toast(e.message); }

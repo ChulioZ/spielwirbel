@@ -81,6 +81,17 @@ function currentUsername() { return (accountUser && accountUser.username) || '';
 // living only in the POST /demo response — the banner has to come back when the
 // visitor refreshes or follows a deep link inside their demo.
 function isDemoAccount() { return !!(accountUser && accountUser.demo); }
+// The BG Stats push opt-in (#485). Off for a logged-out visitor and in the
+// accounts-off self-hosted modes, where `accountUser` is null and there is no
+// account to hold the preference — the results screen then simply offers no
+// push, which is the same answer as an account that never enabled it.
+function bgStatsEnabled() { return !!(accountUser && accountUser.bgStats); }
+// Keep the cached record in step with a preference the Konto screen just saved.
+// showResults reads `bgStatsEnabled()` on every render, so without this the
+// button would not appear (or disappear) until the next reload — the Konto
+// screen fetches its own fresh /me and would otherwise be the only thing that
+// knows.
+function setCachedPref(field, value) { if (accountUser) accountUser[field] = value; }
 
 // Auth endpoints are called with a plain fetch (not api()): they carry no Bearer
 // token, and a 401 here means "bad credentials", not "session expired" — so they

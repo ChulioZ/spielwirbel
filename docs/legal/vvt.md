@@ -9,7 +9,7 @@ konfigurierte Empfangsanschrift; E-Mail: `IMPRESSUM_EMAIL`). Kein Vertreter,
 kein Datenschutzbeauftragter (nicht benannt; keine Pflicht nach § 38 BDSG —
 keine 20 Personen, kein besonderes Risiko).
 
-**Stand:** 2026-08-05
+**Stand:** 2026-08-07
 
 | # | Verarbeitung | Kategorien betroffener Personen | Datenkategorien | Zweck | Rechtsgrundlage | Empfänger / Auftragsverarbeiter | Drittland | Löschfrist |
 |---|---|---|---|---|---|---|---|---|
@@ -32,6 +32,7 @@ keine 20 Personen, kein besonderes Risiko).
 | 17 | Missbrauchsbegrenzung der Gast-Demo (#502) | Besucher ohne Konto | **Gehashte IP-Adresse** des Demo-Starts (HMAC-SHA-256 mit `SESSION_SECRET`); die IP-Adresse selbst wird **nicht** gespeichert. Keine Wiedererkennung, keine Profilbildung, keine Verknüpfung mehrerer Besuche — der Wert dient ausschließlich als Zähler „wie viele Demos hält dieser Anschluss gerade" | Verhindern, dass einzelne Besucher den Demo-Pool belegen und die Demo dadurch für alle anderen unbenutzbar machen | Art. 6 (1) f (berechtigtes Interesse an missbrauchssicherem Betrieb) | Railway (DB); keine zusätzlichen Empfänger | USA (EU-Region; SCC) | Löschung **gemeinsam mit dem Demo-Konto**, also spätestens nach 24 h — kein eigener Aufbewahrungslauf, kein separater Reaper |
 | 18 | Benachrichtigungs-E-Mails zu Postfach-Einträgen (#618) | Registrierte Nutzer | Zwei Ein/Aus-Schalter am Konto (Runden-Einladung, Freundschaftsanfrage) und der Zeitpunkt der letzten Benachrichtigung (für die Begrenzung auf eine Nachricht je Stunde). Die E-Mail selbst nennt nur die Art der Anfrage und den **öffentlichen Nutzernamen** des Absenders — **keinen Rundennamen**, keine Mitgliedsnamen, keine Inhalte | Zustellung von Anfragen, die eine Entscheidung des Empfängers verlangen (Einladung in eine Runde #207, Freundschaftsanfrage #325), an jemanden, der die App gerade nicht geöffnet hat | Art. 6 (1) b (transaktional, kein Newsletter und keine Werbung i. S. d. § 7 UWG — die Nachricht betrifft eine Anfrage, die der Empfänger beantworten muss; die typgenaue Abschaltbarkeit ist Teil dessen) | Heinlein Hosting GmbH (mailbox.org), Berlin — **kein zusätzlicher Empfänger**, identisch mit Zeile 5 | nein (DE) | Schalter und Zeitstempel bis Kontolöschung; keine gesonderte Protokollierung der Versendungen über die Zeile-5-Versandprotokolle hinaus |
 | 19 | Abstimmungs-Link ohne Konto (#652) | Teilnehmende einer Session (Mitglieder + Gäste), Empfänger des Links (ohne Konto) | Gespeichert wird ausschließlich eine **zufällige, nicht erratbare Kennung** (192 Bit) und ihre Zuordnung zu genau einer Session (Mandant, Runde, Session) — **keine** Daten über den Link-Empfänger, kein Konto, keine IP, keine Wiedererkennung. Über den Link **offengelegt** werden Rundenname, ausgeloste Spieltitel und die **Namen der Teilnehmenden dieser Session**; **nicht** offengelegt werden abgegebene Bewertungen, das Ergebnis sowie alle weiteren Runden-, Mitglieds- und Kontodaten | Abstimmung über mehrere Geräte auch für Personen ohne Konto — die Registrierungspflicht war die praktische Hürde der Geräte-Abstimmung (#209/#612) | Art. 6 (1) b | Railway (DB). Empfänger sind die von der Runde **selbst ausgewählten** Personen, an die sie den Link weitergibt; der Link wird von uns nicht veröffentlicht, nicht verlinkt und nicht für Suchmaschinen zugänglich gemacht (keine Veröffentlichung gegenüber der Allgemeinheit) | USA (EU-Region; SCC) | mit dem Ende der Abstimmung bzw. beim Abbrechen/Löschen der Session oder der Runde; ebenso bei Kontolöschung (`eraseAccount`) — **und spätestens 30 Tage nach dem Erzeugen** (`VOTE_LINK_TTL_DAYS`, Höchstfrist per Sweep), da eine nie geschlossene Session keinen der ereignisgesteuerten Löschpfade erreicht |
+| 20 | Übergabe einer Partie an BG Stats (#485) | Teilnehmende einer beendeten Session (Mitglieder + Gäste) | Bei uns gespeichert wird ausschließlich **ein Ein/Aus-Schalter am Konto** (standardmäßig aus). Übermittelt wird — erst beim Antippen des Links, **direkt vom Gerät des Nutzers** — der Spieltitel, Abschlusszeitpunkt, eine Session-Kennung sowie die **Namen der Teilnehmenden** und die Angabe, wer gewonnen hat; **keine** Bewertungen, Punkte, Rundennamen oder Kontodaten | Die Spielhistorie der Runde in das Werkzeug übernehmen können, in dem die Gruppe ihre Partien ohnehin führt (Interoperabilität, Datenhoheit) | Art. 6 (1) f (berechtigtes Interesse an Zusammenarbeit mit anderen Werkzeugen); der Schalter selbst Art. 6 (1) b | Anbieter von **BG Stats** (bgstatsapp.com) — **eigenständiger Verantwortlicher**, keine AV (siehe Hinweise); die App bettet nichts ein und überträgt selbst nichts (reiner Klick-Link). Hat der Nutzer dort sein BoardGameGeek-Konto verbunden, kann BG Stats die Partie zusätzlich dorthin übertragen | unbekannt — die Übermittlung erfolgt durch den Nutzer selbst von seinem Gerät aus; wir sind insoweit nicht Exporteur | Schalter bis Kontolöschung; über die übermittelte Partie entscheidet der Nutzer in BG Stats nach dessen Regime |
 
 **Hinweise**
 
@@ -73,6 +74,13 @@ keine 20 Personen, kein besonderes Risiko).
   Einordnungsrisiko liegt primär beim Dienstleister. ZERODOX wird deshalb als
   **Empfänger** (eigenständiger Verantwortlicher) geführt, nicht als
   Auftragsverarbeiter.
+- **BG Stats** (Zeile 20) ist aus demselben Grund **eigenständiger
+  Verantwortlicher**: Die App bettet nichts ein und überträgt nichts; der Nutzer
+  aktiviert den Link erst selbst am Konto und tippt ihn dann selbst an, sodass
+  die Übermittlung von seinem Gerät ausgeht. Ein AVV ist weder nötig noch von
+  diesem Anbieter erhältlich. Weil die Übermittlung Namen **Dritter** (Gäste,
+  andere Mitglieder) enthält, weisen Datenschutzerklärung und Kontoeinstellung
+  ausdrücklich darauf hin.
 - Die Spenden-Plattformen (Zeile 12: Ko-fi, Stripe, PayPal) sind — wie die
   Cover-Anbieter in Zeile 9 — **eigenständige Verantwortliche**, keine
   Auftragsverarbeiter: Die App bettet nichts ein und überträgt nichts; der

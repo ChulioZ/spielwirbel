@@ -82,6 +82,7 @@ test('configured: the privacy policy covers the real processors and no ODR link'
     'eigenständiger Verantwortlicher',           // …and the classification itself is pinned in the DE text
     'Ko-fi', 'Stripe', 'PayPal',                 // donation-link parties — independent controllers (#173)
     'eigenständige Verantwortliche',             // …their classification pinned in the DE text too
+    'BG Stats', 'bgstatsapp.com',                // the play-push recipient — same click-link shape (#485)
     'geekdo-images.com', 'steamstatic.com',      // hotlinked cover hosts disclosed (#172)
     'Nutzungsereignisse',                        // product-event logging (#261) disclosed
     'keine Konto- oder Mandanten-Kennung',       // feedback is anonymous since #321 — pin the §11 disclosure

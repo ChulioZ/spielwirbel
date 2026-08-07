@@ -102,7 +102,8 @@ const frontendGlobals = {
   getDemoToken: 'readonly', setDemoToken: 'readonly', clearDemoToken: 'readonly',
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
   currentUserId: 'readonly', currentUsername: 'readonly',
-  isDemoAccount: 'readonly', startDemo: 'readonly', setupDemoBanner: 'readonly',
+  isDemoAccount: 'readonly', bgStatsEnabled: 'readonly', setCachedPref: 'readonly',
+  startDemo: 'readonly', setupDemoBanner: 'readonly',
   setupTermsBanner: 'readonly',
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
   authErrorKey: 'readonly',
@@ -136,8 +137,9 @@ const frontendGlobals = {
   buildPasswordForm: 'readonly', setKontoError: 'readonly',
   // self-service account deletion (issue #419)
   buildDeleteSection: 'readonly', openDeleteSheet: 'readonly',
-  // inbox-mail opt-outs (issue #618)
-  buildNotifyForm: 'readonly',
+  // inbox-mail opt-outs (issue #618) + the BG Stats opt-in (issue #485), which
+  // share one account-preference toggle row
+  buildNotifyForm: 'readonly', buildPrefToggle: 'readonly', buildBgStatsForm: 'readonly',
   // support.js (issue #173)
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
   // views-landing.js (issue #322): logged-out landing page
@@ -159,6 +161,10 @@ const frontendGlobals = {
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
   SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly',
+  // bgstats.js (issue #485) — internal helpers listed for the same reason.
+  BGSTATS_SOURCE: 'readonly', BGSTATS_CREATE_PLAY: 'readonly', BGSTATS_URL_MAX: 'readonly',
+  bgStatsPlayDate: 'readonly', bgStatsGuestId: 'readonly', bgStatsTeamLabel: 'readonly',
+  bgStatsBggId: 'readonly', bgStatsPlay: 'readonly', bgStatsPlayUrl: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly', existingTitleState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',

@@ -53,6 +53,14 @@ async function showAccount() {
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgg.title'))}</h2>`));
   app.appendChild(buildBggForm(me.bggUsername));
 
+  // Next to the BGG handle, its natural neighbour — and ABOVE the demo return
+  // below, unlike the mail and password sections. Those sit below it because a
+  // demo account has no routable address and no password identity; this one
+  // needs neither. It is a link the browser follows, so it works for a demo
+  // exactly as it does for a real account.
+  app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgstats.title'))}</h2>`));
+  app.appendChild(buildBgStatsForm(me));
+
   // The password form is STRUCTURALLY unusable for a demo account: it holds no
   // password identity, so change-password answers `invalid_credentials` whatever
   // is typed — i.e. "your current password is wrong" about a password that never
@@ -270,49 +278,81 @@ function buildBggForm(current) {
   return form;
 }
 
+/* One boolean on the account, as a row that saves on change. Shared by the two
+   inbox-mail opt-outs (#618) and the BG Stats opt-in (#485) — the same control,
+   the same failure handling, three different fields.
+
+   The row is a <label> so the whole row toggles its checkbox, and its group gets
+   its OWN wrapper rather than a `.field` — `.field label` is (0,1,1) and would
+   beat `.ds-row` (0,1,0), flattening every row
+   (.claude/rules/label-rows-lose-to-field-label.md). */
+function buildPrefToggle(field, label, checked, onToast) {
+  const row = h(`<label class="ds-row konto-notify__row">
+      <div class="ds-row__main"><span>${esc(label)}</span></div>
+      <div class="ds-row__meta">
+        <input type="checkbox" class="provider-row__box"${checked ? ' checked' : ''} />
+      </div>
+    </label>`);
+  const box = row.querySelector('input');
+  // Saves on change rather than behind a submit button — there is nothing to
+  // review, and a toggle that needs confirming reads as not having worked.
+  box.addEventListener('change', async () => {
+    const want = box.checked;
+    box.disabled = true;
+    try {
+      const data = await accountApi('PATCH', '/me', { [field]: want });
+      // Follow the SERVER's answer, not the click: if it refused or coerced,
+      // the checkbox must show what is actually stored.
+      box.checked = data[field];
+      // The cached /me is what the rest of the app reads this preference from,
+      // and it was fetched before this screen opened.
+      setCachedPref(field, data[field]);
+      toast(t(onToast(want)));
+    } catch (ex) {
+      box.checked = !want; // put it back — nothing was saved
+      if (ex.message !== 'auth') toast(t('auth.error.network'));
+    }
+    box.disabled = false;
+  });
+  return row;
+}
+
 // The two inbox-mail opt-outs (#618): e-mail me when a round invitation or a
 // friend request arrives. Both default ON server-side, and /me always answers a
 // real boolean, so this never has to re-implement the absent-key default.
-//
-// Each row is a <label> so the whole row toggles its checkbox, and the group gets
-// its OWN wrapper rather than a `.field` — `.field label` is (0,1,1) and would
-// beat `.ds-row` (0,1,0), flattening both rows
-// (.claude/rules/label-rows-lose-to-field-label.md).
 function buildNotifyForm(me) {
   const wrap = h(`<div class="konto-notify">
       <p class="muted konto-notify__intro">${esc(t('konto.notify.intro'))}</p>
     </div>`);
+  const mailToast = (want) => (want ? 'konto.notify.on' : 'konto.notify.off');
+  wrap.appendChild(buildPrefToggle(
+    'notifyRoundInvitations', t('konto.notify.invitations'), me.notifyRoundInvitations, mailToast));
+  wrap.appendChild(buildPrefToggle(
+    'notifyFriendRequests', t('konto.notify.friends'), me.notifyFriendRequests, mailToast));
+  return wrap;
+}
 
-  const addRow = (field, label) => {
-    const row = h(`<label class="ds-row konto-notify__row">
-        <div class="ds-row__main"><span>${esc(label)}</span></div>
-        <div class="ds-row__meta">
-          <input type="checkbox" class="provider-row__box"${me[field] ? ' checked' : ''} />
-        </div>
-      </label>`);
-    const box = row.querySelector('input');
-    // Saves on change rather than behind a submit button — there is nothing to
-    // review, and a toggle that needs confirming reads as not having worked.
-    box.addEventListener('change', async () => {
-      const want = box.checked;
-      box.disabled = true;
-      try {
-        const data = await accountApi('PATCH', '/me', { [field]: want });
-        // Follow the SERVER's answer, not the click: if it refused or coerced,
-        // the checkbox must show what is actually stored.
-        box.checked = data[field];
-        toast(t(want ? 'konto.notify.on' : 'konto.notify.off'));
-      } catch (ex) {
-        box.checked = !want; // put it back — nothing was saved
-        if (ex.message !== 'auth') toast(t('auth.error.network'));
-      }
-      box.disabled = false;
-    });
-    wrap.appendChild(row);
-  };
+/* The BG Stats push opt-in (#485).
 
-  addRow('notifyRoundInvitations', t('konto.notify.invitations'));
-  addRow('notifyFriendRequests', t('konto.notify.friends'));
+   OFF by default, unlike the two above: BG Stats' own integration guidance is to
+   let the user enable the button rather than render a link that dead-ends for
+   everyone who does not use the app — a website cannot detect whether it is
+   installed. It is a per-ACCOUNT preference rather than a per-round one because
+   the push happens on the tapping person's own device; enabling it for a whole
+   round would put the link in front of everyone the round is shared with,
+   including people who have never heard of BG Stats.
+
+   The Android note is not padding: the link only opens the app once „Unterstützte
+   Links öffnen" is on in its „Standardmäßig öffnen" settings, and without that
+   hint the button lands in a browser and reads as broken. */
+function buildBgStatsForm(me) {
+  const wrap = h(`<div class="konto-notify">
+      <p class="muted konto-notify__intro">${esc(t('konto.bgstats.intro'))}</p>
+    </div>`);
+  wrap.appendChild(buildPrefToggle(
+    'bgStats', t('konto.bgstats.label'), me.bgStats,
+    (want) => (want ? 'konto.bgstats.on' : 'konto.bgstats.off')));
+  wrap.appendChild(h(`<p class="field__hint muted">${esc(t('konto.bgstats.hint'))}</p>`));
   return wrap;
 }
 

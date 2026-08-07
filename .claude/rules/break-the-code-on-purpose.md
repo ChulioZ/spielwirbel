@@ -133,6 +133,11 @@ Note Route 1 does not reach this either: test-first, the assertion goes red
 because the *module* does not exist yet, which is satisfied just as well by the
 blinded version. Only the deliberate break discriminates.
 
+The server-side sibling is a default no fixture can even *express* — every
+account is created carrying every key, so an absent-key default reads the same
+whichever way it is written:
+`.claude/rules/defaulted-account-fields-need-a-legacy-shape-spec.md`.
+
 ## History
 
 This lived in `.claude/rules/admin-cross-tenant-escape.md` §4 by accident — it was
