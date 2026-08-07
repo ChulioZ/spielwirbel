@@ -189,3 +189,32 @@ test('the request is built from an ALLOWLIST — a request value never reaches t
     assert.ok(bgp.CURRENCIES.includes(m.currency), `currency escaped: ${m.currency}`);
   }
 });
+
+test('a timeout is reported as OUR budget expiring, naming the source', async () => {
+  // AbortError's own message is "This operation was aborted" — no source, no
+  // budget, no cause. The operator reads this string in the admin panel's log,
+  // and on 2026-08-07 it sent them looking at their own config and a redeploy
+  // while the real cause was the upstream 504ing at 10.1 s.
+  const realFetch = global.fetch;
+  global.fetch = async () => { throw Object.assign(new Error('This operation was aborted'), { name: 'AbortError' }); };
+  try {
+    await assert.rejects(
+      bgp.price('342942', 'de'),
+      (err) => err.message.includes('BoardGamePrices') && err.message.includes(String(bgp.TIMEOUT_MS))
+    );
+  } finally {
+    global.fetch = realFetch;
+  }
+});
+
+test('a non-abort failure keeps its own message', async () => {
+  const realFetch = global.fetch;
+  global.fetch = async () => ({ ok: false, status: 504 });
+  try {
+    // The whole point of the 12 s budget: their gateway error must reach the log
+    // instead of being masked by our abort firing first.
+    await assert.rejects(bgp.price('342942', 'de'), /BoardGamePrices responded 504/);
+  } finally {
+    global.fetch = realFetch;
+  }
+});

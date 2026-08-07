@@ -294,6 +294,17 @@ destinations; there is no AT or CH one, so Austrian and Swiss readers see German
 shipping estimates. `PRICES_SITENAME` (default `spielwirbel.app`) is the host we
 identify as, which is their attribution mechanism.
 
+When a price source fails it is **paused for `PRICES_FAILURE_COOLDOWN_SECONDS`**
+(default 120) rather than retried on the next page view. A success is cached for
+an hour but a failure deliberately is not, so without the pause a sustained
+upstream outage costs the full request timeout on *every* wish-detail view — and
+keeps hammering an upstream that is already failing. The pause is per **source**,
+so Steam keeps answering while the aggregator is out, and it never hides a price
+already held: a cached answer is still served while its source is down. Set `0`
+to disable. The board-game request timeout deliberately sits **above** the
+aggregator's own ~10 s gateway budget, so an upstream `504` is logged as such
+instead of being masked by our own abort.
+
 There are deliberately **no affiliate or commission links, ever** (operator
 decision 2026-08-07). That is what keeps the operator non-commercial here and
 removes the ad-labelling duty (§ 5a Abs. 4 UWG); it is a legal posture, not a

@@ -18,10 +18,28 @@ const { app, createRound } = require('./helpers');
  * (.claude/rules/bgg-collection-import.md §4).
  */
 
+/*
+ * The failure COOLDOWN is module state shared by every spec in this file: one
+ * spec's simulated outage would otherwise pause the source for the next two
+ * minutes and silently starve every spec after it — which is exactly what
+ * happened when it was added (two unrelated specs went red). So the file turns
+ * it off by default and the cooldown specs opt in.
+ *
+ * That means almost nothing here can see the real DEFAULT, so one spec below
+ * deletes the override and drives the shipped value through the real path
+ * (.claude/rules/break-the-code-on-purpose.md, "a test that SETS the state it
+ * asserts cannot see a wrong default").
+ */
+process.env.PRICES_FAILURE_COOLDOWN_SECONDS = '0';
+
 const realFetch = global.fetch;
 afterEach(() => {
   global.fetch = realFetch;
   delete process.env.PRICES_ENABLED;
+  process.env.PRICES_FAILURE_COOLDOWN_SECONDS = '0';
+  // Resetting the env alone does NOT clear a deadline already recorded while it
+  // was 60 — that timestamp is still in the future.
+  require('../lib/prices').resetCooldowns();
 });
 
 const stubFetch = (json, { ok = true } = {}) => {
@@ -207,6 +225,87 @@ test('a free Steam game shows nothing rather than 0,00 €', async () => {
   const game = await addWish(round.id, { sourceProvider: 'steam', sourceExternalId: '78' });
   const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices`);
   assert.deepEqual(res.body, { available: false });
+});
+
+test('a failing source is PAUSED, not re-asked on every page view', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  process.env.PRICES_FAILURE_COOLDOWN_SECONDS = '60';
+  let calls = 0;
+  global.fetch = async () => { calls += 1; throw new Error('ECONNRESET'); };
+  const round = await createRound(request);
+  // Four DIFFERENT games, i.e. four cache keys — a per-game cooldown would let
+  // every one of them through and the count would be 4. The upstream is down for
+  // all of them, so the pause has to be per SOURCE.
+  const games = [];
+  for (const eid of ['2001', '2002', '2003', '2004']) games.push(await addWish(round.id, { sourceExternalId: eid }));
+  for (const g of games) {
+    const res = await request(app).get(`/api/rounds/${round.id}/games/${g.id}/prices`);
+    assert.deepEqual(res.body, { available: false });
+  }
+  assert.equal(calls, 1, 'the outage is discovered once, not once per wished game');
+});
+
+test('the cooldown is per SOURCE — Steam keeps answering while the aggregator is out', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  process.env.PRICES_FAILURE_COOLDOWN_SECONDS = '60';
+  const round = await createRound(request);
+  const bgg = await addWish(round.id, { sourceExternalId: '2010' });
+  const steam = await addWish(round.id, { sourceProvider: 'steam', sourceExternalId: '2011' });
+
+  global.fetch = async () => { throw new Error('ECONNRESET'); };
+  assert.deepEqual((await request(app).get(`/api/rounds/${round.id}/games/${bgg.id}/prices`)).body, { available: false });
+
+  global.fetch = async () => ({ ok: true, status: 200, json: async () => ({
+    2011: { success: true, data: { price_overview: { currency: 'EUR', final: 1999, discount_percent: 0 } } },
+  }) });
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${steam.id}/prices`);
+  assert.equal(res.body.available, true, 'one source failing must not silence the other');
+  assert.equal(res.body.amount, 19.99);
+});
+
+test('a price we ALREADY HOLD keeps being served while its source is cooling', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  process.env.PRICES_FAILURE_COOLDOWN_SECONDS = '60';
+  const round = await createRound(request);
+  const good = await addWish(round.id, { sourceExternalId: '2020' });
+  const bad = await addWish(round.id, { sourceExternalId: '2021' });
+
+  stubFetch(bgpBody('2020', [OFFER]));
+  const first = await request(app).get(`/api/rounds/${round.id}/games/${good.id}/prices?lang=de`);
+  assert.equal(first.body.available, true);
+
+  // A different game fails and puts the whole source on cooldown.
+  global.fetch = async () => { throw new Error('ECONNRESET'); };
+  await request(app).get(`/api/rounds/${round.id}/games/${bad.id}/prices?lang=de`);
+
+  // The cached answer must survive it. Checking the cooldown BEFORE the cache
+  // lookup would take the price away from the one game we could still answer.
+  const again = await request(app).get(`/api/rounds/${round.id}/games/${good.id}/prices?lang=de`);
+  assert.equal(again.body.available, true, 'a held price must outlive its source going down');
+  assert.equal(again.body.amount, 49.89);
+  assert.equal(again.body.fetchedAt, first.body.fetchedAt);
+});
+
+test('the cooldown is ON by default — not only when a test sets it', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  // Drop this file's own override and drive the shipped default through the
+  // real path; every other spec here pins it to 0, so nothing else can see it.
+  delete process.env.PRICES_FAILURE_COOLDOWN_SECONDS;
+  let calls = 0;
+  global.fetch = async () => { calls += 1; throw new Error('ECONNRESET'); };
+  const round = await createRound(request);
+  const a = await addWish(round.id, { sourceExternalId: '2030' });
+  const b = await addWish(round.id, { sourceExternalId: '2031' });
+  await request(app).get(`/api/rounds/${round.id}/games/${a.id}/prices`);
+  await request(app).get(`/api/rounds/${round.id}/games/${b.id}/prices`);
+  assert.equal(calls, 1, 'shipped default must pause the source, not retry per view');
+});
+
+test('the timeout sits ABOVE their gateway budget, so a 504 is reported not masked', () => {
+  // Measured 2026-08-07 during a real outage: their edge returns 504 at ~10.1 s.
+  // At 10 s ours fired first and the operator saw "This operation was aborted",
+  // which names our timeout and hides theirs.
+  assert.ok(require('../lib/prices/boardgameprices').TIMEOUT_MS > 10100);
 });
 
 test('the price TTL is an hour, and the shared provider TTL is untouched', () => {
