@@ -720,6 +720,12 @@ h1, h2, h3 { font-family: var(--font-display); }
 
 /* Quieter secondary tasks under the launchpad content. */
 .hub-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+/* ≤520px: stretched buttons, so a wrap reads as a deliberate stack instead of
+   two ragged pills — the `.sheet__actions` narrow rule's reasoning, applied to
+   the page-level action rows (`.toolbar`, `.landing-hero__cta` likewise). */
+@media (max-width: 520px) {
+  .hub-actions .btn { flex: 1 1 auto; }
+}
 
 /* "Last played" as a ticket stub: main part + perforated winner stub. */
 .ticket {
@@ -1640,6 +1646,29 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .tl-act--add .tl-act__icon { opacity: 0.55; }
 .tl-act--add .tl-act__icon .ti { font-size: var(--text-sm); }
 
+/* ≤520px: the meta drops to a quiet second line. Both side items are nowrap
+   `flex: none` (correct on one line), so at phone widths they would starve the
+   label — the only flexible item — down to ~80px: one word per line, #361's
+   fragmentation back in a new shape after #207 added the actor span. The label
+   keeps line 1 beside the icon; actor + timestamp open line 2, indented to the
+   label's left edge; ✕ closes that line at the right.
+
+   The icon column is sized to --tl-act-line for ALL tiers here, not just the
+   milestone chip that already declares it: the label's flex-basis has to clear
+   the widest icon or the milestone tier wraps its label under the chip
+   (measured), and one shared width also lines the labels up across mixed rows.
+   These overrides tie their base rules at (0,1,0) and win on source order —
+   licensed by adjacency below the component (the .dock precedent,
+   responsive-content-width.md); do not hoist them into the ~line-876 block. */
+@media (max-width: 520px) {
+  .tl-act { flex-wrap: wrap; gap: 2px 10px; }
+  .tl-act__icon { width: var(--tl-act-line); }
+  .tl-act__text { flex: 1 1 calc(100% - var(--tl-act-line) - 10px); }
+  .tl-act__text + .tl-act__by,
+  .tl-act__text + .tl-act__time { margin-left: calc(var(--tl-act-line) + 10px); }
+  .tl-act__del { margin-left: auto; }
+}
+
 /* Past-session cards, anchored by the chosen game's cover thumbnail. */
 .session-card {
   display: flex;
@@ -1981,6 +2010,12 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .row .input { flex: 1; }
 
 .toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
+/* ≤520px: same stretched-stack treatment as `.hub-actions` — see the comment
+   there. Sheets compound `.toolbar.sheet__actions`, whose own ≤639px rule
+   already does this; doubling up here is a no-op for them. */
+@media (max-width: 520px) {
+  .toolbar .btn { flex: 1 1 auto; }
+}
 
 /* ---- Onboarding / account auth (issue #138) ---- */
 /* Auth screens take over the view; the top bar keeps only the language picker. */
@@ -2106,6 +2141,14 @@ body.auth-screen .topbar__context { display: none; }
   max-width: 30em;
 }
 .landing-hero__cta { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+/* Narrow branch: same stretched treatment as `.hub-actions` — the two CTAs kept
+   their intrinsic (different) widths when stacked, reading as misalignment; on
+   one row they now split it evenly. 719px and not a tighter cut, because every
+   narrow landing block must tile with the 720px <picture> branch
+   (test/landing-shots.test.js pins the adjacency). */
+@media (max-width: 719px) {
+  .landing-hero__cta .btn { flex: 1 1 auto; }
+}
 
 .landing-hero__visual { width: 100%; }
 
@@ -3062,6 +3105,14 @@ body.auth-screen .terms-banner { display: none; }
   border-top: 1px solid var(--line);
 }
 .round-footer__danger { color: var(--danger); }
+/* ≤520px: `space-between` + wrap strands the third link alone at the left
+   ("Wunschliste (2)" under the Aussortiert/Durchgespielt pair on the Regal).
+   A left-aligned column reads as a deliberate list instead. Ties the base rule
+   at (0,1,0), so it must stay BELOW it — the dock-hide adjacency shape
+   (responsive-content-width.md), not one to hoist into the ~line-876 block. */
+@media (max-width: 520px) {
+  .round-footer { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
 
 /* Finish game / winners (inside the chosen game's result row) */
 .row-finish {
@@ -3702,7 +3753,9 @@ body.auth-screen .terms-banner { display: none; }
   cursor: pointer;
 }
 .cover-pick:hover { border-color: var(--brand); }
-.cover-pick.is-current { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-edge); }
+/* 3px, matching .member-swatch.is-active — one ring recipe for "currently
+   selected on a picker" (test/design-tokens.test.js pins the width). */
+.cover-pick.is-current { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-edge); }
 .cover-pick__img {
   width: 100%;
   height: 68px;
