@@ -133,6 +133,19 @@ test('every elevation box-shadow comes from the 3-step ramp', () => {
   assert.deepEqual(offenders, [], `ad-hoc box-shadow values (use --shadow-1/2/3): ${offenders.join(' | ')}`);
 });
 
+/* One ring recipe per meaning (2026-08-07 audit): "currently selected on a
+   picker" drifted to 2px on `.cover-pick.is-current` while the member swatch,
+   avatar hover and focus rings all say 3px of --brand-edge. The inset chosen-row
+   ring (`.result-row.is-chosen`) is a different treatment on purpose and stays
+   out of scope — the filter keys on non-inset --brand-edge rings only. */
+test('every --brand-edge ring is 3px', () => {
+  const rings = decls('box-shadow')
+    .filter((v) => RING.test(v) && v.includes('--brand-edge') && !v.includes('inset'));
+  assert.ok(rings.length >= 3, `expected the ring family, found only ${rings.length}`);
+  const offenders = rings.filter((v) => !v.startsWith('0 0 0 3px'));
+  assert.deepEqual(offenders, [], `a selection ring drifted off 3px: ${offenders.join(' | ')}`);
+});
+
 test('the ramp is ordered — each step is softer and further than the last', () => {
   // The ambient (second) layer's blur is what reads as distance.
   const blur = (name) => {

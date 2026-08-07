@@ -12,6 +12,9 @@ On 2026-07-29 (operator direction, outside the research cadence) **U-015** and
 **U-016** were added and **U-013** sharpened, so the audit judges screen-level
 composition and character coverage, not only token/consistency discipline — see
 "The big-picture pass" in SKILL.md.
+The 2026-08-07 sweep (cadence-skip, no research) refreshed stale state: **U-014**
+is resolved (#692), `test/design-tokens.test.js` now enforces U-003/U-005/U-014
+and parts of U-004, and **U-R10** records the settled per-component radii call.
 
 **Goal.** Make the app *visually* excellent — something people want to open and
 enjoy looking at. Beautiful, polished, characterful. This is the one audit whose
@@ -93,7 +96,9 @@ is not a UI finding, it is a rejected idea.
   `.ticket--live`'s inset accent edge, and a `0 0 0 1px var(--line)` hairline — those are
   not elevation. Audit against drift (a new ad-hoc elevation value), not against the old
   gap. (Previously: one `--shadow` token plus 8 ad-hoc values, inverted at both ends.)
-- **Enforced by:** — (manual; `grep -o 'box-shadow:[^;]*;' public/styles.css | sort -u`)
+- **Enforced by:** `test/design-tokens.test.js` (every elevation box-shadow must be a
+  ramp token; rings/inset/none are the documented off-ramp, and the ramp's ordering is
+  asserted too)
 
 ### U-004 — Consistent radii, borders and surface treatment
 - **Status:** adopted · 2026-07-26
@@ -102,7 +107,14 @@ is not a UI finding, it is a rejected idea.
   different number per component. Border weights and colours (`--line`, `--brand-edge`)
   are used consistently for the same meaning. Rounded, friendly geometry suits the brand;
   a stray sharp corner or a 5px-vs-6px radius drift is the kind of thing this catches.
-- **Enforced by:** — (manual)
+  **Scope note (2026-08-07):** the in-between literal radii (2/6/10/14/16/22px) are a
+  **settled per-component choice**, recorded in `test/design-tokens.test.js` — see
+  U-R10 before re-raising them. What this criterion still catches: a literal that
+  *duplicates* a token value, a bare pill radius, an off-recipe selection ring (all
+  three now test-enforced), and any genuinely new one-off geometry.
+- **Enforced by:** partially — `test/design-tokens.test.js` (no literal radius may
+  duplicate a token value, pills use `--radius-pill`, `--brand-edge` rings are 3px);
+  the "same meaning, same treatment" judgement stays manual
 
 ### U-005 — A clear typographic hierarchy from a coherent scale
 - **Status:** adopted · 2026-07-26
@@ -127,9 +139,9 @@ is not a UI finding, it is a rejected idea.
   px sizes remain** (measured, not estimated). So do not re-raise the residual as
   partial migration; the finding to look for now is the *new* one that skipped the
   scale.
-- **Enforced by:** — (manual, but the marker makes it a one-liner: any hit from
-  `grep -E 'font-size:\s*[0-9.]+px' public/styles.css | grep -v 'glyph, not type'`
-  is a finding. It returns nothing today.)
+- **Enforced by:** `test/design-tokens.test.js` (every font-size draws from the scale
+  except the named glyph literals, the exemption list is checked for staleness, the
+  scale must ascend, and the four reading steps carry U-R04 px floors)
 
 ### U-014 — Colour mixing happens in a perceptually uniform space
 - **Status:** adopted · 2026-07-26
@@ -143,12 +155,11 @@ is not a UI finding, it is a rejected idea.
   distant hues pass through a muddy, desaturated middle. Since this app *derives its
   entire palette* by mixing (`--sunken`, `--line`, `--brand-tint*`, `--brand-edge`, the
   whole `--stage-*` family), the interpolation space is a design decision, not a detail.
-  **State as of 2026-08-05:** all **37** `color-mix()` calls in `public/styles.css` are
-  still `in srgb` and **none** is `oklab`/`oklch` — the count was 31 when this criterion
-  was measured on 2026-07-26, so new derived tones keep being minted in the non-uniform
-  space while the migration waits. **#544 owns the migration**; re-measuring the count
-  here is not a new finding, it is that issue's scope — route it there rather than
-  re-filing it each sweep.
+  **State as of 2026-08-07: RESOLVED.** #692 (closing #544) migrated every mix to
+  `in oklab` with re-tuned percentages; `grep -c 'color-mix(in srgb' public/styles.css`
+  returns 0. The criterion stays adopted for *new* mixes only — and the test below
+  asserts the space allowlist-style across all four CSS-bearing surfaces, so a fresh
+  srgb mix fails CI rather than waiting for a sweep.
 - **Caveat — this is not a find-and-replace.** Changing the space **changes the rendered
   colour** of every derived token: an oklab mix toward `#000` at the same percentage
   lands lighter than the sRGB one, so the percentages have to be re-tuned by eye, not
@@ -156,7 +167,8 @@ is not a UI finding, it is a rejected idea.
   and re-check the derived tones against the darkest theme page (Schiefer `#e9eef3`),
   per `.claude/rules/accessibility-contrast-and-modals.md` §1. A migration that keeps
   the numbers and only edits the keyword is a regression, not an improvement.
-- **Enforced by:** — (manual; `grep -c 'color-mix(in srgb' public/styles.css`)
+- **Enforced by:** `test/design-tokens.test.js` (oklab allowlist over styles.css,
+  kontakt.html, login.html and lib/faq.js, with a per-surface anti-vacuous floor)
 
 ## Layout & composition (visual, not IA)
 
@@ -338,6 +350,18 @@ is not a UI finding, it is a rejected idea.
   placeholder gradient. Polishing the placeholder, the icons and the CSS backdrop is in
   scope; introducing an illustration set or a stock-image dependency is a new,
   heavyweight decision for the user, not a UI-audit remedy.
+
+### U-R10 — "Migrate the in-between component radii (6/10/14/16/22px) onto the --radius-* scale"
+- **Status:** rejected · 2026-08-07
+- **Why:** Raised by the 2026-08-07 sweep as U-004 drift and dropped on the operator's
+  call, because it re-litigates a recorded decision: the pass that introduced the
+  radius tokens kept these literals **on purpose** — "each is a per-component call,
+  so a blanket 'no literal radius' rule would be a lie" (`test/design-tokens.test.js`,
+  which instead pins the two real defect shapes: token-value duplicates and bare
+  pill radii). A migration would also visibly retune buttons, cards and stage
+  corners app-wide for no stated gain. Re-open only with a *visual* argument that
+  specific components disagree where they should match — not a tokens-for-tokens'-sake
+  sweep.
 
 ### U-R07 — "Adopt the View Transitions API / CSS scroll-driven animations"
 - **Status:** rejected · 2026-07-26
