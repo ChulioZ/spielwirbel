@@ -18,7 +18,7 @@ under a green "required checks passed".
 
 `.github/workflows/ci.yml` has an aggregate **`ci-passed`** job:
 `if: always()`, `needs: [test, coverage, postgres]`, and a step that `exit 1`s
-when any dependency result is `failure`/`cancelled`/`skipped`. Branch protection
+unless **every** dependency result is exactly `success`. Branch protection
 requires **only** `ci-passed` from the CI workflow (plus the stable-named jobs of
 the *other* workflows: `eslint`, `syntax`, `gitleaks`, `dco`).
 
@@ -32,11 +32,71 @@ the *other* workflows: `eslint`, `syntax`, `gitleaks`, `dco`).
   name. `test/ci-workflow.test.js` asserts `ci-passed` `needs` **every** other
   job defined in `ci.yml`, so forgetting to wire a new CI job into the gate fails
   the suite rather than silently leaving it ungated.
-- **`if: always()` + the explicit `needs.*.result` check are both load-bearing.**
-  A plain `needs:` gate *succeeds* when a dependency is skipped (a skip doesn't
-  fail `needs`), which is exactly the vacuous-pass this job exists to prevent —
-  hence `skipped` is treated as failure even though nothing skips conditionally
-  today.
+- **`if: always()` is load-bearing.** A plain `needs:` gate *succeeds* when a
+  dependency is skipped (a skip doesn't fail `needs`), which is exactly the
+  vacuous-pass this job exists to prevent.
+- **The condition must be an ALLOWLIST, and the denylist it replaced was
+  BROKEN.** This is the sharpest thing in this file, because the broken form
+  looked complete and shipped for two weeks:
+
+  ```yaml
+  # WRONG — shipped #364 → 2026-08-06
+  if: >-
+    contains(needs.*.result, 'failure') ||
+    contains(needs.*.result, 'cancelled') ||
+    contains(needs.*.result, 'skipped')
+  ```
+
+  Observed on `main`, run `31114551171` attempt 1: `postgres` concluded
+  **failure** at 15:15:14, `ci-passed` concluded **success** at 15:15:18, and its
+  guard step is recorded as **skipped** — i.e. the condition evaluated false. The
+  `postgres` job's only step was **`Set up job`**: it died during runner /
+  service-container provisioning, before any step of ours ran. Such a job
+  contributes **no `'failure'` entry to the `needs.*.result` object filter**, and
+  it is not `'cancelled'` or `'skipped'` either, so all three arms missed it.
+
+  Since branch protection requires only this context, that is **a red build
+  anyone could merge** — the exact hole this whole file exists to close, through
+  the one mechanism it believed was closing it.
+
+  ```yaml
+  # RIGHT — every dependency named, compared to the one value that may pass
+  if: >-
+    needs.test.result != 'success' ||
+    needs.coverage.result != 'success' ||
+    needs.postgres.result != 'success'
+  ```
+
+  Two properties are load-bearing and each fails silently:
+
+  - **`!= 'success'`, never a list of bad values.** It catches an absent or empty
+    result and anything nobody has thought of yet. Same allowlist-not-denylist
+    shape as `resolveLocale` and `isAllowedImageUrl`.
+  - **Each job named individually**, because `needs.*.result` is *precisely* the
+    construct that cannot see an absent entry — so the object filter must be gone,
+    not merely supplemented. `test/ci-workflow.test.js` asserts every job in
+    `needs` appears in the condition **and** that `needs.*.result` appears
+    nowhere, so neither the omission nor a "simplification" back to the filter can
+    return quietly.
+
+  **The lesson generalises past YAML:** a guard written as "fail on these known
+  bad states" is only as good as the enumeration, and an infrastructure failure
+  is exactly the state nobody enumerates.
+
+  **Verifying a change to this condition costs a scratch branch, and a clean
+  before/after is hard to get.** CI runs only on `push` to `main` and on
+  `pull_request`, so a scratch branch triggers nothing — it needs a **draft PR**
+  to fire at all. Force the failure with an unpullable service image
+  (`image: postgres:18-this-tag-does-not-exist`). Measured with the allowlist in
+  place: `postgres` fails and `ci-passed` fails **with its guard step executing**,
+  where the pre-fix run recorded that same step as `skipped`. The *control* —
+  the old condition against the same break — could not be isolated: two further
+  independent `Set up job` flakes hit `test` mid-experiment and tripped the
+  denylist for an unrelated reason. So the last inch rests on construction rather
+  than measurement, which is sound here because
+  `{failure, cancelled, skipped} ⊂ {≠ 'success'}` — the new condition fires
+  everywhere the old one did, and then some. **Delete the scratch branch and
+  close the draft PR afterwards.**
 
 ## Part B is an ops step, not code
 

@@ -62,13 +62,36 @@ test('ci-passed runs on failure and treats any non-success as a gate failure', (
   // Without `if: always()` the job is skipped when a dependency fails, so it
   // never reports the failure and the gate passes vacuously.
   assert.match(block, /if:[ \t]*always\(\)/, 'ci-passed needs `if: always()`');
-  // A plain `needs:` gate succeeds when a dependency is *skipped*, reopening the
-  // exact gap this job closes — so failure/cancelled/skipped must all fail it.
-  for (const result of ['failure', 'cancelled', 'skipped']) {
+
+  // The condition must be an ALLOWLIST — every dependency explicitly compared
+  // against 'success' — never a denylist of known-bad results.
+  //
+  // This is not a style preference. The denylist form
+  // `contains(needs.*.result, 'failure')` shipped from #364 until 2026-08-06 and
+  // was observed reporting SUCCESS while the `postgres` job had FAILED (main,
+  // run 31114551171 attempt 1): a job that dies during "Set up job" contributes
+  // no 'failure' entry to the `needs.*.result` object filter, and it is not
+  // 'cancelled' or 'skipped' either, so all three arms missed it. Branch
+  // protection requires only `ci-passed`, so that is a mergeable red build.
+  //
+  // `!= 'success'` catches an absent or empty result, and every value nobody
+  // has thought of yet — the allowlist-not-denylist shape this repo already
+  // applies to `resolveLocale` and `isAllowedImageUrl`.
+  const m = block.match(/needs:[ \t]*\[([^\]]+)\]/);
+  assert.ok(m, 'ci-passed must declare a `needs: [...]` list');
+  const needs = m[1].split(',').map((s) => s.trim()).filter(Boolean);
+  for (const job of needs) {
     assert.ok(
-      block.includes(`contains(needs.*.result, '${result}')`),
-      `ci-passed must fail on a '${result}' dependency result`,
+      block.includes(`needs.${job}.result != 'success'`),
+      `ci-passed's condition must check \`needs.${job}.result != 'success'\` — a job in `
+      + '`needs` but absent from the condition is a dependency that cannot fail the gate',
     );
   }
+  // The object filter must be GONE, not merely supplemented: leaving it beside
+  // the explicit checks invites a future edit to "simplify" back to it.
+  assert.ok(
+    !block.includes('needs.*.result'),
+    'ci-passed must not use the `needs.*.result` object filter — an infra-failed job is absent from it',
+  );
   assert.match(block, /run:[ \t]*exit 1/, 'the guard step must `exit 1` on a bad result');
 });
