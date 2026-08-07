@@ -86,6 +86,16 @@ mechanically checkable against the repo, prefer a test instead — the README fi
 tree is checked by `test/readme-tree.test.js`, and the cited paths by
 `test/skills.test.js`.
 
+## The mirror image: a DIFF that never reached the instance
+
+This file is about the instance moving while the repo stands still. The same gap
+runs the other way — a merged, green PR whose **deploy silently did not take
+effect**, leaving `main` describing a production that is still on the old build.
+Nothing in the repo can see that either, and on 2026-08-06 the deploy's own
+commit status reported `success` while it happened. Verify the deployed artifact
+before believing a merge shipped:
+`.claude/rules/verify-the-deployed-artifact-not-the-status.md`.
+
 **Related:** `.claude/rules/keep-readme-current.md` and
 `.claude/rules/keep-legal-docs-current.md` (the diff-triggered rules this covers
 the gap in — a legal-document change driven by an ops action, e.g. a new

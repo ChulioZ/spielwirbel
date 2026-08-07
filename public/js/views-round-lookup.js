@@ -1165,6 +1165,15 @@ async function showBggImport(round, status = 'own') {
       const players = g.minPlayers
         ? t('bggImport.players', { min: g.minPlayers, max: g.maxPlayers || g.minPlayers })
         : '';
+      // A wishlist candidate may be an EXPANSION (#664), which is not a game the
+      // round would ever play — it lands on its base game's row on acquisition.
+      // Say so here, and say which game, or the picker offers "Seefahrer" beside
+      // "Catan" as if the two were the same kind of thing.
+      const expansionNote = !g.expansion ? ''
+        : (g.expansionOf || []).length
+          ? t('bggImport.expansionOf', { titles: g.expansionOf.map((p) => p.title).join(', ') })
+          : t('bggImport.expansionUnknown');
+      const meta = [players, expansionNote].filter(Boolean).join(' · ');
       // The row is a <label> so the whole line toggles its checkbox — which is
       // exactly why the thumbnail and the cover picker are SIBLINGS of it rather
       // than children: a click inside the label would otherwise (un)select the
@@ -1175,7 +1184,7 @@ async function showBggImport(round, status = 'own') {
             <label class="ds-row bgg-import__row">
               <div class="ds-row__main">
                 <span class="bgg-import__name" title="${esc(g.title)}">${esc(g.title)}</span>
-                ${players ? `<span class="muted bgg-import__state">${esc(players)}</span>` : ''}
+                ${meta ? `<span class="muted bgg-import__state">${esc(meta)}</span>` : ''}
               </div>
               <div class="ds-row__meta">
                 <input type="checkbox" class="provider-row__box" value="${esc(g.externalId)}" checked />

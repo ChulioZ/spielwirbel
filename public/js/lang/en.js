@@ -236,6 +236,8 @@ I18N.en = {
   'bggImport.wishTile': 'Wish list from BGG',
   'bggImport.wishEmpty': 'There is nothing on your BGG wish list.',
   'bggImport.wishEmptyHint': 'Put games on your wish list at boardgamegeek.com, then try again.',
+  'bggImport.expansionOf': 'Expansion for {titles}',
+  'bggImport.expansionUnknown': 'Expansion',
 
   // Edition covers (#519): BoardGameGeek holds the box art of every edition, so
   // the printing actually sitting on the shelf can be picked.
@@ -285,6 +287,15 @@ I18N.en = {
   'wish.deleted': '“{title}” taken off the wish list',
   'wish.add': 'Add a wish',
   'wish.tag': 'wish list',
+  'wish.expansionOf': 'Expansion for {titles}',
+  'wish.expansionOfUnknown': 'Expansion — BoardGameGeek does not say which game for',
+  'wish.acquireConfirm': 'Record “{title}” as an expansion of “{base}”?',
+  'wish.acquireBothConfirm': '“{base}” is still on the wish list. Put it on the shelf and record “{title}” as its expansion?',
+  'wish.acquireWithBaseConfirm': '“{base}” is not in this round yet. Add it and record “{title}” as its expansion?',
+  'wish.acquired': '“{title}” now belongs to “{base}”',
+  'wish.pickBase': 'Which game does “{title}” belong to?',
+  'wish.pickParent': 'Which game should be added for “{title}”?',
+  'wish.noBase': 'Add the base game to this round first.',
 
   'sessions.rated': '{n} games rated',
   'sessions.played': 'Played',

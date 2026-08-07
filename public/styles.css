@@ -2599,7 +2599,12 @@ body.auth-screen .terms-banner { display: none; }
    with UA chrome on top of that. Reset only what the component does not own, and
    NEVER via the `font` shorthand: it would tie with the component's own sizing
    and win on source order (.claude/rules/native-button-vs-focusable-span.md). */
-.rs-row {
+/* The reset a <button> needs to look like a `.ds-row`. Shared by the round
+   settings actions and the wished-expansion base picker (#664) rather than
+   copied — a second block of the same six declarations is the drift
+   .claude/rules/shared-constants-across-the-stack.md is about, one layer down. */
+.rs-row,
+.wish-pick__row {
   width: 100%;
   font-family: inherit;
   font-size: inherit;
@@ -2611,8 +2616,10 @@ body.auth-screen .terms-banner { display: none; }
    children on purpose — the Chronik rows put a date over a status, so making it
    a flex row globally would lay those out side by side (the same reasoning that
    scopes `.provider-row .ds-row__main` below). */
-.rs-row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.rs-row .ds-row__meta { color: var(--ink-soft); }
+.rs-row .ds-row__main,
+.wish-pick__row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rs-row .ds-row__meta,
+.wish-pick__row .ds-row__meta { color: var(--ink-soft); }
 
 /* Account menu header (username + e-mail) above the logout item in the shared
    popover. The username (#320) leads: it is the account's public identity, the
