@@ -93,6 +93,21 @@ file read as text. Two of them were found matching source that is not CSS:
   direction and not a reason to leave the shape in place — the identical regex
   goes green over a hero that has genuinely regressed the moment a comment
   further up the file happens to name the tag.
+
+  **Reading this rule is not enough to avoid it — the same PR did both halves.**
+  #525 fixed `landing-copy.test.js` with the parser exactly as prescribed above,
+  and in the same commit shipped `.replace(/<!--[\s\S]*?-->/g, '')` in the new
+  `test/noscript.test.js`, which reddened `CodeQL` on PR #689 with the predicted
+  HIGH `js/incomplete-multi-character-sanitization`. The strip is what you reach
+  for once the comment trap has bitten, so the two failures arrive in that order
+  and the second feels like the fix for the first. **Reach for `JSDOM` directly
+  when a test needs a region of HTML** — never the strip, not even as a step on
+  the way. It costs one `require` and there is no third option.
+
+  Bonus, for a spec about markup a JS-off browser renders: jsdom runs no
+  scripts, so its parser builds `<noscript>` contents as real **elements** —
+  where a scripting-enabled browser stores them as a single text node. Parsing
+  therefore gives you the exact DOM under test rather than a string to match.
 - **JS — do NOT strip, the remedy is wrong here.** `test/faq.test.js`
   (`LANDING_REPO_URL`) and `test/phone-width-overflow.test.js` (`MOODS`) match
   declarations out of `public/js/*.js`. A line-comment strip would eat the `//`
