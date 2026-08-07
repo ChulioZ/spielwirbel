@@ -62,9 +62,10 @@ build-free. Non-obvious things that will bite if you forget them:
   literal must emit different `sw.js` bytes.
 
   **That derived name is also how you tell which commit production is running** —
-  `curl` the live `sw.js`, compare to a local build. It is the only credential-free
-  view of the deployed build, and it caught a Railway deploy that reported
-  `success` and never took effect
+  `curl` the live `sw.js`, compare to a local build. It is the cheapest
+  credential-free view of the deployed build (`index.html`'s hashed `<script>`
+  names answer the same question one file at a time), and it caught a Railway
+  deploy that reported `success` and never took effect
   (`.claude/rules/verify-the-deployed-artifact-not-the-status.md`).
 
 - **HTTP cache headers pair with the hashing (`assetCacheHeaders`, lib/app.js).**
