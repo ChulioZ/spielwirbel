@@ -4084,10 +4084,23 @@ kbd {
 .sheet {
   width: 100%;
   max-width: 720px;
-  /* Capped well below the viewport so the sheet reads as a surface docked over
-     the page, not a full-screen takeover. The head/actions bars are sticky
-     (below), so a lower cap costs nothing — only the field area scrolls. */
-  max-height: min(85vh, 660px);
+  /* The ceiling is derived from the room the backdrop actually offers, never
+     from an absolute px number: `min(85vh, 660px)` stopped growing above a
+     ~776px window, so a 884px add-game sheet scrolled 226px of its own content
+     while leaving 640px of bare backdrop at 1300px tall (#678).
+     The two terms answer the two backdrops:
+     - `85dvh` keeps the phone bottom sheet a surface docked over the page
+       rather than a full-screen takeover. The head/actions bars are sticky
+       (below), so what gives way is only the field area.
+     - `100%` resolves against the backdrop's own CONTENT box, so whatever
+        gutter it declares is respected without restating the number here
+        (.claude/rules/shared-constants-across-the-stack.md, in CSS). Below
+        640px that matters for `--center`, whose 120px bottom bias would
+        otherwise be overrun by the 85dvh term and stop biasing the card up.
+     `max()` floors it: both terms are viewport-derived and compute to 0 in a
+     degenerate viewport, which would collapse the sheet to nothing with no
+     hint why (.claude/rules/anchored-popover-is-placed-once.md). */
+  max-height: max(280px, min(85dvh, 100%));
   /* `.sheet` itself stays the scroll container: the lookup dropdown is
      positioned in JS off a capture-phase `scroll` listener on window, which
      only fires while this element is what scrolls. See
@@ -4117,10 +4130,18 @@ kbd {
 .sheet--dialog {
   width: calc(100% - 32px);
   max-width: 460px;
-  max-height: min(80vh, 560px);
+  /* Deliberately NO max-height of its own — `.sheet`'s viewport-derived ceiling
+     already fits whatever the backdrop offers, and a second cap here could only
+     restate it (wrongly, as `min(80vh, 560px)` did). */
   border-radius: var(--radius-xl);
   border-bottom: 1px solid var(--line);
 }
+/* A dialog whose body is a scanning LIST wants more than the 460px a short form
+   reads best at: the BGG collection import (a whole owned shelf, with
+   thumbnails), „Spiele verschieben" and „Grundspiel wählen". Compounded to
+   (0,2,0) so it beats `.sheet--dialog` on specificity rather than on source
+   order (.claude/rules/ds-row-is-a-click-target.md). */
+.sheet--dialog.sheet--list { max-width: 640px; }
 /* Wide viewports: every sheet becomes a centered, fully-rounded card with a
    visible gap on all four sides. Below the breakpoint it stays a bottom sheet
    docked to the edge, which is the right idiom on a phone. */
@@ -4131,6 +4152,18 @@ kbd {
     border-radius: var(--radius-xl);
     border-bottom: 1px solid var(--line);
   }
+  /* The backdrop is a padded, centered box from here up, so its content box IS
+     the budget — the 85dvh term would only shrink the sheet below the gutter
+     the backdrop already declares.
+
+     COMPOUNDED to (0,2,0) rather than left as a bare `.sheet` beside the two
+     lines above, which tie the base rule and win on source order alone. Those
+     two are visible when they lose; this one is not — the sheet would silently
+     come out ~15% short of the room it has, i.e. a quieter version of the very
+     bug this rule fixes (.claude/rules/responsive-content-width.md, "win on
+     specificity, never on source order"). Every `.sheet` in the app is built
+     inside a `.sheet-backdrop`, so the descendant selector loses no overlay. */
+  .sheet-backdrop .sheet { max-height: max(280px, 100%); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: sheet-up var(--dur-slow) var(--ease-out); }

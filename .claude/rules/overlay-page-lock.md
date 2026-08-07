@@ -13,9 +13,18 @@ dismissing the sheet dropped the user somewhere else. There are **two separate
 paths** to that, and closing either one alone leaves the bug fully reproducible:
 
 - **The exposed backdrop.** `.sheet-backdrop` is `position: fixed; inset: 0` but
-  is *not* a scroll container, and `.sheet` is capped at `min(85vh, 660px)`, so
-  there is always bare backdrop. A drag there goes straight to the document.
-  Closed in JS: `lockPage()` in `openSheet`.
+  is *not* a scroll container, and `.sheet` can never fill it — so there is
+  always bare backdrop. A drag there goes straight to the document. Closed in
+  JS: `lockPage()` in `openSheet`.
+
+  **The premise held by a much bigger margin when this was written**, and the
+  conclusion survives the change that shrank it. `.sheet` was capped at
+  `min(85vh, 660px)`; #678 replaced that with `max(280px, min(85dvh, 100%))`
+  (and `max(280px, 100%)` from 640px up) because the absolute term stopped the
+  sheet growing on any normal desktop window. The gutter is now the backdrop's
+  own `padding: 24px` rather than several hundred px of dead space — still bare
+  backdrop on all four sides, so the lock is still required, and the drag guard
+  in §4 is what keeps that thinner margin from becoming a dismissal hazard.
 - **Scroll chaining.** Every bounded scroll box hands the gesture on once it hits
   its own edge. Closed in CSS: `overscroll-behavior: contain`.
 

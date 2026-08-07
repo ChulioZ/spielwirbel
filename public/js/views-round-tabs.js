@@ -258,7 +258,7 @@ async function showMoveGames(round) {
           : '';
 
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('moveGames.title'))}">
+      <div class="sheet sheet--dialog sheet--list" role="dialog" aria-modal="true" aria-label="${esc(t('moveGames.title'))}">
         <div class="sheet__head">
           <h2>${esc(t('moveGames.title'))}</h2>
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
@@ -1302,7 +1302,7 @@ async function createBaseThenAttach(round, game, parent, done) {
 // (.claude/rules/ds-row-is-a-click-target.md).
 function pickExpansionBase(title, options) {
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="sheet sheet--dialog sheet--list" role="dialog" aria-modal="true" aria-label="${esc(title)}">
         <div class="sheet__head">
           <h2>${esc(title)}</h2>
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
