@@ -9,7 +9,7 @@ paths:
   - "lib/providers/bgg.js"
   - "public/js/views-round-detail.js"
   - "public/js/views-session.js"
-  - "public/js/views-round-tabs.js"
+  - "public/js/views-archive.js"
   - "public/js/wish-expansion.js"
   - "test/draw-pool.test.js"
   - "test/game-expansions.test.js"

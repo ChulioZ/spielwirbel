@@ -117,8 +117,8 @@ clicks that need excluding.
   not focusable, has no link semantics, and only the JS click survives.
 - **An `<a>` with no href is not a link** — not focusable, not styled, no
   affordance. So a shared builder must emit a `<span>` when it has no target
-  (see `statCard`'s `linkMid` parameter in `views-round-tabs.js`) rather than an
-  anchor that some callers happen to fill in later.
+  (see `pokaleStatCard`'s `linkMid` parameter in `views-pokale.js`) rather than
+  an anchor that some callers happen to fill in later.
 - **Path builders live in `router.js`** (`roundPath`, `gamePath`, `memberPath`,
   `resultsPath`), next to `resolveRoute`, so a view's `syncUrl` and the links
   pointing at it cannot drift. The *transient* session-flow paths stay in

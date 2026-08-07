@@ -37,7 +37,7 @@ build-free. Non-obvious things that will bite if you forget them:
 
 - **Reference rewriting is delimited-path replacement.** `rewriteRefs` only
   replaces a mapped path when it's wrapped in matching quotes (`"…"`/`'…'`), so
-  `/js/views-round.js` can't clobber `/js/views-round-tabs.js` as a substring.
+  `/js/views-round.js` can't clobber `/js/views-round-settings.js` as a substring.
   Only `public/js/**` + `styles.css` are in the manifest; **fonts, icons,
   `manifest.webmanifest`, `fonts/tabler-icons.css` and `index.html` itself are
   copied through unchanged** (index.html is the bootstrap document — it can't be

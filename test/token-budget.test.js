@@ -136,7 +136,11 @@ const SOURCE_ALLOW = {
   'test/providers-bgg.test.js': 'judged — one suite per provider, the shape all five providers-*.test.js files follow. A per-hop split (search / thing / collection / versions) is the visible seam, but it would break that convention for the one provider with four hops and split the shared COLLECTION_XML/THING_XML fixtures across files',
 
   // recorded — not yet judged against the seam test
-  'public/js/views-round-tabs.js': 'recorded 2026-07-30 — holds Regal, Chronik, Pokale and the two archive screens; the most likely real seam in the tree',
+  // (views-round-tabs.js was the ninth, and #528 SPLIT it: views-regal.js,
+  // views-chronik.js, views-pokale.js, views-archive.js and
+  // views-round-actions.js — the last holding the two sheets whose entry points
+  // #561 had already moved to the Einstellungen screen. All five land well under
+  // the budget, so the entry is gone rather than re-judged.)
   'public/js/views-round-lookup.js': 'recorded 2026-07-30 — the add-game/link-provider sheets plus the shared lookup menu',
   'public/js/pages/admin.js': 'recorded 2026-07-30 — the whole operator panel as one IIFE on its own standalone page',
   'public/js/account.js': 'recorded 2026-07-30 — auth screens, token handling and the account screen',

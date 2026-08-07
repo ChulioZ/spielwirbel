@@ -1,7 +1,8 @@
 ---
 paths:
   - "public/styles.css"
-  - "public/js/views-round-tabs.js"
+  - "public/js/views-regal.js"
+  - "public/js/views-archive.js"
   - "test/phone-width-overflow.test.js"
   - "test/vote-card-viewport-fit.test.js"
 ---

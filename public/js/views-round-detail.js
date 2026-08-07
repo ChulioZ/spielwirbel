@@ -924,7 +924,7 @@ async function showGameDetail(rid, gameId) {
     // „Ins Regal" with the Regal's own icon, never „Wiederherstellen": the game
     // is arriving on the shelf for the first time, so "restore" would claim it
     // is going back somewhere it has never been. Same reasoning — and the same
-    // two values — as ARCHIVES.wish.restoreIcon in views-round-tabs.js.
+    // two values — as ARCHIVES.wish.restoreIcon in views-archive.js.
     //
     // This branch is what keeps the active `else` below off a wished-for game.
     // Without it a wish was offered „Direkt spielen", which the server refuses

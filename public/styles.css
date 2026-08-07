@@ -1586,7 +1586,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
    Both modifiers are COMPOUNDED against .tl-act on purpose: a bare
    .tl-act--milestone is (0,1,0), a tie with .tl-act decided by source order
    alone, which is the silent-loss shape responsive-content-width.md records
-   three instances of. The tier comes from the event TYPE in views-round-tabs.js,
+   three instances of. The tier comes from the event TYPE in views-chronik.js,
    never from the icon class — `ti-trash` is also `game_deleted`, which is a
    deletion, not a milestone.
 

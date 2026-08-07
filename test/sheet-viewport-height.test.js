@@ -180,8 +180,8 @@ test('.sheet--list widens the list dialogs and outranks .sheet--dialog', () => {
    `test/ds-row-affordance.test.js`. */
 const LIST_DIALOGS = [
   ['public/js/views-round-lookup.js', 'class="bgg-import"', 'BGG collection import'],
-  ['public/js/views-round-tabs.js', 'class="move-picker"', 'Spiele verschieben'],
-  ['public/js/views-round-tabs.js', 'class="ds-list wish-pick"', 'Grundspiel wählen'],
+  ['public/js/views-round-actions.js', 'class="move-picker"', 'Spiele verschieben'],
+  ['public/js/views-archive.js', 'class="ds-list wish-pick"', 'Grundspiel wählen'],
 ];
 
 // Every `<div class="sheet …">` opening tag in a file, with the markup it opens.
