@@ -186,9 +186,12 @@ npm run coverage:ci
   (`.claude/rules/frontend-helper-modules-and-coverage.md`, where one export cost
   11 percentage points). Nothing in `npm test`'s output hints at it, which is why
   it belongs here rather than being discovered on the PR.
-- **If the diff moved or renamed a function, `const` or file, grep the rules for
-  the old name and fix every pointer in the same PR** (the command is in
-  `.claude/rules/token-friendly-source-files.md`). `test/skills.test.js` catches a
+- **If the diff moved or renamed a function, `const` or file — or changed a value
+  another file's prose cites — grep source and docs for the old name and fix every
+  pointer in the same PR** (the command is in
+  `.claude/rules/token-friendly-source-files.md`; `.claude/rules/` alone is too
+  narrow, and the citation it misses is a **code comment** stating another file's
+  value as a premise). `test/skills.test.js` catches a
   moved *file*; a moved **function** is invisible to it, and the rule left pointing
   at the wrong place still reads authoritative. The reason this belongs here rather
   than only in the rule: the rule a move invalidates is almost always on a
