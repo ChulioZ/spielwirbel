@@ -84,6 +84,69 @@ test('the source line names the aggregator AND that the listing is not the whole
   assert.match(note, /nur die dort gelisteten Shops/);
 });
 
+/*
+ * The stored last-known price (#688). The age stops being a footnote here, and
+ * that is the legal half of the feature rather than presentation: a days-old
+ * price shown with only a quiet „Abgerufen am …" line reads as a current one,
+ * which is a § 5a UWG misleading omission.
+ */
+const ago = (ms) => new Date(Date.now() - ms).toISOString();
+const HOUR = 60 * 60 * 1000;
+
+test('a stale price leads with its age, and says why it is old', (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const sec = render(dom, { ...BGP, stale: true, fetchedAt: ago(3 * 24 * HOUR) });
+
+  assert.equal(sec.querySelector('.gd-price__stale').textContent, 'Preis von vor 3 Tagen');
+  assert.match(sec.querySelector('.gd-price__stale-why').textContent, /nicht erreichbar/);
+
+  // Prominence is POSITION, not just wording: the age has to precede the
+  // qualifying facts, or it is a footnote again in a different font.
+  const order = [...sec.children].map((el) => el.className);
+  assert.ok(
+    order.indexOf('gd-price__stale') < order.indexOf('muted gd-price__facts'),
+    `age must come before the facts, got ${JSON.stringify(order)}`
+  );
+  // The exact timestamp stays in the footnote — the headline summarises it.
+  assert.match(sec.querySelector('.gd-price__note').textContent, /Abgerufen am/);
+});
+
+test('a FRESH price renders no age line at all', (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  // Same payload minus the flag: an hour-old cached price is not stale, and
+  // shouting about its age would train the reader to ignore the line.
+  const sec = render(dom, { ...BGP, fetchedAt: ago(HOUR) });
+  assert.equal(sec.querySelector('.gd-price__stale'), null);
+  assert.equal(sec.querySelector('.gd-price__stale-why'), null);
+});
+
+test('the age is phrased in hours under a day, and never rounds down to zero', (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const age = (ms) => render(dom, { ...BGP, stale: true, fetchedAt: ago(ms) })
+    .querySelector('.gd-price__stale').textContent;
+
+  assert.equal(age(5 * HOUR), 'Preis von vor 5 Stunden');
+  assert.equal(age(HOUR), 'Preis von vor 1 Stunde', 'singular, via the plural rules');
+  // A price stored twenty minutes ago is genuinely fresh, but "vor 0 Stunden"
+  // invites the reader to treat it as live — and the clock doing the arithmetic
+  // is theirs. The label may overstate the age, never understate it.
+  assert.equal(age(20 * 60 * 1000), 'Preis von vor 1 Stunde');
+  // The unit changes at a day and the remainder is dropped downward, so 47 hours
+  // reads as one day rather than two.
+  assert.equal(age(47 * HOUR), 'Preis von vor 1 Tag');
+  assert.equal(age(50 * HOUR), 'Preis von vor 2 Tagen');
+});
+
+test('the age follows the reader\'s language', (t) => {
+  const dom = loadApp({ locale: 'en' });
+  t.after(() => dom.close());
+  const sec = render(dom, { ...BGP, stale: true, fetchedAt: ago(2 * 24 * HOUR) });
+  assert.equal(sec.querySelector('.gd-price__stale').textContent, 'Price from 2 days ago');
+});
+
 test('a Steam price shows the discount it was struck from', (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());

@@ -103,8 +103,10 @@ What the app does, in detail. For a short overview see the
   that carries a provider link also shows **what it costs right now** — the
   cheapest in-stock offer including shipping via Brettspielpreise.de for a board
   game, the store price for a Steam one, with the time it was retrieved and a
-  link out. Read-only and server-side: no alerts, no stored prices, and no
-  affiliate links of any kind.
+  link out. The last price seen is kept, so an outage at the price service shows
+  the group that price — led by its age („Preis von vor 3 Tagen") rather than
+  passed off as current, and shown at all only for seven days. Read-only and
+  server-side: no alerts, no price history, and no affiliate links of any kind.
   A game is active, retired, completed or wished-for, never two at once, and all
   three lists are reached from the round hub's footer. Every row on those lists
   opens the game's own detail page, so a game keeps its full editing surface —

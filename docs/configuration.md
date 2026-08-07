@@ -294,6 +294,17 @@ destinations; there is no AT or CH one, so Austrian and Swiss readers see German
 shipping estimates. `PRICES_SITENAME` (default `spielwirbel.app`) is the host we
 identify as, which is their attribution mechanism.
 
+The **last price** each lookup answered is stored and used as a fallback
+(issue #688): when the source cannot be reached, the wish still shows that price
+rather than nothing, led by its age („Preis von vor 3 Tagen") instead of the
+quiet retrieval footnote a fresh price carries. It is read *only* when a live
+lookup is unavailable, never in place of one, and
+`PRICES_FALLBACK_MAX_AGE_DAYS` (default 7) is the age past which nothing is shown
+at all — a stale price presented as current is a misleading omission, so that
+ceiling is correctness rather than cache sizing. A background sweep deletes rows
+past it. Nothing personal is stored: one row per game, destination, currency and
+edition, holding the game's id and the price, global and un-scoped.
+
 When a price source fails it is **paused for `PRICES_FAILURE_COOLDOWN_SECONDS`**
 (default 120) rather than retried on the next page view. A success is cached for
 an hour but a failure deliberately is not, so without the pause a sustained

@@ -3811,6 +3811,19 @@ kbd {
   line-height: 1.2;
   margin-bottom: 4px;
 }
+/* The age of a STORED last-known price (#688), served while the source is out.
+   It sits directly under the amount rather than in the footnote below, because
+   at three days old the age qualifies the number more than anything else on the
+   block does. `--warn` is one of the theme-independent semantic colours and is
+   contrast-tested as text on both --surface and the darkest theme page
+   (.claude/rules/accessibility-contrast-and-modals.md §1) — don't swap it for a
+   tint of the accent, which clears AA on only four of the eight themes. */
+.gd-price__stale {
+  font-weight: 700;
+  color: var(--warn);
+  margin-bottom: 2px;
+}
+.gd-price__stale-why { font-size: var(--text-sm); margin-bottom: 10px; }
 .gd-price__facts { margin-bottom: 10px; }
 /* The retrieval time, the may-have-changed note and the source disclosure. Small
    and muted, never hidden: they are what keeps an hour-old price from reading as

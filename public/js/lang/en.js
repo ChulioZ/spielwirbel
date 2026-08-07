@@ -313,6 +313,11 @@ I18N.en = {
   'price.viewStore': 'View in the Steam store',
   'price.retrieved': 'Retrieved {when}',
   'price.mayChange': 'Prices may have changed.',
+  'price.staleHour': 'Price from {n} hour ago',
+  'price.staleHours': 'Price from {n} hours ago',
+  'price.staleDay': 'Price from {n} day ago',
+  'price.staleDays': 'Price from {n} days ago',
+  'price.staleWhy': 'The price service cannot be reached at the moment, so this is the last price we saw.',
   'price.sourceBgp': 'Price data from Brettspielpreise.de. The list covers the shops listed there only — shops pay to be listed, so it is not the whole market.',
   'price.sourceSteam': 'Price data from the Steam store.',
 
