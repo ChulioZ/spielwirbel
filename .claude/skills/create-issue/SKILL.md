@@ -119,6 +119,36 @@ dependencies per step 6).
 For a **bug**, replace "Proposed approach/Motivation" with **Steps to
 reproduce**, **Expected**, **Actual**, and environment if relevant.
 
+### A step only a human can take is part of the IMPLEMENTATION — never a blocker
+
+An issue is blocked when **other work must land first**. It is *not* blocked
+because it needs a decision, a credential, an account, a provider choice, or a
+fact somebody has to go and look up. Those are the **first step of doing it**,
+and `implement` drives them to completion through interview — see its "Scope the
+whole issue" section, which says a decision you need *from* the user "is **not**
+a blocker and **not** a reason to ship a partial result".
+
+So write such a step into the body as step 1 **with the outcomes it leads to**,
+never as a gate on starting:
+
+```markdown
+## 1. Start here: <the check/decision>
+- **<outcome A>** → build it as described below.
+- **<outcome B>** → <what changes about the plan>.
+- **<outcome C>** → stop and bring the finding back with the options.
+```
+
+Reserve `blocked-by`/`blocking` (step 6) and the `blocked` label for a **real
+dependency on another issue or PR**. Two things make this easy to get wrong:
+
+- A precondition you cannot satisfy *right now* is not a precondition on the
+  work — it is a task you happen to be unable to do at this moment. Writing "do
+  not start until X" freezes someone else's work on your own temporary
+  limitation.
+- **`blocked` already means something else here**: the `dependabot` skill applies
+  it to a PR it is deliberately holding open, and `pick-issue` skips those. Don't
+  overload it onto issues.
+
 Pick a **title** that's a concise imperative ("Add CSV export to a session's
 results", not "Export"). Choose the **labels** that fit (`enhancement`, `bug`,
 `documentation`, `good first issue`, …) — they help `pick-issue` later.

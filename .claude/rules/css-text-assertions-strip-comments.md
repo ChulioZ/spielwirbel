@@ -76,6 +76,38 @@ file read as text. Two of them were found matching source that is not CSS:
   bare `JSDOM` of the file rather than reusing the harness's document, or the
   assertion stops being about the markup and starts including whatever the
   scripts did to the tag after load.
+
+  **The second HTML instance detonated for real (#525).** `test/landing-copy.test.js`
+  extracted the static hero with `/<main id="app"[\s\S]*?<\/main>/`, and #525's
+  `<noscript>` ships a comment explaining *why* it sits outside `<main
+  id="app">` — so the block began inside that comment, several lines early, and
+  swallowed the demo and terms banners. Their `<button>`s failed
+  `doesNotMatch(main[0], /<button/)` against markup that was entirely correct.
+
+  Two things generalise. **A block-extraction regex is the dangerous shape, not
+  the leaf assertion**: `test/seo.test.js` matches the same `<main>` and was
+  unharmed, because its inner assertions are element-scoped `[^<]*` patterns that
+  a comment cannot satisfy — which is the defence its own comment claims. And
+  **this one failed loudly rather than silently**, the opposite of the
+  `theme-color` case above: correct source, red test. That is the *lucky*
+  direction and not a reason to leave the shape in place — the identical regex
+  goes green over a hero that has genuinely regressed the moment a comment
+  further up the file happens to name the tag.
+
+  **Reading this rule is not enough to avoid it — the same PR did both halves.**
+  #525 fixed `landing-copy.test.js` with the parser exactly as prescribed above,
+  and in the same commit shipped `.replace(/<!--[\s\S]*?-->/g, '')` in the new
+  `test/noscript.test.js`, which reddened `CodeQL` on PR #689 with the predicted
+  HIGH `js/incomplete-multi-character-sanitization`. The strip is what you reach
+  for once the comment trap has bitten, so the two failures arrive in that order
+  and the second feels like the fix for the first. **Reach for `JSDOM` directly
+  when a test needs a region of HTML** — never the strip, not even as a step on
+  the way. It costs one `require` and there is no third option.
+
+  Bonus, for a spec about markup a JS-off browser renders: jsdom runs no
+  scripts, so its parser builds `<noscript>` contents as real **elements** —
+  where a scripting-enabled browser stores them as a single text node. Parsing
+  therefore gives you the exact DOM under test rather than a string to match.
 - **JS — do NOT strip, the remedy is wrong here.** `test/faq.test.js`
   (`LANDING_REPO_URL`) and `test/phone-width-overflow.test.js` (`MOODS`) match
   declarations out of `public/js/*.js`. A line-comment strip would eat the `//`

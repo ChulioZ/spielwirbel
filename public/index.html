@@ -80,6 +80,37 @@
     <button id="accountBtn" class="topbar__acct" type="button" hidden aria-label="Account"><i class="ti ti-user" aria-hidden="true"></i></button>
   </header>
 
+  <!-- No-JS fallback (issue #525). Everything below the static hero is rendered
+       by js/*, so with scripting off a visitor gets that hero and then a page
+       where nothing responds — previously with no explanation anywhere.
+
+       Hardcoded in both shipped languages because localizing it would need the
+       one thing that is missing: i18n.js. `lang="de"` on the German line
+       because this document declares `lang="en"` and i18n.js — which normally
+       corrects it — never runs here, so without the attribute a screen reader
+       pronounces German with English phonetics.
+
+       Outside the app's main element on purpose: showLanding() overwrites that
+       block on boot, and test/seo.test.js scopes its crawlable-hero assertion
+       to it (.claude/rules/noindex-vs-disallow-and-the-crawler-surface.md §3).
+       Spelled without the literal tag here because test/seo.test.js still
+       extracts that block with a raw-text regex, and a comment naming the tag
+       is matched ahead of the real element
+       (.claude/rules/css-text-assertions-strip-comments.md).
+
+       Unlike the two banners below this needs no `[hidden]` companion rule in
+       styles.css. With scripting ENABLED the parser never turns this markup
+       into elements at all — it stores it as a single text node — so
+       .noscript-banner does not exist and no author rule can reach it. That is
+       a stronger guarantee than the `hidden` attribute's, which any `display`
+       rule overrides (.claude/rules/hidden-attribute-vs-display-rule.md). -->
+  <noscript>
+    <div class="noscript-banner">
+      <p lang="de">Spielwirbel benötigt JavaScript.</p>
+      <p>Spielwirbel requires JavaScript.</p>
+    </div>
+  </noscript>
+
   <!-- Guest demo marker (issue #427): states that this account is a throwaway
        demo that will be deleted, and offers registration. Permanently in the
        tree and toggled with the `hidden` attribute by setupDemoBanner()
