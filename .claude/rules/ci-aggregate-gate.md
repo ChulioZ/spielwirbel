@@ -83,6 +83,14 @@ the *other* workflows: `eslint`, `syntax`, `gitleaks`, `dco`).
   bad states" is only as good as the enumeration, and an infrastructure failure
   is exactly the state nobody enumerates.
 
+  **The same merge broke the same way one layer over.** `480c93e`'s Railway
+  deployment went `inactive` at 15:15:25 — eleven seconds after the `postgres`
+  `Set up job` failure above — under a **green** commit status, so production
+  stayed on the previous build for 14 hours while `implement` phase 7's poll
+  reported success. Same shape, same GitHub Actions incident (`qcvjkzcs7j74`),
+  same remedy: check the outcome, not the summary of it. See
+  `.claude/rules/verify-the-deployed-artifact-not-the-status.md`.
+
   **Verifying a change to this condition costs a scratch branch, and a clean
   before/after is hard to get.** CI runs only on `push` to `main` and on
   `pull_request`, so a scratch branch triggers nothing — it needs a **draft PR**
