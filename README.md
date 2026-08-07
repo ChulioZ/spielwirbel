@@ -72,8 +72,9 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
 - **Two archives** — games are never deleted by accident: *retired* (done with
   it) and *completed* (finished its content), both restorable.
 - **A Wunschliste** — games *and expansions* the group wants but does not own
-  yet, kept beside the shelf without ever turning up in a vote, and importable
-  from a BGG wishlist.
+  yet, kept beside the shelf without ever turning up in a vote, importable
+  from a BGG wishlist, and — where the instance enables it — showing what each
+  one costs right now.
 - **Per-round design**, custom tags, an installable **PWA** that works offline,
   shareable deep links, and a **Freundeskreis** feed between accounts.
 

@@ -297,6 +297,25 @@ I18N.en = {
   'wish.pickParent': 'Which game should be added for “{title}”?',
   'wish.noBase': 'Add the base game to this round first.',
 
+  // The current price of a wish (#679). The last three lines are legally
+  // required rather than decorative: the retrieval time and the may-have-changed
+  // note keep an hour-old price from reading as a live one, and the source line
+  // exists because withholding that a comparison covers participating shops only
+  // is a § 5a UWG omission (BGH I ZR 55/16).
+  'price.title': 'Current price',
+  'price.inclShipping': 'incl. shipping',
+  'price.plusShipping': 'plus shipping',
+  'price.discount': 'was {regular} · −{percent}%',
+  'price.shopIn': 'Shop in {country}',
+  'price.edition': 'Edition: {title} ({lang})',
+  'price.offers': '{inStock} of {total} offers in stock',
+  'price.viewOffers': 'All offers at Brettspielpreise.de',
+  'price.viewStore': 'View in the Steam store',
+  'price.retrieved': 'Retrieved {when}',
+  'price.mayChange': 'Prices may have changed.',
+  'price.sourceBgp': 'Price data from Brettspielpreise.de. The list covers the shops listed there only — shops pay to be listed, so it is not the whole market.',
+  'price.sourceSteam': 'Price data from the Steam store.',
+
   'sessions.rated': '{n} games rated',
   'sessions.played': 'Played',
   'sessions.cancelled': 'Cancelled',

@@ -83,6 +83,14 @@ test('configured: the privacy policy covers the real processors and no ODR link'
     'Ko-fi', 'Stripe', 'PayPal',                 // donation-link parties — independent controllers (#173)
     'eigenständige Verantwortliche',             // …their classification pinned in the DE text too
     'BG Stats', 'bgstatsapp.com',                // the play-push recipient — same click-link shape (#485)
+    // Wish-list prices (#679). Both markers are load-bearing and neither is
+    // decoration: the first names the source, the second is the whole reason a
+    // no-personal-data hop is disclosed at all — the claim that nothing about
+    // the reader is transmitted. Drop either and §8 stops answering the
+    // question a reader (or an authority) would actually ask about it.
+    'Brettspielpreise.de / BoardGamePrices',
+    'Ein Empfänger personenbezogener Daten entsteht dadurch nicht',
+    'keine Affiliate- oder Provisionsverknüpfung',  // the operator decision, stated publicly
     'geekdo-images.com', 'steamstatic.com',      // hotlinked cover hosts disclosed (#172)
     'Nutzungsereignisse',                        // product-event logging (#261) disclosed
     'keine Konto- oder Mandanten-Kennung',       // feedback is anonymous since #321 — pin the §11 disclosure

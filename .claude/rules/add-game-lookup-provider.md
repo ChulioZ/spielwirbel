@@ -197,6 +197,13 @@ Near-official key-free JSON — no scraping, no split:
   `type === 'app'` (drops `sub`/`bundle`).
 - **detail:** `…/api/appdetails?appids=<id>` → `{ <id>: { success, data } }`.
 
+**Since #679 it also exposes `price(externalId, lang)`** — the `price_overview`
+this same `appdetails` body has always carried and the detail hop discards. It is
+an **optional capability** like BGG's `collection()`/`covers()`, not part of the
+lookup contract, and its consumer lives in `lib/prices/` rather than here: a price
+source must never reach this registry or `round.providers`. See
+`.claude/rules/wish-list-prices.md`.
+
 **Limits:** no numeric player count — only category flags. `parsePlayers` maps
 category **ids** (stable across languages): multiplayer-ish ids
 (`1, 9, 27, 36–39, 47–49`) → `{ min: 1, max: null }` (never invent an upper
