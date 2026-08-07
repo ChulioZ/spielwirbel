@@ -6,7 +6,7 @@ den Prüf-Rhythmus fest; die veröffentlichte Datenschutzerklärung
 Frist, die hier steht, aber nicht gelebt oder nicht veröffentlicht wird, ist
 schlimmer als keine.
 
-**Stand:** 2026-08-05
+**Stand:** 2026-08-07
 
 ## Grundsatz
 
@@ -27,6 +27,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Freundschaften + Freundeskreis-Feed (#325) | bis Entfreunden bzw. Kontolöschung; Feed je Konto auf 50 Einträge begrenzt (älteste werden verdrängt) | Nutzeraktion / automatisch / `eraseAccount` |
 | Postfach-Benachrichtigungen (Inbox, #207) | je Konto auf 100 Einträge begrenzt (älteste werden verdrängt); Kontolöschung räumt vollständig | automatisch / `eraseAccount` |
 | Abstimmungs-Links ohne Konto (#652) | mit dem Ende der Abstimmung, beim Abbrechen/Löschen der Session oder der Runde, bei Kontolöschung — **und in jedem Fall spätestens 30 Tage nach dem Erzeugen** (`VOTE_LINK_TTL_DAYS`). Die Höchstfrist ist nicht nur Aufräumen: eine Session, die nie geschlossen wird, erreicht keinen der ereignisgesteuerten Pfade, und ohne sie bliebe der Link unbegrenzt gültig. Er wird zum selben Stichtag **unbrauchbar** (Prüfung in der Route), unabhängig davon, wann der Sweep die Zeile löscht | automatisch (Route + `deleteRound`/`eraseAccount` + 15-Minuten-Sweep in `lib/scheduler.js`) |
+| Zuletzt abgerufene Preise (`last_prices`, #688 — **keine personenbezogenen Daten**, `vvt.md` Zeile 21: Spiel-Kennung + Preis, ohne Nutzer-/Konto-/Mandanten-Bezug) | **7 Tage** ab Abruf (`PRICES_FALLBACK_MAX_AGE_DAYS`). Die Frist ist keine Datenschutz-, sondern eine **Richtigkeits**-Frist: älter darf der Preis nicht angezeigt werden, weil er sonst irreführend wäre (§ 5a UWG). Die Anzeige endet zum selben Stichtag über die Alterprüfung in `lib/prices/index.js`, unabhängig davon, wann der Sweep die Zeile löscht | automatisch (15-Minuten-Sweep in `lib/scheduler.js`) |
 | Server-Request-Logs, Produkt-Ereignisse | Logrotation der Plattform (Railway) | automatisch |
 | In-App-Feedback | nach Bearbeitung löschen | Panel-Löschung im Admin-Panel (#389, seit 2026-07-24) |
 | Kontakt-/Support-Korrespondenz (Postfach) | bis Abschluss der Bearbeitung, danach löschen — spätestens bei der Jahresprüfung | manuell (Postfach) |

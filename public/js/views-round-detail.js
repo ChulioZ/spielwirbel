@@ -313,6 +313,23 @@ function openEditor(anchor, variant, title, build) {
 
 // =================== Game detail ===================
 
+// How old a stored fallback price is, phrased for the reader (#688).
+//
+// Two deliberate roundings, both in the same direction — the label may overstate
+// the age, never understate it, because understating it is the § 5a UWG problem
+// this line exists to avoid:
+//
+//  - anything under an hour reads as "1 hour". A fallback served minutes after a
+//    restart is genuinely fresh, but "0 hours" invites the reader to treat it as
+//    live, and the clock doing the arithmetic is the reader's own.
+//  - past a day the unit changes and the remainder is dropped downward, so 47
+//    hours is "1 day" rather than "2".
+function priceAge(iso, now = Date.now()) {
+  const hours = Math.floor((now - new Date(iso).getTime()) / 3600000);
+  if (hours < 24) return tn(Math.max(1, hours), 'price.staleHour', 'price.staleHours');
+  return tn(Math.floor(hours / 24), 'price.staleDay', 'price.staleDays');
+}
+
 // The price box for a wished-for game (#679), from GET …/games/:gid/prices.
 //
 // A top-level function rather than a closure inside showGameDetail so a spec can
@@ -333,10 +350,22 @@ function openEditor(anchor, variant, title, build) {
 //    lists participating shops only. Withholding that about a price comparison
 //    is a § 5a UWG omission (BGH I ZR 55/16) — it is not a footnote we may drop
 //    to tidy the layout.
+//  - A `stale: true` payload is a STORED price (#688) served while the source is
+//    out, so its age leads instead of sitting in the footnote below.
 function renderPriceSection(p) {
   const sec = h(`<div class="section gd-price"><h2>${esc(t('price.title'))}</h2></div>`);
   const amount = h(`<div class="gd-price__amount">${esc(fmtMoney(p.amount, p.currency))}</div>`);
   sec.appendChild(amount);
+
+  // A stored last-known price (#688). The age moves OUT of the footnote and
+  // directly under the amount: the quiet „Abgerufen am …" line is right for an
+  // hour-old price and wrong for a three-day-old one, and a stale price
+  // presented as current is a misleading omission rather than a rough edge.
+  // The footnote stays as well — it carries the exact timestamp this summarises.
+  if (p.stale) {
+    sec.appendChild(h(`<div class="gd-price__stale">${esc(priceAge(p.fetchedAt))}</div>`));
+    sec.appendChild(h(`<div class="muted gd-price__stale-why">${esc(t('price.staleWhy'))}</div>`));
+  }
 
   const facts = [];
   facts.push(t(p.shippingKnown ? 'price.inclShipping' : 'price.plusShipping'));

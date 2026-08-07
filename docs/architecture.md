@@ -184,7 +184,9 @@ lib/
                      answers a different question and must reach neither.
                      Off unless PRICES_ENABLED=true
     index.js         dispatch on the game's stored source link, the hour-long
-                     cache, and the degrade-to-{available:false} contract
+                     cache, the degrade-to-{available:false} contract, and the
+                     stored last-known price (#688) served — age-first — while
+                     a source is unreachable, swept past its display ceiling
     boardgameprices.js  Brettspielpreise.de / BoardGamePrices, keyed on the
                      BGG id (board games): picks the reader's language edition
                      and the cheapest in-stock offer whose shipping is known

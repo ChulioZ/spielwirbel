@@ -2084,6 +2084,89 @@ module.exports = function repoContract(repo) {
     assert.ok(await repo.findSessionVoteLink(survivor.id));
   });
 
+  /* ---------------------------- Last known prices ---------------------------- */
+  /*
+   * The price fallback store (#688). Global, un-scoped, keyed by the price
+   * source's own cache key. Upsert-by-key, read-by-key, sweep-by-age.
+   */
+
+  test('last prices: writing the same key twice overwrites rather than accumulating', async () => {
+    const key = `bgp:info:DE:EUR:DE:lp-${Math.random().toString(16).slice(2)}`;
+    const first = { available: true, source: 'boardgameprices', amount: 49.89, currency: 'EUR', fetchedAt: '2026-08-01T10:00:00.000Z' };
+    await repo.putLastPrice(key, first);
+    assert.deepEqual((await repo.getLastPrice(key)).price, first);
+    assert.equal((await repo.getLastPrice(key)).fetchedAt, first.fetchedAt);
+
+    // One row per lookup, always the newest: this store holds the LAST price, not
+    // a history (#688 scopes history out), so a second write must replace.
+    const second = { ...first, amount: 44.5, fetchedAt: '2026-08-02T10:00:00.000Z' };
+    await repo.putLastPrice(key, second);
+    const row = await repo.getLastPrice(key);
+    assert.equal(row.price.amount, 44.5);
+    assert.equal(row.fetchedAt, '2026-08-02T10:00:00.000Z');
+
+    // An unknown key is null, never a throw and never a near-match: the key
+    // encodes the market and the edition, so a neighbouring key is a DIFFERENT
+    // box at a different price and must not answer for this one.
+    assert.equal(await repo.getLastPrice(`${key}-nope`), null);
+    assert.equal(await repo.getLastPrice(key.replace(':DE:EUR:', ':GB:GBP:')), null);
+  });
+
+  test('last prices: a nested payload survives the round trip intact', async () => {
+    // The payload is the whole served answer, including the nested `edition`
+    // object. In Postgres it goes through jsonb, so a shape that stringifies
+    // wrongly would surface here rather than in production.
+    const key = `bgp:info:DE:EUR:DE:lpn-${Math.random().toString(16).slice(2)}`;
+    const price = {
+      available: true, source: 'boardgameprices', currency: 'EUR', amount: 49.89,
+      product: 44.99, shipping: 4.9, shippingKnown: true, country: 'DE', destination: 'DE',
+      offerCount: 8, inStockCount: 5, edition: { title: 'Arche Nova', lang: 'DE' },
+      url: 'https://brettspielpreise.de/item/show/1/arche-nova',
+      fetchedAt: '2026-08-03T10:00:00.000Z',
+    };
+    await repo.putLastPrice(key, price);
+    assert.deepEqual((await repo.getLastPrice(key)).price, price);
+  });
+
+  test('the last-price sweep drops only rows older than the cutoff', async () => {
+    const key = `bgp:info:DE:EUR:DE:lps-${Math.random().toString(16).slice(2)}`;
+    await repo.putLastPrice(key, { available: true, amount: 1, fetchedAt: '2026-08-01T10:00:00.000Z' });
+
+    // A cutoff BEFORE the row's own timestamp must leave it alone. Asserted on the
+    // row, not the count: this suite shares a dataset, so "deleted 0" could be
+    // true while somebody else's row went.
+    assert.equal(await repo.deleteExpiredLastPrices('2000-01-01T00:00:00.000Z'), 0);
+    assert.ok(await repo.getLastPrice(key), 'a row newer than the cutoff survives');
+
+    const removed = await repo.deleteExpiredLastPrices('2999-01-01T00:00:00.000Z');
+    assert.ok(removed >= 1);
+    assert.equal(await repo.getLastPrice(key), null, 'an aged row is swept');
+
+    // Idempotent, so overlapping ticks from two replicas do the work once.
+    await repo.deleteExpiredLastPrices('2999-01-01T00:00:00.000Z');
+    assert.equal(await repo.getLastPrice(key), null);
+  });
+
+  test('a row whose age cannot be judged is swept, on BOTH backends', async () => {
+    // A row with no `fetchedAt` can never be shown (the fallback refuses it) and
+    // must not be able to outlive every sweep either. The two backends reach that
+    // from opposite directions and only agree because Postgres carries an
+    // explicit NULL arm: `data->>'fetchedAt' < ?` answers NULL rather than true,
+    // so without it the row would survive there forever while JSON deleted it —
+    // a divergence exactly where the row is unreachable (the `demoIpHash` shape,
+    // .claude/rules/per-ip-live-caps.md §2).
+    const broken = `bgp:info:DE:EUR:DE:lpb-${Math.random().toString(16).slice(2)}`;
+    const good = `bgp:info:DE:EUR:DE:lpg-${Math.random().toString(16).slice(2)}`;
+    await repo.putLastPrice(broken, { available: true, amount: 1 });
+    await repo.putLastPrice(good, { available: true, amount: 1, fetchedAt: '2026-08-01T10:00:00.000Z' });
+
+    // A cutoff in the distant PAST: nothing is old enough to expire on age, so
+    // the only row that may go is the one whose age is unknowable.
+    await repo.deleteExpiredLastPrices('2000-01-01T00:00:00.000Z');
+    assert.equal(await repo.getLastPrice(broken), null, 'an unjudgeable row is swept, not kept');
+    assert.ok(await repo.getLastPrice(good), 'and a well-formed row is untouched by it');
+  });
+
   /* ------------------------------ Invitations ------------------------------- */
   /*
    * Round-sharing invitations (#207). Global and un-scoped like grants. The

@@ -205,7 +205,7 @@ const frontendGlobals = {
   activeSheet: 'writable', closeSheet: 'readonly', openSheet: 'readonly',
   handleSheetPop: 'readonly',
   openEditor: 'readonly', usesEditorSheet: 'readonly', EDITOR_SHEET_BELOW: 'readonly',
-  renderPriceSection: 'readonly',
+  renderPriceSection: 'readonly', priceAge: 'readonly',
   startDirectSession: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   enabledProviders: 'readonly', lookupDetail: 'readonly',

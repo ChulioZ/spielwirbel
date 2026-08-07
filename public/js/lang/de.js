@@ -314,6 +314,11 @@ I18N.de = {
   'price.viewStore': 'Im Steam Store ansehen',
   'price.retrieved': 'Abgerufen am {when}',
   'price.mayChange': 'Preise können sich geändert haben.',
+  'price.staleHour': 'Preis von vor {n} Stunde',
+  'price.staleHours': 'Preis von vor {n} Stunden',
+  'price.staleDay': 'Preis von vor {n} Tag',
+  'price.staleDays': 'Preis von vor {n} Tagen',
+  'price.staleWhy': 'Der Preisdienst ist gerade nicht erreichbar — das ist der zuletzt gesehene Preis.',
   'price.sourceBgp': 'Preisdaten von Brettspielpreise.de. Die Übersicht umfasst nur die dort gelisteten Shops — Händler zahlen für die Aufnahme, sie ist also nicht der gesamte Markt.',
   'price.sourceSteam': 'Preisdaten aus dem Steam Store.',
 
