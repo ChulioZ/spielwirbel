@@ -119,10 +119,28 @@ const SEEDS = {
   },
 };
 
+// Teardown registry. `fail()` exits the process, and `process.exit` does NOT run
+// a `finally` block — so without this every failure orphans the server on :3199
+// and a headless Chrome on :9333, both of which then hold their ports against the
+// next run. Measured while building this script: two failed runs left one stray
+// server, two stray Chromes and three temp datasets behind. Register each
+// resource as it is created and tear down through one path.
+const cleanups = [];
+function cleanup() {
+  while (cleanups.length) {
+    const fn = cleanups.pop();
+    try { fn(); } catch { /* best effort: one failure must not skip the rest */ }
+  }
+}
+
 function fail(message) {
   console.error(`capture-landing-shots: ${message}`);
+  cleanup();
   process.exit(1);
 }
+
+// Ctrl-C is the other way out of a long run, and it bypasses `finally` too.
+process.on('SIGINT', () => { cleanup(); process.exit(130); });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -137,7 +155,9 @@ function tempDataDir() {
     fail('DATABASE_URL is set, which sends every write to the Postgres backend.\n'
       + '  This script only ever seeds a throwaway JSON dataset. Unset it and re-run.');
   }
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'landing-shots-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'landing-shots-'));
+  cleanups.push(() => fs.rmSync(dir, { recursive: true, force: true }));
+  return dir;
 }
 
 async function startServer(dataDir) {
@@ -159,6 +179,7 @@ async function startServer(dataDir) {
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+  cleanups.push(() => child.kill());
   child.stderr.on('data', (b) => process.stderr.write(`  [server] ${b}`));
 
   for (let i = 0; i < 100; i++) {
@@ -258,6 +279,7 @@ async function connectCdp() {
     '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
     `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profile}`, 'about:blank',
   ]);
+  cleanups.push(() => { chrome.kill(); fs.rmSync(profile, { recursive: true, force: true }); });
 
   let target = null;
   for (let i = 0; i < 100 && !target; i++) {
@@ -267,7 +289,7 @@ async function connectCdp() {
     } catch { /* not up yet */ }
     if (!target) await sleep(100);
   }
-  if (!target) { chrome.kill(); return fail('Chrome did not expose a CDP page target'); }
+  if (!target) return fail('Chrome did not expose a CDP page target');
 
   const ws = new WebSocket(target.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => {
@@ -301,9 +323,10 @@ async function connectCdp() {
     listeners.add(fn);
   });
 
+  cleanups.push(() => ws.close());
   await send('Page.enable');
   await send('Runtime.enable');
-  return { send, once, close: () => { ws.close(); chrome.kill(); } };
+  return { send, once };
 }
 
 // Evaluate in the page and return the value. awaitPromise so a probe can await
@@ -462,8 +485,7 @@ async function main() {
 
   const dataDir = tempDataDir();
   console.log(`capture-landing-shots: dataset ${dataDir}`);
-  const server = await startServer(dataDir);
-  let cdp = null;
+  await startServer(dataDir);
   try {
     const rounds = {};
     // Every locale in ONE run, always. Sets that drift apart one PR at a time
@@ -473,7 +495,7 @@ async function main() {
       console.log(`  seeded ${locale}: round ${rounds[locale]}`);
     }
 
-    cdp = await connectCdp();
+    const cdp = await connectCdp();
     for (const locale of Object.keys(SEEDS)) {
       await setLocale(cdp, locale);
       const rid = rounds[locale];
@@ -493,9 +515,7 @@ async function main() {
       }
     }
   } finally {
-    if (cdp) cdp.close();
-    server.kill();
-    fs.rmSync(dataDir, { recursive: true, force: true });
+    cleanup();
   }
   console.log('capture-landing-shots: done — now LOOK at every image before committing.');
 }
