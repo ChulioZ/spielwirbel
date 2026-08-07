@@ -42,6 +42,49 @@ const hsl = (h, s, l) => {
 
 const WHITE = [255, 255, 255];
 
+// --- Oklab, because that is the space the stylesheet derives in (#544) -------
+/* Every color-mix() in styles.css interpolates `in oklab`. This file's whole
+   value is that its arithmetic is the arithmetic the BROWSER runs — so a mix
+   simulated with a channel lerp would be measuring a colour the app no longer
+   paints, and would keep reporting a comfortable pass over a real regression.
+   Note this is only true of color-mix(); see `composite` below for the other
+   thing that looks identical and must NOT move to oklab. */
+const toLin = (v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+const toSrgb = (v) => (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+
+const rgbToOklab = ([r, g, b]) => {
+  const [lr, lg, lb] = [r, g, b].map((v) => toLin(v / 255));
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+  return [
+    0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s,
+  ];
+};
+
+const oklabToRgb = ([L, A, B]) => {
+  const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+  const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+  const s = (L - 0.0894841775 * A - 1.2914855480 * B) ** 3;
+  return [
+    +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+  ].map((v) => Math.round(Math.max(0, Math.min(1, toSrgb(v))) * 255));
+};
+
+/* What `color-mix(in oklab, a <pA>%, b)` computes. Takes a hex string or an rgb
+   triple on either side, so a chained token (--stage-muted mixes a mix into a
+   mix) reads as the chain it is rather than round-tripping through hex. */
+const rgb = (c) => (Array.isArray(c) ? c : hex(c));
+const mixOklab = (a, b, pA) => {
+  const A = rgbToOklab(rgb(a));
+  const B = rgbToOklab(rgb(b));
+  return oklabToRgb(A.map((v, i) => v * pA + B[i] * (1 - pA)));
+};
+
 // The declared value of a plain-hex custom property in :root.
 const rootHex = (name) => {
   const m = new RegExp(`\\${name}:\\s*(#[0-9a-f]{6});`, 'i').exec(CSS);
@@ -159,7 +202,16 @@ test('the semantic colours clear AA as text on white AND on the darkest theme pa
 // --- the lobby hero band (#543) ---------------------------------------------
 
 /* Composite `fg` over `bg` at `alpha` — what a translucent wash actually paints,
-   and therefore the background the text on it is really measured against. */
+   and therefore the background the text on it is really measured against.
+
+   This one stays a plain sRGB channel lerp and must NOT follow #544 into oklab,
+   even though it is the same three lines as `mixOklab` above. It models ALPHA
+   COMPOSITING — a translucent layer painted over an opaque one, which the
+   compositor does in the device space — not a color-mix(). The two are easy to
+   conflate because the token feeding it (--page-glow) is itself written as a
+   color-mix; that mix is with `transparent`, which under premultiplied alpha
+   resolves to "--brand at 7% alpha" in EVERY interpolation space, so the space
+   switch leaves this call site's input and its arithmetic alone. */
 const composite = (fg, bg, alpha) =>
   hex(fg).map((v, i) => Math.round(v * alpha + hex(bg)[i] * (1 - alpha)));
 
@@ -184,7 +236,7 @@ test('the lobby hero band keeps its heading AND its muted sub-line at AA', () =>
   assert.match(band[1], /background-color:\s*var\(--page-glow\)/,
     'the band no longer tints with --page-glow, so the ceiling measured below does not apply to it');
 
-  const glow = /--page-glow:\s*color-mix\(in srgb,\s*var\(--brand\)\s*(\d+)%/.exec(bodyOf(':root'));
+  const glow = /--page-glow:\s*color-mix\(in oklab,\s*var\(--brand\)\s*([\d.]+)%/.exec(bodyOf(':root'));
   assert.ok(glow, '--page-glow should be a color-mix of --brand with transparent');
   // Any further accent layer in the same rule stacks on top of the wash.
   const extra = [...band[1].matchAll(/var\(--brand\)\s*(\d+)%/g)]
@@ -213,7 +265,7 @@ test('the Wunschliste state chip clears AA on every theme', () => {
      is neither a warning nor an achievement, so this one takes the round's own
      accent — which puts it on exactly the token pair the milestone chip below
      had to reason its way to, and for the same reason: `--brand` ON a brand tint
-     lands 4.28-4.96 and misses AA on four of the eight accents.
+     lands 4.33-4.92 and misses AA on four of the eight accents.
 
      Unlike that chip this is real TEXT, not an aria-hidden glyph, so the strict
      bar is the one that binds rather than the one we choose to hold. Asserting
@@ -225,20 +277,20 @@ test('the Wunschliste state chip clears AA on every theme', () => {
   assert.match(chip, /background:\s*var\(--brand-tint\)/,
     'the wish chip no longer washes with --brand-tint, so the numbers below do not apply to it');
   assert.match(chip, /color:\s*var\(--brand-dark\)/,
-    'the wish chip label must stay --brand-dark: plain --brand drops to 4.28:1 on Sonnenuntergang');
+    'the wish chip label must stay --brand-dark: plain --brand drops to 4.33:1 on Salbei');
 
   // Read both mixes out of :root rather than restating them, so a retune of
   // either token lands here instead of leaving a stale number behind.
-  const tint = /--brand-tint:\s*color-mix\(in srgb,\s*var\(--brand\)\s*(\d+)%,\s*var\(--surface\)\)/.exec(bodyOf(':root'));
+  const tint = /--brand-tint:\s*color-mix\(in oklab,\s*var\(--brand\)\s*([\d.]+)%,\s*var\(--surface\)\)/.exec(bodyOf(':root'));
   assert.ok(tint, '--brand-tint should be a color-mix of --brand into --surface');
-  const darkMix = /--brand-dark:\s*color-mix\(in srgb,\s*var\(--brand\),\s*#000\s*(\d+)%\)/.exec(bodyOf(':root'));
+  const darkMix = /--brand-dark:\s*color-mix\(in oklab,\s*var\(--brand\),\s*#000\s*([\d.]+)%\)/.exec(bodyOf(':root'));
   assert.ok(darkMix, '--brand-dark should be a color-mix of --brand toward #000');
 
   const surface = rootHex('--surface');
   const failures = [];
   for (const { accent } of THEMES) {
-    const label = composite(accent, '#000000', 1 - Number(darkMix[1]) / 100);
-    const bg = composite(accent, surface, Number(tint[1]) / 100);
+    const label = mixOklab(accent, '#000000', 1 - Number(darkMix[1]) / 100);
+    const bg = mixOklab(accent, surface, Number(tint[1]) / 100);
     const ratio = contrast(label, bg);
     if (ratio < AA_TEXT) failures.push(`the wish chip under ${accent} = ${ratio.toFixed(2)}:1`);
   }
@@ -258,7 +310,7 @@ test('the Chronik milestone row keeps its label, its meta line AND its icon at A
      The icon is measured at the strict TEXT bar even though it is an
      aria-hidden glyph whose meaning the adjacent label already carries (1.4.11
      non-text, 3.0, is what actually binds it). That is deliberate: at
-     `var(--brand)` four of the eight accents land 4.28-4.38, i.e. they pass the
+     `var(--brand)` four of the eight accents land 4.33-4.38, i.e. they pass the
      bar that binds and fail the one a reader would assume, which is precisely
      the reading someone retuning this later would have to re-derive. Pinning
      the strict bar makes `--brand-dark` the thing that has to stay. */
@@ -272,12 +324,12 @@ test('the Chronik milestone row keeps its label, its meta line AND its icon at A
   assert.match(chip, /background:\s*var\(--brand-tint\)/,
     'the icon chip no longer washes with --brand-tint, so the numbers below do not apply to it');
   assert.match(chip, /color:\s*var\(--brand-dark\)/,
-    'the icon glyph must stay --brand-dark: plain --brand drops to 4.28:1 on Sonnenuntergang');
+    'the icon glyph must stay --brand-dark: plain --brand drops to 4.33:1 on Salbei');
 
   // Both tints mix the accent into --surface, so read their strengths from the
   // tokens rather than restating them — a retune of either lands here.
   const strength = (token) => {
-    const m = new RegExp(`\\${token}:\\s*color-mix\\(in srgb,\\s*var\\(--brand\\)\\s*(\\d+)%,\\s*var\\(--surface\\)\\)`)
+    const m = new RegExp(`\\${token}:\\s*color-mix\\(in oklab,\\s*var\\(--brand\\)\\s*([\\d.]+)%,\\s*var\\(--surface\\)\\)`)
       .exec(bodyOf(':root'));
     assert.ok(m, `${token} should be a color-mix of --brand into --surface`);
     return Number(m[1]) / 100;
@@ -285,23 +337,74 @@ test('the Chronik milestone row keeps its label, its meta line AND its icon at A
   const surface = rootHex('--surface');
   const wash = strength('--brand-tint-soft');
   const chipMix = strength('--brand-tint');
-  // --brand-dark is 82% accent over black; mirrors the :root color-mix.
-  const darkMix = /--brand-dark:\s*color-mix\(in srgb,\s*var\(--brand\),\s*#000\s*(\d+)%\)/.exec(bodyOf(':root'));
+  // --brand-dark is 87% accent over black; mirrors the :root color-mix.
+  const darkMix = /--brand-dark:\s*color-mix\(in oklab,\s*var\(--brand\),\s*#000\s*([\d.]+)%\)/.exec(bodyOf(':root'));
   assert.ok(darkMix, '--brand-dark should be a color-mix of --brand toward #000');
   const darken = 1 - Number(darkMix[1]) / 100;
 
   const failures = [];
   for (const { accent } of THEMES) {
-    const rowBgPx = composite(accent, surface, wash);
+    const rowBgPx = mixOklab(accent, surface, wash);
     // The label goes to --ink, the timestamp and the actor line stay --ink-soft.
     for (const name of ['--ink', '--ink-soft']) {
       const ratio = contrast(hex(rootHex(name)), rowBgPx);
       if (ratio < AA_TEXT) failures.push(`${name} on the milestone wash under ${accent} = ${ratio.toFixed(2)}:1`);
     }
-    const glyph = composite(accent, '#000000', darken);
-    const ratio = contrast(glyph, composite(accent, surface, chipMix));
+    const glyph = mixOklab(accent, '#000000', darken);
+    const ratio = contrast(glyph, mixOklab(accent, surface, chipMix));
     if (ratio < AA_TEXT) failures.push(`the chip glyph under ${accent} = ${ratio.toFixed(2)}:1`);
   }
   assert.deepEqual(failures, [],
     'a milestone row draws --ink on the wash, --ink-soft for its meta, --brand-dark on the chip');
+});
+
+// --- the finale stage's own ink levels (#544) --------------------------------
+
+test('the finale stage keeps its sub-line and its note legible on every theme', () => {
+  /* The stage is the app's one DARK surface, and its three ink levels are
+     derived through a two-step chain (--stage-ink diluted into --stage-bg), so
+     a retune of either end moves them without touching the tones themselves.
+
+     This exists because #544's space switch cost contrast here and nothing
+     would have noticed: unretuned, --stage-muted fell 5.48 -> 5.12 and
+     --stage-faint 3.59 -> 3.30. Both stayed on the same side of their bar, so
+     every check in this file passed while the darkest text on the darkest
+     screen quietly lost a fifth of its headroom. The percentages were nudged
+     back (62 -> 65, 45 -> 48); this is what stops that being undone silently.
+
+     KNOWN GAP, deliberately pinned below AA: `.stage__note` is 12px/700 in
+     --stage-faint and measures ~3.58:1, i.e. it does NOT meet the 4.5 bar for
+     normal text. That predates this change (3.59:1 in sRGB) and fixing it means
+     choosing a lighter tone, which is a design decision about the finale rather
+     than a derivation one. The floor below is therefore a NON-REGRESSION guard,
+     not a pass — do not read a green here as "the note is accessible". */
+  const root = bodyOf(':root');
+  const pct = (re, what) => {
+    const m = re.exec(root);
+    assert.ok(m, what);
+    return Number(m[1]) / 100;
+  };
+  const bgMix = pct(/--stage-bg:\s*color-mix\(in oklab,\s*var\(--brand\)\s*([\d.]+)%,\s*#201a15\)/,
+    '--stage-bg should mix --brand into the dark curtain');
+  const inkMix = pct(/--stage-ink:\s*color-mix\(in oklab,\s*var\(--brand\)\s*([\d.]+)%,\s*#f7f2e9\)/,
+    '--stage-ink should mix --brand into the warm near-white');
+  const mutedMix = pct(/--stage-muted:\s*color-mix\(in oklab,\s*var\(--stage-ink\)\s*([\d.]+)%,\s*var\(--stage-bg\)\)/,
+    '--stage-muted should dilute --stage-ink into --stage-bg');
+  const faintMix = pct(/--stage-faint:\s*color-mix\(in oklab,\s*var\(--stage-ink\)\s*([\d.]+)%,\s*var\(--stage-bg\)\)/,
+    '--stage-faint should dilute --stage-ink into --stage-bg');
+
+  const FAINT_FLOOR = 3.5;
+  const failures = [];
+  for (const { accent } of THEMES) {
+    const bg = mixOklab(accent, '#201a15', bgMix);
+    const ink = mixOklab(accent, '#f7f2e9', inkMix);
+    // .stage__sub (16px/700) and .stage__voter-name (12px/800) both take --stage-muted.
+    const muted = contrast(mixOklab(ink, bg, mutedMix), bg);
+    if (muted < AA_TEXT) failures.push(`--stage-muted under ${accent} = ${muted.toFixed(2)}:1`);
+    // .stage__note (12px/700) — see the KNOWN GAP note above.
+    const faint = contrast(mixOklab(ink, bg, faintMix), bg);
+    if (faint < FAINT_FLOOR) failures.push(`--stage-faint under ${accent} = ${faint.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    `--stage-muted must clear ${AA_TEXT}:1 and --stage-faint must not fall below ${FAINT_FLOOR}:1 on the stage`);
 });

@@ -19,29 +19,49 @@
   --brand: #c2410c;       /* accent color */
   --surface: #ffffff;
 
-  /* Tones derived from --page-bg. */
-  --sunken: color-mix(in srgb, var(--page-bg), #000 5%);       /* placeholders, progress bars */
-  --sunken-soft: color-mix(in srgb, var(--page-bg), #000 3%);  /* chips, pills, keys */
-  --line: color-mix(in srgb, var(--page-bg), #000 9%);         /* borders */
+  /* Tones derived from --page-bg.
+     Every derivation in this file interpolates `in oklab` (#544). sRGB is
+     neither linear-light nor perceptually uniform, so a mix toward #fff drags
+     the hue with it — measured up to 9.6° off the accent on Rose, 6.4° on
+     Lavendel — which is exactly the wrong thing for a token whose job is "this
+     surface is tinted with the round's own accent". In oklab that drift is
+     under 3.3° everywhere and under 1° on six of the eight themes.
+
+     The percentages below were re-tuned with the space, and the direction is
+     the opposite of the intuitive one: a mix toward #000 lands ~1.3x DARKER per
+     percent in oklab, because scaling a gamma-encoded channel by 0.95 is a
+     smaller perceptual step than scaling perceptual lightness by 0.95. Left
+     alone, every border and sunken surface in the app would have quietly
+     deepened. The factor is ~0.77 and it is remarkably consistent, so the
+     re-tuned tones land within 1-3/255 of what shipped before — the space
+     changed, the palette did not. Mixes toward #fff/--surface keep their
+     percentages: there the shift IS the fix. */
+  --sunken: color-mix(in oklab, var(--page-bg), #000 4%);        /* placeholders, progress bars */
+  --sunken-soft: color-mix(in oklab, var(--page-bg), #000 2.5%); /* chips, pills, keys */
+  --line: color-mix(in oklab, var(--page-bg), #000 7%);          /* borders */
   --bg: var(--page-bg);
 
   /* Accent tones derived from --brand. */
-  --brand-dark: color-mix(in srgb, var(--brand), #000 18%);
+  --brand-dark: color-mix(in oklab, var(--brand), #000 13%);
   --accent: var(--brand);
-  --brand-tint: color-mix(in srgb, var(--brand) 13%, var(--surface));      /* light accent surfaces */
-  --brand-tint-soft: color-mix(in srgb, var(--brand) 7%, var(--surface));  /* very light accent surfaces */
-  --brand-edge: color-mix(in srgb, var(--brand) 32%, var(--surface));      /* borders of accent surfaces */
-  --page-glow: color-mix(in srgb, var(--brand) 7%, transparent);           /* soft halo at the page top */
-  --placeholder: color-mix(in srgb, var(--page-bg), #000 24%);             /* fallback icons on image areas */
+  --brand-tint: color-mix(in oklab, var(--brand) 13%, var(--surface));      /* light accent surfaces */
+  --brand-tint-soft: color-mix(in oklab, var(--brand) 7%, var(--surface));  /* very light accent surfaces */
+  --brand-edge: color-mix(in oklab, var(--brand) 32%, var(--surface));      /* borders of accent surfaces */
+  --page-glow: color-mix(in oklab, var(--brand) 7%, transparent);           /* soft halo at the page top */
+  --placeholder: color-mix(in oklab, var(--page-bg), #000 18.5%);           /* fallback icons on image areas */
 
   /* The finale stage: a dark "curtain" tinted with the accent, so it matches
-     every theme. */
-  --stage-bg: color-mix(in srgb, var(--brand) 18%, #201a15);
-  --stage-raised: color-mix(in srgb, #fff 7%, var(--stage-bg));
-  --stage-line: color-mix(in srgb, #fff 16%, var(--stage-bg));
-  --stage-ink: color-mix(in srgb, var(--brand) 8%, #f7f2e9);
-  --stage-muted: color-mix(in srgb, var(--stage-ink) 62%, var(--stage-bg));
-  --stage-faint: color-mix(in srgb, var(--stage-ink) 45%, var(--stage-bg));
+     every theme. --stage-bg keeps 18%: it mixes into a dark anchor rather than
+     a pure one, so its shift is chromatic (~5/255) and no percentage tunes it
+     out. The three that dilute a light tone INTO that dark bg do re-tune —
+     same darker-per-percent effect as above, and here it costs contrast:
+     unretuned, --stage-muted drops 5.48 -> 5.12 and --stage-faint 3.59 -> 3.30. */
+  --stage-bg: color-mix(in oklab, var(--brand) 18%, #201a15);
+  --stage-raised: color-mix(in oklab, #fff 8%, var(--stage-bg));
+  --stage-line: color-mix(in oklab, #fff 18%, var(--stage-bg));
+  --stage-ink: color-mix(in oklab, var(--brand) 8%, #f7f2e9);
+  --stage-muted: color-mix(in oklab, var(--stage-ink) 65%, var(--stage-bg));
+  --stage-faint: color-mix(in oklab, var(--stage-ink) 48%, var(--stage-bg));
 
   --ink: #2b2620;
   --ink-soft: #6b6358;
@@ -397,7 +417,7 @@ h1, h2, h3 { font-family: var(--font-display); }
        bloom, not more accent: it only raises contrast. */
     background-color: var(--page-glow);
     background-image: radial-gradient(70% 130% at 8% 0%,
-      color-mix(in srgb, var(--surface) 60%, transparent), transparent 70%);
+      color-mix(in oklab, var(--surface) 60%, transparent), transparent 70%);
   }
   /* Display step for the band, on the --text-* scale (#470). */
   .app:has(.lobby-list) > .lobby-head h1 { font-size: var(--text-4xl); }
@@ -1086,7 +1106,8 @@ h1, h2, h3 { font-family: var(--font-display); }
    "reject this tag" reads distinctly from the orange include state. */
 .chip.is-excluded {
   background: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 70%, #000);
+  /* 78%, not 70%: a mix toward #000 darkens ~1.3x harder in oklab (see :root). */
+  border-color: color-mix(in oklab, var(--danger) 78%, #000);
   color: #fff;
 }
 .filter-chips__sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; flex: none; }
@@ -1183,7 +1204,7 @@ h1, h2, h3 { font-family: var(--font-display); }
    compensates by nothing — but it must still restate the resting margin. A
    bare `0` here is the #615 bug, one variant over. */
 .btn--ghost:active { transform: translateY(1px); margin-bottom: var(--press-mb); }
-.btn--danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 25%, var(--surface)); }
+.btn--danger { color: var(--danger); border-color: color-mix(in oklab, var(--danger) 25%, var(--surface)); }
 .btn--lg { font-size: var(--text-xl); padding: 15px 28px; }
 .btn--sm { font-size: var(--text-sm); font-weight: 600; padding: 6px 12px; border-radius: 10px; border-bottom-width: 3px; }
 .btn--sm:active { margin-bottom: calc(var(--press-mb) + 1.5px); }   /* 3px -> 1.5px */
@@ -1576,7 +1597,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   border-radius: var(--radius-sm);
 }
 .tl-act__del .ti { font-size: var(--text-sm); }
-.tl-act__del:hover { background: color-mix(in srgb, var(--danger) 10%, var(--surface)); color: var(--danger); }
+.tl-act__del:hover { background: color-mix(in oklab, var(--danger) 10%, var(--surface)); color: var(--danger); }
 
 /* Three visual tiers on the timeline (#633). The "Alles" view rendered a
    milestone ("X durchgespielt") and a routine add as the same white pill with
@@ -1746,11 +1767,11 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   display: flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in srgb, var(--brand-dark) 55%, #fff);
+  color: color-mix(in oklab, var(--brand-dark) 55%, #fff);
   background-image: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--brand) 26%, var(--page-bg)),
-    color-mix(in srgb, var(--brand) 60%, var(--page-bg))
+    color-mix(in oklab, var(--brand) 26%, var(--page-bg)),
+    color-mix(in oklab, var(--brand) 60%, var(--page-bg))
   );
 }
 /* --cover-h is UNITLESS: inside oklch(from …) the `h` channel is a <number> of
@@ -1792,7 +1813,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .pokale-game__title.game-link:hover,
 .archive-row__title.game-link:hover {
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--brand) 60%, transparent);
+  text-decoration-color: color-mix(in oklab, var(--brand) 60%, transparent);
 }
 .result-row__img.game-link,
 .archive-row__img.game-link { transition: box-shadow var(--dur-base) var(--ease-out); }
@@ -1812,7 +1833,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .result-people__person.member-link:hover .result-people__name,
 .podium__rest-name.member-link:hover {
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--brand) 60%, transparent);
+  text-decoration-color: color-mix(in oklab, var(--brand) 60%, transparent);
 }
 
 /* Rating pill (average), colored by quality */
@@ -1829,7 +1850,8 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   box-shadow: var(--shadow-1);
 }
 .score-pill--none {
-  background: color-mix(in srgb, var(--page-bg), #000 10%);
+  /* 8%, not 10%: the oklab re-tune factor from :root. */
+  background: color-mix(in oklab, var(--page-bg), #000 8%);
   color: var(--ink-soft);
   box-shadow: none;
 }
@@ -2285,8 +2307,8 @@ body.auth-screen .topbar__context { display: none; }
   padding: 10px 20px;
   font-size: var(--text-sm);
   color: var(--ink);
-  background: color-mix(in srgb, var(--warn) 14%, var(--surface));
-  border-bottom: 1px solid color-mix(in srgb, var(--warn) 35%, var(--surface));
+  background: color-mix(in oklab, var(--warn) 14%, var(--surface));
+  border-bottom: 1px solid color-mix(in oklab, var(--warn) 35%, var(--surface));
 }
 .noscript-banner p { margin: 0; }
 
@@ -2313,8 +2335,8 @@ body.auth-screen .topbar__context { display: none; }
   padding: 10px 20px;
   font-size: var(--text-sm);
   color: var(--ink);
-  background: color-mix(in srgb, var(--warn) 14%, var(--surface));
-  border-bottom: 1px solid color-mix(in srgb, var(--warn) 35%, var(--surface));
+  background: color-mix(in oklab, var(--warn) 14%, var(--surface));
+  border-bottom: 1px solid color-mix(in oklab, var(--warn) 35%, var(--surface));
 }
 /* Load-bearing: the `hidden` attribute only hides through the UA stylesheet, so
    the `display: flex` above would otherwise win and show this to every visitor,
@@ -2582,8 +2604,8 @@ body.auth-screen .terms-banner { display: none; }
 .rs-section__h--danger { color: var(--danger); }
 .konto-danger,
 .rs-danger {
-  background: color-mix(in srgb, var(--danger) 5%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--surface));
+  background: color-mix(in oklab, var(--danger) 5%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--danger) 25%, var(--surface));
   border-radius: var(--radius-md);
   padding: 16px;
   margin-bottom: 30px;
@@ -2848,14 +2870,14 @@ body.auth-screen .terms-banner { display: none; }
 .result-row__remove { margin-top: 6px; color: var(--ink-soft); font-size: var(--text-sm); }
 .result-row__remove:hover { color: var(--danger); }
 .tag--retired {
-  background: color-mix(in srgb, var(--warn) 14%, var(--surface));
+  background: color-mix(in oklab, var(--warn) 14%, var(--surface));
   color: var(--warn);
 }
 /* The other archive (#250): "durchgespielt" is an achievement, not a discard,
    so it reads green against retired's warning amber. Both tint a semantic
    variable rather than a fixed pastel — see theme-derived-colors.md. */
 .tag--completed {
-  background: color-mix(in srgb, var(--good) 14%, var(--surface));
+  background: color-mix(in oklab, var(--good) 14%, var(--surface));
   color: var(--good);
 }
 /* The third state chip (#663, #560). The Wunschliste is neither a warning nor
@@ -2899,9 +2921,9 @@ body.auth-screen .terms-banner { display: none; }
   font-weight: 600;
 }
 .chosen-banner.is-cancelled {
-  background: color-mix(in srgb, var(--danger) 6%, var(--surface));
+  background: color-mix(in oklab, var(--danger) 6%, var(--surface));
   color: var(--danger);
-  border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--danger) 25%, var(--surface));
   font-size: var(--text-lg);
 }
 /* The results footer: cancel and delete side by side, centered, wrapping to two
@@ -2926,8 +2948,8 @@ body.auth-screen .terms-banner { display: none; }
 /* Retirement suggestions: a slim, dismissible banner. */
 .rec-banner {
   margin-top: 20px;
-  background: color-mix(in srgb, var(--warn) 9%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--warn) 30%, var(--surface));
+  background: color-mix(in oklab, var(--warn) 9%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--warn) 30%, var(--surface));
   border-left: 5px solid var(--warn);
   border-radius: var(--radius-lg);
   padding: 10px 14px;
@@ -3465,7 +3487,7 @@ body.auth-screen .terms-banner { display: none; }
 }
 .tag-act .ti { font-size: var(--text-md); display: block; }
 .tag-act:hover { background: var(--sunken); color: var(--ink); }
-.tag-act--danger:hover { background: color-mix(in srgb, var(--danger) 12%, var(--surface)); color: var(--danger); }
+.tag-act--danger:hover { background: color-mix(in oklab, var(--danger) 12%, var(--surface)); color: var(--danger); }
 .ds-row {
   display: flex;
   align-items: center;
@@ -4143,7 +4165,7 @@ kbd {
   z-index: 40;
   /* --ink at 45%. This was the literal `rgba(43, 38, 32, 0.45)` — the token's
      own value hand-expanded, so retuning --ink left the backdrop behind. */
-  background: color-mix(in srgb, var(--ink) 45%, transparent);
+  background: color-mix(in oklab, var(--ink) 45%, transparent);
   display: flex;
   align-items: flex-end;
   justify-content: center;
