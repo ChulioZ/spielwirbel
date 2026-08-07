@@ -82,8 +82,9 @@ before assuming you have them all:
 **Frontend:** `views-round.js` `activeGames`, `views-session.js` `activeGames`
 (the one site that is **not** a copy — it passes the shared `isActiveGame`
 straight to `filter`, and its pool preview uses `fitsPlayerCount` too, #634),
-`views-round-tabs.js` (the Pokale "best rated" list, the stats scope, and the
-per-row "Jetzt spielen" launcher at the `gameStatCard` level),
+`views-pokale.js` (the Pokale "best rated" list, the stats scope, and the
+per-row "Jetzt spielen" launcher at the `pokaleGameCard` level — it lived in
+`views-round-tabs.js` until #528 split that file),
 `round-rail.js` `activeGames` (the desktop rail's counts), and `recap.js`
 **twice** — its game pool, plus an active/archived split on adjacent lines.
 

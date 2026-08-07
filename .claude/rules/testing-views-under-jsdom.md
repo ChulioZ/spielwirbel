@@ -13,8 +13,12 @@ paths:
   - "public/js/views-home.js"
   - "public/js/views-round-detail.js"
   - "public/js/views-round-settings.js"
+  - "public/js/views-round-actions.js"
   - "public/js/views-round-lookup.js"
-  - "public/js/views-round-tabs.js"
+  - "public/js/views-regal.js"
+  - "public/js/views-chronik.js"
+  - "public/js/views-pokale.js"
+  - "public/js/views-archive.js"
   - "public/js/core.js"
 ---
 

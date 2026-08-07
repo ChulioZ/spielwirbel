@@ -125,3 +125,16 @@ everything). It has since been split along its real seams into `views-round.js`
 (hub + Start), `views-round-tabs.js`, `views-round-detail.js` and
 `views-round-lookup.js`; this rule keeps future files from regrowing the
 pattern.
+
+**`views-round-tabs.js` then regrew it and was split again (#528)** — 1120 lines
+at the time the issue was filed, 1340 by the time it was picked up. Worth knowing
+because it is the same file twice: the first split moved four screens *out* of
+`views-round.js` into one sibling, which is a smaller unit than the original but
+still four independently-edited concerns. It is now one file per hub tab
+(`views-regal.js`, `views-chronik.js`, `views-pokale.js`) plus `views-archive.js`
+for the three off-shelf screens, plus `views-round-actions.js` for the two
+sheets whose entry points #561 had already moved to Einstellungen
+(`showMoveGames`, `showInvite`) while their markup stayed behind. **A split that lands the parts in one new
+file rather than one per seam only defers the budget** — the seam test asks
+whether the *parts* are independently editable, not whether the result is smaller
+than what you started with.

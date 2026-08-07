@@ -1,8 +1,11 @@
 /* Spielwirbel – views: the round hub (Start / Regal / Chronik / Pokale dock)
    and the Start tab (launchpad + buy-next). The other round concerns live in
-   sibling files loaded right after this one: views-round-tabs.js (Regal /
-   Chronik / Pokale / retired), views-round-detail.js (game detail, design,
-   sheet helpers) and views-round-lookup.js (provider lookup + add/link game).
+   sibling files loaded right after this one: views-regal.js, views-chronik.js
+   and views-pokale.js (one per hub tab), views-archive.js (retired / completed /
+   Wunschliste), views-round-detail.js (game detail, design, sheet helpers),
+   views-round-settings.js + views-round-actions.js (Einstellungen and the
+   two sheets it opens) and
+   views-round-lookup.js (provider lookup + add/link game).
    Part of the frontend; all files share one global script scope. */
 
 // =================== Round: hub (Start / Regal / Chronik) ===================

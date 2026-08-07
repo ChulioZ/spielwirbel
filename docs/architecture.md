@@ -386,12 +386,16 @@ public/
                      mode before registration (issue #322)
     views-home.js    lobby + new round
     views-round.js        round hub (Start/Regal/Chronik/Pokale tabs) + Start tab
-    views-round-tabs.js   Regal, Chronik, Pokale tabs + the three off-shelf
-                          screens (retired / completed / Wunschliste)
+    views-regal.js        Regal tab: the games library (search, filters, grid)
+    views-chronik.js      Chronik tab: the month-grouped session/shelf timeline
+    views-pokale.js       Pokale tab: podium + fun stats, and the Rückblick
+    views-archive.js      the three off-shelf screens (retired / completed /
+                          Wunschliste) through one renderer
     views-round-detail.js game detail, design picker, tags + providers screens,
                           sheet helpers
     views-round-settings.js round Einstellungen screen: the round-level actions
                           (invite, move games, delete/leave) in one place (#561)
+    views-round-actions.js  the two sheets that screen opens: move games, invite
     views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, the rating cards, finale, results

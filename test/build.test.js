@@ -97,9 +97,9 @@ test('does not rename shared top-level identifiers (no minifyIdentifiers)', () =
 
 test('rewriteRefs replaces only whole, delimited paths (not substrings)', () => {
   const m = { '/js/views-round.js': '/js/views-round.abcd1234.js' };
-  const out = rewriteRefs('"/js/views-round.js" and "/js/views-round-tabs.js"', m);
+  const out = rewriteRefs('"/js/views-round.js" and "/js/views-round-settings.js"', m);
   assert.ok(out.includes('"/js/views-round.abcd1234.js"'), 'exact match rewritten');
-  assert.ok(out.includes('"/js/views-round-tabs.js"'), 'longer path left untouched');
+  assert.ok(out.includes('"/js/views-round-settings.js"'), 'longer path left untouched');
 });
 
 test('deriveCache is deterministic and content-derived', () => {

@@ -13,6 +13,12 @@
    and deliberately NOT in that file: it is an independently editable concern and
    that file is already past its size budget (.claude/rules/token-friendly-source-files.md).
 
+   The two sheets it opens — showMoveGames and showInvite — are in
+   views-round-actions.js, loaded right after this file (#528). They had stayed
+   behind in views-round-tabs.js when #561 moved their entry points here, so a
+   change to either action meant opening the Regal's file to edit an
+   Einstellungen action.
+
    Part of the frontend; all files share one global script scope. Every name it
    uses from a sibling file is referenced at call time, never at load time
    (.claude/rules/frontend-script-load-order.md). */

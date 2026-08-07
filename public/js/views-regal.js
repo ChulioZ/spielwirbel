@@ -1,0 +1,234 @@
+/* Spielwirbel – views: the Regal tab, the round's games library — search, the
+   tri-state tag filter chips, sort, the lazy cover grid, and the footer links
+   to the three off-shelf screens. Rendered by showRound() (views-round.js).
+   Part of the frontend; all files share one global script scope. */
+
+// --- Regal tab: the games library — search, filter chips, cover grid.
+function renderRegalTab(round, activeGames) {
+  const rid = round.id;
+
+  // Filters (and sort) persist for the session but are scoped to one round —
+  // opening a different round's Regal resets them to defaults.
+  if (regalFiltersRid !== round.id) {
+    regalFilters = { tags: new Map(), query: '' };
+    gamesSort = 'avg';
+    regalFiltersRid = round.id;
+  }
+
+  // Stats per active game (for the rating pills and sorting).
+  const statsByGame = {};
+  activeGames.forEach((g) => (statsByGame[g.id] = gameStats(round, g.id)));
+
+  const gamesSec = h('<div class="section"></div>');
+  // h1, not h3: on the Regal/Chronik/Pokale tabs this is the top-level heading of
+  // the view — only the Start tab renders the round-name hero (#145). The
+  // section-label look is unchanged; `.section-head :is(h1,h2,h3)` styles it.
+  const gamesHead = h(`<div class="section-head"><h1>${esc(t('games.title', { n: activeGames.length }))}</h1><div class="section-tools"></div></div>`);
+  const gamesTools = gamesHead.querySelector('.section-tools');
+  gamesSec.appendChild(gamesHead);
+
+  const grid = h('<div class="cards"></div>');
+
+  // The dashed "add a game" tile always closes the grid.
+  const addTile = h(`<button class="add-tile">
+       <i class="ti ti-plus" aria-hidden="true"></i>
+       <span>${esc(t('round.addGame'))}</span>
+     </button>`);
+  addTile.addEventListener('click', () => showAddGame(round));
+
+  // Bulk-import a linked BoardGameGeek collection (#481). Filling a shelf one
+  // game at a time is the most tedious part of setting a round up, so the entry
+  // point is offered where that tedium is felt: as a tile beside "add a game"
+  // while the Regal is empty, and as a persistent header action once it isn't.
+  const importTile = h(`<button class="add-tile">
+       <i class="ti ti-download" aria-hidden="true"></i>
+       <span>${esc(t('bggImport.tile'))}</span>
+     </button>`);
+  importTile.addEventListener('click', () => showBggImport(round));
+
+  if (activeGames.length === 0) {
+    gamesSec.appendChild(h(`<div class="empty"><p>${esc(t('games.empty'))}</p></div>`));
+    grid.appendChild(addTile);
+    if (canImportBgg(round)) grid.appendChild(importTile);
+    gamesSec.appendChild(grid);
+  } else {
+    if (canImportBgg(round)) {
+      // Two spellings of one label, switched by width in CSS (#621) — the full
+      // wording is ~269px, most of a 320px phone's content column. Both strings
+      // already exist for the empty-Regal tile, so this needs no new i18n key.
+      const importBtn = h(`<button class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> <span class="tools-label tools-label--long">${esc(t('bggImport.link'))}</span><span class="tools-label tools-label--short">${esc(t('bggImport.tile'))}</span></button>`);
+      importBtn.addEventListener('click', () => showBggImport(round));
+      gamesTools.appendChild(importBtn);
+    }
+    // Average per game (from the already computed stats) for pill and sorting.
+    const avgMap = {};
+    activeGames.forEach((g) => (avgMap[g.id] = statsByGame[g.id].avg));
+
+    // Search pill + sort next to the heading. Sort, search and filter chips are
+    // all kept for the session (scoped to this round) — see regalFilters.
+    const search = h(`<label class="search-pill"><i class="ti ti-search" aria-hidden="true"></i><input type="search" placeholder="${esc(t('games.search'))}" aria-label="${esc(t('games.search'))}" /></label>`);
+    const searchInput = search.querySelector('input');
+    searchInput.value = regalFilters.query;
+    const sortSel = h(`<select class="sort-select" aria-label="${esc(t('games.sortLabel'))}">
+        <option value="random">${esc(t('games.sort.random'))}</option>
+        <option value="name">${esc(t('games.sort.name'))}</option>
+        <option value="avg">${esc(t('games.sort.rating'))}</option>
+      </select>`);
+    sortSel.value = gamesSort;
+    gamesTools.appendChild(search);
+    gamesTools.appendChild(sortSel);
+
+    let query = regalFilters.query;
+    // Filter chips: custom round tags only (#238, tri-state #241). One chip per
+    // round tag, all ignored by default; clicking cycles ignore -> include ->
+    // exclude, where included tags combine with AND and excluded tags reject a
+    // game carrying any of them. Ids of since-deleted tags are pruned from the
+    // persisted map so they can't invisibly filter everything out.
+    const roundTags = round.tags || [];
+    const tagFilter = regalFilters.tags;
+    [...tagFilter.keys()].forEach((x) => { if (!roundTags.some((tg) => tg.id === x)) tagFilter.delete(x); });
+    if (roundTags.length) {
+      // Below 860px the chips are collapsed behind a "Filter" button so the cover
+      // grid stays visible; from 860px up they show inline as before. The
+      // phone-vs-wide switch is purely CSS (scoped to `.regal-filter`, since the
+      // `.filter-chips` class is shared with the game-detail/add-game/session tag
+      // pickers) — the JS only toggles the `is-open` class and keeps the badge in
+      // sync. (#349)
+      const filterWrap = h('<div class="regal-filter"></div>');
+      const chips = h('<div class="filter-chips"></div>');
+      const toggle = h(`<button class="filter-toggle" type="button" aria-expanded="false">
+           <i class="ti ti-tags" aria-hidden="true"></i><span>${esc(t('games.filter'))}</span>
+           <span class="filter-toggle__badge" aria-hidden="true" hidden></span>
+         </button>`);
+      const badge = toggle.querySelector('.filter-toggle__badge');
+      // The count of actively-filtering tags is shown two ways so it is never
+      // conveyed by colour alone while collapsed: the badge (sighted) and the
+      // button's aria-label (screen readers). The badge is aria-hidden so the
+      // label doesn't announce the number twice.
+      function syncFilterBadge() {
+        const n = tagFilter.size;
+        badge.textContent = n;
+        badge.hidden = n === 0;
+        toggle.setAttribute('aria-label', t('games.filterLabel', { n }));
+      }
+      toggle.addEventListener('click', () => {
+        const open = filterWrap.classList.toggle('is-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      roundTags.forEach((tg) => {
+        const chip = h('<button class="chip"></button>');
+        paintTagChip(chip, tg.name, tagFilter.get(tg.id), tg.icon);
+        chip.addEventListener('click', () => {
+          paintTagChip(chip, tg.name, cycleTagState(tagFilter, tg.id), tg.icon);
+          syncFilterBadge();
+          renderGames();
+        });
+        chips.appendChild(chip);
+      });
+      syncFilterBadge();
+      filterWrap.appendChild(toggle);
+      filterWrap.appendChild(chips);
+      gamesSec.appendChild(filterWrap);
+    }
+
+    // Build the cards once and remember them by game id. When re-sorting we only
+    // reorder these existing nodes – no page rebuild that would reset the scroll.
+    // Covers load lazily as cards scroll into view (#198); watch the card, not
+    // the __img — the card's `content-visibility: auto` skips descendant layout.
+    const loadCover = createCoverLoader();
+    const cardById = {};
+    activeGames.forEach((g) => {
+      const fallback = coverPlaceholder(g);
+      const avg = avgMap[g.id];
+      const scorePill =
+        avg !== null
+          ? `<span class="score-pill" style="background:${avgColor(avg)}">Ø ${avg.toFixed(1)}</span>`
+          : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
+      // What the round owns for this game (#653) — no badge at zero, so a shelf
+      // of plain base boxes looks exactly as it always did.
+      const expCount = (g.expansions || []).length;
+      const expBadge = expCount
+        ? `<span class="exp-pill" title="${esc(tn(expCount, 'detail.expansionsBadgeOne', 'detail.expansionsBadge', { n: expCount }))}">+${expCount}</span>`
+        : '';
+      const gc = h(`<a class="game-card game-card--clickable">
+           <div class="game-card__img">${fallback}
+             <div class="game-card__badges">${expBadge}${scorePill}</div>
+           </div>
+           <div class="game-card__body">
+             <div class="game-card__title">${esc(g.title)}</div>
+           </div>
+         </a>`);
+      if (g.image) loadCover(gc, coverUrl(g.image, COVER_CARD), gc.querySelector('.game-card__img'));
+      navLink(gc, gamePath(rid, g.id), () => showGameDetail(rid, g.id));
+      cardById[g.id] = gc;
+    });
+    gamesSec.appendChild(grid);
+
+    function orderedGames() {
+      if (gamesSort === 'name') {
+        return [...activeGames].sort((a, b) =>
+          a.title.localeCompare(b.title, getLocale(), { sensitivity: 'base' })
+        );
+      }
+      if (gamesSort === 'avg') {
+        // Best first; unrated (null) at the end.
+        return [...activeGames].sort((a, b) => (avgMap[b.id] ?? -1) - (avgMap[a.id] ?? -1));
+      }
+      return randomOrderedGames(round, activeGames);
+    }
+    function matchesFilters(g) {
+      if (!matchesTagFilter(tagFilter, g.tagIds)) return false;
+      const q = query.trim().toLowerCase();
+      if (q && !g.title.toLowerCase().includes(q)) return false;
+      return true;
+    }
+    // Reorder/filter the existing card nodes (no page rebuild); the add tile
+    // always closes the grid.
+    function renderGames() {
+      const cards = orderedGames().filter(matchesFilters).map((g) => cardById[g.id]);
+      if (cards.length === 0) {
+        const msg = query.trim()
+          ? t('games.noMatch', { q: query.trim() })
+          : t('games.noMatchFilters');
+        grid.replaceChildren(h(`<div class="muted games-nomatch">${esc(msg)}</div>`), addTile);
+        return;
+      }
+      grid.replaceChildren(...cards, addTile);
+    }
+
+    searchInput.addEventListener('input', () => {
+      query = searchInput.value;
+      regalFilters.query = query;
+      renderGames();
+    });
+    sortSel.addEventListener('change', () => {
+      gamesSort = sortSel.value;
+      renderGames();
+    });
+    renderGames();
+  }
+  app.appendChild(gamesSec);
+
+  // Quiet footer: the ways off the active shelf — the two archives, retired
+  // ("Aussortiert") and completed ("Durchgespielt", #250), plus the Wunschliste
+  // (#560). All three are kept apart because the reason differs: two are games
+  // the group had, the third is games they want.
+  const retiredGames = round.games.filter((g) => g.retired);
+  const completedGames = round.games.filter((g) => g.completed);
+  const wishGames = round.games.filter((g) => g.wish);
+  const foot = h('<div class="round-footer rail-owned"></div>');
+  const retiredBtn = h(`<a class="link-btn"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.link', { n: retiredGames.length }))}</a>`);
+  navLink(retiredBtn, roundPath(round.id, 'retired'), () => showRetired(round.id));
+  foot.appendChild(retiredBtn);
+  const completedBtn = h(`<a class="link-btn"><i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('completed.link', { n: completedGames.length }))}</a>`);
+  navLink(completedBtn, roundPath(round.id, 'completed'), () => showCompleted(round.id));
+  foot.appendChild(completedBtn);
+  const wishBtn = h(`<a class="link-btn"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('wish.link', { n: wishGames.length }))}</a>`);
+  navLink(wishBtn, roundPath(round.id, 'wishlist'), () => showWishlist(round.id));
+  foot.appendChild(wishBtn);
+  // "Spiele verschieben" and "Einladen" used to sit here too. Neither is a shelf
+  // concern — one consolidates two rounds, the other shares the round — and both
+  // were findable only by scrolling past the whole game grid, so they moved to
+  // the round's Einstellungen screen (#561).
+  app.appendChild(foot);
+}

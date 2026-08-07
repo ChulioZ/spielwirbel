@@ -89,7 +89,7 @@ function minify(rel, code) {
 
 // Replace only properly-quoted references ("…"/'…') to a mapped path, so a path
 // can't match as a substring of a longer one (e.g. /js/views-round.js vs
-// /js/views-round-tabs.js).
+// /js/views-round-settings.js).
 function rewriteRefs(text, manifest) {
   for (const [orig, hashed] of Object.entries(manifest)) {
     const esc = orig.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
