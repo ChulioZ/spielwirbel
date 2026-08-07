@@ -69,12 +69,12 @@ const LANDING_SHOTS = {
   de: {
     shelfWide: { src: '/img/landing-shelf-wide.de.webp', w: 1600, h: 988 },
     shelfPhone: { src: '/img/landing-shelf-phone.de.webp', w: 624, h: 1248 },
-    vote: { src: '/img/landing-vote.de.webp', w: 624, h: 1248 },
+    vote: { src: '/img/landing-vote.de.webp', w: 624, h: 1152 },
   },
   en: {
     shelfWide: { src: '/img/landing-shelf-wide.en.webp', w: 1600, h: 988 },
     shelfPhone: { src: '/img/landing-shelf-phone.en.webp', w: 624, h: 1248 },
-    vote: { src: '/img/landing-vote.en.webp', w: 624, h: 1248 },
+    vote: { src: '/img/landing-vote.en.webp', w: 624, h: 1152 },
   },
 };
 

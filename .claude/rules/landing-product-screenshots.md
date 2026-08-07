@@ -3,16 +3,31 @@ paths:
   - "public/img/**"
   - "public/js/views-landing.js"
   - "test/landing-shots.test.js"
+  - "scripts/capture-landing-shots.js"
 ---
-# Regenerating the landing-page product screenshots (#438, #457)
+# Regenerating the landing-page product screenshots (#438, #457, #669)
 
 The logged-out landing hero shows real screenshots of the app
 (`public/img/landing-<shot>.<locale>.webp`, referenced from `LANDING_SHOTS` in
 `public/js/views-landing.js` — **one set per shipped locale** since #457). They
 are **generated once and committed**, the same stance as
 `public/icons/og-image.png` and the PWA icons — there is no image tooling in this
-repo and no build step here. The full capture script lives in git history
-alongside this rule's PRs; the parts worth not rediscovering are below.
+repo and no build step here.
+
+**The capture script is `scripts/capture-landing-shots.js`** — run it, then look
+at every image:
+
+```bash
+node scripts/capture-landing-shots.js          # all three shots, every locale
+node scripts/capture-landing-shots.js --probe  # measure geometry, write nothing
+```
+
+It was **not** committed for the first two regenerations, and this file used to
+say it "lives in git history alongside this rule's PRs" — which was untrue:
+neither #438's nor #457's commit contains one. #669's reshoot therefore began by
+rewriting from the recipe below what two earlier sessions had already written.
+The recipe is still here, because it is the *reasoning* the script encodes and
+what you need in order to change it.
 
 ## 1. `chrome --screenshot` CANNOT take a phone-width screenshot
 
@@ -53,12 +68,32 @@ quality: 84 })` — which matters because **`sips` can read WebP but not write i
 `resolveRoute` deliberately maps every transient session path back to the round
 hub on a cold load (`.claude/rules/session-flow-history.md`), so
 `/round/:rid/session/:sid/vote/3` cannot be navigated to. Reach it with
-`Runtime.evaluate` clicks: `.hub-cta` (or `.rail__cta`) → `#go` → `#goBtn` →
-`.rating .mood`. Pre-selecting a rating is worth it — a blank scale looks
-unfinished.
+`Runtime.evaluate` clicks. The path as of #669:
+
+`.hub-cta` (or `.rail__cta`) → **reset the Start screen** → `#go` →
+`.live-vote__hotseat-btn` → `#goBtn` → `.rating .mood`
+
+Two of those steps did not exist when this rule was written, and each fails in a
+way that reads as something else:
+
+- **The lobby step.** Per-device voting (#209/#612) means the draw lands on the
+  live-vote *lobby*, where someone must claim a seat, not on the vote card. The
+  old recipe's `#go` → `#goBtn` therefore finds no `#goBtn` at all, which looks
+  like a broken selector rather than an extra screen. Claim a **fixed** seat, so
+  both locales show the same person.
+- **The Start screen restores the last draw's filters (#252).** The seed's two
+  rated sessions each run with `count: 1` and a two-tag include filter (§3), so
+  a draw started without resetting them re-draws that one already-rated game —
+  and the card's primary action then reads „Fertig"/"Done" instead of
+  „Weiter"/"Next". Nothing is broken; the hero just illustrates the *end* of a
+  wizard rather than the middle of one. Reset the chips (click each round its
+  cycle until neither `is-on` nor `is-excluded`) and set `#count` before `#go`.
+
+Pre-selecting a rating is worth it — a blank scale looks unfinished.
 
 Note the drawn game is **random each run**, so the title in the committed image
-changes when you regenerate. That is cosmetic; nothing asserts it.
+changes when you regenerate, and the two locales generally show different games.
+That is cosmetic; nothing asserts it.
 
 ## 3. Never let real cover art into these images
 
@@ -100,12 +135,28 @@ cannot tell whether a difference between two locales is the app or the seed (§4
 The seeds therefore live in the script for *all* locales, not just the one being
 added.
 
-The two finished sessions are **direct picks** (`POST …/sessions` with a
-`gameId`), not draws: a draw is random, so the set of rated games — and therefore
-which cards show a `Ø` badge rather than "new" — would change every run. One
-direct-pick session per rated game makes the shelf reproducible. Four ratings of
-`4,5,4,5` and `4,4,5,4` give the committed **Ø 4.5** and **Ø 4.3** (4.25 rounds
-up in `toFixed(1)`).
+The two finished sessions must each rate **exactly one, known** game: a plain
+draw is random, so the set of rated games — and therefore which cards show a `Ø`
+badge rather than "new" — would change every run. Four ratings of `4,5,4,5` and
+`4,4,5,4` give the committed **Ø 4.5** and **Ø 4.3** (4.25 rounds up in
+`toFixed(1)`).
+
+**They used to be direct picks (`POST …/sessions` with a `gameId`); as of #669
+they cannot be.** A direct-pick session is created `done: true` — it has no
+voting phase at all — so `POST …/sessions/:sid/votes/:pid` answers **400
+`voting_closed`**. The only route that still writes votes onto one is
+`POST …/sessions/:sid/results`, which survives *solely* so a browser running a
+pre-#209 bundle out of the service-worker cache can save an evening it has
+already collected, and whose comment marks it for deletion. A seed built on it
+would break silently the day it goes.
+
+So the script constrains a **draw** to a one-game pool instead, which buys the
+same reproducibility through the live route: include-tag filters are **AND**, so
+giving the two rated games a unique tag *pair* each (and every other game a
+single tag) makes `tagIds: [t0, t1]` match exactly one game. The draw then
+asserts it drew what it meant to, rather than trusting the arithmetic. Full
+sequence per rated game: `POST …/sessions` (filtered) → `…/votes/:pid` per
+member → `…/close` → `…/choice` → `…/finish`.
 
 Note that only the *round* content is seeded per locale — the app's own chrome
 follows the locale key, so nothing else needs duplicating.
@@ -139,6 +190,36 @@ locale's number. It also makes the reshoot cheap insurance: capturing both
 locales in one run is the only way to know whether a difference between them is
 the app changing or the words changing.
 
+Re-measured for #669 (2026-08-07), same probe, both locales identical: rail ends
+**689**, card row 1 ends **475**, row 2 ends **712**, row 3 runs from ~730. So
+790 still holds — it clears the rail by 100px and cuts inside row 3's artwork —
+and the wide asset's declared height is unchanged. (The rail got *shorter*, not
+the cards taller: the settings group collapsed to one „Einstellungen" entry and
+the archive section became „Nicht im Regal" with a Wunschliste row.)
+
+### The vote crop is a FIXED POINT now, not a free choice (#669)
+
+Since #666 the vote card sizes itself to the viewport, so the crop height and the
+card height are mutually dependent — shrinking the crop shrinks the card, and the
+usual "pick a band that doesn't slice anything" reasoning does not converge on
+its own. The cover is `max(110px, min(240px, calc(100svh - 480px)))`, which
+reaches its **240px cap at exactly 100svh = 720**. Measured card bottoms:
+
+| crop height | card bottom | slack |
+|---|---|---|
+| 660 | 621 | 39 |
+| 690 | 651 | 39 |
+| 710 | 671 | 39 |
+| **720** | **681** | **39** |
+| 780 | 681 | 99 |
+
+Below 720 the card just shrinks with the crop (a smaller cover buys nothing);
+above it the card stops growing and the crop only adds dead space. **720 is
+therefore the unique best height**, and the pre-#666 value of 780 now leaves
+~100px of empty page with the „powered by BGG" footer sliding into frame — which
+is what #669 actually fixed, over and above the card's own restyling. Re-derive
+this table (not just re-run the probe) if the cover formula changes.
+
 ## 5. Two widths, because one cannot work
 
 A 1280px-wide desktop screenshot scaled into a 375px phone column is illegible,
@@ -159,7 +240,8 @@ calls, and they are worth writing down because the ratios are not round numbers:
 | Asset | CSS viewport | `deviceScaleFactor` | File |
 |---|---|---|---|
 | `landing-shelf-wide` | 1280 × 790 | 1.25 | 1600 × 988 |
-| `landing-shelf-phone`, `landing-vote` | 390 × 780 | 1.6 | 624 × 1248 |
+| `landing-shelf-phone` | 390 × 780 | 1.6 | 624 × 1248 |
+| `landing-vote` | 390 × **720** | 1.6 | 624 × **1152** |
 
 (988 rather than 987.5: Chrome rounds the raster up. Declare what the file says,
 which is what `test/landing-shots.test.js` reads back out of the WebP header.)
@@ -196,6 +278,17 @@ Three details in there are load-bearing:
 It cannot see whether the screenshot depicts anything sensible — a capture of an
 error page, or of the *wrong locale*, passes every assertion. **Look at every
 image** before committing.
+
+**What that blindness has already cost (#669).** The issue was filed about the
+*vote* shot, because #666 had visibly reshaped that card. Reshooting all six
+showed the two `landing-shelf-*` sets had drifted **further**, and nobody had
+noticed: the rail's „Archiv" section had become „Nicht im Regal" and gained a
+Wunschliste row (#560/#671), the four-item settings group had collapsed to one
+entry, and the seats row had gained its `+` button. So the landing page had been
+advertising a navigation the app no longer has — for weeks, with the whole suite
+green. **Reshoot the whole set, not the one asset you came for**: the assets that
+are stale are precisely the ones no issue was filed about, since an issue only
+gets filed when someone happens to look.
 
 ## 7. These images are deliberately NOT in the service worker's `SHELL`
 
