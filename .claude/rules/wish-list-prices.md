@@ -82,6 +82,47 @@ the price was really retrieved. That timestamp plus the „Preise können sich
 geändert haben" note are the whole mitigation for a stale upstream — nothing in
 CI can detect an aggregator that stopped updating.
 
+## An outage taught two things the first cut got wrong (2026-08-07)
+
+The aggregator 504'd for hours the day this shipped. Both defects were ours, and
+both are the kind that only a real outage surfaces.
+
+**1. Our timeout must sit ABOVE their gateway's, not on it.** Theirs returns 504
+at ~10.10 s and ours fired at 10.00 s, so a plain upstream outage was logged as
+`This operation was aborted` — a message naming *our* timeout and hiding theirs.
+The operator reasonably read it as a broken deploy and redeployed. It was also a
+coin flip: 50 ms of jitter either way changed the diagnosis. `TIMEOUT_MS` is 12 s
+for that reason, and an `AbortError` is rewritten to name the source and the
+budget rather than passing its own contentless message up.
+
+**2. A failure must pause the SOURCE, not be retried per page view.** A success
+is cached for an hour; a failure deliberately is not (a five-second blip must not
+be repeated back for an hour). With nothing in between, every wish-detail view
+paid the full timeout and added load to a failing upstream.
+`PRICES_FAILURE_COOLDOWN_SECONDS` (default 120) is that middle ground.
+
+Two properties of the cooldown are load-bearing and each fails silently:
+
+- **It is keyed by source, not by game.** An upstream that is down is down for
+  every game, so a per-game key still issues one request per wished game — the
+  cost this exists to remove. Per source is also what keeps Steam answering while
+  the aggregator is out.
+- **It is checked INSIDE the cache loader, never before the cache lookup.** A
+  price we already hold is still a good price and must keep being served while
+  its source is out; checking first would take prices away from exactly the games
+  we could still answer. `test/prices.test.js`'s "a price we ALREADY HOLD" spec
+  is the one that catches the wrong placement, and nothing else does.
+
+**A stale price is NOT reused today.** An expired cache entry is never a
+fallback — `cachedIf` refetches, the fetch throws, and the answer is
+`{available: false}`. The cache is also per process, so a deploy wipes it. Making
+last-known prices survive an outage would need persistent storage, which #679
+scoped out and which needs their terms read first (a minimum cache duration is
+documented; a maximum retention is not, and § 87b UrhG is the neighbouring
+question). If it is ever built, the `fetchedAt` line stops being a footnote and
+becomes the headline — a days-old price presented as current is a § 5a UWG
+misleading omission.
+
 ## Two things that are legal posture, not configuration
 
 - **No affiliate or commission links, ever** (operator decision 2026-08-07). It
