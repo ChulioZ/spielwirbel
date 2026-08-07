@@ -298,6 +298,25 @@ I18N.de = {
   'wish.noBase': 'Lege zuerst das Grundspiel in dieser Runde an.',
   'wish.tag': 'Wunschliste',
 
+  // Aktueller Preis eines Wunsches (#679). Die letzten drei Zeilen sind
+  // rechtlich gefordert, nicht dekorativ: Abrufzeitpunkt und Änderungshinweis
+  // gegen den Eindruck eines Live-Preises, die Quellenzeile wegen § 5a UWG
+  // (BGH I ZR 55/16) — bei einem Preisvergleich muss offenliegen, dass die
+  // Übersicht nur teilnehmende Shops umfasst.
+  'price.title': 'Aktueller Preis',
+  'price.inclShipping': 'inkl. Versand',
+  'price.plusShipping': 'zzgl. Versand',
+  'price.discount': 'statt {regular} · −{percent} %',
+  'price.shopIn': 'Händler in {country}',
+  'price.edition': 'Ausgabe: {title} ({lang})',
+  'price.offers': '{inStock} von {total} Angeboten verfügbar',
+  'price.viewOffers': 'Alle Angebote bei Brettspielpreise.de',
+  'price.viewStore': 'Im Steam Store ansehen',
+  'price.retrieved': 'Abgerufen am {when}',
+  'price.mayChange': 'Preise können sich geändert haben.',
+  'price.sourceBgp': 'Preisdaten von Brettspielpreise.de. Die Übersicht umfasst nur die dort gelisteten Shops — Händler zahlen für die Aufnahme, sie ist also nicht der gesamte Markt.',
+  'price.sourceSteam': 'Preisdaten aus dem Steam Store.',
+
   'sessions.rated': '{n} Spiele bewertet',
   'sessions.played': 'Gespielt',
   'sessions.cancelled': 'Abgebrochen',

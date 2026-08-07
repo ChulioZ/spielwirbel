@@ -276,6 +276,29 @@ made server-side and cached, as BGG's terms ask, and the app displays the
 required linked "Powered by BGG" logo in its footer. Leave the token unset and
 board-game search simply returns nothing.
 
+Wish-list prices (issue #679) are **off** unless `PRICES_ENABLED=true`: opening a
+wished-for game that carries a provider link then shows what it costs right now —
+board games through the
+[Brettspielpreise.de / BoardGamePrices](https://boardgameprices.co.uk/api/plugin)
+API (keyed on the BGG id already stored on the game), Steam games through the
+`price_overview` the storefront's `appdetails` response already carries. Both
+hops are made server-side and cached for an hour, as the aggregator's terms ask;
+only the game's id is transmitted, so no personal data leaves and the visitor's
+browser contacts neither. With the flag unset the route `404`s and no price
+section renders anywhere.
+
+`PRICES_DESTINATION` / `PRICES_CURRENCY` (default `DE`/`EUR`) are the fallback
+market for any UI locale with no mapping of its own — `de` maps to DE/EUR and
+`en` to GB/GBP. The aggregator supports exactly DK, SE, GB, DE and US as
+destinations; there is no AT or CH one, so Austrian and Swiss readers see German
+shipping estimates. `PRICES_SITENAME` (default `spielwirbel.app`) is the host we
+identify as, which is their attribution mechanism.
+
+There are deliberately **no affiliate or commission links, ever** (operator
+decision 2026-08-07). That is what keeps the operator non-commercial here and
+removes the ad-labelling duty (§ 5a Abs. 4 UWG); it is a legal posture, not a
+config switch, so don't add an affiliate parameter as a "harmless" follow-up.
+
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and
 `ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook (a

@@ -3764,6 +3764,31 @@ kbd {
 }
 .link-out--muted { color: var(--ink-soft); font-weight: 600; }
 
+/* Current price of a wished-for game (issue #679). The amount is the one number
+   the section exists for, so it leads; everything under it qualifies that number
+   and stays quiet. `--brand-dark` rather than `--brand`: this is text, and the
+   accent itself clears AA on only four of the eight themes
+   (.claude/rules/theme-derived-colors.md). */
+.gd-price__amount {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--brand-dark);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.gd-price__facts { margin-bottom: 10px; }
+/* The retrieval time, the may-have-changed note and the source disclosure. Small
+   and muted, never hidden: they are what keeps an hour-old price from reading as
+   a live one and what discloses that the comparison covers participating shops
+   only (§ 5a UWG). `--ink-soft` is the app's muted ink and clears AA on every
+   theme; don't fade this further to "tidy" the block. */
+.gd-price__note {
+  margin-top: 10px;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
 /* The picked provider match inside the link-provider sheet. */
 .link-match { font-size: var(--text-md); }
 /* Cover-override preview: the provider image the "Titelbild" toggle would apply,

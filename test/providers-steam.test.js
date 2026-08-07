@@ -132,3 +132,50 @@ test('imageHostAllowed only vouches for Steam CDN hosts', () => {
   // suffix-spoofing guard
   assert.equal(steam.imageHostAllowed('https://steamstatic.com.evil.com/x'), false);
 });
+
+/*
+ * price_overview, the field appdetails has always returned and the provider has
+ * always discarded (issue #679).
+ *
+ * PROVENANCE: captured live on 2026-08-07 from
+ *   store.steampowered.com/api/appdetails?appids=<id>&cc=de&l=german
+ * ELDEN RING (1245620) and Dota 2 (570, free). Two properties are real and
+ * load-bearing: the amounts are in MINOR units (5999 = 59,99 €), and a free or
+ * unreleased app carries NO price_overview at all rather than a zero.
+ */
+const PRICED = {
+  1245620: {
+    success: true,
+    data: {
+      name: 'ELDEN RING',
+      is_free: false,
+      price_overview: { currency: 'EUR', initial: 5999, final: 5999, discount_percent: 0, initial_formatted: '', final_formatted: '59,99€' },
+    },
+  },
+};
+const FREE = { 570: { success: true, data: { name: 'Dota 2', is_free: true } } };
+
+test('parsePrice reads price_overview and converts the minor units', () => {
+  const p = steam.parsePrice(PRICED, '1245620');
+  assert.equal(p.amount, 59.99);
+  assert.equal(p.currency, 'EUR');
+  assert.equal(p.discountPercent, 0);
+  assert.equal(p.regular, 59.99);
+});
+
+test('parsePrice reports a discount with the price it was struck from', () => {
+  const discounted = { 1: { success: true, data: { price_overview: { currency: 'EUR', initial: 5999, final: 2999, discount_percent: 50 } } } };
+  const p = steam.parsePrice(discounted, '1');
+  assert.equal(p.amount, 29.99);
+  assert.equal(p.regular, 59.99);
+  assert.equal(p.discountPercent, 50);
+});
+
+test('a free or unreleased app has no price at all — never 0,00 €', () => {
+  assert.equal(steam.parsePrice(FREE, '570'), null);
+  assert.equal(steam.parsePrice({ 1: { success: false } }, '1'), null);
+  assert.equal(steam.parsePrice(null, '1'), null);
+  assert.equal(steam.parsePrice({ 1: { success: true, data: { price_overview: {} } } }, '1'), null);
+  // A genuinely free-to-play title priced at 0 is still not a price to show.
+  assert.equal(steam.parsePrice({ 1: { success: true, data: { price_overview: { currency: 'EUR', final: 0, discount_percent: 0 } } } }, '1'), null);
+});

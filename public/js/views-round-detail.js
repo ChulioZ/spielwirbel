@@ -313,6 +313,58 @@ function openEditor(anchor, variant, title, build) {
 
 // =================== Game detail ===================
 
+// The price box for a wished-for game (#679), from GET …/games/:gid/prices.
+//
+// A top-level function rather than a closure inside showGameDetail so a spec can
+// render it straight from a payload (.claude/rules/testing-views-under-jsdom.md);
+// it needs nothing from the view but the answer.
+//
+// Three things here are legal requirements rather than presentation choices, and
+// each is invisible if it silently stops happening:
+//
+//  - `shippingKnown: false` means the amount is the product price ALONE. It is
+//    never labelled as a total — PAngV § 3/§ 6 wants the total including VAT and
+//    the concrete shipping cost, so an offer that cannot state shipping says
+//    "plus shipping" instead of pretending.
+//  - The retrieval time and the "may have changed" note are what keep an
+//    hour-old price from reading as a live one. Nothing in CI can detect an
+//    upstream that stopped updating; this line is the whole mitigation.
+//  - The source line names where the data comes from AND that the aggregator
+//    lists participating shops only. Withholding that about a price comparison
+//    is a § 5a UWG omission (BGH I ZR 55/16) — it is not a footnote we may drop
+//    to tidy the layout.
+function renderPriceSection(p) {
+  const sec = h(`<div class="section gd-price"><h2>${esc(t('price.title'))}</h2></div>`);
+  const amount = h(`<div class="gd-price__amount">${esc(fmtMoney(p.amount, p.currency))}</div>`);
+  sec.appendChild(amount);
+
+  const facts = [];
+  facts.push(t(p.shippingKnown ? 'price.inclShipping' : 'price.plusShipping'));
+  if (p.discountPercent > 0) {
+    facts.push(t('price.discount', { regular: fmtMoney(p.regular, p.currency), percent: p.discountPercent }));
+  }
+  // Whose shop it is. `destination` is "ships to here", not "the shop is here",
+  // so a DE query legitimately returns AT, CH and GR shops — naming the country
+  // is what stops one of those reading as a local offer.
+  if (p.country) facts.push(t('price.shopIn', { country: p.country }));
+  if (p.edition && p.edition.title) {
+    facts.push(t('price.edition', { title: p.edition.title, lang: p.edition.lang || '?' }));
+  }
+  if (typeof p.offerCount === 'number') {
+    facts.push(t('price.offers', { inStock: p.inStockCount, total: p.offerCount }));
+  }
+  sec.appendChild(h(`<div class="muted gd-price__facts">${esc(facts.join(' · '))}</div>`));
+
+  if (p.url) {
+    const label = p.source === 'steam' ? t('price.viewStore') : t('price.viewOffers');
+    sec.appendChild(h(`<a class="link-out" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(label)}</a>`));
+  }
+
+  const disclosure = p.source === 'steam' ? t('price.sourceSteam') : t('price.sourceBgp');
+  sec.appendChild(h(`<div class="muted gd-price__note">${esc(t('price.retrieved', { when: fmtDateTime(p.fetchedAt) }))} · ${esc(t('price.mayChange'))}<br>${esc(disclosure)}</div>`));
+  return sec;
+}
+
 async function showGameDetail(rid, gameId) {
   currentView = () => showGameDetail(rid, gameId);
   syncUrl(gamePath(rid, gameId));
@@ -878,6 +930,32 @@ async function showGameDetail(rid, gameId) {
     actionWrap.appendChild(complete);
   }
   app.appendChild(actionWrap);
+
+  // What it costs right now (#679) — the one question that turns a wish into a
+  // purchase, so it sits directly under "Ins Regal" rather than at the foot of
+  // the page.
+  //
+  // Only a wish, and only one carrying a provider link: the round already owns
+  // everything on the shelf, and a hand-typed wish has no id to ask about (a
+  // title search would quote a price for the wrong edition, which is worse than
+  // no price at all).
+  //
+  // An empty anchor holds the slot rather than a heading with a spinner in it:
+  // the whole feature is off by default, so on most instances this resolves to
+  // "nothing", and a heading that appears and then vanishes is worse than one
+  // that never appeared. Every failure — the route 404ing because PRICES_ENABLED
+  // is unset, the aggregator being down, nobody stocking the game — lands in the
+  // same place: the anchor is dropped and the page is exactly what it was.
+  if (game.wish && game.source && game.source.externalId) {
+    const priceAnchor = h('<div></div>');
+    app.appendChild(priceAnchor);
+    api('GET', `/api/rounds/${rid}/games/${gameId}/prices?lang=${encodeURIComponent(getLocale())}`)
+      .then((p) => {
+        if (!p || !p.available) return priceAnchor.remove();
+        priceAnchor.replaceWith(renderPriceSection(p));
+      })
+      .catch(() => priceAnchor.remove());
+  }
 
   // Sparse game (#256): one inviting panel that says why the page is bare and
   // offers the steps that fill it, instead of scattering half-empty widgets.

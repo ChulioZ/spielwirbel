@@ -103,3 +103,21 @@ function fmtDateTime(iso) {
 function fmtMonth(iso) {
   return new Date(iso).toLocaleString(localeTag(locale), { month: 'long', year: 'numeric' });
 }
+
+// Money, in the reader's locale and the upstream's own currency (#679).
+//
+// The currency comes from the price source, never from the locale: a German
+// reader looking at a British shop must see "49,89 £", not a number silently
+// relabelled as euros. An unknown or missing code would make
+// Intl.NumberFormat throw a RangeError and take the whole screen down over a
+// price label — the same reasoning localeTag() applies to an unknown locale — so
+// it degrades to the bare number instead.
+function fmtMoney(amount, currency) {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return '';
+  try {
+    return n.toLocaleString(localeTag(locale), { style: 'currency', currency });
+  } catch {
+    return n.toFixed(2);
+  }
+}

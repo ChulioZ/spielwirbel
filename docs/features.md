@@ -99,6 +99,12 @@ What the app does, in detail. For a short overview see the
   game's expansion list, bringing that game along if the round does not have it
   yet, so the expansion widens what the game can be drawn at rather than becoming
   a box of its own that nobody can play.
+  Where the instance has it switched on (`PRICES_ENABLED`), opening a wished game
+  that carries a provider link also shows **what it costs right now** — the
+  cheapest in-stock offer including shipping via Brettspielpreise.de for a board
+  game, the store price for a Steam one, with the time it was retrieved and a
+  link out. Read-only and server-side: no alerts, no stored prices, and no
+  affiliate links of any kind.
   A game is active, retired, completed or wished-for, never two at once, and all
   three lists are reached from the round hub's footer. Every row on those lists
   opens the game's own detail page, so a game keeps its full editing surface —

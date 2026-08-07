@@ -155,7 +155,9 @@ lib/
                      counts only, never a secret value and never personal data
   provider-cache.js  the shared 10-minute cache for provider hops (search,
                      detail, collection, cover refresh), so a repeated click
-                     or a debounced keystroke costs nothing upstream
+                     or a debounced keystroke costs nothing upstream. A caller
+                     may pass its own TTL for one hop — prices/ does, because
+                     its upstream requires an hour
   providers/         external game-database providers for the add-game lookup
     index.js         provider registry + image-host allowlist, the round's
                      enabled-provider decode, and cover resolution for a
@@ -175,6 +177,19 @@ lib/
     xbox.js          Xbox / Microsoft Store: search via the storefront
                      autosuggest API, detail via the public catalog service
                      (digital games)
+  prices/            what a wished-for game costs right now (issue #679).
+                     Deliberately NOT a sixth entry under providers/: those
+                     answer "which game is this?" and are wired into the
+                     add-game lookup and round.providers; a price source
+                     answers a different question and must reach neither.
+                     Off unless PRICES_ENABLED=true
+    index.js         dispatch on the game's stored source link, the hour-long
+                     cache, and the degrade-to-{available:false} contract
+    boardgameprices.js  Brettspielpreise.de / BoardGamePrices, keyed on the
+                     BGG id (board games): picks the reader's language edition
+                     and the cheapest in-stock offer whose shipping is known
+    steam.js         Steam, from the price_overview the detail hop already
+                     receives (digital games)
   routes/            Express routers, one per resource; mounted by app.js
                      above. Under lib/ so every backend concern lives in one
                      package and app.js never reaches upward out of its own
