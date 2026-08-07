@@ -1850,6 +1850,70 @@ module.exports = function repoContract(repo) {
     assert.equal(other.username, 'Slur42');
   });
 
+  test('a passkey resolves its account by credential id, and a blank id resolves nothing (#418)', async () => {
+    const cid = `cred-${Math.random().toString(36).slice(2)}`;
+    const user = await repo.createUser(userFields());
+    // updateUser replaces whole top-level keys, so the identities array is
+    // always written COMPLETE — never appended to.
+    await repo.updateUser(user.id, {
+      identities: [
+        { type: 'password', hash: 'argon2-hash' },
+        {
+          type: 'passkey',
+          credentialId: cid,
+          publicKey: 'cHVibGlj',
+          counter: 0,
+          transports: ['internal'],
+          name: 'MacBook',
+          createdAt: '2026-08-07T10:00:00.000Z',
+          lastUsedAt: null,
+        },
+      ],
+    });
+
+    assert.equal((await repo.getUserByCredentialId(cid)).id, user.id);
+    assert.equal(await repo.getUserByCredentialId('cred-nope'), null);
+
+    assert.equal(await repo.getUserByCredentialId(''), null);
+    assert.equal(await repo.getUserByCredentialId(null), null);
+    assert.equal(await repo.getUserByCredentialId(undefined), null);
+
+    const plain = await repo.createUser(userFields());
+    assert.equal(await repo.getUserByCredentialId(plain.id), null);
+  });
+
+  test('the credential lookup is scoped to type "passkey", not to any identity holding the id (#418)', async () => {
+    // lib/accounts.js documents `identities` as the credential-provider array
+    // and names 'apple'/'google' as the next entries. A social identity would
+    // naturally carry the provider's own subject id under some key — so the
+    // lookup matches on type AND id, never on the id alone.
+    //
+    // This is the assertion that makes the type discriminator load-bearing.
+    // Measured: with `type === 'passkey'` deleted, the other two passkey specs
+    // in this file stay GREEN (a password identity carries no credentialId, so
+    // it can never collide) and only this one goes red. Without it the guard
+    // would read as belt-and-braces and be a fair candidate for deletion.
+    const shared = `cred-${Math.random().toString(36).slice(2)}`;
+    const user = await repo.createUser(userFields());
+    await repo.updateUser(user.id, {
+      identities: [{ type: 'oauth-future', credentialId: shared, hash: null }],
+    });
+    assert.equal(await repo.getUserByCredentialId(shared), null);
+  });
+
+  test('removing a passkey makes its credential id unresolvable (#418)', async () => {
+    const cid = `cred-${Math.random().toString(36).slice(2)}`;
+    const user = await repo.createUser(userFields());
+    const passkey = { type: 'passkey', credentialId: cid, publicKey: 'cHVibGlj', counter: 3, transports: [], name: null, createdAt: '2026-08-07T10:00:00.000Z', lastUsedAt: null };
+    await repo.updateUser(user.id, { identities: [passkey] });
+    assert.equal((await repo.getUserByCredentialId(cid)).id, user.id);
+
+    // Deleting a passkey is a rewrite of the array, so the lookup must stop
+    // resolving — otherwise a removed credential would still log its owner in.
+    await repo.updateUser(user.id, { identities: [{ type: 'password', hash: 'argon2-hash' }] });
+    assert.equal(await repo.getUserByCredentialId(cid), null);
+  });
+
   test('updateUser replaces whole top-level keys; deleteUser reports found/again', async () => {
     const user = await repo.createUser(userFields());
     const tokens = [{ tokenHash: 'th', createdAt: 't', expiresAt: '2027-01-01T00:00:00.000Z' }];

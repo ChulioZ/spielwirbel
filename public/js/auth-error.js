@@ -44,6 +44,24 @@ const AUTH_ERROR_KEYS = {
     confirm_mismatch: 'konto.delete.mismatch',
     tenant_shared: 'konto.delete.tenantShared',
   },
+  // Passkey login (#418). `invalid_credentials` is deliberately the SAME answer
+  // for an unknown credential, a bad challenge and a refused assertion — the
+  // route cannot distinguish them without telling a stranger that the
+  // credential they tried is real — so it needs wording that does not blame the
+  // password the user never typed.
+  passkeyLogin: {
+    invalid_credentials: 'auth.passkey.error.noMatch',
+    account_disabled: 'auth.error.accountDisabled',
+  },
+  // Registering a passkey from the Konto screen (#418).
+  passkey: {
+    quota_passkeys: 'konto.passkey.error.quota',
+    passkey_exists: 'konto.passkey.error.exists',
+    passkey_taken: 'konto.passkey.error.taken',
+    invalid_passkey: 'konto.passkey.error.invalid',
+    invalid_challenge: 'konto.passkey.error.invalid',
+    demo_forbidden: 'konto.passkey.error.demo',
+  },
   // 'forgot' and 'resend' have no per-form codes: their handlers always answer
   // ok (anti-enumeration), so only the cross-cutting codes below can reach them.
 };

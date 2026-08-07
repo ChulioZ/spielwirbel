@@ -6,7 +6,7 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "mkdir -p .devdata && DATA_DIR=.devdata ACCOUNTS_ENABLED=true SESSION_SECRET=dev-only-not-a-secret ADMIN_PASSWORD=dev-only-not-a-secret DEMO_ENABLED=true PRICES_ENABLED=true PORT=3100 npm start"
+        "mkdir -p .devdata && DATA_DIR=.devdata ACCOUNTS_ENABLED=true SESSION_SECRET=dev-only-not-a-secret ADMIN_PASSWORD=dev-only-not-a-secret DEMO_ENABLED=true PRICES_ENABLED=true WEBAUTHN_RP_ID=localhost PORT=3100 npm start"
       ],
       "port": 3100
     },

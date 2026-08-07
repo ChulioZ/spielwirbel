@@ -89,6 +89,16 @@ async function showAccount() {
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.pw.title'))}</h2>`));
   app.appendChild(buildPasswordForm());
 
+  // Below the password form on purpose: a passkey is an ADDITIONAL credential,
+  // so it reads as an addition to the account's sign-in rather than as a
+  // replacement for the thing above it. Also below the demo return, for the
+  // same reason the password form is — a demo holds no password identity and
+  // self-erases on a TTL, so a passkey registered against one would point at an
+  // account that is about to vanish while the platform keychain keeps offering
+  // it forever. (The demo branch above has already returned by here.)
+  app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.passkey.title'))}</h2>`));
+  app.appendChild(buildPasskeySection());
+
   // Last, and visually separated: the one irreversible thing on this screen
   // (#419). A demo returned above — its erasure is „Demo beenden“ in the account
   // menu, and it holds no password to re-authenticate with anyway.
@@ -414,6 +424,156 @@ function buildPasswordForm() {
   });
 
   return form;
+}
+
+/* The passkey list plus its "add" button (#418).
+
+   The list is fetched here rather than ridden along on /me: it is the only
+   screen that shows it, and keeping it off the projection every request reads
+   means an account's credential list is not carried through the whole app. */
+function buildPasskeySection() {
+  const wrap = h(`<div class="konto-notify">
+      <p class="muted konto-notify__intro">${esc(t('konto.passkey.intro'))}</p>
+      <p class="field__hint muted">${esc(t('konto.passkey.privacy'))}</p>
+      <div class="ds-list konto-passkeys"></div>
+      <p class="konto-error" hidden></p>
+      <button class="btn btn--primary konto-passkeys__add" type="button">${iconText('ti-fingerprint', t('konto.passkey.add'))}</button>
+    </div>`);
+
+  const list = wrap.querySelector('.konto-passkeys');
+  const err = wrap.querySelector('.konto-error');
+  const add = wrap.querySelector('.konto-passkeys__add');
+
+  // A browser that cannot run the ceremony gets an explanation instead of a
+  // button that will always fail. The LIST still renders — passkeys added on a
+  // phone must remain manageable from a desktop that has no authenticator.
+  if (!passkeysSupported()) {
+    add.remove();
+    wrap.insertBefore(h(`<p class="muted">${esc(t('konto.passkey.unsupported'))}</p>`), list);
+  }
+
+  const render = (passkeys) => {
+    list.innerHTML = '';
+    if (!passkeys.length) {
+      list.appendChild(h(`<p class="muted">${esc(t('konto.passkey.empty'))}</p>`));
+      return;
+    }
+    passkeys.forEach((p) => list.appendChild(renderPasskeyRow(p, render, err)));
+  };
+
+  accountApi('GET', '/passkeys')
+    .then((data) => render(data.passkeys || []))
+    .catch((ex) => { if (ex.message !== 'auth') setKontoError(err, t('auth.error.network')); });
+
+  if (add) {
+    add.addEventListener('click', async () => {
+      err.hidden = true;
+      add.disabled = true;
+      try {
+        const start = await accountApi('POST', '/passkeys/options', {});
+        // Opens the platform's own sheet (Touch ID, Windows Hello, a hardware
+        // key, or the QR flow to another device).
+        const credential = await createPasskey(start.options);
+        const done = await accountApi('POST', '/passkeys', {
+          response: credential,
+          challenge: start.challenge,
+        });
+        render(done.passkeys || []);
+        toast(t('konto.passkey.done'));
+      } catch (ex) {
+        // Dismissing the sheet is a deliberate cancel, not an error.
+        if (!isPasskeyCancel(ex) && ex.message !== 'auth') {
+          setKontoError(err, t(authErrorKey('passkey', ex.message)));
+        }
+      }
+      add.disabled = false;
+    });
+  }
+
+  return wrap;
+}
+
+/* One passkey. The row is an inert div, so it takes `ds-row--static`: it does
+   nothing itself and `.ds-row` otherwise promises a click target it does not
+   have (.claude/rules/ds-row-is-a-click-target.md). The two buttons at its
+   right edge carry the whole affordance, which is also why the row can never
+   become an anchor — a <button> inside an <a> is invalid HTML.
+
+   NB: don't spell the opening tag literally in this comment — the scan in
+   test/ds-row-affordance.test.js reads the file as text and would match it,
+   failing on a row that does not exist. */
+function renderPasskeyRow(passkey, render, err) {
+  const used = passkey.lastUsedAt
+    ? t('konto.passkey.lastUsed', { date: fmtDate(passkey.lastUsedAt) })
+    : t('konto.passkey.neverUsed');
+  const row = h(`<div class="ds-row ds-row--static">
+      <div class="ds-row__main">
+        <span class="konto-passkey__name">${esc(passkey.name || t('konto.passkey.unnamed'))}</span>
+        <span class="konto-passkey__meta muted">${esc(t('konto.passkey.added', { date: fmtDate(passkey.createdAt) }))} · ${esc(used)}</span>
+      </div>
+      <div class="ds-row__meta">
+        <button class="link-btn" type="button" data-act="rename">${esc(t('konto.passkey.rename'))}</button>
+        <button class="link-btn konto-passkey__del" type="button" data-act="remove">${esc(t('konto.passkey.remove'))}</button>
+      </div>
+    </div>`);
+
+  /* `body` must be left UNDEFINED for a request that sends none. accountApi
+     serializes anything that is not `undefined`, so passing null would send the
+     literal `null` — and express.json() runs in strict mode, which accepts only
+     an object or an array at the top level, so the DELETE would 400
+     `entity.parse.failed` and the passkey would never be removed. */
+  const call = async (method, body, toastKey) => {
+    err.hidden = true;
+    try {
+      const data = await accountApi(method, `/passkeys/${encodeURIComponent(passkey.credentialId)}`, body);
+      render(data.passkeys || []);
+      toast(t(toastKey));
+    } catch (ex) {
+      if (ex.message !== 'auth') setKontoError(err, t(authErrorKey('passkey', ex.message)));
+    }
+  };
+
+  // Click "Umbenennen" → inline input; Enter/blur saves, Escape cancels. The
+  // same shape the game-title, member-name and round-name editors use — native
+  // prompt() lives only in the operator panel, which is deliberately outside
+  // this design system.
+  const nameEl = row.querySelector('.konto-passkey__name');
+  row.querySelector('[data-act=rename]').addEventListener('click', () => {
+    if (!nameEl.isConnected) return; // an editor is already open on this row
+    const input = h(`<input class="input konto-passkey__input" aria-label="${esc(t('konto.passkey.renamePrompt'))}" />`);
+    input.value = passkey.name || '';
+    nameEl.replaceWith(input);
+    input.focus();
+    input.select();
+    let handled = false;
+    const commit = () => {
+      if (handled) return;
+      handled = true;
+      const val = input.value.trim();
+      // An empty field is a deliberate clear, not a refusal: the server stores
+      // null and the row falls back to the unnamed label. Unlike a member name,
+      // a passkey has a sensible nameless state.
+      if (val === (passkey.name || '')) {
+        input.replaceWith(nameEl); // nothing changed
+        return;
+      }
+      call('PATCH', { name: val }, 'konto.passkey.renamed');
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      else if (e.key === 'Escape') { handled = true; input.replaceWith(nameEl); }
+    });
+  });
+
+  row.querySelector('[data-act=remove]').addEventListener('click', () => {
+    // The confirm says the account stays usable — removing the last passkey is
+    // safe here precisely because the password was never replaced.
+    if (!confirm(t('konto.passkey.removeConfirm'))) return;
+    call('DELETE', undefined, 'konto.passkey.removed');
+  });
+
+  return row;
 }
 
 function setKontoError(el, message) {

@@ -2029,6 +2029,24 @@ body.auth-screen .topbar__context { display: none; }
    two links to 404s (.claude/rules/hidden-attribute-vs-display-rule.md). */
 .auth__terms[hidden] { display: none; }
 
+/* The passkey login alternative (#418). Ships `hidden` and is revealed only
+   where window.PublicKeyCredential exists. Unlike .auth__terms above, this
+   block DOES declare its own `display`, so the paired [hidden] rule is
+   load-bearing rather than a pin: without it the attribute loses to the author
+   rule and every browser is offered a button whose ceremony cannot run
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.auth__alt { display: block; margin-top: 16px; }
+.auth__alt[hidden] { display: none; }
+/* A rule with the label sitting in the gap, drawn with two flex-grown borders
+   rather than a pseudo-element pair, so it centres at any label length. */
+.auth__or {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 0 12px; color: var(--ink-soft); font-size: var(--text-sm);
+}
+.auth__or::before, .auth__or::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+
 /* ---- Logged-out landing page (issue #322) ---- */
 /* Renders in accounts mode for a logged-out visitor at GET /. Reuses the
    .auth-screen body class (which hides the top-bar home/context/feedback), but
@@ -2595,6 +2613,26 @@ body.auth-screen .terms-banner { display: none; }
 .konto-notify { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
 .konto-notify__intro { margin: 0 0 2px; }
 .konto-notify__row { flex-wrap: nowrap; }
+/* Passkeys (#418). The rows are .ds-row + .ds-row--static — they do nothing
+   themselves, and the two link-btns at the right edge carry the whole
+   affordance (.claude/rules/ds-row-is-a-click-target.md). */
+.konto-passkeys { gap: 10px; }
+.konto-passkey__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.konto-passkey__meta { display: block; font-size: var(--text-sm); }
+/* The inline rename editor replaces the name span in place, so it must not
+   stretch the row's whole main column. */
+.konto-passkey__input { max-width: 260px; }
+.konto-passkey__del { color: var(--danger); }
+.konto-passkeys__add { align-self: flex-start; }
+/* .ds-row is a nowrap line sized for a comfortable width, and this row's main
+   side carries two dates. On a phone that leaves the actions squeezed against a
+   four-line block, so let the row wrap and give them their own line. Compounded
+   to (0,2,0) so it beats .ds-row outright rather than tying and depending on
+   source order (.claude/rules/ds-row-is-a-click-target.md). */
+@media (max-width: 520px) {
+  .konto-passkeys .ds-row { flex-wrap: wrap; row-gap: 8px; }
+  .konto-passkeys .ds-row__meta { margin-left: auto; }
+}
 /* Self-service account deletion (#419). The one irreversible control on this
    screen, so it is set apart rather than styled like the forms above it: its own
    heading tone plus a tinted, outlined block. Every colour is mixed from

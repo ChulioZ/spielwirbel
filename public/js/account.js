@@ -400,6 +400,18 @@ function showLogin() {
       </div>
       <p class="auth__error" hidden></p>
       <button class="btn btn--primary btn--block" type="submit">${esc(t('auth.login.submit'))}</button>
+      <!-- The passkey path (#418). Ships hidden and is revealed only where
+           window.PublicKeyCredential exists, so a browser that cannot run the
+           ceremony is offered no control rather than a broken one. .auth__alt
+           carries its own display, so the paired [hidden] rule in styles.css is
+           what makes the attribute bite
+           (.claude/rules/hidden-attribute-vs-display-rule.md).
+           NB: no backticks in this comment — it sits inside a template
+           literal, and one would terminate the string. -->
+      <div class="auth__alt" id="passkeyAlt" hidden>
+        <p class="auth__or"><span>${esc(t('auth.passkey.or'))}</span></p>
+        <button class="btn btn--block" type="button" id="passkeyLogin">${iconText('ti-fingerprint', t('auth.passkey.login'))}</button>
+      </div>
       <div class="auth__links">
         <button class="link-btn" type="button" id="toForgot">${esc(t('auth.login.forgot'))}</button>
         <button class="link-btn" type="button" id="toRegister">${esc(t('auth.login.toRegister'))}</button>
@@ -411,6 +423,7 @@ function showLogin() {
     const submit = card.querySelector('button[type=submit]');
     card.querySelector('#toForgot').addEventListener('click', showForgot);
     card.querySelector('#toRegister').addEventListener('click', showRegister);
+    wirePasskeyLogin(card);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       authError(card).hidden = true;
@@ -433,6 +446,52 @@ function showLogin() {
     });
     ident.focus();
   }, '/login');
+}
+
+/* The usernameless passkey login (#418).
+
+   No e-mail is typed and none is sent: the server answers the same options to
+   everyone, and the authenticator decides which credential it holds for this
+   site. That is the whole reason the flow is built this way — an e-mail-first
+   passkey login would have to answer "does this address have credentials?",
+   which is exactly the question register and forgot-password are carefully
+   built never to answer (.claude/rules/user-accounts.md). */
+function wirePasskeyLogin(card) {
+  const alt = card.querySelector('#passkeyAlt');
+  const btn = card.querySelector('#passkeyLogin');
+  if (!alt || !btn || !passkeysSupported()) return;
+  alt.hidden = false;
+
+  btn.addEventListener('click', async () => {
+    authError(card).hidden = true;
+    btn.disabled = true;
+    try {
+      const start = await authFetch('/passkeys/login/options', {});
+      if (!start.ok) throw new Error(start.data.error || 'network');
+
+      // Opens the platform's own sheet; resolves once the user has approved.
+      const credential = await getPasskey(start.data.options);
+
+      const done = await authFetch('/passkeys/login', {
+        response: credential,
+        challenge: start.data.challenge,
+      });
+      if (!done.ok) throw new Error(done.data.error || 'network');
+
+      setTokens(done.data.accessToken, done.data.refreshToken);
+      // A different account than the cache's owner may be signing in on this
+      // browser — its persisted round data must not leak across.
+      invalidateRoundCache();
+      accountUser = done.data.user || null;
+      enterApp();
+      return;
+    } catch (ex) {
+      // Dismissing the OS sheet is a deliberate cancel, not a failure — showing
+      // an error for it would blame the user for changing their mind.
+      if (!isPasskeyCancel(ex)) setError(card, t(authErrorKey('passkeyLogin', ex.message)));
+    }
+    btn.disabled = false;
+  });
 }
 
 function showRegister() {

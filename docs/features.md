@@ -293,6 +293,20 @@ What the app does, in detail. For a short overview see the
   unlock nothing; the app contains no payment code and embeds no third-party
   widget — nothing is loaded from (or sent to) the donation platform until the
   link is clicked. With `DONATE_URL` unset the button does not exist.
+- **Passkeys** – *accounts mode only* (issue #418). Sign in with a fingerprint,
+  face or device PIN instead of a password. A passkey is an **additional**
+  credential, never a replacement: the password and the e-mail reset stay
+  exactly as they are, so losing every device cannot lock anyone out. Set them
+  up under **Konto → Passkeys** (several per account, each renamable and
+  removable); the login screen then offers **"Mit Passkey anmelden"**, which
+  needs **no e-mail address typed at all** — the device offers whichever
+  credential it holds for the site. Every device class works: Touch ID on a Mac,
+  Windows Hello, Android and iOS biometrics, credentials synced through iCloud
+  Keychain / Google Password Manager / 1Password, roaming hardware keys, and the
+  cross-device QR flow (register on a laptop, sign in on a phone). **No
+  biometric data ever reaches the server** — the fingerprint or face never
+  leaves the device, and only a public key, which can unlock nothing, is stored.
+  The button appears only on browsers that support WebAuthn.
 - **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a
