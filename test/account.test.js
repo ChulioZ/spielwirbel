@@ -1172,8 +1172,10 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // `notifyRoundInvitations`/`notifyFriendRequests` (#618) ride on every account
   // too, as real booleans: an account predating them carries neither key, and the
   // projection is what guarantees the client never has to re-derive the default.
+  // `bgStats` (#485) rides on every account too, and defaults the other way —
+  // see the opt-in spec below.
   assert.deepEqual(Object.keys(res.body).sort(),
-    ['acceptedTermsRevision', 'bggUsername', 'createdAt', 'demo', 'demoExpiresAt',
+    ['acceptedTermsRevision', 'bgStats', 'bggUsername', 'createdAt', 'demo', 'demoExpiresAt',
       'email', 'emailVerified', 'id', 'notifyFriendRequests', 'notifyRoundInvitations',
       'termsRevision', 'username']);
   assert.equal(res.body.demo, false);
@@ -1181,6 +1183,57 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
 
   // An unauthenticated caller gets nowhere near it.
   assert.equal((await request(app).patch('/api/account/me').send({ bggUsername: 'x' })).status, 401);
+});
+
+/* ------------------- the BG Stats push opt-in (#485) ----------------------- */
+
+test('the BG Stats opt-in is OFF until the account turns it on (#485)', async () => {
+  const acc = await freshAccount('bgstats-optin@example.com');
+
+  // Off by default, and a real boolean rather than an absent key — the whole
+  // point of the preference is that the results screen shows no BG Stats link
+  // to the overwhelming majority of accounts that do not use the app.
+  assert.equal((await getMe(acc.accessToken)).body.bgStats, false);
+
+  assert.equal((await patchMe(acc.accessToken, { bgStats: true })).body.bgStats, true);
+  assert.equal((await getMe(acc.accessToken)).body.bgStats, true, 'and it persists');
+  assert.equal((await patchMe(acc.accessToken, { bgStats: false })).body.bgStats, false);
+});
+
+test('#485: an account predating the field reads as OFF, not as an opt-out', async () => {
+  const acc = await freshAccount('bgstats-legacy@example.com');
+
+  // A real legacy row: the key is absent, not false. updateUser is Object.assign
+  // and cannot remove a key, so go through the store for the genuine shape.
+  const record = store.data.users.find((u) => u.id === acc.uid);
+  delete record.bgStats;
+  store.saveData();
+  assert.equal('bgStats' in
+    store.data.users.find((u) => u.id === acc.uid), false, 'the key is really gone');
+
+  // This is the ONLY spec that can see the difference between `=== true` and the
+  // `!== false` shape the two notification opt-outs next to it use — every other
+  // account in this suite is created WITH the key, so both readings agree for
+  // them. Written after the break-on-purpose loop found the projection could be
+  // flipped to `!== false` with the whole suite still green: every account
+  // registered before #485 would then have been offered a BG Stats link nobody
+  // switched on. (.claude/rules/break-the-code-on-purpose.md)
+  assert.equal((await getMe(acc.accessToken)).body.bgStats, false);
+});
+
+test('a non-boolean BG Stats opt-in is refused and writes nothing (#485)', async () => {
+  const acc = await freshAccount('bgstats-strict@example.com');
+  await patchMe(acc.accessToken, { bgStats: true });
+
+  // The projection reads the stored value as `=== true`, so a stored 'true' or
+  // 1 would be accepted on the way in and read back as OFF forever — a toggle
+  // the user switched on that never takes effect anywhere.
+  for (const bad of ['true', 1, null, {}]) {
+    const res = await patchMe(acc.accessToken, { bgStats: bad });
+    assert.equal(res.status, 400, `${JSON.stringify(bad)} must be refused`);
+    assert.equal(res.body.error, 'invalid_bgstats_pref');
+  }
+  assert.equal((await getMe(acc.accessToken)).body.bgStats, true, 'a refusal writes nothing');
 });
 
 /* ---------------------- terms-change notice (#521) ------------------------- */

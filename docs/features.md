@@ -222,6 +222,13 @@ What the app does, in detail. For a short overview see the
   optional follow-up step afterwards — or
   cancel the session if nothing appealed. Sessions can be deleted later, and a
   single game can be removed from a session's results.
+- **Push a play to BG Stats** – a finished session can be handed to
+  [BG Stats](https://www.bgstatsapp.com/) as a play: the game, the date, who took
+  part and who won, as one link the user taps on their own device (nothing is
+  sent server-side, and ratings deliberately do not travel — BG Stats has no
+  per-player rating field). Off by default and enabled per account under
+  **Konto → BG Stats**, because a website cannot tell whether the app is
+  installed and the push happens on the tapping person's own device.
 - **Ratings on demand** – a game's average is always computed live from all
   session votes, so deleting a session automatically corrects every average.
 - **Designs** – per round, pick a colour scheme (page tone + accent); the

@@ -301,6 +301,9 @@ public/
     session-share.js the plain-text summary behind the results screen's „Teilen"
                      button — built from the view model the screen just rendered,
                      so the two cannot drift (issue #526)
+    bgstats.js       builds the BG Stats createPlay link a finished session can
+                     be handed to — one play per URL, nothing sent server-side
+                     (issue #485)
     recap.js         the round's taste record behind the Pokale tab's Rückblick:
                      best/worst rated, the most divisive game and each member's
                      favourite, all derived from session votes (issue #484)

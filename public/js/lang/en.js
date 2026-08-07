@@ -614,6 +614,7 @@ I18N.en = {
   'result.reset': 'Reset',
   'result.winners': 'Winners: {names}',
   'result.playedNoWinner': 'Played (no winner recorded)',
+  'result.bgStats': 'Send to BG Stats',
   'result.toast.saved': 'Result saved',
   'result.toast.reset': 'Reset done',
   'result.deleteSession': 'Delete session',
@@ -859,6 +860,13 @@ I18N.en = {
   'konto.bgg.submit': 'Save',
   'konto.bgg.done': 'BoardGameGeek account linked.',
   'konto.bgg.cleared': 'Link removed.',
+
+  'konto.bgstats.title': 'BG Stats',
+  'konto.bgstats.intro': 'BG Stats is an app many groups keep their play log in. If you use it, we show a link on a finished session\'s results screen that sends the play across — the game, the date and the names of everyone who played.',
+  'konto.bgstats.label': 'Show the BG Stats link',
+  'konto.bgstats.hint': 'We send nothing ourselves: the link only opens when you tap it, and BG Stats then asks how to match the game and the players. On Android you need to turn on “Open supported links” in BG Stats\' “Open by default” settings, or the link lands in a browser instead.',
+  'konto.bgstats.on': 'BG Stats link shown.',
+  'konto.bgstats.off': 'BG Stats link hidden.',
   // E-mail for inbox items (#618)
   'konto.notify.title': 'Notifications',
   'konto.notify.intro': 'We e-mail you when someone needs an answer from you — at most one message an hour. We stay quiet about everything else.',

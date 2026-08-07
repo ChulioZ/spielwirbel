@@ -605,6 +605,7 @@ I18N.de = {
   'result.reset': 'Zurücksetzen',
   'result.winners': 'Gewonnen: {names}',
   'result.playedNoWinner': 'Gespielt (kein Ergebnis eingetragen)',
+  'result.bgStats': 'An BG Stats übergeben',
   'result.toast.saved': 'Ergebnis gespeichert',
   'result.toast.reset': 'Zurückgesetzt',
   'result.deleteSession': 'Session löschen',
@@ -850,6 +851,13 @@ I18N.de = {
   'konto.bgg.submit': 'Speichern',
   'konto.bgg.done': 'BoardGameGeek-Konto verknüpft.',
   'konto.bgg.cleared': 'Verknüpfung entfernt.',
+
+  'konto.bgstats.title': 'BG Stats',
+  'konto.bgstats.intro': 'BG Stats ist eine App, in der viele Gruppen ihre gespielten Partien führen. Wenn du sie nutzt, blenden wir auf der Ergebnisseite einer beendeten Session einen Link ein, der die Partie dorthin übergibt — mit Spiel, Datum und den Namen der Mitspielenden.',
+  'konto.bgstats.label': 'Link zu BG Stats anzeigen',
+  'konto.bgstats.hint': 'Wir schicken nichts von uns aus: Der Link öffnet sich erst, wenn du ihn antippst, und BG Stats fragt dann noch, wie Spiel und Personen zugeordnet werden. Auf Android musst du in den Einstellungen von BG Stats unter „Standardmäßig öffnen“ die Option „Unterstützte Links öffnen“ aktivieren, sonst landet der Link im Browser.',
+  'konto.bgstats.on': 'BG Stats-Link wird angezeigt.',
+  'konto.bgstats.off': 'BG Stats-Link ausgeblendet.',
   // E-Mail zu Postfach-Einträgen (#618)
   'konto.notify.title': 'Benachrichtigungen',
   'konto.notify.intro': 'Wir schicken dir eine E-Mail, wenn jemand etwas von dir möchte — höchstens eine pro Stunde. Für alles andere melden wir uns nicht.',
