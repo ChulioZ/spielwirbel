@@ -34,10 +34,16 @@ silver/bronze are intentionally fixed — they encode meaning, not theme.
 ## `--brand` ON a brand tint does not clear AA — reach for `--brand-dark` (#633)
 
 The natural way to draw an accent chip is `background: var(--brand-tint); color:
-var(--brand)`. Measured across all eight themes, that lands at **4.28–4.96:1** —
-so four of the eight (Sonnenuntergang 4.28, Salbei 4.37, Pfirsich 4.37, Sand
-4.38) sit **below the 4.5 text bar**, while the other four pass. `--brand-dark`
-on the same tint is 5.80–6.57 everywhere, for free.
+var(--brand)`. Measured across all eight themes, that lands at **4.33–4.92:1** —
+so four of the eight (Salbei 4.33, Standard 4.34, Sand 4.36, Pfirsich 4.38) sit
+**below the 4.5 text bar**, while the other four pass. `--brand-dark` on the same
+tint is 5.84–6.51 everywhere, for free.
+
+(Those numbers were re-measured for #544's oklab switch; the ones here before it
+read 4.28–4.96 / 5.80–6.57 and named a theme, "Sonnenuntergang", that this app
+has never had — the failing accent is **Standard**. The conclusion is unchanged
+in both cases, which is exactly why the wrong name survived: nobody re-derives a
+number they agree with.)
 
 Two things make this worth writing down rather than leaving to a measurement:
 
@@ -56,9 +62,12 @@ rather than to percentages a retune could raise past what was measured.
 
 **Reuse the prepared tints rather than minting a mix.** `--brand-tint-soft` *is*
 `color-mix(… var(--brand) 7%, var(--surface))` and `--brand-tint` the 13% one, so
-a new tinted surface that spells its own `color-mix` adds a fresh srgb mix for
-#544's oklab migration to chase while resolving to a colour that already had a
-name.
+a new tinted surface that spells its own `color-mix` resolves to a colour that
+already had a name — and adds one more mix to keep in the right interpolation
+space. **Every derivation in this app interpolates `in oklab`** (#544, enforced
+by `test/design-tokens.test.js`); the percentage you copy from an sRGB-era
+example will not mean what it meant there. See
+`.claude/rules/color-mix-interpolation-space.md`.
 
 Also note: the page backdrop (soft accent glow + paper grain) lives entirely in
 the `body` rule in `styles.css`. There is no JS texture generation anymore —

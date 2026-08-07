@@ -17,7 +17,9 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { CSS, RULES, bodyOf } = require('./support/css');
+const fs = require('node:fs');
+const path = require('node:path');
+const { CSS, RULES, bodyOf, ROOT: SUPPORT_ROOT } = require('./support/css');
 
 const ROOT = bodyOf(':root');
 const decls = (prop) => [...CSS.matchAll(new RegExp(`${prop}:\\s*([^;]+);`, 'g'))].map((m) => m[1].trim());
@@ -199,6 +201,47 @@ test('the sheet backdrop derives from --ink rather than repeating its value', ()
     body, /background:\s*color-mix\([^)]*var\(--ink\)/,
     'the backdrop must be a color-mix on --ink; a literal rgba() copy goes stale when --ink is retuned',
   );
+});
+
+/* Every derivation interpolates in oklab (#544). The count of srgb mixes had
+   grown 31 -> 37 -> 39 between the audit finding and the fix, purely because
+   nothing stopped a new tone being minted in the old space — so the migration
+   is worth little without something that keeps it migrated. */
+test('every color-mix() derives in oklab, across all four surfaces', () => {
+  /* An ALLOWLIST, not a ban on the string "srgb". A denylist passes for
+     `in oklch`, `in hsl`, `in lab` and a malformed `color-mix(var(--a), …)`
+     alike — the same enumeration hole `.claude/rules/ci-aggregate-gate.md`
+     records, where a guard could only see the bad states someone had thought
+     of. Asserting what each mix MUST say has no such gap.
+
+     oklab and not oklch, deliberately: every mix in this app has at least one
+     achromatic or near-achromatic endpoint (#000, #fff, --surface, --page-bg,
+     --ink, transparent, the stage's #201a15 / #f7f2e9), so none of them travels
+     between two distinct hues. A neutral endpoint has no meaningful hue for
+     oklch to interpolate toward, and forcing one would hold chroma up through a
+     mix whose whole purpose is to drop it — which is how you get a "tinted"
+     grey that is actually saturated. If a genuinely bi-chromatic mix is ever
+     added, that is the moment to revisit this, not before. */
+  const SURFACES = ['public/styles.css', 'public/kontakt.html', 'public/login.html', 'lib/faq.js'];
+  const offenders = [];
+  let total = 0;
+  for (const rel of SURFACES) {
+    // Comments are stripped because this file's own :root comment discusses the
+    // sRGB it replaced — .claude/rules/css-text-assertions-strip-comments.md.
+    const src = fs.readFileSync(path.join(SUPPORT_ROOT, rel), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+    const mixes = [...src.matchAll(/color-mix\(\s*([^,]*),/g)];
+    // Anti-vacuous: a surface that stopped declaring any mix would otherwise
+    // satisfy this test by having nothing to check, per surface and never over
+    // the union (the floor `standalone-page-brand.test.js` gets right).
+    assert.ok(mixes.length > 0, `${rel} declares no color-mix() at all — has it moved?`);
+    total += mixes.length;
+    for (const m of mixes) {
+      if (m[1].trim() !== 'in oklab') offenders.push(`${rel}: color-mix(${m[1].trim()}, …)`);
+    }
+  }
+  assert.deepEqual(offenders, [], 'these mixes do not interpolate in oklab');
+  assert.ok(total >= 45, `expected the full set of derivations, found only ${total}`);
 });
 
 /* Retired with the platform/duration/type tags in #242. They outlived the
