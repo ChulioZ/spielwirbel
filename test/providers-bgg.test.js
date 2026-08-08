@@ -387,15 +387,22 @@ test('collection() excludes expansions from the OWNED shelf only (#664)', async 
 
   await bgg.collection('someone', 'own');
   assert.equal(calls[0].searchParams.get('excludesubtype'), 'boardgameexpansion');
+  assert.equal(calls.length, 1, 'the owned shelf needs no expansion probe (#702)');
   // The wishlist is where an expansion is exactly what the group means to record
   // ("we own Catan, we want Seefahrer"), so it must NOT be filtered out.
   await bgg.collection('someone', 'wishlist');
   assert.equal(calls[1].searchParams.get('wishlist'), '1');
   assert.equal(calls[1].searchParams.get('excludesubtype'), null);
+  // …and a SECOND, subtype-scoped request marks which items are expansions,
+  // because the main body's subtype attribute lies (#702). Same shelf, no stats.
+  assert.equal(calls.length, 3);
+  assert.equal(calls[2].searchParams.get('wishlist'), '1');
+  assert.equal(calls[2].searchParams.get('subtype'), 'boardgameexpansion');
+  assert.equal(calls[2].searchParams.get('stats'), null);
   // An unrecognised status still falls back to the owned shelf, filter included.
   await bgg.collection('someone', '__proto__');
-  assert.equal(calls[2].searchParams.get('own'), '1');
-  assert.equal(calls[2].searchParams.get('excludesubtype'), 'boardgameexpansion');
+  assert.equal(calls[3].searchParams.get('own'), '1');
+  assert.equal(calls[3].searchParams.get('excludesubtype'), 'boardgameexpansion');
 });
 
 test('parseThing links an expansion under its own BGG path', () => {

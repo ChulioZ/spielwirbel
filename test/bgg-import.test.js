@@ -438,13 +438,15 @@ test('the wishlist import asks BGG for wishlist=1 and creates wishes, silently',
   const round = await makeRound(a.token);
   await link(a.token, 'GamerWish');
 
-  const urls = stubBgg(THREE);
+  const urls = stubBggRouted({ collection: THREE });
   const list = await request(app)
     .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`)
     .set(auth(a.token));
   assert.equal(list.status, 200);
   assert.deepEqual(list.body.games.map((g) => g.title), ['CATAN', 'Carcassonne', 'Ticket to Ride']);
-  assert.equal(urls.length, 1);
+  // TWO requests since #702: the wishlist body plus the subtype-scoped probe
+  // that says which of its items are expansions (none here).
+  assert.equal(urls.length, 2);
   assert.match(urls[0], /wishlist=1/);
   assert.equal(/[?&]own=1/.test(urls[0]), false, 'the wishlist hop must not also ask for the owned shelf');
   // Expansions are NOT excluded here (#664, reversing what #560 shipped): on a
@@ -452,9 +454,11 @@ test('the wishlist import asks BGG for wishlist=1 and creates wishes, silently',
   // filtering them out silently dropped a large share of every import. The
   // OWNED shelf still excludes them — asserted in the listing spec above.
   assert.equal(/excludesubtype/.test(urls[0]), false);
+  assert.match(urls[1], /subtype=boardgameexpansion/);
+  assert.match(urls[1], /wishlist=1/);
 
   // Re-stubbed for the import hop; the listing's URLs have been asserted above.
-  stubBgg(THREE);
+  stubBggRouted({ collection: THREE });
   const res = await request(app)
     .post(`/api/rounds/${round.id}/lookup/import?provider=bgg&status=wishlist`)
     .set(auth(a.token)).send({ externalIds: ['13', '9209'] });
@@ -468,6 +472,8 @@ test('the wishlist import asks BGG for wishlist=1 and creates wishes, silently',
     assert.ok(g.wishAt);
     assert.equal(g.retired, false);
     assert.equal(g.completed, false);
+    // Absent-key parity: only an expansion may carry expansionOf (#664).
+    assert.equal('expansionOf' in g, false, `${g.title} must stay keyless`);
   });
   // Invisible to the shelf's own count.
   const home = (await request(app).get('/api/rounds').set(auth(a.token))).body.find((r) => r.id === round.id);
@@ -482,15 +488,27 @@ test('the wishlist import asks BGG for wishlist=1 and creates wishes, silently',
 
 /* --------------- expansions on the wish list (#664) ------------------------ */
 
-// A wishlist item that IS an expansion. Only the subtype differs — a collection
-// body carries no <link> elements at all, which is the whole reason the parents
-// need a second hop.
+// A wishlist item that IS an expansion — carrying subtype="boardgame", because
+// that is what BGG actually serves (#702): an unscoped /collection query
+// includes expansions but mislabels every one of them. Shaped from a live
+// capture of the operator's wishlist, 2026-08-09 (Forest Shuffle: Alpine
+// arrived exactly like this). The truthful label only ever appears in the
+// subtype-scoped probe body below — fixtures stamping it here encode the very
+// assumption this bug lived behind.
 const expansionItem = (objectid, name) => `
-  <item objecttype="thing" objectid="${objectid}" subtype="boardgameexpansion" collid="c${objectid}">
+  <item objecttype="thing" objectid="${objectid}" subtype="boardgame" collid="c${objectid}">
     <name sortindex="1">${name}</name>
     <stats minplayers="5" maxplayers="6"/>
     <status wishlist="1"/>
   </item>`;
+
+// The subtype=boardgameexpansion probe's answer: the same items, truthfully
+// labeled, no <stats> (the probe asks for none — ids are all that matters).
+const probeXml = (...entries) => collectionXml(...entries.map(([objectid, name]) => `
+  <item objecttype="thing" objectid="${objectid}" subtype="boardgameexpansion" collid="c${objectid}">
+    <name sortindex="1">${name}</name>
+    <status wishlist="1"/>
+  </item>`));
 
 // The /thing answer for those expansions: inbound="true" is "expands X".
 const PARENTS_XML = `<items>
@@ -505,15 +523,20 @@ const PARENTS_XML = `<items>
 
 const WISH_WITH_EXPANSIONS = collectionXml(
   item('13', 'CATAN'), expansionItem('325', 'CATAN: Seafarers'), expansionItem('4002', 'Orphan Promo'));
+const WISH_PROBE = probeXml(['325', 'CATAN: Seafarers'], ['4002', 'Orphan Promo']);
 
-// Route by endpoint: the wishlist hop needs the collection AND the /thing parent
-// resolution, which the single-body stub above cannot express.
-function stubBggRouted(bodies) {
+// Route by endpoint: the wishlist path needs the main collection, the
+// subtype-scoped expansion probe (#702) AND the /thing parent resolution —
+// which the single-body stub above cannot express. probeStatus lets a spec fail
+// exactly the probe while the main body stays healthy.
+function stubBggRouted({ collection, probe = probeXml(), thing = '', probeStatus = 200 }) {
   const urls = [];
   global.fetch = async (url) => {
     const u = String(url);
     urls.push(u);
-    return { status: 200, text: async () => (u.includes('/collection?') ? bodies.collection : bodies.thing) };
+    if (!u.includes('/collection?')) return { status: 200, text: async () => thing };
+    if (u.includes('subtype=boardgameexpansion')) return { status: probeStatus, text: async () => probe };
+    return { status: 200, text: async () => collection };
   };
   return urls;
 }
@@ -523,17 +546,26 @@ test('a wished expansion is listed with the base game it belongs to (#664)', asy
   const round = await makeRound(a.token);
   await link(a.token, 'GamerExpList');
 
-  const urls = stubBggRouted({ collection: WISH_WITH_EXPANSIONS, thing: PARENTS_XML });
+  const urls = stubBggRouted({ collection: WISH_WITH_EXPANSIONS, probe: WISH_PROBE, thing: PARENTS_XML });
   const res = await request(app)
     .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`)
     .set(auth(a.token));
   assert.equal(res.status, 200);
+  // The main body labels ALL THREE "boardgame" (#702) — these flags can only
+  // come from membership in the probe's answer.
   assert.deepEqual(res.body.games.map((g) => g.expansion), [false, true, true]);
   assert.deepEqual(res.body.games[1].expansionOf, [{ providerId: '13', title: 'CATAN' }]);
   // BGG reported no inbound link for this one — an empty list, never a dropped
   // candidate: it is still a game the group wants.
   assert.deepEqual(res.body.games[2].expansionOf, []);
   assert.equal(res.body.games[0].expansion, false, 'a base game on the wishlist is not an expansion');
+  // The mislabeled subtype also built a /boardgame/ link; membership corrects it.
+  assert.equal(res.body.games[1].url, 'https://boardgamegeek.com/boardgameexpansion/325');
+
+  // The probe went to the same wishlist, scoped to expansions.
+  const probes = urls.filter((u) => u.includes('subtype=boardgameexpansion'));
+  assert.equal(probes.length, 1);
+  assert.match(probes[0], /wishlist=1/);
 
   // The parent hop asked for exactly the expansions, in ONE request.
   const thing = urls.filter((u) => u.includes('/thing?'));
@@ -546,7 +578,7 @@ test('importing a wished expansion stores its base games, resolved SERVER-side',
   const round = await makeRound(a.token);
   await link(a.token, 'GamerExpWrite');
 
-  stubBggRouted({ collection: WISH_WITH_EXPANSIONS, thing: PARENTS_XML });
+  stubBggRouted({ collection: WISH_WITH_EXPANSIONS, probe: WISH_PROBE, thing: PARENTS_XML });
   const res = await request(app)
     .post(`/api/rounds/${round.id}/lookup/import?provider=bgg&status=wishlist`)
     .set(auth(a.token))
@@ -585,11 +617,57 @@ test('an expansion the round has already ACQUIRED shows as present, not as a fre
       source: { provider: 'bgg', externalId: '325', url: null },
     }]);
 
-  stubBggRouted({ collection: WISH_WITH_EXPANSIONS, thing: PARENTS_XML });
+  stubBggRouted({ collection: WISH_WITH_EXPANSIONS, probe: WISH_PROBE, thing: PARENTS_XML });
   const res = await request(app)
     .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`)
     .set(auth(a.token));
   assert.deepEqual(res.body.games.map((g) => g.present), [true, true, false]);
+});
+
+/* THE PROBE IS HALF OF ONE FETCH (#702). A probe that fails while the main body
+   succeeded must fail (or queue) the whole listing: degrading to "no expansions
+   here" would recreate the very bug the probe exists to fix — a bulk import
+   silently creating unmarked expansion rows — through the error path. Contrast
+   the parents hop, where degrading to "no parents known" is a good answer. */
+test('a failed expansion probe fails the listing rather than importing unmarked rows (#702)', async () => {
+  const a = await makeAccount('imp-probe-down@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerProbeDown');
+
+  stubBggRouted({ collection: WISH_WITH_EXPANSIONS, probe: '', probeStatus: 500, thing: PARENTS_XML });
+  const list = await request(app)
+    .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`).set(auth(a.token));
+  assert.equal(list.status, 502);
+  assert.equal(list.body.error, 'provider_unreachable');
+
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/lookup/import?provider=bgg&status=wishlist`)
+    .set(auth(a.token)).send({ externalIds: ['325'] });
+  assert.equal(res.status, 502);
+
+  const full = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  assert.equal(full.body.games.length, 0, 'no unmarked expansion row may be created');
+});
+
+test('a queued probe reports queued, is not cached, and the retry marks the rows (#702)', async () => {
+  const a = await makeAccount('imp-probe-queued@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerProbeQueued');
+  const url = `/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`;
+
+  // Observed live 2026-08-09: the main body answered 200 while the probe 202'd.
+  stubBggRouted({ collection: WISH_WITH_EXPANSIONS, probe: '', probeStatus: 202 });
+  const queued = await request(app).get(url).set(auth(a.token));
+  assert.equal(queued.status, 200);
+  assert.equal(queued.body.state, 'queued');
+  assert.deepEqual(queued.body.games, []);
+
+  // The pair settles together: the retry re-fetches BOTH and the rows arrive
+  // marked — which is exactly what caching the queued answer would prevent.
+  stubBggRouted({ collection: WISH_WITH_EXPANSIONS, probe: WISH_PROBE, thing: PARENTS_XML });
+  const retry = await request(app).get(url).set(auth(a.token));
+  assert.equal(retry.body.state, 'ok');
+  assert.deepEqual(retry.body.games.map((g) => g.expansion), [false, true, true]);
 });
 
 /* THE CACHE-KEY TRAP. The two shelves are different BGG documents for one
@@ -610,10 +688,10 @@ test('the owned and wishlist shelves do not share a cache entry', async () => {
     .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg`).set(auth(a.token));
   assert.deepEqual(owned.body.games.map((g) => g.title), ['CATAN']);
 
-  const urls = stubBgg(collectionXml(item('9209', 'Ticket to Ride')));
+  const urls = stubBggRouted({ collection: collectionXml(item('9209', 'Ticket to Ride')) });
   const wished = await request(app)
     .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`).set(auth(a.token));
-  assert.equal(urls.length, 1, 'the wishlist must be fetched, not served from the owned entry');
+  assert.equal(urls.length, 2, 'the wishlist (with its expansion probe, #702) must be fetched, not served from the owned entry');
   assert.deepEqual(wished.body.games.map((g) => g.title), ['Ticket to Ride']);
 
   // ...and the owned shelf is still cached rather than refetched, so the key
@@ -638,7 +716,7 @@ test('a game already on the shelf shows as present in the wishlist import and is
   await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
     .set(auth(a.token)).send({ externalIds: ['13'] });
 
-  stubBgg(collectionXml(item('13', 'CATAN'), item('822', 'Carcassonne')));
+  stubBggRouted({ collection: collectionXml(item('13', 'CATAN'), item('822', 'Carcassonne')) });
   const list = await request(app)
     .get(`/api/rounds/${round.id}/lookup/collection?provider=bgg&status=wishlist`).set(auth(a.token));
   const catan = list.body.games.find((g) => g.externalId === '13');
