@@ -8,7 +8,7 @@ paths:
   - "test/bgg-import.test.js"
   - "test/bgg-import-picker.test.js"
 ---
-# The BGG collection import (#481): four traps, three of them silent
+# The BGG collection import (#481): five traps, four of them silent
 
 `GET /api/rounds/:rid/lookup/collection` + `POST …/lookup/import` pull a user's
 owned BoardGameGeek shelf into a round. The provider hop reuses `fetchXml` and
@@ -174,12 +174,45 @@ browser contacts nothing new.
   (multi-parent) is handled by asking. **It does not reverse the owned half**, and
   that asymmetry is deliberate rather than drift.
 
+- **WHICH wishlist items are expansions comes from a second, subtype-scoped
+  collection request — the main body's `subtype` attribute LIES (#702).** An
+  unscoped `/collection` query *includes* expansions but labels every one of
+  them `subtype="boardgame"`; only a query carrying
+  `subtype=boardgameexpansion` labels (and filters) them truthfully. Captured
+  live 2026-08-09 on the operator's wishlist: both expansions arrived
+  mislabeled in the main body, both listed by the probe. Trusting the
+  attribute meant `expansion:` was false for every wished expansion, the
+  parents hop never ran, and `expansionOf` was never written — the entire #664
+  machinery dormant in production while every test was green, because the
+  fixtures stamped the truthful subtype the code assumed (the third instance of
+  the capture-live trap in
+  `.claude/rules/psstore-full-game-is-not-every-game.md` /
+  `.claude/rules/storefront-lookup-locale.md`; fixtures here must mislabel the
+  main body, like the capture). So `collection()` issues the probe itself on
+  the wishlist path and sets `expansion:` by **membership in the probe's id
+  set** (the attribute survives only as `parseCollection`'s first guess, which
+  the own path — where `excludesubtype` makes it vacuously false — still uses).
+  Three consequences:
+
+  - **The pair is ONE fetch.** A failed or queued probe fails/queues the whole
+    collection — degrading to "no expansions here" would recreate the bug
+    through the error path, as silently-unmarked rows at import scale. This is
+    the *opposite* of the parents hop's contract below, and the asymmetry is
+    the point: a missing parent still yields a correctly-marked orphan wish,
+    a missing *marking* changes what kind of row gets created.
+  - **No new cache key.** Both requests run inside `collection()`, so the
+    corrected items ride the existing `bgg:collection:<status>:<handle>` entry,
+    and `queued` stays uncacheable per §3.
+  - The probe also corrects the item's canonical URL to
+    `/boardgameexpansion/<id>`, the way `parseThing` keys links off the item's
+    own type.
+
 - **The parents need a SECOND hop, and it degrades rather than failing.** A
   collection item's children are `name`, `yearpublished`, `image`, `thumbnail`,
   `stats`, `status`, `numplays` and **no `<link>` elements at all**;
-  `/collection` has no links parameter. So the body says *that* an item is an
-  expansion (`subtype`, which `parseCollection` reads into `expansion`) and never
-  *which base game it expands*. `expansionParents(ids)` fills that in from
+  `/collection` has no links parameter. So the body (via the probe above) says
+  *that* an item is an expansion and never *which base game it expands*.
+  `expansionParents(ids)` fills that in from
   `/thing?id=…`, reading the `inbound="true"` boardgameexpansion links — the exact
   inverse of what `parseExpansionLinks` filters out.
 

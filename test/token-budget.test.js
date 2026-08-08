@@ -134,6 +134,8 @@ const SOURCE_ALLOW = {
   'test/admin.test.js': 'judged — one suite per subject, and the admin surface is the largest',
   'test/account.test.js': 'judged — one suite per subject',
   'test/providers-bgg.test.js': 'judged — one suite per provider, the shape all five providers-*.test.js files follow. A per-hop split (search / thing / collection / versions) is the visible seam, but it would break that convention for the one provider with four hops and split the shared COLLECTION_XML/THING_XML fixtures across files',
+  'lib/providers/bgg.js': 'judged 2026-08-09 — one file per provider, the shape all five providers follow (search/detail + pure parse* exports); crossed by #702 adding the wishlist expansion probe. The visible seam (parsers vs transport vs capabilities) is a false one: each capability is pairwise-coupled to its parser (parseCollection <-> collection, parseVersions <-> covers), and splitting BGG alone would make the one provider with six hops the one with a different layout — the re-learn cost token-friendly-source-files.md names',
+  'test/bgg-import.test.js': 'judged 2026-08-09 — one suite per subject (the two collection-import routes), the admin/account shape; crossed by #702\'s probe-failure specs. The visible seam (owned vs wishlist shelf) is a false one: the specs share one fixture/stub kit, and the cache-key-trap spec NEEDS both shelves in one file — it asserts they do not answer each other',
 
   // recorded — not yet judged against the seam test
   // (views-round-tabs.js was the ninth, and #528 SPLIT it: views-regal.js,
