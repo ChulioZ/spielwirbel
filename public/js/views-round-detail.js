@@ -1052,41 +1052,49 @@ async function showGameDetail(rid, gameId) {
 
   // What the round owns for this game (#653). Rendered on a sparse page too:
   // it is one of the few things you CAN record about a game nobody has played,
-  // and it is the answer to "do we still have Seefahrer?".
-  const expSec = h(`<div class="section gd-expansions"><h2>${esc(t('detail.expansionsTitle'))}</h2></div>`);
-  if (!owned.length) {
-    expSec.appendChild(h(`<div class="muted">${esc(t('detail.expansionsEmpty'))}</div>`));
-  } else {
-    const list = h('<div class="ds-list"></div>');
-    owned.forEach((e) => {
-      const range = Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
-        ? playersText(e.minPlayers, e.maxPlayers)
-        : t('detail.expansionNoRange');
-      // A plain <div> row, so it must carry `ds-row--static` — `.ds-row`
-      // declares cursor:pointer and a hover lift, i.e. it promises a click
-      // target (.claude/rules/ds-row-is-a-click-target.md). The remove button
-      // inside it is the only thing here that is clickable.
-      const row = h(`<div class="ds-row ds-row--static">
-           <div class="ds-row__main">
-             <div class="ds-row__title">${esc(e.title)}</div>
-             <div class="muted">${esc(range)}</div>
-           </div>
-           <div class="ds-row__meta">
-             <button class="link-btn exp-row__remove">${iconText('ti-trash', t('detail.expansionRemove'))}</button>
-           </div>
-         </div>`);
-      row.querySelector('.exp-row__remove').addEventListener('click', () => {
-        if (!confirm(t('detail.expansionRemoveConfirm', { title: e.title }))) return;
-        saveExpansions(owned.filter((x) => x.id !== e.id).map((x) => ({ id: x.id })));
+  // and it is the answer to "do we still have Seefahrer?". Never on a
+  // wishlist-imported EXPANSION (#698): an expansion holds no expansions of its
+  // own, and anything recorded here would be silently lost on acquire — the
+  // wish row (and this list with it) is deleted in the same transaction that
+  // carries only title/link/range onto the base game. Presence check, not
+  // truthiness: the key is absent on ordinary games and legitimately [] on an
+  // orphan expansion (.claude/rules/expansions-widen-by-union.md).
+  if (!Array.isArray(game.expansionOf)) {
+    const expSec = h(`<div class="section gd-expansions"><h2>${esc(t('detail.expansionsTitle'))}</h2></div>`);
+    if (!owned.length) {
+      expSec.appendChild(h(`<div class="muted">${esc(t('detail.expansionsEmpty'))}</div>`));
+    } else {
+      const list = h('<div class="ds-list"></div>');
+      owned.forEach((e) => {
+        const range = Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
+          ? playersText(e.minPlayers, e.maxPlayers)
+          : t('detail.expansionNoRange');
+        // A plain <div> row, so it must carry `ds-row--static` — `.ds-row`
+        // declares cursor:pointer and a hover lift, i.e. it promises a click
+        // target (.claude/rules/ds-row-is-a-click-target.md). The remove button
+        // inside it is the only thing here that is clickable.
+        const row = h(`<div class="ds-row ds-row--static">
+             <div class="ds-row__main">
+               <div class="ds-row__title">${esc(e.title)}</div>
+               <div class="muted">${esc(range)}</div>
+             </div>
+             <div class="ds-row__meta">
+               <button class="link-btn exp-row__remove">${iconText('ti-trash', t('detail.expansionRemove'))}</button>
+             </div>
+           </div>`);
+        row.querySelector('.exp-row__remove').addEventListener('click', () => {
+          if (!confirm(t('detail.expansionRemoveConfirm', { title: e.title }))) return;
+          saveExpansions(owned.filter((x) => x.id !== e.id).map((x) => ({ id: x.id })));
+        });
+        list.appendChild(row);
       });
-      list.appendChild(row);
-    });
-    expSec.appendChild(list);
+      expSec.appendChild(list);
+    }
+    const addExp = h(`<button class="link-out link-out--btn"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('detail.expansionAdd'))}</button>`);
+    addExp.addEventListener('click', () => openExpansionEditor(addExp));
+    expSec.appendChild(addExp);
+    app.appendChild(expSec);
   }
-  const addExp = h(`<button class="link-out link-out--btn"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('detail.expansionAdd'))}</button>`);
-  addExp.addEventListener('click', () => openExpansionEditor(addExp));
-  expSec.appendChild(addExp);
-  app.appendChild(expSec);
 
   // Related sessions (`related` is computed near the top — `sparse` needs it).
   // On a sparse page the section is omitted entirely: the onboarding panel

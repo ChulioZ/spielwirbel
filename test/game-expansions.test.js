@@ -14,6 +14,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { app, createRound } = require('./helpers');
+const repo = require('../lib/repo');
 const { fitsPlayerCount } = require('../public/js/draw-pool');
 
 // Add a game via the multipart endpoint, like test/games.test.js does.
@@ -171,6 +172,37 @@ test('PUT expansions 404s for an unknown round or game and clears with an empty 
   assert.deepEqual(cleared.body.expansions, []);
 });
 
+test('PUT expansions refuses a wished EXPANSION row — entries there die with the wish (#698)', async () => {
+  // A row carrying `expansionOf` is itself an expansion; anything recorded on it
+  // is silently lost when the wish is acquired (expansionEntryOf carries only
+  // title/link/range, and acquireWishExpansion deletes the wish row in the same
+  // transaction). Wish rows with `expansionOf` only ever come from the wishlist
+  // import, so seed through the same bulk method (like test/wish-expansion.test.js).
+  const round = await createRound(request);
+  const r = repo.forTenant('default');
+  const { created } = await r.createGames(round.id, [{
+    title: 'Seefahrer', minPlayers: 5, maxPlayers: 6, image: null,
+    source: { provider: 'bgg', externalId: '325', url: null },
+    expansionOf: [{ providerId: '13', title: 'CATAN' }],
+  }], undefined, null, true);
+
+  const res = await request(app).put(PUT_EXP(round.id, created[0].id))
+    .send({ expansions: [{ title: 'Verloren' }] });
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, 'is_expansion');
+
+  // An ordinary wished GAME keeps the write: its row survives acquisition
+  // (`/wish { wish: false }` just flips the flag), so its entries persist —
+  // and owning an expansion before the base game is a real state.
+  const plain = await r.createGames(round.id, [
+    { title: 'Ark Nova', minPlayers: 1, maxPlayers: 4, image: null },
+  ], undefined, null, true);
+  const ok = await request(app).put(PUT_EXP(round.id, plain.created[0].id))
+    .send({ expansions: [{ title: 'Aquarius' }] });
+  assert.equal(ok.status, 200);
+  assert.deepEqual(ok.body.expansions.map((e) => e.title), ['Aquarius']);
+});
+
 /* ------------------------- the rendered surfaces ---------------------------
    Run the real views under jsdom rather than matching their source
    (.claude/rules/testing-views-under-jsdom.md): what the acceptance criteria
@@ -237,6 +269,31 @@ test('an empty section still offers the way in', async (t) => {
   await dom.call('showGameDetail', 'r1', 'g1');
   assert.equal(dom.app.querySelectorAll('.gd-expansions .ds-row').length, 0);
   assert.match(dom.app.querySelector('.gd-expansions .muted').textContent, /Noch keine Erweiterung/);
+});
+
+test('a wished EXPANSION\'s own detail page offers no expansions section at all (#698)', async (t) => {
+  const { dom, round } = boot(t, null);
+  round.games.push({
+    id: 'g3', title: 'Seefahrer', minPlayers: 5, maxPlayers: 6, tagIds: [], image: null,
+    wish: true, expansionOf: [{ providerId: '13', title: 'CATAN' }],
+  });
+  await dom.call('showGameDetail', 'r1', 'g3');
+  // The whole section — heading, empty-state line and „Erweiterung hinzufügen" —
+  // must be gone, not merely empty: an expansion holds no expansions of its own.
+  assert.equal(dom.app.querySelector('.gd-expansions'), null);
+});
+
+test('an ordinary WISHED game keeps the section — its row survives acquisition', async (t) => {
+  // The anti-vacuous control for the spec above: the condition is the presence
+  // of `expansionOf`, never `wish` itself.
+  const { dom, round } = boot(t, null);
+  round.games.push({
+    id: 'g4', title: 'Ark Nova', minPlayers: 1, maxPlayers: 4, tagIds: [], image: null,
+    wish: true,
+  });
+  await dom.call('showGameDetail', 'r1', 'g4');
+  assert.ok(dom.app.querySelector('.gd-expansions'), 'the section renders');
+  assert.ok(dom.app.querySelector('.gd-expansions button.link-out'), 'with the way in');
 });
 
 test('the players chip states the widening — and says nothing without one', async (t) => {
