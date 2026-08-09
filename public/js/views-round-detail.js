@@ -1042,8 +1042,8 @@ async function showGameDetail(rid, gameId) {
       });
   }
 
-  // Weight + description (#717), between the actions and the provider block —
-  // both provider-sourced. Nothing renders when the game has neither. The
+  // The provider metadata (#717/#724), between the actions and the provider
+  // block. Nothing renders when the game carries none of it. The
   // anchor also carries the detail-open backfill trigger: a BGG-linked game
   // missing a field asks the server, which fills the store best-effort and
   // answers whatever it holds (the TTL gate is server-side, so a game BGG has

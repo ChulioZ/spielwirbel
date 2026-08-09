@@ -194,8 +194,7 @@ function renderVoteLinkCards(token, ballot, person) {
       </div>`);
 
     // Same info affordance as the wizard's card (#717) — the ballot projection
-    // carries weight, description and #724's metadata, so a link voter gets the
-    // same facts. It deliberately carries NO `rating`, so there is nothing to
+    // carries weight and #724's metadata, so a link voter gets the same facts. It deliberately carries NO `rating`, so there is nothing to
     // render here even if a future edit passed `{ rating: true }`; the omission
     // is enforced server-side in lib/routes/vote-link.js.
     //
