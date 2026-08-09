@@ -1,6 +1,6 @@
 'use strict';
 
-/* The weight/description surfaces (#717), rendered for real in jsdom
+/* The provider-info surfaces (#717/#724), rendered for real in jsdom
  * (.claude/rules/testing-views-under-jsdom.md): the game-detail section with
  * its detail-open backfill request, the info sheet, and the ⓘ affordance on
  * the vote-link card. The hot-seat wizard's card shares gameInfoButton with
@@ -40,7 +40,7 @@ function roundFixture() {
         source: { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' },
         providerInfoAt: '2026-08-09T10:00:00.000Z',
       },
-      // A storefront game: no weight, no description — the section and the
+      // A storefront game: no provider metadata at all — the section and the
       // backfill request must both stay away.
       {
         id: 'g2', title: 'It Takes Two', image: '/uploads/itt.jpg', minPlayers: 1, maxPlayers: 2,
@@ -65,7 +65,7 @@ function bootApp(t_, { providerInfo } = {}) {
     if (/\/activities$/.test(url)) return [];
     if (/\/provider-info$/.test(url)) {
       infoCalls.push(url);
-      return providerInfo || { weight: null, description: null };
+      return providerInfo || { weight: null };
     }
     if (/^\/api\/rounds\/[^/]+$/.test(url) && method === 'GET') return round;
     return {};
@@ -76,7 +76,31 @@ function bootApp(t_, { providerInfo } = {}) {
 
 const aboutSection = (dom) => dom.app.querySelector(':scope > .gd-about');
 
-test('the detail section renders weight, clamped description and the BGG attribution', async (t_) => {
+// #729: a row stored before the field was dropped still HOLDS the text (no
+// purge, no migration code — CLAUDE.md), so the guarantee is that nothing
+// renders it. The fixture's g1 carries LONG_DESC, which is what keeps this from
+// passing vacuously against a game that simply had no description.
+test('a stored description renders nowhere — not in the detail section, not in the sheet', async (t_) => {
+  const { dom, round } = bootApp(t_);
+  await dom.call('showGameDetail', RID, 'g1');
+
+  const sec = aboutSection(dom);
+  assert.ok(sec, 'the section still renders — weight and the #724 facts remain');
+  assert.equal(sec.querySelector('.game-info__desc'), null, 'the detail section still renders the description');
+  assert.doesNotMatch(sec.textContent, /Aufbauspiel/, 'the description text leaked into the section');
+  assert.equal(sec.querySelector('.game-info__more'), null, 'the show-more toggle survived');
+
+  const btn = dom.call('gameInfoButton', round.games[0]);
+  assert.ok(btn, 'the ⓘ affordance still renders for a game with weight');
+  dom.document.body.appendChild(btn);
+  btn.click();
+  const sheet = dom.document.querySelector('.sheet-backdrop .sheet');
+  assert.ok(sheet);
+  assert.equal(sheet.querySelector('.game-info__desc'), null, 'the vote sheet still renders the description');
+  assert.doesNotMatch(sheet.textContent, /Aufbauspiel/, 'the description text leaked into the sheet');
+});
+
+test('the detail section renders weight and the BGG attribution', async (t_) => {
   const { dom, infoCalls } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g1');
   const sec = aboutSection(dom);
@@ -87,22 +111,9 @@ test('the detail section renders weight, clamped description and the BGG attribu
   assert.match(sec.querySelector('.game-info__weight').textContent, /2\.3 von 5/);
   assert.equal(sec.querySelectorAll('.weight-dots__dot').length, 5);
   assert.equal(sec.querySelectorAll('.weight-dots__dot.is-filled').length, 2);
-  const desc = sec.querySelector('.game-info__desc');
-  assert.equal(desc.textContent, LONG_DESC, 'the stored text renders whole — the clamp is CSS-only');
-  assert.ok(desc.classList.contains('is-clamped'));
   assert.match(sec.querySelector('.game-info__source').textContent, /BoardGameGeek/);
   // Every field present -> no backfill request.
   assert.equal(infoCalls.length, 0);
-
-  // The toggle expands and collapses, stating its state.
-  const toggle = sec.querySelector('.game-info__more');
-  assert.equal(toggle.getAttribute('aria-expanded'), 'false');
-  toggle.click();
-  assert.equal(desc.classList.contains('is-clamped'), false);
-  assert.equal(toggle.getAttribute('aria-expanded'), 'true');
-  assert.equal(toggle.textContent, t('gameInfo.showLess'));
-  toggle.click();
-  assert.ok(desc.classList.contains('is-clamped'));
 });
 
 test('a storefront game gets no section and fires no backfill request', async (t_) => {
@@ -114,7 +125,7 @@ test('a storefront game gets no section and fires no backfill request', async (t
 
 test('a BGG-linked game missing the fields asks the server and renders the answer', async (t_) => {
   const { dom, infoCalls } = bootApp(t_, {
-    providerInfo: { weight: 3.5, description: 'Nachgefüllt.' },
+    providerInfo: { weight: 3.5 },
   });
   await dom.call('showGameDetail', RID, 'g3');
   // The request went out; the response settles on a later microtask.
@@ -124,7 +135,6 @@ test('a BGG-linked game missing the fields asks the server and renders the answe
   const sec = aboutSection(dom);
   assert.ok(sec, 'the section appears once the backfill answers');
   assert.match(sec.querySelector('.game-info__weight').textContent, /3\.5 von 5/);
-  assert.equal(sec.querySelector('.game-info__desc').textContent, 'Nachgefüllt.');
 });
 
 test('a backfill that finds nothing leaves the page without the section', async (t_) => {
@@ -139,7 +149,7 @@ test('gameInfoButton renders only when there is something to show, and opens the
   const { dom } = bootApp(t_);
   assert.equal(dom.call('gameInfoButton', { id: 'x', title: 'Leer' }), null);
 
-  const btn = dom.call('gameInfoButton', { id: 'g', title: 'Catan', weight: 2.3, description: 'Kurz.' });
+  const btn = dom.call('gameInfoButton', { id: 'g', title: 'Catan', weight: 2.3 });
   assert.ok(btn, 'a game with info gets the affordance');
   assert.match(btn.getAttribute('aria-label'), /Catan/);
   dom.document.body.appendChild(btn);
@@ -147,16 +157,13 @@ test('gameInfoButton renders only when there is something to show, and opens the
   const sheet = dom.document.querySelector('.sheet-backdrop .sheet');
   assert.ok(sheet, 'the info sheet opened');
   assert.equal(sheet.querySelector('.sheet__head h2').textContent, 'Catan');
-  // A short description clamps nothing and offers no toggle.
-  assert.equal(sheet.querySelector('.game-info__desc').classList.contains('is-clamped'), false);
-  assert.equal(sheet.querySelector('.game-info__more'), null);
   assert.match(sheet.querySelector('.game-info__source').textContent, /BoardGameGeek/);
 });
 
 // A game carrying every #724 field, for the two surfaces that must disagree
 // about exactly one of them.
 const RICH = {
-  id: 'g', title: 'Catan', weight: 2.2809, description: 'Kurz.',
+  id: 'g', title: 'Catan', weight: 2.2809,
   minPlaytime: 60, maxPlaytime: 120, minAge: 10,
   categories: ['Civilization', 'Economic'],
   mechanics: ['Dice Rolling', 'Hand Management', 'Trading', 'Network Building', 'Income', 'Set Collection'],
@@ -226,38 +233,13 @@ test('one known playtime bound reads as a single number, not a half-open range',
   assert.equal(value({ id: 'd', title: 'D', minPlaytime: 20, maxPlaytime: 600 }), '20–600 Min.');
 });
 
-test('a stored description with BGG\'s double-encoded HTML entities renders decoded', async (t_) => {
-  /* BGG stores its descriptions HTML-encoded and XML-encodes them again when
-   * serving, so after the provider's one XML decode the stored text still
-   * carries literals like `&mdash;` — seen live on production (Ark Nova ends
-   * "&mdash;description from the publisher", raw XML captured 2026-08-09).
-   * Decoded at RENDER time so every already-stored row self-corrects with no
-   * migration code. Literal '<' and clean text must survive untouched. */
-  const { dom } = bootApp(t_);
-  const stored = 'Ein Zoo &mdash; mit Stil.&#10;Neue Zeile &amp; mehr, 3 &lt; 5.';
-  const btn = dom.call('gameInfoButton', { id: 'g', title: 'Ark Nova', weight: 3.7, description: stored });
-  dom.document.body.appendChild(btn);
-  btn.click();
-  const desc = dom.document.querySelector('.sheet-backdrop .game-info__desc');
-  assert.equal(desc.textContent, 'Ein Zoo — mit Stil.\nNeue Zeile & mehr, 3 < 5.');
-
-  // Text with no entity-shaped content passes through byte-identically —
-  // including a literal '<' and a bare '&'.
-  const plain = dom.call('decodeGameDescription', 'Tigris & Euphrates: a < b, kein Tag <br/> bleibt Text');
-  assert.equal(plain, 'Tigris & Euphrates: a < b, kein Tag <br/> bleibt Text');
-
-  // Leading whitespace (blank first lines are real BGG data) survives the
-  // decode path too.
-  assert.equal(dom.call('decodeGameDescription', '\n\n&quot;Zitat&quot;'), '\n\n"Zitat"');
-});
-
 test('the hot-seat card self-heals: a field-less BGG game asks the server and gains the ⓘ', async (t_) => {
   /* The production report on #717: a session drawn before the fields existed
    * (or before the fire-and-forget backfill landed) hands the wizard games
    * without them, so voting showed no ⓘ while the detail page — which has its
    * own lazy trigger — did. The card now uses the same trigger. */
   const { dom, infoCalls } = bootApp(t_, {
-    providerInfo: { weight: 3.0, description: 'Dorfleben.' },
+    providerInfo: { weight: 3.0 },
   });
   const round = roundFixture();
   const session = { id: 's1', gameIds: ['g3'], memberIds: ['m1'], votes: {} };
@@ -299,8 +281,8 @@ test('the vote-link card shows the ⓘ only for a game carrying info', async (t_
     roundName: 'Freitagsrunde',
     people: [person],
     games: [
-      { id: 'g1', title: 'Catan', image: null, weight: 2.3, description: 'Kurz.' },
-      { id: 'g2', title: 'Ohne', image: null, weight: null, description: null },
+      { id: 'g1', title: 'Catan', image: null, weight: 2.3 },
+      { id: 'g2', title: 'Ohne', image: null, weight: null },
     ],
   };
   dom.call('renderVoteLinkCards', 'tok', ballot, person);

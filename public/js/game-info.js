@@ -1,11 +1,17 @@
-/* Provider-sourced game info — BGG weight + description (#717), plus playing
-   time, minimum age, categories, mechanics and the community rating (#724).
-   One builder for the three surfaces that show it: the info sheet the two
-   voting cards open (hot-seat wizard + vote-link cards), and the game-detail
-   section. The description is BGG's licensed text stored unmodified, so it is
-   rendered via textContent (never innerHTML) and only CLAMPED for display —
-   the expand toggle is a real <button>, per
-   .claude/rules/native-button-vs-focusable-span.md.
+/* Provider-sourced game info — BGG weight (#717), plus playing time, minimum
+   age, categories, mechanics and the community rating (#724). One builder for
+   the three surfaces that show it: the info sheet the two voting cards open
+   (hot-seat wizard + vote-link cards), and the game-detail section.
+
+   BGG's DESCRIPTION was rendered here until #729 and is not any more: it is
+   publisher marketing copy, English-only for a bilingual UI, long enough to
+   need a clamp and an expand toggle, and it answered none of the question a
+   voter has — playing time answers a real one in four characters. Rows written
+   before that still carry the string; nothing reads it, so a game whose row
+   holds one renders exactly as one without.
+
+   Every value here is still BGG's own text, so it goes in via textContent,
+   never interpolation.
 
    The RATING is the one field the three surfaces disagree about: detail only,
    never a voting card, because vote anchoring is a property of the voting
@@ -28,37 +34,10 @@
 // something to show. The two flags must agree, so both callers pass the same
 // options object.
 function hasGameInfo(game, { rating = false } = {}) {
-  return !!game && (game.weight != null || !!game.description
+  return !!game && (game.weight != null
     || game.minPlaytime != null || game.maxPlaytime != null || game.minAge != null
     || (game.categories || []).length > 0 || (game.mechanics || []).length > 0
     || (rating && game.rating != null));
-}
-
-// Description lengths under this render whole; longer ones start clamped with
-// a "show more" toggle. Display-only — the stored text is never cut.
-const GAME_INFO_CLAMP_CHARS = 280;
-
-// BGG stores its descriptions HTML-encoded and XML-encodes them again when
-// serving, so after the provider's one XML decode the text still carries HTML
-// entities for many games — Ark Nova ends "&mdash;description from the
-// publisher" (captured live 2026-08-09). Decoded at RENDER time, not at store
-// time, so every already-stored row self-corrects on its next view with no
-// migration code (the render-time precedent in
-// .claude/rules/provider-cover-sizing.md).
-//
-// DOMParser rather than the textarea-innerHTML idiom: an innerHTML assignment
-// fed remote data is a CodeQL XSS sink however inert the element, while a
-// parsed document is never inserted anywhere. '<' is pre-escaped so anything
-// tag-shaped in the text survives as literal text instead of becoming an
-// element the textContent walk would drop, and the 'x' sentinel keeps leading
-// whitespace out of the HTML parser's ignore-initial-whitespace modes (blank
-// first lines are real BGG data). The guard keeps entity-free text — the
-// common case — byte-identical without a parse.
-function decodeGameDescription(s) {
-  const text = String(s);
-  if (!/&(#\d|#x[0-9a-fA-F]|[a-zA-Z]+;)/.test(text)) return text;
-  const doc = new DOMParser().parseFromString('x' + text.replace(/</g, '&lt;'), 'text/html');
-  return doc.body.textContent.slice(1);
 }
 
 // How many categories/mechanics the vote sheet lists before it summarises the
@@ -68,8 +47,8 @@ function decodeGameDescription(s) {
 const GAME_INFO_LIST_CAP = 5;
 
 // One labelled fact row. The value goes in via textContent, never interpolation:
-// categories and mechanics are BGG's own strings, so they are treated with the
-// same care as the description.
+// categories and mechanics are BGG's own strings, so they are never
+// interpolated into markup.
 function factRow(label, value) {
   const row = h(`<div class="game-info__fact"><span class="game-info__fact-label">${esc(label)}</span><span class="game-info__fact-value"></span></div>`);
   row.querySelector('.game-info__fact-value').textContent = value;
@@ -99,8 +78,8 @@ function playtimeText(game) {
 
 // The shared body: weight as a labelled five-dot scale (one decimal — BGG's
 // four decimals would imply a precision the number does not have), the standard
-// metadata facts, the description, and the BGG attribution line the licence asks
-// for wherever its data is displayed.
+// metadata facts, and the BGG attribution line the licence asks for wherever
+// its data is displayed.
 //
 // `rating` DEFAULTS TO OFF, and that direction is the whole guarantee (#724):
 // this one builder fills three surfaces, two of which are voting cards, so a
@@ -131,22 +110,6 @@ function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {
     facts.appendChild(factRow(t('gameInfo.rating'), t('gameInfo.ratingValue', { n: game.rating.toFixed(1) })));
   }
   if (facts.children.length) box.appendChild(facts);
-
-  if (game.description) {
-    const desc = h('<p class="game-info__desc"></p>');
-    desc.textContent = decodeGameDescription(game.description);
-    box.appendChild(desc);
-    if (game.description.length > GAME_INFO_CLAMP_CHARS) {
-      desc.classList.add('is-clamped');
-      const toggle = h(`<button type="button" class="link-btn game-info__more" aria-expanded="false">${esc(t('gameInfo.showMore'))}</button>`);
-      toggle.addEventListener('click', () => {
-        const expanded = !desc.classList.toggle('is-clamped');
-        toggle.setAttribute('aria-expanded', String(expanded));
-        toggle.textContent = t(expanded ? 'gameInfo.showLess' : 'gameInfo.showMore');
-      });
-      box.appendChild(toggle);
-    }
-  }
   box.appendChild(h(`<div class="muted game-info__source">${esc(t('gameInfo.source'))}</div>`));
   return box;
 }
@@ -162,7 +125,7 @@ function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {
 // together anyway, or the detail page stops being a way to refresh a game.
 function wantsGameInfo(game) {
   return !!game && !!game.source && game.source.provider === 'bgg'
-    && (game.weight == null || !game.description
+    && (game.weight == null
       || game.minPlaytime == null || game.maxPlaytime == null || game.minAge == null
       || !(game.categories || []).length || !(game.mechanics || []).length
       || game.rating == null);
@@ -180,7 +143,6 @@ function mergeGameInfo(game, info) {
   for (const k of ['weight', 'minPlaytime', 'maxPlaytime', 'minAge', 'rating']) {
     if (info[k] != null && game[k] == null) game[k] = info[k];
   }
-  if (info.description && !game.description) game.description = info.description;
   for (const k of ['categories', 'mechanics']) {
     if ((info[k] || []).length && !(game[k] || []).length) game[k] = info[k];
   }
@@ -220,6 +182,8 @@ function openGameInfoSheet(game) {
 
 // The game-detail section (#717), same body under a section heading — and the
 // ONE surface that opts into the community rating and the uncapped lists (#724).
+// It used to be the long half of this feature; since #729 dropped the
+// description it is the same short fact list the sheet shows, plus the rating.
 // It is not a voting screen, so the vote-anchoring concern that keeps the rating
 // off the cards does not apply here.
 function renderGameInfoSection(game) {

@@ -372,7 +372,7 @@ public/
                      screens that start a session (issue #532)
     team-picker.js   the team field: group two or more of those people into one
                      party, shared by the same two screens (issue #575)
-    game-info.js     BGG weight + description surfaces (issue #717): the info
+    game-info.js     BGG provider-info surfaces (issues #717/#724): the info
                      sheet the two vote cards open, the ⓘ affordance itself,
                      and the game-detail section — one body builder for all
                      three

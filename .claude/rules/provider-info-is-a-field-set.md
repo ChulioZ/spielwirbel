@@ -48,13 +48,32 @@ empty answer must never erase a stored list) and `hasProviderField` treats it as
 unfilled. Get those two out of step and a game with no categories either loops
 forever or is written as permanently empty.
 
-**#729 will exercise all of this in reverse** by removing `description`. Leaving it
-in the list while nothing writes it is precisely the second failure above.
+**#729 exercised all of this in reverse** by removing `description`, and the
+shape held: deleting its entry from `PROVIDER_INFO_GUARDS` *was* the whole
+store-side change, because the guard map is what both the write loop and the
+completeness check read. Leaving it in the list while nothing wrote it would have
+been precisely the second failure above — every game re-asking BGG once a week,
+forever, for a field with no reader.
+
+Two things that removal settled, worth keeping for the next one:
+
+- **A dropped field needs no purge and no migration.** Rows written before it
+  still hold the string; nothing reads it, so it is inert and goes away naturally
+  the next time the row is rewritten (CLAUDE.md's no-migration-code rule). Say so
+  in a comment where the field used to be handled, or a future reader who greps a
+  live row and finds a `description` concludes something still reads it.
+- **The removal's tests must assert against a body that CARRIES the field.** Every
+  fixture kept its `<description>`, so each assertion discriminates "the parser
+  dropped it" from "the provider never sent one" — the vacuous-green trap in
+  `.claude/rules/break-the-code-on-purpose.md`. Same reasoning as the `parseThing`
+  `deepEqual`, which is the strongest guard of the three because an extra key
+  fails it without anyone naming the field.
 
 ## Anything that STAMPS must also write, or it defers by a whole TTL
 
-The link-provider `PATCH` offers a chip for `weight` and `description` only — the
-two the sheet previews — so writing just those looks right. It is not, and the
+The link-provider `PATCH` offers a chip for `weight` only (it was `weight` and
+`description` until #729) — what the sheet previews — so writing just that looks
+right. It is not, and the
 reason generalises to any future handler that resolves provider info itself:
 **the stamp is what suppresses the backfill.** `providerInfoAt` is set on that
 path, so the unchipped fields would not arrive until the next trigger *after* the

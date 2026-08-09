@@ -1,7 +1,8 @@
 'use strict';
 
 /*
- * BGG weight + description (#717): the create-time resolution, the two lazy
+ * BGG weight (#717) and the standard metadata (#724): the create-time
+ * resolution, the two lazy
  * backfill triggers (game-detail open, session start) and the vote-link ballot
  * projection.
  *
@@ -48,7 +49,7 @@ const thingXml = (items, withStats) => `<?xml version="1.0" encoding="utf-8"?><i
 // with stats=1 on every call — the detail surface DOES carry it (the ballot
 // projection is where it is withheld; see the vote-link spec below).
 const infoBody = (over = {}) => ({
-  weight: null, description: null, minPlaytime: null, maxPlaytime: null,
+  weight: null, minPlaytime: null, maxPlaytime: null,
   minAge: null, categories: [], mechanics: [], rating: 7.0, ...over,
 });
 
@@ -72,7 +73,7 @@ const bggSource = (id) => ({
   sourceUrl: `https://boardgamegeek.com/boardgame/${id}`,
 });
 
-test('POST games with a BGG source stores weight + description, resolved server-side', async () => {
+test('POST games with a BGG source stores the metadata, resolved server-side', async () => {
   const rid = await makeRound('Info-Create');
   stubFetch([{ id: '900001', weight: '2.2809', desc: 'Handel &amp; Bau.' }]);
   const res = await request(app).post(`/api/rounds/${rid}/games`).send({
@@ -80,20 +81,20 @@ test('POST games with a BGG source stores weight + description, resolved server-
   });
   assert.equal(res.status, 201);
   assert.equal(res.body.weight, 2.2809);
-  assert.equal(res.body.description, 'Handel & Bau.');
   assert.equal(typeof res.body.providerInfoAt, 'string');
 });
 
-test('a client cannot dictate weight or description on create', async () => {
+test('a client cannot dictate the provider fields on create', async () => {
   const rid = await makeRound('Info-Trust');
   // No provider link -> no resolution runs; the client-sent fields are ignored.
   const res = await request(app).post(`/api/rounds/${rid}/games`).send({
     title: 'Selbstgebaut', minPlayers: 2, maxPlayers: 4,
-    weight: 4.9, description: 'attacker-controlled text',
+    weight: 4.9, rating: 9.9, categories: ['Attacker-controlled'],
   });
   assert.equal(res.status, 201);
   assert.equal('weight' in res.body, false);
-  assert.equal('description' in res.body, false);
+  assert.equal('rating' in res.body, false);
+  assert.equal('categories' in res.body, false);
 });
 
 test('GET provider-info backfills a linked game missing the fields, once', async () => {
@@ -108,18 +109,17 @@ test('GET provider-info backfills a linked game missing the fields, once', async
 
   const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, infoBody({ weight: 3.5, description: 'Ein Aufbauspiel.' }));
+  assert.deepEqual(res.body, infoBody({ weight: 3.5 }));
   assert.equal(calls.length, 1);
   assert.match(calls[0], /stats=1/);
 
   // Persisted: the round read now carries the fields.
   const stored = (await repo.getRound('default', rid)).games.find((g) => g.id === game.id);
   assert.equal(stored.weight, 3.5);
-  assert.equal(stored.description, 'Ein Aufbauspiel.');
 
   // A second open answers from the store — no further upstream request.
   const again = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
-  assert.deepEqual(again.body, infoBody({ weight: 3.5, description: 'Ein Aufbauspiel.' }));
+  assert.deepEqual(again.body, infoBody({ weight: 3.5 }));
   assert.equal(calls.length, 1);
 });
 
@@ -129,7 +129,7 @@ test('a game BGG has no data for is stamped and not re-fetched on every view', a
     title: 'Obskur', minPlayers: 2, maxPlayers: 4, image: null,
     source: { provider: 'bgg', externalId: '900003', url: null },
   });
-  const calls = stubFetch([{ id: '900003' }]); // averageweight=0, no description
+  const calls = stubFetch([{ id: '900003' }]); // averageweight=0, nothing else
 
   const first = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
   assert.deepEqual(first.body, infoBody());
@@ -158,7 +158,7 @@ test('an upstream failure stamps nothing, so the next trigger retries', async ()
   // Upstream recovers -> the next open fills the fields.
   const calls = stubFetch([{ id: '900004', weight: '1.8', desc: 'Leicht.' }]);
   const retry = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
-  assert.deepEqual(retry.body, infoBody({ weight: 1.8, description: 'Leicht.' }));
+  assert.deepEqual(retry.body, infoBody({ weight: 1.8 }));
   assert.equal(calls.length, 1);
 });
 
@@ -176,7 +176,7 @@ test('a game without a provider link answers its stored nulls with no fetch', as
 test('a game already carrying #717\'s fields still receives the ones #724 added', async () => {
   /* THE TRAP, and the one break in this PR that fails completely silently.
    * needsProviderInfo short-circuits on a completeness check; leave it on the
-   * old {weight, description} pair and every game the #717 backfill already
+   * old {weight} shape and every game the #717 backfill already
    * filled returns false FOREVER — so the games with the BEST coverage are
    * exactly the ones that never receive playtime, age, categories, mechanics or
    * the rating. No error, no failing route, and the feature looks implemented.
@@ -187,7 +187,7 @@ test('a game already carrying #717\'s fields still receives the ones #724 added'
   const game = await repo.createGame('default', rid, {
     title: 'Schon gefüllt', minPlayers: 2, maxPlayers: 4, image: null,
     source: { provider: 'bgg', externalId: '900012', url: null },
-    weight: 2.5, description: 'Bereits da.',
+    weight: 2.5,
   });
   const calls = stubFetch([{
     id: '900012', weight: '2.5', desc: 'Bereits da.',
@@ -197,7 +197,7 @@ test('a game already carrying #717\'s fields still receives the ones #724 added'
   const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
   assert.equal(calls.length, 1, 'a game with only the old fields was treated as complete');
   assert.deepEqual(res.body, infoBody({
-    weight: 2.5, description: 'Bereits da.', minPlaytime: 45, maxPlaytime: 75,
+    weight: 2.5, minPlaytime: 45, maxPlaytime: 75,
     minAge: 12, categories: ['Economic'], mechanics: ['Worker Placement', 'Trading'],
   }));
 
@@ -217,7 +217,7 @@ test('a game carrying EVERY field is complete — the widened check still termin
   const game = await repo.createGame('default', rid, {
     title: 'Komplett', minPlayers: 2, maxPlayers: 4, image: null,
     source: { provider: 'bgg', externalId: '900013', url: null },
-    weight: 2.5, description: 'Alles da.', minPlaytime: 45, maxPlaytime: 75, minAge: 12,
+    weight: 2.5, minPlaytime: 45, maxPlaytime: 75, minAge: 12,
     categories: ['Economic'], mechanics: ['Trading'], rating: 7.4,
   });
   const calls = stubFetch([{ id: '900013' }]);
@@ -252,7 +252,6 @@ test('session start backfills the drawn games in one batched request', async () 
   }
   const byId = new Map(stored.map((g) => [g.id, g]));
   assert.equal(byId.get(g1.id).weight, 2.5);
-  assert.equal(byId.get(g1.id).description, 'Erstes.');
   assert.equal(byId.get(g2.id).weight, 4.1);
   // One batched /thing call carrying both ids (the draw shuffles, so in
   // either order).
@@ -266,7 +265,7 @@ test('the vote-link ballot projects the metadata but NEVER the rating', async ()
   await repo.createGame('default', rid, {
     title: 'Drei', minPlayers: 1, maxPlayers: 6, image: null,
     source: { provider: 'bgg', externalId: '900007', url: null },
-    weight: 3.2, description: 'Ballot-Text.', providerInfoAt: new Date().toISOString(),
+    weight: 3.2, providerInfoAt: new Date().toISOString(),
     minPlaytime: 30, maxPlaytime: 90, minAge: 12,
     categories: ['Economic'], mechanics: ['Worker Placement'],
     rating: 8.4,
@@ -280,7 +279,6 @@ test('the vote-link ballot projects the metadata but NEVER the rating', async ()
   assert.equal(ballot.status, 200);
   const [g] = ballot.body.games;
   assert.equal(g.weight, 3.2);
-  assert.equal(g.description, 'Ballot-Text.');
   assert.equal(g.minPlaytime, 30);
   assert.equal(g.maxPlaytime, 90);
   assert.equal(g.minAge, 12);
@@ -307,10 +305,10 @@ test('PATCH apply flags take the resolved info on link — and only what was cho
   const res = await request(app).patch(`/api/rounds/${rid}/games/${game.id}`).send({
     ...bggSource('900008'),
     applyWeight: true,
-    // applyDescription deliberately absent -> the description must NOT land.
   });
   assert.equal(res.status, 200);
   assert.equal(res.body.weight, 2.9);
+  // The provider body carries a <description>; #729 means it lands nowhere.
   assert.equal('description' in res.body, false);
 
   // The UNCHIPPED #724 fields land regardless of the chips, and that is not
@@ -337,16 +335,116 @@ test('PATCH apply flags take the resolved info on link — and only what was cho
     ...bggSource('900014'), applyWeight: true,
   });
   assert.equal(empty.status, 200);
-  for (const key of ['weight', 'description', 'minPlaytime', 'maxPlaytime', 'minAge', 'categories', 'mechanics']) {
+  for (const key of ['weight', 'minPlaytime', 'maxPlaytime', 'minAge', 'categories', 'mechanics']) {
     assert.equal(key in empty.body, false, `${key} written from an empty provider answer`);
   }
 
   // And the values themselves cannot be dictated: a PATCH carrying literals
   // changes nothing without the resolved link.
   const forged = await request(app).patch(`/api/rounds/${rid}/games/${game.id}`).send({
-    weight: 5, description: 'forged',
+    weight: 5, rating: 9.9,
   });
   assert.equal(forged.status, 200);
-  assert.equal(forged.body.weight, 2.9);
-  assert.equal('description' in forged.body, false);
+  // Asserted as "the resolved values are UNCHANGED" rather than "the key is
+  // absent": this game was linked by the successful PATCH above, so it really
+  // does carry both fields — an absence check would be vacuously false here.
+  assert.equal(forged.body.weight, 2.9, 'a client literal overwrote the resolved weight');
+  assert.equal(forged.body.rating, 7.0, 'a client literal overwrote the resolved rating');
+});
+
+/* --- #729: the description is not imported, stored, served or projected ----
+ *
+ * Written before the removal (Route 1, .claude/rules/break-the-code-on-purpose.md).
+ * Every stub body below deliberately CARRIES a <description>, so each assertion
+ * discriminates "the field was dropped" from "the provider never sent one".
+ */
+
+test('a BGG add stores no description, though the provider body carries one', async () => {
+  const rid = await makeRound('Kein-Text-Create');
+  stubFetch([{ id: '900020', weight: '2.5', desc: 'Verlagstext.', playtime: [45, 90] }]);
+  const res = await request(app).post(`/api/rounds/${rid}/games`).send({
+    title: 'Neu', minPlayers: 2, maxPlayers: 4, ...bggSource('900020'),
+  });
+  assert.equal(res.status, 201);
+  assert.equal(res.body.weight, 2.5, 'the rest of the import still lands');
+  assert.equal('description' in res.body, false, 'the description was stored on create');
+
+  const stored = await repo.getGame('default', rid, res.body.id);
+  assert.equal('description' in stored, false, 'the description reached the store');
+  assert.doesNotMatch(JSON.stringify(stored), /Verlagstext/, 'the prose landed under some other key');
+});
+
+test('GET provider-info answers no description key', async () => {
+  const rid = await makeRound('Kein-Text-Info');
+  const game = await repo.createGame('default', rid, {
+    title: 'Alt', minPlayers: 2, maxPlayers: 4, image: null,
+    source: { provider: 'bgg', externalId: '900021', url: null },
+  });
+  stubFetch([{ id: '900021', weight: '1.8', desc: 'Auch Text.', age: 10 }]);
+  const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
+  assert.equal(res.status, 200);
+  assert.equal(res.body.weight, 1.8, 'the backfill still ran');
+  assert.equal('description' in res.body, false, 'the response still carries a description key');
+});
+
+test('the vote-link ballot carries no description key', async () => {
+  const rid = await makeRound('Kein-Text-Ballot');
+  // Stored on the row on purpose: a game whose row predates the removal still
+  // HOLDS the text (no purge — CLAUDE.md), so this proves the projection drops
+  // it rather than that there was nothing to drop.
+  await repo.createGame('default', rid, {
+    title: 'Vier', minPlayers: 1, maxPlayers: 6, image: null,
+    source: { provider: 'bgg', externalId: '900022', url: null },
+    weight: 3.2, description: 'Alter Ballot-Text.', providerInfoAt: new Date().toISOString(),
+  });
+  stubFetch([]);
+  const start = await request(app).post(`/api/rounds/${rid}/sessions`).send({ count: 1 });
+  const mint = await request(app)
+    .post(`/api/rounds/${rid}/sessions/${start.body.session.id}/vote-link`).send({});
+  const ballot = await request(app).get(`/api/vote/${mint.body.token}`);
+  assert.equal(ballot.status, 200);
+  const [g] = ballot.body.games;
+  assert.equal(g.weight, 3.2, 'the rest of the projection still lands');
+  assert.equal('description' in g, false, 'the ballot still projects the description');
+  assert.doesNotMatch(JSON.stringify(ballot.body), /Ballot-Text/, 'the prose leaked elsewhere in the ballot');
+});
+
+test('a game with weight and the #724 fields is COMPLETE — no weekly re-ask for a field nobody writes', () => {
+  /* The silent trap this whole removal has to avoid (#724's rule file calls it
+   * the mirror-image break): a field left in the completeness check that nothing
+   * writes can never be satisfied, so every game re-asks BGG once per TTL
+   * forever — no error, no red test, just a standing upstream request per game
+   * per week against a provider whose terms ask for few. Asserted directly
+   * because the failure is invisible from any route-level spec. */
+  const { needsProviderInfo } = require('../lib/provider-info');
+  const complete = {
+    source: { provider: 'bgg', externalId: '13' },
+    weight: 2.28, minPlaytime: 60, maxPlaytime: 120, minAge: 10,
+    categories: ['Economic'], mechanics: ['Trading'], rating: 7.09,
+  };
+  assert.equal(needsProviderInfo(complete), false, 'a fully-filled game still asks the provider');
+  // The control: still incomplete when a field that IS written is missing, so
+  // the assertion above cannot pass by the check having been gutted.
+  assert.equal(needsProviderInfo({ ...complete, minAge: null }), true);
+});
+
+test('a stale client still sending applyDescription writes nothing', async () => {
+  /* The shell is cache-first, so a tab opened before this deploy keeps running
+   * the old JS and keeps sending the flag. It must be inert rather than
+   * resurrect the field — and the link itself must still apply, or the stale tab
+   * silently stops being able to link a provider at all. */
+  const rid = await makeRound('Kein-Text-Stale');
+  const game = await repo.createGame('default', rid, {
+    title: 'Unverlinkt', minPlayers: 2, maxPlayers: 4, image: null, source: null,
+  });
+  stubFetch([{ id: '900023', weight: '2.9', desc: 'Verlagstext.', age: 12 }]);
+  const res = await request(app).patch(`/api/rounds/${rid}/games/${game.id}`).send({
+    ...bggSource('900023'), applyWeight: true, applyDescription: true,
+  });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.weight, 2.9, 'the rest of the old body still works');
+  assert.equal('description' in res.body, false, 'a stale flag resurrected the field');
+
+  const stored = await repo.getGame('default', rid, game.id);
+  assert.equal('description' in stored, false, 'a stale flag reached the store');
 });

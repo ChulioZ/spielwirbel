@@ -233,10 +233,10 @@ test('importing writes full game records, ONE Chronik entry and one product even
   assert.equal(feed.body.filter((x) => x.type === 'game_added').length, 0);
 });
 
-test('the import fires the weight/description backfill, so the first draw already has them (#717)', async (t) => {
+test('the import fires the provider-info backfill, so the first draw already has it (#717)', async (t) => {
   /* The reported gap: import -> draw -> vote showed no info anywhere, because
    * the session-start backfill races the first voter and a collection body
-   * carries neither field. Import time is the polite place to fill them — one
+   * carries none of the fields. Import time is the polite place to fill them — one
    * batched /thing?stats=1 per 60 games, long before anyone draws. The stub
    * branches on the URL the way BGG does: the collection body for /collection,
    * a stats body for /thing. */
@@ -275,7 +275,9 @@ test('the import fires the weight/description backfill, so the first draw alread
   }
   const byExt = new Map(games.map((g) => [g.source.externalId, g]));
   assert.equal(byExt.get('13').weight, 2.28);
-  assert.equal(byExt.get('13').description, 'Handel & Bau.');
+  assert.equal(byExt.get('13').rating, 7.1);
+  // The stub bodies carry a <description>; #729 means none of it is stored.
+  assert.equal('description' in byExt.get('13'), false);
   assert.equal(byExt.get('9209').weight, 1.85);
   assert.equal(thingCalls.length, 1, 'both imported games ride one batched /thing call');
   assert.match(thingCalls[0], /stats=1/);

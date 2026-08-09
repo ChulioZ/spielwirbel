@@ -559,10 +559,9 @@ module.exports = function repoContract(repo) {
   // lib/provider-info.js on purpose: that module pulls in the provider registry,
   // and this suite must stay a statement of the CONTRACT the backends owe rather
   // than a mirror of the caller that happens to use it.
-  const INFO_FIELDS = ['weight', 'description', 'minPlaytime', 'maxPlaytime', 'minAge', 'categories', 'mechanics', 'rating'];
+  const INFO_FIELDS = ['weight', 'minPlaytime', 'maxPlaytime', 'minAge', 'categories', 'mechanics', 'rating'];
   const FULL_INFO = {
     weight: 2.28,
-    description: 'Handel & Bau.',
     minPlaytime: 60,
     maxPlaytime: 120,
     minAge: 10,
@@ -621,6 +620,26 @@ module.exports = function repoContract(repo) {
     // the whole set through with nulls in it.
     const plain = await repo.createGame(T, round.id, gameFields({ title: 'Frei', ...NO_INFO }));
     for (const key of INFO_FIELDS) assert.equal(key in plain, false, `${key} present on a free-text game`);
+  });
+
+  test('a field outside the set is ignored by both writers (#729)', async () => {
+    /* `description` was one of these fields until #729. Both mutators copy
+     * through the shared guard map rather than assigning the input, so a caller
+     * still sending the old key writes nothing — which is what lets the field be
+     * dropped without a migration or a purge (CLAUDE.md). Asserted on BOTH
+     * backends because `updateGame` Object.assigns its patch, so an unguarded
+     * write would reach the store on one side and split absent-key parity. */
+    const round = await freshRound();
+    const created = await repo.createGame(T, round.id, gameFields({ description: 'Verlagstext.' }));
+    assert.equal('description' in created, false, 'createGame stored a dropped field');
+
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Zwei' }));
+    const info = await repo.setGameProviderInfo(T, round.id, game.id, { ...FULL_INFO, description: 'Verlagstext.' });
+    assert.equal('description' in info, false, 'setGameProviderInfo stored a dropped field');
+    assert.equal(info.weight, FULL_INFO.weight, 'the rest of the write was skipped too');
+
+    const reread = (await repo.getRound(T, round.id)).games.find((g) => g.id === game.id);
+    assert.equal('description' in reread, false, 'a dropped field survived a re-read');
   });
 
   /* ------------------------- expansions (#653) ------------------------------ */

@@ -2862,17 +2862,6 @@ body.auth-screen .terms-banner { display: none; }
 .game-info__fact { display: contents; }
 .game-info__fact-label { font-weight: 700; }
 .game-info__fact-value { overflow-wrap: anywhere; }
-/* pre-line keeps BGG's own paragraph breaks (the decoded &#10;s) without
-   letting stray indentation through; the clamp is display-only — the stored
-   text is never cut (BGG's licence forbids modifying retrieved data). */
-.game-info__desc { white-space: pre-line; margin: 0 0 6px; overflow-wrap: anywhere; }
-.game-info__desc.is-clamped {
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 .game-info__source { font-size: var(--text-xs); margin-top: 10px; }
 
 /* Wide/landscape screens: image on the left, all controls on the right, so

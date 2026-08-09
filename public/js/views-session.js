@@ -283,7 +283,7 @@ function startVoting(round, session, games, people, opts = {}) {
 
   const hasVotes = () => Object.values(votes).some((byGame) => Object.keys(byGame).length > 0);
 
-  // Self-heal for a game the wizard received without its weight/description
+  // Self-heal for a game the wizard received without its provider metadata
   // (#717 follow-up): a session drawn before the fields existed — or before
   // the fire-and-forget backfill landed — hands this closure field-less games,
   // so voting showed no ⓘ while the detail page (which has its own lazy
@@ -470,7 +470,7 @@ function startVoting(round, session, games, people, opts = {}) {
         </div>
       </div>`);
 
-    // Info affordance (#717): weight + description behind a small ⓘ in the
+    // Info affordance (#717): the provider metadata behind a small ⓘ in the
     // title line, so the height-budgeted card gains no extra row
     // (.claude/rules/fitting-a-screen-to-the-viewport-height.md). Rendered
     // only when the game actually carries the data — and when it doesn't but

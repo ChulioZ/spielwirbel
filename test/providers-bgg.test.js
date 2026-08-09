@@ -227,9 +227,9 @@ test('parseThing normalizes a BGG item (analog, players, cover, url)', () => {
     // The 1–5 float, NOT the community `average` (7.09054) sitting right beside
     // it in the flattened child list — the deepEqual is what proves the exact-
     // name match, and 2.2809 also proves the float survives (parseInt would
-    // store 2). The description is the decoded text node, stored unmodified.
+    // store 2). This deepEqual is also the strongest guard that no `description`
+    // is imported (#729): the fixture body carries one, and an extra key fails.
     weight: 2.2809,
-    description: 'Sammle Rohstoffe & baue Städte.',
     // #724. `rating` is `average`, NOT the `bayesaverage` (6.90221) two nodes
     // away — the deepEqual proves the exact-name match in the other direction
     // from `weight`, and the two differ so the wrong one cannot pass.
@@ -257,7 +257,6 @@ test('every provider field is null-shaped when the body lacks it', () => {
   // rather than null, so the shape stays uniform for a caller that maps them.
   const empty = bgg.parseThing('', '13');
   assert.equal(empty.weight, null);
-  assert.equal(empty.description, null);
   assert.equal(empty.minPlaytime, null);
   assert.equal(empty.maxPlaytime, null);
   assert.equal(empty.minAge, null);
@@ -403,12 +402,35 @@ test('parseGameInfo reads a MULTI-item stats body for the backfill', () => {
   </items>`;
   const none = { minPlaytime: null, maxPlaytime: null, minAge: null, categories: [], mechanics: [] };
   assert.deepEqual(bgg.parseGameInfo(xml), [
-    { providerId: '13', weight: 2.28, description: 'Handel & Bau.', rating: 7.1, ...none },
-    // A game the community has not weighted, with no description: everything
-    // null/empty, so the backfill can stamp the attempt without inventing data.
-    { providerId: '822', weight: null, description: null, rating: null, ...none },
+    // The first item's body carries a <description>; the deepEqual is exact, so
+    // an extra key would fail here — the parse-path guard for #729.
+    { providerId: '13', weight: 2.28, rating: 7.1, ...none },
+    // A game the community has not weighted: everything null/empty, so the
+    // backfill can stamp the attempt without inventing data.
+    { providerId: '822', weight: null, rating: null, ...none },
   ]);
   assert.deepEqual(bgg.parseGameInfo(''), []);
+});
+
+// #729: the description is no longer imported. The fixtures deliberately KEEP
+// their <description> — real BGG bodies carry one — so these assert that the
+// parser drops it, not that the input lacked it. All three parse paths spread
+// the same infoOf(), and asserting each of them is what stops a later edit from
+// reinstating the field on one path only.
+test('no parse path imports the description, though every fixture body carries one', () => {
+  assert.equal('description' in bgg.parseThing(THING_XML, '13'), false);
+
+  const withDesc = `<items><item type="boardgame" id="13">
+    <name type="primary" value="CATAN"/>
+    <description>Handel &amp; Bau.</description>
+    <statistics><ratings><average value="7.1"/><averageweight value="2.28"/></ratings></statistics>
+  </item></items>`;
+  const [info] = bgg.parseGameInfo(withDesc);
+  assert.equal('description' in info, false);
+  // The body really did carry it, so the assertion above is not vacuous.
+  assert.match(withDesc, /<description>/);
+  // And nothing smuggles the prose through under another key.
+  assert.doesNotMatch(JSON.stringify(info), /Handel/);
 });
 
 // --- expansions (#653) ----------------------------------------------------
