@@ -320,9 +320,13 @@ test('parseExpansionParents reads the INBOUND links, i.e. the inverse of parseEx
     <item type="boardgameexpansion" id="4002">
       <name type="primary" value="Orphan"/>
     </item>
+    <item type="boardgame" id="13">
+      <name type="primary" value="CATAN"/>
+      <link type="boardgameexpansion" id="325" value="CATAN: Seafarers"/>
+    </item>
   </items>`;
   assert.deepEqual(bgg.parseExpansionParents(xml), [
-    { providerId: '325', parents: [{ providerId: '13', title: 'CATAN' }] },
+    { providerId: '325', parents: [{ providerId: '13', title: 'CATAN' }], expansion: true },
     // An expansion's inbound links are a LIST — a promo can fit two base games,
     // so all of them are kept and the acquire flow asks which one it belongs to.
     {
@@ -331,9 +335,15 @@ test('parseExpansionParents reads the INBOUND links, i.e. the inverse of parseEx
         { providerId: '13', title: 'CATAN' },
         { providerId: '822', title: 'Tigris & Euphrates' },
       ],
+      expansion: true,
     },
-    // No inbound link at all: an UNATTACHED wish, never dropped from the import.
-    { providerId: '4002', parents: [] },
+    // No inbound link at all: an UNATTACHED wish, never dropped from the
+    // import. `expansion` is what keeps it distinguishable from a base game,
+    // which ALSO yields no inbound links (#703) — parents alone cannot answer
+    // "is this an expansion?".
+    { providerId: '4002', parents: [], expansion: true },
+    // The base-game control: outbound links only, and expansion: false.
+    { providerId: '13', parents: [], expansion: false },
   ]);
   assert.deepEqual(bgg.parseExpansionParents(''), []);
   assert.deepEqual(bgg.parseExpansionParents('not xml'), []);

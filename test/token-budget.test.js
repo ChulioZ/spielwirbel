@@ -150,6 +150,7 @@ const SOURCE_ALLOW = {
   'public/js/views-round-detail.js': 'recorded 2026-07-30 — game detail plus the sheet/editor machinery',
   'lib/routes/admin.js': 'recorded 2026-07-30 — one router, but the widest surface of any',
   'lib/routes/account.js': 'recorded 2026-07-30 — register/verify/login/refresh/reset plus self-service export and deletion',
+  'lib/routes/games.js': 'recorded 2026-08-09 — one router per resource (the repo convention), sitting at 699 since #653 and pushed over by #703\'s wish-add expansion resolution. A seam is visible — the expansion endpoints (PUT /expansions, acquire-expansion, the #703 resolver) against the CRUD/state-flip rest — but splitting one resource\'s router would be a new pattern for lib/routes/; M-001\'s worklist item',
 };
 
 /* All eight were `recorded` — "over budget, nobody has looked" — from 2026-07-30

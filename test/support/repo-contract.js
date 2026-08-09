@@ -727,6 +727,28 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(orphan.created[0].expansionOf, []);
   });
 
+  test('createGame persists expansionOf too, and leaves the key ABSENT otherwise (#703)', async () => {
+    // The singular add is the hand-add path's writer (a BGG expansion wished
+    // through the add-game search); same absent-key parity rules as the bulk
+    // import above.
+    const round = await freshRound();
+    const marked = await repo.createGame(T, round.id,
+      wishExpansion('325', [{ providerId: '13', title: 'CATAN' }], { wish: true }), undefined);
+    assert.deepEqual(marked.expansionOf, [{ providerId: '13', title: 'CATAN' }]);
+    const orphan = await repo.createGame(T, round.id,
+      wishExpansion('4002', [], { wish: true }), undefined);
+    assert.deepEqual(orphan.expansionOf, []);
+    const plain = await repo.createGame(T, round.id, bggFields('9209', { wish: true }), undefined);
+    assert.equal('expansionOf' in plain, false);
+
+    const games = (await repo.getRound(T, round.id)).games;
+    assert.deepEqual(games.find((g) => g.id === marked.id).expansionOf,
+      [{ providerId: '13', title: 'CATAN' }]);
+    assert.deepEqual(games.find((g) => g.id === orphan.id).expansionOf, []);
+    assert.equal('expansionOf' in games.find((g) => g.id === plain.id), false,
+      'absent after a re-read too');
+  });
+
   test('acquireWishExpansion moves the wish onto its base game in ONE step', async () => {
     const round = await freshRound();
     const seat = round.members[0].id;

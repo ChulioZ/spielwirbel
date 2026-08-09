@@ -89,9 +89,9 @@ What the app does, in detail. For a short overview see the
   campaign, a legacy box, a story-driven video game. Alongside them sits the
   **Wunschliste** — games the group wants but does not own yet, added by hand
   through the same add-game sheet or pulled in one shot from a linked
-  BoardGameGeek **wishlist**. That import carries **expansions** too, which is
-  most of what a real wishlist holds — you own Catan, you want Seefahrer — and
-  each one says which game it belongs to. A wish never turns up in a vote, a draw
+  BoardGameGeek **wishlist**. Wished **expansions** are first-class too — most of
+  what a real wishlist holds is "you own Catan, you want Seefahrer" — and whether
+  imported or added by hand, each one says which game it belongs to. A wish never turns up in a vote, a draw
   or any count of the shelf, because the group cannot put it on the table; "Ins
   Regal" moves it across the day they buy it, and that is when the round's
   Chronik and the Freundeskreis feed report it — wanting a game is not news,
