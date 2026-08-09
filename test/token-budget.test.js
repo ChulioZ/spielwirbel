@@ -157,9 +157,8 @@ const SOURCE_ALLOW = {
    until 2026-08-01, when each was put through the seam test (C-004: several
    *unrelated* learnings, not raw length). One had a real seam and was split; the
    other seven are one learning whose length is its evidence, and splitting them
-   would scatter something a single reader needs at once. There are no `recorded`
-   rule entries left; a new one means a file grew past 150 and nobody has judged
-   it yet. */
+   would scatter something a single reader needs at once. A `recorded` rule entry
+   means a file grew past 150 and nobody has judged it yet. */
 const RULE_ALLOW = {
   // judged 2026-08-01
   '.claude/rules/admin-moderation-surface.md': 'judged — SPLIT: 277 -> 161. The two seams with their own file sets left as admin-cross-tenant-escape.md (RLS: reads widen, writes never) and admin-kennzahlen-card.md (lib/status.js + its two generic sweeps). What remains is one surface\'s operator checklist, read together',
