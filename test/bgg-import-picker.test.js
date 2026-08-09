@@ -86,7 +86,7 @@ const PRESENT = ['Azul', 'Cascadia', 'Everdell'];
    cache keyed on the handle, so a client that stopped sending the status would
    be answered from whichever shelf was fetched first — a completely plausible
    wrong list, with no error (`.claude/rules/bgg-collection-import.md`). */
-async function openImport(t, games, { locale = 'de', status = 'own' } = {}) {
+async function openImport(t, games, { locale = 'de', status = 'own', round } = {}) {
   const dom = loadApp({ locale });
   t.after(() => dom.close());
   dom.set('api', async (method, path) => {
@@ -94,7 +94,7 @@ async function openImport(t, games, { locale = 'de', status = 'own' } = {}) {
       `unexpected api call: ${method} ${path}`);
     return { state: 'ok', games };
   });
-  await dom.call('showBggImport', { id: 7, name: 'Freitagsrunde' }, status === 'own' ? undefined : status);
+  await dom.call('showBggImport', round || { id: 7, name: 'Freitagsrunde' }, status === 'own' ? undefined : status);
   await new Promise((resolve) => setImmediate(resolve));
   const body = dom.document.querySelector('.bgg-import');
   assert.ok(body, 'the import sheet rendered no body');
@@ -184,6 +184,28 @@ test('with nothing left to import the sheet shows the message plus the section, 
   assert.ok(sec, 'the all-present state must still list the collection');
   assert.equal(sec.open, false);
   assert.deepEqual(texts(sec.querySelectorAll('.bgg-import__present-item')), PRESENT);
+});
+
+test('an expansion whose base game is on the shelf is noted under the round\'s title (#705)', async (t) => {
+  // The round object here carries games — the real showWishlist hands the picker
+  // its full fetched round, unlike the summary the other specs get away with.
+  const round = {
+    id: 7, name: 'Freitagsrunde',
+    games: [{ id: 'g1', title: 'Die Siedler von Catan', source: { provider: 'bgg', externalId: '13' } }],
+  };
+  const candidates = [{
+    ...game(325, 'Seefahrer', false),
+    expansion: true,
+    expansionOf: [
+      { providerId: '13', title: 'CATAN' },
+      { providerId: '822', title: 'Carcassonne' },
+    ],
+  }];
+  const { body } = await openImport(t, candidates, { status: 'wishlist', round });
+  const meta = body.querySelector('.bgg-import__state').textContent;
+  assert.match(meta, /Erweiterung zu Die Siedler von Catan, Carcassonne/,
+    'a shelf parent shows the Regal title, an unmatched one keeps BGG\'s');
+  assert.doesNotMatch(meta, /CATAN/, 'the BGG primary name must be replaced, not joined');
 });
 
 /* jsdom applies no external stylesheet, so the focus indicator is asserted
