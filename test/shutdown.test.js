@@ -130,14 +130,31 @@ test('exits non-zero when the data backend fails to close', async () => {
   assert.ok(h.logged.some((l) => l.level === 'error' && l.event === 'shutdown_failed'));
 });
 
-test('does not force-exit after a clean shutdown', async () => {
+test('does not force-exit after a clean shutdown', async (t) => {
+  // Mocked clock, so the force-exit timer can only fire on an explicit tick(),
+  // never mid-drain. With a REAL 5ms budget this test raced CI scheduling
+  // jitter: a loaded runner stalled the drain's two async hops past the
+  // timeout, the timer fired first — legitimately — and exits read [1]
+  // (flaked on main run 31303063486, 2026-08-09, green on the same commit's PR
+  // run). Only setTimeout/clearTimeout are mocked; the drain itself still runs
+  // on the real loop (the server double's setImmediate, repo.end's microtask).
+  t.mock.timers.enable({ apis: ['setTimeout'] });
   const h = harness();
   await build(h, { timeoutMs: 5 })('SIGTERM');
-
-  // The timeout timer must be cleared, or a process that drained cleanly gets a
-  // spurious exit(1) a moment later — which on Railway reads as a crash loop.
-  await new Promise((r) => setTimeout(r, 25));
   assert.deepEqual(h.exits, [0]);
+
+  // The timeout timer must be disarmed by the clean drain, or the process gets
+  // a spurious force-exit a moment later — which on Railway reads as a crash
+  // loop. Advance past the budget: a timer finish(0) failed to clear fires
+  // HERE, deterministically. The warn assertion is what sees a missing
+  // clearTimeout on its own — the `finished` guard already swallows the late
+  // exit(1), so exits alone stay [0] unless BOTH defences are gone.
+  t.mock.timers.tick(25);
+  assert.deepEqual(h.exits, [0]);
+  assert.ok(
+    !h.logged.some((l) => l.event === 'shutdown_timeout'),
+    'a clean drain must clear the force-exit timer — a late shutdown_timeout warn lies in the logs on every deploy',
+  );
 });
 
 test('records the signal it is shutting down for', async () => {
