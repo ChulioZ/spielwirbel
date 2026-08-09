@@ -51,11 +51,12 @@ const ARCHIVES = {
     // as a game the round could play (#664). `expansionOf` is what marks the row
     // as an expansion at all, and it may be EMPTY — BGG does not always report an
     // inbound link — which is a state the user has to see, because it is the one
-    // where "Ins Regal" will ask them to file it by hand.
-    note: (g) => {
+    // where "Ins Regal" will ask them to file it by hand. A parent already in
+    // the Regal is named by the round's own title, not BGG's primary name (#705).
+    note: (g, round) => {
       if (!Array.isArray(g.expansionOf)) return null;
       return g.expansionOf.length
-        ? t('wish.expansionOf', { titles: g.expansionOf.map((p) => p.title).join(', ') })
+        ? t('wish.expansionOf', { titles: expansionParentTitles(g.expansionOf, (g.source || {}).provider, round.games).join(', ') })
         : t('wish.expansionOfUnknown');
     },
   },
@@ -122,7 +123,7 @@ async function showArchive(rid, kind, seg = kind) {
     games.forEach((g) => {
       const fallback = coverPlaceholder(g);
       const when = a.at(g) ? fmtDateTime(a.at(g)) : '?';
-      const note = a.note ? a.note(g) : null;
+      const note = a.note ? a.note(g, round) : null;
       const row = h(`<div class="archive-row">
            <a class="archive-row__img">${fallback}</a>
            <div class="archive-row__body">

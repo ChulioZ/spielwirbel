@@ -23,6 +23,7 @@ const {
   expansionBaseCandidates,
   expansionAcquirePlan,
   acquirableBases,
+  expansionParentTitles,
 } = require('../public/js/wish-expansion');
 
 /* ----------------------------- the decision -------------------------------- */
@@ -107,6 +108,45 @@ test('a row with no expansionOf is not an expansion at all', () => {
   // the ROUTE is what refuses it (`not_wish`), so the guard cannot be bypassed
   // by a client that does.
   assert.equal(expansionAcquirePlan(round, plainWish).action, 'pickBase');
+});
+
+/* --------------------- which title the parent note shows ------------------- */
+
+test('a parent already in the round is named by the round\'s own title', () => {
+  const games = [
+    // Title equals the declared parent's, but under the wrong provider link: a
+    // title match would relabel the note after the wrong box (#705).
+    { id: 'g0', title: 'CATAN', source: { provider: 'steam', externalId: '13' } },
+    bggGame('g1', '13', { title: 'Die Siedler von Catan' }),
+  ];
+  assert.deepEqual(
+    expansionParentTitles([{ providerId: '13', title: 'CATAN' }], 'bgg', games),
+    ['Die Siedler von Catan']);
+});
+
+test('an unmatched parent keeps the provider title, in a mixed list too', () => {
+  const games = [bggGame('g1', '13', { title: 'Die Siedler von Catan' })];
+  assert.deepEqual(
+    expansionParentTitles([
+      { providerId: '13', title: 'CATAN' },
+      { providerId: '822', title: 'Carcassonne' },
+    ], 'bgg', games),
+    ['Die Siedler von Catan', 'Carcassonne']);
+});
+
+test('a matched game whose title was redacted falls back to the provider title', () => {
+  const games = [bggGame('g1', '13', { title: '' })];
+  assert.deepEqual(
+    expansionParentTitles([{ providerId: '13', title: 'CATAN' }], 'bgg', games),
+    ['CATAN']);
+});
+
+test('no provider link and no games list both degrade to the provider titles', () => {
+  const parents = [{ providerId: '13', title: 'CATAN' }];
+  // An expansion with no source of its own cannot vouch for any match…
+  assert.deepEqual(expansionParentTitles(parents, undefined, [bggGame('g1', '13')]), ['CATAN']);
+  // …and the import picker's round summary carries no games at all.
+  assert.deepEqual(expansionParentTitles(parents, 'bgg', undefined), ['CATAN']);
 });
 
 /* ------------------------------- the route --------------------------------- */
@@ -235,6 +275,21 @@ test('the Wunschliste says which game a wished expansion belongs to', async (t) 
   assert.match(text(rows[1]), /Erweiterung – BoardGameGeek nennt kein Grundspiel/);
   // A wished GAME must not gain the line, or every row claims to be an expansion.
   assert.doesNotMatch(text(rows[2]), /Erweiterung/);
+});
+
+test('the note prefers the Regal game\'s title once the parent is on the shelf (#705)', async (t) => {
+  const dom = await wishlist(t, [
+    wishedExpansion('e1', '325', [
+      { providerId: '13', title: 'CATAN' },
+      { providerId: '822', title: 'Carcassonne' },
+    ]),
+    // On the shelf under its German title — the note must follow the Regal, not
+    // BGG's primary name. Not a wish, so it renders no row of its own.
+    bggGame('g1', '13', { title: 'Die Siedler von Catan' }),
+  ]);
+  const text = (dom.app.querySelector('.archive-row').textContent || '').replace(/\s+/g, ' ');
+  assert.match(text, /Erweiterung zu Die Siedler von Catan, Carcassonne/);
+  assert.doesNotMatch(text, /CATAN/, 'the BGG primary name must be replaced, not joined');
 });
 
 test('"Ins Regal" on an expansion attaches it instead of clearing the wish flag', async (t) => {

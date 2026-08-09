@@ -1168,10 +1168,12 @@ async function showBggImport(round, status = 'own') {
       // A wishlist candidate may be an EXPANSION (#664), which is not a game the
       // round would ever play — it lands on its base game's row on acquisition.
       // Say so here, and say which game, or the picker offers "Seefahrer" beside
-      // "Catan" as if the two were the same kind of thing.
+      // "Catan" as if the two were the same kind of thing. A parent already on
+      // the shelf is named by the round's own title (#705); these candidates are
+      // BGG by construction, so the provider is not read off the row.
       const expansionNote = !g.expansion ? ''
         : (g.expansionOf || []).length
-          ? t('bggImport.expansionOf', { titles: g.expansionOf.map((p) => p.title).join(', ') })
+          ? t('bggImport.expansionOf', { titles: expansionParentTitles(g.expansionOf, 'bgg', round.games).join(', ') })
           : t('bggImport.expansionUnknown');
       const meta = [players, expansionNote].filter(Boolean).join(' · ');
       // The row is a <label> so the whole line toggles its checkbox — which is

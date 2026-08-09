@@ -65,6 +65,29 @@ function acquirableBases(round, game) {
   return (round.games || []).filter((g) => g.id !== game.id && !Array.isArray(g.expansionOf));
 }
 
+// The display titles for an expansion's declared parents (#705). A parent whose
+// game is already in the round is named by the ROUND's title — the shelf may
+// carry a German edition or a hand-rename while `expansionOf[].title` is always
+// BGG's primary (usually English) name. Matching is on the provider link, like
+// expansionBaseCandidates above; resolving at render time means a later rename
+// of the base game is followed automatically. An unmatched parent — or a matched
+// game whose title was redacted — keeps the provider title: nothing better
+// exists, and a blank name is worse than a foreign one.
+function expansionParentTitles(parents, provider, games) {
+  const byId = new Map();
+  if (provider) {
+    (games || []).forEach((g) => {
+      if (g.source && g.source.provider === provider && !byId.has(String(g.source.externalId))) {
+        byId.set(String(g.source.externalId), g);
+      }
+    });
+  }
+  return (parents || []).map((p) => {
+    const own = byId.get(String(p && p.providerId));
+    return (own && String(own.title || '').trim()) ? own.title : p.title;
+  });
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { expansionBaseCandidates, expansionAcquirePlan, acquirableBases };
+  module.exports = { expansionBaseCandidates, expansionAcquirePlan, acquirableBases, expansionParentTitles };
 }
