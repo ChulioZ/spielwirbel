@@ -47,6 +47,14 @@ const ARCHIVES = {
     restoreIcon: 'ti-cards',
     importStatus: 'wishlist',
     canAdd: true,
+    // #696: this screen exists to bring games IN, so „Ins Regal" leads the row
+    // as the filled primary, and removal drops to the quiet danger-text form
+    // the game-detail „Aussortieren" set the precedent for — `btn--danger`
+    // stays reserved for the archives, where deleting really is „Endgültig
+    // löschen" of a played game. Removing a wish does delete the row outright,
+    // so the danger hint (text colour) stays; dominance was the bug.
+    primaryRestore: true,
+    quietDelete: true,
     // A wished EXPANSION says which game it belongs to, so the row does not read
     // as a game the round could play (#664). `expansionOf` is what marks the row
     // as an expansion at all, and it may be EMPTY — BGG does not always report an
@@ -132,8 +140,8 @@ async function showArchive(rid, kind, seg = kind) {
              ${note ? `<div class="muted archive-row__meta">${esc(note)}</div>` : ''}
            </div>
            <div class="archive-row__actions">
-             <button class="btn" data-act="restore"><i class="ti ${a.restoreIcon || 'ti-arrow-back-up'}" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
-             <button class="btn btn--danger" data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>
+             <button class="btn${a.primaryRestore ? ' btn--primary' : ''}" data-act="restore"><i class="ti ${a.restoreIcon || 'ti-arrow-back-up'}" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
+             <button class="btn${a.quietDelete ? '' : ' btn--danger'}"${a.quietDelete ? ' style="color:var(--danger)"' : ''} data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>
            </div>
          </div>`);
       if (g.image) loadCover(row.querySelector('.archive-row__img'), coverUrl(g.image, COVER_THUMB));
