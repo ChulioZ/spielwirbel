@@ -233,6 +233,54 @@ test('importing writes full game records, ONE Chronik entry and one product even
   assert.equal(feed.body.filter((x) => x.type === 'game_added').length, 0);
 });
 
+test('the import fires the weight/description backfill, so the first draw already has them (#717)', async (t) => {
+  /* The reported gap: import -> draw -> vote showed no info anywhere, because
+   * the session-start backfill races the first voter and a collection body
+   * carries neither field. Import time is the polite place to fill them — one
+   * batched /thing?stats=1 per 60 games, long before anyone draws. The stub
+   * branches on the URL the way BGG does: the collection body for /collection,
+   * a stats body for /thing. */
+  const a = await makeAccount('imp-backfill@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerBackfill');
+
+  const thingCalls = [];
+  global.fetch = async (url) => {
+    const u = String(url);
+    if (/\/thing\?/.test(u)) {
+      thingCalls.push(u);
+      return { status: 200, text: async () => `<items>
+        <item type="boardgame" id="13"><name type="primary" value="CATAN"/>
+          <description>Handel &amp; Bau.</description>
+          <statistics><ratings><average value="7.1"/><averageweight value="2.28"/></ratings></statistics></item>
+        <item type="boardgame" id="9209"><name type="primary" value="Ticket to Ride"/>
+          <description>Zugstrecken.</description>
+          <statistics><ratings><average value="7.4"/><averageweight value="1.85"/></ratings></statistics></item>
+      </items>` };
+    }
+    return { status: 200, text: async () => THREE };
+  };
+  t.after(() => { global.fetch = realFetch; });
+
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token)).send({ externalIds: ['13', '9209'] });
+  assert.equal(res.status, 200);
+
+  // Fire-and-forget: poll until the batched backfill lands in the store.
+  let games;
+  for (let i = 0; i < 50; i++) {
+    games = (await repo.getRound(a.user.tenantId, round.id)).games;
+    if (games.every((g) => g.weight != null)) break;
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  const byExt = new Map(games.map((g) => [g.source.externalId, g]));
+  assert.equal(byExt.get('13').weight, 2.28);
+  assert.equal(byExt.get('13').description, 'Handel & Bau.');
+  assert.equal(byExt.get('9209').weight, 1.85);
+  assert.equal(thingCalls.length, 1, 'both imported games ride one batched /thing call');
+  assert.match(thingCalls[0], /stats=1/);
+});
+
 test('the listing never offers a cover the import would refuse to store (#519)', async () => {
   const a = await makeAccount('imp-listing-cover@example.com');
   const round = await makeRound(a.token);
@@ -368,9 +416,13 @@ test('the import takes its handle from the ACCOUNT, never from the request', asy
   const urls = stubBgg(THREE);
   await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
     .set(auth(a.token)).send({ externalIds: ['13'], username: 'someone-else', bggUsername: 'someone-else' });
-  assert.equal(urls.length, 1);
-  assert.match(urls[0], /username=GamerHandle/);
-  assert.doesNotMatch(urls[0], /someone-else/);
+  // Exactly one COLLECTION request (the #717 backfill adds a /thing hop after
+  // the import, which is not a collection read), carrying the account's
+  // handle — and the forged one reaches no upstream URL at all.
+  const collections = urls.filter((u) => /\/collection\?/.test(u));
+  assert.equal(collections.length, 1);
+  assert.match(collections[0], /username=GamerHandle/);
+  urls.forEach((u) => assert.doesNotMatch(u, /someone-else/));
 });
 
 test('the import only ever writes what the collection actually holds', async () => {

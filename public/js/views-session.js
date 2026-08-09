@@ -283,6 +283,30 @@ function startVoting(round, session, games, people, opts = {}) {
 
   const hasVotes = () => Object.values(votes).some((byGame) => Object.keys(byGame).length > 0);
 
+  // Self-heal for a game the wizard received without its weight/description
+  // (#717 follow-up): a session drawn before the fields existed — or before
+  // the fire-and-forget backfill landed — hands this closure field-less games,
+  // so voting showed no ⓘ while the detail page (which has its own lazy
+  // trigger) did. Same trigger here: ask once per game per wizard run, mutate
+  // the SHARED game object (every rating tap rebuilds the card from it, so
+  // later renders carry the fields synchronously), and slot the ⓘ into the
+  // live card only if it still shows this game.
+  const infoAsked = new Set();
+  function fetchCardGameInfo(game, card) {
+    if (!wantsGameInfo(game) || infoAsked.has(game.id)) return;
+    infoAsked.add(game.id);
+    api('GET', `/api/rounds/${round.id}/games/${game.id}/provider-info`)
+      .then((info) => {
+        if (info.weight != null && game.weight == null) game.weight = info.weight;
+        if (info.description && !game.description) game.description = info.description;
+        const title = card.querySelector('.vote__title');
+        if (!document.body.contains(title) || title.querySelector('.vote__info')) return;
+        const btn = gameInfoButton(game);
+        if (btn) title.append(' ', btn);
+      })
+      .catch(() => {}); // best-effort — the card stands without it
+  }
+
   // Blocks a reload / tab close while votes are unsaved. Removed on every exit
   // path: an abandoned closure that kept its listener would keep blocking
   // reloads for the rest of the SPA session.
@@ -450,9 +474,11 @@ function startVoting(round, session, games, people, opts = {}) {
     // Info affordance (#717): weight + description behind a small ⓘ in the
     // title line, so the height-budgeted card gains no extra row
     // (.claude/rules/fitting-a-screen-to-the-viewport-height.md). Rendered
-    // only when the game actually carries the data.
+    // only when the game actually carries the data — and when it doesn't but
+    // could, the card self-heals below.
     const infoBtn = gameInfoButton(game);
     if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
+    else fetchCardGameInfo(game, card);
 
     // 1–5 as mood faces; the selected one takes the rating's traffic-light color.
     const MOODS = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
