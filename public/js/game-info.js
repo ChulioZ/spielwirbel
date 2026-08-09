@@ -22,6 +22,29 @@ function hasGameInfo(game) {
 // a "show more" toggle. Display-only — the stored text is never cut.
 const GAME_INFO_CLAMP_CHARS = 280;
 
+// BGG stores its descriptions HTML-encoded and XML-encodes them again when
+// serving, so after the provider's one XML decode the text still carries HTML
+// entities for many games — Ark Nova ends "&mdash;description from the
+// publisher" (captured live 2026-08-09). Decoded at RENDER time, not at store
+// time, so every already-stored row self-corrects on its next view with no
+// migration code (the render-time precedent in
+// .claude/rules/provider-cover-sizing.md).
+//
+// DOMParser rather than the textarea-innerHTML idiom: an innerHTML assignment
+// fed remote data is a CodeQL XSS sink however inert the element, while a
+// parsed document is never inserted anywhere. '<' is pre-escaped so anything
+// tag-shaped in the text survives as literal text instead of becoming an
+// element the textContent walk would drop, and the 'x' sentinel keeps leading
+// whitespace out of the HTML parser's ignore-initial-whitespace modes (blank
+// first lines are real BGG data). The guard keeps entity-free text — the
+// common case — byte-identical without a parse.
+function decodeGameDescription(s) {
+  const text = String(s);
+  if (!/&(#\d|#x[0-9a-fA-F]|[a-zA-Z]+;)/.test(text)) return text;
+  const doc = new DOMParser().parseFromString('x' + text.replace(/</g, '&lt;'), 'text/html');
+  return doc.body.textContent.slice(1);
+}
+
 // The shared body: weight as a labelled five-dot scale (one decimal — BGG's
 // four decimals would imply a precision the number does not have), the
 // description, and the BGG attribution line the licence asks for wherever its
@@ -40,7 +63,7 @@ function gameInfoBody(game) {
   }
   if (game.description) {
     const desc = h('<p class="game-info__desc"></p>');
-    desc.textContent = game.description;
+    desc.textContent = decodeGameDescription(game.description);
     box.appendChild(desc);
     if (game.description.length > GAME_INFO_CLAMP_CHARS) {
       desc.classList.add('is-clamped');

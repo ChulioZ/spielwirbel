@@ -147,6 +147,31 @@ test('gameInfoButton renders only when there is something to show, and opens the
   assert.match(sheet.querySelector('.game-info__source').textContent, /BoardGameGeek/);
 });
 
+test('a stored description with BGG\'s double-encoded HTML entities renders decoded', async (t_) => {
+  /* BGG stores its descriptions HTML-encoded and XML-encodes them again when
+   * serving, so after the provider's one XML decode the stored text still
+   * carries literals like `&mdash;` — seen live on production (Ark Nova ends
+   * "&mdash;description from the publisher", raw XML captured 2026-08-09).
+   * Decoded at RENDER time so every already-stored row self-corrects with no
+   * migration code. Literal '<' and clean text must survive untouched. */
+  const { dom } = bootApp(t_);
+  const stored = 'Ein Zoo &mdash; mit Stil.&#10;Neue Zeile &amp; mehr, 3 &lt; 5.';
+  const btn = dom.call('gameInfoButton', { id: 'g', title: 'Ark Nova', weight: 3.7, description: stored });
+  dom.document.body.appendChild(btn);
+  btn.click();
+  const desc = dom.document.querySelector('.sheet-backdrop .game-info__desc');
+  assert.equal(desc.textContent, 'Ein Zoo — mit Stil.\nNeue Zeile & mehr, 3 < 5.');
+
+  // Text with no entity-shaped content passes through byte-identically —
+  // including a literal '<' and a bare '&'.
+  const plain = dom.call('decodeGameDescription', 'Tigris & Euphrates: a < b, kein Tag <br/> bleibt Text');
+  assert.equal(plain, 'Tigris & Euphrates: a < b, kein Tag <br/> bleibt Text');
+
+  // Leading whitespace (blank first lines are real BGG data) survives the
+  // decode path too.
+  assert.equal(dom.call('decodeGameDescription', '\n\n&quot;Zitat&quot;'), '\n\n"Zitat"');
+});
+
 test('the vote-link card shows the ⓘ only for a game carrying info', async (t_) => {
   const { dom } = bootApp(t_);
   const person = { id: 'm1', name: 'Anna', guest: false, color: null };
