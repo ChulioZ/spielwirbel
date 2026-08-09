@@ -31,6 +31,12 @@ function roundFixture() {
       {
         id: 'g1', title: 'Catan', image: '/uploads/catan.jpg', minPlayers: 3, maxPlayers: 4,
         tagIds: [], weight: 2.2809, description: LONG_DESC,
+        // The COMPLETE #724 set, so wantsGameInfo() is satisfied and this
+        // fixture keeps proving "nothing missing -> no backfill request".
+        minPlaytime: 60, maxPlaytime: 120, minAge: 10,
+        categories: ['Civilization', 'Economic'],
+        mechanics: ['Dice Rolling', 'Hand Management', 'Trading', 'Network Building', 'Income', 'Set Collection'],
+        rating: 7.09054,
         source: { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' },
         providerInfoAt: '2026-08-09T10:00:00.000Z',
       },
@@ -85,7 +91,7 @@ test('the detail section renders weight, clamped description and the BGG attribu
   assert.equal(desc.textContent, LONG_DESC, 'the stored text renders whole — the clamp is CSS-only');
   assert.ok(desc.classList.contains('is-clamped'));
   assert.match(sec.querySelector('.game-info__source').textContent, /BoardGameGeek/);
-  // Both fields present -> no backfill request.
+  // Every field present -> no backfill request.
   assert.equal(infoCalls.length, 0);
 
   // The toggle expands and collapses, stating its state.
@@ -145,6 +151,79 @@ test('gameInfoButton renders only when there is something to show, and opens the
   assert.equal(sheet.querySelector('.game-info__desc').classList.contains('is-clamped'), false);
   assert.equal(sheet.querySelector('.game-info__more'), null);
   assert.match(sheet.querySelector('.game-info__source').textContent, /BoardGameGeek/);
+});
+
+// A game carrying every #724 field, for the two surfaces that must disagree
+// about exactly one of them.
+const RICH = {
+  id: 'g', title: 'Catan', weight: 2.2809, description: 'Kurz.',
+  minPlaytime: 60, maxPlaytime: 120, minAge: 10,
+  categories: ['Civilization', 'Economic'],
+  mechanics: ['Dice Rolling', 'Hand Management', 'Trading', 'Network Building', 'Income', 'Set Collection'],
+  rating: 7.09054,
+};
+
+const factOf = (root, label) => [...root.querySelectorAll('.game-info__fact')]
+  .find((f) => f.querySelector('.game-info__fact-label').textContent === label);
+
+test('the detail section renders the standard metadata AND the BGG rating', async (t_) => {
+  const { dom } = bootApp(t_);
+  await dom.call('showGameDetail', RID, 'g1');
+  const sec = aboutSection(dom);
+  // The playtime SPREAD is the information — a range where the bounds differ.
+  assert.equal(factOf(sec, t('gameInfo.playtime')).querySelector('.game-info__fact-value').textContent, '60–120 Min.');
+  assert.equal(factOf(sec, t('gameInfo.minAge')).querySelector('.game-info__fact-value').textContent, 'ab 10');
+  assert.equal(factOf(sec, t('gameInfo.categories')).querySelector('.game-info__fact-value').textContent, 'Civilization, Economic');
+  // Uncapped here: the detail screen shows all six mechanics, unlike the sheet.
+  assert.equal(factOf(sec, t('gameInfo.mechanics')).querySelector('.game-info__fact-value').textContent,
+    'Dice Rolling, Hand Management, Trading, Network Building, Income, Set Collection');
+  // One decimal, like the weight — never BGG's five.
+  assert.equal(factOf(sec, t('gameInfo.rating')).querySelector('.game-info__fact-value').textContent, '7.1 von 10');
+});
+
+test('the vote sheet shows the same metadata but NEVER the rating', async (t_) => {
+  /* The client half of #724's rating rule (the enforceable half is the ballot
+   * projection in lib/routes/vote-link.js). gameInfoBody defaults `rating` to
+   * OFF, so this asserts the DEFAULT rather than a flag the caller passes —
+   * flipping that default to true reddens this by name, which a spec that
+   * passed `{ rating: false }` itself could never see
+   * (.claude/rules/break-the-code-on-purpose.md). */
+  const { dom } = bootApp(t_);
+  const btn = dom.call('gameInfoButton', RICH);
+  dom.document.body.appendChild(btn);
+  btn.click();
+  const sheet = dom.document.querySelector('.sheet-backdrop .sheet');
+  assert.ok(factOf(sheet, t('gameInfo.playtime')), 'the sheet lost the metadata it should carry');
+  assert.equal(factOf(sheet, t('gameInfo.minAge')).querySelector('.game-info__fact-value').textContent, 'ab 10');
+  // Capped at five, with the remainder summarised rather than silently dropped.
+  assert.equal(factOf(sheet, t('gameInfo.mechanics')).querySelector('.game-info__fact-value').textContent,
+    'Dice Rolling, Hand Management, Trading, Network Building, Income, +1 weitere');
+
+  assert.equal(factOf(sheet, t('gameInfo.rating')), undefined, 'the rating reached a voting surface');
+  assert.doesNotMatch(sheet.textContent, /7[.,]1/, 'the rating leaked in some other row');
+});
+
+test('a game whose only provider fact is a rating gets no ⓘ, but does get a detail section', async (t_) => {
+  /* The two gates have to disagree here, and both directions are a real bug:
+   * an ⓘ opening an empty sheet, or a detail screen hiding a section that has
+   * something to say. */
+  const { dom } = bootApp(t_);
+  const ratingOnly = { id: 'g', title: 'Nur Wertung', rating: 8.1 };
+  assert.equal(dom.call('gameInfoButton', ratingOnly), null);
+  const sec = dom.call('renderGameInfoSection', ratingOnly);
+  assert.ok(factOf(sec, t('gameInfo.rating')), 'the detail section dropped the one fact it had');
+});
+
+test('one known playtime bound reads as a single number, not a half-open range', async (t_) => {
+  const { dom } = bootApp(t_);
+  const value = (game) => factOf(dom.call('renderGameInfoSection', game), t('gameInfo.playtime'))
+    .querySelector('.game-info__fact-value').textContent;
+  assert.equal(value({ id: 'a', title: 'A', minPlaytime: 90, maxPlaytime: 90 }), '90 Min.',
+    'equal bounds are one number, not "90–90"');
+  assert.equal(value({ id: 'b', title: 'B', minPlaytime: 45, maxPlaytime: null }), '45 Min.');
+  assert.equal(value({ id: 'c', title: 'C', minPlaytime: null, maxPlaytime: 30 }), '30 Min.');
+  // The live case the data shape exists for (Toriki: 20–600).
+  assert.equal(value({ id: 'd', title: 'D', minPlaytime: 20, maxPlaytime: 600 }), '20–600 Min.');
 });
 
 test('a stored description with BGG\'s double-encoded HTML entities renders decoded', async (t_) => {

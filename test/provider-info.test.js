@@ -29,15 +29,28 @@ afterEach(() => { global.fetch = realFetch; });
 // sibling rides along so a sloppy name match would import the wrong number
 // (7.0 instead of the weight) and fail the assertions loudly.
 const thingXml = (items, withStats) => `<?xml version="1.0" encoding="utf-8"?><items>${items
-  .map(({ id, weight, desc }) => `<item type="boardgame" id="${id}">
+  .map(({ id, weight, desc, playtime, age, cats, mechs }) => `<item type="boardgame" id="${id}">
     <name type="primary" value="Game ${id}"/>
     <minplayers value="2"/><maxplayers value="4"/>
     ${desc ? `<description>${desc}</description>` : ''}
+    ${playtime ? `<minplaytime value="${playtime[0]}"/><maxplaytime value="${playtime[1]}"/>` : ''}
+    ${age ? `<minage value="${age}"/>` : ''}
+    ${(cats || []).map((c) => `<link type="boardgamecategory" id="1" value="${c}"/>`).join('')}
+    ${(mechs || []).map((m) => `<link type="boardgamemechanic" id="2" value="${m}"/>`).join('')}
     ${withStats ? `<statistics><ratings><average value="7.0"/><bayesaverage value="6.9"/>
       ${weight ? `<averageweight value="${weight}"/>` : '<averageweight value="0"/>'}
     </ratings></statistics>` : ''}
   </item>`)
   .join('')}</items>`;
+
+// The GET …/provider-info response shape, so a spec states only what it cares
+// about. `rating: 7.0` is the default because the stub's <average> is served
+// with stats=1 on every call — the detail surface DOES carry it (the ballot
+// projection is where it is withheld; see the vote-link spec below).
+const infoBody = (over = {}) => ({
+  weight: null, description: null, minPlaytime: null, maxPlaytime: null,
+  minAge: null, categories: [], mechanics: [], rating: 7.0, ...over,
+});
 
 const stubFetch = (items) => {
   const calls = [];
@@ -95,7 +108,7 @@ test('GET provider-info backfills a linked game missing the fields, once', async
 
   const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, { weight: 3.5, description: 'Ein Aufbauspiel.' });
+  assert.deepEqual(res.body, infoBody({ weight: 3.5, description: 'Ein Aufbauspiel.' }));
   assert.equal(calls.length, 1);
   assert.match(calls[0], /stats=1/);
 
@@ -106,7 +119,7 @@ test('GET provider-info backfills a linked game missing the fields, once', async
 
   // A second open answers from the store — no further upstream request.
   const again = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
-  assert.deepEqual(again.body, { weight: 3.5, description: 'Ein Aufbauspiel.' });
+  assert.deepEqual(again.body, infoBody({ weight: 3.5, description: 'Ein Aufbauspiel.' }));
   assert.equal(calls.length, 1);
 });
 
@@ -119,11 +132,11 @@ test('a game BGG has no data for is stamped and not re-fetched on every view', a
   const calls = stubFetch([{ id: '900003' }]); // averageweight=0, no description
 
   const first = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
-  assert.deepEqual(first.body, { weight: null, description: null });
+  assert.deepEqual(first.body, infoBody());
   assert.equal(calls.length, 1);
 
   const second = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
-  assert.deepEqual(second.body, { weight: null, description: null });
+  assert.deepEqual(second.body, infoBody());
   assert.equal(calls.length, 1, 'the stamped attempt suppresses a re-fetch inside the TTL');
 });
 
@@ -137,7 +150,7 @@ test('an upstream failure stamps nothing, so the next trigger retries', async ()
   global.fetch = async () => ({ status: 404, text: async () => '' });
   const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, { weight: null, description: null });
+  assert.deepEqual(res.body, infoBody({ rating: null }));
 
   const stored = (await repo.getRound('default', rid)).games.find((g) => g.id === game.id);
   assert.equal('providerInfoAt' in stored, false, 'a failed fetch must not suppress the retry for the whole TTL');
@@ -145,7 +158,7 @@ test('an upstream failure stamps nothing, so the next trigger retries', async ()
   // Upstream recovers -> the next open fills the fields.
   const calls = stubFetch([{ id: '900004', weight: '1.8', desc: 'Leicht.' }]);
   const retry = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
-  assert.deepEqual(retry.body, { weight: 1.8, description: 'Leicht.' });
+  assert.deepEqual(retry.body, infoBody({ weight: 1.8, description: 'Leicht.' }));
   assert.equal(calls.length, 1);
 });
 
@@ -156,8 +169,60 @@ test('a game without a provider link answers its stored nulls with no fetch', as
   });
   const calls = stubFetch([]);
   const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
-  assert.deepEqual(res.body, { weight: null, description: null });
+  assert.deepEqual(res.body, infoBody({ rating: null }));
   assert.equal(calls.length, 0);
+});
+
+test('a game already carrying #717\'s fields still receives the ones #724 added', async () => {
+  /* THE TRAP, and the one break in this PR that fails completely silently.
+   * needsProviderInfo short-circuits on a completeness check; leave it on the
+   * old {weight, description} pair and every game the #717 backfill already
+   * filled returns false FOREVER — so the games with the BEST coverage are
+   * exactly the ones that never receive playtime, age, categories, mechanics or
+   * the rating. No error, no failing route, and the feature looks implemented.
+   *
+   * Seeded WITHOUT providerInfoAt so the TTL gate is not what is under test —
+   * this spec is about the completeness check alone. */
+  const rid = await makeRound('Info-Widen');
+  const game = await repo.createGame('default', rid, {
+    title: 'Schon gefüllt', minPlayers: 2, maxPlayers: 4, image: null,
+    source: { provider: 'bgg', externalId: '900012', url: null },
+    weight: 2.5, description: 'Bereits da.',
+  });
+  const calls = stubFetch([{
+    id: '900012', weight: '2.5', desc: 'Bereits da.',
+    playtime: [45, 75], age: 12, cats: ['Economic'], mechs: ['Worker Placement', 'Trading'],
+  }]);
+
+  const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
+  assert.equal(calls.length, 1, 'a game with only the old fields was treated as complete');
+  assert.deepEqual(res.body, infoBody({
+    weight: 2.5, description: 'Bereits da.', minPlaytime: 45, maxPlaytime: 75,
+    minAge: 12, categories: ['Economic'], mechanics: ['Worker Placement', 'Trading'],
+  }));
+
+  const stored = (await repo.getRound('default', rid)).games.find((g) => g.id === game.id);
+  assert.equal(stored.minPlaytime, 45);
+  assert.equal(stored.minAge, 12);
+  assert.deepEqual(stored.mechanics, ['Worker Placement', 'Trading']);
+  assert.equal(stored.rating, 7.0);
+});
+
+test('a game carrying EVERY field is complete — the widened check still terminates', async () => {
+  /* The other half, and the one that keeps the fix above from being "always
+   * re-fetch": a fully-filled game must still short-circuit, or every view of
+   * every game costs an upstream request per TTL forever. Seeded with no
+   * providerInfoAt, so only the completeness check can stop it. */
+  const rid = await makeRound('Info-Complete');
+  const game = await repo.createGame('default', rid, {
+    title: 'Komplett', minPlayers: 2, maxPlayers: 4, image: null,
+    source: { provider: 'bgg', externalId: '900013', url: null },
+    weight: 2.5, description: 'Alles da.', minPlaytime: 45, maxPlaytime: 75, minAge: 12,
+    categories: ['Economic'], mechanics: ['Trading'], rating: 7.4,
+  });
+  const calls = stubFetch([{ id: '900013' }]);
+  await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
+  assert.equal(calls.length, 0, 'a complete game must not ask the provider again');
 });
 
 test('session start backfills the drawn games in one batched request', async () => {
@@ -196,12 +261,15 @@ test('session start backfills the drawn games in one batched request', async () 
   assert.match(calls[0], /900006/);
 });
 
-test('the vote-link ballot projects weight + description', async () => {
+test('the vote-link ballot projects the metadata but NEVER the rating', async () => {
   const rid = await makeRound('Info-Ballot');
   await repo.createGame('default', rid, {
     title: 'Drei', minPlayers: 1, maxPlayers: 6, image: null,
     source: { provider: 'bgg', externalId: '900007', url: null },
     weight: 3.2, description: 'Ballot-Text.', providerInfoAt: new Date().toISOString(),
+    minPlaytime: 30, maxPlaytime: 90, minAge: 12,
+    categories: ['Economic'], mechanics: ['Worker Placement'],
+    rating: 8.4,
   });
   stubFetch([]);
   const start = await request(app).post(`/api/rounds/${rid}/sessions`).send({ count: 1 });
@@ -210,8 +278,21 @@ test('the vote-link ballot projects weight + description', async () => {
   assert.equal(mint.status, 201);
   const ballot = await request(app).get(`/api/vote/${mint.body.token}`);
   assert.equal(ballot.status, 200);
-  assert.equal(ballot.body.games[0].weight, 3.2);
-  assert.equal(ballot.body.games[0].description, 'Ballot-Text.');
+  const [g] = ballot.body.games;
+  assert.equal(g.weight, 3.2);
+  assert.equal(g.description, 'Ballot-Text.');
+  assert.equal(g.minPlaytime, 30);
+  assert.equal(g.maxPlaytime, 90);
+  assert.equal(g.minAge, 12);
+  assert.deepEqual(g.categories, ['Economic']);
+  assert.deepEqual(g.mechanics, ['Worker Placement']);
+
+  // THE guarantee (#724). The game genuinely carries rating 8.4 — asserted
+  // above via the store — so this is a real exclusion, not a game that had
+  // nothing to leak. A link voter can read this JSON whether or not any view
+  // renders it, which is why the whitelist and not the client is the control.
+  assert.equal('rating' in g, false, 'the community rating reached a voting surface');
+  assert.doesNotMatch(JSON.stringify(ballot.body), /8\.4/, 'the rating leaked somewhere else in the ballot');
 });
 
 test('PATCH apply flags take the resolved info on link — and only what was chosen', async () => {
@@ -219,7 +300,10 @@ test('PATCH apply flags take the resolved info on link — and only what was cho
   const game = await repo.createGame('default', rid, {
     title: 'Unverlinkt', minPlayers: 2, maxPlayers: 4, image: null, source: null,
   });
-  stubFetch([{ id: '900008', weight: '2.9', desc: 'Verlinkt.' }]);
+  stubFetch([{
+    id: '900008', weight: '2.9', desc: 'Verlinkt.',
+    playtime: [45, 75], age: 12, cats: ['Economic'], mechs: ['Trading'],
+  }]);
   const res = await request(app).patch(`/api/rounds/${rid}/games/${game.id}`).send({
     ...bggSource('900008'),
     applyWeight: true,
@@ -228,6 +312,34 @@ test('PATCH apply flags take the resolved info on link — and only what was cho
   assert.equal(res.status, 200);
   assert.equal(res.body.weight, 2.9);
   assert.equal('description' in res.body, false);
+
+  // The UNCHIPPED #724 fields land regardless of the chips, and that is not
+  // symmetry — this handler stamps providerInfoAt, which suppresses the lazy
+  // backfill for a whole TTL. Leave them out and the user who just asked for
+  // BGG's data waits a week for most of it.
+  assert.equal(res.body.minPlaytime, 45);
+  assert.equal(res.body.maxPlaytime, 75);
+  assert.equal(res.body.minAge, 12);
+  assert.deepEqual(res.body.categories, ['Economic']);
+  assert.deepEqual(res.body.mechanics, ['Trading']);
+  assert.equal(res.body.rating, 7.0);
+  assert.equal(typeof res.body.providerInfoAt, 'string');
+
+  // A provider that answers with nothing writes NO key — updateGame
+  // Object.assigns the patch verbatim, so without the accretion guards this path
+  // would store `categories: []` and a wall of nulls on the row, splitting
+  // absent-key parity between the two backends.
+  const bare = await repo.createGame('default', rid, {
+    title: 'Karg', minPlayers: 2, maxPlayers: 4, image: null, source: null,
+  });
+  stubFetch([{ id: '900014' }]); // no playtime, no age, no links, weight 0
+  const empty = await request(app).patch(`/api/rounds/${rid}/games/${bare.id}`).send({
+    ...bggSource('900014'), applyWeight: true,
+  });
+  assert.equal(empty.status, 200);
+  for (const key of ['weight', 'description', 'minPlaytime', 'maxPlaytime', 'minAge', 'categories', 'mechanics']) {
+    assert.equal(key in empty.body, false, `${key} written from an empty provider answer`);
+  }
 
   // And the values themselves cannot be dictated: a PATCH carrying literals
   // changes nothing without the resolved link.

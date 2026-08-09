@@ -157,10 +157,16 @@ lib/
   status.js          aggregate usage metrics + the quota ceilings for the
                      operator panel's Kennzahlen card (issues #274/#404) —
                      counts only, never a secret value and never personal data
-  provider-info.js   lazy backfill of BGG weight + description onto linked
-                     games (issue #717): eligibility (a TTL-stamped attempt
-                     marker) and the batched, best-effort fill both trigger
-                     points share — game-detail open and session start
+  provider-info.js   lazy backfill of BGG's standard metadata onto linked
+                     games (issues #717/#724): eligibility (a TTL-stamped
+                     attempt marker) and the batched, best-effort fill both
+                     trigger points share — game-detail open and session start
+  provider-info-fields.js
+                     WHICH provider fields a game carries and what counts as a
+                     value worth storing (#724). Dependency-free so both repo
+                     backends, the games route and the backfill share one
+                     definition — a second copy would decide on its own
+                     whether an empty answer erases a stored value
   provider-cache.js  the shared 10-minute cache for provider hops (search,
                      detail, collection, cover refresh), so a repeated click
                      or a debounced keystroke costs nothing upstream. A caller

@@ -137,8 +137,14 @@ load-bearing: an attribute value may legally contain a raw `>` (game titles do,
 and a naive `/<[^>]*>/` cuts the tag in half), and titles arrive
 entity-encoded, so every attribute and text node is decoded.
 
-**Known limits, not bugs:** no play-time bucketing (the field is read but the
-app no longer stores durations). Search hits carry `thumbnail: null` — the
+**Known limits, not bugs:** ~~no play-time bucketing~~ — **superseded by #724**:
+BGG's `<minplaytime>`/`<maxplaytime>` *are* stored now, as a provider-sourced
+range on the game record, alongside minimum age, categories, mechanics and the
+community rating. That is not a return of #242's hand-set `duration` enum; see
+`.claude/rules/provider-info-is-a-field-set.md`, which also records why
+`<playingtime>` is skipped and why the pair must not be collapsed to one number.
+The four storefronts still have no play-time field and still default to `'long'`.
+Search hits carry `thumbnail: null` — the
 search endpoint returns no images at all, so BGG rows show the placeholder
 thumb in the dropdown and the cover arrives with the detail on pick.
 
