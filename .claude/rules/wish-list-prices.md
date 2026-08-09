@@ -131,9 +131,11 @@ Two properties of the cooldown are load-bearing and each fails silently:
 and the half that still holds is why. An expired *cache* entry is still never a
 fallback (`cachedIf` refetches, and a failed refetch is `{available: false}`), and
 the cache is still per process. What changed is that the last price each lookup
-answered is now also persisted, read only when a live lookup is unavailable, and
-rendered age-first rather than with a `fetchedAt` footnote. Their terms were read
-and permit it. See `.claude/rules/last-known-price-fallback.md`.
+answered is now also persisted — read when a live lookup is unavailable, and
+since #707 also served instantly (`?stored=1`) as the first render while the
+live lookup is still in flight — and always rendered age-first rather than with
+a `fetchedAt` footnote. Their terms were read and permit it. See
+`.claude/rules/last-known-price-fallback.md`.
 
 ## Two things that are legal posture, not configuration
 

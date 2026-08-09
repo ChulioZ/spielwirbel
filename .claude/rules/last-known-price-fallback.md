@@ -40,21 +40,33 @@ that sees this, and it is the **only** one that does — the market spec beside 
 destination and currency anyway. Verified by weakening `cacheKey` to the tuple
 form and watching exactly that one name go red.
 
-## 2. Read it ONLY when a live lookup is unavailable
+## 2. It never SUBSTITUTES for a live answer — the fallback reads, plus one fast path
 
-Three call sites, and the distinction that matters is *why* there is no fresh
-answer:
+The **fallback** branches read it only when a live lookup is unavailable:
 
 | Outcome | Fallback? |
 |---|---|
 | fetch threw, or the source is cooling | **yes** |
-| fetch succeeded, no offers (`items: []`) | **no** — a settled answer |
+| fetch succeeded, no offers (`items: []` → the frozen `NO_OFFERS`) | **no** — a settled answer, and since #707 it *says* so (`reason: 'no_offers'`) |
 | feature disabled | **no** |
 
 The middle row is the one worth stating: "nobody stocks this" is fresh data, and
 answering it with last week's price would **contradict** the upstream rather than
-survive its absence. The cooling branch is also reached only on a cache *miss*,
-so a live cache entry still outranks the stored row.
+survive its absence. The `no_offers` marker exists because the client may state
+"no price available" only for that settled answer, never for an upstream that
+was merely unreachable — failure paths keep the markerless `UNAVAILABLE`. The
+cooling branch is also reached only on a cache *miss*, so a live cache entry
+still outranks the stored row.
+
+**Since #707 there is a second, deliberate reader:** `storedPriceFor`, the
+route's `?stored=1` fast path. The wish page requests it in parallel with the
+full lookup and renders its answer only until the live one lands. That is honest
+under the same rule, because the stored render is never presented as current —
+§3's age-first labelling is kept, `staleWhy` is swapped for a „wird gerade
+geprüft"-note — and the live answer always replaces it within the same view.
+What `storedPriceFor` must never do is fetch upstream, touch the cooldown or the
+in-memory cache, or write anything: a fast path with side effects would race the
+very lookup it fronts.
 
 ## 3. The age becomes the headline — that is the legal half
 

@@ -188,13 +188,15 @@ test('an upstream 500 is a failure, not an empty price', async () => {
   assert.deepEqual(res.body, { available: false });
 });
 
-test('a game nobody stocks is a settled answer and IS cached', async () => {
+test('a game nobody stocks is a settled answer and IS cached — marked as such (#707)', async () => {
   process.env.PRICES_ENABLED = 'true';
   const calls = stubFetch({ currency: 'EUR', items: [] });
   const round = await createRound(request);
   const game = await addWish(round.id, { sourceExternalId: '1008' });
   const path = `/api/rounds/${round.id}/games/${game.id}/prices`;
-  assert.deepEqual((await request(app).get(path)).body, { available: false });
+  // The marker is what lets the client SAY "no price available" — a claim it may
+  // make only for a settled answer, never for an unreachable upstream.
+  assert.deepEqual((await request(app).get(path)).body, { available: false, reason: 'no_offers' });
   await request(app).get(path);
   assert.equal(calls.length, 1);
 });
@@ -219,13 +221,13 @@ test('a Steam wish is priced from price_overview', async () => {
   assert.ok(calls[0].startsWith('https://store.steampowered.com/api/appdetails'));
 });
 
-test('a free Steam game shows nothing rather than 0,00 €', async () => {
+test('a free Steam game shows nothing rather than 0,00 € — a settled answer too', async () => {
   process.env.PRICES_ENABLED = 'true';
   stubFetch({ 78: { success: true, data: { name: 'Dota 2', is_free: true } } });
   const round = await createRound(request);
   const game = await addWish(round.id, { sourceProvider: 'steam', sourceExternalId: '78' });
   const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices`);
-  assert.deepEqual(res.body, { available: false });
+  assert.deepEqual(res.body, { available: false, reason: 'no_offers' });
 });
 
 test('a failing source is PAUSED, not re-asked on every page view', async () => {
@@ -444,7 +446,7 @@ test('"nobody stocks this" is a settled answer and is NOT overridden by a stored
   // week's price here would contradict fresh data rather than survive an outage.
   assert.deepEqual(
     (await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=de`)).body,
-    { available: false }
+    { available: false, reason: 'no_offers' }
   );
 });
 
@@ -527,4 +529,81 @@ test('the round and the game still 404 honestly', async () => {
   const round = await createRound(request);
   assert.equal((await request(app).get('/api/rounds/nope/games/x/prices')).status, 404);
   assert.equal((await request(app).get(`/api/rounds/${round.id}/games/nope/prices`)).status, 404);
+});
+
+/*
+ * The stored-only fast path (#707): `?stored=1`, the first leg of the client's
+ * stale-while-revalidate race. Its whole value is being instant and inert, so
+ * what these specs pin hardest is what it must NOT do: fetch, cache, cool, or
+ * write. Every fetch stub here would answer happily — a call count above zero is
+ * the failure, not a broken stub.
+ */
+
+test('?stored=1 answers the stored row instantly — and asks nothing upstream', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  await storedPrice('4001', 'de', { amount: 41.5, fetchedAt: isoAgo(2 * DAY) });
+  const calls = stubFetch(bgpBody('4001', [OFFER]));
+  const round = await createRound(request);
+  const game = await addWish(round.id, { sourceExternalId: '4001' });
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=de&stored=1`);
+  assert.equal(res.body.available, true);
+  assert.equal(res.body.amount, 41.5);
+  assert.equal(res.body.stale, true, 'a stored price is always age-labelled, on this path too');
+  assert.deepEqual(calls, [], 'the fast path must never fetch');
+});
+
+test('?stored=1 fills no cache and cools nothing — the full lookup after it still fetches fresh', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  await storedPrice('4002', 'de', { amount: 33.0, fetchedAt: isoAgo(2 * DAY) });
+  const calls = stubFetch(bgpBody('4002', [OFFER]));
+  const round = await createRound(request);
+  const game = await addWish(round.id, { sourceExternalId: '4002' });
+  const path = `/api/rounds/${round.id}/games/${game.id}/prices?lang=de`;
+  await request(app).get(`${path}&stored=1`);
+  assert.deepEqual(calls, []);
+  // The live request right after is untouched by the fast read: it fetches (so
+  // nothing was cached), answers fresh (so no cooldown was set), and overwrites
+  // the row as any success does.
+  const live = await request(app).get(path);
+  assert.equal(calls.length, 1, 'the stored read must not have primed the cache');
+  assert.equal(live.body.amount, 49.89);
+  assert.equal(live.body.stale, undefined);
+  const bgpRepo = require('../lib/prices/boardgameprices');
+  assert.equal((await repo.getLastPrice(bgpRepo.cacheKey('4002', 'de'))).price.amount, 49.89);
+});
+
+test('?stored=1 past the display ceiling shows NOTHING — the lastKnown gate holds here too', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  await storedPrice('4003', 'de', { fetchedAt: isoAgo(8 * DAY) });
+  const calls = stubFetch(bgpBody('4003', [OFFER]));
+  const round = await createRound(request);
+  const game = await addWish(round.id, { sourceExternalId: '4003' });
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=de&stored=1`);
+  assert.deepEqual(res.body, { available: false }, 'eight days is past the seven-day ceiling');
+  assert.deepEqual(calls, []);
+});
+
+test('?stored=1 with nothing stored is a plain unavailable — never a no_offers claim', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  const calls = stubFetch(bgpBody('4004', [OFFER]));
+  const round = await createRound(request);
+  const game = await addWish(round.id, { sourceExternalId: '4004' });
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=de&stored=1`);
+  assert.deepEqual(res.body, { available: false });
+  assert.deepEqual(calls, []);
+});
+
+test('the gates stay in front of ?stored=1: disabled 404s, a shelf game gets nothing', async () => {
+  // PRICES_ENABLED unset → the same 404 as the full path, before any read.
+  const round = await createRound(request);
+  const wish = await addWish(round.id, { sourceExternalId: '4005' });
+  const off = await request(app).get(`/api/rounds/${round.id}/games/${wish.id}/prices?lang=de&stored=1`);
+  assert.equal(off.status, 404);
+  assert.equal(off.body.error, 'prices_disabled');
+
+  process.env.PRICES_ENABLED = 'true';
+  await storedPrice('4006', 'de', { fetchedAt: isoAgo(2 * DAY) });
+  const shelf = await addWish(round.id, { sourceExternalId: '4006', wish: 'false' });
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${shelf.id}/prices?lang=de&stored=1`);
+  assert.deepEqual(res.body, { available: false }, 'the wish-only guard holds for the fast path');
 });

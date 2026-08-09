@@ -318,6 +318,8 @@ I18N.en = {
   'price.staleDay': 'Price from {n} day ago',
   'price.staleDays': 'Price from {n} days ago',
   'price.staleWhy': 'The price service cannot be reached at the moment, so this is the last price we saw.',
+  'price.checking': 'Checking the current price …',
+  'price.noOffers': 'No price available right now.',
   'price.sourceBgp': 'Price data from Brettspielpreise.de. The list covers the shops listed there only — shops pay to be listed, so it is not the whole market.',
   'price.sourceSteam': 'Price data from the Steam store.',
 

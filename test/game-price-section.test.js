@@ -203,9 +203,12 @@ test('the section is fetched for a wished game with a link — and for nothing e
 
   await dom.call('showGameDetail', 'r1', 'g1');
   await new Promise((r) => setTimeout(r, 0));
-  assert.equal(asked.length, 1);
-  assert.match(asked[0], /^\/api\/rounds\/r1\/games\/g1\/prices\?lang=de$/);
+  // Two legs since #707: the stored fast read and the full lookup, raced.
+  assert.equal(asked.length, 2);
+  assert.match(asked[0], /^\/api\/rounds\/r1\/games\/g1\/prices\?lang=de&stored=1$/);
+  assert.match(asked[1], /^\/api\/rounds\/r1\/games\/g1\/prices\?lang=de$/);
   assert.ok(dom.app.querySelector('.gd-price'), 'the wished, linked game shows a price');
+  assert.equal(dom.app.querySelectorAll('.gd-price').length, 1, 'one section, not one per leg');
 
   // A hand-typed wish has no id to ask about, and a title search would quote a
   // price for the wrong edition.
@@ -246,5 +249,162 @@ test('a disabled or unreachable price service leaves the page exactly as it was'
   dom.set('api', async (method, path) => (path.includes('/prices') ? { available: false } : round));
   await dom.call('showGameDetail', 'r1', 'g1');
   await new Promise((r) => setTimeout(r, 0));
+  assert.equal(dom.app.querySelector('.gd-price'), null);
+});
+
+/*
+ * The stale-while-revalidate race (#707). Each spec wires the two price legs to
+ * promises it settles by hand, so the orderings under test — stored first, live
+ * first, live failing — are driven rather than hoped for.
+ */
+const WISH_ROUND = {
+  id: 'r1', name: 'Freitagsrunde', members: [], sessions: [], tags: [],
+  games: [{ id: 'g1', title: 'Arche Nova', wish: true, source: { provider: 'bgg', externalId: '342942' } }],
+};
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+// Renders the wish detail page with both price legs pending; returns their
+// resolve/reject handles.
+async function openRaced(dom, round = WISH_ROUND) {
+  const pending = {};
+  dom.set('api', (method, path) => {
+    if (path.includes('stored=1')) return new Promise((res, rej) => { pending.stored = { res, rej }; });
+    if (path.includes('/prices')) return new Promise((res, rej) => { pending.live = { res, rej }; });
+    return Promise.resolve(round);
+  });
+  await dom.call('showGameDetail', round.id, round.games[0].id);
+  await tick();
+  assert.ok(pending.stored && pending.live, 'both legs go out together');
+  return pending;
+}
+
+test('the stored price renders immediately — checking note, not "unreachable" — and the live answer replaces it', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const pending = await openRaced(dom);
+
+  pending.stored.res({ ...BGP, amount: 51.5, stale: true, fetchedAt: ago(2 * 24 * HOUR) });
+  await tick();
+  const interim = dom.app.querySelector('.gd-price');
+  assert.ok(interim, 'the stored price is on screen before the live answer');
+  assert.match(interim.querySelector('.gd-price__amount').textContent, /51,5/);
+  assert.equal(interim.querySelector('.gd-price__stale').textContent, 'Preis von vor 2 Tagen',
+    'the age-first labelling survives the transient render — the legal half');
+  assert.match(interim.querySelector('.gd-price__checking').textContent, /wird gerade geprüft/);
+  assert.equal(interim.querySelector('.gd-price__stale-why'), null,
+    '"unreachable" would be a false claim while the check is still running');
+
+  pending.live.res(BGP);
+  await tick();
+  const final = dom.app.querySelector('.gd-price');
+  assert.match(final.querySelector('.gd-price__amount').textContent, /49,89/);
+  assert.equal(final.querySelector('.gd-price__checking'), null);
+  assert.equal(final.querySelector('.gd-price__stale'), null, 'the live answer is fresh');
+  assert.equal(dom.app.querySelectorAll('.gd-price').length, 1, 'replaced, not stacked');
+});
+
+test('a settled no-offers answer is stated — replacing a stored price that was on screen', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const pending = await openRaced(dom);
+
+  pending.stored.res({ ...BGP, stale: true, fetchedAt: ago(5 * HOUR) });
+  await tick();
+  assert.ok(dom.app.querySelector('.gd-price__amount'));
+
+  pending.live.res({ available: false, reason: 'no_offers' });
+  await tick();
+  const sec = dom.app.querySelector('.gd-price');
+  assert.ok(sec, 'stated, not blanked (operator decision on #707)');
+  assert.match(sec.querySelector('.gd-price__none').textContent, /Zurzeit kein Preis verfügbar\./);
+  assert.equal(sec.querySelector('.gd-price__amount'), null, 'the old price is gone — it would contradict fresh data');
+  // The disclosure still rides with it: the statement derives from the aggregator.
+  assert.match(sec.querySelector('.gd-price__note').textContent, /nur die dort gelisteten Shops/);
+});
+
+test('no-offers renders even when nothing was on screen first, with the source\'s own disclosure', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const steamRound = {
+    ...WISH_ROUND,
+    games: [{ id: 'g1', title: 'Grounded', wish: true, source: { provider: 'steam', externalId: '77' } }],
+  };
+  const pending = await openRaced(dom, steamRound);
+
+  pending.live.res({ available: false, reason: 'no_offers' });
+  await tick();
+  const sec = dom.app.querySelector('.gd-price');
+  assert.ok(sec);
+  assert.match(sec.querySelector('.gd-price__none').textContent, /kein Preis/);
+  assert.match(sec.querySelector('.gd-price__note').textContent, /Steam Store/);
+
+  // The stored leg settling afterwards must not resurrect a price over the
+  // settled answer.
+  pending.stored.res({ ...BGP, stale: true, fetchedAt: ago(5 * HOUR) });
+  await tick();
+  assert.equal(dom.app.querySelector('.gd-price__amount'), null);
+});
+
+test('an unavailable live answer with no reason removes even a rendered stored price', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const pending = await openRaced(dom);
+
+  pending.stored.res({ ...BGP, stale: true, fetchedAt: ago(5 * HOUR) });
+  await tick();
+  assert.ok(dom.app.querySelector('.gd-price'));
+
+  // The server itself falls back to the stored row when the upstream fails, so a
+  // plain unavailable means there is nothing honest left to show at all.
+  pending.live.res({ available: false });
+  await tick();
+  assert.equal(dom.app.querySelector('.gd-price'), null);
+});
+
+test('the stored answer is skipped once the live one has settled — no stale flash on cache hits', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const pending = await openRaced(dom);
+
+  pending.live.res(BGP);
+  await tick();
+  assert.match(dom.app.querySelector('.gd-price__amount').textContent, /49,89/);
+
+  pending.stored.res({ ...BGP, amount: 99.99, stale: true, fetchedAt: ago(2 * 24 * HOUR) });
+  await tick();
+  const sec = dom.app.querySelector('.gd-price');
+  assert.match(sec.querySelector('.gd-price__amount').textContent, /49,89/, 'the fresh render stays');
+  assert.equal(sec.querySelector('.gd-price__checking'), null);
+  assert.equal(dom.app.querySelectorAll('.gd-price').length, 1);
+});
+
+test('our own server failing mid-check keeps the stored price and drops the checking note', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const pending = await openRaced(dom);
+
+  pending.stored.res({ ...BGP, stale: true, fetchedAt: ago(5 * HOUR) });
+  await tick();
+  assert.ok(dom.app.querySelector('.gd-price__checking'));
+
+  pending.live.rej(new Error('network'));
+  await tick();
+  const sec = dom.app.querySelector('.gd-price');
+  assert.ok(sec, 'the stored price survives our server going away');
+  assert.equal(sec.querySelector('.gd-price__checking'), null, 'no eternal "checking…" claim');
+  assert.ok(sec.querySelector('.gd-price__stale-why'), 'the honest stale explanation stands in');
+});
+
+test('with nothing rendered, a failing live leg still removes the anchor', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const pending = await openRaced(dom);
+
+  pending.live.rej(new Error('network'));
+  await tick();
+  assert.equal(dom.app.querySelector('.gd-price'), null);
+  // The stored leg resolving after the failure must not render into a dead slot.
+  pending.stored.res({ ...BGP, stale: true, fetchedAt: ago(5 * HOUR) });
+  await tick();
   assert.equal(dom.app.querySelector('.gd-price'), null);
 });
