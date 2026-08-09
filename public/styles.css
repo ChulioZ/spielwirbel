@@ -1090,6 +1090,13 @@ h1, h2, h3 { font-family: var(--font-display); }
   flex-wrap: wrap;
   margin: 2px 0 16px;
 }
+/* `display: flex` above is an AUTHOR rule and author styles beat the UA sheet's
+   `[hidden] { display: none }` at any specificity — so a chip row hidden because
+   the round has no tags kept its box and its margins (18px of dead space under
+   the add-game form's tag segment). Harmless until #722 gave the row a
+   min-height, which turns it into an empty scroll well in the tags editor of
+   every untagged round. Same trap `.icon-picker[hidden]` records. */
+.filter-chips[hidden] { display: none; }
 .chip {
   display: inline-flex;
   align-items: center;
@@ -3475,8 +3482,61 @@ body.auth-screen .terms-banner { display: none; }
 .editor { display: flex; flex-direction: column; gap: 6px; }
 :is(.popover--players, .editor--players) .pp-row { display: flex; align-items: center; gap: 8px; }
 :is(.popover--players, .editor--players) .pp-row .input { width: 68px; }
-.popover--tags { max-width: 340px; }
+/* Capped for the same reason as `.popover--expansions` below, and hit the same
+   way (#722): a round's tag list grows without bound — ~34 in the report — the
+   chips are appended BEFORE the create row, and a popover cannot be scrolled
+   into view because a page scroll closes it outright. So the name input,
+   „Hinzufügen" and OK were not merely off-screen, they were unreachable, and
+   creating a tag from a game's detail page was impossible.
+
+   45vh rather than the expansion editor's 78vh, because `place()` never gets
+   the whole viewport to play with: it puts the card wholly above or wholly
+   below its anchor and falls back to BELOW when neither side fits. The room it
+   can count on is therefore the larger of the two sides, whose worst case — an
+   anchor in the vertical middle — is half the viewport. Any taller and there is
+   a band of anchor positions that runs past the fold again, and the tag chip in
+   the game's <h1> sits right inside it. (That anchor is also the report's
+   „außer bei Spielen, die noch keine Tags haben" asymmetry: a sparse game is
+   tagged from the onboarding panel far down the page, so the card flipped above
+   and worked.)
+
+   The `max()` floor is not decoration — a bare `min(45vh, 520px)` computes to 0
+   on a degenerate viewport and collapses the card to nothing with its own
+   children rendering outside it (measured on #653). 240px is what the children's
+   own floors below add up to, so the cap can never be tighter than they need. */
+.popover--tags {
+  max-width: 340px;
+  max-height: max(240px, min(45vh, 520px));
+}
 :is(.popover--tags, .editor--tags) .filter-chips { margin-bottom: 10px; }
+/* The two boxes that give way under that cap, so the create row is always the
+   last thing still on screen. Popover-only on purpose: the sheet presentation
+   scrolls itself, and a nested scroll box there would take the gesture away
+   from `.sheet` — the same call `.popover--expansions` makes.
+
+   `min-height` is doing two jobs in both rules: a flex item's default
+   `min-height: auto` is its content size, so without an explicit one the card's
+   cap is silently inert — and the value is then also the floor, because one row
+   is always better than none. */
+.popover--tags .filter-chips {
+  /* Shrinks four times as hard as the icon grid below: when the picker is open
+     it is the thing the user just asked for, so the chips are what should give
+     first. Both still shrink, which is what keeps the sum under the cap. */
+  flex: 1 4 auto;
+  min-height: 40px;
+  overflow-y: auto;
+  /* Reaching either end must not chain into the page — a page scroll closes the
+     popover outright (.claude/rules/overlay-page-lock.md §3). */
+  overscroll-behavior: contain;
+}
+/* The grid is appended AFTER the create row and expands in place, so under a
+   capped card it is the second thing that has to shrink; left rigid, its rows
+   simply render past the card's bottom edge. */
+.popover--tags .icon-picker {
+  min-height: 48px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 /* Wraps because the icon-picker trigger (#293) joined this row — four controls
    don't always fit 340px, and squeezing the name input is worse than a wrap. */
 :is(.popover--tags, .editor--tags) .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

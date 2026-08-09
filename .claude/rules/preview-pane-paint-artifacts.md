@@ -42,6 +42,32 @@ correct and only the update is missing, which reads exactly like a mis-wired
 callback. See `.claude/rules/anchored-popover-is-placed-once.md`, where it
 decided the shape of a fix.
 
+## `resize_window` DOES clear the 0×0 viewport — re-test before writing it off
+
+Measured 2026-08-09 (#722), and it contradicts four rule files that state the
+opposite (`overlay-page-lock.md`, `popover-vs-sheet-editors.md`,
+`label-rows-lose-to-field-label.md`, `provider-cover-sizing.md`). A **freshly
+opened** tab reports `innerWidth === 0 / innerHeight === 0`, as those files say —
+but an explicit `resize_window` clears it, and a plain resize with **no**
+navigate afterwards was enough:
+
+```js
+// after resize_window {width: 1100, height: 640}
+window.innerWidth / innerHeight        // 1100 / 640
+document.documentElement.clientWidth   // 1100
+```
+
+That matters more than a footnote, because those files talk future sessions out
+of measuring layout in the pane at all — and with a real viewport the whole of
+#722 (a `vh` cap, `place()`'s arithmetic, flex give-way, a low-anchor control)
+was directly measurable, no stubbing needed. `vh` resolves to **0** while the
+viewport is degenerate, so the *unresized* pane silently tests only a rule's
+`max()` floor and never its viewport term.
+
+This is one measurement on one pane build, so treat neither claim as settled:
+**resize first, read the numbers back, and believe what they say.** If they are
+still 0, the stubbing recipes in the files above are the fallback.
+
 **The pane lies about focus as well as about pixels.** `document.hasFocus()` is
 permanently false there, so `element.blur()` moves `document.activeElement`
 without dispatching any `blur`/`focusout` event — which makes every

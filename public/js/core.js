@@ -424,6 +424,12 @@ function tagIconPicker(selected, opts) {
   const setOpen = (open) => {
     grid.hidden = !open;
     trigger.setAttribute('aria-expanded', String(open));
+    // The grid changes the card's height in place, and an anchored popover is
+    // placed ONCE — content that grows afterwards hangs off a fold it cannot be
+    // scrolled back from (#519, #722). A no-op when no popover is open, which is
+    // what lets this picker also live inline on the Tags screen and in the
+    // add-game form (.claude/rules/anchored-popover-is-placed-once.md).
+    repositionPopover();
   };
   if (trigger) trigger.addEventListener('click', () => setOpen(grid.hidden));
   TAG_ICONS.forEach((key) => {
