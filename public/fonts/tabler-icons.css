@@ -100,6 +100,9 @@
 .ti-link::before { content: "\eade"; }
 .ti-unlink::before { content: "\eb46"; }
 .ti-heart::before { content: "\eabe"; }
+/* Codepoint read from THIS bundle's cmap (glyph name `info-circle`) — see
+   .claude/rules/tabler-icon-codepoints.md. */
+.ti-info-circle::before { content: "\eac5"; }
 .ti-percentage::before { content: "\ecf4"; }
 .ti-lock-question::before { content: "\f931"; }
 .ti-mail-check::before { content: "\f939"; }

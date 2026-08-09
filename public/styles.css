@@ -2823,6 +2823,42 @@ body.auth-screen .terms-banner { display: none; }
 .vote__nav { display: flex; gap: 10px; padding: 0 20px 20px; }
 .vote__nav .btn { flex: 1; }
 
+/* Info affordance on the vote cards (#717). Inline in the title line so the
+   height-budgeted card gains no extra row (fitting-a-screen-to-the-viewport-
+   height.md); sized within the title's own line box. 28px clears the 24px
+   SC 2.5.8 floor, with nothing interactive adjacent to crowd it. */
+.vote__info {
+  display: inline-flex; align-items: center; justify-content: center;
+  vertical-align: middle;
+  width: 28px; height: 28px; padding: 0;
+  border: 0; border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: var(--text-xl);
+  cursor: pointer;
+}
+.vote__info:hover, .vote__info:focus-visible { color: var(--brand-dark); }
+
+/* The shared weight/description body (#717): the vote cards' info sheet and
+   the game-detail "Über das Spiel" section. */
+.game-info__weight { display: flex; align-items: center; gap: 10px; margin: 4px 0 12px; }
+.game-info__weight-label { font-weight: 700; }
+.weight-dots { display: inline-flex; gap: 4px; }
+.weight-dots__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sunken); }
+.weight-dots__dot.is-filled { background: var(--brand-dark); }
+/* pre-line keeps BGG's own paragraph breaks (the decoded &#10;s) without
+   letting stray indentation through; the clamp is display-only — the stored
+   text is never cut (BGG's licence forbids modifying retrieved data). */
+.game-info__desc { white-space: pre-line; margin: 0 0 6px; overflow-wrap: anywhere; }
+.game-info__desc.is-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.game-info__source { font-size: var(--text-xs); margin-top: 10px; }
+
 /* Wide/landscape screens: image on the left, all controls on the right, so
    the whole card (incl. the next button) fits without scrolling. */
 @media (min-width: 860px) {

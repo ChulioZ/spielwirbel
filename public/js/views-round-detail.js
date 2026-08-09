@@ -1042,6 +1042,34 @@ async function showGameDetail(rid, gameId) {
       });
   }
 
+  // Weight + description (#717), between the actions and the provider block —
+  // both provider-sourced. Nothing renders when the game has neither. The
+  // anchor also carries the detail-open backfill trigger: a BGG-linked game
+  // missing a field asks the server, which fills the store best-effort and
+  // answers whatever it holds (the TTL gate is server-side, so a game BGG has
+  // no data for costs one cheap local request per open, never an upstream one).
+  {
+    const infoAnchor = h('<div></div>');
+    app.appendChild(infoAnchor);
+    let infoNode = infoAnchor;
+    const renderInfo = () => {
+      if (!hasGameInfo(game)) return;
+      const sec = renderGameInfoSection(game);
+      infoNode.replaceWith(sec);
+      infoNode = sec;
+    };
+    renderInfo();
+    if (game.source && game.source.provider === 'bgg' && (game.weight == null || !game.description)) {
+      api('GET', `/api/rounds/${rid}/games/${gameId}/provider-info`)
+        .then((info) => {
+          if (info.weight != null && game.weight == null) game.weight = info.weight;
+          if (info.description && !game.description) game.description = info.description;
+          renderInfo();
+        })
+        .catch(() => {}); // best-effort enrichment; the page stands without it
+    }
+  }
+
   // Sparse game (#256): one inviting panel that says why the page is bare and
   // offers the steps that fill it, instead of scattering half-empty widgets.
   // The actions reuse the very same popovers the chips/cover would have opened,

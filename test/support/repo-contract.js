@@ -553,6 +553,57 @@ module.exports = function repoContract(repo) {
     assert.equal(reread.image, null);
   });
 
+  /* ---------------------- provider info (#717) ------------------------------ */
+
+  test('setGameProviderInfo accretes weight/description, stamps the attempt, keys stay absent until then', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields());
+    // Absent-key parity: a game nobody asked the provider about carries none of
+    // the three keys (.claude/rules/postgres-backend.md).
+    for (const key of ['weight', 'description', 'providerInfoAt']) {
+      assert.equal(key in game, false, `${key} present on a fresh game`);
+    }
+
+    const saved = await repo.setGameProviderInfo(T, round.id, game.id, { weight: 2.28, description: 'Handel & Bau.' });
+    assert.equal(saved.weight, 2.28);
+    assert.equal(saved.description, 'Handel & Bau.');
+    assert.equal(typeof saved.providerInfoAt, 'string');
+
+    // A later fetch the provider answers with nothing must not erase what an
+    // earlier one stored — values accrete, only the attempt stamp moves.
+    const again = await repo.setGameProviderInfo(T, round.id, game.id, { weight: null, description: null });
+    assert.equal(again.weight, 2.28);
+    assert.equal(again.description, 'Handel & Bau.');
+
+    const reread = (await repo.getRound(T, round.id)).games.find((g) => g.id === game.id);
+    assert.equal(reread.weight, 2.28, 'and it survives a re-read');
+    assert.equal(reread.description, 'Handel & Bau.');
+
+    // An all-null attempt on an untouched game stamps ONLY providerInfoAt — the
+    // "provider has no data" case the TTL suppresses re-fetches with.
+    const bare = await repo.createGame(T, round.id, gameFields({ title: 'B' }));
+    const stamped = await repo.setGameProviderInfo(T, round.id, bare.id, { weight: null, description: null });
+    assert.equal(typeof stamped.providerInfoAt, 'string');
+    assert.equal('weight' in stamped, false);
+    assert.equal('description' in stamped, false);
+
+    assert.equal(await repo.setGameProviderInfo(T, round.id, 'missing', { weight: 1 }), null);
+    assert.equal(await repo.setGameProviderInfo(T, 'missing', game.id, { weight: 1 }), null);
+    assert.equal(await repo.setGameProviderInfo(OTHER, round.id, game.id, { weight: 1 }), null);
+  });
+
+  test('createGame stores resolved provider info; free-text games stay byte-identical', async () => {
+    const round = await freshRound();
+    const withInfo = await repo.createGame(T, round.id, gameFields({
+      weight: 3.7, description: 'Ein Zoo-Aufbauspiel.', providerInfoAt: new Date().toISOString(),
+    }));
+    assert.equal(withInfo.weight, 3.7);
+    assert.equal(withInfo.description, 'Ein Zoo-Aufbauspiel.');
+    assert.equal(typeof withInfo.providerInfoAt, 'string');
+    const reread = (await repo.getRound(T, round.id)).games.find((g) => g.id === withInfo.id);
+    assert.equal(reread.weight, 3.7);
+  });
+
   /* ------------------------- expansions (#653) ------------------------------ */
 
   const expFields = (over = {}) => ({ title: 'Seefahrer', source: null, minPlayers: null, maxPlayers: null, ...over });

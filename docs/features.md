@@ -39,6 +39,15 @@ What the app does, in detail. For a short overview see the
   round, the sheet says so — separately for the shelf and for the archive — but
   never stops you saving it, since a second copy is sometimes exactly what you
   mean.
+- **Know what you are voting on** – a game linked to BoardGameGeek carries its
+  community **complexity** (the 1–5 weight, shown to one decimal) and its
+  **description**. Both voting screens — the hot-seat card and the shared vote
+  link — show a small ⓘ next to the title that opens them in a sheet, and the
+  game's detail page shows them as their own section, so a voter facing an
+  unfamiliar game sees more than a cover. Deliberately *not* imported: BGG's
+  rank and average rating, which would anchor the vote. Games added before this
+  feature fill in silently the next time their detail page opens or a session
+  draws them; the description stays in English (BGG has no translations).
 - **Pick the cover of your edition** – a board game is usually printed in a dozen
   languages, and the picture BoardGameGeek serves by default is rarely the box on
   your shelf. So wherever a game is linked to BGG you can open its **edition

@@ -157,6 +157,10 @@ lib/
   status.js          aggregate usage metrics + the quota ceilings for the
                      operator panel's Kennzahlen card (issues #274/#404) —
                      counts only, never a secret value and never personal data
+  provider-info.js   lazy backfill of BGG weight + description onto linked
+                     games (issue #717): eligibility (a TTL-stamped attempt
+                     marker) and the batched, best-effort fill both trigger
+                     points share — game-detail open and session start
   provider-cache.js  the shared 10-minute cache for provider hops (search,
                      detail, collection, cover refresh), so a repeated click
                      or a debounced keystroke costs nothing upstream. A caller
@@ -362,6 +366,10 @@ public/
                      screens that start a session (issue #532)
     team-picker.js   the team field: group two or more of those people into one
                      party, shared by the same two screens (issue #575)
+    game-info.js     BGG weight + description surfaces (issue #717): the info
+                     sheet the two vote cards open, the ⓘ affordance itself,
+                     and the game-detail section — one body builder for all
+                     three
     swr.js           stale-while-revalidate cache: views render instantly from
                      the last known data while a background fetch refreshes
     lookup-group.js  collapses same-title provider hits into one multi-badge row

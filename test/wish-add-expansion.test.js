@@ -80,9 +80,13 @@ test('a BGG expansion wished via the add search carries expansionOf', async (t) 
   // The full inbound list, in order — a promo can fit two base games, and the
   // acquire flow is what asks which one it joins.
   assert.deepEqual(res.body.expansionOf, parents);
-  assert.equal(calls.length, 1, 'one /thing hop');
+  // Two hops since #717: the expansionParents resolution, then the stats
+  // detail the weight/description resolution reads (cache-cold here; in real
+  // use the add-game lookup has just filled that cache entry).
+  assert.equal(calls.length, 2, 'the expparents hop plus the stats detail hop');
   assert.match(calls[0], /\/thing\?/);
   assert.equal(new URL(calls[0]).searchParams.get('id'), '703001');
+  assert.equal(new URL(calls[1]).searchParams.get('stats'), '1');
 
   const stored = (await request(app).get(`/api/rounds/${round.id}`)).body.games
     .find((g) => g.id === res.body.id);
@@ -151,17 +155,22 @@ test('a failed /thing hop degrades to an unmarked wish, not a failed add', async
   assert.equal('expansionOf' in res.body, false);
 });
 
-test('no hop at all for shelf adds, non-BGG wishes, or sourceless wishes', async (t) => {
+test('no expparents hop for shelf adds, and no hop at all for non-BGG or sourceless adds', async (t) => {
   const calls = stubFetch(t, thingBody('boardgameexpansion', '703007', ''));
   const round = await createRound(request);
 
   // Shelf add with a bgg source: owned expansions live on their base game's
-  // row, so a wish:false add keeps today's behaviour untouched.
+  // row, so a wish:false add resolves NO parents — its one request is the
+  // stats detail the weight/description resolution reads (#717).
   const shelf = await addGame(round.id, { sourceProvider: 'bgg', sourceExternalId: '703007' });
   assert.equal(shelf.status, 201);
   assert.equal('expansionOf' in shelf.body, false);
+  assert.equal(calls.length, 1);
+  assert.equal(new URL(calls[0]).searchParams.get('stats'), '1');
+  assert.doesNotMatch(calls[0], /inbound/i);
 
-  // The four storefronts have no expansion concept (no expansionParents).
+  // The four storefronts have no expansion concept (no expansionParents) and
+  // no weight/description capability (no gameInfo) — zero requests.
   const steam = await addGame(round.id, bggWish('703008', { sourceProvider: 'steam' }));
   assert.equal(steam.status, 201);
   assert.equal('expansionOf' in steam.body, false);
@@ -170,7 +179,7 @@ test('no hop at all for shelf adds, non-BGG wishes, or sourceless wishes', async
   assert.equal(plain.status, 201);
   assert.equal('expansionOf' in plain.body, false);
 
-  assert.equal(calls.length, 0, 'none of the three issued a provider request');
+  assert.equal(calls.length, 1, 'neither the storefront wish nor the sourceless add issued a request');
 });
 
 test('the created row goes through the acquire flow onto its base game', async (t) => {
