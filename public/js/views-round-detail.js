@@ -1053,7 +1053,10 @@ async function showGameDetail(rid, gameId) {
     app.appendChild(infoAnchor);
     let infoNode = infoAnchor;
     const renderInfo = () => {
-      if (!hasGameInfo(game)) return;
+      // { rating: true } on BOTH calls — this is the one surface that renders
+      // the community score (#724), so the gate has to count it or a game whose
+      // only provider fact is a rating would hide a section that has content.
+      if (!hasGameInfo(game, { rating: true })) return;
       const sec = renderGameInfoSection(game);
       infoNode.replaceWith(sec);
       infoNode = sec;
@@ -1062,8 +1065,7 @@ async function showGameDetail(rid, gameId) {
     if (wantsGameInfo(game)) {
       api('GET', `/api/rounds/${rid}/games/${gameId}/provider-info`)
         .then((info) => {
-          if (info.weight != null && game.weight == null) game.weight = info.weight;
-          if (info.description && !game.description) game.description = info.description;
+          mergeGameInfo(game, info);
           renderInfo();
         })
         .catch(() => {}); // best-effort enrichment; the page stands without it

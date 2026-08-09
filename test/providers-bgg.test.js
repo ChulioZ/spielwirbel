@@ -43,6 +43,7 @@ const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
     <playingtime value="120"/>
     <minplaytime value="60"/>
     <maxplaytime value="120"/>
+    <minage value="10"/>
     <statistics page="1">
       <ratings>
         <usersrated value="143634"/>
@@ -56,6 +57,9 @@ const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
       </ratings>
     </statistics>
     <link type="boardgamecategory" id="1015" value="Civilization"/>
+    <link type="boardgamecategory" id="1021" value="Economic"/>
+    <link type="boardgamemechanic" id="2072" value="Dice Rolling"/>
+    <link type="boardgamemechanic" id="2040" value="Hand Management"/>
     <link type="boardgameexpansion" id="325" value="CATAN: Seafarers"/>
     <link type="boardgameexpansion" id="926" value="CATAN: Cities &amp; Knights"/>
   </item>
@@ -226,6 +230,17 @@ test('parseThing normalizes a BGG item (analog, players, cover, url)', () => {
     // store 2). The description is the decoded text node, stored unmodified.
     weight: 2.2809,
     description: 'Sammle Rohstoffe & baue Städte.',
+    // #724. `rating` is `average`, NOT the `bayesaverage` (6.90221) two nodes
+    // away — the deepEqual proves the exact-name match in the other direction
+    // from `weight`, and the two differ so the wrong one cannot pass.
+    // `<playingtime value="120">` is deliberately absent from the product: it
+    // equals maxPlaytime on every live game measured, so it is redundant.
+    minPlaytime: 60,
+    maxPlaytime: 120,
+    minAge: 10,
+    categories: ['Civilization', 'Economic'],
+    mechanics: ['Dice Rolling', 'Hand Management'],
+    rating: 7.09054,
     expansions: [
       { providerId: '325', title: 'CATAN: Seafarers' },
       { providerId: '926', title: 'CATAN: Cities & Knights' },
@@ -233,32 +248,117 @@ test('parseThing normalizes a BGG item (analog, players, cover, url)', () => {
   });
 });
 
-// --- weight + description (#717) ------------------------------------------
+// --- standard metadata (#717, widened by #724) -----------------------------
 
-test('weight and description are null-shaped when the body lacks them', () => {
+test('every provider field is null-shaped when the body lacks it', () => {
   // The token-absent path (empty body) and a bare item — the fields must exist
   // as nulls so the null-shaped-product contract holds (`detail()` without a
-  // token, a game with no weight votes yet).
+  // token, a game with no weight votes yet). The two LISTS are empty arrays
+  // rather than null, so the shape stays uniform for a caller that maps them.
   const empty = bgg.parseThing('', '13');
   assert.equal(empty.weight, null);
   assert.equal(empty.description, null);
+  assert.equal(empty.minPlaytime, null);
+  assert.equal(empty.maxPlaytime, null);
+  assert.equal(empty.minAge, null);
+  assert.equal(empty.rating, null);
+  assert.deepEqual(empty.categories, []);
+  assert.deepEqual(empty.mechanics, []);
   // averageweight="0" is BGG's "no votes yet" and must read as null, like every
   // other zero-means-unknown attribute in the file.
   const zero = `<items><item type="boardgame" id="1">
     <name type="primary" value="X"/>
-    <statistics><ratings><average value="6.5"/><averageweight value="0"/></ratings></statistics>
+    <minplaytime value="0"/><minage value="0"/>
+    <statistics><ratings><average value="0"/><averageweight value="0"/></ratings></statistics>
   </item></items>`;
-  assert.equal(bgg.parseThing(zero, '1').weight, null);
+  const z = bgg.parseThing(zero, '1');
+  assert.equal(z.weight, null);
+  // "0" is BGG's "unknown" on every one of these, not a real zero-minute game,
+  // a newborn-friendly age or a game the community rates at rock bottom.
+  assert.equal(z.minPlaytime, null);
+  assert.equal(z.minAge, null);
+  assert.equal(z.rating, null);
 });
 
-test('no community score is ever imported — rank, average, bayesaverage stay out', () => {
-  // The user feedback explicitly called rank and average rating
-  // counterproductive; the fixture carries all three siblings, so their absence
-  // here is a real exclusion rather than a vacuous one.
+test('the GEEK rating is still excluded — only the plain community average lands', () => {
+  // #717 imported no community score at all; #724 reverses that for `average`
+  // ONLY, and only for the detail screen. rank/bayesaverage/usersrated stay out,
+  // and the fixture carries all three siblings so their absence is a real
+  // exclusion rather than a vacuous one.
   const d = bgg.parseThing(THING_XML, '13');
   for (const key of ['average', 'bayesaverage', 'rank', 'usersrated']) {
-    assert.ok(!(key in d), `parseThing imported the community score "${key}"`);
+    assert.ok(!(key in d), `parseThing leaked the raw node "${key}"`);
   }
+  // The one that DOES land is the plain average, under its own name. 7.09054 is
+  // `average`; 6.90221 is `bayesaverage`. A startsWith/includes match on
+  // "average" would take whichever of the two the flattened list yields first.
+  assert.equal(d.rating, 7.09054);
+  assert.notEqual(d.rating, 6.90221);
+});
+
+test('an out-of-range or absent rating reads as unknown, never as a stored 0', () => {
+  const rated = (v) => bgg.parseThing(`<items><item type="boardgame" id="1">
+    <name type="primary" value="X"/>
+    <statistics><ratings><average value="${v}"/></ratings></statistics>
+  </item></items>`, '1').rating;
+  assert.equal(rated('7.06'), 7.06);
+  assert.equal(rated('10'), 10, 'the top of the scale is a legal value');
+  assert.equal(rated('10.5'), null, 'past the scale is bad data, not a rating');
+  assert.equal(rated('-1'), null);
+  assert.equal(rated('nonsense'), null);
+});
+
+test('both playtime bounds survive a wildly spread range', () => {
+  /* Captured live 2026-08-09 from /thing?id=417403&stats=1 (Toriki – The
+   * Castaway Island), trimmed to the nodes under test. 20–600 is not bad data:
+   * 20 is one sitting and 600 the full campaign, so any single stored number —
+   * and especially the 310 an average would give — describes nothing the game
+   * actually is. Storing BOTH bounds is what lets the UI say "20–600 Min." and
+   * what lets a future filter test the minimum (#725). */
+  const xml = `<items><item type="boardgame" id="417403">
+    <name type="primary" value="Toriki: The Castaway Island"/>
+    <minplayers value="1"/><maxplayers value="4"/>
+    <playingtime value="600"/><minplaytime value="20"/><maxplaytime value="600"/>
+    <minage value="8"/>
+    <statistics><ratings><average value="8.51413"/><bayesaverage value="6.01662"/>
+      <averageweight value="1.7083"/></ratings></statistics>
+    <link type="boardgamecategory" id="1022" value="Adventure"/>
+    <link type="boardgamemechanic" id="2023" value="Cooperative Game"/>
+  </item></items>`;
+  const d = bgg.parseThing(xml, '417403');
+  assert.equal(d.minPlaytime, 20);
+  assert.equal(d.maxPlaytime, 600);
+  assert.equal(d.minAge, 8);
+  // The same body's two ratings are 2.5 points apart — the widest live gap
+  // measured, and the clearest proof the exact-name match picks the right one.
+  assert.equal(d.rating, 8.51413);
+});
+
+test('category and mechanic links are read regardless of an inbound flag', () => {
+  /* Measured live 2026-08-09 across Catan (13), Ark Nova (342942), Toriki
+   * (417403) and the two expansions Seafarers (325) and Marine Worlds (368966):
+   * `inbound="true"` appeared on 2 of 2 relational `boardgameexpansion` links
+   * and on 0 of 41 category/mechanic links, INCLUDING on both expansion items.
+   * The flag marks the inverse of a RELATION, and a taxonomy link has no
+   * inverse — so these are deliberately not filtered on it, unlike
+   * parseExpansionLinks. A synthetic inbound category link therefore still
+   * counts; dropping it would lose real data the day BGG starts emitting one. */
+  const xml = `<items><item type="boardgameexpansion" id="325">
+    <name type="primary" value="CATAN: Seafarers"/>
+    <link type="boardgamecategory" id="1042" value="Expansion for Base-game"/>
+    <link type="boardgamecategory" id="1029" value="City Building" inbound="true"/>
+    <link type="boardgamemechanic" id="2072" value="Dice Rolling"/>
+    <link type="boardgamefamily" id="9" value="Not a category"/>
+    <link type="boardgameexpansion" id="13" value="CATAN" inbound="true"/>
+  </item></items>`;
+  const d = bgg.parseThing(xml, '325');
+  assert.deepEqual(d.categories, ['Expansion for Base-game', 'City Building']);
+  // Only the two families asked for — a `boardgamefamily` link sits in the same
+  // flattened list and must not be swept up by a loose type check.
+  assert.deepEqual(d.mechanics, ['Dice Rolling']);
+  // …and the expansion link is still filtered on `inbound`, which is what makes
+  // the contrast above a decision rather than an oversight.
+  assert.deepEqual(d.expansions, []);
 });
 
 test('gameInfo batches past 60 ids like expansionParents, sequentially', async (t) => {
@@ -301,11 +401,12 @@ test('parseGameInfo reads a MULTI-item stats body for the backfill', () => {
       <statistics><ratings><averageweight value="0"/></ratings></statistics>
     </item>
   </items>`;
+  const none = { minPlaytime: null, maxPlaytime: null, minAge: null, categories: [], mechanics: [] };
   assert.deepEqual(bgg.parseGameInfo(xml), [
-    { providerId: '13', weight: 2.28, description: 'Handel & Bau.' },
-    // A game the community has not weighted, with no description: both null, so
-    // the backfill can stamp the attempt without inventing data.
-    { providerId: '822', weight: null, description: null },
+    { providerId: '13', weight: 2.28, description: 'Handel & Bau.', rating: 7.1, ...none },
+    // A game the community has not weighted, with no description: everything
+    // null/empty, so the backfill can stamp the attempt without inventing data.
+    { providerId: '822', weight: null, description: null, rating: null, ...none },
   ]);
   assert.deepEqual(bgg.parseGameInfo(''), []);
 });

@@ -297,8 +297,7 @@ function startVoting(round, session, games, people, opts = {}) {
     infoAsked.add(game.id);
     api('GET', `/api/rounds/${round.id}/games/${game.id}/provider-info`)
       .then((info) => {
-        if (info.weight != null && game.weight == null) game.weight = info.weight;
-        if (info.description && !game.description) game.description = info.description;
+        mergeGameInfo(game, info);
         const title = card.querySelector('.vote__title');
         if (!document.body.contains(title) || title.querySelector('.vote__info')) return;
         const btn = gameInfoButton(game);

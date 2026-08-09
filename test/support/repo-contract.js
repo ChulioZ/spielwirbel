@@ -553,39 +553,54 @@ module.exports = function repoContract(repo) {
     assert.equal(reread.image, null);
   });
 
-  /* ---------------------- provider info (#717) ------------------------------ */
+  /* ------------------- provider info (#717, widened by #724) ---------------- */
 
-  test('setGameProviderInfo accretes weight/description, stamps the attempt, keys stay absent until then', async () => {
+  // Every field the provider fills in. Listed here rather than required from
+  // lib/provider-info.js on purpose: that module pulls in the provider registry,
+  // and this suite must stay a statement of the CONTRACT the backends owe rather
+  // than a mirror of the caller that happens to use it.
+  const INFO_FIELDS = ['weight', 'description', 'minPlaytime', 'maxPlaytime', 'minAge', 'categories', 'mechanics', 'rating'];
+  const FULL_INFO = {
+    weight: 2.28,
+    description: 'Handel & Bau.',
+    minPlaytime: 60,
+    maxPlaytime: 120,
+    minAge: 10,
+    categories: ['Economic', 'Negotiation'],
+    mechanics: ['Dice Rolling', 'Trading'],
+    rating: 7.09,
+  };
+  const NO_INFO = Object.fromEntries(INFO_FIELDS.map((k) => [k, null]));
+
+  test('setGameProviderInfo accretes every field, stamps the attempt, keys stay absent until then', async () => {
     const round = await freshRound();
     const game = await repo.createGame(T, round.id, gameFields());
     // Absent-key parity: a game nobody asked the provider about carries none of
-    // the three keys (.claude/rules/postgres-backend.md).
-    for (const key of ['weight', 'description', 'providerInfoAt']) {
+    // the keys (.claude/rules/postgres-backend.md).
+    for (const key of [...INFO_FIELDS, 'providerInfoAt']) {
       assert.equal(key in game, false, `${key} present on a fresh game`);
     }
 
-    const saved = await repo.setGameProviderInfo(T, round.id, game.id, { weight: 2.28, description: 'Handel & Bau.' });
-    assert.equal(saved.weight, 2.28);
-    assert.equal(saved.description, 'Handel & Bau.');
+    const saved = await repo.setGameProviderInfo(T, round.id, game.id, FULL_INFO);
+    for (const key of INFO_FIELDS) assert.deepEqual(saved[key], FULL_INFO[key], `${key} not stored`);
     assert.equal(typeof saved.providerInfoAt, 'string');
 
     // A later fetch the provider answers with nothing must not erase what an
-    // earlier one stored — values accrete, only the attempt stamp moves.
-    const again = await repo.setGameProviderInfo(T, round.id, game.id, { weight: null, description: null });
-    assert.equal(again.weight, 2.28);
-    assert.equal(again.description, 'Handel & Bau.');
+    // earlier one stored — values accrete, only the attempt stamp moves. The
+    // empty ARRAYS are the sharp half: [] is "BGG named no categories", so it
+    // must be skipped like a null rather than overwriting a real list.
+    const again = await repo.setGameProviderInfo(T, round.id, game.id, { ...NO_INFO, categories: [], mechanics: [] });
+    for (const key of INFO_FIELDS) assert.deepEqual(again[key], FULL_INFO[key], `${key} erased by an empty answer`);
 
     const reread = (await repo.getRound(T, round.id)).games.find((g) => g.id === game.id);
-    assert.equal(reread.weight, 2.28, 'and it survives a re-read');
-    assert.equal(reread.description, 'Handel & Bau.');
+    for (const key of INFO_FIELDS) assert.deepEqual(reread[key], FULL_INFO[key], `${key} lost on re-read`);
 
     // An all-null attempt on an untouched game stamps ONLY providerInfoAt — the
     // "provider has no data" case the TTL suppresses re-fetches with.
     const bare = await repo.createGame(T, round.id, gameFields({ title: 'B' }));
-    const stamped = await repo.setGameProviderInfo(T, round.id, bare.id, { weight: null, description: null });
+    const stamped = await repo.setGameProviderInfo(T, round.id, bare.id, { ...NO_INFO, categories: [], mechanics: [] });
     assert.equal(typeof stamped.providerInfoAt, 'string');
-    assert.equal('weight' in stamped, false);
-    assert.equal('description' in stamped, false);
+    for (const key of INFO_FIELDS) assert.equal(key in stamped, false, `${key} written by an empty answer`);
 
     assert.equal(await repo.setGameProviderInfo(T, round.id, 'missing', { weight: 1 }), null);
     assert.equal(await repo.setGameProviderInfo(T, 'missing', game.id, { weight: 1 }), null);
@@ -595,13 +610,17 @@ module.exports = function repoContract(repo) {
   test('createGame stores resolved provider info; free-text games stay byte-identical', async () => {
     const round = await freshRound();
     const withInfo = await repo.createGame(T, round.id, gameFields({
-      weight: 3.7, description: 'Ein Zoo-Aufbauspiel.', providerInfoAt: new Date().toISOString(),
+      ...FULL_INFO, providerInfoAt: new Date().toISOString(),
     }));
-    assert.equal(withInfo.weight, 3.7);
-    assert.equal(withInfo.description, 'Ein Zoo-Aufbauspiel.');
+    for (const key of INFO_FIELDS) assert.deepEqual(withInfo[key], FULL_INFO[key], `${key} not stored on create`);
     assert.equal(typeof withInfo.providerInfoAt, 'string');
     const reread = (await repo.getRound(T, round.id)).games.find((g) => g.id === withInfo.id);
-    assert.equal(reread.weight, 3.7);
+    for (const key of INFO_FIELDS) assert.deepEqual(reread[key], FULL_INFO[key], `${key} lost on re-read`);
+
+    // A free-text game grows none of the keys, even though the route now passes
+    // the whole set through with nulls in it.
+    const plain = await repo.createGame(T, round.id, gameFields({ title: 'Frei', ...NO_INFO }));
+    for (const key of INFO_FIELDS) assert.equal(key in plain, false, `${key} present on a free-text game`);
   });
 
   /* ------------------------- expansions (#653) ------------------------------ */
