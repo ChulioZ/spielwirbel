@@ -145,10 +145,11 @@ a `fetchedAt` footnote. Their terms were read and permit it. See
   exposure. An affiliate parameter is a different legal position, not a config
   switch — and it would turn the VVT's row 21 from a documented non-processing
   into a real one.
-- **The source line is required, not decoration.** Brettspielpreise's own about
-  page says shops pay to be listed, so the comparison is not the whole market;
-  withholding that is a § 5a UWG omission (BGH I ZR 55/16). `test/legal.test.js`
-  pins the disclosure and `test/game-price-section.test.js` pins that it renders.
+- **The source line is required, not decoration.** It names the source and says
+  the list covers only the shops listed there — what keeps a best-price claim
+  honest (BGH I ZR 55/16; affiliate-free, § 5a UWG likely doesn't bind us). The
+  „Händler zahlen" clause — true per their about page — went by operator
+  decision 2026-08-09. `test/game-price-section.test.js` pins the render.
 
 **Related:** `.claude/rules/add-game-lookup-provider.md` (the registry this stays
 out of, and the "never hit the network in a test" shape),

@@ -75,12 +75,13 @@ test('the retrieval time and the may-have-changed note are on screen', (t) => {
   assert.match(note, /Preise können sich geändert haben\./);
 });
 
-test('the source line names the aggregator AND that the listing is not the whole market', (t) => {
+test('the source line names the aggregator AND that it covers only the listed shops', (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   const note = render(dom, BGP).querySelector('.gd-price__note').textContent;
   assert.match(note, /Brettspielpreise\.de/);
-  // The § 5a UWG half: a comparison must disclose that shops pay to be listed.
+  // The limited-coverage disclosure: the shown price is the best among the
+  // aggregator's shops, not the whole market (.claude/rules/wish-list-prices.md).
   assert.match(note, /nur die dort gelisteten Shops/);
 });
 

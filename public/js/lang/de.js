@@ -321,7 +321,7 @@ I18N.de = {
   'price.staleWhy': 'Der Preisdienst ist gerade nicht erreichbar — das ist der zuletzt gesehene Preis.',
   'price.checking': 'Der aktuelle Preis wird gerade geprüft …',
   'price.noOffers': 'Zurzeit kein Preis verfügbar.',
-  'price.sourceBgp': 'Preisdaten von Brettspielpreise.de. Die Übersicht umfasst nur die dort gelisteten Shops — Händler zahlen für die Aufnahme, sie ist also nicht der gesamte Markt.',
+  'price.sourceBgp': 'Preisdaten von Brettspielpreise.de. Die Übersicht umfasst nur die dort gelisteten Shops.',
   'price.sourceSteam': 'Preisdaten aus dem Steam Store.',
 
   'sessions.rated': '{n} Spiele bewertet',
