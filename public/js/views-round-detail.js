@@ -836,12 +836,15 @@ async function showGameDetail(rid, gameId) {
     : '';
 
   // The score ring is dropped for a sparse game — an empty ring next to an
-  // empty everything-else is what made the page read as broken (#256).
+  // empty everything-else is what made the page read as broken (#256) — and
+  // for a wish (#699): the round does not own the game, so it cannot be rated
+  // or aussortiert while on the list. Unconditional for a wish, even if the
+  // data holds ratings (API-only edge); they reappear via „Ins Regal".
   const head = h(`<div class="gd-head${sparse ? ' gd-head--sparse' : ''}">
        <div class="gd-info">
          <h1></h1>
        </div>
-       ${sparse ? '' : `<div class="gd-stats">${scoreRing}${sortLine}</div>`}
+       ${sparse || game.wish ? '' : `<div class="gd-stats">${scoreRing}${sortLine}</div>`}
      </div>`);
 
   // Editable cover image (activate to paste a new one or remove it). A <button>
@@ -1153,6 +1156,7 @@ async function showGameDetail(rid, gameId) {
   // On a sparse page the section is omitted entirely: the onboarding panel
   // already explains that ratings and sessions appear once the game is played,
   // so a heading over one line of muted text only adds to the emptiness.
+  // A wish omits it too (#699), same reasoning as the score ring above.
   const sec = h(`<div class="section"><h2>${esc(t('detail.relatedTitle'))}</h2></div>`);
   if (related.length === 0) {
     sec.appendChild(h(`<div class="muted">${esc(t('detail.relatedEmpty'))}</div>`));
@@ -1197,7 +1201,7 @@ async function showGameDetail(rid, gameId) {
     });
     sec.appendChild(list);
   }
-  if (!sparse) app.appendChild(sec);
+  if (!sparse && !game.wish) app.appendChild(sec);
 }
 
 // =================== Add game (bottom sheet) ===================
