@@ -156,7 +156,7 @@ function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {
 // wizard — both fire the same GET …/provider-info trigger, whose server-side TTL
 // gate keeps a data-less game from costing an upstream request per view.
 //
-// Mirrors PROVIDER_INFO_FIELDS in lib/provider-info.js. A field left out here
+// Mirrors PROVIDER_INFO_FIELDS in lib/provider-info-fields.js. A field left out here
 // only costs a trigger that never fires (the server would still backfill on the
 // next session start), so this is the softer of the two lists — but keep them
 // together anyway, or the detail page stops being a way to refresh a game.

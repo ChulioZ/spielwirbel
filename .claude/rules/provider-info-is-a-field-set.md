@@ -29,8 +29,13 @@ never complete, so every game re-asks BGG once per `PROVIDER_INFO_TTL_MS` (7 day
 forever — a standing upstream request per game per week against a provider whose
 terms ask for few requests.
 
-**So the field list is ONE array**, `PROVIDER_INFO_FIELDS`, read by both the check
-and the write loop. Adding a field there is the whole change; the 7-day TTL then
+**So the field list is ONE module**, `lib/provider-info-fields.js` — the field
+names *and* the guard deciding what counts as a value — read by the check, the
+write loop, both repo backends and the games route. It is dependency-free on
+purpose: `lib/provider-info.js` requires `./providers`, so putting the shape
+there would give the repo layer a path to the provider registry.
+
+Adding a field there is the whole change; the 7-day TTL then
 lets every already-stamped game through once, lazily, with no migration code
 (CLAUDE.md) and no thundering herd. Two accepted costs, stated in the code because
 they read as bugs otherwise: a game BGG genuinely has no categories for is re-asked
@@ -45,6 +50,24 @@ forever or is written as permanently empty.
 
 **#729 will exercise all of this in reverse** by removing `description`. Leaving it
 in the list while nothing writes it is precisely the second failure above.
+
+## Anything that STAMPS must also write, or it defers by a whole TTL
+
+The link-provider `PATCH` offers a chip for `weight` and `description` only — the
+two the sheet previews — so writing just those looks right. It is not, and the
+reason generalises to any future handler that resolves provider info itself:
+**the stamp is what suppresses the backfill.** `providerInfoAt` is set on that
+path, so the unchipped fields would not arrive until the next trigger *after* the
+TTL expired — leaving the user who explicitly asked for BGG's data waiting a week
+for most of it, silently and self-healingly enough that nobody would report it.
+
+So the route writes the unchipped fields whenever the hop has already run, via
+the shared `assignProviderInfo(patch, info, UNCHIPPED_PROVIDER_INFO_FIELDS)`.
+Using the shared guards rather than a plain copy matters **more** here than in
+the repo: `updateGame` `Object.assign`s the patch verbatim, so an unfiltered
+write would store `categories: []` and a row of nulls and split absent-key parity
+between the backends — the one place in this feature where a naive write reaches
+the store unchecked.
 
 ## The rating is detail-only, and the guarantee is SERVER-side
 

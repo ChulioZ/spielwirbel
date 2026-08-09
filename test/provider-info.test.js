@@ -300,7 +300,10 @@ test('PATCH apply flags take the resolved info on link — and only what was cho
   const game = await repo.createGame('default', rid, {
     title: 'Unverlinkt', minPlayers: 2, maxPlayers: 4, image: null, source: null,
   });
-  stubFetch([{ id: '900008', weight: '2.9', desc: 'Verlinkt.' }]);
+  stubFetch([{
+    id: '900008', weight: '2.9', desc: 'Verlinkt.',
+    playtime: [45, 75], age: 12, cats: ['Economic'], mechs: ['Trading'],
+  }]);
   const res = await request(app).patch(`/api/rounds/${rid}/games/${game.id}`).send({
     ...bggSource('900008'),
     applyWeight: true,
@@ -309,6 +312,34 @@ test('PATCH apply flags take the resolved info on link — and only what was cho
   assert.equal(res.status, 200);
   assert.equal(res.body.weight, 2.9);
   assert.equal('description' in res.body, false);
+
+  // The UNCHIPPED #724 fields land regardless of the chips, and that is not
+  // symmetry — this handler stamps providerInfoAt, which suppresses the lazy
+  // backfill for a whole TTL. Leave them out and the user who just asked for
+  // BGG's data waits a week for most of it.
+  assert.equal(res.body.minPlaytime, 45);
+  assert.equal(res.body.maxPlaytime, 75);
+  assert.equal(res.body.minAge, 12);
+  assert.deepEqual(res.body.categories, ['Economic']);
+  assert.deepEqual(res.body.mechanics, ['Trading']);
+  assert.equal(res.body.rating, 7.0);
+  assert.equal(typeof res.body.providerInfoAt, 'string');
+
+  // A provider that answers with nothing writes NO key — updateGame
+  // Object.assigns the patch verbatim, so without the accretion guards this path
+  // would store `categories: []` and a wall of nulls on the row, splitting
+  // absent-key parity between the two backends.
+  const bare = await repo.createGame('default', rid, {
+    title: 'Karg', minPlayers: 2, maxPlayers: 4, image: null, source: null,
+  });
+  stubFetch([{ id: '900014' }]); // no playtime, no age, no links, weight 0
+  const empty = await request(app).patch(`/api/rounds/${rid}/games/${bare.id}`).send({
+    ...bggSource('900014'), applyWeight: true,
+  });
+  assert.equal(empty.status, 200);
+  for (const key of ['weight', 'description', 'minPlaytime', 'maxPlaytime', 'minAge', 'categories', 'mechanics']) {
+    assert.equal(key in empty.body, false, `${key} written from an empty provider answer`);
+  }
 
   // And the values themselves cannot be dictated: a PATCH carrying literals
   // changes nothing without the resolved link.
