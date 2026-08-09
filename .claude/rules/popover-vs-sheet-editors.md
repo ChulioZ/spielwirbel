@@ -89,11 +89,22 @@ stay popover-only; they are meaningless for a sheet. Scoping a layout rule to on
 presentation leaves the other unstyled, which reads as a broken layout rather
 than a missing selector.
 
+**The card's cap and whatever gives way under it are ONE unit, and the whole unit
+is popover-only** (#722 — `.popover--tags`' `max-height` plus the scroll boxes on
+its chip row and icon grid). That is not an exception to the paragraph above: the
+sheet is already its own scroll container, so a nested scroll box there would
+take the gesture away from `.sheet` and bound a height nothing was constraining.
+Verified — in the sheet those two boxes compute `overflow-y: visible` and the
+sheet still scrolls itself. Read `:is()` as covering rules the two presentations
+genuinely share, not as a quota to hit.
+
 ## Verifying this in the Browser pane
 
-The pane **cannot reproduce the bug** — it has no soft keyboard, and it reports
-`innerWidth === 0` (`resize_window` does *not* clear it, confirmed again here).
-That 0 has a useful consequence and one trap:
+The pane **cannot reproduce the bug** — it has no soft keyboard, and a freshly
+opened tab reports `innerWidth === 0`. That 0 has a useful consequence and one
+trap (**but resize first**: an explicit `resize_window` *does* clear it, measured
+on #722 — see `.claude/rules/preview-pane-paint-artifacts.md`, which supersedes
+the "does not clear it" claim this paragraph used to make):
 
 - `matchMedia('(min-width: 860px)').matches` is **false**, so the pane always
   takes the **sheet** branch. Convenient — that is the new code.

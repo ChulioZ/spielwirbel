@@ -33,6 +33,11 @@ const CONTAINED = [
   // The expansion tick-list (#653) — a game can have 100+ expansions, so the
   // list is bounded, and it sits in the popover/sheet editor.
   ':is(.popover--expansions, .editor--expansions) .exp-pick__body',
+  // The tags editor's chip row and icon grid (#722) — a round's tag list grows
+  // without bound, so both give way under the anchored card's cap. Popover-only:
+  // the sheet presentation scrolls itself.
+  '.popover--tags .filter-chips',
+  '.popover--tags .icon-picker',
 ];
 const CHAINS = [
   // The session-setup game list sits INLINE on the page, not in an overlay.

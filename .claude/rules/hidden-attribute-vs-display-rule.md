@@ -26,6 +26,20 @@ attribute's effect. This codebase's BEM-ish components almost always set
 `display`, so the attribute alone is rarely enough — prefer the paired rule, or
 toggle a class instead of the attribute.
 
+## The second instance: `.filter-chips` (#722)
+
+`.filter-chips { display: flex }` beat the attribute the same way, in the two
+places a chip row is hidden because there is nothing to put in it (the tags
+editor's own list, and the add-game form's `#tagSeg`). It cost only ~18px of dead
+space, so it sat there unnoticed — until #722 gave the row a `min-height` and the
+box became an empty 40px scroll well inside the editor of every untagged round.
+
+The generalisable half: **a latent instance of this bug is invisible until
+someone gives the element a size.** So when you add a height, a floor or a border
+to a component, check whether anything hides it with the attribute — the
+regression will look like it came from your sizing change, not from a missing
+`[hidden]` rule that predates it.
+
 ## The verification trap that hid it
 
 The DOM probe lied. `el.hidden` is the **IDL attribute** — it returned `true`

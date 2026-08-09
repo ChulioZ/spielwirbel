@@ -60,6 +60,35 @@ Two things generalise from the fix:
   flex item's default `min-height: auto` is its content size, so the cap is
   silently inert without it.
 
+## The cap's ceiling is HALF the viewport, not most of it (#722)
+
+The third instance was the tags editor, and it is the one that shows the cap
+above is not just "pick a big vh". Generalise it: **any editor whose content
+scales with round data needs one** — the tag list grows without bound, the chips
+are appended before the create row, and creating a tag from a game's detail page
+was therefore impossible in production for a round with ~34 tags.
+
+The number is the transferable part. `place()` puts the card **wholly** above or
+wholly below its anchor and, when neither side fits, falls back to *below* — so
+the room it can count on is the larger of the two sides, whose worst case (an
+anchor in the vertical middle) is **half the viewport**. Above that there is a
+band of anchor positions with no legal placement, and the card runs past the fold
+exactly as if it had no cap. Measured at 1440×900 with a mid-height anchor:
+`min(78vh, 620px)` left the OK button **177px past the fold**; `min(45vh, 520px)`
+left it 0.
+
+So **do not copy `.popover--expansions`' 78vh into a new editor** — it is safe
+there only because its trigger sits low enough to flip above, i.e. by luck of the
+anchor rather than by construction. Derive the term from the viewport half
+(`h > (H − anchorH − 12)/2` is the dead-zone condition) and keep the `max()` floor
+at or above the sum of the children's own floors, or the cap can be tighter than
+what they need.
+
+Where several children can grow, **each** needs `min-height` + `overflow-y: auto`
++ `overscroll-behavior: contain`, and the shrink order is a real decision: the
+tags editor gives `flex: 1 4 auto` to the chip list so the icon grid — the thing
+the user just opened — is not the box that collapses.
+
 **And the `max()` floor below is not optional — it was got wrong here first.**
 A bare `max-height: min(78vh, 620px)` on the card computed to **0** in the pane
 and collapsed it to **18px tall with its own children rendering outside it**,
