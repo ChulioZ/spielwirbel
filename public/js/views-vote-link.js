@@ -193,6 +193,11 @@ function renderVoteLinkCards(token, ballot, person) {
         </div>
       </div>`);
 
+    // Same info affordance as the wizard's card (#717) — the ballot projection
+    // carries weight/description, so a link voter gets the same facts.
+    const infoBtn = gameInfoButton(game);
+    if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
+
     // Identical to the wizard's scale, down to the aria-pressed state and the
     // traffic-light fill on the selected face (#145).
     const MOODS = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];

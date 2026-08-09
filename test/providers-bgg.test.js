@@ -43,6 +43,18 @@ const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
     <playingtime value="120"/>
     <minplaytime value="60"/>
     <maxplaytime value="120"/>
+    <statistics page="1">
+      <ratings>
+        <usersrated value="143634"/>
+        <average value="7.09054"/>
+        <bayesaverage value="6.90221"/>
+        <ranks>
+          <rank type="subtype" id="1" name="boardgame" friendlyname="Board Game Rank" value="627" bayesaverage="6.90221"/>
+        </ranks>
+        <numweights value="8594"/>
+        <averageweight value="2.2809"/>
+      </ratings>
+    </statistics>
     <link type="boardgamecategory" id="1015" value="Civilization"/>
     <link type="boardgameexpansion" id="325" value="CATAN: Seafarers"/>
     <link type="boardgameexpansion" id="926" value="CATAN: Cities &amp; Knights"/>
@@ -208,11 +220,66 @@ test('parseThing normalizes a BGG item (analog, players, cover, url)', () => {
     type: 'analog',
     imageUrl: 'https://cf.geekdo-images.com/abc__thumb/img/xyz=/fit-in/200x150/filters:strip_icc()/pic9156909.png',
     url: 'https://boardgamegeek.com/boardgame/13',
+    // The 1–5 float, NOT the community `average` (7.09054) sitting right beside
+    // it in the flattened child list — the deepEqual is what proves the exact-
+    // name match, and 2.2809 also proves the float survives (parseInt would
+    // store 2). The description is the decoded text node, stored unmodified.
+    weight: 2.2809,
+    description: 'Sammle Rohstoffe & baue Städte.',
     expansions: [
       { providerId: '325', title: 'CATAN: Seafarers' },
       { providerId: '926', title: 'CATAN: Cities & Knights' },
     ],
   });
+});
+
+// --- weight + description (#717) ------------------------------------------
+
+test('weight and description are null-shaped when the body lacks them', () => {
+  // The token-absent path (empty body) and a bare item — the fields must exist
+  // as nulls so the null-shaped-product contract holds (`detail()` without a
+  // token, a game with no weight votes yet).
+  const empty = bgg.parseThing('', '13');
+  assert.equal(empty.weight, null);
+  assert.equal(empty.description, null);
+  // averageweight="0" is BGG's "no votes yet" and must read as null, like every
+  // other zero-means-unknown attribute in the file.
+  const zero = `<items><item type="boardgame" id="1">
+    <name type="primary" value="X"/>
+    <statistics><ratings><average value="6.5"/><averageweight value="0"/></ratings></statistics>
+  </item></items>`;
+  assert.equal(bgg.parseThing(zero, '1').weight, null);
+});
+
+test('no community score is ever imported — rank, average, bayesaverage stay out', () => {
+  // The user feedback explicitly called rank and average rating
+  // counterproductive; the fixture carries all three siblings, so their absence
+  // here is a real exclusion rather than a vacuous one.
+  const d = bgg.parseThing(THING_XML, '13');
+  for (const key of ['average', 'bayesaverage', 'rank', 'usersrated']) {
+    assert.ok(!(key in d), `parseThing imported the community score "${key}"`);
+  }
+});
+
+test('parseGameInfo reads a MULTI-item stats body for the backfill', () => {
+  const xml = `<items>
+    <item type="boardgame" id="13">
+      <name type="primary" value="CATAN"/>
+      <description>Handel &amp; Bau.</description>
+      <statistics><ratings><average value="7.1"/><averageweight value="2.28"/></ratings></statistics>
+    </item>
+    <item type="boardgame" id="822">
+      <name type="primary" value="Carcassonne"/>
+      <statistics><ratings><averageweight value="0"/></ratings></statistics>
+    </item>
+  </items>`;
+  assert.deepEqual(bgg.parseGameInfo(xml), [
+    { providerId: '13', weight: 2.28, description: 'Handel & Bau.' },
+    // A game the community has not weighted, with no description: both null, so
+    // the backfill can stamp the attempt without inventing data.
+    { providerId: '822', weight: null, description: null },
+  ]);
+  assert.deepEqual(bgg.parseGameInfo(''), []);
 });
 
 // --- expansions (#653) ----------------------------------------------------

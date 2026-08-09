@@ -447,6 +447,13 @@ function startVoting(round, session, games, people, opts = {}) {
         </div>
       </div>`);
 
+    // Info affordance (#717): weight + description behind a small ⓘ in the
+    // title line, so the height-budgeted card gains no extra row
+    // (.claude/rules/fitting-a-screen-to-the-viewport-height.md). Rendered
+    // only when the game actually carries the data.
+    const infoBtn = gameInfoButton(game);
+    if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
+
     // 1–5 as mood faces; the selected one takes the rating's traffic-light color.
     const MOODS = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
     const ratingEl = card.querySelector('.rating');

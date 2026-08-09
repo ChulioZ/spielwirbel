@@ -66,6 +66,7 @@ const frontendGlobals = {
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', initials: 'readonly',
   personColor: 'readonly',
   renderSeatPicker: 'readonly', renderGuestPicker: 'readonly', renderTeamPicker: 'readonly',
+  hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly', renderGameInfoSection: 'readonly',
   // username-policy.js
   USERNAME_MIN: 'readonly', USERNAME_MAX: 'readonly', USERNAME_RE: 'readonly',
   isValidUsername: 'readonly',

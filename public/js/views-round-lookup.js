@@ -844,6 +844,14 @@ function showLinkProvider(round, game) {
     if ((Number.isInteger(d.minPlayers) && d.minPlayers !== game.minPlayers) ||
         (Number.isInteger(d.maxPlayers) && d.maxPlayers !== game.maxPlayers))
       fields.push({ key: 'players', label: t('linkProvider.field.players') });
+    // Weight + description (#717, BGG only — the storefronts carry neither).
+    // The chips send BOOLEANS: applyLink asks for the fields and the server
+    // resolves the values from the provider itself, so a client chooses
+    // whether to take the info but never what it says.
+    if (d.weight != null && game.weight == null)
+      fields.push({ key: 'weight', label: t('linkProvider.field.weight') });
+    if (d.description && !game.description)
+      fields.push({ key: 'description', label: t('linkProvider.field.description') });
     // Name: the add-game flow takes the provider title outright, so offer it
     // here too (issue #180). Show it first — the name is the most prominent
     // field — but only when it actually differs (trimmed, case-insensitive).
@@ -891,7 +899,9 @@ function showLinkProvider(round, game) {
           return { from: playersText(game.minPlayers, game.maxPlayers) || notSet,
             to: playersText(toMin, toMax) || notSet };
         }
-        return null; // title: the provider value is already shown in the header
+        // One decimal, like every weight display (#717).
+        if (key === 'weight') return { from: notSet, to: t('gameInfo.weightValue', { n: d.weight.toFixed(1) }) };
+        return null; // title/description: shown in the header / too long for a line
       };
       const rest = fields.filter((f) => f.key !== 'image');
       if (rest.length) {
@@ -933,6 +943,10 @@ function showLinkProvider(round, game) {
       if (Number.isInteger(d.minPlayers)) body.minPlayers = d.minPlayers;
       if (Number.isInteger(d.maxPlayers)) body.maxPlayers = d.maxPlayers;
     }
+    // Booleans, not values — the server resolves weight/description from the
+    // provider (#717), so the sheet only ever says WHICH fields to take.
+    if (isOn(chips, 'weight')) body.applyWeight = true;
+    if (isOn(chips, 'description')) body.applyDescription = true;
     try {
       await api('PATCH', `/api/rounds/${round.id}/games/${game.id}`, body);
       toast(t('linkProvider.linked'));
