@@ -80,6 +80,16 @@ function gameInfoBody(game) {
   return box;
 }
 
+// Whether asking the server could still add something: a BGG-linked game
+// missing at least one of the two fields. Shared by the detail page and the
+// hot-seat wizard — both fire the same GET …/provider-info trigger, whose
+// server-side TTL gate keeps a data-less game from costing an upstream
+// request per view.
+function wantsGameInfo(game) {
+  return !!game && !!game.source && game.source.provider === 'bgg'
+    && (game.weight == null || !game.description);
+}
+
 // The ⓘ affordance for the two vote cards, or null when the game has nothing
 // to show — the card's height budget and primary actions stay untouched either
 // way (.claude/rules/fitting-a-screen-to-the-viewport-height.md).

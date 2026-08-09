@@ -172,6 +172,47 @@ test('a stored description with BGG\'s double-encoded HTML entities renders deco
   assert.equal(dom.call('decodeGameDescription', '\n\n&quot;Zitat&quot;'), '\n\n"Zitat"');
 });
 
+test('the hot-seat card self-heals: a field-less BGG game asks the server and gains the ⓘ', async (t_) => {
+  /* The production report on #717: a session drawn before the fields existed
+   * (or before the fire-and-forget backfill landed) hands the wizard games
+   * without them, so voting showed no ⓘ while the detail page — which has its
+   * own lazy trigger — did. The card now uses the same trigger. */
+  const { dom, infoCalls } = bootApp(t_, {
+    providerInfo: { weight: 3.0, description: 'Dorfleben.' },
+  });
+  const round = roundFixture();
+  const session = { id: 's1', gameIds: ['g3'], memberIds: ['m1'], votes: {} };
+  const games = [round.games.find((g) => g.id === 'g3')]; // BGG source, no fields
+  const people = [{ id: 'm1', name: 'Anna', guest: false }];
+  dom.call('startVoting', round, session, games, people,
+    { skipIntro: true, saveVotes: async () => {}, onSaved: () => {} });
+
+  assert.ok(dom.app.querySelector('.vote__title'), 'the card rendered');
+  assert.equal(dom.app.querySelector('.vote__title .vote__info'), null, 'no ⓘ before the answer');
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(infoCalls.length, 1, 'the card asked the provider-info endpoint once');
+  assert.ok(dom.app.querySelector('.vote__title .vote__info'), 'the ⓘ appears when the answer lands');
+
+  // A rating tap rebuilds the card; the mutated game object keeps the ⓘ
+  // WITHOUT a second request.
+  dom.app.querySelectorAll('.rating .mood')[2].click();
+  assert.ok(dom.app.querySelector('.vote__title .vote__info'), 'the rebuilt card still has the ⓘ');
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(infoCalls.length, 1, 'no re-fetch on re-render');
+});
+
+test('a storefront game in the wizard asks nothing', async (t_) => {
+  const { dom, infoCalls } = bootApp(t_);
+  const round = roundFixture();
+  const session = { id: 's1', gameIds: ['g2'], memberIds: ['m1'], votes: {} };
+  const games = [round.games.find((g) => g.id === 'g2')];
+  dom.call('startVoting', round, session, games, [{ id: 'm1', name: 'Anna', guest: false }],
+    { skipIntro: true, saveVotes: async () => {}, onSaved: () => {} });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(infoCalls.length, 0);
+  assert.equal(dom.app.querySelector('.vote__title .vote__info'), null);
+});
+
 test('the vote-link card shows the ⓘ only for a game carrying info', async (t_) => {
   const { dom } = bootApp(t_);
   const person = { id: 'm1', name: 'Anna', guest: false, color: null };

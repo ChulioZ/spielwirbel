@@ -261,6 +261,34 @@ test('no community score is ever imported — rank, average, bayesaverage stay o
   }
 });
 
+test('gameInfo batches past 60 ids like expansionParents, sequentially', async (t) => {
+  /* An import is the one bulk entry point (#717 follow-up): a 130-game shelf
+   * must not silently fill only the first 60 — the rest would stay field-less
+   * AND unstamped, invisible until someone opens each detail page. Same batch
+   * size and ceiling as expansionParents. */
+  process.env.BGG_API_TOKEN = 'test-token';
+  const calls = [];
+  const original = global.fetch;
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    const ids = new URL(String(url)).searchParams.get('id').split(',');
+    return { status: 200, text: async () => `<items>${ids
+      .map((id) => `<item type="boardgame" id="${id}"><name type="primary" value="G${id}"/>
+        <statistics><ratings><averageweight value="2.5"/></ratings></statistics></item>`)
+      .join('')}</items>` };
+  };
+  t.after(() => { global.fetch = original; delete process.env.BGG_API_TOKEN; });
+
+  const ids = Array.from({ length: 130 }, (_, i) => String(100000 + i));
+  const out = await bgg.gameInfo(ids);
+  assert.equal(calls.length, 3, '130 ids ride three batches of <= 60');
+  for (const u of calls) {
+    assert.ok(new URL(u).searchParams.get('id').split(',').length <= 60);
+    assert.match(u, /stats=1/);
+  }
+  assert.equal(out.length, 130, 'every batch\'s items are concatenated');
+});
+
 test('parseGameInfo reads a MULTI-item stats body for the backfill', () => {
   const xml = `<items>
     <item type="boardgame" id="13">

@@ -1059,7 +1059,7 @@ async function showGameDetail(rid, gameId) {
       infoNode = sec;
     };
     renderInfo();
-    if (game.source && game.source.provider === 'bgg' && (game.weight == null || !game.description)) {
+    if (wantsGameInfo(game)) {
       api('GET', `/api/rounds/${rid}/games/${gameId}/provider-info`)
         .then((info) => {
           if (info.weight != null && game.weight == null) game.weight = info.weight;
