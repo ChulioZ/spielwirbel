@@ -427,3 +427,24 @@ test('a game with weight and the #724 fields is COMPLETE — no weekly re-ask fo
   // the assertion above cannot pass by the check having been gutted.
   assert.equal(needsProviderInfo({ ...complete, minAge: null }), true);
 });
+
+test('a stale client still sending applyDescription writes nothing', async () => {
+  /* The shell is cache-first, so a tab opened before this deploy keeps running
+   * the old JS and keeps sending the flag. It must be inert rather than
+   * resurrect the field — and the link itself must still apply, or the stale tab
+   * silently stops being able to link a provider at all. */
+  const rid = await makeRound('Kein-Text-Stale');
+  const game = await repo.createGame('default', rid, {
+    title: 'Unverlinkt', minPlayers: 2, maxPlayers: 4, image: null, source: null,
+  });
+  stubFetch([{ id: '900023', weight: '2.9', desc: 'Verlagstext.', age: 12 }]);
+  const res = await request(app).patch(`/api/rounds/${rid}/games/${game.id}`).send({
+    ...bggSource('900023'), applyWeight: true, applyDescription: true,
+  });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.weight, 2.9, 'the rest of the old body still works');
+  assert.equal('description' in res.body, false, 'a stale flag resurrected the field');
+
+  const stored = await repo.getGame('default', rid, game.id);
+  assert.equal('description' in stored, false, 'a stale flag reached the store');
+});
