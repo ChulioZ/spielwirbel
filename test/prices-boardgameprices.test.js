@@ -75,6 +75,49 @@ const ARK_NOVA = {
   ],
 };
 
+/*
+ * PROVENANCE: captured live on 2026-08-09 from
+ *   https://boardgameprices.co.uk/api/info?eid=241477&currency=EUR&destination=DE&sitename=spielwirbel.app
+ * (Karak, BGG id 241477), trimmed to two of the seven items with a few verbatim
+ * offers each. It preserves what ARK_NOVA cannot show — issue #700's bug: ONE
+ * item can be MULTILINGUAL. items[0] carries versions.lang ["GB","DE","NL","FR",
+ * "IT"], so a German reader is correctly matched to this item while langs[0]
+ * says 'GB'. GB-first is the live order and load-bearing: put DE first and the
+ * label assertion below is satisfied by array order, proving nothing (the same
+ * anti-vacuous shape as ARK_NOVA's inverted offer counts).
+ */
+const KARAK = {
+  currency: 'EUR',
+  sitename: 'Brettspielpreise.de',
+  url: 'https://brettspielpreise.de',
+  items: [
+    {
+      id: 33256,
+      name: 'Karak',
+      url: 'https://brettspielpreise.de/item/show/33256/karak?utm_source=site_spielwirbel.app&utm_medium=cmsplugin&utm_content=getprice&utm_campaign=wpplugin',
+      versions: { lang: ['GB', 'DE', 'NL', 'FR', 'IT'] },
+      external_id: '241477',
+      prices: [
+        { link: 'https://brettspielpreise.de/item/go?source=A&storeitemid=3278790', price: 26.14, product: 26.14, shipping: '0.00', discount: null, fee: 0, stock: 'Y', shipping_known: true, country: 'DE' },
+        { link: 'https://brettspielpreise.de/item/go?source=A&storeitemid=5729988', price: 27.939999999999998, product: 22.99, shipping: '4.95', discount: null, fee: 0, stock: 'Y', shipping_known: true, country: 'DE' },
+        { link: 'https://brettspielpreise.de/item/go?source=A&storeitemid=6340820', price: 31, product: 26, shipping: '5.00', discount: null, fee: 0, stock: 'Y', shipping_known: true, country: 'DE' },
+        { link: 'https://brettspielpreise.de/item/go?source=A&storeitemid=4758400', price: 31.430000000000003, product: 27.29, shipping: '4.95', discount: 0.81, fee: 0, stock: 'Y', shipping_known: true, country: 'NL' },
+      ],
+    },
+    {
+      id: 62407,
+      name: 'Karak',
+      url: 'https://brettspielpreise.de/item/show/62407/karak?utm_source=site_spielwirbel.app&utm_medium=cmsplugin&utm_content=getprice&utm_campaign=wpplugin',
+      versions: { lang: ['ES'] },
+      external_id: '241477',
+      prices: [
+        { link: 'https://brettspielpreise.de/item/go?source=A&storeitemid=3862583', price: 43.45, product: 31.45, shipping: '12.00', discount: null, fee: 0, stock: 'Y', shipping_known: true, country: 'ES' },
+        { link: 'https://brettspielpreise.de/item/go?source=A&storeitemid=3736494', price: 43.99, product: 34.99, shipping: '9.00', discount: null, fee: 0, stock: 'Y', shipping_known: true, country: 'ES' },
+      ],
+    },
+  ],
+};
+
 const de = () => bgp.parseInfo(ARK_NOVA, { lang: 'de', destination: 'DE' });
 
 test('the reader\'s language edition wins — NOT items[0]', () => {
@@ -103,6 +146,31 @@ test('a matching language beats a bigger edition', () => {
   const out = bgp.parseInfo(ARK_NOVA, { lang: 'en', destination: 'DE' });
   assert.equal(out.edition.lang, 'GB');
   assert.equal(out.offerCount, 6);
+});
+
+test('a multilingual listing is labelled with the language that MATCHED the reader', () => {
+  // Issue #700: the price was right, the label was wrong — pickEdition matched
+  // this item for a German reader via 'DE', but langs[0] is 'GB', so the box
+  // said „Ausgabe: Karak (GB)" over the German-market offers.
+  const out = bgp.parseInfo(KARAK, { lang: 'de', destination: 'DE' });
+  assert.equal(out.edition.title, 'Karak');
+  assert.equal(out.edition.lang, 'DE');
+  assert.equal(out.best.amount, 26.14);
+});
+
+test('the label follows the reader — the SAME multilingual listing reads (GB) to an English reader', () => {
+  const out = bgp.parseInfo(KARAK, { lang: 'en', destination: 'DE' });
+  assert.equal(out.edition.lang, 'GB');
+  assert.equal(out.offerCount, 4);
+});
+
+test('the most-offers fallback keeps the item\'s own first language', () => {
+  // 'pt' maps to 'PT', which no Karak item carries, so the fallback picks the
+  // multilingual item on offer count — and must NOT relabel it 'PT': no
+  // reader-language edition existed, so langs[0] is the honest answer there.
+  const out = bgp.parseInfo(KARAK, { lang: 'pt', destination: 'DE' });
+  assert.equal(out.edition.lang, 'GB');
+  assert.equal(out.offerCount, 4);
 });
 
 test('the best offer is the cheapest IN-STOCK one, as a total including shipping', () => {

@@ -8,7 +8,7 @@ paths:
   - "test/game-price-section.test.js"
 ---
 
-# Wish-list prices (#679): three properties of the aggregator that fail SILENTLY
+# Wish-list prices (#679): four properties of the aggregator that fail SILENTLY
 
 `lib/prices/` answers "what does this wished-for game cost right now" from the
 Brettspielpreise.de / BoardGamePrices API (board games, keyed on the BGG id) and
@@ -56,6 +56,20 @@ A `destination=DE` query legitimately returns AT, CH, LV and GR shops. The count
 travels with the offer and the UI names it, so a Greek shop cannot read as a local
 one. Do not "fix" this by filtering to the destination country — a cheaper
 Austrian shop that ships to Germany is a real answer.
+
+## 4. One item can be MULTILINGUAL — `langs[0]` is not "the" edition language
+
+A single listing can carry several languages on **one** item, GB first: Karak
+(`eid=241477`, measured 2026-08-08) is one item with `["GB","DE","NL","FR","IT"]`.
+`pickEdition` correctly matched it for a German reader — right offers, right
+price — but the label printed `langs[0]`, so the box said „Ausgabe: Karak (GB)"
+over the German-market offers (#700). The label is the edition disclosure, so a
+wrong one misleads in both directions. The rule: when the shown box includes the
+reader's language, that **match** is the label; `langs[0]` labels only the
+most-offers fallback, where no reader-language edition existed. Any fixture
+testing this must put GB first in `versions.lang` (the live order) — DE-first
+would satisfy the assertion by array order, the same anti-vacuous shape as §1's
+inverted offer counts.
 
 ## Why this is NOT a sixth entry in `lib/providers/`
 
