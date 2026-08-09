@@ -319,6 +319,8 @@ I18N.de = {
   'price.staleDay': 'Preis von vor {n} Tag',
   'price.staleDays': 'Preis von vor {n} Tagen',
   'price.staleWhy': 'Der Preisdienst ist gerade nicht erreichbar — das ist der zuletzt gesehene Preis.',
+  'price.checking': 'Der aktuelle Preis wird gerade geprüft …',
+  'price.noOffers': 'Zurzeit kein Preis verfügbar.',
   'price.sourceBgp': 'Preisdaten von Brettspielpreise.de. Die Übersicht umfasst nur die dort gelisteten Shops — Händler zahlen für die Aufnahme, sie ist also nicht der gesamte Markt.',
   'price.sourceSteam': 'Preisdaten aus dem Steam Store.',
 

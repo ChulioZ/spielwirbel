@@ -352,7 +352,12 @@ function priceAge(iso, now = Date.now()) {
 //    to tidy the layout.
 //  - A `stale: true` payload is a STORED price (#688) served while the source is
 //    out, so its age leads instead of sitting in the footnote below.
-function renderPriceSection(p) {
+//
+// `refreshing` (#707) marks the transient stored render while the live lookup is
+// still in flight: the age line stays (the legal half — the price on screen IS
+// days old), but the staleWhy line would claim the service is unreachable, which
+// is not yet known — so a "checking the current price" note stands in for it.
+function renderPriceSection(p, { refreshing = false } = {}) {
   const sec = h(`<div class="section gd-price"><h2>${esc(t('price.title'))}</h2></div>`);
   const amount = h(`<div class="gd-price__amount">${esc(fmtMoney(p.amount, p.currency))}</div>`);
   sec.appendChild(amount);
@@ -364,7 +369,11 @@ function renderPriceSection(p) {
   // The footnote stays as well — it carries the exact timestamp this summarises.
   if (p.stale) {
     sec.appendChild(h(`<div class="gd-price__stale">${esc(priceAge(p.fetchedAt))}</div>`));
-    sec.appendChild(h(`<div class="muted gd-price__stale-why">${esc(t('price.staleWhy'))}</div>`));
+    if (refreshing) {
+      sec.appendChild(h(`<div class="muted gd-price__checking">${esc(t('price.checking'))}</div>`));
+    } else {
+      sec.appendChild(h(`<div class="muted gd-price__stale-why">${esc(t('price.staleWhy'))}</div>`));
+    }
   }
 
   const facts = [];
@@ -391,6 +400,20 @@ function renderPriceSection(p) {
 
   const disclosure = p.source === 'steam' ? t('price.sourceSteam') : t('price.sourceBgp');
   sec.appendChild(h(`<div class="muted gd-price__note">${esc(t('price.retrieved', { when: fmtDateTime(p.fetchedAt) }))} · ${esc(t('price.mayChange'))}<br>${esc(disclosure)}</div>`));
+  return sec;
+}
+
+// A settled "no offers" answer (#707): the lookup succeeded and nobody stocks
+// the game (or the Steam app has no price). Rendered as a transparent note
+// rather than nothing — an empty slot after a stored price was on screen would
+// read as the price feature breaking. The server payload carries no `source`
+// (it is one shared frozen object), so the disclosure — still owed, the
+// statement derives from the aggregator — keys off the game's own provider.
+function renderPriceNoOffers(provider) {
+  const sec = h(`<div class="section gd-price gd-price--none"><h2>${esc(t('price.title'))}</h2></div>`);
+  sec.appendChild(h(`<div class="muted gd-price__none">${esc(t('price.noOffers'))}</div>`));
+  const disclosure = provider === 'steam' ? t('price.sourceSteam') : t('price.sourceBgp');
+  sec.appendChild(h(`<div class="muted gd-price__note">${esc(disclosure)}</div>`));
   return sec;
 }
 
@@ -978,12 +1001,42 @@ async function showGameDetail(rid, gameId) {
   if (game.wish && game.source && game.source.externalId) {
     const priceAnchor = h('<div></div>');
     app.appendChild(priceAnchor);
-    api('GET', `/api/rounds/${rid}/games/${gameId}/prices?lang=${encodeURIComponent(getLocale())}`)
+    // Stale-while-revalidate (#707): two requests race. `stored=1` answers from
+    // the last-known-price store instantly; the full request may block on the
+    // upstream for seconds (every in-memory cache miss — hourly, and after each
+    // deploy). The stored answer is rendered only while the live one is still in
+    // flight, and the live answer always wins — on a cache hit it settles just
+    // as fast, so the transient stored render naturally never appears.
+    const q = `lang=${encodeURIComponent(getLocale())}`;
+    let node = priceAnchor;
+    const swap = (next) => { node.replaceWith(next); node = next; };
+    let liveSettled = false;
+    let stored = null;
+    api('GET', `/api/rounds/${rid}/games/${gameId}/prices?${q}&stored=1`)
       .then((p) => {
-        if (!p || !p.available) return priceAnchor.remove();
-        priceAnchor.replaceWith(renderPriceSection(p));
+        if (liveSettled || !p || !p.available) return;
+        stored = p;
+        swap(renderPriceSection(p, { refreshing: true }));
       })
-      .catch(() => priceAnchor.remove());
+      .catch(() => {}); // the fast path failing must cost nothing
+    api('GET', `/api/rounds/${rid}/games/${gameId}/prices?${q}`)
+      .then((p) => {
+        liveSettled = true;
+        if (p && p.available) return swap(renderPriceSection(p));
+        // A settled "nobody stocks this" is stated, not blanked — also when no
+        // stored price was on screen first (operator decision on #707). Any
+        // other unavailable answer has nothing honest to show.
+        if (p && p.reason === 'no_offers') return swap(renderPriceNoOffers(game.source.provider));
+        node.remove();
+      })
+      .catch(() => {
+        liveSettled = true;
+        // Our own server became unreachable mid-view. A stored price already on
+        // screen stays — re-rendered without the "checking…" note, which would
+        // otherwise claim a check that is no longer running.
+        if (stored) swap(renderPriceSection(stored));
+        else node.remove();
+      });
   }
 
   // Sparse game (#256): one inviting panel that says why the page is bare and
