@@ -89,8 +89,13 @@ Worth stating, because each looks like an omission:
   (`excludesubtype=boardgameexpansion`). A bulk shelf import is the one place 50
   expansions of one game are noise — `.claude/rules/bgg-collection-import.md`.
   **The WISHLIST import does not** (#664): there an expansion is the thing being
-  recorded, so it imports as a `wish` row carrying `expansionOf`. That row is not
-  an exception to anything below — it is a *wish*, and it becomes an expansion
+  recorded, so it imports as a `wish` row carrying `expansionOf`. A BGG expansion
+  wished **by hand** through the add-game search gets the same row (#703):
+  `POST …/games` resolves `expansionOf` server-side with one `/thing` hop, and a
+  failed hop degrades to an unmarked wish — deliberately the opposite of the
+  import's probe, which must fail whole
+  (`.claude/rules/bgg-collection-import.md`). Either way the row is not an
+  exception to anything below — it is a *wish*, and it becomes an expansion
   only when it is acquired (next section).
 - **No `trackEvent`.** Adding a product counter is a deliberate act, not symmetry
   with `game_added` (`.claude/rules/product-event-logging.md`).
