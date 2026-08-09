@@ -194,7 +194,14 @@ function renderVoteLinkCards(token, ballot, person) {
       </div>`);
 
     // Same info affordance as the wizard's card (#717) — the ballot projection
-    // carries weight/description, so a link voter gets the same facts.
+    // carries weight, description and #724's metadata, so a link voter gets the
+    // same facts. It deliberately carries NO `rating`, so there is nothing to
+    // render here even if a future edit passed `{ rating: true }`; the omission
+    // is enforced server-side in lib/routes/vote-link.js.
+    //
+    // Note this surface never calls wantsGameInfo(): the provider-info route is
+    // auth-gated and a link voter has no account, so the ballot is the only
+    // source. That is why widening the field set costs nothing here.
     const infoBtn = gameInfoButton(game);
     if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
 
