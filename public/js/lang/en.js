@@ -355,6 +355,8 @@ I18N.en = {
   'detail.onboard.title': 'A blank slate',
   'detail.onboard.text':
     'Nobody has rated or played this one yet. Ratings and sessions show up here by themselves once you play it — until then, you can give it a face.',
+  'detail.onboard.wishText':
+    'This one is on the wish list. You can play and rate it once “Onto the shelf” moves it into your collection — until then, you can already give it a face.',
   'detail.onboard.cover': 'Add a cover',
   'detail.onboard.tags': 'Add tags',
   'detail.onboard.players': 'Set players',

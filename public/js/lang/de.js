@@ -356,6 +356,8 @@ I18N.de = {
   'detail.onboard.title': 'Ein unbeschriebenes Blatt',
   'detail.onboard.text':
     'Dieses Spiel wurde noch nicht gespielt oder bewertet. Bewertungen und Sessions erscheinen hier von selbst, sobald ihr es spielt — bis dahin kannst du ihm ein Gesicht geben.',
+  'detail.onboard.wishText':
+    'Dieses Spiel steht auf der Wunschliste. Spielen und bewerten könnt ihr es, sobald es mit „Ins Regal“ in eurer Sammlung landet — bis dahin kannst du ihm schon ein Gesicht geben.',
   'detail.onboard.cover': 'Cover hinzufügen',
   'detail.onboard.tags': 'Tags vergeben',
   'detail.onboard.players': 'Personenzahl festlegen',

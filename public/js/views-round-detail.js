@@ -1080,7 +1080,7 @@ async function showGameDetail(rid, gameId) {
            <i class="ti ti-sparkles gd-onboard__icon" aria-hidden="true"></i>
            <div>
              <h2>${esc(t('detail.onboard.title'))}</h2>
-             <p class="muted">${esc(t('detail.onboard.text'))}</p>
+             <p class="muted">${esc(t(game.wish ? 'detail.onboard.wishText' : 'detail.onboard.text'))}</p>
            </div>
          </div>
          <div class="gd-onboard__acts"></div>
