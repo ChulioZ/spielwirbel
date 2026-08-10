@@ -45,7 +45,10 @@ function showStartSession(round) {
       </div>
       <div class="setup-grid__aside">
         <div class="field" id="gamesFilterField" hidden>
-          <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
+          <div class="field-head">
+            <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
+            <span id="tagBulkMount"></span>
+          </div>
           <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
         </div>
         <div class="field">
@@ -176,15 +179,28 @@ function showStartSession(round) {
   const roundTags = round.tags || [];
   if (roundTags.length) {
     form.querySelector('#gamesFilterField').hidden = false;
+    // Built before the chips so their click handlers can call bulk.sync(); the
+    // node is mounted after, which is why this is a declaration and not an
+    // inline append.
+    const chipEls = [];
+    const bulk = renderTagBulkToggle(
+      selectedTags,
+      roundTags,
+      () => chipEls.forEach(({ el, tag }) => paintTagChip(el, tag.name, selectedTags.get(tag.id), tag.icon)),
+      () => updateHint()
+    );
     roundTags.forEach((tg) => {
       const chip = h('<button type="button" class="chip"></button>');
+      chipEls.push({ el: chip, tag: tg });
       paintTagChip(chip, tg.name, selectedTags.get(tg.id), tg.icon);
       chip.addEventListener('click', () => {
         paintTagChip(chip, tg.name, cycleTagState(selectedTags, tg.id), tg.icon);
+        bulk.sync();
         updateHint();
       });
       chips.appendChild(chip);
     });
+    form.querySelector('#tagBulkMount').replaceWith(bulk.el);
   }
 
   const countInput = form.querySelector('#count');

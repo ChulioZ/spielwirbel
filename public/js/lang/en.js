@@ -710,6 +710,8 @@ I18N.en = {
   'tags.filter.ignored': 'Tag “{name}”: not filtered. Click to only show games with it.',
   'tags.filter.included': 'Tag “{name}”: only games with it. Click to exclude it instead.',
   'tags.filter.excluded': 'Tag “{name}”: games with it are hidden. Click to stop filtering by it.',
+  'tags.filter.selectAll': 'Select all',
+  'tags.filter.clearAll': 'Clear all',
   'tags.chooseIcon': 'Choose an icon',
   'tags.editIcon': 'Change icon',
   'tags.toast.iconUpdated': 'Icon updated',

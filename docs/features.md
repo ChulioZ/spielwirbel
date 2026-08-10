@@ -149,7 +149,9 @@ What the app does, in detail. For a short overview see the
   any number of tags to a game — in the add-game sheet or later from the game's
   detail page, creating new tags inline — and filter both the Regal and the
   session draw by them (tri-state chips: off / include / exclude; included tags
-  combine with AND, excluded tags reject any match). Each tag can carry an
+  combine with AND, excluded tags reject any match). A toggle above the chips
+  selects every tag at once, or clears the whole filter in one click whenever
+  anything is filtered. Each tag can carry an
   **icon** picked from a curated set, shown next to its name everywhere the tag
   appears; a tag without one keeps the default tag glyph, and the icon can be
   changed later from the Tags screen.

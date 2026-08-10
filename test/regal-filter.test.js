@@ -38,6 +38,29 @@ test('below 860px the toggle shows and the Regal chips collapse behind it', () =
   assert.match(bodyOf('.regal-filter.is-open .filter-chips', rules) || '', /display:\s*flex/);
 });
 
+test('the bulk toggle (#723) collapses WITH the chips it acts on', () => {
+  // It is a sibling of `.filter-chips`, not a child, so it inherits none of the
+  // collapse above — without its own pair of rules it would either offer
+  // "Alle abwählen" over filters the user cannot see, or (having been hidden
+  // once) never come back when the panel opens. Neither is reachable from
+  // jsdom, which applies no external stylesheet, so this is the only guard.
+  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
+  const rules = rulesOf(narrow[1]);
+  assert.match(bodyOf('.regal-filter .tag-bulk', rules) || '', /display:\s*none/);
+  assert.match(bodyOf('.regal-filter.is-open .tag-bulk', rules) || '', /display:\s*inline-block/);
+});
+
+test('the bulk toggle collapse is scoped to the Regal, not the shared class', () => {
+  // The session setup screen carries the same `.tag-bulk`, permanently visible
+  // beside its field label. A bare `.tag-bulk { display: none }` on narrow would
+  // hide it there with nothing to say so — the `.filter-chips` trap above, one
+  // control over.
+  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
+  const offenders = rulesOf(narrow[1]).filter(([sel, body]) =>
+    sel === '.tag-bulk' && /display:\s*none/.test(body));
+  assert.deepEqual(offenders, [], 'the narrow block hides the bare .tag-bulk class');
+});
+
 test('from 860px up the toggle is gone and the inline chips are unchanged', () => {
   assert.ok(wide, 'no wide @media block scopes rules to .regal-filter');
   const rules = rulesOf(wide[1]);
