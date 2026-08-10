@@ -1186,6 +1186,22 @@ module.exports = function repoContract(repo) {
     const next = { tagIds: [], excludeTagIds: [], count: 1 };
     await repo.createSession(T, round.id, base, next);
     assert.deepEqual((await repo.getRound(T, round.id)).lastSessionFilters, next);
+
+    // The tag-combination mode (#726) rides in the same JSONB blob, so it needs
+    // no column and no migration — but it must survive the round trip on BOTH
+    // backends (Postgres stores the preset with J(); a key that failed to
+    // serialize would come back missing, and the sheet would silently reopen on
+    // the wrong mode).
+    const anyMode = { tagIds: ['t1', 't2'], excludeTagIds: [], count: 3, tagMode: 'any' };
+    await repo.createSession(T, round.id, base, anyMode);
+    assert.deepEqual((await repo.getRound(T, round.id)).lastSessionFilters, anyMode);
+    assert.deepEqual(
+      (await repo.listRounds(T)).find((r) => r.id === round.id).lastSessionFilters, anyMode);
+
+    // And a later AND draw clears it — the preset is replaced, never merged, so
+    // the key must be gone rather than left behind at its previous value.
+    await repo.createSession(T, round.id, base, next);
+    assert.equal('tagMode' in (await repo.getRound(T, round.id)).lastSessionFilters, false);
   });
 
   test('session mutators persist through getRound', async () => {

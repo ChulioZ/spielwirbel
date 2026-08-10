@@ -126,10 +126,12 @@ test('start session: the pool preview follows the toggle', async () => {
   assert.deepEqual(pooled(), ['Azul', 'Catan', 'Uno'], 'unfiltered: the whole shelf');
 
   bulk.click();
-  // Included tags are AND (`matchesTagFilter`), so „Alle wählen" over three tags
-  // leaves only a game carrying all three — none. That empty pool is the
-  // documented, accepted consequence and is already handled by the existing
-  // empty-pool copy; it must not be "fixed" by switching includes to OR.
+  // „Alle wählen" over three tags leaves only a game carrying all three — none,
+  // in the DEFAULT mode this spec runs in. That empty pool is the documented,
+  // accepted consequence and is handled by the existing empty-pool copy. #726
+  // added an opt-in „Mind. ein Tag" mode beside it (test/tag-filter-mode.test.js)
+  // and deliberately did NOT change this default — so this assertion still
+  // guards the bulk toggle rather than the combination rule.
   assert.deepEqual(pooled(), [], 'updateHint ran on the bulk click');
 
   bulk.click();

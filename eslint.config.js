@@ -58,6 +58,7 @@ const frontendGlobals = {
   TAG_STATES: 'readonly', cycleTagState: 'readonly',
   paintTagChip: 'readonly', matchesTagFilter: 'readonly',
   renderTagBulkToggle: 'readonly',
+  renderTagModeToggle: 'readonly', includedTagCount: 'readonly',
   tagIconPicker: 'readonly',
   randomOrderCache: 'readonly', randomOrderedGames: 'readonly',
   gameStatsForSession: 'readonly', gameStats: 'readonly',

@@ -61,6 +61,43 @@ test('the bulk toggle collapse is scoped to the Regal, not the shared class', ()
   assert.deepEqual(offenders, [], 'the narrow block hides the bare .tag-bulk class');
 });
 
+test('the AND/OR mode control (#726) collapses WITH the chips it governs', () => {
+  // Same reasoning as the bulk toggle above: it is a sibling of `.filter-chips`,
+  // so it inherits none of the collapse and would otherwise offer a combination
+  // mode over chips the user cannot see while the panel is shut.
+  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
+  const rules = rulesOf(narrow[1]);
+  assert.match(bodyOf('.regal-filter .tag-mode', rules) || '', /display:\s*none/);
+  assert.match(bodyOf('.regal-filter.is-open .tag-mode:not([hidden])', rules) || '',
+    /display:\s*flex/);
+});
+
+test('the open-panel rule must not beat the hidden attribute (#726)', () => {
+  // `.tag-mode` is `display: flex`, so `.tag-mode[hidden]` (0,2,0) is what hides
+  // it on a round with fewer than two included tags. A reveal written as
+  // `.regal-filter.is-open .tag-mode` is (0,3,0) and would win — showing an
+  // empty two-option control over a filter it cannot apply to. The `:not()` is
+  // what stops the two competing at all, so its ABSENCE is the failure to catch.
+  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
+  const offenders = rulesOf(narrow[1]).filter(([sel, body]) =>
+    sel === '.regal-filter.is-open .tag-mode' && /display:/.test(body));
+  assert.deepEqual(offenders, [],
+    'the reveal must be guarded with :not([hidden]) rather than unconditional');
+  // And the guard it is protecting has to exist in the first place.
+  assert.match(bodyOf('.tag-mode[hidden]') || '', /display:\s*none/);
+});
+
+test('the mode control collapse is scoped to the Regal, not the shared class', () => {
+  // The session setup screen carries the same `.tag-mode`, shown inline whenever
+  // two tags are included. A bare `.tag-mode { display: none }` on narrow would
+  // make the mode unreachable on every phone there — the `.filter-chips` trap
+  // again, one control further on.
+  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
+  const offenders = rulesOf(narrow[1]).filter(([sel, body]) =>
+    sel === '.tag-mode' && /display:\s*none/.test(body));
+  assert.deepEqual(offenders, [], 'the narrow block hides the bare .tag-mode class');
+});
+
 test('from 860px up the toggle is gone and the inline chips are unchanged', () => {
   assert.ok(wide, 'no wide @media block scopes rules to .regal-filter');
   const rules = rulesOf(wide[1]);

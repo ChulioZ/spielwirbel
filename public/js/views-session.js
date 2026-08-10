@@ -49,6 +49,7 @@ function showStartSession(round) {
             <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
             <span id="tagBulkMount"></span>
           </div>
+          <div id="tagModeMount"></div>
           <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
         </div>
         <div class="field">
@@ -72,13 +73,16 @@ function showStartSession(round) {
   app.appendChild(form);
 
   // Custom-tag filter (#238, tri-state #241): all ignored by default = no tag
-  // filter. Map<tagId, 'include'|'exclude'>; included tags combine with AND,
-  // excluded tags reject a game carrying any of them.
+  // filter. Map<tagId, 'include'|'exclude'>; included tags combine per
+  // `tagFilterState.tagMode` (#726 — 'all' by default, 'any' for at least one),
+  // excluded tags reject a game carrying any of them in either mode.
   // Preset from the round's last draw-flow session (#252) when there is one;
   // tag ids whose tag has since been deleted are dropped, mirroring the
   // drop-unknown-ids rule the backend applies at session-creation time.
   const preset = round.lastSessionFilters || null;
   const selectedTags = new Map();
+  // An absent key reads as 'all' — every pre-#726 preset, and every AND draw.
+  const tagFilterState = { tagMode: preset && preset.tagMode === 'any' ? 'any' : 'all' };
   if (preset) {
     const known = new Set((round.tags || []).map((tg) => tg.id));
     (preset.tagIds || []).filter((x) => known.has(x)).forEach((x) => selectedTags.set(x, 'include'));
@@ -116,7 +120,9 @@ function showStartSession(round) {
   // (.claude/rules/active-games-filter-sites.md).
   const pool = () =>
     activeGames.filter(
-      (g) => matchesTagFilter(selectedTags, g.tagIds) && fitsPlayerCount(g, playerCount())
+      (g) =>
+        matchesTagFilter(selectedTags, g.tagIds, tagFilterState.tagMode) &&
+        fitsPlayerCount(g, playerCount())
     );
 
   // Live pool preview, in the two presentations described above. The wide panel
@@ -179,28 +185,39 @@ function showStartSession(round) {
   const roundTags = round.tags || [];
   if (roundTags.length) {
     form.querySelector('#gamesFilterField').hidden = false;
-    // Built before the chips so their click handlers can call bulk.sync(); the
-    // node is mounted after, which is why this is a declaration and not an
-    // inline append.
+    // Built before the chips so their click handlers can call bulk.sync() and
+    // mode.sync(); the nodes are mounted after, which is why these are
+    // declarations and not inline appends.
     const chipEls = [];
+    const repaintChips = () =>
+      chipEls.forEach(({ el, tag }) =>
+        paintTagChip(el, tag.name, selectedTags.get(tag.id), tag.icon, tagFilterState.tagMode));
+    // Switching the mode repaints the chips as well as redrawing the pool: the
+    // included chips' aria-labels state the semantics in words (#726).
+    const mode = renderTagModeToggle(tagFilterState, selectedTags, () => {
+      repaintChips();
+      updateHint();
+    });
     const bulk = renderTagBulkToggle(
       selectedTags,
       roundTags,
-      () => chipEls.forEach(({ el, tag }) => paintTagChip(el, tag.name, selectedTags.get(tag.id), tag.icon)),
-      () => updateHint()
+      repaintChips,
+      () => { mode.sync(); updateHint(); }
     );
     roundTags.forEach((tg) => {
       const chip = h('<button type="button" class="chip"></button>');
       chipEls.push({ el: chip, tag: tg });
-      paintTagChip(chip, tg.name, selectedTags.get(tg.id), tg.icon);
+      paintTagChip(chip, tg.name, selectedTags.get(tg.id), tg.icon, tagFilterState.tagMode);
       chip.addEventListener('click', () => {
-        paintTagChip(chip, tg.name, cycleTagState(selectedTags, tg.id), tg.icon);
+        paintTagChip(chip, tg.name, cycleTagState(selectedTags, tg.id), tg.icon, tagFilterState.tagMode);
         bulk.sync();
+        mode.sync();
         updateHint();
       });
       chips.appendChild(chip);
     });
     form.querySelector('#tagBulkMount').replaceWith(bulk.el);
+    form.querySelector('#tagModeMount').replaceWith(mode.el);
   }
 
   const countInput = form.querySelector('#count');
@@ -230,6 +247,7 @@ function showStartSession(round) {
         count,
         tagIds: [...selectedTags].filter(([, s]) => s === 'include').map(([id]) => id),
         excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
+        tagMode: tagFilterState.tagMode, // #726; the server drops it when nothing is included
         memberIds: [...joining],
         guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)

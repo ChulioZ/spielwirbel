@@ -363,7 +363,10 @@ let gamesSort = 'avg';
 // Regal filter state – kept for the running session, scoped to one round.
 // Reset (along with gamesSort) when a different round's Regal is opened.
 // `tags` is a tri-state Map<tagId, 'include'|'exclude'> (#241); absence = ignore.
-let regalFilters = { tags: new Map(), query: '' };
+// `tagMode` is how the INCLUDED tags combine (#726) — 'all' (every one) or
+// 'any' (at least one). It survives while the control that sets it is hidden,
+// which is why it lives here rather than inside renderRegalTab.
+let regalFilters = { tags: new Map(), query: '', tagMode: 'all' };
 let regalFiltersRid = null;
 
 // Tri-state custom-tag filter (#241), shared by the Regal and start-session tag
@@ -381,7 +384,12 @@ function cycleTagState(map, id) {
 // Reflect a tag chip's state on its element: the fill class, the glyph (a ban
 // icon for exclude), and an accessible label so include vs exclude is
 // distinguishable without relying on color alone (a11y).
-function paintTagChip(chip, name, state, tagIcon) {
+// `mode` (#726) is the ACTIVE combination mode, and it only changes the included
+// label — "only games with it" states AND semantics out loud, so in 'any' mode
+// that sentence is simply wrong. It is the one string in the app that says what
+// the filter means, which is why it must follow the control rather than the
+// control merely sitting above it.
+function paintTagChip(chip, name, state, tagIcon, mode = 'all') {
   chip.classList.toggle('is-on', state === 'include');
   chip.classList.toggle('is-excluded', state === 'exclude');
   // The ban glyph still wins for the exclude state (#255): it conveys filter
@@ -389,11 +397,51 @@ function paintTagChip(chip, name, state, tagIcon) {
   // indistinguishable without color.
   const icon = state === 'exclude' ? 'ti-ban' : tagIconClass(tagIcon);
   const key =
-    state === 'include' ? 'tags.filter.included'
+    state === 'include' ? (mode === 'any' ? 'tags.filter.includedAny' : 'tags.filter.included')
     : state === 'exclude' ? 'tags.filter.excluded'
     : 'tags.filter.ignored';
   chip.setAttribute('aria-label', t(key, { name }));
   chip.innerHTML = `<i class="ti ${icon}" aria-hidden="true"></i>${esc(name)}`;
+}
+// The AND/OR control above a tri-state chip row (#726), on both screens that
+// carry the filter — the session setup screen and the Regal, which already
+// share the chips and the bulk toggle.
+//
+// `state` is the screen's own filter state object; the control reads and writes
+// its `tagMode` key in place, so the choice survives while the control is
+// hidden. That matters: with fewer than two included tags the two modes draw the
+// same pool, so the control would be noise — but dropping to one tag and adding
+// another back must restore what the user picked, not silently reset it.
+//
+// Two plain buttons rather than a role="radiogroup": both are Tab-reachable and
+// Enter/Space-activated by the platform, where a radiogroup would owe arrow-key
+// roving. `aria-pressed` plus a check glyph carry the selection, so it is never
+// conveyed by colour alone (.claude/rules/accessibility-contrast-and-modals.md).
+//
+// Returns { el, sync }: `sync` re-reads the map and shows or hides the control,
+// so every chip click and the bulk toggle must call it.
+function renderTagModeToggle(state, map, onChange) {
+  const el = h(`<div class="tag-mode" role="group" aria-label="${esc(t('tags.filter.modeLabel'))}" hidden></div>`);
+  const opts = [['all', 'tags.filter.modeAll'], ['any', 'tags.filter.modeAny']].map(([mode, key]) => {
+    const btn = h(`<button type="button" class="tag-mode__opt"><i class="ti ti-check" aria-hidden="true"></i>${esc(t(key))}</button>`);
+    btn.addEventListener('click', () => {
+      if (state.tagMode === mode) return;
+      state.tagMode = mode;
+      paint();
+      onChange();
+    });
+    el.appendChild(btn);
+    return { btn, mode };
+  });
+  const paint = () => opts.forEach(({ btn, mode }) => {
+    const on = state.tagMode === mode;
+    btn.classList.toggle('is-on', on);
+    btn.setAttribute('aria-pressed', String(on));
+  });
+  const sync = () => { el.hidden = includedTagCount(map) < 2; };
+  paint();
+  sync();
+  return { el, sync };
 }
 // The bulk toggle that sits above a tri-state chip row (#723) — on the session
 // setup screen and in the Regal, which share the chips through the two helpers
@@ -488,15 +536,38 @@ function tagIconPicker(selected, opts) {
   return { trigger, grid, get: () => current };
 }
 
-// A game passes the tri-state tag filter iff it carries every included tag (AND)
-// and none of the excluded tags. `map` is Map<tagId, 'include'|'exclude'>.
-function matchesTagFilter(map, gameTagIds) {
+// How many tags the map currently includes — what decides whether offering a
+// combination mode means anything at all (#726).
+function includedTagCount(map) {
+  let n = 0;
+  for (const state of map.values()) if (state === 'include') n++;
+  return n;
+}
+// A game passes the tri-state tag filter iff it satisfies the included tags and
+// carries none of the excluded ones. `map` is Map<tagId, 'include'|'exclude'>.
+// `mode` (#726) decides how the included ones combine: 'all' — the default —
+// requires every one, 'any' at least one. Excluded tags reject a game carrying
+// any of them in BOTH modes; the mode widens what qualifies, never what is
+// rejected. Anything other than the exact string 'any' reads as 'all', so the
+// second caller cannot silently change behaviour by passing a stray value.
+//
+// Kept in step with lib/draw.js's server-side clause by tests on both sides —
+// the two express one rule over different inputs (a chip map here, resolved id
+// lists there), which is why they are deliberately not shared
+// (.claude/rules/shared-constants-across-the-stack.md).
+function matchesTagFilter(map, gameTagIds, mode = 'all') {
   const ids = gameTagIds || [];
+  let included = 0;
+  let hits = 0;
   for (const [id, state] of map) {
-    if (state === 'include' && !ids.includes(id)) return false;
     if (state === 'exclude' && ids.includes(id)) return false;
+    if (state === 'include') {
+      included++;
+      if (ids.includes(id)) hits++;
+    }
   }
-  return true;
+  if (included === 0) return true;
+  return mode === 'any' ? hits > 0 : hits === included;
 }
 // Remembered random order per round, so it stays the same when navigating back.
 const randomOrderCache = {};

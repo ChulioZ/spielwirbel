@@ -67,6 +67,41 @@ test('included tags use AND semantics — a game must carry every one', () => {
   assert.ok(!picked.includes('plain'));
 });
 
+test('AND stays the default — an absent or unknown tagMode does not widen the pool (#726)', () => {
+  // The mode is a lenient field, so the pool must not depend on the caller
+  // spelling it: every non-'any' value is the pre-#726 behaviour.
+  for (const tagMode of [undefined, null, 'all', 'ALL', 'any-ish', 42]) {
+    assert.deepEqual(
+      ids(drawPool(round, { tagIds: ['a', 'b'], tagMode, playerCount: 1 })),
+      ['tagged-ab'],
+      `tagMode ${JSON.stringify(tagMode)} must behave as 'all'`,
+    );
+  }
+});
+
+test("tagMode 'any' admits a game carrying at least ONE included tag (#726)", () => {
+  const picked = ids(drawPool(round, { tagIds: ['a', 'b'], tagMode: 'any', playerCount: 1 }));
+  // 'tagged-a' carries only one of the two — the whole point of the mode. The
+  // AND result ('tagged-ab') has to stay in as well, or `some` was swapped for
+  // an exclusive-or rather than widened.
+  assert.deepEqual(picked, ['tagged-ab', 'tagged-a']);
+  // A game carrying NEITHER is still out: 'any' widens the filter, it does not
+  // remove it. Without this, `tagIds.some(...)` replaced by a bare `true` passes.
+  assert.ok(!picked.includes('plain'), "'any' is still a filter");
+});
+
+test("tagMode 'any' does not weaken the exclude clause (#726)", () => {
+  // Excludes reject a game carrying ANY of them in BOTH modes. The fixture puts
+  // 'b' in both lists so one assertion discriminates all three ways this can go
+  // wrong: correct OR admits 'tagged-ab' by 'a' and then rejects it by 'b';
+  // an OR that also softens excludes keeps it; and a mode that never applied at
+  // all ANDs down to 'tagged-ab' and then rejects THAT, leaving nothing.
+  const picked = ids(
+    drawPool(round, { tagIds: ['a', 'b'], excludeTagIds: ['b'], tagMode: 'any', playerCount: 1 }),
+  );
+  assert.deepEqual(picked, ['tagged-a']);
+});
+
 test('excluded tags reject a game carrying ANY of them', () => {
   // TWO excluded tags, and 'tagged-ab' carries only one of them. With a single
   // excluded tag `.some` and `.every` behave identically, so a one-tag fixture
