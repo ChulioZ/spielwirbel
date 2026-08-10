@@ -91,10 +91,13 @@ test("tagMode 'any' admits a game carrying at least ONE included tag (#726)", ()
 });
 
 test("tagMode 'any' does not weaken the exclude clause (#726)", () => {
-  // Excludes reject a game carrying ANY of them in BOTH modes: 'tagged-ab' is
-  // admitted by 'a' and must still be rejected by 'b'.
+  // Excludes reject a game carrying ANY of them in BOTH modes. The fixture puts
+  // 'b' in both lists so one assertion discriminates all three ways this can go
+  // wrong: correct OR admits 'tagged-ab' by 'a' and then rejects it by 'b';
+  // an OR that also softens excludes keeps it; and a mode that never applied at
+  // all ANDs down to 'tagged-ab' and then rejects THAT, leaving nothing.
   const picked = ids(
-    drawPool(round, { tagIds: ['a'], excludeTagIds: ['b'], tagMode: 'any', playerCount: 1 }),
+    drawPool(round, { tagIds: ['a', 'b'], excludeTagIds: ['b'], tagMode: 'any', playerCount: 1 }),
   );
   assert.deepEqual(picked, ['tagged-a']);
 });
