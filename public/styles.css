@@ -1125,6 +1125,45 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 .filter-chips__sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; flex: none; }
 
+/* How the INCLUDED tag chips combine (#726) — a two-option control directly
+   above the chip row it governs. Deliberately smaller and quieter than `.chip`:
+   these are a control OVER the chips, and at chip size they read as two more
+   tags in the row. */
+.tag-mode { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 2px 0 8px; }
+/* `display: flex` above is an author rule and beats the UA sheet's
+   `[hidden] { display: none }` at any specificity, so the control would keep its
+   box and its margin on every round with fewer than two included tags — the same
+   trap `.filter-chips[hidden]` two rules up records. */
+.tag-mode[hidden] { display: none; }
+.tag-mode__opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+/* The glyph is present in BOTH states and only made invisible, so switching
+   modes cannot resize either pill — and so the selection is carried by a shape
+   as well as by the fill (.claude/rules/accessibility-contrast-and-modals.md §3). */
+.tag-mode__opt .ti { font-size: var(--text-sm); visibility: hidden; }
+.tag-mode__opt:hover { border-color: var(--brand-edge); }
+/* --brand-dark, not --brand: the accent ON a brand tint measures 4.33–4.92:1
+   across the eight themes and fails AA on four of them
+   (.claude/rules/theme-derived-colors.md). */
+.tag-mode__opt.is-on {
+  background: var(--brand-tint);
+  border-color: var(--brand-dark);
+  color: var(--brand-dark);
+}
+.tag-mode__opt.is-on .ti { visibility: visible; }
+
 /* Regal tag-filter (#349): on phones the chips collapse behind a "Filter" button
    so the cover grid stays visible; from 860px up they show inline as today. The
    860/859 split is the same breakpoint the dock and `.vote--split` use — the two
@@ -1180,6 +1219,14 @@ h1, h2, h3 { font-family: var(--font-display); }
   .regal-filter.is-open .filter-chips { display: flex; }
   .regal-filter .tag-bulk { display: none; }
   .regal-filter.is-open .tag-bulk { display: inline-block; }
+  /* The mode control (#726) collapses with the chips for the same reason the
+     bulk toggle does — it governs chips the user cannot see while the panel is
+     shut. `:not([hidden])` is load-bearing: `.regal-filter.is-open .tag-mode`
+     alone is (0,3,0) and would beat `.tag-mode[hidden]` (0,2,0), so an open
+     panel would show the control on a round with fewer than two included tags,
+     which is the one place the attribute has to win. */
+  .regal-filter .tag-mode { display: none; }
+  .regal-filter.is-open .tag-mode:not([hidden]) { display: flex; margin-top: 10px; }
 }
 @media (min-width: 860px) {
   .regal-filter .filter-toggle { display: none; }

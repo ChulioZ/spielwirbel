@@ -40,6 +40,34 @@ to a component, check whether anything hides it with the attribute — the
 regression will look like it came from your sizing change, not from a missing
 `[hidden]` rule that predates it.
 
+## The third instance (#726): the PAIRED RULE can itself be outranked
+
+`.tag-mode[hidden]` is (0,2,0) — an attribute selector counts in the class
+column — so it beats its own `.tag-mode { display: flex }` (0,1,0) and the rule
+above is satisfied. It is still not enough the moment a **descendant** rule
+reveals the element:
+
+```css
+.regal-filter.is-open .tag-mode { display: flex; }              /* (0,3,0) — WINS */
+.regal-filter.is-open .tag-mode:not([hidden]) { display: flex; } /* (0,4,0) — correct */
+```
+
+The Regal collapses its whole filter panel below 860px and reveals it on
+`.is-open`, so the reveal is *more specific than the guard* and puts the
+attribute back to being decoration — here, an empty two-option control offered
+over a filter it cannot apply to.
+
+**So the guard belongs on the REVEAL, not only on the base rule.** Add
+`:not([hidden])` to any selector that switches such an element back on; the two
+then never compete, rather than competing at a specificity someone has to keep
+re-deriving. Same "win on specificity, never on source order" lesson as
+`.claude/rules/label-rows-lose-to-field-label.md`, one step along: the loser here
+is the fix for the *previous* instance of this very rule.
+
+The tell is that the element is correctly hidden everywhere **except** inside the
+one state that reveals its container — which reads as the reveal being too eager
+rather than as a cascade fight.
+
 ## The verification trap that hid it
 
 The DOM probe lied. `el.hidden` is the **IDL attribute** — it returned `true`

@@ -10,7 +10,7 @@ function renderRegalTab(round, activeGames) {
   // Filters (and sort) persist for the session but are scoped to one round —
   // opening a different round's Regal resets them to defaults.
   if (regalFiltersRid !== round.id) {
-    regalFilters = { tags: new Map(), query: '' };
+    regalFilters = { tags: new Map(), query: '', tagMode: 'all' };
     gamesSort = 'avg';
     regalFiltersRid = round.id;
   }
@@ -81,8 +81,9 @@ function renderRegalTab(round, activeGames) {
     let query = regalFilters.query;
     // Filter chips: custom round tags only (#238, tri-state #241). One chip per
     // round tag, all ignored by default; clicking cycles ignore -> include ->
-    // exclude, where included tags combine with AND and excluded tags reject a
-    // game carrying any of them. Ids of since-deleted tags are pruned from the
+    // exclude, where included tags combine per `regalFilters.tagMode` (#726) and
+    // excluded tags reject a game carrying any of them, whatever the mode.
+    // Ids of since-deleted tags are pruned from the
     // persisted map so they can't invisibly filter everything out.
     const roundTags = round.tags || [];
     const tagFilter = regalFilters.tags;
@@ -120,19 +121,32 @@ function renderRegalTab(round, activeGames) {
       // `.filter-chips` — an action is not one of the chips — so CSS collapses
       // it with them below 860px.
       const chipEls = [];
+      const repaintChips = () =>
+        chipEls.forEach(({ el, tag }) =>
+          paintTagChip(el, tag.name, tagFilter.get(tag.id), tag.icon, regalFilters.tagMode));
+      // The AND/OR control for the included tags (#726), shared with the session
+      // setup screen and reading its state out of `regalFilters` so it survives
+      // navigation within the round like the chips and the search do. The count
+      // badge is unaffected — it counts actively-filtering tags, which the mode
+      // does not change.
+      const mode = renderTagModeToggle(regalFilters, tagFilter, () => {
+        repaintChips();
+        renderGames();
+      });
       const bulk = renderTagBulkToggle(
         tagFilter,
         roundTags,
-        () => chipEls.forEach(({ el, tag }) => paintTagChip(el, tag.name, tagFilter.get(tag.id), tag.icon)),
-        () => { syncFilterBadge(); renderGames(); }
+        repaintChips,
+        () => { mode.sync(); syncFilterBadge(); renderGames(); }
       );
       roundTags.forEach((tg) => {
         const chip = h('<button class="chip"></button>');
         chipEls.push({ el: chip, tag: tg });
-        paintTagChip(chip, tg.name, tagFilter.get(tg.id), tg.icon);
+        paintTagChip(chip, tg.name, tagFilter.get(tg.id), tg.icon, regalFilters.tagMode);
         chip.addEventListener('click', () => {
-          paintTagChip(chip, tg.name, cycleTagState(tagFilter, tg.id), tg.icon);
+          paintTagChip(chip, tg.name, cycleTagState(tagFilter, tg.id), tg.icon, regalFilters.tagMode);
           bulk.sync();
+          mode.sync();
           syncFilterBadge();
           renderGames();
         });
@@ -140,6 +154,7 @@ function renderRegalTab(round, activeGames) {
       });
       syncFilterBadge();
       filterWrap.appendChild(toggle);
+      filterWrap.appendChild(mode.el);
       filterWrap.appendChild(chips);
       filterWrap.appendChild(bulk.el);
       gamesSec.appendChild(filterWrap);
@@ -191,7 +206,7 @@ function renderRegalTab(round, activeGames) {
       return randomOrderedGames(round, activeGames);
     }
     function matchesFilters(g) {
-      if (!matchesTagFilter(tagFilter, g.tagIds)) return false;
+      if (!matchesTagFilter(tagFilter, g.tagIds, regalFilters.tagMode)) return false;
       const q = query.trim().toLowerCase();
       if (q && !g.title.toLowerCase().includes(q)) return false;
       return true;

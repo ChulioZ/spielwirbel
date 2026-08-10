@@ -148,8 +148,11 @@ What the app does, in detail. For a short overview see the
   the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign
   any number of tags to a game — in the add-game sheet or later from the game's
   detail page, creating new tags inline — and filter both the Regal and the
-  session draw by them (tri-state chips: off / include / exclude; included tags
-  combine with AND, excluded tags reject any match). A toggle above the chips
+  session draw by them (tri-state chips: off / include / exclude; excluded tags
+  reject any match). With two or more tags included, a small control above the
+  chips chooses how they combine — "all tags" (a game must carry every one, the
+  default) or "any tag" (at least one); the choice is remembered with the rest of
+  the round's last draw. A toggle above the chips
   selects every tag at once, or clears the whole filter in one click whenever
   anything is filtered. Each tag can carry an
   **icon** picked from a curated set, shown next to its name everywhere the tag
