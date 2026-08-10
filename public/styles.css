@@ -1169,10 +1169,17 @@ h1, h2, h3 { font-family: var(--font-display); }
    so the no-active-filters badge would still show its "0" — restore the hide
    (same trap as `.icon-picker[hidden]`). */
 .filter-toggle__badge[hidden] { display: none; }
+/* The bulk toggle (#723) collapses WITH the chips it acts on: offering "clear
+   all" while the panel is shut would act on filters the user cannot see. It is
+   scoped to `.regal-filter` for the same reason everything else here is — the
+   session setup screen carries the same button and must keep it visible. */
+.regal-filter .tag-bulk { margin-bottom: 16px; }
 @media (max-width: 859px) {
   .regal-filter .filter-toggle { display: inline-flex; }
   .regal-filter .filter-chips { display: none; margin-top: 10px; }
   .regal-filter.is-open .filter-chips { display: flex; }
+  .regal-filter .tag-bulk { display: none; }
+  .regal-filter.is-open .tag-bulk { display: inline-block; }
 }
 @media (min-width: 860px) {
   .regal-filter .filter-toggle { display: none; }
@@ -2002,6 +2009,10 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 /* .field__label is the same look for a heading that labels a GROUP of buttons
    rather than a form control — a bare <label> there labels nothing (#145). */
 .field label, .field .field__label { display: block; font-weight: 600; margin-bottom: 6px; }
+/* A field label with an action opposite it (#723's tag-filter bulk toggle),
+   mirroring `.move-list__head`'s space-between. The label keeps its own
+   margin-bottom, so the row needs none of its own. */
+.field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .input, .select {
   width: 100%;
   font-family: inherit;

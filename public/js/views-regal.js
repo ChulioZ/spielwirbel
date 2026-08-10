@@ -115,11 +115,24 @@ function renderRegalTab(round, activeGames) {
         const open = filterWrap.classList.toggle('is-open');
         toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       });
+      // The bulk „Alle wählen"/„Alle abwählen" action (#723), shared with the
+      // session setup screen. It lives in `.regal-filter` rather than inside
+      // `.filter-chips` — an action is not one of the chips — so CSS collapses
+      // it with them below 860px.
+      const chipEls = [];
+      const bulk = renderTagBulkToggle(
+        tagFilter,
+        roundTags,
+        () => chipEls.forEach(({ el, tag }) => paintTagChip(el, tag.name, tagFilter.get(tag.id), tag.icon)),
+        () => { syncFilterBadge(); renderGames(); }
+      );
       roundTags.forEach((tg) => {
         const chip = h('<button class="chip"></button>');
+        chipEls.push({ el: chip, tag: tg });
         paintTagChip(chip, tg.name, tagFilter.get(tg.id), tg.icon);
         chip.addEventListener('click', () => {
           paintTagChip(chip, tg.name, cycleTagState(tagFilter, tg.id), tg.icon);
+          bulk.sync();
           syncFilterBadge();
           renderGames();
         });
@@ -128,6 +141,7 @@ function renderRegalTab(round, activeGames) {
       syncFilterBadge();
       filterWrap.appendChild(toggle);
       filterWrap.appendChild(chips);
+      filterWrap.appendChild(bulk.el);
       gamesSec.appendChild(filterWrap);
     }
 

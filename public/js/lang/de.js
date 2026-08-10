@@ -701,6 +701,8 @@ I18N.de = {
   'tags.filter.ignored': 'Tag „{name}“: kein Filter. Klicken, um nur Spiele damit zu zeigen.',
   'tags.filter.included': 'Tag „{name}“: nur Spiele damit. Klicken, um sie stattdessen auszuschließen.',
   'tags.filter.excluded': 'Tag „{name}“: Spiele damit sind ausgeblendet. Klicken, um den Filter aufzuheben.',
+  'tags.filter.selectAll': 'Alle wählen',
+  'tags.filter.clearAll': 'Alle abwählen',
   'tags.chooseIcon': 'Symbol wählen',
   'tags.editIcon': 'Symbol ändern',
   'tags.toast.iconUpdated': 'Symbol geändert',

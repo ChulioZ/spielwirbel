@@ -395,6 +395,36 @@ function paintTagChip(chip, name, state, tagIcon) {
   chip.setAttribute('aria-label', t(key, { name }));
   chip.innerHTML = `<i class="ti ${icon}" aria-hidden="true"></i>${esc(name)}`;
 }
+// The bulk toggle that sits above a tri-state chip row (#723) — on the session
+// setup screen and in the Regal, which share the chips through the two helpers
+// above and so must share this too.
+//
+// Its rule is NOT `showMoveGames`'s select-all/none, on purpose: there the
+// useful question is "is everything on?", here it is "is there any filter to
+// clear?". So any non-empty map — including a mixed 2-included/1-excluded one —
+// offers the clear action, which makes wiping a #252 preset one click instead of
+// the two-click walk that prompted the request.
+//
+// `repaint` re-paints every chip from the (mutated) map; `onChange` is the
+// screen's own refresh — the pool preview here, the grid plus the count badge
+// there. The returned `sync` must also run on every CHIP click, or the label
+// keeps promising the action the map no longer needs.
+function renderTagBulkToggle(map, roundTags, repaint, onChange) {
+  const btn = h('<button type="button" class="link-btn tag-bulk"></button>');
+  // No aria-pressed: this is an action whose accessible name changes, not a
+  // two-state control. Announcing it as "pressed" would describe the filter's
+  // state with a word that belongs to the button.
+  const sync = () => { btn.textContent = t(map.size ? 'tags.filter.clearAll' : 'tags.filter.selectAll'); };
+  btn.addEventListener('click', () => {
+    if (map.size) map.clear();
+    else roundTags.forEach((tg) => map.set(tg.id, 'include'));
+    sync();
+    repaint();
+    onChange();
+  });
+  sync();
+  return { el: btn, sync };
+}
 // Build the curated tag-icon picker (#255): a grid of glyph buttons, exactly
 // one active, following the MEMBER_COLORS swatch pattern (a fixed set, no free
 // input). Since #293 the grid is collapsed behind a trigger showing the current
