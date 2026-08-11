@@ -268,16 +268,47 @@ function showStartSession(round) {
   // and those are the two controls that already do. It renders NOTHING when the
   // shelf carries none of the fields, so a round of hand-typed games — or an
   // instance with no BGG token — sees exactly the screen it saw before.
-  const metaFilter = renderMetadataFilter(activeGames, metaFilters, () => updateHint());
+  //
+  // It is (re)built through `mountMetaFilter` rather than mounted once, because
+  // the backfill below can make controls appear that this shelf could not offer
+  // a moment ago (#736). The mount element STAYS in the DOM as the anchor —
+  // `hidden` while there is nothing to show, which costs no flex gap because a
+  // `display: none` element is not a flex item at all. It carries no class, so
+  // no rule can override the UA's `[hidden]`
+  // (.claude/rules/hidden-attribute-vs-display-rule.md).
   const metaMount = form.querySelector('#metaFilterMount');
-  if (metaFilter) {
-    resetMetaFilters = metaFilter.reset;
-    metaMount.replaceWith(metaFilter.el);
-  } else {
-    // Removed rather than left empty: `.setup-grid__aside` is a flex column with
-    // a gap, so an empty placeholder would still cost a row of spacing.
-    metaMount.remove();
-  }
+  let metaFilter = null;
+  const mountMetaFilter = () => {
+    // Preserved across a rebuild: the user's picks (the `metaFilters` object is
+    // mutated in place and handed back in), and whether they had the disclosure
+    // OPEN — losing that would snap the panel shut under someone mid-adjustment.
+    const wasOpen = !!(metaFilter && metaFilter.el.open);
+    metaFilter = renderMetadataFilter(activeGames, metaFilters, () => updateHint());
+    metaMount.replaceChildren();
+    if (metaFilter) {
+      metaFilter.el.open = wasOpen;
+      metaMount.appendChild(metaFilter.el);
+    }
+    resetMetaFilters = metaFilter ? metaFilter.reset : () => {};
+    metaMount.hidden = !metaFilter;
+  };
+  mountMetaFilter();
+
+  // Fill the shelf's missing BGG metadata (#736). Without this the controls
+  // above are derived from whatever happened to be stored, so a shelf nobody had
+  // opened the detail pages of offered no complexity filter at all — and the
+  // filters it did offer passed every game they could not see a value for.
+  //
+  // Folded in rather than re-rendered: `showStartSession(round)` would throw
+  // away the seats, guests and teams the user has already set. Re-seeding the
+  // SWR cache keeps the filled values across a back-navigation — the entry holds
+  // this very object, so the fold already updated it in memory; the `set` is
+  // what persists it (public/js/swr.js).
+  refreshShelfGameInfo(round.id, activeGames, () => {
+    mountMetaFilter();
+    updateHint();
+    swrStore.set('round:' + round.id, round);
+  });
 
   const countInput = form.querySelector('#count');
   // Preloaded from the remembered preset (#252); the markup's 3 stays the

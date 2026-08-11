@@ -385,7 +385,46 @@ test('gameInfo batches past 60 ids like expansionParents, sequentially', async (
     assert.ok(new URL(u).searchParams.get('id').split(',').length <= 60);
     assert.match(u, /stats=1/);
   }
-  assert.equal(out.length, 130, 'every batch\'s items are concatenated');
+  assert.equal(out.items.length, 130, 'every batch\'s items are concatenated');
+  assert.deepEqual(out.asked, ids, 'the covered set must name every id, in order');
+});
+
+test('gameInfo reports the ids it DROPPED as not asked about, and honours maxBatches', async (t) => {
+  /* The `asked` half of the contract (#736), which is what stops the caller
+   * stamping a game the ceiling silently discarded. Two bounds in one spec
+   * because they are the same slice: the module's own 300-id ceiling, and the
+   * caller-supplied batch budget the shelf-wide trigger spends. */
+  process.env.BGG_API_TOKEN = 'test-token';
+  const calls = [];
+  const original = global.fetch;
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    return { status: 200, text: async () => '<items></items>' };
+  };
+  t.after(() => { global.fetch = original; delete process.env.BGG_API_TOKEN; });
+
+  const ids = Array.from({ length: 420 }, (_, i) => String(200000 + i));
+  const capped = await bgg.gameInfo(ids);
+  assert.equal(capped.asked.length, 300, 'the 300-id ceiling must be reported, not hidden');
+  assert.equal(capped.asked.includes('200300'), false, 'an id past the ceiling was reported as asked');
+
+  calls.length = 0;
+  const one = await bgg.gameInfo(ids, { maxBatches: 1 });
+  assert.equal(calls.length, 1, 'maxBatches: 1 must cost exactly one upstream request');
+  assert.equal(one.asked.length, 60);
+});
+
+test('gameInfo without a token asks about nothing at all', async (t) => {
+  /* Deliberately NOT an empty item list over a full `asked` set: a tokenless
+   * instance that reported its whole shelf as covered would stamp every game as
+   * "BGG had nothing", so configuring the token later would leave the shelf
+   * waiting out a 7-day TTL for data it could have had at once. */
+  const original = global.fetch;
+  global.fetch = async () => { throw new Error('a tokenless gameInfo must not reach the network'); };
+  t.after(() => { global.fetch = original; });
+  delete process.env.BGG_API_TOKEN;
+
+  assert.deepEqual(await bgg.gameInfo(['13', '14']), { items: [], asked: [] });
 });
 
 test('parseGameInfo reads a MULTI-item stats body for the backfill', () => {

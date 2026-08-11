@@ -116,8 +116,10 @@ function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {
 
 // Whether asking the server could still add something: a BGG-linked game missing
 // at least one importable field. Shared by the detail page and the hot-seat
-// wizard — both fire the same GET …/provider-info trigger, whose server-side TTL
-// gate keeps a data-less game from costing an upstream request per view.
+// wizard — which fire the per-game GET …/provider-info — and since #736 by
+// refreshShelfGameInfo below, which gates the shelf-wide POST on the same
+// question. The server-side TTL gate is the backstop that keeps a data-less game
+// from costing an upstream request per view.
 //
 // Mirrors PROVIDER_INFO_FIELDS in lib/provider-info-fields.js. A field left out here
 // only costs a trigger that never fires (the server would still backfill on the
@@ -147,6 +149,50 @@ function mergeGameInfo(game, info) {
     if ((info[k] || []).length && !(game[k] || []).length) game[k] = info[k];
   }
   return game;
+}
+
+// Fold a shelf-wide answer into the game objects a screen already holds (#736),
+// reporting how many actually changed. Mutates IN PLACE — every seat, chip and
+// pool closure on the setup screen holds these exact objects, so replacing them
+// would detach the screen from what it renders.
+//
+// "Changed" is measured by serialising the game rather than by re-listing the
+// fields mergeGameInfo copies. A second field list here would be the drift
+// .claude/rules/provider-info-is-a-field-set.md exists for — one that leaves a
+// newly-imported field silently unable to trigger a repaint.
+function foldGameInfoList(games, infos) {
+  const byId = new Map((games || []).map((g) => [g.id, g]));
+  let changed = 0;
+  (infos || []).forEach((info) => {
+    const game = byId.get(info && info.id);
+    if (!game) return;
+    const before = JSON.stringify(game);
+    mergeGameInfo(game, info);
+    if (JSON.stringify(game) !== before) changed += 1;
+  });
+  return changed;
+}
+
+// Ask the server to fill the shelf's missing provider metadata, then fold the
+// answer in and tell the caller to repaint (#736). Used by the two screens that
+// FILTER on this metadata — the session setup screen and the Regal — because
+// until #736 neither was a backfill trigger, so their filters silently did not
+// filter and their controls silently did not appear.
+//
+// Fire-and-forget by design: the screen renders instantly from stored values and
+// this only ever adds to it. `onFilled` is not called when nothing changed, so a
+// filled shelf costs no repaint — which matters because repainting rebuilds the
+// disclosure, and doing that for nothing would snap it shut under the user.
+//
+// The `wantsGameInfo` gate is what keeps a filled shelf from issuing a request
+// at all; the server's TTL gate is the backstop for the games it cannot see.
+function refreshShelfGameInfo(rid, games, onFilled) {
+  if (!(games || []).some(wantsGameInfo)) return;
+  api('POST', `/api/rounds/${rid}/games/provider-info`)
+    .then((res) => {
+      if (foldGameInfoList(games, (res || {}).games) > 0) onFilled();
+    })
+    .catch(() => {});
 }
 
 // The ⓘ affordance for the two vote cards, or null when the game has nothing

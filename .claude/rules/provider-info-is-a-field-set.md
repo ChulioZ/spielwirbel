@@ -69,24 +69,10 @@ Two things that removal settled, worth keeping for the next one:
   `deepEqual`, which is the strongest guard of the three because an extra key
   fails it without anyone naming the field.
 
-## Anything that STAMPS must also write, or it defers by a whole TTL
-
-The link-provider `PATCH` offers a chip for `weight` only (it was `weight` and
-`description` until #729) — what the sheet previews — so writing just that looks
-right. It is not, and the
-reason generalises to any future handler that resolves provider info itself:
-**the stamp is what suppresses the backfill.** `providerInfoAt` is set on that
-path, so the unchipped fields would not arrive until the next trigger *after* the
-TTL expired — leaving the user who explicitly asked for BGG's data waiting a week
-for most of it, silently and self-healingly enough that nobody would report it.
-
-So the route writes the unchipped fields whenever the hop has already run, via
-the shared `assignProviderInfo(patch, info, UNCHIPPED_PROVIDER_INFO_FIELDS)`.
-Using the shared guards rather than a plain copy matters **more** here than in
-the repo: `updateGame` `Object.assign`s the patch verbatim, so an unfiltered
-write would store `categories: []` and a row of nulls and split absent-key parity
-between the backends — the one place in this feature where a naive write reaches
-the store unchecked.
+See `.claude/rules/provider-info-triggers-and-stamping.md` for WHEN the backfill
+runs and what it may stamp — the two questions that sit next to this one and are
+answered separately (#736 gave the field set two new triggers and fixed a
+stamping bug that suppressed games nobody had asked about).
 
 ## The rating is detail-only, and the guarantee is SERVER-side
 
@@ -146,7 +132,9 @@ integers nobody types, and tags remain the only hand-assigned categorization. Th
 user feedback that asked for this said the same thing — provider facts every round
 would otherwise re-enter by hand are not tag-shaped.
 
-**Related:** `.claude/rules/add-game-lookup-provider.md` (the provider contract and
+**Related:** `.claude/rules/provider-info-triggers-and-stamping.md` (the sibling
+this split from: where the backfill is triggered and what it may stamp),
+`.claude/rules/add-game-lookup-provider.md` (the provider contract and
 BGG's licence/throttling rules), `.claude/rules/bgg-collection-import.md` (the
 "capture live, the document lies" pattern this follows),
 `.claude/rules/break-the-code-on-purpose.md`,

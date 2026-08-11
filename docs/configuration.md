@@ -297,6 +297,15 @@ made server-side and cached, as BGG's terms ask, and the app displays the
 required linked "Powered by BGG" logo in its footer. Leave the token unset and
 board-game search simply returns nothing.
 
+The BGG metadata those requests bring back (complexity, playing time, minimum
+age, categories, mechanics) is filled in lazily, in the background, at the points
+it is about to be read — including the session setup screen and the Regal, whose
+„Weitere Filter" controls are derived from it (issue #736). A session draw that
+carries such a filter waits for that fill before drawing, since a game the
+provider was never asked about passes every filter; `DRAW_BACKFILL_TIMEOUT_MS`
+(default 4000) caps that wait, after which the draw proceeds with the values
+already stored. An unfiltered draw never waits.
+
 Wish-list prices (issue #679) are **off** unless `PRICES_ENABLED=true`: opening a
 wished-for game that carries a provider link then shows what it costs right now —
 board games through the

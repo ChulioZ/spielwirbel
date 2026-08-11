@@ -448,3 +448,54 @@ test('a stale client still sending applyDescription writes nothing', async () =>
   const stored = await repo.getGame('default', rid, game.id);
   assert.equal('description' in stored, false, 'a stale flag reached the store');
 });
+
+/* ------------------- The shelf-wide backfill's bounds (#736) --------------- */
+
+/* bgg.gameInfo() caps the ids it will ever ask about, and until #736 the write
+ * loop stamped `providerInfoAt` on EVERY eligible game regardless — so a game
+ * past the cap was recorded as "asked, BGG had nothing" without having been
+ * asked, and was suppressed for the full 7-day TTL. Driven against
+ * backfillProviderInfo directly rather than through a route: the defect needs
+ * more games than the cap, and 300+ HTTP round-trips would dominate the suite. */
+
+const { backfillProviderInfo } = require('../lib/provider-info');
+
+// A repo stub that records which games were written, so a spec can assert on the
+// set that got stamped rather than on the store's contents.
+const recordingRepo = () => {
+  const stamped = [];
+  return { stamped, setGameProviderInfo: async (rid, gid) => { stamped.push(gid); } };
+};
+
+// `n` provider-linked games, none of them filled, so all are eligible.
+const unfilledGames = (n, base) =>
+  Array.from({ length: n }, (_, i) => ({
+    id: `g${base + i}`,
+    source: { provider: 'bgg', externalId: String(base + i), url: null },
+  }));
+
+test('the backfill stamps only the games it actually asked about', async () => {
+  // 305 > bgg.gameInfo's 300-id ceiling, so five games cannot have been asked
+  // about however many batches it issues.
+  const games = unfilledGames(305, 910000);
+  const repoStub = recordingRepo();
+  const calls = stubFetch([]); // a healthy answer that names no game
+  await backfillProviderInfo(repoStub, 'r-bound', games);
+
+  assert.equal(calls.length, 5, 'five batches of 60 is the provider ceiling');
+  assert.equal(repoStub.stamped.length, 300,
+    'a game past the provider ceiling was stamped without ever being asked about');
+  // Named explicitly: the five that must be untouched are the TAIL, so the next
+  // trigger picks them up rather than skipping them for the whole TTL.
+  assert.deepEqual(repoStub.stamped.slice(-1), ['g910299']);
+});
+
+test('one batch is all the shelf-wide trigger spends per call', async () => {
+  const games = unfilledGames(150, 920000);
+  const repoStub = recordingRepo();
+  const calls = stubFetch([]);
+  await backfillProviderInfo(repoStub, 'r-one', games, { maxBatches: 1 });
+
+  assert.equal(calls.length, 1, 'a screen open must cost exactly one upstream request');
+  assert.equal(repoStub.stamped.length, 60, 'only the asked batch may be stamped');
+});

@@ -151,6 +151,7 @@ const SOURCE_ALLOW = {
   'lib/routes/admin.js': 'recorded 2026-07-30 — one router, but the widest surface of any',
   'lib/routes/account.js': 'recorded 2026-07-30 — register/verify/login/refresh/reset plus self-service export and deletion',
   'lib/routes/games.js': 'recorded 2026-08-09 — one router per resource (the repo convention), sitting at 699 since #653 and pushed over by #703\'s wish-add expansion resolution. A seam is visible — the expansion endpoints (PUT /expansions, acquire-expansion, the #703 resolver) against the CRUD/state-flip rest — but splitting one resource\'s router would be a new pattern for lib/routes/; M-001\'s worklist item',
+  'lib/routes/sessions.js': 'recorded 2026-08-11 — one router per resource, the same class as games.js above; pushed over by #736\'s blocking pre-draw backfill. The visible seam is start-a-session (draw, direct-pick, and the guest/team resolvers only they use) against the running session\'s writes (votes, close, results, choice, finish, cancel) — but it is a session LIFECYCLE, the shape token-friendly-source-files.md names as the non-finding for views-session.js, and splitting one resource\'s router remains a new pattern for lib/routes/. M-001\'s worklist item, alongside games.js',
 };
 
 /* All eight were `recorded` — "over budget, nobody has looked" — from 2026-07-30
