@@ -14,6 +14,12 @@ function renderRegalTab(round, activeGames) {
     gamesSort = 'avg';
     regalFiltersRid = round.id;
   }
+  // The metadata filters (#725) are re-normalized against the CURRENT shelf on
+  // every render, which does two jobs in one line: it mints the canonical shape
+  // for a freshly reset round, and it drops a category whose last game has since
+  // been archived — the counterpart of the deleted-tag pruning below, and what
+  // stops a filter surviving as an active count over a chip nobody can see.
+  regalFilters.metadata = normalizeMetadataFilters(regalFilters.metadata, metadataFilterOptions(activeGames));
 
   // Stats per active game (for the rating pills and sorting).
   const statsByGame = {};
@@ -88,14 +94,9 @@ function renderRegalTab(round, activeGames) {
     const roundTags = round.tags || [];
     const tagFilter = regalFilters.tags;
     [...tagFilter.keys()].forEach((x) => { if (!roundTags.some((tg) => tg.id === x)) tagFilter.delete(x); });
-    if (roundTags.length) {
-      // Below 860px the chips are collapsed behind a "Filter" button so the cover
-      // grid stays visible; from 860px up they show inline as before. The
-      // phone-vs-wide switch is purely CSS (scoped to `.regal-filter`, since the
-      // `.filter-chips` class is shared with the game-detail/add-game/session tag
-      // pickers) — the JS only toggles the `is-open` class and keeps the badge in
-      // sync. (#349)
-      const filterWrap = h('<div class="regal-filter"></div>');
+    // The tag half of `.regal-filter`, unchanged but for having become a
+    // function: since #725 it is one of two things that may fill the wrapper.
+    function buildTagFilter(filterWrap) {
       const chips = h('<div class="filter-chips"></div>');
       const toggle = h(`<button class="filter-toggle" type="button" aria-expanded="false">
            <i class="ti ti-tags" aria-hidden="true"></i><span>${esc(t('games.filter'))}</span>
@@ -157,6 +158,20 @@ function renderRegalTab(round, activeGames) {
       filterWrap.appendChild(mode.el);
       filterWrap.appendChild(chips);
       filterWrap.appendChild(bulk.el);
+    }
+
+    // „Weitere Filter" (#725), the same disclosure the session setup screen
+    // carries. It decides whether there is a wrapper at all: a round with no
+    // tags but BGG metadata on its shelf gets a `.regal-filter` holding only
+    // this, and a round with neither still gets none. Its summary carries its
+    // OWN count — deliberately not folded into the tag toggle's badge, because
+    // the two collapse independently (the chips only below 860px, this at every
+    // width) and one number over two controls could not say which is filtering.
+    const metaFilter = renderMetadataFilter(activeGames, regalFilters.metadata, () => renderGames());
+    if (roundTags.length || metaFilter) {
+      const filterWrap = h('<div class="regal-filter"></div>');
+      if (roundTags.length) buildTagFilter(filterWrap);
+      if (metaFilter) filterWrap.appendChild(metaFilter.el);
       gamesSec.appendChild(filterWrap);
     }
 
@@ -207,6 +222,10 @@ function renderRegalTab(round, activeGames) {
     }
     function matchesFilters(g) {
       if (!matchesTagFilter(tagFilter, g.tagIds, regalFilters.tagMode)) return false;
+      // The same predicate the draw applies (#725) — the Regal filters in the
+      // browser only, so there is no route change here, but the semantics must
+      // be the shelf's and the draw's alike.
+      if (!fitsMetadataFilters(g, regalFilters.metadata)) return false;
       const q = query.trim().toLowerCase();
       if (q && !g.title.toLowerCase().includes(q)) return false;
       return true;

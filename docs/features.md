@@ -175,7 +175,8 @@ What the app does, in detail. For a short overview see the
     retire recommendations for games that are rated low or often proposed for
     retirement.
   - **Regal** (shelf) – the game collection as a card grid with custom-tag
-    filter chips, a search pill, sorting
+    filter chips, a „Weitere Filter" disclosure over the imported BGG metadata
+    (see Sessions below), a search pill, sorting
     (random / name / rating),
     and the add-game sheet. Each card opens the game's detail page
     ("Spielepass") with its score ring, editable details, a **Jetzt spielen**
@@ -191,12 +192,19 @@ What the app does, in detail. For a short overview see the
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally filter
   the collection by custom tags, and draw a random set of candidate games —
   only games whose player range fits the number of joining members are
-  eligible. From a tablet width up the setup screen splits in two: who is at the
-  table on the left, and on the right the tag filter, the draw count and a live
-  panel showing exactly which games are currently in the pot, so seating one
-  more player or excluding a tag visibly changes the shelf beside it. The tags
-  and count a round was last drawn with are remembered and preselected the next
-  time, so a group that always draws the same way just confirms.
+  eligible. Behind a collapsed **„Weitere Filter"** there is a second kind of
+  filter, over the metadata imported from BoardGameGeek rather than anything the
+  round maintains: a playing-time budget, a complexity range, the age of the
+  youngest person at the table, and category / mechanic chips. It offers only
+  the values the round's own games actually carry — a fifteen-game shelf lists
+  the handful of categories those games have, not BGG's ~84 — and it is absent
+  entirely on a shelf with no such data. A game BGG knows nothing about always
+  stays in the pot. From a tablet width up the setup screen splits in two: who is
+  at the table on the left, and on the right the filters, the draw count and a
+  live panel showing exactly which games are currently in the pot, so seating one
+  more player or excluding a tag visibly changes the shelf beside it. The tags,
+  filters and count a round was last drawn with are remembered and preselected
+  the next time, so a group that always draws the same way just confirms.
 - **Voting** – the draw opens a **lobby** showing who has voted and who has not.
   There is nothing to configure and no mode to pick: every session works the same
   way, and each person's ratings are saved the moment they give them (**1–5** per

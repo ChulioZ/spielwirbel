@@ -92,6 +92,14 @@ const frontendGlobals = {
   EXPANSION_TITLE_MAX: 'readonly',
   expansionBaseCandidates: 'readonly', expansionAcquirePlan: 'readonly', acquirableBases: 'readonly',
   expansionParentTitles: 'readonly',
+  // draw-pool.js's metadata filters (issue #725) — also required by lib/draw.js
+  // and lib/routes/sessions.js
+  fitsMetadataFilters: 'readonly', metadataFilterOptions: 'readonly',
+  hasMetadataFilterOptions: 'readonly', normalizeMetadataFilters: 'readonly',
+  countMetadataFilters: 'readonly',
+  PLAYTIME_CHOICES: 'readonly', AGE_CHOICES: 'readonly', WEIGHT_CHOICES: 'readonly',
+  // metadata-filter.js (issue #725)
+  renderMetadataFilter: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',

@@ -17,9 +17,30 @@
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { isActiveGame, fitsPlayerCount, requiredExpansions } = require('../public/js/draw-pool');
+const {
+  isActiveGame,
+  fitsPlayerCount,
+  requiredExpansions,
+  fitsMetadataFilters,
+  metadataFilterOptions,
+  hasMetadataFilterOptions,
+  normalizeMetadataFilters,
+  countMetadataFilters,
+} = require('../public/js/draw-pool');
 const { drawPool } = require('../lib/draw');
 const { loadApp } = require('./support/dom');
+
+// The canonical "nothing is filtered" shape, minted the way the app mints it.
+const NO_FILTERS = normalizeMetadataFilters(null, {});
+// Everything on offer, for the normalizer cases that are about the VALUE rather
+// than about a shelf that cannot offer it.
+const ALL_OPTIONS = {
+  playtime: true,
+  weight: true,
+  age: true,
+  categories: ['Economic', 'Party Game'],
+  mechanics: ['Deck Building', 'Dice Rolling'],
+};
 
 test('isActiveGame is false for either archive and true for a plain game', () => {
   assert.equal(isActiveGame({}), true);
@@ -120,6 +141,172 @@ test('requiredExpansions names only what the BASE box cannot seat', () => {
   );
   assert.deepEqual(requiredExpansions(game, 9), [], 'a count nothing admits names nothing');
   assert.deepEqual(requiredExpansions({ minPlayers: 3, maxPlayers: 4 }, 5), []);
+});
+
+/* ---- the metadata filters (#725) ------------------------------------------- */
+
+test('an ABSENT field on the game passes every metadata filter', () => {
+  // The rule the whole feature hangs on: a game BGG has no metadata for must
+  // stay drawable, or the first touch of any filter silently hides every
+  // storefront game, every hand-typed one, and an entire shelf on an instance
+  // with no BGG token. Asserted field by field rather than on one bare {} —
+  // a single guard written the wrong way round would still pass that.
+  const filters = {
+    maxPlaytime: 30, weightMin: 2, weightMax: 3, youngestAge: 8,
+    categories: ['Economic'], mechanics: ['Dice Rolling'],
+  };
+  assert.equal(fitsMetadataFilters({}, filters), true, 'a game with no metadata at all');
+  assert.equal(fitsMetadataFilters({ minPlaytime: 20 }, filters), true, 'only playtime known');
+  assert.equal(fitsMetadataFilters({ weight: 2.5 }, filters), true, 'only weight known');
+  assert.equal(fitsMetadataFilters({ minAge: 8 }, filters), true, 'only age known');
+  assert.equal(fitsMetadataFilters({ categories: [] }, filters), true, 'an empty list is absent');
+  assert.equal(fitsMetadataFilters({ mechanics: [] }, filters), true, 'an empty list is absent');
+});
+
+test('an empty filter set admits everything, including a fully described game', () => {
+  const game = {
+    minPlaytime: 240, maxPlaytime: 600, weight: 4.7, minAge: 14,
+    categories: ['Economic'], mechanics: ['Deck Building'],
+  };
+  assert.equal(fitsMetadataFilters(game, NO_FILTERS), true);
+  assert.equal(fitsMetadataFilters(game, {}), true);
+  assert.equal(fitsMetadataFilters(game, undefined), true);
+});
+
+test('the playtime budget tests the LOWER bound, not an average or the maximum', () => {
+  // Toriki's real 20–600 spread is the case that decides this: filtering on the
+  // maximum (or on a synthesised mean of 310) would drop it from every realistic
+  // evening, though it genuinely plays in twenty minutes.
+  const wide = { minPlaytime: 20, maxPlaytime: 600 };
+  assert.equal(fitsMetadataFilters(wide, { maxPlaytime: 30 }), true);
+  assert.equal(fitsMetadataFilters({ minPlaytime: 45 }, { maxPlaytime: 30 }), false);
+  assert.equal(fitsMetadataFilters({ minPlaytime: 30 }, { maxPlaytime: 30 }), true, 'inclusive');
+});
+
+test('the complexity bounds are inclusive and each acts on its own', () => {
+  assert.equal(fitsMetadataFilters({ weight: 2 }, { weightMin: 2 }), true);
+  assert.equal(fitsMetadataFilters({ weight: 1.9 }, { weightMin: 2 }), false);
+  assert.equal(fitsMetadataFilters({ weight: 3 }, { weightMax: 3 }), true);
+  assert.equal(fitsMetadataFilters({ weight: 3.1 }, { weightMax: 3 }), false);
+  assert.equal(fitsMetadataFilters({ weight: 2.5 }, { weightMin: 2, weightMax: 3 }), true);
+});
+
+test('"the youngest at the table is N" admits a game whose own minimum is at most N', () => {
+  assert.equal(fitsMetadataFilters({ minAge: 8 }, { youngestAge: 8 }), true, 'inclusive');
+  assert.equal(fitsMetadataFilters({ minAge: 6 }, { youngestAge: 8 }), true);
+  assert.equal(fitsMetadataFilters({ minAge: 12 }, { youngestAge: 8 }), false);
+});
+
+test('categories and mechanics are OR within a list and AND between them', () => {
+  const game = { categories: ['Economic', 'Negotiation'], mechanics: ['Trading'] };
+  // OR within: one match out of two picks is enough. AND-ing these would collapse
+  // the pool to near-zero, since a game carries 3–8 of BGG's ~84 categories.
+  assert.equal(fitsMetadataFilters(game, { categories: ['Economic', 'Party Game'] }), true);
+  assert.equal(fitsMetadataFilters(game, { categories: ['Party Game'] }), false);
+  // AND between: the mechanic clause must also hold.
+  assert.equal(
+    fitsMetadataFilters(game, { categories: ['Economic'], mechanics: ['Trading'] }), true);
+  assert.equal(
+    fitsMetadataFilters(game, { categories: ['Economic'], mechanics: ['Deck Building'] }), false,
+    'a matching category cannot carry a failing mechanic');
+});
+
+test('metadataFilterOptions offers only what the SHELF carries, deduped and sorted', () => {
+  const games = [
+    { minPlaytime: 30, categories: ['Party Game', 'Economic'] },
+    { minAge: 10, categories: ['Economic'], mechanics: ['Dice Rolling'] },
+    { title: 'no metadata at all' },
+  ];
+  const o = metadataFilterOptions(games);
+  assert.equal(o.playtime, true);
+  assert.equal(o.age, true);
+  assert.equal(o.weight, false, 'no game carries a weight, so complexity is not offered');
+  assert.deepEqual(o.categories, ['Economic', 'Party Game'], 'BGG\'s ~84 are not on offer');
+  assert.deepEqual(o.mechanics, ['Dice Rolling']);
+});
+
+test('a shelf carrying no metadata at all offers nothing — the disclosure is absent', () => {
+  const bare = metadataFilterOptions([{ title: 'Azul' }, { title: 'Uno' }]);
+  assert.equal(hasMetadataFilterOptions(bare), false);
+  assert.equal(hasMetadataFilterOptions(metadataFilterOptions([])), false);
+  // …and any one field is enough to bring it back, or the "hide it entirely"
+  // branch would be reachable on a shelf that has something to offer.
+  assert.equal(hasMetadataFilterOptions(metadataFilterOptions([{ minAge: 8 }])), true);
+  assert.equal(
+    hasMetadataFilterOptions(metadataFilterOptions([{ mechanics: ['Trading'] }])), true);
+});
+
+test('normalizeMetadataFilters drops a value this shelf can no longer offer', () => {
+  // The vanished referent: a category whose last game was archived, and a
+  // numeric filter on a field nothing on the shelf carries. Left in place, each
+  // would count toward the badge over a control the disclosure never renders.
+  const out = normalizeMetadataFilters(
+    { maxPlaytime: 60, weightMin: 2, youngestAge: 10, categories: ['Economic', 'Gone'], mechanics: ['Trading'] },
+    { playtime: true, weight: false, age: false, categories: ['Economic'], mechanics: [] }
+  );
+  assert.deepEqual(out, {
+    maxPlaytime: 60,
+    weightMin: null,
+    weightMax: null,
+    youngestAge: null,
+    categories: ['Economic'],
+    mechanics: [],
+  });
+});
+
+test('normalizeMetadataFilters accepts only the ladder steps the UI offers', () => {
+  // Membership, not a range — so a hand-crafted 37-minute budget or a 2.5
+  // complexity bound collapses to "unfiltered" instead of 400ing, and the client
+  // cannot offer a step the server would reject.
+  const out = normalizeMetadataFilters(
+    { maxPlaytime: 37, weightMin: 2.5, weightMax: 9, youngestAge: 7 }, ALL_OPTIONS);
+  assert.deepEqual(out, { ...NO_FILTERS });
+  const good = normalizeMetadataFilters(
+    { maxPlaytime: 90, weightMin: 2, weightMax: 4, youngestAge: 12 }, ALL_OPTIONS);
+  assert.deepEqual(good, { ...NO_FILTERS, maxPlaytime: 90, weightMin: 2, weightMax: 4, youngestAge: 12 });
+});
+
+test('normalizeMetadataFilters survives junk of every shape', () => {
+  for (const junk of [null, undefined, 'nope', 42, [], { categories: 'Economic' }, { categories: [7, null] }]) {
+    assert.deepEqual(normalizeMetadataFilters(junk, ALL_OPTIONS), NO_FILTERS,
+      `junk input ${JSON.stringify(junk)} must normalize to the empty filter set`);
+  }
+});
+
+test('an inverted complexity range is SWAPPED, not left to empty the pool', () => {
+  // Unreachable through the UI (each select carries the other along), so this is
+  // about a hand-crafted body. Swapping here, in the shared function, is what
+  // keeps the preview and the draw from disagreeing about what it means.
+  const out = normalizeMetadataFilters({ weightMin: 4, weightMax: 2 }, ALL_OPTIONS);
+  assert.equal(out.weightMin, 2);
+  assert.equal(out.weightMax, 4);
+});
+
+test('countMetadataFilters counts CONTROLS — the complexity range is one', () => {
+  assert.equal(countMetadataFilters(NO_FILTERS), 0);
+  assert.equal(countMetadataFilters({ ...NO_FILTERS, weightMin: 2 }), 1);
+  assert.equal(countMetadataFilters({ ...NO_FILTERS, weightMin: 2, weightMax: 4 }), 1,
+    'two bounds are one visible row, so a badge of 2 could not be reconciled');
+  assert.equal(countMetadataFilters({
+    maxPlaytime: 60, weightMin: 2, weightMax: 4, youngestAge: 10,
+    categories: ['Economic'], mechanics: ['Trading'],
+  }), 5, 'all five controls');
+  assert.equal(countMetadataFilters({ ...NO_FILTERS, categories: [] }), 0, 'an empty list filters nothing');
+});
+
+test('drawPool applies the metadata filters, and is untouched without them', () => {
+  const shelf = {
+    games: [
+      { id: 'a', title: 'Kurz', minPlaytime: 20 },
+      { id: 'b', title: 'Lang', minPlaytime: 120 },
+      { id: 'c', title: 'Unbekannt' },
+    ],
+  };
+  const titles = (metadata) => drawPool(shelf, { metadata, playerCount: 3 }).map((g) => g.title).sort();
+  // The regression guard: no filter set must produce exactly the pre-#725 pool.
+  assert.deepEqual(titles(undefined), ['Kurz', 'Lang', 'Unbekannt']);
+  assert.deepEqual(titles(NO_FILTERS), ['Kurz', 'Lang', 'Unbekannt']);
+  assert.deepEqual(titles({ ...NO_FILTERS, maxPlaytime: 30 }), ['Kurz', 'Unbekannt']);
 });
 
 /* ---- the cross-boundary parity check ---------------------------------------

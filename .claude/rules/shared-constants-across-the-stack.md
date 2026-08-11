@@ -90,6 +90,18 @@ third representation invented for it. Sharing the clauses that are genuinely
 identical is the rule; forcing the ones that are not is how a shared file grows a
 parameter nobody can explain.
 
+**#725 added a third clause to it — `fitsMetadataFilters`, plus the three
+ladders `PLAYTIME_CHOICES` / `AGE_CHOICES` / `WEIGHT_CHOICES`** — and it is both
+halves of this rule at once. The predicate is the logic half again (the setup
+screen's preview and the Regal must narrow the shelf exactly as the draw does);
+the ladders are the plain value half, because the route validates a step by
+**membership in the list the UI offers** rather than by a range, so the two sides
+cannot even disagree about granularity. Note the neighbouring
+`metadataFilterOptions` / `normalizeMetadataFilters` are shared for a *different*
+reason — they are the frontend's own two screens agreeing with each other — and
+the DOM that renders the controls deliberately did **not** join this file (see
+`.claude/rules/provider-metadata-is-a-filter-not-a-tag.md` §4).
+
 It gained two more exports with owned expansions (#653), each for a different
 half of this rule. **`requiredExpansions`** is the logic half again: the results
 screen's „Braucht Erweiterung: …" line has to name the same set that made the

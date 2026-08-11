@@ -52,6 +52,7 @@ function showStartSession(round) {
           <div id="tagModeMount"></div>
           <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
         </div>
+        <div id="metaFilterMount"></div>
         <div class="field">
           <label for="count">${esc(t('startSession.countLabel'))}</label>
           <div class="stepper">
@@ -65,6 +66,7 @@ function showStartSession(round) {
           <div class="setup-panel__body" id="poolGrid"></div>
         </div>
         <div class="pool-hint" id="poolHint"></div>
+        <div id="poolReset"></div>
         <div class="toolbar">
           <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-tornado" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
         </div>
@@ -90,6 +92,15 @@ function showStartSession(round) {
       .filter((x) => known.has(x) && !selectedTags.has(x))
       .forEach((x) => selectedTags.set(x, 'exclude'));
   }
+  // The metadata filters (#725), preset from the same #252 blob. Normalizing
+  // against THIS shelf's options is what drops a category no game carries any
+  // more — the exact counterpart of the deleted-tag drop above, and the reason a
+  // filter can never survive as an invisible active count over a control the
+  // disclosure no longer renders.
+  const metaFilters = normalizeMetadataFilters(
+    preset && preset.metadata,
+    metadataFilterOptions(activeGames)
+  );
   // All members join by default; the number of people joining filters the games
   // by their player count.
   const joining = new Set(round.members.map((m) => m.id));
@@ -122,7 +133,8 @@ function showStartSession(round) {
     activeGames.filter(
       (g) =>
         matchesTagFilter(selectedTags, g.tagIds, tagFilterState.tagMode) &&
-        fitsPlayerCount(g, playerCount())
+        fitsPlayerCount(g, playerCount()) &&
+        fitsMetadataFilters(g, metaFilters)
     );
 
   // Live pool preview, in the two presentations described above. The wide panel
@@ -132,6 +144,16 @@ function showStartSession(round) {
   const hint = form.querySelector('#poolHint');
   const poolTitle = form.querySelector('#poolTitle');
   const poolGrid = form.querySelector('#poolGrid');
+  const poolReset = form.querySelector('#poolReset');
+  // Clear everything that shapes the pool — tags and metadata alike. A user
+  // looking at an empty pool does not care which of the two controls caused it,
+  // and with five more filters than before, arriving there is far easier than it
+  // used to be. Both hooks are assigned later (the tag one only when the round
+  // has tags at all), so they default to no-ops rather than being conditional at
+  // the call site.
+  let resetTagFilters = () => {};
+  let resetMetaFilters = () => {};
+  const anyFilterActive = () => selectedTags.size > 0 || countMetadataFilters(metaFilters) > 0;
   const coverStyle = (g, w) =>
     g.image ? ` style="background-image:url('${coverUrl(g.image, w)}')"` : '';
   const updateHint = () => {
@@ -161,6 +183,21 @@ function showStartSession(round) {
           )
           .join('')
       : `<p class="muted setup-panel__empty">${esc(t('startSession.poolEmpty'))}</p>`;
+
+    // The way back out of an empty pool. It lives OUTSIDE both presentations
+    // above — the tile panel is `display: none` below 860px and the strip above
+    // it — so the escape hatch is reachable at every width, which neither
+    // presentation could manage on its own.
+    poolReset.replaceChildren();
+    if (games.length === 0 && anyFilterActive()) {
+      const btn = h(`<button type="button" class="link-btn">${esc(t('metaFilter.reset'))}</button>`);
+      btn.addEventListener('click', () => {
+        resetTagFilters();
+        resetMetaFilters();
+        updateHint();
+      });
+      poolReset.appendChild(btn);
+    }
   };
   // Seats around the table: tap a member to toggle whether they join tonight.
   // The group attributes go on the table itself, not on #seatMount — replaceWith
@@ -218,6 +255,28 @@ function showStartSession(round) {
     });
     form.querySelector('#tagBulkMount').replaceWith(bulk.el);
     form.querySelector('#tagModeMount').replaceWith(mode.el);
+    resetTagFilters = () => {
+      selectedTags.clear();
+      repaintChips();
+      bulk.sync();
+      mode.sync();
+    };
+  }
+
+  // „Weitere Filter" (#725) — the filters over BGG's imported metadata. It sits
+  // under the tag chips and above the count stepper because it shapes the pool,
+  // and those are the two controls that already do. It renders NOTHING when the
+  // shelf carries none of the fields, so a round of hand-typed games — or an
+  // instance with no BGG token — sees exactly the screen it saw before.
+  const metaFilter = renderMetadataFilter(activeGames, metaFilters, () => updateHint());
+  const metaMount = form.querySelector('#metaFilterMount');
+  if (metaFilter) {
+    resetMetaFilters = metaFilter.reset;
+    metaMount.replaceWith(metaFilter.el);
+  } else {
+    // Removed rather than left empty: `.setup-grid__aside` is a flex column with
+    // a gap, so an empty placeholder would still cost a row of spacing.
+    metaMount.remove();
   }
 
   const countInput = form.querySelector('#count');
@@ -248,6 +307,7 @@ function showStartSession(round) {
         tagIds: [...selectedTags].filter(([, s]) => s === 'include').map(([id]) => id),
         excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
         tagMode: tagFilterState.tagMode, // #726; the server drops it when nothing is included
+        metadata: metaFilters, // #725; re-normalized server-side against the same shelf
         memberIds: [...joining],
         guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
