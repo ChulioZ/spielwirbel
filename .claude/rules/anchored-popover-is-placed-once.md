@@ -146,7 +146,10 @@ The pane is the degenerate viewport (its `innerHeight` really is 0), so this als
 happens to be what makes the layout measurable there at all — but the floor is
 warranted on its own: one row is always better than none.
 
-**Related:** `.claude/rules/popover-vs-sheet-editors.md` (the two presentations
+**Related:** `.claude/rules/popover-width-is-shrink-to-fit.md` (the WIDTH axis —
+why a `max-width` here can be a no-op, and why widening a card is the cheaper
+answer to "this editor is cramped" than raising the cap above),
+`.claude/rules/popover-vs-sheet-editors.md` (the two presentations
 `openEditor` picks between, and why an input-bearing popover must become a sheet
 on a phone), `.claude/rules/preview-pane-paint-artifacts.md` (the artifact family
 this joins), `.claude/rules/bgg-edition-covers.md` (the picker that surfaced it).

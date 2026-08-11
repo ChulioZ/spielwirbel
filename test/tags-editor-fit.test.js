@@ -31,9 +31,14 @@ const { loadApp } = require('./support/dom');
 
 const CHIPS = '.popover--tags .filter-chips';
 const GRID = '.popover--tags .icon-picker';
+/* Compounded with `.popover` since #706: the card's own sizing rule has to beat
+   the base's `max-width: 300px`, which it ties with at (0,1,0) and would
+   otherwise win on source order alone. `test/editor-presentation.test.js` pins
+   that specificity; here it is only the selector to look the rule up by. */
+const CARD = '.popover.popover--tags';
 
 test('the anchored tags editor is capped, WITH a floor', () => {
-  const card = bodyOf('.popover--tags');
+  const card = bodyOf(CARD);
   assert.ok(card, 'the rule exists');
   assert.match(card, /max-height:\s*max\(/,
     'a bare min(…vh, …) computes to 0 on a degenerate viewport and collapses the card '
@@ -48,7 +53,7 @@ test('the cap fits the room place() can actually count on — half the viewport'
      middle, half the viewport. A vh term above 50 leaves a band of anchor
      positions where the card runs past the fold again, and the tag chip in the
      game's <h1> sits inside that band. */
-  const vh = Number((bodyOf('.popover--tags').match(/min\(\s*(\d+)vh/) || [])[1]);
+  const vh = Number((bodyOf(CARD).match(/min\(\s*(\d+)vh/) || [])[1]);
   assert.ok(vh > 0, 'the cap has no vh term to check');
   assert.ok(vh <= 50, `the card may claim at most half the viewport, not ${vh}vh`);
 });

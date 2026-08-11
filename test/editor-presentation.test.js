@@ -32,7 +32,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { bodyOf } = require('./support/css');
+const { bodyOf, RULES, whole, outranks } = require('./support/css');
 const { loadApp } = require('./support/dom');
 
 const ROOT = path.join(__dirname, '..');
@@ -377,6 +377,72 @@ test('the button triggers keep their pill/frame look, and .tag--empty keeps its 
   assert.match(ring, /outline:\s*2px solid var\(--brand\)/);
   assert.ok(bodyOf('.gd-img--edit:hover .gd-img__edit,\n.gd-img--edit:focus-visible .gd-img__edit'),
     'the cover overlay no longer reveals on focus');
+});
+
+/* The three content-heavy popovers size the FLOATING CARD, which is the one part
+   deliberately NOT shared with the sheet (a sheet is already full width). #706
+   widened all three, because width is the axis that has room: a wider card wraps
+   its content onto fewer lines, so it shows more entries AND gets shorter — where
+   raising a height cap buys rows at the cost of pushing the card past a fold that
+   a page scroll cannot recover (`.claude/rules/anchored-popover-is-placed-once.md`,
+   "The cap's ceiling is HALF the viewport"). Measured at 1440x900:
+
+     .popover--expansions  360 -> 540   3 -> 4 rows of a Carcassonne tick-list
+     .popover--tags        340 -> 480   5 -> 3 wrapped lines of chips
+     .popover.has-covers   380 -> 520   3 -> 5 cover columns (6 -> 10 tiles)
+
+   Floors, not exact values: a retune stays green, a revert to the old widths does
+   not. */
+const CARD_WIDTHS = [['popover--expansions', 480], ['popover--tags', 420], ['has-covers', 460]];
+
+/* The rule that actually sizes the card, looked up BY ITS BODY: the one naming
+   this variant class and declaring a max-width. Reading the selector back out of
+   the stylesheet is what keeps the specificity test below non-vacuous — comparing
+   a selector string written in this file would compare it with itself. */
+const cardRule = (cls) => RULES.find(([sel, body]) => whole(`.${cls}`).test(sel) && /max-width:/.test(body));
+
+test('the content-heavy popovers are sized for their content, not the 300px default', () => {
+  for (const [cls, floor] of CARD_WIDTHS) {
+    const hit = cardRule(cls);
+    assert.ok(hit, `no max-width rule for .${cls} — the card falls back to .popover's 300px`);
+    const px = Number((hit[1].match(/max-width:\s*(\d+)px/) || [])[1]);
+    assert.ok(px >= floor, `.${cls} is ${px}px; below ${floor}px it wraps its content back onto extra lines`);
+  }
+});
+
+test('the cover picker also has a FLOOR, or its max-width is a no-op', () => {
+  /* A popover is absolutely positioned, i.e. shrink-to-fit: its width is the
+     widest child's max-content, and the edition grid contributes a single track
+     because `auto-fill` repeats once under intrinsic sizing. So the cover card
+     is sized by its longest BUTTON LABEL and never reaches its cap — measured,
+     it sat at 351px under a 380px cap and still sat at 351px when the cap was
+     raised to 520px. The grid's min-width is what makes the card claim the room;
+     without it this whole rule is a number nobody reads. */
+  const floor = bodyOf('.popover.has-covers .cover-picker__grid');
+  assert.ok(floor, 'no min-width on the popover\'s edition grid — the card shrink-to-fits to its button labels and the max-width above does nothing');
+  assert.match(floor, /min-width:/);
+
+  // And the floor must stay UNDER the cap, or it overflows the card rather than
+  // widening it. Both are declared here, so they are checkable against each other.
+  const cols = floor.match(/min-width:\s*calc\((\d+)px \* (\d+) \+ (\d+)px \* (\d+)\)/);
+  assert.ok(cols, 'the floor is no longer expressed as columns x gaps — re-derive it against the cap by hand');
+  const need = Number(cols[1]) * Number(cols[2]) + Number(cols[3]) * Number(cols[4]);
+  const cap = Number((bodyOf('.popover.has-covers').match(/max-width:\s*(\d+)px/) || [])[1]);
+  assert.ok(need < cap - 16, `the grid floor (${need}px) does not clear the card cap (${cap}px less 16px of padding)`);
+});
+
+test('each of those widths beats .popover on SPECIFICITY, not on source order', () => {
+  /* `.popover { max-width: 300px }` is (0,1,0), so a bare `.popover--tags` merely
+     TIES with it and wins only because it happens to be declared later in the
+     file. Moving either block would silently return the editor to 300px with
+     nothing red — the failure `.claude/rules/responsive-content-width.md` records
+     three times over for the rail's hides. `.popover.has-covers` was already
+     compounded for exactly this reason; #706 made the other two match. */
+  for (const [cls] of CARD_WIDTHS) {
+    const [sel] = cardRule(cls) || [];
+    assert.ok(sel && outranks(sel, '.popover'),
+      `"${sel}" does not outrank .popover — its max-width is decided by block order`);
+  }
 });
 
 test('the editors\' inner layout rules are shared by both presentations', () => {
