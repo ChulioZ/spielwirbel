@@ -123,16 +123,20 @@ function fitsMetadataFilters(game, filters) {
   // filtering on the maximum would drop such a game from every realistic
   // evening. Permissive is the safe direction here too — the draw only produces
   // candidates people then vote on, and the info sheet shows the full range.
-  if (isNumber(f.maxPlaytime) && isNumber(g.minPlaytime) && g.minPlaytime > f.maxPlaytime) return false;
-  if (isNumber(f.weightMin) && isNumber(g.weight) && g.weight < f.weightMin) return false;
-  if (isNumber(f.weightMax) && isNumber(g.weight) && g.weight > f.weightMax) return false;
+  if (isFiniteNum(f.maxPlaytime) && isFiniteNum(g.minPlaytime) && g.minPlaytime > f.maxPlaytime) return false;
+  if (isFiniteNum(f.weightMin) && isFiniteNum(g.weight) && g.weight < f.weightMin) return false;
+  if (isFiniteNum(f.weightMax) && isFiniteNum(g.weight) && g.weight > f.weightMax) return false;
   // "The youngest at the table is N" — so a game passes when its own minimum age
   // is at most N.
-  if (isNumber(f.youngestAge) && isNumber(g.minAge) && g.minAge > f.youngestAge) return false;
+  if (isFiniteNum(f.youngestAge) && isFiniteNum(g.minAge) && g.minAge > f.youngestAge) return false;
   return matchesAnyOf(g.categories, f.categories) && matchesAnyOf(g.mechanics, f.mechanics);
 }
 
-function isNumber(v) {
+// Named `isFiniteNum` rather than the obvious `isNumber`: these files share ONE
+// global scope, `no-redeclare` is off there, and a second file declaring a name
+// this generic would silently take over for everyone, load order deciding
+// (.claude/rules/eslint-frontend-shared-scope.md).
+function isFiniteNum(v) {
   return typeof v === 'number' && Number.isFinite(v);
 }
 
@@ -158,7 +162,7 @@ function matchesAnyOf(values, picked) {
 // field already does with no round tags.
 function metadataFilterOptions(games) {
   const list = Array.isArray(games) ? games : [];
-  const anyNumber = (key) => list.some((g) => isNumber((g || {})[key]));
+  const anyNumber = (key) => list.some((g) => isFiniteNum((g || {})[key]));
   const valuesOf = (key) => {
     const seen = new Set();
     list.forEach((g) => {
@@ -229,7 +233,7 @@ function countMetadataFilters(filters) {
   const f = filters || {};
   return (
     (f.maxPlaytime !== null && f.maxPlaytime !== undefined ? 1 : 0) +
-    (isNumber(f.weightMin) || isNumber(f.weightMax) ? 1 : 0) +
+    (isFiniteNum(f.weightMin) || isFiniteNum(f.weightMax) ? 1 : 0) +
     (f.youngestAge !== null && f.youngestAge !== undefined ? 1 : 0) +
     ((f.categories || []).length ? 1 : 0) +
     ((f.mechanics || []).length ? 1 : 0)
