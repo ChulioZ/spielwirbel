@@ -243,6 +243,13 @@ test('Regal: one click clears a mixed filter, and a chip re-syncs the label', ()
 
 test('Regal: a round with no tags renders no filter at all', () => {
   const { wrap } = regal({ tags: [] });
-  assert.equal(wrap, null);
+  // The `.regal-filter` element itself survives since #736 — it is the anchor
+  // the shelf-wide backfill's repaint mounts the metadata disclosure into — but
+  // with no tags and no metadata it must be hidden AND empty, so the screen is
+  // the one it always was. These fixture games carry no provider metadata, so
+  // nothing can fill it here.
+  assert.ok(wrap, 'the repaint anchor must survive');
+  assert.equal(wrap.hidden, true);
+  assert.equal(wrap.children.length, 0, 'a hidden wrapper must also hold nothing');
   assert.equal(dom.app.querySelector('.tag-bulk'), null);
 });

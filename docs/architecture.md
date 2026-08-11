@@ -158,9 +158,13 @@ lib/
                      operator panel's Kennzahlen card (issues #274/#404) —
                      counts only, never a secret value and never personal data
   provider-info.js   lazy backfill of BGG's standard metadata onto linked
-                     games (issues #717/#724): eligibility (a TTL-stamped
-                     attempt marker) and the batched, best-effort fill both
-                     trigger points share — game-detail open and session start
+                     games (issues #717/#724/#736): eligibility (a TTL-stamped
+                     attempt marker) and the batched, best-effort fill every
+                     trigger point shares — game-detail open, collection
+                     import, session start, the two filter screens' shelf-wide
+                     fill, and the one blocking fill a filtered draw performs.
+                     Its header lists all five; only games the provider was
+                     really asked about are stamped
   provider-info-fields.js
                      WHICH provider fields a game carries and what counts as a
                      value worth storing (#724). Dependency-free so both repo
@@ -379,7 +383,10 @@ public/
     game-info.js     BGG provider-info surfaces (issues #717/#724): the info
                      sheet the two vote cards open, the ⓘ affordance itself,
                      and the game-detail section — one body builder for all
-                     three
+                     three. Plus the shelf-wide fill the session setup screen
+                     and the Regal fire on mount (#736), folded into the games
+                     they already hold so the filter controls and the pool
+                     catch up without a re-render
     swr.js           stale-while-revalidate cache: views render instantly from
                      the last known data while a background fetch refreshes
     lookup-group.js  collapses same-title provider hits into one multi-badge row

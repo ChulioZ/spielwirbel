@@ -70,6 +70,7 @@ const frontendGlobals = {
   renderSeatPicker: 'readonly', renderGuestPicker: 'readonly', renderTeamPicker: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly', renderGameInfoSection: 'readonly',
   wantsGameInfo: 'readonly', mergeGameInfo: 'readonly',
+  foldGameInfoList: 'readonly', refreshShelfGameInfo: 'readonly',
   // username-policy.js
   USERNAME_MIN: 'readonly', USERNAME_MAX: 'readonly', USERNAME_RE: 'readonly',
   isValidUsername: 'readonly',

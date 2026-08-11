@@ -199,7 +199,10 @@ What the app does, in detail. For a short overview see the
   the values the round's own games actually carry — a fifteen-game shelf lists
   the handful of categories those games have, not BGG's ~84 — and it is absent
   entirely on a shelf with no such data. A game BGG knows nothing about always
-  stays in the pot. From a tablet width up the setup screen splits in two: who is
+  stays in the pot. The data itself is fetched in the background as the shelf is
+  looked at, so on a round whose games were added before this existed the
+  controls fill themselves in over the first few visits rather than staying
+  empty; a draw that uses one of these filters waits briefly for that to happen. From a tablet width up the setup screen splits in two: who is
   at the table on the left, and on the right the filters, the draw count and a
   live panel showing exactly which games are currently in the pot, so seating one
   more player or excluding a tag visibly changes the shelf beside it. The tags,

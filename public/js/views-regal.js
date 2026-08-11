@@ -167,13 +167,42 @@ function renderRegalTab(round, activeGames) {
     // OWN count — deliberately not folded into the tag toggle's badge, because
     // the two collapse independently (the chips only below 860px, this at every
     // width) and one number over two controls could not say which is filtering.
-    const metaFilter = renderMetadataFilter(activeGames, regalFilters.metadata, () => renderGames());
-    if (roundTags.length || metaFilter) {
-      const filterWrap = h('<div class="regal-filter"></div>');
-      if (roundTags.length) buildTagFilter(filterWrap);
-      if (metaFilter) filterWrap.appendChild(metaFilter.el);
-      gamesSec.appendChild(filterWrap);
-    }
+    //
+    // The wrapper is created UNCONDITIONALLY and hidden while it holds nothing,
+    // because the backfill below can make the disclosure appear on a shelf that
+    // could not offer it a moment ago (#736) — and with no wrapper there would
+    // be nowhere to put it. `hidden` costs no space: `.regal-filter` sets only a
+    // margin, so nothing overrides the UA's `[hidden]`
+    // (.claude/rules/hidden-attribute-vs-display-rule.md).
+    const filterWrap = h('<div class="regal-filter"></div>');
+    if (roundTags.length) buildTagFilter(filterWrap);
+    gamesSec.appendChild(filterWrap);
+
+    let metaFilter = null;
+    const mountMetaFilter = () => {
+      // The open flag survives a rebuild; the picks survive because
+      // `regalFilters.metadata` is mutated in place and handed straight back in.
+      const wasOpen = !!(metaFilter && metaFilter.el.open);
+      if (metaFilter) metaFilter.el.remove();
+      metaFilter = renderMetadataFilter(activeGames, regalFilters.metadata, () => renderGames());
+      if (metaFilter) {
+        metaFilter.el.open = wasOpen;
+        filterWrap.appendChild(metaFilter.el);
+      }
+      filterWrap.hidden = !roundTags.length && !metaFilter;
+    };
+    mountMetaFilter();
+
+    // Fill the shelf's missing BGG metadata (#736) — the Regal is the other
+    // screen #725 gave these filters to, and it was no more a backfill trigger
+    // than the setup screen was. Folded in and repainted in place rather than
+    // re-rendered: a rebuild would reset the scroll position, the search box and
+    // the sort the user just chose.
+    refreshShelfGameInfo(rid, activeGames, () => {
+      mountMetaFilter();
+      renderGames();
+      swrStore.set('round:' + rid, round);
+    });
 
     // Build the cards once and remember them by game id. When re-sorting we only
     // reorder these existing nodes – no page rebuild that would reset the scroll.

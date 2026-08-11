@@ -56,6 +56,15 @@ Under-filtering is recoverable: the user sees a game and skips it. Over-filterin
 hides games with nothing on screen to say so, on the one screen whose whole job
 is to answer "what can we play tonight".
 
+**That permissiveness is why these screens must TRIGGER the backfill (#736), and
+#725 shipped without doing so.** A game whose BGG metadata was never fetched is
+indistinguishable here from one BGG genuinely knows nothing about — so on a shelf
+nobody had opened the detail pages of, „max. Komplexität 1" drew Agricola and the
+complexity control did not exist at all (§3's option list is derived from stored
+values). The rule stays exactly as written; what changed is that the values are
+now fetched where they are read. See
+`.claude/rules/provider-info-triggers-and-stamping.md`.
+
 ## 3. The OPTIONS come from the shelf, never from the vocabulary
 
 `metadataFilterOptions(games)` derives the categories and mechanics on offer from

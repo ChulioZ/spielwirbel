@@ -99,9 +99,13 @@ test('a shelf with no metadata at all renders no disclosure whatsoever', async (
   }));
 
   assert.equal(disclosure(), null, 'a round of hand-typed games sees the screen it always saw');
-  // The placeholder must be gone too, or `.setup-grid__aside`'s gap pays for a
-  // control that is not there.
-  assert.equal(dom.app.querySelector('#metaFilterMount'), null);
+  // The mount STAYS since #736 — it is the anchor the backfill's repaint mounts
+  // into — but it must be `hidden`, or `.setup-grid__aside`'s gap pays for a
+  // control that is not there. A `display: none` element is not a flex item at
+  // all, so hidden costs exactly what removal did.
+  const mount = dom.app.querySelector('#metaFilterMount');
+  assert.ok(mount, 'the repaint anchor must survive, or a filled shelf has nowhere to mount');
+  assert.equal(mount.hidden, true, 'an empty mount still costs a row of flex gap');
 });
 
 test('it is collapsed by default and its badge is silent until something filters', async () => {
@@ -311,7 +315,13 @@ test('Regal: a round with NO tags but metadata still gets a filter panel', () =>
 test('Regal: a round with neither tags nor metadata still gets no panel at all', () => {
   regal({ tags: [], games: [{ id: 'x', title: 'Azul' }] });
 
-  assert.equal(dom.app.querySelector('.regal-filter'), null);
+  // Present since #736 (the backfill's repaint needs somewhere to mount) and
+  // `hidden`, which is what makes it cost nothing: `.regal-filter` declares only
+  // a margin, so nothing overrides the UA's `[hidden]`.
+  const wrap = dom.app.querySelector('.regal-filter');
+  assert.ok(wrap, 'the repaint anchor must survive a shelf that offers nothing yet');
+  assert.equal(wrap.hidden, true);
+  assert.equal(wrap.textContent.trim(), '', 'a hidden wrapper must also be empty');
 });
 
 test('Regal: the tag half is untouched when the round has tags', () => {
@@ -376,4 +386,132 @@ test('the narrow Regal block never hides the disclosure it now contains', () => 
   const offenders = rulesOf(narrow[1])
     .filter(([sel, body]) => whole('.mfilter').test(sel) && /display:\s*none/.test(body));
   assert.deepEqual(offenders, [], 'the phone block must not hide the metadata disclosure');
+});
+
+/* ---------------- The shelf-wide backfill's repaint (#736) ----------------- */
+
+/* Until #736 neither screen was a backfill trigger, so a shelf whose games had
+   never had their detail page opened offered NO complexity control at all and
+   filtered nothing. These specs drive the fold-in: the answer lands after the
+   screen has rendered, and the controls plus the pool have to catch up in place
+   — without discarding what the user has already done. */
+
+// A shelf whose games are BGG-linked but carry no metadata, which is what makes
+// `wantsGameInfo` true and the trigger fire at all. Two games so a filter can
+// discriminate once the answer lands.
+const UNFILLED = [
+  { id: 'u1', title: 'Agricola', source: { provider: 'bgg', externalId: '100' } },
+  { id: 'u2', title: 'Leicht', source: { provider: 'bgg', externalId: '101' } },
+];
+
+// Resolve the POST by hand so a spec controls exactly when the answer arrives.
+const deferredApi = () => {
+  const calls = [];
+  let release;
+  const pending = new Promise((resolve) => { release = resolve; });
+  dom.set('api', async (method, path) => {
+    calls.push(`${method} ${path}`);
+    if (method === 'POST' && /provider-info$/.test(path)) return pending;
+    return {};
+  });
+  // Await a macrotask after releasing, so the view's `.then` has run.
+  return { calls, deliver: async (games) => { release({ games }); await new Promise((r) => setTimeout(r, 0)); } };
+};
+
+const FILLED = [
+  { id: 'u1', weight: 3.6, minPlaytime: 90, maxPlaytime: 210, minAge: 12, categories: ['Economic'], mechanics: [] },
+  { id: 'u2', weight: 1.0, minPlaytime: 20, maxPlaytime: 30, minAge: 8, categories: ['Family'], mechanics: [] },
+];
+
+test('setup: controls the shelf could not offer appear once the backfill lands', async () => {
+  const { calls, deliver } = deferredApi();
+  await dom.call('showStartSession', roundFixture({ games: UNFILLED.map((g) => ({ ...g })) }));
+
+  // Before: nothing to derive a control from, so there is no disclosure at all —
+  // which is exactly the reported symptom ("no complexity filter on my shelf").
+  assert.equal(disclosure(), null);
+  assert.ok(calls.includes('POST /api/rounds/mf-1/games/provider-info'.replace('mf-1', calls[0].split('/')[3])),
+    'the setup screen must trigger the shelf-wide fill');
+
+  await deliver(FILLED);
+
+  assert.ok(disclosure(), 'the disclosure never appeared after the metadata arrived');
+  assert.deepEqual(rowLabels(), ['Spieldauer', 'Komplexität', 'Jüngste Person am Tisch']);
+  assert.deepEqual(chipsFor('Kategorien').map((c) => c.textContent), ['Economic', 'Family']);
+  assert.equal(dom.app.querySelector('#metaFilterMount').hidden, false);
+});
+
+test('setup: the fold-in keeps the seats, guests and filter picks the user set', async () => {
+  /* The reason this is a fold-in and not a re-render: `showStartSession(round)`
+     would rebuild the screen and throw away everything below. */
+  const { deliver } = deferredApi();
+  const round = roundFixture({
+    games: [...UNFILLED.map((g) => ({ ...g })), { id: 'u3', title: 'Schon da', minPlaytime: 45 }],
+  });
+  await dom.call('showStartSession', round);
+
+  // The shelf already offers a playtime control (u3 carries one), so the user
+  // can filter before the answer lands — and open the disclosure to do it.
+  disclosure().open = true;
+  choose(selectLabelled('Spieldauer'), '60');
+  dom.app.querySelector('.nr-seat').click(); // Anna sits out
+  const outBefore = dom.app.querySelectorAll('.nr-seat--out').length;
+  assert.equal(outBefore, 1, 'the fixture never took anyone out of the session');
+
+  await deliver(FILLED);
+
+  assert.equal(selectLabelled('Spieldauer').value, '60', 'the fold-in discarded the user\'s pick');
+  assert.equal(disclosure().open, true, 'the disclosure snapped shut under the user');
+  assert.equal(dom.app.querySelectorAll('.nr-seat--out').length, outBefore,
+    'the fold-in reset the seat selection');
+  // And the new control is there alongside the preserved one.
+  assert.deepEqual(rowLabels(), ['Spieldauer', 'Komplexität', 'Jüngste Person am Tisch']);
+});
+
+test('setup: the pool preview re-filters against the values that just arrived', async () => {
+  const { deliver } = deferredApi();
+  await dom.call('showStartSession', roundFixture({ games: UNFILLED.map((g) => ({ ...g })) }));
+  await deliver(FILLED);
+
+  assert.deepEqual(previewed(), ['Agricola', 'Leicht'], 'unfiltered, both are in the pool');
+  choose(selectLabelled('Komplexität höchstens'), '1');
+  assert.deepEqual(previewed(), ['Leicht'], 'the preview still promises a game the draw would not pick');
+});
+
+test('a filled shelf issues no request at all', async () => {
+  /* The `wantsGameInfo` gate. Without it every open of either screen would POST,
+     and the server would answer an empty list after a round trip nobody needed. */
+  const { calls } = deferredApi();
+  await dom.call('showStartSession', roundFixture());
+
+  assert.deepEqual(calls.filter((c) => /provider-info/.test(c)), []);
+});
+
+test('Regal: the disclosure appears and the grid re-filters after the fold-in', async () => {
+  const { deliver } = deferredApi();
+  dom.app.innerHTML = '';
+  const r = roundFixture({ tags: [], games: UNFILLED.map((g) => ({ ...g })) });
+  dom.call('renderRegalTab', r, r.games);
+
+  assert.equal(disclosure(), null);
+  assert.equal(dom.app.querySelector('.regal-filter').hidden, true);
+
+  await deliver(FILLED);
+
+  assert.ok(disclosure(), 'the Regal never grew the disclosure');
+  assert.equal(dom.app.querySelector('.regal-filter').hidden, false);
+  chipsFor('Kategorien').find((c) => c.textContent === 'Family').click();
+  assert.deepEqual(shelved(), ['Leicht'], 'the grid ignored the metadata that just arrived');
+});
+
+test('a failed backfill leaves the screen exactly as it was', async () => {
+  dom.set('api', async (method, path) => {
+    if (method === 'POST' && /provider-info$/.test(path)) throw new Error('offline');
+    return {};
+  });
+  await dom.call('showStartSession', roundFixture({ games: UNFILLED.map((g) => ({ ...g })) }));
+  await new Promise((r) => setTimeout(r, 0));
+
+  assert.equal(disclosure(), null, 'a rejected trigger must not throw or blank anything');
+  assert.deepEqual(previewed(), ['Agricola', 'Leicht'], 'the pool still lists the shelf');
 });
