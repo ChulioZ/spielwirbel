@@ -29,11 +29,29 @@ also the child asking for the least.
 
 ```css
 .popover.has-covers { max-width: 520px; }
-.popover.has-covers .cover-picker__grid { min-width: calc(92px * 4 + 8px * 3); }
+.popover.has-covers .cover-picker__grid:has(.cover-pick:nth-child(5)) {
+  min-width: calc(92px * 4 + 8px * 3);
+}
 ```
 
 The floor is what makes the card *claim* room; `max-width` is what stops it.
-Result: 520px, 5 columns, 10 tiles. Three properties are load-bearing:
+Result: 520px, 5 columns, 10 tiles. Four properties are load-bearing:
+
+- **Gate the floor on there being content to fill it.** `auto-fill` keeps empty
+  tracks by design, so an ungated floor pays for the rich case with the common
+  one — measured dead space right of the last tile, ungated vs gated:
+
+  | covers | 1 | 2 | 4 | 5+ |
+  |---|---|---|---|---|
+  | ungated | 416px | 315px | 112px | 11px |
+  | gated | 236px | 123px | 11px | 11px |
+
+  Most games are not Catan, and a 520px card holding one 92px tile reads as
+  broken. Gate at the **column count the widened card yields**, so the floor
+  applies exactly when a full wide row can be filled. `:has()` is live and has to
+  be — the grid is filled *asynchronously* after the covers hop, so the rule must
+  start matching when the fifth tile lands, not at build time (verified by
+  appending tiles one at a time: 0px through four, 392px on the fifth).
 
 - **The floor must clear the cap**, or it overflows the card instead of widening
   it. Express it as columns × gaps so the two are checkable against each other —

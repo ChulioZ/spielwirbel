@@ -418,9 +418,20 @@ test('the cover picker also has a FLOOR, or its max-width is a no-op', () => {
      it sat at 351px under a 380px cap and still sat at 351px when the cap was
      raised to 520px. The grid's min-width is what makes the card claim the room;
      without it this whole rule is a number nobody reads. */
-  const floor = bodyOf('.popover.has-covers .cover-picker__grid');
-  assert.ok(floor, 'no min-width on the popover\'s edition grid — the card shrink-to-fits to its button labels and the max-width above does nothing');
-  assert.match(floor, /min-width:/);
+  // Found BY ITS BODY, so the selector below is the stylesheet's own text rather
+  // than a string this file could satisfy with itself.
+  const hit = RULES.find(([sel, body]) => whole('.cover-picker__grid').test(sel)
+    && whole('.has-covers').test(sel) && /min-width:/.test(body));
+  assert.ok(hit, 'no min-width on the popover\'s edition grid — the card shrink-to-fits to its button labels and the max-width above does nothing');
+  const [selector, floor] = hit;
+
+  /* And it must stay GATED on having enough covers to fill the wider card.
+     `auto-fill` keeps empty tracks by design, so an ungated floor pads a sparse
+     edition list out with them — measured, a single-cover picker went from 236px
+     of dead space to 416px. Most games are not Catan. */
+  const gate = Number((selector.match(/:has\([^)]*nth-child\((\d+)\)/) || [])[1]);
+  assert.ok(gate >= 5,
+    `the floor is gated at ${gate || 'nothing'} — below 5 covers it widens the card before a full row can fill it`);
 
   // And the floor must stay UNDER the cap, or it overflows the card rather than
   // widening it. Both are declared here, so they are checkable against each other.

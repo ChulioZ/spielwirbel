@@ -4079,8 +4079,27 @@ body.auth-screen .terms-banner { display: none; }
    of widening it. `.cover-picker__body` carries no author `display` rule, so its
    `hidden` attribute really does hide it (.claude/rules/hidden-attribute-vs-display-rule.md)
    and a COLLAPSED picker contributes nothing: the card stays 351px until the
-   user opens the grid, then `setBody`'s repositionPopover() re-places it. */
-.popover.has-covers .cover-picker__grid { min-width: calc(92px * 4 + 8px * 3); }
+   user opens the grid, then `setBody`'s repositionPopover() re-places it.
+
+   GATED on there being a fifth cover, because most games are not Catan and an
+   ungated floor pays for the rich case with the common one. `auto-fill` keeps
+   empty tracks by design (that is why it is not `auto-fit`), so a floor applied
+   to a sparse edition list just pads the card out with them. Measured dead space
+   to the right of the last tile, ungated vs gated:
+
+     covers   1      2      4     5+
+     ungated  416px  315px  112px  11px
+     gated    236px  123px   11px  11px   (= untouched below the threshold)
+
+   Five is the column count the widened card yields, so the floor applies exactly
+   when a full wide row can be filled. `:has()` is live, and it has to be: the
+   grid is filled ASYNCHRONOUSLY by setBody after the /covers hop, so the rule
+   must start matching when the fifth tile lands rather than at build time —
+   verified by appending tiles one at a time (0px through four, 392px on the
+   fifth). */
+.popover.has-covers .cover-picker__grid:has(.cover-pick:nth-child(5)) {
+  min-width: calc(92px * 4 + 8px * 3);
+}
 .ds-row__meta .score-pill { position: static; }
 .ds-row__meta .sort-flag { margin: 0; }
 
