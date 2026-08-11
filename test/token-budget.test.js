@@ -62,8 +62,8 @@ const lineCount = (rel) => {
    context cost, which is backwards.
 
    Not hypothetical: concluding the scoping trial pushed `bgg-collection-import.md`
-   to 151 and `psstore-full-game-is-not-every-game.md` to 152 — both over budget
-   on metadata alone, having gained no content. The honest fix is to measure the
+   to 151 and a since-retired sibling to 152 — both over budget on metadata
+   alone, having gained no content. The honest fix is to measure the
    right thing rather than to allowlist two files for a rounding artefact.
 
    `wc -l` semantics below are deliberate — that is the command every criterion
@@ -163,7 +163,8 @@ const SOURCE_ALLOW = {
 const RULE_ALLOW = {
   // judged 2026-08-01
   '.claude/rules/admin-moderation-surface.md': 'judged — SPLIT: 277 -> 161. The two seams with their own file sets left as admin-cross-tenant-escape.md (RLS: reads widen, writes never) and admin-kennzahlen-card.md (lib/status.js + its two generic sweeps). What remains is one surface\'s operator checklist, read together',
-  '.claude/rules/add-game-lookup-provider.md': 'judged — the provider CONTRACT plus a per-provider reference table; adding or debugging a provider needs both at once, and per-provider discoveries already split off on their own (psstore-full-game-is-not-every-game, storefront-lookup-locale, provider-cover-*). Five thin files would scatter one lookup',
+  '.claude/rules/add-game-lookup-provider.md': 'judged 2026-08-12 — the provider CONTRACT plus the retirement checklist (#744). It LOST ~100 lines when the four storefront reference sections went with their modules, and gained the four findings that decided the retirement — the first thing a fifth provider has to be tested against. The visible seam (how the lookup works vs. should this provider exist) is a false one: the second question is only answerable from the first (a fixture-green dead search, a cover host that outlives its registry), and separating them is how the next provider gets added without anyone reading its terms',
+  '.claude/rules/wish-list-prices.md': 'judged 2026-08-12 — 171 lines, crossed by #744 removing the second price source: the paragraphs that went were short and the ones explaining what is now UNOBSERVABLE (the per-source cooldown, the single disclosure) are longer than what they replaced. Four aggregator properties that each produce a plausible WRONG PRICE, plus the outage that taught the timeout and cooldown shapes. No seam — the shipping-unknown ranking and the cooldown placement are both consequences of one payload shape, and each is meaningless without the live measurements beside it',
   '.claude/rules/landing-product-screenshots.md': 'judged — a sequential regeneration procedure, read start to finish when run; whoever runs it opens every piece anyway, so a split adds indirection and no saving',
   '.claude/rules/responsive-content-width.md': 'judged — one learning (width keys off the viewport, never content) whose evidence IS the #332 revert. Drop the evidence and it becomes an assertion nobody can re-derive, which is how #332 shipped the first time',
   '.claude/rules/guest-demo-accounts.md': 'judged — five failure modes of ONE feature, every one reachable from a single edit to lib/demo.js; whoever touches the demo needs all five',

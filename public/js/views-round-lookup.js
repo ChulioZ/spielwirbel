@@ -5,6 +5,13 @@
 
 // --- Shared add-game / link-provider lookup plumbing ---
 // Provider display names are proper nouns, not translated (see the source link).
+//
+// The four storefronts are LOOKUP-RETIRED (#744) but stay named here, and that is
+// deliberate: games linked to them are still on real shelves, and the game-detail
+// page renders „Auf {provider} ansehen" from this table. Drop an entry and that
+// link silently degrades to the bare id (`psstore`), which reads as a bug in the
+// one place the stored link is still useful. They are absent from
+// LOOKUP_PROVIDERS below — being nameable is not being queryable.
 const PROVIDER_LABELS = { psstore: 'PlayStation Store', bgg: 'BoardGameGeek', steam: 'Steam', nintendo: 'Nintendo eShop', xbox: 'Xbox' };
 function providerLabel(provider) {
   return PROVIDER_LABELS[provider] || provider;
@@ -16,15 +23,16 @@ function providerLabel(provider) {
 // color system (like the fixed category tags and medal colors) — they encode
 // brand identity, not theme, so their hardcoded hexes must not be "fixed" to
 // accent tones. See .claude/rules/theme-derived-colors.md. Each is a
-// self-contained inline SVG (no external/CDN request; the app is local-only).
+// self-contained inline SVG (no external/CDN request).
 // `aria-hidden` because the button around it carries the accessible name
-// (lookup.fillFrom). Nintendo is represented by the Nintendo Switch mark (Simple
-// Icons has no eShop glyph); the accessible name still says "Nintendo eShop".
+// (lookup.fillFrom).
+//
+// Only the LOOKUP renders these, so unlike PROVIDER_LABELS above the four
+// retired storefronts' marks went with #744 — nothing can produce a hit from
+// them any more. `providerLogo` answering null is a supported state (the badge
+// falls back to a text pill), which is why removing one is safe here and is not
+// safe there.
 const PROVIDER_LOGOS = {
-  psstore: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="#0070D1"><path d="M8.984 2.596v17.547l3.915 1.261V6.688c0-.69.304-1.151.794-.991.636.18.76.814.76 1.505v5.875c2.441 1.193 4.362-.002 4.362-3.152 0-3.237-1.126-4.675-4.438-5.827-1.307-.448-3.728-1.186-5.39-1.502zm4.656 16.241l6.296-2.275c.715-.258.826-.625.246-.818-.586-.192-1.637-.139-2.357.123l-4.205 1.5V14.98l.24-.085s1.201-.42 2.913-.615c1.696-.18 3.785.03 5.437.661 1.848.601 2.04 1.472 1.576 2.072-.465.6-1.622 1.036-1.622 1.036l-8.544 3.107V18.86zM1.807 18.6c-1.9-.545-2.214-1.668-1.352-2.32.801-.586 2.16-1.052 2.16-1.052l5.615-2.013v2.313L4.205 17c-.705.271-.825.632-.239.826.586.195 1.637.15 2.343-.12L8.247 17v2.074c-.12.03-.256.044-.39.073-1.939.331-3.996.196-6.038-.479z"/></svg>',
-  steam: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="#000000"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"/></svg>',
-  nintendo: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="#E60012"><path d="M14.176 24h3.674c3.376 0 6.15-2.774 6.15-6.15V6.15C24 2.775 21.226 0 17.85 0H14.1c-.074 0-.15.074-.15.15v23.7c-.001.076.075.15.226.15zm4.574-13.199c1.351 0 2.399 1.125 2.399 2.398 0 1.352-1.125 2.4-2.399 2.4-1.35 0-2.4-1.049-2.4-2.4-.075-1.349 1.05-2.398 2.4-2.398zM11.4 0H6.15C2.775 0 0 2.775 0 6.15v11.7C0 21.226 2.775 24 6.15 24h5.25c.074 0 .15-.074.15-.149V.15c.001-.076-.075-.15-.15-.15zM9.676 22.051H6.15c-2.326 0-4.201-1.875-4.201-4.201V6.15c0-2.326 1.875-4.201 4.201-4.201H9.6l.076 20.102zM3.75 7.199c0 1.275.975 2.25 2.25 2.25s2.25-.975 2.25-2.25c0-1.273-.975-2.25-2.25-2.25s-2.25.977-2.25 2.25z"/></svg>',
-  xbox: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="#107C10"><path d="M4.102 21.033C6.211 22.881 8.977 24 12 24c3.026 0 5.789-1.119 7.902-2.967 1.877-1.912-4.316-8.709-7.902-11.417-3.582 2.708-9.779 9.505-7.898 11.417zm11.16-14.406c2.5 2.961 7.484 10.313 6.076 12.912C23.002 17.48 24 14.861 24 12.004c0-3.34-1.365-6.362-3.57-8.536 0 0-.027-.022-.082-.042-.063-.022-.152-.045-.281-.045-.592 0-1.985.434-4.805 3.246zM3.654 3.426c-.057.02-.082.041-.086.042C1.365 5.642 0 8.664 0 12.004c0 2.854.998 5.473 2.661 7.533-1.401-2.605 3.579-9.951 6.08-12.91-2.82-2.813-4.216-3.245-4.806-3.245-.131 0-.223.021-.281.046v-.002zM12 3.551S9.055 1.828 6.755 1.746c-.903-.033-1.454.295-1.521.339C7.379.646 9.659 0 11.984 0H12c2.334 0 4.605.646 6.766 2.085-.068-.046-.615-.372-1.52-.339C14.946 1.828 12 3.545 12 3.545v.006z"/></svg>',
   bgg: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="#FF5100"><path d="m19.7 4.44-2.38.64L19.65 0 4.53 5.56l.83 6.67-1.4 1.34L8.12 24l8.85-3.26 3.07-7.22-1.32-1.27.98-7.81Z"/></svg>',
 };
 function providerLogo(provider) {
@@ -38,30 +46,22 @@ function providerLogo(provider) {
 // in place as each provider arrives. One provider failing must not hide the
 // others' results — only an all-providers failure shows the error state.
 //
-// This is the registry order, which doubles as the interleave priority. Since
-// #294 it is the FULL set: filter it through enabledProviders() before any
-// fan-out, because a round can switch individual providers off.
-const LOOKUP_PROVIDERS = ['psstore', 'bgg', 'steam', 'nintendo', 'xbox'];
+// This is the registry order, which doubles as the interleave priority. It must
+// mirror lib/providers/index.js — a name here the server does not register only
+// ever produces a 400 per keystroke. Since #744 it holds BGG alone, and the
+// lookup is UNCONDITIONAL: the per-round `providers` setting that used to filter
+// this list went with the four storefronts it existed to switch off.
+const LOOKUP_PROVIDERS = ['bgg'];
 const MAX_SUGGESTIONS = 10;
 
-// The providers this round queries (#294). An ABSENT `providers` key means the
-// round was never configured, which means all of them — so don't treat a missing
-// key like an empty list, or every existing round would lose its lookup. An
-// empty array is a real, deliberate setting: query nothing.
-function enabledProviders(round) {
-  const ids = round && round.providers;
-  if (!Array.isArray(ids)) return LOOKUP_PROVIDERS;
-  return LOOKUP_PROVIDERS.filter((p) => ids.includes(p));
-}
-
-// The four storefronts answer in whatever language they are asked for, so both
-// hops carry the ACTIVE UI locale (#505) — otherwise an English user gets German
-// titles and German store links from Sony, Microsoft, Valve and Nintendo.
+// Both hops carry the ACTIVE UI locale (#505), for a provider that answers in
+// whatever language it is asked for.
 //
 // It is the app's own locale, deliberately not the browser's Accept-Language:
 // a user who switched the picker would otherwise still get their OS language.
 // The server maps it through a closed per-provider table, so an invented value
-// only ever falls back — see lib/providers/locales.js. BGG ignores it (#117).
+// only ever falls back. BGG ignores it entirely (#117), so today this is
+// contract rather than effect — keep sending it.
 async function searchProvider(rid, provider, q) {
   const lang = encodeURIComponent(getLocale());
   const res = await api('GET', `/api/rounds/${rid}/lookup/search?provider=${provider}&q=${encodeURIComponent(q)}&lang=${lang}`);
@@ -94,10 +94,12 @@ let lookupSeq = 0;
 // the tab order (and out of the sheet's focus trap).
 function attachLookup(round, input, menu, onPick, onInput) {
   const rid = round.id;
-  const active = enabledProviders(round);
-  // Zero providers enabled is a legitimate configuration (#294): the field stays
-  // a plain title input with no dropdown. Return inert stubs so callers can keep
-  // calling closeMenu()/search()/isOpen() unconditionally.
+  const active = LOOKUP_PROVIDERS;
+  // An empty registry keeps the field a plain title input with no dropdown, and
+  // the inert stubs let callers keep calling closeMenu()/search()/isOpen()
+  // unconditionally. Unreachable while a provider ships — kept because the
+  // sheets' Escape handling calls isOpen() before anything else, so the day this
+  // list is empty it must not throw (.claude/rules/lookup-menu-keyboard-combobox.md §1).
   if (!active.length) return { closeMenu() {}, search() {}, isOpen: () => false };
 
   let searchTimer;
@@ -386,7 +388,7 @@ function showAddGame(round, { wish = false } = {}) {
           <div class="muted field__hint">${esc(t('addGame.searchHint'))}</div>
           <div class="field__hint field__hint--dup" id="dupHint" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
-        ${canImportBgg(round) ? `<div class="toolbar" style="margin:-8px 0 18px">
+        ${canImportBgg() ? `<div class="toolbar" style="margin:-8px 0 18px">
           <button type="button" id="bggImportFromAdd" class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(wish ? t('bggImport.wishLink') : t('bggImport.link'))}</button>
         </div>` : ''}
         <div class="field">
@@ -844,7 +846,7 @@ function showLinkProvider(round, game) {
     if ((Number.isInteger(d.minPlayers) && d.minPlayers !== game.minPlayers) ||
         (Number.isInteger(d.maxPlayers) && d.maxPlayers !== game.maxPlayers))
       fields.push({ key: 'players', label: t('linkProvider.field.players') });
-    // Weight (#717, BGG only — the storefronts carry none). The chip sends a
+    // Weight (#717, BGG only). The chip sends a
     // BOOLEAN: applyLink asks for the field and the server resolves the value
     // from the provider itself, so a client chooses whether to take the info but
     // never what it says. #724's metadata gets no chip (it is not a preview
@@ -1030,12 +1032,12 @@ function startDirectSession(round, game) {
 
 /* ---------------------- BGG collection import (#481) ----------------------- */
 
-// Whether this round can offer the one-shot BoardGameGeek collection import.
-// Accounts only (the handle hangs off the account), and only where the round
-// still queries BGG (#294) — the route 403s a disabled provider, so an entry
-// point that ignored the setting would just produce an error on click.
-function canImportBgg(round) {
-  return accountsActive() && enabledProviders(round).includes('bgg');
+// Whether a round can offer the one-shot BoardGameGeek collection import.
+// Accounts only — the handle hangs off the account. The per-round provider gate
+// this also used to consult went with #744; BGG is now always queryable, so the
+// account is the whole condition, and the round no longer decides anything.
+function canImportBgg() {
+  return accountsActive();
 }
 
 // Import a linked BoardGameGeek collection into this round — the OWNED shelf
@@ -1308,7 +1310,6 @@ async function showBggImport(round, status = 'own') {
 function bggImportError(code) {
   const known = {
     quota_games: 'bggImport.toast.quota',
-    provider_disabled: 'bggImport.toast.disabled',
     provider_unreachable: 'bggImport.toast.unreachable',
     no_bgg_username: 'bggImport.toast.noHandle',
     queued: 'bggImport.queued',

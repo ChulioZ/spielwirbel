@@ -23,7 +23,6 @@ const { app, store, createRound } = require('./helpers');
 const { providers: registry } = require('../lib/providers');
 
 const BGG_COVER = 'https://cf.geekdo-images.com/x/fresh.jpg';
-const PS_COVER = 'https://image.api.playstation.com/vulcan/ap/rnd/hades.png';
 const coverPath = (rid, gid) => `/api/rounds/${rid}/games/${gid}/cover/provider`;
 
 // A minimal 1x1 PNG (signature + IHDR + IDAT + IEND), enough for the upload
@@ -148,17 +147,32 @@ test('an unlinked game answers no_source', async () => {
   assert.equal(res.body.error, 'no_source');
 });
 
-test('a provider the round switched off is refused and never queried', async () => {
+// A game linked to one of the four storefronts #744 retired is the case this
+// route most has to survive: the link is still stored (nothing was migrated), so
+// the refresh is reachable by a stale tab and by a hand-rolled call. It must
+// fail CLEANLY — the registry lookup answers null and the route 400s, rather
+// than the old code path throwing on a provider object that no longer exists.
+test('a game linked to a RETIRED provider is refused, not thrown at (#744)', async () => {
   const round = await createRound(request);
   const game = await addLinkedGame(round.id, null);
-  await request(app).put(`/api/rounds/${round.id}/providers`).send({ providers: ['steam'] });
+  // Rewritten in the store, past the route's own validation — exactly the shape
+  // a pre-#744 row still has today. The POST would refuse to mint this link now,
+  // which is precisely why the stored one has to be produced by hand.
+  const stored = store.findRound(round.id).games.find((g) => g.id === game.id);
+  stored.source = { provider: 'psstore', externalId: 'EP2319-CUSA26625_00', url: null };
+  store.saveData();
 
-  await withStubbedBgg({ detail: { title: 'Catan', imageUrl: BGG_COVER } }, async (calls) => {
+  let called = false;
+  const realFetch = global.fetch;
+  global.fetch = async () => { called = true; throw new Error('must not be contacted'); };
+  try {
     const res = await request(app).post(coverPath(round.id, game.id));
-    assert.equal(res.status, 403);
-    assert.equal(res.body.error, 'provider_disabled');
-    assert.deepEqual(calls, [], 'a disabled provider must not be contacted');
-  });
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, 'Unknown provider');
+    assert.equal(called, false, 'a retired provider must not be contacted');
+  } finally {
+    global.fetch = realFetch;
+  }
 });
 
 test('an upstream failure is a 502, distinct from having no cover', async () => {
@@ -258,34 +272,23 @@ test('a failed resolve is not cached, so a retry can succeed', async () => {
   });
 });
 
-// Two UI locales that map to different storefront locales must not share an
-// entry — a French user would otherwise be served the German answer for the
-// whole TTL (#505). BGG maps every locale to one constant, so the storefront
-// case is what this asserts, via the key the route builds.
-test('two UI locales that map to different store locales do not share an entry', async () => {
+// The cache key carries the EFFECTIVE provider locale, not the raw `?lang=`
+// (#505). BGG maps every UI locale to one constant, so all of them share a
+// single entry rather than fragmenting seven ways for byte-identical results —
+// the storefronts that made the two spellings differ went with #744.
+test('every UI locale shares ONE cache entry for BGG', async () => {
   const round = await createRound(request);
-  const externalId = 'EP-LOCALE-1';
-  const game = (await addGame(round.id, {
-    title: 'Hades', sourceProvider: 'psstore', sourceExternalId: externalId,
-  })).body;
+  const game = await addLinkedGame(round.id, null);
 
-  const psstore = registry.psstore;
-  // Precondition: these two really do resolve to different storefront locales,
-  // or the test proves nothing about the key.
-  assert.notEqual(psstore.resolveLocale('de'), psstore.resolveLocale('fr'));
+  assert.equal(registry.bgg.resolveLocale('de'), registry.bgg.resolveLocale('fr'),
+    'BGG no longer maps every locale alike — this spec is asserting the wrong thing');
 
-  const real = psstore.detail;
-  const langs = [];
-  psstore.detail = async (id, lang) => { langs.push(lang); return { title: 'Hades', imageUrl: PS_COVER }; };
-  try {
-    for (const lang of ['de', 'fr', 'de']) {
+  await withStubbedBgg({ detail: { title: 'Catan', imageUrl: BGG_COVER } }, async (calls) => {
+    for (const lang of ['de', 'fr', 'en']) {
       const res = await request(app).post(coverPath(round.id, game.id)).query({ lang });
       assert.equal(res.status, 200);
-      assert.equal(res.body.image, PS_COVER);
+      assert.equal(res.body.image, BGG_COVER);
     }
-    // de fetched, fr fetched (a different locale), de served from the cache.
-    assert.deepEqual(langs, ['de', 'fr']);
-  } finally {
-    psstore.detail = real;
-  }
+    assert.equal(calls.length, 1, `three locales, one hop — got ${calls.length}`);
+  });
 });

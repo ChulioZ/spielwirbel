@@ -40,7 +40,6 @@ function roundFixture(over = {}) {
     name: 'Freitagsrunde',
     background: null,
     tags: [{ id: 't1', name: 'Kennerspiel' }],
-    providers: [],
     members: [
       { id: 'm1', name: 'Anna', userId: ME, color: '#7f77dd' },
       { id: 'm2', name: 'Ben' },
@@ -135,7 +134,6 @@ function assertRendered(app, name) {
 const NON_MAIN = [
   ['design', (dom) => dom.call('showBackground', RID)],
   ['tags', (dom) => dom.call('showTags', RID)],
-  ['providers', (dom) => dom.call('showProviders', RID)],
   ['game detail', (dom) => dom.call('showGameDetail', RID, 'g1')],
   ['member', (dom) => dom.call('showMember', RID, 'm1')],
   ['round settings', (dom) => dom.call('showRoundSettings', RID)],

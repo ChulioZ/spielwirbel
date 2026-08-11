@@ -48,7 +48,9 @@ exclude state here: with OR semantics a third click would have nothing to mean.
 the same shape `fitsOwnRange` uses for an unfilled player range. Reversing it —
 "no playtime, so it cannot satisfy a playtime budget" — silently hides:
 
-- every storefront game (PS Store carries none of these fields),
+- every game linked to a provider that carries none of these fields (the four
+  digital storefronts did, until #744 retired them — a legacy row still has no
+  metadata and still passes every filter),
 - every hand-typed game,
 - **the entire shelf** on an instance with no `BGG_API_TOKEN`.
 

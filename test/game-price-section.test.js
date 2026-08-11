@@ -148,22 +148,26 @@ test('the age follows the reader\'s language', (t) => {
   assert.equal(sec.querySelector('.gd-price__stale').textContent, 'Price from 2 days ago');
 });
 
-test('a Steam price shows the discount it was struck from', (t) => {
+test('a discounted price shows the amount it was struck from', (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
+  // Shaped as a payload with no edition, country or offer count — the leanest
+  // one the renderer can receive. It was a Steam price until #744 retired that
+  // source; what it guards is the renderer, which must not print an empty
+  // "Ausgabe: ()" line for a field the payload simply does not carry.
   const sec = render(dom, {
-    available: true, source: 'steam', currency: 'EUR', amount: 29.99, regular: 59.99,
+    available: true, currency: 'EUR', amount: 29.99, regular: 59.99,
     discountPercent: 50, shippingKnown: true,
-    url: 'https://store.steampowered.com/app/77/', fetchedAt: '2026-08-07T10:04:00.000Z',
+    url: 'https://boardgameprices.co.uk/item/show/77', fetchedAt: '2026-08-07T10:04:00.000Z',
   });
   assert.match(sec.querySelector('.gd-price__amount').textContent, /29,99/);
   const facts = sec.querySelector('.gd-price__facts').textContent;
   assert.match(facts, /59,99/);
   assert.match(facts, /50/);
-  // No edition, no country, no offer count — a digital store has none of them,
-  // and an empty "Ausgabe: ()" is worse than no line.
   assert.doesNotMatch(facts, /Ausgabe|Händler|Angeboten/);
-  assert.match(sec.querySelector('.gd-price__note').textContent, /Steam Store/);
+  // One disclosure now, whatever the payload — the source-dependent branch went
+  // with the second source.
+  assert.match(sec.querySelector('.gd-price__note').textContent, /nur die dort gelisteten Shops/);
 });
 
 test('the currency comes from the price, not from the reader', (t) => {
@@ -323,21 +327,19 @@ test('a settled no-offers answer is stated — replacing a stored price that was
   assert.match(sec.querySelector('.gd-price__note').textContent, /nur die dort gelisteten Shops/);
 });
 
-test('no-offers renders even when nothing was on screen first, with the source\'s own disclosure', async (t) => {
+test('no-offers renders even when nothing was on screen first, with the disclosure', async (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
-  const steamRound = {
-    ...WISH_ROUND,
-    games: [{ id: 'g1', title: 'Grounded', wish: true, source: { provider: 'steam', externalId: '77' } }],
-  };
-  const pending = await openRaced(dom, steamRound);
+  const pending = await openRaced(dom);
 
   pending.live.res({ available: false, reason: 'no_offers' });
   await tick();
   const sec = dom.app.querySelector('.gd-price');
   assert.ok(sec);
   assert.match(sec.querySelector('.gd-price__none').textContent, /kein Preis/);
-  assert.match(sec.querySelector('.gd-price__note').textContent, /Steam Store/);
+  // Still owed on a settled "nobody stocks this": the statement derives from the
+  // aggregator even though no amount is shown.
+  assert.match(sec.querySelector('.gd-price__note').textContent, /nur die dort gelisteten Shops/);
 
   // The stored leg settling afterwards must not resurrect a price over the
   // settled answer.

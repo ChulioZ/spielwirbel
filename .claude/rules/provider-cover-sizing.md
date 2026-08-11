@@ -22,6 +22,22 @@ numbers are not marginal — measured live on 2026-07-20:
 a sized variant at every render site. A 14-game PS shelf went **13,196 KB → 239
 KB (55×)**, i.e. ~17 KB/cover — the same order as a BGG shelf.
 
+## Since #744 this file is about LEGACY DATA — which makes it more load-bearing, not less
+
+PS Store and Xbox were retired as lookup providers, so **no new cover can land on
+either host**. The `COVER_RESIZERS` rules for them stay, and deleting them as
+"dead code" is the specific mistake to avoid: the ~66 covers already stored on
+those hosts still render through them, and without the rewrite each one goes back
+to serving a 1–2 MB master — the exact regression measured above, reintroduced by
+a tidy-up rather than by a feature.
+
+The same asymmetry runs through the whole retirement: those hosts are refused by
+the *write* gate (`isAllowedImageUrl`) and kept on the *render* one
+(`imageCspSources`, `.claude/rules/security-middleware.md`).
+`test/cover-size.test.js` pins both directions for the two resizer hosts, so a
+future "these hosts aren't providers any more" cleanup fails rather than blanking
+or bloating a shelf.
+
 ## The finding that explains the symptom: decode memory, not download
 
 The reported bug was *scroll jank*, and the tempting culprit was the blurred

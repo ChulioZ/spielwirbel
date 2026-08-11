@@ -24,13 +24,10 @@ What the app does, in detail. For a short overview see the
   Seefahrer?" is answered by the app. An expansion that seats more (or fewer)
   people widens the range the draw filters by, which is how the 5–6-player
   extension stops a six-person evening from hiding the game you own. When adding a
-  game, the title field doubles as a **search-as-you-type lookup**: it queries
-  the **PlayStation Store**, **Steam**, the **Nintendo eShop** and the
-  **Xbox / Microsoft Store** (digital games) and **BoardGameGeek** (board games)
-  together and merges the hits into one
-  dropdown. When several stores return the **same title** (e.g. a cross-platform
-  game), they collapse into a **single row with one badge per store** — click
-  a badge to fill from that store, or the title to use the top match. Pick a
+  game, the title field doubles as a **search-as-you-type lookup** against
+  **BoardGameGeek**. Hits with the **same title** collapse into a **single row
+  with one badge per source** — click a badge to fill from it, or the title to
+  use the top match. Pick a
   suggestion to auto-fill the title, cover art and player range, and store a link
   back to the source page (shown on the game's detail
   view). The lookup is optional — manual entry works exactly as before, and the
@@ -73,18 +70,11 @@ What the app does, in detail. For a short overview see the
   row shows the cover it would import and lets you swap in a different edition's
   before you confirm. It is **one-shot and on demand** — never a background
   sync — and it needs no BGG password: a username is enough, and you can unlink
-  it again at any time. Accounts mode only, and only for rounds that still have
-  BoardGameGeek among their providers.
-- **Providers per round** – each round chooses which of the five databases its
-  lookups query (a "Provider" screen next to Tags in the round hub). A
-  board-games-only group can switch the four digital stores off so their hits
-  stop crowding the dropdown — and the requests stop being made at all. A round
-  that never configures it queries all five, as before; turning *every* provider
-  off is allowed too and simply leaves the title field a plain text input.
-  **Provider cover art is hotlinked, not copied:** the picture is loaded straight
-  from the store's own servers rather than downloaded onto this instance, because
-  re-hosting the four digital stores' box art on a public service needs a licence
-  they don't offer (issue #172). BoardGameGeek *does* grant one with its XML API
+  it again at any time. Accounts mode only.
+- **Provider cover art is hotlinked, not copied:** the picture is loaded straight
+  from the provider's own servers rather than downloaded onto this instance,
+  because re-hosting third-party box art on a public service needs a licence
+  (issue #172). BoardGameGeek *does* grant one with its XML API
   token (#117), so BGG covers stay hotlinked only for want of an image-resizing
   pipeline. Your own uploaded covers are stored normally. One
   consequence to expect: if a store moves or removes an image, that cover stops
@@ -102,7 +92,7 @@ What the app does, in detail. For a short overview see the
   browsable archive and restorable any time. There are two archives, because
   the reason matters: **retired** ("Aussortiert") means the group wants rid of
   the game, **completed** ("Durchgespielt") means they finished its content — a
-  campaign, a legacy box, a story-driven video game. Alongside them sits the
+  campaign or a legacy box. Alongside them sits the
   **Wunschliste** — games the group wants but does not own yet, added by hand
   through the same add-game sheet or pulled in one shot from a linked
   BoardGameGeek **wishlist**. Wished **expansions** are first-class too — most of
@@ -117,9 +107,8 @@ What the app does, in detail. For a short overview see the
   a box of its own that nobody can play.
   Where the instance has it switched on (`PRICES_ENABLED`), opening a wished game
   that carries a provider link also shows **what it costs right now** — the
-  cheapest in-stock offer including shipping via Brettspielpreise.de for a board
-  game, the store price for a Steam one, with the time it was retrieved and a
-  link out. The last price seen is kept: it appears immediately — led by its age
+  cheapest in-stock offer including shipping via Brettspielpreise.de, with the
+  time it was retrieved and a link out. The last price seen is kept: it appears immediately — led by its age
   („Preis von vor 3 Tagen") plus a checking note — while the current price is
   looked up, stands in when the price service is out, and is never passed off as
   current or shown past seven days. A lookup that settles on "nobody stocks
@@ -144,7 +133,7 @@ What the app does, in detail. For a short overview see the
   no games at all is dropped). Moving is owner-only — the action is not offered
   on a round that was shared with you.
 - **Tags** – every round can define its own free-form tags (e.g. "outside",
-  "quick lunch break", "digital", "co-op") on a dedicated screen, reached from
+  "quick lunch break", "co-op") on a dedicated screen, reached from
   the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign
   any number of tags to a game — in the add-game sheet or later from the game's
   detail page, creating new tags inline — and filter both the Regal and the

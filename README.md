@@ -14,7 +14,7 @@
 **"What should we play tonight?"** — Spielwirbel draws a few games from your
 group's shelf, collects everyone's rating — on one shared device, on their own
 phones, or through a link — and
-remembers what your round actually likes. Board games and video games together.
+remembers what your round actually likes.
 
 <p align="center">
   <img src="public/img/landing-shelf-wide.en.webp" alt="The Regal — a round's game shelf as a card grid, with tag filter chips and the desktop navigation rail" width="820">
@@ -56,9 +56,8 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
 
 - **Rounds** — a group with a name and any number of member seats.
 - **Games** — title, player range, custom tags, cover art. Adding one searches
-  **BoardGameGeek**, the **PlayStation Store**, **Steam**, the **Nintendo
-  eShop** and the **Xbox Store** at once and fills in the details; or import
-  your whole *owned* BoardGameGeek collection in one go.
+  **BoardGameGeek** and fills in the details; or import your whole *owned*
+  BoardGameGeek collection in one go.
 - **Sessions** — pick who's playing, draw candidate games that fit the player
   count, then everyone rates them 1–5. Pass one device around the table, rate
   from your own phone, or send a link to people with no account — mix all three

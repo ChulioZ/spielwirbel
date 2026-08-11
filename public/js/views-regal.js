@@ -55,10 +55,10 @@ function renderRegalTab(round, activeGames) {
   if (activeGames.length === 0) {
     gamesSec.appendChild(h(`<div class="empty"><p>${esc(t('games.empty'))}</p></div>`));
     grid.appendChild(addTile);
-    if (canImportBgg(round)) grid.appendChild(importTile);
+    if (canImportBgg()) grid.appendChild(importTile);
     gamesSec.appendChild(grid);
   } else {
-    if (canImportBgg(round)) {
+    if (canImportBgg()) {
       // Two spellings of one label, switched by width in CSS (#621) — the full
       // wording is ~269px, most of a 320px phone's content column. Both strings
       // already exist for the empty-Regal tile, so this needs no new i18n key.

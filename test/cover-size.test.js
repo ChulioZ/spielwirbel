@@ -72,20 +72,49 @@ test('passes through an unparseable https value', () => {
   assert.strictEqual(coverUrl('https://', 330), 'https://');
 });
 
-test('the sized URLs still clear the server-side cover guard', () => {
+test('the sized URLs still carry no character the server-side guard refuses', () => {
   // providerCoverUrl() rejects quotes, parens, backslashes and whitespace
   // because game.image is interpolated into background-image:url('…'). Verify
   // rather than assume that the appended query trips none of them (#298 §4).
+  //
+  // Since #744 the two resizer hosts are LEGACY: no provider vouches for them,
+  // so providerCoverUrl() refuses them on the host check before it ever looks at
+  // the characters. Asserting `providerCoverUrl(sized) === sized` would now be
+  // asserting `null === null` — vacuously green against a resizer that appended
+  // a quote. So the character rule is checked directly, and the host rule is
+  // checked separately below, where it says the opposite thing on purpose.
+  const UNSAFE = /['"<>\\\s]/;
   [
     'https://image.api.playstation.com/vulcan/ap/rnd/202309/1215/abc.png',
     'https://store-images.s-microsoft.com/image/apps.64416.138287.abc',
   ].forEach((url) => {
-    assert.ok(isAllowedImageUrl(url), `${url} should be an allowed host`);
     [COVER_THUMB, COVER_CARD, COVER_HERO].forEach((w) => {
       const sized = coverUrl(url, w);
       assert.notStrictEqual(sized, url, 'expected the URL to be rewritten');
-      assert.strictEqual(providerCoverUrl(sized), sized,
-        `${sized} must survive the server guard unchanged`);
+      assert.doesNotMatch(sized, UNSAFE, `${sized} carries a character the cover guard refuses`);
+      assert.ok(sized.startsWith('https://'), 'the resizer must not change the scheme');
     });
+  });
+
+  // A BGG cover passes through untouched AND clears the real guard — the
+  // anti-vacuous half: it proves providerCoverUrl still accepts something, so
+  // the refusals above are about the host and not about the function being dead.
+  const bggCover = 'https://cf.geekdo-images.com/x/fit-in/200x150/filters:strip_icc()/pic1.jpg';
+  assert.strictEqual(coverUrl(bggCover, COVER_CARD), bggCover, 'geekdo paths are signed — never rewritten');
+  assert.ok(isAllowedImageUrl(bggCover));
+  assert.strictEqual(providerCoverUrl(bggCover), bggCover);
+});
+
+test('the two resizer hosts are legacy-render-only since #744', () => {
+  // The rules stay in COVER_RESIZERS for the ~66 covers already stored on those
+  // hosts — delete them and those games silently go back to serving a 1–2 MB
+  // master. But nothing may WRITE one any more, and this is what pins that the
+  // two halves disagree deliberately rather than by oversight.
+  [
+    'https://image.api.playstation.com/vulcan/ap/rnd/202309/1215/abc.png',
+    'https://store-images.s-microsoft.com/image/apps.64416.138287.abc',
+  ].forEach((url) => {
+    assert.notStrictEqual(coverUrl(url, COVER_CARD), url, 'the resizer still sizes a stored cover');
+    assert.equal(isAllowedImageUrl(url), false, 'no provider vouches for this host any more');
   });
 });

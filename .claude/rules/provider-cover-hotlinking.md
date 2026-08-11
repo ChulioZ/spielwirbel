@@ -85,6 +85,16 @@ download-and-cache**, however tempting the reliability argument is.
 - **The digital storefronts have no path at all.** Sony, Microsoft, Nintendo and
   Valve offer no cover-art licence at any price, so hotlinking is the end state
   for them, not a stopgap.
+- **Since #744 those four are LEGACY DATA, and the hotlinks stay.** The providers
+  were retired from the lookup; not one stored cover was touched, because
+  rewriting or clearing them would visibly change existing shelves for no gain
+  and — for a cover — would mean deleting a link we are perfectly entitled to
+  keep. Their hosts therefore stay on the CSP `img-src` allowlist through
+  `LEGACY_COVER_HOSTS` while `isAllowedImageUrl` refuses them: **may render, may
+  not be stored.** That split is the one thing to preserve if you touch either
+  gate — see `.claude/rules/security-middleware.md` and
+  `.claude/rules/provider-cover-sizing.md`, whose render-time resizing keeps the
+  same covers from costing megabytes.
 
 ## Privacy follow-through
 

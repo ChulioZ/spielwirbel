@@ -156,9 +156,10 @@ not a finding; the rejected entries below are that ledger.
 
 ### M-009 — External-service fixtures reflect measured reality, dated
 - **Status:** adopted · 2026-07-29
-- **Source:** `.claude/rules/psstore-full-game-is-not-every-game.md` ·
-  `.claude/rules/storefront-lookup-locale.md` (both bugs lived under green
-  suites whose fixtures were written from the same assumption as the code)
+- **Source:** `.claude/rules/add-game-lookup-provider.md` (finding 3 and the
+  testing section) · `.claude/rules/bgg-collection-import.md` (the mislabeled
+  wishlist subtype) — every one of those bugs lived under a green suite whose
+  fixtures were written from the same assumption as the code
 - **Check:** Parser fixtures for live external services carry a capture date
   and provenance. Where a premise *about the service* is load-bearing
   (classification enums, localized separators, region-scoped ids), the fixture
@@ -171,7 +172,7 @@ not a finding; the rejected entries below are that ledger.
 - **Source:** `.claude/rules/noindex-vs-disallow-and-the-crawler-surface.md`
   §3 (the hero assertion that stayed green with the hero deleted) ·
   `.claude/rules/bounding-bulk-registration-mail.md` (two limiters answering
-  identical 429s) · `.claude/rules/storefront-lookup-locale.md` (one shared
+  identical 429s) · `.claude/rules/bgg-collection-import.md` §4 (one shared
   cache answering later specs)
 - **Check:** When the asserted value also exists somewhere else in the
   response (head vs body), when two mechanisms produce identical output, or

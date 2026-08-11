@@ -60,7 +60,6 @@ I18N.de = {
 
   'round.design': 'Design',
   'round.tags': 'Tags',
-  'round.providers': 'Provider',
   'round.startSession': 'Session wirbeln',
   'round.startSessionDisabled': 'Erst Spiele hinzufügen',
   'round.addGame': 'Spiel hinzufügen',
@@ -241,7 +240,6 @@ I18N.de = {
   'bggImport.toast.doneOne': '{n} Spiel übernommen',
   'bggImport.toast.done': '{n} Spiele übernommen',
   'bggImport.toast.quota': 'So viele Spiele passen nicht mehr in diese Runde.',
-  'bggImport.toast.disabled': 'BoardGameGeek ist für diese Runde ausgeschaltet.',
   'bggImport.toast.unreachable': 'BoardGameGeek ist gerade nicht erreichbar.',
   'bggImport.toast.noHandle': 'Verknüpfe zuerst deinen BoardGameGeek-Nutzernamen.',
   'bggImport.toast.badHandle': 'Dieser Nutzername sieht nicht wie ein BGG-Name aus.',
@@ -325,7 +323,6 @@ I18N.de = {
   'price.edition': 'Ausgabe: {title} ({lang})',
   'price.offers': '{inStock} von {total} Angeboten verfügbar',
   'price.viewOffers': 'Alle Angebote bei Brettspielpreise.de',
-  'price.viewStore': 'Im Steam Store ansehen',
   'price.retrieved': 'Abgerufen am {when}',
   'price.mayChange': 'Preise können sich geändert haben.',
   'price.staleHour': 'Preis von vor {n} Stunde',
@@ -336,7 +333,6 @@ I18N.de = {
   'price.checking': 'Der aktuelle Preis wird gerade geprüft …',
   'price.noOffers': 'Zurzeit kein Preis verfügbar.',
   'price.sourceBgp': 'Preisdaten von Brettspielpreise.de. Die Übersicht umfasst nur die dort gelisteten Shops.',
-  'price.sourceSteam': 'Preisdaten aus dem Steam Store.',
 
   'sessions.rated': '{n} Spiele bewertet',
   'sessions.played': 'Gespielt',
@@ -449,7 +445,6 @@ I18N.de = {
   'detail.toast.coverFetched': 'Titelbild von {provider} übernommen',
   'detail.toast.noProviderCover': '{provider} hat kein Titelbild für dieses Spiel.',
   'detail.toast.coverNoSource': 'Dieses Spiel ist mit keinem Anbieter verknüpft.',
-  'detail.toast.coverDisabled': '{provider} ist in dieser Runde deaktiviert.',
   'detail.toast.coverUnreachable': '{provider} ist gerade nicht erreichbar.',
 
   'detail.expansionsTitle': 'Erweiterungen',
@@ -692,11 +687,6 @@ I18N.de = {
   'theme.schiefer': 'Schiefer',
   'theme.pfirsich': 'Pfirsich',
 
-  'providers.crumb': 'Provider',
-  'providers.title': 'Provider',
-  'providers.note': 'Wähle, welche Spiele-Datenbanken durchsucht werden, wenn du ein Spiel hinzufügst oder mit einem Store verknüpfst. Schalte aus, was ihr nie spielt – deren Treffer verschwinden aus den Vorschlägen.',
-  'providers.noneHint': 'Kein Provider aktiv: Das Titelfeld bleibt ein einfaches Textfeld, du tippst jedes Spiel selbst ein.',
-  'providers.toast.saved': 'Provider aktualisiert',
 
   'tags.crumb': 'Tags',
   'tags.title': 'Tags',
@@ -983,12 +973,12 @@ I18N.de = {
   // Logged-out landing page (#322). Rewritten in #483 to lead with what the app
   // is FOR — the decision at the table, and the record the votes leave behind —
   // instead of enumerating features. Three things the old copy never said out
-  // loud are now explicit: the vote is also a measurement, the shelf covers
-  // digital games, and nobody but the round owner needs an account.
+  // loud are now explicit: the vote is also a measurement, the shelf holds
+  // whatever the group plays, and nobody but the round owner needs an account.
   // NOTE: hero.title/hero.sub are duplicated as static meta tags in index.html
   // (a scraper runs no JS) — test/link-preview.test.js pins the two in sync.
   'landing.hero.title': 'Was spielen wir heute?',
-  'landing.hero.sub': 'Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele, vom Brettspiel bis zum Videospiel. Heraus kommt das Spiel für heute – und mit jeder Session ein schärferes Bild davon, was eure Runde gern spielt.',
+  'landing.hero.sub': 'Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele. Heraus kommt das Spiel für heute – und mit jeder Session ein schärferes Bild davon, was eure Runde gern spielt.',
   'landing.hero.ctaPrimary': 'Kostenlos registrieren',
   'landing.hero.ctaSecondary': 'Anmelden',
   // Guest demo (#427). The CTA leads the hero when the instance has it enabled,
@@ -1002,7 +992,7 @@ I18N.de = {
   'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala von 1 bis 5.',
   'landing.features.title': 'Was ihr davon habt',
   'landing.features.shelf.title': 'Ein Regal für alles',
-  'landing.features.shelf.desc': 'Brettspiele und Videospiele nebeneinander – mit Covern aus BoardGameGeek, Steam, PlayStation, Nintendo und Xbox.',
+  'landing.features.shelf.desc': 'Alle Spiele eurer Runde an einem Ort – Titel, Cover und Spieleranzahl kommen aus BoardGameGeek, alles andere tippt ihr selbst ein.',
   'landing.features.vote.title': 'Die Runde entscheidet',
   'landing.features.vote.desc': 'Spielwirbel lost aus, das Gerät geht reihum, jeder bewertet für sich. Keine Viertelstunde Diskussion mehr. Wer ein Konto hat, kann stattdessen am eigenen Gerät bewerten.',
   'landing.features.ratings.title': 'Jede Stimme zählt doppelt',

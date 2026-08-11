@@ -111,7 +111,7 @@ const WEIGHT_CHOICES = [1, 2, 3, 4, 5];
 // THE RULE THAT IS EASY TO GET BACKWARDS: an absent value ON THE GAME passes
 // every filter — the same reasoning as `fitsOwnRange`'s typeof guards above. A
 // game BGG has no playtime for must stay drawable, or the first touch of any
-// filter silently hides every storefront game, every hand-typed one, and (on an
+// filter silently hides every hand-typed game and (on an
 // instance without BGG_API_TOKEN) the entire shelf. Under-filtering is
 // recoverable — the user sees a game they can skip; over-filtering hides games
 // with nothing on screen to say so.

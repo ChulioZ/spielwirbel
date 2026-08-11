@@ -116,7 +116,7 @@ async function showArchive(rid, kind, seg = kind) {
   // The BGG import pulls the same account's `wishlist=1` shelf that the Regal's
   // own button pulls with `own=1` (#560). Two spellings of the label, switched
   // by width in CSS, exactly like the Regal's (#621).
-  if (a.importStatus && canImportBgg(round)) {
+  if (a.importStatus && canImportBgg()) {
     const importBtn = h(`<button class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> <span class="tools-label tools-label--long">${esc(t('bggImport.wishLink'))}</span><span class="tools-label tools-label--short">${esc(t('bggImport.wishTile'))}</span></button>`);
     importBtn.addEventListener('click', () => showBggImport(round, a.importStatus));
     head.querySelector('.section-tools').appendChild(importBtn);

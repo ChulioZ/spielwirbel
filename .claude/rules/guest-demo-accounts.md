@@ -124,10 +124,10 @@ Three things learned building it:
   product id**. Never the query's first result: at the time this was written
   "Gran Turismo 7" resolved to *Grandia* and "It Takes Two" to its friend-pass
   DLC. **That was not fuzzy matching, as this rule used to claim — it was the
-  `FULL_GAME`-only filter dropping both real games**
-  (`.claude/rules/psstore-full-game-is-not-every-game.md`, fixed 2026-07-28).
-  Matching back to the exact product id remains the right shape regardless: it
-  is what makes the cover independent of result order at all.
+  `FULL_GAME`-only filter dropping both real games** (fixed 2026-07-28; the
+  provider itself was retired in #744). Matching back to the exact product id
+  remains the right shape regardless: it is what makes the cover independent of
+  result order at all.
 - **A PS thumbnail is a 3840×2160 master** (8.3 MP, ~31 MB decoded). That is fine
   and is what a real user's game stores, because `coverUrl()` sizes it at render
   time — measured 370×208 / 0.08 MP. Verify that rather than assuming it, or a

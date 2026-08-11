@@ -26,12 +26,12 @@
 
 'use strict';
 
-// The Einstellungen screen and the three routed screens reached FROM it. They
-// share one rail row (#581): duplicating Tags/Provider/Design — and the two
-// sheet actions — beside an entry that already contains all five made the rail
-// disagree with every narrow width, where one entry has always been the only
-// way in. So the row stands for the whole group.
-const RAIL_SETTINGS_SUB = ['settings', 'tags', 'providers', 'design'];
+// The Einstellungen screen and the routed screens reached FROM it. They share
+// one rail row (#581): duplicating Tags/Design — and the two sheet actions —
+// beside an entry that already contains them made the rail disagree with every
+// narrow width, where one entry has always been the only way in. So the row
+// stands for the whole group. (It held a Provider screen too until #744.)
+const RAIL_SETTINGS_SUB = ['settings', 'tags', 'design'];
 
 // Round sub-screens that have their OWN rail entry. On these, that entry is
 // marked current and no section is — the alternative (highlighting the section

@@ -73,7 +73,6 @@ const roundFixture = (over = {}) => ({
   sessions: [],
   activity: [],
   tags: [],
-  providers: [],
   ...over,
 });
 
@@ -170,16 +169,16 @@ test('the rail carries no destructive round action', () => {
   assert.doesNotMatch(RAIL, /round\.deleteRound|round\.deleteConfirm|share\.leave/, 'a destructive action was added to the persistent rail (#561)');
 });
 
-/* #581: the settings group is ONE row. It briefly held six — the three routed
-   screens, both sheet actions, and the screen that already contains all five —
+/* #581: the settings group is ONE row. It briefly held six — the routed
+   screens, both sheet actions, and the screen that already contains them all —
    so the rail was a second, longer navigation model competing with the single
-   entry every width below 1280px uses. */
+   entry every width below 1280px uses. (One of those routed screens, Provider,
+   went away with #744.) */
 test('the rail settings group is a single Einstellungen entry', () => {
   const rail = bodyOfFn(RAIL, 'buildRoundRail');
   assert.match(rail, /roundPath\(rid, 'settings'\)/, 'the rail lost its way into the settings screen');
   for (const [needle, what] of [
     [/roundPath\(rid, 'tags'\)/, 'Tags'],
-    [/roundPath\(rid, 'providers'\)/, 'Provider'],
     [/roundPath\(rid, 'design'\)/, 'Design'],
     [/showMoveGames\(/, 'Spiele verschieben'],
     [/showInvite\(/, 'Einladen'],
@@ -196,7 +195,7 @@ test('the rail settings group is a single Einstellungen entry', () => {
    onNav, which would leave a desktop user on Tags with no rail route back to the
    screen that owns it. */
 test('the settings entry stays a live link on the screens it owns', () => {
-  assert.match(RAIL, /RAIL_SETTINGS_SUB = \[[^\]]*'settings'[^\]]*'tags'[^\]]*'providers'[^\]]*'design'/, 'the settings entry no longer owns the three screens reached from it');
+  assert.match(RAIL, /RAIL_SETTINGS_SUB = \[[^\]]*'settings'[^\]]*'tags'[^\]]*'design'/, 'the settings entry no longer owns the screens reached from it');
   assert.match(RAIL, /RAIL_OWN_ENTRY = \[[^\]]*\.\.\.RAIL_SETTINGS_SUB/, 'the own-entry list no longer derives from the settings group — a screen with no row would highlight nothing at all');
   // NOT bodyOfFn here: railItem destructures its argument, so the first `{`
   // after the paren is the parameter pattern and the helper brace-matches that
@@ -209,13 +208,12 @@ test('the settings entry stays a live link on the screens it owns', () => {
   assert.match(RAIL, /inside: !!sub && sub !== 'settings' && RAIL_SETTINGS_SUB\.includes\(sub\)/, 'the settings entry no longer marks the screens it owns');
 });
 
-test('the Start tab points at the settings screen instead of three separate links', () => {
+test('the Start tab points at the settings screen instead of separate links', () => {
   assert.match(ROUND, /roundPath\(rid, 'settings'\)/, 'the Start tab has no Einstellungen entry');
-  // The three it replaced must not linger beside it — that was the crowding the
+  // The ones it replaced must not linger beside it — that was the crowding the
   // issue set out to remove, and it is what a partial revert would leave behind.
   const actions = ROUND.slice(ROUND.indexOf("h('<div class=\"hub-actions\">"));
   assert.doesNotMatch(actions, /roundPath\(rid, 'tags'\)/, 'the Start tab still links Tags directly');
-  assert.doesNotMatch(actions, /roundPath\(rid, 'providers'\)/, 'the Start tab still links Provider directly');
   assert.doesNotMatch(actions, /roundPath\(rid, 'design'\)/, 'the Start tab still links Design directly');
 });
 

@@ -5,7 +5,6 @@ paths:
   - "public/js/lang/**"
   - "lib/routes/contact.js"
   - "test/i18n-locales.test.js"
-  - "lib/providers/locales.js"
   - "lib/demo-seed.js"
 ---
 # The locale set is data (#504) — and a test over it is VACUOUS at two locales
@@ -129,16 +128,18 @@ assume the plurals follow.
   "half-translated app" impression the per-locale seed exists to avoid once the
   list grows). It is named apart from `SUPPORTED_LOCALES` so the two cannot be
   required interchangeably.
-- **`lib/providers/locales.js` is a THIRD list and stays a superset.** It answers
-  "is this a language we recognise at all" for the storefront lookup, so a
-  not-yet-shipped locale falls back to English rather than the deployment's
-  German (`.claude/rules/storefront-lookup-locale.md`). Don't derive it from the
-  shipped set — that would re-pin a French user to German store results.
+- **There used to be a THIRD list**, a locale table under `lib/providers/`,
+  answering "is this a language we recognise at all" for the four digital
+  storefronts, so a not-yet-shipped locale fell back to English rather than to
+  the deployment's German. It went with those providers in #744 (BGG takes no locale). If a
+  localizing provider is ever added, give it its own superset again — don't
+  derive one from the shipped set, which would re-pin a French user to German
+  store results.
 
 **Related:** `.claude/rules/shared-constants-across-the-stack.md` (why
 `lib/routes/contact.js` requires out of `public/js/`),
 `.claude/rules/frontend-helper-modules-and-coverage.md` (why `locales.js` is its
 own file and the four places a new one must be wired into),
 `.claude/rules/frontend-script-load-order.md`,
-`.claude/rules/storefront-lookup-locale.md` (the provider-side locale, which is
-independent of this one).
+`.claude/rules/allowlist-request-values-that-reach-a-url.md` (the allowlist shape any
+provider-side locale mapping has to follow — a different list from this one).
