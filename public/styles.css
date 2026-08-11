@@ -1232,6 +1232,70 @@ h1, h2, h3 { font-family: var(--font-display); }
   .regal-filter .filter-toggle { display: none; }
 }
 
+/* „Weitere Filter" (#725): the metadata filters — playing time, complexity,
+   minimum age, categories, mechanics — on the session setup screen and in the
+   Regal. Collapsed at EVERY width, deliberately: a user who never opens it sees
+   a screen one summary row taller than before, and one who leaves a filter on
+   cannot forget it, because the badge stays on the closed summary.
+
+   A native <details>, so the open state, the keyboard behaviour and the
+   accessible name are the platform's. Both marker resets are needed — the
+   `list-style` one for the standard rendering, the ::-webkit- one for Safari,
+   which still ships the old pseudo-element. */
+.mfilter { margin: 2px 0 16px; }
+.mfilter__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: pointer;
+  list-style: none;
+}
+.mfilter__summary::-webkit-details-marker { display: none; }
+.mfilter__summary:hover { border-color: var(--brand-edge); }
+.mfilter__caret { font-size: var(--text-md); transition: transform var(--dur-base) var(--ease-out); }
+.mfilter[open] .mfilter__caret { transform: rotate(180deg); }
+/* Same accent fill + white text as `.filter-toggle__badge`, an audited pair, so
+   the count stays legible on every theme. */
+.mfilter__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: #fff;
+  font-size: 12px; /* glyph, not type */
+  font-weight: 700;
+}
+/* The explicit `display` above beats the UA sheet's `[hidden] { display: none }`,
+   so a no-active-filters badge would still show its "0" — the same trap
+   `.filter-chips[hidden]` records. */
+.mfilter__badge[hidden] { display: none; }
+.mfilter__body { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.mfilter__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+/* A plain class, NOT `.field__label`: this row's label sits beside its control
+   rather than above it, and `.field label`/`.field__label` is `display: block`
+   (.claude/rules/label-rows-lose-to-field-label.md). */
+.mfilter__label { font-family: var(--font-display); font-weight: 600; font-size: var(--text-sm); color: var(--ink); }
+.mfilter__range { display: flex; align-items: center; gap: 8px; }
+/* `min-width: 0` so a long option string cannot pin the row wider than its
+   column and push the page into horizontal scroll
+   (.claude/rules/flex-none-cancels-flex-wrap.md). */
+.mfilter__select { min-width: 0; }
+.mfilter__range .mfilter__select { flex: 0 1 auto; }
+.mfilter__group .field__label { margin-bottom: 6px; }
+.mfilter__chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
 /* ---- Buttons ----
    Chunky and pressable: a thicker bottom border acts as the button's "base";
    pressing pushes the face down onto it. The :active margin compensates the

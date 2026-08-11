@@ -354,9 +354,13 @@ public/
     member-colors.js the curated avatar palette — the single source of truth
                      lib/routes/members.js validates against (issue #420)
     draw-pool.js     which games a draw may pick from: the active-collection
-                     check and the player-range fit, required by lib/draw.js so
+                     check, the player-range fit and the filters over BGG's
+                     imported metadata (issue #725), required by lib/draw.js so
                      the setup screen's live preview and the real draw apply one
                      predicate (issue #634)
+    metadata-filter.js the „Weitere Filter" disclosure — playing time,
+                     complexity, minimum age, categories, mechanics — shared by
+                     the session setup screen and the Regal (issue #725)
     wish-expansion.js which game a wished EXPANSION is acquired onto: the base
                      games of this round its provider links name, and the
                      resulting attach / pick / create-the-base decision

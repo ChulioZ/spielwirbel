@@ -61,6 +61,16 @@ before assuming you have them all:
   hand-synced copy — `lib/draw.js` requires it and re-exports `isActiveGame`, so
   the route's import is unchanged.
 
+  **A THIRD predicate joined it in #725**: `fitsMetadataFilters`, over the
+  metadata BGG's import writes (#724). It is not an "active games" clause and
+  does not belong in the set below — it is listed here because it sits in the
+  same file and is applied at the same three sites (`drawPool`, the setup
+  screen's preview, the Regal's grid), so a `grep` that lands here needs to know
+  which of the two questions it is looking at. Its absent-value rule is the
+  *base game's*, not the expansion's: a game the provider knows nothing about
+  passes every filter. See
+  `.claude/rules/provider-metadata-is-a-filter-not-a-tag.md`.
+
   **`fitsPlayerCount` grew a second term in #653**: the range a game admits is
   now the base box's *union* the ranges of the expansions the round owns for it,
   so a 3–4 game with a 5–6 extension is drawn at six. It is still one edit in one
