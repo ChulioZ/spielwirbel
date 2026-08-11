@@ -77,12 +77,55 @@ exactly as if it had no cap. Measured at 1440×900 with a mid-height anchor:
 `min(78vh, 620px)` left the OK button **177px past the fold**; `min(45vh, 520px)`
 left it 0.
 
-So **do not copy `.popover--expansions`' 78vh into a new editor** — it is safe
-there only because its trigger sits low enough to flip above, i.e. by luck of the
-anchor rather than by construction. Derive the term from the viewport half
-(`h > (H − anchorH − 12)/2` is the dead-zone condition) and keep the `max()` floor
-at or above the sum of the children's own floors, or the cap can be tighter than
-what they need.
+Derive the term from the viewport half (`h > (H − anchorH − 12)/2` is the
+dead-zone condition) and keep the `max()` floor at or above the sum of the
+children's own floors, or the cap can be tighter than what they need.
+
+**`.popover--expansions` was NOT safe — #728 measured it and it was 78vh's own
+victim.** This file used to say its 78vh survived "by luck of the anchor"; the
+luck ran out one game page over. On the real editor at 1440×900 the card is
+**529px** against a 430px budget, and its OK button landed **96px past the
+fold**. Not a stubbed-anchor curiosity: sweeping the demo round's nine game
+pages, Codenames put the trigger inside the dead band at **51 of its 119**
+reachable scroll positions. It ships at `max(380px, min(45vh, 620px))` — card
+405px ending 32px above the fold, tick-list giving way 240 → 117, all nine pages
+clean. Fold-safe from ~799px of viewport height up, against ~1097px before.
+
+### The floor has a SECOND job, and it is the half that bit
+
+The floor is easy to read as only the degenerate-viewport guard (§"`min()` alone
+will collapse a scroll box"). It is also what stops the cap squeezing the card
+**below what its own children accept** — and the two failures look nothing alike:
+
+`.exp-pick` carries `min-height: 0` precisely so the cap can bite, so under the
+card's irreducible minimum the card does not shrink. Its tick-list keeps its own
+96px floor, spills out of `.exp-pick`, and renders **on top of** the free-text
+form — measured, **53px of overlap** at a 315px cap. So lowering a vh term
+without re-measuring the floor trades a fold problem for an overlap, which is
+strictly worse: the control is visible, looks fine in a screenshot, and is
+unusable.
+
+`.popover--expansions`' floor was **280px against a measured 371px minimum** —
+91px under, and wrong since #653. At 78vh that only bit under ~476px of viewport;
+at 45vh it would have bitten under ~825px, i.e. on ordinary laptops. So the bug
+was latent *because* the cap was too generous, and correcting the cap is exactly
+what would have detonated it.
+
+**Measure the minimum, don't sum the CSS.** Only 96 of those 371px is declared
+anywhere — the rest is rendered text and controls. Squeeze the card
+(`el.style.maxHeight = '0px'`) and read what the children insist on.
+`test/game-expansions.test.js` then binds the floor to the list's *declared*
+floor plus that measured remainder, so raising one without the other goes red.
+
+### When no cap can fix it
+
+A cap works only while the card's irreducible minimum fits the budget. The
+edition-cover editor does not: chrome 270px + the grid's own 160px floor = 430px
+against `(900 − 180 − 12) / 2 = 354px`, because „Bild ändern" **is** the 180px
+cover and a large anchor eats the room. Measured 534px tall, 110px past the fold,
+on all nine pages at scroll 0. That one needs `place()` to clamp the card to the
+room it has — **#739** — not a smaller number. Check the minimum against the
+budget *before* reaching for a cap.
 
 Where several children can grow, **each** needs `min-height` + `overflow-y: auto`
 + `overscroll-behavior: contain`, and the shrink order is a real decision: the
