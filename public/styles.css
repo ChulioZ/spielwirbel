@@ -3624,8 +3624,24 @@ body.auth-screen .terms-banner { display: none; }
    on a degenerate viewport and collapses the card to nothing with its own
    children rendering outside it (measured on #653). 240px is what the children's
    own floors below add up to, so the cap can never be tighter than they need. */
-.popover--tags {
-  max-width: 340px;
+/* 480px rather than the 340px this shipped at (#706). A round's tag names are
+   short, so the width buys ROWS rather than characters: measured at 1440x900
+   with a 12-tag round, the chip list fell from 5 wrapped lines (188px) to 3
+   (129px), and the create row — input + „Symbol" + „Hinzufügen" — stopped
+   wrapping, which is what the `flex-wrap` two rules below exists to survive.
+
+   Widening a capped card is also the one axis that is free here: it makes the
+   content SHORTER, so it can only move the card further inside the half-viewport
+   ceiling the cap below is derived from. Measured card height at 1440x900:
+   405px -> 284px.
+
+   Compounded with `.popover` for the reason `.popover.has-covers` already is:
+   the base declares `max-width: 300px` at the SAME (0,1,0) specificity, so an
+   uncompounded `.popover--tags` wins only because it happens to sit later in the
+   file. Moving either block would silently put the editor back to 300px, with
+   nothing red (.claude/rules/responsive-content-width.md, "your rule will lose"). */
+.popover.popover--tags {
+  max-width: 480px;
   max-height: max(240px, min(45vh, 520px));
 }
 :is(.popover--tags, .editor--tags) .filter-chips { margin-bottom: 10px; }
@@ -3679,8 +3695,42 @@ body.auth-screen .terms-banner { display: none; }
    nothing and leaves its own children rendering outside it — measured, 18px
    tall with the OK button 200px below its bottom edge. Same trap, same remedy
    as `.cover-picker__grid` (.claude/rules/anchored-popover-is-placed-once.md). */
-.popover--expansions {
-  max-width: 360px;
+/* 540px rather than the 360px this shipped at (#706), and the WIDTH is what
+   makes the tick-list usable — not the height, which is already spent (see the
+   note on the cap below). A candidate row is a `.ds-row`, so a title that does
+   not fit takes a second and third line. Measured at 1440x900 over Carcassonne's
+   real German candidate names:
+
+     width   row heights (px)                  rows inside the 240px list box
+     360     72,72,45,72,45,72,45,72           3
+     520     72,45,45,45,45,72,45,45           4
+     540     72,45,45,45,45,45,45,45           4
+     560     45,45,45,45,45,45,45,45           4
+
+   540 is where all but the single longest name („Erweiterung 1 – Wirtshäuser und
+   Kathedralen") collapses to one line; the total height of those eight entries
+   falls 537px -> 429px. Past it the return is one title per 20px, so this stops
+   at the top of the range #706 proposed rather than chasing the longest name in
+   board gaming.
+
+   `place()` clamps horizontally (`maxLeft`, 8px margin), so a card wider than the
+   room beside its anchor slides into view rather than off-screen — the width has
+   no equivalent of the vertical dead zone below.
+
+   Compounded with `.popover` for the same reason as `.popover.popover--tags`
+   above: at (0,1,0) it merely ties with the base's `max-width: 300px` and wins
+   on source order alone. */
+.popover.popover--expansions {
+  max-width: 540px;
+  /* NOT raised, deliberately, and #706 asked for it to be — see the measurement
+     recorded on #728. `place()` can only count on HALF the viewport (it puts the
+     card wholly above or wholly below its anchor), i.e. 424px at 1440x900. This
+     card is already 529px there with the 240px list cap below, so the 620px term
+     is nearly dead: the list cap is what actually holds the height down, and
+     every px added to it is a px further past a fold that a page scroll cannot
+     recover (a scroll closes the popover). Raising either number to "use the
+     viewport" would deepen a defect that is already live rather than fix one.
+     The widening above is the part that adds rows without adding height. */
   max-height: max(280px, min(78vh, 620px));
 }
 :is(.popover--expansions, .editor--expansions) .exp-pick {
@@ -3994,8 +4044,62 @@ body.auth-screen .terms-banner { display: none; }
 /* The floating cover editor is 300px by default, which fits two tiles and no
    caption worth reading. Compounded so it beats `.popover` on SPECIFICITY
    rather than on source order (.claude/rules/label-rows-lose-to-field-label.md).
-   The sheet variant below 860px is already full width and needs nothing. */
-.popover.has-covers { max-width: 380px; }
+   The sheet variant below 860px is already full width and needs nothing.
+
+   520px since #706. The grid is `auto-fill, minmax(92px, 1fr)`, so width turns
+   straight into COLUMNS and the bounded grid shows proportionally more editions
+   with no extra height at all. Measured at 1440x900, 40 candidate covers:
+
+     380px -> 3 columns,  6 tiles visible
+     440px -> 4 columns,  8 tiles
+     520px -> 5 columns, 10 tiles
+
+   `.cover-picker__grid`'s own cap stays where it is, and that is the same call
+   the expansion editor makes above: this card carries almost no chrome, so it
+   measures 352px against a half-viewport ceiling of 424px — only 72px of slack.
+   Raising the grid's 264px term to `min(38vh, 420px)` takes the card to 430px,
+   i.e. straight through the ceiling, which is what #728 asks to be checked here.
+   Width is the axis with room; height is not. */
+.popover.has-covers { max-width: 520px; }
+/* …and a `max-width` ALONE moves nothing here, which is the trap this pair
+   exists to record. The popover is absolutely positioned, so it is shrink-to-fit:
+   its width comes from the widest child's max-content — „Titelbild von
+   BoardGameGeek holen" — and the grid contributes only ONE track, because
+   `auto-fill`'s repeat count is 1 under intrinsic sizing. Measured: the card sat
+   at 351px with `max-width: 380px` and stayed at 351px when that was raised to
+   520px. A cap the box never reaches is a no-op that reads as a shipped change.
+
+   So the grid is given a floor, and THAT is what makes the card claim its width;
+   `max-width` above is what bounds the result. Measured at 1440x900 with 40
+   editions: 351px/3 columns/6 tiles -> 520px/5 columns/10 tiles.
+
+   Popover-only, because the sheet and the add-game form are already full width.
+   Four columns rather than five, so the floor keeps ~108px of clearance under
+   the 520px cap — a floor that exceeds the cap would overflow the card instead
+   of widening it. `.cover-picker__body` carries no author `display` rule, so its
+   `hidden` attribute really does hide it (.claude/rules/hidden-attribute-vs-display-rule.md)
+   and a COLLAPSED picker contributes nothing: the card stays 351px until the
+   user opens the grid, then `setBody`'s repositionPopover() re-places it.
+
+   GATED on there being a fifth cover, because most games are not Catan and an
+   ungated floor pays for the rich case with the common one. `auto-fill` keeps
+   empty tracks by design (that is why it is not `auto-fit`), so a floor applied
+   to a sparse edition list just pads the card out with them. Measured dead space
+   to the right of the last tile, ungated vs gated:
+
+     covers   1      2      4     5+
+     ungated  416px  315px  112px  11px
+     gated    236px  123px   11px  11px   (= untouched below the threshold)
+
+   Five is the column count the widened card yields, so the floor applies exactly
+   when a full wide row can be filled. `:has()` is live, and it has to be: the
+   grid is filled ASYNCHRONOUSLY by setBody after the /covers hop, so the rule
+   must start matching when the fifth tile lands rather than at build time —
+   verified by appending tiles one at a time (0px through four, 392px on the
+   fifth). */
+.popover.has-covers .cover-picker__grid:has(.cover-pick:nth-child(5)) {
+  min-width: calc(92px * 4 + 8px * 3);
+}
 .ds-row__meta .score-pill { position: static; }
 .ds-row__meta .sort-flag { margin: 0; }
 

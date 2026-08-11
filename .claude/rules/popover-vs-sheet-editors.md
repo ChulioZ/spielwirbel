@@ -84,10 +84,16 @@ One builder filling two containers means every inner rule has to match both.
 `:is(.popover--tags, .editor--tags) .pp-row` keeps the original **(0,2,0)**
 specificity — `:is()` takes the specificity of its most specific argument — so
 nothing else in the cascade shifts. Only the rules that size the *floating card*
-(`.popover--tags { max-width: 340px }`, `.popover--image { min-width: 220px }`)
-stay popover-only; they are meaningless for a sheet. Scoping a layout rule to one
-presentation leaves the other unstyled, which reads as a broken layout rather
-than a missing selector.
+(`.popover.popover--tags { max-width: 480px }`, `.popover--image { min-width:
+220px }`) stay popover-only; they are meaningless for a sheet. Scoping a layout
+rule to one presentation leaves the other unstyled, which reads as a broken
+layout rather than a missing selector.
+
+Those card rules are **compounded with `.popover`** since #706, and that is not
+cosmetic: the base declares `max-width: 300px` at the same (0,1,0) specificity,
+so an uncompounded `.popover--tags` wins on source order alone. Note too that a
+`max-width` there does not by itself make the card any wider — see
+`.claude/rules/popover-width-is-shrink-to-fit.md`.
 
 **The card's cap and whatever gives way under it are ONE unit, and the whole unit
 is popover-only** (#722 — `.popover--tags`' `max-height` plus the scroll boxes on

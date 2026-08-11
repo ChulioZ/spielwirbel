@@ -445,7 +445,9 @@ test('… and re-places even when the lookup FAILS or comes back empty', async (
 const { bodyOf } = require('./support/css');
 
 test('the anchored expansion editor is capped, WITH a floor', () => {
-  const card = bodyOf('.popover--expansions');
+  // Compounded with `.popover` since #706, so the card's sizing beats the base's
+  // `max-width: 300px` on specificity rather than on source order.
+  const card = bodyOf('.popover.popover--expansions');
   assert.ok(card, 'the rule exists');
   assert.match(card, /max-height:\s*max\(/,
     'a bare min(…vh, …) computes to 0 on a degenerate viewport and collapses the card '
