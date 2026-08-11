@@ -438,9 +438,12 @@ test('… and re-places even when the lookup FAILS or comes back empty', async (
 
 /* ------------ the editor card is bounded by the VIEWPORT (#653) -------------
    Asserted over the stylesheet text, because jsdom applies no external
-   stylesheet and the Claude Code Browser pane's viewport height is degenerate —
-   there `78vh` resolves to 0, which is precisely the failure the floor exists
-   to prevent, so the pane cannot measure the real behaviour either. */
+   stylesheet and an unresized Browser pane's viewport height is degenerate —
+   there `45vh` resolves to 0, which is precisely the failure the floor exists
+   to prevent. (`resize_window` DOES clear that, so the real geometry behind the
+   two numbers below was measured in a browser — see #728 and
+   `.claude/rules/preview-pane-paint-artifacts.md`. What cannot be measured
+   there is the stylesheet's own text, which is what these guard.) */
 
 const { bodyOf } = require('./support/css');
 
@@ -454,6 +457,43 @@ test('the anchored expansion editor is capped, WITH a floor', () => {
     + 'to nothing, leaving its own children rendering outside it — measured at 18px tall '
     + 'with the OK button 200px past its bottom edge');
   assert.match(card, /vh/, 'and it must actually track the viewport, not just a constant');
+});
+
+test('the cap fits the room place() can actually count on — half the viewport', () => {
+  /* `place()` puts the card wholly above or wholly below its anchor and falls
+     back to BELOW when neither side fits, so the room it is guaranteed is the
+     larger of the two — worst case, an anchor in the vertical middle, half the
+     viewport. Measured on the real editor at 1440x900 (#728): at the 78vh this
+     shipped with, the card was 529px against a 430px budget and its OK button
+     landed 96px past a fold a page scroll cannot recover, on 51 of Codenames'
+     119 reachable scroll positions. At 45vh the card is 405px and every game
+     page in the sweep is clean. */
+  const vh = Number((bodyOf('.popover.popover--expansions').match(/min\(\s*(\d+)vh/) || [])[1]);
+  assert.ok(vh > 0, 'the cap has no vh term to check');
+  assert.ok(vh <= 50, `the card may claim at most half the viewport, not ${vh}vh`);
+});
+
+test('the max() floor clears what the card\'s own children insist on', () => {
+  /* The floor is not only the degenerate-viewport guard above. `.exp-pick`
+     carries `min-height: 0` so the cap can bite, so a floor BELOW the card's
+     irreducible minimum does not shrink the card — the tick-list spills out of
+     `.exp-pick` and renders on top of the free-text form (measured, 53px of
+     overlap at a 315px cap). Shipped at 280px against a 371px minimum, which
+     only bit under ~476px of viewport at 78vh; at 45vh it would have bitten
+     under ~825px.
+
+     FIXED_CHROME is the measured rest of the card at 1440x900 — the tick-list's
+     head (21) + its margin (10) + the free-text form (157) + the OK button (57)
+     + padding and gaps (30). Deriving the bound from the list's OWN declared
+     floor is the point: raise that and this goes red rather than silently
+     re-opening the overlap. */
+  const FIXED_CHROME = 275;
+  const floor = Number(bodyOf('.popover.popover--expansions').match(/max-height:\s*max\(\s*(\d+)px/)[1]);
+  const listFloor = Number(bodyOf(':is(.popover--expansions, .editor--expansions) .exp-pick__body')
+    .match(/min-height:\s*(\d+)px/)[1]);
+  assert.ok(floor >= listFloor + FIXED_CHROME,
+    `floor ${floor}px is under the card's own minimum (${listFloor} + ${FIXED_CHROME}) — `
+    + 'squeezed below it the tick-list overlaps the free-text form instead of shrinking');
 });
 
 test('the tick-list is the part that gives way, so the OK button stays visible', () => {

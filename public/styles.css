@@ -3690,11 +3690,12 @@ body.auth-screen .terms-banner { display: none; }
    which pushed the OK button ~100px below the bottom of an 800px viewport.
    Only `.popover--expansions`: the sheet variant scrolls itself.
 
-   The `max()` floor is NOT decoration: a bare `min(78vh, 620px)` computes to
+   The `max()` floor is NOT decoration: a bare `min(45vh, 620px)` computes to
    **0** wherever the viewport height is degenerate, which collapses the card to
    nothing and leaves its own children rendering outside it — measured, 18px
    tall with the OK button 200px below its bottom edge. Same trap, same remedy
-   as `.cover-picker__grid` (.claude/rules/anchored-popover-is-placed-once.md). */
+   as `.cover-picker__grid` (.claude/rules/anchored-popover-is-placed-once.md).
+   The floor has a SECOND job, and #728 found it the hard way — see the rule. */
 /* 540px rather than the 360px this shipped at (#706), and the WIDTH is what
    makes the tick-list usable — not the height, which is already spent (see the
    note on the cap below). A candidate row is a `.ds-row`, so a title that does
@@ -3722,16 +3723,38 @@ body.auth-screen .terms-banner { display: none; }
    on source order alone. */
 .popover.popover--expansions {
   max-width: 540px;
-  /* NOT raised, deliberately, and #706 asked for it to be — see the measurement
-     recorded on #728. `place()` can only count on HALF the viewport (it puts the
-     card wholly above or wholly below its anchor), i.e. 424px at 1440x900. This
-     card is already 529px there with the 240px list cap below, so the 620px term
-     is nearly dead: the list cap is what actually holds the height down, and
-     every px added to it is a px further past a fold that a page scroll cannot
-     recover (a scroll closes the popover). Raising either number to "use the
-     viewport" would deepen a defect that is already live rather than fix one.
-     The widening above is the part that adds rows without adding height. */
-  max-height: max(280px, min(78vh, 620px));
+  /* 45vh, down from the 78vh this shipped at, and a 380px floor, up from 280px.
+     #706 asked for the cap to be RAISED; #728 measured it instead and both
+     numbers were wrong in the same direction — too much height.
+
+     `place()` can only count on HALF the viewport (it puts the card wholly above
+     or wholly below its anchor and falls back to below), so the room it is
+     guaranteed is `(H - anchorH - 12) / 2` — 430px at 1440x900 for this 27px
+     trigger. Measured on the real editor with a 12-candidate list: the card is
+     **529px**, placed at top 476, and its OK button landed **96px past the
+     fold** — unreachable, because a page scroll closes a popover outright.
+     Not a stubbed-anchor curiosity either: sweeping the demo round's nine game
+     pages, Codenames put the trigger inside that dead band at **51 of its 119**
+     reachable scroll positions. At 45vh the card is 405px and all nine are
+     clean; the tick-list gives way 240px -> 117px and the card ends 32px above
+     the fold.
+
+     The 380px floor is the half #722's rule warned about and nothing had
+     checked: the floor must be >= the sum of the children's own floors, and
+     280px was **91px under** the card's measured 371px minimum (list floor 96 +
+     head 21 + margin 10 + the free-text form 157 + the button 57 + 30 chrome).
+     `.exp-pick` carries `min-height: 0` so the cap can bite, so below that
+     minimum the card does not shrink — its tick-list spills out of `.exp-pick`
+     and lands **on top of** the free-text form (measured: 53px of overlap at a
+     315px cap). At 78vh that only bit under ~476px of viewport; at 45vh it
+     would have bitten under ~825px, i.e. on ordinary laptops. Lower the vh term
+     and this floor without re-measuring the children and you trade a fold
+     problem for an overlap.
+
+     Fold-safe from ~799px of viewport height up (was ~1097px). Below that the
+     card sits at its 380px floor and no cap can do better — the remaining fix is
+     clamping in `place()` itself (#739), not a smaller number here. */
+  max-height: max(380px, min(45vh, 620px));
 }
 :is(.popover--expansions, .editor--expansions) .exp-pick {
   margin-bottom: 10px;
@@ -4054,12 +4077,26 @@ body.auth-screen .terms-banner { display: none; }
      440px -> 4 columns,  8 tiles
      520px -> 5 columns, 10 tiles
 
-   `.cover-picker__grid`'s own cap stays where it is, and that is the same call
-   the expansion editor makes above: this card carries almost no chrome, so it
-   measures 352px against a half-viewport ceiling of 424px — only 72px of slack.
-   Raising the grid's 264px term to `min(38vh, 420px)` takes the card to 430px,
-   i.e. straight through the ceiling, which is what #728 asks to be checked here.
-   Width is the axis with room; height is not. */
+   `.cover-picker__grid`'s own cap stays where it is — but NOT for the reason
+   this comment gave until #728, which was measured and wrong. It claimed the
+   card "carries almost no chrome, so it measures 352px against a half-viewport
+   ceiling of 424px". 352 was the card's WIDTH (see the shrink-to-fit note
+   below); its height, with the grid open, is **534px**, and this card has no
+   `max-height` at all — only the grid inside it is bounded.
+
+   Measured at 1440x900 with the grid expanded: chrome 270px (two 57px buttons,
+   the toggle, the 54px „Bild entfernen" and the hint) + a 264px grid, placed at
+   top 476, so the card ran **110px past the fold** and „Bild entfernen" was
+   unreachable. Every one of the demo round's nine game pages was in that state
+   at **scroll 0**, i.e. on arrival, with no scrolling needed.
+
+   A cap is not the instrument here, which is why #728 fixed the expansion
+   editor and left this one: the chrome alone (270px) plus the grid's own 160px
+   floor is 430px, against a budget of `(900 - 180 - 12) / 2 = 354px` — the
+   „Bild ändern" trigger IS the 180px cover, so the anchor eats the room a
+   smaller trigger would leave. No `max-height` and no vh term can get under
+   that; it needs `place()` to clamp the card to the room it has, or an editor
+   with less chrome. Tracked as #739. Width is still the axis with room. */
 .popover.has-covers { max-width: 520px; }
 /* …and a `max-width` ALONE moves nothing here, which is the trap this pair
    exists to record. The popover is absolutely positioned, so it is shrink-to-fit:
