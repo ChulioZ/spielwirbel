@@ -126,8 +126,8 @@ The rest — the positional wire format, the party-count arithmetic and why
 - **`guests` is absent, never `[]`.** The route spreads
   `...(guests.length ? { guests } : {})`; the contract suite pins the absent key
   in both backends (`.claude/rules/postgres-backend.md`). Unlike
-  `round.providers` there is **no** meaningful third state — absent and `[]` read
-  the same (`.claude/rules/round-provider-config.md`).
+  the retired `round.providers` setting there is **no** meaningful third state —
+  absent and `[]` read the same.
 - **`renderSeatPicker` grew `extraCount` + `refreshSeats`.** The centre count has
   to include guests, but the guest list lives outside the picker — so the picker
   takes a *function* and exposes its own `render` on the returned element for the

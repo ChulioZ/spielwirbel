@@ -12,8 +12,8 @@ round into another and merges the two rounds' tags by name. Three parts of it
 are non-obvious, and each fails *quietly* — wrong order, wrong count, or a
 deadlock under concurrency, none of which throws.
 
-**`gameIds` is the #402 subset, and absent ≠ empty** (the same discipline as
-`.claude/rules/round-provider-config.md`): null/undefined moves the **whole
+**`gameIds` is the #402 subset, and absent ≠ empty** (the same discipline the
+retired per-round `providers` setting followed): null/undefined moves the **whole
 shelf** — #253's behaviour, still what an old client sends — while an array
 moves exactly those games. The route rejects `[]` at the schema (nothing to
 move is a client error, not a no-op) and dedupes before calling down. Membership

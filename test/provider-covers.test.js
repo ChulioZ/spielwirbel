@@ -16,6 +16,17 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { providerCoverUrl, isAllowedImageUrl, imageCspSources } = require('../lib/providers');
 
+// Covers already stored on real shelves, on hosts no registered provider vouches
+// for since #744 retired the four digital storefronts. Kept as a named list
+// because the two halves of this file now say OPPOSITE things about them: they
+// may still render, and they may no longer be written.
+const LEGACY_COVERS = [
+  'https://image.api.playstation.com/vulcan/x.png',
+  'https://store-images.s-microsoft.com/image/apps.1.jpg',
+  'https://www.nintendo.com/eu/media/images/mk8.jpg',
+  'https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg',
+];
+
 test('providerCoverUrl keeps an allowlisted https cover URL verbatim', () => {
   const urls = [
     'https://cf.geekdo-images.com/abc/pic123.jpg',
@@ -23,12 +34,37 @@ test('providerCoverUrl keeps an allowlisted https cover URL verbatim', () => {
     // quoted url('…') the frontend emits, and rejecting them silently dropped
     // every BGG cover — caught only in a browser, since nothing logs it.
     'https://cf.geekdo-images.com/W3Bsga_uLP9kO91gZ7H8yw__itemrep/img/IzYEUm_gWFuRFOL8gQYqGm5gU6A=/fit-in/246x300/filters:strip_icc()/pic2419375.jpg',
-    'https://image.api.playstation.com/vulcan/x.png',
-    'https://store-images.s-microsoft.com/image/apps.1.jpg',
-    'https://www.nintendo.com/eu/media/images/mk8.jpg',
-    'https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg',
   ];
   for (const u of urls) assert.equal(providerCoverUrl(u), u);
+});
+
+/*
+ * #744's load-bearing invariant, and the one nothing else guards.
+ *
+ * The write gate and the render gate used to be the same list, derived from the
+ * live registry. Unregistering the four storefront modules therefore did not
+ * merely stop new storefront covers being stored — it silently revoked img-src
+ * for the ~75 covers ALREADY on people's shelves, which go blank with nothing
+ * but a console violation. So the two questions are separate now, and they must
+ * answer differently for exactly these hosts.
+ */
+test('a stored storefront cover still RENDERS after its provider was retired', () => {
+  const sources = imageCspSources();
+  const covered = (h) => sources.some((s) => s === h || (s.startsWith('*.') && h.endsWith(s.slice(1))));
+  for (const url of LEGACY_COVERS) {
+    assert.ok(covered(new URL(url).hostname), `${url} must stay on img-src`);
+  }
+});
+
+test('…but can no longer be STORED — the write gate follows the registry', () => {
+  // The other direction, and it is what stops the test above being satisfied by
+  // simply re-registering the providers. A cover we may render is not a cover we
+  // may accept: nothing offers these hosts any more, so a URL naming one now
+  // arrives only from a hand-rolled request.
+  for (const url of LEGACY_COVERS) {
+    assert.equal(isAllowedImageUrl(url), false, `${url} must no longer pass the write gate`);
+    assert.equal(providerCoverUrl(url), null);
+  }
 });
 
 test('providerCoverUrl refuses a host no provider vouches for', () => {
@@ -71,10 +107,10 @@ test('providerCoverUrl refuses junk without throwing', () => {
 test('every hotlinkable host is renderable under the CSP', () => {
   // A stored hotlink is only useful if img-src permits it — the same coupling
   // test/security.test.js asserts from the app side, checked here from the
-  // provider side so a new provider can't ship a cover the browser blocks.
+  // provider side so a new provider can't ship a cover the browser blocks. This
+  // is the REGISTRY half; the legacy half is the pair of tests above.
   const sources = imageCspSources();
-  const hosts = ['cf.geekdo-images.com', 'image.api.playstation.com', 'store-images.s-microsoft.com'];
-  for (const h of hosts) {
+  for (const h of ['cf.geekdo-images.com']) {
     const ok = sources.some((s) => s === h || (s.startsWith('*.') && h.endsWith(s.slice(1))));
     assert.ok(ok, `${h} must be covered by img-src`);
   }

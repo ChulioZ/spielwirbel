@@ -78,11 +78,13 @@ pick pay that for a picker most picks never open, so `covers()` is its own
 capability and the client fetches only when the grid is expanded. `test/lookup.test.js`
 pins that opening the editor issues nothing.
 
-It is an **optional** capability, like `collection()`: the four storefronts expose
-no per-edition image set, so `lib/routes/lookup.js` answers `400 covers_unsupported`
-for a provider without one — after the round's provider setting is enforced, so a
-disabled provider still gets `403 provider_disabled` and never reveals what it
-can do.
+It is an **optional** capability, like `collection()`: `lib/routes/lookup.js`
+answers `400 covers_unsupported` for a provider without one, **after** the
+registry lookup — so an unknown or retired id gets the plain `400 Unknown
+provider` and never reveals what a provider could or could not do. (Until #744
+that ordering also hid the per-round provider setting's `403`; the setting is
+gone, the ordering is not.) `test/lookup.test.js` registers a synthetic
+capability-less provider to reach the branch, because BGG has every capability.
 
 ## The import screen is the one place a client-supplied cover is accepted (#519)
 

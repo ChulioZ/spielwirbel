@@ -175,29 +175,21 @@ test('PATCH ignores retired platform/duration/type fields (#242)', async () => {
   assert.equal('type' in res.body, false);
 });
 
-test('POST games stores a provider source link', async () => {
-  const round = await createRound(request);
-  const res = await addGame(round.id, {
-    title: 'The Witcher 3',
-    sourceProvider: 'psstore',
-    sourceExternalId: 'UP4497-PPSA10407_00-0000000000000001',
-    sourceUrl: 'https://store.playstation.com/de-de/product/UP4497-PPSA10407_00-0000000000000001',
-  });
-  assert.equal(res.status, 201);
-  assert.deepEqual(res.body.source, {
-    provider: 'psstore',
-    externalId: 'UP4497-PPSA10407_00-0000000000000001',
-    url: 'https://store.playstation.com/de-de/product/UP4497-PPSA10407_00-0000000000000001',
-  });
-});
-
 test('POST games ignores an unknown source provider and a non-http source url', async () => {
   const round = await createRound(request);
   const bad = await addGame(round.id, { sourceProvider: 'evil', sourceExternalId: '1' });
   assert.equal(bad.body.source, undefined);
 
+  // A RETIRED provider (#744) is an unknown id like any other, so a stale tab
+  // cannot mint a fresh storefront link — the four are checked as a set rather
+  // than one of them standing in for the rest.
+  for (const id of ['psstore', 'steam', 'nintendo', 'xbox']) {
+    const retired = await addGame(round.id, { title: `stale ${id}`, sourceProvider: id, sourceExternalId: '1' });
+    assert.equal(retired.body.source, undefined, `${id} must not mint a source link`);
+  }
+
   const noUrl = await addGame(round.id, {
-    sourceProvider: 'psstore',
+    sourceProvider: 'bgg',
     sourceExternalId: 'X',
     sourceUrl: 'javascript:alert(1)',
   });
@@ -222,13 +214,11 @@ test('POST games stores a BoardGameGeek source link', async () => {
 
 // Provider cover art is HOTLINKED, never re-hosted (#172): the provider's own
 // https URL is what gets stored, and the server must not fetch a single byte.
-// One case per provider image host, so the allowlist stays covered.
+// One case per provider image host, so the allowlist stays covered. It listed
+// five until #744 — the four storefront hosts are now render-only and refused by
+// the write gate, which test/provider-covers.test.js pins from both sides.
 const COVER_HOSTS = [
   ['BoardGameGeek', 'https://cf.geekdo-images.com/x/pic.jpg'],
-  ['Steam', 'https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg'],
-  ['Nintendo', 'https://www.nintendo.com/eu/media/images/mk8_square.jpg'],
-  ['Xbox', 'https://store-images.s-microsoft.com/image/apps.9999.infinite.jpg'],
-  ['PlayStation', 'https://image.api.playstation.com/vulcan/witcher.png'],
 ];
 
 for (const [label, imageUrl] of COVER_HOSTS) {

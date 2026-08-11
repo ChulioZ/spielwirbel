@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const { app } = require('./helpers');
 const { createApp } = require('../lib/app');
-const { imageCspSources } = require('../lib/providers');
+const { imageCspSources, LEGACY_COVER_HOSTS } = require('../lib/providers');
 
 test('helmet sets security headers on every response', async () => {
   const res = await request(app).get('/');
@@ -29,14 +29,24 @@ test('helmet sets security headers on every response', async () => {
   assert.match(csp, /style-src [^;]*'unsafe-inline'/);
   assert.match(csp, /img-src [^;]*data:/);
   assert.doesNotMatch(csp, /upgrade-insecure-requests/);
-  // Provider cover hosts are render-allowed on img-src, mirroring the host
-  // allowlist (isAllowedImageUrl) so provider covers show in the add-game/link
-  // previews and lookup thumbnails (#179) — and, since #172, so that SAVED
-  // covers render at all, since they are hotlinked rather than re-hosted.
+  // Cover hosts are render-allowed on img-src, so provider covers show in the
+  // add-game/link previews and lookup thumbnails (#179) — and, since #172, so
+  // that SAVED covers render at all, since they are hotlinked rather than
+  // re-hosted.
   const imgSrc = csp.match(/img-src ([^;]*)/)[1];
   const sources = imageCspSources();
-  assert.ok(sources.length > 0, 'there are provider image hosts to allow');
+  assert.ok(sources.length > 0, 'there are cover image hosts to allow');
   for (const src of sources) assert.ok(imgSrc.includes(src), `img-src lists ${src}`);
+
+  // …and the retired storefronts' hosts are among them, checked HERE against
+  // the served header rather than only against imageCspSources() — the point of
+  // #744's split is that the app's real CSP still permits covers whose provider
+  // is gone, and a test that only compared the header to the function would
+  // agree with itself while every one of those covers went blank.
+  assert.ok(LEGACY_COVER_HOSTS.length > 0, 'the frozen legacy list is not empty');
+  for (const host of LEGACY_COVER_HOSTS) {
+    assert.ok(imgSrc.includes(host), `img-src still lists the legacy cover host ${host}`);
+  }
 });
 
 // Structural truth-pin for the footer's "no tracking, no ads, no third-party

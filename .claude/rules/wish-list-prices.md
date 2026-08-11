@@ -1,7 +1,6 @@
 ---
 paths:
   - "lib/prices/**"
-  - "lib/providers/steam.js"
   - "lib/routes/games.js"
   - "public/js/views-round-detail.js"
   - "test/prices*.test.js"
@@ -11,8 +10,10 @@ paths:
 # Wish-list prices (#679): four properties of the aggregator that fail SILENTLY
 
 `lib/prices/` answers "what does this wished-for game cost right now" from the
-Brettspielpreise.de / BoardGamePrices API (board games, keyed on the BGG id) and
-from Steam's `price_overview`. Everything below was measured live on 2026-08-07
+Brettspielpreise.de / BoardGamePrices API (board games, keyed on the BGG id).
+There was a second source — Steam's `price_overview` — until #744 retired the
+four digital storefronts; a Steam-linked game is now just a game whose provider
+has no price source. Everything below was measured live on 2026-08-07
 against Ark Nova (`eid=342942`) and Catan (`eid=13`); each item produces a
 **plausible wrong price** rather than an error, which is why the fixture in
 `test/prices-boardgameprices.test.js` is a real capture and not a hand-written
@@ -71,16 +72,17 @@ testing this must put GB first in `versions.lang` (the live order) — DE-first
 would satisfy the assertion by array order, the same anti-vacuous shape as §1's
 inverted offer counts.
 
-## Why this is NOT a sixth entry in `lib/providers/`
+## Why this is NOT an entry in `lib/providers/`
 
-Those five answer *which game is this* and are wired into the add-game dropdown
-and `round.providers` (`.claude/rules/add-game-lookup-provider.md`). A price
-source answers a different question, and putting one in that registry would offer
-it in the lookup menu and let a round's provider setting silently switch pricing
-off. Steam is the one module in both trees: the price *parsing* lives in
-`lib/providers/steam.js` next to `parsePlayers` (same response body), the price
-*source* in `lib/prices/steam.js`. Its `price()` is an optional capability like
-BGG's `collection()`/`covers()`, not part of the lookup contract.
+Those answer *which game is this* and are wired into the add-game dropdown
+(`.claude/rules/add-game-lookup-provider.md`). A price source answers a different
+question, and putting one in that registry would offer it in the lookup menu.
+
+Steam used to be the one module in **both** trees — the price *parsing* beside
+`parsePlayers` in the provider (same response body), the price *source* in its
+own module under `lib/prices/` — which is worth remembering as the shape a
+future source might take: a `price()` there would be an optional capability like BGG's
+`collection()`/`covers()`, never part of the lookup contract.
 
 ## The cache TTL is per hop, and the shared one must not move
 
@@ -88,13 +90,18 @@ Their terms require caching for **at least an hour**; `lib/provider-cache.js`'s
 shared TTL is ten minutes. `cachedIf` takes an optional `ttlMs` for that reason.
 Do not raise the shared constant instead — BGG's `202` "queued, come back"
 collection answer must not gain an hour of life
-(`.claude/rules/bgg-collection-import.md` §3), and the storefront hops were never
+(`.claude/rules/bgg-collection-import.md` §3), and the lookup hops were never
 designed for one.
 
 `fetchedAt` is stamped **inside** the cache entry, so a cached answer reports when
 the price was really retrieved. That timestamp plus the „Preise können sich
 geändert haben" note are the whole mitigation for a stale upstream — nothing in
 CI can detect an aggregator that stopped updating.
+
+The renderer has **one** disclosure since #744, not one per source
+(`price.sourceSteam` went with the module). If a second source ever lands, the
+branch comes back with it — a statement that derives from the aggregator must not
+be printed under a price that came from somewhere else.
 
 ## An outage taught two things the first cut got wrong (2026-08-07)
 
@@ -119,8 +126,12 @@ Two properties of the cooldown are load-bearing and each fails silently:
 
 - **It is keyed by source, not by game.** An upstream that is down is down for
   every game, so a per-game key still issues one request per wished game — the
-  cost this exists to remove. Per source is also what keeps Steam answering while
-  the aggregator is out.
+  cost this exists to remove. Per source is also what would keep a second source
+  answering while the aggregator is out. **With one source registered those two
+  implementations are behaviourally identical**, so `test/prices.test.js` pins
+  only the half that is still observable (four games, one upstream call) and says
+  in place of the deleted spec that the rest returns when a second source does.
+  Don't add a test for it in the meantime: it would be green either way.
 - **It is checked INSIDE the cache loader, never before the cache lookup.** A
   price we already hold is still a good price and must keep being served while
   its source is out; checking first would take prices away from exactly the games
@@ -154,6 +165,7 @@ a `fetchedAt` footnote. Their terms were read and permit it. See
 **Related:** `.claude/rules/add-game-lookup-provider.md` (the registry this stays
 out of, and the "never hit the network in a test" shape),
 `.claude/rules/keep-legal-docs-current.md` (why §8 of the policy and `vvt.md`
-row 21 shipped in the same PR), `.claude/rules/storefront-lookup-locale.md` §1
-(the allowlist shape `resolveMarket` follows — destination and currency reach a
-fetched URL's query string).
+row 21 shipped in the same PR),
+`.claude/rules/allowlist-request-values-that-reach-a-url.md` (the allowlist shape
+`resolveMarket` follows — destination and currency reach a fetched URL's query
+string).

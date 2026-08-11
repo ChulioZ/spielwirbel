@@ -85,8 +85,8 @@ So the key is `bgg:collection:<status>:<handle>`, a spec needs its own handle
 
 The status is an **allowlist lookup, never interpolated** (`COLLECTION_STATUS`, a
 `Map` so `__proto__` reaches nothing): it lands in a fetched URL's query string,
-i.e. the `resolveLocale` shape in
-`.claude/rules/storefront-lookup-locale.md` §1.
+i.e. the allowlist shape in
+`.claude/rules/allowlist-request-values-that-reach-a-url.md`.
 
 Two things about the wishlist import that are easy to get backwards: it is
 **silent** (no `games_imported`, no `trackEvent`, no feed event — the group has
@@ -185,10 +185,9 @@ browser contacts nothing new.
   parents hop never ran, and `expansionOf` was never written — the entire #664
   machinery dormant in production while every test was green, because the
   fixtures stamped the truthful subtype the code assumed (the third instance of
-  the capture-live trap in
-  `.claude/rules/psstore-full-game-is-not-every-game.md` /
-  `.claude/rules/storefront-lookup-locale.md`; fixtures here must mislabel the
-  main body, like the capture). So `collection()` issues the probe itself on
+  the capture-live trap that also hid a dead PS Store search for months —
+  `.claude/rules/add-game-lookup-provider.md`, finding 3; fixtures here must
+  mislabel the main body, like the capture). So `collection()` issues the probe itself on
   the wishlist path and sets `expansion:` by **membership in the probe's id
   set** (the attribute survives only as `parseCollection`'s first guess, which
   the own path — where `excludesubtype` makes it vacuously false — still uses).

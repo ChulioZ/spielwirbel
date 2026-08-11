@@ -22,7 +22,7 @@ const HUB_TABS = ['start', 'regal', 'chronik', 'pokale'];
 const HUB_TAB_OF = {
   regal: ['game', 'retired', 'completed', 'wishlist'],
   chronik: ['session'],
-  start: ['member', 'design', 'tags', 'providers', 'settings'],
+  start: ['member', 'design', 'tags', 'settings'],
 };
 const hubTabOwning = (sub) =>
   HUB_TABS.find((tab) => (HUB_TAB_OF[tab] || []).includes(sub)) || 'start';

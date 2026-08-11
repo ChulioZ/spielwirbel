@@ -32,7 +32,14 @@ const COVER_HERO = 480;
 //
 // Each entry matches the host itself and any subdomain, mirroring the
 // `host === h || host.endsWith('.' + h)` shape every provider's download guard
-// uses (lib/providers/*.js IMAGE_HOSTS).
+// uses (IMAGE_HOSTS in lib/providers/*.js).
+//
+// ALL THREE ARE LEGACY-DATA HOSTS SINCE #744 — PS Store and Xbox were retired as
+// lookup providers, so no new cover can ever land on them. The rules stay because
+// the ~66 covers already stored on real shelves still render through them: delete
+// an entry and those games silently go back to serving a 1–2 MB master (the whole
+// finding in .claude/rules/provider-cover-sizing.md). They are not dead code,
+// they are the render half of data we no longer write.
 const COVER_RESIZERS = [
   { host: 'image.api.playstation.com', query: (w) => `w=${w}` },
   { host: 'playstation.net', query: (w) => `w=${w}` },

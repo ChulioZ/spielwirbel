@@ -47,25 +47,18 @@ behind these choices — and why they are not up for casual revision — are in
 - **Runs entirely on your machine.** Fonts and the icon set are self-hosted
   under `public/fonts/`, and the subtle background grain is an inline SVG in the
   stylesheet — no CDNs. The only runtime external calls are **opt-in**: the
-  add-game lookup queries the PlayStation Store, Steam, the Nintendo eShop, the
-  Xbox / Microsoft Store and BoardGameGeek server-side (via
-  `/api/rounds/:rid/lookup/*`, and only the providers that round enabled) only
-  when you type a title to search; it sends just the search text, and the app
-  works fully without it. The four digital stores need no key or account.
-  **BoardGameGeek does:** its XML API requires a registered application and a
-  bearer token in `BGG_API_TOKEN` (create one at
+  add-game lookup queries BoardGameGeek server-side (via
+  `/api/rounds/:rid/lookup/*`) only when you type a title to search; it sends
+  just the search text, and the app works fully without it. **BoardGameGeek
+  needs a key:** its XML API requires a registered application and a bearer
+  token in `BGG_API_TOKEN` (create one at
   [boardgamegeek.com/applications](https://boardgamegeek.com/applications)).
-  Without it the board-game search silently returns nothing and the other four
-  providers carry on — nothing logs and nothing errors, so check the env var
-  itself if board games stop being found. Because
-  BGG answers a search with the name that *matched*, typing a title in your own
-  language finds and fills in that name. The four **digital storefronts** answer
-  in the language the app is set to (the top-bar picker), so an English UI gets
-  English titles and English store links and a German one gets German — no
-  configuration needed. `PSSTORE_LOCALE`, `STEAM_CC` / `STEAM_LOCALE`,
-  `NINTENDO_LOCALE` and `XBOX_LOCALE` remain as the **fallback** a self-hosted
-  instance can pin (they still default to the German store), used only for a
-  language none of those stores serves.
+  Without it the lookup silently returns nothing — nothing logs and nothing
+  errors, so check the env var itself if games stop being found. Because BGG
+  answers a search with the name that *matched*, typing a title in your own
+  language finds and fills in that name. Four digital storefronts (PlayStation
+  Store, Steam, Nintendo eShop, Xbox) were lookup providers until #744 retired
+  them; games already linked to one keep their link and their cover.
 
 ```
 server.js            starts the HTTP server (the only place that listens)
@@ -177,29 +170,17 @@ lib/
                      may pass its own TTL for one hop — prices/ does, because
                      its upstream requires an hour
   providers/         external game-database providers for the add-game lookup
-    index.js         provider registry + image-host allowlist, the round's
-                     enabled-provider decode, and cover resolution for a
-                     stored source link (issue #518)
-    locales.js       maps a request's UI locale onto each storefront's own
-                     spelling of it, through a closed table (never
-                     interpolated — it reaches a fetched URL path)
-    psstore.js       PlayStation Store: search + detail via the store's
-                     server-rendered page data (digital games)
+    index.js         provider registry + image-host allowlist, the frozen
+                     legacy cover hosts the CSP still renders (#744), and
+                     cover resolution for a stored source link (issue #518)
     bgg.js           BoardGameGeek: search + detail + owned-collection import
                      via BGG's official XML API2 under an application token
-                     (board games)
-    steam.js         Steam: search + detail via the store's public JSON
-                     endpoints (storesearch / appdetails) (digital games)
-    nintendo.js      Nintendo eShop: search + detail via Nintendo of Europe's
-                     public Solr endpoint (Switch games)
-    xbox.js          Xbox / Microsoft Store: search via the storefront
-                     autosuggest API, detail via the public catalog service
-                     (digital games)
+                     (board games) — the only registered provider since #744
   prices/            what a wished-for game costs right now (issue #679).
-                     Deliberately NOT a sixth entry under providers/: those
+                     Deliberately NOT a second entry under providers/: those
                      answer "which game is this?" and are wired into the
-                     add-game lookup and round.providers; a price source
-                     answers a different question and must reach neither.
+                     add-game lookup; a price source answers a different
+                     question and must not reach that registry.
                      Off unless PRICES_ENABLED=true
     index.js         dispatch on the game's stored source link, the hour-long
                      cache, the degrade-to-{available:false} contract, and the
@@ -208,8 +189,6 @@ lib/
     boardgameprices.js  Brettspielpreise.de / BoardGamePrices, keyed on the
                      BGG id (board games): picks the reader's language edition
                      and the cheapest in-stock offer whose shipping is known
-    steam.js         Steam, from the price_overview the detail hop already
-                     receives (digital games)
   routes/            Express routers, one per resource; mounted by app.js
                      above. Under lib/ so every backend concern lives in one
                      package and app.js never reaches upward out of its own
@@ -267,8 +246,9 @@ lib/
                                              filterable action log, user feedback,
                                              recent warn/error logs —
                                              404 unless ADMIN_PASSWORD)
-    lookup.js        …/lookup               (search/game — provider proxy: PS Store, BGG, Steam, Nintendo, Xbox;
-                                             round-scoped, refuses a provider the round disabled)
+    lookup.js        …/lookup               (search/game — provider proxy for
+                                             BoardGameGeek; round-scoped, plus the
+                                             BGG-only covers/expansions/import hops)
     rounds.js        /api/rounds            (list — incl. granted rounds (#207);
                                              detail, create, delete; revoke/leave
                                              a share via …/:rid/shares/:userId)
@@ -289,7 +269,6 @@ lib/
     activities.js    …/activities           (list the feed [GET], delete an entry)
     background.js    …/background           (set the design)
     tags.js          …/tags                 (create a custom tag [deduped], set its icon, delete one)
-    providers.js     …/providers            (set which lookup providers this round queries)
 public/
   index.html
   login.html         standalone login page (shown only when AUTH_PASSWORD is set)

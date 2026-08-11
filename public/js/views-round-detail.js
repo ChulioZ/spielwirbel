@@ -190,75 +190,6 @@ async function showTags(rid) {
   app.appendChild(sec);
 }
 
-// =================== Lookup providers (#294) ===================
-
-// Which external game databases this round's add-game / link-provider lookups
-// query. Sibling of showTags: both are per-round global configuration.
-async function showProviders(rid) {
-  currentView = () => showProviders(rid);
-  syncUrl(roundPath(rid, 'providers'));
-  app.innerHTML = '<p class="muted">…</p>';
-  let round;
-  try { round = await fetchRound(rid); }
-  catch { return showHome(); }
-  applyBackground(round.background);
-  setContext(round.name);
-  setDocTitle(t('providers.title'), round.name);
-
-  app.innerHTML = '';
-  renderSubScreenTabs(round, 'providers');
-  app.appendChild(backRow(() => showRound(rid)));
-  app.appendChild(h(`<div class="page-head"><h1>${esc(t('providers.title'))}</h1></div>`));
-
-  const sec = h('<div class="section"></div>');
-  sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t('providers.note'))}</div>`));
-
-  // A round that has never been configured has no `providers` key at all, which
-  // means "all of them" — enabledProviders() owns that rule, so read the current
-  // state through it rather than re-deriving it here.
-  const enabled = new Set(enabledProviders(round));
-  const hint = h(`<div class="muted" style="margin-top:14px"></div>`);
-  const renderHint = () => {
-    hint.textContent = enabled.size ? '' : t('providers.noneHint');
-  };
-
-  const list = h('<div class="ds-list ds-list--tiles"></div>');
-  LOOKUP_PROVIDERS.forEach((id) => {
-    const logo = providerLogo(id);
-    const row = h(`<label class="ds-row provider-row">
-         <div class="ds-row__main">
-           ${logo ? `<span class="provider-row__logo" aria-hidden="true">${logo}</span>` : ''}
-           <span class="provider-row__name" title="${esc(providerLabel(id))}">${esc(providerLabel(id))}</span>
-         </div>
-         <div class="ds-row__meta">
-           <input type="checkbox" class="provider-row__box" ${enabled.has(id) ? 'checked' : ''} />
-         </div>
-       </label>`);
-    const box = row.querySelector('input');
-    box.addEventListener('change', async () => {
-      if (box.checked) enabled.add(id); else enabled.delete(id);
-      renderHint();
-      try {
-        // Always PUT the full list: an empty one is a real setting ("we type our
-        // own titles"), not a no-op, so it has to be sent like any other.
-        await api('PUT', `/api/rounds/${rid}/providers`, { providers: LOOKUP_PROVIDERS.filter((p) => enabled.has(p)) });
-        toast(t('providers.toast.saved'));
-      } catch (e) {
-        // Put the checkbox back where the server still has it.
-        box.checked = !box.checked;
-        if (box.checked) enabled.add(id); else enabled.delete(id);
-        renderHint();
-        toast(e.message);
-      }
-    });
-    list.appendChild(row);
-  });
-  sec.appendChild(list);
-  renderHint();
-  sec.appendChild(hint);
-  app.appendChild(sec);
-}
-
 // The three game-detail editors (tags, players, cover) have ONE builder each
 // and two presentations (#422): an anchored popover from 860px up, a bottom
 // sheet below it. The anchored form is unusable on a phone — focusing its input
@@ -394,25 +325,25 @@ function renderPriceSection(p, { refreshing = false } = {}) {
   sec.appendChild(h(`<div class="muted gd-price__facts">${esc(facts.join(' · '))}</div>`));
 
   if (p.url) {
-    const label = p.source === 'steam' ? t('price.viewStore') : t('price.viewOffers');
+    const label = t('price.viewOffers');
     sec.appendChild(h(`<a class="link-out" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(label)}</a>`));
   }
 
-  const disclosure = p.source === 'steam' ? t('price.sourceSteam') : t('price.sourceBgp');
+  const disclosure = t('price.sourceBgp');
   sec.appendChild(h(`<div class="muted gd-price__note">${esc(t('price.retrieved', { when: fmtDateTime(p.fetchedAt) }))} · ${esc(t('price.mayChange'))}<br>${esc(disclosure)}</div>`));
   return sec;
 }
 
 // A settled "no offers" answer (#707): the lookup succeeded and nobody stocks
-// the game (or the Steam app has no price). Rendered as a transparent note
-// rather than nothing — an empty slot after a stored price was on screen would
-// read as the price feature breaking. The server payload carries no `source`
-// (it is one shared frozen object), so the disclosure — still owed, the
-// statement derives from the aggregator — keys off the game's own provider.
-function renderPriceNoOffers(provider) {
+// the game. Rendered as a transparent note rather than nothing — an empty slot
+// after a stored price was on screen would read as the price feature breaking.
+// The disclosure is still owed, because the statement derives from the
+// aggregator. It took the game's own provider until #744 left one price source;
+// the parameter is gone with the branch it fed.
+function renderPriceNoOffers() {
   const sec = h(`<div class="section gd-price gd-price--none"><h2>${esc(t('price.title'))}</h2></div>`);
   sec.appendChild(h(`<div class="muted gd-price__none">${esc(t('price.noOffers'))}</div>`));
-  const disclosure = provider === 'steam' ? t('price.sourceSteam') : t('price.sourceBgp');
+  const disclosure = t('price.sourceBgp');
   sec.appendChild(h(`<div class="muted gd-price__note">${esc(disclosure)}</div>`));
   return sec;
 }
@@ -634,14 +565,15 @@ async function showGameDetail(rid, gameId) {
 
       // Re-fetch the cover from the provider this game is linked to (#518).
       // Offered whether or not there is a cover today, so it doubles as a repair
-      // for a hotlink the provider has since moved. Hidden when the round has
-      // switched that provider off — the route refuses it anyway (403), this
-      // just doesn't offer what it would refuse.
+      // for a hotlink the provider has since moved. Hidden for a game linked to a
+      // RETIRED provider (#744) — the route refuses it anyway (400), this just
+      // doesn't offer what it would refuse, and the stored cover keeps rendering
+      // either way.
       //
-      // `enabledProviders` lives in views-round-lookup.js, which loads AFTER
+      // `LOOKUP_PROVIDERS` lives in views-round-lookup.js, which loads AFTER
       // this file. Safe because this runs on click, never at load time — keep it
       // that way (.claude/rules/frontend-script-load-order.md).
-      if (game.source && enabledProviders(round).includes(game.source.provider)) {
+      if (game.source && LOOKUP_PROVIDERS.includes(game.source.provider)) {
         const prov = providerLabel(game.source.provider);
         const fetchBtn = h(`<button class="btn">${esc(t('detail.coverFromProvider', { provider: prov }))}</button>`);
         fetchBtn.addEventListener('click', async () => {
@@ -656,7 +588,6 @@ async function showGameDetail(rid, gameId) {
             const known = {
               no_cover: 'detail.toast.noProviderCover',
               no_source: 'detail.toast.coverNoSource',
-              provider_disabled: 'detail.toast.coverDisabled',
               provider_unreachable: 'detail.toast.coverUnreachable',
             }[e.message];
             toast(known ? t(known, { provider: prov }) : e.message);
@@ -667,10 +598,9 @@ async function showGameDetail(rid, gameId) {
 
       // Pick one of the game's BGG edition covers (#519) — the printing on this
       // group's table rather than whatever /thing serves as the item's default.
-      // BGG only: the four storefronts expose no per-edition image set, and the
-      // route answers 400 for a provider without the capability, so offering it
-      // for one would only produce an error on expand.
-      if (game.source && game.source.provider === 'bgg' && enabledProviders(round).includes('bgg')) {
+      // BGG only: the route answers 400 for a provider without the capability,
+      // so offering it for one would only produce an error on expand.
+      if (game.source && game.source.provider === 'bgg') {
         // Widens the floating card: three tiles of box art do not fit the
         // 300px `.popover` default. Compounded in CSS so it beats `.popover`
         // on specificity rather than on source order.
@@ -717,7 +647,7 @@ async function showGameDetail(rid, gameId) {
       const keep = owned.map((e) => ({ id: e.id }));
       const picked = new Set();
       const canPick = game.source && typeof game.source.externalId === 'string'
-        && game.source.provider === 'bgg' && enabledProviders(round).includes('bgg');
+        && game.source.provider === 'bgg';
 
       if (canPick) {
         const prov = providerLabel(game.source.provider);
@@ -1029,7 +959,7 @@ async function showGameDetail(rid, gameId) {
         // A settled "nobody stocks this" is stated, not blanked — also when no
         // stored price was on screen first (operator decision on #707). Any
         // other unavailable answer has nothing honest to show.
-        if (p && p.reason === 'no_offers') return swap(renderPriceNoOffers(game.source.provider));
+        if (p && p.reason === 'no_offers') return swap(renderPriceNoOffers());
         node.remove();
       })
       .catch(() => {

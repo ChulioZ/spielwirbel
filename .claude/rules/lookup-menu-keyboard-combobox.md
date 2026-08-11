@@ -126,12 +126,14 @@ Typing clears the reference outright — the next render answers a different que
 `test/lookup-nav.test.js` covers the arithmetic; everything else needs a browser
 (`dev-temp-data`, service worker cleared — `.claude/rules/pwa-service-worker.md`).
 
-- **Stub `window.api`, don't rely on live storefronts.** `api` is a top-level
+- **Stub `window.api`, don't rely on the live provider.** `api` is a top-level
   `function` declaration, so it *is* a `window` property and can be wrapped
   (`.claude/rules/in-app-nav-links.md` §1 on which globals are reachable). That is
   also the only practical way to construct a **merged** row on demand — return the
   same title from two providers — and to stagger one provider's response to
-  exercise §4.
+  exercise §4. **Since #744 registered BGG alone it is the only way at all**: the
+  merge and the badge navigation are dormant until a second provider lands, so a
+  stub is what keeps them from silently rotting in the meantime.
 - **Synthetic `keydown` is a valid probe here**, unlike the synthetic *click* trap
   in `.claude/rules/in-app-nav-links.md`: the whole behaviour lives in listeners
   and `defaultPrevented`, not in a default action the browser has to perform.

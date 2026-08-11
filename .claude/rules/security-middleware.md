@@ -19,23 +19,39 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   score pills) and the background grain is a `data:` SVG — a stricter CSP blanks
   those with no JS error, only a silent CSP violation in the console.
 
-- **`img-src` also lists the provider cover hosts, derived from the providers'
-  `IMAGE_HOSTS` (issue #179).** `lib/app.js` spreads
+- **`img-src` lists the cover hosts, and since #744 that is NOT the same list as
+  the download allowlist.** `lib/app.js` spreads
   `require('./providers').imageCspSources()` into `img-src` so the browser may
-  **render** the same hosts the server is allowed to **download** from
-  (`isAllowedImageUrl`) — one source of truth for "hosts we trust for covers".
-  Without it, every provider cover is cross-origin and CSP-blocked, so the
-  add-game preview, the link-provider cover preview, and the lookup dropdown
-  thumbnails silently show nothing (only a CSP violation in the console). Each
-  provider's download guard accepts a host `h` **and any subdomain**
-  (`host === h || host.endsWith('.' + h)`), so `imageCspSources()` emits both the
-  bare `h` and a `*.h` wildcard (a lone `*.h` doesn't match the apex). Keep it
-  derived — add a provider's hosts to its `IMAGE_HOSTS` and both the download
-  allowlist and the CSP stay in sync; don't re-hardcode hosts in `lib/app.js`.
-  `test/security.test.js` asserts every `imageCspSources()` entry is on `img-src`.
-  Note this is *not* a widening to arbitrary hosts — it's exactly the download
-  allowlist (no wildcards to third parties). A same-origin image proxy is the
-  tighter alternative for a hardened hosted deploy; deferred to the hosting work.
+  **render** provider covers. Without it, every provider cover is cross-origin
+  and CSP-blocked, so the add-game preview, the link-provider cover preview, the
+  lookup thumbnails **and every saved cover** silently show nothing (only a CSP
+  violation in the console). Each provider's download guard accepts a host `h`
+  **and any subdomain** (`host === h || host.endsWith('.' + h)`), so
+  `imageCspSources()` emits both the bare `h` and a `*.h` wildcard (a lone `*.h`
+  doesn't match the apex). Don't re-hardcode hosts in `lib/app.js`.
+
+  The two questions were one list until #744 retired the four digital
+  storefronts, and separating them is the whole point:
+
+  | question | answered by |
+  |---|---|
+  | what may be **queried and stored**? | the live registry — `isAllowedImageUrl` |
+  | what may be **rendered**? | that, **plus** `LEGACY_COVER_HOSTS` |
+
+  Derived from the registry alone, unregistering a provider module silently
+  revokes `img-src` for the covers **already stored on people's shelves** — ~75
+  of them at the time — which go blank with nothing but a console violation.
+  `LEGACY_COVER_HOSTS` (`lib/providers/index.js`) is therefore a written-out,
+  frozen list; it grows only when a provider is retired and must never be pruned
+  on the reasoning that "we don't query that store any more". Adding a provider
+  still needs nothing but its `IMAGE_HOSTS`.
+
+  `test/security.test.js` asserts every `imageCspSources()` entry is on `img-src`
+  **and** that each legacy host survives in the served header;
+  `test/provider-covers.test.js` asserts the same URLs render and no longer
+  store. Note this is *not* a widening to arbitrary hosts. A same-origin image
+  proxy is the tighter alternative for a hardened hosted deploy; deferred to the
+  hosting work.
 
 - **The ceilings are meaningless if `req.ip` isn't the caller — see
   `.claude/rules/trust-proxy-is-a-hop-count.md`.** Every limiter here keys on

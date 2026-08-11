@@ -174,24 +174,26 @@ test('the five collection states are distinguishable, and none of them throws', 
   assert.equal(down.body.error, 'provider_unreachable');
 });
 
-test('a round with the bgg provider switched off refuses the import outright (#294)', async () => {
-  const a = await makeAccount('imp-disabled@example.com');
+// #744 retired the four storefronts, so `provider=steam` on these two hops is
+// now an unknown id rather than a disabled one. The property that matters is
+// unchanged and is what this asserts: the refusal happens BEFORE any upstream
+// call, so a stale tab cannot make us fetch anything.
+test('a retired provider id is refused before the collection is fetched (#744)', async () => {
+  const a = await makeAccount('imp-retired@example.com');
   const round = await makeRound(a.token);
-  await link(a.token, 'GamerDisabled');
-  await request(app).put(`/api/rounds/${round.id}/providers`).set(auth(a.token)).send({ providers: ['steam'] });
+  await link(a.token, 'GamerRetired');
 
   let called = false;
   global.fetch = async () => { called = true; return { status: 200, text: async () => THREE }; };
 
   for (const res of [
-    await request(app).get(`/api/rounds/${round.id}/lookup/collection?provider=bgg`).set(auth(a.token)),
-    await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    await request(app).get(`/api/rounds/${round.id}/lookup/collection?provider=steam`).set(auth(a.token)),
+    await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=steam`)
       .set(auth(a.token)).send({ externalIds: ['13'] }),
   ]) {
-    assert.equal(res.status, 403);
-    assert.equal(res.body.error, 'provider_disabled');
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, 'Unknown provider');
   }
-  // The setting is ENFORCED, not merely hidden: the provider is never reached.
   assert.equal(called, false);
 });
 

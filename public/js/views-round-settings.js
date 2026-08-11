@@ -9,7 +9,7 @@
    concern, and on a phone it was reachable only by switching tabs and scrolling
    past the entire month-grouped history.
 
-   It is a sibling of showTags/showProviders/showBackground (views-round-detail.js)
+   It is a sibling of showTags/showBackground (views-round-detail.js)
    and deliberately NOT in that file: it is an independently editable concern and
    that file is already past its size budget (.claude/rules/token-friendly-source-files.md).
 
@@ -47,7 +47,6 @@ async function showRoundSettings(rid) {
   const nav = h('<div class="ds-list"></div>');
   [
     { icon: 'ti-tags', label: t('round.tags'), sub: 'tags', go: () => showTags(rid) },
-    { icon: 'ti-world-search', label: t('round.providers'), sub: 'providers', go: () => showProviders(rid) },
     { icon: 'ti-palette', label: t('round.design'), sub: 'design', go: () => showBackground(rid) },
   ].forEach(({ icon, label, sub, go }) => {
     const row = h(`<a class="ds-row rs-row">

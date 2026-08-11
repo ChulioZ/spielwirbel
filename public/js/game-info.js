@@ -24,7 +24,7 @@
    through the jsdom harness instead. */
 
 // Whether there is anything to show for this game. The affordances render only
-// when true, so a storefront game (no provider metadata at all) looks exactly as
+// when true, so a hand-typed game (no provider metadata at all) looks exactly as
 // it always did.
 //
 // `rating` counts only when the caller renders it, and it DEFAULTS TO OFF for

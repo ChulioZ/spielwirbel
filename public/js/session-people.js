@@ -32,8 +32,8 @@ const MIN_TEAM_SIZE = 2;
 // Two absent-key conventions meet here and they are NOT the same:
 //  - `memberIds` absent means "everyone in the round" (back-compat: sessions
 //    predating the seat picker never stored one);
-//  - `guests` absent means "none", exactly like `[]` — unlike round.providers
-//    there is no meaningful third state (.claude/rules/round-provider-config.md).
+//  - `guests` absent means "none", exactly like `[]` — there is no meaningful
+//    third state here, unlike the `memberIds` case above it.
 // Every screen that used to resolve an id against `round.members` has to go
 // through this instead: a guest id is a vote-map and winnerIds key too, but has
 // no member row behind it.

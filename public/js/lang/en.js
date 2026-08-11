@@ -59,7 +59,6 @@ I18N.en = {
 
   'round.design': 'Design',
   'round.tags': 'Tags',
-  'round.providers': 'Providers',
   'round.startSession': 'Start session',
   'round.startSessionDisabled': 'Add games first',
   'round.addGame': 'Add a game',
@@ -240,7 +239,6 @@ I18N.en = {
   'bggImport.toast.doneOne': '{n} game added',
   'bggImport.toast.done': '{n} games added',
   'bggImport.toast.quota': 'That many games no longer fit in this round.',
-  'bggImport.toast.disabled': 'BoardGameGeek is switched off for this round.',
   'bggImport.toast.unreachable': 'BoardGameGeek cannot be reached right now.',
   'bggImport.toast.noHandle': 'Link your BoardGameGeek username first.',
   'bggImport.toast.badHandle': 'That does not look like a BGG username.',
@@ -324,7 +322,6 @@ I18N.en = {
   'price.edition': 'Edition: {title} ({lang})',
   'price.offers': '{inStock} of {total} offers in stock',
   'price.viewOffers': 'All offers at Brettspielpreise.de',
-  'price.viewStore': 'View in the Steam store',
   'price.retrieved': 'Retrieved {when}',
   'price.mayChange': 'Prices may have changed.',
   'price.staleHour': 'Price from {n} hour ago',
@@ -335,7 +332,6 @@ I18N.en = {
   'price.checking': 'Checking the current price …',
   'price.noOffers': 'No price available right now.',
   'price.sourceBgp': 'Price data from Brettspielpreise.de. The list covers the shops listed there only.',
-  'price.sourceSteam': 'Price data from the Steam store.',
 
   'sessions.rated': '{n} games rated',
   'sessions.played': 'Played',
@@ -448,7 +444,6 @@ I18N.en = {
   'detail.toast.coverFetched': 'Cover taken from {provider}',
   'detail.toast.noProviderCover': '{provider} has no cover for this game.',
   'detail.toast.coverNoSource': 'This game is not linked to a provider.',
-  'detail.toast.coverDisabled': '{provider} is switched off in this round.',
   'detail.toast.coverUnreachable': '{provider} could not be reached.',
 
   'detail.expansionsTitle': 'Expansions',
@@ -701,11 +696,6 @@ I18N.en = {
   'theme.schiefer': 'Slate',
   'theme.pfirsich': 'Peach',
 
-  'providers.crumb': 'Providers',
-  'providers.title': 'Providers',
-  'providers.note': 'Choose which game databases are searched when you add a game or link one to a store. Turn off the ones your group never plays – their hits disappear from the suggestions.',
-  'providers.noneHint': 'No provider is active: the title field stays a plain text box and you type every game in yourself.',
-  'providers.toast.saved': 'Providers updated',
 
   'tags.crumb': 'Tags',
   'tags.title': 'Tags',
@@ -992,12 +982,12 @@ I18N.en = {
   // Logged-out landing page (#322). Rewritten in #483 to lead with what the app
   // is FOR — the decision at the table, and the record the votes leave behind —
   // instead of enumerating features. Three things the old copy never said out
-  // loud are now explicit: the vote is also a measurement, the shelf covers
-  // digital games, and nobody but the round owner needs an account.
+  // loud are now explicit: the vote is also a measurement, the shelf holds
+  // whatever the group plays, and nobody but the round owner needs an account.
   // NOTE: the link-preview meta tags in index.html duplicate the GERMAN hero
   // copy only (a scraper has no locale) — see .claude/rules/link-preview-card.md.
   'landing.hero.title': 'What are we playing tonight?',
-  'landing.hero.sub': 'One device goes around the table and everyone rates the drawn games, from board games to video games. You end up with tonight’s pick – and, with every session, a sharper picture of what your group likes to play.',
+  'landing.hero.sub': 'One device goes around the table and everyone rates the drawn games. You end up with tonight’s pick – and, with every session, a sharper picture of what your group likes to play.',
   'landing.hero.ctaPrimary': 'Sign up free',
   'landing.hero.ctaSecondary': 'Log in',
   // Guest demo (#427). The CTA leads the hero when the instance has it enabled,
@@ -1011,7 +1001,7 @@ I18N.en = {
   'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale from 1 to 5.',
   'landing.features.title': 'What you get',
   'landing.features.shelf.title': 'One shelf for everything',
-  'landing.features.shelf.desc': 'Board games and video games side by side – with covers from BoardGameGeek, Steam, PlayStation, Nintendo and Xbox.',
+  'landing.features.shelf.desc': 'Every game your group owns in one place – titles, cover art and player counts come from BoardGameGeek, and anything else you type in yourself.',
   'landing.features.vote.title': 'The group decides',
   'landing.features.vote.desc': 'Spielwirbel draws the candidates, the device goes around, everyone rates on their own. No more quarter-hour debate. Anyone with an account can rate from their own device instead.',
   'landing.features.ratings.title': 'Every vote counts twice',

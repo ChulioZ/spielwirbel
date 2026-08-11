@@ -18,7 +18,7 @@
 let metaFilterSeq = 0;
 
 // Build the whole disclosure, or return NULL when this shelf carries none of the
-// fields — a fresh instance without BGG_API_TOKEN, or a Regal of storefront
+// fields — a fresh instance without BGG_API_TOKEN, or a Regal of hand-typed
 // games. Rendering an empty „Weitere Filter" there would be a control that can
 // never do anything, which is why the tag field already hides itself with no
 // round tags rather than showing an empty chip row.

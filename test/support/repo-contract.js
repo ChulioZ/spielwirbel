@@ -104,12 +104,9 @@ module.exports = function repoContract(repo) {
     assert.equal('sessions' in meta, false);
     // Absent-key parity with getRound: config keys appear only once written.
     assert.equal('tags' in meta, false);
-    assert.equal('providers' in meta, false);
     await repo.addTag(T, round.id, 'Koop', null);
-    await repo.setProviders(T, round.id, ['bgg']);
     const again = await repo.getRoundMeta(T, round.id);
     assert.equal(again.tags.length, 1);
-    assert.deepEqual(again.providers, ['bgg']);
 
     // Snapshot semantics + isolation, like every other read.
     again.members.push({ id: 'x', name: 'Injected' });
@@ -1465,31 +1462,27 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.setTagIcon(T, 'missing', plain.id, 'star'), null);
   });
 
-  test('setProviders: absent by default, empty list distinct from absent (#294)', async () => {
+  test('a round never grows a `providers` key — the setting is gone (#744)', async () => {
     const round = await freshRound();
 
-    // Absent-key parity: a round that was never configured must not grow a
-    // `providers` key, because absent is what means "all providers enabled".
-    // Give it a default and every existing round silently changes behaviour.
+    // #294 stored which lookup providers a round queried, in three states
+    // (absent / a list / empty). #744 retired the four storefronts it existed to
+    // switch off, so nothing writes the key any longer.
+    //
+    // NOTE what this half can and cannot see. A fresh round has never had the
+    // key, so these assertions stay green whether or not the read paths still
+    // SHAPE it — verified by reinstating the shaping line on purpose (141/141
+    // still passed). They pin absent-key parity between the backends, which is
+    // worth having; the leftover-value half needs a stored value and lives in
+    // the JSON runner, which can plant one.
     assert.equal('providers' in round, false);
-    assert.equal('providers' in (await repo.getRound(T, round.id)), false);
-
-    const saved = await repo.setProviders(T, round.id, ['bgg', 'steam']);
-    assert.deepEqual(saved, ['bgg', 'steam']);
-    assert.deepEqual((await repo.getRound(T, round.id)).providers, ['bgg', 'steam']);
-
-    // An empty list is a real, distinct setting ("query nothing"), so it must
-    // round-trip as [] and NOT collapse back to the absent key.
-    assert.deepEqual(await repo.setProviders(T, round.id, []), []);
-    const cleared = await repo.getRound(T, round.id);
-    assert.equal('providers' in cleared, true);
-    assert.deepEqual(cleared.providers, []);
-
-    // It also survives the list read, not just the single-round read.
-    const listed = (await repo.listRounds(T)).find((r) => r.id === round.id);
-    assert.deepEqual(listed.providers, []);
-
-    assert.equal(await repo.setProviders(T, 'missing', ['bgg']), null);
+    for (const shape of [
+      await repo.getRound(T, round.id),
+      await repo.getRoundMeta(T, round.id),
+      (await repo.listRounds(T)).find((r) => r.id === round.id),
+      await repo.renameRound(T, round.id, `${round.name} II`, null),
+    ]) assert.equal('providers' in shape, false);
+    assert.equal(typeof repo.setProviders, 'undefined', 'the writer is gone with the setting');
   });
 
   test('moveGames reparents every game and merges tags by name (#253)', async () => {

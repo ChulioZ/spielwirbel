@@ -3,7 +3,7 @@
 const { test, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
-const { app, createRound } = require('./helpers');
+const { app, store, createRound } = require('./helpers');
 
 /*
  * GET /api/rounds/:rid/games/:gid/prices (#679).
@@ -201,33 +201,25 @@ test('a game nobody stocks is a settled answer and IS cached — marked as such 
   assert.equal(calls.length, 1);
 });
 
-test('a Steam wish is priced from price_overview', async () => {
+// #744 retired lib/prices/steam.js, so `bgg -> boardgameprices` is the whole
+// SOURCES map. A Steam-linked wish is now simply a game whose provider has no
+// price source — the already-handled "nothing to fetch" path, pinned below
+// alongside the hand-typed wish rather than as a case of its own.
+test('a wish linked to a RETIRED provider has no price source and makes no request', async () => {
   process.env.PRICES_ENABLED = 'true';
-  const calls = stubFetch({
-    77: { success: true, data: { name: 'Test', price_overview: { currency: 'EUR', initial: 5999, final: 2999, discount_percent: 50 } } },
-  });
+  let called = false;
+  global.fetch = async () => { called = true; throw new Error('must not be contacted'); };
   const round = await createRound(request);
-  const game = await addWish(round.id, { sourceProvider: 'steam', sourceExternalId: '77' });
-  const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=de`);
-  assert.equal(res.body.available, true);
-  assert.equal(res.body.source, 'steam');
-  assert.equal(res.body.amount, 29.99);
-  assert.equal(res.body.regular, 59.99);
-  assert.equal(res.body.discountPercent, 50);
-  // A digital purchase has no shipping, so the store price really is the total.
-  assert.equal(res.body.shippingKnown, true);
-  assert.equal(res.body.url, 'https://store.steampowered.com/app/77/');
-  assert.equal(calls.length, 1);
-  assert.ok(calls[0].startsWith('https://store.steampowered.com/api/appdetails'));
-});
+  const game = await addWish(round.id, { sourceExternalId: '99' });
+  // Rewritten in the store past the route's validation, exactly as a pre-#744
+  // row still sits there — POST would no longer mint this link.
+  const stored = store.findRound(round.id).games.find((g) => g.id === game.id);
+  stored.source = { provider: 'steam', externalId: '477160', url: null };
+  store.saveData();
 
-test('a free Steam game shows nothing rather than 0,00 € — a settled answer too', async () => {
-  process.env.PRICES_ENABLED = 'true';
-  stubFetch({ 78: { success: true, data: { name: 'Dota 2', is_free: true } } });
-  const round = await createRound(request);
-  const game = await addWish(round.id, { sourceProvider: 'steam', sourceExternalId: '78' });
   const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices`);
-  assert.deepEqual(res.body, { available: false, reason: 'no_offers' });
+  assert.deepEqual(res.body, { available: false });
+  assert.equal(called, false);
 });
 
 test('a failing source is PAUSED, not re-asked on every page view', async () => {
@@ -248,23 +240,17 @@ test('a failing source is PAUSED, not re-asked on every page view', async () => 
   assert.equal(calls, 1, 'the outage is discovered once, not once per wished game');
 });
 
-test('the cooldown is per SOURCE — Steam keeps answering while the aggregator is out', async () => {
-  process.env.PRICES_ENABLED = 'true';
-  process.env.PRICES_FAILURE_COOLDOWN_SECONDS = '60';
-  const round = await createRound(request);
-  const bgg = await addWish(round.id, { sourceExternalId: '2010' });
-  const steam = await addWish(round.id, { sourceProvider: 'steam', sourceExternalId: '2011' });
-
-  global.fetch = async () => { throw new Error('ECONNRESET'); };
-  assert.deepEqual((await request(app).get(`/api/rounds/${round.id}/games/${bgg.id}/prices`)).body, { available: false });
-
-  global.fetch = async () => ({ ok: true, status: 200, json: async () => ({
-    2011: { success: true, data: { price_overview: { currency: 'EUR', final: 1999, discount_percent: 0 } } },
-  }) });
-  const res = await request(app).get(`/api/rounds/${round.id}/games/${steam.id}/prices`);
-  assert.equal(res.body.available, true, 'one source failing must not silence the other');
-  assert.equal(res.body.amount, 19.99);
-});
+/*
+ * There WAS a spec here proving the cooldown is keyed per SOURCE rather than
+ * globally — Steam answering while the aggregator was out. #744 left one price
+ * source, so those two implementations are now behaviourally identical and no
+ * test can tell them apart; writing one anyway would be green against either.
+ *
+ * The half that IS still observable is covered by the spec above: four games,
+ * one upstream call, which is what separates per-source from per-GAME. The
+ * per-source-vs-global distinction becomes testable again the day a second
+ * source is added, and that is when the spec should come back.
+ */
 
 test('a price we ALREADY HOLD keeps being served while its source is cooling', async () => {
   process.env.PRICES_ENABLED = 'true';
@@ -319,7 +305,6 @@ test('the price TTL is an hour, and the shared provider TTL is untouched', () =>
   // (.claude/rules/bgg-collection-import.md §3).
   const HOUR = 60 * 60 * 1000;
   assert.ok(require('../lib/prices/boardgameprices').CACHE_TTL_MS >= HOUR);
-  assert.ok(require('../lib/prices/steam').CACHE_TTL_MS >= HOUR);
   assert.equal(require('../lib/provider-cache').TTL_MS, 10 * 60 * 1000);
 });
 

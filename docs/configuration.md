@@ -289,13 +289,16 @@ boundaries. Optionally set `ADMIN_SESSION_SECRET` to sign the admin cookie
 (otherwise `SESSION_SECRET`, then the password itself). Leave `ADMIN_PASSWORD`
 unset — the default — and the entire surface `404`s.
 
-Add-game lookup: the four digital stores work out of the box, but BoardGameGeek
-needs `BGG_API_TOKEN` — a bearer token from a registered application
+Add-game lookup: BoardGameGeek is the only provider, and it needs
+`BGG_API_TOKEN` — a bearer token from a registered application
 ([boardgamegeek.com/applications](https://boardgamegeek.com/applications), see
 [Using the XML API](https://boardgamegeek.com/using_the_xml_api)). Requests are
 made server-side and cached, as BGG's terms ask, and the app displays the
-required linked "Powered by BGG" logo in its footer. Leave the token unset and
-board-game search simply returns nothing.
+required linked "Powered by BGG" logo in its footer. Leave the token unset and the
+lookup simply returns nothing. (Four digital storefronts were providers too
+until #744 retired them; games already linked to one keep their link and their
+cover, and the five `*_LOCALE`/`STEAM_CC` variables that configured them are
+gone.)
 
 The BGG metadata those requests bring back (complexity, playing time, minimum
 age, categories, mechanics) is filled in lazily, in the background, at the points
@@ -310,11 +313,10 @@ Wish-list prices (issue #679) are **off** unless `PRICES_ENABLED=true`: opening 
 wished-for game that carries a provider link then shows what it costs right now —
 board games through the
 [Brettspielpreise.de / BoardGamePrices](https://boardgameprices.co.uk/api/plugin)
-API (keyed on the BGG id already stored on the game), Steam games through the
-`price_overview` the storefront's `appdetails` response already carries. Both
-hops are made server-side and cached for an hour, as the aggregator's terms ask;
-only the game's id is transmitted, so no personal data leaves and the visitor's
-browser contacts neither. With the flag unset the route `404`s and no price
+API (keyed on the BGG id already stored on the game). The hop is made
+server-side and cached for an hour, as the aggregator's terms ask; only the
+game's id is transmitted, so no personal data leaves and the visitor's browser
+contacts nothing. With the flag unset the route `404`s and no price
 section renders anywhere.
 
 `PRICES_DESTINATION` / `PRICES_CURRENCY` (default `DE`/`EUR`) are the fallback
@@ -340,8 +342,8 @@ When a price source fails it is **paused for `PRICES_FAILURE_COOLDOWN_SECONDS`**
 an hour but a failure deliberately is not, so without the pause a sustained
 upstream outage costs the full request timeout on *every* wish-detail view — and
 keeps hammering an upstream that is already failing. The pause is per **source**,
-so Steam keeps answering while the aggregator is out, and it never hides a price
-already held: a cached answer is still served while its source is down. Set `0`
+so a second source would keep answering while one is out, and it never hides a
+price already held: a cached answer is still served while its source is down. Set `0`
 to disable. The board-game request timeout deliberately sits **above** the
 aggregator's own ~10 s gateway budget, so an upstream `504` is logged as such
 instead of being masked by our own abort.

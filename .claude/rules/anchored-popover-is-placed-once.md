@@ -34,8 +34,8 @@ sheet on a phone, inline in the add-game form) call it unconditionally.
 **A ResizeObserver on `el` is the obvious better design and was implemented
 first. It was removed because it cannot be VERIFIED here** — see below. An
 untestable mechanism whose whole failure mode is silence is not worth having;
-this is the same call `.claude/rules/psstore-full-game-is-not-every-game.md`
-records for a trailing regex anchor that survived nothing.
+this is the same call that retired a trailing regex anchor in the PS Store
+player-count scrape, which a break-on-purpose loop showed guarded nothing.
 
 ## The second instance (#653), and why an ASYNC fill is the sharper case
 

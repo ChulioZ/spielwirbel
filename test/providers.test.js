@@ -1,14 +1,16 @@
 'use strict';
 
 /*
- * Per-round lookup-provider configuration (issue #294): the
- * PUT /api/rounds/:rid/providers route and the enforcement it buys on the
- * round-scoped lookup routes.
+ * The lookup provider registry over HTTP, after #744 retired the four digital
+ * storefronts and the per-round `providers` setting with them.
  *
- * The point of the enforcement tests is that a disabled provider is REFUSED
- * server-side rather than merely hidden in the UI — a client that asks anyway
- * (stale tab, hand-rolled call) must not get an answer, and must not cause the
- * upstream request at all.
+ * This file used to test that setting (issue #294) and the 403 it bought. What
+ * replaces it is the property the retirement has to hold: BoardGameGeek answers
+ * on every round with no configuration anywhere, and a request naming a retired
+ * provider is refused CLEANLY — a 400, never a throw and never an upstream
+ * request. Both matter because a stale tab is the normal way one arrives: the
+ * client stopped offering those ids the moment this shipped, so anything asking
+ * for one is a client that has not reloaded since.
  */
 
 const { test, afterEach } = require('node:test');
@@ -16,104 +18,66 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 
 const { app, createRound } = require('./helpers');
+const { providers } = require('../lib/providers');
 
 const realFetch = global.fetch;
 afterEach(() => { global.fetch = realFetch; });
 
-const setProviders = (rid, providers) =>
-  request(app).put(`/api/rounds/${rid}/providers`).send({ providers });
+// The ids #744 unregistered. Read as data rather than asserted one by one, so
+// the "never reaches upstream" property is proven for all four rather than for
+// whichever one someone thought of.
+const RETIRED = ['psstore', 'steam', 'nintendo', 'xbox'];
 
-test('a fresh round has no providers key at all (absent = all enabled)', async () => {
+test('BoardGameGeek is the whole registry', () => {
+  assert.deepEqual(Object.keys(providers), ['bgg']);
+});
+
+test('a fresh round still has no providers key — nothing writes one any more', async () => {
   const round = await createRound(request);
   const res = await request(app).get(`/api/rounds/${round.id}`);
   assert.equal(res.status, 200);
-  // Absent, not `[]` and not the full list — absent is what "never configured"
-  // means, and the JSON/Postgres backends must agree on that (contract suite).
   assert.equal('providers' in res.body, false);
 });
 
-test('PUT stores the list and it survives a reload', async () => {
+test('the per-round providers route is gone', async () => {
   const round = await createRound(request);
-  const res = await setProviders(round.id, ['bgg', 'steam']);
-  assert.equal(res.status, 200);
-  assert.deepEqual(res.body.providers, ['bgg', 'steam']);
-
-  const reload = await request(app).get(`/api/rounds/${round.id}`);
-  assert.deepEqual(reload.body.providers, ['bgg', 'steam']);
-});
-
-test('an empty list is a real setting, distinct from never-configured', async () => {
-  const round = await createRound(request);
-  const res = await setProviders(round.id, []);
-  assert.equal(res.status, 200);
-  assert.deepEqual(res.body.providers, []);
-
-  const reload = await request(app).get(`/api/rounds/${round.id}`);
-  assert.equal('providers' in reload.body, true);
-  assert.deepEqual(reload.body.providers, []);
-});
-
-test('duplicate ids collapse to a set', async () => {
-  const round = await createRound(request);
-  const res = await setProviders(round.id, ['bgg', 'bgg', 'steam', 'bgg']);
-  assert.equal(res.status, 200);
-  assert.deepEqual(res.body.providers, ['bgg', 'steam']);
-});
-
-test('an unknown provider id is rejected with a 400', async () => {
-  const round = await createRound(request);
-  const res = await setProviders(round.id, ['bgg', 'nope']);
-  assert.equal(res.status, 400);
-
-  // …and nothing was stored.
-  const reload = await request(app).get(`/api/rounds/${round.id}`);
-  assert.equal('providers' in reload.body, false);
-});
-
-test('PUT on a missing round is a 404', async () => {
-  const res = await setProviders('nope', ['bgg']);
-  assert.equal(res.status, 404);
-});
-
-test('a disabled provider is refused server-side and never reaches upstream', async () => {
-  const round = await createRound(request);
-  await setProviders(round.id, ['bgg']);
-
-  let called = false;
-  global.fetch = async () => { called = true; return { ok: true, text: async () => '' }; };
-
-  const search = await request(app)
-    .get(`/api/rounds/${round.id}/lookup/search?provider=psstore&q=witcher`);
-  assert.equal(search.status, 403);
-  assert.equal(search.body.error, 'provider_disabled');
-
-  const detail = await request(app)
-    .get(`/api/rounds/${round.id}/lookup/game?provider=psstore&id=X`);
-  assert.equal(detail.status, 403);
-  assert.equal(detail.body.error, 'provider_disabled');
-
-  assert.equal(called, false);
-});
-
-test('a round with BGG switched off is refused the edition covers too (#519)', async () => {
-  const round = await createRound(request);
-  await setProviders(round.id, ['steam']);
-
-  let called = false;
-  global.fetch = async () => { called = true; return { ok: true, text: async () => '' }; };
-
   const res = await request(app)
-    .get(`/api/rounds/${round.id}/lookup/covers?provider=bgg&id=13`);
-  // 403, not the capability 400: the round setting is enforced BEFORE the
-  // capability check, so a disabled provider never reveals what it can do.
-  assert.equal(res.status, 403);
-  assert.equal(res.body.error, 'provider_disabled');
-  assert.equal(called, false);
+    .put(`/api/rounds/${round.id}/providers`)
+    .send({ providers: ['bgg'] });
+  // Unmounted, so the SPA fallback answers — the point is only that it is not a
+  // 200 that silently stores a setting nothing reads.
+  assert.notEqual(res.status, 200);
 });
 
-test('an enabled provider still answers on a configured round', async () => {
+test('a retired provider is a clean 400 and never reaches upstream', async () => {
   const round = await createRound(request);
-  await setProviders(round.id, ['bgg']);
+  let called = false;
+  global.fetch = async () => { called = true; return { ok: true, text: async () => '' }; };
+
+  for (const id of RETIRED) {
+    const search = await request(app)
+      .get(`/api/rounds/${round.id}/lookup/search?provider=${id}&q=witcher`);
+    assert.equal(search.status, 400, `${id} search`);
+    assert.equal(search.body.error, 'Unknown provider');
+
+    const detail = await request(app)
+      .get(`/api/rounds/${round.id}/lookup/game?provider=${id}&id=X`);
+    assert.equal(detail.status, 400, `${id} detail`);
+
+    const covers = await request(app)
+      .get(`/api/rounds/${round.id}/lookup/covers?provider=${id}&id=13`);
+    // The registry check runs before the capability check, so a retired provider
+    // answers 400 `Unknown provider` rather than 400 `covers_unsupported` — it
+    // never gets far enough to reveal what it could or could not do.
+    assert.equal(covers.status, 400, `${id} covers`);
+    assert.equal(covers.body.error, 'Unknown provider');
+  }
+
+  assert.equal(called, false, 'a retired provider must cost no upstream request');
+});
+
+test('BGG answers on an unconfigured round — the lookup is unconditional now', async () => {
+  const round = await createRound(request);
   const previousToken = process.env.BGG_API_TOKEN;
   process.env.BGG_API_TOKEN = 'test-token'; // BGG answers nothing without one (#117)
   global.fetch = async () => ({
@@ -132,22 +96,13 @@ test('an enabled provider still answers on a configured round', async () => {
   }
 });
 
-test('with no providers enabled every lookup is refused', async () => {
-  const round = await createRound(request);
-  await setProviders(round.id, []);
-  const res = await request(app)
-    .get(`/api/rounds/${round.id}/lookup/search?provider=bgg&q=catan`);
-  assert.equal(res.status, 403);
-});
-
 test('the lookup 404s for a round that does not exist', async () => {
   const res = await request(app).get('/api/rounds/nope/lookup/search?provider=bgg&q=catan');
   assert.equal(res.status, 404);
 });
 
-test('an unknown provider is still a 400, not a 403', async () => {
+test('an id that never existed is a 400, like a retired one', async () => {
   const round = await createRound(request);
-  await setProviders(round.id, ['bgg']);
   const res = await request(app)
     .get(`/api/rounds/${round.id}/lookup/search?provider=nope&q=catan`);
   assert.equal(res.status, 400);
