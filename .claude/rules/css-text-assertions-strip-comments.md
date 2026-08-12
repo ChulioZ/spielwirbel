@@ -47,6 +47,14 @@ Two follow-on habits from the same bug:
   `.site-footer__links` and `.site-footer__bgg`; this codebase's BEM-ish naming
   makes that collision the norm, not the exception. Use a trailing guard:
   `/\.site-footer(?![\w-])/`.
+  **`whole()` is for EXCLUDING the family — never reach for it to include one**
+  (#694). `_` is a word character, so `whole('.pokale-card')` does not match
+  `.pokale-card__value`. A guard asking *"does any rule here restyle this
+  component?"* wants the opposite — a prefix match, `/\.pokale-[\w-]*/` — and
+  written with `whole()` it is **green against the exact leak it names in its own
+  comment**. Both sides need it: the same slip in the *scoping* half reports your
+  own `.member-stats__card` rules as leaks, which is the loud failure that
+  reveals the quiet one.
 
 ## In HTML strip too — in JS, assert UNIQUENESS instead (#637)
 

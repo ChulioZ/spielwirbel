@@ -4578,6 +4578,37 @@ kbd {
 .pokale-game__play:hover { background: var(--brand-tint-soft); }
 .pokale-game__play:active { transform: scale(0.94); }
 
+/* ---- Member screen STATISTIKEN on phones (#694) ----
+   `.pokale-cards` is auto-fit/minmax(200px, 1fr), so a phone's ~362px content
+   column yields ONE column: the member's five stat cards stack into a tall strip
+   for five short facts, with the number — the entire point of each card —
+   rendered last and smallest under an icon that dominates the tile. Two columns
+   and a promoted value make the section readable at a glance. Measured at 390px
+   on a member with two finished sessions: 640px -> 432px.
+
+   Scoped to the member screen's own classes, never to `.pokale-card`: the Pokale
+   tab's category and Rückblick tiles share that class and are composed for their
+   own content.
+
+   This block must stay BELOW `.pokale-cards`. `.member-stats` and `.pokale-cards`
+   are both (0,1,0), so the grid override is a specificity TIE broken purely by
+   source order — moving this block above the component silently restores the
+   one-column layout with nothing red. (The other overrides here are (0,2,0) and
+   win outright.) Same lesson as the ≤520px block in
+   `.claude/rules/flex-none-cancels-flex-wrap.md`. */
+@media (max-width: 859px) {
+  .member-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .member-stats .pokale-card { padding: 12px 14px; }
+  /* Value leads: icon, then the number at display size, then its label. */
+  .member-stats__card .pokale-card__icon { order: 0; }
+  .member-stats__card .pokale-card__value { order: 1; font-size: var(--text-3xl); line-height: 1.15; }
+  .member-stats__card .pokale-card__label { order: 2; }
+  .member-stats__card .pokale-card__sub { order: 3; }
+  /* The favourite tile holds a list of game links, not a number — it keeps its
+     natural order and takes the full row rather than being squeezed into half. */
+  .member-stats__fav { grid-column: 1 / -1; }
+}
+
 /* ---- Rückblick: the round's taste record, under the standings (#484) ----
    Reuses .pokale-cards / .pokale-card wholesale, so the grid, the tile chrome
    and the >=1280px width exemption all come for free; only the totals strip and
