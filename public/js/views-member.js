@@ -148,7 +148,7 @@ async function showMember(rid, mid) {
   const st = memberStats(round, mid);
   const statsSec = h(`<div class="section">
        <h2>${esc(t('member.statsTitle'))}</h2>
-       <div class="pokale-cards"></div>
+       <div class="pokale-cards member-stats"></div>
      </div>`);
   if (st.joined === 0) {
     // After the section title. The template has an <h2> (not <h3>) — querying the
@@ -160,8 +160,12 @@ async function showMember(rid, mid) {
   }
   const cards = statsSec.querySelector('.pokale-cards');
 
+  /* The scoping classes carry the phone recomposition (#694). `.member-stats`
+     alone would reach the Pokale tab's own `.pokale-card` uses if the grid were
+     ever reused, and the per-card classes keep the "value leads" reorder off the
+     favourite tile, which has no `__value` at all — see the note there. */
   const statCard = (icon, label, value, sub) =>
-    h(`<div class="pokale-card">
+    h(`<div class="pokale-card member-stats__card">
          <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
          <span class="pokale-card__label">${esc(label)}</span>
          <span class="pokale-card__value">${esc(value)}</span>
@@ -182,8 +186,13 @@ async function showMember(rid, mid) {
     statCard('ti-star', t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + st.avgGiven.toFixed(1), '')
   );
 
-  // Favorite game: one card whose value links to the game detail page(s).
-  const favCard = h(`<div class="pokale-card">
+  /* Favorite game: one card whose value links to the game detail page(s). It
+     carries `__games` rather than `__value`, so the phone reorder must not
+     apply — a list of wrapping links is not a "number to promote", and it is
+     the one card given the full row (#694) precisely because it holds more
+     text. Hence its own class rather than the `:last-child` the issue sketched:
+     both the span and the exemption follow the card, not its position. */
+  const favCard = h(`<div class="pokale-card member-stats__fav">
        <span class="pokale-card__icon"><i class="ti ti-heart" aria-hidden="true"></i></span>
        <span class="pokale-card__label">${esc(t('member.favorite'))}</span>
        <span class="pokale-card__games"></span>
