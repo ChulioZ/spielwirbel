@@ -38,6 +38,12 @@ const CONTAINED = [
   // the sheet presentation scrolls itself.
   '.popover--tags .filter-chips',
   '.popover--tags .icon-picker',
+  // A card `place()` had to clamp to the room its anchor leaves (#739). It is
+  // the only one here applied from JS rather than declared on a component, and
+  // the only one that is the overlay itself rather than a box inside it — but
+  // the question is the same one, and the answer matters more: reaching its end
+  // would scroll the page, and a page scroll CLOSES a popover outright.
+  '.popover--clamped',
 ];
 const CHAINS = [
   // The session-setup game list sits INLINE on the page, not in an overlay.

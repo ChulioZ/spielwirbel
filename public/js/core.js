@@ -857,7 +857,12 @@ function openPopover(anchor, build) {
   document.body.appendChild(el);
   place();
 
-  // Prefer below the anchor; flip above if it wouldn't fit. Clamp horizontally.
+  // Prefer below the anchor; flip above if it wouldn't fit. Clamp horizontally,
+  // and — since #739 — vertically too, to the room the chosen side actually has:
+  // the card is placed wholly on one side, so a card taller than the larger side
+  // has no legal placement and used to be put past the fold regardless. The
+  // arithmetic (which side, how much room, how far it may be squeezed) is in
+  // `popover-fit.js`; everything DOM-shaped about it stays here.
   //
   // Re-runnable, and re-run through repositionPopover() whenever the content
   // changes size (#519): the placement is decided from `el.offsetHeight`, so a
@@ -877,10 +882,36 @@ function openPopover(anchor, build) {
   function place() {
     const r = anchor.getBoundingClientRect();
     const margin = 8;
-    const below = window.scrollY + r.bottom + 6;
-    const above = window.scrollY + r.top - el.offsetHeight - 6;
-    const fitsBelow = r.bottom + el.offsetHeight + 6 <= window.innerHeight;
-    el.style.top = (fitsBelow || above < window.scrollY ? below : above) + 'px';
+    const kids = [...el.children];
+    // From a clean slate every time: a previous run may have clamped the card,
+    // and both the anchor and the viewport can have moved since.
+    el.style.maxHeight = '';
+    el.classList.remove('popover--clamped');
+    kids.forEach((k) => { k.style.minHeight = ''; });
+    const natural = el.offsetHeight;
+    const fit = popoverFit(natural, r.top, r.bottom, window.innerHeight);
+    if (fit.clamped) {
+      // No child may be squeezed past its own content while the card is clamped.
+      // A give-way child carries `min-height: 0` precisely so its card's CSS cap
+      // can bite (`.exp-pick`), and under a tighter clamp that lets it collapse
+      // to nothing while its own content keeps its floor — which then paints ON
+      // TOP of the next child (#728; measured here at 107px). Barred, the child
+      // stops at its content and the card scrolls the rest, which is the whole
+      // reason the clamp needs no floor of its own.
+      //
+      // Inline rather than a rule, because the declarations that set that 0 are
+      // more specific than any class this could add — a stylesheet fight decided
+      // by source order is exactly what .claude/rules/ warns off.
+      kids.forEach((k) => { k.style.minHeight = 'auto'; });
+      el.style.maxHeight = fit.height + 'px';
+      // A clamped card has to scroll itself, or the clamp merely trades "past
+      // the fold" for "clipped" — which is worse, because nothing indicates
+      // there is more. The class carries that (plus the `overscroll-behavior`
+      // that keeps reaching its end from scrolling the page and closing it).
+      el.classList.add('popover--clamped');
+    }
+    const h = el.offsetHeight;
+    el.style.top = (fit.above ? window.scrollY + r.top - h - fit.gap : window.scrollY + r.bottom + fit.gap) + 'px';
     let left = window.scrollX + r.left;
     const maxLeft = window.scrollX + document.documentElement.clientWidth - el.offsetWidth - margin;
     left = Math.max(window.scrollX + margin, Math.min(left, maxLeft));

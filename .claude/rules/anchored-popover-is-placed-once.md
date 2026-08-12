@@ -117,15 +117,43 @@ anywhere — the rest is rendered text and controls. Squeeze the card
 `test/game-expansions.test.js` then binds the floor to the list's *declared*
 floor plus that measured remainder, so raising one without the other goes red.
 
-### When no cap can fix it
+### When no cap can fix it — `place()` clamps, and the floor is a trap (#739)
 
 A cap works only while the card's irreducible minimum fits the budget. The
 edition-cover editor does not: chrome 270px + the grid's own 160px floor = 430px
 against `(900 − 180 − 12) / 2 = 354px`, because „Bild ändern" **is** the 180px
-cover and a large anchor eats the room. Measured 534px tall, 110px past the fold,
-on all nine pages at scroll 0. That one needs `place()` to clamp the card to the
-room it has — **#739** — not a smaller number. Check the minimum against the
-budget *before* reaching for a cap.
+cover and a large anchor eats the room. Measured 534px tall and past the fold on
+all nine pages at scroll 0.
+
+So `place()` now clamps **any** card to `max(roomAbove, roomBelow)` and adds
+`.popover--clamped` (`overflow-y: auto` + `overscroll-behavior: contain`). The
+caps above stay — a card that fits by construction picks *which* child gives way,
+where the clamp can only shorten the card and scroll the rest.
+
+**The obvious floor under that clamp is the trap, and it was implemented and
+measured before being removed.** "Never squeeze below what the children insist
+on" is the right instinct — it is what stops `.exp-pick` collapsing and painting
+over its sibling — but as a *height* floor it also refuses to clamp a card whose
+children cannot shrink **at all**, which is exactly this editor: its floor comes
+back as its full 534px, the clamp never fires, and the fix fixes nothing. It also
+let a card be clamped to a height fitting neither side, which hung a 12-option
+list off the **top** at `top: -322`, unreachable in a way a bottom overflow is
+not (the card's own scroll box cannot move the viewport's clipping edge).
+
+The working shape prevents the collapse **where it happens** instead: `place()`
+sets `min-height: auto` inline on every direct child while clamped, so no child
+shrinks past its own content and the card scrolls the remainder. Inline, because
+the rules declaring `min-height: 0` are more specific than any class it could
+add. Verified on the real expansion editor squeezed to 34px: **0px of overlap**,
+OK button reachable; the un-guarded version overlaps by **107px**.
+
+Two measurement traps met proving that, both of which reported "no overlap" while
+107px of it was on screen: a walker that skips zero-height children skips
+`.exp-pick`, which is *the* element that collapses; and one that descends into a
+scroll box counts clipped content as painted. Compare a child's painted extent —
+descending only through boxes whose `overflow-y` is `visible` — against the next
+child's top, and include children with `height: 0` (`getClientRects().length` is
+what separates "collapsed" from "not rendered").
 
 Where several children can grow, **each** needs `min-height` + `overflow-y: auto`
 + `overscroll-behavior: contain`, and the shrink order is a real decision: the

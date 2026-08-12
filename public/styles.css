@@ -3592,6 +3592,20 @@ body.auth-screen .terms-banner { display: none; }
   cursor: pointer;
   white-space: nowrap;
 }
+/* Applied by `place()` when it had to clamp the card to the room its anchor
+   leaves (#739). A clamp without a scroll box would merely trade "past the fold"
+   for "clipped", which is worse — nothing indicates there is more. Reaching
+   either end must not chain into the page, because a page scroll closes the
+   popover outright (.claude/rules/overlay-page-lock.md §3).
+
+   Set from JS rather than declared on `.popover` because the card must keep its
+   `overflow: visible` in the ordinary case: the per-card caps (#722, #728) hand
+   the shrink to a designated child, and a card that fits by construction should
+   not gain a second scroll box competing with that one. */
+.popover--clamped {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .popover__opt:hover { background: var(--brand-tint); }
 .popover__opt.is-current { border-color: var(--brand); background: var(--brand-tint); }
 /* Below 860px the same three editors are presented as a bottom sheet instead
@@ -3752,8 +3766,10 @@ body.auth-screen .terms-banner { display: none; }
      problem for an overlap.
 
      Fold-safe from ~799px of viewport height up (was ~1097px). Below that the
-     card sits at its 380px floor and no cap can do better — the remaining fix is
-     clamping in `place()` itself (#739), not a smaller number here. */
+     card sits at its 380px floor and no cap can do better — which is what #739
+     added `place()`'s clamp for. The cap still earns its place above that
+     threshold: it lets the tick-list be the part that gives way, where the clamp
+     can only shorten the card and scroll the remainder. */
   max-height: max(380px, min(45vh, 620px));
 }
 :is(.popover--expansions, .editor--expansions) .exp-pick {
@@ -4095,8 +4111,14 @@ body.auth-screen .terms-banner { display: none; }
    floor is 430px, against a budget of `(900 - 180 - 12) / 2 = 354px` — the
    „Bild ändern" trigger IS the 180px cover, so the anchor eats the room a
    smaller trigger would leave. No `max-height` and no vh term can get under
-   that; it needs `place()` to clamp the card to the room it has, or an editor
-   with less chrome. Tracked as #739. Width is still the axis with room. */
+   that.
+
+   FIXED IN #739, and not by a number here: `place()` now clamps any card to the
+   room its anchor actually leaves and lets it scroll (`.popover--clamped`), so
+   this editor needs no cap at all. Re-measured on the real editor with 40
+   editions — card 534px throughout, „Bild entfernen" was 14 / 120 / 220 / 320 /
+   420px past the fold at anchor tops 194…600 and is now inside a card that fits
+   the viewport at every one of them. Width is still the axis with room. */
 .popover.has-covers { max-width: 520px; }
 /* …and a `max-width` ALONE moves nothing here, which is the trap this pair
    exists to record. The popover is absolutely positioned, so it is shrink-to-fit:
