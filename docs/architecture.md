@@ -384,6 +384,8 @@ public/
                      cover editor and the collection-import list
     doc-title.js     joins a screen's browser-tab title, most specific part
                      first, ahead of the brand (issue #522)
+    popover-fit.js   which side of its anchor a popover goes on and how far it
+                     may be squeezed to stay reachable there (issue #739)
     report-link.js   builds the contact-form deep link behind the Freundeskreis
                      feed's per-item report button (issue #559)
     install-prompt.js stashes the browser's install event and decides which

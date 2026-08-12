@@ -30,6 +30,8 @@ const frontendGlobals = {
   backRow: 'readonly', joinNames: 'readonly',
   // doc-title.js
   docTitle: 'readonly', DOC_TITLE_SEP: 'readonly', DOC_TITLE_BRAND_SEP: 'readonly',
+  // popover-fit.js (issue #739)
+  popoverFit: 'readonly', popoverRoom: 'readonly', POPOVER_GAP: 'readonly',
   // report-link.js
   feedReportUrl: 'readonly', setContactAvailable: 'readonly',
   REPORT_SUBJECT_MAX: 'readonly', REPORT_USERNAME_MAX: 'readonly',
