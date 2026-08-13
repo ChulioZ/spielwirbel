@@ -185,9 +185,10 @@ test('opening the screen stamps it seen, clears the dot, and re-seats the accoun
   assert.equal(dot().hidden, true);
 
   /* The re-seat is the load-bearing half: setupAccountUi runs again on the next
-     login transition (and on every language switch, via the banners it calls),
-     and against a stale `accountUser` it would re-light the dot the user just
-     cleared. */
+     login transition, and against a stale `accountUser` it would re-light the
+     dot the user just cleared. (A language switch does NOT re-run it —
+     applyStaticTexts calls only the two banner functions — which is fine, since
+     the dot does not depend on the locale.) */
   assert.equal(dom.run('accountUser.lastSeenNewsRevision'), '2026-08-20');
   dom.call('setupAccountUi');
   assert.equal(dot().hidden, true, 'and it stays cleared');
