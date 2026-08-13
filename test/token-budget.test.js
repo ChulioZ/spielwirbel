@@ -131,6 +131,7 @@ const SOURCE_ALLOW = {
   'lib/legal.js': 'judged — flat data: the rendered legal texts, DE + EN, kept in one file so a revision bump touches one place (keep-legal-docs-current.md)',
   'public/js/views-session.js': 'judged — a single cohesive flow (start -> vote -> finale -> results), named as the non-finding in token-friendly-source-files.md',
   'test/support/repo-contract.js': 'judged — one shared contract both backends run; splitting it lets a case exist for one backend only',
+  'test/repo.postgres.test.js': 'judged 2026-08-13 — one harness, not several concerns: every case shares the single DATABASE_URL skip guard, the discovered-TRUNCATE before hook and one superuser connection, and the plain-role probes each stand up and tear down their own role. Splitting it would duplicate that scaffolding per file and let a probe exist for one half of the backend only — the same reason repo-contract.js is allowlisted. Crossed by #564 adding the fifth cross-tenant read probe',
   'test/admin.test.js': 'judged — one suite per subject, and the admin surface is the largest',
   'test/account.test.js': 'judged — one suite per subject',
   'test/providers-bgg.test.js': 'judged — one suite per provider, the shape all five providers-*.test.js files follow. A per-hop split (search / thing / collection / versions) is the visible seam, but it would break that convention for the one provider with four hops and split the shared COLLECTION_XML/THING_XML fixtures across files',

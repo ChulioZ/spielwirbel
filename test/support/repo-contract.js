@@ -3244,6 +3244,194 @@ module.exports = function repoContract(repo) {
     });
   });
 
+  /* --------------------- Public game aggregates (#564) ----------------------- */
+  /*
+   * Every case here uses a provider external id UNIQUE TO ITSELF, so the shared
+   * store cannot let one case's rows show up in another's row. That also makes
+   * every assertion absolute rather than a delta: the aggregate is keyed by the
+   * provider link, so a private id yields a private row.
+   */
+  test('publicGameAggregates groups by provider link, not by title', async (t) => {
+    const NOW = '2026-08-13T12:00:00.000Z';
+    const daysAgo = (n) => new Date(Date.parse(NOW) - n * 86400000).toISOString();
+    const rowFor = async (externalId) => (await repo.publicGameAggregates(NOW))
+      .find((r) => r.externalId === externalId) || null;
+    const bgg = (externalId, over = {}) => gameFields({
+      source: { provider: 'bgg', externalId, url: null }, ...over,
+    });
+
+    await t.test('two tenants owning the same game are ONE row with two owners', async () => {
+      const id = uniq();
+      const t1 = `pga-${uniq()}`;
+      const t2 = `pga-${uniq()}`;
+      const r1 = await repo.createRound(t1, { name: 'A', members: ['Ann'] });
+      const r2 = await repo.createRound(t2, { name: 'B', members: ['Bo'] });
+      // Deliberately DIFFERENT titles for the same provider game: grouping must
+      // key on the link, and the titles are what a user typed.
+      await repo.createGame(t1, r1.id, bgg(id, { title: 'Die Siedler' }));
+      await repo.createGame(t2, r2.id, bgg(id, { title: 'catan (2. Auflage)' }));
+
+      const row = await rowFor(id);
+      assert.equal(row.owners, 2);
+      assert.equal(row.provider, 'bgg');
+      // No user-authored field may ride along; the caller resolves the name.
+      assert.deepEqual(Object.keys(row).sort(), ['externalId', 'owners', 'plays', 'provider', 'ratings']);
+    });
+
+    await t.test('a game with no provider link produces no row at all', async () => {
+      const tenant = `pga-${uniq()}`;
+      const round = await repo.createRound(tenant, { name: 'C', members: ['Ann'] });
+      const game = await repo.createGame(tenant, round.id, gameFields({ title: 'Handgetippt' }));
+      const rows = await repo.publicGameAggregates(NOW);
+      assert.ok(!rows.some((r) => r.externalId === game.id));
+      // And nothing in the payload carries the typed title anywhere.
+      assert.ok(!JSON.stringify(rows).includes('Handgetippt'));
+    });
+
+    await t.test('a WISH is not owned; retired and completed games still are', async () => {
+      const owned = uniq();
+      const wished = uniq();
+      const tenant = `pga-${uniq()}`;
+      const round = await repo.createRound(tenant, { name: 'D', members: ['Ann'] });
+      const game = await repo.createGame(tenant, round.id, bgg(owned));
+      await repo.createGame(tenant, round.id, bgg(wished, { wish: true }));
+      await repo.retireGame(tenant, round.id, game.id, true);
+
+      assert.equal((await rowFor(owned)).owners, 1, 'a retired game is still owned');
+      assert.equal(await rowFor(wished), null, 'a wish has no owner, so it has no row');
+    });
+
+    await t.test('plays land in the 7/30/365 windows by the date they finished', async () => {
+      const id = uniq();
+      const tenant = `pga-${uniq()}`;
+      const round = await repo.createRound(tenant, { name: 'E', members: ['Ann'] });
+      const game = await repo.createGame(tenant, round.id, bgg(id));
+      const play = async (daysBack, over = {}) => repo.createSession(tenant, round.id, {
+        gameIds: [game.id], votes: {}, createdAt: daysAgo(daysBack),
+        finished: true, finishedAt: daysAgo(daysBack), chosenGameId: game.id, ...over,
+      });
+      await play(2);
+      await play(20);
+      await play(200);
+      // Neither of these is a play: one never finished, one settled on nothing.
+      await play(1, { finished: false });
+      await play(1, { chosenGameId: null });
+
+      const row = await rowFor(id);
+      assert.equal(row.plays.d7.count, 1);
+      assert.equal(row.plays.d30.count, 2, 'the windows nest — 30 days includes the last 7');
+      assert.equal(row.plays.d365.count, 3);
+      assert.equal(row.plays.d365.tenants, 1, 'one group playing three times is still one group');
+    });
+
+    await t.test('ratings sum across sessions, people and tenants', async () => {
+      const id = uniq();
+      const t1 = `pga-${uniq()}`;
+      const t2 = `pga-${uniq()}`;
+      const r1 = await repo.createRound(t1, { name: 'F', members: ['Ann', 'Bo'] });
+      const r2 = await repo.createRound(t2, { name: 'G', members: ['Cy'] });
+      const g1 = await repo.createGame(t1, r1.id, bgg(id));
+      const g2 = await repo.createGame(t2, r2.id, bgg(id));
+      const [ann, bo] = (await repo.getRound(t1, r1.id)).members;
+      const [cy] = (await repo.getRound(t2, r2.id)).members;
+
+      await repo.createSession(t1, r1.id, {
+        gameIds: [g1.id], createdAt: daysAgo(1),
+        votes: {
+          [ann.id]: { [g1.id]: { rating: 5 } },
+          // A vote with no rating (a bare "retire" tick) is not a rating.
+          [bo.id]: { [g1.id]: { retire: true } },
+        },
+      });
+      await repo.createSession(t2, r2.id, {
+        gameIds: [g2.id], createdAt: daysAgo(1),
+        votes: { [cy.id]: { [g2.id]: { rating: 2 } } },
+      });
+
+      const row = await rowFor(id);
+      assert.equal(row.ratings.count, 2);
+      assert.equal(row.ratings.sum, 7);
+      assert.equal(row.ratings.tenants, 2);
+      // The sum crosses the pg-numeric-is-a-string boundary, where the backends
+      // silently disagree unless it is coerced.
+      assert.equal(typeof row.ratings.sum, 'number');
+    });
+
+    await t.test('a vote naming a game in ANOTHER round is ignored, not credited', async () => {
+      /*
+       * Game ids are globally unique, so a malformed votes blob can name a real
+       * game that belongs to a different round. The JSON backend cannot credit
+       * it — it only ever looks an id up in its own round's shelf — and the
+       * Postgres read has to agree, or the two backends diverge on precisely the
+       * input nobody writes a fixture for.
+       */
+      const mine = uniq();
+      const theirs = uniq();
+      const tenant = `pga-${uniq()}`;
+      const r1 = await repo.createRound(tenant, { name: 'J', members: ['Ann'] });
+      const r2 = await repo.createRound(tenant, { name: 'K', members: ['Bo'] });
+      const g1 = await repo.createGame(tenant, r1.id, bgg(mine));
+      const g2 = await repo.createGame(tenant, r2.id, bgg(theirs));
+      const [ann] = (await repo.getRound(tenant, r1.id)).members;
+
+      await repo.createSession(tenant, r1.id, {
+        gameIds: [g1.id], createdAt: daysAgo(1),
+        // The second entry points at r2's game from r1's session.
+        votes: { [ann.id]: { [g1.id]: { rating: 3 }, [g2.id]: { rating: 5 } } },
+        finished: true, finishedAt: daysAgo(1), chosenGameId: g2.id,
+      });
+
+      assert.equal((await rowFor(mine)).ratings.count, 1, 'the in-round vote still counts');
+      const other = await rowFor(theirs);
+      assert.equal(other.ratings.count, 0, 'the cross-round vote must not be credited');
+      assert.equal(other.plays.d7.count, 0, 'nor a cross-round chosenGameId as a play');
+    });
+
+    await t.test('a demo tenant contributes to nothing', async () => {
+      const id = uniq();
+      const real = `pga-${uniq()}`;
+      const demo = `demo-${uniq()}`;
+      const rr = await repo.createRound(real, { name: 'H', members: ['Ann'] });
+      const dr = await repo.createRound(demo, { name: 'Demo', members: ['Gast'] });
+      const rg = await repo.createGame(real, rr.id, bgg(id));
+      const dg = await repo.createGame(demo, dr.id, bgg(id));
+      const [gast] = (await repo.getRound(demo, dr.id)).members;
+      await repo.createSession(demo, dr.id, {
+        gameIds: [dg.id], createdAt: daysAgo(1), finished: true, finishedAt: daysAgo(1),
+        chosenGameId: dg.id, votes: { [gast.id]: { [dg.id]: { rating: 5 } } },
+      });
+      // One real play so the row exists at all and the assertion is about the
+      // demo being absent, not about the row being missing.
+      await repo.createSession(real, rr.id, {
+        gameIds: [rg.id], createdAt: daysAgo(1), finished: true, finishedAt: daysAgo(1),
+        chosenGameId: rg.id, votes: {},
+      });
+
+      const row = await rowFor(id);
+      assert.equal(row.owners, 1, 'the demo shelf must not count as an owner');
+      assert.equal(row.plays.d7.count, 1, 'the demo night must not count as a play');
+      assert.equal(row.ratings.count, 0, 'the demo rating must not count');
+    });
+
+    await t.test('every number really is a number, on both backends', async () => {
+      const id = uniq();
+      const tenant = `pga-${uniq()}`;
+      const round = await repo.createRound(tenant, { name: 'I', members: ['Ann'] });
+      await repo.createGame(tenant, round.id, bgg(id));
+      const row = await rowFor(id);
+      // Swept rather than hand-listed: half of any such list is vacuous, and the
+      // field that would catch a dropped ::int cast is the one nobody adds.
+      for (const [name, value] of Object.entries(row.plays)) {
+        assert.equal(typeof value.count, 'number', `plays.${name}.count`);
+        assert.equal(typeof value.tenants, 'number', `plays.${name}.tenants`);
+      }
+      for (const field of ['sum', 'count', 'tenants']) {
+        assert.equal(typeof row.ratings[field], 'number', `ratings.${field}`);
+      }
+      assert.equal(typeof row.owners, 'number');
+    });
+  });
+
   // The suite shares one store across cases, so assert on the delta, not on an
   // absolute count — other tests have already created users by now.
   test('listUsers returns every user for the operator account list', async () => {

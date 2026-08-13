@@ -157,6 +157,10 @@ const MAIN = [
   ['konto', (dom) => dom.call('showAccount')],
   // Reached from the account menu, like /freunde and /konto (#741).
   ['was ist neu', (dom) => dom.call('showNews')],
+  // Also reached from the account menu (#564). Its own fetch is stubbed by
+  // bootApp's `fetch`, so it renders its empty state here — which still has to
+  // satisfy assertRendered, i.e. the screen is genuinely there.
+  ['entdecken', (dom) => dom.call('showEntdecken')],
 ];
 
 for (const [name, render] of NON_MAIN) {

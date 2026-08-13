@@ -212,6 +212,11 @@ const isAuthRoute = (p) => ['/login', '/register', '/forgot-password'].includes(
 // the server and shows the dead-link state when the answer is no.
 const isVoteLinkRoute = (p) => /^\/vote\/[^/]+\/*$/.test(p);
 
+// The public statistics screen (#564). Like a vote link, it is a URL a
+// logged-out visitor is MEANT to land on — it publishes nothing tenant-private
+// and its whole point is being shareable to someone who has never seen the app.
+const isPublicStatsRoute = (p) => p.replace(/\/+$/, '') === '/entdecken';
+
 // Where to continue after a successful login: the deep link a logged-out visitor
 // arrived on, captured by bootApp() before it hands them to /login and consumed
 // by enterApp(). It lives in memory rather than in the URL because the auth
@@ -265,6 +270,10 @@ async function bootApp() {
     // rather than called directly so the cold-loaded entry is replaced, not
     // pushed (same reasoning as the auth screens above).
     if (isVoteLinkRoute(path)) return routeTo(path);
+    // /entdecken, for the same reason: parking it in pendingPath would answer a
+    // shared "look what this instance is playing" link with a login wall, which
+    // is exactly the audience the screen is published for.
+    if (isPublicStatsRoute(path)) return routeTo(path);
     pendingPath = path;
     // routeTo() rather than showLogin() directly: it sets `routing`, which makes
     // the login screen's syncUrl REPLACE the deep link's history entry instead
@@ -1062,6 +1071,14 @@ function setupAccountUi() {
     const konto = h(`<button class="popover__opt"><i class="ti ti-user" aria-hidden="true"></i> ${esc(t('konto.menu'))}</button>`);
     konto.addEventListener('click', () => { close(); showAccount(); });
     el.appendChild(konto);
+    // Entdecken (#564): the instance-wide statistics. Listed unconditionally
+    // rather than gated on /api/stats/public answering — the menu is built
+    // synchronously on every open, and a network round-trip per open to decide
+    // whether to show one row would either stall the popover or make it jump.
+    // The screen itself renders an honest empty state when the feature is off.
+    const entdecken = h(`<button class="popover__opt"><i class="ti ti-world-search" aria-hidden="true"></i> ${esc(t('stats.menu'))}</button>`);
+    entdecken.addEventListener('click', () => { close(); showEntdecken(); });
+    el.appendChild(entdecken);
     // „Was ist neu" (#741). The only entry point to /neu, which is what makes
     // this a PULLED surface — the dot on the button above merely says there is
     // something here, and costs nothing when there is not.

@@ -244,6 +244,14 @@ function showLanding() {
       </div>
     </section>
 
+    <!-- Instance-wide statistics (#564). An EMPTY placeholder: mountLandingStats
+         fills it once GET /api/stats/public answers, and removes it outright
+         when there is nothing to publish — so an instance with the feature off
+         renders no heading, no container and no gap, and there is no hidden
+         attribute here needing a paired display rule. (No backticks in here:
+         this comment is inside a template literal.) -->
+    <section class="landing-section landing-stats" id="landingStats"></section>
+
     <section class="landing-section landing-trust">
       <h2 class="landing-section__title">${esc(t('landing.trust.title'))}</h2>
       <ul class="landing-trust__chips">
@@ -278,4 +286,7 @@ function showLanding() {
   view.querySelector('#landingRegisterClose').addEventListener('click', () => showRegister());
   view.querySelector('#landingLogin').addEventListener('click', () => showLogin());
   landingRevealOperatorClaims(view);
+  // Not awaited: the landing page must render at once, and the block appears
+  // (or its placeholder disappears) when the payload lands.
+  mountLandingStats(view.querySelector('#landingStats'));
 }

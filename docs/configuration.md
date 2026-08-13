@@ -353,6 +353,41 @@ decision 2026-08-07). That is what keeps the operator non-commercial here and
 removes the ad-labelling duty (§ 5a Abs. 4 UWG); it is a legal posture, not a
 config switch, so don't add an affiliate parameter as a "harmless" follow-up.
 
+Instance-wide public statistics (issue #564) are **off** unless
+`PUBLIC_STATS_ENABLED=true`. With the flag set, the logged-out landing page and a
+new `/entdecken` screen publish the instance's totals (accounts, rounds, games,
+nights played) plus its most-owned, most-played and best-rated games; with it
+unset `GET /api/stats/public` answers `404`, no surface renders anything, and the
+rebuild job makes no provider request at all.
+
+Two properties are worth knowing before switching it on. **Game names come from
+BoardGameGeek, never from the title someone typed** — the aggregate is keyed on
+the provider link and the display name is resolved from the provider, so no
+user-authored byte can reach the public page. The cost of that guarantee is that
+games with no provider link never appear in the rankings, although they still
+count in the totals. And because the rankings show hotlinked covers, an anonymous
+visitor's browser then contacts BoardGameGeek, which until now only happened
+inside the signed-in app — the privacy policy's sections 5 and 7 and
+`docs/legal/vvt.md` row 22 cover both points.
+
+Each metric additionally hides itself until it clears its own minimum, so the
+page fills in as the instance grows rather than publishing weak numbers:
+`PUBLIC_STATS_MIN_ACCOUNTS` / `_ROUNDS` / `_GAMES` / `_SESSIONS` (50/50/500/200)
+for the counters, and `PUBLIC_STATS_MIN_OWNERS` (3), `PUBLIC_STATS_MIN_PLAYS` (3)
+with `PUBLIC_STATS_MIN_PLAY_TENANTS` (2), and `PUBLIC_STATS_MIN_RATINGS` (5) with
+`PUBLIC_STATS_MIN_RATING_TENANTS` (2) for the rankings. The paired tenant floors
+are the point of that shape: three plays say nothing about the instance if one
+group played three times. Like every ceiling here they are read per call, so
+raising one pulls a single metric back without a deploy and without taking the
+block down. A `0` is honoured rather than falling back to the default.
+
+The payload is rebuilt by the background scheduler and served from memory —
+nothing is computed per request and nothing is stored — and
+`PUBLIC_STATS_RESOLVE_MAX` (default 20) caps how many *new* provider lookups one
+rebuild may make. Only games that could actually reach a podium are resolved
+(ranking happens on the raw numbers first) and successful lookups are memoized,
+so a steady state costs no upstream requests.
+
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and
 `ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook (a

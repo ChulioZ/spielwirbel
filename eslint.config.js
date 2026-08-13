@@ -148,7 +148,7 @@ const frontendGlobals = {
   initAccounts: 'readonly', enterApp: 'readonly', authScreen: 'readonly',
   openAuth: 'readonly', setAuthDocTitle: 'readonly', authError: 'readonly', setError: 'readonly',
   // routed auth screens (issue #501)
-  isAuthRoute: 'readonly', isVoteLinkRoute: 'readonly',
+  isAuthRoute: 'readonly', isVoteLinkRoute: 'readonly', isPublicStatsRoute: 'readonly',
   pendingPath: 'writable', authScreensAvailable: 'readonly',
   showLogin: 'readonly', showRegister: 'readonly', showForgot: 'readonly',
   showAuthDone: 'readonly', buildResend: 'readonly', renderVerifyLanding: 'readonly',
@@ -159,6 +159,11 @@ const frontendGlobals = {
   hasUnseenNews: 'readonly', setNewsDot: 'readonly', markNewsSeen: 'readonly',
   // views-news.js (issue #741)
   showNews: 'readonly', renderNewsEntry: 'readonly',
+  // views-stats.js (issue #564)
+  showEntdecken: 'readonly', renderPublicStats: 'readonly', loadPublicStats: 'readonly',
+  publicStatsHasContent: 'readonly', mountLandingStats: 'readonly',
+  mountHomeStatsTeaser: 'readonly', statsCard: 'readonly', formatCount: 'readonly',
+  STATS_PODIUMS: 'readonly', STATS_COUNTERS: 'readonly',
   // views-inbox.js (issue #207)
   showInbox: 'readonly', renderInboxItem: 'readonly',
   renderInvitationItem: 'readonly', renderGenericItem: 'readonly',

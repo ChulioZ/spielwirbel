@@ -147,6 +147,11 @@ function resolveRoute(pathname) {
   // list still renders on a password-only or open self-hosted instance, where
   // there is no account to badge it against.
   if (parts[0] === 'neu') return () => showNews();
+  // Instance-wide public statistics (#564). Unlike every other route above it is
+  // NOT guarded on being logged in: the whole point of publishing this is that it
+  // is public, so the URL has to be shareable to someone who has no account. The
+  // screen renders its own honest empty state when the feature is off.
+  if (parts[0] === 'entdecken') return () => showEntdecken();
   // A public account profile (#558); showProfile sends a logged-out visitor
   // Home. The segment is decoded here because resolveRoute splits the raw
   // pathname — profilePath encoded it.
