@@ -353,6 +353,7 @@ I18N.de = {
   'detail.setPlayers': 'Personenzahl festlegen',
   'detail.setTags': 'Tags',
   'detail.changeImage': 'Bild ändern',
+  'detail.edition': 'Ausgabe: {edition}',
   'detail.pasteImage': 'Neues Bild einfügen',
   'detail.imageHint': 'Kopiere ein Bild und füge es hier ein.',
   'detail.relatedTitle': 'Verwandte Sessions',

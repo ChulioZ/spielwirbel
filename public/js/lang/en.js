@@ -352,6 +352,7 @@ I18N.en = {
   'detail.setPlayers': 'Set players',
   'detail.setTags': 'Tags',
   'detail.changeImage': 'Change image',
+  'detail.edition': 'Edition: {edition}',
   'detail.pasteImage': 'Paste new image',
   'detail.imageHint': 'Copy an image, then paste it here.',
   'detail.relatedTitle': 'Related sessions',

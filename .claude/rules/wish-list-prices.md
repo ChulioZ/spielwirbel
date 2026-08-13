@@ -2,6 +2,8 @@
 paths:
   - "lib/prices/**"
   - "lib/routes/games.js"
+  - "lib/edition.js"
+  - "public/js/bgg-covers.js"
   - "public/js/views-round-detail.js"
   - "test/prices*.test.js"
   - "test/game-price-section.test.js"
@@ -26,10 +28,34 @@ box at a different price: measured, `items[0]`'s cheapest quotable offer was
 **55.17 €** while the German edition's was **49.89 €**. Nothing distinguishes the
 two on screen.
 
-So the edition is chosen by the reader's language, falling back to the edition
-with the most offers. The two rules must **disagree** in any fixture that tests
-either, or both are satisfied by the array order and neither is proven — the
-committed fixture inverts the live offer counts (GB 6, DE 8) precisely for that.
+So the edition is chosen, in order, by **the game's own stored edition**, then the
+reader's language, then the edition with the most offers. All three must
+**disagree** in any fixture that tests one, or the assertion is satisfied by the
+array order or by the fallback and proves nothing — the committed fixture inverts
+the live offer counts (GB 6, DE 8) precisely for that.
+
+**The first term is #742 and it replaced "the reader's language decides", which
+was wrong in two directions at once.** A round that picked the **English** box's
+cover was quoted the German one (the 55.17 / 49.89 spread above, backwards), and
+**two members of one round saw different prices for the same wish** purely because
+they read the app in different languages — with nothing on either screen to
+indicate a substitution. The edition comes from `game.edition.languages`, BGG's
+own `<link type="language">` values, kept by the cover picker instead of thrown
+away with the rest of its answer.
+
+**The MARKET and the EDITION must come from different places, and collapsing them
+is the trap.** `cacheKey`/`price` derive `destination` + `currency` from the
+reader's locale (shipping is about the person) and the edition language from the
+game (which box it is). One value for both would quote a German reader asking for
+the English box **GB shipping in GBP**. A test asserting only that the amount
+changed cannot see that — assert the currency and destination separately.
+
+`resolveEditionLang` is the single function both `cacheKey` and `price` go
+through, so the key and the body it is keyed to cannot describe different
+editions. `BGG_EDITION_LANGS` maps BGG's language **names** onto the aggregator's
+**codes** as an allowlist, and the fallback chain is what keeps a **Polish or
+Japanese** printing showing a price at all — BGG names ~80 languages, the
+aggregator sells seven.
 
 ## 2. `shipping_known: false` arrives with `shipping: 0`, so `price` LOOKS like a total
 
@@ -71,6 +97,11 @@ most-offers fallback, where no reader-language edition existed. Any fixture
 testing this must put GB first in `versions.lang` (the live order) — DE-first
 would satisfy the assertion by array order, the same anti-vacuous shape as §1's
 inverted offer counts.
+
+Since #742 the label follows the **wanted** language rather than the reader's,
+which is the same rule with a wider first term: `parseInfo` takes an
+already-resolved `want` code, so the box a round picked is also the box the
+label names.
 
 ## Why this is NOT an entry in `lib/providers/`
 

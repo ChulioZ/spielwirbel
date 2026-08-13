@@ -3359,6 +3359,15 @@ body.auth-screen .terms-banner { display: none; }
    title, so the game's rating read as belonging to nothing. Shrinking is still
    allowed (`0 1 auto`), so a long title or a row of tag chips takes the room it
    needs and the ring follows it instead of the container's edge. */
+/* The cover plus its edition line (#742). Only rendered when the game HAS a
+   stored edition, so the cover is otherwise still a direct flex child of
+   .gd-head. The explicit 240px matches .gd-img's own width rather than being
+   `fit-content`: .gd-head is `width: fit-content`, so a column sized by its
+   widest child would let a long edition name ("Deutsche Erstausgabe · 2019")
+   widen the whole head band instead of wrapping under the cover. */
+.gd-cover { flex: none; width: 240px; max-width: 100%; }
+.gd-edition { margin: 8px 0 0; font-size: var(--text-sm); line-height: 1.4; }
+
 .gd-info { flex: 0 1 auto; min-width: 240px; }
 .gd-info h1 { margin: 0 0 14px; font-size: var(--text-2xl); line-height: 1.5; }
 

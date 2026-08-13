@@ -60,6 +60,12 @@ What the app does, in detail. For a short overview see the
   then English, then the rest; each tile names the edition and its year. The list
   is only fetched when you open it, and — like every other provider picture — the
   cover stays a link to BGG's own servers rather than a copy on this instance.
+  The choice is **remembered**: the game's detail page names the printing under
+  its cover („Ausgabe: Deutsche Erstausgabe · 2021"), and if the game is on the
+  Wunschliste the price below is quoted for *that* box rather than for whichever
+  edition matches the language you happen to read the app in. Picking a different
+  cover moves both; pasting your own picture drops the label, since it no longer
+  describes a BGG printing.
 - **Import a BoardGameGeek collection** – filling a shelf one game at a time is
   the slow part of setting a round up, so link your BGG username once under
   **Konto** and the Regal can pull in everything you have marked as *owned*
@@ -112,7 +118,9 @@ What the app does, in detail. For a short overview see the
   („Preis von vor 3 Tagen") plus a checking note — while the current price is
   looked up, stands in when the price service is out, and is never passed off as
   current or shown past seven days. A lookup that settles on "nobody stocks
-  this" says so instead of showing nothing. Read-only and
+  this" says so instead of showing nothing. Which **edition** is priced follows
+  the cover the round picked, so everyone in it sees one price for one wish;
+  where it ships to and in what currency still follows each reader. Read-only and
   server-side: no alerts, no price history, and no affiliate links of any kind.
   A game is active, retired, completed or wished-for, never two at once, and all
   three lists are reached from the round hub's footer. Every row on those lists

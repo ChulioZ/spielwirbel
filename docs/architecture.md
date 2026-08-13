@@ -97,6 +97,10 @@ lib/
   feed.js            the Freundeskreis activity feed's allowlisted events (#325)
   actor-seat.js      which member seat to attribute a round activity to; one
                      definition shared by the games and members routes (#563)
+  edition.js         the printing a game's cover was picked from, normalized and
+                     bounded once for both writers — the single add (flat
+                     multipart fields) and the bulk import (a map beside
+                     `covers`) — so they cannot accept different things (#742)
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
@@ -187,8 +191,11 @@ lib/
                      stored last-known price (#688) served — age-first — while
                      a source is unreachable, swept past its display ceiling
     boardgameprices.js  Brettspielpreise.de / BoardGamePrices, keyed on the
-                     BGG id (board games): picks the reader's language edition
-                     and the cheapest in-stock offer whose shipping is known
+                     BGG id (board games): picks the GAME's own edition (the box
+                     its cover was picked from, #742), falling back to the
+                     reader's language, and the cheapest in-stock offer whose
+                     shipping is known. The market — where it ships and in what
+                     currency — follows the reader either way
   routes/            Express routers, one per resource; mounted by app.js
                      above. Under lib/ so every backend concern lives in one
                      package and app.js never reaches upward out of its own
@@ -378,7 +385,9 @@ public/
                      dropdown, and how it survives a re-render (issue #542)
     bgg-covers.js    which of a game's BGG edition covers is offered first
                      (the reader's language, then English) and which duplicate
-                     box arts are dropped (issue #519)
+                     box arts are dropped (issue #519); plus what a pick says
+                     about its PRINTING, kept on the game row rather than
+                     discarded with the rest of the cover object (#742)
     cover-picker.js  the collapsible grid of those covers, shared by the three
                      screens that offer it: the add-game sheet, the game-detail
                      cover editor and the collection-import list

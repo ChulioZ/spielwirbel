@@ -59,16 +59,69 @@ function sortEditionCovers(covers, locale) {
     });
 }
 
-// One line of context under a cover tile: "German edition · 2019", either half
-// alone, or '' when BGG has neither. Kept here rather than in the renderer so
-// the "no label at all" case is unit-testable — an edition with no name and no
-// year must not render a stray separator.
-function coverCaption(cover) {
-  return [(cover && cover.edition) || '', (cover && cover.year) || '']
+// What a picked cover says about its PRINTING, in the shape the game row stores
+// (#742): BGG's edition name, its year and its own language values. Null when the
+// cover carries none of the three — the routes read that as "no edition", which
+// is what keeps the key absent on a game whose cover says nothing about the box.
+//
+// Note the rename: a cover's own field is `edition` (the name), while the stored
+// object is `edition: { name, … }`. Converting here rather than at three call
+// sites is what stops one of them shipping `{ edition: 'Deutsche Erstausgabe' }`.
+//
+// `languages` is the half that does real work — the server maps it onto the price
+// aggregator's edition codes — so it is kept even for a cover with no name and no
+// year, which `editionLabel` then renders as nothing at all.
+function editionFromCover(cover) {
+  const name = (cover && cover.edition) || '';
+  const year = (cover && cover.year) || null;
+  const languages = (cover && Array.isArray(cover.languages) ? cover.languages : [])
+    .map(String)
+    .filter(Boolean);
+  if (!name && year === null && !languages.length) return null;
+  return { name, year, languages };
+}
+
+// One line of context: "German edition · 2019", either half alone, or '' when BGG
+// has neither. Kept here rather than in the renderer so the "no label at all"
+// case is unit-testable — an edition with no name and no year must not render a
+// stray separator. Used under a cover tile in the picker AND under the cover on
+// the game detail page, so the two can never phrase one printing differently.
+function editionLabel(edition) {
+  return [(edition && edition.name) || '', (edition && edition.year) || '']
     .filter(Boolean)
     .join(' · ');
 }
 
+function coverCaption(cover) {
+  return editionLabel(editionFromCover(cover));
+}
+
+// The picked edition flattened onto a request body, the way `POST /games` and
+// `PATCH /games/:gid` read it — those are multipart, so a nested object would
+// arrive as '[object Object]' (the same reason `source` rides as three fields).
+//
+// All three keys are ALWAYS present, including for a cover that names no
+// printing: an omitted key leaves the stored edition in place, so a new cover
+// would keep the previous box's label and its price edition. Empty values are how
+// the routes are told to clear it.
+function editionFields(cover) {
+  const ed = editionFromCover(cover);
+  return {
+    editionName: ed ? ed.name : '',
+    editionYear: ed && ed.year != null ? ed.year : '',
+    editionLanguages: ed ? ed.languages : [],
+  };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { BGG_LANGUAGES, bggCoverLanguage, coverRank, sortEditionCovers, coverCaption };
+  module.exports = {
+    BGG_LANGUAGES,
+    bggCoverLanguage,
+    coverRank,
+    sortEditionCovers,
+    coverCaption,
+    editionFromCover,
+    editionLabel,
+    editionFields,
+  };
 }

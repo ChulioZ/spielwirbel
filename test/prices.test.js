@@ -592,3 +592,176 @@ test('the gates stay in front of ?stored=1: disabled 404s, a shelf game gets not
   const res = await request(app).get(`/api/rounds/${round.id}/games/${shelf.id}/prices?lang=de&stored=1`);
   assert.deepEqual(res.body, { available: false }, 'the wish-only guard holds for the fast path');
 });
+
+/* ---- the wish's own EDITION decides which box is priced (#742) -------------- */
+
+/*
+ * Two editions of one game, GB first — the live array order
+ * (.claude/rules/wish-list-prices.md §1) — with the DE edition carrying MORE
+ * offers than the GB one. Both anti-vacuous properties matter: the array order
+ * and the answer must disagree, and so must the offer counts, or an assertion is
+ * satisfied by `items[0]` (or by the most-offers fallback) and proves nothing
+ * about the edition rule having run at all.
+ */
+const twoEditions = (eid) => ({
+  currency: 'EUR',
+  items: [
+    {
+      id: 1, name: 'Ark Nova', url: 'https://brettspielpreise.de/item/show/1/ark-nova',
+      versions: { lang: ['GB'] }, external_id: String(eid),
+      prices: [{ ...OFFER, price: 55.17, product: 50.27, country: 'GB' }],
+    },
+    {
+      id: 2, name: 'Arche Nova', url: 'https://brettspielpreise.de/item/show/2/arche-nova',
+      versions: { lang: ['DE'] }, external_id: String(eid),
+      prices: [
+        { ...OFFER, price: 49.89, product: 44.99 },
+        { ...OFFER, price: 51.0, product: 46.1 },
+      ],
+    },
+  ],
+});
+
+// A wish whose cover was picked from a specific BGG printing. The edition rides
+// the multipart create route flattened, beside the imageUrl it belongs to —
+// which is the only branch the route reads it on. `editionLanguages` is repeated
+// per value rather than joined: multipart has no array form, so this is the wire
+// shape the picker really produces.
+async function addWishWithEdition(rid, over = {}, languages = ['German']) {
+  const fields = {
+    title: 'Arche Nova', minPlayers: '1', maxPlayers: '4', wish: 'true',
+    sourceProvider: 'bgg', sourceExternalId: '342942',
+    imageUrl: 'https://cf.geekdo-images.com/ark-nova-de.jpg',
+    editionName: 'Deutsche Erstausgabe', editionYear: '2021', ...over,
+  };
+  const req = request(app).post(`/api/rounds/${rid}/games`);
+  for (const [k, v] of Object.entries(fields)) req.field(k, String(v));
+  languages.forEach((l) => req.field('editionLanguages', l));
+  return (await req).body;
+}
+
+test('a German box is quoted the GERMAN edition to a reader using the app in English', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  stubFetch(twoEditions('3101'));
+  const round = await createRound(request);
+  const game = await addWishWithEdition(round.id, { sourceExternalId: '3101' });
+  assert.deepEqual(game.edition, { name: 'Deutsche Erstausgabe', year: 2021, languages: ['German'] });
+
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=en`);
+  // Before #742 the reader's `en` chose the GB edition at 55.17 — the wrong box.
+  assert.equal(res.body.edition.lang, 'DE');
+  assert.equal(res.body.edition.title, 'Arche Nova');
+  assert.equal(res.body.amount, 49.89);
+});
+
+test('…and that same reader still gets THEIR market: GB destination, GBP currency', async () => {
+  // The trap the split exists for. An assertion on the amount alone cannot see
+  // this: deriving the market from the edition too would quote an English reader
+  // the German box in EUR shipped to Germany, and the number would still change.
+  process.env.PRICES_ENABLED = 'true';
+  const calls = stubFetch(twoEditions('3102'));
+  const round = await createRound(request);
+  const game = await addWishWithEdition(round.id, { sourceExternalId: '3102' });
+
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=en`);
+  assert.equal(res.body.destination, 'GB');
+  assert.equal(res.body.currency, 'EUR', 'the body\'s own currency wins where it states one');
+  assert.match(calls[0], /destination=GB/);
+  assert.match(calls[0], /currency=GBP/);
+});
+
+test('and the other way round — an English box is quoted the GB edition to a German reader', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  const calls = stubFetch(twoEditions('3103'));
+  const round = await createRound(request);
+  const game = await addWishWithEdition(round.id, { sourceExternalId: '3103' }, ['English']);
+
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=de`);
+  // The DE edition has more offers, so the most-offers fallback would answer 'DE'
+  // here — reaching 'GB' proves the stored edition decided it.
+  assert.equal(res.body.edition.lang, 'GB');
+  assert.equal(res.body.amount, 55.17);
+  assert.match(calls[0], /destination=DE/, 'the market is still the reader\'s');
+});
+
+test('two members of one round see the SAME price for one wish, in either language', async () => {
+  // The second half of the bug: identical data, different reader, different
+  // number — with nothing on either screen to indicate a substitution.
+  process.env.PRICES_ENABLED = 'true';
+  stubFetch(twoEditions('3104'));
+  const round = await createRound(request);
+  const game = await addWishWithEdition(round.id, { sourceExternalId: '3104' });
+  const url = `/api/rounds/${round.id}/games/${game.id}/prices`;
+  const de = (await request(app).get(`${url}?lang=de`)).body;
+  const en = (await request(app).get(`${url}?lang=en`)).body;
+  assert.equal(de.amount, en.amount);
+  assert.equal(de.edition.lang, en.edition.lang);
+});
+
+test('a printing the aggregator does not sell keeps a price, from the reader\'s locale', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  stubFetch(twoEditions('3105'));
+  const round = await createRound(request);
+  const game = await addWishWithEdition(round.id, { sourceExternalId: '3105' }, ['Polish']);
+  assert.deepEqual(game.edition.languages, ['Polish']);
+
+  // Not an empty price box: the fallback chain is edition -> reader -> most
+  // offers, so a Polish box read in English still answers with the GB edition.
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=en`);
+  assert.equal(res.body.available, true);
+  assert.equal(res.body.edition.lang, 'GB');
+});
+
+test('a wish with no stored edition behaves exactly as it did before', async () => {
+  process.env.PRICES_ENABLED = 'true';
+  stubFetch(twoEditions('3106'));
+  const round = await createRound(request);
+  const game = await addWish(round.id, { sourceExternalId: '3106' });
+  assert.equal('edition' in game, false, 'absent-key parity: no cover picked, no key');
+  const res = await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=en`);
+  assert.equal(res.body.edition.lang, 'GB', 'the reader still decides');
+});
+
+test('the stored fallback is keyed per EDITION, so it cannot answer another box\'s question', async () => {
+  // The cache key and the last_prices key are one string, so this is really an
+  // assertion that priceFor and storedPriceFor thread the edition identically —
+  // .claude/rules/last-known-price-fallback.md §1. Store under the German box,
+  // then ask about a game whose stored edition is the English one.
+  process.env.PRICES_ENABLED = 'true';
+  await storedPrice('3107', 'de', { amount: 44.4 });
+  global.fetch = async () => { throw new Error('ECONNRESET'); };
+  const round = await createRound(request);
+  const game = await addWishWithEdition(round.id, { sourceExternalId: '3107' }, ['English']);
+  assert.deepEqual(
+    (await request(app).get(`/api/rounds/${round.id}/games/${game.id}/prices?lang=de`)).body,
+    { available: false }
+  );
+});
+
+test('?stored=1 is keyed per edition too — the FAST path must ask the same question', async () => {
+  /*
+   * Its own spec because `storedPriceFor` is a SECOND reader of the key and does
+   * not go through `priceFor` at all — dropping the edition there alone reddens
+   * nothing else in this file, verified by doing exactly that. It is also the
+   * worse of the two to get wrong: this is the FIRST render the user sees, so a
+   * mis-keyed hit shows the wrong box's price immediately and confidently, and is
+   * then replaced by the right one a second later.
+   */
+  process.env.PRICES_ENABLED = 'true';
+  // The stored row is the GERMAN box's (what `lang=de` alone keys).
+  await storedPrice('4101', 'de', { amount: 41.5 });
+  const calls = stubFetch(twoEditions('4101'));
+  const round = await createRound(request);
+  const english = await addWishWithEdition(round.id, { sourceExternalId: '4101' }, ['English']);
+  const german = await addWishWithEdition(round.id, {
+    sourceExternalId: '4101', title: 'Arche Nova (DE)',
+  }, ['German']);
+
+  const path = (g) => `/api/rounds/${round.id}/games/${g.id}/prices?lang=de&stored=1`;
+  assert.deepEqual(
+    (await request(app).get(path(english))).body, { available: false },
+    'a wish for the English box must not be handed the German box\'s stored price'
+  );
+  assert.equal((await request(app).get(path(german))).body.amount, 41.5, 'its own box still answers');
+  assert.deepEqual(calls, [], 'and the fast path still fetches nothing');
+});

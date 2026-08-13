@@ -28,11 +28,19 @@ being shown different boxes at different prices. Under the tuple key they share 
 row, so the French reader is served the German edition's price with nothing on
 screen to indicate the substitution.
 
-So the stored key is `source.cacheKey(externalId, lang)` **verbatim** — the same
-string the in-memory cache uses, which already encodes market and edition. Reusing
-it makes the class of bug unrepresentable rather than merely absent: the fallback
-cannot answer a question the live lookup would have answered differently, because
-there is only one notion of "which lookup is this".
+So the stored key is `source.cacheKey(externalId, lang, editionLangs)`
+**verbatim** — the same string the in-memory cache uses, which already encodes
+market and edition. Reusing it makes the class of bug unrepresentable rather than
+merely absent: the fallback cannot answer a question the live lookup would have
+answered differently, because there is only one notion of "which lookup is this".
+
+**#742 added the third argument and the property is what made it cheap.** The
+edition is no longer derived from the reader's locale but from the game's own
+stored `edition.languages`, so the key gained a term whose *source* changed —
+and because `priceFor`, `storedPriceFor` and the loader all read one
+`sourceFor()` answer (`{ source, externalId, editionLangs }`), there is one place
+to thread it rather than three that can disagree. Miss one and the fallback
+serves the English box's price under the German box's question, silently.
 
 `test/prices.test.js`'s *"keyed per EDITION too, not just per market"* is the spec
 that sees this, and it is the **only** one that does — the market spec beside it
@@ -115,7 +123,14 @@ the upstream once per tenant.
 is not "we store nothing" any more (we do) but that the row holds a public game
 id and a price and **no** user, account, round or tenant id — so it cannot say
 who looked, or whose wish list the game is on. Put any of those in the key and
-that classification has to be made again. Two published statements said "prices
+that classification has to be made again.
+
+#742's third key term is safe on exactly that test and it is worth stating why,
+because the obvious implementation is not: the key carries the edition
+**language** (`DE`), never the game row's id. Keying by the row would have been
+the convenient way to reach the same edition — and it would have made every
+stored price attributable to one round's wish list, i.e. a different legal
+classification for a caching change. Two published statements said "prices
 are not stored" and changed with this feature; `PRIVACY_REVISION` already named
 2026-08-07 from an earlier same-day change, so it did not move again.
 

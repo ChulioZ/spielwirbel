@@ -118,7 +118,7 @@ const KARAK = {
   ],
 };
 
-const de = () => bgp.parseInfo(ARK_NOVA, { lang: 'de', destination: 'DE' });
+const de = () => bgp.parseInfo(ARK_NOVA, { want: 'DE', destination: 'DE' });
 
 test('the reader\'s language edition wins — NOT items[0]', () => {
   const out = de();
@@ -131,7 +131,7 @@ test('the reader\'s language edition wins — NOT items[0]', () => {
 });
 
 test('an unmapped language falls back to the edition with the most offers', () => {
-  const out = bgp.parseInfo(ARK_NOVA, { lang: 'sv', destination: 'DE' });
+  const out = bgp.parseInfo(ARK_NOVA, { want: null, destination: 'DE' });
   assert.equal(out.edition.lang, 'DE');
   assert.equal(out.offerCount, 8);
   // Not items[0], which is the whole reason the fallback is a rule and not the
@@ -143,7 +143,7 @@ test('a matching language beats a bigger edition', () => {
   // The DE edition carries more offers (8 vs 6), so an English reader landing on
   // the GB edition proves the language rule ran and won — the fallback would
   // have answered 'DE' here.
-  const out = bgp.parseInfo(ARK_NOVA, { lang: 'en', destination: 'DE' });
+  const out = bgp.parseInfo(ARK_NOVA, { want: 'GB', destination: 'DE' });
   assert.equal(out.edition.lang, 'GB');
   assert.equal(out.offerCount, 6);
 });
@@ -152,14 +152,14 @@ test('a multilingual listing is labelled with the language that MATCHED the read
   // Issue #700: the price was right, the label was wrong — pickEdition matched
   // this item for a German reader via 'DE', but langs[0] is 'GB', so the box
   // said „Ausgabe: Karak (GB)" over the German-market offers.
-  const out = bgp.parseInfo(KARAK, { lang: 'de', destination: 'DE' });
+  const out = bgp.parseInfo(KARAK, { want: 'DE', destination: 'DE' });
   assert.equal(out.edition.title, 'Karak');
   assert.equal(out.edition.lang, 'DE');
   assert.equal(out.best.amount, 26.14);
 });
 
 test('the label follows the reader — the SAME multilingual listing reads (GB) to an English reader', () => {
-  const out = bgp.parseInfo(KARAK, { lang: 'en', destination: 'DE' });
+  const out = bgp.parseInfo(KARAK, { want: 'GB', destination: 'DE' });
   assert.equal(out.edition.lang, 'GB');
   assert.equal(out.offerCount, 4);
 });
@@ -168,7 +168,7 @@ test('the most-offers fallback keeps the item\'s own first language', () => {
   // 'pt' maps to 'PT', which no Karak item carries, so the fallback picks the
   // multilingual item on offer count — and must NOT relabel it 'PT': no
   // reader-language edition existed, so langs[0] is the honest answer there.
-  const out = bgp.parseInfo(KARAK, { lang: 'pt', destination: 'DE' });
+  const out = bgp.parseInfo(KARAK, { want: 'PT', destination: 'DE' });
   assert.equal(out.edition.lang, 'GB');
   assert.equal(out.offerCount, 4);
 });
@@ -198,7 +198,7 @@ test('an unknown-shipping offer never wins on price it cannot claim', () => {
   // The GB edition's cheapest offer (48.28) has shipping_known: false, so its
   // "price" is the product price wearing a total's clothes. PAngV § 3/§ 6: we may
   // not present it as an inclusive price, so it must not outrank a real total.
-  const { best } = bgp.parseInfo(ARK_NOVA, { lang: 'en', destination: 'DE' });
+  const { best } = bgp.parseInfo(ARK_NOVA, { want: 'GB', destination: 'DE' });
   assert.equal(best.shippingKnown, true);
   assert.equal(best.amount, 55.17);
 });
@@ -214,31 +214,31 @@ test('when NO in-stock offer knows its shipping, the winner says so and shows th
       ],
     }],
   };
-  const { best } = bgp.parseInfo(body, { lang: 'de', destination: 'DE' });
+  const { best } = bgp.parseInfo(body, { want: 'DE', destination: 'DE' });
   assert.equal(best.shippingKnown, false);
   assert.equal(best.amount, 35.99);
   assert.equal(best.country, 'GR');
 });
 
 test('totals are rounded — the wire carries binary float noise', () => {
-  const out = bgp.parseInfo(ARK_NOVA, { lang: 'de', destination: 'DE' });
+  const out = bgp.parseInfo(ARK_NOVA, { want: 'DE', destination: 'DE' });
   const noisy = out.offers.find((o) => o.product === 64.9);
   assert.equal(noisy.amount, 69.85);
 });
 
 test('a body with no items at all is not a price', () => {
   // What the API answers for an eid it does not know: a clean 200, items: [].
-  assert.equal(bgp.parseInfo({ currency: 'EUR', items: [] }, { lang: 'de', destination: 'DE' }), null);
+  assert.equal(bgp.parseInfo({ currency: 'EUR', items: [] }, { want: 'DE', destination: 'DE' }), null);
 });
 
 test('an edition with no offers at all is not a price', () => {
   const body = { currency: 'EUR', items: [{ id: 1, name: 'Leer', versions: { lang: ['DE'] }, prices: [] }] };
-  assert.equal(bgp.parseInfo(body, { lang: 'de', destination: 'DE' }), null);
+  assert.equal(bgp.parseInfo(body, { want: 'DE', destination: 'DE' }), null);
 });
 
 test('a malformed body degrades to null instead of throwing', () => {
   for (const body of [null, undefined, {}, 'nope', 42, { items: 'nope' }, { items: [null] }, { items: [{}] }]) {
-    assert.equal(bgp.parseInfo(body, { lang: 'de', destination: 'DE' }), null, `body: ${JSON.stringify(body)}`);
+    assert.equal(bgp.parseInfo(body, { want: 'DE', destination: 'DE' }), null, `body: ${JSON.stringify(body)}`);
   }
 });
 
@@ -285,4 +285,71 @@ test('a non-abort failure keeps its own message', async () => {
   } finally {
     global.fetch = realFetch;
   }
+});
+
+/* ---- which EDITION a lookup is about (#742): the box, not the reader -------- */
+
+test('the game\'s stored edition beats the reader\'s locale', () => {
+  // The whole of #742 in one line: a German-speaking round that wished for the
+  // ENGLISH box was quoted the German one (49.89 € vs 55.17 € on Ark Nova), and
+  // two members of one round saw different prices for the same wish purely
+  // because they read the app in different languages.
+  assert.equal(bgp.resolveEditionLang('de', ['English']), 'GB');
+  assert.equal(bgp.resolveEditionLang('en', ['German']), 'DE');
+});
+
+test('with no stored edition it is still the reader\'s locale — today\'s behaviour', () => {
+  // Every game whose cover predates #742, and every pasted or uploaded cover
+  // after it. This arm is what makes the change invisible to them.
+  assert.equal(bgp.resolveEditionLang('de', []), 'DE');
+  assert.equal(bgp.resolveEditionLang('en', null), 'GB');
+  assert.equal(bgp.resolveEditionLang('de', undefined), 'DE');
+});
+
+test('a printing the aggregator does not sell falls back to the reader, not to nothing', () => {
+  // BGG names ~80 languages and the aggregator sells seven, so a Polish or
+  // Japanese box is the ordinary case rather than an edge one — and it must keep
+  // a working price box rather than emptying it.
+  assert.equal(bgp.resolveEditionLang('de', ['Polish']), 'DE');
+  assert.equal(bgp.resolveEditionLang('en', ['Japanese']), 'GB');
+  // Neither maps: null, i.e. the most-offers edition.
+  assert.equal(bgp.resolveEditionLang('sv', ['Polish']), null);
+  assert.equal(bgp.resolveEditionLang(null, null), null);
+});
+
+test('a multilingual printing takes the FIRST language that maps', () => {
+  // One BGG version legitimately lists several languages, and any of them
+  // describes the same physical box.
+  assert.equal(bgp.resolveEditionLang('de', ['Polish', 'French', 'German']), 'FR');
+  assert.equal(bgp.resolveEditionLang('de', ['Czech', 'Polish']), 'DE', 'none map -> the reader');
+});
+
+test('the language table is an ALLOWLIST, and BGG\'s capitalisation is not the contract', () => {
+  // The value it yields lands in a cache key and decides which edition a fetched
+  // body is read as (.claude/rules/allowlist-request-values-that-reach-a-url.md).
+  assert.equal(bgp.resolveEditionLang('sv', ['german']), 'DE');
+  assert.equal(bgp.resolveEditionLang('sv', [' German ']), 'DE');
+  // A Map, so a key off Object.prototype reaches nothing.
+  assert.equal(bgp.resolveEditionLang('sv', ['__proto__']), null);
+  assert.equal(bgp.resolveEditionLang('sv', ['constructor']), null);
+  // Junk in the array must not throw or match.
+  assert.equal(bgp.resolveEditionLang('sv', [null, 42, {}]), null);
+  assert.equal(bgp.resolveEditionLang('sv', 'German'), null, 'not an array -> no edition');
+});
+
+test('the cache key splits the MARKET from the EDITION — they come from different places', () => {
+  // The trap #742 had to avoid: deriving both from one value would quote a
+  // German reader asking for the English box GB shipping in GBP.
+  const en = bgp.cacheKey('342942', 'en', ['German']);
+  assert.match(en, /:GB:GBP:DE:342942$/, 'British market, German box');
+  const de = bgp.cacheKey('342942', 'de', ['English']);
+  assert.match(de, /:DE:EUR:GB:342942$/, 'German market, English box');
+  // Two readers of one wish now share a key where they used to differ, which is
+  // the second half of the bug: one round, one price.
+  assert.equal(bgp.cacheKey('342942', 'de', ['German']), bgp.cacheKey('342942', 'de', ['German']));
+  assert.notEqual(de, bgp.cacheKey('342942', 'de', ['German']), 'a different box is a different lookup');
+  // Unchanged for a game with no stored edition.
+  assert.equal(bgp.cacheKey('342942', 'de', []), bgp.cacheKey('342942', 'de'));
+  // No tenant, round, user or game-row id — the vvt.md row 21 constraint.
+  assert.equal(bgp.cacheKey('342942', 'de', ['German']), 'bgp:info:DE:EUR:DE:342942');
 });

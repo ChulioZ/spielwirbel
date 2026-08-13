@@ -607,7 +607,11 @@ async function showGameDetail(rid, gameId) {
         el.classList.add('has-covers');
         el.appendChild(editionCoverPicker(rid, game.source.externalId, game.image || null, async (c) => {
           close();
-          await updateGame({ imageUrl: c.imageUrl });
+          // The pick's edition rides along with its URL (#742) — the picker has
+          // always handed back `{ edition, year, languages }` and every caller
+          // used to keep only the image. It is what the detail page labels the
+          // cover with, and what the wish-list price quotes an edition for.
+          await updateGame({ imageUrl: c.imageUrl, ...editionFields(c) });
         }));
       }
 
@@ -783,7 +787,21 @@ async function showGameDetail(rid, gameId) {
   // rule was already written for a focusable frame.
   const imgEl = h(`<button type="button" class="gd-img gd-img--edit" ${imgStyle} title="${esc(t('detail.changeImage'))}">${fallback}<span class="gd-img__edit">${esc(t('detail.changeImage'))}</span></button>`);
   imgEl.addEventListener('click', () => openImagePopover(imgEl));
-  head.prepend(imgEl);
+
+  // Which printing this cover is (#742) — a quiet line under it, and only when
+  // the game actually carries one. The wrapper is added ONLY in that case, so a
+  // game with no stored edition (every game before this shipped, and every
+  // pasted or uploaded cover after it) renders exactly the DOM it always did.
+  // An edition that carries only languages has nothing to say here and correctly
+  // renders nothing.
+  const editionText = editionLabel(game.edition);
+  if (editionText) {
+    const col = h('<div class="gd-cover"></div>');
+    col.append(imgEl, h(`<p class="gd-edition muted">${esc(t('detail.edition', { edition: editionText }))}</p>`));
+    head.prepend(col);
+  } else {
+    head.prepend(imgEl);
+  }
 
   // Title + editable tags.
   const h1 = head.querySelector('h1');

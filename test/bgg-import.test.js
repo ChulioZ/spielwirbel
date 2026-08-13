@@ -804,3 +804,98 @@ test('an unknown status falls back to the owned shelf', async () => {
   assert.equal(/wishlist/.test(urls[0]), false);
   assert.equal(/__proto__/.test(urls[0]), false, 'a request value must never reach the provider URL');
 });
+
+test('the edition behind a picked import cover is stored beside it (#742)', async () => {
+  const a = await makeAccount('imp-edition@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerEdition');
+  stubBgg(THREE);
+
+  const chosen = 'https://cf.geekdo-images.com/de__thumb/img/y=/fit-in/200x150/german-edition.png';
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token))
+    .send({
+      externalIds: ['13', '822'],
+      covers: { 13: chosen },
+      editions: { 13: { name: 'Deutsche Erstausgabe', year: 2015, languages: ['German'] } },
+    });
+  assert.equal(res.status, 200);
+
+  const full = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  const byTitle = Object.fromEntries(full.body.games.map((g) => [g.title, g]));
+  assert.deepEqual(byTitle.CATAN.edition, { name: 'Deutsche Erstausgabe', year: 2015, languages: ['German'] });
+  // A game whose cover the user did not pick keeps the key ABSENT, exactly like
+  // every other optional field on an imported row.
+  assert.equal('edition' in byTitle.Carcassonne, false);
+});
+
+test('an import edition without a surviving cover is dropped, not stored alone', async () => {
+  const a = await makeAccount('imp-edition-orphan@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerEditionOrphan');
+  stubBgg(THREE);
+
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token))
+    .send({
+      externalIds: ['13', '822'],
+      // 13's URL is refused by the host allowlist, so the row falls back to the
+      // collection's own art; 822 never had a cover choice at all. In both cases
+      // an edition would name a printing that is not the box on screen.
+      covers: { 13: 'https://evil.example.com/tracker.png' },
+      editions: {
+        13: { name: 'Deutsche Erstausgabe', languages: ['German'] },
+        822: { name: 'Erweiterte Ausgabe', languages: ['German'] },
+      },
+    });
+  assert.equal(res.status, 200);
+
+  const full = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  for (const g of full.body.games) {
+    assert.match(g.image, /^https:\/\/cf\.geekdo-images\.com\/x__thumb\//, 'sanity: the collection cover won');
+    assert.equal('edition' in g, false);
+  }
+});
+
+test('the import bounds an edition exactly as a single add does', async () => {
+  // One normalizer for both entry points, so the bulk path cannot accept what a
+  // single add refuses (.claude/rules/shared-constants-across-the-stack.md).
+  const a = await makeAccount('imp-edition-caps@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerEditionCaps');
+  stubBgg(THREE);
+
+  const chosen = 'https://cf.geekdo-images.com/de__thumb/img/y=/fit-in/200x150/german-edition.png';
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token))
+    .send({
+      externalIds: ['13'],
+      covers: { 13: chosen },
+      editions: {
+        13: {
+          name: 'ä'.repeat(400),
+          year: 0,
+          languages: Array.from({ length: 40 }, (_, i) => `Lang${i}`),
+        },
+      },
+    });
+  assert.equal(res.status, 200);
+
+  const full = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  const catan = full.body.games.find((g) => g.title === 'CATAN');
+  assert.equal(catan.edition.name.length, 200);
+  assert.equal(catan.edition.year, null);
+  assert.equal(catan.edition.languages.length, 12);
+});
+
+test('a malformed editions map is a 400, like every other body-shape error', async () => {
+  const a = await makeAccount('imp-edition-bad@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerEditionBad');
+  stubBgg(THREE);
+
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token))
+    .send({ externalIds: ['13'], editions: { 13: { languages: 'German' } } });
+  assert.equal(res.status, 400);
+});
