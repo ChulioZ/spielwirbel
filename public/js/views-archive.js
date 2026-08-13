@@ -141,7 +141,7 @@ async function showArchive(rid, kind, seg = kind) {
            </div>
            <div class="archive-row__actions">
              <button class="btn${a.primaryRestore ? ' btn--primary' : ''}" data-act="restore"><i class="ti ${a.restoreIcon || 'ti-arrow-back-up'}" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
-             <button class="btn${a.quietDelete ? '' : ' btn--danger'}"${a.quietDelete ? ' style="color:var(--danger)"' : ''} data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>
+             ${roundCan(round, 'game.delete') ? `<button class="btn${a.quietDelete ? '' : ' btn--danger'}"${a.quietDelete ? ' style="color:var(--danger)"' : ''} data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>` : ''}
            </div>
          </div>`);
       if (g.image) loadCover(row.querySelector('.archive-row__img'), coverUrl(g.image, COVER_THUMB));
@@ -170,7 +170,10 @@ async function showArchive(rid, kind, seg = kind) {
           showArchive(rid, kind, seg);
         } catch (e) { toast(e.message); }
       });
-      row.querySelector('[data-act="delete"]').addEventListener('click', async () => {
+      // #137: deleting a game takes its whole rating history with it, so it is
+      // co-owner and up — the button is absent below that, hence the null check.
+      const delBtn = row.querySelector('[data-act="delete"]');
+      if (delBtn) delBtn.addEventListener('click', async () => {
         if (!confirm(t(`${kind}.deleteConfirm`, { title: g.title }))) return;
         try {
           await api('DELETE', `/api/rounds/${rid}/games/${g.id}`);

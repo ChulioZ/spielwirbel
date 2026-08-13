@@ -129,6 +129,10 @@ function renderChronikTab(round, activities) {
   }
 
   function buildActivityRow(e) {
+    // #137: an entry is part of the round's shared history, so removing one is
+    // co-owner and up. Below that the button is not rendered at all — the row
+    // still opens its target, and the route refuses the delete regardless.
+    const canDelete = roundCan(round, 'activity.delete');
     // Navigate to the game (if it still exists) or to the archive.
     const gameExists = e.gameId && round.games.some((g) => g.id === e.gameId);
     const target =
@@ -150,7 +154,7 @@ function renderChronikTab(round, activities) {
          ${target ? `<a class="tl-act__text">${esc(e.text)}</a>` : `<span class="tl-act__text">${esc(e.text)}</span>`}
          ${by}
          <span class="tl-act__time">${fmtDateTime(e.at)}</span>
-         <button class="tl-act__del" title="${esc(t('activity.delete'))}" aria-label="${esc(t('activity.delete'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+         ${canDelete ? `<button class="tl-act__del" title="${esc(t('activity.delete'))}" aria-label="${esc(t('activity.delete'))}"><i class="ti ti-x" aria-hidden="true"></i></button>` : ''}
        </div>`);
     if (target) {
       navLink(row.querySelector('.tl-act__text'), target.path, target.nav);
@@ -163,7 +167,7 @@ function renderChronikTab(round, activities) {
         target.nav();
       });
     }
-    row.querySelector('.tl-act__del').addEventListener('click', async () => {
+    if (canDelete) row.querySelector('.tl-act__del').addEventListener('click', async () => {
       if (!confirm(t('activity.deleteConfirm'))) return;
       try {
         await api('DELETE', `/api/rounds/${rid}/activities/${e.id}`);
