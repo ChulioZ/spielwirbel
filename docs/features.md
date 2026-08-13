@@ -25,14 +25,13 @@ What the app does, in detail. For a short overview see the
   people widens the range the draw filters by, which is how the 5–6-player
   extension stops a six-person evening from hiding the game you own. When adding a
   game, the title field doubles as a **search-as-you-type lookup** against
-  **BoardGameGeek**. Hits with the **same title** collapse into a **single row
-  with one badge per source** — click a badge to fill from it, or the title to
-  use the top match. Pick a
+  **BoardGameGeek**. Hits with the **same title** collapse into a **single
+  row** — a game printed in several editions offers one entry to click rather
+  than a dozen near-identical ones. Pick a
   suggestion to auto-fill the title, cover art and player range, and store a link
   back to the source page (shown on the game's detail
   view). The lookup is optional — manual entry works exactly as before, and the
-  app degrades gracefully when a source is unreachable (one provider failing
-  still shows the others' results). If the title you type is already in the
+  app degrades gracefully when the lookup is unreachable. If the title you type is already in the
   round, the sheet says so — separately for the shelf and for the archive — but
   never stops you saving it, since a second copy is sometimes exactly what you
   mean.
@@ -89,7 +88,7 @@ What the app does, in detail. For a short overview see the
   one click, whether the game lost its cover or never had one (issue #518).
   Details can be edited inline on the game's detail page. A game added by hand
   (with no source link) can be **linked to a provider after the fact** from its
-  detail page: search the providers, pick the match, and choose which differing
+  detail page: search BoardGameGeek, pick the match, and choose which differing
   fields (name, cover, player count) to take from it — the source
   link is always saved. A link can also be **removed again** from the same
   detail page if the match turns out to be wrong; a hotlinked provider cover is
