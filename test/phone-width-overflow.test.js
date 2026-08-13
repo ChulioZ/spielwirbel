@@ -111,6 +111,30 @@ test('the short tools label OUTRANKS the base hide, so one spelling is always sh
   'the <=520px block no longer hides .tools-label--long, so both spellings show');
 });
 
+/* A game title is user-authored free text with no length limit and no
+   guaranteed break opportunity, so a long single-word title had nowhere to wrap
+   and painted straight out of its card — measured at a 390px viewport against a
+   57-character title, an untouched Pokale card produced ~160-190px of horizontal
+   PAGE overflow, i.e. the same class of defect as the four checks above.
+
+   The declaration belongs to `.pokale-card__value` itself rather than to any one
+   screen: the Pokale tab and the member detail page render it through the same
+   builders, so a screen-scoped copy would fix one and leave the other. It got
+   noticed on the Pokale taste cards because #695's 64px cover takes 78px off
+   that card's text column, which makes the title run out of room sooner — but
+   the cover only exposed it, it did not cause it. */
+test('a long unbreakable game title can wrap instead of overflowing its card', () => {
+  const body = bodyOf('.pokale-card__value');
+  const match = /overflow-wrap:\s*([\w-]+)/.exec(body);
+  assert.ok(match, '.pokale-card__value declares no overflow-wrap, so an unbreakable title overflows the page');
+  // `break-word` is NOT interchangeable here. Only `anywhere` also shrinks the
+  // element's min-content contribution, and that contribution is what a grid or
+  // flex track sizes against — `.recap-fav` is exactly such a track, so under
+  // `break-word` the text would wrap while the COLUMN still refused to narrow.
+  assert.equal(match[1], 'anywhere',
+    `.pokale-card__value uses overflow-wrap: ${match[1]}, which does not shrink the min-content size a grid track sizes against`);
+});
+
 test('the results row drops to two columns on a phone, and its score follows', () => {
   const row = PHONE.find(([sel]) => sel === '.result-row');
   assert.ok(row, 'the <=520px block no longer re-tracks .result-row');

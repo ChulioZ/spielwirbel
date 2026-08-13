@@ -84,6 +84,7 @@ const GLYPH_LITERALS = [
   '.landing-card__icon', '.landing-step__num', '.feed-item__img', '.result-row__img',
   '.pool-thumb', '.pool-thumb .ti', '.pool-tile__img', '.game-card__img', '.vote__img',
   '.gd-img', '.lookup__thumb--none .ti', '.archive-row__img .ti', '.result-podium__img .ti',
+  '.recap-fav__cover .ti',
   // a glyph or number sized to its own small box
   '.result-row__bars .bar', '.stage__voter-check .ti', '.stage__seal > .ti', '.mood .ti',
   '.filter-toggle__badge', '.mfilter__badge',
