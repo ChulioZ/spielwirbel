@@ -8,6 +8,7 @@ const { app, createRound } = require('./helpers');
 const publicStats = require('../lib/public-stats');
 const bgg = require('../lib/providers/bgg');
 const scheduler = require('../lib/scheduler');
+const repo = require('../lib/repo');
 
 /*
  * Instance-wide public statistics (#564).
@@ -35,10 +36,12 @@ function stubProvider(byId = {}) {
 }
 
 const THRESHOLDS = [
-  'PUBLIC_STATS_MIN_ACCOUNTS', 'PUBLIC_STATS_MIN_ROUNDS', 'PUBLIC_STATS_MIN_GAMES',
-  'PUBLIC_STATS_MIN_SESSIONS', 'PUBLIC_STATS_MIN_OWNERS', 'PUBLIC_STATS_MIN_PLAYS',
-  'PUBLIC_STATS_MIN_PLAY_TENANTS', 'PUBLIC_STATS_MIN_RATINGS',
-  'PUBLIC_STATS_MIN_RATING_TENANTS', 'PUBLIC_STATS_RESOLVE_MAX',
+  'PUBLIC_STATS_MIN_PLAYERS', 'PUBLIC_STATS_MIN_ROUNDS', 'PUBLIC_STATS_MIN_GAMES',
+  'PUBLIC_STATS_MIN_SESSIONS', 'PUBLIC_STATS_MIN_SHELVES', 'PUBLIC_STATS_MIN_OWNER_TENANTS',
+  'PUBLIC_STATS_MIN_PLAYS_WEEK', 'PUBLIC_STATS_MIN_PLAY_TENANTS_WEEK',
+  'PUBLIC_STATS_MIN_PLAYS_MONTH', 'PUBLIC_STATS_MIN_PLAY_TENANTS_MONTH',
+  'PUBLIC_STATS_MIN_PLAYS_YEAR', 'PUBLIC_STATS_MIN_PLAY_TENANTS_YEAR',
+  'PUBLIC_STATS_MIN_RATINGS', 'PUBLIC_STATS_MIN_RATING_TENANTS', 'PUBLIC_STATS_RESOLVE_MAX',
 ];
 
 /*
@@ -64,9 +67,12 @@ afterEach(async () => {
 // Lower every content floor to 1 so a small fixture can reach a podium; the
 // counters keep their real defaults unless a case says otherwise.
 function openContentFloors() {
-  process.env.PUBLIC_STATS_MIN_OWNERS = '1';
-  process.env.PUBLIC_STATS_MIN_PLAYS = '1';
-  process.env.PUBLIC_STATS_MIN_PLAY_TENANTS = '1';
+  process.env.PUBLIC_STATS_MIN_SHELVES = '1';
+  process.env.PUBLIC_STATS_MIN_OWNER_TENANTS = '1';
+  for (const w of ['WEEK', 'MONTH', 'YEAR']) {
+    process.env['PUBLIC_STATS_MIN_PLAYS_' + w] = '1';
+    process.env['PUBLIC_STATS_MIN_PLAY_TENANTS_' + w] = '1';
+  }
   process.env.PUBLIC_STATS_MIN_RATINGS = '1';
   process.env.PUBLIC_STATS_MIN_RATING_TENANTS = '1';
 }
@@ -101,11 +107,25 @@ async function seedPlayedGame({ externalId, title, rating = 5 }) {
 
 /* ------------------------------- the gate ---------------------------------- */
 
-test('with the feature off the route 404s and the job makes no provider call', async () => {
+/*
+ * THE FLAG IS INVERTED relative to every other feature switch here: the block
+ * publishes unless PUBLIC_STATS_ENABLED is exactly 'false'. That is the one
+ * behaviour a spec must not establish for itself — setting the variable would
+ * make these green against a flag written the wrong way round, which is the
+ * defaulted-flag trap in .claude/rules/break-the-code-on-purpose.md. So the
+ * first case touches nothing at all.
+ */
+test('the feature is LIVE with no env var set at all', async () => {
+  assert.equal(process.env.PUBLIC_STATS_ENABLED, undefined, 'the spec must not set it');
+  assert.equal(publicStats.publicStatsEnabled(), true, 'unset must publish, not hide');
+});
+
+test('PUBLIC_STATS_ENABLED=false is the kill switch: 404, and no provider call', async () => {
   let calls = 0;
   bgg.detail = async () => { calls += 1; return null; };
+  process.env.PUBLIC_STATS_ENABLED = 'false';
 
-  assert.equal(publicStats.publicStatsEnabled(), false, 'off unless explicitly enabled');
+  assert.equal(publicStats.publicStatsEnabled(), false);
   assert.equal(await scheduler.runJob('rebuildPublicStats'), null, 'the job is disabled, so it does not run');
   assert.equal(await rebuild(), null);
   assert.equal(calls, 0, 'a disabled instance must make NO provider request at all');
@@ -114,21 +134,23 @@ test('with the feature off the route 404s and the job makes no provider call', a
   assert.equal(res.status, 404);
 });
 
-test('any value other than the literal "true" leaves the feature off', async () => {
-  for (const value of ['1', 'yes', 'TRUE', 'on', '']) {
+test('only the literal "false" turns it off — a typo must not silently hide it', async () => {
+  // The inverse of the usual opt-in guard, and it matters more in this
+  // direction: a mistyped 'FALSE' that read as off would take a public page
+  // down with nothing to indicate why.
+  for (const value of ['0', 'no', 'FALSE', 'off', '', 'true']) {
     process.env.PUBLIC_STATS_ENABLED = value;
-    assert.equal(publicStats.publicStatsEnabled(), false, `"${value}" must not enable it`);
+    assert.equal(publicStats.publicStatsEnabled(), true, `"${value}" must not disable it`);
   }
 });
 
 test('switching the feature off drops an already-built payload', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
-  process.env.PUBLIC_STATS_MIN_ACCOUNTS = '0';
+  process.env.PUBLIC_STATS_MIN_ROUNDS = '0';
   stubProvider();
   await rebuild();
   assert.ok(publicStats.publicStats(), 'built while on');
 
-  delete process.env.PUBLIC_STATS_ENABLED;
+  process.env.PUBLIC_STATS_ENABLED = 'false';
   assert.equal(publicStats.publicStats(), null, 'and gone the moment it is switched off');
   assert.equal((await request(app).get('/api/stats/public')).status, 404);
 });
@@ -136,7 +158,6 @@ test('switching the feature off drops an already-built payload', async () => {
 /* ----------------------------- the payload --------------------------------- */
 
 test('the podium names the game from the PROVIDER, never from the typed title', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   openContentFloors();
   const externalId = 'thing-provider-name';
   stubProvider();
@@ -160,7 +181,6 @@ test('the podium names the game from the PROVIDER, never from the typed title', 
 });
 
 test('the route serves the CACHED payload and never resolves per request', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   openContentFloors();
   stubProvider();
   await seedPlayedGame({ externalId: 'thing-cached', title: 'Gecacht' });
@@ -174,49 +194,104 @@ test('the route serves the CACHED payload and never resolves per request', async
   assert.equal(calls, 0, 'serving the payload must not touch a provider');
 });
 
+test('the games counter follows the SHELF: a wish moves it not at all', async () => {
+  process.env.PUBLIC_STATS_MIN_GAMES = '0';
+  stubProvider();
+  const round = track(await createRound(request, { name: 'Zählrunde', members: ['Ann'] }));
+  const add = async (over) => request(app).post(`/api/rounds/${round.id}/games`)
+    .send({ title: 'Zähl mich', minPlayers: '1', maxPlayers: '4', ...over });
+
+  const before = (await rebuild()).counters.games;
+  await add({});
+  const withShelfGame = (await rebuild()).counters.games;
+  assert.equal(withShelfGame, before + 1, 'a shelf game moves the counter');
+
+  // A wish is a game the round does NOT own, and an archived one is not out on
+  // the table — neither belongs in a public "how many games" figure. Asserted as
+  // deltas because the counter is instance-wide and the suite shares a store.
+  await add({ wish: 'true' });
+  const withWish = (await rebuild()).counters.games;
+  assert.equal(withWish, withShelfGame, 'a wish must not move it');
+
+  const shelfGame = (await request(app).get(`/api/rounds/${round.id}`)).body.games
+    .find((g) => g.wish !== true);
+  await request(app).post(`/api/rounds/${round.id}/games/${shelfGame.id}/retire`).send({ retired: true });
+  assert.equal((await rebuild()).counters.games, before, 'retiring takes it back off');
+});
+
+test('most-owned needs several ACCOUNTS, not one account with several rounds', async () => {
+  /*
+   * The anti-skew control. `shelves` is what the card displays and a family
+   * running three rounds really is on three shelves — but the podium is gated on
+   * distinct accounts, so that family cannot put a game there by itself.
+   */
+  stubProvider();
+  openContentFloors();
+  process.env.PUBLIC_STATS_MIN_OWNER_TENANTS = '2';
+  const externalId = 'thing-skew';
+  const bggGame = { title: 'Geklont', minPlayers: '1', maxPlayers: '4', sourceProvider: 'bgg', sourceExternalId: externalId };
+
+  // One account, two rounds, same game: two shelves, one owner.
+  for (const name of ['Runde A', 'Runde B']) {
+    const r = track(await createRound(request, { name, members: ['Ann'] }));
+    await request(app).post(`/api/rounds/${r.id}/games`).send(bggGame);
+  }
+  const rows = await repo.publicGameAggregates();
+  const row = rows.find((x) => x.externalId === externalId);
+  assert.equal(row.shelves, 2, 'it really is on two shelves');
+  assert.equal(row.owners, 1, 'but one account owns both');
+
+  const built = await rebuild();
+  // Coerced: `built.games` is ABSENT (undefined) when nothing qualifies, and
+  // assert/strict rejects undefined against false.
+  assert.equal(!!(built.games && 'mostOwned' in built.games), false,
+    'one account must not reach the podium however many rounds it clones');
+
+  // Drop the account floor and the very same data qualifies — so the assertion
+  // above is about the gate, not about the fixture being too small.
+  process.env.PUBLIC_STATS_MIN_OWNER_TENANTS = '1';
+  assert.equal((await rebuild()).games.mostOwned.shelves, 2);
+});
+
 /* ---------------------------- the thresholds -------------------------------- */
 
 test('a metric below its threshold is ABSENT — not a zero, not an empty row', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   openContentFloors();
   stubProvider();
   await seedPlayedGame({ externalId: 'thing-threshold', title: 'Unterschwellig' });
 
-  // One tenant owns it, so a floor of 2 owners must remove exactly that metric
-  // while the play metrics (floor 1) survive.
-  process.env.PUBLIC_STATS_MIN_OWNERS = '2';
+  // It sits on one shelf, so a floor of 2 shelves must remove exactly that
+  // metric while the play metrics (floor 1) survive.
+  process.env.PUBLIC_STATS_MIN_SHELVES = '2';
   const built = await rebuild();
   assert.equal('mostOwned' in built.games, false, 'absent, rather than a zero');
   assert.ok(built.games.playedWeek, 'the sibling metrics are unaffected');
 });
 
 test('raising a threshold removes the metric on the next rebuild — no restart', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   openContentFloors();
   stubProvider();
   await seedPlayedGame({ externalId: 'thing-retune', title: 'Nachjustiert' });
 
   assert.ok((await rebuild()).games.playedWeek, 'published at the low floor');
   // A live re-tune: the ceilings are read per call, so no deploy and no restart.
-  process.env.PUBLIC_STATS_MIN_PLAYS = '99';
+  process.env.PUBLIC_STATS_MIN_PLAYS_WEEK = '99';
   assert.equal('playedWeek' in ((await rebuild()).games || {}), false);
 });
 
 test('a floor of 0 is honoured, not swallowed back to the default', async () => {
   // The `Number(x) || DEFAULT` idiom would silently restore the default here,
   // and an operator would see no change and no error.
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   openContentFloors();
-  process.env.PUBLIC_STATS_MIN_ACCOUNTS = '0';
+  process.env.PUBLIC_STATS_MIN_ROUNDS = '0';
   process.env.PUBLIC_STATS_MIN_ROUNDS = '0';
   stubProvider();
   const built = await rebuild();
   assert.ok(built.counters, 'a zero floor publishes the counter whatever it says');
-  assert.equal(typeof built.counters.accounts, 'number');
+  assert.equal(typeof built.counters.rounds, 'number');
 });
 
 test('with every metric below its threshold the payload carries NO block at all', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   stubProvider();
   await seedPlayedGame({ externalId: 'thing-all-dark', title: 'Alles dunkel' });
   // The shipped counter defaults are far above a test fixture, and the content
@@ -230,9 +305,8 @@ test('with every metric below its threshold the payload carries NO block at all'
 /* --------------------------- provider degradation --------------------------- */
 
 test('a provider outage degrades to fewer entries; the counters still render', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   openContentFloors();
-  process.env.PUBLIC_STATS_MIN_ACCOUNTS = '0';
+  process.env.PUBLIC_STATS_MIN_ROUNDS = '0';
   stubProvider();
   await seedPlayedGame({ externalId: 'thing-outage', title: 'Ausfall' });
 
@@ -243,7 +317,6 @@ test('a provider outage degrades to fewer entries; the counters still render', a
 });
 
 test('an unset BGG_API_TOKEN (a nameless answer) is not cached as the answer', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   openContentFloors();
   // What detail() returns with no token: the null-shaped product.
   bgg.detail = async (externalId) => ({ provider: 'bgg', externalId, title: null, imageUrl: null, url: null });
@@ -259,7 +332,6 @@ test('an unset BGG_API_TOKEN (a nameless answer) is not cached as the answer', a
 test('a game whose provider has left the registry can never reach a podium', async () => {
   // A storefront-linked game from before #744: the row still exists and is still
   // owned, but no module can name it, so it must not occupy a podium place.
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   openContentFloors();
   stubProvider();
   const round = track(await createRound(request, { name: 'Altlast', members: ['Ann'] }));
@@ -278,7 +350,6 @@ test('a game whose provider has left the registry can never reach a podium', asy
 });
 
 test('the runner-up is published when the leader cannot be resolved', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
   openContentFloors();
   // The leader is owned twice, the runner-up once — so ranking is unambiguous
   // and independent of anything the provider says.
@@ -294,8 +365,7 @@ test('the runner-up is published when the leader cannot be resolved', async () =
 /* ------------------------------ the scheduler ------------------------------- */
 
 test('the scheduler job rebuilds the payload when the feature is on', async () => {
-  process.env.PUBLIC_STATS_ENABLED = 'true';
-  process.env.PUBLIC_STATS_MIN_ACCOUNTS = '0';
+  process.env.PUBLIC_STATS_MIN_ROUNDS = '0';
   stubProvider();
   assert.equal(publicStats.publicStats(), null, 'nothing built yet');
   const built = await scheduler.runJob('rebuildPublicStats');

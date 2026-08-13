@@ -27,6 +27,29 @@
 // seeding would dot every existing account about features most of them joined
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
+  /*
+   * Deliberately GENERAL about what is on the page. Each figure appears only
+   * once it clears its own minimum, so which of them a reader actually sees
+   * depends on how big the instance is that day — naming them ("see the most
+   * played game of the year!") would promise cards that may not be there.
+   */
+  {
+    revision: '2026-08-13',
+    de: {
+      title: 'Entdecken',
+      body: 'Unter „Entdecken" steht jetzt, was auf Spielwirbel insgesamt los ist: '
+        + 'wie viel hier zusammengekommen ist und welche Spiele gerade besonders '
+        + 'oft im Regal stehen, gespielt oder gut bewertet werden. Du findest die '
+        + 'Seite in diesem Menü.',
+    },
+    en: {
+      title: 'Discover',
+      body: 'A new "Discover" page shows what is going on across Spielwirbel as a '
+        + 'whole: how much has come together here, and which games are currently '
+        + 'on especially many shelves, played especially often, or rated '
+        + 'especially well. You will find it in this menu.',
+    },
+  },
   // { revision: '2026-08-20',
   //   de: { title: 'Kurzer Titel', body: 'Was man jetzt tun kann.' },
   //   en: { title: 'Short title', body: 'What you can do now.' } },

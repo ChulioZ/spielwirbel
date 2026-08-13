@@ -231,7 +231,16 @@
 
     rows.push(['Runden', null, String(m.rounds.total)]);
 
-    rows.push(['Spiele', null, String(m.content.games)]);
+    // Seats across all rounds — most of them belong to people with no account,
+    // which is why this is a different (and larger) number than 'Konten' above.
+    // It is what the public „Spieler*innen" counter publishes (#564).
+    rows.push(['Spieler*innen', null, String(m.content.members),
+      'Mitglieds-Plätze in allen Runden']);
+
+    // Both figures, because they answer different questions and the public page
+    // publishes the ACTIVE one: the quota counts every row, the Regal does not.
+    rows.push(['Spiele', null, String(m.content.games),
+      `${m.content.activeGames} im Regal · ${m.content.games - m.content.activeGames} archiviert oder auf der Wunschliste`]);
 
     rows.push(['Sessions', null, String(m.content.sessions),
       `${m.content.sessionsFinished} abgeschlossen · ${m.content.sessions30d} in den letzten 30 Tagen`]);

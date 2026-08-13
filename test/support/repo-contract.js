@@ -3273,9 +3273,30 @@ module.exports = function repoContract(repo) {
 
       const row = await rowFor(id);
       assert.equal(row.owners, 2);
+      assert.equal(row.shelves, 2, 'two accounts, one round each — two shelves');
       assert.equal(row.provider, 'bgg');
       // No user-authored field may ride along; the caller resolves the name.
-      assert.deepEqual(Object.keys(row).sort(), ['externalId', 'owners', 'plays', 'provider', 'ratings']);
+      assert.deepEqual(Object.keys(row).sort(),
+        ['externalId', 'owners', 'plays', 'provider', 'ratings', 'shelves']);
+    });
+
+    await t.test('one account with two rounds is TWO shelves but ONE owner', async () => {
+      /*
+       * The card displays `shelves` and is gated on `owners` (#564): a family
+       * running several rounds really does have the game on several shelves, and
+       * saying so is honest — but it must not be able to reach the podium on its
+       * own, which is what the separate account count is for.
+       */
+      const id = uniq();
+      const tenant = `pga-${uniq()}`;
+      const r1 = await repo.createRound(tenant, { name: 'Familie', members: ['Ann'] });
+      const r2 = await repo.createRound(tenant, { name: 'Freitag', members: ['Ann'] });
+      await repo.createGame(tenant, r1.id, bgg(id));
+      await repo.createGame(tenant, r2.id, bgg(id));
+
+      const row = await rowFor(id);
+      assert.equal(row.shelves, 2, 'it really is on two shelves');
+      assert.equal(row.owners, 1, 'but only one account owns it');
     });
 
     await t.test('a game with no provider link produces no row at all', async () => {

@@ -1425,14 +1425,26 @@ test('#741: news-seen stamps the SERVER value and ignores the client’s', async
 });
 
 test('#741: with the list empty, news-seen stamps null and nothing is ever unseen', async () => {
-  // The shipped state at rollout. Asserted rather than assumed, because it is
-  // what guarantees no existing account is dotted the day this ships.
-  assert.equal(news.NEWS.length, 0, 'the shipped list starts empty');
-  assert.equal(news.newsRevision(), null);
+  /*
+   * The empty-list BEHAVIOUR, established explicitly rather than read off the
+   * shipped array.
+   *
+   * It used to assert `news.NEWS.length === 0` as "the shipped list starts
+   * empty", which was true while the list was empty and stopped being true when
+   * #564 added the first entry. It did not go red: every spec above ends its
+   * `withNewsEntries` teardown with `NEWS.length = 0`, so by the time this ran
+   * the real array had already been wiped — the assertion was green because of
+   * execution order, and would have stayed green with fifty entries shipped.
+   * A claim about shipped content cannot be made from inside a file that mutates
+   * that content (.claude/rules/break-the-code-on-purpose.md).
+   */
+  await withNewsEntries([], async () => {
+    assert.equal(news.newsRevision(), null);
 
-  const acc = await freshAccount('news-empty@example.com');
-  assert.equal((await getMe(acc.accessToken)).body.lastSeenNewsRevision, null);
-  assert.equal((await newsSeen(acc.accessToken)).body.lastSeenNewsRevision, null);
+    const acc = await freshAccount('news-empty@example.com');
+    assert.equal((await getMe(acc.accessToken)).body.lastSeenNewsRevision, null);
+    assert.equal((await newsSeen(acc.accessToken)).body.lastSeenNewsRevision, null);
+  });
 });
 
 test('#521: the login response carries the terms fields, so the notice shows at once', async () => {

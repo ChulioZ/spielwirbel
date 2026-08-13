@@ -33,15 +33,17 @@
 // nothing at all, silently (.claude/rules/tabler-icon-codepoints.md). All four
 // are already used elsewhere in the app.
 const STATS_PODIUMS = [
-  { key: 'mostOwned', icon: 'ti-cards', line: (e) => tn(e.owners, 'stats.owners.one', 'stats.owners.many') },
+  { key: 'mostOwned', icon: 'ti-cards', line: (e) => tn(e.shelves, 'stats.shelves.one', 'stats.shelves.many') },
   { key: 'playedWeek', icon: 'ti-flame', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   { key: 'playedMonth', icon: 'ti-calendar', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   { key: 'playedYear', icon: 'ti-history', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
-  { key: 'bestRated', icon: 'ti-star', line: (e) => t('stats.rated', { avg: e.average, n: e.ratings }) },
+  // The average goes through the locale formatter, not straight into the string:
+  // a raw JS number interpolates as "4.6", and German writes "4,6".
+  { key: 'bestRated', icon: 'ti-star', line: (e) => t('stats.rated', { avg: formatAverage(e.average), n: e.ratings }) },
 ];
 
-// The scale counters, in render order.
-const STATS_COUNTERS = ['accounts', 'rounds', 'games', 'sessions'];
+// The scale counters, in render order: rounds first, then the people in them.
+const STATS_COUNTERS = ['rounds', 'players', 'games', 'sessions'];
 
 // One in-flight fetch for the whole page load, shared by every surface: the home
 // hub can mount the teaser while /entdecken is a click away, and a logged-out
@@ -130,6 +132,19 @@ function renderPublicStats(stats) {
 function formatCount(n) {
   try {
     return new Intl.NumberFormat(localeTag(getLocale())).format(n);
+  } catch {
+    return String(n);
+  }
+}
+
+// A rating average, always to one decimal in the reader's own notation — "4,6"
+// in German, "4.6" in English. Pinned to one digit so a whole number still reads
+// as a rating ("4,0 von 5") rather than as a count.
+function formatAverage(n) {
+  try {
+    return new Intl.NumberFormat(localeTag(getLocale()), {
+      minimumFractionDigits: 1, maximumFractionDigits: 1,
+    }).format(n);
   } catch {
     return String(n);
   }

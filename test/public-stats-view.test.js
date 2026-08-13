@@ -19,11 +19,11 @@ const { loadApp } = require('./support/dom');
 // A payload shaped like a healthy instance's.
 const FULL = {
   generatedAt: '2026-08-13T12:00:00.000Z',
-  counters: { accounts: 120, rounds: 90, games: 1400, sessions: 260 },
+  counters: { rounds: 90, players: 120, games: 1400, sessions: 260 },
   games: {
     mostOwned: {
       title: 'Cascadia', image: 'https://cf.geekdo-images.com/x.png',
-      url: 'https://boardgamegeek.com/boardgame/295947', owners: 42,
+      url: 'https://boardgamegeek.com/boardgame/295947', shelves: 42,
     },
     playedWeek: { title: 'Ark Nova', image: null, url: null, plays: 9 },
     bestRated: { title: 'Wingspan', image: null, url: null, average: 4.6, ratings: 88 },
@@ -61,6 +61,11 @@ test('/entdecken renders the counters and one card per qualifying metric', async
 
   const titles = [...dom.document.querySelectorAll('.stats-card__title')].map((n) => n.textContent);
   assert.deepEqual(titles, ['Cascadia', 'Ark Nova', 'Wingspan']);
+  // The average follows the reader's notation: German writes 4,6 — a raw number
+  // interpolates as '4.6' and reads as English on a German page.
+  const rated = [...dom.document.querySelectorAll('.stats-card__value')]
+    .map((n) => n.textContent).find((x) => x.includes('von 5'));
+  assert.match(rated, /^4,6 von 5 — 88 Bewertungen$/);
   // Exactly the three the payload carried — the two absent metrics render no
   // card at all, rather than an empty or zeroed one.
   assert.equal(dom.document.querySelectorAll('.stats-card').length, 3);
@@ -94,7 +99,7 @@ test('a cover goes through coverUrl, and is left decorative', async (t) => {
     generatedAt: 'x',
     games: {
       mostOwned: {
-        title: 'Altlast', owners: 3, url: null,
+        title: 'Altlast', shelves: 3, url: null,
         image: 'https://image.api.playstation.com/vulcan/master.png',
       },
     },
