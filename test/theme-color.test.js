@@ -1,6 +1,7 @@
 'use strict';
 
-// <meta name="theme-color"> follows the round's design (#523).
+// <meta name="theme-color"> follows the round's design (#523), and every page
+// that ships the manifest starts from the manifest's own theme_color (#597).
 //
 // The tag tints the mobile browser toolbar and the installed PWA's chrome, and
 // index.html ships it at the standard accent — so inside a themed round the
@@ -32,10 +33,28 @@ const { loadApp } = require('./support/dom');
    A bare JSDOM of the file, not the harness's document: the question is what the
    markup declares, which must stay separable from anything a script does to the
    tag after load. Nothing is executed here (no `runScripts`). */
-const INDEX_THEME_COLORS = [...new JSDOM(
-  fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8'),
-).window.document.querySelectorAll('meta[name="theme-color"]')]
-  .map((el) => el.getAttribute('content'));
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+
+function parsePage(file) {
+  const { document } = new JSDOM(fs.readFileSync(path.join(PUBLIC_DIR, file), 'utf8')).window;
+  return {
+    file,
+    linksManifest: Boolean(document.querySelector('link[rel="manifest"]')),
+    themeColors: [...document.querySelectorAll('meta[name="theme-color"]')]
+      .map((el) => el.getAttribute('content')),
+  };
+}
+
+/* DERIVED, never a hand-written page list: a fourth standalone document that
+   links the manifest is covered the day it is added, which is the whole failure
+   this guards — kontakt.html shipped at its own page background in #224 and
+   stayed there while index.html and login.html carried the brand value (#597). */
+const PAGES = fs.readdirSync(PUBLIC_DIR).filter((f) => f.endsWith('.html')).sort().map(parsePage);
+const INSTALL_SURFACES = PAGES.filter((p) => p.linksManifest);
+const MANIFEST = JSON.parse(
+  fs.readFileSync(path.join(PUBLIC_DIR, 'manifest.webmanifest'), 'utf8'),
+);
+const INDEX_THEME_COLORS = PAGES.find((p) => p.file === 'index.html').themeColors;
 
 // Sand's accent before #145 darkened it for contrast. Deliberately a literal:
 // it is a value rounds still carry in their stored design and that the code
@@ -60,6 +79,44 @@ test('the static default in index.html is the standard accent core.js falls back
     `index.html declares ${INDEX_THEME_COLORS.length} live theme-color tags, expected exactly 1`);
   assert.equal(INDEX_THEME_COLORS[0], dom.get('STANDARD_ACCENT'));
 });
+
+/* Every page linking the manifest is a PWA install surface, so an install from
+   it produces app chrome in that page's theme-color — from the same app, tinted
+   differently depending only on which document the user happened to be on when
+   they installed. The relationship is asserted against the manifest rather than
+   against a hex per page: a literal restated per document is the copy problem
+   these files already have one level up
+   (`.claude/rules/shared-constants-across-the-stack.md`). */
+test('the derived install-surface set discriminates, so the loop below is not vacuous', () => {
+  // Without this the whole check passes by finding nothing — a broken readdir
+  // filter or a renamed link rel would silently retire the guard.
+  assert.ok(INSTALL_SURFACES.some((p) => p.file === 'index.html'),
+    'index.html is the SPA and definitionally an install surface');
+  assert.ok(INSTALL_SURFACES.length >= 2,
+    `expected the standalone documents to be covered too, got ${INSTALL_SURFACES.length}`);
+
+  /* admin.html is the discriminating case: it declares its own #eef1f5 and is
+     deliberately outside the design system, which is only tolerable because it
+     links no manifest and therefore installs nothing
+     (`.claude/rules/admin-moderation-surface.md`). If it ever gains one, it
+     joins the loop below rather than keeping its private value. */
+  const admin = PAGES.find((p) => p.file === 'admin.html');
+  assert.ok(admin, 'admin.html is gone — re-point this assertion at whatever replaced it');
+  assert.equal(admin.linksManifest, false,
+    'admin.html now links the manifest: it is an install surface and must match theme_color');
+});
+
+for (const page of INSTALL_SURFACES) {
+  test(`${page.file} declares the manifest's theme_color`, () => {
+    // Exactly one, for the same reason index.html's own tag is counted above:
+    // a second live tag would win in the browser while this read the first.
+    assert.equal(page.themeColors.length, 1,
+      `${page.file} declares ${page.themeColors.length} live theme-color tags, expected exactly 1`);
+    assert.equal(page.themeColors[0], MANIFEST.theme_color,
+      `${page.file} would install chrome in ${page.themeColors[0]}, `
+      + `the manifest says ${MANIFEST.theme_color}`);
+  });
+}
 
 test('a themed round moves the chrome to its accent, in lockstep with --brand', (t) => {
   const dom = loadApp();

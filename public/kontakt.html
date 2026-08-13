@@ -10,8 +10,15 @@
        requirement is that the channel is publicly reachable, which noindex does
        not affect. -->
   <meta name="robots" content="noindex, nofollow" />
+  <!-- Linking the manifest makes this page a PWA install surface, so theme-color
+       must be the manifest's own theme_color (#597) — otherwise an install from
+       here tints the app chrome differently than one from the SPA or the login
+       page. It used to be #f4f1ea, the app's --page-bg: defensible on its own
+       terms (tint the chrome like the page), but the manifest already carries
+       that value as background_color, and #523 settled the question the other
+       way — the SPA's tag tracks the round ACCENT, falling back to the brand. -->
   <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="theme-color" content="#f4f1ea" />
+  <meta name="theme-color" content="#c2410c" />
   <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
   <!-- Standalone public contact page (issue #224), reachable WITHOUT login (it is
