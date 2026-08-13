@@ -1009,7 +1009,7 @@ I18N.en = {
   'landing.features.shelf.title': 'One shelf for everything',
   'landing.features.shelf.desc': 'Every game your group owns in one place – titles, cover art and player counts come from BoardGameGeek, and anything else you type in yourself.',
   'landing.features.vote.title': 'The group decides',
-  'landing.features.vote.desc': 'Spielwirbel draws the candidates, the device goes around, everyone rates on their own. No more quarter-hour debate. Anyone with an account can rate from their own device instead.',
+  'landing.features.vote.desc': 'Spielwirbel draws the candidates, the device goes around, everyone rates on their own. No more quarter-hour debate. Anyone with an account can rate from their own device instead – and anyone without one can rate from a shared link, no sign-up needed.',
   'landing.features.ratings.title': 'Every vote counts twice',
   'landing.features.ratings.desc': 'The same rating picks tonight and then stays: an average per game, your favourites, your shelf-warmers.',
   'landing.features.chronicle.title': 'Your play history',

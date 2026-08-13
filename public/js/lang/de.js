@@ -1000,7 +1000,7 @@ I18N.de = {
   'landing.features.shelf.title': 'Ein Regal für alles',
   'landing.features.shelf.desc': 'Alle Spiele eurer Runde an einem Ort – Titel, Cover und Spieleranzahl kommen aus BoardGameGeek, alles andere tippt ihr selbst ein.',
   'landing.features.vote.title': 'Die Runde entscheidet',
-  'landing.features.vote.desc': 'Spielwirbel lost aus, das Gerät geht reihum, jeder bewertet für sich. Keine Viertelstunde Diskussion mehr. Wer ein Konto hat, kann stattdessen am eigenen Gerät bewerten.',
+  'landing.features.vote.desc': 'Spielwirbel lost aus, das Gerät geht reihum, jeder bewertet für sich. Keine Viertelstunde Diskussion mehr. Wer ein Konto hat, kann stattdessen am eigenen Gerät bewerten – und wer keines hat, bewertet über einen geteilten Link, ganz ohne Anmeldung.',
   'landing.features.ratings.title': 'Jede Stimme zählt doppelt',
   'landing.features.ratings.desc': 'Dieselbe Bewertung entscheidet die Session und bleibt: Schnitt pro Spiel, Lieblingsspiele, Staubfänger.',
   'landing.features.chronicle.title': 'Eure Spielhistorie',
