@@ -4550,7 +4550,21 @@ kbd {
   color: var(--ink-soft);
   margin-top: 4px;
 }
-.pokale-card__value { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
+/* `overflow-wrap` because a game title is user-authored text with no length
+   limit and no guaranteed break opportunity: a long single-word title painted
+   straight out of the card and pushed the whole PAGE into horizontal scroll
+   (~160-190px at a 390px viewport against a 57-character title). It reads as a
+   Pokale bug but belongs to the component — the member detail page renders
+   `.pokale-card__value` through the same builders, so both screens are fixed by
+   the one declaration. `anywhere`, not `break-word`: only `anywhere` also
+   shrinks the min-content contribution, which is what a grid/flex track sizes
+   against — and .recap-fav is exactly such a track (#695). */
+.pokale-card__value {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
 .pokale-card__sub { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); }
 
 /* Game rows with a per-game "Jetzt spielen" launcher (Meistgespielt etc.). */
@@ -4652,15 +4666,6 @@ kbd {
   box-shadow: var(--shadow-1);
 }
 .recap-fav__cover .ti { font-size: 26px; /* glyph, not type */ }
-/* The cover takes 78px (64 + the column gap) off the text column, so an
-   unbreakable title runs out of room 78px sooner than on the category cards
-   beside it. Those overflow too — `.pokale-card__value` has never wrapped one,
-   and an untouched card measured ~160-190px of horizontal page overflow at
-   390px against a 57-character title — but that is a pre-existing app-wide gap
-   and out of this issue's scope, so this only neutralises what the cover itself
-   costs. (0,2,0), so it beats the component rule outright rather than tying
-   with it and winning on source order. */
-.recap-fav .pokale-card__value { overflow-wrap: anywhere; }
 /* The member replaces the icon slot on a favourite tile, so the avatar carries
    the identity a `.pokale-card__icon` would otherwise. */
 .recap-fav__who { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
