@@ -186,3 +186,44 @@ test('the hero and the rail are never displayed at the same time', () => {
   assert.match(bodyOf('.app .rail-owned', wide), /display:\s*none/,
     'the hero is no longer hidden at rail widths — Start would render two h1s');
 });
+
+/* ------------------- every top-bar control is LOCALIZED --------------------- */
+
+/* index.html can only carry one hardcoded language, so `applyStaticTexts()`
+   re-labels each icon-only top-bar control on locale init and on every change —
+   the aria-label is the ONLY thing a screen reader announces for them. #145 did
+   that for five controls and missed `#inboxBtn`, which therefore announced the
+   German "Postfach" to an English reader from #207 until #764 found it.
+   Nothing could catch it: the markup looks complete and the label is a real
+   word, just the wrong language.
+
+   The assertion names the key each control must render, rather than the string.
+   The tempting generic form — "the name must differ between de and en" — needs
+   no key map and is WRONG: `feedback.button` is „Feedback" in both languages,
+   so that spec fails on a control which is perfectly localized, while a future
+   locale pair that happens to coincide would let a genuinely static label pass.
+   Comparing against `t(key)` has neither failure. */
+const TOPBAR_NAMES = {
+  homeBtn: 'a11y.home',
+  langPicker: 'a11y.language',
+  feedbackBtn: 'feedback.button',
+  supportBtn: 'support.button',
+  inboxBtn: 'inbox.title',
+  accountBtn: 'a11y.account',
+};
+
+test('every icon-only top-bar control is announced in the reader\u2019s language', (t) => {
+  for (const locale of LOCALES.map((l) => l.code)) {
+    const dom = loadApp({ locale });
+    t.after(() => dom.close());
+    dom.call('applyStaticTexts');
+    const t_ = translator(locale);
+
+    for (const [id, key] of Object.entries(TOPBAR_NAMES)) {
+      const el = dom.document.getElementById(id);
+      assert.ok(el, `#${id} is gone from index.html \u2014 this spec is guarding nothing`);
+      assert.equal(el.getAttribute('aria-label'), t_(key),
+        `#${id} announces "${el.getAttribute('aria-label')}" in ${locale} \u2014 its aria-label is not localized from ${key}`);
+    }
+  }
+});
