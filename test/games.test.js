@@ -656,3 +656,151 @@ test('game activities carry no actorMemberId with accounts off (never the first 
   assert.ok(feed.some((a) => a.type === 'game_added'), 'the feed should hold the add');
   assert.ok(feed.length >= 3, `expected add+retire+complete, got ${feed.length}`);
 });
+
+/* ---- the edition a cover was picked from (#742) ----------------------------- */
+
+const GEEKDO = 'https://cf.geekdo-images.com/x/pic.jpg';
+const OTHER_GEEKDO = 'https://cf.geekdo-images.com/y/other.jpg';
+
+// The picker's flat wire shape. `editionLanguages` is repeated per value because
+// multipart has no array form (the same coercion tagIds needs).
+async function addGameWithEdition(rid, fields = {}, languages = ['German']) {
+  const req = request(app).post(`/api/rounds/${rid}/games`);
+  const all = { title: 'Arche Nova', minPlayers: '2', maxPlayers: '4', ...fields };
+  for (const [k, v] of Object.entries(all)) req.field(k, String(v));
+  languages.forEach((l) => req.field('editionLanguages', l));
+  return req;
+}
+
+test('POST stores the picked edition beside its cover', async () => {
+  const round = await createRound(request);
+  const res = await addGameWithEdition(round.id, {
+    imageUrl: GEEKDO, editionName: 'Deutsche Erstausgabe', editionYear: '2021',
+  });
+  assert.equal(res.status, 201);
+  assert.deepEqual(res.body.edition, { name: 'Deutsche Erstausgabe', year: 2021, languages: ['German'] });
+});
+
+test('POST leaves the key ABSENT on a game whose cover was not picked', async () => {
+  const round = await createRound(request);
+  // A free-text game: no cover at all.
+  const plain = await addGame(round.id, { title: 'Freitext' });
+  assert.equal('edition' in plain.body, false);
+
+  // A provider cover with no edition fields — how a pasted URL arrives.
+  const pasted = await addGame(round.id, { title: 'Eingefügt', imageUrl: GEEKDO });
+  assert.equal('edition' in pasted.body, false);
+
+  // Edition fields present but the URL REFUSED: no cover was stored, so an
+  // edition naming a printing would describe a box that is not on screen.
+  const refused = await addGameWithEdition(round.id, {
+    title: 'Abgelehnt', imageUrl: 'https://evil.example.com/x.png', editionName: 'Deutsche Erstausgabe',
+  });
+  assert.equal(refused.body.image, null);
+  assert.equal('edition' in refused.body, false);
+});
+
+test('POST bounds every field of the edition', async () => {
+  const round = await createRound(request);
+  const res = await addGameWithEdition(
+    round.id,
+    { imageUrl: GEEKDO, editionName: 'ä'.repeat(500), editionYear: 'nicht-eine-zahl' },
+    Array.from({ length: 30 }, (_, i) => `Lang${i}`)
+  );
+  assert.equal(res.body.edition.name.length, 200);
+  assert.equal(res.body.edition.year, null, 'an unparseable year is BGG\'s "unknown"');
+  assert.equal(res.body.edition.languages.length, 12);
+  // A BGG `yearpublished value="0"` is its own "unknown" and must not store a 0.
+  const zero = await addGameWithEdition(round.id, {
+    title: 'Jahr null', imageUrl: GEEKDO, editionName: 'Erstausgabe', editionYear: '0',
+  });
+  assert.equal(zero.body.edition.year, null);
+});
+
+// Every way the cover can change, and what each must do to the stored edition.
+// They are one test because the shared setup is the point: the same game, the
+// same starting edition, one differing final act.
+async function gameWithEdition(rid) {
+  const res = await addGameWithEdition(rid, {
+    imageUrl: GEEKDO, editionName: 'Deutsche Erstausgabe', editionYear: '2021',
+  });
+  return res.body;
+}
+
+test('PATCH replaces the edition when a different printing is picked', async () => {
+  const round = await createRound(request);
+  const game = await gameWithEdition(round.id);
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ imageUrl: OTHER_GEEKDO, editionName: 'English first edition', editionYear: 2019, editionLanguages: ['English'] });
+  assert.deepEqual(res.body.edition, { name: 'English first edition', year: 2019, languages: ['English'] });
+});
+
+test('PATCH re-picking the same cover URL still records the edition', async () => {
+  const round = await createRound(request);
+  // A game whose cover predates #742: the URL is already there, no edition.
+  const game = (await addGame(round.id, { title: 'Alt', imageUrl: GEEKDO })).body;
+  assert.equal('edition' in game, false);
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ imageUrl: GEEKDO, editionName: 'Deutsche Erstausgabe', editionYear: 2021, editionLanguages: ['German'] });
+  // The image did not change, so an edition gated on `newImage !== oldImage`
+  // would never be written — and two BGG editions legitimately share one
+  // thumbnail, so that is also how a real re-pick gets lost.
+  assert.equal(res.body.edition.name, 'Deutsche Erstausgabe');
+});
+
+test('PATCH clears the edition when the cover stops being a picked printing', async () => {
+  const round = await createRound(request);
+  for (const [label, body] of [
+    ['a pasted provider URL carrying no edition', { imageUrl: OTHER_GEEKDO }],
+    ['removeImage', { removeImage: true }],
+    ['unlinking the provider', { removeSource: true }],
+  ]) {
+    const game = await gameWithEdition(round.id);
+    assert.equal(game.edition.name, 'Deutsche Erstausgabe', `${label}: sanity`);
+    const res = await request(app).patch(`/api/rounds/${round.id}/games/${game.id}`).send(body);
+    assert.equal(res.body.edition, null, `${label} must not keep a label for a box that is gone`);
+  }
+});
+
+test('PATCH clears the edition when the cover is replaced by an UPLOAD', async () => {
+  // Its own spec rather than a row in the loop above: an upload is multipart, so
+  // it cannot ride `.send()`. A member's own photo is not a BGG printing.
+  const round = await createRound(request);
+  const game = await gameWithEdition(round.id);
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .attach('image', PNG_BYTES, { filename: 'cover.png', contentType: 'image/png' });
+  assert.match(res.body.image, /^\/uploads\//, 'sanity: the upload replaced the cover');
+  assert.equal(res.body.edition, null);
+});
+
+test('PATCH keeps the edition when the request says nothing about the cover', async () => {
+  const round = await createRound(request);
+  const game = await gameWithEdition(round.id);
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ title: 'Umbenannt' });
+  assert.deepEqual(res.body.edition, game.edition);
+});
+
+test('PATCH keeps the edition when an imageUrl is REFUSED — the old cover is still on screen', async () => {
+  const round = await createRound(request);
+  const game = await gameWithEdition(round.id);
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ imageUrl: 'https://evil.example.com/x.png', editionName: 'Gefälscht' });
+  assert.equal(res.body.image, GEEKDO, 'sanity: the refused URL changed nothing');
+  assert.deepEqual(res.body.edition, game.edition);
+});
+
+test('PATCH does not give a game that never had an edition a null one', async () => {
+  // Absent-key parity: an unrelated remove must not add the key.
+  const round = await createRound(request);
+  const game = (await addGame(round.id, { title: 'Ohne', imageUrl: GEEKDO })).body;
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .send({ removeImage: true });
+  assert.equal('edition' in res.body, false);
+});

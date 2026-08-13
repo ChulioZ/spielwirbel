@@ -835,6 +835,55 @@ module.exports = function repoContract(repo) {
       'absent after a re-read too');
   });
 
+  /* ------------------ the picked edition (#742) ----------------------------- */
+
+  test('both writers persist the picked edition, and leave the key ABSENT otherwise', async () => {
+    // Same absent-key parity rules as expansionOf above, and the same reason for
+    // covering BOTH writers: the single add and the bulk import build their rows
+    // independently in each backend, so a field wired into one is silently
+    // missing from the other (.claude/rules/postgres-backend.md).
+    const edition = { name: 'Deutsche Erstausgabe', year: 2021, languages: ['German'] };
+    const round = await freshRound();
+
+    const picked = await repo.createGame(T, round.id, bggFields('342942', { edition }), undefined);
+    assert.deepEqual(picked.edition, edition);
+    const plain = await repo.createGame(T, round.id, bggFields('13'), undefined);
+    assert.equal('edition' in plain, false);
+
+    const imported = await repo.createGames(T, round.id, [
+      bggFields('230802', { edition }),
+      bggFields('9209'),
+    ], undefined, null);
+    assert.deepEqual(imported.created[0].edition, edition);
+    assert.equal('edition' in imported.created[1], false);
+
+    const games = (await repo.getRound(T, round.id)).games;
+    const byId = Object.fromEntries(games.map((g) => [g.id, g]));
+    // The languages array is what selects the price edition, so it has to survive
+    // the round trip as an array rather than as a JSON string — the serialization
+    // footgun the Knex query builder exists to sidestep.
+    assert.deepEqual(byId[picked.id].edition, edition);
+    assert.deepEqual(byId[imported.created[0].id].edition.languages, ['German']);
+    assert.equal('edition' in byId[plain.id], false, 'and it survives a re-read absent');
+    assert.equal('edition' in byId[imported.created[1].id], false);
+  });
+
+  test('updateGame replaces and CLEARS the edition', async () => {
+    // The route sends `null` to clear, exactly as it does for `source` on an
+    // unlink — a stored edition must not outlive the cover it describes.
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id,
+      bggFields('342942', { edition: { name: 'Deutsche Erstausgabe', year: 2021, languages: ['German'] } }), undefined);
+
+    const swapped = await repo.updateGame(T, round.id, game.id,
+      { edition: { name: 'English first edition', year: 2019, languages: ['English'] } });
+    assert.deepEqual(swapped.edition, { name: 'English first edition', year: 2019, languages: ['English'] });
+
+    const cleared = await repo.updateGame(T, round.id, game.id, { edition: null });
+    assert.equal(cleared.edition, null);
+    assert.equal((await repo.getRound(T, round.id)).games[0].edition, null, 'and it stays cleared');
+  });
+
   test('acquireWishExpansion moves the wish onto its base game in ONE step', async () => {
     const round = await freshRound();
     const seat = round.members[0].id;

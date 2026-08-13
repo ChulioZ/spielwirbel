@@ -2,8 +2,12 @@
 paths:
   - "lib/providers/bgg.js"
   - "lib/routes/lookup.js"
+  - "lib/routes/games.js"
+  - "lib/edition.js"
   - "public/js/bgg-covers.js"
   - "public/js/cover-picker.js"
+  - "public/js/views-round-detail.js"
+  - "public/js/views-round-lookup.js"
   - "test/bgg-covers.test.js"
 ---
 # BGG edition covers (#519): `parseItems` LOSES the game item on a versions body
@@ -56,6 +60,25 @@ Deduping is deliberately **not** done server-side for the same reason: which
 member survives depends on the reader's language, which the server does not have
 (BGG's `resolveLocale()` returns a constant and the version list is
 language-independent).
+
+**Since #742 the pick is STORED, and the dedupe order therefore decides more than
+a caption.** The surviving member's `{ edition, year, languages }` is what lands
+on the game row as `edition` — so it names the printing on the detail page **and
+selects which language edition the wish-list price quotes**. Deduping first would
+not merely mislabel a box; it would price a different one.
+
+Two consequences for the three call sites (`views-round-detail.js`'s cover
+popover, `views-round-lookup.js`'s add-game sheet and its bulk-import rows), all
+of which used to keep only `c.imageUrl`:
+
+- **The edition travels WITH the cover, in both directions.** Picking a new cover
+  replaces it; an upload, a `removeImage`, a pasted URL carrying no edition, a
+  refused URL and an unlink all clear it. Otherwise a game keeps a label — and a
+  priced edition — for a box that is no longer on screen.
+- **A cover's own field is `edition` (the NAME) while the stored object is
+  `edition: { name, … }`.** `editionFromCover` in `bgg-covers.js` does that
+  rename once, precisely so one of the three sites does not ship
+  `{ edition: 'Deutsche Erstausgabe' }`.
 
 ## 3. `<thumbnail>`, never `<image>` — and drop the versions that have neither
 

@@ -203,6 +203,7 @@ const frontendGlobals = {
   // bgg-covers.js + cover-picker.js (issue #519)
   BGG_LANGUAGES: 'readonly', bggCoverLanguage: 'readonly', coverRank: 'readonly',
   sortEditionCovers: 'readonly', coverCaption: 'readonly',
+  editionFromCover: 'readonly', editionLabel: 'readonly', editionFields: 'readonly',
   editionCoverPicker: 'readonly',
   TAG_ICONS: 'readonly', tagIconClass: 'readonly',
   // views-home.js

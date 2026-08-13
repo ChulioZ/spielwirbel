@@ -552,6 +552,11 @@ function showAddGame(round, { wish = false } = {}) {
   // or a manual title edit clears them (see setImage / the lookup input handler).
   let chosenImageUrl = null;
   let chosenSource = null;
+  // Which PRINTING the chosen cover is (#742) — set only when the URL came from
+  // an edition tile, cleared by every other way the cover can change. Declared
+  // beside chosenImageUrl for the same TDZ reason as coverPicker below: setImage
+  // is hoisted and reads it.
+  let chosenEdition = null;
   // Declared up here, not next to setCoverPicker below: setImage() reads it and
   // is a hoisted function declaration, so a `let` further down would be a TDZ
   // trap the moment anything called it earlier.
@@ -563,6 +568,7 @@ function showAddGame(round, { wish = false } = {}) {
   function setImage(blob) {
     if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
     chosenImageUrl = null; // a pasted/cleared image overrides a provider cover
+    chosenEdition = null; // …and so is not any BGG printing (#742)
     if (coverPicker) coverPicker.setCurrent(null);
     pastedBlob = blob;
     if (blob) {
@@ -606,10 +612,16 @@ function showAddGame(round, { wish = false } = {}) {
 
   // Show a provider cover from its URL (no local blob yet — the server downloads
   // it on save). Cleared like any other image via the remove button.
-  function showProviderImage(url) {
+  // `cover` is the picker's own object when the URL came from an edition tile
+  // (#742), and absent for a provider's default art — so the edition is cleared
+  // by default and set only where a printing was actually chosen. Routing it
+  // through the one function that changes the cover is what keeps the two from
+  // ever describing different boxes.
+  function showProviderImage(url, cover) {
     if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
     pastedBlob = null;
     chosenImageUrl = url;
+    chosenEdition = cover ? editionFromCover(cover) : null;
     preview.src = url;
     preview.hidden = false;
     pasteZone.classList.add('has-image');
@@ -629,7 +641,7 @@ function showAddGame(round, { wish = false } = {}) {
     if (coverPicker) { coverPicker.remove(); coverPicker = null; }
     if (!source || source.provider !== 'bgg') return;
     coverPicker = editionCoverPicker(round.id, source.externalId, chosenImageUrl, (c) => {
-      showProviderImage(c.imageUrl);
+      showProviderImage(c.imageUrl, c);
       toast(t('coverPicker.toast.picked'));
     });
     pickerSlot.appendChild(coverPicker);
@@ -733,6 +745,16 @@ function showAddGame(round, { wish = false } = {}) {
       fd.append('image', pastedBlob, 'pasted.' + ext);
     } else if (chosenImageUrl) {
       fd.append('imageUrl', chosenImageUrl);
+      // Only alongside the URL it belongs to, and only when a printing was
+      // actually picked — the route stores the edition solely on the
+      // provider-cover branch anyway, so sending it otherwise could not take
+      // effect and would just be noise on the wire.
+      if (chosenEdition) {
+        fd.append('editionName', chosenEdition.name);
+        if (chosenEdition.year != null) fd.append('editionYear', chosenEdition.year);
+        // Repeated per value, like tagIds — multipart has no array form.
+        chosenEdition.languages.forEach((l) => fd.append('editionLanguages', l));
+      }
     }
     if (chosenSource) {
       fd.append('sourceProvider', chosenSource.provider);
@@ -1173,6 +1195,8 @@ async function showBggImport(round, status = 'own') {
     // Only what the user actually changed goes on the wire; everything else
     // keeps the cover the collection itself reported.
     const chosenCovers = {};
+    // …and which printing each of those covers is (#742), same keying.
+    const chosenEditions = {};
     // NOT wrapped in a .field: `.field label` beats `.ds-row` on specificity and
     // silently flattens every row (.claude/rules/label-rows-lose-to-field-label.md).
     fresh.forEach((g) => {
@@ -1217,6 +1241,9 @@ async function showBggImport(round, status = 'own') {
 
       item.appendChild(editionCoverPicker(round.id, g.externalId, g.imageUrl, (c) => {
         chosenCovers[g.externalId] = c.imageUrl;
+        // The printing that cover belongs to (#742), kept beside it so the
+        // imported row can be labelled — and priced — as the box the user chose.
+        chosenEditions[g.externalId] = editionFromCover(c);
         paintThumb(c.imageUrl);
       }));
       list.appendChild(item);
@@ -1259,8 +1286,16 @@ async function showBggImport(round, status = 'own') {
         // Only the covers of games actually being imported ride along — a
         // choice made and then deselected must not reach the server.
         const covers = {};
-        ids.forEach((id) => { if (chosenCovers[id]) covers[id] = chosenCovers[id]; });
-        const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg&status=${status}`, { externalIds: ids, covers });
+        const editions = {};
+        ids.forEach((id) => {
+          if (!chosenCovers[id]) return;
+          covers[id] = chosenCovers[id];
+          // Only beside its own cover: the server stores an edition solely when
+          // the picked URL survives the host allowlist, so an edition without one
+          // could never apply.
+          if (chosenEditions[id]) editions[id] = chosenEditions[id];
+        });
+        const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg&status=${status}`, { externalIds: ids, covers, editions });
         imported = imported || res.imported > 0;
         toast(tn(res.imported, 'bggImport.toast.doneOne', 'bggImport.toast.done'));
         dismiss();

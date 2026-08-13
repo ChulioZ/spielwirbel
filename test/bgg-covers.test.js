@@ -8,7 +8,10 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { bggCoverLanguage, coverRank, sortEditionCovers, coverCaption } = require('../public/js/bgg-covers');
+const {
+  bggCoverLanguage, coverRank, sortEditionCovers, coverCaption,
+  editionFromCover, editionLabel, editionFields,
+} = require('../public/js/bgg-covers');
 
 // Shaped exactly like lib/providers/bgg.js parseVersions' output.
 const cover = (edition, languages, imageUrl, year) => ({
@@ -119,4 +122,59 @@ test('coverCaption joins edition and year, and stays empty when BGG has neither'
   assert.equal(coverCaption({ edition: null, year: 2019 }), '2019');
   assert.equal(coverCaption({ edition: null, year: null }), '');
   assert.equal(coverCaption(null), '');
+});
+
+/* ------------------ the picked edition, kept rather than dropped (#742) ----- */
+
+test('editionFromCover renames the cover\'s own `edition` field to `name`', () => {
+  // The trap this exists to remove: a cover calls the edition NAME `edition`,
+  // while the stored object is `edition: { name, … }`. Converting at three call
+  // sites is how one of them ends up storing `{ edition: 'Deutsche Erstausgabe' }`.
+  assert.deepEqual(
+    editionFromCover({ edition: 'Deutsche Erstausgabe', year: 2019, languages: ['German'] }),
+    { name: 'Deutsche Erstausgabe', year: 2019, languages: ['German'] }
+  );
+});
+
+test('editionFromCover keeps a languages-only cover — that half is what prices it', () => {
+  // No name and no year, so it renders NOTHING on the detail page — but the
+  // language is exactly what decides which edition the wish-list price quotes,
+  // so dropping the object here would silently un-fix the whole issue for any
+  // printing BGG names without an edition title.
+  assert.deepEqual(
+    editionFromCover({ edition: null, year: null, languages: ['German'] }),
+    { name: '', year: null, languages: ['German'] }
+  );
+  assert.equal(editionLabel(editionFromCover({ languages: ['German'] })), '');
+});
+
+test('editionFromCover is null when the cover says nothing about the printing', () => {
+  // Null is what the routes read as "clear the stored edition", and it is what
+  // keeps the key ABSENT on a game whose cover names no box.
+  assert.equal(editionFromCover({ edition: null, year: null, languages: [] }), null);
+  assert.equal(editionFromCover({ edition: '', year: 0, languages: null }), null);
+  assert.equal(editionFromCover(null), null);
+});
+
+test('editionLabel phrases a STORED edition exactly as coverCaption phrases a cover', () => {
+  // One join rule, so the tile under the picker and the line under the detail
+  // page's cover can never word one printing differently.
+  const cov = { edition: 'German edition', year: 2019, languages: ['German'] };
+  assert.equal(editionLabel(editionFromCover(cov)), coverCaption(cov));
+  assert.equal(editionLabel({ name: 'German edition', year: null }), 'German edition');
+  assert.equal(editionLabel({ name: '', year: 2019 }), '2019');
+  assert.equal(editionLabel(null), '');
+});
+
+test('editionFields always sends all three keys — an omitted one leaves the OLD edition', () => {
+  assert.deepEqual(editionFields({ edition: 'Erstausgabe', year: 2019, languages: ['German'] }), {
+    editionName: 'Erstausgabe', editionYear: 2019, editionLanguages: ['German'],
+  });
+  // The load-bearing half: a cover that names no printing must still send the
+  // keys, EMPTY, so the route clears whatever was stored. Were they omitted, a
+  // new cover would keep the previous box's label and its price edition.
+  assert.deepEqual(editionFields({ edition: null, year: null, languages: [] }), {
+    editionName: '', editionYear: '', editionLanguages: [],
+  });
+  assert.deepEqual(Object.keys(editionFields(null)).sort(), ['editionLanguages', 'editionName', 'editionYear']);
 });
