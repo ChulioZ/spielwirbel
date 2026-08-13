@@ -3,14 +3,15 @@ name: claude-file-audit
 description: >-
   Audit the repo's own documentation — CLAUDE.md, README.md, CONTRIBUTING.md,
   SECURITY.md, CODE_OF_CONDUCT.md, LICENSE, the community-health files under
-  .github/ (issue forms, PR template, FUNDING.yml) and every committed file under
-  .claude/ (rules, skills, launch config) — for staleness, contradictions and
-  drift from the code, and periodically refresh the criteria from current Claude
-  Code/harness capabilities. Use when asked to audit or review the Claude files,
-  rules, skills, CLAUDE.md, the root docs or the GitHub issue/PR templates, to
-  check whether the repo's own docs still match reality, or to clean up the
-  agent-facing documentation. Produces a ranked report; files issues only with
-  your approval.
+  .github/ (issue forms, PR template, FUNDING.yml), every committed file under
+  .claude/ (rules, skills, launch config) and the end-user product copy (the
+  landing page text, the in-app FAQ, the landing screenshots) — for staleness,
+  contradictions and drift from the code, and periodically refresh the criteria
+  from current Claude Code/harness capabilities. Use when asked to audit or review
+  the Claude files, rules, skills, CLAUDE.md, the root docs, the GitHub issue/PR
+  templates or the landing/FAQ copy, to check whether the repo's own docs and
+  product copy still match reality, or to clean up the agent-facing documentation.
+  Produces a ranked report; files issues only with your approval.
 ---
 
 # Claude-file audit
@@ -27,6 +28,12 @@ no longer exists. Finding those is the main job.
 `SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE`** — and the committed
 **community-health files under `.github/`**: `ISSUE_TEMPLATE/` (the issue forms
 and `config.yml`), `PULL_REQUEST_TEMPLATE.md` and `FUNDING.yml`.
+
+Since 2026-08-13 it also covers the **end-user product copy** — the `landing.*`
+keys in every `public/js/lang/*.js`, `lib/faq.js`, and the landing screenshots
+(§5, C-024). The first *user*-facing surface here, and it joined for the same
+reason as the rest: **no other domain owns it** — `ui-audit` files copy under UX
+and rejects such findings outright (U-R03), C-006 covers only the developer docs.
 
 All of them are in scope because **no other skill owns them** and they drift the
 same way: `legal-audit` covers the published legal pages and `docs/legal/`,
@@ -124,7 +131,20 @@ The README tree and the cited paths are pinned by `test/readme-tree.test.js` and
 `test/skills.test.js` — check what those don't cover: prose that has quietly
 stopped being true.
 
-### 5. The root documents → C-016
+### 5. The end-user product copy → C-024
+
+What the *user* reads, as against §4's developer documents: the `landing.*` keys
+in every `public/js/lang/*.js`, `lib/faq.js`, and the landing screenshots.
+
+Run it **after** §4: the baseline is `docs/features.md` and C-006 is what keeps
+that trustworthy, so a stale baseline voids every comparison here. Then it is a
+two-document diff, **both** directions (copy describing behaviour the app no
+longer has; a headline feature no copy mentions), across every locale derived from
+`public/js/locales.js`. Three green tests cover this surface and none checks
+currency — which is why the drift reads as covered. C-024 has the screenshot mtime
+proxy and the two constraints that govern a *correction*.
+
+### 6. The root documents → C-016
 
 `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md` and
 `LICENSE`. The check that matters is **instance state**: each asserts something
@@ -161,7 +181,7 @@ count inside one of the copies, which is the drift the repo's own
 `shared-constants-across-the-stack.md` doctrine predicts. Don't restate the table
 again: add a row to the rule.
 
-### 6. The community-health files under `.github/` → C-018
+### 7. The community-health files under `.github/` → C-018
 
 Four specific drifts, each invisible until a contributor is misled by it:
 
@@ -185,7 +205,7 @@ Four specific drifts, each invisible until a contributor is misled by it:
   (`gh api graphql` → `discussionCategories`). Check both by request, not by
   reading the file.
 
-### 7. Hygiene → C-004, C-007, C-008, C-011, C-012, C-013
+### 8. Hygiene → C-004, C-007, C-008, C-011, C-012, C-013
 
 Rule shape (one learning, says why), skill frontmatter quality, trigger overlap
 between skills, no secrets or real data anywhere, no hedged half-true rules, and —

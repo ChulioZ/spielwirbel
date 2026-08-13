@@ -36,6 +36,16 @@ architecture tree, and the product copy is the one description a *user* actually
 reads. It was caught by the operator asking, which is exactly the failure mode
 `.claude/rules/keep-legal-docs-current.md` was written up for.
 
+**This rule is diff-triggered, so it has a recurring backstop:** `claude-file-audit`
+criterion **C-024** sweeps the same two surfaces (plus the landing screenshots)
+against `docs/features.md` on the audit cadence. The division is what each can
+see — this rule fires per change and catches drift *as it is introduced*, which
+the audit cannot do; C-024 catches drift that has *already accumulated*, which
+this rule cannot, because it only ever reaches a session that happens to be
+touching the feature in question. Both constraints below are carried into the
+criterion, since they govern what makes a correction right rather than merely
+current.
+
 **Two constraints when you do update them**, both of which are easy to get
 backwards:
 

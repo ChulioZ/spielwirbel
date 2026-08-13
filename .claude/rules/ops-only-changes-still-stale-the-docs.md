@@ -42,7 +42,7 @@ Neither is reachable from any diff, because there was no diff.
 **After an ops-only change — anything that alters what the live instance *is*
 without producing a commit — walk this list in a follow-up PR.** These are the
 files that assert live instance state, and this table is the **canonical** list
-as of 2026-07-30 — `claude-file-audit`'s `SKILL.md` §5 and its criteria C-016
+as of 2026-07-30 — `claude-file-audit`'s `SKILL.md` §6 and its criteria C-016
 point here rather than restating it, because the copy that gets forgotten is the
 one that rots (`.claude/rules/shared-constants-across-the-stack.md`, applied to a
 checklist instead of a constant):

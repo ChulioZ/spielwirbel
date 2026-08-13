@@ -16,10 +16,14 @@ Seeded 2026-07-23 from `CLAUDE.md` (the "Capturing learnings" contract),
 Scope: `CLAUDE.md`, everything committed under `.claude/` (the rule files, the
 skills, `launch.json`), the five root documents — `README.md`, `CONTRIBUTING.md`,
 `SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE` — and the community-health files
-under `.github/` (`ISSUE_TEMPLATE/`, `PULL_REQUEST_TEMPLATE.md`, `FUNDING.yml`).
-The root docs joined on 2026-07-26 because no other skill owns them, and the
-`.github/` files on the same day, when they were created (see `SKILL.md` →
-Scope).
+under `.github/` (`ISSUE_TEMPLATE/`, `PULL_REQUEST_TEMPLATE.md`, `FUNDING.yml`) —
+plus, since 2026-08-13, the **end-user product copy**: the `landing.*` keys in
+every `public/js/lang/*.js`, the answers in `lib/faq.js`, and the landing
+screenshots (C-024). The root docs joined on 2026-07-26 because no other skill
+owns them, and the `.github/` files on the same day, when they were created (see
+`SKILL.md` → Scope). The product copy is the first **end-user** surface here and
+joined for the same reason as the rest: nothing else owns it — `ui-audit` rejects
+copy findings by rule, and C-006 covers only the developer-facing documents.
 
 **The premise:** these files are *instructions to future sessions*. A stale one is
 worse than a missing one — it actively misdirects, and nothing in CI checks any of
@@ -107,6 +111,60 @@ research at all.
   nothing was asking it. The sibling budgets for the agent-facing files are C-015
   (`CLAUDE.md`), C-021 (rules) and C-023 (skills).
 - **Enforced by:** — (manual; the line count is one command)
+
+### C-024 — The product copy reflects the shipped app
+- **Status:** adopted · 2026-08-13
+- **Source:** the #209 drift that proved the gap ·
+  `keep-readme-current.md` → "The PRODUCT copy is a fifth and sixth surface"
+- **Check:** The **end-user** copy — the `landing.*` keys in **every**
+  `public/js/lang/*.js`, the answers in `lib/faq.js`, and the landing screenshots
+  under `public/img/` — still describes the app that `docs/features.md` describes.
+  - **The baseline is `docs/features.md`, not a sweep of merged PRs.** C-006
+    already keeps that document current against the shipped app, so this check
+    reduces to a cheap two-document diff. **It therefore depends on C-006's
+    result being trustworthy: run C-006 first**, and if C-006 finds `features.md`
+    itself stale, fix that before reading anything into a copy mismatch — the
+    baseline, not the copy, is what moved.
+  - **Both directions.** Copy describing behaviour the app no longer has (the
+    #209 shape), *and* a headline feature `features.md` lists that no copy
+    mentions at all.
+  - **Every locale, not just German.** Derive the set from
+    `public/js/locales.js` — never a hardcoded `['de', 'en']`
+    (`.claude/rules/locale-set-is-data.md`). A correction landed in one language
+    only is still drift, and `test/i18n-parity.test.js` cannot see it: parity is
+    over *keys*, and a stale sentence is a perfectly present key.
+  - **Screenshots:** judge whether each still depicts the current UI of the screen
+    it claims to show. Cheap proxy before opening a browser — compare each file's
+    last-commit date against the last commit touching the view it depicts
+    (`public/js/views-regal.js` for the `landing-shelf-*` shots,
+    `public/js/views-session.js` for `landing-vote`).
+  - **Two constraints govern the correction, not just the finding** — both from
+    `keep-readme-current.md`, and both easy to get backwards. Copy is **additive,
+    not replacing**: a new optional mode goes *beside* the existing story, because
+    rewriting the pitch around an opt-in feature quietly restates what the product
+    is. And **the hero is usually the wrong place** for a nuance — it is the
+    one-sentence pitch; a feature card or an FAQ answer is where the nuance
+    belongs. A `lib/faq.js` correction also has to respect that file's own content
+    rules (`test/faq.test.js`: never name a device kind).
+
+  **Why it needed its own criterion:** no audit domain checked end-user copy at
+  all. C-006 is scoped to the developer/self-hoster documents, `ui-audit` files
+  copy under UX and **rejects** such findings by rule (U-R03), and `legal-audit`
+  reads the landing page only for legal truthfulness. So the one description a
+  *user* actually reads was the single unaudited surface — and it has already
+  failed exactly this way: #209 shipped per-device voting, all four C-006
+  documents were updated, and the FAQ still answered "a round runs from one
+  device" while the landing hero, the voting feature card and step 3 still said
+  "one device goes around the table". Nothing went red; the operator caught it by
+  asking. `keep-readme-current.md` names both surfaces but is **diff-triggered**,
+  so it cannot see drift that has already accumulated — this criterion is the
+  recurring sweep behind that per-change discipline.
+- **Enforced by:** `test/landing-copy.test.js` (falsifiable claims only — the
+  "open source" term, the unlinked source chip, placement),
+  `test/landing-shots.test.js` (set parity, dimensions, weight — never content),
+  `test/faq.test.js` (content rules, not currency). **Currency itself is manual**,
+  the way C-006's prose is — and those three green tests are precisely why this
+  drift reads as covered.
 
 ### C-007 — Every skill has frontmatter that will actually trigger it
 - **Status:** adopted · 2026-07-23
