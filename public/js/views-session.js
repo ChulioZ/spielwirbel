@@ -1265,16 +1265,21 @@ async function showResults(round, session, gamesHint, reveal) {
   // ("nothing belongs after a back link") is satisfied by construction.
   const footer = h('<div class="section result-footer"></div>');
   footer.appendChild(cancelWrap);
-  const delBtn = h(`<button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button>`);
-  delBtn.addEventListener('click', async () => {
-    if (!confirm(t('sessions.deleteConfirm', { when }))) return;
-    try {
-      await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
-      toast(t('sessions.deleted'));
-      showRound(round.id);
-    } catch (e) { toast(e.message); }
-  });
-  footer.appendChild(delBtn);
+  // #137: deleting a played evening destroys its votes, result and winners for
+  // everyone, so it is co-owner and up. Cancelling (above) stays an ordinary
+  // write — it is reversible and is part of running the session.
+  if (roundCan(round, 'session.delete')) {
+    const delBtn = h(`<button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button>`);
+    delBtn.addEventListener('click', async () => {
+      if (!confirm(t('sessions.deleteConfirm', { when }))) return;
+      try {
+        await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
+        toast(t('sessions.deleted'));
+        showRound(round.id);
+      } catch (e) { toast(e.message); }
+    });
+    footer.appendChild(delBtn);
+  }
   app.appendChild(footer);
 }
 

@@ -99,7 +99,9 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
   order (core → account → main) is safe — see frontend-script-load-order.md.
 
 - **What #138 did NOT do:** invitations / tenant-sharing (a second user can't see
-  your rounds under RLS — that's #207, shipped since) and roles (#137, still
-  open). Which mode an instance runs in is an ops decision, not something this
+  your rounds under RLS — that's #207, shipped since) and roles (#137, shipped
+  since too — `.claude/rules/round-roles-are-a-chokepoint.md`). Note the
+  per-tenant `/uploads` isolation mentioned above is a **separate** follow-up that
+  neither closed. Which mode an instance runs in is an ops decision, not something this
   code turns on — production has been accounts-only since the 2026-07-24
   go-live, and a self-hosted checkout is whatever its env says.

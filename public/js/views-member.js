@@ -243,10 +243,37 @@ async function showMember(rid, mid) {
     btn.addEventListener('click', () => seatPatch(null));
     sec.appendChild(btn);
     app.appendChild(sec);
-  } else if (!round.shared && member.userId) {
+  } else if (roundCan(round, 'round.shares.manage') && member.userId) {
     const shareSec = h(`<div class="round-footer">
         <p class="muted">${esc(t('share.linked'))}</p>
       </div>`);
+    // #137: the role control. Rendered only once the server confirms this seat
+    // really holds a grant — a seat the OWNER claimed for themselves is linked but
+    // un-granted, and offering a role picker there would 404 on save. The fetch is
+    // owner-only and best-effort: a failure leaves the revoke button working
+    // rather than blanking the section.
+    api('GET', `/api/rounds/${rid}/shares`).then((shares) => {
+      const grant = (shares || []).find((s) => s.userId === member.userId);
+      if (!grant) return;
+      const field = h(`<div class="field">
+          <label for="shareRole">${esc(t('share.role'))}</label>
+          <select id="shareRole" class="input">
+            ${ROUND_ROLES.filter((r) => r !== 'owner').map((r) =>
+    `<option value="${esc(r)}"${r === grant.role ? ' selected' : ''}>${esc(t('share.role.' + r))}</option>`).join('')}
+          </select>
+          <p class="muted field__hint" id="shareRoleHint">${esc(t('share.role.' + grant.role + '.hint'))}</p>
+        </div>`);
+      const sel = field.querySelector('#shareRole');
+      sel.addEventListener('change', async () => {
+        const role = sel.value;
+        try {
+          await api('PATCH', `/api/rounds/${rid}/shares/${member.userId}`, { role });
+          field.querySelector('#shareRoleHint').textContent = t('share.role.' + role + '.hint');
+          toast(t('share.roleSaved', { name: member.name }));
+        } catch (e) { toast(e.message); }
+      });
+      shareSec.insertBefore(field, shareSec.firstChild);
+    }).catch(() => {});
     const revokeBtn = h(`<button class="link-btn round-footer__danger">${esc(t('share.revoke'))}</button>`);
     revokeBtn.addEventListener('click', async () => {
       if (!confirm(t('share.revokeConfirm', { name: member.name }))) return;
@@ -257,7 +284,7 @@ async function showMember(rid, mid) {
     });
     shareSec.appendChild(revokeBtn);
     app.appendChild(shareSec);
-  } else if (!member.userId && !round.shared && isLoggedIn() && me
+  } else if (!member.userId && roundCan(round, 'member.link') && isLoggedIn() && me
       && !round.members.some((m) => m.userId === me)) {
     // Holding a seat elsewhere in this round hides the button entirely — moving
     // seats is a deliberate two-step (release, then claim), so that a claim can
