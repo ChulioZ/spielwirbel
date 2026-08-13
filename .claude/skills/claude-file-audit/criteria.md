@@ -137,7 +137,12 @@ research at all.
     it claims to show. Cheap proxy before opening a browser — compare each file's
     last-commit date against the last commit touching the view it depicts
     (`public/js/views-regal.js` for the `landing-shelf-*` shots,
-    `public/js/views-session.js` for `landing-vote`).
+    `public/js/views-session.js` for `landing-vote`). **Name
+    `.claude/rules/landing-product-screenshots.md` in any such finding** — it
+    holds the regeneration procedure, and it is `paths:`-scoped to
+    `public/img/**` and friends, so it does **not** load for a session reading
+    this file. An unnamed scoped rule is one a session never learns exists
+    (C-014), which here means regenerating a shot without the procedure.
   - **Two constraints govern the correction, not just the finding** — both from
     `keep-readme-current.md`, and both easy to get backwards. Copy is **additive,
     not replacing**: a new optional mode goes *beside* the existing story, because
