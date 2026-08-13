@@ -1027,6 +1027,17 @@ function setupAccountUi() {
   // rather than being called from each of those sites separately.
   setupDemoBanner();
   setupTermsBanner(); // #521, same transitions
+  // #207, same transitions — and it belongs UP HERE with the other two rather
+  // than at the foot of this function, where it used to sit. Everything below
+  // returns early for a logged-out user, so the inbox button was never hidden on
+  // the way out: logging out left it on the landing page as a dead control
+  // (clicking it lands in showInbox, which guards itself and bounces Home).
+  // A cold boot never showed it — bootApp() returns before calling this for a
+  // logged-out visitor, so the button keeps index.html's `hidden` — which is why
+  // only the logout and session-lost transitions ever exposed it.
+  // setupInboxUi() handles the logged-out case itself and self-guards on a
+  // missing element, so it is safe ahead of both returns below.
+  setupInboxUi();
   const btn = document.getElementById('accountBtn');
   if (!btn) return;
   const loggedIn = accountsActive() && isLoggedIn();
@@ -1070,7 +1081,6 @@ function setupAccountUi() {
       el.appendChild(out);
     }
   });
-  setupInboxUi();
 }
 
 // The inbox button (issue #207): visible only when logged in, opens the inbox
