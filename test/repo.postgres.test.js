@@ -681,4 +681,75 @@ if (!process.env.DATABASE_URL) {
       assert.equal(typeof n, 'number');
     }
   });
+
+  // publicGameAggregates (#564) is the fifth cross-tenant read, and the highest
+  // stakes of them so far: it feeds a PUBLIC page. Without atx() a non-superuser
+  // connection sees zero rows — no error — so production's landing page would
+  // publish a confident "nothing here yet" while every superuser test stayed
+  // green. Same child-process shape as the two probes above, for the same
+  // reason: this file's own connection is a superuser and bypasses RLS.
+  test('publicGameAggregates reads the round tables under the admin escape', async () => {
+    const assert = require('node:assert/strict');
+    const tenant = `pg-pubstats-${Math.random().toString(16).slice(2)}`;
+    const externalId = `probe-${Math.random().toString(16).slice(2)}`;
+    const round = await repo.createRound(tenant, { name: 'Öffentlich', members: ['Ann'] });
+    const game = await repo.createGame(tenant, round.id, {
+      title: 'Getippter Titel', minPlayers: 1, maxPlayers: 4, image: null,
+      source: { provider: 'bgg', externalId, url: null },
+    });
+    const [ann] = (await repo.getRound(tenant, round.id)).members;
+    const at = new Date().toISOString();
+    await repo.createSession(tenant, round.id, {
+      gameIds: [game.id], createdAt: at, finished: true, finishedAt: at, chosenGameId: game.id,
+      votes: { [ann.id]: { [game.id]: { rating: 4 } } },
+    });
+
+    const admin = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    });
+    await admin.connect();
+    let rows;
+    try {
+      await admin.query('DROP ROLE IF EXISTS gs_pubstats_probe');
+      await admin.query("CREATE ROLE gs_pubstats_probe LOGIN PASSWORD 'probe'");
+      await admin.query('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO gs_pubstats_probe');
+      await admin.query('GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO gs_pubstats_probe');
+
+      const url = new URL(process.env.DATABASE_URL);
+      url.username = 'gs_pubstats_probe';
+      url.password = 'probe';
+      const child = execFileSync(process.execPath, ['-e', `
+        const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
+        repo.publicGameAggregates()
+          .then((r) => { console.log('RESULT:' + JSON.stringify(r)); return repo.end(); })
+          .catch((err) => { console.error(err.stack); process.exit(1); });
+      `], { env: { ...process.env, DATABASE_URL: url.toString() }, encoding: 'utf8' });
+
+      const line = child.split('\n').find((l) => l.startsWith('RESULT:'));
+      assert.ok(line, `the probe child produced no result: ${child}`);
+      rows = JSON.parse(line.slice('RESULT:'.length));
+    } finally {
+      await admin.query('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM gs_pubstats_probe').catch(() => {});
+      await admin.query('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM gs_pubstats_probe').catch(() => {});
+      await admin.query('DROP ROLE IF EXISTS gs_pubstats_probe').catch(() => {});
+      await admin.end();
+    }
+
+    // The row belongs to a tenant the probe never scoped itself to, so reaching
+    // it at all is only possible through the FOR SELECT admin escape. Asserted
+    // per aggregate, because the three reads are three separate statements and a
+    // missed atx() on any one of them would zero only that column.
+    const row = rows.find((r) => r.externalId === externalId);
+    assert.ok(row, 'the games read was invisible without the admin escape');
+    assert.equal(row.owners, 1, 'the owner read was invisible without the admin escape');
+    assert.equal(row.plays.d7.count, 1, 'the plays read was invisible without the admin escape');
+    assert.equal(row.ratings.count, 1, 'the ratings read was invisible without the admin escape');
+    assert.equal(row.ratings.sum, 4);
+    // pg hands numeric back as a STRING; a missing cast would answer '4' here
+    // while the JSON backend answers 4.
+    assert.equal(typeof row.ratings.sum, 'number');
+    // And nothing user-authored crossed the boundary, even under the escape.
+    assert.ok(!JSON.stringify(rows).includes('Getippter Titel'));
+  });
 }

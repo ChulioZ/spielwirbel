@@ -4,13 +4,14 @@
  * The „Was ist neu" screen and its unseen dot (issue #741), driven through the
  * jsdom harness (.claude/rules/testing-views-under-jsdom.md).
  *
- * THE POINT OF THIS FILE is that the shipped NEWS list is EMPTY. With no entries
- * `newsRevision()` is null, so every claim about the dot — "it lights when the
- * account is behind", "visiting clears it" — is vacuously satisfiable: an
- * implementation that never lights the dot at all passes them. So every spec
- * below that is about the dot injects fixture entries into the real array first,
- * and the empty-list specs assert the empty case DELIBERATELY rather than by
- * accident. Same trap as the defaulted flag in
+ * EVERY SPEC HERE STATES ITS OWN LIST through `boot({ entries })`, and never
+ * reads the shipped NEWS. That began as a guard against vacuity — while the
+ * shipped list was empty, `newsRevision()` was null and every claim about the
+ * dot was satisfiable by an implementation that never lights it — and it is
+ * what kept this file correct when #564 shipped the first real entry: the
+ * empty-list specs still test the empty case, because they establish it rather
+ * than inherit it. A spec that had read the shipped array would have silently
+ * changed meaning that day. Same trap as the defaulted flag in
  * .claude/rules/break-the-code-on-purpose.md.
  */
 
@@ -150,7 +151,8 @@ test('an account predating the field (null) is behind, so it IS dotted', async (
 });
 
 test('with the list EMPTY no dot can ever appear, whatever the account holds', async (t) => {
-  // The state this ships in. Both stamps are exercised, because an
+  // The state a self-hosted instance with no entries is in. Both stamps are
+  // exercised, because an
   // implementation comparing a null revision against a null stamp with `!==`
   // would light the dot for a stale account and not for a fresh one.
   for (const lastSeen of [null, '2026-08-20']) {

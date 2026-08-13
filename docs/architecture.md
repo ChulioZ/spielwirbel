@@ -98,6 +98,12 @@ lib/
   faq.js             the server-rendered FAQ page, DE + EN, with each answer an
                      instance cannot honestly give gated out (issue #489)
   feed.js            the Freundeskreis activity feed's allowlisted events (#325)
+  public-stats.js    the instance-wide statistics published on the landing page
+                     and /entdecken (issue #564; off unless
+                     PUBLIC_STATS_ENABLED). Ranks the repo's raw provider-keyed
+                     aggregate, resolves only the handful of games that could
+                     reach a podium from the provider — never from the
+                     user-typed title — and caches the payload for the route
   actor-seat.js      which member seat to attribute a round activity to; one
                      definition shared by the games and members routes (#563)
   edition.js         the printing a game's cover was picked from, normalized and
@@ -127,8 +133,9 @@ lib/
                      never cancelled — reaches none of the five event-driven
                      deletions, so without a max age its link never expires
   scheduler.js       background jobs, started from server.js only: the
-                     expired-demo purge (issue #427) and the expired-vote-link
-                     sweep (issue #652)
+                     expired-demo purge (issue #427), the expired-vote-link
+                     sweep (issue #652), the stored-price sweep (issue #688)
+                     and the public-statistics rebuild (issue #564)
   shutdown.js        the SIGTERM/SIGINT drain server.js installs — stops the
                      scheduler, lets in-flight requests finish, destroys the
                      pool, with a force-exit fallback. A factory taking its
@@ -446,6 +453,11 @@ public/
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
     views-news.js    the pulled „Was ist neu" screen at /neu, reached from the
                      account menu; opening it marks the entries seen (#741)
+    views-stats.js   instance-wide public statistics (#564): the /entdecken
+                     screen, the landing-page block and the home teaser, all
+                     from one payload. Renders nothing at all — no heading, no
+                     container — when the feature is off or every metric is
+                     still below its threshold
     views-friends.js Freundeskreis view + home feed section (#325) and the
                      account profile at /u/:username (#558; accounts mode only)
     views-account.js Konto settings: identity + change password (#482; accounts mode only)

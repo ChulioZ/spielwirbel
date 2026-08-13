@@ -353,6 +353,53 @@ decision 2026-08-07). That is what keeps the operator non-commercial here and
 removes the ad-labelling duty (§ 5a Abs. 4 UWG); it is a legal posture, not a
 config switch, so don't add an affiliate parameter as a "harmless" follow-up.
 
+Instance-wide public statistics (issue #564) are **live by default** — the one
+opt-**out** switch here. `PUBLIC_STATS_ENABLED=false` makes `GET
+/api/stats/public` answer `404`, renders nothing on any surface and stops the
+rebuild job making provider requests; anything else, including unset, publishes.
+It is inverted on purpose: this is the only feature that renders on a *public*
+page, so the switch that matters is the one that takes it down quickly, and the
+per-metric floors below already prevent a small instance from publishing weak
+numbers.
+
+What appears: the logged-out landing page and a shareable `/entdecken` screen
+show how many **rounds**, **players**, shelf **games** and played **sessions**
+the instance holds, plus the games on the most shelves, played most this week /
+month / year, and best rated. „Players“ counts member seats across all rounds,
+not accounts — most people in a round never hold one, which is the point of the
+app — and „games“ counts the active Regal only, so wishes and archived games are
+excluded.
+
+Two properties are worth knowing. **Game names come from BoardGameGeek, never
+from the title someone typed** — the aggregate is keyed on the provider link and
+the display name is resolved from the provider, so no user-authored byte can
+reach the public page. The cost of that guarantee is that games with no provider
+link never appear in the rankings, although they still count in the totals. And
+because the rankings show hotlinked covers, an anonymous visitor’s browser
+contacts BoardGameGeek, which until now only happened inside the signed-in app —
+the privacy policy’s sections 5 and 7 and `docs/legal/vvt.md` row 22 cover both.
+
+Each metric hides itself until it clears its own minimum, which is what makes
+shipping it on safe: `PUBLIC_STATS_MIN_ROUNDS` / `_PLAYERS` / `_GAMES` /
+`_SESSIONS` (25/100/500/100) for the counters. Most-owned pairs
+`PUBLIC_STATS_MIN_SHELVES` (3) — the number the card *displays*, since a round
+has one Regal — with `PUBLIC_STATS_MIN_OWNER_TENANTS` (2), which stops one
+person with several rounds reaching the podium alone. The three period cards get
+their own floors, because three sessions in a week is a fact and three in a year
+is noise: `PUBLIC_STATS_MIN_PLAYS_WEEK` / `_MONTH` / `_YEAR` (3/8/25) each with
+a `_PLAY_TENANTS_` spread (2/3/5). Best rated pairs `PUBLIC_STATS_MIN_RATINGS`
+(5) with `PUBLIC_STATS_MIN_RATING_TENANTS` (2) — the count floor is why the card
+can rank on the average at all. Like every ceiling here they are read per call,
+so raising one pulls a single metric back without a deploy. A `0` is honoured
+rather than falling back to the default.
+
+The payload is rebuilt by the background scheduler and served from memory —
+nothing is computed per request and nothing is stored — and
+`PUBLIC_STATS_RESOLVE_MAX` (default 20) caps how many *new* provider lookups one
+rebuild may make. Only games that could actually reach a podium are resolved
+(ranking happens on the raw numbers first) and successful lookups are memoized,
+so a steady state costs no upstream requests.
+
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and
 `ERROR_WEBHOOK_URL` to have unexpected 500s POSTed to an alerting webhook (a

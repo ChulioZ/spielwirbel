@@ -400,3 +400,17 @@ What the app does, in detail. For a short overview see the
   and still only for activity after you became friends. Nothing tenant-private
   is shown: no e-mail address, no shelf, no sessions, no ratings. Signing in is
   required, so profiles are not public web pages and are not crawlable.
+- **Entdecken** – *live by default; PUBLIC_STATS_ENABLED=false takes it down* (issue #564). Publishes
+  the whole instance at a glance: how many rounds, players, shelf games and
+  played sessions it holds, plus the games on the most shelves and the ones most
+  played this week / month / year, and the best-rated. It appears on the logged-out landing
+  page, on a shareable `/entdecken` screen and as a teaser on the home hub —
+  and, unlike everything above, is **public**: a visitor with no account sees it.
+  Two consequences follow from that. Every game name comes from BoardGameGeek
+  rather than from the title someone typed, so nothing user-authored can reach
+  the page — which also means a hand-typed game counts in the totals but never
+  appears in the rankings. And each figure stays hidden until enough is behind
+  it (a ranking needs several *different* accounts behind it, not one account
+  with several rounds),
+  so the page fills in on its own as an instance grows instead of publishing a
+  number that flatters nobody. Demo accounts are excluded throughout.

@@ -60,6 +60,15 @@ async function showHome() {
     app.appendChild(friends);
     renderHomeFriends(friends);
   }
+
+  // Instance-wide statistics teaser (#564): the same placeholder-or-remove shape
+  // as the friends feed above, and unawaited for the same reason. Not gated on
+  // being logged in — this hub only renders for someone who is, in accounts
+  // mode, but a password-only instance reaches it logged out and the numbers are
+  // public either way.
+  const stats = h('<section class="home-stats" id="homeStats"></section>');
+  app.appendChild(stats);
+  mountHomeStatsTeaser(stats);
 }
 
 // The populated lobby: one rich card per round, plus the dashed new-round card
