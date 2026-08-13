@@ -56,8 +56,19 @@ const BASE = `http://127.0.0.1:${PORT}`;
 // game cards or the vote card, because the band moves with the *content* as
 // well as with the code — a title that wraps to a second line shifts it ~25px.
 const VIEWPORTS = {
-  shelfWide: { width: 1280, height: 790, deviceScaleFactor: 1.25, mobile: false },
-  shelfPhone: { width: 390, height: 780, deviceScaleFactor: 1.6, mobile: true },
+  // Both shelf crops grew by exactly what the Regal grew above its grid (#752).
+  // Two controls landed there after #669 — the bulk select/clear toggle (#723)
+  // and the „Weitere Filter" disclosure (#725) — and each pushes every card row
+  // down 41px. The wide layout shows both (+82); the phone collapses the tag
+  // half into its „Filter" chip and so takes only the disclosure (+41).
+  //
+  // Measured at 1280: rail ends 689, row 1 ends 557, row 2 ends 794. The old 790
+  // therefore landed 4px ABOVE row 2's bottom edge, slicing its titles; at 390
+  // it cut through row 3's badges. Shifting each crop by its own delta restores
+  // the composition #669 derived rather than re-deriving a new one: the cut
+  // still clears the rail and lands inside row 3's cover art.
+  shelfWide: { width: 1280, height: 872, deviceScaleFactor: 1.25, mobile: false },
+  shelfPhone: { width: 390, height: 821, deviceScaleFactor: 1.6, mobile: true },
   // 720, not the 780 that shipped before #666. The vote card now SIZES ITSELF to
   // the viewport, so the crop is a fixed point rather than a free choice: the
   // cover is `max(110px, min(240px, calc(100svh - 480px)))`, which reaches its
@@ -97,6 +108,41 @@ const RATINGS = [
 // Same four seats in both locales: they are proper names, and the committed sets
 // have always shown the same MA/JO/LE/TI avatars in both languages.
 const MEMBERS = ['Marco', 'Jonas', 'Lea', 'Tim'];
+
+/*
+ * Provider metadata (#717/#724), cycled over the shelf. Without it TWO of the
+ * affordances these screenshots exist to show simply do not render, because both
+ * are gated on a game having something to say:
+ *
+ *   - the vote card's ⓘ (#724/#730) — `hasGameInfo` (public/js/game-info.js) is
+ *     false for a game carrying none of these fields, by design, so a hand-typed
+ *     game "looks exactly as it always did";
+ *   - the Regal's „Weitere Filter" disclosure (#725) — `metadataFilterOptions`
+ *     (public/js/draw-pool.js) derives the controls from stored values and drops
+ *     the whole disclosure when the shelf can offer none.
+ *
+ * So a plain reshoot of the old seed can never depict either, however current
+ * the code is: the app is right and the *seed* is what predates the features.
+ * That is what #752 turned out to be — the issue asked only for a recapture.
+ *
+ * NUMBERS ONLY, and no `source`. Both are deliberate:
+ *   - the numeric four satisfy `hasGameInfo` and give the disclosure its three
+ *     controls, so categories/mechanics would add nothing visible (the ⓘ sheet
+ *     is closed and the disclosure collapsed in every frame) while putting
+ *     invented strings into BGG's own vocabulary. `rating` is skipped for a
+ *     stronger reason: it must never reach a voting surface at all
+ *     (.claude/rules/provider-info-is-a-field-set.md).
+ *   - a game with no `source` is not eligible for the lazy backfill
+ *     (`needsProviderInfo` short-circuits on it), so the Regal and setup screens
+ *     — both backfill triggers since #736 — cannot turn a capture run into an
+ *     upstream BGG request. The script stays offline by construction.
+ */
+const METADATA = [
+  { weight: 1.8, minPlaytime: 30, maxPlaytime: 45, minAge: 8 },
+  { weight: 2.6, minPlaytime: 45, maxPlaytime: 75, minAge: 10 },
+  { weight: 3.4, minPlaytime: 60, maxPlaytime: 120, minAge: 12 },
+  { weight: 2.1, minPlaytime: 20, maxPlaytime: 40, minAge: 8 },
+];
 
 const SEEDS = {
   de: {
@@ -263,6 +309,43 @@ async function seedRound(locale) {
   }
 
   return rid;
+}
+
+// The one thing the API cannot seed. POST …/games accepts title, player counts,
+// tags and a cover; the six provider fields are written only by a real BGG
+// lookup (resolveProviderInfo in lib/routes/games.js) or by the lazy backfill —
+// neither of which a capture script may depend on, since both need a token, a
+// network and an upstream request per run.
+//
+// So it is written to the dataset directly, with the server STOPPED: the store
+// holds data.json in memory and rewrites the whole file on every mutation, so an
+// external edit under a running server is silently lost on its next save
+// (.claude/rules/data-json-external-edits.md). The API still owns the shape of
+// everything else — this touches four keys on rows the API created.
+function writeProviderMetadata(dataDir) {
+  const file = path.join(dataDir, 'data.json');
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  let n = 0;
+  for (const round of data.rounds || []) {
+    (round.games || []).forEach((game, i) => {
+      Object.assign(game, METADATA[i % METADATA.length]);
+      n++;
+    });
+  }
+  if (!n) fail('no games found in the seeded dataset — the seed did not land');
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  return n;
+}
+
+// Stop a server and WAIT for it to exit. Not a formality: the write above races
+// the child's final save otherwise, and a lost metadata write shows up only as
+// screenshots missing the very affordances they were reshot for.
+function stopServer(child) {
+  return new Promise((resolve) => {
+    if (child.exitCode != null || child.signalCode != null) return resolve();
+    child.once('exit', resolve);
+    child.kill();
+  });
 }
 
 /* ------------------------------------------------------------------ the CDP */
@@ -485,7 +568,7 @@ async function main() {
 
   const dataDir = tempDataDir();
   console.log(`capture-landing-shots: dataset ${dataDir}`);
-  await startServer(dataDir);
+  const server = await startServer(dataDir);
   try {
     const rounds = {};
     // Every locale in ONE run, always. Sets that drift apart one PR at a time
@@ -494,6 +577,13 @@ async function main() {
       rounds[locale] = await seedRound(locale);
       console.log(`  seeded ${locale}: round ${rounds[locale]}`);
     }
+
+    // Down, patch, up: see writeProviderMetadata. The old server's cleanup entry
+    // stays registered and becomes a no-op — killing an exited child is
+    // harmless, and dropping the entry would be the riskier edit of the two.
+    await stopServer(server);
+    console.log(`  wrote provider metadata onto ${writeProviderMetadata(dataDir)} games`);
+    await startServer(dataDir);
 
     const cdp = await connectCdp();
     for (const locale of Object.keys(SEEDS)) {
