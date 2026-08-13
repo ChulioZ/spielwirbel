@@ -25,6 +25,7 @@ that no test can check:
 |---|---|
 | changes how a user-facing feature *works*, in a way an existing answer describes | `lib/faq.js` — **both languages**, and mind its content rules (`test/faq.test.js` bans naming a device kind: say "Gerät"/"device", never "Handy"/"phone") |
 | adds or changes a feature the pitch describes | the `landing.*` keys in **every** `public/js/lang/*.js` (hero, feature cards, the three steps) |
+| ships a genuinely new user-facing **capability** — and only then | a `NEWS` entry in `public/js/news.js` (#741), **both languages inline** |
 
 **Why this row exists.** #209 added per-device voting and the four documents above
 were all updated — while `lib/faq.js` still answered "a round runs from one
@@ -46,9 +47,34 @@ backwards:
 - **The hero is usually the wrong place.** It is the one-sentence pitch; a
   feature card or an FAQ answer is where a nuance belongs.
 
+## The news row is a BUDGET, and its default answer is "no entry"
+
+The seventh row differs from the other six in direction: they ask whether an
+existing description has gone stale, this one asks whether to *add* something.
+So it needs a bar, and the bar is high.
+
+**An entry is warranted only for a genuinely new user-facing capability** —
+something a user could not do before, at roughly the level of passkeys (#418),
+the BGG collection import (#481), owned expansions (#653) or shared vote links
+(#652). Explicitly **not**: bug fixes, UI tweaks, copy changes, performance work,
+refactors, dependency bumps, small adjustments to an existing feature, or
+anything an ordinary user would not notice.
+
+**Why the bar, rather than "log what shipped":** every entry lights a dot on the
+account button, and that dot spends the same attention the Nutzungsbedingungen
+§11 terms notice needs — `lib/legal.js`'s own comment names the failure mode
+("a banner people learn to dismiss unread destroys the only channel §11 has").
+A list that fires for routine work teaches people the dot means nothing, which
+costs more than never having built it. So the list is a budget, not a changelog,
+and an empty release is the normal case.
+
+Two mechanical constraints when you do add one: it goes **newest first** (the
+first entry's `revision` is what the dot compares against), and the list stays
+trimmed to roughly the last ten, exactly like `TERMS_CHANGELOG`.
+
 **Rule:** whenever you implement a change (in particular in the `implement`
 skill's review phase, before committing), explicitly ask: *does this change make
-any of those six stale?* Update it in the same branch/PR.
+any of those seven stale?* Update it in the same branch/PR.
 
 Pure refactors, styling tweaks, and test-only changes usually don't need it —
 but make the check consciously rather than skipping it.

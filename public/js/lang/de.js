@@ -755,6 +755,11 @@ I18N.de = {
   'inbox.invite.decline': 'Ablehnen',
   'inbox.invite.seatGone': 'Dieser Platz ist nicht mehr verfügbar.',
   'inbox.invite.failed': 'Einladung konnte nicht angenommen werden.',
+  // „Was ist neu" (issue #741). Chrome only — the entries themselves carry their
+  // own text in both languages (public/js/news.js), so one entry stays one edit.
+  'news.title': 'Was ist neu',
+  'news.menu': 'Was ist neu',
+  'news.empty': 'Hier steht, was es Neues gibt. Im Moment ist alles beim Alten.',
   // Friendships & Freundeskreis (issue #325)
   'inbox.friend.title': '{user} möchte dich als Freund*in hinzufügen',
   'inbox.friend.failed': 'Anfrage konnte nicht angenommen werden.',

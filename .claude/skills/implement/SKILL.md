@@ -164,6 +164,14 @@ renamed user-facing features, changed file tree, routes, npm scripts, env
 vars) and update it in the same branch if so — see
 `.claude/rules/keep-readme-current.md`.
 
+Same moment, same file, one more question: **does this change warrant a „Was ist
+neu" entry** in `public/js/news.js` (#741)? The bar is deliberately high and
+**the default answer is no** — only a genuinely new user-facing *capability*
+qualifies, never a fix, a tweak, a refactor or a dependency bump. Every entry
+lights a dot that competes with the legally load-bearing terms notice, so the
+list is a budget rather than a changelog. The rule above states the bar; ask the
+question consciously rather than skipping it, in either direction.
+
 ## 3. Review the local changes thoroughly
 
 Convince yourself it actually works before anything leaves the machine. Read your

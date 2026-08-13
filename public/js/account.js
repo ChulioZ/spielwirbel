@@ -1031,6 +1031,11 @@ function setupAccountUi() {
   if (!btn) return;
   const loggedIn = accountsActive() && isLoggedIn();
   btn.hidden = !loggedIn;
+  // The „Was ist neu" dot (#741). It lives INSIDE the button above, so hiding
+  // that button takes the dot with it — this call is what keeps the two honest
+  // across the same login transitions the rest of this function tracks (boot,
+  // login, logout, session-lost).
+  setNewsDot(loggedIn && hasUnseenNews());
   if (!loggedIn) return;
   btn.onclick = () => openPopover(btn, (el, close) => {
     const username = (accountUser && accountUser.username) || '';
@@ -1046,6 +1051,12 @@ function setupAccountUi() {
     const konto = h(`<button class="popover__opt"><i class="ti ti-user" aria-hidden="true"></i> ${esc(t('konto.menu'))}</button>`);
     konto.addEventListener('click', () => { close(); showAccount(); });
     el.appendChild(konto);
+    // „Was ist neu" (#741). The only entry point to /neu, which is what makes
+    // this a PULLED surface — the dot on the button above merely says there is
+    // something here, and costs nothing when there is not.
+    const newsOpt = h(`<button class="popover__opt"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('news.menu'))}</button>`);
+    newsOpt.addEventListener('click', () => { close(); showNews(); });
+    el.appendChild(newsOpt);
     // A demo has nothing to log back INTO — it holds no password identity, so
     // "Abmelden" would strand the account alive and unreachable, holding a
     // capacity slot for the rest of its TTL (#502). Ending it erases it instead.
@@ -1090,4 +1101,47 @@ async function refreshInboxBadge() {
     const { items } = await accountApi('GET', '/inbox');
     setInboxDot(items.some((i) => !i.read));
   } catch {}
+}
+
+/* ------------------------- „Was ist neu" (issue #741) ----------------------- */
+
+// Is there a news entry this account has not seen? Needs NO network call — the
+// entry list ships in this very bundle (public/js/news.js) and the account's own
+// stamp already rode in on /me. That is the whole reason the dot costs nothing
+// when there is nothing to say.
+//
+// A null revision (the empty list) answers false, so no dot can ever appear
+// before the first entry exists. `accountUser` is deliberately required: with no
+// account there is no seen-state, and dotting everyone would be worse than not
+// dotting at all.
+function hasUnseenNews() {
+  const rev = newsRevision();
+  return !!rev && !!accountUser && accountUser.lastSeenNewsRevision !== rev;
+}
+
+// Toggle the unseen dot on the account button.
+function setNewsDot(on) {
+  const dot = document.getElementById('newsDot');
+  if (dot) dot.hidden = !on;
+}
+
+// Record that the current entries have been seen — called by showNews(), because
+// OPENING the screen is the acknowledgement (the same shape as the terms
+// banner's dismiss button, and the reason there is no separate "mark read"
+// control). Lives here rather than in views-news.js so the `accountUser`
+// re-seating below stays in the file that owns that variable.
+async function markNewsSeen() {
+  if (!hasUnseenNews()) return; // nothing to record, including the empty-list case
+  setNewsDot(false); // optimistic: the click is the acknowledgement, a round trip is not
+  try {
+    // accountApi resolves to the PARSED BODY, i.e. a fresh meProjection.
+    // Re-seating it is load-bearing rather than tidy: setupAccountUi() runs again
+    // on the next login transition, and against a stale `accountUser` it would
+    // re-light the dot the user just cleared.
+    const me = await accountApi('POST', '/news-seen');
+    if (me && me.id) accountUser = me;
+  } catch {
+    // A failed write just means the dot returns on the next load — the right
+    // failure direction for a nudge nobody is blocked on.
+  }
 }

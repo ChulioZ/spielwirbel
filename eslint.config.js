@@ -109,6 +109,8 @@ const frontendGlobals = {
   // session-log.js
   SESSION_EVENTS: 'readonly', SESSION_LOG_MAX: 'readonly', sessionLogLines: 'readonly',
   partyName: 'readonly', teamsForPeople: 'readonly',
+  // news.js (issue #741)
+  NEWS: 'readonly', newsRevision: 'readonly', newsText: 'readonly',
   sessionTeams: 'readonly', sessionParties: 'readonly',
   TEAM_TOKEN_MEMBER: 'readonly', TEAM_TOKEN_GUEST: 'readonly',
   themeAccent: 'readonly', resolveAccent: 'readonly',
@@ -147,6 +149,10 @@ const frontendGlobals = {
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',
   accountApi: 'readonly', setupInboxUi: 'readonly', setInboxDot: 'readonly',
   refreshInboxBadge: 'readonly',
+  // account.js — the „Was ist neu" dot (issue #741)
+  hasUnseenNews: 'readonly', setNewsDot: 'readonly', markNewsSeen: 'readonly',
+  // views-news.js (issue #741)
+  showNews: 'readonly', renderNewsEntry: 'readonly',
   // views-inbox.js (issue #207)
   showInbox: 'readonly', renderInboxItem: 'readonly',
   renderInvitationItem: 'readonly', renderGenericItem: 'readonly',

@@ -30,6 +30,10 @@ const { outbox } = require('../lib/mail');
 // file the route requires — a hand-copied list here would pass against a route
 // that had drifted away from it (.claude/rules/shared-constants-across-the-stack.md).
 const { USERNAME_MIN, USERNAME_MAX, RESERVED_USERNAMES } = require('../public/js/username-policy');
+// The „Was ist neu" list (#741), imported from the same file the route requires
+// — the specs below inject fixture entries into it, because the shipped list is
+// empty and every assertion about the seen-state would otherwise be vacuous.
+const news = require('../public/js/news');
 
 const EMAIL = 'user@example.com';
 const USERNAME = 'user_one';
@@ -1174,10 +1178,13 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // projection is what guarantees the client never has to re-derive the default.
   // `bgStats` (#485) rides on every account too, and defaults the other way —
   // see the opt-in spec below.
+  // `lastSeenNewsRevision` (#741) rides on every account as well, but ALONE:
+  // unlike the terms pair, the current revision lives in the client's own bundle
+  // (public/js/news.js), so only the account's own stamp has to travel.
   assert.deepEqual(Object.keys(res.body).sort(),
     ['acceptedTermsRevision', 'bgStats', 'bggUsername', 'createdAt', 'demo', 'demoExpiresAt',
-      'email', 'emailVerified', 'id', 'notifyFriendRequests', 'notifyRoundInvitations',
-      'termsRevision', 'username']);
+      'email', 'emailVerified', 'id', 'lastSeenNewsRevision', 'notifyFriendRequests',
+      'notifyRoundInvitations', 'termsRevision', 'username']);
   assert.equal(res.body.demo, false);
   assert.equal(res.body.demoExpiresAt, null);
 
@@ -1335,6 +1342,97 @@ test('#521: accept-terms takes no client-supplied revision and needs a session',
 
   // And it is behind the account gate like every other /me route.
   assert.equal((await request(app).post('/api/account/accept-terms').send()).status, 401);
+});
+
+/* ------------------ the „Was ist neu" seen-state (#741) --------------------- */
+
+// Every assertion below needs a NON-EMPTY list: the shipped NEWS starts empty on
+// purpose, and with `newsRevision()` null every claim about the dot and the stamp
+// is vacuously satisfiable (.claude/rules/break-the-code-on-purpose.md, "a test
+// that SETS the state it asserts"). So each spec pushes a fixture entry onto the
+// real array — the same array lib/routes/account.js reads — and clears it after.
+// Mutating rather than reassigning is forced by `const`, and is also what keeps
+// the route reading the fixture: `newsRevision()` is called per request.
+function withNewsEntries(entries, fn) {
+  news.NEWS.length = 0;
+  news.NEWS.push(...entries);
+  return fn().finally(() => { news.NEWS.length = 0; });
+}
+
+const newsSeen = (accessToken, body) => request(app)
+  .post('/api/account/news-seen')
+  .set('Authorization', `Bearer ${accessToken}`)
+  .send(body);
+
+test('#741: a new account is stamped with the current news revision', async () => {
+  await withNewsEntries([{ revision: '2026-08-20', de: {}, en: {} }], async () => {
+    const acc = await freshAccount('news-fresh@example.com');
+
+    // Written at creation, so a newly registered account is caught up and is
+    // never dotted about entries that predate it.
+    const stored = await repo.getUserById(acc.uid);
+    assert.equal(stored.lastSeenNewsRevision, '2026-08-20');
+    assert.equal((await getMe(acc.accessToken)).body.lastSeenNewsRevision, '2026-08-20');
+  });
+});
+
+test('#741: an account predating the field reads as null — it has seen nothing', async () => {
+  const acc = await freshAccount('news-legacy@example.com');
+
+  // A real legacy row: the key ABSENT, not null. updateUser is an Object.assign
+  // so it cannot remove a key — go through the store for the genuine shape
+  // (.claude/rules/defaulted-account-fields-need-a-legacy-shape-spec.md).
+  const record = store.data.users.find((u) => u.id === acc.uid);
+  delete record.lastSeenNewsRevision;
+  store.saveData();
+  assert.equal('lastSeenNewsRevision' in
+    store.data.users.find((u) => u.id === acc.uid), false, 'the key is really gone');
+
+  const me = await getMe(acc.accessToken);
+  assert.equal(me.status, 200);
+  // null, never undefined: the client compares this against its own
+  // newsRevision(), and `undefined !== '2026-…'` would be true for the wrong
+  // reason — a missing field rather than an unseen entry.
+  assert.equal(me.body.lastSeenNewsRevision, null);
+  assert.ok('lastSeenNewsRevision' in me.body, 'the projection always sends the key');
+});
+
+test('#741: news-seen stamps the SERVER value and ignores the client’s', async () => {
+  await withNewsEntries([{ revision: '2026-08-20', de: {}, en: {} }], async () => {
+    const acc = await freshAccount('news-seen@example.com');
+    await repo.updateUser(acc.uid, { lastSeenNewsRevision: null }); // behind, as a real account would be
+
+    let me = await getMe(acc.accessToken);
+    assert.equal(me.body.lastSeenNewsRevision, null);
+    assert.notEqual(me.body.lastSeenNewsRevision, news.newsRevision(),
+      'the account must actually be behind, or this spec proves nothing');
+
+    // The server decides the value — a client cannot stamp itself forward past
+    // an entry it never received, nor pin itself to an old one to keep the dot.
+    const res = await newsSeen(acc.accessToken, { lastSeenNewsRevision: '2099-01-01' });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.lastSeenNewsRevision, '2026-08-20',
+      'the response re-seats the projection so the dot goes immediately');
+    assert.equal((await repo.getUserById(acc.uid)).lastSeenNewsRevision, '2026-08-20');
+
+    // "Stays gone across a reload" — the whole reason this is stored server-side.
+    me = await getMe(acc.accessToken);
+    assert.equal(me.body.lastSeenNewsRevision, '2026-08-20');
+  });
+
+  // And it is behind the account gate like every other /me route.
+  assert.equal((await request(app).post('/api/account/news-seen').send()).status, 401);
+});
+
+test('#741: with the list empty, news-seen stamps null and nothing is ever unseen', async () => {
+  // The shipped state at rollout. Asserted rather than assumed, because it is
+  // what guarantees no existing account is dotted the day this ships.
+  assert.equal(news.NEWS.length, 0, 'the shipped list starts empty');
+  assert.equal(news.newsRevision(), null);
+
+  const acc = await freshAccount('news-empty@example.com');
+  assert.equal((await getMe(acc.accessToken)).body.lastSeenNewsRevision, null);
+  assert.equal((await newsSeen(acc.accessToken)).body.lastSeenNewsRevision, null);
 });
 
 test('#521: the login response carries the terms fields, so the notice shows at once', async () => {
