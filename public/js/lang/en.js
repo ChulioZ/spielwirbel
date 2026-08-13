@@ -844,6 +844,14 @@ I18N.en = {
   // Revoke / leave a share (issue #207)
   'share.linked': 'This seat is linked to an account.',
   'share.revoke': 'Remove access',
+  // Roles in a shared round (#137). "Owner" is deliberately absent: the role
+  // belongs to the round, not to a share, so it cannot be handed out here.
+  'share.role': 'Role',
+  'share.role.coowner': 'Co-manager',
+  'share.role.editor': 'Player',
+  'share.role.coowner.hint': 'Everything a player can do, plus deleting sessions, Chronik entries and games, and renaming the round.',
+  'share.role.editor.hint': 'Can start sessions and vote, and look after games and seats — but cannot delete anything permanently.',
+  'share.roleSaved': "Changed {name}'s role.",
   'share.revokeConfirm': 'Remove {name}’s access to this round?',
   'share.leave': 'Leave round',
   'share.leaveConfirm': 'Leave “{name}”? You’ll lose access to this shared round.',

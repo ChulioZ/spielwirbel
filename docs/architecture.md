@@ -73,6 +73,9 @@ lib/
     postgres.js      PostgreSQL backend (Knex query builder), used when DATABASE_URL set
     migrations/      versioned Knex schema migrations (npm run migrate)
   tenant.js          resolves each request's tenant and scopes the repo to it
+  round-access.js    the one place a round-level action's required role is
+                     decided — the route-to-capability table plus the middleware
+                     that refuses an unlisted mutating route (issue #137)
   store.js           the JSON backend's engine: in-memory data + atomic
                      load/save to the data/ folder, id/activity helpers
   storage/           cover-image storage: one seam, two backends
@@ -343,6 +346,9 @@ public/
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
                      lib/routes/members.js validates against (issue #420)
+    round-roles.js   the owner/co-owner/editor ladder and what each may do,
+                     required by lib/round-access.js so the views hide exactly
+                     what the server refuses (issue #137)
     draw-pool.js     which games a draw may pick from: the active-collection
                      check, the player-range fit and the filters over BGG's
                      imported metadata (issue #725), required by lib/draw.js so

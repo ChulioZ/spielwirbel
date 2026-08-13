@@ -163,6 +163,14 @@ async function showInvite(round) {
             ${freeSeats.map((m) => `<option value="${esc(m.id)}">${esc(t('invite.takeOver', { name: m.name }))}</option>`).join('')}
           </select>
         </div>
+        <div class="field">
+          <label for="inviteRole">${esc(t('share.role'))}</label>
+          <select id="inviteRole" class="input">
+            ${ROUND_ROLES.filter((r) => r !== 'owner').map((r) =>
+    `<option value="${esc(r)}"${r === 'editor' ? ' selected' : ''}>${esc(t('share.role.' + r))}</option>`).join('')}
+          </select>
+          <p class="muted field__hint" id="inviteRoleHint">${esc(t('share.role.editor.hint'))}</p>
+        </div>
         <div class="toolbar sheet__actions">
           <button id="inviteGo" class="btn btn--primary btn--lg"><i class="ti ti-mail" aria-hidden="true"></i> ${esc(t('invite.submit'))}</button>
         </div>
@@ -181,14 +189,22 @@ async function showInvite(round) {
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   form.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 
+  // #137: the hint follows the picked role, so the difference between the two is
+  // stated where the choice is made rather than only in the FAQ.
+  const roleSel = form.querySelector('#inviteRole');
+  roleSel.addEventListener('change', () => {
+    form.querySelector('#inviteRoleHint').textContent = t('share.role.' + roleSel.value + '.hint');
+  });
+
   const go = form.querySelector('#inviteGo');
   go.addEventListener('click', async () => {
     const username = form.querySelector('#inviteUser').value.trim();
     const memberId = form.querySelector('#inviteSeat').value || null;
+    const role = roleSel.value;
     if (!username) { form.querySelector('#inviteUser').focus(); return; }
     go.disabled = true;
     try {
-      await accountApi('POST', '/invitations', { roundId: rid, username, memberId });
+      await accountApi('POST', '/invitations', { roundId: rid, username, memberId, role });
       toast(t('invite.toast.sent', { user: username }));
       closeSheet();
     } catch (e) {

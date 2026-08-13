@@ -112,13 +112,17 @@ test('the owner is unaffected: they read, edit and delete their own round normal
   assert.equal((await request(app).get(`/api/rounds/${round.id}`).set(auth(owner.token))).status, 404); // gone
 });
 
-// #562 — the deliberate counterpart to the owner-only guards above, and the one
-// product decision in that issue. Renaming is acting WITHIN the round (the class
-// of editing a member name or a game title, both already open to a grantee), not
-// destroying it or reparenting its shelf — so it carries NO `if (req.grant)`
-// guard. Pinned here so re-adding one, which would look like a consistency fix
-// next to DELETE and move-to, fails loudly.
-test('renaming a shared round is allowed for a grantee, and attributed to their seat (#562)', async () => {
+// #562 opened renaming to every grantee; #137 moved it to CO-OWNER and up
+// (operator decision, 2026-08-13) — the round's name is what identifies it on
+// every other person's home screen, so it joined the destructive actions rather
+// than staying in the class of editing a member name.
+//
+// The attribution half of #562 is unchanged and still pinned below: a rename by a
+// grantee lands in the OWNER's round and names the actor's seat. That is why this
+// spec drives the co-owner path rather than simply asserting a 403 — dropping to
+// "an editor is refused" would have deleted the only coverage of `actorSeat`
+// under a grant.
+test('renaming a shared round needs co-owner, and is attributed to their seat (#562, #137)', async () => {
   const owner = await makeAccount('rename-owner@example.com');
   const grantee = await makeAccount('rename-grantee@example.com');
   const outsider = await makeAccount('rename-outsider@example.com');
@@ -136,13 +140,25 @@ test('renaming a shared round is allowed for a grantee, and attributed to their 
     roundId: shared.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id, memberId: seat.id,
   });
 
+  // #137: the default role is `editor`, which may NOT rename. Asserted before the
+  // promotion so the co-owner 200 below cannot pass vacuously — without this the
+  // spec would be green against a build where the capability is never checked.
+  const asEditor = await request(app).patch(`/api/rounds/${shared.id}`)
+    .set(auth(grantee.token)).send({ name: 'Zu früh' });
+  assert.equal(asEditor.status, 403);
+  assert.equal(asEditor.body.error, 'not_owner');
+  assert.equal((await request(app).get(`/api/rounds/${shared.id}`).set(auth(owner.token))).body.name, 'Alte Runde');
+
+  await repo.updateGrantRole(shared.id, grantee.user.id, 'coowner');
+
   const res = await request(app).patch(`/api/rounds/${shared.id}`)
     .set(auth(grantee.token)).send({ name: 'Neue Runde' });
   assert.equal(res.status, 200);
   assert.equal(res.body.name, 'Neue Runde');
-  // The response keeps the `shared` marker GET sets, so a client replacing its
-  // round object with it cannot silently start offering owner-only actions.
+  // The response keeps the markers GET sets, so a client replacing its round
+  // object with it cannot silently start offering actions the role forbids.
   assert.equal(res.body.shared, true);
+  assert.equal(res.body.role, 'coowner');
 
   // It landed in the OWNER's round, and the owner sees who did it.
   const ownerView = await request(app).get(`/api/rounds/${shared.id}`).set(auth(owner.token));

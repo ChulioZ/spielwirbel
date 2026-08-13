@@ -58,15 +58,17 @@ async function showRoundSettings(rid) {
   });
   app.appendChild(nav);
 
-  // --- The two sheet actions. Gating is copied verbatim from the footers these
-  // replaced and must stay exact (.claude/rules/round-grant-resolver.md): both are
-  // owner-only, so a grantee is never offered an action the route would 403/404.
+  // --- The two sheet actions. The gate asks the shared capability table (#137)
+  // rather than testing `shared`, so a grantee is never offered an action the
+  // route would 403 — and the two cannot drift, since the server consults the same
+  // table (.claude/rules/shared-constants-across-the-stack.md). Both are still
+  // owner-only in effect: no grantee role clears either capability.
   // They open sheets rather than routing, so they stay <button>s (#330).
   const actions = [];
-  if (round.games.length && !round.shared) {
+  if (round.games.length && roundCan(round, 'games.moveOut')) {
     actions.push({ icon: 'ti-arrow-right', label: t('moveGames.link'), onClick: () => showMoveGames(round) });
   }
-  if (accountsActive() && !round.shared) {
+  if (accountsActive() && roundCan(round, 'round.shares.manage')) {
     actions.push({ icon: 'ti-users', label: t('invite.link'), onClick: () => showInvite(round) });
   }
   if (actions.length) {

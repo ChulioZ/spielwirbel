@@ -1,0 +1,423 @@
+'use strict';
+
+/*
+ * Per-round roles (#137) — the enforcement layer, over HTTP and at the unit.
+ *
+ * The point of the feature is that "who may do what" is decided in ONE place
+ * (lib/round-access.js) rather than by a guard each handler must remember, so
+ * these specs are aimed at that chokepoint rather than at individual routes:
+ *
+ *  - §1 the pure ladder (public/js/round-roles.js), including the owner branch
+ *        whose natural implementation hides every action from the owner;
+ *  - §2 the route table is COMPLETE — every mutating route the app registers
+ *        under /api/rounds/:rid states a requirement, so a new one reddens here
+ *        rather than 403ing in production;
+ *  - §3 the role × route matrix over real HTTP;
+ *  - §4 UNLISTED = REFUSED, the property the whole design rests on;
+ *  - §5 the legacy 'member' value, and accounts-off mode.
+ *
+ * There is still no route that creates a grant from inside a round (invitation
+ * accept does, from /api/account/invitations), so grants are seeded through the
+ * repo exactly as test/round-grants-access.test.js does.
+ */
+
+process.env.ACCOUNTS_ENABLED = 'true';
+process.env.SESSION_SECRET = 'test-session-secret';
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const request = require('supertest');
+
+const { app } = require('./helpers');
+const repo = require('../lib/repo');
+const { outbox } = require('../lib/mail');
+const roles = require('../public/js/round-roles');
+const { capabilityFor, ROUTE_ROLES } = require('../lib/round-access');
+
+// Accounts must be ON for per-user tenants and grants to exist; the register →
+// verify → login walk mirrors test/round-grants-access.test.js.
+const PASSWORD = 'correct horse battery';
+const auth = (token) => ({ Authorization: `Bearer ${token}` });
+
+// A plain counter rather than a handle derived from the caller's label: this file
+// seeds a fresh round per action, and a descriptive username runs past the 30-char
+// policy ceiling (public/js/username-policy.js) — which registration answers with
+// `invalid_username`, leaving `user` null and every later assertion failing on
+// `tenantId` instead of naming the real cause.
+let accountSeq = 0;
+async function makeAccount() {
+  accountSeq += 1;
+  const email = `roles-${accountSeq}@example.com`;
+  const username = `roles-${accountSeq}`;
+  await request(app).post('/api/account/register').send({ email, username, password: PASSWORD });
+  const m = outbox[outbox.length - 1].text.match(/\/v\?t=(v1\.[0-9a-f]+\.[A-Za-z0-9_-]+)/);
+  assert.ok(m, 'verification mail carries a /v?t= link');
+  await request(app).post('/api/account/verify-email').send({ token: m[1] });
+  const login = await request(app).post('/api/account/login').send({ email, password: PASSWORD });
+  assert.equal(login.status, 200, 'the seeded account must register, verify and log in');
+  return { token: login.body.accessToken, user: await repo.getUserByEmail(email) };
+}
+
+/* ------------------------------ §1 the ladder ------------------------------ */
+
+test('the ladder ranks owner > coowner > editor, and an unknown role loses power', () => {
+  assert.equal(roles.can('owner', 'round.delete'), true);
+  assert.equal(roles.can('coowner', 'round.delete'), false);
+  assert.equal(roles.can('editor', 'round.delete'), false);
+
+  assert.equal(roles.can('owner', 'session.delete'), true);
+  assert.equal(roles.can('coowner', 'session.delete'), true);
+  assert.equal(roles.can('editor', 'session.delete'), false);
+
+  // An unnamed capability is an ordinary round write, which every role clears.
+  assert.equal(roles.can('editor', 'round.write'), true);
+  assert.equal(roles.can('editor', 'something.nobody.has.declared'), true);
+
+  // A value from the database this build has never heard of must lose power,
+  // never gain it — the allowlist shape, not a denylist.
+  assert.equal(roles.normalizeRole('sysadmin'), 'editor');
+  assert.equal(roles.normalizeRole(undefined), 'editor');
+  assert.equal(roles.can('sysadmin', 'session.delete'), false);
+});
+
+test('roundCan treats a round with NO role key as owned, not as the lowest role', () => {
+  // The trap: a round payload carries `shared`/`role` only for a grantee, so
+  // reading `round.role` directly would hand the OWNER an undefined role,
+  // normalizeRole would resolve it to `editor`, and every guarded action would
+  // vanish from the UI of the person who owns the round.
+  assert.equal(roles.roundCan({ id: 'r1' }, 'round.delete'), true);
+  assert.equal(roles.roundCan({ id: 'r1' }, 'session.delete'), true);
+
+  assert.equal(roles.roundCan({ id: 'r1', shared: true, role: 'editor' }, 'session.delete'), false);
+  assert.equal(roles.roundCan({ id: 'r1', shared: true, role: 'coowner' }, 'session.delete'), true);
+  assert.equal(roles.roundCan({ id: 'r1', shared: true, role: 'coowner' }, 'round.delete'), false);
+});
+
+/* -------------------------- §2 the table is complete ------------------------ */
+
+// Walk the routers the app actually mounts under /api/rounds/:rid and collect
+// every mutating route, expressed the way the chokepoint sees it (paths relative
+// to that mount). This is what makes §4's default-deny safe to rely on: without
+// it, a route added tomorrow would simply 403 for grantees with nothing to say
+// why. `require` here is a BACKEND router, so it costs no frontend coverage
+// (.claude/rules/frontend-helper-modules-and-coverage.md).
+const MOUNTS = [
+  ['', '../lib/routes/rounds'],
+  ['/games', '../lib/routes/games'],
+  ['/members', '../lib/routes/members'],
+  ['/sessions', '../lib/routes/sessions'],
+  ['/activities', '../lib/routes/activities'],
+  ['/background', '../lib/routes/background'],
+  ['/tags', '../lib/routes/tags'],
+  ['/lookup', '../lib/routes/lookup'],
+];
+
+function registeredMutatingRoutes() {
+  const out = [];
+  for (const [prefix, mod] of MOUNTS) {
+    for (const layer of require(mod).stack || []) {
+      if (!layer.route) continue;
+      // A sub-router's own '/' becomes the mount itself ('/games'), matching how
+      // the table spells it; the rounds router's '/:rid' becomes the bare '/'.
+      let path = (prefix + layer.route.path).replace(/\/$/, '') || '/';
+      // The rounds router is mounted at /api/rounds, one segment ABOVE the
+      // chokepoint, so strip the :rid its own paths carry. Its '/' routes (list
+      // and create) sit outside /api/rounds/:rid and are deliberately not gated.
+      if (prefix === '') {
+        if (!layer.route.path.startsWith('/:rid')) continue;
+        path = layer.route.path.slice('/:rid'.length) || '/';
+      }
+      for (const [method, on] of Object.entries(layer.route.methods || {})) {
+        if (!on) continue;
+        const m = method.toUpperCase();
+        if (['GET', 'HEAD', 'OPTIONS'].includes(m)) continue;
+        out.push([m, path]);
+      }
+    }
+  }
+  return out;
+}
+
+test('every mutating round route states a required role', () => {
+  const missing = registeredMutatingRoutes()
+    .filter(([method, path]) => !capabilityFor(method, path.replace(/:[^/]+/g, 'x')))
+    .map(([method, path]) => `${method} ${path}`);
+  assert.deepEqual(missing, [],
+    'these routes are refused for every grantee until lib/round-access.js states what they cost');
+});
+
+test('the table names no route the app does not register', () => {
+  // The other direction: an entry left behind after a route was renamed or
+  // removed reads as coverage while guarding nothing at all.
+  const registered = new Set(registeredMutatingRoutes().map(([m, p]) => `${m} ${p}`));
+  const stale = ROUTE_ROLES
+    .map(([method, path]) => `${method} ${path}`)
+    .filter((key) => !registered.has(key));
+  assert.deepEqual(stale, []);
+});
+
+/* ---------------------------- §3 the role matrix ---------------------------- */
+
+// A shared round with a game, a played session and a Chronik to act on, plus the
+// grantee's own seat. Returns helpers bound to the grantee's token.
+async function seedRound(role) {
+  const owner = await makeAccount();
+  const grantee = await makeAccount();
+  const round = (await request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Geteilt', members: ['Anna', 'Bob'] })).body;
+  const seat = round.members.find((m) => m.name === 'Anna');
+  const ownerRepo = repo.forTenant(owner.user.tenantId);
+  await ownerRepo.updateMember(round.id, seat.id, { userId: grantee.user.id });
+  await repo.createGrant({
+    roundId: round.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id, memberId: seat.id, role,
+  });
+
+  // Assert each seed step: a silently failed fixture surfaces much later as
+  // "expected 1 games, got 0" or an undefined activity id, which reads as a bug
+  // in the feature rather than in the setup.
+  const gameRes = await request(app).post(`/api/rounds/${round.id}/games`)
+    .set(auth(owner.token)).send({ title: 'Catan', minPlayers: 2, maxPlayers: 4 });
+  assert.equal(gameRes.status, 201, `seed: add game -> ${JSON.stringify(gameRes.body)}`);
+  const game = gameRes.body;
+
+  const sessionRes = await request(app).post(`/api/rounds/${round.id}/sessions`)
+    .set(auth(owner.token)).send({ gameId: game.id, memberIds: [seat.id] });
+  assert.equal(sessionRes.status, 201, `seed: start session -> ${JSON.stringify(sessionRes.body)}`);
+  const session = sessionRes.body;
+
+  const acts = (await request(app).get(`/api/rounds/${round.id}/activities`).set(auth(owner.token))).body;
+  assert.ok(acts.length, 'seed: the round has a Chronik entry to delete');
+  const activity = acts[0];
+
+  return { owner, grantee, round, seat, game, session, activity };
+}
+
+// Each guarded action, as the request a grantee would make. The expected answers
+// per role are in the table below — one place, so a role's whole remit is
+// readable at a glance rather than spread over a spec each.
+const ACTIONS = {
+  'rename the round': (s, tok) => request(app).patch(`/api/rounds/${s.round.id}`).set(tok).send({ name: 'Neu' }),
+  'delete the round': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}`).set(tok),
+  'delete a session': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}/sessions/${s.session.id}`).set(tok),
+  'delete a Chronik entry': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}/activities/${s.activity.id}`).set(tok),
+  'move games out': (s, tok) => request(app).post(`/api/rounds/${s.round.id}/games/move-to`).set(tok).send({ targetRoundId: 'anywhere' }),
+  'relink a seat': (s, tok) => request(app).patch(`/api/rounds/${s.round.id}/members/${s.seat.id}`).set(tok).send({ userId: null }),
+  // Ordinary writes — the editor's actual remit, and the half that proves the
+  // refusals above are a role decision rather than a blanket lockout.
+  'add a game': (s, tok) => request(app).post(`/api/rounds/${s.round.id}/games`).set(tok).send({ title: 'Azul', minPlayers: 2, maxPlayers: 4 }),
+  'rename a member': (s, tok) => request(app).patch(`/api/rounds/${s.round.id}/members/${s.seat.id}`).set(tok).send({ name: 'Annika' }),
+  'add a tag': (s, tok) => request(app).post(`/api/rounds/${s.round.id}/tags`).set(tok).send({ name: 'Kenner' }),
+  'start a session': (s, tok) => request(app).post(`/api/rounds/${s.round.id}/sessions`).set(tok).send({ gameId: s.game.id, memberIds: [s.seat.id] }),
+  'retire a game': (s, tok) => request(app).post(`/api/rounds/${s.round.id}/games/${s.game.id}/retire`).set(tok).send({ retired: true }),
+};
+
+// true = allowed (the route answers on its own merits), false = 403 not_owner.
+const MATRIX = {
+  editor: {
+    'rename the round': false,
+    'delete the round': false,
+    'delete a session': false,
+    'delete a Chronik entry': false,
+    'move games out': false,
+    'relink a seat': false,
+    'add a game': true,
+    'rename a member': true,
+    'add a tag': true,
+    'start a session': true,
+    'retire a game': true,
+  },
+  coowner: {
+    'rename the round': true,
+    'delete the round': false,
+    'delete a session': true,
+    'delete a Chronik entry': true,
+    // Owner-only for EVERY grantee role: #411's hole, and the seat-link desync.
+    // Neither is about trust, so promoting someone does not open them.
+    'move games out': false,
+    'relink a seat': false,
+    'add a game': true,
+    'rename a member': true,
+    'add a tag': true,
+    'start a session': true,
+    'retire a game': true,
+  },
+};
+
+for (const [role, expected] of Object.entries(MATRIX)) {
+  test(`a ${role} may do exactly what the ladder says`, async () => {
+    for (const [name, allowed] of Object.entries(expected)) {
+      // A fresh round per action: several of these are destructive, so sharing
+      // one would make the outcome depend on the order the object is iterated in.
+      const s = await seedRound(role);
+      const res = await ACTIONS[name](s, auth(s.grantee.token));
+      if (allowed) {
+        assert.notEqual(res.status, 403, `${role} should be allowed to ${name}, got ${res.status}`);
+      } else {
+        assert.equal(res.status, 403, `${role} must not be able to ${name}`);
+        assert.equal(res.body.error, 'not_owner');
+      }
+    }
+  });
+}
+
+test('the ROLE gate never refuses the round owner', async () => {
+  // Asserted on the error CODE rather than on the status, and the distinction is
+  // the point: `not_owner` is this feature's refusal, while a handler may still
+  // say no for a reason of its own. The owner really is refused "relink a seat"
+  // here — with `not_self`, the #421 guard that stops an owner nulling a
+  // GRANTEE's seat link and stranding them with access but no chair
+  // (.claude/rules/member-seat-self-claim.md). A status-only assertion would
+  // either fail on that or, if loosened, stop noticing a role gate that had
+  // started refusing owners outright.
+  for (const name of Object.keys(ACTIONS)) {
+    const s = await seedRound('editor');
+    const res = await ACTIONS[name](s, auth(s.owner.token));
+    assert.notEqual(res.body.error, 'not_owner', `the role gate refused the owner: ${name}`);
+  }
+});
+
+/* --------------------------- §4 unlisted = refused -------------------------- */
+
+test('a mutating round route the table does not name is refused for a grantee', () => {
+  // The property the whole design rests on: the default for something nobody has
+  // classified is CLOSED. Asserted at the table rather than over HTTP, because a
+  // route that does not exist yet cannot be requested — which is exactly the
+  // case this guards.
+  assert.equal(capabilityFor('POST', '/games/x/teleport'), null);
+  assert.equal(capabilityFor('DELETE', '/something-new'), null);
+  assert.equal(capabilityFor('POST', '/'), null); // create is not under this mount
+
+  // …and a listed one still resolves, so the null above is a real miss rather
+  // than a matcher that never matches anything.
+  assert.equal(capabilityFor('DELETE', '/'), 'round.delete');
+  assert.equal(capabilityFor('POST', '/games/move-to'), 'games.moveOut');
+  assert.equal(capabilityFor('POST', '/games/x/retire'), 'round.write');
+});
+
+test('a grantee is refused an unlisted mutating path over HTTP, and the owner is not', async () => {
+  // The table half above is a statement about a data structure; this is the
+  // behaviour it is supposed to produce. A path no router serves stands in for
+  // "a route added tomorrow": the grantee must be refused BEFORE routing (403),
+  // while the owner falls through to the ordinary 404. Without that asymmetry the
+  // default-deny is only asserted where it is also implemented.
+  const s = await seedRound('coowner');
+  const asGrantee = await request(app).post(`/api/rounds/${s.round.id}/not-a-real-route`)
+    .set(auth(s.grantee.token)).send({});
+  assert.equal(asGrantee.status, 403);
+  assert.equal(asGrantee.body.error, 'not_owner');
+
+  const asOwner = await request(app).post(`/api/rounds/${s.round.id}/not-a-real-route`)
+    .set(auth(s.owner.token)).send({});
+  assert.equal(asOwner.status, 404);
+
+  // A GET on an unlisted path is NOT refused — reads are bounded by the grant
+  // resolver, and gating them would turn a typo into a 403 for the owner too.
+  assert.notEqual((await request(app).get(`/api/rounds/${s.round.id}/not-a-real-route`)
+    .set(auth(s.grantee.token))).status, 403);
+});
+
+test('the gate is a pure no-op without a grant (legacy and accounts-off callers)', () => {
+  // Accounts-off mode never resolves a grant, so every caller must pass straight
+  // through with role `owner`. Driven at the middleware rather than over HTTP
+  // because the shared test app in ./helpers is accounts-off already — the rest
+  // of the suite is the end-to-end evidence that mode is unchanged; this pins the
+  // reason, so a future edit that starts consulting the table before checking for
+  // a grant reddens here instead of breaking every self-hosted instance.
+  const { requireRoundRole } = require('../lib/round-access');
+  for (const method of ['DELETE', 'POST', 'GET']) {
+    let nexted = false;
+    const req = { method, path: '/anything/unlisted' };
+    const res = { status: () => assert.fail(`the gate refused a grant-less ${method}`) };
+    requireRoundRole(req, res, () => { nexted = true; });
+    assert.equal(nexted, true);
+    assert.equal(req.roundRole, 'owner');
+  }
+});
+
+test('#411 stays closed: no grantee role can name a second round in the body', async () => {
+  for (const role of ['editor', 'coowner']) {
+    const s = await seedRound(role);
+    // A round of the OWNER's that the grantee holds no grant on — the target the
+    // re-scoped repo would happily resolve if the guard were missing.
+    const other = (await request(app).post('/api/rounds').set(auth(s.owner.token))
+      .send({ name: 'Privat', members: ['Owner'] })).body;
+    const res = await request(app).post(`/api/rounds/${s.round.id}/games/move-to`)
+      .set(auth(s.grantee.token)).send({ targetRoundId: other.id });
+    assert.equal(res.status, 403);
+    // And nothing moved.
+    const still = await request(app).get(`/api/rounds/${s.round.id}`).set(auth(s.owner.token));
+    assert.equal(still.body.games.length, 1);
+    const target = await request(app).get(`/api/rounds/${other.id}`).set(auth(s.owner.token));
+    assert.equal(target.body.games.length, 0);
+  }
+});
+
+/* ------------------- §5 legacy values and accounts-off mode ------------------ */
+
+test("a grant still carrying the pre-#137 'member' role behaves exactly as an editor", async () => {
+  const s = await seedRound('member');
+  // It may do the ordinary writes it always could…
+  const add = await request(app).post(`/api/rounds/${s.round.id}/games`)
+    .set(auth(s.grantee.token)).send({ title: 'Azul', minPlayers: 2, maxPlayers: 4 });
+  assert.notEqual(add.status, 403);
+  // …and is refused the four it always was, plus the four #137 moved up.
+  const del = await request(app).delete(`/api/rounds/${s.round.id}`).set(auth(s.grantee.token));
+  assert.equal(del.status, 403);
+  const sess = await request(app).delete(`/api/rounds/${s.round.id}/sessions/${s.session.id}`)
+    .set(auth(s.grantee.token));
+  assert.equal(sess.status, 403);
+});
+
+test('the role travels on the round payload, for the client to hide by', async () => {
+  const s = await seedRound('coowner');
+  const asGrantee = await request(app).get(`/api/rounds/${s.round.id}`).set(auth(s.grantee.token));
+  assert.equal(asGrantee.body.shared, true);
+  assert.equal(asGrantee.body.role, 'coowner');
+
+  // The owner gets NEITHER key — their absence is what roundCan reads as
+  // ownership, so a `role: 'owner'` here would be a different contract.
+  const asOwner = await request(app).get(`/api/rounds/${s.round.id}`).set(auth(s.owner.token));
+  assert.equal('shared' in asOwner.body, false);
+  assert.equal('role' in asOwner.body, false);
+
+  // The home list carries it too, or a shared round's card could offer an action
+  // the round screen then hides.
+  const home = await request(app).get('/api/rounds').set(auth(s.grantee.token));
+  assert.equal(home.body.find((r) => r.id === s.round.id).role, 'coowner');
+});
+
+test('changing a role is owner-only, and cannot mint an owner', async () => {
+  const s = await seedRound('editor');
+  const url = `/api/rounds/${s.round.id}/shares/${s.grantee.user.id}`;
+
+  // A grantee cannot promote themselves — the reason 'round.shares.manage' is
+  // owner-only rather than co-owner, which would be self-promotion in one hop.
+  assert.equal((await request(app).patch(url).set(auth(s.grantee.token)).send({ role: 'coowner' })).status, 403);
+
+  const ok = await request(app).patch(url).set(auth(s.owner.token)).send({ role: 'coowner' });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.role, 'coowner');
+  assert.equal((await repo.listGrantsForUser(s.grantee.user.id))[0].role, 'coowner');
+
+  // 'owner' is not assignable: ownership is not a grant, so a grant claiming it
+  // would outrank every guard while the real owner still owns the round.
+  assert.equal((await request(app).patch(url).set(auth(s.owner.token)).send({ role: 'owner' })).status, 400);
+  assert.equal((await request(app).patch(url).set(auth(s.owner.token)).send({ role: 'sysadmin' })).status, 400);
+  assert.equal((await repo.listGrantsForUser(s.grantee.user.id))[0].role, 'coowner');
+
+  // A user who holds no grant on this round is a 404, not a silent no-op.
+  const stranger = await makeAccount('promote-stranger@example.com');
+  assert.equal((await request(app).patch(`/api/rounds/${s.round.id}/shares/${stranger.user.id}`)
+    .set(auth(s.owner.token)).send({ role: 'coowner' })).status, 404);
+});
+
+test('the share list is owner-only', async () => {
+  const s = await seedRound('coowner');
+  const asOwner = await request(app).get(`/api/rounds/${s.round.id}/shares`).set(auth(s.owner.token));
+  assert.equal(asOwner.status, 200);
+  assert.deepEqual(asOwner.body, [{ userId: s.grantee.user.id, memberId: s.seat.id, role: 'coowner' }]);
+
+  // Even a co-owner may not enumerate the owner's other grantees.
+  assert.equal((await request(app).get(`/api/rounds/${s.round.id}/shares`)
+    .set(auth(s.grantee.token))).status, 403);
+});

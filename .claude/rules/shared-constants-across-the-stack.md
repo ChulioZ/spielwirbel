@@ -126,7 +126,27 @@ that mattered, with no error and a screen that still looks finished. The entry
 text is deliberately **not** i18n keys but inline `de`/`en` objects, so adding an
 entry stays one edit and `test/i18n-parity.test.js` never has to care.
 
-Each new instance must be named in this inventory — the seven paragraphs above.
+**The eighth is `public/js/round-roles.js`** (#137): the owner/co-owner/editor
+ladder, the capability each guarded action costs, and the `can`/`roundCan`
+predicate — offered by the invite sheet's role picker and by every view that
+hides an action, enforced by `lib/round-access.js` and the rounds/members routes.
+It is the **logic** half of this rule, like `draw-pool.js`, and it is the sharpest
+case for the shape because a drift is invisible in *both* directions: a client
+copy that grants too much offers a button that 403s, and one that grants too
+little hides a control the user is entitled to — with no error either way, and the
+second variant indistinguishable from the feature simply not existing. Note what
+deliberately did **not** join it: the route-to-capability **table**
+(`ROUTE_ROLES`), because the client speaks in capabilities and never in paths, so
+sharing it would export a list with no reader.
+
+Its one trap is `roundCan`'s owner branch. A round payload carries `shared`/`role`
+only for a grantee, so `can(round.role, …)` reads an owner's absent key as the
+lowest role and hides every guarded action from the person who owns the round —
+which is why the owner case is spelled out rather than left to `normalizeRole`'s
+fallback. That fallback is itself deliberate in the other direction: an unknown
+role loses power rather than gaining it.
+
+Each new instance must be named in this inventory — the eight paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

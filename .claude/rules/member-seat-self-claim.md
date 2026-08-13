@@ -30,7 +30,7 @@ well-formed. The matrix, in `lib/routes/members.js`:
 
 | Request | Answer |
 |---|---|
-| caller reached the round via a grant (`req.grant`) | **403 `not_owner`** |
+| the caller's role lacks `member.link` — i.e. any grantee, co-owners included (#137) | **403 `not_owner`** |
 | no `req.userId` (legacy / accounts off) | **403 `not_self`** |
 | `userId: null` on a seat that isn't yours | **403 `not_self`** |
 | `userId: <not the caller>` (including an unknown id) | **403 `not_self`** |
