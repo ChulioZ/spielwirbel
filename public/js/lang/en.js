@@ -768,6 +768,9 @@ I18N.en = {
   // own text in both languages (public/js/news.js), so one entry stays one edit.
   'news.title': 'What’s new',
   'news.menu': 'What’s new',
+  // The whole name of the row while it carries the dot (#764) — the dot itself
+  // is aria-hidden, or a screen reader meets a nameless element.
+  'news.menuUnseen': 'What’s new (new entries)',
   'news.empty': 'New things land here. Right now there’s nothing to report.',
   // Discover — instance-wide statistics (issue #564). Game titles come from the
   // provider, never from a user-typed title, which is why `stats.note` says

@@ -382,8 +382,10 @@ What the app does, in detail. For a short overview see the
 - **„Was ist neu"** (issue #741). A small screen at `/neu`, reached from the
   account menu, listing the handful of genuinely new capabilities that have
   shipped — newest first, in your language. A **dot on the account button**
-  appears when there is an entry you have not seen; opening the screen is the
-  acknowledgement and clears it. Deliberately **pulled, never pushed**: no
+  appears when there is an entry you have not seen, and the „Was ist neu" row
+  inside that menu repeats it (issue #764) — the button is a menu rather than a
+  destination, so without the second mark the trail ends at five unlabelled
+  rows. Opening the screen is the acknowledgement and clears both. Deliberately **pulled, never pushed**: no
   banner, no toast, no interstitial, because the app already has one strip that
   legally has to be read (the terms-change notice) and a second one on a cadence
   would teach people to dismiss both unread. The bar for adding an entry is high

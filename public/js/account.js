@@ -1082,7 +1082,25 @@ function setupAccountUi() {
     // „Was ist neu" (#741). The only entry point to /neu, which is what makes
     // this a PULLED surface — the dot on the button above merely says there is
     // something here, and costs nothing when there is not.
-    const newsOpt = h(`<button class="popover__opt"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('news.menu'))}</button>`);
+    //
+    // That dot is repeated on this row (#764), because the button it sits on is
+    // a MENU rather than a destination: without the repeat the trail ends here,
+    // and a user who opens the menu, guesses wrong and closes it has spent the
+    // nudge's attention without reading the entry — while the dot stays lit and
+    // charges them again next time. Read from the same `hasUnseenNews()` that
+    // setNewsDot() is called with above, so the two marks cannot disagree; it
+    // needs no network call, which is what lets this menu stay synchronous (see
+    // the Entdecken comment). Nothing clears it explicitly — the handler's
+    // showNews() stamps it seen, and the next open rebuilds the row.
+    const unseen = hasUnseenNews();
+    const newsOpt = h(`<button class="popover__opt${unseen ? ' popover__opt--marked' : ''}"${
+      // The dot is decorative; the state belongs in the row's accessible name,
+      // or a screen reader meets a nameless span. Only set when marked, so the
+      // seen row keeps the plain text as its name.
+      unseen ? ` aria-label="${esc(t('news.menuUnseen'))}"` : ''
+    }><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('news.menu'))}${
+      unseen ? '<span class="popover__dot" aria-hidden="true"></span>' : ''
+    }</button>`);
     newsOpt.addEventListener('click', () => { close(); showNews(); });
     el.appendChild(newsOpt);
     // A demo has nothing to log back INTO — it holds no password identity, so

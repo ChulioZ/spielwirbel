@@ -266,6 +266,12 @@ function applyStaticTexts() {
   document.getElementById('feedbackBtn').setAttribute('aria-label', t('feedback.button'));
   document.getElementById('supportBtn').setAttribute('aria-label', t('support.button'));
   document.getElementById('accountBtn').setAttribute('aria-label', t('a11y.account'));
+  // #inboxBtn was the one control this list missed when #145 wrote it — it kept
+  // index.html's hardcoded „Postfach" and announced that to every reader,
+  // whatever their language. It reuses the inbox screen's own title rather than
+  // gaining an `a11y.*` key: the button opens exactly that screen, so a second
+  // string for the same thing could only ever drift from it.
+  document.getElementById('inboxBtn').setAttribute('aria-label', t('inbox.title'));
   // Shared site footer (issues #224/#134): link labels, re-localized on
   // language change like the aria-labels above.
   document.getElementById('footerFaq').textContent = t('footer.faq');
