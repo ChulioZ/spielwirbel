@@ -113,7 +113,20 @@ plain value half — the free-text input's `maxlength` and the route's zod
 which the client never states and only ever learns about from a 403.
 See `.claude/rules/expansions-widen-by-union.md`.
 
-Each new instance must be named in this inventory — the six paragraphs above.
+**The seventh is `public/js/news.js`** (#741): `NEWS`, the „Was ist neu" entry
+list, plus `newsRevision()`. It is the **fourth** direction this rule runs in —
+neither side *offers* or *validates* a value; both read the same list and have to
+agree on what its newest revision is. The client renders the entries and lights a
+dot when the account's stamp is behind; `lib/routes/account.js` writes that stamp
+from its own `newsRevision()` at registration and on `POST …/news-seen`, so a
+client cannot claim to have seen an entry that does not exist. A drifted copy
+would not 400 and would not blank a screen — it would stamp accounts as caught up
+on a revision the list never held, permanently suppressing the dot for the entry
+that mattered, with no error and a screen that still looks finished. The entry
+text is deliberately **not** i18n keys but inline `de`/`en` objects, so adding an
+entry stays one edit and `test/i18n-parity.test.js` never has to care.
+
+Each new instance must be named in this inventory — the seven paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

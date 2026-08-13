@@ -2643,13 +2643,20 @@ body.auth-screen .terms-banner { display: none; }
 }
 .topbar__acct:hover { color: var(--brand); border-color: var(--brand-edge); }
 
-/* Inbox (#207): the unread dot on the topbar button, and the per-row unread
-   mark, both follow the round accent rather than a fixed colour
+/* The topbar notification dot, and the inbox's per-row unread mark, both follow
+   the round accent rather than a fixed colour
    (.claude/rules/theme-derived-colors.md). Unread state is never conveyed by
    colour alone — the dot is a present/absent element with an aria-label and the
-   row's title also goes bolder (.claude/rules/accessibility-contrast-and-modals.md §3). */
-#inboxBtn { position: relative; }
-.inbox-dot {
+   row's title also goes bolder (.claude/rules/accessibility-contrast-and-modals.md §3).
+
+   `.topbar-dot` is control-neutral on purpose: it was `.inbox-dot` while the
+   inbox (#207) was its only user, and #741 gave the account button the same
+   affordance for unseen „Was ist neu" entries. One rule, so the two dots cannot
+   drift apart visually. BOTH host buttons need `position: relative` — the dot is
+   absolutely positioned, so without it on the account button it would anchor to
+   whatever ancestor happens to be positioned and land somewhere else entirely. */
+#inboxBtn, #accountBtn { position: relative; }
+.topbar-dot {
   position: absolute;
   top: 3px;
   right: 3px;
@@ -2669,6 +2676,17 @@ body.auth-screen .terms-banner { display: none; }
   vertical-align: middle;
 }
 .inbox-row--unread .ds-row__date { font-weight: 800; }
+
+/* „Was ist neu" (#741): a plain reading list, newest first. Deliberately not
+   `.ds-list`/`.ds-row` — these entries are prose to be read in order, not rows
+   to be scanned or acted on, which is the list-not-tiles distinction in
+   .claude/rules/tiles-vs-lists.md. Nothing here is clickable, so nothing carries
+   a pointer affordance. */
+.news-list { display: flex; flex-direction: column; gap: 22px; }
+.news-entry { border-left: 3px solid var(--brand-edge); padding-left: 14px; }
+.news-entry__date { font-size: var(--text-sm); margin: 0 0 2px; }
+.news-entry__title { font-size: var(--text-lg); margin: 0 0 6px; }
+.news-entry__body { margin: 0; }
 
 /* ===== Freundeskreis / friends (#325) ===== */
 /* Add-friend row: a username field + submit, above the feed and lists. */

@@ -155,6 +155,8 @@ const MAIN = [
   ['inbox', (dom) => dom.call('showInbox')],
   ['freundeskreis', (dom) => dom.call('showFriends')],
   ['konto', (dom) => dom.call('showAccount')],
+  // Reached from the account menu, like /freunde and /konto (#741).
+  ['was ist neu', (dom) => dom.call('showNews')],
 ];
 
 for (const [name, render] of NON_MAIN) {

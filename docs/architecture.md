@@ -358,6 +358,9 @@ public/
     session-log.js   the session activity log's event types and their phrasing —
                      one list, written by lib/session-events.js and rendered by
                      the lobby and the results screen (issue #209)
+    news.js          the „Was ist neu" entry list + its newest revision — a code
+                     constant that ships with the release it describes, read by
+                     the /neu screen and by lib/routes/account.js (issue #741)
     session-people.js who took part in ONE session (members who joined + that
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds
@@ -435,6 +438,8 @@ public/
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
+    views-news.js    the pulled „Was ist neu" screen at /neu, reached from the
+                     account menu; opening it marks the entries seen (#741)
     views-friends.js Freundeskreis view + home feed section (#325) and the
                      account profile at /u/:username (#558; accounts mode only)
     views-account.js Konto settings: identity + change password (#482; accounts mode only)

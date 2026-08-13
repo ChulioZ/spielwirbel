@@ -764,6 +764,11 @@ I18N.en = {
   'inbox.invite.decline': 'Decline',
   'inbox.invite.seatGone': 'That seat is no longer available.',
   'inbox.invite.failed': 'Couldn’t accept the invitation.',
+  // „Was ist neu" (issue #741). Chrome only — the entries themselves carry their
+  // own text in both languages (public/js/news.js), so one entry stays one edit.
+  'news.title': 'What’s new',
+  'news.menu': 'What’s new',
+  'news.empty': 'New things land here. Right now there’s nothing to report.',
   // Friendships & Freundeskreis (issue #325)
   'inbox.friend.title': '{user} wants to be your friend',
   'inbox.friend.failed': 'Couldn’t accept the request.',

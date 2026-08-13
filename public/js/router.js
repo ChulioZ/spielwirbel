@@ -142,6 +142,11 @@ function resolveRoute(pathname) {
   if (parts[0] === 'inbox') return () => showInbox(); // #207; showInbox sends a logged-out visitor Home
   if (parts[0] === 'freunde') return () => showFriends(); // #325; showFriends sends a logged-out visitor Home
   if (parts[0] === 'konto') return () => showAccount(); // #482; showAccount sends a logged-out visitor Home
+  // „Was ist neu" (#741). Guarded in the view like its neighbours, but one step
+  // looser: only an accounts-mode visitor who is logged OUT goes Home, so the
+  // list still renders on a password-only or open self-hosted instance, where
+  // there is no account to badge it against.
+  if (parts[0] === 'neu') return () => showNews();
   // A public account profile (#558); showProfile sends a logged-out visitor
   // Home. The segment is decoded here because resolveRoute splits the raw
   // pathname — profilePath encoded it.

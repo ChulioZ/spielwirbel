@@ -159,10 +159,48 @@ testable:
 
 Keep the change focused on the request; don't fold in unrelated edits.
 
+### A small adjacent defect you find mid-build: FIX IT HERE, don't defer it
+
+"Focused" is about not rewriting the neighbourhood — it is **not** a reason to
+route a two-line fix into a separate task. When you notice a real, unrelated
+defect while working (a dead control, a stale comment, a missing guard), the
+default is to **fix it in this PR** and say so at the end (phase 6a already asks
+for "what you found mid-build that the issue did not mention"; the phase-9 report
+repeats it).
+
+Deferring is the expensive option here, and the cost is not obvious: spawning a
+background task or a chip means a **fresh session, a fresh worktree and a fresh
+read of the whole context** to land a change you already have in your head, with
+the file open. For anything small that is pure waste, and the operator has said
+so explicitly (2026-08-13).
+
+**Fold it in when all of these hold** — a handful of lines, you understand the
+cause, it is independently testable, and it touches nothing the issue's own
+change depends on. Give it its own commit and its own spec, taken red first, so
+it stays reviewable and revertable on its own.
+
+**Still defer — and then a separate issue, not a chip** — when it is genuinely
+big or risky: a schema or data-format change, anything touching auth, tenant
+isolation or money, a refactor spanning several files, a design decision the user
+should make, or anything you would have to guess at. The test is *size and
+confidence*, not whether it was in the issue.
+
+Two things not to do either way: don't quietly widen the diff without reporting
+it, and don't let the adjacent fix grow until it is the larger half of the PR —
+at that point it wanted its own issue after all.
+
 Before moving on, check whether the change makes `README.md` stale (new or
 renamed user-facing features, changed file tree, routes, npm scripts, env
 vars) and update it in the same branch if so — see
 `.claude/rules/keep-readme-current.md`.
+
+Same moment, same file, one more question: **does this change warrant a „Was ist
+neu" entry** in `public/js/news.js` (#741)? The bar is deliberately high and
+**the default answer is no** — only a genuinely new user-facing *capability*
+qualifies, never a fix, a tweak, a refactor or a dependency bump. Every entry
+lights a dot that competes with the legally load-bearing terms notice, so the
+list is a budget rather than a changelog. The rule above states the bar; ask the
+question consciously rather than skipping it, in either direction.
 
 ## 3. Review the local changes thoroughly
 
@@ -417,3 +455,9 @@ deploy). If you stopped early at any gate, say exactly where and why. If the
 issue closed only partially (a genuine hard limit or a split the user agreed to),
 say which part shipped and which remains, and give the exact remaining actions
 only the user can take.
+
+**Name anything you shipped ON TOP of the issue** — the adjacent fixes phase 2
+tells you to fold in — as its own short line: what was broken, and that it was
+not part of the issue. Folding a fix in is only cheaper than deferring it if the
+user still learns it happened; an unreported extra change is a diff they did not
+ask for and cannot review.

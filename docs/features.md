@@ -361,6 +361,18 @@ What the app does, in detail. For a short overview see the
   password mail that notifications may never touch, and no mail at all to guest
   demo accounts or unverified addresses. The body names the sender's public
   username and the kind of request — never a round name or any other free text.
+- **„Was ist neu"** (issue #741). A small screen at `/neu`, reached from the
+  account menu, listing the handful of genuinely new capabilities that have
+  shipped — newest first, in your language. A **dot on the account button**
+  appears when there is an entry you have not seen; opening the screen is the
+  acknowledgement and clears it. Deliberately **pulled, never pushed**: no
+  banner, no toast, no interstitial, because the app already has one strip that
+  legally has to be read (the terms-change notice) and a second one on a cadence
+  would teach people to dismiss both unread. The bar for adding an entry is high
+  — a new capability, never a fix, a tweak or a redesign — so most releases add
+  nothing and the list starts out empty. Entries live in the deployed code, so a
+  self-hosted instance shows exactly what shipped with its version. With accounts
+  off the screen still opens; there is simply no account to badge it against.
 - **Account profiles** – *accounts mode only* (issue #558). Every account has a
   profile at `/u/‹username›`, reachable by clicking a name in the Freundeskreis
   and usable to check you have the right person **before** sending a request.
