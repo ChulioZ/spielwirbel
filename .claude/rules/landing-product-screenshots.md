@@ -109,6 +109,36 @@ Seed the data through the real API against a throwaway `DATA_DIR`
 the round the **standard theme**, which is the palette the landing page itself
 renders on, so the screenshot sits in the hero instead of clashing with it.
 
+## 3a. An affordance gated on DATA cannot be reshot into existence (#752)
+
+The seed decides which features the picture can show, and two of them are gated
+on a game carrying **provider metadata** rather than on the code being current:
+
+| Affordance | Gate | Renders nothing when |
+|---|---|---|
+| the vote card's ⓘ (#724/#730) | `hasGameInfo` (`public/js/game-info.js`) | the game has no weight/playtime/age/categories/mechanics |
+| the Regal's „Weitere Filter" (#725) | `metadataFilterOptions` (`public/js/draw-pool.js`) | no game on the shelf carries any of them |
+
+Both gates are deliberate — a hand-typed game must look exactly as it always did
+— and the seed only ever set player counts. So #752's reshoot came out
+**identical to the stale assets in the two respects it was filed about**: current
+code, current app, and no ⓘ and no disclosure anywhere in frame. The issue asked
+for a recapture; the recapture could not have worked.
+
+The generalisable form: **before reshooting for a feature, check whether the seed
+can make that feature appear at all.** A feature gated on data is invisible to a
+"is the code current?" reading, and the failure looks exactly like the code not
+having shipped.
+
+The script therefore writes `METADATA` onto every seeded game — with the server
+**stopped**, because the store rewrites the whole file on its next save
+(`.claude/rules/data-json-external-edits.md`). It is the one thing the API cannot
+seed: `POST …/games` takes title, player counts, tags and a cover, and the six
+provider fields arrive only from a real BGG lookup or the lazy backfill, neither
+of which a capture run may depend on. Numbers only and no `source`, so the run
+cannot trigger an upstream request — the reasoning is in the script, next to the
+table.
+
 ## 3b. Per locale: set it BEFORE boot, and seed the CONTENT too (#457)
 
 Two things, and the first one has no visible failure mode other than a German
@@ -173,7 +203,7 @@ so read the geometry out of the page rather than eyeballing screenshots:
 ```
 
 At 1280 CSS wide that gave (2026-07-26): rail ends **781**, card row 2 ends
-**707**, row 3's cover art spans **723–891**. Hence the committed height of
+**707**, row 3's cover art spans **723–891**. Hence the then-committed height of
 **790** — the only band where the whole rail fits *and* the cut lands inside
 artwork. Re-measure after any rail or card change; the number is not portable.
 
@@ -192,10 +222,27 @@ the app changing or the words changing.
 
 Re-measured for #669 (2026-08-07), same probe, both locales identical: rail ends
 **689**, card row 1 ends **475**, row 2 ends **712**, row 3 runs from ~730. So
-790 still holds — it clears the rail by 100px and cuts inside row 3's artwork —
-and the wide asset's declared height is unchanged. (The rail got *shorter*, not
-the cards taller: the settings group collapsed to one „Einstellungen" entry and
-the archive section became „Nicht im Regal" with a Wunschliste row.)
+790 still held at that point — it cleared the rail by 100px and cut inside row 3's
+artwork — and the wide asset's declared height was unchanged. (The rail got
+*shorter*, not the cards taller: the settings group collapsed to one
+„Einstellungen" entry and the archive section became „Nicht im Regal" with a
+Wunschliste row.)
+
+**Re-measured for #752 (2026-08-13) — this is the current derivation, and 790 is
+now wrong.** Rail **689**, row 1 ends **557**, row 2 ends **794**, row 3 runs
+811→1048. Both shelf crops moved, by a delta each layout derives for itself
+rather than by a fresh "pick a band" pass: the Regal gained the bulk select/clear
+toggle (#723) and the „Weitere Filter" disclosure (#725) **above** its grid, at
+41px each, so the wide layout shifted +82 (790 → **872**) and the phone +41
+(780 → **821**) — the phone collapses the tag half into its „Filter" chip and so
+takes only the disclosure.
+
+That is the cheapest way to re-derive this number when the change is a pure
+vertical shift: **move the crop by what moved above the grid**, and the
+composition measured above is preserved by construction. Re-derive from scratch
+only when the cards or the rail themselves change size. The old 790 was not
+merely suboptimal by then — it landed 4px *above* row 2's bottom edge, slicing
+its titles, and at 390px it cut through row 3's badges.
 
 ### The vote crop is a FIXED POINT now, not a free choice (#669)
 
@@ -239,11 +286,12 @@ calls, and they are worth writing down because the ratios are not round numbers:
 
 | Asset | CSS viewport | `deviceScaleFactor` | File |
 |---|---|---|---|
-| `landing-shelf-wide` | 1280 × 790 | 1.25 | 1600 × 988 |
-| `landing-shelf-phone` | 390 × 780 | 1.6 | 624 × 1248 |
+| `landing-shelf-wide` | 1280 × 872 | 1.25 | 1600 × 1090 |
+| `landing-shelf-phone` | 390 × 821 | 1.6 | 624 × 1314 |
 | `landing-vote` | 390 × **720** | 1.6 | 624 × **1152** |
 
-(988 rather than 987.5: Chrome rounds the raster up. Declare what the file says,
+(1090 rather than 1089.9, and 1314 rather than 1313.6: Chrome rounds the raster
+up. Declare what the file says,
 which is what `test/landing-shots.test.js` reads back out of the WebP header.)
 
 ## 6. What the test can and cannot see
@@ -267,7 +315,7 @@ Three details in there are load-bearing:
   assertion for a reason that has nothing to do with the image.
 - **The weight budget is per locale, not a committed total.** A flat total gets
   laxer per visitor with each language added, which is backwards for the one
-  number guarding the page's first paint. Today: ~118 KB (en), ~120 KB (de)
+  number guarding the page's first paint. Today: ~118 KB (en), ~125 KB (de)
   against a 200 KB cap; a `<picture>` fetches only one of the two shelf widths,
   so the real download is smaller again.
 - **The parity test is what a third language trips.** Adding a `lang/fr.js` and a
@@ -289,6 +337,15 @@ advertising a navigation the app no longer has — for weeks, with the whole sui
 green. **Reshoot the whole set, not the one asset you came for**: the assets that
 are stale are precisely the ones no issue was filed about, since an issue only
 gets filed when someone happens to look.
+
+**One sliver of that blindness is now covered (#752).** The suite still cannot
+see a picture, but it *can* see whether the seed is able to produce a
+data-gated affordance at all — so it runs `METADATA` through the two real
+predicates (`hasMetadataFilterOptions`, and `hasGameInfo` via the jsdom harness,
+since `game-info.js` has no exports guard). That is the whole of §3a expressed as
+an assertion: a future edit dropping the metadata cannot silently reshoot the ⓘ
+and the disclosure back out of the images. It says nothing about whether either
+was in frame — the crop can still exclude them, and only your eyes catch that.
 
 ## 7. These images are deliberately NOT in the service worker's `SHELL`
 

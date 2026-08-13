@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * Landing-page product screenshots (issues #438, #457).
+ * Landing-page product screenshots (issues #438, #457, #752).
  *
  * The hero and the how-it-works section render committed static images. Nothing
  * else in the suite would notice if one of them broke, and both failure modes are
@@ -32,12 +32,16 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const fs = require('fs');
 const path = require('path');
+const vm = require('node:vm');
 
 const { app } = require('./helpers');
+const { loadApp } = require('./support/dom');
 const { SUPPORTED_LOCALES } = require('../public/js/locales');
+const { metadataFilterOptions, hasMetadataFilterOptions } = require('../public/js/draw-pool');
 
 const ROOT = path.join(__dirname, '..');
 const VIEW = fs.readFileSync(path.join(ROOT, 'public/js/views-landing.js'), 'utf8');
+const CAPTURE = fs.readFileSync(path.join(ROOT, 'scripts/capture-landing-shots.js'), 'utf8');
 
 // Per-locale weight budget: what one visitor's landing page can cost. Generous
 // next to today's ~120 KB per set so an honest re-crop never trips it, small
@@ -64,6 +68,21 @@ function declaredShots() {
   }
   assert.ok(Object.keys(byLocale).length > 0, 'at least one locale set parsed');
   return byLocale;
+}
+
+// The capture script's METADATA profiles, read out of the script for the same
+// reason declaredShots() reads the view: a hand-copied constant proves nothing.
+//
+// Matched globally with a uniqueness assertion rather than by stripping comments
+// — over JS source a line-comment strip would eat the `//` inside any URL and
+// destroy the value being read (.claude/rules/css-text-assertions-strip-comments.md).
+function captureMetadata() {
+  const found = [...CAPTURE.matchAll(/\nconst METADATA = (\[[\s\S]*?\n\]);/g)];
+  assert.equal(found.length, 1,
+    `capture-landing-shots.js declares METADATA ${found.length} times, expected exactly 1`);
+  const profiles = vm.runInNewContext(found[0][1]);
+  assert.ok(profiles.length > 0, 'METADATA holds at least one profile');
+  return profiles;
 }
 
 // Flattened, for the assertions that don't care which locale an asset belongs to.
@@ -217,4 +236,37 @@ test('the screenshots are informative images, not decoration', () => {
   assert.match(VIEW, /alt="\$\{esc\(t\('landing\.shot\.shelfAlt'\)\)\}"/);
   assert.match(VIEW, /alt="\$\{esc\(t\('landing\.shot\.voteAlt'\)\)\}"/);
   assert.doesNotMatch(VIEW, /landing-hero__visual"[^>]*aria-hidden/);
+});
+
+test('the capture seed can still make the metadata-gated affordances render', () => {
+  // #752's actual finding. Two of the things these screenshots exist to show are
+  // gated on a game HAVING provider metadata — the vote card's ⓘ (#724/#730) and
+  // the Regal's „Weitere Filter" disclosure (#725) — and the seed carried none,
+  // so the reshoot depicted an app two feature-generations old however current
+  // the code was. Neither gate can go red on its own: the app is correct, and
+  // this file's other six tests check parity, pixels and weight, none of which
+  // can see WHAT a picture shows.
+  //
+  // So it asserts against the two REAL predicates rather than restating their
+  // field lists, which would drift the moment either gate widened.
+  const games = captureMetadata().map((p, i) => ({ id: `g${i}`, title: `Game ${i}`, ...p }));
+
+  assert.ok(
+    hasMetadataFilterOptions(metadataFilterOptions(games)),
+    'the seeded shelf can offer metadata filters, so the Regal renders „Weitere Filter"'
+  );
+
+  // game-info.js builds DOM and deliberately carries no module.exports guard
+  // (requiring it would drag a DOM file into the coverage report), so the real
+  // hasGameInfo is reached through the jsdom harness. No options: that is
+  // exactly how the vote card calls it, and its `rating` flag defaults to off.
+  const dom = loadApp();
+  try {
+    for (const game of games) {
+      assert.ok(dom.call('hasGameInfo', game),
+        `a game seeded with ${JSON.stringify(game)} shows the ⓘ on the vote card`);
+    }
+  } finally {
+    dom.close();
+  }
 });
