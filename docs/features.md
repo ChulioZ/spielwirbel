@@ -337,6 +337,25 @@ What the app does, in detail. For a short overview see the
   biometric data ever reaches the server** — the fingerprint or face never
   leaves the device, and only a public key, which can unlock nothing, is stored.
   The button appears only on browsers that support WebAuthn.
+- **Sharing a round, with roles** – *accounts mode only* (issues #207, #137).
+  The owner invites another account by its **username** from Einstellungen →
+  „Mitspielende einladen", fixing both the **seat** they take (an existing
+  user-less member, or a fresh one) and their **role**. Two roles are on offer:
+  - **Mitspielen** (player) – the default, and everything a round is normally
+    for: start sessions and vote in them, add and edit games, retire or complete
+    them, manage seats, tags and the round's design.
+  - **Mitverwaltung** (co-manager) – all of that, plus the destructive actions:
+    delete a session, delete a Chronik entry, delete an archived game, and
+    rename the round.
+
+  Four things stay with the **owner alone**, whatever role they hand out:
+  deleting the round, changing or revoking anyone's access, relinking a seat to
+  an account, and moving the shelf into another round. So a co-manager is
+  trusted with the round's *content*, never with who may reach it — they cannot
+  promote themselves. The role can be changed later, or the share revoked, from
+  that person's member page; a grantee can always leave a round themselves.
+  Whatever the UI offers, the server decides: an action a role may not perform
+  is refused even if the request is made by hand.
 - **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a

@@ -835,6 +835,15 @@ I18N.de = {
   // Revoke / leave a share (issue #207)
   'share.linked': 'Dieser Platz ist mit einem Konto verknüpft.',
   'share.revoke': 'Zugriff entfernen',
+  // Rollen in einer geteilten Runde (#137). „Besitzerin/Besitzer" taucht hier
+  // nicht auf: die Rolle gehört der Runde, nicht dem Zugriff — sie ist nicht
+  // vergebbar.
+  'share.role': 'Rolle',
+  'share.role.coowner': 'Mitverwaltung',
+  'share.role.editor': 'Mitspielen',
+  'share.role.coowner.hint': 'Darf alles wie beim Mitspielen und zusätzlich Sessions, Chronik-Einträge und Spiele löschen sowie die Runde umbenennen.',
+  'share.role.editor.hint': 'Darf Sessions starten und abstimmen, Spiele und Plätze pflegen — aber nichts endgültig löschen.',
+  'share.roleSaved': 'Rolle von {name} geändert.',
   'share.revokeConfirm': '{name} den Zugriff auf diese Runde entziehen?',
   'share.leave': 'Runde verlassen',
   'share.leaveConfirm': '„{name}“ verlassen? Du verlierst den Zugriff auf diese geteilte Runde.',

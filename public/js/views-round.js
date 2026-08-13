@@ -154,6 +154,14 @@ function renderSubScreenTabs(round, sub) {
 // others. (Note views-member.js's copy predates #424 and has none of them — copy
 // the game-detail shape, not that one.)
 function editableRoundName(round) {
+  // #137: the round's name identifies it on every other person's home screen, so
+  // renaming is co-owner and up. Below that this is plain text — no `.gd-title`,
+  // so it carries none of the component's affordance (hover tint, focus ring,
+  // pointer), which is the .claude/rules/ds-row-is-a-click-target.md lesson: an
+  // element must not promise an interaction it will not perform. Both call sites
+  // (the hero and the desktop rail) go through here, so the gate covers both.
+  if (!roundCan(round, 'round.edit')) return h(`<span>${esc(round.name)}</span>`);
+
   const el = h(`<span class="gd-title" role="button" tabindex="0" title="${esc(t('round.editName'))}">${esc(round.name)}</span>`);
 
   const startEdit = () => {

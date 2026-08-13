@@ -61,10 +61,19 @@ people it collected and leaves everyone else's alone; replacing would erase them
 silently while the stale client reported success. Delete the route a release or
 two on, once no such bundle can plausibly still be in use.
 
-## 3. There is no host — `lib/routes/sessions.js` has NO `req.grant` guard
+## 3. There is no host — running a session is an ordinary round write
 
-No route in the sessions router is owner-only. So **any invitee can start, vote
-in and close a session**, and "the owner's device" is a fiction: it is the
+**Updated by #137**, which re-examined every route in this router and left the
+conclusion below intact: running a session costs `round.write`, the floor every
+grantee clears. The one exception is `DELETE …/sessions/:sid`, which needs
+`coowner` — deleting a *played* evening destroys its votes, result and winners for
+everyone, which is not part of running one. Cancelling stays an ordinary write:
+it is reversible and is a session state, not a deletion. The requirements live in
+`lib/round-access.js`'s table, so this router still carries no `req.grant` guard
+of its own (`.claude/rules/round-roles-are-a-chokepoint.md`).
+
+So **any invitee can start, vote in and close a session**, and "the owner's
+device" is a fiction: it is the
 *starting* device and holds no special standing. The lobby is deliberately one
 screen for everybody, offering whatever actions fit whoever is looking at it —
 which is also what stops a flat battery on one phone from stranding the evening.
