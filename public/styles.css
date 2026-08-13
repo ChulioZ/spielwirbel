@@ -2666,15 +2666,22 @@ body.auth-screen .terms-banner { display: none; }
   background: var(--brand);
   border: 1px solid var(--surface);
 }
-.inbox-row__dot {
+/* The in-list marks share everything but which side they hang off, so the
+   position is the ONLY thing either variant declares — a variant that restated
+   the size or the fill could drift from `.topbar-dot` above without anything
+   noticing. `.inbox-row__dot` leads its row's title; `.popover__dot` (#764)
+   trails the „Was ist neu" row in the account menu, repeating the mark the
+   account button's own dot made. */
+.inbox-row__dot, .popover__dot {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--brand);
-  margin-right: 8px;
   vertical-align: middle;
 }
+.inbox-row__dot { margin-right: 8px; }
+.popover__dot { margin-left: auto; }
 .inbox-row--unread .ds-row__date { font-weight: 800; }
 
 /* „Was ist neu" (#741): a plain reading list, newest first. Deliberately not
@@ -3744,6 +3751,14 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+/* Only the row that actually carries a mark becomes a flex line (#764), so the
+   `margin-left: auto` on its dot has something to push against. Flipping
+   `.popover__opt` itself to flex would re-space all five rows of every popover
+   in the app to move one dot — and the seen state has to render exactly as it
+   did before, since that is the state almost every open is in. The `gap`
+   replaces the literal space between the icon and the label, which flexbox
+   drops when it wraps that text in an anonymous item. */
+.popover__opt--marked { display: flex; align-items: center; gap: 5px; }
 .popover__opt:hover { background: var(--brand-tint); }
 .popover__opt.is-current { border-color: var(--brand); background: var(--brand-tint); }
 /* Below 860px the same three editors are presented as a bottom sheet instead

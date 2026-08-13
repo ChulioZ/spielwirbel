@@ -71,8 +71,27 @@ function boot(t, { entries = [], lastSeen = null, loggedIn = true, accounts = tr
     calls,
     seenCalls: () => calls.filter((c) => c.url === '/news-seen'),
     dot: () => dom.document.getElementById('newsDot'),
+    menu: () => openMenu(dom),
   };
 }
+
+/* Open the account menu and hand back its rows, plus the „Was ist neu" one
+   picked out by its label. Both are needed: a spec about the marked row also has
+   to say the four siblings stayed unmarked. `news` is null when the menu never
+   opened at all, which is the logged-out case. */
+function openMenu(dom) {
+  dom.call('setupAccountUi');
+  dom.document.getElementById('accountBtn').click();
+  const rows = [...dom.document.querySelectorAll('.popover__opt')];
+  const label = dom.run(`t('news.menu')`);
+  return { rows, news: rows.find((el) => el.textContent.trim() === label) || null };
+}
+
+// The row's mark, as a screen reader and a sighted user each meet it.
+const marked = (row) => ({
+  dot: !!row.querySelector('.popover__dot'),
+  name: row.getAttribute('aria-label'),
+});
 
 /* ------------------------------- the screen -------------------------------- */
 
@@ -171,6 +190,62 @@ test('logging out takes the dot with it', async (t) => {
   dom.set('isLoggedIn', () => false);
   dom.call('setupAccountUi');
   assert.equal(dot().hidden, true);
+});
+
+/* ------------------ the same mark inside the menu it opens (#764) ----------- */
+
+test('the „Was ist neu" row carries the mark the button dot promised', async (t) => {
+  const { dom, dot, menu } = boot(t, { entries: [ENTRY, OLDER], lastSeen: '2026-07-01' });
+  const { rows, news } = menu();
+
+  assert.ok(news, `no „Was ist neu" row among ${JSON.stringify(rows.map((r) => r.textContent.trim()))}`);
+  assert.deepEqual(marked(news), { dot: true, name: dom.run(`t('news.menuUnseen')`) });
+  // The dot itself is decorative — the unseen state is IN the row's name, or a
+  // screen reader meets a nameless span and learns nothing.
+  assert.equal(news.querySelector('.popover__dot').getAttribute('aria-hidden'), 'true');
+  // One predicate drives both, so the trail cannot go cold halfway.
+  assert.equal(dot().hidden, false);
+  // And only the one row is marked — no dots on Freundeskreis/Konto/Entdecken/Abmelden.
+  assert.equal(rows.filter((r) => r.querySelector('.popover__dot')).length, 1);
+});
+
+test('a caught-up account gets a row identical to its unmarked siblings', async (t) => {
+  const { dot, menu } = boot(t, { entries: [ENTRY, OLDER], lastSeen: '2026-08-20' });
+  const { rows, news } = menu();
+
+  assert.deepEqual(marked(news), { dot: false, name: null });
+  assert.equal(dot().hidden, true);
+  /* The seen state must render as it did before #764 — same class list as the
+     four rows that never had a dot, so no modifier can leak into it and re-space
+     the menu. */
+  const siblings = rows.filter((r) => r !== news).map((r) => r.className);
+  assert.deepEqual(new Set(siblings), new Set([news.className]));
+  assert.equal(news.className, 'popover__opt');
+});
+
+test('with the list EMPTY the row is never marked, whatever the account holds', async (t) => {
+  for (const lastSeen of [null, '2026-08-20']) {
+    const { menu } = boot(t, { entries: [], lastSeen });
+    assert.deepEqual(marked(menu().news), { dot: false, name: null }, `lastSeen=${lastSeen}`);
+  }
+});
+
+test('a logged-out visitor gets no menu, so no marked row either', async (t) => {
+  const { dom, menu } = boot(t, { entries: [ENTRY], lastSeen: null, loggedIn: false });
+  assert.equal(menu().news, null, 'the account menu opened for a logged-out visitor');
+  assert.equal(dom.document.querySelectorAll('.popover__dot').length, 0);
+});
+
+test('opening /neu FROM the row clears the mark on the next open', async (t) => {
+  const { dom, menu } = boot(t, { entries: [ENTRY], lastSeen: null });
+  const first = menu();
+  assert.equal(marked(first.news).dot, true, 'unmarked before the click proves nothing');
+
+  first.news.click();
+  await new Promise((r) => setTimeout(r, 0)); // let markNewsSeen re-seat accountUser
+
+  assert.equal(dom.app.querySelectorAll('.news-entry').length, 1, 'the row still opens the screen');
+  assert.deepEqual(marked(menu().news), { dot: false, name: null });
 });
 
 /* ------------------------- opening the screen marks seen -------------------- */

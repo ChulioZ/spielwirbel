@@ -759,6 +759,9 @@ I18N.de = {
   // own text in both languages (public/js/news.js), so one entry stays one edit.
   'news.title': 'Was ist neu',
   'news.menu': 'Was ist neu',
+  // Der ganze Name der Zeile, wenn sie den Punkt trägt (#764) — der Punkt selbst
+  // ist aria-hidden, sonst begegnet eine Vorlesehilfe einem namenlosen Element.
+  'news.menuUnseen': 'Was ist neu (neue Einträge)',
   'news.empty': 'Hier steht, was es Neues gibt. Im Moment ist alles beim Alten.',
   // Entdecken — instanzweite Statistiken (issue #564). Die Spieltitel kommen vom
   // Anbieter, nie aus einem selbst getippten Titel, daher spricht `stats.note`
