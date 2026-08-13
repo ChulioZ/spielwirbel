@@ -42,7 +42,7 @@ Start the four subagents first. Then, while they work, do the two browser passes
 yourself back-to-back on the shared preview. Collect the subagents' reports when
 they land.
 
-Three seams to attribute correctly:
+Four seams to attribute correctly:
 - `security-audit` and `accessibility-audit` both touch tenant isolation from
   different angles (RLS/gate enforcement vs. the auth-screen UI); `security-audit`
   overlaps `claude-file-audit` on the CI-tooling and env-file rules.
@@ -58,6 +58,11 @@ Three seams to attribute correctly:
   everything else visual — colour harmony, spacing, depth, type, consistency,
   polish — is UI's. A change that would trade one for the other (a prettier but
   lower-contrast treatment) is a **rejected** UI idea, not a finding.
+- **Copy currency is `claude-file-audit`'s (C-024), not `ui-audit`'s.** `ui-audit`
+  files copy under UX and rejects such findings outright (U-R03), so without this
+  attribution a landing/FAQ sentence that no longer describes the app is dropped
+  on the floor by every domain — which is how #209's per-device voting shipped
+  with the FAQ still answering "a round runs from one device".
 
 Attribute every shared finding to the domain that owns the *remedy*.
 
