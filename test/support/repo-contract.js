@@ -2201,7 +2201,7 @@ module.exports = function repoContract(repo) {
     assert.equal(g1.userId, 'user-x');
     assert.equal(g1.ownerTenantId, 'owner-t');
     assert.equal(g1.memberId, null); // default
-    assert.equal(g1.role, 'member'); // default
+    assert.equal(g1.role, 'editor'); // default (#137 — 'member' until then)
     assert.match(g1.createdAt, /^\d{4}-\d\d-\d\dT.*Z$/);
 
     // A second grant for the SAME (round, user) is refused, not duplicated.
@@ -2211,15 +2211,32 @@ module.exports = function repoContract(repo) {
     );
 
     // Same user on a DIFFERENT round, and a DIFFERENT user on the same round, are fine.
-    const g2 = await repo.createGrant({ roundId: 'round-2', ownerTenantId: 'owner-t', userId: 'user-x', memberId: 'seat-9', role: 'editor' });
+    const g2 = await repo.createGrant({ roundId: 'round-2', ownerTenantId: 'owner-t', userId: 'user-x', memberId: 'seat-9', role: 'coowner' });
     assert.equal(g2.memberId, 'seat-9');
-    assert.equal(g2.role, 'editor');
+    assert.equal(g2.role, 'coowner');
     await repo.createGrant({ roundId: 'round-1', ownerTenantId: 'owner-t', userId: 'user-y' });
 
     // Read by user: user-x holds two (round-1, round-2).
     assert.deepEqual((await repo.listGrantsForUser('user-x')).map((g) => g.roundId).sort(), ['round-1', 'round-2']);
     // Read by round: round-1 has two grantees (user-x, user-y).
     assert.deepEqual((await repo.listGrantsForRound('round-1')).map((g) => g.userId).sort(), ['user-x', 'user-y']);
+
+    // #137: the role is changeable in place, and ONLY the role changes — the
+    // grant keeps its id, seat and ownerTenantId, so a promotion cannot silently
+    // re-point or re-seat the grant. Changing a role nobody holds is null, the
+    // same not-found shape deleteGrant uses.
+    const promoted = await repo.updateGrantRole('round-2', 'user-x', 'coowner');
+    assert.equal(promoted.role, 'coowner');
+    assert.equal(promoted.id, g2.id);
+    assert.equal(promoted.memberId, 'seat-9');
+    assert.equal(promoted.ownerTenantId, 'owner-t');
+    assert.equal(promoted.createdAt, g2.createdAt);
+    const demoted = await repo.updateGrantRole('round-2', 'user-x', 'editor');
+    assert.equal(demoted.role, 'editor');
+    // It persists — a read after the write agrees with what the write returned.
+    assert.equal((await repo.listGrantsForUser('user-x')).find((g) => g.roundId === 'round-2').role, 'editor');
+    assert.equal(await repo.updateGrantRole('round-2', 'nobody', 'coowner'), null);
+    assert.equal(await repo.updateGrantRole('no-such-round', 'user-x', 'coowner'), null);
 
     // Delete one grant; it disappears from both reads, and re-deleting is null.
     const removed = await repo.deleteGrant('round-1', 'user-x');

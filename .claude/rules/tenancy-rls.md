@@ -63,7 +63,9 @@ and the traps that cost effort:
   *acts as* the owner's tenant for the duration of a request to a granted round
   (per-round `round_grants`, resolved in `lib/tenant.js` — see
   `.claude/rules/round-grant-resolver.md`), so **RLS stays un-widened**. Roles
-  within a shared round are #137. Both were reclassified 2026-07-19 as **not
+  within a shared round shipped as #137 and did **not** change that — they narrow
+  what a grantee may do, never which tenant the request runs as
+  (`.claude/rules/round-roles-are-a-chokepoint.md`). Both were reclassified 2026-07-19 as **not
   go-live blockers** (docs/production-readiness.md §12 — neither carries a
   GitHub blocking relation to the go-live issue #219 in either direction) —
   because "member" is already decoupled from "user" (a name-only seat the

@@ -63,24 +63,34 @@ or an OR into the tenant policy.
    in the tenant" was the wrong test — the target *was* in the tenant, and being
    in the tenant is not the same as being granted.
 
-   The fix was to make the action owner-only (`if (req.grant) …403`, §3) rather
-   than to authorize the target, so nothing from a grantee reaches the lookup.
+   The fix was to make the action owner-only rather than to authorize the target,
+   so nothing from a grantee reaches the lookup — originally a hand-placed
+   `if (req.grant) …403`, since #137 the `games.moveOut` entry in
+   `lib/round-access.js`'s table (§3), which no grantee role clears.
    **A future handler that genuinely needs a second round under a grant must
    authorize that round on its own** — check for a grant on the *target* id too;
    `req.repo` finding it proves nothing.
 
 3. **A grant is not authority to DESTROY or REPARENT the round.** `req.grant` is
-   left set so a handler can refuse a grantee (`403 not_owner`). A grant lets you
-   act *within* a round, never destroy the owner's whole round + its history, nor
-   move its shelf out of it. Three handlers draw that line today, all with the
-   same one-line guard placed **first, before any lookup**:
-   `DELETE /api/rounds/:rid`, `DELETE /api/rounds/:rid/shares/:userId` (a grantee
-   may remove only their *own* share) and `POST …/games/move-to` (#411 — moving
-   is destructive and hard to undo, see
-   `.claude/rules/reparenting-rows-between-rounds.md`). Per-action roles are #137;
-   until then, "owner-only" is the whole permission model, so a new destructive
-   round-level action needs that guard **and** the matching frontend gate on
-   `round.shared` — the payload flag `GET /api/rounds/:rid` sets for a grantee.
+   left set so the role layer can refuse a grantee (`403 not_owner`). A grant lets
+   you act *within* a round, never destroy the owner's whole round + its history,
+   nor move its shelf out of it.
+
+   **Since #137 that line is drawn by a TABLE, not by a guard per handler** —
+   `lib/round-access.js`, mounted immediately after this resolver, where every
+   round-level route states the role it costs and an **unlisted mutating route is
+   refused**. So a new destructive action no longer needs anyone to remember a
+   guard: it is closed to grantees until the table says otherwise. The four
+   hand-placed `if (req.grant)` checks this rule used to enumerate are gone; two
+   became table entries, and the two whose cost depends on the *request* rather
+   than the route (leaving your own share, the seat-link field of
+   `PATCH …/members/:mid`) now ask the same shared capability table instead of
+   testing `req.grant` for truthiness.
+
+   The frontend gate moved with it: `roundCan(round, capability)` rather than
+   `!round.shared`, against the `shared`/`role` pair `GET /api/rounds/:rid` sets
+   for a grantee. See `.claude/rules/round-roles-are-a-chokepoint.md` for the
+   ladder, what each level may do, and the owner-branch trap in `roundCan`.
 
 4. **`req.userId` gates the whole thing.** Legacy mode (accounts off) and
    unauthenticated callers have no `req.userId`, so `resolveRoundGrant` is a
