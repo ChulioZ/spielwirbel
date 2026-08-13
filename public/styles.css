@@ -1970,9 +1970,11 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   text-decoration-color: color-mix(in oklab, var(--brand) 60%, transparent);
 }
 .result-row__img.game-link,
-.archive-row__img.game-link { transition: box-shadow var(--dur-base) var(--ease-out); }
+.archive-row__img.game-link,
+.recap-fav__cover.game-link { transition: box-shadow var(--dur-base) var(--ease-out); }
 .result-row__img.game-link:hover,
 .archive-row__img.game-link:hover,
+.recap-fav__cover.game-link:hover,
 .result-podium__col.game-link:hover .result-podium__img {
   box-shadow: 0 0 0 3px var(--brand-edge);
 }
@@ -4625,6 +4627,40 @@ kbd {
   margin: 0 0 2px;
 }
 .recap__thin { margin-top: 14px; }
+/* The favourite tile anchors on its game's cover (#695), like the Chronik
+   session cards, the results podium and the Regal — the one section of the app
+   that carried none of its personality. Compounded to (0,2,0) so it outranks
+   `.pokale-card`'s own `display: flex` outright instead of tying with it and
+   winning on source order (ds-row-is-a-click-target.md).
+   `minmax(0, 1fr)`, not `1fr`: a grid track's automatic minimum is its content,
+   so a long unbreakable title would otherwise widen the column past the card. */
+.pokale-card.recap-fav {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 4px 14px;
+  align-items: center;
+}
+.recap-fav__cover {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: var(--sunken) center/cover no-repeat;
+  box-shadow: var(--shadow-1);
+}
+.recap-fav__cover .ti { font-size: 26px; /* glyph, not type */ }
+/* The cover takes 78px (64 + the column gap) off the text column, so an
+   unbreakable title runs out of room 78px sooner than on the category cards
+   beside it. Those overflow too — `.pokale-card__value` has never wrapped one,
+   and an untouched card measured ~160-190px of horizontal page overflow at
+   390px against a 57-character title — but that is a pre-existing app-wide gap
+   and out of this issue's scope, so this only neutralises what the cover itself
+   costs. (0,2,0), so it beats the component rule outright rather than tying
+   with it and winning on source order. */
+.recap-fav .pokale-card__value { overflow-wrap: anywhere; }
 /* The member replaces the icon slot on a favourite tile, so the avatar carries
    the identity a `.pokale-card__icon` would otherwise. */
 .recap-fav__who { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }

@@ -318,11 +318,13 @@ function renderRecapSection(round, recap) {
          <h3 class="recap__sub">${esc(t('recap.favourites'))}</h3>
        </div>`);
     const favs = h('<div class="pokale-cards"></div>');
+    const loadCover = createCoverLoader(); // lazy taste-card covers, as on the Regal/archive (#198)
     recap.favourites.forEach((fav) => {
       const member = round.members.find((m) => m.id === fav.memberId);
       const game = round.games.find((g) => g.id === fav.gameId);
       if (!member || !game) return;
       const card = h(`<div class="pokale-card recap-fav">
+           <a class="recap-fav__cover">${coverPlaceholder(game)}</a>
            <span class="recap-fav__who">
              <a class="avatar" style="background:${memberColor(round, member.id)}">${esc(initials(member.name))}</a>
              <span class="recap-fav__name">${esc(member.name)}</span>
@@ -330,8 +332,13 @@ function renderRecapSection(round, recap) {
            <a class="pokale-card__value">${esc(game.title)}</a>
            <span class="pokale-card__sub">${esc(t('recap.favSub', { avg: fav.avg.toFixed(1) }))}</span>
          </div>`);
+      if (game.image) loadCover(card.querySelector('.recap-fav__cover'), coverUrl(game.image, COVER_THUMB));
       makeMemberLink(card.querySelector('.recap-fav__who .avatar'), round.id, member.id);
       makeGameLink(card.querySelector('.pokale-card__value'), round.id, game.id);
+      // Redundant by the archive rows' rule (#663): it targets the same game as
+      // the title below it, so it stays mouse-clickable but leaves the tab order
+      // and the accessibility tree rather than announcing as a nameless control.
+      makeGameLink(card.querySelector('.recap-fav__cover'), round.id, game.id, { redundant: true });
       favs.appendChild(card);
     });
     if (favs.children.length) {
