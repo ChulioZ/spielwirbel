@@ -321,3 +321,33 @@ test('a game a grantee adds to a shared round is attributed to their member seat
   const added = feed.find((a) => a.type === 'game_added' && a.title === 'Catan');
   assert.equal(added.actorMemberId, s.seatId); // recorded as the grantee's seat
 });
+
+/* #682's read is mounted under /api/rounds/:rid, so it inherits both the grant
+ * resolver and the role gate rather than carrying access rules of its own. That
+ * inheritance is the whole security story for it, and it is worth an explicit
+ * probe: the round's shelf and ratings are the profile, so a leak here would
+ * expose one tenant's taste to another. It is a GET, so it is deliberately
+ * absent from lib/round-access.js's table
+ * (.claude/rules/round-roles-are-a-chokepoint.md).
+ */
+test('recommendations follow the grant: the grantee reads them, an outsider gets 404 (#682)', async () => {
+  const owner = await makeAccount('rec-owner@example.com');
+  const grantee = await makeAccount('rec-grantee@example.com');
+  const outsider = await makeAccount('rec-outsider@example.com');
+
+  const shared = (await request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Empfehlungsrunde', members: ['Owner'] })).body;
+  await repo.createGrant({ roundId: shared.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id });
+
+  const asGrantee = await request(app).get(`/api/rounds/${shared.id}/recommendations`).set(auth(grantee.token));
+  assert.equal(asGrantee.status, 200);
+  // The shelf is empty here, so the honest answer is the cold start — what
+  // matters is that the grantee is answered ABOUT THE OWNER'S ROUND at all.
+  assert.deepEqual(asGrantee.body.recommendations, []);
+  assert.equal(asGrantee.body.minProfileGames > 0, true);
+
+  // An account with no grant must not learn that the round exists.
+  assert.equal((await request(app).get(`/api/rounds/${shared.id}/recommendations`).set(auth(outsider.token))).status, 404);
+  // Nor may an unauthenticated caller.
+  assert.equal((await request(app).get(`/api/rounds/${shared.id}/recommendations`)).status, 401);
+});

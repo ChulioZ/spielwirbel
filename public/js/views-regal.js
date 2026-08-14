@@ -303,6 +303,12 @@ function renderRegalTab(round, activeGames) {
   const wishBtn = h(`<a class="link-btn"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('wish.link', { n: wishGames.length }))}</a>`);
   navLink(wishBtn, roundPath(round.id, 'wishlist'), () => showWishlist(round.id));
   foot.appendChild(wishBtn);
+  // The one entry that points OFF the shelf entirely (#682): games the round
+  // does not own, next to the wish list because that is where an accepted
+  // recommendation lands.
+  const recBtn = h(`<a class="link-btn"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('suggest.link'))}</a>`);
+  navLink(recBtn, roundPath(round.id, 'recommendations'), () => showRecommendations(round.id));
+  foot.appendChild(recBtn);
   // "Spiele verschieben" and "Einladen" used to sit here too. Neither is a shelf
   // concern — one consolidates two rounds, the other shares the round — and both
   // were findable only by scrolling past the whole game grid, so they moved to

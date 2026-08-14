@@ -302,18 +302,36 @@ test('importFromRoundId copies active games into the new round', async () => {
   assert.equal(res.body.games[0].title, 'Catan');
 });
 
-// Issue #264: the buy-next recommendations feature (the app's only AI surface)
-// was removed entirely. Guard the removal so the route can't quietly come back.
-test('the recommendations endpoints are gone (#264)', async () => {
+/*
+ * Issue #264 removed the buy-next recommendations feature — the app's only AI
+ * surface — and this guarded the removal by asserting the whole path 404s.
+ *
+ * #682 reinstates a recommender, and it is DELIBERATELY not that one: it scores
+ * a local corpus with weighted arithmetic, so there is no model, no outbound
+ * call, no processor and nothing that can hallucinate a title. So the read is
+ * expected to answer now, and what still has to stay gone is #264's own shape:
+ * a feature that STORES runs and lets a client trigger or delete them. Those are
+ * what made it a billed, stateful AI surface; a stateless GET is not.
+ *
+ * Widening this to "recommendations exist again, so drop the test" would lose
+ * the guard entirely — the sibling below (`recommendationRuns`) is the other
+ * half and is unchanged.
+ */
+test('the recommendations surface is READ-ONLY — #264\'s run endpoints stay gone', async () => {
   const round = await createRound(request, { name: 'NoRecs' });
   for (const [method, path] of [
     ['post', `/api/rounds/${round.id}/recommendations`],
-    ['get', `/api/rounds/${round.id}/recommendations`],
     ['delete', `/api/rounds/${round.id}/recommendations/anything`],
   ]) {
     const res = await request(app)[method](path);
     assert.equal(res.status, 404, `${method.toUpperCase()} ${path} must 404`);
   }
+  // The #682 read, by contrast, answers — with an empty list on this instance,
+  // which has no corpus. Asserted here so the loop above cannot be "satisfied"
+  // by the whole path 404ing again.
+  const read = await request(app).get(`/api/rounds/${round.id}/recommendations`);
+  assert.equal(read.status, 200);
+  assert.deepEqual(read.body.recommendations, []);
 });
 
 // A round never carries a recommendation run history anymore (#264) — neither

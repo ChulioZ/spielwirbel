@@ -305,6 +305,32 @@ I18N.en = {
   'wish.acquireBothConfirm': '“{base}” is still on the wish list. Put it on the shelf and record “{title}” as its expansion?',
   'wish.acquireWithBaseConfirm': '“{base}” is not in this round yet. Add it and record “{title}” as its expansion?',
   'wish.acquired': '“{title}” now belongs to “{base}”',
+
+  // Recommendations (#682): games the round does NOT own, scored from the
+  // BoardGameGeek corpus against the round's own shelf and sessions. Category
+  // and mechanic names inside a reason come from BGG and stay in BGG's English
+  // spelling in every UI language — translating them would be modifying the
+  // data, which its licence forbids.
+  'suggest.link': 'You might also like',
+  'suggest.title': 'You might also like',
+  'suggest.lead': 'Based on {n} of your games and how you rated them.',
+  'suggest.source': 'Game data from BoardGameGeek.',
+  'suggest.wish': 'Add to wish list',
+  'suggest.wished': '“{title}” is on the wish list',
+  'suggest.open': 'View on BGG',
+  'suggest.fact.weight': 'complexity {weight}',
+  'suggest.fact.players': '{players} players',
+  'suggest.fact.time': '{time} min',
+  'suggest.reason.quality': 'Highly rated on BGG ({rating})',
+  'suggest.reason.complexity': 'Complexity {weight} — like your best-rated games',
+  'suggest.reason.players': 'Plays best with {n}',
+  'suggest.reason.time': 'About {minutes} minutes, like your usual evening',
+  'suggest.reason.mechanics': 'Similar mechanics to {games}',
+  'suggest.reason.categories': 'Same kind of game as {games}',
+  'suggest.empty.fewGames': 'Link a few more of your games to BoardGameGeek first — with too little to go on, any list would just be guesswork.',
+  'suggest.empty.unknownGames': 'The game database does not know your shelf yet. It fills up in the background; look again in a while.',
+  'suggest.empty.noCorpus': 'This instance has no game database, so there is nothing to recommend from.',
+  'suggest.empty.noneLeft': 'Nothing left to suggest — you already own everything that fits.',
   'wish.pickBase': 'Which game does “{title}” belong to?',
   'wish.pickParent': 'Which game should be added for “{title}”?',
   'wish.noBase': 'Add the base game to this round first.',

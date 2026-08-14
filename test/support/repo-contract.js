@@ -3909,10 +3909,41 @@ module.exports = function repoContract(repo) {
     assert.deepEqual((await repo.listCorpusPending(2, '9999-12-31')).map((e) => e.externalId), ['c3', 'c4']);
   });
 
+  test('listCorpusEntries answers the WHOLE corpus, best-ranked first (#682)', async () => {
+    // Its own id namespace: replaceCorpus CARRIES OVER enrichment for surviving
+    // ids, so reusing c1/c2/c3 would inherit an earlier case's enrichedAt and
+    // this case's "un-enriched row" assertion would fail for an unrelated reason
+    // (.claude/rules/bgg-corpus.md §3).
+    await repo.replaceCorpus(
+      // Deliberately not in rank order, so the sort is doing something.
+      [corpusEntry(82, { rank: 20 }), corpusEntry(81, { rank: 3 }), corpusEntry(83, { rank: 11 })],
+      { dumpDate: 'd', uploadedAt: 'u' },
+    );
+    const info = { weight: 3.2, minPlayers: 2, maxPlayers: 4, mechanics: ['Drafting'] };
+    await repo.updateCorpusEntries([{ externalId: 'c83', enrichedAt: '2026-08-14T11:00:00.000Z', info }]);
+
+    const all = await repo.listCorpusEntries();
+    assert.deepEqual(all.map((e) => e.externalId), ['c81', 'c83', 'c82']);
+    // UN-enriched rows are included: the recommender needs to see the whole pool
+    // to report how much of it it can actually score, and filtering here would
+    // make "the corpus" mean something different per caller.
+    assert.equal(all[0].enrichedAt, null);
+    assert.equal(all[0].info, null);
+    // Both halves of a row survive the round trip — the CSV columns and the
+    // enrichment — since the scoring reads them together.
+    const c3 = all.find((e) => e.externalId === 'c83');
+    assert.deepEqual(c3.info, info);
+    assert.equal(c3.name, 'Game 83');
+    assert.equal(c3.rank, 11);
+    assert.equal(c3.bayesRating, 6.9);
+    assert.equal(c3.enrichedAt, '2026-08-14T11:00:00.000Z');
+  });
+
   test('an empty corpus answers zeroes and an empty queue rather than throwing', async () => {
     await repo.replaceCorpus([], { dumpDate: null, uploadedAt: null });
     assert.deepEqual(await repo.corpusStats(), { rows: 0, enriched: 0, dumpDate: null, uploadedAt: null });
     assert.deepEqual(await repo.listCorpusPending(10, '9999-12-31'), []);
+    assert.deepEqual(await repo.listCorpusEntries(), []);
     assert.deepEqual(await repo.updateCorpusEntries([]), { updated: 0 });
   });
 

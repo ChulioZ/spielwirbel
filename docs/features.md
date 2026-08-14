@@ -121,6 +121,19 @@ What the app does, in detail. For a short overview see the
   the cover the round picked, so everyone in it sees one price for one wish;
   where it ships to and in what currency still follows each reader. Read-only and
   server-side: no alerts, no price history, and no affiliate links of any kind.
+  Beside those three lists the shelf's footer offers **„Das könnte euch auch
+  gefallen"** — games the round does *not* own, ranked against its own taste.
+  The profile comes from the two things BoardGameGeek cannot know: which games
+  this group actually rated well, and how many people really sit at their table
+  (parties, so a team counts once). Everything else — quality, complexity,
+  mechanics, categories, the community's verdict on player counts — comes from
+  the local BGG corpus, and the two are joined by plain weighted arithmetic:
+  no model, no AI, no outbound call, and every entry a real BGG row that cannot
+  be invented. Each card says **why** it is there ("Ähnliche Mechaniken wie
+  Wingspan und Terraforming Mars", „Zu viert am besten"), and one tap puts it on
+  the Wunschliste. Games already in the round in any state — including retired,
+  the sharpest signal of all — are never suggested back, and a round with too
+  few linked games is told so rather than shown a confident guess.
   A game is active, retired, completed or wished-for, never two at once, and all
   three lists are reached from the round hub's footer. Every row on those lists
   opens the game's own detail page, so a game keeps its full editing surface —

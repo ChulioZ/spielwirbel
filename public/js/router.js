@@ -182,6 +182,7 @@ function resolveRoute(pathname) {
     if (sub === 'retired') return () => showRetired(rid);
     if (sub === 'completed') return () => showCompleted(rid);
     if (sub === 'wishlist') return () => showWishlist(rid);
+    if (sub === 'recommendations') return () => showRecommendations(rid);
     if (sub === 'design') return () => showBackground(rid);
     if (sub === 'tags') return () => showTags(rid);
     if (sub === 'settings') return () => showRoundSettings(rid);
