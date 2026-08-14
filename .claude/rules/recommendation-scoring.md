@@ -86,7 +86,37 @@ has an action behind it (import a BGG collection). Collapsing them into one
 imported. `test/recommend-view.test.js` asserts one per state; collapsing the
 selector reddens three.
 
-## 7. The corpus snapshot needs a TTL as well as an invalidate
+## 7. Size the snapshot against the ELIGIBLE count, not the default
+
+`BGG_CORPUS_SIZE` defaults to 5000, and reasoning from that default understates
+this feature's cost by ~3×: `docs/configuration.md` records that a real dump
+yields **17,483 eligible** rows and advises setting the ceiling *above* that, so
+the ratings floor rather than the rank cap decides what is kept. Measured
+2026-08-14 (`recommend()` over 40 owned games):
+
+| rows | JSON | heap held / process | per request |
+|---|---|---|---|
+| 5,000 | 2.5 MB | 4 MB | 9.6 ms |
+| **17,483** | 8.9 MB | 10 MB | 27.7 ms |
+| 100,000 (the `num()` ceiling) | 50.4 MB | 68 MB | 171 ms |
+
+Two things that measurement settled and one it did not:
+
+- **The ranking does not change with corpus size.** Rows are rank-ordered and
+  quality carries 35% of the score, so a bigger corpus only adds candidates that
+  were already going to lose. Growing the pool is a cost question, never a
+  correctness one.
+- **The obvious suspect is not the cost.** Rebuilding the 17k-entry `corpusById`
+  Map per request looks like the expensive part and is **1.5 ms**; scoring is
+  10 ms and the rest is the sort over every scored candidate. Don't "optimise"
+  the Map away — measure first.
+- **The heap figure is PER PROCESS**, and a Railway deploy overlaps two
+  (`.claude/rules/deploy-invariants-are-pinned-in-code.md`). At the ceiling that
+  is ~136 MB of snapshot alone. Unreachable from today's dump, since above the
+  eligible count the cap stops binding — but it is the number to check before a
+  future dump makes it reachable.
+
+## 8. The corpus snapshot needs a TTL as well as an invalidate
 
 `lib/corpus-cache.js` is dropped by `lib/corpus.js` on every write **this process**
 makes. That is not enough on its own: Railway overlaps two containers on every
@@ -95,7 +125,7 @@ enrichment tick that wrote a row may have run in the other one, where no
 `invalidate()` of ours can reach. Without the TTL that process serves its
 boot-time snapshot until it is replaced.
 
-## 8. What the browser pass caught that no test did
+## 9. What the browser pass caught that no test did
 
 `localeTag()` takes the locale **explicitly** and falls back to English when
 called bare — so `localeTag()` instead of `localeTag(getLocale())` prints `8.4`
@@ -108,7 +138,7 @@ verbatim printed `80–60 Min.`, which reads as a bug in the app rather than as 
 upstream data. Ordering the two is not *modifying* BGG's data — both numbers are
 still shown, unrounded (`.claude/rules/bgg-corpus.md` on the licence condition).
 
-## 9. #264 removed a recommender, and its guard had to be re-aimed rather than deleted
+## 10. #264 removed a recommender, and its guard had to be re-aimed rather than deleted
 
 `test/rounds.test.js` asserted the whole `…/recommendations` path 404s. This
 feature is deliberately not that one — local corpus, weighted arithmetic, no
