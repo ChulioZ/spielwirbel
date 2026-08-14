@@ -434,6 +434,9 @@ test('every failed batch is reported, not just the one that stops the pass', asy
   const failures = lines.filter((l) => l.event === 'bgg_corpus_enrich_failed');
   assert.equal(failures.length, 2);
   assert.deepEqual(failures.map((l) => l.batch), [1, 2], 'batches WRITTEN so far, per line');
+  // Two CONSECUTIVE failures would carry the same `batch` (nothing was written
+  // between them), so without `attempt` the pair reads as one line logged twice.
+  assert.deepEqual(failures.map((l) => l.attempt), [2, 4]);
 });
 
 test('a re-enrichment never ERASES what an earlier pass learned', async () => {
