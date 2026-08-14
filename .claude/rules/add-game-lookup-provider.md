@@ -149,8 +149,11 @@ Four things about it bite:
   var. `docs/deploy-railway.md`'s go-live list says so.
 - **Throttling is a status code, not a queue.** BGG answers `500`/`503` when
   too busy (`202` on some endpoints, `429` generically). `fetchXml` retries
-  exactly those, twice, inside one 8 s budget; every other status (notably
-  `401`) is final. Don't turn this into an unbounded retry — the route's
+  exactly those, twice, inside one call's budget — `TIMEOUT_MS` (8 s) unless the
+  caller passes its own, which since #774 only the corpus hop does (30 s). Every
+  other status (notably `401`) is final, and so is an **abort**: the deadline
+  fires as a *throw*, not a status, so it escapes the retry loop entirely and
+  `RETRY_STATUS` never sees it. Don't turn this into an unbounded retry — the route's
   `cached()` (10 min) plus the UI debounce are what actually keep the request
   count down, which is what BGG's terms ask for.
 
