@@ -335,17 +335,46 @@ Expansions, unranked games and games under the ratings floor are dropped on
 ingest, and the best-ranked `BGG_CORPUS_SIZE` survive. Roughly monthly is ample;
 the card shows the dump's age and turns amber past 45 days.
 
+**How the two limits interact — measured on a real dump, 2026-08-14.** Of
+**180,000** rows, **162,517** were dropped by the filters and **17,483** were
+eligible, so at the default ceiling of 5000 the cap — not the ratings floor —
+was deciding what the corpus held, discarding 12,483 qualifying games. The upload
+reports those two numbers apart for exactly this reason.
+
+That makes `BGG_CORPUS_SIZE` a knob worth setting deliberately rather than
+leaving at its default. **Set it above the eligible count and
+`BGG_CORPUS_MIN_RATINGS` becomes the only gate**, which is the more principled
+model: the floor answers "is BGG's data on this game worth believing", while a
+rank cutoff answers nothing in particular. The default stays conservative (5000
+is a ~6-hour fill) because a fresh self-hosted instance should not spend a day of
+upstream requests before it has decided whether it wants the feature.
+
 The per-game attributes are then filled in by a background job
 (`lib/scheduler.js`) at `BGG_CORPUS_BATCHES_PER_TICK` requests of 20 ids per
-15-minute tick — about six hours for a full 5000-game corpus, spread thin
-because BGG's terms ask for *few* requests rather than fast ones. It needs
-`BGG_API_TOKEN`; without one the corpus stays un-enriched rather than erroring.
-Re-uploading a dump **keeps** the enrichment of every game still in it, so a
-monthly refresh costs a handful of requests, not another full pass.
+15-minute tick, spread thin because BGG's terms ask for *few* requests rather
+than fast ones. At the defaults that is 40 batches an hour, so the one-time fill
+scales linearly with the ceiling:
+
+| Corpus size | Storage | One-time fill |
+|---|---|---|
+| 5,000 | ~6 MB | ~6 h |
+| 10,000 | ~11 MB | ~12.5 h |
+| 20,000 | ~20 MB | ~25 h |
+
+Storage is not the constraint at any of these — an enriched row measures
+**0.7–1.3 KB** (the famous games carry far more category, mechanic and family
+links than the tail). Upstream requests are, which is what the ceiling is really
+budgeting. Steady state is negligible either way: a 17,000-game corpus on the
+30-day refresh window spends about 30 of the ~960 batches available per day.
+
+It needs `BGG_API_TOKEN`; without one the corpus stays un-enriched rather than
+erroring. Re-uploading a dump **keeps** the enrichment of every game still in it,
+so a monthly refresh costs a handful of requests, not another full pass — and
+raising the ceiling later only pays for the newly admitted games.
 
 | Variable | Default | What it does |
 |---|---|---|
-| `BGG_CORPUS_SIZE` | `5000` | how many games to keep, best-ranked first |
+| `BGG_CORPUS_SIZE` | `5000` | how many games to keep, best-ranked first; above the eligible count it stops binding and the ratings floor decides |
 | `BGG_CORPUS_MIN_RATINGS` | `100` | ratings floor below which BGG's averages are noise |
 | `BGG_CORPUS_BATCHES_PER_TICK` | `10` | `/thing` requests per tick; `0` pauses enrichment |
 | `BGG_CORPUS_STALE_DAYS` | `30` | when an enriched row is refreshed |
