@@ -245,6 +245,28 @@ test('a match on the round\'s FAVOURITE mechanics scores near 1.0, not half (#77
   assert.ok(partialValue > 0 && partialValue < mech, `one-of-four scored ${partialValue}`);
 });
 
+test('the rescale ceiling ignores NEGATIVE profile components (#772)', () => {
+  // A retired game contributes affinity -0.5, so the profile vector can hold
+  // negative components — and a candidate can always avoid one by carrying a
+  // mechanic the round has never met, which scores 0. So the best a k-mechanic
+  // candidate can do is the k largest NON-NEGATIVE components; counting a
+  // negative one into the ceiling lowers it, and everything above it clamps.
+  const round = shelfRound();
+  round.games.push({ id: 'gr', title: 'Retired', retired: true, source: { provider: 'bgg', externalId: 'orx' } });
+  const corpus = [...shelfCorpus({ mechanics: ['Loved'] }), entry('orx', { info: info({ mechanics: ['Hated'] }) })];
+  const profile = profileOf(round, corpus);
+  const value = (mechanics) =>
+    scoreCandidate(profile, entry('x', { info: info({ mechanics }) })).terms.find((t) => t.term === 'mechanics').value;
+
+  assert.equal(value(['Loved']), 1, 'the round\'s own mechanic is a perfect match');
+  assert.equal(value(['Loved', 'Unknown']), 1, 'plus an unknown is still the best a pair can do');
+  // The real assertion: carrying a mechanic from the game they GOT RID OF is
+  // strictly worse than carrying one they have never seen, and must score lower.
+  // With the negative folded into the ceiling all three clamp to 1.0 instead.
+  assert.ok(value(['Loved', 'Hated']) < 1, `a retired-game mechanic scored ${value(['Loved', 'Hated'])}`);
+  assert.ok(value(['Loved', 'Hated']) < value(['Loved', 'Unknown']));
+});
+
 test('the taste terms move a score by their FULL weight, on a real taste spread (#772)', () => {
   const profile = profileOf(shelfRound(), tasteCorpus());
   // The §1 isolation shape, on the fixture that exposes the shortfall: these two
