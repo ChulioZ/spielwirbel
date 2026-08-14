@@ -458,8 +458,8 @@ public/
     views-archive.js      the three off-shelf screens (retired / completed /
                           Wunschliste) through one renderer
     views-recommend.js    "das könnte euch auch gefallen": ranked games the
-                          round does not own, each card naming the two reasons
-                          it was picked (#682)
+                          round does not own, each card naming up to three
+                          reasons it was picked (#682, #772)
     views-round-detail.js game detail, design picker, tags + providers screens,
                           sheet helpers
     views-round-settings.js round Einstellungen screen: the round-level actions
