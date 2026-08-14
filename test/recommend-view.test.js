@@ -1,0 +1,154 @@
+'use strict';
+
+/* The recommendations screen (#682), run in jsdom.
+ *
+ * The scoring is covered in test/recommend.test.js and the payload in
+ * test/recommendations.test.js. What only a rendered screen can see is the half
+ * that decides whether the feature is legible at all: which of the four empty
+ * states is chosen, and whether the reason lines — the entire argument for a
+ * deterministic recommender over #264's — actually reach the card.
+ *
+ * The harness loads the frontend through `vm`, so the view stays out of the
+ * coverage report; a `require()` would red `coverage:ci` with every test green
+ * (.claude/rules/testing-views-under-jsdom.md).
+ */
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+
+const { loadApp } = require('./support/dom');
+
+const round = { id: 'r1', name: 'Freitagsrunde', games: [], sessions: [], members: [], background: null };
+
+const rec = (over = {}) => ({
+  externalId: '999',
+  title: 'Ark Nova',
+  year: 2021,
+  rank: 12,
+  rating: 8.4,
+  weight: 3.7,
+  minPlayers: 1,
+  maxPlayers: 4,
+  minPlaytime: 90,
+  maxPlaytime: 150,
+  score: 0.81,
+  url: 'https://boardgamegeek.com/boardgame/999',
+  reasons: [],
+  ...over,
+});
+
+// Render the screen against a stubbed payload. `api` is the one function both
+// the round read and the recommendations read go through, so one stub serves
+// both — dispatched on the path, which also asserts the URL the view builds.
+async function render(t, payload, { locale = 'de' } = {}) {
+  const dom = loadApp({ locale });
+  t.after(() => dom.close());
+  const calls = [];
+  dom.set('api', async (method, url, body) => {
+    calls.push({ method, url, body });
+    if (/\/recommendations$/.test(url)) return payload;
+    return round;
+  });
+  dom.set('toast', () => {});
+  await dom.call('showRecommendations', 'r1');
+  return { dom, calls };
+}
+
+const full = (over = {}) => ({
+  profileGames: 12,
+  linkedGames: 12,
+  minProfileGames: 8,
+  corpusRows: 5000,
+  parties: [{ players: 4, share: 1 }],
+  recommendations: [],
+  ...over,
+});
+
+test('a recommendation renders its title, its BGG facts and its reason lines', async (t) => {
+  const { dom } = await render(t, full({
+    recommendations: [rec({
+      reasons: [
+        { term: 'quality', rating: 8.4 },
+        { term: 'mechanics', games: ['Wingspan', 'Terraforming Mars'] },
+      ],
+    })],
+  }));
+
+  const card = dom.app.querySelector('.rec-card');
+  assert.ok(card, 'the card is rendered');
+  assert.match(card.querySelector('.rec-card__title').textContent, /Ark Nova/);
+  const why = [...card.querySelectorAll('.rec-card__why li')].map((li) => li.textContent);
+  assert.equal(why.length, 2);
+  assert.match(why[0], /8,4/, 'the rating is formatted for the reader\'s locale');
+  // The whole argument for this recommender over #264's: it names the games it
+  // reasoned from, so the list is checkable rather than merely confident.
+  assert.match(why[1], /Wingspan/);
+  assert.match(why[1], /Terraforming Mars/);
+  // The link out is a real anchor at the row's own BGG page.
+  assert.equal(card.querySelector('a.link-btn').getAttribute('href'), 'https://boardgamegeek.com/boardgame/999');
+});
+
+test('a reason the client has no phrase for renders NOTHING, never a raw key', async (t) => {
+  const { dom } = await render(t, full({
+    recommendations: [rec({ reasons: [{ term: 'from-a-newer-server' }, { term: 'quality', rating: 8.4 }] })],
+  }));
+  const why = [...dom.app.querySelectorAll('.rec-card__why li')].map((li) => li.textContent);
+  assert.equal(why.length, 1, 'the unknown term is dropped, not half-rendered');
+  assert.match(why[0], /8,4/);
+  assert.doesNotMatch(dom.app.textContent, /from-a-newer-server|suggest\.reason/);
+});
+
+/* The four empty states ask the reader for OPPOSITE things, so each is asserted
+   against the copy it must show. A single "nothing to show" would send someone
+   off to re-import a collection they have already imported — which is why this
+   is four cases rather than one. */
+const EMPTIES = [
+  { name: 'a thin shelf points at the BGG import', data: { profileGames: 2, linkedGames: 2 }, match: /BoardGameGeek/ },
+  { name: 'a shelf the corpus does not know says so', data: { profileGames: 2, linkedGames: 12 }, match: /Spieledatenbank kennt euer Regal/ },
+  { name: 'no corpus at all names the instance, not the shelf', data: { corpusRows: 0, profileGames: 0, linkedGames: 12 }, match: /keine Spieledatenbank/ },
+  { name: 'nothing left to suggest is not an error', data: {}, match: /besitzt schon alles/ },
+];
+
+for (const c of EMPTIES) {
+  test(`empty state: ${c.name}`, async (t) => {
+    const { dom } = await render(t, full({ ...c.data, recommendations: [] }));
+    assert.equal(dom.app.querySelectorAll('.rec-card').length, 0);
+    assert.match(dom.app.querySelector('.empty').textContent, c.match);
+  });
+}
+
+test('accepting a recommendation posts the ordinary wish-game write, source and all', async (t) => {
+  const { dom, calls } = await render(t, full({ recommendations: [rec()] }));
+  dom.app.querySelector('[data-act="wish"]').click();
+  await new Promise((r) => setTimeout(r, 0));
+
+  const post = calls.find((c) => c.method === 'POST');
+  assert.ok(post, 'the click writes');
+  assert.equal(post.url, '/api/rounds/r1/games');
+  // A FormData built inside the vm realm — read it field by field rather than
+  // comparing objects across realms (.claude/rules/testing-views-under-jsdom.md).
+  assert.equal(post.body.get('title'), 'Ark Nova');
+  assert.equal(post.body.get('wish'), 'true', 'a recommendation lands on the WUNSCHLISTE, never the shelf');
+  assert.equal(post.body.get('sourceProvider'), 'bgg');
+  assert.equal(post.body.get('sourceExternalId'), '999');
+  assert.equal(post.body.get('minPlayers'), '1');
+  assert.equal(post.body.get('maxPlayers'), '4');
+});
+
+test('the screen credits BoardGameGeek, which its licence requires wherever the data shows', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [rec()] }));
+  assert.match(dom.app.querySelector('.rec-source').textContent, /BoardGameGeek/);
+});
+
+test('an inverted upstream range is rendered in order, not backwards', async (t) => {
+  // BGG's two bounds are not guaranteed to be ordered. Rendering them verbatim
+  // printed "80–60 Min." on the first browser pass, which reads as a bug in the
+  // app rather than as odd upstream data.
+  const { dom } = await render(t, full({
+    recommendations: [rec({ minPlaytime: 80, maxPlaytime: 60, minPlayers: 6, maxPlayers: 2 })],
+  }));
+  const facts = dom.app.querySelector('.rec-card__facts').textContent;
+  assert.match(facts, /60–80/);
+  assert.match(facts, /2–6/);
+  assert.doesNotMatch(facts, /80–60|6–2/);
+});

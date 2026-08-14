@@ -118,6 +118,15 @@ lib/
                      bounded once for both writers — the single add (flat
                      multipart fields) and the bulk import (a map beside
                      `covers`) — so they cannot accept different things (#742)
+  recommend.js       "das könnte euch auch gefallen" (issue #682): the taste
+                     profile built from a round's own shelf and sessions, and
+                     the deterministic weighted score that ranks the corpus
+                     against it. Pure, no model, no outbound call — every
+                     recommendation is a real BGG row that says why it is there
+  corpus-cache.js    the corpus held in process memory for that scoring, so a
+                     recommendation costs no multi-megabyte read per request;
+                     dropped on every write lib/corpus.js makes, plus a TTL for
+                     the writes another replica made (issue #682)
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
@@ -273,6 +282,8 @@ lib/
                                              filterable action log, user feedback,
                                              recent warn/error logs —
                                              404 unless ADMIN_PASSWORD)
+    recommendations.js …/recommendations    (games the round does not own,
+                                            scored from the BGG corpus — #682)
     lookup.js        …/lookup               (search/game — provider proxy for
                                              BoardGameGeek; round-scoped, plus the
                                              BGG-only covers/expansions/import hops)
@@ -446,6 +457,9 @@ public/
     views-pokale.js       Pokale tab: podium + fun stats, and the Rückblick
     views-archive.js      the three off-shelf screens (retired / completed /
                           Wunschliste) through one renderer
+    views-recommend.js    "das könnte euch auch gefallen": ranked games the
+                          round does not own, each card naming the two reasons
+                          it was picked (#682)
     views-round-detail.js game detail, design picker, tags + providers screens,
                           sheet helpers
     views-round-settings.js round Einstellungen screen: the round-level actions

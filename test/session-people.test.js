@@ -22,6 +22,7 @@ const {
   partyName,
   sessionTeams,
   sessionParties,
+  sessionPartyCount,
 } = require('../public/js/session-people');
 
 const round = {
@@ -185,4 +186,30 @@ test('a team dropped for being too small does not claim its people', () => {
   });
   assert.deepEqual(teams.map((tm) => tm.id), ['t2']);
   assert.deepEqual(teams[0].personIds, ['m1', 'm2']);
+});
+
+// `sessionPartyCount` is what the server counts a stored session's table by
+// (#682) — it exists only because `sessionParties` builds names through `t()`,
+// which is unreachable from Node. Asserting it against the resolver it is a
+// shortcut for is what stops the two from drifting into different answers about
+// a session with a dropped team, which is the case that separates them at all.
+test('sessionPartyCount equals the resolved party list, dropped team and all', () => {
+  const cases = [
+    { memberIds: ['m1', 'm2', 'm3'] },
+    { memberIds: ['m1', 'm2', 'm3'], teams: [{ id: 't1', personIds: ['m1', 'm2'] }] },
+    { memberIds: ['m1', 'm2'], guests: [{ id: 'g1', name: 'Dana' }] },
+    // The §4 ordering case: a dropped team followed by a valid one wanting m1.
+    {
+      memberIds: ['m1', 'm2'],
+      teams: [
+        { id: 't1', personIds: ['m1', 'gone'] },
+        { id: 't2', personIds: ['m1', 'm2'] },
+      ],
+    },
+  ];
+  const counts = cases.map((s) => sessionPartyCount(round, s));
+  assert.deepEqual(counts, cases.map((s) => sessionParties(round, s).length));
+  // Spelled out too, so the assertion above cannot pass by both sides being
+  // broken in the same direction.
+  assert.deepEqual(counts, [3, 2, 3, 1]);
 });

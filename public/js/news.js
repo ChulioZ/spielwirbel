@@ -28,6 +28,29 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * Deliberately says what the reader can DO and where, not how it works. The
+   * mechanism (a local BGG corpus, weighted arithmetic, no AI) is the interesting
+   * half for the repo and the wrong half here — and naming the scoring would
+   * promise a precision a heuristic should not claim.
+   */
+  {
+    revision: '2026-08-14',
+    de: {
+      title: 'Das könnte euch auch gefallen',
+      body: 'Im Regal einer Runde steht jetzt unten „Könnte euch gefallen": Spiele, '
+        + 'die ihr noch nicht habt, ausgewählt nach eurem eigenen Regal und euren '
+        + 'Wertungen. Jeder Vorschlag sagt dazu, warum er dabei ist — und ein Tipp '
+        + 'setzt ihn auf die Wunschliste.',
+    },
+    en: {
+      title: 'You might also like',
+      body: 'A round\'s shelf now has a "You might also like" link at the bottom: '
+        + 'games you do not own yet, picked from your own shelf and your own '
+        + 'ratings. Every suggestion says why it is there — and one tap puts it on '
+        + 'your wish list.',
+    },
+  },
+  /*
    * Deliberately GENERAL about what is on the page. Each figure appears only
    * once it clears its own minimum, so which of them a reader actually sees
    * depends on how big the instance is that day — naming them ("see the most

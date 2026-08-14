@@ -74,6 +74,10 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
   yet, kept beside the shelf without ever turning up in a vote, importable
   from a BGG wishlist, and — where the instance enables it — showing what each
   one costs right now.
+- **Recommendations** — "das könnte euch auch gefallen": games the round does
+  *not* own, ranked against its own shelf and its own ratings using a local
+  BoardGameGeek corpus. Plain weighted arithmetic — no AI, nothing invented —
+  and every card says why it is there.
 - **Per-round design**, custom tags, an installable **PWA** that works offline,
   shareable deep links, a **Freundeskreis** feed between accounts, and
   **passkey** sign-in (fingerprint, face or device PIN — alongside the password,

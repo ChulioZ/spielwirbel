@@ -5689,6 +5689,49 @@ kbd {
 .archive-row__actions { display: flex; gap: 8px; flex: none; flex-wrap: wrap; }
 .archive-row__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
 
+/* ---- Recommendations (#682): games the round does NOT own ----
+   Same row anatomy as .archive-row (cover, body, actions) rather than a tile
+   grid: an entry here is RICH — a placeholder cover, four facts and up to two
+   reason lines — and the list is ORDERED by score, which is the case
+   .claude/rules/tiles-vs-lists.md keeps as a list. */
+.rec-lead { margin: 0 0 12px; }
+.rec-list { display: flex; flex-direction: column; gap: 12px; }
+.rec-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+}
+.rec-card__img {
+  position: relative; /* anchors + clips the .cover-ph gradient layer */
+  overflow: hidden;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--sunken) center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.rec-card__img .ti { font-size: 24px; /* glyph, not type */ }
+.rec-card__body { flex: 1; min-width: 200px; }
+.rec-card__title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
+.rec-card__facts { font-size: var(--text-sm); font-weight: 600; margin-top: 3px; }
+.rec-card__sep { margin: 0 6px; }
+/* The reason lines. Bulletless because they are one short clause each, and a
+   marker column would push them out of line with the facts row above. */
+.rec-card__why { list-style: none; margin: 6px 0 0; padding: 0; font-size: var(--text-sm); }
+.rec-card__why li { color: var(--ink-soft); }
+.rec-card__why li + li { margin-top: 2px; }
+.rec-card__actions { display: flex; gap: 8px; flex: none; flex-wrap: wrap; align-items: center; }
+.rec-card__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
+.rec-source { margin-top: 18px; font-size: var(--text-sm); }
+
 /* ---- Design studio: theme preview cards ---- */
 .theme-cards {
   display: grid;

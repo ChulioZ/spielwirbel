@@ -305,6 +305,32 @@ I18N.de = {
   'wish.acquireBothConfirm': '„{base}“ steht noch auf der Wunschliste. Ins Regal stellen und „{title}“ als Erweiterung dazu eintragen?',
   'wish.acquireWithBaseConfirm': '„{base}“ ist noch nicht in dieser Runde. Hinzufügen und „{title}“ als Erweiterung dazu eintragen?',
   'wish.acquired': '„{title}“ gehört jetzt zu „{base}“',
+
+  // Empfehlungen (#682): Spiele, die die Runde NICHT besitzt, aus dem
+  // BoardGameGeek-Korpus gegen das eigene Regal und die eigenen Sessions
+  // bewertet. Kategorie- und Mechanik-Namen in einer Begründung kommen von BGG
+  // und bleiben in jeder UI-Sprache in BGGs englischer Schreibweise — sie zu
+  // übersetzen wäre eine Änderung der Daten, die deren Lizenz verbietet.
+  'suggest.link': 'Könnte euch gefallen',
+  'suggest.title': 'Das könnte euch auch gefallen',
+  'suggest.lead': 'Auf Basis von {n} eurer Spiele und eurer Wertungen dazu.',
+  'suggest.source': 'Spieldaten von BoardGameGeek.',
+  'suggest.wish': 'Auf die Wunschliste',
+  'suggest.wished': '„{title}“ steht auf der Wunschliste',
+  'suggest.open': 'Auf BGG ansehen',
+  'suggest.fact.weight': 'Gewicht {weight}',
+  'suggest.fact.players': '{players} Personen',
+  'suggest.fact.time': '{time} Min.',
+  'suggest.reason.quality': 'Auf BGG stark bewertet ({rating})',
+  'suggest.reason.complexity': 'Gewicht {weight} — wie eure bestbewerteten Spiele',
+  'suggest.reason.players': 'Zu {n} am besten',
+  'suggest.reason.time': 'Rund {minutes} Minuten, wie euer üblicher Abend',
+  'suggest.reason.mechanics': 'Ähnliche Mechaniken wie {games}',
+  'suggest.reason.categories': 'Gleiche Art Spiel wie {games}',
+  'suggest.empty.fewGames': 'Verknüpft zuerst ein paar mehr eurer Spiele mit BoardGameGeek — mit zu wenig Grundlage wäre jede Liste geraten.',
+  'suggest.empty.unknownGames': 'Die Spieledatenbank kennt euer Regal noch nicht. Sie füllt sich im Hintergrund; schaut später noch einmal vorbei.',
+  'suggest.empty.noCorpus': 'Diese Instanz hat keine Spieledatenbank, aus der sich etwas empfehlen ließe.',
+  'suggest.empty.noneLeft': 'Nichts mehr vorzuschlagen — ihr besitzt schon alles, was passt.',
   'wish.pickBase': 'Zu welchem Spiel gehört „{title}“?',
   'wish.pickParent': 'Welches Spiel soll für „{title}“ angelegt werden?',
   'wish.noBase': 'Lege zuerst das Grundspiel in dieser Runde an.',

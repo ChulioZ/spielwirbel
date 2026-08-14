@@ -40,6 +40,10 @@
 .ti-bolt::before { content: "\ea38"; }
 .ti-clock::before { content: "\ea70"; }
 .ti-users::before { content: "\ebf2"; }
+/* Complexity, on the recommendation cards (#682). Codepoint read from THIS
+   bundle's own cmap, not from tabler.io — the two do not always agree
+   (.claude/rules/tabler-icon-codepoints.md). */
+.ti-scale::before { content: "\ebc2"; }
 .ti-user::before { content: "\eb4d"; }
 /* #563 — codepoint verified against THIS bundle's own cmap via fontTools, never
    tabler.io (.claude/rules/tabler-icon-codepoints.md): a wrong-but-present value

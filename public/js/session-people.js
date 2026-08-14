@@ -80,7 +80,7 @@ function partyName(people) {
 // that person shows up twice on the winner picker. A person already claimed by
 // an earlier team is skipped rather than shared, so the parties below stay a
 // partition of the participants however the stored blob looks.
-function teamsForPeople(people, session) {
+function resolveTeamMembers(people, session) {
   const byId = new Map(people.map((p) => [p.id, p]));
   const claimed = new Set();
   const teams = [];
@@ -94,14 +94,23 @@ function teamsForPeople(people, session) {
     // out of a later valid one.
     if (members.length < MIN_TEAM_SIZE) return;
     members.forEach((p) => claimed.add(p.id));
-    teams.push({
-      id: tm.id,
-      people: members,
-      personIds: members.map((p) => p.id),
-      name: partyName(members),
-    });
+    teams.push({ id: tm.id, people: members });
   });
   return teams;
+}
+
+// The naming half, split from the resolution above so a caller that only needs
+// to COUNT parties does not go through `partyName` — which reads `t()`, and is
+// therefore unreachable from Node (#682: lib/recommend.js counts a round's real
+// party sizes server-side). One resolver, two consumers, so §4's claim-after-the
+// -size-check ordering cannot drift between them.
+function teamsForPeople(people, session) {
+  return resolveTeamMembers(people, session).map((tm) => ({
+    id: tm.id,
+    people: tm.people,
+    personIds: tm.people.map((p) => p.id),
+    name: partyName(tm.people),
+  }));
 }
 
 function sessionTeams(round, session) {
@@ -132,6 +141,22 @@ function sessionParties(round, session) {
   return parties;
 }
 
+// How many playing parties one STORED session had — `sessionParties().length`
+// without building any name, so it is callable from the server (#682).
+//
+// It is deliberately not a fourth copy of the party arithmetic
+// (.claude/rules/session-teams.md §2): the two existing copies compute the count
+// from LIVE pickers, where the guests do not have ids yet, while this one reads a
+// session that has already been stored. Deriving it from the same resolver the
+// read side already uses is what keeps it honest — a spec asserts it equals
+// `sessionParties(round, session).length` on a fixture with a dropped team.
+function sessionPartyCount(round, session) {
+  const people = sessionPeople(round, session);
+  const teams = resolveTeamMembers(people, session);
+  const teamed = teams.reduce((n, tm) => n + tm.people.length, 0);
+  return people.length - teamed + teams.length;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     MAX_SESSION_GUESTS,
@@ -142,5 +167,6 @@ if (typeof module !== 'undefined' && module.exports) {
     partyName,
     sessionTeams,
     sessionParties,
+    sessionPartyCount,
   };
 }

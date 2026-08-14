@@ -20,7 +20,7 @@ const HUB_TABS = ['start', 'regal', 'chronik', 'pokale'];
 // router names them (resolveRoute in router.js), so a new sub-screen that
 // forgets its entry here simply renders no strip rather than a wrong one.
 const HUB_TAB_OF = {
-  regal: ['game', 'retired', 'completed', 'wishlist'],
+  regal: ['game', 'retired', 'completed', 'wishlist', 'recommendations'],
   chronik: ['session'],
   start: ['member', 'design', 'tags', 'settings'],
 };

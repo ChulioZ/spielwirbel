@@ -100,11 +100,11 @@ Two consequences worth knowing rather than rediscovering:
 ## 4. Claim the people only AFTER the size check, or a dropped team steals them
 
 Both resolvers — `resolveTeams` in the route (wire → stored records) and
-`teamsForPeople` in `session-people.js` (stored records → resolved people, on
-every read) — enforce the same two rules: nobody is in two teams, and a team
-below `MIN_TEAM_SIZE` is dropped. They are named apart on purpose: one grep must
-not return two functions with different shapes. The order is what makes them
-compose:
+**`resolveTeamMembers`** in `session-people.js` (stored records → resolved
+people, on every read) — enforce the same two rules: nobody is in two teams, and
+a team below `MIN_TEAM_SIZE` is dropped. They are named apart on purpose: one
+grep must not return two functions with different shapes. The order is what makes
+them compose:
 
 ```js
 if (personIds.length < MIN_TEAM_SIZE) return;   // drop first …
@@ -120,6 +120,20 @@ after the fact shrinks their team, and a team down to one person must stop being
 a team — otherwise that person appears twice on the picker, once inside the
 "team" and once as themselves. Both resolvers exist because the stored blob is
 the one thing a hand-crafted request can shape freely.
+
+**`resolveTeamMembers` was split out of `teamsForPeople` by #682**, which needed
+to COUNT a stored session's parties from the server (`sessionPartyCount`, for the
+recommender's party-size distribution). The naming half could not come along:
+`teamsForPeople` builds each team's label through `partyName` → `t()`, which does
+not exist in Node. So the file now has one resolver and two consumers —
+`teamsForPeople` (adds names) and `sessionPartyCount` (counts) — rather than a
+second copy of the ordering above, which is the whole point of the split. Note
+`sessionPartyCount` is **not** a fourth copy of §2's party arithmetic either: the
+two copies there compute the count from LIVE pickers, where guests have no ids
+yet, while this one reads a session that is already stored.
+`test/session-people.test.js` pins it against `sessionParties(...).length` on a
+fixture with a dropped team, which is the only input shape that can separate
+them.
 
 **Only one input shape can see this ordering, and the obvious test is not it.**
 A single too-small team passes either way: the team is discarded in both
