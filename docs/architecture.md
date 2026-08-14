@@ -74,6 +74,9 @@ lib/
     corpus-file.js   the JSON backend's BGG-corpus store (issue #681) — its OWN
                      file under DATA_DIR, never data.json, because store.js
                      rewrites that whole file on every mutation
+    corpus-backfill.js  the one-off window in which both backends re-queue
+                     corpus rows enriched before covers were parsed (#779);
+                     deletable once the corpus has turned over
     migrations/      versioned Knex schema migrations (npm run migrate)
   tenant.js          resolves each request's tenant and scopes the repo to it
   round-access.js    the one place a round-level action's required role is

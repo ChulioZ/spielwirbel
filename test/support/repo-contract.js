@@ -20,6 +20,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
+// The real cutoff, not a copy — a hand-written date here would pass against a
+// backend using a different one (.claude/rules/shared-constants-across-the-stack.md).
+const { COVER_BACKFILL_BEFORE } = require('../../lib/repo/corpus-backfill');
 
 // A fresh identifier per call, so a suite run against a PERSISTENT database
 // can't collide with an earlier run's rows. Uses crypto rather than
@@ -3878,6 +3881,39 @@ module.exports = function repoContract(repo) {
     // and the row never matches again. Without this the queue never drains.
     await repo.updateCorpusEntries([{ externalId: 'c1', enrichedAt: stamp, info: { weight: 3.2, maxPlayers: 4, imageUrl: null } }]);
     assert.deepEqual(await repo.listCorpusPending(10, '2026-01-01T00:00:00.000Z'), []);
+  });
+
+  test('the cover backfill retires a row BGG answers NOTHING for, instead of asking forever (#779)', async () => {
+    await repo.replaceCorpus([corpusEntry(1)], { dumpDate: 'd', uploadedAt: 'u' });
+    // Enriched before covers existed, and its id no longer resolves upstream
+    // (merged or deleted). The enrichment pass omits `info` for such a row on
+    // purpose (#736 — nulling it would empty the corpus one hiccup at a time),
+    // so it can NEVER gain the imageUrl key: keyed on absence alone it comes
+    // back on every tick, forever, spending an upstream request each time
+    // against a provider whose terms ask for few.
+    await repo.updateCorpusEntries([
+      { externalId: 'c1', enrichedAt: '2026-08-01T00:00:00.000Z', info: { weight: 2.4, maxPlayers: 4 } },
+    ]);
+    assert.deepEqual(
+      (await repo.listCorpusPending(10, '2026-01-01T00:00:00.000Z')).map((e) => e.externalId),
+      ['c1'],
+      'it is owed exactly one re-ask',
+    );
+
+    // The pass asks, BGG answers nothing, so only `enrichedAt` moves — `info`
+    // is deliberately left untouched, and the key never arrives. Moving the
+    // stamp past the backfill window must retire the row anyway, which is the
+    // invariant that makes the queue drain whatever BGG does.
+    const afterWindow = '2026-09-01T00:00:00.000Z';
+    assert.ok(afterWindow > COVER_BACKFILL_BEFORE, 'the stamp has to land past the window to test it');
+    await repo.updateCorpusEntries([{ externalId: 'c1', enrichedAt: afterWindow }]);
+
+    const still = await repo.listCorpusPending(10, '2026-01-01T00:00:00.000Z');
+    assert.deepEqual(still, [], 'a row BGG never answers for must not come back forever');
+    // ...and it is genuinely still keyless, so the row retired on the window
+    // rather than by quietly acquiring the key some other way.
+    const row = (await repo.listCorpusPending(10, '9999-12-31')).find((e) => e.externalId === 'c1');
+    assert.equal(Object.prototype.hasOwnProperty.call(row.info, 'imageUrl'), false);
   });
 
   test('a re-uploaded dump CARRIES OVER enrichment for the ids that survive', async () => {
