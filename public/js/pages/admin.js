@@ -428,10 +428,20 @@
       show($('corpusMsg'), message(new Error(payload.error || `HTTP ${res.status}`)), 'err');
       return;
     }
+    // The two drop reasons are reported apart on purpose. Rolled into one
+    // number the message reads as "175000 rows were unusable", when most of a
+    // full dump's losses to the FILTERS are unranked rows while the losses to
+    // the CAP are ordinary games — and only the second number says anything
+    // about whether BGG_CORPUS_SIZE is set right.
     const u = payload.upload;
-    show($('corpusMsg'),
-      `${u.rows} Spiele übernommen (${u.dropped} von ${u.total} Zeilen verworfen:`
-      + ' Erweiterungen, unplatzierte und zu selten bewertete).', 'ok');
+    const parts = [`${u.rows} Spiele übernommen`];
+    parts.push(`${u.filtered} von ${u.total} Zeilen aussortiert `
+      + '(Erweiterungen, unplatzierte, zu selten bewertete)');
+    parts.push(u.overCap
+      ? `${u.overCap} weitere passten, lagen aber über dem Limit von ${payload.corpus.limit}`
+        + ' — BGG_CORPUS_SIZE erhöhen, wenn du sie brauchst'
+      : 'kein Spiel lag über dem Limit');
+    show($('corpusMsg'), `${parts.join(' · ')}.`, 'ok');
     $('corpusForm').reset();
     loadCorpus();
   });

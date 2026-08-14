@@ -94,6 +94,31 @@ This is not a "third persistence backend" in CLAUDE.md's sense — that call is
 about not fragmenting *round-data* storage, and this holds no round data, no
 personal data and nothing a tenant owns.
 
+## An operator-facing count must not merge two reasons under one label
+
+The upload first reported a single `dropped = total - kept` and the card phrased
+it as "*n* von *m* Zeilen verworfen: Erweiterungen, unplatzierte und zu selten
+bewertete". On a real 180,000-row dump that read **"175000 von 180000 Zeilen
+verworfen"** — and it was wrong, because `dropped` also contained every row that
+passed all three filters and lost only to `BGG_CORPUS_SIZE`.
+
+The two are not the same fact. A filtered row was never a candidate; an over-cap
+row is an ordinary game the ceiling excluded. Merging them told the operator that
+175,000 rows were unusable, and hid `overCap` — **the only number that says
+whether the cap is set right**, and the number they would need to decide whether
+to raise it. The operator asked "does it only take 5000, and why not all of
+them?", which is precisely the question the message should have pre-empted.
+
+So `parseRanksCsv` returns `filtered` and `overCap` separately, and the three
+numbers are asserted to account for the whole file (`kept + filtered + overCap
+=== total`) — that closure is what stops a future filter being added without a
+counter. Nothing here throws either way: the wrong version is a plausible
+sentence about a successful upload.
+
+**The general form:** when a pipeline discards rows for reasons the reader can
+*act on differently*, the count is per reason. One total with a list of causes
+reads as if every cause applied to every row.
+
 ## A captured-real fixture is still not automatically a DISCRIMINATING one
 
 `.claude/rules/bgg-collection-import.md` says to capture live rather than
