@@ -32,6 +32,31 @@ twelve enthusiasts outrank a classic), and `minPlayers`/`maxPlayers` instead of
 the `suggested_numplayers` poll (the box routinely lies). Both breaks were
 verified to redden exactly their own named case.
 
+**The isolation shape is right and the FIXTURE decides whether it means anything
+— #772.** For the two cosine terms the delta equals the weight only if the
+candidate can reach 1.0, and against `shelfCorpus` — one mechanic, one category —
+it always could. So both cases passed at full weight while the terms delivered
+~70% of it on any real shelf: raw cosine compares an L2-normalised profile spread
+over dozens of mechanics against a candidate's handful, so a candidate whose
+*every* mechanic was a round favourite scored **0.536** against the 0.5 naming
+threshold, where complexity, players and time saturated at 0.98–1.0. The rescale
+(`attainable()`) divides by the best a candidate of that size could reach against
+this profile, so the assertion measures the term's range rather than a fixture
+artefact.
+
+Hence `tasteCorpus` beside `shelfCorpus`: eight mechanics over eight games. Two
+traps live in that fixture, both producing a **vacuously green** test, both
+measured while writing #772's:
+
+- **A uniform profile scores every candidate 1.0** — equal components mean any
+  candidate drawing only from the taste set is a perfect match by construction,
+  the standard deviation is zero, and a spec about *variation* sees nothing. Mix
+  foreign values in.
+- **Two corpora from one periodic formula carry the same distribution**, so a
+  corpus-size test built that way has no difference to detect: the deliberate
+  break stayed green at three strengths. What the bigger corpus *adds* must be a
+  genuinely different population.
+
 ## 2. An absent attribute must score NEUTRAL, not zero
 
 A corpus row missing a playtime has made no claim about evening length; scoring
@@ -106,6 +131,17 @@ Two things that measurement settled and one it did not:
   quality carries 35% of the score, so a bigger corpus only adds candidates that
   were already going to lose. Growing the pool is a cost question, never a
   correctness one.
+
+  **#772 put one corpus-relative statistic in this file, and the line it must not
+  cross is here.** Reason lines are ranked by how *unusual* a value is (a per-term
+  z-score, streamed via Welford during the scoring pass — §11). It feeds the
+  **reasons only, never the score**: a corpus-relative term in the score would
+  make the ranking depend on corpus composition and break exactly the invariance
+  above. A reason line re-ordering as the corpus grows is acceptable; the
+  recommendation order is not. `scoreCandidate` cannot see the statistics at all,
+  which is the structural half of that guarantee — and §1's rescale is
+  **profile**-relative for the same reason, the candidate-relative version being
+  the cheaper implementation that breaks it.
 - **The obvious suspect is not the cost.** Rebuilding the 17k-entry `corpusById`
   Map per request looks like the expensive part and is **1.5 ms**; scoring is
   10 ms and the rest is the sort over every scored candidate. Don't "optimise"
@@ -152,6 +188,27 @@ model, no processor, nothing that can hallucinate a title — so the read answer
 now. What the guard still holds is #264's actual shape: **no POST, no DELETE, no
 stored runs**. Deleting the test because "recommendations exist again" would have
 lost the guard entirely; the sibling `recommendationRuns` assertion is untouched.
+
+## 11. Three of the six reasons were UNREACHABLE, and the weights were why (#772)
+
+`reasonsFrom` sorted qualifying terms by `weight × value`, so the ordering was
+decided by the constants and not by the candidate: mechanics' *maximum*
+contribution (0.130) sat below quality's *minimum qualifying* one (0.175), so a
+mechanics reason could surface only when quality failed its threshold — which a
+top-24 candidate essentially never does, since quality is 35% of the score that
+put it there. Categories and time needed **both** quality and complexity to fail.
+The live list read rating, complexity, players, forever, and the operator
+reported that mechanics and categories appeared to play no role at all.
+
+- **Rank by standout, keep the absolute gate.** The z-score decides the *order*
+  among qualifying terms; §2's `> NEUTRAL` gate still decides *admission*, or a
+  card compliments a game on an attribute nobody knows. The rescale is what made
+  that gate passable for the taste terms at all — the two halves are coupled.
+- **Four of the six reasons restate the fact row** (`★ 8.4 · complexity 3.2 ·
+  2–4 players · 90 min`, `recFacts`), so mechanics and categories — the only two
+  saying something new, naming the round's *own* games — were exactly the two the
+  ordering could not reach. When adding a reason type, ask what it tells a reader
+  that the card does not already print.
 
 **Related:** `.claude/rules/bgg-corpus.md` (the pool this scores, and its licence
 conditions), `.claude/rules/break-the-code-on-purpose.md` (every assertion above
