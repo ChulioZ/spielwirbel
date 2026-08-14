@@ -125,18 +125,24 @@ enrichment tick that wrote a row may have run in the other one, where no
 `invalidate()` of ours can reach. Without the TTL that process serves its
 boot-time snapshot until it is replaced.
 
-## 9. What the browser pass caught that no test did
+## 9. What the browser pass caught — and the width it never rendered
 
-`localeTag()` takes the locale **explicitly** and falls back to English when
-called bare — so `localeTag()` instead of `localeTag(getLocale())` prints `8.4`
-to a German reader who should read `8,4`. Nothing throws and the number is still
-right; only the separator is wrong. Caught by a jsdom spec asserting `8,4`, which
-is worth copying for any new number a view formats.
+**Caught:** `localeTag()` takes the locale **explicitly** and falls back to
+English when called bare, so `localeTag()` rather than `localeTag(getLocale())`
+prints `8.4` to a German reader who should read `8,4` — nothing throws, only the
+separator is wrong. And BGG's two range bounds are not guaranteed ordered:
+rendering them verbatim printed `80–60 Min.`, which reads as a bug in the app.
+Ordering them is not *modifying* the data — both numbers still show, unrounded
+(`.claude/rules/bgg-corpus.md`).
 
-Also: **BGG's two range bounds are not guaranteed to be ordered.** Rendering them
-verbatim printed `80–60 Min.`, which reads as a bug in the app rather than as odd
-upstream data. Ordering the two is not *modifying* BGG's data — both numbers are
-still shown, unrounded (`.claude/rules/bgg-corpus.md` on the licence condition).
+**Missed:** the screen needs TWO entry points. The Regal footer carrying „Könnte
+euch gefallen" is `.rail-owned`, so from 1280px up it is `display: none` and the
+**rail** is the only way in — and #682 shipped with the footer row alone, leaving
+the feature unreachable on a desktop-width window. Reported by the operator, who
+had read the news entry and then could not find it. The pass that missed it ran
+at 1180px and 390px: two widths, both **below the one breakpoint that mattered**.
+`test/rail-footer-parity.test.js` now pins the footer's links as a subset of the
+rail's; see `.claude/rules/responsive-content-width.md`.
 
 ## 10. #264 removed a recommender, and its guard had to be re-aimed rather than deleted
 
