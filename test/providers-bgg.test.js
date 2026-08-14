@@ -1046,3 +1046,67 @@ test('imageHostAllowed accepts BGG image hosts and rejects everything else', () 
   assert.equal(bgg.imageHostAllowed('file:///etc/passwd'), false);
   assert.equal(bgg.imageHostAllowed('not a url'), false);
 });
+
+// --- per-call request deadlines (#774) ------------------------------------
+//
+// The abort timer is what these two assert, so time is mocked rather than
+// waited out: a real 30 s deadline is not a thing a test suite may spend. The
+// stub settles a call ONLY via the abort signal, so the deadline under test is
+// the only thing that can end it.
+//
+// Both APIs are mocked together because fetchXml computes its deadline from
+// `Date.now()` while fetchOnce arms the abort with `setTimeout` — mocking one
+// alone leaves the arithmetic reading a real clock against a frozen timer.
+//
+// The assertions step the clock and ask WHETHER the abort has fired, rather
+// than reading a timestamp inside the listener: node's mock clock jumps to the
+// end of a `tick()` before running any callback it uncovered, so a `Date.now()`
+// read from inside one reports the tick's end for every timer in it. Measured —
+// timers armed at 8 s and 30 s both report 31000 under a single tick(31000),
+// which makes a timestamp-based probe agree with any implementation at all.
+function armAbort(t, call) {
+  const realFetch = global.fetch;
+  const realToken = process.env.BGG_API_TOKEN;
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => {
+    global.fetch = realFetch;
+    if (realToken === undefined) delete process.env.BGG_API_TOKEN;
+    else process.env.BGG_API_TOKEN = realToken;
+  });
+  process.env.BGG_API_TOKEN = 'test-token';
+
+  const state = { fired: false };
+  global.fetch = (url, opts) => new Promise((_resolve, reject) => {
+    opts.signal.addEventListener('abort', () => {
+      state.fired = true;
+      reject(Object.assign(new Error('This operation was aborted'), { name: 'AbortError' }));
+    });
+  });
+  // Swallowed here so the eventual rejection is never unhandled; every spec
+  // below asserts on `state`, which the listener sets synchronously.
+  state.settled = call().then(() => null, (err) => err);
+  return state;
+}
+
+test('the interactive lookup keeps its 8 s budget', async (t) => {
+  // The guard on the other half of #774: giving the corpus hop a wider deadline
+  // must not widen the budget that protects every search.
+  const state = armAbort(t, () => bgg.detail('13'));
+  t.mock.timers.tick(7999);
+  assert.equal(state.fired, false, 'still within the 8 s budget');
+  t.mock.timers.tick(1);
+  assert.equal(state.fired, true, 'aborted at 8 s');
+  assert.match(String((await state.settled).message), /aborted/i);
+});
+
+test('the corpus hop gets its own 30 s deadline', async (t) => {
+  // 20 ids x stats=1 is the heaviest body this app asks BGG for, on a 15-minute
+  // background tick with no user waiting — under the lookup's 8 s it aborted
+  // mid-batch in production three times an hour.
+  const state = armAbort(t, () => bgg.corpus(['13', '342942']));
+  t.mock.timers.tick(29999);
+  assert.equal(state.fired, false, 'the corpus hop must outlive the 8 s lookup budget');
+  t.mock.timers.tick(1);
+  assert.equal(state.fired, true, 'aborted at 30 s');
+  assert.match(String((await state.settled).message), /aborted/i);
+});

@@ -56,6 +56,12 @@ inside a text node or an attribute, where a literal `<` is entity-encoded.
 `queued` state rather than an outage. **Do not widen `TIMEOUT_MS` to sit the
 queue out** — that budget is shared with every search, and the queue is unbounded.
 
+Since #774 `fetchXml` also takes a **per-call** `timeoutMs`, so widening this one
+hop no longer means widening every search — and that does **not** reopen the
+question. The corpus hop qualified for its own 30 s because it is a background
+tick with a bounded, known-heavy body; `/collection`'s queue has no bound at all,
+so no finite deadline sits it out and the `queued` answer is still the right one.
+
 The trap is what happens next. The listing goes through the route's 10-minute
 `cached()` helper, and putting a `queued` answer in it makes the user-facing
 message *"BoardGameGeek is still building it, try again shortly"* **a lie for the

@@ -31,6 +31,7 @@ const { app } = require('./helpers');
 const repo = require('../lib/repo');
 const corpus = require('../lib/corpus');
 const scheduler = require('../lib/scheduler');
+const observability = require('../lib/observability');
 
 const ADMIN_PW = 'operator-secret-pw';
 
@@ -316,7 +317,7 @@ test('a row BGG answers nothing for is still STAMPED, so it cannot block the que
   assert.equal(fetchCalls.length, 0);
 });
 
-test('a transient BGG failure keeps the batches already written and stops the pass', async () => {
+test('a standing BGG outage stops the pass and keeps the batches already written', async () => {
   await seed(60);
   let n = 0;
   global.fetch = async (url) => {
@@ -334,6 +335,105 @@ test('a transient BGG failure keeps the batches already written and stops the pa
   // upstream leaves the corpus permanently empty.
   assert.equal(run.enriched, 20);
   assert.equal((await repo.corpusStats()).enriched, 20);
+  // Two consecutive failures is where a slow moment becomes an outage, so the
+  // pass gives up on the 3rd attempt rather than spending all 3 batches on a
+  // dead upstream.
+  assert.equal(n, 3);
+});
+
+/*
+ * A SLOW BATCH IS NOT AN OUTAGE (#774).
+ *
+ * The pass used to stop on the first failed batch, which is the right instinct
+ * for an outage and the wrong one for a single slow answer — and in production
+ * it was always the latter: BGG's /thing aborted 3-5 batches into a 10-batch
+ * tick, three times an hour, so the corpus filled at ~40% of the documented
+ * rate. A consecutive-failure counter is what tells the two apart.
+ *
+ * Nothing here asserts a wall-clock or a timeout; that half lives in
+ * test/providers-bgg.test.js. These cases are about how far the pass gets.
+ */
+
+// Throws on the given 1-based batch attempts and answers normally otherwise.
+// The returned counter is how far the pass got — the thing every case below is
+// really asserting, and invisible in `result` once a batch is skipped.
+const failOn = (...attempts) => {
+  const state = { attempts: 0 };
+  global.fetch = async (url) => {
+    const ids = new URL(String(url)).searchParams.get('id').split(',');
+    state.attempts += 1;
+    if (attempts.includes(state.attempts)) throw new Error('This operation was aborted');
+    fetchCalls.push(ids);
+    return { ok: true, status: 200, text: async () => thingBody(ids) };
+  };
+  return state;
+};
+
+test('one failed batch is SKIPPED and the rest of the pass still runs', async () => {
+  await seed(100);
+  const stub = failOn(2);
+
+  const run = await corpus.enrich({ maxBatches: 5, pauseMs: 0 });
+  assert.equal(stub.attempts, 5, 'the tick spent its full batch budget');
+  assert.equal(run.batches, 4);
+  assert.equal(run.enriched, 80);
+  // Still truthy for ANY failed batch — the operator panel's log card is how a
+  // degrading upstream is noticed at all, so a survived failure must not read
+  // as a clean pass.
+  assert.equal(run.failed, true);
+  assert.equal((await repo.corpusStats()).enriched, 80);
+});
+
+test('the rows in a skipped batch stay unstamped, so the next pass re-reads them', async () => {
+  await seed(100);
+  const stub = failOn(2);
+  await corpus.enrich({ maxBatches: 5, pauseMs: 0 });
+  const asked = new Set(fetchCalls.flat());
+  fetchCalls = [];
+  stub.attempts = 0;
+
+  // Skipping must not cost the rows their place: `enrichedAt` is the queue, so
+  // an unstamped row is simply still owed. Stamping them to "move on" would
+  // silently drop 20 games out of the corpus for a whole staleness window.
+  await corpus.enrich({ maxBatches: 5, pauseMs: 0 });
+  const second = fetchCalls.flat();
+  assert.equal(second.length, 20);
+  assert.equal(second.some((id) => asked.has(id)), false);
+  assert.equal((await repo.corpusStats()).enriched, 100);
+});
+
+test('a success between two failures RESETS the tolerance', async () => {
+  await seed(100);
+  const stub = failOn(2, 4);
+
+  const run = await corpus.enrich({ maxBatches: 5, pauseMs: 0 });
+  // Two failures, never consecutive — a flaky upstream, not a dead one. Counting
+  // failures per pass instead of consecutively would stop here and re-introduce
+  // the bug on any tick unlucky enough to hit two slow batches.
+  assert.equal(stub.attempts, 5);
+  assert.equal(run.batches, 3);
+  assert.equal(run.enriched, 60);
+  assert.equal(run.failed, true);
+});
+
+test('every failed batch is reported, not just the one that stops the pass', async () => {
+  await seed(100);
+  failOn(2, 4);
+  const lines = [];
+  const restore = observability.logger.warn.bind(observability.logger);
+  observability.logger.warn = (obj) => { lines.push(obj); return restore(obj); };
+  try {
+    await corpus.enrich({ maxBatches: 5, pauseMs: 0 });
+  } finally {
+    observability.logger.warn = restore;
+  }
+
+  // A survived failure that logged nothing would make a degrading upstream
+  // invisible: the tick would look clean and only the fill RATE would betray it,
+  // which is exactly how #774 went unnoticed until the logs were read by hand.
+  const failures = lines.filter((l) => l.event === 'bgg_corpus_enrich_failed');
+  assert.equal(failures.length, 2);
+  assert.deepEqual(failures.map((l) => l.batch), [1, 2], 'batches WRITTEN so far, per line');
 });
 
 test('a re-enrichment never ERASES what an earlier pass learned', async () => {
