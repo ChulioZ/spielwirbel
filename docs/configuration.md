@@ -309,6 +309,50 @@ provider was never asked about passes every filter; `DRAW_BACKFILL_TIMEOUT_MS`
 (default 4000) caps that wait, after which the draw proceeds with the values
 already stored. An unfiltered draw never waits.
 
+### The BoardGameGeek game corpus (issue #681)
+
+A local pool of a few thousand ranked BGG games — their ratings, complexity,
+player counts, mechanics and categories — that recommendation features score
+against. It exists because BGG's API has **no browse, filter or attribute-search
+endpoint at all**: "which games would fit this group?" cannot be asked upstream,
+so the app has to hold its own candidate pool.
+
+There is no on/off switch. An instance with nothing uploaded simply has an empty
+corpus, and the features reading it show their own empty state.
+
+**Filling it is a manual operator step, by design.** BGG publishes the pool as a
+single CSV, covered by the same licence as the XML API — but
+[boardgamegeek.com/data_dumps/bg_ranks](https://boardgamegeek.com/data_dumps/bg_ranks)
+requires a logged-in **BGG session cookie**, not `BGG_API_TOKEN`, so the server
+cannot fetch it. In the operator panel's **BGG-Korpus** card:
+
+1. download `boardgames_ranks_<date>.zip` from that page while logged in to BGG,
+2. unzip it locally (the app takes the `.csv`, not the ZIP — this repo has no
+   unzip dependency and one is not worth adding for a monthly operator action),
+3. upload the CSV.
+
+Expansions, unranked games and games under the ratings floor are dropped on
+ingest, and the best-ranked `BGG_CORPUS_SIZE` survive. Roughly monthly is ample;
+the card shows the dump's age and turns amber past 45 days.
+
+The per-game attributes are then filled in by a background job
+(`lib/scheduler.js`) at `BGG_CORPUS_BATCHES_PER_TICK` requests of 20 ids per
+15-minute tick — about six hours for a full 5000-game corpus, spread thin
+because BGG's terms ask for *few* requests rather than fast ones. It needs
+`BGG_API_TOKEN`; without one the corpus stays un-enriched rather than erroring.
+Re-uploading a dump **keeps** the enrichment of every game still in it, so a
+monthly refresh costs a handful of requests, not another full pass.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `BGG_CORPUS_SIZE` | `5000` | how many games to keep, best-ranked first |
+| `BGG_CORPUS_MIN_RATINGS` | `100` | ratings floor below which BGG's averages are noise |
+| `BGG_CORPUS_BATCHES_PER_TICK` | `10` | `/thing` requests per tick; `0` pauses enrichment |
+| `BGG_CORPUS_STALE_DAYS` | `30` | when an enriched row is refreshed |
+
+Nothing in the corpus is personal data — it is public metadata about published
+games, fetched server-side — so it needs no privacy-policy or VVT entry.
+
 Wish-list prices (issue #679) are **off** unless `PRICES_ENABLED=true`: opening a
 wished-for game that carries a provider link then shows what it costs right now —
 board games through the

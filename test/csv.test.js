@@ -12,7 +12,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { CSV_BOM, csvField, toCsv } = require('../lib/csv');
+const { CSV_BOM, csvField, toCsv, fromCsv } = require('../lib/csv');
 
 test('csvField quotes every field and doubles inner quotes', () => {
   assert.equal(csvField('plain'), '"plain"');
@@ -95,3 +95,59 @@ function parseCsv(text) {
   if (field || record.length) { record.push(field); records.push(record); }
   return records;
 }
+
+/*
+ * The READER (issue #681) — the mirror image of the writer above, and the half
+ * the BGG ranks dump needs. Its traps are the same escaping rules read backwards:
+ * a game title containing a comma, a quote or a newline must not shift the row.
+ *
+ * Note the local parseCsv above is deliberately NOT replaced by fromCsv: it
+ * exists so the writer is verified by something other than this repo's own
+ * reader, which would make both halves agree about a shared mistake.
+ */
+
+test('fromCsv reads plain records', () => {
+  assert.deepEqual(fromCsv('id,name\r\n13,CATAN\r\n'), [['id', 'name'], ['13', 'CATAN']]);
+});
+
+test('fromCsv accepts LF as well as CRLF, and skips blank lines', () => {
+  assert.deepEqual(fromCsv('a,b\n1,2\n\n3,4\n'), [['a', 'b'], ['1', '2'], ['3', '4']]);
+});
+
+test('fromCsv keeps a quoted comma inside one field', () => {
+  assert.deepEqual(fromCsv('id,name\r\n1,"Tigris, Euphrates"\r\n')[1], ['1', 'Tigris, Euphrates']);
+});
+
+test('fromCsv un-doubles an escaped quote', () => {
+  assert.deepEqual(fromCsv('1,"say ""hi"""\r\n')[0], ['1', 'say "hi"']);
+});
+
+test('fromCsv keeps a quoted NEWLINE inside the field rather than ending the record', () => {
+  const rows = fromCsv('id,name\r\n1,"two\r\nlines"\r\n2,plain\r\n');
+  assert.equal(rows.length, 3);
+  assert.deepEqual(rows[1], ['1', 'two\r\nlines']);
+  assert.deepEqual(rows[2], ['2', 'plain']);
+});
+
+test('fromCsv preserves empty fields, including a quoted empty one', () => {
+  assert.deepEqual(fromCsv('1,,"",4')[0], ['1', '', '', '4']);
+});
+
+test('fromCsv strips a leading BOM so the first header name is usable', () => {
+  assert.deepEqual(fromCsv(`${CSV_BOM}id,name\r\n`)[0], ['id', 'name']);
+});
+
+test('fromCsv round-trips what toCsv writes', () => {
+  const written = toCsv([['id', (r) => r.id], ['name', (r) => r.name]],
+    [{ id: '1', name: 'a,b "c"\nd' }]);
+  assert.deepEqual(fromCsv(written), [['id', 'name'], ['1', 'a,b "c"\nd']]);
+});
+
+test('fromCsv never throws on junk, and answers [] for nothing at all', () => {
+  assert.deepEqual(fromCsv(''), []);
+  assert.deepEqual(fromCsv(null), []);
+  // An unterminated quote yields the rest of the file as one field rather than
+  // throwing: a truncated upload must be REFUSED by its caller's column check,
+  // not by an exception here.
+  assert.deepEqual(fromCsv('1,"unterminated'), [['1', 'unterminated']]);
+});

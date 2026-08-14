@@ -71,6 +71,9 @@ lib/
     index.js         picks the backend (DATABASE_URL ? postgres : json)
     json.js          default backend — the data/data.json store below
     postgres.js      PostgreSQL backend (Knex query builder), used when DATABASE_URL set
+    corpus-file.js   the JSON backend's BGG-corpus store (issue #681) — its OWN
+                     file under DATA_DIR, never data.json, because store.js
+                     rewrites that whole file on every mutation
     migrations/      versioned Knex schema migrations (npm run migrate)
   tenant.js          resolves each request's tenant and scopes the repo to it
   round-access.js    the one place a round-level action's required role is
@@ -98,6 +101,11 @@ lib/
   faq.js             the server-rendered FAQ page, DE + EN, with each answer an
                      instance cannot honestly give gated out (issue #489)
   feed.js            the Freundeskreis activity feed's allowlisted events (#325)
+  corpus.js          the licensed BoardGameGeek game corpus (issue #681): the
+                     operator-uploaded ranks dump, filtered and capped, plus the
+                     bounded, resumable enrichment pass that fills each row's
+                     attributes from /thing. A local candidate pool exists
+                     because BGG's API has no browse or attribute search at all
   public-stats.js    the instance-wide statistics published on the landing page
                      and /entdecken (issue #564; off unless
                      PUBLIC_STATS_ENABLED). Ranks the repo's raw provider-keyed
@@ -134,8 +142,9 @@ lib/
                      deletions, so without a max age its link never expires
   scheduler.js       background jobs, started from server.js only: the
                      expired-demo purge (issue #427), the expired-vote-link
-                     sweep (issue #652), the stored-price sweep (issue #688)
-                     and the public-statistics rebuild (issue #564)
+                     sweep (issue #652), the stored-price sweep (issue #688),
+                     the public-statistics rebuild (issue #564) and the BGG
+                     corpus enrichment pass (issue #681)
   shutdown.js        the SIGTERM/SIGINT drain server.js installs — stops the
                      scheduler, lets in-flight requests finish, destroys the
                      pool, with a force-exit fallback. A factory taking its
@@ -159,7 +168,8 @@ lib/
                      (issue #288) — quotes every field, so a feedback message
                      with commas/quotes/newlines cannot corrupt the file, and
                      neutralizes leading =/+/-/@ so it cannot become an Excel
-                     formula
+                     formula — plus the matching reader (issue #681) the BGG
+                     ranks dump is parsed with
   observability.js   structured logging, /healthz + /readyz, central error handler
   status.js          aggregate usage metrics + the quota ceilings for the
                      operator panel's Kennzahlen card (issues #274/#404) —
