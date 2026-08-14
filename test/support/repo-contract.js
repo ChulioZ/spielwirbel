@@ -3769,6 +3769,153 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.getUserById(user.id), null);
   });
 
+  /* --------------------------- the BGG game corpus -------------------------- */
+  /*
+   * Global and un-scoped (issue #681): no tenant argument anywhere, which is the
+   * enforcement — a handler holding only req.repo cannot reach these at all.
+   */
+
+  // Every case here uses ids of its own, because the suite may run against a
+  // PERSISTENT database and replaceCorpus is wholesale: a hardcoded id would let
+  // one case's dump decide another's answers.
+  const corpusEntry = (n, over) => ({
+    externalId: `c${n}`,
+    name: `Game ${n}`,
+    year: 2000 + n,
+    rank: n,
+    rating: 7.5,
+    bayesRating: 6.9,
+    usersRated: 1000 + n,
+    ...over,
+  });
+
+  test('replaceCorpus stores the dump and its meta, and reports the row count', async () => {
+    const out = await repo.replaceCorpus(
+      [corpusEntry(1), corpusEntry(2)],
+      { dumpDate: '2026-08-01', uploadedAt: '2026-08-14T10:00:00.000Z' },
+    );
+    assert.deepEqual(out, { rows: 2 });
+
+    const stats = await repo.corpusStats();
+    assert.equal(stats.rows, 2);
+    assert.equal(stats.enriched, 0);
+    assert.equal(stats.dumpDate, '2026-08-01');
+    assert.equal(stats.uploadedAt, '2026-08-14T10:00:00.000Z');
+    // Postgres count(*) is a bigint and comes back as a STRING unless coerced,
+    // which passes a loose glance and breaks the moment the panel does
+    // arithmetic on it (.claude/rules/postgres-backend.md).
+    assert.equal(typeof stats.rows, 'number');
+    assert.equal(typeof stats.enriched, 'number');
+  });
+
+  test('replaceCorpus REPLACES — a dropped game is gone, and nothing accumulates', async () => {
+    await repo.replaceCorpus([corpusEntry(1), corpusEntry(2)], { dumpDate: 'd1', uploadedAt: 'u1' });
+    await repo.replaceCorpus([corpusEntry(2)], { dumpDate: 'd2', uploadedAt: 'u2' });
+
+    const stats = await repo.corpusStats();
+    assert.equal(stats.rows, 1);
+    assert.equal(stats.dumpDate, 'd2');
+    const pending = await repo.listCorpusPending(10, '9999-12-31');
+    assert.deepEqual(pending.map((e) => e.externalId), ['c2']);
+  });
+
+  test('a stored entry carries enrichedAt and info as NULL, never absent', async () => {
+    await repo.replaceCorpus([corpusEntry(1)], { dumpDate: 'd', uploadedAt: 'u' });
+    const [row] = await repo.listCorpusPending(10, '9999-12-31');
+    // Absent-key parity: the JSON backend writes both keys, so Postgres must
+    // assemble them too or the two backends answer differently-shaped rows.
+    assert.ok('enrichedAt' in row);
+    assert.ok('info' in row);
+    assert.equal(row.enrichedAt, null);
+    assert.equal(row.info, null);
+    assert.equal(row.name, 'Game 1');
+    assert.equal(row.year, 2001);
+    assert.equal(row.rank, 1);
+    assert.equal(row.usersRated, 1001);
+  });
+
+  test('updateCorpusEntries stamps the attributes and the enrichment time', async () => {
+    await repo.replaceCorpus([corpusEntry(1), corpusEntry(2)], { dumpDate: 'd', uploadedAt: 'u' });
+    const info = { weight: 3.2, minPlayers: 2, maxPlayers: 4, categories: ['Economic'], bestWith: [3] };
+    const out = await repo.updateCorpusEntries([{ externalId: 'c1', enrichedAt: '2026-08-14T11:00:00.000Z', info }]);
+    assert.deepEqual(out, { updated: 1 });
+
+    assert.equal((await repo.corpusStats()).enriched, 1);
+    const pending = await repo.listCorpusPending(10, '2026-08-14T10:00:00.000Z');
+    // c1 is now fresher than the cutoff, so only c2 is still owed a fetch.
+    assert.deepEqual(pending.map((e) => e.externalId), ['c2']);
+
+    // Read it back through the same method with a cutoff nothing can be fresher
+    // than, which is how the suite sees an already-enriched row at all. Find it
+    // by id: the queue puts the never-asked c2 ahead of it, deliberately.
+    const stored = (await repo.listCorpusPending(10, '9999-12-31')).find((e) => e.externalId === 'c1');
+    assert.equal(stored.enrichedAt, '2026-08-14T11:00:00.000Z');
+    assert.deepEqual(stored.info, info);
+  });
+
+  test('a re-uploaded dump CARRIES OVER enrichment for the ids that survive', async () => {
+    await repo.replaceCorpus([corpusEntry(1), corpusEntry(2)], { dumpDate: 'd1', uploadedAt: 'u1' });
+    const info = { weight: 2.5, maxPlayers: 5 };
+    await repo.updateCorpusEntries([{ externalId: 'c1', enrichedAt: '2026-08-01T00:00:00.000Z', info }]);
+
+    // The monthly re-upload. Without the carry-over every upload would throw
+    // away the whole corpus's attributes and re-fetch thousands of rows from
+    // BGG — hours of requests to relearn what had not changed.
+    await repo.replaceCorpus(
+      [corpusEntry(1, { rank: 7, rating: 8.1 }), corpusEntry(3)],
+      { dumpDate: 'd2', uploadedAt: 'u2' },
+    );
+
+    assert.equal((await repo.corpusStats()).enriched, 1);
+    const all = await repo.listCorpusPending(10, '9999-12-31');
+    const c1 = all.find((e) => e.externalId === 'c1');
+    assert.deepEqual(c1.info, info, 'the carried-over attributes');
+    assert.equal(c1.enrichedAt, '2026-08-01T00:00:00.000Z');
+    // The CSV columns still come from the new dump — that is what changed.
+    assert.equal(c1.rank, 7);
+    assert.equal(c1.rating, 8.1);
+    // The new game has no enrichment to inherit.
+    assert.equal(all.find((e) => e.externalId === 'c3').enrichedAt, null);
+  });
+
+  test('an enrichment stamp for an id no longer in the corpus is skipped, not re-created', async () => {
+    await repo.replaceCorpus([corpusEntry(1)], { dumpDate: 'd', uploadedAt: 'u' });
+    // Exactly what a dump uploaded while the job was mid-flight leaves behind.
+    const out = await repo.updateCorpusEntries([
+      { externalId: 'c1', enrichedAt: '2026-08-14T12:00:00.000Z', info: { weight: 1 } },
+      { externalId: 'c999', enrichedAt: '2026-08-14T12:00:00.000Z', info: { weight: 1 } },
+    ]);
+    assert.deepEqual(out, { updated: 1 });
+    assert.equal((await repo.corpusStats()).rows, 1);
+  });
+
+  test('the pending queue is never-asked first, then oldest, then best-ranked', async () => {
+    await repo.replaceCorpus(
+      [corpusEntry(1), corpusEntry(2), corpusEntry(3), corpusEntry(4)],
+      { dumpDate: 'd', uploadedAt: 'u' },
+    );
+    await repo.updateCorpusEntries([
+      { externalId: 'c1', enrichedAt: '2026-08-10T00:00:00.000Z', info: {} },
+      { externalId: 'c2', enrichedAt: '2026-08-02T00:00:00.000Z', info: {} },
+    ]);
+
+    // c3/c4 have never been asked about (rank order between them); then the
+    // stale ones, longest-ago first. Both backends must agree on this exact
+    // order — the JSON backend sorts, Postgres uses NULLS FIRST, and a drift
+    // would hand the two a different queue with nothing to catch it.
+    const pending = await repo.listCorpusPending(10, '9999-12-31');
+    assert.deepEqual(pending.map((e) => e.externalId), ['c3', 'c4', 'c2', 'c1']);
+    // And the limit really bounds it — one upstream request per 20 rows.
+    assert.deepEqual((await repo.listCorpusPending(2, '9999-12-31')).map((e) => e.externalId), ['c3', 'c4']);
+  });
+
+  test('an empty corpus answers zeroes and an empty queue rather than throwing', async () => {
+    await repo.replaceCorpus([], { dumpDate: null, uploadedAt: null });
+    assert.deepEqual(await repo.corpusStats(), { rows: 0, enriched: 0, dumpDate: null, uploadedAt: null });
+    assert.deepEqual(await repo.listCorpusPending(10, '9999-12-31'), []);
+    assert.deepEqual(await repo.updateCorpusEntries([]), { updated: 0 });
+  });
+
   test('updateMember links and unlinks a user', async () => {
     const user = await repo.createUser(userFields({ email: 'fixed@example.com' }));
 

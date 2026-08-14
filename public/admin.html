@@ -334,6 +334,33 @@
             <p class="msg" id="statementMsg" role="alert" hidden></p>
           </div>
         </section>
+
+        <!-- The licensed BGG game corpus (#681). It is an operator card and not
+             a user-facing screen because the dump has to be fetched by hand: the
+             download needs a logged-in BGG session cookie, which the server does
+             not have. -->
+        <section class="card">
+          <h2>BGG-Korpus</h2>
+          <p class="sub" style="margin-bottom: 0.9rem;">
+            Lizenzierte Spieldaten von BoardGameGeek, aus denen Empfehlungen berechnet
+            werden. Die Rangliste bei
+            <code>boardgamegeek.com/data_dumps/bg_ranks</code> herunterladen (BGG-Login
+            nötig), lokal entpacken und die <code>.csv</code> hier hochladen — etwa
+            einmal im Monat. Die Attribute je Spiel holt sich die Instanz danach
+            selbst, verteilt über mehrere Stunden.
+          </p>
+          <div class="status" id="corpusGrid"></div>
+          <form id="corpusForm" style="margin-top: 1rem;">
+            <label for="corpusFile">Rangliste (CSV)</label>
+            <input type="file" id="corpusFile" accept=".csv,text/csv" required />
+            <button type="submit" style="margin-top: 0.6rem;">Hochladen</button>
+          </form>
+          <div class="row" style="margin-top: 1rem;">
+            <button class="ghost small" id="corpusReload">Neu laden</button>
+            <button class="ghost small" id="corpusEnrich">Attribute jetzt nachladen</button>
+          </div>
+          <p class="msg" id="corpusMsg" role="alert" hidden></p>
+        </section>
       </aside>
     </div>
   </div>

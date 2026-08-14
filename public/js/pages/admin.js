@@ -52,6 +52,12 @@
     invalid_password: 'Falsches Passwort.',
     admin_auth_required: 'Sitzung abgelaufen. Bitte neu anmelden.',
     admin_disabled: 'Die Moderationsoberfläche ist auf dieser Instanz nicht aktiviert.',
+    invalid_csv: 'Das ist nicht die BGG-Rangliste (Spalten id, name und rank fehlen) '
+      + 'oder sie enthält keine verwertbare Zeile. Der bisherige Korpus bleibt unverändert.',
+    file_too_large: 'Die Datei ist zu groß. Bitte die entpackte .csv hochladen, nicht das ZIP.',
+    no_file: 'Keine Datei ausgewählt.',
+    upload_failed: 'Der Upload ist fehlgeschlagen. Bitte erneut versuchen.',
+    bgg_token_missing: 'Ohne BGG_API_TOKEN können keine Attribute geladen werden.',
     rate_limited: 'Zu viele Versuche. Bitte kurz warten.',
     confirm_mismatch: 'Die eingegebene E-Mail-Adresse stimmt nicht mit dem Konto überein.',
     tenant_shared: 'Abgebrochen: Auf diesem Tenant liegt noch ein weiteres Konto. '
@@ -191,6 +197,7 @@
     loadNotices();
     // Konten is deliberately NOT loaded here (#403) — see loadUsers().
     loadFeedback();
+    loadCorpus();
     refreshLog();
   }
 
@@ -292,7 +299,14 @@
       return;
     }
 
-    for (const [label, verdict, value, note] of statusRows(status)) {
+    renderTiles(grid, statusRows(status));
+  }
+
+  // One [label, verdict, value, note?] row per tile. Shared by the Kennzahlen
+  // board and the BGG-Korpus card so the two cannot drift into two ideas of what
+  // a status tile looks like. Every value goes in via textContent.
+  function renderTiles(grid, rows) {
+    for (const [label, verdict, value, note] of rows) {
       const item = document.createElement('div');
       item.className = 'status__item';
 
@@ -318,6 +332,128 @@
       grid.appendChild(item);
     }
   }
+
+  // ---- the BGG game corpus (#681) ------------------------------------------
+
+  // How stale a ranks dump may get before the card says so. The operator's own
+  // cadence is monthly, so 45 days is "you have slipped" and 120 is "this is no
+  // longer being maintained" — the numbers move slowly enough that neither is a
+  // correctness problem, only a quality one.
+  const CORPUS_WARN_DAYS = 45;
+  const CORPUS_STALE_DAYS = 120;
+
+  const daysSince = (iso) => {
+    const t = Date.parse(iso);
+    return Number.isFinite(t) ? Math.floor((Date.now() - t) / 86400000) : null;
+  };
+
+  function corpusRows(c) {
+    const rows = [];
+
+    // Deliberately NO verdict on the size: sitting exactly AT the cap is the
+    // intended state (the corpus keeps the best-ranked N), so capVerdict's red
+    // would be an alarm about the thing working.
+    rows.push(['Spiele im Korpus', null, `${c.rows} / ${c.limit}`,
+      `bestplatzierte aus der Rangliste, gegen BGG_CORPUS_SIZE`
+      + ` · ab ${c.minRatings} Bewertungen`]);
+
+    const enrichVerdict = () => {
+      if (!c.rows) return 'off';
+      if (c.enriched >= c.rows) return 'ok';
+      return 'warn';
+    };
+    rows.push(['Attribute geladen', enrichVerdict(), `${c.enriched} / ${c.rows}`,
+      c.rows
+        ? `Gewicht, Spieleranzahl, Kategorien · ${c.batchesPerTick} Abfragen je 15 Min,`
+          + ` Auffrischung nach ${c.staleDays} Tagen`
+        : 'noch keine Rangliste hochgeladen']);
+
+    const age = daysSince(c.uploadedAt);
+    const ageVerdict = () => {
+      if (age === null) return 'off';
+      if (age >= CORPUS_STALE_DAYS) return 'off';
+      if (age >= CORPUS_WARN_DAYS) return 'warn';
+      return 'ok';
+    };
+    rows.push(['Rangliste', ageVerdict(),
+      age === null ? 'nie' : `vor ${age} Tg.`,
+      // The dump date is only known when the operator's file name kept it — BGG
+      // puts it on the ZIP, not on the CSV inside. So the upload time is the
+      // fact the verdict is really built on, and it is always known.
+      c.dumpDate ? `Stand ${c.dumpDate} · hochgeladen ${c.uploadedAt.slice(0, 10)}`
+        : (c.uploadedAt ? `hochgeladen ${c.uploadedAt.slice(0, 10)} · Stand unbekannt` : null)]);
+
+    rows.push(['BGG-Token', c.tokenSet ? 'ok' : 'off', c.tokenSet ? 'gesetzt' : 'fehlt',
+      c.tokenSet ? null : 'ohne BGG_API_TOKEN werden keine Attribute geladen']);
+
+    return rows;
+  }
+
+  async function loadCorpus() {
+    const grid = $('corpusGrid');
+    grid.replaceChildren();
+    let corpus;
+    try {
+      ({ corpus } = await api('/corpus'));
+    } catch (err) {
+      show($('corpusMsg'), message(err), 'err');
+      return;
+    }
+    renderTiles(grid, corpusRows(corpus));
+  }
+
+  // NOT through api(): that helper sets Content-Type: application/json, and a
+  // multipart body needs the browser to write the header itself so it can put
+  // its own boundary in it. Setting it by hand is the classic way to make every
+  // upload arrive as an empty field.
+  $('corpusForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const file = $('corpusFile').files[0];
+    if (!file) return;
+    hide($('corpusMsg'));
+    show($('corpusMsg'), 'Wird hochgeladen und verarbeitet …', 'ok');
+
+    const body = new FormData();
+    body.append('file', file);
+    let res;
+    let payload;
+    try {
+      res = await fetch('/api/admin/corpus', { method: 'POST', body });
+      payload = await res.json().catch(() => ({}));
+    } catch (err) {
+      show($('corpusMsg'), message(err), 'err');
+      return;
+    }
+    if (!res.ok) {
+      show($('corpusMsg'), message(new Error(payload.error || `HTTP ${res.status}`)), 'err');
+      return;
+    }
+    const u = payload.upload;
+    show($('corpusMsg'),
+      `${u.rows} Spiele übernommen (${u.dropped} von ${u.total} Zeilen verworfen:`
+      + ' Erweiterungen, unplatzierte und zu selten bewertete).', 'ok');
+    $('corpusForm').reset();
+    loadCorpus();
+  });
+
+  $('corpusReload').addEventListener('click', loadCorpus);
+
+  $('corpusEnrich').addEventListener('click', async () => {
+    hide($('corpusMsg'));
+    show($('corpusMsg'), 'Attribute werden geladen …', 'ok');
+    let run;
+    try {
+      ({ run } = await api('/corpus/enrich', { method: 'POST' }));
+    } catch (err) {
+      show($('corpusMsg'), message(err), 'err');
+      return;
+    }
+    show($('corpusMsg'), run.asked
+      ? `${run.asked} Spiele abgefragt, ${run.enriched} beantwortet`
+        + `${run.failed ? ' — dann brach BGG ab, der Rest folgt automatisch.' : '.'}`
+      : 'Nichts offen — alle Spiele sind aktuell.', run.failed ? 'err' : 'ok');
+    loadCorpus();
+  });
 
   // ---- error/warn logs (#359) ----------------------------------------------
 
