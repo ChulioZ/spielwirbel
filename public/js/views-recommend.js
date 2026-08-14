@@ -125,12 +125,18 @@ async function showRecommendations(rid) {
   recs.forEach((rec) => {
     const reasons = (rec.reasons || []).map(recReasonText).filter(Boolean);
     const facts = recFacts(rec);
-    // No cover: a corpus row carries no image, and hotlinking one would mean a
-    // fetch per card against BGG's CDN for a screen nobody asked to load images
-    // for. The deterministic placeholder is what every coverless game already
-    // uses (.claude/rules/deterministic-cover-placeholders.md).
+    // The BGG box art (#779), hotlinked like every other provider cover
+    // (.claude/rules/provider-cover-hotlinking.md) and already gated server-side
+    // by providerCoverUrl, so `rec.image` is either a vouched-for https URL or
+    // null. On this screen the cover is the recognition cue — the reader owns
+    // none of these games, so the title is all they have to go on otherwise.
+    //
+    // coverPlaceholder() returns '' when an image is present, so the frame stays
+    // one plain interpolation for both branches
+    // (.claude/rules/deterministic-cover-placeholders.md).
+    const imgStyle = rec.image ? ` style="background-image:url('${coverUrl(rec.image, COVER_THUMB)}')"` : '';
     const card = h(`<div class="rec-card">
-         <div class="rec-card__img">${coverPlaceholder({ title: rec.title })}</div>
+         <div class="rec-card__img"${imgStyle}>${coverPlaceholder({ title: rec.title, image: rec.image })}</div>
          <div class="rec-card__body">
            <div class="rec-card__title">${esc(rec.title)}${rec.year ? ` <span class="muted">(${esc(rec.year)})</span>` : ''}</div>
            ${facts.length ? `<div class="muted rec-card__facts">${facts.join('<span class="rec-card__sep">·</span>')}</div>` : ''}

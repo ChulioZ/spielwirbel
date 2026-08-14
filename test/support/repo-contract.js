@@ -3836,7 +3836,10 @@ module.exports = function repoContract(repo) {
 
   test('updateCorpusEntries stamps the attributes and the enrichment time', async () => {
     await repo.replaceCorpus([corpusEntry(1), corpusEntry(2)], { dumpDate: 'd', uploadedAt: 'u' });
-    const info = { weight: 3.2, minPlayers: 2, maxPlayers: 4, categories: ['Economic'], bestWith: [3] };
+    // `imageUrl` is present because this is what a CURRENT enrichment writes
+    // (#779) — a row without the key is a pre-#779 one and is deliberately still
+    // pending, which the backfill spec below covers.
+    const info = { weight: 3.2, minPlayers: 2, maxPlayers: 4, categories: ['Economic'], bestWith: [3], imageUrl: 'https://cf.geekdo-images.com/x.jpg' };
     const out = await repo.updateCorpusEntries([{ externalId: 'c1', enrichedAt: '2026-08-14T11:00:00.000Z', info }]);
     assert.deepEqual(out, { updated: 1 });
 
@@ -3851,6 +3854,30 @@ module.exports = function repoContract(repo) {
     const stored = (await repo.listCorpusPending(10, '9999-12-31')).find((e) => e.externalId === 'c1');
     assert.equal(stored.enrichedAt, '2026-08-14T11:00:00.000Z');
     assert.deepEqual(stored.info, info);
+  });
+
+  test('a row enriched BEFORE covers existed is re-queued; one answered null is NOT (#779)', async () => {
+    await repo.replaceCorpus([corpusEntry(1), corpusEntry(2), corpusEntry(3)], { dumpDate: 'd', uploadedAt: 'u' });
+    const stamp = '2026-08-14T11:00:00.000Z';
+    await repo.updateCorpusEntries([
+      // c1: enriched before the cover was parsed — no imageUrl KEY at all.
+      { externalId: 'c1', enrichedAt: stamp, info: { weight: 3.2, maxPlayers: 4 } },
+      // c2: enriched since, and BGG had no thumbnail. A settled answer.
+      { externalId: 'c2', enrichedAt: stamp, info: { weight: 2.1, imageUrl: null } },
+      // c3: BGG answered nothing at all, so the row is stamped with no info.
+      // It must stay out for the same reason c2 does — re-queueing it would put
+      // it back at the head of the queue on every tick, forever (#736).
+      { externalId: 'c3', enrichedAt: stamp },
+    ]);
+
+    // A cutoff nothing is stale against, so staleness cannot account for a hit.
+    const pending = await repo.listCorpusPending(10, '2026-01-01T00:00:00.000Z');
+    assert.deepEqual(pending.map((e) => e.externalId), ['c1']);
+
+    // ...and the clause is SELF-RETIRING: one pass writes the key, null or not,
+    // and the row never matches again. Without this the queue never drains.
+    await repo.updateCorpusEntries([{ externalId: 'c1', enrichedAt: stamp, info: { weight: 3.2, maxPlayers: 4, imageUrl: null } }]);
+    assert.deepEqual(await repo.listCorpusPending(10, '2026-01-01T00:00:00.000Z'), []);
   });
 
   test('a re-uploaded dump CARRIES OVER enrichment for the ids that survive', async () => {

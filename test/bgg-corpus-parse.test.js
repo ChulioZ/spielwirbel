@@ -22,6 +22,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const bgg = require('../lib/providers/bgg');
+const { providerCoverUrl } = require('../lib/providers');
 
 const XML = fs.readFileSync(path.join(__dirname, 'fixtures', 'bgg-thing-stats.xml'), 'utf8');
 const rows = bgg.parseCorpusThing(XML);
@@ -162,6 +163,31 @@ test('a field BGG has no data for is null, never 0', () => {
   // as "the lightest game in the corpus" and win every low-complexity match.
   assert.equal(ark.weight, null);
   assert.equal(ark.minAge, null);
+});
+
+test('the box art is read off the same body, as the fit-in thumbnail (#779)', () => {
+  const ark = byId('342942');
+  const toriki = byId('417403');
+  // The THUMBNAIL, never <image>: the master is 68 KB – 2 MB and BGG's transform
+  // paths are signed, so the right-sized variant can only be picked here
+  // (.claude/rules/provider-cover-sizing.md).
+  assert.match(ark.imageUrl, /^https:\/\/cf\.geekdo-images\.com\//);
+  assert.ok(ark.imageUrl.includes('/fit-in/200x150/'), ark.imageUrl);
+  assert.notEqual(toriki.imageUrl, ark.imageUrl);
+  // It must survive the write gate the route applies before it reaches a card —
+  // BGG's real paths carry `filters:strip_icc()`, and an over-strict guard that
+  // refused parens would silently drop every cover with nothing logged.
+  assert.equal(providerCoverUrl(ark.imageUrl), ark.imageUrl);
+});
+
+test('a game BGG has no thumbnail for is null — a settled answer, not a gap', () => {
+  // Deliberately MODIFIED, like the poll-absent body below: BGG serves a
+  // thumbnail for both captured items, so absence cannot be fetched. null here
+  // is what listCorpusPending's backfill clause must NOT re-queue — it tests for
+  // the key's absence precisely so this row is answered once and left alone.
+  const [ark] = bgg.parseCorpusThing(XML.replace(/<thumbnail>[^<]*<\/thumbnail>/, ''));
+  assert.equal(ark.imageUrl, null);
+  assert.ok('imageUrl' in ark, 'the key is written even when the answer is null');
 });
 
 test('corpus() asks in batches of at most 20 and reports what it asked', async () => {
