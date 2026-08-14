@@ -36,7 +36,7 @@ const RAIL_SETTINGS_SUB = ['settings', 'tags', 'design'];
 // Round sub-screens that have their OWN rail entry. On these, that entry is
 // marked current and no section is — the alternative (highlighting the section
 // that owns them, as the strip must) would light up two things at once.
-const RAIL_OWN_ENTRY = ['retired', 'completed', 'wishlist', ...RAIL_SETTINGS_SUB];
+const RAIL_OWN_ENTRY = ['retired', 'completed', 'wishlist', 'recommendations', ...RAIL_SETTINGS_SUB];
 
 // One rail row. `sub` decides the marker, and the two states are NOT
 // interchangeable — the same distinction the sections below draw (#331):
@@ -169,6 +169,24 @@ function buildRoundRail(round, activeTab, sub) {
     path: roundPath(rid, 'wishlist'),
     onNav: () => showWishlist(rid),
     current: ownEntry === 'wishlist',
+  }));
+  // Recommendations (#682) sit in this group rather than in a fourth one: the
+  // label is literally "Nicht im Regal", and a game the round does not own is
+  // the furthest thing from being on the shelf. It carries no count — the other
+  // three number the round's OWN games, while this one would number a list the
+  // round has never seen, which is a promise rather than an inventory.
+  //
+  // It MUST be here, not only in the Regal footer: that footer is `rail-owned`,
+  // so from 1280px up it is display:none and the rail is the only way in. #682
+  // shipped without this row and the feature was unreachable on a desktop-width
+  // window — see .claude/rules/responsive-content-width.md, which is exactly the
+  // "walk the width transitions" check that was skipped.
+  archive.appendChild(railItem({
+    icon: 'ti-sparkles',
+    label: t('suggest.link'),
+    path: roundPath(rid, 'recommendations'),
+    onNav: () => showRecommendations(rid),
+    current: ownEntry === 'recommendations',
   }));
   rail.appendChild(archive);
 

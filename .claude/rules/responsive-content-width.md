@@ -161,6 +161,27 @@ source order just as surely as the rail's hides did. One of the two losses left 
 control with no accessible name at all. Same remedy, same reason:
 `.claude/rules/flex-none-cancels-flex-wrap.md`.
 
+## A link added to something `rail-owned` needs a RAIL entry too — or it exists only below 1280px
+
+The five hides above are not merely cosmetic: the Regal's footer is one of them,
+so from 1280px up **the rail is the only way into every screen that footer links
+to**. Adding a row to the footer alone therefore ships a screen that is
+unreachable on a desktop-width window, with nothing red anywhere — the footer is
+correct, the screen is correct, and the width that hides one and not the other is
+the state nobody rendered.
+
+#682 did exactly that: its recommendations screen was reachable from the footer
+and absent from the rail, verified in a browser at 1180px and 390px — **both
+below the breakpoint**, so the check that existed could not see it. That is this
+file's own "measure the transition, not the screen" advice, skipped by walking
+two points on the same side of the transition.
+
+`test/rail-footer-parity.test.js` now asserts the footer's link set is a subset
+of the rail's, so the next such screen is covered without anyone remembering.
+Write the assertion as **parity**, never as "the new row exists": the parity form
+covers additions to either surface, and the anti-vacuous floor (the footer really
+did render ≥4 links) is what stops it going quiet if the footer is refactored.
+
 ## What survived from #332, and why
 
 - **The phone Regal is two columns.** A 220px floor needs 456px for two, so
