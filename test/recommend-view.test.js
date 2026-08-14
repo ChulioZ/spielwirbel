@@ -88,6 +88,28 @@ test('a recommendation renders its title, its BGG facts and its reason lines', a
   assert.equal(card.querySelector('a.link-btn').getAttribute('href'), 'https://boardgamegeek.com/boardgame/999');
 });
 
+test('the BGG cover is painted on the frame, and a coverless row keeps the placeholder (#779)', async (t) => {
+  const cover = 'https://cf.geekdo-images.com/abc__small/img/x=/fit-in/200x150/filters:strip_icc()/pic1.jpg';
+  const { dom } = await render(t, full({
+    recommendations: [
+      rec({ externalId: '999', title: 'Ark Nova', image: cover }),
+      rec({ externalId: '998', title: 'Toriki', image: null }),
+    ],
+  }));
+
+  const [withCover, without] = [...dom.app.querySelectorAll('.rec-card__img')];
+  // The frame paints it; geekdo signs its transform paths, so coverUrl() leaves
+  // the URL untouched rather than appending a size query
+  // (.claude/rules/provider-cover-sizing.md).
+  assert.ok(withCover.style.backgroundImage.includes(cover), withCover.style.backgroundImage);
+  // ...and the placeholder is GONE, not merely covered up — it paints its own
+  // gradient layer, which would otherwise sit on top of the box art.
+  assert.equal(withCover.querySelector('.cover-ph'), null);
+
+  assert.equal(without.style.backgroundImage, '');
+  assert.ok(without.querySelector('.cover-ph'), 'a coverless row still gets the deterministic placeholder');
+});
+
 test('a reason the client has no phrase for renders NOTHING, never a raw key', async (t) => {
   const { dom } = await render(t, full({
     recommendations: [rec({ reasons: [{ term: 'from-a-newer-server' }, { term: 'quality', rating: 8.4 }] })],

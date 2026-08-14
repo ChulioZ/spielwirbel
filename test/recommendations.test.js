@@ -96,6 +96,32 @@ test('a round with a profile gets ranked recommendations, each with a reason and
   assert.equal(res.body.minProfileGames, MIN_PROFILE_GAMES);
 });
 
+test('the corpus row\'s cover reaches the card, gated by the host allowlist (#779)', async () => {
+  const cover = 'https://cf.geekdo-images.com/abc__small/img/x=/fit-in/200x150/filters:strip_icc()/pic1.jpg';
+  const round = await seedRound();
+  await seedCorpus([
+    ...ownedRows(),
+    { externalId: '999', name: 'With cover', rank: 40, bayesRating: 8.4, info: info({ imageUrl: cover }) },
+    { externalId: '998', name: 'No cover', rank: 41, bayesRating: 8.3, info: info({ imageUrl: null }) },
+    // A host no provider vouches for. It cannot arrive from parseCorpusThing —
+    // this is the shape a future parser change, or a hand-edited row, could
+    // produce, and it must degrade to the placeholder rather than being
+    // interpolated into background-image:url('…') on the client.
+    { externalId: '997', name: 'Untrusted host', rank: 42, bayesRating: 8.2, info: info({ imageUrl: 'https://evil.example/x.jpg' }) },
+    { externalId: '996', name: 'Quote injection', rank: 43, bayesRating: 8.1, info: info({ imageUrl: "https://cf.geekdo-images.com/a.jpg');background:url('x" }) },
+  ]);
+
+  const res = await request(app).get(`/api/rounds/${round.id}/recommendations`);
+  assert.equal(res.status, 200);
+  const by = Object.fromEntries(res.body.recommendations.map((r) => [r.externalId, r.image]));
+  // Verbatim: BGG's real paths carry parens, which providerCoverUrl allows on
+  // purpose (.claude/rules/provider-cover-hotlinking.md).
+  assert.equal(by['999'], cover);
+  assert.equal(by['998'], null);
+  assert.equal(by['997'], null);
+  assert.equal(by['996'], null);
+});
+
 test('a game already on the shelf is never recommended back', async () => {
   const round = await seedRound();
   await seedCorpus([...ownedRows(), { externalId: '999', name: 'Great Match', rank: 40, bayesRating: 8.4, info: info() }]);
