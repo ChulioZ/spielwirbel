@@ -60,7 +60,39 @@ test('parseRanksCsv keeps the ranked base games and drops the rest', () => {
   ]));
   assert.deepEqual(out.entries.map((e) => e.externalId), ['13', '342942']);
   assert.equal(out.total, 5);
-  assert.equal(out.dropped, 3);
+  assert.equal(out.filtered, 3);
+  assert.equal(out.overCap, 0);
+});
+
+test('rows lost to the FILTERS and rows lost to the CAP are counted apart', () => {
+  // The bug this replaced: one `dropped` number, reported to the operator as
+  // "Erweiterungen, unplatzierte und zu selten bewertete". On a real 180k-row
+  // dump that attributed the cap's work to the filters, so the panel claimed
+  // 175,000 rows were unusable while an unknown share of them were ordinary
+  // games — hiding the only number that says whether the cap is set right.
+  const prev = process.env.BGG_CORPUS_SIZE;
+  process.env.BGG_CORPUS_SIZE = '2';
+  try {
+    const out = corpus.parseRanksCsv(csv([
+      { id: 1, name: 'Kept', rank: 1 },
+      { id: 2, name: 'Kept too', rank: 2 },
+      { id: 3, name: 'Eligible but over the cap', rank: 3 },
+      { id: 4, name: 'Also over the cap', rank: 4 },
+      { id: 5, name: 'An expansion', rank: 5, expansion: 1 },
+      { id: 6, name: 'Unranked', rank: 0 },
+    ]));
+    assert.equal(out.total, 6);
+    assert.equal(out.entries.length, 2);
+    // Two were never candidates …
+    assert.equal(out.filtered, 2);
+    // … and two lost only to BGG_CORPUS_SIZE. Under one combined number both
+    // of these would read as 4, and the message would blame the filters.
+    assert.equal(out.overCap, 2);
+    // The three account for the whole file, or one of them is quietly wrong.
+    assert.equal(out.entries.length + out.filtered + out.overCap, out.total);
+  } finally {
+    if (prev === undefined) delete process.env.BGG_CORPUS_SIZE; else process.env.BGG_CORPUS_SIZE = prev;
+  }
 });
 
 test('a title containing a comma survives the parse intact', () => {
@@ -119,7 +151,11 @@ test('uploading a dump stores it and reports the counts and the dump date', asyn
   ]));
   assert.equal(res.status, 200);
   assert.equal(res.body.upload.rows, 2);
-  assert.equal(res.body.upload.dropped, 1);
+  assert.equal(res.body.upload.filtered, 1);
+  assert.equal(res.body.upload.overCap, 0);
+  // The card phrases the over-cap line against the ceiling, so the route has to
+  // hand it over with the counts.
+  assert.equal(res.body.corpus.limit, corpus.corpusSize());
   // BGG puts the date on the ZIP, not on the CSV inside it — so it is read off
   // the uploaded file name when it survived, and is null otherwise.
   assert.equal(res.body.upload.dumpDate, '2026-08-01');
