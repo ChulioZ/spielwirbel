@@ -58,9 +58,14 @@ Two consequences worth stating, because both look like regressions:
   `demo`/`demoExpiresAt` from the stored record, which `createDemoAccount`
   writes. Restating it in the route would let the banner read a flag that
   disagrees with what `/me` reports on the very next load.
-- **The passkey route projects `{ ...user, identities }`**, the same object it
-  mints the session from — not the pre-write `user`, whose identities are stale
-  by that point.
+- **The passkey route projects `{ ...user, identities }`** — the same object it
+  mints the session from, rather than the pre-write `user` whose identities are
+  stale by that point. That makes **no difference to the output today**, since the
+  projection exposes nothing identity-derived; it is there so it stays correct if
+  it ever does (a "this account has a passkey" field is the obvious candidate).
+  Don't read it as load-bearing, and don't "simplify" it either — the cost is one
+  spread and the alternative is a payload built from a record the route has
+  already superseded.
 
 ## The test that keeps it true
 
