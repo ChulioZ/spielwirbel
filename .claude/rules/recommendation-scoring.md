@@ -97,6 +97,29 @@ here from `round.members` would silently drop guests and flatten teams, so
   retired is the sharpest of the five: they explicitly got rid of it. A test
   covers all four off-shelf states, because the natural implementation filters
   the *active* shelf and quietly recommends a retired game back.
+
+  **"Already known" and "shapes the profile" are two different lists (#776), and
+  one loop in `buildProfile` builds both.** A **wished** game is in the first and
+  not the second: it must never be recommended back, and it must contribute
+  nothing — no vector component, no pull on the complexity/time targets, no
+  novelty comparison, no reason contributor, and no place in either count. It had
+  carried affinity **1.5**, the *top* of the `gameAffinity` ladder, on the
+  argument that a want with no play data beats a game sitting unplayed. True
+  about wanting, wrong as an input: a wish is not a statement about what the group
+  likes to **play**, and the reader cannot verify it against their own shelf — so
+  the list a round saw was steered hardest by games it does not own, and
+  „Ähnliche Mechaniken wie X" routinely named one of them, on a screen whose
+  entire premise is games you do not own. `gameAffinity` therefore has **no wish
+  rung at all** rather than an unreachable branch; the filter happens one level
+  up. Adding one back is the obvious-looking omission this paragraph exists to
+  stop.
+
+  **Both counts move, and that is load-bearing** — §6's four empty states are
+  picked from them. Wishes counted in `linkedGames` would send a round of ten
+  wishes and two owned games to `unknownGames` ("the database does not know your
+  shelf") when the true answer is `fewGames`, the one state carrying the
+  BGG-import button. Verify `linkedGames` **and** `profileGames`, never just the
+  list.
 - **An un-enriched corpus row is dropped**, since it carries no attributes at all
   — it could be neither scored nor explained. The response still reports
   `corpusRows` over the whole corpus, which is what lets the screen tell "your

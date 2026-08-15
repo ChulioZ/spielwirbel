@@ -125,7 +125,7 @@ const delta = (profile, a, b) =>
 
 /* -------------------------------- affinities ------------------------------- */
 
-test('a game state outranks its ratings, and the ladder is retired < owned < rated-high < wished', () => {
+test('a game state outranks its ratings, and the ladder is retired < rated-low < owned < rated-high', () => {
   const round = {
     members: [],
     sessions: [
@@ -144,7 +144,6 @@ test('a game state outranks its ratings, and the ladder is retired < owned < rat
   // A retired game usually carries votes; letting them speak would make "we
   // threw this out" read as an ordinary five-star opinion.
   assert.equal(gameAffinity(round, g('gr', { retired: true })), -0.5);
-  assert.equal(gameAffinity(round, g('gw', { wish: true })), 1.5);
   assert.equal(gameAffinity(round, g('ghigh')), 2, 'rated 5 -> 2.0');
   assert.equal(gameAffinity(round, g('glow')), 0, 'rated 1 -> 0.0');
   assert.equal(gameAffinity(round, g('gnone')), 1, 'owned, unrated -> neutral 1.0');
@@ -450,6 +449,107 @@ test('each recommendation names up to three terms that actually earned it', () =
   assert.equal(rec.reasons[0].rating, 8.4);
   assert.equal(rec.reasons[1].weight, 3);
   assert.equal(rec.reasons[2].players, 4);
+});
+
+/* ------------------------------- wished games ------------------------------ */
+/*
+ * A wish is a want, not a statement about what the group likes to PLAY (#776).
+ * It used to sit at the TOP of the affinity ladder (1.5, above every rated
+ * game), so the list a round saw was steered hardest by games it does not own —
+ * on a screen whose entire premise is "games you do not own".
+ *
+ * The four cases below are one behaviour seen from four sides, because this file
+ * fails by ranking: the profile, the reason lines, the novelty penalty and the
+ * counts are all derived from the same list, and a wish leaking back into any of
+ * them produces a plausible wrong list rather than an error.
+ */
+
+// One wished game the shelf resembles in NOTHING — a foreign mechanic, a foreign
+// category, twice the complexity and four times the length. Any leak into the
+// profile moves all four at once.
+const WISH_ID = 'x-wish';
+const wishGame = () => ({ id: 'gw', title: 'Wished', wish: true, source: { provider: 'bgg', externalId: WISH_ID } });
+const wishRow = (over = {}) =>
+  entry(WISH_ID, {
+    name: 'Wished classic',
+    info: info({ mechanics: ['M-wish'], categories: ['C-wish'], weight: 5, maxPlaytime: 240, ...over }),
+  });
+
+test('a WISHED game shapes nothing in the profile — vectors, targets or counts', () => {
+  const without = profileOf(shelfRound(), shelfCorpus());
+  const round = shelfRound();
+  round.games.push(wishGame());
+  const withWish = profileOf(round, [...shelfCorpus(), wishRow()]);
+
+  assert.deepEqual(withWish.mechanics, without.mechanics, 'no mechanic vector component');
+  assert.deepEqual(withWish.categories, without.categories, 'no category vector component');
+  assert.equal(withWish.targetWeight, without.targetWeight, 'no pull on the complexity target');
+  assert.equal(withWish.targetTime, without.targetTime, 'no pull on the playtime target');
+  assert.equal(withWish.linkedGames, without.linkedGames, 'linkedGames excludes the wish');
+  assert.equal(withWish.profileGames, without.profileGames, 'profileGames excludes the wish');
+
+  // The consequence that matters: the ranking is identical, term for term. A
+  // candidate built out of the WISH's attributes is the sharpest probe — it is
+  // the one a leaked wish would promote hardest.
+  const candidate = entry('c', { info: info({ mechanics: ['M-wish'], categories: ['C-wish'], weight: 5, maxPlaytime: 240 }) });
+  assert.equal(scoreCandidate(withWish, candidate).score, scoreCandidate(without, candidate).score);
+
+  // …but it is still known, so it is still never recommended back. That filter
+  // is the one thing a wish must keep doing.
+  assert.ok(withWish.ownedIds.has(WISH_ID));
+});
+
+test('a reason line can never name a wished game', () => {
+  const round = shelfRound();
+  round.games.push(wishGame());
+  // The wish shares BOTH mechanics with the candidate where every owned game
+  // shares one, so `topContributors` ranked it first and the card read
+  // „Ähnliche Mechaniken wie Wished" — naming a game the round does not have, on
+  // a screen whose whole list is games the round does not have.
+  //
+  // The shared M1 is load-bearing, not scenery: a candidate carrying the wish's
+  // mechanic ALONE scores ~0.19 after the rescale, fails the `> NEUTRAL`
+  // admission gate (§2), and emits no mechanics reason at all — so the
+  // assertion would pass against the unfixed code for a reason that has nothing
+  // to do with wishes. Measured while writing this.
+  const out = recommend(round, [
+    ...shelfCorpus(),
+    wishRow({ mechanics: ['M1', 'M-wish'], categories: ['C1'] }),
+    entry('cand', { info: info({ mechanics: ['M1', 'M-wish'], categories: ['C1'] }) }),
+  ]);
+  const [rec] = out.recommendations.filter((r) => r.externalId === 'cand');
+  const mechanics = rec.reasons.find((r) => r.term === 'mechanics');
+  assert.ok(mechanics, 'the mechanics reason still fires — this case is about WHO it names');
+  assert.deepEqual(mechanics.games, ['Owned 1', 'Owned 2']);
+  assert.deepEqual(rec.reasons.flatMap((r) => r.games || []).filter((g) => g === 'Wished'), []);
+});
+
+test('the NOVELTY penalty does not fire against a wished game', () => {
+  const round = shelfRound();
+  round.games.push(wishGame());
+  const profile = profileOf(round, [...shelfCorpus(), wishRow()]);
+  // A reimplementation of something on the WUNSCHLISTE is not "you already own
+  // this in different clothes" — it is a second route to a game they still want.
+  const reprint = entry('c', { info: info({ implementations: ['Wished classic'] }) });
+  assert.equal(delta(profile, entry('d', { info: info() }), reprint), 0);
+});
+
+test('a shelf of mostly wishes falls UNDER the profile floor rather than profiling the wishes', () => {
+  const round = shelfRound();
+  // Two owned games and six wishes: eight BGG-linked games, of which only two
+  // say anything about what this round plays.
+  round.games = round.games.map((g, i) => (i < 2 ? g : { ...g, wish: true }));
+  const out = recommend(round, [...shelfCorpus(), entry('cand', { info: info() })]);
+
+  assert.deepEqual(out.recommendations, [], 'better nothing than a list built from games they do not own');
+  assert.equal(out.linkedGames, 2);
+  assert.equal(out.profileGames, 2);
+  // BOTH counts matter, and this is why: recEmptyKey() (public/js/views-recommend.js)
+  // reads `linkedGames` first. Had the wishes stayed counted there, 8 >= 8 would
+  // have sent the reader to `unknownGames` — "the database does not know your
+  // shelf" — when the true answer is `fewGames`, the one state carrying the
+  // BGG-import button (.claude/rules/recommendation-scoring.md §6).
+  assert.ok(out.linkedGames < out.minProfileGames, 'the fewGames state, not unknownGames');
 });
 
 test('a mechanics reason NAMES the owned games it was derived from', () => {
