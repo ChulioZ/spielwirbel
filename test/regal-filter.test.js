@@ -13,7 +13,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { bodyOf, rulesOf, mediaBlocks, whole } = require('./support/css');
+const { bodyOf, rulesOf, mediaBlocks, whole, RULES } = require('./support/css');
 
 // The @media blocks that govern the Regal filter — identified by scoping rules
 // to `.regal-filter` (the dock's own 859/860 blocks never mention it).
@@ -68,23 +68,23 @@ test('the AND/OR mode control (#726) collapses WITH the chips it governs', () =>
   assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
   const rules = rulesOf(narrow[1]);
   assert.match(bodyOf('.regal-filter .tag-mode', rules) || '', /display:\s*none/);
-  assert.match(bodyOf('.regal-filter.is-open .tag-mode:not([hidden])', rules) || '',
-    /display:\s*flex/);
+  assert.match(bodyOf('.regal-filter.is-open .tag-mode', rules) || '', /display:\s*flex/);
 });
 
-test('the open-panel rule must not beat the hidden attribute (#726)', () => {
-  // `.tag-mode` is `display: flex`, so `.tag-mode[hidden]` (0,2,0) is what hides
-  // it on a round with fewer than two included tags. A reveal written as
-  // `.regal-filter.is-open .tag-mode` is (0,3,0) and would win — showing an
-  // empty two-option control over a filter it cannot apply to. The `:not()` is
-  // what stops the two competing at all, so its ABSENCE is the failure to catch.
-  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
-  const offenders = rulesOf(narrow[1]).filter(([sel, body]) =>
-    sel === '.regal-filter.is-open .tag-mode' && /display:/.test(body));
-  assert.deepEqual(offenders, [],
-    'the reveal must be guarded with :not([hidden]) rather than unconditional');
-  // And the guard it is protecting has to exist in the first place.
-  assert.match(bodyOf('.tag-mode[hidden]') || '', /display:\s*none/);
+test('the mode control is never hidden by attribute any more (#787)', () => {
+  // #726 hid the control below two included tags, which reflowed the chip row
+  // mid-cycle; it is now always rendered and merely inert. Two rules existed
+  // ONLY to make that attribute win a cascade fight — `.tag-mode[hidden]`
+  // against its own `display: flex`, and the `:not([hidden])` guard on the
+  // Regal's open-panel reveal (`hidden-attribute-vs-display-rule.md` §3). Both
+  // are dead now, and a dead `[hidden]` rule is worse than none: it reads as a
+  // live guard, so the next person to reach for `el.hidden` here would find the
+  // CSS already "handled" and reintroduce the reflow with nothing going red.
+  const offenders = RULES.filter(([sel]) => /\.tag-mode[^\s,{]*\[hidden\]/.test(sel));
+  assert.deepEqual(offenders.map(([sel]) => sel), [],
+    'no rule may still gate .tag-mode on the hidden attribute');
+  // And the state that replaced it has to be styled, or "inert" is invisible.
+  assert.match(bodyOf('.tag-mode--inert .tag-mode__opt') || '', /cursor:\s*default/);
 });
 
 test('the mode control collapse is scoped to the Regal, not the shared class', () => {
