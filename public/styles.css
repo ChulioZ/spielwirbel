@@ -1130,11 +1130,12 @@ h1, h2, h3 { font-family: var(--font-display); }
    these are a control OVER the chips, and at chip size they read as two more
    tags in the row. */
 .tag-mode { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 2px 0 8px; }
-/* `display: flex` above is an author rule and beats the UA sheet's
-   `[hidden] { display: none }` at any specificity, so the control would keep its
-   box and its margin on every round with fewer than two included tags — the same
-   trap `.filter-chips[hidden]` two rules up records. */
-.tag-mode[hidden] { display: none; }
+/* Below two included tags the control keeps its box and goes inert (#787) — it
+   used to carry `hidden`, which reflowed the chip row underneath it mid-cycle.
+   Muted and unhoverable, but NOT re-coloured: the selected option must keep
+   painting as selected, and the state that matters to assistive tech rides on
+   the options' native `disabled` rather than on any of this. */
+.tag-mode--inert .tag-mode__opt { opacity: 0.55; cursor: default; }
 .tag-mode__opt {
   display: inline-flex;
   align-items: center;
@@ -1153,7 +1154,7 @@ h1, h2, h3 { font-family: var(--font-display); }
    modes cannot resize either pill — and so the selection is carried by a shape
    as well as by the fill (.claude/rules/accessibility-contrast-and-modals.md §3). */
 .tag-mode__opt .ti { font-size: var(--text-sm); visibility: hidden; }
-.tag-mode__opt:hover { border-color: var(--brand-edge); }
+.tag-mode__opt:not(:disabled):hover { border-color: var(--brand-edge); }
 /* --brand-dark, not --brand: the accent ON a brand tint measures 4.33–4.92:1
    across the eight themes and fails AA on four of them
    (.claude/rules/theme-derived-colors.md). */
@@ -1221,12 +1222,11 @@ h1, h2, h3 { font-family: var(--font-display); }
   .regal-filter.is-open .tag-bulk { display: inline-block; }
   /* The mode control (#726) collapses with the chips for the same reason the
      bulk toggle does — it governs chips the user cannot see while the panel is
-     shut. `:not([hidden])` is load-bearing: `.regal-filter.is-open .tag-mode`
-     alone is (0,3,0) and would beat `.tag-mode[hidden]` (0,2,0), so an open
-     panel would show the control on a round with fewer than two included tags,
-     which is the one place the attribute has to win. */
+     shut. The reveal used to carry a `:not([hidden])` guard so it could not beat
+     `.tag-mode[hidden]`; since #787 the control is never hidden, only inert, so
+     there is no attribute left for this rule to outrank. */
   .regal-filter .tag-mode { display: none; }
-  .regal-filter.is-open .tag-mode:not([hidden]) { display: flex; margin-top: 10px; }
+  .regal-filter.is-open .tag-mode { display: flex; margin-top: 10px; }
 }
 @media (min-width: 860px) {
   .regal-filter .filter-toggle { display: none; }

@@ -415,7 +415,7 @@ function paintTagChip(chip, name, state, tagIcon, mode = 'all') {
 //
 // `state` is the screen's own filter state object; the control reads and writes
 // its `tagMode` key in place, so the choice survives while the control is
-// hidden. That matters: with fewer than two included tags the two modes draw the
+// inert. That matters: with fewer than two included tags the two modes draw the
 // same pool, so the control would be noise — but dropping to one tag and adding
 // another back must restore what the user picked, not silently reset it.
 //
@@ -424,10 +424,10 @@ function paintTagChip(chip, name, state, tagIcon, mode = 'all') {
 // roving. `aria-pressed` plus a check glyph carry the selection, so it is never
 // conveyed by colour alone (.claude/rules/accessibility-contrast-and-modals.md).
 //
-// Returns { el, sync }: `sync` re-reads the map and shows or hides the control,
-// so every chip click and the bulk toggle must call it.
+// Returns { el, sync }: `sync` re-reads the map and enables or inerts the
+// control, so every chip click and the bulk toggle must call it.
 function renderTagModeToggle(state, map, onChange) {
-  const el = h(`<div class="tag-mode" role="group" aria-label="${esc(t('tags.filter.modeLabel'))}" hidden></div>`);
+  const el = h(`<div class="tag-mode" role="group" aria-label="${esc(t('tags.filter.modeLabel'))}"></div>`);
   const opts = [['all', 'tags.filter.modeAll'], ['any', 'tags.filter.modeAny']].map(([mode, key]) => {
     const btn = h(`<button type="button" class="tag-mode__opt"><i class="ti ti-check" aria-hidden="true"></i>${esc(t(key))}</button>`);
     btn.addEventListener('click', () => {
@@ -444,7 +444,19 @@ function renderTagModeToggle(state, map, onChange) {
     btn.classList.toggle('is-on', on);
     btn.setAttribute('aria-pressed', String(on));
   });
-  const sync = () => { el.hidden = includedTagCount(map) < 2; };
+  // Below two included tags the two modes mean the same thing, so the control is
+  // useless — but it must NOT leave the flow (#787). It sits above the chip row,
+  // and the tri-state cycle necessarily walks the included count across that
+  // boundary, so hiding it moved the chips ~30px between the two clicks one
+  // cycle needs and the second click landed on a different tag. Inert instead:
+  // native `disabled` keeps it unclickable and out of the Tab order (and states
+  // that to assistive tech), while `paint()` above keeps the current pick
+  // showing — the state it holds still applies the moment a second tag joins.
+  const sync = () => {
+    const off = includedTagCount(map) < 2;
+    el.classList.toggle('tag-mode--inert', off);
+    opts.forEach(({ btn }) => { btn.disabled = off; });
+  };
   paint();
   sync();
   return { el, sync };

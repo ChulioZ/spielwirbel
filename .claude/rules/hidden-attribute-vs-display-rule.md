@@ -42,9 +42,16 @@ regression will look like it came from your sizing change, not from a missing
 
 ## The third instance (#726): the PAIRED RULE can itself be outranked
 
-`.tag-mode[hidden]` is (0,2,0) — an attribute selector counts in the class
-column — so it beats its own `.tag-mode { display: flex }` (0,1,0) and the rule
-above is satisfied. It is still not enough the moment a **descendant** rule
+**Historical — the code no longer carries it.** #787 stopped hiding `.tag-mode`
+at all (it reflowed the chip row under it mid-cycle; it is rendered inert now),
+so both `.tag-mode[hidden]` and the `:not([hidden])` guard below are **gone from
+`styles.css`** and `test/regal-filter.test.js` asserts they stay gone. Don't grep
+for them. The cascade lesson is what survives, and it binds any future element
+that *is* hidden by attribute inside a container with a reveal state.
+
+`.tag-mode[hidden]` was (0,2,0) — an attribute selector counts in the class
+column — so it beat its own `.tag-mode { display: flex }` (0,1,0) and the rule
+above was satisfied. That is still not enough the moment a **descendant** rule
 reveals the element:
 
 ```css
@@ -53,9 +60,9 @@ reveals the element:
 ```
 
 The Regal collapses its whole filter panel below 860px and reveals it on
-`.is-open`, so the reveal is *more specific than the guard* and puts the
-attribute back to being decoration — here, an empty two-option control offered
-over a filter it cannot apply to.
+`.is-open`, so the reveal was *more specific than the guard* and put the
+attribute back to being decoration — there, an empty two-option control offered
+over a filter it could not apply to.
 
 **So the guard belongs on the REVEAL, not only on the base rule.** Add
 `:not([hidden])` to any selector that switches such an element back on; the two
