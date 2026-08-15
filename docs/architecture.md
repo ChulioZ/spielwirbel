@@ -171,6 +171,12 @@ lib/
                      per-recipient throttle and coalescing
   legal.js           server-rendered Impressum / privacy policy /
                      Nutzungsbedingungen in DE + EN (issues #134/#140)
+  me-projection.js   the ONE description of what a client may see about an
+                     account (issue #785) — answered by GET /me and by all
+                     three endpoints that start a session (password login,
+                     passkey login, demo), so the client's `accountUser` is
+                     never missing a field, and so the stored record's hashes
+                     and challenges cannot leak through a hand-built payload
   canonical.js       301s the branded non-canonical domains onto one origin
                      (issue #230; an allowlist, never an inverse rule)
   validate.js        zod request-body schemas applied at the router boundary

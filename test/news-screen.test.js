@@ -169,6 +169,28 @@ test('an account predating the field (null) is behind, so it IS dotted', async (
   assert.equal(dot().hidden, false);
 });
 
+test('#785: a session-start payload that OMITS the stamp dots a caught-up account', async (t) => {
+  // The mechanism behind #785, pinned from the client end. `accountUser` is
+  // seated straight from whatever started the session (login, passkey login or
+  // demo) and only refreshed from /me on the next cold load — so a payload that
+  // hand-builds a small user object reads `undefined` here and dots an account
+  // that is provably up to date. The server-side fix is the three key-parity
+  // specs in test/account.test.js and test/passkeys.test.js; this is why they
+  // matter.
+  const { dom, dot } = boot(t, { entries: [ENTRY], lastSeen: '2026-08-20' });
+  dom.context.__stale = { id: 'u1', username: 'ada', email: 'a@example.com' }; // no stamp
+  dom.run('accountUser = __stale');
+  dom.call('setupAccountUi');
+  assert.equal(dot().hidden, false, 'an absent key is indistinguishable from "never seen"');
+
+  // …and the same account, seated from a FULL projection, does not dot. Both
+  // halves are the assertion: the first alone would pass against a client that
+  // dots unconditionally.
+  dom.run(`accountUser = { ...__stale, lastSeenNewsRevision: '2026-08-20' }`);
+  dom.call('setupAccountUi');
+  assert.equal(dot().hidden, true);
+});
+
 test('with the list EMPTY no dot can ever appear, whatever the account holds', async (t) => {
   // The state a self-hosted instance with no entries is in. Both stamps are
   // exercised, because an

@@ -416,6 +416,14 @@ test('a passkey signs in without an identifier, minting the same session a passw
   assert.equal(me.status, 200);
   assert.equal(me.body.id, session.uid);
 
+  // …and this response carries the SAME account shape /me does (#785). The
+  // client seats `accountUser` from whatever started the session, so a field
+  // omitted here reads as `undefined` for the rest of it — which is how the
+  // „Was ist neu" dot (#741) re-lit after every sign-in. Derived from /me rather
+  // than restated, so the two lists cannot drift apart
+  // (.claude/rules/shared-constants-across-the-stack.md).
+  assert.deepEqual(Object.keys(res.body.user).sort(), Object.keys(me.body).sort());
+
   // The stored credential is what was verified against, and the counter and
   // last-used stamp are written back.
   assert.equal(Buffer.from(captured.verifyAuthentication.credential.publicKey).toString('base64url'),

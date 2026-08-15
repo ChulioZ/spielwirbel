@@ -1192,6 +1192,52 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   assert.equal((await request(app).patch('/api/account/me').send({ bggUsername: 'x' })).status, 401);
 });
 
+/* ------------- the session-start responses answer /me's shape (#785) -------- */
+
+// The client seats `accountUser` straight from whatever started the session, and
+// only refreshes it from /me on the next cold load. So a field the login/demo/
+// passkey payloads omit reads as `undefined` for a whole logged-in session — how
+// the „Was ist neu" dot (#741) came back after every login although the stored
+// stamp was correct.
+//
+// The key list is DERIVED from /me rather than restated: a second hand-copied
+// list here would be the very drift this pins against, one layer further out
+// (.claude/rules/shared-constants-across-the-stack.md).
+test('POST /login answers exactly the /me projection (#785)', async () => {
+  const acc = await freshAccount('login-projection@example.com');
+  const login = await request(app).post('/api/account/login')
+    .send({ email: 'login-projection@example.com', password: PASSWORD });
+  assert.equal(login.status, 200);
+
+  const me = await getMe(acc.accessToken);
+  assert.deepEqual(Object.keys(login.body.user).sort(), Object.keys(me.body).sort());
+  // Not just the keys: the values a fresh login reports must be the stored ones.
+  assert.deepEqual(login.body.user, me.body);
+});
+
+test('POST /demo answers exactly the /me projection, and stays a demo (#785)', async () => {
+  process.env.DEMO_ENABLED = 'true';
+  try {
+    const res = await request(app).post('/api/account/demo').send({ locale: 'de' });
+    assert.equal(res.status, 200);
+
+    const me = await getMe(res.body.accessToken);
+    assert.deepEqual(Object.keys(res.body.user).sort(), Object.keys(me.body).sort());
+
+    // The persistent demo banner reads both off `accountUser`, so the projection
+    // has to derive them from the stored record rather than the route restating
+    // `demo: true` by hand.
+    assert.equal(res.body.user.demo, true);
+    assert.ok(res.body.user.demoExpiresAt, 'carries an expiry');
+
+    // A demo is minted at the current revision, so it must never dot — the one
+    // account shape where the seen-state is set before the session even starts.
+    assert.equal(res.body.user.lastSeenNewsRevision, me.body.lastSeenNewsRevision);
+  } finally {
+    delete process.env.DEMO_ENABLED;
+  }
+});
+
 /* ------------------- the BG Stats push opt-in (#485) ----------------------- */
 
 test('the BG Stats opt-in is OFF until the account turns it on (#485)', async () => {
