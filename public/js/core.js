@@ -415,7 +415,7 @@ function paintTagChip(chip, name, state, tagIcon, mode = 'all') {
 //
 // `state` is the screen's own filter state object; the control reads and writes
 // its `tagMode` key in place, so the choice survives while the control is
-// hidden. That matters: with fewer than two included tags the two modes draw the
+// inert. That matters: with fewer than two included tags the two modes draw the
 // same pool, so the control would be noise — but dropping to one tag and adding
 // another back must restore what the user picked, not silently reset it.
 //
@@ -424,8 +424,8 @@ function paintTagChip(chip, name, state, tagIcon, mode = 'all') {
 // roving. `aria-pressed` plus a check glyph carry the selection, so it is never
 // conveyed by colour alone (.claude/rules/accessibility-contrast-and-modals.md).
 //
-// Returns { el, sync }: `sync` re-reads the map and shows or hides the control,
-// so every chip click and the bulk toggle must call it.
+// Returns { el, sync }: `sync` re-reads the map and enables or inerts the
+// control, so every chip click and the bulk toggle must call it.
 function renderTagModeToggle(state, map, onChange) {
   const el = h(`<div class="tag-mode" role="group" aria-label="${esc(t('tags.filter.modeLabel'))}"></div>`);
   const opts = [['all', 'tags.filter.modeAll'], ['any', 'tags.filter.modeAny']].map(([mode, key]) => {
