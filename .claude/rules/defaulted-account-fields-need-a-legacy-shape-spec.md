@@ -1,11 +1,14 @@
 ---
 paths:
+  - "lib/me-projection.js"
   - "lib/routes/account.js"
   - "test/account.test.js"
 ---
 # A new field on the user record needs a LEGACY-SHAPE spec — every fixture is born with the key
 
-`meProjection` (`lib/routes/account.js`) resolves each account preference's
+`meProjection` (`lib/me-projection.js` — it lived in `lib/routes/account.js`
+until #785 gave it its own module, so that the three session-start responses
+could answer it too) resolves each account preference's
 default, because accounts predating a field carry **no key at all** and
 `CLAUDE.md` forbids migration code. So the projection is the only thing standing
 between an old account and a wrong answer:
