@@ -233,6 +233,41 @@ reported that mechanics and categories appeared to play no role at all.
   ordering could not reach. When adding a reason type, ask what it tells a reader
   that the card does not already print.
 
+**And the two that don't restate the fact row restate EACH OTHER (#775).** Making
+them reachable revealed the same question one level in: they surfaced *together*,
+naming the same owned games, so a card read „Ähnliche Mechaniken wie Ark Nova und
+Wingspan" directly above „Gleiche Art Spiel wie Ark Nova und Wingspan" — two of
+three lines, one piece of information. BGG categories correlate heavily with
+mechanics and `topContributors` derives both from the same shelf by the same
+"most shared values" rule, so the overlap is the common case rather than a
+coincidence. `reasonsFrom` therefore names **at most one** of them:
+
+- **The survivor is the more unusual one**, decided by the same standout ordering
+  every other reason uses rather than a preference of its own. On an exact tie
+  mechanics wins — higher weight, and the signal people cannot articulate
+  themselves. The exclusion is **unconditional**, not "only when the two name
+  overlapping games": a card whose shape depends on a coincidence the reader
+  cannot see is less predictable for no gain.
+- **Presentation only.** Both terms keep their weights and both still contribute
+  to the score; nothing about the ranking moves.
+- **The z-score over a SPIKE distribution is value-independent**, which is the
+  fixture trap here and it is sharp: one candidate above a floor of zeros scores
+  z = 5.477226 whether its value is 0.75 or 1.0, bit-identical. So a fixture that
+  varies only the two candidate *values* produces an exact tie, and a spec
+  asserting "the higher standout survives" is **vacuously green against a rule
+  that always keeps mechanics**. Vary the two terms' *distributions* — in
+  `test/recommend.test.js`, by letting some fillers share the candidate's
+  mechanics, which makes a perfect mechanics match ordinary while a weaker
+  category match stays unusual. Measured: mechanics v=1.0 z=2.598 c=0.130 against
+  categories v=0.75 z=5.477 c=0.053, so the case discriminates against "keep
+  mechanics", "keep the stronger match" and "keep the bigger contributor" at once.
+- **The empty-contributors filter runs BEFORE the slice**, or dropping that line
+  costs the card a slot a qualifying term would have filled. The state is
+  unreachable today — a term only clears the `> NEUTRAL` gate by matching a game
+  in `profile.games`, which is the very list the contributors are drawn from — so
+  it is pinned by a hand-built `reasonsFrom` call rather than through
+  `recommend()`, and the ordering is what keeps it harmless if that ever changes.
+
 **Related:** `.claude/rules/bgg-corpus.md` (the pool this scores, and its licence
 conditions), `.claude/rules/break-the-code-on-purpose.md` (every assertion above
 was seen red against a deliberate break), `.claude/rules/session-teams.md` §4,

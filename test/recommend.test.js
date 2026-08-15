@@ -17,6 +17,7 @@ const {
   recommend,
   buildProfile,
   scoreCandidate,
+  reasonsFrom,
   gameAffinity,
   partyDistribution,
   MIN_PROFILE_GAMES,
@@ -627,6 +628,172 @@ test('a term at or below neutral is never claimed as a reason', () => {
     entry('cand', { bayesRating: 5.5, info: info({ weight: 4.9, maxPlaytime: 400, mechanics: ['ZZ'], categories: ['ZZ'], bestWith: [9] }) }),
   ]);
   assert.deepEqual(out.recommendations[0].reasons, []);
+});
+
+/* ------------------- at most one taste reason per card (#775) -------------- */
+/*
+ * BGG categories correlate heavily with mechanics and `topContributors` derives
+ * both lines from the same shelf by the same "most shared values" rule, so once
+ * #772 made the two terms reachable they surfaced TOGETHER, naming the same owned
+ * games: two of a card's three lines spent on one piece of information.
+ *
+ * The fixture below varies the two terms' DISTRIBUTIONS, not just the candidate's
+ * two values, and that distinction is the whole of this block. Over a spike
+ * distribution — one candidate above a floor of zeros — the z-score is
+ * value-INDEPENDENT: measured 5.477226 for a 0.75 candidate and 5.477226 for a
+ * 1.0 one, bit-identical. So a fixture that only moves the values produces an
+ * exact tie, and a spec asserting "the higher standout survives" would be
+ * vacuously green against a rule that always keeps mechanics.
+ */
+const PAIR_MECHANICS = ['M-a', 'M-b', 'M-c', 'M-d', 'M-e', 'M-f', 'M-g', 'M-h'];
+const PAIR_CATEGORIES = ['C-a', 'C-b', 'C-c', 'C-d', 'C-e', 'C-f', 'C-g', 'C-h'];
+
+/*
+ * An owned shelf spread over BOTH taste axes, plus 30 ordinary fillers that fit
+ * the table and say nothing about taste. Exactly `sharers` of those fillers also
+ * carry the candidate's mechanics — which is what makes a perfect mechanics match
+ * ORDINARY (low standout) while a weaker category match stays unusual.
+ */
+function twoAxisCorpus(sharers = 0) {
+  const rows = [];
+  for (let i = 0; i < MIN_PROFILE_GAMES; i += 1) {
+    rows.push(entry(`o${i + 1}`, {
+      info: info({ mechanics: pick(PAIR_MECHANICS, i, 3), categories: pick(PAIR_CATEGORIES, i, 3) }),
+    }));
+  }
+  for (let i = 0; i < 30; i += 1) {
+    rows.push(entry(`f${i}`, {
+      rank: 500 + i,
+      info: info({
+        bestWith: [4],
+        mechanics: i < sharers ? PAIR_MECHANICS.slice(0, 4) : ['ZZ'],
+        categories: ['YY'],
+      }),
+    }));
+  }
+  return rows;
+}
+
+const tasteTerms = (rec) => rec.reasons.map((r) => r.term).filter((t) => t === 'mechanics' || t === 'categories');
+
+test('a card never names BOTH taste reasons — the more unusual one survives (#775)', () => {
+  const cand = entry('cand', {
+    rank: 1,
+    // Mechanics is a PERFECT match (1.0) that three other candidates also make,
+    // so it is ordinary: z 2.598. Categories is only 0.75, but nothing else in
+    // the pool comes near it: z 5.477.
+    info: info({
+      bestWith: [4],
+      mechanics: PAIR_MECHANICS.slice(0, 4),
+      categories: [...PAIR_CATEGORIES.slice(0, 3), 'YY'],
+    }),
+  });
+  const out = recommend(shelfRound(), [...twoAxisCorpus(3), cand]);
+  const [top] = out.recommendations.filter((r) => r.externalId === 'cand');
+
+  // Discriminating in three directions at once: mechanics carries the higher
+  // VALUE (1.0 vs 0.75), the higher WEIGHT (0.13 vs 0.07) and nearly 2.5x the
+  // contribution (0.130 vs 0.053), so "keep mechanics", "keep the stronger match"
+  // and "keep the bigger contributor" all pick the wrong one here. Only the
+  // standout ordering — the one everything else in `reasonsFrom` uses — picks
+  // categories.
+  assert.deepEqual(tasteTerms(top), ['categories'], `named ${top.reasons.map((r) => r.term).join(', ')}`);
+
+  // The freed line is BACKFILLED rather than lost: the card still carries three
+  // reasons, the third being the next qualifying term.
+  assert.equal(top.reasons.length, REASON_LINES);
+  assert.deepEqual(top.reasons.map((r) => r.term), ['categories', 'complexity', 'players']);
+});
+
+test('on an exact standout tie the taste line is mechanics (#775)', () => {
+  const cand = entry('cand', {
+    rank: 1,
+    // Both terms are pure spikes here, so their z-scores are bit-identical
+    // (5.477226) even though categories scores 1.0 against mechanics' 0.75. The
+    // standout ranking cannot separate them, and the tie goes to the stronger
+    // taste signal — the one carrying the higher weight.
+    info: info({
+      bestWith: [4],
+      mechanics: [...PAIR_MECHANICS.slice(0, 3), 'ZZ'],
+      categories: PAIR_CATEGORIES.slice(0, 4),
+    }),
+  });
+  const out = recommend(shelfRound(), [...twoAxisCorpus(0), cand]);
+  const [top] = out.recommendations.filter((r) => r.externalId === 'cand');
+
+  assert.deepEqual(tasteTerms(top), ['mechanics'], `named ${top.reasons.map((r) => r.term).join(', ')}`);
+  assert.equal(top.reasons.length, REASON_LINES);
+});
+
+test('a card where only ONE taste term qualifies is untouched (#775)', () => {
+  const cand = entry('cand', {
+    rank: 1,
+    // Categories matches nothing the round owns, so it never qualifies and there
+    // is nothing to exclude. The card must look exactly as it did before.
+    info: info({ bestWith: [4], mechanics: PAIR_MECHANICS.slice(0, 4), categories: ['YY'] }),
+  });
+  const out = recommend(shelfRound(), [...twoAxisCorpus(0), cand]);
+  const [top] = out.recommendations.filter((r) => r.externalId === 'cand');
+  assert.deepEqual(top.reasons.map((r) => r.term), ['mechanics', 'complexity', 'players']);
+});
+
+test('the exclusion is PRESENTATION only — both terms still score (#775)', () => {
+  const cand = entry('cand', {
+    rank: 1,
+    info: info({
+      bestWith: [4],
+      mechanics: PAIR_MECHANICS.slice(0, 4),
+      categories: [...PAIR_CATEGORIES.slice(0, 3), 'YY'],
+    }),
+  });
+  const corpus = [...twoAxisCorpus(3), cand];
+  const out = recommend(shelfRound(), corpus);
+  const [top] = out.recommendations.filter((r) => r.externalId === 'cand');
+
+  // The dropped line must not cost the candidate any of its score: both taste
+  // terms still clear the admission gate and both still contribute their weight,
+  // and the score the card reports is `scoreCandidate`'s untouched.
+  const profile = profileOf(shelfRound(), corpus);
+  const s = scoreCandidate(profile, cand);
+  const byTerm = Object.fromEntries(s.terms.map((t) => [t.term, t]));
+  assert.ok(byTerm.mechanics.value > NEUTRAL, 'mechanics still qualifies on the score side');
+  assert.ok(byTerm.categories.value > NEUTRAL, 'categories still qualifies on the score side');
+  assert.equal(byTerm.mechanics.contribution, W_MECHANICS * byTerm.mechanics.value);
+  assert.equal(byTerm.categories.contribution, W_CATEGORIES * byTerm.categories.value);
+  assert.equal(top.score, Math.round(s.score * 1000) / 1000);
+});
+
+test('a taste reason with no contributors left costs the card no line (#775)', () => {
+  /*
+   * DEFENSIVE, and deliberately built by hand: end to end a qualifying taste term
+   * always HAS a contributor, because the vector it scored against is built from
+   * `profile.games` itself — a candidate sharing nothing with a profiled game
+   * scores a zero dot product and never clears the `> NEUTRAL` gate. So this
+   * state is unreachable through `recommend()` today and can only be expressed by
+   * handing `reasonsFrom` a profile whose games and vectors disagree.
+   *
+   * It is pinned anyway because what it guards is the ORDERING: the empty-games
+   * filter has to run BEFORE the slice, or dropping the line costs a slot that a
+   * qualifying term would have filled. With the filter last this card gets two
+   * reasons; with it before the slice, three.
+   */
+  const profile = { games: [], round: {} };
+  const stats = new Map(); // no observations -> every standout is 0, so contribution orders
+  const term = (t, value, weight, over = {}) => ({ term: t, value, weight, contribution: weight * value, ...over });
+  const scored = {
+    terms: [
+      // Every value must clear the `> NEUTRAL` gate to be ranked at all.
+      term('quality', 0.7, W_QUALITY, { rating: 8.4 }), // 0.245
+      term('mechanics', 1, W_MECHANICS), // 0.130 — ranks second, and names nobody
+      term('complexity', 0.6, W_COMPLEXITY, { weightValue: 3 }), // 0.108
+      term('time', 0.9, W_TIME, { minutes: 60 }), // 0.081
+    ],
+  };
+  const reasons = reasonsFrom(profile, { info: { mechanics: ['M1'] } }, scored, stats);
+  // Ranked quality, mechanics, complexity, time. Mechanics names nobody and goes;
+  // `time` moves up into the slot it vacated instead of the card losing a line.
+  assert.deepEqual(reasons.map((r) => r.term), ['quality', 'complexity', 'time']);
+  assert.equal(reasons.length, REASON_LINES, 'the dropped taste line is backfilled, not lost');
 });
 
 test('the list is ranked by score, then by BGG rank, and bounded by the limit', () => {
