@@ -193,10 +193,9 @@ const frontendGlobals = {
   LANDING_SHOTS: 'readonly', landingShots: 'readonly',
   LANDING_SHOT_BP: 'readonly', LANDING_REPO_URL: 'readonly',
   landingCfg: 'writable', landingRevealOperatorClaims: 'readonly',
-  // ranking.js + lookup-group.js + lookup-cover.js + lookup-title.js +
-  // lookup-score.js + cover.js + tag-icons.js (also CommonJS modules for
-  // tests — hence `module`)
-  computePlaces: 'readonly', groupLookupHits: 'readonly', module: 'readonly',
+  // ranking.js + lookup-cover.js + lookup-title.js + lookup-score.js +
+  // cover.js + tag-icons.js (also CommonJS modules for tests — hence `module`)
+  computePlaces: 'readonly', module: 'readonly',
   // recap.js (issue #484). The internal helpers are listed too, like every
   // other helper module's: they share the one global scope whether or not
   // another file calls them, and no-redeclare is off — so an unlisted name is
@@ -259,7 +258,6 @@ const frontendGlobals = {
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   lookupDetail: 'readonly',
   providerLabel: 'readonly',
-  providerLogo: 'readonly', PROVIDER_LOGOS: 'readonly',
   PROVIDER_LABELS: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
   // views-member.js
   showMember: 'readonly', memberStats: 'readonly',

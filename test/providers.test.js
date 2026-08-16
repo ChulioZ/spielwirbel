@@ -83,13 +83,13 @@ test('BGG answers on an unconfigured round — the lookup is unconditional now',
   global.fetch = async () => ({
     ok: true,
     status: 200,
-    text: async () => '<items><item type="boardgame" id="13"><name type="primary" value="Catan"/></item></items>',
+    text: async () => '<items><item type="boardgame" id="13"><name type="primary" value="Catan"/><yearpublished value="1995"/></item></items>',
   });
   try {
     const res = await request(app)
       .get(`/api/rounds/${round.id}/lookup/search?provider=bgg&q=catan`);
     assert.equal(res.status, 200);
-    assert.deepEqual(res.body.results, [{ providerId: '13', title: 'Catan', thumbnail: null }]);
+    assert.deepEqual(res.body.results, [{ providerId: '13', title: 'Catan', thumbnail: null, year: 1995 }]);
   } finally {
     if (previousToken === undefined) delete process.env.BGG_API_TOKEN;
     else process.env.BGG_API_TOKEN = previousToken;

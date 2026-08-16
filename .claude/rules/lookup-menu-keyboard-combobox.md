@@ -83,32 +83,36 @@ ArrowRight and Home/End must keep moving the caret in a field the user is still
 typing in. Claiming them for navigation would be a regression traded for a
 feature.
 
-**That constraint is what shapes the option list.** A merged row offers several
-providers (one badge each), and with no horizontal axis available they have to
-join the same vertical list — so a row contributes its title button plus one
-entry per *further* provider. **Badge 0 is skipped**: it is the primary, the same
-choice the title button above it already offers, so including it would stop Down
-twice on one choice. Without this, picking a specific provider — the whole point
-of the badges — would have stayed mouse-only, i.e. a half-fixed issue.
+**That constraint shapes the option list**, and since #790 it costs nothing: with
+the same-title merge gone (`.claude/rules/add-game-lookup-provider.md`) the list
+is exactly one entry per hit. **Anything that adds a second pickable control per
+row inherits the constraint** — it must join this *vertical* list, as the merged
+row's per-provider badges once did, because Left/Right belong to the caret.
 
 ## 4. The highlight is tracked by IDENTITY, because the menu re-renders under it
 
 `render()` runs again on **every** provider arrival, re-sorting rows as a better
 match lands. An index alone therefore slides the highlight onto a different game
-mid-keystroke. `lookupOptionIndex(options, { key, provider })` re-locates it, and
-an option that is gone clears to "nothing active" rather than snapping to a
-neighbour. Measured live: with a slow provider inserting a row above it, the
-active option moved from index 2 to 4 and DOM id `lk3-0-2` to `lk3-1-2` while
-staying on the same game+provider.
+mid-keystroke. `lookupOptionIndex(options, { provider, providerId })` re-locates
+it, and an option that is gone clears to "nothing active" rather than snapping to
+a neighbour. Measured live: with a slow provider inserting a row above it, the
+active option moved from index 2 to 4 while staying on the same hit.
+
+**The provider is half of that identity even though `providerId` alone would do
+today** — ids are each provider's own namespace, so two providers can mint the
+same string and one's row would inherit the other's highlight.
 
 Typing clears the reference outright — the next render answers a different query.
 
 ## 5. Smaller things
 
 - **`role="presentation"` on the rows and on the status lines.** A listbox's
-  children must be its options; the `.lookup__opt` wrapper, the `.lookup__badges`
-  span and the „Suche läuft …" / „Keine Treffer" messages are not pickable and
-  must not be announced as if they were.
+  children must be its options; the `.lookup__opt` wrapper and the
+  „Suche läuft …" / „Keine Treffer" messages are not pickable and must not be
+  announced as if they were.
+- **The year rides INSIDE the option button** (`.lookup__year`, #790), so it is
+  part of the option's accessible name — on rows whose titles are identical, a
+  year rendered outside the button leaves every option announced as "Scout".
 - **`scrollIntoView()` is wrong for this menu.** It is `position: fixed`
   (`.claude/rules/lookup-menu-fixed-position.md`), so it is its own rows'
   offsetParent, and the browser may satisfy the request by scrolling the *sheet*
@@ -117,9 +121,9 @@ Typing clears the reference outright — the next render answers a different que
 - **`aria-activedescendant` must be removed, not just repointed**, whenever the
   options go away — a stale id names a detached element that some screen readers
   keep reporting as current.
-- Option ids carry a per-attach counter (`lk<uid>-<row>-<col>`): both sheets
-  hard-code the same `#lookupMenu` id, so only the option ids can guarantee
-  uniqueness across sheet opens.
+- Option ids carry a per-attach counter (`lk<uid>-<row>`): both sheets hard-code
+  the same `#lookupMenu` id, so only the option ids can guarantee uniqueness
+  across sheet opens.
 
 ## Verifying it
 

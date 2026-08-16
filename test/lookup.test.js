@@ -54,8 +54,11 @@ test('game requires an id', async () => {
 
 // --- BoardGameGeek provider (XML API2 search + thing, token-authorized, #117) --
 
+// One item carries a <yearpublished> and one does not, so the assertion below
+// discriminates "the route passes the year through" from "the year is always
+// null" — a fixture where nobody has one is green either way (#790).
 const BGG_SEARCH_XML = `<items total="2">
-  <item type="boardgame" id="13"><name type="primary" value="CATAN"/></item>
+  <item type="boardgame" id="13"><name type="primary" value="CATAN"/><yearpublished value="1995"/></item>
   <item type="boardgameexpansion" id="926"><name type="primary" value="Catan: Cities &amp; Knights"/></item>
 </items>`;
 const BGG_THING_XML = `<items>
@@ -91,8 +94,8 @@ test('GET …/lookup/search?provider=bgg queries the token-authorized XML API', 
     const res = await request(app).get(L('/search?provider=bgg&q=catan'));
     assert.equal(res.status, 200);
     assert.deepEqual(res.body.results, [
-      { providerId: '13', title: 'CATAN', thumbnail: null },
-      { providerId: '926', title: 'Catan: Cities & Knights', thumbnail: null },
+      { providerId: '13', title: 'CATAN', thumbnail: null, year: 1995 },
+      { providerId: '926', title: 'Catan: Cities & Knights', thumbnail: null, year: null },
     ]);
     // The host must carry no www (BGG's docs: www breaks authorization), and the
     // bearer token must actually be attached.

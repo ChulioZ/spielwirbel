@@ -458,7 +458,6 @@ I18N.de = {
   'lookup.loadingMore': 'Weitere Ergebnisse werden geladen …',
   'lookup.noResults': 'Keine Treffer gefunden',
   'lookup.error': 'Spieldatenbank nicht erreichbar',
-  'lookup.fillFrom': 'Von {provider} übernehmen',
   // Names the suggestion listbox for screen readers; never rendered on screen.
   'lookup.suggestions': 'Suchvorschläge',
 

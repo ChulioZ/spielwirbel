@@ -421,7 +421,6 @@ public/
                      catch up without a re-render
     swr.js           stale-while-revalidate cache: views render instantly from
                      the last known data while a background fetch refreshes
-    lookup-group.js  collapses same-title provider hits into one multi-badge row
     lookup-cover.js  which cover image a picked provider match yields
     lookup-score.js  how well a hit's title answers the query (drives the
                      cross-provider ranking; folds punctuation + diacritics)

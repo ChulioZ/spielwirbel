@@ -167,13 +167,28 @@ test('scoreName ranks exact over prefix over substring, ignoring case/diacritics
 
 // --- parseSearch ---------------------------------------------------------
 
-test('parseSearch normalizes items to { providerId, title, thumbnail:null }', () => {
+test('parseSearch normalizes items to { providerId, title, thumbnail:null, year }', () => {
   const out = bgg.parseSearch(SEARCH_XML, 8, 'catan');
   assert.deepEqual(out, [
-    { providerId: '13', title: 'CATAN', thumbnail: null },
-    { providerId: '926', title: 'Catan: Cities & Knights', thumbnail: null },
-    { providerId: '325', title: 'Die Siedler von Catan', thumbnail: null },
+    { providerId: '13', title: 'CATAN', thumbnail: null, year: 1995 },
+    { providerId: '926', title: 'Catan: Cities & Knights', thumbnail: null, year: 1998 },
+    { providerId: '325', title: 'Die Siedler von Catan', thumbnail: null, year: 1995 },
   ]);
+});
+
+test('parseSearch reads the year as a number, and "0"/absent as null (#790)', () => {
+  // The year is the only thing telling apart the several distinct games BGG
+  // serves under one exact title, so each of these renders a different row.
+  // "0" is BGG's "unknown" everywhere in its API — rendered, it would read
+  // "Scout (0)".
+  const xml = `<items>
+    <item type="boardgame" id="291453"><name type="primary" value="Scout"/><yearpublished value="2019"/></item>
+    <item type="boardgame" id="9226"><name type="primary" value="Scout"/><yearpublished value="0"/></item>
+    <item type="boardgame" id="40000"><name type="primary" value="Scout"/></item>
+  </items>`;
+  const out = bgg.parseSearch(xml, 8, 'scout');
+  assert.deepEqual(out.map((r) => [r.providerId, r.year]),
+    [['291453', 2019], ['9226', null], ['40000', null]]);
 });
 
 test('parseSearch ranks by relevance, not by BGG response order', () => {

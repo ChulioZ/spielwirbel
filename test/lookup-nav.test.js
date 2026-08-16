@@ -48,31 +48,34 @@ test('an out-of-range index reads as nothing active rather than moving from it',
 
 // --- lookupOptionIndex: re-locating the active option after a re-render ------
 
+// Since #790 there is one option per hit, identified by its provider plus that
+// provider's own id — note '13' appears under two providers, which is exactly
+// the collision matching on the id alone would get wrong.
 const OPTIONS = [
-  { key: 'catan', provider: 'bgg' },
-  { key: 'catan', provider: 'steam' },
-  { key: 'azul', provider: 'bgg' },
+  { provider: 'bgg', providerId: '13' },
+  { provider: 'steam', providerId: '13' },
+  { provider: 'bgg', providerId: '230802' },
 ];
 
-test('an option is re-found by group key AND provider, not by either alone', () => {
-  assert.equal(lookupOptionIndex(OPTIONS, { key: 'catan', provider: 'steam' }), 1);
-  assert.equal(lookupOptionIndex(OPTIONS, { key: 'azul', provider: 'bgg' }), 2);
-  // Same game, a provider that is no longer among its badges.
-  assert.equal(lookupOptionIndex(OPTIONS, { key: 'catan', provider: 'xbox' }), -1);
-  // Same provider, a game that dropped out of the list.
-  assert.equal(lookupOptionIndex(OPTIONS, { key: 'gone', provider: 'bgg' }), -1);
+test('an option is re-found by provider AND providerId, not by either alone', () => {
+  assert.equal(lookupOptionIndex(OPTIONS, { provider: 'steam', providerId: '13' }), 1);
+  assert.equal(lookupOptionIndex(OPTIONS, { provider: 'bgg', providerId: '230802' }), 2);
+  // Same id, a provider that is no longer in the list.
+  assert.equal(lookupOptionIndex(OPTIONS, { provider: 'xbox', providerId: '13' }), -1);
+  // Same provider, a hit that dropped out of the list.
+  assert.equal(lookupOptionIndex(OPTIONS, { provider: 'bgg', providerId: 'gone' }), -1);
 });
 
 test('the highlight follows its option when a re-render moves it', () => {
-  const ref = { key: 'azul', provider: 'bgg' };
+  const ref = { provider: 'bgg', providerId: '230802' };
   assert.equal(lookupOptionIndex(OPTIONS, ref), 2);
-  // A faster provider's row lands above it: same option, new index.
-  const reordered = [{ key: 'zug', provider: 'psstore' }].concat(OPTIONS);
+  // A better-matching hit lands above it: same option, new index.
+  const reordered = [{ provider: 'bgg', providerId: '9209' }].concat(OPTIONS);
   assert.equal(lookupOptionIndex(reordered, ref), 3);
 });
 
 test('no selection, or no list, is -1 rather than a crash or a stray match', () => {
   assert.equal(lookupOptionIndex(OPTIONS, null), -1);
   assert.equal(lookupOptionIndex(OPTIONS, undefined), -1);
-  assert.equal(lookupOptionIndex(null, { key: 'catan', provider: 'bgg' }), -1);
+  assert.equal(lookupOptionIndex(null, { provider: 'bgg', providerId: '13' }), -1);
 });

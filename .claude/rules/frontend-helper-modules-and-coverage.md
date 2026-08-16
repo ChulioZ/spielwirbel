@@ -34,7 +34,7 @@ three-line function to its own `public/js/lookup-cover.js` restored it to
 
 **Rule:** a frontend helper you want to test goes in its own small,
 purpose-named, dependency-free file. That is exactly why `cover.js`,
-`ranking.js`, `lookup-group.js` and `lookup-cover.js` exist and all sit at ~100%
+`ranking.js` and `lookup-cover.js` exist and all sit at ~100%
 — the pattern is a **coverage constraint**, not just taste.
 
 **Splitting one is not free** (see `token-friendly-source-files.md`) — the new
