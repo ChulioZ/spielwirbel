@@ -4554,48 +4554,6 @@ kbd {
    at the row the same way. */
 .lookup__pick:hover,
 .lookup__pick.is-active { background: var(--brand-tint); }
-/* One badge per contributing provider on a merged (same-title) row; clicking a
-   badge fills the sheet from that provider. Compact brand-logo chips, so the
-   title keeps most of the row width. */
-.lookup__badges {
-  flex: none;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 5px;
-}
-.lookup__badge {
-  flex: none;
-  border: 1px solid var(--brand-edge);
-  background: var(--brand-tint-soft);
-  color: var(--brand-dark);
-  border-radius: var(--radius-pill);
-  padding: 3px 9px;
-  font: inherit;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  line-height: 1.4;
-  white-space: nowrap;
-  cursor: pointer;
-}
-/* Logo variant: a small square chip framing the brand-color glyph. The logo
-   colors are a deliberate exception to the theme system (brand identity, not
-   theme) — see theme-derived-colors.md. */
-.lookup__badge--logo {
-  width: 30px;
-  height: 30px;
-  padding: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-color: var(--line);
-  background: var(--surface);
-}
-.lookup__badge--logo svg { width: 100%; height: 100%; display: block; }
-.lookup__badge:hover,
-.lookup__badge.is-active { background: var(--brand-tint); border-color: var(--brand); }
-.lookup__badge--logo:hover,
-.lookup__badge--logo.is-active { background: var(--brand-tint-soft); border-color: var(--brand); }
 .lookup__thumb {
   flex: none;
   width: 40px;
@@ -4607,6 +4565,16 @@ kbd {
 .lookup__thumb--none { display: inline-flex; align-items: center; justify-content: center; }
 .lookup__thumb--none .ti { font-size: 20px; /* glyph, not type */ color: var(--placeholder); }
 .lookup__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* BGG's own disambiguator between rows that carry the exact same title (#790).
+   `flex: none` so the year survives when a long title is ellipsized — it is the
+   only thing telling those rows apart, so it must never be the part that gets
+   cut. Muted and lighter than the title, so it reads as an aside. */
+.lookup__year {
+  flex: none;
+  color: var(--ink-soft);
+  font-weight: 400;
+  font-size: var(--text-sm);
+}
 .lookup__msg { padding: 9px 12px; font-size: var(--text-md); }
 
 /* ---- Steppers (player counts, draw count) ---- */

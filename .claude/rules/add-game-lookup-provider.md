@@ -6,7 +6,6 @@ paths:
   - "public/js/views-round-lookup.js"
   - "public/js/lookup-score.js"
   - "public/js/lookup-cover.js"
-  - "public/js/lookup-group.js"
   - "public/js/lookup-title.js"
   - "test/providers.test.js"
   - "test/lookup*.test.js"
@@ -67,7 +66,8 @@ retiring a provider must not blank covers already on people's shelves.
 ## The cross-provider merge ranking must FOLD before it tokenizes (#317)
 
 `scoreHit` (`public/js/lookup-score.js`) tiers each hit by how well its title
-answers the query; `groupLookupHits` then breaks **ties** by `LOOKUP_PROVIDERS`
+answers the query; the menu's own sort (`render()` in
+`public/js/views-round-lookup.js`) then breaks **ties** by `LOOKUP_PROVIDERS`
 position, and any tie *within* one provider by the shorter title (#527). So
 provider priority is only ever meant to order *equally relevant* hits — which
 makes any bug that collapses distinct relevance to a shared `0` present itself as
@@ -91,22 +91,52 @@ same treatment. Two things worth keeping:
   over the query's tokens, and `[].every(...)` is `true` — so an all-punctuation
   query would otherwise match *everything* at tier 1. The `!query` guard is what
   prevents that; `test/lookup-score.test.js` pins it.
-- **`groupLookupHits`' key is deliberately NOT folded.** It uses plain
-  trim+lowercase, because it answers a different question ("are these two
-  providers offering the same game?") — folding punctuation there would merge
-  rows that differ only by it. Don't "unify" the two normalizations.
 - The helper lives in its own file for the coverage reason in
   `.claude/rules/frontend-helper-modules-and-coverage.md` — exporting it from
   the ~730-line view file would drag that file into the coverage report and red
   the gate with every test still passing.
 
-Both mechanisms are dormant with one provider registered and are kept whole
-rather than simplified away: the merge is what a second provider would arrive
-into, and a "tidy-up" that collapses it is the change that has to be undone
-first. Note the length tiebreak sits **after** `prio` deliberately — `prio` is
-the provider's index, so two groups from different providers never reach the
-length term, and moving it earlier would let title shape override provider
-priority.
+The **ranking** is dormant with one provider registered and is kept whole rather
+than simplified away: it is what a second provider would arrive into, and a
+"tidy-up" that collapses it is the change that would have to be undone first.
+Note the length tiebreak sits **after** `prio` deliberately — `prio` is the
+provider's index, so two hits from different providers never reach the length
+term, and moving it earlier would let title shape override provider priority.
+
+## The same-title MERGE was removed, and "dormant" is why that was wrong (#790)
+
+This file used to make that keep-it-whole argument about the **merge** as well —
+`groupLookupHits`, a since-deleted helper module beside `lookup-score.js`, which
+collapsed every hit sharing a title into one row with a badge per contributing
+provider. The argument was wrong, and the way it was wrong is the transferable
+part:
+
+**It was never dormant.** "One provider ⇒ every group has one member" is false,
+because BGG serves several *genuinely distinct games* under one exact title —
+type "Scout" and you get at least three. So with the four storefronts retired the
+layer had stopped merging anything and was purely **hiding hits**: all but one
+were dropped, and with no "show more" and no way to type a BGG id, those games
+could not be linked **at all**. A machine that only ever ran on cross-provider
+input turned out to have same-provider input too.
+
+So the menu renders **one row per hit**, disambiguated by `<yearpublished>` — the
+same signal BGG's own search shows, already in the `/xmlapi2/search` body and now
+carried on the hit as `year` (a picking aid only; nothing stores it on the game).
+The badge row went with it: with one provider it held a single badge duplicating
+the title button beside it.
+
+**Re-merging same-game hits across providers is NEW work, not a restoration.** Do
+not read the deleted file as a starting point — it keyed on a plain
+trim+lowercase title, deliberately *not* `foldTitle`'s fold, and that key is what
+produced this bug. A second provider needs a merge keyed on something that can
+distinguish two different games with one name (the year here, ideally a mapped
+id), which is a different question from the one the old key answered.
+
+**The general form, for the next "this is dormant, keep it whole":** check that
+the mechanism is genuinely *inert* on today's input rather than merely aimed at a
+case that no longer arrives. A dormant mechanism costs nothing; one that is
+still running against input nobody re-examined is a live bug wearing a keep-it-
+whole argument.
 
 
 ## BGG (`lib/providers/bgg.js`) — the XML API2, under a token (#117)

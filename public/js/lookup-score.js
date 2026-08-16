@@ -17,8 +17,8 @@
 // a query like "… Quedlinburg - Megabox" used to yield a dead "-" token that
 // can never prefix a real word. That one token made the loose tier's every()
 // fail, scoring an obviously-correct hit 0 — indistinguishable from a
-// completely unrelated title, at which point groupLookupHits' tiebreak handed
-// the row order to provider priority alone.
+// completely unrelated title, at which point the row order fell through to
+// provider priority alone.
 //
 // Letters are matched by Unicode property, not [a-z]: stripping whole scripts
 // would fold e.g. "Catan Двубоят" down to a bare "catan".
@@ -56,11 +56,11 @@ function scoreHit(title, q) {
 // (two physical copies, a base game next to a standalone edition), so the
 // answer must never gate saving.
 //
-// Deliberately folded through foldTitle rather than groupLookupHits' weaker
-// trim+lowercase key: this is advisory, so an over-eager hint costs nothing
-// while a missed one is the whole defect. Folding catches the near-misses a
-// person actually types — "Cafe International" for „Café International",
-// "Strasse" for „Straße", "Catan Seefahrer" for „Catan: Seefahrer".
+// Deliberately folded through foldTitle rather than compared on a plain
+// trim+lowercase: this is advisory, so an over-eager hint costs nothing while a
+// missed one is the whole defect. Folding catches the near-misses a person
+// actually types — "Cafe International" for „Café International", "Strasse" for
+// „Straße", "Catan Seefahrer" for „Catan: Seefahrer".
 //
 // 'active' wins outright over 'archived', so every game is checked rather than
 // returning on the first hit: a title held by both an archived and an active

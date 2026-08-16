@@ -4,7 +4,6 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { scoreHit, foldTitle, existingTitleState } = require('../public/js/lookup-score');
-const { groupLookupHits } = require('../public/js/lookup-group');
 
 // The reported repro (#317): the query carries a stray " - " the title spells
 // as ":", so the whitespace split used to yield a dead "-" token that no word
@@ -22,19 +21,12 @@ test('the punctuated query outranks an unrelated title', () => {
   assert.ok(scoreHit(REPRO_TITLE, REPRO_Q) > unrelated);
 });
 
-test('a punctuated hit sorts above an unrelated higher-priority provider hit', () => {
-  // prio 0 = psstore, prio 1 = bgg (LOOKUP_PROVIDERS order). Before the fix
-  // both scored 0, so provider priority alone put the wrong row first.
-  const hit = (provider, title, prio) =>
-    ({ provider, title, providerId: `${provider}-1`, thumbnail: null,
-      score: scoreHit(title, REPRO_Q), prio, order: 0 });
-  const groups = groupLookupHits([
-    hit('psstore', 'Perlen von Atlantis', 0),
-    hit('psstore', 'Die magische Wippe', 0),
-    hit('bgg', REPRO_TITLE, 1),
-  ]);
-  assert.equal(groups[0].title, REPRO_TITLE);
-});
+// The ordering half of #317 — that the correct game reaches the TOP ROW, not
+// merely a non-zero score — is asserted against the menu the user actually sees,
+// in test/lookup-rows.test.js. It used to live here because the sort was a pure
+// function (groupLookupHits, removed with the title grouping in #790); the sort
+// is now part of rendering, so a unit test of it would be a second copy of the
+// comparator rather than a test of the screen.
 
 test('the tiers are unchanged for a query without punctuation', () => {
   assert.equal(scoreHit('Hades', 'hades'), 5); // exact

@@ -16,28 +16,12 @@ const PROVIDER_LABELS = { psstore: 'PlayStation Store', bgg: 'BoardGameGeek', st
 function providerLabel(provider) {
   return PROVIDER_LABELS[provider] || provider;
 }
-// Brand marks identifying the source of a lookup hit (nominative use). These are
-// the official single-color glyphs from Simple Icons (https://simpleicons.org),
-// whose SVG path data is released CC0 (public domain); each is rendered in its
-// brand's official color. They are a DELIBERATE exception to the theme-derived
-// color system (like the fixed category tags and medal colors) — they encode
-// brand identity, not theme, so their hardcoded hexes must not be "fixed" to
-// accent tones. See .claude/rules/theme-derived-colors.md. Each is a
-// self-contained inline SVG (no external/CDN request).
-// `aria-hidden` because the button around it carries the accessible name
-// (lookup.fillFrom).
-//
-// Only the LOOKUP renders these, so unlike PROVIDER_LABELS above the four
-// retired storefronts' marks went with #744 — nothing can produce a hit from
-// them any more. `providerLogo` answering null is a supported state (the badge
-// falls back to a text pill), which is why removing one is safe here and is not
-// safe there.
-const PROVIDER_LOGOS = {
-  bgg: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="#FF5100"><path d="m19.7 4.44-2.38.64L19.65 0 4.53 5.56l.83 6.67-1.4 1.34L8.12 24l8.85-3.26 3.07-7.22-1.32-1.27.98-7.81Z"/></svg>',
-};
-function providerLogo(provider) {
-  return PROVIDER_LOGOS[provider] || null;
-}
+// There were per-provider brand marks here until #790 — a badge row under each
+// suggestion, one badge per provider offering that title. They went with the
+// title-grouping layer that produced them: with a single provider every badge
+// row held exactly one badge, duplicating the title button beside it. Note the
+// "Powered by BGG" attribution the XML API licence requires is a separate,
+// self-hosted mark in the site footer (public/index.html) and is untouched.
 
 // The lookup queries every provider in parallel and merges the hits into one
 // menu, each result carrying its own provider. Providers are rendered
@@ -116,10 +100,9 @@ function attachLookup(round, input, menu, onPick, onInput) {
   input.setAttribute('aria-controls', menu.id);
   input.setAttribute('aria-autocomplete', 'list');
 
-  // One entry per pickable provider, in visual order: { el, key, provider, pick }.
-  // A merged row contributes its primary (the title button) plus one entry per
-  // *additional* provider badge — badge 0 is the primary again, so including it
-  // would make Down stop twice on the same choice.
+  // One entry per row, in visual order: { el, provider, providerId, pick }.
+  // Since #790 that is exactly one per hit — no badges, so no second stop on a
+  // choice the title button already offers.
   let options = [];
   let activeIdx = -1;
   // The identity of the active option, so a re-render can find it again — see
@@ -219,7 +202,7 @@ function attachLookup(round, input, menu, onPick, onInput) {
     next.el.classList.add('is-active');
     next.el.setAttribute('aria-selected', 'true');
     input.setAttribute('aria-activedescendant', next.el.id);
-    activeRef = { key: next.key, provider: next.provider };
+    activeRef = { provider: next.provider, providerId: next.providerId };
     scrollIntoMenu(next.el);
   }
 
@@ -230,14 +213,21 @@ function attachLookup(round, input, menu, onPick, onInput) {
     let pending = active.length;
     let anyFulfilled = false;
 
-    // Group same-title hits from different providers into one row (ranked by
-    // each group's best member), then render one row per group with a badge per
-    // contributing provider. Re-run on every arrival so a late provider adds a
-    // badge (or a new row) in place — see lookup-group.js.
+    // One row per hit, ranked by how well its title answers the query. Re-run on
+    // every arrival so a late provider's rows slot in place.
+    //
+    // Hits are deliberately NOT collapsed by title (#790): BGG returns several
+    // genuinely distinct games under one exact name ("Scout"), and folding them
+    // into one row made every hit but the survivor impossible to link at all —
+    // there is no "show more" and no way to type an id. The year is what tells
+    // the rows apart, the same disambiguator BGG's own search uses.
     function render() {
       if (seq !== searchSeq) return; // a newer keystroke superseded this search
-      const groups = groupLookupHits(hits, MAX_SUGGESTIONS);
-      if (!groups.length) {
+      const rows = hits.slice()
+        .sort((a, b) => b.score - a.score || a.prio - b.prio ||
+          (a.title || '').trim().length - (b.title || '').trim().length || a.order - b.order)
+        .slice(0, MAX_SUGGESTIONS);
+      if (!rows.length) {
         if (pending > 0) return showMenuMsg(t('lookup.searching'));
         return showMenuMsg(anyFulfilled ? t('lookup.noResults') : t('lookup.error'));
       }
@@ -248,50 +238,35 @@ function attachLookup(round, input, menu, onPick, onInput) {
       // menu down (a click listener alone never runs for a mouse pick), while a
       // keyboard/AT activation only ever dispatches click. `done` keeps a real
       // pointer click — which fires both — from picking twice.
-      const bindPick = (el, member) => {
+      const bindPick = (el, hit) => {
         let done = false;
         const fire = (e) => {
           e.preventDefault();
           if (done) return;
           done = true;
-          onPick(member);
+          onPick(hit);
         };
         el.addEventListener('mousedown', fire);
         el.addEventListener('click', fire);
         return fire;
       };
-      groups.forEach((g, gi) => {
-        const thumb = g.thumbnail
-          ? `<img class="lookup__thumb" src="${esc(g.thumbnail)}" alt="" loading="lazy" />`
-          : `<span class="lookup__thumb lookup__thumb--none" aria-hidden="true"><i class="ti ${g.primary.provider === 'bgg' ? 'ti-dice-3' : 'ti-device-gamepad-2'}"></i></span>`;
+      rows.forEach((hit, ri) => {
+        const thumb = hit.thumbnail
+          ? `<img class="lookup__thumb" src="${esc(hit.thumbnail)}" alt="" loading="lazy" />`
+          : `<span class="lookup__thumb lookup__thumb--none" aria-hidden="true"><i class="ti ${hit.provider === 'bgg' ? 'ti-dice-3' : 'ti-device-gamepad-2'}"></i></span>`;
+        // The year rides inside the button, so it is part of the option's
+        // accessible name — which is the whole point on a set of rows whose
+        // titles are identical. Muted and parenthesized, so it reads as an
+        // aside rather than as part of the game's name; absent when BGG has
+        // none, rather than rendering an empty element that shifts the row.
+        const year = hit.year ? `<span class="lookup__year">(${esc(hit.year)})</span>` : '';
         // The row is presentational: a listbox's children must be its options,
-        // and here the options are the title button plus the provider badges.
+        // and the option here is the title button.
         const row = h(`<div class="lookup__opt" role="presentation">
-            <button type="button" class="lookup__pick" id="lk${uid}-${gi}-0" role="option" aria-selected="false" tabindex="-1">${thumb}<span class="lookup__title">${esc(g.title)}</span></button>
-            <span class="lookup__badges" role="presentation"></span>
+            <button type="button" class="lookup__pick" id="lk${uid}-${ri}" role="option" aria-selected="false" tabindex="-1">${thumb}<span class="lookup__title">${esc(hit.title)}</span>${year}</button>
           </div>`);
-        // The title/thumb picks the highest-priority provider…
         const pickBtn = row.querySelector('.lookup__pick');
-        options.push({ el: pickBtn, key: g.key, provider: g.primary.provider, pick: bindPick(pickBtn, g.primary) });
-        // …and each badge picks that specific provider's hit.
-        const badges = row.querySelector('.lookup__badges');
-        g.members.forEach((m, mi) => {
-          const name = t('lookup.fillFrom', { provider: providerLabel(m.provider) });
-          const logo = providerLogo(m.provider);
-          // Logo badges for known providers; a text pill still labels any
-          // provider without a bundled mark. Either way the button is labelled.
-          const attrs = `id="lk${uid}-${gi}-${mi + 1}" role="option" aria-selected="false" tabindex="-1" title="${esc(name)}" aria-label="${esc(name)}"`;
-          const badge = logo
-            ? h(`<button type="button" class="lookup__badge lookup__badge--logo" ${attrs}>${logo}</button>`)
-            : h(`<button type="button" class="lookup__badge" ${attrs}>${esc(providerLabel(m.provider))}</button>`);
-          const fire = bindPick(badge, m);
-          // Badge 0 is the primary — the same choice the title button above
-          // already offers — so it is a mouse shortcut, not a second keyboard
-          // stop. Every *further* provider is a distinct choice and joins the
-          // vertical list, which is what gives the badges a keyboard path at all.
-          if (mi > 0) options.push({ el: badge, key: g.key, provider: m.provider, pick: fire });
-          badges.appendChild(badge);
-        });
+        options.push({ el: pickBtn, provider: hit.provider, providerId: hit.providerId, pick: bindPick(pickBtn, hit) });
         menu.appendChild(row);
       });
       // A muted, non-clickable hint while a slower provider is still pending.

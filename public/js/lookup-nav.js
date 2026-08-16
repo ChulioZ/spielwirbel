@@ -12,9 +12,9 @@
 // all this file is.
 //
 // Deliberately only Down/Up: the combobox's input is editable, so ArrowLeft/
-// ArrowRight and Home/End must keep moving the caret (APG). That is also why a
-// merged row contributes one option per provider to the SAME vertical list
-// rather than needing a second, horizontal axis to reach its badges.
+// ArrowRight and Home/End must keep moving the caret (APG). Since #790 the list
+// is exactly the rows — one per provider hit — so there is nothing a horizontal
+// axis would have been needed to reach.
 //
 // `active` is the current index (-1 when nothing is active), `count` the number
 // of options. Returns the next index, or **null** when the key is not one this
@@ -33,12 +33,17 @@ function nextLookupIndex(active, count, key) {
 // Find an option again after a re-render. The menu re-renders on every provider
 // arrival (a slow provider adds rows and re-sorts), so an index alone would slide
 // the highlight onto a different game mid-keystroke. Options are therefore
-// re-located by *identity* — the group key plus the provider — and a selection
-// whose option is gone (the re-sort dropped it past MAX_SUGGESTIONS) clears to
-// -1 rather than snapping to an arbitrary neighbour.
+// re-located by *identity* — the provider plus its own id for the hit — and a
+// selection whose option is gone (the re-sort dropped it past MAX_SUGGESTIONS)
+// clears to -1 rather than snapping to an arbitrary neighbour.
+//
+// The provider is half of the identity even though `providerId` alone would do
+// today: ids are each provider's own namespace, so two providers can mint the
+// same string, and matching on the id alone would let one provider's row
+// inherit the highlight from another's (#790 replaced the group key here).
 function lookupOptionIndex(options, ref) {
   if (!ref || !Array.isArray(options)) return -1;
-  return options.findIndex((o) => o && o.key === ref.key && o.provider === ref.provider);
+  return options.findIndex((o) => o && o.providerId === ref.providerId && o.provider === ref.provider);
 }
 
 if (typeof module !== 'undefined' && module.exports) {
