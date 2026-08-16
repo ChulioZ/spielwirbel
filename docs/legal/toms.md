@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-08-04
+**Stand:** 2026-08-16
 
 ## Verschlüsselung & Transport
 
@@ -58,8 +58,11 @@ list nothing that is not actually in place.
   seit dem 2026-08-04 eingerichtet:
   - **Point-in-Time-Recovery**: fortlaufende WAL-Archivierung; Wiederherstellung
     auf einen beliebigen Zeitpunkt innerhalb des Vorhaltefensters, und zwar in
-    eine **neue** Datenbankinstanz (die laufende bleibt unberührt). Länge des
-    Fensters: siehe `retention.md`.
+    eine **neue** Datenbankinstanz (die laufende bleibt unberührt). Das Fenster
+    umfasst **bis zu ca. 4 Wochen** (rollierend die letzten 4 wöchentlichen
+    Vollsicherungen), ist plattformseitig **nicht konfigurierbar** und beginnt
+    mit der Aktivierung am 2026-08-04 — rückwirkend darüber hinaus ist keine
+    Wiederherstellung möglich. Maßgeblich für Löschfristen: `retention.md`.
   - **Tägliche Volume-Sicherungen** mit 6 Tagen Aufbewahrung, dazu manuelle
     Sicherungen auf Anforderung.
 - Deployment reproduzierbar aus dem Repo (Dockerfile); Objektspeicher repliziert

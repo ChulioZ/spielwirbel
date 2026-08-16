@@ -6,7 +6,7 @@ den Prüf-Rhythmus fest; die veröffentlichte Datenschutzerklärung
 Frist, die hier steht, aber nicht gelebt oder nicht veröffentlicht wird, ist
 schlimmer als keine.
 
-**Stand:** 2026-08-07
+**Stand:** 2026-08-16
 
 ## Grundsatz
 
@@ -38,15 +38,19 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Gespeicherte Kontakt-Meldungen (Datenbank `contact_notices`, #272) | wie Postfach: Allgemeine Anfragen nach Bearbeitung, DSA-Meldungen **3 Jahre** ab Jahresende der Entscheidung | manuell (DB), Jahresprüfung |
 | **Moderations-Log-Einträge mit personenbezogenen Daten** (E-Mail-Adressen, redigierte Texte als `previous`-Nachweis) | **3 Jahre ab Ende des Jahres der Maßnahme** | Jahresprüfung (unten) |
 | Löschnachweise (`eraseAccount`-Einträge — ohne E-Mail-Adresse by design): Aktionen **`user_erased`** (betreiberseitig, #273) **und `account_deleted`** (Selbstbedienung, #419) | dauerhaft (Art. 17 Abs. 3 lit. b/e DSGVO) | — |
-| **Backups** (Railway Managed Postgres, eingerichtet 2026-08-04) | **Volume-Sicherungen: 6 Tage** (täglicher Lauf); **Point-in-Time-Recovery: Vorhaltefenster des WAL-Archivs — noch zu bestätigen**, siehe „Offen" unten | automatisch |
+| **Backups** (Railway Managed Postgres, eingerichtet 2026-08-04) | **Point-in-Time-Recovery: bis zu ca. 4 Wochen** (rollierend die letzten 4 wöchentlichen Vollsicherungen; plattformseitig nicht konfigurierbar); **Volume-Sicherungen: 6 Tage** (täglicher Lauf) | automatisch |
 
 **Backups und Art. 17 (Löschung).** Eine Löschung wirkt im Live-Bestand sofort
 und vollständig. In den Sicherungen bleiben die Daten dagegen bis zum Ablauf des
-jeweiligen Aufbewahrungsfensters erhalten (oben: 6 Tage für die
-Volume-Sicherungen, das PITR-Fenster für das WAL-Archiv). Das ist der anerkannte
+Aufbewahrungsfensters erhalten; maßgeblich ist das **längste** — das sind **bis
+zu ca. 4 Wochen** über das PITR-WAL-Archiv, während die Volume-Sicherungen nach
+6 Tagen und damit deutlich früher auslaufen. Das ist der anerkannte
 **Backup-Vorbehalt**: Sicherungen werden nicht gezielt durchsucht, um einzelne
-Datensätze zu entfernen — sie laufen aus. Eine Wiederherstellung erfolgt nur als
-Ganzes und nur im Katastrophenfall; wird eine Sicherung eingespielt, **sind
+Datensätze zu entfernen — sie laufen aus. Das ist keine Annahme, sondern
+Mechanik: pgBackRest führt nach jeder Sicherung `expire` aus und gibt alte
+Vollsicherungen **samt der an sie gebundenen WAL-Segmente** frei, sodass das
+Archiv nicht unbegrenzt wächst. Eine Wiederherstellung erfolgt nur als Ganzes
+und nur im Katastrophenfall; wird eine Sicherung eingespielt, **sind
 zwischenzeitlich ausgeführte Löschungen erneut auszuführen**.
 
 Diese Fenster sind bewusst **interne Betriebsgrößen** und stehen nicht in der
@@ -59,14 +63,6 @@ veröffentlichten **Löschfristen je Datenbestand**, nicht auf die
 Backup-Mechanik. Wird die Backup-Mechanik künftig doch veröffentlicht, gilt die
 Kopplung wieder (dann mit `PRIVACY_REVISION`-Bump, siehe
 `.claude/rules/keep-legal-docs-current.md`).
-
-**Offen (Stand 2026-08-04):** Die Länge des PITR-Fensters ist noch **nicht
-bestätigt** — Railway dokumentiert sie nicht, und das Archiv lief zum Zeitpunkt
-der Einrichtung erst wenige Minuten. Sobald der linke Rand des
-Wiederherstellungsfensters im Railway-Dashboard stabil ist: hier in der Tabelle
-und in `toms.md` eintragen und diesen Absatz entfernen. **Bis dahin keine Zahl
-schätzen** — eine erfundene Frist in einem Rechenschaftsdokument ist schlimmer
-als eine offen als offen markierte.
 
 **Warum 3 Jahre:** die regelmäßige Verjährungsfrist (§ 195 BGB) beginnt mit
 dem Schluss des Jahres, in dem der Anspruch entstand (§ 199 Abs. 1 BGB) —
