@@ -42,6 +42,17 @@ safe once recovery exists — and until 2026-08-04 this project had **none at al
 that made auto-updates defensible was: manual backup → PITR → daily schedule →
 *then* auto-updates. Restore that order if any of those is ever turned off.
 
+**What that recovery covers, and the trap in checking it** (2026-08-16): PITR
+keeps the last 4 weekly full backups, so the window is **up to ~4 weeks**, is
+**not configurable**, and **starts at activation** — it can never reach back
+before 2026-08-04. The trap is reading the dashboard too early: until the archive
+is older than the retention policy, the window's left edge is pinned to the
+activation time and only ever grows, so **an edge that keeps reaching further
+back is not evidence of an absent limit.** Checked twelve days in it still
+reached day one, which says nothing either way; the first truncation was due
+around 2026-09-01. The figures live in `docs/legal/retention.md`, where they are
+an Art. 17 statement rather than an ops note.
+
 ## Reading the live minor (the Console tab is a shell, not psql)
 
 Railway's **Console** tab gives you a container shell, so `SELECT version();`
