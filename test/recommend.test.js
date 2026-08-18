@@ -113,11 +113,8 @@ function tasteCorpus() {
   return rows;
 }
 
-const profileOf = (round, corpus) => {
-  const p = buildProfile(round, new Map(corpus.map((e) => [String(e.externalId), e])));
-  p.round = round;
-  return p;
-};
+const profileOf = (round, corpus) =>
+  buildProfile(round, new Map(corpus.map((e) => [String(e.externalId), e])));
 
 // The score difference between two candidates that differ in exactly one
 // attribute. Rounded to kill float noise without hiding a real drift.
@@ -525,6 +522,111 @@ test('a reason line can never name a wished game', () => {
   assert.deepEqual(rec.reasons.flatMap((r) => r.games || []).filter((g) => g === 'Wished'), []);
 });
 
+test('a reason line can never name a RETIRED game', () => {
+  const round = shelfRound();
+  round.games.push({ id: 'gr', title: 'Thrown out', retired: true, source: { provider: 'bgg', externalId: 'orx' } });
+  /*
+   * The sibling of the wish case above, one state over — and the reason #776's
+   * fix does not cover it. A wished game could simply leave `profile.games`; a
+   * retired one CANNOT, because its negative affinity is exactly how „we threw
+   * this out" reaches the mechanics/categories vectors. So it has to be gated
+   * where the naming happens instead.
+   *
+   * The retired row shares all THREE mechanics with the candidate where every
+   * owned game shares one, so ranking by `shared` alone put it first and the
+   * card read „Ähnliche Mechaniken wie Thrown out" — the game they got rid of,
+   * named as the reason to consider a new one.
+   *
+   * The shared M1 is load-bearing for the same reason it is in the wish sibling:
+   * without a mechanic the OWNED shelf also carries, the term never clears the
+   * `> NEUTRAL` admission gate, no mechanics reason is emitted at all, and the
+   * assertion would pass against the unfixed code for a reason that has nothing
+   * to do with retiring.
+   */
+  const out = recommend(round, [
+    ...shelfCorpus(),
+    entry('orx', { info: info({ mechanics: ['M1', 'M-ret1', 'M-ret2'] }) }),
+    entry('cand', { info: info({ mechanics: ['M1', 'M-ret1', 'M-ret2'] }) }),
+  ]);
+  const [rec] = out.recommendations.filter((r) => r.externalId === 'cand');
+  const mechanics = rec.reasons.find((r) => r.term === 'mechanics');
+  assert.ok(mechanics, 'the mechanics reason still fires — this case is about WHO it names');
+  assert.deepEqual(mechanics.games, ['Owned 1', 'Owned 2']);
+  assert.deepEqual(rec.reasons.flatMap((r) => r.games || []).filter((g) => g === 'Thrown out'), []);
+});
+
+test('a retired game is FILTERED OUT, not merely outranked, when a slot is free', () => {
+  const round = shelfRound();
+  round.games.push({ id: 'gr', title: 'Thrown out', retired: true, source: { provider: 'bgg', externalId: 'orx' } });
+  /*
+   * The sibling above does NOT cover the `rank > 0` filter clause, and this is
+   * the measurement that says so: with the clause deleted and the `rank` sort
+   * kept, the whole file stays green. Ten positive contributors at rank 1 fill
+   * both REASON_GAMES slots, so the retired game at rank 0 sorts to the back and
+   * is sliced away for a reason that has nothing to do with the filter.
+   *
+   * The clause only bites when FEWER than REASON_GAMES contributors qualify —
+   * exactly one owned game carries the mechanic here — because then the slice
+   * has a free slot and would fill it with a rank-0 game. Without the clause
+   * this card reads „Ähnliche Mechaniken wie Owned 1 und Thrown out".
+   */
+  const corpus = shelfCorpus({ mechanics: [] });
+  corpus[0].info.mechanics = ['M-x'];
+  const out = recommend(round, [
+    ...corpus,
+    entry('orx', { info: info({ mechanics: ['M-x'] }) }),
+    entry('cand', { info: info({ mechanics: ['M-x'] }) }),
+  ]);
+  const mechanics = out.recommendations
+    .find((r) => r.externalId === 'cand').reasons.find((r) => r.term === 'mechanics');
+
+  assert.ok(mechanics, 'the mechanics reason still fires — the shelf game carries it');
+  assert.deepEqual(mechanics.games, ['Owned 1'], 'one name, not a free slot filled with the discarded game');
+});
+
+// A shelf where exactly two owned games carry the candidate's mechanics, rated
+// so that the SECOND is the loved one — the natural stable order names Owned 1
+// first, so only a real affinity ranking can produce the expected list.
+const ratedPairRound = () => shelfRound({
+  sessions: [{
+    id: 's1',
+    gameIds: ['g1', 'g2'],
+    memberIds: ['m1', 'm2', 'm3', 'm4'],
+    votes: { m1: { g1: { rating: 2 }, g2: { rating: 5 } } },
+  }],
+});
+
+test('reason contributors sharing the SAME count are ranked by affinity', () => {
+  const round = ratedPairRound();
+  const corpus = shelfCorpus({ mechanics: [] });
+  corpus[0].info.mechanics = ['M-x'];
+  corpus[1].info.mechanics = ['M-x'];
+  const out = recommend(round, [...corpus, entry('cand', { info: info({ mechanics: ['M-x'] }) })]);
+  const mechanics = out.recommendations
+    .find((r) => r.externalId === 'cand').reasons.find((r) => r.term === 'mechanics');
+
+  // Both share the one mechanic, so `shared` alone cannot order them and the
+  // pre-fix code fell back to shelf order. Owned 2 is rated 5 (affinity 2.0),
+  // Owned 1 rated 2 (affinity 0.5).
+  assert.deepEqual(mechanics.games, ['Owned 2', 'Owned 1']);
+});
+
+test('a reason contributor sharing FEWER attributes can outrank one sharing more', () => {
+  const round = ratedPairRound();
+  const corpus = shelfCorpus({ mechanics: [] });
+  corpus[0].info.mechanics = ['M-x', 'M-y'];
+  corpus[1].info.mechanics = ['M-x'];
+  const out = recommend(round, [...corpus, entry('cand', { info: info({ mechanics: ['M-x', 'M-y'] }) })]);
+  const mechanics = out.recommendations
+    .find((r) => r.externalId === 'cand').reasons.find((r) => r.term === 'mechanics');
+
+  // Owned 1 shares BOTH mechanics but is rated 2 -> 2 x 0.5 = 1.0; Owned 2
+  // shares one and is rated 5 -> 1 x 2.0 = 2.0. So the ranking is the PRODUCT,
+  // not `shared` with affinity as a tie-break — under a tie-break the shared
+  // count would decide first and Owned 1 would still lead.
+  assert.deepEqual(mechanics.games, ['Owned 2', 'Owned 1']);
+});
+
 test('the NOVELTY penalty does not fire against a wished game', () => {
   const round = shelfRound();
   round.games.push(wishGame());
@@ -766,18 +868,24 @@ test('the exclusion is PRESENTATION only — both terms still score (#775)', () 
 test('a taste reason with no contributors left costs the card no line (#775)', () => {
   /*
    * DEFENSIVE, and deliberately built by hand: end to end a qualifying taste term
-   * always HAS a contributor, because the vector it scored against is built from
-   * `profile.games` itself — a candidate sharing nothing with a profiled game
-   * scores a zero dot product and never clears the `> NEUTRAL` gate. So this
-   * state is unreachable through `recommend()` today and can only be expressed by
-   * handing `reasonsFrom` a profile whose games and vectors disagree.
+   * always HAS a contributor, so this state is unreachable through `recommend()`
+   * and can only be expressed by handing `reasonsFrom` a profile whose games and
+   * vectors disagree.
+   *
+   * #798 narrowed the argument without breaking it. It used to be enough that the
+   * vector is built from `profile.games` itself; the contributors are now only
+   * that list's POSITIVE-affinity subset, so matching a profiled game no longer
+   * suffices. What still holds: clearing the `> NEUTRAL` gate needs a positive dot
+   * product, which needs a positive component, which only a positive-affinity game
+   * can accumulate — and that game is itself a qualifying contributor. Measured: a
+   * mechanic carried solely by a retired (-0.5) and a rated-1 (0.0) game scores 0.
    *
    * It is pinned anyway because what it guards is the ORDERING: the empty-games
    * filter has to run BEFORE the slice, or dropping the line costs a slot that a
    * qualifying term would have filled. With the filter last this card gets two
    * reasons; with it before the slice, three.
    */
-  const profile = { games: [], round: {} };
+  const profile = { games: [] };
   const stats = new Map(); // no observations -> every standout is 0, so contribution orders
   const term = (t, value, weight, over = {}) => ({ term: t, value, weight, contribution: weight * value, ...over });
   const scored = {
