@@ -811,6 +811,9 @@ I18N.de = {
   'stats.counter.rounds': 'Runden',
   'stats.counter.games': 'Spiele',
   'stats.counter.sessions': 'gespielte Sessions',
+  // The closing CTA for a logged-out visitor (#786). A pitch, not a
+  // restatement of the numbers above it; the buttons reuse landing.hero.*.
+  'stats.cta.title': 'Mach mit und stell dein eigenes Regal zusammen.',
   'stats.teaser.title': 'Entdecken',
   'stats.teaser.sub': 'Was gerade gespielt und gut bewertet wird',
   // Friendships & Freundeskreis (issue #325)

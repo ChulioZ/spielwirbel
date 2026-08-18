@@ -429,3 +429,7 @@ What the app does, in detail. For a short overview see the
   with several rounds),
   so the page fills in on its own as an instance grows instead of publishing a
   number that flatters nobody. Demo accounts are excluded throughout.
+  Because the `/entdecken` screen is meant to be *shared* with people who have
+  never seen the app, a logged-out visitor is offered a way in at the bottom of
+  it (issue #786): the demo where the instance has one, otherwise registering or
+  logging in. A logged-in visitor sees the statistics alone.

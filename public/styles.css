@@ -2777,6 +2777,29 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 /* The home hub's teaser: one row linking into /entdecken, shaped like the
    lobby's own cards so it reads as part of the hub rather than an ad. */
 .home-stats { display: block; }
+/* The logged-out closing CTA on /entdecken (#786). Everything inside it is a
+   landing-page component — the heading, the demo group and the button row all
+   reuse `.landing-*` rules, which are unscoped and so apply here (see
+   renderEntdeckenCta in views-stats.js). So this rule has only two jobs: place
+   the section on a screen that has no `.landing` flex parent to space it, and
+   set it off from the statistics it follows, so the pitch reads as a separate
+   offer rather than as a caption on the numbers.
+
+   The rule sets no display, and the section is conditionally RENDERED rather
+   than hidden, so it needs no `[hidden]` pairing of its own — the demo wrapper
+   inside it ships hidden and rides `.landing-hero__demo[hidden]`, which is
+   already declared above (.claude/rules/hidden-attribute-vs-display-rule.md).
+   Separator from the token, never a fixed grey
+   (.claude/rules/theme-derived-colors.md). */
+.stats-cta {
+  margin-top: 44px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 719px) {
+  .stats-cta { margin-top: 32px; padding-top: 24px; }
+}
+
 .stats-teaser {
   display: flex;
   align-items: center;
