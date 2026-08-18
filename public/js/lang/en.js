@@ -820,6 +820,9 @@ I18N.en = {
   'stats.counter.rounds': 'rounds',
   'stats.counter.games': 'games',
   'stats.counter.sessions': 'sessions played',
+  // The closing CTA for a logged-out visitor (#786). A pitch, not a
+  // restatement of the numbers above it; the buttons reuse landing.hero.*.
+  'stats.cta.title': 'Join in and build your own shelf.',
   'stats.teaser.title': 'Discover',
   'stats.teaser.sub': 'What’s being played and rated well right now',
   // Friendships & Freundeskreis (issue #325)

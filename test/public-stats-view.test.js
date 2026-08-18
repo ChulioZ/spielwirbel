@@ -30,20 +30,28 @@ const FULL = {
   },
 };
 
-// Boot the app with `fetch` answering one canned response for /api/stats/public.
-function bootWith(t, answer) {
+// Boot the app with `fetch` answering one canned response for /api/stats/public,
+// and one for the /api/config probe that gates the demo CTA. `cfg` is what
+// landingRevealOperatorClaims() sees — `{}` is an instance with the demo off.
+function bootWith(t, answer, cfg = {}) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   dom.set('fetch', async (url) => {
     if (String(url).startsWith('/api/stats/public')) return answer();
+    // The operator/demo gate's probe, shared by the landing page and the
+    // /entdecken CTA (#786) — both go through landingRevealOperatorClaims().
+    if (String(url).startsWith('/api/config')) return { ok: true, json: async () => cfg };
     // Anything else a booted view reaches for is a bug in the spec.
     throw new Error(`unexpected fetch: ${url}`);
   });
-  // The landing page's own config probe goes through the same stub.
   dom.set('accountsActive', () => true);
   dom.set('isLoggedIn', () => false);
   return dom;
 }
+
+// landingRevealOperatorClaims() reveals on a `.then`, so the CTA's demo block is
+// still hidden when the view's own promise resolves. One macrotask is enough.
+const settle = () => new Promise((r) => setTimeout(r, 0));
 
 const ok = (body) => () => ({ ok: true, json: async () => body });
 const notFound = () => ({ ok: false, status: 404, json: async () => ({}) });
@@ -138,6 +146,137 @@ test('the podium note is rendered only alongside actual podiums', async (t) => {
   // cards it would be a caveat about nothing.
   assert.equal(withCounters.document.querySelector('.stats-note'), null);
   assert.ok(withCounters.document.querySelector('.stats-counter'));
+});
+
+/* --------------------- the logged-out CTA on /entdecken --------------------- */
+
+/*
+ * The screen is published in order to be SHARED with people who have no account
+ * (#564) — and until #786 it gave exactly that audience nowhere to go. A
+ * logged-out visitor is on the auth-screen chrome, which hides the top bar's
+ * home button, context and feedback, and the screen deliberately carries no back
+ * control; so someone arriving from a shared link could read the stats and then
+ * only edit the URL.
+ *
+ * The demo assertions double as the pin on a SHARED interface: the CTA reuses
+ * landingRevealOperatorClaims() rather than fetching /api/config a second time,
+ * and that helper addresses the two buttons by the ids `#landingDemo` and
+ * `#landingRegister`. Rename those in the helper and the *reveal* still works
+ * (it keys off `[data-demo-only]`), but the demo silently stops being promoted
+ * over registering and a returning visitor is told to start a demo they already
+ * hold — measured: exactly the two tests below go red, and the hidden-when-off
+ * one correctly stays green.
+ */
+
+test('a logged-out visitor gets a CTA offering register and login', async (t) => {
+  const dom = bootWith(t, ok(FULL));
+  await dom.call('showEntdecken');
+  await settle();
+
+  const cta = dom.document.querySelector('.stats-cta');
+  assert.ok(cta, 'the CTA is rendered');
+  assert.ok(cta.querySelector('#landingRegister'));
+  assert.ok(cta.querySelector('#landingLogin'));
+  // The screen title is the page h1, so the CTA heading is one level down.
+  assert.equal(cta.querySelector('.landing-section__title').tagName, 'H2');
+  assert.equal(dom.document.querySelectorAll('h1').length, 1);
+});
+
+test('the CTA buttons reach the register and login screens', async (t) => {
+  const dom = bootWith(t, ok(FULL));
+  const seen = [];
+  dom.set('showRegister', () => seen.push('register'));
+  dom.set('showLogin', () => seen.push('login'));
+  await dom.call('showEntdecken');
+  await settle();
+
+  dom.document.querySelector('#landingRegister').click();
+  dom.document.querySelector('#landingLogin').click();
+  assert.deepEqual(seen, ['register', 'login']);
+});
+
+test('the CTA renders in the EMPTY state too', async (t) => {
+  // The state where a visitor most needs somewhere to go: an instance with
+  // nothing to publish still has an app to offer.
+  const dom = bootWith(t, notFound);
+  await dom.call('showEntdecken');
+  await settle();
+
+  assert.ok(dom.document.querySelector('.empty-note'));
+  assert.ok(dom.document.querySelector('.stats-cta'));
+});
+
+test('a LOGGED-IN visitor sees no CTA — the screen is unchanged for them', async (t) => {
+  const dom = bootWith(t, ok(FULL));
+  dom.set('isLoggedIn', () => true);
+  await dom.call('showEntdecken');
+  await settle();
+
+  assert.equal(dom.document.querySelector('.stats-cta'), null);
+});
+
+test('an instance running without accounts gets no CTA either', async (t) => {
+  // Nothing to register for, and it is the same expression authScreen() is
+  // already given — one `loggedOut` const, not two evaluations that can drift.
+  const dom = bootWith(t, ok(FULL));
+  dom.set('accountsActive', () => false);
+  await dom.call('showEntdecken');
+  await settle();
+
+  assert.equal(dom.document.querySelector('.stats-cta'), null);
+});
+
+test('the demo block stays hidden on an instance whose demo is off', async (t) => {
+  // cfg.footer set but cfg.demo unset: the legal surfaces are configured and the
+  // demo is not, which is a perfectly ordinary instance.
+  const dom = bootWith(t, ok(FULL), { footer: true });
+  await dom.call('showEntdecken');
+  await settle();
+
+  const demo = dom.document.querySelector('.stats-cta .landing-hero__demo');
+  assert.ok(demo, 'the block is in the DOM');
+  assert.equal(demo.hidden, true, 'a demo button that 404s is worse than no button');
+  // And registering keeps the primary slot it shipped with.
+  assert.ok(dom.document.querySelector('#landingRegister').classList.contains('btn--primary'));
+});
+
+test('the demo leads when the instance has it on, and register is demoted', async (t) => {
+  const dom = bootWith(t, ok(FULL), { demo: true });
+  await dom.call('showEntdecken');
+  await settle();
+
+  const demo = dom.document.querySelector('.stats-cta .landing-hero__demo');
+  assert.equal(demo.hidden, false);
+  const demoBtn = dom.document.querySelector('#landingDemo');
+  assert.ok(demoBtn.classList.contains('btn--primary'), 'the demo is THE primary action');
+  assert.ok(!dom.document.querySelector('#landingRegister').classList.contains('btn--primary'));
+  assert.equal(demoBtn.textContent, 'Ohne Anmeldung ausprobieren');
+  // The note rides the wrapper, so it is revealed with it rather than separately.
+  assert.ok(demo.querySelector('.landing-hero__demo-note'));
+});
+
+test('a visitor already holding a live demo is offered to RESUME it', async (t) => {
+  const dom = bootWith(t, ok(FULL), { demo: true });
+  dom.set('getDemoToken', () => 'a-live-demo-token');
+  await dom.call('showEntdecken');
+  await settle();
+
+  // Minting a second demo strands the first one's slot for its whole TTL (#502),
+  // so the label has to say resume rather than read as starting over.
+  assert.equal(dom.document.querySelector('#landingDemo').textContent, 'Demo fortsetzen');
+});
+
+test('the demo button starts the demo, passing itself as the busy control', async (t) => {
+  const dom = bootWith(t, ok(FULL), { demo: true });
+  const started = [];
+  dom.set('startDemo', (busy) => { started.push(busy && busy.id); });
+  await dom.call('showEntdecken');
+  await settle();
+
+  // Passing the button is what disables it — without it a second click mints a
+  // second demo tenant and abandons the first.
+  dom.document.querySelector('#landingDemo').click();
+  assert.deepEqual(started, ['landingDemo']);
 });
 
 /* ------------------------------ the landing page ---------------------------- */
@@ -246,16 +385,24 @@ test('an ordinary deep link still goes to login — the carve-out is not a hole'
 /* --------------------------------- the fetch -------------------------------- */
 
 test('the payload is fetched ONCE for the whole page load', async (t) => {
-  let calls = 0;
+  // Counted PER ENDPOINT rather than in total: since #786 the logged-out
+  // /entdecken also mounts the CTA, whose demo gate probes /api/config. A
+  // blanket counter would fold that unrelated request into this claim and
+  // report a second stats fetch that never happened.
+  const calls = {};
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   dom.set('accountsActive', () => true);
   dom.set('isLoggedIn', () => false);
-  dom.set('fetch', async () => { calls += 1; return { ok: true, json: async () => FULL }; });
+  dom.set('fetch', async (url) => {
+    const key = String(url).split('?')[0];
+    calls[key] = (calls[key] || 0) + 1;
+    return { ok: true, json: async () => FULL };
+  });
 
   await dom.call('showEntdecken');
   await dom.call('showEntdecken');
   await dom.run('loadPublicStats()');
   // Three surfaces on one page must not mean three requests for one payload.
-  assert.equal(calls, 1);
+  assert.equal(calls['/api/stats/public'], 1);
 });

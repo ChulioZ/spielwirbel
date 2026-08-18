@@ -153,6 +153,62 @@ function formatAverage(n) {
 /* ------------------------------- /entdecken -------------------------------- */
 
 /*
+ * The closing call-to-action for a LOGGED-OUT visitor on /entdecken (#786).
+ *
+ * This screen exists to be shared with people who have never seen the app, and
+ * a logged-out visitor is on the auth-screen chrome — no home button, no
+ * context, no feedback — on a screen that deliberately carries no back control
+ * either. Without this section the one page built for that audience answered
+ * them with a dead end: read the stats, then edit the URL.
+ *
+ * The markup reuses the landing page's closing-CTA components rather than
+ * declaring its own — `.landing-close`, `.landing-hero__demo` and
+ * `.landing-hero__cta` are all unscoped rules, so they apply cleanly outside
+ * `.landing`, and sharing them is what keeps the two pitches from drifting into
+ * two different-looking offers. `.landing-hero__demo` in particular already
+ * carries its paired `[hidden] { display: none }` rule, which the wrapper needs
+ * because it ships hidden and the class sets `display: flex`
+ * (.claude/rules/hidden-attribute-vs-display-rule.md).
+ *
+ * The two ids are not decoration: `#landingDemo` and `#landingRegister` are
+ * landingRevealOperatorClaims()'s interface. It is reused here — rather than a
+ * second /api/config fetch — because it already memoizes the config, reveals
+ * `[data-demo-only]` only when the instance HAS a demo (a button that answers
+ * 404 is worse than no button), promotes the demo over registering, and
+ * relabels it for a visitor who already holds one (#502). Nothing renders two
+ * screens at once, so the ids cannot collide with the landing page's own.
+ */
+function renderEntdeckenCta() {
+  const cta = h(`<section class="landing-close stats-cta">
+      <h2 class="landing-section__title">${esc(t('stats.cta.title'))}</h2>
+      <!-- Ships hidden and is revealed only on an instance whose /api/config
+           reports a demo, exactly as the landing hero does. The note rides the
+           wrapper rather than sitting under the button row, so a promise of
+           "no e-mail needed" can never end up beneath Anmelden (#503). (No
+           backticks in here: this comment is inside a template literal.) -->
+      <div class="landing-hero__demo" data-demo-only hidden>
+        <button class="btn btn--lg" id="landingDemo">${esc(t('landing.hero.ctaDemo'))}</button>
+        <p class="landing-hero__demo-note muted">${esc(t('landing.hero.demoNote'))}</p>
+      </div>
+      <div class="landing-hero__cta">
+        <button class="btn btn--primary btn--lg" id="landingRegister">${esc(t('landing.hero.ctaPrimary'))}</button>
+        <button class="btn btn--lg" id="landingLogin">${esc(t('landing.hero.ctaSecondary'))}</button>
+      </div>
+    </section>`);
+  // startDemo/showRegister/showLogin live in account.js and
+  // landingRevealOperatorClaims in views-landing.js — both load before this
+  // file, and the first three are referenced inside handlers either way, so
+  // they resolve at click time (.claude/rules/frontend-script-load-order.md).
+  const demoBtn = cta.querySelector('#landingDemo');
+  demoBtn.addEventListener('click', () => startDemo(demoBtn));
+  cta.querySelector('#landingRegister').addEventListener('click', () => showRegister());
+  cta.querySelector('#landingLogin').addEventListener('click', () => showLogin());
+  landingRevealOperatorClaims(cta);
+  return cta;
+}
+
+
+/*
  * The standalone screen. Renders in BOTH the logged-in and logged-out states —
  * unlike /inbox, /freunde and /konto, which bounce a logged-out visitor Home —
  * because the whole point of publishing this is that it is public, and the URL
@@ -164,8 +220,11 @@ async function showEntdecken() {
   setContext(t('stats.title'));
   setDocTitle(t('stats.title'));
   applyBackground(null);
+  // ONE expression, read twice: the chrome a visitor gets and whether they are
+  // offered a way in are the same question, and two copies could disagree.
+  const loggedOut = accountsActive() && !isLoggedIn();
   // A logged-out visitor is on the auth-screen chrome; a logged-in one is not.
-  authScreen(accountsActive() && !isLoggedIn());
+  authScreen(loggedOut);
 
   app.innerHTML = '';
   app.appendChild(h(`<div class="lobby-head">
@@ -183,6 +242,9 @@ async function showEntdecken() {
     // broken, whereas the teaser and the landing block simply do not appear.
     app.appendChild(h(`<p class="muted empty-note">${esc(t('stats.empty'))}</p>`));
   }
+  // Appended in BOTH branches on purpose: an instance with nothing to publish is
+  // exactly where a visitor most needs somewhere to go.
+  if (loggedOut) app.appendChild(renderEntdeckenCta());
   // Deliberately NO back control: the account menu reaches this screen, exactly
   // like /freunde, /konto and /neu, which makes it a main page — and a main
   // page's way "up" is the persistent chrome
