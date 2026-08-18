@@ -19,7 +19,8 @@
     "check:syntax": "find . -path ./node_modules -prune -o -path ./data -prune -o -path ./dist -prune -o -name '*.js' -print0 | xargs -0 -n1 node --check",
     "migrate": "knex migrate:latest",
     "migrate:make": "knex migrate:make",
-    "migrate:rollback": "knex migrate:rollback"
+    "migrate:rollback": "knex migrate:rollback",
+    "session-cost": "node scripts/session-cost.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",

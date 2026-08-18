@@ -185,8 +185,8 @@ const RULE_ALLOW = {
 };
 
 const SKILL_ALLOW = {
-  '.claude/skills/pick-issue/SKILL.md': 'recorded 2026-07-30 — the ranking loop and its criteria in one file; the audit skills\' SKILL.md + criteria.md split is the obvious shape to follow',
-  '.claude/skills/implement/SKILL.md': 'recorded 2026-07-30 — eight sequential phases, read in order',
+  '.claude/skills/pick-issue/SKILL.md': 'judged 2026-08-18 — SPLIT: 525 -> 360. The seam taken was not the recorded one (SKILL.md + criteria.md, the audit shape): the ranking criteria are read on EVERY invocation, so filing them away would defer the load without saving it. The real seam is conditional — the three branches that fire only when a candidate belongs to someone else (the foreign-assignee reclaim ladder, the multi-PR ordering, the contributor-PR norms) left as contributor-work.md, which most rounds never open. What remains is one sequential decision procedure, gather -> rank -> hand off, read start to finish every run',
+  '.claude/skills/implement/SKILL.md': 'judged 2026-08-18 — eight sequential phases, all read in order on every run, so a split defers the load rather than saving it: the file is the non-finding token-friendly-source-files.md names for views-session.js, one cohesive flow. Re-examined for prose trimming under the same PR that split pick-issue and NOT trimmed — every candidate repetition turned out to be either a distinct constraint or deliberate adherence engineering the file documents as such (the 6a gate exists precisely because a single statement of the rule was skipped on #558/PR #593). It GREW by ~2.4KB there, adding the request-count discipline section, which is a good trade in the currency this budget is about: the resident cost is paid once per session, an avoidable tool call is paid against a 220-390k context',
   '.claude/skills/security-audit/SKILL.md': 'recorded 2026-07-30 — the loop plus the composition rules against /security-review and CodeQL',
 };
 

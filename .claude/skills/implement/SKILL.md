@@ -103,6 +103,35 @@ with the user — never a default you pick on your own to avoid asking. When you
 genuinely must split (a real hard limit, or the user's own choice), keep the
 issue open and say exactly which part landed, which remains, and why.
 
+## Keep the session cheap — it is the whole context, re-read every call
+
+Every tool call is one round trip that re-reads the entire conversation, and its
+output then joins that context for all remaining calls. Measured over three real
+sessions of this workflow: 224–799 calls each, with the context running 220–390k
+tokens. So an avoidable call is not a rounding error, and a large output is a tax
+charged again on every call after it.
+
+None of this trades away rigour — it changes *how* you look, never *whether*:
+
+- **Batch independent probes into one call.** Several `git`/`gh`/`grep` reads that
+  don't depend on each other go in one Bash invocation separated by
+  `echo "=== label ==="`, not one call apiece.
+- **Ask for the summary first, the detail only where it matters.** `git diff --stat`
+  before any full diff, then read the files that actually changed materially.
+  `gh issue list` without `body`; read the one issue you are building.
+- **Cap noisy output, but keep the exit status.** `npm test 2>&1 | tail -30` is
+  enough when green — and `set -o pipefail` first, or the pipe reports `tail`'s
+  status and **a red suite reads as green**. On a real failure, go get the full
+  output; that is the case the cap exists to make affordable.
+- **Prefer text probes to screenshots.** `read_page`, `get_page_text` and
+  `javascript_tool` answer layout and state questions precisely and cheaply; a
+  screenshot costs ~1.5k tokens and, per
+  `.claude/rules/preview-pane-paint-artifacts.md`, is the *less* reliable
+  instrument in this pane. Screenshot once, at the end, as evidence for the user
+  — not as a per-step check.
+- **Don't re-read what you already have.** A file you just wrote, or output you
+  already have in context, does not need fetching again to confirm it took.
+
 ## 1. Branch from up-to-date main
 
 Never commit on `main`. Start from a current base:
@@ -208,12 +237,13 @@ Convince yourself it actually works before anything leaves the machine. Read you
 own diff end to end:
 
 ```bash
-git diff
-npm test
-npm run lint
-npm run check:syntax
-npm run coverage:ci
+git diff --stat          # then read the files that changed materially, in full
+set -o pipefail          # without it, a piped red suite exits 0 and reads as green
+npm test 2>&1 | tail -30 && npm run lint && npm run check:syntax && npm run coverage:ci
 ```
+
+Chained in one call because they are independent of each other and you need all
+four green; on a failure, re-run that one command alone for its full output.
 
 - All four must pass. Read the diff critically for correctness, edge cases, and
   the repo constraints above — not just "tests are green."
@@ -245,7 +275,10 @@ npm run coverage:ci
   `.claude/rules/frontend-helper-modules-and-coverage.md`.
 - For **substantial** UI changes (new views/layouts, non-trivial interaction or
   state, anything easy to get visibly wrong), verify in a real browser via the
-  preview workflow (the `run` skill / preview tools), not tests alone. For
+  preview workflow (the `run` skill / preview tools), not tests alone. Drive that
+  check with `read_page` / `javascript_tool` probes and take **one** screenshot at
+  the end as evidence — per-step screenshots are both the expensive instrument and
+  the unreliable one (`.claude/rules/preview-pane-paint-artifacts.md`). For
   small, straightforward, low-risk UI tweaks (copy, a class, an icon, a spacing
   value), it's enough to confirm the diff looks correct — a human does the visual
   review. Use judgement; when unsure, verify.

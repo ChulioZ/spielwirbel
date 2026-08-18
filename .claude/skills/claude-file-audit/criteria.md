@@ -367,8 +367,15 @@ research at all.
 - **Source:** the 2026-07-30 review · `C-015`'s reasoning applied to skills
 - **Check:** A `SKILL.md` stays around or under **250 lines** — it is loaded whole on
   invocation, so its length is a per-use cost. The split the audit skills already
-  demonstrate (`SKILL.md` = the loop, `criteria.md` = the catalogue) is the remedy;
-  `pick-issue/SKILL.md` at 525 lines is the standing candidate. **`criteria.md` files
+  demonstrate (`SKILL.md` = the loop, `criteria.md` = the catalogue) is one remedy, but not
+  the only one, and picking the wrong seam buys nothing: `pick-issue/SKILL.md` was
+  split in 2026-08 (525 -> 360) along a **conditional** seam instead — the branches
+  that fire only when a candidate belongs to someone else went to
+  `.claude/skills/pick-issue/contributor-work.md`, because its ranking criteria are
+  read on every invocation, so filing them away as a catalogue would have deferred
+  the load without saving it. Ask which parts a typical run *doesn't* read.
+  `implement/SKILL.md` is the standing candidate and may have no seam at all —
+  eight phases, all read in order. **`criteria.md` files
   are deliberately exempt**: a catalogue of independent entries is the flat-data-table
   case `token-friendly-source-files.md` carves out, and splitting one would only add
   indirection. Lower severity than C-021 — a skill loads on invocation, a rule can load

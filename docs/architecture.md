@@ -505,6 +505,9 @@ scripts/
   resolve-demo-covers.js
                      re-resolves the demo seed's cover hotlinks against the
                      providers and prints a DEMO_GAMES block for lib/demo-seed.js
+  session-cost.js    reports what an agent session cost (requests, the fixed
+                     preamble, the largest tool results) from Claude Code's own
+                     transcripts — so a workflow change can be measured
   capture-landing-shots.js
                      regenerates the committed landing-page product screenshots
                      (public/img/landing-*.webp) — seeds a throwaway dataset and
