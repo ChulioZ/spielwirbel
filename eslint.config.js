@@ -163,6 +163,7 @@ const frontendGlobals = {
   showEntdecken: 'readonly', renderPublicStats: 'readonly', loadPublicStats: 'readonly',
   publicStatsHasContent: 'readonly', mountLandingStats: 'readonly',
   mountHomeStatsTeaser: 'readonly', statsCard: 'readonly',
+  renderEntdeckenCta: 'readonly',
   formatCount: 'readonly', formatAverage: 'readonly',
   STATS_PODIUMS: 'readonly', STATS_COUNTERS: 'readonly',
   // views-inbox.js (issue #207)

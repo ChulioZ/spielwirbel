@@ -207,7 +207,6 @@ function renderEntdeckenCta() {
   return cta;
 }
 
-
 /*
  * The standalone screen. Renders in BOTH the logged-in and logged-out states —
  * unlike /inbox, /freunde and /konto, which bounce a logged-out visitor Home —
