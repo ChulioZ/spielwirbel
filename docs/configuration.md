@@ -521,6 +521,25 @@ is what the committed `dev-temp-data` preview config runs). The credentials are
 deliberately worthless — they only ever exist inside a gitignored throwaway
 dataset, so never point the script at a dataset anyone else can reach.
 
+### Measuring what an agent session costs
+
+The `.claude/skills/` workflows are read by an agent on every tool call, so their
+size and the number of calls they provoke are a real running cost. `npm run
+session-cost` reports it from Claude Code's own transcripts:
+
+```bash
+npm run session-cost              # the 5 largest sessions of this repo
+npm run session-cost -- --limit 10
+npm run session-cost -- <path-to-session.jsonl>
+```
+
+For each session it prints the request count, the context at the **first** request
+(the fixed preamble — `CLAUDE.md`, the always-on rules, the loaded skills, memory
+— which is re-read on every later call), the cache-read total, and the largest
+tool results. Images are counted as calls rather than by their base64 length,
+which would overstate them by two orders of magnitude. It reads only
+`~/.claude/projects/`; it never touches `data/`.
+
 ### Configuration via a `.env` file
 
 All settings above are plain environment variables (see `.env.example` for the
