@@ -112,7 +112,10 @@ here from `round.members` would silently drop guests and flatten teams, so
   entire premise is games you do not own. `gameAffinity` therefore has **no wish
   rung at all** rather than an unreachable branch; the filter happens one level
   up. Adding one back is the obvious-looking omission this paragraph exists to
-  stop.
+  stop. **The same sentence had a second cause one state over** — a *retired*
+  game could be named for the same reason and could **not** be fixed this way;
+  see §11's affinity-ranked-contributors bullet (#798) for why the remedies
+  differ.
 
   **Both counts move, and that is load-bearing** — §6's four empty states are
   picked from them. Wishes counted in `linkedGames` would send a round of ten
@@ -261,12 +264,46 @@ coincidence. `reasonsFrom` therefore names **at most one** of them:
   category match stays unusual. Measured: mechanics v=1.0 z=2.598 c=0.130 against
   categories v=0.75 z=5.477 c=0.053, so the case discriminates against "keep
   mechanics", "keep the stronger match" and "keep the bigger contributor" at once.
+- **The reason contributors are AFFINITY-ranked, and a retired game must be
+  excluded there even though it stays in `profile.games` (#798).**
+  `topContributors` ranked by the raw count of shared values, which knows nothing
+  about the *direction* a game pulled the vector — so a retired game, whose
+  affinity is negative and which pushed the profile **away** from the very
+  attributes being matched, could be named first: „Ähnliche Mechaniken wie X"
+  naming the game they explicitly got rid of, as the reason to consider a new
+  one. This is the wish bug of §5 one state over, and it needs the **opposite**
+  remedy: a wish could leave `profile.games` outright, a retired game cannot,
+  because its negative contribution is how "we threw this out" reaches the
+  vectors at all. Rank by `shared × max(0, affinity)` and keep **both** filter
+  clauses — `shared > 0` says "this game has something to do with the term",
+  `rank > 0` says "the profile weighted it positively", and a future rung of
+  exactly 0 must drop out rather than sit in the list at rank 0.
+
+  **The obvious test covers only the sort half, and goes green with the filter
+  clause deleted** — measured. Against a normal shelf the retired game sits at
+  rank 0 with ten positive contributors above it, so the *sort* already pushes it
+  past `REASON_GAMES` and the filter never runs. The clause only bites when FEWER
+  than `REASON_GAMES` contributors qualify, because then the slice has a free
+  slot to fill with a rank-0 game. So the filter needs its own case built on a
+  shelf where exactly **one** owned game carries the attribute. The count alone
+  also favoured games with **long attribute lists**, so a game listing eight
+  mechanics beat a beloved game listing three whatever the round thought of
+  either.
 - **The empty-contributors filter runs BEFORE the slice**, or dropping that line
-  costs the card a slot a qualifying term would have filled. The state is
-  unreachable today — a term only clears the `> NEUTRAL` gate by matching a game
-  in `profile.games`, which is the very list the contributors are drawn from — so
-  it is pinned by a hand-built `reasonsFrom` call rather than through
-  `recommend()`, and the ordering is what keeps it harmless if that ever changes.
+  costs the card a slot a qualifying term would have filled. The state is still
+  unreachable through `recommend()` after #798 — but **the argument changed and
+  the old one no longer closes**, which is the kind of stale premise a rule file
+  keeps authoritative-looking for years. It used to be "a term only clears the
+  `> NEUTRAL` gate by matching a game in `profile.games`, which is the very list
+  the contributors are drawn from"; the contributors are now only that list's
+  **positive-affinity subset**, so matching a profiled game is no longer
+  sufficient. What still closes it: clearing the gate needs a positive dot
+  product, a positive dot needs a positive component in the profile vector, and
+  only a positive-affinity game can accumulate one — and that game is itself a
+  qualifying contributor. Measured while writing #798: a mechanic carried solely
+  by a retired (-0.5) and a rated-1 (0.0) game scores exactly **0**. So it stays
+  pinned by a hand-built `reasonsFrom` call rather than through `recommend()`,
+  and the ordering is what keeps it harmless if a future rung breaks that chain.
 
 **Related:** `.claude/rules/bgg-corpus.md` (the pool this scores, and its licence
 conditions), `.claude/rules/break-the-code-on-purpose.md` (every assertion above
