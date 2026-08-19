@@ -205,6 +205,77 @@ test('PLAYERS scores the poll against the round\'s real party sizes, Best over R
   assert.equal(delta(profile, boxOnly, wrong), 0);
 });
 
+/*
+ * #805 — the reason line SAYS "am besten", so it may only ever NAME a count
+ * BGG's poll calls Best. Whether a Recommended count still SCORES is a separate
+ * question and deliberately unchanged, which is why both halves are pinned in
+ * the same test: the variant that also drops Recommended from the score passes
+ * every "no players reason" assertion on its own.
+ */
+test('the players reason names a BEST count only, never a merely Recommended one (#805)', () => {
+  const profile = profileOf(shelfRound(), shelfCorpus());
+  assert.deepEqual(profile.parties, [{ players: 4, share: 1 }]);
+  const term = (e) => scoreCandidate(profile, e).terms.find((t) => t.term === 'players');
+
+  const recOnly = term(entry('x', { info: info({ bestWith: [2], recommendedWith: [4] }) }));
+  // It clears the gate — which is precisely why it used to render a sentence
+  // asserting a verdict BGG never gave.
+  assert.ok(recOnly.value > NEUTRAL, `scored ${recOnly.value}`);
+  assert.equal(recOnly.players, null, 'nothing to name: BGG called 4 Recommended, not Best');
+  assert.equal(recOnly.value, 0.6, 'the SCORE keeps the Recommended hit at 0.6');
+
+  const both = term(entry('y', { info: info({ bestWith: [4], recommendedWith: [3, 4, 5] }) }));
+  assert.equal(both.players, 4);
+  assert.equal(both.value, 1);
+
+  // An unanswered poll is not a verdict either way: neutral, not 0, and nothing
+  // to name.
+  const silent = term(entry('z', { info: info() }));
+  assert.equal(silent.value, null);
+  assert.equal(silent.players, null);
+});
+
+test('among the counts it names, BEST beats the size the round plays most (#805)', () => {
+  const mixed = shelfRound({
+    members: [1, 2, 3, 4, 5].map((i) => ({ id: `m${i}`, name: `P${i}` })),
+    sessions: [1, 2, 3].map((i) => ({ id: `s${i}`, gameIds: [], memberIds: ['m1', 'm2', 'm3', 'm4', 'm5'], votes: {} }))
+      .concat([4, 5].map((i) => ({ id: `s${i}`, gameIds: [], memberIds: ['m1', 'm2', 'm3', 'm4'], votes: {} }))),
+  });
+  const profile = profileOf(mixed, shelfCorpus());
+  assert.deepEqual(profile.parties, [{ players: 5, share: 0.6 }, { players: 4, share: 0.4 }]);
+  const term = (e) => scoreCandidate(profile, e).terms.find((t) => t.term === 'players');
+
+  // The round sits down at five more often than at four, and `parties` is
+  // sorted by share — so the most-played hit is the one that used to win.
+  const split = term(entry('x', { info: info({ bestWith: [4], recommendedWith: [5] }) }));
+  assert.equal(split.players, 4, 'names the Best count, not the one played more often');
+  assert.equal(Math.round(split.value * 1e6) / 1e6, 0.76, 'both hits still score, at 1.0 and 0.6');
+
+  // Among SEVERAL Best counts the most-played one still wins — that tie-break
+  // is the current intent and does not change.
+  assert.equal(term(entry('y', { info: info({ bestWith: [4, 5] }) })).players, 5);
+});
+
+test('a players reason with nothing to name frees its line for the next term (#805)', () => {
+  const round = shelfRound();
+  // Qualifying terms, by contribution: quality (0.34), complexity (0.20),
+  // players (0.096) and time (0.06). Mechanics and categories both miss the
+  // gate, so `time` is the fourth in line and the one that must move up.
+  const cand = (poll) => entry('cand', {
+    bayesRating: 8.4,
+    info: info({ mechanics: ['ZZ'], categories: ['ZZ'], ...poll }),
+  });
+
+  const named = recommend(round, [...shelfCorpus(), cand({ bestWith: [4] })]).recommendations[0];
+  assert.deepEqual(named.reasons.map((r) => r.term), ['quality', 'complexity', 'players']);
+
+  const withheld = recommend(round, [...shelfCorpus(), cand({ bestWith: [2], recommendedWith: [4] })]).recommendations[0];
+  // Three lines still, with `time` promoted — the drop happens BEFORE the slice,
+  // so the freed line goes to the next qualifying term instead of being lost.
+  assert.equal(withheld.reasons.length, REASON_LINES);
+  assert.deepEqual(withheld.reasons.map((r) => r.term), ['quality', 'complexity', 'time']);
+});
+
 test('MECHANICS and CATEGORIES are cosine similarity against the affinity-weighted vector', () => {
   const profile = profileOf(shelfRound(), shelfCorpus());
   const match = entry('x', { info: info({ mechanics: ['M1'], categories: ['C1'] }) });

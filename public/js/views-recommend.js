@@ -20,7 +20,10 @@ function recReasonText(reason) {
   if (!reason || !reason.term) return '';
   if (reason.term === 'quality') return t('suggest.reason.quality', { rating: recNum(reason.rating) });
   if (reason.term === 'complexity') return t('suggest.reason.complexity', { weight: recNum(reason.weight) });
-  if (reason.term === 'players') return t('suggest.reason.players', { n: reason.players });
+  // tn() injects `n` and picks the category via Intl.PluralRules, so n = 1
+  // gets „Am besten solo" rather than the nonsensical „Am besten mit 1
+  // Personen" — the same shape as home.chip.gamesOne, not an `n === 1` branch.
+  if (reason.term === 'players') return tn(reason.players, 'suggest.reason.playersOne', 'suggest.reason.players');
   if (reason.term === 'time') return t('suggest.reason.time', { minutes: reason.minutes });
   if (reason.term === 'mechanics') return t('suggest.reason.mechanics', { games: joinNames(reason.games || []) });
   if (reason.term === 'categories') return t('suggest.reason.categories', { games: joinNames(reason.games || []) });
