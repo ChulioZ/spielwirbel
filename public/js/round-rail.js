@@ -42,11 +42,16 @@ const RAIL_OWN_ENTRY = ['retired', 'completed', 'wishlist', 'recommendations', .
 // interchangeable — the same distinction the sections below draw (#331):
 //   current -> you are ON this screen: "page", and click-inert, like the active
 //              hub tab (#330/#331).
-//   inside  -> you are on a screen this entry OWNS (Tags, reached from
-//              Einstellungen): "true", highlighted, and deliberately still a
-//              LIVE link, because clicking it is how you get back up to it.
+//   inside  -> you are on a screen this entry OWNS: "true", highlighted, and
+//              deliberately still a LIVE link, because clicking it is how you
+//              get back up to it.
 // Marking `inside` as current instead would leave a desktop user on Tags with
 // no rail route back to the screen that owns it.
+//
+// `inside` has TWO producers, not one. Einstellungen owns Tags/Design, and the
+// three off-shelf rows own the detail page of a game sitting in them (#794) —
+// a wished-for game is on no shelf, so the Regal, which by definition cannot
+// contain it, must not be the row that claims the marker.
 function railItem({ icon, label, path, onNav, current, inside }) {
   const mark = current ? 'page' : inside ? 'true' : '';
   const el = h(`<a class="rail__item${current || inside ? ' is-active' : ''}"${mark ? ` aria-current="${mark}"` : ''}>
@@ -55,13 +60,20 @@ function railItem({ icon, label, path, onNav, current, inside }) {
   return navLink(el, path, current ? null : onNav);
 }
 
-function buildRoundRail(round, activeTab, sub) {
+function buildRoundRail(round, activeTab, sub, offShelf) {
   const rid = round.id;
   const activeGames = round.games.filter((g) => !g.retired && !g.completed && !g.wish);
   const playedCount = round.sessions.filter((s) => s.finished).length;
   // A sub-screen with its own entry claims the current marker, so the section
   // list stays unhighlighted rather than lighting up two rows at once.
   const ownEntry = sub && RAIL_OWN_ENTRY.includes(sub) ? sub : null;
+  // The same one-marker rule, for a row that owns the screen without BEING it:
+  // the detail page of an off-shelf game is claimed by that game's list (#794).
+  // `offShelf` and `ownEntry` are mutually exclusive by construction — only the
+  // game detail passes one, and `game` has no entry of its own — but the
+  // sections below ask a single "is the marker already spoken for" question so
+  // that stays true no matter which of the two is set.
+  const claimed = ownEntry || offShelf || null;
 
   const rail = h(`<aside class="rail" aria-label="${esc(t('a11y.roundNav'))}"></aside>`);
 
@@ -130,8 +142,8 @@ function buildRoundRail(round, activeTab, sub) {
     // marked, and stays a live link, but never "page". Same distinction the
     // strip draws (#331); here it only applies when the screen has no entry of
     // its own.
-    const inside = !ownEntry && sub && tabId === activeTab;
-    const el = h(`<a class="rail__item${tabId === activeTab && !ownEntry ? ' is-active' : ''}"${inside ? ' aria-current="true"' : ''}>
+    const inside = !claimed && sub && tabId === activeTab;
+    const el = h(`<a class="rail__item${tabId === activeTab && !claimed ? ' is-active' : ''}"${inside ? ' aria-current="true"' : ''}>
          <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span>
        </a>`);
     const current = tabId === activeTab && !sub;
@@ -155,6 +167,7 @@ function buildRoundRail(round, activeTab, sub) {
     path: roundPath(rid, 'retired'),
     onNav: () => showRetired(rid),
     current: ownEntry === 'retired',
+    inside: offShelf === 'retired',
   }));
   archive.appendChild(railItem({
     icon: 'ti-circle-check',
@@ -162,6 +175,7 @@ function buildRoundRail(round, activeTab, sub) {
     path: roundPath(rid, 'completed'),
     onNav: () => showCompleted(rid),
     current: ownEntry === 'completed',
+    inside: offShelf === 'completed',
   }));
   archive.appendChild(railItem({
     icon: 'ti-heart',
@@ -169,6 +183,7 @@ function buildRoundRail(round, activeTab, sub) {
     path: roundPath(rid, 'wishlist'),
     onNav: () => showWishlist(rid),
     current: ownEntry === 'wishlist',
+    inside: offShelf === 'wishlist',
   }));
   // Recommendations (#682) sit in this group rather than in a fourth one: the
   // label is literally "Nicht im Regal", and a game the round does not own is
