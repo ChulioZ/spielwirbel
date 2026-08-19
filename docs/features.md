@@ -121,7 +121,7 @@ What the app does, in detail. For a short overview see the
   the cover the round picked, so everyone in it sees one price for one wish;
   where it ships to and in what currency still follows each reader. Read-only and
   server-side: no alerts, no price history, and no affiliate links of any kind.
-  Beside those three lists the shelf's footer offers **„Das könnte euch auch
+  Beside those three lists the shelf offers **„Das könnte euch auch
   gefallen"** — games the round does *not* own, ranked against its own taste.
   The profile comes from the two things BoardGameGeek cannot know: which games
   this group actually rated well, and how many people really sit at their table
@@ -134,8 +134,10 @@ What the app does, in detail. For a short overview see the
   puts it on the Wunschliste. Games already in the round in any state — including retired,
   the sharpest signal of all — are never suggested back, and a round with too
   few linked games is told so rather than shown a confident guess.
-  A game is active, retired, completed or wished-for, never two at once, and all
-  three lists are reached from the round hub's footer. Every row on those lists
+  A game is active, retired, completed or wished-for, never two at once. All
+  three lists — and the recommendations beside them — are reached from „Nicht im
+  Regal" in the shelf's header on a phone or tablet, and from the left rail's own
+  group from 1280px up. Every row on those lists
   opens the game's own detail page, so a game keeps its full editing surface —
   title, cover, player range, tags — after it has left the shelf; the page then
   offers only the way back onto it. The distinction carries through to the Pokale tab: a
@@ -144,7 +146,7 @@ What the app does, in detail. For a short overview see the
   nights you actually played it still count toward "Meistgespielt". A completed
   game keeps counting everywhere. Only a game that is already off the shelf —
   archived or wished-for — can be permanently deleted. Games can be **moved between rounds**: "Spiele verschieben" in the
-  shelf's footer lists the round's games — archived ones included, labelled —
+  round's Einstellungen lists the round's games — archived ones included, labelled —
   each pre-checked, so confirming untouched consolidates the whole round while
   unchecking splits off just part of the shelf. Moved games keep their covers,
   provider links and tags, and same-named tags are merged into the target. The

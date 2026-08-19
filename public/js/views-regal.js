@@ -1,6 +1,7 @@
 /* Spielwirbel – views: the Regal tab, the round's games library — search, the
-   tri-state tag filter chips, sort, the lazy cover grid, and the footer links
-   to the three off-shelf screens. Rendered by showRound() (views-round.js).
+   tri-state tag filter chips, sort, the lazy cover grid, and the header control
+   that opens the four off-shelf screens. Rendered by showRound()
+   (views-round.js).
    Part of the frontend; all files share one global script scope. */
 
 // --- Regal tab: the games library — search, filter chips, cover grid.
@@ -284,34 +285,87 @@ function renderRegalTab(round, activeGames) {
     });
     renderGames();
   }
-  app.appendChild(gamesSec);
 
-  // Quiet footer: the ways off the active shelf — the two archives, retired
-  // ("Aussortiert") and completed ("Durchgespielt", #250), plus the Wunschliste
-  // (#560). All three are kept apart because the reason differs: two are games
-  // the group had, the third is games they want.
-  const retiredGames = round.games.filter((g) => g.retired);
-  const completedGames = round.games.filter((g) => g.completed);
-  const wishGames = round.games.filter((g) => g.wish);
-  const foot = h('<div class="round-footer rail-owned"></div>');
-  const retiredBtn = h(`<a class="link-btn"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('retired.link', { n: retiredGames.length }))}</a>`);
-  navLink(retiredBtn, roundPath(round.id, 'retired'), () => showRetired(round.id));
-  foot.appendChild(retiredBtn);
-  const completedBtn = h(`<a class="link-btn"><i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('completed.link', { n: completedGames.length }))}</a>`);
-  navLink(completedBtn, roundPath(round.id, 'completed'), () => showCompleted(round.id));
-  foot.appendChild(completedBtn);
-  const wishBtn = h(`<a class="link-btn"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('wish.link', { n: wishGames.length }))}</a>`);
-  navLink(wishBtn, roundPath(round.id, 'wishlist'), () => showWishlist(round.id));
-  foot.appendChild(wishBtn);
-  // The one entry that points OFF the shelf entirely (#682): games the round
-  // does not own, next to the wish list because that is where an accepted
-  // recommendation lands.
-  const recBtn = h(`<a class="link-btn"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('suggest.link'))}</a>`);
-  navLink(recBtn, roundPath(round.id, 'recommendations'), () => showRecommendations(round.id));
-  foot.appendChild(recBtn);
-  // "Spiele verschieben" and "Einladen" used to sit here too. Neither is a shelf
-  // concern — one consolidates two rounds, the other shares the round — and both
-  // were findable only by scrolling past the whole game grid, so they moved to
-  // the round's Einstellungen screen (#561).
-  app.appendChild(foot);
+  // The ways off the active shelf — the two archives, retired ("Aussortiert")
+  // and completed ("Durchgespielt", #250), the Wunschliste (#560) and the
+  // recommendations (#682). All four are kept apart because the reason differs:
+  // two are games the group had, one is games they want, and one is games they
+  // do not own at all.
+  //
+  // `rail-owned`, so from 1280px up this is display:none and the rail's
+  // "Nicht im Regal" group carries the same four. Below that they used to be a
+  // row at the very BOTTOM of the grid — #334 fixed only the desktop half, and
+  // on a phone column of 1–2 covers a large Regal buries them a hundred-plus
+  // rows down (#777). Same footer-stranding #561 fixed for the round's actions.
+  //
+  // Appended OUTSIDE the branch above on purpose: `.section-tools` is otherwise
+  // only populated when the shelf has games, and an empty shelf can still have a
+  // full Wunschliste or Aussortiert — i.e. it would vanish exactly where it is
+  // most needed.
+  const offShelfBtn = h(`<button class="link-btn rail-owned" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
+  offShelfBtn.addEventListener('click', () => openOffShelfSheet(round));
+  gamesTools.appendChild(offShelfBtn);
+
+  app.appendChild(gamesSec);
+  // "Spiele verschieben" and "Einladen" used to sit in a footer below the grid
+  // too. Neither is a shelf concern — one consolidates two rounds, the other
+  // shares the round — and both were findable only by scrolling past the whole
+  // game grid, so they moved to the round's Einstellungen screen (#561).
+}
+
+// The four off-shelf destinations, as a plain list sheet.
+//
+// ONE presentation for everything below 1280px, deliberately: the trigger is
+// `rail-owned`, so a popover/sheet split by the 860px editor breakpoint would
+// invent a third presentation for the 860–1279px band alone. The
+// popover-vs-sheet split exists because an anchored popover cannot hold a text
+// input on a phone (.claude/rules/popover-vs-sheet-editors.md) — this holds only
+// links, so it never needs it. Shape copied from pickExpansionBase (#664).
+function openOffShelfSheet(round) {
+  const rid = round.id;
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog sheet--list" role="dialog" aria-modal="true" aria-label="${esc(t('rail.archive'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('rail.archive'))}</h2>
+          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="ds-list off-shelf"></div>
+      </div>
+    </div>`);
+  document.body.appendChild(backdrop);
+  const dismiss = () => closeSheet();
+  const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
+  document.addEventListener('keydown', onKey, true);
+  // Must go through openSheet for the focus trap (#145) and Back-dismissal
+  // (#333) — never assign activeSheet directly.
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) dismiss(); });
+  backdrop.querySelector('.sheet__close').addEventListener('click', dismiss);
+
+  // Same icons, labels and counts as the rail's rows — the two are one
+  // navigation at two widths, which is what test/off-shelf-parity.test.js
+  // pins. Recommendations carry no count deliberately: the other three number
+  // the round's OWN games, while this one would number a list the round has
+  // never seen (see the comment at round-rail.js's suggest row).
+  const list = backdrop.querySelector('.off-shelf');
+  [
+    { icon: 'ti-trash', label: t('retired.link', { n: round.games.filter((g) => g.retired).length }), sub: 'retired', go: () => showRetired(rid) },
+    { icon: 'ti-circle-check', label: t('completed.link', { n: round.games.filter((g) => g.completed).length }), sub: 'completed', go: () => showCompleted(rid) },
+    { icon: 'ti-heart', label: t('wish.link', { n: round.games.filter((g) => g.wish).length }), sub: 'wishlist', go: () => showWishlist(rid) },
+    { icon: 'ti-sparkles', label: t('suggest.link'), sub: 'recommendations', go: () => showRecommendations(rid) },
+  ].forEach(({ icon, label, sub, go }) => {
+    // Real <a href> (#330), so ⌘/middle-click still open them in a new tab.
+    // `class` FIRST, like every other .ds-row site — test/ds-row-affordance.test.js
+    // matches on `<a\s+class="ds-row…"`, so an attribute in front of it makes the
+    // row invisible to that guard rather than failing it.
+    const row = h(`<a class="ds-row off-shelf__row">
+         <span class="ds-row__main"><i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span></span>
+         <span class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></span>
+       </a>`);
+    // Through closeSheet, never on the line after it, or the queued history pop
+    // races the screen the choice renders
+    // (.claude/rules/sheet-history-back-dismissal.md).
+    navLink(row, roundPath(rid, sub), () => closeSheet(go));
+    list.appendChild(row);
+  });
 }

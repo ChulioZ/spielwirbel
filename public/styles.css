@@ -3027,7 +3027,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 /* The reset a <button> needs to look like a `.ds-row`. Shared by the round
    settings actions and the wished-expansion base picker (#664) rather than
    copied — a second block of the same six declarations is the drift
-   .claude/rules/shared-constants-across-the-stack.md is about, one layer down. */
+   .claude/rules/shared-constants-across-the-stack.md is about, one layer down.
+
+   The Regal's off-shelf sheet (#777) joins the two LAYOUT rules below but not
+   this reset: its rows are <a href> destinations, not <button>s, so they carry
+   none of the form-control defaults these six declarations undo. */
 .rs-row,
 .wish-pick__row {
   width: 100%;
@@ -3042,9 +3046,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    a flex row globally would lay those out side by side (the same reasoning that
    scopes `.provider-row .ds-row__main` below). */
 .rs-row .ds-row__main,
-.wish-pick__row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.wish-pick__row .ds-row__main,
+.off-shelf__row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .rs-row .ds-row__meta,
-.wish-pick__row .ds-row__meta { color: var(--ink-soft); }
+.wish-pick__row .ds-row__meta,
+.off-shelf__row .ds-row__meta { color: var(--ink-soft); }
 
 /* Account menu header (username + e-mail) above the logout item in the shared
    popover. The username (#320) leads: it is the account's public identity, the

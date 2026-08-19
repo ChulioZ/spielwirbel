@@ -170,17 +170,25 @@ unreachable on a desktop-width window, with nothing red anywhere — the footer 
 correct, the screen is correct, and the width that hides one and not the other is
 the state nobody rendered.
 
-#682 did exactly that: its recommendations screen was reachable from the footer
-and absent from the rail, verified in a browser at 1180px and 390px — **both
-below the breakpoint**, so the check that existed could not see it. That is this
-file's own "measure the transition, not the screen" advice, skipped by walking
-two points on the same side of the transition.
+#682 did exactly that: its recommendations screen was reachable from the narrow
+surface and absent from the rail, verified in a browser at 1180px and 390px —
+**both below the breakpoint**, so the check that existed could not see it. That
+is this file's own "measure the transition, not the screen" advice, skipped by
+walking two points on the same side of the transition.
 
-`test/rail-footer-parity.test.js` now asserts the footer's link set is a subset
-of the rail's, so the next such screen is covered without anyone remembering.
-Write the assertion as **parity**, never as "the new row exists": the parity form
-covers additions to either surface, and the anti-vacuous floor (the footer really
-did render ≥4 links) is what stops it going quiet if the footer is refactored.
+`test/off-shelf-parity.test.js` now asserts the narrow surface's link set is a
+subset of the rail's, so the next such screen is covered without anyone
+remembering. Write the assertion as **parity**, never as "the new row exists":
+the parity form covers additions to either surface, and the anti-vacuous floor
+(the narrow surface really did render ≥4 links) is what stops it going quiet if
+that surface is refactored.
+
+**It was refactored, in #777** — the `.round-footer` row below the grid became a
+sheet opened from the Regal's header — and the floor is what made the retarget a
+checkable step rather than a silent one: pointed at the now-absent `.round-footer`
+the spec would have compared two empty sets and passed. A parity assertion whose
+inputs can both go empty needs that floor on the surface that is *likely to move*,
+not on the stable one.
 
 ## What survived from #332, and why
 

@@ -233,14 +233,23 @@ rendering them verbatim printed `80–60 Min.`, which reads as a bug in the app.
 Ordering them is not *modifying* the data — both numbers still show, unrounded
 (`.claude/rules/bgg-corpus.md`).
 
-**Missed:** the screen needs TWO entry points. The Regal footer carrying „Könnte
-euch gefallen" is `.rail-owned`, so from 1280px up it is `display: none` and the
-**rail** is the only way in — and #682 shipped with the footer row alone, leaving
-the feature unreachable on a desktop-width window. Reported by the operator, who
-had read the news entry and then could not find it. The pass that missed it ran
-at 1180px and 390px: two widths, both **below the one breakpoint that mattered**.
-`test/rail-footer-parity.test.js` now pins the footer's links as a subset of the
-rail's; see `.claude/rules/responsive-content-width.md`.
+**Missed:** the screen needs TWO entry points. The Regal's narrow entry to
+„Könnte euch gefallen" is `.rail-owned`, so from 1280px up it is `display: none`
+and the **rail** is the only way in — and #682 shipped with the narrow row alone,
+leaving the feature unreachable on a desktop-width window. Reported by the
+operator, who had read the news entry and then could not find it. The pass that
+missed it ran at 1180px and 390px: two widths, both **below the one breakpoint
+that mattered**. `test/off-shelf-parity.test.js` now pins the narrow surface's
+links as a subset of the rail's; see
+`.claude/rules/responsive-content-width.md`.
+
+**Where that narrow entry lives moved in #777**, and the lesson above is exactly
+why it moved: it was a `.round-footer` row below the *entire* cover grid, i.e.
+present but, on a phone column of 1–2 covers, unreachable in practice. It is now
+a „Nicht im Regal" control in the Regal's `.section-tools` header row, opening a
+sheet with all four off-shelf destinations (`openOffShelfSheet`,
+`public/js/views-regal.js`). The parity test was retargeted at that sheet in the
+same PR rather than left watching an empty `.round-footer` selector.
 
 ## 10. #264 removed a recommender, and its guard had to be re-aimed rather than deleted
 
