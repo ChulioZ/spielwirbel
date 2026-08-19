@@ -130,8 +130,8 @@ What the app does, in detail. For a short overview see the
   the local BGG corpus, and the two are joined by plain weighted arithmetic:
   no model, no AI, no outbound call, and every entry a real BGG row that cannot
   be invented. Each card says **why** it is there ("Ähnliche Mechaniken wie
-  Wingspan und Terraforming Mars", „Zu viert am besten"), and one tap puts it on
-  the Wunschliste. Games already in the round in any state — including retired,
+  Wingspan und Terraforming Mars", „Am besten mit 4 Personen"), and one tap
+  puts it on the Wunschliste. Games already in the round in any state — including retired,
   the sharpest signal of all — are never suggested back, and a round with too
   few linked games is told so rather than shown a confident guess.
   A game is active, retired, completed or wished-for, never two at once, and all

@@ -110,6 +110,24 @@ test('the BGG cover is painted on the frame, and a coverless row keeps the place
   assert.ok(without.querySelector('.cover-ph'), 'a coverless row still gets the deterministic placeholder');
 });
 
+test('the players reason reads as a sentence, with its own solo phrasing (#805)', async (t) => {
+  const both = [{ term: 'players', players: 4 }, { term: 'players', players: 1 }];
+  const lines = async (locale) => {
+    const { dom } = await render(t, full({
+      recommendations: both.map((r, i) => rec({ externalId: String(900 + i), reasons: [r] })),
+    }), { locale });
+    return [...dom.app.querySelectorAll('.rec-card__why li')].map((li) => li.textContent);
+  };
+
+  // The collective numeral is deliberately not used: „Zu 4. am besten" reads as
+  // an ordinal and „zu viert" would need a hand-written table, so the line
+  // reuses the app's own established „{n} Personen" phrasing.
+  assert.deepEqual(await lines('de'), ['Am besten mit 4 Personen', 'Am besten solo']);
+  // n = 1 goes through tn()'s one-category key rather than an `n === 1` branch,
+  // which is what keeps „Am besten mit 1 Personen" off the card.
+  assert.deepEqual(await lines('en'), ['Plays best with 4 players', 'Plays best solo']);
+});
+
 test('a reason the client has no phrase for renders NOTHING, never a raw key', async (t) => {
   const { dom } = await render(t, full({
     recommendations: [rec({ reasons: [{ term: 'from-a-newer-server' }, { term: 'quality', rating: 8.4 }] })],
