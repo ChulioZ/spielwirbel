@@ -348,6 +348,30 @@ function renderPriceNoOffers() {
   return sec;
 }
 
+// The three lists that hold a game the round is not playing off its shelf, in
+// the order a game's own flags are read. ONE table, because two affordances on
+// the game-detail screen answer the same question from it: the rail marks the
+// list the game belongs to (#794) and the back control falls back to it (#663).
+// They answered it separately until #794, and the rail's answer — a hard-coded
+// Regal — was wrong in all three states, so the two navigation controls on one
+// screen pointed at different lists.
+//
+// The order is not a tie-break: the repo clears the other two flags on every
+// one of these transitions (`.claude/rules/active-games-filter-sites.md`), so a
+// game is never in two of the lists at once.
+//
+// `show` is an arrow rather than a bare reference because these are defined in
+// views-archive.js: a top-level table capturing them by value would be reading
+// a later file's names at load time (`.claude/rules/frontend-script-load-order.md`).
+const OFF_SHELF_LISTS = [
+  { id: 'retired', holds: (g) => !!g.retired, show: (rid) => showRetired(rid) },
+  { id: 'completed', holds: (g) => !!g.completed, show: (rid) => showCompleted(rid) },
+  { id: 'wishlist', holds: (g) => !!g.wish, show: (rid) => showWishlist(rid) },
+];
+
+// The off-shelf list a game sits in, or null while it is on the shelf.
+const offShelfListOf = (game) => OFF_SHELF_LISTS.find((l) => l.holds(game)) || null;
+
 async function showGameDetail(rid, gameId) {
   currentView = () => showGameDetail(rid, gameId);
   syncUrl(gamePath(rid, gameId));
@@ -365,18 +389,17 @@ async function showGameDetail(rid, gameId) {
   const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
   const fallback = coverPlaceholder(game);
   app.innerHTML = '';
-  renderSubScreenTabs(round, 'game');
+  // Where this game lives, which both navigation controls below need. The rail
+  // marks that list instead of the Regal, which for an off-shelf game is the one
+  // section that by definition cannot contain it (#794).
+  const offShelf = offShelfListOf(game);
+  renderSubScreenTabs(round, 'game', offShelf && offShelf.id);
   // The fallback destination is derived from the GAME's state, not from an
   // origin argument (#663). Real history still wins — backRow feeds navBack —
   // so this is the deep-link case, and a page reached by URL has no origin to
   // pass: a game belongs to whichever screen lists it, whether it was opened
   // from a shared link, a session results row or the Pokale cards.
-  app.appendChild(backRow(() => {
-    if (game.retired) return showRetired(rid);
-    if (game.completed) return showCompleted(rid);
-    if (game.wish) return showWishlist(rid);
-    return showRound(rid, 'regal');
-  }));
+  app.appendChild(backRow(() => (offShelf ? offShelf.show(rid) : showRound(rid, 'regal'))));
 
   // Send a partial update, then re-render the page from fresh data.
   async function updateGame(updates) {

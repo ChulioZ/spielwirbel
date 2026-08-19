@@ -238,6 +238,7 @@ const frontendGlobals = {
   recReasonText: 'readonly', recNum: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
   showArchive: 'readonly', ARCHIVES: 'readonly', THEMES: 'readonly',
   showBackground: 'readonly', showGameDetail: 'readonly', showAddGame: 'readonly',
+  OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showMoveGames: 'readonly',
   showInvite: 'readonly', inviteError: 'readonly', insertFriendPicker: 'readonly',
   showBggImport: 'readonly', canImportBgg: 'readonly', bggImportError: 'readonly',

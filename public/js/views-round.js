@@ -84,7 +84,13 @@ async function showRound(rid, tab) {
 // are rendered and CSS shows exactly one, so a resize never needs a re-render.
 // Takes the whole `round` because the rail carries its identity and counts, not
 // just its id.
-function renderHubTabs(round, activeTab, sub) {
+//
+// `offShelf` reaches the rail alone (#794). It names the off-shelf list holding
+// the game a detail screen is showing, and only the rail has rows for those
+// lists — the dock carries the four hub tabs and nothing else, so below 1280px
+// a wish game keeps marking Regal, which is #777's territory rather than this
+// argument's.
+function renderHubTabs(round, activeTab, sub, offShelf) {
   const rid = round.id;
   const tabs = [
     { id: 'start', icon: 'ti-home', label: t('hub.tab.start') },
@@ -118,7 +124,7 @@ function renderHubTabs(round, activeTab, sub) {
   // Rail first, so it is the column's first child and the dock the second —
   // both inert in the presentation where CSS hides them.
   app.prepend(dock);
-  app.prepend(buildRoundRail(round, activeTab, sub));
+  app.prepend(buildRoundRail(round, activeTab, sub, offShelf));
 }
 
 // Prepend the desktop-only strip to a round sub-screen, marking the tab that
@@ -129,8 +135,13 @@ function renderHubTabs(round, activeTab, sub) {
 // gives five of those screens an entry of their own and has to know which one it
 // is on. Collapsing it here made Tags/Provider/Design and both archives light up
 // "Start" instead of themselves, which looks like a plausible answer and is not.
-function renderSubScreenTabs(round, sub) {
-  renderHubTabs(round, hubTabOwning(sub), sub);
+//
+// `offShelf` is optional and passed only by the game detail, whose `sub` is the
+// same 'game' for four different screens: HUB_TAB_OF answers where the game
+// detail lives in the hub (always the Regal, which is what the dock needs) and
+// cannot answer where THIS game lives, which is what the rail marks.
+function renderSubScreenTabs(round, sub, offShelf) {
+  renderHubTabs(round, hubTabOwning(sub), sub, offShelf);
 }
 
 // The round's name as an inline-editable heading (#562). Until then it was typed
