@@ -123,15 +123,15 @@ const delta = (profile, a, b) =>
 
 /* -------------------------------- affinities ------------------------------- */
 
-test('a game state outranks its ratings, and the ladder is retired < rated-low < owned < rated-high', () => {
+test('a game state outranks its ratings, and the ladder is retired < rated-low < unrated < rated-high', () => {
   const round = {
     members: [],
     sessions: [
       {
         id: 's1',
-        gameIds: ['gr', 'ghigh', 'glow'],
+        gameIds: ['gr', 'ghigh', 'gmid', 'glow'],
         memberIds: ['m1'],
-        votes: { m1: { gr: { rating: 5 }, ghigh: { rating: 5 }, glow: { rating: 1 } } },
+        votes: { m1: { gr: { rating: 5 }, ghigh: { rating: 5 }, gmid: { rating: 3 }, glow: { rating: 1 } } },
       },
     ],
     members2: null,
@@ -141,13 +141,61 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
 
   // A retired game usually carries votes; letting them speak would make "we
   // threw this out" read as an ordinary five-star opinion.
-  assert.equal(gameAffinity(round, g('gr', { retired: true })), -0.5);
+  assert.equal(gameAffinity(round, g('gr', { retired: true })), -1, 'retired -> -1.0');
   assert.equal(gameAffinity(round, g('ghigh')), 2, 'rated 5 -> 2.0');
+  assert.equal(gameAffinity(round, g('gmid')), 1, 'rated 3 -> 1.0');
   assert.equal(gameAffinity(round, g('glow')), 0, 'rated 1 -> 0.0');
-  assert.equal(gameAffinity(round, g('gnone')), 1, 'owned, unrated -> neutral 1.0');
+  assert.equal(gameAffinity(round, g('gnone')), 0.6, 'owned, unrated -> 0.6');
   // Completed is deliberately NOT a state: the game was played through, so its
   // ratings still count.
   assert.equal(gameAffinity(round, g('ghigh', { completed: true })), 2);
+
+  // The RELATION, not the literals (#799): a shelf entry nobody has voted on is
+  // a real signal but a weaker one than any game the round has formed an opinion
+  // about — and still stronger than a game it actively disliked. Two bare
+  // literals would go green on any future re-tune that inverted this.
+  const unrated = gameAffinity(round, g('gnone'));
+  assert.ok(unrated < gameAffinity(round, g('gmid')), `unrated ${unrated} must rank below rated 3.0`);
+  assert.ok(unrated > gameAffinity(round, g('glow')), `unrated ${unrated} must rank above rated 1.0`);
+  // And "we got rid of it" outweighs "we own it and never played it".
+  assert.ok(Math.abs(gameAffinity(round, g('gr', { retired: true }))) > unrated);
+});
+
+test('lowering the unrated rung shifts profile mass onto the games the round RATED (#799)', () => {
+  /*
+   * Three rated-5 games (affinity 2.0) carrying one mechanic, five unrated ones
+   * carrying another — the collection-import shape, where the unrated majority
+   * used to dominate a profile built mostly of games nobody has said anything
+   * about.
+   *
+   * Asserted as the RATIO of the two components, which the L2 normalisation
+   * divides by a common scalar and so cannot move — it states the rung directly,
+   * where a bare normalised value also folds in the vector length: 3x2.0 against
+   * 5x0.6 is exactly 2:1, where the old 5x1.0 gave 1.2:1 — the unrated block
+   * came within a fifth of the rated one despite the round rating nothing else.
+   */
+  const games = [];
+  for (let i = 1; i <= 3; i += 1) games.push({ id: `r${i}`, title: `Rated ${i}`, source: { provider: 'bgg', externalId: `or${i}` } });
+  for (let i = 1; i <= 5; i += 1) games.push({ id: `u${i}`, title: `Unrated ${i}`, source: { provider: 'bgg', externalId: `ou${i}` } });
+  const round = shelfRound({
+    games,
+    sessions: [{
+      id: 's1',
+      gameIds: ['r1', 'r2', 'r3'],
+      memberIds: ['m1'],
+      votes: { m1: { r1: { rating: 5 }, r2: { rating: 5 }, r3: { rating: 5 } } },
+    }],
+  });
+  const corpus = [
+    ...[1, 2, 3].map((i) => entry(`or${i}`, { info: info({ mechanics: ['Rated'] }) })),
+    ...[1, 2, 3, 4, 5].map((i) => entry(`ou${i}`, { info: info({ mechanics: ['Unrated'] }) })),
+  ];
+  const profile = profileOf(round, corpus);
+  const ratio = profile.mechanics.Rated / profile.mechanics.Unrated;
+  assert.equal(Math.round(ratio * 1e6) / 1e6, 2, `rated:unrated mass was ${ratio}:1`);
+  // …and the same thing said in the normalised units the cosine actually reads.
+  assert.ok(profile.mechanics.Rated > 0.85, `rated component ${profile.mechanics.Rated}`);
+  assert.ok(profile.mechanics.Unrated < 0.5, `unrated component ${profile.mechanics.Unrated}`);
 });
 
 test('the party distribution counts PARTIES per session, and falls back to the member count', () => {
@@ -182,7 +230,10 @@ test('QUALITY is scored from the BAYES average, over the band BGG actually uses'
 
 test('COMPLEXITY is symmetric — too heavy and too light are equally wrong', () => {
   const profile = profileOf(shelfRound(), shelfCorpus());
-  assert.equal(profile.targetWeight, 3);
+  // Rounded, not pinned: the weighted mean over eight games at affinity 0.6 lands
+  // on 3.0000000000000004, and the term below reads it through the same `delta`
+  // rounding anyway. The claim is "the target IS the shelf's own weight".
+  assert.equal(Math.round(profile.targetWeight * 1e6) / 1e6, 3);
   const centre = entry('x', { info: info({ weight: 3 }) });
   const heavy = entry('y', { info: info({ weight: 4.2 }) }); // exactly the tolerance
   const light = entry('z', { info: info({ weight: 1.8 }) });
@@ -314,7 +365,7 @@ test('a match on the round\'s FAVOURITE mechanics scores near 1.0, not half (#77
 });
 
 test('the rescale ceiling ignores NEGATIVE profile components (#772)', () => {
-  // A retired game contributes affinity -0.5, so the profile vector can hold
+  // A retired game contributes affinity -1.0, so the profile vector can hold
   // negative components — and a candidate can always avoid one by carrying a
   // mechanic the round has never met, which scores 0. So the best a k-mechanic
   // candidate can do is the k largest NON-NEGATIVE components; counting a
@@ -323,6 +374,11 @@ test('the rescale ceiling ignores NEGATIVE profile components (#772)', () => {
   round.games.push({ id: 'gr', title: 'Retired', retired: true, source: { provider: 'bgg', externalId: 'orx' } });
   const corpus = [...shelfCorpus({ mechanics: ['Loved'] }), entry('orx', { info: info({ mechanics: ['Hated'] }) })];
   const profile = profileOf(round, corpus);
+  // The rung reaches the VECTOR, not just the ladder (#799): a mechanic only the
+  // retired game carries ends up negative, which is how "we threw this out"
+  // influences anything at all.
+  assert.ok(profile.mechanics.Hated < 0, `retired-only mechanic scored ${profile.mechanics.Hated}`);
+  assert.ok(profile.mechanics.Loved > 0);
   const value = (mechanics) =>
     scoreCandidate(profile, entry('x', { info: info({ mechanics }) })).terms.find((t) => t.term === 'mechanics').value;
 
@@ -594,7 +650,19 @@ test('a reason line can never name a wished game', () => {
 });
 
 test('a reason line can never name a RETIRED game', () => {
-  const round = shelfRound();
+  // The shelf is RATED, and that is a re-measure rather than scenery (#799).
+  // At the -1.0 retired rung a candidate carrying M1 plus the two mechanics only
+  // the discarded game has no longer clears the `> NEUTRAL` gate off an unrated
+  // shelf — correctly, but it would make this case pass for the wrong reason,
+  // exactly like the missing shared M1 the comment below warns about.
+  const round = shelfRound({
+    sessions: [{
+      id: 's1',
+      gameIds: Array.from({ length: MIN_PROFILE_GAMES }, (_, i) => `g${i + 1}`),
+      memberIds: ['m1'],
+      votes: { m1: Object.fromEntries(Array.from({ length: MIN_PROFILE_GAMES }, (_, i) => [`g${i + 1}`, { rating: 5 }])) },
+    }],
+  });
   round.games.push({ id: 'gr', title: 'Thrown out', retired: true, source: { provider: 'bgg', externalId: 'orx' } });
   /*
    * The sibling of the wish case above, one state over — and the reason #776's
@@ -627,7 +695,12 @@ test('a reason line can never name a RETIRED game', () => {
 });
 
 test('a retired game is FILTERED OUT, not merely outranked, when a slot is free', () => {
-  const round = shelfRound();
+  // Owned 1 is rated, for the same reason as the sibling above (#799): one
+  // unrated game at 0.6 against a retired one at -1.0 leaves M-x NEGATIVE, so no
+  // mechanics reason fires at all and the case would stop testing the filter.
+  const round = shelfRound({
+    sessions: [{ id: 's1', gameIds: ['g1'], memberIds: ['m1'], votes: { m1: { g1: { rating: 5 } } } }],
+  });
   round.games.push({ id: 'gr', title: 'Thrown out', retired: true, source: { provider: 'bgg', externalId: 'orx' } });
   /*
    * The sibling above does NOT cover the `rank > 0` filter clause, and this is
@@ -949,7 +1022,7 @@ test('a taste reason with no contributors left costs the card no line (#775)', (
    * suffices. What still holds: clearing the `> NEUTRAL` gate needs a positive dot
    * product, which needs a positive component, which only a positive-affinity game
    * can accumulate — and that game is itself a qualifying contributor. Measured: a
-   * mechanic carried solely by a retired (-0.5) and a rated-1 (0.0) game scores 0.
+   * mechanic carried solely by a retired (-1.0) and a rated-1 (0.0) game scores 0.
    *
    * It is pinned anyway because what it guards is the ORDERING: the empty-games
    * filter has to run BEFORE the slice, or dropping the line costs a slot that a

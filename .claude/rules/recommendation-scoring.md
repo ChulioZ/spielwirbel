@@ -117,6 +117,42 @@ here from `round.members` would silently drop guests and flatten teams, so
   see §11's affinity-ranked-contributors bullet (#798) for why the remedies
   differ.
 
+  **The ladder is `retired -1.0` / `rated (avg-1)/2` / `unrated 0.6` (#799), and
+  both ends were re-tuned away from the obvious values.** Unrated used to be
+  `1.0` — exactly what a game rated 3.0 earns, and more than anything below it.
+  Since a rating only exists where somebody voted in a *voting* session, every
+  other route onto the shelf (the BGG import, a manual add, a direct-pick
+  evening) produced that value, so a normal round's profile was dominated by
+  games nobody has said anything about. Be honest about the size of the lever
+  though: mass share is driven mainly by COUNT, so on an import-shaped shelf
+  (8 rated / 30 unrated) `0.6` moves the unrated block from 71% to 60%, not into
+  a minority. `0` was rejected — a collection-import round would have almost no
+  profile, and a direct-pick round none at all, since every one of its
+  most-played games is unrated.
+
+  **`-1.0` deepens the negative past the unrated rung's height on purpose:**
+  retiring is the strongest explicit verdict a round can give, and at `-0.5` it
+  was worth less in absolute terms than a game the round has never formed an
+  opinion about. Two mechanisms already absorb it and needed no change —
+  `prefixSums` drops negatives so the attainable ceiling is untouched at any
+  magnitude, and `cosine` clamps at 0 so a more negative dot cannot become a
+  second penalty with a weight nobody chose. The L2 worry (a bigger negative
+  lengthens the vector and shrinks every positive component) does not
+  materialise, because the same retired game usually also subtracts from the
+  mixed components. Measured on `[loved, shared-with-retired, retired-only]`:
+  `-0.5` gives `0.920 / 0.383 / -0.077`, `-1.0` gives `0.937 / 0.312 / -0.156` —
+  the loved component goes **up**.
+
+  **What it broke in the SPEC is the thing to remember.** Three existing cases
+  went red, none of them about the ladder: a `targetWeight` pinned at exactly `3`
+  (eight games at 0.6 sum to `3.0000000000000004`), and both retired-naming cases
+  in §11, where one unrated game at `0.6` no longer outweighs a retired one at
+  `-1.0` — so the shared mechanic went negative, the term stopped clearing the
+  `> NEUTRAL` gate, and the specs would have passed **for the wrong reason**,
+  exactly the failure their own comments warn about. The fix is to RATE the
+  fixture's shelf, never to soften the assertion; both were re-verified against
+  their original deliberate breaks afterwards.
+
   **Both counts move, and that is load-bearing** — §6's four empty states are
   picked from them. Wishes counted in `linkedGames` would send a round of ten
   wishes and two owned games to `unknownGames` ("the database does not know your
@@ -301,7 +337,7 @@ coincidence. `reasonsFrom` therefore names **at most one** of them:
   product, a positive dot needs a positive component in the profile vector, and
   only a positive-affinity game can accumulate one — and that game is itself a
   qualifying contributor. Measured while writing #798: a mechanic carried solely
-  by a retired (-0.5) and a rated-1 (0.0) game scores exactly **0**. So it stays
+  by a retired (-1.0) and a rated-1 (0.0) game scores exactly **0**. So it stays
   pinned by a hand-built `reasonsFrom` call rather than through `recommend()`,
   and the ordering is what keeps it harmless if a future rung breaks that chain.
 
