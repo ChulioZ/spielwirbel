@@ -57,6 +57,7 @@ const frontendGlobals = {
   applyStaticTexts: 'readonly', setupLangPicker: 'readonly', initFooter: 'readonly',
   gamesSort: 'writable',
   regalFilters: 'writable', regalFiltersRid: 'writable',
+  chronikFilter: 'writable', chronikFilterRid: 'writable', CHRONIK_FILTERS: 'readonly',
   TAG_STATES: 'readonly', cycleTagState: 'readonly',
   paintTagChip: 'readonly', matchesTagFilter: 'readonly',
   renderTagBulkToggle: 'readonly',

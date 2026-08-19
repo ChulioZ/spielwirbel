@@ -14,9 +14,21 @@ const CHRONIK_MILESTONES = ['game_retired', 'game_completed', 'game_restored', '
 const chronikTier = (type) =>
   CHRONIK_MILESTONES.includes(type) ? 'milestone' : type === 'game_added' ? 'add' : '';
 
+const CHRONIK_FILTERS = ['all', 'sessions', 'changes'];
+
 function renderChronikTab(round, activities) {
   const rid = round.id;
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
+
+  // The chip choice persists for the session but is scoped to one round — the
+  // same guard renderRegalTab opens with. An unknown value (a filter dropped in
+  // a later redesign, still sitting in the module-level slot) falls back to
+  // 'all', so the timeline can never render with no chip lit.
+  if (chronikFilterRid !== round.id) {
+    chronikFilter = 'all';
+    chronikFilterRid = round.id;
+  }
+  if (!CHRONIK_FILTERS.includes(chronikFilter)) chronikFilter = 'all';
 
   // Collect all entries: done sessions as cards, game activities as quiet rows.
   const entries = [];
@@ -66,16 +78,18 @@ function renderChronikTab(round, activities) {
   const sec = h('<div class="section"></div>');
   sec.appendChild(h(`<div class="section-head"><h1>${esc(t('chronik.title'))}</h1></div>`));
 
-  // Filter chips: everything / sessions only / shelf changes only.
-  let filter = 'all';
+  // Filter chips: everything / sessions only / shelf changes only. `is-on` is
+  // driven by the remembered choice rather than hard-coded onto "all", or the
+  // marked chip and the timeline would disagree on every return to the tab.
+  const on = (f) => (f === chronikFilter ? ' is-on' : '');
   const chips = h(`<div class="filter-chips">
-      <button class="chip is-on" data-f="all">${esc(t('chronik.filter.all'))}</button>
-      <button class="chip" data-f="sessions"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(t('chronik.filter.sessions'))}</button>
-      <button class="chip" data-f="changes"><i class="ti ti-cards" aria-hidden="true"></i>${esc(t('chronik.filter.changes'))}</button>
+      <button class="chip${on('all')}" data-f="all">${esc(t('chronik.filter.all'))}</button>
+      <button class="chip${on('sessions')}" data-f="sessions"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(t('chronik.filter.sessions'))}</button>
+      <button class="chip${on('changes')}" data-f="changes"><i class="ti ti-cards" aria-hidden="true"></i>${esc(t('chronik.filter.changes'))}</button>
     </div>`);
   chips.querySelectorAll('[data-f]').forEach((chip) => {
     chip.addEventListener('click', () => {
-      filter = chip.dataset.f;
+      chronikFilter = chip.dataset.f;
       chips.querySelectorAll('[data-f]').forEach((c) => c.classList.toggle('is-on', c === chip));
       renderTimeline();
     });
@@ -182,7 +196,7 @@ function renderChronikTab(round, activities) {
   function renderTimeline() {
     tl.innerHTML = '';
     const visible = entries.filter((e) =>
-      filter === 'all' ? true : filter === 'sessions' ? e.kind === 'session' : e.kind === 'activity'
+      chronikFilter === 'all' ? true : chronikFilter === 'sessions' ? e.kind === 'session' : e.kind === 'activity'
     );
     if (visible.length === 0) {
       tl.appendChild(h(`<div class="muted">${esc(t('chronik.empty'))}</div>`));

@@ -375,6 +375,15 @@ let gamesSort = 'avg';
 let regalFilters = { tags: new Map(), query: '', tagMode: 'all' };
 let regalFiltersRid = null;
 
+// Chronik filter state (#793) – the timeline's chip choice ('all' | 'sessions' |
+// 'changes'), kept for the running session and scoped to one round, exactly like
+// regalFilters above. It lives here rather than inside renderChronikTab because
+// every return to the tab re-runs that whole render — a session card and
+// „Zurück", a hub-tab switch, a language switch — so a local would reset the
+// choice on each visit and the filter had to be re-applied per session opened.
+let chronikFilter = 'all';
+let chronikFilterRid = null;
+
 // Tri-state custom-tag filter (#241), shared by the Regal and start-session tag
 // chips. State lives in a Map<tagId, 'include'|'exclude'> — a tag absent from the
 // map is ignored. Clicking a chip cycles ignore -> include -> exclude -> ignore.
