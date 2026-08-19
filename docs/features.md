@@ -123,9 +123,12 @@ What the app does, in detail. For a short overview see the
   server-side: no alerts, no price history, and no affiliate links of any kind.
   Beside those three lists the shelf offers **„Das könnte euch auch
   gefallen"** — games the round does *not* own, ranked against its own taste.
-  The profile comes from the two things BoardGameGeek cannot know: which games
-  this group actually rated well, and how many people really sit at their table
-  (parties, so a team counts once). Everything else — quality, complexity,
+  The profile comes from the three things BoardGameGeek cannot know: which games
+  this group actually rated well, which ones it keeps putting on the table, and
+  how many people really sit at their table (parties, so a team counts once).
+  That middle one matters most to a round that picks its games directly instead
+  of voting: those evenings leave no ratings behind, so without counting the
+  plays the app would know nothing about them. Everything else — quality, complexity,
   mechanics, categories, the community's verdict on player counts — comes from
   the local BGG corpus, and the two are joined by plain weighted arithmetic:
   no model, no AI, no outbound call, and every entry a real BGG row that cannot
