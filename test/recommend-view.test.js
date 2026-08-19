@@ -157,6 +157,45 @@ test('accepting a recommendation posts the ordinary wish-game write, source and 
   assert.equal(post.body.get('maxPlayers'), '4');
 });
 
+/* The cover is the one field the card already HAS and the write used to drop
+   (#789). It matters beyond this screen: the add is the only moment the URL is
+   available, so a wish stored without it renders the placeholder in the wish
+   list, on its detail page and in the Regal until somebody hand-picks a cover.
+
+   Two renders rather than two clicks in one: a successful wish re-runs
+   showRecommendations(), so the second card is rebuilt mid-assertion. */
+const GEEKDO_COVER = 'https://cf.geekdo-images.com/abc__small/img/x=/fit-in/200x150/filters:strip_icc()/pic1.jpg';
+
+test('the card cover travels with the wish (#789)', async (t) => {
+  const { dom, calls } = await render(t, full({ recommendations: [rec({ image: GEEKDO_COVER })] }));
+  dom.app.querySelector('[data-act="wish"]').click();
+  await new Promise((r) => setTimeout(r, 0));
+
+  const post = calls.find((c) => c.method === 'POST');
+  assert.equal(post.body.get('imageUrl'), GEEKDO_COVER, 'the wish carries the box art the reader just clicked');
+  // Sending a cover makes the route's EDITION branch reachable for the first
+  // time on this path (`if (image) edition = buildEdition(...)`, lib/routes/games.js).
+  // The corpus carries no printing, so no edition field is sent and
+  // normalizeEdition answers null — a cover without a claimed printing, which is
+  // what a recommendation actually knows. Picking one is the cover picker's job.
+  assert.equal(post.body.get('editionName'), null);
+  assert.equal(post.body.get('editionYear'), null);
+});
+
+test('a coverless recommendation sends NO imageUrl, rather than an empty one (#789)', async (t) => {
+  const { dom, calls } = await render(t, full({ recommendations: [rec({ image: null })] }));
+  dom.app.querySelector('[data-act="wish"]').click();
+  await new Promise((r) => setTimeout(r, 0));
+
+  const post = calls.find((c) => c.method === 'POST');
+  assert.ok(post, 'a coverless recommendation still adds');
+  // Absent, not ''. The route branches on the field's truthiness before it ever
+  // reaches providerCoverUrl, so an empty string would be harmless today — but
+  // it would also be a field the client states and means nothing by.
+  assert.equal(post.body.get('imageUrl'), null);
+  assert.equal(post.body.get('title'), 'Ark Nova');
+});
+
 test('the screen credits BoardGameGeek, which its licence requires wherever the data shows', async (t) => {
   const { dom } = await render(t, full({ recommendations: [rec()] }));
   assert.match(dom.app.querySelector('.rec-source').textContent, /BoardGameGeek/);

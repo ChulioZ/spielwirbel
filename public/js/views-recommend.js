@@ -167,6 +167,17 @@ async function showRecommendations(rid) {
       fd.append('sourceProvider', 'bgg');
       fd.append('sourceExternalId', rec.externalId);
       fd.append('sourceUrl', rec.url);
+      // The card's own cover, or nothing (#789). Without it the wish row stores
+      // no image at all — the add is the only moment the URL is in hand, so the
+      // placeholder would then follow the game through the wish list, its detail
+      // page and the Regal until somebody hand-picked a cover.
+      //
+      // Not new trust in client input: the route re-validates it through
+      // providerCoverUrl, exactly as the add-game sheet's cover picker is
+      // (.claude/rules/provider-cover-hotlinking.md). `rec.image` has already
+      // been through that gate server-side (lib/recommend.js), so this hands
+      // back a URL the server itself vouched for one request ago.
+      if (rec.image) fd.append('imageUrl', rec.image);
       try {
         await api('POST', `/api/rounds/${rid}/games`, fd);
         toast(t('suggest.wished', { title: rec.title }));
