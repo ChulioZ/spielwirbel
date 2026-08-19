@@ -117,8 +117,9 @@ here from `round.members` would silently drop guests and flatten teams, so
   see §11's affinity-ranked-contributors bullet (#798) for why the remedies
   differ.
 
-  **The ladder is `retired -1.0` / `rated (avg-1)/2` / `unrated 0.6` (#799), and
-  both ends were re-tuned away from the obvious values.** Unrated used to be
+  **The ladder is `retired -1.0` / `rated (avg-1)/2` / `unrated 0.6` (#799), plus
+  an additive play bonus of up to `1.0` on the two non-retired arms (#778, §12),
+  and both ends were re-tuned away from the obvious values.** Unrated used to be
   `1.0` — exactly what a game rated 3.0 earns, and more than anything below it.
   Since a rating only exists where somebody voted in a *voting* session, every
   other route onto the shelf (the BGG import, a manual add, a direct-pick
@@ -128,7 +129,11 @@ here from `round.members` would silently drop guests and flatten teams, so
   (8 rated / 30 unrated) `0.6` moves the unrated block from 71% to 60%, not into
   a minority. `0` was rejected — a collection-import round would have almost no
   profile, and a direct-pick round none at all, since every one of its
-  most-played games is unrated.
+  most-played games is unrated. **That last clause is what #778 then answered
+  directly** — the play bonus is precisely what distinguishes an unplayed shelf
+  entry from a game the round puts on the table constantly, and `0.6` was chosen
+  partly in anticipation of it. The two changes reinforce each other; read §12
+  before re-tuning either.
 
   **`-1.0` deepens the negative past the unrated rung's height on purpose:**
   retiring is the strongest explicit verdict a round can give, and at `-0.5` it
@@ -349,6 +354,74 @@ coincidence. `reasonsFrom` therefore names **at most one** of them:
   by a retired (-1.0) and a rated-1 (0.0) game scores exactly **0**. So it stays
   pinned by a hand-built `reasonsFrom` call rather than through `recommend()`,
   and the ordering is what keeps it harmless if a future rung breaks that chain.
+
+## 12. Plays are a PROFILE input, not a scored term (#778)
+
+`gameAffinity` read only state and ratings, so a **direct-pick** evening left no
+trace in the taste profile at all. Those sessions are created with `votes: {}`
+and born `done` (`lib/routes/sessions.js`), so no vote is ever written against
+them, `ownRating` finds nothing, and the game lands on the unrated rung —
+**exactly what a game that has sat unplayed on the shelf since the day it was
+added scores.** A round that runs its evenings by direct pick, which is the whole
+point of that mode, therefore had a flat profile: every mechanic weighted alike,
+the targets the plain mean of the shelf, and the list degenerating to
+"well-rated games near the middle of what you own".
+
+Measured as the free Route-1 red: three direct-pick evenings gave a profile
+component of `0.1414213562373095` against the same round with **no sessions at
+all** — `0.1414213562373095`. Byte-identical.
+
+- **A play bonus is ADDED to the ladder, never a fourth rung.** `W_PLAYS × (plays
+  / the round's own most-played)`, on top of whatever state and ratings say. A
+  rung would have to choose between "played" and "rated", and the two are
+  independent facts about the same game.
+- **The retired arm short-circuits before the bonus is read.** Twenty nights do
+  not soften "we got rid of it" — the state ordering §5 describes is unchanged.
+- **The ceiling moves from 2.0 to 3.0 and NO weight needed re-tuning.** Nothing
+  downstream reads the magnitude: `accumulate`/`normalize` are L2-normalised and
+  `weightedMean` divides by its own weights, so only ratios reach a score. Check
+  that property before changing any rung — it is what makes the ladder cheap to
+  re-tune and is not obvious from the call sites.
+- **The scale is ROUND-relative, and that does not touch §7.** The denominator is
+  the round's own most-played game, so a very active shelf where everything is
+  past five plays keeps discriminating, where an absolute
+  (`log2`-with-saturation) scale would saturate. §7's guarantee is about **corpus
+  size**; the profile has always been round-relative, exactly as `attainable` is
+  profile-relative.
+- **`PLAY_SCALE_FLOOR = 3` is the relative scale's one weakness answered.** Purely
+  relative, a round whose entire history is one evening hands that game the
+  maximum play signal available. One night is not a favourite.
+- **The denominator is taken over the games that can RECEIVE the bonus** —
+  walking `round.games`, skipping retired and wished. A retired game played
+  twenty times and then thrown out would otherwise shrink every remaining game's
+  bonus toward nothing while earning none itself. Walking the games rather than
+  the counts also means a `chosenGameId` naming a **deleted** game can never be
+  read. The naive `Math.max(...counts.values())` reddens exactly here.
+- **The `wish` clause in that loop looks dead after #776 and is NOT.** Plays are
+  history while the wish flag is current: `POST …/games/:gid/wish { wish: true }`
+  moves a game the round has played for years back onto the Wunschliste. The UI
+  only ever sends `wish: false`, but the route takes both directions and says so
+  ("the other direction comes free"). Deleting the clause as unreachable is the
+  plausible-looking mistake this bullet exists to stop.
+- **`playScale` has no default, on purpose.** A caller that forgot it would
+  silently get the pre-#778 scoring back — a confident, wrong list with no error
+  — where an absent argument is a programming error. Same reasoning as
+  `attainable`'s missing `prefix`, and the reason this file exists at all.
+- **What it deliberately is NOT:** a scored term. Plays decide which owned games
+  shape the *target*, never how a candidate is scored against it, so
+  `W_QUALITY … W_NOVELTY_PENALTY` are untouched and the seven isolation cases of
+  §1 stay green unmodified. There is also no new reason type — a card does not
+  say "you play a lot of X".
+- **Do not unify the counter with the Pokale „Meistgespielt" card.** That card
+  counts retired games on purpose: it is a record of nights that happened, not a
+  claim about the current shelf (`.claude/rules/active-games-filter-sites.md`).
+  The recommender asks the opposite question and must keep dropping them. Two
+  different questions over one field, so this is not a
+  `shared-constants-across-the-stack.md` case.
+
+`W_PLAYS` and `PLAY_SCALE_FLOOR` are approved starting values with the same
+status as the seven weights: changing a number is expected, changing the set of
+terms is a scope change.
 
 **Related:** `.claude/rules/bgg-corpus.md` (the pool this scores, and its licence
 conditions), `.claude/rules/break-the-code-on-purpose.md` (every assertion above

@@ -145,6 +145,20 @@ it (operator decision, 2026-08-04, revising #643's own acceptance criteria).
 `test/pokale-retired.test.js` pins that Azul, retired, still wins the card on
 three nights, right beside the specs that keep it out of every taste card.
 
+**A SECOND feature now counts the same field, and it must keep disagreeing with
+this card (#778).** The recommender's play bonus (`playCounts` /
+`buildPlayScale` in `lib/recommend.js`,
+`.claude/rules/recommendation-scoring.md` §12) tallies the same `chosenGameId`
+over the same sessions — and **drops retired games**, both from the bonus and
+from the denominator it is scaled against. That is not an inconsistency to
+unify: the card asks "what did we play", which retiring cannot unmake, and the
+recommender asks "what should we play more of", which retiring answers
+explicitly. Two questions over one field is exactly the case
+`.claude/rules/shared-constants-across-the-stack.md` is **not** about — sharing
+a counter here would need a parameter meaning "and should this pretend the game
+is still on the shelf", which is the tell that the two are different
+functions.
+
 Also deliberately **not** in the set, though they are one line away:
 `bestAndWorst` (Bestbewertet/Schlechtbewertet) and the Staubfänger keep the
 active-only filter — they answer "what should we reach for", which only a game

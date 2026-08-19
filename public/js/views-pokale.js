@@ -155,6 +155,11 @@ function renderPokaleTab(round) {
   // Lieblingsspiele, via `retiredIds` in recap.js — are about taste, which is a
   // claim the group has withdrawn. Don't unify the two; see
   // `.claude/rules/active-games-filter-sites.md`.
+  //
+  // Nor with the RECOMMENDER's play counter (#778), which tallies the same
+  // `chosenGameId` over the same sessions and deliberately drops retired games
+  // — it asks "what should we play more of", where this card asks "what did we
+  // play". `.claude/rules/recommendation-scoring.md` §12.
   const playCount = {};
   finished.forEach((s) => {
     if (s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))

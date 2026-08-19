@@ -20,6 +20,7 @@ const {
   reasonsFrom,
   gameAffinity,
   partyDistribution,
+  buildPlayScale,
   MIN_PROFILE_GAMES,
   NEUTRAL,
   REASON_LINES,
@@ -30,6 +31,10 @@ const {
   W_CATEGORIES,
   W_TIME,
   W_NOVELTY_PENALTY,
+  W_PLAYS,
+  PLAY_SCALE_FLOOR,
+  A_RETIRED,
+  A_UNRATED,
 } = require('../lib/recommend');
 
 /* --------------------------------- fixtures -------------------------------- */
@@ -121,6 +126,33 @@ const profileOf = (round, corpus) =>
 const delta = (profile, a, b) =>
   Math.round((scoreCandidate(profile, a).score - scoreCandidate(profile, b).score) * 1e6) / 1e6;
 
+/*
+ * What `lib/routes/sessions.js` writes for a direct pick (#778): the game is
+ * chosen up front, there is no voting phase, so `votes` stays empty and the
+ * session is born `done`. That empty `votes` is the whole defect — `ownRating`
+ * finds nothing, so the game lands on the unrated rung no matter how many
+ * evenings it saw.
+ */
+const directPick = (id, gameId, over = {}) => ({
+  id,
+  gameIds: [gameId],
+  memberIds: ['m1', 'm2', 'm3', 'm4'],
+  votes: {},
+  chosenGameId: gameId,
+  chosenAt: '2026-08-19T00:00:00.000Z',
+  finished: true,
+  done: true,
+  cancelled: false,
+  ...over,
+});
+
+// One mechanic on the played game, another on the rest of the shelf, so the two
+// blocks' profile mass can be compared directly.
+const playCorpus = () => [
+  entry('o1', { info: info({ mechanics: ['Played'] }) }),
+  ...Array.from({ length: MIN_PROFILE_GAMES - 1 }, (_, i) => entry(`o${i + 2}`, { info: info({ mechanics: ['Shelf'] }) })),
+];
+
 /* -------------------------------- affinities ------------------------------- */
 
 test('a game state outranks its ratings, and the ladder is retired < rated-low < unrated < rated-high', () => {
@@ -139,26 +171,67 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
   round.members = [{ id: 'm1', name: 'A' }];
   const g = (id, over) => ({ id, title: id, ...over });
 
+  // Nothing in this round was ever put on the table, so the play bonus is zero
+  // throughout and each rung shows its bare value. Built by the real helper
+  // rather than hand-rolled: `playScale` has no default on purpose (#778), and a
+  // literal here would stop exercising the shape the production caller passes.
+  const idle = buildPlayScale(round);
+
   // A retired game usually carries votes; letting them speak would make "we
   // threw this out" read as an ordinary five-star opinion.
-  assert.equal(gameAffinity(round, g('gr', { retired: true })), -1, 'retired -> -1.0');
-  assert.equal(gameAffinity(round, g('ghigh')), 2, 'rated 5 -> 2.0');
-  assert.equal(gameAffinity(round, g('gmid')), 1, 'rated 3 -> 1.0');
-  assert.equal(gameAffinity(round, g('glow')), 0, 'rated 1 -> 0.0');
-  assert.equal(gameAffinity(round, g('gnone')), 0.6, 'owned, unrated -> 0.6');
+  assert.equal(gameAffinity(round, g('gr', { retired: true }), idle), -1, 'retired -> -1.0');
+  assert.equal(gameAffinity(round, g('ghigh'), idle), 2, 'rated 5 -> 2.0');
+  assert.equal(gameAffinity(round, g('gmid'), idle), 1, 'rated 3 -> 1.0');
+  assert.equal(gameAffinity(round, g('glow'), idle), 0, 'rated 1 -> 0.0');
+  assert.equal(gameAffinity(round, g('gnone'), idle), 0.6, 'owned, unrated -> 0.6');
   // Completed is deliberately NOT a state: the game was played through, so its
   // ratings still count.
-  assert.equal(gameAffinity(round, g('ghigh', { completed: true })), 2);
+  assert.equal(gameAffinity(round, g('ghigh', { completed: true }), idle), 2);
 
   // The RELATION, not the literals (#799): a shelf entry nobody has voted on is
   // a real signal but a weaker one than any game the round has formed an opinion
   // about — and still stronger than a game it actively disliked. Two bare
   // literals would go green on any future re-tune that inverted this.
-  const unrated = gameAffinity(round, g('gnone'));
-  assert.ok(unrated < gameAffinity(round, g('gmid')), `unrated ${unrated} must rank below rated 3.0`);
-  assert.ok(unrated > gameAffinity(round, g('glow')), `unrated ${unrated} must rank above rated 1.0`);
+  const unrated = gameAffinity(round, g('gnone'), idle);
+  assert.ok(unrated < gameAffinity(round, g('gmid'), idle), `unrated ${unrated} must rank below rated 3.0`);
+  assert.ok(unrated > gameAffinity(round, g('glow'), idle), `unrated ${unrated} must rank above rated 1.0`);
   // And "we got rid of it" outweighs "we own it and never played it".
-  assert.ok(Math.abs(gameAffinity(round, g('gr', { retired: true }))) > unrated);
+  assert.ok(Math.abs(gameAffinity(round, g('gr', { retired: true }), idle)) > unrated);
+
+  /*
+   * The play bonus is ADDITIVE on top of those rungs, never a rung of its own
+   * (#778). Same round, now with a history: the retired game saw five nights and
+   * two shelf games three each, so the denominator is 3 — set by the games that
+   * can RECEIVE the bonus, which is why five plays of a retired game do not
+   * raise it.
+   */
+  const played = {
+    ...round,
+    games: [g('gr', { retired: true }), g('ghigh'), g('gnone'), g('gmid')],
+    sessions: [
+      ...round.sessions,
+      ...Array.from({ length: 5 }, (_, i) => directPick(`pr${i}`, 'gr')),
+      ...Array.from({ length: 3 }, (_, i) => directPick(`ph${i}`, 'ghigh')),
+      ...Array.from({ length: 3 }, (_, i) => directPick(`pn${i}`, 'gnone')),
+    ],
+  };
+  const scale = buildPlayScale(played);
+  assert.equal(scale.denominator, 3, 'the retired game must not set the scale');
+
+  // The state arm short-circuits BEFORE the bonus is read: twenty nights do not
+  // soften "we got rid of it".
+  assert.equal(gameAffinity(played, g('gr', { retired: true }), scale), A_RETIRED, 'retired stays -1.0 however often played');
+  assert.equal(gameAffinity(played, g('ghigh'), scale), 3, 'rated 5 at max plays -> 3.0');
+  assert.equal(gameAffinity(played, g('gnone'), scale), 1.6, 'unrated at max plays -> 1.6');
+  assert.equal(gameAffinity(played, g('gmid'), scale), 1, 'rated 3, never played -> 1.0, unchanged');
+
+  // Stated as the composition too, so a future re-tune of either constant keeps
+  // a spec that says what the arithmetic IS rather than what it happened to be.
+  assert.equal(gameAffinity(played, g('gnone'), scale), A_UNRATED + W_PLAYS);
+  // The revealed-preference point, and the reason W_PLAYS is set as high as it
+  // is: a game the round keeps putting on the table outranks an unplayed shelf
+  // entry even when nobody has rated it above the middle of the scale.
+  assert.ok(gameAffinity(played, g('gnone'), scale) > gameAffinity(played, g('gmid'), scale));
 });
 
 test('lowering the unrated rung shifts profile mass onto the games the round RATED (#799)', () => {
@@ -196,6 +269,158 @@ test('lowering the unrated rung shifts profile mass onto the games the round RAT
   // …and the same thing said in the normalised units the cosine actually reads.
   assert.ok(profile.mechanics.Rated > 0.85, `rated component ${profile.mechanics.Rated}`);
   assert.ok(profile.mechanics.Unrated < 0.5, `unrated component ${profile.mechanics.Unrated}`);
+});
+
+/* ---------------------------------- plays ---------------------------------- */
+
+test('a history of DIRECT PICKS shapes the profile — it used to leave no trace at all (#778)', () => {
+  /*
+   * The free Route-1 red (.claude/rules/break-the-code-on-purpose.md): before
+   * this change the two profiles below were identical in every taste term, so
+   * a round that runs its evenings by direct pick — the mode for groups who
+   * already know what they want to play — had a completely flat profile.
+   *
+   * Asserted on the taste terms ONLY, never as a deepEqual over the profile:
+   * `partyDistribution` already counted these evenings (16% of the score), so a
+   * whole-object comparison would have gone green today for a reason that has
+   * nothing to do with plays.
+   */
+  const played = shelfRound({ sessions: [1, 2, 3].map((i) => directPick(`s${i}`, 'g1')) });
+  const corpus = playCorpus();
+
+  const withPlays = profileOf(played, corpus);
+  const without = profileOf(shelfRound(), corpus);
+  assert.ok(
+    withPlays.mechanics.Played > without.mechanics.Played,
+    `direct picks must move the profile: ${withPlays.mechanics.Played} vs ${without.mechanics.Played}`,
+  );
+});
+
+test('plays move the profile mass by the exact ratio the bonus implies (#778)', () => {
+  /*
+   * The ratio, not the normalised value: L2 divides both components by a common
+   * scalar and so cannot move it, where a bare component also folds in the
+   * vector length. One game played to the maximum reaches 0.6 + 1.0 = 1.6
+   * against its unplayed shelfmates' 0.6 — seven of them, so 1.6 : 4.2.
+   */
+  const played = shelfRound({ sessions: [1, 2, 3].map((i) => directPick(`s${i}`, 'g1')) });
+  const profile = profileOf(played, playCorpus());
+  const ratio = profile.mechanics.Played / profile.mechanics.Shelf;
+  assert.equal(Math.round(ratio * 1e6) / 1e6, Math.round((1.6 / (7 * 0.6)) * 1e6) / 1e6, `played:shelf mass was ${ratio}`);
+});
+
+test('plays pull the complexity and time targets toward what the round actually plays (#778)', () => {
+  // A heavy, long game played every week against seven light, short shelf
+  // entries. `weightedMean` reads the same affinity the vectors do, so the
+  // targets have to follow the bonus.
+  const sessions = [1, 2, 3].map((i) => directPick(`s${i}`, 'g1'));
+  const corpus = [
+    entry('o1', { info: info({ weight: 4.5, maxPlaytime: 180 }) }),
+    ...Array.from({ length: MIN_PROFILE_GAMES - 1 }, (_, i) => entry(`o${i + 2}`, { info: info({ weight: 2, maxPlaytime: 30 }) })),
+  ];
+  const idle = profileOf(shelfRound(), corpus);
+  const played = profileOf(shelfRound({ sessions }), corpus);
+  assert.ok(played.targetWeight > idle.targetWeight, `targetWeight ${played.targetWeight} vs ${idle.targetWeight}`);
+  assert.ok(played.targetTime > idle.targetTime, `targetTime ${played.targetTime} vs ${idle.targetTime}`);
+});
+
+test('a single evening is not a favourite — the play scale has a floor (#778)', () => {
+  /*
+   * Purely relative, a round whose entire history is ONE night would hand that
+   * game the maximum play signal available. `PLAY_SCALE_FLOOR` is the answer:
+   * one play out of a denominator of three is a third of the bonus, so the
+   * signal grows with the evidence instead of maxing out on the first evening.
+   */
+  const round = shelfRound({ sessions: [directPick('s1', 'g1')] });
+  const scale = buildPlayScale(round);
+  assert.equal(scale.denominator, PLAY_SCALE_FLOOR, 'one play must not set the denominator to 1');
+  assert.equal(gameAffinity(round, round.games[0], scale), A_UNRATED + W_PLAYS / PLAY_SCALE_FLOOR);
+});
+
+test('a RETIRED game does not set the play denominator, however often it was played (#778)', () => {
+  /*
+   * The maximum is taken over games that can RECEIVE the bonus. A retired game
+   * short-circuits to -1.0 and gets none, so letting one they threw out set the
+   * denominator would shrink every other game's bonus toward nothing — the
+   * naive `Math.max(...counts.values())` reddens exactly here.
+   */
+  const games = [
+    { id: 'gold', title: 'Thrown out', retired: true, source: { provider: 'bgg', externalId: 'oold' } },
+    ...shelfRound().games,
+  ];
+  const round = shelfRound({
+    games,
+    sessions: [
+      ...Array.from({ length: 20 }, (_, i) => directPick(`old${i}`, 'gold')),
+      ...[1, 2, 3].map((i) => directPick(`s${i}`, 'g1')),
+    ],
+  });
+  const scale = buildPlayScale(round);
+  assert.equal(scale.denominator, 3, 'the retired game must not set the scale');
+  assert.equal(gameAffinity(round, round.games[1], scale), A_UNRATED + W_PLAYS, 'g1 still earns the full bonus');
+  assert.equal(gameAffinity(round, round.games[0], scale), A_RETIRED, 'and 20 plays do not soften the retirement');
+});
+
+test('a WISHED game does not set the play denominator either (#778)', () => {
+  /*
+   * NOT a dead branch, though it looks like one after #776 — plays are history
+   * and the wish flag is current. `POST …/games/:gid/wish { wish: true }` moves
+   * an owned game the round has played for years back onto the Wunschliste (the
+   * UI only ever sends `wish: false`, but "the other direction comes free"), and
+   * from then on it never reaches `gameAffinity` at all. Letting its plays set
+   * the denominator would shrink every remaining game's bonus with no signal
+   * behind it.
+   */
+  const games = [
+    { id: 'gsold', title: 'Sold, want again', wish: true, source: { provider: 'bgg', externalId: 'osold' } },
+    ...shelfRound().games,
+  ];
+  const round = shelfRound({
+    games,
+    sessions: [
+      ...Array.from({ length: 12 }, (_, i) => directPick(`w${i}`, 'gsold')),
+      ...[1, 2, 3].map((i) => directPick(`s${i}`, 'g1')),
+    ],
+  });
+  assert.equal(buildPlayScale(round).denominator, 3);
+});
+
+test('a cancelled evening and a deleted game contribute no plays (#778)', () => {
+  /*
+   * Two different mechanisms, both worth pinning. A cancelled session is
+   * dropped by `playCounts`, matching `partyDistribution` — and a session whose
+   * `chosenGameId` names a game the round has since deleted can never be read,
+   * because the denominator loop walks `round.games` rather than the counts.
+   * Both breaks show up as a collapsed denominator rather than as an error.
+   */
+  const round = shelfRound({
+    sessions: [
+      ...Array.from({ length: 15 }, (_, i) => directPick(`c${i}`, 'g2', { cancelled: true })),
+      ...Array.from({ length: 30 }, (_, i) => directPick(`d${i}`, 'ggone')),
+      ...[1, 2, 3].map((i) => directPick(`s${i}`, 'g1')),
+    ],
+  });
+  const scale = buildPlayScale(round);
+  assert.equal(scale.denominator, 3, 'neither a cancelled evening nor a deleted game may set the scale');
+  assert.equal(scale.counts.get('g2') || 0, 0, 'a cancelled evening is not a play');
+  assert.equal(gameAffinity(round, round.games[1], scale), A_UNRATED, 'g2 saw 15 cancelled nights and earns nothing');
+});
+
+test('a DRAWN winner counts as a play exactly like a direct pick (#778)', () => {
+  // Both start modes write `chosenGameId`, and they count the same on purpose:
+  // the defect is that direct picks counted ZERO, not that they should outrank
+  // a drawn win — and a drawn winner also carries the ratings a direct pick
+  // never gets, so it is already ahead on the ladder.
+  const drawn = {
+    id: 'sd',
+    gameIds: ['g1', 'g2', 'g3'],
+    memberIds: ['m1'],
+    votes: { m1: { g1: { rating: 4 } } },
+    chosenGameId: 'g1',
+    finished: true,
+  };
+  const round = shelfRound({ sessions: [drawn] });
+  assert.equal(buildPlayScale(round).counts.get('g1'), 1);
 });
 
 test('the party distribution counts PARTIES per session, and falls back to the member count', () => {
