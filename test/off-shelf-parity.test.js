@@ -135,7 +135,11 @@ test('the off-shelf control is offered on an EMPTY shelf too', async (t) => {
   // "there are active games" branch, so a control added there would vanish for a
   // round whose games are ALL off the shelf — the case that needs it most.
   const dom = await renderRegal(t, roundWith(baseGames));
-  assert.equal(dom.app.querySelectorAll('.cards .add-tile').length >= 1, true, 'fixture is not an empty shelf');
+  // `.empty` is rendered by the zero-active-games branch ONLY. The obvious guard
+  // — that the grid has an `.add-tile` — is vacuous: that tile closes the grid in
+  // BOTH branches, so it would have let a non-empty fixture through and this
+  // spec would have tested nothing it claims to.
+  assert.ok(dom.app.querySelector('.section .empty'), 'fixture is not an empty shelf');
   const sheet = rowsOf(openOffShelf(dom));
   assert.ok(sheet.length >= 4, `an empty Regal offered ${sheet.length} off-shelf links`);
 });
