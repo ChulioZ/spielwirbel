@@ -91,7 +91,7 @@ const labels = (root) => [...root.querySelectorAll('button, a')]
   .map((el) => (el.textContent || '').replace(/\s+/g, ' ').trim())
   .filter(Boolean);
 
-test('the round-level actions are gone from the Regal footer, which keeps its archives', (t) => {
+test('the round-level actions are gone from the Regal, which keeps its archives', (t) => {
   const dom = loadApp();
   t.after(() => dom.close());
   // The tab renderers append to the global `app` rather than returning a node.
@@ -100,10 +100,15 @@ test('the round-level actions are gone from the Regal footer, which keeps its ar
 
   assert.ok(!found.includes('Spiele verschieben'), `"Spiele verschieben" is back under the game grid (#561): ${found}`);
   assert.ok(!found.includes('Einladen'), `"Einladen" is back under the game grid (#561): ${found}`);
-  // Anti-vacuous: the footer itself must still be there. Without this the two
-  // assertions above pass just as happily against a tab that renders nothing.
-  assert.ok(found.some((l) => l.startsWith('Aussortiert')), `the Regal footer lost its retired-archive link: ${found}`);
-  assert.ok(found.some((l) => l.startsWith('Durchgespielt')), `the Regal footer lost its completed-archive link: ${found}`);
+  // Anti-vacuous: the archives must still be REACHABLE from the Regal. Without
+  // this the two assertions above pass just as happily against a tab that
+  // renders nothing. #777 moved them out of a footer below the grid and behind
+  // the header's „Nicht im Regal" control, so the check now has to open it —
+  // the sheet is what carries the links, and it mounts on document.body.
+  dom.app.querySelector('.section-tools .rail-owned').click();
+  const offShelf = labels(dom.document.querySelector('.off-shelf'));
+  assert.ok(offShelf.some((l) => l.startsWith('Aussortiert')), `the Regal lost its retired-archive link: ${offShelf}`);
+  assert.ok(offShelf.some((l) => l.startsWith('Durchgespielt')), `the Regal lost its completed-archive link: ${offShelf}`);
 });
 
 test('the Chronik carries no round deletion, and still renders its timeline', (t) => {
