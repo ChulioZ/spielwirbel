@@ -168,8 +168,9 @@ test('lowering the unrated rung shifts profile mass onto the games the round RAT
    * used to dominate a profile built mostly of games nobody has said anything
    * about.
    *
-   * Asserted as the RATIO of the two raw components, which is independent of the
-   * L2 normalisation and therefore states the rung directly: 3x2.0 against
+   * Asserted as the RATIO of the two components, which the L2 normalisation
+   * divides by a common scalar and so cannot move — it states the rung directly,
+   * where a bare normalised value also folds in the vector length: 3x2.0 against
    * 5x0.6 is exactly 2:1, where the old 5x1.0 gave 1.2:1 — the unrated block
    * came within a fifth of the rated one despite the round rating nothing else.
    */
