@@ -146,7 +146,41 @@ which is why the owner case is spelled out rather than left to `normalizeRole`'s
 fallback. That fallback is itself deliberate in the other direction: an unknown
 role loses power rather than gaining it.
 
-Each new instance must be named in this inventory — the eight paragraphs above.
+**The ninth is `public/js/vote-scale.js`** (#797): `effectiveRating`/`wantsRetire`
+— what one vote on a game is worth, now that the retirement proposal is the
+**zero** of the 0–5 scale rather than a separate flag beside it. Logic, like
+`draw-pool.js`, and it earns the shape because *nothing* is validated across the
+boundary: the client renders every average (Regal pills, the detail ring, session
+results, Pokale) and the server computes `groupRating` and the cross-tenant
+corpus aggregate from **the same stored votes**, so a drifted copy makes two
+screens state a different Ø for one game with no error, no 400 and no blank —
+just a number that is quietly wrong wherever nobody is comparing. It carries the
+precedence rule as well as the arithmetic: storage was **not** migrated, so a
+pre-#797 row can hold `{ rating: 4, retire: true }`, and "retirement wins" has to
+be answered identically in all eight places or a legacy round's history changes
+depending on which screen is asked.
+
+Its trap is the tenth site, which **cannot** require the file: the corpus
+aggregate in `lib/repo/postgres.js` is SQL. Both halves of the rule are restated
+there by hand — the `WHERE` must admit a retire-only vote (the pre-#797 clause
+`jsonb_typeof(…'rating') = 'number'` silently dropped it) and the `CASE` must let
+retirement win. Note the comparison is `vote.val->'retire' = 'true'::jsonb`, not
+`->>'retire' = 'true'`: the text form also matches the **string** `"true"`, which
+`effectiveRating`'s `=== true` rejects — and the legacy `/results` route stores a
+member's column unvalidated, so that is a shape the JSON backend really can hold.
+`effectiveRating` uses `Number.isFinite` rather than `Number.isInteger` for the
+same reason: it is the exact JS equivalent of `jsonb_typeof(…) = 'number'`, so
+the two backends admit precisely the same values by construction.
+`test/support/repo-contract.js` pins them against one fixture carrying both
+legacy shapes.
+
+Note `public/js/recap.js` reaches it by **injection**, not `require`: it is a
+public/js file the test suite requires into Node, where the shared scope does not
+exist, and `require` is deliberately not a frontend global. Its header already
+established that shape for `sessionPeople`; `effectiveRating` is the second
+parameter of the same kind.
+
+Each new instance must be named in this inventory — the nine paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

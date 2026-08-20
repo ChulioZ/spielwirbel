@@ -181,9 +181,14 @@ test('a link vote lands exactly like an in-app one', async () => {
 
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/close`).send({});
   const stored = sessionOf(await getRound(round.id), session.id);
-  assert.equal(stored.votes[alice.id][a.id].rating, 5);
+  // The two are mutually exclusive since #797 — the retirement proposal IS the
+  // zero of the scale, so a payload claiming both is normalised on the way in
+  // rather than left for every reader to resolve. The card cannot produce this
+  // shape; a hand-crafted request can.
+  assert.equal(stored.votes[alice.id][a.id].rating, null);
   assert.equal(stored.votes[alice.id][a.id].retire, true);
   assert.equal(stored.votes[alice.id][b.id].rating, 2);
+  assert.equal(stored.votes[alice.id][b.id].retire, false);
 });
 
 // The shared sanitizer's rules must hold on this route too — a link voter's column

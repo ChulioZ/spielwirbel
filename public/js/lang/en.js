@@ -648,12 +648,14 @@ I18N.en = {
   'vote.ratingLabel': '{n} out of {max}',
   'vote.scaleLow': 'not at all',
   'vote.scaleHigh': 'absolutely',
+  // Label of the scale's leftmost, zero tile (#797) — it shows only the trash
+  // glyph, so the label carries the whole of its meaning.
   'vote.suggestRetire': 'Suggest retiring',
   'vote.next': 'Next ›',
   'vote.finish': 'Done',
-  'vote.toast.needRating': 'Please choose a rating (or “retire”)',
-  // A guest gets no retire control, so a rating is the only way on (#458).
-  'vote.toast.needRatingOnly': 'Please choose a rating',
+  // One scale, one message (#797): retiring IS the zero on it, and the same
+  // sentence is right for a guest, whose scale starts at 1.
+  'vote.toast.needRating': 'Please choose a rating',
   'vote.toast.saved': 'Results saved',
 
   'finale.crumb': 'Finale',
@@ -678,6 +680,8 @@ I18N.en = {
   'result.lockedHint': 'Reset the result first to change the choice',
   'result.avgOf': 'Ø of {n}',
   'result.barTitle': '{c}× rating {r}',
+  // The leftmost bar: the zero of the scale (#797).
+  'result.barTitleRetire': '{c}× “retire”',
   'result.sortFlag': '{n}× suggested for retirement',
   'result.retireNow': '— retire now',
   // Named on the results screen when the winning game only seats this table
@@ -1079,7 +1083,7 @@ I18N.en = {
   'landing.hero.ctaResume': 'Resume demo',
   'landing.hero.demoNote': 'Start straight away, no e-mail needed. The demo round comes pre-filled and is deleted after 24 hours.',
   'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their average rating, next to the navigation for Start, shelf, chronicle and trophies.',
-  'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale from 1 to 5.',
+  'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale running from “retire it” through 1 to 5.',
   'landing.features.title': 'What you get',
   'landing.features.shelf.title': 'One shelf for everything',
   'landing.features.shelf.desc': 'Every game your group owns in one place – titles, cover art and player counts come from BoardGameGeek, and anything else you type in yourself.',

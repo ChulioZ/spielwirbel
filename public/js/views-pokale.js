@@ -74,7 +74,7 @@ function renderPokaleTab(round) {
   // The group's accumulated taste, derived on demand from the session votes
   // (#484). Read here for the best-rated card and again by the Rückblick
   // section appended at the end of this tab.
-  const recap = roundRecap(round, sessionPeople);
+  const recap = roundRecap(round, sessionPeople, effectiveRating);
 
   // Wins per member (a night can have several winners). Keyed by round member,
   // so a guest win is dropped by the `wid in wins` guard below — deliberately:

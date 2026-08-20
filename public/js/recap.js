@@ -5,13 +5,16 @@
    single source of truth (CLAUDE.md §Architecture), so deleting one removes its
    effect for free; nothing in this file is stored or denormalized.
 
-   The session→participants resolver is passed IN (`peopleOf`, i.e. sessionPeople
-   from session-people.js) rather than read off the shared scope. A public/js file
-   cannot require() a sibling — `require` is not among eslint.config.js's
-   frontendGlobals and the browser has none — so injecting the one dependency is
-   what keeps this file usable both as a shared-scope frontend script and as a
-   CommonJS module the test suite can require, without a second copy of the
-   member/guest resolution rules.
+   Its two sibling dependencies are passed IN rather than read off the shared
+   scope: `peopleOf` (sessionPeople, from session-people.js) and `ratingOf`
+   (effectiveRating, from vote-scale.js — what a vote is worth once a retirement
+   proposal counts as the 0 it is, #797). A public/js file cannot require() a
+   sibling — `require` is not among eslint.config.js's frontendGlobals and the
+   browser has none — so injecting them is what keeps this file usable both as a
+   shared-scope frontend script and as a CommonJS module the test suite can
+   require, without a second copy of either rule. Both callers pass the real
+   ones; a caller that substituted its own would be reintroducing exactly the
+   drift those two modules exist to prevent.
 
    Load order: see index.html. */
 
@@ -38,7 +41,7 @@ const recapMean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
 // Votes are read straight off the vote map rather than through `s.gameIds`,
 // so a rating always counts exactly once; ids of deleted games are dropped,
 // since a stat naming a game that is no longer on the shelf has nothing to show.
-function collectRatings(round, peopleOf) {
+function collectRatings(round, peopleOf, ratingOf) {
   const known = new Set(round.games.map((g) => g.id));
   const games = new Map();
   let total = 0;
@@ -48,8 +51,10 @@ function collectRatings(round, peopleOf) {
       const own = votes[person.id] || {};
       Object.keys(own).forEach((gid) => {
         if (!known.has(gid)) return;
-        const rating = own[gid] ? own[gid].rating : null;
-        if (typeof rating !== 'number') return;
+        // A retirement proposal is the zero of the scale, so it belongs in
+        // the taste stats like any other vote (#797).
+        const rating = ratingOf(own[gid]);
+        if (rating === null) return;
         let entry = games.get(gid);
         if (!entry) games.set(gid, (entry = { all: [], byMember: new Map() }));
         entry.all.push(rating);
@@ -177,8 +182,8 @@ function memberFavourites(round, index) {
 }
 
 // The whole recap for one round. `peopleOf` is sessionPeople(round, session).
-function roundRecap(round, peopleOf) {
-  const index = collectRatings(round, peopleOf);
+function roundRecap(round, peopleOf, ratingOf) {
+  const index = collectRatings(round, peopleOf, ratingOf);
   const { best, worst } = bestAndWorst(round, index);
   return {
     totals: {

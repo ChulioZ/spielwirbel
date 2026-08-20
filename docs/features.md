@@ -230,8 +230,9 @@ What the app does, in detail. For a short overview see the
   the next time, so a group that always draws the same way just confirms.
 - **Voting** – the draw opens a **lobby** showing who has voted and who has not.
   There is nothing to configure and no mode to pick: every session works the same
-  way, and each person's ratings are saved the moment they give them (**1–5** per
-  drawn game, plus an optional "retire this" for members). Three ways in, freely
+  way, and each person's ratings are saved the moment they give them: one scale
+  per drawn game, running from a trash tile — "get rid of it", the **zero** of
+  the scale and members-only — up through **1–5**. Three ways in, freely
   mixed within one evening:
   - **pass the device around** – tap whoever is next, a handover screen names
     them so nobody peeks, and when they are done the lobby leads with the next
@@ -264,8 +265,8 @@ What the app does, in detail. For a short overview see the
   screen: they count toward the player range the draw filters by, take their own
   hot-seat turn, can be recorded as a winner, and stay in that session's record
   marked as a guest — but they never join the round, so they leave the member
-  list, the Pokale standings and the win streak untouched. A guest rates games
-  but gets no "retire" vote: throwing a game off the shelf is the permanent
+  list, the Pokale standings and the win streak untouched. A guest's scale starts
+  at 1, with no trash tile: throwing a game off the shelf is the permanent
   group's call.
 - **Teams** – two or more of the people joining a session — members and guests
   in any mix — can be grouped into a team that plays and wins together, for that
@@ -279,7 +280,8 @@ What the app does, in detail. For a short overview see the
   the results screen with that game chosen.
 - **Finale & results** – votes stay sealed until everyone is done, then a
   little show reveals the results: per-game average (colored by score), rating
-  distribution, medals for the favourites, and retirement proposals. Pick the
+  distribution (six bars, the leftmost being the retirement proposals), medals
+  for the favourites, and how many want each game gone. Pick the
   game you actually played and mark it finished; recording the winner(s) is an
   optional follow-up step afterwards — or
   cancel the session if nothing appealed. Sessions can be deleted later, and a

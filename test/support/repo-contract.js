@@ -3420,28 +3420,46 @@ module.exports = function repoContract(repo) {
       const t1 = `pga-${uniq()}`;
       const t2 = `pga-${uniq()}`;
       const r1 = await repo.createRound(t1, { name: 'F', members: ['Ann', 'Bo'] });
-      const r2 = await repo.createRound(t2, { name: 'G', members: ['Cy'] });
+      const r2 = await repo.createRound(t2, { name: 'G', members: ['Cy', 'Dee'] });
       const g1 = await repo.createGame(t1, r1.id, bgg(id));
       const g2 = await repo.createGame(t2, r2.id, bgg(id));
       const [ann, bo] = (await repo.getRound(t1, r1.id)).members;
-      const [cy] = (await repo.getRound(t2, r2.id)).members;
+      const [cy, dee] = (await repo.getRound(t2, r2.id)).members;
 
       await repo.createSession(t1, r1.id, {
         gameIds: [g1.id], createdAt: daysAgo(1),
         votes: {
-          [ann.id]: { [g1.id]: { rating: 5 } },
-          // A vote with no rating (a bare "retire" tick) is not a rating.
-          [bo.id]: { [g1.id]: { retire: true } },
+          [ann.id]: { [g1.id]: { rating: 5, retire: false } },
+          /* The two shapes #797 turned into a rating of 0, and the reason this
+             fixture carries both: the JSON backend answers them through
+             `effectiveRating` while Postgres answers them in SQL that cannot
+             require it, so this is the only place the two spellings of the same
+             rule are compared. A retire-only vote used to be skipped outright
+             (count 2, sum 7), and a legacy row carrying BOTH used to be counted
+             at its stored rating — which would make this sum 11. */
+          [bo.id]: { [g1.id]: { rating: null, retire: true } },
         },
       });
       await repo.createSession(t2, r2.id, {
         gameIds: [g2.id], createdAt: daysAgo(1),
-        votes: { [cy.id]: { [g2.id]: { rating: 2 } } },
+        votes: {
+          [cy.id]: { [g2.id]: { rating: 2 } },
+          // A second person in t2, carrying the legacy contradiction.
+          [dee.id]: { [g2.id]: { rating: 4, retire: true } },
+          /* And the shape that separates the two spellings of "is this a
+             retirement": `effectiveRating` requires `=== true`, so this counts
+             as nothing. Postgres agrees only because it compares as jsonb —
+             `->>'retire' = 'true'` would read the STRING "true" as a 0 and
+             quietly make this tenant's aggregate a vote heavier than the JSON
+             backend's. The legacy POST …/results route validates a member's
+             column with z.unknown(), so this really can be stored. */
+          'stray-1': { [g2.id]: { rating: null, retire: 'true' } },
+        },
       });
 
       const row = await rowFor(id);
-      assert.equal(row.ratings.count, 2);
-      assert.equal(row.ratings.sum, 7);
+      assert.equal(row.ratings.count, 4, 'a retirement proposal is a rating of 0, not an absent one');
+      assert.equal(row.ratings.sum, 7, 'both zero-votes must add nothing — retirement wins over a stored 4');
       assert.equal(row.ratings.tenants, 2);
       // The sum crosses the pg-numeric-is-a-string boundary, where the backends
       // silently disagree unless it is coerced.

@@ -110,6 +110,10 @@ const frontendGlobals = {
   PLAYTIME_CHOICES: 'readonly', AGE_CHOICES: 'readonly', WEIGHT_CHOICES: 'readonly',
   // metadata-filter.js (issue #725)
   renderMetadataFilter: 'readonly',
+  // vote-scale.js (issue #797) — also required by lib/session-votes.js,
+  // lib/recommend.js and both repo backends
+  RATING_MIN: 'readonly', RATING_MAX: 'readonly',
+  wantsRetire: 'readonly', effectiveRating: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
