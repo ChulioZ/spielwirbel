@@ -27,8 +27,10 @@ function memberStats(round, mid) {
   round.sessions.forEach((s) => {
     const votes = s.votes[mid] || {};
     Object.keys(votes).forEach((gid) => {
-      const r = votes[gid] && votes[gid].rating;
-      if (typeof r !== 'number') return;
+      // Includes a retirement proposal as a 0 (#797) — "I want this gone" is
+      // very much part of how this member rates.
+      const r = effectiveRating(votes[gid]);
+      if (r === null) return;
       allRatings.push(r);
       if (round.games.some((g) => g.id === gid && isNameableGame(g)))
         (perGame[gid] = perGame[gid] || []).push(r);

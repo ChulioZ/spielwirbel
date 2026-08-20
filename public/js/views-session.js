@@ -520,9 +520,10 @@ function startVoting(round, session, games, people, opts = {}) {
   // user on <body> — a full Tab through the card again, once per game per voter,
   // on the app's central action.
   //
-  // Only the two in-place handlers set it; go(), onPopstate and the language
+  // Only the in-place tile handler sets it; go(), onPopstate and the language
   // switch leave it null on purpose, so *arriving* on a step never yanks focus
-  // into the middle of the card.
+  // into the middle of the card. Since #797 the retirement proposal is one of
+  // those tiles rather than a separate control, so there is one kind, not two.
   let refocus = null;
 
   function render() {
@@ -568,10 +569,10 @@ function startVoting(round, session, games, people, opts = {}) {
     const color = personColor(round, person);
     // A guest rates the game but does not get to vote it off the shelf (#458):
     // that is the permanent group governing its own collection, and a one-off
-    // visitor shouldn't nudge a game toward the retire recommendation. The
-    // control is not rendered at all rather than cast and filtered later — so
-    // gameStats() needs no guest exclusion, and the "rate or flag before
-    // continuing" guard below becomes rating-only for them.
+    // visitor shouldn't nudge a game toward the retire recommendation. Since
+    // #797 that means their scale simply starts at 1 — the zero tile is not
+    // rendered at all rather than cast and filtered later, so gameStats() needs
+    // no guest exclusion.
     const mayRetire = !person.guest;
 
     const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
@@ -586,9 +587,6 @@ function startVoting(round, session, games, people, opts = {}) {
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
-        ${mayRetire ? `<div class="vote__sort">
-          <button class="sortBtn ${current.retire ? 'is-selected' : ''}" aria-pressed="${!!current.retire}"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('vote.suggestRetire'))}</button>
-        </div>` : ''}
         <div class="vote__nav">
           <button class="btn" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
           <button class="btn btn--primary" id="nextBtn">${idx === total - 1 ? esc(t('vote.finish')) + ' <i class="ti ti-chevron-right" aria-hidden="true"></i>' : esc(t('vote.next'))}</button>
@@ -604,18 +602,31 @@ function startVoting(round, session, games, people, opts = {}) {
     if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
     else fetchCardGameInfo(game, card);
 
-    // 1–5 as mood faces; the selected one takes the rating's traffic-light color.
+    /* The scale: a trash tile for 0 (members only), then 1–5 as mood faces. The
+       selected one takes the rating's traffic-light colour, and `avgColor(0)`
+       lands on the deep red at the bottom of that ramp with no special case —
+       which is the point of the whole change, the zero being the bottom of one
+       axis rather than a second question.
+
+       Deliberately duplicated in views-vote-link.js — the two cards must render
+       the same markup and write the same vote shape; see that file's header. */
     const MOODS = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
     const ratingEl = card.querySelector('.rating');
-    for (let n = 1; n <= 5; n++) {
-      const sel = current.rating === n;
+    for (let n = mayRetire ? 0 : 1; n <= RATING_MAX; n++) {
+      // Read through effectiveRating rather than comparing `current.rating`, so
+      // a legacy column carrying both a rating and the flag lights the tile the
+      // rest of the app will actually count (#797).
+      const sel = effectiveRating(current) === n;
       // aria-pressed carries the choice (#145): the selected face is otherwise
       // marked only by its traffic-light fill, so nothing announced which rating
       // was picked — on the app's central action. The label spells out the scale
       // too; a bare "1" gave no hint of what the number meant or how far it ran.
-      const b = h(`<button class="mood${sel ? ' is-selected' : ''}"
-           aria-pressed="${sel}" aria-label="${esc(t('vote.ratingLabel', { n, max: 5 }))}">
-           <i class="ti ${MOODS[n - 1]}" aria-hidden="true"></i><span class="mood__n">${n}</span>
+      // The zero carries no numeral, so its label is the whole of what it means;
+      // its `.mood__n` is a non-breaking space rather than absent, which keeps
+      // its icon on the same baseline as the five faces beside it.
+      const b = h(`<button class="mood${n === 0 ? ' mood--retire' : ''}${sel ? ' is-selected' : ''}"
+           aria-pressed="${sel}" aria-label="${esc(n === 0 ? t('vote.suggestRetire') : t('vote.ratingLabel', { n, max: RATING_MAX }))}">
+           <i class="ti ${n === 0 ? 'ti-trash' : MOODS[n - 1]}" aria-hidden="true"></i><span class="mood__n">${n === 0 ? '&nbsp;' : n}</span>
          </button>`);
       if (sel) {
         b.style.background = avgColor(n);
@@ -623,21 +634,14 @@ function startVoting(round, session, games, people, opts = {}) {
       }
       if (wanted && wanted.kind === 'mood' && wanted.n === n) restore = b;
       b.addEventListener('click', () => {
-        votes[person.id][game.id] = { rating: n, retire: current.retire };
+        // Mutually exclusive: picking a face clears the flag, picking the trash
+        // clears the rating. That is what removes the contradiction a vote could
+        // express before (#797).
+        votes[person.id][game.id] = n === 0 ? { rating: null, retire: true } : { rating: n, retire: false };
         refocus = { kind: 'mood', n };
         render();
       });
       ratingEl.appendChild(b);
-    }
-
-    const sortBtn = card.querySelector('.sortBtn');
-    if (sortBtn) {
-      if (wanted && wanted.kind === 'sort') restore = sortBtn;
-      sortBtn.addEventListener('click', () => {
-        votes[person.id][game.id] = { rating: current.rating, retire: !current.retire };
-        refocus = { kind: 'sort' };
-        render();
-      });
     }
 
     const backBtn = card.querySelector('#backBtn');
@@ -645,11 +649,10 @@ function startVoting(round, session, games, people, opts = {}) {
     backBtn.addEventListener('click', () => history.back());
 
     card.querySelector('#nextBtn').addEventListener('click', () => {
-      const v = votes[person.id][game.id];
-      // A member may continue on either a rating or a retire flag; a guest has
-      // no flag to give, so for them the rating is the only way through.
-      if (!v || (v.rating === null && !(mayRetire && v.retire))) {
-        return toast(t(mayRetire ? 'vote.toast.needRating' : 'vote.toast.needRatingOnly'));
+      // One scale, so one guard: has this person put the game anywhere on it?
+      // (#797 — it used to be "a rating, or the flag, unless you're a guest".)
+      if (effectiveRating(votes[person.id][game.id]) === null) {
+        return toast(t('vote.toast.needRating'));
       }
       if (idx === total - 1) finish();
       else go(idx + 1);
@@ -774,13 +777,16 @@ async function showResults(round, session, gamesHint, reveal) {
     people.forEach((p) => {
       const v = (session.votes[p.id] || {})[g.id];
       if (!v) return;
-      if (v.retire) sortCount++;
-      if (typeof v.rating === 'number') ratings.push(v.rating);
+      if (wantsRetire(v)) sortCount++;
+      // 0–5 since #797: a retirement proposal is a vote of 0, so it lands in
+      // the average and in its own bucket rather than only in `sortCount`.
+      const r = effectiveRating(v);
+      if (r !== null) ratings.push(r);
     });
     const sum = ratings.reduce((a, b) => a + b, 0);
     const avg = ratings.length ? sum / ratings.length : 0;
-    const dist = [0, 0, 0, 0, 0];
-    ratings.forEach((r) => dist[r - 1]++);
+    const dist = [0, 0, 0, 0, 0, 0];
+    ratings.forEach((r) => dist[r]++);
     return { game: g, avg, count: ratings.length, sortCount, dist };
   });
 
@@ -949,10 +955,18 @@ async function showResults(round, session, gamesHint, reveal) {
     const g = r.game;
     const imgStyle = g.image ? `style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
     const fallback = coverPlaceholder(g);
+    /* Six bars since #797, the leftmost being the retirement proposals. It
+       carries the same trash glyph as the vote card's zero tile INSTEAD of its
+       count, because the numeral inside a bar already means the count and two
+       numbers in a 22px box would say neither. Nothing is lost: that count is
+       `sortCount`, which the „X wollen aussortieren" line directly below states
+       in words whenever it is non-zero. */
     const bars = r.dist
       .map((c, n) => {
         const hpx = 4 + Math.round((c / maxBar) * 24);
-        return `<div class="bar" style="height:${hpx}px" title="${esc(t('result.barTitle', { c, r: n + 1 }))}">${c || ''}</div>`;
+        const title = n === 0 ? t('result.barTitleRetire', { c }) : t('result.barTitle', { c, r: n });
+        const label = n === 0 ? (c ? '<i class="ti ti-trash" aria-hidden="true"></i>' : '') : (c || '');
+        return `<div class="bar${n === 0 ? ' bar--retire' : ''}" style="height:${hpx}px" title="${esc(title)}">${label}</div>`;
       })
       .join('');
     // Info if the game has been archived in the meantime (#250: either way).

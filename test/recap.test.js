@@ -8,6 +8,7 @@ const { RECAP_MIN_RATINGS, roundRecap, isNameableGame } = require('../public/js/
 // these assertions are about, so a simplified fake would test the wrong rules
 // (.claude/rules/session-guests-are-not-members.md).
 const { sessionPeople } = require('../public/js/session-people');
+const { effectiveRating } = require('../public/js/vote-scale');
 
 // ---- fixtures -------------------------------------------------------------
 
@@ -40,7 +41,7 @@ const round = (over = {}) => ({
   sessions: over.sessions || [],
 });
 
-const recapOf = (r) => roundRecap(r, sessionPeople);
+const recapOf = (r) => roundRecap(r, sessionPeople, effectiveRating);
 
 // Ratings for one game from as many distinct members as needed to clear the
 // evidence bar, all at the same value.
@@ -371,10 +372,24 @@ test('a round with no sessions at all is all zeros', () => {
   assert.deepEqual(rec.favourites, []);
 });
 
-test('a session carrying only retire flags contributes no ratings', () => {
+/* Inverted by #797. A retire-only vote used to be invisible to every taste stat
+   — the strongest thing a member can say about a game they have played simply
+   did not count — so a round whose members all wanted a game gone reported no
+   ratings at all. It is now a 0, which is a rating like any other. */
+test('a session carrying only retire flags contributes ratings of 0', () => {
   const r = round({
-    sessions: [{ id: 'sx', createdAt: '2026-07-01T20:00:00.000Z', finished: true, gameIds: ['g1'], votes: { m1: { g1: { retire: true } } } }],
+    sessions: [{ id: 'sx', createdAt: '2026-07-01T20:00:00.000Z', finished: true, gameIds: ['g1'], votes: { m1: { g1: { rating: null, retire: true } } } }],
   });
-  assert.equal(recapOf(r).totals.ratings, 0);
-  assert.deepEqual(recapOf(r).favourites, []);
+  assert.equal(recapOf(r).totals.ratings, 1);
+  assert.deepEqual(recapOf(r).favourites, [{ memberId: 'm1', gameId: 'g1', avg: 0, count: 1 }]);
+});
+
+// The legacy shape the storage was never migrated for: retirement wins, so this
+// member's favourite averages 0 rather than the 5 the stored rating claims.
+test('a legacy vote carrying BOTH a rating and the flag counts as 0', () => {
+  const r = round({
+    sessions: [{ id: 'sx', createdAt: '2026-07-01T20:00:00.000Z', finished: true, gameIds: ['g1'], votes: { m1: { g1: { rating: 5, retire: true } } } }],
+  });
+  assert.equal(recapOf(r).totals.ratings, 1);
+  assert.equal(recapOf(r).favourites[0].avg, 0);
 });

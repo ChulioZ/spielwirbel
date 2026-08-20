@@ -110,7 +110,23 @@ const MOUNTS = [
   ['/background', '../lib/routes/background'],
   ['/tags', '../lib/routes/tags'],
   ['/lookup', '../lib/routes/lookup'],
+  ['/recommendations', '../lib/routes/recommendations'],
 ];
+
+// MOUNTS is a hand-copied mirror of lib/app.js, and a router missing from it is
+// INVISIBLE to both guards below — they would report "every mutating route
+// states a required role" while never having looked at it. That was not
+// hypothetical: /recommendations was mounted in the app and absent here from
+// #682 until #782 gave that router its first mutating route. It cost nothing
+// only because there was nothing to miss.
+test('MOUNTS covers every round sub-router the app actually mounts', () => {
+  const appSrc = require('node:fs').readFileSync(require.resolve('../lib/app.js'), 'utf8');
+  const mounted = [...appSrc.matchAll(/app\.use\('\/api\/rounds\/:rid(\/[a-z-]+)'/g)].map((m) => m[1]);
+  assert.ok(mounted.length >= 8, `the mount scan found only ${mounted.length} routers — the regex has drifted`);
+  const listed = new Set(MOUNTS.map(([prefix]) => prefix));
+  assert.deepEqual(mounted.filter((p) => !listed.has(p)), [],
+    'these routers are mounted under /api/rounds/:rid but are not walked by the guards below');
+});
 
 function registeredMutatingRoutes() {
   const out = [];

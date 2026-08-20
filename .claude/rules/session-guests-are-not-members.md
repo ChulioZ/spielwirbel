@@ -85,26 +85,38 @@ Note filtering the *guest ids* out of `winnerIds` instead is also wrong, in the
 other direction: `[Anna, guest]` would become a sole Anna win and **extend** the
 streak.
 
-## 4. The retire control is not RENDERED for a guest — that is what removes the aggregation logic
+## 4. A guest's SCALE STARTS AT 1 — that is what removes the aggregation logic
 
 A guest rates (their opinion of a game they played belongs in `gameStats`, or the
-results screen and the game's own average silently disagree) but gets no
-"Aussortieren" toggle: throwing a game off the shelf is the permanent group
-governing its collection.
+results screen and the game's own average silently disagree) but cannot vote a
+game off the shelf: that is the permanent group governing its collection.
 
-Omitting the control rather than casting and filtering the flag is what lets
+**Since #797 that is a shorter scale, not a missing control.** The retirement
+proposal used to be a separate "Aussortieren" toggle under the 1–5 row; it is now
+the **zero** of the same scale, rendered as a leading trash tile — and the tile is
+simply not emitted for a guest, so they see five tiles where a member sees six.
+The mechanism is unchanged (omit, don't cast-and-filter); what changed is what is
+being omitted.
+
+Omitting it rather than casting and filtering the flag is what lets
 `gameStats`/`gameStatsForSession` iterate `sessionPeople()` with **no
 guest-specific exclusion at all** — there is simply never a guest `retire` flag.
-Two consequences follow and both are load-bearing:
+That property got *more* load-bearing with #797, not less: a guest zero would now
+also drag the game's average down, not just its side counter. Three consequences
+follow and each is load-bearing:
 
 - `dropGuestRetireFlags()` in `lib/routes/sessions.js` strips one from a hand-crafted
-  `POST …/results`, so the invariant holds for data too, not just for the UI.
+  `POST …/results`, and `sanitizePersonVotes` refuses one on the per-device and
+  vote-link paths, so the invariant holds for data too, not just for the UI.
 - The guard in `POST …/results` is in the **route, not the repo** — the contract
   suite pins that the store happily persists a guest `retire`, which is what
   proves the guard was not quietly moved down a layer (same shape as
   `.claude/rules/admin-moderation-surface.md`'s notice-retention guard).
-- The "rate or flag to continue" guard becomes rating-only for a guest, hence the
-  separate `vote.toast.needRatingOnly` key.
+- **The two continue-guards collapsed into one, and `vote.toast.needRatingOnly`
+  is gone with them.** "A rating, or the flag unless you are a guest" became "is
+  this game anywhere on your scale" — one `effectiveRating(v) === null` test that
+  is already correct for both, because a guest has no zero to give. A future edit
+  that re-splits them is re-introducing a difference the data no longer has.
 
 ## 4b. Teams (#575) reuse this resolver — and add a second unit above the person
 

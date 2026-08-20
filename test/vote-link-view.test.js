@@ -70,23 +70,24 @@ test('the claim list offers every participant, marking who has already voted', a
   assert.match(dom.app.textContent, /Freitagsrunde/);
 });
 
-test('picking a name opens the cards; a member gets the retire control, a guest does not', async (t) => {
+test('picking a name opens the cards; a member gets the zero tile, a guest does not', async (t) => {
   const { dom } = boot(t);
   await dom.call('showVoteLink', 'tok-2');
 
-  // Anna (a member).
+  // Anna (a member) — six tiles since #797, the zero being the retirement one.
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
-  assert.equal(dom.app.querySelectorAll('.mood').length, 5, 'the 1-5 scale');
+  assert.equal(dom.app.querySelectorAll('.mood').length, 6, 'the 0-5 scale');
   assert.match(dom.app.querySelector('.vote__title').textContent, /Catan/);
-  assert.ok(dom.app.querySelector('.sortBtn'), 'a member may suggest retiring a game');
+  assert.ok(dom.app.querySelector('.mood--retire'), 'a member may suggest retiring a game');
+  assert.equal(dom.app.querySelector('.sortBtn'), null, 'the separate control is gone');
 
   // Dana (a guest) — back to the claim list first.
   dom.app.querySelector('#backBtn').click();
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[2].click();
-  assert.equal(dom.app.querySelectorAll('.mood').length, 5);
+  assert.equal(dom.app.querySelectorAll('.mood').length, 5, 'a guest scale starts at 1');
   assert.equal(
-    dom.app.querySelector('.sortBtn'), null,
-    'a guest gets no retire control — not rendering it is what keeps the flag out of the payload (#458)'
+    dom.app.querySelector('.mood--retire'), null,
+    'a guest gets no zero tile — not rendering it is what keeps the flag out of the payload (#458)'
   );
 });
 
@@ -103,7 +104,7 @@ test('a rating must be given before the cards advance', async (t) => {
   assert.match(dom.app.querySelector('.vote__title').textContent, /Catan/);
 
   // With a rating it moves on.
-  dom.app.querySelectorAll('.mood')[3].click();
+  dom.app.querySelectorAll('.mood')[4].click();
   dom.app.querySelector('#nextBtn').click();
   assert.match(dom.app.querySelector('.vote__title').textContent, /Azul/);
 });
@@ -113,10 +114,12 @@ test('submitting sends only the claimed person\'s ratings, then shows the thank-
   await dom.call('showVoteLink', 'tok-4');
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click(); // Anna
 
-  dom.app.querySelectorAll('.mood')[4].click(); // Catan -> 5
-  dom.app.querySelector('.sortBtn').click(); // and suggest retiring it
+  // Catan -> 5, then a change of mind onto the zero: the two are mutually
+  // exclusive now (#797), so the rating must NOT ride along in the payload.
+  dom.app.querySelectorAll('.mood')[5].click();
+  dom.app.querySelectorAll('.mood')[0].click();
   dom.app.querySelector('#nextBtn').click();
-  dom.app.querySelectorAll('.mood')[0].click(); // Azul -> 1
+  dom.app.querySelectorAll('.mood')[1].click(); // Azul -> 1
   dom.app.querySelector('#nextBtn').click(); // finish
 
   await new Promise((r) => setTimeout(r, 0));
@@ -129,7 +132,7 @@ test('submitting sends only the claimed person\'s ratings, then shows the thank-
   // a false red reading "same structure but not reference-equal"
   // (.claude/rules/scroll-reset-on-forward-navigation.md notes the same trap).
   assert.deepEqual(JSON.parse(JSON.stringify(post.body)), {
-    votes: { g1: { rating: 5, retire: true }, g2: { rating: 1, retire: false } },
+    votes: { g1: { rating: null, retire: true }, g2: { rating: 1, retire: false } },
   });
   // Nobody else's column rides along — the payload is one person's, by shape.
   assert.deepEqual(Object.keys(post.body.votes).sort(), ['g1', 'g2']);
@@ -155,7 +158,7 @@ test('replacing someone else\'s vote is confirmed first; your own is not', async
   // Anna has NOT voted, so picking her asks nothing.
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
   assert.equal(asked.length, 1);
-  assert.equal(dom.app.querySelectorAll('.mood').length, 5);
+  assert.equal(dom.app.querySelectorAll('.mood').length, 6);
 });
 
 test('a device that already claimed a name revises without being re-asked', async (t) => {
@@ -173,7 +176,7 @@ test('a device that already claimed a name revises without being re-asked', asyn
   await dom.call('showVoteLink', 'tok-6');
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
   assert.deepEqual(asked, []);
-  assert.equal(dom.app.querySelectorAll('.mood').length, 5);
+  assert.equal(dom.app.querySelectorAll('.mood').length, 6);
 });
 
 test('an unusable link renders the dead state, never a blank screen', async (t) => {

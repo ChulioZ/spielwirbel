@@ -775,6 +775,42 @@ test('a game already in the round is excluded in EVERY state, retired included',
   assert.deepEqual(out.recommendations.map((r) => r.externalId), ['free']);
 });
 
+test('a dismissed title is a THIRD hard filter — gone from the list, absent from the profile (#782)', () => {
+  const round = shelfRound({ dismissedRecommendations: [{ externalId: 'nope', title: 'Not for us', at: '2026-08-20T10:00:00.000Z' }] });
+  const corpus = [...shelfCorpus(), entry('nope', { bayesRating: 9.5, info: info() }), entry('free', { info: info() })];
+
+  const out = recommend(round, corpus);
+  // 'nope' outscores everything on quality alone, so it can only be missing
+  // because it was filtered — not because it lost.
+  assert.deepEqual(out.recommendations.map((r) => r.externalId), ['free']);
+
+  // A dismissal is NOT an owned game and must not act like one: the profile
+  // counts are what §6's empty states are picked from, so a dismissal leaking
+  // into them would send a round to the wrong screen.
+  const clean = recommend(shelfRound(), corpus);
+  assert.equal(out.profileGames, clean.profileGames);
+  assert.equal(out.linkedGames, clean.linkedGames);
+  // …and the whole corpus is still reported, exactly like the un-enriched filter.
+  assert.equal(out.corpusRows, corpus.length);
+
+  // The list rides along on the answer so the screen can offer the undo without
+  // a second read.
+  assert.deepEqual(out.dismissed, round.dismissedRecommendations);
+});
+
+test('the dismissed list is reported even when the profile is too thin to score (#782)', () => {
+  // A round below the floor returns early — but the reader must still be able to
+  // find and restore what they ignored, so the list cannot ride behind that gate.
+  const thin = { id: 'r1', name: 'R', members: [], games: [], sessions: [], dismissedRecommendations: [{ externalId: '1', title: 'X', at: '2026-08-20T10:00:00.000Z' }] };
+  const out = recommend(thin, shelfCorpus());
+  assert.deepEqual(out.recommendations, []);
+  assert.deepEqual(out.dismissed, thin.dismissedRecommendations);
+});
+
+test('a round that has never dismissed anything reports an empty list, not undefined (#782)', () => {
+  assert.deepEqual(recommend(shelfRound(), shelfCorpus()).dismissed, []);
+});
+
 test('an un-enriched corpus row is never recommended — it could not be explained', () => {
   const corpus = [...shelfCorpus(), entry('bare'), entry('rich', { info: info() })];
   const out = recommend(shelfRound(), corpus);
