@@ -91,7 +91,7 @@ here from `round.members` would silently drop guests and flatten teams, so
 *because* the naming path (`partyName` → `t()`) is unreachable from Node — see
 `.claude/rules/session-teams.md` §4.
 
-## 5. Two hard filters that are not optimisations
+## 5. Three hard filters that are not optimisations
 
 - **A game already in the round in ANY state is dropped**, retired included, and
   retired is the sharpest of the five: they explicitly got rid of it. A test
@@ -158,25 +158,54 @@ here from `round.members` would silently drop guests and flatten teams, so
   fixture's shelf, never to soften the assertion; both were re-verified against
   their original deliberate breaks afterwards.
 
-  **Both counts move, and that is load-bearing** — §6's four empty states are
+  **Both counts move, and that is load-bearing** — §6's five empty states are
   picked from them. Wishes counted in `linkedGames` would send a round of ten
   wishes and two owned games to `unknownGames` ("the database does not know your
   shelf") when the true answer is `fewGames`, the one state carrying the
   BGG-import button. Verify `linkedGames` **and** `profileGames`, never just the
   list.
+- **A title the round has DISMISSED is dropped (#782)** — „Nicht interessiert",
+  stored as `round.dismissedRecommendations` (`[{ externalId, title, at }]`). It
+  is a **filter and nothing else**: it touches neither count, contributes no
+  vector component, and has no `gameAffinity` rung — the same shape a wish took
+  after #776, for a related but distinct reason. The symmetry with retiring
+  (`-1.0`, which *does* reshape the profile) is tempting and was rejected: a
+  retired game is bounded by what the round once owned, while a dismissal is one
+  tap and unbounded, so thirty of them at a negative rung would outweigh a
+  40-game shelf in the two list-valued vectors and narrow the list onto a
+  shrinking niche — a self-reinforcing loop with no play data behind it. It would
+  also be the first input where a UI action reshapes the ranking. If that is ever
+  revisited, the open question is the **cap** on the dismissals' combined
+  negative mass, not the value (operator, 2026-08-15).
+
+  **The list rides on the response ahead of the thin-profile early return**, so a
+  round below the floor can still see and undo what it ignored. A dismissal is
+  also **not a game row** in any backend — see the issue and
+  `lib/repo/json.js`'s `dismissRecommendation` for why inventing one would put a
+  title the round never owned into `gameCount`, the Regal's archive views, the
+  Chronik, the public stats and the per-round game quota.
 - **An un-enriched corpus row is dropped**, since it carries no attributes at all
   — it could be neither scored nor explained. The response still reports
   `corpusRows` over the whole corpus, which is what lets the screen tell "your
   shelf is too thin" from "this instance has no database".
 
-## 6. The four empty states are not interchangeable
+## 6. The five empty states are not interchangeable
 
 `few linked games` / `the corpus does not know your shelf` / `no corpus at all` /
-`nothing left to suggest` ask the reader for opposite things, and only the first
-has an action behind it (import a BGG collection). Collapsing them into one
-"nothing to show" sends someone off to re-import a collection they already
-imported. `test/recommend-view.test.js` asserts one per state; collapsing the
-selector reddens three.
+`you have ignored everything that was left` / `nothing left to suggest` ask the
+reader for opposite things, and only two have an action behind them (import a BGG
+collection; un-ignore something). Collapsing them into one "nothing to show"
+sends someone off to re-import a collection they already imported.
+`test/recommend-view.test.js` asserts one per state; collapsing the selector
+reddens four.
+
+**`allDismissed` is checked fourth, and its position is the whole assertion**
+(#782): after the three database states, which answer the more fundamental
+question of whether anything could be said at all — but **before** `noneLeft`,
+which claims "you already own everything that fits". That claim is false and
+unactionable for a round that has merely hidden what was left, and it is the one
+empty state the reader can fix from where they are standing, so the „Ignorierte"
+restore surface is rendered on the empty screen too.
 
 ## 7. Size the snapshot against the ELIGIBLE count, not the default
 
@@ -264,6 +293,23 @@ model, no processor, nothing that can hallucinate a title — so the read answer
 now. What the guard still holds is #264's actual shape: **no POST, no DELETE, no
 stored runs**. Deleting the test because "recommendations exist again" would have
 lost the guard entirely; the sibling `recommendationRuns` assertion is untouched.
+
+**#782 added the first writes under this path and the guard still passes
+UNMODIFIED**, which is what the sub-path is for. `POST …/recommendations/dismissed`
+and `DELETE …/recommendations/dismissed/:externalId` sit one segment deeper than
+the two paths the guard names, so a bare `POST …/recommendations` and a
+`DELETE …/recommendations/anything` still 404 exactly as asserted. That is not a
+loophole: what #264 forbids is a **stored model run** — something scored, billed,
+persisted and re-triggerable — and a list of ids the read filters against is none
+of those. Do not "tidy" the writes up to `POST …/recommendations`; the depth is
+carrying the guarantee.
+
+**The role table was blind to this router until #782.** `test/round-roles.test.js`
+walks a hand-copied `MOUNTS` mirror of `lib/app.js`, and `/recommendations` was
+missing from it from #682 onward — so both of its guards would have reported
+"every mutating round route states a required role" without ever having looked at
+this file. It cost nothing only because the router had no mutating route to miss.
+The list now has its own completeness test against `lib/app.js`.
 
 ## 11. Three of the six reasons were UNREACHABLE, and the weights were why (#772)
 

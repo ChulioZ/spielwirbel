@@ -16,7 +16,15 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { loadApp } = require('./support/dom');
+const { loadApp, translator } = require('./support/dom');
+
+// The views' click handlers are async; one microtask drain is enough because the
+// stubbed api() resolves immediately.
+async function click(el) {
+  el.click();
+  await new Promise((r) => setImmediate(r));
+}
+const tDe = translator('de');
 
 const round = { id: 'r1', name: 'Freitagsrunde', games: [], sessions: [], members: [], background: null };
 
@@ -128,6 +136,78 @@ test('the players reason reads as a sentence, with its own solo phrasing (#805)'
   assert.deepEqual(await lines('en'), ['Plays best with 4 players', 'Plays best solo']);
 });
 
+/* ------------------------- „Nicht interessiert" (#782) ------------------------- */
+
+test('dismissing a card replaces it in place with a persistent undo', async (t) => {
+  const { dom, calls } = await render(t, full({ recommendations: [rec({ title: 'Ark Nova' }), rec({ externalId: '998', title: 'Wingspan' })] }));
+  assert.equal(dom.app.querySelectorAll('.rec-card').length, 2);
+
+  await click(dom.app.querySelector('.rec-card [data-act="dismiss"]'));
+
+  const write = calls.find((c) => c.method === 'POST');
+  assert.equal(write.url, '/api/rounds/r1/recommendations/dismissed');
+  // Field by field: the body is constructed inside the jsdom realm, so a
+  // deepEqual against a Node-realm literal fails on the prototype alone.
+  assert.equal(write.body.externalId, '999');
+  assert.equal(write.body.title, 'Ark Nova');
+
+  // The card is gone and an undo row stands where it was — NOT a timed control
+  // inside the toast's aria-live region, which would take the only way back away
+  // again after 2.2s. Same in-place shape as the session-cancel undo.
+  assert.equal(dom.app.querySelectorAll('.rec-card').length, 1);
+  const undone = dom.app.querySelector('.rec-undone');
+  assert.ok(undone, 'the dismissed card leaves an undo row behind');
+  assert.match(undone.textContent, /Ark Nova/);
+
+  await click(undone.querySelector('button'));
+  const back = calls.find((c) => c.method === 'DELETE');
+  assert.equal(back.url, '/api/rounds/r1/recommendations/dismissed/999');
+});
+
+test('the ignored list is absent when nothing is dismissed, and lists what is', async (t) => {
+  const none = await render(t, full({ recommendations: [rec()] }));
+  assert.equal(none.dom.app.querySelector('[data-act="show-ignored"]'), null, 'no toggle with an empty list');
+
+  const some = await render(t, full({
+    recommendations: [rec()],
+    dismissed: [{ externalId: '111', title: 'Monopoly', at: '2026-08-20T10:00:00.000Z' }],
+  }));
+  const toggle = some.dom.app.querySelector('[data-act="show-ignored"]');
+  assert.ok(toggle);
+  assert.match(toggle.textContent, /1/, 'the toggle carries the count');
+  // Collapsed until asked for — the list is a recovery surface, not something
+  // that should push the recommendations down the screen.
+  assert.equal(some.dom.app.querySelector('.rec-ignored'), null);
+
+  await click(toggle);
+  const list = some.dom.app.querySelector('.rec-ignored');
+  assert.ok(list);
+  assert.match(list.textContent, /Monopoly/);
+
+  await click(list.querySelector('button'));
+  const back = some.calls.find((c) => c.method === 'DELETE');
+  assert.equal(back.url, '/api/rounds/r1/recommendations/dismissed/111');
+});
+
+test('an empty list caused by dismissals is its OWN empty state, not noneLeft', async (t) => {
+  const { dom } = await render(t, full({
+    recommendations: [],
+    dismissed: [{ externalId: '111', title: 'Monopoly', at: '2026-08-20T10:00:00.000Z' }],
+  }));
+  const text = dom.app.querySelector('.empty p').textContent;
+  // The five states ask for opposite things and only this one has an action the
+  // reader can actually take right now (§6 of the scoring rule).
+  assert.equal(text, tDe('suggest.empty.allDismissed'));
+  assert.notEqual(text, tDe('suggest.empty.noneLeft'));
+  // …and the way back is on screen with it.
+  assert.ok(dom.app.querySelector('[data-act="show-ignored"]'), 'the restore surface is reachable from the empty state');
+});
+
+test('an empty list with NO dismissals is still noneLeft', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [], dismissed: [] }));
+  assert.equal(dom.app.querySelector('.empty p').textContent, tDe('suggest.empty.noneLeft'));
+});
+
 test('a reason the client has no phrase for renders NOTHING, never a raw key', async (t) => {
   const { dom } = await render(t, full({
     recommendations: [rec({ reasons: [{ term: 'from-a-newer-server' }, { term: 'quality', rating: 8.4 }] })],
@@ -138,7 +218,7 @@ test('a reason the client has no phrase for renders NOTHING, never a raw key', a
   assert.doesNotMatch(dom.app.textContent, /from-a-newer-server|suggest\.reason/);
 });
 
-/* The four empty states ask the reader for OPPOSITE things, so each is asserted
+/* The five empty states ask the reader for OPPOSITE things, so each is asserted
    against the copy it must show. A single "nothing to show" would send someone
    off to re-import a collection they have already imported — which is why this
    is four cases rather than one. */

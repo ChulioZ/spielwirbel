@@ -70,6 +70,25 @@ test('.section-tools can shrink, so its own flex-wrap engages', () => {
     ".section-tools keeps min-width:auto, so it cannot shrink past its content");
 });
 
+test('.rec-card__actions can shrink, so a third action wraps instead of overflowing', () => {
+  // The SAME self-cancelling pair as .section-tools above, found again in #782:
+  // `flex: none` + `flex-wrap: wrap` on the recommendation card's action column.
+  // Two actions happened to fit a 375px viewport, so it sat latent from #682
+  // until „Nicht interessiert" made three — measured before the fix, at 375px:
+  // the column claimed 479px and the document scrollWidth went to 510.
+  const flex = flexOf(bodyOf('.rec-card__actions'));
+  assert.ok(flex, '.rec-card__actions declares no flex');
+  assert.notEqual(flex.shrink, 0,
+    '.rec-card__actions cannot shrink, so its flex-wrap can never engage (#782)');
+  assert.match(bodyOf('.rec-card__actions'), /flex-wrap:\s*wrap/,
+    '.rec-card__actions no longer wraps, so shrinking alone cannot make it fit');
+  // Deliberately NOT min-width:0 here, unlike .section-tools: the automatic
+  // minimum is what stops the column shrinking narrower than its widest single
+  // button and pushing the buttons out of their own card.
+  assert.doesNotMatch(bodyOf('.rec-card__actions'), /min-width:\s*0/,
+    '.rec-card__actions may not shrink past its widest button');
+});
+
 test('the search pill and its input can both shrink below their content', () => {
   // A flex item's automatic minimum size is its min-content width, so BOTH the
   // pill and the input need min-width:0 — with either missing the 150px input

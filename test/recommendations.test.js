@@ -203,6 +203,76 @@ test('the round\'s own ratings shape the ranking', async () => {
   assert.ok(ids.indexOf('901') < ids.indexOf('902'), `expected the loved mechanic first, got ${ids}`);
 });
 
+/* ------------------------- „Nicht interessiert" (#782) ------------------------- */
+
+const dismissed = (rid) => request(app).get(`/api/rounds/${rid}/recommendations`).then((r) => r.body.dismissed);
+
+test('a dismissed title leaves the list for good, and the undo brings it back', async () => {
+  const round = await seedRound();
+  await seedCorpus([
+    ...ownedRows(),
+    { externalId: '999', name: 'Great Match', rank: 40, bayesRating: 8.4, info: info() },
+    { externalId: '998', name: 'Second Match', rank: 41, bayesRating: 8.3, info: info() },
+  ]);
+  const ids = async () => (await request(app).get(`/api/rounds/${round.id}/recommendations`)).body.recommendations.map((r) => r.externalId);
+  assert.deepEqual(await ids(), ['999', '998']);
+
+  const post = await request(app)
+    .post(`/api/rounds/${round.id}/recommendations/dismissed`)
+    .send({ externalId: '999', title: 'Great Match' });
+  assert.equal(post.status, 201);
+  assert.equal(post.body.externalId, '999');
+
+  assert.deepEqual(await ids(), ['998'], 'the dismissed title is gone from the ranking');
+  assert.deepEqual((await dismissed(round.id)).map((d) => d.title), ['Great Match']);
+
+  const del = await request(app).delete(`/api/rounds/${round.id}/recommendations/dismissed/999`);
+  assert.equal(del.status, 200);
+  assert.deepEqual(await ids(), ['999', '998'], 'the undo restores it into the ranking');
+  assert.deepEqual(await dismissed(round.id), []);
+});
+
+test('dismissing creates NO game row — not a fifth state, not a retired game', async () => {
+  const round = await seedRound();
+  await seedCorpus([...ownedRows(), { externalId: '999', name: 'Great Match', rank: 40, bayesRating: 8.4, info: info() }]);
+  const before = (await request(app).get(`/api/rounds/${round.id}`)).body.games;
+
+  // Asserted, or this whole spec is vacuously green against a route that 404s:
+  // nothing was added because nothing happened.
+  const post = await request(app).post(`/api/rounds/${round.id}/recommendations/dismissed`).send({ externalId: '999', title: 'Great Match' });
+  assert.equal(post.status, 201);
+
+  const after = (await request(app).get(`/api/rounds/${round.id}`)).body;
+  // The whole argument of the issue: a dismissal must cost no shelf row, or it
+  // shows up in gameCount, the Regal's archive views, the Chronik, the public
+  // stats and the per-round game quota.
+  assert.equal(after.games.length, before.length);
+  assert.ok(!after.games.some((g) => g.title === 'Great Match'));
+  // …and it writes no Chronik entry either — nothing happened to the shelf.
+  const acts = (await request(app).get(`/api/rounds/${round.id}/activities`)).body;
+  assert.ok(!(acts.activities || acts).some?.((a) => /Great Match/.test(JSON.stringify(a))), 'no activity names a game that was never added');
+});
+
+test('a dismissal is refused without an externalId, and an unknown round 404s', async () => {
+  const round = await seedRound();
+  assert.equal((await request(app).post(`/api/rounds/${round.id}/recommendations/dismissed`).send({ title: 'No id' })).status, 400);
+  assert.equal((await request(app).post('/api/rounds/nope/recommendations/dismissed').send({ externalId: '1', title: 'X' })).status, 404);
+  assert.equal((await request(app).delete('/api/rounds/nope/recommendations/dismissed/1')).status, 404);
+  // Restoring something that was never dismissed is a 404, not a silent ok —
+  // the client would otherwise show "restored" for a no-op.
+  assert.equal((await request(app).delete(`/api/rounds/${round.id}/recommendations/dismissed/never`)).status, 404);
+});
+
+test('dismissing the same title twice is idempotent, and keeps the first decision', async () => {
+  const round = await seedRound();
+  await seedCorpus([...ownedRows(), { externalId: '999', name: 'Great Match', rank: 40, info: info() }]);
+  const first = await request(app).post(`/api/rounds/${round.id}/recommendations/dismissed`).send({ externalId: '999', title: 'Great Match' });
+  const again = await request(app).post(`/api/rounds/${round.id}/recommendations/dismissed`).send({ externalId: '999', title: 'Great Match' });
+  assert.equal(again.status, 201);
+  assert.equal(again.body.at, first.body.at, 'a re-dismiss must not restamp the moment the round decided');
+  assert.equal((await dismissed(round.id)).length, 1);
+});
+
 test('an unknown round is a 404, like every other round-scoped read', async () => {
   const res = await request(app).get('/api/rounds/nope/recommendations');
   assert.equal(res.status, 404);

@@ -5725,9 +5725,49 @@ kbd {
 .rec-card__why { list-style: none; margin: 6px 0 0; padding: 0; font-size: var(--text-sm); }
 .rec-card__why li { color: var(--ink-soft); }
 .rec-card__why li + li { margin-top: 2px; }
-.rec-card__actions { display: flex; gap: 8px; flex: none; flex-wrap: wrap; align-items: center; }
+/* `flex: 0 1 auto`, NOT `flex: none` (#782). As a non-shrinking item this column
+   claims its max-content width, so `flex-wrap` inside it could never engage and
+   the card — and with it the whole page — was pushed wider than a phone
+   viewport. Two actions happened to fit in 375px and a third did not; letting it
+   shrink bottoms it out at the widest single button instead, which is what makes
+   the buttons stack rather than overflow. */
+.rec-card__actions { display: flex; gap: 8px; flex: 0 1 auto; flex-wrap: wrap; align-items: center; }
 .rec-card__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
 .rec-source { margin-top: 18px; font-size: var(--text-sm); }
+
+/* „Nicht interessiert" (#782). The dismissed card is replaced IN PLACE by this
+   row rather than vanishing: the undo has to outlive the 2.2s toast, and a card
+   that simply disappears gives the reader nothing to aim at if they mis-tapped.
+   Dashed, so it reads as a gap in the list rather than as another card. */
+.rec-undone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+.rec-undone__name { font-weight: 600; }
+
+/* The ignored list: a recovery surface, so it sits below the recommendations
+   and stays collapsed until asked for. */
+.rec-ignored-wrap { margin-top: 18px; }
+.rec-ignored { margin-top: 10px; }
+.rec-ignored__title { font-family: var(--font-display); font-size: var(--text-md); margin: 0 0 8px; }
+.rec-ignored__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.rec-ignored__name { font-size: var(--text-sm); }
 
 /* ---- Design studio: theme preview cards ---- */
 .theme-cards {

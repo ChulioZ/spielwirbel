@@ -60,6 +60,19 @@ reminder arrives as a **red suite** rather than as a puzzling 403 in production.
 The reverse direction is asserted too: an entry naming a route that no longer
 exists reads as coverage while guarding nothing.
 
+**Both directions are only as good as the router list they walk, and that list is
+a HAND-COPY of `lib/app.js`.** `MOUNTS` in that spec names the sub-routers to
+inspect, and `/recommendations` was missing from it from #682 until #782 — so for
+two months both guards above reported full coverage while never having opened
+that file. Nothing could go red: a router with no mutating route is
+indistinguishable from a router nobody looked at. It cost nothing only by luck,
+and the moment that router grew its first write the omission would have handed
+every grantee an ungated 403 with no explanation. `MOUNTS` now has its own
+completeness test against `lib/app.js`'s `app.use('/api/rounds/:rid/…')` lines —
+**add a new sub-router there as well as in the app**, and note the assertion that
+the scan itself found a plausible number of mounts, which is what stops a drifted
+regex from making the check vacuous.
+
 **GET is not gated**, on purpose. `resolveRoundGrant` has already bounded the
 request to exactly the granted round and every role may read it, so an unlisted
 GET leaks nothing — while gating reads would turn a typo'd path into a 403 for
