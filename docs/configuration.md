@@ -120,8 +120,10 @@ Per-tenant quotas (issue #139): in the public multi-tenant mode (`ACCOUNTS_ENABL
 each tenant is capped on rounds (`MAX_ROUNDS_PER_TENANT`, default 10), games per
 round (`MAX_GAMES_PER_ROUND`, default 1000), custom tags per round
 (`MAX_TAGS_PER_ROUND`, default 30), member seats per round
-(`MAX_MEMBERS_PER_ROUND`, default 50), and expansions per game
-(`MAX_EXPANSIONS_PER_GAME`, default 40). Per **account** rather than per
+(`MAX_MEMBERS_PER_ROUND`, default 50), expansions per game
+(`MAX_EXPANSIONS_PER_GAME`, default 40), and dismissed recommendations per round
+(`MAX_DISMISSED_RECOMMENDATIONS_PER_ROUND`, default 500, issue #782). Per
+**account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
 friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50) and passkeys
 (`MAX_PASSKEYS_PER_USER`, default 20, issue #418). With accounts off (the

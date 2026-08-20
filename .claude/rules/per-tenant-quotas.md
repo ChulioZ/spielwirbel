@@ -9,7 +9,7 @@ paths:
 
 Issue #139 added per-tenant cost/abuse caps. They are all **state caps** — they
 count current data rather than metering a rate — and `lib/quota.js`'s own header
-comment is the authoritative list. Today it holds **seven** ceilings, in two
+comment is the authoritative list. Today it holds **eight** ceilings, in two
 groups:
 
 | Cap | Checked in | Refusal | Since |
@@ -19,6 +19,7 @@ groups:
 | tags per round | `lib/routes/tags.js`, `lib/routes/games.js` | `quota_tags` | #238 |
 | members per round | `lib/routes/members.js` | `quota_members` | #563 |
 | expansions per game | `lib/routes/games.js` | `quota_expansions` | #653 |
+| dismissed recommendations per round | `lib/routes/recommendations.js` | `quota_dismissed` | #782 |
 | accepted friends per user | `lib/routes/friends.js` | `quota_friends` | #325 |
 | open outgoing friend requests per user | `lib/routes/friends.js` | `quota_requests` | #325 |
 | passkeys per user | `lib/routes/passkeys.js` | `quota_passkeys` | #418 |
@@ -48,6 +49,17 @@ Things that will bite if you forget them:
   byte-for-byte unchanged and an existing group already past a cap is never
   suddenly blocked. This mirrors how tenancy (#136) and onboarding (#138) gate
   their behaviour. Don't make a quota fire in legacy mode.
+
+- **`quota_dismissed` is the only cap checked INSIDE the repo mutator**, not in
+  its route. The dismissed list is deliberately absent from `getRoundMeta`
+  (#782), so the route would have to pull the whole round to count it — and the
+  tags shape (`getRoundMeta` → count → `addTag`) is a read-then-write that two
+  concurrent requests can race past the ceiling anyway. Passing the limit into
+  `dismissRecommendation` puts the count and the append in one critical section
+  (the `FOR UPDATE` on Postgres), and it returns the string `'quota'` for the
+  route to turn into the 403 — the same sentinel shape `moveGamesTo` already uses
+  for an in-transaction refusal. A repeat of an ALREADY-dismissed id resolves
+  before the check, so re-tapping a dismissed card is never refused at the cap.
 
 - **State caps count current data; deleting frees the slot.** The rounds cap
   counts `req.repo.listRounds().length` (tenant-scoped) and the games cap counts

@@ -1514,6 +1514,73 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.setTagIcon(T, 'missing', plain.id, 'star'), null);
   });
 
+  test('dismissed recommendations: a round-scoped id list, never a game row (#782)', async () => {
+    const round = await freshRound();
+    // Absent until the round dismisses something — absent-key parity, so a
+    // round that never used the feature is byte-for-byte what it was.
+    assert.equal('dismissedRecommendations' in round, false);
+
+    const first = await repo.dismissRecommendation(T, round.id, { externalId: '999', title: 'Ark Nova' });
+    assert.equal(first.externalId, '999');
+    assert.equal(first.title, 'Ark Nova');
+    assert.match(first.at, /^\d{4}-\d{2}-\d{2}T/);
+
+    const second = await repo.dismissRecommendation(T, round.id, { externalId: '998', title: 'Wingspan' });
+    const stored = await repo.getRound(T, round.id);
+    assert.deepEqual(stored.dismissedRecommendations, [first, second]);
+
+    // It is NOT a game: the whole point of the issue is that dismissing costs
+    // no shelf row, so nothing about the shelf may move.
+    assert.deepEqual(stored.games, []);
+
+    // Dismissing the same id twice is idempotent — the card can be double-tapped
+    // and an undo can race the re-dismiss.
+    const again = await repo.dismissRecommendation(T, round.id, { externalId: '999', title: 'Ark Nova (again)' });
+    assert.deepEqual(again, first, 'the stored entry wins; a second dismiss never restamps it');
+    assert.equal((await repo.getRound(T, round.id)).dismissedRecommendations.length, 2);
+
+    // The LIGHT validation read deliberately does NOT carry the list: every
+    // mutation route pays for getRoundMeta and none of them can act on it, so
+    // both backends keep it off that path. Pinned here because the two would
+    // otherwise be free to drift — one shaping the key in, one leaving it out.
+    assert.equal('dismissedRecommendations' in (await repo.getRoundMeta(T, round.id)), false);
+
+    // Undismiss removes exactly one, and reports whether it found it.
+    assert.equal(await repo.undismissRecommendation(T, round.id, '999'), true);
+    assert.equal(await repo.undismissRecommendation(T, round.id, '999'), false);
+    assert.deepEqual((await repo.getRound(T, round.id)).dismissedRecommendations, [second]);
+
+    // Ids are compared as STRINGS in both backends — a corpus externalId arrives
+    // as a string from the client and is stored as one, so a numeric-looking id
+    // must not depend on the backend's JSON coercion.
+    await repo.dismissRecommendation(T, round.id, { externalId: 12345, title: 'Numeric' });
+    const nums = (await repo.getRound(T, round.id)).dismissedRecommendations;
+    assert.equal(nums[nums.length - 1].externalId, '12345');
+    assert.equal(await repo.undismissRecommendation(T, round.id, '12345'), true);
+
+    // A REFUSED dismiss must leave the key exactly as it found it. On a round
+    // that has never dismissed anything the key is absent, and a backend that
+    // seeds an empty list on the way to the refusal diverges from the other —
+    // silently, and only for a round that has only ever hit the ceiling.
+    const fresh = await freshRound();
+    assert.equal(await repo.dismissRecommendation(T, fresh.id, { externalId: '1', title: 'X' }, 0), 'quota');
+    assert.equal('dismissedRecommendations' in (await repo.getRound(T, fresh.id)), false);
+    // The limit is honoured on a non-empty list too, and the append below it is not.
+    assert.ok(await repo.dismissRecommendation(T, fresh.id, { externalId: '1', title: 'X' }, 1));
+    assert.equal(await repo.dismissRecommendation(T, fresh.id, { externalId: '2', title: 'Y' }, 1), 'quota');
+    // …while a REPEAT resolves before the check, so a re-tap is never refused.
+    assert.ok(await repo.dismissRecommendation(T, fresh.id, { externalId: '1', title: 'X' }, 1));
+    assert.equal((await repo.getRound(T, fresh.id)).dismissedRecommendations.length, 1);
+
+    // A missing round reads as not-found on both, never as a throw.
+    assert.equal(await repo.dismissRecommendation(T, 'missing', { externalId: '1', title: 'X' }), null);
+    assert.equal(await repo.undismissRecommendation(T, 'missing', '1'), false);
+    // …and so does the right round under the wrong tenant.
+    assert.equal(await repo.dismissRecommendation(OTHER, round.id, { externalId: '1', title: 'X' }), null);
+    assert.equal(await repo.undismissRecommendation(OTHER, round.id, second.externalId), false);
+    assert.deepEqual((await repo.getRound(T, round.id)).dismissedRecommendations, [second]);
+  });
+
   test('a round never grows a `providers` key — the setting is gone (#744)', async () => {
     const round = await freshRound();
 

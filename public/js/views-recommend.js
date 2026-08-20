@@ -70,15 +70,75 @@ function recFacts(rec) {
   return facts;
 }
 
-// Which empty state to show. The three are NOT interchangeable — they ask the
+// Which empty state to show. The five are NOT interchangeable — they ask the
 // reader for opposite things (import your shelf / wait for the database / no
-// database here), and a single "nothing to show" would send someone off to
-// re-import a collection that is already imported.
+// database here / un-ignore something), and a single "nothing to show" would
+// send someone off to re-import a collection that is already imported.
+//
+// `allDismissed` is checked LAST of the five: the three database states are
+// about whether we could say anything at all, which is a more fundamental answer
+// than what this round has hidden. But it must come before `noneLeft`, which
+// claims "you already own everything that fits" — false, and unactionable, for a
+// round that has simply ignored what was left.
 function recEmptyKey(data) {
   if (!data.corpusRows) return 'noCorpus';
   if (data.linkedGames < data.minProfileGames) return 'fewGames';
   if (data.profileGames < data.minProfileGames) return 'unknownGames';
+  if ((data.dismissed || []).length) return 'allDismissed';
   return 'noneLeft';
+}
+
+// The „Ignorierte" surface: a toggle plus, once opened, the list of titles this
+// round has said no to, each with a way back.
+//
+// Collapsed by default and absent entirely when the list is empty: it is a
+// RECOVERY surface, and a round that has never dismissed anything must not pay
+// for it with a row that pushes the recommendations down the screen.
+//
+// The titles are the ones stored at dismissal time, not looked up — a dismissed
+// row may have fallen out of the corpus since, and the reader still has to be
+// able to find it to undo it.
+function recIgnoredSection(rid, dismissed) {
+  if (!dismissed.length) return null;
+  const wrap = h('<div class="rec-ignored-wrap"></div>');
+  const toggle = h(`<button class="link-btn" data-act="show-ignored" aria-expanded="false">
+       <i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('suggest.showIgnored', { n: dismissed.length }))}</button>`);
+  wrap.appendChild(toggle);
+
+  toggle.addEventListener('click', () => {
+    const open = wrap.querySelector('.rec-ignored');
+    if (open) {
+      open.remove();
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.innerHTML = `<i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('suggest.showIgnored', { n: dismissed.length }))}`;
+      return;
+    }
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.innerHTML = `<i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('suggest.hideIgnored'))}`;
+    const list = h(`<div class="rec-ignored"><h2 class="rec-ignored__title">${esc(t('suggest.ignoredTitle'))}</h2></div>`);
+    dismissed.forEach((d) => {
+      const row = h(`<div class="rec-ignored__row">
+           <span class="rec-ignored__name">${esc(d.title || d.externalId)}</span>
+           <button class="link-btn"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('suggest.restore'))}</button>
+         </div>`);
+      row.querySelector('button').addEventListener('click', async (ev) => {
+        ev.currentTarget.disabled = true;
+        try {
+          await api('DELETE', `/api/rounds/${rid}/recommendations/dismissed/${encodeURIComponent(d.externalId)}`);
+          toast(t('suggest.restored', { title: d.title || d.externalId }));
+          // A re-render rather than a row removal: the restored title re-enters
+          // the ranking, so the list above it is no longer the one on screen.
+          showRecommendations(rid);
+        } catch (e) {
+          ev.currentTarget.disabled = false;
+          toast(e.message);
+        }
+      });
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+  });
+  return wrap;
 }
 
 async function showRecommendations(rid) {
@@ -117,6 +177,11 @@ async function showRecommendations(rid) {
       box.appendChild(btn);
     }
     app.appendChild(box);
+    // The way back has to be reachable from the empty state too — `allDismissed`
+    // is the one empty state whose action is "un-ignore something", and it would
+    // otherwise name an affordance that is not on the screen.
+    const ignored = recIgnoredSection(rid, data.dismissed || []);
+    if (ignored) app.appendChild(ignored);
     return;
   }
 
@@ -147,6 +212,7 @@ async function showRecommendations(rid) {
          </div>
          <div class="rec-card__actions">
            <button class="btn btn--primary" data-act="wish"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('suggest.wish'))}</button>
+           <button class="link-btn" data-act="dismiss"><i class="ti ti-ban" aria-hidden="true"></i> ${esc(t('suggest.dismiss'))}</button>
            <a class="link-btn" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('suggest.open'))}</a>
          </div>
        </div>`);
@@ -193,9 +259,54 @@ async function showRecommendations(rid) {
         toast(e.message);
       }
     });
+    card.querySelector('[data-act="dismiss"]').addEventListener('click', async (ev) => {
+      const btn = ev.currentTarget;
+      btn.disabled = true;
+      try {
+        await api('POST', `/api/rounds/${rid}/recommendations/dismissed`, { externalId: rec.externalId, title: rec.title });
+      } catch (e) {
+        btn.disabled = false;
+        // The cap only ever binds on abuse (500 by default), but a raw
+        // `quota_dismissed` in a toast tells the reader nothing they can act on.
+        return toast(e.message === 'quota_dismissed' ? t('suggest.toast.quota') : e.message);
+      }
+      toast(t('suggest.dismissed', { title: rec.title }));
+      // The card is REPLACED IN PLACE by a persistent undo row rather than the
+      // screen being re-rendered, and the undo deliberately does not live in the
+      // toast: toast() is a 2.2s aria-live region with no action slot, so a
+      // button inside it would take the only way back away again on a timer —
+      // and the app's own undo idiom (the session-cancel row in
+      // views-session.js) is in-place for exactly that reason.
+      //
+      // Not re-rendering also keeps the reader's place: re-scoring would pull a
+      // fresh candidate into the list and shift everything below the card they
+      // were just looking at.
+      const undone = h(`<div class="rec-undone">
+           <span class="rec-undone__name">${esc(t('suggest.dismissed', { title: rec.title }))}</span>
+           <button class="link-btn"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('suggest.undo'))}</button>
+         </div>`);
+      undone.querySelector('button').addEventListener('click', async (ev2) => {
+        ev2.currentTarget.disabled = true;
+        try {
+          await api('DELETE', `/api/rounds/${rid}/recommendations/dismissed/${encodeURIComponent(rec.externalId)}`);
+          // Back to the real card, not a re-render: the ranking is unchanged by
+          // an undo of something that never left it.
+          undone.replaceWith(card);
+          btn.disabled = false;
+        } catch (e) {
+          ev2.currentTarget.disabled = false;
+          toast(e.message);
+        }
+      });
+      card.replaceWith(undone);
+    });
+
     list.appendChild(card);
   });
   app.appendChild(list);
+
+  const ignored = recIgnoredSection(rid, data.dismissed || []);
+  if (ignored) app.appendChild(ignored);
 
   // Where the numbers come from, stated on the screen rather than only in the
   // code: BGG must be credited wherever its data is presented (#117).

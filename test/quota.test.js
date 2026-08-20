@@ -20,6 +20,7 @@ process.env.MAX_TAGS_PER_ROUND = '2';
 // very first add and the spec could not tell a working cap from an off-by-one.
 process.env.MAX_MEMBERS_PER_ROUND = '3';
 process.env.MAX_EXPANSIONS_PER_GAME = '2';
+process.env.MAX_DISMISSED_RECOMMENDATIONS_PER_ROUND = '2';
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -198,6 +199,38 @@ test('tags-per-round cap (#238)', async (t) => {
     await request(app).delete(`/api/rounds/${rid}/tags/${fetched.body.tags[0].id}`).set(auth(a.token));
     const res = await request(app).post(`/api/rounds/${rid}/tags`).set(auth(a.token)).send({ name: 'Again' });
     assert.equal(res.status, 201);
+  });
+});
+
+test('dismissed-recommendations-per-round cap (#782)', async (t) => {
+  const a = await makeAccount('dismiss-a@example.com');
+  const round = await request(app).post('/api/rounds').set(auth(a.token))
+    .send({ name: 'DismissRound', members: ['Alice'] });
+  const rid = round.body.id;
+  const dismiss = (externalId) => request(app)
+    .post(`/api/rounds/${rid}/recommendations/dismissed`).set(auth(a.token))
+    .send({ externalId, title: `Game ${externalId}` });
+
+  await t.test('dismisses up to the limit, then 403 quota_dismissed', async () => {
+    for (const id of ['1', '2']) assert.equal((await dismiss(id)).status, 201);
+    const over = await dismiss('3');
+    assert.equal(over.status, 403);
+    assert.equal(over.body.error, 'quota_dismissed');
+    assert.equal(over.body.limit, 2);
+  });
+
+  await t.test('a REPEAT of an already-dismissed title still resolves at the cap', async () => {
+    // The idempotent path must not be refused by the ceiling: the list does not
+    // grow, and a user re-tapping a card they already dismissed would otherwise
+    // get an unexplainable quota error.
+    const res = await dismiss('1');
+    assert.equal(res.status, 201);
+    assert.equal(res.body.externalId, '1');
+  });
+
+  await t.test('restoring one frees the slot (state cap, not a rate cap)', async () => {
+    assert.equal((await request(app).delete(`/api/rounds/${rid}/recommendations/dismissed/1`).set(auth(a.token))).status, 200);
+    assert.equal((await dismiss('3')).status, 201);
   });
 });
 
