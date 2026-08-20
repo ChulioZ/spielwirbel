@@ -162,10 +162,11 @@ function renderVoteLinkClaim(token, ballot) {
    handover screen between them). */
 function renderVoteLinkCards(token, ballot, person) {
   const games = ballot.games;
-  // A guest rates but gets no "Aussortieren" control — deciding a game should
-  // leave the shelf is the permanent group governing its own collection (#458).
-  // Not rendering it is what keeps the flag out of the payload entirely, so the
-  // server's own guard never has anything to strip.
+  // A guest rates but gets no zero tile — deciding a game should leave the shelf
+  // is the permanent group governing its own collection (#458), so since #797
+  // their scale simply starts at 1. Not rendering it is what keeps the flag out
+  // of the payload entirely, so the server's own guard never has anything to
+  // strip.
   const mayRetire = !person.guest;
   const votes = {};
   let idx = 0;
@@ -184,9 +185,6 @@ function renderVoteLinkCards(token, ballot, person) {
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
-        ${mayRetire ? `<div class="vote__sort">
-          <button class="sortBtn ${current.retire ? 'is-selected' : ''}" aria-pressed="${!!current.retire}"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('vote.suggestRetire'))}</button>
-        </div>` : ''}
         <div class="vote__nav">
           <button class="btn" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
           <button class="btn btn--primary" id="nextBtn">${idx === games.length - 1 ? esc(t('vote.finish')) + ' <i class="ti ti-chevron-right" aria-hidden="true"></i>' : esc(t('vote.next'))}</button>
@@ -204,33 +202,28 @@ function renderVoteLinkCards(token, ballot, person) {
     const infoBtn = gameInfoButton(game);
     if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
 
-    // Identical to the wizard's scale, down to the aria-pressed state and the
-    // traffic-light fill on the selected face (#145).
+    // Identical to the wizard's scale, down to the aria-pressed state, the
+    // traffic-light fill on the selected face (#145) and the zero tile that
+    // carries the retirement proposal (#797). The only thing missing here is
+    // focus restoration: this card re-renders on the same tap the wizard's does,
+    // but it has no `refocus` machinery (#667) because it never had one.
     const MOODS = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
     const ratingEl = card.querySelector('.rating');
-    for (let n = 1; n <= 5; n++) {
-      const sel = current.rating === n;
-      const b = h(`<button class="mood${sel ? ' is-selected' : ''}"
-           aria-pressed="${sel}" aria-label="${esc(t('vote.ratingLabel', { n, max: 5 }))}">
-           <i class="ti ${MOODS[n - 1]}" aria-hidden="true"></i><span class="mood__n">${n}</span>
+    for (let n = mayRetire ? 0 : 1; n <= RATING_MAX; n++) {
+      const sel = effectiveRating(current) === n;
+      const b = h(`<button class="mood${n === 0 ? ' mood--retire' : ''}${sel ? ' is-selected' : ''}"
+           aria-pressed="${sel}" aria-label="${esc(n === 0 ? t('vote.suggestRetire') : t('vote.ratingLabel', { n, max: RATING_MAX }))}">
+           <i class="ti ${n === 0 ? 'ti-trash' : MOODS[n - 1]}" aria-hidden="true"></i><span class="mood__n">${n === 0 ? '&nbsp;' : n}</span>
          </button>`);
       if (sel) {
         b.style.background = avgColor(n);
         b.style.borderColor = avgColor(n);
       }
       b.addEventListener('click', () => {
-        votes[game.id] = { rating: n, retire: current.retire };
+        votes[game.id] = n === 0 ? { rating: null, retire: true } : { rating: n, retire: false };
         render();
       });
       ratingEl.appendChild(b);
-    }
-
-    const sortBtn = card.querySelector('.sortBtn');
-    if (sortBtn) {
-      sortBtn.addEventListener('click', () => {
-        votes[game.id] = { rating: current.rating, retire: !current.retire };
-        render();
-      });
     }
 
     // On the first card "Zurück" means "I picked the wrong name", which is the
@@ -243,11 +236,10 @@ function renderVoteLinkCards(token, ballot, person) {
     });
 
     card.querySelector('#nextBtn').addEventListener('click', () => {
-      const v = votes[game.id];
-      // Same guard as the wizard: a member may continue on a rating OR a retire
-      // flag, a guest only on a rating (they have no flag to give).
-      if (!v || (v.rating === null && !(mayRetire && v.retire))) {
-        return toast(t(mayRetire ? 'vote.toast.needRating' : 'vote.toast.needRatingOnly'));
+      // Same guard as the wizard: one scale, so one question — is the game
+      // anywhere on it? (#797)
+      if (effectiveRating(votes[game.id]) === null) {
+        return toast(t('vote.toast.needRating'));
       }
       if (idx === games.length - 1) return submit();
       idx += 1;

@@ -635,17 +635,20 @@ I18N.de = {
   'vote.who': 'Es bewertet:',
   'vote.question': 'Wie gern möchtest du das spielen?',
   // Spoken label for the 1–5 mood buttons — the visible face/number alone says
-  // nothing about the scale to a screen reader (#145).
+  // nothing about the scale to a screen reader (#145). Die Null der Skala nutzt
+  // stattdessen 'vote.suggestRetire' als Label (#797).
   'vote.ratingLabel': '{n} von {max}',
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
+  // Label der Null-Kachel ganz links auf der Skala (#797) — dort steht nur das
+  // Papierkorb-Symbol, also trägt das Label die ganze Bedeutung.
   'vote.suggestRetire': 'Aussortieren vorschlagen',
   'vote.next': 'Weiter ›',
   'vote.finish': 'Fertig',
-  'vote.toast.needRating': 'Bitte eine Bewertung wählen (oder „Aussortieren“)',
-  // Gäste haben keinen Aussortieren-Schalter, also führt nur die Bewertung
-  // weiter (#458).
-  'vote.toast.needRatingOnly': 'Bitte eine Bewertung wählen',
+  // Eine Skala, eine Meldung (#797): das Aussortieren ist die Null darauf, also
+  // gibt es nichts mehr daneben zu erwähnen — und für Gäste, deren Skala bei 1
+  // beginnt, stimmt derselbe Satz.
+  'vote.toast.needRating': 'Bitte eine Bewertung wählen',
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
   'finale.crumb': 'Finale',
@@ -669,6 +672,8 @@ I18N.de = {
   'result.lockedHint': 'Erst „Zurücksetzen“, um die Auswahl zu ändern',
   'result.avgOf': 'Ø von {n}',
   'result.barTitle': '{c}× die Note {r}',
+  // Der Balken ganz links: die Null der Skala (#797).
+  'result.barTitleRetire': '{c}× „Aussortieren“',
   'result.sortFlag': '{n}× Aussortieren vorgeschlagen',
   'result.retireNow': '— jetzt aussortieren',
   // Named on the results screen when the winning game only seats this table
@@ -1071,7 +1076,7 @@ I18N.de = {
   'landing.hero.ctaResume': 'Demo fortsetzen',
   'landing.hero.demoNote': 'Sofort loslegen, ohne E-Mail. Die Demo-Runde ist schon gefüllt und wird nach 24 Stunden gelöscht.',
   'landing.shot.shelfAlt': 'Screenshot: das Spielregal einer Runde in Spielwirbel – Spiele als Kacheln mit Durchschnittsbewertung, daneben die Navigation zu Start, Regal, Chronik und Pokalen.',
-  'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala von 1 bis 5.',
+  'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala von „aussortieren“ über 1 bis 5.',
   'landing.features.title': 'Was ihr davon habt',
   'landing.features.shelf.title': 'Ein Regal für alles',
   'landing.features.shelf.desc': 'Alle Spiele eurer Runde an einem Ort – Titel, Cover und Spieleranzahl kommen aus BoardGameGeek, alles andere tippt ihr selbst ein.',

@@ -408,6 +408,11 @@ public/
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds
                      the guest cap lib/routes/sessions.js enforces (issue #458)
+    vote-scale.js    what one vote on a game is worth: the retirement proposal
+                     is the ZERO of the 0-5 scale, so it counts into every
+                     average instead of only a side counter. Required by
+                     lib/session-votes.js, lib/recommend.js and both repo
+                     backends (issue #797)
     guest-picker.js  the guest name field (chips + input), shared by the two
                      screens that start a session (issue #532)
     team-picker.js   the team field: group two or more of those people into one
