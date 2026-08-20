@@ -610,16 +610,22 @@ function randomOrderedGames(round, activeGames) {
 // the round's members, so a guest's rating counts too (#458) — a guest actually
 // played the game, and leaving their vote out would make this screen and the
 // game's own average silently disagree. A guest can carry no `retire` flag (the
-// vote card offers none, and the server strips one), so `sortCount` needs no
-// guest exclusion.
+// scale offers them no zero tile, and the server strips a hand-crafted one), so
+// `sortCount` needs no guest exclusion.
+//
+// A retirement proposal counts as a rating of 0 rather than as no rating at all
+// (#797) — `effectiveRating` is the one place that rule lives, so a legacy vote
+// carrying both a rating and the flag resolves the same way here as on the
+// server.
 function gameStatsForSession(round, session, gameId) {
   const ratings = [];
   let sortCount = 0;
   sessionPeople(round, session).forEach((p) => {
     const v = (session.votes[p.id] || {})[gameId];
     if (!v) return;
-    if (v.retire) sortCount++;
-    if (typeof v.rating === 'number') ratings.push(v.rating);
+    if (wantsRetire(v)) sortCount++;
+    const r = effectiveRating(v);
+    if (r !== null) ratings.push(r);
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
   return { avg, count: ratings.length, sortCount };
@@ -641,8 +647,9 @@ function gameStats(round, gameId) {
       const v = (s.votes[p.id] || {})[gameId];
       if (!v) return;
       votesCast++;
-      if (v.retire) sortCount++;
-      if (typeof v.rating === 'number') ratings.push(v.rating);
+      if (wantsRetire(v)) sortCount++;
+      const r = effectiveRating(v);
+      if (r !== null) ratings.push(r);
     });
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
@@ -654,7 +661,7 @@ function gameStats(round, gameId) {
 // enough votes (no false alarm from a few votes).
 function retireRecommendations(activeGames, statsByGame, minVotes) {
   const SORT_SHARE = 0.5; // at least half want it retired
-  const LOW_AVG = 2.0; // "very low" on the 1–5 scale
+  const LOW_AVG = 2.0; // "very low" on the 0–5 scale (#797)
   const recs = [];
   activeGames.forEach((g) => {
     const st = statsByGame[g.id];

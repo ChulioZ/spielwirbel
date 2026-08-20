@@ -3100,20 +3100,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .rating { display: flex; justify-content: center; gap: 10px; padding: 8px 20px 4px; }
 .rating-scale { display: flex; justify-content: space-between; padding: 2px 22px 0; color: var(--ink-soft); font-size: var(--text-sm); }
 
-.vote__sort { padding: 14px 20px 20px; }
-.sortBtn {
-  width: 100%;
-  padding: 14px;
-  border-radius: var(--radius-md);
-  border: 2px dashed var(--warn);
-  background: transparent;
-  color: var(--warn);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  cursor: pointer;
-}
-.sortBtn.is-selected { background: var(--warn); color: #fff; border-style: solid; }
-
 .vote__nav { display: flex; gap: 10px; padding: 0 20px 20px; }
 .vote__nav .btn { flex: 1; }
 
@@ -3175,7 +3161,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .vote--split .vote__q,
   .vote--split .rating,
   .vote--split .rating-scale,
-  .vote--split .vote__sort,
   .vote--split .vote__nav { grid-column: 2; }
   .vote--split .vote__nav { align-self: end; }
 }
@@ -3235,10 +3220,14 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   }
   .vote .vote__title { padding: 2px 20px; font-size: var(--text-xl); }
   .vote .vote__q { margin: 2px 20px; font-size: var(--text-md); }
-  .vote .rating { padding: 6px 20px 2px; }
-  .vote .rating-scale { padding-top: 0; }
-  .vote .vote__sort { padding: 10px 20px 12px; }
-  .vote .sortBtn { padding: 10px; font-size: var(--text-md); }
+  /* The row carries SIX tiles since #797, so the horizontal budget got 20%
+     tighter. Measured at 390x640 with the old 20px/10px: the tiles shrank to
+     45px — WCAG 2.5.5's target-size floor is 44, i.e. no headroom left at all,
+     and at 320px they hit their min-content width and started spilling out of
+     the row's own padding box. Buying the inset and the gap back puts them at
+     ~51px instead, which is the same slack the five-tile row used to have. */
+  .vote .rating { padding: 6px 12px 2px; gap: 6px; }
+  .vote .rating-scale { padding-top: 0; padding-inline: 14px; }
   .vote .vote__nav { padding: 0 20px 14px; }
 }
 
@@ -3271,6 +3260,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   display: flex; align-items: flex-end; justify-content: center;
   font-size: 11px; /* glyph, not type */ color: var(--brand-dark); font-weight: 700;
 }
+/* The retirement bucket (#797), tied by colour to the „X wollen aussortieren"
+   line right below it — which is also where its COUNT is stated, since the bar
+   itself carries the trash glyph in the slot the numeral would use. */
+.result-row__bars .bar--retire { background: var(--warn); color: #fff; }
+.result-row__bars .bar--retire .ti { font-size: 13px; /* glyph, not type */ }
 .result-row__score { text-align: right; }
 .score-big { font-size: var(--text-3xl); font-weight: 800; color: var(--brand-dark); line-height: 1; }
 .score-label { font-size: var(--text-sm); color: var(--ink-soft); }
@@ -5373,6 +5367,13 @@ kbd {
 .mood__n { font-family: var(--font-display); font-size: var(--text-xs); font-weight: 700; }
 .mood:hover { border-color: var(--brand); transform: translateY(-2px); }
 .mood.is-selected { color: #fff; transform: scale(1.08); }
+/* The zero of the scale (#797) — "gar nicht", one rung below the 1. It takes the
+   same traffic-light fill as every other tile when selected (avgColor(0) is the
+   bottom of that ramp), so the only thing that sets it apart unselected is the
+   warn tone the retirement language uses everywhere else in the app. Its
+   `.mood__n` holds a non-breaking space, which is what keeps its glyph on the
+   same baseline as the five numbered faces. */
+.mood--retire { color: var(--warn); }
 
 /* ---- Per-device voting (#209) ----
    The setup toggle and the lobby that replaces the hot-seat wizard for a session
@@ -5725,9 +5726,49 @@ kbd {
 .rec-card__why { list-style: none; margin: 6px 0 0; padding: 0; font-size: var(--text-sm); }
 .rec-card__why li { color: var(--ink-soft); }
 .rec-card__why li + li { margin-top: 2px; }
-.rec-card__actions { display: flex; gap: 8px; flex: none; flex-wrap: wrap; align-items: center; }
+/* `flex: 0 1 auto`, NOT `flex: none` (#782). As a non-shrinking item this column
+   claims its max-content width, so `flex-wrap` inside it could never engage and
+   the card — and with it the whole page — was pushed wider than a phone
+   viewport. Two actions happened to fit in 375px and a third did not; letting it
+   shrink bottoms it out at the widest single button instead, which is what makes
+   the buttons stack rather than overflow. */
+.rec-card__actions { display: flex; gap: 8px; flex: 0 1 auto; flex-wrap: wrap; align-items: center; }
 .rec-card__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
 .rec-source { margin-top: 18px; font-size: var(--text-sm); }
+
+/* „Nicht interessiert" (#782). The dismissed card is replaced IN PLACE by this
+   row rather than vanishing: the undo has to outlive the 2.2s toast, and a card
+   that simply disappears gives the reader nothing to aim at if they mis-tapped.
+   Dashed, so it reads as a gap in the list rather than as another card. */
+.rec-undone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+.rec-undone__name { font-weight: 600; }
+
+/* The ignored list: a recovery surface, so it sits below the recommendations
+   and stays collapsed until asked for. */
+.rec-ignored-wrap { margin-top: 18px; }
+.rec-ignored { margin-top: 10px; }
+.rec-ignored__title { font-family: var(--font-display); font-size: var(--text-md); margin: 0 0 8px; }
+.rec-ignored__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.rec-ignored__name { font-size: var(--text-sm); }
 
 /* ---- Design studio: theme preview cards ---- */
 .theme-cards {

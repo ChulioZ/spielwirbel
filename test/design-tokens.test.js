@@ -87,7 +87,8 @@ const GLYPH_LITERALS = [
   '.result-podium__img .ti',
   '.recap-fav__cover .ti',
   // a glyph or number sized to its own small box
-  '.result-row__bars .bar', '.stage__voter-check .ti', '.stage__seal > .ti', '.mood .ti',
+  '.result-row__bars .bar', '.result-row__bars .bar--retire .ti',
+  '.stage__voter-check .ti', '.stage__seal > .ti', '.mood .ti',
   '.filter-toggle__badge', '.mfilter__badge',
   // large standalone marks
   '.auth__logo', '.paste-zone__icon',
