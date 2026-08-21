@@ -71,6 +71,17 @@ before assuming you have them all:
   passes every filter. See
   `.claude/rules/provider-metadata-is-a-filter-not-a-tag.md`.
 
+  **A FOURTH predicate joined the same three sites in #796 — and it is NOT in
+  this file.** `fitsSomeTable` is the pool clause a multi-table session draws
+  with ("can this box seat *some* table of three or more?" rather than "does it
+  seat the whole party?"), applied by `drawPool` and by `showStartSession`'s
+  preview exactly where `fitsPlayerCount` is. It lives in
+  `public/js/table-split.js`, not here, because these are classic scripts over one
+  global lexical scope and `MIN_TABLE_PARTIES` — which every other user of is in
+  that file — cannot be declared twice. `draw-pool.js` carries a pointer comment
+  so a `grep` landing here finds it; see
+  `.claude/rules/multi-table-sessions.md` §2.
+
   **`fitsPlayerCount` grew a second term in #653**: the range a game admits is
   now the base box's *union* the ranges of the expansions the round owns for it,
   so a 3–4 game with a 5–6 extension is drawn at six. It is still one edit in one

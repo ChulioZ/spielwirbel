@@ -46,6 +46,10 @@ const SESSION_EVENTS = {
   unfinished: 'log.unfinished',
   cancelled: 'log.cancelled',
   uncancelled: 'log.uncancelled',
+  // The parent of a multi-table split (#796). It carries a `count`, so it is the
+  // second entry after `game_chosen`/`game_removed` that needs more than an
+  // actor — see the branch in sessionLogLines.
+  split: 'log.split',
 };
 
 // Cap on a single session's log. Choosing and un-choosing a game is one tap
@@ -83,6 +87,8 @@ function sessionLogLines(session, { name, title, t }) {
         text = !e.actor || e.actor === e.personId
           ? t('log.votedSelf', { name: person })
           : t('log.votedFor', { actor, name: person });
+      } else if (e.type === 'split') {
+        text = t('log.split', { actor, n: e.count || 0 });
       } else if (e.type === 'game_chosen' || e.type === 'game_removed') {
         text = t(SESSION_EVENTS[e.type], {
           actor,

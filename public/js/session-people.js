@@ -117,28 +117,41 @@ function sessionTeams(round, session) {
   return teamsForPeople(sessionPeople(round, session), session);
 }
 
-// Everyone at the table as PLAYING PARTIES (#575): one entry per team plus one
-// per un-teamed person, in sessionPeople order. This is the unit the draw's
-// player range is matched against and the unit the winner picker offers, so a
-// person who is in a team never appears on their own as well.
-function sessionParties(round, session) {
+// Everyone at the table as PLAYING PARTIES (#575), WITHOUT naming any of them:
+// one entry per team plus one per un-teamed person, in sessionPeople order.
+//
+// The name-free half exists for the same reason `sessionPartyCount` does —
+// `partyName` reads `t()`, which is unreachable from Node — and the server needs
+// the grouping itself, not just its size, since #796: a party is the atom the
+// multi-table search seats, so a team can never end up at two tables.
+function sessionPartyGroups(round, session) {
   const people = sessionPeople(round, session);
-  const teams = teamsForPeople(people, session);
+  const teams = resolveTeamMembers(people, session);
   const teamOf = new Map();
-  teams.forEach((tm) => tm.personIds.forEach((pid) => teamOf.set(pid, tm)));
+  teams.forEach((tm) => tm.people.forEach((p) => teamOf.set(p.id, tm)));
   const seen = new Set();
   const parties = [];
   people.forEach((p) => {
     const tm = teamOf.get(p.id);
     if (!tm) {
-      parties.push({ id: p.id, name: personLabel(p), people: [p], team: false });
+      parties.push({ id: p.id, people: [p], personIds: [p.id], team: false });
       return;
     }
     if (seen.has(tm.id)) return;
     seen.add(tm.id);
-    parties.push({ id: tm.id, name: tm.name, people: tm.people, team: true });
+    parties.push({ id: tm.id, people: tm.people, personIds: tm.people.map((x) => x.id), team: true });
   });
   return parties;
+}
+
+// The named half: the unit the draw's player range is matched against and the
+// unit the winner picker offers, so a person who is in a team never appears on
+// their own as well.
+function sessionParties(round, session) {
+  return sessionPartyGroups(round, session).map((party) => ({
+    ...party,
+    name: party.team ? partyName(party.people) : personLabel(party.people[0]),
+  }));
 }
 
 // How many playing parties one STORED session had — `sessionParties().length`
@@ -166,6 +179,7 @@ if (typeof module !== 'undefined' && module.exports) {
     personLabel,
     partyName,
     sessionTeams,
+    sessionPartyGroups,
     sessionParties,
     sessionPartyCount,
   };

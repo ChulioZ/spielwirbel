@@ -1185,8 +1185,13 @@ async function showGameDetail(rid, gameId) {
         status = s.finished
           ? `${esc(t('detail.played'))}${names.length ? ' · <i class="ti ti-trophy" aria-hidden="true"></i> ' + names.map(esc).join(', ') : ''}`
           : esc(t('detail.chosen'));
-      } else if (s.cancelled) {
+      } else if (sessionOutcome(s) === 'cancelled') {
         status = `<span class="muted">${esc(t('detail.sessionCancelled'))}</span>`;
+      } else if (sessionOutcome(s) === 'split') {
+        // A split parent never chose a game (#796), so the plain "not chosen"
+        // below would be true and useless: this game was voted on and the
+        // evening moved to its tables, which each have their own row here.
+        status = `<span class="muted">${esc(t('detail.sessionSplit'))}</span>`;
       } else {
         status = `<span class="muted">${esc(t('detail.notChosen'))}</span>`;
       }

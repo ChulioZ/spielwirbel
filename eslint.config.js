@@ -117,6 +117,15 @@ const frontendGlobals = {
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
+  sessionPartyGroups: 'readonly',
+  // session-outcome.js (issue #796) — also required by lib/routes/sessions.js
+  sessionChildIds: 'readonly', sessionOutcome: 'readonly', isSplitParent: 'readonly',
+  // table-split.js (issue #796) — also required by lib/draw.js and lib/session-split.js
+  MIN_TABLE_PARTIES: 'readonly', VIOLATION_MAX: 'readonly', NEUTRAL_RATING: 'readonly',
+  MAX_TABLE_PROPOSALS: 'readonly', seatRating: 'readonly', tableFeedback: 'readonly',
+  admittedTableSizes: 'readonly', fitsSomeTable: 'readonly',
+  feasibleTableCounts: 'readonly', scoreSplit: 'readonly', compareSplits: 'readonly',
+  proposeTableSplits: 'readonly',
   // session-log.js
   SESSION_EVENTS: 'readonly', SESSION_LOG_MAX: 'readonly', sessionLogLines: 'readonly',
   partyName: 'readonly', teamsForPeople: 'readonly',
@@ -272,6 +281,9 @@ const frontendGlobals = {
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
+  // views-session-tables.js (issue #796)
+  showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
+  coverBg: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',

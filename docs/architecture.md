@@ -137,6 +137,10 @@ lib/
                      devices: strips the ratings already cast out of the round
                      payload while voting is open, leaving only who has voted
                      (issue #209)
+  session-split.js   splitting one voted session across several tables (#796):
+                     the proposals, the validation a hand-edited arrangement
+                     must pass, and the child sessions a confirm creates — the
+                     part of that flow that needs only a round and a session
   session-events.js  writes the session activity log: builds one entry and
                      appends it inside the repo mutator's own read-modify-write,
                      so the log cannot drift from what it records (issue #209)
@@ -398,6 +402,14 @@ public/
                      games of this round its provider links name, and the
                      resulting attach / pick / create-the-base decision
                      (issue #664)
+    session-outcome.js what became of a session — open, played, cancelled or, since
+                     #796, SPLIT across several tables; derived from the child
+                     ids rather than from a third boolean, and required by
+                     lib/routes/sessions.js and lib/recommend.js
+    table-split.js   the multi-table objective, the seeded search that optimises
+                     it and the per-table numbers the builder shows; also the
+                     relaxed pool predicate lib/draw.js applies in that mode
+                     (issue #796)
     session-log.js   the session activity log's event types and their phrasing —
                      one list, written by lib/session-events.js and rendered by
                      the lobby and the results screen (issue #209)
@@ -481,6 +493,8 @@ public/
     views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, the rating cards, finale, results
+    views-session-tables.js the multi-table builder and, once confirmed, the split
+                     summary linking to the evening's tables (issue #796)
     views-session-live.js the voting lobby every session opens (#655): who has voted, vote for
                      yourself or for anyone still open on this device, and end
                      the voting (issue #209)

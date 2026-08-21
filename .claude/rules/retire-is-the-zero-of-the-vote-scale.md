@@ -66,6 +66,16 @@ retirement win. Two things there are exact, not stylistic:
 through both backends and asserts the same `{ count, sum }` — that comparison is
 the only thing standing between the two spellings.
 
+## The eleventh site reads it through an INJECTED reference (#796)
+
+`public/js/table-split.js` scores a multi-table split from the same votes, and it
+takes `effectiveRating` as a parameter rather than requiring it — the shape
+`recap.js` already uses, because a public/js file cannot require a sibling and the
+suite loads this one into Node. The consequence for this rule is that the
+**threshold moves with the scale**: `VIOLATION_MAX = 2` is "the bottom two of the
+0-5 scale", so a retire vote is a tier-1 violation by construction and needs no
+clause of its own. Change the scale and that constant changes in the same PR.
+
 ## What the thresholds do NOT mean any more
 
 `retireRecommendations`' `LOW_AVG = 2.0` is now a point on a **0–5** scale, and

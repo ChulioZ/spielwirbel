@@ -22,6 +22,12 @@ function showStartSession(round) {
   // wrapped input labels nothing at all. `aria-labelledby` on the group is what
   // actually ties the text to the seats/chips.
   //
+  // The „Mehrere Tische" checkbox (#796) is deliberately NOT wrapped in a
+  // `.field`: `.field label` is (0,1,1) and beats any component rule written for
+  // it, stacking the box above its own text and bolding it
+  // (.claude/rules/label-rows-lose-to-field-label.md). `.multi-table` restates
+  // the 18px spacing `.field` would have provided.
+  //
   // `.setup-grid` splits the screen along the two questions it actually asks:
   // WHO is at the table (left) and WHAT gets drawn (right — the two controls
   // that shape the pool, the resulting pool itself, and the button that draws
@@ -42,6 +48,13 @@ function showStartSession(round) {
         </div>
         <div id="guestMount"></div>
         <div id="teamMount"></div>
+        <div class="multi-table">
+          <label class="multi-table__row">
+            <input type="checkbox" id="multiTable" />
+            <span>${esc(t('startSession.multiTable'))}</span>
+          </label>
+          <div class="muted field__hint">${esc(t('startSession.multiTableNote'))}</div>
+        </div>
       </div>
       <div class="setup-grid__aside">
         <div class="field" id="gamesFilterField" hidden>
@@ -121,6 +134,9 @@ function showStartSession(round) {
   const teamPicker = renderTeamPicker(round, joining, guestPicker, t('startSession.teamsNote'), () => updateHint());
   const playerCount = () =>
     joining.size + guests.length - teamPicker.teamedPeopleCount() + teamPicker.teamCount();
+  // Multi-table mode (#796). Preset from the same #252 blob as everything else on
+  // this screen; the checkbox below is bound to it and the pool reads it live.
+  const tableState = { multiTable: !!(preset && preset.multiTable) };
 
   // Games matching the tag filter, whose player range fits the joining count.
   // Guests sit at the table, so they count here, and a team counts once however
@@ -129,11 +145,17 @@ function showStartSession(round) {
   // cannot promise a pool the draw would not produce — only the tag filter is
   // expressed differently here, over the chip map instead of resolved id lists
   // (.claude/rules/active-games-filter-sites.md).
+  // In multi-table mode the range clause is `fitsSomeTable` instead (#796) — "can
+  // this box seat some table this group could form?" rather than "does it seat
+  // the whole party?". Both predicates are the SERVER's own, so this preview can
+  // never promise a pool the draw would not produce.
   const pool = () =>
     activeGames.filter(
       (g) =>
         matchesTagFilter(selectedTags, g.tagIds, tagFilterState.tagMode) &&
-        fitsPlayerCount(g, playerCount()) &&
+        (tableState.multiTable
+          ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
+          : fitsPlayerCount(g, playerCount())) &&
         fitsMetadataFilters(g, metaFilters)
     );
 
@@ -210,6 +232,12 @@ function showStartSession(round) {
   }, () => guests.length);
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
+  const multiTableBox = form.querySelector('#multiTable');
+  multiTableBox.checked = tableState.multiTable;
+  multiTableBox.addEventListener('change', () => {
+    tableState.multiTable = multiTableBox.checked;
+    updateHint();
+  });
   form.querySelector('#seatMount').replaceWith(seatTable);
   form.querySelector('#guestMount').replaceWith(guestPicker);
   form.querySelector('#teamMount').replaceWith(teamPicker);
@@ -342,6 +370,7 @@ function showStartSession(round) {
         memberIds: [...joining],
         guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
+        multiTable: tableState.multiTable, // #796; the server drops it when false
       });
       // A per-device session opens the lobby instead: its votes arrive one
       // person at a time, from wherever those people are, so there is no single
@@ -751,8 +780,19 @@ function showFinale(round, session, games) {
 
 // =================== Results ===================
 
-async function showResults(round, session, gamesHint, reveal) {
-  currentView = () => showResults(round, session, gamesHint);
+/* `plain` (#796) forces the ordinary result screen for a multi-table session.
+   Its one caller is the builder's own escape hatch, for a session drawn with
+   „Mehrere Tische" that turns out to have no feasible split — too few people, or
+   fewer usable games than tables. Without it that evening would have a screen
+   with nothing on it but an apology. */
+async function showResults(round, session, gamesHint, reveal, plain) {
+  // A multi-table session's result IS the split, so it gets the builder (before
+  // confirming) or the summary of its children (after) instead of the podium.
+  // Branching on the session rather than on a caller's flag is what makes every
+  // way in — the finale, the lobby, the Chronik, a cold load — agree.
+  if (!plain && (session.multiTable || isSplitParent(session)))
+    return showTableBuilder(round, session, gamesHint);
+  currentView = () => showResults(round, session, gamesHint, false, plain);
   syncUrl(resultsPath(round.id, session.id));
   setContext(round.name);
   setDocTitle(t('result.title'), round.name);

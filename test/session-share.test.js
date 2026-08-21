@@ -180,3 +180,28 @@ test('the summary contains no cover art, link or footer — only the group\'s ow
   const text = sessionShareText(model(), translator('de'));
   assert.ok(!/https?:\/\/|spielwirbel\.app|\.jpg|\.png/i.test(text), text);
 });
+
+/* ---- A session split across several tables (#796) ---- */
+
+test('a split evening leads with what happened to it, not with a played game', () => {
+  // Without the outcome arm this model has no `playedTitle` and is not cancelled,
+  // so `shareHeadline` returns null and the message describes the ratings of an
+  // evening with no account of what happened at it.
+  const text = sessionShareText(
+    model({ outcome: 'split', playedTitle: null, tables: [
+      { title: 'Catan', names: 'Anna, Ben, Dana' },
+      { title: 'Azul', names: 'Eli, Frida, Georg' },
+    ] }),
+    translator('de'),
+    joinNames('de')
+  );
+  assert.ok(text.includes('Der Abend wurde auf mehrere Tische aufgeteilt.'));
+  assert.ok(text.includes('Catan: Anna, Ben, Dana'));
+  assert.ok(text.includes('Azul: Eli, Frida, Georg'));
+  assert.ok(!text.includes(SHARE_TROPHY), 'nobody won an evening that was split');
+});
+
+test('the tables block appears for nothing else', () => {
+  const text = sessionShareText(model(), translator('en'), joinNames('en'));
+  assert.ok(!text.includes('The tables:'));
+});

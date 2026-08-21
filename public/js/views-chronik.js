@@ -31,9 +31,25 @@ function renderChronikTab(round, activities) {
   if (!CHRONIK_FILTERS.includes(chronikFilter)) chronikFilter = 'all';
 
   // Collect all entries: done sessions as cards, game activities as quiet rows.
+  //
+  // A multi-table split's children (#796) are NOT top-level entries: they are the
+  // tables of one evening, so they nest under their parent's card instead of
+  // scattering three near-identical rows through the timeline at the same
+  // minute. The parent is resolved rather than trusted — a deleted parent leaves
+  // its children as ordinary sessions, which is what they are once nothing ties
+  // them together.
   const entries = [];
-  round.sessions
-    .filter((s) => s.done)
+  const doneSessions = round.sessions.filter((s) => s.done);
+  const parentIds = new Set(doneSessions.filter(isSplitParent).map((s) => s.id));
+  const childrenOf = new Map();
+  doneSessions.forEach((s) => {
+    if (!s.parentSessionId || !parentIds.has(s.parentSessionId)) return;
+    const list = childrenOf.get(s.parentSessionId) || [];
+    list.push(s);
+    childrenOf.set(s.parentSessionId, list);
+  });
+  doneSessions
+    .filter((s) => !(s.parentSessionId && parentIds.has(s.parentSessionId)))
     .forEach((s) => entries.push({ kind: 'session', at: s.createdAt, session: s }));
   (activities || []).forEach((a) => {
     const meta = {
@@ -111,9 +127,14 @@ function renderChronikTab(round, activities) {
       .filter(Boolean);
 
     // Thumbnail: the chosen game's cover, or an icon for the session's state.
+    // Keyed on `sessionOutcome` (#796) rather than on `s.cancelled`, or a split
+    // parent — which has no chosen game and is not cancelled — would render with
+    // the played icon and read as a night that happened at one table.
+    const outcome = sessionOutcome(s);
+    const stateIcon = outcome === 'cancelled' ? 'ti-x' : outcome === 'split' ? 'ti-layout-grid' : 'ti-cards';
     const thumbIcon = chosen
       ? coverPlaceholder(chosen)
-      : `<i class="ti ${s.cancelled ? 'ti-x' : 'ti-cards'}" aria-hidden="true"></i>`;
+      : `<i class="ti ${stateIcon}" aria-hidden="true"></i>`;
 
     // Headline is the chosen game (with a rating pill); the date leads only
     // when no game was played. The meta line carries the rest.
@@ -126,8 +147,9 @@ function renderChronikTab(round, activities) {
 
     const parts = [];
     if (chosen) parts.push(esc(when));
-    if (s.finished) parts.push(winnerNames.length ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' + winnerNames.map(esc).join(', ') : iconText('ti-check', t('sessions.played')));
-    else if (s.cancelled) parts.push(`<span style="color:var(--danger)">${iconText('ti-x', t('sessions.cancelled'))}</span>`);
+    if (outcome === 'split') parts.push(iconText('ti-layout-grid', t('sessions.split')));
+    else if (s.finished) parts.push(winnerNames.length ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' + winnerNames.map(esc).join(', ') : iconText('ti-check', t('sessions.played')));
+    else if (outcome === 'cancelled') parts.push(`<span style="color:var(--danger)">${iconText('ti-x', t('sessions.cancelled'))}</span>`);
     parts.push(esc(t('sessions.rated', { n: s.gameIds.length })));
 
     const card = h(`<a class="session-card">
@@ -213,6 +235,15 @@ function renderChronikTab(round, activities) {
         : chronikTier(e.type) === 'milestone' ? ' tl-dot--milestone' : '';
       const item = h(`<div class="tl-item"><span class="tl-dot${dot}"></span></div>`);
       item.appendChild(e.kind === 'session' ? buildSessionCard(e.session) : buildActivityRow(e));
+      // The tables of a split evening, indented under the parent they came from
+      // (#796). Newest-first everywhere else in this timeline, but a split's
+      // tables are siblings of one moment, so they keep their creation order.
+      const kids = e.kind === 'session' ? childrenOf.get(e.session.id) : null;
+      if (kids && kids.length) {
+        const nest = h('<div class="tl-nest"></div>');
+        kids.forEach((child) => nest.appendChild(buildSessionCard(child)));
+        item.appendChild(nest);
+      }
       tl.appendChild(item);
     });
   }

@@ -180,7 +180,42 @@ exist, and `require` is deliberately not a frontend global. Its header already
 established that shape for `sessionPeople`; `effectiveRating` is the second
 parameter of the same kind.
 
-Each new instance must be named in this inventory — the nine paragraphs above.
+**The tenth is `public/js/table-split.js`** (#796): the multi-table objective —
+what one seating is worth, which table counts are feasible, and the seeded search
+over them — plus `fitsSomeTable`, the relaxed pool predicate that mode draws with.
+Logic, like `draw-pool.js`, and it runs in the **third** direction again: the
+server computes the proposals once and persists them, while the builder screen
+rescores every table live as people are dragged between them. So nothing is
+validated across the boundary and nothing 400s — a drifted copy simply makes the
+screen disagree with the recommendation it is showing, telling a group that a
+table they just edited is worse (or better) than the one the server proposed, with
+no error anywhere. The threshold `VIOLATION_MAX` is the sharpest single value in
+it, and it is **coupled to the vote scale**: it is the bottom two of the 0-5 scale
+whose zero is the retirement proposal (#797), so changing the scale moves it in
+the same change.
+
+`fitsSomeTable` lives here rather than beside `fitsPlayerCount` for a reason that
+is structural rather than editorial: these are classic scripts over one global
+lexical scope, so two files cannot both declare `MIN_TABLE_PARTIES`, and every
+other user of that constant is in this file. `draw-pool.js` carries a pointer
+comment to it so a `grep` for the pool predicates lands on both.
+
+**The eleventh is `public/js/session-outcome.js`** (#796): `sessionOutcome`, what
+became of a session — `open`, `played`, `cancelled` or `split`. It is the
+`session-log.js` direction (the server writes, the client renders) with the
+validation removed entirely: sixteen sites branched on `session.cancelled` to mean
+"this evening did not happen at one table", and a parent split across several
+tables is neither played nor cancelled, so **every one of those sites failed
+silently** — the Chronik drew it with the played icon, the hub offered to resume
+it, the share text described an evening nobody played, and the recommender learned
+that this round routinely plays twelve-handed. Nothing throws at any of them.
+
+`split` is derived from the presence of child session ids rather than stored as a
+third boolean, so a flag can never disagree with the links the same screens render
+— the `sessionOutcome`-not-`s.cancelled` discipline is the whole rule, and it is
+the shape `.claude/rules/active-games-filter-sites.md` exists for one entity over.
+
+Each new instance must be named in this inventory — the eleven paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

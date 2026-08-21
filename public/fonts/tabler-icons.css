@@ -1,7 +1,10 @@
 /* Tabler Icons (MIT, see LICENSE-tabler-icons.txt) - self-hosted subset.
    Only the glyph classes used by this app are declared here; the woff2 holds
-   the full icon set, so adding an icon = adding one line with its codepoint
-   from https://tabler.io/icons (or the full tabler-icons.css). */
+   the full icon set, so adding an icon = adding one line with its codepoint.
+   Read that codepoint out of THIS woff2's own cmap, never off tabler.io: the
+   numbers do not always agree, and a wrong-but-present codepoint renders a
+   plausible OTHER icon with no error anywhere. The fontTools snippet and the
+   two-step check are in .claude/rules/tabler-icon-codepoints.md. */
 
 @font-face {
   font-family: 'tabler-icons';
@@ -64,6 +67,9 @@
 .ti-arrow-right::before { content: "\ea1f"; }
 .ti-arrow-left::before { content: "\ea19"; }
 .ti-arrow-back-up::before { content: "\eb77"; }
+.ti-arrow-down::before { content: "\ea16"; }
+.ti-alert-triangle::before { content: "\ea06"; }
+.ti-layout-grid::before { content: "\edba"; }
 .ti-trash::before { content: "\eb41"; }
 .ti-clipboard::before { content: "\ea6f"; }
 .ti-photo::before { content: "\eb0a"; }
