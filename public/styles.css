@@ -4361,6 +4361,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   background: none; border: none; color: var(--accent);
   cursor: pointer; font-size: var(--text-md); font-family: inherit; padding: 0;
 }
+/* An icon-only .link-btn. `.link-btn` is padding:0, which on a lone glyph is a
+   16x22 target — under WCAG 2.2 SC 2.5.8's 24x24 floor. It happens to pass on
+   the spacing exception today, but that makes the button hostage to any future
+   gap change; 6px of padding measures 28x30 and owes nothing to its neighbours. */
+.link-btn--icon { padding: 6px; line-height: 1; }
 img.preview { max-width: 120px; border-radius: 10px; margin-top: 8px; display: block; }
 
 /* ---- Paste image (clipboard) ---- */

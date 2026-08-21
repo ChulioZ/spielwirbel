@@ -134,8 +134,10 @@ What the app does, in detail. For a short overview see the
   no model, no AI, no outbound call, and every entry a real BGG row that cannot
   be invented. Each card says **why** it is there ("Ähnliche Mechaniken wie
   Wingspan und Terraforming Mars", „Am besten mit 4 Personen"), and one tap
-  puts it on the Wunschliste — or, with **„Nicht interessiert"**, takes the title
-  off the list for good. That dismissal belongs to the round rather than to one
+  puts it on the Wunschliste — or, with the **ban icon** beside it („Nicht
+  interessiert"), takes the title off the list for good. That icon shows no
+  text but is labelled for screen readers, so the card's actions fit one row on
+  a phone. The dismissal belongs to the round rather than to one
   person, is undoable both on the spot and later from „Ignorierte anzeigen", and
   creates **no game row**: it hides a suggestion without claiming the round owns
   anything. It also only ever hides — it never re-trains the ranking, so nobody

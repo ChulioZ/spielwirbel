@@ -138,7 +138,12 @@ test('cancel is a link-btn with its icon and label, not a ghost button', async (
   assert.equal(btn.classList.contains('btn'), false, 'must not still be a full-weight button');
   assert.equal(btn.classList.contains('btn--ghost'), false);
   assert.ok(btn.querySelector('i.ti-x'), 'expected the ti-x icon to survive the restyle');
-  assert.match(btn.textContent, /Kein Spiel gefällt/);
+  assert.match(btn.textContent, /Session abbrechen/);
+  /* The reason MOVED to the title in #817, it was not dropped: spelled out in the
+     label the footer wrapped at 375px. Asserting it here rather than deleting the
+     old assertion is the point — a shortening that loses the explanation is the
+     regression, and only the title can still show it. */
+  assert.equal(btn.getAttribute('title'), 'Kein Spiel gefällt');
 });
 
 // Cancel sits beside delete, and before it: the reversible action ahead of the
