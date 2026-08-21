@@ -1109,7 +1109,12 @@ async function showResults(round, session, gamesHint, reveal) {
       });
       cancelWrap.appendChild(undo);
     } else {
-      const btn = h(`<button class="link-btn">${iconText('ti-x', t('result.cancel'))}</button>`);
+      // „Session abbrechen" alone, with the reason („Kein Spiel gefällt") moved
+      // to the title (#817): spelled out it was 293px, which with „Session
+      // löschen" beside it wrapped the footer row at 375px. Visible text is
+      // present, so the title supplies the accessible DESCRIPTION and not the
+      // name — SC 2.5.3 is unaffected.
+      const btn = h(`<button class="link-btn" title="${esc(t('result.cancelHint'))}">${iconText('ti-x', t('result.cancel'))}</button>`);
       btn.addEventListener('click', async () => {
         if (!confirm(t('result.cancelConfirm'))) return;
         try {

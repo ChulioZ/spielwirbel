@@ -598,7 +598,11 @@ async function showGameDetail(rid, gameId) {
       // that way (.claude/rules/frontend-script-load-order.md).
       if (game.source && LOOKUP_PROVIDERS.includes(game.source.provider)) {
         const prov = providerLabel(game.source.provider);
-        const fetchBtn = h(`<button class="btn">${esc(t('detail.coverFromProvider', { provider: prov }))}</button>`);
+        // Short in the button, full in the toast (#817): this label's max-content
+        // width sized the whole image-editor popover
+        // (.claude/rules/popover-width-is-shrink-to-fit.md), while the toast has
+        // room and reads better spelled out.
+        const fetchBtn = h(`<button class="btn">${esc(t('detail.coverFromProvider', { provider: providerLabelShort(game.source.provider) }))}</button>`);
         fetchBtn.addEventListener('click', async () => {
           close();
           try {
@@ -1084,7 +1088,10 @@ async function showGameDetail(rid, gameId) {
     // A link built before the provider exposed a URL has none — it stays
     // unlinkable rather than rendering nothing at all.
     if (game.source.url) {
-      src.appendChild(h(`<a class="link-out" href="${esc(game.source.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('detail.viewSource', { provider }))}</a>`));
+      // Short label, and deliberately NO aria-label over it (#817): a spelled-out
+      // name above a visible „Auf BGG ansehen" would fail WCAG 2.2 SC 2.5.3,
+      // which requires the accessible name to contain the visible text.
+      src.appendChild(h(`<a class="link-out" href="${esc(game.source.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('detail.viewSource', { provider: providerLabelShort(game.source.provider) }))}</a>`));
     }
     const un = h(`<button class="link-out link-out--btn link-out--muted"><i class="ti ti-unlink" aria-hidden="true"></i> ${esc(t('detail.unlinkProvider'))}</button>`);
     un.addEventListener('click', async () => {

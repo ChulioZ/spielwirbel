@@ -146,6 +146,16 @@ see A-R05. AA is held here as the product bar regardless.
   alone fails.
 - **Enforced by:** — (manual)
 
+### A-017 — An accessible name contains the visible label
+- **Status:** adopted · 2026-08-21
+- **Source:** WCAG 2.2 SC 2.5.3
+- **Check:** Where a control has visible text AND an `aria-label`/`aria-labelledby`,
+  the accessible name contains that visible text as a substring. A shortened visible
+  label (`BGG`) with a spelled-out name (`Auf BoardGameGeek ansehen`) fails; `Auf BGG
+  ansehen` passes. Icon-only controls have no visible text and are out of its scope —
+  they are covered by their `aria-label` alone.
+- **Enforced by:** — (manual)
+
 ---
 
 ## Rejected — settled, do not re-litigate

@@ -210,10 +210,15 @@ async function showRecommendations(rid) {
            ${facts.length ? `<div class="muted rec-card__facts">${facts.join('<span class="rec-card__sep">·</span>')}</div>` : ''}
            ${reasons.length ? `<ul class="rec-card__why">${reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
          </div>
+         <!-- Two of the three actions carry a SHORT visible label (#817): spelled
+              out, the row wrapped to a second line on every card at 375px. The
+              names are preserved rather than dropped — dismiss is icon-only and
+              names itself via aria-label + title, and the link's aria-label
+              CONTAINS its visible „BGG" as WCAG 2.2 SC 2.5.3 requires. -->
          <div class="rec-card__actions">
            <button class="btn btn--primary" data-act="wish"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('suggest.wish'))}</button>
-           <button class="link-btn" data-act="dismiss"><i class="ti ti-ban" aria-hidden="true"></i> ${esc(t('suggest.dismiss'))}</button>
-           <a class="link-btn" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('suggest.open'))}</a>
+           <button class="link-btn link-btn--icon" data-act="dismiss" aria-label="${esc(t('suggest.dismiss'))}" title="${esc(t('suggest.dismiss'))}"><i class="ti ti-ban" aria-hidden="true"></i></button>
+           <a class="link-btn" target="_blank" rel="noopener noreferrer" aria-label="${esc(t('suggest.open'))}"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('suggest.openShort'))}</a>
          </div>
        </div>`);
     card.querySelector('a.link-btn').href = rec.url;

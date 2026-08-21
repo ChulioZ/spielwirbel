@@ -16,6 +16,17 @@ const PROVIDER_LABELS = { psstore: 'PlayStation Store', bgg: 'BoardGameGeek', st
 function providerLabel(provider) {
   return PROVIDER_LABELS[provider] || provider;
 }
+// The same names, short enough to sit in a button (#817). „Auf BoardGameGeek
+// ansehen" measured 275px against a 343px phone card, so the game-detail link
+// and the cover-fetch button take these instead.
+//
+// The fallback chains to providerLabel, NOT to the raw id: a missing short entry
+// must land on the full name rather than doubling the bare-`psstore` exposure the
+// comment above already warns about.
+const PROVIDER_LABELS_SHORT = { psstore: 'PS Store', bgg: 'BGG', nintendo: 'eShop' };
+function providerLabelShort(provider) {
+  return PROVIDER_LABELS_SHORT[provider] || providerLabel(provider);
+}
 // There were per-provider brand marks here until #790 — a badge row under each
 // suggestion, one badge per provider offering that title. They went with the
 // title-grouping layer that produced them: with a single provider every badge

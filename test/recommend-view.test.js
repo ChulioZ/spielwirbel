@@ -311,3 +311,51 @@ test('an inverted upstream range is rendered in order, not backwards', async (t)
   assert.match(facts, /2–6/);
   assert.doesNotMatch(facts, /80–60|6–2/);
 });
+
+/* --- The action row's labels (#817) ---
+ *
+ * The row wrapped to a second line on every card at 375px, costing 32px each.
+ * Both fixes trade visible text for an accessible name, so what has to be
+ * asserted is not "the label is short" but that the name survived the
+ * shortening — a card whose dismiss button loses its name is a regression the
+ * layout measurement cannot see.
+ */
+
+test('dismiss is icon-only and carries its name on aria-label and title (#817)', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [rec()] }));
+  const btn = dom.app.querySelector('.rec-card [data-act="dismiss"]');
+
+  // No visible text at all — the glyph is aria-hidden, so textContent is the
+  // whole of what a sighted reader sees.
+  assert.equal(btn.textContent.trim(), '', 'the dismiss button renders no visible label');
+  assert.ok(btn.querySelector('i.ti-ban'), 'the ban glyph is what is left to read');
+  // An icon-only control has no visible text, so SC 2.5.3 does not apply — but
+  // it now depends entirely on these two, which is why both are pinned.
+  assert.equal(btn.getAttribute('aria-label'), tDe('suggest.dismiss'));
+  assert.equal(btn.getAttribute('title'), tDe('suggest.dismiss'));
+  assert.equal(btn.classList.contains('link-btn--icon'), true, 'the icon-only modifier carries the 24px target');
+});
+
+test('the BGG link shortens its visible text but keeps a containing name (#817)', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [rec()] }));
+  const link = dom.app.querySelector('.rec-card a.link-btn');
+
+  assert.equal(link.textContent.trim(), 'BGG', 'the visible text is the short form');
+  const name = link.getAttribute('aria-label');
+  // WCAG 2.2 SC 2.5.3: the accessible name must CONTAIN the visible text, so a
+  // spelled-out "Auf BoardGameGeek ansehen" over a visible „BGG" would fail.
+  assert.equal(name, tDe('suggest.open'));
+  assert.ok(
+    name.includes(link.textContent.trim()),
+    `the accessible name ${JSON.stringify(name)} must contain the visible "BGG" (SC 2.5.3)`,
+  );
+});
+
+test('the shortened labels hold in English too (#817)', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [rec()] }), { locale: 'en' });
+  const link = dom.app.querySelector('.rec-card a.link-btn');
+
+  assert.equal(link.textContent.trim(), 'BGG');
+  assert.ok(link.getAttribute('aria-label').includes('BGG'), 'SC 2.5.3 holds in en as well');
+  assert.equal(dom.app.querySelector('.rec-card [data-act="dismiss"]').textContent.trim(), '');
+});

@@ -264,8 +264,8 @@ const frontendGlobals = {
   startDirectSession: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   lookupDetail: 'readonly',
-  providerLabel: 'readonly',
-  PROVIDER_LABELS: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
+  providerLabel: 'readonly', providerLabelShort: 'readonly',
+  PROVIDER_LABELS: 'readonly', PROVIDER_LABELS_SHORT: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
   // views-member.js
   showMember: 'readonly', memberStats: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',

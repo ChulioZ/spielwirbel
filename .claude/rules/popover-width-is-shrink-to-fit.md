@@ -25,6 +25,13 @@ one track**, because `repeat(auto-fill, …)`'s repeat count is **1** under
 intrinsic sizing. So the one child with something to gain from more width was
 also the child asking for the least.
 
+**That label no longer exists (#817):** the button now reads „Titelbild von BGG
+holen", so the sizing child is narrower than when the 351px above was measured.
+The measurement is left as taken rather than re-run, because it is the *record of
+the trap*, not a current fact — and the trap is unaffected, since a **narrower**
+sizing child only widens the gap between the cap and the used width. Re-measure
+before citing 351px as today's number.
+
 ## The fix: give the growable child a floor; the cap bounds the result
 
 ```css
