@@ -71,6 +71,17 @@ async function showHome() {
   mountHomeStatsTeaser(stats);
 }
 
+/* The lobby tile's avatar row is a single non-wrapping line in a card only
+   ~360px wide at its narrowest, while a round may hold up to 50 members
+   (MAX_MEMBERS_PER_ROUND, lib/quota.js) — so it is capped and the remainder
+   rides in one "+N" bubble (#820). Uncapped, the row simply grew until it ran
+   past the card's right edge, and `.round-card__meta`'s flex-wrap then pushed
+   both stat chips onto a second line, so the card stopped matching the height
+   of its neighbours in the grid. The round's OWN member strips
+   (.hero__members, .rail__members) wrap instead and are deliberately uncapped:
+   several rows of avatars are fine inside the round, not on the lobby tile. */
+const LOBBY_AVATAR_CAP = 5;
+
 // The populated lobby: one rich card per round, plus the dashed new-round card
 // at the end. Only ever called with >= 1 round — the empty state is its own
 // centred CTA (#358), so this grid never renders holding just the new card.
@@ -78,12 +89,24 @@ function renderLobbyList(rounds) {
   const list = h('<div class="lobby-list"></div>');
   rounds.forEach((r) => {
     // Members ride along in the summary so the avatars get their colors.
-    const stack = r.members
-      .map(
-        (m) =>
-          `<span class="avatar" style="background:${memberColor(r, m.id)}" title="${esc(m.name)}">${esc(initials(m.name))}</span>`
-      )
-      .join('');
+    const seats = r.members.slice(0, LOBBY_AVATAR_CAP);
+    const rest = r.members.length - seats.length;
+    /* The bubble is a count, not a person: no inline background, so it takes
+       the neutral fill from .avatar-stack__more rather than a palette swatch.
+       It stays a <span> like the seats around it — the whole card is already
+       one <a>, so a nested control would be a link inside a link. The visible
+       glyph is bare "+N"; the localized wording is the accessible label. */
+    const moreLabel = rest > 0 ? tn(rest, 'home.moreMembersOne', 'home.moreMembers') : '';
+    const stack =
+      seats
+        .map(
+          (m) =>
+            `<span class="avatar" style="background:${memberColor(r, m.id)}" title="${esc(m.name)}">${esc(initials(m.name))}</span>`
+        )
+        .join('') +
+      (rest > 0
+        ? `<span class="avatar avatar-stack__more" title="${esc(moreLabel)}" aria-label="${esc(moreLabel)}">+${rest}</span>`
+        : '');
 
     let lastLine = '';
     if (r.lastPlayed) {
