@@ -93,12 +93,12 @@ a reviewable PR.
 
 ## Translations
 
-The UI ships German and English. **Correcting a translation is a one-line
+The UI ships German, English and Spanish. **Correcting a translation is a one-line
 change**: find the key in `public/js/lang/<code>.js`, fix the wording, open a PR.
 Nothing else needs touching — the key already exists in every other language, and
 `npm test` checks that the files stay in key parity.
 
-**Adding a language** is a little more, and all of it is data:
+**Adding a language** is a little more — mostly data, plus one capture run:
 
 1. Add a row to `public/js/locales.js` — the code (two letters, so the browser's
    system language matches it), the name in that language, and its BCP-47 tag.
@@ -106,6 +106,14 @@ Nothing else needs touching — the key already exists in every other language, 
    values. Keep every key; the parity test will tell you if one is missing.
 3. Register the file in `public/index.html` (next to the other `lang/` scripts),
    add it to `SHELL` in `public/sw.js`, and bump that file's `CACHE` version.
+4. Shoot the three landing-page screenshots for the new language. Add a seed
+   (round name, tag names, invented game titles) to `SEEDS` in
+   `scripts/capture-landing-shots.js`, run it, and add the `LANDING_SHOTS` entry
+   in `public/js/views-landing.js`. This step is **not** optional: the suite goes
+   red until every shipped language has its own set, because otherwise the page
+   explaining the app would show it in somebody else's language.
+5. Optionally add the language to `DEMO_TEXT`/`DEMO_TAGS` in `lib/demo-seed.js`,
+   so the guest demo's round is in it too. Without this it falls back to English.
 
 Plural forms, date and month formatting and the language picker all follow from
 step 1 — there is no code to change. Translate the product vocabulary

@@ -39,6 +39,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
+const { SUPPORTED_LOCALES } = require('../../public/js/locales');
 
 const ROOT = path.join(__dirname, '..', '..');
 const JS_DIR = path.join(ROOT, 'public', 'js');
@@ -77,7 +78,13 @@ function loadI18n(locale) {
     Intl,
   };
   vm.createContext(context);
-  for (const file of ['locales.js', 'i18n.js', 'lang/en.js', 'lang/de.js']) {
+  /* The lang tables are DERIVED from the shipped locale set, never listed here:
+     a hand-copied ['en', 'de'] left this harness one locale behind the app the
+     moment a third shipped, and the failure is a spec comparing a Spanish DOM
+     against an English t() — which reads as a broken view rather than as a
+     stale test fixture (.claude/rules/locale-set-is-data.md §1). */
+  const files = ['locales.js', 'i18n.js', ...SUPPORTED_LOCALES.map((l) => `lang/${l}.js`)];
+  for (const file of files) {
     vm.runInContext(read(file), context, { filename: file });
   }
   if (locale) context.setLocale(locale);

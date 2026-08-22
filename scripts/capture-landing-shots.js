@@ -163,6 +163,15 @@ const SEEDS = {
       'Guildmaster', 'Salt & Sand', 'The Last Train', 'Northern Lights',
     ],
   },
+  es: {
+    round: 'Los jueves',
+    tags: ['Juego de mesa', 'Cooperativo', 'Estrategia', 'Digital'],
+    games: [
+      'Puerto Estelar', 'Brasa Negra', 'El Puente de los Cuervos', 'Cartógrafos del Norte',
+      'Valle de los Faroles', 'Deriva de Obsidiana', 'Mercado de Verano', 'Óxido y Lluvia',
+      'Maestro del Gremio', 'Sal y Arena', 'El Último Tren', 'Caza de Auroras',
+    ],
+  },
 };
 
 // Teardown registry. `fail()` exits the process, and `process.exit` does NOT run

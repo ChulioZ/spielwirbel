@@ -45,6 +45,28 @@ test('every supported locale exposes the exact same set of keys as en', () => {
   }
 });
 
+/* The {placeholders} t() substitutes are part of a key's contract, and a
+ * translation that drops or misspells one fails in silence: t() only replaces
+ * the names it is handed, so the string renders with a literal "{n}" in it —
+ * no error, no failed request, just a broken-looking sentence in one language.
+ * Key parity cannot see it, because the key is present and non-empty. */
+test('every translation substitutes the same placeholders as en', () => {
+  const placeholders = (value) =>
+    [...String(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+
+  const en = loadLocale('en');
+  for (const name of SUPPORTED_LOCALES.filter((l) => l !== 'en')) {
+    const dict = loadLocale(name);
+    for (const [key, value] of Object.entries(en)) {
+      assert.deepEqual(
+        placeholders(dict[key]), placeholders(value),
+        `${name}: ${key} substitutes different placeholders than en — `
+        + `"${dict[key]}" vs "${value}"`
+      );
+    }
+  }
+});
+
 test('no translation value is left empty', () => {
   for (const name of SUPPORTED_LOCALES) {
     const dict = loadLocale(name);

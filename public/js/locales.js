@@ -27,6 +27,7 @@
 const LOCALES = [
   { code: 'en', label: 'English', tag: 'en-US' },
   { code: 'de', label: 'Deutsch', tag: 'de-DE' },
+  { code: 'es', label: 'Español', tag: 'es-ES' },
 ];
 
 // Order is the picker's order (public/js/core.js setupLangPicker).
