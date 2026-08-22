@@ -1000,7 +1000,10 @@ function setupTermsBanner() {
     // English one (id="changes-en"); without this an English reader would be
     // dropped onto the German summary with the English one far below. Re-applied
     // on every call, so it follows the language picker like the label above.
-    link.href = `/nutzungsbedingungen#${getLocale() === 'en' ? 'changes-en' : 'aenderungen'}`;
+    // German only for `de` — NOT "anything that isn't `en`" (#822): the document
+    // has exactly two summaries, so every further locale belongs on the English
+    // one, which is the same outcome this comment already argues for.
+    link.href = `/nutzungsbedingungen#${getLocale() === 'de' ? 'aenderungen' : 'changes-en'}`;
     withAppConfig((cfg) => { link.hidden = !(cfg && cfg.footer); });
   }
   const dismiss = document.getElementById('termsBannerDismiss');
