@@ -193,7 +193,7 @@ function compareSplits(a, b) {
    produced the same answer anyway; and a split someone reports as bad is
    reproducible from the stored session instead of being a one-off nobody can
    recreate. */
-function seedFrom(text) {
+function splitSeedFrom(text) {
   let h = 2166136261;
   const s = String(text || '');
   for (let i = 0; i < s.length; i++) {
@@ -214,7 +214,7 @@ function mulberry32(seed) {
   };
 }
 
-function shuffleWith(list, rand) {
+function shuffleSeeded(list, rand) {
   const out = list.slice();
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
@@ -227,7 +227,7 @@ function shuffleWith(list, rand) {
 // count and grow random tables one admitted step at a time until the parties are
 // exactly used up. Returns null when this game subset cannot seat them at all,
 // which is the normal way an infeasible `k` drops out of the search.
-function chooseSizes(admits, totalParties, rand) {
+function chooseTableSizes(admits, totalParties, rand) {
   const idx = admits.map(() => 0);
   let seated = admits.reduce((n, sizes) => n + sizes[0], 0);
   if (seated > totalParties) return null;
@@ -249,9 +249,9 @@ function chooseSizes(admits, totalParties, rand) {
 // left scores best for that party alone. A deliberately shallow start — the local
 // search below is what actually finds the split; this only has to be feasible and
 // not absurd.
-function seedAssignment(gameIds, sizes, partyIds, ctx, rand) {
+function seedTableAssignment(gameIds, sizes, partyIds, ctx, rand) {
   const tables = gameIds.map((gameId) => ({ gameId, partyIds: [] }));
-  shuffleWith(partyIds, rand).forEach((pid) => {
+  shuffleSeeded(partyIds, rand).forEach((pid) => {
     let best = -1;
     let bestKey = null;
     tables.forEach((tb, t) => {
@@ -271,7 +271,7 @@ function seedAssignment(gameIds, sizes, partyIds, ctx, rand) {
 // Try one party moving from `from` to `to`. Both table sizes change, so both have
 // to stay inside their game's admitted set — the holes an expansion leaves make
 // this a real test rather than a range check.
-function tryMoves(from, to, tables, ctx, state) {
+function trySplitMove(from, to, tables, ctx, state) {
   if (from.partyIds.length - 1 < MIN_TABLE_PARTIES) return false;
   if (!ctx.admits(from.gameId, from.partyIds.length - 1)) return false;
   if (!ctx.admits(to.gameId, to.partyIds.length + 1)) return false;
@@ -289,7 +289,7 @@ function tryMoves(from, to, tables, ctx, state) {
   return false;
 }
 
-function trySwaps(ta, tb, tables, ctx, state) {
+function trySplitSwap(ta, tb, tables, ctx, state) {
   for (let i = 0; i < ta.partyIds.length; i++) {
     for (let j = 0; j < tb.partyIds.length; j++) {
       const x = ta.partyIds[i];
@@ -310,7 +310,7 @@ function trySwaps(ta, tb, tables, ctx, state) {
 
 // Swap a table's game for one nothing else is using; the current size has to be
 // admitted by the replacement.
-function trySwapGames(tables, ctx, unused, state) {
+function trySplitGameSwap(tables, ctx, unused, state) {
   for (let t = 0; t < tables.length; t++) {
     for (let u = 0; u < unused.length; u++) {
       const gid = unused[u];
@@ -334,18 +334,18 @@ function trySwapGames(tables, ctx, unused, state) {
    First-improvement, bounded by PASSES rather than by wall clock — a search whose
    result depended on how fast the machine ran would break the one property the
    whole persistence design exists to guarantee. */
-function improve(tables, ctx, unused, maxPasses) {
+function improveSplit(tables, ctx, unused, maxPasses) {
   const state = { score: scoreSplit(tables, ctx) };
   for (let pass = 0; pass < maxPasses; pass++) {
     let moved = false;
     for (let a = 0; a < tables.length && !moved; a++) {
       for (let b = a + 1; b < tables.length && !moved; b++) {
-        moved = trySwaps(tables[a], tables[b], tables, ctx, state)
-          || tryMoves(tables[a], tables[b], tables, ctx, state)
-          || tryMoves(tables[b], tables[a], tables, ctx, state);
+        moved = trySplitSwap(tables[a], tables[b], tables, ctx, state)
+          || trySplitMove(tables[a], tables[b], tables, ctx, state)
+          || trySplitMove(tables[b], tables[a], tables, ctx, state);
       }
     }
-    if (!moved) moved = trySwapGames(tables, ctx, unused, state);
+    if (!moved) moved = trySplitGameSwap(tables, ctx, unused, state);
     if (!moved) break;
   }
   return state.score;
@@ -357,12 +357,12 @@ function bestSplitForCount(k, ctx, rand, restarts, maxPasses) {
   let bestTables = null;
   let bestScore = null;
   for (let r = 0; r < restarts; r++) {
-    const shuffled = shuffleWith(ctx.gameIds, rand);
+    const shuffled = shuffleSeeded(ctx.gameIds, rand);
     const picked = shuffled.slice(0, k);
-    const sizes = chooseSizes(picked.map((gid) => ctx.sizesOf(gid)), ctx.partyIds.length, rand);
+    const sizes = chooseTableSizes(picked.map((gid) => ctx.sizesOf(gid)), ctx.partyIds.length, rand);
     if (!sizes) continue;
-    const tables = seedAssignment(picked, sizes, ctx.partyIds, ctx, rand);
-    const score = improve(tables, ctx, shuffled.slice(k), maxPasses);
+    const tables = seedTableAssignment(picked, sizes, ctx.partyIds, ctx, rand);
+    const score = improveSplit(tables, ctx, shuffled.slice(k), maxPasses);
     if (bestScore === null || compareSplits(score, bestScore) < 0) {
       bestScore = score;
       bestTables = tables.map((tb) => ({ gameId: tb.gameId, partyIds: tb.partyIds.slice() }));
@@ -451,7 +451,7 @@ function proposeTableSplits({ parties, games, votes, seed, effectiveRating, fits
   };
 
   const byId = new Map(partyList.map((p) => [p.id, p]));
-  const rand = mulberry32(seedFrom(seed));
+  const rand = mulberry32(splitSeedFrom(seed));
   const restarts = restartBudget(total);
   const proposals = [];
   for (const k of counts) {

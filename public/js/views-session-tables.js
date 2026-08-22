@@ -132,7 +132,7 @@ async function showTableBuilder(round, session, gamesHint) {
       const names = sessionPeople(round, child).map(personLabel);
       const card = h(`<a class="tables-card">
            <div class="tables-card__head">
-             <span class="tables-card__img"${coverBg(game)}>${game ? coverPlaceholder(game) : '<i class="ti ti-cards" aria-hidden="true"></i>'}</span>
+             <span class="tables-card__img"${tableCoverBg(game)}>${game ? coverPlaceholder(game) : '<i class="ti ti-cards" aria-hidden="true"></i>'}</span>
              <span class="tables-card__title">${esc(game ? game.title : t('tables.gameGone'))}</span>
            </div>
            <div class="tables-card__people">${names.map(esc).join(', ')}</div>
@@ -238,7 +238,7 @@ async function showTableBuilder(round, session, gamesHint) {
 
         const card = h(`<div class="tables-card${tooSmall || outOfRange || stale ? ' is-invalid' : ''}">
              <div class="tables-card__head">
-               <span class="tables-card__img"${coverBg(game)}>${game ? coverPlaceholder(game) : ''}</span>
+               <span class="tables-card__img"${tableCoverBg(game)}>${game ? coverPlaceholder(game) : ''}</span>
                <select class="input tables-card__select" aria-label="${esc(t('tables.gameLabel', { n: index + 1 }))}"></select>
              </div>
              <div class="tables-card__seats"></div>
@@ -347,6 +347,6 @@ async function showTableBuilder(round, session, gamesHint) {
 // Covers are painted straight onto the tile rather than lazily (#198): this
 // screen holds one card per table — a dozen at most, all of them the thing the
 // group is looking at — so there is nothing below the fold to defer.
-function coverBg(game) {
+function tableCoverBg(game) {
   return game && game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
 }
