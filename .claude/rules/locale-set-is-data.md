@@ -6,6 +6,7 @@ paths:
   - "lib/routes/contact.js"
   - "test/i18n-locales.test.js"
   - "lib/demo-seed.js"
+  - "test/support/dom.js"
 ---
 # The locale set is data (#504) — and a test over it is VACUOUS at two locales
 
@@ -58,6 +59,15 @@ It only holds if the consumer resolves the list **per call**. `lib/routes/contac
 reads it inside the zod `preprocess` closure, so it does; a module-level
 `const LOCALES = [...SUPPORTED_LOCALES]` copy taken at require time would refuse
 the synthetic locale — which is itself the bug, correctly caught.
+
+**The synthetic locale does not reach a copy in the TEST HARNESS, and that is
+where one was hiding** (#535). `loadI18n()` in `test/support/dom.js` listed
+`['lang/en.js', 'lang/de.js']` by hand while its sibling `loadApp()` parses the
+script tags out of `index.html` — so the moment a third language shipped, one
+half of the harness knew about it and the other did not, and every spec
+comparing a rendered view against `translator(locale)` read a Spanish DOM
+against an English `t()`. It presents as a broken view, not as a stale fixture.
+Derive the lang files from `SUPPORTED_LOCALES` there too.
 
 ## 2. `i18n.js` must NOT redeclare what `locales.js` publishes
 
@@ -129,13 +139,11 @@ assume the plurals follow.
   list grows). It is named apart from `SUPPORTED_LOCALES` so the two cannot be
   required interchangeably. Two *other* sites still fell back to German until
   #822 — `.claude/rules/not-english-is-not-german.md` generalises the direction.
-- **There used to be a THIRD list**, a locale table under `lib/providers/`,
-  answering "is this a language we recognise at all" for the four digital
-  storefronts, so a not-yet-shipped locale fell back to English rather than to
-  the deployment's German. It went with those providers in #744 (BGG takes no locale). If a
-  localizing provider is ever added, give it its own superset again — don't
-  derive one from the shipped set, which would re-pin a French user to German
-  store results.
+- **There used to be a THIRD list**, a locale table under `lib/providers/`
+  answering "is this a language we recognise at all", which went with those
+  providers in #744 (BGG takes no locale). If a localizing provider is ever
+  added, give it its own superset again — deriving one from the shipped set
+  would re-pin a French user to German store results.
 
 **Related:** `.claude/rules/shared-constants-across-the-stack.md` (why
 `lib/routes/contact.js` requires out of `public/js/`),
