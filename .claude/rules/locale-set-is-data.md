@@ -127,7 +127,8 @@ assume the plurals follow.
   until #504: reasonable while German was one of two languages, and the
   "half-translated app" impression the per-locale seed exists to avoid once the
   list grows). It is named apart from `SUPPORTED_LOCALES` so the two cannot be
-  required interchangeably.
+  required interchangeably. Two *other* sites still fell back to German until
+  #822 — `.claude/rules/not-english-is-not-german.md` generalises the direction.
 - **There used to be a THIRD list**, a locale table under `lib/providers/`,
   answering "is this a language we recognise at all" for the four digital
   storefronts, so a not-yet-shipped locale fell back to English rather than to

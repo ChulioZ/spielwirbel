@@ -119,13 +119,18 @@
   };
   const reportFields = document.getElementById('reportFields');
 
-  // Resolve the display language: saved SPA choice -> system -> DE (this legal
-  // page is DE-authoritative, so it falls back to German, not English).
+  // Resolve the display language: saved SPA choice -> system language -> English.
+  // German only for a German reader, English for everyone else (#822) — the page
+  // renders ONE language at a time, so "not English" must not mean "German": the
+  // app already ships a locale picker, and a visitor who chose (or whose system
+  // reports) fr/es/it would otherwise be handed German text they cannot read.
+  // The page's German text stays authoritative; this only picks which of the two
+  // a reader is shown.
   function resolveLang() {
     const saved = localStorage.getItem('locale');
-    if (saved === 'de' || saved === 'en') return saved;
-    const sys = (navigator.language || 'de').slice(0, 2).toLowerCase();
-    return sys === 'en' ? 'en' : 'de';
+    if (saved) return saved === 'de' ? 'de' : 'en';
+    const sys = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    return sys === 'de' ? 'de' : 'en';
   }
 
   let lang = resolveLang();
