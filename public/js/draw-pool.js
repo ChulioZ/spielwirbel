@@ -78,6 +78,15 @@ function fitsPlayerCount(game, playerCount) {
   return (game.expansions || []).some((e) => expansionAdmits(e, playerCount));
 }
 
+// THE MULTI-TABLE POOL PREDICATE IS `fitsSomeTable` IN public/js/table-split.js
+// (#796). A session split across several tables asks "can this box seat SOME
+// table of at least three?" instead of "does it seat exactly this party?", so it
+// is a sibling of the function above and not a different `playerCount`. It sits
+// in table-split.js because these are classic scripts over one global lexical
+// scope and MIN_TABLE_PARTIES — which every other user of is in that file —
+// cannot be declared twice. Both sides of the draw apply it identically, exactly
+// like the two predicates here (.claude/rules/active-games-filter-sites.md).
+
 // The owned expansions a table of `playerCount` actually NEEDS — empty when the
 // base box already seats them. Derived from the same predicate as the pool, so
 // the results screen's „Braucht Erweiterung: …" line can never name a different

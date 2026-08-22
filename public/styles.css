@@ -3348,6 +3348,115 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   background: var(--brand-tint-soft);
 }
 
+/* The „Mehrere Tische" checkbox (#796). Its own wrapper rather than a `.field`,
+   because `.field label` (0,1,1) beats any rule written here and would stack the
+   box above its label (.claude/rules/label-rows-lose-to-field-label.md); the
+   spacing `.field` would have given it is restated instead. Shaped like
+   `.nr-owner`, the app's other standalone checkbox row. */
+.multi-table { margin-bottom: 18px; }
+.multi-table__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* ---- The multi-table builder (#796) ----
+   One card per table, laid out with the same auto-fill grid the tiled lists use
+   (.claude/rules/tiles-vs-lists.md): tables are UNORDERED and each entry is short
+   — a cover, a title, a handful of name chips — which is exactly the tiling case.
+   No breakpoint: 1 column on a phone, several in the desktop pane. */
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.tables-card {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+}
+/* A table whose size is outside its game's range, or below the floor: the border
+   carries it, and the reason is spelled out in `.tables-card__warn` below —
+   colour alone would say nothing to a screen reader
+   (.claude/rules/accessibility-contrast-and-modals.md section 3). */
+.tables-card.is-invalid { border-color: var(--danger); }
+.tables-card__head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.tables-card__img {
+  /* Anchors + clips the .cover-ph gradient layer (#256), which is
+     `position: absolute; inset: 0`. Without it the placeholder escapes to the
+     initial containing block and covers the ENTIRE viewport — with every DOM
+     probe reporting a healthy 44x44 box, because the box really is fine and it is
+     the child that got away. Only a screenshot shows it. */
+  position: relative;
+  width: 44px; height: 44px; flex: none;
+  border-radius: var(--radius-md);
+  background: var(--sunken-soft) center/cover no-repeat;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-soft);
+  overflow: hidden;
+}
+.tables-card__title { font-weight: 600; min-width: 0; }
+.tables-card__select { flex: 1 1 auto; min-width: 0; }
+.tables-card__seats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.tables-seat {
+  border: 1px solid var(--line);
+  background: var(--sunken-soft);
+  color: var(--ink);
+  border-radius: var(--radius-pill);
+  padding: 5px 10px;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.tables-seat.is-held { border-color: var(--brand); background: var(--brand-tint); color: var(--brand-dark); }
+/* Somebody at a game they rated 0-2. Marked on the chip as well as named in the
+   notice below, so the person to move is findable without reading the list. */
+.tables-seat.is-hurt { border-color: var(--danger); }
+.tables-card__meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  font-size: var(--text-sm); color: var(--ink-soft);
+}
+/* `.score-pill` is `position: absolute; top: 8px; right: 8px` — it is a badge
+   over a game tile. Used INLINE it flies to the nearest positioned ancestor (or
+   the page's top-right corner) and disappears behind the top bar, with the
+   element still in the DOM and reading correctly. The fifth context to need this
+   override, after the ticket, the session card, the game card and .ds-row. */
+.tables-card__meta .score-pill { position: static; }
+.tables-card__warn:not(:empty) { margin-top: 10px; font-size: var(--text-sm); color: var(--danger); }
+.tables-card__drop {
+  width: 100%;
+  border: 1px dashed var(--brand-edge);
+  background: var(--brand-tint-soft);
+  color: var(--brand-dark);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  cursor: pointer;
+}
+.tables-card__people { font-size: var(--text-sm); color: var(--ink-soft); margin-bottom: 6px; }
+.tables-notice:not(:empty) { margin-bottom: 18px; }
+.tables-notice__row { font-size: var(--text-sm); color: var(--ink-soft); padding: 4px 0; }
+
+/* The hub's and the Chronik's nesting of a split evening's tables under the
+   parent they came from. A left rule rather than an indent alone, so the grouping
+   survives at 375px where the indent would eat the ticket. */
+.split-group { margin-bottom: 14px; }
+.split-group__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-size: var(--text-sm); color: var(--ink-soft);
+  padding: 6px 2px;
+}
+.split-group__link { color: var(--brand); }
+.split-group__body, .tl-nest {
+  border-left: 2px solid var(--brand-edge);
+  padding-left: 10px;
+  display: grid;
+  gap: 8px;
+}
+.tl-nest { margin-top: 8px; }
+
 /* Retirement suggestions: a slim, dismissible banner. */
 .rec-banner {
   margin-top: 20px;

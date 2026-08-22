@@ -73,6 +73,11 @@ function shareRatingLines(rows, t) {
 // worse German besides. The comma fallback exists only so the builder stays
 // callable without it.
 function shareHeadline(result, t, join) {
+  // The outcome, not the two booleans (#796): a session split across several
+  // tables was neither played nor cancelled, and without this arm it would fall
+  // through to `playedTitle`-less silence — a message describing the ratings of
+  // an evening with no account of what happened at it.
+  if (result.outcome === 'split') return t('result.titleSplit');
   if (result.cancelled) return t('result.titleCancelled');
   if (!result.playedTitle) return null;
   const names = result.winnerNames || [];
@@ -84,11 +89,21 @@ function shareHeadline(result, t, join) {
 }
 
 // The full message. `result` is
-// { roundName, when, cancelled, playedTitle, winnerNames, rows: [{ title, avg, count, place }] }.
+// { roundName, when, outcome, cancelled, playedTitle, winnerNames,
+//   tables: [{ title, names }], rows: [{ title, avg, count, place }] }.
 function sessionShareText(result, t, join) {
   const blocks = [t('share.header', { round: result.roundName, when: result.when })];
   const headline = shareHeadline(result, t, join);
   if (headline) blocks[0] += '\n' + headline;
+  // The tables of a split evening (#796) — the one thing its message is actually
+  // about, since no game was played at the parent. Absent for every other
+  // session, so nothing else gains a block.
+  const tables = result.tables || [];
+  if (tables.length) {
+    blocks.push([t('share.tables')].concat(
+      tables.map((tb) => t('share.table', { title: tb.title, names: tb.names }))
+    ).join('\n'));
+  }
   const lines = shareRatingLines(result.rows || [], t);
   // A cancelled session still carries ratings — the group rated the games, they
   // just did not play one — so the block is dropped only when there is nothing

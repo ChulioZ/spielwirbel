@@ -63,11 +63,26 @@ lookup (this bundle maps glyphs above U+F900), but it does mean the codepoint
 prints as a CJK character in a console dump. Judge those by the rendered glyph,
 not by how the `content` string looks in devtools.
 
-**So when you add an icon, also grep the class you're copying from:**
+**That grep is now a test — `test/tabler-icons-declared.test.js`.** It matches
+the two ways this codebase names an icon (`class="ti ti-foo"` and
+`iconText('ti-foo', …)`), so unlike the loose grep below it reports no prose
+false-positives, and it fails naming both the class and the file. The remedy
+criteria C-017 prescribes for a rule that was right and got skipped anyway: #796
+added three undeclared classes with the rule already written, and they were caught
+by a screenshot rather than by the grep.
+
+The manual form, if you want it while editing:
 
 ```bash
 grep -o '^\.ti-[a-z0-9-]*' public/fonts/tabler-icons.css   # what's declared
 grep -rho 'ti-[a-z0-9-]*' public/js public/*.html | sort -u # what's used
 ```
 
-A name in the second list but not the first is an already-invisible icon.
+A name in the second list but not the first is an already-invisible icon —
+though this form also matches prose, so read the hits rather than trusting them.
+
+**The test cannot see a WRONG-but-present codepoint**, which is the other half of
+this file and still needs the cmap lookup plus a look at the rendered glyph. Both
+were done for #796's three: `ti-layout-grid` `\edba`, `ti-alert-triangle`
+`\ea06`, `ti-arrow-down` `\ea16`, each read from this woff2's own cmap and each
+confirmed on screen at 72px.

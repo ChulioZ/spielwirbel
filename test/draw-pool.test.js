@@ -333,6 +333,10 @@ const round = {
     { id: 'g3', title: 'Risiko', completed: true },
     { id: 'g4', title: 'Duo', minPlayers: 2, maxPlayers: 2 },
     { id: 'g5', title: 'Catan', minPlayers: 3, maxPlayers: 4 },
+    // Exactly three, which is what separates the two range predicates at a table
+    // of four: `fitsPlayerCount` asks whether the box seats the whole party (no),
+    // `fitsSomeTable` whether it seats SOME table of three or more (yes).
+    { id: 'g6', title: 'Trio', minPlayers: 3, maxPlayers: 3 },
   ],
 };
 
@@ -347,8 +351,8 @@ const previewed = () =>
   [...dom.app.querySelectorAll('.pool-tile__name')].map((el) => el.textContent).sort();
 
 // What the server would actually draw from, for the same table size.
-const drawable = (playerCount) =>
-  drawPool(round, { playerCount }).map((g) => g.title).sort();
+const drawable = (playerCount, over = {}) =>
+  drawPool(round, { playerCount, ...over }).map((g) => g.title).sort();
 
 test('the setup preview offers exactly what the draw would pick from', async () => {
   await dom.call('showStartSession', round);
@@ -372,4 +376,59 @@ test('… and still does after the table size changes', async () => {
   // The set must have moved in both directions, or this asserts nothing that the
   // four-player case did not already cover.
   assert.deepEqual(previewed(), ['Azul', 'Duo']);
+});
+
+/* ---- Multi-table (#796) ---- */
+
+test('… and after „Mehrere Tische", against the RELAXED predicate', async () => {
+  await dom.call('showStartSession', round);
+  const box = dom.app.querySelector('#multiTable');
+  assert.ok(box, 'the setup screen offers the multi-table checkbox');
+  box.click();
+
+  assert.deepEqual(previewed(), drawable(4, { multiTable: true }));
+  // The set must actually have GROWN, or this asserts nothing the four-player
+  // case above did not already cover — which is exactly what the first version of
+  // this spec did, and it stayed green against a preview that ignored the flag.
+  // Trio (3-3) is the game that separates them; Duo (2-2) seats no table of three
+  // and stays out of both.
+  assert.deepEqual(previewed(), ['Azul', 'Catan', 'Trio']);
+
+  box.click();
+  assert.deepEqual(previewed(), drawable(4), 'unticking restores the ordinary pool');
+  assert.deepEqual(previewed(), ['Azul', 'Catan']);
+});
+
+test('and the flag itself rides the draw request', async () => {
+  /* The preview and the pool can agree perfectly while the POST omits the flag,
+     in which case the server draws the ordinary pool and answers "no matching
+     games" over a screen showing four. Only the request body can see that. */
+  await dom.call('showStartSession', round);
+  const bodies = [];
+  dom.set('api', async (method, path, body) => {
+    bodies.push({ ...body });
+    return { session: { id: 's1', gameIds: [] }, games: [], members: [], guests: [], teams: [] };
+  });
+  dom.set('showSessionLobby', () => {});
+
+  dom.app.querySelector('#go').click();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(bodies[0].multiTable, false);
+
+  dom.app.querySelector('#multiTable').click();
+  dom.app.querySelector('#go').click();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(bodies[1].multiTable, true);
+});
+
+test('the multi-table checkbox is not inside a .field', async () => {
+  /* `.field label` is (0,1,1) and beats any component rule written for the row,
+     so a `.field` wrapper silently makes the box `display: block` above its own
+     bolded text (.claude/rules/label-rows-lose-to-field-label.md). Asserted over
+     the rendered tree, because the wrapper is markup rather than CSS and jsdom
+     applies no stylesheet to notice the result. */
+  await dom.call('showStartSession', round);
+  const row = dom.app.querySelector('.multi-table__row');
+  assert.equal(row.tagName, 'LABEL', 'the whole row toggles the box');
+  assert.equal(row.closest('.field'), null);
 });

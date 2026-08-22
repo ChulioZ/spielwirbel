@@ -1313,6 +1313,67 @@ module.exports = function repoContract(repo) {
     assert.equal(after.votes.gst1[g.id].retire, true);
   });
 
+  // Multi-table (#796): the flag, the persisted proposals and the child links all
+  // ride the same blob. Worth its own case for the reason the teams one is —
+  // three separate writers, so a default added to any of them is invisible from
+  // the others' assertions — plus the two first-writer-wins mutators, whose whole
+  // job is to refuse a second write.
+  test('a session carries its multi-table state and grows no key without it', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const base = {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    };
+
+    const plain = await repo.createSession(T, round.id, base);
+    assert.equal('multiTable' in plain, false);
+    const storedPlain = await repo.getSession(T, round.id, plain.id);
+    assert.equal('multiTable' in storedPlain, false);
+    assert.equal('tableProposals' in storedPlain, false);
+    assert.equal('childSessionIds' in storedPlain, false);
+
+    const parent = await repo.createSession(T, round.id, { ...base, multiTable: true });
+    assert.equal((await repo.getSession(T, round.id, parent.id)).multiTable, true);
+
+    // FIRST WRITER WINS. The recommendation must never move under the group, so a
+    // later request has to read back what is stored rather than replacing it.
+    const proposals = [{ tables: [{ gameId: g.id, personIds: ['m1', 'm2', 'm3'] }] }];
+    const written = await repo.setSessionTableProposals(T, round.id, parent.id, proposals);
+    assert.deepEqual(written.tableProposals, proposals);
+    const loser = await repo.setSessionTableProposals(T, round.id, parent.id, [{ tables: [] }]);
+    assert.deepEqual(loser.tableProposals, proposals, 'a second computation must not replace the first');
+
+    // Same for the children, so a double tap cannot double the evening — and the
+    // log entry rides inside the claim, so only the claiming writer records it.
+    const child = await repo.createSession(T, round.id, { ...base, parentSessionId: parent.id });
+    const claim = await repo.splitSession(T, round.id, parent.id, [child.id], {
+      at: 't', type: 'split', count: 1,
+    });
+    assert.equal(claim.claimed, true);
+    assert.deepEqual(claim.session.childSessionIds, [child.id]);
+    const second = await repo.splitSession(T, round.id, parent.id, ['other'], {
+      at: 't', type: 'split', count: 9,
+    });
+    assert.equal(second.claimed, false);
+    assert.deepEqual(second.session.childSessionIds, [child.id]);
+    assert.equal(second.session.events.filter((e) => e.type === 'split').length, 1);
+
+    // And the state survives the mutators that rewrite the rest of the blob.
+    await repo.saveSessionPersonVotes(T, round.id, parent.id, 'm1', { [g.id]: { rating: 4 } });
+    const after = await repo.getSession(T, round.id, parent.id);
+    assert.equal(after.multiTable, true);
+    assert.deepEqual(after.tableProposals, proposals);
+    assert.deepEqual(after.childSessionIds, [child.id]);
+    assert.equal((await repo.getSession(T, round.id, child.id)).parentSessionId, parent.id);
+  });
+
+  test('the multi-table mutators answer null for a session that is not there', async () => {
+    const round = await freshRound();
+    assert.equal(await repo.setSessionTableProposals(T, round.id, 'nope', []), null);
+    assert.equal(await repo.splitSession(T, round.id, 'nope', ['x']), null);
+  });
+
   // Teams (#575) ride in the same blob and take the same absent-key discipline.
   // Worth its own case rather than a line in the guest one: the two keys are
   // written by separate spreads in the route, so a default added to either is

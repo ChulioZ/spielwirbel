@@ -28,6 +28,30 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * A genuinely new capability — a group that could not use the session flow at
+   * all can now use it — which is the bar .claude/rules/keep-readme-current.md
+   * sets. Says what the reader can DO, deliberately not how the split is chosen:
+   * the objective is the interesting half for the repo and the wrong half here.
+   */
+  {
+    revision: '2026-08-21',
+    de: {
+      title: 'Mehrere Tische an einem Abend',
+      body: 'Zu viele für ein Spiel? Setzt beim Auslosen einen Haken bei „Mehrere '
+        + 'Tische". Es wird einmal gemeinsam abgestimmt, danach schlägt euch die App '
+        + 'fertige Aufteilungen auf zwei, drei oder mehr Tische vor — mit Spiel und '
+        + 'Sitzordnung. Ihr könnt alles noch von Hand umstellen und seht dabei sofort, '
+        + 'wie zufrieden jeder Tisch ist.',
+    },
+    en: {
+      title: 'Several tables in one evening',
+      body: 'Too many of you for one game? Tick "Multiple tables" when you draw. '
+        + 'Everyone votes once together, and the app then proposes ready-made splits '
+        + 'across two, three or more tables — game and seating included. You can move '
+        + 'anyone by hand and see straight away how happy each table is.',
+    },
+  },
+  /*
    * Deliberately says what the reader can DO and where, not how it works. The
    * mechanism (a local BGG corpus, weighted arithmetic, no AI) is the interesting
    * half for the repo and the wrong half here — and naming the scoring would

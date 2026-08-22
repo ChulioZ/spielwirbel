@@ -288,6 +288,23 @@ What the app does, in detail. For a short overview see the
   optional follow-up step afterwards — or
   cancel the session if nothing appealed. Sessions can be deleted later, and a
   single game can be removed from a session's results.
+- **Several tables from one vote** – a group too big for a single game ticks
+  **„Mehrere Tische"** before the draw. The pool then admits any game that seats
+  *some* table of three or more rather than the whole party, everyone votes once
+  together as usual, and the results screen is replaced by a **table builder**: it
+  proposes complete splits of the people and the drawn games, one per feasible
+  number of tables, and the group picks between them or moves people and games by
+  hand. Each table shows the average and the *lowest* rating among the people
+  actually sitting at it, both updating live as anyone is moved, and it names —
+  by name — everyone seated at a game they said they did not want to play. No
+  score is shown: how many tables a room has is knowledge the app does not have,
+  so the trade-off is the thing the group picks between rather than a number to
+  argue with. There is no upper limit on the table count — a group of sixty gets a
+  dozen tables or more. Confirming creates one ordinary session per table, with
+  its game already chosen; the parent reads as **„Aufgeteilt"**, links to its
+  tables, and each table links back. The proposals are computed once, on the
+  server, and never move afterwards, so everyone in the room is looking at the
+  same split.
 - **Push a play to BG Stats** – a finished session can be handed to
   [BG Stats](https://www.bgstatsapp.com/) as a play: the game, the date, who took
   part and who won, as one link the user taps on their own device (nothing is

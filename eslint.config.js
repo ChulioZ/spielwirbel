@@ -117,6 +117,29 @@ const frontendGlobals = {
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
+  sessionPartyGroups: 'readonly',
+  // Pre-existing omissions from the same file, folded in while adding the line
+  // above: both are top-level names in the shared scope and neither was listed.
+  resolveTeamMembers: 'readonly', sessionPartyCount: 'readonly',
+  // session-outcome.js (issue #796) — also required by lib/routes/sessions.js
+  sessionChildIds: 'readonly', sessionOutcome: 'readonly', isSplitParent: 'readonly',
+  // table-split.js (issue #796) — also required by lib/draw.js and lib/session-split.js
+  MIN_TABLE_PARTIES: 'readonly', VIOLATION_MAX: 'readonly', NEUTRAL_RATING: 'readonly',
+  MAX_TABLE_PROPOSALS: 'readonly', seatRating: 'readonly', tableFeedback: 'readonly',
+  admittedTableSizes: 'readonly', fitsSomeTable: 'readonly',
+  feasibleTableCounts: 'readonly', scoreSplit: 'readonly', compareSplits: 'readonly',
+  proposeTableSplits: 'readonly',
+  // …and its search internals. Nothing outside that file uses them, but they are
+  // top-level names in the one shared global scope all the same, so they are
+  // listed for the reason the rule gives: an unlisted name makes a cross-file typo
+  // silent rather than a `no-undef`. They carry a `split`/`table` prefix for the
+  // same reason `isFiniteNum` is not called `isNumber` — `no-redeclare` is off
+  // here, so a second file declaring `improve` or `seedFrom` would take over for
+  // everyone with load order deciding (.claude/rules/eslint-frontend-shared-scope.md).
+  splitSeedFrom: 'readonly', mulberry32: 'readonly', shuffleSeeded: 'readonly',
+  chooseTableSizes: 'readonly', seedTableAssignment: 'readonly',
+  trySplitMove: 'readonly', trySplitSwap: 'readonly', trySplitGameSwap: 'readonly',
+  improveSplit: 'readonly', bestSplitForCount: 'readonly', restartBudget: 'readonly',
   // session-log.js
   SESSION_EVENTS: 'readonly', SESSION_LOG_MAX: 'readonly', sessionLogLines: 'readonly',
   partyName: 'readonly', teamsForPeople: 'readonly',
@@ -272,6 +295,9 @@ const frontendGlobals = {
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
+  // views-session-tables.js (issue #796)
+  showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
+  tableCoverBg: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',

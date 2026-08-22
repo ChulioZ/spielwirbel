@@ -125,9 +125,11 @@ the one thing a hand-crafted request can shape freely.
 to COUNT a stored session's parties from the server (`sessionPartyCount`, for the
 recommender's party-size distribution). The naming half could not come along:
 `teamsForPeople` builds each team's label through `partyName` → `t()`, which does
-not exist in Node. So the file now has one resolver and two consumers —
-`teamsForPeople` (adds names) and `sessionPartyCount` (counts) — rather than a
-second copy of the ordering above, which is the whole point of the split. Note
+not exist in Node. So the file now has one resolver and THREE consumers —
+`teamsForPeople` (adds names), `sessionPartyCount` (counts) and, since #796,
+`sessionPartyGroups` (the name-free party partition the multi-table search seats,
+which `sessionParties` then decorates with names) — rather than a second copy of
+the ordering above, which is the whole point of the split. Note
 `sessionPartyCount` is **not** a fourth copy of §2's party arithmetic either: the
 two copies there compute the count from LIVE pickers, where guests have no ids
 yet, while this one reads a session that is already stored.

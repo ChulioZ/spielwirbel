@@ -325,8 +325,20 @@ function renderStartTab(round, activeGames) {
   // "In progress" tickets: sessions whose voting is done but that have not yet
   // reached a final state (no winner recorded, not cancelled). Shown above the
   // last-played ticket, newest first; tapping resumes on the results screen.
-  round.sessions
-    .filter((s) => s.done && !s.finished && !s.cancelled)
+  //
+  // A split parent (#796) is NOT in progress — it is resolved, and its tables are
+  // the sessions still open — so it is excluded by outcome rather than by a
+  // fourth boolean. Its children stay in the list and are nested under one header
+  // below, so three tickets at the same minute read as one evening's three tables
+  // rather than as three unrelated evenings.
+  const inProgress = round.sessions
+    .filter((s) => s.done && !s.finished && !s.cancelled && !isSplitParent(s));
+  const splitParents = new Map(
+    round.sessions.filter(isSplitParent).map((s) => [s.id, s])
+  );
+  const groupKey = (s) => (s.parentSessionId && splitParents.has(s.parentSessionId) ? s.parentSessionId : null);
+  const mounts = new Map(); // parent id -> the element its tables render into
+  inProgress
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
     .forEach((session) => {
       const game = session.chosenGameId && round.games.find((g) => g.id === session.chosenGameId);
@@ -356,7 +368,26 @@ function renderStartTab(round, activeGames) {
            </span>
          </a>`);
       navLink(ticket, resultsPath(round.id, session.id), () => showResults(round, session));
-      app.appendChild(ticket);
+      const parentId = groupKey(session);
+      if (!parentId) {
+        app.appendChild(ticket);
+        return;
+      }
+      // One header per split evening, created by whichever of its tables is
+      // rendered first, so the group keeps the newest-first position it earned.
+      if (!mounts.has(parentId)) {
+        const parent = splitParents.get(parentId);
+        const group = h(`<div class="split-group">
+             <a class="split-group__head">${iconText('ti-layout-grid', t('tables.parentLabel'))}
+               <span class="split-group__link">${esc(t('tables.openParent'))}</span>
+             </a>
+             <div class="split-group__body"></div>
+           </div>`);
+        navLink(group.querySelector('.split-group__head'), resultsPath(round.id, parentId), () => showResults(round, parent));
+        app.appendChild(group);
+        mounts.set(parentId, group.querySelector('.split-group__body'));
+      }
+      mounts.get(parentId).appendChild(ticket);
     });
 
   // "Last played" ticket: the newest finished session whose chosen game still
