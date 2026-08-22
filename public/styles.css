@@ -1441,8 +1441,23 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .round-card__shared .ti { font-size: var(--text-sm); }
 .round-card__meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.avatar-stack { display: inline-flex; }
+/* flex: none because the seats inside are `flex: none` too — as a shrinkable
+   flex item the stack's BOX would narrow while its content stayed put, which is
+   the overflow the cap exists to stop rather than a second way of avoiding it.
+   The cap (LOBBY_AVATAR_CAP in views-home.js) bounds the width; this keeps it. */
+.avatar-stack { display: inline-flex; flex: none; }
 .avatar-stack .avatar:not(:first-child) { margin-left: -9px; }
+/* The "+N" overflow bubble (#820). Reuses .avatar's geometry so the -9px
+   overlap above applies to it unchanged, and repaints only the two properties
+   that would otherwise make it read as a member: the brand background and the
+   white ink. Solid rather than the dashed .avatar--guest treatment — dashed
+   already means "a person who is not one of us", and this is a count. Declared
+   AFTER .avatar so these win on source order at equal specificity. */
+.avatar-stack__more {
+  background: var(--sunken);
+  color: var(--ink-soft);
+  font-size: 12px; /* glyph, not type — "+12" is three characters in a 30px circle */
+}
 .stat-chip {
   display: inline-flex;
   align-items: center;

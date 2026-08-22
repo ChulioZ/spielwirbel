@@ -30,6 +30,10 @@ I18N.en = {
   'home.chip.games': '{n} games',
   'home.chip.sessionsOne': '{n} session',
   'home.chip.sessions': '{n} sessions',
+  // The accessible label of the "+N" bubble that ends the lobby tile's
+  // avatar stack (#820) — the visible glyph is just "+3".
+  'home.moreMembersOne': '{n} more member',
+  'home.moreMembers': '{n} more members',
   'home.lastPlayed': 'Last played: {game}',
   'home.lastPlayedWonOne': 'Last played: {game} — {names} won',
   'home.lastPlayedWonMany': 'Last played: {game} — {names} won',

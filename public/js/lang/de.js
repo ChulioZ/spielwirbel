@@ -31,6 +31,10 @@ I18N.de = {
   'home.chip.games': '{n} Spiele',
   'home.chip.sessionsOne': '{n} Session',
   'home.chip.sessions': '{n} Sessions',
+  // Die Vorlesefassung des "+N"-Kreises am Ende des Avatar-Stapels auf der
+  // Lobby-Kachel (#820) — sichtbar steht dort nur "+3".
+  'home.moreMembersOne': '{n} weiteres Mitglied',
+  'home.moreMembers': '{n} weitere Mitglieder',
   'home.lastPlayed': 'Zuletzt: {game}',
   'home.lastPlayedWonOne': 'Zuletzt: {game} — {names} hat gewonnen',
   'home.lastPlayedWonMany': 'Zuletzt: {game} — {names} haben gewonnen',
