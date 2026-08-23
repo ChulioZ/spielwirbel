@@ -75,3 +75,50 @@ test('no translation value is left empty', () => {
     }
   }
 });
+
+/* French (and Portuguese) put 0 in the SINGULAR — «0 jeu», not «0 jeux». So a
+ * tn() singular form is reachable with a count of zero, and one that spells the
+ * number out ("1 game") instead of substituting {n} renders a flatly wrong
+ * number in those locales: a tag holding no games reads "1 jeu". Nothing throws,
+ * no request fails, and en/de/es are unaffected because they route 0 to the
+ * plural — so the bug is invisible until the first such locale ships.
+ *
+ * The pairs are DERIVED from the tn() calls in the source rather than listed
+ * here, so a new plural pair is covered without anyone remembering this file.
+ * What is flagged is narrow on purpose: a singular that SPELLS OUT the digit 1
+ * while its plural substitutes {n}. A singular deliberately carrying no count
+ * at all ("Move this game into …", "Plays best solo") is a different and
+ * correct shape — it reads fine whatever n is — and must not be dragged in. */
+test('a plural singular never spells out a literal 1 where the plural substitutes {n}', () => {
+  const dir = path.join(__dirname, '..', 'public', 'js');
+  const sources = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.js')) sources.push(path.join(dir, entry.name));
+    if (entry.isDirectory() && entry.name !== 'lang') {
+      for (const f of fs.readdirSync(path.join(dir, entry.name))) {
+        if (f.endsWith('.js')) sources.push(path.join(dir, entry.name, f));
+      }
+    }
+  }
+
+  const pairs = new Map();
+  for (const file of sources) {
+    const text = fs.readFileSync(file, 'utf8');
+    for (const m of text.matchAll(/\btn\([^;]*?'([\w.]+)'\s*,\s*'([\w.]+)'/g)) pairs.set(m[1], m[2]);
+  }
+  assert.ok(pairs.size > 20, `expected to find the app's tn() pairs, found ${pairs.size}`);
+
+  for (const name of SUPPORTED_LOCALES) {
+    const dict = loadLocale(name);
+    for (const [one, other] of pairs) {
+      if (!String(dict[other]).includes('{n}')) continue; // no count shown at all
+      const singular = String(dict[one]);
+      if (!/(^|[^\w{])1([^\w}]|$)/.test(singular)) continue; // carries no literal number
+      assert.ok(
+        singular.includes('{n}'),
+        `${name}: '${one}' is "${singular}" — it spells out a 1 where '${other}' substitutes `
+        + `{n}, so a locale whose zero is singular (fr, pt) renders it at n = 0 as a flat lie`
+      );
+    }
+  }
+});
