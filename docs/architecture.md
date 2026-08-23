@@ -354,6 +354,7 @@ public/
     lang/en.js       English strings
     lang/de.js       German strings
     lang/es.js       Spanish strings
+    lang/fr.js       French strings
     core.js          DOM/API helpers, stats, design, language picker  (loads first)
     account.js       onboarding + auth UI (login/register/verify/reset), token wiring
     auth-error.js    maps an auth API error code to the localized message each

@@ -529,7 +529,7 @@ subtitle, not the brand to build on.
 
 ## 11. Internationalization & product readiness
 
-**Current.** Solid i18n foundation: DE/EN/ES with enforced key parity, locale
+**Current.** Solid i18n foundation: DE/EN/ES/FR with enforced key parity, locale
 follows system language, overridable, persisted in `localStorage` — ahead of
 most hobby projects and a real launch asset.
 
