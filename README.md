@@ -20,7 +20,7 @@ remembers what your round actually likes.
   <img src="public/img/landing-shelf-wide.en.webp" alt="The Regal — a round's game shelf as a card grid, with tag filter chips and the desktop navigation rail" width="820">
 </p>
 
-Self-hostable, German + English + Spanish UI, no tracking. Try it without an account at
+Self-hostable, German + English + Spanish + French UI, no tracking. Try it without an account at
 **[spielwirbel.app](https://spielwirbel.app)**.
 
 > ℹ️ **Status: live as a public multi-tenant SaaS** — registration has been open

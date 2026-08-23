@@ -172,6 +172,18 @@ const SEEDS = {
       'Maestro del Gremio', 'Sal y Arena', 'El Último Tren', 'Caza de Auroras',
     ],
   },
+  // The second title is kept SHORT on purpose (#824): it lands where the phone
+  // crop cuts, and a title wrapping to two lines pushes that cut through a card
+  // title instead of through cover art.
+  fr: {
+    round: 'La bande du jeudi',
+    tags: ['Jeu de plateau', 'Coopératif', 'Stratégie', 'Numérique'],
+    games: [
+      'Port Stellaire', 'Braise Noire', 'Le Pont aux Corbeaux', 'Cartographes du Nord',
+      'Vallée des Lanternes', 'Dérive d’Obsidienne', 'Marché de Verano', 'Rouille et Pluie',
+      'Maître de Guilde', 'Sel et Sable', 'Le Dernier Train', 'Chasse aux Aurores',
+    ],
+  },
 };
 
 // Teardown registry. `fail()` exits the process, and `process.exit` does NOT run

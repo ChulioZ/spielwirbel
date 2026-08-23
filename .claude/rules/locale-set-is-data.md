@@ -52,8 +52,20 @@ That works because the `const` bindings hold a **mutable array and plain
 objects** — `const` freezes the binding, not the value — so a test (or a vm
 sandbox) can add a locale without touching the file. `test/i18n-locales.test.js`
 uses the same move to prove the plural and date paths: it pushes a synthetic
-`fr` with its tag and a two-key dictionary, then asserts `0` renders **singular**
-(`0 joueur`), which the pre-#504 `n === 1` rule gets wrong.
+locale carrying the **French** tag `fr-FR` plus a two-key dictionary, then
+asserts `0` renders **singular** (`0 joueur`), which the pre-#504 `n === 1` rule
+gets wrong.
+
+**The synthetic code must be one the app does NOT ship, and shipping a language
+silently takes that away.** Those three tests pushed `'fr'` until French shipped
+(#534) — from that day the push duplicated a real row and the two-key dictionary
+**overwrote the real 1,029-key one** in the sandbox, so a test named "registered
+at runtime" registered nothing. Nothing goes red; the assertions pass for the
+wrong reason, and they are the ones guarding locale-count-agnosticism — §1's trap
+re-entering through the fix for §1. They now use `'zx'` (unassigned in ISO 639-1)
+with the `fr-FR` **tag**, so French plurals and months stay under test while the
+registration stays synthetic. **Grep the suite for a language's code before
+writing its lang file.**
 
 It only holds if the consumer resolves the list **per call**. `lib/routes/contact.js`
 reads it inside the zod `preprocess` closure, so it does; a module-level

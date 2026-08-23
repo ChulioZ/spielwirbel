@@ -69,15 +69,23 @@ test('a locale registered at runtime gets its own plural rule — 0 is singular 
   // Exactly what adding a translation does: one row in the table plus a lang
   // file. Both are mutated in place — the `const` bindings hold an array and
   // two plain objects, which is what makes a locale a data change.
+  //
+  // The code is the UNSHIPPED 'zx', carrying the French tag. It used to be 'fr'
+  // — which stopped being a runtime registration the day French shipped (#534):
+  // loadI18n() derives its lang files from SUPPORTED_LOCALES, so the push would
+  // have duplicated a real row and the dictionary below would have overwritten a
+  // real one, leaving a test named "registered at runtime" that registers
+  // nothing (.claude/rules/locale-set-is-data.md §1). The tag is what the plural
+  // rule is read from, so French behaviour is still exactly what is asserted.
   vm.runInContext(`
-    LOCALES.push({ code: 'fr', label: 'Français', tag: 'fr-FR' });
-    SUPPORTED_LOCALES.push('fr');
-    LOCALE_LABELS.fr = 'Français';
-    LOCALE_TAGS.fr = 'fr-FR';
-    I18N.fr = { 'players.one': '{n} joueur', 'players.single': '{n} joueurs' };
+    LOCALES.push({ code: 'zx', label: 'Zxxx', tag: 'fr-FR' });
+    SUPPORTED_LOCALES.push('zx');
+    LOCALE_LABELS.zx = 'Zxxx';
+    LOCALE_TAGS.zx = 'fr-FR';
+    I18N.zx = { 'players.one': '{n} joueur', 'players.single': '{n} joueurs' };
   `, ctx);
 
-  ctx.setLocale('fr');
+  ctx.setLocale('zx');
   // French (and Portuguese) put 0 in the SINGULAR. The rule this replaced —
   // `n === 1` — renders "0 joueurs" here, which is the regression this pins.
   assert.equal(ctx.tn(0, 'players.one', 'players.single'), '0 joueur');
@@ -123,12 +131,12 @@ test('switching the locale updates the tab title in both directions (#566)', () 
 test('a locale registered at runtime gets its own tab title (#566)', () => {
   const ctx = loadI18n();
   vm.runInContext(`
-    SUPPORTED_LOCALES.push('fr');
-    LOCALE_TAGS.fr = 'fr-FR';
-    I18N.fr = { 'app.tabTitle': 'Spielwirbel – On joue à quoi ce soir ?' };
+    SUPPORTED_LOCALES.push('zx');
+    LOCALE_TAGS.zx = 'fr-FR';
+    I18N.zx = { 'app.tabTitle': 'Spielwirbel – On joue à quoi ce soir ?' };
   `, ctx);
 
-  ctx.setLocale('fr');
+  ctx.setLocale('zx');
   // Would read the English (t()'s fallback) if the title were picked with a
   // de/en ternary rather than through t().
   assert.equal(ctx.document.title, 'Spielwirbel – On joue à quoi ce soir ?');
@@ -153,12 +161,12 @@ test('dates and months render in the active locale, not an en-US fallback', () =
 test('a locale registered at runtime formats dates with its own tag', () => {
   const ctx = loadI18n();
   vm.runInContext(`
-    SUPPORTED_LOCALES.push('fr');
-    LOCALE_TAGS.fr = 'fr-FR';
-    I18N.fr = {};
+    SUPPORTED_LOCALES.push('zx');
+    LOCALE_TAGS.zx = 'fr-FR';
+    I18N.zx = {};
   `, ctx);
 
-  ctx.setLocale('fr');
+  ctx.setLocale('zx');
   // Would read "July 2026" if fmtMonth still picked its tag with a de/en ternary.
   assert.match(ctx.fmtMonth('2026-07-29T14:05:00Z'), /juillet/);
 });

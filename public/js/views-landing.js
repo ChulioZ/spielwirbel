@@ -81,6 +81,11 @@ const LANDING_SHOTS = {
     shelfPhone: { src: '/img/landing-shelf-phone.es.webp', w: 624, h: 1314 },
     vote: { src: '/img/landing-vote.es.webp', w: 624, h: 1152 },
   },
+  fr: {
+    shelfWide: { src: '/img/landing-shelf-wide.fr.webp', w: 1600, h: 1090 },
+    shelfPhone: { src: '/img/landing-shelf-phone.fr.webp', w: 624, h: 1314 },
+    vote: { src: '/img/landing-vote.fr.webp', w: 624, h: 1152 },
+  },
 };
 
 // The set for the active locale, resolved at RENDER time — showLanding() sets
