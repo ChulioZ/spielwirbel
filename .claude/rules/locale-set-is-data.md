@@ -5,6 +5,7 @@ paths:
   - "public/js/lang/**"
   - "lib/routes/contact.js"
   - "test/i18n-locales.test.js"
+  - "test/demo.test.js"
   - "lib/demo-seed.js"
   - "test/support/dom.js"
 ---
@@ -71,6 +72,24 @@ It only holds if the consumer resolves the list **per call**. `lib/routes/contac
 reads it inside the zod `preprocess` closure, so it does; a module-level
 `const LOCALES = [...SUPPORTED_LOCALES]` copy taken at require time would refuse
 the synthetic locale — which is itself the bug, correctly caught.
+
+**It is not only the locale-registering tests — #536 found a second site, and a
+narrow grep misses it.** `test/demo.test.js` stood in for "a UI locale that has
+no demo text yet" with `'it'`, and named Italian and Dutch in its comment as the
+examples. Shipping Italian made `textFor('it')` return the Italian seed, so the
+assertion named *falls back to English* asserted the opposite. Here it went
+**red**, which is the lucky direction — the `'fr'` case above went silently green
+— but the cause is one step more general than §1 states: **any** test using a
+real language code to mean "unshipped" is armed, whether or not it registers a
+locale. Stand in with `'zx'`, never with a code some open issue is about to ship.
+
+The grep is the part that needs care. `grep "locale.*'it'"` finds nothing here,
+because the call is `seed.textFor('it')` — search for the **bare quoted code**
+across `test/` and read the hits:
+
+```bash
+grep -rn "'it'" test/ lib/ public/js/ scripts/
+```
 
 **The synthetic locale does not reach a copy in the TEST HARNESS, and that is
 where one was hiding** (#535). `loadI18n()` in `test/support/dom.js` listed
