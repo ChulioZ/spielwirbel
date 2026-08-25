@@ -137,12 +137,18 @@ test('every seeded locale seeds the same number of fellow players', () => {
 
 test('a locale with no seed text falls back to English rather than throwing', () => {
   // English, not German (#504): a UI locale may ship before its demo text, and
-  // handing an Italian or Dutch visitor a German round is the half-translated
+  // handing a Dutch or Portuguese visitor a German round is the half-translated
   // impression the per-locale seed exists to avoid.
-  assert.strictEqual(seed.textFor('it'), seed.DEMO_TEXT.en);
+  //
+  // The stand-in is the UNSHIPPED 'zx', as in test/i18n-locales.test.js. It used
+  // to be 'it' — a language with an open translation issue, so shipping Italian
+  // (#536) made textFor('it') return the Italian seed and this assertion assert
+  // the opposite of its own name. Never stand in for "unshipped" with a code
+  // some issue is about to ship (.claude/rules/locale-set-is-data.md).
+  assert.strictEqual(seed.textFor('zx'), seed.DEMO_TEXT.en);
   assert.strictEqual(seed.textFor(''), seed.DEMO_TEXT.en);
   assert.strictEqual(seed.textFor(undefined), seed.DEMO_TEXT.en);
-  assert.strictEqual(seed.tagNameFor('party', 'it'), seed.DEMO_TAGS.party.en);
+  assert.strictEqual(seed.tagNameFor('party', 'zx'), seed.DEMO_TAGS.party.en);
   // A locale that DOES have text still gets its own, region tag and all.
   assert.strictEqual(seed.textFor('en-GB'), seed.DEMO_TEXT.en);
   assert.strictEqual(seed.textFor('de'), seed.DEMO_TEXT.de);
