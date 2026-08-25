@@ -184,6 +184,15 @@ const SEEDS = {
       'Maître de Guilde', 'Sel et Sable', 'Le Dernier Train', 'Chasse aux Aurores',
     ],
   },
+  it: {
+    round: 'La banda del giovedì',
+    tags: ['Gioco da tavolo', 'Cooperativo', 'Strategia', 'Digitale'],
+    games: [
+      'Porto Stellare', 'Brace Nera', 'Il Ponte dei Corvi', 'Cartografi del Nord',
+      'Valle delle Lanterne', 'Deriva d’Ossidiana', 'Mercato di Verano', 'Ruggine e Pioggia',
+      'Maestro di Gilda', 'Sale e Sabbia', 'L’Ultimo Treno', 'Caccia alle Aurore',
+    ],
+  },
 };
 
 // Teardown registry. `fail()` exits the process, and `process.exit` does NOT run

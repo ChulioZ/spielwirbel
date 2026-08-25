@@ -317,7 +317,7 @@ What the app does, in detail. For a short overview see the
 - **Designs** – per round, pick a colour scheme (page tone + accent); the
   whole UI derives from it — surfaces, shadows, the dark "stage" of the
   finale, and the mobile browser / installed-app chrome around the page.
-- **Languages** – German, English, Spanish and French, following the system language by
+- **Languages** – German, English, Spanish, French and Italian, following the system language by
   default, switchable any time via the picker in the top bar.
 - **Shareable links & reload-safe navigation** – the URL reflects the current
   screen (home, a round tab, a game, a member, a session result, …), so a
