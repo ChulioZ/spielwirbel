@@ -4005,6 +4005,30 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(stored.info, info);
   });
 
+  test('getCorpusEntries answers by id, holds the enrichment, and skips misses (#829)', async () => {
+    /* The provider-info backfill's "does the corpus already know this game?"
+     * lookup. It must carry BOTH halves of a row, because they come from
+     * different sources and the caller needs them together: `rating` off the
+     * uploaded CSV, everything else off the enrichment hop. */
+    await repo.replaceCorpus([corpusEntry(1), corpusEntry(2)], { dumpDate: 'd', uploadedAt: 'u' });
+    const info = { weight: 3.2, minPlaytime: 60, maxPlaytime: 120, minAge: 12, categories: ['Economic'], mechanics: ['Trading'] };
+    await repo.updateCorpusEntries([{ externalId: 'c1', enrichedAt: '2026-08-26T11:00:00.000Z', info }]);
+
+    const rows = await repo.getCorpusEntries(['c1', 'c2', 'c-not-in-the-corpus']);
+    assert.deepEqual(rows.map((e) => e.externalId).sort(), ['c1', 'c2'],
+      'an id the corpus does not hold must be absent, never a null row');
+    const c1 = rows.find((e) => e.externalId === 'c1');
+    assert.deepEqual(c1.info, info, 'the enrichment half');
+    assert.equal(c1.rating, 7.5, 'the CSV half — a DIFFERENT source than info');
+    assert.equal(c1.enrichedAt, '2026-08-26T11:00:00.000Z');
+    // An un-enriched row still comes back: it carries the CSV half, and the
+    // caller is what decides that half alone is not enough to fill a game.
+    assert.equal(rows.find((e) => e.externalId === 'c2').info ?? null, null);
+
+    assert.deepEqual(await repo.getCorpusEntries([]), [], 'an empty ask must not read the table');
+    assert.deepEqual(await repo.getCorpusEntries(['c-none']), []);
+  });
+
   test('a row enriched BEFORE covers existed is re-queued; one answered null is NOT (#779)', async () => {
     await repo.replaceCorpus([corpusEntry(1), corpusEntry(2), corpusEntry(3)], { dumpDate: 'd', uploadedAt: 'u' });
     const stamp = '2026-08-14T11:00:00.000Z';

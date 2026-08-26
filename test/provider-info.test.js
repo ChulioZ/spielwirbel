@@ -504,7 +504,7 @@ test('a multi-batch pass covers the whole list, 20 ids at a time', async () => {
     assert.ok(new URL(u).searchParams.get('id').split(',').length <= 20);
   }
   assert.equal(repoStub.stamped.length, 45, 'every game must be covered');
-  assert.deepEqual(out, { batches: 3, asked: 45, filled: 45, failed: false });
+  assert.deepEqual(out, { batches: 3, asked: 45, filled: 45, fromCorpus: 0, failed: false });
 });
 
 test('a failed batch is skipped; a second CONSECUTIVE failure ends the pass', async () => {

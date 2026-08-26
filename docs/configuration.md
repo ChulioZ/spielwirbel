@@ -322,7 +322,9 @@ requests.
 
 A local pool of a few thousand ranked BGG games — their ratings, complexity,
 player counts, mechanics and categories — that recommendation features score
-against. It exists because BGG's API has **no browse, filter or attribute-search
+against, and that the provider-metadata backfill above reads **before** asking
+BGG (#829): a game the corpus already knows is filled with no upstream request
+at all, so only what it lacks is fetched. It exists because BGG's API has **no browse, filter or attribute-search
 endpoint at all**: "which games would fit this group?" cannot be asked upstream,
 so the app has to hold its own candidate pool.
 
