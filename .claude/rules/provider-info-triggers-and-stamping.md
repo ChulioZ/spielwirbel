@@ -46,26 +46,35 @@ the fill exists for* — and the draw then returns the whole shelf while looking
 entirely healthy. Fill first, normalize against the shelf you now have. The tell
 is the stored #252 preset, which remembers it as an unfiltered draw.
 
+**A trigger is only as good as the request behind it — see §4.** #736 satisfied
+this rule and the symptom did not move, because every batched request it made was
+refused by the provider.
+
 ## 2. Only stamp a game the provider was actually ASKED about
 
 `providerInfoAt` records the *attempt*, and it is what suppresses the next
 fetch — so stamping a game no request covered hides it for the full 7-day TTL
-with no request ever having left the process. That was live from #717: BGG's
-`gameInfo` caps the ids it will carry (300) and silently drops the overflow, while
-the write loop iterated every eligible game. It needed an import of more than 300
-games to bite, so it was rare — and a shelf-wide trigger makes it routine.
+with no request ever having left the process. That was live from #717: `gameInfo`
+caps the ids it will carry and silently drops the overflow, while the write loop
+iterated every eligible game.
 
 The fix is structural rather than a bound copied into the caller: `gameInfo`
 returns **`{ items, asked }`**, and the backfill stamps only ids in `asked`.
 A caller cannot re-derive a ceiling that is not its own, and the two cannot drift.
-`gameInfo` also takes `{ maxBatches }` — how many upstream requests the caller
-will spend — so the batch **size** stays the provider's business while the shelf
-trigger can say "one request" without restating 60.
+`backfillProviderInfo` takes `{ maxBatches, pauseMs }` — how many upstream
+requests the caller will spend and how far apart — so the batch **size** stays
+the provider's business (`MAX_THING_IDS`) while the shelf trigger can say "one
+request" without restating a number.
 
-A tokenless instance therefore reports `asked: []` rather than an empty item list
-over a full set. That direction matters: reporting them as covered would stamp the
-whole shelf as "BGG had nothing", so configuring the token later would leave every
-game waiting out a TTL for data it could have had at once.
+**Since #828 that guard is observable in exactly ONE case**, and it is worth
+knowing which before trusting a green suite: the caller chunks by precisely
+`provider.MAX_THING_IDS`, so `slice` and `asked` coincide everywhere else and
+deleting the guard changes nothing. The discriminating case is the **tokenless**
+instance, where `gameInfo` answers `{ items: [], asked: [] }` — a healthy answer
+over a full list — rather than throwing. `test/provider-info.test.js`'s
+"a TOKENLESS instance stamps nothing at all" is the only spec that goes red for
+it; found by deleting the guard and watching all 21 others stay green
+(.claude/rules/break-the-code-on-purpose.md).
 
 ## 3. Anything that STAMPS must also write, or it defers by a whole TTL
 
@@ -85,6 +94,38 @@ the repo: `updateGame` `Object.assign`s the patch verbatim, so an unfiltered
 write would store `categories: []` and a row of nulls and split absent-key parity
 between the backends — the one place in this feature where a naive write reaches
 the store unchecked.
+
+## 4. The trigger fired, the request was refused, and nobody heard (#828)
+
+Everything in §1 shipped and the reported symptom did not move: a round whose
+games came from a collection import still showed no „Weitere Filter" at all. The
+cause was one number. **BGG carries at most 20 ids on `/thing`** — its docs say
+"Maximum 20" and the server enforces it with `400 Cannot load more than 20
+items` — and `MAX_EXPANSION_BATCH` was **60**, so every bulk hop was refused:
+the import, both filter screens, the session start, and `expansionParents` on top.
+A 400 is not retryable, so it failed in ~300 ms, completely, every time.
+
+Three properties made it invisible for a year:
+
+- **Four nested catches and no log line.** The provider threw, the backfill
+  `continue`d, the route swallowed, the client `.catch(() => {})`d. There is now a
+  `provider_info_backfill_failed` warn at the one layer that can see both the
+  status and the id count.
+- **The demo round worked.** Nine seeded games is one under-limit request, so the
+  one shelf every developer and every reviewer looked at was the one shelf that
+  could not reproduce it. So did every spec: a fixture inside one batch is green
+  whatever the bound is.
+- **The correct number was written down, next to the wrong one.** `corpus()` used
+  20 and its comment said the neighbours' 60 was "a pre-existing question
+  deliberately left alone". It was not a question.
+
+**So: a provider's documented limit is a fact to MEASURE, and to state once.**
+The two values are now one `MAX_THING_IDS`, and `test/providers-bgg.test.js` pins
+it to **20 as a literal** while every other assertion reads the constant — a
+`n <= bgg.MAX_THING_IDS` loop cannot see a raised constant, which is the
+`.claude/rules/shared-constants-across-the-stack.md` "import the wrong list" trap
+one level up. Any fixture written to exercise a batching bound must exceed it: 25
+games, not 20.
 
 **Related:** `.claude/rules/provider-info-is-a-field-set.md` (the field set this
 splits from, and the accretion rule the fold-in mirrors),

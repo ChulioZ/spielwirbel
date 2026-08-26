@@ -238,8 +238,8 @@ test('importing writes full game records, ONE Chronik entry and one product even
 test('the import fires the provider-info backfill, so the first draw already has it (#717)', async (t) => {
   /* The reported gap: import -> draw -> vote showed no info anywhere, because
    * the session-start backfill races the first voter and a collection body
-   * carries none of the fields. Import time is the polite place to fill them — one
-   * batched /thing?stats=1 per 60 games, long before anyone draws. The stub
+   * carries none of the fields. Import time is the polite place to fill them — a
+   * paced pass of /thing?stats=1 batches, long before anyone draws. The stub
    * branches on the URL the way BGG does: the collection body for /collection,
    * a stats body for /thing. */
   const a = await makeAccount('imp-backfill@example.com');
@@ -283,6 +283,61 @@ test('the import fires the provider-info backfill, so the first draw already has
   assert.equal(byExt.get('9209').weight, 1.85);
   assert.equal(thingCalls.length, 1, 'both imported games ride one batched /thing call');
   assert.match(thingCalls[0], /stats=1/);
+});
+
+test('an import of MORE than one batch fills every game (#828)', async (t) => {
+  /* The reported bug at its own entry point. BGG answers `400 Cannot load more
+   * than 20 items` to any /thing over 20 ids, and the import asked for 60 — so
+   * an imported collection got no provider metadata at all, "Weitere Filter"
+   * never appeared, and only the nine-game demo round worked.
+   *
+   * 25 games is deliberately just over one batch: a 20-game import is green
+   * whatever the bound is, which is why the spec above could not see this. */
+  process.env.MAX_GAMES_PER_ROUND = '100';
+  process.env.PROVIDER_INFO_BATCH_PAUSE_MS = '0';
+  t.after(() => {
+    process.env.MAX_GAMES_PER_ROUND = '4';
+    delete process.env.PROVIDER_INFO_BATCH_PAUSE_MS;
+    global.fetch = realFetch;
+  });
+
+  const a = await makeAccount('imp-two-batches@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerTwoBatches');
+
+  const ids = Array.from({ length: 25 }, (_, i) => String(870000 + i));
+  const collection = `<?xml version="1.0"?><items totalitems="${ids.length}">${ids
+    .map((id) => `<item objecttype="thing" objectid="${id}"><name>Spiel ${id}</name>
+      <status own="1"/></item>`).join('')}</items>`;
+  const thingCalls = [];
+  global.fetch = async (url) => {
+    const u = String(url);
+    if (!/\/thing\?/.test(u)) return { status: 200, text: async () => collection };
+    const batch = new URL(u).searchParams.get('id').split(',');
+    thingCalls.push(batch);
+    return { status: 200, text: async () => `<items>${batch.map((id) =>
+      `<item type="boardgame" id="${id}"><name type="primary" value="Spiel ${id}"/>
+        <statistics><ratings><averageweight value="2.5"/></ratings></statistics></item>`).join('')}</items>` };
+  };
+
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token)).send({ externalIds: ids });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.imported, 25);
+
+  // Fire-and-forget, like the spec above: poll until the paced pass lands.
+  let games;
+  for (let i = 0; i < 100; i++) {
+    games = (await repo.getRound(a.user.tenantId, round.id)).games;
+    if (games.every((g) => g.weight != null)) break;
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  assert.equal(games.filter((g) => g.weight === 2.5).length, 25,
+    'a game past the first batch was left without provider metadata');
+  assert.ok(thingCalls.length >= 2, 'the import must batch, not ask once');
+  for (const batch of thingCalls) {
+    assert.ok(batch.length <= 20, `a /thing request carried ${batch.length} ids — BGG answers 400 over 20`);
+  }
 });
 
 test('the listing never offers a cover the import would refuse to store (#519)', async () => {
