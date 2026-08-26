@@ -197,13 +197,16 @@ lib/
                      operator panel's Kennzahlen card (issues #274/#404) —
                      counts only, never a secret value and never personal data
   provider-info.js   lazy backfill of BGG's standard metadata onto linked
-                     games (issues #717/#724/#736): eligibility (a TTL-stamped
-                     attempt marker) and the batched, best-effort fill every
+                     games (issues #717/#724/#736/#828/#829): eligibility (a
+                     TTL-stamped attempt marker) and the best-effort fill every
                      trigger point shares — game-detail open, collection
                      import, session start, the two filter screens' shelf-wide
                      fill, and the one blocking fill a filtered draw performs.
                      Its header lists all five; only games the provider was
-                     really asked about are stamped
+                     really asked about are stamped. Reads the local BGG corpus
+                     first (#829) — one query, one write for the whole shelf —
+                     and asks BGG only about what it lacks, in paced batches of
+                     at most 20 ids (#828)
   provider-info-fields.js
                      WHICH provider fields a game carries and what counts as a
                      value worth storing (#724). Dependency-free so both repo

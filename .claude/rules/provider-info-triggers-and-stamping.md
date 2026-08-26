@@ -76,6 +76,18 @@ over a full list — rather than throwing. `test/provider-info.test.js`'s
 it; found by deleting the guard and watching all 21 others stay green
 (.claude/rules/break-the-code-on-purpose.md).
 
+**The corpus path (#829) is the same rule from the other side.** The local BGG
+corpus is read before the upstream hop, and `setGameProviderInfo` *always* stamps
+— so a row that fills a game only partly must fill it **not at all**. Writing the
+half it knows would suppress the game for the full TTL from the very hop that
+could have completed it, with no request ever going out. Hence `corpusPatch`
+returns null unless every `PROVIDER_INFO_FIELDS` entry passes `hasProviderField`;
+the skipped game costs nothing, because the hop behind it fills and stamps it a
+moment later. Note the three shapes of "partial" that must all be caught: an
+un-enriched row (the CSV's `rating` and nothing else), a missing number, and an
+**empty list** — which `hasProviderField` counts as absent rather than as "BGG
+named none".
+
 ## 3. Anything that STAMPS must also write, or it defers by a whole TTL
 
 The link-provider `PATCH` offers a chip for `weight` only (it was `weight` and

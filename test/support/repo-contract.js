@@ -606,6 +606,48 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.setGameProviderInfo(OTHER, round.id, game.id, { weight: 1 }), null);
   });
 
+  test('setGameProviderInfoMany writes a whole batch in ONE persist (#829)', async () => {
+    /* The corpus-first fill can cover a whole shelf at once, so the per-game
+     * writer would rewrite the entire data.json once per game on the JSON
+     * backend and open a transaction per game on Postgres.
+     *
+     * Same guards as the single-game writer, because it is the same write: an
+     * empty list and a null must not erase a stored value, and every game in the
+     * batch shares ONE `providerInfoAt` -- it is one attempt, at one moment. */
+    const round = await freshRound();
+    const a = await repo.createGame(T, round.id, gameFields());
+    const b = await repo.createGame(T, round.id, gameFields());
+
+    const out = await repo.setGameProviderInfoMany(T, round.id, [
+      { gameId: a.id, info: FULL_INFO },
+      { gameId: b.id, info: { ...FULL_INFO, weight: 3.5 } },
+      // An id this round does not hold is SKIPPED, never created -- the rule
+      // updateCorpusEntries follows for an id that left the corpus.
+      { gameId: 'no-such-game', info: FULL_INFO },
+    ]);
+    assert.deepEqual(out, { updated: 2 });
+
+    const games = (await repo.getRound(T, round.id)).games;
+    const byId = new Map(games.map((g) => [g.id, g]));
+    for (const k of INFO_FIELDS) assert.deepEqual(byId.get(a.id)[k], FULL_INFO[k], k);
+    assert.equal(byId.get(b.id).weight, 3.5);
+    assert.equal(byId.get(a.id).providerInfoAt, byId.get(b.id).providerInfoAt,
+      'one attempt, one moment -- the batch must share a stamp');
+
+    // Accretion, exactly as the single-game writer: an empty list and a null are
+    // "the provider named none", never an instruction to erase.
+    await repo.setGameProviderInfoMany(T, round.id, [
+      { gameId: a.id, info: { ...NO_INFO, categories: [], mechanics: [] } },
+    ]);
+    const after = (await repo.getRound(T, round.id)).games.find((g) => g.id === a.id);
+    assert.deepEqual(after.categories, FULL_INFO.categories, 'an empty list erased a stored one');
+    assert.equal(after.weight, FULL_INFO.weight, 'a null erased a stored value');
+
+    assert.deepEqual(await repo.setGameProviderInfoMany(T, round.id, []), { updated: 0 });
+    assert.equal(await repo.setGameProviderInfoMany(T, 'no-such-round', [{ gameId: a.id, info: FULL_INFO }]),
+      null, 'an unknown round must answer null, not pretend to have written');
+  });
+
   test('createGame stores resolved provider info; free-text games stay byte-identical', async () => {
     const round = await freshRound();
     const withInfo = await repo.createGame(T, round.id, gameFields({
@@ -4003,6 +4045,30 @@ module.exports = function repoContract(repo) {
     const stored = (await repo.listCorpusPending(10, '9999-12-31')).find((e) => e.externalId === 'c1');
     assert.equal(stored.enrichedAt, '2026-08-14T11:00:00.000Z');
     assert.deepEqual(stored.info, info);
+  });
+
+  test('getCorpusEntries answers by id, holds the enrichment, and skips misses (#829)', async () => {
+    /* The provider-info backfill's "does the corpus already know this game?"
+     * lookup. It must carry BOTH halves of a row, because they come from
+     * different sources and the caller needs them together: `rating` off the
+     * uploaded CSV, everything else off the enrichment hop. */
+    await repo.replaceCorpus([corpusEntry(1), corpusEntry(2)], { dumpDate: 'd', uploadedAt: 'u' });
+    const info = { weight: 3.2, minPlaytime: 60, maxPlaytime: 120, minAge: 12, categories: ['Economic'], mechanics: ['Trading'] };
+    await repo.updateCorpusEntries([{ externalId: 'c1', enrichedAt: '2026-08-26T11:00:00.000Z', info }]);
+
+    const rows = await repo.getCorpusEntries(['c1', 'c2', 'c-not-in-the-corpus']);
+    assert.deepEqual(rows.map((e) => e.externalId).sort(), ['c1', 'c2'],
+      'an id the corpus does not hold must be absent, never a null row');
+    const c1 = rows.find((e) => e.externalId === 'c1');
+    assert.deepEqual(c1.info, info, 'the enrichment half');
+    assert.equal(c1.rating, 7.5, 'the CSV half — a DIFFERENT source than info');
+    assert.equal(c1.enrichedAt, '2026-08-26T11:00:00.000Z');
+    // An un-enriched row still comes back: it carries the CSV half, and the
+    // caller is what decides that half alone is not enough to fill a game.
+    assert.equal(rows.find((e) => e.externalId === 'c2').info ?? null, null);
+
+    assert.deepEqual(await repo.getCorpusEntries([]), [], 'an empty ask must not read the table');
+    assert.deepEqual(await repo.getCorpusEntries(['c-none']), []);
   });
 
   test('a row enriched BEFORE covers existed is re-queued; one answered null is NOT (#779)', async () => {
