@@ -204,8 +204,9 @@ lib/
                      fill, and the one blocking fill a filtered draw performs.
                      Its header lists all five; only games the provider was
                      really asked about are stamped. Reads the local BGG corpus
-                     first (#829) and asks BGG only about what it lacks, in
-                     paced batches of at most 20 ids (#828)
+                     first (#829) — one query, one write for the whole shelf —
+                     and asks BGG only about what it lacks, in paced batches of
+                     at most 20 ids (#828)
   provider-info-fields.js
                      WHICH provider fields a game carries and what counts as a
                      value worth storing (#724). Dependency-free so both repo

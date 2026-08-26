@@ -31,11 +31,25 @@ const { backfillProviderInfo } = require('../lib/provider-info');
 const realFetch = global.fetch;
 afterEach(() => { global.fetch = realFetch; });
 
-// A repo stub that records which games were written, so a spec can assert on the
-// set that got stamped rather than on the store's contents.
+// A repo stub that records what was written, so a spec can assert on the set
+// that got stamped — and on HOW MANY writes it took, which is the whole point of
+// the bulk method: a corpus-covered shelf must land in one call, not one per
+// game (the JSON backend rewrites the entire data.json per call).
 const recordingRepo = () => {
   const stamped = [];
-  return { stamped, setGameProviderInfo: async (rid, gid) => { stamped.push(gid); } };
+  const written = [];
+  const writes = [];
+  return {
+    stamped,
+    written,
+    writes,
+    setGameProviderInfo: async (rid, gid, patch) => { stamped.push(gid); written.push(patch); writes.push(1); },
+    setGameProviderInfoMany: async (rid, updates) => {
+      writes.push(updates.length);
+      for (const u of updates) { stamped.push(u.gameId); written.push(u.info); }
+      return { updated: updates.length };
+    },
+  };
 };
 
 // `n` provider-linked games, none of them filled, so all are eligible.
@@ -82,8 +96,6 @@ test('a game the corpus knows is filled with NO upstream request', async () => {
   const games = unfilledGames(3, 990000);
   await seedCorpus(games.map((g) => ({ externalId: g.source.externalId, rating: 7.4, info: FULL_INFO })));
   const repoStub = recordingRepo();
-  const written = [];
-  repoStub.setGameProviderInfo = async (rid, gid, patch) => { written.push(patch); repoStub.stamped.push(gid); };
   const calls = stubFetch();
 
   const out = await backfillProviderInfo(repoStub, 'r-corpus', games, { maxBatches: 15 });
@@ -91,6 +103,11 @@ test('a game the corpus knows is filled with NO upstream request', async () => {
   assert.equal(out.fromCorpus, 3);
   assert.equal(out.batches, 0);
   assert.equal(repoStub.stamped.length, 3);
+  const { written } = repoStub;
+  // ONE write for the three games, not three. On the JSON backend each call
+  // serializes and rewrites the whole data.json, and the corpus read is fast
+  // enough that a covered shelf arrives here in a burst with nothing pacing it.
+  assert.deepEqual(repoStub.writes, [3], 'the batch must land in a single write');
   // Both halves land, from their two different sources...
   assert.equal(written[0].weight, 3.2);
   assert.equal(written[0].rating, 7.4);
