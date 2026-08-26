@@ -375,11 +375,53 @@ test('category and mechanic links are read regardless of an inbound flag', () =>
   assert.deepEqual(d.expansions, []);
 });
 
-test('gameInfo batches past 60 ids like expansionParents, sequentially', async (t) => {
-  /* An import is the one bulk entry point (#717 follow-up): a 130-game shelf
-   * must not silently fill only the first 60 — the rest would stay field-less
-   * AND unstamped, invisible until someone opens each detail page. Same batch
-   * size and ceiling as expansionParents. */
+test('NO /thing hop ever asks for more than BGG will carry', async (t) => {
+  /* THE regression of #828. BGG answers `400 Cannot load more than 20 items` to
+   * any /thing over MAX_THING_IDS, and 400 is not retryable — so an over-long
+   * batch fails fast, completely, and (through three layers of catch) silently.
+   * Every bulk metadata backfill had done exactly that since #717.
+   *
+   * All four batching hops in one spec, because the bug was one constant shared
+   * by three of them, and the bound is read from the module rather than typed
+   * here: a hand-copied ceiling is what let this ship
+   * (.claude/rules/shared-constants-across-the-stack.md). */
+  // PINNED to the measured limit, not merely to whatever the module says: every
+  // other assertion here reads MAX_THING_IDS, so raising the constant would move
+  // them with it and this spec would pass at 60 exactly as it did before the fix
+  // (.claude/rules/break-the-code-on-purpose.md — a loop over a list imported
+  // from the implementation can be vacuously true).
+  //
+  // Measured against the live API 2026-08-26: 20 ids -> 200, 21 -> 400
+  // "Cannot load more than 20 items", with and without stats=1.
+  assert.equal(bgg.MAX_THING_IDS, 20, "BGG refuses more than 20 ids on /thing");
+
+  process.env.BGG_API_TOKEN = 'test-token';
+  const calls = [];
+  const original = global.fetch;
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    return { status: 200, text: async () => '<items></items>' };
+  };
+  t.after(() => { global.fetch = original; delete process.env.BGG_API_TOKEN; });
+
+  const ids = Array.from({ length: 130 }, (_, i) => String(100000 + i));
+  await bgg.gameInfo(ids);
+  await bgg.expansionParents(ids);
+  await bgg.expansionDetails(ids);
+  await bgg.corpus(ids);
+
+  assert.ok(calls.length > 4, 'every hop must have batched, not asked once');
+  for (const u of calls) {
+    const n = new URL(u).searchParams.get('id').split(',').length;
+    assert.ok(n <= bgg.MAX_THING_IDS, `a /thing request carried ${n} ids, over BGG's limit`);
+  }
+});
+
+test('gameInfo asks ONE batch and reports exactly the ids it covered', async (t) => {
+  /* The `asked` half of the contract (#736), which is what stops the caller
+   * stamping a game the ceiling silently discarded. Since #828 gameInfo is a
+   * single-batch primitive like corpus(): the batch COUNT and the pacing belong
+   * to lib/provider-info.js, the SIZE stays here. */
   process.env.BGG_API_TOKEN = 'test-token';
   const calls = [];
   const original = global.fetch;
@@ -393,40 +435,53 @@ test('gameInfo batches past 60 ids like expansionParents, sequentially', async (
   };
   t.after(() => { global.fetch = original; delete process.env.BGG_API_TOKEN; });
 
-  const ids = Array.from({ length: 130 }, (_, i) => String(100000 + i));
+  const ids = Array.from({ length: 420 }, (_, i) => String(200000 + i));
   const out = await bgg.gameInfo(ids);
-  assert.equal(calls.length, 3, '130 ids ride three batches of <= 60');
-  for (const u of calls) {
-    assert.ok(new URL(u).searchParams.get('id').split(',').length <= 60);
-    assert.match(u, /stats=1/);
-  }
-  assert.equal(out.items.length, 130, 'every batch\'s items are concatenated');
-  assert.deepEqual(out.asked, ids, 'the covered set must name every id, in order');
+  assert.equal(calls.length, 1, 'one call, however long the list');
+  assert.match(calls[0], /stats=1/);
+  assert.equal(out.asked.length, bgg.MAX_THING_IDS);
+  assert.deepEqual(out.asked, ids.slice(0, bgg.MAX_THING_IDS), 'the covered set, in order');
+  assert.equal(out.items.length, bgg.MAX_THING_IDS, 'items must not outrun what was asked');
+  // The tail is DROPPED, not reported — a caller that stamped it would suppress
+  // those games for the full 7-day TTL without a request having gone out.
+  assert.equal(out.asked.includes(ids[bgg.MAX_THING_IDS]), false);
 });
 
-test('gameInfo reports the ids it DROPPED as not asked about, and honours maxBatches', async (t) => {
-  /* The `asked` half of the contract (#736), which is what stops the caller
-   * stamping a game the ceiling silently discarded. Two bounds in one spec
-   * because they are the same slice: the module's own 300-id ceiling, and the
-   * caller-supplied batch budget the shelf-wide trigger spends. */
+test('a multi-id batch gets the bulk budget, a single-id ask the interactive one', async (t) => {
+  /* #774 measured the 20-id stats=1 body (~471 KB) aborting under the 8 s
+   * interactive budget three times an hour; #828 gave gameInfo the same wider
+   * budget corpus() got, because it now requests the same document. A one-id
+   * ask is the game detail page with a user waiting on it, so it keeps 8 s —
+   * the size of the document is what the two budgets differ over, and the id
+   * count is exactly that.
+   *
+   * Asserted as a BOUNDARY in two steps (tick to just under, then over): a
+   * single tick past both budgets is satisfied by either value, and reading a
+   * timestamp inside the callback reports the end of the tick rather than the
+   * deadline (.claude/rules/mock-timers-jump-the-clock-before-firing.md). */
   process.env.BGG_API_TOKEN = 'test-token';
-  const calls = [];
   const original = global.fetch;
-  global.fetch = async (url) => {
-    calls.push(String(url));
-    return { status: 200, text: async () => '<items></items>' };
-  };
+  const signals = [];
+  // Never settles, so the ONLY thing that ends the request is the abort under test.
+  global.fetch = async (_url, opts) => { signals.push(opts.signal); return new Promise(() => {}); };
   t.after(() => { global.fetch = original; delete process.env.BGG_API_TOKEN; });
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
 
-  const ids = Array.from({ length: 420 }, (_, i) => String(200000 + i));
-  const capped = await bgg.gameInfo(ids);
-  assert.equal(capped.asked.length, 300, 'the 300-id ceiling must be reported, not hidden');
-  assert.equal(capped.asked.includes('200300'), false, 'an id past the ceiling was reported as asked');
+  const flush = () => new Promise((r) => setImmediate(r));
 
-  calls.length = 0;
-  const one = await bgg.gameInfo(ids, { maxBatches: 1 });
-  assert.equal(calls.length, 1, 'maxBatches: 1 must cost exactly one upstream request');
-  assert.equal(one.asked.length, 60);
+  bgg.gameInfo(['1']).catch(() => {});
+  await flush();
+  t.mock.timers.tick(7999);
+  assert.equal(signals[0].aborted, false, 'a single-id ask aborted before its 8 s budget');
+  t.mock.timers.tick(2);
+  assert.equal(signals[0].aborted, true, 'a single-id ask must abort at the interactive budget');
+
+  bgg.gameInfo(['1', '2']).catch(() => {});
+  await flush();
+  t.mock.timers.tick(8001);
+  assert.equal(signals[1].aborted, false, 'a batch must not abort at the interactive budget');
+  t.mock.timers.tick(30000);
+  assert.equal(signals[1].aborted, true, 'a batch must still be bounded');
 });
 
 test('gameInfo without a token asks about nothing at all', async (t) => {
@@ -560,10 +615,18 @@ test('expansionDetails batches every id into ONE request and degrades without a 
     // Deduped, and the ids ride in one comma-separated `id` parameter.
     assert.equal(new URL(calls[0]).searchParams.get('id'), '325,926');
 
+    // The quota allows 40 expansions on one game, so a save can legitimately
+    // tick more than one batch's worth. Before #828 that was a single 40-id
+    // request, which BGG answers 400 — surfacing as `provider_unreachable` on a
+    // perfectly reachable provider.
+    calls.length = 0;
+    await bgg.expansionDetails(Array.from({ length: 40 }, (_, i) => String(i + 1)));
+    assert.equal(calls.length, 2, 'a 40-id tick-list is two requests, not one');
+
     delete process.env.BGG_API_TOKEN;
     assert.deepEqual(await bgg.expansionDetails(['325']), []);
     assert.deepEqual(await bgg.expansionDetails([]), []);
-    assert.equal(calls.length, 1, 'neither made a request');
+    assert.equal(calls.length, 2, 'neither made a request');
   } finally {
     global.fetch = original;
     if (originalToken === undefined) delete process.env.BGG_API_TOKEN;
@@ -635,12 +698,12 @@ test('expansionParents batches ids and degrades to [] without a token', async ()
     assert.equal(calls.length, 1, 'one request for the whole batch');
     assert.equal(new URL(calls[0]).searchParams.get('id'), '325,926');
 
-    // Over one batch it splits rather than building an unbounded URL.
+    // Over one batch it splits rather than building a URL BGG answers 400 to.
     calls.length = 0;
-    await bgg.expansionParents(Array.from({ length: 61 }, (_, i) => String(i + 1)));
-    assert.equal(calls.length, 2, 'a 61-id list is two requests, not one');
-    assert.equal(new URL(calls[0]).searchParams.get('id').split(',').length, 60);
-    assert.equal(new URL(calls[1]).searchParams.get('id'), '61');
+    await bgg.expansionParents(Array.from({ length: 21 }, (_, i) => String(i + 1)));
+    assert.equal(calls.length, 2, 'a 21-id list is two requests, not one');
+    assert.equal(new URL(calls[0]).searchParams.get('id').split(',').length, bgg.MAX_THING_IDS);
+    assert.equal(new URL(calls[1]).searchParams.get('id'), '21');
 
     delete process.env.BGG_API_TOKEN;
     calls.length = 0;

@@ -25,6 +25,20 @@ const request = require('supertest');
 const { app, store } = require('./helpers');
 const repo = require('../lib/repo');
 
+// The background shelf fill (#828) paces itself 2 s between batches in
+// production; a spec that waited that out would park the suite. Read per call,
+// like DRAW_BACKFILL_TIMEOUT_MS.
+process.env.PROVIDER_INFO_BATCH_PAUSE_MS = '0';
+
+const { shelfFillInFlight } = require('../lib/provider-info');
+
+// Wait for the pass a route just started, if one is still running. NOT awaited
+// by the routes themselves — nobody waits on the fill — so this is the seam that
+// keeps a background job observable (lib/scheduler.js draws the same one).
+const settleShelfFill = async (rid) => {
+  for (let i = 0; i < 50 && shelfFillInFlight(rid); i += 1) await shelfFillInFlight(rid);
+};
+
 const realFetch = global.fetch;
 afterEach(() => {
   global.fetch = realFetch;
@@ -138,14 +152,17 @@ test('the shelf trigger asks about the ACTIVE shelf only', async () => {
   assert.equal('providerInfoAt' in (await stored(rid, wished.id)), false);
 });
 
-test('a big shelf fills ONE batch per open, and resumes on the next', async () => {
-  /* The route's `maxBatches: 1`. Deliberately more than 60 games, because the
-   * two-game spec above cannot see this bound at all — one batch is what an
-   * unbounded call would issue there too, so it is green either way.
+test('an imported shelf fills COMPLETELY, and the screen repaints after one batch', async () => {
+  /* THE reported bug (#828), end to end. BGG carries at most 20 ids per /thing,
+   * and every bulk hop asked for 60 — so a round whose games came from a
+   * collection import got NO provider metadata at all, „Weitere Filter" never
+   * appeared, and the demo round (nine games, one under-limit request) was the
+   * only one that worked.
    *
-   * Progressive filling is the point: each filled game drops out of
-   * `needsProviderInfo`, so the second open starts where the first stopped and a
-   * 300-game shelf never costs one screen open five upstream requests. */
+   * Two halves, and they are separate promises on purpose: the response carries
+   * the FIRST batch, so the controls appear on this open rather than the next,
+   * and the rest lands behind it. 70 games is deliberately more than three
+   * batches — a shelf inside one batch is green whatever the bound is. */
   const rid = await makeRound('Regal-Gross');
   for (let i = 0; i < 70; i += 1) await addLinked(rid, `Spiel ${i}`, String(931000 + i));
   const calls = [];
@@ -156,17 +173,23 @@ test('a big shelf fills ONE batch per open, and resumes on the next', async () =
   };
 
   const first = await request(app).post(`/api/rounds/${rid}/games/provider-info`);
-  assert.equal(calls.length, 1, 'one screen open must cost one upstream request');
-  assert.equal(first.body.games.filter((g) => g.weight !== null).length, 60);
+  assert.equal(first.body.games.filter((g) => g.weight !== null).length, 20,
+    'the answer must carry the synchronous first batch');
+
+  await settleShelfFill(rid);
+  assert.equal(calls.length, 4, '70 games ride four batches of 20');
+  for (const u of calls) {
+    const n = new URL(u).searchParams.get('id').split(',').length;
+    assert.ok(n <= 20, `a /thing request carried ${n} ids — BGG answers 400 over 20`);
+  }
+  const filled = (await repo.getRound('default', rid)).games;
+  assert.equal(filled.filter((g) => g.weight === 2.5).length, 70,
+    'the whole shelf must be filled, not just what one screen open reached');
 
   const second = await request(app).post(`/api/rounds/${rid}/games/provider-info`);
-  assert.equal(calls.length, 2, 'the second open must resume, not stop');
-  assert.equal(second.body.games.length, 10, 'only the still-unfilled tail is eligible');
-  assert.equal(second.body.games.every((g) => g.weight === 2.5), true);
-
-  const third = await request(app).post(`/api/rounds/${rid}/games/provider-info`);
-  assert.equal(calls.length, 2, 'a fully filled shelf must ask nothing');
-  assert.deepEqual(third.body.games, []);
+  await settleShelfFill(rid);
+  assert.equal(calls.length, 4, 'a fully filled shelf must ask nothing');
+  assert.deepEqual(second.body.games, []);
 });
 
 test('a second open of the screen costs no upstream request', async () => {

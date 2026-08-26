@@ -458,7 +458,7 @@ test('a stale client still sending applyDescription writes nothing', async () =>
  * backfillProviderInfo directly rather than through a route: the defect needs
  * more games than the cap, and 300+ HTTP round-trips would dominate the suite. */
 
-const { backfillProviderInfo } = require('../lib/provider-info');
+const { backfillProviderInfo, startShelfFill, shelfFillInFlight } = require('../lib/provider-info');
 
 // A repo stub that records which games were written, so a spec can assert on the
 // set that got stamped rather than on the store's contents.
@@ -475,27 +475,154 @@ const unfilledGames = (n, base) =>
   }));
 
 test('the backfill stamps only the games it actually asked about', async () => {
-  // 305 > bgg.gameInfo's 300-id ceiling, so five games cannot have been asked
-  // about however many batches it issues.
-  const games = unfilledGames(305, 910000);
+  // 25 > one batch, so five games cannot have been asked about in a single-batch
+  // call however the provider answers.
+  const games = unfilledGames(25, 910000);
   const repoStub = recordingRepo();
   const calls = stubFetch([]); // a healthy answer that names no game
   await backfillProviderInfo(repoStub, 'r-bound', games);
 
-  assert.equal(calls.length, 5, 'five batches of 60 is the provider ceiling');
-  assert.equal(repoStub.stamped.length, 300,
+  assert.equal(calls.length, 1, 'the default is one upstream request');
+  assert.equal(repoStub.stamped.length, 20,
     'a game past the provider ceiling was stamped without ever being asked about');
   // Named explicitly: the five that must be untouched are the TAIL, so the next
   // trigger picks them up rather than skipping them for the whole TTL.
-  assert.deepEqual(repoStub.stamped.slice(-1), ['g910299']);
+  assert.deepEqual(repoStub.stamped.slice(-1), ['g910019']);
 });
 
-test('one batch is all the shelf-wide trigger spends per call', async () => {
+test('a multi-batch pass covers the whole list, 20 ids at a time', async () => {
+  /* What the shelf fill spends. Before #828 this was one 60-id request that BGG
+   * answered 400 to, so NOTHING was written and nothing was stamped — the whole
+   * of the reported bug. */
+  const games = unfilledGames(45, 940000);
+  const repoStub = recordingRepo();
+  const calls = stubFetch([]);
+  const out = await backfillProviderInfo(repoStub, 'r-many', games, { maxBatches: 15 });
+
+  assert.equal(calls.length, 3, '45 games ride three batches');
+  for (const u of calls) {
+    assert.ok(new URL(u).searchParams.get('id').split(',').length <= 20);
+  }
+  assert.equal(repoStub.stamped.length, 45, 'every game must be covered');
+  assert.deepEqual(out, { batches: 3, asked: 45, filled: 45, failed: false });
+});
+
+test('a failed batch is skipped; a second CONSECUTIVE failure ends the pass', async () => {
+  /* #780's lesson, which had only ever been applied to the corpus hop. Stopping
+   * on the first failure is right for an outage and wrong for one slow answer,
+   * and in production it was always the latter.
+   *
+   * The ids in a failed batch must stay UNSTAMPED, or they are suppressed for
+   * the full 7-day TTL over a request that failed. */
+  const games = unfilledGames(100, 950000);
+  const repoStub = recordingRepo();
+  const original = global.fetch;
+  // Batch 2 fails alone (the pass continues), then 4 and 5 fail together. Keyed
+  // on the batch's FIRST ID, never on a call counter: a retryable status is
+  // retried inside fetchXml, so a counter would fail a different batch than the
+  // one it names (and 400 keeps the spec off the 1.5 s retry ladder).
+  const failFirstId = new Set(['950020', '950060', '950080']);
+  global.fetch = async (url) => {
+    const ids = new URL(String(url)).searchParams.get('id').split(',');
+    if (failFirstId.has(ids[0])) return { status: 400, text: async () => '' };
+    return { status: 200, text: async () => `<items>${ids.map((id) =>
+      `<item type="boardgame" id="${id}"><name type="primary" value="G${id}"/></item>`).join('')}</items>` };
+  };
+  try {
+    const out = await backfillProviderInfo(repoStub, 'r-flaky', games, { maxBatches: 15 });
+    assert.equal(out.batches, 5, 'the pass must survive one failure and stop after two');
+    assert.equal(out.failed, true);
+    assert.equal(repoStub.stamped.length, 40, 'only the two answered batches may be stamped');
+    // The failed batch's ids are the ones NOT stamped — still owed, not suppressed.
+    assert.equal(repoStub.stamped.includes('g950020'), false, 'a failed batch was stamped anyway');
+  } finally {
+    global.fetch = original;
+  }
+});
+
+test('an over-long batch would fail loudly now, not silently (#828)', async () => {
+  /* The exact production failure, driven end to end: BGG answers 400 to a
+   * /thing over its 20-id limit, 400 is not retryable, and the three layers of
+   * catch above this made it invisible. Nothing may be written, nothing stamped,
+   * and the failure must be REPORTED to the caller. */
+  const games = unfilledGames(20, 960000);
+  const repoStub = recordingRepo();
+  const original = global.fetch;
+  global.fetch = async () => ({ status: 400, text: async () => 'Cannot load more than 20 items' });
+  try {
+    const out = await backfillProviderInfo(repoStub, 'r-400', games);
+    assert.equal(out.failed, true, 'the caller must be able to see the failure');
+    assert.equal(out.asked, 0);
+    assert.deepEqual(repoStub.stamped, [], 'an upstream failure must stamp nothing');
+  } finally {
+    global.fetch = original;
+  }
+});
+
+test('a TOKENLESS instance stamps nothing at all', async () => {
+  /* The one path where the `asked` guard is still observable, and the reason it
+   * exists (.claude/rules/provider-info-triggers-and-stamping.md §2). Without a
+   * token gameInfo answers `{ items: [], asked: [] }` rather than throwing — a
+   * perfectly healthy answer over a full list — so a stamping loop that trusted
+   * its own slice would record the whole shelf as "BGG had nothing" and leave
+   * every game waiting out a 7-day TTL after the token is configured.
+   *
+   * Note the chunking makes this the ONLY discriminating case: every other
+   * caller now slices by exactly the provider's own limit, so `slice` and
+   * `asked` coincide and the guard is vacuous there. */
+  const games = unfilledGames(5, 970000);
+  const repoStub = recordingRepo();
+  const calls = stubFetch([]);
+  const token = process.env.BGG_API_TOKEN;
+  delete process.env.BGG_API_TOKEN;
+  try {
+    const out = await backfillProviderInfo(repoStub, 'r-notoken', games);
+    assert.equal(calls.length, 0, 'nothing may be requested without a token');
+    assert.equal(out.asked, 0);
+    assert.deepEqual(repoStub.stamped, [], 'a tokenless instance stamped its shelf as asked');
+  } finally {
+    process.env.BGG_API_TOKEN = token;
+  }
+});
+
+test('one batch is all the SYNCHRONOUS part of the shelf trigger spends', async () => {
   const games = unfilledGames(150, 920000);
   const repoStub = recordingRepo();
   const calls = stubFetch([]);
   await backfillProviderInfo(repoStub, 'r-one', games, { maxBatches: 1 });
 
-  assert.equal(calls.length, 1, 'a screen open must cost exactly one upstream request');
-  assert.equal(repoStub.stamped.length, 60, 'only the asked batch may be stamped');
+  assert.equal(calls.length, 1, 'the screen must repaint after exactly one upstream request');
+  assert.equal(repoStub.stamped.length, 20, 'only the asked batch may be stamped');
+});
+
+test('a shelf fill joins the pass already running, and survives a repo failure', async () => {
+  /* Two properties of the background pass (#828) that no route spec can see.
+   *
+   * The dedupe is a PROCESS-LOCAL optimisation, never a correctness requirement:
+   * a deploy overlaps two containers even at `numReplicas: 1`, so a double pass
+   * has to be harmless — which it is, since `needsProviderInfo` re-reads the
+   * stored row (.claude/rules/deploy-invariants-are-pinned-in-code.md).
+   *
+   * The failure path matters because nobody awaits this: a rejection here would
+   * be an unhandled promise rejection behind a response already sent. */
+  const games = unfilledGames(3, 980000);
+  let reads = 0;
+  const repoStub = {
+    stamped: [],
+    getRound: async () => { reads += 1; await new Promise((r) => setImmediate(r)); return { games }; },
+    setGameProviderInfo: async (rid, gid) => { repoStub.stamped.push(gid); },
+  };
+  stubFetch([]);
+  const first = startShelfFill(repoStub, 'r-fill');
+  const second = startShelfFill(repoStub, 'r-fill');
+  assert.equal(first, second, 'a second trigger must join the running pass, not start another');
+  assert.ok(shelfFillInFlight('r-fill'), 'the pass must be observable while it runs');
+  await first;
+  assert.equal(reads, 1);
+  assert.equal(shelfFillInFlight('r-fill'), null, 'a finished pass must not block the next one');
+  assert.equal(repoStub.stamped.length, 3);
+
+  const broken = { getRound: async () => { throw new Error('db is down'); } };
+  assert.equal(await startShelfFill(broken, 'r-broken'), null, 'a repo failure must not reject');
+  assert.equal(shelfFillInFlight('r-broken'), null, 'a failed pass must release the round');
 });

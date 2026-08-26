@@ -194,7 +194,7 @@ test('corpus() asks in batches of at most 20 and reports what it asked', async (
   // BGG documents the /thing id limit as 20. Without a token nothing is asked —
   // and nothing may be reported as asked either, or a tokenless instance would
   // stamp its whole corpus as "BGG had nothing".
-  assert.equal(bgg.MAX_CORPUS_BATCH, 20);
+  assert.equal(bgg.MAX_THING_IDS, 20);
   const token = process.env.BGG_API_TOKEN;
   delete process.env.BGG_API_TOKEN;
   try {

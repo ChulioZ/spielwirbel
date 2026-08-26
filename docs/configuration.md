@@ -311,6 +311,13 @@ provider was never asked about passes every filter; `DRAW_BACKFILL_TIMEOUT_MS`
 (default 4000) caps that wait, after which the draw proceeds with the values
 already stored. An unfiltered draw never waits.
 
+BGG carries at most 20 games per request, so a freshly imported collection needs
+several. A collection import and an open of either filter screen start a **paced
+background pass** over the shelf; the screen answers after its first batch, so
+the controls appear at once and the rest fills behind the response.
+`PROVIDER_INFO_BATCH_PAUSE_MS` (default 2000) is the gap between two of those
+requests.
+
 ### The BoardGameGeek game corpus (issue #681)
 
 A local pool of a few thousand ranked BGG games — their ratings, complexity,
