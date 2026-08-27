@@ -844,7 +844,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const when = fmtDateTime(session.createdAt);
   const head = h(`<div class="page-head"><div>
          <h1 class="result-title">${esc(t('result.title'))}</h1>
-         <div class="muted">${esc(t('result.subtitle', { when, n: games.length }))}</div>
+         <div class="muted">${esc(tn(games.length, 'result.subtitleOne', 'result.subtitle', { when }))}</div>
        </div></div>`);
   app.appendChild(head);
   const titleEl = head.querySelector('.result-title');

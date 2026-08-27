@@ -39,7 +39,7 @@ const STATS_PODIUMS = [
   { key: 'playedYear', icon: 'ti-history', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   // The average goes through the locale formatter, not straight into the string:
   // a raw JS number interpolates as "4.6", and German writes "4,6".
-  { key: 'bestRated', icon: 'ti-star', line: (e) => t('stats.rated', { avg: formatAverage(e.average), n: e.ratings }) },
+  { key: 'bestRated', icon: 'ti-star', line: (e) => tn(e.ratings, 'stats.ratedOne', 'stats.rated', { avg: formatAverage(e.average) }) },
 ];
 
 // The scale counters, in render order: rounds first, then the people in them.

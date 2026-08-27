@@ -150,7 +150,7 @@ function renderChronikTab(round, activities) {
     if (outcome === 'split') parts.push(iconText('ti-layout-grid', t('sessions.split')));
     else if (s.finished) parts.push(winnerNames.length ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' + winnerNames.map(esc).join(', ') : iconText('ti-check', t('sessions.played')));
     else if (outcome === 'cancelled') parts.push(`<span style="color:var(--danger)">${iconText('ti-x', t('sessions.cancelled'))}</span>`);
-    parts.push(esc(t('sessions.rated', { n: s.gameIds.length })));
+    parts.push(esc(tn(s.gameIds.length, 'sessions.ratedOne', 'sessions.rated')));
 
     const card = h(`<a class="session-card">
          <div class="session-card__img">${thumbIcon}</div>

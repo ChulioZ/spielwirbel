@@ -298,7 +298,7 @@ function showSessionLobby(round, session, handedOn) {
       <i class="ti ti-flag" aria-hidden="true"></i> ${esc(t('lobby.close'))}
     </button>`);
   close.addEventListener('click', async () => {
-    if (pending.length && !confirm(t('lobby.closeConfirm', { n: pending.length }))) return;
+    if (pending.length && !confirm(tn(pending.length, 'lobby.closeConfirmOne', 'lobby.closeConfirm'))) return;
     try {
       stopLobbyPoll();
       await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/close`, {});
