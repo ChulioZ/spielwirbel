@@ -53,6 +53,7 @@ I18N.de = {
   'newRound.ownerSeatYou': '(du)',
   'newRound.importLabel': 'Spiele übernehmen von (optional)',
   'newRound.importNone': '— keine —',
+  'newRound.importOptionOne': '{name} ({n} Spiel)',
   'newRound.importOption': '{name} ({n} Spiele)',
   'newRound.importNote': 'Übernimmt nur die Spieleliste (Titel, Art, Bild) – keine Bewertungen oder Sessions.',
   'newRound.create': 'Runde gründen',
@@ -134,6 +135,7 @@ I18N.de = {
   'rec.reasonSort': '{n}× „Aussortieren“ ({pct} %)',
   'rec.reasonAvg': 'Ø {avg}',
   'rec.retire': 'Aussortieren',
+  'rec.moreOne': '… und {n} weiteres',
   'rec.more': '… und {n} weitere',
   'rec.dismiss': 'Ausblenden',
 
@@ -376,6 +378,7 @@ I18N.de = {
   'price.noOffers': 'Zurzeit kein Preis verfügbar.',
   'price.sourceBgp': 'Preisdaten von Brettspielpreise.de. Die Übersicht umfasst nur die dort gelisteten Shops.',
 
+  'sessions.ratedOne': '{n} Spiel bewertet',
   'sessions.rated': '{n} Spiele bewertet',
   'sessions.played': 'Gespielt',
   'sessions.cancelled': 'Abgebrochen',
@@ -535,6 +538,7 @@ I18N.de = {
   'gameInfo.mechanics': 'Mechaniken',
   'gameInfo.rating': 'BGG-Wertung',
   'gameInfo.ratingValue': '{n} von 10',
+  'gameInfo.listMoreOne': '+{n} weitere',
   'gameInfo.listMore': '+{n} weitere',
   'gameInfo.source': 'Quelle: BoardGameGeek (englisch)',
   'linkProvider.apply': 'Spiel verknüpfen',
@@ -582,6 +586,7 @@ I18N.de = {
   'startSession.title': 'Neue Session',
   'startSession.membersLabel': 'Wer spielt mit?',
   'startSession.membersNote': 'Die Anzahl der Personen filtert die Spiele.',
+  'startSession.tableCountOne': '{n} spielt mit',
   'startSession.tableCount': '{n} spielen mit',
   // Gäste (#458): nur für diese Session, beim Auslosen eingefroren.
   'startSession.guestsLabel': 'Sind Gäste dabei?',
@@ -622,6 +627,7 @@ I18N.de = {
   'lobby.voteHere': 'Für {name}',
   'lobby.next': 'Weiter zu {name}',
   'lobby.close': 'Abstimmung beenden',
+  'lobby.closeConfirmOne': 'Es fehlt noch {n} Stimme. Abstimmung trotzdem beenden?',
   'lobby.closeConfirm': 'Es fehlen noch {n} Stimmen. Abstimmung trotzdem beenden?',
   // Abstimmen per Link (#652): wer keinen Account hat, stimmt über die geteilte
   // Adresse vom eigenen Gerät ab.
@@ -638,6 +644,7 @@ I18N.de = {
   'voteLink.youAre': 'Du stimmst ab als',
   'voteLink.doneTitle': 'Danke!',
   'voteLink.doneSub': 'Deine Stimme für {name} ist angekommen.',
+  'voteLink.doneProgressOne': '{n} von {total} hat abgestimmt. Das Ergebnis zeigt die Runde am Tisch.',
   'voteLink.doneProgress': '{n} von {total} haben abgestimmt. Das Ergebnis zeigt die Runde am Tisch.',
   'voteLink.revise': 'Stimme ändern',
   'voteLink.deadTitle': 'Dieser Link führt ins Leere',
@@ -700,6 +707,7 @@ I18N.de = {
 
   'result.crumb': 'Ergebnis',
   'result.title': 'Ergebnis',
+  'result.subtitleOne': '{when} · {n} Spiel',
   'result.subtitle': '{when} · {n} Spiele',
   'result.participants': 'Wer dabei war',
   'result.teams': 'Im Team',
@@ -864,6 +872,7 @@ I18N.de = {
   'stats.shelves.many': 'in {n} Regalen',
   'stats.plays.one': '{n} Session',
   'stats.plays.many': '{n} Sessions',
+  'stats.ratedOne': '{avg} von 5 — {n} Bewertung',
   'stats.rated': '{avg} von 5 — {n} Bewertungen',
   'stats.counter.players': 'Spieler*innen',
   'stats.counter.rounds': 'Runden',

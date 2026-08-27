@@ -493,7 +493,7 @@ function renderStartTab(round, activeGames) {
       list.appendChild(item);
     });
     if (recs.length > 5) {
-      list.appendChild(h(`<div class="muted recommend-more">${esc(t('rec.more', { n: recs.length - 5 }))}</div>`));
+      list.appendChild(h(`<div class="muted recommend-more">${esc(tn(recs.length - 5, 'rec.moreOne', 'rec.more'))}</div>`));
     }
     app.appendChild(banner);
   }

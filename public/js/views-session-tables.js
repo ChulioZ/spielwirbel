@@ -62,7 +62,7 @@ async function showTableBuilder(round, session, gamesHint) {
   app.appendChild(
     h(`<div class="page-head"><div>
          <h1>${esc(heading)}</h1>
-         <div class="muted">${esc(t('result.subtitle', { when, n: games.length }))}</div>
+         <div class="muted">${esc(tn(games.length, 'result.subtitleOne', 'result.subtitle', { when }))}</div>
        </div></div>`)
   );
 

@@ -167,7 +167,7 @@ async function showNewRound() {
           <label for="importSel">${esc(t('newRound.importLabel'))}</label>
           <select id="importSel" class="select">
             <option value="">${esc(t('newRound.importNone'))}</option>
-            ${importable.map((r) => `<option value="${r.id}">${esc(t('newRound.importOption', { name: r.name, n: r.gameCount }))}</option>`).join('')}
+            ${importable.map((r) => `<option value="${r.id}">${esc(tn(r.gameCount, 'newRound.importOptionOne', 'newRound.importOption', { name: r.name }))}</option>`).join('')}
           </select>
           <div class="muted import-card__note">${esc(t('newRound.importNote'))}</div>
         </div>

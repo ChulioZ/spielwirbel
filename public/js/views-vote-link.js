@@ -286,7 +286,7 @@ function renderVoteLinkDone(token, ballot, person) {
         <h1>${esc(t('voteLink.doneTitle'))}</h1>
         <p class="muted">${esc(t('voteLink.doneSub', { name: personLabel(person) }))}</p>
       </div>
-      <p class="muted center">${esc(t('voteLink.doneProgress', { n: done, total }))}</p>
+      <p class="muted center">${esc(tn(done, 'voteLink.doneProgressOne', 'voteLink.doneProgress', { total }))}</p>
       <div class="live-vote__actions">
         <button class="btn" id="vlAgain"><i class="ti ti-refresh" aria-hidden="true"></i> ${esc(t('voteLink.revise'))}</button>
       </div>

@@ -60,7 +60,7 @@ function factRow(label, value) {
 function factList(values, cap) {
   const shown = values.slice(0, cap);
   const rest = values.length - shown.length;
-  return rest > 0 ? `${shown.join(', ')}, ${t('gameInfo.listMore', { n: rest })}` : shown.join(', ');
+  return rest > 0 ? `${shown.join(', ')}, ${tn(rest, 'gameInfo.listMoreOne', 'gameInfo.listMore')}` : shown.join(', ');
 }
 
 // BGG serves a playtime RANGE and the spread is the information: Toriki reports

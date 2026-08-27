@@ -52,6 +52,7 @@ I18N.en = {
   'newRound.ownerSeatYou': '(you)',
   'newRound.importLabel': 'Copy games from (optional)',
   'newRound.importNone': '— none —',
+  'newRound.importOptionOne': '{name} ({n} game)',
   'newRound.importOption': '{name} ({n} games)',
   'newRound.importNote': 'Copies only the games list (title, type, image) – no ratings or sessions.',
   'newRound.create': 'Start the round',
@@ -133,6 +134,7 @@ I18N.en = {
   'rec.reasonSort': '{n}× “retire” ({pct} %)',
   'rec.reasonAvg': 'Ø {avg}',
   'rec.retire': 'Retire',
+  'rec.moreOne': '… and {n} more',
   'rec.more': '… and {n} more',
   'rec.dismiss': 'Dismiss',
 
@@ -375,6 +377,7 @@ I18N.en = {
   'price.noOffers': 'No price available right now.',
   'price.sourceBgp': 'Price data from Brettspielpreise.de. The list covers the shops listed there only.',
 
+  'sessions.ratedOne': '{n} game rated',
   'sessions.rated': '{n} games rated',
   'sessions.played': 'Played',
   'sessions.cancelled': 'Cancelled',
@@ -534,6 +537,7 @@ I18N.en = {
   'gameInfo.mechanics': 'Mechanics',
   'gameInfo.rating': 'BGG rating',
   'gameInfo.ratingValue': '{n} of 10',
+  'gameInfo.listMoreOne': '+{n} more',
   'gameInfo.listMore': '+{n} more',
   'gameInfo.source': 'Source: BoardGameGeek',
   'linkProvider.apply': 'Link game',
@@ -583,6 +587,7 @@ I18N.en = {
   'startSession.title': 'New session',
   'startSession.membersLabel': 'Who’s playing?',
   'startSession.membersNote': 'The number of players filters the games.',
+  'startSession.tableCountOne': '{n} playing',
   'startSession.tableCount': '{n} playing',
   // Guests (#458): session-only participants, named here and frozen at the draw.
   'startSession.guestsLabel': 'Guests along tonight?',
@@ -626,6 +631,7 @@ I18N.en = {
   'lobby.voteHere': 'For {name}',
   'lobby.next': 'Next: {name}',
   'lobby.close': 'End voting',
+  'lobby.closeConfirmOne': '{n} vote is still missing. End voting anyway?',
   'lobby.closeConfirm': '{n} votes are still missing. End voting anyway?',
   // Voting by link (#652): anyone without an account votes from their own device
   // through the shared address.
@@ -642,6 +648,7 @@ I18N.en = {
   'voteLink.youAre': 'You are voting as',
   'voteLink.doneTitle': 'Thank you!',
   'voteLink.doneSub': 'Your vote for {name} is in.',
+  'voteLink.doneProgressOne': '{n} of {total} has voted. The group reveals the result at the table.',
   'voteLink.doneProgress': '{n} of {total} have voted. The group reveals the result at the table.',
   'voteLink.revise': 'Change my vote',
   'voteLink.deadTitle': 'This link leads nowhere',
@@ -707,6 +714,7 @@ I18N.en = {
 
   'result.crumb': 'Result',
   'result.title': 'Result',
+  'result.subtitleOne': '{when} · {n} game',
   'result.subtitle': '{when} · {n} games',
   'result.participants': 'Who played',
   // The teams of this session (#575), listed next to the participants row.
@@ -872,6 +880,7 @@ I18N.en = {
   'stats.shelves.many': 'on {n} shelves',
   'stats.plays.one': '{n} session',
   'stats.plays.many': '{n} sessions',
+  'stats.ratedOne': '{avg} out of 5 — {n} rating',
   'stats.rated': '{avg} out of 5 — {n} ratings',
   'stats.counter.players': 'players',
   'stats.counter.rounds': 'rounds',

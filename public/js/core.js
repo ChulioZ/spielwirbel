@@ -801,7 +801,7 @@ function renderSeatPicker(round, joining, onChange, extraCount) {
   function render() {
     table.querySelectorAll('.nr-seat').forEach((el) => el.remove());
     const extra = typeof extraCount === 'function' ? extraCount() : 0;
-    tableCenter.textContent = t('startSession.tableCount', { n: joining.size + extra });
+    tableCenter.textContent = tn(joining.size + extra, 'startSession.tableCountOne', 'startSession.tableCount');
     const cx = 140, cy = 118, rx = 112, ry = 92;
     round.members.forEach((m, i) => {
       const angle = ((-90 + (i * 360) / round.members.length) * Math.PI) / 180;
