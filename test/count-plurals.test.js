@@ -196,13 +196,19 @@ test('none of the nine keys is reachable through plain t() any more', () => {
     }
   }
 
+  /* Escape EVERY regex metacharacter, not just the dot the keys happen to
+     contain: a partial escape is the js/incomplete-sanitization shape, and
+     "the inputs are all literals in the array above" is exactly the reasoning
+     that stops being true when someone adds a key. */
+  const rx = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
   let checked = 0;
   for (const file of sources) {
     const text = fs.readFileSync(file, 'utf8');
     for (const row of PAIRS) {
       for (const key of [row.one, row.other]) {
         // `\bt\(` cannot match `tn(` — the n is a word character.
-        const bad = new RegExp(`\\bt\\(\\s*'${key.replace(/\./g, '\\.')}'`);
+        const bad = new RegExp(`\\bt\\(\\s*'${rx(key)}'`);
         assert.ok(!bad.test(text), `${path.basename(file)}: '${key}' is passed to t(), not tn() — ${row.what}`);
         checked++;
       }
