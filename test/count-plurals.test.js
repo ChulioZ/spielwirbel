@@ -172,3 +172,41 @@ test('a French zero renders through the singular with the actual number in it', 
   const de = loadI18n('de');
   assert.equal(de.tn(0, 'startSession.tableCountOne', 'startSession.tableCount'), '0 spielen mit');
 });
+
+/* The wording table above proves the KEYS are right; only the Chronik test
+   proves a call site was converted. This closes that gap for the other eight
+   without a page of fixture each: it is a claim about the call SHAPE, which is
+   what regresses — a view that goes back to t() renders the plural at n = 1
+   again while every assertion above stays green.
+   Deliberately not a regex over a view's rendered output (which is what
+   `.claude/rules/testing-views-under-jsdom.md` exists to replace) — it asks
+   only "is this key ever reached through the non-plural helper", which no
+   amount of rendering can answer for nine screens. */
+test('none of the nine keys is reachable through plain t() any more', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const dir = path.join(__dirname, '..', 'public', 'js');
+  const sources = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.isFile() && e.name.endsWith('.js')) sources.push(path.join(dir, e.name));
+    if (e.isDirectory() && e.name !== 'lang') {
+      for (const f of fs.readdirSync(path.join(dir, e.name))) {
+        if (f.endsWith('.js')) sources.push(path.join(dir, e.name, f));
+      }
+    }
+  }
+
+  let checked = 0;
+  for (const file of sources) {
+    const text = fs.readFileSync(file, 'utf8');
+    for (const row of PAIRS) {
+      for (const key of [row.one, row.other]) {
+        // `\bt\(` cannot match `tn(` — the n is a word character.
+        const bad = new RegExp(`\\bt\\(\\s*'${key.replace(/\./g, '\\.')}'`);
+        assert.ok(!bad.test(text), `${path.basename(file)}: '${key}' is passed to t(), not tn() — ${row.what}`);
+        checked++;
+      }
+    }
+  }
+  assert.ok(checked > 100, `expected to have scanned the frontend, made ${checked} checks`);
+});
