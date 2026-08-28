@@ -67,6 +67,11 @@ function renderChronikTab(round, activities) {
       // the same reason as the two moves above: an import is routinely 100+
       // games and a row each would bury every other event on the round.
       games_imported: { icon: 'ti-download', text: tn(a.count, 'activity.gamesImportedOne', 'activity.gamesImported') },
+      // Bulk shelf tidying (#832) — counts for the same reason as the three
+      // above, and the reason bites hardest here: undoing a 200-game import
+      // would otherwise bury every other event the round has ever had.
+      games_retired: { icon: 'ti-trash', text: tn(a.count, 'activity.gamesRetiredOne', 'activity.gamesRetired') },
+      games_deleted: { icon: 'ti-trash', text: tn(a.count, 'activity.gamesDeletedOne', 'activity.gamesDeleted') },
       // A new seat (#563) — carries the member's NAME, not a game title. Written
       // for both an added seat and an accepted invitation (#207), since either way
       // a new person is in the round.

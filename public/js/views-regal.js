@@ -85,6 +85,157 @@ function renderRegalTab(round, activeGames) {
     gamesTools.appendChild(search);
     gamesTools.appendChild(sortSel);
 
+    // --- Selection mode (#832): tidy the shelf in bulk.
+    //
+    // It lives IN the grid rather than in a picker sheet on purpose. A shelf can
+    // be filled in one action (the BGG collection import, #481) but was emptied
+    // one game and two steps at a time, so undoing a 200-game import ran to some
+    // 400 interactions — which is what a tester hit mid-evaluation. A flat sheet
+    // of 200 checkbox rows would be a bulk path with no way to aim it; here the
+    // search, the tag chips, the metadata filters and the sort all keep working,
+    // so "select all" means "everything I have narrowed to".
+    //
+    // The selection deliberately SURVIVES a filter change: picking a few games,
+    // searching again and picking a few more is the normal way to use it. The
+    // count is always on screen, so a selection reaching beyond what is currently
+    // shown is stated rather than hidden.
+    let selecting = false;
+    let shownCards = [];
+    const selection = new Set();
+    const canBulkDelete = roundCan(round, 'game.delete');
+
+    const bulkBar = h(`<div class="bulk-bar" hidden>
+         <div class="bulk-bar__info">
+           <span class="bulk-bar__count" aria-live="polite"></span>
+           <span class="muted bulk-bar__hint">${esc(t('bulk.hint'))}</span>
+         </div>
+         <div class="bulk-bar__actions">
+           <button type="button" class="link-btn" data-act="all"></button>
+           <button type="button" class="btn" data-act="retire"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('bulk.retire'))}</button>
+           ${canBulkDelete ? `<button type="button" class="btn btn--danger" data-act="delete"><i class="ti ti-trash-x" aria-hidden="true"></i> ${esc(t('bulk.delete'))}</button>` : ''}
+         </div>
+       </div>`);
+    const bulkCount = bulkBar.querySelector('.bulk-bar__count');
+    const bulkAll = bulkBar.querySelector('[data-act="all"]');
+
+    // The one place the card's selected state is written, so the class, the
+    // ARIA state and the enabled actions can never disagree.
+    function syncSelection() {
+      shownCards.forEach((c) => {
+        const on = selection.has(c.dataset.gid);
+        c.classList.toggle('is-picked', on);
+        if (selecting) c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      const n = selection.size;
+      bulkCount.textContent = tn(n, 'bulk.selectedOne', 'bulk.selected');
+      // „Alle auswählen" until everything currently SHOWN is on, then „Auswahl
+      // aufheben" — showMoveGames' semantics, not the tag chips' (#723). The two
+      // differ deliberately; see the comment on core.js's bulk toggle.
+      const allShown = shownCards.length > 0 && shownCards.every((c) => selection.has(c.dataset.gid));
+      bulkAll.textContent = allShown ? t('bulk.selectNone') : t('bulk.selectAll');
+      bulkBar.querySelectorAll('[data-act="retire"], [data-act="delete"]')
+        .forEach((b) => { b.disabled = n === 0; });
+    }
+
+    // A card is a link to the game's detail page; in selection mode it becomes a
+    // toggle instead. Swapping the role and dropping the href is what keeps that
+    // honest for assistive tech — a nested checkbox would be an interactive
+    // control inside an <a>, the shape the archive rows avoid too.
+    function paintCardMode(card) {
+      if (selecting) {
+        card.dataset.href = card.getAttribute('href') || '';
+        card.removeAttribute('href');
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-pressed', 'false');
+      } else {
+        if (card.dataset.href) card.setAttribute('href', card.dataset.href);
+        card.removeAttribute('role');
+        card.removeAttribute('tabindex');
+        card.removeAttribute('aria-pressed');
+        card.classList.remove('is-picked');
+      }
+    }
+
+    function setSelecting(on) {
+      selecting = on;
+      if (!on) selection.clear();
+      gamesSec.classList.toggle('is-selecting', on);
+      bulkBar.hidden = !on;
+      selectBtn.classList.toggle('is-active', on);
+      selectBtn.querySelector('.tools-label').textContent = on ? t('bulk.done') : t('bulk.select');
+      Object.values(cardById).forEach(paintCardMode);
+      renderGames();
+    }
+
+    // Capture phase, on the grid: the card's own navLink handler is attached to
+    // the card itself, so stopping propagation here is what keeps a pick from
+    // navigating away. Delegated rather than per-card, so it costs one listener
+    // whatever the shelf holds.
+    const toggleFrom = (e) => {
+      if (!selecting) return false;
+      const card = e.target.closest && e.target.closest('.game-card');
+      if (!card || !grid.contains(card)) return false;
+      e.preventDefault();
+      e.stopPropagation();
+      const gid = card.dataset.gid;
+      if (selection.has(gid)) selection.delete(gid); else selection.add(gid);
+      syncSelection();
+      return true;
+    };
+    grid.addEventListener('click', toggleFrom, true);
+    grid.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      toggleFrom(e);
+    }, true);
+
+    bulkAll.addEventListener('click', () => {
+      const allShown = shownCards.length > 0 && shownCards.every((c) => selection.has(c.dataset.gid));
+      shownCards.forEach((c) => {
+        if (allShown) selection.delete(c.dataset.gid); else selection.add(c.dataset.gid);
+      });
+      syncSelection();
+    });
+
+    // Both actions send the explicit id list the user just confirmed a count
+    // for — never an "everything" shortcut, which could pick up a game added
+    // from another device since the mode was entered (showMoveGames' reasoning).
+    async function runBulk(act) {
+      const ids = [...selection];
+      if (!ids.length) return;
+      const msg = act === 'retire'
+        ? tn(ids.length, 'bulk.confirmRetireOne', 'bulk.confirmRetire')
+        : selectionTouchesHistory(round, selection)
+          ? tn(ids.length, 'bulk.confirmDeleteOne', 'bulk.confirmDelete')
+          : tn(ids.length, 'bulk.confirmDeletePlainOne', 'bulk.confirmDeletePlain');
+      if (!confirm(msg)) return;
+      const buttons = [...bulkBar.querySelectorAll('button')];
+      buttons.forEach((b) => { b.disabled = true; });
+      try {
+        const res = await api('POST', `/api/rounds/${rid}/games/bulk-${act}`, { gameIds: ids });
+        const n = act === 'retire' ? res.retired : res.deleted;
+        toast(act === 'retire'
+          ? tn(n, 'bulk.retiredOne', 'bulk.retired')
+          : tn(n, 'bulk.deletedOne', 'bulk.deleted'));
+        // Await the fresh round before re-rendering: after a destructive bulk
+        // action the stale-then-revalidate render would show the deleted games
+        // one more time, which reads as the action having failed.
+        await fetchRoundFresh(rid);
+        showRound(rid, 'regal');
+      } catch (e) {
+        buttons.forEach((b) => { b.disabled = false; });
+        syncSelection();
+        toast(e.message);
+      }
+    }
+    bulkBar.querySelector('[data-act="retire"]').addEventListener('click', () => runBulk('retire'));
+    const bulkDelBtn = bulkBar.querySelector('[data-act="delete"]');
+    if (bulkDelBtn) bulkDelBtn.addEventListener('click', () => runBulk('delete'));
+
+    const selectBtn = h(`<button class="link-btn"><i class="ti ti-checkbox" aria-hidden="true"></i> <span class="tools-label">${esc(t('bulk.select'))}</span></button>`);
+    selectBtn.addEventListener('click', () => setSelecting(!selecting));
+    gamesTools.appendChild(selectBtn);
+
     let query = regalFilters.query;
     // Filter chips: custom round tags only (#238, tri-state #241). One chip per
     // round tag, all ignored by default; clicking cycles ignore -> include ->
@@ -227,6 +378,7 @@ function renderRegalTab(round, activeGames) {
       const gc = h(`<a class="game-card game-card--clickable">
            <div class="game-card__img">${fallback}
              <div class="game-card__badges">${expBadge}${scorePill}</div>
+             <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
            </div>
            <div class="game-card__body">
              <div class="game-card__title">${esc(g.title)}</div>
@@ -234,8 +386,10 @@ function renderRegalTab(round, activeGames) {
          </a>`);
       if (g.image) loadCover(gc, coverUrl(g.image, COVER_CARD), gc.querySelector('.game-card__img'));
       navLink(gc, gamePath(rid, g.id), () => showGameDetail(rid, g.id));
+      gc.dataset.gid = g.id;
       cardById[g.id] = gc;
     });
+    gamesSec.appendChild(bulkBar);
     gamesSec.appendChild(grid);
 
     function orderedGames() {
@@ -264,14 +418,22 @@ function renderRegalTab(round, activeGames) {
     // always closes the grid.
     function renderGames() {
       const cards = orderedGames().filter(matchesFilters).map((g) => cardById[g.id]);
+      // The "add a game" tile is dropped while selecting: it is not selectable,
+      // and a dashed tile sitting among checkable covers reads as one that is
+      // simply unticked. `shownCards` is what "select all" means — the games
+      // currently passing the search, tags and metadata filters, which is the
+      // whole reason the mode lives in the grid rather than in a flat sheet.
+      shownCards = cards;
       if (cards.length === 0) {
         const msg = query.trim()
           ? t('games.noMatch', { q: query.trim() })
           : t('games.noMatchFilters');
-        grid.replaceChildren(h(`<div class="muted games-nomatch">${esc(msg)}</div>`), addTile);
+        grid.replaceChildren(h(`<div class="muted games-nomatch">${esc(msg)}</div>`), ...(selecting ? [] : [addTile]));
+        syncSelection();
         return;
       }
-      grid.replaceChildren(...cards, addTile);
+      grid.replaceChildren(...cards, ...(selecting ? [] : [addTile]));
+      syncSelection();
     }
 
     searchInput.addEventListener('input', () => {

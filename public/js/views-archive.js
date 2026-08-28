@@ -132,7 +132,8 @@ async function showArchive(rid, kind, seg = kind) {
       const fallback = coverPlaceholder(g);
       const when = a.at(g) ? fmtDateTime(a.at(g)) : '?';
       const note = a.note ? a.note(g, round) : null;
-      const row = h(`<div class="archive-row">
+      const row = h(`<div class="archive-row" data-gid="${esc(g.id)}">
+           <label class="archive-row__pick"><input type="checkbox" aria-label="${esc(g.title)}" /></label>
            <a class="archive-row__img">${fallback}</a>
            <div class="archive-row__body">
              <a class="archive-row__title">${esc(g.title)}</a>
@@ -184,7 +185,88 @@ async function showArchive(rid, kind, seg = kind) {
       list.appendChild(row);
     });
     app.appendChild(list);
+    setupArchiveSelection(round, kind, seg, list, head.querySelector('.section-tools'));
   }
+}
+
+// Bulk delete on the three off-shelf screens (#832) — the same selection idiom
+// the Regal's grid carries, minus the retire action, which has no meaning for
+// games that already left the shelf.
+//
+// It is gated on `game.delete` end to end: without the capability there is no
+// entry point at all, matching the per-row delete button above (a co-owner
+// action since #137), and the route refuses it regardless.
+function setupArchiveSelection(round, kind, seg, list, tools) {
+  if (!roundCan(round, 'game.delete')) return;
+  const rid = round.id;
+  const rows = [...list.querySelectorAll('.archive-row')];
+  const boxes = rows.map((r) => r.querySelector('.archive-row__pick input'));
+  let selecting = false;
+
+  const bar = h(`<div class="bulk-bar" hidden>
+       <div class="bulk-bar__info">
+         <span class="bulk-bar__count" aria-live="polite"></span>
+         <span class="muted bulk-bar__hint">${esc(t('bulk.hintArchive'))}</span>
+       </div>
+       <div class="bulk-bar__actions">
+         <button type="button" class="link-btn" data-act="all"></button>
+         <button type="button" class="btn btn--danger" data-act="delete"><i class="ti ti-trash-x" aria-hidden="true"></i> ${esc(t('bulk.delete'))}</button>
+       </div>
+     </div>`);
+  const count = bar.querySelector('.bulk-bar__count');
+  const allBtn = bar.querySelector('[data-act="all"]');
+  const delBtn = bar.querySelector('[data-act="delete"]');
+  list.before(bar);
+
+  const picked = () => boxes.filter((b) => b.checked);
+  function sync() {
+    const n = picked().length;
+    count.textContent = tn(n, 'bulk.selectedOne', 'bulk.selected');
+    allBtn.textContent = n === boxes.length ? t('bulk.selectNone') : t('bulk.selectAll');
+    delBtn.disabled = n === 0;
+    rows.forEach((r, i) => r.classList.toggle('is-picked', boxes[i].checked));
+  }
+  boxes.forEach((b) => b.addEventListener('change', sync));
+  allBtn.addEventListener('click', () => {
+    const all = picked().length === boxes.length;
+    boxes.forEach((b) => { b.checked = !all; });
+    sync();
+  });
+
+  delBtn.addEventListener('click', async () => {
+    const ids = rows.filter((r, i) => boxes[i].checked).map((r) => r.dataset.gid);
+    if (!ids.length) return;
+    // Games here are off the shelf, but they can still carry session history —
+    // a retired game was played before it was retired — so the confirm asks the
+    // same question the Regal's does rather than assuming either answer.
+    const msg = selectionTouchesHistory(round, ids)
+      ? tn(ids.length, 'bulk.confirmDeleteOne', 'bulk.confirmDelete')
+      : tn(ids.length, 'bulk.confirmDeletePlainOne', 'bulk.confirmDeletePlain');
+    if (!confirm(msg)) return;
+    delBtn.disabled = true;
+    try {
+      const res = await api('POST', `/api/rounds/${rid}/games/bulk-delete`, { gameIds: ids });
+      toast(tn(res.deleted, 'bulk.deletedOne', 'bulk.deleted'));
+      await fetchRoundFresh(rid);
+      showArchive(rid, kind, seg);
+    } catch (e) {
+      delBtn.disabled = false;
+      toast(e.message);
+    }
+  });
+
+  const selectBtn = h(`<button class="link-btn"><i class="ti ti-checkbox" aria-hidden="true"></i> <span class="tools-label">${esc(t('bulk.select'))}</span></button>`);
+  selectBtn.addEventListener('click', () => {
+    selecting = !selecting;
+    list.classList.toggle('is-selecting', selecting);
+    bar.hidden = !selecting;
+    selectBtn.classList.toggle('is-active', selecting);
+    selectBtn.querySelector('.tools-label').textContent = selecting ? t('bulk.done') : t('bulk.select');
+    if (!selecting) boxes.forEach((b) => { b.checked = false; });
+    sync();
+  });
+  tools.appendChild(selectBtn);
+  sync();
 }
 
 // ============ Acquiring a wished expansion (#664) ============

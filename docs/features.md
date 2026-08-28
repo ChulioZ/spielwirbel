@@ -155,8 +155,22 @@ What the app does, in detail. For a short overview see the
   retired game stops being named as anyone's favourite or as the game the group
   disagrees about, because retiring it withdraws that preference — while the
   nights you actually played it still count toward "Meistgespielt". A completed
-  game keeps counting everywhere. Only a game that is already off the shelf —
-  archived or wished-for — can be permanently deleted. Games can be **moved between rounds**: "Spiele verschieben" in the
+  game keeps counting everywhere. Deleting one game permanently requires it to be
+  off the shelf first — archived or wished-for — so nothing in the active
+  collection can be erased by a single stray tap.
+  A shelf can also be **tidied in bulk**. The Regal has a „Auswählen" mode that
+  turns the covers into a selection: it keeps the search, the tag chips, the
+  metadata filters and the sort working, so „Alle auswählen" means everything you
+  have narrowed to, and the picked games can be retired — or deleted outright —
+  in one confirmed action. The same selection sits on the two archives and the
+  Wunschliste, for delete only. It exists because the shelf can be *filled* in
+  one action by the BoardGameGeek import: undoing a 200-game import used to be
+  some 400 taps. Bulk delete is the one path that accepts a game still on the
+  shelf, deliberately — being made to retire 200 games before deleting them is
+  the two-step in bulk, i.e. the problem rather than the fix — and it is a
+  co-owner action, behind a confirm naming the count and saying that the games
+  leave every past session with it.
+  Games can be **moved between rounds**: "Spiele verschieben" in the
   round's Einstellungen lists the round's games — archived ones included, labelled —
   each pre-checked, so confirming untouched consolidates the whole round while
   unchecking splits off just part of the shelf. Moved games keep their covers,

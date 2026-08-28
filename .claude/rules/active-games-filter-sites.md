@@ -193,7 +193,14 @@ filter is missing and when one is widened to both archives.
   pick goes through `isActiveGame` above, so offering it for a wish hands the
   user a seat picker and an English 400.
 
-## Related: the delete guard covers everything off the shelf
+## Related: the SINGLE delete guard covers everything off the shelf
+
+**Read this as being about `deleteGame` only.** #832 added `deleteGames`, the
+bulk path behind the Regal's selection mode, and it deliberately carries **no**
+such guard — it accepts a game still on the shelf, because making a user retire
+200 games before deleting them is the two-step in bulk. What replaces the guard
+there is the co-owner `game.delete` capability plus a confirm naming the count;
+see `.claude/rules/bulk-paths-restate-the-single-path.md`.
 
 `deleteGame`'s refusal marker was renamed `'not_retired'` → **`'not_archived'`**
 in both backends. The guard is `!retired && !completed && !wish`, i.e. *"not in
