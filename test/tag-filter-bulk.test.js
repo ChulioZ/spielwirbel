@@ -16,10 +16,11 @@
  * repaint and the downstream refresh are three separate wirings, and a regex
  * can see none of them. */
 
-const { test, after } = require('node:test');
+const { test, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
+const { filterPanelKit } = require('./support/filter-panel');
 
 const TAGS = [
   { id: 't1', name: 'Area Control', icon: 'map' },
@@ -50,6 +51,12 @@ const roundFixture = (over) => ({
 const dom = loadApp({ locale: 'de' });
 after(() => dom.close());
 dom.set('isLoggedIn', () => false);
+/* Since #844 both screens open the filter panel as an OVERLAY, so the tag
+   section these specs drive lives under `document.body` rather than under `#app`
+   and has to be opened first. `beforeEach` closes it, because an overlay
+   survives a re-render of `#app` (test/support/filter-panel.js). */
+const { closePanel, tagSection, appliedChips, triggerLabel } = filterPanelKit(dom);
+beforeEach(() => closePanel());
 
 /* The chips of whichever screen is currently rendered, in round-tag order.
    Scoped away from the desktop rail, which `renderSubScreenTabs` prepends into
@@ -64,7 +71,7 @@ const stateOf = (chip) =>
 
 test('start session: the toggle reads „Alle wählen" and includes every tag', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const bulk = field.querySelector('.tag-bulk');
 
   assert.ok(bulk, 'the toggle is rendered inside the tag filter field');
@@ -86,7 +93,7 @@ test('start session: the toggle reads „Alle wählen" and includes every tag', 
 
 test('start session: one click clears a MIXED filter', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const bulk = field.querySelector('.tag-bulk');
   const chips = chipsOf(field);
 
@@ -105,7 +112,7 @@ test('start session: cycling the last chip back to neutral restores „Alle wäh
   // The chip click has to re-sync the label too, not just the toggle's own
   // click — otherwise the button lies about what it will do next.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const bulk = field.querySelector('.tag-bulk');
   const chip = chipsOf(field)[0];
 
@@ -118,7 +125,7 @@ test('start session: cycling the last chip back to neutral restores „Alle wäh
 
 test('start session: the pool preview follows the toggle', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const bulk = field.querySelector('.tag-bulk');
   const pooled = () =>
     [...dom.app.querySelectorAll('.pool-tile__name')].map((el) => el.textContent).sort();
@@ -145,7 +152,7 @@ test('start session: a #252 preset arrives clearable in one click', async () => 
     lastSessionFilters: { tagIds: ['t1', 't2'], excludeTagIds: ['t3'] },
   });
   await dom.call('showStartSession', round);
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const bulk = field.querySelector('.tag-bulk');
 
   assert.deepEqual(chipsOf(field).map(stateOf), ['include', 'include', 'exclude'],
@@ -182,6 +189,9 @@ test('start session: a round with no tags renders no tag section, and no panel a
    every count wrong for a reason that has nothing to do with the toggle. */
 let regalRid = 0;
 const regal = (over) => {
+  // An overlay outlives `#app`, so a leftover panel would hand the next spec the
+  // PREVIOUS round's tag section (test/support/filter-panel.js).
+  closePanel();
   dom.app.innerHTML = '';
   const r = roundFixture({ id: `regal-${++regalRid}`, ...over });
   dom.call('renderRegalTab', r, r.games);
@@ -189,56 +199,60 @@ const regal = (over) => {
 };
 
 test('Regal: the toggle sits in the filter panel and flips the same way', () => {
-  const { wrap } = regal();
-  const bulk = wrap.querySelector('.tag-bulk');
+  regal();
+  const field = tagSection();
+  const bulk = field.querySelector('.tag-bulk');
 
-  assert.ok(bulk, 'rendered inside .regal-filter, so it shows whenever the panel is open');
+  assert.ok(bulk, 'rendered inside the panel, so it shows whenever the panel is open');
   assert.equal(bulk.closest('.filter-chips'), null);
   assert.equal(bulk.hasAttribute('aria-pressed'), false);
   assert.equal(bulk.textContent, 'Alle wählen');
 
   bulk.click();
-  assert.deepEqual(chipsOf(wrap).map(stateOf), ['include', 'include', 'include']);
+  assert.deepEqual(chipsOf(field).map(stateOf), ['include', 'include', 'include']);
   assert.equal(bulk.textContent, 'Alle abwählen');
 });
 
-test('Regal: the toggle updates the grid AND the active-count badge', () => {
-  const { wrap } = regal();
-  const bulk = wrap.querySelector('.tag-bulk');
-  const badge = wrap.querySelector('.fpanel__badge');
-  const toggle = wrap.querySelector('.fpanel__summary');
+test('Regal: the toggle updates the grid AND the applied-filter chips', () => {
+  regal();
+  const bulk = tagSection().querySelector('.tag-bulk');
   const cards = () => dom.app.querySelectorAll('.cards .game-card').length;
 
   assert.equal(cards(), 3);
-  assert.equal(badge.hidden, true, 'no active filters yet');
+  assert.deepEqual(appliedChips(), [], 'no active filters yet');
 
   bulk.click();
-  assert.equal(badge.textContent, '3', 'syncFilterBadge ran');
-  assert.equal(badge.hidden, false);
-  assert.equal(toggle.getAttribute('aria-label'), 'Filter (3 aktiv)',
-    'the count is announced, not conveyed by the badge colour alone');
+  // The bulk toggle mutates the map behind the chips' backs, so it has to tell
+  // the bar itself — `syncFilterBar` — or the panel would show three included
+  // tags over an empty chip row.
+  assert.deepEqual(appliedChips(), ['Area Control', 'Deck Builder', 'Party']);
+  assert.equal(triggerLabel(), 'Filter (3 aktiv)',
+    'the count is announced on the trigger, not left to the chips\' colour alone');
   assert.equal(cards(), 0, 'renderGames ran — three ANDed tags match no game');
 
   bulk.click();
-  assert.equal(badge.hidden, true);
+  assert.deepEqual(appliedChips(), []);
   assert.equal(cards(), 3, 'the grid came back');
 });
 
 test('Regal: one click clears a mixed filter, and a chip re-syncs the label', () => {
-  const { wrap, round } = regal();
-  const bulk = wrap.querySelector('.tag-bulk');
-  const chips = chipsOf(wrap);
+  const { round } = regal();
+  const field = tagSection();
+  const bulk = field.querySelector('.tag-bulk');
+  const chips = chipsOf(field);
 
   chips[2].click(); chips[2].click();      // Party -> exclude
   assert.equal(bulk.textContent, 'Alle abwählen', 'an exclusion alone is a filter to clear');
+  assert.deepEqual(appliedChips(), ['ohne Party'], 'and the bar names it as an exclusion');
   assert.equal(dom.app.querySelectorAll('.cards .game-card').length, 3, 'no game carries Party');
 
   // The Regal keeps its filter across a re-render of the SAME round, so the
   // toggle has to read the persisted map when it is rebuilt — a label computed
   // only on click would come back saying „Alle wählen" over a live filter.
+  closePanel();
   dom.app.innerHTML = '';
   dom.call('renderRegalTab', round, round.games);
-  const reopened = dom.app.querySelector('.regal-filter');
+  const reopened = tagSection();
   assert.deepEqual(chipsOf(reopened).map(stateOf), ['ignore', 'ignore', 'exclude']);
   assert.equal(reopened.querySelector('.tag-bulk').textContent, 'Alle abwählen');
 
@@ -250,7 +264,7 @@ test('Regal: one click clears a mixed filter, and a chip re-syncs the label', ()
 test('Regal: a round with no tags renders no filter at all', () => {
   const { wrap } = regal({ tags: [] });
   // The `.regal-filter` element itself survives since #736 — it is the anchor
-  // the shelf-wide backfill's repaint mounts the metadata disclosure into — but
+  // the shelf-wide backfill's repaint mounts the filter control into — but
   // with no tags and no metadata it must be hidden AND empty, so the screen is
   // the one it always was. These fixture games carry no provider metadata, so
   // nothing can fill it here.

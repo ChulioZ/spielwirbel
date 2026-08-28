@@ -250,7 +250,7 @@ function renderRegalTab(round, activeGames) {
     // OWN phone-only „Filter" toggle sitting beside the „Weitere Filter" drawer —
     // three affordances for one job, and the toggle collapsed only below 860px
     // while the drawer collapsed at every width. Now it is a plain section handed
-    // to `renderFilterPanel`, which owns the one disclosure and the one count.
+    // to `renderFilterPanel`, which owns the one trigger and the applied chips.
     function buildTagSection() {
       const sectionEl = h(`<div class="fpanel__group">
           <div class="field-head">
@@ -280,7 +280,7 @@ function renderRegalTab(round, activeGames) {
         tagFilter,
         roundTags,
         repaintChips,
-        () => { mode.sync(); syncFilterBadge(); renderGames(); }
+        () => { mode.sync(); syncFilterBar(); renderGames(); }
       );
       roundTags.forEach((tg) => {
         const chip = h('<button class="chip"></button>');
@@ -290,7 +290,7 @@ function renderRegalTab(round, activeGames) {
           paintTagChip(chip, tg.name, cycleTagState(tagFilter, tg.id), tg.icon, regalFilters.tagMode);
           bulk.sync();
           mode.sync();
-          syncFilterBadge();
+          syncFilterBar();
           renderGames();
         });
         chips.appendChild(chip);
@@ -299,7 +299,14 @@ function renderRegalTab(round, activeGames) {
       sectionEl.querySelector('#regalModeMount').replaceWith(mode.el);
       return {
         el: sectionEl,
-        count: () => tagFilter.size,
+        // `tagFilterChips` is shared with the session setup screen
+        // (filter-panel.js): one tri-state map, one set of applied chips, so the
+        // two screens cannot describe the same picks differently.
+        chips: () => tagFilterChips(roundTags, tagFilter, () => {
+          repaintChips();
+          bulk.sync();
+          mode.sync();
+        }),
         reset: () => { tagFilter.clear(); repaintChips(); bulk.sync(); mode.sync(); },
       };
     }
@@ -315,20 +322,22 @@ function renderRegalTab(round, activeGames) {
 
     const tagSection = roundTags.length ? buildTagSection() : null;
     let filterPanel = null;
-    // A tag chip changes a count the panel renders, so the badge has to be told;
-    // the metadata controls resync themselves through the panel's onChange.
-    function syncFilterBadge() { if (filterPanel) filterPanel.sync(); }
+    // A tag chip changes the applied-filter chips the bar renders, so it has to
+    // be told; the metadata controls resync themselves through the panel's
+    // onChange.
+    function syncFilterBar() { if (filterPanel) filterPanel.sync(); }
     const mountFilterPanel = () => {
-      // The open flag survives a rebuild; the picks survive because
-      // `regalFilters.metadata` is mutated in place and handed straight back in,
-      // and the tag section node is MOVED into the new panel rather than rebuilt.
-      const wasOpen = !!(filterPanel && filterPanel.el.open);
+      // Never rebuild under an open overlay (#844) — the trigger is the popover's
+      // anchor, and replacing it would strand it mid-adjustment. Nothing is lost:
+      // the overlay body is rebuilt from `activeGames` on every open, and the
+      // backfill fills those game objects IN PLACE.
+      if (filterPanel && filterPanel.isOpen()) return;
+      // The picks survive because `regalFilters.metadata` is mutated in place and
+      // handed straight back in, and the tag section node is MOVED into the new
+      // panel rather than rebuilt.
       if (filterPanel) filterPanel.el.remove();
       filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection);
-      if (filterPanel) {
-        filterPanel.el.open = wasOpen;
-        filterWrap.appendChild(filterPanel.el);
-      }
+      if (filterPanel) filterWrap.appendChild(filterPanel.el);
       filterWrap.hidden = !filterPanel;
     };
     mountFilterPanel();

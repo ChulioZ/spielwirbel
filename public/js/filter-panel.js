@@ -1,7 +1,6 @@
-/* Spielwirbel – the ONE filter control the two game-picking screens carry
-   (#827): a single disclosure holding both ways to narrow a shelf — the round's
-   own tags (#238/#241/#726) and the filters over the metadata #724 imports from
-   BoardGameGeek (#725).
+/* Spielwirbel – the ONE filter control (#827) the two game-picking screens
+   carry: the round's own tags (#238/#241/#726) and the filters over the
+   metadata #724 imports from BoardGameGeek (#725).
 
    It is one control because narrowing the pool is one job. Until #827 the two
    were separate affordances — an always-open chip row plus a collapsed „Weitere
@@ -17,14 +16,46 @@
    screens genuinely differ there (the setup screen has no persisted state to
    prune, the Regal does), while the metadata half is identical on both.
 
+   ## The presentation is an OVERLAY, not an inline disclosure (#844)
+
+   #827 shipped it as a <details>, which unfolded IN the page. On the setup
+   screen the trigger shares a `flex-wrap` row with the count stepper, so the
+   open body's full-row flex-basis pushed the trigger itself onto the next line —
+   one click moved two things the user had not asked to move — and the pool
+   preview, which is the whole point of adjusting a filter, was shoved down out
+   of view exactly while it was being adjusted.
+
+   So it opens through `openEditor` instead: an anchored popover from 860px up, a
+   bottom sheet below (.claude/rules/popover-vs-sheet-editors.md). The trigger
+   cannot move, by construction — the body is no longer in the page's flow at all
+   — and the preview stays where it is. The applied filters live OUTSIDE the
+   overlay as removable chips, which is what the count badge could never do: a
+   number says how many are on, never which.
+
    Frontend shared-scope script; load order: see index.html. */
 
 'use strict';
 
-// Ids for the label/control pairs. Only one of these is ever on screen at a
+// Ids for the label/control pairs. Only one metadata body is ever on screen at a
 // time, but a counter costs one line and removes the question entirely — the
 // `for`/`id` association is what makes each select announce its own name.
 let metaFilterSeq = 0;
+
+// Clear every metadata filter, IN PLACE and with no DOM involved.
+//
+// Separate from the controls on purpose: the empty-pool escape hatch has to work
+// while the panel is CLOSED (#844), i.e. when no select or chip exists to
+// repaint. The two lists are emptied in place (`length = 0`, not a fresh `[]`),
+// because the caller and every chip's paint closure hold the same array —
+// reassigning would leave both reading a list this function no longer writes to.
+function clearMetadataFilters(state) {
+  state.maxPlaytime = null;
+  state.weightMin = null;
+  state.weightMax = null;
+  state.youngestAge = null;
+  state.categories.length = 0;
+  state.mechanics.length = 0;
+}
 
 // Build the metadata half — the rows that filter on BGG's imported fields — or
 // return NULL when this shelf carries none of them: a fresh instance without
@@ -38,26 +69,30 @@ let metaFilterSeq = 0;
 //    have been through `normalizeMetadataFilters` already, so a value whose
 //    referent has vanished is gone before a control could show it.
 //  - `onChange` is the screen's refresh — the pool preview here, the cover grid
-//    there. `renderFilterPanel` wraps it so the shared badge resyncs too.
+//    there. `renderFilterPanel` wraps it so the applied chips resync too.
 //
-// Returns { el, reset }. `reset` clears every filter and repaints the controls
-// in place — the empty-pool escape hatch needs that rather than a rebuild, which
-// would snap the panel shut on the user mid-recovery. It deliberately does NOT
-// call `onChange`: the panel clears the tag half in the same breath and
-// refreshes once.
+// Called on every OPEN rather than once per screen (#844), which is what keeps
+// the #736 backfill honest: `foldGameInfoList` fills the game objects in place,
+// so re-deriving the options here picks up metadata that arrived since the
+// screen was drawn, with no rebuild and nothing to invalidate.
+//
+// Returns { el, repaint }. `repaint` re-reads `state` into every widget without
+// rebuilding them — what the applied chips and the escape hatch need when they
+// change a filter from outside this body.
 function renderMetadataFilter(games, state, onChange) {
   const options = metadataFilterOptions(games);
   if (!hasMetadataFilterOptions(options)) return null;
 
   const uid = `mf${++metaFilterSeq}`;
-  // A plain container: the disclosure, its summary and the count badge belong to
+  // A plain container: the trigger and the applied chips belong to
   // `renderFilterPanel` below, which wraps this together with the tag half.
   const el = h('<div class="mfilter"></div>');
   const body = el;
 
   const changed = onChange;
   // One entry per control, each re-reading `state` into its own widget. That is
-  // what lets `reset` clear the filters without rebuilding the disclosure.
+  // what lets `repaint` follow a filter changed from OUTSIDE this body — an
+  // applied chip's ×, or the empty-pool escape hatch — without a rebuild.
   const painters = [];
 
   // One labelled <select> row. `values` are the ladder's steps, `format` turns a
@@ -170,84 +205,204 @@ function renderMetadataFilter(games, state, onChange) {
   if (options.categories.length) body.appendChild(chipGroup('metaFilter.categories', 'categories', options.categories));
   if (options.mechanics.length) body.appendChild(chipGroup('metaFilter.mechanics', 'mechanics', options.mechanics));
 
-  // The two lists are emptied IN PLACE (`length = 0`, not a fresh `[]`), because
-  // the caller and every chip's paint closure hold the same array — reassigning
-  // would leave both reading a list this function no longer writes to.
-  function reset() {
-    state.maxPlaytime = null;
-    state.weightMin = null;
-    state.weightMax = null;
-    state.youngestAge = null;
-    state.categories.length = 0;
-    state.mechanics.length = 0;
-    painters.forEach((paint) => paint());
-  }
-  return { el, reset };
+  // Re-read `state` into every widget. The controls are not rebuilt, so a
+  // <select> the user has open keeps its identity and the chip rows keep their
+  // listeners; only the values move.
+  function repaint() { painters.forEach((paint) => paint()); }
+  return { el, repaint };
 }
 
-// =================== The one filter control (#827) ===================
+// =================== The applied filters, as removable chips ===================
 
-// Wrap the two halves — the round's tags and the BGG metadata rows — in a single
-// disclosure: one control, one count, one place to look. Returns NULL when there
-// is nothing to filter by at all (no round tags AND no metadata on the shelf), so
-// a round of hand-typed games without tags sees no filter affordance rather than
-// an empty one.
+// The tag half's chips, built here rather than on each screen: both screens hold
+// the same tri-state map over the same round tags, so one function is what stops
+// the Regal and the setup screen from offering different chips over one control
+// (.claude/rules/shared-constants-across-the-stack.md).
 //
-//  - `tagSection` is `{ el, count, reset }` built by the calling screen, or null
-//    when the round has no tags. `count()` is READ on every sync rather than
-//    passed in as a number, because the chips mutate the screen's own map and a
-//    copy taken at build time would report a count the user has already changed.
+// `afterRemove` is the screen's own repaint of the tag CHIPS INSIDE the panel
+// (plus its bulk/mode toggles) — not its data refresh, which the caller already
+// runs for every chip kind.
+function tagFilterChips(roundTags, tagFilter, afterRemove) {
+  return (roundTags || [])
+    .filter((tg) => tagFilter.has(tg.id))
+    .map((tg) => ({
+      // An excluded tag says so IN WORDS („ohne Solo"), not by a colour or a
+      // glyph alone: include and exclude are opposite filters and a chip row is
+      // read at a glance (.claude/rules/accessibility-contrast-and-modals.md §3).
+      label: tagFilter.get(tg.id) === 'exclude'
+        ? t('metaFilter.chipTagExcluded', { name: tg.name })
+        : tg.name,
+      remove: () => { tagFilter.delete(tg.id); afterRemove(); },
+    }));
+}
+
+// One entry per REMOVABLE filter, `{ label, remove }`, tags first — the panel's
+// own section order, and the half a group recognises.
 //
-// Returns { el, sync, reset }. A screen calls `sync()` after a tag chip moves;
-// the metadata controls route through `onChange` and resync themselves.
+// The granularity is deliberately FINER than `countMetadataFilters`, which
+// counts controls (all categories are one). A chip whose × cleared six
+// categories at once would not be a chip; each selected value gets its own. That
+// is also why the count this feeds the trigger's accessible name is computed
+// from `chips.length` rather than from `countMetadataFilters` — one number, one
+// source, so the label can never disagree with what is on screen.
+// `countMetadataFilters` is untouched: the SERVER uses it (lib/routes/sessions.js)
+// to decide whether a draw carried filters at all, which is a different question.
+function activeFilterChips(state, tagSection) {
+  const f = state || {};
+  const out = tagSection && tagSection.chips ? tagSection.chips() : [];
+
+  if (f.maxPlaytime !== null && f.maxPlaytime !== undefined) {
+    out.push({
+      label: t('metaFilter.playtimeOption', { n: f.maxPlaytime }),
+      remove: () => { f.maxPlaytime = null; },
+    });
+  }
+  // The two bounds are ONE filter, exactly as `countMetadataFilters` treats them
+  // and as the panel renders them: an inverted pair admits nothing at all, so
+  // clearing one half and leaving the other is not a state worth reaching from a
+  // chip. Which of the three phrasings applies depends on which bounds are set.
+  const lo = isFiniteNum(f.weightMin) ? f.weightMin : null;
+  const hi = isFiniteNum(f.weightMax) ? f.weightMax : null;
+  if (lo !== null || hi !== null) {
+    out.push({
+      label: lo !== null && hi !== null ? t('metaFilter.chipWeight', { min: lo, max: hi })
+        : lo !== null ? t('metaFilter.chipWeightMin', { min: lo })
+          : t('metaFilter.chipWeightMax', { max: hi }),
+      remove: () => { f.weightMin = null; f.weightMax = null; },
+    });
+  }
+  if (f.youngestAge !== null && f.youngestAge !== undefined) {
+    out.push({
+      label: t('metaFilter.chipAge', { n: f.youngestAge }),
+      remove: () => { f.youngestAge = null; },
+    });
+  }
+  // Per VALUE, not per list. `indexOf` at removal time rather than a captured
+  // index: an earlier chip may have spliced the array since this closure was
+  // built, and a stale index would drop somebody else's pick.
+  ['categories', 'mechanics'].forEach((key) => {
+    (f[key] || []).forEach((v) => {
+      out.push({
+        label: v,
+        remove: () => { const at = f[key].indexOf(v); if (at >= 0) f[key].splice(at, 1); },
+      });
+    });
+  });
+  return out;
+}
+
+// =================== The one filter control ===================
+
+// The trigger plus the applied-filter chips. Returns NULL when there is nothing
+// to filter by at all (no round tags AND no metadata on the shelf), so a round
+// of hand-typed games without tags sees no filter affordance rather than an
+// empty one.
+//
+//  - `tagSection` is `{ el, chips, reset }` built by the calling screen, or null
+//    when the round has no tags. `chips()` is READ on every sync rather than
+//    passed in as a list, because the chips mutate the screen's own map and a
+//    copy taken at build time would describe a state the user has already left.
+//
+// Returns { el, sync, reset, isOpen }. A screen calls `sync()` after a tag chip
+// moves; the metadata controls route through `onChange` and resync themselves.
 function renderFilterPanel(games, state, onChange, tagSection) {
-  const meta = renderMetadataFilter(games, state, () => { sync(); onChange(); });
-  if (!meta && !tagSection) return null;
+  if (!hasMetadataFilterOptions(metadataFilterOptions(games)) && !tagSection) return null;
 
-  // <details>/<summary> rather than a button plus a class toggle: the platform
-  // gives the disclosure its expanded state, its keyboard behaviour and its
-  // accessible name for free (.claude/rules/native-button-vs-focusable-span.md).
-  // The badge is aria-hidden and the count is restated in the summary's
-  // aria-label, so it is never conveyed by colour or by a bare glyph alone.
-  const el = h(`<details class="fpanel">
-      <summary class="fpanel__summary">
+  // A real <button>, not the old <summary>: the disclosure's expanded state is
+  // gone with it, so `aria-expanded` is set by hand and kept true only while an
+  // overlay is actually up (.claude/rules/native-button-vs-focusable-span.md).
+  const el = h(`<div class="fbar">
+      <button type="button" class="fbar__trigger" aria-expanded="false">
         <i class="ti ti-filter" aria-hidden="true"></i>
         <span>${esc(t('games.filter'))}</span>
-        <span class="fpanel__badge" aria-hidden="true" hidden></span>
-      </summary>
-      <div class="fpanel__body"></div>
-    </details>`);
-  const body = el.querySelector('.fpanel__body');
-  const badge = el.querySelector('.fpanel__badge');
-  const summary = el.querySelector('.fpanel__summary');
+      </button>
+      <div class="fbar__chips"></div>
+    </div>`);
+  const trigger = el.querySelector('.fbar__trigger');
+  const chipRow = el.querySelector('.fbar__chips');
 
-  // Tags first — they are the round's own vocabulary, so they are the half a
-  // group recognises; the metadata rows follow in the order draw-pool.js states
-  // them. The two stay visibly separate sections inside the one panel: a
-  // provider fact and a round's own word combine differently and must not read
-  // as one vocabulary (.claude/rules/provider-metadata-is-a-filter-not-a-tag.md).
-  if (tagSection) body.appendChild(tagSection.el);
-  if (meta) body.appendChild(meta.el);
+  // The open overlay's body, or null. Also the answer to `isOpen()`, so there is
+  // one fact rather than a flag that can disagree with the DOM.
+  let live = null;
 
-  // ONE number over both halves. They were deliberately two badges while they
-  // were two controls collapsing on different triggers (the chips only below
-  // 860px, the drawer at every width) — with a single control and a single
-  // trigger there is no "which of the two is filtering" question left for a
-  // second number to answer, and both sections are labelled inside.
-  function sync() {
-    const n = countMetadataFilters(state) + (tagSection ? tagSection.count() : 0);
-    badge.textContent = String(n);
-    badge.hidden = n === 0;
-    summary.setAttribute('aria-label', t('games.filterLabel', { n }));
+  function appliedChip(entry) {
+    const chip = h(`<span class="fchip">
+        <span class="fchip__label">${esc(entry.label)}</span>
+        <button type="button" class="fchip__x" aria-label="${esc(t('metaFilter.removeFilter', { name: entry.label }))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </span>`);
+    chip.querySelector('.fchip__x').addEventListener('click', () => {
+      entry.remove();
+      // The open panel's own control has to follow the chip that just vanished —
+      // an un-pressed category chip, a select back on „Egal".
+      if (live) live.repaint();
+      sync();
+      onChange();
+    });
+    return chip;
   }
+
+  function sync() {
+    const chips = activeFilterChips(state, tagSection);
+    trigger.setAttribute('aria-label', t('games.filterLabel', { n: chips.length }));
+    chipRow.replaceChildren(...chips.map(appliedChip));
+    // `.fbar__chips` declares its own `display`, so the attribute alone would not
+    // hide it and an empty row would still cost the bar's gap
+    // (.claude/rules/hidden-attribute-vs-display-rule.md).
+    chipRow.hidden = chips.length === 0;
+  }
+
+  trigger.addEventListener('click', () => {
+    // Second click on the trigger closes it. `openPopover`'s outside-click guard
+    // exempts the anchor — which is this button — so without this the popover
+    // would stay up and the click would read as dead.
+    if (live) { live.close(); return; }
+    trigger.setAttribute('aria-expanded', 'true');
+    openEditor(trigger, 'filter', t('games.filter'), (container, close) => {
+      // `tabindex="-1"` so focus can be moved ONTO the body when it opens: the
+      // sheet is `aria-modal`, and leaving focus on the trigger behind the
+      // backdrop is the state `trapFocus` has to rescue on the first Tab. The
+      // body rather than its first <select>, which is the standard dialog
+      // pattern and avoids handing arrow keys to a control nobody aimed at.
+      // `focusables()` skips `tabindex="-1"`, so it does not become a tab stop.
+      const body = h('<div class="fpanel__body" tabindex="-1"></div>');
+      // Tags first — they are the round's own vocabulary, so they are the half a
+      // group recognises; the metadata rows follow in the order draw-pool.js
+      // states them. The two stay visibly separate sections: a provider fact and
+      // a round's own word combine differently and must not read as one
+      // vocabulary (.claude/rules/provider-metadata-is-a-filter-not-a-tag.md).
+      //
+      // `tagSection.el` is MOVED in (appendChild moves a node), so every chip
+      // listener and the user's current picks survive being closed and reopened.
+      if (tagSection) body.appendChild(tagSection.el);
+      const meta = renderMetadataFilter(games, state, () => { sync(); onChange(); });
+      if (meta) body.appendChild(meta.el);
+      container.appendChild(body);
+      live = { repaint: () => { if (meta) meta.repaint(); }, close };
+      // Returned, not called here: `build` runs on a DETACHED node in the popover
+      // path, so a focus() in it is a silent no-op — both presentations invoke
+      // this once the container is live (.claude/rules/popover-vs-sheet-editors.md
+      // §2). `preventScroll` because a page scroll CLOSES a popover, so scrolling
+      // the card into view would dismiss it on the way in.
+      return () => body.focus({ preventScroll: true });
+    }, () => {
+      // Every exit funnels here — ×, Escape, Back, a backdrop tap, an outside
+      // click, the page scroll that tears a popover down. Wrapping only the
+      // `close` above would leave `aria-expanded` stuck on true for four of them.
+      live = null;
+      trigger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
   // Clears BOTH halves: the empty-pool escape hatch offers one button because
   // the user sees one filter control, and clearing half of it would leave the
-  // pool empty with the badge still lit.
+  // pool empty with chips still showing. It touches no control it does not have
+  // to, so it works with the panel closed — which is the state it is called in.
   function reset() {
     if (tagSection && tagSection.reset) tagSection.reset();
-    if (meta) meta.reset();
+    clearMetadataFilters(state);
+    if (live) live.repaint();
     sync();
   }
   sync();
-  return { el, sync, reset };
+  return { el, sync, reset, isOpen: () => !!live };
 }

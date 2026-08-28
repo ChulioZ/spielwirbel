@@ -203,6 +203,12 @@ I18N.it = {
   'metaFilter.categories': 'Categorie',
   'metaFilter.mechanics': 'Meccaniche',
   'metaFilter.reset': 'Azzera i filtri',
+  'metaFilter.chipWeight': 'Complessità {min}–{max}',
+  'metaFilter.chipWeightMin': 'Complessità da {min}',
+  'metaFilter.chipWeightMax': 'Complessità fino a {max}',
+  'metaFilter.chipAge': 'Il più giovane: {n} anni',
+  'metaFilter.chipTagExcluded': 'senza {name}',
+  'metaFilter.removeFilter': 'Rimuovi {name}',
 
   'moveGames.link': 'Sposta giochi',
   'moveGames.title': 'Sposta giochi',

@@ -203,6 +203,12 @@ I18N.en = {
   'metaFilter.categories': 'Categories',
   'metaFilter.mechanics': 'Mechanics',
   'metaFilter.reset': 'Reset filters',
+  'metaFilter.chipWeight': 'Complexity {min}–{max}',
+  'metaFilter.chipWeightMin': 'Complexity from {min}',
+  'metaFilter.chipWeightMax': 'Complexity up to {max}',
+  'metaFilter.chipAge': 'Youngest: {n} years',
+  'metaFilter.chipTagExcluded': 'without {name}',
+  'metaFilter.removeFilter': 'Remove {name}',
 
   'moveGames.link': 'Move games',
   'moveGames.title': 'Move games',

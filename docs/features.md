@@ -228,8 +228,11 @@ What the app does, in detail. For a short overview see the
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally narrow
   the collection, and draw a random set of candidate games — only games whose
   player range fits the number of joining members are eligible. Narrowing happens
-  in one place: a single **„Filter"** control beside the draw count, carrying an
-  active-filter count and holding both kinds of filter as labelled sections. The
+  in one place: a single **„Filter"** control beside the draw count. It opens over
+  the screen rather than pushing it around — an anchored panel on a desktop, a
+  sheet on a phone — so the pool preview it is shaping stays where it is, and
+  whatever is currently filtering sits beside the button as chips you can drop one
+  at a time. It holds both kinds of filter as labelled sections. The
   first is the round's own custom tags; the second is over the metadata imported
   from BoardGameGeek rather than anything the round maintains — a playing-time
   budget, a complexity range, the age of the youngest person at the table, and

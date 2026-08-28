@@ -851,7 +851,7 @@ function themeAccent(bg) {
 let activePopover = null;
 function closePopover() {
   if (!activePopover) return;
-  const { el, restoreTo } = activePopover;
+  const { el, restoreTo, onClose } = activePopover;
   // Hand focus back to the control that opened it, the way trapFocus does for a
   // sheet (#145) — without it a keyboard user who closes a popover is dropped to
   // <body> and restarts from the top of the document (#424). Only when focus is
@@ -866,6 +866,12 @@ function closePopover() {
   window.removeEventListener('scroll', activePopover.onScroll, true);
   activePopover = null;
   if (held && restoreTo && document.contains(restoreTo) && typeof restoreTo.focus === 'function') restoreTo.focus();
+  // AFTER the teardown and the focus restore, so a hook that reads the world
+  // back — `aria-expanded` on the trigger, a deferred rebuild — sees the closed
+  // state rather than the one it is being told about. Fired for EVERY exit
+  // (Escape, outside click, page scroll, resize), which is the whole reason it
+  // exists: a caller that only wraps the `close` it was handed misses all four.
+  if (typeof onClose === 'function') onClose();
 }
 // Re-place the open popover after its content changed height. A no-op when no
 // popover is open, which is what lets a component that may live in EITHER
@@ -880,7 +886,7 @@ function repositionPopover() {
 // `input.focus()` — belongs there: build() itself runs on a detached node, so a
 // focus() call in it is a silent no-op, which is why the tags/players editors'
 // autofocus never worked on any platform (#422).
-function openPopover(anchor, build) {
+function openPopover(anchor, build, onClose) {
   // Captured before the replace-close below, so THIS popover's opener is the
   // restore target even when it replaces one that was already open.
   const restoreTo = document.activeElement;
@@ -964,7 +970,7 @@ function openPopover(anchor, build) {
   document.addEventListener('keydown', onKey, true);
   window.addEventListener('resize', onGone, true);
   window.addEventListener('scroll', onScroll, true);
-  activePopover = { el, restoreTo, onDoc, onKey, onGone, onScroll, place };
+  activePopover = { el, restoreTo, onDoc, onKey, onGone, onScroll, place, onClose };
   if (typeof attached === 'function') attached();
   return { el, close };
 }

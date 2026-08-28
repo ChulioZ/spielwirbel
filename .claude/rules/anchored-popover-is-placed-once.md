@@ -166,6 +166,31 @@ and collapsed it to **18px tall with its own children rendering outside it**,
 the OK button 200px past its bottom edge. Exactly the `min()` trap the next
 section records for `.cover-picker__grid`, one element up.
 
+## The fourth capped card, and what measuring it confirmed (#844)
+
+`.popover--filter` — the one „Filter" control's body — is `max(300px, min(45vh,
+560px))`, the shape this file prescribes, and it was measured rather than copied:
+
+| Anchor top (1440x900) | 80 | 300 | 420 | 600 | 820 |
+|---|---|---|---|---|---|
+| Past the fold | 0 | 0 | 0 | 0 | 0 |
+
+That is the *easy* direction, and it holds by arithmetic rather than by luck: the
+45vh term resolves to 405px against a dead-zone bound of `(900 − 40 − 12)/2 =
+424`, so no anchor position on a 900px viewport has a card that cannot be placed.
+The instructive case is the one where the bound bites — a shelf carrying BGG's
+whole vocabulary on a **600px** viewport, mid anchor, where the cap resolves to
+its 300px floor against a bound of 274. Measured there: `place()` clamped to
+exactly **274px**, added `.popover--clamped`, and the body scrolled the remainder
+— 0px past the fold, 0px off the top. So the #739 clamp is what covers the band
+the cap cannot, exactly as this file claims, and the two are not alternatives.
+
+**One measurement trap met doing it, and it wastes a probe.** Growing the card by
+setting `body.style.minHeight` and calling `repositionPopover()` reports *no*
+change — `place()` resets `minHeight` on every direct child from a clean slate
+before it measures (the #739 collapse guard), so the probe is erased by the very
+function under test. Grow the card with **real content** (append chips) instead.
+
 ## The pane never fires a ResizeObserver at all
 
 New member of the artifact family in

@@ -1165,9 +1165,9 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 .tag-mode__opt.is-on .ti { visibility: visible; }
 
-/* The ONE filter control (#827) — a single disclosure holding both ways to
-   narrow a shelf: the round's own tags and the filters over BGG's imported
-   metadata. On the session setup screen and in the Regal.
+/* The ONE filter control (#827/#844) — one trigger holding both ways to narrow a
+   shelf: the round's own tags and the filters over BGG's imported metadata. On
+   the session setup screen and in the Regal.
 
    It replaced three affordances for one job: an always-open chip row, a
    phone-only „Filter" button over those chips alone (`.filter-toggle`, #349,
@@ -1175,16 +1175,24 @@ h1, h2, h3 { font-family: var(--font-display); }
    sitting beside them (#725, collapsed at every width). Two of those are gone
    from this file entirely; don't reintroduce a second collapse mechanism here.
 
-   Collapsed at EVERY width, deliberately: a user who never opens it sees one
-   button, and one who leaves a filter on cannot forget it, because the badge
-   stays on the closed summary.
+   #844 replaced the <details> that #827 shipped with an OVERLAY — `openEditor`,
+   so a popover from 860px up and a sheet below. The disclosure unfolded in the
+   page, which on the setup screen pushed the trigger onto its own flex line and
+   drove the pool preview off the screen while the user was shaping it. Nothing
+   here may give the body a place in the page's flow again: the trigger's staying
+   put is a property of the body being out of flow, not of a rule holding it down.
 
-   A native <details>, so the open state, the keyboard behaviour and the
-   accessible name are the platform's. Both marker resets are needed — the
-   `list-style` one for the standard rendering, the ::-webkit- one for Safari,
-   which still ships the old pseudo-element. */
+   Collapsed at EVERY width, deliberately: a user who never opens it sees one
+   button, and one who leaves a filter on cannot forget it — the applied filters
+   sit beside the trigger as removable chips, which also say WHICH, where the
+   count badge they replaced could only say how many. */
 .regal-filter { margin: 2px 0 16px; }
-.fpanel__summary {
+.fbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Same pill the old <summary> was, so the affordance did not change shape when
+   its element did — a real <button> now, which is what carries the keyboard
+   behaviour the disclosure used to give for free
+   (.claude/rules/native-button-vs-focusable-span.md). */
+.fbar__trigger {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1197,30 +1205,86 @@ h1, h2, h3 { font-family: var(--font-display); }
   font-weight: 700;
   color: var(--ink-soft);
   cursor: pointer;
-  list-style: none;
 }
-.fpanel__summary::-webkit-details-marker { display: none; }
-.fpanel__summary:hover { border-color: var(--brand-edge); }
-/* Accent fill + white text, an audited pair, so the collapsed count stays
-   legible on every theme. */
-.fpanel__badge {
+.fbar__trigger:hover { border-color: var(--brand-edge); }
+.fbar__trigger[aria-expanded="true"] { border-color: var(--brand); color: var(--brand-dark); }
+.fbar__chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+/* The explicit `display` above beats the UA sheet's `[hidden] { display: none }`,
+   so an empty chip row would still claim the bar's gap
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.fbar__chips[hidden] { display: none; }
+/* One applied filter. `--brand-dark` rather than `--brand` on a brand tint: the
+   latter measures 4.33–4.92:1 across the eight themes, i.e. below AA on four of
+   them (.claude/rules/theme-derived-colors.md). */
+.fchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 4px 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  max-width: 100%;
+}
+.fchip__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fchip__x {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: var(--brand);
-  color: #fff;
-  font-size: 12px; /* glyph, not type */
-  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font-size: 14px; /* glyph, not type */
+  cursor: pointer;
 }
-/* The explicit `display` above beats the UA sheet's `[hidden] { display: none }`,
-   so a no-active-filters badge would still show its "0" — the same trap
-   `.filter-chips[hidden]` records. */
-.fpanel__badge[hidden] { display: none; }
-.fpanel__body { display: flex; flex-direction: column; gap: 16px; margin-top: 12px; }
+.fchip__x:hover { background: var(--brand-tint-soft); }
+
+/* The overlay card. Shared by both presentations via :is(), except the two rules
+   that size the floating card — meaningless for a sheet, which is already its own
+   scroll container (.claude/rules/popover-vs-sheet-editors.md §4).
+
+   Compounded with `.popover` on purpose: the base declares `max-width: 300px` at
+   the same (0,1,0) specificity, so an uncompounded `.popover--filter` would win
+   on source order alone. */
+.popover.popover--filter {
+  max-width: 420px;
+  /* This content scales with round data — a round's tags, and BGG's ~84
+     categories / ~180 mechanics as they appear on the shelf — so it needs a cap,
+     and the cap's ceiling is HALF the viewport, because place() puts the card
+     wholly above or wholly below its anchor
+     (.claude/rules/anchored-popover-is-placed-once.md). The max() floor is not
+     optional: a bare min() computes to 0 wherever the viewport height is
+     degenerate and collapses the card to nothing. */
+  max-height: max(300px, min(45vh, 560px));
+}
+/* No `min-width` floor here, and that is a measured decision rather than an
+   omission (.claude/rules/popover-width-is-shrink-to-fit.md says to check before
+   adding one). The chip rows already reach the cap unaided — 420px measured at
+   1440x900 on the demo shelf, identical with and without a floor — so a floor
+   buys the rich case nothing. It costs the SPARSE case: a shelf offering only the
+   three <select> rows sizes to 279px with its label/control rows intact (gaps of
+   12-30px, nothing wrapping), and a 340px floor pushes those gaps to 91-109px of
+   dead space between a label and the control it names.
+
+   The body is the flex item that gives way under the cap. `min-height: 0` is what
+   lets it: a flex item's default `min-height: auto` is its content size, so the
+   cap above would be silently inert without it. Popover-only — the sheet scrolls
+   itself, and a nested scroll box there would take the gesture away from it. */
+.popover--filter .fpanel__body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* The overlay's body, in either presentation. No `margin-top`: since #844 nothing
+   sits above it inside the card — the trigger it used to hang under is outside
+   the overlay entirely. */
+.fpanel__body { display: flex; flex-direction: column; gap: 16px; }
 .fpanel__group .field__label { margin-bottom: 6px; }
 .fpanel__group .filter-chips { margin: 0; }
 .fpanel__group .tag-mode { margin-bottom: 10px; }
@@ -1252,11 +1316,12 @@ h1, h2, h3 { font-family: var(--font-display); }
    above the pool — the two things that decide what gets drawn, beside the thing
    they decide.
 
-   `:has()` is what lets the panel take the full row when it expands instead of
-   unfolding inside its own narrow flex column; the mount deliberately carries no
-   class, so nothing can override its `[hidden]`, and the selector reaches it
-   structurally instead. Where `:has()` is unsupported the body simply opens
-   narrow — degraded, not broken. */
+   NOTHING here may re-widen the mount for an open panel. #827 carried
+   `.setup-filterbar > :has(> .fpanel[open]) { flex: 1 1 100% }`, which gave the
+   expanding body the full row — and, in the same stroke, pushed the „Filter"
+   button itself onto the next flex line and the pool preview down with it (#844).
+   The panel opens as an overlay now, so the body needs no room in this row at
+   all; a rule that grants it any is the bug coming back. */
 .setup-filterbar {
   display: flex;
   align-items: flex-end;
@@ -1266,7 +1331,6 @@ h1, h2, h3 { font-family: var(--font-display); }
   margin-bottom: 16px;
 }
 .setup-filterbar .field { margin-bottom: 0; }
-.setup-filterbar > :has(> .fpanel[open]) { flex: 1 1 100%; }
 
 /* ---- Buttons ----
    Chunky and pressable: a thicker bottom border acts as the button's "base";
