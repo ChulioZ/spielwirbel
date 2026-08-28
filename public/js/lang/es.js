@@ -194,6 +194,12 @@ I18N.es = {
   'metaFilter.categories': 'Categorías',
   'metaFilter.mechanics': 'Mecánicas',
   'metaFilter.reset': 'Quitar los filtros',
+  'metaFilter.chipWeight': 'Complejidad {min}–{max}',
+  'metaFilter.chipWeightMin': 'Complejidad desde {min}',
+  'metaFilter.chipWeightMax': 'Complejidad hasta {max}',
+  'metaFilter.chipAge': 'El más joven: {n} años',
+  'metaFilter.chipTagExcluded': 'sin {name}',
+  'metaFilter.removeFilter': 'Quitar {name}',
 
   'moveGames.link': 'Mover juegos',
   'moveGames.title': 'Mover juegos',

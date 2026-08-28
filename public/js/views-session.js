@@ -171,10 +171,10 @@ function showStartSession(round) {
   // until the tag section below exists. Both are read only from listeners, which
   // run long after this function has finished.
   let filterPanel = null;
-  // A tag chip changes a count the PANEL renders, so the badge has to be told.
-  // The metadata controls route through the panel's own onChange and resync
-  // themselves, which is why only the tag half calls this.
-  const syncFilterBadge = () => { if (filterPanel) filterPanel.sync(); };
+  // A tag chip changes the applied-filter chips the BAR renders, so it has to be
+  // told. The metadata controls route through the panel's own onChange and
+  // resync themselves, which is why only the tag half calls this.
+  const syncFilterBar = () => { if (filterPanel) filterPanel.sync(); };
   const anyFilterActive = () => selectedTags.size > 0 || countMetadataFilters(metaFilters) > 0;
   const coverStyle = (g, w) =>
     g.image ? ` style="background-image:url('${coverUrl(g.image, w)}')"` : '';
@@ -282,7 +282,7 @@ function showStartSession(round) {
       selectedTags,
       roundTags,
       repaintChips,
-      () => { mode.sync(); syncFilterBadge(); updateHint(); }
+      () => { mode.sync(); syncFilterBar(); updateHint(); }
     );
     roundTags.forEach((tg) => {
       const chip = h('<button type="button" class="chip"></button>');
@@ -292,7 +292,7 @@ function showStartSession(round) {
         paintTagChip(chip, tg.name, cycleTagState(selectedTags, tg.id), tg.icon, tagFilterState.tagMode);
         bulk.sync();
         mode.sync();
-        syncFilterBadge();
+        syncFilterBar();
         updateHint();
       });
       chips.appendChild(chip);
@@ -301,8 +301,15 @@ function showStartSession(round) {
     sectionEl.querySelector('#tagModeMount').replaceWith(mode.el);
     tagSection = {
       el: sectionEl,
-      // Read on every sync rather than captured: the map is mutated in place.
-      count: () => selectedTags.size,
+      // Read on every sync rather than captured: the map is mutated in place, so
+      // a list taken at build time would describe picks the user has left.
+      // `tagFilterChips` is shared with the Regal (filter-panel.js) — the two
+      // screens must not offer different chips over the same tri-state map.
+      chips: () => tagFilterChips(roundTags, selectedTags, () => {
+        repaintChips();
+        bulk.sync();
+        mode.sync();
+      }),
       reset: () => {
         selectedTags.clear();
         repaintChips();
@@ -312,33 +319,37 @@ function showStartSession(round) {
     };
   }
 
-  // The one filter control (#827) — both halves behind a single disclosure,
-  // parked beside the count stepper directly above the pool it shapes, because
-  // those are the two things that decide what gets drawn. It renders NOTHING
-  // when the round has neither tags nor a shelf carrying BGG metadata, so a
-  // round of hand-typed games — or an instance with no BGG token — sees exactly
-  // the screen it saw before.
+  // The one filter control (#827) — both halves behind one trigger, parked beside
+  // the count stepper directly above the pool it shapes, because those are the
+  // two things that decide what gets drawn. It renders NOTHING when the round has
+  // neither tags nor a shelf carrying BGG metadata, so a round of hand-typed
+  // games — or an instance with no BGG token — sees exactly the screen it saw
+  // before.
+  //
+  // Since #844 the body opens as an overlay, so this row holds only the trigger
+  // and the applied chips and can no longer be pushed around by opening it.
   //
   // It is (re)built through `mountFilterPanel` rather than mounted once, because
-  // the backfill below can make controls appear that this shelf could not offer
-  // a moment ago (#736). The mount element STAYS in the DOM as the anchor —
-  // `hidden` while there is nothing to show, which costs no flex gap because a
-  // `display: none` element is not a flex item at all. It carries no class, so
-  // no rule can override the UA's `[hidden]`
+  // the backfill below can make the control appear on a shelf that could not
+  // offer it a moment ago (#736). The mount element STAYS in the DOM as the
+  // anchor — `hidden` while there is nothing to show, which costs no flex gap
+  // because a `display: none` element is not a flex item at all. It carries no
+  // class, so no rule can override the UA's `[hidden]`
   // (.claude/rules/hidden-attribute-vs-display-rule.md).
   const filterMount = form.querySelector('#filterMount');
   const mountFilterPanel = () => {
+    // NEVER rebuild under an open overlay. The trigger is the node `place()` and
+    // `openPopover`'s outside-click guard both hold as the anchor, so replacing
+    // it would strand the popover mid-adjustment. Skipping loses nothing: the
+    // overlay body is built fresh on every open from `activeGames`, which the
+    // backfill fills IN PLACE — so the metadata that just landed is there the
+    // next time the user opens it, with nothing to invalidate.
+    if (filterPanel && filterPanel.isOpen()) return;
     // Preserved across a rebuild: the user's picks (the `metaFilters` object is
-    // mutated in place and handed back in), the tag section node itself, and
-    // whether they had the panel OPEN — losing that would snap it shut under
-    // someone mid-adjustment.
-    const wasOpen = !!(filterPanel && filterPanel.el.open);
+    // mutated in place and handed back in) and the tag section node itself.
     filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection);
     filterMount.replaceChildren();
-    if (filterPanel) {
-      filterPanel.el.open = wasOpen;
-      filterMount.appendChild(filterPanel.el);
-    }
+    if (filterPanel) filterMount.appendChild(filterPanel.el);
     filterMount.hidden = !filterPanel;
   };
   mountFilterPanel();

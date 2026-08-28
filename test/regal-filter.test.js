@@ -1,12 +1,14 @@
 'use strict';
 
-/* The Regal's filter gating, after #827 collapsed three affordances into one.
+/* The Regal's filter gating, after #827 collapsed three affordances into one and
+ * #844 moved the body out of the page into an overlay.
  *
  * #349 had hidden the tag chips behind a phone-only "Filter" button below 860px
  * (`.filter-toggle` + `.regal-filter.is-open`, a pure-CSS mechanism), while the
  * „Weitere Filter" drawer beside it collapsed at EVERY width. #827 deleted the
- * first: there is one `<details>` now, holding both halves, collapsed at every
- * width on both screens.
+ * first: there is one control now, holding both halves, collapsed at every
+ * width on both screens — and since #844 it opens as an overlay rather than
+ * unfolding in the page.
  *
  * This file pins that the old mechanism is GONE and cannot creep back, because
  * its return is silent in the worst way: a `.regal-filter .filter-chips
@@ -48,22 +50,37 @@ test('nothing hides the shared .filter-chips class by width, anywhere', () => {
   assert.deepEqual(hidden.map(([sel]) => sel), []);
 });
 
-test('the panel badge honours [hidden] (its explicit display would override it)', () => {
-  // `.fpanel__badge { display: inline-flex }` beats the UA sheet's
-  // `[hidden] { display: none }`, so without this rule a zero-filter panel would
-  // show a "0" badge. Same trap `.filter-chips[hidden]` records.
-  assert.match(bodyOf('.fpanel__badge') || '', /display:\s*inline-flex/);
-  const guard = bodyOf('.fpanel__badge[hidden]');
-  assert.ok(guard, '.fpanel__badge[hidden] rule not found');
+test('the applied-chip row honours [hidden] (its explicit display would override it)', () => {
+  // `.fbar__chips { display: flex }` beats the UA sheet's
+  // `[hidden] { display: none }`, so without this rule an unfiltered screen would
+  // still pay the bar's 8px gap for an empty row. Same trap the badge this
+  // replaced recorded, and the one `.filter-chips[hidden]` records.
+  assert.match(bodyOf('.fbar__chips') || '', /display:\s*flex/);
+  const guard = bodyOf('.fbar__chips[hidden]');
+  assert.ok(guard, '.fbar__chips[hidden] rule not found');
   assert.match(guard, /display:\s*none/);
 });
 
-test('the setup screen lets the open panel take the whole filter row', () => {
-  // The count stepper and the panel share a flex row; without this the body
-  // would unfold inside the panel's own narrow column and the ~84 category
-  // chips would wrap into a tower beside the stepper.
-  assert.match(bodyOf('.setup-filterbar') || '', /flex-wrap:\s*wrap/);
-  const open = RULES.find(([sel]) => whole('.setup-filterbar').test(sel) && /\.fpanel\[open\]/.test(sel));
-  assert.ok(open, 'no rule widens the setup filter row for an open panel');
-  assert.match(open[1], /flex:\s*1\s+1\s+100%/);
+test('NOTHING re-widens the setup filter row for an open panel (#844)', () => {
+  /* This is the bug, in one assertion. #827 carried
+       `.setup-filterbar > :has(> .fpanel[open]) { flex: 1 1 100% }`
+     so the expanding body could use the full row instead of unfolding inside its
+     own narrow flex column — and that 100% flex-basis is exactly what forced the
+     mount onto a new flex line, taking the „Filter" button with it and pushing
+     the pool preview down. One click moved two things the user had not touched.
+
+     Since #844 the body opens as an overlay, so it needs no room in this row at
+     all. Any rule granting the mount a full-row basis is the bug returning: it
+     could only be there to make room for a body that is no longer in the flow. */
+  assert.match(bodyOf('.setup-filterbar') || '', /flex-wrap:\s*wrap/,
+    'the row still wraps — the stepper and the trigger must not overflow it');
+  const widened = RULES.filter(([sel, body]) =>
+    whole('.setup-filterbar').test(sel) && /flex(-basis)?:[^;]*100%/.test(body));
+  assert.deepEqual(widened.map(([sel]) => sel), [],
+    'a rule gives the filter mount the whole setup row again — the trigger will jump lines (#844)');
+  // And the selector that carried it is gone outright, so it cannot come back
+  // under a different declaration either.
+  const details = RULES.filter(([sel]) => /\.fpanel\[open\]/.test(sel));
+  assert.deepEqual(details.map(([sel]) => sel), [],
+    'a `.fpanel[open]` rule is back — the panel is not a <details> any more');
 });

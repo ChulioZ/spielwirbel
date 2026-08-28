@@ -1,30 +1,40 @@
 'use strict';
 
-/* The ONE filter control (#827) on the two screens that pick games — the
-   round's tags and the BGG metadata filters behind a single disclosure.
+/* The ONE filter control (#827/#844) on the two screens that pick games — the
+   round's tags and the BGG metadata filters behind a single trigger.
 
    The predicate itself is unit-tested in `test/draw-pool.test.js`; what cannot
    be seen from there is whether the CONTROLS are wired to it — an option list
-   built from BGG's vocabulary instead of the shelf's, a badge that counts
+   built from BGG's vocabulary instead of the shelf's, an applied chip that says
    something the user cannot see, a preset restoring a category whose last game
    was archived. Each of those renders a screen that looks finished and filters
    wrongly, so they are asserted by rendering the real views.
 
-   The panel's own CSS contract — that the pre-#827 phone-only collapse is gone
-   and cannot creep back — is in `test/regal-filter.test.js`. Anything CSS stays
-   parsed out of styles.css: jsdom applies no external stylesheet
+   Since #844 the body opens as an OVERLAY (`openEditor`), so a spec that wants a
+   control has to open the panel first — `openPanel()` below. That is not
+   ceremony: it is the property the whole issue turns on, since a body outside the
+   page's flow is what stops the trigger being pushed around by its own opening.
+
+   The panel's own CSS contract — that the pre-#827 phone-only collapse is gone,
+   and that nothing re-widens the setup row for an open panel — is in
+   `test/regal-filter.test.js`. Anything CSS stays parsed out of styles.css:
+   jsdom applies no external stylesheet
    (.claude/rules/testing-views-under-jsdom.md). */
 
-const { test, after } = require('node:test');
+const { test, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { drawPool } = require('../lib/draw');
 const { bodyOf } = require('./support/css');
 const { loadApp } = require('./support/dom');
+const { filterPanelKit } = require('./support/filter-panel');
 
 const dom = loadApp({ locale: 'de' });
 after(() => dom.close());
 dom.set('isLoggedIn', () => false);
+// The shared opening kit — including the matchMedia stub without which every
+// trigger click throws silently. See test/support/filter-panel.js.
+const { trigger, panelBody, openPanel, closePanel, appliedChips, triggerLabel } = filterPanelKit(dom);
 
 // A shelf that discriminates on every one of the five controls, and — crucially
 // — carries one game with NO metadata at all, so every assertion below also
@@ -47,19 +57,24 @@ const roundFixture = (over = {}) => ({
   ...over,
 });
 
-const disclosure = () => dom.app.querySelector('.fpanel');
-const summaryBadge = () => dom.app.querySelector('.fpanel__badge');
-const rowLabels = () => [...dom.app.querySelectorAll('.mfilter__label')].map((el) => el.textContent);
-const groupLabels = () => [...dom.app.querySelectorAll('.mfilter__group .field__label')].map((el) => el.textContent);
+// Everything below the trigger lives in the overlay, i.e. under `document.body`
+// rather than under `#app`, so every query goes through `dom.document`.
+const rowLabels = () => [...dom.document.querySelectorAll('.mfilter__label')].map((el) => el.textContent);
+const groupLabels = () => [...dom.document.querySelectorAll('.mfilter__group .field__label')].map((el) => el.textContent);
 const chipsFor = (label) => {
-  const group = [...dom.app.querySelectorAll('.mfilter__group')]
+  const group = [...dom.document.querySelectorAll('.mfilter__group')]
     .find((g) => g.querySelector('.field__label').textContent === label);
   return group ? [...group.querySelectorAll('.chip')] : [];
 };
 const selectLabelled = (name) =>
-  [...dom.app.querySelectorAll('.mfilter__select')]
+  [...dom.document.querySelectorAll('.mfilter__select')]
     .find((s) => s.getAttribute('aria-label') === name
-      || (s.id && dom.app.querySelector(`label[for="${s.id}"]`)?.textContent === name));
+      || (s.id && dom.document.querySelector(`label[for="${s.id}"]`)?.textContent === name));
+/* An overlay lives under `document.body`, so re-rendering `#app` does NOT remove
+   a previous spec's open panel — and `panelBody()` would then find a stale one,
+   which reads as "the panel is already open" in a spec that never opened it. */
+beforeEach(() => closePanel());
+
 const previewed = () =>
   [...dom.app.querySelectorAll('.pool-tile__name')].map((el) => el.textContent).sort();
 
@@ -72,10 +87,11 @@ const choose = (sel, value) => {
 
 // ------------------------------------------------------------- session setup
 
-test('the disclosure offers exactly the controls this shelf can fill', async () => {
+test('the panel offers exactly the controls this shelf can fill', async () => {
   await dom.call('showStartSession', roundFixture());
 
-  assert.ok(disclosure(), 'the shelf carries metadata, so the disclosure is rendered');
+  assert.ok(trigger(), 'the shelf carries metadata, so the control is rendered');
+  openPanel();
   assert.deepEqual(rowLabels(), ['Spieldauer', 'Komplexität', 'Jüngste Person am Tisch']);
   assert.deepEqual(groupLabels(), ['Kategorien', 'Mechaniken']);
   // Derived from the round's own games, not from BGG's ~84 categories — and
@@ -91,17 +107,17 @@ test('a control is absent — not empty — when no game on the shelf carries it
     games: [{ id: 'x', title: 'Nur Dauer', minPlaytime: 45 }],
   }));
 
-  assert.ok(disclosure());
+  openPanel();
   assert.deepEqual(rowLabels(), ['Spieldauer'], 'no complexity row, no age row');
   assert.deepEqual(groupLabels(), [], 'and no empty chip groups');
 });
 
-test('a shelf with no metadata at all renders no disclosure whatsoever', async () => {
+test('a shelf with no metadata at all renders no control whatsoever', async () => {
   await dom.call('showStartSession', roundFixture({
     games: [{ id: 'x', title: 'Azul' }, { id: 'y', title: 'Uno' }],
   }));
 
-  assert.equal(disclosure(), null, 'a round of hand-typed games sees the screen it always saw');
+  assert.equal(trigger(), null, 'a round of hand-typed games sees the screen it always saw');
   // The mount STAYS since #736 — it is the anchor the backfill's repaint mounts
   // into — but it must be `hidden`, or `.setup-grid__aside`'s gap pays for a
   // control that is not there. A `display: none` element is not a flex item at
@@ -111,20 +127,23 @@ test('a shelf with no metadata at all renders no disclosure whatsoever', async (
   assert.equal(mount.hidden, true, 'an empty mount still costs a row of flex gap');
 });
 
-test('it is collapsed by default and its badge is silent until something filters', async () => {
+test('it is closed by default and shows no applied chips until something filters', async () => {
   await dom.call('showStartSession', roundFixture());
 
-  assert.equal(disclosure().hasAttribute('open'), false,
-    'a user who never opens it sees one summary row more than before, and nothing else');
-  assert.equal(summaryBadge().hidden, true, 'no "0" badge on an unfiltered screen');
-  assert.equal(dom.app.querySelector('.fpanel__summary').getAttribute('aria-label'),
-    'Filter (0 aktiv)');
+  assert.equal(panelBody(), null,
+    'a user who never opens it sees one button more than before, and nothing else');
+  assert.equal(trigger().getAttribute('aria-expanded'), 'false');
+  assert.deepEqual(appliedChips(), [], 'nothing is filtering yet');
+  assert.equal(dom.document.querySelector('.fbar__chips').hidden, true,
+    'an empty chip row must not claim the bar\'s gap');
+  assert.equal(triggerLabel(), 'Filter (0 aktiv)');
 });
 
-test('setting a filter shrinks the pool preview and shows the count', async () => {
+test('setting a filter shrinks the pool preview and names itself as a chip', async () => {
   const round = roundFixture();
   await dom.call('showStartSession', round);
 
+  openPanel();
   choose(selectLabelled('Spieldauer'), '30');
 
   // The absent-field game is still in: that is the rule, stated through the UI.
@@ -135,14 +154,16 @@ test('setting a filter shrinks the pool preview and shows the count', async () =
     metadata: { maxPlaytime: 30, weightMin: null, weightMax: null, youngestAge: null, categories: [], mechanics: [] },
   }).map((g) => g.title).sort());
 
-  assert.equal(summaryBadge().hidden, false);
-  assert.equal(summaryBadge().textContent, '1');
-  assert.equal(dom.app.querySelector('.fpanel__summary').getAttribute('aria-label'),
-    'Filter (1 aktiv)');
+  // The chip says WHICH filter is on, which is the whole reason it replaced the
+  // count badge: a number could only ever say how many.
+  assert.deepEqual(appliedChips(), ['Höchstens 30 Min.']);
+  assert.equal(dom.document.querySelector('.fbar__chips').hidden, false);
+  assert.equal(triggerLabel(), 'Filter (1 aktiv)');
 });
 
 test('a category chip toggles, is announced by aria-pressed, and ORs with its siblings', async () => {
   await dom.call('showStartSession', roundFixture());
+  openPanel();
   const [abstract, adventure] = chipsFor('Kategorien');
 
   assert.equal(abstract.getAttribute('aria-pressed'), 'false',
@@ -161,6 +182,7 @@ test('a category chip toggles, is announced by aria-pressed, and ORs with its si
 
 test('the complexity selects carry each other rather than allowing an inverted range', async () => {
   await dom.call('showStartSession', roundFixture());
+  openPanel();
   const min = selectLabelled('Komplexität mindestens');
   const max = selectLabelled('Komplexität höchstens');
 
@@ -171,8 +193,10 @@ test('the complexity selects carry each other rather than allowing an inverted r
   choose(min, '2');
   choose(max, '1');
   assert.equal(min.value, '1', 'and the other way round');
-  // One control, one badge unit — however many of its bounds are set.
-  assert.equal(summaryBadge().textContent, '1');
+  // One control, ONE chip — however many of its bounds are set. The two bounds
+  // are one question, so a × that cleared half of it would leave a range that
+  // admits nothing with nothing on screen saying so.
+  assert.deepEqual(appliedChips(), ['Komplexität 1–1']);
 });
 
 test('the preset restores the last draw and drops a category the shelf lost', async () => {
@@ -189,10 +213,13 @@ test('the preset restores the last draw and drops a category the shelf lost', as
     },
   }));
 
+  assert.deepEqual(appliedChips(), ['Höchstens 60 Min.', 'Economic'],
+    'the surviving preset is named; "Wargame" is on no game here, so it has no chip');
+  openPanel();
   assert.equal(selectLabelled('Spieldauer').value, '60');
   const on = chipsFor('Kategorien').filter((c) => c.getAttribute('aria-pressed') === 'true');
   assert.deepEqual(on.map((c) => c.textContent), ['Economic']);
-  assert.equal(summaryBadge().textContent, '2', 'two controls, both of them visible');
+  closePanel();
 
   // The chips alone cannot see the failure: "Wargame" has no chip to press
   // either way, so a state that still holds it looks identical on screen. The
@@ -208,8 +235,9 @@ test('the preset restores the last draw and drops a category the shelf lost', as
 test('a preset filtering a field the shelf no longer carries is dropped, not counted', async () => {
   // The numeric half of the same rule, and the sharper one: with no game
   // carrying a minimum age there is no age row at all, so a surviving
-  // `youngestAge` would show as a badge count over a control that is not on
-  // screen — a filter the user can neither see nor clear.
+  // `youngestAge` would show as an applied chip over a control that is not on
+  // screen — a filter the user could clear from the chip but never see the
+  // reason for.
   await dom.call('showStartSession', roundFixture({
     games: [{ id: 'x', title: 'Nur Dauer', minPlaytime: 45 }],
     lastSessionFilters: {
@@ -218,8 +246,10 @@ test('a preset filtering a field the shelf no longer carries is dropped, not cou
     },
   }));
 
+  assert.deepEqual(appliedChips(), ['Höchstens 60 Min.'], 'the age filter is not carried');
+  openPanel();
   assert.deepEqual(rowLabels(), ['Spieldauer'], 'no age control is rendered');
-  assert.equal(summaryBadge().textContent, '1', 'and the age filter is not counted');
+  closePanel();
 });
 
 test('an empty pool offers a reset that clears the metadata filters AND the tags', async () => {
@@ -232,9 +262,17 @@ test('an empty pool offers a reset that clears the metadata filters AND the tags
 
   // Filter on both controls until nothing is left: the tag no game carries, plus
   // a metadata pick.
-  dom.app.querySelector('#filterChips .chip').click();
+  openPanel();
+  dom.document.querySelector('#filterChips .chip').click();
   chipsFor('Kategorien')[0].click();
   assert.deepEqual(previewed(), []);
+
+  // CLOSE it first. The escape hatch lives outside the panel and is reached from
+  // an empty pool, which is a state a user arrives at with the panel shut — so
+  // `reset` may not depend on a single control existing (#844).
+  closePanel();
+  assert.equal(panelBody(), null);
+  assert.deepEqual(appliedChips(), ['Kenner', 'Abstract Strategy']);
 
   const reset = dom.app.querySelector('#poolReset button');
   assert.ok(reset, 'an empty pool must offer a way back');
@@ -242,15 +280,22 @@ test('an empty pool offers a reset that clears the metadata filters AND the tags
   reset.click();
 
   assert.deepEqual(previewed(), ['Azul', 'Catan', 'Gloomhaven', 'Handgetippt']);
-  assert.equal(summaryBadge().hidden, true, 'the badge follows the reset');
-  assert.equal(chipsFor('Kategorien')[0].getAttribute('aria-pressed'), 'false',
-    'the chips are repainted in place — the disclosure must not snap shut mid-recovery');
+  assert.deepEqual(appliedChips(), [], 'the applied chips follow the reset');
   assert.equal(dom.app.querySelector('#poolReset button'), null);
+
+  // And the controls inside catch up when it is next opened, rather than the
+  // reset having cleared only the state behind them.
+  openPanel();
+  assert.equal(chipsFor('Kategorien')[0].getAttribute('aria-pressed'), 'false');
+  assert.equal(dom.document.querySelector('#filterChips .chip').getAttribute('aria-pressed'), null);
+  closePanel();
 });
 
 test('the reset button appears only for an EMPTY pool, not for a merely filtered one', async () => {
   await dom.call('showStartSession', roundFixture());
+  openPanel();
   chipsFor('Kategorien')[0].click();
+  closePanel();
 
   assert.deepEqual(previewed(), ['Azul', 'Handgetippt']);
   assert.equal(dom.app.querySelector('#poolReset button'), null);
@@ -264,7 +309,9 @@ test('the draw sends the metadata filters with the request', async () => {
   });
   dom.set('showSessionLobby', () => {});
   await dom.call('showStartSession', roundFixture());
+  openPanel();
   choose(selectLabelled('Jüngste Person am Tisch'), '10');
+  closePanel();
   dom.app.querySelector('#go').click();
   await new Promise((r) => setTimeout(r, 0));
 
@@ -285,6 +332,9 @@ test('the draw sends the metadata filters with the request', async () => {
 /* `renderRegalTab` keeps its filters per round for the session and resets them
    only when the round id changes, so every spec renders its own id. */
 const regal = (over) => {
+  // An overlay lives under `document.body`, so blanking `#app` would leave a
+  // previous spec's panel — and the tag section node inside it — on screen.
+  closePanel();
   dom.app.innerHTML = '';
   const r = roundFixture(over);
   dom.call('renderRegalTab', r, r.games);
@@ -293,17 +343,19 @@ const regal = (over) => {
 const shelved = () =>
   [...dom.app.querySelectorAll('.game-card__title')].map((el) => el.textContent).sort();
 
-test('Regal: the disclosure filters the cover grid with the same semantics', () => {
+test('Regal: the panel filters the cover grid with the same semantics', () => {
   regal();
 
-  assert.ok(disclosure(), 'it joins .regal-filter');
+  assert.ok(trigger(), 'it joins .regal-filter');
+  openPanel();
   chipsFor('Mechaniken').find((c) => c.textContent === 'Trading').click();
   assert.deepEqual(shelved(), ['Catan', 'Handgetippt'],
     'the absent-field game survives here too');
 
   choose(selectLabelled('Spieldauer'), '30');
   assert.deepEqual(shelved(), ['Handgetippt'], 'the two controls AND together');
-  assert.equal(summaryBadge().textContent, '2');
+  assert.deepEqual(appliedChips(), ['Höchstens 30 Min.', 'Trading']);
+  closePanel();
 });
 
 test('Regal: a round with NO tags but metadata still gets a filter panel', () => {
@@ -311,10 +363,12 @@ test('Regal: a round with NO tags but metadata still gets a filter panel', () =>
 
   const wrap = dom.app.querySelector('.regal-filter');
   assert.ok(wrap, 'the wrapper is no longer conditional on the round having tags');
-  assert.ok(wrap.querySelector('.mfilter'));
+  const body = openPanel();
+  assert.ok(body.querySelector('.mfilter'));
   // `.fpanel__group`, not `.filter-toggle`: since #827 that class exists nowhere,
   // so asserting its absence would pass against a panel full of tag chips.
-  assert.equal(wrap.querySelector('.fpanel__group'), null, 'and carries no tag half');
+  assert.equal(body.querySelector('.fpanel__group'), null, 'and carries no tag half');
+  closePanel();
 });
 
 test('Regal: a round with neither tags nor metadata still gets no panel at all', () => {
@@ -336,50 +390,232 @@ test('Regal: both halves live in ONE panel, as two labelled sections (#827)', ()
   });
 
   const wrap = dom.app.querySelector('.regal-filter');
-  const panels = wrap.querySelectorAll('.fpanel');
-  assert.equal(panels.length, 1, 'one control, not a chip row beside a drawer');
+  assert.equal(wrap.querySelectorAll('.fbar__trigger').length, 1,
+    'one control, not a chip row beside a drawer');
+  const body = openPanel();
   // Tags first, metadata second, both direct children of the one body: the
   // sections stay separate because a round's own word and a BGG fact combine
   // differently (.claude/rules/provider-metadata-is-a-filter-not-a-tag.md).
-  const sections = [...wrap.querySelectorAll('.fpanel__body > *')]
-    .map((el) => el.className);
+  const sections = [...body.querySelectorAll('.fpanel__body > *')].map((el) => el.className);
   assert.deepEqual(sections, ['fpanel__group', 'mfilter']);
-  assert.equal(wrap.querySelector('.filter-toggle'), null,
+  assert.equal(dom.document.querySelector('.filter-toggle'), null,
     'the phone-only tag toggle is gone — the panel is the only collapse now');
 
-  wrap.querySelector('.fpanel__group .filter-chips .chip').click();
+  body.querySelector('.fpanel__group .filter-chips .chip').click();
   assert.deepEqual(shelved(), ['Gloomhaven'], 'the tag half still filters the grid');
+  closePanel();
 });
 
-test('Regal: ONE badge counts both halves together (#827)', () => {
+test('Regal: ONE chip row covers both halves together (#827/#844)', () => {
   // The two counts were deliberately separate while they were two controls that
   // collapsed on different triggers — one number could not say which was
   // filtering. With a single control and a single trigger that question is gone,
-  // and a user who set one of each expects to be told "2".
+  // and a user who set one of each expects to see both named.
   regal({
     tags: [{ id: 't1', name: 'Kenner' }],
     games: GAMES.map((g) => ({ ...g, tagIds: g.id === 'g3' ? ['t1'] : [] })),
   });
-  const wrap = dom.app.querySelector('.regal-filter');
-  assert.equal(summaryBadge().hidden, true, 'nothing filtering yet');
+  assert.deepEqual(appliedChips(), [], 'nothing filtering yet');
+  const body = openPanel();
 
-  wrap.querySelector('.fpanel__group .filter-chips .chip').click();
-  assert.equal(summaryBadge().textContent, '1', 'the tag half tells the shared badge');
+  body.querySelector('.fpanel__group .filter-chips .chip').click();
+  assert.deepEqual(appliedChips(), ['Kenner'], 'the tag half reaches the shared chip row');
 
   choose(selectLabelled('Spieldauer'), '30');
-  assert.equal(summaryBadge().textContent, '2', 'and the metadata half adds to it');
-  assert.equal(wrap.querySelector('.fpanel__summary').getAttribute('aria-label'),
-    'Filter (2 aktiv)', 'the count is announced, not conveyed by the badge colour alone');
+  assert.deepEqual(appliedChips(), ['Kenner', 'Höchstens 30 Min.'],
+    'and the metadata half joins it — tags first, the panel\'s own section order');
+  assert.equal(triggerLabel(), 'Filter (2 aktiv)',
+    'the count is announced on the trigger, not left to the chips\' colour alone');
+  closePanel();
 });
 
 test('Regal: switching rounds resets the metadata filters with everything else', () => {
   regal();
+  openPanel();
   chipsFor('Kategorien')[0].click();
-  assert.equal(summaryBadge().textContent, '1');
+  assert.deepEqual(appliedChips(), ['Abstract Strategy']);
 
   regal(); // a fresh round id
-  assert.equal(summaryBadge().hidden, true, 'another round\'s categories mean nothing here');
+  assert.deepEqual(appliedChips(), [], 'another round\'s categories mean nothing here');
   assert.deepEqual(shelved(), ['Azul', 'Catan', 'Gloomhaven', 'Handgetippt']);
+});
+
+/* ------------- The overlay presentation, and the jump it removes (#844) ----- */
+
+test('opening the panel puts NOTHING in the row the trigger sits in (#844)', async () => {
+  /* The bug, at the only layer jsdom can see it — and the layer that actually
+     fixes it. #827's body was a sibling of the count stepper inside
+     `.setup-filterbar`, a `flex-wrap: wrap` row, so opening it gave the mount a
+     full-row flex-basis and pushed the trigger onto the next line with the pool
+     preview behind it.
+
+     A CSS assertion (test/regal-filter.test.js) can only say that today's
+     stylesheet grants no such basis. This says the stronger thing: there is
+     nothing in that row for ANY rule to widen, because the body is not in the
+     page's flow at all. That is what makes the trigger's staying put a property
+     of the structure rather than of a rule someone has to keep not writing. */
+  await dom.call('showStartSession', roundFixture());
+  const bar = dom.app.querySelector('.setup-filterbar');
+  const shape = () => [...bar.querySelectorAll('*')].map((el) => el.className || el.tagName);
+  const before = shape();
+
+  const body = openPanel();
+  assert.ok(body, 'the panel did not open');
+  // Compared as STRUCTURE, not innerHTML: the trigger legitimately flips
+  // `aria-expanded`, and an innerHTML diff would report that as a layout change.
+  assert.deepEqual(shape(), before, 'opening the panel added a node to the trigger\'s row');
+  assert.equal(bar.contains(body), false, 'the panel body is back inside the filter row');
+  assert.equal(dom.app.contains(body), false,
+    'the body is still inside #app, so page layout can push the trigger around');
+  assert.ok(dom.document.body.contains(body), 'the overlay must be attached to the document');
+
+  // The pool preview is the thing the filters shape, so it must not move either.
+  assert.ok(dom.app.querySelector('.setup-panel'), 'the pool panel is still on screen');
+  assert.equal(dom.app.querySelector('.setup-grid__aside').contains(body), false);
+});
+
+test('the presentation is a sheet below 860px and an anchored popover above it', async () => {
+  /* Routed through `openEditor`, so it inherits the #422 split: an anchored
+     popover cannot hold a focusable control on a phone, because focusing one
+     scrolls the page and openPopover's own scroll teardown removes it mid-open
+     (.claude/rules/popover-vs-sheet-editors.md). This panel holds five. */
+  await dom.call('showStartSession', roundFixture());
+
+  closePanel();
+  dom.run('window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} });');
+  trigger().click();
+  assert.ok(dom.document.querySelector('.popover--filter'), 'no popover above the breakpoint');
+  assert.equal(dom.document.querySelector('.sheet-backdrop'), null);
+
+  closePanel();
+  dom.run('window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });');
+  trigger().click();
+  const sheet = dom.document.querySelector('.sheet-backdrop .sheet--dialog');
+  assert.ok(sheet, 'no sheet below the breakpoint');
+  assert.equal(sheet.getAttribute('aria-label'), 'Filter', 'the sheet is a labelled dialog');
+  assert.ok(dom.document.querySelector('.editor--filter'),
+    'the sheet carries no .editor--filter — its layout rules would not apply');
+  assert.equal(dom.document.querySelector('.popover'), null);
+});
+
+test('the trigger announces its expanded state, and every exit resets it', async () => {
+  /* The <details> gave this for free; an overlay has to earn it back. And it has
+     to come from a hook on the overlay's own teardown, not from wrapping the
+     `close` the builder is handed — Escape, Back, a backdrop tap and (for a
+     popover) a page scroll all bypass that one. */
+  await dom.call('showStartSession', roundFixture());
+  assert.equal(trigger().getAttribute('aria-expanded'), 'false');
+
+  trigger().click();
+  assert.equal(trigger().getAttribute('aria-expanded'), 'true');
+
+  // Escape, i.e. an exit the builder's own `close` never sees.
+  dom.document.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  assert.equal(panelBody(), null, 'Escape did not dismiss the panel');
+  assert.equal(trigger().getAttribute('aria-expanded'), 'false',
+    'the trigger still claims to be expanded over a panel that is gone');
+
+  // A second click on the trigger closes it: openPopover exempts its own anchor
+  // from the outside-click guard, so without the toggle the click reads as dead.
+  trigger().click();
+  assert.ok(panelBody());
+  trigger().click();
+  assert.equal(panelBody(), null, 'a second click on the trigger did not close it');
+});
+
+test('closing the panel hands focus back to the trigger', async () => {
+  await dom.call('showStartSession', roundFixture());
+  const t = trigger();
+  t.focus();
+  assert.equal(dom.document.activeElement, t);
+
+  t.click();
+  assert.ok(panelBody().contains(dom.document.activeElement),
+    'focus never entered the overlay — the sheet is aria-modal, so a keyboard user is left outside it');
+  dom.run('closeSheet();');
+  assert.equal(dom.document.activeElement, t,
+    'a keyboard user who closes the panel is dropped to <body> and restarts from the top');
+});
+
+test('an applied chip removes exactly its own filter, with the panel CLOSED', async () => {
+  /* The chips are the half the count badge could never do. They also have to work
+     from outside the panel — that is where they live — so removal may not depend
+     on the control that set the filter still existing. */
+  const round = roundFixture();
+  await dom.call('showStartSession', round);
+  openPanel();
+  chipsFor('Kategorien').find((c) => c.textContent === 'Economic').click();
+  chipsFor('Kategorien').find((c) => c.textContent === 'Adventure').click();
+  choose(selectLabelled('Spieldauer'), '120');
+  closePanel();
+
+  assert.deepEqual(appliedChips(), ['Höchstens 120 Min.', 'Economic', 'Adventure']);
+  assert.deepEqual(previewed(), ['Catan', 'Gloomhaven', 'Handgetippt']);
+
+  // Drop ONE category. Not the whole list, and not the neighbouring playtime
+  // filter — the granularity is per value, which is the only granularity a × can
+  // mean on a chip that names one.
+  const dismiss = (label) => [...dom.document.querySelectorAll('.fbar__chips .fchip')]
+    .find((c) => c.querySelector('.fchip__label').textContent === label)
+    .querySelector('.fchip__x');
+  assert.equal(dismiss('Economic').getAttribute('aria-label'), 'Economic entfernen');
+  dismiss('Economic').click();
+
+  assert.deepEqual(appliedChips(), ['Höchstens 120 Min.', 'Adventure']);
+  assert.deepEqual(previewed(), ['Gloomhaven', 'Handgetippt'], 'the pool did not follow the chip');
+  assert.deepEqual(previewed(), drawPool(round, {
+    playerCount: 3,
+    metadata: { maxPlaytime: 120, weightMin: null, weightMax: null, youngestAge: null, categories: ['Adventure'], mechanics: [] },
+  }).map((g) => g.title).sort(), 'and the draw agrees with the preview');
+
+  // The control inside catches up too, rather than the chip having cleared only
+  // the state behind it.
+  openPanel();
+  const on = chipsFor('Kategorien').filter((c) => c.getAttribute('aria-pressed') === 'true');
+  assert.deepEqual(on.map((c) => c.textContent), ['Adventure']);
+});
+
+test('an EXCLUDED tag says so in words, not by a colour its chip cannot carry', async () => {
+  /* Include and exclude are opposite filters. Inside the panel the tri-state chip
+     distinguishes them with a ban glyph and an aria-label; an applied chip has
+     neither, so the word does the work. */
+  await dom.call('showStartSession', roundFixture({
+    tags: [{ id: 't1', name: 'Solo' }],
+    games: GAMES.map((g) => ({ ...g, tagIds: g.id === 'g1' ? ['t1'] : [] })),
+  }));
+  openPanel();
+  const tagChip = dom.document.querySelector('#filterChips .chip');
+
+  tagChip.click(); // ignore -> include
+  assert.deepEqual(appliedChips(), ['Solo']);
+  assert.deepEqual(previewed(), ['Azul']);
+
+  tagChip.click(); // include -> exclude
+  assert.deepEqual(appliedChips(), ['ohne Solo']);
+  assert.deepEqual(previewed(), ['Catan', 'Gloomhaven', 'Handgetippt']);
+
+  tagChip.click(); // exclude -> ignore
+  assert.deepEqual(appliedChips(), [], 'the third click clears it, so no chip is left');
+});
+
+test('removing a tag chip repaints the tri-state chip it came from', async () => {
+  await dom.call('showStartSession', roundFixture({
+    tags: [{ id: 't1', name: 'Solo' }],
+    games: GAMES.map((g) => ({ ...g, tagIds: g.id === 'g1' ? ['t1'] : [] })),
+  }));
+  openPanel();
+  dom.document.querySelector('#filterChips .chip').click();
+  assert.deepEqual(appliedChips(), ['Solo']);
+
+  dom.document.querySelector('.fbar__chips .fchip__x').click();
+
+  assert.deepEqual(appliedChips(), []);
+  assert.deepEqual(previewed(), ['Azul', 'Catan', 'Gloomhaven', 'Handgetippt']);
+  // The tri-state chip is a live node inside the open panel, so a removal that
+  // only touched the map would leave it painted as included over a filter that
+  // is off — and the next click would cycle it to `exclude`, not to `include`.
+  assert.equal(dom.document.querySelector('#filterChips .chip').classList.contains('is-on'), false,
+    'the tag chip inside the panel still reads as included');
 });
 
 // ---------------------------------------------------------------------- CSS
@@ -438,18 +674,20 @@ test('setup: controls the shelf could not offer appear once the backfill lands',
   const { calls, deliver } = deferredApi();
   await dom.call('showStartSession', roundFixture({ games: UNFILLED.map((g) => ({ ...g })) }));
 
-  // Before: nothing to derive a control from, so there is no disclosure at all —
+  // Before: nothing to derive a control from, so there is no trigger at all —
   // which is exactly the reported symptom ("no complexity filter on my shelf").
-  assert.equal(disclosure(), null);
+  assert.equal(trigger(), null);
   assert.ok(calls.includes('POST /api/rounds/mf-1/games/provider-info'.replace('mf-1', calls[0].split('/')[3])),
     'the setup screen must trigger the shelf-wide fill');
 
   await deliver(FILLED);
 
-  assert.ok(disclosure(), 'the disclosure never appeared after the metadata arrived');
+  assert.ok(trigger(), 'the control never appeared after the metadata arrived');
+  assert.equal(dom.app.querySelector('#filterMount').hidden, false);
+  openPanel();
   assert.deepEqual(rowLabels(), ['Spieldauer', 'Komplexität', 'Jüngste Person am Tisch']);
   assert.deepEqual(chipsFor('Kategorien').map((c) => c.textContent), ['Economic', 'Family']);
-  assert.equal(dom.app.querySelector('#filterMount').hidden, false);
+  closePanel();
 });
 
 test('setup: the fold-in keeps the seats, guests and filter picks the user set', async () => {
@@ -462,8 +700,9 @@ test('setup: the fold-in keeps the seats, guests and filter picks the user set',
   await dom.call('showStartSession', round);
 
   // The shelf already offers a playtime control (u3 carries one), so the user
-  // can filter before the answer lands — and open the disclosure to do it.
-  disclosure().open = true;
+  // can filter before the answer lands — with the panel OPEN, which is the state
+  // the rebuild has to respect.
+  openPanel();
   choose(selectLabelled('Spieldauer'), '60');
   dom.app.querySelector('.nr-seat').click(); // Anna sits out
   const outBefore = dom.app.querySelectorAll('.nr-seat--out').length;
@@ -471,12 +710,36 @@ test('setup: the fold-in keeps the seats, guests and filter picks the user set',
 
   await deliver(FILLED);
 
+  assert.ok(panelBody(), 'the fold-in tore the open panel down under the user');
   assert.equal(selectLabelled('Spieldauer').value, '60', 'the fold-in discarded the user\'s pick');
-  assert.equal(disclosure().open, true, 'the disclosure snapped shut under the user');
   assert.equal(dom.app.querySelectorAll('.nr-seat--out').length, outBefore,
     'the fold-in reset the seat selection');
-  // And the new control is there alongside the preserved one.
-  assert.deepEqual(rowLabels(), ['Spieldauer', 'Komplexität', 'Jüngste Person am Tisch']);
+  // The OPEN panel is left exactly as it is — deliberately. Repainting it would
+  // swap controls under a hand mid-adjustment, and rebuilding the bar would
+  // replace the very node the popover is anchored to.
+  assert.deepEqual(rowLabels(), ['Spieldauer'],
+    'the open panel grew a control under the user instead of waiting');
+
+  /* The assertion that actually discriminates, and the one the guard is FOR.
+     Without it `mountFilterPanel` builds a second panel and swaps the trigger
+     out — while the open overlay's controls keep calling the OLD panel's
+     `sync()`, which writes to a chip row that is no longer in the document. So
+     the panel stays up and keeps filtering while the applied chips silently
+     stop following it. Verified by deleting the guard: this is the only line
+     that goes red (.claude/rules/break-the-code-on-purpose.md). */
+  choose(selectLabelled('Spieldauer'), '30');
+  assert.deepEqual(appliedChips(), ['Höchstens 30 Min.'],
+    'the visible chip row stopped following the open panel — its trigger was swapped out under it');
+
+  // Nothing is lost by waiting: the body is rebuilt from the live `activeGames`
+  // on every open, and `foldGameInfoList` filled those objects IN PLACE.
+  closePanel();
+  openPanel();
+  assert.deepEqual(rowLabels(), ['Spieldauer', 'Komplexität', 'Jüngste Person am Tisch'],
+    'the metadata that arrived while it was open is there the next time it opens');
+  assert.equal(selectLabelled('Spieldauer').value, '30',
+    'and the pick made WHILE the backfill landed survives the reopen');
+  closePanel();
 });
 
 test('setup: the pool preview re-filters against the values that just arrived', async () => {
@@ -485,8 +748,10 @@ test('setup: the pool preview re-filters against the values that just arrived', 
   await deliver(FILLED);
 
   assert.deepEqual(previewed(), ['Agricola', 'Leicht'], 'unfiltered, both are in the pool');
+  openPanel();
   choose(selectLabelled('Komplexität höchstens'), '1');
   assert.deepEqual(previewed(), ['Leicht'], 'the preview still promises a game the draw would not pick');
+  closePanel();
 });
 
 test('a filled shelf issues no request at all', async () => {
@@ -498,21 +763,24 @@ test('a filled shelf issues no request at all', async () => {
   assert.deepEqual(calls.filter((c) => /provider-info/.test(c)), []);
 });
 
-test('Regal: the disclosure appears and the grid re-filters after the fold-in', async () => {
+test('Regal: the control appears and the grid re-filters after the fold-in', async () => {
   const { deliver } = deferredApi();
+  closePanel();
   dom.app.innerHTML = '';
   const r = roundFixture({ tags: [], games: UNFILLED.map((g) => ({ ...g })) });
   dom.call('renderRegalTab', r, r.games);
 
-  assert.equal(disclosure(), null);
+  assert.equal(trigger(), null);
   assert.equal(dom.app.querySelector('.regal-filter').hidden, true);
 
   await deliver(FILLED);
 
-  assert.ok(disclosure(), 'the Regal never grew the disclosure');
+  assert.ok(trigger(), 'the Regal never grew the filter control');
   assert.equal(dom.app.querySelector('.regal-filter').hidden, false);
+  openPanel();
   chipsFor('Kategorien').find((c) => c.textContent === 'Family').click();
   assert.deepEqual(shelved(), ['Leicht'], 'the grid ignored the metadata that just arrived');
+  closePanel();
 });
 
 test('a failed backfill leaves the screen exactly as it was', async () => {
@@ -523,6 +791,6 @@ test('a failed backfill leaves the screen exactly as it was', async () => {
   await dom.call('showStartSession', roundFixture({ games: UNFILLED.map((g) => ({ ...g })) }));
   await new Promise((r) => setTimeout(r, 0));
 
-  assert.equal(disclosure(), null, 'a rejected trigger must not throw or blank anything');
+  assert.equal(trigger(), null, 'a rejected trigger must not throw or blank anything');
   assert.deepEqual(previewed(), ['Agricola', 'Leicht'], 'the pool still lists the shelf');
 });

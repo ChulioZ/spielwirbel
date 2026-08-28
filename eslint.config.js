@@ -106,10 +106,12 @@ const frontendGlobals = {
   // and lib/routes/sessions.js
   fitsMetadataFilters: 'readonly', metadataFilterOptions: 'readonly',
   hasMetadataFilterOptions: 'readonly', normalizeMetadataFilters: 'readonly',
-  countMetadataFilters: 'readonly',
+  countMetadataFilters: 'readonly', isFiniteNum: 'readonly',
   PLAYTIME_CHOICES: 'readonly', AGE_CHOICES: 'readonly', WEIGHT_CHOICES: 'readonly',
-  // metadata-filter.js (issue #725)
+  // filter-panel.js (issues #725, #827, #844)
   renderMetadataFilter: 'readonly', renderFilterPanel: 'readonly',
+  clearMetadataFilters: 'readonly', activeFilterChips: 'readonly',
+  tagFilterChips: 'readonly',
   // vote-scale.js (issue #797) — also required by lib/session-votes.js,
   // lib/recommend.js and both repo backends
   RATING_MIN: 'readonly', RATING_MAX: 'readonly',

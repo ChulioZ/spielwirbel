@@ -114,11 +114,18 @@ jsdom harness instead.
 
 ## 5. One control, two sections — what #827 changed and what it did not
 
-The two halves share a single `<details>` now (`renderFilterPanel`), because
+The two halves share a single control now (`renderFilterPanel`), because
 narrowing the pool is one job and the screen was asking it in three grammars.
 Merging the *presentation* is not licence to merge the *semantics* in §1–§3: they
 stay separate labelled sections, with a hairline between them, and every clause
 above still holds unchanged.
+
+**#844 changed WHERE that control opens, and nothing else here.** It was a
+`<details>` unfolding in the page; it is a trigger opening an `openEditor` overlay
+(popover ≥860px, sheet below). The two labelled sections and the hairline moved
+into the overlay untouched — see
+`.claude/rules/an-inline-disclosure-moves-its-own-trigger.md` for why the
+disclosure had to go.
 
 Two smaller traps, one of which #827 rewrote:
 
@@ -131,17 +138,30 @@ Two smaller traps, one of which #827 rewrote:
   OR semantics a third click would have nothing to mean (§1). Sharing the class
   would invite sharing the behaviour. Nothing in jsdom can see a stylesheet, so
   this is asserted over the markup the renderer emits.
-- **The two badges are now ONE number, and that reversal is deliberate.** They
-  were separate while they were two controls that collapsed on **different
+- **The two badges became ONE number (#827), and then no badge at all (#844).**
+  They were separate while they were two controls that collapsed on **different
   triggers** (the chips only below 860px, the drawer at every width) — one number
   over two independently-hidden controls could not say which was filtering. With
   a single control and a single trigger that question no longer exists: opening
-  the panel shows both labelled sections at once. Do not re-split it without
-  re-splitting the control.
+  the panel shows both labelled sections at once. Do not re-split the count
+  without re-splitting the control.
+
+  #844 then dropped the badge itself, because the applied filters now sit outside
+  the panel as removable chips and a badge beside them is a **second, differently
+  grained** statement of the same thing — the chips are per value (each category
+  its own) where `countMetadataFilters` counts controls, so the two would disagree
+  the moment anyone picked two categories. The count survives where it cannot
+  contradict anything: the trigger's `aria-label`, computed from `chips.length`.
+  `countMetadataFilters` itself is untouched — the **server** uses it
+  (`lib/routes/sessions.js`) to decide whether a draw carried filters at all,
+  which is a different question and must not be retuned to match the chips.
 
 **Related:** `.claude/rules/active-games-filter-sites.md` (the other predicates
 this joins), `.claude/rules/expansions-widen-by-union.md` (the previous addition
 to the same shared file, and its own absent-value asymmetry),
 `.claude/rules/shared-constants-across-the-stack.md`,
-`.claude/rules/hidden-attribute-vs-display-rule.md` (the badge's paired
-`[hidden]` rule).
+`.claude/rules/hidden-attribute-vs-display-rule.md` (the applied-chip row's
+paired `[hidden]` rule — the badge's, until #844 replaced it),
+`.claude/rules/an-inline-disclosure-moves-its-own-trigger.md` (why the panel is
+an overlay), `.claude/rules/popover-vs-sheet-editors.md` (the presentation it
+routes through).

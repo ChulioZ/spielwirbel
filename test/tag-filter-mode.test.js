@@ -14,10 +14,11 @@
  * the two express one rule over different inputs and are deliberately not
  * shared, so each side needs its own coverage. */
 
-const { test, after } = require('node:test');
+const { test, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
+const { filterPanelKit } = require('./support/filter-panel');
 
 const TAGS = [
   { id: 't1', name: 'Area Control', icon: 'map' },
@@ -46,6 +47,12 @@ const roundFixture = (over) => ({
 const dom = loadApp({ locale: 'de' });
 after(() => dom.close());
 dom.set('isLoggedIn', () => false);
+/* Since #844 both screens open the filter panel as an OVERLAY, so the tag
+   section these specs drive lives under `document.body` rather than under `#app`
+   and has to be opened first. `beforeEach` closes it, because an overlay
+   survives a re-render of `#app` (test/support/filter-panel.js). */
+const { closePanel, tagSection, appliedChips, triggerLabel } = filterPanelKit(dom);
+beforeEach(() => closePanel());
 
 const chipsOf = (root) => [...root.querySelectorAll('.filter-chips .chip')];
 const optsOf = (root) => [...root.querySelectorAll('.tag-mode__opt')];
@@ -67,7 +74,7 @@ const inert = (root) => {
 
 test('start session: the control is INERT until TWO tags are included (#787)', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const chips = chipsOf(field);
 
   assert.ok(field.querySelector('.tag-mode'), 'rendered up front, not built on demand');
@@ -92,7 +99,7 @@ test('start session: cycling a chip never moves the chip row (#787)', async () =
   // every step of a full cycle, with one tag already included so the count really
   // does cross the two-tag boundary in both directions.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const el = field.querySelector('.tag-mode');
   const siblings = () => [...el.parentNode.children].indexOf(el);
   const at = siblings();
@@ -111,7 +118,7 @@ test('start session: an inert option cannot be activated (#787)', async () => {
   // changing a mode the user cannot see the effect of — and what keeps the
   // option out of the Tab order.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   assert.equal(inert(field), true);
 
   optsOf(field)[1].click();            // „Mind. ein Tag", while inert
@@ -129,7 +136,7 @@ test('start session: the mode survives while the control is inert', async () => 
   // Tags" — and the pick must keep PAINTING as selected while inert, or the user
   // watches it disappear.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const chips = chipsOf(field);
 
   chips[0].click(); chips[1].click();
@@ -148,7 +155,7 @@ test('start session: the mode survives while the control is inert', async () => 
 
 test('start session: the pool preview follows the mode (#726)', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const pooled = () =>
     [...dom.app.querySelectorAll('.pool-tile__name')].map((el) => el.textContent).sort();
 
@@ -167,7 +174,7 @@ test('start session: the included chips describe the ACTIVE mode', async () => {
   // The only string in the app that states the semantics out loud, so it is the
   // one thing a screen reader user has to go on.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const chips = chipsOf(field);
   chips[0].click(); chips[1].click();
 
@@ -184,7 +191,7 @@ test('start session: the included chips describe the ACTIVE mode', async () => {
 
 test('start session: the selection is not conveyed by colour alone', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   chipsOf(field)[0].click(); chipsOf(field)[1].click();
 
   assert.deepEqual(pressed(field), ['true', 'false'], 'AND is the default');
@@ -206,7 +213,7 @@ test('start session: the draw sends the mode it is showing (#726)', async () => 
     return { session: { id: 's1', gameIds: [] }, games: [], members: [], guests: [], teams: [] };
   });
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   chipsOf(field)[0].click(); chipsOf(field)[1].click();
   optsOf(field)[1].click();
 
@@ -227,7 +234,7 @@ test('start session: a #252 preset reopens on the mode the last draw used', asyn
     lastSessionFilters: { tagIds: ['t1', 't2'], excludeTagIds: [], count: 3, tagMode: 'any' },
   });
   await dom.call('showStartSession', round);
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   assert.equal(inert(field), false, 'the preset includes two tags, so it is live');
   assert.deepEqual(pressed(field), ['false', 'true']);
   assert.deepEqual(
@@ -242,7 +249,7 @@ test('start session: a preset with no tagMode opens on „Alle Tags" (#726)', as
     lastSessionFilters: { tagIds: ['t1', 't2'], excludeTagIds: [], count: 3 },
   });
   await dom.call('showStartSession', round);
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   assert.deepEqual(pressed(field), ['true', 'false']);
   assert.deepEqual(
     [...dom.app.querySelectorAll('.pool-tile__name')].map((el) => el.textContent).sort(), ['Azul']);
@@ -253,7 +260,7 @@ test('start session: the bulk toggle wakes and re-inerts the control', async () 
   // so it needs its own sync — otherwise the control stays inert over a filter
   // the mode very much applies to.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('.fpanel__group');
+  const field = tagSection();
   const bulk = field.querySelector('.tag-bulk');
 
   assert.equal(inert(field), true);
@@ -267,63 +274,71 @@ test('start session: the bulk toggle wakes and re-inerts the control', async () 
 
 let regalRid = 0;
 const regal = (over) => {
+  // An overlay outlives `#app`, so a leftover panel would hand the next spec the
+  // PREVIOUS round's tag section (test/support/filter-panel.js).
+  closePanel();
   dom.app.innerHTML = '';
   const r = roundFixture({ id: `regal-${++regalRid}`, ...over });
   dom.call('renderRegalTab', r, r.games);
-  return { wrap: dom.app.querySelector('.regal-filter'), round: r };
+  return { round: r };
 };
 const titles = () =>
   [...dom.app.querySelectorAll('.cards .game-card__title')].map((el) => el.textContent).sort();
 
 test('Regal: the control filters the shelf the same way', () => {
-  const { wrap } = regal();
-  const chips = chipsOf(wrap);
+  regal();
+  const field = tagSection();
+  const chips = chipsOf(field);
 
-  assert.equal(inert(wrap), true);
+  assert.equal(inert(field), true);
   chips[0].click(); chips[1].click();
-  assert.equal(inert(wrap), false);
+  assert.equal(inert(field), false);
   assert.deepEqual(titles(), ['Azul'], 'AND');
 
-  optsOf(wrap)[1].click();
+  optsOf(field)[1].click();
   assert.deepEqual(titles(), ['Azul', 'Catan'], 'OR — renderGames ran');
 });
 
-test('Regal: the count badge ignores the mode', () => {
-  // It counts actively-filtering tags, which the mode does not change — a badge
-  // that moved with it would report a number nothing else in the UI means.
-  const { wrap } = regal();
-  chipsOf(wrap)[0].click(); chipsOf(wrap)[1].click();
-  const badge = wrap.querySelector('.fpanel__badge');
-  assert.equal(badge.textContent, '2');
-  optsOf(wrap)[1].click();
-  assert.equal(badge.textContent, '2');
-  assert.equal(wrap.querySelector('.fpanel__summary').getAttribute('aria-label'),
-    'Filter (2 aktiv)');
+test('Regal: the applied-filter chips ignore the mode', () => {
+  // They name the tags that are actively filtering, which the mode does not
+  // change — a chip row that moved with it would describe a filter nothing else
+  // in the UI means.
+  regal();
+  const field = tagSection();
+  chipsOf(field)[0].click(); chipsOf(field)[1].click();
+  assert.deepEqual(appliedChips(), ['Area Control', 'Deck Builder']);
+  optsOf(field)[1].click();
+  assert.deepEqual(appliedChips(), ['Area Control', 'Deck Builder']);
+  assert.equal(triggerLabel(), 'Filter (2 aktiv)');
 });
 
 test('Regal: the mode survives a re-render of the same round', () => {
   // `regalFilters` keeps the whole filter for the session, scoped to one round —
   // a mode held in the view closure instead would silently reset every time the
   // user came back to the tab.
-  const { wrap, round } = regal();
-  chipsOf(wrap)[0].click(); chipsOf(wrap)[1].click();
-  optsOf(wrap)[1].click();
+  const { round } = regal();
+  const field = tagSection();
+  chipsOf(field)[0].click(); chipsOf(field)[1].click();
+  optsOf(field)[1].click();
   assert.deepEqual(titles(), ['Azul', 'Catan']);
 
+  closePanel();
   dom.app.innerHTML = '';
   dom.call('renderRegalTab', round, round.games);
-  const again = dom.app.querySelector('.regal-filter');
+  const again = tagSection();
   assert.deepEqual(pressed(again), ['false', 'true']);
   assert.equal(inert(again), false);
   assert.deepEqual(titles(), ['Azul', 'Catan'], 'the grid came back filtered the same way');
 });
 
 test('Regal: opening a DIFFERENT round resets the mode', () => {
-  const { wrap } = regal();
-  chipsOf(wrap)[0].click(); chipsOf(wrap)[1].click();
-  optsOf(wrap)[1].click();
+  regal();
+  const field = tagSection();
+  chipsOf(field)[0].click(); chipsOf(field)[1].click();
+  optsOf(field)[1].click();
 
-  const { wrap: fresh } = regal();          // a new round id
+  regal();                                  // a new round id
+  const fresh = tagSection();
   assert.deepEqual(pressed(fresh), ['true', 'false']);
   assert.deepEqual(chipsOf(fresh).map((c) => c.className), ['chip', 'chip', 'chip']);
   assert.deepEqual(titles(), ['Azul', 'Catan', 'Uno']);

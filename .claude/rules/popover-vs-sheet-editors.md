@@ -8,9 +8,15 @@ paths:
 
 The three game-detail editors (tags, players, cover) are one builder each with
 **two presentations**: an anchored `.popover` from 860px up, a bottom sheet below
-it. `openEditor(anchor, variant, title, build)` in `views-round-detail.js` picks
-between them. This is not a taste call — the anchored form is *structurally*
+it. `openEditor(anchor, variant, title, build, onClose)` in `views-round-detail.js`
+picks between them. This is not a taste call — the anchored form is *structurally*
 unusable on a phone, and the way it fails is invisible from every check we have.
+
+**The filter panel (#844) is the fourth, and the first from outside game detail.**
+`filter-panel.js` routes through the same function, which is what the rule below
+asks for — so the sheet/popover split, the focus trap, Esc, Back and the
+outside-click dismissal all came for free rather than being re-hand-rolled on two
+more screens.
 
 ## 1. Why an anchored popover dies on a phone
 
@@ -31,9 +37,15 @@ app, from #238 until #422. Nothing threw, no test failed, and the DOM was built
 correctly the whole time.
 
 **Rule:** any popover that contains a focusable text input must present as a
-sheet below 860px. If you add a fourth editor, route it through `openEditor`
+sheet below 860px. If you add another editor, route it through `openEditor`
 rather than `openPopover`. A popover holding only buttons (the top-bar account
 menu, `account.js`) is fine at every width — it raises no keyboard.
+
+The filter panel holds `<select>`s and chip buttons rather than a text input, so
+it raises no soft keyboard and (1) does not strictly bind it. It takes the sheet
+anyway: a phone-width popover of ~84 category chips anchored to a button in a
+narrow column is unusable for reasons of its own, and one control presenting two
+ways across two screens is exactly what #827 spent a release removing.
 
 That same self-teardown is why a popover is **exempt from the page lock** every
 sheet gets (#622): freezing the document would defeat the scroll listener that
@@ -62,6 +74,23 @@ This also matters for the sheet path specifically: **iOS only raises the keyboar
 for a `focus()` inside a user gesture**, so the whole open path stays synchronous
 from the button's click handler. Defer it into a `setTimeout`/`await` and the
 keyboard stops appearing again, on a code path that looks fine everywhere else.
+
+## 2b. `onClose` fires for EVERY exit — wrapping `close` catches four of six
+
+`openEditor`'s fifth parameter (#844) runs when the overlay goes away, whichever
+way it went: the ×, Escape, a backdrop tap, Back, an outside click, and the page
+scroll that tears a popover down. It is plumbed through `closePopover` (which
+fires it after its own focus restore) and through `teardownSheet` (after
+`activeSheet = null`, so a hook that opens something cannot re-enter the
+teardown) — the single funnel every sheet exit already went through.
+
+**The obvious alternative is wrong and looks right.** `build(container, close)`
+hands the builder a `close`, so a caller tracking its own open state naturally
+wraps *that*. It covers only the exits the builder itself triggers; the other four
+leave the caller believing an overlay is still up. The symptom is a trigger whose
+`aria-expanded` sticks on `true` over a panel that is gone, and a toggle that then
+needs two clicks to reopen. `test/filter-panel.test.js` dismisses with **Escape**
+specifically, because that is the cheapest exit the wrapped-`close` version misses.
 
 ## 3. Ordering constraints in the sheet path
 

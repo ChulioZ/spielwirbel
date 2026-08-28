@@ -155,7 +155,7 @@ test('the sheet presentation goes through openSheet/closeSheet', () => {
   // activeSheet directly gets neither, silently — which is exactly why
   // `.claude/rules/accessibility-contrast-and-modals.md` §2 requires the call.
   const body = bodyOfFn(DETAIL, 'openEditor');
-  assert.match(body, /openSheet\(backdrop, onKey\)/, 'openEditor does not register its sheet via openSheet');
+  assert.match(body, /openSheet\(backdrop, onKey, onClose\)/, 'openEditor does not register its sheet via openSheet');
   assert.match(body, /closeSheet\(\)/, 'openEditor never closes through closeSheet');
   assert.doesNotMatch(body, /activeSheet\s*=/, 'openEditor assigns activeSheet directly — it would miss the focus trap and Back-dismissal');
 });

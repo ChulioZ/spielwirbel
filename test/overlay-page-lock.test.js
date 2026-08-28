@@ -38,6 +38,11 @@ const CONTAINED = [
   // the sheet presentation scrolls itself.
   '.popover--tags .filter-chips',
   '.popover--tags .icon-picker',
+  // The filter panel's body (#844) — the round's tags plus BGG's categories and
+  // mechanics as they appear on the shelf, so it grows without bound too, and it
+  // is the flex item that gives way under the anchored card's cap. Popover-only,
+  // for the same reason as the two above: the sheet presentation scrolls itself.
+  '.popover--filter .fpanel__body',
   // A card `place()` had to clamp to the room its anchor leaves (#739). It is
   // the only one here applied from JS rather than declared on a component, and
   // the only one that is the overlay itself rather than a box inside it — but

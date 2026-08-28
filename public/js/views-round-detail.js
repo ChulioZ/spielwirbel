@@ -205,12 +205,16 @@ const EDITOR_SHEET_BELOW = 860;
 function usesEditorSheet() {
   return !window.matchMedia(`(min-width: ${EDITOR_SHEET_BELOW}px)`).matches;
 }
-function openEditor(anchor, variant, title, build) {
+// `onClose` (optional) runs on EVERY exit from either presentation — the ×,
+// Escape, a backdrop tap, Back, an outside click, and the page scroll that tears
+// a popover down. A caller that only wraps the `close` it is handed sees none of
+// those, which is how a trigger's `aria-expanded` goes stale (#844).
+function openEditor(anchor, variant, title, build, onClose) {
   if (!usesEditorSheet()) {
     return openPopover(anchor, (el, close) => {
       el.classList.add('popover--' + variant);
       return build(el, close);
-    });
+    }, onClose);
   }
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(title)}">
@@ -231,7 +235,7 @@ function openEditor(anchor, variant, title, build) {
   document.addEventListener('keydown', onKey, true);
   // Must go through openSheet for the focus trap (#145) and Back-dismissal
   // (#333) — never assign activeSheet directly.
-  openSheet(backdrop, onKey);
+  openSheet(backdrop, onKey, onClose);
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   backdrop.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
   // After openSheet, not before: trapFocus captures document.activeElement as
@@ -1243,7 +1247,7 @@ let pendingAfterClose = null;
 // without trapFocus, Tab walked out of the dialog into the page behind the
 // backdrop. Call this instead of assigning `activeSheet` directly, so no sheet
 // can be added later that silently misses the trap OR the Back-dismissal.
-function openSheet(backdrop, onKey) {
+function openSheet(backdrop, onKey, onClose) {
   // Replacing an already-open sheet (a showX opened while one is up) reuses its
   // marker — tear the old one down here, synchronously, rather than via a
   // leading closeSheet() whose async history.back() would arrive AFTER the new
@@ -1257,7 +1261,7 @@ function openSheet(backdrop, onKey) {
   lockPage();
   guardDragDismiss(backdrop);
   const release = trapFocus(backdrop);
-  activeSheet = { el: backdrop, onKey, release };
+  activeSheet = { el: backdrop, onKey, release, onClose };
   if (!sheetHistory) {
     history.pushState(Object.assign({}, history.state, { sheet: true }), '');
     sheetHistory = true;
@@ -1273,12 +1277,19 @@ function teardownSheet(opts) {
   document.removeEventListener('keydown', activeSheet.onKey, true);
   activeSheet.el.remove();
   if (activeSheet.release) activeSheet.release();
+  const { onClose } = activeSheet;
   activeSheet = null;
   // Every path OUT of the sheet layer comes through here — the × button, Escape,
   // a backdrop tap, a successful submit, and Back via handleSheetPop — so this is
   // the one place the page lock has to be released. `keepLock` is passed by the
   // openSheet replace path above, and by nothing else.
   if (!(opts && opts.keepLock)) unlockPage();
+  // AFTER `activeSheet = null`, so a hook that opens something of its own cannot
+  // re-enter this teardown. Fired on the `keepLock` replace path too: that sheet
+  // really is closing, and a caller tracking its own open state would otherwise
+  // believe it is still up. Mirrors closePopover's hook, so `openEditor` can
+  // offer ONE close notification across both presentations.
+  if (typeof onClose === 'function') onClose();
 }
 
 // Programmatic close (Escape, backdrop, the × button, a successful submit).

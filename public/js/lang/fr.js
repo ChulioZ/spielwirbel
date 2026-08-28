@@ -204,6 +204,12 @@ I18N.fr = {
   'metaFilter.categories': 'Catégories',
   'metaFilter.mechanics': 'Mécaniques',
   'metaFilter.reset': 'Réinitialiser les filtres',
+  'metaFilter.chipWeight': 'Complexité {min}–{max}',
+  'metaFilter.chipWeightMin': 'Complexité d’au moins {min}',
+  'metaFilter.chipWeightMax': 'Complexité d’au plus {max}',
+  'metaFilter.chipAge': 'Le plus jeune : {n} ans',
+  'metaFilter.chipTagExcluded': 'sans {name}',
+  'metaFilter.removeFilter': 'Retirer {name}',
 
   'moveGames.link': 'Déplacer des jeux',
   'moveGames.title': 'Déplacer des jeux',

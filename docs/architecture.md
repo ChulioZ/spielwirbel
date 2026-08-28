@@ -405,8 +405,10 @@ public/
                      predicate (issue #634)
     filter-panel.js  the ONE „Filter" control: the round's tags and the
                      metadata filters — playing time, complexity, minimum age,
-                     categories, mechanics — behind one disclosure, shared by the
-                     session setup screen and the Regal (issues #725, #827)
+                     categories, mechanics — behind one trigger that opens a
+                     popover (or a sheet on a phone), with the applied filters
+                     beside it as removable chips; shared by the session setup
+                     screen and the Regal (issues #725, #827, #844)
     wish-expansion.js which game a wished EXPANSION is acquired onto: the base
                      games of this round its provider links name, and the
                      resulting attach / pick / create-the-base decision
