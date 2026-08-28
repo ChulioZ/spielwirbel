@@ -109,6 +109,10 @@ I18N.en = {
   'pokale.empty': 'No trophies yet — the first session will decide.',
   'pokale.winsOne': '{n} win',
   'pokale.wins': '{n} wins',
+  // The podium's per-rank overflow count (#836): a rank shows at most three
+  // entries, the rest collapse into this. Same wording as gameInfo.listMore.
+  'podium.moreOne': '+{n} more',
+  'podium.more': '+{n} more',
   'pokale.mostPlayed': 'Most played',
   'pokale.bestRated': 'Best rated',
   'pokale.streak': 'Winning streak',

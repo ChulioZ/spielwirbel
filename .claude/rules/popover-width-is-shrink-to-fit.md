@@ -113,6 +113,10 @@ build the probe from the view's **real** markup: a synthetic card holding one
 short button measured 193px and would have sent the fix in a third direction
 again — the long button label is the whole reason the card is 351px.
 
+**Related:** `.claude/rules/percent-sizes-under-a-shrink-to-fit-flex-item.md`
+(the same shrink-to-fit sizing inside a flex item, where a child`s `%` width
+ends up measuring the text beside it).
+
 **Related:** `.claude/rules/anchored-popover-is-placed-once.md` (the height half,
 and the half-viewport ceiling this defers to),
 `.claude/rules/popover-vs-sheet-editors.md` §4 (which card rules stay

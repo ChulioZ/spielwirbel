@@ -228,6 +228,8 @@ const frontendGlobals = {
   // ranking.js + lookup-cover.js + lookup-title.js + lookup-score.js +
   // cover.js + tag-icons.js (also CommonJS modules for tests — hence `module`)
   computePlaces: 'readonly', module: 'readonly',
+  // podium.js (issue #836): the shared rank-per-column podium
+  PODIUM_MAX_PER_RANK: 'readonly', podiumColumns: 'readonly', podiumColHtml: 'readonly',
   // recap.js (issue #484). The internal helpers are listed too, like every
   // other helper module's: they share the one global scope whether or not
   // another file calls them, and no-redeclare is off — so an unlisted name is

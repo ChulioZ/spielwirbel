@@ -110,6 +110,8 @@ I18N.de = {
   'pokale.empty': 'Noch keine Pokale vergeben — die erste Session entscheidet.',
   'pokale.winsOne': '{n} Sieg',
   'pokale.wins': '{n} Siege',
+  'podium.moreOne': '+{n} weitere',
+  'podium.more': '+{n} weitere',
   'pokale.mostPlayed': 'Meistgespielt',
   'pokale.bestRated': 'Bestbewertet',
   'pokale.streak': 'Siegesserie',

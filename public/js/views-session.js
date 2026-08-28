@@ -914,30 +914,41 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     );
   }
 
-  // Podium: the top three *places* as a stage. Tied games share a place, so a
-  // 3-way tie for 1st shows all three (all crowned, same height). Arranged as
-  // [place 2 | place 1 | place 3] so a lone winner stays centered as before.
-  // With `reveal` the pedestals rise (shortest first) and confetti falls — the
-  // finale's payoff moment.
+  // Podium: the top three *places* as a stage. A COLUMN IS A PLACE, NOT A GAME
+  // (#836) — tied games share one column instead of each adding another, so the
+  // stage is at most three columns wide at any width. That is what keeps the
+  // pedestals reading as steps and the crowned winner central: places are
+  // tie-aware, so one winner plus a three-way tie for 2nd used to emit four
+  // fixed-width columns, wrap on a phone, and strand the crown bottom-right.
+  // Arranged [place 2 | place 1 | place 3]; with `reveal` the pedestals rise
+  // (shortest first) and confetti falls — the finale's payoff moment.
   const podiumRows = rows.filter((r) => r.place && r.place <= 3);
   if (rows.length >= 2 && podiumRows.length && !session.cancelled) {
-    const atPlace = (p) => podiumRows.filter((r) => r.place === p);
-    const arranged = [...atPlace(2), ...atPlace(1), ...atPlace(3)];
-    const podium = h(`<div class="result-podium${reveal ? ' is-reveal' : ''}"></div>`);
-    arranged.forEach((r) => {
-      const place = r.place;
+    const { single, cols } = podiumColumns(podiumRows);
+    const entryHtml = (r) => {
       const g = r.game;
       const imgStyle = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
-      const fb = coverPlaceholder(g);
-      const col = h(`<a class="result-podium__col result-podium__col--${place}">
-             ${place === 1 ? '<i class="ti ti-crown result-podium__crown" aria-hidden="true"></i>' : ''}
-             <span class="result-podium__img"${imgStyle}>${fb}</span>
+      return `<a class="podium__entry result-podium__entry" data-gid="${esc(g.id)}">
+             <span class="result-podium__img"${imgStyle}>${coverPlaceholder(g)}</span>
              <span class="result-podium__title">${esc(g.title)}</span>
              <span class="score-pill result-podium__pill" style="background:${avgColor(r.avg)}">Ø ${r.avg.toFixed(1)}</span>
-             <span class="result-podium__base">${place}</span>
-           </a>`);
-      makeGameLink(col, round.id, g.id);
-      podium.appendChild(col);
+           </a>`;
+    };
+    const stage = cols
+      .map((col) =>
+        podiumColHtml(col, {
+          entries: col.shown.map(entryHtml).join(''),
+          more: esc(tn(col.hidden, 'podium.moreOne', 'podium.more')),
+          base: `<span class="podium__rank">${col.rank}</span>`,
+        })
+      )
+      .join('');
+    const podium = h(
+      `<div class="podium podium--result${single ? ' podium--single' : ''}${reveal ? ' is-reveal' : ''}">${stage}</div>`
+    );
+    // The ENTRY is the link now, not the column — a column can hold several.
+    podium.querySelectorAll('.result-podium__entry[data-gid]').forEach((el) => {
+      makeGameLink(el, round.id, el.dataset.gid);
     });
     if (reveal) {
       const conf = h('<div class="confetti" aria-hidden="true"></div>');
