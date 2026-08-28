@@ -67,7 +67,7 @@ const inert = (root) => {
 
 test('start session: the control is INERT until TWO tags are included (#787)', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const chips = chipsOf(field);
 
   assert.ok(field.querySelector('.tag-mode'), 'rendered up front, not built on demand');
@@ -92,7 +92,7 @@ test('start session: cycling a chip never moves the chip row (#787)', async () =
   // every step of a full cycle, with one tag already included so the count really
   // does cross the two-tag boundary in both directions.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const el = field.querySelector('.tag-mode');
   const siblings = () => [...el.parentNode.children].indexOf(el);
   const at = siblings();
@@ -111,7 +111,7 @@ test('start session: an inert option cannot be activated (#787)', async () => {
   // changing a mode the user cannot see the effect of — and what keeps the
   // option out of the Tab order.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   assert.equal(inert(field), true);
 
   optsOf(field)[1].click();            // „Mind. ein Tag", while inert
@@ -129,7 +129,7 @@ test('start session: the mode survives while the control is inert', async () => 
   // Tags" — and the pick must keep PAINTING as selected while inert, or the user
   // watches it disappear.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const chips = chipsOf(field);
 
   chips[0].click(); chips[1].click();
@@ -148,7 +148,7 @@ test('start session: the mode survives while the control is inert', async () => 
 
 test('start session: the pool preview follows the mode (#726)', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const pooled = () =>
     [...dom.app.querySelectorAll('.pool-tile__name')].map((el) => el.textContent).sort();
 
@@ -167,7 +167,7 @@ test('start session: the included chips describe the ACTIVE mode', async () => {
   // The only string in the app that states the semantics out loud, so it is the
   // one thing a screen reader user has to go on.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const chips = chipsOf(field);
   chips[0].click(); chips[1].click();
 
@@ -184,7 +184,7 @@ test('start session: the included chips describe the ACTIVE mode', async () => {
 
 test('start session: the selection is not conveyed by colour alone', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   chipsOf(field)[0].click(); chipsOf(field)[1].click();
 
   assert.deepEqual(pressed(field), ['true', 'false'], 'AND is the default');
@@ -206,7 +206,7 @@ test('start session: the draw sends the mode it is showing (#726)', async () => 
     return { session: { id: 's1', gameIds: [] }, games: [], members: [], guests: [], teams: [] };
   });
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   chipsOf(field)[0].click(); chipsOf(field)[1].click();
   optsOf(field)[1].click();
 
@@ -227,7 +227,7 @@ test('start session: a #252 preset reopens on the mode the last draw used', asyn
     lastSessionFilters: { tagIds: ['t1', 't2'], excludeTagIds: [], count: 3, tagMode: 'any' },
   });
   await dom.call('showStartSession', round);
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   assert.equal(inert(field), false, 'the preset includes two tags, so it is live');
   assert.deepEqual(pressed(field), ['false', 'true']);
   assert.deepEqual(
@@ -242,7 +242,7 @@ test('start session: a preset with no tagMode opens on „Alle Tags" (#726)', as
     lastSessionFilters: { tagIds: ['t1', 't2'], excludeTagIds: [], count: 3 },
   });
   await dom.call('showStartSession', round);
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   assert.deepEqual(pressed(field), ['true', 'false']);
   assert.deepEqual(
     [...dom.app.querySelectorAll('.pool-tile__name')].map((el) => el.textContent).sort(), ['Azul']);
@@ -253,7 +253,7 @@ test('start session: the bulk toggle wakes and re-inerts the control', async () 
   // so it needs its own sync — otherwise the control stays inert over a filter
   // the mode very much applies to.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const bulk = field.querySelector('.tag-bulk');
 
   assert.equal(inert(field), true);
@@ -293,12 +293,12 @@ test('Regal: the count badge ignores the mode', () => {
   // that moved with it would report a number nothing else in the UI means.
   const { wrap } = regal();
   chipsOf(wrap)[0].click(); chipsOf(wrap)[1].click();
-  const badge = wrap.querySelector('.filter-toggle__badge');
+  const badge = wrap.querySelector('.fpanel__badge');
   assert.equal(badge.textContent, '2');
   optsOf(wrap)[1].click();
   assert.equal(badge.textContent, '2');
-  assert.equal(wrap.querySelector('.filter-toggle').getAttribute('aria-label'),
-    'Nach Tags filtern (2 aktiv)');
+  assert.equal(wrap.querySelector('.fpanel__summary').getAttribute('aria-label'),
+    'Filter (2 aktiv)');
 });
 
 test('Regal: the mode survives a re-render of the same round', () => {

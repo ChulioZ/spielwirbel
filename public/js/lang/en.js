@@ -190,10 +190,8 @@ I18N.en = {
   'games.search': 'Search games',
   'games.noMatch': 'No games match “{q}”.',
   'games.filter': 'Filter',
-  'games.filterLabel': 'Filter tags ({n} active)',
+  'games.filterLabel': 'Filters ({n} active)',
 
-  'metaFilter.title': 'More filters',
-  'metaFilter.label': 'More filters ({n} active)',
   'metaFilter.any': 'Any',
   'metaFilter.playtime': 'Playing time',
   'metaFilter.playtimeOption': 'At most {n} min',
@@ -639,7 +637,6 @@ I18N.en = {
   // Per-device voting (#209). The note describes what the feature does, in the
   // disabled state too. It must never read as though the round were missing
   // something: a round of names without accounts is the normal configuration.
-  'startSession.whichGames': 'Which games?',
   'startSession.countLabel': 'How many games to draw?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',

@@ -210,9 +210,9 @@ What the app does, in detail. For a short overview see the
     button, resumable in-progress sessions, the last played result, and gentle
     retire recommendations for games that are rated low or often proposed for
     retirement.
-  - **Regal** (shelf) – the game collection as a card grid with custom-tag
-    filter chips, a „Weitere Filter" disclosure over the imported BGG metadata
-    (see Sessions below), a search pill, sorting
+  - **Regal** (shelf) – the game collection as a card grid with one „Filter"
+    control holding both the custom-tag chips and the imported-BGG-metadata
+    filters (see Sessions below), a search pill, sorting
     (random / name / rating),
     and the add-game sheet. Each card opens the game's detail page
     ("Spielepass") with its score ring, editable details, a **Jetzt spielen**
@@ -225,13 +225,15 @@ What the app does, in detail. For a short overview see the
     a **Rückblick** turns the round's accumulated ratings into a readable
     record: totals, the worst-rated game, the one the group disagrees about
     most, and every member's own favourite.
-- **Sessions (hot-seat voting)** – pick who is playing tonight, optionally filter
-  the collection by custom tags, and draw a random set of candidate games —
-  only games whose player range fits the number of joining members are
-  eligible. Behind a collapsed **„Weitere Filter"** there is a second kind of
-  filter, over the metadata imported from BoardGameGeek rather than anything the
-  round maintains: a playing-time budget, a complexity range, the age of the
-  youngest person at the table, and category / mechanic chips. It offers only
+- **Sessions (hot-seat voting)** – pick who is playing tonight, optionally narrow
+  the collection, and draw a random set of candidate games — only games whose
+  player range fits the number of joining members are eligible. Narrowing happens
+  in one place: a single **„Filter"** control beside the draw count, carrying an
+  active-filter count and holding both kinds of filter as labelled sections. The
+  first is the round's own custom tags; the second is over the metadata imported
+  from BoardGameGeek rather than anything the round maintains — a playing-time
+  budget, a complexity range, the age of the youngest person at the table, and
+  category / mechanic chips. That second half offers only
   the values the round's own games actually carry — a fifteen-game shelf lists
   the handful of categories those games have, not BGG's ~84 — and it is absent
   entirely on a shelf with no such data. A game BGG knows nothing about always
@@ -239,9 +241,10 @@ What the app does, in detail. For a short overview see the
   looked at, so on a round whose games were added before this existed the
   controls fill themselves in over the first few visits rather than staying
   empty; a draw that uses one of these filters waits briefly for that to happen. From a tablet width up the setup screen splits in two: who is
-  at the table on the left, and on the right the filters, the draw count and a
-  live panel showing exactly which games are currently in the pot, so seating one
-  more player or excluding a tag visibly changes the shelf beside it. The tags,
+  at the table on the left, and on the right the filter control, the draw count
+  and a live panel showing exactly which games are currently in the pot, so
+  seating one more player or excluding a tag visibly changes the shelf beside
+  it. The tags,
   filters and count a round was last drawn with are remembered and preselected
   the next time, so a group that always draws the same way just confirms.
 - **Voting** – the draw opens a **lobby** showing who has voted and who has not.

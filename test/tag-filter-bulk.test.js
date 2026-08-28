@@ -64,7 +64,7 @@ const stateOf = (chip) =>
 
 test('start session: the toggle reads „Alle wählen" and includes every tag', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const bulk = field.querySelector('.tag-bulk');
 
   assert.ok(bulk, 'the toggle is rendered inside the tag filter field');
@@ -86,7 +86,7 @@ test('start session: the toggle reads „Alle wählen" and includes every tag', 
 
 test('start session: one click clears a MIXED filter', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const bulk = field.querySelector('.tag-bulk');
   const chips = chipsOf(field);
 
@@ -105,7 +105,7 @@ test('start session: cycling the last chip back to neutral restores „Alle wäh
   // The chip click has to re-sync the label too, not just the toggle's own
   // click — otherwise the button lies about what it will do next.
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const bulk = field.querySelector('.tag-bulk');
   const chip = chipsOf(field)[0];
 
@@ -118,7 +118,7 @@ test('start session: cycling the last chip back to neutral restores „Alle wäh
 
 test('start session: the pool preview follows the toggle', async () => {
   await dom.call('showStartSession', roundFixture());
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const bulk = field.querySelector('.tag-bulk');
   const pooled = () =>
     [...dom.app.querySelectorAll('.pool-tile__name')].map((el) => el.textContent).sort();
@@ -145,7 +145,7 @@ test('start session: a #252 preset arrives clearable in one click', async () => 
     lastSessionFilters: { tagIds: ['t1', 't2'], excludeTagIds: ['t3'] },
   });
   await dom.call('showStartSession', round);
-  const field = dom.app.querySelector('#gamesFilterField');
+  const field = dom.app.querySelector('.fpanel__group');
   const bulk = field.querySelector('.tag-bulk');
 
   assert.deepEqual(chipsOf(field).map(stateOf), ['include', 'include', 'exclude'],
@@ -161,11 +161,17 @@ test('start session: a #252 preset arrives clearable in one click', async () => 
   assert.deepEqual(sent, ['Azul', 'Catan', 'Uno'], 'the cleared filter draws from everything');
 });
 
-test('start session: a round with no tags renders no toggle and no field', async () => {
+test('start session: a round with no tags renders no tag section, and no panel at all', async () => {
+  // Since #827 the tag chips are a section INSIDE the one filter control, so
+  // "no tags" is now absence rather than a hidden field — and on this fixture,
+  // whose games carry no BGG metadata either, the whole panel is absent with
+  // them. The mount stays as the anchor the backfill remounts into (#736).
   await dom.call('showStartSession', roundFixture({ tags: [] }));
-  const field = dom.app.querySelector('#gamesFilterField');
-  assert.equal(field.hidden, true, 'the whole field stays hidden');
-  assert.equal(field.querySelector('.tag-bulk'), null);
+  assert.equal(dom.app.querySelector('.fpanel__group'), null, 'no tag section');
+  assert.equal(dom.app.querySelector('.tag-bulk'), null);
+  assert.equal(dom.app.querySelector('.fpanel'), null,
+    'no tags AND no metadata means no filter control whatsoever');
+  assert.equal(dom.app.querySelector('#filterMount').hidden, true);
 });
 
 // ------------------------------------------------------------------------ Regal
@@ -199,8 +205,8 @@ test('Regal: the toggle sits in the filter panel and flips the same way', () => 
 test('Regal: the toggle updates the grid AND the active-count badge', () => {
   const { wrap } = regal();
   const bulk = wrap.querySelector('.tag-bulk');
-  const badge = wrap.querySelector('.filter-toggle__badge');
-  const toggle = wrap.querySelector('.filter-toggle');
+  const badge = wrap.querySelector('.fpanel__badge');
+  const toggle = wrap.querySelector('.fpanel__summary');
   const cards = () => dom.app.querySelectorAll('.cards .game-card').length;
 
   assert.equal(cards(), 3);
@@ -209,7 +215,7 @@ test('Regal: the toggle updates the grid AND the active-count badge', () => {
   bulk.click();
   assert.equal(badge.textContent, '3', 'syncFilterBadge ran');
   assert.equal(badge.hidden, false);
-  assert.equal(toggle.getAttribute('aria-label'), 'Nach Tags filtern (3 aktiv)',
+  assert.equal(toggle.getAttribute('aria-label'), 'Filter (3 aktiv)',
     'the count is announced, not conveyed by the badge colour alone');
   assert.equal(cards(), 0, 'renderGames ran — three ANDed tags match no game');
 

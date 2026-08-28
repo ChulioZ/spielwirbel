@@ -246,46 +246,36 @@ function renderRegalTab(round, activeGames) {
     const roundTags = round.tags || [];
     const tagFilter = regalFilters.tags;
     [...tagFilter.keys()].forEach((x) => { if (!roundTags.some((tg) => tg.id === x)) tagFilter.delete(x); });
-    // The tag half of `.regal-filter`, unchanged but for having become a
-    // function: since #725 it is one of two things that may fill the wrapper.
-    function buildTagFilter(filterWrap) {
-      const chips = h('<div class="filter-chips"></div>');
-      const toggle = h(`<button class="filter-toggle" type="button" aria-expanded="false">
-           <i class="ti ti-tags" aria-hidden="true"></i><span>${esc(t('games.filter'))}</span>
-           <span class="filter-toggle__badge" aria-hidden="true" hidden></span>
-         </button>`);
-      const badge = toggle.querySelector('.filter-toggle__badge');
-      // The count of actively-filtering tags is shown two ways so it is never
-      // conveyed by colour alone while collapsed: the badge (sighted) and the
-      // button's aria-label (screen readers). The badge is aria-hidden so the
-      // label doesn't announce the number twice.
-      function syncFilterBadge() {
-        const n = tagFilter.size;
-        badge.textContent = n;
-        badge.hidden = n === 0;
-        toggle.setAttribute('aria-label', t('games.filterLabel', { n }));
-      }
-      toggle.addEventListener('click', () => {
-        const open = filterWrap.classList.toggle('is-open');
-        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      });
-      // The bulk „Alle wählen"/„Alle abwählen" action (#723), shared with the
-      // session setup screen. It lives in `.regal-filter` rather than inside
-      // `.filter-chips` — an action is not one of the chips — so CSS collapses
-      // it with them below 860px.
+    // The tag half of the filter panel (#827). It used to be a chip row with its
+    // OWN phone-only „Filter" toggle sitting beside the „Weitere Filter" drawer —
+    // three affordances for one job, and the toggle collapsed only below 860px
+    // while the drawer collapsed at every width. Now it is a plain section handed
+    // to `renderFilterPanel`, which owns the one disclosure and the one count.
+    function buildTagSection() {
+      const sectionEl = h(`<div class="fpanel__group">
+          <div class="field-head">
+            <div class="field__label" id="regalTagLabel">${esc(t('tags.title'))}</div>
+            <span id="regalBulkMount"></span>
+          </div>
+          <div id="regalModeMount"></div>
+          <div class="filter-chips" role="group" aria-labelledby="regalTagLabel"></div>
+        </div>`);
+      const chips = sectionEl.querySelector('.filter-chips');
       const chipEls = [];
       const repaintChips = () =>
         chipEls.forEach(({ el, tag }) =>
           paintTagChip(el, tag.name, tagFilter.get(tag.id), tag.icon, regalFilters.tagMode));
       // The AND/OR control for the included tags (#726), shared with the session
       // setup screen and reading its state out of `regalFilters` so it survives
-      // navigation within the round like the chips and the search do. The count
-      // badge is unaffected — it counts actively-filtering tags, which the mode
-      // does not change.
+      // navigation within the round like the chips and the search do.
       const mode = renderTagModeToggle(regalFilters, tagFilter, () => {
         repaintChips();
         renderGames();
       });
+      // The bulk „Alle wählen"/„Alle abwählen" action (#723), shared with the
+      // session setup screen. It sits in the section head beside the label
+      // rather than after the chips, which is where the setup screen already put
+      // it — one panel, one grammar.
       const bulk = renderTagBulkToggle(
         tagFilter,
         roundTags,
@@ -305,45 +295,43 @@ function renderRegalTab(round, activeGames) {
         });
         chips.appendChild(chip);
       });
-      syncFilterBadge();
-      filterWrap.appendChild(toggle);
-      filterWrap.appendChild(mode.el);
-      filterWrap.appendChild(chips);
-      filterWrap.appendChild(bulk.el);
+      sectionEl.querySelector('#regalBulkMount').replaceWith(bulk.el);
+      sectionEl.querySelector('#regalModeMount').replaceWith(mode.el);
+      return {
+        el: sectionEl,
+        count: () => tagFilter.size,
+        reset: () => { tagFilter.clear(); repaintChips(); bulk.sync(); mode.sync(); },
+      };
     }
 
-    // „Weitere Filter" (#725), the same disclosure the session setup screen
-    // carries. It decides whether there is a wrapper at all: a round with no
-    // tags but BGG metadata on its shelf gets a `.regal-filter` holding only
-    // this, and a round with neither still gets none. Its summary carries its
-    // OWN count — deliberately not folded into the tag toggle's badge, because
-    // the two collapse independently (the chips only below 860px, this at every
-    // width) and one number over two controls could not say which is filtering.
-    //
     // The wrapper is created UNCONDITIONALLY and hidden while it holds nothing,
-    // because the backfill below can make the disclosure appear on a shelf that
-    // could not offer it a moment ago (#736) — and with no wrapper there would
-    // be nowhere to put it. `hidden` costs no space: `.regal-filter` sets only a
+    // because the backfill below can make the panel appear on a shelf that could
+    // not offer it a moment ago (#736) — and with no wrapper there would be
+    // nowhere to put it. `hidden` costs no space: `.regal-filter` sets only a
     // margin, so nothing overrides the UA's `[hidden]`
     // (.claude/rules/hidden-attribute-vs-display-rule.md).
     const filterWrap = h('<div class="regal-filter"></div>');
-    if (roundTags.length) buildTagFilter(filterWrap);
     gamesSec.appendChild(filterWrap);
 
-    let metaFilter = null;
-    const mountMetaFilter = () => {
+    const tagSection = roundTags.length ? buildTagSection() : null;
+    let filterPanel = null;
+    // A tag chip changes a count the panel renders, so the badge has to be told;
+    // the metadata controls resync themselves through the panel's onChange.
+    function syncFilterBadge() { if (filterPanel) filterPanel.sync(); }
+    const mountFilterPanel = () => {
       // The open flag survives a rebuild; the picks survive because
-      // `regalFilters.metadata` is mutated in place and handed straight back in.
-      const wasOpen = !!(metaFilter && metaFilter.el.open);
-      if (metaFilter) metaFilter.el.remove();
-      metaFilter = renderMetadataFilter(activeGames, regalFilters.metadata, () => renderGames());
-      if (metaFilter) {
-        metaFilter.el.open = wasOpen;
-        filterWrap.appendChild(metaFilter.el);
+      // `regalFilters.metadata` is mutated in place and handed straight back in,
+      // and the tag section node is MOVED into the new panel rather than rebuilt.
+      const wasOpen = !!(filterPanel && filterPanel.el.open);
+      if (filterPanel) filterPanel.el.remove();
+      filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection);
+      if (filterPanel) {
+        filterPanel.el.open = wasOpen;
+        filterWrap.appendChild(filterPanel.el);
       }
-      filterWrap.hidden = !roundTags.length && !metaFilter;
+      filterWrap.hidden = !filterPanel;
     };
-    mountMetaFilter();
+    mountFilterPanel();
 
     // Fill the shelf's missing BGG metadata (#736) — the Regal is the other
     // screen #725 gave these filters to, and it was no more a backfill trigger
@@ -351,7 +339,7 @@ function renderRegalTab(round, activeGames) {
     // re-rendered: a rebuild would reset the scroll position, the search box and
     // the sort the user just chose.
     refreshShelfGameInfo(rid, activeGames, () => {
-      mountMetaFilter();
+      mountFilterPanel();
       renderGames();
       swrStore.set('round:' + rid, round);
     });

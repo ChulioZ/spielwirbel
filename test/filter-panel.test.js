@@ -1,6 +1,7 @@
 'use strict';
 
-/* The „Weitere Filter" disclosure (#725) on the two screens that pick games.
+/* The ONE filter control (#827) on the two screens that pick games — the
+   round's tags and the BGG metadata filters behind a single disclosure.
 
    The predicate itself is unit-tested in `test/draw-pool.test.js`; what cannot
    be seen from there is whether the CONTROLS are wired to it — an option list
@@ -9,14 +10,16 @@
    was archived. Each of those renders a screen that looks finished and filters
    wrongly, so they are asserted by rendering the real views.
 
-   Anything CSS stays parsed out of styles.css: jsdom applies no external
-   stylesheet (.claude/rules/testing-views-under-jsdom.md). */
+   The panel's own CSS contract — that the pre-#827 phone-only collapse is gone
+   and cannot creep back — is in `test/regal-filter.test.js`. Anything CSS stays
+   parsed out of styles.css: jsdom applies no external stylesheet
+   (.claude/rules/testing-views-under-jsdom.md). */
 
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { drawPool } = require('../lib/draw');
-const { bodyOf, rulesOf, mediaBlocks, whole } = require('./support/css');
+const { bodyOf } = require('./support/css');
 const { loadApp } = require('./support/dom');
 
 const dom = loadApp({ locale: 'de' });
@@ -44,8 +47,8 @@ const roundFixture = (over = {}) => ({
   ...over,
 });
 
-const disclosure = () => dom.app.querySelector('.mfilter');
-const summaryBadge = () => dom.app.querySelector('.mfilter__badge');
+const disclosure = () => dom.app.querySelector('.fpanel');
+const summaryBadge = () => dom.app.querySelector('.fpanel__badge');
 const rowLabels = () => [...dom.app.querySelectorAll('.mfilter__label')].map((el) => el.textContent);
 const groupLabels = () => [...dom.app.querySelectorAll('.mfilter__group .field__label')].map((el) => el.textContent);
 const chipsFor = (label) => {
@@ -103,7 +106,7 @@ test('a shelf with no metadata at all renders no disclosure whatsoever', async (
   // into — but it must be `hidden`, or `.setup-grid__aside`'s gap pays for a
   // control that is not there. A `display: none` element is not a flex item at
   // all, so hidden costs exactly what removal did.
-  const mount = dom.app.querySelector('#metaFilterMount');
+  const mount = dom.app.querySelector('#filterMount');
   assert.ok(mount, 'the repaint anchor must survive, or a filled shelf has nowhere to mount');
   assert.equal(mount.hidden, true, 'an empty mount still costs a row of flex gap');
 });
@@ -114,8 +117,8 @@ test('it is collapsed by default and its badge is silent until something filters
   assert.equal(disclosure().hasAttribute('open'), false,
     'a user who never opens it sees one summary row more than before, and nothing else');
   assert.equal(summaryBadge().hidden, true, 'no "0" badge on an unfiltered screen');
-  assert.equal(dom.app.querySelector('.mfilter__summary').getAttribute('aria-label'),
-    'Weitere Filter (0 aktiv)');
+  assert.equal(dom.app.querySelector('.fpanel__summary').getAttribute('aria-label'),
+    'Filter (0 aktiv)');
 });
 
 test('setting a filter shrinks the pool preview and shows the count', async () => {
@@ -134,8 +137,8 @@ test('setting a filter shrinks the pool preview and shows the count', async () =
 
   assert.equal(summaryBadge().hidden, false);
   assert.equal(summaryBadge().textContent, '1');
-  assert.equal(dom.app.querySelector('.mfilter__summary').getAttribute('aria-label'),
-    'Weitere Filter (1 aktiv)');
+  assert.equal(dom.app.querySelector('.fpanel__summary').getAttribute('aria-label'),
+    'Filter (1 aktiv)');
 });
 
 test('a category chip toggles, is announced by aria-pressed, and ORs with its siblings', async () => {
@@ -309,7 +312,9 @@ test('Regal: a round with NO tags but metadata still gets a filter panel', () =>
   const wrap = dom.app.querySelector('.regal-filter');
   assert.ok(wrap, 'the wrapper is no longer conditional on the round having tags');
   assert.ok(wrap.querySelector('.mfilter'));
-  assert.equal(wrap.querySelector('.filter-toggle'), null, 'and carries no tag half');
+  // `.fpanel__group`, not `.filter-toggle`: since #827 that class exists nowhere,
+  // so asserting its absence would pass against a panel full of tag chips.
+  assert.equal(wrap.querySelector('.fpanel__group'), null, 'and carries no tag half');
 });
 
 test('Regal: a round with neither tags nor metadata still gets no panel at all', () => {
@@ -324,20 +329,47 @@ test('Regal: a round with neither tags nor metadata still gets no panel at all',
   assert.equal(wrap.textContent.trim(), '', 'a hidden wrapper must also be empty');
 });
 
-test('Regal: the tag half is untouched when the round has tags', () => {
+test('Regal: both halves live in ONE panel, as two labelled sections (#827)', () => {
   regal({
     tags: [{ id: 't1', name: 'Kenner' }],
     games: GAMES.map((g) => ({ ...g, tagIds: g.id === 'g3' ? ['t1'] : [] })),
   });
 
   const wrap = dom.app.querySelector('.regal-filter');
-  assert.ok(wrap.querySelector('.filter-toggle'), 'the collapsed-chips toggle still exists');
-  wrap.querySelector('#filterChips .chip, .filter-chips .chip').click();
-  assert.deepEqual(shelved(), ['Gloomhaven']);
-  // The two badges are independent — the tag toggle counts tags, the disclosure
-  // counts metadata. One number over both could not say which is filtering.
-  assert.equal(wrap.querySelector('.filter-toggle__badge').textContent, '1');
-  assert.equal(summaryBadge().hidden, true);
+  const panels = wrap.querySelectorAll('.fpanel');
+  assert.equal(panels.length, 1, 'one control, not a chip row beside a drawer');
+  // Tags first, metadata second, both direct children of the one body: the
+  // sections stay separate because a round's own word and a BGG fact combine
+  // differently (.claude/rules/provider-metadata-is-a-filter-not-a-tag.md).
+  const sections = [...wrap.querySelectorAll('.fpanel__body > *')]
+    .map((el) => el.className);
+  assert.deepEqual(sections, ['fpanel__group', 'mfilter']);
+  assert.equal(wrap.querySelector('.filter-toggle'), null,
+    'the phone-only tag toggle is gone — the panel is the only collapse now');
+
+  wrap.querySelector('.fpanel__group .filter-chips .chip').click();
+  assert.deepEqual(shelved(), ['Gloomhaven'], 'the tag half still filters the grid');
+});
+
+test('Regal: ONE badge counts both halves together (#827)', () => {
+  // The two counts were deliberately separate while they were two controls that
+  // collapsed on different triggers — one number could not say which was
+  // filtering. With a single control and a single trigger that question is gone,
+  // and a user who set one of each expects to be told "2".
+  regal({
+    tags: [{ id: 't1', name: 'Kenner' }],
+    games: GAMES.map((g) => ({ ...g, tagIds: g.id === 'g3' ? ['t1'] : [] })),
+  });
+  const wrap = dom.app.querySelector('.regal-filter');
+  assert.equal(summaryBadge().hidden, true, 'nothing filtering yet');
+
+  wrap.querySelector('.fpanel__group .filter-chips .chip').click();
+  assert.equal(summaryBadge().textContent, '1', 'the tag half tells the shared badge');
+
+  choose(selectLabelled('Spieldauer'), '30');
+  assert.equal(summaryBadge().textContent, '2', 'and the metadata half adds to it');
+  assert.equal(wrap.querySelector('.fpanel__summary').getAttribute('aria-label'),
+    'Filter (2 aktiv)', 'the count is announced, not conveyed by the badge colour alone');
 });
 
 test('Regal: switching rounds resets the metadata filters with everything else', () => {
@@ -352,40 +384,19 @@ test('Regal: switching rounds resets the metadata filters with everything else',
 
 // ---------------------------------------------------------------------- CSS
 
-test('the badge honours the hidden attribute (its explicit display would override it)', () => {
-  // `.mfilter__badge { display: inline-flex }` beats the UA sheet's
-  // `[hidden] { display: none }`, so without the paired rule the unfiltered
-  // summary renders a literal "0" — the trap `.filter-chips[hidden]` records.
-  const guard = bodyOf('.mfilter__badge[hidden]');
-  assert.ok(guard, '.mfilter__badge[hidden] rule not found in styles.css');
-  assert.match(guard, /display:\s*none/);
-});
-
-test('the disclosure chips do NOT reuse the shared .filter-chips class', () => {
-  // The Regal's phone block hides `.regal-filter .filter-chips` behind its own
-  // "Filter" button, and this disclosure mounts inside `.regal-filter`. Borrowing
-  // the class would collapse these chips behind a control that does not govern
-  // them — invisible from jsdom, which applies no stylesheet, so it is asserted
-  // over the markup the renderer emits.
+test('the metadata chips do NOT reuse the shared .filter-chips class', () => {
+  // They are different controls: `.filter-chips` carries the tags' tri-state
+  // cycle, these are plain multi-select (with OR semantics a third click would
+  // have nothing to mean). Sharing the class would invite sharing the behaviour.
+  // Invisible from jsdom, which applies no stylesheet, so it is asserted over
+  // the markup the renderer emits — and the tag section, which DOES use the
+  // shared class, is built by the screens rather than by this file.
   const fs = require('node:fs');
   const path = require('node:path');
-  const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'metadata-filter.js'), 'utf8');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'filter-panel.js'), 'utf8');
   assert.match(src, /class="mfilter__chips"/);
   assert.doesNotMatch(src, /class="filter-chips"/);
   assert.ok(bodyOf('.mfilter__chips'), '.mfilter__chips needs its own layout rule');
-});
-
-test('the narrow Regal block never hides the disclosure it now contains', () => {
-  // The tag chips collapse below 860px; the metadata disclosure is collapsed by
-  // its own summary at every width and must stay reachable there. A rule hiding
-  // `.mfilter` inside that block would make it unopenable on every phone.
-  const narrow = mediaBlocks()
-    .filter(([, css]) => whole('.regal-filter').test(css))
-    .find(([q]) => /max-width/.test(q));
-  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
-  const offenders = rulesOf(narrow[1])
-    .filter(([sel, body]) => whole('.mfilter').test(sel) && /display:\s*none/.test(body));
-  assert.deepEqual(offenders, [], 'the phone block must not hide the metadata disclosure');
 });
 
 /* ---------------- The shelf-wide backfill's repaint (#736) ----------------- */
@@ -438,7 +449,7 @@ test('setup: controls the shelf could not offer appear once the backfill lands',
   assert.ok(disclosure(), 'the disclosure never appeared after the metadata arrived');
   assert.deepEqual(rowLabels(), ['Spieldauer', 'Komplexität', 'Jüngste Person am Tisch']);
   assert.deepEqual(chipsFor('Kategorien').map((c) => c.textContent), ['Economic', 'Family']);
-  assert.equal(dom.app.querySelector('#metaFilterMount').hidden, false);
+  assert.equal(dom.app.querySelector('#filterMount').hidden, false);
 });
 
 test('setup: the fold-in keeps the seats, guests and filter picks the user set', async () => {

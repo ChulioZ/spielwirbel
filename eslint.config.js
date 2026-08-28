@@ -109,7 +109,7 @@ const frontendGlobals = {
   countMetadataFilters: 'readonly',
   PLAYTIME_CHOICES: 'readonly', AGE_CHOICES: 'readonly', WEIGHT_CHOICES: 'readonly',
   // metadata-filter.js (issue #725)
-  renderMetadataFilter: 'readonly',
+  renderMetadataFilter: 'readonly', renderFilterPanel: 'readonly',
   // vote-scale.js (issue #797) — also required by lib/session-votes.js,
   // lib/recommend.js and both repo backends
   RATING_MIN: 'readonly', RATING_MAX: 'readonly',

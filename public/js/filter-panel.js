@@ -1,12 +1,21 @@
-/* Spielwirbel – the „Weitere Filter" disclosure (#725): playing time,
-   complexity, minimum age, categories and mechanics, over the metadata #724
-   imports from BoardGameGeek.
+/* Spielwirbel – the ONE filter control the two game-picking screens carry
+   (#827): a single disclosure holding both ways to narrow a shelf — the round's
+   own tags (#238/#241/#726) and the filters over the metadata #724 imports from
+   BoardGameGeek (#725).
 
-   Shared by the two screens that pick games — the session setup screen
-   (views-session.js), where it shapes the draw pool, and the Regal
-   (views-regal.js), where it filters the shelf — so the two cannot offer
-   different controls over the same fields. The predicate they apply lives one
-   file further down, in draw-pool.js, because the SERVER applies it too.
+   It is one control because narrowing the pool is one job. Until #827 the two
+   were separate affordances — an always-open chip row plus a collapsed „Weitere
+   Filter" drawer, and in the Regal a third, phone-only „Filter" button over the
+   chips alone — so the screen asked the same question in three grammars and the
+   user had to learn which one held what.
+
+   Shared by the session setup screen (views-session.js), where it shapes the
+   draw pool, and the Regal (views-regal.js), where it filters the shelf, so the
+   two cannot offer different controls over the same fields. The predicate they
+   apply lives one file further down, in draw-pool.js, because the SERVER
+   applies it too. The TAG half is built by each screen and handed in: the two
+   screens genuinely differ there (the setup screen has no persisted state to
+   prune, the Regal does), while the metadata half is identical on both.
 
    Frontend shared-scope script; load order: see index.html. */
 
@@ -17,11 +26,11 @@
 // `for`/`id` association is what makes each select announce its own name.
 let metaFilterSeq = 0;
 
-// Build the whole disclosure, or return NULL when this shelf carries none of the
-// fields — a fresh instance without BGG_API_TOKEN, or a Regal of hand-typed
-// games. Rendering an empty „Weitere Filter" there would be a control that can
-// never do anything, which is why the tag field already hides itself with no
-// round tags rather than showing an empty chip row.
+// Build the metadata half — the rows that filter on BGG's imported fields — or
+// return NULL when this shelf carries none of them: a fresh instance without
+// BGG_API_TOKEN, or a Regal of hand-typed games. Rendering an empty control
+// there would be one that can never do anything, which is why the tag field
+// already hides itself with no round tags rather than showing an empty chip row.
 //
 //  - `games` are the ACTIVE games the filters will be applied to; every option
 //    offered is derived from them (draw-pool.js `metadataFilterOptions`).
@@ -29,37 +38,24 @@ let metaFilterSeq = 0;
 //    have been through `normalizeMetadataFilters` already, so a value whose
 //    referent has vanished is gone before a control could show it.
 //  - `onChange` is the screen's refresh — the pool preview here, the cover grid
-//    there.
+//    there. `renderFilterPanel` wraps it so the shared badge resyncs too.
 //
-// Returns { el, sync, reset }. `reset` clears every filter and repaints the
-// controls in place — the empty-pool escape hatch needs that rather than a
-// rebuild, which would snap the disclosure shut on the user mid-recovery. It
-// deliberately does NOT call `onChange`: the caller is clearing the tag filter
-// in the same breath and refreshes once.
+// Returns { el, reset }. `reset` clears every filter and repaints the controls
+// in place — the empty-pool escape hatch needs that rather than a rebuild, which
+// would snap the panel shut on the user mid-recovery. It deliberately does NOT
+// call `onChange`: the panel clears the tag half in the same breath and
+// refreshes once.
 function renderMetadataFilter(games, state, onChange) {
   const options = metadataFilterOptions(games);
   if (!hasMetadataFilterOptions(options)) return null;
 
   const uid = `mf${++metaFilterSeq}`;
-  // <details>/<summary> rather than a button plus a class toggle: the platform
-  // gives the disclosure its expanded state, its keyboard behaviour and its name
-  // for free (.claude/rules/native-button-vs-focusable-span.md). The badge is
-  // aria-hidden and the count is restated in the summary's aria-label, exactly
-  // as the Regal's collapsed tag filter does it — so it is never conveyed by
-  // colour or by a bare glyph alone.
-  const el = h(`<details class="mfilter">
-      <summary class="mfilter__summary">
-        <i class="ti ti-chevron-down mfilter__caret" aria-hidden="true"></i>
-        <span>${esc(t('metaFilter.title'))}</span>
-        <span class="mfilter__badge" aria-hidden="true" hidden></span>
-      </summary>
-      <div class="mfilter__body"></div>
-    </details>`);
-  const body = el.querySelector('.mfilter__body');
-  const badge = el.querySelector('.mfilter__badge');
-  const summary = el.querySelector('.mfilter__summary');
+  // A plain container: the disclosure, its summary and the count badge belong to
+  // `renderFilterPanel` below, which wraps this together with the tag half.
+  const el = h('<div class="mfilter"></div>');
+  const body = el;
 
-  const changed = () => { sync(); onChange(); };
+  const changed = onChange;
   // One entry per control, each re-reading `state` into its own widget. That is
   // what lets `reset` clear the filters without rebuilding the disclosure.
   const painters = [];
@@ -174,12 +170,6 @@ function renderMetadataFilter(games, state, onChange) {
   if (options.categories.length) body.appendChild(chipGroup('metaFilter.categories', 'categories', options.categories));
   if (options.mechanics.length) body.appendChild(chipGroup('metaFilter.mechanics', 'mechanics', options.mechanics));
 
-  function sync() {
-    const n = countMetadataFilters(state);
-    badge.textContent = String(n);
-    badge.hidden = n === 0;
-    summary.setAttribute('aria-label', t('metaFilter.label', { n }));
-  }
   // The two lists are emptied IN PLACE (`length = 0`, not a fresh `[]`), because
   // the caller and every chip's paint closure hold the same array — reassigning
   // would leave both reading a list this function no longer writes to.
@@ -191,6 +181,71 @@ function renderMetadataFilter(games, state, onChange) {
     state.categories.length = 0;
     state.mechanics.length = 0;
     painters.forEach((paint) => paint());
+  }
+  return { el, reset };
+}
+
+// =================== The one filter control (#827) ===================
+
+// Wrap the two halves — the round's tags and the BGG metadata rows — in a single
+// disclosure: one control, one count, one place to look. Returns NULL when there
+// is nothing to filter by at all (no round tags AND no metadata on the shelf), so
+// a round of hand-typed games without tags sees no filter affordance rather than
+// an empty one.
+//
+//  - `tagSection` is `{ el, count, reset }` built by the calling screen, or null
+//    when the round has no tags. `count()` is READ on every sync rather than
+//    passed in as a number, because the chips mutate the screen's own map and a
+//    copy taken at build time would report a count the user has already changed.
+//
+// Returns { el, sync, reset }. A screen calls `sync()` after a tag chip moves;
+// the metadata controls route through `onChange` and resync themselves.
+function renderFilterPanel(games, state, onChange, tagSection) {
+  const meta = renderMetadataFilter(games, state, () => { sync(); onChange(); });
+  if (!meta && !tagSection) return null;
+
+  // <details>/<summary> rather than a button plus a class toggle: the platform
+  // gives the disclosure its expanded state, its keyboard behaviour and its
+  // accessible name for free (.claude/rules/native-button-vs-focusable-span.md).
+  // The badge is aria-hidden and the count is restated in the summary's
+  // aria-label, so it is never conveyed by colour or by a bare glyph alone.
+  const el = h(`<details class="fpanel">
+      <summary class="fpanel__summary">
+        <i class="ti ti-filter" aria-hidden="true"></i>
+        <span>${esc(t('games.filter'))}</span>
+        <span class="fpanel__badge" aria-hidden="true" hidden></span>
+      </summary>
+      <div class="fpanel__body"></div>
+    </details>`);
+  const body = el.querySelector('.fpanel__body');
+  const badge = el.querySelector('.fpanel__badge');
+  const summary = el.querySelector('.fpanel__summary');
+
+  // Tags first — they are the round's own vocabulary, so they are the half a
+  // group recognises; the metadata rows follow in the order draw-pool.js states
+  // them. The two stay visibly separate sections inside the one panel: a
+  // provider fact and a round's own word combine differently and must not read
+  // as one vocabulary (.claude/rules/provider-metadata-is-a-filter-not-a-tag.md).
+  if (tagSection) body.appendChild(tagSection.el);
+  if (meta) body.appendChild(meta.el);
+
+  // ONE number over both halves. They were deliberately two badges while they
+  // were two controls collapsing on different triggers (the chips only below
+  // 860px, the drawer at every width) — with a single control and a single
+  // trigger there is no "which of the two is filtering" question left for a
+  // second number to answer, and both sections are labelled inside.
+  function sync() {
+    const n = countMetadataFilters(state) + (tagSection ? tagSection.count() : 0);
+    badge.textContent = String(n);
+    badge.hidden = n === 0;
+    summary.setAttribute('aria-label', t('games.filterLabel', { n }));
+  }
+  // Clears BOTH halves: the empty-pool escape hatch offers one button because
+  // the user sees one filter control, and clearing half of it would leave the
+  // pool empty with the badge still lit.
+  function reset() {
+    if (tagSection && tagSection.reset) tagSection.reset();
+    if (meta) meta.reset();
     sync();
   }
   sync();

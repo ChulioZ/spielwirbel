@@ -29,9 +29,9 @@ function showStartSession(round) {
   // the 18px spacing `.field` would have provided.
   //
   // `.setup-grid` splits the screen along the two questions it actually asks:
-  // WHO is at the table (left) and WHAT gets drawn (right — the two controls
-  // that shape the pool, the resulting pool itself, and the button that draws
-  // from it). From 860px up that is two columns; below it the grid is a plain
+  // WHO is at the table (left) and WHAT gets drawn (right — the filter control
+  // and the count that shape the pool, the resulting pool itself, and the button
+  // that draws from it). From 860px up that is two columns; below it the grid is a plain
   // block, so the DOM order below IS the phone order — and it is byte-for-byte
   // the order this screen already had, so nothing moves on a phone.
   //
@@ -57,22 +57,16 @@ function showStartSession(round) {
         </div>
       </div>
       <div class="setup-grid__aside">
-        <div class="field" id="gamesFilterField" hidden>
-          <div class="field-head">
-            <div class="field__label" id="tagFilterLabel">${esc(t('startSession.whichGames'))}</div>
-            <span id="tagBulkMount"></span>
+        <div class="setup-filterbar">
+          <div class="field">
+            <label for="count">${esc(t('startSession.countLabel'))}</label>
+            <div class="stepper">
+              <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+              <input id="count" class="stepper__val" inputmode="numeric" value="3" />
+              <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+            </div>
           </div>
-          <div id="tagModeMount"></div>
-          <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
-        </div>
-        <div id="metaFilterMount"></div>
-        <div class="field">
-          <label for="count">${esc(t('startSession.countLabel'))}</label>
-          <div class="stepper">
-            <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
-            <input id="count" class="stepper__val" inputmode="numeric" value="3" />
-            <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
-          </div>
+          <div id="filterMount"></div>
         </div>
         <div class="setup-panel">
           <h2 class="setup-panel__title" id="poolTitle"></h2>
@@ -173,8 +167,14 @@ function showStartSession(round) {
   // used to be. Both hooks are assigned later (the tag one only when the round
   // has tags at all), so they default to no-ops rather than being conditional at
   // the call site.
-  let resetTagFilters = () => {};
-  let resetMetaFilters = () => {};
+  // Declared here because `updateHint` closes over it, and it cannot be built
+  // until the tag section below exists. Both are read only from listeners, which
+  // run long after this function has finished.
+  let filterPanel = null;
+  // A tag chip changes a count the PANEL renders, so the badge has to be told.
+  // The metadata controls route through the panel's own onChange and resync
+  // themselves, which is why only the tag half calls this.
+  const syncFilterBadge = () => { if (filterPanel) filterPanel.sync(); };
   const anyFilterActive = () => selectedTags.size > 0 || countMetadataFilters(metaFilters) > 0;
   const coverStyle = (g, w) =>
     g.image ? ` style="background-image:url('${coverUrl(g.image, w)}')"` : '';
@@ -214,8 +214,9 @@ function showStartSession(round) {
     if (games.length === 0 && anyFilterActive()) {
       const btn = h(`<button type="button" class="link-btn">${esc(t('metaFilter.reset'))}</button>`);
       btn.addEventListener('click', () => {
-        resetTagFilters();
-        resetMetaFilters();
+        // One button for one control: the panel clears both halves and resyncs
+        // its own badge, so a half-cleared filter can never survive the escape.
+        if (filterPanel) filterPanel.reset();
         updateHint();
       });
       poolReset.appendChild(btn);
@@ -243,13 +244,27 @@ function showStartSession(round) {
   form.querySelector('#teamMount').replaceWith(teamPicker);
   updateHint();
 
-  // Custom-tag chips (#238, tri-state #241) are the only game filter now (#242).
-  // Clicking cycles ignore -> include -> exclude -> ignore. With no round tags
-  // there is nothing to filter, so the whole field stays hidden.
-  const chips = form.querySelector('#filterChips');
+  // Custom-tag chips (#238, tri-state #241). Clicking cycles ignore -> include
+  // -> exclude -> ignore. With no round tags there is nothing to filter, so the
+  // section is not built at all and the panel below carries only the metadata
+  // half — or, on a shelf with neither, does not exist.
+  //
+  // Since #827 this is a detached SECTION handed to `renderFilterPanel`, not a
+  // field of its own on the screen. The node is built once and MOVED into each
+  // rebuilt panel (appendChild moves a node), so every chip listener, and the
+  // user's current picks, survive the backfill's remount untouched.
   const roundTags = round.tags || [];
+  let tagSection = null;
   if (roundTags.length) {
-    form.querySelector('#gamesFilterField').hidden = false;
+    const sectionEl = h(`<div class="fpanel__group">
+        <div class="field-head">
+          <div class="field__label" id="tagFilterLabel">${esc(t('tags.title'))}</div>
+          <span id="tagBulkMount"></span>
+        </div>
+        <div id="tagModeMount"></div>
+        <div class="filter-chips" id="filterChips" role="group" aria-labelledby="tagFilterLabel"></div>
+      </div>`);
+    const chips = sectionEl.querySelector('#filterChips');
     // Built before the chips so their click handlers can call bulk.sync() and
     // mode.sync(); the nodes are mounted after, which is why these are
     // declarations and not inline appends.
@@ -267,7 +282,7 @@ function showStartSession(round) {
       selectedTags,
       roundTags,
       repaintChips,
-      () => { mode.sync(); updateHint(); }
+      () => { mode.sync(); syncFilterBadge(); updateHint(); }
     );
     roundTags.forEach((tg) => {
       const chip = h('<button type="button" class="chip"></button>');
@@ -277,50 +292,56 @@ function showStartSession(round) {
         paintTagChip(chip, tg.name, cycleTagState(selectedTags, tg.id), tg.icon, tagFilterState.tagMode);
         bulk.sync();
         mode.sync();
+        syncFilterBadge();
         updateHint();
       });
       chips.appendChild(chip);
     });
-    form.querySelector('#tagBulkMount').replaceWith(bulk.el);
-    form.querySelector('#tagModeMount').replaceWith(mode.el);
-    resetTagFilters = () => {
-      selectedTags.clear();
-      repaintChips();
-      bulk.sync();
-      mode.sync();
+    sectionEl.querySelector('#tagBulkMount').replaceWith(bulk.el);
+    sectionEl.querySelector('#tagModeMount').replaceWith(mode.el);
+    tagSection = {
+      el: sectionEl,
+      // Read on every sync rather than captured: the map is mutated in place.
+      count: () => selectedTags.size,
+      reset: () => {
+        selectedTags.clear();
+        repaintChips();
+        bulk.sync();
+        mode.sync();
+      },
     };
   }
 
-  // „Weitere Filter" (#725) — the filters over BGG's imported metadata. It sits
-  // under the tag chips and above the count stepper because it shapes the pool,
-  // and those are the two controls that already do. It renders NOTHING when the
-  // shelf carries none of the fields, so a round of hand-typed games — or an
-  // instance with no BGG token — sees exactly the screen it saw before.
+  // The one filter control (#827) — both halves behind a single disclosure,
+  // parked beside the count stepper directly above the pool it shapes, because
+  // those are the two things that decide what gets drawn. It renders NOTHING
+  // when the round has neither tags nor a shelf carrying BGG metadata, so a
+  // round of hand-typed games — or an instance with no BGG token — sees exactly
+  // the screen it saw before.
   //
-  // It is (re)built through `mountMetaFilter` rather than mounted once, because
+  // It is (re)built through `mountFilterPanel` rather than mounted once, because
   // the backfill below can make controls appear that this shelf could not offer
   // a moment ago (#736). The mount element STAYS in the DOM as the anchor —
   // `hidden` while there is nothing to show, which costs no flex gap because a
   // `display: none` element is not a flex item at all. It carries no class, so
   // no rule can override the UA's `[hidden]`
   // (.claude/rules/hidden-attribute-vs-display-rule.md).
-  const metaMount = form.querySelector('#metaFilterMount');
-  let metaFilter = null;
-  const mountMetaFilter = () => {
+  const filterMount = form.querySelector('#filterMount');
+  const mountFilterPanel = () => {
     // Preserved across a rebuild: the user's picks (the `metaFilters` object is
-    // mutated in place and handed back in), and whether they had the disclosure
-    // OPEN — losing that would snap the panel shut under someone mid-adjustment.
-    const wasOpen = !!(metaFilter && metaFilter.el.open);
-    metaFilter = renderMetadataFilter(activeGames, metaFilters, () => updateHint());
-    metaMount.replaceChildren();
-    if (metaFilter) {
-      metaFilter.el.open = wasOpen;
-      metaMount.appendChild(metaFilter.el);
+    // mutated in place and handed back in), the tag section node itself, and
+    // whether they had the panel OPEN — losing that would snap it shut under
+    // someone mid-adjustment.
+    const wasOpen = !!(filterPanel && filterPanel.el.open);
+    filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection);
+    filterMount.replaceChildren();
+    if (filterPanel) {
+      filterPanel.el.open = wasOpen;
+      filterMount.appendChild(filterPanel.el);
     }
-    resetMetaFilters = metaFilter ? metaFilter.reset : () => {};
-    metaMount.hidden = !metaFilter;
+    filterMount.hidden = !filterPanel;
   };
-  mountMetaFilter();
+  mountFilterPanel();
 
   // Fill the shelf's missing BGG metadata (#736). Without this the controls
   // above are derived from whatever happened to be stored, so a shelf nobody had
@@ -333,7 +354,7 @@ function showStartSession(round) {
   // this very object, so the fold already updated it in memory; the `set` is
   // what persists it (public/js/swr.js).
   refreshShelfGameInfo(round.id, activeGames, () => {
-    mountMetaFilter();
+    mountFilterPanel();
     updateHint();
     swrStore.set('round:' + round.id, round);
   });
