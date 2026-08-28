@@ -936,11 +936,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     };
     const stage = cols
       .map((col) =>
-        podiumColHtml(col, {
+        podiumColHtml(col, () => ({
           entries: col.shown.map(entryHtml).join(''),
           more: esc(tn(col.hidden, 'podium.moreOne', 'podium.more')),
           base: `<span class="podium__rank">${col.rank}</span>`,
-        })
+        }))
       )
       .join('');
     const podium = h(

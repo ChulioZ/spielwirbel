@@ -36,10 +36,12 @@ const at = (place, n) => Array.from({ length: n }, (_, i) => ({ place, id: `${pl
 test('a tie shares ONE column instead of adding one each', () => {
   // The everyday case from the issue: one winner, a three-way tie for 2nd.
   const { cols } = podiumColumns([...at(1, 1), ...at(2, 3)]);
-  assert.equal(cols.length, 2, 'four games must still make at most two columns');
-  assert.deepEqual(cols.map((c) => c.rank), [2, 1]);
-  assert.equal(cols[0].shown.length, 3, 'all three tied games stand on rank 2');
-  assert.equal(cols[1].shown.length, 1);
+  const filled = cols.filter((c) => !c.spacer);
+  assert.ok(cols.length <= 3, 'the stage never exceeds three columns');
+  assert.equal(filled.length, 2, 'four games occupy two ranks, not four columns');
+  assert.deepEqual(filled.map((c) => c.rank), [2, 1]);
+  assert.equal(filled[0].shown.length, 3, 'all three tied games stand on rank 2');
+  assert.equal(filled[1].shown.length, 1);
 });
 
 test('the crowned rank is CENTRAL — the columns run [2 | 1 | 3]', () => {
@@ -48,9 +50,37 @@ test('the crowned rank is CENTRAL — the columns run [2 | 1 | 3]', () => {
   assert.equal(cols[1].rank, 1, 'rank 1 sits between the other two');
 });
 
-test('a rank nobody holds leaves no hole', () => {
-  assert.deepEqual(podiumColumns([...at(1, 1), ...at(3, 2)]).cols.map((c) => c.rank), [1, 3]);
+test('the crown stays central even when a rank beside it is unheld', () => {
+  /* Packing the occupied ranks together would put the winner at one END —
+     which is a milder version of the bug #836 fixed — so the empty slot is
+     held open. {1,1,3} (two games tied for the win) is the common one. */
+  const oneAndThree = podiumColumns([...at(1, 2), ...at(3, 1)]).cols;
+  assert.deepEqual(oneAndThree.map((c) => c.rank), [2, 1, 3]);
+  assert.equal(oneAndThree[0].spacer, true, 'rank 2 is held open, not dropped');
+  assert.equal(oneAndThree[1].rank, 1, 'the crown is still the middle column');
+
+  const oneAndTwo = podiumColumns([...at(1, 1), ...at(2, 3)]).cols;
+  assert.deepEqual(oneAndTwo.map((c) => c.rank), [2, 1, 3]);
+  assert.equal(oneAndTwo[2].spacer, true);
+  assert.equal(oneAndTwo[1].rank, 1);
+});
+
+test('nothing is held open when there is no crown to centre', () => {
+  // No rank 1, so no crown — the remaining ranks just pack.
   assert.deepEqual(podiumColumns([...at(2, 2), ...at(3, 1)]).cols.map((c) => c.rank), [2, 3]);
+  // One rank is the wide band, which has no centring problem at all.
+  assert.equal(podiumColumns(at(1, 4)).cols.length, 1);
+});
+
+test('a spacer renders as an empty slot — no pedestal, no crown, nothing announced', () => {
+  /* The callback must not even RUN for a spacer: Pokale labels its pedestal from
+     `shown[0]`, which a spacer does not have. Passing an object literal here
+     instead would have hidden that — the caller evaluates it eagerly. */
+  const html = podiumColHtml({ rank: 3, shown: [], hidden: 0, spacer: true },
+    () => { throw new Error('a spacer must not ask its caller for content'); });
+  assert.match(html, /podium__col--spacer/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.doesNotMatch(html, /podium__base|ti-crown|podium__entries/);
 });
 
 test('a crowded rank is bounded, and reports how many it is holding back', () => {
@@ -68,7 +98,7 @@ test('one distinct place occupied is flagged as the degenerate stage', () => {
 });
 
 test('the column skeleton crowns only rank 1 and marks a shared step', () => {
-  const parts = { entries: '<i>e</i>', more: '+2 more', base: 'B' };
+  const parts = () => ({ entries: '<i>e</i>', more: '+2 more', base: 'B' });
   const one = podiumColHtml({ rank: 1, shown: at(1, 1), hidden: 0 }, parts);
   assert.match(one, /ti-crown/);
   assert.doesNotMatch(one, /podium__col--multi/);
@@ -189,10 +219,18 @@ test('the results podium puts three tied games on ONE step, not three columns', 
   await dom.call('showResults', r, TIED_SESSION, r.games, false);
 
   const cols = colsOf(dom);
-  assert.equal(cols.length, 2, `four placed games must make two columns, got ${cols.length}`);
+  const filled = cols.filter((c) => !c.classList.contains('podium__col--spacer'));
+  assert.ok(cols.length <= 3, `the stage must never exceed three columns, got ${cols.length}`);
+  assert.equal(filled.length, 2, 'four placed games occupy two ranks');
   // The pre-#836 stage emitted one column per game and let the row wrap.
   assert.equal(dom.app.querySelectorAll('.result-podium__entry').length, 4,
     'every placed game is still on the stage');
+  // Rank 3 is unheld here, so its slot is a spacer keeping the crown centred.
+  // Both halves matter: packed to two columns, index 1 is STILL the crown, so
+  // the position assertion alone passes against the very layout it guards.
+  assert.equal(cols.length, 3, 'the unheld rank keeps its slot open');
+  assert.ok(cols[1].classList.contains('podium__col--1'), 'the crown is the middle column');
+  assert.ok(cols[2].classList.contains('podium__col--spacer'));
   const second = cols.find((c) => c.classList.contains('podium__col--2'));
   assert.equal(second.querySelectorAll('.result-podium__entry').length, 3);
   const first = cols.find((c) => c.classList.contains('podium__col--1'));
@@ -254,8 +292,12 @@ test('a Pokale member entry links to that member', async (t) => {
   const dom = bootApp(t, r);
   await dom.call('renderPokaleTab', r);
 
-  assert.deepEqual(colsOf(dom).map((c) => c.className.match(/podium__col--\d/)[0]),
-    ['podium__col--2', 'podium__col--1'], 'Anna leads, Ben stands on 2 — and 2 renders first');
+  const cols = colsOf(dom);
+  assert.deepEqual(cols.map((c) => c.className.match(/podium__col--\d/)[0]),
+    ['podium__col--2', 'podium__col--1', 'podium__col--3'],
+    'Anna leads and Ben stands on 2; rank 3 is held open so the crown is central');
+  assert.ok(cols[2].classList.contains('podium__col--spacer'));
+  assert.ok(cols[1].querySelector('.ti-crown'), 'the crown is the middle column');
   const entries = [...dom.app.querySelectorAll('.podium__entry')];
   assert.ok(entries.every((e) => e.classList.contains('member-link')));
   assert.deepEqual(entries.map((e) => e.dataset.mid), ['m2', 'm1']);

@@ -26,34 +26,59 @@
 const PODIUM_MAX_PER_RANK = 3;
 
 /* Group `items` (each carrying a `place`) into at most three rank columns, in
-   the display order [2 | 1 | 3] so a lone winner stands in the middle. Ranks
-   nobody holds are dropped, so the order degrades sensibly: {1,3} renders as
-   [1 | 3] rather than leaving a hole where 2nd would have been.
+   the display order [2 | 1 | 3] so the winner stands in the middle.
 
-   Returns { single, cols: [{ rank, shown, hidden }] }. `single` marks the
-   degenerate stage — one distinct place occupied, i.e. every entry tied or only
-   one ranked entry at all — which the callers render as one wide crowned band
-   instead of a lone pedestal floating on an empty stage. */
+   Returns { single, cols: [{ rank, shown, hidden, spacer }] }. `single` marks
+   the degenerate stage — one distinct place occupied, i.e. every entry tied or
+   only one ranked entry at all — which the callers render as one wide crowned
+   band instead of a lone pedestal floating on an empty stage.
+
+   THE CROWN IS CENTRAL WHENEVER IT SHARES THE STAGE, which is why an unheld
+   rank beside it is kept as an empty `spacer` column rather than dropped.
+   Dropping it reads fine in the abstract and is wrong on screen: two occupied
+   ranks then sit side by side, putting the winner at one END — {1,2} as
+   [1st | 2nd] and the genuinely common {1,1,3} (two games tied for the win) as
+   [1st | 3rd]. That is a milder version of the very thing #836 fixed, so the
+   slot is held open and the crown never moves. Nothing is held open when there
+   is no crown to centre: an absent rank 1 leaves the remaining ranks packed. */
 function podiumColumns(items, cap) {
   const max = Number.isFinite(cap) && cap > 0 ? Math.floor(cap) : PODIUM_MAX_PER_RANK;
-  const cols = [];
+  const held = [];
   [2, 1, 3].forEach((rank) => {
     const at = items.filter((it) => it.place === rank);
     if (!at.length) return;
-    cols.push({ rank, shown: at.slice(0, max), hidden: Math.max(0, at.length - max) });
+    held.push({ rank, shown: at.slice(0, max), hidden: Math.max(0, at.length - max) });
   });
-  return { single: cols.length === 1, cols };
+  const single = held.length === 1;
+  if (single || held.length === 3 || !held.some((c) => c.rank === 1)) {
+    return { single, cols: held };
+  }
+  const cols = [2, 1, 3].map(
+    (rank) => held.find((c) => c.rank === rank) || { rank, shown: [], hidden: 0, spacer: true }
+  );
+  return { single, cols };
 }
 
 /* The column skeleton both podiums share: crown (rank 1 only), the entries, the
    overflow count, the pedestal. Kept a pure string builder rather than a DOM
    renderer so it stays require-able from Node and fully covered — the two
-   callers differ only in what an entry contains and what its base says, which
-   they pass in as already-escaped HTML.
+   callers differ only in what an entry contains and what its base says.
+
+   `buildParts` is a CALLBACK returning { entries, more, base } as already-escaped
+   HTML, not a plain object, and that is load-bearing: a spacer column has an
+   EMPTY `shown`, so a caller reading `shown[0]` to label its pedestal (Pokale
+   needs the step's win count) throws before this function ever sees the column.
+   Passing a callback means content is only ever computed for a column that has
+   some.
 
    `--multi` is set from the entry count rather than left to CSS `:has()`,
    because it is the hook the covers and avatars shrink on once a rank fills. */
-function podiumColHtml(col, parts) {
+function podiumColHtml(col, buildParts) {
+  // An empty slot holding the crown's centre: no pedestal, no crown, nothing to
+  // announce — it exists only to occupy its third of the stage.
+  if (col.spacer)
+    return `<div class="podium__col podium__col--${col.rank} podium__col--spacer" aria-hidden="true"></div>`;
+  const parts = buildParts(col);
   const multi = col.shown.length > 1 ? ' podium__col--multi' : '';
   return (
     `<div class="podium__col podium__col--${col.rank}${multi}">` +

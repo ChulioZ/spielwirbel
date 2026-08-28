@@ -113,14 +113,14 @@ function renderPokaleTab(round) {
        </a>`;
     const stage = cols
       .map((col) =>
-        podiumColHtml(col, {
+        podiumColHtml(col, () => ({
           entries: col.shown.map(entryHtml).join(''),
           more: esc(tn(col.hidden, 'podium.moreOne', 'podium.more')),
           // Everyone on a step has the same win count, so shown[0] speaks for it.
           base:
             `<span class="podium__rank">${col.rank}</span>` +
             esc(tn(wins[col.shown[0].member.id], 'pokale.winsOne', 'pokale.wins')),
-        })
+        }))
       )
       .join('');
     const podium = h(`<div class="podium${single ? ' podium--single' : ''}">${stage}</div>`);
