@@ -1,136 +1,69 @@
 'use strict';
 
-/* On a phone, a round with many custom tags pushed the Regal cover grid below
-   the fold behind a tall wrapped block of filter chips; #349 collapses the
-   chips behind a "Filter" button below 860px and leaves them inline from 860px
-   up. That gating is pure CSS scoped to `.regal-filter`, so it fails silently
-   in both directions from Node: a blanket rule on the shared `.filter-chips`
-   class would also blank the game-detail / add-game / session tag pickers, and
-   a dropped media block would strand the chips on either phones or desktop.
-   Pin the gating and the 859/860 adjacency here (comments stripped, whole-class
-   matched — see .claude/rules/css-text-assertions-strip-comments.md). */
+/* The Regal's filter gating, after #827 collapsed three affordances into one.
+ *
+ * #349 had hidden the tag chips behind a phone-only "Filter" button below 860px
+ * (`.filter-toggle` + `.regal-filter.is-open`, a pure-CSS mechanism), while the
+ * „Weitere Filter" drawer beside it collapsed at EVERY width. #827 deleted the
+ * first: there is one `<details>` now, holding both halves, collapsed at every
+ * width on both screens.
+ *
+ * This file pins that the old mechanism is GONE and cannot creep back, because
+ * its return is silent in the worst way: a `.regal-filter .filter-chips
+ * { display: none }` rule below 860px would now hide the tag chips INSIDE an
+ * open panel — a user on a phone taps „Filter", the panel opens, and the tags
+ * they were looking for are simply not there. Nothing throws, nothing is red,
+ * and the metadata rows below still render, so the panel looks finished.
+ *
+ * CSS is asserted as text: jsdom applies no external stylesheet (comments
+ * stripped, whole-class matched — .claude/rules/css-text-assertions-strip-comments.md). */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { bodyOf, rulesOf, mediaBlocks, whole, RULES } = require('./support/css');
+const { bodyOf, mediaBlocks, whole, RULES } = require('./support/css');
 
-// The @media blocks that govern the Regal filter — identified by scoping rules
-// to `.regal-filter` (the dock's own 859/860 blocks never mention it).
-const regalBlocks = mediaBlocks().filter(([, css]) => whole('.regal-filter').test(css));
-const narrow = regalBlocks.find(([q]) => /max-width/.test(q));
-const wide = regalBlocks.find(([q]) => /min-width/.test(q));
-
-test('.filter-toggle is hidden by default (inert on wide screens)', () => {
-  const base = bodyOf('.filter-toggle');
-  assert.ok(base, '.filter-toggle base rule not found in styles.css');
-  assert.match(base, /display:\s*none/);
+test('the phone-only tag toggle is gone from the stylesheet entirely', () => {
+  assert.equal(bodyOf('.filter-toggle'), null,
+    '.filter-toggle is back — #827 replaced it with the one .fpanel disclosure');
+  assert.equal(bodyOf('.filter-toggle__badge'), null, '.filter-toggle__badge is back');
+  const open = RULES.filter(([sel]) => whole('.regal-filter').test(sel) && /\.is-open/.test(sel));
+  assert.deepEqual(open.map(([sel]) => sel), [],
+    'a `.regal-filter.is-open` rule is back — that is the second collapse mechanism #827 removed');
 });
 
-test('below 860px the toggle shows and the Regal chips collapse behind it', () => {
-  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
-  const rules = rulesOf(narrow[1]);
-  // The button appears...
-  assert.match(bodyOf('.regal-filter .filter-toggle', rules) || '', /display:\s*inline-flex/);
-  // ...the chips are hidden by default...
-  assert.match(bodyOf('.regal-filter .filter-chips', rules) || '', /display:\s*none/);
-  // ...and revealed only when the wrapper is toggled open.
-  assert.match(bodyOf('.regal-filter.is-open .filter-chips', rules) || '', /display:\s*flex/);
+test('no @media block gates the Regal filter by width any more', () => {
+  const gated = mediaBlocks().filter(([, css]) => whole('.regal-filter').test(css));
+  assert.deepEqual(gated.map(([q]) => q), [],
+    'a width-gated .regal-filter block is back; the panel collapses by disclosure, at every width');
 });
 
-test('the bulk toggle (#723) collapses WITH the chips it acts on', () => {
-  // It is a sibling of `.filter-chips`, not a child, so it inherits none of the
-  // collapse above — without its own pair of rules it would either offer
-  // "Alle abwählen" over filters the user cannot see, or (having been hidden
-  // once) never come back when the panel opens. Neither is reachable from
-  // jsdom, which applies no external stylesheet, so this is the only guard.
-  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
-  const rules = rulesOf(narrow[1]);
-  assert.match(bodyOf('.regal-filter .tag-bulk', rules) || '', /display:\s*none/);
-  assert.match(bodyOf('.regal-filter.is-open .tag-bulk', rules) || '', /display:\s*inline-block/);
+test('nothing hides the shared .filter-chips class by width, anywhere', () => {
+  // The class is shared with the game-detail, add-game and session tag pickers,
+  // and since #827 the Regal's copy lives INSIDE the open panel — so a
+  // display:none on it is wrong at both ends.
+  const hidden = RULES
+    .filter(([sel]) => whole('.filter-chips').test(sel) && !/\[hidden\]/.test(sel))
+    .filter(([, body]) => /display:\s*none/.test(body));
+  assert.deepEqual(hidden.map(([sel]) => sel), []);
 });
 
-test('the bulk toggle collapse is scoped to the Regal, not the shared class', () => {
-  // The session setup screen carries the same `.tag-bulk`, permanently visible
-  // beside its field label. A bare `.tag-bulk { display: none }` on narrow would
-  // hide it there with nothing to say so — the `.filter-chips` trap above, one
-  // control over.
-  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
-  const offenders = rulesOf(narrow[1]).filter(([sel, body]) =>
-    sel === '.tag-bulk' && /display:\s*none/.test(body));
-  assert.deepEqual(offenders, [], 'the narrow block hides the bare .tag-bulk class');
-});
-
-test('the AND/OR mode control (#726) collapses WITH the chips it governs', () => {
-  // Same reasoning as the bulk toggle above: it is a sibling of `.filter-chips`,
-  // so it inherits none of the collapse and would otherwise offer a combination
-  // mode over chips the user cannot see while the panel is shut.
-  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
-  const rules = rulesOf(narrow[1]);
-  assert.match(bodyOf('.regal-filter .tag-mode', rules) || '', /display:\s*none/);
-  assert.match(bodyOf('.regal-filter.is-open .tag-mode', rules) || '', /display:\s*flex/);
-});
-
-test('the mode control is never hidden by attribute any more (#787)', () => {
-  // #726 hid the control below two included tags, which reflowed the chip row
-  // mid-cycle; it is now always rendered and merely inert. Two rules existed
-  // ONLY to make that attribute win a cascade fight — `.tag-mode[hidden]`
-  // against its own `display: flex`, and the `:not([hidden])` guard on the
-  // Regal's open-panel reveal (`hidden-attribute-vs-display-rule.md` §3). Both
-  // are dead now, and a dead `[hidden]` rule is worse than none: it reads as a
-  // live guard, so the next person to reach for `el.hidden` here would find the
-  // CSS already "handled" and reintroduce the reflow with nothing going red.
-  const offenders = RULES.filter(([sel]) => /\.tag-mode[^\s,{]*\[hidden\]/.test(sel));
-  assert.deepEqual(offenders.map(([sel]) => sel), [],
-    'no rule may still gate .tag-mode on the hidden attribute');
-  // And the state that replaced it has to be styled, or "inert" is invisible.
-  assert.match(bodyOf('.tag-mode--inert .tag-mode__opt') || '', /cursor:\s*default/);
-});
-
-test('the mode control collapse is scoped to the Regal, not the shared class', () => {
-  // The session setup screen carries the same `.tag-mode`, shown inline whenever
-  // two tags are included. A bare `.tag-mode { display: none }` on narrow would
-  // make the mode unreachable on every phone there — the `.filter-chips` trap
-  // again, one control further on.
-  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
-  const offenders = rulesOf(narrow[1]).filter(([sel, body]) =>
-    sel === '.tag-mode' && /display:\s*none/.test(body));
-  assert.deepEqual(offenders, [], 'the narrow block hides the bare .tag-mode class');
-});
-
-test('from 860px up the toggle is gone and the inline chips are unchanged', () => {
-  assert.ok(wide, 'no wide @media block scopes rules to .regal-filter');
-  const rules = rulesOf(wide[1]);
-  assert.match(bodyOf('.regal-filter .filter-toggle', rules) || '', /display:\s*none/);
-  // The chips are NOT re-hidden here — they inherit the base `.filter-chips`
-  // display:flex, so the wide Regal looks exactly as before this change.
-  assert.equal(bodyOf('.regal-filter .filter-chips', rules), null,
-    'the wide block must not restyle the Regal chips');
-});
-
-test('the badge honours the hidden attribute (explicit display would override it)', () => {
-  // `.filter-toggle__badge { display: inline-flex }` beats the UA sheet's
-  // `[hidden] { display: none }`, so without this guard the no-active-filters
-  // badge renders its literal "0" — the same trap `.icon-picker[hidden]` fixes.
-  const guard = bodyOf('.filter-toggle__badge[hidden]');
-  assert.ok(guard, '.filter-toggle__badge[hidden] rule not found');
+test('the panel badge honours [hidden] (its explicit display would override it)', () => {
+  // `.fpanel__badge { display: inline-flex }` beats the UA sheet's
+  // `[hidden] { display: none }`, so without this rule a zero-filter panel would
+  // show a "0" badge. Same trap `.filter-chips[hidden]` records.
+  assert.match(bodyOf('.fpanel__badge') || '', /display:\s*inline-flex/);
+  const guard = bodyOf('.fpanel__badge[hidden]');
+  assert.ok(guard, '.fpanel__badge[hidden] rule not found');
   assert.match(guard, /display:\s*none/);
 });
 
-test('the collapse never hides the shared .filter-chips class globally', () => {
-  // A blanket `.filter-chips { display: none }` on narrow would also blank the
-  // game-detail / add-game / session tag pickers — the reason the collapse is
-  // scoped to `.regal-filter`. This is the exact silent break to guard against.
-  assert.ok(narrow, 'no narrow @media block scopes rules to .regal-filter');
-  const offenders = rulesOf(narrow[1]).filter(([sel, body]) =>
-    sel === '.filter-chips' && /display:\s*none/.test(body));
-  assert.deepEqual(offenders, [], 'the narrow block hides the bare .filter-chips class');
-});
-
-test('the narrow and wide blocks tile the width axis with no gap (859/860)', () => {
-  assert.ok(narrow && wide, 'both Regal-filter media blocks must exist');
-  const max = Number(narrow[0].match(/max-width:\s*(\d+)px/)[1]);
-  const min = Number(wide[0].match(/min-width:\s*(\d+)px/)[1]);
-  assert.equal(max, 859);
-  assert.equal(min, max + 1, 'the phone/desktop filter blocks must be adjacent');
+test('the setup screen lets the open panel take the whole filter row', () => {
+  // The count stepper and the panel share a flex row; without this the body
+  // would unfold inside the panel's own narrow column and the ~84 category
+  // chips would wrap into a tower beside the stepper.
+  assert.match(bodyOf('.setup-filterbar') || '', /flex-wrap:\s*wrap/);
+  const open = RULES.find(([sel]) => whole('.setup-filterbar').test(sel) && /\.fpanel\[open\]/.test(sel));
+  assert.ok(open, 'no rule widens the setup filter row for an open panel');
+  assert.match(open[1], /flex:\s*1\s+1\s+100%/);
 });

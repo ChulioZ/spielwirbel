@@ -90,7 +90,7 @@ const GLYPH_LITERALS = [
   // a glyph or number sized to its own small box
   '.result-row__bars .bar', '.result-row__bars .bar--retire .ti',
   '.stage__voter-check .ti', '.stage__seal > .ti', '.mood .ti',
-  '.filter-toggle__badge', '.mfilter__badge',
+  '.fpanel__badge',
   '.game-card__pick',
   // large standalone marks
   '.auth__logo', '.paste-zone__icon',

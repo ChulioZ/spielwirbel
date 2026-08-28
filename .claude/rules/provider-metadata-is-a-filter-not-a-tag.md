@@ -1,7 +1,7 @@
 ---
 paths:
   - "public/js/draw-pool.js"
-  - "public/js/metadata-filter.js"
+  - "public/js/filter-panel.js"
   - "public/js/views-session.js"
   - "public/js/views-regal.js"
   - "lib/draw.js"
@@ -10,9 +10,10 @@ paths:
 
 # A provider FACT is a filter; a round's own vocabulary is a tag — and the two must never merge
 
-The app has two ways to narrow a shelf, and they look interchangeable on screen
-(two chip rows, one above the other, on the same two screens). They are not, and
-the line between them is what keeps either of them useful:
+The app has two ways to narrow a shelf, and since #827 they look **more**
+interchangeable than ever: two labelled sections inside one „Filter" panel, under
+one count, on the same two screens. They are not interchangeable, and the line
+between them is what keeps either of them useful:
 
 | | Tags (#238/#241/#726) | Metadata filters (#725) |
 |---|---|---|
@@ -105,24 +106,38 @@ contract). An inverted complexity range is **swapped** in the shared normalizer
 rather than dropped, so the preview and the draw cannot disagree about what a
 hand-crafted one means.
 
-The **rendering** is a separate file (`public/js/metadata-filter.js`) because it
+The **rendering** is a separate file (`public/js/filter-panel.js`) because it
 is DOM code: requiring it into a Node test would put it in the coverage report at
 ~10% and redden `coverage:ci` with every test green
 (`.claude/rules/frontend-helper-modules-and-coverage.md`). Test it through the
 jsdom harness instead.
 
-## 5. Two smaller traps in the disclosure itself
+## 5. One control, two sections — what #827 changed and what it did not
 
-- **Its chips are `.mfilter__chips`, not the shared `.filter-chips`.** The Regal's
-  phone block hides `.regal-filter .filter-chips` behind its own "Filter" button,
-  and this disclosure mounts inside `.regal-filter` — so borrowing the class
-  would collapse these chips behind a control that does not govern them. Nothing
-  in jsdom can see that (no external stylesheet), so it is asserted over the
-  markup the renderer emits.
-- **The two badges stay separate.** The Regal now carries the tag toggle's count
-  and the disclosure's own. Folding them into one number would leave a collapsed
-  panel unable to say *which* of the two is filtering — and they collapse on
-  different triggers (the chips only below 860px, the disclosure at every width).
+The two halves share a single `<details>` now (`renderFilterPanel`), because
+narrowing the pool is one job and the screen was asking it in three grammars.
+Merging the *presentation* is not licence to merge the *semantics* in §1–§3: they
+stay separate labelled sections, with a hairline between them, and every clause
+above still holds unchanged.
+
+Two smaller traps, one of which #827 rewrote:
+
+- **The metadata chips are `.mfilter__chips`, not the shared `.filter-chips`.**
+  The original reason is **gone**: it was that the Regal's phone block hid
+  `.regal-filter .filter-chips` behind its own „Filter" button, and #827 deleted
+  that block along with the button. What survives is the better reason — the two
+  chip rows are different controls. `.filter-chips` carries the tags' tri-state
+  cycle (ignore → include → exclude); these are plain multi-select, because with
+  OR semantics a third click would have nothing to mean (§1). Sharing the class
+  would invite sharing the behaviour. Nothing in jsdom can see a stylesheet, so
+  this is asserted over the markup the renderer emits.
+- **The two badges are now ONE number, and that reversal is deliberate.** They
+  were separate while they were two controls that collapsed on **different
+  triggers** (the chips only below 860px, the drawer at every width) — one number
+  over two independently-hidden controls could not say which was filtering. With
+  a single control and a single trigger that question no longer exists: opening
+  the panel shows both labelled sections at once. Do not re-split it without
+  re-splitting the control.
 
 **Related:** `.claude/rules/active-games-filter-sites.md` (the other predicates
 this joins), `.claude/rules/expansions-widen-by-union.md` (the previous addition

@@ -189,10 +189,8 @@ I18N.de = {
   'games.search': 'Spiele suchen',
   'games.noMatch': 'Keine Spiele passen zu „{q}“.',
   'games.filter': 'Filter',
-  'games.filterLabel': 'Nach Tags filtern ({n} aktiv)',
+  'games.filterLabel': 'Filter ({n} aktiv)',
 
-  'metaFilter.title': 'Weitere Filter',
-  'metaFilter.label': 'Weitere Filter ({n} aktiv)',
   'metaFilter.any': 'Egal',
   'metaFilter.playtime': 'Spieldauer',
   'metaFilter.playtimeOption': 'Höchstens {n} Min.',
@@ -633,7 +631,6 @@ I18N.de = {
   // Per-Gerät-Abstimmung (#209). Der Hinweis beschreibt, was die Funktion tut —
   // auch im deaktivierten Zustand. Er darf nie klingen, als fehle der Runde
   // etwas: eine Runde aus Namen ohne Konten ist die normale Konfiguration.
-  'startSession.whichGames': 'Welche Spiele?',
   'startSession.countLabel': 'Wie viele Spiele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
   'startSession.availableOne': '{n} Spiel im Topf',

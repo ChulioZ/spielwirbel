@@ -117,7 +117,7 @@ on a game carrying **provider metadata** rather than on the code being current:
 | Affordance | Gate | Renders nothing when |
 |---|---|---|
 | the vote card's ⓘ (#724/#730) | `hasGameInfo` (`public/js/game-info.js`) | the game has no weight/playtime/age/categories/mechanics |
-| the Regal's „Weitere Filter" (#725) | `metadataFilterOptions` (`public/js/draw-pool.js`) | no game on the shelf carries any of them |
+| the metadata half of the Regal's „Filter" panel (#725, #827) | `metadataFilterOptions` (`public/js/draw-pool.js`) | no game on the shelf carries any of them |
 
 Both gates are deliberate — a hand-typed game must look exactly as it always did
 — and the seed only ever set player counts. So #752's reshoot came out
@@ -244,6 +244,30 @@ only when the cards or the rail themselves change size. The old 790 was not
 merely suboptimal by then — it landed 4px *above* row 2's bottom edge, slicing
 its titles, and at 390px it cut through row 3's badges.
 
+**Re-measured for #827 (2026-08-28) — the mirror image of #752, and the current
+numbers.** #827 folds the tag half INTO the disclosure, so above the grid there
+is now one 40px „Filter" button at every width instead of a chip row plus a
+drawer summary. Probed on both sides of the change (rail **730**, unmoved):
+
+| | row 1 ends | row 2 ends | delta | crop |
+|---|---|---|---|---|
+| wide | 594 → **478** | 831 → **715** | −116 | 872 → **756** |
+| phone | 514 → **472** | 736 → **694** | −42 | 821 → **779** |
+
+Same method, opposite sign — and it is worth noting the method *verified* itself
+here: the wide cut still lands 24px into row 3's cover art and the phone cut
+68px into it, which are the two numbers the pre-change crops produced. The vote
+shot is untouched (card bottom 617 either way), and its capture is
+pixel-identical but for the random game.
+
+**Declaring the new sizes is a SEPARATE edit, and the suite catches it.** The
+crop drives the file's real pixels, so `LANDING_SHOTS` in `views-landing.js`
+must move with it — 1600×1090 → **1600×945**, 624×1314 → **624×1246**. Take the
+height from the **file header**, not from the script's log line: at
+779 × 1.6 the script reports 1247 and Chrome writes **1246**, and
+`test/landing-shots.test.js` reads the header. It failed on exactly that 1px,
+which is the assertion earning its keep.
+
 ### The vote crop is a FIXED POINT now, not a free choice (#669)
 
 Since #666 the vote card sizes itself to the viewport, so the crop height and the
@@ -286,12 +310,13 @@ calls, and they are worth writing down because the ratios are not round numbers:
 
 | Asset | CSS viewport | `deviceScaleFactor` | File |
 |---|---|---|---|
-| `landing-shelf-wide` | 1280 × 872 | 1.25 | 1600 × 1090 |
-| `landing-shelf-phone` | 390 × 821 | 1.6 | 624 × 1314 |
+| `landing-shelf-wide` | 1280 × 756 | 1.25 | 1600 × 945 |
+| `landing-shelf-phone` | 390 × 779 | 1.6 | 624 × 1246 |
 | `landing-vote` | 390 × **720** | 1.6 | 624 × **1152** |
 
-(1090 rather than 1089.9, and 1314 rather than 1313.6: Chrome rounds the raster
-up. Declare what the file says,
+(945 rather than 944.99, and 1246 rather than the 1247 the script's own log
+prints for 779 × 1.6: Chrome's rounding is not a rule you can predict from the
+arithmetic. Declare what the file says,
 which is what `test/landing-shots.test.js` reads back out of the WebP header.)
 
 ## 6. What the test can and cannot see

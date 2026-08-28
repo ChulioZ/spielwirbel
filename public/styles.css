@@ -1165,85 +1165,26 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 .tag-mode__opt.is-on .ti { visibility: visible; }
 
-/* Regal tag-filter (#349): on phones the chips collapse behind a "Filter" button
-   so the cover grid stays visible; from 860px up they show inline as today. The
-   860/859 split is the same breakpoint the dock and `.vote--split` use — the two
-   media blocks below are kept adjacent (min === max + 1) per
-   .claude/rules/responsive-hub-tabs.md. Everything is scoped to `.regal-filter`
-   so the game-detail / add-game / session tag chips (same `.filter-chips` class)
-   are untouched. */
-.regal-filter { margin: 2px 0 16px; }
-.regal-filter .filter-chips { margin: 0; }
-.filter-toggle {
-  display: none; /* shown only in the narrow block below; inert on wide screens */
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  border: 1.5px solid var(--line);
-  background: var(--surface);
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--ink-soft);
-  cursor: pointer;
-}
-.filter-toggle .ti { font-size: var(--text-md); }
-.filter-toggle:hover { border-color: var(--brand-edge); }
-/* Accent fill + white text, matching `.chip.is-on` (an audited pair) so the
-   collapsed count stays legible on every theme. */
-.filter-toggle__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: var(--brand);
-  color: #fff;
-  font-size: 12px; /* glyph, not type */
-  font-weight: 700;
-}
-/* The explicit `display` above beats the UA sheet's `[hidden] { display:none }`,
-   so the no-active-filters badge would still show its "0" — restore the hide
-   (same trap as `.icon-picker[hidden]`). */
-.filter-toggle__badge[hidden] { display: none; }
-/* The bulk toggle (#723) collapses WITH the chips it acts on: offering "clear
-   all" while the panel is shut would act on filters the user cannot see. It is
-   scoped to `.regal-filter` for the same reason everything else here is — the
-   session setup screen carries the same button and must keep it visible. */
-.regal-filter .tag-bulk { margin-bottom: 16px; }
-@media (max-width: 859px) {
-  .regal-filter .filter-toggle { display: inline-flex; }
-  .regal-filter .filter-chips { display: none; margin-top: 10px; }
-  .regal-filter.is-open .filter-chips { display: flex; }
-  .regal-filter .tag-bulk { display: none; }
-  .regal-filter.is-open .tag-bulk { display: inline-block; }
-  /* The mode control (#726) collapses with the chips for the same reason the
-     bulk toggle does — it governs chips the user cannot see while the panel is
-     shut. The reveal used to carry a `:not([hidden])` guard so it could not beat
-     `.tag-mode[hidden]`; since #787 the control is never hidden, only inert, so
-     there is no attribute left for this rule to outrank. */
-  .regal-filter .tag-mode { display: none; }
-  .regal-filter.is-open .tag-mode { display: flex; margin-top: 10px; }
-}
-@media (min-width: 860px) {
-  .regal-filter .filter-toggle { display: none; }
-}
+/* The ONE filter control (#827) — a single disclosure holding both ways to
+   narrow a shelf: the round's own tags and the filters over BGG's imported
+   metadata. On the session setup screen and in the Regal.
 
-/* „Weitere Filter" (#725): the metadata filters — playing time, complexity,
-   minimum age, categories, mechanics — on the session setup screen and in the
-   Regal. Collapsed at EVERY width, deliberately: a user who never opens it sees
-   a screen one summary row taller than before, and one who leaves a filter on
-   cannot forget it, because the badge stays on the closed summary.
+   It replaced three affordances for one job: an always-open chip row, a
+   phone-only „Filter" button over those chips alone (`.filter-toggle`, #349,
+   which collapsed them only below 860px), and the „Weitere Filter" drawer
+   sitting beside them (#725, collapsed at every width). Two of those are gone
+   from this file entirely; don't reintroduce a second collapse mechanism here.
+
+   Collapsed at EVERY width, deliberately: a user who never opens it sees one
+   button, and one who leaves a filter on cannot forget it, because the badge
+   stays on the closed summary.
 
    A native <details>, so the open state, the keyboard behaviour and the
    accessible name are the platform's. Both marker resets are needed — the
    `list-style` one for the standard rendering, the ::-webkit- one for Safari,
    which still ships the old pseudo-element. */
-.mfilter { margin: 2px 0 16px; }
-.mfilter__summary {
+.regal-filter { margin: 2px 0 16px; }
+.fpanel__summary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1258,13 +1199,11 @@ h1, h2, h3 { font-family: var(--font-display); }
   cursor: pointer;
   list-style: none;
 }
-.mfilter__summary::-webkit-details-marker { display: none; }
-.mfilter__summary:hover { border-color: var(--brand-edge); }
-.mfilter__caret { font-size: var(--text-md); transition: transform var(--dur-base) var(--ease-out); }
-.mfilter[open] .mfilter__caret { transform: rotate(180deg); }
-/* Same accent fill + white text as `.filter-toggle__badge`, an audited pair, so
-   the count stays legible on every theme. */
-.mfilter__badge {
+.fpanel__summary::-webkit-details-marker { display: none; }
+.fpanel__summary:hover { border-color: var(--brand-edge); }
+/* Accent fill + white text, an audited pair, so the collapsed count stays
+   legible on every theme. */
+.fpanel__badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1280,8 +1219,21 @@ h1, h2, h3 { font-family: var(--font-display); }
 /* The explicit `display` above beats the UA sheet's `[hidden] { display: none }`,
    so a no-active-filters badge would still show its "0" — the same trap
    `.filter-chips[hidden]` records. */
-.mfilter__badge[hidden] { display: none; }
-.mfilter__body { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.fpanel__badge[hidden] { display: none; }
+.fpanel__body { display: flex; flex-direction: column; gap: 16px; margin-top: 12px; }
+.fpanel__group .field__label { margin-bottom: 6px; }
+.fpanel__group .filter-chips { margin: 0; }
+.fpanel__group .tag-mode { margin-bottom: 10px; }
+/* A hairline between the two halves. They live in one panel because narrowing
+   the pool is one job, but they are NOT one vocabulary: a round's own word and a
+   BGG fact combine differently and prune differently
+   (.claude/rules/provider-metadata-is-a-filter-not-a-tag.md). */
+.fpanel__group + .mfilter { border-top: 1px solid var(--line); padding-top: 16px; }
+
+/* The metadata half's rows. This used to be the whole „Weitere Filter" drawer,
+   summary and badge included; since #827 it is a plain section INSIDE the panel
+   above, so only the row layout is left here. */
+.mfilter { display: flex; flex-direction: column; gap: 12px; }
 .mfilter__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 /* A plain class, NOT `.field__label`: this row's label sits beside its control
    rather than above it, and `.field label`/`.field__label` is `display: block`
@@ -1295,6 +1247,26 @@ h1, h2, h3 { font-family: var(--font-display); }
 .mfilter__range .mfilter__select { flex: 0 1 auto; }
 .mfilter__group .field__label { margin-bottom: 6px; }
 .mfilter__chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Session setup: the count stepper and the filter control share one row directly
+   above the pool — the two things that decide what gets drawn, beside the thing
+   they decide.
+
+   `:has()` is what lets the panel take the full row when it expands instead of
+   unfolding inside its own narrow flex column; the mount deliberately carries no
+   class, so nothing can override its `[hidden]`, and the selector reaches it
+   structurally instead. Where `:has()` is unsupported the body simply opens
+   narrow — degraded, not broken. */
+.setup-filterbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.setup-filterbar .field { margin-bottom: 0; }
+.setup-filterbar > :has(> .fpanel[open]) { flex: 1 1 100%; }
 
 /* ---- Buttons ----
    Chunky and pressable: a thicker bottom border acts as the button's "base";

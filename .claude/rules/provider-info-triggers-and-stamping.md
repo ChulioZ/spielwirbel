@@ -8,7 +8,7 @@ paths:
   - "public/js/views-session.js"
   - "public/js/views-regal.js"
   - "public/js/game-info.js"
-  - "public/js/metadata-filter.js"
+  - "public/js/filter-panel.js"
 ---
 # The provider-info backfill: WHERE it is triggered, and what it may STAMP (#736)
 

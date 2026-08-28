@@ -56,19 +56,25 @@ const BASE = `http://127.0.0.1:${PORT}`;
 // game cards or the vote card, because the band moves with the *content* as
 // well as with the code — a title that wraps to a second line shifts it ~25px.
 const VIEWPORTS = {
-  // Both shelf crops grew by exactly what the Regal grew above its grid (#752).
-  // Two controls landed there after #669 — the bulk select/clear toggle (#723)
-  // and the „Weitere Filter" disclosure (#725) — and each pushes every card row
-  // down 41px. The wide layout shows both (+82); the phone collapses the tag
-  // half into its „Filter" chip and so takes only the disclosure (+41).
+  // Both shelf crops SHRANK by exactly what the Regal lost above its grid
+  // (#827), which is the mirror image of the #752 note this replaces. That note
+  // added +82 wide / +41 phone for two controls that had landed above the grid
+  // — the bulk select/clear toggle (#723) and the „Weitere Filter" disclosure
+  // (#725). #827 folds the whole tag half INTO one disclosure, so above the grid
+  // there is now a single 40px „Filter" button at every width.
   //
-  // Measured at 1280: rail ends 689, row 1 ends 557, row 2 ends 794. The old 790
-  // therefore landed 4px ABOVE row 2's bottom edge, slicing its titles; at 390
-  // it cut through row 3's badges. Shifting each crop by its own delta restores
-  // the composition #669 derived rather than re-deriving a new one: the cut
-  // still clears the rail and lands inside row 3's cover art.
-  shelfWide: { width: 1280, height: 872, deviceScaleFactor: 1.25, mobile: false },
-  shelfPhone: { width: 390, height: 821, deviceScaleFactor: 1.6, mobile: true },
+  // Measured with --probe on both sides of the change (rail 730, unmoved):
+  //
+  //            row 1 ends   row 2 ends   delta
+  //   wide      594 -> 478   831 -> 715   -116
+  //   phone     514 -> 472   736 -> 694    -42
+  //
+  // Shifting each crop by its OWN delta again preserves the composition rather
+  // than re-deriving a new one: the wide cut still clears the rail and lands
+  // 24px into row 3's cover art, the phone cut 68px into it — the same two
+  // numbers as before. The vote shot is untouched (card bottom 617 either way).
+  shelfWide: { width: 1280, height: 756, deviceScaleFactor: 1.25, mobile: false },
+  shelfPhone: { width: 390, height: 779, deviceScaleFactor: 1.6, mobile: true },
   // 720, not the 780 that shipped before #666. The vote card now SIZES ITSELF to
   // the viewport, so the crop is a fixed point rather than a free choice: the
   // cover is `max(110px, min(240px, calc(100svh - 480px)))`, which reaches its

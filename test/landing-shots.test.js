@@ -253,7 +253,7 @@ test('the capture seed can still make the metadata-gated affordances render', ()
 
   assert.ok(
     hasMetadataFilterOptions(metadataFilterOptions(games)),
-    'the seeded shelf can offer metadata filters, so the Regal renders „Weitere Filter"'
+    'the seeded shelf can offer metadata filters, so the Regal renders their half of „Filter"'
   );
 
   // game-info.js builds DOM and deliberately carries no module.exports guard

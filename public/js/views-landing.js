@@ -67,28 +67,28 @@ const LANDING_STEPS = ['landing.how.step1', 'landing.how.step2', 'landing.how.st
 // other.
 const LANDING_SHOTS = {
   de: {
-    shelfWide: { src: '/img/landing-shelf-wide.de.webp', w: 1600, h: 1090 },
-    shelfPhone: { src: '/img/landing-shelf-phone.de.webp', w: 624, h: 1314 },
+    shelfWide: { src: '/img/landing-shelf-wide.de.webp', w: 1600, h: 945 },
+    shelfPhone: { src: '/img/landing-shelf-phone.de.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.de.webp', w: 624, h: 1152 },
   },
   en: {
-    shelfWide: { src: '/img/landing-shelf-wide.en.webp', w: 1600, h: 1090 },
-    shelfPhone: { src: '/img/landing-shelf-phone.en.webp', w: 624, h: 1314 },
+    shelfWide: { src: '/img/landing-shelf-wide.en.webp', w: 1600, h: 945 },
+    shelfPhone: { src: '/img/landing-shelf-phone.en.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.en.webp', w: 624, h: 1152 },
   },
   es: {
-    shelfWide: { src: '/img/landing-shelf-wide.es.webp', w: 1600, h: 1090 },
-    shelfPhone: { src: '/img/landing-shelf-phone.es.webp', w: 624, h: 1314 },
+    shelfWide: { src: '/img/landing-shelf-wide.es.webp', w: 1600, h: 945 },
+    shelfPhone: { src: '/img/landing-shelf-phone.es.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.es.webp', w: 624, h: 1152 },
   },
   fr: {
-    shelfWide: { src: '/img/landing-shelf-wide.fr.webp', w: 1600, h: 1090 },
-    shelfPhone: { src: '/img/landing-shelf-phone.fr.webp', w: 624, h: 1314 },
+    shelfWide: { src: '/img/landing-shelf-wide.fr.webp', w: 1600, h: 945 },
+    shelfPhone: { src: '/img/landing-shelf-phone.fr.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.fr.webp', w: 624, h: 1152 },
   },
   it: {
-    shelfWide: { src: '/img/landing-shelf-wide.it.webp', w: 1600, h: 1090 },
-    shelfPhone: { src: '/img/landing-shelf-phone.it.webp', w: 624, h: 1314 },
+    shelfWide: { src: '/img/landing-shelf-wide.it.webp', w: 1600, h: 945 },
+    shelfPhone: { src: '/img/landing-shelf-phone.it.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.it.webp', w: 624, h: 1152 },
   },
 };

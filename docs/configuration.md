@@ -305,7 +305,7 @@ gone.)
 The BGG metadata those requests bring back (complexity, playing time, minimum
 age, categories, mechanics) is filled in lazily, in the background, at the points
 it is about to be read — including the session setup screen and the Regal, whose
-„Weitere Filter" controls are derived from it (issue #736). A session draw that
+„Filter" control derives its metadata half from it (issue #736). A session draw that
 carries such a filter waits for that fill before drawing, since a game the
 provider was never asked about passes every filter; `DRAW_BACKFILL_TIMEOUT_MS`
 (default 4000) caps that wait, after which the draw proceeds with the values
