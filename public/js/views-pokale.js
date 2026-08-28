@@ -98,35 +98,42 @@ function renderPokaleTab(round) {
     rankOf[m.id] = winners.filter((o) => wins[o.id] > wins[m.id]).length + 1;
   });
 
-  // Podium slots by rank: left = 2, center = 1, right = 3. A slot holds every
-  // member with that rank, so a tie shows several avatars sharing one step.
-  const podiumCol = (rank) => {
-    const members = winners.filter((m) => rankOf[m.id] === rank);
-    if (!members.length) return '';
-    const avatars = members
-      .map(
-        (m) =>
-          `<a class="avatar podium__avatar" data-mid="${esc(m.id)}" style="background:${memberColor(round, m.id)}">${esc(initials(m.name))}</a>`
+  // Podium slots by rank: left = 2, center = 1, right = 3. A COLUMN IS A RANK,
+  // NOT A MEMBER — tied members share one step rather than widening the stage,
+  // which is the same shared component the session results podium uses (#836).
+  // Its three fixed 110px columns plus gaps came to 358px, wider than a 375px
+  // phone's 347px content box, with no wrap set to catch it.
+  const podiumItems = winners.map((m) => ({ place: rankOf[m.id], member: m }));
+  const { single, cols } = podiumColumns(podiumItems);
+  if (winners.length) {
+    const entryHtml = (it) =>
+      `<a class="podium__entry podium__entry--member" data-mid="${esc(it.member.id)}">
+         <span class="avatar podium__avatar" style="background:${memberColor(round, it.member.id)}">${esc(initials(it.member.name))}</span>
+         <span class="podium__name">${esc(it.member.name)}</span>
+       </a>`;
+    const stage = cols
+      .map((col) =>
+        podiumColHtml(col, () => ({
+          entries: col.shown.map(entryHtml).join(''),
+          more: esc(tn(col.hidden, 'podium.moreOne', 'podium.more')),
+          // Everyone on a step has the same win count, so shown[0] speaks for it.
+          base:
+            `<span class="podium__rank">${col.rank}</span>` +
+            esc(tn(wins[col.shown[0].member.id], 'pokale.winsOne', 'pokale.wins')),
+        }))
       )
       .join('');
-    const names = members.map((m) => esc(m.name)).join(', ');
-    return `<div class="podium__col podium__col--${rank}">
-             ${rank === 1 ? '<i class="ti ti-crown podium__crown" aria-hidden="true"></i>' : ''}
-             <span class="podium__avatars">${avatars}</span>
-             <span class="podium__name">${names}</span>
-             <span class="podium__base"><span class="podium__rank">${rank}</span>${esc(tn(wins[members[0].id], 'pokale.winsOne', 'pokale.wins'))}</span>
-           </div>`;
-  };
-  if (winners.length) {
-    const podium = h(`<div class="podium">${podiumCol(2)}${podiumCol(1)}${podiumCol(3)}</div>`);
-    // Each podium avatar opens that member's detail page.
-    podium.querySelectorAll('.podium__avatar[data-mid]').forEach((el) => {
+    const podium = h(`<div class="podium${single ? ' podium--single' : ''}">${stage}</div>`);
+    // Each podium entry opens that member's detail page.
+    podium.querySelectorAll('.podium__entry[data-mid]').forEach((el) => {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
     sec.appendChild(podium);
   }
-  // Anyone ranked below the podium's three steps drops to the summary line.
-  const onPodium = new Set(winners.filter((m) => rankOf[m.id] <= 3).map((m) => m.id));
+  // Anyone not actually standing on the podium drops to the summary line — both
+  // those ranked below the three steps and anyone pushed off a crowded step by
+  // the per-rank cap, so the cap never makes a member disappear entirely.
+  const onPodium = new Set(cols.flatMap((c) => c.shown.map((it) => it.member.id)));
   const rest = ranked.filter((m) => !onPodium.has(m.id));
   if (rest.length) {
     const line = rest

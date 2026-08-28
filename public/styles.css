@@ -1990,7 +1990,8 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .result-row__img.game-link:hover,
 .archive-row__img.game-link:hover,
 .recap-fav__cover.game-link:hover,
-.result-podium__col.game-link:hover .result-podium__img {
+.result-podium__entry.game-link:hover .result-podium__img,
+.podium__entry.member-link:hover .podium__avatar {
   box-shadow: 0 0 0 3px var(--brand-edge);
 }
 
@@ -2000,8 +2001,10 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .avatar.member-link { transition: box-shadow var(--dur-base) var(--ease-out); }
 .avatar.member-link:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .result-people__person.member-link:focus-visible,
+.podium__entry.member-link:focus-visible,
 .podium__rest-name.member-link:focus-visible { border-radius: var(--radius-sm); }
 .result-people__person.member-link:hover .result-people__name,
+.podium__entry.member-link:hover .podium__name,
 .podium__rest-name.member-link:hover {
   text-decoration: underline;
   text-decoration-color: color-mix(in oklab, var(--brand) 60%, transparent);
@@ -4762,17 +4765,64 @@ kbd {
 .stepper__val:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
 .stepper-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-/* ---- Pokale: podium + stat cards ---- */
-.podium { display: flex; align-items: flex-end; justify-content: center; gap: 14px; margin: 8px 0 18px; }
-.podium__col { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 110px; }
+/* ---- The podium (shared: Pokale members + session results) ---- */
+/* ONE COLUMN IS ONE RANK, never one entry (#836). Both podiums are tie-aware,
+   so a column-per-entry stage grew with every tie: the results podium emitted
+   four 140px columns for the everyday "one winner, three-way tie for 2nd" and
+   wrapped on a phone (pedestals off one baseline, the crown stranded at the
+   bottom right), while Pokale's three 110px columns plus gaps came to 358px in
+   a 347px box with no wrap set at all. At most three columns, sized fluidly,
+   and NEVER `flex-wrap` here — the wrap was the bug. */
+.podium {
+  position: relative; /* anchors the results confetti overlay */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  margin: 8px 0 18px;
+}
+.podium__col {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
 .podium__crown { font-size: var(--text-2xl); color: var(--gold); }
+.podium__entries {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.podium__entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  /* Fills the column on purpose: a shrink-to-fit entry sizes itself from its
+     own title, which makes covers ragged and stops text-overflow ever firing. */
+  width: 100%;
+  min-width: 0;
+}
+/* The wide band lays entries in a row, so there they take a width of their own —
+   96px keeps three of them on one line inside a 375px phone's 347px box. */
+.podium--single .podium__entry { width: 96px; }
+.podium__more {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--placeholder);
+  text-align: center;
+}
 .podium__avatar { width: 52px; height: 52px; font-size: 18px; /* glyph, not type */ }
-.podium__avatars { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .podium__name {
   font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: 700;
-  max-width: 110px;
+  max-width: 100%;
   overflow-wrap: anywhere;
   text-align: center;
 }
@@ -4791,10 +4841,22 @@ kbd {
   color: var(--brand-dark);
   padding-top: 6px;
 }
-.podium__col--1 .podium__base { height: 96px; }
-.podium__col--2 .podium__base { height: 74px; }
-.podium__col--3 .podium__base { height: 58px; }
+.podium__col--1 .podium__base { height: 88px; }
+.podium__col--2 .podium__base { height: 64px; }
+.podium__col--3 .podium__base { height: 46px; }
 .podium__rank { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; line-height: 1.1; }
+/* A rank holding several entries shrinks its covers/avatars rather than its
+   column — the column width belongs to the stage, not to how the tie fell. */
+.podium__col--multi .podium__avatar { width: 40px; height: 40px; font-size: 15px; /* glyph, not type */ }
+.podium__col--multi .podium__entries { gap: 8px; }
+/* One distinct place occupied (everyone tied, or a single ranked entry): a lone
+   pedestal on an empty stage is not a podium, so the rank becomes one wide
+   crowned band and its entries sit side by side. */
+.podium--single .podium__col { max-width: none; flex: 1 1 100%; }
+.podium--single .podium__entries { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px 18px; }
+.podium--single .podium__col--1 .podium__base,
+.podium--single .podium__col--2 .podium__base,
+.podium--single .podium__col--3 .podium__base { height: 44px; }
 .podium__rest { text-align: center; font-size: var(--text-sm); font-weight: 600; margin-bottom: 18px; }
 .pokale-cards {
   display: grid;
@@ -5704,22 +5766,16 @@ kbd {
 .result-people__person .avatar { width: 28px; height: 28px; font-size: 11px; /* glyph, not type */ }
 .result-people__name { font-size: var(--text-sm); font-weight: 700; }
 
-.result-podium {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 14px;
-  margin: 4px 0 22px;
-}
-.result-podium__col { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 140px; }
-.result-podium__crown { font-size: var(--text-2xl); color: var(--gold); }
+/* The results stage is the shared .podium; only what one ENTRY looks like is
+   its own. Cover sizes are ABSOLUTE with a `max-width: 100%` squeeze, never a
+   percentage — see percent-sizes-under-a-shrink-to-fit-flex-item.md. */
+.podium--result { margin: 4px 0 22px; }
 .result-podium__img {
   position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
   overflow: hidden;
   width: 74px;
-  height: 74px;
+  max-width: 100%;
+  aspect-ratio: 1;
   border-radius: 14px;
   background: var(--sunken) center/cover no-repeat;
   display: flex;
@@ -5733,32 +5789,20 @@ kbd {
   font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: 700;
-  max-width: 140px;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.podium__col--multi .result-podium__img { width: 52px; }
+.podium__col--multi .result-podium__title { font-size: var(--text-sm); }
 .result-podium__pill { position: static; }
-.result-podium__base {
-  width: 100%;
-  background: var(--brand-tint);
-  border: 1px solid var(--brand-edge);
-  border-radius: 12px 12px 0 0;
-  text-align: center;
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--brand-dark);
-  padding-top: 4px;
-}
-.result-podium__col--1 .result-podium__base { height: 84px; }
-.result-podium__col--2 .result-podium__base { height: 56px; }
-.result-podium__col--3 .result-podium__base { height: 38px; }
 @media (prefers-reduced-motion: no-preference) {
-  .result-podium.is-reveal .result-podium__col { animation: podium-rise 0.55s ease-out backwards; }
-  .result-podium.is-reveal .result-podium__col--3 { animation-delay: 0.1s; }
-  .result-podium.is-reveal .result-podium__col--2 { animation-delay: 0.5s; }
-  .result-podium.is-reveal .result-podium__col--1 { animation-delay: 0.9s; }
+  /* Staggered shortest-first, which stays right now that a column is a rank. */
+  .podium.is-reveal .podium__col { animation: podium-rise 0.55s ease-out backwards; }
+  .podium.is-reveal .podium__col--3 { animation-delay: 0.1s; }
+  .podium.is-reveal .podium__col--2 { animation-delay: 0.5s; }
+  .podium.is-reveal .podium__col--1 { animation-delay: 0.9s; }
   @keyframes podium-rise {
     from { transform: translateY(26px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }

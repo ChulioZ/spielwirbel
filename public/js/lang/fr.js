@@ -115,6 +115,8 @@ I18N.fr = {
   'pokale.empty': 'Pas encore de trophée — la première session décidera.',
   'pokale.winsOne': '{n} victoire',
   'pokale.wins': '{n} victoires',
+  'podium.moreOne': '+{n} de plus',
+  'podium.more': '+{n} de plus',
   'pokale.mostPlayed': 'Le plus joué',
   'pokale.bestRated': 'Le mieux noté',
   'pokale.streak': 'Série de victoires',

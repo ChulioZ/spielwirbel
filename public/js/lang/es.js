@@ -105,6 +105,8 @@ I18N.es = {
   'pokale.empty': 'Todavía no hay trofeos: los decidirá la primera sesión.',
   'pokale.winsOne': '{n} victoria',
   'pokale.wins': '{n} victorias',
+  'podium.moreOne': '+{n} más',
+  'podium.more': '+{n} más',
   'pokale.mostPlayed': 'El más jugado',
   'pokale.bestRated': 'El mejor valorado',
   'pokale.streak': 'Racha de victorias',
