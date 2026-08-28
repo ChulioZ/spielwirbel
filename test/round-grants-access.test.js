@@ -218,6 +218,49 @@ test('moving games out of a shared round is owner-only (#411)', async () => {
     .body.games.map((g) => g.title), ['Catan']);
 });
 
+/* Bulk shelf tidying (#832) costs exactly what each single-game counterpart
+   costs — retiring is an ordinary write a grantee may do, deleting takes a
+   game's whole rating history with it and is co-owner and up. That split lives
+   in one table (lib/round-access.js), and the client hides what the server
+   refuses; this is the server half. */
+test('bulk-retire is open to a grantee, bulk-delete is co-owner and up (#832)', async () => {
+  const owner = await makeAccount('bulk-owner@example.com');
+  const grantee = await makeAccount('bulk-grantee@example.com');
+
+  const shared = (await request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Geteilte Runde', members: ['Owner'] })).body;
+  const game = async (title) => (await request(app).post(`/api/rounds/${shared.id}/games`)
+    .set(auth(owner.token)).send({ title, minPlayers: 2, maxPlayers: 4 })).body;
+  const a = await game('Azul');
+  const b = await game('Brass');
+
+  const grant = { roundId: shared.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id };
+  await repo.createGrant(grant);
+
+  // A plain grantee (editor) may retire — it is reversible and the round's
+  // content is exactly what sharing is for.
+  const retire = await request(app).post(`/api/rounds/${shared.id}/games/bulk-retire`)
+    .set(auth(grantee.token)).send({ gameIds: [a.id] });
+  assert.equal(retire.status, 200);
+  assert.equal(retire.body.retired, 1);
+
+  // ...but may NOT delete. Were this open, the bulk route would be a way around
+  // the co-owner guard on DELETE …/games/:gid.
+  const del = await request(app).post(`/api/rounds/${shared.id}/games/bulk-delete`)
+    .set(auth(grantee.token)).send({ gameIds: [a.id, b.id] });
+  assert.equal(del.status, 403);
+  assert.equal((await request(app).get(`/api/rounds/${shared.id}`).set(auth(owner.token)))
+    .body.games.length, 2, 'nothing was deleted');
+
+  // A co-owner may — the destructive action an owner can delegate.
+  await repo.updateGrantRole(shared.id, grantee.user.id, 'coowner');
+  const asCoowner = await request(app).post(`/api/rounds/${shared.id}/games/bulk-delete`)
+    .set(auth(grantee.token)).send({ gameIds: [a.id, b.id] });
+  assert.equal(asCoowner.status, 200);
+  assert.equal((await request(app).get(`/api/rounds/${shared.id}`).set(auth(owner.token)))
+    .body.games.length, 0);
+});
+
 // Seed a shared round: owner's round, one member linked to the grantee + a grant.
 async function seedShare(owner, grantee, seatName = 'Anna') {
   const round = (await request(app).post('/api/rounds').set(auth(owner.token))

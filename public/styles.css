@@ -5816,6 +5816,85 @@ kbd {
 .archive-row__actions { display: flex; gap: 8px; flex: none; flex-wrap: wrap; }
 .archive-row__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
 
+/* --- Bulk shelf tidying (#832) --------------------------------------------
+   One selection idiom over two very different lists: the Regal's cover grid and
+   the three off-shelf screens' rows. Both switch on a container class rather
+   than on per-element state, so entering the mode is one class toggle and no
+   node is rebuilt — which is what lets the Regal keep its search, filters and
+   sort working while a selection is live. */
+
+/* The action bar, above the grid/list it governs. `[hidden]` is restored
+   explicitly: an author `display` beats the UA stylesheet's [hidden] rule, so
+   without this the bar would be permanently visible
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.bulk-bar[hidden] { display: none; }
+.bulk-bar__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bulk-bar__count { font-weight: 700; }
+.bulk-bar__hint { font-size: var(--text-sm); }
+.bulk-bar__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bulk-bar__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
+/* On a phone the hint wraps to two lines and the bar then eats a quarter of the
+   viewport above the grid it governs. The mode is entered deliberately and the
+   count plus two labelled buttons say the rest, so the explanation is the part
+   that goes. Declared HERE rather than in the shared <=520px block near the top
+   of the file: that block sits above every component it overrides, so a rule of
+   equal specificity there would lose on source order
+   (.claude/rules/flex-none-cancels-flex-wrap.md). */
+@media (max-width: 520px) {
+  .bulk-bar__hint { display: none; }
+}
+
+/* The header toggle, while the mode is on. */
+.link-btn.is-active { color: var(--brand); font-weight: 700; }
+
+/* Regal: the tick sits in the cover's corner, opposite the badge column, and
+   exists only while selecting. .game-card__img is position:relative already
+   (it anchors .cover-ph), so this needs no new positioned host
+   (.claude/rules/absolutely-positioned-components-escape-a-new-host.md). */
+.game-card__pick {
+  display: none;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  align-items: center;
+  justify-content: center;
+  font-size: 16px; /* glyph, not type */
+  color: transparent;
+}
+.is-selecting .game-card__pick { display: flex; }
+.is-selecting .game-card { cursor: pointer; }
+.is-selecting .game-card.is-picked { border-color: var(--brand); }
+.is-selecting .game-card.is-picked .game-card__pick {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* Off-shelf screens: a real checkbox, because the row is a <div> holding its
+   own buttons — an <a>/<label> wrapper would nest interactive elements
+   (.claude/rules/ds-row-is-a-click-target.md). */
+.archive-row__pick { display: none; align-items: center; flex: none; }
+.archive-row__pick input { width: 20px; height: 20px; accent-color: var(--brand); }
+.is-selecting .archive-row__pick { display: flex; }
+.is-selecting .archive-row.is-picked { border-color: var(--brand); }
+
 /* ---- Recommendations (#682): games the round does NOT own ----
    Same row anatomy as .archive-row (cover, body, actions) rather than a tile
    grid: an entry here is RICH — a placeholder cover, four facts and up to two

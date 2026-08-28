@@ -28,6 +28,31 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * The bulk-REMOVE counterpart of the BGG collection import, which is the
+   * capability test this clears: the shelf could be filled in one action and
+   * emptied only one game (and two steps) at a time. Says what the reader can
+   * do and where; the endpoint, the co-owner gate and the retire-first
+   * semantics are all the repo's business, not theirs.
+   */
+  {
+    revision: '2026-08-28',
+    de: {
+      title: 'Regal in einem Rutsch aufräumen',
+      body: 'Im Regal gibt es jetzt „Auswählen": Spiele antippen, Suche und Filter '
+        + 'dabei ganz normal weiterbenutzen — „Alle auswählen" nimmt genau das, was '
+        + 'gerade zu sehen ist. Die Auswahl könnt ihr in einem Schritt aussortieren '
+        + 'oder endgültig löschen. Auf „Aussortiert", „Durchgespielt" und der '
+        + 'Wunschliste geht dasselbe zum Löschen.',
+    },
+    en: {
+      title: 'Tidy the whole shelf at once',
+      body: 'The Regal now has a "Select" mode: tap the games you mean while the '
+        + 'search and filters keep working — "Select all" takes exactly what is on '
+        + 'screen. Retire the selection, or delete it for good, in one step. The '
+        + 'retired, completed and wishlist screens offer the same for deleting.',
+    },
+  },
+  /*
    * A genuinely new capability — a group that could not use the session flow at
    * all can now use it — which is the bar .claude/rules/keep-readme-current.md
    * sets. Says what the reader can DO, deliberately not how the split is chosen:

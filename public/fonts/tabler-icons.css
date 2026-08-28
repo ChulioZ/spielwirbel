@@ -60,6 +60,7 @@
 .ti-minus::before { content: "\eaf2"; }
 .ti-x::before { content: "\eb55"; }
 .ti-check::before { content: "\ea5e"; }
+.ti-checkbox::before { content: "\eba6"; }
 .ti-circle-check::before { content: "\ea67"; }
 .ti-chevron-left::before { content: "\ea60"; }
 .ti-chevron-right::before { content: "\ea61"; }
@@ -71,6 +72,7 @@
 .ti-alert-triangle::before { content: "\ea06"; }
 .ti-layout-grid::before { content: "\edba"; }
 .ti-trash::before { content: "\eb41"; }
+.ti-trash-x::before { content: "\ef88"; }
 .ti-clipboard::before { content: "\ea6f"; }
 .ti-photo::before { content: "\eb0a"; }
 .ti-pencil::before { content: "\eb04"; }

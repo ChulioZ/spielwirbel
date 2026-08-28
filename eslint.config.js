@@ -121,6 +121,9 @@ const frontendGlobals = {
   // Pre-existing omissions from the same file, folded in while adding the line
   // above: both are top-level names in the shared scope and neither was listed.
   resolveTeamMembers: 'readonly', sessionPartyCount: 'readonly',
+  // bulk-tidy.js (issue #832)
+  selectionTouchesHistory: 'readonly',
+  setupArchiveSelection: 'readonly',
   // session-outcome.js (issue #796) — also required by lib/routes/sessions.js
   sessionChildIds: 'readonly', sessionOutcome: 'readonly', isSplitParent: 'readonly',
   // table-split.js (issue #796) — also required by lib/draw.js and lib/session-split.js

@@ -408,6 +408,10 @@ public/
                      games of this round its provider links name, and the
                      resulting attach / pick / create-the-base decision
                      (issue #664)
+    bulk-tidy.js     what a bulk shelf-tidying selection costs the round — does
+                     it reach into any past session? Shared by the Regal's
+                     selection mode, the three off-shelf screens and the move
+                     sheet, so all three warn in the same words (issue #832)
     session-outcome.js what became of a session — open, played, cancelled or, since
                      #796, SPLIT across several tables; derived from the child
                      ids rather than from a third boolean, and required by

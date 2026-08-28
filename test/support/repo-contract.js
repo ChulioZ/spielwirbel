@@ -1242,6 +1242,157 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteGame(T, round.id, 'gone'), null);
   });
 
+  // ---- Bulk shelf tidying (#832) ----
+  // The counterparts of retireGame/deleteGame, for undoing a collection import.
+  // Both backends must answer identically, including the two places they are
+  // deliberately NOT the single-game path: an already-archived game is skipped
+  // rather than refused, and bulk-delete accepts a game still on the shelf.
+
+  test('retireGames retires the named games and counts what CHANGED', async () => {
+    const round = await freshRound();
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'A' }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'B' }));
+    const c = await repo.createGame(T, round.id, gameFields({ title: 'C' }));
+    await repo.retireGame(T, round.id, a.id, true);
+
+    // `a` is already retired, so it is skipped rather than refused — and must
+    // not be counted, or the caller's toast claims work that did not happen.
+    assert.deepEqual(await repo.retireGames(T, round.id, [a.id, b.id]), { retired: 1 });
+
+    const after = await repo.getRound(T, round.id);
+    const byId = Object.fromEntries(after.games.map((g) => [g.id, g]));
+    assert.equal(byId[a.id].retired, true);
+    assert.equal(byId[b.id].retired, true);
+    assert.ok(byId[b.id].retiredAt, 'the timestamp is stamped as the single path does');
+    assert.equal(byId[c.id].retired, false, 'an unnamed game is untouched');
+  });
+
+  // Exclusivity is enforced in the repo, not the UI (#250/#560) — a bulk path
+  // that skipped it could leave a game both wished-for and retired.
+  test('retireGames clears the completed and wish flags it supersedes', async () => {
+    const round = await freshRound();
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'A' }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'B' }));
+    await repo.completeGame(T, round.id, a.id, true);
+    await repo.wishGame(T, round.id, b.id, true);
+
+    assert.deepEqual(await repo.retireGames(T, round.id, [a.id, b.id]), { retired: 2 });
+    const byId = Object.fromEntries((await repo.getRound(T, round.id)).games.map((g) => [g.id, g]));
+    for (const g of [byId[a.id], byId[b.id]]) {
+      assert.equal(g.retired, true);
+      assert.equal(g.completed, false);
+      assert.equal(g.wish, false);
+    }
+  });
+
+  // ONE counted row, not N — the games_imported reasoning. An undo of a
+  // 200-game import would otherwise bury every other event the round has had.
+  test('both bulk paths write ONE counted activity, never one per game', async () => {
+    const round = await freshRound();
+    const ids = [];
+    for (const title of ['A', 'B', 'C']) {
+      ids.push((await repo.createGame(T, round.id, gameFields({ title }))).id);
+    }
+    await repo.retireGames(T, round.id, ids);
+    await repo.deleteGames(T, round.id, ids);
+
+    const acts = await repo.listActivities(T, round.id);
+    const retired = acts.filter((a) => a.type === 'games_retired');
+    const deleted = acts.filter((a) => a.type === 'games_deleted');
+    assert.equal(retired.length, 1);
+    assert.equal(retired[0].count, 3);
+    assert.equal(deleted.length, 1);
+    assert.equal(deleted[0].count, 3);
+    assert.equal(acts.filter((a) => a.type === 'game_retired').length, 0);
+    assert.equal(acts.filter((a) => a.type === 'game_deleted').length, 0);
+  });
+
+  // A stale client is refused WHOLE rather than partly obeyed — moveGames'
+  // 'unknown_game' contract, and for the same reason: silently acting on the
+  // subset it got right is worse than an error the caller can show.
+  test('both bulk paths refuse an id from another round, changing nothing', async () => {
+    const round = await freshRound();
+    const other = await freshRound({ name: 'Elsewhere' });
+    const mine = await repo.createGame(T, round.id, gameFields({ title: 'Mine' }));
+    const theirs = await repo.createGame(T, other.id, gameFields({ title: 'Theirs' }));
+
+    assert.equal(await repo.retireGames(T, round.id, [mine.id, theirs.id]), 'unknown_game');
+    assert.equal(await repo.deleteGames(T, round.id, [mine.id, theirs.id]), 'unknown_game');
+    const after = await repo.getRound(T, round.id);
+    assert.equal(after.games.length, 1);
+    assert.equal(after.games[0].retired, false);
+  });
+
+  test('both bulk paths report a missing round as null', async () => {
+    assert.equal(await repo.retireGames(T, 'nope', ['x']), null);
+    assert.equal(await repo.deleteGames(T, 'nope', ['x']), null);
+  });
+
+  // A wrong-tenant call must look exactly like not-found — never a partial write.
+  test('both bulk paths are tenant-scoped', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'A' }));
+    assert.equal(await repo.retireGames(OTHER, round.id, [g.id]), null);
+    assert.equal(await repo.deleteGames(OTHER, round.id, [g.id]), null);
+    assert.equal((await repo.getRound(T, round.id)).games.length, 1);
+  });
+
+  // THE decision this pair exists for: unlike deleteGame, bulk-delete accepts a
+  // game still on the shelf. Making the user retire 200 games and then delete
+  // them is the two-step in bulk, i.e. the problem rather than the fix.
+  test('deleteGames accepts an ACTIVE game, which deleteGame refuses', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'A', image: '/uploads/a.png' }));
+    assert.equal(await repo.deleteGame(T, round.id, g.id), 'not_archived');
+    assert.deepEqual(await repo.deleteGames(T, round.id, [g.id]),
+      { deleted: 1, images: ['/uploads/a.png'] });
+    assert.equal((await repo.getRound(T, round.id)).games.length, 0);
+  });
+
+  // Every deleted cover must come back, or a shelf purge silently leaks the
+  // objects (.claude/rules/deletion-paths-must-free-cover-objects.md). A game
+  // with no cover contributes nothing rather than a null the caller must filter.
+  test('deleteGames returns every cover path and scrubs all of them in ONE pass', async () => {
+    const round = await freshRound();
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'A', image: '/uploads/a.png' }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'B', image: '/uploads/b.png' }));
+    const bare = await repo.createGame(T, round.id, gameFields({ title: 'No cover', image: null }));
+    const keep = await repo.createGame(T, round.id, gameFields({ title: 'Keep' }));
+    const shared = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [a.id, keep.id], votes: { m1: { [a.id]: { rating: 5 }, [keep.id]: { rating: 3 } } },
+      chosenGameId: a.id, chosenAt: 't', finished: true, finishedAt: 't', winnerIds: ['m1'],
+      cancelled: false, cancelledAt: null, done: true,
+    });
+    const doomed = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [b.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    });
+
+    const res = await repo.deleteGames(T, round.id, [a.id, b.id, bare.id]);
+    assert.equal(res.deleted, 3);
+    assert.deepEqual([...res.images].sort(), ['/uploads/a.png', '/uploads/b.png']);
+
+    const after = await repo.getRound(T, round.id);
+    assert.deepEqual(after.games.map((g) => g.id), [keep.id]);
+    const s = after.sessions.find((x) => x.id === shared.id);
+    assert.deepEqual(s.gameIds, [keep.id]);
+    assert.equal(s.chosenGameId, null, 'the chosen game was deleted, so the choice is reset');
+    assert.equal(s.votes.m1[a.id], undefined);
+    assert.equal(s.votes.m1[keep.id].rating, 3, 'the kept game keeps its vote');
+    assert.equal(after.sessions.some((x) => x.id === doomed.id), false,
+      'a session left with no games at all is dropped');
+  });
+
+  test('deleteGames drops the deleted games\' activity rows, keeping the others\'', async () => {
+    const round = await freshRound();
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'A' }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'B' }));
+    await repo.deleteGames(T, round.id, [a.id]);
+    const acts = await repo.listActivities(T, round.id);
+    assert.equal(acts.some((x) => x.gameId === a.id), false);
+    assert.equal(acts.some((x) => x.gameId === b.id), true);
+  });
+
   test('isImageReferenced sees images across the tenant\'s rounds, not other tenants\'', async () => {
     const round = await freshRound();
     await repo.createGame(T, round.id, gameFields({ image: '/uploads/shared.jpg' }));
