@@ -1008,7 +1008,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       if (names.length === 0) {
         titleEl.textContent = t('result.titlePlayed', { game: gname });
       } else {
-        titleEl.textContent = t(names.length === 1 ? 'result.titleWonOne' : 'result.titleWonMany', {
+        titleEl.textContent = tn(names.length, 'result.titleWonOne', 'result.titleWonMany', {
           game: gname,
           names: joinNames(names),
         });
@@ -1447,7 +1447,7 @@ function canShareResult() {
 async function shareResult(model) {
   // joinNames is passed in so the shared headline is byte-identical to the h1
   // above it ("Anna und Ben", not "Anna, Ben") — see session-share.js.
-  const text = sessionShareText(model, t, joinNames);
+  const text = sessionShareText(model, t, joinNames, tn);
   if (navigator.share) {
     try {
       await navigator.share({ text });

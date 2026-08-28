@@ -781,7 +781,7 @@ async function showGameDetail(rid, gameId) {
     !game.image && st.avg === null && related.length === 0 && assignedTagIds.length === 0;
 
   // Header card: image + title + score ring ("Spielepass").
-  const ratingsLine = t(st.count === 1 ? 'detail.ratingsLineOne' : 'detail.ratingsLine', { n: st.count, s: st.sessions });
+  const ratingsLine = tn(st.count, 'detail.ratingsLineOne', 'detail.ratingsLine', { s: st.sessions });
   const RING_C = (2 * Math.PI * 34).toFixed(1);
   const scoreRing =
     st.avg !== null

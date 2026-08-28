@@ -19,6 +19,14 @@
  *    (the test/players-plural.test.js shape) for the other eight, whose views
  *    need a page of fixture each to reach one line of text.
  *
+ * #838 added four more sites to the scan at the bottom. They are a quieter
+ * case: they picked the same key pair with a hand-written `n === 1 ? … : …`,
+ * which is already CORRECT for every n they can receive, so no assertion over a
+ * reachable input can discriminate the conversion (see the issue). Only one of
+ * the four prints its count, so only that one joins the wording table; the other
+ * three (carrying two key pairs between them) are held to the call shape
+ * alone.
+ *
  * The table is de + en only on purpose. It states a claim about GRAMMAR, and
  * those are the two languages this repo can assert one in; es/fr/it are held to
  * the structural half instead, which test/i18n-parity.test.js already enforces
@@ -92,6 +100,33 @@ const PAIRS = [
     one: 'newRound.importOptionOne', other: 'newRound.importOption', params: { name: 'Freitagsrunde' },
     de: ['Freitagsrunde (1 Spiel)', 'Freitagsrunde (2 Spiele)'],
     en: ['Freitagsrunde (1 game)', 'Freitagsrunde (2 games)'],
+  },
+  {
+    what: 'detail.ratingsLine — the game detail header (#838)',
+    one: 'detail.ratingsLineOne', other: 'detail.ratingsLine', params: { s: 3 },
+    de: ['Ø aus 1 Bewertung · 3 Sessions', 'Ø aus 2 Bewertungen · 3 Sessions'],
+    en: ['Ø from 1 rating · 3 sessions', 'Ø from 2 ratings · 3 sessions'],
+  },
+];
+
+/* The other three #838 sites select on a count they never PRINT — the winner
+   list's length picks the verb, and the number itself is not in the sentence.
+   So they carry no wording claim this file could state: they have no `{n}` to
+   substitute, and in English both forms are byte-identical („{names} won!"), so
+   a row in the table above would assert precisely nothing.
+   What is real about them is the call SHAPE, which is what regresses — hence
+   the scan below runs over these as well. */
+const SILENT_PAIRS = [
+  {
+    what: 'home.lastPlayedWon — the round card\'s last-played line',
+    one: 'home.lastPlayedWonOne', other: 'home.lastPlayedWonMany',
+  },
+  {
+    // Two call sites, one row: the scan sweeps every file for every row, so a
+    // second entry with the same key pair would repeat the work and imply a
+    // per-site distinction this test cannot make.
+    what: 'result.titleWon — the session-result h1 and the shared summary\'s headline',
+    one: 'result.titleWonOne', other: 'result.titleWonMany',
   },
 ];
 
@@ -174,15 +209,18 @@ test('a French zero renders through the singular with the actual number in it', 
 });
 
 /* The wording table above proves the KEYS are right; only the Chronik test
-   proves a call site was converted. This closes that gap for the other eight
+   proves a call site was converted. This closes that gap for the others
    without a page of fixture each: it is a claim about the call SHAPE, which is
    what regresses — a view that goes back to t() renders the plural at n = 1
    again while every assertion above stays green.
    Deliberately not a regex over a view's rendered output (which is what
    `.claude/rules/testing-views-under-jsdom.md` exists to replace) — it asks
    only "is this key ever reached through the non-plural helper", which no
-   amount of rendering can answer for nine screens. */
-test('none of the nine keys is reachable through plain t() any more', () => {
+   amount of rendering can answer for a dozen screens.
+   For #838's four this is the ONLY assertion that can go red at all, which is
+   the whole reason that issue is a test-shape change rather than a behavioural
+   one. */
+test('none of the plural-pair keys is reachable through plain t() any more', () => {
   const fs = require('node:fs');
   const path = require('node:path');
   const dir = path.join(__dirname, '..', 'public', 'js');
@@ -205,10 +243,21 @@ test('none of the nine keys is reachable through plain t() any more', () => {
   let checked = 0;
   for (const file of sources) {
     const text = fs.readFileSync(file, 'utf8');
-    for (const row of PAIRS) {
+    for (const row of PAIRS.concat(SILENT_PAIRS)) {
       for (const key of [row.one, row.other]) {
-        // `\bt\(` cannot match `tn(` — the n is a word character.
-        const bad = new RegExp(`\\bt\\(\\s*'${rx(key)}'`);
+        /* `\bt\(` cannot match `tn(` — the n is a word character.
+
+           `[^)\n]*` is load-bearing and was NOT here originally: it lets the key
+           sit anywhere in the call's first line, not just immediately after the
+           paren. #833's nine were all direct `t('key', …)` calls, so the tighter
+           `\s*'key'` caught them — but the shape #838 converts is
+           `t(n === 1 ? 'keyOne' : 'keyOther')`, where the key follows a ternary
+           condition and the old pattern matched nothing at all. Measured: with
+           the four sites reverted on purpose, this test stayed GREEN five times
+           out of five before the character class was widened.
+           It stays on ONE line and refuses to cross a `)` so it cannot wander
+           out of the call it started in — `foo(t('x'), 'keyOne')` is not a hit. */
+        const bad = new RegExp(`\\bt\\(\\s*[^)\\n]*'${rx(key)}'`);
         assert.ok(!bad.test(text), `${path.basename(file)}: '${key}' is passed to t(), not tn() — ${row.what}`);
         checked++;
       }
