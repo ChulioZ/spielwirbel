@@ -2,9 +2,9 @@
    results screen's „Teilen" button.
 
    Pure and dependency-free, so it works both as a shared-scope frontend script
-   and as a CommonJS module the test suite can require. The translate function is
-   passed IN for the same reason recap.js takes its resolver: a public/js file
-   cannot require() a sibling, and `t` lives in i18n.js.
+   and as a CommonJS module the test suite can require. The translate functions
+   are passed IN for the same reason recap.js takes its resolver: a public/js
+   file cannot require() a sibling, and `t`/`tn` live in i18n.js.
 
    The builder takes the view model showResults has ALREADY computed — the same
    sorted rows, places and winner names it just rendered — rather than re-tallying
@@ -72,7 +72,11 @@ function shareRatingLines(rows, t) {
 // a subtly different sentence in the chat than the one on screen, and would be
 // worse German besides. The comma fallback exists only so the builder stays
 // callable without it.
-function shareHeadline(result, t, join) {
+// `tn` is injected beside `t` for the same reason `t` is (see the header), and
+// it goes LAST rather than next to its sibling: a caller that forgets it then
+// fails loudly on `tn is not a function`, where an argument inserted mid-list
+// would silently read `join` as the plural helper.
+function shareHeadline(result, t, join, tn) {
   // The outcome, not the two booleans (#796): a session split across several
   // tables was neither played nor cancelled, and without this arm it would fall
   // through to `playedTitle`-less silence — a message describing the ratings of
@@ -82,7 +86,7 @@ function shareHeadline(result, t, join) {
   if (!result.playedTitle) return null;
   const names = result.winnerNames || [];
   if (!names.length) return t('result.titlePlayed', { game: result.playedTitle });
-  return SHARE_TROPHY + ' ' + t(names.length === 1 ? 'result.titleWonOne' : 'result.titleWonMany', {
+  return SHARE_TROPHY + ' ' + tn(names.length, 'result.titleWonOne', 'result.titleWonMany', {
     game: result.playedTitle,
     names: (join || ((xs) => xs.join(', ')))(names),
   });
@@ -91,9 +95,9 @@ function shareHeadline(result, t, join) {
 // The full message. `result` is
 // { roundName, when, outcome, cancelled, playedTitle, winnerNames,
 //   tables: [{ title, names }], rows: [{ title, avg, count, place }] }.
-function sessionShareText(result, t, join) {
+function sessionShareText(result, t, join, tn) {
   const blocks = [t('share.header', { round: result.roundName, when: result.when })];
-  const headline = shareHeadline(result, t, join);
+  const headline = shareHeadline(result, t, join, tn);
   if (headline) blocks[0] += '\n' + headline;
   // The tables of a split evening (#796) — the one thing its message is actually
   // about, since no game was played at the parent. Absent for every other

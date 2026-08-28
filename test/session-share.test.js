@@ -14,7 +14,15 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { sessionShareText, SHARE_MEDALS, SHARE_TROPHY } = require('../public/js/session-share');
+const shareModule = require('../public/js/session-share');
+const { SHARE_MEDALS, SHARE_TROPHY } = shareModule;
+
+/* The view injects both halves of the i18n surface — `t` and, since #838, `tn`.
+   `translator()` hands the locale's `t` back with its `tn` sibling attached, so
+   the specs below keep passing one translator and this unpacks it. Deliberately
+   NOT a default inside session-share.js: a fallback there would be the `n === 1`
+   comparison this change exists to delete. */
+const sessionShareText = (result, t, join) => shareModule.sessionShareText(result, t, join, t.tn);
 // A translate function bound to one locale, exactly as the view passes `t` in
 // (test/support/dom.js — shared with i18n-locales and players-plural).
 const { translator } = require('./support/dom');

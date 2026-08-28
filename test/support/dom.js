@@ -94,7 +94,12 @@ function loadI18n(locale) {
 /* A translate function bound to one locale, exactly as a view passes `t` in. */
 function translator(locale) {
   const ctx = loadI18n(locale);
-  return (key, params) => ctx.t(key, params);
+  const t = (key, params) => ctx.t(key, params);
+  // The plural half of the same surface, bound to the same locale. A view holds
+  // both as globals; a spec passing this one function around would otherwise
+  // have to thread a second one beside it through every call (#838).
+  t.tn = (n, keyOne, keyOther, params) => ctx.tn(n, keyOne, keyOther, params);
+  return t;
 }
 
 /**

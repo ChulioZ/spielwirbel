@@ -112,7 +112,7 @@ function renderLobbyList(rounds) {
     if (r.lastPlayed) {
       const lp = r.lastPlayed;
       const text = lp.winnerNames.length
-        ? t(lp.winnerNames.length === 1 ? 'home.lastPlayedWonOne' : 'home.lastPlayedWonMany', {
+        ? tn(lp.winnerNames.length, 'home.lastPlayedWonOne', 'home.lastPlayedWonMany', {
             game: lp.gameTitle,
             names: joinNames(lp.winnerNames),
           })

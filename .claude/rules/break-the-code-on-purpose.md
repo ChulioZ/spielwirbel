@@ -146,7 +146,9 @@ cite the discipline and **not one of the eight citing rules is about databases**
 which is why it could not stay filed under an RLS heading once `paths:` scoping
 made that heading decide who gets to read it.
 
-**Related:** `.claude/rules/bgg-corpus.md` (a real captured fixture can still be
+**Related:** `.claude/rules/source-scanning-guards-enumerate-shapes.md` (adding a
+key to a source scan proves nothing about the new call site — #838's vacuous
+green), `.claude/rules/bgg-corpus.md` (a real captured fixture can still be
 green against the break), `.claude/rules/automated-tests.md` (the suite itself),
 `.claude/rules/admin-cross-tenant-escape.md` §4 (the RLS instance this came from,
 where breaking `redactText` onto `atx()` left all but one assertion green).
