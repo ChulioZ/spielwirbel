@@ -4623,7 +4623,28 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   position: fixed;
   bottom: 24px; left: 50%; transform: translateX(-50%);
   background: var(--ink); color: #fff;
-  padding: 12px 22px; border-radius: var(--radius-pill);
+  padding: 12px 22px;
+  /* Deliberately NOT var(--radius-pill) (#858). A 999px radius is only a pill
+     while the box is ONE line tall; on a wrapped message the four corner arcs
+     meet and the toast paints as a giant black ellipse over the content — which
+     any long game title reaches on a phone. 26px is just over half a
+     single-line box (12+12 padding + 18px/1.5 = 51px), so a one-liner is
+     clamped back to the same pill it has always been, while a wrapped one
+     degrades to a clean rounded rectangle. It is a magic number on purpose:
+     CSS cannot see line boxes, so this makes the ellipse unrepresentable
+     rather than detecting it. Restoring the pill token re-opens the bug. */
+  border-radius: 26px;
+  /* `width` is load-bearing and NOT redundant with the cap below. `left: 50%`
+     moves the box's START edge to the middle, so its available space is only
+     what remains to the right of that — half the viewport — and the transform
+     recentres it at paint time without giving any of that width back. A
+     shrink-to-fit box therefore clamps at 187.5px on a 375px screen and the cap
+     never binds: measured before this line existed, 187.5px wide and SIX lines
+     tall, which is what let the old pill radius paint a full circle. An
+     explicit max-content width is sized against `max-width` instead. */
+  width: max-content;
+  max-width: min(420px, 100vw - 32px);
+  text-align: center;
   box-shadow: var(--shadow-2); font-weight: 600;
   z-index: 50;
   display: none;
