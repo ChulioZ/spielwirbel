@@ -1,6 +1,7 @@
 ---
 paths:
   - "public/js/views-pokale.js"
+  - "public/js/views-chronik.js"
   - "public/js/views-round*.js"
   - "public/js/views-member.js"
 ---
@@ -33,6 +34,29 @@ guard is about. The general form is the dangerous one — a second card under a
 label the guard *excludes* is silently never checked, and `cardByLabel` in every
 other spec quietly starts answering about whichever of the two is earlier in the
 DOM.
+
+**The two sections no longer share a screen** (#851 moved the period recap to the
+Chronik, above its timeline), so that specific collision is dissolved. The rest of
+this file is unchanged and still binds — read it as the general rule it always
+was, not as a note about one pair of cards. Three things survive the move and are
+the reason it is not simply deleted:
+
+- **The scoped keys were kept deliberately.** With nothing left to collide with,
+  reverting `periodRecap.*` to the short labels would have been defensible — and
+  it is wrong here for a *different* reason: on the Chronik the „· Juli 2026" is
+  what ties a card to the picker directly above it. One statistic, two labels,
+  chosen by what the surface needs; see the PNG note below for the third case.
+- **The guard is now a list of ONE**, in `test/pokale-retired.test.js`, and it is
+  still written as a list with its count asserted. That is the falsifiability
+  property below, and the degenerate case is exactly where it is easiest to
+  quietly drop.
+- **The taste-card assertion moved with the section** to
+  `test/chronik-period-recap.test.js`. It has to keep existing *somewhere*, or
+  widening the record list becomes a way to make the Pokale guard stop looking.
+
+Moving a section does not make a label collision less likely, incidentally — the
+Chronik now carries `.pokale-card` elements it never had, which is the same trap
+one screen over (see the Related note on scoping a selector).
 
 ## The rule
 

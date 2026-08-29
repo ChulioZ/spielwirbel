@@ -34,12 +34,12 @@ async function showRound(rid, tab) {
   app.innerHTML = '<p class="muted">…</p>';
   // The round may not exist (e.g. a deep link / reload to a deleted round) —
   // fall back to Home instead of hanging on the loading state. The activity
-  // feed is not part of the round payload (#197); only Chronik and Pokale
-  // render it — the latter since #800, whose period recap reads the shelf
-  // changes out of it — so fetch it just for those two tabs, in parallel with
-  // the round. A failed feed fetch degrades to an empty feed (sessions still
-  // render) rather than blocking the tab.
-  const NEEDS_ACTIVITIES = ['chronik', 'pokale'];
+  // feed is not part of the round payload (#197); only the Chronik renders it —
+  // the timeline itself, and the period recap that reads the shelf changes out
+  // of the same feed (#800, moved here from Pokale by #851) — so fetch it just
+  // for that tab, in parallel with the round. A failed feed fetch degrades to
+  // an empty feed (sessions still render) rather than blocking the tab.
+  const NEEDS_ACTIVITIES = ['chronik'];
   let round, activities;
   try {
     [round, activities] = await Promise.all([
@@ -60,7 +60,7 @@ async function showRound(rid, tab) {
   const activeGames = round.games.filter((g) => !g.retired && !g.completed && !g.wish);
   if (activeTab === 'regal') renderRegalTab(round, activeGames);
   else if (activeTab === 'chronik') renderChronikTab(round, activities);
-  else if (activeTab === 'pokale') renderPokaleTab(round, activities);
+  else if (activeTab === 'pokale') renderPokaleTab(round);
   else renderStartTab(round, activeGames);
   renderHubTabs(round, activeTab);
 }
