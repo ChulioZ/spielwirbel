@@ -335,6 +335,34 @@ test('an editor discards a running vote for real, and is still refused a played 
   assert.equal(ids.includes(s.session.id), true, 'the played evening survived the refusal');
 });
 
+test('a cancelled vote is history, not a running one — an editor may not delete it', async () => {
+  // The trap the boundary hides. `cancelSession` never touches `done`, so a vote
+  // cancelled before a game was chosen keeps `done: false` — and `!done` alone,
+  // which the Start ticket's filter makes look like the natural predicate, would
+  // hand every grantee the deletion of an evening the Chronik draws as
+  // „Abgebrochen". The live-vote ticket filters on BOTH flags; so does the route.
+  const s = await seedRound('editor');
+  const cancel = await request(app)
+    .post(`/api/rounds/${s.round.id}/sessions/${s.openSession.id}/cancel`)
+    .set(auth(s.grantee.token)).send({});
+  assert.equal(cancel.status, 200, `cancelling is an ordinary write: ${JSON.stringify(cancel.body)}`);
+  assert.equal(cancel.body.done, false, 'the fixture is only meaningful while `done` stays false');
+  assert.equal(cancel.body.cancelled, true);
+
+  const del = await request(app)
+    .delete(`/api/rounds/${s.round.id}/sessions/${s.openSession.id}`).set(auth(s.grantee.token));
+  assert.equal(del.status, 403);
+  assert.equal(del.body.error, 'not_owner');
+
+  // …and a co-owner still may, so this is a role boundary rather than the route
+  // having simply stopped deleting cancelled sessions for anyone.
+  const co = await seedRound('coowner');
+  await request(app).post(`/api/rounds/${co.round.id}/sessions/${co.openSession.id}/cancel`)
+    .set(auth(co.grantee.token)).send({});
+  assert.equal((await request(app).delete(`/api/rounds/${co.round.id}/sessions/${co.openSession.id}`)
+    .set(auth(co.grantee.token))).status, 200);
+});
+
 test('the ROLE gate never refuses the round owner', async () => {
   // Asserted on the error CODE rather than on the status, and the distinction is
   // the point: `not_owner` is this feature's refusal, while a handler may still

@@ -92,28 +92,29 @@ truthiness, so there is still one definition of who may do what:
   (leaving); only `round.shares.manage` may remove someone else's.
 - `PATCH …/members/:mid` — name and colour are an ordinary write; the `userId`
   link needs `member.link`.
-- `DELETE …/sessions/:sid` — discarding a session whose voting is **still open**
-  is `session.discard` (editor); deleting a **played** one is `session.delete`
-  (coowner). #857.
+- `DELETE …/sessions/:sid` — discarding a vote that is **still running** is
+  `session.discard` (editor); deleting one that has resolved is `session.delete`
+  (coowner). The predicate is `!done && !cancelled`: `cancelSession` never
+  touches `done`, so `!done` alone — which the Start ticket's filter makes look
+  natural — would hand a grantee an evening the Chronik draws as „Abgebrochen".
+  It is also narrower than `sessionOutcome() === 'open'` (#857).
 
 "This route costs role X" belongs in the table; "this *request* costs role X" does
 not, and forcing it in would need a condition nobody could read.
 
-The third one adds a **kind** the first two do not: its cost depends on the
-**state of the resource**, not on the body or the path. That is the shape to
-recognise — one path carrying two acts the table literally cannot see apart — and
-it is what the missing UI guard cost. The Start screen offered „Abstimmung
-verwerfen" to every grantee while the route cost co-owner, so an ordinary
-invitee's confirm dialog accepted and the request then 403'd into a toast, for as
-long as the ladder existed.
+The third adds a **kind** the first two do not: its cost depends on the **state
+of the resource**, not on the body or the path — one path carrying two acts the
+table cannot see apart. Its UI half is what the missing guard cost: the Start
+screen offered „Abstimmung verwerfen" to every grantee while the route cost
+co-owner, so an invitee's confirm dialog accepted and the request 403'd into a
+toast, for as long as the ladder existed.
 
-**Its regression test was vacuous, and the reason generalises.** The matrix's
-`'delete a session': false` for `editor` had seeded `sessionRes.body` rather than
-`sessionRes.body.session` — both start modes answer with an envelope — so the
-DELETE went to `/sessions/undefined`, which the **gate** refuses before routing.
-The assertion named a state-based refusal and measured a path-based one. When a
-guard can refuse for two reasons, a fixture that trips the *other* one passes
-forever: assert the resource exists before asserting it is protected.
+**Its regression test was vacuous, and the reason generalises.** The matrix had
+seeded `sessionRes.body` rather than `sessionRes.body.session` — both start modes
+answer with an envelope — so the DELETE went to `/sessions/undefined`, which the
+**gate** refuses before routing: the assertion named a state-based refusal and
+measured a path-based one. When a guard can refuse for two reasons, a fixture
+tripping the *other* one passes forever.
 
 ## The frontend trap: an owner's round carries NO role key
 

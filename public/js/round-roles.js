@@ -81,11 +81,12 @@ const CAPABILITY_ROLE = {
   // Throwing away a session whose voting is STILL OPEN (#857). It shares a route
   // and a method with 'session.delete' and differs only in the session's state,
   // so lib/round-access.js's table names this one as the floor and the handler
-  // narrows to 'session.delete' once the session is `done`. The two are a
-  // different kind of act, not a different amount of one: an open session has no
+  // narrows to 'session.delete' for anything that is no longer a running vote —
+  // `done` OR `cancelled`, since cancelling never sets `done`. The two are a
+  // different kind of act, not a different amount of one: a running vote has no
   // result, no winners and no Chronik entry, so discarding it is part of running
   // the evening — which is what a shared round's co-players are there for —
-  // while deleting a played one destroys history the whole group made.
+  // while deleting a played or cancelled one destroys history the group can see.
   'session.discard': 'editor',
 };
 
