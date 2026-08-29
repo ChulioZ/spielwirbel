@@ -111,24 +111,25 @@ const cardByLabel = (root, label) =>
 // ---- the Pokale tab -------------------------------------------------------
 
 /* The RECORD cards — the ones that report nights that happened rather than a
-   claim of taste. #800 added a second one (the period recap's own Meistgespielt,
-   which carries its period in the label), so this list is what the assertion
-   below subtracts. Widening it is only safe because the period section's TASTE
-   card is asserted by name further down; without that, adding a label here would
-   be a way to make this test stop looking. */
+   claim of taste. A LIST of one, and deliberately still a list: #800 briefly put
+   a second one here (the period recap's own Meistgespielt) before #851 moved
+   that whole section to the Chronik, and the next such card would land the same
+   way. What the assertion below subtracts. Widening it is only safe while every
+   entry's own TASTE sibling is asserted by name somewhere — for the period
+   recap that is now test/chronik-period-recap.test.js; without it, adding a
+   label here would be a way to make this test stop looking. */
 const recordLabels = (dom) => [
   dom.run("t('pokale.mostPlayed')"),
-  dom.run(`t('periodRecap.mostPlayed', { period: ${JSON.stringify(dom.run("fmtMonth('2026-07-01T00:00:00')"))} })`),
 ];
 
-test('the only cards that may name a retired game are the two Meistgespielt records', async (t) => {
+test('the only card that may name a retired game is the Meistgespielt record', async (t) => {
   const dom = bootApp(t);
   await dom.call('showRound', RID, 'pokale');
   assert.ok(namedGames(dom.app).length >= 3, 'the tab must actually have rendered its cards');
   const records = recordLabels(dom);
   const cards = [...dom.app.querySelectorAll('.pokale-card')];
   const labelled = cards.filter((c) => records.includes((c.querySelector('.pokale-card__label') || {}).textContent));
-  assert.equal(labelled.length, 2, 'both record cards must be on screen, or the subtraction below is hiding one');
+  assert.equal(labelled.length, 1, 'the record card must be on screen, or the subtraction below is hiding one');
   const elsewhere = cards.filter((c) => !labelled.includes(c)).flatMap((c) => namedGames(c));
   assert.ok(
     !elsewhere.includes('Azul'),
@@ -136,17 +137,10 @@ test('the only cards that may name a retired game are the two Meistgespielt reco
   );
 });
 
-test('the period recap Bestbewertet follows the same active-only rule (#800)', async (t) => {
-  const dom = bootApp(t);
-  await dom.call('showRound', RID, 'pokale');
-  // All three games average 3.0 in July, so the filter alone decides: Azul is
-  // retired, Cascadia completed, only Catan is on the active shelf. Both
-  // archives lead, so neither a missing filter nor a retired-only one passes.
-  const period = dom.run("fmtMonth('2026-07-01T00:00:00')");
-  const card = cardByLabel(dom.app, dom.run(`t('periodRecap.bestRated', { period: ${JSON.stringify(period)} })`));
-  assert.ok(card, 'the period best-rated card is missing entirely');
-  assert.deepEqual(namedGames(card), ['Catan']);
-});
+/* The period recap's own retired-game rule moved to the Chronik with the section
+   (#851) — test/chronik-period-recap.test.js, over this same fixture. It is the
+   "assert the new section's own TASTE card by name" half of the guard above, and
+   it has to keep existing SOMEWHERE for the record list to stay falsifiable. */
 
 test('Meistgespielt still counts a retired game\'s nights — the sessions happened', async (t) => {
   const dom = bootApp(t);

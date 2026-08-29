@@ -381,7 +381,7 @@ h1, h2, h3 { font-family: var(--font-display); }
      capped the lobby at the reading measure — 2 round cards across instead of
      4, on the first screen anyone sees. */
   .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .theme-cards, .lobby-list, .ds-list--tiles),
-  .app > *:not(.rail):not(.dock):has(.cards, .pokale-cards, .theme-cards, .lobby-list, .ds-list--tiles) {
+  .app > *:not(.rail):not(.dock):not(.precap):has(.cards, .pokale-cards, .theme-cards, .lobby-list, .ds-list--tiles) {
     max-width: none;
   }
 
@@ -5125,10 +5125,12 @@ kbd {
 .recap__thin { margin-top: 14px; }
 
 /* ---- Period recap: one month or one year, shareable as an image (#800) ----
-   It reuses .recap__lead, .recap__totals and .pokale-cards wholesale for the
-   same reason the Rückblick above reuses them — the grid, the tile chrome and
-   the >=1280px width exemption then all come for free. Only the picker row
-   needs anything of its own. */
+   Lives on the CHRONIK since #851, above the timeline. It reuses .recap__lead,
+   .recap__totals and .pokale-cards wholesale for the same reason the Rückblick
+   above reuses them — the grid and the tile chrome come for free. The >=1280px
+   width exemption deliberately does NOT: `.precap` is excluded from it by name,
+   because a wide recap above a reading-measure timeline would stack two column
+   widths on one screen. Only the picker row needs anything of its own. */
 .precap__head {
   display: flex;
   flex-wrap: wrap;
@@ -5142,10 +5144,12 @@ kbd {
    share button out through the row's right edge instead of wrapping it. */
 .precap__picker { flex: 1 1 200px; min-width: 0; }
 .precap__thin { margin-top: 14px; }
-/* The card grid stays in the DOM on a period with no cards, so the section keeps
-   the >=1280px wide-column exemption (`:has(… .pokale-cards …)`) instead of
-   resizing under the reader as they move the picker. Empty it has no height —
-   only this margin, which it does not need. */
+/* The card grid stays in the DOM on a period with no cards. It used to have to:
+   before #851 dropping the container would have cost the section the >=1280px
+   wide-column exemption, resizing it under the reader as they moved the picker.
+   `.precap` is now excluded from that exemption outright, so this is merely the
+   simpler render path. Empty the grid has no height — only this margin, which it
+   does not need. */
 .precap__body > .pokale-cards:empty { margin-top: 0; }
 /* The favourite tile anchors on its game's cover (#695), like the Chronik
    session cards, the results podium and the Regal — the one section of the app

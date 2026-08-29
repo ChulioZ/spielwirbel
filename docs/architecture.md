@@ -501,7 +501,8 @@ public/
                      (Freundeskreis / Entdecken / news) — plus new round
     views-round.js        round hub (Start/Regal/Chronik/Pokale tabs) + Start tab
     views-regal.js        Regal tab: the games library (search, filters, grid)
-    views-chronik.js      Chronik tab: the month-grouped session/shelf timeline
+    views-chronik.js      Chronik tab: the month-grouped session/shelf timeline,
+                          and the shareable month/year recap above it
     views-pokale.js       Pokale tab: podium + fun stats, and the Rückblick
     views-archive.js      the three off-shelf screens (retired / completed /
                           Wunschliste) through one renderer

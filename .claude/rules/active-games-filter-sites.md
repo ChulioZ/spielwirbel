@@ -156,13 +156,15 @@ it (operator decision, 2026-08-04, revising #643's own acceptance criteria).
 `test/pokale-retired.test.js` pins that Azul, retired, still wins the card on
 three nights, right beside the specs that keep it out of every taste card.
 
-**There are TWO of these cards since #800** — the period recap under the
-Rückblick renders its own Meistgespielt over one calendar month or year, and it
-counts retired games for the identical reason. The spec's exclusion list is
-therefore a list rather than one card; see
-`.claude/rules/a-second-section-must-not-reuse-a-card-label.md` for why both
-cards need distinct LABELS for that list to work at all, and for the two
-assertions that keep widening it from becoming a way to hide a card.
+**There are TWO of these cards since #800** — the period recap renders its own
+Meistgespielt over one calendar month or year, and it counts retired games for
+the identical reason. Since #851 they are on two different SCREENS (the recap
+moved to the Chronik, above its timeline), so each is pinned by its own spec:
+`test/pokale-retired.test.js` and `test/chronik-period-recap.test.js`. The
+former's exclusion list is a list of one and stays written as a list; see
+`.claude/rules/a-second-section-must-not-reuse-a-card-label.md` for why the two
+cards keep distinct LABELS even now that they no longer collide, and for the two
+assertions that stop widening that list from becoming a way to hide a card.
 
 **A SECOND feature now counts the same field, and it must keep disagreeing with
 this card (#778).** The recommender's play bonus (`playCounts` /

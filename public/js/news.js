@@ -28,17 +28,21 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
-   * Clears the capability bar: the Pokale tab could only ever answer "all time",
-   * so „unser Juli" and „unser 2026" were questions the app had no way to ask —
-   * and the shareable image is a thing the group could not produce at all.
+   * Clears the capability bar: the app could only ever answer "all time", so
+   * „unser Juli" and „unser 2026" were questions it had no way to ask — and the
+   * shareable image is a thing the group could not produce at all.
    * Says what the reader can do and where; that it is derived on demand and
    * drawn client-side is the repo's business, not theirs.
+   *
+   * The LOCATION was corrected by #851 (Pokale -> Chronik) without bumping the
+   * revision: the entry was a day old and the capability did not change, so
+   * re-lighting the dot would spend attention the terms notice needs.
    */
   {
     revision: '2026-08-29',
     de: {
       title: 'Rückblick auf einen Monat oder ein Jahr',
-      body: 'Unter den Pokalen könnt ihr jetzt einen einzelnen Monat oder ein ganzes '
+      body: 'In der Chronik könnt ihr jetzt einen einzelnen Monat oder ein ganzes '
         + 'Jahr auswählen: wie viele Sessions es waren, welche Spiele auf dem Tisch '
         + 'lagen, was am häufigsten gespielt und am besten bewertet wurde, und was in '
         + 'der Zeit ins Regal kam oder es verlassen hat. „Teilen" macht daraus ein '
@@ -46,7 +50,7 @@ const NEWS = [
     },
     en: {
       title: 'Look back on a month or a year',
-      body: 'Under the trophies you can now pick a single month or a whole year: how '
+      body: 'In the Chronik you can now pick a single month or a whole year: how '
         + 'many sessions there were, which games made it to the table, what you played '
         + 'most and rated best, and what joined or left the shelf in that time. '
         + '"Share" turns it into an image for the group chat.',
