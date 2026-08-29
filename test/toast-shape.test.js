@@ -10,8 +10,14 @@
    so this was the normal case there, not an edge one.
 
    Two independent gaps compounded, and both are pinned below: the unconditional
-   pill radius, and the absence of any `max-width` (the box was shrink-to-fit
-   against the viewport, so a long message wrapped edge-to-edge with no gutter).
+   pill radius, and the box's width. Note the width half is NOT what #858's issue
+   body described — it attributed the wrapping to shrink-to-fit "against the
+   viewport ... edge-to-edge with no gutter", and prescribed a `max-width` alone.
+   Measured, that cap changes nothing: `left: 50%` moves the box's start edge to
+   the middle, so the available space is only the half-viewport to its right and
+   shrink-to-fit clamps at 187.5px on a 375px screen, far below any cap. The
+   explicit `width` is the half that does the work — see the assertion below and
+   `.claude/rules/centred-fixed-overlay-needs-a-width.md`.
 
    The radius bound is DERIVED from the stylesheet's own type tokens rather than
    hardcoded, because that is the way it goes silently wrong: 26px is only "half
