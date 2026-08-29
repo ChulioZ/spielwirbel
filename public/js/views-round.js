@@ -311,6 +311,12 @@ function renderStartTab(round, activeGames) {
       ticket.addEventListener('click', () => showSessionLobby(round, session));
       app.appendChild(ticket);
 
+      // Guarded even though every grantee role clears the floor today (#857):
+      // the route decides on a capability, so the control has to ask the same
+      // question, or a re-tightening tomorrow degrades to a button that 403s
+      // instead of one that is simply absent.
+      if (!roundCan(round, 'session.discard')) return;
+
       const discard = h(`<div class="center ticket__discard"><button class="link-btn">${esc(t('round.draftDiscard'))}</button></div>`);
       discard.querySelector('button').addEventListener('click', async () => {
         if (!confirm(t('round.draftDiscardConfirm'))) return;
