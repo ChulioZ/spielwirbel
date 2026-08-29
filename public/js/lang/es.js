@@ -869,8 +869,11 @@ I18N.es = {
   'stats.counter.games': 'juegos',
   'stats.counter.sessions': 'sesiones jugadas',
   'stats.cta.title': 'Únete y monta vuestra propia estantería.',
-  'stats.teaser.title': 'Descubrir',
   'stats.teaser.sub': 'A qué se juega y qué se valora bien ahora mismo',
+  'home.resume.result': 'Anotar el resultado',
+  'friends.home.noneTitle': 'Aún no tienes amistades',
+  'friends.home.noneSub': 'Sigue a tus amistades para ver a qué juegan.',
+  'friends.home.noneAction': 'Buscar amistades',
   // Amistades (#325)
   'inbox.friend.title': '{user} quiere ser tu amigo',
   'inbox.friend.failed': 'No se ha podido aceptar la solicitud.',

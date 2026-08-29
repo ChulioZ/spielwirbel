@@ -4,6 +4,7 @@ paths:
   - "test/feed-report.test.js"
   - "test/editor-presentation.test.js"
   - "test/home-empty-cta.test.js"
+  - "test/home-dashboard.test.js"
   - "test/round-settings.test.js"
   - "test/dup-hint-live-region.test.js"
   - "test/i18n-locales.test.js"

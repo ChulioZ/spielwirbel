@@ -439,15 +439,32 @@ async function renderHomeFriends(section) {
   try { feed = await accountApi('GET', '/friends/feed'); } catch { section.remove(); return; }
   // The section (and its host view) may have been re-rendered while we awaited.
   if (!section.isConnected) return;
-  if (!feed.friendCount) { section.remove(); return; }
 
   section.innerHTML = '';
-  const head = h(`<div class="home-friends__head">
+  const head = h(`<div class="dash-tile__head">
       <h2>${esc(t('friends.home.title'))}</h2>
       <a class="link-btn" href="/freunde">${esc(t('friends.home.all'))}</a>
     </div>`);
   navLink(head.querySelector('a'), '/freunde', () => showFriends());
   section.appendChild(head);
+
+  /* No friends yet is an EMPTY STATE, not an absence (#842). This section used
+     to remove itself here, so an account with no friends got the round grid and
+     then a hole — and the section it would have needed in order to FIND anyone
+     was the one that had disappeared. The three removals above stay: those are
+     "this instance has no friends feature" / "we could not ask", which is a
+     different answer from "you have nobody yet". */
+  if (!feed.friendCount) {
+    const invite = h(`<a class="friends-invite">
+        <span class="friends-invite__icon"><i class="ti ti-user-plus" aria-hidden="true"></i></span>
+        <span class="friends-invite__title">${esc(t('friends.home.noneTitle'))}</span>
+        <span class="friends-invite__sub muted">${esc(t('friends.home.noneSub'))}</span>
+        <span class="friends-invite__action">${esc(t('friends.home.noneAction'))}</span>
+      </a>`);
+    navLink(invite, '/freunde', () => showFriends());
+    section.appendChild(invite);
+    return;
+  }
 
   if (!feed.events.length) {
     section.appendChild(h(`<p class="muted empty-note">${esc(t('friends.feedEmpty'))}</p>`));

@@ -1,10 +1,16 @@
 /* Spielwirbel – instance-wide public statistics (issue #564).
 
    ONE renderer, three surfaces: the logged-out landing page, the standalone
-   /entdecken screen, and a compact teaser card on the home hub. They share this
-   file rather than each building their own markup, because they publish the same
-   payload and a drift between them would be a different claim about the instance
-   on each screen.
+   /entdecken screen, and the home hub's dashboard panel. They share this file
+   rather than each building their own markup, because they publish the same
+   payload and a drift between them would be a different claim about the
+   instance on each screen.
+
+   #842 made that sharing real for the third one. It used to be a teaser strip
+   — icon, title, one subline, chevron — which said nothing about the instance
+   and so had nothing to drift FROM; it now draws podium cards through the same
+   statsCard() the other two use, a different SELECTION of one markup rather
+   than a second copy of it.
 
    Everything here is driven by GET /api/stats/public, which answers 404 when the
    feature is off — so the DEFAULT on every surface is to render NOTHING AT ALL:
@@ -266,25 +272,58 @@ async function mountLandingStats(placeholder) {
   placeholder.appendChild(block);
 }
 
+/* How many of the five podiums the home panel shows. The dashboard tile sits
+   beside two others in one grid, so it takes the first few rather than the whole
+   ladder — /entdecken remains the place that publishes all of them. */
+const HOME_STATS_PODIUMS = 3;
+
 /*
- * The home hub's compact teaser: a single card linking into /entdecken, shown
- * only when there is something behind it. A real <a href> via navLink, so
- * Cmd-click and "copy link address" work (.claude/rules/in-app-nav-links.md).
+ * The home hub's dashboard panel (#564 teaser, rebuilt in #842): a heading, the
+ * first few podium entries WITH their cover art, and a link into /entdecken.
+ *
+ * It replaced a single strip — icon, title, one subline, chevron — that was the
+ * entire Entdecken presence on home while saying nothing about the instance.
+ *
+ * Two constraints carry over from /entdecken and are the reason this reuses
+ * renderPublicStats's parts rather than inventing its own:
+ *
+ *  - Nothing is inserted when there is nothing: publicStatsHasContent() false
+ *    removes the placeholder outright — no heading, no skeleton, no container.
+ *  - The provenance note TRAVELS WITH THE CLAIM. The podiums cover only
+ *    provider-linked games (lib/public-stats.js), so a screen that shows the
+ *    cards must also be able to say so; without it the tile would be a claim
+ *    about every shelf, which the data does not support. Rendered exactly where
+ *    renderPublicStats renders it — with the cards, and only with the cards.
  */
-async function mountHomeStatsTeaser(placeholder) {
+async function mountHomeStatsPanel(placeholder) {
   const stats = await loadPublicStats();
   if (!publicStatsHasContent(stats)) {
     placeholder.remove();
     return;
   }
-  const card = h(`<a class="stats-teaser">
-      <span class="stats-teaser__icon"><i class="ti ti-world-search" aria-hidden="true"></i></span>
-      <span class="stats-teaser__body">
-        <span class="stats-teaser__title">${esc(t('stats.teaser.title'))}</span>
-        <span class="stats-teaser__sub muted">${esc(t('stats.teaser.sub'))}</span>
-      </span>
-      <i class="ti ti-chevron-right stats-teaser__chev" aria-hidden="true"></i>
-    </a>`);
-  navLink(card, '/entdecken', () => showEntdecken());
-  placeholder.appendChild(card);
+  // The section may have been re-rendered while we awaited (locale switch,
+  // SWR refresh) — the same guard renderHomeFriends carries.
+  if (!placeholder.isConnected) return;
+
+  const head = h(`<div class="dash-tile__head">
+      <h2>${esc(t('stats.title'))}</h2>
+      <a class="link-btn" href="/entdecken">${esc(t('friends.home.all'))}</a>
+    </div>`);
+  navLink(head.querySelector('a'), '/entdecken', () => showEntdecken());
+  placeholder.appendChild(head);
+
+  const podiums = stats.games
+    ? STATS_PODIUMS.filter((p) => stats.games[p.key]).slice(0, HOME_STATS_PODIUMS)
+    : [];
+  if (!podiums.length) {
+    // Counters but no podiums (a young instance): the heading and the link are
+    // still honest — there IS something behind them — and there is simply no
+    // card to draw, so no note either.
+    placeholder.appendChild(h(`<p class="muted empty-note">${esc(t('stats.teaser.sub'))}</p>`));
+    return;
+  }
+  placeholder.appendChild(h(
+    `<ul class="stats-cards stats-cards--home">${podiums.map((p) => statsCard(p, stats.games[p.key])).join('')}</ul>`
+  ));
+  placeholder.appendChild(h(`<p class="stats-note muted">${esc(t('stats.note'))}</p>`));
 }

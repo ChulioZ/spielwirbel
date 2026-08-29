@@ -5,7 +5,11 @@ What the app does, in detail. For a short overview see the
 [`architecture.md`](architecture.md).
 
 - **Rounds** – a group with a name and any number of members. The home screen
-  is a lobby of round cards (members, game/session counts, last result); a new
+  is a dashboard (issue #842): any **sessions still running** across all your
+  rounds sit at the top as resume tickets — one tap back into the vote, or into
+  the results screen if the vote is closed but the evening was never recorded —
+  then the lobby of round cards (members, game/session counts, last result), then
+  a row of tiles for the Freundeskreis, Entdecken and „Was ist neu". A new
   round is set up on a playful "seats around the table" screen, optionally
   importing the games list from an existing round. The **name can be corrected
   later** — click it on the round's Start screen (or in the desktop rail) and
@@ -424,7 +428,7 @@ What the app does, in detail. For a short overview see the
 - **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a
-  **Freundeskreis feed** (a compact section on the home screen plus a dedicated
+  **Freundeskreis feed** (a tile on the home dashboard plus a dedicated
   view at `/freunde`): only "*added a game*" and "*played a game*" notes with the
   **game title and cover** — never member names, ratings, votes or round names,
   and only for activity after you became friends. A friendship shares **no round
@@ -471,7 +475,8 @@ What the app does, in detail. For a short overview see the
   the whole instance at a glance: how many rounds, players, shelf games and
   played sessions it holds, plus the games on the most shelves and the ones most
   played this week / month / year, and the best-rated. It appears on the logged-out landing
-  page, on a shareable `/entdecken` screen and as a teaser on the home hub —
+  page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
+  the first few rankings with their cover art —
   and, unlike everything above, is **public**: a visitor with no account sees it.
   Two consequences follow from that. Every game name comes from BoardGameGeek
   rather than from the title someone typed, so nothing user-authored can reach

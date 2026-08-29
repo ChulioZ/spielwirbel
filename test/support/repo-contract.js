@@ -192,7 +192,7 @@ module.exports = function repoContract(repo) {
       chosenGameId: active.id, chosenAt: 't', finished: true, finishedAt: 't',
       winnerIds: [bob.id, alice.id, 'ghost'], cancelled: false, cancelledAt: null, done: true,
     });
-    await repo.createSession(T, round.id, {
+    const stillVoting = await repo.createSession(T, round.id, {
       createdAt: '2026-01-02T10:00:00.000Z', gameIds: [active.id], votes: {},
       chosenGameId: null, chosenAt: null, finished: false, finishedAt: null,
       winnerIds: [], cancelled: false, cancelledAt: null, done: false,
@@ -218,6 +218,12 @@ module.exports = function repoContract(repo) {
         winnerNames: ['Bob', 'Alice'],
         at: '2026-01-01T10:00:00.000Z',
       },
+      // The second session above is still collecting votes, so it rides along
+      // for the home resume zone (#842). The finished one does not.
+      openSessions: [{
+        id: stillVoting.id, stage: 'voting', at: '2026-01-02T10:00:00.000Z',
+        gameTitle: null, image: null,
+      }],
     });
     // Counts must be real numbers on both backends (the Postgres count()
     // bigint-as-string trap, #288).
@@ -301,6 +307,132 @@ module.exports = function repoContract(repo) {
     const bare = await freshRound();
     const bareSummary = (await repo.listRoundSummaries(T)).find((x) => x.id === bare.id);
     assert.equal(bareSummary.lastPlayed, null);
+  });
+
+  /* The home screen's resume zone (#842). This is the fixture the two backends
+     are pinned against: the JSON side requires sessionChildIds from
+     public/js/session-outcome.js, the Postgres side restates the whole
+     predicate in SQL and cannot — the drift shape
+     .claude/rules/shared-constants-across-the-stack.md exists for.
+
+     Every branch is represented, because each one fails SILENTLY and
+     differently: a missed split parent offers to resume an evening that was
+     already dealt out across tables, a missed cancel offers one nobody played,
+     and a legacy session with no childSessionIds key is what a real pre-#796
+     round is made of. */
+  test('listRoundSummaries: openSessions carries the open sessions, newest first, split parents excluded', async () => {
+    const round = await freshRound({ name: 'Resume' });
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Catan', image: '/uploads/c.jpg' }));
+    const base = (over) => ({
+      gameIds: [game.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [],
+      cancelled: false, cancelledAt: null, done: false, ...over,
+    });
+
+    // Still collecting votes -> 'voting', and title/cover null BY CONSTRUCTION.
+    const voting = await repo.createSession(T, round.id, base({ createdAt: '2026-05-01T10:00:00.000Z' }));
+    // Vote closed, outcome never recorded -> 'results', with the chosen game.
+    const results = await repo.createSession(T, round.id, base({
+      createdAt: '2026-05-03T10:00:00.000Z', done: true, chosenGameId: game.id, chosenAt: 't',
+    }));
+    // Settled, in three different ways: none of these may produce a ticket.
+    await repo.createSession(T, round.id, base({
+      createdAt: '2026-05-04T10:00:00.000Z', cancelled: true, cancelledAt: 't',
+    }));
+    await repo.createSession(T, round.id, base({
+      createdAt: '2026-05-05T10:00:00.000Z', done: true, chosenGameId: game.id,
+      finished: true, finishedAt: 't',
+    }));
+    const parent = await repo.createSession(T, round.id, base({
+      createdAt: '2026-05-06T10:00:00.000Z', done: true, childSessionIds: ['c1', 'c2'],
+    }));
+    assert.ok(parent);
+
+    const s = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    assert.deepEqual(s.openSessions, [
+      {
+        id: results.id, stage: 'results', at: '2026-05-03T10:00:00.000Z',
+        gameTitle: 'Catan', image: '/uploads/c.jpg',
+      },
+      {
+        // The draw is secret until everyone has rated, so an open vote names
+        // no game — on either backend, and not merely because this fixture
+        // happens to leave chosenGameId null.
+        id: voting.id, stage: 'voting', at: '2026-05-01T10:00:00.000Z',
+        gameTitle: null, image: null,
+      },
+    ]);
+    // getRoundSummary answers with the identical array, not a second shape.
+    assert.deepEqual((await repo.getRoundSummary(T, round.id)).openSessions, s.openSessions);
+
+    /* The other half of the split rule, and the half that makes the parent's
+       exclusion mean something: the parent is resolved, but the TABLES it was
+       dealt out across are the sessions still open, and each must offer its own
+       ticket. Excluding the parent by excluding everything about a split would
+       satisfy the assertion above and strand every table. */
+    const split = await freshRound({ name: 'Split' });
+    const kids = [];
+    for (const day of ['10', '11']) {
+      kids.push(await repo.createSession(T, split.id, {
+        createdAt: `2026-05-${day}T10:00:00.000Z`, gameIds: [], votes: {},
+        chosenGameId: null, chosenAt: null, finished: false, finishedAt: null,
+        winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+      }));
+    }
+    await repo.createSession(T, split.id, {
+      createdAt: '2026-05-09T10:00:00.000Z', gameIds: [], votes: {},
+      chosenGameId: null, chosenAt: null, finished: false, finishedAt: null,
+      winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      childSessionIds: kids.map((k) => k.id),
+    });
+    const splitSummary = (await repo.listRoundSummaries(T)).find((x) => x.id === split.id);
+    assert.deepEqual(splitSummary.openSessions.map((o) => o.id), [kids[1].id, kids[0].id],
+      'the split parent suppressed its own open tables, or offered a ticket for itself');
+
+    // A LEGACY session — no childSessionIds key at all, which is every session
+    // written before #796. The Postgres side must read the absent key as "no
+    // children"; a bare coalesce over a non-array would error instead.
+    const legacy = await freshRound({ name: 'Legacy' });
+    const created = await repo.createSession(T, legacy.id, {
+      createdAt: '2026-04-01T10:00:00.000Z', gameIds: [], votes: {},
+      chosenGameId: null, chosenAt: null, finished: false, finishedAt: null,
+      winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    });
+    assert.equal('childSessionIds' in created, false, 'the fixture grew the key it is meant to lack');
+    const legacySummary = (await repo.listRoundSummaries(T)).find((x) => x.id === legacy.id);
+    assert.deepEqual(legacySummary.openSessions, [{
+      id: created.id, stage: 'voting', at: '2026-04-01T10:00:00.000Z',
+      gameTitle: null, image: null,
+    }]);
+
+    // A round with nothing open answers [] — never null, never absent, so the
+    // home screen can always iterate it.
+    const quiet = await freshRound({ name: 'Quiet' });
+    assert.deepEqual(
+      (await repo.listRoundSummaries(T)).find((x) => x.id === quiet.id).openSessions, []);
+  });
+
+  /* The cap is what keeps this summary proportional to the sub-kilobyte screen
+     it answers (.claude/rules/railway-db-same-region.md). It is a constant on
+     the JSON side and a bare LIMIT in the SQL, so nothing but this makes the
+     two agree — and an uncapped read is invisible until a busy round ships
+     dozens of tickets to a screen that shows three. */
+  test('listRoundSummaries: openSessions is capped at 3 per round, keeping the newest', async () => {
+    const round = await freshRound({ name: 'Busy' });
+    const made = [];
+    for (const day of ['01', '02', '03', '04', '05']) {
+      made.push(await repo.createSession(T, round.id, {
+        createdAt: `2026-06-${day}T10:00:00.000Z`, gameIds: [], votes: {},
+        chosenGameId: null, chosenAt: null, finished: false, finishedAt: null,
+        winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+      }));
+    }
+    const s = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    assert.equal(s.openSessions.length, 3);
+    assert.deepEqual(s.openSessions.map((o) => o.at), [
+      '2026-06-05T10:00:00.000Z', '2026-06-04T10:00:00.000Z', '2026-06-03T10:00:00.000Z',
+    ]);
+    assert.deepEqual(s.openSessions.map((o) => o.id), [made[4].id, made[3].id, made[2].id]);
   });
 
   test('listRoundSummaries is tenant-scoped and returns snapshots', async () => {

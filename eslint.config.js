@@ -195,7 +195,7 @@ const frontendGlobals = {
   // views-stats.js (issue #564)
   showEntdecken: 'readonly', renderPublicStats: 'readonly', loadPublicStats: 'readonly',
   publicStatsHasContent: 'readonly', mountLandingStats: 'readonly',
-  mountHomeStatsTeaser: 'readonly', statsCard: 'readonly',
+  mountHomeStatsPanel: 'readonly', statsCard: 'readonly',
   renderEntdeckenCta: 'readonly',
   formatCount: 'readonly', formatAverage: 'readonly',
   STATS_PODIUMS: 'readonly', STATS_COUNTERS: 'readonly',

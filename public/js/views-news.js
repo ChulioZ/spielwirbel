@@ -1,12 +1,22 @@
 /* Spielwirbel – the „Was ist neu" screen (issue #741).
 
-   A PULLED surface: the user opens it from the account menu, and the only nudge
-   is a small dot on that button. There is deliberately no banner, toast, modal
-   or interstitial anywhere in this feature — a third dismissable strip would
-   train people to dismiss the Nutzungsbedingungen §11 terms notice unread, which
-   is the one channel that legally has to be seen
-   (.claude/rules/keep-legal-docs-current.md, lib/legal.js). Don't "improve"
-   discoverability by promoting it.
+   A PULLED surface: the user opens it from the account menu, nudged by a small
+   dot on that button and — since #842 — by one tile on the home dashboard.
+   There is deliberately no banner, toast, modal or interstitial anywhere in this
+   feature, because a third DISMISSABLE strip would train people to dismiss the
+   Nutzungsbedingungen §11 terms notice unread, and that is the one channel which
+   legally has to be seen (.claude/rules/keep-legal-docs-current.md, lib/legal.js).
+
+   #842 narrowed that rule rather than lifting it, so the line is worth stating
+   exactly. What is now PERMITTED is an in-flow, self-clearing tile: it sits in
+   the dashboard region below the round grid, it carries no dismiss control, and
+   it does NOT call markNewsSeen() — opening this screen is still the only
+   acknowledgement, so the tile is simply absent on the next home render.
+
+   What is still forbidden, and what the §11 reasoning actually protects: anything
+   DISMISSABLE (the dismiss gesture is the habit that transfers), anything above
+   the fold, and anything that interrupts — banner, toast, modal, interstitial.
+   Don't "improve" discoverability past that line.
 
    Content comes from NEWS (public/js/news.js), a code constant that ships with
    the release it describes. Part of the shared frontend scope — loads after

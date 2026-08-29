@@ -83,6 +83,7 @@ const GLYPH_LITERALS = [
   // placeholder glyphs centred in a cover / thumb / tile box
   '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon',
   '.landing-card__icon', '.landing-step__num', '.feed-item__img', '.result-row__img',
+  '.friends-invite__icon',
   '.pool-thumb', '.pool-thumb .ti', '.pool-tile__img', '.game-card__img', '.vote__img',
   '.gd-img', '.lookup__thumb--none .ti', '.archive-row__img .ti', '.rec-card__img .ti',
   '.result-podium__img .ti',

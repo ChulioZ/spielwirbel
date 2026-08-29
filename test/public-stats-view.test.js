@@ -309,7 +309,12 @@ test('the landing placeholder is REMOVED when the feature is off', async (t) => 
 
 /* ------------------------------- the home hub ------------------------------- */
 
-test('the home teaser links into /entdecken as a real anchor', async (t) => {
+/* #842 replaced the one-line teaser strip with a panel that draws REAL podium
+   cards. The point of the rebuild is that the tile now says something about the
+   instance instead of merely linking to somewhere that does, so the cards are
+   what is pinned — a panel that rendered only a heading and a link would be the
+   old teaser wearing a new class name, and would pass a mere presence check. */
+test('the home Entdecken panel renders podium cards from statsCard() and links into /entdecken', async (t) => {
   const dom = bootWith(t, ok(FULL));
   dom.set('isLoggedIn', () => true);
   // fetchRoundList is a top-level const (unstubbable, see dom.js); api() is the
@@ -318,15 +323,30 @@ test('the home teaser links into /entdecken as a real anchor', async (t) => {
   await dom.call('showHome');
   await new Promise((r) => setTimeout(r, 0));
 
-  const teaser = dom.document.querySelector('.stats-teaser');
-  assert.ok(teaser, 'the teaser is present when there is something behind it');
+  const panel = dom.document.querySelector('#homeStats');
+  assert.ok(panel, 'the Entdecken panel is absent when there is something behind it');
+
+  const cards = panel.querySelectorAll('.stats-card');
+  assert.ok(cards.length >= 2, `the panel drew ${cards.length} podium cards — the strip is back`);
+  assert.ok(cards.length <= 3, `the panel drew ${cards.length} cards; the dashboard tile takes the first few`);
+  // The cover art is the visible difference from the old strip, and it comes
+  // from the ONE renderer (statsCard) rather than a second copy of the markup.
+  assert.ok(panel.querySelector('.stats-card__cover'), 'the podium cards render no cover art');
+  assert.ok(panel.querySelector('.stats-card__title'), 'the podium cards render no title');
+
+  /* The provenance note travels WITH the claim: the podiums cover only
+     provider-linked games (lib/public-stats.js), so a tile that shows the cards
+     without it is a claim about every shelf. */
+  assert.ok(panel.querySelector('.stats-note'), 'the podium cards render without the provenance note');
+
   // A real href, so Cmd-click and "copy link address" work
   // (.claude/rules/in-app-nav-links.md).
-  assert.equal(teaser.tagName, 'A');
-  assert.equal(teaser.getAttribute('href'), '/entdecken');
+  const all = panel.querySelector('a.link-btn');
+  assert.ok(all, 'the panel has no "see all" link');
+  assert.equal(all.getAttribute('href'), '/entdecken');
 });
 
-test('the home teaser is removed when there is nothing behind it', async (t) => {
+test('the home Entdecken panel is removed when there is nothing behind it', async (t) => {
   const dom = bootWith(t, notFound);
   dom.set('isLoggedIn', () => true);
   // fetchRoundList is a top-level const (unstubbable, see dom.js); api() is the
@@ -335,7 +355,8 @@ test('the home teaser is removed when there is nothing behind it', async (t) => 
   await dom.call('showHome');
   await new Promise((r) => setTimeout(r, 0));
 
-  assert.equal(dom.document.querySelector('.stats-teaser'), null);
+  assert.equal(dom.document.querySelector('.stats-card'), null);
+  assert.equal(dom.document.querySelector('.stats-note'), null, 'an orphaned provenance note survived');
   assert.equal(dom.document.querySelector('#homeStats'), null, 'the placeholder went too');
 });
 
