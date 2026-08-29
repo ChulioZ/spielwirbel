@@ -23,8 +23,8 @@ so the value never appears in `round_grants.role`.
 | Role | May |
 |---|---|
 | `owner` | everything |
-| `coowner` | everything below, plus delete a session, delete a Chronik entry, delete a game, rename the round |
-| `editor` | run sessions (start, vote, close, finish, cancel, share a vote link), manage the shelf, seats, tags and the design |
+| `coowner` | everything below, plus delete a **played** session, delete a Chronik entry, delete a game, rename the round |
+| `editor` | run sessions (start, vote, close, finish, cancel, share a vote link, **discard one whose voting is still open**), manage the shelf, seats, tags and the design |
 
 Four things stay **owner-only for every grantee role, co-owners included**, and
 the split is deliberate: a co-owner is trusted with the round's *content*, never
@@ -83,18 +83,38 @@ legacy accounts-off mode byte-for-byte unchanged: `req.userId` is never set ther
 no grant is ever resolved, and every caller passes. Do not start consulting the
 table before checking for a grant.
 
-**3. The table is a FLOOR, not the whole answer.** Two handlers narrow further,
-because their cost depends on the **request** rather than on the route — and both
-read the same capability table rather than testing `req.grant` for truthiness, so
-there is still one definition of who may do what:
+**3. The table is a FLOOR, not the whole answer.** Three handlers narrow further,
+because their cost depends on the **request** rather than on the route — and all
+three read the same capability table rather than testing `req.grant` for
+truthiness, so there is still one definition of who may do what:
 
 - `DELETE …/shares/:userId` — any grantee may remove their **own** share
   (leaving); only `round.shares.manage` may remove someone else's.
 - `PATCH …/members/:mid` — name and colour are an ordinary write; the `userId`
   link needs `member.link`.
+- `DELETE …/sessions/:sid` — discarding a vote that is **still running** is
+  `session.discard` (editor); deleting one that has resolved is `session.delete`
+  (coowner). The predicate is `!done && !cancelled`: `cancelSession` never
+  touches `done`, so `!done` alone — which the Start ticket's filter makes look
+  natural — would hand a grantee an evening the Chronik draws as „Abgebrochen".
+  It is also narrower than `sessionOutcome() === 'open'` (#857).
 
 "This route costs role X" belongs in the table; "this *request* costs role X" does
 not, and forcing it in would need a condition nobody could read.
+
+The third adds a **kind** the first two do not: its cost depends on the **state
+of the resource**, not on the body or the path — one path carrying two acts the
+table cannot see apart. Its UI half is what the missing guard cost: the Start
+screen offered „Abstimmung verwerfen" to every grantee while the route cost
+co-owner, so an invitee's confirm dialog accepted and the request 403'd into a
+toast, for as long as the ladder existed.
+
+**Its regression test was vacuous, and the reason generalises.** The matrix had
+seeded `sessionRes.body` rather than `sessionRes.body.session` — both start modes
+answer with an envelope — so the DELETE went to `/sessions/undefined`, which the
+**gate** refuses before routing: the assertion named a state-based refusal and
+measured a path-based one. When a guard can refuse for two reasons, a fixture
+tripping the *other* one passes forever.
 
 ## The frontend trap: an owner's round carries NO role key
 

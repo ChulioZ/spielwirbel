@@ -61,6 +61,11 @@ function normalizeRole(role) {
 // round's shape" (coowner) versus "changes who may reach the round at all, or
 // where its data lives" (owner) — a co-owner is trusted with the group's
 // content, never with its access control, so they cannot promote themselves.
+//
+// The editor-level entry below resolves to DEFAULT_CAPABILITY_ROLE anyway and is
+// stated for the reason 'round.write' is stated in lib/round-access.js's table:
+// a requirement written down beats one implied by omission, and this one exists
+// precisely to be told apart from the co-owner capability it was split out of.
 const CAPABILITY_ROLE = {
   // Owner only.
   'round.delete': 'owner',          // DELETE the round + every session, rating, cover
@@ -72,6 +77,17 @@ const CAPABILITY_ROLE = {
   'game.delete': 'coowner',         // delete an archived game, and its whole rating history
   'session.delete': 'coowner',      // delete a played evening's votes, result and winners
   'activity.delete': 'coowner',     // delete an entry from the shared Chronik
+  // Any grantee.
+  // Throwing away a session whose voting is STILL OPEN (#857). It shares a route
+  // and a method with 'session.delete' and differs only in the session's state,
+  // so lib/round-access.js's table names this one as the floor and the handler
+  // narrows to 'session.delete' for anything that is no longer a running vote —
+  // `done` OR `cancelled`, since cancelling never sets `done`. The two are a
+  // different kind of act, not a different amount of one: a running vote has no
+  // result, no winners and no Chronik entry, so discarding it is part of running
+  // the evening — which is what a shared round's co-players are there for —
+  // while deleting a played or cancelled one destroys history the group can see.
+  'session.discard': 'editor',
 };
 
 // The floor for anything not named above.

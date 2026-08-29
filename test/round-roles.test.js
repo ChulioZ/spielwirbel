@@ -14,7 +14,8 @@
  *        rather than 403ing in production;
  *  - §3 the role × route matrix over real HTTP;
  *  - §4 UNLISTED = REFUSED, the property the whole design rests on;
- *  - §5 the legacy 'member' value, and accounts-off mode.
+ *  - §5 the legacy 'member' value, and accounts-off mode;
+ *  - §6 the client hides what the route refuses (#857).
  *
  * There is still no route that creates a grant from inside a round (invitation
  * accept does, from /api/account/invitations), so grants are seeded through the
@@ -69,6 +70,14 @@ test('the ladder ranks owner > coowner > editor, and an unknown role loses power
   assert.equal(roles.can('coowner', 'session.delete'), true);
   assert.equal(roles.can('editor', 'session.delete'), false);
 
+  // #857 split the two acts one route used to share. Throwing away a vote that
+  // is still running destroys no history — there is no result, no winner and no
+  // Chronik entry yet — so it is an ordinary write; deleting a PLAYED evening is
+  // still co-owner. The pair is asserted together because the whole point is
+  // that they moved apart.
+  assert.equal(roles.can('editor', 'session.discard'), true);
+  assert.equal(roles.can('editor', 'session.delete'), false);
+
   // An unnamed capability is an ordinary round write, which every role clears.
   assert.equal(roles.can('editor', 'round.write'), true);
   assert.equal(roles.can('editor', 'something.nobody.has.declared'), true);
@@ -78,6 +87,8 @@ test('the ladder ranks owner > coowner > editor, and an unknown role loses power
   assert.equal(roles.normalizeRole('sysadmin'), 'editor');
   assert.equal(roles.normalizeRole(undefined), 'editor');
   assert.equal(roles.can('sysadmin', 'session.delete'), false);
+  // …and an unknown role reads as `editor`, so it clears the editor-level floor.
+  assert.equal(roles.can('sysadmin', 'session.discard'), true);
 });
 
 test('roundCan treats a round with NO role key as owned, not as the lowest role', () => {
@@ -196,16 +207,35 @@ async function seedRound(role) {
   assert.equal(gameRes.status, 201, `seed: add game -> ${JSON.stringify(gameRes.body)}`);
   const game = gameRes.body;
 
+  // Naming a gameId takes the DIRECT-PICK path, which skips the vote and lands
+  // `done: true` — a played evening. That is the session the co-owner-only
+  // deletion is about.
   const sessionRes = await request(app).post(`/api/rounds/${round.id}/sessions`)
     .set(auth(owner.token)).send({ gameId: game.id, memberIds: [seat.id] });
   assert.equal(sessionRes.status, 201, `seed: start session -> ${JSON.stringify(sessionRes.body)}`);
-  const session = sessionRes.body;
+  // BOTH start modes answer with an ENVELOPE, `{ session, games, members, … }`.
+  // This used to read `sessionRes.body`, so every delete below was aimed at
+  // `/sessions/undefined` — which the role gate refuses before routing, so the
+  // played-session 403 was asserted against a session that did not exist (#857).
+  const session = sessionRes.body.session;
+  assert.ok(session && session.id, 'seed: the played session must have an id');
+  assert.equal(session.done, true, 'seed: a direct pick skips the vote and lands done');
+
+  // …and one with NO gameId, which draws and leaves voting open (`done: false`)
+  // — the live-vote ticket #857 is about. Both members join so the drawn pool
+  // can contain Catan (2–4 players); a single joiner would empty the pool and
+  // the draw would 400.
+  const openRes = await request(app).post(`/api/rounds/${round.id}/sessions`)
+    .set(auth(owner.token)).send({ memberIds: round.members.map((m) => m.id) });
+  assert.equal(openRes.status, 201, `seed: draw a session -> ${JSON.stringify(openRes.body)}`);
+  const openSession = openRes.body.session;
+  assert.equal(openSession.done, false, 'seed: the drawn session must still be open');
 
   const acts = (await request(app).get(`/api/rounds/${round.id}/activities`).set(auth(owner.token))).body;
   assert.ok(acts.length, 'seed: the round has a Chronik entry to delete');
   const activity = acts[0];
 
-  return { owner, grantee, round, seat, game, session, activity };
+  return { owner, grantee, round, seat, game, session, openSession, activity };
 }
 
 // Each guarded action, as the request a grantee would make. The expected answers
@@ -214,7 +244,10 @@ async function seedRound(role) {
 const ACTIONS = {
   'rename the round': (s, tok) => request(app).patch(`/api/rounds/${s.round.id}`).set(tok).send({ name: 'Neu' }),
   'delete the round': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}`).set(tok),
-  'delete a session': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}/sessions/${s.session.id}`).set(tok),
+  'delete a played session': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}/sessions/${s.session.id}`).set(tok),
+  // Same route, same method — only the session's state differs, which is why
+  // the split cannot live in lib/round-access.js's path table (#857).
+  'discard an open vote': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}/sessions/${s.openSession.id}`).set(tok),
   'delete a Chronik entry': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}/activities/${s.activity.id}`).set(tok),
   'move games out': (s, tok) => request(app).post(`/api/rounds/${s.round.id}/games/move-to`).set(tok).send({ targetRoundId: 'anywhere' }),
   'relink a seat': (s, tok) => request(app).patch(`/api/rounds/${s.round.id}/members/${s.seat.id}`).set(tok).send({ userId: null }),
@@ -232,7 +265,8 @@ const MATRIX = {
   editor: {
     'rename the round': false,
     'delete the round': false,
-    'delete a session': false,
+    'delete a played session': false,
+    'discard an open vote': true,
     'delete a Chronik entry': false,
     'move games out': false,
     'relink a seat': false,
@@ -245,7 +279,8 @@ const MATRIX = {
   coowner: {
     'rename the round': true,
     'delete the round': false,
-    'delete a session': true,
+    'delete a played session': true,
+    'discard an open vote': true,
     'delete a Chronik entry': true,
     // Owner-only for EVERY grantee role: #411's hole, and the seat-link desync.
     // Neither is about trust, so promoting someone does not open them.
@@ -275,6 +310,58 @@ for (const [role, expected] of Object.entries(MATRIX)) {
     }
   });
 }
+
+test('an editor discards a running vote for real, and is still refused a played evening', async () => {
+  // The matrix above only asks "was it a 403?". This asks whether the allowed
+  // half actually did the thing — a route that answers 200 and deletes nothing
+  // satisfies `notEqual(403)` perfectly — and whether the refused half really
+  // left the played session in place rather than deleting it and then erroring.
+  const s = await seedRound('editor');
+
+  const discard = await request(app)
+    .delete(`/api/rounds/${s.round.id}/sessions/${s.openSession.id}`).set(auth(s.grantee.token));
+  assert.equal(discard.status, 200, `an editor may discard an open vote: ${JSON.stringify(discard.body)}`);
+
+  const played = await request(app)
+    .delete(`/api/rounds/${s.round.id}/sessions/${s.session.id}`).set(auth(s.grantee.token));
+  assert.equal(played.status, 403);
+  assert.equal(played.body.error, 'not_owner');
+
+  // Read back as the OWNER: the grantee's view is re-scoped, so asking through
+  // their token would prove less.
+  const after = await request(app).get(`/api/rounds/${s.round.id}`).set(auth(s.owner.token));
+  const ids = after.body.sessions.map((x) => x.id);
+  assert.equal(ids.includes(s.openSession.id), false, 'the discarded vote is gone');
+  assert.equal(ids.includes(s.session.id), true, 'the played evening survived the refusal');
+});
+
+test('a cancelled vote is history, not a running one — an editor may not delete it', async () => {
+  // The trap the boundary hides. `cancelSession` never touches `done`, so a vote
+  // cancelled before a game was chosen keeps `done: false` — and `!done` alone,
+  // which the Start ticket's filter makes look like the natural predicate, would
+  // hand every grantee the deletion of an evening the Chronik draws as
+  // „Abgebrochen". The live-vote ticket filters on BOTH flags; so does the route.
+  const s = await seedRound('editor');
+  const cancel = await request(app)
+    .post(`/api/rounds/${s.round.id}/sessions/${s.openSession.id}/cancel`)
+    .set(auth(s.grantee.token)).send({});
+  assert.equal(cancel.status, 200, `cancelling is an ordinary write: ${JSON.stringify(cancel.body)}`);
+  assert.equal(cancel.body.done, false, 'the fixture is only meaningful while `done` stays false');
+  assert.equal(cancel.body.cancelled, true);
+
+  const del = await request(app)
+    .delete(`/api/rounds/${s.round.id}/sessions/${s.openSession.id}`).set(auth(s.grantee.token));
+  assert.equal(del.status, 403);
+  assert.equal(del.body.error, 'not_owner');
+
+  // …and a co-owner still may, so this is a role boundary rather than the route
+  // having simply stopped deleting cancelled sessions for anyone.
+  const co = await seedRound('coowner');
+  await request(app).post(`/api/rounds/${co.round.id}/sessions/${co.openSession.id}/cancel`)
+    .set(auth(co.grantee.token)).send({});
+  assert.equal((await request(app).delete(`/api/rounds/${co.round.id}/sessions/${co.openSession.id}`)
+    .set(auth(co.grantee.token))).status, 200);
+});
 
 test('the ROLE gate never refuses the round owner', async () => {
   // Asserted on the error CODE rather than on the status, and the distinction is
@@ -308,6 +395,10 @@ test('a mutating round route the table does not name is refused for a grantee', 
   assert.equal(capabilityFor('DELETE', '/'), 'round.delete');
   assert.equal(capabilityFor('POST', '/games/move-to'), 'games.moveOut');
   assert.equal(capabilityFor('POST', '/games/x/retire'), 'round.write');
+  // The FLOOR for deleting a session is the editor-level discard (#857); the
+  // handler narrows to 'session.delete' for a played one, which no table keyed
+  // on the path could express.
+  assert.equal(capabilityFor('DELETE', '/sessions/x'), 'session.discard');
 });
 
 test('a grantee is refused an unlisted mutating path over HTTP, and the owner is not', async () => {
@@ -436,4 +527,64 @@ test('the share list is owner-only', async () => {
   // Even a co-owner may not enumerate the owner's other grantees.
   assert.equal((await request(app).get(`/api/rounds/${s.round.id}/shares`)
     .set(auth(s.grantee.token))).status, 403);
+});
+
+/* ------------------ §6 the client hides what the route refuses --------------- */
+
+/* The other half of #857. The route was only ever the second line of defence:
+   the Start screen offered „Abstimmung verwerfen" to EVERY grantee while the
+   route cost co-owner, so an editor's confirm dialog accepted and the request
+   then 403'd into a toast. This is exactly the drift
+   .claude/rules/shared-constants-across-the-stack.md describes for this file —
+   a client copy that offers a button the server refuses.
+
+   Note what these two cases can and cannot prove today. `session.discard` is the
+   editor floor and normalizeRole clamps every unknown value UP to `editor`, so
+   no real role fails the guard: the hidden branch is unreachable through data
+   alone. Stubbing `roundCan` is therefore the only way to show the guard is
+   WIRED rather than merely present in the source — which is the whole point,
+   since a re-tightening tomorrow must degrade to a hidden control, not a 403. */
+
+const { loadApp } = require('./support/dom');
+
+const liveVoteRound = () => ({
+  id: 1,
+  name: 'Donnerstagsrunde',
+  shared: true,
+  role: 'editor',
+  games: [{ id: 7, title: 'Catan', retired: false, completed: false }],
+  members: [],
+  sessions: [{ id: 9, createdAt: '2026-08-29T18:00:00Z', gameIds: [7], done: false, cancelled: false, finished: false }],
+  activity: [],
+  tags: [],
+});
+
+/** The Start tab's control labels, for a caller `roundCan` answers `allowed` for. */
+function startTabLabels(t, { stubDeny } = {}) {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  if (stubDeny) dom.set('roundCan', () => false);
+  const round = liveVoteRound();
+  dom.call('renderStartTab', round, round.games);
+  return [...dom.app.querySelectorAll('button, a')]
+    .map((el) => (el.textContent || '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+}
+
+test('the Start screen offers the discard to an editor, whom the route now allows', (t) => {
+  const found = startTabLabels(t);
+  assert.ok(found.includes('Abstimmung verwerfen'),
+    `an editor is not offered the discard they are entitled to: ${found}`);
+  // Anti-vacuous: the ticket itself must still render, or "the label is present"
+  // would be asserted against a screen that draws no live vote at all.
+  assert.ok(found.some((l) => l.includes('Jetzt abstimmen')), `the live-vote ticket is gone: ${found}`);
+});
+
+test('the discard is HIDDEN from a caller the capability refuses, rather than 403ing them', (t) => {
+  const found = startTabLabels(t, { stubDeny: true });
+  assert.ok(!found.includes('Abstimmung verwerfen'),
+    `the discard is rendered unguarded — a refused caller gets a button that 403s: ${found}`);
+  // The ticket is NOT gated, only its discard: hiding the vote itself would take
+  // the round's co-players out of the session they are supposed to be voting in.
+  assert.ok(found.some((l) => l.includes('Jetzt abstimmen')), `the live-vote ticket was gated too: ${found}`);
 });
