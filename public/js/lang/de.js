@@ -912,8 +912,11 @@ I18N.de = {
   // The closing CTA for a logged-out visitor (#786). A pitch, not a
   // restatement of the numbers above it; the buttons reuse landing.hero.*.
   'stats.cta.title': 'Mach mit und stell dein eigenes Regal zusammen.',
-  'stats.teaser.title': 'Entdecken',
   'stats.teaser.sub': 'Was gerade gespielt und gut bewertet wird',
+  'home.resume.result': 'Ergebnis eintragen',
+  'friends.home.noneTitle': 'Noch niemand im Freundeskreis',
+  'friends.home.noneSub': 'Folge Freunden, um zu sehen, was sie spielen.',
+  'friends.home.noneAction': 'Freunde finden',
   // Friendships & Freundeskreis (issue #325)
   'inbox.friend.title': '{user} möchte dich als Freund*in hinzufügen',
   'inbox.friend.failed': 'Anfrage konnte nicht angenommen werden.',

@@ -490,7 +490,9 @@ public/
                      one Einstellungen entry
     views-landing.js logged-out marketing landing page shown at / in accounts
                      mode before registration (issue #322)
-    views-home.js    lobby + new round
+    views-home.js    the home dashboard (#842) — greeting, resume tickets for
+                     sessions still running, the round lobby, and the tile row
+                     (Freundeskreis / Entdecken / news) — plus new round
     views-round.js        round hub (Start/Regal/Chronik/Pokale tabs) + Start tab
     views-regal.js        Regal tab: the games library (search, filters, grid)
     views-chronik.js      Chronik tab: the month-grouped session/shelf timeline
@@ -520,12 +522,14 @@ public/
     views-news.js    the pulled „Was ist neu" screen at /neu, reached from the
                      account menu; opening it marks the entries seen (#741)
     views-stats.js   instance-wide public statistics (#564): the /entdecken
-                     screen, the landing-page block and the home teaser, all
-                     from one payload. Renders nothing at all — no heading, no
-                     container — when the feature is off or every metric is
-                     still below its threshold
-    views-friends.js Freundeskreis view + home feed section (#325) and the
-                     account profile at /u/:username (#558; accounts mode only)
+                     screen, the landing-page block and the home dashboard
+                     panel, all from one payload and one card renderer. Renders
+                     nothing at all — no heading, no container — when the
+                     feature is off or every metric is still below its threshold
+    views-friends.js Freundeskreis view + home dashboard tile (#325; since #842
+                     it invites rather than vanishing when you have no friends)
+                     and the account profile at /u/:username (#558; accounts
+                     mode only)
     views-account.js Konto settings: identity + change password (#482; accounts mode only)
     router.js        URL ↔ view routing (History API): deep links, reloads
     main.js          bootstrap: route from the current URL              (loads last)

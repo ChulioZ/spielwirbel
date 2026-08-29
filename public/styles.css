@@ -385,6 +385,24 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: none;
   }
 
+  /* The two zones #842 added are grids in their own right, so they take the
+     full pane exactly as `.lobby-list` does — a zone left at the 900px reading
+     measure under a four-across round grid is the defect that issue exists to
+     fix.
+
+     Conditioned on `.lobby-list` for the SAME reason `.lobby-head` below is:
+     with no rounds the screen renders the centred `.lobby-cta` first-run
+     treatment (#358), and a full-shell dashboard under a centred 900px CTA
+     recreates that misalignment one screen over. With no rounds the whole
+     screen stays one centred column.
+
+     Both are named in `:is()` and neither in `:has()`: each IS a grid rather
+     than containing one. Getting that backwards fails silently — the zone
+     simply renders fewer columns (see the note on the cap's own exemption). */
+  .app:has(.lobby-list) > *:not(.rail):not(.dock):is(.home-resume, .home-dash) {
+    max-width: none;
+  }
+
   /* The lobby greeting INTRODUCES a grid instead of containing one, so neither
      selector above reaches it — `.lobby-head` is a sibling of `.lobby-list`, not
      its wrapper. Capped, it centred at the 900px measure while the grid it
@@ -2828,9 +2846,123 @@ a.stats-card__title:hover,
 a.stats-card__title:focus-visible { text-decoration: underline; }
 .stats-card__value { font-size: var(--text-sm); }
 .stats-note { font-size: var(--text-sm); margin: 0; }
-/* The home hub's teaser: one row linking into /entdecken, shaped like the
-   lobby's own cards so it reads as part of the hub rather than an ad. */
-.home-stats { display: block; }
+/* ===== Home dashboard zones (#842) =====
+   The logged-in home screen is four zones: the greeting band, the sessions
+   still running, the round grid, and a dashboard region. Every one of them is a
+   real DOM group in reading order — never CSS `order` — so the visual order and
+   the tab order cannot disagree at any width, and the phone simply gets the
+   same sequence stacked. */
+
+/* Zone 2 — the resume tickets, above the round grid at every width.
+
+   `auto-fit` rather than `auto-fill` is load-bearing: with a single ticket,
+   `auto-fill` keeps the empty tracks and packs that one ticket ~340px wide
+   against the left edge of an up-to-1800px shell — the exact defect #358 fixed
+   on the empty lobby. `auto-fit` collapses the empty tracks, so one ticket
+   spans the zone and three share it.
+
+   Which is also why the HEADING is a sibling of the grid rather than an item
+   spanning it: a `grid-column: 1 / -1` item occupies every track, so none is
+   empty and auto-fit collapses nothing. Measured at 1440px with the heading
+   inside — two tickets, three 457px tracks, one of them a hole. */
+.home-resume { margin-bottom: 26px; }
+.home-resume__head { margin: 0 0 12px; font-size: var(--text-lg); }
+.home-resume__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 14px;
+}
+/* The grid gap does the stacking; `.ticket + .ticket`'s margin would add a
+   second, uneven one on top of it. */
+.home-resume__list .ticket + .ticket { margin-top: 0; }
+
+/* Zone 4 — the dashboard region. Same `auto-fit` reasoning as the resume zone:
+   an account with only one tile gets a full-width tile, not a narrow one
+   stranded on the left.
+
+   `:empty` is what keeps the promise that nothing renders when there is nothing
+   to render. Two of the three tiles decide ASYNCHRONOUSLY and remove themselves
+   (renderHomeFriends, mountHomeStatsPanel), so the grid can only be known to be
+   empty after they have answered — a JS check at append time would be too
+   early. `:empty` re-evaluates as they go, and the margin goes with it. */
+.home-dash {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  align-items: start;
+  margin-top: 34px;
+}
+.home-dash:empty { display: none; }
+.dash-tile {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  min-width: 0;
+}
+/* The tiles' own cards sit inside a tile that already draws a surface, so they
+   drop back to the page ground rather than stacking a second panel on it. */
+.dash-tile .stats-card { background: var(--sunken); }
+
+/* The „Was ist neu" tile. A link, never a dismissable strip: opening /neu is
+   the acknowledgement and the tile is then absent on the next home render, so
+   nothing here trains anyone to dismiss the terms notice unread
+   (views-news.js's header records the narrowing). */
+.home-news {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-decoration: none;
+  color: inherit;
+}
+.home-news__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--brand-dark);
+}
+.home-news__title { font-weight: 700; }
+.home-news__body {
+  font-size: var(--text-sm);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* The Freundeskreis tile's empty state (#842). This section used to REMOVE
+   itself when the account had no friends, so the one place that leads to
+   finding any was the thing that vanished. */
+.friends-invite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.friends-invite__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 2px;
+  border-radius: var(--radius-md);
+  background: var(--brand-tint);
+  font-size: 20px; /* glyph, not type */
+}
+.friends-invite__title { font-weight: 600; }
+.friends-invite__sub { font-size: var(--text-sm); }
+.friends-invite__action { font-weight: 600; color: var(--brand-dark); }
+
+/* The home hub's Entdecken tile (#842): real podium cards inside a dashboard
+   tile, where a one-line teaser strip used to sit. Stacked one per row — the
+   tile is a grid column, not the page. */
+.stats-cards--home { grid-template-columns: 1fr; }
 /* The logged-out closing CTA on /entdecken (#786). Everything inside it is a
    landing-page component — the heading, the demo group and the button row all
    reuse `.landing-*` rules, which are unscoped and so apply here (see
@@ -2854,33 +2986,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .stats-cta { margin-top: 32px; padding-top: 24px; }
 }
 
-.stats-teaser {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 22px;
-  padding: 14px 16px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  text-decoration: none;
-  color: inherit;
-}
-.stats-teaser__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex: none;
-  border-radius: var(--radius-md);
-  background: var(--brand-tint);
-}
-.stats-teaser__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.stats-teaser__title { font-weight: 600; }
-.stats-teaser__sub { font-size: var(--text-sm); }
-.stats-teaser__chev { margin-left: auto; color: var(--ink-soft); }
-
 /* ===== Freundeskreis / friends (#325) ===== */
 /* Add-friend row: a username field + submit, above the feed and lists. */
 .friends-add { display: flex; gap: 8px; margin: 4px 0 22px; }
@@ -2890,7 +2995,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .friends-section__h,
 .konto-section__h,
 .rs-section__h,
-.home-friends__head h2 { font-size: var(--text-lg); margin: 24px 0 10px; }
+.dash-tile__head h2 { font-size: var(--text-lg); margin: 24px 0 10px; }
 /* A friend / request row reuses .ds-row; its main side pairs avatar + name. */
 .friend-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .friend-row__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -2958,10 +3063,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 }
 .feed-item__report .ti { font-size: var(--text-md); display: block; }
 .feed-item__report:hover { background: var(--sunken); color: var(--ink); }
-/* Home compact section: a heading with a "see all" link, then a few feed rows. */
-.home-friends { margin-top: 30px; }
-.home-friends__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.home-friends__head h2 { margin: 0; }
+/* Home compact section: a heading with a "see all" link, then a few feed rows.
+   Since #842 it is a tile in the `.home-dash` grid, which owns the spacing —
+   the standalone top margin it used to carry would offset it inside its row. */
+.dash-tile__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.dash-tile__head h2 { margin: 0; }
 
 /* ===== Konto settings screen (#482) ===== */
 /* Read-only identity rows (e-mail, username). Deliberately NOT .ds-row: that

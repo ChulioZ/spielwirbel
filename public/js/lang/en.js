@@ -922,8 +922,11 @@ I18N.en = {
   // The closing CTA for a logged-out visitor (#786). A pitch, not a
   // restatement of the numbers above it; the buttons reuse landing.hero.*.
   'stats.cta.title': 'Join in and build your own shelf.',
-  'stats.teaser.title': 'Discover',
   'stats.teaser.sub': 'What’s being played and rated well right now',
+  'home.resume.result': 'Record the result',
+  'friends.home.noneTitle': 'No friends yet',
+  'friends.home.noneSub': 'Follow friends to see what they are playing.',
+  'friends.home.noneAction': 'Find friends',
   // Friendships & Freundeskreis (issue #325)
   'inbox.friend.title': '{user} wants to be your friend',
   'inbox.friend.failed': 'Couldn’t accept the request.',
