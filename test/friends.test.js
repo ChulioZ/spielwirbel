@@ -19,6 +19,11 @@
 
 process.env.ACCOUNTS_ENABLED = 'true';
 process.env.SESSION_SECRET = 'test-session-secret';
+// The per-account feed cap (#325, default 50) equals the route's FEED_SHOW, so a
+// spec cannot store more rows than one page holds — which is exactly what the
+// collapse-before-slice assertion below needs. Raised out of reach here;
+// lib/repo/*.js read it per call. Nothing else in this file depends on it.
+process.env.MAX_FEED_EVENTS = '400';
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -55,6 +60,20 @@ async function addGame(a, rid, title, extra = {}) {
   for (const [k, v] of Object.entries({ title, minPlayers: '2', maxPlayers: '4', ...extra })) req.field(k, v);
   return req.then((r) => r.body);
 }
+// Befriend two accounts, returning the friendship id (mirrors test/profile.test.js).
+async function befriend(a, b) {
+  await sendReq(a, b.username);
+  const fid = (await inbox(b)).find((i) => i.type === 'friend_request').payload.friendshipId;
+  await request(app).post(`/api/account/friends/${fid}/accept`).set(auth(b.token));
+  return fid;
+}
+const sess = (a, rid, path, body) =>
+  request(app).post(`/api/rounds/${rid}/sessions${path}`).set(auth(a.token)).send(body);
+// What the store actually holds for one account — the emit-guard specs must read
+// THIS and not the feed route, whose collapse would make them pass against a
+// route that still emits per request.
+const stored = (a, type) =>
+  repo.listFeedEvents([a.user.id], 200).then((rows) => rows.filter((e) => e.type === type));
 
 test('send: known user, self/unknown rejected, inbox item lands, duplicates refused', async () => {
   const alice = await makeAccount('fr-alice@example.com');
@@ -218,6 +237,87 @@ test('caps: open outgoing requests are bounded with a distinct 403', async () =>
     if (prev === undefined) delete process.env.MAX_FRIEND_REQUESTS_PER_USER;
     else process.env.MAX_FRIEND_REQUESTS_PER_USER = prev;
   }
+});
+
+/* #856: the results screen has no save button — every winner-chip tap re-POSTs
+   …/finish with `finished: true`, so an unconditional emit stored one row per
+   TAP and friends saw the same evening three times. The guard is a transition
+   check, and these assertions read the STORE rather than the feed route: the
+   read-side collapse below would hide a missing guard entirely. */
+test('feed: repeated finish saves store one play; a reset and re-finish is a new one', async () => {
+  const alice = await makeAccount('fin-alice@example.com');
+  const bob = await makeAccount('fin-bob@example.com');
+  await befriend(alice, bob);
+
+  const round = await makeRound(alice, ['Anna', 'Bob']);
+  const game = await addGame(alice, round.id, 'Catan');
+  const session = (await sess(alice, round.id, '', {})).body.session;
+  await sess(alice, round.id, `/${session.id}/choice`, { gameId: game.id });
+
+  // Three saves, as three winner-chip taps produce.
+  const winner = round.members[0].id;
+  await sess(alice, round.id, `/${session.id}/finish`, { winnerIds: [] });
+  await sess(alice, round.id, `/${session.id}/finish`, { winnerIds: [winner] });
+  await sess(alice, round.id, `/${session.id}/finish`, { winnerIds: [winner] });
+  assert.equal((await stored(alice, 'session_played')).length, 1, 'one play, one stored event');
+
+  // Un-finishing announces nothing on its own.
+  await sess(alice, round.id, `/${session.id}/finish`, { finished: false });
+  assert.equal((await stored(alice, 'session_played')).length, 1);
+
+  // …but a reset is a real un-play, so finishing again IS a second play.
+  await sess(alice, round.id, `/${session.id}/finish`, { winnerIds: [winner] });
+  assert.equal((await stored(alice, 'session_played')).length, 2);
+
+  // Bob still sees one line: the two rows are the same evening, so the read-side
+  // collapse folds them. Two plays a day apart is the case that stays two, and
+  // test/feed.test.js pins the window that separates them.
+  const played = (await getFeed(bob)).events.filter((e) => e.type === 'session_played');
+  assert.deepEqual(played.map((e) => e.title), ['Catan']);
+});
+
+test('feed: repeated „Ins Regal" saves store one acquisition, and the feed shows one', async () => {
+  const alice = await makeAccount('shelf-alice@example.com');
+  const bob = await makeAccount('shelf-bob@example.com');
+  await befriend(alice, bob);
+
+  const round = await makeRound(alice, ['Anna']);
+  const wish = await addGame(alice, round.id, 'Wanted', { wish: 'true' });
+  const shelve = (v) => request(app)
+    .post(`/api/rounds/${round.id}/games/${wish.id}/wish`).set(auth(alice.token)).send({ wish: v });
+
+  // Three identical „Ins Regal" saves: only the first is a transition.
+  await shelve(false);
+  await shelve(false);
+  await shelve(false);
+  assert.equal((await stored(alice, 'game_added')).length, 1, 'only the transition emits');
+
+  // Back to the wish list and onto the shelf again: a genuine second acquisition,
+  // so a second row is stored — and the feed collapses the pair into one line.
+  await shelve(true);
+  await shelve(false);
+  assert.equal((await stored(alice, 'game_added')).length, 2);
+  const added = (await getFeed(bob)).events.filter((e) => e.type === 'game_added');
+  assert.deepEqual(added.map((e) => e.title), ['Wanted']);
+});
+
+/* Collapse happens BEFORE the FEED_SHOW slice. Collapsing after it would let
+   duplicates eat the page — the feed would get shorter instead of cleaner — and
+   only a store holding more than one page's worth can tell the two orders apart. */
+test('feed: a run of stored duplicates does not shorten the returned page', async () => {
+  const alice = await makeAccount('page-alice@example.com');
+  const bob = await makeAccount('page-bob@example.com');
+  await befriend(alice, bob);
+  await sleep(20); // clear the acceptedAt cutoff
+
+  for (let i = 0; i < 52; i++) await repo.addFeedEvent(alice.user.id, { type: 'game_added', title: `G${i}` });
+  // Newest: a run of three identical rows, as the pre-#856 routes wrote.
+  for (let i = 0; i < 3; i++) await repo.addFeedEvent(alice.user.id, { type: 'session_played', title: 'Dup' });
+
+  const events = (await getFeed(bob)).events;
+  assert.equal(events.length, 50, 'still a full page after the run collapsed');
+  assert.equal(events.filter((e) => e.title === 'Dup').length, 1);
+  assert.equal(new Set(events.map((e) => e.title)).size, 50, 'and 50 DISTINCT entries');
 });
 
 test('accounts off: every friend route 404s accounts_disabled', async () => {

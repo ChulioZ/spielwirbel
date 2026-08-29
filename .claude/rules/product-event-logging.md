@@ -74,3 +74,16 @@ forward exist — there is **no historical backfill**.
 `LOG_LEVEL` gates these like every other line (they log at `info`), so
 `LOG_LEVEL=warn` or `silent` turns them off — which is exactly what the test
 suite does.
+
+## A counter counts REQUESTS, not occurrences (#856)
+
+`trackEvent('session_finished')` and `trackEvent('game_added')` sit in routes the
+UI re-POSTs as an idempotent save — every winner-chip tap, every repeated „Ins
+Regal" — so both **over-count**, and always have. That was left standing on
+purpose when the sibling *feed* emits were moved onto the state transition:
+whether a product counter should measure requests or occurrences is its own
+question. Know which one you are reading before drawing a conclusion from it, and
+if you change it, change it deliberately.
+
+**Related:** `.claude/rules/feed-events-fire-on-the-transition.md` (the same
+call sites, the other emitter, and why the answer there was different).
