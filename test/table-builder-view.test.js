@@ -117,9 +117,9 @@ test('the builder renders one card per table, with its game and its people', asy
 test('the two numbers under a table are computed over the SEATED only', async (t) => {
   const { dom } = await builder(t);
   const [a, b] = cards(dom);
-  assert.match(metaOf(a), /Ø 4\.0/);
+  assert.match(metaOf(a), /Ø 4,0/);
   assert.match(metaOf(a), /Niedrigste 4/);
-  assert.match(metaOf(b), /Ø 4\.0/);
+  assert.match(metaOf(b), /Ø 4,0/);
   // Ben's 1 is on g2, and nobody is seated at g2 who gave it — so it does not
   // appear anywhere yet.
   assert.equal(dom.app.querySelector('.tables-notice').textContent.trim(), '');
@@ -139,7 +139,7 @@ test('moving a party rescores both tables live and names the unhappy seating', a
   assert.deepEqual(seatsOf(a), ['Anna', 'Dana']);
   assert.deepEqual(seatsOf(b), ['Eli', 'Frida', 'Georg', 'Ben']);
   // 4+4+4+1 over four people.
-  assert.match(metaOf(b), /Ø 3\.3/);
+  assert.match(metaOf(b), /Ø 3,3/);
   assert.match(metaOf(b), /Niedrigste 1/);
   assert.match(dom.app.querySelector('.tables-notice').textContent, /Ben.*Azul/);
   assert.ok(b.querySelector('.tables-seat.is-hurt'), 'the chip to move is findable without reading the list');
@@ -283,7 +283,7 @@ test('every cover placeholder the builder draws sits in a POSITIONED box', async
 test('the average pill is un-absoluted for its inline row', async (t) => {
   /* `.score-pill` is a BADGE over a game tile — `position: absolute; top/right`.
      Used inline it flies to the page's top-right corner and vanishes behind the
-     top bar while `textContent` still reads "Ø 4.0", so every DOM probe agrees
+     top bar while `textContent` still reads "Ø 4,0", so every DOM probe agrees
      it is fine. Four other inline contexts already carry the same override; this
      is the fifth. jsdom applies no stylesheet, so it is asserted over the sheet
      (.claude/rules/css-text-assertions-strip-comments.md). */

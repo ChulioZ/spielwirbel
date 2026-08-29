@@ -243,7 +243,7 @@ async function showTableBuilder(round, session, gamesHint) {
              </div>
              <div class="tables-card__seats"></div>
              <div class="tables-card__meta">
-               <span class="score-pill"${fb.avg === null ? '' : ` style="background:${avgColor(fb.avg)}"`}>Ø ${fb.avg === null ? '–' : fb.avg.toFixed(1)}</span>
+               <span class="score-pill"${fb.avg === null ? '' : ` style="background:${avgColor(fb.avg)}"`}>Ø ${fb.avg === null ? '–' : fmtAvg(fb.avg)}</span>
                <span class="tables-card__low">${esc(t('tables.lowest', { n: fb.lowest === null ? '–' : fb.lowest }))}</span>
                <span class="tables-card__size">${esc(tn(size, 'tables.partiesOne', 'tables.parties'))}</span>
              </div>

@@ -791,7 +791,7 @@ async function showGameDetail(rid, gameId) {
              <circle cx="40" cy="40" r="34" fill="none" stroke="${avgColor(st.avg)}" stroke-width="8" stroke-linecap="round"
                stroke-dasharray="${(((st.avg - 1) / 4) * 2 * Math.PI * 34).toFixed(1)} ${RING_C}" transform="rotate(-90 40 40)"/>
            </svg>
-           <span class="gd-ring__num" style="color:${avgColor(st.avg)}">${st.avg.toFixed(1)}</span>
+           <span class="gd-ring__num" style="color:${avgColor(st.avg)}">${fmtAvg(st.avg)}</span>
          </div>
          <div class="score-label">${esc(ratingsLine)}</div>`
       : `<div class="gd-ring gd-ring--none"><span class="gd-ring__num">–</span></div>
@@ -1201,7 +1201,7 @@ async function showGameDetail(rid, gameId) {
       }
       const scoreCell =
         sst.avg !== null
-          ? `<span class="score-pill" style="background:${avgColor(sst.avg)}">Ø ${sst.avg.toFixed(1)}</span>`
+          ? `<span class="score-pill" style="background:${avgColor(sst.avg)}">Ø ${fmtAvg(sst.avg)}</span>`
           : '<span class="score-pill score-pill--none">–</span>';
       const sortCell = sst.sortCount
         ? `<span class="sort-flag"><i class="ti ti-trash" aria-hidden="true"></i> ${sst.sortCount}×</span>`

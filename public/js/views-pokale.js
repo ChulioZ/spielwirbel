@@ -191,7 +191,7 @@ function renderPokaleTab(round, activities) {
   // threshold or on how ties are handled — they are one aggregation read twice.
   if (recap.best) {
     cards.appendChild(
-      pokaleGameCard(round, 'ti-star', t('pokale.bestRated'), recapGames(round, recap.best.gameIds), `Ø ${recap.best.avg.toFixed(1)}`)
+      pokaleGameCard(round, 'ti-star', t('pokale.bestRated'), recapGames(round, recap.best.gameIds), `Ø ${fmtAvg(recap.best.avg)}`)
     );
   }
 
@@ -303,7 +303,7 @@ function renderRecapSection(round, recap) {
 
   if (recap.worst) {
     cards.appendChild(
-      pokaleGameCard(round, 'ti-mood-empty', t('recap.worstRated'), recapGames(round, recap.worst.gameIds), `Ø ${recap.worst.avg.toFixed(1)}`)
+      pokaleGameCard(round, 'ti-mood-empty', t('recap.worstRated'), recapGames(round, recap.worst.gameIds), `Ø ${fmtAvg(recap.worst.avg)}`)
     );
   }
 
@@ -319,9 +319,9 @@ function renderRecapSection(round, recap) {
            <a class="pokale-card__value">${esc(game.title)}</a>
            <span class="pokale-card__sub">${esc(t('recap.divisiveSub', {
              high: nameOf(recap.divisive.high.memberId),
-             highAvg: recap.divisive.high.avg.toFixed(1),
+             highAvg: fmtAvg(recap.divisive.high.avg),
              low: nameOf(recap.divisive.low.memberId),
-             lowAvg: recap.divisive.low.avg.toFixed(1),
+             lowAvg: fmtAvg(recap.divisive.low.avg),
            }))}</span>
          </div>`);
       makeGameLink(card.querySelector('.pokale-card__value'), round.id, game.id);
@@ -349,7 +349,7 @@ function renderRecapSection(round, recap) {
              <span class="recap-fav__name">${esc(member.name)}</span>
            </span>
            <a class="pokale-card__value">${esc(game.title)}</a>
-           <span class="pokale-card__sub">${esc(t('recap.favSub', { avg: fav.avg.toFixed(1) }))}</span>
+           <span class="pokale-card__sub">${esc(t('recap.favSub', { avg: fmtAvg(fav.avg) }))}</span>
          </div>`);
       if (game.image) loadCover(card.querySelector('.recap-fav__cover'), coverUrl(game.image, COVER_THUMB));
       makeMemberLink(card.querySelector('.recap-fav__who .avatar'), round.id, member.id);
@@ -443,7 +443,7 @@ function renderPeriodRecapSection(round, activities) {
     played: rec.topPlayed ? recapGames(round, rec.topPlayed.gameIds).map((g) => g.title) : [],
     playedSub: rec.topPlayed ? tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions') : '',
     rated: rec.topRated ? recapGames(round, rec.topRated.gameIds).map((g) => g.title) : [],
-    ratedAvg: rec.topRated ? rec.topRated.avg.toFixed(1) : '',
+    ratedAvg: rec.topRated ? fmtAvg(rec.topRated.avg) : '',
     added: rec.added,
     retired: rec.retired,
     completed: rec.completed,
@@ -494,7 +494,7 @@ function renderPeriodRecapSection(round, activities) {
     // within the period there is no card at all (period-recap.js).
     if (rec.topRated) {
       cards.appendChild(pokaleGameCard(round, 'ti-star', t('periodRecap.bestRated', scope), recapGames(round, rec.topRated.gameIds),
-        `Ø ${rec.topRated.avg.toFixed(1)}`));
+        `Ø ${fmtAvg(rec.topRated.avg)}`));
     }
     // The grid is appended even when EMPTY, unlike the sections above. At
     // >=1280px the wide-column exemption is `.app > *:has(…, .pokale-cards, …)`

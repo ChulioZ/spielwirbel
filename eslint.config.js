@@ -23,6 +23,7 @@ const frontendGlobals = {
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
   fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMoney: 'readonly',
+  fmtAvg: 'readonly', fmtCount: 'readonly',
   // core.js
   app: 'readonly', context: 'readonly', toastEl: 'readonly',
   currentView: 'writable', h: 'readonly', esc: 'readonly', toastTimer: 'writable',

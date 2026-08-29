@@ -185,7 +185,7 @@ async function showMember(rid, mid) {
     )
   );
   cards.appendChild(
-    statCard('ti-star', t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + st.avgGiven.toFixed(1), '')
+    statCard('ti-star', t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven), '')
   );
 
   /* Favorite game: one card whose value links to the game detail page(s). It
@@ -198,7 +198,7 @@ async function showMember(rid, mid) {
        <span class="pokale-card__icon"><i class="ti ti-heart" aria-hidden="true"></i></span>
        <span class="pokale-card__label">${esc(t('member.favorite'))}</span>
        <span class="pokale-card__games"></span>
-       <span class="pokale-card__sub">${st.favAvg === null ? '' : esc('Ø ' + st.favAvg.toFixed(1))}</span>
+       <span class="pokale-card__sub">${st.favAvg === null ? '' : esc('Ø ' + fmtAvg(st.favAvg))}</span>
      </div>`);
   const favList = favCard.querySelector('.pokale-card__games');
   if (st.favorite.length) {

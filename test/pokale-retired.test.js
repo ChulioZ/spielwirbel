@@ -181,7 +181,7 @@ test('a member whose top-rated game is retired keeps their next-best favourite',
   assert.equal(anna.querySelector('.pokale-card__value').textContent, 'Cascadia');
   assert.equal(
     anna.querySelector('.pokale-card__sub').textContent,
-    dom.run("t('recap.favSub', { avg: '4.0' })"),
+    dom.run("t('recap.favSub', { avg: fmtAvg(4) })"),
     'the average shown must be the one for the game named, not the retired favourite'
   );
 });
@@ -253,5 +253,5 @@ test('a member page still averages every rating given, retired games included', 
   // Anna gave 3 (Catan), 5 (Azul, retired) and 4 (Cascadia) -> 4.0. This stat is
   // about how she rates, not about what is on the shelf, so the favourite filter
   // two lines above it in memberStats must not reach `allRatings`.
-  assert.equal(card.querySelector('.pokale-card__value').textContent, 'Ø 4.0');
+  assert.equal(card.querySelector('.pokale-card__value').textContent, 'Ø 4,0');
 });

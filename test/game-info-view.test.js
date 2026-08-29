@@ -108,7 +108,7 @@ test('the detail section renders weight and the BGG attribution', async (t_) => 
   assert.equal(sec.querySelector('h2').textContent, t('gameInfo.title'));
   // One decimal — never BGG's four (2.2809 would imply a precision the number
   // does not have).
-  assert.match(sec.querySelector('.game-info__weight').textContent, /2\.3 von 5/);
+  assert.match(sec.querySelector('.game-info__weight').textContent, /2,3 von 5/);
   assert.equal(sec.querySelectorAll('.weight-dots__dot').length, 5);
   assert.equal(sec.querySelectorAll('.weight-dots__dot.is-filled').length, 2);
   assert.match(sec.querySelector('.game-info__source').textContent, /BoardGameGeek/);
@@ -134,7 +134,7 @@ test('a BGG-linked game missing the fields asks the server and renders the answe
   await new Promise((r) => setTimeout(r, 0));
   const sec = aboutSection(dom);
   assert.ok(sec, 'the section appears once the backfill answers');
-  assert.match(sec.querySelector('.game-info__weight').textContent, /3\.5 von 5/);
+  assert.match(sec.querySelector('.game-info__weight').textContent, /3,5 von 5/);
 });
 
 test('a backfill that finds nothing leaves the page without the section', async (t_) => {
@@ -185,7 +185,7 @@ test('the detail section renders the standard metadata AND the BGG rating', asyn
   assert.equal(factOf(sec, t('gameInfo.mechanics')).querySelector('.game-info__fact-value').textContent,
     'Dice Rolling, Hand Management, Trading, Network Building, Income, Set Collection');
   // One decimal, like the weight — never BGG's five.
-  assert.equal(factOf(sec, t('gameInfo.rating')).querySelector('.game-info__fact-value').textContent, '7.1 von 10');
+  assert.equal(factOf(sec, t('gameInfo.rating')).querySelector('.game-info__fact-value').textContent, '7,1 von 10');
 });
 
 test('the vote sheet shows the same metadata but NEVER the rating', async (t_) => {

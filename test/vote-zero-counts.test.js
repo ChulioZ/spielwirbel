@@ -110,9 +110,9 @@ test('a member\'s Ø includes the games they voted off the shelf', async (t) => 
   await dom.call('showMember', RID, 'm2');
   const values = [...dom.app.querySelectorAll('.member-stats__card')]
     .map((c) => c.textContent.replace(/\s+/g, ' ').trim());
-  // Ben: 0 for Catan (the flag wins over his stored 4) and 5 for Azul -> Ø 2.5.
-  // Reading his 4 would report Ø 4.5, which is the pre-#797 number.
-  assert.ok(values.some((v) => /Ø 2\.5/.test(v)), `no Ø 2.5 among: ${values.join(' | ')}`);
+  // Ben: 0 for Catan (the flag wins over his stored 4) and 5 for Azul -> Ø 2,5.
+  // Reading his 4 would report Ø 4,5, which is the pre-#797 number.
+  assert.ok(values.some((v) => /Ø 2,5/.test(v)), `no Ø 2,5 among: ${values.join(' | ')}`);
 });
 
 // ------------------------------------------------------- the results screen

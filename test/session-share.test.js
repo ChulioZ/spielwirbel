@@ -22,7 +22,8 @@ const { SHARE_MEDALS, SHARE_TROPHY } = shareModule;
    the specs below keep passing one translator and this unpacks it. Deliberately
    NOT a default inside session-share.js: a fallback there would be the `n === 1`
    comparison this change exists to delete. */
-const sessionShareText = (result, t, join) => shareModule.sessionShareText(result, t, join, t.tn);
+const sessionShareText = (result, t, join) =>
+  shareModule.sessionShareText(result, t, join, t.tn, t.fmtAvg);
 // A translate function bound to one locale, exactly as the view passes `t` in
 // (test/support/dom.js — shared with i18n-locales and players-plural).
 const { translator } = require('./support/dom');
@@ -64,9 +65,9 @@ test('the summary carries the headline and every rated game, in screen order', (
       '🏆 „Catan“ wurde gespielt. Anna hat gewonnen!\n' +
       '\n' +
       'Bewertungen:\n' +
-      '🥇 Catan · Ø 4.5\n' +
-      '🥈 Azul · Ø 4.0\n' +
-      '🥉 Splendor · Ø 3.3'
+      '🥇 Catan · Ø 4,5\n' +
+      '🥈 Azul · Ø 4,0\n' +
+      '🥉 Splendor · Ø 3,3'
   );
 });
 
@@ -110,7 +111,7 @@ test('a cancelled session says so and STILL carries its ratings', () => {
   // here would throw away the only content such a message has.
   const text = sessionShareText(model({ cancelled: true, playedTitle: null, winnerNames: [] }), translator('de'));
   assert.match(text, /Session abgebrochen/);
-  assert.match(text, /🥇 Catan · Ø 4\.5/);
+  assert.match(text, /🥇 Catan · Ø 4,5/);
 });
 
 test('a session with no outcome yet shares the ratings alone — no empty headline line', () => {
@@ -149,7 +150,7 @@ test('tied games share a place number, exactly as the screen prints it', () => {
     }),
     translator('de')
   );
-  assert.match(text, /🥈 Azul · Ø 4\.0\n🥈 Splendor · Ø 4\.0/);
+  assert.match(text, /🥈 Azul · Ø 4,0\n🥈 Splendor · Ø 4,0/);
 });
 
 test('places past bronze fall back to a plain number, as the screen does', () => {
@@ -166,7 +167,7 @@ test('places past bronze fall back to a plain number, as the screen does', () =>
     }),
     translator('de')
   );
-  assert.match(text, /^4\. Carcassonne · Ø 3\.0$/m);
+  assert.match(text, /^4\. Carcassonne · Ø 3,0$/m);
   assert.equal(SHARE_MEDALS.length, 3, 'a fourth medal would silently change the fallback');
 });
 

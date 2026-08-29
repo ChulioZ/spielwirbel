@@ -101,7 +101,10 @@ const QUALITY = 84;
  * localized too — round name, game titles.
  *
  * The first two games are the ones the finished sessions rate, in that order:
- * 4,5,4,5 -> Ø 4.5 and 4,4,5,4 -> Ø 4.3 (4.25 rounds up in toFixed(1)). Every
+ * 4,5,4,5 -> Ø 4.5 and 4,4,5,4 -> Ø 4.3 (4.25 rounds up at one decimal). Since
+ * #850 the badge is written in the READER's notation, so the en set shows those
+ * two figures and the de/es/fr/it sets show „Ø 4,5" / „Ø 4,3" — a dot in a
+ * non-English set now means the capture predates that change. Every
  * other game shows the "neu"/"new" badge. Cover gradients are derived from the
  * title (gameHue() in public/js/cover.js), so they follow the words and differ
  * between the two locales by construction — that is not a bug in the set.
@@ -314,8 +317,9 @@ async function seedRound(locale) {
     }));
   }
 
-  // Two finished sessions, each rating exactly one game — 4,5,4,5 -> Ø 4.5 and
-  // 4,4,5,4 -> Ø 4.3, which is what the shelf's two badges show.
+  // Two finished sessions, each rating exactly one game — 4,5,4,5 -> 4.5 and
+  // 4,4,5,4 -> 4.3, which is what the shelf's two badges show (in the locale's
+  // own notation since #850).
   //
   // These are DRAWS with a one-game pool, not direct picks. The rule file
   // prescribes direct picks (a draw is random, so which games carry a Ø badge

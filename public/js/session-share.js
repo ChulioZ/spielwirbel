@@ -41,17 +41,23 @@ const SHARE_TROPHY = '🏆';
 // dash carries no information in a chat message, and computePlaces gives such a
 // row no place, so there would be nothing to number it with either.
 //
-// The average is `toFixed(1)`, exactly as the screen prints it — deliberately
-// NOT locale-formatted. What is shared has to match the pill the group is
-// looking at while they read the message.
-function shareRatingLines(rows, t) {
+// The average is formatted exactly as the screen prints it: what is shared has
+// to match the pill the group is looking at while they read the message. That
+// invariant is unchanged — the pill is what moved (#850), so the share text
+// moved with it and a German message now reads „Ø 4,5".
+//
+// `fmtAvg` is injected for the same reason `t`/`tn`/`join` are (see the header)
+// and, like `tn`, it takes the LAST position and has NO default here: a
+// fallback would be the `toFixed(1)` this change exists to delete, so a caller
+// that forgets it must fail loudly rather than quietly print a dot.
+function shareRatingLines(rows, t, fmtAvg) {
   return rows
     .filter((r) => r.place && r.count)
     .map((r) =>
       t('share.row', {
         rank: SHARE_MEDALS[r.place - 1] || r.place + '.',
         title: r.title,
-        avg: r.avg.toFixed(1),
+        avg: fmtAvg(r.avg),
       })
     );
 }
@@ -95,7 +101,7 @@ function shareHeadline(result, t, join, tn) {
 // The full message. `result` is
 // { roundName, when, outcome, cancelled, playedTitle, winnerNames,
 //   tables: [{ title, names }], rows: [{ title, avg, count, place }] }.
-function sessionShareText(result, t, join, tn) {
+function sessionShareText(result, t, join, tn, fmtAvg) {
   const blocks = [t('share.header', { round: result.roundName, when: result.when })];
   const headline = shareHeadline(result, t, join, tn);
   if (headline) blocks[0] += '\n' + headline;
@@ -108,7 +114,7 @@ function sessionShareText(result, t, join, tn) {
       tables.map((tb) => t('share.table', { title: tb.title, names: tb.names }))
     ).join('\n'));
   }
-  const lines = shareRatingLines(result.rows || [], t);
+  const lines = shareRatingLines(result.rows || [], t, fmtAvg);
   // A cancelled session still carries ratings — the group rated the games, they
   // just did not play one — so the block is dropped only when there is nothing
   // rated at all, never because of the session's state.

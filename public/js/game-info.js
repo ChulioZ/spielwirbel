@@ -95,7 +95,7 @@ function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {
     box.appendChild(h(`<div class="game-info__weight">
         <span class="game-info__weight-label">${esc(t('gameInfo.weight'))}</span>
         <span class="weight-dots" aria-hidden="true">${dots}</span>
-        <span class="game-info__weight-value">${esc(t('gameInfo.weightValue', { n: game.weight.toFixed(1) }))}</span>
+        <span class="game-info__weight-value">${esc(t('gameInfo.weightValue', { n: fmtAvg(game.weight) }))}</span>
       </div>`));
   }
   const facts = h('<div class="game-info__facts"></div>');
@@ -107,7 +107,7 @@ function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {
   // One decimal, like the weight — BGG's five are a precision the number does
   // not have.
   if (rating && game.rating != null) {
-    facts.appendChild(factRow(t('gameInfo.rating'), t('gameInfo.ratingValue', { n: game.rating.toFixed(1) })));
+    facts.appendChild(factRow(t('gameInfo.rating'), t('gameInfo.ratingValue', { n: fmtAvg(game.rating) })));
   }
   if (facts.children.length) box.appendChild(facts);
   box.appendChild(h(`<div class="muted game-info__source">${esc(t('gameInfo.source'))}</div>`));

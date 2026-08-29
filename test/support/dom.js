@@ -99,6 +99,11 @@ function translator(locale) {
   // both as globals; a spec passing this one function around would otherwise
   // have to thread a second one beside it through every call (#838).
   t.tn = (n, keyOne, keyOther, params) => ctx.tn(n, keyOne, keyOther, params);
+  // The number half of the same surface (#850). A view injects `fmtAvg` into
+  // session-share.js exactly like `t`/`tn`, and it is bound to the SAME locale
+  // here — a spec that formatted with the default locale while translating in
+  // German would assert a mixed-language line that the app can never produce.
+  t.fmtAvg = (n) => ctx.fmtAvg(n);
   return t;
 }
 
