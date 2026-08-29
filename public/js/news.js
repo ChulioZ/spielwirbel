@@ -28,6 +28,31 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * Clears the capability bar: the Pokale tab could only ever answer "all time",
+   * so „unser Juli" and „unser 2026" were questions the app had no way to ask —
+   * and the shareable image is a thing the group could not produce at all.
+   * Says what the reader can do and where; that it is derived on demand and
+   * drawn client-side is the repo's business, not theirs.
+   */
+  {
+    revision: '2026-08-29',
+    de: {
+      title: 'Rückblick auf einen Monat oder ein Jahr',
+      body: 'Unter den Pokalen könnt ihr jetzt einen einzelnen Monat oder ein ganzes '
+        + 'Jahr auswählen: wie viele Sessions es waren, welche Spiele auf dem Tisch '
+        + 'lagen, was am häufigsten gespielt und am besten bewertet wurde, und was in '
+        + 'der Zeit ins Regal kam oder es verlassen hat. „Teilen" macht daraus ein '
+        + 'Bild für den Gruppenchat.',
+    },
+    en: {
+      title: 'Look back on a month or a year',
+      body: 'Under the trophies you can now pick a single month or a whole year: how '
+        + 'many sessions there were, which games made it to the table, what you played '
+        + 'most and rated best, and what joined or left the shelf in that time. '
+        + '"Share" turns it into an image for the group chat.',
+    },
+  },
+  /*
    * The bulk-REMOVE counterpart of the BGG collection import, which is the
    * capability test this clears: the shelf could be filled in one action and
    * emptied only one game (and two steps) at a time. Says what the reader can

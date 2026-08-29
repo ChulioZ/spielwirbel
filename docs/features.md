@@ -229,6 +229,12 @@ What the app does, in detail. For a short overview see the
     a **Rückblick** turns the round's accumulated ratings into a readable
     record: totals, the worst-rated game, the one the group disagrees about
     most, and every member's own favourite.
+    Below that, a **period recap** narrows the same idea to one calendar month
+    or year — sessions played, distinct games, the month's most-played and
+    best-rated game, and what was added, retired or completed — over a picker
+    offering only periods that actually have something in them. Any of them can
+    be shared as an image: the card is drawn on the device and handed to the
+    share sheet (or saved), so nothing is published anywhere.
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally narrow
   the collection, and draw a random set of candidate games — only games whose
   player range fits the number of joining members are eligible. Narrowing happens

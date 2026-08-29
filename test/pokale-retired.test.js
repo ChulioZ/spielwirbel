@@ -110,17 +110,42 @@ const cardByLabel = (root, label) =>
 
 // ---- the Pokale tab -------------------------------------------------------
 
-test('the only card that may name a retired game is Meistgespielt', async (t) => {
+/* The RECORD cards — the ones that report nights that happened rather than a
+   claim of taste. #800 added a second one (the period recap's own Meistgespielt,
+   which carries its period in the label), so this list is what the assertion
+   below subtracts. Widening it is only safe because the period section's TASTE
+   card is asserted by name further down; without that, adding a label here would
+   be a way to make this test stop looking. */
+const recordLabels = (dom) => [
+  dom.run("t('pokale.mostPlayed')"),
+  dom.run(`t('periodRecap.mostPlayed', { period: ${JSON.stringify(dom.run("fmtMonth('2026-07-01T00:00:00')"))} })`),
+];
+
+test('the only cards that may name a retired game are the two Meistgespielt records', async (t) => {
   const dom = bootApp(t);
   await dom.call('showRound', RID, 'pokale');
   assert.ok(namedGames(dom.app).length >= 3, 'the tab must actually have rendered its cards');
-  const elsewhere = [...dom.app.querySelectorAll('.pokale-card')]
-    .filter((c) => c !== cardByLabel(dom.app, dom.run("t('pokale.mostPlayed')")))
-    .flatMap((c) => namedGames(c));
+  const records = recordLabels(dom);
+  const cards = [...dom.app.querySelectorAll('.pokale-card')];
+  const labelled = cards.filter((c) => records.includes((c.querySelector('.pokale-card__label') || {}).textContent));
+  assert.equal(labelled.length, 2, 'both record cards must be on screen, or the subtraction below is hiding one');
+  const elsewhere = cards.filter((c) => !labelled.includes(c)).flatMap((c) => namedGames(c));
   assert.ok(
     !elsewhere.includes('Azul'),
     'Azul is retired, yet a taste card still names it'
   );
+});
+
+test('the period recap Bestbewertet follows the same active-only rule (#800)', async (t) => {
+  const dom = bootApp(t);
+  await dom.call('showRound', RID, 'pokale');
+  // All three games average 3.0 in July, so the filter alone decides: Azul is
+  // retired, Cascadia completed, only Catan is on the active shelf. Both
+  // archives lead, so neither a missing filter nor a retired-only one passes.
+  const period = dom.run("fmtMonth('2026-07-01T00:00:00')");
+  const card = cardByLabel(dom.app, dom.run(`t('periodRecap.bestRated', { period: ${JSON.stringify(period)} })`));
+  assert.ok(card, 'the period best-rated card is missing entirely');
+  assert.deepEqual(namedGames(card), ['Catan']);
 });
 
 test('Meistgespielt still counts a retired game\'s nights — the sessions happened', async (t) => {
