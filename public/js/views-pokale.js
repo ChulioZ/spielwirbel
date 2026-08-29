@@ -549,11 +549,21 @@ async function shareRecapCard(period, model) {
       }
     }
   }
+  // Two things here are load-bearing and both fail SILENTLY — no error, no
+  // toast, simply no file. The anchor is appended before it is clicked, because
+  // a detached one has historically been ignored; and the object URL is revoked
+  // on a later task rather than on the next line, because revoking it while the
+  // download the click just started is still reading it races that read.
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = name;
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 0);
   toast(t('periodRecap.toast.saved'));
 }
