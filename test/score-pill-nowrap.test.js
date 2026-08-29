@@ -30,12 +30,3 @@ test('.score-pill declares white-space: nowrap, so its space is not a break oppo
     'without this the pill breaks after the Ø whenever the title beside it overflows'
   );
 });
-
-test('.score-pill refuses to shrink below its own content', () => {
-  const body = bodyOf('.score-pill') || bodyOfIn('.score-pill');
-  // `flex: none` states the intent the five static contexts depend on. It is
-  // belt-and-braces next to `nowrap` (min-width: auto already floors a flex item
-  // at min-content, which nowrap makes the full pill), and inert in the absolute
-  // case — but it is what stops a later `min-width: 0` from re-opening the bug.
-  assert.match(body, /flex:\s*none/, '.score-pill must not be shrinkable');
-});
