@@ -178,6 +178,27 @@ test('the feed is friends-only and keeps the acceptedAt cutoff', async () => {
   assert.deepEqual(Object.keys(ev).sort(), ['at', 'coverUrl', 'title', 'type']);
 });
 
+/* #856: the profile feed is the SECOND read site, and a fix applied only to
+   /friends/feed would leave a friend's own profile showing the same evening three
+   times. The interrupted run is what makes this a collapse rather than a de-dupe. */
+test('the feed collapses a run of duplicates, but not one broken by another event', async () => {
+  const alice = await makeAccount('pdup-alice@example.com');
+  const bob = await makeAccount('pdup-bob@example.com');
+  await befriend(alice, bob);
+  await sleep(20);
+
+  // Written straight to the store: these model the rows the pre-#856 routes left
+  // in production, which no guard can retroactively remove.
+  const play = (title) => repo.addFeedEvent(alice.user.id, { type: 'session_played', title });
+  await play('Catan');
+  await play('Catan');
+  await play('Azul');
+  await play('Catan');
+
+  const titles = (await profile(bob, alice.username)).body.events.map((e) => e.title);
+  assert.deepEqual(titles, ['Catan', 'Azul', 'Catan'], 'newest first: the run folds, the split pair does not');
+});
+
 test('the profile requires a token, and 404s with accounts off', async () => {
   const alice = await makeAccount('gate-alice@example.com');
 
