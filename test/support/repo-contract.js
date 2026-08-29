@@ -365,6 +365,30 @@ module.exports = function repoContract(repo) {
     // getRoundSummary answers with the identical array, not a second shape.
     assert.deepEqual((await repo.getRoundSummary(T, round.id)).openSessions, s.openSessions);
 
+    /* The other half of the split rule, and the half that makes the parent's
+       exclusion mean something: the parent is resolved, but the TABLES it was
+       dealt out across are the sessions still open, and each must offer its own
+       ticket. Excluding the parent by excluding everything about a split would
+       satisfy the assertion above and strand every table. */
+    const split = await freshRound({ name: 'Split' });
+    const kids = [];
+    for (const day of ['10', '11']) {
+      kids.push(await repo.createSession(T, split.id, {
+        createdAt: `2026-05-${day}T10:00:00.000Z`, gameIds: [], votes: {},
+        chosenGameId: null, chosenAt: null, finished: false, finishedAt: null,
+        winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+      }));
+    }
+    await repo.createSession(T, split.id, {
+      createdAt: '2026-05-09T10:00:00.000Z', gameIds: [], votes: {},
+      chosenGameId: null, chosenAt: null, finished: false, finishedAt: null,
+      winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      childSessionIds: kids.map((k) => k.id),
+    });
+    const splitSummary = (await repo.listRoundSummaries(T)).find((x) => x.id === split.id);
+    assert.deepEqual(splitSummary.openSessions.map((o) => o.id), [kids[1].id, kids[0].id],
+      'the split parent suppressed its own open tables, or offered a ticket for itself');
+
     // A LEGACY session — no childSessionIds key at all, which is every session
     // written before #796. The Postgres side must read the absent key as "no
     // children"; a bare coalesce over a non-array would error instead.
