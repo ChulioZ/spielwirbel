@@ -5116,6 +5116,30 @@ kbd {
   margin: 0 0 2px;
 }
 .recap__thin { margin-top: 14px; }
+
+/* ---- Period recap: one month or one year, shareable as an image (#800) ----
+   It reuses .recap__lead, .recap__totals and .pokale-cards wholesale for the
+   same reason the Rückblick above reuses them — the grid, the tile chrome and
+   the >=1280px width exemption then all come for free. Only the picker row
+   needs anything of its own. */
+.precap__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.precap__share { flex: 0 0 auto; }
+/* `min-width: 0` because a <select> takes a large intrinsic minimum from its
+   longest option ("September 2026"), which on a 375px phone would push the
+   share button out through the row's right edge instead of wrapping it. */
+.precap__picker { flex: 1 1 200px; min-width: 0; }
+.precap__thin { margin-top: 14px; }
+/* The card grid stays in the DOM on a period with no cards, so the section keeps
+   the >=1280px wide-column exemption (`:has(… .pokale-cards …)`) instead of
+   resizing under the reader as they move the picker. Empty it has no height —
+   only this margin, which it does not need. */
+.precap__body > .pokale-cards:empty { margin-top: 0; }
 /* The favourite tile anchors on its game's cover (#695), like the Chronik
    session cards, the results podium and the Regal — the one section of the app
    that carried none of its personality. Compounded to (0,2,0) so it outranks

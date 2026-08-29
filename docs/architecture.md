@@ -390,6 +390,12 @@ public/
     recap.js         the round's taste record behind the Pokale tab's Rückblick:
                      best/worst rated, the most divisive game and each member's
                      favourite, all derived from session votes (issue #484)
+    period-recap.js  the same idea for ONE calendar month or year, beside the
+                     all-time Rückblick: which periods have content, and what
+                     was played, rated and shelved in one of them (issue #800)
+    recap-card.js    draws that period recap onto a canvas and hands it out as a
+                     PNG the user shares — never any cover art, which may not be
+                     redistributed and would taint the canvas (issue #800)
     cover.js         deterministic per-title gradient for games with no cover
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)

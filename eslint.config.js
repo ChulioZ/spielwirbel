@@ -239,6 +239,16 @@ const frontendGlobals = {
   RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly', recapMean: 'readonly',
   collectRatings: 'readonly', bestAndWorst: 'readonly', mostDivisive: 'readonly',
   memberFavourites: 'readonly', retiredIds: 'readonly', isNameableGame: 'readonly',
+  // period-recap.js + recap-card.js (issue #800) — internal helpers listed for
+  // the same reason.
+  periodKeyOf: 'readonly', inPeriod: 'readonly', playedSessions: 'readonly',
+  SHELF_EVENTS: 'readonly', shelfEvents: 'readonly', periodsOf: 'readonly',
+  playTally: 'readonly', bestRated: 'readonly', periodRecap: 'readonly',
+  RECAP_CARD_W: 'readonly', RECAP_CARD_PAD: 'readonly', RECAP_CARD_GAP: 'readonly',
+  RECAP_CARD_TILE_H: 'readonly', RECAP_CARD_ROW_H: 'readonly', RECAP_CARD_SHELF_H: 'readonly',
+  recapToken: 'readonly', recapPalette: 'readonly', recapFit: 'readonly',
+  recapFont: 'readonly', recapPanel: 'readonly', recapCardBlocks: 'readonly',
+  recapCardHeight: 'readonly', drawRecapCard: 'readonly', recapCardBlob: 'readonly',
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
   SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly',
@@ -286,7 +296,8 @@ const frontendGlobals = {
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
-  renderRecapSection: 'readonly',
+  renderRecapSection: 'readonly', renderPeriodRecapSection: 'readonly',
+  canShareRecapImage: 'readonly', shareRecapCard: 'readonly',
   activeSheet: 'writable', closeSheet: 'readonly', openSheet: 'readonly',
   handleSheetPop: 'readonly',
   openEditor: 'readonly', usesEditorSheet: 'readonly', EDITOR_SHEET_BELOW: 'readonly',

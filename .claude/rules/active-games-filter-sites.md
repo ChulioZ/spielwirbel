@@ -156,6 +156,14 @@ it (operator decision, 2026-08-04, revising #643's own acceptance criteria).
 `test/pokale-retired.test.js` pins that Azul, retired, still wins the card on
 three nights, right beside the specs that keep it out of every taste card.
 
+**There are TWO of these cards since #800** — the period recap under the
+Rückblick renders its own Meistgespielt over one calendar month or year, and it
+counts retired games for the identical reason. The spec's exclusion list is
+therefore a list rather than one card; see
+`.claude/rules/a-second-section-must-not-reuse-a-card-label.md` for why both
+cards need distinct LABELS for that list to work at all, and for the two
+assertions that keep widening it from becoming a way to hide a card.
+
 **A SECOND feature now counts the same field, and it must keep disagreeing with
 this card (#778).** The recommender's play bonus (`playCounts` /
 `buildPlayScale` in `lib/recommend.js`,
@@ -173,7 +181,15 @@ functions.
 Also deliberately **not** in the set, though they are one line away:
 `bestAndWorst` (Bestbewertet/Schlechtbewertet) and the Staubfänger keep the
 active-only filter — they answer "what should we reach for", which only a game
-still on the shelf can. And `collectRatings` / `recap.totals.ratings` /
+still on the shelf can. **The period recap's `bestRated` (`public/js/period-recap.js`,
+#800) joins them**, and it is the case that shows the split is about the CARD and
+not about the window it covers: that section's Meistgespielt counts retired games
+while its Bestbewertet, four lines away over the very same sessions, does not.
+What forces it is not taste-vs-record reasoning alone — it renders under the same
+word as `bestAndWorst`'s card, so two „Bestbewertet" cards disagreeing about
+whether a retired game may be named would be incoherent whichever answer is right.
+It takes the predicate by injection (`deps.isActive` = `isActiveGame`) rather than
+spelling out a fourth `!retired && !completed && !wish`. And `collectRatings` / `recap.totals.ratings` /
 `memberStats`'s `avgGiven` filter **nothing**: they measure how much the group has
 rated, not what is on the shelf.
 
