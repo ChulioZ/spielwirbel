@@ -364,7 +364,7 @@ function renderRegalTab(round, activeGames) {
       const avg = avgMap[g.id];
       const scorePill =
         avg !== null
-          ? `<span class="score-pill" style="background:${avgColor(avg)}">Ø ${avg.toFixed(1)}</span>`
+          ? `<span class="score-pill" style="background:${avgColor(avg)}">Ø ${fmtAvg(avg)}</span>`
           : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
       // What the round owns for this game (#653) — no badge at zero, so a shelf
       // of plain base boxes looks exactly as it always did.

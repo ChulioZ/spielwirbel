@@ -963,7 +963,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       return `<a class="podium__entry result-podium__entry" data-gid="${esc(g.id)}">
              <span class="result-podium__img"${imgStyle}>${coverPlaceholder(g)}</span>
              <span class="result-podium__title">${esc(g.title)}</span>
-             <span class="score-pill result-podium__pill" style="background:${avgColor(r.avg)}">Ø ${r.avg.toFixed(1)}</span>
+             <span class="score-pill result-podium__pill" style="background:${avgColor(r.avg)}">Ø ${fmtAvg(r.avg)}</span>
            </a>`;
     };
     const stage = cols
@@ -1077,7 +1077,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
            <button class="link-btn result-row__remove">${iconText('ti-trash', t('result.removeGame'))}</button>
          </div>
          <div class="result-row__score">
-           <div class="score-big">${r.count ? r.avg.toFixed(1) : '–'}</div>
+           <div class="score-big">${r.count ? fmtAvg(r.avg) : '–'}</div>
            <div class="score-label">${esc(t('result.avgOf', { n: r.count }))}</div>
            <button class="btn play-btn">${iconText('ti-player-play', t('result.play'))}</button>
          </div>
@@ -1447,7 +1447,7 @@ function canShareResult() {
 async function shareResult(model) {
   // joinNames is passed in so the shared headline is byte-identical to the h1
   // above it ("Anna und Ben", not "Anna, Ben") — see session-share.js.
-  const text = sessionShareText(model, t, joinNames, tn);
+  const text = sessionShareText(model, t, joinNames, tn, fmtAvg);
   if (navigator.share) {
     try {
       await navigator.share({ text });

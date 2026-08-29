@@ -45,7 +45,7 @@ const STATS_PODIUMS = [
   { key: 'playedYear', icon: 'ti-history', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   // The average goes through the locale formatter, not straight into the string:
   // a raw JS number interpolates as "4.6", and German writes "4,6".
-  { key: 'bestRated', icon: 'ti-star', line: (e) => tn(e.ratings, 'stats.ratedOne', 'stats.rated', { avg: formatAverage(e.average) }) },
+  { key: 'bestRated', icon: 'ti-star', line: (e) => tn(e.ratings, 'stats.ratedOne', 'stats.rated', { avg: fmtAvg(e.average) }) },
 ];
 
 // The scale counters, in render order: rounds first, then the people in them.
@@ -114,7 +114,7 @@ function renderPublicStats(stats) {
       .filter((key) => typeof stats.counters[key] === 'number')
       .map((key) => `
         <li class="stats-counter">
-          <span class="stats-counter__num">${esc(formatCount(stats.counters[key]))}</span>
+          <span class="stats-counter__num">${esc(fmtCount(stats.counters[key]))}</span>
           <span class="stats-counter__label muted">${esc(t('stats.counter.' + key))}</span>
         </li>`).join('')}</ul>`
     : '';
@@ -131,29 +131,6 @@ function renderPublicStats(stats) {
   const note = cards ? `<p class="stats-note muted">${esc(t('stats.note'))}</p>` : '';
 
   return h(`<div class="stats-block">${counters}${cards}${note}</div>`);
-}
-
-// Thousands separators for the active locale, so a counter reads as a number
-// rather than a serial. Falls back to the raw digits where Intl is unavailable.
-function formatCount(n) {
-  try {
-    return new Intl.NumberFormat(localeTag(getLocale())).format(n);
-  } catch {
-    return String(n);
-  }
-}
-
-// A rating average, always to one decimal in the reader's own notation — "4,6"
-// in German, "4.6" in English. Pinned to one digit so a whole number still reads
-// as a rating ("4,0 von 5") rather than as a count.
-function formatAverage(n) {
-  try {
-    return new Intl.NumberFormat(localeTag(getLocale()), {
-      minimumFractionDigits: 1, maximumFractionDigits: 1,
-    }).format(n);
-  } catch {
-    return String(n);
-  }
 }
 
 /* ------------------------------- /entdecken -------------------------------- */

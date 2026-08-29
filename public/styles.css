@@ -2076,6 +2076,13 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   padding: 3px 10px;
   border-radius: var(--radius-pill);
   box-shadow: var(--shadow-1);
+  /* #849: in the five inline (`position: static`) contexts the pill is a flex
+     item beside a title that can overflow, so both shrink to min-content — and
+     the pill's content "Ø 3,5" has a space to break at, leaving the Ø stranded
+     on its own row. This alone is enough: a flex item's default `min-width:
+     auto` floors it at min-content, which `nowrap` makes the whole pill, so no
+     `flex: none` is needed (measured — it changed no pixel at any width). */
+  white-space: nowrap;
 }
 .score-pill--none {
   /* 8%, not 10%: the oklab re-tune factor from :root. */

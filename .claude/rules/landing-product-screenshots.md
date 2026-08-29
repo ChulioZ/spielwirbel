@@ -168,8 +168,12 @@ added.
 The two finished sessions must each rate **exactly one, known** game: a plain
 draw is random, so the set of rated games — and therefore which cards show a `Ø`
 badge rather than "new" — would change every run. Four ratings of `4,5,4,5` and
-`4,4,5,4` give the committed **Ø 4.5** and **Ø 4.3** (4.25 rounds up in
-`toFixed(1)`).
+`4,4,5,4` give the committed **Ø 4.5** and **Ø 4.3** (4.25 rounds up at one
+decimal) — in the **English** set. Since #850 the badge is written in the
+reader's own notation (`fmtAvg`, `i18n.js`), so the de/es/fr/it sets read
+**Ø 4,5** and **Ø 4,3**. That makes the pill a free tell when you look at a
+regenerated set: a **dot in a non-English shot** means the capture predates the
+locale-formatting fix, and nothing in the suite can see it.
 
 **They used to be direct picks (`POST …/sessions` with a `gameId`); as of #669
 they cannot be.** A direct-pick session is created `done: true` — it has no

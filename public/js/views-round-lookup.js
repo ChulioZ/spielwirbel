@@ -909,7 +909,7 @@ function showLinkProvider(round, game) {
             to: playersText(toMin, toMax) || notSet };
         }
         // One decimal, like every weight display (#717).
-        if (key === 'weight') return { from: notSet, to: t('gameInfo.weightValue', { n: d.weight.toFixed(1) }) };
+        if (key === 'weight') return { from: notSet, to: t('gameInfo.weightValue', { n: fmtAvg(d.weight) }) };
         return null; // title: already shown in the header
       };
       const rest = fields.filter((f) => f.key !== 'image');

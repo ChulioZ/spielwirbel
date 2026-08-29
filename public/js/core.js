@@ -671,7 +671,7 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
     if (share >= SORT_SHARE)
       reasons.push(t('rec.reasonSort', { n: st.sortCount, pct: Math.round(share * 100) }));
     if (st.avg !== null && st.avg <= LOW_AVG)
-      reasons.push(t('rec.reasonAvg', { avg: st.avg.toFixed(1) }));
+      reasons.push(t('rec.reasonAvg', { avg: fmtAvg(st.avg) }));
     if (!reasons.length) return;
     const severity = share + (st.avg !== null ? Math.max(0, 3 - st.avg) / 3 : 0);
     recs.push({ game: g, reasons, severity });

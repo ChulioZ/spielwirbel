@@ -129,3 +129,41 @@ function fmtMoney(amount, currency) {
     return n.toFixed(2);
   }
 }
+
+// A rating average, always to one decimal in the reader's own notation — "4,6"
+// in German, "4.6" in English (#850). Pinned to one digit so a whole number
+// still reads as a rating ("4,0 von 5") rather than as a count.
+//
+// Every Ø the app prints goes through here. `toFixed(1)` is locale-independent
+// BY DEFINITION and always emits a dot, so it is never the right call for a
+// number a reader looks at — but it stays correct for the three places that
+// build a machine string rather than a label (ranking.js's tie key, the detail
+// ring's stroke-dasharray, an animation-delay), and those must not be routed
+// here.
+function fmtAvg(n) {
+  // Stricter than fmtMoney's `Number(amount)` on purpose: `Number(null)` is 0,
+  // so a coercing guard turns a missing rating into a confident-looking "0,0" —
+  // a wrong number on the screen, where the callers all render "–" for absent.
+  // Only a real finite number is a rating.
+  if (typeof n !== 'number' || !Number.isFinite(n)) return '';
+  try {
+    return new Intl.NumberFormat(localeTag(locale), {
+      minimumFractionDigits: 1, maximumFractionDigits: 1,
+    }).format(n);
+  } catch {
+    // Same reasoning as fmtMoney: a RangeError here would take a whole screen
+    // down over a label, so degrade to the bare number.
+    return n.toFixed(1);
+  }
+}
+
+// Thousands separators for the active locale, so a counter reads as a number
+// rather than as a serial. Falls back to the raw digits where Intl is
+// unavailable.
+function fmtCount(n) {
+  try {
+    return new Intl.NumberFormat(localeTag(locale)).format(n);
+  } catch {
+    return String(n);
+  }
+}
