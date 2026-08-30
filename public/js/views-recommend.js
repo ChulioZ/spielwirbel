@@ -18,8 +18,8 @@
 // half-rendered.
 function recReasonText(reason) {
   if (!reason || !reason.term) return '';
-  if (reason.term === 'quality') return t('suggest.reason.quality', { rating: recNum(reason.rating) });
-  if (reason.term === 'complexity') return t('suggest.reason.complexity', { weight: recNum(reason.weight) });
+  if (reason.term === 'quality') return t('suggest.reason.quality', { rating: fmtAvg(reason.rating) });
+  if (reason.term === 'complexity') return t('suggest.reason.complexity', { weight: fmtAvg(reason.weight) });
   // tn() injects `n` and picks the category via Intl.PluralRules, so n = 1
   // gets „Am besten solo" rather than the nonsensical „Am besten mit 1
   // Personen" — the same shape as home.chip.gamesOne, not an `n === 1` branch.
@@ -30,27 +30,13 @@ function recReasonText(reason) {
   return '';
 }
 
-// Named `recNum` rather than the obvious `fmtNum`: these files share ONE global
-// scope and `no-redeclare` is off there, so a name this generic would silently
-// take over for everyone (.claude/rules/eslint-frontend-shared-scope.md).
-// One decimal in the reader's own locale — a German reader reads 3,1 rather than
-// 3.1, and these numbers sit inside a sentence.
-function recNum(v) {
-  if (typeof v !== 'number' || !Number.isFinite(v)) return '';
-  // `localeTag()` takes the locale EXPLICITLY and falls back to English when
-  // called bare — so a missing `getLocale()` here is not a no-op, it silently
-  // prints 8.4 to a German reader who should see 8,4. Same shape as
-  // views-stats.js's number formatting.
-  return v.toLocaleString(localeTag(getLocale()), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-}
-
 // The facts under the title. Every one of them is BGG's, rendered verbatim —
 // nothing here rescales a weight or reworks a range (the licence forbids
 // modifying the data, .claude/rules/bgg-corpus.md).
 function recFacts(rec) {
   const facts = [];
-  if (typeof rec.rating === 'number') facts.push(`<i class="ti ti-star" aria-hidden="true"></i> ${esc(recNum(rec.rating))}`);
-  if (typeof rec.weight === 'number') facts.push(`<i class="ti ti-scale" aria-hidden="true"></i> ${esc(t('suggest.fact.weight', { weight: recNum(rec.weight) }))}`);
+  if (typeof rec.rating === 'number') facts.push(`<i class="ti ti-star" aria-hidden="true"></i> ${esc(fmtAvg(rec.rating))}`);
+  if (typeof rec.weight === 'number') facts.push(`<i class="ti ti-scale" aria-hidden="true"></i> ${esc(t('suggest.fact.weight', { weight: fmtAvg(rec.weight) }))}`);
   const range = (a, b) => {
     // Ordered, because BGG's two bounds are not guaranteed to be: a row whose
     // min exceeds its max renders "80–60 Min.", which reads as a bug in the app
