@@ -109,7 +109,7 @@ test('the schema never 400s, whatever shape the metadata field arrives in', asyn
     undefined, null, 'nope', 42, [], true,
     { categories: 'Economic' },                       // a bare string, not a list
     { maxPlaytime: '60' },                            // a numeric string
-    { maxPlaytime: 37, weightMin: 2.5, youngestAge: 7 }, // off-ladder steps
+    { maxPlaytime: 37, weightMin: 2.3, youngestAge: 7 }, // off-ladder steps
     { weightMin: 4, weightMax: 2 },                   // inverted
     { categories: [null, 7, { x: 1 }] },
     { maxPlaytime: Number.POSITIVE_INFINITY },
@@ -118,6 +118,26 @@ test('the schema never 400s, whatever shape the metadata field arrives in', asyn
     const res = await start(round.id, { metadata });
     assert.equal(res.status, 201, `metadata ${JSON.stringify(metadata) ?? 'undefined'} must not 400`);
   }
+});
+
+test('a half-step band narrows to what no integer bound could say (#855)', async () => {
+  const round = await shelf();
+
+  // The whole point of the finer ladder: 2.5-3.5 keeps the weight-3 game while
+  // dropping the 2 and the 4. Neither integer band can express that -- 2-3 drags
+  // Kurz in, 3-4 drags Lang in -- so this assertion is red on the old ladder for
+  // the right reason, namely that both bounds collapse to "unfiltered".
+  assert.deepEqual(drawn(await start(round.id, { metadata: { weightMin: 2.5, weightMax: 3.5 } })),
+    ['Blank', 'Mittel']);
+  // A half step is now ON the ladder, so it survives into the preset rather
+  // than normalizing away.
+  assert.deepEqual((await presetOf(round.id)).metadata, {
+    maxPlaytime: null, weightMin: 2.5, weightMax: 3.5,
+    youngestAge: null, categories: [], mechanics: [],
+  });
+  // ...and an inverted half-step pair is still swapped, not dropped.
+  assert.deepEqual(drawn(await start(round.id, { metadata: { weightMin: 3.5, weightMax: 2.5 } })),
+    ['Blank', 'Mittel']);
 });
 
 test('an off-ladder or inverted value cannot empty the pool', async () => {

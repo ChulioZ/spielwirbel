@@ -29,6 +29,7 @@ const assert = require('node:assert/strict');
 
 const { SUPPORTED_LOCALES } = require('../public/js/locales');
 const { loadI18n, loadApp } = require('./support/dom');
+const { filterPanelKit } = require('./support/filter-panel');
 
 /* --------------------------- the formatter itself -------------------------- */
 
@@ -118,6 +119,74 @@ async function regalPill(t, locale) {
   assert.ok(pill, `no score pill rendered on the '${locale}' Regal`);
   return pill.textContent.trim();
 }
+
+/* ------------------------ the complexity filter (#855) ---------------------- */
+
+/* The second view-half call site. The complexity bounds became half steps in
+   #855, which is the moment their labels started needing a decimal separator at
+   all — an integer ladder reads identically in every locale, so nothing here
+   could have gone wrong before and nothing was watching. */
+
+const FILTER_ROUND = {
+  id: 'fr1',
+  name: 'Freitagsrunde',
+  background: null,
+  tags: [],
+  providers: [],
+  members: [{ id: 'm1', name: 'Anna' }, { id: 'm2', name: 'Ben' }],
+  sessions: [],
+  // One described game is enough to make the panel offer the weight control at
+  // all — `metadataFilterOptions` derives the rows from the shelf.
+  games: [{ id: 'g1', title: 'Catan', tagIds: [], weight: 3, minPlaytime: 60, minAge: 10 }],
+};
+
+async function weightLabels(t, locale) {
+  const dom = loadApp({ locale });
+  t.after(() => dom.close());
+  const { openPanel } = filterPanelKit(dom);
+  dom.set('isLoggedIn', () => false);
+  await dom.call('showStartSession', { ...FILTER_ROUND, games: FILTER_ROUND.games.map((g) => ({ ...g })) });
+  openPanel();
+
+  const selects = [...dom.document.querySelectorAll('.mfilter__range .mfilter__select')];
+  assert.equal(selects.length, 2, `the '${locale}' panel carries no complexity bounds`);
+  const options = [...selects[0].options];
+  // Drive the bound the way a user does, so the applied chip is real output and
+  // not a hand-built string.
+  selects[0].value = '2.5';
+  selects[0].dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  const chip = dom.document.querySelector('.fbar__chips .fchip__label');
+  assert.ok(chip, `no applied chip on the '${locale}' panel`);
+
+  return {
+    // The machine string stays locale-independent, or a German reader's pick
+    // cannot round-trip through `Number(sel.value)`.
+    values: options.map((o) => o.value),
+    labels: options.slice(1).map((o) => o.textContent),
+    chip: chip.textContent,
+  };
+}
+
+test('the complexity steps are written in the reader\'s notation, and the locales disagree', async (t) => {
+  const de = await weightLabels(t, 'de');
+  const en = await weightLabels(t, 'en');
+
+  assert.deepEqual(de.values, ['', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    'the <option value> attributes must stay bare numbers in every locale');
+  assert.deepEqual(en.values, de.values);
+
+  assert.deepEqual(de.labels, ['1,0', '1,5', '2,0', '2,5', '3,0', '3,5', '4,0', '4,5', '5,0']);
+  assert.deepEqual(en.labels, ['1.0', '1.5', '2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0']);
+
+  assert.match(de.chip, /2,5/, `the German chip read ${JSON.stringify(de.chip)}`);
+  assert.match(en.chip, /2\.5/, `the English chip read ${JSON.stringify(en.chip)}`);
+
+  // The load-bearing half, exactly as above: a label built from the raw `${v}`,
+  // or an fmtAvg wired to one locale, makes these pairs equal while each
+  // individual assertion could still be written to pass.
+  assert.notEqual(de.labels.join(), en.labels.join(), 'the option labels rendered identically');
+  assert.notEqual(de.chip, en.chip, 'the applied chips rendered identically');
+});
 
 test('the Regal pill is written in the reader\'s notation, and the locales disagree', async (t) => {
   const de = await regalPill(t, 'de');
