@@ -84,3 +84,41 @@ test('NOTHING re-widens the setup filter row for an open panel (#844)', () => {
   assert.deepEqual(details.map(([sel]) => sel), [],
     'a `.fpanel[open]` rule is back — the panel is not a <details> any more');
 });
+
+test('the trigger and the chip row are SEPARATE flex items of their bar (#854)', () => {
+  /* The bug this closes. `.fbar` wrapped the trigger and `.fbar__chips`
+     together, so the bar it sits in — `.setup-filterbar`, a `flex-wrap: wrap`
+     row — saw ONE item whose min-content width included the chips. A long
+     category label ("Wirtschaftssimulation") inflated it past the space beside
+     the count stepper, the item wrapped, and the „Filter" button went with it.
+     The control moved depending on how many filters happened to be on, which is
+     the same "the trigger stays put" guarantee #844 gave for opening the panel —
+     lost to the other half of the same element.
+
+     Both halves are required and each fails silently on its own: dissolve the
+     wrappers and the trigger is its own item, but the chips would sit inline
+     after it and push it again; force the chips onto their own line without
+     dissolving the wrappers and nothing changes at all, because the bar still
+     sees one item. */
+  assert.match(bodyOf('.fbar') || '', /display:\s*contents/,
+    '.fbar is a box again — the trigger and its chips are one flex item and wrap together (#854)');
+  assert.match(bodyOf('.fbar-mount') || '', /display:\s*contents/,
+    "the setup screen's mount is a box again — the same single-item wrap, one level up (#854)");
+  assert.match(bodyOf('.fbar__chips') || '', /flex:[^;]*100%/,
+    'the chip row no longer claims a full line — chips sit inline after the trigger again (#854)');
+});
+
+test('#854 gave two wrappers a display, so both restate [hidden]', () => {
+  /* Same trap `.fbar__chips[hidden]` above records, twice over: a declared
+     `display` — `contents` no less than `flex` — outranks the UA sheet's
+     `[hidden] { display: none }`. Both of these are hidden by JS while empty:
+     `#filterMount` when the round has nothing to filter by, and `.regal-filter`
+     which is created unconditionally so the #736 backfill has somewhere to
+     mount. Without these rules a shelf with no metadata pays the bar's gap for
+     a control it never shows. */
+  for (const sel of ['.fbar-mount[hidden]', '.regal-filter[hidden]']) {
+    const guard = bodyOf(sel);
+    assert.ok(guard, `${sel} rule not found — its element declares a display that beats [hidden]`);
+    assert.match(guard, /display:\s*none/);
+  }
+});

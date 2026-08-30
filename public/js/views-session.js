@@ -66,7 +66,7 @@ function showStartSession(round) {
               <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
             </div>
           </div>
-          <div id="filterMount"></div>
+          <div id="filterMount" class="fbar-mount"></div>
         </div>
         <div class="setup-panel">
           <h2 class="setup-panel__title" id="poolTitle"></h2>
@@ -336,6 +336,10 @@ function showStartSession(round) {
   // because a `display: none` element is not a flex item at all. It carries no
   // class, so no rule can override the UA's `[hidden]`
   // (.claude/rules/hidden-attribute-vs-display-rule.md).
+  // `.fbar-mount` is `display: contents`, so this wrapper and the `.fbar` inside
+  // it have no boxes: the trigger and the applied-chip row are items of
+  // `.setup-filterbar` itself. As one item they wrapped together, and a long chip
+  // label carried the „Filter" button onto its own row (#854).
   const filterMount = form.querySelector('#filterMount');
   const mountFilterPanel = () => {
     // NEVER rebuild under an open overlay. The trigger is the node `place()` and
