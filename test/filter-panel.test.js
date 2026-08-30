@@ -25,7 +25,7 @@ const { test, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { drawPool } = require('../lib/draw');
-const { bodyOf } = require('./support/css');
+const { bodyOf, bodyOfIn } = require('./support/css');
 const { loadApp } = require('./support/dom');
 const { filterPanelKit } = require('./support/filter-panel');
 
@@ -472,6 +472,49 @@ test('opening the panel puts NOTHING in the row the trigger sits in (#844)', asy
   // The pool preview is the thing the filters shape, so it must not move either.
   assert.ok(dom.app.querySelector('.setup-panel'), 'the pool panel is still on screen');
   assert.equal(dom.app.querySelector('.setup-grid__aside').contains(body), false);
+});
+
+test('nothing between the trigger and its bar is a flex item of that bar (#854)', async () => {
+  /* #844 stopped the trigger moving when the panel OPENS; this is the other way
+     it moved — with the panel shut, as a function of how many filters were on.
+     `.fbar` held the trigger and the chip row together, so `.setup-filterbar`
+     saw one item, and a long chip label inflated it until the whole thing
+     wrapped and took the „Filter" button along.
+
+     jsdom applies no stylesheet, so it cannot watch anything wrap. What it CAN
+     see is the half the fix actually turns on: which elements the render puts
+     between the bar and the two controls, i.e. which elements the bar would
+     treat as items. Each one has to be dissolved by a rule in the real
+     stylesheet — so this fails on a wrapper added in the markup just as it does
+     on a `display: contents` dropped from the CSS, which a text-only assertion
+     over styles.css cannot do. */
+  await dom.call('showStartSession', roundFixture());
+  const bar = dom.app.querySelector('.setup-filterbar');
+  const trig = bar.querySelector('.fbar__trigger');
+  const chips = bar.querySelector('.fbar__chips');
+  assert.ok(trig && chips, 'the setup bar rendered no filter control to check');
+
+  // The chip row must FOLLOW the trigger, or it would claim the line above it.
+  assert.equal(trig.compareDocumentPosition(chips) & 4, 4,
+    'the chip row renders before the trigger — its full-width line would sit above it');
+
+  const between = (el) => {
+    const out = [];
+    for (let p = el.parentElement; p && p !== bar; p = p.parentElement) out.push(p);
+    return out;
+  };
+  const wrappers = [...new Set([...between(trig), ...between(chips)])];
+  assert.ok(wrappers.length, 'no wrapper at all here — check the fixture actually rendered the bar');
+  for (const w of wrappers) {
+    const dissolved = [...w.classList]
+      // Both spellings: `.fbar-mount` is dissolved on its own, `.fbar` only
+      // inside the setup bar (#854 is scoped — the Regal keeps its plain row).
+      .some((c) => [`.${c}`, `.setup-filterbar .${c}`]
+        .some((sel) => /display:\s*contents/.test(bodyOf(sel) || bodyOfIn(sel) || '')));
+    assert.ok(dissolved,
+      `<${w.tagName.toLowerCase()} class="${w.className}"> is a flex item of .setup-filterbar: `
+      + 'it wraps together with the chips inside it, carrying the trigger onto another row (#854)');
+  }
 });
 
 test('the presentation is a sheet below 860px and an anchored popover above it', async () => {

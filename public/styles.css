@@ -1205,7 +1205,30 @@ h1, h2, h3 { font-family: var(--font-display); }
    sit beside the trigger as removable chips, which also say WHICH, where the
    count badge they replaced could only say how many. */
 .regal-filter { margin: 2px 0 16px; }
+/* #854, and note the SCOPE: on the setup screen the trigger and the applied chips
+   must not be ONE flex item of the bar they sit in. They were — `.fbar` wraps
+   both — so a chip with a long label inflated that item's min-content width until
+   the item wrapped, carrying the „Filter" button onto its own row with it. The
+   control then moved depending on how many filters happened to be on, which
+   breaks the same "the trigger stays put" guarantee #844 gave for opening it.
+
+   Scoped to `.setup-filterbar` deliberately, and NOT applied to the Regal: there
+   `.fbar` is alone in `.regal-filter`, so no sibling competes for the row and
+   nothing can push the trigger. Its chips read better beside the button than on
+   a line of their own, so the Regal keeps the plain wrapping row below. Only the
+   screen that puts a count stepper next to the trigger needs the split.
+
+   `display: contents` dissolves the two wrappers, so `.fbar__trigger` and
+   `.fbar__chips` become direct flex items of `.setup-filterbar` itself and the
+   chip row can claim a line of its own (the 100% basis further down). They exist
+   as JS mount points, not for layout, so neither has a box worth keeping — but a
+   declared `display` beats the UA sheet's `[hidden] { display: none }` exactly as
+   an explicit `display: flex` would, and `#filterMount` is hidden whenever the
+   round has nothing to filter by (.claude/rules/hidden-attribute-vs-display-rule.md). */
 .fbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.setup-filterbar .fbar { display: contents; }
+.fbar-mount { display: contents; }
+.fbar-mount[hidden] { display: none; }
 /* Same pill the old <summary> was, so the affordance did not change shape when
    its element did — a real <button> now, which is what carries the keyboard
    behaviour the disclosure used to give for free
@@ -1227,6 +1250,12 @@ h1, h2, h3 { font-family: var(--font-display); }
 .fbar__trigger:hover { border-color: var(--brand-edge); }
 .fbar__trigger[aria-expanded="true"] { border-color: var(--brand); color: var(--brand-dark); }
 .fbar__chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+/* The other half of #854, and scoped for the reason stated above: on the setup
+   screen the chip row takes a full line of its own, below the trigger, at every
+   width and chip count. `min-width: 0` so a long label cannot re-inflate it past
+   that line (.claude/rules/flex-none-cancels-flex-wrap.md); `.fchip__label`
+   already ellipsises. The Regal keeps its chips beside the trigger. */
+.setup-filterbar .fbar__chips { flex: 1 1 100%; min-width: 0; }
 /* The explicit `display` above beats the UA sheet's `[hidden] { display: none }`,
    so an empty chip row would still claim the bar's gap
    (.claude/rules/hidden-attribute-vs-display-rule.md). */
