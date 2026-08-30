@@ -147,7 +147,7 @@ async function showProfile(username) {
   app.appendChild(backRow(() => showFriends()));
 
   const head = h(`<div class="profile-head">
-      ${friendAvatar(p.username)}
+      ${friendAvatar(p.username, p.avatar)}
       <div class="profile-head__text">
         <h1>${friendName(p.username)}</h1>
         ${p.createdAt ? `<p class="muted">${esc(t('profile.memberSince', { when: fmtMonth(p.createdAt) }))}</p>` : ''}
@@ -158,6 +158,17 @@ async function showProfile(username) {
 
   app.appendChild(renderProfileCta(p, username));
 
+  // Not on your own profile: the notice channel is for reporting someone else,
+  // and an operator receiving "user X reports user X" learns nothing.
+  if (!p.self) {
+    const report = accountReportButton(p.username);
+    if (report) {
+      const wrap = h('<div class="profile-actions"></div>');
+      wrap.appendChild(report);
+      app.appendChild(wrap);
+    }
+  }
+
   // The friend's own feed, between accepted friends only. The server applies
   // the acceptedAt cutoff (lib/routes/profile.js), so nothing predating the
   // friendship can arrive here.
@@ -167,7 +178,8 @@ async function showProfile(username) {
       const list = h('<div class="feed-list"></div>');
       // The events all belong to this one account, so the route omits the
       // username and the line is rendered with the profile's own.
-      p.events.forEach((ev) => list.appendChild(renderFeedEvent({ ...ev, username: p.username })));
+      p.events.forEach((ev) => list.appendChild(
+        renderFeedEvent({ ...ev, username: p.username, avatar: p.avatar })));
       app.appendChild(list);
     } else {
       app.appendChild(h(`<p class="muted empty-note">${esc(t('profile.feedEmpty'))}</p>`));
@@ -273,10 +285,18 @@ function friendSendError(code) {
 
 // A small avatar for an account, coloured deterministically from the username so
 // a friend keeps the same colour everywhere (no round context to borrow from).
-function friendAvatar(username) {
+function friendAvatar(username, avatar, extraClass) {
   const name = username || '?';
   const color = MEMBER_COLORS[gameHue(name) % MEMBER_COLORS.length];
-  return `<span class="avatar" style="background:${color}" aria-hidden="true">${esc(initials(name))}</span>`;
+  // The picture, when this account has one (#841). `avatar` is the path the
+  // payload already carried (profile / friends list / feed), so these surfaces
+  // never touch the batch endpoint. The colour stays as the fallback behind it:
+  // a picture that 404s degrades to exactly the avatar this app always had.
+  //
+  // NOT aria-hidden any more on the wrapper alone — it still is, because the
+  // name is rendered beside it and alt="" inside would otherwise be announced
+  // twice; see avatarFace.
+  return `<span class="avatar${extraClass ? ' ' + extraClass : ''}" style="background:${color}" aria-hidden="true">${avatarFace(initials(name), { src: avatar })}</span>`;
 }
 
 const friendName = (username) => esc(username || t('friends.unknownUser'));
@@ -296,8 +316,8 @@ const friendName = (username) => esc(username || t('friends.unknownUser'));
    An account with no resolvable username (edge: mid-erasure) has no profile to
    point at, so it stays a <span> — an <a> with no usable href is not a link at
    all (not focusable, no affordance). */
-function friendRowMain(username) {
-  const inner = `${friendAvatar(username)}<span class="friend-row__name">${friendName(username)}</span>`;
+function friendRowMain(username, avatar) {
+  const inner = `${friendAvatar(username, avatar)}<span class="friend-row__name">${friendName(username)}</span>`;
   return username
     ? `<a class="ds-row__main friend-row__main friend-row__link" href="${esc(profilePath(username))}">${inner}</a>`
     : `<div class="ds-row__main friend-row__main">${inner}</div>`;
@@ -327,8 +347,19 @@ function feedText(ev) {
 function renderFeedEvent(ev) {
   const imgStyle = ev.coverUrl ? ` style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"` : '';
   const fallback = ev.coverUrl ? '' : '<i class="ti ti-cards" aria-hidden="true"></i>';
+  // The AUTHOR, badged onto the corner of the GAME's cover (#841). The row's one
+  // image slot belongs to the game, so the person rides on it rather than taking
+  // a fourth column — which on a phone would push the line that carries the
+  // actual news further right. It needs the wrapper because .feed-item__img is
+  // `overflow: hidden` and would clip a badge placed inside it.
+  //
+  // aria-hidden: the author's name is already in the line beside it, in bold.
+  const who = friendAvatar(ev.username, ev.avatar, 'feed-item__who');
   const item = h(`<div class="feed-item">
-      <span class="feed-item__img"${imgStyle}>${fallback}</span>
+      <span class="feed-item__media">
+        <span class="feed-item__img"${imgStyle}>${fallback}</span>
+        ${who}
+      </span>
       <div class="feed-item__body">
         <div class="feed-item__text">${feedText(ev)}</div>
         <div class="feed-item__time muted">${esc(fmtDateTime(ev.at))}</div>
@@ -364,17 +395,45 @@ function renderFeedEvent(ev) {
   return item;
 }
 
+/* Report an ACCOUNT to the operator (#841), the DSA Art. 16(1) entry point for a
+   profile picture — the second thing on this app one user sees another user
+   author, after the feed's game titles (#559).
+
+   Reuses report-link.js's deep link into the public contact form: no new
+   endpoint and no new notice shape, so it lands in the same Meldungen inbox with
+   the same Art. 16(4) acknowledgement. Returns null — and therefore renders
+   nothing — when the contact channel is unconfigured or the row names no
+   account, which is report-link.js's own gate and must not be second-guessed
+   here. */
+function accountReportButton(username) {
+  const url = feedReportUrl({
+    username,
+    subject: t('friends.reportAccountSubject', { user: username || '' }),
+  });
+  if (!url) return null;
+  const btn = h(`<button class="link-btn friend-row__report" type="button"
+      aria-label="${esc(t('friends.reportAccount'))}" title="${esc(t('friends.reportAccount'))}">
+      <i class="ti ti-flag" aria-hidden="true"></i></button>`);
+  // New tab (#390), matching the feed's report button and the feedback button,
+  // so the SPA stays loaded behind the contact page; noopener prevents a
+  // window.opener leak.
+  btn.addEventListener('click', () => window.open(url, '_blank', 'noopener'));
+  return btn;
+}
+
 /* ----------------------------- request/friend rows ------------------------- */
 
 function renderIncomingRequest(r) {
   const row = h(`<div class="ds-row ds-row--static">
-      ${friendRowMain(r.username)}
+      ${friendRowMain(r.username, r.avatar)}
       <div class="ds-row__meta">
         <button class="btn btn--primary friend-req__accept" type="button">${esc(t('friends.accept'))}</button>
         <button class="link-btn friend-req__decline" type="button">${esc(t('friends.decline'))}</button>
       </div>
     </div>`);
   wireFriendRowMain(row, r.username);
+  const report = accountReportButton(r.username);
+  if (report) row.querySelector('.ds-row__meta').appendChild(report);
   row.querySelector('.friend-req__accept').addEventListener('click', async () => {
     try {
       await accountApi('POST', `/friends/${r.friendshipId}/accept`);
@@ -395,7 +454,7 @@ function renderIncomingRequest(r) {
 
 function renderOutgoingRequest(r) {
   const row = h(`<div class="ds-row ds-row--static">
-      ${friendRowMain(r.username)}
+      ${friendRowMain(r.username, r.avatar)}
       <div class="ds-row__meta">
         <span class="muted friend-req__pending">${esc(t('friends.pending'))}</span>
         <button class="link-btn friend-req__cancel" type="button">${esc(t('friends.cancel'))}</button>
@@ -411,12 +470,14 @@ function renderOutgoingRequest(r) {
 
 function renderFriendRow(f) {
   const row = h(`<div class="ds-row ds-row--static">
-      ${friendRowMain(f.username)}
+      ${friendRowMain(f.username, f.avatar)}
       <div class="ds-row__meta">
         <button class="link-btn friend-row__remove" type="button">${esc(t('friends.unfriend'))}</button>
       </div>
     </div>`);
   wireFriendRowMain(row, f.username);
+  const report = accountReportButton(f.username);
+  if (report) row.querySelector('.ds-row__meta').appendChild(report);
   row.querySelector('.friend-row__remove').addEventListener('click', async () => {
     if (!confirm(t('friends.unfriendConfirm', { name: f.username || t('friends.unknownUser') }))) return;
     try {

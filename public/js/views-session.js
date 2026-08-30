@@ -616,7 +616,7 @@ function startVoting(round, session, games, people, opts = {}) {
       app.innerHTML = '';
       const card = h(`<div class="handover" style="background:${color}">
           ${progressBar()}
-          <span class="handover__avatar" style="color:${color}">${esc(initials(step.person.name))}</span>
+          <span class="handover__avatar" style="color:${color}">${avatarFace(initials(step.person.name), { userId: step.person.userId })}</span>
           <h1 class="handover__name">${esc(t('vote.turn', { name: personLabel(step.person) }))}</h1>
           <div class="handover__sub"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>
           <button class="handover__go" id="goBtn" style="color:${color}">${esc(t('vote.go'))}</button>
@@ -796,7 +796,7 @@ function showFinale(round, session, games) {
         .map(
           (p) => `<span class="stage__voter">
              <span class="stage__voter-avatar">
-               <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${esc(initials(p.name))}</span>
+               <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
                <span class="stage__voter-check"><i class="ti ti-check" aria-hidden="true"></i></span>
              </span>
              <span class="stage__voter-name">${esc(personLabel(p))}</span>
@@ -920,7 +920,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
          <span class="result-people__list">${people
            .map(
              (p) => `<${p.guest ? 'span' : 'a'} class="result-people__person"${p.guest ? '' : ` data-mid="${esc(p.id)}"`}>
-                <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${esc(initials(p.name))}</span>
+                <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
                 <span class="result-people__name">${esc(personLabel(p))}</span>
               </${p.guest ? 'span' : 'a'}>`
            )

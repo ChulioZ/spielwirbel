@@ -138,6 +138,7 @@ async function refreshAccessToken() {
 function onSessionLost() {
   clearTokens();
   invalidateRoundCache(); // no cached round data may survive the identity loss
+  resetAvatarCache();     // nor the profile pictures resolved under it (#841)
   accountUser = null;
   setupAccountUi();
   showLogin();
@@ -161,7 +162,13 @@ async function accountApi(method, path, body, _retried) {
   const token = getAccessToken();
   const opts = { method, headers: {} };
   if (token) opts.headers['Authorization'] = 'Bearer ' + token;
-  if (body !== undefined) {
+  // FormData rides as-is and MUST NOT get an explicit Content-Type: the browser
+  // has to set it itself so the multipart boundary is included. Mirrors core.js
+  // api(); added for the profile-picture upload (#841), which is the only
+  // multipart request on the account surface.
+  if (body instanceof FormData) {
+    opts.body = body;
+  } else if (body !== undefined) {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(body);
   }
@@ -188,6 +195,7 @@ async function logout() {
   try { await authFetch('/logout', { refreshToken: getRefreshToken() }); } catch {}
   clearTokens();
   invalidateRoundCache(); // the next login may be a different account/tenant
+  resetAvatarCache();     // ...and so must the faces resolved for it (#841)
   accountUser = null;
   setupAccountUi();
   // The landing page, not the login card (#501). A deliberate logout is a
@@ -1039,6 +1047,13 @@ function setupAccountUi() {
   // rather than being called from each of those sites separately.
   setupDemoBanner();
   setupTermsBanner(); // #521, same transitions
+  // #841, same transitions. Seats the CALLER'S OWN picture into the avatar cache
+  // so their linked seat renders it without a batch request — and so a login as
+  // a different account overwrites the previous one's entry rather than
+  // inheriting it. Hangs off this function for exactly the reason the two above
+  // do: it tracks boot, login, logout and session-lost, and nothing else has to
+  // remember to call it.
+  if (accountUser) rememberAvatar(accountUser.id, accountUser.avatar || null);
   // #207, same transitions — and it belongs UP HERE with the other two rather
   // than at the foot of this function, where it used to sit. Everything below
   // returns early for a logged-out user, so the inbox button was never hidden on

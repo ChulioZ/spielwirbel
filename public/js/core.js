@@ -174,8 +174,35 @@ async function swrRead(key, url, { rerender = true } = {}) {
   }
   return cached;
 }
-const fetchRoundList = (opts) => swrRead('rounds', '/api/rounds', opts);
-const fetchRound = (rid) => swrRead('round:' + rid, '/api/rounds/' + rid);
+/* Resolve the profile pictures of any seat linked to an account (#841) BEFORE
+   the view renders, so avatarFace() is a pure cache read at every render site
+   and no screen has to re-render when a photo arrives.
+
+   Costs nothing for a round whose seats are all name-only — the overwhelmingly
+   common case, since member.userId is set only by the seat self-claim (#421) —
+   because primeAvatars returns without a request when there is nothing missing.
+   In accounts-off mode the endpoint 404s and primeAvatars swallows it, leaving
+   the initials that mode has always shown.
+
+   Wrapping the two SWR readers rather than each view is what keeps the promise
+   in member-avatar.js's header true: a screen cannot forget to prime and then
+   quietly render initials for someone the screen next to it shows a photo of. */
+const fetchAvatars = (ids) =>
+  api('GET', '/api/account/avatars?ids=' + ids.map(encodeURIComponent).join(','));
+const primePeople = async (rounds) => {
+  const ids = [].concat(rounds || []).flatMap((r) => ((r && r.members) || []).map((m) => m.userId));
+  await primeAvatars(ids, fetchAvatars);
+};
+const fetchRoundList = async (opts) => {
+  const rounds = await swrRead('rounds', '/api/rounds', opts);
+  await primePeople(rounds);
+  return rounds;
+};
+const fetchRound = async (rid) => {
+  const round = await swrRead('round:' + rid, '/api/rounds/' + rid);
+  await primePeople(round);
+  return round;
+};
 // The activity feed lives on its own endpoint (#197), hence its own key.
 const fetchActivities = (rid) => swrRead('acts:' + rid, `/api/rounds/${rid}/activities`);
 // Await the network and seed the cache — for flows that must observe their own
@@ -813,7 +840,7 @@ function renderSeatPicker(round, joining, onChange, extraCount) {
       const seat = h(`<button type="button" class="nr-seat${joined ? '' : ' nr-seat--out'}"
            aria-pressed="${joined}" title="${esc(m.name)}">
            <span class="nr-seat__avatar"${joined ? ` style="background:${memberColor(round, m.id)}"` : ''}>${
-             joined ? esc(initials(m.name)) : '<i class="ti ti-plus" aria-hidden="true"></i>'
+             joined ? avatarFace(initials(m.name), { userId: m.userId }) : '<i class="ti ti-plus" aria-hidden="true"></i>'
            }</span>
            <span class="nr-seat__name">${esc(m.name)}</span>
          </button>`);

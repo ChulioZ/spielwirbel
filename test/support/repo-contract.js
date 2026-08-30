@@ -77,6 +77,16 @@ module.exports = function repoContract(repo) {
     // Without an owner, a member is byte-identical to pre-#421: { id, name }.
     const plain = await repo.createRound(T, { name: 'Unseated', members: ['Ann'] });
     assert.deepEqual(Object.keys(plain.members[0]).sort(), ['id', 'name']);
+
+    // #841: the HOME summary carries the link too, so the home screen's member
+    // chips resolve the same profile pictures the round screen does. Asserted
+    // here rather than in the summary case above because this is the only
+    // fixture that produces a linked seat — and the absent-key half is what a
+    // wrong jsonb_exists() would break silently, leaving home showing initials
+    // for someone every other screen shows a photo of.
+    const summary = (await repo.listRoundSummaries(T)).find((x) => x.id === withOwner.id);
+    assert.equal(summary.members[0].userId, 'user-1');
+    assert.equal('userId' in summary.members[1], false);
   });
 
   test('getRound returns a snapshot: mutating it does not change the store', async () => {
@@ -3135,6 +3145,80 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.findImageOwner('/uploads/bad.jpg'), null);
     // The takedown must not have widened writes: the untouched game is intact.
     assert.equal(await repo.isImageReferenced(T, '/uploads/ok.jpg'), true);
+  });
+
+  /* ------------------- Account profile pictures (#841) ---------------------- */
+
+  test('getUserAvatars answers a batch, with null for an account that has none', async () => {
+    const withPic = await repo.createUser(userFields({ avatar: '/uploads/face.webp' }));
+    const without = await repo.createUser(userFields({ avatar: null }));
+
+    const map = await repo.getUserAvatars([withPic.id, without.id, 'no-such-id']);
+    assert.equal(map[withPic.id], '/uploads/face.webp');
+    // Present-and-null, not absent: the client caches what it asked for, and an
+    // absent key would make it re-request that id on every render.
+    assert.equal(map[without.id], null);
+    // An unknown id is simply not named — "no such account" and "no picture" are
+    // the same non-answer to a caller holding an opaque id.
+    assert.equal('no-such-id' in map, false);
+
+    // An empty ask must not become a full scan.
+    assert.deepEqual(await repo.getUserAvatars([]), {});
+  });
+
+  test('findImageOwner resolves an avatar to its ACCOUNT, and says which kind it found', async () => {
+    const mine = await freshRound();
+    await repo.createGame(T, mine.id, gameFields({ title: 'Cover', image: '/uploads/cover.jpg' }));
+    // A path of its own: the contract suite shares one dataset across tests, and
+    // the getUserAvatars case above already owns '/uploads/face.webp'.
+    const user = await repo.createUser(userFields({ avatar: '/uploads/owner-face.webp' }));
+
+    const cover = await repo.findImageOwner('/uploads/cover.jpg');
+    assert.equal(cover.kind, 'game');
+    assert.equal(cover.gameTitle, 'Cover');
+
+    const face = await repo.findImageOwner('/uploads/owner-face.webp');
+    assert.equal(face.kind, 'account');
+    assert.equal(face.userId, user.id);
+    assert.equal(face.username, user.username);
+    assert.equal(face.tenantId, user.tenantId);
+    assert.equal(face.image, '/uploads/owner-face.webp');
+
+    // The trap this guard exists for: `u.avatar === image` with both undefined
+    // matches the first account that has NO picture — i.e. it would hand the
+    // operator an innocent stranger for a blank lookup.
+    await repo.createUser(userFields({ avatar: null }));
+    assert.equal(await repo.findImageOwner(''), null);
+    assert.equal(await repo.findImageOwner(null), null);
+    assert.equal(await repo.findImageOwner(undefined), null);
+  });
+
+  test('takedownImage clears an account avatar too, and counts it', async () => {
+    const user = await repo.createUser(userFields({ avatar: '/uploads/bad-face.webp' }));
+    const bystander = await repo.createUser(userFields({ avatar: '/uploads/fine.webp' }));
+
+    assert.equal(await repo.takedownImage('/uploads/bad-face.webp'), 1);
+    assert.equal((await repo.getUserById(user.id)).avatar, null);
+    // The write must not have widened: nobody else lost their picture.
+    assert.equal((await repo.getUserById(bystander.id)).avatar, '/uploads/fine.webp');
+
+    // Honest no-op on a repeat, like the cover path.
+    assert.equal(await repo.takedownImage('/uploads/bad-face.webp'), 0);
+    assert.equal(await repo.findImageOwner('/uploads/bad-face.webp'), null);
+  });
+
+  test('eraseAccount frees the avatar object along with the tenant\'s covers', async () => {
+    const user = await repo.createUser(userFields({
+      tenantId: 'erase-with-face', avatar: '/uploads/gone-face.webp',
+    }));
+    const round = await repo.createRound('erase-with-face', { name: 'R', members: ['Ann'] });
+    await repo.createGame('erase-with-face', round.id, gameFields({ title: 'G', image: '/uploads/gone-cover.jpg' }));
+
+    const result = await repo.eraseAccount(user.id);
+    // Collected while the row was still in hand — after the delete the path is
+    // unreachable and the object would be billable forever.
+    assert.deepEqual([...result.images].sort(), ['/uploads/gone-cover.jpg', '/uploads/gone-face.webp']);
+    assert.equal(await repo.getUserById(user.id), null);
   });
 
   /* ------------------- Broader lookup & redaction (#275) -------------------- */

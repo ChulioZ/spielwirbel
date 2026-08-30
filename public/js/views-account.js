@@ -50,6 +50,17 @@ async function showAccount() {
   facts.appendChild(renderKontoFact(t('auth.username'), me.username || '—'));
   app.appendChild(facts);
 
+  // The profile picture (#841), beside the identity facts it belongs to.
+  // Hidden outright for a demo rather than rendered and refused: the upload
+  // route answers 403 demo_account, so the control could only ever fail — the
+  // same reasoning the password form below uses. A demo has no friends and no
+  // profile audience, so there is nothing for a picture to do
+  // (.claude/rules/guest-demo-accounts.md).
+  if (!me.demo) {
+    app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.avatar.title'))}</h2>`));
+    app.appendChild(buildAvatarForm(me));
+  }
+
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgg.title'))}</h2>`));
   app.appendChild(buildBggForm(me.bggUsername));
 
@@ -104,6 +115,112 @@ async function showAccount() {
   // menu, and it holds no password to re-authenticate with anyway.
   app.appendChild(h(`<h2 class="konto-section__h konto-section__h--danger">${esc(t('konto.delete.title'))}</h2>`));
   app.appendChild(buildDeleteSection(me));
+}
+
+/* Upload, replace and remove the account's profile picture (#841).
+
+   The byte check here is a COURTESY, never the gate: multer refuses the same
+   size server-side before anything is decoded, and lib/avatar.js re-encodes
+   whatever survives. Checking first only means a user picking a 40 MB photo
+   gets an immediate, specific message instead of spending the upload and
+   receiving a 413 — client-side validation as UX, exactly the split
+   .claude/rules/shared-constants-across-the-stack.md describes (both sides read
+   AVATAR_MAX_BYTES from one file, so they cannot disagree about the number the
+   message states). */
+function buildAvatarForm(me) {
+  const wrap = h('<div class="konto-avatar"></div>');
+  // `.konto-error` is the screen's own inline error line (the auth cards and
+  // every other Konto form use it). setKontoError always unhides, so clearing is
+  // done here rather than by calling it with an empty string — which would leave
+  // an empty red line standing above the buttons.
+  const err = h('<p class="konto-error" hidden></p>');
+  const clearError = () => { err.textContent = ''; err.hidden = true; };
+
+  const render = (avatar) => {
+    wrap.innerHTML = '';
+    const color = MEMBER_COLORS[gameHue(me.username || '?') % MEMBER_COLORS.length];
+    wrap.appendChild(h(`<span class="avatar konto-avatar__preview" style="background:${color}" aria-hidden="true">${
+      avatarFace(initials(me.username || '?'), { src: avatar })
+    }</span>`));
+
+    const actions = h('<div class="konto-avatar__actions"></div>');
+    // The input is `hidden` and driven by a real <button>, NOT by a <label for>.
+    // A <label> is not keyboard-focusable, so the label idiom would make picking
+    // a picture mouse-only; a button is focusable, activates on Enter/Space, and
+    // file.click() opens the same dialog. (A bare visible file input renders the
+    // browser's own unstyled control and its "no file chosen" chrome, which
+    // reads as broken beside the rest of this screen.)
+    const file = h(`<input type="file" accept="${esc(AVATAR_ACCEPT)}" hidden>`);
+    const pick = h(`<button class="btn" type="button">${
+      esc(t(avatar ? 'konto.avatar.replace' : 'konto.avatar.upload'))
+    }</button>`);
+    pick.addEventListener('click', () => file.click());
+    actions.appendChild(file);
+    actions.appendChild(pick);
+
+    if (avatar) {
+      const remove = h(`<button class="link-btn" type="button">${esc(t('konto.avatar.remove'))}</button>`);
+      remove.addEventListener('click', async () => {
+        clearError();
+        try {
+          const data = await accountApi('DELETE', '/me/avatar');
+          seatAvatar(data.avatar);
+          toast(t('konto.avatar.toast.removed'));
+          render(data.avatar);
+        } catch { setKontoError(err, t('konto.avatar.err.generic')); }
+      });
+      actions.appendChild(remove);
+    }
+
+    file.addEventListener('change', async () => {
+      const chosen = file.files && file.files[0];
+      if (!chosen) return;
+      clearError();
+      if (chosen.size > AVATAR_MAX_BYTES) {
+        setKontoError(err, t('konto.avatar.err.tooLarge', { mb: Math.floor(AVATAR_MAX_BYTES / (1024 * 1024)) }));
+        file.value = '';
+        return;
+      }
+      const body = new FormData();
+      body.append('avatar', chosen);
+      try {
+        const data = await accountApi('POST', '/me/avatar', body);
+        seatAvatar(data.avatar);
+        toast(t('konto.avatar.toast.saved'));
+        render(data.avatar);
+      } catch (e) {
+        setKontoError(err, t(avatarErrorKey(e.message)));
+        file.value = '';
+      }
+    });
+
+    wrap.appendChild(actions);
+    wrap.appendChild(err);
+  };
+
+  render(me.avatar);
+  return wrap;
+}
+
+// Map the route's error codes to their own messages. `invalid_image` and
+// `avatar_too_large` are the two a user can act on — re-crop, or pick a smaller
+// file — so collapsing them into the generic failure would throw away the only
+// upload errors worth stating precisely.
+function avatarErrorKey(code) {
+  if (code === 'avatar_too_large') return 'konto.avatar.err.tooLargeServer';
+  if (code === 'invalid_image') return 'konto.avatar.err.invalid';
+  if (code === 'demo_account') return 'konto.avatar.err.demo';
+  return 'konto.avatar.err.generic';
+}
+
+// Keep every other screen in step with what was just saved. `accountUser` is
+// seated at login and only refreshed on the next cold load
+// (.claude/rules/session-start-responses-seat-the-client.md), and the avatar
+// cache is what the round screens render from — without both, changing your
+// picture would leave the old one on the Freundeskreis until a reload.
+function seatAvatar(avatar) {
+  setCachedPref('avatar', avatar);
+  rememberAvatar(currentUserId(), avatar);
 }
 
 /* „App installieren" (#616), or nothing at all.

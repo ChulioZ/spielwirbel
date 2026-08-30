@@ -214,7 +214,7 @@ function renderLobbyList(rounds) {
       seats
         .map(
           (m) =>
-            `<span class="avatar" style="background:${memberColor(r, m.id)}" title="${esc(m.name)}">${esc(initials(m.name))}</span>`
+            `<span class="avatar" style="background:${memberColor(r, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</span>`
         )
         .join('') +
       (rest > 0
@@ -374,7 +374,7 @@ async function showNewRound() {
                <span class="nr-seat__avatar"><i class="ti ti-plus" aria-hidden="true"></i></span>
              </button>`)
         : h(`<button type="button" class="nr-seat" title="${esc(t('newRound.removeHint'))}">
-               <span class="nr-seat__avatar" style="background:${MEMBER_COLORS[i % MEMBER_COLORS.length]}">${esc(initials(taken[i].name))}</span>
+               <span class="nr-seat__avatar" style="background:${MEMBER_COLORS[i % MEMBER_COLORS.length]}">${avatarFace(initials(taken[i].name), { userId: taken[i].userId })}</span>
                <span class="nr-seat__name">${esc(taken[i].name)}</span>
                ${taken[i].owner ? `<span class="nr-seat__you">${esc(t('newRound.ownerSeatYou'))}</span>` : ''}
              </button>`);

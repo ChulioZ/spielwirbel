@@ -88,7 +88,10 @@ lib/
     index.js         picks the backend (S3_BUCKET ? s3 : disk)
     disk.js          default backend — files under DATA_DIR/uploads
     s3.js            S3-compatible object storage, used when S3_BUCKET set
-  upload.js          multer image-upload config (persists via lib/storage)
+  upload.js          multer image-upload config (persists via lib/storage) —
+                     two instances: covers, and the smaller-capped avatar one
+  avatar.js          re-encodes an account profile picture to one square webp,
+                     stripping EXIF/GPS and flattening animation (issue #841)
   auth.js            shared-password gate (active when AUTH_PASSWORD is set)
   admin.js           operator gate for the moderation surface (separate
                      ADMIN_PASSWORD; 404s unless set — issue #268)
@@ -437,6 +440,12 @@ public/
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)
+    avatar-policy.js what a profile picture may be — byte cap, stored square,
+                     accepted types — offered by the Konto picker and validated
+                     by lib/avatar.js + lib/upload.js (issue #841)
+    member-avatar.js the ONE decision of photo-vs-initials, used by every avatar
+                     render site, plus the per-page id→picture cache and the
+                     broken-image fallback (issue #841)
     session-people.js who took part in ONE session (members who joined + that
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds
