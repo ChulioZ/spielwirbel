@@ -26,6 +26,7 @@ const {
   hasMetadataFilterOptions,
   normalizeMetadataFilters,
   countMetadataFilters,
+  WEIGHT_CHOICES,
 } = require('../public/js/draw-pool');
 const { drawPool } = require('../lib/draw');
 const { loadApp } = require('./support/dom');
@@ -255,15 +256,67 @@ test('normalizeMetadataFilters drops a value this shelf can no longer offer', ()
 });
 
 test('normalizeMetadataFilters accepts only the ladder steps the UI offers', () => {
-  // Membership, not a range — so a hand-crafted 37-minute budget or a 2.5
+  // Membership, not a range — so a hand-crafted 37-minute budget or a 2.3
   // complexity bound collapses to "unfiltered" instead of 400ing, and the client
   // cannot offer a step the server would reject.
+  //
+  // 2.3 rather than the 2.5 this used to say: #855 halved the weight step, so
+  // 2.5 is now ON the ladder and the case would have gone on passing while
+  // testing nothing (.claude/rules/break-the-code-on-purpose.md). Pick a value
+  // that is off the ladder under the ladder in force.
   const out = normalizeMetadataFilters(
-    { maxPlaytime: 37, weightMin: 2.5, weightMax: 9, youngestAge: 7 }, ALL_OPTIONS);
+    { maxPlaytime: 37, weightMin: 2.3, weightMax: 9, youngestAge: 7 }, ALL_OPTIONS);
   assert.deepEqual(out, { ...NO_FILTERS });
   const good = normalizeMetadataFilters(
     { maxPlaytime: 90, weightMin: 2, weightMax: 4, youngestAge: 12 }, ALL_OPTIONS);
   assert.deepEqual(good, { ...NO_FILTERS, maxPlaytime: 90, weightMin: 2, weightMax: 4, youngestAge: 12 });
+});
+
+test('the complexity ladder runs in half steps, exactly as literals (#855)', () => {
+  // The ladder itself, pinned as a value: BGG's weight is a float and real
+  // shelves cluster in the 2–3 band, so whole numbers left "nothing heavier than
+  // a mid-weight" unsayable.
+  assert.deepEqual(WEIGHT_CHOICES, [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]);
+
+  // Membership is exact float equality against the double a client's JSON parses
+  // to, so every rung must round-trip on its own. A generated ladder happens to
+  // survive at 0.5 and would silently drop rungs at 0.1 — hence the literals.
+  for (const v of WEIGHT_CHOICES) {
+    assert.deepEqual(
+      normalizeMetadataFilters({ weightMin: v, weightMax: v }, ALL_OPTIONS),
+      { ...NO_FILTERS, weightMin: v, weightMax: v },
+      `rung ${v} did not survive normalization`);
+  }
+
+  // The swap still has to work ACROSS half steps, not only between integers.
+  assert.deepEqual(
+    normalizeMetadataFilters({ weightMin: 3.5, weightMax: 2.5 }, ALL_OPTIONS),
+    { ...NO_FILTERS, weightMin: 2.5, weightMax: 3.5 });
+
+  // And a step between the new rungs is still rejected — the ladder got finer,
+  // not open-ended.
+  for (const off of [1.25, 2.3, 2.7, 4.9]) {
+    assert.deepEqual(normalizeMetadataFilters({ weightMin: off }, ALL_OPTIONS), NO_FILTERS,
+      `off-ladder ${off} must collapse to unfiltered`);
+  }
+
+  // An integer bound stored by a pre-#855 preset still normalizes unchanged —
+  // all five old rungs survive on the wider ladder, so no migration is needed.
+  for (const legacy of [1, 2, 3, 4, 5]) {
+    assert.deepEqual(normalizeMetadataFilters({ weightMax: legacy }, ALL_OPTIONS),
+      { ...NO_FILTERS, weightMax: legacy });
+  }
+});
+
+test('a half-step band admits exactly the games between its bounds (#855)', () => {
+  const band = { weightMin: 2.5, weightMax: 3.5 };
+  assert.equal(fitsMetadataFilters({ weight: 3 }, band), true);
+  assert.equal(fitsMetadataFilters({ weight: 2.5 }, band), true, 'the bounds are inclusive');
+  assert.equal(fitsMetadataFilters({ weight: 3.5 }, band), true, 'the bounds are inclusive');
+  assert.equal(fitsMetadataFilters({ weight: 2 }, band), false);
+  assert.equal(fitsMetadataFilters({ weight: 4 }, band), false);
+  // The absent-value rule survives the finer ladder.
+  assert.equal(fitsMetadataFilters({ title: 'Handgetippt' }, band), true);
 });
 
 test('normalizeMetadataFilters survives junk of every shape', () => {

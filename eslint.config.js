@@ -280,7 +280,7 @@ const frontendGlobals = {
   showRoundSettings: 'readonly',
   showRound: 'readonly', showRetired: 'readonly', showCompleted: 'readonly',
   showWishlist: 'readonly', showRecommendations: 'readonly',
-  recReasonText: 'readonly', recNum: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
+  recReasonText: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
   showArchive: 'readonly', ARCHIVES: 'readonly', THEMES: 'readonly',
   showBackground: 'readonly', showGameDetail: 'readonly', showAddGame: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',

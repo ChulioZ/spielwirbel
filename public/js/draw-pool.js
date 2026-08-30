@@ -111,8 +111,16 @@ function requiredExpansions(game, playerCount) {
 // sides cannot even disagree about the granularity.
 const PLAYTIME_CHOICES = [30, 45, 60, 90, 120, 180];
 const AGE_CHOICES = [6, 8, 10, 12, 14, 16, 18];
-// BGG's weight is a 1–5 float; the bounds a user picks are whole steps.
-const WEIGHT_CHOICES = [1, 2, 3, 4, 5];
+// BGG's weight is a 1–5 float, and real shelves cluster hard in the 2–3 band, so
+// whole steps left "nothing heavier than a mid-weight" unsayable (#855).
+//
+// WRITTEN AS LITERALS, never generated with `v += 0.5`: membership is tested with
+// `includes`, i.e. exact float equality against the double a client's JSON `2.5`
+// parses to. Halves are exactly representable so a loop would happen to work
+// here — but the same loop at 0.1 yields 2.2999999999999994 and would silently
+// drop every filter. The literal list is what keeps this safe if the step is
+// ever revisited.
+const WEIGHT_CHOICES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 
 // Whether a game passes the metadata filters. Every filter field is nullable /
 // empty meaning "unfiltered".

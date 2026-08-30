@@ -186,17 +186,22 @@ test('the complexity selects carry each other rather than allowing an inverted r
   const min = selectLabelled('Komplexität mindestens');
   const max = selectLabelled('Komplexität höchstens');
 
+  // Half steps throughout (#855) — the carry has to hold across the new rungs,
+  // not merely between the integers it was written against.
   choose(max, '2');
-  choose(min, '4');
-  assert.equal(max.value, '4', 'raising the minimum past the maximum carries the maximum up');
+  choose(min, '3.5');
+  assert.equal(max.value, '3.5', 'raising the minimum past the maximum carries the maximum up');
 
   choose(min, '2');
-  choose(max, '1');
-  assert.equal(min.value, '1', 'and the other way round');
+  choose(max, '1.5');
+  assert.equal(min.value, '1.5', 'and the other way round');
   // One control, ONE chip — however many of its bounds are set. The two bounds
   // are one question, so a × that cleared half of it would leave a range that
   // admits nothing with nothing on screen saying so.
-  assert.deepEqual(appliedChips(), ['Komplexität 1–1']);
+  //
+  // "1,5" and not "1.5": the chip is prose, so it is written in the reader's
+  // notation, and this file runs under `de` (#855).
+  assert.deepEqual(appliedChips(), ['Komplexität 1,5–1,5']);
 });
 
 test('the preset restores the last draw and drops a category the shelf lost', async () => {

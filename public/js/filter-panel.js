@@ -135,7 +135,10 @@ function renderMetadataFilter(games, state, onChange) {
       .map(([key, labelKey]) => {
         const sel = h(`<select class="sort-select mfilter__select" aria-label="${esc(t(labelKey))}"></select>`);
         sel.appendChild(h(`<option value="">${esc(t('metaFilter.any'))}</option>`));
-        WEIGHT_CHOICES.forEach((v) => sel.appendChild(h(`<option value="${v}">${v}</option>`)));
+        // The LABEL is prose and goes through `fmtAvg`, so a German reader sees
+        // "2,5"; the `value` stays the bare number, because it is a machine
+        // string `Number(sel.value)` reads back (the split i18n.js:137 draws).
+        WEIGHT_CHOICES.forEach((v) => sel.appendChild(h(`<option value="${v}">${esc(fmtAvg(v))}</option>`)));
         const paint = () => { sel.value = state[key] === null || state[key] === undefined ? '' : String(state[key]); };
         paint();
         painters.push(paint);
@@ -264,10 +267,14 @@ function activeFilterChips(state, tagSection) {
   const lo = isFiniteNum(f.weightMin) ? f.weightMin : null;
   const hi = isFiniteNum(f.weightMax) ? f.weightMax : null;
   if (lo !== null || hi !== null) {
+    // Same reader's-notation rule as the options above (#855): the half steps
+    // are the reason a separator is visible here at all.
+    const dLo = fmtAvg(lo);
+    const dHi = fmtAvg(hi);
     out.push({
-      label: lo !== null && hi !== null ? t('metaFilter.chipWeight', { min: lo, max: hi })
-        : lo !== null ? t('metaFilter.chipWeightMin', { min: lo })
-          : t('metaFilter.chipWeightMax', { max: hi }),
+      label: lo !== null && hi !== null ? t('metaFilter.chipWeight', { min: dLo, max: dHi })
+        : lo !== null ? t('metaFilter.chipWeightMin', { min: dLo })
+          : t('metaFilter.chipWeightMax', { max: dHi }),
       remove: () => { f.weightMin = null; f.weightMax = null; },
     });
   }
