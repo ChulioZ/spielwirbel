@@ -5864,9 +5864,22 @@ kbd {
 .device-vote.is-disabled .ds-row { cursor: default; opacity: 0.55; }
 .device-vote.is-disabled .ds-row:hover { box-shadow: none; }
 
+/* The 280px floor is load-bearing, not a round number. A chip spends a fixed
+   ~173px on things that never shrink — 24px padding, the 34px avatar, two 10px
+   gaps, and `.live-person__state`, which is `flex: none` and so keeps the full
+   width of "✓ abgestimmt" (~95px). `.live-person__name` is the ONLY shrinkable
+   child, so every pixel the track gives up comes out of the name. At the old
+   200px floor that left it 45px inside a 218px chip: "Julian" rendered as
+   "Juli…", and an 11-character name clipped even in the un-voted state.
+
+   Sized against the FLOOR, not the width you see. `1fr` stretches the realized
+   track well past the floor at most viewports (293px in a 900px column), but a
+   container that is an exact multiple realizes the floor itself — so the floor
+   is the case the name has to survive. 280px leaves it ~107px there, and costs
+   one column at 1440 while changing nothing at the strip or on a phone. */
 .live-vote__people {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 10px;
   margin-bottom: 24px;
 }

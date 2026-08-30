@@ -363,3 +363,38 @@ test('the home lobby tiles once there is room for a second round card', () => {
   assert.ok(columns >= 2,
     `at its own ${from}px breakpoint the lobby still shows ${columns} column(s)`);
 });
+
+test('a voter chip keeps room for a real name beside its status badge', () => {
+  /* `.live-person__state` is `flex: none`, so the status badge keeps the full
+     width of "✓ abgestimmt" whatever happens, and `.live-person__name` — the
+     only shrinkable child — absorbs every pixel the track gives up. The failure
+     is therefore silent and it gets WORSE the moment someone votes: at the old
+     200px floor the name box measured 45px inside a 218px chip, rendering
+     "Julian" as "Juli…" (and clipping an 11-character name even before anyone
+     had voted).
+
+     Pinned as arithmetic over the declared numbers, like the Regal and lobby
+     assertions above: what matters is the width the NAME is left with, which a
+     floor nudged back down would quietly halve while every "a grid exists"
+     assertion stayed green. */
+  const spec = gridSpec(bodyOf('.live-vote__people'));
+  assert.ok(spec && spec.floor && spec.gap, '.live-vote__people is no longer an auto-fill grid');
+
+  // What the chip spends before the name gets anything: its own side padding,
+  // the avatar, the two flex gaps, and the un-shrinkable status badge.
+  const chip = bodyOf('.live-person');
+  const pad = Number(chip.match(/padding:\s*\d+px\s+(\d+)px/)[1]);
+  const gap = Number(chip.match(/gap:\s*(\d+)px/)[1]);
+  const avatar = Number(bodyOf('.live-person__avatar').match(/width:\s*(\d+)px/)[1]);
+  /* Measured from the rendered chip: the icon + `lobby.voted` at --text-sm.
+     GERMAN is the worst case of the five shipped locales ("abgestimmt", vs
+     "ha votado"/"ha votato"/"voted"/"a voté"), so this is the real ceiling
+     today — but it is a measurement, not a derivation. A new locale whose
+     word is longer than the German one silently makes the floor too small
+     again, so re-measure this when one is added. */
+  const BADGE = 95;
+
+  const nameWidth = spec.floor - 2 * pad - avatar - 2 * gap - BADGE;
+  assert.ok(nameWidth >= 100,
+    `a voter chip leaves its name ${nameWidth}px, which truncates an ordinary member name`);
+});
