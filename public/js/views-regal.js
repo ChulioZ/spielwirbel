@@ -314,10 +314,8 @@ function renderRegalTab(round, activeGames) {
     // The wrapper is created UNCONDITIONALLY and hidden while it holds nothing,
     // because the backfill below can make the panel appear on a shelf that could
     // not offer it a moment ago (#736) — and with no wrapper there would be
-    // nowhere to put it. `hidden` costs no space — but only because
-    // `.regal-filter[hidden]` restates it: since #854 the wrapper is the flex
-    // container the dissolved `.fbar` used to be, and that `display: flex` would
-    // otherwise beat the UA's `[hidden]`
+    // nowhere to put it. `hidden` costs no space: `.regal-filter` sets only a
+    // margin, so nothing overrides the UA's `[hidden]`
     // (.claude/rules/hidden-attribute-vs-display-rule.md).
     const filterWrap = h('<div class="regal-filter"></div>');
     gamesSec.appendChild(filterWrap);

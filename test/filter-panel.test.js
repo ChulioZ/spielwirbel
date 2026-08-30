@@ -507,7 +507,10 @@ test('nothing between the trigger and its bar is a flex item of that bar (#854)'
   assert.ok(wrappers.length, 'no wrapper at all here — check the fixture actually rendered the bar');
   for (const w of wrappers) {
     const dissolved = [...w.classList]
-      .some((c) => /display:\s*contents/.test(bodyOf(`.${c}`) || bodyOfIn(`.${c}`) || ''));
+      // Both spellings: `.fbar-mount` is dissolved on its own, `.fbar` only
+      // inside the setup bar (#854 is scoped — the Regal keeps its plain row).
+      .some((c) => [`.${c}`, `.setup-filterbar .${c}`]
+        .some((sel) => /display:\s*contents/.test(bodyOf(sel) || bodyOfIn(sel) || '')));
     assert.ok(dissolved,
       `<${w.tagName.toLowerCase()} class="${w.className}"> is a flex item of .setup-filterbar: `
       + 'it wraps together with the chips inside it, carrying the trigger onto another row (#854)');

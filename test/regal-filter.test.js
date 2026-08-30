@@ -74,8 +74,13 @@ test('NOTHING re-widens the setup filter row for an open panel (#844)', () => {
      could only be there to make room for a body that is no longer in the flow. */
   assert.match(bodyOf('.setup-filterbar') || '', /flex-wrap:\s*wrap/,
     'the row still wraps — the stepper and the trigger must not overflow it');
+  /* #854 carve-out: the CHIP ROW is meant to take a full line — that is the fix
+     for the trigger being pushed by its own chips, and it is asserted positively
+     below. What must never get a full-row basis is the mount or the trigger, i.e.
+     anything that carries the button with it when the row wraps. */
   const widened = RULES.filter(([sel, body]) =>
-    whole('.setup-filterbar').test(sel) && /flex(-basis)?:[^;]*100%/.test(body));
+    whole('.setup-filterbar').test(sel) && !whole('.fbar__chips').test(sel)
+    && /flex(-basis)?:[^;]*100%/.test(body));
   assert.deepEqual(widened.map(([sel]) => sel), [],
     'a rule gives the filter mount the whole setup row again — the trigger will jump lines (#844)');
   // And the selector that carried it is gone outright, so it cannot come back
@@ -85,44 +90,60 @@ test('NOTHING re-widens the setup filter row for an open panel (#844)', () => {
     'a `.fpanel[open]` rule is back — the panel is not a <details> any more');
 });
 
-test('the trigger and the chip row are SEPARATE flex items of their bar (#854)', () => {
-  /* The bug this closes. `.fbar` wrapped the trigger and `.fbar__chips`
-     together, so the bar it sits in — `.setup-filterbar`, a `flex-wrap: wrap`
-     row — saw ONE item whose min-content width included the chips. A long
+test('the trigger and the chip row are SEPARATE flex items of the SETUP bar (#854)', () => {
+  /* The bug this closes. `.fbar` wraps the trigger and `.fbar__chips` together,
+     so `.setup-filterbar` — a `flex-wrap: wrap` row that also holds the count
+     stepper — saw ONE item whose min-content width included the chips. A long
      category label ("Wirtschaftssimulation") inflated it past the space beside
-     the count stepper, the item wrapped, and the „Filter" button went with it.
-     The control moved depending on how many filters happened to be on, which is
-     the same "the trigger stays put" guarantee #844 gave for opening the panel —
+     the stepper, the item wrapped, and the „Filter" button went with it. The
+     control moved depending on how many filters happened to be on, which is the
+     same "the trigger stays put" guarantee #844 gave for opening the panel —
      lost to the other half of the same element.
 
      Both halves are required and each fails silently on its own: dissolve the
      wrappers and the trigger is its own item, but the chips would sit inline
-     after it and push it again; force the chips onto their own line without
-     dissolving the wrappers and nothing changes at all, because the bar still
-     sees one item. */
-  // bodyOfIn as well as bodyOf: these two rules have identical bodies, so a
-  // future author merging them into `.fbar, .fbar-mount { … }` is likely — and
-  // bodyOf() compares the WHOLE selector text, which would read that regrouping
-  // as the rule having been deleted.
-  assert.match(bodyOf('.fbar') || bodyOfIn('.fbar') || '', /display:\s*contents/,
-    '.fbar is a box again — the trigger and its chips are one flex item and wrap together (#854)');
-  assert.match(bodyOf('.fbar-mount') || bodyOfIn('.fbar-mount') || '', /display:\s*contents/,
+     after it and push it again; give the chips their own line without dissolving
+     the wrappers and nothing changes at all, because the bar still sees one
+     item. */
+  // bodyOfIn as well as bodyOf: `.setup-filterbar .fbar` and `.fbar-mount` carry
+  // identical bodies, so a future author merging them into one selector group is
+  // likely — and bodyOf() compares the WHOLE selector text, which would read that
+  // regrouping as the rule having been deleted.
+  const dissolved = (sel) => bodyOf(sel) || bodyOfIn(sel) || '';
+  assert.match(dissolved('.setup-filterbar .fbar'), /display:\s*contents/,
+    '.fbar is a box in the setup bar again — the trigger and its chips are one flex item and wrap together (#854)');
+  assert.match(dissolved('.fbar-mount'), /display:\s*contents/,
     "the setup screen's mount is a box again — the same single-item wrap, one level up (#854)");
-  assert.match(bodyOf('.fbar__chips') || '', /flex:[^;]*100%/,
+  assert.match(bodyOf('.setup-filterbar .fbar__chips') || '', /flex:[^;]*100%/,
     'the chip row no longer claims a full line — chips sit inline after the trigger again (#854)');
 });
 
-test('#854 gave two wrappers a display, so both restate [hidden]', () => {
-  /* Same trap `.fbar__chips[hidden]` above records, twice over: a declared
-     `display` — `contents` no less than `flex` — outranks the UA sheet's
-     `[hidden] { display: none }`. Both of these are hidden by JS while empty:
-     `#filterMount` when the round has nothing to filter by, and `.regal-filter`
-     which is created unconditionally so the #736 backfill has somewhere to
-     mount. Without these rules a shelf with no metadata pays the bar's gap for
-     a control it never shows. */
-  for (const sel of ['.fbar-mount[hidden]', '.regal-filter[hidden]']) {
-    const guard = bodyOf(sel);
-    assert.ok(guard, `${sel} rule not found — its element declares a display that beats [hidden]`);
-    assert.match(guard, /display:\s*none/);
-  }
+test('#854 is scoped to the setup screen — the Regal keeps its chips beside the trigger', () => {
+  /* Operator decision on PR #862: the Regal was not broken. Its `.fbar` is alone
+     in `.regal-filter`, so no sibling competes for the row and nothing can push
+     the trigger there — the chips read better beside the button than on a line of
+     their own. Only the screen that puts a count stepper next to the trigger
+     needs the split.
+
+     This is the positive half of that decision, and it is worth pinning because
+     the tidying instinct is to hoist the two rules above onto the bare classes so
+     "both screens read identically" — which silently relayouts a screen nobody
+     asked to change. */
+  assert.match(bodyOf('.fbar') || '', /display:\s*flex/,
+    '.fbar was dissolved globally — that relayouts the Regal, which #854 deliberately leaves alone');
+  assert.doesNotMatch(bodyOf('.fbar__chips') || '', /flex:[^;]*100%/,
+    "the chip row's full-line basis went global — the Regal's chips just left the trigger's row");
+  assert.equal(bodyOf('.regal-filter'), ' margin: 2px 0 16px; ',
+    '.regal-filter gained declarations — it is a plain block, which is what lets it rely on the UA `[hidden]`');
+});
+
+test('#854 gave the setup mount a display, so it restates [hidden]', () => {
+  /* Same trap `.fbar__chips[hidden]` above records: a declared `display` —
+     `contents` no less than `flex` — outranks the UA sheet's
+     `[hidden] { display: none }`. `#filterMount` is hidden by JS whenever the
+     round has nothing to filter by, so without this rule such a round would pay
+     the bar's gap for a control it never shows. */
+  const guard = bodyOf('.fbar-mount[hidden]');
+  assert.ok(guard, '.fbar-mount[hidden] rule not found — its element declares a display that beats [hidden]');
+  assert.match(guard, /display:\s*none/);
 });
