@@ -25,7 +25,7 @@ const { test, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { drawPool } = require('../lib/draw');
-const { bodyOf } = require('./support/css');
+const { bodyOf, bodyOfIn } = require('./support/css');
 const { loadApp } = require('./support/dom');
 const { filterPanelKit } = require('./support/filter-panel');
 
@@ -507,7 +507,7 @@ test('nothing between the trigger and its bar is a flex item of that bar (#854)'
   assert.ok(wrappers.length, 'no wrapper at all here — check the fixture actually rendered the bar');
   for (const w of wrappers) {
     const dissolved = [...w.classList]
-      .some((c) => /display:\s*contents/.test(bodyOf(`.${c}`) || ''));
+      .some((c) => /display:\s*contents/.test(bodyOf(`.${c}`) || bodyOfIn(`.${c}`) || ''));
     assert.ok(dissolved,
       `<${w.tagName.toLowerCase()} class="${w.className}"> is a flex item of .setup-filterbar: `
       + 'it wraps together with the chips inside it, carrying the trigger onto another row (#854)');

@@ -333,13 +333,15 @@ function showStartSession(round) {
   // the backfill below can make the control appear on a shelf that could not
   // offer it a moment ago (#736). The mount element STAYS in the DOM as the
   // anchor — `hidden` while there is nothing to show, which costs no flex gap
-  // because a `display: none` element is not a flex item at all. It carries no
-  // class, so no rule can override the UA's `[hidden]`
+  // because a `display: none` element is not a flex item at all.
+  //
+  // Since #854 it carries `.fbar-mount`, whose `display: contents` dissolves both
+  // this wrapper and the `.fbar` inside it: the trigger and the applied-chip row
+  // are items of `.setup-filterbar` itself, where as ONE item they wrapped
+  // together and a long chip label carried the „Filter" button onto its own row.
+  // That class is also why the `[hidden]` above is no longer free — a declared
+  // `display` outranks the UA sheet's, so `.fbar-mount[hidden]` restates it
   // (.claude/rules/hidden-attribute-vs-display-rule.md).
-  // `.fbar-mount` is `display: contents`, so this wrapper and the `.fbar` inside
-  // it have no boxes: the trigger and the applied-chip row are items of
-  // `.setup-filterbar` itself. As one item they wrapped together, and a long chip
-  // label carried the „Filter" button onto its own row (#854).
   const filterMount = form.querySelector('#filterMount');
   const mountFilterPanel = () => {
     // NEVER rebuild under an open overlay. The trigger is the node `place()` and

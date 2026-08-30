@@ -23,7 +23,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { bodyOf, mediaBlocks, whole, RULES } = require('./support/css');
+const { bodyOf, bodyOfIn, mediaBlocks, whole, RULES } = require('./support/css');
 
 test('the phone-only tag toggle is gone from the stylesheet entirely', () => {
   assert.equal(bodyOf('.filter-toggle'), null,
@@ -100,9 +100,13 @@ test('the trigger and the chip row are SEPARATE flex items of their bar (#854)',
      after it and push it again; force the chips onto their own line without
      dissolving the wrappers and nothing changes at all, because the bar still
      sees one item. */
-  assert.match(bodyOf('.fbar') || '', /display:\s*contents/,
+  // bodyOfIn as well as bodyOf: these two rules have identical bodies, so a
+  // future author merging them into `.fbar, .fbar-mount { … }` is likely — and
+  // bodyOf() compares the WHOLE selector text, which would read that regrouping
+  // as the rule having been deleted.
+  assert.match(bodyOf('.fbar') || bodyOfIn('.fbar') || '', /display:\s*contents/,
     '.fbar is a box again — the trigger and its chips are one flex item and wrap together (#854)');
-  assert.match(bodyOf('.fbar-mount') || '', /display:\s*contents/,
+  assert.match(bodyOf('.fbar-mount') || bodyOfIn('.fbar-mount') || '', /display:\s*contents/,
     "the setup screen's mount is a box again — the same single-item wrap, one level up (#854)");
   assert.match(bodyOf('.fbar__chips') || '', /flex:[^;]*100%/,
     'the chip row no longer claims a full line — chips sit inline after the trigger again (#854)');
