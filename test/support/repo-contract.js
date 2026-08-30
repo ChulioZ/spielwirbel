@@ -1338,6 +1338,58 @@ module.exports = function repoContract(repo) {
     assert.equal((await repo.getRound(T, round.id)).games.length, 0);
   });
 
+  // Removing a wish is the one half of the wish list that used to be LOUD
+  // (#863). Every other wish transition is silent — creating one, importing a
+  // BGG wishlist, moving a shelf game onto the list, editing one — because the
+  // group never owned the game. Its removal carries even less information, so
+  // the deletion path (written for retired/completed games, which really were
+  // on the shelf) must skip the entry too.
+  test('deleting a wish writes NO game_deleted entry', async () => {
+    const round = await freshRound();
+    const wanted = await repo.createGame(T, round.id, gameFields({ title: 'Wanted' }));
+    const owned = await repo.createGame(T, round.id, gameFields({ title: 'Owned' }));
+    await repo.wishGame(T, round.id, wanted.id, true);
+    await repo.retireGame(T, round.id, owned.id, true);
+
+    await repo.deleteGame(T, round.id, wanted.id);
+    assert.equal(
+      (await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_deleted').length, 0,
+      'a wish was never on the shelf, so its removal is not a Chronik event',
+    );
+
+    // The guard is the wish flag, not "deleteGame went quiet": an archived game
+    // was owned, and its deletion still reports.
+    await repo.deleteGame(T, round.id, owned.id);
+    const deleted = (await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_deleted');
+    assert.equal(deleted.length, 1);
+    assert.equal(deleted[0].title, 'Owned');
+  });
+
+  // The bulk counterpart (#863). The count reports what the round actually
+  // OWNED, while the returned `deleted` keeps counting every removed row — that
+  // is what the caller's toast reports. An all-wish selection (the only shape
+  // the wish list's own bulk action can produce, since each archive screen shows
+  // one kind) writes no entry at all.
+  test('deleteGames counts only non-wishes, and is silent when all were wishes', async () => {
+    const round = await freshRound();
+    const w1 = await repo.createGame(T, round.id, gameFields({ title: 'W1' }));
+    const w2 = await repo.createGame(T, round.id, gameFields({ title: 'W2' }));
+    const owned = await repo.createGame(T, round.id, gameFields({ title: 'Owned' }));
+    await repo.wishGame(T, round.id, w1.id, true);
+    await repo.wishGame(T, round.id, w2.id, true);
+
+    assert.deepEqual(await repo.deleteGames(T, round.id, [w1.id, owned.id]), { deleted: 2, images: [] });
+    const mixed = (await repo.listActivities(T, round.id)).filter((a) => a.type === 'games_deleted');
+    assert.equal(mixed.length, 1, 'a mixed selection still writes one counted row');
+    assert.equal(mixed[0].count, 1, 'the count is what was owned, not what was removed');
+
+    assert.deepEqual(await repo.deleteGames(T, round.id, [w2.id]), { deleted: 1, images: [] });
+    assert.equal(
+      (await repo.listActivities(T, round.id)).filter((a) => a.type === 'games_deleted').length, 1,
+      'an all-wish selection adds nothing',
+    );
+  });
+
   // A completed game is deletable exactly like a retired one — the delete guard
   // covers both archives, not just `retired`.
   test('deleteGame accepts a completed game', async () => {
