@@ -90,7 +90,7 @@ async function showMember(rid, mid) {
 
   // Header: big avatar + editable name.
   const head = h(`<div class="member-head">
-       <span class="avatar member-avatar" style="background:${color}">${esc(initials(member.name))}</span>
+       <span class="avatar member-avatar" style="background:${color}">${avatarFace(initials(member.name), { userId: member.userId })}</span>
        <div class="member-head__info">
          <h1></h1>
        </div>

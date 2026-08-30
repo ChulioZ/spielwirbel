@@ -151,6 +151,11 @@ const frontendGlobals = {
   partyName: 'readonly', teamsForPeople: 'readonly',
   // news.js (issue #741)
   NEWS: 'readonly', newsRevision: 'readonly', newsText: 'readonly',
+  // avatar-policy.js + member-avatar.js (issue #841)
+  AVATAR_MAX_BYTES: 'readonly', AVATAR_SIZE: 'readonly', AVATAR_EXT: 'readonly',
+  AVATAR_ACCEPT: 'readonly', AVATAR_MAX_PIXELS: 'readonly',
+  avatarFace: 'readonly', primeAvatars: 'readonly', rememberAvatar: 'readonly',
+  knownAvatar: 'readonly', installAvatarFallback: 'readonly', resetAvatarCache: 'readonly',
   sessionTeams: 'readonly', sessionParties: 'readonly',
   TEAM_TOKEN_MEMBER: 'readonly', TEAM_TOKEN_GUEST: 'readonly',
   themeAccent: 'readonly', resolveAccent: 'readonly',

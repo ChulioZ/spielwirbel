@@ -78,7 +78,13 @@ test('a stranger profile: username + createdAt, friendship none, no e-mail', asy
   // The disclosure boundary: the profile carries the public handle and the
   // registration date and nothing else about the account. A field added here
   // later is a new disclosure needing policy §5 + vvt.md (#558).
-  assert.deepEqual(Object.keys(res.body).sort(), ['createdAt', 'friendship', 'self', 'userId', 'username']);
+  // `avatar` (#841) joined the list, and it went through exactly the gate this
+  // comment names: privacy policy §5/§6 + docs/legal/vvt.md, with a
+  // PRIVACY_REVISION bump. It is a picture the account chose to publish under
+  // its own handle — deliberately narrower than it looks, since /uploads is
+  // readable only by an authenticated caller, which the profile already is.
+  assert.deepEqual(Object.keys(res.body).sort(),
+    ['avatar', 'createdAt', 'friendship', 'self', 'userId', 'username']);
   assert.equal(JSON.stringify(res.body).includes('pf-bob@example.com'), false);
 });
 

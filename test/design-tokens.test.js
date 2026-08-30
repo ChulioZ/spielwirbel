@@ -80,6 +80,7 @@ const GLYPH_LITERALS = [
   '.stage__voter-avatar .avatar', '.nr-seat__avatar', '.nr-seat--empty .nr-seat__avatar',
 '.podium__col--multi .podium__avatar', 
     '.podium__avatar', '.profile-head .avatar', '.member-avatar', '.handover__avatar',
+  '.konto-avatar__preview', '.feed-item__who',
   // placeholder glyphs centred in a cover / thumb / tile box
   '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon',
   '.landing-card__icon', '.landing-step__num', '.feed-item__img', '.result-row__img',

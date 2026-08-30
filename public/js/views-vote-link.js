@@ -133,7 +133,7 @@ function renderVoteLinkClaim(token, ballot) {
   const list = root.querySelector('#vlClaim');
   ballot.people.forEach((person) => {
     const btn = h(`<button class="btn live-vote__hotseat-btn">
-        <span class="live-person__avatar live-person__avatar--sm" style="background:${voteLinkColor(person)}">${esc(initials(person.name))}</span>
+        <span class="live-person__avatar live-person__avatar--sm" style="background:${voteLinkColor(person)}">${avatarFace(initials(person.name), { userId: person.userId })}</span>
         ${esc(personLabel(person))}
         ${person.hasVoted ? `<span class="live-person__state"><i class="ti ti-check" aria-hidden="true"></i> ${esc(t('lobby.voted'))}</span>` : ''}
       </button>`);

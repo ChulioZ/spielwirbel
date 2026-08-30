@@ -242,7 +242,7 @@ function renderStartTab(round, activeGames) {
   const hero = h(`<div class="hero rail-owned">
        <h1></h1>
        <div class="hero__members">${round.members
-         .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${esc(initials(m.name))}</a>`)
+         .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
          .join('')}</div>
        <div class="hero__chips">
          <span class="stat-chip"><i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(activeGames.length, 'home.chip.gamesOne', 'home.chip.games'))}</span>

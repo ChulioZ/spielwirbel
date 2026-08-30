@@ -34,7 +34,10 @@ Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
 `REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below) and
 `DEMO_RATE_LIMIT_MAX` (guest demos, per 15 min, default 5 — see below), and
 `VOTE_LINK_RATE_LIMIT_MAX` (the public vote link `/api/vote/…`, per 15 min,
-default 60 — higher because it is an ordinary user action, not a signup).
+default 60 — higher because it is an ordinary user action, not a signup), and
+`AVATAR_RATE_LIMIT_MAX` (profile-picture uploads, per 15 min, default 10 — the
+one endpoint whose cost is decoding attacker-supplied bytes, so it gets a much
+lower ceiling than the account surface around it).
 
 Voting by shared link (issue #652): a per-device session can be shared as
 `/vote/<token>` so people **without an account** vote from their own phone.

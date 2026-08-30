@@ -173,7 +173,7 @@ test('feed: shows a friend\'s game title + username, only post-friendship, no ro
   assert.equal(ev.username, alice.username);
   // The isolation point: a feed event carries ONLY these fields — never a member
   // name, score, vote or round name.
-  assert.deepEqual(Object.keys(ev).sort(), ['at', 'coverUrl', 'title', 'type', 'username']);
+  assert.deepEqual(Object.keys(ev).sort(), ['at', 'avatar', 'coverUrl', 'title', 'type', 'username']);
 
   // Alice sees an empty feed (Bob has added nothing) but the same friendCount.
   const aliceFeed = await getFeed(alice);

@@ -472,12 +472,23 @@ What the app does, in detail. For a short overview see the
 - **Account profiles** – *accounts mode only* (issue #558). Every account has a
   profile at `/u/‹username›`, reachable by clicking a name in the Freundeskreis
   and usable to check you have the right person **before** sending a request.
-  It shows the username, its avatar, "member since ‹month›" and the one friend
+  It shows the username, its picture or initials, "member since ‹month›", a
+  report button, and the one friend
   action your current relationship allows (send / cancel / accept+decline /
   unfriend) — plus that account's feed, but **only between accepted friends**
   and still only for activity after you became friends. Nothing tenant-private
   is shown: no e-mail address, no shelf, no sessions, no ratings. Signing in is
   required, so profiles are not public web pages and are not crawlable.
+- **Profile pictures** – *accounts mode only* (issue #841). An account can upload
+  a picture, replace it or remove it again from the Konto screen; without one the
+  app keeps showing the coloured tile with your initials, which also stands in if
+  a picture ever fails to load. It appears wherever the account already does: the
+  profile page, Freundeskreis rows and requests, the friend feed, and any round
+  seat linked to that account — the seat's **name** is unchanged either way.
+  Uploads are re-encoded server-side to one square format with the image file's
+  metadata (EXIF/GPS) stripped, so a phone photo's coordinates are never stored.
+  Guest-demo accounts cannot set one. Pictures are visible to signed-in accounts
+  only, and are reportable from the profile and from a Freundeskreis row.
 - **Entdecken** – *live by default; PUBLIC_STATS_ENABLED=false takes it down* (issue #564). Publishes
   the whole instance at a glance: how many rounds, players, shelf games and
   played sessions it holds, plus the games on the most shelves and the ones most

@@ -662,6 +662,25 @@ h1, h2, h3 { font-family: var(--font-display); }
   flex: none;
   border: 2px solid var(--surface);
 }
+/* An account's profile picture (#841), rendered INSIDE whichever avatar element
+   the site already had — .avatar here, but also .nr-seat__avatar,
+   .handover__avatar and .live-person__avatar, all of which are square circles
+   with a centring flex box. One rule covers all four because avatarFace() emits
+   the same <img> everywhere.
+
+   `object-fit: cover` is what makes a non-square source fill the circle instead
+   of squashing; the server already stores a square, so this only matters for the
+   moment a picture is replaced. The per-member background colour stays behind
+   the image and is what shows through if the bytes ever fail to load — before
+   installAvatarFallback() swaps the initials back in. */
+.avatar__img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
 /* A session guest (#458) is not a round member, so they have no palette swatch —
    memberColor() would find no row and hand every guest member #0's colour. This
    neutral, dashed treatment (the one .nr-seat--empty already uses for a free
@@ -3066,6 +3085,22 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   border-radius: var(--radius-md);
   padding: 10px 14px;
 }
+/* The cover plus the author's badge (#841). `position: relative` lives HERE and
+   not on .feed-item__img, which is `overflow: hidden` and would clip the badge
+   at its rounded corner. */
+.feed-item__media { position: relative; flex: none; }
+/* The author, overlapping the cover's bottom-left corner — the row's one image
+   slot belongs to the game, so the person rides on it rather than taking a
+   fourth column. Its 2px ring is .avatar's own border in --surface, which is
+   what separates it from the cover underneath. */
+.feed-item__who {
+  position: absolute;
+  left: -6px;
+  bottom: -6px;
+  width: 24px;
+  height: 24px;
+  font-size: 10px; /* glyph, not type */
+}
 .feed-item__img {
   position: relative;
   overflow: hidden;
@@ -3109,6 +3144,19 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 /* Read-only identity rows (e-mail, username). Deliberately NOT .ds-row: that
    component is a click target (cursor: pointer) and these rows do nothing. */
 .konto-facts { display: flex; flex-direction: column; gap: 10px; }
+/* The profile-picture control (#841): the current picture beside its actions.
+   Wraps so the buttons drop under the preview on a narrow phone rather than
+   squeezing it. */
+.konto-avatar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+/* Larger than the 34px .avatar it borrows from — this is the one place the
+   picture is the subject rather than a label next to a name. */
+.konto-avatar__preview { width: 72px; height: 72px; font-size: 26px; /* glyph, not type */ }
+.konto-avatar__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+/* The error line sits under the whole control, not beside the buttons. Its own
+   `flex-basis: 100%` rather than a wrapper, so the `hidden` attribute still
+   removes it entirely — this rule sets no `display`
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.konto-avatar > .konto-error { flex-basis: 100%; margin: 0; }
 .konto-fact {
   display: flex;
   align-items: baseline;

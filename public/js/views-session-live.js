@@ -143,7 +143,7 @@ function showSessionLobby(round, session, handedOn) {
   people.forEach((p) => {
     const done = voted.has(p.id);
     const chip = h(`<div class="live-person${done ? ' is-voted' : ''}">
-        <span class="live-person__avatar" style="background:${personColor(round, p)}">${esc(initials(p.name))}</span>
+        <span class="live-person__avatar" style="background:${personColor(round, p)}">${avatarFace(initials(p.name), { userId: p.userId })}</span>
         <span class="live-person__name">${esc(personLabel(p))}</span>
         <span class="live-person__state">
           <i class="ti ${done ? 'ti-check' : 'ti-hourglass'}" aria-hidden="true"></i>
@@ -201,7 +201,7 @@ function showSessionLobby(round, session, handedOn) {
   const nextUp = handedOn && !iLead && hotseat.length ? hotseat[0] : null;
   if (nextUp) {
     const btn = h(`<button class="btn btn--primary btn--lg live-vote__mine">
-        <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, nextUp)}">${esc(initials(nextUp.name))}</span>
+        <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, nextUp)}">${avatarFace(initials(nextUp.name), { userId: nextUp.userId })}</span>
         ${esc(t('lobby.next', { name: personLabel(nextUp) }))}
       </button>`);
     // With the handover screen: on this device the next person really is being
@@ -240,7 +240,7 @@ function showSessionLobby(round, session, handedOn) {
       </div>`);
     rest.forEach((p) => {
       const btn = h(`<button class="btn live-vote__hotseat-btn">
-          <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, p)}">${esc(initials(p.name))}</span>
+          <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, p)}">${avatarFace(initials(p.name), { userId: p.userId })}</span>
           ${esc(t('lobby.voteHere', { name: personLabel(p) }))}
         </button>`);
       // With the handover screen: on this device the next person really is being

@@ -97,7 +97,7 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
   const id = h(`<div class="rail__id">
        <${nameTag} class="rail__name"></${nameTag}>
        <div class="rail__members">${round.members
-         .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${esc(initials(m.name))}</a>`)
+         .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
          .join('')}</div>
        <div class="rail__chips">
          <span class="stat-chip"><i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(activeGames.length, 'home.chip.gamesOne', 'home.chip.games'))}</span>

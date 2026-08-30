@@ -28,6 +28,37 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * Clears the bar: an account could not be recognised by anything but two
+   * letters, so a picture is something a person could not do at all before —
+   * the level of passkeys (#418) or the BGG import (#481).
+   *
+   * The EXIF line is deliberately in the body rather than left to the privacy
+   * policy. It is the one thing about this feature a reader might otherwise
+   * worry about, and it is a promise we keep — a phone photo's coordinates are
+   * never stored (lib/avatar.js).
+   */
+  {
+    revision: '2026-08-30',
+    de: {
+      title: 'Profilbild für dein Konto',
+      body: 'Du kannst deinem Konto jetzt im Kontobereich ein Bild geben. Es '
+        + 'erscheint überall dort, wo dein Konto ohnehin auftaucht: auf deiner '
+        + 'Profilseite, im Freundeskreis und auf deinem Sitzplatz in einer Runde. '
+        + 'Ohne Bild bleibt alles wie bisher bei den Initialen. Die Metadaten der '
+        + 'Bilddatei — auch der GPS-Ort von Handyfotos — entfernen wir beim '
+        + 'Hochladen, und du kannst das Bild jederzeit wieder löschen.',
+    },
+    en: {
+      title: 'A profile picture for your account',
+      body: 'You can now give your account a picture from the Konto screen. It '
+        + 'shows up wherever your account already does: your profile page, the '
+        + 'Freundeskreis, and your seat in a round. Without one, everything stays '
+        + 'as it was with your initials. We strip the image file\'s metadata on '
+        + 'upload — including the GPS location phone photos carry — and you can '
+        + 'remove the picture again at any time.',
+    },
+  },
+  /*
    * Clears the capability bar: the app could only ever answer "all time", so
    * „unser Juli" and „unser 2026" were questions it had no way to ask — and the
    * shareable image is a thing the group could not produce at all.

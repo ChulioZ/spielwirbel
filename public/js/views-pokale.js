@@ -112,7 +112,7 @@ function renderPokaleTab(round) {
   if (winners.length) {
     const entryHtml = (it) =>
       `<a class="podium__entry podium__entry--member" data-mid="${esc(it.member.id)}">
-         <span class="avatar podium__avatar" style="background:${memberColor(round, it.member.id)}">${esc(initials(it.member.name))}</span>
+         <span class="avatar podium__avatar" style="background:${memberColor(round, it.member.id)}">${avatarFace(initials(it.member.name), { userId: it.member.userId })}</span>
          <span class="podium__name">${esc(it.member.name)}</span>
        </a>`;
     const stage = cols
@@ -342,7 +342,7 @@ function renderRecapSection(round, recap) {
       const card = h(`<div class="pokale-card recap-fav">
            <a class="recap-fav__cover">${coverPlaceholder(game)}</a>
            <span class="recap-fav__who">
-             <a class="avatar" style="background:${memberColor(round, member.id)}">${esc(initials(member.name))}</a>
+             <a class="avatar" style="background:${memberColor(round, member.id)}">${avatarFace(initials(member.name), { userId: member.userId })}</a>
              <span class="recap-fav__name">${esc(member.name)}</span>
            </span>
            <a class="pokale-card__value">${esc(game.title)}</a>

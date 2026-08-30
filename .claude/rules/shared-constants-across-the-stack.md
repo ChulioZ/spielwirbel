@@ -215,7 +215,28 @@ third boolean, so a flag can never disagree with the links the same screens rend
 — the `sessionOutcome`-not-`s.cancelled` discipline is the whole rule, and it is
 the shape `.claude/rules/active-games-filter-sites.md` exists for one entity over.
 
-Each new instance must be named in this inventory — the eleven paragraphs above.
+**The twelfth is `public/js/avatar-policy.js`** (#841): what an account profile
+picture may be — the upload byte cap, the stored square, and the accepted types.
+The plain value half of this rule, like `EXPANSION_TITLE_MAX`: the Konto picker
+*offers* them (the file input's `accept`, the pre-flight size check, and the
+error line that states the limit in prose) and the server *validates* against
+them (`lib/upload.js`'s avatar multer instance, `lib/avatar.js`'s pixel ceiling).
+
+Its trap is that the two sides fail in **opposite directions**, so neither drift
+looks like the other. A client cap larger than the server's produces the palette
+bug exactly — the picker accepts a file the route then 413s. A client cap
+*smaller* than the server's produces no error at all: the picker simply refuses
+a picture the server would have taken, and the user reads it as their photo being
+too big. The prose message takes `{mb}` derived from the shared constant for that
+reason — a hand-written "at most 5 MB" is a third copy, and it is the one that
+states a number nobody re-checks.
+
+Note what deliberately did **not** join it: `AVATAR_SIZE` is *used* by the server
+only. It lives here because it is the same decision as the cap — what we store —
+and splitting one policy across two files to keep this one purely bidirectional
+would be tidiness at the cost of the thing being findable.
+
+Each new instance must be named in this inventory — the twelve paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

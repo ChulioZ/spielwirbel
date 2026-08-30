@@ -1181,10 +1181,12 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // `lastSeenNewsRevision` (#741) rides on every account as well, but ALONE:
   // unlike the terms pair, the current revision lives in the client's own bundle
   // (public/js/news.js), so only the account's own stamp has to travel.
+  // `avatar` (#841) rides on every account as a path or null — the client needs
+  // to know there is nothing to remove as much as it needs the path itself.
   assert.deepEqual(Object.keys(res.body).sort(),
-    ['acceptedTermsRevision', 'bgStats', 'bggUsername', 'createdAt', 'demo', 'demoExpiresAt',
-      'email', 'emailVerified', 'id', 'lastSeenNewsRevision', 'notifyFriendRequests',
-      'notifyRoundInvitations', 'termsRevision', 'username']);
+    ['acceptedTermsRevision', 'avatar', 'bgStats', 'bggUsername', 'createdAt', 'demo',
+      'demoExpiresAt', 'email', 'emailVerified', 'id', 'lastSeenNewsRevision',
+      'notifyFriendRequests', 'notifyRoundInvitations', 'termsRevision', 'username']);
   assert.equal(res.body.demo, false);
   assert.equal(res.body.demoExpiresAt, null);
 
@@ -1251,6 +1253,28 @@ test('the BG Stats opt-in is OFF until the account turns it on (#485)', async ()
   assert.equal((await patchMe(acc.accessToken, { bgStats: true })).body.bgStats, true);
   assert.equal((await getMe(acc.accessToken)).body.bgStats, true, 'and it persists');
   assert.equal((await patchMe(acc.accessToken, { bgStats: false })).body.bgStats, false);
+});
+
+test('#841: an account predating the profile picture answers null, not an absent key', async () => {
+  const acc = await freshAccount('avatar-legacy@example.com');
+
+  // A real legacy row: the key is absent, not null. updateUser is Object.assign
+  // and cannot remove a key, so go through the store for the genuine shape.
+  const record = store.data.users.find((u) => u.id === acc.uid);
+  delete record.avatar;
+  store.saveData();
+  assert.equal('avatar' in
+    store.data.users.find((u) => u.id === acc.uid), false, 'the key is really gone');
+
+  // The direction that matters here is not a wrong default — `|| null` reads an
+  // absent key and a stored null identically — but whether the key is answered
+  // AT ALL. A projection spelled `...(user.avatar && { avatar: user.avatar })`
+  // would satisfy the key-set assertion above for an account that has a picture
+  // and silently omit the field for every account that does not, leaving the
+  // Konto screen unable to tell "no picture" from "not loaded".
+  const body = (await getMe(acc.accessToken)).body;
+  assert.equal('avatar' in body, true, 'the projection supplies the key regardless');
+  assert.equal(body.avatar, null);
 });
 
 test('#485: an account predating the field reads as OFF, not as an opt-out', async () => {
