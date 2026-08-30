@@ -375,7 +375,7 @@ test('a voter chip keeps room for a real name beside its status badge', () => {
 
      Pinned as arithmetic over the declared numbers, like the Regal and lobby
      assertions above: what matters is the width the NAME is left with, which a
-     floor nudged 260 -> 230 would quietly halve while every "a grid exists"
+     floor nudged back down would quietly halve while every "a grid exists"
      assertion stayed green. */
   const spec = gridSpec(bodyOf('.live-vote__people'));
   assert.ok(spec && spec.floor && spec.gap, '.live-vote__people is no longer an auto-fill grid');
@@ -386,7 +386,13 @@ test('a voter chip keeps room for a real name beside its status badge', () => {
   const pad = Number(chip.match(/padding:\s*\d+px\s+(\d+)px/)[1]);
   const gap = Number(chip.match(/gap:\s*(\d+)px/)[1]);
   const avatar = Number(bodyOf('.live-person__avatar').match(/width:\s*(\d+)px/)[1]);
-  const BADGE = 95; // measured: "✓ abgestimmt" at --text-sm, the widest state label
+  /* Measured from the rendered chip: the icon + `lobby.voted` at --text-sm.
+     GERMAN is the worst case of the five shipped locales ("abgestimmt", vs
+     "ha votado"/"ha votato"/"voted"/"a voté"), so this is the real ceiling
+     today — but it is a measurement, not a derivation. A new locale whose
+     word is longer than the German one silently makes the floor too small
+     again, so re-measure this when one is added. */
+  const BADGE = 95;
 
   const nameWidth = spec.floor - 2 * pad - avatar - 2 * gap - BADGE;
   assert.ok(nameWidth >= 100,
