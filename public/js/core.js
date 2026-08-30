@@ -175,8 +175,8 @@ async function swrRead(key, url, { rerender = true } = {}) {
   return cached;
 }
 /* Resolve the profile pictures of any seat linked to an account (#841) BEFORE
-   the view renders, so avatarFace() is a pure cache read at every render
-   sites and no screen has to re-render when a photo arrives.
+   the view renders, so avatarFace() is a pure cache read at every render site
+   and no screen has to re-render when a photo arrives.
 
    Costs nothing for a round whose seats are all name-only — the overwhelmingly
    common case, since member.userId is set only by the seat self-claim (#421) —

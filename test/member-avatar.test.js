@@ -18,7 +18,7 @@ const { JSDOM } = require('jsdom');
 
 const {
   avatarFace, primeAvatars, rememberAvatar, knownAvatar,
-  installAvatarFallback, resetAvatarCache,
+  installAvatarFallback, resetAvatarCache, AVATAR_PRIME_TIMEOUT_MS,
 } = require('../public/js/member-avatar');
 
 // MUST be first in the file, and must not prime, remember or reset anything.
@@ -133,4 +133,57 @@ test('the fallback listener ignores images that are not avatars', () => {
   const box = document.getElementById('box');
   box.querySelector('img').dispatchEvent(new dom.window.Event('error'));
   assert.equal(box.querySelectorAll('img').length, 1, 'a failed COVER must not be blanked by this');
+});
+
+test('a fetch that never answers gives up and lets the screen render initials', async (t) => {
+  // The round-read path awaits this before rendering, and `fetch` has no timeout
+  // of its own — so without the deadline a stalled connection holds the app's
+  // most-used screen open forever. Failing open on a HANG has to be as reliable
+  // as failing open on an error.
+  //
+  // Mocked so the test does not really wait four seconds. Both APIs together:
+  // mocking one leaves the other on the real clock and the timer never fires
+  // (.claude/rules/mock-timers-jump-the-clock-before-firing.md).
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  resetAvatarCache();
+
+  const state = { settled: false };
+  const hang = () => new Promise(() => {});          // never resolves, never rejects
+  const done = primeAvatars(['a'], hang).then(() => { state.settled = true; });
+
+  // Drain the microtask queue properly. `await Promise.resolve()` yields ONE
+  // tick, and the rejection has to travel race -> catch -> finally -> .then —
+  // so with a single yield `settled` reads false whether or not the timer fired,
+  // and the assertion below passes against ANY deadline. Measured: halving the
+  // deadline on purpose left this test green until setImmediate replaced it.
+  // setImmediate is not among the mocked APIs, so it still really defers.
+  const drain = () => new Promise((r) => setImmediate(r));
+
+  // Step ACROSS the boundary rather than past it: only the false-then-true pair
+  // pins the deadline. A single big tick would pass against any shorter one.
+  t.mock.timers.tick(AVATAR_PRIME_TIMEOUT_MS - 1);
+  await drain();
+  assert.equal(state.settled, false, 'still waiting just inside the deadline');
+
+  t.mock.timers.tick(1);
+  await done;
+  await drain();
+  assert.equal(state.settled, true, 'gave up at the deadline');
+  assert.equal(knownAvatar('a'), undefined,
+    'nothing cached, so the next view retries rather than remembering a non-answer');
+});
+
+test('a prime that answers in time clears its timer instead of leaving one pending', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  resetAvatarCache();
+
+  await primeAvatars(['a'], async () => ({ avatars: { a: '/uploads/a.webp' } }));
+  assert.equal(knownAvatar('a'), '/uploads/a.webp');
+
+  // Advancing past the deadline must reach no live timer. If the race's timer
+  // survived a successful prime, its rejection would surface here as an
+  // unhandled rejection rather than being harmlessly discarded.
+  t.mock.timers.tick(AVATAR_PRIME_TIMEOUT_MS * 2);
+  await Promise.resolve();
+  assert.equal(knownAvatar('a'), '/uploads/a.webp', 'the answer stands');
 });

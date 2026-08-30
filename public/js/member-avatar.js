@@ -33,6 +33,11 @@
 // would be re-requested on every render.
 const AVATAR_CACHE = new Map();
 
+// How long a view will wait for pictures before rendering initials instead.
+// Generous next to the endpoint's real cost (one indexed lookup) and short next
+// to a stalled connection — it is a fallback trigger, not a performance budget.
+const AVATAR_PRIME_TIMEOUT_MS = 4000;
+
 // Attribute-safe escaping. Its own three lines rather than core.js's esc()
 // because this file must be requireable outside the browser, where the shared
 // scope does not exist. The values are server-minted (an opaque id, an
@@ -69,15 +74,33 @@ function knownAvatar(userId) {
 //
 // A failed fetch caches nothing and throws nothing: the screen renders initials,
 // which is the correct fallback, and the next view tries again.
-async function primeAvatars(userIds, fetcher) {
+//
+// The DEADLINE is the load-bearing half, not the try/catch. This runs on the
+// round-read path, so a caller awaits it before the screen renders — and `fetch`
+// has no timeout of its own, so a stalled connection (a phone losing signal
+// mid-request) would hold the app's most-used screen open indefinitely rather
+// than failing. Failing open on a hang has to be as reliable as failing open on
+// an error, so the race is what actually delivers the fallback this comment
+// promises. A picture is a nicety; the round is not.
+async function primeAvatars(userIds, fetcher, timeoutMs = AVATAR_PRIME_TIMEOUT_MS) {
   const missing = [...new Set((userIds || []).filter(Boolean))]
     .filter((uid) => !AVATAR_CACHE.has(uid));
   if (!missing.length) return;
   let answer;
+  let timer = null;
   try {
-    answer = await fetcher(missing);
+    answer = await Promise.race([
+      fetcher(missing),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error('avatar_prime_timeout')), timeoutMs);
+      }),
+    ]);
   } catch {
     return;
+  } finally {
+    // Cleared on BOTH paths: a pending timer would otherwise keep a rejected
+    // promise alive for the rest of the deadline on every successful prime.
+    if (timer) clearTimeout(timer);
   }
   const avatars = (answer && answer.avatars) || {};
   // EVERY requested id is cached, including ones the answer omitted — an id the
@@ -137,5 +160,6 @@ function resetAvatarCache() {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     avatarFace, primeAvatars, rememberAvatar, knownAvatar, installAvatarFallback, resetAvatarCache,
+    AVATAR_PRIME_TIMEOUT_MS,
   };
 }
