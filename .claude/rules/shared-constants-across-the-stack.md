@@ -234,7 +234,34 @@ only. It lives here because it is the same decision as the cap — what we store
 and splitting one policy across two files to keep this one purely bidirectional
 would be tidiness at the cost of the thing being findable.
 
-Each new instance must be named in this inventory — the twelve paragraphs above.
+**The thirteenth is `public/js/cover-policy.js`** (#867): what an uploaded game
+cover may be — the upload byte cap, the ceiling on the stored long edge, and the
+output format. The plain value half of this rule and the direct sibling of
+`avatar-policy.js`: the two paste sites *offer* the cap (the pre-flight check on
+the blob and the message that states the limit) and `lib/upload.js` /
+`lib/cover.js` *validate* against it.
+
+Its trap is that the two constants fail in **different directions**, so neither
+drift resembles the other. `COVER_MAX_BYTES` is the avatar case exactly — a
+client cap above the server's produces the palette bug (the zone accepts a paste
+the route then 413s), one below it silently refuses a cover the server would
+have taken. `COVER_MAX_DIM` is not offered to anyone: it is shared because
+`lib/cover.js` writes it and the admin backfill's `coverIsCurrent` decides
+against it, and if those two ever disagreed the backfill would either re-encode
+every object on every press (a lossy generation each time, reclaiming nothing) or
+skip the ones it exists to convert. The message takes `{mb}` from the derived
+`COVER_MAX_MB` for the reason `avatar-policy.js` gives: a hand-written "at most
+5 MB" is the third copy, and it is the one that states a number nobody
+re-checks.
+
+Note what deliberately stayed **out**: `.claude/rules/cover-image-storage-backend.md`'s
+`/uploads/<key>` path shape, and `cover-size.js`'s `COVER_THUMB`/`CARD`/`HERO`
+render widths. The latter look like they belong — they are about cover sizing and
+they bound `COVER_MAX_DIM`'s justification — but nothing validates them across the
+boundary: they are the frontend's own render-time choice, and the server has no
+opinion about them at all.
+
+Each new instance must be named in this inventory — the thirteen paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

@@ -3147,6 +3147,62 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.isImageReferenced(T, '/uploads/ok.jpg'), true);
   });
 
+  /* --------------- Cover re-encode backfill (#867) -------------------------- */
+
+  test('listGameImages reports every distinct cover across tenants, deduped', async () => {
+    const mine = await freshRound();
+    await repo.createGame(T, mine.id, gameFields({ title: 'A', image: '/uploads/a.jpg' }));
+    // Two rows naming ONE object — what importFromRoundId produces. The backfill
+    // must convert it once, not once per reference, so the dedupe is the point.
+    await repo.createGame(T, mine.id, gameFields({ title: 'A copy', image: '/uploads/a.jpg' }));
+    await repo.createGame(T, mine.id, gameFields({ title: 'No cover' }));
+    // A hotlinked provider cover (#172) is listed raw: the ROUTE decides which
+    // are ours, exactly as it does for tenantSummary's images.
+    await repo.createGame(T, mine.id, gameFields({ title: 'Linked', image: 'https://cf.geekdo-images.com/x.jpg' }));
+
+    const theirs = await repo.createRound(OTHER, { name: 'Their round', members: ['Zoe'] });
+    await repo.createGame(OTHER, theirs.id, gameFields({ title: 'B', image: '/uploads/b.jpg' }));
+
+    const images = await repo.listGameImages();
+    assert.equal(images.filter((i) => i === '/uploads/a.jpg').length, 1, 'deduped');
+    assert.ok(images.includes('/uploads/b.jpg'), 'another tenant\'s cover is listed too');
+    assert.ok(images.includes('https://cf.geekdo-images.com/x.jpg'), 'hotlinks are not filtered here');
+    assert.equal(images.includes(null), false);
+    assert.equal(images.includes(undefined), false);
+  });
+
+  test('replaceImage repoints every reference across tenants and reports the count', async () => {
+    const mine = await freshRound();
+    const g1 = await repo.createGame(T, mine.id, gameFields({ title: 'One', image: '/uploads/old.jpg' }));
+    const theirs = await repo.createRound(OTHER, { name: 'Their round', members: ['Zoe'] });
+    await repo.createGame(OTHER, theirs.id, gameFields({ title: 'Two', image: '/uploads/old.jpg' }));
+    const keep = await repo.createGame(T, mine.id, gameFields({ title: 'Keep', image: '/uploads/ok.jpg' }));
+
+    assert.equal(await repo.replaceImage('/uploads/old.jpg', '/uploads/new.webp'), 2);
+
+    const after = await repo.getRound(T, mine.id);
+    assert.equal(after.games.find((g) => g.id === g1.id).image, '/uploads/new.webp');
+    assert.equal(after.games.find((g) => g.id === keep.id).image, '/uploads/ok.jpg');
+    assert.equal((await repo.getRound(OTHER, theirs.id)).games[0].image, '/uploads/new.webp');
+
+    // EVERY reference moved, which is what lets the route delete the old object
+    // without an isImageReferenced check.
+    assert.equal(await repo.isImageReferenced(T, '/uploads/old.jpg'), false);
+    // A repeat is an honest no-op — the property the admin button leans on.
+    assert.equal(await repo.replaceImage('/uploads/old.jpg', '/uploads/new.webp'), 0);
+  });
+
+  test('replaceImage refuses a degenerate rewrite rather than reporting a change', async () => {
+    const mine = await freshRound();
+    await repo.createGame(T, mine.id, gameFields({ title: 'One', image: '/uploads/same.jpg' }));
+    // Same path in and out would otherwise report a "change" the route answers
+    // by deleting the object it just kept.
+    assert.equal(await repo.replaceImage('/uploads/same.jpg', '/uploads/same.jpg'), 0);
+    assert.equal(await repo.replaceImage('', '/uploads/new.webp'), 0);
+    assert.equal(await repo.replaceImage('/uploads/same.jpg', null), 0);
+    assert.equal(await repo.isImageReferenced(T, '/uploads/same.jpg'), true);
+  });
+
   /* ------------------- Account profile pictures (#841) ---------------------- */
 
   test('getUserAvatars answers a batch, with null for an account that has none', async () => {

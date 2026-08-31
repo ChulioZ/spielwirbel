@@ -15,10 +15,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { app, store, createRound } = require('./helpers');
 
-// Real magic bytes, padded past the 12-byte sniff minimum (as test/games.test.js).
-const PNG_BYTES = Buffer.concat([
-  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(8),
-]);
+const { PNG_BYTES } = require('./support/images');
 const objectOf = (image) => path.join(store.UPLOAD_DIR, path.basename(image));
 
 async function addGame(rid, title) {

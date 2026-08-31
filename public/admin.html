@@ -361,6 +361,26 @@
           </div>
           <p class="msg" id="corpusMsg" role="alert" hidden></p>
         </section>
+
+        <!-- Cover re-encode backfill (#867). New uploads are resized and
+             re-encoded on the way in; covers stored before that are not, and a
+             10 MB one is re-served at 10 MB on every render. This converts them
+             in place. An operator button rather than boot-time migration code,
+             per CLAUDE.md's standing rule. -->
+        <section class="card">
+          <h2>Titelbilder</h2>
+          <p class="sub" style="margin-bottom: 0.9rem;">
+            Verkleinert hochgeladene Titelbilder, die noch im Originalformat im
+            Speicher liegen — neue Uploads werden schon beim Hochladen verkleinert.
+            Läuft in Schritten von 200 Bildern — bei Bedarf mehrmals drücken;
+            bereits umgewandelte Bilder werden übersprungen. Fremd verlinkte
+            Cover bleiben unberührt.
+          </p>
+          <div class="row">
+            <button class="ghost small" id="coverReencode">Titelbilder verkleinern</button>
+          </div>
+          <p class="msg" id="coverMsg" role="alert" hidden></p>
+        </section>
       </aside>
     </div>
   </div>

@@ -1342,3 +1342,105 @@ test('with no ADMIN_PASSWORD the whole surface 404s', async () => {
     process.env.ADMIN_PASSWORD = saved;
   }
 });
+
+
+/* ------------------- Cover re-encode backfill (#867) ------------------------ */
+
+test('the cover backfill converts legacy objects, skips the rest, and is safe to press twice', async (t) => {
+  const sharp = require('sharp');
+  const storage = require('../lib/storage');
+  const { COVER_MAX_DIM } = require('../public/js/cover-policy');
+
+  const cookie = await adminCookie();
+  const owner = await makeAccount('backfill@example.com');
+  const round = await request(app)
+    .post('/api/rounds')
+    .set('Authorization', `Bearer ${owner.token}`)
+    .send({ name: 'Shelf', members: ['Zoe'] });
+  const rid = round.body.id;
+  const tenantRepo = repo.forTenant(owner.user.tenantId);
+
+  const addGame = async (title) => {
+    const res = await request(app)
+      .post(`/api/rounds/${rid}/games`)
+      .set('Authorization', `Bearer ${owner.token}`)
+      .send({ title, minPlayers: 1, maxPlayers: 4 });
+    return res.body.id;
+  };
+
+  // A pre-#867 cover: stored exactly as pasted, so big and not our format.
+  // Written through the storage seam directly because the upload route would
+  // now re-encode it — the legacy shape is precisely what no longer occurs.
+  const legacyBytes = await sharp({
+    create: { width: 2400, height: 1600, channels: 3, background: '#c2410c' },
+  }).jpeg({ quality: 100 }).toBuffer();
+  const legacyPath = await storage.save(legacyBytes, '.jpg');
+
+  const legacyGame = await addGame('Legacy cover');
+  await tenantRepo.updateGame(rid, legacyGame, { image: legacyPath });
+
+  // An already-converted object, which must be left alone rather than re-encoded
+  // a second time (a lossy generation for no bytes reclaimed).
+  const currentBytes = await sharp({
+    create: { width: 800, height: 600, channels: 3, background: '#0f766e' },
+  }).webp().toBuffer();
+  const currentPath = await storage.save(currentBytes, '.webp');
+  const currentGame = await addGame('Already reduced');
+  await tenantRepo.updateGame(rid, currentGame, { image: currentPath });
+
+  // A hotlinked provider cover (#172): no bytes of ours behind it, and fetching
+  // or rewriting one would be exactly the re-hosting that rule forbids.
+  const hotlink = 'https://cf.geekdo-images.com/thumb/img/abc/pic1.jpg';
+  const linkedGame = await addGame('Hotlinked');
+  await tenantRepo.updateGame(rid, linkedGame, { image: hotlink });
+
+  let newPath;
+
+  await t.test('the first run converts only the legacy object', async () => {
+    const res = await request(app).post('/api/admin/covers/reencode').set('Cookie', cookie);
+    assert.equal(res.status, 200);
+    const { run } = res.body;
+
+    assert.equal(run.converted, 1);
+    assert.equal(run.skipped, 1, 'the already-converted object was skipped');
+    assert.equal(run.failed, 0);
+    assert.equal(run.remaining, 0);
+    assert.ok(run.reclaimed > 0, 'the run reports bytes actually reclaimed');
+    assert.equal(run.reclaimed, run.bytesBefore - run.bytesAfter);
+
+    const games = (await tenantRepo.getRound(rid)).games;
+    newPath = games.find((g) => g.id === legacyGame).image;
+    assert.notEqual(newPath, legacyPath, 'the game was repointed');
+    assert.match(newPath, /^\/uploads\/[0-9a-f]+\.webp$/);
+
+    const stored = await storage.read(newPath);
+    const meta = await sharp(stored).metadata();
+    assert.equal(meta.format, 'webp');
+    assert.equal(Math.max(meta.width, meta.height), COVER_MAX_DIM);
+    assert.ok(stored.length < legacyBytes.length);
+
+    // Reference first, bytes second: the superseded object is gone only after
+    // the row moved off it.
+    assert.equal(await storage.read(legacyPath), null, 'the superseded object was deleted');
+  });
+
+  await t.test('the hotlinked and already-current covers are untouched', async () => {
+    const games = (await tenantRepo.getRound(rid)).games;
+    assert.equal(games.find((g) => g.id === linkedGame).image, hotlink);
+    assert.equal(games.find((g) => g.id === currentGame).image, currentPath);
+    assert.ok(await storage.read(currentPath), 'its object still exists');
+  });
+
+  await t.test('a second press converts nothing — the run is idempotent', async () => {
+    const res = await request(app).post('/api/admin/covers/reencode').set('Cookie', cookie);
+    const { run } = res.body;
+    assert.equal(run.converted, 0);
+    assert.equal(run.reclaimed, 0);
+    assert.equal(run.skipped, 2, 'both objects now have the stored shape');
+
+    // The decisive half: the object the FIRST run wrote is still the one the
+    // game points at, so pressing again cannot churn covers indefinitely.
+    const games = (await tenantRepo.getRound(rid)).games;
+    assert.equal(games.find((g) => g.id === legacyGame).image, newPath);
+  });
+});

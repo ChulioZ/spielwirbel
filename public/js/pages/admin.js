@@ -465,6 +465,36 @@
     loadCorpus();
   });
 
+  // ---- cover re-encode backfill (#867) --------------------------------------
+
+  // The route reports the numbers; this decides what reads as good, the same
+  // division of labour the status card uses. `remaining` is the one that must
+  // not be buried: a run that stopped at the batch ceiling looks identical to a
+  // finished one unless the panel says so.
+  $('coverReencode').addEventListener('click', async () => {
+    hide($('coverMsg'));
+    show($('coverMsg'), 'Titelbilder werden geprüft …', 'ok');
+    let run;
+    try {
+      ({ run } = await api('/covers/reencode', { method: 'POST' }));
+    } catch (err) {
+      show($('coverMsg'), message(err), 'err');
+      return;
+    }
+    if (!run.scanned) {
+      show($('coverMsg'), 'Keine eigenen Titelbilder gespeichert.', 'ok');
+      return;
+    }
+    const parts = [`${run.scanned} von ${run.hosted} geprüft`];
+    parts.push(run.converted
+      ? `${run.converted} verkleinert, ${formatBytes(run.reclaimed)} gespart`
+      : 'nichts zu tun — alle geprüften Bilder sind bereits verkleinert');
+    if (run.skipped) parts.push(`${run.skipped} übersprungen`);
+    if (run.failed) parts.push(`${run.failed} nicht lesbar`);
+    if (run.remaining) parts.push(`${run.remaining} noch offen — nochmal drücken`);
+    show($('coverMsg'), `${parts.join(' · ')}.`, run.failed ? 'err' : 'ok');
+  });
+
   // ---- error/warn logs (#359) ----------------------------------------------
 
   // The most recent warn/error lines this process emitted, newest first, from

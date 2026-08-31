@@ -414,6 +414,9 @@ async function showGameDetail(rid, gameId) {
       body = new FormData();
       Object.entries(fields).forEach(([k, v]) => body.append(k, v));
       if (imageBlob) {
+        // Pre-flight against the shared cap, as the add-game paste zone does
+        // (#867) — refused here rather than 413'd after the upload.
+        if (imageBlob.size > COVER_MAX_BYTES) return toast(t('cover.tooLarge', { mb: COVER_MAX_MB }));
         const ext = (imageBlob.type && imageBlob.type.split('/')[1]) || 'png';
         body.append('image', imageBlob, 'cover.' + ext);
       }
@@ -426,6 +429,9 @@ async function showGameDetail(rid, gameId) {
       toast(t('detail.saved'));
       showGameDetail(rid, gameId);
     } catch (e) {
+      // The server's answer when the pre-flight above was bypassed; every other
+      // code still surfaces as-is.
+      if (e.message === 'cover_too_large') return toast(t('cover.tooLarge', { mb: COVER_MAX_MB }));
       toast(e.message);
     }
   }

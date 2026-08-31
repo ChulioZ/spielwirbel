@@ -89,9 +89,14 @@ lib/
     disk.js          default backend — files under DATA_DIR/uploads
     s3.js            S3-compatible object storage, used when S3_BUCKET set
   upload.js          multer image-upload config (persists via lib/storage) —
-                     two instances: covers, and the smaller-capped avatar one
+                     two instances, one per kind; both sniff magic bytes and
+                     then re-encode, so the stored type is always ours
   avatar.js          re-encodes an account profile picture to one square webp,
                      stripping EXIF/GPS and flattening animation (issue #841)
+  cover.js           re-encodes an uploaded game cover to a bounded webp — fitted
+                     INSIDE the ceiling (never cropped), EXIF/GPS stripped, plus
+                     the "already converted?" predicate the operator backfill
+                     presses against (issue #867)
   auth.js            shared-password gate (active when AUTH_PASSWORD is set)
   admin.js           operator gate for the moderation surface (separate
                      ADMIN_PASSWORD; 404s unless set — issue #268)
@@ -443,6 +448,10 @@ public/
     avatar-policy.js what a profile picture may be — byte cap, stored square,
                      accepted types — offered by the Konto picker and validated
                      by lib/avatar.js + lib/upload.js (issue #841)
+    cover-policy.js  what an uploaded game cover may be — byte cap, ceiling on
+                     the stored long edge, output format — offered by the two
+                     paste sites and validated by lib/upload.js + lib/cover.js
+                     (issue #867)
     member-avatar.js the ONE decision of photo-vs-initials, used by every avatar
                      render site, plus the per-page id→picture cache and the
                      broken-image fallback (issue #841)

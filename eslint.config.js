@@ -156,6 +156,9 @@ const frontendGlobals = {
   AVATAR_ACCEPT: 'readonly', AVATAR_MAX_PIXELS: 'readonly',
   avatarFace: 'readonly', primeAvatars: 'readonly', rememberAvatar: 'readonly',
   knownAvatar: 'readonly', installAvatarFallback: 'readonly', resetAvatarCache: 'readonly',
+  // cover-policy.js (issue #867)
+  COVER_MAX_BYTES: 'readonly', COVER_MAX_MB: 'readonly', COVER_MAX_DIM: 'readonly',
+  COVER_EXT: 'readonly', COVER_MAX_PIXELS: 'readonly',
   sessionTeams: 'readonly', sessionParties: 'readonly',
   TEAM_TOKEN_MEMBER: 'readonly', TEAM_TOKEN_GUEST: 'readonly',
   themeAccent: 'readonly', resolveAccent: 'readonly',
