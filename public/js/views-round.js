@@ -439,6 +439,26 @@ function renderStartTab(round, activeGames) {
     app.appendChild(ticket);
   }
 
+  // From 1280px up the rail owns the hero and the big CTA above, so a round with
+  // no ticket to show left the pane holding only `.hub-actions` — one visible
+  // child over 816px of bare page, on every young round (#869). This is the
+  // pane's stand-in; `.empty--rail-gap` renders it ONLY where the rail exists,
+  // because below that width the hero and CTA are right here and it would
+  // duplicate them.
+  //
+  // Asked of the DOM rather than re-deriving the three ticket predicates above,
+  // so a fourth kind of ticket is covered without anyone remembering this line.
+  // Safe because the rail renders no tickets of its own.
+  if (!app.querySelector('.ticket')) {
+    const gap = emptyState({
+      icon: 'ti-tornado',
+      title: t('round.startEmptyTitle'),
+      text: t('round.startEmpty'),
+    });
+    gap.classList.add('empty--rail-gap');
+    app.appendChild(gap);
+  }
+
   // Retirement suggestions: a slim, dismissible banner. Enough data = at least
   // three times as many votes as members. Collapsed by default; expand to see
   // the list, or dismiss it for this session.

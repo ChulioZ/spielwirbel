@@ -124,7 +124,9 @@ async function showArchive(rid, kind, seg = kind) {
   app.appendChild(head);
 
   if (games.length === 0) {
-    app.appendChild(h(`<div class="empty"><p>${esc(t(`${kind}.empty`))}</p></div>`));
+    // The kind's own glyph (a.icon), so the empty state and the rows it stands
+    // in for speak the same language.
+    app.appendChild(emptyState({ icon: a.icon, title: t(`${kind}.emptyTitle`), text: t(`${kind}.empty`) }));
   } else {
     const list = h('<div class="archive-list"></div>');
     const loadCover = createCoverLoader(); // lazy archive thumbs (#198)

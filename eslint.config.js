@@ -267,6 +267,8 @@ const frontendGlobals = {
   bgStatsBggId: 'readonly', bgStatsPlay: 'readonly', bgStatsPlayUrl: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly', existingTitleState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
+  // empty-state.js (issue #869)
+  emptyState: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
   COVER_HERO: 'readonly', COVER_RESIZERS: 'readonly',
   providerMatchCover: 'readonly', pickedTitle: 'readonly',

@@ -70,7 +70,7 @@ function renderPokaleTab(round) {
   sec.appendChild(h(`<div class="section-head"><h1>${esc(t('pokale.title'))}</h1></div>`));
 
   if (finished.length === 0) {
-    sec.appendChild(h(`<div class="empty"><p>${esc(t('pokale.empty'))}</p></div>`));
+    sec.appendChild(emptyState({ icon: 'ti-trophy', title: t('pokale.emptyTitle'), text: t('pokale.empty') }));
     app.appendChild(sec);
     return;
   }

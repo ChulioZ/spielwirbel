@@ -153,7 +153,10 @@ async function showRecommendations(rid) {
   const recs = data.recommendations || [];
   if (!recs.length) {
     const key = recEmptyKey(data);
-    const box = h(`<div class="empty"><p>${esc(t(`suggest.empty.${key}`))}</p></div>`);
+    // Sub-only: each of these five strings is one explanatory thought
+    // ("This instance has no game database…"), and a headline invented for it
+    // would be filler. The component's title is optional for exactly this (#869).
+    const box = emptyState({ icon: 'ti-sparkles', text: t(`suggest.empty.${key}`) });
     // Only the "your shelf is too thin" case has an action behind it: importing
     // a BGG collection is what fills a profile fastest. The other two are about
     // the instance's database, which the reader cannot do anything about.
