@@ -8,10 +8,9 @@ const request = require('supertest');
 const { app, createRound } = require('./helpers');
 const store = require('../lib/store');
 
-// A minimal but real PNG (magic bytes) — uploads are validated by content.
-const PNG_BYTES = Buffer.concat([
-  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(8),
-]);
+// Uploads are validated by content AND re-encoded (#867), so this has to be a
+// real decodable image, not just a valid signature.
+const { PNG_BYTES } = require('./support/images');
 
 test('POST /api/rounds creates a round with cleaned members', async () => {
   const res = await request(app)

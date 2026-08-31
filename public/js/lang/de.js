@@ -522,6 +522,7 @@ I18N.de = {
   'addGame.toast.playersRange': 'Die maximale Personenzahl darf nicht kleiner als die minimale sein',
   'addGame.toast.saved': 'Spiel gespeichert',
   'addGame.toast.savedWish': 'Auf die Wunschliste gesetzt',
+  'cover.tooLarge': 'Dieses Bild ist zu groß (höchstens {mb} MB).',
   'addGame.toast.quota': 'Spiellimit für diese Runde erreicht.',
   'addGame.toast.pasted': 'Bild eingefügt',
   'addGame.toast.noImage': 'Kein Bild in der Zwischenablage',

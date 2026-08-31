@@ -4,6 +4,12 @@
 
 'use strict';
 
+// NOTE on own uploads (#867): coverUrl() still passes a '/uploads/' path
+// through byte-identically — that contract is unchanged. What changed is why it
+// is cheap: since #867 the bytes behind it were resized and re-encoded on the
+// way in (lib/cover.js, COVER_MAX_DIM), so there is a bounded object behind the
+// unrewritten URL rather than whatever was pasted.
+//
 // Frame-appropriate widths, in CSS px * ~1.5 for DPR headroom. Pass one of
 // these to coverUrl() at each render site so the browser downloads a cover
 // sized for the box it lands in, not the provider's print-resolution master.

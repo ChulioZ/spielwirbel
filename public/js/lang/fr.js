@@ -506,6 +506,7 @@ I18N.fr = {
   'addGame.toast.playersRange': 'Le nombre max de joueurs ne peut pas être inférieur au min',
   'addGame.toast.saved': 'Jeu enregistré',
   'addGame.toast.savedWish': 'Ajouté à la liste d’envies',
+  'cover.tooLarge': 'Cette image est trop grande (au maximum {mb} Mo).',
   'addGame.toast.quota': 'Limite de jeux atteinte pour ce groupe.',
   'addGame.toast.pasted': 'Image collée',
   'addGame.toast.noImage': 'Aucune image dans le presse-papiers',

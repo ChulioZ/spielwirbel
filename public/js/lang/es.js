@@ -505,6 +505,7 @@ I18N.es = {
   'addGame.toast.playersRange': 'El máximo de jugadores no puede ser menor que el mínimo',
   'addGame.toast.saved': 'Juego guardado',
   'addGame.toast.savedWish': 'Añadido a la lista de deseos',
+  'cover.tooLarge': 'Esa imagen es demasiado grande (como máximo {mb} MB).',
   'addGame.toast.quota': 'Este grupo ha llegado a su límite de juegos.',
   'addGame.toast.pasted': 'Imagen pegada',
   'addGame.toast.noImage': 'No hay ninguna imagen en el portapapeles',

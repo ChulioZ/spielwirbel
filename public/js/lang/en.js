@@ -523,6 +523,9 @@ I18N.en = {
   'addGame.toast.playersRange': 'Max players must not be less than min players',
   'addGame.toast.saved': 'Game saved',
   'addGame.toast.savedWish': 'Added to the wish list',
+  // Shared by both cover paste sites and by the server's 413 (#867). {mb}
+  // comes from COVER_MAX_BYTES, never hand-written.
+  'cover.tooLarge': 'That image is too large (at most {mb} MB).',
   'addGame.toast.quota': 'Game limit for this round reached.',
   'addGame.toast.pasted': 'Image pasted',
   'addGame.toast.noImage': 'No image in the clipboard',

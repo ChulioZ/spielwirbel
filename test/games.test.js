@@ -458,22 +458,24 @@ test('PATCH keeps the old cover when an imageUrl host is not allowlisted', async
 // --- Uploaded-file hardening (issue #133): verify real content, derive the
 // stored extension from the detected type, reject non-images. ---
 
-// Minimal buffers carrying real magic bytes (padded past the 12-byte sniff min).
-const PNG_BYTES = Buffer.concat([
-  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(8),
-]);
-const JPEG_BYTES = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(8)]);
+// Real, decodable images — since #867 a valid signature is no longer enough:
+// saveUploadedImage decodes and re-encodes, so a signature-plus-padding buffer
+// is correctly refused. See test/support/images.js.
+const { PNG_BYTES, JPEG_BYTES } = require('./support/images');
+const { COVER_MAX_BYTES, COVER_MAX_DIM } = require('../public/js/cover-policy');
+const sharp = require('sharp');
 
-test('POST games stores an uploaded PNG and derives the extension from the content', async () => {
+test('POST games stores an uploaded cover as OUR webp, whatever came in', async () => {
   const round = await createRound(request);
-  // Filename lies (.jpg) and mimetype is generic — the stored ext must follow
-  // the real PNG magic bytes, not the client-supplied name.
+  // Filename lies (.jpg), mimetype is generic, and the bytes are a PNG — none
+  // of the three decides the stored type. Since #867 the sniffed extension is
+  // discarded too: the object on disk is our encoder's output.
   const res = await request(app)
     .post(`/api/rounds/${round.id}/games`)
     .field('title', 'Chess').field('minPlayers', '2').field('maxPlayers', '4')
     .attach('image', PNG_BYTES, { filename: 'cover.jpg', contentType: 'image/jpeg' });
   assert.equal(res.status, 201);
-  assert.match(res.body.image, /^\/uploads\/[0-9a-f]+\.png$/);
+  assert.match(res.body.image, /^\/uploads\/[0-9a-f]+\.webp$/);
   assert.ok(fs.existsSync(path.join(store.UPLOAD_DIR, path.basename(res.body.image))));
 });
 
@@ -492,6 +494,62 @@ test('POST games rejects an uploaded file whose content is not a real image', as
   assert.equal(fs.readdirSync(store.UPLOAD_DIR).length, before);
 });
 
+test('an upload over the byte cap is refused with 413 cover_too_large, storing nothing', async () => {
+  // multer refuses this before anything is decoded, which is the point of the
+  // cap: the bytes accepted here are bytes a native decoder is made to read.
+  // The dedicated code is what lets the client say WHAT went wrong instead of
+  // surfacing a generic failure (#867).
+  const round = await createRound(request);
+  const game = (await addGame(round.id)).body;
+  const tooBig = Buffer.concat([PNG_BYTES, Buffer.alloc(COVER_MAX_BYTES)]);
+  const before = fs.readdirSync(store.UPLOAD_DIR).length;
+
+  const post = await request(app)
+    .post(`/api/rounds/${round.id}/games`)
+    .field('title', 'Huge').field('minPlayers', '2').field('maxPlayers', '4')
+    .attach('image', tooBig, { filename: 'big.png', contentType: 'image/png' });
+  assert.equal(post.status, 413);
+  assert.equal(post.body.error, 'cover_too_large');
+
+  const patch = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`)
+    .attach('image', tooBig, { filename: 'big.png', contentType: 'image/png' });
+  assert.equal(patch.status, 413);
+  assert.equal(patch.body.error, 'cover_too_large');
+
+  assert.equal(fs.readdirSync(store.UPLOAD_DIR).length, before, 'nothing was written');
+
+  // The other side of the boundary, which is what actually pins the CAP rather
+  // than merely the wrapper: a payload just under it must not be refused for
+  // size. It still 400s (padding is not a decodable image) — the point is that
+  // it is NOT a 413, so a cap silently left at the old 10 MB would fail here.
+  const justUnder = Buffer.concat([PNG_BYTES, Buffer.alloc(COVER_MAX_BYTES - 4096)]);
+  const ok = await request(app)
+    .post(`/api/rounds/${round.id}/games`)
+    .field('title', 'Almost').field('minPlayers', '2').field('maxPlayers', '4')
+    .attach('image', justUnder, { filename: 'ok.png', contentType: 'image/png' });
+  assert.notEqual(ok.status, 413, 'a payload under the cap is not refused for size');
+});
+
+test('an oversized cover is stored reduced, not as pasted', async () => {
+  // The whole point of #867: what lands in the bucket is bounded, so it is not
+  // re-served at paste size into a 240px frame on every render.
+  const round = await createRound(request);
+  const big = await sharp({ create: { width: 2400, height: 1600, channels: 3, background: '#c2410c' } })
+    .png().toBuffer();
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/games`)
+    .field('title', 'Big').field('minPlayers', '2').field('maxPlayers', '4')
+    .attach('image', big, { filename: 'big.png', contentType: 'image/png' });
+  assert.equal(res.status, 201);
+
+  const stored = fs.readFileSync(path.join(store.UPLOAD_DIR, path.basename(res.body.image)));
+  const meta = await sharp(stored).metadata();
+  assert.equal(meta.format, 'webp');
+  assert.equal(Math.max(meta.width, meta.height), COVER_MAX_DIM);
+  assert.ok(stored.length < big.length, 'the stored object is smaller than what was pasted');
+});
+
 test('PATCH rejects a spoofed image upload and keeps the old cover', async () => {
   const round = await createRound(request);
   const game = (await addGame(round.id)).body;
@@ -500,7 +558,7 @@ test('PATCH rejects a spoofed image upload and keeps the old cover', async () =>
     .patch(`/api/rounds/${round.id}/games/${game.id}`)
     .attach('image', JPEG_BYTES, { filename: 'a.jpg', contentType: 'image/jpeg' });
   assert.equal(first.status, 200);
-  assert.match(first.body.image, /\.jpg$/);
+  assert.match(first.body.image, /\.webp$/, 'a JPEG input is stored as our webp too');
   const cover = first.body.image;
 
   const res = await request(app)

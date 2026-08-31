@@ -727,6 +727,10 @@ function showAddGame(round, { wish = false } = {}) {
     // ordinary add-game request byte-identical to what it has always been.
     if (wish) fd.append('wish', 'true');
     if (pastedBlob) {
+      // Pre-flight against the shared cap so an oversize screenshot is refused
+      // here, with a message that states the limit, rather than after the whole
+      // blob has gone up the wire to be 413'd (#867).
+      if (pastedBlob.size > COVER_MAX_BYTES) return toast(t('cover.tooLarge', { mb: COVER_MAX_MB }));
       const ext = (pastedBlob.type && pastedBlob.type.split('/')[1]) || 'png';
       fd.append('image', pastedBlob, 'pasted.' + ext);
     } else if (chosenImageUrl) {
@@ -765,7 +769,12 @@ function showAddGame(round, { wish = false } = {}) {
       } else {
         closeSheet(back);
       }
-    } catch (e) { toast(e.message === 'quota_games' ? t('addGame.toast.quota') : e.message); }
+    } catch (e) {
+      // cover_too_large is the server's answer when the pre-flight above was
+      // bypassed (a stale tab, a client that skipped it); same message either way.
+      if (e.message === 'cover_too_large') return toast(t('cover.tooLarge', { mb: COVER_MAX_MB }));
+      toast(e.message === 'quota_games' ? t('addGame.toast.quota') : e.message);
+    }
   }
   form.querySelector('#save').addEventListener('click', () => save(false));
   form.querySelector('#saveMore').addEventListener('click', () => save(true));
