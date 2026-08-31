@@ -1617,7 +1617,15 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   border-radius: var(--radius-lg);
   transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
 }
-.lobby-cta__icon {
+/* These three are SHARED with `.empty` (#869) — the app's one empty-state
+   treatment, grouped rather than copied. A copy is exactly how the two visual
+   languages drifted apart in the first place (a dashed `.empty` box on five
+   screens, this on the home screen, and a bare `.muted` in the Chronik), so
+   test/empty-state.test.js pins the sharing rather than the values. What stays
+   `.lobby-cta`-only is what makes it a clickable card: the hover, the focus
+   ring and `__action`. */
+.lobby-cta__icon,
+.empty__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1629,14 +1637,16 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   color: var(--brand);
   font-size: 30px; /* glyph, not type */
 }
-.lobby-cta__title {
+.lobby-cta__title,
+.empty__title {
   display: block;
   font-family: var(--font-display);
   font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--ink);
 }
-.lobby-cta__sub { display: block; margin-top: 6px; font-size: var(--text-lg); }
+.lobby-cta__sub,
+.empty__text { display: block; margin-top: 6px; font-size: var(--text-lg); }
 /* The explicit create affordance, so the card reads as an action rather than as
    a notice that happens to be clickable. */
 .lobby-cta__action {
@@ -2234,15 +2244,35 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .add-tile .ti { font-size: var(--text-3xl); }
 .add-tile:hover { background: var(--brand-tint-soft); }
 
+/* The shared empty state (#869). Its medallion, title and sub-line rules are
+   grouped with `.lobby-cta`'s and declared up there; only the box differs,
+   because that one is a clickable card and this is a notice. Built by
+   `emptyState()` in js/empty-state.js — don't hand-write the markup. */
 .empty {
   text-align: center;
-  padding: 48px 20px;
+  padding: 44px 20px;
   color: var(--ink-soft);
-  background: var(--surface);
-  border: 2px dashed var(--line);
+  /* A wash rather than flat --surface, so a content-light screen still has
+     something to look at, and it follows the round's own accent. The PREPARED
+     tint rather than a fresh color-mix: a hand-rolled one here resolved to
+     brand-at-5.2%, i.e. a colour a hair off a token that already has a name
+     (.claude/rules/theme-derived-colors.md). Measured with --ink-soft on it
+     across all eight themes: worst 5.35:1, against the 4.5 AA bar. */
+  background: var(--brand-tint-soft);
+  border: 2px dashed var(--brand-edge);
   border-radius: var(--radius-lg);
 }
-.empty p { font-size: var(--text-lg); }
+/* The Start tab's stand-in for what the rail takes. Its hero and its big CTA
+   are both `.rail-owned`, so from 1280px up the pane was left holding only
+   `.hub-actions` whenever the round had no ticket to show — one visible child
+   over 816px of bare page, on every young round's home screen.
+
+   Below that width the hero and CTA are in the pane themselves, so the stand-in
+   must NOT render or it duplicates them. The two rules are adjacent and equally
+   specific on purpose: the media block wins by source order, which cannot be
+   broken by moving code the way the `.rail-owned` specificity trap above was. */
+.empty--rail-gap { display: none; }
+@media (min-width: 1280px) { .empty--rail-gap { display: block; } }
 
 /* ---- Formulare ---- */
 .field { margin-bottom: 18px; }

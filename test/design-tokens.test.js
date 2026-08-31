@@ -82,7 +82,9 @@ const GLYPH_LITERALS = [
     '.podium__avatar', '.profile-head .avatar', '.member-avatar', '.handover__avatar',
   '.konto-avatar__preview', '.feed-item__who',
   // placeholder glyphs centred in a cover / thumb / tile box
-  '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon',
+  // The medallion is one rule shared by .lobby-cta and .empty (#869), so the
+  // exemption has to name the whole selector text — these are matched exactly.
+  '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon,\n.empty__icon',
   '.landing-card__icon', '.landing-step__num', '.feed-item__img', '.result-row__img',
   '.friends-invite__icon',
   '.pool-thumb', '.pool-thumb .ti', '.pool-tile__img', '.game-card__img', '.vote__img',

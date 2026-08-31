@@ -139,7 +139,7 @@ async function showTags(rid) {
 
   const tags = round.tags || [];
   if (tags.length === 0) {
-    sec.appendChild(h(`<div class="empty"><p>${esc(t('tags.empty'))}</p></div>`));
+    sec.appendChild(emptyState({ icon: 'ti-tags', title: t('tags.emptyTitle'), text: t('tags.empty') }));
   } else {
     const list = h('<div class="ds-list ds-list--tiles"></div>');
     tags.forEach((tg) => {

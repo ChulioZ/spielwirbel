@@ -239,7 +239,7 @@ function renderChronikTab(round, activities) {
       chronikFilter === 'all' ? true : chronikFilter === 'sessions' ? e.kind === 'session' : e.kind === 'activity'
     );
     if (visible.length === 0) {
-      tl.appendChild(h(`<div class="muted">${esc(t('chronik.empty'))}</div>`));
+      tl.appendChild(emptyState({ icon: 'ti-history', title: t('chronik.emptyTitle'), text: t('chronik.empty') }));
       return;
     }
     let lastMonth = '';

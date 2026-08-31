@@ -54,7 +54,7 @@ function renderRegalTab(round, activeGames) {
   importTile.addEventListener('click', () => showBggImport(round));
 
   if (activeGames.length === 0) {
-    gamesSec.appendChild(h(`<div class="empty"><p>${esc(t('games.empty'))}</p></div>`));
+    gamesSec.appendChild(emptyState({ icon: 'ti-cards', title: t('games.emptyTitle'), text: t('games.empty') }));
     grid.appendChild(addTile);
     if (canImportBgg()) grid.appendChild(importTile);
     gamesSec.appendChild(grid);
