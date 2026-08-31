@@ -201,6 +201,70 @@ test('s3: size swallows client errors (best effort, like remove)', async () => {
   assert.equal(await s3.size('/uploads/x.png'), null);
 });
 
+/* ---------------- read(): the backfill's byte source (#867) ---------------- */
+
+test('disk: read returns the bytes, and null for anything it cannot read', async () => {
+  const p = await disk.save(PNG, '.png');
+  assert.deepEqual(await disk.read(p), PNG);
+  assert.equal(await disk.read('/uploads/missing.png'), null);
+  assert.equal(await disk.read(null), null);
+  await disk.remove(p);
+});
+
+test('s3: read returns the bytes from a STREAMING body', async () => {
+  const { client } = fakeS3();
+  const s3 = createS3Storage({ client, bucket: 'test-bucket', prefix: 'covers/' });
+  const p = await s3.save(PNG, '.png');
+  // Rebuilds the prefixed key the way serve/remove/size do — on a prefixed
+  // bucket a wrong key reads as "missing", and the backfill would report every
+  // cover unreadable rather than converting one.
+  assert.deepEqual(await s3.read(p), PNG);
+});
+
+test('s3: read prefers the SDK helper when the body offers one', async () => {
+  // The REAL @aws-sdk body exposes transformToByteArray, so this is the branch
+  // production takes — fakeS3 hands back a bare Readable and therefore only ever
+  // exercises the stream fallback. Without this case the path that runs against
+  // R2 would be the one no test has executed.
+  let usedHelper = false;
+  const client = {
+    async send() {
+      return {
+        Body: {
+          async transformToByteArray() { usedHelper = true; return new Uint8Array(PNG); },
+        },
+      };
+    },
+  };
+  const s3 = createS3Storage({ client, bucket: 'test-bucket' });
+  const out = await s3.read('/uploads/x.png');
+  assert.equal(usedHelper, true, 'the helper was used, not the stream fallback');
+  assert.ok(Buffer.isBuffer(out), 'a Buffer comes back, not a Uint8Array');
+  assert.deepEqual(out, PNG);
+});
+
+test('s3: read degrades to null on a missing key or a client error', async () => {
+  const { client } = fakeS3();
+  assert.equal(await createS3Storage({ client, bucket: 'b' }).read('/uploads/gone.png'), null);
+
+  const broken = { async send() { throw new Error('network down'); } };
+  assert.equal(await createS3Storage({ client: broken, bucket: 'b' }).read('/uploads/x.png'), null);
+});
+
+test('index: read ignores anything that is not a hosted /uploads path', async () => {
+  // Same guard, same reason as size() below: basename() of a hotlinked provider
+  // URL (#172) would read OUR object of that name — and here the bytes would
+  // then be re-encoded and written over a stranger's cover.
+  const storage = require('../lib/storage');
+  const p = await storage.save(PNG, '.png');
+  assert.deepEqual(await storage.read(p), PNG);
+
+  assert.equal(await storage.read(`https://cf.geekdo-images.com/x/${path.basename(p)}`), null);
+  assert.equal(await storage.read(null), null);
+
+  await storage.remove(p);
+});
+
 // The seam guard (lib/storage/index.js) applies to size() for the same reason it
 // applies to remove(): both backends take path.basename() of what they are
 // handed, so a hotlinked provider URL (#172) ending in '/pic123.jpg' would size
