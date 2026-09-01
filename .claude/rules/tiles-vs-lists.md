@@ -72,11 +72,15 @@ doesn't have to be redone.
   raggedness (a full-width stats band under narrower sections above) is
   deliberate and reads as a band, not as a mistake.
 - **Game detail** — the defect there was a *sizing* one, not a shape one: the
-  score ring sat 453px from the title because `.gd-info` was `flex: 1`. Fixed
-  by `flex: 0 1 auto` plus `width: fit-content` on `.gd-head`. A full
-  two-column restructure would need the view rebuilt (cover and facts live
-  inside one `.gd-head`, the rest are flat siblings of `.app`) to turn a
-  ~550px-tall page into a ~400px one.
+  score ring sat 453px from the title because `.gd-info` was `flex: 1`. That was
+  first fixed by `flex: 0 1 auto` plus `width: fit-content` on `.gd-head`, and
+  **#868 replaced both** — `fit-content` made the band's right edge a function of
+  the title, so the page frame shifted between games (990–1212px across four
+  games of one round). The band is now a full-width framed card and `.gd-info` is
+  back to growing (`flex: 1 1 240px`); the ring lands on the card's own right
+  edge, which is what relates it to the game now that there is a boundary. A full
+  two-column restructure would still need the view rebuilt (cover and facts live
+  inside one `.gd-head`, the rest are flat siblings of `.app`).
 - **The two archives and the Wunschliste** (`.archive-list` / `.archive-row` —
   retired, completed and, since #560, wished-for, all through one renderer) —
   they look like the next tiling candidate after tags and

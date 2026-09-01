@@ -78,9 +78,13 @@ first** — that number, not transferSize, is what predicts it.
   quietly reintroduce megabyte covers on exactly the items with unusual data.
   The trade is accepted knowingly: it is roughly half the linear resolution the
   pre-#117 private endpoint served, so a new BGG game's cover is softer on the
-  240 px game-detail hero. Re-hosting a resized copy is now *licensed* (the BGG
-  token grants reproduction rights) but needs an image pipeline this repo does
-  not have — that is the follow-up, not a reason to store the master.
+  game-detail hero. **#868 widened that hero from 240 px to 300 px**, so a
+  `fit-in/200x150` thumbnail now upscales 1.5× there rather than 1.2× — the
+  softness argument below got *stronger*, not weaker, and the hero is the one
+  frame in the app where it is visible. Re-hosting a resized copy is now
+  *licensed* (the BGG token grants reproduction rights) but needs an image
+  pipeline this repo does not have — that is the follow-up, not a reason to store
+  the master.
 - **It must be render-time, not capture-time.** This repo keeps no permanent
   migration code (CLAUDE.md), so rewriting what `pickImage()` stores would fix
   only games added afterwards and leave the whole existing corpus slow. On
