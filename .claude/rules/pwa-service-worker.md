@@ -74,5 +74,24 @@ caches, then navigate fresh:
 ```
 
 The SW re-registers on the next load, so do this once per asset edit, not once
-per session. Several rules reference this section — it is the one canonical
+per session.
+
+**That snippet alone is NOT enough in the Browser pane** (measured on #868). With
+the SW unregistered and its caches deleted, a fresh `navigate` still served the
+**previous** `styles.css` from the ordinary HTTP cache: `getComputedStyle` kept
+reporting the old value for an edit that was definitely on disk, which reads
+exactly like a CSS change that failed to apply — and sent one cycle of work
+chasing a layout bug that had already been fixed. Re-point the `<link>` at a
+cache-busted url instead, and read a changed property back before believing any
+measurement:
+
+```js
+const l = document.querySelector('link[rel=stylesheet][href*="styles.css"]');
+l.setAttribute('href', l.getAttribute('href').split('?')[0] + '?b=' + Date.now());
+await new Promise(r => setTimeout(r, 900));
+getComputedStyle(document.querySelector('.some-el')).flex;   // confirm it moved
+```
+
+It must be re-applied after every `navigate` and every `resize_window`, because
+both reload the document and restore the un-busted href. Several rules reference this section — it is the one canonical
 copy of the snippet.

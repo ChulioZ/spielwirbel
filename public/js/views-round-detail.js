@@ -390,7 +390,8 @@ async function showGameDetail(rid, gameId) {
   setDocTitle(game.title, round.name);
 
   const st = gameStats(round, gameId);
-  const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
+  const coverCss = game.image ? `url('${coverUrl(game.image, COVER_HERO)}')` : '';
+  const imgStyle = coverCss ? `style="background-image:${coverCss}"` : '';
   const fallback = coverPlaceholder(game);
   app.innerHTML = '';
   // Where this game lives, which both navigation controls below need. The rail
@@ -811,7 +812,9 @@ async function showGameDetail(rid, gameId) {
   // for a wish (#699): the round does not own the game, so it cannot be rated
   // or aussortiert while on the list. Unconditional for a wish, even if the
   // data holds ratings (API-only edge); they reappear via „Ins Regal".
-  const head = h(`<div class="gd-head${sparse ? ' gd-head--sparse' : ''}">
+  const head = h(`<div class="gd-head${sparse ? ' gd-head--sparse' : ''}"${
+    coverCss ? ` style="--gd-cover:${coverCss}"` : ''
+  }>
        <div class="gd-info">
          <h1></h1>
        </div>

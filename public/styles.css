@@ -3874,15 +3874,69 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 }
 
 /* Game detail page */
-/* `fit-content`, so the header is as wide as cover + facts + ring and no wider.
-   Stretched to the full column it spread those three across 900px and left the
-   score ring stranded at the far edge. `max-width: 100%` keeps the phone
-   behaviour: the row still fills a narrow screen and still wraps, driven by
-   .gd-info's min-width below. */
-.gd-head { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; width: fit-content; max-width: 100%; }
+/* The hero band (#868). It used to be `width: fit-content`, so the header was
+   as wide as cover + facts + ring and no wider — which kept the score ring from
+   being stranded at the far edge of an otherwise empty 900px row, but made the
+   band's right edge a function of its CONTENT. Measured across four games of one
+   round it landed at 990, 1109, 1119 and 1212px while every section below runs
+   to 1212px, so the page frame visibly shifted from game to game.
+   It is now a framed card at the column's full width, which fixes the frame and
+   re-earns the original intent a different way: the ring rides the card's own
+   right edge (`.gd-info` grows into the slack) instead of floating in open
+   whitespace, because it is the card boundary — not proximity — that relates it
+   to the game.
+   `flex-wrap: wrap` is deliberately KEPT. The cover is 300px and .gd-info holds
+   a 240px floor, so a `nowrap` row cannot fit a 390px screen and would overflow
+   rather than shrink. */
+.gd-head {
+  --gd-cover-w: 300px;
+  position: relative;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+  max-width: 100%;
+  padding: 28px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+/* The cover's own colour spilling into the band — the #181 blurred-copy idea at
+   band scale, which is the atmospheric work this screen was doing nowhere. The
+   url arrives as `--gd-cover`, set inline by showGame(); a game with no cover
+   resolves it to `none`, this layer draws nothing, and #256's placeholder path
+   is untouched.
+   The safety argument is the OPACITY CAP, not the mask — the mask only shapes
+   where the wash reads, and text does sit on it. `--surface` is `#ffffff` on
+   :root and no theme overrides it (themes set only --page-bg and --brand), so
+   an arbitrary user cover composited over it can only DARKEN — which raises
+   contrast for this app's uniformly dark text until the wash goes too far. The
+   binding token is `--ink-soft` (#6b6358, L 0.1275, 5.92:1 on white): a
+   worst-case pure-black cover reaches the 4.5:1 floor only at opacity 0.25
+   ((1.05 - a) / 0.1775 = 4.5), so 0.16 leaves the softest text at 5.0:1. Raise
+   this past 0.25 and the floor goes with it.
+   `overflow: hidden` on the band is what clips this layer. It cannot clip the
+   cover/title/tag editors — every one of them mounts on document.body, as a
+   popover or a sheet (openEditor). */
+.gd-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--gd-cover, none);
+  background-position: left center;
+  background-size: 150% auto;
+  filter: blur(40px) saturate(1.4);
+  opacity: 0.16;
+  -webkit-mask-image: radial-gradient(78% 135% at 22% 50%, #000 0%, #000 22%, transparent 82%);
+  mask-image: radial-gradient(78% 135% at 22% 50%, #000 0%, #000 22%, transparent 82%);
+  pointer-events: none;
+}
+/* Everything real sits above the wash. */
+.gd-head > * { position: relative; }
 .gd-img {
   position: relative;
-  width: 240px;
+  width: var(--gd-cover-w);
   max-width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: var(--radius-lg);
@@ -3893,23 +3947,31 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   justify-content: center;
   font-size: 64px; /* glyph, not type */
   flex: none;
+  box-shadow: var(--shadow-2);
 }
-/* Sized to its content, NOT `flex: 1`. Growing to fill the line pushed the
-   score ring to the far right of the header — measured 453px from a short
-   title, so the game's rating read as belonging to nothing. Shrinking is still
-   allowed (`0 1 auto`), so a long title or a row of tag chips takes the room it
-   needs and the ring follows it instead of the container's edge. */
 /* The cover plus its edition line (#742). Only rendered when the game HAS a
    stored edition, so the cover is otherwise still a direct flex child of
-   .gd-head. The explicit 240px matches .gd-img's own width rather than being
-   `fit-content`: .gd-head is `width: fit-content`, so a column sized by its
-   widest child would let a long edition name ("Deutsche Erstausgabe · 2019")
-   widen the whole head band instead of wrapping under the cover. */
-.gd-cover { flex: none; width: 240px; max-width: 100%; }
+   .gd-head. It shares .gd-img's width through --gd-cover-w rather than being
+   `fit-content`, so a long edition name ("Deutsche Erstausgabe · 2019") wraps
+   under the cover instead of widening the column. That was load-bearing while
+   .gd-head was `width: fit-content` (#868 made the band full-width, so it can
+   no longer widen the BAND) and is kept because it still decides where the
+   text column starts. */
+.gd-cover { flex: none; width: var(--gd-cover-w); max-width: 100%; }
 .gd-edition { margin: 8px 0 0; font-size: var(--text-sm); line-height: 1.4; }
 
-.gd-info { flex: 0 1 auto; min-width: 240px; }
-.gd-info h1 { margin: 0 0 14px; font-size: var(--text-2xl); line-height: 1.5; }
+/* `flex: 1 1 240px`, not `0 1 auto`. Two reasons, and the first is a bug:
+   a flex line wraps on its items' HYPOTHETICAL sizes and only shrinks within a
+   line it has already committed to, so sizing this block to its content (315px
+   for „CATAN" plus two chips, measured) overflowed the 900px column and threw
+   .gd-stats onto a second line — the band rendered 418px tall with the ring
+   marooned under it. Basing it on its own 240px floor makes the row fit.
+   Second, growing into the leftover space is now WANTED. It used to push the
+   ring to the far right "so the game's rating read as belonging to nothing" —
+   true when the band had no frame; since #868 the right edge it lands on is the
+   card's own, which is what relates the two. */
+.gd-info { flex: 1 1 240px; min-width: 240px; }
+.gd-info h1 { margin: 0 0 14px; font-size: var(--text-3xl); line-height: 1.35; }
 
 /* --- Inline editing on the game detail page --- */
 /* Stays a <span> (with role=button + tabindex, #424) precisely because of
@@ -4030,6 +4092,18 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 /* With no stats column the head is just cover + title, so let the title block
    sit beside a full-width-ish cover instead of stretching across the page. */
 .gd-head--sparse .gd-info { min-width: 200px; }
+/* Narrow: the band wraps into a stack, and a 300px cover with nothing beside it
+   wastes the width it could be leading with — so the art takes the full column
+   and the title steps back down under it. 700px is where the desktop row
+   (cover 300 + .gd-info's 240 floor + the ring + gaps) stops fitting the
+   column, measured — not a new device breakpoint.
+   Nothing needs to move the ring: .gd-info grows, so once the line wraps it
+   takes the whole row and .gd-stats starts the next one at the left on its own
+   (measured at 390: stats x=34, the content edge). */
+@media (max-width: 700px) {
+  .gd-head { --gd-cover-w: 100%; padding: 20px; gap: 18px; align-items: flex-start; }
+  .gd-info h1 { font-size: var(--text-2xl); }
+}
 
 /* Member detail page: big avatar + editable name, color picker, stats. */
 .member-head { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
