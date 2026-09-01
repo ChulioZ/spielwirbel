@@ -284,6 +284,52 @@ h1, h2, h3 { font-family: var(--font-display); }
   flex: 1 0 auto;
   width: 100%;
 }
+
+/* ---- The session flow's stage screens compose against the VIEWPORT (#870) ----
+   The hand-off card, the vote card and the finale are the app's full-attention
+   moments: they replace the whole page (no rail, no dock, no siblings — each
+   `show*` appends exactly one block to `.app`). On a phone that reads as
+   theatre, because the card is most of the screen. At desktop it did not:
+   measured at 1440x1100, the finale was 509px tall starting at y=153, leaving a
+   326px band of bare page between it and the footer, so the one deliberately
+   theatrical screen in the app read as a small dark rectangle pinned to the top
+   of a big light page.
+
+   `.app` already spans the region between the top chrome and the footer (it is
+   `flex: 1 0 auto` in the body column), so centring the card inside `.app` is
+   centring it in that region — no viewport arithmetic, and it degrades by
+   itself: on a short viewport, or with a stage tall enough to overflow, `.app`
+   grows instead of shrinking (`flex-shrink: 0`), free space reaches zero and
+   this becomes a no-op that scrolls exactly as before.
+
+   Conditioned on content, which is safe HERE for the reason the rail's own
+   `:has()` rules are: it PLACES an element, it does not choose a width — and
+   these three screens render no navigation at all, so there is nothing inside
+   the column for a change to move (.claude/rules/responsive-content-width.md).
+
+   860px is the breakpoint `.vote--split` already uses to go landscape, i.e.
+   exactly where these cards stop being full-height phone cards. Below it
+   nothing here applies and the phone presentation is untouched. */
+@media (min-width: 860px) {
+  .app:has(> .stage, > .handover, > .vote--split) {
+    display: flex;
+    flex-direction: column;
+    /* `safe` so a stage taller than the space can never be centred into an
+       unreachable overflow above the scroll origin. Free space cannot go
+       negative while `.app` is `flex-shrink: 0`, so this is insurance against
+       that changing, not a live branch. */
+    justify-content: safe center;
+  }
+  /* Each of the three sizes itself with `max-width` + `margin-inline: auto`,
+     which as a FLEX ITEM would shrink-to-fit instead of filling the column —
+     the same trap `.app` itself documents above, and the same remedy. Without
+     this the cards silently narrow to their content the moment the rule above
+     lands. (0,2,0) so it beats each component's own (0,1,0) sizing rule. */
+  .app > .stage,
+  .app > .handover,
+  .app > .vote--split { width: 100%; }
+}
+
 /* Shared site footer (issue #224). Muted, theme-derived link colour (no
    hardcoded tones — .claude/rules/theme-derived-colors.md).
    #326: a full-bleed tinted band with a top border, so the footer reads as a
