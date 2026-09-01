@@ -23,8 +23,11 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
+const fs = require('node:fs');
+const path = require('node:path');
+
 const { loadApp } = require('./support/dom');
-const { bodyOf, bodyOfIn } = require('./support/css');
+const { bodyOf, bodyOfIn, CSS: RAW_CSS } = require('./support/css');
 
 const RID = 'r1';
 
@@ -118,6 +121,24 @@ test('the cover glow stays under the opacity that would break the text contrast 
      softest text on the band drops below AA. */
   assert.ok(Number(m[2]) <= 0.25,
     `the glow is ${m[2]}; above 0.25 a dark cover pushes --ink-soft under 4.5:1`);
+});
+
+/* The opacity bound above is only sound while the band's background is the
+   LIGHTEST surface going — a wash can then only darken it, and darkening helps
+   dark text. If a theme ever painted `--surface` darker, the wash would move
+   text the other way and the 0.25 ceiling would be void, with nothing to say so.
+   That premise is two facts, and this pins both. */
+test('--surface is un-themed, which is what makes the glow bound sound', () => {
+  const decls = [...RAW_CSS.matchAll(/(^|[;{\s])--surface\s*:\s*([^;}]+)/g)].map((m) => m[2].trim());
+  assert.deepEqual(decls, ['#ffffff'],
+    '--surface is declared exactly once, on :root, as white');
+
+  // The other way a theme could reach it: applyBackground() writing it at runtime.
+  const core = fs.readFileSync(path.join(__dirname, '..', 'public/js/core.js'), 'utf8');
+  const applyBackground = core.slice(core.indexOf('function applyBackground'));
+  const body = applyBackground.slice(0, applyBackground.indexOf('\n}\n') + 2);
+  assert.doesNotMatch(body, /--surface/,
+    'applyBackground() must not set --surface, or a round could darken the band');
 });
 
 test('the cover leads the band and the ring does not outweigh it', () => {
