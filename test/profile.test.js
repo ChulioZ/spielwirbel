@@ -12,7 +12,9 @@
  *  - matching is case-insensitive, consistent with getUserByUsername;
  *  - the feed appears only between accepted friends and keeps /friends/feed's
  *    acceptedAt cutoff — a fresh friendship must not expose prior history;
- *  - the profile discloses no e-mail address and nothing tenant-private.
+ *  - the profile discloses no e-mail address and nothing tenant-private;
+ *  - a GUEST DEMO account is refused outright (#877), so the picture stays
+ *    behind a real sign-in as vvt.md row 4 and the policy both state.
  *
  * Accounts must be ON, so this drives real accounts (register → verify → login),
  * mirroring test/friends.test.js.
@@ -20,6 +22,8 @@
 
 process.env.ACCOUNTS_ENABLED = 'true';
 process.env.SESSION_SECRET = 'test-session-secret';
+// #877 needs a real demo token, and demoEnabled() reads this at call time.
+process.env.DEMO_ENABLED = 'true';
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -227,4 +231,36 @@ test('the profile requires a token, and 404s with accounts off', async () => {
     if (prevPw === undefined) delete process.env.AUTH_PASSWORD;
     else process.env.AUTH_PASSWORD = prevPw;
   }
+});
+
+test('a guest demo account is refused the profile, picture included (#877)', async () => {
+  const alice = await makeAccount('pdemo-alice@example.com');
+  // Written straight to the store rather than uploaded: what matters here is
+  // that the field is populated, not how it got there.
+  await repo.updateUser(alice.user.id, { avatar: '/uploads/0123456789abcdef.webp' });
+
+  const started = await request(app).post('/api/account/demo').send({});
+  assert.equal(started.status, 200, 'DEMO_ENABLED is on for this file');
+
+  const res = await request(app)
+    .get(`/api/account/profile/${encodeURIComponent(alice.username)}`)
+    .set(auth(started.body.accessToken));
+  assert.equal(res.status, 403);
+  assert.equal(res.body.error, 'demo_forbidden');
+  assert.equal(JSON.stringify(res.body).includes('.webp'), false, 'no picture path leaks in the refusal');
+
+  // The refusal must not depend on the handle existing, or the demo surface
+  // becomes a username oracle the signed-in surface deliberately is not.
+  const unknown = await request(app)
+    .get('/api/account/profile/nobody-by-that-name')
+    .set(auth(started.body.accessToken));
+  assert.equal(unknown.status, 403);
+  assert.equal(unknown.body.error, 'demo_forbidden');
+
+  // The control, without which this passes against a route that refuses
+  // everyone: a real account still gets the whole profile.
+  const bob = await makeAccount('pdemo-bob@example.com');
+  const ok = await profile(bob, alice.username);
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.avatar, '/uploads/0123456789abcdef.webp');
 });

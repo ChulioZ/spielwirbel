@@ -181,8 +181,8 @@ testable:
   `test/helpers.js` so the store gets an isolated temp `DATA_DIR` (see the
   `automated-tests` rule and the `test-data` skill). Never touch the real
   `data/`.
-- User-facing text → add the key to **both** `public/js/lang/en.js` and
-  `de.js` (i18n parity is tested).
+- User-facing text → add the key to **every** `public/js/lang/*.js` — the
+  shipped set is `public/js/locales.js` (i18n parity is tested).
 - New top-level name in `public/js/**` → update the `globals` list in
   `eslint.config.js`, and watch the load-order trap.
 

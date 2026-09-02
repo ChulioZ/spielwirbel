@@ -46,7 +46,8 @@ Read `CLAUDE.md` and the relevant `.claude/rules/`, and locate the affected area
 - Which layer? Backend (`server.js`, `lib/*.js`, `lib/routes/*.js`) vs. frontend
   (`public/js/*.js` in their fixed load order) vs. both.
 - Does it touch data shape (`lib/store.js`)? User-facing text (needs i18n keys in
-  **both** `lang/en.js` and `lang/de.js`)? A route? A view (`views-*.js`)?
+  **every** `lang/*.js` — the shipped set is `public/js/locales.js`)? A route?
+  A view (`views-*.js`)?
 - Is there an existing pattern to follow or a rule that constrains it (retire
   concept, "Session" naming, theme-derived colors, no frontend framework, no
   third persistence backend, tenant isolation)?

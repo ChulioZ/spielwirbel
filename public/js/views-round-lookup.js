@@ -398,7 +398,8 @@ function showAddGame(round, { wish = false } = {}) {
           <label>${esc(t('addGame.tagsLabel'))}</label>
           <div class="filter-chips" id="tagSeg" hidden></div>
           <div class="toolbar" style="margin-top:6px">
-            <input id="newTag" class="input" placeholder="${esc(t('tags.addPlaceholder'))}" style="flex:1" autocomplete="off" />
+            <input id="newTag" class="input" placeholder="${esc(t('tags.addPlaceholder'))}"
+                   aria-label="${esc(t('tags.addPlaceholder'))}" style="flex:1" autocomplete="off" />
             <button type="button" id="addTagBtn" class="btn">${esc(t('tags.add'))}</button>
           </div>
         </div>

@@ -19,7 +19,7 @@ Abschnitt 7 (Maßnahmen + Begründung), Abschnitt 10 (Kontaktstellen
 Art. 11/12). **Jede Entfernung stützt sich auf eine dort benannte Regel** —
 die Begründung (unten) zeigt auf die konkrete Ziffer.
 
-**Stand:** 2026-07-21
+**Stand:** 2026-08-01
 
 ## Kanäle (Art. 16 Abs. 1)
 

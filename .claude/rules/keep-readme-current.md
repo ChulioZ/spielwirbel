@@ -14,6 +14,7 @@ material moved into `docs/`. **Most of what used to be a "README update" is now 
 | changes a backend/frontend design decision, a seam, a dependency | `docs/architecture.md` prose |
 | adds/changes an env var, npm script, route, Docker or deploy detail | `docs/configuration.md` (and `.env.example`) |
 | changes the Node floor, the quick start, or what the app *is* | `README.md` |
+| mounts a route **outside** the `/api` auth gate, or publishes anything cross-tenant | `SECURITY.md`'s "especially relevant" list — it is what an external reporter calibrates severity against, and a surface missing from it gets either misfiled or not reported at all |
 
 ## The PRODUCT copy is a fifth and sixth surface — and it was missing here
 

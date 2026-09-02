@@ -1013,6 +1013,7 @@ I18N.en = {
   'profile.memberSince': 'Member since {when}',
   'profile.friendsSince': 'Friends since {when}',
   'profile.notFound': 'No account with that username.',
+  'profile.demoBlocked': 'Account profiles are not available in the demo. Register a free account to view them.',
   'profile.self': 'That’s you.',
   'profile.incoming': 'This account would like to be friends with you.',
   'profile.demoNote': 'You can’t send friend requests from the demo. Register to add someone.',

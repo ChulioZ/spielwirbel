@@ -11,8 +11,9 @@ const bgp = require('../lib/prices/boardgameprices');
  * below is verbatim from that response — the numbers, the `shipping` string/number
  * split, the four `stock` spellings and the one `shipping_known: false` offer are
  * all real, which is the point: a hand-written body would have agreed with
- * whatever the parser assumed (.claude/rules/storefront-lookup-locale.md
- * "Fixtures cannot answer the questions above").
+ * whatever the parser assumed — the captured-fixture discipline in
+ * .claude/rules/add-game-lookup-provider.md ("A fixture cannot tell you the
+ * provider still works").
  *
  * Three properties of the real body the fixture preserves deliberately:
  *  - ONE BGG id returns TEN items, one per language edition, GB first.
@@ -244,7 +245,7 @@ test('a malformed body degrades to null instead of throwing', () => {
 
 test('the request is built from an ALLOWLIST — a request value never reaches the URL', () => {
   // destination and currency land in a fetched URL's query string, i.e. the
-  // resolveLocale shape in .claude/rules/storefront-lookup-locale.md §1.
+  // resolveLocale shape described in .claude/rules/wish-list-prices.md §1.
   assert.deepEqual(bgp.resolveMarket('de'), { destination: 'DE', currency: 'EUR' });
   // Eurozone locales the UI may ship later must NOT inherit English's GB/GBP —
   // a French reader is served by German shops in euros, not by British ones in

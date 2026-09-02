@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-07-25
+**Stand:** 2026-07-28
 
 ## Eingang & Identitätsprüfung
 
