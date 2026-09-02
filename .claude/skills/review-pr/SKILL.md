@@ -71,7 +71,7 @@ specifically, a PR is suspect if it:
   showing up unrequested as a side effect of unrelated work — see
   `CLAUDE.md`'s production-readiness mindset for when a mature dependency
   replacing hand-rolled code is legitimate versus gratuitous.
-- adds a key to only one of `public/js/lang/en.js` / `de.js` (breaks i18n parity);
+- adds a key to only some of `public/js/lang/*.js` (breaks i18n parity);
 - adds a top-level name in `public/js/**` without updating the `globals` list in
   `eslint.config.js`, or introduces a load-order reference (see the rules);
 - calls `app.listen()` in `lib/app.js`, or reassigns the `store` `data` object;

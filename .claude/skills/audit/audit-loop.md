@@ -77,7 +77,8 @@ For each candidate, answer in order. The first "no" ends it.
 
 1. **Is the source authoritative and current?** A draft, a proposal, a
    commentator's reading of a draft, or an undated page is not yet a criterion.
-2. **Does it bind *this* app?** Spielwirbel is: a German+English PWA, no frontend
+2. **Does it bind *this* app?** Spielwirbel is: a multilingual PWA (the shipped
+   set is data — `public/js/locales.js`), no frontend
    framework and no build step beyond the optional cache-busting one; an Express
    backend with JSON and Postgres backends; running in production on Railway (EU)
    with Cloudflare R2; operated by **one person**, funded by voluntary donations;

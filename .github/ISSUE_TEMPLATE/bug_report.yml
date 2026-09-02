@@ -98,6 +98,9 @@ body:
       options:
         - Deutsch
         - English
+        - Español
+        - Français
+        - Italiano
     validations:
       required: true
 

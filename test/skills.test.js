@@ -177,3 +177,44 @@ test("a criterion's Status matches the section it sits in", () => {
   }
   assert.deepEqual(problems, [], `misfiled criteria:\n  ${problems.join('\n  ')}`);
 });
+
+/*
+ * The shipped locale set is DATA (`public/js/locales.js`, #504) and has been
+ * five languages since then — but #504 fixed only the *code* copies. Seven
+ * prose and YAML sites went on naming `lang/en.js` and `lang/de.js` as the
+ * closed pair a contributor must edit, including a REQUIRED field in the bug
+ * report form that an es/fr/it reporter could only answer wrongly, and
+ * `audit-loop.md`'s repo description, which every one of the six domain audits
+ * tests candidate findings against.
+ *
+ * `.claude/rules/locale-set-is-data.md` already said "don't reintroduce a
+ * hardcoded ['de', 'en'] anywhere". The rule was right and got skipped, so the
+ * remedy is a check rather than a rewording (criterion C-017 case a).
+ */
+test('no agent- or contributor-facing file names en.js and de.js as the closed locale pair', () => {
+  const scanned = [
+    ...docs, ...ruleDocs, ...rootDocs,
+    ...['.github/PULL_REQUEST_TEMPLATE.md', '.github/ISSUE_TEMPLATE/bug_report.yml',
+        '.github/ISSUE_TEMPLATE/config.yml'].map(read),
+  ];
+  // Anti-vacuous: a glob that silently stopped matching would assert nothing.
+  assert.ok(scanned.length > 50, `scanned ${scanned.length} files, expected the full doc set`);
+
+  /* The rule file that documents this very bug quotes the bad pair AS the bug,
+     and must keep doing so. It is the only legitimate mention. */
+  const ALLOWED = new Set(['.claude/rules/locale-set-is-data.md']);
+
+  /* Matches the pair named together within one sentence — `en.js` … `de.js` in
+     either order, at most 80 characters apart so it cannot span a paragraph.
+     Deliberately NOT a bare `de.js`: naming one locale for an example is fine,
+     naming exactly the two as the set to edit is what went stale. */
+  const PAIR = /\ben\.js\b[\s\S]{0,80}?\bde\.js\b|\bde\.js\b[\s\S]{0,80}?\ben\.js\b/;
+
+  const bad = scanned
+    .filter(([rel]) => !ALLOWED.has(rel))
+    .filter(([, text]) => PAIR.test(text))
+    .map(([rel, text]) => `${rel}: ${text.match(PAIR)[0].replace(/\s+/g, ' ').slice(0, 70)}`);
+
+  assert.deepEqual(bad, [],
+    `these name en.js/de.js as the complete locale set — it is five languages, derived from public/js/locales.js:\n  ${bad.join('\n  ')}`);
+});
