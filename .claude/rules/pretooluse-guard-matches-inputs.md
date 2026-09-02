@@ -69,6 +69,19 @@ remove is the *accidental* read — the class the near-miss in
 `no-reading-production-data.md` actually was, where a mistyped launch-config name
 silently fell through to the production one.
 
+**Two costs it cannot avoid, both worth knowing before editing the wiring:**
+
+- **It fails open if the script cannot be found.** The command resolves
+  `$CLAUDE_PROJECT_DIR`; if that is ever unset the path is wrong, node exits 1,
+  and the harness treats a non-2 exit as a *non-blocking* error — so the tool call
+  proceeds. Only exit 2 blocks, and a script that never ran cannot exit 2. This is
+  inherent, not a bug to fix in the script: nothing inside it can report the
+  script's own absence.
+- **Every tool call now pays a node process spawn** (~40 ms measured). That is the
+  price of matcher `"*"`, and it is the right trade — a narrower matcher buys back
+  the milliseconds by reintroducing the shape-blindness above — but it is a real,
+  per-call cost rather than a free check.
+
 **Related:** `.claude/rules/no-reading-production-data.md` and
 `.claude/rules/no-reading-env-files.md` (the prohibitions it enforces),
 `.claude/rules/break-the-code-on-purpose.md` (six breaks, each reddening a named
