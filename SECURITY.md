@@ -33,7 +33,19 @@ Security issues especially relevant given the current architecture:
 
 - **Cross-tenant data leakage** — one account/tenant seeing another's rounds,
   members, games, sessions, or cover images (see
-  [`.claude/rules/tenancy-rls.md`](.claude/rules/tenancy-rls.md)).
+  [`.claude/rules/tenancy-rls.md`](.claude/rules/tenancy-rls.md)). Note that
+  *aggregate* cross-tenant figures are published **by design** on the landing
+  page and at `/entdecken`, behind k-anonymity thresholds
+  (`PUBLIC_STATS_MIN_*`, `lib/public-stats.js`) — a way to read those below the
+  thresholds, or to attribute one of them to a particular tenant, is in scope;
+  the published totals themselves are not.
+- **Abuse of the two routes that sit OUTSIDE the auth gate.** Everything under
+  `/api` is gated in `lib/app.js`, with two deliberate exceptions mounted ahead
+  of it: `/api/account` (register, login, the demo) and **`/api/vote`** — the
+  shared vote link (#652), which lets an unauthenticated holder of a capability
+  token **write** a participant's votes. Forging or guessing such a token,
+  reaching a session other than the one it names, or escaping it into any other
+  round data is in scope.
 - Auth/session bypass — forging or replaying access/refresh tokens, the shared
   session cookie, or the `/uploads` cookie gate (see
   [`.claude/rules/accounts-mode-gate.md`](.claude/rules/accounts-mode-gate.md),

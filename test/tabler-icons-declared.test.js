@@ -48,11 +48,29 @@ function sources() {
    `grep 'ti-[a-z-]*'` also matches prose ("multi-table", "arrows-split" in a
    comment) and would report false misses that nobody could act on.
 
-   1. `class="ti ti-foo"` — the literal element.
+   1. `class="ti ti-foo"` — the literal element, with any number of further
+      classes after the icon name.
    2. `iconText('ti-foo', …)` — core.js's builder, which interpolates the name
-      into exactly that markup. */
+      into exactly that markup.
+
+   The first pattern used to require the closing quote IMMEDIATELY after the
+   icon name (`class="ti (ti-[a-z0-9-]+)"`), which made every element carrying a
+   second class invisible to the scan — six live sites across five icons
+   (`ti-crown podium__crown`, `ti-chevron-down icon-picker__caret`,
+   `ti-chevron-right round-card__chev`, `ti-copy import-card__icon`,
+   `ti-sparkles gd-onboard__icon`). Measured: with `.ti-crown::before` deleted
+   from the subset, the old pattern left this test GREEN, so the podium crown
+   would have rendered nothing in production under a passing suite — the exact
+   failure this file exists to prevent.
+
+   `(?=[ "])` is what fixes it: the name must end at a space or the closing
+   quote, so `ti-crown podium__crown` matches on `ti-crown` while a longer name
+   is still never truncated to a shorter one. See
+   .claude/rules/source-scanning-guards-enumerate-shapes.md — a source scan's
+   coverage is the set of CALL SHAPES its regex happens to accept, and the shape
+   it misses is invisible from a green run. */
 const PATTERNS = [
-  /class="ti (ti-[a-z0-9-]+)"/g,
+  /class="ti (ti-[a-z0-9-]+)(?=[ "])/g,
   /iconText\('(ti-[a-z0-9-]+)'/g,
 ];
 

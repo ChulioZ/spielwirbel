@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-08-16
+**Stand:** 2026-09-02
 
 ## Verschlüsselung & Transport
 
@@ -65,8 +65,11 @@ list nothing that is not actually in place.
     Wiederherstellung möglich. Maßgeblich für Löschfristen: `retention.md`.
   - **Tägliche Volume-Sicherungen** mit 6 Tagen Aufbewahrung, dazu manuelle
     Sicherungen auf Anforderung.
-- Deployment reproduzierbar aus dem Repo (Dockerfile); Objektspeicher repliziert
-  bei Cloudflare.
+- Deployment reproduzierbar aus dem Repo (Dockerfile).
+- **Objektspeicher (Cloudflare R2):** derzeit **keine** eigene Replikation und
+  keine eigenen Sicherungen konfiguriert. Betroffen wären hochgeladene Cover und
+  Profilbilder; die zugehörigen Datensätze in der Datenbank sind von den oben
+  genannten Sicherungen abgedeckt. Offener Punkt.
 - Health-Check (`/healthz`, ohne Datenbankzugriff) + Bereitschafts-Check
   (`/readyz`, prüft die Datenbank und antwortet 503, wenn sie nicht erreichbar
   ist — #462) + externes Uptime-Monitoring, das den Verantwortlichen alarmiert;

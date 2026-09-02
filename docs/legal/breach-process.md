@@ -3,7 +3,7 @@
 Internal record (German). Kept deliberately short — it must be executable under
 stress by one person.
 
-**Stand:** 2026-07-21
+**Stand:** 2026-07-26
 
 ## 1. Erkennen & Eindämmen (sofort)
 

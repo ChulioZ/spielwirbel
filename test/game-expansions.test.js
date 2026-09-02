@@ -373,7 +373,7 @@ test('the expansion editor re-places its popover once the candidates arrive', as
   const round = roundFixture(null);
   round.games[0].source = { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' };
   // NOT the fixture's `[]`, which means "query nothing" rather than "all"
-  // (.claude/rules/round-provider-config.md).
+  // (the absent-≠-empty shape the retired `providers` setting had, #744).
   round.providers = ['bgg'];
 
   let resolveLookup;
@@ -411,7 +411,7 @@ test('… and re-places even when the lookup FAILS or comes back empty', async (
     const round = roundFixture(null);
     round.games[0].source = { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' };
     // NOT the fixture's `[]`, which means "query nothing" rather than "all"
-    // (.claude/rules/round-provider-config.md) — with it the tick-list is never
+    // (absent means "all", #744) — with it the tick-list is never
     // built and the branch under test does not run at all.
     round.providers = ['bgg'];
     dom.set('api', async (method, url) => {

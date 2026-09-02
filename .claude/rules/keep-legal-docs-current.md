@@ -96,6 +96,20 @@ Two constraints on the entry itself:
 - **Both languages, and keep the list to roughly five entries.** It sits inside
   the document and must not grow to dwarf the terms.
 
+**The INTERNAL records under `docs/legal/` carry their own `Stand:` line, and it
+is not covered by any of the three constants above.** `vvt.md`, `toms.md`,
+`retention.md`, `dsar-process.md`, `breach-process.md` and
+`notice-and-action.md` each open with one, and it exists to show an authority
+when the record last moved — Art. 5 Abs. 2 / Art. 30 accountability. So a
+substantive edit to one of those files bumps **that file's** `Stand:` in the same
+PR, exactly as a policy edit bumps `PRIVACY_REVISION`.
+
+Found stale on **five of six** on 2026-09-02, by up to eleven days, every one of
+them because a feature PR correctly updated the record's *content* and nobody
+touched the date line four lines above it. A test is the wrong tool — CI checks
+out at `fetch-depth: 1`, so a git-mtime assertion would be unreliable — which
+makes this a discipline like the rest of this file.
+
 **`LEGACY_TERMS_REVISION` is NOT a fourth date to bump — it is frozen.** It
 records the terms revision live when `acceptedTermsRevision` was introduced, so
 accounts predating that key read as up to date today and correctly fall behind on
