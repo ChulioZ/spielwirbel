@@ -25,6 +25,13 @@ work gets done here. Whether you contribute by prompting Claude Code or by hand,
 that is the intended path — start there rather than improvising.
 `CLAUDE.md` states the constraints you must work within.
 
+One of those constraints is enforced rather than written down: `.claude/settings.json`
+registers a `PreToolUse` hook that **blocks** agent reads of the production data
+(`data/data.json`, `data/uploads/`) and of local `.env` files, which hold private
+user data and live secrets. If a command of yours is denied, that is the hook and it
+is deliberate — the message names the rule and the supported alternative. It affects
+agent tool calls only; nothing stops you opening those files yourself.
+
 In short, before opening a PR:
 
 - Branch off an up-to-date `main` (never commit on `main`); use a descriptive

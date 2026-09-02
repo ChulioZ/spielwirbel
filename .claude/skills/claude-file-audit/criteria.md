@@ -6,7 +6,9 @@
 The 2026-09-02 pass was the first broad sweep since 2026-07-24 (the 2026-07-30
 scoped pass covered one operator-supplied source and deliberately did not
 advance the clock, so this one was still owed). It adopted **C-025**, widened
-**C-024** to the `stats.*` keys, and rejected **C-R05**/**C-R06**.
+**C-024** to the `stats.*` keys, and rejected **C-R05**/**C-R06**. It also raised
+the hook question it could not settle itself; the operator adopted it on
+2026-09-03 as **C-026** (#880).
 
 Seeded 2026-07-23 from `CLAUDE.md` (the "Capturing learnings" contract),
 `.claude/rules/keep-readme-current.md` and
@@ -439,6 +441,33 @@ research at all.
   `CLAUDE.md`'s Conventions section already opens with "Match the surrounding style",
   and the audit found no taste-only absolutes to convert.
 - **Enforced by:** — (manual)
+
+### C-026 — The absolute data prohibitions are enforced by a hook, not only by prose
+- **Status:** adopted · 2026-09-03 — operator decision on #880
+- **Source:** the 2026-09-02 full audit (claude-file research pass), which raised the
+  question and deferred it here by design
+- **Check:** `.claude/rules/no-reading-production-data.md` and
+  `no-reading-env-files.md` guard private user data and live secrets, and they were
+  the **only** invariants of that weight backed entirely by prose — every other one
+  has a test behind it. `audit-loop.md` §F ranks "a test or an assertion" first
+  precisely because a check that runs forever beats a document someone has to read,
+  and the near-miss recorded inside `no-reading-production-data.md` (a mistyped
+  launch-config name falling through to the production one) is the accident this
+  removes.
+
+  This is the repo's **first committed harness configuration**, so it is a posture
+  change rather than a defect fix — which is why it was an operator decision and not
+  an audit finding. It does **not** open the door to C-R02: the hook was adopted
+  because it solves a named problem, not because the feature exists.
+
+  Two constraints on any future edit, both of which fail silently if inverted: the
+  matcher stays `"*"` (a tool-name list is shape-blind and stops matching on a
+  rename), and `NOT_A_PATH` stays an *exclusion* list (an allowlist fails open).
+  The reasoning is in `.claude/rules/pretooluse-guard-matches-inputs.md`, including
+  the false-positive tax it knowingly accepts and the bypass it cannot close.
+- **Enforced by:** `test/guard-protected-paths.test.js` — the deny table, the
+  must-still-work table, the end-to-end exit-code contract, and the `matcher: "*"`
+  wiring assertion
 
 ---
 
