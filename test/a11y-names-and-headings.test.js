@@ -25,7 +25,11 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { loadApp, translator } = require('./support/dom');
+
+const ROOT = path.join(__dirname, '..');
 const { bodyOf, mediaBlocks, rulesOf } = require('./support/css');
 const { LOCALES } = require('../public/js/locales');
 
@@ -225,5 +229,78 @@ test('every icon-only top-bar control is announced in the reader\u2019s language
       assert.equal(el.getAttribute('aria-label'), t_(key),
         `#${id} announces "${el.getAttribute('aria-label')}" in ${locale} \u2014 its aria-label is not localized from ${key}`);
     }
+  }
+});
+
+/* --------------------------- A-011, second pass ---------------------------- */
+
+/*
+ * The 2026-09-02 audit found the same defect twice more, in the two OTHER
+ * renderings of the "create a new tag" field: the add-game sheet
+ * (views-round-lookup.js) and the game-detail tag popover
+ * (views-round-detail.js) both shipped placeholder-only, while the Tags screen's
+ * copy had carried an aria-label since it was written. Three renderings of one
+ * control, one of them correct — the shape
+ * .claude/rules/shared-constants-across-the-stack.md describes, one layer down.
+ *
+ * Unlike `friends.addLabel`, these reuse `tags.addPlaceholder` as the name
+ * rather than taking a dedicated key, and that is deliberate: "Neuer Tag…" /
+ * "New tag…" already says what the field is FOR, where the friends field's
+ * placeholder ("Nutzername") was an example value and needed its own label. So
+ * the name-differs-from-placeholder assertion above correctly does not apply
+ * here.
+ */
+
+test('every field the add-game sheet renders has an accessible name', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const round = {
+    id: 'r1', name: 'Runde', members: [], games: [],
+    tags: [{ id: 't1', name: 'Klassiker', icon: null }],
+  };
+  await dom.call('showAddGame', round);
+
+  const inputs = [...dom.document.querySelectorAll('.sheet input')]
+    .filter((i) => !['hidden', 'submit', 'button', 'checkbox', 'radio'].includes(i.type));
+  // Anti-vacuous: a sheet that failed to render would satisfy a loop over nothing.
+  assert.ok(inputs.length >= 4, `the sheet rendered ${inputs.length} fields, expected its full form`);
+
+  const unnamed = inputs.filter((i) => {
+    const aria = (i.getAttribute('aria-label') || '').trim();
+    const by = i.getAttribute('aria-labelledby');
+    const byText = (by && dom.document.getElementById(by)?.textContent) || '';
+    const forLabel = i.id && dom.document.querySelector(`label[for="${i.id}"]`);
+    const wrapping = i.closest('label');
+    return !(aria || byText.trim() || forLabel?.textContent.trim() || wrapping?.textContent.trim());
+  });
+
+  assert.deepEqual(
+    unnamed.map((i) => i.outerHTML.replace(/\s+/g, ' ').slice(0, 90)),
+    [],
+    'a field renders with no accessible name (a placeholder is not a label — WCAG 2.2 SC 3.3.2/4.1.2)',
+  );
+});
+
+/*
+ * The third rendering — the game-detail tag popover — cannot be reached from
+ * here: openEditor() measures its anchor to place the popover, and jsdom has no
+ * layout, so clicking "Tags vergeben" renders nothing at all. So this one is
+ * asserted against the view source instead, keyed on the i18n key rather than
+ * on any surrounding markup.
+ *
+ * Per .claude/rules/source-scanning-guards-enumerate-shapes.md that is a check
+ * on a CALL SHAPE, not on behaviour: it proves the attribute is written, not
+ * that the accessibility tree resolves it. The rendered test above is what
+ * establishes the latter for the identical markup; this one only stops the
+ * popover's copy drifting back. Verified by deleting the attribute on purpose.
+ */
+test('the game-detail tag popover names its new-tag field', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'public/js/views-round-detail.js'), 'utf8');
+  const fields = [...src.matchAll(/<input\b[^>]*?placeholder="\$\{esc\(t\('tags\.addPlaceholder'\)\)\}"[^>]*>/g)]
+    .map((m) => m[0].replace(/\s+/g, ' '));
+  // Two renderings live in this file: the Tags screen and the popover.
+  assert.equal(fields.length, 2, `expected 2 new-tag fields in views-round-detail.js, found ${fields.length}`);
+  for (const tag of fields) {
+    assert.match(tag, /aria-label="\$\{esc\(t\('tags\.addPlaceholder'\)\)\}"/, `field has no aria-label: ${tag}`);
   }
 });

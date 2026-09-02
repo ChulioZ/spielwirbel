@@ -17,8 +17,8 @@
       branch protection requires the aggregate `ci-passed` check, which fails on
       a coverage drop even with every test green
 - [ ] Tests added or updated for the change (when it's testable)
-- [ ] New user-facing strings added to **both** `public/js/lang/en.js` and
-      `public/js/lang/de.js` (key parity is enforced by a test)
+- [ ] New user-facing strings added to **every** `public/js/lang/*.js` — the
+      shipped set is `public/js/locales.js` (key parity is enforced by a test)
 - [ ] Docs updated in this PR for what the change touches — `docs/features.md`
       if it adds or renames a user-facing feature, `docs/architecture.md` if it
       alters the file tree (a test enforces that one), `docs/configuration.md`

@@ -938,6 +938,7 @@ I18N.it = {
   'profile.memberSince': 'Iscritto dal {when}',
   'profile.friendsSince': 'Amici dal {when}',
   'profile.notFound': 'Nessun account con questo nome utente.',
+  'profile.demoBlocked': 'I profili degli account non sono disponibili nella demo. Registra un account gratuito per vederli.',
   'profile.self': 'Questo sei tu.',
   'profile.incoming': 'Questo account vorrebbe fare amicizia con te.',
   'profile.demoNote': 'Dalla demo non puoi inviare richieste di amicizia. Registrati per aggiungere qualcuno.',

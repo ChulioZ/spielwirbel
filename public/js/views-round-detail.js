@@ -537,7 +537,12 @@ async function showGameDetail(rid, gameId) {
       renderChips();
       el.appendChild(chipsWrap);
 
-      const input = h(`<input class="input" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}" />`);
+      // aria-label as well as placeholder: a placeholder is not a label (it is
+      // not exposed as the accessible name and it disappears on input), so
+      // without this the field is an unnamed text input to a screen reader.
+      // The Tags screen's own copy of this control already carries it.
+      const input = h(`<input class="input" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}"
+              aria-label="${esc(t('tags.addPlaceholder'))}" />`);
       const addBtn = h(`<button class="btn">${esc(t('tags.add'))}</button>`);
       // Icon picker for the inline "create new tag" (#255). The trigger joins
       // the input row and the grid opens below it (#293) — an always-open grid

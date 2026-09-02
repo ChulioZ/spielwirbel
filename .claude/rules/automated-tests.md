@@ -26,9 +26,11 @@ done. The non-obvious parts below are why this is easy to get wrong:
   this in the right order and exports a ready `app`. `node --test` runs each file
   in its own process, so each test file gets its own fresh temp dataset.
 
-- **i18n parity is tested.** `test/i18n-parity.test.js` fails if `en.js` and
-  `de.js` drift out of key parity or have an empty value — so adding a key to only
-  one file will (correctly) break the suite. Add it to both.
+- **i18n parity is tested.** `test/i18n-parity.test.js` derives the locale set
+  from `public/js/locales.js` and fails if any two `lang/*.js` files drift out of
+  key parity or have an empty value — so adding a key to only some of them will
+  (correctly) break the suite. Add it to **every** shipped locale, not just en/de
+  (`.claude/rules/locale-set-is-data.md`).
 
 - **A green new test is not yet evidence it works.** You have to have seen it
   red. Prefer writing it **first** — for a new feature, and especially for a bug
