@@ -2,8 +2,6 @@
 
 <!-- scope: global — a Browser-pane artifact — it surfaces while verifying, whatever file is under test -->
 
-<!-- scope: global — a Browser-pane artifact — it surfaces while verifying, whatever file is under test -->
-
 The app's inline editors (the game title, the member name, and the round name
 since #562) all save on **blur**: `keydown` Enter calls `input.blur()`, and a
 `blur` listener does the work. Verifying one of those in the Claude Code Browser
@@ -70,7 +68,9 @@ top of the first. Re-`navigate` between attempts rather than re-running against 
 page you have already poked, and assert the editor count (`querySelectorAll(…)
 .length`) before and after opening one.
 
-**Related:** `.claude/rules/preview-pane-paint-artifacts.md` (blank captures and
+**Related:** `.claude/rules/escape-keypresses-never-reach-the-preview-pane.md`
+(the same pane, the same shape: a key it never delivers at all),
+`.claude/rules/preview-pane-paint-artifacts.md` (blank captures and
 wedged input — the same "the pane is lying to you" family),
 `.claude/rules/accessibility-contrast-and-modals.md` ("`el.focus()` from a script
 does not set `:focus-visible`" — the other focus-related pane falsehood, and note
