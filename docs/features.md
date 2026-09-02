@@ -487,8 +487,10 @@ What the app does, in detail. For a short overview see the
   seat linked to that account — the seat's **name** is unchanged either way.
   Uploads are re-encoded server-side to one square format with the image file's
   metadata (EXIF/GPS) stripped, so a phone photo's coordinates are never stored.
-  Guest-demo accounts cannot set one. Pictures are visible to signed-in accounts
-  only, and are reportable from the profile and from a Freundeskreis row.
+  Guest-demo accounts cannot set one, and since #877 they cannot read a profile
+  at all — otherwise "signed-in" would include an account anyone gets in one
+  unauthenticated request. Pictures are visible to real signed-in accounts only,
+  and are reportable from the profile and from a Freundeskreis row.
 - **Entdecken** – *live by default; PUBLIC_STATS_ENABLED=false takes it down* (issue #564). Publishes
   the whole instance at a glance: how many rounds, players, shelf games and
   played sessions it holds, plus the games on the most shelves and the ones most

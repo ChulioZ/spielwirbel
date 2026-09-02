@@ -939,6 +939,7 @@ I18N.fr = {
   'profile.memberSince': 'Membre depuis {when}',
   'profile.friendsSince': 'Amis depuis {when}',
   'profile.notFound': 'Aucun compte avec ce nom d’utilisateur.',
+  'profile.demoBlocked': 'Les profils de compte ne sont pas disponibles dans la démo. Crée un compte gratuit pour les consulter.',
   'profile.self': 'C’est toi.',
   'profile.incoming': 'Ce compte aimerait devenir ton ami.',
   'profile.demoNote': 'Impossible d’envoyer des demandes d’ami depuis la démo. Inscris-toi pour ajouter quelqu’un.',

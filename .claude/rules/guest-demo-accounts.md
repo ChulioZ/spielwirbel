@@ -5,6 +5,8 @@ paths:
   - "lib/demo-tenant.js"
   - "lib/scheduler.js"
   - "lib/routes/account.js"
+  - "lib/routes/profile.js"
+  - "public/js/views-friends.js"
   - "public/js/views-landing.js"
   - "test/demo.test.js"
   - "lib/observability.js"
@@ -177,10 +179,26 @@ suffices), the deep link passes nothing.
   `.claude/rules/per-ip-live-caps.md`, which also covers why adding that default
   broke a dozen unrelated specs in `test/demo.test.js`.
 - **Demo accounts cannot send friend requests or round invitations**
-  (`demo.refuseDemoAccount` on those two POSTs). "We didn't build a UI for it" is
-  not a control — the endpoints are reachable by hand with the demo's own token,
-  and a throwaway account that is purged within the day is an unattributable spam
-  channel into a real user's inbox.
+  (`demo.refuseDemoAccount` on those two POSTs, plus both passkey POSTs). "We
+  didn't build a UI for it" is not a control — the endpoints are reachable by
+  hand with the demo's own token, and a throwaway account that is purged within
+  the day is an unattributable spam channel into a real user's inbox.
+- **Since #877 the guard also covers a READ** — `GET /api/account/profile/:username`,
+  which returned another account's uploaded profile picture. The question to ask
+  of any new read surface is not "is it authenticated" but **"does a document
+  describe this as protected by the sign-in gate?"**: `docs/legal/vvt.md` row 4
+  and `lib/legal.js` both do, and since #427 a sign-in is something an anonymous
+  visitor gets in one unauthenticated request — so both sentences stayed literally
+  true while a picture of a person became reachable without registering. #841 put
+  that picture behind the gate without re-running the question.
+  The guard is **middleware**, before the lookup: a 403 that depended on whether
+  the handle existed would make the demo surface a username oracle the signed-in
+  surface deliberately is not.
+  Left open knowingly: `GET /api/account/avatars` still resolves any id a caller
+  can name (its own comment explains why it is no narrower than `/uploads`). With
+  the profile closed a demo has no way to *obtain* a real account's opaque id —
+  so a future surface that hands one out re-opens this, and is the thing to look
+  for.
 - **A demo has no password identity, so the Konto screen must not offer the
   password form.** `change-password` answers `invalid_credentials` whatever is
   typed — i.e. *"your current password is wrong"* about a password that never

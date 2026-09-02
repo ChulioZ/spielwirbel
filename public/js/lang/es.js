@@ -955,6 +955,7 @@ I18N.es = {
   'profile.memberSince': 'En Spielwirbel desde {when}',
   'profile.friendsSince': 'Amigos desde {when}',
   'profile.notFound': 'No hay ninguna cuenta con ese nombre de usuario.',
+  'profile.demoBlocked': 'Los perfiles de cuenta no están disponibles en la demo. Regístrate con una cuenta gratuita para verlos.',
   'profile.self': 'Eres tú.',
   'profile.incoming': 'Esta cuenta quiere ser tu amiga.',
   'profile.demoNote': 'Desde la demo no se pueden enviar solicitudes de amistad. Regístrate para añadir a alguien.',
