@@ -218,3 +218,57 @@ test('no agent- or contributor-facing file names en.js and de.js as the closed l
   assert.deepEqual(bad, [],
     `these name en.js/de.js as the complete locale set — it is five languages, derived from public/js/locales.js:\n  ${bad.join('\n  ')}`);
 });
+
+/*
+ * The same check, over SOURCE COMMENTS.
+ *
+ * The sweep above reads `.claude/**`, the root docs and `docs/**` — never
+ * `lib/`, `test/`, `public/js/` or `scripts/`. So a code comment citing a rule
+ * file is entirely outside its field of view, and five such citations were
+ * dangling on 2026-09-02 while it passed: two rules deleted in #744, one
+ * deleted in #405, and two that had NEVER existed (one of them naming a private
+ * auto-memory topic as though it were a committed rule).
+ *
+ * `.claude/rules/token-friendly-source-files.md` had already diagnosed exactly
+ * this class — "a code comment citing a value or invariant owned by another
+ * file … reads as documentation, so nobody greps it, and nothing can go red
+ * over it" — and named this spec as unable to see it. The remedy for a rule
+ * that was right and got skipped is a check, not a rewording.
+ *
+ * Narrower than the sweep above on purpose: only `.claude/rules/<name>.md` and
+ * `.claude/skills/<name>/`, because source comments quote source paths loosely
+ * (in prose, in regex literals, inside string templates) and matching those
+ * would produce false positives nobody can act on.
+ */
+test('every .claude/ reference in a source comment resolves', () => {
+  const SRC_DIRS = ['lib', 'test', 'public/js', 'scripts'];
+  const files = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) walk(rel);
+      else if (e.name.endsWith('.js')) files.push(rel);
+    }
+  };
+  for (const d of SRC_DIRS) walk(d);
+  // Anti-vacuous: a broken walk would assert nothing at all.
+  assert.ok(files.length > 100, `walked ${files.length} source files, expected the whole tree`);
+
+  const REF_RE = /\.claude\/(?:rules\/[A-Za-z0-9_-]+\.md|skills\/[A-Za-z0-9_-]+\/)/g;
+
+  const missing = [];
+  let checked = 0;
+  for (const rel of files) {
+    const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    for (const ref of new Set(text.match(REF_RE) || [])) {
+      checked += 1;
+      if (DELETED_ON_PURPOSE.has(ref)) continue;
+      if (!fs.existsSync(path.join(ROOT, ref))) missing.push(`${rel} -> ${ref}`);
+    }
+  }
+  // Counts hits, not attempts — a regex that stopped matching would go to zero.
+  assert.ok(checked > 40, `matched only ${checked} .claude/ references, expected many more`);
+
+  assert.deepEqual(missing, [],
+    `source comments cite .claude/ files that do not exist:\n  ${missing.join('\n  ')}`);
+});

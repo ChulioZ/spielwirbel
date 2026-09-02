@@ -42,7 +42,7 @@ async function addGame(rid, fields = {}) {
 // Every spec needs its OWN external id: the provider hop is cached for ten
 // minutes keyed on provider+locale+id (lib/provider-cache.js), so two specs
 // sharing an id would answer each other and prove nothing — the trap
-// .claude/rules/storefront-lookup-locale.md records for test/lookup.test.js.
+// .claude/rules/add-game-lookup-provider.md records for test/lookup.test.js.
 let nextId = 100;
 const freshId = () => String(nextId++);
 
