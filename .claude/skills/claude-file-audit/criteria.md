@@ -1,13 +1,12 @@
 # Claude-file criteria
 
-- **last-researched:** 2026-07-24
+- **last-researched:** 2026-09-02
 - **cadence:** 30 days
-- **last-scoped-pass:** 2026-07-30 — one operator-supplied source (Anthropic's
-  "new rules of context engineering for Claude 5-generation models"), which
-  yielded C-019 and C-R04. **This deliberately does not advance
-  `last-researched`:** a single-source pass is not the broad sweep the cadence
-  exists to schedule, and letting it reset the clock would suppress the next full
-  pass (due ~2026-08-23) on the strength of one blog post.
+
+The 2026-09-02 pass was the first broad sweep since 2026-07-24 (the 2026-07-30
+scoped pass covered one operator-supplied source and deliberately did not
+advance the clock, so this one was still owed). It adopted **C-025**, widened
+**C-024** to the `stats.*` keys, and rejected **C-R05**/**C-R06**.
 
 Seeded 2026-07-23 from `CLAUDE.md` (the "Capturing learnings" contract),
 `.claude/rules/keep-readme-current.md` and
@@ -116,9 +115,15 @@ research at all.
 - **Status:** adopted · 2026-08-13
 - **Source:** the #209 drift that proved the gap ·
   `keep-readme-current.md` → "The PRODUCT copy is a fifth and sixth surface"
-- **Check:** The **end-user** copy — the `landing.*` keys in **every**
-  `public/js/lang/*.js`, the answers in `lib/faq.js`, and the landing screenshots
-  under `public/img/` — still describes the app that `docs/features.md` describes.
+- **Check:** The **end-user** copy — the `landing.*` **and `stats.*`** keys in
+  **every** `public/js/lang/*.js`, the answers in `lib/faq.js`, and the landing
+  screenshots under `public/img/` — still describes the app that
+  `docs/features.md` describes.
+  (`stats.*` joined on 2026-09-02: #763 put an instance-statistics section on the
+  landing page, rendered by `public/js/views-stats.js`, whose copy sits outside
+  the `landing.` prefix this criterion originally named — so roughly a third of
+  the landing page's prose was outside the check that exists to keep the landing
+  page current. The copy itself was current; the coverage was not.)
   - **The baseline is `docs/features.md`, not a sweep of merged PRs.** C-006
     already keeps that document current against the shipped app, so this check
     reduces to a cheap two-document diff. **It therefore depends on C-006's
@@ -383,6 +388,43 @@ research at all.
   C-R04) for lines.
 - **Enforced by:** `test/token-budget.test.js`
 
+### C-025 — The always-resident rule slice is measured, and global-by-default is bounded
+- **Status:** adopted · 2026-09-02
+- **Source:** ["The new rules of context engineering for Claude 5-generation models"](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models)
+  (Anthropic, 2026-07-24) — long content loads *on demand*, not upfront · measured
+  during the 2026-09-02 research pass
+- **Check:** C-021 measures the **whole** rule corpus; C-014/C-022 decide scope
+  **per rule**, with an explicit "when in doubt, stay global" valve. Nothing
+  measures the number those two produce together — the bytes a session pays for
+  *before it has done anything*. Report it every run, both halves:
+  ```bash
+  for f in .claude/rules/*.md; do head -5 "$f" | grep -q 'scope: global' && cat "$f"; done | wc -c
+  for f in .claude/rules/*.md; do head -5 "$f" | grep -q 'scope: global' && echo "$f"; done | wc -l
+  ```
+  Baseline **2026-09-02: 26 global files / 135 KB**, against 18 files at the
+  C-022 trial's conclusion (2026-08-01) — while the corpus as a whole went
+  82 files/427 KB (2026-07-30) to 134 files/862 KB. So the global slice grew ~44%
+  while the corpus grew ~102%: scoping is working, and the number still needs
+  watching because nothing bounds it.
+
+  The remedy for growth is **never** to narrow C-014's safety valve — a scoped
+  rule that fails to load loses its protection silently, which is the worse
+  failure. It is to ask, per global rule, whether the *whole file* has to be
+  resident or only its trap. `shared-constants-across-the-stack.md` is the
+  standing case at **~360 lines / 19 KB, global** — 1.8x the entire `CLAUDE.md`
+  budget, resident in every session, and structurally an *inventory* of thirteen
+  entries of which a given session needs at most one.
+
+  **Why C-021 was not enough:** it asks what the corpus costs *in total*, which
+  is the right question for a file nobody has to read. A global rule is read
+  every time, so its cost is multiplied by session count and C-021 cannot see the
+  multiplier. Same blind-spot shape as C-020 over C-006 and C-021 over C-004: the
+  existing criterion was measuring the honest thing and the wrong one.
+- **Enforced by:** `test/token-budget.test.js` (per-file budgets only),
+  `test/rule-scope.test.js` (that a scope is declared) — **the aggregate is
+  manual**, and deliberately so: a hard cap would push rules to scope themselves
+  to dodge it, which is exactly the silent-protection-loss C-014 forbids.
+
 ### C-019 — An absolute prohibition names the failure mode it prevents
 - **Status:** adopted · 2026-07-30
 - **Source:** ["The new rules of context engineering for Claude 5-generation models"](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models)
@@ -433,3 +475,25 @@ research at all.
   and C-007 requires it in the words a user would actually type. Deleting those
   clauses would silently stop skills triggering — a routing failure with no error.
   Recorded so a future run reading that post doesn't strip them.
+
+### C-R05 — "Scope the skills with `paths:` frontmatter, the way the rules are"
+- **Status:** rejected · 2026-09-02
+- **Why:** `paths:` reached `SKILL.md` in this window
+  ([skills docs](https://code.claude.com/docs/en/skills#frontmatter-reference)),
+  and it is the right mechanism for the wrong file class here. Every skill in
+  this repo is a **workflow** skill — `implement`, `pick-issue`, `dependabot`,
+  the six audits, `test-data` — invoked by name or by a described task, never by
+  "I happen to be editing this file". Path-scoping them would narrow the trigger
+  surface C-007 requires and C-R04 protects, i.e. it would stop skills firing,
+  silently. It also buys nothing in tokens: a skill body loads on invocation, not
+  per session, which is the very distinction C-023 records. Adopt only if a
+  genuinely *file-scoped* skill is ever written.
+
+### C-R06 — "Use CLAUDE.md `@path` imports to get under the C-015 budget"
+- **Status:** rejected · 2026-09-02
+- **Why:** imports are **inlined at load**, so moving 14 lines behind an
+  `@import` changes what the file looks like and not what a session pays — the
+  budget's whole subject. It would also fragment the one document C-R03 protects
+  for its narrative order. The honest answers to a `CLAUDE.md` overshoot stay the
+  two C-015 already names: move content into a scoped rule, or record the
+  overshoot in the allowlist.
