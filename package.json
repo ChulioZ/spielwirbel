@@ -23,7 +23,7 @@
     "session-cost": "node scripts/session-cost.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1111.0",
+    "@aws-sdk/client-s3": "^3.1121.0",
     "@simplewebauthn/server": "^13.3.2",
     "argon2": "^0.45.1",
     "compression": "^1.8.1",
