@@ -124,16 +124,22 @@ async function showProfile(username) {
   try {
     p = await accountApi('GET', `/profile/${encodeURIComponent(username)}`);
   } catch (err) {
-    // An unknown (or suspended) handle explains itself rather than bouncing —
-    // a typo'd URL is the likeliest way to get here.
-    if (err.message !== 'user_not_found') return; // accountApi handled a dead session
+    // Two refusals explain themselves rather than bouncing: an unknown (or
+    // suspended) handle, and — since #877 — a guest demo account, which the
+    // route declines outright. The demo branch is not cosmetic: without it the
+    // screen keeps the loading ellipsis above forever, because anything other
+    // than a recognised code falls through to the bare `return`.
+    const note = err.message === 'user_not_found' ? 'profile.notFound'
+      : err.message === 'demo_forbidden' ? 'profile.demoBlocked'
+        : null;
+    if (!note) return; // accountApi handled a dead session
     app.innerHTML = '';
     // The likeliest way to reach this screen is a typo'd URL, so it is the one
     // that most needs a way out — and it is the only branch a `backRow` added to
     // the happy path below would miss (#623).
     app.appendChild(backRow(() => showFriends()));
     app.appendChild(h(`<div class="lobby-head"><h1>${esc(t('profile.title'))}</h1></div>`));
-    app.appendChild(h(`<p class="muted empty-note">${esc(t('profile.notFound'))}</p>`));
+    app.appendChild(h(`<p class="muted empty-note">${esc(t(note))}</p>`));
     return;
   }
 

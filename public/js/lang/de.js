@@ -1001,6 +1001,7 @@ I18N.de = {
   'profile.memberSince': 'Mitglied seit {when}',
   'profile.friendsSince': 'Befreundet seit {when}',
   'profile.notFound': 'Kein Konto mit diesem Nutzernamen.',
+  'profile.demoBlocked': 'Kontoprofile sind in der Demo nicht verfügbar. Registriere ein kostenloses Konto, um sie zu sehen.',
   'profile.self': 'Das bist du.',
   'profile.incoming': 'Dieses Konto möchte mit dir befreundet sein.',
   'profile.demoNote': 'In der Demo kannst du keine Freundschaftsanfragen senden. Registriere dich, um jemanden hinzuzufügen.',
