@@ -202,8 +202,9 @@ test('an unheld rank is PAINTED as a riser on EVERY stage, not just a shared ste
      crown central — spent that third of the width on nothing. Measured at
      1200px before the fix: a 142px-wide, ZERO-HEIGHT column, so the stage read
      as two steps shoved against one side rather than as a podium missing a
-     place. */
-  /* The generality claim comes FIRST, and is written over every painting rule
+     place.
+
+     So the GENERALITY claim comes first, and is written over every painting rule
      rather than as `bodyOf(<the old selector>) === null`: re-scoping the paint
      back under the shared step is the regression, and asked in this order it
      fails saying so, instead of the property assertions below tripping over a
