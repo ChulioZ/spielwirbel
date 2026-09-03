@@ -27,7 +27,11 @@ const assert = require('node:assert/strict');
 
 const { PODIUM_MAX_PER_RANK, podiumColumns, podiumColHtml } = require('../public/js/podium');
 const { loadApp } = require('./support/dom');
-const { bodyOf } = require('./support/css');
+const { bodyOf, bodyOfIn, outranks, mediaBlocks, rulesOf, RULES } = require('./support/css');
+
+// A px value out of a rule body, so a claim can be COMPARED with another rule's
+// number rather than restated as a literal that silently drifts from it.
+const px = (body, prop) => body.match(new RegExp(prop + ':\\s*(\\d+)px'))[1];
 
 const at = (place, n) => Array.from({ length: n }, (_, i) => ({ place, id: `${place}-${i}` }));
 
@@ -68,8 +72,20 @@ test('the crown stays central even when a rank beside it is unheld', () => {
 test('nothing is held open when there is no crown to centre', () => {
   // No rank 1, so no crown — the remaining ranks just pack.
   assert.deepEqual(podiumColumns([...at(2, 2), ...at(3, 1)]).cols.map((c) => c.rank), [2, 3]);
-  // One rank is the wide band, which has no centring problem at all.
-  assert.equal(podiumColumns(at(1, 4)).cols.length, 1);
+  // Not even when it stands alone: an unheld rank 2 has nothing to be a step of.
+  assert.equal(podiumColumns(at(2, 4)).cols.length, 1);
+});
+
+test('a shared top step keeps its empty risers — for the SILHOUETTE, not centring', () => {
+  /* One column has no centring problem, so the reason differs from the case
+     above: a lone pedestal has no stepped profile, and the profile is what makes
+     the stage read as a podium at all (#879). The unheld ranks are drawn as
+     vestigial risers saying nobody stands below the top step. */
+  const { single, cols } = podiumColumns(at(1, 3));
+  assert.equal(single, true);
+  assert.deepEqual(cols.map((c) => c.rank), [2, 1, 3], 'the step is still the middle slot');
+  assert.deepEqual(cols.map((c) => !!c.spacer), [true, false, true]);
+  assert.equal(cols[1].shown.length, 3, 'all three tied entries share the one held rank');
 });
 
 test('a spacer renders as an empty slot — no pedestal, no crown, nothing announced', () => {
@@ -83,12 +99,15 @@ test('a spacer renders as an empty slot — no pedestal, no crown, nothing annou
   assert.doesNotMatch(html, /podium__base|ti-crown|podium__entries/);
 });
 
+const filledOf = (cols) => cols.filter((c) => !c.spacer);
+
 test('a crowded rank is bounded, and reports how many it is holding back', () => {
-  const { cols } = podiumColumns(at(1, 5));
-  assert.equal(cols[0].shown.length, PODIUM_MAX_PER_RANK);
-  assert.equal(cols[0].hidden, 5 - PODIUM_MAX_PER_RANK);
+  // Read the FILLED column, never cols[0] — a single rank is flanked by risers.
+  const [step] = filledOf(podiumColumns(at(1, 5)).cols);
+  assert.equal(step.shown.length, PODIUM_MAX_PER_RANK);
+  assert.equal(step.hidden, 5 - PODIUM_MAX_PER_RANK);
   // An uncrowded one hides nothing — the count must not render as "+0".
-  assert.equal(podiumColumns(at(1, 2)).cols[0].hidden, 0);
+  assert.equal(filledOf(podiumColumns(at(1, 2)).cols)[0].hidden, 0);
 });
 
 test('one distinct place occupied is flagged as the degenerate stage', () => {
@@ -135,7 +154,7 @@ test('an entry fills its column, so covers are uniform and titles can clip', () 
   const entry = bodyOf('.podium__entry');
   assert.match(entry, /width:\s*100%/, 'a shrink-to-fit entry sizes itself from its title');
   assert.match(entry, /min-width:\s*0/);
-  // The band lays entries in a row, where 100% would put one per line.
+  // The shared top step lays entries in a row, where 100% would put one per line.
   assert.match(bodyOf('.podium--single .podium__entry'), /width:\s*96px/);
 
   // Cover sizes are absolute for the same reason: a % here is a title measurement.
@@ -143,6 +162,82 @@ test('an entry fills its column, so covers are uniform and titles can clip', () 
   assert.match(img, /width:\s*74px/);
   assert.match(img, /max-width:\s*100%/, 'the only squeeze a narrow column needs');
   assert.match(bodyOf('.podium__col--multi .result-podium__img'), /width:\s*52px/);
+});
+
+test('the degenerate stage is a shared TOP STEP, not a full-width band', () => {
+  /* Everyone tied is what a round looks like when it is YOUNGEST — one session
+     played leaves every winner on one win — so the degenerate stage is the one
+     a new group meets first, on the app's most celebratory screen. It used to
+     be `flex: 1 1 100%` over a 44px base: measured 1108x149px at 1440px, a
+     tinted horizon line where the stepped silhouette should be (#879). */
+  const col = bodyOf('.podium--single .podium__col');
+  assert.ok(col, '.podium--single .podium__col rule is gone');
+  assert.doesNotMatch(col, /flex:\s*1 1 100%/,
+    'claiming the whole stage is what made it a band rather than a step');
+  assert.match(col, /width:\s*fit-content/,
+    'the step is only as wide as the entries standing on it');
+
+  /* Both numbers are read off the WINNER's own column, which is the whole idea:
+     a tie SHARES the top step rather than getting a shape of its own. Compared
+     rather than merely matched, so retuning one of them reddens here instead of
+     silently drifting the two apart. */
+  assert.equal(px(col, 'min-width'), px(bodyOf('.podium__col'), 'max-width'),
+    "a lone entry stands on the winner's column width, not on a 96px post");
+  assert.equal(
+    px(bodyOfIn('.podium--single .podium__col--1 .podium__base'), 'height'),
+    px(bodyOf('.podium__col--1 .podium__base'), 'height'),
+    'the shared step is the winner pedestal height — 44px full-width read as a divider'
+  );
+});
+
+test('the empty risers are vestigial, and never at the step\'s expense', () => {
+  const sel = '.podium--single .podium__col.podium__col--spacer';
+  const riser = bodyOf(sel);
+  assert.ok(riser, 'the risers are gone — a lone pedestal has no stepped profile');
+
+  /* Compounded past `.podium--single .podium__col` on PURPOSE. A bare
+     `.podium--single .podium__col--spacer` merely TIES that rule, so it would
+     inherit the step's 170px floor on source order alone — three 170px columns
+     on a stage sized for one (ds-row-is-a-click-target.md). */
+  assert.ok(outranks(sel, '.podium--single .podium__col'),
+    'a riser that only ties the step rule inherits its 170px floor');
+  assert.match(riser, /min-width:\s*0/);
+
+  // Their real heights, so the profile matches the ordinary podium's steps.
+  for (const rank of [2, 3]) {
+    assert.equal(
+      px(bodyOf(`.podium--single .podium__col--${rank}.podium__col--spacer`), 'height'),
+      px(bodyOf(`.podium__col--${rank} .podium__base`), 'height'),
+      `the empty rank-${rank} riser must stand at that rank's real height`
+    );
+  }
+
+  /* Only the risers may give way. A step that shrinks wraps the tied entries
+     onto a second row, which costs the composition the whole point of it. */
+  assert.match(bodyOf('.podium--single .podium__col'), /flex:\s*0 0 auto/,
+    'the step must not absorb a narrow stage');
+  assert.match(riser, /flex:\s*0 1 /, 'the risers must');
+
+  /* And where even that is not enough, they go. 3x96 + 2x18 of entries leaves
+     under 40px a side on a phone. */
+  const narrow = mediaBlocks().find(([q]) => /max-width:\s*639px/.test(q));
+  assert.ok(narrow, 'the phone guard is gone — risers would squeeze the step');
+  assert.match(bodyOf(sel, rulesOf(narrow[1])), /display:\s*none/);
+});
+
+test('a lone step rises at once instead of waiting out the winner cue', () => {
+  /* Across three occupied columns the 0.9s on rank 1 is the climax of a staggered
+     build. On the shared step the risers beside it are EMPTY, so the same build
+     reveals two blank slots and only then the thing anyone is waiting for. */
+  const single = '.podium--single.is-reveal .podium__col';
+  const staged = '.podium.is-reveal .podium__col--1';
+  assert.match(bodyOf(single), /animation-delay:\s*0s/);
+  assert.equal(outranks(single, staged), false,
+    'three classes each — they TIE, so nothing but source order makes this win');
+  // Not `at` — that name is this file's entries-at-a-place helper.
+  const orderOf = (sel) => RULES.findIndex(([s]) => s === sel);
+  assert.ok(orderOf(single) > orderOf(staged),
+    'the lone-step delay must stay AFTER the staggered one or it silently loses');
 });
 
 test('the reveal keys off the shared component and still rises shortest-first', () => {
@@ -252,14 +347,18 @@ test('each podium game is its own link — a column can hold several', async (t)
   );
 });
 
-test('everything tied renders one wide crowned band, not a lone pedestal', async (t) => {
+test('everything tied renders ONE shared step, not a column each', async (t) => {
   const flat = session('s2', ['m1'], { g1: 4, g2: 4, g3: 4 });
   const r = round({ sessions: [flat] });
   const dom = bootApp(t, r);
   await dom.call('showResults', r, flat, r.games, false);
 
   assert.ok(stageOf(dom).classList.contains('podium--single'));
-  assert.equal(colsOf(dom).length, 1);
+  const cols = colsOf(dom);
+  assert.equal(cols.length, 3, 'the two unheld ranks stay as risers');
+  assert.equal(cols.filter((c) => !c.classList.contains('podium__col--spacer')).length, 1,
+    'but only one of them holds anybody');
+  assert.ok(cols[1].querySelector('.ti-crown'), 'the step is the crowned middle slot');
 });
 
 test('the Pokale podium shares the component, and its cap spills into the rest line', async (t) => {
@@ -271,10 +370,11 @@ test('the Pokale podium shares the component, and its cap spills into the rest l
   await dom.call('renderPokaleTab', r);
 
   const cols = colsOf(dom);
-  assert.equal(cols.length, 1, 'one rank, one column');
+  const step = cols.find((c) => !c.classList.contains('podium__col--spacer'));
+  assert.equal(cols.length, 3, 'one held rank, flanked by two empty risers');
   assert.ok(stageOf(dom).classList.contains('podium--single'));
-  assert.equal(cols[0].querySelectorAll('.podium__entry').length, PODIUM_MAX_PER_RANK);
-  assert.match(cols[0].querySelector('.podium__more').textContent, /\+2 weitere/);
+  assert.equal(step.querySelectorAll('.podium__entry').length, PODIUM_MAX_PER_RANK);
+  assert.match(step.querySelector('.podium__more').textContent, /\+2 weitere/);
 
   // The two the cap pushed off the step must still be reachable somewhere.
   const rest = dom.app.querySelector('.podium__rest');

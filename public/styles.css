@@ -5205,8 +5205,10 @@ kbd {
   width: 100%;
   min-width: 0;
 }
-/* The wide band lays entries in a row, so there they take a width of their own —
-   96px keeps three of them on one line inside a 375px phone's 347px box. */
+/* The shared top step lays entries in a row, so there they take a width of their
+   own — 96px keeps three of them on one line inside a 375px phone's 347px box.
+   It is ALSO what lets the step size itself with `fit-content` (see below): an
+   entry left at `100%` would make that measurement circular. */
 .podium--single .podium__entry { width: 96px; }
 .podium__more {
   font-size: var(--text-xs);
@@ -5246,14 +5248,70 @@ kbd {
    column — the column width belongs to the stage, not to how the tie fell. */
 .podium__col--multi .podium__avatar { width: 40px; height: 40px; font-size: 15px; /* glyph, not type */ }
 .podium__col--multi .podium__entries { gap: 8px; }
-/* One distinct place occupied (everyone tied, or a single ranked entry): a lone
-   pedestal on an empty stage is not a podium, so the rank becomes one wide
-   crowned band and its entries sit side by side. */
-.podium--single .podium__col { max-width: none; flex: 1 1 100%; }
+/* One distinct place occupied (everyone tied, or a single ranked entry): the
+   SHARED TOP STEP. The tied entries stand side by side on the winner's own
+   pedestal, which is as wide as they need and no wider.
+
+   It used to be one wide crowned BAND — `flex: 1 1 100%` over a 44px base — on
+   the reasoning that a lone pedestal on an empty stage is not a podium. That
+   measured 1108x149px at 1440px (#879): a tinted horizon line where the stepped
+   silhouette should be, and it is the state a round is in when it is YOUNGEST,
+   since everybody's first win leaves everybody tied. Height is what the band
+   gave away — a full-width 44px bar reads as a divider, an 88px pedestal reads
+   as a step someone is standing on.
+
+   `fit-content` is only safe here because `.podium--single .podium__entry` has
+   an ABSOLUTE width: `%` sizes inside a shrink-to-fit column resolve against
+   whichever child is widest, i.e. the title
+   (percent-sizes-under-a-shrink-to-fit-flex-item.md). `min-width` is the
+   winner's own column width from `.podium__col`, so ONE entry stands on a step
+   rather than on a 96px post.
+
+   `flex-shrink: 0` so the RISERS below absorb a narrow stage, never the step —
+   letting it shrink wraps the tied entries onto a second row, which is the one
+   thing that costs the composition its shape. `max-width` still clamps it to
+   the stage where there are no risers to give way. */
+.podium--single .podium__col { flex: 0 0 auto; width: fit-content; min-width: 170px; max-width: 100%; }
 .podium--single .podium__entries { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px 18px; }
+/* Whichever rank stands alone IS the top step, so it takes the winner's height. */
 .podium--single .podium__col--1 .podium__base,
 .podium--single .podium__col--2 .podium__base,
-.podium--single .podium__col--3 .podium__base { height: 44px; }
+.podium--single .podium__col--3 .podium__base { height: 88px; }
+
+/* The empty 2nd and 3rd steps beside a shared top step (#879). A lone pedestal
+   has no stepped profile, and the profile is what makes the stage read as a
+   podium at all — so the unheld ranks are drawn as vestigial risers at their
+   real heights. They say what the tie means: nobody is standing below the top
+   step. Faded rather than filled, or they read as occupied.
+
+   COMPOUNDED past `.podium--single .podium__col` deliberately — a bare
+   `.podium--single .podium__col--spacer` merely TIES it and would inherit the
+   step's 170px floor on source order alone (ds-row-is-a-click-target.md).
+
+   The opacity was measured by eye at 1440px, not guessed: at 0.45 the fade
+   takes the BORDER with it and the risers all but vanish against the page, so
+   the profile they exist to draw is not there. 0.75 reads as two low steps.
+   They cannot be mistaken for occupied ones — a real step carries a rank, a
+   count and the avatars above it, and these carry nothing. */
+.podium--single .podium__col.podium__col--spacer {
+  flex: 0 1 170px;
+  width: auto;
+  min-width: 0;
+  background: var(--brand-tint);
+  border: 1px solid var(--brand-edge);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  opacity: 0.75;
+}
+.podium--single .podium__col--2.podium__col--spacer { height: 64px; }
+.podium--single .podium__col--3.podium__col--spacer { height: 46px; }
+/* Below this there is no room for them beside a three-abreast step: 3x96 + 2x18
+   of entries leaves under 40px a side on a phone, so the risers would take the
+   width out of the step and wrap the tied entries. The phone keeps the lone
+   pedestal, which is the composition that measured fine there. */
+@media (max-width: 639px) {
+  .podium--single .podium__col.podium__col--spacer { display: none; }
+}
 .podium__rest { text-align: center; font-size: var(--text-sm); font-weight: 600; margin-bottom: 18px; }
 .pokale-cards {
   display: grid;
@@ -6241,6 +6299,11 @@ kbd {
   .podium.is-reveal .podium__col--3 { animation-delay: 0.1s; }
   .podium.is-reveal .podium__col--2 { animation-delay: 0.5s; }
   .podium.is-reveal .podium__col--1 { animation-delay: 0.9s; }
+  /* The shared top step has nothing to stagger against — the risers beside it are
+     empty, so a 3rd-2nd-1st build would reveal two blank slots and then the only
+     thing anyone is waiting for. It rises as one 0.55s piece instead.
+     Same specificity as the rules above — this MUST stay after them. */
+  .podium--single.is-reveal .podium__col { animation-delay: 0s; }
   @keyframes podium-rise {
     from { transform: translateY(26px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
