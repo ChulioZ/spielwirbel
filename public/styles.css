@@ -82,6 +82,13 @@
   --gold-deep: #92400e;
   --gold-soft: #fef3c7;
   --gold-edge: #d97706;
+  /* Filled rank discs on the podium (#891). NOT the `.rank-medal--*` glyph
+     colours: white on a disc is a different contrast problem — `--silver
+     #9ca3af` sits at 1.9:1. These three clear WCAG AA against white and are
+     pinned in test/a11y-contrast.test.js. */
+  --medal-gold-disc: #a16207;
+  --medal-silver-disc: #6b7280;
+  --medal-bronze-disc: #9a5b23;
   /* Type scale. 22 hardcoded sizes — every integer from 10 to 22 — were a
      continuum rather than a scale, and 14/15/16/17px alone carried 109
      declarations: four body sizes no reader can perceive as distinct levels,
@@ -5163,60 +5170,136 @@ kbd {
 .stepper-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 /* ---- The podium (shared: Pokale members + session results) ---- */
-/* ONE COLUMN IS ONE RANK, never one entry (#836). Both podiums are tie-aware,
-   so a column-per-entry stage grew with every tie: the results podium emitted
-   four 140px columns for the everyday "one winner, three-way tie for 2nd" and
-   wrapped on a phone (pedestals off one baseline, the crown stranded at the
-   bottom right), while Pokale's three 110px columns plus gaps came to 358px in
-   a 347px box with no wrap set at all. At most three columns, sized fluidly,
-   and NEVER `flex-wrap` here — the wrap was the bug. */
+/* RANK IS POSITION, NEVER HEIGHT (#891). This was three side-by-side pedestal
+   columns whose HEIGHT carried the rank — and a tie adds entries, which stack
+   upward from the pedestal, so the more games shared a low place the taller
+   that column's silhouette: one winner plus a three-way tie for 3rd made the
+   bronze column overtop the crowned winner. The one claim a podium makes,
+   contradicted by its own geometry.
+
+   The tiers run [1, 2, 3] DOWN the page instead, each indented one step further
+   and a little quieter than the one above, so the staircase reads down the left
+   edge. A tie then grows SIDEWAYS — the one direction that says nothing about
+   rank — and `flex-wrap` is what it grows into, where under the column layout
+   wrapping was the bug (#836). */
 .podium {
   position: relative; /* anchors the results confetti overlay */
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   margin: 8px 0 18px;
 }
-.podium__col {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 170px;
+.podium__tier {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+/* The staircase itself. Indent is the ONLY property that scales with rank, and
+   a tie cannot grow it — which is the whole point of moving off height. */
+.podium__tier--2 { margin-left: 20px; }
+.podium__tier--3 { margin-left: 40px; }
+/* Tier 1 is the hero, so the winner stays the heaviest thing on the stage
+   without being the tallest: gold edge, crown, and the full-size cover the
+   quieter tiers give up below. */
+.podium__tier--1 {
+  background: var(--gold-soft);
+  border-color: var(--gold-edge);
+  padding: 14px 12px;
+}
+/* Sized to its own label, not to a literal. The shared-place word is
+   translated, so a fixed column is a bet on the longest locale: at 46px the
+   German „geteilt" already overflowed by 2px a side and the Spanish
+   „compartido" would have escaped the tier entirely. `min-width` keeps an
+   untied tier's marker from collapsing onto the 30px disc, and the ceiling
+   keeps a long locale from eating the entries' row on a phone — past it the
+   label wraps instead. */
+.podium__marker {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  min-width: 46px;
+  max-width: 88px;
 }
-.podium__crown { font-size: var(--text-2xl); color: var(--gold); }
+.podium__crown { font-size: var(--text-xl); color: var(--gold); line-height: 1; }
+/* The rank numeral sits in a filled disc. Its tones are NOT the
+   `.rank-medal--*` family: those are glyph colours on the page, and white on a
+   filled disc is a different contrast problem — `--silver #9ca3af` misses AA by
+   a mile. These three clear 4.5:1 against white and are pinned in
+   test/a11y-contrast.test.js. */
+.podium__rank {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: var(--medal-bronze-disc);
+}
+.podium__tier--1 .podium__rank { background: var(--medal-gold-disc); }
+.podium__tier--2 .podium__rank { background: var(--medal-silver-disc); }
+.podium__shared {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--placeholder);
+  text-align: center;
+  line-height: 1.2;
+  overflow-wrap: anywhere; /* a single long word must wrap, never overhang */
+}
+.podium__tier--1 .podium__shared { color: var(--gold-deep); }
 .podium__entries {
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px 14px;
 }
+/* An entry is an ABSOLUTE box. Entries flow in a row now, so each needs a width
+   of its own — and a `%` here would resolve against whichever child is widest,
+   i.e. the title, which makes covers ragged and stops text-overflow ever firing
+   (percent-sizes-under-a-shrink-to-fit-flex-item.md). */
 .podium__entry {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 5px;
-  /* Fills the column on purpose: a shrink-to-fit entry sizes itself from its
-     own title, which makes covers ragged and stops text-overflow ever firing. */
-  width: 100%;
+  width: 112px;
+  max-width: 100%;
   min-width: 0;
 }
-/* The shared top step lays entries in a row, so there they take a width of their
-   own — 96px keeps three of them on one line inside a 375px phone's 347px box.
-   It is ALSO what lets the step size itself with `fit-content` (see below): an
-   entry left at `100%` would make that measurement circular. */
-.podium--single .podium__entry { width: 96px; }
-.podium__more {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  color: var(--placeholder);
-  text-align: center;
+/* Below the hero an entry lies down into a compact chip, which is what keeps a
+   crowded tie SHORT: three tied entries wrap to three ~44px lines rather than
+   three ~130px cards, so no tie outgrows the winner's tier at any width. */
+.podium__tier--2 .podium__entry,
+.podium__tier--3 .podium__entry {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 178px;
 }
+/* The chip is kept SHORT deliberately, and the numbers are measured rather than
+   chosen. On a 375px phone a quiet tier fits one chip per line, so its height is
+   linear in the size of the tie — at a 42px cover and a 10px row gap a
+   three-way tie for 3rd came to 163px against the winner's 161px, i.e. the
+   inversion this whole change removes, surviving by two pixels in the one place
+   it is least visible. At 34px and 6px the same tie is ~140px. */
+.podium__tier--2 .podium__entries,
+.podium__tier--3 .podium__entries { gap: 6px 14px; }
 .podium__avatar { width: 52px; height: 52px; font-size: 18px; /* glyph, not type */ }
+.podium__tier--2 .podium__avatar,
+.podium__tier--3 .podium__avatar { width: 30px; height: 30px; font-size: 12px; /* glyph, not type */ }
 .podium__name {
   font-family: var(--font-display);
   font-size: var(--text-md);
@@ -5225,114 +5308,18 @@ kbd {
   overflow-wrap: anywhere;
   text-align: center;
 }
-.podium__base {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0;
-  background: var(--brand-tint);
-  border: 1px solid var(--brand-edge);
-  border-radius: 12px 12px 0 0;
+.podium__tier--2 .podium__name,
+.podium__tier--3 .podium__name {
   font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--brand-dark);
-  padding-top: 6px;
-}
-.podium__col--1 .podium__base { height: 88px; }
-.podium__col--2 .podium__base { height: 64px; }
-.podium__col--3 .podium__base { height: 46px; }
-
-/* An unheld rank is drawn as a vestigial riser at its real height (#879, every
-   stage since #889). `podiumColumns` holds the slot open — for the shared top
-   step to have a stepped profile at all, and beside two occupied ranks to keep
-   the crown central — and an unpainted slot spends that width on a hole: {1,2}
-   read as two steps shoved against the left of the stage, {1,1,3} as a gap
-   where second place should be. Painted, the same slot says what it means, that
-   nobody is standing there.
-
-   Faded rather than filled, or they read as occupied. The value was measured by
-   eye at 1440px, not guessed: at 0.45 the fade takes the BORDER with it and the
-   risers all but vanish against the page, so the profile they exist to draw is
-   not there. They cannot be mistaken for occupied steps — a real step carries a
-   rank number, and beside one that also carries a count and the entries above
-   it, which is why the same 0.75 that reads as two low steps on an otherwise
-   empty stage still reads as unoccupied between two filled columns.
-
-   Heights deliberately restate `.podium__col--N .podium__base` rather than
-   inheriting: the riser IS the column here (there is no base inside it, since a
-   spacer renders no content at all), and the two are compared in
-   test/podium-ranks.test.js so retuning a step reddens rather than drifting. */
-.podium__col--spacer {
-  background: var(--brand-tint);
-  border: 1px solid var(--brand-edge);
-  border-bottom: 0;
-  border-radius: 12px 12px 0 0;
-  opacity: 0.75;
-}
-.podium__col--2.podium__col--spacer { height: 64px; }
-.podium__col--3.podium__col--spacer { height: 46px; }
-.podium__rank { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; line-height: 1.1; }
-/* A rank holding several entries shrinks its covers/avatars rather than its
-   column — the column width belongs to the stage, not to how the tie fell. */
-.podium__col--multi .podium__avatar { width: 40px; height: 40px; font-size: 15px; /* glyph, not type */ }
-.podium__col--multi .podium__entries { gap: 8px; }
-/* One distinct place occupied (everyone tied, or a single ranked entry): the
-   SHARED TOP STEP. The tied entries stand side by side on the winner's own
-   pedestal, which is as wide as they need and no wider.
-
-   It used to be one wide crowned BAND — `flex: 1 1 100%` over a 44px base — on
-   the reasoning that a lone pedestal on an empty stage is not a podium. That
-   measured 1108x149px at 1440px (#879): a tinted horizon line where the stepped
-   silhouette should be, and it is the state a round is in when it is YOUNGEST,
-   since everybody's first win leaves everybody tied. Height is what the band
-   gave away — a full-width 44px bar reads as a divider, an 88px pedestal reads
-   as a step someone is standing on.
-
-   `fit-content` is only safe here because `.podium--single .podium__entry` has
-   an ABSOLUTE width: `%` sizes inside a shrink-to-fit column resolve against
-   whichever child is widest, i.e. the title
-   (percent-sizes-under-a-shrink-to-fit-flex-item.md). `min-width` is the
-   winner's own column width from `.podium__col`, so ONE entry stands on a step
-   rather than on a 96px post.
-
-   `flex-shrink: 0` so the RISERS below absorb a narrow stage, never the step —
-   letting it shrink wraps the tied entries onto a second row, which is the one
-   thing that costs the composition its shape. `max-width` still clamps it to
-   the stage where there are no risers to give way. */
-.podium--single .podium__col { flex: 0 0 auto; width: fit-content; min-width: 170px; max-width: 100%; }
-.podium--single .podium__entries { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px 18px; }
-/* Whichever rank stands alone IS the top step, so it takes the winner's height. */
-.podium--single .podium__col--1 .podium__base,
-.podium--single .podium__col--2 .podium__base,
-.podium--single .podium__col--3 .podium__base { height: 88px; }
-
-/* Beside a SHARED TOP STEP the risers need sizing of their own — everywhere
-   else they simply take their third of the stage from `.podium__col`. What they
-   look like is above; this is only how they escape the step's rules, which size
-   a column to its content and give it a 170px floor.
-
-   COMPOUNDED past `.podium--single .podium__col` deliberately — a bare
-   `.podium--single .podium__col--spacer` merely TIES it and would inherit that
-   floor on source order alone (ds-row-is-a-click-target.md). */
-.podium--single .podium__col.podium__col--spacer {
-  flex: 0 1 170px;
-  width: auto;
+  text-align: left;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-/* Below this there is no room for them beside a three-abreast step: 3x96 + 2x18
-   of entries leaves under 40px a side on a phone, so the risers would take the
-   width out of the step and wrap the tied entries. The phone keeps the lone
-   pedestal, which is the composition that measured fine there.
-
-   SCOPED to the shared step on purpose. An ordinary stage's riser already holds
-   its third through `flex: 1 1 0` whether it is painted or not, so painting it
-   costs the occupied columns no width at any size — hiding it there would give
-   the phone back the hole this whole block exists to fill. */
-@media (max-width: 639px) {
-  .podium--single .podium__col.podium__col--spacer { display: none; }
-}
+.podium__wins { font-size: var(--text-xs); font-weight: 700; color: var(--ink-soft); }
+.podium__tier--2 .podium__wins,
+.podium__tier--3 .podium__wins { margin-left: auto; flex: 0 0 auto; }
 .podium__rest { text-align: center; font-size: var(--text-sm); font-weight: 600; margin-bottom: 18px; }
 .pokale-cards {
   display: grid;
@@ -6311,20 +6298,29 @@ kbd {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.podium__col--multi .result-podium__img { width: 52px; }
-.podium__col--multi .result-podium__title { font-size: var(--text-sm); }
+/* Below the hero the entry is a chip, so the cover shrinks and the title takes
+   the row's remaining width — `min-width: 0` is what lets it ellipsise there. */
+.podium__tier--2 .result-podium__img,
+.podium__tier--3 .result-podium__img { width: 34px; border-radius: 9px; }
+.podium__tier--2 .result-podium__img .ti,
+.podium__tier--3 .result-podium__img .ti { font-size: 15px; /* glyph, not type */ }
+.podium__tier--2 .result-podium__title,
+.podium__tier--3 .result-podium__title { font-size: var(--text-sm); flex: 1 1 auto; min-width: 0; }
 .result-podium__pill { position: static; }
+.podium__tier--2 .result-podium__pill,
+.podium__tier--3 .result-podium__pill { flex: 0 0 auto; }
 @media (prefers-reduced-motion: no-preference) {
-  /* Staggered shortest-first, which stays right now that a column is a rank. */
-  .podium.is-reveal .podium__col { animation: podium-rise 0.55s ease-out backwards; }
-  .podium.is-reveal .podium__col--3 { animation-delay: 0.1s; }
-  .podium.is-reveal .podium__col--2 { animation-delay: 0.5s; }
-  .podium.is-reveal .podium__col--1 { animation-delay: 0.9s; }
-  /* The shared top step has nothing to stagger against — the risers beside it are
-     empty, so a 3rd-2nd-1st build would reveal two blank slots and then the only
-     thing anyone is waiting for. It rises as one 0.55s piece instead.
-     Same specificity as the rules above — this MUST stay after them. */
-  .podium--single.is-reveal .podium__col { animation-delay: 0s; }
+  /* The stage still builds bottom-up to the winner, but keyed off POSITION
+     rather than rank — an unheld rank renders nothing now (#891), so a stage
+     whose only tier is rank 1 would otherwise sit blank through the winner's
+     0.9s cue before revealing the one thing anyone is waiting for. `:last-child`
+     is the bottom tier whatever its rank, which retires the old
+     `.podium--single` special case instead of reproducing it. The three are
+     mutually exclusive, so their equal specificity never has to be resolved. */
+  .podium.is-reveal .podium__tier { animation: podium-rise 0.55s ease-out backwards; }
+  .podium.is-reveal .podium__tier:last-child { animation-delay: 0.1s; }
+  .podium.is-reveal .podium__tier:nth-last-child(2) { animation-delay: 0.5s; }
+  .podium.is-reveal .podium__tier:nth-last-child(3) { animation-delay: 0.9s; }
   @keyframes podium-rise {
     from { transform: translateY(26px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }

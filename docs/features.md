@@ -229,7 +229,8 @@ What the app does, in detail. For a short overview see the
     actually have something in them. Any of them can be shared as an image: the
     card is drawn on the device and handed to the share sheet (or saved), so
     nothing is published anywhere.
-  - **Pokale** (trophies) – a winners' podium (ties share a step) plus stat
+  - **Pokale** (trophies) – a winners' podium (a staircase of tiers, best on
+    top; members tied on a place share a tier) plus stat
     tiles: most played, best rated, current winning streak, and the
     "Staubfänger" — the game gathering dust the longest. Below the standings,
     a **Rückblick** turns the round's accumulated ratings into a readable

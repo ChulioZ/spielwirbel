@@ -102,42 +102,40 @@ function renderPokaleTab(round) {
     rankOf[m.id] = winners.filter((o) => wins[o.id] > wins[m.id]).length + 1;
   });
 
-  // Podium slots by rank: left = 2, center = 1, right = 3. A COLUMN IS A RANK,
-  // NOT A MEMBER — tied members share one step rather than widening the stage,
-  // which is the same shared component the session results podium uses (#836).
-  // Its three fixed 110px columns plus gaps came to 358px, wider than a 375px
-  // phone's 347px content box, with no wrap set to catch it.
+  // Podium tiers by rank, best on top. RANK IS POSITION, NEVER HEIGHT (#891) —
+  // tied members share a tier and grow sideways, which is the same shared
+  // component the session results podium uses. The stage used to be pedestal
+  // columns whose height carried the rank, and a tie inverted it: entries stack
+  // upward, so the more members shared a low place the taller that column.
   const podiumItems = winners.map((m) => ({ place: rankOf[m.id], member: m }));
-  const { single, cols } = podiumColumns(podiumItems);
+  const tiers = podiumTiers(podiumItems);
   if (winners.length) {
+    // The win count belongs to the MEMBER, not to the tier. It used to be the
+    // pedestal's label, read off `shown[0]` — sound only while the ranking IS
+    // the win count, which #895 ends by ranking on the Siegwertung while still
+    // showing the raw count, at which point tier-mates differ.
     const entryHtml = (it) =>
       `<a class="podium__entry podium__entry--member" data-mid="${esc(it.member.id)}">
          <span class="avatar podium__avatar" style="background:${memberColor(round, it.member.id)}">${avatarFace(initials(it.member.name), { userId: it.member.userId })}</span>
          <span class="podium__name">${esc(it.member.name)}</span>
+         <span class="podium__wins">${esc(tn(wins[it.member.id], 'pokale.winsOne', 'pokale.wins'))}</span>
        </a>`;
-    const stage = cols
-      .map((col) =>
-        podiumColHtml(col, () => ({
-          entries: col.shown.map(entryHtml).join(''),
-          more: esc(tn(col.hidden, 'podium.moreOne', 'podium.more')),
-          // Everyone on a step has the same win count, so shown[0] speaks for it.
-          base:
-            `<span class="podium__rank">${col.rank}</span>` +
-            esc(tn(wins[col.shown[0].member.id], 'pokale.winsOne', 'pokale.wins')),
-        }))
+    const stage = tiers
+      .map((tier) =>
+        podiumTierHtml(tier, () => ({ entries: tier.shown.map(entryHtml).join('') }), esc(t('podium.shared')))
       )
       .join('');
-    const podium = h(`<div class="podium${single ? ' podium--single' : ''}">${stage}</div>`);
+    const podium = h(`<div class="podium">${stage}</div>`);
     // Each podium entry opens that member's detail page.
     podium.querySelectorAll('.podium__entry[data-mid]').forEach((el) => {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
     sec.appendChild(podium);
   }
-  // Anyone not actually standing on the podium drops to the summary line — both
-  // those ranked below the three steps and anyone pushed off a crowded step by
-  // the per-rank cap, so the cap never makes a member disappear entirely.
-  const onPodium = new Set(cols.flatMap((c) => c.shown.map((it) => it.member.id)));
+  // Anyone ranked below the third tier drops to the summary line. Nothing else
+  // lands here any more: the tiers are uncapped since #891, so a crowded place
+  // can no longer push a member off the stage.
+  const onPodium = new Set(tiers.flatMap((tier) => tier.shown.map((it) => it.member.id)));
   const rest = ranked.filter((m) => !onPodium.has(m.id));
   if (rest.length) {
     const line = rest

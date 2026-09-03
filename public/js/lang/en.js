@@ -112,10 +112,10 @@ I18N.en = {
   'pokale.emptyTitle': 'No trophies yet',
   'pokale.winsOne': '{n} win',
   'pokale.wins': '{n} wins',
-  // The podium's per-rank overflow count (#836): a rank shows at most three
-  // entries, the rest collapse into this. Same wording as gameInfo.listMore.
-  'podium.moreOne': '+{n} more',
-  'podium.more': '+{n} more',
+  // Marks a podium tier held by more than one entry (#891) — the tie label
+  // is the semantic half of the staircase, so podium.js renders it for both
+  // screens and only its wording comes from here.
+  'podium.shared': 'shared',
   'pokale.mostPlayed': 'Most played',
   'pokale.bestRated': 'Best rated',
   'pokale.streak': 'Winning streak',

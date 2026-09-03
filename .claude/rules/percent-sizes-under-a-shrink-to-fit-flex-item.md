@@ -33,15 +33,22 @@ the first place. The two symptoms have one cause.
 ## The fix, and why both halves are needed
 
 ```css
-.podium__entry { width: 100%; min-width: 0; }   /* a definite box to measure against */
-.result-podium__img { width: 74px; max-width: 100%; }  /* absolute, not % */
+.podium__entry { width: 112px; max-width: 100%; min-width: 0; }  /* a definite box */
+.result-podium__img { width: 74px; max-width: 100%; }            /* absolute, not % */
 ```
 
-`width: 100%` gives the entry the column's definite width, so `%` and
-`text-overflow` both start working. `min-width: 0` is the usual flex companion —
-without it the item still refuses to go below its content. And once the box is
-definite, prefer an **absolute** size with `max-width: 100%` as the squeeze:
-that says what it means, and it cannot be re-broken by a long title later.
+A **definite** width on the entry is what makes `%` and `text-overflow` start
+working at all; `min-width: 0` is the usual flex companion, without which the
+item still refuses to go below its content. Then prefer an **absolute** size with
+`max-width: 100%` as the squeeze: it says what it means, and a long title cannot
+re-break it later.
+
+The entry's own width was `100%` until #891, when the stage became a stack of
+tiers whose entries flow in a **row** — where `100%` would put one entry per line
+and defeat the whole arrangement. Note the fix did not change in kind: `100%` was
+only ever standing in for "definite", inherited from the column above it, and a
+literal states the same thing without depending on a parent that no longer
+exists.
 
 ## The tell, and why nothing catches it
 
@@ -53,21 +60,28 @@ either; it took a real browser and a rendering with titles of different lengths.
 Pin the fix with a CSS-text assertion (`test/podium-ranks.test.js`), since that
 is the only layer that can hold it.
 
-## The definite width also LICENSES a shrink-to-fit parent (#879)
+## The definite width also LICENSES a shrink-to-fit parent (#879, #891)
 
 Once the entries have absolute widths, the rule runs in the other direction too:
-the column above them can safely size itself to its content, because there is no
-longer a `%` to resolve circularly. `.podium--single .podium__col` does exactly
-that — `width: fit-content`, so a tie stands on a pedestal as wide as the tied
-entries need rather than on a full-width 1108px band.
+the box above them can safely size itself to its content, because there is no
+longer a `%` to resolve circularly.
 
-That makes `.podium--single .podium__entry { width: 96px }` load-bearing **one
-level up from where it is written**, and the failure it now guards is bigger than
-the ragged covers above: relax it back to a relative width and the *step's own
-width* becomes a measurement of the longest name. Measured after the change, the
-symptom this file opens with stays absent — three tied covers at 52/52/52px, and
-the one over-long title ellipsised — which is the check to re-run if either width
-is ever retuned.
+The original instance was `.podium--single .podium__col { width: fit-content }`,
+so a tie stood on a pedestal as wide as the tied entries needed rather than on a
+full-width 1108px band. **That selector is gone with the column stage (#891)**,
+but the shape is not: `.podium__marker` now sizes to its own content between a
+`min-width` and a `max-width`, which is the same licence for the same reason —
+and it is a *stronger* case, because the content it sizes to is a **translated**
+word. A literal there is a bet on the longest locale, and the bet was already
+lost at the value that looked generous: 46px, against a German „geteilt" that
+measured 51px and a Spanish „compartido" at 85px.
+
+So the load-bearing pairing survives the rewrite. Relax an entry back to a
+relative width and the *parent's* width becomes a measurement of the longest
+title. The check to re-run if either is retuned: uniform covers across a tie, the
+one over-long title ellipsised, and — since #891 — zero overhang on the marker in
+**all five locales**, which is one probe (swap the label text, compare the two
+rects) and not five browser sessions.
 
 **Related:** `.claude/rules/popover-width-is-shrink-to-fit.md` (the same
 shrink-to-fit sizing one container over, where a `max-width` clamps nothing),
