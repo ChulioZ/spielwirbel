@@ -32,8 +32,7 @@ const PODIUM_MAX_PER_RANK = 3;
    the degenerate stage — one distinct place occupied, i.e. every entry tied or
    only one ranked entry at all — which the callers render as one SHARED TOP
    STEP: the winner's own pedestal, widened to hold the tied entries side by
-   side (#879). It is a class on the stage, so the composition is entirely CSS's
-   (`.podium--single` in styles.css); nothing here changes with it.
+   side (#879). What that looks like is entirely CSS's (`.podium--single`).
 
    THE CROWN IS CENTRAL WHENEVER IT SHARES THE STAGE, which is why an unheld
    rank beside it is kept as an empty `spacer` column rather than dropped.
@@ -42,7 +41,14 @@ const PODIUM_MAX_PER_RANK = 3;
    [1st | 2nd] and the genuinely common {1,1,3} (two games tied for the win) as
    [1st | 3rd]. That is a milder version of the very thing #836 fixed, so the
    slot is held open and the crown never moves. Nothing is held open when there
-   is no crown to centre: an absent rank 1 leaves the remaining ranks packed. */
+   is no crown to centre: an absent rank 1 leaves the remaining ranks packed.
+
+   A SINGLE held rank keeps its slots too (#879), for a different reason — one
+   column has no centring problem, so this is about the SILHOUETTE. The stepped
+   profile is what makes the stage read as a podium at all, and a lone pedestal
+   has none; the empty 2nd and 3rd risers restore it and say what the tie
+   actually means, that nobody is standing below the top step. CSS hides them
+   where they would squeeze the shared step (styles.css). */
 function podiumColumns(items, cap) {
   const max = Number.isFinite(cap) && cap > 0 ? Math.floor(cap) : PODIUM_MAX_PER_RANK;
   const held = [];
@@ -52,7 +58,7 @@ function podiumColumns(items, cap) {
     held.push({ rank, shown: at.slice(0, max), hidden: Math.max(0, at.length - max) });
   });
   const single = held.length === 1;
-  if (single || held.length === 3 || !held.some((c) => c.rank === 1)) {
+  if (held.length === 3 || !held.some((c) => c.rank === 1)) {
     return { single, cols: held };
   }
   const cols = [2, 1, 3].map(
