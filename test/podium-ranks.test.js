@@ -190,10 +190,51 @@ test('the degenerate stage is a shared TOP STEP, not a full-width band', () => {
   );
 });
 
-test('the empty risers are vestigial, and never at the step\'s expense', () => {
+// Every rule that PAINTS a riser, by selector — the property that decides
+// which stages show one, kept separate from the sizing rules.
+const painters = () => RULES.filter(([sel, body]) =>
+  /podium__col--spacer/.test(sel) && /background:/.test(body));
+
+test('an unheld rank is PAINTED as a riser on EVERY stage, not just a shared step', () => {
+  /* `podiumColumns` holds the slot open in two situations, and until #889 only
+     one of them was painted: the shared top step (#879) had its risers, while
+     {1,2} and {1,1,3} — the ordinary stages where the slot exists to keep the
+     crown central — spent that third of the width on nothing. Measured at
+     1200px before the fix: a 142px-wide, ZERO-HEIGHT column, so the stage read
+     as two steps shoved against one side rather than as a podium missing a
+     place.
+
+     So the GENERALITY claim comes first, and is written over every painting rule
+     rather than as `bodyOf(<the old selector>) === null`: re-scoping the paint
+     back under the shared step is the regression, and asked in this order it
+     fails saying so, instead of the property assertions below tripping over a
+     null and reporting the risers as merely „gone". */
+  const paint = painters();
+  assert.ok(paint.length, 'nothing paints a riser at all');
+  assert.deepEqual(paint.map(([sel]) => sel).filter((sel) => /podium--single/.test(sel)), [],
+    'a riser painted only under .podium--single leaves every other stage with a hole');
+
+  const riser = bodyOf('.podium__col--spacer');
+  assert.ok(riser, 'the risers are gone — an unheld rank is a hole again');
+  assert.match(riser, /background:\s*var\(--brand-tint\)/);
+  assert.match(riser, /border:\s*1px solid var\(--brand-edge\)/,
+    'without the edge the fade takes the profile with it');
+  assert.match(riser, /opacity:\s*0\.\d+/, 'filled, a riser reads as occupied');
+
+  // Their real heights, so the profile matches the ordinary podium's steps.
+  for (const rank of [2, 3]) {
+    assert.equal(
+      px(bodyOf(`.podium__col--${rank}.podium__col--spacer`), 'height'),
+      px(bodyOf(`.podium__col--${rank} .podium__base`), 'height'),
+      `the empty rank-${rank} riser must stand at that rank's real height`
+    );
+  }
+});
+
+test('beside a shared top step the riser is sized to give way, and on a phone to go', () => {
   const sel = '.podium--single .podium__col.podium__col--spacer';
   const riser = bodyOf(sel);
-  assert.ok(riser, 'the risers are gone — a lone pedestal has no stepped profile');
+  assert.ok(riser, 'the shared step\'s risers no longer escape its sizing');
 
   /* Compounded past `.podium--single .podium__col` on PURPOSE. A bare
      `.podium--single .podium__col--spacer` merely TIES that rule, so it would
@@ -202,15 +243,6 @@ test('the empty risers are vestigial, and never at the step\'s expense', () => {
   assert.ok(outranks(sel, '.podium--single .podium__col'),
     'a riser that only ties the step rule inherits its 170px floor');
   assert.match(riser, /min-width:\s*0/);
-
-  // Their real heights, so the profile matches the ordinary podium's steps.
-  for (const rank of [2, 3]) {
-    assert.equal(
-      px(bodyOf(`.podium--single .podium__col--${rank}.podium__col--spacer`), 'height'),
-      px(bodyOf(`.podium__col--${rank} .podium__base`), 'height'),
-      `the empty rank-${rank} riser must stand at that rank's real height`
-    );
-  }
 
   /* Only the risers may give way. A step that shrinks wraps the tied entries
      onto a second row, which costs the composition the whole point of it. */
@@ -223,6 +255,16 @@ test('the empty risers are vestigial, and never at the step\'s expense', () => {
   const narrow = mediaBlocks().find(([q]) => /max-width:\s*639px/.test(q));
   assert.ok(narrow, 'the phone guard is gone — risers would squeeze the step');
   assert.match(bodyOf(sel, rulesOf(narrow[1])), /display:\s*none/);
+
+  /* ONLY there. An ordinary stage's riser already holds its third through
+     `flex: 1 1 0`, painted or not, so hiding it buys the occupied columns no
+     width and simply hands the phone back the hole. Measured at 390px: three
+     columns at 95/93/93px, no wrap. */
+  assert.deepEqual(
+    rulesOf(narrow[1]).map(([s]) => s).filter((s) => /podium__col--spacer/.test(s)),
+    [sel],
+    'a phone hides the risers only where they would squeeze the shared step'
+  );
 });
 
 test('a lone step rises at once instead of waiting out the winner cue', () => {

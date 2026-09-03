@@ -5243,6 +5243,36 @@ kbd {
 .podium__col--1 .podium__base { height: 88px; }
 .podium__col--2 .podium__base { height: 64px; }
 .podium__col--3 .podium__base { height: 46px; }
+
+/* An unheld rank is drawn as a vestigial riser at its real height (#879, every
+   stage since #889). `podiumColumns` holds the slot open — for the shared top
+   step to have a stepped profile at all, and beside two occupied ranks to keep
+   the crown central — and an unpainted slot spends that width on a hole: {1,2}
+   read as two steps shoved against the left of the stage, {1,1,3} as a gap
+   where second place should be. Painted, the same slot says what it means, that
+   nobody is standing there.
+
+   Faded rather than filled, or they read as occupied. The value was measured by
+   eye at 1440px, not guessed: at 0.45 the fade takes the BORDER with it and the
+   risers all but vanish against the page, so the profile they exist to draw is
+   not there. They cannot be mistaken for occupied steps — a real step carries a
+   rank number, and beside one that also carries a count and the entries above
+   it, which is why the same 0.75 that reads as two low steps on an otherwise
+   empty stage still reads as unoccupied between two filled columns.
+
+   Heights deliberately restate `.podium__col--N .podium__base` rather than
+   inheriting: the riser IS the column here (there is no base inside it, since a
+   spacer renders no content at all), and the two are compared in
+   test/podium-ranks.test.js so retuning a step reddens rather than drifting. */
+.podium__col--spacer {
+  background: var(--brand-tint);
+  border: 1px solid var(--brand-edge);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  opacity: 0.75;
+}
+.podium__col--2.podium__col--spacer { height: 64px; }
+.podium__col--3.podium__col--spacer { height: 46px; }
 .podium__rank { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; line-height: 1.1; }
 /* A rank holding several entries shrinks its covers/avatars rather than its
    column — the column width belongs to the stage, not to how the tie fell. */
@@ -5278,37 +5308,28 @@ kbd {
 .podium--single .podium__col--2 .podium__base,
 .podium--single .podium__col--3 .podium__base { height: 88px; }
 
-/* The empty 2nd and 3rd steps beside a shared top step (#879). A lone pedestal
-   has no stepped profile, and the profile is what makes the stage read as a
-   podium at all — so the unheld ranks are drawn as vestigial risers at their
-   real heights. They say what the tie means: nobody is standing below the top
-   step. Faded rather than filled, or they read as occupied.
+/* Beside a SHARED TOP STEP the risers need sizing of their own — everywhere
+   else they simply take their third of the stage from `.podium__col`. What they
+   look like is above; this is only how they escape the step's rules, which size
+   a column to its content and give it a 170px floor.
 
    COMPOUNDED past `.podium--single .podium__col` deliberately — a bare
-   `.podium--single .podium__col--spacer` merely TIES it and would inherit the
-   step's 170px floor on source order alone (ds-row-is-a-click-target.md).
-
-   The opacity was measured by eye at 1440px, not guessed: at 0.45 the fade
-   takes the BORDER with it and the risers all but vanish against the page, so
-   the profile they exist to draw is not there. 0.75 reads as two low steps.
-   They cannot be mistaken for occupied ones — a real step carries a rank, a
-   count and the avatars above it, and these carry nothing. */
+   `.podium--single .podium__col--spacer` merely TIES it and would inherit that
+   floor on source order alone (ds-row-is-a-click-target.md). */
 .podium--single .podium__col.podium__col--spacer {
   flex: 0 1 170px;
   width: auto;
   min-width: 0;
-  background: var(--brand-tint);
-  border: 1px solid var(--brand-edge);
-  border-bottom: 0;
-  border-radius: 12px 12px 0 0;
-  opacity: 0.75;
 }
-.podium--single .podium__col--2.podium__col--spacer { height: 64px; }
-.podium--single .podium__col--3.podium__col--spacer { height: 46px; }
 /* Below this there is no room for them beside a three-abreast step: 3x96 + 2x18
    of entries leaves under 40px a side on a phone, so the risers would take the
    width out of the step and wrap the tied entries. The phone keeps the lone
-   pedestal, which is the composition that measured fine there. */
+   pedestal, which is the composition that measured fine there.
+
+   SCOPED to the shared step on purpose. An ordinary stage's riser already holds
+   its third through `flex: 1 1 0` whether it is painted or not, so painting it
+   costs the occupied columns no width at any size — hiding it there would give
+   the phone back the hole this whole block exists to fill. */
 @media (max-width: 639px) {
   .podium--single .podium__col.podium__col--spacer { display: none; }
 }

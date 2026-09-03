@@ -48,7 +48,13 @@ const PODIUM_MAX_PER_RANK = 3;
    profile is what makes the stage read as a podium at all, and a lone pedestal
    has none; the empty 2nd and 3rd risers restore it and say what the tie
    actually means, that nobody is standing below the top step. CSS hides them
-   where they would squeeze the shared step (styles.css). */
+   where they would squeeze the shared step (styles.css).
+
+   BOTH kinds of held-open slot are painted (#889) — only the shared step's were
+   until then, so {1,2} and {1,1,3} spent their third of the stage on a hole
+   while the degenerate case got a silhouette. What a riser looks like is CSS's,
+   but which slots get one follows from the two paragraphs above, not from how
+   the stage happens to be flagged. */
 function podiumColumns(items, cap) {
   const max = Number.isFinite(cap) && cap > 0 ? Math.floor(cap) : PODIUM_MAX_PER_RANK;
   const held = [];
@@ -82,8 +88,9 @@ function podiumColumns(items, cap) {
    `--multi` is set from the entry count rather than left to CSS `:has()`,
    because it is the hook the covers and avatars shrink on once a rank fills. */
 function podiumColHtml(col, buildParts) {
-  // An empty slot holding the crown's centre: no pedestal, no crown, nothing to
-  // announce — it exists only to occupy its third of the stage.
+  // An empty slot holding the crown's centre: no pedestal, no crown, and nothing
+  // to announce — CSS draws it as a low riser at that rank's own height, so the
+  // markup carries no content at all.
   if (col.spacer)
     return `<div class="podium__col podium__col--${col.rank} podium__col--spacer" aria-hidden="true"></div>`;
   const parts = buildParts(col);
