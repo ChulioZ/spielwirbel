@@ -390,8 +390,9 @@ public/
     support.js       the donation/support sheet (issue #173; hidden unless
                      DONATE_URL is set)
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
-    podium.js        arranges ranked entries into podium columns — a column is
-                     a RANK, not an entry, so ties never widen the stage (#836)
+    podium.js        arranges ranked entries into podium tiers — rank is
+                     POSITION, never height, so a tie grows sideways instead of
+                     overtopping the winner (#891)
     session-share.js the plain-text summary behind the results screen's „Teilen"
                      button — built from the view model the screen just rendered,
                      so the two cannot drift (issue #526)

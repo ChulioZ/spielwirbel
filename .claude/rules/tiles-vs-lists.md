@@ -62,9 +62,11 @@ Three things about that are load-bearing:
 Re-deciding these costs a browser session each; the reasoning is here so it
 doesn't have to be redone.
 
-- **Session results** — a ranking (see above). The podium is a centred hero
-  band; moving it beside the rows saves ~250px of scroll at the cost of
-  squeezing it and breaking the reveal-then-detail flow.
+- **Session results** — a ranking (see above). The podium is a stack of tiers,
+  best on top (#891); moving it beside the rows saves ~250px of scroll at the
+  cost of squeezing it and breaking the reveal-then-detail flow. Note it is
+  itself the ordering case in miniature — its tiers descend for the same reason
+  the rows below them are not tiled.
 - **Member** — already uses the pane: the five stat cards span it (they are
   `.pokale-cards`, already exempt) while identity and the colour picker keep
   the reading measure. At 900px those cards are ~170px and labels like

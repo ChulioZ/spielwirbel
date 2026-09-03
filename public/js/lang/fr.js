@@ -118,8 +118,10 @@ I18N.fr = {
   'pokale.emptyTitle': 'Pas encore de trophées',
   'pokale.winsOne': '{n} victoire',
   'pokale.wins': '{n} victoires',
-  'podium.moreOne': '+{n} de plus',
-  'podium.more': '+{n} de plus',
+  // Marks a podium tier held by more than one entry (#891) — the tie label
+  // is the semantic half of the staircase, so podium.js renders it for both
+  // screens and only its wording comes from here.
+  'podium.shared': 'ex æquo',
   'pokale.mostPlayed': 'Le plus joué',
   'pokale.bestRated': 'Le mieux noté',
   'pokale.streak': 'Série de victoires',

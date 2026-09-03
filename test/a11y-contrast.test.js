@@ -158,6 +158,25 @@ function memberColors() {
   return found;
 }
 
+test('every podium rank disc carries its white numeral at AA', () => {
+  /* The podium's rank numeral sits in a FILLED disc (#891), which is a different
+     contrast problem from the `.rank-medal--*` glyph colours it looks like — and
+     the reflex is to reuse those. Measured: white on `--gold #d99a06` is 2.45:1
+     and on the silver `#9ca3af` 1.94:1, so borrowing them would have put the one
+     character that states the rank below AA on two of the three tiers.
+
+     Read out of :root by name, so retuning a tone reddens here rather than
+     quietly dropping the numeral off the bar again. */
+  const failures = ['gold', 'silver', 'bronze']
+    .map((tone) => {
+      const name = `--medal-${tone}-disc`;
+      return { name, ratio: contrast(hex(rootHex(name)), WHITE) };
+    })
+    .filter(({ ratio }) => ratio < AA_TEXT)
+    .map(({ name, ratio }) => `${name} = ${ratio.toFixed(2)}:1`);
+  assert.deepEqual(failures, [], `white numerals below AA on: ${failures.join(', ')}`);
+});
+
 test('every member color carries white initials at AA', () => {
   const failures = memberColors()
     .map((c) => ({ c, ratio: contrast(hex(c), WHITE) }))
