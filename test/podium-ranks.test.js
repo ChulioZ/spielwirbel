@@ -27,7 +27,7 @@ const assert = require('node:assert/strict');
 
 const { PODIUM_MAX_PER_RANK, podiumColumns, podiumColHtml } = require('../public/js/podium');
 const { loadApp } = require('./support/dom');
-const { bodyOf } = require('./support/css');
+const { bodyOf, bodyOfIn, outranks, RULES } = require('./support/css');
 
 const at = (place, n) => Array.from({ length: n }, (_, i) => ({ place, id: `${place}-${i}` }));
 
@@ -68,7 +68,7 @@ test('the crown stays central even when a rank beside it is unheld', () => {
 test('nothing is held open when there is no crown to centre', () => {
   // No rank 1, so no crown — the remaining ranks just pack.
   assert.deepEqual(podiumColumns([...at(2, 2), ...at(3, 1)]).cols.map((c) => c.rank), [2, 3]);
-  // One rank is the wide band, which has no centring problem at all.
+  // One rank is the shared top step, which has no centring problem at all.
   assert.equal(podiumColumns(at(1, 4)).cols.length, 1);
 });
 
@@ -135,7 +135,7 @@ test('an entry fills its column, so covers are uniform and titles can clip', () 
   const entry = bodyOf('.podium__entry');
   assert.match(entry, /width:\s*100%/, 'a shrink-to-fit entry sizes itself from its title');
   assert.match(entry, /min-width:\s*0/);
-  // The band lays entries in a row, where 100% would put one per line.
+  // The shared top step lays entries in a row, where 100% would put one per line.
   assert.match(bodyOf('.podium--single .podium__entry'), /width:\s*96px/);
 
   // Cover sizes are absolute for the same reason: a % here is a title measurement.
@@ -143,6 +143,48 @@ test('an entry fills its column, so covers are uniform and titles can clip', () 
   assert.match(img, /width:\s*74px/);
   assert.match(img, /max-width:\s*100%/, 'the only squeeze a narrow column needs');
   assert.match(bodyOf('.podium__col--multi .result-podium__img'), /width:\s*52px/);
+});
+
+test('the degenerate stage is a shared TOP STEP, not a full-width band', () => {
+  /* Everyone tied is what a round looks like when it is YOUNGEST — one session
+     played leaves every winner on one win — so the degenerate stage is the one
+     a new group meets first, on the app's most celebratory screen. It used to
+     be `flex: 1 1 100%` over a 44px base: measured 1108x149px at 1440px, a
+     tinted horizon line where the stepped silhouette should be (#879). */
+  const col = bodyOf('.podium--single .podium__col');
+  assert.ok(col, '.podium--single .podium__col rule is gone');
+  assert.doesNotMatch(col, /flex:\s*1 1 100%/,
+    'claiming the whole stage is what made it a band rather than a step');
+  assert.match(col, /width:\s*fit-content/,
+    'the step is only as wide as the entries standing on it');
+
+  /* Both numbers are read off the WINNER's own column, which is the whole idea:
+     a tie SHARES the top step rather than getting a shape of its own. Compared
+     rather than merely matched, so retuning one of them reddens here instead of
+     silently drifting the two apart. */
+  const px = (body, prop) => body.match(new RegExp(prop + ':\\s*(\\d+)px'))[1];
+  assert.equal(px(col, 'min-width'), px(bodyOf('.podium__col'), 'max-width'),
+    "a lone entry stands on the winner's column width, not on a 96px post");
+  assert.equal(
+    px(bodyOfIn('.podium--single .podium__col--1 .podium__base'), 'height'),
+    px(bodyOf('.podium__col--1 .podium__base'), 'height'),
+    'the shared step is the winner pedestal height — 44px full-width read as a divider'
+  );
+});
+
+test('a lone step rises at once instead of waiting out the winner cue', () => {
+  /* Across three columns the 0.9s on rank 1 is the climax of a staggered build.
+     With one column it is 0.9s of blank stage before the only thing there
+     appears. */
+  const single = '.podium--single.is-reveal .podium__col--1';
+  const staged = '.podium.is-reveal .podium__col--1';
+  assert.match(bodyOf(single), /animation-delay:\s*0s/);
+  assert.equal(outranks(single, staged), false,
+    'three classes each — they TIE, so nothing but source order makes this win');
+  // Not `at` — that name is this file's entries-at-a-place helper.
+  const orderOf = (sel) => RULES.findIndex(([s]) => s === sel);
+  assert.ok(orderOf(single) > orderOf(staged),
+    'the lone-step delay must stay AFTER the staggered one or it silently loses');
 });
 
 test('the reveal keys off the shared component and still rises shortest-first', () => {
@@ -252,7 +294,7 @@ test('each podium game is its own link — a column can hold several', async (t)
   );
 });
 
-test('everything tied renders one wide crowned band, not a lone pedestal', async (t) => {
+test('everything tied renders ONE shared step, not a column each', async (t) => {
   const flat = session('s2', ['m1'], { g1: 4, g2: 4, g3: 4 });
   const r = round({ sessions: [flat] });
   const dom = bootApp(t, r);

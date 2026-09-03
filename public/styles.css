@@ -5205,8 +5205,10 @@ kbd {
   width: 100%;
   min-width: 0;
 }
-/* The wide band lays entries in a row, so there they take a width of their own —
-   96px keeps three of them on one line inside a 375px phone's 347px box. */
+/* The shared top step lays entries in a row, so there they take a width of their
+   own — 96px keeps three of them on one line inside a 375px phone's 347px box.
+   It is ALSO what lets the step size itself with `fit-content` (see below): an
+   entry left at `100%` would make that measurement circular. */
 .podium--single .podium__entry { width: 96px; }
 .podium__more {
   font-size: var(--text-xs);
@@ -5246,14 +5248,30 @@ kbd {
    column — the column width belongs to the stage, not to how the tie fell. */
 .podium__col--multi .podium__avatar { width: 40px; height: 40px; font-size: 15px; /* glyph, not type */ }
 .podium__col--multi .podium__entries { gap: 8px; }
-/* One distinct place occupied (everyone tied, or a single ranked entry): a lone
-   pedestal on an empty stage is not a podium, so the rank becomes one wide
-   crowned band and its entries sit side by side. */
-.podium--single .podium__col { max-width: none; flex: 1 1 100%; }
+/* One distinct place occupied (everyone tied, or a single ranked entry): the
+   SHARED TOP STEP. The tied entries stand side by side on the winner's own
+   pedestal, which is as wide as they need and no wider.
+
+   It used to be one wide crowned BAND — `flex: 1 1 100%` over a 44px base — on
+   the reasoning that a lone pedestal on an empty stage is not a podium. That
+   measured 1108x149px at 1440px (#879): a tinted horizon line where the stepped
+   silhouette should be, and it is the state a round is in when it is YOUNGEST,
+   since everybody's first win leaves everybody tied. Height is what the band
+   gave away — a full-width 44px bar reads as a divider, an 88px pedestal reads
+   as a step someone is standing on.
+
+   `fit-content` is only safe here because `.podium--single .podium__entry` has
+   an ABSOLUTE width: `%` sizes inside a shrink-to-fit column resolve against
+   whichever child is widest, i.e. the title
+   (percent-sizes-under-a-shrink-to-fit-flex-item.md). `min-width` is the
+   winner's own column width from `.podium__col`, so ONE entry stands on a step
+   rather than on a 96px post. */
+.podium--single .podium__col { flex: 0 1 auto; width: fit-content; min-width: 170px; max-width: 100%; }
 .podium--single .podium__entries { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px 18px; }
+/* Whichever rank stands alone IS the top step, so it takes the winner's height. */
 .podium--single .podium__col--1 .podium__base,
 .podium--single .podium__col--2 .podium__base,
-.podium--single .podium__col--3 .podium__base { height: 44px; }
+.podium--single .podium__col--3 .podium__base { height: 88px; }
 .podium__rest { text-align: center; font-size: var(--text-sm); font-weight: 600; margin-bottom: 18px; }
 .pokale-cards {
   display: grid;
@@ -6241,6 +6259,10 @@ kbd {
   .podium.is-reveal .podium__col--3 { animation-delay: 0.1s; }
   .podium.is-reveal .podium__col--2 { animation-delay: 0.5s; }
   .podium.is-reveal .podium__col--1 { animation-delay: 0.9s; }
+  /* The shared top step has nothing to stagger against, so the winner's 0.9s
+     cue would just hold a blank stage. One 0.55s rise is still a reveal.
+     Same specificity as the rule above — this MUST stay after it. */
+  .podium--single.is-reveal .podium__col--1 { animation-delay: 0s; }
   @keyframes podium-rise {
     from { transform: translateY(26px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }

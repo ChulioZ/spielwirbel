@@ -53,6 +53,22 @@ either; it took a real browser and a rendering with titles of different lengths.
 Pin the fix with a CSS-text assertion (`test/podium-ranks.test.js`), since that
 is the only layer that can hold it.
 
+## The definite width also LICENSES a shrink-to-fit parent (#879)
+
+Once the entries have absolute widths, the rule runs in the other direction too:
+the column above them can safely size itself to its content, because there is no
+longer a `%` to resolve circularly. `.podium--single .podium__col` does exactly
+that — `width: fit-content`, so a tie stands on a pedestal as wide as the tied
+entries need rather than on a full-width 1108px band.
+
+That makes `.podium--single .podium__entry { width: 96px }` load-bearing **one
+level up from where it is written**, and the failure it now guards is bigger than
+the ragged covers above: relax it back to a relative width and the *step's own
+width* becomes a measurement of the longest name. Measured after the change, the
+symptom this file opens with stays absent — three tied covers at 52/52/52px, and
+the one over-long title ellipsised — which is the check to re-run if either width
+is ever retuned.
+
 **Related:** `.claude/rules/popover-width-is-shrink-to-fit.md` (the same
 shrink-to-fit sizing one container over, where a `max-width` clamps nothing),
 `.claude/rules/flex-none-cancels-flex-wrap.md` (the other `min-width: 0` trap),

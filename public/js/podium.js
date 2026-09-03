@@ -30,8 +30,10 @@ const PODIUM_MAX_PER_RANK = 3;
 
    Returns { single, cols: [{ rank, shown, hidden, spacer }] }. `single` marks
    the degenerate stage — one distinct place occupied, i.e. every entry tied or
-   only one ranked entry at all — which the callers render as one wide crowned
-   band instead of a lone pedestal floating on an empty stage.
+   only one ranked entry at all — which the callers render as one SHARED TOP
+   STEP: the winner's own pedestal, widened to hold the tied entries side by
+   side (#879). It is a class on the stage, so the composition is entirely CSS's
+   (`.podium--single` in styles.css); nothing here changes with it.
 
    THE CROWN IS CENTRAL WHENEVER IT SHARES THE STAGE, which is why an unheld
    rank beside it is kept as an empty `spacer` column rather than dropped.
