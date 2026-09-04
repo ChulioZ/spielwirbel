@@ -124,21 +124,27 @@ test('the results distribution has six buckets, the first being the retirements'
   const rows = [...dom.app.querySelectorAll('.result-row')];
   assert.ok(rows.length, 'the results screen rendered no rows');
   for (const row of rows) {
-    assert.equal(row.querySelectorAll('.result-row__bars .bar').length, 6,
+    assert.equal(row.querySelectorAll('.result-row__bars .bar-col').length, 6,
       'the distribution must run 0–5, not 1–5');
   }
 
   // Catan's row: two retirement votes in the zero bucket and nothing anywhere
   // else, plus the plain-language line that states the same count in words.
+  // Since #890 the count is read off the fill HEIGHT (the columns are labelled
+  // with the scale, not with counts), so "nothing anywhere else" is every other
+  // fill sitting at 0%.
   const catan = rows.find((r) => /Catan/.test(r.textContent));
-  const bars = [...catan.querySelectorAll('.result-row__bars .bar')];
-  assert.ok(bars[0].classList.contains('bar--retire'), 'the zero bar is the retirement bucket');
-  assert.ok(bars[0].querySelector('.ti-trash'), 'the zero bar carries the trash glyph, not a numeral');
-  assert.match(bars[0].getAttribute('title'), /2/, 'its count belongs in the tooltip');
-  assert.equal(bars.slice(1).map((b) => b.textContent.trim()).join(''), '',
+  const cols = [...catan.querySelectorAll('.result-row__bars .bar-col')];
+  assert.ok(cols[0].querySelector('.bar-axis .ti-trash'),
+    'the zero column is named by the vote card\'s trash glyph');
+  assert.equal(cols[0].querySelector('.bar').style.height, '100%',
+    'both retirement votes land in the zero column');
+  assert.match(cols[0].getAttribute('title'), /2/, 'its count belongs in the tooltip');
+  assert.deepEqual(cols.slice(1).map((c) => c.querySelector('.bar').style.height),
+    ['0%', '0%', '0%', '0%', '0%'],
     'a retirement vote must not also land in a 1–5 bucket');
   assert.match(catan.querySelector('.sort-flag').textContent, /2/,
-    'the „X wollen aussortieren" line is where the zero bar\'s count is stated');
+    'the „X wollen aussortieren" line is where the zero column\'s count is stated');
 
   // And the average the row prints is the 0 those votes make it.
   assert.match(catan.querySelector('.result-row__score').textContent, /0[.,]0/);

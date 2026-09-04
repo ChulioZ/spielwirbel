@@ -208,15 +208,21 @@ test('two tracks are ARITHMETICALLY enough for the results row at 320px', () => 
 
   const barsBody = bodyOf('.result-row__bars');
   const barGap = px(barsBody, 'gap');
-  const barW = px(bodyOf('.result-row__bars .bar'), 'width');
-  const view = fs.readFileSync(path.join(ROOT, 'public/js/views-session.js'), 'utf8');
-  // The UNIQUE declaration, not the first one — a commented-out copy above the
-  // live line would otherwise decide the bar count
+  // The COLUMN is what occupies the strip since #890 — the fill inside it is
+  // `width: 100%` of the track, so reading `.bar` here would find no px at all.
+  const barW = px(bodyOf('.result-row__bars .bar-col'), 'width');
+  // MOODS moved to its own shared module (#890) — the chart, the wizard's vote
+  // card and the shared-link card all read it from there. The UNIQUE
+  // declaration, not the first one: a commented-out copy above the live line
+  // would otherwise decide the bar count
   // (`.claude/rules/css-text-assertions-strip-comments.md`, in JS).
-  const moods = [...view.matchAll(/const MOODS = \[([^\]]+)\]/g)];
+  const faces = fs.readFileSync(path.join(ROOT, 'public/js/rating-faces.js'), 'utf8');
+  const moods = [...faces.matchAll(/const MOODS = \[([^\]]+)\]/g)];
   assert.equal(moods.length, 1,
-    `views-session.js declares MOODS ${moods.length} times, expected exactly 1 — the rating scale drives the bar count`);
-  const bars = moods[0][1].split(',').length;
+    `rating-faces.js declares MOODS ${moods.length} times, expected exactly 1 — the rating scale drives the bar count`);
+  // Plus the retirement rung, which is the zero of the same scale (#797) and
+  // gets a column like any other — MOODS names only the five faces of 1–5.
+  const bars = moods[0][1].split(',').length + 1;
 
   for (const [name, v] of Object.entries({ appSide, rowSide, rowGap, cover, barGap, barW })) {
     assert.ok(Number.isFinite(v) && v > 0, `could not read ${name} out of styles.css`);

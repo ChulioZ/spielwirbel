@@ -3574,17 +3574,31 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 /* `display: block` because this is an <a> since #330 — an inline box would let
    the medal/badge line wrap differently from the block <div> it replaced. */
 .result-row__title { display: block; font-weight: 700; font-size: var(--text-xl); }
-.result-row__bars { margin-top: 6px; display: flex; gap: 4px; align-items: flex-end; height: 28px; }
-.result-row__bars .bar {
-  width: 22px; background: var(--brand-edge); border-radius: 4px 4px 0 0;
-  display: flex; align-items: flex-end; justify-content: center;
-  font-size: 11px; /* glyph, not type */ color: var(--brand-dark); font-weight: 700;
+/* The vote distribution, in the vote card's own vocabulary (#890): one column
+   per rung of the 0–5 scale, each a full-height track holding an `avgColor(n)`
+   fill, over an axis row that names the rung with the vote tile's mood face and
+   its numeral. The track is what makes a rung nobody chose read as an EMPTY
+   SLOT — before this it was a 4px sliver indistinguishable from a rounding
+   error. The track is `align-items: flex-end`, so the fill grows upward. */
+.result-row__bars { margin-top: 6px; display: flex; gap: 4px; }
+.result-row__bars .bar-col { width: 22px; display: flex; flex-direction: column; gap: 2px; }
+.result-row__bars .bar-track {
+  height: 24px; border-radius: 4px 4px 0 0;
+  background: var(--sunken);
+  display: flex; align-items: flex-end;
 }
-/* The retirement bucket (#797), tied by colour to the „X wollen aussortieren"
-   line right below it — which is also where its COUNT is stated, since the bar
-   itself carries the trash glyph in the slot the numeral would use. */
-.result-row__bars .bar--retire { background: var(--warn); color: #fff; }
-.result-row__bars .bar--retire .ti { font-size: 13px; /* glyph, not type */ }
+/* The fill only — its colour is inline, from avgColor(n). No min-height: a rung
+   with no votes must be the empty track, not a stub that reads as one vote. */
+.result-row__bars .bar { width: 100%; border-radius: 4px 4px 0 0; }
+/* The axis. Colour carries the scale on the glyph (a non-text UI component, 3:1)
+   while the numeral stays --ink-soft — the ramp as TEXT only just clears 4.5:1
+   at its tightest point, and a per-round theme moves the surface under it. */
+.result-row__bars .bar-axis {
+  display: flex; flex-direction: column; align-items: center; line-height: 1;
+  color: var(--ink-soft);
+}
+.result-row__bars .bar-axis .ti { font-size: 14px; /* glyph, not type */ }
+.result-row__bars .bar-axis__n { font-size: var(--text-xs); font-weight: 700; }
 .result-row__score { text-align: right; }
 .score-big { font-size: var(--text-3xl); font-weight: 800; color: var(--brand-dark); line-height: 1; }
 .score-label { font-size: var(--text-sm); color: var(--ink-soft); }

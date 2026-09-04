@@ -207,13 +207,12 @@ function renderVoteLinkCards(token, ballot, person) {
     // carries the retirement proposal (#797). The only thing missing here is
     // focus restoration: this card re-renders on the same tap the wizard's does,
     // but it has no `refocus` machinery (#667) because it never had one.
-    const MOODS = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
     const ratingEl = card.querySelector('.rating');
     for (let n = mayRetire ? 0 : 1; n <= RATING_MAX; n++) {
       const sel = effectiveRating(current) === n;
       const b = h(`<button class="mood${n === 0 ? ' mood--retire' : ''}${sel ? ' is-selected' : ''}"
            aria-pressed="${sel}" aria-label="${esc(n === 0 ? t('vote.suggestRetire') : t('vote.ratingLabel', { n, max: RATING_MAX }))}">
-           <i class="ti ${n === 0 ? 'ti-trash' : MOODS[n - 1]}" aria-hidden="true"></i><span class="mood__n">${n === 0 ? '&nbsp;' : n}</span>
+           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n === 0 ? '&nbsp;' : n}</span>
          </button>`);
       if (sel) {
         b.style.background = avgColor(n);

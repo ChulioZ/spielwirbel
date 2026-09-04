@@ -675,9 +675,10 @@ function startVoting(round, session, games, people, opts = {}) {
        which is the point of the whole change, the zero being the bottom of one
        axis rather than a second question.
 
-       Deliberately duplicated in views-vote-link.js — the two cards must render
-       the same markup and write the same vote shape; see that file's header. */
-    const MOODS = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+       The faces come from rating-faces.js, which views-vote-link.js and the
+       results distribution read too — the two cards must render the same markup
+       and write the same vote shape (see that file's header), and the chart the
+       group reads seconds later must name each rung with the same glyph. */
     const ratingEl = card.querySelector('.rating');
     for (let n = mayRetire ? 0 : 1; n <= RATING_MAX; n++) {
       // Read through effectiveRating rather than comparing `current.rating`, so
@@ -693,7 +694,7 @@ function startVoting(round, session, games, people, opts = {}) {
       // its icon on the same baseline as the five faces beside it.
       const b = h(`<button class="mood${n === 0 ? ' mood--retire' : ''}${sel ? ' is-selected' : ''}"
            aria-pressed="${sel}" aria-label="${esc(n === 0 ? t('vote.suggestRetire') : t('vote.ratingLabel', { n, max: RATING_MAX }))}">
-           <i class="ti ${n === 0 ? 'ti-trash' : MOODS[n - 1]}" aria-hidden="true"></i><span class="mood__n">${n === 0 ? '&nbsp;' : n}</span>
+           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n === 0 ? '&nbsp;' : n}</span>
          </button>`);
       if (sel) {
         b.style.background = avgColor(n);
@@ -1066,18 +1067,37 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     const g = r.game;
     const imgStyle = g.image ? `style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
     const fallback = coverPlaceholder(g);
-    /* Six bars since #797, the leftmost being the retirement proposals. It
-       carries the same trash glyph as the vote card's zero tile INSTEAD of its
-       count, because the numeral inside a bar already means the count and two
-       numbers in a 22px box would say neither. Nothing is lost: that count is
-       `sortCount`, which the „X wollen aussortieren" line directly below states
-       in words whenever it is non-zero. */
+    /* The distribution, drawn in the VOTE CARD's vocabulary (#890): six columns
+       0–5, each tinted with `avgColor(n)` and named on an always-visible axis by
+       the same mood face the voter pressed minutes earlier — the trash for the
+       zero, exactly as on the tile.
+
+       What it replaces, and why: six identical `--brand-edge` bars whose only
+       numerals were vote COUNTS, sitting precisely where an axis label belongs.
+       So a „3" in the fourth column read as „this is a 3" before it read as
+       „three people", while bar height already carried that count. The label
+       channel is spent on the axis instead, and colour does the rest — the
+       columns stop having to be read as a left-to-right sequence at all.
+
+       Counts stay in `title=`, on the whole column rather than the bar, so a
+       one-vote column is still hoverable. The readable numbers remain the score,
+       its „Spielwirbel-Score" label and the „X wollen aussortieren" line.
+
+       The label cannot live INSIDE the bar: an unvoted rung is 0px tall, and
+       every column must be labelled — that is what makes an empty rung read as
+       an empty slot rather than as a missing one. Hence the full-height track
+       behind each fill, and the separate axis row. */
     const bars = r.dist
       .map((c, n) => {
-        const hpx = 4 + Math.round((c / maxBar) * 24);
         const title = n === 0 ? t('result.barTitleRetire', { c }) : t('result.barTitle', { c, r: n });
-        const label = n === 0 ? (c ? '<i class="ti ti-trash" aria-hidden="true"></i>' : '') : (c || '');
-        return `<div class="bar${n === 0 ? ' bar--retire' : ''}" style="height:${hpx}px" title="${esc(title)}">${label}</div>`;
+        // The numeral stays `--ink-soft` while the fill and the glyph carry the
+        // ramp: as TEXT on the page the tightest point of the ramp is ~4.58:1,
+        // and a per-round theme moves the surface under it. A glyph is a
+        // non-text UI component, so it sits at the 3:1 bar instead.
+        return `<div class="bar-col" title="${esc(title)}">
+             <div class="bar-track"><div class="bar" style="height:${Math.round((c / maxBar) * 100)}%;background:${avgColor(n)}"></div></div>
+             <div class="bar-axis"><i class="ti ${ratingFace(n)}" aria-hidden="true" style="color:${avgColor(n)}"></i><span class="bar-axis__n">${n === 0 ? '&nbsp;' : n}</span></div>
+           </div>`;
       })
       .join('');
     // Info if the game has been archived in the meantime (#250: either way).

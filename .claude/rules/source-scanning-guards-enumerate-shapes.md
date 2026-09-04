@@ -63,5 +63,10 @@ green.
 an instance of, and the "name the failing test, don't count failures" habit that
 made the five green runs legible),
 `.claude/rules/tabler-icon-codepoints.md` (`test/tabler-icons-declared.test.js`
-is the same technique — it matches exactly two spellings of an icon name, and an
-icon named a third way would be as invisible as these four sites were).
+is the same technique — and the third spelling this file predicted turned up:
+#890 found the five `ti-mood-*` faces had only ever been reached through an
+array (`MOODS[n - 1]`), so neither of the scan's two patterns had ever seen the
+app's most-pressed glyphs. Measured the way this file prescribes — with
+`.ti-mood-cry::before` deleted, the two-pattern scan stayed **green** and the
+widened one went red naming the file. A bare quoted `'ti-foo'` is now the third
+pattern).

@@ -797,7 +797,7 @@ function applyBackground(bg) {
   }
 }
 
-// Color for an average 1–5: red (bad) → yellow → green (good).
+// Color for an average 0–5: deep red (retire) → red → yellow → green (good).
 // The lightness is 30%, not the more obvious 42%, for contrast (#145): the scale
 // is used BOTH as a fill under white text (.score-pill) and as text/stroke on the
 // page (.gd-ring__num, the ring). At 42% the yellow-green middle only reached
@@ -808,7 +808,16 @@ function applyBackground(bg) {
 // unchanged; don't lighten it back without re-checking both uses.
 function avgColor(avg) {
   const hue = Math.max(0, Math.min(120, ((avg - 1) / 4) * 120));
-  return `hsl(${hue}, 60%, 30%)`;
+  // Below 1 the hue formula is already clamped at 0, so the retirement end of
+  // the scale came out the SAME red as a 1 (#890). Invisible where one tile is
+  // lit at a time; not in the results chart, which paints all six rungs side by
+  // side. Deepen the lightness instead of bending the hue: continuous, and a
+  // provable no-op for avg >= 1, which is what bounds the ripple through every
+  // other avgColor/scoreColor consumer. Darker is also the safe direction for
+  // both uses — more contrast under white text, and more against every (light)
+  // theme page as text.
+  const light = 30 - 10 * Math.max(0, Math.min(1, 1 - avg));
+  return `hsl(${hue}, 60%, ${light}%)`;
 }
 
 // What a score PRINTS as. The curve can carry a score below zero — five vetoes
