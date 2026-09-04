@@ -79,6 +79,15 @@ So the load-bearing pairing survives two rewrites. Relax an entry back to a
 relative width and the *parent's* width becomes a measurement of the longest
 name.
 
+**One case looks like a violation and is not** — a shared top step holding a
+*single* member, where the column carries no `--multi` and the entry keeps the
+base `width: 100%` under `fit-content`. Measured at 1440px (#897): the column
+comes out **170px for a two-letter name and for „Alexandra-Maria" alike**, i.e.
+it does not measure the title, because `min-width: 170px` is a definite floor
+above the circular part. Worth knowing before "fixing" it: the safety here comes
+from the **floor**, not from an absolute child, and removing that `min-width`
+would make the whole paragraph above bind again.
+
 **The translated-word case is the sharper half, and #897 moved where it lives.**
 A box sized to a *localised* string must never take a literal: `.podium__marker`
 (#891, now gone) was a bet on the longest locale and lost it at the value that
