@@ -3956,9 +3956,25 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    to the game.
    `flex-wrap: wrap` is deliberately KEPT. The cover is 300px and .gd-info holds
    a 240px floor, so a `nowrap` row cannot fit a 390px screen and would overflow
-   rather than shrink. */
+   rather than shrink.
+   --gd-stats-w (#901) is the other half of "the frame does not move". The band
+   was pinned to the column, but the ROW inside it still wrapped for some games
+   and not others, because .gd-stats was `flex: none` — sized to the max-content
+   of its longest label. The headroom at >=1280px, where
+   `.app > *:not(.rail):not(.dock)` caps the band at --w-read:
+       900 - 2x28 padding                                    = 844 inner
+       - 300 cover - 2x24 gaps - .gd-info's own 240px floor   = 256 for .gd-stats
+   The common German „Ø 4,2 aus 7 Bewertungen in 3 Sessions" measures 246.9px,
+   so the row had NINE pixels of slack: two-digit counts (263.7px) and fr
+   (264.8px) tipped it, dropping the ring onto a line of its own and taking the
+   band from 281px to 450px tall (measured at 1440). A fixed basis is data-independent — no label, count or
+   locale can move it — and 200px leaves 56px of headroom instead of 5. The
+   labels wrap inside it, which is what `text-align: center` on .gd-stats is for.
+   It is `auto` below the breakpoint, where the band is a stack and the column
+   sits at the content edge on a line of its own. */
 .gd-head {
   --gd-cover-w: 300px;
+  --gd-stats-w: 200px;
   position: relative;
   display: flex;
   gap: 24px;
@@ -4170,7 +4186,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    takes the whole row and .gd-stats starts the next one at the left on its own
    (measured at 390: stats x=34, the content edge). */
 @media (max-width: 700px) {
-  .gd-head { --gd-cover-w: 100%; padding: 20px; gap: 18px; align-items: flex-start; }
+  .gd-head { --gd-cover-w: 100%; --gd-stats-w: auto; padding: 20px; gap: 18px; align-items: flex-start; }
   .gd-info h1 { font-size: var(--text-2xl); }
 }
 
@@ -5638,7 +5654,17 @@ kbd {
   border-radius: 50%;
 }
 .gd-ring--none .gd-ring__num { color: var(--ink-soft); }
-.gd-stats { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
+.gd-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  /* See the --gd-stats-w paragraph on .gd-head: `flex: none` sized this
+     column to its longest label, which is what made the row wrap for some
+     games and not others. */
+  flex: 0 0 var(--gd-stats-w);
+  text-align: center;
+}
 
 /* ---- Add game: bottom sheet ---- */
 .sheet-backdrop {

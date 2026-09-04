@@ -27,7 +27,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
-const { bodyOf, bodyOfIn, CSS: RAW_CSS } = require('./support/css');
+const { bodyOf, bodyOfIn, RULES, rootPx, whole, CSS: RAW_CSS } = require('./support/css');
 
 const RID = 'r1';
 
@@ -153,4 +153,92 @@ test('the cover leads the band and the ring does not outweigh it', () => {
   /* 240px was the thumbnail this issue was filed about; the ring is 88px, and
      the cover has to read as the larger object by a clear margin. */
   assert.ok(Number(w[1]) >= 300, `the desktop cover is ${w[1]}px, not clearly leading`);
+});
+
+/* --- The score ring's column (#901) ---------------------------------------
+   #868 fixed the band's OUTER edge; the row inside it still wrapped for some
+   games and not others, because `.gd-stats` was `flex: none` — i.e. as wide as
+   its longest label. Route 1 is unavailable for a CSS text assertion (the sheet
+   already exists), so each of the three below was seen red against a deliberate
+   break (`.claude/rules/break-the-code-on-purpose.md`). */
+
+const px = (body, prop) => {
+  const m = body && body.match(new RegExp(`(^|[;{\\s])${prop}\\s*:\\s*(\\d+)px`));
+  return m ? Number(m[2]) : null;
+};
+
+test('the stats column sizes from a token, not from its longest label', () => {
+  const stats = bodyOf('.gd-stats');
+  assert.ok(stats, '.gd-stats still has a rule of its own');
+  assert.match(stats, /flex:\s*0\s+0\s+var\(--gd-stats-w\)/,
+    '.gd-stats needs a fixed basis; `flex: none` is what made the row data-dependent');
+  /* `flex: none` and `flex: 0 0 auto` are the same declaration spelled two ways,
+     and either one reinstates the bug while still looking like a sized column. */
+  assert.doesNotMatch(stats, /flex:\s*(none|0\s+0\s+auto)/,
+    '.gd-stats must not be content-sized');
+});
+
+test('the stats column fits the row it shares with the cover and the title block', () => {
+  const head = bodyOf('.gd-head');
+  const info = bodyOf('.gd-info');
+  assert.ok(head && info, 'both halves of the hero row still have rules');
+  /* `.gd-head` is declared TWICE — here and inside @media (max-width: 700px) —
+     and bodyOf() returns whichever comes first in the sheet. Only the desktop
+     one has a headroom to compute, so pin that this is it: the phone rule sets
+     `--gd-cover-w: 100%`, whose 20px padding would compute a LARGER headroom and
+     quietly weaken every assertion below. */
+  assert.match(head, /--gd-cover-w:\s*\d+px/,
+    'this must be the desktop .gd-head rule, not the phone block');
+
+  /* Every term is read from the sheet rather than pinned as a literal, so this
+     also catches a retune of the cover, the gap, the padding, the .gd-info
+     floor or --w-read — any of which eats the same headroom this column needs.
+     Above 1280px `.app > *:not(.rail):not(.dock)` caps the band at --w-read. */
+  const terms = {
+    read: rootPx('--w-read'),
+    padding: px(head, 'padding'),
+    cover: px(head, '--gd-cover-w'),
+    gap: px(head, 'gap'),
+    infoFloor: Number((info.match(/flex:\s*1\s+1\s+(\d+)px/) || [])[1]),
+  };
+  for (const [name, v] of Object.entries(terms)) {
+    assert.ok(Number.isFinite(v), `could not read ${name} out of the sheet — the arithmetic below would be vacuous`);
+  }
+  const headroom = terms.read - 2 * terms.padding
+    - terms.cover - 2 * terms.gap - terms.infoFloor;
+
+  const statsW = px(head, '--gd-stats-w');
+  assert.ok(statsW, '.gd-head declares --gd-stats-w as a px value');
+  assert.ok(statsW <= headroom,
+    `--gd-stats-w is ${statsW}px but only ${headroom}px is left on the row — the ring wraps`);
+  /* The ring is a fixed 88px box, so a column narrower than that clips it. */
+  const ring = px(bodyOf('.gd-ring'), 'width');
+  assert.ok(statsW >= ring, `--gd-stats-w is ${statsW}px, narrower than the ${ring}px ring`);
+});
+
+test('the stats column wraps its labels instead of clipping them', () => {
+  /* A fixed width only works because the labels reflow inside it. Truncating
+     them instead would keep the row from wrapping while losing the text —
+     the same screen, broken a quieter way. */
+  const cls = ['.gd-stats', '.score-label', '.score-why', '.sort-flag'];
+  /* These three labels are shared with the Regal rows, so match only selectors
+     that can actually apply INSIDE this column: the class at the end, under no
+     ancestor but the band's own. Without that, `.ds-row__meta .sort-flag` — a
+     different component entirely — would be held to this column's constraint. */
+  const inThisColumn = (sel) => {
+    const parts = sel.trim().split(/\s+/);
+    const last = parts.pop();
+    return cls.some((c) => whole(c).test(last))
+      && parts.every((p) => whole('.gd-head').test(p) || whole('.gd-stats').test(p));
+  };
+  let checked = 0;
+  for (const [sel, body] of RULES) {
+    if (!sel.split(',').some((s_) => inThisColumn(s_))) continue;
+    checked++;
+    assert.doesNotMatch(body, /white-space:\s*nowrap/, `${sel} must not stop the labels wrapping`);
+    assert.doesNotMatch(body, /text-overflow:\s*ellipsis/, `${sel} must not truncate the labels`);
+  }
+  /* Anti-vacuous: a selector-matching change that stopped matching anything
+     would leave this test green while checking nothing at all. */
+  assert.ok(checked >= cls.length, `only ${checked} rules matched; the sweep has stopped seeing the column`);
 });
