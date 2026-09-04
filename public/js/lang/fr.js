@@ -746,7 +746,6 @@ I18N.fr = {
   'result.titleWonOne': '« {game} » a été joué. {names} a gagné !',
   'result.titleWonMany': '« {game} » a été joué. {names} ont gagné !',
   'result.titlePlayed': '« {game} » a été joué.',
-  'result.bannerChosen': 'On joue à : {title}',
   'result.bannerPrompt': 'Touche « Jouer » sur un jeu pour enregistrer ce à quoi vous jouez.',
   'result.play': 'Jouer',
   'result.willPlay': 'On y joue',

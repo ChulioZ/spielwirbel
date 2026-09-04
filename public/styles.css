@@ -3666,19 +3666,16 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   font-size: var(--text-md);
   text-align: center;
 }
+/* Empty is a real state since #915: with a game chosen the banner says nothing
+   (the row is marked, its button reads „Wird gespielt", the title states the
+   outcome), and `display: none` is what stops the removal leaving a 45px gap.
+   Same shape as `.cancel-area:empty` below. */
+.chosen-banner:empty { display: none; }
 .chosen-banner.is-set {
   background: var(--brand-tint);
   color: var(--brand-dark);
   border: 1px solid var(--brand-edge);
   font-size: var(--text-lg);
-}
-/* "Braucht Erweiterung: …" (#653) — the winning game only seats this table
-   because the round owns an expansion for it, so the group has to bring the
-   right box. A quieter second line inside the banner, not a peer of it. */
-.chosen-banner__note {
-  margin-top: 6px;
-  font-size: var(--text-sm);
-  font-weight: 600;
 }
 .chosen-banner.is-cancelled {
   background: color-mix(in oklab, var(--danger) 6%, var(--surface));
@@ -3909,6 +3906,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   padding-top: 14px;
 }
 .row-finish :is(h2, h3) { margin: 0 0 6px; }
+/* "Braucht Erweiterung: …" (#653) — the chosen game only seats this table
+   because the round owns an expansion for it, so the group has to bring the
+   right box. It sat inside the „Gespielt wird:" banner until #915 removed that;
+   here it is on the chosen game's own row, which is the box it is about. */
+.row-finish__note { font-size: var(--text-sm); font-weight: 600; margin-bottom: 8px; }
 .member-chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .member-chip {
   font-family: var(--font-display);

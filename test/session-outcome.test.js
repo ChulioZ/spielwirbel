@@ -12,7 +12,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { sessionChildIds, sessionOutcome, isSplitParent } = require('../public/js/session-outcome');
+const { sessionChildIds, sessionOutcome, isSplitParent, sessionHasVotes } = require('../public/js/session-outcome');
 
 test('the four outcomes', () => {
   assert.equal(sessionOutcome({ done: false }), 'open');
@@ -44,4 +44,33 @@ test('a missing session reads as open rather than throwing', () => {
   assert.equal(sessionOutcome(undefined), 'open');
   assert.equal(isSplitParent(null), false);
   assert.equal(isSplitParent({ childSessionIds: ['s1'] }), true);
+});
+
+/* Did anybody vote at all (#915).
+
+   Not an outcome, but the same kind of derived question and the same failure
+   shape: a direct-play session stores `votes: {}`, and every vote-derived piece
+   of the results screen rendered its EMPTY state — 0px bars, a bare „–", a
+   medal, „1 Spiel bewertet" — instead of being absent. Derived from the votes
+   themselves rather than stored, so no flag can disagree with the votes the
+   same screens tally. */
+
+test('a session has votes only when somebody actually voted on something', () => {
+  assert.equal(sessionHasVotes({ votes: { m1: { g1: { rating: 4 } } } }), true);
+  // The zero of the scale is a vote like any other (#797) — a retirement
+  // proposal is somebody having answered, so the ranking treatment belongs.
+  assert.equal(sessionHasVotes({ votes: { m1: { g1: { retire: true } } } }), true);
+  assert.equal(sessionHasVotes({ votes: { m1: {}, m2: { g1: { rating: 0 } } } }), true,
+    'one person answering is enough, even beside somebody who did not');
+});
+
+test('every shape of "nobody voted" reads as no votes', () => {
+  assert.equal(sessionHasVotes({}), false, 'the direct-play branch writes no key at all');
+  assert.equal(sessionHasVotes({ votes: {} }), false, 'nor does an empty map');
+  assert.equal(sessionHasVotes({ votes: { m1: {} } }), false,
+    'a person entry with no game in it is somebody who was asked and never answered');
+  assert.equal(sessionHasVotes({ votes: { m1: null } }), false, 'a null entry cannot throw');
+  assert.equal(sessionHasVotes({ votes: 'oops' }), false, 'nor can a non-object');
+  assert.equal(sessionHasVotes(null), false);
+  assert.equal(sessionHasVotes(undefined), false);
 });

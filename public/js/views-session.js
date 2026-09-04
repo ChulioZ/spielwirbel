@@ -849,6 +849,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // recorded in one tap and nobody is offered twice.
   const parties = sessionParties(round, session);
 
+  /* Did anybody vote at all (#915)? A direct-play session (#532) is created
+     with `votes: {}`, so it arrives here having asked nobody anything — and the
+     whole ranking treatment then rendered its EMPTY state rather than being
+     absent. Session-level on purpose, not per row: within a voted session a
+     game added after the vote legitimately shows „–" beside its scored
+     neighbours, and that row is still part of a ranking. A session nobody voted
+     in is not a ranking at all. */
+  const hasVotes = sessionHasVotes(session);
+
   // Tally per game.
   const rows = games.map((g) => {
     const ratings = [];
@@ -1087,7 +1096,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
        every column must be labelled — that is what makes an empty rung read as
        an empty slot rather than as a missing one. Hence the full-height track
        behind each fill, and the separate axis row. */
-    const bars = r.dist
+    const bars = !hasVotes ? '' : r.dist
       .map((c, n) => {
         const title = n === 0 ? t('result.barTitleRetire', { c }) : t('result.barTitle', { c, r: n });
         // The numeral stays `--ink-soft` while the fill and the glyph carry the
@@ -1139,14 +1148,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
          <a class="result-row__img" ${imgStyle}>${fallback}</a>
          <div>
            <a class="result-row__title">${medal}${esc(g.title)}${retiredBadge}</a>
-           <div class="result-row__bars">${bars}</div>
+           ${hasVotes ? `<div class="result-row__bars">${bars}</div>` : ''}
            ${sortFlag}
            <button class="link-btn result-row__remove">${iconText('ti-trash', t('result.removeGame'))}</button>
          </div>
          <div class="result-row__score">
+           ${!hasVotes ? '' : `
            <div class="score-big"${r.count ? ` style="color:${scoreColor(r.score)}"` : ''}>${r.count ? fmtAvg(r.shown) : '–'}</div>
            ${scoreLabel}
-           ${r.count && scoreReason(r) ? `<div class="score-why">${esc(scoreReason(r))}</div>` : ''}
+           ${r.count && scoreReason(r) ? `<div class="score-why">${esc(scoreReason(r))}</div>` : ''}`}
            <button class="btn play-btn">${iconText('ti-player-play', t('result.play'))}</button>
          </div>
          <div class="row-finish" hidden></div>
@@ -1218,18 +1228,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       banner.innerHTML = iconText('ti-x', t('result.bannerCancelled'));
       banner.classList.remove('is-set');
     } else if (chosenId) {
-      const g = games.find((x) => x.id === chosenId);
-      const icon = `<i class="ti ${GAME_ICON}" aria-hidden="true"></i> `;
-      banner.innerHTML = icon + t('result.bannerChosen', { title: '<strong>' + esc(g ? g.title : '') + '</strong>' });
-      // Say so when the base box does NOT seat this table and an owned
-      // expansion is what made the game drawable at all (#653) — otherwise the
-      // group carries the wrong box to the table. Derived from the same
-      // predicate the draw used, so the warning can never name a different set.
-      const needed = g ? requiredExpansions(g, parties.length) : [];
-      if (needed.length) {
-        banner.innerHTML += `<div class="chosen-banner__note">${esc(t('result.needsExpansion', { names: needed.map((e) => e.title).join(', ') }))}</div>`;
-      }
-      banner.classList.add('is-set');
+      // „Gespielt wird: X" is gone (#915): the chosen row already carries
+      // `is-chosen`, its own button already reads „Wird gespielt", and once the
+      // game is finished the page title states „„X" wurde gespielt." — so the
+      // banner restated, in a third place, a fact the screen makes twice
+      // already. It renders nothing here; `.chosen-banner:empty` collapses it so
+      // the removal costs no vertical space. The element itself stays for the
+      // prompt and cancelled states below (and for views-session-tables.js).
+      banner.innerHTML = '';
+      banner.classList.remove('is-set');
     } else {
       banner.textContent = t('result.bannerPrompt');
       banner.classList.remove('is-set');
@@ -1293,6 +1300,20 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     const finishWrap = ref.finishEl;
     finishWrap.hidden = false;
     const chosenGame = games.find((g) => g.id === chosenId);
+    // Say so when the base box does NOT seat this table and an owned expansion
+    // is what made the game drawable at all (#653) — otherwise the group
+    // carries the wrong box to the table. Derived from the same predicate the
+    // draw used, so the warning can never name a different set.
+    //
+    // It used to be a second line inside the „Gespielt wird:" banner, which
+    // #915 removed; this is the chosen row's own area and re-renders on the
+    // same path, so the note keeps its one trigger and gains the right context.
+    const needed = chosenGame ? requiredExpansions(chosenGame, parties.length) : [];
+    if (needed.length) {
+      finishWrap.appendChild(
+        h(`<div class="row-finish__note">${esc(t('result.needsExpansion', { names: needed.map((e) => e.title).join(', ') }))}</div>`)
+      );
+    }
     finishWrap.appendChild(
       h(`<h2>${finished ? iconText('ti-trophy', t('result.finishTitleDone')) : esc(t('result.finishTitle'))}</h2>`)
     );

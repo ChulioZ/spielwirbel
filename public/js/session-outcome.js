@@ -53,6 +53,28 @@ function isSplitParent(session) {
   return sessionOutcome(session) === 'split';
 }
 
+// Did anybody vote at all (#915)?
+//
+// Not an outcome, but the same kind of question and the same failure shape. A
+// direct-play session is created with `votes: {}` (`lib/routes/sessions.js`), so
+// it reaches the results screen having asked nobody anything — and every
+// vote-derived piece rendered its EMPTY state instead of being absent: six
+// full-height distribution tracks all filled to 0px, a bare „–" where the score
+// goes, and a Chronik line reading „1 Spiel bewertet" over zero votes. #890's
+// empty rung is right ("an unvoted rung is an empty SLOT") and wrong here: it
+// states something about a vote nobody was ever asked for.
+//
+// Derived from the votes the same screens tally, never stored, so no flag can
+// drift away from them. A person entry with no game in it is somebody who was
+// asked and never answered, which is still no vote.
+function sessionHasVotes(session) {
+  const votes = session && session.votes;
+  if (!votes || typeof votes !== 'object') return false;
+  return Object.values(votes).some(
+    (byGame) => byGame && typeof byGame === 'object' && Object.keys(byGame).length > 0
+  );
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { sessionChildIds, sessionOutcome, isSplitParent };
+  module.exports = { sessionChildIds, sessionOutcome, isSplitParent, sessionHasVotes };
 }
