@@ -900,10 +900,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const when = fmtDateTime(session.createdAt);
   const head = h(`<div class="page-head"><div>
          <h1 class="result-title">${esc(t('result.title'))}</h1>
-         <div class="muted">${esc(tn(games.length, 'result.subtitleOne', 'result.subtitle', { when }))} ${scoreInfoButton()}</div>
+         <div class="muted">${esc(tn(games.length, 'result.subtitleOne', 'result.subtitle', { when }))}</div>
        </div></div>`);
   app.appendChild(head);
-  wireScoreInfo(head);
   const titleEl = head.querySelector('.result-title');
 
   // „Teilen": hand the group chat what this screen says, as plain text (#526).
@@ -1061,6 +1060,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const medalRanks = ['gold', 'silver', 'bronze'];
   const maxBar = Math.max(1, ...rows.map((r) => Math.max(...r.dist)));
   const rowRefs = [];
+  let infoPlaced = false;
 
   rows.forEach((r) => {
     const g = r.game;
@@ -1095,6 +1095,25 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           g.retired || g.completed || g.wish ? '' : ` <button class="link-btn sortflag-btn">${esc(t('result.retireNow'))}</button>`
         }</div>`
       : '';
+    /* The score's NAME, not a vote count (#902). Within one session `n` is the
+       same on every row — the vote card refuses to advance until each drawn
+       game has been placed somewhere on the scale (see the guard in
+       renderVote) — so „Score aus 3" restated the participant line once per
+       row while the number itself, no longer a plain mean since #893, went
+       unnamed. A row nobody voted on prints the bare „–" and gets NO label at
+       all: there is no score there to name.
+
+       The single ⓘ rides the first labelled row, i.e. the highest-scoring game
+       anybody voted on (`rows` is sorted by score above). score-info.js places
+       it once per screen, never per pill — that rule is kept, only this one
+       occurrence moves: it used to hang off the page head's „4 Spiele · 3.
+       September", where it read as an annotation on the date and went
+       unnoticed. A session nobody voted in renders no label and therefore no
+       ⓘ, which is correct — there is no number on screen to explain. */
+    const scoreLabel = r.count
+      ? `<div class="score-label">${esc(t('score.name'))}${infoPlaced ? '' : ` ${scoreInfoButton()}`}</div>`
+      : '';
+    if (r.count) infoPlaced = true;
     const medal = r.place && r.place <= 3 ? `<span class="rank-medal rank-medal--${medalRanks[r.place - 1]}"><i class="ti ti-medal" aria-hidden="true"></i></span>` : '';
     const row = h(`<div class="result-row">
          <a class="result-row__img" ${imgStyle}>${fallback}</a>
@@ -1106,7 +1125,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
          </div>
          <div class="result-row__score">
            <div class="score-big"${r.count ? ` style="color:${scoreColor(r.score)}"` : ''}>${r.count ? fmtAvg(r.shown) : '–'}</div>
-           <div class="score-label">${esc(t('result.scoreOf', { n: r.count }))}</div>
+           ${scoreLabel}
            ${r.count && scoreReason(r) ? `<div class="score-why">${esc(scoreReason(r))}</div>` : ''}
            <button class="btn play-btn">${iconText('ti-player-play', t('result.play'))}</button>
          </div>
@@ -1156,6 +1175,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     rowRefs.push({ gameId: g.id, row, btn, finishEl: row.querySelector('.row-finish') });
     app.appendChild(row);
   });
+  // One call for whatever the loop placed — and none to bind when no row had
+  // votes. `wireScoreInfo` is idempotent, so the re-renders below (retire,
+  // remove) cannot stack a second listener.
+  wireScoreInfo(app);
 
   function updateChosen() {
     rowRefs.forEach(({ gameId, row, btn }) => {

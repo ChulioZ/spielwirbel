@@ -83,6 +83,9 @@ const rowsOf = (dom) => [...dom.app.querySelectorAll('.result-row')].map((row) =
   title: row.querySelector('.result-row__title').textContent.trim(),
   score: row.querySelector('.score-big').textContent.trim(),
   why: row.querySelector('.score-why') && row.querySelector('.score-why').textContent.trim(),
+  // `null` when the element is absent, which is a different statement from an
+  // empty string and is what the zero-vote row asserts.
+  label: row.querySelector('.score-label') && row.querySelector('.score-label').textContent.trim(),
 }));
 
 test('the ⓘ survives the heading rewrite that states the outcome', async (t) => {
@@ -100,6 +103,64 @@ test('the ⓘ survives the heading rewrite that states the outcome', async (t) =
     dom.app.querySelector('.result-title .score-info'), null,
     'it must NOT live inside the <h1> — textContent there deletes it'
   );
+  // #902 moved it off the page head, where it hung on the date line and read
+  // as an annotation on „3. September" rather than on the scores.
+  assert.equal(
+    dom.app.querySelector('.page-head .score-info'), null,
+    'and not in the page head either — it belongs beside the numbers'
+  );
+  const rows = [...dom.app.querySelectorAll('.result-row')];
+  assert.equal(
+    rows[0].querySelectorAll('.score-label .score-info').length, 1,
+    'it rides the FIRST result row\'s label — the highest-scoring game'
+  );
+});
+
+test('the row names the score instead of counting the votes', async (t) => {
+  const dom = await show(t, session('s1', { g1: 5, g2: 4, g3: 3 }));
+
+  assert.deepEqual(
+    rowsOf(dom).map((r) => r.label.replace(/\s+/g, ' ')),
+    ['Spielwirbel-Score', 'Spielwirbel-Score', 'Spielwirbel-Score'],
+    'every scored row names the number under it'
+  );
+  // The label it replaced printed `n = ratings.length`, which is the same on
+  // every row of a session — the vote card will not advance until each drawn
+  // game is somewhere on the scale — so it said nothing three times over.
+  assert.doesNotMatch(
+    dom.app.textContent, /Score aus/,
+    'no row states a vote count any more'
+  );
+});
+
+test('a game nobody voted on gets no label at all, not an empty one', async (t) => {
+  // g3 is in the session but carries no vote: `–` stands alone, because there
+  // is no score there to name. This is the branch most likely to throw.
+  const s = session('s1', { g1: 5, g2: 4 }, { gameIds: ['g1', 'g2', 'g3'] });
+  const dom = await show(t, s);
+  const by = Object.fromEntries(rowsOf(dom).map((r) => [r.title, r]));
+
+  assert.equal(by.Splendor.score, '–', 'the unvoted game shows the dash');
+  assert.equal(by.Splendor.label, null, 'no element, not an empty element');
+  assert.equal(by.Catan.label, 'Spielwirbel-Score', 'while the voted rows are labelled');
+});
+
+test('a session nobody voted in renders no ⓘ and does not throw', async (t) => {
+  const s = session('s1', {}, {
+    gameIds: ['g1', 'g2'],
+    votes: {},
+    votedIds: [],
+    winnerIds: [],
+    chosenGameId: null,
+  });
+  const dom = await show(t, s);
+
+  assert.equal(dom.app.querySelectorAll('.result-row').length, 2, 'the rows still render');
+  assert.equal(dom.app.querySelectorAll('.score-label').length, 0, 'nothing to name');
+  // Correct rather than a miss: with no number on screen there is nothing for
+  // the sheet to explain. The point of the assertion is that the empty case is
+  // a deliberate branch and not a crash on rows[0].
+  assert.equal(dom.app.querySelectorAll('.score-info').length, 0, 'and therefore no ⓘ');
 });
 
 test('the score, not the mean, ranks the rows', async (t) => {

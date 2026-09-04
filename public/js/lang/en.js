@@ -814,8 +814,7 @@ I18N.en = {
   'score.reasonRetire': '{n}× retire',
   'score.reasonVetoOne': '{n}× not at all',
   'score.reasonVeto': '{n}× not at all',
-  'detail.scoreName': 'Spielwirbel score',
-  'result.scoreOf': 'Score of {n}',
+  'score.name': 'Spielwirbel score',
   'result.retireNow': '— retire now',
   // Named on the results screen when the winning game only seats this table
   // because the round owns an expansion for it (#653).

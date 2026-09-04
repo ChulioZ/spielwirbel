@@ -15,8 +15,14 @@
    understand „wer gar nicht will, zählt schwerer".
 
    Placed ONCE PER SCREEN beside the primary occurrence (the game detail line,
-   the results heading, the Regal sort control), never on every pill: a dozen
-   ⓘ buttons down a shelf is noise, and they would all say the same thing.
+   the top result row's label, the Regal sort control), never on every pill: a
+   dozen ⓘ buttons down a shelf is noise, and they would all say the same thing.
+
+   On the results screen that occurrence was the page HEAD until #902, hanging
+   off „4 Spiele · 3. September" where it read as an annotation on the date and
+   went unnoticed; it now rides the first row that has a score to explain. A
+   session nobody voted in therefore carries no ⓘ at all — the same rule, not an
+   omission: there is no number on screen to explain.
 
    Load order: see index.html — after core.js, which owns `openSheet`/`h`/`t`. */
 

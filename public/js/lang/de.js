@@ -804,8 +804,7 @@ I18N.de = {
   'score.reasonRetire': '{n}× aussortieren',
   'score.reasonVetoOne': '{n}× gar nicht',
   'score.reasonVeto': '{n}× gar nicht',
-  'detail.scoreName': 'Spielwirbel-Score',
-  'result.scoreOf': 'Score aus {n}',
+  'score.name': 'Spielwirbel-Score',
   'result.retireNow': '— jetzt aussortieren',
   // Named on the results screen when the winning game only seats this table
   // because the round owns an expansion for it (#653).
