@@ -68,17 +68,29 @@ up, where an absent value *passes* a filter.
 The consequence for the reasons is the mirror image: only a term scoring **above**
 neutral may be named, or a card compliments a game on an attribute nobody knows.
 
-## 3. The novelty penalty needs BOTH directions of the implementation link, and they read different sets
+## 3. The implementation link needs BOTH directions, and they read different sets
 
 A `boardgameimplementation` link is stored as the *names* it points at. So "the
 owned row names this candidate" and "this candidate names an owned game" are two
 separate lookups — against the profile's collected `implementations` and against
 the owned rows' own `name`s. BGG usually records the link on both items, but not
-always, so checking one side leaves the common case unpenalised: the group owns
+always, so checking one side leaves the common case unfiltered: the group owns
 the classic, the candidate is the reprint.
 
 Found by a test asserting the reverse direction, against code that had only the
 forward one. It is exactly the shape that could not have failed loudly.
+
+**Since #900 this governs a FILTER, not a penalty** — `reimplementsOwned`, §5's
+fourth hard filter — and the constraint is unchanged but now sharper: a missed
+direction no longer costs 3% of a score, it leaves a game the round already owns
+in the list. The same both-directions shape is mirrored by the within-list
+dedupe in the same §5 bullet, with "what has been kept so far" standing in for
+the shelf.
+
+**A fixture that records the link on both rows cannot see the bug.** BGG usually
+writes both, so the natural test passes against a one-directional
+implementation — which is how the original was found. Each direction needs its
+own case, with the link on **one** side only.
 
 ## 4. The party-size distribution must come from the shared resolver
 
@@ -91,7 +103,7 @@ here from `round.members` would silently drop guests and flatten teams, so
 *because* the naming path (`partyName` → `t()`) is unreachable from Node — see
 `.claude/rules/session-teams.md` §4.
 
-## 5. Three hard filters that are not optimisations
+## 5. Four hard filters that are not optimisations
 
 - **A game already in the round in ANY state is dropped**, retired included, and
   retired is the sharpest of the five: they explicitly got rid of it. A test
@@ -184,6 +196,44 @@ here from `round.members` would silently drop guests and flatten teams, so
   `lib/repo/json.js`'s `dismissRecommendation` for why inventing one would put a
   title the round never owned into `gameCount`, the Regal's archive views, the
   Chronik, the public stats and the per-round game quota.
+- **A REIMPLEMENTATION of a profiled game is dropped (#900)** — BGG's own
+  `boardgameimplementation` link, in both directions (§3). It was a soft
+  `W_NOVELTY_PENALTY` until #900, and the arithmetic is why it had to stop being
+  one: 3% against a quality term carrying 35% cannot displace a strong candidate,
+  so a highly-ranked reprint of a shelf game still landed near the top — exactly
+  what the constant's own comment says must not happen. The cheaper-looking
+  implementation that silently gets it wrong is checking **one** link direction;
+  see §3 for why, and for the fixture shape that hides it.
+
+  **It inherits the wish exclusion rather than restating it.** Both sets it reads
+  are built from `profiled` (owned, non-wish), so a reprint of a **wished** game
+  stays in the list — they do not own it, so a second route to it is a live
+  suggestion, not a duplicate. That is the same #776 decision the bullet above
+  states, and the reasoning holds harder for a filter than for a penalty.
+
+  **What stayed a penalty, deliberately:** the same-designer + shared-mechanics
+  half of the old `noveltyPenalty`. It is a guess with a 0.6 threshold on it, and
+  hard-dropping on it would silently bury legitimately distinct games by prolific
+  designers. So `W_NOVELTY_PENALTY` keeps its weight and has one path left
+  instead of two.
+
+  **The sibling is the WITHIN-LIST dedupe**, which is not a fourth filter but the
+  same relation applied to the candidates against each other: nothing compared
+  them, so a round whose taste points at a family of reimplemented classics got
+  several editions of one game — a list that looks varied and is not. Three
+  things about `dedupeReimplementations` are load-bearing and each fails silently:
+  it runs **after** the score sort (so "the best-scoring member survives" falls
+  out of the walk order and needs no second comparison), **before** the slice (so
+  a list holding duplicates still comes back `limit` long instead of short by
+  however many it contained), and it stops at `limit` survivors (so it never
+  becomes a second full pass over ~17.5k rows — §7 has the budget). A dedupe test
+  whose duplicate sits *past* the cutoff would be absent anyway and passes against
+  a build that does no deduping at all.
+
+  **It matches only the DIRECT link, unlike the shelf filter**, which also treats
+  a candidate and an owned game naming the same third title as a match. BGG has
+  not said A and C are one game because both reimplement B, so the greedy walk
+  keeps A, drops B, keeps C — intended, not a transitive closure left for later.
 - **An un-enriched corpus row is dropped**, since it carries no attributes at all
   — it could be neither scored nor explained. The response still reports
   `corpusRows` over the whole corpus, which is what lets the screen tell "your
@@ -455,8 +505,10 @@ all** — `0.1414213562373095`. Byte-identical.
   `attainable`'s missing `prefix`, and the reason this file exists at all.
 - **What it deliberately is NOT:** a scored term. Plays decide which owned games
   shape the *target*, never how a candidate is scored against it, so
-  `W_QUALITY … W_NOVELTY_PENALTY` are untouched and the seven isolation cases of
-  §1 stay green unmodified. There is also no new reason type — a card does not
+  `W_QUALITY … W_NOVELTY_PENALTY` are untouched and §1's isolation cases stayed
+  green unmodified. (#900 later removed one of them — the implementation-link
+  case, which became a filter and is now asserted through `recommend()` instead;
+  the count in §1 is whatever the file holds, not a fixed seven.) There is also no new reason type — a card does not
   say "you play a lot of X".
 - **Do not unify the counter with the Pokale „Meistgespielt" card.** That card
   counts retired games on purpose: it is a record of nights that happened, not a
