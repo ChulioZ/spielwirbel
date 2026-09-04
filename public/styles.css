@@ -5286,9 +5286,10 @@ kbd {
   overflow-wrap: anywhere;
   text-align: center;
 }
-/* The win count belongs to the MEMBER, never to the step — step-mates will hold
-   different raw counts once #895 ranks on the Siegwertung. */
+/* Both numbers belong to the MEMBER, never to the step — step-mates share a
+   Siegwertung and hold different raw counts, since #895 ranks on the former. */
 .podium__wins { font-size: var(--text-xs); font-weight: 700; color: var(--ink-soft); }
+.podium__score { color: var(--ink); }
 /* A SHARED step lays its members down into chips, and that is what keeps a
    crowded place short: a chip is ~32px against an upright card's ~90px, so the
    column grows by a third of what a stack would cost it and the winner's
@@ -5317,6 +5318,15 @@ kbd {
   overflow-wrap: normal;
 }
 .podium__col--multi .podium__wins { flex: 0 0 auto; }
+/* THE RAW COUNT IS WHAT GIVES WAY ON A SHARED STEP (#895), leaving the
+   Siegwertung the entries are ranked by. The fixed part of a chip is what
+   crushes the name — „3 Siege" already took 48 of a 108px phone step's width,
+   and „+2,0 · 12 Siege" takes twice that — so carrying both here would undo
+   exactly what #897 lying-down bought. It is also the right half to drop: the
+   count exists to explain why 12 Siege ranks below 5, which only ever needs
+   answering ACROSS steps, and step-mates are by definition tied. The full
+   phrase survives as the entry's `title`. */
+.podium__col--multi .podium__winsraw { display: none; }
 .podium__col--multi .podium__entries { gap: 5px 10px; }
 /* The pedestal. It states the RANK and, when the place is shared, that it is
    shared — and nothing else; anything true of one member rather than of the

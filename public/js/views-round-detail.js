@@ -813,7 +813,7 @@ async function showGameDetail(rid, gameId) {
            </svg>
            <span class="gd-ring__num" style="color:${scoreColor(st.score)}">${fmtAvg(shown)}</span>
          </div>
-         <div class="score-label">${esc(t('score.name'))} ${scoreInfoButton()}</div>
+         <div class="score-label">${esc(t('score.name'))} ${infoButton('score')}</div>
          ${scoreReason(st) ? `<div class="score-why">${esc(scoreReason(st))}</div>` : ''}
          <div class="score-label">${esc(ratingsLine)}</div>`
       : `<div class="gd-ring gd-ring--none"><span class="gd-ring__num">–</span></div>
@@ -835,7 +835,7 @@ async function showGameDetail(rid, gameId) {
        </div>
        ${sparse || game.wish ? '' : `<div class="gd-stats">${scoreRing}${sortLine}</div>`}
      </div>`);
-  wireScoreInfo(head);
+  wireInfoButtons(head);
 
   // Editable cover image (activate to paste a new one or remove it). A <button>
   // for the same reason as the chips (#424); its fixed 240px box means the UA's

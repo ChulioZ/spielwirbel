@@ -89,9 +89,9 @@ function renderRegalTab(round, activeGames) {
     gamesTools.appendChild(sortSel);
     // The shelf's one ⓘ (#893) — beside the control that sorts on the score,
     // not on every pill in the grid.
-    const scoreInfo = h(scoreInfoButton());
+    const scoreInfo = h(infoButton('score'));
     gamesTools.appendChild(scoreInfo);
-    wireScoreInfo(gamesTools);
+    wireInfoButtons(gamesTools);
 
     // --- Selection mode (#832): tidy the shelf in bulk.
     //

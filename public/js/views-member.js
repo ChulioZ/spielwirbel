@@ -13,7 +13,23 @@ function memberStats(round, mid) {
     (s) => !Array.isArray(s.memberIds) || s.memberIds.includes(mid)
   );
   const wins = finished.filter((s) => (s.winnerIds || []).includes(mid)).length;
-  const winRate = joined.length ? wins / joined.length : null;
+
+  // The RATE is over contested evenings only (#895). A solo night is not a
+  // contest, and counting it showed a member who logs their solo plays at
+  // 100 % — the naive "measure against opportunity" fix, which makes the solo
+  // case worse than the plain count it replaced rather than better. `wins`
+  // above stays over every finished night: it is a factual record of nights
+  // won, not a claim about skill.
+  const contested = joined.filter((s) => sessionPartyCount(round, s) > 1);
+  const contestedWins = contested.filter((s) => (s.winnerIds || []).includes(mid)).length;
+  const winRate = contested.length ? contestedWins / contested.length : null;
+
+  // The Siegwertung, the measure the Ruhmeshalle now ranks on (#895). Shown
+  // here UNCLAMPED, negatives included, unlike the Pokale tab: this is the
+  // member's own stats page rather than a leaderboard, the number sits beside
+  // the rate it explains, and clamping it would make one person's figure
+  // disagree with the standings they are reading it against.
+  const winScore = memberWinScores(round, sessionPartyGroups)[mid];
 
   // Every numeric rating this member has given, and the per-game averages used
   // to find their favorite game (only games that still exist in the round and
@@ -54,7 +70,7 @@ function memberStats(round, mid) {
   });
   const favorite = favGames.map((gid) => round.games.find((g) => g.id === gid)).filter(Boolean);
 
-  return { wins, joined: joined.length, winRate, avgGiven, favorite, favAvg };
+  return { wins, joined: joined.length, winRate, winScore, avgGiven, favorite, favAvg };
 }
 
 async function showMember(rid, mid) {
@@ -183,6 +199,15 @@ async function showMember(rid, mid) {
       st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%',
       ''
     )
+  );
+  // Beside the rate, because the two answer the same question differently and
+  // the pair is what makes either legible: the rate ignores how many people
+  // were beaten, the Siegwertung is exactly that correction.
+  cards.appendChild(
+    // ti-medal, not the wins card's ti-trophy: two cards side by side under one
+    // icon read as one statistic shown twice, and the medal is already the
+    // app's mark for a placing (the results rows' rank-medal).
+    statCard('ti-medal', t('member.winScore'), st.winScore === undefined ? '–' : fmtSigned(st.winScore), '')
   );
   cards.appendChild(
     statCard('ti-star', t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven), '')

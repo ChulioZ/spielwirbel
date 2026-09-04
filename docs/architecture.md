@@ -473,6 +473,10 @@ public/
                      averaging, so a game one person does not want to play
                      stops outranking a game everybody is fine with. Required
                      by lib/recommend.js and lib/session-split.js (issue #893)
+    win-score.js     what a member's WINS are worth: the Siegwertung, each win
+                     weighted by the size of the field it beat, so the
+                     Ruhmeshalle ranks play rather than attendance and a solo
+                     evening scores exactly zero (issue #895)
     rating-faces.js  the mood face each rung of the 0-5 scale wears, so the two
                      vote cards and the session result distribution name a
                      rating with the same glyph (issue #890)

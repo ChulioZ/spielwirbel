@@ -204,7 +204,8 @@ What the app does, in detail. For a short overview see the
   Deleting a tag simply unassigns it from every game.
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list) with their stats — wins,
-  sessions joined, win rate, average rating given, and favorite game — and lets
+  sessions joined, win rate, Siegwertung, average rating given, and favorite
+  game — and lets
   you rename them and pick their avatar color from the curated palette.
 - **Round hub** – each round is a small app of its own, with four sections
   presented per screen size: a floating bottom dock on phones, a tab strip at
@@ -241,6 +242,18 @@ What the app does, in detail. For a short overview see the
     record: totals, the worst-rated game, the one the group disagrees about
     most, and every member's own favourite. Pokale is the all-time record; the
     time-scoped view of the same idea is the Chronik's period recap above.
+
+    The standings rank on the **Siegwertung**, not on the raw number of wins:
+    each win is weighted by the size of the field it beat, so beating four
+    people counts for more than beating one, merely turning up earns nothing,
+    and an evening played alone is worth exactly zero. Nobody below chance
+    stands on the podium — which is what keeps a negative number off the tab —
+    so an evenly matched round, where everyone sits at exactly chance, still
+    shares a top step. Each entry shows the Siegwertung with the raw win count
+    beside it, and everyone else is listed below the stage with their plain win
+    counts. The winning-streak tile skips solo evenings for the same
+    reason it already skipped nights a guest won: an evening that was not a
+    contest can neither break nor extend a streak.
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally narrow
   the collection, and draw a random set of candidate games — only games whose
   player range fits the number of joining members are eligible. Narrowing happens
@@ -303,7 +316,8 @@ What the app does, in detail. For a short overview see the
   screen: they count toward the player range the draw filters by, take their own
   hot-seat turn, can be recorded as a winner, and stay in that session's record
   marked as a guest — but they never join the round, so they leave the member
-  list, the Pokale standings and the win streak untouched. A guest's scale starts
+  list, the Pokale standings and the win streak untouched — though they do count
+  as one of the parties a member's win is measured against. A guest's scale starts
   at 1, with no trash tile: throwing a game off the shelf is the permanent
   group's call.
 - **Teams** – two or more of the people joining a session — members and guests
