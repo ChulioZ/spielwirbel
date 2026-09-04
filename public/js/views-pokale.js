@@ -105,27 +105,31 @@ function renderPokaleTab(round) {
   const scores = memberWinScores(round, sessionPartyGroups);
   const ranked = [...round.members].sort((a, b) => scores[b.id] - scores[a.id]);
 
-  // NOBODY BELOW CHANCE stands on the podium — which is the invariant this tab
-  // actually promises, since it is what keeps a negative number off the screen.
+  // THE PODIUM IS THE TOP THREE PLACES, and nothing else decides who stands.
   //
-  // Not "above chance", which is the tempting reading and empties the stage:
-  // the Siegwertung is zero-sum over the parties at a table, so a round whose
-  // wins are PERFECTLY even puts every member at exactly 0,0 and none of them
-  // above it. Two evenly matched members would then never see a podium at all,
-  // at any number of nights, and a four-member round that has played four
-  // nights would lose the shared top step #879 built for exactly that state.
-  // Being at chance still buys nothing, because it cannot outrank anyone: the
-  // stage holds three places, so a member on 0,0 stands only when fewer than
-  // three distinct better scores exist above them.
+  // It used to filter on the score as well — first „above chance", then „not
+  // below chance" — and both are wrong for the same reason, found in live
+  // family use (operator decision, 2026-09-04): the stage stood with rank 1
+  // taken and ranks 2 and 3 EMPTY while several members were named below it,
+  // with nothing on screen saying why they were not on it. A score threshold is
+  // an invisible rule, so the only thing a reader can conclude from an unclaimed
+  // step is that the feature is broken. Seeing yourself on the podium with a
+  // negative Siegwertung is better than seeing the places unclaimed — and being
+  // fourth is a reason that explains itself.
   //
-  // `wins > 0` is the other half and is not redundant. A member who has played
-  // NOTHING also scores exactly 0 — no sessions, no terms in the sum — and
-  // without it would stand on the stage having never turned up. Anyone who did
-  // play and never won is already below chance and excluded by the score.
+  // So a negative number DOES reach this tab now. That reverses the issue's
+  // „nobody ever sees a negative number" and is deliberate; the rest line below
+  // states the score for the same reason.
   //
-  // Compared at the PRINTED precision, like the tie key below: a member at
-  // −0,04 reads „0,0" and must not be refused a step for a number nobody sees.
-  const winners = ranked.filter((m) => wins[m.id] > 0 && Number(scores[m.id].toFixed(1)) >= 0);
+  // The one exclusion left is a member with NO RECORD AT ALL — no wins and no
+  // losses, because they took part in no session that had a winner. They score
+  // exactly 0 (an empty sum), which would rank them above everyone who played
+  // and lost, so a person who never turned up would stand over people who did.
+  // Anyone who did play and never won holds a strictly negative score, since
+  // every term of the sum is `−w/p` with `w >= 1`; that is why the raw score is
+  // tested here rather than the printed one, which rounds a thin loss to „0,0".
+  const hasRecord = (m) => wins[m.id] > 0 || scores[m.id] < 0;
+  const winners = ranked.filter(hasRecord);
 
   // Competition ranking (1224) through `computePlaces` (ranking.js) rather than
   // the hand-rolled comparison this carried. That one was exact equality, safe
@@ -188,16 +192,17 @@ function renderPokaleTab(round) {
   // order. Nothing else lands here: the steps are uncapped, so a crowded place
   // can no longer push a member off the stage into a „+N weitere" count.
   //
-  // IT SHOWS PLAIN WIN COUNTS, never the Siegwertung (#895). This is exactly the
-  // set of people whose score may be negative, and „−1,3" printed under a
-  // Ruhmeshalle heading is a punishment the feature should not hand out.
+  // It states the Siegwertung it is ORDERED BY, beside the raw count. Printing
+  // the count alone made the order look arbitrary — „5 Siege" listed above
+  // „6 Siege" reads as a sorting bug — and now that a negative number stands on
+  // the stage itself there is nothing left to spare anyone one line below it.
   const onPodium = new Set(cols.flatMap((c) => c.shown.map((it) => it.member.id)));
   const rest = ranked.filter((m) => !onPodium.has(m.id));
   if (rest.length) {
     const line = rest
       .map(
         (m) =>
-          `<a class="podium__rest-name" data-mid="${esc(m.id)}">${esc(m.name)}</a> · ${esc(tn(wins[m.id], 'pokale.winsOne', 'pokale.wins'))}`
+          `<a class="podium__rest-name" data-mid="${esc(m.id)}">${esc(m.name)}</a> · <span class="podium__score">${esc(fmtSigned(scores[m.id]))}</span> · ${esc(tn(wins[m.id], 'pokale.winsOne', 'pokale.wins'))}`
       )
       .join('&ensp;—&ensp;');
     const restEl = h(`<div class="muted podium__rest">${line}</div>`);

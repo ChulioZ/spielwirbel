@@ -231,23 +231,21 @@ const RID = 'r1';
 /* THE FIELD SIZE IS PART OF THE FIXTURE SINCE #895, and it used to be wrong in
    a way nothing could see: every session here was seated `memberIds: ['m1']`,
    i.e. a SOLO night, which was harmless while the ranking was a raw win count
-   and makes every night worth exactly zero now.
+   and makes every night worth exactly zero now. Each night therefore seats the
+   whole round.
 
-   Each night therefore seats the whole round plus guests up to FIELD parties.
-   Eight is chosen, not arbitrary: a member's Siegwertung with everyone present
-   every night is `wins − T/p` for T nights, so p has to exceed T for a
-   single-win member to sit above chance at all. Eight clears that for the six
-   fixtures that want their lowest member ON the stage, and still leaves the
-   {4,3,2,1} fixture's one-win member below it — which is the case that pins the
-   rest line. Retune it and those two claims move in opposite directions. */
-const FIELD = 8;
-
-const session = (id, winnerIds, memberIds, guests) => ({
+   That is all it needs. With everyone present every night a member's Siegwertung
+   is `wins − T/p` for T nights — a constant offset from the win count — so the
+   order, and every tie in it, is exactly the order these fixtures always meant.
+   An earlier revision padded the table with guests to lift single-win members
+   over a score threshold on the podium; that threshold is gone (the stage is the
+   top three PLACES), and the padding went with it. */
+const session = (id, winnerIds, memberIds) => ({
   id,
   createdAt: '2026-07-01T20:00:00.000Z',
   gameIds: ['g1'],
   memberIds,
-  guests,
+  guests: [],
   votes: { m1: { g1: { rating: 4, retire: false } } },
   votedIds: ['m1'],
   finished: true,
@@ -272,17 +270,11 @@ const round = (members, sessions) => ({
 const memberList = (n) => Array.from({ length: n }, (_, i) => ({ id: `m${i + 1}`, name: `P${i + 1}` }));
 
 // `wins` maps a member id to how many nights they won; one session per win.
-// Every member is seated at every night, and guests pad the table out to FIELD
-// parties — the guests never win, so they change nobody's ordering, only the
-// denominator each win is measured against.
+// Every member is seated at every night, so the field is the round itself.
 const winsToSessions = (wins, members) => {
   const memberIds = members.map((m) => m.id);
-  const guests = Array.from({ length: Math.max(0, FIELD - memberIds.length) }, (_, i) => ({
-    id: `guest-${i}`,
-    name: `G${i}`,
-  }));
   return Object.entries(wins).flatMap(([mid, n]) =>
-    Array.from({ length: n }, (_, i) => session(`${mid}-${i}`, [mid], memberIds, guests))
+    Array.from({ length: n }, (_, i) => session(`${mid}-${i}`, [mid], memberIds))
   );
 };
 
@@ -339,7 +331,8 @@ test('every member carries their OWN win count; the step carries only the rank',
   /* An UPRIGHT entry — one member alone on a step — has a whole line, so it
      carries both numbers: the Siegwertung it is ranked by and the raw count
      that explains why 12 Siege can sit below 5. */
-  assert.match(leadWins.textContent, /^\+1,4 · 2 Siege$/, 'both numbers, score first');
+  // 2 wins in 5 four-party nights: 2·(3/4) − 3·(1/4) = +0,8.
+  assert.match(leadWins.textContent, /^\+0,8 · 2 Siege$/, 'both numbers, score first');
   assert.match(leadWins.getAttribute('title'), /2 Siege/, 'the phrase it stands for stays one hover away');
   /* On a SHARED step the raw count is what gives way (styles.css), so the
      markup must still carry it — hiding it is CSS's call, not the view's. */
@@ -393,13 +386,17 @@ test('members ranked below the third step still appear in the rest line', async 
   assert.deepEqual([...rest.querySelectorAll('.podium__rest-name')].map((e) => e.dataset.mid), ['m4']);
 });
 
-test('a member who has never won stands off the stage, in the rest line', async (t) => {
-  /* Only members with a win can hold a rank (`winners` in views-pokale.js), so
-     a winless member is not on a step — but the rest line is the round's whole
-     standings, so they are listed there on zero rather than dropped. */
+test('a member who has never won STANDS, rather than leaving a step empty', async (t) => {
+  /* Reversed by operator decision (2026-09-04) after live family use: a winless
+     member used to be filtered off the stage, which left ranks unclaimed while
+     they were named below with no visible reason. They are third here, on a
+     negative Siegwertung, and the stage is full.
+
+     See `.claude/rules/rank-encodings-must-not-be-growable-by-ties.md`. */
   const dom = await pokale(t, memberList(3), { m1: 2, m2: 1 });
-  assert.deepEqual([...dom.app.querySelectorAll('.podium__entry')].map((e) => e.dataset.mid), ['m2', 'm1']);
-  const rest = dom.app.querySelector('.podium__rest');
-  assert.deepEqual([...rest.querySelectorAll('.podium__rest-name')].map((e) => e.dataset.mid), ['m3']);
-  assert.match(rest.textContent, /0 Siege/);
+  assert.deepEqual([...dom.app.querySelectorAll('.podium__entry')].map((e) => e.dataset.mid), ['m2', 'm1', 'm3']);
+  assert.equal(dom.app.querySelector('.podium__col--spacer'), null, 'every step is claimed');
+  assert.equal(dom.app.querySelector('.podium__rest'), null, 'nobody is left below a full stage');
+  const third = [...dom.app.querySelectorAll('.podium__col')][2];
+  assert.match(third.querySelector('.podium__winsraw').textContent, /0 Siege/, 'winless, and said so');
 });
