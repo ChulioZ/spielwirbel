@@ -358,8 +358,15 @@ test('every member carries their OWN win count; the step carries only the rank',
 });
 
 test('everyone on one win renders the SHARED TOP STEP, with its risers', async (t) => {
-  /* The youngest state of a round, and the one #879 found rendered as a
-     full-width tinted band where a stepped silhouette should be. */
+  /* The state #879 found rendered as a full-width tinted band where a stepped
+     silhouette should be.
+
+     NOTE what the guest padding buys here since #895: four members each winning
+     one of four nights, with NOBODY else at the table, puts every one of them at
+     exactly 0,0 — at chance — so none of them is above it and the stage is
+     EMPTY. This fixture keeps them on the stage by widening the field, and it
+     asserts the arrangement, not that a young round always has a podium. That
+     second claim is no longer true and is a product question, not a test one. */
   const dom = await pokale(t, memberList(4), { m1: 1, m2: 1, m3: 1, m4: 1 });
   const stage = dom.app.querySelector('.podium');
   assert.ok(stage.classList.contains('podium--single'));
