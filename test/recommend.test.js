@@ -720,24 +720,6 @@ test('TIME is the distance from the group\'s own evening length', () => {
   assert.equal(delta(profile, fits, marathon), W_TIME);
 });
 
-test('the NOVELTY penalty fires on a reimplementation link in either direction', () => {
-  const round = shelfRound();
-  const corpus = shelfCorpus();
-  // The owned row names the candidate as a relative…
-  corpus[0].info.implementations = ['Game reimpl'];
-  const profile = profileOf(round, corpus);
-  const same = entry('reimpl', { info: info() });
-  const other = entry('fresh', { info: info() });
-  assert.equal(delta(profile, other, same), Math.abs(W_NOVELTY_PENALTY));
-
-  // …and the other way round: the candidate names something owned.
-  const corpus2 = shelfCorpus();
-  corpus2[0].name = 'Owned classic';
-  const profile2 = profileOf(round, corpus2);
-  const child = entry('c', { info: info({ implementations: ['Owned classic'] }) });
-  assert.equal(delta(profile2, entry('d', { info: info() }), child), Math.abs(W_NOVELTY_PENALTY));
-});
-
 test('an UNKNOWN attribute scores neutral, not zero', () => {
   const profile = profileOf(shelfRound(), shelfCorpus());
   // A row BGG knows nothing about beyond its rank must not be buried under a row
@@ -777,6 +759,161 @@ test('a game already in the round is excluded in EVERY state, retired included',
   ];
   const out = recommend(round, corpus);
   assert.deepEqual(out.recommendations.map((r) => r.externalId), ['free']);
+});
+
+/*
+ * The FOURTH hard filter (#900): a reimplementation of something the round
+ * already owns.
+ *
+ * Every case below records the `boardgameimplementation` link on ONE side only.
+ * BGG usually writes it on both items, and a fixture that does the same passes
+ * against a one-directional implementation — which is exactly how the bug behind
+ * .claude/rules/recommendation-scoring.md §3 was found. The two directions read
+ * two different sets, so they get two tests.
+ */
+test('a candidate NAMING an owned game as its predecessor is filtered out, not merely penalised', () => {
+  const round = shelfRound();
+  const corpus = shelfCorpus();
+  // The owned row itself names nothing — only the candidate carries the link.
+  corpus[0].name = 'Owned classic';
+  // Outscores everything on quality alone, so it can only be missing because it
+  // was filtered, never because it lost.
+  const reprint = entry('reprint', { rank: 1, bayesRating: 9.5, info: info({ implementations: ['Owned classic'] }) });
+  const fresh = entry('fresh', { rank: 2, info: info() });
+  const out = recommend(round, [...corpus, reprint, fresh]);
+  assert.deepEqual(out.recommendations.map((r) => r.externalId), ['fresh']);
+});
+
+test('a candidate an OWNED row names as a reimplementation is filtered out too', () => {
+  const round = shelfRound();
+  const corpus = shelfCorpus();
+  // The reverse direction, and the candidate carries no link of its own: this is
+  // the common older-edition case — they own the classic, the candidate is the
+  // reprint, and BGG recorded it on the classic only.
+  corpus[0].info.implementations = ['Game reimpl'];
+  const reimpl = entry('reimpl', { rank: 1, bayesRating: 9.5, info: info() });
+  const fresh = entry('fresh', { rank: 2, info: info() });
+  const out = recommend(round, [...corpus, reimpl, fresh]);
+  assert.deepEqual(out.recommendations.map((r) => r.externalId), ['fresh']);
+});
+
+test('a RETIRED game\'s reimplementation is filtered too', () => {
+  // The sharpest of the states: they explicitly got rid of it, so recommending
+  // the reprint back is the same defect as recommending the game itself.
+  const round = shelfRound();
+  round.games.push({ id: 'gr', title: 'Thrown out', retired: true, source: { provider: 'bgg', externalId: 'x-retired' } });
+  const corpus = [...shelfCorpus(), entry('x-retired', { name: 'Retired classic', info: info() })];
+  const reprint = entry('reprint', { rank: 1, bayesRating: 9.5, info: info({ implementations: ['Retired classic'] }) });
+  const fresh = entry('fresh', { rank: 2, info: info() });
+  const out = recommend(round, [...corpus, reprint, fresh]);
+  assert.deepEqual(out.recommendations.map((r) => r.externalId), ['fresh']);
+});
+
+test('a candidate reimplementing a WISHED game is still recommended, and still scores no penalty', () => {
+  const round = shelfRound();
+  round.games.push(wishGame());
+  const corpus = [...shelfCorpus(), wishRow()];
+  // A reimplementation of something on the WUNSCHLISTE is not "you already own
+  // this in different clothes" — it is a second route to a game they still want.
+  // The filter inherits the wish exclusion for free: `ownedNames` and
+  // `implementations` are built from the profiled (owned, non-wish) rows only.
+  const reprint = entry('reprint', { rank: 1, info: info({ implementations: ['Wished classic'] }) });
+  const out = recommend(round, [...corpus, reprint]);
+  assert.deepEqual(out.recommendations.map((r) => r.externalId), ['reprint']);
+
+  // And the soft penalty is not standing in for the filter either.
+  const profile = profileOf(round, corpus);
+  assert.equal(delta(profile, entry('d', { info: info() }), reprint), 0);
+});
+
+test('a candidate SHARING a predecessor with an owned game is filtered too', () => {
+  // The third clause of the link check, and the one with no test before #900: the
+  // candidate names neither an owned game nor is named by one — both simply point
+  // at the same third title, which is BGG's shape for two editions of one family.
+  // It was inherited verbatim from the penalty, and promoting that penalty to a
+  // hard drop is exactly what makes an untested clause worth pinning.
+  const round = shelfRound();
+  const corpus = shelfCorpus();
+  corpus[0].info.implementations = ['Shared ancestor'];
+  const sibling = entry('sibling', { rank: 1, bayesRating: 9.5, info: info({ implementations: ['Shared ancestor'] }) });
+  const fresh = entry('fresh', { rank: 2, info: info() });
+  const out = recommend(round, [...corpus, sibling, fresh]);
+  assert.deepEqual(out.recommendations.map((r) => r.externalId), ['fresh']);
+});
+
+/*
+ * The within-list dedupe (#900), which is the other half: nothing compared
+ * candidates against EACH OTHER, so a round whose taste points at a family of
+ * reimplemented classics got several editions of one game in one list.
+ *
+ * Both fixtures keep the duplicate well INSIDE the limit. One ranked past the
+ * cutoff would be absent anyway and the case would pass against a build that
+ * does no deduping at all.
+ */
+test('two candidates linked to each other appear once, and the higher-scoring one survives', () => {
+  const round = shelfRound();
+  const corpus = shelfCorpus();
+
+  // The loser names the survivor…
+  const strong = entry('strong', { rank: 1, bayesRating: 8.5, info: info() });
+  const weak = entry('weak', { rank: 2, bayesRating: 5.5, info: info({ implementations: ['Game strong'] }) });
+  assert.deepEqual(
+    recommend(round, [...corpus, strong, weak]).recommendations.map((r) => r.externalId),
+    ['strong'],
+  );
+
+  // …and the other way round: the survivor names the loser.
+  const namer = entry('namer', { rank: 1, bayesRating: 8.5, info: info({ implementations: ['Game named'] }) });
+  const named = entry('named', { rank: 2, bayesRating: 5.5, info: info() });
+  assert.deepEqual(
+    recommend(round, [...corpus, namer, named]).recommendations.map((r) => r.externalId),
+    ['namer'],
+  );
+});
+
+test('neither reimplementation filter SHORTENS the list while the pool can still fill it', () => {
+  const round = shelfRound();
+  const corpus = shelfCorpus();
+  corpus[0].name = 'Owned classic';
+  const candidates = [
+    entry('c1', { rank: 1, bayesRating: 9.0, info: info() }),
+    // Dropped by the shelf filter, and ranked high enough that a list which
+    // merely sliced first would come back one short.
+    entry('c2', { rank: 2, bayesRating: 8.8, info: info({ implementations: ['Owned classic'] }) }),
+    entry('c3', { rank: 3, bayesRating: 8.6, info: info() }),
+    // Dropped by the dedupe, against c3 above it.
+    entry('c4', { rank: 4, bayesRating: 8.4, info: info({ implementations: ['Game c3'] }) }),
+    entry('c5', { rank: 5, bayesRating: 8.2, info: info() }),
+  ];
+  const out = recommend(round, [...corpus, ...candidates], { limit: 3 });
+  assert.deepEqual(out.recommendations.map((r) => r.externalId), ['c1', 'c3', 'c5']);
+});
+
+test('a filtered candidate does not shift the per-term statistics behind the reason lines', () => {
+  // The filter sits with the other three, BEFORE `scoreCandidate`, so a row that
+  // can never be shown must not feed the z-scores that order the reasons of the
+  // rows that are. Asserted as an equivalence: a filtered row is as if it were
+  // not in the corpus at all.
+  const round = shelfRound();
+  const corpus = shelfCorpus();
+  corpus[0].name = 'Owned classic';
+  const keeper = entry('keeper', { rank: 1, bayesRating: 7.4, info: info() });
+  const filler = entry('filler', { rank: 2, bayesRating: 6.0, info: info({ weight: 4.5 }) });
+
+  const clean = recommend(round, [...corpus, keeper, filler]);
+  // Ten reprints of the owned classic, every one of them a quality outlier: if
+  // they reached `observeTerms` the quality mean would jump and the keeper's
+  // quality z would collapse below its other terms, reordering its reasons.
+  const noisy = recommend(round, [
+    ...corpus,
+    keeper,
+    filler,
+    ...Array.from({ length: 10 }, (_, i) =>
+      entry(`reprint${i}`, { rank: 100 + i, bayesRating: 9.9, info: info({ implementations: ['Owned classic'] }) })),
+  ]);
+
+  assert.deepEqual(noisy.recommendations.map((r) => r.externalId), ['keeper', 'filler']);
+  assert.deepEqual(noisy.recommendations[0].reasons, clean.recommendations[0].reasons);
 });
 
 test('a dismissed title is a THIRD hard filter — gone from the list, absent from the profile (#782)', () => {
@@ -848,10 +985,12 @@ test('each recommendation names up to three terms that actually earned it', () =
  * game), so the list a round saw was steered hardest by games it does not own —
  * on a screen whose entire premise is "games you do not own".
  *
- * The four cases below are one behaviour seen from four sides, because this file
- * fails by ranking: the profile, the reason lines, the novelty penalty and the
- * counts are all derived from the same list, and a wish leaking back into any of
- * them produces a plausible wrong list rather than an error.
+ * The cases below are one behaviour seen from several sides, because this file
+ * fails by ranking: the profile, the reason lines and the counts are all derived
+ * from the same list, and a wish leaking back into any of them produces a
+ * plausible wrong list rather than an error. The novelty side moved up to the
+ * reimplementation-filter block (#900), where the wish exclusion now has to hold
+ * against a FILTER rather than a 3% penalty.
  */
 
 // One wished game the shelf resembles in NOTHING — a foreign mechanic, a foreign
@@ -1040,16 +1179,6 @@ test('a reason contributor sharing FEWER attributes can outrank one sharing more
   // not `shared` with affinity as a tie-break — under a tie-break the shared
   // count would decide first and Owned 1 would still lead.
   assert.deepEqual(mechanics.games, ['Owned 2', 'Owned 1']);
-});
-
-test('the NOVELTY penalty does not fire against a wished game', () => {
-  const round = shelfRound();
-  round.games.push(wishGame());
-  const profile = profileOf(round, [...shelfCorpus(), wishRow()]);
-  // A reimplementation of something on the WUNSCHLISTE is not "you already own
-  // this in different clothes" — it is a second route to a game they still want.
-  const reprint = entry('c', { info: info({ implementations: ['Wished classic'] }) });
-  assert.equal(delta(profile, entry('d', { info: info() }), reprint), 0);
 });
 
 test('a shelf of mostly wishes falls UNDER the profile floor rather than profiling the wishes', () => {
