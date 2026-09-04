@@ -261,7 +261,35 @@ they bound `COVER_MAX_DIM`'s justification — but nothing validates them across
 boundary: they are the frontend's own render-time choice, and the server has no
 opinion about them at all.
 
-Each new instance must be named in this inventory — the thirteen paragraphs above.
+**The fourteenth is `public/js/vote-score.js`** (#893): the Spielwirbel-Score —
+what a SET of votes on a game is worth, once a veto counts for more than its
+numeric distance. Logic, like `draw-pool.js` and its direct sibling
+`vote-scale.js`, and it runs in the same direction as `vote-scale.js` for the
+same reason: nothing is validated across the boundary. The client renders every
+score (Regal pills, the detail ring, session results, Pokale) and the server
+weighs the same votes in `lib/recommend.js`'s taste profile and in
+`lib/session-split.js`'s table proposals, so a drifted copy makes two screens
+state a different number for one game with no error, no 400 and no blank.
+
+Its trap is that the curve has **two consumers with different arithmetic**, and
+only one of them is obvious. `scoreRatings` is the mean of `tileValue` over a
+game's votes; `tableFeedback` in `table-split.js` sums `tileValue` over a
+table's seats. Those must move together — the whole point of #893 was that the
+single-table results screen and the multi-table objective had been applying
+*different* value judgements to the same evening — so `table-split.js` takes
+`tileValue` as an **injected** parameter with no default, exactly as it takes
+`effectiveRating`. A default would hand back a plausible, confident,
+differently-scored split with no error anywhere, which is this rule's failure
+mode expressed as a seating chart.
+
+Two neighbouring values deliberately did **not** join it. `VIOLATION_MAX` stays
+in `table-split.js`: it is a threshold on the *tile* scale, not on the score, and
+it is already coupled to the vote scale there. And `LOW_SCORE` in
+`retireRecommendations` (core.js) stays in core.js — the client never states it
+and the server has no opinion about it, so it is a render-time choice like
+`cover-size.js`'s widths rather than a shared contract.
+
+Each new instance must be named in this inventory — the fourteen paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

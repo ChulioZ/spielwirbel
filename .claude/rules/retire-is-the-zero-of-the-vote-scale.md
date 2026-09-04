@@ -78,11 +78,19 @@ clause of its own. Change the scale and that constant changes in the same PR.
 
 ## What the thresholds do NOT mean any more
 
-`retireRecommendations`' `LOW_AVG = 2.0` is now a point on a **0–5** scale, and
-zeros land in the average that feeds it, so the Ø reason fires more often than it
-used to. That is intended (#797 decision 5) and the constant was deliberately not
-retuned — don't "correct" it back on the assumption that it still describes a
-1–5 scale.
+`retireRecommendations`' threshold is a point on a **0–5** scale, and zeros land
+in the number that feeds it, so the rating reason fires more often than it used
+to. That is intended (#797 decision 5) — don't "correct" it back on the
+assumption that it still describes a 1–5 scale.
+
+**Superseded in part by #893.** The constant is no longer `LOW_AVG = 2.0` and no
+longer compares against the raw mean: it is `LOW_SCORE = 1.0` in `core.js` and
+compares against the **Spielwirbel-Score**
+(`.claude/rules/shared-constants-across-the-stack.md`, fourteenth entry). #797's
+"deliberately not retuned" no longer applies — the scale under it moved, so the
+threshold moved with it. It is anchored rather than picked: 1.0 is exactly what
+a flat 2 from every voter scores. `VIOLATION_MAX = 2` above is untouched, being
+a threshold on the tile scale rather than on the score.
 
 **Related:** `.claude/rules/shared-constants-across-the-stack.md` (the ninth
 inventory entry, and why this is one file rather than nine copies),

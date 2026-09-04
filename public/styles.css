@@ -3588,6 +3588,29 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .result-row__score { text-align: right; }
 .score-big { font-size: var(--text-3xl); font-weight: 800; color: var(--brand-dark); line-height: 1; }
 .score-label { font-size: var(--text-sm); color: var(--ink-soft); }
+/* Why this score is what it is — „1× gar nicht" (#893). Deliberately quieter
+   than `.sort-flag` beside it: that one is a call to ACT (a game half the group
+   wants gone), this one only explains a number the reader is already looking
+   at. `--warn` here would make every vetoed game shout. */
+.score-why { font-size: var(--text-sm); color: var(--ink-soft); font-weight: 700; margin-top: 2px; }
+/* The ⓘ that opens the Spielwirbel-Score sheet (#893). Same 28px box and the
+   same colours as `.vote__info` — it is the same affordance on a different
+   screen — but it is NOT that class: `.vote__info` is sized within the vote
+   card title's line box, and reusing it would tie the two to one another's
+   layout for no reason beyond looking alike today. */
+.score-info {
+  display: inline-flex; align-items: center; justify-content: center;
+  vertical-align: middle;
+  width: 28px; height: 28px; padding: 0;
+  border: 0; border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: var(--text-lg);
+  cursor: pointer;
+}
+.score-info:hover, .score-info:focus-visible { color: var(--brand-dark); }
+.score-info__body p { margin: 0 0 12px; line-height: 1.5; }
+.score-info__body p:last-child { margin-bottom: 0; }
 .sort-flag { color: var(--warn); font-size: var(--text-sm); font-weight: 700; margin-top: 4px; }
 .sortflag-btn { color: var(--warn); font-weight: 700; text-decoration: underline; }
 .result-row__remove { margin-top: 6px; color: var(--ink-soft); font-size: var(--text-sm); }

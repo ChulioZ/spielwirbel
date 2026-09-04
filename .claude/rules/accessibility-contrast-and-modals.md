@@ -37,6 +37,13 @@ checked automatically.
   lightness is **30%**: the lightest value clearing 4.5:1 under white across
   the whole hue range while the ring still clears 3:1 (large text) on every
   theme. Don't lighten it without re-checking both uses.
+  Since #893 most callers arrive through **`scoreColor()`**, which clamps the
+  Spielwirbel-Score into 0–5 and then calls this — so the hue range, and every
+  contrast figure above, is unchanged by construction. That clamp is load-bearing
+  for contrast and not merely for looks: the score can go negative, and an
+  unclamped value would drive the hue formula below its floor. Keep `avgColor`
+  for anything on the tile scale (the vote card's selected tile) and
+  `scoreColor` for anything on the score scale.
 - **Hex rounding eats the last hundredth.** Scaling RGB toward black and
   rounding to 8-bit hex landed colours at 4.48–4.49:1 — just under. Aim at
   ~4.52 and assert on the rounded hex (the test does; it caught this).

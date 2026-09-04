@@ -31,11 +31,34 @@ document.activeElement.dispatchEvent(
 
 So the app is fine and the pane simply swallows the key.
 
-**Tab is NOT affected**, which is what makes this so misleading: in the same
-session, `computer {action:"key", text:"Tab", repeat: 25}` moved focus correctly
-and proved the focus trap holds. So the pane's key input is *partly* working, and
-"my keypresses are being delivered" is a reasonable and wrong conclusion to draw
-from the Tab result. Don't generalise from one key to another.
+**Tab was NOT affected in the session this file was first written from**, which
+is what made the Escape failure so misleading: `computer {action:"key",
+text:"Tab", repeat: 25}` moved focus correctly and proved the focus trap held.
+So the pane's key input is *partly* working, and "my keypresses are being
+delivered" is a reasonable and wrong conclusion to draw from a Tab result.
+
+**But Tab is not reliably delivered either — measured 2026-09-04 (#893), and it
+is the same false negative one key over.** With a bare capture spy on `document`
+and **no sheet open at all**, `computer {action:"key", text:"Tab", repeat: 4}`
+delivered **zero** keydown events while `document.activeElement` still moved:
+
+```js
+window.__seen = [];
+document.addEventListener('keydown', e => window.__seen.push(e.key), true);
+// → computer {action:"key", text:"Tab", repeat: 4}
+window.__seen                                  // []      ← nothing arrived
+document.activeElement                         // moved anyway
+```
+
+That combination is the trap: focus visibly travels, so the pane looks like it
+is working, while the app's handler never runs — and a focus trap then reads as
+**broken**, because focus really does escape the sheet. It cost one cycle of
+looking for a bug in a correctly-wired `trapFocus`.
+
+So the honest rule is: **generalise from no key to any other, in either
+direction.** Whether a given key is delivered is a property of the pane on the
+day, not of the key — re-measure with the spy each time rather than trusting
+either this paragraph or the last one.
 
 ## The probe
 
@@ -46,6 +69,22 @@ follows the real path to the capture listener on `document`:
 document.activeElement.dispatchEvent(
   new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
 ```
+
+The same dispatch is the probe for **Tab**, and it exercises the real trap —
+`trapFocus` (`public/js/focus-trap.js`) listens on `document` in the capture
+phase and only intervenes *on* a Tab, so a dispatched one is the whole mechanism:
+
+```js
+const ev = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+document.activeElement.dispatchEvent(ev);
+ev.defaultPrevented                            // true — the trap took the key
+sheet.contains(document.activeElement)         // true — and pulled focus back in
+```
+
+Note `trapFocus` deliberately does **not** move focus when a sheet OPENS — it
+acts only on Tab — so `sheet.contains(document.activeElement) === false` right
+after `openSheet` is correct behaviour for every sheet in the app, not a defect
+in a new one. Checking that first saves inventing a second bug.
 
 That exercises the whole real path — `onKey`, the lookup-menu branch that owns
 Escape while a dropdown is open (`.claude/rules/lookup-menu-keyboard-combobox.md`

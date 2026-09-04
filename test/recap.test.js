@@ -4,6 +4,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { RECAP_MIN_RATINGS, roundRecap, isNameableGame } = require('../public/js/recap');
+const { scoreRatings } = require('../public/js/vote-score');
 // The real resolver, not a stand-in: the member/guest split is the thing most of
 // these assertions are about, so a simplified fake would test the wrong rules
 // (.claude/rules/session-guests-are-not-members.md).
@@ -41,7 +42,7 @@ const round = (over = {}) => ({
   sessions: over.sessions || [],
 });
 
-const recapOf = (r) => roundRecap(r, sessionPeople, effectiveRating);
+const recapOf = (r) => roundRecap(r, sessionPeople, effectiveRating, scoreRatings);
 
 // Ratings for one game from as many distinct members as needed to clear the
 // evidence bar, all at the same value.
@@ -89,7 +90,7 @@ test('best and worst need RECAP_MIN_RATINGS ratings behind them', () => {
   assert.equal(recapOf(r).best, null, 'one rating short of the bar');
 
   r.sessions.push(flat('g1', 5, members.slice(RECAP_MIN_RATINGS - 1)));
-  assert.deepEqual(recapOf(r).best, { gameIds: ['g1'], avg: 5 });
+  assert.deepEqual(recapOf(r).best, { gameIds: ['g1'], score: 5 });
 });
 
 test('worst is withheld while a single game holds both ends', () => {
@@ -99,7 +100,7 @@ test('worst is withheld while a single game holds both ends', () => {
     sessions: [flat('g1', 4, members)],
   });
   const rec = recapOf(r);
-  assert.deepEqual(rec.best, { gameIds: ['g1'], avg: 4 });
+  assert.deepEqual(rec.best, { gameIds: ['g1'], score: 4 });
   assert.equal(rec.worst, null, 'the same title must not be announced as best and worst');
 });
 
@@ -115,8 +116,8 @@ test('best and worst separate once a second game qualifies, and ties share a car
     sessions: [flat('g1', 5, members), flat('g2', 2, members), flat('g3', 2, members)],
   });
   const rec = recapOf(r);
-  assert.deepEqual(rec.best, { gameIds: ['g1'], avg: 5 });
-  assert.deepEqual(rec.worst, { gameIds: ['g2', 'g3'], avg: 2 });
+  assert.deepEqual(rec.best, { gameIds: ['g1'], score: 5 });
+  assert.deepEqual(rec.worst, { gameIds: ['g2', 'g3'], score: 1 }, 'a flat 2 is worth 1 on the curve');
 });
 
 test('archived games are out of the best/worst pair — it is about the shelf you still have', () => {
@@ -131,7 +132,7 @@ test('archived games are out of the best/worst pair — it is about the shelf yo
     sessions: [flat('g1', 5, members), flat('g2', 3, members), flat('g3', 1, members)],
   });
   const rec = recapOf(r);
-  assert.deepEqual(rec.worst, { gameIds: ['g2'], avg: 3 }, 'the retired 1.0 must not win worst');
+  assert.deepEqual(rec.worst, { gameIds: ['g2'], score: 3 }, 'the retired 1.0 must not win worst');
 });
 
 test("a guest's rating moves the average, so the recap cannot contradict the game's own ring", () => {
@@ -141,7 +142,10 @@ test("a guest's rating moves the average, so the recap cannot contradict the gam
   );
   const rec = recapOf(round({ sessions: [withGuest] }));
   assert.equal(rec.totals.ratings, 3, 'the guest vote counts');
-  assert.equal(rec.best.avg, 4, '(5 + 5 + 2) / 3');
+  // The Spielwirbel-Score, not the raw mean, since #893: (5 + 5 + 1) / 3, where
+  // the 2 is worth 1 on the curve. The point of the test is unchanged — the
+  // guest's vote MOVED the number, which is what the recap must not contradict.
+  assert.equal(rec.best.score, (5 + 5 + 1) / 3, 'the guest vote counts, on the curve');
 });
 
 // ---- what a taste stat may name -------------------------------------------

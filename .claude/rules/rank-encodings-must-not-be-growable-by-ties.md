@@ -14,8 +14,11 @@ column overtop the crowned winner. The one claim the component exists to make,
 contradicted by its own geometry — and worse the further down the tie sat.
 
 Ties are the norm here, not an edge case: `computePlaces` (`ranking.js`) ties on
-the *displayed* one-decimal average, so a four- or five-person round hits them
-constantly, and Pokale ties on whole win counts, where they are unavoidable.
+the *displayed* one-decimal number — `row.shown`, the Spielwirbel-Score as it is
+printed since #893, not the raw average — so a four- or five-person round hits
+them constantly, and Pokale ties on whole win counts, where they are
+unavoidable. The score adds one new source of them: every game below the
+displayed floor prints 0,0 and shares a place, by design.
 
 **Four PRs each fixed a sub-case inside that encoding and none could reach it.**
 #836 made a column a rank rather than an entry, #879 gave the degenerate stage a

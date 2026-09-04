@@ -67,9 +67,12 @@ function renderRegalTab(round, activeGames) {
       importBtn.addEventListener('click', () => showBggImport(round));
       gamesTools.appendChild(importBtn);
     }
-    // Average per game (from the already computed stats) for pill and sorting.
-    const avgMap = {};
-    activeGames.forEach((g) => (avgMap[g.id] = statsByGame[g.id].avg));
+    // Score per game (from the already computed stats) for pill and sorting.
+    // The Spielwirbel-Score, not the raw mean (#893) — the pill and the
+    // „Sortieren: Bewertung" order read the same number, so the shelf cannot
+    // show one ranking and sort by another.
+    const scoreMap = {};
+    activeGames.forEach((g) => (scoreMap[g.id] = statsByGame[g.id].score));
 
     // Search pill + sort next to the heading. Sort, search and filter chips are
     // all kept for the session (scoped to this round) — see regalFilters.
@@ -84,6 +87,11 @@ function renderRegalTab(round, activeGames) {
     sortSel.value = gamesSort;
     gamesTools.appendChild(search);
     gamesTools.appendChild(sortSel);
+    // The shelf's one ⓘ (#893) — beside the control that sorts on the score,
+    // not on every pill in the grid.
+    const scoreInfo = h(scoreInfoButton());
+    gamesTools.appendChild(scoreInfo);
+    wireScoreInfo(gamesTools);
 
     // --- Selection mode (#832): tidy the shelf in bulk.
     //
@@ -361,10 +369,10 @@ function renderRegalTab(round, activeGames) {
     const cardById = {};
     activeGames.forEach((g) => {
       const fallback = coverPlaceholder(g);
-      const avg = avgMap[g.id];
+      const score = scoreMap[g.id];
       const scorePill =
-        avg !== null
-          ? `<span class="score-pill" style="background:${avgColor(avg)}">Ø ${fmtAvg(avg)}</span>`
+        score !== null
+          ? `<span class="score-pill" style="background:${scoreColor(score)}">${fmtAvg(displayScore(score))}</span>`
           : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
       // What the round owns for this game (#653) — no badge at zero, so a shelf
       // of plain base boxes looks exactly as it always did.
@@ -396,8 +404,10 @@ function renderRegalTab(round, activeGames) {
         );
       }
       if (gamesSort === 'avg') {
-        // Best first; unrated (null) at the end.
-        return [...activeGames].sort((a, b) => (avgMap[b.id] ?? -1) - (avgMap[a.id] ?? -1));
+        // Best first; unrated (null) at the end. Sorted on the UNCLAMPED score,
+        // so two games below the displayed floor still order by how bad they
+        // are — the sentinel is below the curve's minimum for that reason.
+        return [...activeGames].sort((a, b) => (scoreMap[b.id] ?? -Infinity) - (scoreMap[a.id] ?? -Infinity));
       }
       return randomOrderedGames(round, activeGames);
     }

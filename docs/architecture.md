@@ -468,10 +468,17 @@ public/
                      average instead of only a side counter. Required by
                      lib/session-votes.js, lib/recommend.js and both repo
                      backends (issue #797)
+    vote-score.js    what a SET of votes is worth: the Spielwirbel-Score, a
+                     per-tile value curve applied to each vote before
+                     averaging, so a game one person does not want to play
+                     stops outranking a game everybody is fine with. Required
+                     by lib/recommend.js and lib/session-split.js (issue #893)
     guest-picker.js  the guest name field (chips + input), shared by the two
                      screens that start a session (issue #532)
     team-picker.js   the team field: group two or more of those people into one
                      party, shared by the same two screens (issue #575)
+    score-info.js    the ⓘ that explains the Spielwirbel-Score, once per screen
+                     beside its primary occurrence (issue #893)
     game-info.js     BGG provider-info surfaces (issues #717/#724): the info
                      sheet the two vote cards open, the ⓘ affordance itself,
                      and the game-detail section — one body builder for all

@@ -790,21 +790,31 @@ async function showGameDetail(rid, gameId) {
   // widgets entirely and leads with an invitation (see `onboard` below).
   const assignedTagIds = (game.tagIds || []).filter((x) => (round.tags || []).some((tg) => tg.id === x));
   const sparse =
-    !game.image && st.avg === null && related.length === 0 && assignedTagIds.length === 0;
+    !game.image && st.score === null && related.length === 0 && assignedTagIds.length === 0;
 
   // Header card: image + title + score ring ("Spielepass").
-  const ratingsLine = tn(st.count, 'detail.ratingsLineOne', 'detail.ratingsLine', { s: st.sessions });
+  // The detail screen is the ONE place that carries both numbers (#893): the
+  // ring shows the Spielwirbel-Score the rest of the app ranks on, and the line
+  // beneath it keeps the honest raw mean, so „warum steht da 2,2 wenn alle 4
+  // gegeben haben" has an answer on the page rather than only in the ⓘ sheet.
+  const shown = st.score === null ? null : displayScore(st.score);
+  const ratingsLine = tn(st.count, 'detail.ratingsLineOne', 'detail.ratingsLine', {
+    s: st.sessions,
+    avg: fmtAvg(st.avg),
+  });
   const RING_C = (2 * Math.PI * 34).toFixed(1);
   const scoreRing =
-    st.avg !== null
+    st.score !== null
       ? `<div class="gd-ring">
            <svg viewBox="0 0 80 80" aria-hidden="true">
              <circle cx="40" cy="40" r="34" fill="none" stroke="var(--sunken)" stroke-width="8"/>
-             <circle cx="40" cy="40" r="34" fill="none" stroke="${avgColor(st.avg)}" stroke-width="8" stroke-linecap="round"
-               stroke-dasharray="${(((st.avg - 1) / 4) * 2 * Math.PI * 34).toFixed(1)} ${RING_C}" transform="rotate(-90 40 40)"/>
+             <circle cx="40" cy="40" r="34" fill="none" stroke="${scoreColor(st.score)}" stroke-width="8" stroke-linecap="round"
+               stroke-dasharray="${(((Math.max(1, shown) - 1) / 4) * 2 * Math.PI * 34).toFixed(1)} ${RING_C}" transform="rotate(-90 40 40)"/>
            </svg>
-           <span class="gd-ring__num" style="color:${avgColor(st.avg)}">${fmtAvg(st.avg)}</span>
+           <span class="gd-ring__num" style="color:${scoreColor(st.score)}">${fmtAvg(shown)}</span>
          </div>
+         <div class="score-label">${esc(t('detail.scoreName'))} ${scoreInfoButton()}</div>
+         ${scoreReason(st) ? `<div class="score-why">${esc(scoreReason(st))}</div>` : ''}
          <div class="score-label">${esc(ratingsLine)}</div>`
       : `<div class="gd-ring gd-ring--none"><span class="gd-ring__num">–</span></div>
          <div class="score-label">${esc(t('detail.noRating'))}</div>`;
@@ -825,6 +835,7 @@ async function showGameDetail(rid, gameId) {
        </div>
        ${sparse || game.wish ? '' : `<div class="gd-stats">${scoreRing}${sortLine}</div>`}
      </div>`);
+  wireScoreInfo(head);
 
   // Editable cover image (activate to paste a new one or remove it). A <button>
   // for the same reason as the chips (#424); its fixed 240px box means the UA's
@@ -1215,7 +1226,7 @@ async function showGameDetail(rid, gameId) {
       }
       const scoreCell =
         sst.avg !== null
-          ? `<span class="score-pill" style="background:${avgColor(sst.avg)}">Ø ${fmtAvg(sst.avg)}</span>`
+          ? `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
           : '<span class="score-pill score-pill--none">–</span>';
       const sortCell = sst.sortCount
         ? `<span class="sort-flag"><i class="ti ti-trash" aria-hidden="true"></i> ${sst.sortCount}×</span>`

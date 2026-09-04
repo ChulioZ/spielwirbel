@@ -57,7 +57,7 @@ function shareRatingLines(rows, t, fmtAvg) {
       t('share.row', {
         rank: SHARE_MEDALS[r.place - 1] || r.place + '.',
         title: r.title,
-        avg: fmtAvg(r.avg),
+        score: fmtAvg(r.score),
       })
     );
 }
@@ -100,7 +100,11 @@ function shareHeadline(result, t, join, tn) {
 
 // The full message. `result` is
 // { roundName, when, outcome, cancelled, playedTitle, winnerNames,
-//   tables: [{ title, names }], rows: [{ title, avg, count, place }] }.
+//   tables: [{ title, names }], rows: [{ title, score, count, place }] }.
+// `score` is the DISPLAYED Spielwirbel-Score (#893), already clamped by the
+// caller — this text lands in a group chat where non-users see it and there is
+// no UI around it, so `share.row` spells the name out in full rather than
+// printing a bare number nobody can place.
 function sessionShareText(result, t, join, tn, fmtAvg) {
   const blocks = [t('share.header', { round: result.roundName, when: result.when })];
   const headline = shareHeadline(result, t, join, tn);

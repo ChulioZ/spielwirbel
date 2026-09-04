@@ -192,8 +192,12 @@ test('the Regal pill is written in the reader\'s notation, and the locales disag
   const de = await regalPill(t, 'de');
   const en = await regalPill(t, 'en');
 
-  assert.equal(de, 'Ø 4,5');
-  assert.equal(en, 'Ø 4.5');
+  // The „Ø " prefix went with #893: the pill prints the bare Spielwirbel-Score,
+  // because the chip repeats a dozen times per screen and a label does not fit
+  // on a phone-width Regal card. The notation test is unaffected — the number
+  // is still written in the reader's locale, which is what this file guards.
+  assert.equal(de, '4,5');
+  assert.equal(en, '4.5');
   // The load-bearing half: a fmtAvg wired to a single locale, or a call site
   // still on toFixed(1), makes these two equal while each individual assertion
   // above could still be written to pass.

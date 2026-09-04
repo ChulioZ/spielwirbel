@@ -633,6 +633,19 @@ function randomOrderedGames(round, activeGames) {
   return order.map((id) => activeGames.find((g) => g.id === id)).filter(Boolean);
 }
 
+// The Spielwirbel-Score fields both stat functions carry (#893). Spread rather
+// than nested so `st.score` reads exactly like `st.avg` at the call sites, and
+// so a screen that has not switched over yet keeps working untouched.
+//
+// `score` is null for an empty list, matching `avg`, so every `!== null` guard
+// already on screen transfers as-is.
+function scoreFields(ratings) {
+  const s = scoreRatings(ratings);
+  return s
+    ? { score: s.score, low: s.low, vetoes: s.vetoes, retires: s.retires }
+    : { score: null, low: null, vetoes: 0, retires: 0 };
+}
+
 // Rating stats of a game within ONE session. Iterates the session's PEOPLE, not
 // the round's members, so a guest's rating counts too (#458) — a guest actually
 // played the game, and leaving their vote out would make this screen and the
@@ -655,7 +668,11 @@ function gameStatsForSession(round, session, gameId) {
     if (r !== null) ratings.push(r);
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-  return { avg, count: ratings.length, sortCount };
+  // `avg` is kept beside `score`: the detail screen prints the honest mean next
+  // to the Spielwirbel-Score, and the per-member stats are about how a PERSON
+  // votes rather than how good a game is, so a game-scoring curve would be a
+  // category error there (#893).
+  return { avg, ...scoreFields(ratings), count: ratings.length, sortCount };
 }
 
 // Rating stats of a game across ALL (still existing) sessions. Computed on
@@ -680,7 +697,7 @@ function gameStats(round, gameId) {
     });
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-  return { avg, count: ratings.length, sortCount, sessions, votesCast };
+  return { avg, ...scoreFields(ratings), count: ratings.length, sortCount, sessions, votesCast };
 }
 
 // Retirement suggestions: games often suggested for retirement and/or with a
@@ -688,7 +705,23 @@ function gameStats(round, gameId) {
 // enough votes (no false alarm from a few votes).
 function retireRecommendations(activeGames, statsByGame, minVotes) {
   const SORT_SHARE = 0.5; // at least half want it retired
-  const LOW_AVG = 2.0; // "very low" on the 0–5 scale (#797)
+  // "very low" on the SCORE scale. Was `LOW_AVG = 2.0` against the raw mean
+  // (#797); the veto curve makes a 2,0 far easier to reach, so the threshold
+  // came down with it (#893) rather than quietly widening what gets proposed.
+  //
+  // 1.0 is not a magnitude, it is an ANCHOR: it is exactly what a flat 2 from
+  // everybody scores — „eher nicht" all round, the worst a game can be while
+  // still getting a real rating from every voter. That is the bar for saying
+  // "this one is dragging the shelf down", and reading it that way is what
+  // keeps a retune honest.
+  //
+  // The value 1.5 was tried first and is WRONG, for a reason worth recording:
+  // a game rated {0,4,5,3} — three of four people like it, one wants it gone —
+  // scores exactly 1.5, so the rating branch would archive-nag a game the
+  // SORT_SHARE branch had just correctly declined at 25%. One dissenter must
+  // not retire a game on their own; that is what SORT_SHARE is for.
+  // Pinned by test/retire-score-threshold.test.js, demo fixture included.
+  const LOW_SCORE = 1.0;
   const recs = [];
   activeGames.forEach((g) => {
     const st = statsByGame[g.id];
@@ -697,10 +730,10 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
     const reasons = [];
     if (share >= SORT_SHARE)
       reasons.push(t('rec.reasonSort', { n: st.sortCount, pct: Math.round(share * 100) }));
-    if (st.avg !== null && st.avg <= LOW_AVG)
-      reasons.push(t('rec.reasonAvg', { avg: fmtAvg(st.avg) }));
+    if (st.score !== null && st.score <= LOW_SCORE)
+      reasons.push(t('rec.reasonAvg', { avg: fmtAvg(displayScore(st.score)) }));
     if (!reasons.length) return;
-    const severity = share + (st.avg !== null ? Math.max(0, 3 - st.avg) / 3 : 0);
+    const severity = share + (st.score !== null ? Math.max(0, 3 - st.score) / 3 : 0);
     recs.push({ game: g, reasons, severity });
   });
   recs.sort((a, b) => b.severity - a.severity);
@@ -776,6 +809,40 @@ function applyBackground(bg) {
 function avgColor(avg) {
   const hue = Math.max(0, Math.min(120, ((avg - 1) / 4) * 120));
   return `hsl(${hue}, 60%, 30%)`;
+}
+
+// What a score PRINTS as. The curve can carry a score below zero — five vetoes
+// score −5 — and a negative reads as a broken app rather than as a bad game, so
+// every display clamps at the floor. Ranking deliberately uses the unclamped
+// value, so two games at the floor still sort by how bad they actually are;
+// `computePlaces` then ties them on the displayed number, which is what makes
+// two floored games correctly share a place (#893).
+const displayScore = (score) => Math.max(SCORE_MIN, score);
+
+// The score's colour. `avgColor`'s ramp is defined over the 0–5 tile scale, so
+// the score's floor is the deep red a 0 already gets — one ramp, two domains.
+// Keep `avgColor` for anything on the tile scale itself (the selected vote
+// tile, the distribution chart) and this for anything on the score scale.
+const scoreColor = (score) => avgColor(displayScore(score));
+
+// Why this score is what it is, in a few words — „1× gar nicht" (#893).
+//
+// This is the PRIMARY explanation of the number, not the ⓘ sheet: it explains
+// THIS game at the moment the group is deciding, which a popup describing the
+// principle in general cannot. Empty whenever there is nothing to say, which is
+// the common case — a game nobody rated below 3 scores exactly its raw average,
+// so a reason line there would be noise claiming a divergence that is not
+// happening.
+//
+// The two counts stay separate sentences rather than one "unhappy" total: the
+// trash tile is members-only (#458) and says something about the SHELF, while
+// the 1 is about tonight. Both, in the rare case a game collected each, reads
+// as the two distinct complaints it is.
+function scoreReason(st) {
+  const parts = [];
+  if (st.retires) parts.push(tn(st.retires, 'score.reasonRetireOne', 'score.reasonRetire', { n: st.retires }));
+  if (st.vetoes) parts.push(tn(st.vetoes, 'score.reasonVetoOne', 'score.reasonVeto', { n: st.vetoes }));
+  return parts.join(' · ');
 }
 
 // The avatar palette itself lives in member-colors.js — one source of truth

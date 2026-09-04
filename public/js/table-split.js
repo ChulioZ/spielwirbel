@@ -11,10 +11,14 @@
 
    Pure and dependency-free, so it works both as a shared-scope frontend script
    and as a CommonJS module the server and the test suite require. It reads a
-   vote through `effectiveRating` (public/js/vote-scale.js), which is INJECTED
-   rather than required for the reason recap.js injects it: a public/js file
-   cannot require a sibling, and the suite loads this one into Node.
-   Load order: see index.html — after vote-scale.js. */
+   vote through `effectiveRating` (public/js/vote-scale.js) and weighs one
+   through `tileValue` (public/js/vote-score.js); both are INJECTED rather than
+   required, for the reason recap.js injects its two: a public/js file cannot
+   require a sibling, and the suite loads this one into Node. Neither has a
+   default — an absent one throws on the first seat, where a silent fallback
+   would hand back a plausible, confident, differently-scored split with no
+   error anywhere.
+   Load order: see index.html — after vote-scale.js and vote-score.js. */
 
 'use strict';
 
@@ -55,7 +59,7 @@ function seatRating(votes, personId, gameId, effectiveRating) {
    answer "is this table alright" for the people actually at it. The lowest is
    what makes a bad split visible at a glance; the average alone hides one
    miserable person behind five happy ones. */
-function tableFeedback(table, votes, effectiveRating) {
+function tableFeedback(table, votes, effectiveRating, tileValue) {
   const personIds = (table && table.personIds) || [];
   const gameId = table && table.gameId;
   let sum = 0;
@@ -63,7 +67,14 @@ function tableFeedback(table, votes, effectiveRating) {
   const violations = [];
   personIds.forEach((pid) => {
     const r = seatRating(votes, pid, gameId, effectiveRating);
-    sum += r;
+    // Summed through the SAME curve the single-table results screen scores with
+    // (#893), so the two paths cannot disagree about what one evening is worth.
+    // `NEUTRAL_RATING = 3` needs no adjustment: `tileValue(3) === 3`, so an
+    // absent vote is worth exactly what it was worth before, by construction.
+    sum += tileValue(r);
+    // `lowest` stays the RAW rating. `tileValue` is strictly increasing, so the
+    // lexicographic ordering is identical either way, and the raw value is what
+    // the builder screen prints and the proposal persists.
     if (lowest === null || r < lowest) lowest = r;
     if (r <= VIOLATION_MAX) violations.push(pid);
   });
@@ -150,7 +161,8 @@ function feasibleTableCounts(games, totalParties, fitsPlayerCount) {
    direction table nobody can check at a glance.
 
      1. violations  — people seated at a game they do not want to play
-     2. -sum        — the sum of every seated person's raw rating
+     2. -sum        — the sum of every seated person's rating THROUGH THE
+                      SPIELWIRBEL-SCORE CURVE (#893), not their raw tile numeral
      3. -lowest     — the highest lowest rating across all seated people
      4. emptySeats  — fuller tables ...
      5. tables      — ... then fewer of them
@@ -398,7 +410,7 @@ const MAX_TABLE_PROPOSALS = 5;
    `parties` is [{ id, personIds }] — one entry per team plus one per un-teamed
    person, so a team is never split across two tables and all its people's ratings
    count. */
-function proposeTableSplits({ parties, games, votes, seed, effectiveRating, fitsPlayerCount }) {
+function proposeTableSplits({ parties, games, votes, seed, effectiveRating, tileValue, fitsPlayerCount }) {
   const partyList = (parties || []).filter((p) => p && Array.isArray(p.personIds) && p.personIds.length);
   const total = partyList.length;
   const counts = feasibleTableCounts(games, total, fitsPlayerCount);
@@ -420,7 +432,7 @@ function proposeTableSplits({ parties, games, votes, seed, effectiveRating, fits
   const cells = new Map();
   partyList.forEach((p) => {
     usable.forEach((gid) => {
-      const fb = tableFeedback({ gameId: gid, personIds: p.personIds }, votes, effectiveRating);
+      const fb = tableFeedback({ gameId: gid, personIds: p.personIds }, votes, effectiveRating, tileValue);
       cells.set(p.id + ' ' + gid, {
         sum: fb.sum,
         lowest: fb.lowest === null ? NEUTRAL_RATING : fb.lowest,

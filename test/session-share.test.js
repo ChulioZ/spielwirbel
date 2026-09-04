@@ -50,9 +50,9 @@ const model = (over = {}) => ({
   playedTitle: 'Catan',
   winnerNames: ['Anna'],
   rows: [
-    { title: 'Catan', avg: 4.5, count: 4, place: 1 },
-    { title: 'Azul', avg: 4, count: 4, place: 2 },
-    { title: 'Splendor', avg: 3.25, count: 4, place: 3 },
+    { title: 'Catan', score: 4.5, count: 4, place: 1 },
+    { title: 'Azul', score: 4, count: 4, place: 2 },
+    { title: 'Splendor', score: 3.25, count: 4, place: 3 },
   ],
   ...over,
 });
@@ -65,9 +65,9 @@ test('the summary carries the headline and every rated game, in screen order', (
       '🏆 „Catan“ wurde gespielt. Anna hat gewonnen!\n' +
       '\n' +
       'Bewertungen:\n' +
-      '🥇 Catan · Ø 4,5\n' +
-      '🥈 Azul · Ø 4,0\n' +
-      '🥉 Splendor · Ø 3,3'
+      '🥇 Catan · Spielwirbel-Score 4,5\n' +
+      '🥈 Azul · Spielwirbel-Score 4,0\n' +
+      '🥉 Splendor · Spielwirbel-Score 3,3'
   );
 });
 
@@ -111,7 +111,7 @@ test('a cancelled session says so and STILL carries its ratings', () => {
   // here would throw away the only content such a message has.
   const text = sessionShareText(model({ cancelled: true, playedTitle: null, winnerNames: [] }), translator('de'));
   assert.match(text, /Session abgebrochen/);
-  assert.match(text, /🥇 Catan · Ø 4,5/);
+  assert.match(text, /🥇 Catan · Spielwirbel-Score 4,5/);
 });
 
 test('a session with no outcome yet shares the ratings alone — no empty headline line', () => {
@@ -123,7 +123,7 @@ test('a session with no outcome yet shares the ratings alone — no empty headli
 
 test('unrated games are omitted rather than shared as a bare dash', () => {
   const text = sessionShareText(
-    model({ rows: [...model().rows, { title: 'Ungespielt', avg: 0, count: 0, place: null }] }),
+    model({ rows: [...model().rows, { title: 'Ungespielt', score: 0, count: 0, place: null }] }),
     translator('de')
   );
   assert.ok(!/Ungespielt/.test(text), text);
@@ -131,7 +131,7 @@ test('unrated games are omitted rather than shared as a bare dash', () => {
 
 test('with nothing rated at all the ratings block is dropped entirely', () => {
   const text = sessionShareText(
-    model({ rows: [{ title: 'Ungespielt', avg: 0, count: 0, place: null }] }),
+    model({ rows: [{ title: 'Ungespielt', score: 0, count: 0, place: null }] }),
     translator('de')
   );
   assert.ok(!/Bewertungen/.test(text), text);
@@ -143,14 +143,14 @@ test('tied games share a place number, exactly as the screen prints it', () => {
   const text = sessionShareText(
     model({
       rows: [
-        { title: 'Catan', avg: 4.5, count: 3, place: 1 },
-        { title: 'Azul', avg: 4, count: 3, place: 2 },
-        { title: 'Splendor', avg: 4, count: 3, place: 2 },
+        { title: 'Catan', score: 4.5, count: 3, place: 1 },
+        { title: 'Azul', score: 4, count: 3, place: 2 },
+        { title: 'Splendor', score: 4, count: 3, place: 2 },
       ],
     }),
     translator('de')
   );
-  assert.match(text, /🥈 Azul · Ø 4,0\n🥈 Splendor · Ø 4,0/);
+  assert.match(text, /🥈 Azul · Spielwirbel-Score 4,0\n🥈 Splendor · Spielwirbel-Score 4,0/);
 });
 
 test('places past bronze fall back to a plain number, as the screen does', () => {
@@ -159,15 +159,15 @@ test('places past bronze fall back to a plain number, as the screen does', () =>
   const text = sessionShareText(
     model({
       rows: [
-        { title: 'Catan', avg: 4.5, count: 3, place: 1 },
-        { title: 'Azul', avg: 4, count: 3, place: 2 },
-        { title: 'Splendor', avg: 3.5, count: 3, place: 3 },
-        { title: 'Carcassonne', avg: 3, count: 3, place: 4 },
+        { title: 'Catan', score: 4.5, count: 3, place: 1 },
+        { title: 'Azul', score: 4, count: 3, place: 2 },
+        { title: 'Splendor', score: 3.5, count: 3, place: 3 },
+        { title: 'Carcassonne', score: 3, count: 3, place: 4 },
       ],
     }),
     translator('de')
   );
-  assert.match(text, /^4\. Carcassonne · Ø 3,0$/m);
+  assert.match(text, /^4\. Carcassonne · Spielwirbel-Score 3,0$/m);
   assert.equal(SHARE_MEDALS.length, 3, 'a fourth medal would silently change the fallback');
 });
 

@@ -5,9 +5,9 @@ const assert = require('node:assert/strict');
 
 const { computePlaces } = require('../public/js/ranking');
 
-// Helper: build sorted-desc rows from a list of averages (all rated unless a
-// count is given), mirroring what showResults passes in.
-const rows = (...avgs) => avgs.map((avg) => ({ avg, count: 1 }));
+// Helper: build sorted-desc rows from a list of DISPLAYED scores (all rated
+// unless a count is given), mirroring what showResults passes in.
+const rows = (...shown) => shown.map((n) => ({ shown: n, count: 1 }));
 
 test('no ties: places are 1, 2, 3, …', () => {
   assert.deepEqual(computePlaces(rows(5, 4, 3, 2)), [1, 2, 3, 4]);
@@ -36,11 +36,18 @@ test('ties are decided at the displayed one-decimal precision', () => {
 
 test('unrated rows (count 0) get no place and never medal', () => {
   const input = [
-    { avg: 4, count: 2 },
-    { avg: 0, count: 0 },
-    { avg: 0, count: 0 },
+    { shown: 4, count: 2 },
+    { shown: 0, count: 0 },
+    { shown: 0, count: 0 },
   ];
   assert.deepEqual(computePlaces(input), [1, null, null]);
+});
+
+test('two games at the displayed floor share a place (#893)', () => {
+  // The score can go negative and every screen clamps at 0,0. Rows arrive
+  // sorted by the UNCLAMPED value, so these are in the right order — but they
+  // print the same number, so they must not be ranked 1 and 2.
+  assert.deepEqual(computePlaces(rows(2.2, 0, 0)), [1, 2, 2]);
 });
 
 test('empty input', () => {

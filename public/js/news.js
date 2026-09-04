@@ -28,6 +28,43 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * A judgement call, decided WITH the operator (#893) rather than by the bar
+   * alone. Strictly this is not a new capability — ratings already existed —
+   * and on that reading it does not qualify. What tipped it is the failure mode
+   * running the other way: the number every user has learned to read changes
+   * value and name overnight on every screen at once. Unannounced, that reads
+   * as the app having broken rather than improved, and the ⓘ sheet only reaches
+   * somebody who already went looking for an explanation.
+   *
+   * Note what the body does NOT do: print the curve, or promise a formula. The
+   * six values are explicitly tunable, so an entry quoting them would be wrong
+   * the first time anybody retunes — and a group does not need the arithmetic.
+   */
+  {
+    revision: '2026-09-04',
+    de: {
+      title: 'Der Spielwirbel-Score löst den Ø ab',
+      body: 'Die Bewertung eines Spiels ist jetzt mehr als der Durchschnitt: '
+        + 'Wenn jemand ein Spiel gar nicht spielen möchte, zählt das schwerer '
+        + 'als eine gute Bewertung von jemand anderem — damit am Ende ein Abend '
+        + 'herauskommt, auf den alle Lust haben. Solange niemand schlechter als '
+        + '„geht so" bewertet hat, ist der Score genau der gewohnte '
+        + 'Durchschnitt; weicht er ab, steht daneben, warum. Den reinen '
+        + 'Durchschnitt aller Bewertungen findet ihr weiterhin unten auf der '
+        + 'Seite des Spiels.',
+    },
+    en: {
+      title: 'The Spielwirbel score replaces the Ø',
+      body: 'A game\'s rating is now more than the average: if somebody does '
+        + 'not want to play a game at all, that counts for more than a good '
+        + 'rating from somebody else — so that what comes out at the end is an '
+        + 'evening everybody is up for. As long as nobody rated below „so-so", '
+        + 'the score is exactly the average you are used to; where it differs, '
+        + 'it says why right beside it. The plain average of all ratings is '
+        + 'still shown at the bottom of the game\'s page.',
+    },
+  },
+  /*
    * Clears the bar: an account could not be recognised by anything but two
    * letters, so a picture is something a person could not do at all before —
    * the level of passkeys (#418) or the BGG import (#481).

@@ -863,13 +863,31 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     });
     const sum = ratings.reduce((a, b) => a + b, 0);
     const avg = ratings.length ? sum / ratings.length : 0;
+    // The Spielwirbel-Score (#893): the same votes weighed through the tile
+    // curve, so a game one person does not want to play stops outranking a game
+    // everybody is fine with. `avg` stays for the share text's raw fallback and
+    // for anything describing the votes rather than the game.
+    const sc = scoreRatings(ratings);
     const dist = [0, 0, 0, 0, 0, 0];
     ratings.forEach((r) => dist[r]++);
-    return { game: g, avg, count: ratings.length, sortCount, dist };
+    return {
+      game: g,
+      avg,
+      score: sc ? sc.score : 0,
+      // What the pill prints and what places tie on — see computePlaces.
+      shown: sc ? displayScore(sc.score) : 0,
+      vetoes: sc ? sc.vetoes : 0,
+      retires: sc ? sc.retires : 0,
+      count: ratings.length,
+      sortCount,
+      dist,
+    };
   });
 
-  rows.sort((a, b) => b.avg - a.avg);
-  // Tie-aware places ("1, 2, 2, 4"): games with the same displayed average share
+  // Sorted on the UNCLAMPED score, so two games below the displayed floor still
+  // order by how bad they actually are.
+  rows.sort((a, b) => b.score - a.score);
+  // Tie-aware places ("1, 2, 2, 4"): games with the same displayed score share
   // a place and a medal. Drives both the winner spotlight and the medal list.
   computePlaces(rows).forEach((place, i) => { rows[i].place = place; });
 
@@ -882,9 +900,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const when = fmtDateTime(session.createdAt);
   const head = h(`<div class="page-head"><div>
          <h1 class="result-title">${esc(t('result.title'))}</h1>
-         <div class="muted">${esc(tn(games.length, 'result.subtitleOne', 'result.subtitle', { when }))}</div>
+         <div class="muted">${esc(tn(games.length, 'result.subtitleOne', 'result.subtitle', { when }))} ${scoreInfoButton()}</div>
        </div></div>`);
   app.appendChild(head);
+  wireScoreInfo(head);
   const titleEl = head.querySelector('.result-title');
 
   // „Teilen": hand the group chat what this screen says, as plain text (#526).
@@ -905,7 +924,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       cancelled,
       playedTitle: chosenId ? (games.find((g) => g.id === chosenId) || {}).title || null : null,
       winnerNames: winnerIds.map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),
-      rows: rows.map((r) => ({ title: r.game.title, avg: r.avg, count: r.count, place: r.place })),
+      rows: rows.map((r) => ({ title: r.game.title, score: r.shown, count: r.count, place: r.place })),
     }));
     head.appendChild(shareBtn);
   }
@@ -974,7 +993,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       return `<a class="spotlight__winner" data-gid="${esc(g.id)}">
              <span class="spotlight__img"${imgStyle}>${coverPlaceholder(g)}</span>
              <span class="spotlight__title">${esc(g.title)}</span>
-             <span class="score-pill spotlight__pill" style="background:${avgColor(r.avg)}">Ø ${fmtAvg(r.avg)}</span>
+             <span class="score-pill spotlight__pill" style="background:${scoreColor(r.score)}">${fmtAvg(displayScore(r.score))}</span>
            </a>`;
     };
     // The kicker deliberately names no entity: „Spiel des Abends" would put
@@ -1086,8 +1105,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
            <button class="link-btn result-row__remove">${iconText('ti-trash', t('result.removeGame'))}</button>
          </div>
          <div class="result-row__score">
-           <div class="score-big">${r.count ? fmtAvg(r.avg) : '–'}</div>
-           <div class="score-label">${esc(t('result.avgOf', { n: r.count }))}</div>
+           <div class="score-big"${r.count ? ` style="color:${scoreColor(r.score)}"` : ''}>${r.count ? fmtAvg(r.shown) : '–'}</div>
+           <div class="score-label">${esc(t('result.scoreOf', { n: r.count }))}</div>
+           ${r.count && scoreReason(r) ? `<div class="score-why">${esc(scoreReason(r))}</div>` : ''}
            <button class="btn play-btn">${iconText('ti-player-play', t('result.play'))}</button>
          </div>
          <div class="row-finish" hidden></div>

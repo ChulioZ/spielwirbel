@@ -182,7 +182,11 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
   assert.equal(gameAffinity(round, g('gr', { retired: true }), idle), -1, 'retired -> -1.0');
   assert.equal(gameAffinity(round, g('ghigh'), idle), 2, 'rated 5 -> 2.0');
   assert.equal(gameAffinity(round, g('gmid'), idle), 1, 'rated 3 -> 1.0');
-  assert.equal(gameAffinity(round, g('glow'), idle), 0, 'rated 1 -> 0.0');
+  // Since #893 a lone „gar nicht" scores −5, which the clamp in `gameAffinity`
+  // floors at 0 before the ladder arithmetic — so this rung is −0.5 rather than
+  // 0.0. The clamp is what keeps it ABOVE `A_RETIRED`: a game the round still
+  // owns and dislikes must not outrank-in-reverse one they actually threw out.
+  assert.equal(gameAffinity(round, g('glow'), idle), -0.5, 'rated 1 -> -0.5');
   assert.equal(gameAffinity(round, g('gnone'), idle), 0.6, 'owned, unrated -> 0.6');
   // Completed is deliberately NOT a state: the game was played through, so its
   // ratings still count.
@@ -992,12 +996,18 @@ test('a retired game is FILTERED OUT, not merely outranked, when a slot is free'
 // A shelf where exactly two owned games carry the candidate's mechanics, rated
 // so that the SECOND is the loved one — the natural stable order names Owned 1
 // first, so only a real affinity ranking can produce the expected list.
+// g1 sits at affinity 0.5 and g2 at 2.0 — the two rungs both tests below are
+// written around. Since #893 that takes TWO voters on g1: the Spielwirbel-Score
+// curve is worth 1 at the 2-tile, so a lone 2 would score 1.0 -> affinity 0.0,
+// and a zero-affinity game contributes nothing at all rather than contributing
+// weakly, which would leave these tests with a single contributor and nothing
+// to order. `{2, 3}` scores (1 + 3) / 2 = 2.0, i.e. exactly the old rung.
 const ratedPairRound = () => shelfRound({
   sessions: [{
     id: 's1',
     gameIds: ['g1', 'g2'],
     memberIds: ['m1', 'm2', 'm3', 'm4'],
-    votes: { m1: { g1: { rating: 2 }, g2: { rating: 5 } } },
+    votes: { m1: { g1: { rating: 2 }, g2: { rating: 5 } }, m2: { g1: { rating: 3 } } },
   }],
 });
 

@@ -228,7 +228,7 @@ async function showTableBuilder(round, session, gamesHint) {
       tables.forEach((table, index) => {
         const game = gameById.get(table.gameId);
         const personIds = tablePeopleIds(table, partyById);
-        const fb = tableFeedback({ gameId: table.gameId, personIds }, session.votes || {}, effectiveRating);
+        const fb = tableFeedback({ gameId: table.gameId, personIds }, session.votes || {}, effectiveRating, tileValue);
         const size = table.partyIds.length;
         const tooSmall = size < MIN_TABLE_PARTIES;
         const stale = !!game && !isActiveGame(game);
@@ -243,7 +243,7 @@ async function showTableBuilder(round, session, gamesHint) {
              </div>
              <div class="tables-card__seats"></div>
              <div class="tables-card__meta">
-               <span class="score-pill"${fb.avg === null ? '' : ` style="background:${avgColor(fb.avg)}"`}>Ø ${fb.avg === null ? '–' : fmtAvg(fb.avg)}</span>
+               <span class="score-pill"${fb.avg === null ? '' : ` style="background:${scoreColor(fb.avg)}"`}>${fb.avg === null ? '–' : fmtAvg(displayScore(fb.avg))}</span>
                <span class="tables-card__low">${esc(t('tables.lowest', { n: fb.lowest === null ? '–' : fb.lowest }))}</span>
                <span class="tables-card__size">${esc(tn(size, 'tables.partiesOne', 'tables.parties'))}</span>
              </div>

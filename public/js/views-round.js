@@ -358,7 +358,7 @@ function renderStartTab(round, activeGames) {
       let pill = '';
       if (game) {
         const sst = gameStatsForSession(round, session, game.id);
-        if (sst.avg !== null) pill = `<span class="score-pill" style="background:${avgColor(sst.avg)}">Ø ${fmtAvg(sst.avg)}</span>`;
+        if (sst.score !== null) pill = `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`;
       }
       const title = game ? esc(game.title) : esc(t('round.inProgressDeciding'));
       const ticket = h(`<a class="ticket ticket--live">
@@ -419,7 +419,7 @@ function renderStartTab(round, activeGames) {
     const fallback = coverPlaceholder(game);
     const pill =
       sst.avg !== null
-        ? `<span class="score-pill" style="background:${avgColor(sst.avg)}">Ø ${fmtAvg(sst.avg)}</span>`
+        ? `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
         : '';
     const ticket = h(`<a class="ticket">
          <span class="ticket__main">

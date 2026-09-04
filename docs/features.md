@@ -315,10 +315,11 @@ What the app does, in detail. For a short overview see the
   the results screen with that game chosen.
 - **Finale & results** – votes stay sealed until everyone is done, then a
   little show reveals the results: a spotlight on the top-rated game (several,
-  side by side, when they tie), and under it the full ranking — per-game average
-  (colored by score), rating distribution (six bars, the leftmost being the
-  retirement proposals), medals for the favourites, and how many want each game
-  gone. Pick the
+  side by side, when they tie), and under it the full ranking — per-game
+  **Spielwirbel-Score** (colored by score, with a short line saying why it
+  diverges from the plain average, e.g. „1× gar nicht"), rating distribution
+  (six bars, the leftmost being the retirement proposals), medals for the
+  favourites, and how many want each game gone. Pick the
   game you actually played and mark it finished; recording the winner(s) is an
   optional follow-up step afterwards — or
   cancel the session if nothing appealed. Sessions can be deleted later, and a
@@ -329,8 +330,8 @@ What the app does, in detail. For a short overview see the
   together as usual, and the results screen is replaced by a **table builder**: it
   proposes complete splits of the people and the drawn games, one per feasible
   number of tables, and the group picks between them or moves people and games by
-  hand. Each table shows the average and the *lowest* rating among the people
-  actually sitting at it, both updating live as anyone is moved, and it names —
+  hand. Each table shows the Spielwirbel-Score and the *lowest* rating among
+  the people actually sitting at it, both updating live as anyone is moved, and it names —
   by name — everyone seated at a game they said they did not want to play. No
   score is shown: how many tables a room has is knowledge the app does not have,
   so the trade-off is the thing the group picks between rather than a number to
@@ -347,8 +348,16 @@ What the app does, in detail. For a short overview see the
   per-player rating field). Off by default and enabled per account under
   **Konto → BG Stats**, because a website cannot tell whether the app is
   installed and the push happens on the tapping person's own device.
-- **Ratings on demand** – a game's average is always computed live from all
-  session votes, so deleting a session automatically corrects every average.
+- **Ratings on demand** – a game's rating is always computed live from all
+  session votes, so deleting a session automatically corrects every number.
+- **The Spielwirbel-Score** – the figure every screen ranks a game by is not a
+  plain mean of the votes. Each vote is weighed first, so a „gar nicht" (and a
+  retirement proposal below it) counts for more than its numeric distance
+  suggests: two games with the same average are *not* the same recommendation
+  when one of them has somebody at the table who does not want to play. As long
+  as nobody rated below „geht so" the score is exactly the familiar average, and
+  where it diverges the screen says why. The game's own page keeps the honest
+  raw Ø beside it, and an ⓘ explains the principle.
 - **Designs** – per round, pick a colour scheme (page tone + accent); the
   whole UI derives from it — surfaces, shadows, the dark "stage" of the
   finale, and the mobile browser / installed-app chrome around the page.

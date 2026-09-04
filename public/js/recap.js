@@ -5,10 +5,12 @@
    single source of truth (CLAUDE.md §Architecture), so deleting one removes its
    effect for free; nothing in this file is stored or denormalized.
 
-   Its two sibling dependencies are passed IN rather than read off the shared
-   scope: `peopleOf` (sessionPeople, from session-people.js) and `ratingOf`
+   Its three sibling dependencies are passed IN rather than read off the shared
+   scope: `peopleOf` (sessionPeople, from session-people.js), `ratingOf`
    (effectiveRating, from vote-scale.js — what a vote is worth once a retirement
-   proposal counts as the 0 it is, #797). A public/js file cannot require() a
+   proposal counts as the 0 it is, #797) and `scoreOf` (scoreRatings, from
+   vote-score.js — what a SET of votes is worth once a veto counts for more than
+   its numeric distance, #893). A public/js file cannot require() a
    sibling — `require` is not among eslint.config.js's frontendGlobals and the
    browser has none — so injecting them is what keeps this file usable both as a
    shared-scope frontend script and as a CommonJS module the test suite can
@@ -77,19 +79,28 @@ function collectRatings(round, peopleOf, ratingOf) {
 // `worst` is null unless a *different* game holds it: with a single qualifying
 // game the same title would otherwise be announced as both the best and the
 // worst thing the group owns, which reads as a bug rather than as thin data.
-function bestAndWorst(round, index) {
+function bestAndWorst(round, index, scoreOf) {
   const rated = round.games
     .filter((g) => !g.retired && !g.completed && !g.wish)
     .map((g) => {
       const entry = index.games.get(g.id);
       const ratings = entry ? entry.all : [];
-      return { id: g.id, avg: ratings.length ? recapMean(ratings) : null, count: ratings.length };
+      // Best and worst are ranked on the Spielwirbel-Score (#893), not the raw
+      // mean: „das schlechteste Spiel im Regal" is exactly the question a veto
+      // is an answer to, and crowning a game two people loved and one refuses
+      // to play would be the ranking this change exists to correct.
+      const sc = scoreOf(ratings);
+      return { id: g.id, score: sc ? sc.score : null, count: ratings.length };
     })
-    .filter((r) => r.avg !== null && r.count >= RECAP_MIN_RATINGS);
+    .filter((r) => r.score !== null && r.count >= RECAP_MIN_RATINGS);
   if (!rated.length) return { best: null, worst: null };
-  const top = Math.max(...rated.map((r) => r.avg));
-  const bottom = Math.min(...rated.map((r) => r.avg));
-  const pick = (avg) => ({ gameIds: rated.filter((r) => r.avg === avg).map((r) => r.id), avg });
+  const top = Math.max(...rated.map((r) => r.score));
+  const bottom = Math.min(...rated.map((r) => r.score));
+  // The field is `score`, not `avg`: the sibling stats in this file (`divisive`,
+  // `fav`) are deliberately still RAW means, because they describe how a PERSON
+  // votes rather than how good a game is, and one name for both would make that
+  // distinction invisible at every call site.
+  const pick = (score) => ({ gameIds: rated.filter((r) => r.score === score).map((r) => r.id), score });
   return { best: pick(top), worst: bottom < top ? pick(bottom) : null };
 }
 
@@ -182,9 +193,9 @@ function memberFavourites(round, index) {
 }
 
 // The whole recap for one round. `peopleOf` is sessionPeople(round, session).
-function roundRecap(round, peopleOf, ratingOf) {
+function roundRecap(round, peopleOf, ratingOf, scoreOf) {
   const index = collectRatings(round, peopleOf, ratingOf);
-  const { best, worst } = bestAndWorst(round, index);
+  const { best, worst } = bestAndWorst(round, index, scoreOf);
   return {
     totals: {
       // Finished sessions only, matching the count the home screen and the rail

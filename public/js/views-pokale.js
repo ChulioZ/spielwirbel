@@ -78,7 +78,7 @@ function renderPokaleTab(round) {
   // The group's accumulated taste, derived on demand from the session votes
   // (#484). Read here for the best-rated card and again by the Rückblick
   // section appended at the end of this tab.
-  const recap = roundRecap(round, sessionPeople, effectiveRating);
+  const recap = roundRecap(round, sessionPeople, effectiveRating, scoreRatings);
 
   // Wins per member (a night can have several winners). Keyed by round member,
   // so a guest win is dropped by the `wid in wins` guard below — deliberately:
@@ -205,7 +205,7 @@ function renderPokaleTab(round) {
   // threshold or on how ties are handled — they are one aggregation read twice.
   if (recap.best) {
     cards.appendChild(
-      pokaleGameCard(round, 'ti-star', t('pokale.bestRated'), recapGames(round, recap.best.gameIds), `Ø ${fmtAvg(recap.best.avg)}`)
+      pokaleGameCard(round, 'ti-star', t('pokale.bestRated'), recapGames(round, recap.best.gameIds), fmtAvg(displayScore(recap.best.score)))
     );
   }
 
@@ -310,7 +310,7 @@ function renderRecapSection(round, recap) {
 
   if (recap.worst) {
     cards.appendChild(
-      pokaleGameCard(round, 'ti-mood-empty', t('recap.worstRated'), recapGames(round, recap.worst.gameIds), `Ø ${fmtAvg(recap.worst.avg)}`)
+      pokaleGameCard(round, 'ti-mood-empty', t('recap.worstRated'), recapGames(round, recap.worst.gameIds), fmtAvg(displayScore(recap.worst.score)))
     );
   }
 

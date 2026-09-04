@@ -117,9 +117,12 @@ test('the builder renders one card per table, with its game and its people', asy
 test('the two numbers under a table are computed over the SEATED only', async (t) => {
   const { dom } = await builder(t);
   const [a, b] = cards(dom);
-  assert.match(metaOf(a), /Ø 4,0/);
+  // No „Ø " prefix since #893 — the pill prints the bare Spielwirbel-Score.
+  // Everyone seated rated a 4 and the curve leaves anything at or above 3
+  // untouched, so the number itself is unchanged.
+  assert.match(metaOf(a), /(^|\s)4,0/);
   assert.match(metaOf(a), /Niedrigste 4/);
-  assert.match(metaOf(b), /Ø 4,0/);
+  assert.match(metaOf(b), /(^|\s)4,0/);
   // Ben's 1 is on g2, and nobody is seated at g2 who gave it — so it does not
   // appear anywhere yet.
   assert.equal(dom.app.querySelector('.tables-notice').textContent.trim(), '');
@@ -138,8 +141,13 @@ test('moving a party rescores both tables live and names the unhappy seating', a
   const [a, b] = cards(dom);
   assert.deepEqual(seatsOf(a), ['Anna', 'Dana']);
   assert.deepEqual(seatsOf(b), ['Eli', 'Frida', 'Georg', 'Ben']);
-  // 4+4+4+1 over four people.
-  assert.match(metaOf(b), /Ø 3,3/);
+  // 4+4+4+1 over four people. The raw mean is 3,25; the Spielwirbel-Score is
+  // (4+4+4−5)/4 = 1,75, because Ben's „gar nicht" now weighs on the table the
+  // way it already weighed on the split objective that proposed it (#893).
+  // This is the whole point of the change, seen from the builder screen: the
+  // number the group reads while dragging people around finally agrees that
+  // one person at a game they refuse is not a table averaging a 3.
+  assert.match(metaOf(b), /(^|\s)1,8/);
   assert.match(metaOf(b), /Niedrigste 1/);
   assert.match(dom.app.querySelector('.tables-notice').textContent, /Ben.*Azul/);
   assert.ok(b.querySelector('.tables-seat.is-hurt'), 'the chip to move is findable without reading the list');

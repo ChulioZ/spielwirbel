@@ -69,6 +69,10 @@ const frontendGlobals = {
   retireRecommendations: 'readonly', minimizedRecs: 'readonly',
   STANDARD_ACCENT: 'readonly',
   applyBackground: 'readonly', setThemeColor: 'readonly', avgColor: 'readonly',
+  scoreColor: 'readonly', displayScore: 'readonly',
+  scoreReason: 'readonly',
+  // score-info.js (issue #893)
+  scoreInfoButton: 'readonly', wireScoreInfo: 'readonly', openScoreInfoSheet: 'readonly',
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', initials: 'readonly',
   personColor: 'readonly',
   renderSeatPicker: 'readonly', renderGuestPicker: 'readonly', renderTeamPicker: 'readonly',
@@ -117,6 +121,9 @@ const frontendGlobals = {
   // lib/recommend.js and both repo backends
   RATING_MIN: 'readonly', RATING_MAX: 'readonly',
   wantsRetire: 'readonly', effectiveRating: 'readonly',
+  // vote-score.js (issue #893) — also required by lib/recommend.js
+  TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
+  tileValue: 'readonly', scoreRatings: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
