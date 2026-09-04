@@ -332,6 +332,7 @@ function renderPeriodRecapSection(round, activities) {
   const deps = {
     peopleOf: sessionPeople,
     ratingOf: effectiveRating,
+    scoreOf: scoreRatings,
     minRatings: RECAP_MIN_RATINGS,
     isActive: isActiveGame,
   };
@@ -347,7 +348,7 @@ function renderPeriodRecapSection(round, activities) {
     played: rec.topPlayed ? recapGames(round, rec.topPlayed.gameIds).map((g) => g.title) : [],
     playedSub: rec.topPlayed ? tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions') : '',
     rated: rec.topRated ? recapGames(round, rec.topRated.gameIds).map((g) => g.title) : [],
-    ratedAvg: rec.topRated ? fmtAvg(rec.topRated.avg) : '',
+    ratedScore: rec.topRated ? fmtAvg(displayScore(rec.topRated.score)) : '',
     added: rec.added,
     retired: rec.retired,
     completed: rec.completed,
@@ -398,7 +399,7 @@ function renderPeriodRecapSection(round, activities) {
     // within the period there is no card at all (period-recap.js).
     if (rec.topRated) {
       cards.appendChild(pokaleGameCard(round, 'ti-star', t('periodRecap.bestRated', scope), recapGames(round, rec.topRated.gameIds),
-        `Ø ${fmtAvg(rec.topRated.avg)}`));
+        fmtAvg(displayScore(rec.topRated.score))));
     }
     // The grid is appended even when EMPTY. Its original reason is gone —
     // #851 took this section OUT of the >=1280px wide-column exemption, so a

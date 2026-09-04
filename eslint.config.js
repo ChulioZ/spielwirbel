@@ -123,7 +123,7 @@ const frontendGlobals = {
   wantsRetire: 'readonly', effectiveRating: 'readonly',
   // vote-score.js (issue #893) — also required by lib/recommend.js
   TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
-  tileValue: 'readonly', scoreRatings: 'readonly',
+  tileValue: 'readonly', scoreRatings: 'readonly', scoreTally: 'readonly',
   // rating-faces.js (issue #890) — frontend only, by design
   MOODS: 'readonly', ratingFace: 'readonly',
   // win-score.js (issue #895): the Siegwertung

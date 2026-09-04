@@ -745,10 +745,10 @@ if (!process.env.DATABASE_URL) {
     assert.equal(row.owners, 1, 'the owner read was invisible without the admin escape');
     assert.equal(row.plays.d7.count, 1, 'the plays read was invisible without the admin escape');
     assert.equal(row.ratings.count, 1, 'the ratings read was invisible without the admin escape');
-    assert.equal(row.ratings.sum, 4);
-    // pg hands numeric back as a STRING; a missing cast would answer '4' here
-    // while the JSON backend answers 4.
-    assert.equal(typeof row.ratings.sum, 'number');
+    assert.deepEqual(row.ratings.tiles, [0, 0, 0, 0, 1, 0]);
+    // pg hands an uncast aggregate back as a STRING; a missing ::int would
+    // answer '1' here while the JSON backend answers 1.
+    row.ratings.tiles.forEach((n, i) => assert.equal(typeof n, 'number', `tiles[${i}]`));
     // And nothing user-authored crossed the boundary, even under the escape.
     assert.ok(!JSON.stringify(rows).includes('Getippter Titel'));
   });
