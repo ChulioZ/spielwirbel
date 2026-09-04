@@ -826,6 +826,21 @@ test('a candidate reimplementing a WISHED game is still recommended, and still s
   assert.equal(delta(profile, entry('d', { info: info() }), reprint), 0);
 });
 
+test('a candidate SHARING a predecessor with an owned game is filtered too', () => {
+  // The third clause of the link check, and the one with no test before #900: the
+  // candidate names neither an owned game nor is named by one — both simply point
+  // at the same third title, which is BGG's shape for two editions of one family.
+  // It was inherited verbatim from the penalty, and promoting that penalty to a
+  // hard drop is exactly what makes an untested clause worth pinning.
+  const round = shelfRound();
+  const corpus = shelfCorpus();
+  corpus[0].info.implementations = ['Shared ancestor'];
+  const sibling = entry('sibling', { rank: 1, bayesRating: 9.5, info: info({ implementations: ['Shared ancestor'] }) });
+  const fresh = entry('fresh', { rank: 2, info: info() });
+  const out = recommend(round, [...corpus, sibling, fresh]);
+  assert.deepEqual(out.recommendations.map((r) => r.externalId), ['fresh']);
+});
+
 /*
  * The within-list dedupe (#900), which is the other half: nothing compared
  * candidates against EACH OTHER, so a round whose taste points at a family of
