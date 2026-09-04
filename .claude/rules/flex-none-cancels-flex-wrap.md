@@ -118,7 +118,10 @@ reported it; the browser's parser recovered and the page still rendered. It was
 caught only because a CSS-**text** test looked up a rule by exact selector and
 could not find it. Worth knowing when a rule you just added seems not to apply.
 
-**Related:** `.claude/rules/responsive-content-width.md` (the same specificity
+**Related:** `.claude/rules/flex-none-item-makes-the-row-data-dependent.md` (the
+same declaration one level down — on an ITEM of a wrapping row, where it makes the
+row's wrap point a function of that item's text, count and locale),
+`.claude/rules/responsive-content-width.md` (the same specificity
 lesson in the ≥1280px block, and why the column has one width),
 `.claude/rules/responsive-hub-tabs.md` (where 520/860 come from),
 `.claude/rules/css-text-assertions-strip-comments.md` (how the guarding test
