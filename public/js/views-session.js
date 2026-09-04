@@ -1,6 +1,6 @@
-/* Spielwirbel – views: session setup, voting (hot-seat),
-   finale reveal, results podium. Part of the frontend; all files share one
-   global script scope. */
+/* Spielwirbel – views: session setup, voting (hot-seat), finale reveal, and
+   results (winner spotlight + ranked rows). Part of the frontend; all files
+   share one global script scope. */
 
 // =================== Session: setup ===================
 
@@ -825,7 +825,7 @@ function showFinale(round, session, games) {
    with nothing on it but an apology. */
 async function showResults(round, session, gamesHint, reveal, plain) {
   // A multi-table session's result IS the split, so it gets the builder (before
-  // confirming) or the summary of its children (after) instead of the podium.
+  // confirming) or the summary of its children (after) instead of the ranking.
   // Branching on the session rather than on a caller's flag is what makes every
   // way in — the finale, the lobby, the Chronik, a cold load — agree.
   if (!plain && (session.multiTable || isSplitParent(session)))
@@ -870,7 +870,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
   rows.sort((a, b) => b.avg - a.avg);
   // Tie-aware places ("1, 2, 2, 4"): games with the same displayed average share
-  // a place, medal, and pedestal. Drives both the podium and the medal list.
+  // a place and a medal. Drives both the winner spotlight and the medal list.
   computePlaces(rows).forEach((place, i) => { rows[i].place = place; });
 
   app.innerHTML = '';
@@ -952,35 +952,43 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     );
   }
 
-  // Podium: the top three *places* as a staircase. RANK IS POSITION, NEVER
-  // HEIGHT (#891) — the tiers run [1, 2, 3] down the screen, each indented one
-  // step further, and tied games share a tier and grow sideways. The stage used
-  // to be pedestal columns whose height carried the rank, which a tie inverted:
-  // entries stack upward, so a three-way tie for 3rd overtopped the crowned
-  // winner. With `reveal` the tiers rise bottom-up and confetti falls — the
-  // finale's payoff moment.
-  const podiumRows = rows.filter((r) => r.place && r.place <= 3);
-  if (rows.length >= 2 && podiumRows.length && !session.cancelled) {
-    const tiers = podiumTiers(podiumRows);
-    const entryHtml = (r) => {
+  // The winner spotlight (#897). This screen used to open with a STAGE showing
+  // the top three places — and the ranked rows twenty pixels below it already
+  // state that ranking, with distribution bars, vote counts and the big score.
+  // Two visual languages for one fact reads as clutter however well it is
+  // drawn, and places 2 and 3 are already marked in the list by their silver
+  // and bronze medals, so nothing is lost by cutting the stage down to its one
+  // unique job: celebration.
+  //
+  // A tie therefore stops needing a geometry to decode — it gets a headline.
+  // And nothing here encodes rank in height, so several winners may simply
+  // scale down and wrap: a tall spotlight can only ever mean „several games
+  // tied", never „these outrank the winner".
+  const topRows = rows.filter((r) => r.place === 1);
+  if (rows.length >= 2 && topRows.length && !session.cancelled) {
+    const shared = topRows.length > 1;
+    const winnerHtml = (r) => {
       const g = r.game;
       const imgStyle = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
-      return `<a class="podium__entry result-podium__entry" data-gid="${esc(g.id)}">
-             <span class="result-podium__img"${imgStyle}>${coverPlaceholder(g)}</span>
-             <span class="result-podium__title">${esc(g.title)}</span>
-             <span class="score-pill result-podium__pill" style="background:${avgColor(r.avg)}">Ø ${fmtAvg(r.avg)}</span>
+      // Its OWN link: a shared win is several games, each reachable.
+      return `<a class="spotlight__winner" data-gid="${esc(g.id)}">
+             <span class="spotlight__img"${imgStyle}>${coverPlaceholder(g)}</span>
+             <span class="spotlight__title">${esc(g.title)}</span>
+             <span class="score-pill spotlight__pill" style="background:${avgColor(r.avg)}">Ø ${fmtAvg(r.avg)}</span>
            </a>`;
     };
-    const stage = tiers
-      .map((tier) =>
-        podiumTierHtml(tier, () => ({ entries: tier.shown.map(entryHtml).join('') }), esc(t('podium.shared')))
-      )
-      .join('');
-    const podium = h(
-      `<div class="podium podium--result${reveal ? ' is-reveal' : ''}">${stage}</div>`
+    // The kicker deliberately names no entity: „Spiel des Abends" would put
+    // „Abend" back in the UI, which the Session naming rule bans (CLAUDE.md).
+    const spot = h(
+      `<div class="spotlight${shared ? ' spotlight--shared' : ''}${reveal ? ' is-reveal' : ''}">
+         <div class="spotlight__kicker">
+           <i class="ti ti-crown spotlight__crown" aria-hidden="true"></i>
+           ${esc(t(shared ? 'result.winnerShared' : 'result.winner'))}
+         </div>
+         <div class="spotlight__winners">${topRows.map(winnerHtml).join('')}</div>
+       </div>`
     );
-    // The ENTRY is the link, not the tier — a tier can hold several.
-    podium.querySelectorAll('.result-podium__entry[data-gid]').forEach((el) => {
+    spot.querySelectorAll('.spotlight__winner[data-gid]').forEach((el) => {
       makeGameLink(el, round.id, el.dataset.gid);
     });
     if (reveal) {
@@ -992,9 +1000,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
         bit.style.animationDelay = (Math.random() * 0.9).toFixed(2) + 's';
         conf.appendChild(bit);
       }
-      podium.appendChild(conf);
+      spot.appendChild(conf);
     }
-    app.appendChild(podium);
+    app.appendChild(spot);
   }
 
   function updateTitle() {
@@ -1175,7 +1183,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // Cancel is the alternative final state: only offered while no game is
   // chosen, and undoable like the finish reset. Rendered as a `link-btn` in the
   // footer next to „Session löschen" (#614) — the rare escape hatch, not a peer
-  // of the podium it used to sit above.
+  // of the result it used to sit above.
   function renderCancel() {
     cancelWrap.innerHTML = '';
     if (finished || chosenId) return;

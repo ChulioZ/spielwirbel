@@ -70,7 +70,8 @@ that entirely and leaves the lazy cover loader (#198), which assigns
 Thumbnail frames therefore need `position: relative` **and** `overflow: hidden`
 so the absolutely-positioned layer is anchored and clipped to their rounded
 corners — that's why those two lines were added to `.ticket__img`,
-`.session-card__img`, `.result-row__img`, `.pool-thumb`, `.result-podium__img`
+`.session-card__img`, `.result-row__img`, `.pool-thumb`, `.spotlight__img`
+(the results screen's winner cover, `.result-podium__img` until #897)
 and `.archive-row__img`.
 
 ## Verifying a change here

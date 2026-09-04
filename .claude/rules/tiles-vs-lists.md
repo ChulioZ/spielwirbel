@@ -19,7 +19,7 @@ deliberately were not, and the line between them is not about available width:
 **The ordering half is the one that actually bites.** A grid is read
 left-to-right and then wrapped, so putting a *ranking* in one makes rank 3 sit
 to the right of rank 2 and rank 4 below rank 1. The session results screen
-exists to communicate an order — podium, then rows sorted by rating — so tiling
+exists to communicate an order — the winner, then rows sorted by rating — so tiling
 its rows would destroy the one thing it is for, while looking tidier. Same for
 the Chronik: a month-grouped timeline read in columns is not a timeline.
 
@@ -62,11 +62,16 @@ Three things about that are load-bearing:
 Re-deciding these costs a browser session each; the reasoning is here so it
 doesn't have to be redone.
 
-- **Session results** — a ranking (see above). The podium is a stack of tiers,
-  best on top (#891); moving it beside the rows saves ~250px of scroll at the
-  cost of squeezing it and breaking the reveal-then-detail flow. Note it is
-  itself the ordering case in miniature — its tiers descend for the same reason
-  the rows below them are not tiled.
+- **Session results** — a ranking (see above). It opens on a **winner
+  spotlight** since #897, not a stage: the stage restated the top three places in
+  a second visual language twenty pixels above rows that already state them
+  properly, and redundancy reads as clutter however well it is drawn. Moving
+  either half beside the other saves ~250px of scroll at the cost of squeezing
+  it and breaking the reveal-then-detail flow. **The spotlight is not a
+  counter-example to the ordering rule** — it is the one component on the screen
+  that may wrap, precisely because everything in it holds the *same* place, so
+  reading it left-to-right says nothing false. The moment a component carries
+  two different ranks, the rule binds again.
 - **Member** — already uses the pane: the five stat cards span it (they are
   `.pokale-cards`, already exempt) while identity and the colour picker keep
   the reading measure. At 900px those cards are ~170px and labels like

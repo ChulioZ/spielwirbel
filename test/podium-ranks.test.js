@@ -1,19 +1,20 @@
 'use strict';
 
-/* A podium TIER is a rank, and rank is encoded by POSITION, never by height
- * (#891).
+/* The Pokale podium: ONE COLUMN IS ONE RANK, and a TIE MUST NOT GROW THE
+ * PEDESTAL'S HEIGHT.
  *
- * The stage used to be three side-by-side columns whose pedestal height carried
- * the rank. But a tie adds ENTRIES, and entries stack UPWARD from the pedestal,
- * so the more games shared a low place the taller that column's silhouette: one
- * winner plus a three-way tie for 3rd made the bronze column overtop the crowned
- * winner. The one claim a podium exists to make, contradicted by its own
- * geometry — and worse the further down the tie sat. #836, #879, #888 and #889
- * each fixed a sub-case inside that encoding without being able to reach the
- * inversion, because the inversion WAS the encoding.
+ * Two constraints that pull against each other, each learned the hard way:
  *
- * Ties are the norm rather than an edge case: `computePlaces` ties on the
- * *displayed* one-decimal average, so a four-person round hits them constantly.
+ *  - #836: a column per MEMBER made an ordinary tie emit four fixed-width
+ *    columns that wrapped on a phone — pedestals off one baseline, and since
+ *    the arrangement is [2 | 1 | 3] the crowned winner at the bottom right.
+ *  - #891/#897: entries STACKING upward from the pedestal made the tie grow the
+ *    very dimension the pedestal uses to state the rank, so one winner plus a
+ *    three-way tie for 3rd overtopped the crowned winner. Entries lie sideways
+ *    on the step instead — the one direction that says nothing about rank.
+ *
+ * Ties are the norm rather than an edge case: members tie on whole win counts,
+ * so a four-person round hits them constantly.
  *
  * Three layers, because none of them can see the others' failure:
  *
@@ -21,20 +22,25 @@
  *  - the CSS contract, parsed out of styles.css — jsdom applies no external
  *    stylesheet, so `flex-direction` is only assertable as text
  *    (`.claude/rules/testing-views-under-jsdom.md`);
- *  - the two CALL SITES, run under jsdom. A spec over the helper alone stays
- *    green while views-session.js still emits a column per game, which is
- *    precisely the bug.
+ *  - the CALL SITE, run under jsdom. A spec over the helper alone stays green
+ *    while views-pokale.js emits something else entirely.
  *
- * The rank numeral's contrast against its disc lives in test/a11y-contrast.test.js,
- * where the WCAG machinery already is — a palette tweak must redden there.
+ * What NO layer here can hold is the pixel heights — jsdom applies no
+ * stylesheet, so nothing in the suite can see a wrapped step at 375px. The
+ * crossover is a browser measurement, written down in
+ * `.claude/rules/rank-encodings-must-not-be-growable-by-ties.md`.
+ *
+ * The session results screen used to be this component's second caller; it
+ * opens with a winner spotlight since #897 and is covered by
+ * test/result-spotlight.test.js.
  */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { podiumTiers, podiumTierHtml } = require('../public/js/podium');
+const { podiumColumns, podiumColHtml } = require('../public/js/podium');
 const { loadApp } = require('./support/dom');
-const { bodyOf, bodyOfIn, mediaBlocks, rulesOf, RULES } = require('./support/css');
+const { bodyOf, bodyOfIn, RULES } = require('./support/css');
 
 // A px value out of a rule body, so a claim can be COMPARED with another rule's
 // number rather than restated as a literal that silently drifts from it.
@@ -44,181 +50,204 @@ const at = (place, n) => Array.from({ length: n }, (_, i) => ({ place, id: `${pl
 
 // ------------------------------------------------------- the arrangement
 
-test('the tiers run TOP-DOWN [1, 2, 3] — position is the ranking', () => {
-  const tiers = podiumTiers([...at(1, 1), ...at(2, 1), ...at(3, 1)]);
-  assert.deepEqual(tiers.map((t) => t.rank), [1, 2, 3]);
+test('the columns run [2 | 1 | 3] — the winner stands in the middle', () => {
+  const { cols, single } = podiumColumns([...at(1, 1), ...at(2, 1), ...at(3, 1)]);
+  assert.deepEqual(cols.map((c) => c.rank), [2, 1, 3]);
+  assert.equal(single, false);
 });
 
-test('a tie shares ONE tier instead of adding one each', () => {
-  // The issue's case: one winner, a three-way tie for 3rd.
-  const tiers = podiumTiers([...at(1, 1), ...at(3, 3)]);
-  assert.deepEqual(tiers.map((t) => t.rank), [1, 3]);
-  assert.equal(tiers[1].shown.length, 3, 'all three tied games stand on rank 3');
+test('a tie shares ONE column instead of adding one each', () => {
+  // The #836 case: one winner and a three-way tie for 2nd — four columns once.
+  const { cols } = podiumColumns([...at(1, 1), ...at(2, 3)]);
+  assert.deepEqual(cols.map((c) => c.rank), [2, 1, 3]);
+  assert.equal(cols[0].shown.length, 3, 'all three tied members stand on rank 2');
+  assert.equal(cols[2].spacer, true, 'rank 3 is unheld');
 });
 
-test('an unheld rank is ABSENT — no spacer, no riser, no empty slot', () => {
-  /* The column layout held the slot open to keep the crown central and to draw a
-     stepped silhouette. Both reasons die with the columns: the winner is the top
-     row, and the indent draws the staircase. A held-open slot now buys nothing
-     and costs a blank tier. */
-  assert.deepEqual(podiumTiers([...at(1, 2), ...at(3, 1)]).map((t) => t.rank), [1, 3]);
-  assert.deepEqual(podiumTiers([...at(2, 2), ...at(3, 1)]).map((t) => t.rank), [2, 3]);
-  assert.equal(podiumTiers(at(1, 4)).length, 1, 'everybody tied is ONE tier and nothing else');
+test('an unheld rank beside the crown is held OPEN, so the crown stays central', () => {
+  /* Dropping it reads fine in the abstract and is wrong on screen: {1,2} would
+     render as [1st | 2nd] and the common {1,1,3} as [1st | 3rd], putting the
+     winner at one end — a milder version of the very thing #836 fixed. */
+  assert.deepEqual(podiumColumns([...at(1, 2), ...at(3, 1)]).cols.map((c) => c.rank), [2, 1, 3]);
+  assert.deepEqual(
+    podiumColumns([...at(1, 2), ...at(3, 1)]).cols.map((c) => !!c.spacer),
+    [true, false, false]
+  );
 });
 
-test('nothing is capped — every tied entry stands on its tier', () => {
-  /* The column cap existed because a column has no width to grow into. A row
-     does, so an entry never has to be explained away into a „+N" count. */
-  assert.equal(podiumTiers(at(1, 7))[0].shown.length, 7);
+test('nothing is held open where there is no crown to centre', () => {
+  const { cols } = podiumColumns([...at(2, 2), ...at(3, 1)]);
+  assert.deepEqual(cols.map((c) => c.rank), [2, 3]);
+  assert.deepEqual(cols.map((c) => !!c.spacer), [false, false]);
+});
+
+test('one distinct place occupied is the SHARED TOP STEP, slots kept', () => {
+  /* Everybody tied is the state a round is in when it is YOUNGEST, since
+     everyone's first win leaves everyone on one. The empty risers are what give
+     a lone pedestal a stepped silhouette at all (#879). */
+  const { single, cols } = podiumColumns(at(1, 4));
+  assert.equal(single, true);
+  assert.deepEqual(cols.map((c) => c.rank), [2, 1, 3]);
+  assert.equal(cols[1].shown.length, 4);
+});
+
+test('nothing is capped — every tied member stands on the step', () => {
+  /* There was a per-rank cap of 3 with a „+N weitere" spill, because a column
+     of STACKED entries had no width to grow into. Entries lying sideways grow
+     into width, so nobody has to be explained away into a count. */
+  assert.equal(podiumColumns(at(1, 7)).cols[1].shown.length, 7);
 });
 
 test('places outside the top three never reach the stage', () => {
-  assert.deepEqual(podiumTiers([...at(1, 1), ...at(4, 2), ...at(9, 1)]).map((t) => t.rank), [1]);
+  assert.deepEqual(podiumColumns([...at(1, 1), ...at(4, 2), ...at(9, 1)]).cols.map((c) => c.rank), [2, 1, 3]);
+  assert.equal(podiumColumns([...at(1, 1), ...at(4, 2)]).cols[1].shown.length, 1);
 });
 
-test('the tier skeleton crowns only rank 1 and marks a shared place', () => {
-  const parts = () => ({ entries: '<i>e</i>' });
-  const one = podiumTierHtml({ rank: 1, shown: at(1, 1) }, parts, 'geteilt');
-  assert.match(one, /podium__tier--1/);
+test('the column skeleton crowns rank 1 and states the rank on the PEDESTAL', () => {
+  const entry = () => '<i>e</i>';
+  const one = podiumColHtml({ rank: 1, shown: at(1, 1) }, entry, 'geteilt');
+  assert.match(one, /podium__col--1/);
   assert.match(one, /ti-crown/);
-  assert.match(one, /<span class="podium__rank">1<\/span>/);
+  assert.match(one, /<div class="podium__base"><span class="podium__rank">1<\/span><\/div>/,
+    'the pedestal states the rank and, alone, nothing else');
+  assert.doesNotMatch(one, /podium__col--multi/, 'one member is not a shared step');
   assert.doesNotMatch(one, /podium__shared/, 'a place held alone is not shared');
 
-  const three = podiumTierHtml({ rank: 3, shown: at(3, 3) }, parts, 'geteilt');
+  const three = podiumColHtml({ rank: 3, shown: at(3, 3) }, entry, 'geteilt');
   assert.doesNotMatch(three, /ti-crown/, 'only the winner is crowned');
-  assert.match(three, /<span class="podium__shared">geteilt<\/span>/,
-    'the tie label is the whole semantic fix — the component owns it for both screens');
+  assert.match(three, /podium__col--multi/, 'the hook the entries lie down on');
+  assert.match(three, /<span class="podium__shared">geteilt<\/span>/);
+});
+
+test('a spacer column asks the caller for nothing and announces nothing', () => {
+  /* Its `shown` is empty, so a callback reaching into it would throw — which is
+     why entries are built through a callback rather than handed in. */
+  const html = podiumColHtml({ rank: 2, shown: [], spacer: true }, () => {
+    throw new Error('a spacer must never build content');
+  }, 'geteilt');
+  assert.match(html, /podium__col--spacer/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.doesNotMatch(html, /podium__base/, 'an empty slot is a riser, not a pedestal');
 });
 
 // -------------------------------------------------------- the CSS contract
 
-test('the stage stacks DOWNWARD — height no longer encodes anything', () => {
+test('the stage is a row of at most three columns and NEVER wraps', () => {
   const stage = bodyOf('.podium');
   assert.ok(stage, '.podium rule is gone');
-  assert.match(stage, /flex-direction:\s*column/, 'one tier per row, best on top');
-  assert.doesNotMatch(stage, /align-items:\s*flex-end/,
-    'a shared baseline is what made a taller tie outrank the winner');
-  assert.match(stage, /position:\s*relative/, 'the confetti overlay is anchored here');
+  assert.match(stage, /align-items:\s*flex-end/, 'the pedestals stand on one baseline');
+  assert.doesNotMatch(stage, /flex-wrap/, 'a wrapped stage was the #836 bug');
 });
 
-test('the staircase is drawn by INDENT, which a tie cannot grow', () => {
-  /* The one property that must scale with rank. Read as numbers and compared,
-     so flattening the steps — or inverting them — reddens here rather than
-     quietly costing the stage the thing it now uses to say „lower place". */
-  const indent = (rank) => px(bodyOf(`.podium__tier--${rank}`), 'margin-left');
-  assert.ok(indent(2) > 0 && indent(3) > indent(2),
-    'each tier must sit one step further right than the one above it');
+test('the PEDESTAL height is the rank encoding, and it descends', () => {
+  /* Read as numbers and compared, so flattening the steps — or inverting them —
+     reddens here rather than quietly costing the stage the thing it uses to say
+     „this place is higher". */
+  const base = (rank) => px(bodyOf(`.podium__col--${rank} .podium__base`), 'height');
+  assert.ok(base(1) > base(2) && base(2) > base(3), 'the winner must stand highest');
 });
 
-test('the winner is the heaviest thing on the stage, by size not by height', () => {
-  // Hero cover vs. the quieter tiers', compared rather than matched.
-  const hero = px(bodyOf('.result-podium__img'), 'width');
-  const quiet = px(bodyOfIn('.podium__tier--3 .result-podium__img'), 'width');
-  assert.ok(hero > quiet, 'the top tier must carry the largest cover');
-  assert.match(bodyOf('.podium__tier--1'), /var\(--gold-edge\)/, 'and the gold edge');
-});
-
-test('an entry is an ABSOLUTE box, so covers stay uniform and titles clip', () => {
-  /* Entries now flow in a ROW, so each needs a width of its own. A `%` here
-     would resolve against whichever child is widest — the title — which makes
-     covers ragged and stops text-overflow ever firing
-     (percent-sizes-under-a-shrink-to-fit-flex-item.md). */
-  const entry = bodyOf('.podium__entry');
-  assert.match(entry, /width:\s*\d+px/, 'a shrink-to-fit entry sizes itself from its title');
-  assert.match(entry, /max-width:\s*100%/, 'the only squeeze a narrow stage needs');
-  assert.doesNotMatch(entry, /(^|[;\s])width:\s*\d+%/m, 'a % width measures the title, not the box');
-
-  const img = bodyOf('.result-podium__img');
-  assert.match(img, /width:\s*74px/);
-  assert.match(img, /max-width:\s*100%/);
-});
-
-test('the column apparatus is gone — not merely unused', () => {
-  /* Left behind, these keep sizing a `.podium__col` no caller emits any more,
-     and the next reader has to work out which layout is live. */
-  for (const dead of [
-    '.podium__col',
-    '.podium__col--spacer',
-    '.podium--single .podium__col',
-    '.podium__more',
-    '.podium__col--1 .podium__base',
-  ]) {
-    assert.equal(bodyOf(dead), null, `${dead} belongs to the retired column stage`);
+test('an unheld rank is PAINTED at exactly its own step height', () => {
+  /* An unpainted slot spends its third of the stage on a hole. The heights
+     restate the pedestal's rather than inheriting (a spacer holds no base at
+     all), so they are compared here to keep the two from drifting. */
+  for (const rank of [2, 3]) {
+    assert.equal(
+      px(bodyOf(`.podium__col--${rank}.podium__col--spacer`), 'height'),
+      px(bodyOf(`.podium__col--${rank} .podium__base`), 'height'),
+      `the rank ${rank} riser must be exactly as tall as the step it stands in for`
+    );
   }
-  assert.deepEqual(
-    RULES.map(([sel]) => sel).filter((sel) => /podium__col|podium--single|podium__base/.test(sel)),
-    []
-  );
+  assert.match(bodyOf('.podium__col--spacer'), /opacity:\s*0\.75/, 'faded, or it reads as occupied');
 });
 
-test('the reveal builds BOTTOM-UP by position, so the winner is still the climax', () => {
-  /* Keyed off position rather than rank on purpose: a stage whose only tier is
-     rank 1 would otherwise sit blank for the winner's 0.9s cue before revealing
-     the one thing anyone is waiting for. `:last-child` is the bottom tier
-     whatever its rank, which also retires the old `.podium--single` special
-     case rather than reproducing it. */
-  const delay = (sel) => {
-    const body = bodyOf(sel);
-    assert.ok(body, `${sel} has no reveal delay`);
-    return parseFloat(body.match(/animation-delay:\s*([\d.]+)s/)[1]);
-  };
-  const bottom = delay('.podium.is-reveal .podium__tier:last-child');
-  const middle = delay('.podium.is-reveal .podium__tier:nth-last-child(2)');
-  const top = delay('.podium.is-reveal .podium__tier:nth-last-child(3)');
-  assert.ok(bottom < middle && middle < top, 'the stage must build upward to the winner');
-
-  // And none of it runs where motion is unwelcome.
-  const guarded = mediaBlocks()
-    .filter(([q]) => /prefers-reduced-motion:\s*no-preference/.test(q))
-    .flatMap(([, css]) => rulesOf(css).map(([sel]) => sel));
-  assert.ok(guarded.some((sel) => /\.podium\.is-reveal/.test(sel)),
-    'the rise must stay inside a prefers-reduced-motion guard');
+test('a SHARED step lays its members sideways — the tie may only grow WIDTH', () => {
+  /* The whole structural fix. Entries flow in a row for every rank, and once a
+     place is shared each one lies down into a chip, so a crowded place adds
+     ~32px a member rather than ~90px. */
+  assert.match(bodyOf('.podium__entries'), /flex-direction:\s*row/);
+  assert.match(bodyOf('.podium__entries'), /flex-wrap:\s*wrap/);
+  assert.match(bodyOf('.podium__col--multi .podium__entry'), /flex-direction:\s*row/,
+    'a shared step must lie its members down, or a tie stacks upward again');
+  const solo = px(bodyOf('.podium__avatar'), 'width');
+  const shared = px(bodyOf('.podium__col--multi .podium__avatar'), 'width');
+  assert.ok(shared < solo, `a shared step shrinks its avatars (${shared} vs ${solo})`);
 });
 
-// --------------------------------------------------------- the call sites
+test('an entry is a DEFINITE box, so covers stay uniform and names clip', () => {
+  /* A `%` inside a shrink-to-fit column resolves against whichever child is
+     widest — the name — which stops text-overflow ever firing
+     (percent-sizes-under-a-shrink-to-fit-flex-item.md). The entry's `100%` is
+     definite because `.podium__col` has a definite width of its own; the shared
+     top step's is an absolute literal, because that column sizes to `fit-content`
+     and a `%` there would be circular. */
+  assert.match(bodyOf('.podium__entry'), /width:\s*100%/);
+  assert.match(bodyOf('.podium__col'), /max-width:\s*\d+px/, 'the column is what makes 100% definite');
+  assert.match(bodyOf('.podium--single .podium__col--multi .podium__entry'), /width:\s*\d+px/,
+    'a fit-content step needs an absolute entry, or its width measures the longest name');
+  assert.match(bodyOf('.podium--single .podium__col'), /width:\s*fit-content/);
+});
+
+test('the shared top step stands UPRIGHT and at the winner\'s height', () => {
+  /* It is the only occupied column, so its height claims nothing about anybody
+     — the chip rule has nothing to protect there, and a row of faces reads as a
+     celebration where a row of chips reads as a list. */
+  assert.match(bodyOf('.podium--single .podium__col--multi .podium__entry'), /flex-direction:\s*column/);
+  const top = px(bodyOf('.podium__col--1 .podium__base'), 'height');
+  for (const rank of [1, 2, 3]) {
+    const sel = RULES.find(([s]) => s.includes(`.podium--single .podium__col--${rank} .podium__base`));
+    assert.ok(sel, `the lone rank ${rank} step must take the winner's height`);
+  }
+  assert.equal(px(bodyOfIn('.podium--single .podium__col--1 .podium__base'), 'height'), top);
+});
+
+test('the tier apparatus is gone — not merely unused', () => {
+  /* Left behind, these keep sizing a `.podium__tier` no caller emits any more,
+     and the next reader has to work out which layout is live. */
+  for (const dead of ['.podium__tier', '.podium__tier--1', '.podium__marker', '.podium.is-reveal .podium__tier']) {
+    assert.equal(bodyOf(dead), null, `${dead} belongs to the retired tier stage`);
+  }
+  assert.deepEqual(RULES.map(([sel]) => sel).filter((sel) => /podium__tier|podium__marker/.test(sel)), []);
+});
+
+// --------------------------------------------------------- the call site
 
 const RID = 'r1';
 
-const session = (id, winnerIds, ratings) => ({
+const session = (id, winnerIds) => ({
   id,
   createdAt: '2026-07-01T20:00:00.000Z',
-  gameIds: Object.keys(ratings),
+  gameIds: ['g1'],
   memberIds: ['m1'],
-  votes: { m1: Object.fromEntries(Object.entries(ratings).map(([g, r]) => [g, { rating: r, retire: false }])) },
+  votes: { m1: { g1: { rating: 4, retire: false } } },
   votedIds: ['m1'],
   finished: true,
   cancelled: false,
   done: true,
   winnerIds,
-  chosenGameId: Object.keys(ratings)[0],
+  chosenGameId: 'g1',
   events: [],
 });
 
-/* One clear winner, a second place, and a three-way tie for 3rd — the issue's
-   case, and the one the column stage inverted worst: three entries stacked on
-   the shortest pedestal overtopped the crowned winner. Competition ranking, so
-   the ratings have to descend through a held 2nd to put the tie on rank 3. */
-const TIED_SESSION = session('s1', ['m1'], { g1: 5, g2: 4, g3: 3, g4: 3, g5: 3 });
-
-const round = (over = {}) => ({
+const round = (members, sessions) => ({
   id: RID,
   name: 'Freitagsrunde',
   background: null,
   tags: [],
   providers: [],
-  members: [{ id: 'm1', name: 'Anna' }],
-  games: [
-    { id: 'g1', title: 'Catan', tagIds: [] },
-    { id: 'g2', title: 'Azul', tagIds: [] },
-    { id: 'g3', title: 'Splendor', tagIds: [] },
-    { id: 'g4', title: 'Cascadia', tagIds: [] },
-    { id: 'g5', title: 'Kingdomino', tagIds: [] },
-  ],
-  sessions: [TIED_SESSION],
-  ...over,
+  members,
+  games: [{ id: 'g1', title: 'Catan', tagIds: [] }],
+  sessions,
 });
 
-function bootApp(t, r) {
+const memberList = (n) => Array.from({ length: n }, (_, i) => ({ id: `m${i + 1}`, name: `P${i + 1}` }));
+
+// `wins` maps a member id to how many nights they won; one session per win.
+const winsToSessions = (wins) =>
+  Object.entries(wins).flatMap(([mid, n]) => Array.from({ length: n }, (_, i) => session(`${mid}-${i}`, [mid])));
+
+async function pokale(t, members, wins) {
+  const r = round(members, winsToSessions(wins));
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   dom.set('api', async (method, url) => {
@@ -229,127 +258,93 @@ function bootApp(t, r) {
   });
   dom.set('accountsActive', () => false);
   dom.set('isLoggedIn', () => false);
+  await dom.call('renderPokaleTab', r);
   return dom;
 }
 
-const stageOf = (dom) => dom.app.querySelector('.podium');
-const tiersOf = (dom) => [...stageOf(dom).querySelectorAll('.podium__tier')];
-const rankOrder = (dom) => tiersOf(dom).map((el) => el.className.match(/podium__tier--(\d)/)[1]);
+const colOrder = (dom) =>
+  [...dom.app.querySelectorAll('.podium__col')].map((el) => el.className.match(/podium__col--(\d)/)[1]);
 
-test('the results podium puts three tied games on ONE tier, below the winner', async (t) => {
-  const r = round();
-  const dom = bootApp(t, r);
-  await dom.call('showResults', r, TIED_SESSION, r.games, false);
+test('the Pokale stage runs [2 | 1 | 3] with the crown in the middle', async (t) => {
+  const dom = await pokale(t, memberList(3), { m1: 3, m2: 2, m3: 1 });
+  assert.deepEqual(colOrder(dom), ['2', '1', '3']);
+  const [second, first, third] = [...dom.app.querySelectorAll('.podium__col')];
+  assert.ok(first.querySelector('.ti-crown'), 'the winner is crowned');
+  assert.equal(second.querySelector('.ti-crown'), null);
+  assert.equal(third.querySelector('.ti-crown'), null);
+});
 
-  assert.deepEqual(rankOrder(dom), ['1', '2', '3'], 'the tiers descend, best on top');
-  assert.equal(dom.app.querySelectorAll('.result-podium__entry').length, 5,
-    'every placed game is still on the stage');
-
-  const [winner, second, tied] = tiersOf(dom);
-  assert.equal(winner.querySelectorAll('.result-podium__entry').length, 1);
-  assert.ok(winner.querySelector('.ti-crown'), 'the winner is crowned');
-  assert.equal(second.querySelector('.ti-crown'), null, 'only the winner is crowned');
-  assert.equal(winner.querySelector('.podium__shared'), null, 'a place held alone is not shared');
-  assert.equal(tied.querySelectorAll('.result-podium__entry').length, 3);
+test('tied members share ONE step, sideways, and nobody is capped', async (t) => {
+  // One clear winner and a FOUR-way tie for 2nd: the cap used to drop the fourth.
+  const dom = await pokale(t, memberList(5), { m1: 5, m2: 2, m3: 2, m4: 2, m5: 2 });
+  const cols = [...dom.app.querySelectorAll('.podium__col')];
+  const tied = cols.find((el) => el.classList.contains('podium__col--2'));
+  assert.equal(tied.querySelectorAll('.podium__entry').length, 4);
+  assert.ok(tied.classList.contains('podium__col--multi'), 'the hook the entries lie down on');
   assert.match(tied.querySelector('.podium__shared').textContent, /geteilt/);
+  assert.equal(dom.app.querySelector('.podium__more'), null, 'the „+N weitere" spill is retired');
+  assert.equal(dom.app.querySelector('.podium__rest'), null, 'nobody was pushed off the stage');
 });
 
-test('an unheld rank renders NOTHING between the tiers that are held', async (t) => {
-  /* Two games tied for the win and one third — the common {1, 1, 3}. The column
-     stage held rank 2 open as a spacer to keep the crown central; a tier does
-     not need it, and an empty tier would only say somebody is standing there. */
-  const gap = session('s3', ['m1'], { g1: 5, g2: 5, g3: 3 });
-  const r = round({ sessions: [gap] });
-  const dom = bootApp(t, r);
-  await dom.call('showResults', r, gap, r.games, false);
+test('every member carries their OWN win count; the step carries only the rank', async (t) => {
+  /* The count used to be the pedestal's label, read off `shown[0]` — sound only
+     while the ranking IS the win count, which #895 ends by ranking on the
+     Siegwertung while still showing the raw count. */
+  const dom = await pokale(t, memberList(4), { m1: 2, m2: 1, m3: 1, m4: 1 });
+  const cols = [...dom.app.querySelectorAll('.podium__col')];
+  const lead = cols.find((el) => el.classList.contains('podium__col--1'));
+  const tied = cols.find((el) => el.classList.contains('podium__col--2'));
 
-  assert.deepEqual(rankOrder(dom), ['1', '3']);
-  assert.ok(tiersOf(dom)[0].querySelector('.podium__shared'), 'the shared win is marked');
-});
-
-test('each podium game is its own link — a tier can hold several', async (t) => {
-  const r = round();
-  const dom = bootApp(t, r);
-  await dom.call('showResults', r, TIED_SESSION, r.games, false);
-
-  const entries = [...dom.app.querySelectorAll('.result-podium__entry')];
-  assert.ok(entries.every((e) => e.classList.contains('game-link')),
-    'an entry that is not a link cannot reach the game it names');
-  assert.deepEqual(entries.map((e) => e.dataset.gid).sort(), ['g1', 'g2', 'g3', 'g4', 'g5']);
-});
-
-test('everything tied renders ONE hero tier and nothing else', async (t) => {
-  const flat = session('s2', ['m1'], { g1: 4, g2: 4, g3: 4 });
-  const r = round({ sessions: [flat] });
-  const dom = bootApp(t, r);
-  await dom.call('showResults', r, flat, r.games, false);
-
-  assert.deepEqual(rankOrder(dom), ['1'], 'no empty risers stand in for the unheld places');
-  assert.equal(dom.app.querySelectorAll('.result-podium__entry').length, 3);
-  assert.ok(tiersOf(dom)[0].querySelector('.podium__shared'));
-});
-
-test('the Pokale podium shares the component and caps nobody', async (t) => {
-  // Five members on one win each: every one of them is rank 1.
-  const members = ['m1', 'm2', 'm3', 'm4', 'm5'].map((id, i) => ({ id, name: `P${i + 1}` }));
-  const sessions = members.map((m, i) => session(`s${i}`, [m.id], { g1: 4 }));
-  const r = round({ members, sessions });
-  const dom = bootApp(t, r);
-  await dom.call('renderPokaleTab', r);
-
-  assert.deepEqual(rankOrder(dom), ['1']);
-  assert.equal(tiersOf(dom)[0].querySelectorAll('.podium__entry').length, 5,
-    'the retired per-rank cap must not push a tied member off the stage');
-  assert.equal(dom.app.querySelector('.podium__rest'), null, 'nobody is left over to list');
-});
-
-test('every podium member carries their OWN win count', async (t) => {
-  /* It used to be the tier's pedestal label, read off `shown[0]` — sound only
-     while the ranking IS the win count. #895 ranks on the Siegwertung and shows
-     the raw count, and tier-mates then differ, so the number belongs to the
-     member rather than to the step. */
-  const members = [
-    { id: 'm1', name: 'Anna' },
-    { id: 'm2', name: 'Ben' },
-    { id: 'm3', name: 'Cem' },
-    { id: 'm4', name: 'Dana' },
-  ];
-  const sessions = [
-    session('s0', ['m1'], { g1: 4 }),
-    session('s1', ['m1'], { g1: 4 }),
-    session('s2', ['m2'], { g1: 4 }),
-    session('s3', ['m3'], { g1: 4 }),
-    session('s4', ['m4'], { g1: 4 }),
-  ];
-  const r = round({ members, sessions });
-  const dom = bootApp(t, r);
-  await dom.call('renderPokaleTab', r);
-
-  assert.deepEqual(rankOrder(dom), ['1', '2'], 'Anna leads on 2; the other three tie on 1');
-  const [lead, tied] = tiersOf(dom);
-  assert.match(lead.querySelector('.podium__wins').textContent, /2 Siege/);
+  const leadWins = lead.querySelector('.podium__wins');
+  assert.equal(leadWins.textContent, '2\u00d7', 'the count is notation on the stage, like the Ø pills');
+  assert.match(leadWins.getAttribute('title'), /2 Siege/, 'the phrase it stands for stays one hover away');
   assert.equal(tied.querySelectorAll('.podium__wins').length, 3,
-    'a shared tier states the count once PER MEMBER, not once for the step');
+    'a shared step states the count once PER MEMBER, not once for the step');
+  for (const el of tied.querySelectorAll('.podium__base')) {
+    assert.doesNotMatch(el.textContent, /Sieg/, 'a step must not claim a count its members may not share');
+  }
 
   const entries = [...dom.app.querySelectorAll('.podium__entry')];
   assert.ok(entries.every((e) => e.classList.contains('member-link')));
-  assert.deepEqual(entries.map((e) => e.dataset.mid), ['m1', 'm2', 'm3', 'm4']);
+  assert.deepEqual(entries.map((e) => e.dataset.mid).sort(), ['m1', 'm2', 'm3', 'm4']);
 });
 
-test('members ranked below the third place still appear in the rest line', async (t) => {
-  const members = ['m1', 'm2', 'm3', 'm4'].map((id, i) => ({ id, name: `P${i + 1}` }));
-  const sessions = [
-    ...Array.from({ length: 4 }, (_, i) => session(`a${i}`, ['m1'], { g1: 4 })),
-    ...Array.from({ length: 3 }, (_, i) => session(`b${i}`, ['m2'], { g1: 4 })),
-    ...Array.from({ length: 2 }, (_, i) => session(`c${i}`, ['m3'], { g1: 4 })),
-    session('d0', ['m4'], { g1: 4 }),
-  ];
-  const r = round({ members, sessions });
-  const dom = bootApp(t, r);
-  await dom.call('renderPokaleTab', r);
+test('everyone on one win renders the SHARED TOP STEP, with its risers', async (t) => {
+  /* The youngest state of a round, and the one #879 found rendered as a
+     full-width tinted band where a stepped silhouette should be. */
+  const dom = await pokale(t, memberList(4), { m1: 1, m2: 1, m3: 1, m4: 1 });
+  const stage = dom.app.querySelector('.podium');
+  assert.ok(stage.classList.contains('podium--single'));
+  assert.deepEqual(colOrder(dom), ['2', '1', '3']);
+  assert.equal(stage.querySelectorAll('.podium__col--spacer').length, 2, 'the empty risers draw the profile');
+  assert.equal(stage.querySelector('.podium__col--1').querySelectorAll('.podium__entry').length, 4);
+});
 
-  assert.deepEqual(rankOrder(dom), ['1', '2', '3']);
+test('an unheld rank beside two held ones is a painted riser, not a hole', async (t) => {
+  // {1, 1, 3}: two members tied for the win, one behind them.
+  const dom = await pokale(t, memberList(3), { m1: 2, m2: 2, m3: 1 });
+  assert.deepEqual(colOrder(dom), ['2', '1', '3']);
+  const spacer = dom.app.querySelector('.podium__col--2');
+  assert.ok(spacer.classList.contains('podium__col--spacer'));
+  assert.equal(spacer.textContent.trim(), '', 'a riser announces nothing');
+  assert.equal(spacer.getAttribute('aria-hidden'), 'true');
+});
+
+test('members ranked below the third step still appear in the rest line', async (t) => {
+  const dom = await pokale(t, memberList(4), { m1: 4, m2: 3, m3: 2, m4: 1 });
+  assert.deepEqual(colOrder(dom), ['2', '1', '3']);
   const rest = dom.app.querySelector('.podium__rest');
   assert.ok(rest, 'the fourth-placed member vanished from the screen entirely');
   assert.deepEqual([...rest.querySelectorAll('.podium__rest-name')].map((e) => e.dataset.mid), ['m4']);
+});
+
+test('a member who has never won stands off the stage, in the rest line', async (t) => {
+  /* Only members with a win can hold a rank (`winners` in views-pokale.js), so
+     a winless member is not on a step — but the rest line is the round's whole
+     standings, so they are listed there on zero rather than dropped. */
+  const dom = await pokale(t, memberList(3), { m1: 2, m2: 1 });
+  assert.deepEqual([...dom.app.querySelectorAll('.podium__entry')].map((e) => e.dataset.mid), ['m2', 'm1']);
+  const rest = dom.app.querySelector('.podium__rest');
+  assert.deepEqual([...rest.querySelectorAll('.podium__rest-name')].map((e) => e.dataset.mid), ['m3']);
+  assert.match(rest.textContent, /0 Siege/);
 });
