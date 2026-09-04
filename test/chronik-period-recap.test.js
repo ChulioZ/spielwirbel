@@ -177,6 +177,63 @@ test('the period Bestbewertet follows the active-only rule (moved with #851)', a
   assert.deepEqual(namedGames(card), ['Catan']);
 });
 
+/* THE DEFECT #914 FIXED, stated as one assertion across two screens.
+ *
+ * Both cards carry the label „Bestbewertet" and, until #914, two different
+ * arithmetics behind it: the all-time card (views-pokale.js) has ranked on the
+ * Spielwirbel-Score since #893, while this one still meaned the raw ratings —
+ * and printed the result with a `Ø ` prefix the all-time card does not use. So
+ * the same game could be crowned with two different numbers in two different
+ * typographies, on one screen's worth of scrolling.
+ *
+ * THE SHARED FIXTURE CANNOT SEE THE ARITHMETIC HALF. Its games are all rated 3,
+ * and f(3) = 3 is one of the curve's pinned anchors, so score and raw mean print
+ * the same „3,0" and only the `Ø ` would discriminate. This round therefore
+ * carries a veto spread instead: `{5,5,1}` scores 1,7 and means 3,7
+ * (.claude/rules/redefining-a-measure-invalidates-its-fixtures.md — the field
+ * that stood for nothing under the old measure is the one under test now).
+ *
+ * The year period covers every session this round has, so the two cards are
+ * looking at exactly the same votes and MUST agree. Comparing the rendered TEXT
+ * rather than the two models is deliberate: the `Ø ` was a rendering defect, so
+ * an assertion over the models could not have seen it.
+ */
+const VETO_ROUND = {
+  ...ROUND,
+  sessions: [
+    played('v1', 'g1', '2026-07-06T20:00:00.000Z', {
+      m1: { g1: { rating: 5 } }, m2: { g1: { rating: 5 } }, m3: { g1: { rating: 1 } },
+    }),
+  ],
+};
+
+test('the per-period and all-time Bestbewertet cards print the SAME number, in the same format', async (t) => {
+  const dom = boot(t, VETO_ROUND);
+  await dom.call('showRound', RID, 'chronik');
+  const picker = precap(dom).querySelector('.precap__picker');
+  picker.value = 'year:2026';
+  picker.dispatchEvent(new dom.window.Event('change'));
+
+  // A year period labels itself with the bare key (views-chronik.js's labelOf).
+  const periodCard = recapCardByLabel(dom, dom.run("t('periodRecap.bestRated', { period: '2026' })"));
+  assert.ok(periodCard, 'the year period card is missing — check the picker id shape');
+  assert.deepEqual(namedGames(periodCard), ['Catan'], 'the two cards must be about the same game to be comparable');
+  const periodValue = periodCard.querySelector('.pokale-card__sub').textContent;
+
+  await dom.call('showRound', RID, 'pokale');
+  const allTime = [...dom.app.querySelectorAll('.pokale-card')].find(
+    (c) => (c.querySelector('.pokale-card__label') || {}).textContent === dom.run("t('pokale.bestRated')")
+  );
+  assert.ok(allTime, 'the all-time best-rated card is missing');
+  assert.deepEqual(namedGames(allTime), ['Catan']);
+
+  assert.equal(periodValue, allTime.querySelector('.pokale-card__sub').textContent);
+  /* Named as well as compared, so a change breaking BOTH cards the same way
+     cannot satisfy this by making them equally wrong — 1,7 is the score, 3,7
+     would be the raw mean, and „Ø 1,7" the old typography. */
+  assert.equal(periodValue, '1,7');
+});
+
 test('the picker drives only the recap cards — the timeline below is untouched', async (t) => {
   const dom = boot(t);
   await dom.call('showRound', RID, 'chronik');

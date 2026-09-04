@@ -23,6 +23,9 @@ const crypto = require('node:crypto');
 // The real cutoff, not a copy — a hand-written date here would pass against a
 // backend using a different one (.claude/rules/shared-constants-across-the-stack.md).
 const { COVER_BACKFILL_BEFORE } = require('../../lib/repo/corpus-backfill');
+// The real curve, so the histogram is checked against what the app actually
+// prints rather than against a hand-copied expectation of it (#914).
+const { scoreTally } = require('../../public/js/vote-score');
 
 // A fresh identifier per call, so a suite run against a PERSISTENT database
 // can't collide with an earlier run's rows. Uses crypto rather than
@@ -3993,7 +3996,7 @@ module.exports = function repoContract(repo) {
       assert.equal(row.plays.d365.tenants, 1, 'one group playing three times is still one group');
     });
 
-    await t.test('ratings sum across sessions, people and tenants', async () => {
+    await t.test('ratings bin into tiles across sessions, people and tenants', async () => {
       const id = uniq();
       const t1 = `pga-${uniq()}`;
       const t2 = `pga-${uniq()}`;
@@ -4012,9 +4015,9 @@ module.exports = function repoContract(repo) {
              fixture carries both: the JSON backend answers them through
              `effectiveRating` while Postgres answers them in SQL that cannot
              require it, so this is the only place the two spellings of the same
-             rule are compared. A retire-only vote used to be skipped outright
-             (count 2, sum 7), and a legacy row carrying BOTH used to be counted
-             at its stored rating — which would make this sum 11. */
+             rule are compared. A retire-only vote used to be skipped outright,
+             and a legacy row carrying BOTH used to be counted at its stored
+             rating — which would put a count in tile 4 instead of tile 0. */
           [bo.id]: { [g1.id]: { rating: null, retire: true } },
         },
       });
@@ -4037,11 +4040,21 @@ module.exports = function repoContract(repo) {
 
       const row = await rowFor(id);
       assert.equal(row.ratings.count, 4, 'a retirement proposal is a rating of 0, not an absent one');
-      assert.equal(row.ratings.sum, 7, 'both zero-votes must add nothing — retirement wins over a stored 4');
+      /* The HISTOGRAM, not a sum (#914): Ann's 5, Cy's 2, and BOTH zero-votes in
+         tile 0 — which is the whole point of the fixture, because a stored 4
+         losing to `retire: true` is visible here as a bucket rather than as an
+         arithmetic coincidence. Under the old sum, `[…,4:1]` and `[…,0:1]`
+         differing by exactly the wrong amount could still total 7 by luck. */
+      assert.deepEqual(row.ratings.tiles, [2, 0, 1, 0, 0, 1]);
       assert.equal(row.ratings.tenants, 2);
-      // The sum crosses the pg-numeric-is-a-string boundary, where the backends
-      // silently disagree unless it is coerced.
-      assert.equal(typeof row.ratings.sum, 'number');
+      // `count` is not an independent number — it must be the total of the
+      // buckets, or a floor could admit a row the score cannot be computed for.
+      assert.equal(row.ratings.tiles.reduce((a, b) => a + b, 0), row.ratings.count);
+      /* And the reason this is asserted rather than assumed: the score is
+         computed from these buckets in JS (lib/public-stats.js) precisely so the
+         curve is not restated in SQL, so a drifted bucket is a wrong number on
+         the logged-out landing page and nowhere else. */
+      assert.equal(scoreTally(row.ratings.tiles).score, -1.5);
     });
 
     await t.test('a vote naming a game in ANOTHER round is ignored, not credited', async () => {
@@ -4112,9 +4125,14 @@ module.exports = function repoContract(repo) {
         assert.equal(typeof value.count, 'number', `plays.${name}.count`);
         assert.equal(typeof value.tenants, 'number', `plays.${name}.tenants`);
       }
-      for (const field of ['sum', 'count', 'tenants']) {
+      for (const field of ['count', 'tenants']) {
         assert.equal(typeof row.ratings[field], 'number', `ratings.${field}`);
       }
+      // Six separate ::int casts since #914, i.e. six chances to hand a string
+      // back — and `scoreTally` rejects a non-integer bucket silently, so a
+      // dropped cast would empty the public podium rather than throw.
+      assert.equal(row.ratings.tiles.length, 6);
+      row.ratings.tiles.forEach((n, i) => assert.equal(typeof n, 'number', `ratings.tiles[${i}]`));
       assert.equal(typeof row.owners, 'number');
     });
   });

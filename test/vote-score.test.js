@@ -15,7 +15,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { TILE_VALUE, tileValue, scoreRatings } = require('../public/js/vote-score');
+const { TILE_VALUE, tileValue, scoreRatings, scoreTally } = require('../public/js/vote-score');
 
 // Rounded the way every screen prints it (`fmtAvg` is one decimal), so a row
 // asserts what a user actually reads rather than a float nobody sees.
@@ -137,4 +137,39 @@ test('the veto scales with group size, by construction', () => {
   const withVeto = (n) => scoreRatings([...Array(n - 1).fill(5), 1]).score;
   assert.ok(withVeto(5) <= allThrees, 'at five voters the veto still wins');
   assert.ok(withVeto(6) > allThrees, 'at six voters it starts losing');
+});
+
+/* ---- the histogram shape (#914) -------------------------------------------- */
+
+/* `scoreTally` exists because the cross-tenant Discover aggregate is SQL and
+   cannot require this file — so the aggregate reports which TILE each vote
+   landed on and the curve is applied here. `scoreRatings` is expressed through
+   it, and this is the assertion that they are genuinely one implementation
+   rather than two that happen to agree on the cases someone thought of. */
+test('scoreTally and scoreRatings are the same function over two input shapes', () => {
+  const cases = [[5, 5, 1], [3, 3, 3], [0, 0, 4], [2], [5, 4, 3, 2, 1, 0]];
+  for (const list of cases) {
+    const tiles = [0, 0, 0, 0, 0, 0];
+    list.forEach((r) => { tiles[r] += 1; });
+    assert.deepEqual(scoreTally(tiles), scoreRatings(list), `disagreed on [${list}]`);
+  }
+});
+
+test('an empty histogram scores null, like an empty list', () => {
+  assert.equal(scoreTally([0, 0, 0, 0, 0, 0]), null);
+  assert.equal(scoreTally([]), null);
+  assert.equal(scoreTally(null), null);
+});
+
+test('a malformed bucket is treated as empty, never trusted into the divisor', () => {
+  /* `count` is a divisor, so a stray value would publish NaN on the logged-out
+     landing page rather than throw anywhere. The realistic source is a dropped
+     ::int cast on one of the six SQL counters, which hands back a STRING —
+     test/support/repo-contract.js guards that end, this one guards what happens
+     if it ever gets through. */
+  const s = scoreTally([0, 0, 0, '2', 1.5, 2]);
+  assert.equal(s.count, 2, 'only the well-formed bucket counted');
+  assert.equal(s.score, 5);
+  assert.equal(s.low, 5, 'low is the lowest bucket that actually has votes in it');
+  assert.equal(scoreTally([0, 0, 0, '3', -1, 0]), null, 'nothing well-formed at all');
 });

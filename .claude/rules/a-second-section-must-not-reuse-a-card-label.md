@@ -62,8 +62,12 @@ one screen over (see the Related note on scoping a selector).
 
 **Two cards on one screen may not carry the same label.** That is a UI
 requirement before it is a testing one: a reader scrolling past „Bestbewertet ·
-Codenames Ø 4,5" and then „Bestbewertet · Just One Ø 4,8" has no way to tell that
+Codenames 4,5" and then „Bestbewertet · Just One 4,8" has no way to tell that
 the first is July and the second is all time, and reads it as a bug.
+
+(The example carried a `Ø ` prefix until #914, when the period card stopped
+printing one — the two cards had been disagreeing about their *arithmetic* as
+well as sharing a label, and the prefix was the visible half of that.)
 
 So a second section gets **its own keys**, and they carry the scope that
 distinguishes them:

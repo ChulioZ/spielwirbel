@@ -26,7 +26,7 @@ const FULL = {
       url: 'https://boardgamegeek.com/boardgame/295947', shelves: 42,
     },
     playedWeek: { title: 'Ark Nova', image: null, url: null, plays: 9 },
-    bestRated: { title: 'Wingspan', image: null, url: null, average: 4.6, ratings: 88 },
+    bestRated: { title: 'Wingspan', image: null, url: null, score: 4.6, ratings: 88 },
   },
 };
 
@@ -69,15 +69,58 @@ test('/entdecken renders the counters and one card per qualifying metric', async
 
   const titles = [...dom.document.querySelectorAll('.stats-card__title')].map((n) => n.textContent);
   assert.deepEqual(titles, ['Cascadia', 'Ark Nova', 'Wingspan']);
-  // The average follows the reader's notation: German writes 4,6 — a raw number
-  // interpolates as '4.6' and reads as English on a German page.
+  /* The Spielwirbel-Score, and the copy must not call it an average (#914) —
+     „von 5" is what it used to say, and the podium is the one surface a
+     logged-out visitor meets the number on. It follows the reader's notation
+     too: German writes 4,6, and a raw number interpolates as '4.6'. */
   const rated = [...dom.document.querySelectorAll('.stats-card__value')]
-    .map((n) => n.textContent).find((x) => x.includes('von 5'));
-  assert.match(rated, /^4,6 von 5 — 88 Bewertungen$/);
+    .map((n) => n.textContent).find((x) => x.includes('88'));
+  assert.match(rated, /^Score 4,6 — 88 Bewertungen$/);
   // Exactly the three the payload carried — the two absent metrics render no
   // card at all, rather than an empty or zeroed one.
   assert.equal(dom.document.querySelectorAll('.stats-card').length, 3);
   assert.equal(dom.document.querySelector('.empty-note'), null);
+});
+
+/* The ⓘ is on the podium for one reason the in-round ones do not have: this is
+   where somebody who has never used the app meets the score. So it is asserted
+   per SURFACE rather than once — the landing page is the surface that matters
+   most and the one a spec is least likely to reach for. */
+test('the bestRated podium carries the score ⓘ, and only that podium does', async (t) => {
+  const dom = bootWith(t, ok(FULL));
+  await dom.call('showEntdecken');
+
+  const infos = dom.document.querySelectorAll('.stats-card [data-info-topic]');
+  assert.equal(infos.length, 1, 'one ⓘ per screen, beside the primary occurrence — not one per podium');
+  assert.equal(infos[0].dataset.infoTopic, 'score');
+  const card = infos[0].closest('.stats-card');
+  assert.equal(card.querySelector('.stats-card__title').textContent, 'Wingspan');
+  /* On the LABEL, not beside the number — a placement decision with a measured
+     reason (views-stats.js): the value line leaves no room for a 28px control at
+     1100px, so beside the number it wraps and, because the cards are a grid,
+     costs EVERY card 28px of height. On the label the cards grow by 7px, which
+     is just the control's own height. jsdom applies no stylesheet and so cannot
+     see the wrap; this pins the placement the browser check settled on. */
+  assert.ok(infos[0].closest('.stats-card__label'), 'the ⓘ moved off the card label');
+});
+
+test('the ⓘ opens the score sheet on the LOGGED-OUT landing page, and closes again', async (t) => {
+  const dom = bootWith(t, ok(FULL));
+  await dom.call('showLanding');
+  await new Promise((r) => setTimeout(r, 0));
+
+  const btn = dom.document.querySelector('#landingStats [data-info-topic="score"]');
+  assert.ok(btn, 'the landing podium carries no ⓘ');
+  btn.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+
+  const sheet = dom.document.querySelector('.sheet[role="dialog"]');
+  assert.ok(sheet, 'the sheet did not open');
+  // Wired through openSheet, so it is a real modal rather than a bare div.
+  assert.equal(sheet.getAttribute('aria-modal'), 'true');
+  assert.match(sheet.textContent, /Spielwirbel-Score/);
+
+  sheet.querySelector('.sheet__close').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+  assert.equal(dom.document.querySelector('.sheet[role="dialog"]'), null, 'the sheet did not close');
 });
 
 test('a linked game gets an outbound provider link; an unlinked one stays text', async (t) => {

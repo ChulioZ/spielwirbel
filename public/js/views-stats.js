@@ -43,9 +43,31 @@ const STATS_PODIUMS = [
   { key: 'playedWeek', icon: 'ti-flame', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   { key: 'playedMonth', icon: 'ti-calendar', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   { key: 'playedYear', icon: 'ti-history', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
-  // The average goes through the locale formatter, not straight into the string:
-  // a raw JS number interpolates as "4.6", and German writes "4,6".
-  { key: 'bestRated', icon: 'ti-star', line: (e) => tn(e.ratings, 'stats.ratedOne', 'stats.rated', { avg: fmtAvg(e.average) }) },
+  /* The value is the SPIELWIRBEL-SCORE, not a raw mean (#914) — so the copy must
+     not call it an average, and the card carries the ⓘ that explains it. This is
+     the only surface where a LOGGED-OUT visitor meets the score, which is why
+     the explainer matters more here than on a screen inside a round.
+
+     `info` is a separate field rather than something `line` could return: the
+     card escapes `line`'s output as text, and the button is markup.
+
+     IT RIDES THE LABEL, NOT THE VALUE. Beside the number it looks more direct,
+     and measured at 1100px it costs the whole grid 28px of card height: the
+     value line is 186px of a 217px box, so the 28px button does not fit beside
+     it and wraps — by ONE pixel in German, and further in Spanish, so the
+     wrapping is locale-dependent rather than reliably absent. On the label
+     („Am besten bewertet", 149px) there is 40px of headroom and the cards grow
+     by 7px, which is just the control's own height. The label is also what the
+     ⓘ is explaining, so it reads correctly there.
+
+     The number goes through the locale formatter, not straight into the string:
+     a raw JS number interpolates as "4.6", and German writes "4,6". */
+  {
+    key: 'bestRated',
+    icon: 'ti-star',
+    info: 'score',
+    line: (e) => tn(e.ratings, 'stats.ratedOne', 'stats.rated', { score: fmtAvg(e.score) }),
+  },
 ];
 
 // The scale counters, in render order: rounds first, then the people in them.
@@ -91,7 +113,7 @@ function statsCard(podium, entry) {
     <li class="stats-card">
       ${cover}
       <span class="stats-card__body">
-        <span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(t('stats.' + podium.key))}</span>
+        <span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(t('stats.' + podium.key))}${podium.info ? ` ${infoButton(podium.info)}` : ''}</span>
         ${title}
         <span class="stats-card__value muted">${esc(podium.line(entry))}</span>
       </span>
@@ -130,7 +152,12 @@ function renderPublicStats(stats) {
   // claim the data does not support (lib/public-stats.js).
   const note = cards ? `<p class="stats-note muted">${esc(t('stats.note'))}</p>` : '';
 
-  return h(`<div class="stats-block">${counters}${cards}${note}</div>`);
+  const el = h(`<div class="stats-block">${counters}${cards}${note}</div>`);
+  // Bound on the DETACHED element, which `wireInfoButtons` handles fine — every
+  // caller appends it, and doing it here means no surface can mount the block
+  // and forget the ⓘ (the landing page being the one that would hurt).
+  wireInfoButtons(el);
+  return el;
 }
 
 /* ------------------------------- /entdecken -------------------------------- */
@@ -299,8 +326,10 @@ async function mountHomeStatsPanel(placeholder) {
     placeholder.appendChild(h(`<p class="muted empty-note">${esc(t('stats.teaser.sub'))}</p>`));
     return;
   }
-  placeholder.appendChild(h(
+  const list = h(
     `<ul class="stats-cards stats-cards--home">${podiums.map((p) => statsCard(p, stats.games[p.key])).join('')}</ul>`
-  ));
+  );
+  wireInfoButtons(list);
+  placeholder.appendChild(list);
   placeholder.appendChild(h(`<p class="stats-note muted">${esc(t('stats.note'))}</p>`));
 }

@@ -100,24 +100,50 @@ function tileValue(r) {
    every pill on the screen with it. */
 function scoreRatings(ratings) {
   const list = Array.isArray(ratings) ? ratings : [];
+  const tiles = TILE_VALUE.map(() => 0);
+  list.forEach((r) => { if (tileValue(r) !== null) tiles[r] += 1; });
+  return scoreTally(tiles);
+}
+
+/* Score a per-tile HISTOGRAM: `tiles[k]` is how many votes landed on tile k.
+
+   Same curve, same return shape and the same null-on-empty contract as
+   `scoreRatings` — which is now expressed through it, so the two input shapes
+   cannot come to disagree about what a set of votes is worth.
+
+   WHY A SECOND SHAPE EXISTS AT ALL (#914). The cross-tenant Discover aggregate
+   (lib/public-stats.js) is fed by a `count(*) FILTER` per tile from SQL, because
+   the Postgres aggregate cannot require() this file. The obvious alternative — a
+   `sum(CASE …)` over the tile values there — would hand-restate all six
+   TILE_VALUE numbers in a place that can never be kept in step, and the header
+   above says those numbers are *expected* to be retuned. That copy would freeze
+   the public podium on the old curve, silently, on the one surface a logged-out
+   visitor sees (.claude/rules/shared-constants-across-the-stack.md). A histogram
+   carries no curve at all — only which tile a vote landed on, which is the
+   SCALE, and the scale is already restated in that SQL for #797's sake.
+
+   A non-integer or negative bucket is treated as empty rather than trusted:
+   `count` is a divisor here, and a stray value would paint every podium NaN. */
+function scoreTally(tiles) {
+  const counts = Array.isArray(tiles) ? tiles : [];
   let sum = 0;
   let count = 0;
   let low = null;
   let vetoes = 0;
   let retires = 0;
-  list.forEach((r) => {
-    const v = tileValue(r);
-    if (v === null) return;
-    sum += v;
-    count++;
-    if (low === null || r < low) low = r;
-    if (r === 1) vetoes++;
-    if (r === 0) retires++;
-  });
+  for (let r = 0; r < TILE_VALUE.length; r++) {
+    const n = counts[r];
+    if (!Number.isInteger(n) || n <= 0) continue;
+    sum += TILE_VALUE[r] * n;
+    count += n;
+    if (low === null) low = r;
+    if (r === 1) vetoes = n;
+    if (r === 0) retires = n;
+  }
   if (!count) return null;
   return { score: sum / count, count, low, vetoes, retires };
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { TILE_VALUE, SCORE_MIN, tileValue, scoreRatings };
+  module.exports = { TILE_VALUE, SCORE_MIN, tileValue, scoreRatings, scoreTally };
 }

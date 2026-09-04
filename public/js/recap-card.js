@@ -102,7 +102,7 @@ function recapCardBlocks(model) {
     rows.push({ label: t('pokale.mostPlayed'), value: model.played.join(' · '), sub: model.playedSub });
   }
   if (model.rated && model.rated.length) {
-    rows.push({ label: t('pokale.bestRated'), value: model.rated.join(' · '), sub: `Ø ${model.ratedAvg}` });
+    rows.push({ label: t('pokale.bestRated'), value: model.rated.join(' · '), sub: model.ratedScore });
   }
   const shelf = [
     { n: model.added, label: t('periodRecap.label.added'), plus: true },
@@ -125,7 +125,7 @@ function recapCardHeight(model) {
 
 // `model` is what the view already computed for the screen:
 // { roundName, periodLabel, sessions, gamesPlayed, played: [titles],
-//   playedCount, rated: [titles], ratedAvg, added, retired, completed }.
+//   playedCount, rated: [titles], ratedScore, added, retired, completed }.
 function drawRecapCard(ctx, model, height) {
   const p = recapPalette();
   const W = RECAP_CARD_W;

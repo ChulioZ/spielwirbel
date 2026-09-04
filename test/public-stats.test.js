@@ -105,6 +105,31 @@ async function seedPlayedGame({ externalId, title, rating = 5 }) {
   return { round, game };
 }
 
+/* Two provider-linked games rated by three people in one session, so a case can
+   choose the exact vote spread it needs. `seedPlayedGame` above cannot: it casts
+   ONE vote, and the whole point of the score is what happens when several
+   disagree. */
+async function seedRatedPair({ a, b, votesA, votesB }) {
+  const round = track(await createRound(request, { name: 'Wertungsrunde', members: ['Ann', 'Bo', 'Cy'] }));
+  const mk = async (externalId, title) => (await request(app).post(`/api/rounds/${round.id}/games`).send({
+    title, minPlayers: '1', maxPlayers: '4',
+    sourceProvider: 'bgg', sourceExternalId: externalId,
+  })).body;
+  const gA = await mk(a, 'Getippt A');
+  const gB = await mk(b, 'Getippt B');
+  const fresh = (await request(app).get(`/api/rounds/${round.id}`)).body;
+  const { session } = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+    gameIds: [gA.id, gB.id], memberIds: fresh.members.map((m) => m.id),
+  })).body;
+  const votes = {};
+  fresh.members.forEach((m, i) => {
+    votes[m.id] = { [gA.id]: { rating: votesA[i] }, [gB.id]: { rating: votesB[i] } };
+  });
+  const res = await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/results`).send({ votes });
+  assert.equal(res.status, 200, `fixture step failed: ${JSON.stringify(res.body)}`);
+  return { round, gA, gB };
+}
+
 /* ------------------------------- the gate ---------------------------------- */
 
 /*
@@ -371,4 +396,78 @@ test('the scheduler job rebuilds the payload when the feature is on', async () =
   const built = await scheduler.runJob('rebuildPublicStats');
   assert.ok(built, 'the job returns what it built');
   assert.ok(publicStats.publicStats(), 'and the route can now serve it');
+});
+
+/* ----------------------------- the score ----------------------------------- */
+
+/* The two vote spreads have the SAME raw arithmetic mean (11/3), which is what
+   makes this fixture discriminating: under the mean the two games tie and the
+   winner is whichever the sort happened to reach first, so a spec asserting a
+   winner would have been a coin flip that passed. Under the Spielwirbel-Score
+   the veto is decisive — (5+5−5)/3 = 1,67 against (4+4+3)/3 = 3,67. */
+test('the podium ranks on the score, so a veto loses to a game nobody objects to', async () => {
+  openContentFloors();
+  stubProvider();
+  await seedRatedPair({
+    a: 'thing-veto', b: 'thing-content', votesA: [5, 5, 1], votesB: [4, 4, 3],
+  });
+
+  const built = await rebuild();
+  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-content');
+  assert.equal(built.games.bestRated.score, 3.7);
+  assert.equal(built.games.bestRated.ratings, 3);
+});
+
+/* Five vetoes score −5, and a negative on a public front door reads as a broken
+   app rather than as a bad game — every other surface clamps for display, so
+   this one must too (core.js's `displayScore`).
+
+   Both games here are disliked, so the winner is genuinely below the floor: the
+   raw mean would publish 1,0 and the score publishes the clamped 0,0. Ranking
+   stays UNCLAMPED, which is what keeps `thing-bad` (−5) above `thing-worse`
+   (−6) — two floored games must still sort, or the podium would name whichever
+   the aggregate happened to reach first. */
+test('a published score is clamped at the display floor, but the RANKING is not', async () => {
+  openContentFloors();
+  stubProvider();
+  await seedRatedPair({
+    a: 'thing-bad', b: 'thing-worse', votesA: [1, 1, 1], votesB: [0, 0, 0],
+  });
+
+  const built = await rebuild();
+  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-bad', 'the floor decided the ranking');
+  assert.equal(built.games.bestRated.score, 0, 'a negative reached the public payload');
+});
+
+/* THE CURVE HAS ONE HOME (#914). The repo aggregate reports a per-tile histogram
+   and never a score, precisely so the six tunable TILE_VALUE numbers are not
+   hand-restated in SQL that cannot require() them — a restatement would freeze
+   the public podium on the old curve the first time anybody retunes.
+   
+   Retuning the table in place is the only assertion that can see this: it moves
+   with the shared module or it does not move at all. A spec pinning a literal
+   score would pass just as well against a SQL copy.
+   
+   For the POSTGRES half specifically this composes with the repo contract, which
+   asserts both backends bin the same votes into the same tiles — the score is
+   then computed from those tiles in JS, here, by the code under test. */
+test('retuning TILE_VALUE moves the published score — the curve is not restated in the aggregate', async () => {
+  openContentFloors();
+  stubProvider();
+  await seedRatedPair({
+    a: 'thing-tuned', b: 'thing-quiet', votesA: [5, 5, 1], votesB: [1, 1, 1],
+  });
+  const { TILE_VALUE } = require('../public/js/vote-score');
+  const original = TILE_VALUE.slice();
+
+  assert.equal((await rebuild()).games.bestRated.score, 1.7, 'the shipped curve');
+
+  try {
+    // Forgive the veto entirely: `{5,5,1}` becomes the raw mean again.
+    TILE_VALUE[1] = 1;
+    assert.equal((await rebuild()).games.bestRated.score, 3.7, 'the podium did not follow the retune');
+  } finally {
+    original.forEach((v, i) => { TILE_VALUE[i] = v; });
+  }
+  assert.equal((await rebuild()).games.bestRated.score, 1.7, 'the retune leaked out of the case');
 });

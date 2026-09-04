@@ -158,11 +158,14 @@ pre-#797 row can hold `{ rating: 4, retire: true }`, and "retirement wins" has t
 be answered identically in all eight places or a legacy round's history changes
 depending on which screen is asked.
 
-Its trap is the tenth site, which **cannot** require the file: the corpus
-aggregate in `lib/repo/postgres.js` is SQL. Both halves of the rule are restated
-there by hand — the `WHERE` must admit a retire-only vote (the pre-#797 clause
-`jsonb_typeof(…'rating') = 'number'` silently dropped it) and the `CASE` must let
-retirement win. Note the comparison is `vote.val->'retire' = 'true'::jsonb`, not
+Its trap is the tenth site, which **cannot** require the file: the cross-tenant
+aggregate `publicGameAggregates` in `lib/repo/postgres.js` is SQL. Both halves of
+the rule are restated there by hand — it must admit a retire-only vote (the
+pre-#797 clause `jsonb_typeof(…'rating') = 'number'` silently dropped it) and it
+must let retirement win. #914 collapsed what had been a separate `WHERE` and
+`CASE` into **one lateral `tile` expression**, so the admission test and the
+resolved value are by construction the same decision instead of two spellings of
+it that could drift apart. Note the comparison is `vote.val->'retire' = 'true'::jsonb`, not
 `->>'retire' = 'true'`: the text form also matches the **string** `"true"`, which
 `effectiveRating`'s `=== true` rejects — and the legacy `/results` route stores a
 member's column unvalidated, so that is a shape the JSON backend really can hold.
@@ -281,6 +284,25 @@ single-table results screen and the multi-table objective had been applying
 `effectiveRating`. A default would hand back a plausible, confident,
 differently-scored split with no error anywhere, which is this rule's failure
 mode expressed as a seating chart.
+
+**#914 gave it a second input shape, `scoreTally`, and the reason is the trap
+above seen from the other side.** The Discover podium (`lib/public-stats.js`)
+ranks cross-tenant games on this score, and the aggregate feeding it is that same
+SQL. Summing `TILE_VALUE` there would have hand-restated all six numbers in the
+one place that can never require them — and this file's own header says those
+numbers are *expected to be retuned*, so the copy would silently freeze the
+public podium on the old curve while every other screen moved. It is the palette
+bug with the blast radius pointed at the logged-out landing page.
+
+So the aggregate reports a **per-tile histogram** — `count(*) FILTER` per tile,
+which is pure *scale* and carries no curve at all — and `scoreTally` applies the
+curve in JS. `scoreRatings` is now expressed through it, so the two shapes cannot
+disagree. The generalisable move: when a boundary cannot take the shared
+function, push the boundary **down** to something the function still owns, rather
+than copying the function across it. `test/public-stats.test.js` proves the
+ownership the only way that survives a retune — it changes `TILE_VALUE` in place
+and asserts the published score follows, where a spec pinning a literal would
+pass just as well against a SQL copy.
 
 Two neighbouring values deliberately did **not** join it. `VIOLATION_MAX` stays
 in `table-split.js`: it is a threshold on the *tile* scale, not on the score, and

@@ -57,9 +57,12 @@ const PAIRS = [
   },
   {
     what: 'stats.rated — the best-rated stat card',
-    one: 'stats.ratedOne', other: 'stats.rated', params: { avg: '4,6' },
-    de: ['4,6 von 5 — 1 Bewertung', '4,6 von 5 — 2 Bewertungen'],
-    en: ['4,6 out of 5 — 1 rating', '4,6 out of 5 — 2 ratings'],
+    one: 'stats.ratedOne', other: 'stats.rated', params: { score: '4,6' },
+    // The number is the Spielwirbel-Score since #914, so the copy must no longer
+    // say „von 5"/"out of 5" — the podium is the one surface a logged-out
+    // visitor meets it on, and it was the app claiming a mean it stopped using.
+    de: ['Score 4,6 — 1 Bewertung', 'Score 4,6 — 2 Bewertungen'],
+    en: ['Score 4,6 — 1 rating', 'Score 4,6 — 2 ratings'],
   },
   {
     what: 'lobby.closeConfirm — closing the lobby with votes outstanding',

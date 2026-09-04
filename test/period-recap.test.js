@@ -10,10 +10,11 @@ const { periodsOf, periodRecap, periodKeyOf } = require('../public/js/period-rec
 const { sessionPeople } = require('../public/js/session-people');
 const { effectiveRating } = require('../public/js/vote-scale');
 const { RECAP_MIN_RATINGS } = require('../public/js/recap');
+const { scoreRatings } = require('../public/js/vote-score');
 const { isActiveGame } = require('../public/js/draw-pool');
 
 const deps = {
-  peopleOf: sessionPeople, ratingOf: effectiveRating,
+  peopleOf: sessionPeople, ratingOf: effectiveRating, scoreOf: scoreRatings,
   minRatings: RECAP_MIN_RATINGS, isActive: isActiveGame,
 };
 
@@ -196,7 +197,10 @@ test('a retirement proposal counts as the zero it is', () => {
       },
     ],
   });
-  assert.equal(periodRecap(r, [], month('2026-07'), deps).topRated.avg, 0);
+  /* Three retirement proposals, one of them over a stored 5. TILE_VALUE[0] is
+     −6, so the crown scores exactly that — and the number discriminates: had the
+     stored 5 won, this would be (5 − 6 − 6) / 3 ≈ −2,33. */
+  assert.equal(periodRecap(r, [], month('2026-07'), deps).topRated.score, -6);
 });
 
 test('a tie on best-rated names every tied game', () => {
@@ -289,7 +293,9 @@ test('the best-rated card skips a retired game AND a completed one', () => {
   });
   const rec = periodRecap(r, [], month('2026-07'), deps);
   assert.deepEqual(rec.topRated.gameIds, ['g1']);
-  assert.equal(rec.topRated.avg, 3);
+  // All 3s, and f(3) = 3 is one of the curve's pinned anchors — so the score
+  // and the old raw mean coincide here, which is what makes it a clean fixture.
+  assert.equal(rec.topRated.score, 3);
   // …while the record card still names the retired game the group played.
   assert.deepEqual(rec.topPlayed.gameIds, ['g2']);
 });
