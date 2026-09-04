@@ -798,7 +798,6 @@ I18N.en = {
   'result.titleWonOne': '“{game}” was played. {names} won!',
   'result.titleWonMany': '“{game}” was played. {names} won!',
   'result.titlePlayed': '“{game}” was played.',
-  'result.bannerChosen': 'Playing: {title}',
   'result.bannerPrompt': 'Tap “Play” on a game to record what you’re playing.',
   'result.play': 'Play',
   'result.willPlay': 'Playing',

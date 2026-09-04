@@ -752,7 +752,6 @@ I18N.es = {
   'result.titleWonOne': 'Jugasteis a «{game}». ¡Ganó {names}!',
   'result.titleWonMany': 'Jugasteis a «{game}». ¡Ganaron {names}!',
   'result.titlePlayed': 'Jugasteis a «{game}».',
-  'result.bannerChosen': 'Se juega: {title}',
   'result.bannerPrompt': 'Toca «Jugar» en un juego para dejar constancia de a qué jugáis.',
   'result.play': 'Jugar',
   'result.willPlay': 'Se juega',

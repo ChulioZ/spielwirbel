@@ -168,7 +168,12 @@ function renderChronikTab(round, activities) {
     if (outcome === 'split') parts.push(iconText('ti-layout-grid', t('sessions.split')));
     else if (s.finished) parts.push(winnerNames.length ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' + winnerNames.map(esc).join(', ') : iconText('ti-check', t('sessions.played')));
     else if (outcome === 'cancelled') parts.push(`<span style="color:var(--danger)">${iconText('ti-x', t('sessions.cancelled'))}</span>`);
-    parts.push(esc(tn(s.gameIds.length, 'sessions.ratedOne', 'sessions.rated')));
+    // „N Spiele bewertet" counts the games IN the session, phrased as games
+    // RATED — true for a voted session, and for a direct-play one (#532) it read
+    // „1 Spiel bewertet" over zero votes (#915). Omitted entirely there rather
+    // than reworded: the card then reads „3. September · ✓ Gespielt", which is
+    // the whole truth about that evening.
+    if (sessionHasVotes(s)) parts.push(esc(tn(s.gameIds.length, 'sessions.ratedOne', 'sessions.rated')));
 
     const card = h(`<a class="session-card">
          <div class="session-card__img">${thumbIcon}</div>

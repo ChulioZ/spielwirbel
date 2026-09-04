@@ -140,6 +140,7 @@ const frontendGlobals = {
   setupArchiveSelection: 'readonly',
   // session-outcome.js (issue #796) — also required by lib/routes/sessions.js
   sessionChildIds: 'readonly', sessionOutcome: 'readonly', isSplitParent: 'readonly',
+  sessionHasVotes: 'readonly',
   // table-split.js (issue #796) — also required by lib/draw.js and lib/session-split.js
   MIN_TABLE_PARTIES: 'readonly', VIOLATION_MAX: 'readonly', NEUTRAL_RATING: 'readonly',
   MAX_TABLE_PROPOSALS: 'readonly', seatRating: 'readonly', tableFeedback: 'readonly',

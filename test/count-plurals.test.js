@@ -171,6 +171,11 @@ const chronikRound = (gameIds) => ({
   sessions: [{
     id: 100, done: true, finished: true,
     createdAt: '2026-08-10T18:00:00.000Z', gameIds, winnerIds: [1],
+    // A real vote per game: since #915 the card omits the „N Spiele bewertet"
+    // fragment entirely when nobody voted, so an unvoted fixture would make this
+    // spec assert the phrasing of a line that is no longer rendered.
+    votes: { 1: Object.fromEntries(gameIds.map((g) => [g, { rating: 4, retire: false }])) },
+    votedIds: [1],
   }],
 });
 
