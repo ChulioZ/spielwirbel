@@ -95,6 +95,22 @@ the padding, `--gd-cover-w`, the gap and `.gd-info`'s basis — and asserts
 `--gd-stats-w` fits inside it. A pinned `256` would go stale the moment any of
 those five is retuned, which is precisely the change that would re-break this.
 
+Two things that make such a guard quietly weaker rather than red:
+
+- **`.gd-head` is declared twice** — once at desktop and once inside
+  `@media (max-width: 700px)` — and `bodyOf()` returns whichever comes **first**
+  in the sheet. Reading the phone rule by accident yields `padding: 20px` and so
+  a *larger* headroom, i.e. a guard that still passes while permitting the bug.
+  Pin which rule you got (`--gd-cover-w` in px, not `100%`), and assert every
+  derived term is finite before doing arithmetic with it.
+- **`.score-label`, `.score-why` and `.sort-flag` are shared with the Regal
+  rows.** A sweep that matches the bare class also binds `.ds-row__meta
+  .sort-flag`, holding an unrelated component to this column's constraint. Match
+  the class only as the selector's **last** compound, under no ancestor but
+  `.gd-head`/`.gd-stats` — and prove the narrowing by breaking the *excluded*
+  component and watching the test stay **green**, which is the only evidence that
+  a scope restriction restricts the right thing.
+
 **Related:** `.claude/rules/flex-none-cancels-flex-wrap.md` (the same declaration
 on the *container*, where it kills the `flex-wrap` beside it — this file is the
 item-side half), `.claude/rules/responsive-content-width.md` (why the column has
