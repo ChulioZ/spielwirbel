@@ -204,7 +204,11 @@ test('a split evening leads with what happened to it, not with a played game', (
     translator('de'),
     joinNames('de')
   );
-  assert.ok(text.includes('Der Abend wurde auf mehrere Tische aufgeteilt.'));
+  // Read from the real lang table rather than hand-copied: a literal here is a
+  // second copy of the string under test, and it is the copy nobody re-checks
+  // (.claude/rules/shared-constants-across-the-stack.md). #899 renamed this
+  // headline and the literal was the only thing that noticed.
+  assert.ok(text.includes(translator('de')('result.titleSplit')));
   assert.ok(text.includes('Catan: Anna, Ben, Dana'));
   assert.ok(text.includes('Azul: Eli, Frida, Georg'));
   assert.ok(!text.includes(SHARE_TROPHY), 'nobody won an evening that was split');

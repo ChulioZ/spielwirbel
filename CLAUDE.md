@@ -145,11 +145,16 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   `showRetired` view. The German display word "Aussortieren" lives only in
   `lang/de.js`.
 - The core entity (a voting/play session) is called **"Session"** — in code
-  (`sessions`, `…/sessions` routes) *and* in both UI languages. Don't
+  (`sessions`, `…/sessions` routes) *and* in every shipped UI language. Don't
   reintroduce "Spielabend", "game night", or "Abend" for it. The app brand
   "Spielwirbel" (`app.title`, `<title>`) names the product, not the entity,
   and is the one intentional exception (it replaced the earlier working name
   "Spieleabend" in the #147 rebrand — don't reintroduce that either).
+  **`test/session-naming.test.js` enforces it** (#899, after the rule was skipped
+  twice with it already written), scanning translation *values* + `news.js` in
+  all five locales. It deliberately does **not** cover developer prose, **round**
+  names (a round is a group — the demo's „Spieleabend" round is fine), or
+  time-of-day adverbials, which name no entity („heute", "tonight", « ce soir »).
 - There is intentionally **no one-time migration code** in the backend; the live
   `data.json` is fully up to date. For a future schema change, migrate the data
   once (with the server stopped, see `.claude/rules/`) rather than keeping

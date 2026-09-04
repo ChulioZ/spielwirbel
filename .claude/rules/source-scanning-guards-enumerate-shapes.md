@@ -59,6 +59,33 @@ it. This is the general case of the family in
 since a test-first author writing the scan alongside the conversion sees the same
 green.
 
+## The inverse: a scan over raw TEXT trips on its own documentation
+
+Everything above is about a scan matching too little. #899's guard
+(`test/session-naming.test.js`, the ban on naming a Session an „Abend") hit the
+opposite wall, and the natural implementation is the wrong one.
+
+Written over raw file text it is unshippable: the comment above `result.winner`
+contains „Abend" in **all five** `lang/*.js` files — it is the comment
+documenting this very rule — and four of the five file headers name the banned
+phrase to warn translators off it. A text scan flags six sites that are all
+correct, so the only way to green is to weaken the pattern until it stops
+catching the real ones.
+
+**Scan the parsed VALUES instead.** The `vm` sandbox seam
+`test/i18n-parity.test.js` uses hands back the dictionary, so comments are gone
+by construction rather than by an exclusion list that has to be maintained.
+Where a guard bans a *word*, the corollary is general: the place a rule is
+written down is the place that word legitimately appears, so a text-level scan
+is at war with its own documentation.
+
+The second half is that a banned word can have an allowed sense. French « soir »
+is the entity in « le jeu du soir » and the time-of-day adverbial in « ce soir »,
+so the guard strips the allowed phrases *first* and then bans bluntly. Say in a
+comment which mechanism you chose — and give the matcher its own self-test with
+both positive and negative cases, since the negatives are the only thing proving
+it bans the entity rather than the word.
+
 **Related:** `.claude/rules/break-the-code-on-purpose.md` (the discipline this is
 an instance of, and the "name the failing test, don't count failures" habit that
 made the five green runs legible),

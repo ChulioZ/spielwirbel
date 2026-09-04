@@ -196,7 +196,7 @@ const SKILL_ALLOW = {
 };
 
 const CLAUDE_MD_ALLOW = {
-  'CLAUDE.md': 'recorded 2026-08-05 — 212 lines against C-015\'s ~200 target. It was recorded at 203 on 2026-07-30 and drifted +9 through #594/#598 without anyone noticing, which the 2026-08-04 claude-file audit found and #635 refreshed. The overshoot is still small and real: every candidate line is a live constraint, so trimming to the number would cost a `why` this file exists to carry — the outcome this budget explicitly does not want. Left as M-001 worklist',
+  'CLAUDE.md': 'recorded 2026-09-04 — 219 lines against C-015\'s ~200 target (212 on 2026-08-05; #899 added the pointer to the Session-naming guard test). It was recorded at 203 on 2026-07-30 and drifted +9 through #594/#598 without anyone noticing, which the 2026-08-04 claude-file audit found and #635 refreshed. The overshoot is still small and real: every candidate line is a live constraint, so trimming to the number would cost a `why` this file exists to carry — the outcome this budget explicitly does not want. Left as M-001 worklist',
 };
 
 // --- The assertions, applied identically to all four classes.

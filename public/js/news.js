@@ -46,8 +46,8 @@ const NEWS = [
       title: 'Der Spielwirbel-Score löst den Ø ab',
       body: 'Die Bewertung eines Spiels ist jetzt mehr als der Durchschnitt: '
         + 'Wenn jemand ein Spiel gar nicht spielen möchte, zählt das schwerer '
-        + 'als eine gute Bewertung von jemand anderem — damit am Ende ein Abend '
-        + 'herauskommt, auf den alle Lust haben. Solange niemand schlechter als '
+        + 'als eine gute Bewertung von jemand anderem — damit am Ende gespielt '
+        + 'wird, worauf alle Lust haben. Solange niemand schlechter als '
         + '„geht so" bewertet hat, ist der Score genau der gewohnte '
         + 'Durchschnitt; weicht er ab, steht daneben, warum. Den reinen '
         + 'Durchschnitt aller Bewertungen findet ihr weiterhin unten auf der '
@@ -57,8 +57,8 @@ const NEWS = [
       title: 'The Spielwirbel score replaces the Ø',
       body: 'A game\'s rating is now more than the average: if somebody does '
         + 'not want to play a game at all, that counts for more than a good '
-        + 'rating from somebody else — so that what comes out at the end is an '
-        + 'evening everybody is up for. As long as nobody rated below „so-so", '
+        + 'rating from somebody else — so that what you end up playing is '
+        + 'something everybody is up for. As long as nobody rated below „so-so", '
         + 'the score is exactly the average you are used to; where it differs, '
         + 'it says why right beside it. The plain average of all ratings is '
         + 'still shown at the bottom of the game\'s page.',
@@ -158,7 +158,7 @@ const NEWS = [
   {
     revision: '2026-08-21',
     de: {
-      title: 'Mehrere Tische an einem Abend',
+      title: 'Mehrere Tische in einer Session',
       body: 'Zu viele für ein Spiel? Setzt beim Auslosen einen Haken bei „Mehrere '
         + 'Tische". Es wird einmal gemeinsam abgestimmt, danach schlägt euch die App '
         + 'fertige Aufteilungen auf zwei, drei oder mehr Tische vor — mit Spiel und '
@@ -166,7 +166,7 @@ const NEWS = [
         + 'wie zufrieden jeder Tisch ist.',
     },
     en: {
-      title: 'Several tables in one evening',
+      title: 'Several tables in one session',
       body: 'Too many of you for one game? Tick "Multiple tables" when you draw. '
         + 'Everyone votes once together, and the app then proposes ready-made splits '
         + 'across two, three or more tables — game and seating included. You can move '
