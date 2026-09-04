@@ -174,6 +174,20 @@ test('a SHARED step lays its members sideways — the tie may only grow WIDTH', 
   assert.ok(shared < solo, `a shared step shrinks its avatars (${shared} vs ${solo})`);
 });
 
+test('a shared step drops the RAW COUNT, keeping the number it is ranked by', () => {
+  /* The view emits both numbers on every entry and CSS decides which fits
+     (#895). Without this rule a chip carries „+2,0 · 12 Siege" — roughly twice
+     the fixed width „3 Siege" already took out of a 108px phone step — so every
+     name on a crowded step ellipsises away and #897's lying-down buys nothing.
+     Asserted as text because jsdom applies no external stylesheet, so no
+     rendered-DOM spec in the suite can see it
+     (`.claude/rules/testing-views-under-jsdom.md`). */
+  assert.match(bodyOf('.podium__col--multi .podium__winsraw'), /display:\s*none/,
+    'the count must give way on a shared step, or the name does');
+  assert.equal(bodyOf('.podium__col--multi .podium__score'), null,
+    'the score is the half that must never be hidden — it is what the step ranks on');
+});
+
 test('an entry is a DEFINITE box, so covers stay uniform and names clip', () => {
   /* A `%` inside a shrink-to-fit column resolves against whichever child is
      widest — the name — which stops text-overflow ever firing
@@ -214,11 +228,26 @@ test('the tier apparatus is gone — not merely unused', () => {
 
 const RID = 'r1';
 
-const session = (id, winnerIds) => ({
+/* THE FIELD SIZE IS PART OF THE FIXTURE SINCE #895, and it used to be wrong in
+   a way nothing could see: every session here was seated `memberIds: ['m1']`,
+   i.e. a SOLO night, which was harmless while the ranking was a raw win count
+   and makes every night worth exactly zero now.
+
+   Each night therefore seats the whole round plus guests up to FIELD parties.
+   Eight is chosen, not arbitrary: a member's Siegwertung with everyone present
+   every night is `wins − T/p` for T nights, so p has to exceed T for a
+   single-win member to sit above chance at all. Eight clears that for the six
+   fixtures that want their lowest member ON the stage, and still leaves the
+   {4,3,2,1} fixture's one-win member below it — which is the case that pins the
+   rest line. Retune it and those two claims move in opposite directions. */
+const FIELD = 8;
+
+const session = (id, winnerIds, memberIds, guests) => ({
   id,
   createdAt: '2026-07-01T20:00:00.000Z',
   gameIds: ['g1'],
-  memberIds: ['m1'],
+  memberIds,
+  guests,
   votes: { m1: { g1: { rating: 4, retire: false } } },
   votedIds: ['m1'],
   finished: true,
@@ -243,11 +272,22 @@ const round = (members, sessions) => ({
 const memberList = (n) => Array.from({ length: n }, (_, i) => ({ id: `m${i + 1}`, name: `P${i + 1}` }));
 
 // `wins` maps a member id to how many nights they won; one session per win.
-const winsToSessions = (wins) =>
-  Object.entries(wins).flatMap(([mid, n]) => Array.from({ length: n }, (_, i) => session(`${mid}-${i}`, [mid])));
+// Every member is seated at every night, and guests pad the table out to FIELD
+// parties — the guests never win, so they change nobody's ordering, only the
+// denominator each win is measured against.
+const winsToSessions = (wins, members) => {
+  const memberIds = members.map((m) => m.id);
+  const guests = Array.from({ length: Math.max(0, FIELD - memberIds.length) }, (_, i) => ({
+    id: `guest-${i}`,
+    name: `G${i}`,
+  }));
+  return Object.entries(wins).flatMap(([mid, n]) =>
+    Array.from({ length: n }, (_, i) => session(`${mid}-${i}`, [mid], memberIds, guests))
+  );
+};
 
 async function pokale(t, members, wins) {
-  const r = round(members, winsToSessions(wins));
+  const r = round(members, winsToSessions(wins, members));
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   dom.set('api', async (method, url) => {
@@ -296,8 +336,16 @@ test('every member carries their OWN win count; the step carries only the rank',
   const tied = cols.find((el) => el.classList.contains('podium__col--2'));
 
   const leadWins = lead.querySelector('.podium__wins');
-  assert.equal(leadWins.textContent, '2\u00d7', 'the count is notation on the stage, like the Ø pills');
+  /* An UPRIGHT entry — one member alone on a step — has a whole line, so it
+     carries both numbers: the Siegwertung it is ranked by and the raw count
+     that explains why 12 Siege can sit below 5. */
+  assert.match(leadWins.textContent, /^\+1,4 · 2 Siege$/, 'both numbers, score first');
   assert.match(leadWins.getAttribute('title'), /2 Siege/, 'the phrase it stands for stays one hover away');
+  /* On a SHARED step the raw count is what gives way (styles.css), so the
+     markup must still carry it — hiding it is CSS's call, not the view's. */
+  const chip = tied.querySelector('.podium__entry .podium__wins');
+  assert.ok(chip.querySelector('.podium__score'), 'the score is the half that always shows');
+  assert.ok(chip.querySelector('.podium__winsraw'), 'the count must be present for CSS to hide');
   assert.equal(tied.querySelectorAll('.podium__wins').length, 3,
     'a shared step states the count once PER MEMBER, not once for the step');
   for (const el of tied.querySelectorAll('.podium__base')) {

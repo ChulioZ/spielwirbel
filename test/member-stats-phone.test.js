@@ -98,11 +98,13 @@ test('every numeric stat card is marked, and the favourite tile is exempt', asyn
   await dom.call('showMember', RID, 'm1');
   const grid = dom.app.querySelector('.member-stats');
 
-  /* Four numeric cards + the favourite. The count is asserted rather than
-     "at least one": the reorder is applied per card, so a helper that stopped
-     marking one of them would leave a single label-first tile in the grid. */
+  /* Five numeric cards + the favourite — the fifth is the Siegwertung (#895),
+     which sits beside the win rate it corrects. The count is asserted rather
+     than "at least one": the reorder is applied per card, so a helper that
+     stopped marking one of them would leave a single label-first tile in the
+     grid. */
   const marked = grid.querySelectorAll('.member-stats__card');
-  assert.equal(marked.length, 4, 'all four numeric stat cards must be marked');
+  assert.equal(marked.length, 5, 'all five numeric stat cards must be marked');
   marked.forEach((c) =>
     assert.ok(c.querySelector('.pokale-card__value'), 'a marked card must have a value to promote')
   );

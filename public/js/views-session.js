@@ -1131,7 +1131,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
        unnoticed. A session nobody voted in renders no label and therefore no
        ⓘ, which is correct — there is no number on screen to explain. */
     const scoreLabel = r.count
-      ? `<div class="score-label">${esc(t('score.name'))}${infoPlaced ? '' : ` ${scoreInfoButton()}`}</div>`
+      ? `<div class="score-label">${esc(t('score.name'))}${infoPlaced ? '' : ` ${infoButton('score')}`}</div>`
       : '';
     if (r.count) infoPlaced = true;
     const medal = r.place && r.place <= 3 ? `<span class="rank-medal rank-medal--${medalRanks[r.place - 1]}"><i class="ti ti-medal" aria-hidden="true"></i></span>` : '';
@@ -1196,9 +1196,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     app.appendChild(row);
   });
   // One call for whatever the loop placed — and none to bind when no row had
-  // votes. `wireScoreInfo` is idempotent, so the re-renders below (retire,
+  // votes. `wireInfoButtons` is idempotent, so the re-renders below (retire,
   // remove) cannot stack a second listener.
-  wireScoreInfo(app);
+  wireInfoButtons(app);
 
   function updateChosen() {
     rowRefs.forEach(({ gameId, row, btn }) => {

@@ -56,10 +56,28 @@ text wrap and the whole encoding is growable again.**
 
 Two supporting decisions, both measured rather than chosen:
 
-- **The win count is notation (`3×`), not prose (`3 Siege`).** On a 375px phone
-  each of the three steps is 108px, and the full phrase took 48 of them — every
+- **The chip prints ONE short number, never prose.** On a 375px phone each of
+  the three steps is 108px, and the full phrase „3 Siege" took 48 of them — every
   name truncated to three characters. It is not a cosmetic call: the alternative
   to the compact form is a second line, and a second line is height.
+
+  **WHICH number changed in #895**, from the win count (`3×`) to the Siegwertung
+  (`+0,8`) the step now ranks on. Both are in the markup of every entry and CSS
+  chooses: an upright entry has a whole line and prints `+2,8 · 4 Siege`;
+  `.podium__col--multi .podium__winsraw` hides the count on a shared step.
+  Measured at 375px on a three-way tie — the third row is why the issue's literal
+  „both numbers on each entry" was not built:
+
+  ```
+  form              number   name left   chip height
+  2×      (#897)      14px       52px       28px
+  +0,8    (#895)      25px       42px       28px    ← shipped
+  +0,8 · 2 Siege      75px        0px       28px    ← name gone entirely
+  ```
+
+  The count is the right half to drop: it explains why 12 Siege can rank below 5,
+  which only arises ACROSS steps, and step-mates are tied by definition. It
+  survives as the entry's `title`.
 - **The tie marker („geteilt") is on the pedestal, and it wraps.** So the step's
   height is a bet on the longest locale — see
   `.claude/rules/percent-sizes-under-a-shrink-to-fit-flex-item.md`, which owns
@@ -76,6 +94,12 @@ n=3  hero 227   tie-for-3rd 159
 n=5  hero 227   tie-for-3rd 225      ← the last one that holds
 n=6  hero 227   tie-for-3rd 258      ← inverted
 ```
+
+**Re-measured after #895: unchanged — five holds, six inverts.** Expected, and
+worth stating rather than assuming: that swap moved the chip's *width*, and the
+crossover is a function of its **height**, which stayed 28px. So after any retune
+of the chip's contents — if the height moved, re-measure; if only the width did,
+it cannot have moved.
 
 That is the number to re-measure and to re-record if anything in the chip, the
 gaps or the pedestal heights is retuned. For scale: the pre-#891 column stage

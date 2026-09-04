@@ -23,7 +23,7 @@ const frontendGlobals = {
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
   fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMoney: 'readonly',
-  fmtAvg: 'readonly', fmtCount: 'readonly',
+  fmtAvg: 'readonly', fmtSigned: 'readonly', fmtCount: 'readonly',
   // core.js
   app: 'readonly', context: 'readonly', toastEl: 'readonly',
   currentView: 'writable', h: 'readonly', esc: 'readonly', toastTimer: 'writable',
@@ -72,7 +72,7 @@ const frontendGlobals = {
   scoreColor: 'readonly', displayScore: 'readonly',
   scoreReason: 'readonly',
   // score-info.js (issue #893)
-  scoreInfoButton: 'readonly', wireScoreInfo: 'readonly', openScoreInfoSheet: 'readonly',
+  infoButton: 'readonly', wireInfoButtons: 'readonly', openInfoSheet: 'readonly', INFO_SHEETS: 'readonly',
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', initials: 'readonly',
   personColor: 'readonly',
   renderSeatPicker: 'readonly', renderGuestPicker: 'readonly', renderTeamPicker: 'readonly',
@@ -126,6 +126,8 @@ const frontendGlobals = {
   tileValue: 'readonly', scoreRatings: 'readonly',
   // rating-faces.js (issue #890) — frontend only, by design
   MOODS: 'readonly', ratingFace: 'readonly',
+  // win-score.js (issue #895): the Siegwertung
+  sessionWinScores: 'readonly', memberWinScores: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',

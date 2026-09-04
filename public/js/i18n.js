@@ -157,6 +157,18 @@ function fmtAvg(n) {
   }
 }
 
+// A number that is only meaningful with its sign — the Siegwertung (#895),
+// where „+2,0" says "above chance" and the bare „2,0" would read as a count.
+// Rounds to the PRINTED precision before deciding the sign, so a member at
+// −0,04 reads „0,0" rather than the nonsense „−0,0"; the `|| 0` is what folds
+// negative zero away, since -0 is falsy while (-0).toFixed(1) is "-0.0".
+// Negatives keep whatever minus glyph the locale uses, via fmtAvg.
+function fmtSigned(n) {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return '';
+  const rounded = Number(n.toFixed(1)) || 0;
+  return (rounded > 0 ? '+' : '') + fmtAvg(rounded);
+}
+
 // Thousands separators for the active locale, so a counter reads as a number
 // rather than as a serial. Falls back to the raw digits where Intl is
 // unavailable.

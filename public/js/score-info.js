@@ -1,4 +1,17 @@
-/* Spielwirbel – the ⓘ that explains the Spielwirbel-Score (#893).
+/* Spielwirbel – the ⓘ sheets that explain a derived number (#893, #895).
+
+   TWO SHEETS, ONE MECHANISM. It opened as the Spielwirbel-Score's explainer and
+   #895 added the Siegwertung's, which wants the identical „button → openSheet"
+   shape — so the topic became a parameter rather than a near-identical second
+   module (.claude/rules/shared-constants-across-the-stack.md's reasoning, one
+   level up: a copy of this file would drift in its focus trap and its Escape
+   path, not in a constant). The file and the `.score-info` CSS class keep their
+   original names: the class is the shared style hook for the dot and is pinned
+   by name in test/score-results-view.test.js, so renaming only the module would
+   make the naming less consistent, not more.
+
+   Everything below is about the Spielwirbel-Score specifically; the Siegwertung
+   entry follows the same rules — principle, no formula, one per screen.
 
    The score replaces a number every user had already learned to read, so it
    owes an explanation somewhere. Two surfaces carry it, and they do different
@@ -28,18 +41,28 @@
 
 'use strict';
 
+// The sheets, keyed by topic. `body` is one or more i18n keys; every paragraph
+// after the first renders muted, which is the shape the score sheet already had
+// (principle first, the caveat under it). Keeping the key wiring in a table
+// rather than in each caller is what stops a third sheet from inventing a
+// fourth naming convention for the same three strings.
+const INFO_SHEETS = {
+  score: { title: 'score.infoTitle', open: 'score.infoOpen', body: ['score.infoBody', 'score.infoRaw'] },
+  win: { title: 'win.infoTitle', open: 'win.infoOpen', body: ['win.infoBody'] },
+};
+
 // The ⓘ trigger, as an HTML string so it can be interpolated into a template
-// the caller is already building. `wireScoreInfo` binds whatever landed in the
+// the caller is already building. `wireInfoButtons` binds whatever landed in the
 // DOM — one call after the markup is inserted, however many buttons it holds.
-function scoreInfoButton() {
-  return `<button type="button" class="score-info" data-score-info aria-label="${esc(t('score.infoOpen'))}"><i class="ti ti-info-circle" aria-hidden="true"></i></button>`;
+function infoButton(topic) {
+  return `<button type="button" class="score-info" data-info-topic="${esc(topic)}" aria-label="${esc(t(INFO_SHEETS[topic].open))}"><i class="ti ti-info-circle" aria-hidden="true"></i></button>`;
 }
 
 // Bind every unbound ⓘ inside `root`. Idempotent via the dataset flag, so a
 // view that re-renders a fragment cannot stack a second listener on a button it
 // already wired.
-function wireScoreInfo(root) {
-  (root || document).querySelectorAll('[data-score-info]').forEach((b) => {
+function wireInfoButtons(root) {
+  (root || document).querySelectorAll('[data-info-topic]').forEach((b) => {
     if (b.dataset.scoreInfoBound) return;
     b.dataset.scoreInfoBound = '1';
     b.addEventListener('click', (e) => {
@@ -47,23 +70,26 @@ function wireScoreInfo(root) {
       // row; without this the click would also toggle whatever wraps it.
       e.preventDefault();
       e.stopPropagation();
-      openScoreInfoSheet();
+      openInfoSheet(b.dataset.infoTopic);
     });
   });
 }
 
 // Goes through openSheet for the focus trap, page lock and Back-dismissal
 // (#145/#333/#622) — never assign activeSheet directly.
-function openScoreInfoSheet() {
+function openInfoSheet(topic) {
+  const sheet = INFO_SHEETS[topic];
+  const paragraphs = sheet.body
+    .map((key, i) => `<p${i ? ' class="muted"' : ''}>${esc(t(key))}</p>`)
+    .join('');
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('score.infoTitle'))}">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t(sheet.title))}">
         <div class="sheet__head">
-          <h2>${esc(t('score.infoTitle'))}</h2>
+          <h2>${esc(t(sheet.title))}</h2>
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <div class="score-info__body">
-          <p>${esc(t('score.infoBody'))}</p>
-          <p class="muted">${esc(t('score.infoRaw'))}</p>
+          ${paragraphs}
         </div>
       </div>
     </div>`);

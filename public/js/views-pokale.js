@@ -67,7 +67,12 @@ function renderPokaleTab(round) {
   const finished = round.sessions.filter((s) => s.finished);
 
   const sec = h('<div class="section"></div>');
-  sec.appendChild(h(`<div class="section-head"><h1>${esc(t('pokale.title'))}</h1></div>`));
+  // The ⓘ explains the Siegwertung (#895) — the standings rank on a number the
+  // group has not seen before, so it owes an explanation somewhere. One per
+  // screen, beside the heading the standings sit under.
+  const head = h(`<div class="section-head"><h1>${esc(t('pokale.title'))} ${infoButton('win')}</h1></div>`);
+  wireInfoButtons(head);
+  sec.appendChild(head);
 
   if (finished.length === 0) {
     sec.appendChild(emptyState({ icon: 'ti-trophy', title: t('pokale.emptyTitle'), text: t('pokale.empty') }));
@@ -91,16 +96,32 @@ function renderPokaleTab(round) {
       if (wid in wins) wins[wid]++;
     })
   );
-  const ranked = [...round.members].sort((a, b) => wins[b.id] - wins[a.id]);
+  // THE RANKING IS THE SIEGWERTUNG, NOT THE COUNT ABOVE (#895). Counting wins
+  // ranked attendance — someone simply present more often accumulates more —
+  // and a solo evening is representable, so a member logging their solo plays
+  // built a total nobody playing in a group could answer. The raw count stays
+  // because it is what the group recognises; both are shown, which is what
+  // explains why 12 Siege can sit below 5.
+  const scores = memberWinScores(round, sessionPartyGroups);
+  const ranked = [...round.members].sort((a, b) => scores[b.id] - scores[a.id]);
 
-  // Competition ranking (1224): members tied on wins share a rank, so two
-  // three-win members are both rank 1 and the next best jumps to rank 3. Only
-  // members who have actually won something can stand on the podium.
-  const winners = ranked.filter((m) => wins[m.id] > 0);
+  // Only members ABOVE CHANCE stand on the podium, which is also what keeps a
+  // negative number off this tab entirely. Compared at the PRINTED precision,
+  // like the tie key below: a member at +0,04 would otherwise stand on a step
+  // showing „0,0".
+  const winners = ranked.filter((m) => Number(scores[m.id].toFixed(1)) > 0);
+
+  // Competition ranking (1224) through `computePlaces` (ranking.js) rather than
+  // the hand-rolled comparison this carried. That one was exact equality, safe
+  // only while the measure IS an integer win count. A sum of `1 − w/p` terms is
+  // a float, and two members at a mathematically equal total routinely differ
+  // in the last bits — test/win-score.test.js pins a five-night fixture that
+  // really does drift. Left exact, two members showing the same number would
+  // land on different steps: the tie inversion #836/#891 exist to remove,
+  // reintroduced on the other podium.
+  const places = computePlaces(winners.map((m) => ({ shown: scores[m.id], count: 1 })));
   const rankOf = {};
-  winners.forEach((m) => {
-    rankOf[m.id] = winners.filter((o) => wins[o.id] > wins[m.id]).length + 1;
-  });
+  winners.forEach((m, i) => (rankOf[m.id] = places[i]));
 
   // Podium columns by rank: left = 2, center = 1, right = 3. A COLUMN IS A
   // RANK, NOT A MEMBER (#836) — tied members share one step rather than
@@ -114,17 +135,20 @@ function renderPokaleTab(round) {
   const podiumItems = winners.map((m) => ({ place: rankOf[m.id], member: m }));
   const { single, cols } = podiumColumns(podiumItems);
   if (winners.length) {
-    // The win count belongs to the MEMBER, not to the step. It used to be the
-    // pedestal's label, read off `shown[0]` — sound only while the ranking IS
-    // the win count, which #895 ends by ranking on the Siegwertung while still
-    // showing the raw count, at which point step-mates differ.
+    // Both numbers belong to the MEMBER, not to the step: the count used to be
+    // the pedestal's label, read off `shown[0]` — sound only while the ranking
+    // IS the win count, which #895 ends. Step-mates now share a Siegwertung and
+    // differ in the raw count.
     //
-    // NOTATION, not prose, and it is what makes a shared step legible: a member
-    // lying sideways on a 108px phone step has ~22px left for their name once
-    // „3 Siege" has taken its 48, so every name truncated to three characters.
-    // „3×" costs 16 and reads the same at a glance — the same call as the „Ø"
-    // the rating pills render inline. The full phrase stays one hover away and
-    // is spelled out under the stage in the `podium__rest` line.
+    // THE MARKUP CARRIES BOTH AND CSS DECIDES WHICH FITS. An upright entry — a
+    // member alone on a step — has a whole line and reads „+3,0 · 5 Siege". On a
+    // SHARED step the entries lie sideways as chips (#897), where the fixed part
+    // is what crushes the name: a member on a 108px phone step has ~22px left
+    // once „3 Siege" has taken its 48, and „+2,0 · 12 Siege" would take twice
+    // that. So `.podium__col--multi` hides the count and the score alone stands.
+    // That is not merely the affordable half — the count exists to explain why
+    // 12 Siege ranks below 5, a question that only arises ACROSS steps, and
+    // step-mates are by definition tied. The full phrase stays one hover away.
     const entryHtml = (it) => {
       const n = wins[it.member.id];
       const full = esc(tn(n, 'pokale.winsOne', 'pokale.wins'));
@@ -132,7 +156,7 @@ function renderPokaleTab(round) {
          <span class="avatar podium__avatar" style="background:${memberColor(round, it.member.id)}">${avatarFace(initials(it.member.name), { userId: it.member.userId })}</span>
          <span class="podium__who">
            <span class="podium__name">${esc(it.member.name)}</span>
-           <span class="podium__wins" title="${full}">${esc(String(n))}×</span>
+           <span class="podium__wins" title="${full}"><span class="podium__score">${esc(fmtSigned(scores[it.member.id]))}</span><span class="podium__winsraw"> · ${full}</span></span>
          </span>
        </a>`;
     };
@@ -144,9 +168,13 @@ function renderPokaleTab(round) {
     });
     sec.appendChild(podium);
   }
-  // Anyone ranked below the third step drops to the summary line. Nothing else
-  // lands here: the steps are uncapped, so a crowded place can no longer push a
-  // member off the stage into a „+N weitere" count.
+  // Anyone ranked below the third step drops to the summary line, in standings
+  // order. Nothing else lands here: the steps are uncapped, so a crowded place
+  // can no longer push a member off the stage into a „+N weitere" count.
+  //
+  // IT SHOWS PLAIN WIN COUNTS, never the Siegwertung (#895). This is exactly the
+  // set of people whose score may be negative, and „−1,3" printed under a
+  // Ruhmeshalle heading is a punishment the feature should not hand out.
   const onPodium = new Set(cols.flatMap((c) => c.shown.map((it) => it.member.id)));
   const rest = ranked.filter((m) => !onPodium.has(m.id));
   if (rest.length) {
@@ -220,8 +248,13 @@ function renderPokaleTab(round) {
     const gids = new Set((s.guests || []).map((g) => g.id));
     return gids.size > 0 && (s.winnerIds || []).some((wid) => gids.has(wid));
   };
+  // A solo evening is skipped for the SAME reason (#895), and the argument was
+  // already here unimplemented: an evening that was not a contest can neither
+  // break nor extend a streak. A one-person session is single-winner by
+  // definition, so twenty logged solo plays read as a twenty-night streak.
+  const isSolo = (s) => sessionPartyCount(round, s) === 1;
   const chrono = [...finished]
-    .filter((s) => !wonByGuest(s))
+    .filter((s) => !wonByGuest(s) && !isSolo(s))
     .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
   let streakMember = null;
   let streak = 0;
