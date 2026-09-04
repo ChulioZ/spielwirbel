@@ -813,7 +813,7 @@ async function showGameDetail(rid, gameId) {
            </svg>
            <span class="gd-ring__num" style="color:${scoreColor(st.score)}">${fmtAvg(shown)}</span>
          </div>
-         <div class="score-label">${esc(t('detail.scoreName'))} ${scoreInfoButton()}</div>
+         <div class="score-label">${esc(t('score.name'))} ${scoreInfoButton()}</div>
          ${scoreReason(st) ? `<div class="score-why">${esc(scoreReason(st))}</div>` : ''}
          <div class="score-label">${esc(ratingsLine)}</div>`
       : `<div class="gd-ring gd-ring--none"><span class="gd-ring__num">–</span></div>
