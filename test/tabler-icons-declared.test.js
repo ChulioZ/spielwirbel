@@ -44,7 +44,7 @@ function sources() {
   return out;
 }
 
-/* The two ways this codebase names an icon, and only those two — a bare
+/* The three ways this codebase names an icon, and only those three — a bare
    `grep 'ti-[a-z-]*'` also matches prose ("multi-table", "arrows-split" in a
    comment) and would report false misses that nobody could act on.
 
@@ -52,6 +52,14 @@ function sources() {
       classes after the icon name.
    2. `iconText('ti-foo', …)` — core.js's builder, which interpolates the name
       into exactly that markup.
+   3. a bare quoted `'ti-foo'` — a name held in a variable or an array and
+      interpolated into the markup later. The five mood faces in
+      `public/js/rating-faces.js` are the case that forced it (#890): they have
+      only ever been reached as `MOODS[n - 1]`, so neither shape above ever saw
+      them, and five of the app's most-pressed glyphs sat outside this scan
+      while it read as covering the whole app. Measured to add no false
+      positive today — every quoted `'ti-…'` in `public/` and `lib/` is a real
+      icon name, not prose.
 
    The first pattern used to require the closing quote IMMEDIATELY after the
    icon name (`class="ti (ti-[a-z0-9-]+)"`), which made every element carrying a
@@ -72,6 +80,7 @@ function sources() {
 const PATTERNS = [
   /class="ti (ti-[a-z0-9-]+)(?=[ "])/g,
   /iconText\('(ti-[a-z0-9-]+)'/g,
+  /'(ti-[a-z0-9-]+)'/g,
 ];
 
 test('every Tabler icon class the app renders is declared in the subset', () => {

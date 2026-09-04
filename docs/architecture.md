@@ -473,6 +473,9 @@ public/
                      averaging, so a game one person does not want to play
                      stops outranking a game everybody is fine with. Required
                      by lib/recommend.js and lib/session-split.js (issue #893)
+    rating-faces.js  the mood face each rung of the 0-5 scale wears, so the two
+                     vote cards and the session result distribution name a
+                     rating with the same glyph (issue #890)
     guest-picker.js  the guest name field (chips + input), shared by the two
                      screens that start a session (issue #532)
     team-picker.js   the team field: group two or more of those people into one

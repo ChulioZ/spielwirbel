@@ -124,6 +124,8 @@ const frontendGlobals = {
   // vote-score.js (issue #893) — also required by lib/recommend.js
   TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
   tileValue: 'readonly', scoreRatings: 'readonly',
+  // rating-faces.js (issue #890) — frontend only, by design
+  MOODS: 'readonly', ratingFace: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',

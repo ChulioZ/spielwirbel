@@ -33,9 +33,10 @@ see A-R05. AA is held here as the product bar regardless.
 - **Status:** adopted · 2026-07-23
 - **Source:** WCAG 2.2 SC 1.4.11, 1.4.3 (large text)
 - **Check:** UI component boundaries, focus indicators and the score ring
-  (`.gd-ring__num`) clear 3:1. `avgColor()`'s 30% lightness is tuned to sit at the
-  boundary of two competing uses — fill under white text *and* stroke on the page;
-  re-check both if it moves.
+  (`.gd-ring__num`) clear 3:1. `avgColor()`'s 30% lightness (for values at or
+  above 1; it ramps darker below, #890) is tuned to sit at the boundary of two
+  competing uses — fill under white text *and* stroke on the page; re-check both
+  if it moves.
 - **Enforced by:** `test/a11y-contrast.test.js` (ring only)
 
 ### A-004 — Every sheet traps focus and restores it on close

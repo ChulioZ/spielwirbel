@@ -34,9 +34,17 @@ checked automatically.
   migration code.)
 - **`avgColor()` is used in BOTH directions** — fill under white text
   (`.score-pill`) *and* text/stroke on the page (`.gd-ring__num`). Its
-  lightness is **30%**: the lightest value clearing 4.5:1 under white across
-  the whole hue range while the ring still clears 3:1 (large text) on every
-  theme. Don't lighten it without re-checking both uses.
+  lightness is **30%** for every value at or above 1: the lightest value
+  clearing 4.5:1 under white across the whole hue range while the ring still
+  clears 3:1 (large text) on every theme. Don't lighten it without re-checking
+  both uses. **Below 1 it ramps DARKER**, to 20% at the zero (#890) — the hue
+  formula is clamped there, so the retirement end of the scale would otherwise
+  be the same red as a 1, which the results distribution paints side by side.
+  Darker is the safe direction for both uses, and the ramp is a provable no-op
+  at and above 1, which is what bounds it. `test/a11y-contrast.test.js` now
+  evaluates the real `avgColor` under jsdom and sweeps from 0 — it used to lift
+  one fixed lightness out of the source with a regex, which cannot read an
+  expression and left the whole 0–1 range unmeasured.
   Since #893 most callers arrive through **`scoreColor()`**, which clamps the
   Spielwirbel-Score into 0–5 and then calls this — so the hue range, and every
   contrast figure above, is unchanged by construction. That clamp is load-bearing

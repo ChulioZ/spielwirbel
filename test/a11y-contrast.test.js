@@ -5,7 +5,7 @@
    pin the three colour sources the audit had to fix, so a future palette tweak
    fails here instead of shipping. */
 
-const { test } = require('node:test');
+const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -13,9 +13,9 @@ const path = require('node:path');
 // Comment-stripped, brace-matched parsing for the one assertion that has to find
 // a rule inside a media query — `.claude/rules/css-text-assertions-strip-comments.md`.
 const { rulesOf, bodyOf, mediaBlocks, whole } = require('./support/css');
+const { loadApp } = require('./support/dom');
 
 const ROOT = path.join(__dirname, '..');
-const CORE = fs.readFileSync(path.join(ROOT, 'public/js/core.js'), 'utf8');
 const PALETTE = fs.readFileSync(path.join(ROOT, 'public/js/member-colors.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public/styles.css'), 'utf8');
 
@@ -114,38 +114,77 @@ const AA_LARGE = 3.0; // >=24px, or >=18.66px bold
 
 // --- the rating scale (avgColor) -------------------------------------------
 
-// Read the lightness straight out of core.js, so the test tracks the shipped
-// value rather than a copy that could drift away from it.
-function avgColorLightness() {
-  const m = /hsl\(\$\{hue\},\s*(\d+)%,\s*(\d+)%\)/.exec(CORE);
-  assert.ok(m, 'avgColor should emit an hsl() template with saturation and lightness');
-  return { sat: Number(m[1]), light: Number(m[2]) };
+/* Evaluate the REAL avgColor rather than parsing it (#890).
+
+   This used to lift one fixed lightness out of core.js with
+   `/hsl\(\$\{hue\},\s*(\d+)%,\s*(\d+)%\)/`, which stopped being possible the
+   moment the lightness became an expression — and would have failed *open* for
+   any shape it could still match. Running the shipped function measures what
+   ships, and it costs one jsdom boot for the whole file
+   (`.claude/rules/testing-views-under-jsdom.md`). */
+const APP = loadApp();
+after(() => APP.close());
+
+// avgColor emits `hsl(<h>, <s>%, <l>%)`; parse its OUTPUT, which is a value the
+// browser will really paint, not a template in a source file.
+function avgRgb(avg) {
+  const css = APP.run(`avgColor(${avg})`);
+  const m = /^hsl\(([\d.]+),\s*([\d.]+)%,\s*([\d.]+)%\)$/.exec(css);
+  assert.ok(m, `avgColor(${avg}) returned ${css}, which is not an hsl() triple`);
+  return hsl(Number(m[1]), Number(m[2]), Number(m[3]));
 }
+
+/* The pre-#890 formula, restated by hand on purpose: the no-op assertion below
+   is only worth anything if its expectation is INDEPENDENT of the function it
+   checks. Derived from core.js it could not fail. */
 const avgHue = (avg) => Math.max(0, Math.min(120, ((avg - 1) / 4) * 120));
 
-test('every rating on the 1–5 scale clears AA as a fill under white text', () => {
-  const { sat, light } = avgColorLightness();
-  const failures = [];
-  for (let avg = 1; avg <= 5.0001; avg += 0.1) {
-    const rgb = hsl(avgHue(avg), sat, light);
-    const ratio = contrast(rgb, WHITE);
-    if (ratio < AA_TEXT) failures.push(`Ø${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
-  }
+/* The sweep starts at 0, not at 1. Zero is a real, reachable value on this scale
+   — a game every voter sent to the trash averages 0 (#797), and scoreColor
+   clamps the Spielwirbel-Score to the same floor (#893) — so the bottom fifth of
+   the ramp was simply unmeasured until #890 gave it its own colour. */
+const SWEEP = [];
+for (let avg = 0; avg <= 5.0001; avg += 0.1) SWEEP.push(Math.round(avg * 10) / 10);
+
+test('every rating on the 0–5 scale clears AA as a fill under white text', () => {
+  const failures = SWEEP
+    .map((avg) => ({ avg, ratio: contrast(avgRgb(avg), WHITE) }))
+    .filter(({ ratio }) => ratio < AA_TEXT)
+    .map(({ avg, ratio }) => `Ø${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
   assert.deepEqual(failures, [], `.score-pill is 14px white text on avgColor(); needs ${AA_TEXT}:1`);
 });
 
 test('every rating clears AA-large as ring text on each theme page', () => {
-  const { sat, light } = avgColorLightness();
   const failures = [];
   for (const page of PAGES) {
-    for (let avg = 1; avg <= 5.0001; avg += 0.1) {
-      const ratio = contrast(hsl(avgHue(avg), sat, light), hex(page));
+    for (const avg of SWEEP) {
+      const ratio = contrast(avgRgb(avg), hex(page));
       // .gd-ring__num is 24px/700 -> large text; the ring stroke is a graphical
       // object. Both sit at the 3:1 bar.
       if (ratio < AA_LARGE) failures.push(`${page} Ø${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
     }
   }
   assert.deepEqual(failures, [], `.gd-ring__num draws avgColor() on the page; needs ${AA_LARGE}:1`);
+});
+
+/* The zero must be its OWN colour, not the 1's (#890). Without this the results
+   distribution paints its two leftmost columns identically — the whole reason
+   the ramp gained a lightness term. */
+test('the retirement end of the ramp is distinguishable from a 1', () => {
+  assert.notEqual(APP.run('avgColor(0)'), APP.run('avgColor(1)'),
+    'avgColor(0) and avgColor(1) must not be the same colour');
+});
+
+/* And the ripple stops there. Every avgColor/scoreColor consumer in the app —
+   the score pills, the detail ring, the vote tiles, the score on the result row
+   — is unchanged for anything at or above 1, which is what made #890's colour
+   change safe to ship without re-auditing each of them. */
+test('avgColor is unchanged for every value at or above 1', () => {
+  const drifted = SWEEP
+    .filter((avg) => avg >= 1)
+    .filter((avg) => APP.run(`avgColor(${avg})`) !== `hsl(${avgHue(avg)}, 60%, 30%)`)
+    .map((avg) => `Ø${avg.toFixed(1)} -> ${APP.run(`avgColor(${avg})`)}`);
+  assert.deepEqual(drifted, [], 'the 1–5 half of the ramp moved — every consumer of it changed too');
 });
 
 // --- member avatar palette --------------------------------------------------

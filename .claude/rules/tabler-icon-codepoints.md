@@ -64,9 +64,12 @@ prints as a CJK character in a console dump. Judge those by the rendered glyph,
 not by how the `content` string looks in devtools.
 
 **That grep is now a test — `test/tabler-icons-declared.test.js`.** It matches
-the two ways this codebase names an icon (`class="ti ti-foo"` and
-`iconText('ti-foo', …)`), so unlike the loose grep below it reports no prose
-false-positives, and it fails naming both the class and the file. The remedy
+the three ways this codebase names an icon (`class="ti ti-foo"`,
+`iconText('ti-foo', …)` and a bare quoted `'ti-foo'` held in a variable or an
+array — #890 added the third after finding the five `ti-mood-*` faces had never
+been in the scan's field of view at all), so unlike the loose grep below it
+reports no prose false-positives, and it fails naming both the class and the
+file. The remedy
 criteria C-017 prescribes for a rule that was right and got skipped anyway: #796
 added three undeclared classes with the rule already written, and they were caught
 by a screenshot rather than by the grep.
