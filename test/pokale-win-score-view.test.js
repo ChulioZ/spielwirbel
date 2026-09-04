@@ -96,11 +96,28 @@ const inRest = (dom) => [...dom.app.querySelectorAll('.podium__rest-name')].map(
 
 // ---- the defect ------------------------------------------------------------
 
-test('the member with the MOST wins is off the podium when they are solo wins', async (t) => {
+const rankOfOnStage = (dom, mid) => {
+  const col = [...dom.app.querySelectorAll('.podium__col')].find((c) =>
+    [...c.querySelectorAll('.podium__entry')].some((e) => e.dataset.mid === mid)
+  );
+  return col ? Number(col.className.match(/podium__col--(\d)/)[1]) : null;
+};
+
+test('six wins do not outrank two when five of them were solo', async (t) => {
+  /* THE DEFECT, stated as the ordering it broke. Dan holds SIX wins to Anna's
+     two and used to top the stage on the raw count; his five solo nights are
+     worth nothing, so his one win in four contested nights leaves him at
+     exactly chance and a step below her.
+
+     Asserted as "below Anna", not as "off the podium" — he is genuinely the
+     round's joint second and the podium says so. Tuning the fixture until the
+     stronger-sounding claim held would be exactly the trap in
+     `.claude/rules/redefining-a-measure-invalidates-its-fixtures.md`. */
   const dom = await pokale(t, roundWith([...group, ...solos]));
-  assert.deepEqual(onStage(dom), ['anna'], 'only Anna is above chance');
-  // Dan holds six wins to Anna's two and is not on the stage at all.
-  assert.deepEqual(inRest(dom).sort(), ['ben', 'clara', 'dan']);
+  assert.equal(rankOfOnStage(dom, 'anna'), 1, 'two contested wins in four take the crown');
+  assert.equal(rankOfOnStage(dom, 'dan'), 2, 'six wins, five of them solo, do not');
+  // Clara played every contested night and won none, so she is below chance.
+  assert.deepEqual(inRest(dom), ['clara']);
 });
 
 test('a solo night moves nobody — the standings ignore the whole block', async (t) => {
@@ -114,11 +131,59 @@ test('a solo night moves nobody — the standings ignore the whole block', async
   );
 });
 
+// ---- the balanced round keeps its stage -------------------------------------
+
+test('an evenly matched round still has a podium — everyone shares the top step', async (t) => {
+  /* The Siegwertung is zero-sum over the parties at a table, so a round whose
+     wins are PERFECTLY even puts every member at exactly 0,0. Filtered on
+     "above chance" that emptied the stage outright, and the two-person case is
+     the one that matters: a couple who win half each would never see a podium
+     at all, at any number of nights. The filter is therefore "not BELOW
+     chance" — which is also the invariant the tab actually promises, since it
+     is what keeps a negative number off the screen. */
+  const even = [night(['anna'], MEMBERS), night(['ben'], MEMBERS), night(['dan'], MEMBERS), night(['clara'], MEMBERS)];
+  const dom = await pokale(t, roundWith(even));
+  assert.deepEqual(onStage(dom).sort(), ['anna', 'ben', 'clara', 'dan'], 'all four are exactly at chance and tied');
+  assert.ok(dom.app.querySelector('.podium--single'), 'one distinct place occupied is the shared top step (#879)');
+  assert.equal(dom.app.querySelector('.podium__score').textContent, '0,0', 'at chance prints without a sign');
+});
+
+test('two evenly matched members still have a podium', async (t) => {
+  // The sharpest case: a couple, six nights, three wins each.
+  const pair = Array.from({ length: 6 }, (_, i) => night([i % 2 ? 'anna' : 'dan'], ['dan', 'anna']));
+  const dom = await pokale(t, roundWith(pair, ['dan', 'anna']));
+  assert.deepEqual(onStage(dom).sort(), ['anna', 'dan']);
+});
+
+test('being at chance buys a step but never promotes anyone', async (t) => {
+  /* The relaxation must not let a member at 0,0 share the crown with someone
+     genuinely ahead. Dan and Ben sit at chance BEHIND Anna, so they hold rank 2
+     together while she keeps rank 1 alone. */
+  const dom = await pokale(t, roundWith([...group, ...solos]));
+  assert.equal(dom.app.querySelector('.podium--single'), null, 'a lone leader is not the shared-step stage');
+  assert.equal(rankOfOnStage(dom, 'ben'), 2);
+  assert.equal(rankOfOnStage(dom, 'dan'), 2);
+  const crown = [...dom.app.querySelectorAll('.podium__col')].find((c) => c.querySelector('.ti-crown'));
+  assert.deepEqual([...crown.querySelectorAll('.podium__entry')].map((e) => e.dataset.mid), ['anna']);
+});
+
+test('a member who has never played does not stand at chance', async (t) => {
+  /* The other half of the filter. Someone with no sessions has no terms in the
+     sum and scores exactly 0 too — without the `wins > 0` guard they would
+     stand on the stage having never turned up. */
+  const dom = await pokale(t, roundWith(group, [...MEMBERS, 'never']));
+  assert.ok(!onStage(dom).includes('never'));
+  assert.ok(inRest(dom).includes('never'));
+});
+
 // ---- what the stage prints --------------------------------------------------
 
 test('an upright entry carries the score first and the raw count beside it', async (t) => {
   const dom = await pokale(t, roundWith([...group, ...solos]));
-  const wins = dom.app.querySelector('.podium__entry .podium__wins');
+  // Scoped to the CROWNED column: it is the one holding a single member, and an
+  // upright entry is exactly the case that prints both numbers.
+  const crown = [...dom.app.querySelectorAll('.podium__col')].find((c) => c.querySelector('.ti-crown'));
+  const wins = crown.querySelector('.podium__entry .podium__wins');
   assert.equal(wins.querySelector('.podium__score').textContent, '+1,0');
   assert.match(wins.querySelector('.podium__winsraw').textContent, /2 Siege/);
   assert.match(wins.getAttribute('title'), /2 Siege/);
@@ -132,7 +197,7 @@ test('no negative number is rendered anywhere on the tab', async (t) => {
   assert.doesNotMatch(text, /[−-]\d+,\d/, `a negative Siegwertung reached the tab: ${text.slice(0, 200)}`);
   // The rest line states plain win counts and no score at all.
   const rest = dom.app.querySelector('.podium__rest');
-  assert.match(rest.textContent, /6 Siege/, "Dan's raw count is still stated");
+  assert.match(rest.textContent, /0 Siege/, "Clara's raw count is still stated");
   assert.equal(rest.querySelector('.podium__score'), null, 'the rest line carries no Siegwertung');
 });
 

@@ -105,11 +105,27 @@ function renderPokaleTab(round) {
   const scores = memberWinScores(round, sessionPartyGroups);
   const ranked = [...round.members].sort((a, b) => scores[b.id] - scores[a.id]);
 
-  // Only members ABOVE CHANCE stand on the podium, which is also what keeps a
-  // negative number off this tab entirely. Compared at the PRINTED precision,
-  // like the tie key below: a member at +0,04 would otherwise stand on a step
-  // showing „0,0".
-  const winners = ranked.filter((m) => Number(scores[m.id].toFixed(1)) > 0);
+  // NOBODY BELOW CHANCE stands on the podium — which is the invariant this tab
+  // actually promises, since it is what keeps a negative number off the screen.
+  //
+  // Not "above chance", which is the tempting reading and empties the stage:
+  // the Siegwertung is zero-sum over the parties at a table, so a round whose
+  // wins are PERFECTLY even puts every member at exactly 0,0 and none of them
+  // above it. Two evenly matched members would then never see a podium at all,
+  // at any number of nights, and a four-member round that has played four
+  // nights would lose the shared top step #879 built for exactly that state.
+  // Being at chance still buys nothing, because it cannot outrank anyone: the
+  // stage holds three places, so a member on 0,0 stands only when fewer than
+  // three distinct better scores exist above them.
+  //
+  // `wins > 0` is the other half and is not redundant. A member who has played
+  // NOTHING also scores exactly 0 — no sessions, no terms in the sum — and
+  // without it would stand on the stage having never turned up. Anyone who did
+  // play and never won is already below chance and excluded by the score.
+  //
+  // Compared at the PRINTED precision, like the tie key below: a member at
+  // −0,04 reads „0,0" and must not be refused a step for a number nobody sees.
+  const winners = ranked.filter((m) => wins[m.id] > 0 && Number(scores[m.id].toFixed(1)) >= 0);
 
   // Competition ranking (1224) through `computePlaces` (ranking.js) rather than
   // the hand-rolled comparison this carried. That one was exact equality, safe

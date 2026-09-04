@@ -246,10 +246,12 @@ What the app does, in detail. For a short overview see the
     The standings rank on the **Siegwertung**, not on the raw number of wins:
     each win is weighted by the size of the field it beat, so beating four
     people counts for more than beating one, merely turning up earns nothing,
-    and an evening played alone is worth exactly zero. Only members above
-    chance stand on the podium; each entry shows the Siegwertung with the raw
-    win count beside it, and everyone else is listed below the stage with their
-    plain win counts. The winning-streak tile skips solo evenings for the same
+    and an evening played alone is worth exactly zero. Nobody below chance
+    stands on the podium — which is what keeps a negative number off the tab —
+    so an evenly matched round, where everyone sits at exactly chance, still
+    shares a top step. Each entry shows the Siegwertung with the raw win count
+    beside it, and everyone else is listed below the stage with their plain win
+    counts. The winning-streak tile skips solo evenings for the same
     reason it already skipped nights a guest won: an evening that was not a
     contest can neither break nor extend a streak.
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally narrow
