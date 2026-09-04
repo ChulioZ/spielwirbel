@@ -42,25 +42,30 @@ field the old measure ignored. It is usually the one carrying an obviously
 placeholder value — `['m1']`, a single rating, one member — chosen when it stood
 for nothing.
 
-## The arithmetic that decides the new fixture (and the trap inside it)
+## Fixing the fixture is where you find out what the feature should do
 
-Rebalancing is not "seat everyone and adjust the win counts". A zero-sum measure
-makes that impossible, and the reason is worth having written down:
+The repair here was one line — seat the round instead of one member — and the
+detour on the way to it is the part worth keeping.
+
+A zero-sum measure makes "seat everyone and adjust the win counts" impossible:
 
 > If every member plays every night, the scores **sum to zero** by construction.
 > So you can never have all of them above chance, however you distribute the wins.
 
-For the Siegwertung with everyone present across `T` nights and `p` parties, a
-member's score is `wins − T/p`. A single-win member therefore sits above chance
-only when `p > T` — which is why `test/podium-ranks.test.js` now pads each night
-with guests to `FIELD = 8` rather than seating the four or five round members
-alone. Attendance has to vary, or the field has to exceed the schedule; there is
-no third option, and hand-tuning win counts against a zero-sum measure is a loop
-that cannot terminate.
+With everyone present across `T` nights and `p` parties a member scores
+`wins − T/p`, so a single-win member clears chance only when `p > T`. Chasing
+that, the fixture grew guests padding every night out to eight parties — an
+elaborate, unreal table whose only job was to lift members over a **score
+threshold on the podium**. The padding was a fixture bending itself around a
+product decision that was itself wrong, and when live use killed the threshold
+(`.claude/rules/rank-encodings-must-not-be-growable-by-ties.md`) the padding
+evaporated with it: `wins − T/p` is a constant offset from the win count, so
+seating the round reproduces the exact order these fixtures always meant.
 
-Note the same fixture must keep a case on the **wrong** side of the line — its
-`{4,3,2,1}` round still has a member below chance — or the "who is off the
-podium" assertion is satisfied by a stage nobody could fall off.
+**Treat an elaborate fixture as a finding, not a solution.** Needing a contrived
+table to make a spec express an ordinary situation is evidence about the
+feature, and it was here: real rounds cannot pad themselves with guests either,
+which is precisely why the threshold emptied a real family's podium.
 
 ## What to sweep when a measure changes
 

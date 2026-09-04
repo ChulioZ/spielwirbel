@@ -83,6 +83,12 @@ Two supporting decisions, both measured rather than chosen:
   `.claude/rules/percent-sizes-under-a-shrink-to-fit-flex-item.md`, which owns
   that half.
 
+This file governs what the stage's GEOMETRY may claim. What decides *membership*
+of it — and why a score threshold never may — is
+`.claude/rules/an-unclaimed-step-is-a-claim.md` (split out of here at #895's
+reversal). Where they meet: an empty step is legitimate when a tie consumed the
+place, never when a filter removed someone.
+
 ## The crossover, measured (#897)
 
 **Holds to a FIVE-way tie; a six-way tie for 3rd outgrows the winner.**

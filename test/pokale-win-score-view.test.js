@@ -103,6 +103,47 @@ const rankOfOnStage = (dom, mid) => {
   return col ? Number(col.className.match(/podium__col--(\d)/)[1]) : null;
 };
 
+test('the podium fills its three steps rather than leaving them empty', async (t) => {
+  /* OPERATOR DECISION, 2026-09-04, from live family use: the score-based filter
+     („nobody below chance stands") left one member alone on rank 1 with ranks 2
+     and 3 EMPTY, and everyone else named below the stage with no visible reason
+     for being there. Seeing yourself on the podium with a negative Siegwertung
+     is better than seeing the places unclaimed.
+
+     So the podium is now simply THE TOP THREE PLACES, and the only reason to be
+     under it is being fourth. Nothing about that needs explaining on screen,
+     which is what the score filter could never manage. */
+  /* The reported shape exactly: three members, one of whom has never won. Under
+     the score filter only Anna stood, on rank 1, with ranks 2 and 3 empty and
+     the other two named below. */
+  const three = ['anna', 'dan', 'clara'];
+  const nights = [night(['anna'], three), night(['anna'], three), night(['dan'], three)];
+  const dom = await pokale(t, roundWith(nights, three));
+
+  const cols = [...dom.app.querySelectorAll('.podium__col')];
+  assert.equal(cols.filter((c) => c.classList.contains('podium__col--spacer')).length, 0,
+    'every step is claimed — no member may be kept off the stage by their score');
+  assert.equal(rankOfOnStage(dom, 'anna'), 1);
+  assert.equal(rankOfOnStage(dom, 'dan'), 2);
+  assert.equal(rankOfOnStage(dom, 'clara'), 3, 'winless, negative, and standing');
+  assert.match(dom.app.textContent, /−1,0|-1,0/, 'her negative Siegwertung is shown, not hidden');
+  assert.equal(dom.app.querySelector('.podium__rest'), null, 'nobody is left below a stage with room');
+});
+
+test('an empty step is only ever a TIE consuming the place, never a filter', async (t) => {
+  /* The one case that still leaves a step unclaimed, and it is honest: Ben and
+     Dan tie for 2nd, so by competition ranking (1224) there IS no third place
+     and the next member is fourth. That is #836/#889's painted riser saying
+     „nobody stands below the shared step", which predates #895 and is a true
+     statement about the ranking rather than a hidden rule about the score. */
+  const dom = await pokale(t, roundWith([...group, ...solos]));
+  assert.equal(rankOfOnStage(dom, 'ben'), 2);
+  assert.equal(rankOfOnStage(dom, 'dan'), 2);
+  const spacer = dom.app.querySelector('.podium__col--3.podium__col--spacer');
+  assert.ok(spacer, 'the tie consumed rank 3');
+  assert.deepEqual(inRest(dom), ['clara'], 'and the next member is genuinely fourth');
+});
+
 test('six wins do not outrank two when five of them were solo', async (t) => {
   /* THE DEFECT, stated as the ordering it broke. Dan holds SIX wins to Anna's
      two and used to top the stage on the raw count; his five solo nights are
@@ -116,8 +157,6 @@ test('six wins do not outrank two when five of them were solo', async (t) => {
   const dom = await pokale(t, roundWith([...group, ...solos]));
   assert.equal(rankOfOnStage(dom, 'anna'), 1, 'two contested wins in four take the crown');
   assert.equal(rankOfOnStage(dom, 'dan'), 2, 'six wins, five of them solo, do not');
-  // Clara played every contested night and won none, so she is below chance.
-  assert.deepEqual(inRest(dom), ['clara']);
 });
 
 test('a solo night moves nobody — the standings ignore the whole block', async (t) => {
@@ -189,16 +228,17 @@ test('an upright entry carries the score first and the raw count beside it', asy
   assert.match(wins.getAttribute('title'), /2 Siege/);
 });
 
-test('no negative number is rendered anywhere on the tab', async (t) => {
-  // Clara sits at −1,0 and Dan's six wins are worth 0,0, so both the "below
-  // chance" and the "at chance" cases are on screen here.
-  const dom = await pokale(t, roundWith([...group, ...solos]));
-  const text = dom.app.textContent;
-  assert.doesNotMatch(text, /[−-]\d+,\d/, `a negative Siegwertung reached the tab: ${text.slice(0, 200)}`);
-  // The rest line states plain win counts and no score at all.
+test('the rest line states the score it is ordered by, beside the raw count', async (t) => {
+  /* It is ordered by Siegwertung, so printing only win counts made the order
+     look arbitrary — „5 Siege" above „6 Siege" reads as a sorting bug. Now that
+     a negative number is shown on the stage there is no reason to hide it one
+     line below it either. */
+  const many = [...group, ...solos, night(['anna'], MEMBERS), night(['ben'], MEMBERS)];
+  const dom = await pokale(t, roundWith(many, [...MEMBERS, 'ida']));
   const rest = dom.app.querySelector('.podium__rest');
-  assert.match(rest.textContent, /0 Siege/, "Clara's raw count is still stated");
-  assert.equal(rest.querySelector('.podium__score'), null, 'the rest line carries no Siegwertung');
+  assert.ok(rest, 'a fifth member has to land below a three-step stage');
+  assert.ok(rest.querySelector('.podium__score'), 'the rest line states the Siegwertung');
+  assert.match(rest.textContent, /Siege/, 'and still states the raw count beside it');
 });
 
 test('the standings explain themselves through the ⓘ', async (t) => {
