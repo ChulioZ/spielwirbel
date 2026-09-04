@@ -229,8 +229,9 @@ What the app does, in detail. For a short overview see the
     actually have something in them. Any of them can be shared as an image: the
     card is drawn on the device and handed to the share sheet (or saved), so
     nothing is published anywhere.
-  - **Pokale** (trophies) – a winners' podium (a staircase of tiers, best on
-    top; members tied on a place share a tier) plus stat
+  - **Pokale** (trophies) – a winners' podium (three pedestals, `[2 | 1 | 3]`
+    with the crown in the middle; members tied on a place stand side by side on
+    one step, and nobody is capped off it) plus stat
     tiles: most played, best rated, current winning streak, and the
     "Staubfänger" — the game gathering dust the longest. Below the standings,
     a **Rückblick** turns the round's accumulated ratings into a readable
@@ -313,9 +314,11 @@ What the app does, in detail. For a short overview see the
   Pokale tile: pick who joins and skip the vote entirely, landing directly on
   the results screen with that game chosen.
 - **Finale & results** – votes stay sealed until everyone is done, then a
-  little show reveals the results: per-game average (colored by score), rating
-  distribution (six bars, the leftmost being the retirement proposals), medals
-  for the favourites, and how many want each game gone. Pick the
+  little show reveals the results: a spotlight on the top-rated game (several,
+  side by side, when they tie), and under it the full ranking — per-game average
+  (colored by score), rating distribution (six bars, the leftmost being the
+  retirement proposals), medals for the favourites, and how many want each game
+  gone. Pick the
   game you actually played and mark it finished; recording the winner(s) is an
   optional follow-up step afterwards — or
   cancel the session if nothing appealed. Sessions can be deleted later, and a

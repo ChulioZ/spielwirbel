@@ -32,7 +32,7 @@ is "back"**, and those differ for every screen with more than one origin:
 | Screen | Reachable from | The rail sends you to |
 |---|---|---|
 | Game detail | Regal, Chronik, Pokale, session results, in-progress ticket | **Regal**, always |
-| Member detail | Start hero avatars, rail avatars, results podium | **Start** |
+| Member detail | Start hero avatars, rail avatars, the results participants row, the Pokale podium | **Start** |
 | Session results | Chronik, finishing a session, a shared link | **Chronik** |
 
 `HUB_TAB_OF` (`public/js/views-round.js`) maps each sub-screen to exactly **one**

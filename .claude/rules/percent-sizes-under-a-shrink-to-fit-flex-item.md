@@ -33,8 +33,9 @@ the first place. The two symptoms have one cause.
 ## The fix, and why both halves are needed
 
 ```css
-.podium__entry { width: 112px; max-width: 100%; min-width: 0; }  /* a definite box */
-.result-podium__img { width: 74px; max-width: 100%; }            /* absolute, not % */
+.podium__entry { width: 100%; min-width: 0; }                 /* definite via the column */
+.spotlight__winner { width: 168px; max-width: 100%; }         /* definite by literal */
+.spotlight__img { width: 112px; max-width: 100%; }            /* absolute, not % */
 ```
 
 A **definite** width on the entry is what makes `%` and `text-overflow` start
@@ -43,12 +44,12 @@ item still refuses to go below its content. Then prefer an **absolute** size wit
 `max-width: 100%` as the squeeze: it says what it means, and a long title cannot
 re-break it later.
 
-The entry's own width was `100%` until #891, when the stage became a stack of
-tiers whose entries flow in a **row** — where `100%` would put one entry per line
-and defeat the whole arrangement. Note the fix did not change in kind: `100%` was
-only ever standing in for "definite", inherited from the column above it, and a
-literal states the same thing without depending on a parent that no longer
-exists.
+**Either form is fine; what matters is that the width is DEFINITE.** The podium
+entry was `100%` before #891, a `112px` literal while the stage was a stack of
+tiers (a tier has no width of its own to inherit), and is `100%` again since #897
+now that the column is back and carries a `max-width` of its own. The one thing
+that must never come back is a `%` under a parent that is itself shrink-to-fit —
+the two literals in the block above exist precisely because their parents are.
 
 ## The tell, and why nothing catches it
 
@@ -66,22 +67,42 @@ Once the entries have absolute widths, the rule runs in the other direction too:
 the box above them can safely size itself to its content, because there is no
 longer a `%` to resolve circularly.
 
-The original instance was `.podium--single .podium__col { width: fit-content }`,
-so a tie stood on a pedestal as wide as the tied entries needed rather than on a
-full-width 1108px band. **That selector is gone with the column stage (#891)**,
-but the shape is not: `.podium__marker` now sizes to its own content between a
-`min-width` and a `max-width`, which is the same licence for the same reason —
-and it is a *stronger* case, because the content it sizes to is a **translated**
-word. A literal there is a bet on the longest locale, and the bet was already
-lost at the value that looked generous: 46px, against a German „geteilt" that
-measured 51px and a Spanish „compartido" at 85px.
+The instance is `.podium--single .podium__col { width: fit-content }`, so a tie
+stands on a pedestal as wide as the tied entries need rather than on a full-width
+1108px band. It was retired with the column stage in #891 and **came back with it
+in #897**, unchanged and for the same reason — which is the tell that it is
+structural rather than incidental: `fit-content` is only ever safe above an
+absolute child, and `.podium--single .podium__col--multi .podium__entry`'s `96px`
+is that child.
 
-So the load-bearing pairing survives the rewrite. Relax an entry back to a
+So the load-bearing pairing survives two rewrites. Relax an entry back to a
 relative width and the *parent's* width becomes a measurement of the longest
-title. The check to re-run if either is retuned: uniform covers across a tie, the
-one over-long title ellipsised, and — since #891 — zero overhang on the marker in
-**all five locales**, which is one probe (swap the label text, compare the two
-rects) and not five browser sessions.
+name.
+
+**One case looks like a violation and is not** — a shared top step holding a
+*single* member, where the column carries no `--multi` and the entry keeps the
+base `width: 100%` under `fit-content`. Measured at 1440px (#897): the column
+comes out **170px for a two-letter name and for „Alexandra-Maria" alike**, i.e.
+it does not measure the title, because `min-width: 170px` is a definite floor
+above the circular part. Worth knowing before "fixing" it: the safety here comes
+from the **floor**, not from an absolute child, and removing that `min-width`
+would make the whole paragraph above bind again.
+
+**The translated-word case is the sharper half, and #897 moved where it lives.**
+A box sized to a *localised* string must never take a literal: `.podium__marker`
+(#891, now gone) was a bet on the longest locale and lost it at the value that
+looked generous — 46px, against a German „geteilt" measuring 51px and a Spanish
+„compartido" 85px. The same word is now the pedestal's `.podium__shared`, which
+is sized in the *other* axis, so the bet moved from width to **height**: at 56px
+the rank-3 step held every locale on one line at 375px and let the Spanish and
+Italian labels overhang its bottom edge at 320px, where the step is 89px wide and
+they wrap. It is 60px for that reason.
+
+The check to re-run if any of this is retuned: uniform avatars across a tie, one
+over-long name ellipsised (**not** wrapped — a wrapped chip is a taller chip, and
+height is the rank), and zero overhang on the tie marker in **all five locales at
+320px as well as 375px**. That is one probe per width (swap the label text,
+compare the two rects), not five browser sessions.
 
 **Related:** `.claude/rules/popover-width-is-shrink-to-fit.md` (the same
 shrink-to-fit sizing one container over, where a `max-width` clamps nothing),

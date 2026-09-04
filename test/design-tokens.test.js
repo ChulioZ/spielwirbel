@@ -78,7 +78,8 @@ const GLYPH_LITERALS = [
   // avatar initials, sized to the circle
   '.avatar', '.avatar--add', '.avatar-stack__more', '.recap-fav__who .avatar', '.result-people__person .avatar',
   '.stage__voter-avatar .avatar', '.nr-seat__avatar', '.nr-seat--empty .nr-seat__avatar',
-  '.podium__avatar', '.podium__tier--2 .podium__avatar,\n.podium__tier--3 .podium__avatar',
+  '.podium__avatar', '.podium__col--multi .podium__avatar',
+  '.podium--single .podium__col--multi .podium__avatar',
   '.profile-head .avatar', '.member-avatar', '.handover__avatar',
   '.konto-avatar__preview', '.feed-item__who',
   // placeholder glyphs centred in a cover / thumb / tile box
@@ -89,8 +90,7 @@ const GLYPH_LITERALS = [
   '.friends-invite__icon',
   '.pool-thumb', '.pool-thumb .ti', '.pool-tile__img', '.game-card__img', '.vote__img',
   '.gd-img', '.lookup__thumb--none .ti', '.archive-row__img .ti', '.rec-card__img .ti',
-  '.result-podium__img .ti',
-  '.podium__tier--2 .result-podium__img .ti,\n.podium__tier--3 .result-podium__img .ti',
+  '.spotlight__img .ti', '.spotlight--shared .spotlight__img .ti',
   '.recap-fav__cover .ti',
   // a glyph or number sized to its own small box
   '.result-row__bars .bar', '.result-row__bars .bar--retire .ti',

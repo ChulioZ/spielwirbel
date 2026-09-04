@@ -117,9 +117,9 @@ I18N.it = {
   'pokale.emptyTitle': 'Ancora nessun trofeo',
   'pokale.winsOne': '{n} vittoria',
   'pokale.wins': '{n} vittorie',
-  // Marks a podium tier held by more than one entry (#891) — the tie label
-  // is the semantic half of the staircase, so podium.js renders it for both
-  // screens and only its wording comes from here.
+  // Marks a Pokale podium step held by more than one member (#891, #897) — the
+  // tie label is the semantic half of "several people stand here", so podium.js
+  // renders it rather than the view, and only its wording comes from here.
   'podium.shared': 'a pari merito',
   'pokale.mostPlayed': 'Più giocato',
   'pokale.bestRated': 'Meglio valutato',
@@ -726,14 +726,19 @@ I18N.it = {
 
   'finale.crumb': 'Finale',
   'finale.title': 'Tutti i voti sono arrivati.',
-  'finale.sub': 'Radunate tutti davanti allo schermo — il podio sta per essere svelato.',
-  'finale.reveal': 'Svela il podio',
+  'finale.sub': 'Radunate tutti davanti allo schermo — il vincitore sta per essere svelato.',
+  'finale.reveal': 'Svela il vincitore',
   'finale.note': 'Nessuno conosce ancora il risultato.',
 
   'result.crumb': 'Risultato',
   'result.title': 'Risultato',
   'result.subtitleOne': '{when} · {n} gioco',
   'result.subtitle': '{when} · {n} giochi',
+  // The winner spotlight's kicker (#897). Deliberately names no entity: „Spiel
+  // des Abends" would put „Abend" back in the UI, which the Session naming rule
+  // bans (CLAUDE.md).
+  'result.winner': 'Vincitore',
+  'result.winnerShared': 'Vittoria condivisa',
   'result.participants': 'Chi ha giocato',
   'result.teams': 'In squadra',
   'result.titleWonOne': 'Avete giocato a «{game}». Ha vinto {names}!',

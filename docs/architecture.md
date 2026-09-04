@@ -390,9 +390,9 @@ public/
     support.js       the donation/support sheet (issue #173; hidden unless
                      DONATE_URL is set)
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
-    podium.js        arranges ranked entries into podium tiers — rank is
-                     POSITION, never height, so a tie grows sideways instead of
-                     overtopping the winner (#891)
+    podium.js        arranges ranked members into the Pokale podium's three
+                     rank columns — a tie shares one step and grows SIDEWAYS,
+                     never upward, or it overtops the winner (#891, #897)
     session-share.js the plain-text summary behind the results screen's „Teilen"
                      button — built from the view model the screen just rendered,
                      so the two cannot drift (issue #526)
