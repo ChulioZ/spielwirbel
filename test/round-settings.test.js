@@ -37,6 +37,10 @@ const strip = (src) => src
   .replace(/^\s*\/\/.*$/gm, '');
 
 const ROUND = strip(read('public/js/views-round.js'));
+// The Start tab moved out of views-round.js into its own file with #923; the
+// hub shell (HUB_TAB_OF and the tab strip) stayed behind, so the two
+// assertions below read whichever file now owns the thing they pin.
+const START = strip(read('public/js/views-round-start.js'));
 const RAIL = strip(read('public/js/round-rail.js'));
 const ROUTER = strip(read('public/js/router.js'));
 const SESSION = strip(read('public/js/views-session.js'));
@@ -214,10 +218,10 @@ test('the settings entry stays a live link on the screens it owns', () => {
 });
 
 test('the Start tab points at the settings screen instead of separate links', () => {
-  assert.match(ROUND, /roundPath\(rid, 'settings'\)/, 'the Start tab has no Einstellungen entry');
+  assert.match(START, /roundPath\(rid, 'settings'\)/, 'the Start tab has no Einstellungen entry');
   // The ones it replaced must not linger beside it — that was the crowding the
   // issue set out to remove, and it is what a partial revert would leave behind.
-  const actions = ROUND.slice(ROUND.indexOf("h('<div class=\"hub-actions\">"));
+  const actions = START.slice(START.indexOf("h('<div class=\"hub-actions\">"));
   assert.doesNotMatch(actions, /roundPath\(rid, 'tags'\)/, 'the Start tab still links Tags directly');
   assert.doesNotMatch(actions, /roundPath\(rid, 'design'\)/, 'the Start tab still links Design directly');
 });

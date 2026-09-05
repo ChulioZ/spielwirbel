@@ -94,6 +94,39 @@ I18N.de = {
   'hub.tab.chronik': 'Chronik',
   'hub.tab.pokale': 'Pokale',
 
+  // ---- Start tab: the hub's card grid (#923) ----
+  // The Start tab used to be a ticket and a button; these are the modules that
+  // give it content of its own, all derived from the round payload on demand.
+  'hub.suggest.title': 'Wie wär’s mit',
+  'hub.suggest.never': 'Steht im Regal, war aber noch nie dran',
+  'hub.suggest.longAgoOne': 'Seit einem Monat nicht gespielt',
+  'hub.suggest.longAgo': 'Seit {n} Monaten nicht gespielt',
+  'hub.suggest.loved': 'Kam gut an und war lange nicht dran',
+  'hub.preset.label': 'Schnellstart',
+  'hub.preset.short': 'Unter 60 Min',
+  'hub.preset.light': 'Leichte Kost',
+  'hub.preset.meaty': 'Anspruchsvoll',
+  'hub.preset.family': 'Familientauglich',
+  'hub.pulse.title': 'Rundenpuls',
+  'hub.pulse.barLabel': '{month}: {n}',
+  'hub.pulse.sessionsOne': '{n} Session in 12 Monaten',
+  'hub.pulse.sessions': '{n} Sessions in 12 Monaten',
+  'hub.pulse.lastToday': 'Heute gespielt',
+  'hub.pulse.lastDaysOne': 'Vor einem Tag gespielt',
+  'hub.pulse.lastDays': 'Vor {n} Tagen gespielt',
+  'hub.pulse.coverage': '{n} von {total} Spielen waren noch nie dran',
+  'hub.care.title': 'Kümmerliste',
+  'hub.care.winnerOne': '{n} Session ohne Sieger',
+  'hub.care.winner': '{n} Sessions ohne Sieger',
+  'hub.care.winnerRow': '{game} · {when}',
+  'hub.care.rangeOne': '{n} Spiel ohne Spielerzahl',
+  'hub.care.range': '{n} Spiele ohne Spielerzahl',
+  'hub.care.coverOne': '{n} Spiel ohne Bild',
+  'hub.care.cover': '{n} Spiele ohne Bild',
+  'hub.anniv.yearsOne': 'Heute vor einem Jahr',
+  'hub.anniv.years': 'Heute vor {n} Jahren',
+  'hub.reco.more': 'Alle Empfehlungen ansehen',
+
   // Group headings in the desktop navigation rail (from 1280px up).
   // Steht über den drei Listen, die NICHT das Regal sind: die zwei Archive und
   // die Wunschliste (#560). Nicht mehr „Archiv“ — eine Wunschliste ist keins.

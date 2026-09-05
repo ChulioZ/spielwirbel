@@ -271,6 +271,11 @@ const frontendGlobals = {
   periodKeyOf: 'readonly', inPeriod: 'readonly', playedSessions: 'readonly',
   SHELF_EVENTS: 'readonly', shelfEvents: 'readonly', periodsOf: 'readonly',
   playTally: 'readonly', bestRated: 'readonly', periodRecap: 'readonly',
+  // hub-insights.js (#923) — the Start tab's derivations
+  SUGGEST_MIN_SHELF: 'readonly', SUGGEST_RECENT_DAYS: 'readonly',
+  PULSE_MONTHS: 'readonly', PULSE_MIN_SESSIONS: 'readonly', CARE_ROW_MAX: 'readonly',
+  gameSuggestions: 'readonly', quickPresets: 'readonly', roundPulse: 'readonly',
+  careList: 'readonly', anniversary: 'readonly',
   RECAP_CARD_W: 'readonly', RECAP_CARD_PAD: 'readonly', RECAP_CARD_GAP: 'readonly',
   RECAP_CARD_TILE_H: 'readonly', RECAP_CARD_ROW_H: 'readonly', RECAP_CARD_SHELF_H: 'readonly',
   recapToken: 'readonly', recapPalette: 'readonly', recapFit: 'readonly',
@@ -321,6 +326,10 @@ const frontendGlobals = {
   RAIL_OWN_ENTRY: 'readonly', RAIL_SETTINGS_SUB: 'readonly', railItem: 'readonly',
   buildRoundRail: 'readonly',
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
+  // views-round-start.js (#923) — the Start tab and its card grid
+  hubDeps: 'readonly', hubCard: 'readonly', hubSuggestCard: 'readonly',
+  hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
+  hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
   editableRoundName: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly',

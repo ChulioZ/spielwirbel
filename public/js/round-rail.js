@@ -129,6 +129,22 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
   }
   rail.appendChild(cta);
 
+  // The quick-start chips belong to that button (#923), so they follow it up
+  // here. The Start tab renders its own copy and marks it `rail-owned`, which
+  // is the same "render both, let the viewport decide" split the hero and the
+  // CTA itself already use — without it the chips stay behind in the pane at
+  // rail widths and read as a stray label above the tickets, modifying a button
+  // that is no longer next to them.
+  //
+  // Called rather than duplicated: `hubPresetChips` lives in
+  // views-round-start.js, which loads after this file — safe because this runs
+  // at render time, never at load time
+  // (.claude/rules/frontend-script-load-order.md).
+  if (activeGames.length) {
+    const presets = hubPresetChips(round, activeGames);
+    if (presets) rail.appendChild(presets);
+  }
+
   // --- The four sections.
   const nav = h(`<nav class="rail__group" aria-label="${esc(t('a11y.hubTabs'))}"></nav>`);
   [
