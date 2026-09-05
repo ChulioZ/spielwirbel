@@ -71,6 +71,9 @@ lib/
     index.js         picks the backend (DATABASE_URL ? postgres : json)
     json.js          default backend — the data/data.json store below
     postgres.js      PostgreSQL backend (Knex query builder), used when DATABASE_URL set
+    import-copy.js   what travels when a new round imports another round's
+                     games (#921) — shared by both backends so a copy carries
+                     the same fields whichever one is running
     corpus-file.js   the JSON backend's BGG-corpus store (issue #681) — its OWN
                      file under DATA_DIR, never data.json, because store.js
                      rewrites that whole file on every mutation

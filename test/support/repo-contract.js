@@ -26,6 +26,11 @@ const { COVER_BACKFILL_BEFORE } = require('../../lib/repo/corpus-backfill');
 // The real curve, so the histogram is checked against what the app actually
 // prints rather than against a hand-copied expectation of it (#914).
 const { scoreTally } = require('../../public/js/vote-score');
+// The real field set and the real pool predicate, so the import is checked
+// against what the app actually stores and draws with rather than against a
+// hand-copied expectation of it (#921).
+const { PROVIDER_INFO_FIELDS } = require('../../lib/provider-info-fields');
+const { fitsPlayerCount } = require('../../public/js/draw-pool');
 
 // A fresh identifier per call, so a suite run against a PERSISTENT database
 // can't collide with an earlier run's rows. Uses crypto rather than
@@ -538,7 +543,7 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.isImageReferenced(T, '/uploads/kept-280.jpg'), true);
   });
 
-  test('createRound import copies only active games (title/image) + logs them', async () => {
+  test('createRound import copies only ACTIVE games + logs one game_added each', async () => {
     const src = await freshRound();
     const active = await repo.createGame(T, src.id, gameFields({ title: 'Catan', minPlayers: 3, image: '/uploads/a.jpg' }));
     const retired = await repo.createGame(T, src.id, gameFields({ title: 'Old', minPlayers: 2, maxPlayers: 2 }));
@@ -555,10 +560,118 @@ module.exports = function repoContract(repo) {
     assert.equal(g.image, '/uploads/a.jpg');
     assert.equal(g.retired, false);
     assert.notEqual(g.id, active.id); // a fresh id, not the source game's
-    // players are intentionally NOT carried over by import.
-    assert.equal(g.minPlayers, undefined);
+    // The player range travels since #921 — the widened field set is asserted
+    // in full below; here it only pins that this path is the one that carries it.
+    assert.equal(g.minPlayers, 3);
     const feed = await repo.listActivities(T, copy.id);
     assert.equal(feed.filter((a) => a.type === 'game_added').length, 1);
+  });
+
+  // #921: the import built a fresh row naming only title/image, so a copied game
+  // arrived as a stub — no BGG link, no player range, no provider metadata, no
+  // edition. The RANGE is the sharp loss and it is silent: `fitsPlayerCount`
+  // reads an absent range as "any table size" (deliberately, so a free-text game
+  // stays drawable), so a 3-4 game imported into a new round was offered to a
+  // table of eight with no error anywhere.
+  //
+  // The metadata half is looped over the REAL field set rather than a hand-copied
+  // key list, so a field added to PROVIDER_INFO_FIELDS is covered here
+  // automatically (.claude/rules/shared-constants-across-the-stack.md).
+  test('createRound import carries the full copy field set (#921)', async () => {
+    const src = await freshRound();
+    const source = { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' };
+    const edition = { name: 'Kosmos 2015', year: 2015, languages: ['de'] };
+    const meta = {
+      weight: 2.31, minPlaytime: 45, maxPlaytime: 90, minAge: 10,
+      categories: ['Negotiation'], mechanics: ['Trading'], rating: 7.12,
+    };
+    await repo.createGame(T, src.id, gameFields({
+      title: 'Catan', minPlayers: 3, maxPlayers: 4, image: '/uploads/a.jpg',
+      source, edition, providerInfoAt: '2026-09-01T00:00:00.000Z', ...meta,
+    }));
+    // An expansion put on the shelf from the wish list keeps `expansionOf` —
+    // the base games BGG says it belongs to (#664/#703). Its EMPTY form is
+    // meaningful ("the provider named none") and distinct from absent, so it is
+    // the case that separates a real copy from a truthiness check.
+    await repo.createGame(T, src.id, gameFields({ title: 'Seefahrer', expansionOf: ['13'] }));
+    await repo.createGame(T, src.id, gameFields({ title: 'Waisenkind', expansionOf: [] }));
+    // A free-text game beside it: every one of those keys must stay ABSENT on
+    // its copy rather than arriving as a wall of nulls (absent-key parity,
+    // .claude/rules/postgres-backend.md).
+    await repo.createGame(T, src.id, { title: 'Selbstgebaut', image: null });
+
+    const copy = await repo.createRound(T, { name: 'Copy', members: ['Z'], importFromRoundId: src.id });
+    const full = copy.games.find((g) => g.title === 'Catan');
+    const bare = copy.games.find((g) => g.title === 'Selbstgebaut');
+    assert.deepEqual(copy.games.find((g) => g.title === 'Seefahrer').expansionOf, ['13']);
+    assert.deepEqual(copy.games.find((g) => g.title === 'Waisenkind').expansionOf, [],
+      'an empty expansionOf is a value, not an absence');
+
+    assert.deepEqual(full.source, source, 'the BGG link travels, so the copy is repairable');
+    assert.equal(full.minPlayers, 3);
+    assert.equal(full.maxPlayers, 4);
+    assert.deepEqual(full.edition, edition);
+    assert.equal(full.providerInfoAt, '2026-09-01T00:00:00.000Z');
+    for (const key of PROVIDER_INFO_FIELDS) {
+      assert.deepEqual(full[key], meta[key], `provider field ${key} travels`);
+    }
+    // The regression this issue is really about, asserted through the app's own
+    // predicate rather than a restatement of it.
+    assert.equal(fitsPlayerCount(full, 4), true, 'still drawable at its own count');
+    assert.equal(fitsPlayerCount(full, 8), false, 'a 3-4 game is not drawable at eight');
+
+    for (const key of ['source', 'edition', 'providerInfoAt', 'expansionOf', 'minPlayers', 'maxPlayers', ...PROVIDER_INFO_FIELDS]) {
+      assert.equal(key in bare, false, `${key} stays absent on a game that never had it`);
+    }
+    // The source round is untouched by its own import.
+    const after = await repo.getRound(T, src.id);
+    assert.equal(after.games.length, 4);
+    assert.deepEqual(after.games.find((g) => g.title === 'Catan').source, source);
+  });
+
+  // #921: tags travel too, so an imported shelf is filterable on arrival. The
+  // target is brand new, so every used tag is CREATED (there is nothing to merge
+  // with) — which is the one way this differs from moveGames' remap.
+  test('createRound import creates the tags its games use, remapped (#921)', async () => {
+    const src = await freshRound();
+    const koop = await repo.addTag(T, src.id, 'Koop', 'puzzle');
+    const solo = await repo.addTag(T, src.id, 'Solo');
+    await repo.addTag(T, src.id, 'Ungenutzt');
+    await repo.createGame(T, src.id, gameFields({ title: 'Pandemie', tagIds: [koop.id, solo.id] }));
+
+    const copy = await repo.createRound(T, { name: 'Copy', members: ['Z'], importFromRoundId: src.id });
+    assert.deepEqual((copy.tags || []).map((t) => t.name), ['Koop', 'Solo'],
+      'only the tags an imported game actually uses are created');
+    assert.equal(copy.tags[0].icon, 'puzzle', 'the icon rides along');
+    assert.equal('icon' in copy.tags[1], false, 'and stays absent when the source has none');
+    assert.ok(copy.tags.every((t) => t.id !== koop.id && t.id !== solo.id), 'fresh tag ids');
+    assert.deepEqual(copy.games[0].tagIds, copy.tags.map((t) => t.id), 'the game points at the new ids');
+  });
+
+  // #921 decision: a tag cap is capped SILENTLY, in shelf order — round creation
+  // must not fail over a secondary field the user did not ask for. A game whose
+  // tag did not fit simply keeps the ids that exist.
+  test('createRound import caps copied tags at the quota instead of refusing (#921)', async () => {
+    const src = await freshRound();
+    const a = await repo.addTag(T, src.id, 'Alpha');
+    const b = await repo.addTag(T, src.id, 'Beta');
+    await repo.createGame(T, src.id, gameFields({ title: 'Zug', tagIds: [a.id, b.id] }));
+
+    const copy = await repo.createRound(T, {
+      name: 'Copy', members: ['Z'], importFromRoundId: src.id, limits: { maxTags: 1 },
+    });
+    assert.equal(copy.games.length, 1, 'the round is created, not refused');
+    assert.deepEqual(copy.tags.map((t) => t.name), ['Alpha']);
+    assert.deepEqual(copy.games[0].tagIds, [copy.tags[0].id], 'the tag that did not fit is dropped');
+  });
+
+  // A round whose imported games carry no tags keeps `tags` ABSENT, not [].
+  test('createRound import leaves tags absent when nothing is tagged (#921)', async () => {
+    const src = await freshRound();
+    await repo.addTag(T, src.id, 'Nie benutzt');
+    await repo.createGame(T, src.id, gameFields({ title: 'Nackt' }));
+    const copy = await repo.createRound(T, { name: 'Copy', members: ['Z'], importFromRoundId: src.id });
+    assert.equal('tags' in copy, false);
   });
 
   // #481: the bulk create behind the BGG collection import. Its whole reason to

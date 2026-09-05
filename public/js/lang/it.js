@@ -66,7 +66,7 @@ I18N.it = {
   'newRound.importNone': '— nessuno —',
   'newRound.importOptionOne': '{name} ({n} gioco)',
   'newRound.importOption': '{name} ({n} giochi)',
-  'newRound.importNote': 'Copia solo l’elenco dei giochi (titolo, tipo, immagine) – nessuna valutazione né sessione.',
+  'newRound.importNote': 'Copia i giochi con copertina, link e dettagli – nessuna valutazione né sessione.',
   'newRound.create': 'Avvia il gruppo',
   'newRound.toast.needName': 'Inserisci un nome',
   'newRound.toast.needMember': 'Aggiungi almeno un partecipante',

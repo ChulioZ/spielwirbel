@@ -35,6 +35,12 @@ Non-obvious things baked into the design — keep them:
   would silently break under Postgres. Don't switch `getRound` back to returning
   the live `data.rounds` object to "save a clone".
 
+  **That clone is also a blind spot in the contract suite**, and it is worth
+  knowing before you trust a green run: because every read clones, two rows
+  sharing one live object read back as two distinct ones, so no contract
+  assertion can see an aliasing bug in the JSON tree. See
+  `.claude/rules/repo-contract-cannot-see-identity.md`.
+
 - **The API is async on purpose.** Every method returns a Promise even though the
   JSON backend is synchronous, so the Postgres backend won't force a second
   rewrite of every handler. Route handlers are `async` and `await` the repo. This
