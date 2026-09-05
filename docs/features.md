@@ -371,10 +371,16 @@ What the app does, in detail. For a short overview see the
   plain mean of the votes. Each vote is weighed first, so a „gar nicht" (and a
   retirement proposal below it) counts for more than its numeric distance
   suggests: two games with the same average are *not* the same recommendation
-  when one of them has somebody at the table who does not want to play. As long
-  as nobody rated below „geht so" the score is exactly the familiar average, and
-  where it diverges the screen says why. The game's own page keeps the honest
-  raw Ø beside it, and an ⓘ explains the principle.
+  when one of them has somebody at the table who does not want to play. Where it
+  diverges the screen says why. At **shelf** scope the score is additionally
+  shrunk toward the round's own prior in proportion to how thin the evidence is,
+  so a game three people rated 5,5,5 on its one evening stops outranking a
+  staple forty votes agree on — and a game the group keeps choosing lifts that
+  prior, which is what finally gives a round that runs its evenings by direct
+  pick a ranked shelf at all (those sessions write no votes). Tonight's podium
+  and every other per-session number are deliberately **not** shrunk: there `n`
+  is the whole electorate rather than a sample. The game's own page keeps the
+  honest raw Ø beside it, and an ⓘ explains the principle.
 - **Designs** – per round, pick a colour scheme (page tone + accent); the
   whole UI derives from it — surfaces, shadows, the dark "stage" of the
   finale, and the mobile browser / installed-app chrome around the page.

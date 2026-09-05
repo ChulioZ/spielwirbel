@@ -10,7 +10,8 @@
    reason recap.js's header sets out: a public/js file cannot require() a
    sibling, so injection is what keeps this file usable both as a shared-scope
    frontend script and as a CommonJS module the tests require, without a second
-   copy of any rule. `deps` is { peopleOf, ratingOf, scoreOf, minRatings,
+   copy of any rule. `deps` is { peopleOf, ratingOf, scoreOf, shelfOf, priorOf,
+   playsOf, minRatings,
    isActive } — sessionPeople (session-people.js), effectiveRating
    (vote-scale.js), scoreRatings (vote-score.js) and RECAP_MIN_RATINGS
    (recap.js). The threshold is injected rather than re-declared here precisely
@@ -160,14 +161,34 @@ function bestRated(round, sessions, deps) {
   // The field is `score`, not `avg`, deliberately — the same naming call
   // `bestAndWorst` documents: the sibling per-member stats really are raw means,
   // and one name for both would make that distinction invisible at the call site.
+  //
+  // And SHRUNK toward the period's own prior (#894), for the same reason again:
+  // the all-time card beside it is shrunk, so leaving this one raw would put two
+  // different arithmetics back under one label — the very split #914 closed. The
+  // prior, the vote counts and the plays are all read from THIS period, so the
+  // card answers „das bestbewertete Spiel 2026" out of 2026's evidence rather
+  // than borrowing the round's whole history; over a period covering everything
+  // the two cards therefore print the same number, which
+  // test/chronik-period-recap.test.js pins.
+  const plays = deps.playsOf({ sessions });
+  const raw = new Map();
+  ratings.forEach((list, gid) => {
+    const sc = deps.scoreOf(list);
+    if (sc) raw.set(gid, { score: sc.score, count: list.length });
+  });
+  // The prior is read over every active game rated in the period, NOT only the
+  // ones clearing `minRatings`: it answers "what does a game on this shelf
+  // typically score", and a thin game is still evidence about that even when it
+  // may not wear a crown itself.
+  const prior = deps.priorOf([...raw.values()].map((r) => r.score));
   let top = null;
   const scores = new Map();
-  ratings.forEach((list, gid) => {
-    if (list.length < deps.minRatings) return;
-    const sc = deps.scoreOf(list);
-    if (!sc) return;
-    scores.set(gid, sc.score);
-    if (top === null || sc.score > top) top = sc.score;
+  raw.forEach((r, gid) => {
+    if (r.count < deps.minRatings) return;
+    const score = deps.shelfOf(r.score, r.count, plays.get(gid) || 0, prior);
+    if (score === null) return;
+    scores.set(gid, score);
+    if (top === null || score > top) top = score;
   });
   if (top === null) return null;
   const gameIds = [...scores.keys()].filter((gid) => scores.get(gid) === top);

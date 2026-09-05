@@ -234,9 +234,9 @@ function editableRoundName(round) {
 function renderStartTab(round, activeGames) {
   const rid = round.id;
 
-  // Stats per active game (for the retirement recommendations below).
-  const statsByGame = {};
-  activeGames.forEach((g) => (statsByGame[g.id] = gameStats(round, g.id)));
+  // Stats per active game (for the retirement recommendations below). Shelf-
+  // scoped and built in one pass, for the reason roundScoreIndex states (#894).
+  const { byGame: statsByGame } = roundScoreIndex(round, activeGames);
 
   const playedCount = round.sessions.filter((s) => s.finished).length;
   const hero = h(`<div class="hero rail-owned">

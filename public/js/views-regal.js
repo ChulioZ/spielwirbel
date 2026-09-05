@@ -22,9 +22,11 @@ function renderRegalTab(round, activeGames) {
   // stops a filter surviving as an active count over a chip nobody can see.
   regalFilters.metadata = normalizeMetadataFilters(regalFilters.metadata, metadataFilterOptions(activeGames));
 
-  // Stats per active game (for the rating pills and sorting).
-  const statsByGame = {};
-  activeGames.forEach((g) => (statsByGame[g.id] = gameStats(round, g.id)));
+  // Stats per active game (for the rating pills and sorting), shelf-scoped:
+  // one pass for the play counts, one for the raw scores, then the round's own
+  // prior — never `gameStats` per card, which would rederive both per game
+  // (#894, and see roundScoreIndex's own comment for the measured cost).
+  const { byGame: statsByGame } = roundScoreIndex(round, activeGames);
 
   const gamesSec = h('<div class="section"></div>');
   // h1, not h3: on the Regal/Chronik/Pokale tabs this is the top-level heading of
@@ -370,9 +372,18 @@ function renderRegalTab(round, activeGames) {
     activeGames.forEach((g) => {
       const fallback = coverPlaceholder(g);
       const score = scoreMap[g.id];
+      // What the number rests on, so a shelf score the reader cannot square with
+      // their own memory („warum steht da 3,9, wir haben alle 5 gegeben") has an
+      // answer on the card (#894). It rides the pill's `title` — the pattern
+      // `exp-pill` below already uses — because the badge overlay sits on the
+      // cover and has no room for a second figure.
+      const st = statsByGame[g.id];
+      const evidence = st.count
+        ? tn(st.count, 'score.evidenceOne', 'score.evidence', { n: st.count })
+        : tn(st.plays, 'score.evidencePlaysOne', 'score.evidencePlays', { n: st.plays });
       const scorePill =
         score !== null
-          ? `<span class="score-pill" style="background:${scoreColor(score)}">${fmtAvg(displayScore(score))}</span>`
+          ? `<span class="score-pill" style="background:${scoreColor(score)}" title="${esc(evidence)}">${fmtAvg(displayScore(score))}</span>`
           : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
       // What the round owns for this game (#653) — no badge at zero, so a shelf
       // of plain base boxes looks exactly as it always did.

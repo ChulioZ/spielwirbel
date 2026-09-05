@@ -47,21 +47,23 @@ const NEWS = [
       body: 'Die Bewertung eines Spiels ist jetzt mehr als der Durchschnitt: '
         + 'Wenn jemand ein Spiel gar nicht spielen möchte, zählt das schwerer '
         + 'als eine gute Bewertung von jemand anderem — damit am Ende gespielt '
-        + 'wird, worauf alle Lust haben. Solange niemand schlechter als '
-        + '„geht so" bewertet hat, ist der Score genau der gewohnte '
-        + 'Durchschnitt; weicht er ab, steht daneben, warum. Den reinen '
-        + 'Durchschnitt aller Bewertungen findet ihr weiterhin unten auf der '
-        + 'Seite des Spiels.',
+        + 'wird, worauf alle Lust haben. Weicht der Score vom Durchschnitt '
+        + 'ab, steht daneben, warum. Ein Spiel mit erst wenigen Bewertungen '
+        + 'wird dabei vorsichtiger eingeschätzt, und ein Spiel, das ihr immer '
+        + 'wieder auf den Tisch legt, etwas besser. Den reinen Durchschnitt '
+        + 'aller Bewertungen findet ihr weiterhin unten auf der Seite des '
+        + 'Spiels.',
     },
     en: {
       title: 'The Spielwirbel score replaces the Ø',
       body: 'A game\'s rating is now more than the average: if somebody does '
         + 'not want to play a game at all, that counts for more than a good '
         + 'rating from somebody else — so that what you end up playing is '
-        + 'something everybody is up for. As long as nobody rated below „so-so", '
-        + 'the score is exactly the average you are used to; where it differs, '
-        + 'it says why right beside it. The plain average of all ratings is '
-        + 'still shown at the bottom of the game\'s page.',
+        + 'something everybody is up for. Where the score differs from the '
+        + 'average, it says why right beside it. A game with only a few '
+        + 'ratings so far is judged more cautiously, and a game you keep '
+        + 'putting on the table a little more favourably. The plain average of '
+        + 'all ratings is still shown at the bottom of the game\'s page.',
     },
   },
   /*

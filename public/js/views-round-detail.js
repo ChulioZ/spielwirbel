@@ -797,11 +797,17 @@ async function showGameDetail(rid, gameId) {
   // ring shows the Spielwirbel-Score the rest of the app ranks on, and the line
   // beneath it keeps the honest raw mean, so „warum steht da 2,2 wenn alle 4
   // gegeben haben" has an answer on the page rather than only in the ⓘ sheet.
+  // Since #894 the ring's number is also SHRUNK toward the round's prior, which
+  // is the second half of that same question — hence the rating count in the
+  // line below, and the ⓘ sentence that names the ramp.
   const shown = st.score === null ? null : displayScore(st.score);
-  const ratingsLine = tn(st.count, 'detail.ratingsLineOne', 'detail.ratingsLine', {
-    s: st.sessions,
-    avg: fmtAvg(st.avg),
-  });
+  // A game with plays and no ratings does carry a score since #894 — the
+  // direct-pick round's whole shelf is that case — and „Ø – aus 0 Bewertungen"
+  // beside it is nonsense, so the line phrases what the number actually rests
+  // on instead. The rated wording is unchanged.
+  const ratingsLine = st.count
+    ? tn(st.count, 'detail.ratingsLineOne', 'detail.ratingsLine', { s: st.sessions, avg: fmtAvg(st.avg) })
+    : tn(st.plays, 'score.evidencePlaysOne', 'score.evidencePlays', { n: st.plays });
   const RING_C = (2 * Math.PI * 34).toFixed(1);
   const scoreRing =
     st.score !== null

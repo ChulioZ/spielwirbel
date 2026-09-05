@@ -687,10 +687,15 @@ function gameStatsForSession(round, session, gameId) {
   return { avg, ...scoreFields(ratings), count: ratings.length, sortCount };
 }
 
-// Rating stats of a game across ALL (still existing) sessions. Computed on
-// demand on purpose: sessions are the single source of truth, so deleting a
-// session automatically removes its effect.
-function gameStats(round, gameId) {
+// Rating stats of a game across ALL (still existing) sessions, BEFORE the shelf
+// decides how much of that to believe (#894). Computed on demand on purpose:
+// sessions are the single source of truth, so deleting a session automatically
+// removes its effect.
+//
+// Nothing renders this directly — every shelf surface goes through `gameStats`
+// or `roundScoreIndex` below, which is what stops one screen showing a game's
+// raw score beside another showing its shrunk one.
+function rawGameStats(round, gameId) {
   const ratings = [];
   let sortCount = 0;
   let sessions = 0;
@@ -710,6 +715,69 @@ function gameStats(round, gameId) {
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
   return { avg, ...scoreFields(ratings), count: ratings.length, sortCount, sessions, votesCast };
+}
+
+// The raw stats plus the shelf's verdict on them (#894). `score` becomes the
+// shrunk value because at shelf scope the shrunk score simply IS the score —
+// the pill, the ring and the Pokale cards all read this one field, so the
+// numbers and the ordering can never contradict each other. `rawScore` is kept
+// beside it for tests and for anyone who needs the unshrunk figure; `avg` is
+// still the honest arithmetic mean and is untouched by any of this.
+//
+// Every other field (`count`, `votesCast`, `sortCount`, `tiles`, `vetoes`,
+// `retires`) stays raw on purpose: they are counts of what happened, and
+// `scoreReason()` and `retireRecommendations()` both read them as such.
+function shelveStats(raw, prior, plays) {
+  return {
+    ...raw,
+    plays,
+    rawScore: raw.score,
+    score: shelfScore(raw.score, raw.count, plays, prior),
+  };
+}
+
+/* The shelf's view of a whole round, computed ONCE per render (#894).
+
+   THE O(n²) TRAP THIS EXISTS TO AVOID. The prior is a property of the shelf,
+   not of the game being scored, and so is the play count — so deriving either
+   inside `rawGameStats` would rescan every session for every game on every
+   card. lib/recommend.js records the same mistake with numbers: 19.8 ms ->
+   364 ms for one call at the 1000-game quota ceiling. Hence one `playCounts`
+   walk, one `rawGameStats` pass, then the prior, then the shrink — never a
+   second walk and never a per-game one.
+
+   `games` is the shelf the prior is read over, and it must be the ACTIVE one:
+   a retired game's verdict is exactly the opinion the round has withdrawn, so
+   letting it set the expectation for a newcomer would be reading the shelf by
+   what is no longer on it. Callers that already hold `activeGames` pass it;
+   otherwise it is derived here with the same predicate they use. */
+function roundScoreIndex(round, games) {
+  const shelf = games || round.games.filter(isActiveGame);
+  const plays = playCounts(round);
+  const raw = {};
+  shelf.forEach((g) => (raw[g.id] = rawGameStats(round, g.id)));
+  const prior = roundPrior(shelf.map((g) => raw[g.id].score));
+  const byGame = {};
+  shelf.forEach((g) => (byGame[g.id] = shelveStats(raw[g.id], prior, plays.get(g.id) || 0)));
+  return { prior, plays, byGame };
+}
+
+// Shelf-scope stats for ONE game — the single-game entry point (the game detail
+// screen). It derives the round's prior itself, which costs a full pass over
+// the active shelf; that is the same work opening the Regal already does, and
+// it is why this must never be called in a loop. Loop sites take
+// `roundScoreIndex` above and read `byGame`.
+//
+// A game absent from `byGame` is an off-shelf one (retired, completed or a
+// wish) opened by its own URL: it gets no say in the prior, but is still shrunk
+// toward it, so its number means the same thing as every other number in the
+// round.
+function gameStats(round, gameId) {
+  const idx = roundScoreIndex(round);
+  return (
+    idx.byGame[gameId] ||
+    shelveStats(rawGameStats(round, gameId), idx.prior, idx.plays.get(gameId) || 0)
+  );
 }
 
 // Retirement suggestions: games often suggested for retirement and/or with a
@@ -741,6 +809,29 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
   // threshold stayed at 1.0 and the rating branch grew the lone-dissenter guard
   // below instead, which is group-size independent by construction.
   // Pinned by test/retire-score-threshold.test.js, demo fixture included.
+  //
+  // THE THIRD CORRECTION (#894) IS ABOUT WHICH SCORE IT READS. Everything the
+  // shelf displays is now shrunk toward the round's own prior, but this branch
+  // deliberately keeps reading `rawScore`, and both halves of that matter:
+  //
+  // - No fixed threshold on the shrunk scale can hold the anchor. {2,2,2,2}
+  //   shrinks to 2,00 at four votes and 1,18 at forty, so the bar would be
+  //   reached by how many people voted rather than by how the game was received
+  //   — which is exactly the defect #922 fixed one divisor over.
+  // - The direction is backwards for this question. Shrinking pulls a game
+  //   TOWARD the shelf, so the better the round's other games, the harder it
+  //   would be to propose a bad one — „dieses Spiel zieht das Regal runter"
+  //   would get quieter the more it is true.
+  //
+  // This is not a second ranking: shrinkage is monotonic in the raw score at a
+  // fixed (n, prior), so `rawScore <= LOW_SCORE` is EXACTLY the same decision as
+  // comparing the shrunk score against the shrunk anchor — just without a
+  // threshold that has to move. Uncertainty is already handled here by
+  // `minVotes` (three times the member count), which is a harder evidence bar
+  // than shrinkage expresses; applying both would count it twice.
+  //
+  // The number the banner PRINTS is still the shrunk one, so it agrees with the
+  // pill and the ring rather than showing a second figure for the same game.
   const LOW_SCORE = 1.0;
   const recs = [];
   activeGames.forEach((g) => {
@@ -761,10 +852,13 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
     // SORT_SHARE above is deliberately NOT gated: half the group asking for the
     // shelf is a majority however the score reads.
     const loneDissenter = st.tiles[0] + st.tiles[1] === 1 && st.tiles[2] === 0;
-    if (st.score !== null && st.score <= LOW_SCORE && !loneDissenter)
+    if (st.rawScore !== null && st.rawScore <= LOW_SCORE && !loneDissenter)
       reasons.push(t('rec.reasonAvg', { avg: fmtAvg(displayScore(st.score)) }));
     if (!reasons.length) return;
-    const severity = share + (st.score !== null ? Math.max(0, 3 - st.score) / 3 : 0);
+    // Ranked on the raw score for the same reason the branch gates on it: this
+    // orders "how badly is this game received", not "where does it sit on the
+    // shelf".
+    const severity = share + (st.rawScore !== null ? Math.max(0, 3 - st.rawScore) / 3 : 0);
     recs.push({ game: g, reasons, severity });
   });
   recs.sort((a, b) => b.severity - a.severity);

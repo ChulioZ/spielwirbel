@@ -304,6 +304,37 @@ ownership the only way that survives a retune — it changes `TILE_VALUE` in pla
 and asserts the published score follows, where a spec pinning a literal would
 pass just as well against a SQL copy.
 
+**#894 added a second half to the same file — the SHELF scope — and with it
+`playCounts`, which is the plainest instance in this whole inventory.** That
+function counts how often each game was put on the table; it was written in
+`lib/recommend.js` (#778) and now lives here because the Regal's shelf score
+lifts a game's prior by its plays and the recommender's `W_PLAYS` bonus divides
+by the round's most-played. Nothing validates that across the boundary and
+neither side 400s, so a drifted copy would simply make the shelf and the
+recommender disagree about how often a game was played — a number one of them
+prints. `lib/recommend.js` re-exports it so every existing caller and spec is
+untouched.
+
+The shrinkage half (`SHRINK_M`, `PRIOR_DEFAULT`, `PRIOR_MIN_GAMES`, `PLAY_LIFT`,
+`PLAY_HALF`, `roundPrior`, `shrinkScore`, `shelfScore`) is the `draw-pool.js`
+direction — shared logic — and it reaches **five** consumers, which is why it had
+to be one file rather than a rule people remember: `core.js`'s
+`roundScoreIndex` (the Regal pill and sort, the detail ring, the retirement
+banner), `recap.js` via an injected lookup (the Pokale best/worst card),
+`period-recap.js` via three more injected functions (the Chronik's per-period
+card), and `lib/recommend.js`'s `buildShelfIndex`. The Chronik case is the one
+worth knowing: #914 had *just* finished making its „Bestbewertet" card and the
+all-time card share one arithmetic, and shrinking only the all-time one split
+them again within the same release — caught by
+`test/chronik-period-recap.test.js`, which compares the two rendered numbers
+rather than trusting either.
+
+Note `recommend.js` shrinks toward a prior floored at `UNRATED_EQUIV` and applies
+**no** play lift, and neither is drift: both are stated in `gameAffinity`'s
+comment with the measurement behind them (#894 §0). Sharing the *function* while
+each side supplies its own prior is the point — what must never differ is the
+arithmetic, not the inputs.
+
 Two neighbouring values deliberately did **not** join it. `VIOLATION_MAX` stays
 in `table-split.js`: it is a threshold on the *tile* scale, not on the score, and
 it is already coupled to the vote scale there. And `LOW_SCORE` in

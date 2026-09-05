@@ -83,7 +83,14 @@ function renderPokaleTab(round) {
   // The group's accumulated taste, derived on demand from the session votes
   // (#484). Read here for the best-rated card and again by the Rückblick
   // section appended at the end of this tab.
-  const recap = roundRecap(round, sessionPeople, effectiveRating, scoreRatings);
+  // The shelf index is built once here and handed to the recap, so „das
+  // bestbewertete Spiel" names the game the Regal actually puts at the top —
+  // one ranking of one shelf, not two (#894).
+  const shelfIndex = roundScoreIndex(round);
+  const recap = roundRecap(round, sessionPeople, effectiveRating, (gid) => {
+    const st = shelfIndex.byGame[gid];
+    return st ? st.score : null;
+  });
 
   // Wins per member (a night can have several winners). Keyed by round member,
   // so a guest win is dropped by the `wid in wins` guard below — deliberately:

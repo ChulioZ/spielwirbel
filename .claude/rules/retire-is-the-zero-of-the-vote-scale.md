@@ -89,7 +89,16 @@ compares against the **Spielwirbel-Score**
 (`.claude/rules/shared-constants-across-the-stack.md`, fourteenth entry). #797's
 "deliberately not retuned" no longer applies — the scale under it moved, so the
 threshold moved with it. It is anchored rather than picked: 1.0 is exactly what
-a flat 2 from every voter scores. `VIOLATION_MAX = 2` above is untouched, being
+a flat 2 from every voter scores.
+
+**#894 kept the constant and changed which score it reads: `st.rawScore`, not the
+shrunk `st.score` the same screen prints.** That is deliberate and the comment on
+`LOW_SCORE` carries the measurement — no fixed threshold on the shrunk scale can
+hold the anchor, because {2,2,2,2} shrinks to 2,00 at four votes and 1,18 at
+forty, so the bar would be reached by turnout rather than by how the game was
+received (the #922 defect, one divisor over). It is not a second ranking:
+shrinkage is monotonic in the raw score at a fixed (n, prior), so this is exactly
+the comparison against the shrunk anchor, without a threshold that has to move. `VIOLATION_MAX = 2` above is untouched, being
 a threshold on the tile scale rather than on the score.
 
 **Qualified further by #922.** The rating reason no longer fires when the low

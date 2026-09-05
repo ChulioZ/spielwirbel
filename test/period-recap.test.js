@@ -10,11 +10,14 @@ const { periodsOf, periodRecap, periodKeyOf } = require('../public/js/period-rec
 const { sessionPeople } = require('../public/js/session-people');
 const { effectiveRating } = require('../public/js/vote-scale');
 const { RECAP_MIN_RATINGS } = require('../public/js/recap');
-const { scoreRatings } = require('../public/js/vote-score');
+const { scoreRatings, shelfScore, roundPrior, playCounts } = require('../public/js/vote-score');
 const { isActiveGame } = require('../public/js/draw-pool');
 
 const deps = {
   peopleOf: sessionPeople, ratingOf: effectiveRating, scoreOf: scoreRatings,
+  // The shelf half (#894): the real ones, never a stub — a substituted shrinkage
+  // is exactly the drift this file's injection discipline exists to prevent.
+  shelfOf: shelfScore, priorOf: roundPrior, playsOf: playCounts,
   minRatings: RECAP_MIN_RATINGS, isActive: isActiveGame,
 };
 
@@ -198,16 +201,38 @@ test('a retirement proposal counts as the zero it is', () => {
     ],
   });
   /* Three retirement proposals, one of them over a stored 5. TILE_VALUE[0] is
-     −6, so the crown scores exactly that — and the number discriminates: had the
-     stored 5 won, this would be (5 − 6 − 6) / 3 ≈ −2,33. */
-  assert.equal(periodRecap(r, [], month('2026-07'), deps).topRated.score, -6);
+     −6, so the game's own score is exactly that — and since #894 the card prints
+     it shrunk toward the shelf's prior: no other game is rated, so the prior is
+     PRIOR_DEFAULT and nothing was played, giving (3·−6 + 4·3) / 7 = −6/7.
+     The number still discriminates: had the stored 5 won, the raw score would be
+     (5 − 6 − 6) / 3 ≈ −2,33 and the printed one +5/7 ≈ 0,71. */
+  const top = periodRecap(r, [], month('2026-07'), deps).topRated;
+  assert.equal(Number(top.score.toFixed(4)), Number((-6 / 7).toFixed(4)));
+  assert.ok(top.score < 0, 'three retirement proposals must stay firmly negative');
 });
 
 test('a tie on best-rated names every tied game', () => {
+  // Neither game was chosen, so the two are tied on every input. It used to say
+  // `chosen: 'g1'`, which since #894 is no longer a tie at all — see the test
+  // below, which pins that on purpose rather than leaving it as the accident
+  // that made this one fail.
+  const r = round({
+    sessions: [session(at(2026, 7, 2), { m1: { g1: 5, g2: 5 }, m2: { g1: 5, g2: 5 }, m3: { g1: 5, g2: 5 } })],
+  });
+  assert.deepEqual([...periodRecap(r, [], month('2026-07'), deps).topRated.gameIds].sort(), ['g1', 'g2']);
+});
+
+test('a play breaks a tie between two identically rated games (#894)', () => {
+  // The play lift is evidence, not decoration: of two games the group rated
+  // exactly alike, the one they actually put on the table is the better bet.
+  // The card is „Bestbewertet" and this makes it partly about plays — which is
+  // deliberate and matches the all-time card beside it, since both read the same
+  // shelf score (test/chronik-period-recap.test.js pins that they agree).
   const r = round({
     sessions: [session(at(2026, 7, 2), { m1: { g1: 5, g2: 5 }, m2: { g1: 5, g2: 5 }, m3: { g1: 5, g2: 5 } }, { chosen: 'g1' })],
   });
-  assert.deepEqual([...periodRecap(r, [], month('2026-07'), deps).topRated.gameIds].sort(), ['g1', 'g2']);
+  const top = periodRecap(r, [], month('2026-07'), deps).topRated;
+  assert.deepEqual(top.gameIds, ['g1'], 'the played one wins outright');
 });
 
 // ---- shelf changes --------------------------------------------------------
