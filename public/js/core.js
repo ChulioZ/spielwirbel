@@ -639,11 +639,23 @@ function randomOrderedGames(round, activeGames) {
 //
 // `score` is null for an empty list, matching `avg`, so every `!== null` guard
 // already on screen transfers as-is.
+//
+// `tiles` is the per-tile histogram, and it is part of the contract: it carries
+// "how many voted 2", which `vetoes`/`retires` cannot express and which the
+// lone-dissenter guard in retireRecommendations() needs (#922). It is scored
+// through `scoreTally` rather than `scoreRatings` — the two are the same
+// function over two input shapes, so this is behaviour-identical and leaves ONE
+// counting loop instead of a second one beside it. Admission goes through
+// `tileValue` for the same reason scoreRatings' does: an off-scale stray has to
+// be skipped by the histogram and the score alike, or the two would disagree
+// about who voted.
 function scoreFields(ratings) {
-  const s = scoreRatings(ratings);
+  const tiles = TILE_VALUE.map(() => 0);
+  (Array.isArray(ratings) ? ratings : []).forEach((r) => { if (tileValue(r) !== null) tiles[r] += 1; });
+  const s = scoreTally(tiles);
   return s
-    ? { score: s.score, low: s.low, vetoes: s.vetoes, retires: s.retires }
-    : { score: null, low: null, vetoes: 0, retires: 0 };
+    ? { score: s.score, low: s.low, vetoes: s.vetoes, retires: s.retires, tiles }
+    : { score: null, low: null, vetoes: 0, retires: 0, tiles };
 }
 
 // Rating stats of a game within ONE session. Iterates the session's PEOPLE, not
@@ -720,6 +732,14 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
   // scores exactly 1.5, so the rating branch would archive-nag a game the
   // SORT_SHARE branch had just correctly declined at 25%. One dissenter must
   // not retire a game on their own; that is what SORT_SHARE is for.
+  //
+  // The SECOND correction (#922) is not to the number but to its DIVISOR. The
+  // 1.5-was-wrong analysis above was done entirely at n=4, where one dissenter
+  // weighs `TILE_VALUE[1] / 4`; at n=3 the same dissent weighs -5/3 and {1,4,4}
+  // lands on exactly 1.0. So the anchor was being reached by group size rather
+  // than by how the game was received — {1,4,4} proposed, {1,4,4,4} not. The
+  // threshold stayed at 1.0 and the rating branch grew the lone-dissenter guard
+  // below instead, which is group-size independent by construction.
   // Pinned by test/retire-score-threshold.test.js, demo fixture included.
   const LOW_SCORE = 1.0;
   const recs = [];
@@ -730,7 +750,18 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
     const reasons = [];
     if (share >= SORT_SHARE)
       reasons.push(t('rec.reasonSort', { n: st.sortCount, pct: Math.round(share * 100) }));
-    if (st.score !== null && st.score <= LOW_SCORE)
+    // The rating branch declines when the low score rests on a SINGLE voter
+    // (#922): exactly one vote below 2, and nobody at 2. Both low tiles count,
+    // not just the 1 — a lone trash vote is already SORT_SHARE's job, and it
+    // correctly declines it at 33%. Requiring nobody at 2 is what keeps the
+    // anchor intact: „eher nicht" from anyone else still leaves the game
+    // proposable, so this suppresses a dissenting minority of one and nothing
+    // wider.
+    //
+    // SORT_SHARE above is deliberately NOT gated: half the group asking for the
+    // shelf is a majority however the score reads.
+    const loneDissenter = st.tiles[0] + st.tiles[1] === 1 && st.tiles[2] === 0;
+    if (st.score !== null && st.score <= LOW_SCORE && !loneDissenter)
       reasons.push(t('rec.reasonAvg', { avg: fmtAvg(displayScore(st.score)) }));
     if (!reasons.length) return;
     const severity = share + (st.score !== null ? Math.max(0, 3 - st.score) / 3 : 0);

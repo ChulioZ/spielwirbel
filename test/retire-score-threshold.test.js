@@ -72,3 +72,108 @@ test('the demo seed arrives with nothing proposed for retirement', () => {
     );
   }
 });
+
+/* ---------------------------------------------------------------------------
+   The MEMBERSHIP decision, not just the threshold (#922).
+
+   Everything above compares `scoreRatings(...)` to `LOW_SCORE` by hand, which
+   is a statement about the number and not about what the banner does with it.
+   That proxy is what let the bug through: the threshold is fine, and the
+   proposal is still wrong, because the veto curve is divided by the VOTER COUNT
+   — one dissenter weighs `-5/n`, decisive at n=3 and harmless at n=5. So these
+   run the real `gameStats` -> `retireRecommendations` path under jsdom
+   (`.claude/rules/testing-views-under-jsdom.md`) and ask the question the user
+   sees: does this game get proposed?
+
+   NOTE which sizes actually discriminate. The single-dissenter shapes flip only
+   at n=3 and n=4; at n=5 a lone dissenter can never reach `LOW_SCORE` in the
+   first place ({1,3,3,3,3} scores 1.4), so those rows are CONTROLS — green
+   before the guard and green after. They are here because group-size
+   independence is the claim, and a sweep that only covered the sizes which
+   break is how the n=4-only coverage came to miss n=3. */
+
+const { loadApp } = require('./support/dom');
+
+/* One game, one session, one vote per member — the multiset IS the fixture.
+
+   A trash vote is stored the way the card stores it (`{ rating: null, retire:
+   true }`, #797), not as a literal 0, so `sortCount` and the SORT_SHARE branch
+   see what they would see in real data.
+
+   `minVotes` is passed as 0 deliberately: "is there enough data" is a separate
+   condition (`round.members.length * 3` at the call site in views-round.js) and
+   this file is about which vote SHAPES get proposed, not about when a game has
+   accumulated enough votes to be judged at all. */
+function recsFor(dom, votes) {
+  const ids = votes.map((_, i) => `m${i}`);
+  dom.set('UT_ROUND', {
+    id: 'r1',
+    name: 'Freitagsrunde',
+    background: null,
+    tags: [],
+    providers: [],
+    members: votes.map((_, i) => ({ id: ids[i], name: `M${i}` })),
+    games: [{ id: 'g1', title: 'Spiel', tagIds: [] }],
+    sessions: [{
+      id: 's1',
+      createdAt: '2026-07-01T20:00:00.000Z',
+      gameIds: ['g1'],
+      memberIds: ids,
+      votes: Object.fromEntries(votes.map((r, i) => [
+        ids[i],
+        { g1: r === 0 ? { rating: null, retire: true } : { rating: r, retire: false } },
+      ])),
+    }],
+  });
+  return dom.run('retireRecommendations(UT_ROUND.games, { g1: gameStats(UT_ROUND, "g1") }, 0)');
+}
+
+const proposed = (dom, votes) => recsFor(dom, votes).length > 0;
+
+test('one dissenter cannot propose a game the rest of the group is fine with', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  // Exactly one voter below 2, everyone else at 3+. In each of these the
+  // SORT_SHARE branch has just declined the game (one flag in three is 33%),
+  // and until #922 the rating branch proposed it anyway.
+  for (const votes of [
+    [1, 4, 4], [1, 3, 3], [0, 3, 3], [0, 4, 4],   // n=3 — all six flipped here
+    [1, 3, 3, 3], [0, 3, 3, 3],                    // n=4
+    [1, 4, 4, 4], [0, 4, 5, 3],                    // n=4 controls (already fine)
+    [1, 3, 3, 3, 3], [0, 3, 3, 3, 3],              // n=5 controls (already fine)
+  ]) {
+    assert.equal(
+      proposed(dom, votes), false,
+      `{${votes.join(',')}} must not be proposed — one dissenter, everyone else content`
+    );
+  }
+});
+
+test('a genuinely disliked game is still proposed — the guard narrows nothing', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  // The anchor, then four shapes that are NOT a lone dissenter: either somebody
+  // sits at 2 (so "everyone else is content" is false) or more than one voter
+  // is below 2.
+  for (const votes of [[2, 2, 2, 2], [1, 2, 3, 2], [1, 1, 3, 3], [0, 2, 2, 2], [1, 1, 4, 4]]) {
+    assert.equal(
+      proposed(dom, votes), true,
+      `{${votes.join(',')}} must still be proposed`
+    );
+  }
+});
+
+test('the guard touches the rating branch only — SORT_SHARE still proposes on its own', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  // {0,3} in a two-person round: one flag out of two votes is a 50% share, so
+  // SORT_SHARE fires, while the lone-dissenter guard suppresses the rating
+  // reason. The game must still be proposed, with the sort reason and only it.
+  // This is the one shape where the two branches can be told apart at all —
+  // half the votes being trash already forces the score far below LOW_SCORE.
+  const recs = recsFor(dom, [0, 3]);
+  assert.equal(recs.length, 1, '{0,3} must still be proposed by the share branch');
+  // `Array.from` because the value crossed out of the vm realm: its prototype is
+  // that context's Array.prototype, and `deepEqual` (strict) compares those.
+  assert.deepEqual(Array.from(recs[0].reasons), [dom.run("t('rec.reasonSort', { n: 1, pct: 50 })")]);
+});
