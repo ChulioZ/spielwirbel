@@ -66,6 +66,7 @@ const frontendGlobals = {
   tagIconPicker: 'readonly',
   randomOrderCache: 'readonly', randomOrderedGames: 'readonly',
   gameStatsForSession: 'readonly', gameStats: 'readonly',
+  rawGameStats: 'readonly', shelveStats: 'readonly', roundScoreIndex: 'readonly',
   retireRecommendations: 'readonly', minimizedRecs: 'readonly',
   STANDARD_ACCENT: 'readonly',
   applyBackground: 'readonly', setThemeColor: 'readonly', avgColor: 'readonly',
@@ -124,6 +125,10 @@ const frontendGlobals = {
   // vote-score.js (issue #893) — also required by lib/recommend.js
   TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
   tileValue: 'readonly', scoreRatings: 'readonly', scoreTally: 'readonly',
+  SHRINK_M: 'readonly', PRIOR_DEFAULT: 'readonly', PRIOR_MIN_GAMES: 'readonly',
+  PLAY_LIFT: 'readonly', PLAY_HALF: 'readonly',
+  roundPrior: 'readonly', playCredit: 'readonly', gamePrior: 'readonly',
+  shrinkScore: 'readonly', shelfScore: 'readonly', playCounts: 'readonly',
   // rating-faces.js (issue #890) — frontend only, by design
   MOODS: 'readonly', ratingFace: 'readonly',
   // win-score.js (issue #895): the Siegwertung

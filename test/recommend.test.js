@@ -21,6 +21,8 @@ const {
   gameAffinity,
   partyDistribution,
   buildPlayScale,
+  buildShelfIndex,
+  UNRATED_EQUIV,
   MIN_PROFILE_GAMES,
   NEUTRAL,
   REASON_LINES,
@@ -170,37 +172,56 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
   };
   round.members = [{ id: 'm1', name: 'A' }];
   const g = (id, over) => ({ id, title: id, ...over });
+  // The shelf the prior is read over. It was implicit before #894 — `ownRating`
+  // walked the sessions and never asked what else was on the shelf — and is now
+  // an input, so the fixture has to state it.
+  round.games = [g('gr', { retired: true }), g('ghigh'), g('gmid'), g('glow'), g('gnone')];
 
   // Nothing in this round was ever put on the table, so the play bonus is zero
   // throughout and each rung shows its bare value. Built by the real helper
   // rather than hand-rolled: `playScale` has no default on purpose (#778), and a
   // literal here would stop exercising the shape the production caller passes.
   const idle = buildPlayScale(round);
+  const shelf = buildShelfIndex(round);
+  // Every rating here rests on ONE voter, so #894's shrinkage pulls each rung
+  // four fifths of the way to the shelf's prior — these are no longer the bare
+  // ladder values. The prior itself is this fixture's floor (`UNRATED_EQUIV`),
+  // because a shelf of {5, 3, veto} means 1,0 and shrinking a verdict toward
+  // something below the unrated rung would make one vote worse than none.
+  const aff = (game) => Math.round(gameAffinity(game, idle, shelf) * 100) / 100;
 
   // A retired game usually carries votes; letting them speak would make "we
   // threw this out" read as an ordinary five-star opinion.
-  assert.equal(gameAffinity(round, g('gr', { retired: true }), idle), -1, 'retired -> -1.0');
-  assert.equal(gameAffinity(round, g('ghigh'), idle), 2, 'rated 5 -> 2.0');
-  assert.equal(gameAffinity(round, g('gmid'), idle), 1, 'rated 3 -> 1.0');
+  assert.equal(aff(g('gr', { retired: true })), -1, 'retired -> -1.0, ahead of any rating');
+  assert.equal(aff(g('ghigh')), 0.88, 'rated 5 by one voter -> 0.88 (bare rung 2.0)');
+  assert.equal(aff(g('gmid')), 0.68, 'rated 3 by one voter -> 0.68 (bare rung 1.0)');
   // Since #893 a lone „gar nicht" scores −5, which the clamp in `gameAffinity`
-  // floors at 0 before the ladder arithmetic — so this rung is −0.5 rather than
-  // 0.0. The clamp is what keeps it ABOVE `A_RETIRED`: a game the round still
-  // owns and dislikes must not outrank-in-reverse one they actually threw out.
-  assert.equal(gameAffinity(round, g('glow'), idle), -0.5, 'rated 1 -> -0.5');
-  assert.equal(gameAffinity(round, g('gnone'), idle), 0.6, 'owned, unrated -> 0.6');
+  // floors at 0 before the ladder arithmetic. Shrinkage lifts it off that clamp
+  // here, but it stays the bottom rung of the three, which is what the clamp is
+  // for: a game the round still owns and dislikes must not outrank-in-reverse
+  // one they actually threw out.
+  assert.equal(aff(g('glow')), -0.12, 'rated 1 by one voter -> -0.12 (bare rung -0.5)');
+  assert.equal(aff(g('gnone')), 0.6, 'owned, unrated -> 0.6, and shrinkage never touches it');
   // Completed is deliberately NOT a state: the game was played through, so its
   // ratings still count.
-  assert.equal(gameAffinity(round, g('ghigh', { completed: true }), idle), 2);
+  assert.equal(aff(g('ghigh', { completed: true })), 0.88);
+
+  // #894's own interaction, pinned as a RELATION rather than a row: one neutral
+  // vote must never rank a game below never having been rated. The prior floor
+  // is what guarantees it, and without it this fixture inverts — its raw prior
+  // is 1,0, at which rated-3-once scores 0,2 against the unrated 0,6.
+  assert.ok(aff(g('gmid')) > A_UNRATED, 'one 😐 vote must beat no vote at all');
+  assert.equal(UNRATED_EQUIV, 2.2, 'the floor is derived from the rung, not chosen');
 
   // The RELATION, not the literals (#799): a shelf entry nobody has voted on is
   // a real signal but a weaker one than any game the round has formed an opinion
   // about — and still stronger than a game it actively disliked. Two bare
   // literals would go green on any future re-tune that inverted this.
-  const unrated = gameAffinity(round, g('gnone'), idle);
-  assert.ok(unrated < gameAffinity(round, g('gmid'), idle), `unrated ${unrated} must rank below rated 3.0`);
-  assert.ok(unrated > gameAffinity(round, g('glow'), idle), `unrated ${unrated} must rank above rated 1.0`);
+  const unrated = aff(g('gnone'));
+  assert.ok(unrated < aff(g('gmid')), `unrated ${unrated} must rank below rated 3.0`);
+  assert.ok(unrated > aff(g('glow')), `unrated ${unrated} must rank above rated 1.0`);
   // And "we got rid of it" outweighs "we own it and never played it".
-  assert.ok(Math.abs(gameAffinity(round, g('gr', { retired: true }), idle)) > unrated);
+  assert.ok(Math.abs(aff(g('gr', { retired: true }))) > unrated);
 
   /*
    * The play bonus is ADDITIVE on top of those rungs, never a rung of its own
@@ -220,22 +241,32 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
     ],
   };
   const scale = buildPlayScale(played);
+  const playedShelf = buildShelfIndex(played);
+  const pAff = (game) => Math.round(gameAffinity(game, scale, playedShelf) * 100) / 100;
   assert.equal(scale.denominator, 3, 'the retired game must not set the scale');
 
   // The state arm short-circuits BEFORE the bonus is read: twenty nights do not
   // soften "we got rid of it".
-  assert.equal(gameAffinity(played, g('gr', { retired: true }), scale), A_RETIRED, 'retired stays -1.0 however often played');
-  assert.equal(gameAffinity(played, g('ghigh'), scale), 3, 'rated 5 at max plays -> 3.0');
-  assert.equal(gameAffinity(played, g('gnone'), scale), 1.6, 'unrated at max plays -> 1.6');
-  assert.equal(gameAffinity(played, g('gmid'), scale), 1, 'rated 3, never played -> 1.0, unchanged');
+  assert.equal(pAff(g('gr', { retired: true })), A_RETIRED, 'retired stays -1.0 however often played');
+  // This round's shelf drops `glow`, so only two games carry a score and the
+  // round falls below PRIOR_MIN_GAMES — it shrinks toward PRIOR_DEFAULT. That
+  // makes `gmid` the cleanest possible illustration of the ramp: a game rated
+  // exactly the prior is shrunk to exactly itself, so its rung is untouched.
+  assert.equal(pAff(g('ghigh')), 2.2, 'rated 5 at max plays -> 1.2 + the full bonus');
+  assert.equal(pAff(g('gnone')), 1.6, 'unrated at max plays -> 1.6');
+  assert.equal(pAff(g('gmid')), 1, 'rated 3 on a shelf whose prior IS 3 -> 1.0, shrinkage a no-op');
 
   // Stated as the composition too, so a future re-tune of either constant keeps
   // a spec that says what the arithmetic IS rather than what it happened to be.
-  assert.equal(gameAffinity(played, g('gnone'), scale), A_UNRATED + W_PLAYS);
+  // The unrated rung is the one #894 leaves untouched — there is no score to
+  // shrink — so it still reads as the two constants added.
+  assert.equal(pAff(g('gnone')), A_UNRATED + W_PLAYS);
   // The revealed-preference point, and the reason W_PLAYS is set as high as it
   // is: a game the round keeps putting on the table outranks an unplayed shelf
-  // entry even when nobody has rated it above the middle of the scale.
-  assert.ok(gameAffinity(played, g('gnone'), scale) > gameAffinity(played, g('gmid'), scale));
+  // entry even when nobody has rated it above the middle of the scale. This is
+  // what #894 §0 measured and could NOT preserve by lifting the shrinkage prior
+  // instead, which is why W_PLAYS survives that issue (its §0 fallback b).
+  assert.ok(pAff(g('gnone')) > pAff(g('gmid')));
 });
 
 test('lowering the unrated rung shifts profile mass onto the games the round RATED (#799)', () => {
@@ -338,7 +369,7 @@ test('a single evening is not a favourite — the play scale has a floor (#778)'
   const round = shelfRound({ sessions: [directPick('s1', 'g1')] });
   const scale = buildPlayScale(round);
   assert.equal(scale.denominator, PLAY_SCALE_FLOOR, 'one play must not set the denominator to 1');
-  assert.equal(gameAffinity(round, round.games[0], scale), A_UNRATED + W_PLAYS / PLAY_SCALE_FLOOR);
+  assert.equal(gameAffinity(round.games[0], scale, buildShelfIndex(round)), A_UNRATED + W_PLAYS / PLAY_SCALE_FLOOR);
 });
 
 test('a RETIRED game does not set the play denominator, however often it was played (#778)', () => {
@@ -361,8 +392,9 @@ test('a RETIRED game does not set the play denominator, however often it was pla
   });
   const scale = buildPlayScale(round);
   assert.equal(scale.denominator, 3, 'the retired game must not set the scale');
-  assert.equal(gameAffinity(round, round.games[1], scale), A_UNRATED + W_PLAYS, 'g1 still earns the full bonus');
-  assert.equal(gameAffinity(round, round.games[0], scale), A_RETIRED, 'and 20 plays do not soften the retirement');
+  const shelf20 = buildShelfIndex(round);
+  assert.equal(gameAffinity(round.games[1], scale, shelf20), A_UNRATED + W_PLAYS, 'g1 still earns the full bonus');
+  assert.equal(gameAffinity(round.games[0], scale, shelf20), A_RETIRED, 'and 20 plays do not soften the retirement');
 });
 
 test('a WISHED game does not set the play denominator either (#778)', () => {
@@ -407,7 +439,7 @@ test('a cancelled evening and a deleted game contribute no plays (#778)', () => 
   const scale = buildPlayScale(round);
   assert.equal(scale.denominator, 3, 'neither a cancelled evening nor a deleted game may set the scale');
   assert.equal(scale.counts.get('g2') || 0, 0, 'a cancelled evening is not a play');
-  assert.equal(gameAffinity(round, round.games[1], scale), A_UNRATED, 'g2 saw 15 cancelled nights and earns nothing');
+  assert.equal(gameAffinity(round.games[1], scale, buildShelfIndex(round)), A_UNRATED, 'g2 saw 15 cancelled nights and earns nothing');
 });
 
 test('a DRAWN winner counts as a play exactly like a direct pick (#778)', () => {
@@ -1141,12 +1173,25 @@ test('a retired game is FILTERED OUT, not merely outranked, when a slot is free'
 // and a zero-affinity game contributes nothing at all rather than contributing
 // weakly, which would leave these tests with a single contributor and nothing
 // to order. `{2, 3}` scores (1 + 3) / 2 = 2.0, i.e. exactly the old rung.
+/*
+ * Two rated games with a WIDE affinity gap, which is what both reason-ordering
+ * tests below need in order to demonstrate anything.
+ *
+ * All four members vote, deliberately: since #894 a verdict is shrunk toward the
+ * round's prior in proportion to how thin it is, so a one-voter fixture
+ * compresses the very gap these tests exist to exercise (measured: the two games
+ * landed 0,83 and 1,20 apart, at which the product ordering in the second test
+ * no longer inverts and it passed for the wrong reason). Four votes is
+ * `SHRINK_M`, so each game keeps half its own say.
+ */
 const ratedPairRound = () => shelfRound({
   sessions: [{
     id: 's1',
     gameIds: ['g1', 'g2'],
     memberIds: ['m1', 'm2', 'm3', 'm4'],
-    votes: { m1: { g1: { rating: 2 }, g2: { rating: 5 } }, m2: { g1: { rating: 3 } } },
+    votes: Object.fromEntries(
+      ['m1', 'm2', 'm3', 'm4'].map((m) => [m, { g1: { rating: 2 }, g2: { rating: 5 } }])
+    ),
   }],
 });
 
@@ -1160,8 +1205,8 @@ test('reason contributors sharing the SAME count are ranked by affinity', () => 
     .find((r) => r.externalId === 'cand').reasons.find((r) => r.term === 'mechanics');
 
   // Both share the one mechanic, so `shared` alone cannot order them and the
-  // pre-fix code fell back to shelf order. Owned 2 is rated 5 (affinity 2.0),
-  // Owned 1 rated 2 (affinity 0.5).
+  // pre-fix code fell back to shelf order. Owned 2 is rated 5 by everyone
+  // (shrunk to 4,0 -> affinity 1.5), Owned 1 rated 2 (shrunk to 2,0 -> 0.5).
   assert.deepEqual(mechanics.games, ['Owned 2', 'Owned 1']);
 });
 
@@ -1175,7 +1220,7 @@ test('a reason contributor sharing FEWER attributes can outrank one sharing more
     .find((r) => r.externalId === 'cand').reasons.find((r) => r.term === 'mechanics');
 
   // Owned 1 shares BOTH mechanics but is rated 2 -> 2 x 0.5 = 1.0; Owned 2
-  // shares one and is rated 5 -> 1 x 2.0 = 2.0. So the ranking is the PRODUCT,
+  // shares one and is rated 5 -> 1 x 1.5 = 1.5. So the ranking is the PRODUCT,
   // not `shared` with affinity as a tie-break — under a tie-break the shared
   // count would decide first and Owned 1 would still lead.
   assert.deepEqual(mechanics.games, ['Owned 2', 'Owned 1']);

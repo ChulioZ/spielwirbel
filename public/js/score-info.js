@@ -47,7 +47,13 @@
 // rather than in each caller is what stops a third sheet from inventing a
 // fourth naming convention for the same three strings.
 const INFO_SHEETS = {
-  score: { title: 'score.infoTitle', open: 'score.infoOpen', body: ['score.infoBody', 'score.infoRaw'] },
+  score: {
+    title: 'score.infoTitle',
+    open: 'score.infoOpen',
+    // Principle, never formula — see the header. The two #894 sentences state
+    // the ramp and the play lift in the same register: what happens, not how.
+    body: ['score.infoBody', 'score.infoThin', 'score.infoPlays', 'score.infoRaw'],
+  },
   win: { title: 'win.infoTitle', open: 'win.infoOpen', body: ['win.infoBody'] },
 };
 

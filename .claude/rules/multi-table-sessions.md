@@ -49,7 +49,8 @@ because a `grep` for the pool predicates otherwise finds one of the two.
 
 Both are the natural thing to copy over, and both are wrong:
 
-- **Votes.** `gameStats` tallies every session whose `gameIds` holds the game
+- **Votes.** `gameStats` (through `rawGameStats` since #894) tallies every
+  session whose `gameIds` holds the game
   (`core.js`), so copying the parent's column into a child would count each
   rating twice and quietly move the game's average — a number that changed
   because the evening was split, with nothing on any screen to explain it.

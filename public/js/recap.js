@@ -8,9 +8,11 @@
    Its three sibling dependencies are passed IN rather than read off the shared
    scope: `peopleOf` (sessionPeople, from session-people.js), `ratingOf`
    (effectiveRating, from vote-scale.js — what a vote is worth once a retirement
-   proposal counts as the 0 it is, #797) and `scoreOf` (scoreRatings, from
-   vote-score.js — what a SET of votes is worth once a veto counts for more than
-   its numeric distance, #893). A public/js file cannot require() a
+   proposal counts as the 0 it is, #797) and `shelfScoreOf` (a `gameId ->
+   number|null` lookup into the round's shelf index, built by core.js's
+   `roundScoreIndex` — what a SET of votes is worth once a veto counts for more
+   than its numeric distance (#893) and once thin data is shrunk toward the
+   round's own prior (#894)). A public/js file cannot require() a
    sibling — `require` is not among eslint.config.js's frontendGlobals and the
    browser has none — so injecting them is what keeps this file usable both as a
    shared-scope frontend script and as a CommonJS module the test suite can
@@ -79,7 +81,7 @@ function collectRatings(round, peopleOf, ratingOf) {
 // `worst` is null unless a *different* game holds it: with a single qualifying
 // game the same title would otherwise be announced as both the best and the
 // worst thing the group owns, which reads as a bug rather than as thin data.
-function bestAndWorst(round, index, scoreOf) {
+function bestAndWorst(round, index, shelfScoreOf) {
   const rated = round.games
     .filter((g) => !g.retired && !g.completed && !g.wish)
     .map((g) => {
@@ -89,8 +91,13 @@ function bestAndWorst(round, index, scoreOf) {
       // mean: „das schlechteste Spiel im Regal" is exactly the question a veto
       // is an answer to, and crowning a game two people loved and one refuses
       // to play would be the ranking this change exists to correct.
-      const sc = scoreOf(ratings);
-      return { id: g.id, score: sc ? sc.score : null, count: ratings.length };
+      //
+      // And it is the SHELF score (#894), handed in rather than recomputed: the
+      // card names „das bestbewertete Spiel", which has to be the same game the
+      // Regal puts at the top. Recomputing it from `ratings` here would leave
+      // two rankings of one shelf — the exact drift the injected dependencies
+      // in this file's header exist to prevent.
+      return { id: g.id, score: shelfScoreOf(g.id), count: ratings.length };
     })
     .filter((r) => r.score !== null && r.count >= RECAP_MIN_RATINGS);
   if (!rated.length) return { best: null, worst: null };
@@ -193,9 +200,9 @@ function memberFavourites(round, index) {
 }
 
 // The whole recap for one round. `peopleOf` is sessionPeople(round, session).
-function roundRecap(round, peopleOf, ratingOf, scoreOf) {
+function roundRecap(round, peopleOf, ratingOf, shelfScoreOf) {
   const index = collectRatings(round, peopleOf, ratingOf);
-  const { best, worst } = bestAndWorst(round, index, scoreOf);
+  const { best, worst } = bestAndWorst(round, index, shelfScoreOf);
   return {
     totals: {
       // Finished sessions only, matching the count the home screen and the rail

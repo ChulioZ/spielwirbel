@@ -333,6 +333,11 @@ function renderPeriodRecapSection(round, activities) {
     peopleOf: sessionPeople,
     ratingOf: effectiveRating,
     scoreOf: scoreRatings,
+    // The shelf half of the same rule (#894): the period card is shrunk exactly
+    // as the all-time one is, so „Bestbewertet" means one thing on both.
+    shelfOf: shelfScore,
+    priorOf: roundPrior,
+    playsOf: playCounts,
     minRatings: RECAP_MIN_RATINGS,
     isActive: isActiveGame,
   };

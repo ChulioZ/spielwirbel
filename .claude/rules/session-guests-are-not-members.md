@@ -99,7 +99,8 @@ The mechanism is unchanged (omit, don't cast-and-filter); what changed is what i
 being omitted.
 
 Omitting it rather than casting and filtering the flag is what lets
-`gameStats`/`gameStatsForSession` iterate `sessionPeople()` with **no
+`rawGameStats` (the raw half of `gameStats` since #894)/`gameStatsForSession`
+iterate `sessionPeople()` with **no
 guest-specific exclusion at all** — there is simply never a guest `retire` flag.
 That property got *more* load-bearing with #797, not less: a guest zero would now
 also drag the game's average down, not just its side counter. Three consequences

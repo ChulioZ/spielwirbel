@@ -19,7 +19,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
-const { gameAffinity, buildPlayScale } = require('../lib/recommend');
+const { gameAffinity, buildPlayScale, buildShelfIndex } = require('../lib/recommend');
 
 const RID = 'r1';
 
@@ -168,7 +168,7 @@ test('the recommendation profile reads a retirement proposal as a 0', () => {
   const legacy = mk({ m1: { g1: { rating: 5, retire: true } } });
 
   const affinityOf = (round) =>
-    gameAffinity(round, round.games[0], buildPlayScale(round));
+    gameAffinity(round.games[0], buildPlayScale(round), buildShelfIndex(round));
 
   assert.ok(affinityOf(hated) < affinityOf(loved),
     'a game the group voted off the shelf must not score like one they love');

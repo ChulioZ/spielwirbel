@@ -42,7 +42,31 @@ const round = (over = {}) => ({
   sessions: over.sessions || [],
 });
 
-const recapOf = (r) => roundRecap(r, sessionPeople, effectiveRating, scoreRatings);
+/*
+ * The shelf scores the recap is HANDED (#894). In production that lookup is
+ * core.js's `roundScoreIndex`, which shrinks a thin verdict toward the round's
+ * own prior — so „das bestbewertete Spiel" names the game the Regal actually
+ * puts at the top rather than a second ranking of the same shelf.
+ *
+ * These specs are about WHICH game the recap picks from a set of scores and
+ * where the eligibility bar sits, so the default lookup here is the plain
+ * unshrunk score; the shrinkage arithmetic is pinned in test/vote-score.test.js
+ * and the fact that the recap defers to the lookup at all is pinned by the
+ * contract test below. Passing a lookup explicitly overrides it.
+ */
+const shelfOf = (r) => (gid) => {
+  const ratings = [];
+  (r.sessions || []).forEach((s) =>
+    sessionPeople(r, s).forEach((p) => {
+      const x = effectiveRating(((s.votes || {})[p.id] || {})[gid]);
+      if (x !== null) ratings.push(x);
+    })
+  );
+  const sc = scoreRatings(ratings);
+  return sc ? sc.score : null;
+};
+
+const recapOf = (r, lookup) => roundRecap(r, sessionPeople, effectiveRating, lookup || shelfOf(r));
 
 // Ratings for one game from as many distinct members as needed to clear the
 // evidence bar, all at the same value.
@@ -133,6 +157,30 @@ test('archived games are out of the best/worst pair — it is about the shelf yo
   });
   const rec = recapOf(r);
   assert.deepEqual(rec.worst, { gameIds: ['g2'], score: 3 }, 'the retired 1.0 must not win worst');
+});
+
+test('best and worst rank on the shelf score they are HANDED, never a recomputed one (#894)', () => {
+  // g1 is loved and g2 disliked by the raw votes; the lookup says the opposite.
+  // If `bestAndWorst` ever recomputes the score from the ratings it already
+  // holds — which it did until #894, and which is the natural implementation —
+  // the shelf and the Pokale card would rank the same shelf two different ways
+  // and this assertion is the only thing that would notice.
+  const members = ['m1', 'm2', 'm3'];
+  const r = round({
+    members: members.map((id) => ({ id, name: id })),
+    sessions: [flat('g1', 5, members), flat('g2', 1, members)],
+  });
+  const inverted = (gid) => (gid === 'g1' ? 0.5 : 4.5);
+  const rec = recapOf(r, inverted);
+  assert.deepEqual(rec.best, { gameIds: ['g2'], score: 4.5 });
+  assert.deepEqual(rec.worst, { gameIds: ['g1'], score: 0.5 });
+
+  // The eligibility bar still reads the recap's OWN rating count, not the
+  // lookup: a game the shelf scores highly but nobody has rated three times
+  // must stay out of „Bestes Spiel" (#894 §5 — the ramp did not replace the
+  // cliff, and a play-only score must not become Pokal-eligible).
+  const thin = round({ sessions: [flat('g1', 5, ['m1'])] });
+  assert.equal(recapOf(thin, () => 5).best, null, 'a high shelf score cannot buy eligibility');
 });
 
 test("a guest's rating moves the average, so the recap cannot contradict the game's own ring", () => {

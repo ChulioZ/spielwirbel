@@ -167,8 +167,10 @@ cards keep distinct LABELS even now that they no longer collide, and for the two
 assertions that stop widening that list from becoming a way to hide a card.
 
 **A SECOND feature now counts the same field, and it must keep disagreeing with
-this card (#778).** The recommender's play bonus (`playCounts` /
-`buildPlayScale` in `lib/recommend.js`,
+this card (#778).** The recommender's play bonus (`buildPlayScale` in
+`lib/recommend.js`, over `playCounts` — which moved to
+`public/js/vote-score.js` in #894, since the Regal's shelf score counts the same
+plays and `lib/recommend.js` re-exports it,
 `.claude/rules/recommendation-scoring.md` §12) tallies the same `chosenGameId`
 over the same sessions — and **drops retired games**, both from the bonus and
 from the denominator it is scaled against. That is not an inconsistency to

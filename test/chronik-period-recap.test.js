@@ -229,9 +229,12 @@ test('the per-period and all-time Bestbewertet cards print the SAME number, in t
 
   assert.equal(periodValue, allTime.querySelector('.pokale-card__sub').textContent);
   /* Named as well as compared, so a change breaking BOTH cards the same way
-     cannot satisfy this by making them equally wrong — 1,7 is the score, 3,7
-     would be the raw mean, and „Ø 1,7" the old typography. */
-  assert.equal(periodValue, '1,7');
+     cannot satisfy this by making them equally wrong. All four candidate values
+     are distinct here, which is what keeps the guard discriminating: 2,6 is the
+     shelf score (#894 — {5,5,1} shrunk toward the prior, lifted by one play),
+     1,7 the unshrunk Spielwirbel-Score (#893), 3,7 the raw mean, and „Ø 1,7"
+     the old typography. */
+  assert.equal(periodValue, '2,6');
 });
 
 test('the picker drives only the recap cards — the timeline below is untouched', async (t) => {

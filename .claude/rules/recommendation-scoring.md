@@ -451,6 +451,42 @@ coincidence. `reasonsFrom` therefore names **at most one** of them:
   pinned by a hand-built `reasonsFrom` call rather than through `recommend()`,
   and the ordering is what keeps it harmless if a future rung breaks that chain.
 
+## 13. Ratings are SHRUNK before they reach the ladder (#894)
+
+`ownRating` no longer feeds `gameAffinity` its raw Spielwirbel-Score: the score
+is pulled toward the round's own prior in proportion to how thin it is, so a
+game three people rated 5,5,5 on its one evening stops shaping the taste profile
+as hard as a staple forty votes agree on. Three things about how it landed:
+
+- **`gameAffinity(game, playScale, shelf)` — `round` left the signature.** The
+  scores come from `buildShelfIndex(round)`, built once per profile beside
+  `buildPlayScale`, so the function walks no sessions at all. Same hoisting
+  argument as §12's: the prior is a property of the shelf, not of the game being
+  scored, and per-game derivation is the 19.8 ms → 364 ms mistake this file
+  already records. Total session walks are unchanged, not increased.
+- **`W_PLAYS` SURVIVED #894, and the measurement is why.** That issue proposed
+  retiring it and letting plays reach the profile by lifting the prior instead;
+  its own §0 required §12's three cases to be measured first, and they invert.
+  Because the lift fades as `m/(n+m)`, a gateway game rated 3,0 by twenty people
+  and played twenty times scores **1,08** while a never-rated game played ten
+  times floats at **1,42** — the game they play most and have an opinion about
+  ranking below one they have never rated, which is precisely the case §12
+  exists to serve. The inversion is structural: restoring the order needs the
+  prior to outweigh twenty real votes (`k ≥ 300`, or `SHRINK_M ≥ 250`), at which
+  point every shelf score collapses onto the prior and the shrinkage stops
+  discriminating at all. So the shelf DISPLAY lifts its prior by plays and this
+  file does not — two mechanisms, one argument, each where it works.
+- **The prior is floored at `UNRATED_EQUIV = A_UNRATED × 2 + 1`, and this is the
+  finding #894 did not anticipate.** Shrinkage and a *fixed* unrated rung
+  interact: a thin verdict is pulled toward the shelf's prior, so if that prior
+  sits below what the ladder pays for no verdict at all, adding one „😐 passt
+  schon" vote ranks a game BELOW never having been rated — the profile saying
+  some evidence is worth less than none. Measured: the inversion starts under a
+  prior of 2,0 and the break-even is exactly this value, which is why the floor
+  is derived from the rung rather than chosen. It floors the **prior** (an
+  input), never the score, so it blunts no veto: a game with real votes still
+  converges on its own score as `n` grows.
+
 ## 12. Plays are a PROFILE input, not a scored term (#778)
 
 `gameAffinity` read only state and ratings, so a **direct-pick** evening left no
