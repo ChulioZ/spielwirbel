@@ -170,6 +170,34 @@ if (!process.env.DATABASE_URL) {
     assert.deepEqual(row, { id: `s-${rid}`, gameIds: [] });
   });
 
+  test('the migration REFUSES to finish when the rewrite changed nothing', async () => {
+    /* The verification is the whole reason this migration cannot silently do
+       nothing (.claude/rules/rls-blocks-data-migrations.md), so it needs a guard
+       of its own — otherwise it is a check nobody has watched fail, in a file
+       whose entire subject is checks that pass while doing nothing.
+
+       Driven by handing `up()` a knex whose `raw` swallows just the UPDATE, so
+       the real predicate runs against real rows with the rewrite disabled. That
+       is the exact production failure: RLS filters the UPDATE to zero rows while
+       everything else succeeds. */
+    const sid = await seed({ bo: { g1: { rating: null, retire: true } } });
+    const blind = {
+      raw: (sql, bindings) =>
+        (/^\s*UPDATE sessions/.test(sql) ? Promise.resolve({ rowCount: 0 }) : knex.raw(sql, bindings)),
+    };
+
+    await assert.rejects(() => dropRetireVotes.up(blind), /still carry a retire flag/);
+
+    // The row is untouched (the whole migration rolls back with the throw in
+    // production), and FORCE is back even on the failure path.
+    assert.deepEqual(await votesOf(sid), { bo: { g1: { rating: null, retire: true } } });
+    const r = await knex.raw(`SELECT relforcerowsecurity AS f FROM pg_class WHERE relname = 'sessions'`);
+    assert.equal(r.rows[0].f, true);
+
+    await dropRetireVotes.up(knex);   // and the real one still cleans it up
+    assert.deepEqual(await votesOf(sid), { bo: { g1: { rating: 1 } } });
+  });
+
   test('FORCE ROW LEVEL SECURITY is restored on sessions afterwards', async () => {
     // The rewrite is cross-tenant by nature, so it lifts FORCE for the duration
     // (see the migration's header). Leaving it lifted would silently disable the

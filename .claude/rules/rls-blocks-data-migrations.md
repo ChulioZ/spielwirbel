@@ -58,6 +58,26 @@ do" predicate and fail loudly if it still matches. A data migration that can
 silently do nothing is the one shape that must not ship, and the verification is
 four lines.
 
+**Put the verification INSIDE the `try`, before FORCE goes back on.** This is the
+same trap one statement over, and #909 shipped it wrong first: a `SELECT` issued
+after the restore is filtered by the tenant policy and returns nothing, so the
+check passes by construction — vacuously in production, honestly against a local
+superuser. Green exactly where it cannot help, which is the whole family this
+file is about.
+
+It belongs inside for a second, independent reason: the `ALTER` holds an
+`ACCESS EXCLUSIVE` lock on the table for the rest of the transaction, so nothing
+else can write while you count. Outside that window a row committed by the
+still-serving previous container between the UPDATE and the count would fail the
+migration — and therefore the deploy — over a row the next boot would simply
+clean up.
+
+**And guard the guard.** A verification nobody has watched fail is exactly the
+thing it exists to prevent, so give it a named spec: hand `up()` a `knex` whose
+`raw` swallows just the `UPDATE` and assert it rejects. That reproduces the real
+production failure (the rewrite matches nothing while everything else succeeds)
+against real rows, and it fails alone when the check is deleted.
+
 Three notes on the alternatives, so they are not re-derived:
 
 - **`SET row_security = off` does not work.** It makes a query that *would* apply
