@@ -52,14 +52,48 @@ const RECAP_CARD_TILE_H = 104;
 const RECAP_CARD_ROW_H = 82;
 const RECAP_CARD_SHELF_H = 68;
 
-// One raw custom property off the document, with a fallback for the case where
-// the round carries no theme (or the property is missing entirely).
+/* Normalize any CSS colour to what a canvas will actually paint, or null.
+
+   Canvas treats an unparseable fillStyle as "keep the previous one", so a bad
+   value paints the last colour used rather than failing — which is why this
+   asks the question with TWO sentinels instead of pattern-matching the string.
+   If the value parses, both assignments land on it and agree; if it does not,
+   each sentinel survives and they differ. That is exact where a regex is a
+   guess, and it returns the normalized `#rrggbb` as a bonus. */
+function recapColor(v) {
+  if (!v) return null;
+  const ctx = document.createElement('canvas').getContext('2d');
+  // No 2d context at all (jsdom, where the specs run): fall back to accepting a
+  // plainly-written colour, which is what this did before #904. Without this the
+  // harness would report every token as unresolvable and quietly measure the
+  // fallbacks — a green run over a card nobody had actually checked.
+  if (!ctx) return /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\()/i.test(v) ? v : null;
+  ctx.fillStyle = '#000000';
+  ctx.fillStyle = v;
+  const a = ctx.fillStyle;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = v;
+  return a === ctx.fillStyle ? a : null;
+}
+
+/* One custom property off the document, as a colour the canvas can use.
+
+   Custom properties are substitution-only, so getPropertyValue() hands back the
+   UNRESOLVED text: since #904 `--surface` is a color-mix() under a dark design,
+   and the card would have quietly fallen back to white — a white panel on a
+   night-blue card, with nothing to say so. Painting the token on a throwaway
+   span and reading the computed `color` back is the one way to get the value
+   the browser resolved (.claude/rules/color-mix-interpolation-space.md). */
 function recapToken(name, fallback) {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  // A color-mix()/var() chain would parse as a canvas colour on no browser, so
-  // anything that is not a plain value is refused rather than silently painting
-  // black — canvas treats an unparseable fillStyle as "keep the previous one".
-  return /^#|^rgb|^hsl/.test(v) ? v : fallback;
+  const raw = recapColor(getComputedStyle(document.documentElement).getPropertyValue(name).trim());
+  if (raw) return raw;
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;left:-9999px;top:0;width:0;height:0';
+  probe.style.color = `var(${name})`;
+  document.body.appendChild(probe);
+  const resolved = recapColor(getComputedStyle(probe).color);
+  probe.remove();
+  return resolved || fallback;
 }
 
 function recapPalette() {

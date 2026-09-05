@@ -871,6 +871,7 @@ I18N.es = {
   'theme.sand': 'Arena',
   'theme.schiefer': 'Pizarra',
   'theme.pfirsich': 'Melocotón',
+  'theme.obsidian': 'Obsidiana',
   'theme.forest': 'Bosque',
   'theme.scifi': 'Ciencia ficción',
   'design.group.colors': 'Colores',

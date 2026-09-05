@@ -13,13 +13,18 @@ see A-R05. AA is held here as the product bar regardless.
 
 ---
 
-### A-001 — Text contrast ≥ 4.5:1 against both the card and the darkest theme page
-- **Status:** adopted · 2026-07-23
+### A-001 — Text contrast ≥ 4.5:1 against its OWN design's card and page
+- **Status:** adopted · 2026-07-23 · revised 2026-09-05 (#904)
 - **Source:** WCAG 2.2 SC 1.4.3 · `accessibility-contrast-and-modals.md` §1
 - **Check:** Any colour used as text clears 4.5:1 against `--surface` *and* against
-  the darkest design page (Schiefer `#e9eef3`; a world page sits no darker, #903). Bare `.link-btn`s paint straight
-  onto `--page-bg`, so "passes on white" is not the test.
-- **Enforced by:** `test/a11y-contrast.test.js` (semantic colours, member colours, ratings)
+  `--page-bg` — **resolved for the design being checked**. Bare `.link-btn`s paint
+  straight onto the page, so "passes on white" is not the test. Since #904 neither
+  end is a constant: a dark design replaces `--surface`, `--ink`, `--ink-soft` and
+  the three semantics, so "the darkest theme page" is no longer one hex to measure
+  everything against — it is per design, in both directions.
+- **Enforced by:** `test/a11y-contrast.test.js` (semantic colours, member tones,
+  ratings, `--on-accent`), which resolves each design's tokens via
+  `test/support/theme.js` rather than reading `:root`
 
 ### A-002 — A theme accent clears 4.5:1 as text on its own page
 - **Status:** adopted · 2026-07-23

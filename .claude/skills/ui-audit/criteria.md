@@ -164,8 +164,10 @@ is not a UI finding, it is a rejected idea.
   colour** of every derived token: an oklab mix toward `#000` at the same percentage
   lands lighter than the sRGB one, so the percentages have to be re-tuned by eye, not
   just the keyword swapped. Any migration must re-run **`test/a11y-contrast.test.js`**
-  and re-check the derived tones against the darkest theme page (Schiefer `#e9eef3`),
-  per `.claude/rules/accessibility-contrast-and-modals.md` §1. A migration that keeps
+  and re-check the derived tones against **every** design's own page — since #904 a
+  design may be dark, so there is no single darkest page to measure against, and the
+  neutral mixes travel toward `#fff` rather than `#000` on one
+  (`.claude/rules/accessibility-contrast-and-modals.md` §1). A migration that keeps
   the numbers and only edits the keyword is a regression, not an improvement.
 - **Enforced by:** `test/design-tokens.test.js` (oklab allowlist over styles.css,
   kontakt.html, login.html and lib/faq.js, with a per-surface anti-vacuous floor)

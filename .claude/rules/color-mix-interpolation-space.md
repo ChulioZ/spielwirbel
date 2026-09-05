@@ -34,13 +34,13 @@ Left alone, every border and sunken surface in the app would have quietly
 deepened — a palette change wearing a derivation change's clothes.
 
 **The conversion factor is ~0.77 and it is remarkably stable** (3%→2.3,
-5%→3.8, 9%→6.8, 24%→18.5, and 18%→13.3 for `--brand-dark`). Residual after
+5%→3.8, 9%→6.8, 24%→18.5, and 18%→13.3 for `--brand-strong`). Residual after
 re-tuning: 1–3/255. So for a mix toward pure black the two spaces produce *the
 same colour family at a different rate* — re-tune the percentage and the palette
 is preserved exactly.
 
 Shipped: `--sunken` 5→4, `--sunken-soft` 3→2.5, `--line` 9→7, `--placeholder`
-24→18.5, `--brand-dark` 18→13, `.score-pill--none` 10→8, `.chip.is-excluded`
+24→18.5, `--brand-strong` 18→13, `.score-pill--none` 10→8, `.chip.is-excluded`
 70→78% danger.
 
 ## Mixes toward `#fff`/`--surface` keep their percentages — there the shift IS the fix
@@ -60,6 +60,21 @@ A token whose job is "this surface is tinted with the round's own accent" was
 landing up to ~10° off that accent. Those mixes move only 1–4/255 in RGB, so the
 correction is free.
 
+## The direction became a token (#904)
+
+The four neutral mixes no longer name `#000`. They mix `--page-bg` toward
+**`--shade`**, which the dark scheme block flips to `#fff` — one decision in one
+place instead of four re-spelled mixes, and the reason the percentages did NOT
+have to be re-tuned for it: an oklab mix moves L by `p%` of the remaining
+distance to the endpoint, so 7% off a light page (L .955 → .888) and 7% off a
+dark one (L .200 → .256) are steps of comparable size. That symmetry is a
+property of oklab, not a lucky pick — it does not hold in sRGB, which is the
+same asymmetry the table above measures.
+
+What did NOT become `--shade`: a mix toward `#fff` that is not about the page.
+`--stage-raised`/`--stage-line` lift the finale curtain, which is dark under both
+schemes, so their endpoint is a literal white on purpose.
+
 ## oklab, never oklch — and the reason is a property of THIS sheet
 
 **Every mix here has at least one achromatic or near-achromatic endpoint**
@@ -73,7 +88,8 @@ bi-chromatic mix is ever added.
 ## Two traps in the surrounding code
 
 **1. The a11y test's arithmetic has to move with the sheet.**
-`test/a11y-contrast.test.js` simulates the mixes in JS. A channel lerp left
+The mixes are simulated in JS — in `test/support/theme.js` since #904, which
+resolves a token for a *given design* rather than reading `:root`. A channel lerp left
 behind would measure a colour the browser no longer paints — measured gap: **up
 to 0.56 contrast points**, pessimistic here, but wrong, and nothing would say so.
 The regexes there now require the literal `in oklab`, so reverting the space in

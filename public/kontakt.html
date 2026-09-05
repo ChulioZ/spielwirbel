@@ -43,8 +43,14 @@
       /* AA-checked in test/a11y-contrast.test.js against the app's themes. */
       --good: #117c38;
       --danger: #d02424;
-      --line: color-mix(in oklab, var(--page-bg), #000 7%);
-      --brand-dark: color-mix(in oklab, var(--brand), #000 13%);
+      /* --shade names the direction the neutrals below travel away from the
+         page (#904). These pages are always light, so it is always #000 here —
+         it is copied along because test/standalone-page-brand.test.js compares
+         the token TEXT, and a page that spelled the endpoint out would read as
+         drift the moment styles.css retunes the direction. */
+      --shade: #000;
+      --line: color-mix(in oklab, var(--page-bg), var(--shade) 7%);
+      --brand-strong: color-mix(in oklab, var(--brand), var(--shade) 13%);
       --page-glow: color-mix(in oklab, var(--brand) 7%, transparent);
       --radius-lg: 18px;
       --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
@@ -134,14 +140,14 @@
       font-family: var(--font-display);
       font-size: 1.05rem;
       font-weight: 700;
-      border: 1.5px solid var(--brand-dark);
+      border: 1.5px solid var(--brand-strong);
       border-bottom-width: 4px;
       border-radius: 14px;
       background: var(--brand);
       color: #fff;
       cursor: pointer;
     }
-    button.submit:hover { background: var(--brand-dark); }
+    button.submit:hover { background: var(--brand-strong); }
     button.submit:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: 2.5px; }
     button.submit:disabled { opacity: 0.6; cursor: default; }
     .msg { margin-top: 1rem; font-size: 0.88rem; text-align: center; }

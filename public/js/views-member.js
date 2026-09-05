@@ -142,6 +142,9 @@ async function showMember(rid, mid) {
   }
 
   const color = memberColor(round, mid);
+  // The picker compares against the STORED hex; `color` above is what gets
+  // painted, which a dark scheme lifts into a color-mix() (memberTone, #904).
+  const ownHex = memberHex(round, mid);
 
   // Header: big avatar + editable name.
   const head = h(`<div class="member-head">
@@ -192,8 +195,10 @@ async function showMember(rid, mid) {
      </div>`);
   const swatches = colorSec.querySelector('.member-swatches');
   MEMBER_COLORS.forEach((c) => {
-    const active = c === color;
-    const sw = h(`<button class="member-swatch${active ? ' is-active' : ''}" aria-pressed="${active}" style="background:${c}" aria-label="${c}">
+    const active = c === ownHex;
+    // Shown in the tone the round actually paints, so the swatch a member wears
+    // and the swatch you pick are the same colour on a dark design too.
+    const sw = h(`<button class="member-swatch${active ? ' is-active' : ''}" aria-pressed="${active}" style="background:${memberTone(c)}" aria-label="${c}">
          <i class="ti ti-check" aria-hidden="true"></i>
        </button>`);
     if (!active) sw.addEventListener('click', () => updateMember({ color: c }));

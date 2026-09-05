@@ -137,7 +137,7 @@ test('a stale stored accent is resolved against the current PALETTES', (t) => {
      Only the STALE hex is a literal here — it is history and exists nowhere in
      the code. Sand's current page and accent are read off PALETTES, so the next
      legitimate contrast retune needs no hand-edit in this file
-     (`.claude/rules/theme-derived-colors.md`). */
+     (`.claude/rules/theme-color-meta-tag.md`). */
   const sand = JSON.parse(dom.run("JSON.stringify(PALETTES.find((x) => x.labelKey === 'theme.sand'))"));
   assert.notEqual(sand.accent, STALE_SAND_ACCENT,
     'Sand\'s accent is back at its pre-#145 value, so this test no longer resolves anything');

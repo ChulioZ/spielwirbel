@@ -10,19 +10,26 @@ paths:
 The #145 audit's findings cluster into traps that produce no error, no failing
 test, and no visibly broken screen — easy to reintroduce.
 
-## 1. A colour is not "accessible on white" — check the darkest THEME page
+## 1. A colour is not "accessible on white" — check it on EACH design, both ways
 
-Cards are white `--surface`, but bare `.link-btn`s (breadcrumbs, "Session
-löschen") paint straight onto `--page-bg`, a **round-chosen theme** — darkest
-is Schiefer `#e9eef3`. Measuring against `#fff` alone passed three colours
-(`--good`, `--warn`, `--danger`) that were below AA on Schiefer.
+Cards are `--surface`, but bare `.link-btn`s (breadcrumbs, "Session löschen")
+paint straight onto `--page-bg`, a **round-chosen design**. Measuring against
+`#fff` alone passed three colours (`--good`, `--warn`, `--danger`) that were
+below AA on the darkest page (#145).
 
 **Rule:** any colour used as text gets measured against **both** `--surface`
-and the darkest design page. `test/a11y-contrast.test.js` does exactly this
-and requires the registry (`public/js/round-designs.js` — palettes AND worlds,
-#903), so a newly added design is checked automatically. A world's page sits no
-darker than Schiefer's on purpose: at `#e6ecf3` Sci-Fi became the darkest page
-and pulled `--good`/`--warn` to 4.45:1.
+and `--page-bg` — **resolved for the design under test**.
+`test/a11y-contrast.test.js` does exactly this and requires the registry
+(`public/js/round-designs.js` — palettes AND worlds), so a newly added design is
+checked automatically.
+
+**"The darkest theme page" stopped being one hex in #904.** A design may declare
+`scheme: 'dark'`, which replaces `--surface`, `--ink`, `--ink-soft` and all three
+semantics, and inverts the ink on every saturated fill (`--on-accent`). So the
+harness resolves tokens **per design** through `test/support/theme.js` instead
+of lifting them out of `:root`, and it asserts the registry ships designs in
+both directions — otherwise every "for each design" loop in it is vacuous. The
+whole dark half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`.
 
 - **The accent is text, not just a fill.** Every design's `accent` becomes
   `--brand`, which paints every `.link-btn` — so an accent must clear 4.5:1
@@ -34,16 +41,21 @@ and pulled `--good`/`--warn` to 4.45:1.
   draw. Both `applyBackground` and `themeAccent` go through it. (Same
   render-time reasoning as `provider-cover-sizing.md`; keeps the repo free of
   migration code.)
-- **`avgColor()` is used in BOTH directions** — fill under white text
+- **`avgColor()` is used in BOTH directions** — fill under `--on-accent` text
   (`.score-pill`) *and* text/stroke on the page (`.gd-ring__num`). Its
   lightness is **30%** for every value at or above 1: the lightest value
   clearing 4.5:1 under white across the whole hue range while the ring still
-  clears 3:1 (large text) on every theme. Don't lighten it without re-checking
-  both uses. **Below 1 it ramps DARKER**, to 20% at the zero (#890) — the hue
-  formula is clamped there, so the retirement end of the scale would otherwise
-  be the same red as a 1, which the results distribution paints side by side.
-  Darker is the safe direction for both uses, and the ramp is a provable no-op
-  at and above 1, which is what bounds it. `test/a11y-contrast.test.js` now
+  clears 3:1 (large text) on every light design. Don't lighten it without
+  re-checking both uses. **On a dark design it is 66%** (#904) — the mirror of
+  the same two constraints, since both uses invert together: the ring is 2.6:1
+  at 30% on a dark page, and the pill's ink is near-black there. Hue and
+  saturation are identical in both directions, so a 2 is the same orange-red
+  whichever design the round picked. **Below 1 it steps AWAY from the ink**, to
+  20% on a light design and 76% on a dark one (#890) — the hue formula is clamped
+  there, so the retirement end of the scale would otherwise be the same red as a
+  1, which the results distribution paints side by side. That direction can only
+  add contrast for both uses, and the ramp is a provable no-op at and above 1,
+  which is what bounds it. `test/a11y-contrast.test.js` now
   evaluates the real `avgColor` under jsdom and sweeps from 0 — it used to lift
   one fixed lightness out of the source with a regex, which cannot read an
   expression and left the whole 0–1 range unmeasured.

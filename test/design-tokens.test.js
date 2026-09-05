@@ -220,10 +220,15 @@ test('no .tag-- variant hardcodes a hex colour', () => {
 test('the sheet backdrop derives from --ink rather than repeating its value', () => {
   const body = bodyOf('.sheet-backdrop');
   assert.ok(body, 'expected a .sheet-backdrop rule');
-  assert.match(
-    body, /background:\s*color-mix\([^)]*var\(--ink\)/,
-    'the backdrop must be a color-mix on --ink; a literal rgba() copy goes stale when --ink is retuned',
-  );
+  assert.match(body, /background:\s*var\(--scrim\)/,
+    'the backdrop paints --scrim; a literal rgba() copy goes stale when --ink is retuned');
+  /* --scrim went through a token in #904 rather than staying an inline mix on
+     --ink, because a dark design takes --ink to near-white and a white scrim is
+     not a dimmer. The DERIVATION is still the point on a light design, so the
+     :root value must keep deriving — a hand-written rgba() there would go stale
+     the next time --ink is retuned, which is what this test has always been for. */
+  assert.match(ROOT, /--scrim:\s*color-mix\([^)]*var\(--ink\)/,
+    ':root must derive --scrim from --ink');
 });
 
 /* Every derivation interpolates in oklab (#544). The count of srgb mixes had

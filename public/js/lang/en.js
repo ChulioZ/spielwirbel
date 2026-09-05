@@ -916,6 +916,7 @@ I18N.en = {
   'theme.sand': 'Sand',
   'theme.schiefer': 'Slate',
   'theme.pfirsich': 'Peach',
+  'theme.obsidian': 'Obsidian',
   'theme.forest': 'Forest',
   'theme.scifi': 'Sci-Fi',
   'design.group.colors': 'Colors',
