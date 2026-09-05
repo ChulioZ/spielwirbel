@@ -195,6 +195,17 @@ function suggestScore(stats, game, neutral) {
      whole shelf is a chip that does nothing; one that admits none of it is a
      chip that opens an empty pool.
 
+   WHAT THE GATE DELIBERATELY DOES NOT SEE: the round's remembered TAG filter.
+   A chip merges over `lastSessionFilters`, which keeps its `tagIds`, so a shelf
+   with four short games none of which carries the remembered tag opens on an
+   empty pool despite the gate. Keeping the tags is the right default — they are
+   how this group usually draws — and the miss is visible rather than silent:
+   the pool count and the clear-filters control are both on the screen the chip
+   opens. Closing it properly would mean expressing the tag clause here, which
+   draw-pool.js's header explains is the one clause the two sides legitimately
+   spell differently (resolved id lists server-side, a tri-state chip map in the
+   client).
+
    The filter is normalized through the SAME function the setup screen applies
    to a stored preset, so what the chip promises and what the screen does are
    one decision rather than two. */
