@@ -685,10 +685,11 @@ function gameStatsForSession(round, session, gameId) {
     if (r !== null) ratings.push(r);
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-  // `avg` is kept beside `score`: the detail screen prints the honest mean next
-  // to the Spielwirbel-Score, and the per-member stats are about how a PERSON
-  // votes rather than how good a game is, so a game-scoring curve would be a
-  // category error there (#893).
+  // `avg` is kept beside `score` for the per-member stats, which are about how
+  // a PERSON votes rather than how good a game is — a game-scoring curve would
+  // be a category error there (#893). It no longer has a second reader on the
+  // game detail header, which printed the honest mean beside the score until
+  // #919.
   return { avg, ...scoreFields(ratings), count: ratings.length, sortCount };
 }
 

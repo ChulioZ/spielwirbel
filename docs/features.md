@@ -391,8 +391,8 @@ What the app does, in detail. For a short overview see the
   Nothing about the *other* games on a shelf enters the number, so the same votes
   and plays on a game read the same in every round and on /entdecken. Tonight's podium
   and every other per-session number are deliberately **not** shrunk: there `n`
-  is the whole electorate rather than a sample. The game's own page keeps the
-  honest raw Ø beside it, and an ⓘ explains the principle.
+  is the whole electorate rather than a sample. The game's own page shows the
+  score alone, with an ⓘ explaining the principle.
 - **Designs** – per round, pick a colour scheme (page tone + accent); the
   whole UI derives from it — surfaces, shadows, the dark "stage" of the
   finale, and the mobile browser / installed-app chrome around the page.

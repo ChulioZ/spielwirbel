@@ -457,8 +457,6 @@ I18N.fr = {
   'sessions.deleteConfirm': 'Vraiment supprimer la session du {when} ?',
   'sessions.deleted': 'Session supprimée',
 
-  'detail.ratingsLine': 'Ø {avg} sur {n} évaluations · {s} sessions',
-  'detail.ratingsLineOne': 'Ø {avg} sur {n} évaluation · {s} sessions',
   'detail.noRating': 'Pas encore de note',
   'detail.totalSort': 'Proposé au retrait {n}× au total',
   'detail.retire': 'Retirer',
@@ -773,7 +771,6 @@ I18N.fr = {
   'result.barTitle': '{c}× note {r}',
   'result.barTitleRetire': '{c}× « retirer »',
   'result.sortFlag': '{n}× proposé au retrait',
-  'score.infoRaw': 'La moyenne simple de toutes les évaluations reste affichée en bas de la page du jeu.',
   'score.infoBody': 'Le score est plus que la moyenne. Si quelqu’un n’a pas du tout envie de jouer à un jeu, cela pèse plus lourd qu’une bonne note donnée par quelqu’un d’autre — pour qu’au bout du compte vous jouiez à quelque chose qui plaise à tout le monde.',
   'score.infoThin': 'Un jeu qui n’a encore que peu d’évaluations est jugé avec plus de prudence — il faut quelques sessions pour que son score compte pleinement.',
   'score.infoPlays': 'Un jeu que vous remettez sans cesse sur la table est jugé nettement plus favorablement, même sans évaluations.',

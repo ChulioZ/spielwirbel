@@ -456,8 +456,6 @@ I18N.es = {
   'sessions.deleteConfirm': '¿Seguro que quieres eliminar la sesión del {when}?',
   'sessions.deleted': 'Sesión eliminada',
 
-  'detail.ratingsLine': 'Ø {avg} de {n} valoraciones · {s} sesiones',
-  'detail.ratingsLineOne': 'Ø {avg} de {n} valoración · {s} sesiones',
   'detail.noRating': 'Todavía sin valorar',
   'detail.totalSort': 'Propuesto para retirar {n}× en total',
   'detail.retire': 'Retirar',
@@ -779,7 +777,6 @@ I18N.es = {
   'result.barTitle': '{c}× valoración {r}',
   'result.barTitleRetire': '{c}× «retirar»',
   'result.sortFlag': '{n}× propuesto para retirar',
-  'score.infoRaw': 'La media simple de todas las valoraciones sigue apareciendo al final de la página del juego.',
   'score.infoBody': 'La puntuación es más que la media. Si alguien no quiere jugar a un juego para nada, eso pesa más que una buena valoración de otra persona, para que al final juguéis a algo que apetezca a todo el mundo.',
   'score.infoThin': 'Un juego con pocas valoraciones todavía se juzga con más cautela: hacen falta unas cuantas sesiones para que su puntuación cuente del todo.',
   'score.infoPlays': 'Un juego que sacáis a la mesa una y otra vez se juzga bastante mejor, incluso sin valoraciones.',

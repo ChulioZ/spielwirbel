@@ -793,21 +793,16 @@ async function showGameDetail(rid, gameId) {
     !game.image && st.score === null && related.length === 0 && assignedTagIds.length === 0;
 
   // Header card: image + title + score ring ("Spielepass").
-  // The detail screen is the ONE place that carries both numbers (#893): the
-  // ring shows the Spielwirbel-Score the rest of the app ranks on, and the line
-  // beneath it keeps the honest raw mean, so „warum steht da 2,2 wenn alle 4
-  // gegeben haben" has an answer on the page rather than only in the ⓘ sheet.
-  // Since #894 the ring's number is also SHRUNK toward the round's prior, which
-  // is the second half of that same question — hence the rating count in the
-  // line below, and the ⓘ sentence that names the ramp.
+  // The ring carries the Spielwirbel-Score and NOTHING else (#919). It used to
+  // print the honest raw mean under it — #893's answer to „warum steht da 2,2
+  // wenn alle 4 gegeben haben" — plus the ratings/session counts and
+  // `scoreReason()`. The score has since become the number every surface ranks
+  // on (Regal, results, Pokale, recommendations, /entdecken since #918) and the
+  // plain average is read nowhere, so the line cost the page's best real estate
+  // to state a number nobody acts on. The principle now lives only in the ⓘ
+  // sheet; the per-game reason line survives on the results screen, which is
+  // where it is worth something — at the moment the group is deciding.
   const shown = st.score === null ? null : displayScore(st.score);
-  // A game with plays and no ratings does carry a score since #894 — the
-  // direct-pick round's whole shelf is that case — and „Ø – aus 0 Bewertungen"
-  // beside it is nonsense, so the line phrases what the number actually rests
-  // on instead. The rated wording is unchanged.
-  const ratingsLine = st.count
-    ? tn(st.count, 'detail.ratingsLineOne', 'detail.ratingsLine', { s: st.sessions, avg: fmtAvg(st.avg) })
-    : tn(st.plays, 'score.evidencePlaysOne', 'score.evidencePlays', { n: st.plays });
   const RING_C = (2 * Math.PI * 34).toFixed(1);
   const scoreRing =
     st.score !== null
@@ -819,9 +814,7 @@ async function showGameDetail(rid, gameId) {
            </svg>
            <span class="gd-ring__num" style="color:${scoreColor(st.score)}">${fmtAvg(shown)}</span>
          </div>
-         <div class="score-label">${esc(t('score.name'))} ${infoButton('score')}</div>
-         ${scoreReason(st) ? `<div class="score-why">${esc(scoreReason(st))}</div>` : ''}
-         <div class="score-label">${esc(ratingsLine)}</div>`
+         <div class="score-label">${esc(t('score.name'))} ${infoButton('score')}</div>`
       : `<div class="gd-ring gd-ring--none"><span class="gd-ring__num">–</span></div>
          <div class="score-label">${esc(t('detail.noRating'))}</div>`;
   const sortLine = st.sortCount

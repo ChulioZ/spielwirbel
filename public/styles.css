@@ -3987,7 +3987,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    locale can move it — and 200px leaves 56px of headroom instead of 5. The
    labels wrap inside it, which is what `text-align: center` on .gd-stats is for.
    It is `auto` below the breakpoint, where the band is a stack and the column
-   sits at the content edge on a line of its own. */
+   sits at the content edge on a line of its own.
+   #919 removed that longest label — the column now holds only the score's name
+   („Puntuación Spielwirbel" is the widest of the five) plus its ⓘ. Keep the
+   fixed basis anyway: data-independence is the property that stops the frame
+   moving, and it does not depend on which label happens to be longest today. */
 .gd-head {
   --gd-cover-w: 300px;
   --gd-stats-w: 200px;
