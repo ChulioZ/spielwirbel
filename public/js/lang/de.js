@@ -512,6 +512,8 @@ I18N.de = {
   'member.winRate': 'Siegquote',
   'member.winScore': 'Siegwertung',
   'member.avgGiven': 'Ø vergebene Wertung',
+  'member.bestGame': 'Stärkstes Spiel',
+  'member.bestGameNone': 'Noch keine Siege',
   'member.favorite': 'Lieblingsspiel',
   'member.favoriteNone': 'Noch keine Wertungen',
   'member.noSessions': 'Noch bei keiner Session dabei',

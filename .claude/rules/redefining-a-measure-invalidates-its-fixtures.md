@@ -67,6 +67,28 @@ table to make a spec express an ordinary situation is evidence about the
 feature, and it was here: real rounds cannot pad themselves with guests either,
 which is precisely why the threshold emptied a real family's podium.
 
+## A member id the ROUND does not carry shrinks the field, silently (#920)
+
+The same failure has a second cause that does not need a redefinition at all,
+and a fixture author hits it the first time they write one of these:
+
+```js
+roundOf(['a'], [night(['a', 'b'], ['a'], { chosenGameId: 'real' })])
+//       ^^^ 'b' is in the SESSION but not in the ROUND
+```
+
+`sessionPeople` (session-people.js) intersects `session.memberIds` with
+`round.members`, so `b` is not a person, the night has **one** party, and it
+scores `1 − 1/1 = 0` — the solo value — for a fixture written to be a contested
+win. The assertion that catches it (`byGame.real > byGame.solo`) then fails with
+`0 > 0`, which reads as the implementation ignoring the field weighting rather
+than as the fixture having no field in it.
+
+There is no error and no guard: seating a stranger is exactly how a session
+whose member was later removed from the round is meant to degrade. So **name
+every seat in `roundOf` too**, and when a party-weighted assertion comes out at
+the solo value, check the round's member list before the arithmetic.
+
 ## What to sweep when a measure changes
 
 Not only the specs that fail. A fixture can be **correct by irrelevance in the

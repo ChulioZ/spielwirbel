@@ -70,7 +70,47 @@ function memberStats(round, mid) {
   });
   const favorite = favGames.map((gid) => round.games.find((g) => g.id === gid)).filter(Boolean);
 
-  return { wins, joined: joined.length, winRate, winScore, avgGiven, favorite, favAvg };
+  /* „Stärkstes Spiel" (#920): the same Siegwertung above, partitioned by the
+     game that was played. It is a TERM of that total rather than a second
+     measure, so the two tiles can never disagree — and it needs none of #894's
+     shrinkage for the same reason `win-score.js` gives: a sum, not a rate.
+
+     Same nameability bar as the favourite, and deliberately so: a retired game
+     may not be NAMED by a stat tile even though it still counts toward the
+     Siegwertung beside it. That is the opposite call from `avgGiven` (#643),
+     which counts every rating including retired games — the split is between
+     measuring and naming, not between two filters.
+
+     Ties share the tile, like `favorite`. A member with no qualifying game
+     leaves `bestScore` at null, which is what the empty state keys off: 0 is a
+     real answer here (a solo-only game scores exactly 0) and must not be
+     mistaken for "nothing". */
+  const perGameWin = memberGameWinScores(round, mid, sessionPartyGroups);
+  let bestIds = [];
+  let bestScore = null;
+  Object.keys(perGameWin).forEach((gid) => {
+    if (!round.games.some((g) => g.id === gid && isNameableGame(g))) return;
+    const v = perGameWin[gid];
+    if (bestScore === null || v > bestScore) {
+      bestScore = v;
+      bestIds = [gid];
+    } else if (v === bestScore) {
+      bestIds.push(gid);
+    }
+  });
+  const bestGames = bestIds.map((gid) => round.games.find((g) => g.id === gid)).filter(Boolean);
+
+  return {
+    wins,
+    joined: joined.length,
+    winRate,
+    winScore,
+    avgGiven,
+    favorite,
+    favAvg,
+    bestGames,
+    bestScore,
+  };
 }
 
 async function showMember(rid, mid) {
@@ -213,29 +253,68 @@ async function showMember(rid, mid) {
     statCard('ti-star', t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven), '')
   );
 
-  /* Favorite game: one card whose value links to the game detail page(s). It
-     carries `__games` rather than `__value`, so the phone reorder must not
-     apply — a list of wrapping links is not a "number to promote", and it is
-     the one card given the full row (#694) precisely because it holds more
-     text. Hence its own class rather than the `:last-child` the issue sketched:
+  /* The two game-link cards: „Stärkstes Spiel" (where this member has won most,
+     #920) and „Lieblingsspiel" (what they rate highest). They read as a pair on
+     purpose — one is taste, the other is record, and the two disagreeing is the
+     interesting case — so they are adjacent and share one builder.
+
+     Each carries `__games` rather than `__value`, so the phone reorder must not
+     apply — a list of wrapping links is not a "number to promote", and they are
+     the cards given the full row (#694) precisely because they hold more text.
+     Hence their own classes rather than the `:last-child` the issue sketched:
      both the span and the exemption follow the card, not its position. */
-  const favCard = h(`<div class="pokale-card member-stats__fav">
-       <span class="pokale-card__icon"><i class="ti ti-heart" aria-hidden="true"></i></span>
-       <span class="pokale-card__label">${esc(t('member.favorite'))}</span>
-       <span class="pokale-card__games"></span>
-       <span class="pokale-card__sub">${st.favAvg === null ? '' : esc('Ø ' + fmtAvg(st.favAvg))}</span>
-     </div>`);
-  const favList = favCard.querySelector('.pokale-card__games');
-  if (st.favorite.length) {
-    st.favorite.forEach((g) => {
-      const row = h(`<span class="pokale-game"><a class="pokale-game__title">${esc(g.title)}</a></span>`);
-      makeGameLink(row.querySelector('.pokale-game__title'), rid, g.id);
-      favList.appendChild(row);
-    });
-  } else {
-    favList.appendChild(h(`<span class="muted">${esc(t('member.favoriteNone'))}</span>`));
-  }
-  cards.appendChild(favCard);
+  const gameCard = (cls, icon, label, games, sub, emptyText) => {
+    const card = h(`<div class="pokale-card ${cls}">
+         <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
+         <span class="pokale-card__label">${esc(label)}</span>
+         <span class="pokale-card__games"></span>
+         <span class="pokale-card__sub">${esc(sub)}</span>
+       </div>`);
+    const list = card.querySelector('.pokale-card__games');
+    if (games.length) {
+      games.forEach((g) => {
+        const row = h(`<span class="pokale-game"><a class="pokale-game__title">${esc(g.title)}</a></span>`);
+        makeGameLink(row.querySelector('.pokale-game__title'), rid, g.id);
+        list.appendChild(row);
+      });
+    } else {
+      list.appendChild(h(`<span class="muted">${esc(emptyText)}</span>`));
+    }
+    return card;
+  };
+
+  /* ti-sword: `ti-medal` is already this screen's Siegwertung and `ti-crown`
+     is the Pokale podium's, and a card under an icon that already means
+     something else reads as the same statistic shown twice. The codepoint was
+     read from the bundled woff2's own cmap and the glyph looked at on screen —
+     a wrong-but-present one draws a plausible OTHER icon with nothing red
+     (.claude/rules/tabler-icon-codepoints.md).
+
+     The sub-line is `fmtSigned`, matching the Siegwertung tile this decomposes
+     — and it is shown for a negative or zero best too. This is the member's own
+     stats page, not a leaderboard, so a „−0,3" is the honest answer rather than
+     something to hide; `bestScore === null` (no qualifying game at all) is the
+     only empty state. */
+  cards.appendChild(
+    gameCard(
+      'member-stats__best',
+      'ti-sword',
+      t('member.bestGame'),
+      st.bestGames,
+      st.bestScore === null ? '' : fmtSigned(st.bestScore),
+      t('member.bestGameNone')
+    )
+  );
+  cards.appendChild(
+    gameCard(
+      'member-stats__fav',
+      'ti-heart',
+      t('member.favorite'),
+      st.favorite,
+      st.favAvg === null ? '' : 'Ø ' + fmtAvg(st.favAvg),
+      t('member.favoriteNone')
+    )
+  );
   app.appendChild(statsSec);
 
   // Who sits here? Three mutually exclusive states, and the split matters:

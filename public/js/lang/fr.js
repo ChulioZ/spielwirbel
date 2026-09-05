@@ -496,6 +496,8 @@ I18N.fr = {
   'member.winRate': 'Taux de victoire',
   'member.winScore': 'Score de victoires',
   'member.avgGiven': 'Ø note donnée',
+  'member.bestGame': 'Jeu le plus fort',
+  'member.bestGameNone': 'Pas encore de victoire',
   'member.favorite': 'Jeu préféré',
   'member.favoriteNone': 'Pas encore de note',
   'member.noSessions': 'Ne fait encore partie d’aucune session',

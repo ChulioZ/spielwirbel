@@ -92,6 +92,36 @@ function memberWinScores(round, partyGroupsOf) {
   return totals;
 }
 
+// The same score, partitioned by the game that was played, as
+// { [gameId]: number } — the „Stärkstes Spiel" tile (#920). Each finished
+// night's value is attributed to its `chosenGameId`, so this is the round total
+// expressed in its own terms rather than a second measure.
+//
+// A night with NO chosen game names no game and is simply absent here, so the
+// per-game sums deliberately do NOT re-add to memberWinScores' total. That is
+// the honest reading: the evening happened and counts for the round, but there
+// is nothing to credit it to. The split parent falls out here for that reason
+// AND for carrying no winnerIds, so neither the parent's people nor its game
+// need a branch of their own.
+//
+// Absent means "did not sit at that game", never "scored 0 at it": a member who
+// missed the night is not in the session's map at all, while a solo night is
+// present at 0 by the same construction as everywhere else in this file.
+// Retirement and round membership are NOT filtered here — whether a game may be
+// NAMED is `isNameableGame`'s question (recap.js) and belongs to the caller.
+function memberGameWinScores(round, mid, partyGroupsOf) {
+  const totals = {};
+  (round.sessions || []).forEach((session) => {
+    if (!session.finished) return;
+    const gid = session.chosenGameId;
+    if (!gid) return;
+    const value = sessionWinScores(round, session, partyGroupsOf).get(mid);
+    if (value === undefined) return;
+    totals[gid] = (totals[gid] || 0) + value;
+  });
+  return totals;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { sessionWinScores, memberWinScores };
+  module.exports = { sessionWinScores, memberWinScores, memberGameWinScores };
 }

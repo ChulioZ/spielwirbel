@@ -27,7 +27,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
-const { rulesOf, bodyOf, mediaBlocks, specificity } = require('./support/css');
+const { rulesOf, bodyOf, bodyOfIn, mediaBlocks, specificity } = require('./support/css');
 
 const RID = 'r1';
 
@@ -109,15 +109,20 @@ test('every numeric stat card is marked, and the favourite tile is exempt', asyn
     assert.ok(c.querySelector('.pokale-card__value'), 'a marked card must have a value to promote')
   );
 
-  const fav = grid.querySelectorAll('.member-stats__fav');
-  assert.equal(fav.length, 1);
-  /* The exemption exists BECAUSE this card has no `__value`: the shared reorder
-     would otherwise move its game list above its own label. If the card ever
-     gains a `__value`, this assertion fails and the exemption gets re-decided
-     deliberately instead of quietly doing the wrong thing. */
-  assert.equal(fav[0].querySelector('.pokale-card__value'), null);
-  assert.ok(fav[0].querySelector('.pokale-card__games'), 'it holds a list of game links');
-  assert.ok(!fav[0].classList.contains('member-stats__card'));
+  /* BOTH game-link tiles, checked identically (#920): „Stärkstes Spiel" and
+     „Lieblingsspiel" are built by one helper and share the exemption, so a
+     regression in either is a regression in the pair. */
+  ['.member-stats__best', '.member-stats__fav'].forEach((sel) => {
+    const tiles = grid.querySelectorAll(sel);
+    assert.equal(tiles.length, 1, `exactly one ${sel} tile`);
+    /* The exemption exists BECAUSE this card has no `__value`: the shared
+       reorder would otherwise move its game list above its own label. If the
+       card ever gains a `__value`, this assertion fails and the exemption gets
+       re-decided deliberately instead of quietly doing the wrong thing. */
+    assert.equal(tiles[0].querySelector('.pokale-card__value'), null);
+    assert.ok(tiles[0].querySelector('.pokale-card__games'), `${sel} holds a list of game links`);
+    assert.ok(!tiles[0].classList.contains('member-stats__card'));
+  });
 });
 
 test('the recomposition cannot reach the Pokale tab', async (t) => {
@@ -127,7 +132,7 @@ test('the recomposition cannot reach the Pokale tab', async (t) => {
     dom.app.querySelectorAll('.pokale-card').length > 0,
     'the tab must actually have rendered its cards, or this proves nothing'
   );
-  ['.member-stats', '.member-stats__card', '.member-stats__fav'].forEach((sel) =>
+  ['.member-stats', '.member-stats__card', '.member-stats__fav', '.member-stats__best'].forEach((sel) =>
     assert.equal(
       dom.app.querySelector(sel),
       null,
@@ -176,10 +181,16 @@ test('the value leads and outgrows its label', () => {
   assert.match(size[1], /var\(--text-3xl\)/);
 });
 
-test('the favourite tile spans the full row', () => {
-  const body = bodyOf('.member-stats__fav', PHONE_RULES);
-  assert.ok(body, 'the favourite tile must be re-spanned inside a phone media block');
-  assert.match(body, /grid-column:\s*1\s*\/\s*-1/);
+test('both game-link tiles span the full row', () => {
+  /* `bodyOfIn`, not `bodyOf`: the two tiles share one grouped rule (#920), and
+     bodyOf compares the whole selector text — so it would report the rule as
+     DELETED the moment a second component joined it, which is a confusing
+     signal for a test whose job is to notice a deletion. */
+  ['.member-stats__best', '.member-stats__fav'].forEach((sel) => {
+    const body = bodyOfIn(sel, PHONE_RULES);
+    assert.ok(body, `${sel} must be re-spanned inside a phone media block`);
+    assert.match(body, /grid-column:\s*1\s*\/\s*-1/);
+  });
 });
 
 test('no phone rule restyles the .pokale-* component unscoped', () => {
