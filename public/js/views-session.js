@@ -4,8 +4,19 @@
 
 // =================== Session: setup ===================
 
-function showStartSession(round) {
-  currentView = () => showStartSession(round);
+/* `prefill` (#923) is a partial, shaped exactly like `round.lastSessionFilters`,
+   that WINS over the stored preset for this entry only — the quick-start chips
+   on the hub. It is a shallow merge at the top level, so a chip carrying
+   `metadata` replaces the remembered metadata block wholesale rather than
+   merging into it: a chip named „unter 60 Min" that quietly inherited last
+   week's complexity range would open a pool nobody asked for and offer no clue
+   why it is that small.
+
+   Nothing here persists it. `lastSessionFilters` is written server-side by the
+   draw itself, so an exploratory tap that never draws leaves the round's
+   remembered preset untouched. */
+function showStartSession(round, prefill) {
+  currentView = () => showStartSession(round, prefill);
   // Reached either from the hub CTA or by backing out of the wizard; either way
   // the wizard (if any) is over, so drop its flow before claiming the entry.
   endFlow();
@@ -88,7 +99,8 @@ function showStartSession(round) {
   // Preset from the round's last draw-flow session (#252) when there is one;
   // tag ids whose tag has since been deleted are dropped, mirroring the
   // drop-unknown-ids rule the backend applies at session-creation time.
-  const preset = round.lastSessionFilters || null;
+  const stored = round.lastSessionFilters || null;
+  const preset = prefill ? { ...(stored || {}), ...prefill } : stored;
   const selectedTags = new Map();
   // An absent key reads as 'all' — every pre-#726 preset, and every AND draw.
   const tagFilterState = { tagMode: preset && preset.tagMode === 'any' ? 'any' : 'all' };

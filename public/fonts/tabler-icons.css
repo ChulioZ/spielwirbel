@@ -41,6 +41,12 @@
 .ti-history::before { content: "\ebea"; }
 .ti-hourglass::before { content: "\ef93"; }
 .ti-bolt::before { content: "\ea38"; }
+/* The Start tab's card headings (#923). Codepoints read from THIS woff2's own
+   cmap, never from tabler.io — the bundled subset does not always agree with
+   upstream (.claude/rules/tabler-icon-codepoints.md). */
+.ti-bulb::before { content: "\ea51"; }
+.ti-tool::before { content: "\eb40"; }
+.ti-activity::before { content: "\ed23"; }
 .ti-clock::before { content: "\ea70"; }
 .ti-users::before { content: "\ebf2"; }
 /* Complexity, on the recommendation cards (#682). Codepoint read from THIS

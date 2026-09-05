@@ -93,6 +93,39 @@ I18N.en = {
   'hub.tab.chronik': 'History',
   'hub.tab.pokale': 'Trophies',
 
+  // ---- Start tab: the hub's card grid (#923) ----
+  // The Start tab used to be a ticket and a button; these are the modules that
+  // give it content of its own, all derived from the round payload on demand.
+  'hub.suggest.title': 'How about',
+  'hub.suggest.never': 'On the shelf, never played',
+  'hub.suggest.longAgoOne': 'Not played for a month',
+  'hub.suggest.longAgo': 'Not played for {n} months',
+  'hub.suggest.loved': 'Well liked, and not out for a while',
+  'hub.preset.label': 'Quick start',
+  'hub.preset.short': 'Under 60 min',
+  'hub.preset.light': 'Something light',
+  'hub.preset.meaty': 'Something meaty',
+  'hub.preset.family': 'Family friendly',
+  'hub.pulse.title': 'Round pulse',
+  'hub.pulse.barLabel': '{month}: {n}',
+  'hub.pulse.sessionsOne': '{n} session in 12 months',
+  'hub.pulse.sessions': '{n} sessions in 12 months',
+  'hub.pulse.lastToday': 'Played today',
+  'hub.pulse.lastDaysOne': 'Played a day ago',
+  'hub.pulse.lastDays': 'Played {n} days ago',
+  'hub.pulse.coverage': '{n} of {total} games have never been played',
+  'hub.care.title': 'Loose ends',
+  'hub.care.winnerOne': '{n} session with no winner',
+  'hub.care.winner': '{n} sessions with no winner',
+  'hub.care.winnerRow': '{game} · {when}',
+  'hub.care.rangeOne': '{n} game with no player count',
+  'hub.care.range': '{n} games with no player count',
+  'hub.care.coverOne': '{n} game with no image',
+  'hub.care.cover': '{n} games with no image',
+  'hub.anniv.yearsOne': 'One year ago today',
+  'hub.anniv.years': '{n} years ago today',
+  'hub.reco.more': 'See all recommendations',
+
   // Group headings in the desktop navigation rail (from 1280px up).
   // Heads the three lists that are NOT the shelf: the two archives and the wish
   // list (#560). No longer "Archive" — a wish list is not one.

@@ -411,6 +411,10 @@ public/
     recap-card.js    draws that period recap onto a canvas and hands it out as a
                      PNG the user shares — never any cover art, which may not be
                      redistributed and would taint the canvas (issue #800)
+    hub-insights.js  the Start tab's derivations: which games are worth putting
+                     on the table, how often the round meets, what is quietly
+                     broken, and what was played on this day in a past year
+                     (issue #923)
     cover.js         deterministic per-title gradient for games with no cover
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
@@ -538,7 +542,10 @@ public/
     views-home.js    the home dashboard (#842) — greeting, resume tickets for
                      sessions still running, the round lobby, and the tile row
                      (Freundeskreis / Entdecken / news) — plus new round
-    views-round.js        round hub (Start/Regal/Chronik/Pokale tabs) + Start tab
+    views-round.js        round hub SHELL: the Start/Regal/Chronik/Pokale tab
+                          strip, the round fetch, the inline round-name editor
+    views-round-start.js  Start tab: hero, the one big CTA and its quick-start
+                          chips, the tickets, and the derived card grid (#923)
     views-regal.js        Regal tab: the games library (search, filters, grid)
     views-chronik.js      Chronik tab: the month-grouped session/shelf timeline,
                           and the shareable month/year recap above it

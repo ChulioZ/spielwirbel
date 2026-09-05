@@ -138,3 +138,13 @@ sheets whose entry points #561 had already moved to Einstellungen
 file rather than one per seam only defers the budget** — the seam test asks
 whether the *parts* are independently editable, not whether the result is smaller
 than what you started with.
+
+**`views-round.js` was split a third time by #923**, and this one is the pattern
+working as intended rather than a regrowth: the file sat at 549 lines, well under
+budget, and the Start tab's six new modules would have pushed it past 900. The
+seam was the one its own header already named — the hub SHELL (`showRound`, the
+tab strip, the round-name editor) versus the Start TAB's content — so
+`views-round-start.js` took the tab and the shell dropped to 231 lines. Worth
+recording because the budget was not yet red: applying the seam test *before* the
+test forces you to is what keeps the split along a real boundary instead of
+wherever the line count happens to land.

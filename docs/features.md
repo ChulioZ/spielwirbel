@@ -226,9 +226,20 @@ What the app does, in detail. For a short overview see the
   three stay visible on
   the round's sub-screens, marking the section they belong to:
   - **Start** – the launchpad: hero with the members, a big "start session"
-    button, resumable in-progress sessions, the last played result, and gentle
-    retire recommendations for games that are rated low or often proposed for
-    retirement.
+    button (with quick-start chips beside it that open the setup with the draw
+    already narrowed — „unter 60 Min", „leichte Kost" …), resumable in-progress
+    sessions, the last played result, and gentle retire recommendations for
+    games that are rated low or often proposed for retirement. Below those, a
+    responsive card grid derived on demand from the round's own data:
+    **Spielvorschläge** (up to three games worth playing, each with its reason —
+    never played, not out for months, well liked and long overdue), a
+    **Rundenpuls** (sessions per month over the last year, days since the last
+    one, how much of the shelf has ever reached the table), a **Kümmerliste**
+    (played sessions with no winner recorded, games with no cover, games with no
+    player count — each deep-linking to the fix), a „**heute vor N Jahren**"
+    anniversary when one falls on today, and a teaser from the recommendations
+    screen. Every card renders nothing at all when it has nothing to say, so a
+    young round sees none of them.
   - **Regal** (shelf) – the game collection as a card grid with one „Filter"
     control holding both the custom-tag chips and the imported-BGG-metadata
     filters (see Sessions below), a search pill, sorting

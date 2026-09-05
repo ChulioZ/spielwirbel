@@ -2,7 +2,7 @@
    or as their initials (#841).
 
    The avatar span is written out at seventeen sites across eleven files
-   (core.js, round-rail.js, views-home.js, views-round.js, views-member.js,
+   (core.js, round-rail.js, views-home.js, views-round-start.js, views-member.js,
    views-pokale.js, views-session.js, views-session-live.js, views-vote-link.js,
    views-friends.js, views-account.js). Every one of them calls avatarFace(), so
    a person cannot appear as a photograph on the Regal and as two letters on the

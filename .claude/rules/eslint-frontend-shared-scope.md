@@ -16,7 +16,13 @@ override for `public/js/**`:
   error. **When you add/rename/remove a top-level `function`/`const` in
   `public/js`, update that list** or lint will (wrongly) flag it — or miss a typo.
 - **`no-redeclare` is off** there: each shared name is both declared in its home
-  file *and* listed in `globals`, which would otherwise collide.
+  file *and* listed in `globals`, which would otherwise collide. **The cost of
+  that is real and is not a lint problem**: two files declaring the same
+  top-level `const` is a `SyntaxError` that takes the whole app down, and two
+  declaring the same `function` is a silent takeover — neither of which any
+  per-file tool can see. See
+  `.claude/rules/duplicate-top-level-name-across-scripts.md` for the measurement
+  and the one-line grep to run before naming anything.
 - **`no-unused-vars` is `vars: 'local'`**: a top-level function used only from
   another file must not be reported as unused; unused *locals* inside functions
   still are.

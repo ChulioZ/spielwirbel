@@ -803,6 +803,125 @@ h1, h2, h3 { font-family: var(--font-display); }
 
 /* Quieter secondary tasks under the launchpad content. */
 .hub-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+
+/* ---- The Start tab's card grid (#923) ----
+
+   `auto-fill`, NOT `auto-fit`, and the choice is the opposite of the one
+   `.home-resume__list` makes. There, one ticket SHOULD span the pane; here a
+   lone card ballooning to 1400px of a mostly-empty box reads as a layout bug —
+   these are small modules whose content is a few short rows, so an empty track
+   beside one of them is correct (.claude/rules/auto-fit-collapses-only-empty-tracks.md
+   documents the same fact from the other side).
+
+   No media query and no JS width branch: one column on a phone, two or three in
+   the wide pane, correct at every width in between, and a resize needs no
+   re-render — the discipline the rail, the dock and `.ds-list--tiles` all use.
+
+   `:empty` is load-bearing rather than tidy. The grid is appended even when
+   nothing has filled it, because the recommendations teaser arrives after first
+   paint and needs somewhere connected to land; without this rule such a grid
+   would contribute its own top margin to exactly the young round the whole
+   "render nothing when there is nothing to say" rule exists to protect. */
+.hub-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.hub-cards:empty { display: none; }
+.hub-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  /* The cards carry different amounts of content by nature — one suggestion or
+     three, a pulse chart or a two-line list — so they align at the TOP of their
+     row rather than stretching to the tallest sibling, which would leave the
+     short one holding a pocket of empty surface. */
+  align-self: start;
+}
+.hub-card__title {
+  margin: 0 0 10px;
+  font-size: var(--text-md);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hub-card__title .ti { color: var(--brand); font-size: var(--text-lg); }
+.hub-card__facts { font-size: var(--text-sm); margin: 10px 0 0; }
+.hub-card__body { display: flex; flex-direction: column; }
+
+/* A row inside a card. Full-bleed to the card's padding edge so the hover tint
+   reads as one band rather than as a floating rectangle. */
+.hub-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  margin: 0 -16px;
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+.hub-row + .hub-row { border-top: 1px solid var(--line); }
+a.hub-row:hover { background: var(--sunken-soft); }
+.hub-row__main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+/* The title may be a long game name in a 280px tile; ellipsis rather than a
+   wrap keeps every row one line high, which is what lets three of them read as
+   a list instead of as three paragraphs. */
+.hub-row__title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hub-row__sub { font-size: var(--text-sm); color: var(--muted); }
+.hub-row--quiet .hub-row__sub { color: var(--muted); }
+.hub-row__go { color: var(--muted); flex: none; }
+.hub-row--static { cursor: default; }
+.hub-care__head {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  margin: 10px 0 2px;
+}
+.hub-care__head:first-child { margin-top: 0; }
+
+/* The twelve-month bars. CSS only — the app ships no chart library and must not
+   gain one for twelve numbers. Each bar is a fixed-height track whose fill is a
+   percentage of the busiest month, so the row keeps its height whether the
+   round meets weekly or twice a year. `align-items: flex-end` is what makes the
+   fills grow upward from the axis. */
+.pulse-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 56px;
+  margin-bottom: 2px;
+}
+.pulse-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+}
+.pulse-bar__fill {
+  width: 100%;
+  /* A zero-count month still shows a hairline, so the axis reads as twelve
+     months with gaps rather than as a chart that starts in March. */
+  min-height: 2px;
+  background: var(--brand);
+  border-radius: 2px 2px 0 0;
+}
+.pulse-bar__tick { font-size: var(--text-xs); color: var(--muted); line-height: 1.2; }
+
+/* The quick-start chips (#923), directly under the big CTA they modify — in the
+   pane below 1280px and in the rail above it, following that button either way. */
+.hub-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.rail .hub-presets { margin: -6px 0 4px; }
 /* ≤520px: stretched buttons, so a wrap reads as a deliberate stack instead of
    two ragged pills — the `.sheet__actions` narrow rule's reasoning, applied to
    the page-level action rows (`.toolbar`, `.landing-hero__cta` likewise). */
