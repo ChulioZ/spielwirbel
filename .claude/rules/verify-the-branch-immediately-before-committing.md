@@ -1,0 +1,84 @@
+# The current branch can change under you — re-check it in the SAME call as `git commit`
+
+<!-- scope: global — the trap is in the git/tool workflow, not in any file you could be editing -->
+
+`implement` phase 1 creates a branch and confirms it. Phase 4 commits and
+pushes. Between them sit dozens of tool calls, and **the checked-out branch is
+process-global state that nothing in this session owns**: another Claude session
+in the same working copy, the desktop app's own git tooling, or an IDE file-
+history view can move `HEAD` while you are editing.
+
+Measured 2026-09-05 on #928. `git branch --show-current` printed
+`fix/928-fixed-score-prior` right after phase 1. By phase 4 the reflog read:
+
+```
+c974ed0 HEAD@{5}: checkout: moving from fix/928-fixed-score-prior to main
+cd4ab9f HEAD@{4}: checkout: moving from main to main~1
+c974ed0 HEAD@{3}: checkout: moving from cd4ab9f... to main      ← twice more
+```
+
+Nothing in this repo does that — `grep` over `test/`, `scripts/`, `lib/`,
+`package.json` and `.git/hooks` finds no `git checkout`/`git switch` at all. The
+commit therefore landed on `main`, and `git push -u origin HEAD` pushed it to
+`origin/main`, deploying to production without a PR, without a review, and
+without the user's go-ahead.
+
+## The rule
+
+**Put the check in the same Bash call as the commit, so it cannot be stale:**
+
+```bash
+test "$(git branch --show-current)" != main || { echo "ON MAIN — ABORT"; exit 1; }
+git add -A && git commit -s -F - <<'MSG'
+…
+MSG
+```
+
+`git commit` runs only if the guard passed *in that same shell*. A separate
+`git status` call one message earlier proves nothing about the state at commit
+time — which is exactly the gap that was exercised here.
+
+Read the push output too, and do not stop at the first plausible line:
+`git push` printed
+
+```
+remote: - 5 of 5 required status checks are expected.
+```
+
+which reads like a rejection and is not — it is GitHub reporting *pending*
+checks on an accepted push. The only proof is `git log --oneline origin/main -1`.
+
+## Why branch protection did not save it
+
+`enforce_admins` is **false** on `main`:
+
+```bash
+gh api repos/{owner}/{repo}/branches/main/protection \
+  --jq '{enforce_admins: .enforce_admins.enabled, required_pr: (.required_pull_request_reviews != null)}'
+# {"enforce_admins": false, "required_pr": true}
+```
+
+So the required PR, the required reviews and all five required contexts
+(`ci-passed`, `eslint`, `syntax`, `gitleaks`, `dco`) apply to **everyone except
+the repo owner** — and this session runs as the owner. `implement` phase 6c says
+"the repo's branch-protection settings would block an un-approved merge anyway,
+so asking is both the rule here and the only path that actually goes through."
+**That sentence is false for this repo**, and believing it is what makes a
+missing self-check unrecoverable rather than merely embarrassing. Treat the
+whole PR flow as enforced by discipline alone.
+
+## Recovering, if it happens anyway
+
+Do **not** force-push and do not revert on your own judgement — both are
+outward-facing on a live public branch, and a revert triggers a second
+production deploy. Tell the user what landed, that CI and the deploy are already
+running on it, and let them choose. Then finish the phases you skipped against
+the commit: watch CI, verify the deployed artifact
+(`.claude/rules/verify-the-deployed-artifact-not-the-status.md`), review the
+diff, and give the walkthrough late rather than not at all.
+
+**Related:** `.claude/rules/ci-aggregate-gate.md` (the required contexts this
+bypasses, and the Part-B ops step that never turned `enforce_admins` on),
+`.claude/rules/data-json-external-edits.md` (the other rule in this repo about
+another session mutating shared state under you),
+`.claude/skills/implement/SKILL.md` phases 1, 4 and 6c.

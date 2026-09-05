@@ -529,6 +529,71 @@ test('retuning TILE_VALUE moves the published score — the curve is not restate
   assert.equal((await rebuild()).games.bestRated.score, 2.4, 'the retune leaked out of the case');
 });
 
+/* THE PODIUM MAY NOT CROWN AN UNRATED GAME — a regression #928 introduced and
+   this case closes.
+
+   Until #928 the `bestRated` gate rested on `ratingScore(r) !== null`, which was
+   sufficient because the raw curve has nothing to say about a row with no votes.
+   Shrinkage broke that: `shelfScore` answers a played-but-unrated game with its
+   lifted prior on purpose (it is what gives a direct-pick round a ranked shelf),
+   so the null test stopped excluding anything.
+
+   THE FLOORS ARE SET TO 0 HERE, and that is the whole case rather than an
+   artifact of it. `openContentFloors` uses 1, which hides this — a game with no
+   ratings has `ratings.count` 0 and `ratings.tenants` 0, so any floor above zero
+   excludes it for the wrong reason and the case would pass against the bug.
+   `threshold`'s own comment names 0 as a meaningful operator setting, so this is
+   a reachable state and not a contrivance.
+
+   The fixture pairs the unrated game with a POORLY rated one: the podium has to
+   still name something, and it has to be the rated game. Asserting only "the
+   unrated game is absent" would be satisfied by a build that published no
+   podium at all. */
+test('#928 a game with no ratings can never take the best-rated podium', async () => {
+  openContentFloors();
+  process.env.PUBLIC_STATS_MIN_RATINGS = '0';
+  process.env.PUBLIC_STATS_MIN_RATING_TENANTS = '0';
+  stubProvider();
+  const round = track(await createRound(request, { name: 'Ungewertet', members: ['Ann'] }));
+  const mk = async (externalId) => (await request(app).post(`/api/rounds/${round.id}/games`).send({
+    title: 'Getippt', minPlayers: '1', maxPlayers: '4',
+    sourceProvider: 'bgg', sourceExternalId: externalId,
+  })).body;
+  const unrated = await mk('thing-unrated');
+  const meh = await mk('thing-meh');
+  const ids = (await request(app).get(`/api/rounds/${round.id}`)).body.members.map((m) => m.id);
+  const ok = async (res) => {
+    assert.equal(res.status, 200, `fixture step failed: ${JSON.stringify(res.body)}`);
+    return res;
+  };
+
+  // The unrated game is played twice and never rated — a direct-pick evening,
+  // which writes `votes: {}` and can never collect a rating afterwards. Its
+  // shelf score is the lifted prior, ~3,7, i.e. ABOVE the rated game below.
+  for (let i = 0; i < 2; i += 1) {
+    const s = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+      gameId: unrated.id, memberIds: ids,
+    })).body.session;
+    await ok(await request(app).post(`/api/rounds/${round.id}/sessions/${s.id}/finish`).send({
+      finished: true, winnerIds: [],
+    }));
+  }
+  // The rated game gets one middling vote, scoring 3,0 — deliberately lower, so
+  // a podium that admitted the unrated game would rank it FIRST and the title
+  // assertion below is what catches it.
+  const { session } = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+    count: 2, memberIds: ids,
+  })).body;
+  await ok(await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/results`).send({
+    votes: { [ids[0]]: { [meh.id]: { rating: 3 } } },
+  }));
+
+  const built = await rebuild();
+  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-meh',
+    'an unrated game outranked a rated one on the best-rated podium');
+  assert.equal(built.games.bestRated.ratings, 1);
+});
+
 /* THE PLAY LIFT REACHES THIS PODIUM TOO (#928), which is the half of the parity
    that needed a new column: the aggregate carried only `plays7/30/365`, and the
    lift is a fact about a game over its whole life, so `publicGameAggregates`
