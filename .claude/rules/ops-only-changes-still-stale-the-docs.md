@@ -60,6 +60,7 @@ checklist instead of a constant):
 | `lib/legal.js` — the published privacy policy (both languages) | any aside about what *this instance* runs (auth mode, cookies in use, providers); a change here also bumps that document's own revision constant — `PRIVACY_REVISION` for the policy, one of three since #521 (`keep-legal-docs-current.md`) — missed after #219, found 2026-07-29: §14 still said "solange die Registrierung noch nicht geöffnet ist" five days past a revision bump |
 | `.github/FUNDING.yml` | the donation handle — must equal the live `DONATE_URL` (`GET /api/config`) |
 | `.github/ISSUE_TEMPLATE/config.yml` | that private vulnerability reporting is on and the Discussions Q&A category exists at that slug — **repo settings, not files** |
+| `.claude/rules/ci-aggregate-gate.md` (Part B/C) + `.claude/rules/verify-the-branch-immediately-before-committing.md` | which checks `main` requires, and **of whom** (`enforce_admins`). Both were stale within the hour on 2026-09-05: the second file was written stating `enforce_admins: false` as its central fact, and the operator turned it on immediately after reading it — a row that stales a rule *about* the very setting being changed |
 | `.github/ISSUE_TEMPLATE/bug_report.yml` | that spielwirbel.app runs accounts-only, in the auth-mode dropdown's help text |
 | `lib/quota.js` — the header comment | which mode is "today's production"; it described prod as sitting "behind the shared-password gate" for six days past the go-live (found 2026-07-30). A *code comment* asserting instance state is the easiest row to forget, because no docs sweep looks in `lib/` |
 | `docs/legal/toms.md` — „Verfügbarkeit & Wiederherstellung" | which backup and recovery measures actually exist — an **Art. 32 Abs. 1 lit. c** statement. It claimed „Managed PostgreSQL (Railway) mit Plattform-Backups" from the day it was written while the Railway project had **none configured at all**: PITR off, no schedule, zero snapshots. Nobody had *removed* anything — the line was written assuming the platform backs up managed Postgres by default, and it does not. Found 2026-08-04 when the operator opened the Backups tab; fixed the same day by configuring backups, not by softening the text |
@@ -71,7 +72,8 @@ switching a **provider or host**, moving a **region**, acquiring or dropping a
 **domain**, opening or closing **registration**, changing a **plan** that gates a
 capability (Railway Pro for SMTP), and — for the three `.github/` rows —
 **flipping a repo setting** (disabling Discussions or renaming a category,
-turning private vulnerability reporting off).
+turning private vulnerability reporting off, changing what `main`'s branch
+protection requires or who it binds).
 
 Two things make this cheap: the list above is the sweep (not a memory exercise),
 and the follow-up PR is docs-only, so it needs no coordination with the ops

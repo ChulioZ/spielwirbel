@@ -128,3 +128,20 @@ No deadlock while the Part-A PR is open: the *old* required checks
 (a broken Dockerfile breaks the Railway deploy — see
 `.claude/rules/railway-no-dockerfile-volume.md`) was left as an explicit
 decision for whoever flips the setting, not pulled in silently.
+
+## Part C: none of the above applied to the OWNER until 2026-09-05
+
+Everything above describes what branch protection *requires*. It never said who
+it requires it **of**, and the answer was "everyone except the repo owner":
+`enforce_admins` was `false`, so this entire gate — the required PR, the five
+contexts, `strict` — was advisory for the one account that does most of the
+pushing, and a direct push to `main` from an editing session deployed to
+production (#928). It is now `true`.
+
+The mechanics of changing it, the sub-endpoint that must be used instead of a
+full `PUT`, the `required_approving_review_count` deadlock to check first, and
+why the local pre-commit guard is still load-bearing all live in
+`.claude/rules/verify-the-branch-immediately-before-committing.md` — that file's
+central fact is this setting. What belongs *here* is only the correction: read
+every "required" in this file as binding on everybody, which it did not until
+that date.
