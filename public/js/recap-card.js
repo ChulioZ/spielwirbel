@@ -61,8 +61,13 @@ const RECAP_CARD_SHELF_H = 68;
    each sentinel survives and they differ. That is exact where a regex is a
    guess, and it returns the normalized `#rrggbb` as a bonus. */
 function recapColor(v) {
+  if (!v) return null;
   const ctx = document.createElement('canvas').getContext('2d');
-  if (!ctx || !v) return null;
+  // No 2d context at all (jsdom, where the specs run): fall back to accepting a
+  // plainly-written colour, which is what this did before #904. Without this the
+  // harness would report every token as unresolvable and quietly measure the
+  // fallbacks — a green run over a card nobody had actually checked.
+  if (!ctx) return /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\()/i.test(v) ? v : null;
   ctx.fillStyle = '#000000';
   ctx.fillStyle = v;
   const a = ctx.fillStyle;
