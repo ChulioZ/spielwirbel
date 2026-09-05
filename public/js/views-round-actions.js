@@ -144,7 +144,11 @@ async function showTransferGames(round) {
     if (mode !== 'copy' || !targetId) { clearDupes(); return; }
     if (!dupCache.has(targetId)) {
       try {
-        const target = await fetchRound(targetId);
+        // `rerender: false` for the reason fetchRoundList above takes it: this
+        // read happens with the sheet open, and the sheet sits on document.body
+        // where uiBusy() cannot see it — so a revalidation would rebuild the
+        // screen behind the sheet while the user is picking games.
+        const target = await fetchRound(targetId, { rerender: false });
         dupCache.set(targetId, new Set((target.games || []).map((g) => norm(g.title))));
       } catch {
         // A failed lookup flags nothing rather than blocking the copy: the round

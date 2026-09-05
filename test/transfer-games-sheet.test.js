@@ -31,9 +31,13 @@ async function openSheetOn(t, { target = TARGET } = {}) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   const posts = [];
-  dom.set('swrRead', async (key) => (key === 'rounds'
-    ? [{ id: 'r1', name: 'Hier' }, { id: 'r2', name: 'Andere' }]
-    : JSON.parse(JSON.stringify(target))));
+  const reads = [];
+  dom.set('swrRead', async (key, url, opts) => {
+    reads.push({ key, opts: opts && { ...opts } });
+    return key === 'rounds'
+      ? [{ id: 'r1', name: 'Hier' }, { id: 'r2', name: 'Andere' }]
+      : JSON.parse(JSON.stringify(target));
+  });
   dom.set('api', async (method, path, body) => { posts.push({ method, path, body }); return { movedGames: 1, copiedGames: 1 }; });
   dom.set('toast', () => {});
   dom.set('showRound', () => {});
@@ -45,6 +49,7 @@ async function openSheetOn(t, { target = TARGET } = {}) {
     dom,
     sheet,
     posts,
+    reads,
     chip,
     // The picker settles asynchronously in copy mode: switching mode kicks off a
     // fetch of the target's shelf, so a spec must let it resolve before reading
@@ -133,6 +138,20 @@ test('switching back to Verschieben clears the flags and the hint', async (t) =>
   assert.equal(s.rows().every((r) => r.querySelector('.move-row__dup').hidden), true);
   assert.equal(s.sheet.querySelector('#transferDupHint').hidden, true);
   assert.equal(s.text('#transferTitle'), 'Spiele verschieben');
+});
+
+/* Both reads this sheet takes happen WITH THE SHEET OPEN, and the sheet lives on
+   document.body where swrRead's uiBusy() guard cannot see it — so a background
+   revalidation would call currentView() and rebuild the screen underneath the
+   user mid-selection. Neither read may carry the default `rerender: true`. */
+test('every read taken while the sheet is open suppresses the re-render', async (t) => {
+  const s = await openSheetOn(t);
+  await s.pick('copy');
+
+  assert.deepEqual(s.reads.map((r) => r.key), ['rounds', 'round:r2']);
+  for (const r of s.reads) {
+    assert.deepEqual(r.opts, { rerender: false }, `${r.key} would rebuild the screen behind the sheet`);
+  }
 });
 
 test('a target whose shelf shares no title flags nothing', async (t) => {

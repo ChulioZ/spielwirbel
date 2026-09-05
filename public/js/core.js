@@ -198,8 +198,13 @@ const fetchRoundList = async (opts) => {
   await primePeople(rounds);
   return rounds;
 };
-const fetchRound = async (rid) => {
-  const round = await swrRead('round:' + rid, '/api/rounds/' + rid);
+// `opts` is swrRead's: every screen wants the default background re-render, but a
+// read taken WHILE A SHEET IS OPEN must pass `{ rerender: false }` — the sheet
+// lives on document.body, so uiBusy() cannot see it and a revalidation would
+// rebuild the screen underneath it (#916's duplicate flagging reads the TARGET
+// round this way).
+const fetchRound = async (rid, opts) => {
+  const round = await swrRead('round:' + rid, '/api/rounds/' + rid, opts);
   await primePeople(round);
   return round;
 };
