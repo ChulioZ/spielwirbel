@@ -55,7 +55,7 @@ I18N.de = {
   'newRound.importNone': '— keine —',
   'newRound.importOptionOne': '{name} ({n} Spiel)',
   'newRound.importOption': '{name} ({n} Spiele)',
-  'newRound.importNote': 'Übernimmt nur die Spieleliste (Titel, Art, Bild) – keine Bewertungen oder Sessions.',
+  'newRound.importNote': 'Übernimmt die Spiele mit Cover, Link und Details – keine Bewertungen oder Sessions.',
   'newRound.create': 'Runde gründen',
   'newRound.toast.needName': 'Bitte einen Namen eingeben',
   'newRound.toast.needMember': 'Bitte mindestens ein Mitglied',

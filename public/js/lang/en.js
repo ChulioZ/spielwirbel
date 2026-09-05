@@ -54,7 +54,7 @@ I18N.en = {
   'newRound.importNone': '— none —',
   'newRound.importOptionOne': '{name} ({n} game)',
   'newRound.importOption': '{name} ({n} games)',
-  'newRound.importNote': 'Copies only the games list (title, type, image) – no ratings or sessions.',
+  'newRound.importNote': 'Copies the games with their covers, links and details – no ratings or sessions.',
   'newRound.create': 'Start the round',
   'newRound.toast.needName': 'Please enter a name',
   'newRound.toast.needMember': 'Please add at least one member',
