@@ -46,3 +46,46 @@ test('a round that still STORES a providers value never surfaces it (#744)', asy
   // above are about the READ and not about the write having been lost.
   assert.deepEqual(store.findRound(round.id).providers, ['bgg', 'steam']);
 });
+
+/*
+ * The other half the shared contract cannot reach (#921).
+ *
+ * The import copies object-valued fields — `source`, `edition`, and the
+ * `categories`/`mechanics` lists — onto the new round's game. In THIS backend
+ * `data` is one shared in-memory tree, so carrying them by reference aliases two
+ * rounds' live objects: an in-place edit to the source round's list would silently
+ * rewrite the copy's. That is the hazard `copyExpansions`' own comment names, and
+ * nothing today mutates these in place — but it costs one clone to make
+ * unreachable.
+ *
+ * The contract suite is structurally blind to it: every read goes through
+ * `clone()`, so two aliased objects come back as two distinct ones and the
+ * assertion passes on both backends with the bug in place. Reaching past the repo
+ * into the store is the only way to see it, which is what makes this a fixture
+ * rather than a contract (Postgres cannot have it — every row is a fresh parse).
+ */
+test('an imported game shares no live object with the game it was copied from (#921)', async () => {
+  const T = 'tenant-alias';
+  const src = await repo.createRound(T, { name: 'Quelle', members: ['Ada'] });
+  const koop = await repo.addTag(T, src.id, 'Koop');
+  await repo.createGame(T, src.id, {
+    title: 'Catan',
+    image: null,
+    source: { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' },
+    edition: { name: 'Kosmos', year: 2015, languages: ['de'] },
+    categories: ['Negotiation'],
+    mechanics: ['Trading'],
+    tagIds: [koop.id],
+  });
+  const copy = await repo.createRound(T, { name: 'Kopie', members: ['Bo'], importFromRoundId: src.id });
+
+  const from = store.findRound(src.id).games[0];
+  const to = store.findRound(copy.id).games[0];
+  for (const key of ['source', 'edition', 'categories', 'mechanics']) {
+    assert.notEqual(from[key], to[key], `${key} is the SAME live object on both games`);
+    assert.deepEqual(from[key], to[key], `${key} was copied, not dropped`);
+  }
+  // Anti-vacuous: the values really are there, so `notEqual` is about identity
+  // and not about one side being undefined.
+  assert.equal(from.categories[0], 'Negotiation');
+});
