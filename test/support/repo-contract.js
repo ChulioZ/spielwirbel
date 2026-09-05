@@ -589,6 +589,12 @@ module.exports = function repoContract(repo) {
       title: 'Catan', minPlayers: 3, maxPlayers: 4, image: '/uploads/a.jpg',
       source, edition, providerInfoAt: '2026-09-01T00:00:00.000Z', ...meta,
     }));
+    // An expansion put on the shelf from the wish list keeps `expansionOf` —
+    // the base games BGG says it belongs to (#664/#703). Its EMPTY form is
+    // meaningful ("the provider named none") and distinct from absent, so it is
+    // the case that separates a real copy from a truthiness check.
+    await repo.createGame(T, src.id, gameFields({ title: 'Seefahrer', expansionOf: ['13'] }));
+    await repo.createGame(T, src.id, gameFields({ title: 'Waisenkind', expansionOf: [] }));
     // A free-text game beside it: every one of those keys must stay ABSENT on
     // its copy rather than arriving as a wall of nulls (absent-key parity,
     // .claude/rules/postgres-backend.md).
@@ -597,6 +603,9 @@ module.exports = function repoContract(repo) {
     const copy = await repo.createRound(T, { name: 'Copy', members: ['Z'], importFromRoundId: src.id });
     const full = copy.games.find((g) => g.title === 'Catan');
     const bare = copy.games.find((g) => g.title === 'Selbstgebaut');
+    assert.deepEqual(copy.games.find((g) => g.title === 'Seefahrer').expansionOf, ['13']);
+    assert.deepEqual(copy.games.find((g) => g.title === 'Waisenkind').expansionOf, [],
+      'an empty expansionOf is a value, not an absence');
 
     assert.deepEqual(full.source, source, 'the BGG link travels, so the copy is repairable');
     assert.equal(full.minPlayers, 3);
@@ -611,12 +620,12 @@ module.exports = function repoContract(repo) {
     assert.equal(fitsPlayerCount(full, 4), true, 'still drawable at its own count');
     assert.equal(fitsPlayerCount(full, 8), false, 'a 3-4 game is not drawable at eight');
 
-    for (const key of ['source', 'edition', 'providerInfoAt', 'minPlayers', 'maxPlayers', ...PROVIDER_INFO_FIELDS]) {
+    for (const key of ['source', 'edition', 'providerInfoAt', 'expansionOf', 'minPlayers', 'maxPlayers', ...PROVIDER_INFO_FIELDS]) {
       assert.equal(key in bare, false, `${key} stays absent on a game that never had it`);
     }
     // The source round is untouched by its own import.
     const after = await repo.getRound(T, src.id);
-    assert.equal(after.games.length, 2);
+    assert.equal(after.games.length, 4);
     assert.deepEqual(after.games.find((g) => g.title === 'Catan').source, source);
   });
 
