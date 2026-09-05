@@ -18,11 +18,13 @@ is Schiefer `#e9eef3`. Measuring against `#fff` alone passed three colours
 (`--good`, `--warn`, `--danger`) that were below AA on Schiefer.
 
 **Rule:** any colour used as text gets measured against **both** `--surface`
-and the darkest `THEMES` page. `test/a11y-contrast.test.js` does exactly this
-and reads `THEMES` out of `views-round-detail.js`, so a newly added theme is
-checked automatically.
+and the darkest design page. `test/a11y-contrast.test.js` does exactly this
+and requires the registry (`public/js/round-designs.js` — palettes AND worlds,
+#903), so a newly added design is checked automatically. A world's page sits no
+darker than Schiefer's on purpose: at `#e6ecf3` Sci-Fi became the darkest page
+and pulled `--good`/`--warn` to 4.45:1.
 
-- **The accent is text, not just a fill.** `THEMES[].accent` becomes
+- **The accent is text, not just a fill.** Every design's `accent` becomes
   `--brand`, which paints every `.link-btn` — so an accent must clear 4.5:1
   **on its own page** (Sand and Pfirsich sat at 3.8:1 and put every link in
   the app below AA; both were darkened).

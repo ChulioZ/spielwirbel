@@ -154,3 +154,5 @@
    tabler.io — the two disagree for some glyphs. See
    .claude/rules/tabler-icon-codepoints.md. */
 .ti-world-search::before { content: "\f9e7"; }
+.ti-trees::before { content: "\ec10"; }
+.ti-planet::before { content: "\ec08"; }

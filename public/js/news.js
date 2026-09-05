@@ -28,6 +28,34 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * Clears the bar: a round's design was eight variations of one look, and a
+   * world is something a group could not have before — its own typeface,
+   * backdrop and ornaments on the round's screens, its home tile and its shared
+   * recap card (#903). The remaining worlds are content on this machinery (#905).
+   */
+  {
+    revision: '2026-09-06',
+    de: {
+      title: 'Welten: Wald und Sci-Fi als Design',
+      body: 'Unter Design gibt es neben den Farben jetzt Welten. Wald und Sci-Fi '
+        + 'bringen eine eigene Schrift für Überschriften und Knöpfe, ein '
+        + 'Hintergrundmotiv und Verzierungen an Karten, Knöpfen, leeren Bereichen '
+        + 'und der Bühne vor der Auflösung mit. Die Kachel der Runde auf der '
+        + 'Startseite und die Rückblick-Karte zum Teilen tragen die Welt ebenfalls. '
+        + 'Fließtext bleibt in jeder Welt gut lesbar, und alle Farben halten wie '
+        + 'bisher den Kontrast.',
+    },
+    en: {
+      title: 'Worlds: Forest and Sci-Fi designs',
+      body: 'Under Design, the colours are now joined by worlds. Forest and Sci-Fi '
+        + 'bring their own typeface for headings and buttons, a backdrop motif and '
+        + 'ornaments on cards, buttons, empty areas and the stage before the '
+        + 'reveal. The round\'s tile on the home screen and the shareable recap '
+        + 'card carry the world too. Body text stays easy to read in every world, '
+        + 'and all colours keep their contrast as before.',
+    },
+  },
+  /*
    * Clears the bar: until now a game could only ever live in ONE round, so a
    * group playing the same box in two rounds had to add it a second time by
    * hand — cover, player range, provider link and tags included. Copying is

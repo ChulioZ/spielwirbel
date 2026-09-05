@@ -855,7 +855,6 @@ I18N.fr = {
 
   'design.crumb': 'Apparence',
   'design.title': 'Apparence',
-  'design.scheme': 'Palette de couleurs',
   'design.note': 'Choisis une apparence pour ce groupe. Le fond, la couleur d’accent et toutes les autres teintes s’adaptent ensemble.',
   'design.toast.set': 'Apparence appliquée',
   'theme.standard': 'Standard',
@@ -866,6 +865,11 @@ I18N.fr = {
   'theme.sand': 'Sable',
   'theme.schiefer': 'Ardoise',
   'theme.pfirsich': 'Pêche',
+  'theme.forest': 'Forêt',
+  'theme.scifi': 'Science-fiction',
+  'design.group.colors': 'Couleurs',
+  'design.group.worlds': 'Mondes',
+  'design.worlds.note': 'Un monde ajoute aux couleurs sa propre police, des ornements et un fond.',
 
 
   'tags.crumb': 'Étiquettes',

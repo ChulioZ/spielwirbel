@@ -3,7 +3,7 @@
 - **last-researched:** 2026-07-26
 - **cadence:** 90 days
 
-Seeded 2026-07-26 from `public/styles.css`, the `THEMES` table
+Seeded 2026-07-26 from `public/styles.css`, the `PALETTES` table (`public/js/round-designs.js`)
 (`public/js/views-round-detail.js`), `.claude/rules/theme-derived-colors.md`,
 `tiles-vs-lists.md`, `responsive-content-width.md` and the redesign memory.
 The first research pass ran the same day and added **U-014**, sharpened **U-003**
@@ -41,7 +41,7 @@ genuinely beautiful" mandate.
   order, information architecture, what a control does, or copy. If the fix
   changes what a user *does* rather than what they *see*, it is out of scope.
 - **Evolution within the brand, never a rebrand (U-R02).** Every change stays
-  inside `--brand` (`#c2410c`), the 8 `THEMES`, and the `color-mix`-derived token
+  inside `--brand` (`#c2410c`), the 8 `PALETTES` (plus the worlds, #903), and the `color-mix`-derived token
   families. The app must look like itself tomorrow. Refining a token ramp is in
   scope; swapping the palette or defaulting to a dark theme is not.
 
@@ -316,7 +316,7 @@ is not a UI finding, it is a rejected idea.
 ### U-R02 — "Rebrand: new palette, new logo, dark theme by default"
 - **Status:** rejected · 2026-07-26 — **a hard fence, do not remove**
 - **Why:** The user's explicit constraint: the app must not look 100% different from one
-  day to the next. Every change stays within `--brand` and the 8 `THEMES`. Refining a
+  day to the next. Every change stays within `--brand` and the 8 `PALETTES` (plus the worlds, #903). Refining a
   derived token (a better tint ramp, a softer shadow) is in scope; replacing the brand
   colour, adding a new default theme, or a dark mode as the default is not. (A user-chosen
   dark *theme* could be a legitimate feature — but that is a `create-issue` proposal to the

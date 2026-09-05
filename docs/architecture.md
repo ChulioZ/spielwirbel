@@ -420,6 +420,11 @@ public/
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
                      lib/routes/members.js validates against (issue #420)
+    round-designs.js the design registry: the eight colour palettes and the
+                     worlds (Forest, Sci-Fi) under a stable id each, plus the
+                     resolver every view and the recap card look a stored
+                     design up through — by id, then by the legacy page hex
+                     (issue #903)
     round-roles.js   the owner/co-owner/editor ladder and what each may do,
                      required by lib/round-access.js so the views hide exactly
                      what the server refuses (issue #137)

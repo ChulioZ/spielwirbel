@@ -870,15 +870,26 @@ const STANDARD_ACCENT = '#c2410c';
 // The accent a stored design should actually paint with. Rounds save a snapshot
 // of the palette, so when a theme's accent is corrected — as Sand and Pfirsich
 // were for contrast (#145) — a round that picked it earlier still carries the
-// old, failing value. Resolving against the current THEMES on every render fixes
-// those rounds the next time they are drawn, which is the same render-time (not
-// capture-time) approach cover sizing takes and keeps the repo free of one-time
-// migration code (CLAUDE.md). An unknown page — a legacy or hand-edited design —
-// keeps whatever was stored. THEMES lives in a later-loaded file and is only
-// read here at call time, which the load order allows.
+// old, failing value. Resolving against the registry (round-designs.js) on
+// every render fixes those rounds the next time they are drawn, which is the
+// same render-time (not capture-time) approach cover sizing takes and keeps the
+// repo free of one-time migration code (CLAUDE.md). An unknown design — a
+// legacy or hand-edited one — keeps whatever was stored.
 function resolveAccent(bg) {
-  const theme = THEMES.find((th) => th.page.toLowerCase() === String(bg.page).toLowerCase());
-  return theme ? theme.accent : bg.accent;
+  const design = resolveDesign(bg);
+  return design ? design.accent : bg.accent;
+}
+
+// A world (#903) lives on <html data-world="…">: the one hook every ornament
+// rule and the display-face override in styles.css key off. An attribute rather
+// than a custom property for the same reason the browser chrome is a tag: a
+// whole family of rules has to switch on and off at once, and only a selector
+// can do that. Cleared when there is no world, so leaving a Forest round never
+// leaks its vines onto home.
+function setWorld(world) {
+  const el = document.documentElement;
+  if (world) el.dataset.world = world;
+  else delete el.dataset.world;
 }
 
 // The mobile browser toolbar and the installed PWA's chrome are tinted from
@@ -897,11 +908,15 @@ function setThemeColor(accent) {
 // Apply the round's design: page background + accent color. Everything else —
 // placeholders, borders, accent surfaces, the page glow and the finale stage —
 // derives from these two custom properties via CSS color-mix (see styles.css).
+// A world sets the same two and adds only the root attribute (setWorld), so its
+// ornaments are additive over the tokens and a palette is a world with none.
 function applyBackground(bg) {
   const root = document.documentElement.style;
+  const design = resolveDesign(bg);
+  setWorld(design && design.world);
   if (bg && bg.type === 'theme' && bg.page && bg.accent) {
     const accent = resolveAccent(bg);
-    root.setProperty('--page-bg', bg.page);
+    root.setProperty('--page-bg', design ? design.page : bg.page);
     root.setProperty('--brand', accent);
     setThemeColor(accent);
   } else if (bg && bg.type === 'color' && bg.color) {

@@ -854,7 +854,6 @@ I18N.it = {
 
   'design.crumb': 'Aspetto',
   'design.title': 'Aspetto',
-  'design.scheme': 'Combinazione di colori',
   'design.note': 'Scegli un aspetto per questo gruppo. Sfondo, colore d’accento e tutte le altre tonalità si adattano insieme.',
   'design.toast.set': 'Aspetto applicato',
   'theme.standard': 'Standard',
@@ -865,6 +864,11 @@ I18N.it = {
   'theme.sand': 'Sabbia',
   'theme.schiefer': 'Ardesia',
   'theme.pfirsich': 'Pesca',
+  'theme.forest': 'Foresta',
+  'theme.scifi': 'Fantascienza',
+  'design.group.colors': 'Colori',
+  'design.group.worlds': 'Mondi',
+  'design.worlds.note': 'Un mondo aggiunge ai colori un carattere tipografico, ornamenti e uno sfondo propri.',
 
 
   'tags.crumb': 'Etichette',

@@ -906,7 +906,6 @@ I18N.en = {
 
   'design.crumb': 'Design',
   'design.title': 'Design',
-  'design.scheme': 'Color scheme',
   'design.note': 'Choose a design for this round. Background, accent color and all other tones adapt together.',
   'design.toast.set': 'Design applied',
   'theme.standard': 'Standard',
@@ -917,6 +916,11 @@ I18N.en = {
   'theme.sand': 'Sand',
   'theme.schiefer': 'Slate',
   'theme.pfirsich': 'Peach',
+  'theme.forest': 'Forest',
+  'theme.scifi': 'Sci-Fi',
+  'design.group.colors': 'Colors',
+  'design.group.worlds': 'Worlds',
+  'design.worlds.note': 'A world adds its own typeface, ornaments and a backdrop on top of the colors.',
 
 
   'tags.crumb': 'Tags',

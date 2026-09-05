@@ -79,8 +79,9 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
   *not* own, ranked against its own shelf, its own ratings and what it actually
   plays, using a local BoardGameGeek corpus. Plain weighted arithmetic — no AI, nothing invented —
   and every card says why it is there.
-- **Per-round design**, custom tags, an installable **PWA** that works offline,
-  shareable deep links, a **Freundeskreis** feed between accounts, and
+- **Per-round design** (colour schemes and themed worlds), custom tags, an
+  installable **PWA** that works offline, shareable deep links, a
+  **Freundeskreis** feed between accounts, and
   **passkey** sign-in (fingerprint, face or device PIN — alongside the password,
   never instead of it).
 
