@@ -582,10 +582,10 @@ async function reachVoteScreen(cdp, rid) {
     seen.push(['handover', await step('#goBtn')]);
     const rating = await until('.rating .mood');
     const moods = document.querySelectorAll('.rating .mood');
-    /* Pre-select 4 of 5 — a blank scale looks unfinished. Index 4, not 3: since
-       #797 the row opens with the trash tile that carries the retirement
-       proposal (the 0 of the scale), so the faces are offset by one. */
-    if (moods[4]) moods[4].click();
+    /* Pre-select 4 of 5 — a blank scale looks unfinished. Index 3 is that face:
+       the row is the five ratings and nothing else since #909 removed the
+       leading trash tile that had offset them by one. */
+    if (moods[3]) moods[3].click();
     await new Promise((r) => setTimeout(r, 400));
     return {
       seen,
@@ -596,10 +596,12 @@ async function reachVoteScreen(cdp, rid) {
       rating: !!rating,
     };
   })()`);
-  // Six tiles for a member since #797: the zero, then the five faces. This
-  // count is a real guard — it is what caught the change rather than shipping a
-  // marketing screenshot of a scale the app no longer has.
-  if (!walk || walk.moods !== 6) fail(`could not reach the vote screen: ${JSON.stringify(walk, null, 1)}`);
+  /* Five tiles, one per rating. This count is a real guard and it has earned its
+     keep twice: it caught #797's sixth tile arriving and #909's removing it
+     again, in both cases before a marketing screenshot of a scale the app no
+     longer has could be committed. Move it deliberately, never to make a run
+     pass. */
+  if (!walk || walk.moods !== 5) fail(`could not reach the vote screen: ${JSON.stringify(walk, null, 1)}`);
 }
 
 /* ------------------------------------------------------------------- main */

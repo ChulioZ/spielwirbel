@@ -155,10 +155,13 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   all five locales. It deliberately does **not** cover developer prose, **round**
   names (a round is a group — the demo's „Spieleabend" round is fine), or
   time-of-day adverbials, which name no entity („heute", "tonight", « ce soir »).
-- There is intentionally **no one-time migration code** in the backend; the live
-  `data.json` is fully up to date. For a future schema change, migrate the data
-  once (with the server stopped, see `.claude/rules/`) rather than keeping
-  migration code around permanently.
+- There is intentionally **no one-time migration code** in the JSON backend; a
+  data change ships as a script in `scripts/` run once with the server stopped
+  (see `.claude/rules/data-json-external-edits.md`), never as a permanent branch
+  in `lib/repo/json.js`. **Postgres is the exception and always was**: a Knex
+  migration is by definition permanent and applies itself on boot. Its own trap
+  is that a data-rewriting one matches ZERO rows under FORCE RLS and reports
+  success — `.claude/rules/rls-blocks-data-migrations.md`.
 - The default JSON backend (`lib/repo/json.js`) still assumes one small dataset
   and favors simple, readable code over optimization — that's fine for
   local/self-hosted use. **Production runs the Postgres backend instead**

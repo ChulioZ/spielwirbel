@@ -25,8 +25,8 @@ const { loadApp } = require('./support/dom');
 
 const RID = 'r1';
 
-// One vote per game from a single member. `null` means the retirement tile:
-// the zero of the scale, stored the way the vote card writes it (#797).
+// One vote per game from a single member, stored the way the vote card writes
+// it: `{ rating }` and nothing else (#909).
 const session = (id, ratings, over = {}) => ({
   id,
   createdAt: '2026-09-01T18:00:00.000Z',
@@ -34,8 +34,7 @@ const session = (id, ratings, over = {}) => ({
   memberIds: ['m1'],
   guests: [],
   votes: {
-    m1: Object.fromEntries(Object.entries(ratings).map(([g, r]) =>
-      [g, r === null ? { retire: true } : { rating: r, retire: false }])),
+    m1: Object.fromEntries(Object.entries(ratings).map(([g, r]) => [g, { rating: r }])),
   },
   votedIds: ['m1'],
   finished: true,
@@ -164,22 +163,24 @@ test('a session nobody voted in renders no ⓘ and does not throw', async (t) =>
 });
 
 test('the score, not the mean, ranks the rows', async (t) => {
-  // {5,4,0} vs a clean 3: the vetoed game's raw mean is 3.0, the same as the
-  // game nobody objects to, so under the old arithmetic these were tied and
-  // shelf order decided. This is the ordering flip the whole issue is about,
-  // asserted where a user would see it.
-  const dom = await show(t, session('s1', { g1: null, g2: 3, g3: 5 }));
+  // A lone „gar nicht" against a clean 3 and a clean 5. On the raw mean the 1
+  // and the 3 are just one apart; on the curve the veto is worth -5, so it
+  // sorts last by a wide margin. This is the ordering the whole of #893 is
+  // about, asserted where a user would see it.
+  const dom = await show(t, session('s1', { g1: 1, g2: 3, g3: 5 }));
   const rows = rowsOf(dom);
   assert.deepEqual(rows.map((r) => r.title), ['Splendor', 'Azul', 'Catan']);
-  assert.equal(rows[2].score, '0,0', 'a lone retirement proposal is floored at the displayed 0,0');
+  assert.equal(rows[2].score, '0,0', 'a lone veto is negative, so it prints the floored 0,0');
 });
 
 test('the reason line appears only where there IS something to say', async (t) => {
-  const dom = await show(t, session('s1', { g1: null, g2: 1, g3: 4 }));
+  const dom = await show(t, session('s1', { g1: 2, g2: 1, g3: 4 }));
   const by = Object.fromEntries(rowsOf(dom).map((r) => [r.title, r]));
 
-  assert.equal(by.Catan.why, '1× aussortieren', 'the trash tile phrases its own sentence');
-  assert.equal(by.Azul.why, '1× gar nicht', 'and the 1 phrases a different one');
+  // The veto clause is the whole of the reason line since #909 removed the
+  // „1× aussortieren" sentence that used to sit beside it.
+  assert.equal(by.Azul.why, '1× gar nicht', 'the 1 phrases the reason');
+  assert.equal(by.Catan.why, null, 'a 2 diverges from its mean but has no sentence of its own');
   // The common case, and the one that is invisible when it regresses: a game
   // nobody rated below 3 scores its plain average, so there is nothing to
   // explain and NO element at all — not an empty one.

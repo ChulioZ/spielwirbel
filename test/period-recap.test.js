@@ -5,16 +5,15 @@ const assert = require('node:assert/strict');
 
 const { periodsOf, periodRecap, periodKeyOf } = require('../public/js/period-recap');
 // The real resolvers, not stand-ins — same reasoning as test/recap.test.js: the
-// member/guest split and the retirement-is-zero rule are things these
-// assertions depend on, so a simplified fake would test the wrong rules.
+// member/guest split is something these assertions depend on, so a simplified
+// fake would test the wrong rules.
 const { sessionPeople } = require('../public/js/session-people');
-const { effectiveRating } = require('../public/js/vote-scale');
 const { RECAP_MIN_RATINGS } = require('../public/js/recap');
 const { scoreRatings, shelfScore, playCounts } = require('../public/js/vote-score');
 const { isActiveGame } = require('../public/js/draw-pool');
 
 const deps = {
-  peopleOf: sessionPeople, ratingOf: effectiveRating, scoreOf: scoreRatings,
+  peopleOf: sessionPeople, scoreOf: scoreRatings,
   // The shelf half (#894): the real ones, never a stub — a substituted shrinkage
   // is exactly the drift this file's injection discipline exists to prevent.
   shelfOf: shelfScore, playsOf: playCounts,
@@ -191,24 +190,25 @@ test('votes for a game that has since been deleted are dropped', () => {
   assert.equal(periodRecap(r, [], month('2026-07'), deps).topRated, null);
 });
 
-test('a retirement proposal counts as the zero it is', () => {
+test('three „gar nicht" votes stay firmly negative', () => {
   const r = round({
     sessions: [
       {
         id: 'sx', createdAt: at(2026, 7, 2), finished: true, gameIds: ['g1'],
-        votes: { m1: { g1: { rating: 5, retire: true } }, m2: { g1: { rating: 0 } }, m3: { g1: { rating: 0 } } },
+        // One of the three carries a stale pre-#909 `retire` flag beside its
+        // rating. It must be ignored: the rating is the vote.
+        votes: { m1: { g1: { rating: 1, retire: true } }, m2: { g1: { rating: 1 } }, m3: { g1: { rating: 1 } } },
       },
     ],
   });
-  /* Three retirement proposals, one of them over a stored 5. TILE_VALUE[0] is
-     −6, so the game's own score is exactly that — and since #894 the card prints
-     it shrunk: the prior is `PRIOR_DEFAULT` (fixed since #928) and nothing was
-     played, so no lift, giving (3·−6 + 4·3) / 7 = −6/7.
-     The number still discriminates: had the stored 5 won, the raw score would be
-     (5 − 6 − 6) / 3 ≈ −2,33 and the printed one +5/7 ≈ 0,71. */
+  /* TILE_VALUE[1] is −5, so the game's own score is exactly that — and since
+     #894 the card prints it shrunk: the prior is `PRIOR_DEFAULT` (fixed since
+     #928) and nothing was played, so no lift, giving (3·−5 + 4·3) / 7 = −3/7.
+     The number discriminates against the flag winning: on #797's precedence the
+     first vote would have scored −6 and the printed value −4/7. */
   const top = periodRecap(r, [], month('2026-07'), deps).topRated;
-  assert.equal(Number(top.score.toFixed(4)), Number((-6 / 7).toFixed(4)));
-  assert.ok(top.score < 0, 'three retirement proposals must stay firmly negative');
+  assert.equal(Number(top.score.toFixed(4)), Number((-3 / 7).toFixed(4)));
+  assert.ok(top.score < 0, 'three vetoes must stay firmly negative');
 });
 
 test('a tie on best-rated names every tied game', () => {

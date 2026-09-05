@@ -5,8 +5,8 @@
  * than matched over its source (.claude/rules/testing-views-under-jsdom.md).
  *
  * What is worth pinning here is what the ROUTE tests cannot see: that a link
- * holder is offered exactly the names on the ballot, that a guest is offered
- * without the retire control the group's own members get (#458), that an
+ * holder is offered exactly the names on the ballot, that a guest gets the same
+ * card a member does (#909 removed the last per-role difference), that an
  * already-voted name is confirmed before it is replaced, and that an unusable
  * link renders the one honest dead state instead of a blank screen — the failure
  * mode a page reached from a chat link can least afford.
@@ -70,24 +70,25 @@ test('the claim list offers every participant, marking who has already voted', a
   assert.match(dom.app.textContent, /Freitagsrunde/);
 });
 
-test('picking a name opens the cards; a member gets the zero tile, a guest does not', async (t) => {
+test('picking a name opens the cards; a member and a guest get the same scale', async (t) => {
   const { dom } = boot(t);
   await dom.call('showVoteLink', 'tok-2');
 
-  // Anna (a member) — six tiles since #797, the zero being the retirement one.
+  // Anna (a member) — five tiles, 1-5. Between #797 and #909 she had a sixth,
+  // the retirement proposal, which a guest did not; that difference is gone.
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
-  assert.equal(dom.app.querySelectorAll('.mood').length, 6, 'the 0-5 scale');
+  assert.equal(dom.app.querySelectorAll('.mood').length, 5, 'the 1-5 scale');
   assert.match(dom.app.querySelector('.vote__title').textContent, /Catan/);
-  assert.ok(dom.app.querySelector('.mood--retire'), 'a member may suggest retiring a game');
-  assert.equal(dom.app.querySelector('.sortBtn'), null, 'the separate control is gone');
+  assert.equal(dom.app.querySelector('.mood--retire'), null, 'no trash tile for anybody');
+  assert.equal(dom.app.querySelector('.sortBtn'), null, 'no separate retire control either');
+  const memberLabels = [...dom.app.querySelectorAll('.mood')].map((b) => b.getAttribute('aria-label'));
 
   // Dana (a guest) — back to the claim list first.
   dom.app.querySelector('#backBtn').click();
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[2].click();
-  assert.equal(dom.app.querySelectorAll('.mood').length, 5, 'a guest scale starts at 1');
-  assert.equal(
-    dom.app.querySelector('.mood--retire'), null,
-    'a guest gets no zero tile — not rendering it is what keeps the flag out of the payload (#458)'
+  assert.deepEqual(
+    [...dom.app.querySelectorAll('.mood')].map((b) => b.getAttribute('aria-label')), memberLabels,
+    'a guest card must be indistinguishable from a member one (#909)'
   );
 });
 
@@ -104,7 +105,7 @@ test('a rating must be given before the cards advance', async (t) => {
   assert.match(dom.app.querySelector('.vote__title').textContent, /Catan/);
 
   // With a rating it moves on.
-  dom.app.querySelectorAll('.mood')[4].click();
+  dom.app.querySelectorAll('.mood')[3].click();
   dom.app.querySelector('#nextBtn').click();
   assert.match(dom.app.querySelector('.vote__title').textContent, /Azul/);
 });
@@ -114,12 +115,12 @@ test('submitting sends only the claimed person\'s ratings, then shows the thank-
   await dom.call('showVoteLink', 'tok-4');
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click(); // Anna
 
-  // Catan -> 5, then a change of mind onto the zero: the two are mutually
-  // exclusive now (#797), so the rating must NOT ride along in the payload.
-  dom.app.querySelectorAll('.mood')[5].click();
+  // Catan -> 5, then a change of mind onto the 1: one tile wins, and the
+  // payload carries the rating alone with no `retire` key beside it (#909).
+  dom.app.querySelectorAll('.mood')[4].click();
   dom.app.querySelectorAll('.mood')[0].click();
   dom.app.querySelector('#nextBtn').click();
-  dom.app.querySelectorAll('.mood')[1].click(); // Azul -> 1
+  dom.app.querySelectorAll('.mood')[0].click(); // Azul -> 1
   dom.app.querySelector('#nextBtn').click(); // finish
 
   await new Promise((r) => setTimeout(r, 0));
@@ -132,7 +133,7 @@ test('submitting sends only the claimed person\'s ratings, then shows the thank-
   // a false red reading "same structure but not reference-equal"
   // (.claude/rules/scroll-reset-on-forward-navigation.md notes the same trap).
   assert.deepEqual(JSON.parse(JSON.stringify(post.body)), {
-    votes: { g1: { rating: null, retire: true }, g2: { rating: 1, retire: false } },
+    votes: { g1: { rating: 1 }, g2: { rating: 1 } },
   });
   // Nobody else's column rides along — the payload is one person's, by shape.
   assert.deepEqual(Object.keys(post.body.votes).sort(), ['g1', 'g2']);
@@ -158,7 +159,7 @@ test('replacing someone else\'s vote is confirmed first; your own is not', async
   // Anna has NOT voted, so picking her asks nothing.
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
   assert.equal(asked.length, 1);
-  assert.equal(dom.app.querySelectorAll('.mood').length, 6);
+  assert.equal(dom.app.querySelectorAll('.mood').length, 5);
 });
 
 test('a device that already claimed a name revises without being re-asked', async (t) => {
@@ -176,7 +177,7 @@ test('a device that already claimed a name revises without being re-asked', asyn
   await dom.call('showVoteLink', 'tok-6');
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
   assert.deepEqual(asked, []);
-  assert.equal(dom.app.querySelectorAll('.mood').length, 6);
+  assert.equal(dom.app.querySelectorAll('.mood').length, 5);
 });
 
 test('an unusable link renders the dead state, never a blank screen', async (t) => {

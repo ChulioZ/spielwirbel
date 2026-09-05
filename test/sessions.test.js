@@ -179,8 +179,8 @@ test('deleting a game from a session drops it and its votes', async () => {
   const session = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({ count: 5 })).body.session;
   const [m0, m1] = round.members.map((m) => m.id);
   const votes = {
-    [m0]: { [keep.id]: { rating: 4, retire: false }, [drop.id]: { rating: 2, retire: true } },
-    [m1]: { [drop.id]: { rating: 5, retire: false } },
+    [m0]: { [keep.id]: { rating: 4 }, [drop.id]: { rating: 2 } },
+    [m1]: { [drop.id]: { rating: 5 } },
   };
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/results`).send({ votes });
 
@@ -189,7 +189,7 @@ test('deleting a game from a session drops it and its votes', async () => {
   assert.deepEqual(res.body.gameIds, [keep.id]);
   assert.equal(res.body.votes[m0][drop.id], undefined);
   assert.equal(res.body.votes[m1][drop.id], undefined);
-  assert.deepEqual(res.body.votes[m0][keep.id], { rating: 4, retire: false });
+  assert.deepEqual(res.body.votes[m0][keep.id], { rating: 4 });
 });
 
 test('deleting the chosen game resets the choice and result', async () => {
@@ -221,7 +221,7 @@ test('results persist votes and mark the session done', async () => {
   const round = await createRound(request);
   const game = await addGame(round.id);
   const session = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({})).body.session;
-  const votes = { [round.members[0].id]: { [game.id]: { rating: 5, retire: false } } };
+  const votes = { [round.members[0].id]: { [game.id]: { rating: 5 } } };
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/results`)
     .send({ votes });
@@ -640,7 +640,10 @@ test('a guest can be recorded as a winner; another session\'s guest cannot', asy
 // The vote card renders no retire control for a guest, so a guest `retire` flag
 // can only come from a hand-crafted request. Dropping it here is what lets
 // gameStats() skip guest-exclusion logic entirely.
-test('a guest vote cannot carry a retire flag, even hand-crafted', async () => {
+// #909: no vote path may store a `retire` key. The legacy /results route is a
+// vote path — a bundle old enough to still use it is old enough to offer a
+// retirement control — so it normalises rather than passing the shape through.
+test('the legacy results route stores no retire flag, for anybody', async () => {
   const round = await createRound(request);
   await addGame(round.id, { title: 'A' });
   const started = (await request(app)
@@ -656,15 +659,17 @@ test('a guest vote cannot carry a retire flag, even hand-crafted', async () => {
       votes: {
         [member.id]: { [gid]: { rating: 4, retire: true } },
         [guest.id]: { [gid]: { rating: 2, retire: true } },
+        // The retire-ONLY shape, where the flag WAS the vote: it becomes the 1,
+        // exactly as the two data migrations rewrite it. Dropping the flag
+        // alone would silently delete the opinion.
+        'ghost-1': { [gid]: { rating: null, retire: true } },
       },
     });
 
   assert.equal(res.status, 200);
-  // The guest's rating is kept — they played the game — only the flag goes.
-  assert.equal(res.body.votes[guest.id][gid].rating, 2);
-  assert.equal('retire' in res.body.votes[guest.id][gid], false);
-  // A member's flag is untouched.
-  assert.equal(res.body.votes[member.id][gid].retire, true);
+  assert.deepEqual(res.body.votes[member.id][gid], { rating: 4 });
+  assert.deepEqual(res.body.votes[guest.id][gid], { rating: 2 });
+  assert.deepEqual(res.body.votes['ghost-1'][gid], { rating: 1 });
 });
 
 test('saving results still 404s for an unknown session', async () => {

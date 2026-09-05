@@ -197,8 +197,7 @@ I18N.de = {
   'periodRecap.toast.failed': 'Das Bild konnte nicht erstellt werden.',
 
   'rec.title': 'Aussortieren empfohlen ({n})',
-  'rec.sub': 'Wenig beliebt oder oft zum Aussortieren vorgeschlagen.',
-  'rec.reasonSort': '{n}× „Aussortieren“ ({pct} %)',
+  'rec.sub': 'Von der Runde durchweg schlecht bewertet.',
   'rec.reasonAvg': 'Score {avg}',
   'rec.retire': 'Aussortieren',
   'rec.moreOne': '… und {n} weiteres',
@@ -507,7 +506,6 @@ I18N.de = {
   'sessions.deleted': 'Session gelöscht',
 
   'detail.noRating': 'Noch keine Bewertung',
-  'detail.totalSort': 'Insgesamt {n}× Aussortieren vorgeschlagen',
   'detail.retire': 'Aussortieren',
   'detail.complete': 'Durchgespielt',
   'detail.restore': 'Wieder aufnehmen',
@@ -805,19 +803,13 @@ I18N.de = {
   'vote.who': 'Es bewertet:',
   'vote.question': 'Wie gern möchtest du das spielen?',
   // Spoken label for the 1–5 mood buttons — the visible face/number alone says
-  // nothing about the scale to a screen reader (#145). Die Null der Skala nutzt
-  // stattdessen 'vote.suggestRetire' als Label (#797).
+  // nothing about the scale to a screen reader (#145).
   'vote.ratingLabel': '{n} von {max}',
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
-  // Label der Null-Kachel ganz links auf der Skala (#797) — dort steht nur das
-  // Papierkorb-Symbol, also trägt das Label die ganze Bedeutung.
-  'vote.suggestRetire': 'Aussortieren vorschlagen',
   'vote.next': 'Weiter ›',
   'vote.finish': 'Fertig',
-  // Eine Skala, eine Meldung (#797): das Aussortieren ist die Null darauf, also
-  // gibt es nichts mehr daneben zu erwähnen — und für Gäste, deren Skala bei 1
-  // beginnt, stimmt derselbe Satz.
+  // Eine Skala, eine Meldung: dieselbe 1–5 für Mitglieder und Gäste (#909).
   'vote.toast.needRating': 'Bitte eine Bewertung wählen',
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
@@ -846,9 +838,6 @@ I18N.de = {
   'result.willPlay': 'Wird gespielt',
   'result.lockedHint': 'Erst „Zurücksetzen“, um die Auswahl zu ändern',
   'result.barTitle': '{c}× die Note {r}',
-  // Der Balken ganz links: die Null der Skala (#797).
-  'result.barTitleRetire': '{c}× „Aussortieren“',
-  'result.sortFlag': '{n}× Aussortieren vorgeschlagen',
   'score.infoBody': 'Der Score ist mehr als der Durchschnitt. Wenn jemand ein Spiel gar nicht spielen möchte, zählt das schwerer als eine gute Bewertung von jemand anderem — damit am Ende gespielt wird, worauf alle Lust haben.',
   'score.infoThin': 'Ein Spiel mit erst wenigen Bewertungen wird vorsichtiger eingeschätzt — es braucht ein paar Sessions, bis sich sein Score voll durchsetzt.',
   'score.infoPlays': 'Ein Spiel, das ihr immer wieder auf den Tisch legt, wird deutlich besser eingeschätzt — auch ohne Bewertungen.',
@@ -861,16 +850,12 @@ I18N.de = {
   'win.infoOpen': 'Über die Siegwertung',
   'win.infoBody': 'Ein Sieg zählt mehr, wenn mehr Mitspielende am Tisch saßen — wer gegen vier andere gewinnt, hat mehr geschafft als wer gegen eine Person gewinnt. Wer allein spielt, sammelt deshalb keine Siegwertung.',
   'score.infoOpen': 'Über den Spielwirbel-Score',
-  'score.reasonRetireOne': '{n}× aussortieren',
-  'score.reasonRetire': '{n}× aussortieren',
   'score.reasonVetoOne': '{n}× gar nicht',
   'score.reasonVeto': '{n}× gar nicht',
   'score.name': 'Spielwirbel-Score',
-  'result.retireNow': '— jetzt aussortieren',
   // Named on the results screen when the winning game only seats this table
   // because the round owns an expansion for it (#653).
   'result.needsExpansion': 'Braucht Erweiterung: {names}',
-  'result.retireNowConfirm': '„{title}“ jetzt aussortieren? Es wird aus der Spieleliste der Runde entfernt.',
   'result.retiredTag': 'aussortiert',
   'result.completedTag': 'durchgespielt',
   'result.toast.willPlay': '„{title}“ wird gespielt',
@@ -1287,7 +1272,7 @@ I18N.de = {
   'landing.hero.ctaResume': 'Demo fortsetzen',
   'landing.hero.demoNote': 'Sofort loslegen, ohne E-Mail. Die Demo-Runde ist schon gefüllt und wird nach 24 Stunden gelöscht.',
   'landing.shot.shelfAlt': 'Screenshot: das Spielregal einer Runde in Spielwirbel – Spiele als Kacheln mit Durchschnittsbewertung, daneben die Navigation zu Start, Regal, Chronik und Pokalen.',
-  'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala von „aussortieren“ über 1 bis 5.',
+  'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala aus fünf Gesichtern von 1 („gar nicht“) bis 5 („unbedingt“).',
   'landing.features.title': 'Was ihr davon habt',
   'landing.features.shelf.title': 'Ein Regal für alles',
   'landing.features.shelf.desc': 'Alle Spiele eurer Runde an einem Ort – Titel, Cover und Spieleranzahl kommen aus BoardGameGeek, alles andere tippt ihr selbst ein.',

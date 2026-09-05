@@ -85,39 +85,38 @@ Note filtering the *guest ids* out of `winnerIds` instead is also wrong, in the
 other direction: `[Anna, guest]` would become a sole Anna win and **extend** the
 streak.
 
-## 4. A guest's SCALE STARTS AT 1 — that is what removes the aggregation logic
+## 4. A guest votes on exactly the same scale — there is no asymmetry left
 
 A guest rates (their opinion of a game they played belongs in `gameStats`, or the
-results screen and the game's own average silently disagree) but cannot vote a
-game off the shelf: that is the permanent group governing its collection.
+results screen and the game's own average silently disagree), and since **#909**
+that is the whole story: the scale is 1–5 for everybody and the vote card renders
+the identical five tiles whoever is holding it.
 
-**Since #797 that is a shorter scale, not a missing control.** The retirement
-proposal used to be a separate "Aussortieren" toggle under the 1–5 row; it is now
-the **zero** of the same scale, rendered as a leading trash tile — and the tile is
-simply not emitted for a guest, so they see five tiles where a member sees six.
-The mechanism is unchanged (omit, don't cast-and-filter); what changed is what is
-being omitted.
+**This section used to describe the app's sharpest per-role branch, and it is
+worth knowing what it was, because two of the three mechanisms it named are
+gone.** A guest could not vote a game off the shelf — that is the permanent group
+governing its collection — so a member's card carried a sixth control the
+guest's did not: an "Aussortieren" toggle at first, then (#797) a leading trash
+tile that was the **zero** of a 0–5 scale. #909 removed the option from
+*everyone*, and the branch went with it: `dropGuestRetireFlags()` in
+`lib/routes/sessions.js` and the `isGuest ? { rating } : { rating, retire }`
+split in `sanitizePersonVotes` are both deleted, and there is no longer a shape
+only a member may write.
 
-Omitting it rather than casting and filtering the flag is what lets
-`rawGameStats` (the raw half of `gameStats` since #894)/`gameStatsForSession`
-iterate `sessionPeople()` with **no
-guest-specific exclusion at all** — there is simply never a guest `retire` flag.
-That property got *more* load-bearing with #797, not less: a guest zero would now
-also drag the game's average down, not just its side counter. Three consequences
-follow and each is load-bearing:
+What survives is the reason the branch was cheap while it existed, and it is
+still the rule to keep: the tile was **omitted, never cast and filtered later**,
+which is what let `rawGameStats` (the raw half of `gameStats` since #894) and
+`gameStatsForSession` iterate `sessionPeople()` with **no guest-specific
+exclusion at all**. Apply that shape to the next control only some people may
+use: keep it out of the payload rather than stripping it downstream, or every
+aggregate over votes grows a role check.
 
-- `dropGuestRetireFlags()` in `lib/routes/sessions.js` strips one from a hand-crafted
-  `POST …/results`, and `sanitizePersonVotes` refuses one on the per-device and
-  vote-link paths, so the invariant holds for data too, not just for the UI.
-- The guard in `POST …/results` is in the **route, not the repo** — the contract
-  suite pins that the store happily persists a guest `retire`, which is what
-  proves the guard was not quietly moved down a layer (same shape as
-  `.claude/rules/admin-moderation-surface.md`'s notice-retention guard).
-- **The two continue-guards collapsed into one, and `vote.toast.needRatingOnly`
-  is gone with them.** "A rating, or the flag unless you are a guest" became "is
-  this game anywhere on your scale" — one `effectiveRating(v) === null` test that
-  is already correct for both, because a guest has no zero to give. A future edit
-  that re-splits them is re-introducing a difference the data no longer has.
+The other durable half is the **continue-guard**, which #797 collapsed from two
+questions into one ("a rating, or the flag unless you are a guest" became "is
+this game anywhere on your scale") and #909 simplified again to a plain
+`Number.isFinite(v.rating)`. `vote.toast.needRatingOnly` went with the first
+collapse. A future edit that re-splits it is re-introducing a difference the data
+no longer has.
 
 ## 4b. Teams (#575) reuse this resolver — and add a second unit above the person
 

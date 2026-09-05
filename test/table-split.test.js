@@ -31,7 +31,6 @@ const {
   compareSplits,
   proposeTableSplits,
 } = require('../public/js/table-split');
-const { effectiveRating } = require('../public/js/vote-scale');
 const { tileValue } = require('../public/js/vote-score');
 const { fitsPlayerCount } = require('../public/js/draw-pool');
 
@@ -62,30 +61,32 @@ const cell = (sum, lowest, violations) => ({ sum, lowest, violations });
 /* ---- One vote's worth ---- */
 
 test('an absent vote counts as the neutral midpoint, which is not a violation', () => {
-  assert.equal(seatRating({}, 'p1', 'g1', effectiveRating), NEUTRAL_RATING);
+  assert.equal(seatRating({}, 'p1', 'g1'), NEUTRAL_RATING);
   assert.ok(NEUTRAL_RATING > VIOLATION_MAX, 'the neutral value must never be a tier-1 violation');
 });
 
-test('a retirement proposal is a violation whatever rating sits beside it', () => {
-  // Both stored shapes: post-#797 (retire only) and the legacy contradiction a
-  // round that voted before it can still hold.
+test('the bottom two rungs are violations; a stale retire flag is ignored', () => {
+  // `p2` carries the pre-#909 legacy shape. The flag is ignored and the stored
+  // rating decides, exactly as the migration rewrites it — so a round that has
+  // not been migrated yet seats identically to one that has.
   const votes = {
-    p1: { g1: { rating: null, retire: true } },
+    p1: { g1: { rating: 1 } },
     p2: { g1: { rating: 5, retire: true } },
-    p3: { g1: { rating: 5 } },
+    p3: { g1: { rating: 2 } },
+    p4: { g1: { rating: 3 } },
   };
-  assert.equal(seatRating(votes, 'p1', 'g1', effectiveRating), 0);
-  assert.equal(seatRating(votes, 'p2', 'g1', effectiveRating), 0, 'retirement wins over the rating');
-  assert.equal(seatRating(votes, 'p3', 'g1', effectiveRating), 5);
+  assert.equal(seatRating(votes, 'p1', 'g1'), 1);
+  assert.equal(seatRating(votes, 'p2', 'g1'), 5, 'the stored rating wins over a stale flag');
+  assert.equal(seatRating(votes, 'p3', 'g1'), 2);
 
-  const fb = tableFeedback({ gameId: 'g1', personIds: ['p1', 'p2', 'p3'] }, votes, effectiveRating, tileValue);
-  assert.deepEqual(fb.violations, ['p1', 'p2']);
-  assert.equal(fb.lowest, 0);
+  const fb = tableFeedback({ gameId: 'g1', personIds: ['p1', 'p2', 'p3', 'p4'] }, votes, tileValue);
+  assert.deepEqual(fb.violations, ['p1', 'p3'], 'the 1 and the 2, and nothing above');
+  assert.equal(fb.lowest, 1);
 });
 
 test('the per-table numbers are over the SEATED only', () => {
   const votes = { a: { g: { rating: 5 } }, b: { g: { rating: 1 } }, c: { g: { rating: 1 } } };
-  const fb = tableFeedback({ gameId: 'g', personIds: ['a', 'b'] }, votes, effectiveRating, tileValue);
+  const fb = tableFeedback({ gameId: 'g', personIds: ['a', 'b'] }, votes, tileValue);
   // Scored through the Spielwirbel-Score curve since #893, so this is 0 rather
   // than the raw mean's 3: `a`'s 5 and `b`'s „gar nicht" cancel exactly, which
   // is the same value judgement the results screen now applies. `lowest` stays
@@ -257,7 +258,7 @@ const VOTES = Object.fromEntries(
   PARTIES.map((p, i) => [p.id, Object.fromEntries(GAMES.map((g, j) => [g.id, { rating: 1 + ((i + j * 3) % 5) }]))])
 );
 const propose = (over = {}) =>
-  proposeTableSplits({ parties: PARTIES, games: GAMES, votes: VOTES, seed: 'sess-1', effectiveRating, tileValue, fitsPlayerCount, ...over });
+  proposeTableSplits({ parties: PARTIES, games: GAMES, votes: VOTES, seed: 'sess-1', tileValue, fitsPlayerCount, ...over });
 
 test('the search is seeded, so two runs produce byte-identical proposals', () => {
   assert.deepEqual(propose(), propose());
@@ -300,7 +301,7 @@ test('a team is seated as ONE party, never split across two tables', () => {
   parties.forEach((p) => p.personIds.forEach((pid) => {
     votes[pid] = Object.fromEntries(GAMES.map((g) => [g.id, { rating: 3 }]));
   }));
-  const proposals = proposeTableSplits({ parties, games: GAMES, votes, seed: 's', effectiveRating, tileValue, fitsPlayerCount });
+  const proposals = proposeTableSplits({ parties, games: GAMES, votes, seed: 's', tileValue, fitsPlayerCount });
   assert.ok(proposals.length);
   proposals.forEach((proposal) => {
     const table = proposal.tables.find((tb) => tb.personIds.includes('a'));
@@ -317,9 +318,9 @@ test('the search avoids seating people at a game they voted 0-2 for', () => {
   parties.forEach((p, i) => {
     votes[p.id] = i < 3 ? { x: { rating: 5 }, y: { rating: 1 } } : { x: { rating: 1 }, y: { rating: 5 } };
   });
-  const [proposal] = proposeTableSplits({ parties, games, votes, seed: 's', effectiveRating, tileValue, fitsPlayerCount });
+  const [proposal] = proposeTableSplits({ parties, games, votes, seed: 's', tileValue, fitsPlayerCount });
   proposal.tables.forEach((tb) => {
-    const fb = tableFeedback(tb, votes, effectiveRating, tileValue);
+    const fb = tableFeedback(tb, votes, tileValue);
     assert.deepEqual(fb.violations, [], 'a violation-free split exists, so one must be found');
   });
 });
@@ -328,7 +329,7 @@ test('too few usable games for the tables the group needs yields no proposal at 
   // 12 parties, one 4-seat game: three tables would be needed and only one box
   // exists. The builder surfaces this rather than showing an infeasible split.
   assert.deepEqual(
-    proposeTableSplits({ parties: PARTIES, games: [game('only', 2, 4)], votes: VOTES, seed: 's', effectiveRating, tileValue, fitsPlayerCount }),
+    proposeTableSplits({ parties: PARTIES, games: [game('only', 2, 4)], votes: VOTES, seed: 's', tileValue, fitsPlayerCount }),
     []
   );
 });

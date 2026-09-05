@@ -9,7 +9,6 @@ const { scoreRatings } = require('../public/js/vote-score');
 // these assertions are about, so a simplified fake would test the wrong rules
 // (.claude/rules/session-guests-are-not-members.md).
 const { sessionPeople } = require('../public/js/session-people');
-const { effectiveRating } = require('../public/js/vote-scale');
 
 // ---- fixtures -------------------------------------------------------------
 
@@ -58,15 +57,15 @@ const shelfOf = (r) => (gid) => {
   const ratings = [];
   (r.sessions || []).forEach((s) =>
     sessionPeople(r, s).forEach((p) => {
-      const x = effectiveRating(((s.votes || {})[p.id] || {})[gid]);
-      if (x !== null) ratings.push(x);
+      const v = ((s.votes || {})[p.id] || {})[gid];
+      if (v && Number.isFinite(v.rating)) ratings.push(v.rating);
     })
   );
   const sc = scoreRatings(ratings);
   return sc ? sc.score : null;
 };
 
-const recapOf = (r, lookup) => roundRecap(r, sessionPeople, effectiveRating, lookup || shelfOf(r));
+const recapOf = (r, lookup) => roundRecap(r, sessionPeople, lookup || shelfOf(r));
 
 // Ratings for one game from as many distinct members as needed to clear the
 // evidence bar, all at the same value.
@@ -428,20 +427,25 @@ test('a round with no sessions at all is all zeros', () => {
    — the strongest thing a member can say about a game they have played simply
    did not count — so a round whose members all wanted a game gone reported no
    ratings at all. It is now a 0, which is a rating like any other. */
-test('a session carrying only retire flags contributes ratings of 0', () => {
+// A retire-only row is what the #909 migration rewrites to a 1. Un-migrated, it
+// carries no rating at all and is therefore not a vote — which is the cost of
+// skipping the migration, written down rather than assumed.
+test('an un-migrated retire-ONLY vote contributes no rating', () => {
   const r = round({
     sessions: [{ id: 'sx', createdAt: '2026-07-01T20:00:00.000Z', finished: true, gameIds: ['g1'], votes: { m1: { g1: { rating: null, retire: true } } } }],
   });
-  assert.equal(recapOf(r).totals.ratings, 1);
-  assert.deepEqual(recapOf(r).favourites, [{ memberId: 'm1', gameId: 'g1', avg: 0, count: 1 }]);
+  assert.equal(recapOf(r).totals.ratings, 0);
+  assert.deepEqual(recapOf(r).favourites, []);
 });
 
-// The legacy shape the storage was never migrated for: retirement wins, so this
-// member's favourite averages 0 rather than the 5 the stored rating claims.
-test('a legacy vote carrying BOTH a rating and the flag counts as 0', () => {
+// The legacy contradiction. #797 let the flag win (an average of 0); #909
+// reverses that — the stored rating is the only real opinion in the row, and
+// ignoring the flag is exactly what the migration writes, so a round reads the
+// same before and after being migrated.
+test('a legacy vote carrying BOTH a rating and the flag counts as the rating', () => {
   const r = round({
     sessions: [{ id: 'sx', createdAt: '2026-07-01T20:00:00.000Z', finished: true, gameIds: ['g1'], votes: { m1: { g1: { rating: 5, retire: true } } } }],
   });
   assert.equal(recapOf(r).totals.ratings, 1);
-  assert.equal(recapOf(r).favourites[0].avg, 0);
+  assert.equal(recapOf(r).favourites[0].avg, 5);
 });

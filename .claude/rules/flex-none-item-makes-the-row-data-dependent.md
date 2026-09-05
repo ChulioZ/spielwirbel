@@ -103,13 +103,14 @@ Two things that make such a guard quietly weaker rather than red:
   a *larger* headroom, i.e. a guard that still passes while permitting the bug.
   Pin which rule you got (`--gd-cover-w` in px, not `100%`), and assert every
   derived term is finite before doing arithmetic with it.
-- **`.score-label`, `.score-why` and `.sort-flag` are shared with the Regal
-  rows.** A sweep that matches the bare class also binds `.ds-row__meta
-  .sort-flag`, holding an unrelated component to this column's constraint. Match
-  the class only as the selector's **last** compound, under no ancestor but
+- **`.score-label` and `.score-why` are shared with the Regal rows.** A sweep
+  that matches the bare class also binds the same class under `.ds-row__meta`,
+  holding an unrelated component to this column's constraint. Match the class
+  only as the selector's **last** compound, under no ancestor but
   `.gd-head`/`.gd-stats` — and prove the narrowing by breaking the *excluded*
   component and watching the test stay **green**, which is the only evidence that
-  a scope restriction restricts the right thing.
+  a scope restriction restricts the right thing. (The bullet named a third class,
+  `.sort-flag`, until #909 removed the retirement vote that rendered it.)
 
 **Related:** `.claude/rules/flex-none-cancels-flex-wrap.md` (the same declaration
 on the *container*, where it kills the `flex-wrap` beside it — this file is the

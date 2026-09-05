@@ -333,7 +333,6 @@ function renderPeriodRecapSection(round, activities) {
   // wear one.
   const deps = {
     peopleOf: sessionPeople,
-    ratingOf: effectiveRating,
     scoreOf: scoreRatings,
     // The shelf half of the same rule (#894): the period card is shrunk exactly
     // as the all-time one is, so „Bestbewertet" means one thing on both.

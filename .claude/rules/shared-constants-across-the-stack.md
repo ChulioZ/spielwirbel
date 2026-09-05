@@ -144,44 +144,7 @@ which is why the owner case is spelled out rather than left to `normalizeRole`'s
 fallback. That fallback is itself deliberate in the other direction: an unknown
 role loses power rather than gaining it.
 
-**The ninth is `public/js/vote-scale.js`** (#797): `effectiveRating`/`wantsRetire`
-— what one vote on a game is worth, now that the retirement proposal is the
-**zero** of the 0–5 scale rather than a separate flag beside it. Logic, like
-`draw-pool.js`, and it earns the shape because *nothing* is validated across the
-boundary: the client renders every average (Regal pills, the detail ring, session
-results, Pokale) and the server computes `groupRating` and the cross-tenant
-corpus aggregate from **the same stored votes**, so a drifted copy makes two
-screens state a different Ø for one game with no error, no 400 and no blank —
-just a number that is quietly wrong wherever nobody is comparing. It carries the
-precedence rule as well as the arithmetic: storage was **not** migrated, so a
-pre-#797 row can hold `{ rating: 4, retire: true }`, and "retirement wins" has to
-be answered identically in all eight places or a legacy round's history changes
-depending on which screen is asked.
-
-Its trap is the tenth site, which **cannot** require the file: the cross-tenant
-aggregate `publicGameAggregates` in `lib/repo/postgres.js` is SQL. Both halves of
-the rule are restated there by hand — it must admit a retire-only vote (the
-pre-#797 clause `jsonb_typeof(…'rating') = 'number'` silently dropped it) and it
-must let retirement win. #914 collapsed what had been a separate `WHERE` and
-`CASE` into **one lateral `tile` expression**, so the admission test and the
-resolved value are by construction the same decision instead of two spellings of
-it that could drift apart. Note the comparison is `vote.val->'retire' = 'true'::jsonb`, not
-`->>'retire' = 'true'`: the text form also matches the **string** `"true"`, which
-`effectiveRating`'s `=== true` rejects — and the legacy `/results` route stores a
-member's column unvalidated, so that is a shape the JSON backend really can hold.
-`effectiveRating` uses `Number.isFinite` rather than `Number.isInteger` for the
-same reason: it is the exact JS equivalent of `jsonb_typeof(…) = 'number'`, so
-the two backends admit precisely the same values by construction.
-`test/support/repo-contract.js` pins them against one fixture carrying both
-legacy shapes.
-
-Note `public/js/recap.js` reaches it by **injection**, not `require`: it is a
-public/js file the test suite requires into Node, where the shared scope does not
-exist, and `require` is deliberately not a frontend global. Its header already
-established that shape for `sessionPeople`; `effectiveRating` is the second
-parameter of the same kind.
-
-**The tenth is `public/js/table-split.js`** (#796): the multi-table objective —
+**The ninth is `public/js/table-split.js`** (#796): the multi-table objective —
 what one seating is worth, which table counts are feasible, and the seeded search
 over them — plus `fitsSomeTable`, the relaxed pool predicate that mode draws with.
 Logic, like `draw-pool.js`, and it runs in the **third** direction again: the
@@ -191,9 +154,11 @@ validated across the boundary and nothing 400s — a drifted copy simply makes t
 screen disagree with the recommendation it is showing, telling a group that a
 table they just edited is worse (or better) than the one the server proposed, with
 no error anywhere. The threshold `VIOLATION_MAX` is the sharpest single value in
-it, and it is **coupled to the vote scale**: it is the bottom two of the 0-5 scale
-whose zero is the retirement proposal (#797), so changing the scale moves it in
-the same change.
+it, and it is **coupled to the vote scale**: it is the bottom two rungs of the
+1–5 scale, so changing the scale moves it in the same change. #909 is the worked
+example — it removed the 0 the scale had carried since #797, which was a rung
+`VIOLATION_MAX` was already covering, so the value stood while the sentence
+justifying it moved up one.
 
 `fitsSomeTable` lives here rather than beside `fitsPlayerCount` for a reason that
 is structural rather than editorial: these are classic scripts over one global
@@ -201,7 +166,7 @@ lexical scope, so two files cannot both declare `MIN_TABLE_PARTIES`, and every
 other user of that constant is in this file. `draw-pool.js` carries a pointer
 comment to it so a `grep` for the pool predicates lands on both.
 
-**The eleventh is `public/js/session-outcome.js`** (#796): `sessionOutcome`, what
+**The tenth is `public/js/session-outcome.js`** (#796): `sessionOutcome`, what
 became of a session — `open`, `played`, `cancelled` or `split`. It is the
 `session-log.js` direction (the server writes, the client renders) with the
 validation removed entirely: sixteen sites branched on `session.cancelled` to mean
@@ -216,7 +181,7 @@ third boolean, so a flag can never disagree with the links the same screens rend
 — the `sessionOutcome`-not-`s.cancelled` discipline is the whole rule, and it is
 the shape `.claude/rules/active-games-filter-sites.md` exists for one entity over.
 
-**The twelfth is `public/js/avatar-policy.js`** (#841): what an account profile
+**The eleventh is `public/js/avatar-policy.js`** (#841): what an account profile
 picture may be — the upload byte cap, the stored square, and the accepted types.
 The plain value half of this rule, like `EXPANSION_TITLE_MAX`: the Konto picker
 *offers* them (the file input's `accept`, the pre-flight size check, and the
@@ -237,7 +202,7 @@ only. It lives here because it is the same decision as the cap — what we store
 and splitting one policy across two files to keep this one purely bidirectional
 would be tidiness at the cost of the thing being findable.
 
-**The thirteenth is `public/js/cover-policy.js`** (#867): what an uploaded game
+**The twelfth is `public/js/cover-policy.js`** (#867): what an uploaded game
 cover may be — the upload byte cap, the ceiling on the stored long edge, and the
 output format. The plain value half of this rule and the direct sibling of
 `avatar-policy.js`: the two paste sites *offer* the cap (the pre-flight check on
@@ -264,11 +229,10 @@ they bound `COVER_MAX_DIM`'s justification — but nothing validates them across
 boundary: they are the frontend's own render-time choice, and the server has no
 opinion about them at all.
 
-**The fourteenth is `public/js/vote-score.js`** (#893): the Spielwirbel-Score —
+**The thirteenth is `public/js/vote-score.js`** (#893): the Spielwirbel-Score —
 what a SET of votes on a game is worth, once a veto counts for more than its
-numeric distance. Logic, like `draw-pool.js` and its direct sibling
-`vote-scale.js`, and it runs in the same direction as `vote-scale.js` for the
-same reason: nothing is validated across the boundary. The client renders every
+numeric distance. Logic, like `draw-pool.js`, and it earns the shape because
+*nothing* is validated across the boundary. The client renders every
 score (Regal pills, the detail ring, session results, Pokale) and the server
 weighs the same votes in `lib/recommend.js`'s taste profile and in
 `lib/session-split.js`'s table proposals, so a drifted copy makes two screens
@@ -280,16 +244,15 @@ game's votes; `tableFeedback` in `table-split.js` sums `tileValue` over a
 table's seats. Those must move together — the whole point of #893 was that the
 single-table results screen and the multi-table objective had been applying
 *different* value judgements to the same evening — so `table-split.js` takes
-`tileValue` as an **injected** parameter with no default, exactly as it takes
-`effectiveRating`. A default would hand back a plausible, confident,
-differently-scored split with no error anywhere, which is this rule's failure
-mode expressed as a seating chart.
+`tileValue` as an **injected** parameter with **no default**. A default would
+hand back a plausible, confident, differently-scored split with no error
+anywhere, which is this rule's failure mode expressed as a seating chart.
 
 **#914 gave it a second input shape, `scoreTally`, and the reason is the trap
 above seen from the other side.** The Discover podium (`lib/public-stats.js`)
 ranks cross-tenant games on this score, and the aggregate feeding it is that same
-SQL. Summing `TILE_VALUE` there would have hand-restated all six numbers in the
-one place that can never require them — and this file's own header says those
+SQL. Summing `TILE_VALUE` there would have hand-restated every one of its
+numbers in the one place that can never require them — and this file's own header says those
 numbers are *expected to be retuned*, so the copy would silently freeze the
 public podium on the old curve while every other screen moved. It is the palette
 bug with the blast radius pointed at the logged-out landing page.
@@ -370,7 +333,7 @@ it is already coupled to the vote scale there. And `LOW_SCORE` in
 and the server has no opinion about it, so it is a render-time choice like
 `cover-size.js`'s widths rather than a shared contract.
 
-Each new instance must be named in this inventory — the fourteen paragraphs above.
+Each new instance must be named in this inventory — the thirteen paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

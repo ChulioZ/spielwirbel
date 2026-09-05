@@ -5,10 +5,9 @@
    single source of truth (CLAUDE.md §Architecture), so deleting one removes its
    effect for free; nothing in this file is stored or denormalized.
 
-   Its three sibling dependencies are passed IN rather than read off the shared
-   scope: `peopleOf` (sessionPeople, from session-people.js), `ratingOf`
-   (effectiveRating, from vote-scale.js — what a vote is worth once a retirement
-   proposal counts as the 0 it is, #797) and `shelfScoreOf` (a `gameId ->
+   Its two sibling dependencies are passed IN rather than read off the shared
+   scope: `peopleOf` (sessionPeople, from session-people.js) and `shelfScoreOf`
+   (a `gameId ->
    number|null` lookup into the round's shelf index, built by core.js's
    `roundScoreIndex` — what a SET of votes is worth once a veto counts for more
    than its numeric distance (#893) and once thin data is shrunk toward the
@@ -46,7 +45,7 @@ const recapMean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
 // Votes are read straight off the vote map rather than through `s.gameIds`,
 // so a rating always counts exactly once; ids of deleted games are dropped,
 // since a stat naming a game that is no longer on the shelf has nothing to show.
-function collectRatings(round, peopleOf, ratingOf) {
+function collectRatings(round, peopleOf) {
   const known = new Set(round.games.map((g) => g.id));
   const games = new Map();
   let total = 0;
@@ -56,10 +55,9 @@ function collectRatings(round, peopleOf, ratingOf) {
       const own = votes[person.id] || {};
       Object.keys(own).forEach((gid) => {
         if (!known.has(gid)) return;
-        // A retirement proposal is the zero of the scale, so it belongs in
-        // the taste stats like any other vote (#797).
-        const rating = ratingOf(own[gid]);
-        if (rating === null) return;
+        const vote = own[gid];
+        if (!vote || !Number.isFinite(vote.rating)) return;
+        const rating = vote.rating;
         let entry = games.get(gid);
         if (!entry) games.set(gid, (entry = { all: [], byMember: new Map() }));
         entry.all.push(rating);
@@ -201,8 +199,8 @@ function memberFavourites(round, index) {
 }
 
 // The whole recap for one round. `peopleOf` is sessionPeople(round, session).
-function roundRecap(round, peopleOf, ratingOf, shelfScoreOf) {
-  const index = collectRatings(round, peopleOf, ratingOf);
+function roundRecap(round, peopleOf, shelfScoreOf) {
+  const index = collectRatings(round, peopleOf);
   const { best, worst } = bestAndWorst(round, index, shelfScoreOf);
   return {
     totals: {

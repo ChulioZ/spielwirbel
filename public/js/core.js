@@ -646,7 +646,7 @@ function randomOrderedGames(round, activeGames) {
 // already on screen transfers as-is.
 //
 // `tiles` is the per-tile histogram, and it is part of the contract: it carries
-// "how many voted 2", which `vetoes`/`retires` cannot express and which the
+// "how many voted 2", which `vetoes` cannot express and which the
 // lone-dissenter guard in retireRecommendations() needs (#922). It is scored
 // through `scoreTally` rather than `scoreRatings` — the two are the same
 // function over two input shapes, so this is behaviour-identical and leaves ONE
@@ -659,30 +659,24 @@ function scoreFields(ratings) {
   (Array.isArray(ratings) ? ratings : []).forEach((r) => { if (tileValue(r) !== null) tiles[r] += 1; });
   const s = scoreTally(tiles);
   return s
-    ? { score: s.score, low: s.low, vetoes: s.vetoes, retires: s.retires, tiles }
-    : { score: null, low: null, vetoes: 0, retires: 0, tiles };
+    ? { score: s.score, low: s.low, vetoes: s.vetoes, tiles }
+    : { score: null, low: null, vetoes: 0, tiles };
 }
 
 // Rating stats of a game within ONE session. Iterates the session's PEOPLE, not
 // the round's members, so a guest's rating counts too (#458) — a guest actually
 // played the game, and leaving their vote out would make this screen and the
-// game's own average silently disagree. A guest can carry no `retire` flag (the
-// scale offers them no zero tile, and the server strips a hand-crafted one), so
-// `sortCount` needs no guest exclusion.
+// game's own average silently disagree. Since #909 a guest's scale is the same
+// 1–5 as a member's, so there is nothing here to treat differently at all.
 //
-// A retirement proposal counts as a rating of 0 rather than as no rating at all
-// (#797) — `effectiveRating` is the one place that rule lives, so a legacy vote
-// carrying both a rating and the flag resolves the same way here as on the
-// server.
+// `v.rating` is read directly: a vote is its rating and nothing else. That was
+// not true between #797 and #909, when a retirement proposal was the zero of a
+// 0–5 scale and had to be resolved through a shared `effectiveRating`.
 function gameStatsForSession(round, session, gameId) {
   const ratings = [];
-  let sortCount = 0;
   sessionPeople(round, session).forEach((p) => {
     const v = (session.votes[p.id] || {})[gameId];
-    if (!v) return;
-    if (wantsRetire(v)) sortCount++;
-    const r = effectiveRating(v);
-    if (r !== null) ratings.push(r);
+    if (v && Number.isFinite(v.rating)) ratings.push(v.rating);
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
   // `avg` is kept beside `score` for the per-member stats, which are about how
@@ -690,7 +684,7 @@ function gameStatsForSession(round, session, gameId) {
   // be a category error there (#893). It no longer has a second reader on the
   // game detail header, which printed the honest mean beside the score until
   // #919.
-  return { avg, ...scoreFields(ratings), count: ratings.length, sortCount };
+  return { avg, ...scoreFields(ratings), count: ratings.length };
 }
 
 // Rating stats of a game across ALL (still existing) sessions, BEFORE the shelf
@@ -703,24 +697,18 @@ function gameStatsForSession(round, session, gameId) {
 // raw score beside another showing its shrunk one.
 function rawGameStats(round, gameId) {
   const ratings = [];
-  let sortCount = 0;
   let sessions = 0;
-  let votesCast = 0; // total votes cast (rating and/or "retire")
   round.sessions.forEach((s) => {
     if (!s.gameIds.includes(gameId)) return;
     sessions++;
     // Guests included, for the same reason as gameStatsForSession above (#458).
     sessionPeople(round, s).forEach((p) => {
       const v = (s.votes[p.id] || {})[gameId];
-      if (!v) return;
-      votesCast++;
-      if (wantsRetire(v)) sortCount++;
-      const r = effectiveRating(v);
-      if (r !== null) ratings.push(r);
+      if (v && Number.isFinite(v.rating)) ratings.push(v.rating);
     });
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-  return { avg, ...scoreFields(ratings), count: ratings.length, sortCount, sessions, votesCast };
+  return { avg, ...scoreFields(ratings), count: ratings.length, sessions };
 }
 
 // The raw stats plus the shelf's verdict on them (#894). `score` becomes the
@@ -730,9 +718,9 @@ function rawGameStats(round, gameId) {
 // beside it for tests and for anyone who needs the unshrunk figure; `avg` is
 // still the honest arithmetic mean and is untouched by any of this.
 //
-// Every other field (`count`, `votesCast`, `sortCount`, `tiles`, `vetoes`,
-// `retires`) stays raw on purpose: they are counts of what happened, and
-// `scoreReason()` and `retireRecommendations()` both read them as such.
+// Every other field (`count`, `tiles`, `vetoes`) stays raw on purpose: they are
+// counts of what happened, and `scoreReason()` and `retireRecommendations()`
+// both read them as such.
 function shelveStats(raw, plays) {
   return {
     ...raw,
@@ -780,11 +768,25 @@ function gameStats(round, gameId) {
   return shelveStats(rawGameStats(round, gameId), playCounts(round).get(gameId) || 0);
 }
 
-// Retirement suggestions: games often suggested for retirement and/or with a
-// very low average. Thresholds chosen so nothing is suggested until there are
-// enough votes (no false alarm from a few votes).
+/* Retirement suggestions: games the round's accumulated votes say are dragging
+   the shelf down. Nothing is proposed until there are enough votes, so a few
+   opinions never raise a banner.
+
+   ONE BRANCH SINCE #909. There used to be a second, `SORT_SHARE`: at least half
+   the votes on a game being explicit "aussortieren" proposals. That control is
+   gone from the vote card — and it had already stopped deciding anything, which
+   is the argument that retired it. With a trash vote worth -6 under #893's
+   curve, half a game's votes being trash caps its best possible score at
+   (−6 + 5) / 2 = −0,5, far below the 1,0 bar below; so the share branch could
+   never fire without the score branch firing first. The score branch is in fact
+   the MORE sensitive of the two — two vetoes among five voters with the rest at
+   5 lands on exactly 1,0 and proposes the game at a 40 % share.
+
+   What is knowingly given up with the tile: the 1 says „not tonight" and the
+   trash said „off the shelf", so this is now purely inferential — a game the
+   group is merely tired of reads like one they want gone. Accepted (#909); in
+   real use the 1 was already being read as the veto. */
 function retireRecommendations(activeGames, statsByGame, minVotes) {
-  const SORT_SHARE = 0.5; // at least half want it retired
   // "very low" on the SCORE scale. Was `LOW_AVG = 2.0` against the raw mean
   // (#797); the veto curve makes a 2,0 far easier to reach, so the threshold
   // came down with it (#893) rather than quietly widening what gets proposed.
@@ -796,10 +798,9 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
   // keeps a retune honest.
   //
   // The value 1.5 was tried first and is WRONG, for a reason worth recording:
-  // a game rated {0,4,5,3} — three of four people like it, one wants it gone —
-  // scores exactly 1.5, so the rating branch would archive-nag a game the
-  // SORT_SHARE branch had just correctly declined at 25%. One dissenter must
-  // not retire a game on their own; that is what SORT_SHARE is for.
+  // a game rated {1,4,5,3} — three of four people like it, one does not want to
+  // play it at all — scores exactly 1.5, and one dissenter must not retire a
+  // game on their own.
   //
   // The SECOND correction (#922) is not to the number but to its DIVISOR. The
   // 1.5-was-wrong analysis above was done entirely at n=4, where one dissenter
@@ -837,30 +838,23 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
   const recs = [];
   activeGames.forEach((g) => {
     const st = statsByGame[g.id];
-    if (!st || st.votesCast < minVotes) return;
-    const share = st.votesCast ? st.sortCount / st.votesCast : 0;
-    const reasons = [];
-    if (share >= SORT_SHARE)
-      reasons.push(t('rec.reasonSort', { n: st.sortCount, pct: Math.round(share * 100) }));
-    // The rating branch declines when the low score rests on a SINGLE voter
-    // (#922): exactly one vote below 2, and nobody at 2. Both low tiles count,
-    // not just the 1 — a lone trash vote is already SORT_SHARE's job, and it
-    // correctly declines it at 33%. Requiring nobody at 2 is what keeps the
-    // anchor intact: „eher nicht" from anyone else still leaves the game
+    // `count` is the evidence bar: since #909 a vote IS a rating, so the
+    // separate `votesCast` (votes carrying a rating and/or the retire flag)
+    // this used to gate on is the same number.
+    if (!st || st.count < minVotes) return;
+    // Decline when the low score rests on a SINGLE voter (#922): exactly one
+    // vote below 2, and nobody at 2. Requiring nobody at 2 is what keeps the
+    // anchor intact — „eher nicht" from anyone else still leaves the game
     // proposable, so this suppresses a dissenting minority of one and nothing
-    // wider.
-    //
-    // SORT_SHARE above is deliberately NOT gated: half the group asking for the
-    // shelf is a majority however the score reads.
-    const loneDissenter = st.tiles[0] + st.tiles[1] === 1 && st.tiles[2] === 0;
-    if (st.rawScore !== null && st.rawScore <= LOW_SCORE && !loneDissenter)
-      reasons.push(t('rec.reasonAvg', { avg: fmtAvg(displayScore(st.score)) }));
-    if (!reasons.length) return;
+    // wider. (It read `tiles[0] + tiles[1]` while the trash tile existed; tile 0
+    // is a permanent hole since #909, so only the 1 remains.)
+    const loneDissenter = st.tiles[1] === 1 && st.tiles[2] === 0;
+    if (st.rawScore === null || st.rawScore > LOW_SCORE || loneDissenter) return;
+    const reasons = [t('rec.reasonAvg', { avg: fmtAvg(displayScore(st.score)) })];
     // Ranked on the raw score for the same reason the branch gates on it: this
     // orders "how badly is this game received", not "where does it sit on the
     // shelf".
-    const severity = share + (st.rawScore !== null ? Math.max(0, 3 - st.rawScore) / 3 : 0);
-    recs.push({ game: g, reasons, severity });
+    recs.push({ game: g, reasons, severity: Math.max(0, 3 - st.rawScore) / 3 });
   });
   recs.sort((a, b) => b.severity - a.severity);
   return recs;
@@ -923,7 +917,7 @@ function applyBackground(bg) {
   }
 }
 
-// Color for an average 0–5: deep red (retire) → red → yellow → green (good).
+// Color for a value on the 0–5 ramp: deep red → red → yellow → green (good).
 // The lightness is 30%, not the more obvious 42%, for contrast (#145): the scale
 // is used BOTH as a fill under white text (.score-pill) and as text/stroke on the
 // page (.gd-ring__num, the ring). At 42% the yellow-green middle only reached
@@ -934,14 +928,15 @@ function applyBackground(bg) {
 // unchanged; don't lighten it back without re-checking both uses.
 function avgColor(avg) {
   const hue = Math.max(0, Math.min(120, ((avg - 1) / 4) * 120));
-  // Below 1 the hue formula is already clamped at 0, so the retirement end of
-  // the scale came out the SAME red as a 1 (#890). Invisible where one tile is
-  // lit at a time; not in the results chart, which paints all six rungs side by
-  // side. Deepen the lightness instead of bending the hue: continuous, and a
-  // provable no-op for avg >= 1, which is what bounds the ripple through every
-  // other avgColor/scoreColor consumer. Darker is also the safe direction for
-  // both uses — more contrast under white text, and more against every (light)
-  // theme page as text.
+  // Below 1 the hue formula is already clamped at 0, so everything down there
+  // would otherwise be the SAME red as a 1 (#890). The RATING scale no longer
+  // reaches it — it starts at 1 since #909 — but the SCORE scale does: a badly
+  // vetoed game floors at `SCORE_MIN` and `scoreColor` hands that straight in
+  // here, so a 0,4 and a 1,0 must not print as one colour. Deepen the lightness
+  // rather than bending the hue: continuous, and a provable no-op for values
+  // >= 1, which is what bounds the ripple through every other consumer. Darker
+  // is also the safe direction for both uses — more contrast under white text,
+  // and more against every (light) theme page as text.
   const light = 30 - 10 * Math.max(0, Math.min(1, 1 - avg));
   return `hsl(${hue}, 60%, ${light}%)`;
 }
@@ -954,10 +949,10 @@ function avgColor(avg) {
 // two floored games correctly share a place (#893).
 const displayScore = (score) => Math.max(SCORE_MIN, score);
 
-// The score's colour. `avgColor`'s ramp is defined over the 0–5 tile scale, so
-// the score's floor is the deep red a 0 already gets — one ramp, two domains.
-// Keep `avgColor` for anything on the tile scale itself (the selected vote
-// tile, the distribution chart) and this for anything on the score scale.
+// The score's colour. `avgColor`'s ramp runs over 0–5 and the score's floor is
+// its bottom — one ramp, two domains. Keep `avgColor` for anything on the 1–5
+// tile scale itself (the selected vote tile, the distribution chart) and this
+// for anything on the score scale, which reaches below 1.
 const scoreColor = (score) => avgColor(displayScore(score));
 
 // Why this score is what it is, in a few words — „1× gar nicht" (#893).
@@ -969,15 +964,11 @@ const scoreColor = (score) => avgColor(displayScore(score));
 // so a reason line there would be noise claiming a divergence that is not
 // happening.
 //
-// The two counts stay separate sentences rather than one "unhappy" total: the
-// trash tile is members-only (#458) and says something about the SHELF, while
-// the 1 is about tonight. Both, in the rare case a game collected each, reads
-// as the two distinct complaints it is.
+// It had a second sentence for the trash tile („1× aussortieren") until #909
+// removed that tile; the veto clause is the whole of it now, and stays — it
+// explains the score pill rather than recommending a retirement.
 function scoreReason(st) {
-  const parts = [];
-  if (st.retires) parts.push(tn(st.retires, 'score.reasonRetireOne', 'score.reasonRetire', { n: st.retires }));
-  if (st.vetoes) parts.push(tn(st.vetoes, 'score.reasonVetoOne', 'score.reasonVeto', { n: st.vetoes }));
-  return parts.join(' · ');
+  return st.vetoes ? tn(st.vetoes, 'score.reasonVetoOne', 'score.reasonVeto', { n: st.vetoes }) : '';
 }
 
 // The avatar palette itself lives in member-colors.js — one source of truth

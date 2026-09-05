@@ -817,10 +817,6 @@ async function showGameDetail(rid, gameId) {
          <div class="score-label">${esc(t('score.name'))} ${infoButton('score')}</div>`
       : `<div class="gd-ring gd-ring--none"><span class="gd-ring__num">–</span></div>
          <div class="score-label">${esc(t('detail.noRating'))}</div>`;
-  const sortLine = st.sortCount
-    ? `<div class="sort-flag" style="margin-top:8px"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('detail.totalSort', { n: st.sortCount }))}</div>`
-    : '';
-
   // The score ring is dropped for a sparse game — an empty ring next to an
   // empty everything-else is what made the page read as broken (#256) — and
   // for a wish (#699): the round does not own the game, so it cannot be rated
@@ -832,7 +828,7 @@ async function showGameDetail(rid, gameId) {
        <div class="gd-info">
          <h1></h1>
        </div>
-       ${sparse || game.wish ? '' : `<div class="gd-stats">${scoreRing}${sortLine}</div>`}
+       ${sparse || game.wish ? '' : `<div class="gd-stats">${scoreRing}</div>`}
      </div>`);
   wireInfoButtons(head);
 
@@ -1227,15 +1223,12 @@ async function showGameDetail(rid, gameId) {
         sst.avg !== null
           ? `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
           : '<span class="score-pill score-pill--none">–</span>';
-      const sortCell = sst.sortCount
-        ? `<span class="sort-flag"><i class="ti ti-trash" aria-hidden="true"></i> ${sst.sortCount}×</span>`
-        : '';
       const row = h(`<a class="ds-row${picked ? ' ds-row--picked' : ''}">
            <div class="ds-row__main">
              <div class="ds-row__date">${when}</div>
              <div class="ds-row__status">${status}</div>
            </div>
-           <div class="ds-row__meta">${sortCell}${scoreCell}</div>
+           <div class="ds-row__meta">${scoreCell}</div>
          </a>`);
       navLink(row, resultsPath(round.id, s.id), () => showResults(round, s));
       list.appendChild(row);

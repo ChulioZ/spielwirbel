@@ -1801,18 +1801,19 @@ module.exports = function repoContract(repo) {
     // A guest is a first-class vote-map and winnerIds key, so both survive the
     // ordinary mutators untouched.
     await repo.saveSessionResults(T, round.id, withGuests.id, {
-      m1: { [g.id]: { rating: 4, retire: false } },
-      gst1: { [g.id]: { rating: 2, retire: true } },
+      m1: { [g.id]: { rating: 4 } },
+      gst1: { [g.id]: { rating: 2, retire: true } },  // a pre-#909 shape
     });
     await repo.finishSession(T, round.id, withGuests.id, { finished: true, winnerIds: ['gst2', 'm1'] });
     const after = await repo.getSession(T, round.id, withGuests.id);
     assert.deepEqual(after.guests, guests);
     assert.deepEqual(after.winnerIds, ['gst2', 'm1']);
     assert.equal(after.votes.gst1[g.id].rating, 2);
-    // The store takes whatever it is handed, guest retire flag included: that
-    // guard lives in the ROUTE (`dropGuestRetireFlags`), and pinning it here is
-    // what proves it was not quietly baked into the data layer instead — where
-    // it would also rewrite history on any future re-save path.
+    // The store takes whatever it is handed, a stale `retire` key included:
+    // normalising it away is the ROUTE's job (`normalizeLegacyVotes`, #909 —
+    // `dropGuestRetireFlags` before it), and pinning that here is what proves it
+    // was not quietly baked into the data layer instead, where it would also
+    // rewrite history on any future re-save path.
     assert.equal(after.votes.gst1[g.id].retire, true);
   });
 
@@ -1901,7 +1902,7 @@ module.exports = function repoContract(repo) {
     // grouping must survive the mutators that rewrite the rest of the blob, or
     // finishing the session would quietly un-team everyone.
     await repo.saveSessionResults(T, round.id, withTeams.id, {
-      m1: { [g.id]: { rating: 4, retire: false } },
+      m1: { [g.id]: { rating: 4 } },
     });
     await repo.finishSession(T, round.id, withTeams.id, { finished: true, winnerIds: ['m1', 'gst1'] });
     const after = await repo.getSession(T, round.id, withTeams.id);
@@ -1927,7 +1928,7 @@ module.exports = function repoContract(repo) {
     const session = await repo.createSession(T, round.id, { ...base, deviceVoting: true });
     assert.equal((await repo.getSession(T, round.id, session.id)).deviceVoting, true);
 
-    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 5, retire: false } });
+    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 5 } });
     await repo.saveSessionPersonVotes(T, round.id, session.id, 'm2', { [g.id]: { rating: 2, retire: true } });
     const both = await repo.getSession(T, round.id, session.id);
     assert.equal(both.votes.m1[g.id].rating, 5);
@@ -1936,7 +1937,7 @@ module.exports = function repoContract(repo) {
     assert.equal(both.done, false);
 
     // Re-writing one column replaces that column only.
-    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 1, retire: false } });
+    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 1 } });
     const revised = await repo.getSession(T, round.id, session.id);
     assert.equal(revised.votes.m1[g.id].rating, 1);
     assert.equal(revised.votes.m2[g.id].rating, 2);
@@ -1954,7 +1955,7 @@ module.exports = function repoContract(repo) {
       finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null,
       done: false, deviceVoting: true,
     });
-    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 4, retire: false } });
+    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 4 } });
 
     const closed = await repo.closeSessionVoting(T, round.id, session.id);
     assert.equal(closed.done, true);
@@ -1982,7 +1983,7 @@ module.exports = function repoContract(repo) {
     });
     assert.deepEqual((await repo.getSession(T, round.id, session.id)).events.map((e) => e.type), ['started']);
 
-    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 4, retire: false } },
+    await repo.saveSessionPersonVotes(T, round.id, session.id, 'm1', { [g.id]: { rating: 4 } },
       { at: 't1', type: 'voted', actor: 'm1', personId: 'm1' });
     await repo.closeSessionVoting(T, round.id, session.id, { at: 't2', type: 'voting_closed', actor: 'm2' });
     await repo.setSessionChoice(T, round.id, session.id, g.id, { at: 't3', type: 'game_chosen', actor: 'm1', gameId: g.id });
@@ -4340,14 +4341,21 @@ module.exports = function repoContract(repo) {
       await repo.createSession(t1, r1.id, {
         gameIds: [g1.id], createdAt: daysAgo(1),
         votes: {
-          [ann.id]: { [g1.id]: { rating: 5, retire: false } },
-          /* The two shapes #797 turned into a rating of 0, and the reason this
-             fixture carries both: the JSON backend answers them through
-             `effectiveRating` while Postgres answers them in SQL that cannot
-             require it, so this is the only place the two spellings of the same
-             rule are compared. A retire-only vote used to be skipped outright,
-             and a legacy row carrying BOTH used to be counted at its stored
-             rating — which would put a count in tile 4 instead of tile 0. */
+          [ann.id]: { [g1.id]: { rating: 5 } },
+          /* The LEGACY shapes, and the reason this fixture still carries them
+             after #909 removed the retirement vote: the JSON backend reads
+             `vote.rating` in JS while Postgres reads it in SQL that cannot
+             require anything, so this is the only place the two spellings of
+             one rule are compared. The rewrite (the Knex migration and
+             scripts/migrate-retire-votes.js) does not reach an instance that
+             has not run it, and the outgoing container of a zero-downtime
+             deploy can write one after it has — so both backends have to agree
+             about a row nobody writes any more.
+
+             A retire-ONLY vote carries no rating and is therefore not a vote at
+             all. That is the loss the migration exists to prevent, and pinning
+             it here is what makes the cost of skipping the migration a stated
+             fact rather than an assumption. */
           [bo.id]: { [g1.id]: { rating: null, retire: true } },
         },
       });
@@ -4355,27 +4363,24 @@ module.exports = function repoContract(repo) {
         gameIds: [g2.id], createdAt: daysAgo(1),
         votes: {
           [cy.id]: { [g2.id]: { rating: 2 } },
-          // A second person in t2, carrying the legacy contradiction.
+          /* The legacy contradiction. #797 let the flag win (tile 0); #909
+             reverses that, so this is a 4 — which is visible here as a BUCKET
+             rather than as an arithmetic coincidence, and is exactly the
+             comparison a sum could satisfy by luck. */
           [dee.id]: { [g2.id]: { rating: 4, retire: true } },
-          /* And the shape that separates the two spellings of "is this a
-             retirement": `effectiveRating` requires `=== true`, so this counts
-             as nothing. Postgres agrees only because it compares as jsonb —
-             `->>'retire' = 'true'` would read the STRING "true" as a 0 and
-             quietly make this tenant's aggregate a vote heavier than the JSON
-             backend's. The legacy POST …/results route validates a member's
-             column with z.unknown(), so this really can be stored. */
-          'stray-1': { [g2.id]: { rating: null, retire: 'true' } },
+          /* A 0 is no longer a tile at all: it was the trash rung between #797
+             and #909 and is now off the scale, so both backends must skip it.
+             The JS side does it in `tileValue`, the SQL in `in (1,2,3,4,5)`. */
+          'stray-1': { [g2.id]: { rating: 0 } },
         },
       });
 
       const row = await rowFor(id);
-      assert.equal(row.ratings.count, 4, 'a retirement proposal is a rating of 0, not an absent one');
-      /* The HISTOGRAM, not a sum (#914): Ann's 5, Cy's 2, and BOTH zero-votes in
-         tile 0 — which is the whole point of the fixture, because a stored 4
-         losing to `retire: true` is visible here as a bucket rather than as an
-         arithmetic coincidence. Under the old sum, `[…,4:1]` and `[…,0:1]`
-         differing by exactly the wrong amount could still total 7 by luck. */
-      assert.deepEqual(row.ratings.tiles, [2, 0, 1, 0, 0, 1]);
+      assert.equal(row.ratings.count, 3, 'a vote with no rating is not a vote');
+      // Ann's 5, Cy's 2 and Dee's 4 — the flag beside Dee's is ignored, Bo's
+      // rating-less row and the stray 0 contribute nothing, and tile 0 is a
+      // permanent hole (#909).
+      assert.deepEqual(row.ratings.tiles, [0, 0, 1, 0, 1, 1]);
       assert.equal(row.ratings.tenants, 2);
       // `count` is not an independent number — it must be the total of the
       // buckets, or a floor could admit a row the score cannot be computed for.
@@ -4384,7 +4389,7 @@ module.exports = function repoContract(repo) {
          computed from these buckets in JS (lib/public-stats.js) precisely so the
          curve is not restated in SQL, so a drifted bucket is a wrong number on
          the logged-out landing page and nowhere else. */
-      assert.equal(scoreTally(row.ratings.tiles).score, -1.5);
+      assert.equal(scoreTally(row.ratings.tiles).score, (1 + 4 + 5) / 3);
     });
 
     await t.test('a vote naming a game in ANOTHER round is ignored, not credited', async () => {

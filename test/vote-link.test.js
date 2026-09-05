@@ -181,20 +181,16 @@ test('a link vote lands exactly like an in-app one', async () => {
 
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/close`).send({});
   const stored = sessionOf(await getRound(round.id), session.id);
-  // The two are mutually exclusive since #797 — the retirement proposal IS the
-  // zero of the scale, so a payload claiming both is normalised on the way in
-  // rather than left for every reader to resolve. The card cannot produce this
-  // shape; a hand-crafted request can.
-  assert.equal(stored.votes[alice.id][a.id].rating, null);
-  assert.equal(stored.votes[alice.id][a.id].retire, true);
-  assert.equal(stored.votes[alice.id][b.id].rating, 2);
-  assert.equal(stored.votes[alice.id][b.id].retire, false);
+  // A vote is `{ rating }` and nothing else since #909, so the hand-crafted
+  // `retire` is not stripped by a rule somewhere downstream — it simply has no
+  // way through the sanitizer, which builds the entry rather than filtering it.
+  assert.deepEqual(stored.votes[alice.id], { [a.id]: { rating: 5 }, [b.id]: { rating: 2 } });
 });
 
 // The shared sanitizer's rules must hold on this route too — a link voter's column
 // obeying different rules than an in-app one is exactly the drift that made
 // sanitizePersonVotes a shared function rather than a second copy.
-test('a link vote is sanitized: unknown games dropped, guest retire flags refused', async () => {
+test('a link vote is sanitized: unknown games dropped, stray keys refused', async () => {
   const { round, a, session, token } = await setup({ session: { guests: ['Dana'] } });
   const [alice] = round.members;
   const ballot = await request(app).get(`/api/vote/${token}`);
@@ -206,8 +202,8 @@ test('a link vote is sanitized: unknown games dropped, guest retire flags refuse
     .post(`/api/vote/${token}/votes/${alice.id}`)
     .send({ votes: { [a.id]: { rating: 4 }, [other.id]: { rating: 1 } } });
 
-  // A guest never gets the retire control in the UI; a hand-crafted request must
-  // not smuggle one in either (.claude/rules/session-guests-are-not-members.md §4).
+  // A guest writes exactly what a member writes since #909 — and a key nobody
+  // writes any more cannot be smuggled back in through a hand-crafted request.
   await request(app)
     .post(`/api/vote/${token}/votes/${dana.id}`)
     .send({ votes: { [a.id]: { rating: 3, retire: true } } });

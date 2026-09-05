@@ -91,6 +91,15 @@ way that reads as something else:
 
 Pre-selecting a rating is worth it — a blank scale looks unfinished.
 
+**The script asserts the TILE COUNT before capturing, and that guard has earned
+its keep twice.** It refuses to shoot unless the row holds exactly the scale the
+app is supposed to have — six while #797's trash tile existed, **five since #909
+removed it again**. Both times the assertion fired on the first run of an
+otherwise-finished change and stopped a marketing screenshot of a scale the app
+no longer has from being committed. Move the number deliberately, as part of a
+change to the scale; never to make a run go green. The pre-selected index moves
+with it (`moods[3]` is the 4 now that the row is not offset by a leading tile).
+
 Note the drawn game is **random each run**, so the title in the committed image
 changes when you regenerate, and the two locales generally show different games.
 That is cosmetic; nothing asserts it.

@@ -228,7 +228,7 @@ async function showTableBuilder(round, session, gamesHint) {
       tables.forEach((table, index) => {
         const game = gameById.get(table.gameId);
         const personIds = tablePeopleIds(table, partyById);
-        const fb = tableFeedback({ gameId: table.gameId, personIds }, session.votes || {}, effectiveRating, tileValue);
+        const fb = tableFeedback({ gameId: table.gameId, personIds }, session.votes || {}, tileValue);
         const size = table.partyIds.length;
         const tooSmall = size < MIN_TABLE_PARTIES;
         const stale = !!game && !isActiveGame(game);

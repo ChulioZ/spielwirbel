@@ -2,7 +2,6 @@
 paths:
   - "public/js/win-score.js"
   - "public/js/vote-score.js"
-  - "public/js/vote-scale.js"
   - "public/js/core.js"
   - "test/podium-ranks.test.js"
   - "test/win-score.test.js"

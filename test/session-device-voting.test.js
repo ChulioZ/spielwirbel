@@ -60,7 +60,7 @@ test('direct-pick opens no voting phase, so it takes no votes', async () => {
 
   const vote = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${res.body.session.id}/votes/${round.members[0].id}`)
-    .send({ votes: { [game.id]: { rating: 4, retire: false } } });
+    .send({ votes: { [game.id]: { rating: 4 } } });
   assert.equal(vote.status, 400);
   assert.equal(vote.body.error, 'voting_closed');
 });
@@ -73,12 +73,12 @@ test('two people write their own columns without clobbering each other', async (
 
   const first = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${alice.id}`)
-    .send({ votes: { [a.id]: { rating: 5, retire: false }, [b.id]: { rating: 2, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 5 }, [b.id]: { rating: 2 } } });
   assert.equal(first.status, 200);
 
   await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${bob.id}`)
-    .send({ votes: { [a.id]: { rating: 3, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 3 } } });
 
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/close`).send({});
 
@@ -106,7 +106,7 @@ test('four people submitting at the same moment all land', async () => {
     round.members.map((m, i) =>
       request(app)
         .post(`/api/rounds/${round.id}/sessions/${sid}/votes/${m.id}`)
-        .send({ votes: { [game.id]: { rating: i + 1, retire: false } } })
+        .send({ votes: { [game.id]: { rating: i + 1 } } })
     )
   );
 
@@ -122,7 +122,7 @@ test('the vote write does not echo the session back', async () => {
   const { round, a, session } = await setup();
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${round.members[0].id}`)
-    .send({ votes: { [a.id]: { rating: 4, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 4 } } });
   assert.equal(res.status, 200);
   assert.deepEqual(res.body, { ok: true });
 });
@@ -134,7 +134,7 @@ test('an open per-device session ships no vote values, only who has voted', asyn
   const [alice, bob] = round.members;
   await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${alice.id}`)
-    .send({ votes: { [a.id]: { rating: 5, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 5 } } });
 
   const open = sessionOf(await getRound(round.id), session.id);
   assert.deepEqual(open.votes, {}, 'vote values must not leave the server while voting is open');
@@ -147,7 +147,7 @@ test('closing voting reveals the collected votes', async () => {
   const alice = round.members[0];
   await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${alice.id}`)
-    .send({ votes: { [a.id]: { rating: 5, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 5 } } });
 
   const closed = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/close`)
@@ -170,7 +170,7 @@ test('an ordinary session is never redacted', async () => {
   const alice = round.members[0];
   await request(app)
     .post(`/api/rounds/${round.id}/sessions/${sid}/results`)
-    .send({ votes: { [alice.id]: { [game.id]: { rating: 4, retire: false } } } });
+    .send({ votes: { [alice.id]: { [game.id]: { rating: 4 } } } });
 
   const stored = sessionOf(await getRound(round.id), sid);
   assert.equal(stored.votes[alice.id][game.id].rating, 4);
@@ -187,7 +187,7 @@ test('every drawn session takes an incremental vote write and redacts while open
 
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${sid}/votes/${alice.id}`)
-    .send({ votes: { [game.id]: { rating: 4, retire: false } } });
+    .send({ votes: { [game.id]: { rating: 4 } } });
   assert.equal(res.status, 200);
 
   // Open: who voted, never what they voted. This is the assertion that carries
@@ -214,11 +214,11 @@ test('the legacy bulk write merges into columns already collected, never clobber
   const [alice, bob] = round.members;
   await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${alice.id}`)
-    .send({ votes: { [a.id]: { rating: 5, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 5 } } });
 
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/results`)
-    .send({ votes: { [bob.id]: { [a.id]: { rating: 1, retire: false } } } });
+    .send({ votes: { [bob.id]: { [a.id]: { rating: 1 } } } });
   assert.equal(res.status, 200);
 
   const stored = sessionOf(await getRound(round.id), session.id);
@@ -232,7 +232,7 @@ test('voting after the session is closed is refused', async () => {
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/close`).send({});
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${round.members[0].id}`)
-    .send({ votes: { [a.id]: { rating: 5, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 5 } } });
   assert.equal(res.status, 400);
   assert.equal(res.body.error, 'voting_closed');
 });
@@ -242,7 +242,7 @@ test('voting in a cancelled session is refused', async () => {
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/cancel`).send({});
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${round.members[0].id}`)
-    .send({ votes: { [a.id]: { rating: 5, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 5 } } });
   assert.equal(res.status, 400);
 });
 
@@ -251,7 +251,7 @@ test('a person who did not join this session cannot vote in it', async () => {
   const other = await createRound(request);
   const res = await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${other.members[0].id}`)
-    .send({ votes: { [a.id]: { rating: 5, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 5 } } });
   assert.equal(res.status, 404);
 });
 
@@ -263,28 +263,37 @@ test('votes for games outside the session are dropped', async () => {
   const alice = round.members[0];
   await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${alice.id}`)
-    .send({ votes: { [a.id]: { rating: 4, retire: false }, [stray.id]: { rating: 5, retire: false } } });
+    .send({ votes: { [a.id]: { rating: 4 }, [stray.id]: { rating: 5 } } });
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/close`).send({});
 
   const stored = sessionOf(await getRound(round.id), session.id);
   assert.deepEqual(Object.keys(stored.votes[alice.id]), [a.id]);
 });
 
-test('out-of-range ratings are dropped, a retire flag alone is kept', async () => {
+test('an out-of-range rating is dropped, and no retire key is ever stored', async () => {
   const { round, a, b, session } = await setup();
-  const alice = round.members[0];
+  const [alice, bob] = round.members;
   await request(app)
     .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${alice.id}`)
-    .send({ votes: { [a.id]: { rating: 99, retire: true }, [b.id]: { rating: 0, retire: false } } });
+    // 0 is off the scale since #909 — it used to be the trash tile — and the
+    // flag beside it is not a vote in its own right, so nothing survives.
+    .send({ votes: { [a.id]: { rating: 0, retire: true }, [b.id]: { rating: 4, retire: true } } });
+  await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${session.id}/votes/${bob.id}`)
+    .send({ votes: { [a.id]: { rating: 99 } } });
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/close`).send({});
 
   const stored = sessionOf(await getRound(round.id), session.id);
-  assert.deepEqual(stored.votes[alice.id], { [a.id]: { rating: null, retire: true } });
+  // Only the well-formed rating survives, and it is stored as `{ rating }`
+  // alone — the shape is what makes a `retire` key unwritable rather than
+  // merely unusual (#909).
+  assert.deepEqual(stored.votes[alice.id], { [b.id]: { rating: 4 } });
+  assert.deepEqual(stored.votes[bob.id], {});
 });
 
-// #458: a guest rates the game but does not get to vote it off the group's
-// shelf, so the flag is stripped rather than trusted from the wire.
-test("a guest's retire flag is dropped, matching the hot-seat path", async () => {
+// #909 removed the last per-role difference in the vote path: a guest writes
+// exactly what a member writes, so there is no flag left to strip.
+test('a guest writes the same shape a member does', async () => {
   const { round, a, session, guests } = await setup({ guests: ['Chris'] });
   assert.equal(guests.length, 1);
   await request(app)

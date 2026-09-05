@@ -36,8 +36,8 @@ context and a round object — real friction, in exchange for a test that appear
 to say the same thing.
 
 It does not say the same thing. The proxy sees only the two values the author
-thought of; the real function also reads `votesCast`, `sortCount`, the vote
-counts and `minVotes`, and a bug living in **any factor the proxy left out** is
+thought of; the real function also reads the vote counts, the per-tile histogram
+and `minVotes`, and a bug living in **any factor the proxy left out** is
 invisible to it. Group size was that factor, and it was invisible precisely
 because the proxy has no notion of a group at all — it takes a list of numbers.
 

@@ -535,6 +535,35 @@ is what the committed `dev-temp-data` preview config runs). The credentials are
 deliberately worthless — they only ever exist inside a gitignored throwaway
 dataset, so never point the script at a dataset anyone else can reach.
 
+### Migrating away from the retirement vote (JSON backend, one-off)
+
+Voting used to offer a sixth tile — a retirement proposal, stored as
+`{ retire: true }` beside the 1–5 rating. It was removed in **#909**, and stored
+votes are brought to the surviving shape once:
+
+| stored | becomes |
+|---|---|
+| `{ rating: null, retire: true }` | `{ rating: 1 }` |
+| `{ rating: N, retire: true }` | `{ rating: N }` — the flag just goes |
+
+**On PostgreSQL this happens by itself**, as a Knex migration applied on the next
+boot; there is nothing to run. **The JSON backend has no migration runner**, so a
+self-hosted instance runs the script once:
+
+```bash
+node scripts/migrate-retire-votes.js --dry-run    # report only, writes nothing
+node scripts/migrate-retire-votes.js              # migrates, backing the file up first
+DATA_DIR=/path/to/data node scripts/migrate-retire-votes.js
+```
+
+**Stop the server first** — a running instance holds the dataset in memory and
+would overwrite the migrated file on its next save. The script writes a
+timestamped `.bak` copy before touching anything, is safe to run twice (a second
+pass finds nothing and writes nothing), and is safe to skip: the app reads
+`rating` directly either way. Skipping it only means the *retire-only* votes —
+where the flag was the whole vote — read as "did not vote" and drop out of that
+game's averages.
+
 ### Measuring what an agent session costs
 
 The `.claude/skills/` workflows are read by an agent on every tool call, so their
