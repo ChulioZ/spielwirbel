@@ -2419,8 +2419,12 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   white-space: nowrap;
 }
 .score-pill--none {
-  /* 8%, not 10%: the oklab re-tune factor from :root. */
-  background: color-mix(in oklab, var(--page-bg), var(--shade) 8%);
+  /* --sunken, not a mix of its own. At 8% off the page this put --ink-soft at
+     4.15:1 on the default design — real text, just under AA, and invisible to
+     every check because the pill minted its own tone instead of reusing a
+     prepared one (theme-derived-colors.md). --sunken is the 4% step, which is
+     the pair test/a11y-contrast.test.js already measures. */
+  background: var(--sunken);
   color: var(--ink-soft);
   box-shadow: none;
 }
@@ -4551,7 +4555,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   background: transparent;
   border-radius: var(--radius-sm);
   padding: 8px 12px;
+  /* `font: inherit` without `color: inherit` is a latent bug (#904): a <button>
+     takes the UA's `buttontext`, which is ~black — indistinguishable from --ink
+     on a light design and unreadable on a dark one. */
   font: inherit;
+  color: inherit;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -5033,7 +5041,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
      EXISTING component whose own rule declares a size/weight the shorthand
      would then tie with and beat on source order. Nothing else targets
      .cover-pick. */
+  /* `font: inherit` without `color: inherit` is a latent bug (#904): a <button>
+     takes the UA's `buttontext`, which is ~black — indistinguishable from --ink
+     on a light design and unreadable on a dark one. */
   font: inherit;
+  color: inherit;
   text-align: inherit;
   cursor: pointer;
 }
@@ -5282,7 +5294,11 @@ kbd {
   border: 0;
   padding: 0;
   cursor: pointer;
+  /* `font: inherit` without `color: inherit` is a latent bug (#904): a <button>
+     takes the UA's `buttontext`, which is ~black — indistinguishable from --ink
+     on a light design and unreadable on a dark one. */
   font: inherit;
+  color: inherit;
 }
 
 /* "View on X" and "Remove link" side by side (issue #282). The unlink action is
@@ -5396,7 +5412,11 @@ kbd {
   background: transparent;
   border-radius: var(--radius-sm);
   padding: 7px 8px;
+  /* `font: inherit` without `color: inherit` is a latent bug (#904): a <button>
+     takes the UA's `buttontext`, which is ~black — indistinguishable from --ink
+     on a light design and unreadable on a dark one. */
   font: inherit;
+  color: inherit;
   font-weight: 600;
   cursor: pointer;
 }
@@ -6679,7 +6699,11 @@ kbd {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--placeholder);
+  /* --ink-soft, not --placeholder: this is real TEXT, and --placeholder is a
+     fallback GLYPH tone (18.5% off the page) that measured 1.07:1 here on a
+     light design — the label was all but invisible. Found by the #904 contrast
+     sweep, where the dark scheme happened to make it BETTER (1.58:1). */
+  color: var(--ink-soft);
 }
 .result-people__list { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .result-people__person { display: inline-flex; align-items: center; gap: 7px; }

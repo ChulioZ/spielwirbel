@@ -465,6 +465,54 @@ test('no bare white is painted outside the rules that justify one', () => {
     'a bare white must be tokenised (--surface / --on-accent) or added to WHITE_EXEMPT with a reason');
 });
 
+/* `--placeholder` is a fallback GLYPH tone — 18.5% off the page, for the icon in
+   an empty cover box — and it is far too faint to read: on a light design it
+   measures 1.07:1 against the card. `.result-people__label` had been drawing the
+   results screen's „TEILGENOMMEN" line in it, i.e. all but invisible, and the
+   dark scheme is what surfaced it (there it is 1.58:1, which is *better*).
+
+   The exemptions are the boxes the token is actually for. Each must still be a
+   glyph container, never a run of text. */
+const PLACEHOLDER_GLYPHS = new Set([
+  '.session-card__img', '.game-card__img', '.feed-item__img',
+  '.lookup__thumb--none .ti', '.pool-tile__img',
+]);
+
+test('--placeholder paints glyph boxes, never text', () => {
+  const offenders = rulesOf(CSS)
+    .filter(([, body]) => /(^|[;{\s])color:\s*var\(--placeholder\)/.test(body))
+    .map(([sel]) => sel.replace(/\s+/g, ' ').trim())
+    .filter((sel) => !PLACEHOLDER_GLYPHS.has(sel));
+  assert.deepEqual(offenders, [],
+    '--placeholder is ~1.1:1 against the card — text needs --ink-soft');
+});
+
+test('no --placeholder exemption is stale', () => {
+  const using = new Set(rulesOf(CSS)
+    .filter(([, body]) => /(^|[;{\s])color:\s*var\(--placeholder\)/.test(body))
+    .map(([sel]) => sel.replace(/\s+/g, ' ').trim()));
+  const stale = [...PLACEHOLDER_GLYPHS].filter((sel) => !using.has(sel));
+  assert.deepEqual(stale, [], `exempted but no longer paints in --placeholder: ${stale.join(', ')}`);
+});
+
+/* A <button> does NOT inherit `color` — the UA gives it `buttontext`, which is
+   ~black. On a light design that is indistinguishable from --ink, so four rules
+   had shipped with `font: inherit` and no `color` and looked perfect; on a dark
+   one the account menu's five rows rendered black on a dark surface at 1.40:1.
+
+   `font: inherit` is the tell, because it is only ever written on a form control
+   — the one place inheritance has to be asked for. It is not a complete guard
+   (a control styled without `font: inherit` is invisible to it), and it cannot
+   be: what actually finds these is a contrast sweep over the RENDERED page in a
+   dark round, which no jsdom spec can run. It pins the exact shape that bit. */
+test('a control that inherits its font inherits its colour too', () => {
+  const offenders = rulesOf(CSS)
+    .filter(([, body]) => /font:\s*inherit/.test(body) && !/(^|[;{\s])color\s*:/.test(body))
+    .map(([sel]) => sel.replace(/\s+/g, ' ').trim());
+  assert.deepEqual(offenders, [],
+    'these take the UA\'s buttontext (~black), which is unreadable on a dark design');
+});
+
 /* The anti-vacuous half, the shape test/design-tokens.test.js uses for its glyph
    list: an exemption nobody re-checks rots into a selector that no longer exists,
    and every stale entry silently widens the assertion above. */

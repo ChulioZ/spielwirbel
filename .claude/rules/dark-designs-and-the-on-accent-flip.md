@@ -12,7 +12,7 @@ paths:
 
 A round's design may be dark since #904: `scheme: 'dark'` in `round-designs.js`,
 `<html data-scheme="dark">` from `applyBackground()`, and one token block in
-`styles.css`. The colour work is mechanical. The three things that are not
+`styles.css`. The colour work is mechanical. The four things that are not
 obvious cost real effort, and each is silent.
 
 ## 1. The accent must be LIGHT, so white-on-accent stops working
@@ -74,6 +74,35 @@ Two moves, both worth reusing:
   then the value; assign `#ffffff`, then the value. If it parsed, both land on
   it and agree; if not, each sentinel survives and they differ. Exact where a
   `/^#|^rgb/` regex is a guess, and it hands back a normalized `#rrggbb`.
+
+## 4. The dark page EXPOSES latent light-page bugs — sweep the rendered app
+
+Three defects turned up that a static read of the sheet cannot see, and two of
+them were failing on light designs the whole time:
+
+- **A `<button>` does not inherit `color`.** The UA gives it `buttontext`, which
+  is ~black — indistinguishable from `--ink` on a light page. Four rules had
+  `font: inherit` with no `color`, and the account menu rendered black on a dark
+  surface at 1.40:1. `font: inherit` is the tell, and `test/a11y-contrast.test.js`
+  now pins it.
+- **`--placeholder` was painting real text.** It is a fallback GLYPH tone, 18.5%
+  off the page; `.result-people__label` measured **1.07:1 on a light design** and
+  1.58 on dark, i.e. the dark scheme made it *better*.
+- **A minted mix instead of a prepared one.** `.score-pill--none` spelled its own
+  8% tone and put `--ink-soft` at 4.15:1 on the default design; `--sunken` (4%)
+  is the pair the harness already measures.
+
+The instrument for all three is a **contrast sweep over the rendered page** in a
+dark round: walk every element with text or an icon, resolve its computed colour
+and its effective background **through a canvas** (a computed `color-mix` comes
+back as `oklab(…)`, and a regex over that string silently reads the L/a/b numbers
+as RGB — it reported a passing avatar at 1.18:1), and compare against 4.5 / 3.
+Nothing in jsdom can run it, so it stays a browser step rather than a spec.
+
+Two hits are decorative and deliberately left: the gold seal's white lock glyph
+(2.45:1) and the empty-cover placeholder glyph (1.48 dark / 1.05 light). Both are
+`aria-hidden` and both measure the same or better on dark, so neither is this
+change's to make.
 
 ## What the harness had to become
 
