@@ -91,6 +91,24 @@ test('migrateFile backs the dataset up before rewriting it', () => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('--dry-run reports what it would do and writes nothing', () => {
+  // The flag is documented in docs/configuration.md as the safe first step
+  // against a live dataset, so "reports the right count" and "touches nothing"
+  // are both part of the promise.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sw-mig-'));
+  const file = path.join(dir, 'data.json');
+  const before = { rounds: [round([{ id: 's1', votes: { bo: { g1: { rating: null, retire: true } } } }])] };
+  fs.writeFileSync(file, JSON.stringify(before, null, 2));
+
+  const { stats, backup } = migrateFile(file, { dryRun: true });
+
+  assert.equal(stats.flagsDropped, 1, 'it still reports what it found');
+  assert.equal(backup, null);
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, 'utf8')), before, 'the dataset is untouched');
+  assert.deepEqual(fs.readdirSync(dir), ['data.json'], 'and no backup was left behind');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('migrateFile leaves the file completely alone when there is nothing to do', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sw-mig-'));
   const file = path.join(dir, 'data.json');
