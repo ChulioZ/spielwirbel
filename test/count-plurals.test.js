@@ -104,14 +104,6 @@ const PAIRS = [
     de: ['Freitagsrunde (1 Spiel)', 'Freitagsrunde (2 Spiele)'],
     en: ['Freitagsrunde (1 game)', 'Freitagsrunde (2 games)'],
   },
-  {
-    // Carries the raw Ø since #893 — the detail screen is the one place showing
-    // both numbers, the Spielwirbel-Score in the ring and the honest mean here.
-    what: 'detail.ratingsLine — the game detail header (#838, #893)',
-    one: 'detail.ratingsLineOne', other: 'detail.ratingsLine', params: { s: 3, avg: '3,4' },
-    de: ['Ø 3,4 aus 1 Bewertung · 3 Sessions', 'Ø 3,4 aus 2 Bewertungen · 3 Sessions'],
-    en: ['Ø 3,4 from 1 rating · 3 sessions', 'Ø 3,4 from 2 ratings · 3 sessions'],
-  },
 ];
 
 /* The other three #838 sites select on a count they never PRINT — the winner

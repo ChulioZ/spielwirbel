@@ -473,8 +473,6 @@ I18N.de = {
   'sessions.deleteConfirm': 'Session vom {when} wirklich löschen?',
   'sessions.deleted': 'Session gelöscht',
 
-  'detail.ratingsLine': 'Ø {avg} aus {n} Bewertungen · {s} Sessions',
-  'detail.ratingsLineOne': 'Ø {avg} aus {n} Bewertung · {s} Sessions',
   'detail.noRating': 'Noch keine Bewertung',
   'detail.totalSort': 'Insgesamt {n}× Aussortieren vorgeschlagen',
   'detail.retire': 'Aussortieren',
@@ -816,7 +814,6 @@ I18N.de = {
   // Der Balken ganz links: die Null der Skala (#797).
   'result.barTitleRetire': '{c}× „Aussortieren“',
   'result.sortFlag': '{n}× Aussortieren vorgeschlagen',
-  'score.infoRaw': 'Unten auf der Spielseite steht weiterhin der reine Durchschnitt aller Bewertungen.',
   'score.infoBody': 'Der Score ist mehr als der Durchschnitt. Wenn jemand ein Spiel gar nicht spielen möchte, zählt das schwerer als eine gute Bewertung von jemand anderem — damit am Ende gespielt wird, worauf alle Lust haben.',
   'score.infoThin': 'Ein Spiel mit erst wenigen Bewertungen wird vorsichtiger eingeschätzt — es braucht ein paar Sessions, bis sich sein Score voll durchsetzt.',
   'score.infoPlays': 'Ein Spiel, das ihr immer wieder auf den Tisch legt, wird deutlich besser eingeschätzt — auch ohne Bewertungen.',

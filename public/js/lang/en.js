@@ -472,8 +472,6 @@ I18N.en = {
   'sessions.deleteConfirm': 'Really delete the session from {when}?',
   'sessions.deleted': 'Session deleted',
 
-  'detail.ratingsLine': 'Ø {avg} from {n} ratings · {s} sessions',
-  'detail.ratingsLineOne': 'Ø {avg} from {n} rating · {s} sessions',
   'detail.noRating': 'No rating yet',
   'detail.totalSort': 'Suggested for retirement {n}× in total',
   'detail.retire': 'Retire',
@@ -826,7 +824,6 @@ I18N.en = {
   // The leftmost bar: the zero of the scale (#797).
   'result.barTitleRetire': '{c}× “retire”',
   'result.sortFlag': '{n}× suggested for retirement',
-  'score.infoRaw': 'The plain average of all ratings is still shown at the bottom of the game page.',
   'score.infoBody': 'The score is more than the average. If someone does not want to play a game at all, that counts for more than a good rating from someone else — so that what you end up playing is something everybody is up for.',
   'score.infoThin': 'A game with only a few ratings so far is judged more cautiously — it takes a few sessions before its score carries full weight.',
   'score.infoPlays': 'A game you keep putting on the table is judged much more favourably — even without any ratings.',

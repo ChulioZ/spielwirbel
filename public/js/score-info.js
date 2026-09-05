@@ -18,18 +18,26 @@
    jobs — keep both:
 
    - `scoreReason()` (core.js) is the PRIMARY one: „2,2 · 1× gar nicht", printed
-     beside the number itself. It explains THIS game at the moment the group is
-     deciding, which is the only moment the explanation is worth anything.
+     beside the number on the RESULTS screen. It explains THIS game at the
+     moment the group is deciding, which is the only moment the explanation is
+     worth anything — which is also why #919 dropped it from the game detail
+     header, where nobody is deciding anything.
    - this sheet explains the PRINCIPLE, once, for whoever goes looking.
+
+   The sheet said one thing more until #919: that the plain average was still
+   printed at the bottom of the game page. That page now shows the score alone,
+   so the sentence went with the line it described — a promise a sheet makes
+   about another screen is only ever one edit away from being false.
 
    It states no formula and prints none of the six tile values. Those are
    explicitly tunable, so a sheet quoting them would be wrong the first time
    anybody retunes the curve — and a group does not need the arithmetic to
    understand „wer gar nicht will, zählt schwerer".
 
-   Placed ONCE PER SCREEN beside the primary occurrence (the game detail line,
-   the top result row's label, the Regal sort control), never on every pill: a
-   dozen ⓘ buttons down a shelf is noise, and they would all say the same thing.
+   Placed ONCE PER SCREEN beside the primary occurrence (the game detail's score
+   label, the top result row's label, the Regal sort control), never on every
+   pill: a dozen ⓘ buttons down a shelf is noise, and they would all say the
+   same thing.
 
    On the results screen that occurrence was the page HEAD until #902, hanging
    off „4 Spiele · 3. September" where it read as an annotation on the date and
@@ -52,7 +60,7 @@ const INFO_SHEETS = {
     open: 'score.infoOpen',
     // Principle, never formula — see the header. The two #894 sentences state
     // the ramp and the play lift in the same register: what happens, not how.
-    body: ['score.infoBody', 'score.infoThin', 'score.infoPlays', 'score.infoRaw'],
+    body: ['score.infoBody', 'score.infoThin', 'score.infoPlays'],
   },
   win: { title: 'win.infoTitle', open: 'win.infoOpen', body: ['win.infoBody'] },
 };

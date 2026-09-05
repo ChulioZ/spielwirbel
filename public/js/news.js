@@ -79,9 +79,7 @@ const NEWS = [
         + 'wird, worauf alle Lust haben. Weicht der Score vom Durchschnitt '
         + 'ab, steht daneben, warum. Ein Spiel mit erst wenigen Bewertungen '
         + 'wird dabei vorsichtiger eingeschätzt, und ein Spiel, das ihr immer '
-        + 'wieder auf den Tisch legt, etwas besser. Den reinen Durchschnitt '
-        + 'aller Bewertungen findet ihr weiterhin unten auf der Seite des '
-        + 'Spiels.',
+        + 'wieder auf den Tisch legt, etwas besser.',
     },
     en: {
       title: 'The Spielwirbel score replaces the Ø',
@@ -91,8 +89,7 @@ const NEWS = [
         + 'something everybody is up for. Where the score differs from the '
         + 'average, it says why right beside it. A game with only a few '
         + 'ratings so far is judged more cautiously, and a game you keep '
-        + 'putting on the table a little more favourably. The plain average of '
-        + 'all ratings is still shown at the bottom of the game\'s page.',
+        + 'putting on the table a little more favourably.',
     },
   },
   /*
