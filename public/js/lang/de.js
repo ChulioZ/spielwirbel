@@ -894,7 +894,6 @@ I18N.de = {
 
   'design.crumb': 'Design',
   'design.title': 'Design',
-  'design.scheme': 'Farbschema',
   'design.note': 'Wähle ein Design für diese Runde. Hintergrund, Akzentfarbe und alle übrigen Töne passen sich gemeinsam an.',
   'design.toast.set': 'Design gesetzt',
   'theme.standard': 'Standard',
@@ -905,6 +904,11 @@ I18N.de = {
   'theme.sand': 'Sand',
   'theme.schiefer': 'Schiefer',
   'theme.pfirsich': 'Pfirsich',
+  'theme.forest': 'Wald',
+  'theme.scifi': 'Sci-Fi',
+  'design.group.colors': 'Farben',
+  'design.group.worlds': 'Welten',
+  'design.worlds.note': 'Eine Welt bringt zu den Farben eine eigene Schrift, Verzierungen und einen Hintergrund mit.',
 
 
   'tags.crumb': 'Tags',

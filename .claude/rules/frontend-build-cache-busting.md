@@ -19,7 +19,7 @@ build-free. Non-obvious things that will bite if you forget them:
   `frontend-script-load-order.md`). So `build.js` minifies each file with
   `minifyWhitespace`/`minifySyntax` but **`minifyIdentifiers: false`**, via
   `esbuild.transformSync` (per file), never `esbuild.build`/bundling. Renaming a
-  top-level name (`showHome`, `THEMES`, …) or merging files would break the
+  top-level name (`showHome`, `PALETTES`, …) or merging files would break the
   cross-file references and the load order. `test/build.test.js` spot-checks that
   known globals survive minification. (esbuild won't DCE apparently-unused
   top-level names in a *script* either — they're global — but keep identifiers

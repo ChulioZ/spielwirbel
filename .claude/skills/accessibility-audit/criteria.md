@@ -17,14 +17,14 @@ see A-R05. AA is held here as the product bar regardless.
 - **Status:** adopted · 2026-07-23
 - **Source:** WCAG 2.2 SC 1.4.3 · `accessibility-contrast-and-modals.md` §1
 - **Check:** Any colour used as text clears 4.5:1 against `--surface` *and* against
-  the darkest `THEMES` page (Schiefer `#e9eef3`). Bare `.link-btn`s paint straight
+  the darkest design page (Schiefer `#e9eef3`; a world page sits no darker, #903). Bare `.link-btn`s paint straight
   onto `--page-bg`, so "passes on white" is not the test.
 - **Enforced by:** `test/a11y-contrast.test.js` (semantic colours, member colours, ratings)
 
 ### A-002 — A theme accent clears 4.5:1 as text on its own page
 - **Status:** adopted · 2026-07-23
 - **Source:** `accessibility-contrast-and-modals.md` §1
-- **Check:** `THEMES[].accent` becomes `--brand` and paints every `.link-btn`, so a new
+- **Check:** every design's `accent` (`public/js/round-designs.js`) becomes `--brand` and paints every `.link-btn`, so a new
   or edited theme must clear AA on its own `page` value. Resolved at render time via
   `resolveAccent(bg)` — a corrected theme needs no migration.
 - **Enforced by:** `test/a11y-contrast.test.js`

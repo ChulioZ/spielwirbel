@@ -1,26 +1,6 @@
-/* Spielwirbel – views: a round's game detail screen, the design/background
-   picker (THEMES) and the shared sheet open/close helpers. Loaded after
-   views-round.js; shares one global script scope. */
-
-// Coordinated designs: light background + matching accent color. The first is
-// the default (warm cream + orange). Labels are translation keys. Accents are
-// kept soft and slightly muted so they sit well next to the member colors,
-// the gold family and the neutral surfaces.
-const THEMES = [
-  { labelKey: 'theme.standard', page: '#f4f1ea', accent: '#c2410c', std: true },
-  { labelKey: 'theme.blaugrau', page: '#eef2f7', accent: '#3a67b1' },
-  { labelKey: 'theme.salbei', page: '#eaf1ea', accent: '#397a4b' },
-  { labelKey: 'theme.rose', page: '#f6ecf1', accent: '#b23a72' },
-  { labelKey: 'theme.lavendel', page: '#efedf8', accent: '#6d55c4' },
-  // Sand and Pfirsich were darkened for contrast (#145): the accent is not just
-  // a fill, it is also link/breadcrumb TEXT on the page (`--brand`), and at
-  // #a2701d / #c95633 those two sat at 3.8:1 — so picking either theme put every
-  // link in the app below AA. Both now clear 4.5:1 on their own page and on
-  // white. Any new theme has to clear both; test/a11y-contrast.test.js checks it.
-  { labelKey: 'theme.sand', page: '#f6efe2', accent: '#91641a' },
-  { labelKey: 'theme.schiefer', page: '#e9eef3', accent: '#33688f' },
-  { labelKey: 'theme.pfirsich', page: '#f8ede6', accent: '#b34d2e' },
-];
+/* Spielwirbel – views: a round's game detail screen, the design picker (its
+   data lives in round-designs.js) and the shared sheet open/close helpers.
+   Loaded after views-round.js; shares one global script scope. */
 
 async function showBackground(rid) {
   currentView = () => showBackground(rid);
@@ -38,46 +18,59 @@ async function showBackground(rid) {
   app.appendChild(backRow(() => showRound(rid)));
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('design.title'))}</h1></div>`));
 
-  const sec = h(`<div class="section"><h2>${esc(t('design.scheme'))}</h2></div>`);
-  sec.appendChild(
-    h(`<div class="muted" style="margin-bottom:14px">${esc(t('design.note'))}</div>`)
-  );
-
+  // Which card is active. A design that matches nothing — a legacy plain colour
+  // or a hand-edited hex — de-selects Standard without selecting anything else,
+  // exactly as the hex-only lookup did before ids existed (#903).
   const bg = round.background;
-  const currentPage = bg && bg.type === 'theme' ? (bg.page || '').toLowerCase() : null;
+  const current = resolveDesign(bg);
+  const stored = Boolean(bg && bg.type === 'theme' && bg.page);
+  const cards = []; // every card across BOTH groups, for the active-state sweep
 
-  // Theme cards: each is a tiny live preview of the palette — page background,
-  // an accent "button", a text line and the accent dot.
-  const swatches = h('<div class="theme-cards"></div>');
-  THEMES.forEach((th) => {
-    const active = th.std ? !currentPage : currentPage === th.page.toLowerCase();
-    const sw = h(`<button class="theme-card${active ? ' is-active' : ''}" aria-pressed="${active}" style="background:${th.page}" title="${esc(t(th.labelKey))}">
+  // Two groups: the colour palettes, then the worlds. Each card is a tiny live
+  // preview — page background, an accent "button", a text line and the accent
+  // dot. A world card also carries data-world plus its OWN --brand, so the
+  // ornament rules paint its backdrop, frame and display face in its accent
+  // rather than in the round's (see "Worlds" in styles.css).
+  [
+    { titleKey: 'design.group.colors', noteKey: 'design.note', designs: PALETTES },
+    { titleKey: 'design.group.worlds', noteKey: 'design.worlds.note', designs: WORLDS },
+  ].forEach((group) => {
+    const sec = h(`<div class="section"><h2>${esc(t(group.titleKey))}</h2></div>`);
+    sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t(group.noteKey))}</div>`));
+    const grid = h('<div class="theme-cards"></div>');
+    group.designs.forEach((th) => {
+      const active = th.std ? !stored : Boolean(current && current.id === th.id);
+      const worldAttr = th.world ? ` data-world="${esc(th.world)}"` : '';
+      const style = `background:${th.page}${th.world ? `;--brand:${th.accent}` : ''}`;
+      const sw = h(`<button class="theme-card${th.world ? ' theme-card--world' : ''}${active ? ' is-active' : ''}"${worldAttr} aria-pressed="${active}" style="${style}" title="${esc(t(th.labelKey))}">
          <span class="theme-card__bar" style="background:${th.accent}"></span>
          <span class="theme-card__line"></span>
          <span class="theme-card__line theme-card__line--short"></span>
          <span class="theme-card__name" style="color:${th.accent}">${esc(t(th.labelKey))}</span>
          <span class="theme-card__check" style="background:${th.accent}"><i class="ti ti-check" aria-hidden="true"></i></span>
        </button>`);
-    sw.addEventListener('click', async () => {
-      const payload = th.std
-        ? { type: 'none' }
-        : { type: 'theme', page: th.page, accent: th.accent };
-      try {
-        const saved = await api('POST', `/api/rounds/${rid}/background`, payload);
-        applyBackground(saved.background);
-        swatches.querySelectorAll('.theme-card').forEach((el) => {
-          el.classList.remove('is-active');
-          el.setAttribute('aria-pressed', 'false');
-        });
-        sw.classList.add('is-active');
-        sw.setAttribute('aria-pressed', 'true');
-        toast(t('design.toast.set'));
-      } catch (e) { toast(e.message); }
+      sw.addEventListener('click', async () => {
+        const payload = th.std
+          ? { type: 'none' }
+          : { type: 'theme', id: th.id, page: th.page, accent: th.accent };
+        try {
+          const saved = await api('POST', `/api/rounds/${rid}/background`, payload);
+          applyBackground(saved.background);
+          cards.forEach((el) => {
+            el.classList.remove('is-active');
+            el.setAttribute('aria-pressed', 'false');
+          });
+          sw.classList.add('is-active');
+          sw.setAttribute('aria-pressed', 'true');
+          toast(t('design.toast.set'));
+        } catch (e) { toast(e.message); }
+      });
+      cards.push(sw);
+      grid.appendChild(sw);
     });
-    swatches.appendChild(sw);
+    sec.appendChild(grid);
+    app.appendChild(sec);
   });
-  sec.appendChild(swatches);
-  app.appendChild(sec);
 }
 
 // =================== Tags (custom round tags, #238) ===================

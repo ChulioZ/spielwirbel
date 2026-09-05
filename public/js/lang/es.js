@@ -861,7 +861,6 @@ I18N.es = {
 
   'design.crumb': 'Diseño',
   'design.title': 'Diseño',
-  'design.scheme': 'Combinación de colores',
   'design.note': 'Elige un diseño para este grupo. El fondo, el color de acento y el resto de tonos se adaptan a la vez.',
   'design.toast.set': 'Diseño aplicado',
   'theme.standard': 'Estándar',
@@ -872,6 +871,11 @@ I18N.es = {
   'theme.sand': 'Arena',
   'theme.schiefer': 'Pizarra',
   'theme.pfirsich': 'Melocotón',
+  'theme.forest': 'Bosque',
+  'theme.scifi': 'Ciencia ficción',
+  'design.group.colors': 'Colores',
+  'design.group.worlds': 'Mundos',
+  'design.worlds.note': 'Un mundo añade a los colores su propia tipografía, adornos y un fondo.',
 
 
   'tags.crumb': 'Etiquetas',

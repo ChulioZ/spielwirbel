@@ -92,20 +92,13 @@ const rootHex = (name) => {
   return m[1];
 };
 
-// Every theme a round can pick, read out of views-round-detail.js so a new theme
-// is measured automatically instead of silently escaping these checks.
-function themes() {
-  const block = /const THEMES = \[([\s\S]*?)\];/.exec(
-    fs.readFileSync(path.join(ROOT, 'public/js/views-round-detail.js'), 'utf8')
-  );
-  assert.ok(block, 'THEMES should be a literal array');
-  const found = [...block[1].matchAll(/page:\s*'(#[0-9a-f]{6})',\s*accent:\s*'(#[0-9a-f]{6})'/gi)]
-    .map((m) => ({ page: m[1], accent: m[2] }));
-  assert.ok(found.length >= 8, 'expected every theme to declare a page and an accent');
-  return found;
-}
-const THEMES = themes();
-const PAGES = THEMES.map((th) => th.page);
+// Every design a round can pick — the palettes AND the worlds — required off
+// the registry, so a new design is measured automatically instead of silently
+// escaping these checks. (#903 replaced a regex over views-round-detail.js; the
+// registry is a dependency-free module precisely so this file can require it.)
+const { DESIGNS } = require('../public/js/round-designs');
+assert.ok(DESIGNS.length >= 10, 'expected the eight palettes plus the two worlds');
+const PAGES = DESIGNS.map((th) => th.page);
 // The darkest page is the worst case for coloured text drawn straight on it.
 const DARKEST = PAGES.map(hex).sort((a, b) => luminance(a) - luminance(b))[0];
 
@@ -213,7 +206,7 @@ test('every theme accent clears AA as text on its own page and on white', () => 
   // card prints each theme's name in its own accent. Sand and Pfirsich shipped
   // at 3.8:1, so choosing either put every link in the app below AA (#145).
   const failures = [];
-  for (const { page, accent } of THEMES) {
+  for (const { page, accent } of DESIGNS) {
     const onPage = contrast(hex(accent), hex(page));
     const onWhite = contrast(hex(accent), WHITE);
     if (onPage < AA_TEXT) failures.push(`${accent} on its page ${page} = ${onPage.toFixed(2)}:1`);
@@ -283,7 +276,7 @@ test('the lobby hero band keeps its heading AND its muted sub-line at AA', () =>
   const alpha = Number(glow[1]) / 100 + extra;
 
   const failures = [];
-  for (const { page, accent } of THEMES) {
+  for (const { page, accent } of DESIGNS) {
     const bg = composite(accent, page, alpha);
     for (const name of ['--ink', '--ink-soft']) {
       const ratio = contrast(hex(rootHex(name)), bg);
@@ -327,7 +320,7 @@ test('the Wunschliste state chip clears AA on every theme', () => {
 
   const surface = rootHex('--surface');
   const failures = [];
-  for (const { accent } of THEMES) {
+  for (const { accent } of DESIGNS) {
     const label = mixOklab(accent, '#000000', 1 - Number(darkMix[1]) / 100);
     const bg = mixOklab(accent, surface, Number(tint[1]) / 100);
     const ratio = contrast(label, bg);
@@ -382,7 +375,7 @@ test('the Chronik milestone row keeps its label, its meta line AND its icon at A
   const darken = 1 - Number(darkMix[1]) / 100;
 
   const failures = [];
-  for (const { accent } of THEMES) {
+  for (const { accent } of DESIGNS) {
     const rowBgPx = mixOklab(accent, surface, wash);
     // The label goes to --ink, the timestamp and the actor line stay --ink-soft.
     for (const name of ['--ink', '--ink-soft']) {
@@ -434,7 +427,7 @@ test('the finale stage keeps its sub-line and its note legible on every theme', 
 
   const FAINT_FLOOR = 3.5;
   const failures = [];
-  for (const { accent } of THEMES) {
+  for (const { accent } of DESIGNS) {
     const bg = mixOklab(accent, '#201a15', bgMix);
     const ink = mixOklab(accent, '#f7f2e9', inkMix);
     // .stage__sub (16px/700) and .stage__voter-name (12px/800) both take --stage-muted.

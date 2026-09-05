@@ -11,6 +11,13 @@
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/nunito-latin-600-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/nunito-latin-700-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 800; font-display: swap; src: url('fonts/nunito-latin-800-normal.woff2') format('woff2'); }
+/* World display faces (#903, "Worlds" at the end of this file). Declared here,
+   fetched only when a [data-world] rule applies them — a Standard round
+   downloads neither. Licences: LICENSE-averia-serif-libre.txt, LICENSE-chakra-petch.txt. */
+@font-face { font-family: 'Averia Serif Libre'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/averia-serif-libre-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Averia Serif Libre'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/averia-serif-libre-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/chakra-petch-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/chakra-petch-latin-700-normal.woff2') format('woff2'); }
 
 :root {
   /* Per-round design: page background + accent color.
@@ -71,7 +78,7 @@
      #e9eef3 — measuring against white alone is too lenient and was how --good
      (3.3:1 on white) and, less obviously, --warn and --danger (4.3/4.1:1 on
      Schiefer) all shipped below AA (#145). These three land at 4.54–4.55:1
-     there. Re-check against the darkest THEMES page, not white, if you retune
+     there. Re-check against the darkest design page (round-designs.js), not white, if you retune
      them or add a darker theme. */
   --good: #117c38;
   --warn: #ae5009;
@@ -179,7 +186,9 @@
      (1.7s) are the app's character moments, and a 0.25s ceiling would flatten
      exactly the thing worth keeping. */
   --font: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Named so a world (#903) can put its own face IN FRONT of this stack. */
+  --font-display-std: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: var(--font-display-std);
 }
 
 * { box-sizing: border-box; }
@@ -6910,3 +6919,277 @@ kbd {
 .theme-card__check .ti { font-size: var(--text-sm); }
 .theme-card.is-active { border-color: var(--ink); }
 .theme-card.is-active .theme-card__check { display: flex; }
+
+/* ---- Worlds (#903): a design with a personality on top of the two tokens ----
+   A world is ADDITIVE over the palette machinery above: it sets --page-bg and
+   --brand exactly as a palette does (round-designs.js, applied by
+   applyBackground in core.js) and adds ONE hook, `<html data-world="…">`.
+   Everything below keys off that hook, so a world with no rules here is simply
+   a palette, and nothing on home, login, landing, account or inbox — which
+   applyBackground(null) — ever carries an ornament.
+
+   The contract, in two halves:
+
+   1. ONE TOKEN BLOCK PER WORLD — [data-world="forest"], [data-world="scifi"] —
+      naming its display face and its artwork: hand-authored SVG silhouettes,
+      inlined as data URIs (no vendored assets, no build step, works offline).
+      Every mask is drawn in black; the colour comes from the SLOT, always a
+      theme token (--brand, --brand-dark, --stage-ink), so a motif follows the
+      world's accent for free and never hardcodes a shade
+      (.claude/rules/theme-derived-colors.md).
+   2. SIX SLOT RULES, shared by every world, keyed off the bare [data-world]:
+      the page backdrop, the primary-button frame, the section-heading rule, the
+      card corner, the empty-state scene and the finale stage. Each is a
+      PSEUDO-ELEMENT with pointer-events: none — never a real element, never in
+      an accessible name, never a change to a hit target — and each anchors its
+      host with position: relative only (no overflow change on cards, so nothing
+      a card contains gets clipped).
+
+   The same token block also matches a design-screen preview card carrying
+   data-world (views-round-detail.js): custom properties inherit from the
+   NEAREST element that sets them, so a Sci-Fi card inside a Forest round
+   previews Sci-Fi — which is why the slots read tokens rather than being
+   written per world. The design face applies through --font-display only;
+   --font (body text) is Nunito in every world, on purpose. Focus rings are
+   untouched (test/design-tokens.test.js pins them); backdrop motifs drop
+   under prefers-contrast: more and the one animation runs only under
+   prefers-reduced-motion: no-preference (test/round-worlds.test.js). */
+
+[data-world="forest"] {
+  --world-font: "Averia Serif Libre";
+  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E %3Cpath d='M18 46c14-18 40-22 62-10c-12 22-40 28-62 10z'/%3E %3Cpath d='M150 30c10-20 36-26 60-16c-10 22-36 30-60 16z'/%3E %3Cpath d='M60 136c18-10 40-6 56 12c-20 8-42 4-56-12z'/%3E %3Cpath d='M168 128c4-22 24-36 48-34c-4 24-24 38-48 34z'/%3E %3Cpath d='M20 206c16-12 38-12 56 2c-16 12-38 12-56-2z'/%3E %3Cpath d='M132 214c12-18 36-24 58-14c-12 18-36 24-58 14z'/%3E %3Cpath d='M96 76c2-12 12-20 26-18c-2 12-12 20-26 18z'/%3E %3Cpath d='M204 200c2-12 12-20 26-18c-2 12-12 20-26 18z'/%3E %3Ccircle cx='118' cy='176' r='3'/%3E%3Ccircle cx='230' cy='70' r='2.6'/%3E%3Ccircle cx='42' cy='106' r='2.6'/%3E%3Ccircle cx='150' cy='90' r='2.2'/%3E %3C/g%3E%3C/svg%3E");
+  --world-backdrop-size: 320px 320px;
+  /* A canopy: densest at the top of the viewport, thinning toward the bottom. */
+  --world-backdrop-fade: linear-gradient(#000 0%, transparent 130vh);
+  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cpath d='M4 54C8 34 22 16 50 8' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E %3Cg fill='%23000'%3E %3Cpath d='M10 40c4-12 14-18 26-14c-4 12-14 18-26 14z'/%3E %3Cpath d='M24 22c8-8 20-10 30-4c-8 8-20 10-30 4z'/%3E %3Cpath d='M42 12c8-6 18-6 26 0c-8 6-18 6-26 0z'/%3E %3Cpath d='M2 52c-2-10 2-18 12-22c2 10-2 18-12 22z'/%3E %3Ccircle cx='20' cy='30' r='2.4'/%3E%3Ccircle cx='60' cy='9' r='2'/%3E%3C/g%3E%3C/svg%3E");
+  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cpath d='M0 5h132' stroke='%23000' stroke-width='1.5' fill='none'/%3E%3Cg fill='%23000'%3E %3Cpath d='M14 5c4-5 12-6 18-2c-4 5-12 6-18 2z'/%3E %3Cpath d='M52 5c4-5 12-6 18-2c-4 5-12 6-18 2z'/%3E %3Cpath d='M90 5c4-5 12-6 18-2c-4 5-12 6-18 2z'/%3E %3Cpath d='M34 5c4 5 12 6 18 2c-4-5-12-6-18-2z'/%3E %3Cpath d='M72 5c4 5 12 6 18 2c-4-5-12-6-18-2z'/%3E %3Ccircle cx='136' cy='5' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
+  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='%23000' transform='rotate(-45 11 11)'%3E%3Cpath d='M1 11c5-7 15-7 20 0c-5 7-15 7-20 0z'/%3E%3C/g%3E%3C/svg%3E");
+  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Cdefs%3E%3Cpattern id='t' width='200' height='120' patternUnits='userSpaceOnUse'%3E %3Cpath d='M0 120V96l18-30 18 30 12-20 18 34 22-46 22 46 14-24 18 36 22-40 22 40 14-22V120z' fill='%23000'/%3E %3C/pattern%3E%3C/defs%3E%3Crect width='600' height='120' fill='url(%23t)'/%3E%3C/svg%3E");
+  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Cg fill='%23000'%3E %3Cpath d='M0 0h600v20c-30 14-70 18-100 6c-30-12-70-8-100 4c-30 12-70 22-100 6c-30-16-70-14-100 0c-30 14-70 22-100 8c-30-14-60-6-100 2z'/%3E %3Cpath d='M90 40v34M300 34v46M470 30v40' stroke='%23000' stroke-width='2.5' fill='none'/%3E %3Cpath d='M60 74c10-14 40-18 60-8c-10 14-40 18-60 8z'/%3E %3Cpath d='M270 80c10-14 40-18 60-8c-10 14-40 18-60 8z'/%3E %3Cpath d='M440 70c10-14 40-18 60-8c-10 14-40 18-60 8z'/%3E %3Cpath d='M180 110c6-8 20-10 30-4c-6 8-20 10-30 4z'/%3E %3Cpath d='M540 96c6-8 20-10 30-4c-6 8-20 10-30 4z'/%3E %3Cpath d='M20 100c6-8 20-10 30-4c-6 8-20 10-30 4z'/%3E %3C/g%3E%3C/svg%3E");
+  --world-stage-size: 100% auto;
+  --world-stage-repeat: no-repeat;
+  --world-stage-position: center top;
+}
+
+[data-world="scifi"] {
+  --world-font: "Chakra Petch";
+  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23000'%3E %3Crect x='0' y='19.5' width='120' height='1'/%3E%3Crect x='0' y='59.5' width='120' height='1'/%3E%3Crect x='0' y='99.5' width='120' height='1'/%3E %3Crect x='19.5' y='0' width='1' height='120'/%3E%3Crect x='59.5' y='0' width='1' height='120'/%3E%3Crect x='99.5' y='0' width='1' height='120'/%3E %3Cpath d='M20 20h40v40h40' fill='none' stroke='%23000' stroke-width='2'/%3E %3Cpath d='M100 100h-40v-24' fill='none' stroke='%23000' stroke-width='2'/%3E %3Ccircle cx='20' cy='20' r='3'/%3E%3Ccircle cx='100' cy='60' r='3'/%3E%3Ccircle cx='60' cy='76' r='2.5'/%3E%3Crect x='97' y='97' width='6' height='6'/%3E %3C/g%3E%3C/svg%3E");
+  --world-backdrop-size: 150px 150px;
+  /* A circuit floor: rises from the bottom, fades under the page glow. */
+  --world-backdrop-fade: linear-gradient(transparent 0%, #000 90vh);
+  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cdefs%3E %3ClinearGradient id='f' x1='0' x2='1' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='0'/%3E%3C/linearGradient%3E %3ClinearGradient id='v' x1='0' x2='0' y1='0' y2='1'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E %3Cpath d='M3 30V3h27' fill='none' stroke='%23000' stroke-width='3'/%3E %3Crect x='30' y='2' width='58' height='2' fill='url(%23f)'/%3E %3Crect x='2' y='30' width='2' height='26' fill='url(%23v)'/%3E %3Crect x='0' y='0' width='7' height='7' fill='%23000'/%3E%3C/svg%3E");
+  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cpath d='M6 1H1v8h5M104 1h5v8h-5' fill='none' stroke='%23000' stroke-width='1.6'/%3E %3Crect x='10' y='4.25' width='88' height='1.5' fill='%23000'/%3E %3Crect x='114' y='3' width='4' height='4' fill='%23000'/%3E%3Crect x='122' y='3' width='4' height='4' fill='%23000' opacity='.6'/%3E%3Crect x='130' y='3' width='4' height='4' fill='%23000' opacity='.3'/%3E%3C/svg%3E");
+  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cpath d='M22 0v14L8 0z' fill='%23000' opacity='.7'/%3E%3Cpath d='M22 6V0h-6' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E");
+  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Ccircle cx='500' cy='78' r='30' fill='%23000'/%3E %3Cellipse cx='500' cy='78' rx='72' ry='16' fill='none' stroke='%23000' stroke-width='3' transform='rotate(-12 500 78)'/%3E %3Cellipse cx='500' cy='78' rx='96' ry='24' fill='none' stroke='%23000' stroke-width='1.5' transform='rotate(-12 500 78)' opacity='.6'/%3E %3Cg fill='%23000'%3E%3Ccircle cx='120' cy='40' r='2.5'/%3E%3Ccircle cx='220' cy='90' r='2'/%3E%3Ccircle cx='340' cy='30' r='3'/%3E%3Ccircle cx='60' cy='96' r='1.8'/%3E%3Ccircle cx='420' cy='104' r='2'/%3E%3C/g%3E %3Cpath d='M0 110h300' stroke='%23000' stroke-width='1' opacity='.5'/%3E%3C/svg%3E");
+  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Ccircle cx='300' cy='420' r='360' fill='%23000' opacity='.5'/%3E %3Ccircle cx='300' cy='420' r='360' fill='none' stroke='%23000' stroke-width='3'/%3E %3Cellipse cx='300' cy='112' rx='330' ry='30' fill='none' stroke='%23000' stroke-width='1.5' opacity='.7'/%3E %3Cg fill='%23000'%3E%3Ccircle cx='40' cy='24' r='2.5'/%3E%3Ccircle cx='120' cy='48' r='1.8'/%3E%3Ccircle cx='200' cy='16' r='2'/%3E%3Ccircle cx='390' cy='22' r='2.6'/%3E%3Ccircle cx='480' cy='44' r='1.8'/%3E%3Ccircle cx='560' cy='18' r='2.2'/%3E%3Ccircle cx='300' cy='8' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
+  --world-stage-size: 100% auto;
+  --world-stage-repeat: no-repeat;
+  --world-stage-position: center top;
+}
+
+/* The display face: the world's own first, then the standard stack, so a
+   glyph the world face lacks still renders in Baloo 2. Declaring the face in
+   @font-face (top of this file) downloads nothing; the fetch happens the first
+   time THIS rule applies it to rendered text. */
+[data-world] { --font-display: var(--world-font), var(--font-display-std); }
+/* A palette preview card inside a world round shows the palette's own face. */
+.theme-card:not([data-world]) { --font-display: var(--font-display-std); }
+
+/* Slot 1 — the page backdrop. A fixed layer under everything, above the
+   body's own glow + grain: the motif tile, intersected with a fade so it sits
+   where the world wants it and never across a whole reading column at once.
+   Alpha is the contrast budget: at .09 of the accent over the page, --ink
+   keeps AAA and --ink-soft keeps AA on the densest pixel of the motif
+   (test/round-worlds.test.js pins the ceiling and measures both). */
+[data-world] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .09;
+  mask-image: var(--world-backdrop), var(--world-backdrop-fade);
+  mask-size: var(--world-backdrop-size), 100% 100%;
+  mask-repeat: repeat, no-repeat;
+  mask-composite: intersect;
+}
+
+/* Slot 2 — the primary button's frame: one ornament at the top-left corner,
+   the same one rotated at the bottom-right. Sized in em so .btn--sm and
+   .btn--lg scale their frame with their type. --brand-dark rather than --brand:
+   the button IS --brand, and the part of the frame that overlaps it has to
+   read as sitting in front. */
+[data-world] .btn--primary { position: relative; }
+[data-world] .btn--primary::before,
+[data-world] .btn--primary::after {
+  content: '';
+  position: absolute;
+  width: 2.8em;
+  height: 1.8em;
+  pointer-events: none;
+  background: var(--brand-dark);
+  mask-image: var(--world-frame);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: left top;
+}
+[data-world] .btn--primary::before { top: -.7em; left: -.8em; }
+[data-world] .btn--primary::after { bottom: -.7em; right: -.8em; transform: rotate(180deg); }
+
+/* Slot 3 — a rule under a heading: section headings (direct children only:
+   the same selector without `>` reaches every card title inside the
+   section), sheet titles, the round's own name on the hub and in the rail,
+   and the vote card's game title. The name and the title get the widest cut. */
+[data-world] .section > :is(h1, h2, h3)::after,
+[data-world] .section > .section-head > :is(h1, h2, h3)::after,
+[data-world] .sheet__head > h2::after,
+[data-world] .hero > h1::after,
+[data-world] .rail__name::after,
+[data-world] .vote__title::after {
+  content: '';
+  display: block;
+  width: 200px;
+  max-width: 100%;
+  height: 12px;
+  margin-top: 6px;
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .9;
+  mask-image: var(--world-rule);
+  mask-size: auto 100%;
+  mask-repeat: no-repeat;
+  mask-position: left center;
+}
+[data-world] .hero > h1::after,
+[data-world] .rail__name::after { width: 280px; height: 16px; margin-top: 8px; }
+[data-world] .vote__title::after { width: 200px; height: 14px; margin: 8px auto 0; }
+
+/* Slot 4 — a card corner. Inset from the rounded corner rather than clipped
+   to it, so the host keeps its overflow and a badge, a popover or a hover
+   shadow inside it is never cut. The Regal's game tile takes it at the
+   BOTTOM-right, turned a quarter, because its badge column owns the top-right;
+   the home tile carries the attribute itself (views-home.js) and joins here. */
+[data-world] :is(.card, .ticket, .round-card, .vote, .game-card) { position: relative; }
+[data-world] :is(.card, .ticket, .round-card, .vote)::after,
+.round-card[data-world]::after,
+[data-world] .game-card::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .9;
+  mask-image: var(--world-corner);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+[data-world] .game-card::after { top: auto; bottom: 6px; transform: rotate(90deg); }
+
+/* Slot 5 — the empty state's scene, in a band of its own along the bottom.
+   The band is one fifth of the width (the art's own ratio), capped at 160px
+   on wide screens (the art stops growing at 800px), and the box reserves
+   exactly that much below its text, so the scene never sits under a line of
+   --ink-soft — which is what lets it be bold: measured at .14 across the text
+   it already cost the muted line its AA (4.35:1). */
+[data-world] .empty { position: relative; overflow: hidden; isolation: isolate; padding-bottom: calc(44px + min(20%, 160px)); }
+[data-world] .empty::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .36;
+  mask-image: var(--world-scene);
+  mask-size: min(100%, 800px) auto;
+  mask-repeat: no-repeat;
+  mask-position: center bottom;
+}
+
+/* Slot 6 — the finale stage: the world's scene in the stage's own light ink,
+   as a band across the top BEHIND THE SEAL, plus a glow that breathes
+   (motion-gated below). A band rather than a curtain-wide tile because every
+   line of stage text is centred under the seal: a tile at .16 pulled
+   --stage-faint to 2.27:1 on its densest pixel. The art is 600x140, so at the
+   stage's 640px ceiling the band ends at 149px — above the title, which
+   starts at 40px padding + the 104px seal + its 18px margin. */
+[data-world] .stage { position: relative; overflow: hidden; isolation: isolate; }
+[data-world] .stage::before,
+[data-world] .stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+[data-world] .stage::before {
+  background: var(--stage-ink);
+  opacity: .4;
+  mask-image: var(--world-stage);
+  mask-size: var(--world-stage-size);
+  mask-repeat: var(--world-stage-repeat);
+  mask-position: var(--world-stage-position);
+}
+[data-world] .stage::after {
+  background: radial-gradient(70% 55% at 50% 0%, color-mix(in oklab, var(--stage-ink) 22%, transparent), transparent 70%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-world] .stage::after { animation: world-glow 3.6s ease-in-out infinite; }
+  @keyframes world-glow {
+    0%, 100% { opacity: .7; }
+    50% { opacity: 1; }
+  }
+}
+
+/* The design screen's preview card and the home tile carry data-world THEMSELVES
+   (views-round-detail.js, views-home.js): the world's backdrop across the box
+   and, on the preview, its frame around the accent bar — both in the BOX's
+   accent (its inline --brand), so the preview is the world it names, not the
+   round it sits in, and a home tile is recognisable from the lobby. The tile
+   sits on white, where --ink-soft keeps 4.9:1 on the motif's densest pixel.
+   --brand rather than --brand-dark for the bar frame: the derived tokens are
+   resolved once at :root from the ROUND's accent and inherit as values, so
+   inside the card only the raw token is the card's own. */
+:is(.theme-card, .round-card)[data-world] { position: relative; overflow: hidden; isolation: isolate; }
+:is(.theme-card, .round-card)[data-world]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .16;
+  mask-image: var(--world-backdrop);
+  mask-size: var(--world-backdrop-size);
+  mask-repeat: repeat;
+}
+.theme-card[data-world] .theme-card__bar { position: relative; }
+.theme-card[data-world] .theme-card__bar::before,
+.theme-card[data-world] .theme-card__bar::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 19px;
+  pointer-events: none;
+  background: var(--brand);
+  mask-image: var(--world-frame);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: left top;
+}
+.theme-card[data-world] .theme-card__bar::before { top: -8px; left: -9px; }
+.theme-card[data-world] .theme-card__bar::after { bottom: -8px; right: -9px; transform: rotate(180deg); }
+
+/* Backdrop motifs are decoration under text; a reader who asked for more
+   contrast gets the plain page. The small marks (frame, rule, corner) stay. */
+@media (prefers-contrast: more) {
+  [data-world] body::before,
+  [data-world] .empty::before,
+  [data-world] .stage::before,
+  [data-world] .stage::after,
+  :is(.theme-card, .round-card)[data-world]::before { display: none; }
+}

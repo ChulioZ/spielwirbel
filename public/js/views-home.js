@@ -233,8 +233,13 @@ function renderLobbyList(rounds) {
       lastLine = `<span class="round-card__last"><i class="ti ti-trophy" aria-hidden="true"></i>${esc(text)}</span>`;
     }
 
-    const card = h(`<a class="round-card">
-         <span class="round-card__emblem" style="background:${themeAccent(r.background)}"><i class="ti ti-tornado" aria-hidden="true"></i></span>
+    // A round on a world carries the hook ITSELF (#903), with its own accent
+    // inline, so the tile's backdrop, corner and display face are that world's
+    // while the lobby around it stays standard — the one place home shows one.
+    const design = resolveDesign(r.background);
+    const worldAttrs = design && design.world ? ` data-world="${esc(design.world)}" style="--brand:${design.accent}"` : '';
+    const card = h(`<a class="round-card"${worldAttrs}>
+         <span class="round-card__emblem" style="background:${themeAccent(r.background)}"><i class="ti ${designIcon(r.background)}" aria-hidden="true"></i></span>
          <span class="round-card__body">
            <span class="round-card__name">${esc(r.name)}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>
            <span class="round-card__meta">
