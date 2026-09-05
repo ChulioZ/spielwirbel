@@ -5586,8 +5586,11 @@ kbd {
   .member-stats__card .pokale-card__value { order: 1; font-size: var(--text-3xl); line-height: 1.15; }
   .member-stats__card .pokale-card__label { order: 2; }
   .member-stats__card .pokale-card__sub { order: 3; }
-  /* The favourite tile holds a list of game links, not a number — it keeps its
-     natural order and takes the full row rather than being squeezed into half. */
+  /* The two game-link tiles hold a list of links, not a number — they keep
+     their natural order and take the full row rather than being squeezed into
+     half. Both are exempt from the reorder above for free, since it is scoped
+     to `.member-stats__card` and neither carries it. */
+  .member-stats__best,
   .member-stats__fav { grid-column: 1 / -1; }
 }
 

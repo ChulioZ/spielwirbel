@@ -133,6 +133,7 @@ const frontendGlobals = {
   MOODS: 'readonly', ratingFace: 'readonly',
   // win-score.js (issue #895): the Siegwertung
   sessionWinScores: 'readonly', memberWinScores: 'readonly',
+  memberGameWinScores: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',

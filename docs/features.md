@@ -214,8 +214,9 @@ What the app does, in detail. For a short overview see the
   Deleting a tag simply unassigns it from every game.
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list) with their stats — wins,
-  sessions joined, win rate, Siegwertung, average rating given, and favorite
-  game — and lets
+  sessions joined, win rate, Siegwertung, average rating given, their strongest
+  game (the one they hold the highest Siegwertung in) and their favorite game —
+  and lets
   you rename them and pick their avatar color from the curated palette.
 - **Round hub** – each round is a small app of its own, with four sections
   presented per screen size: a floating bottom dock on phones, a tab strip at

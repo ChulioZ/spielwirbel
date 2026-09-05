@@ -511,6 +511,8 @@ I18N.en = {
   'member.winRate': 'Win rate',
   'member.winScore': 'Win score',
   'member.avgGiven': 'Ø rating given',
+  'member.bestGame': 'Strongest game',
+  'member.bestGameNone': 'No wins yet',
   'member.favorite': 'Favorite game',
   'member.favoriteNone': 'No ratings yet',
   'member.noSessions': 'Not part of any session yet',

@@ -19,7 +19,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { sessionWinScores, memberWinScores } = require('../public/js/win-score');
+const { sessionWinScores, memberWinScores, memberGameWinScores } = require('../public/js/win-score');
 const { sessionPartyGroups } = require('../public/js/session-people');
 
 // ---- Fixture builders -------------------------------------------------------
@@ -184,4 +184,112 @@ test('a guest is scored within the session but is not a round member', () => {
 test('an unfinished session is not counted', () => {
   const round = roundOf(['a', 'b'], [night(['a', 'b'], ['a'], { finished: false })]);
   assert.equal(scoresOf(round).a, 0);
+});
+
+// ---- Per game: the „Stärkstes Spiel" decomposition (#920) -------------------
+
+/* The same Siegwertung, partitioned by the game that was actually played. The
+ * measure is deliberately the round total's own terms — a SUM per game, not an
+ * average per evening — so a game's figure can never disagree with the
+ * Siegwertung tile beside it (win-score.js's header: "A SUM, DELIBERATELY NOT A
+ * RATE"). What it does NOT do is re-add to that total: an evening with no
+ * chosenGameId contributes to the round and to no game.
+ */
+
+const perGame = (round, mid) => memberGameWinScores(round, mid, sessionPartyGroups);
+
+test('each finished night is attributed to the game that was played', () => {
+  const round = roundOf(
+    ['a', 'b'],
+    [
+      night(['a', 'b'], ['a'], { chosenGameId: 'g1' }),
+      night(['a', 'b'], ['a'], { chosenGameId: 'g1' }),
+      night(['a', 'b'], ['b'], { chosenGameId: 'g2' }),
+    ]
+  );
+  // Two wins at g1 (+0,5 each), one loss at g2 (−0,5).
+  assert.deepEqual(perGame(round, 'a'), { g1: 1, g2: -0.5 });
+  assert.deepEqual(perGame(round, 'b'), { g1: -1, g2: 0.5 });
+});
+
+test('the per-game sums are terms of the round total, minus the unattributed nights', () => {
+  const round = roundOf(
+    ['a', 'b'],
+    [
+      night(['a', 'b'], ['a'], { chosenGameId: 'g1' }),
+      night(['a', 'b'], ['a']), // finished, won, but no game recorded
+    ]
+  );
+  const byGame = perGame(round, 'a');
+  assert.deepEqual(byGame, { g1: 0.5 }, 'a night with no chosenGameId names no game');
+  const total = Object.values(byGame).reduce((x, y) => x + y, 0);
+  assert.equal(scoresOf(round).a, 1, 'the round total still counts both nights');
+  assert.ok(total < scoresOf(round).a, 'so the per-game sums deliberately do not re-add to it');
+});
+
+test('a negative best is a real answer, not an empty one', () => {
+  const round = roundOf(['a', 'b'], [night(['a', 'b'], ['b'], { chosenGameId: 'g1' })]);
+  assert.deepEqual(perGame(round, 'a'), { g1: -0.5 });
+});
+
+test('ties are represented as equal values, for the caller to share the tile', () => {
+  const round = roundOf(
+    ['a', 'b'],
+    [
+      night(['a', 'b'], ['a'], { chosenGameId: 'g1' }),
+      night(['a', 'b'], ['a'], { chosenGameId: 'g2' }),
+    ]
+  );
+  const byGame = perGame(round, 'a');
+  assert.equal(byGame.g1, byGame.g2);
+});
+
+test('a solo night registers its game at exactly zero and cannot outrank a win', () => {
+  const round = roundOf(
+    ['a', 'b'],
+    [
+      night(['a'], ['a'], { chosenGameId: 'solo' }),
+      night(['a'], ['a'], { chosenGameId: 'solo' }),
+      night(['a', 'b'], ['a'], { chosenGameId: 'real' }),
+    ]
+  );
+  const byGame = perGame(round, 'a');
+  assert.equal(byGame.solo, 0, 'p = w = 1, twice over');
+  assert.ok(byGame.real > byGame.solo);
+});
+
+test('an unfinished or winner-less night names no game', () => {
+  const round = roundOf(
+    ['a', 'b'],
+    [
+      night(['a', 'b'], ['a'], { chosenGameId: 'g1', finished: false }),
+      night(['a', 'b'], [], { chosenGameId: 'g2' }),
+    ]
+  );
+  assert.deepEqual(perGame(round, 'a'), {});
+});
+
+test('a member who did not sit that night gets no entry for its game', () => {
+  const round = roundOf(
+    ['a', 'b', 'away'],
+    [night(['a', 'b'], ['a'], { chosenGameId: 'g1' })]
+  );
+  assert.deepEqual(perGame(round, 'away'), {}, 'absent is not the same as scoring 0 at that game');
+});
+
+test('a split evening attributes each child to its own game, the parent to none', () => {
+  /* The shape lib/session-split.js really builds: the parent keeps
+     chosenGameId null (routes/sessions.js refuses to split a session that has
+     one) and never gains winnerIds, while each child is an ordinary direct-pick
+     session with both. Asserted rather than assumed — the issue's own
+     instruction, and the parent is skipped for TWO independent reasons, so a
+     regression in either stays invisible while the other holds. */
+  const parent = night(['a', 'b', 'c', 'd'], [], { chosenGameId: null });
+  const kidA = night(['a', 'b'], ['a'], { chosenGameId: 'g1', parentSessionId: parent.id });
+  const kidB = night(['c', 'd'], ['c'], { chosenGameId: 'g2', parentSessionId: parent.id });
+  const round = roundOf(['a', 'b', 'c', 'd'], [parent, kidA, kidB]);
+
+  assert.deepEqual(perGame(round, 'a'), { g1: 0.5 });
+  assert.deepEqual(perGame(round, 'c'), { g2: 0.5 });
+  assert.deepEqual(perGame(round, 'b'), { g1: -0.5 }, 'b sat at g1 only, not at the parent');
 });

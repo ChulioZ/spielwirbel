@@ -495,6 +495,8 @@ I18N.it = {
   'member.winRate': 'Percentuale di vittorie',
   'member.winScore': 'Punteggio vittorie',
   'member.avgGiven': 'Ø valutazione data',
+  'member.bestGame': 'Gioco più forte',
+  'member.bestGameNone': 'Ancora nessuna vittoria',
   'member.favorite': 'Gioco preferito',
   'member.favoriteNone': 'Ancora nessuna valutazione',
   'member.noSessions': 'Non ha ancora partecipato a nessuna sessione',
