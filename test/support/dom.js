@@ -200,4 +200,12 @@ function loadApp(opts = {}) {
   };
 }
 
-module.exports = { loadApp, loadI18n, translator };
+/* Let every pending microtask (and the timer turn after them) run.
+   Needed since #939: a confirmation is a promise now, so a handler written as
+   `if (!await confirmDialog(…)) return;` reaches its api() call one turn after
+   the click that started it. A spec that clicks and asserts in the same tick
+   sees nothing sent — which reads as the action being wired wrong rather than
+   as the spec being one turn early. */
+const flush = () => new Promise((resolve) => setImmediate(resolve));
+
+module.exports = { loadApp, loadI18n, translator, flush };

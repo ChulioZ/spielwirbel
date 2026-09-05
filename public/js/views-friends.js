@@ -209,7 +209,10 @@ function renderProfileCta(p, username) {
   if (p.friendship === 'friends') {
     const btn = h(`<button class="link-btn" type="button">${esc(t('friends.unfriend'))}</button>`);
     btn.addEventListener('click', async () => {
-      if (!confirm(t('friends.unfriendConfirm', { name: p.username || t('friends.unknownUser') }))) return;
+      if (!await confirmDialog({
+        body: t('friends.unfriendConfirm', { name: p.username || t('friends.unknownUser') }),
+        confirmLabel: t('friends.unfriend'),
+      })) return;
       try {
         await accountApi('DELETE', `/friends/${p.friendshipId}`);
         toast(t('friends.toast.removed'));
@@ -485,7 +488,10 @@ function renderFriendRow(f) {
   const report = accountReportButton(f.username);
   if (report) row.querySelector('.ds-row__meta').appendChild(report);
   row.querySelector('.friend-row__remove').addEventListener('click', async () => {
-    if (!confirm(t('friends.unfriendConfirm', { name: f.username || t('friends.unknownUser') }))) return;
+    if (!await confirmDialog({
+      body: t('friends.unfriendConfirm', { name: f.username || t('friends.unknownUser') }),
+      confirmLabel: t('friends.unfriend'),
+    })) return;
     try {
       await accountApi('DELETE', `/friends/${f.friendshipId}`);
       toast(t('friends.toast.removed'));

@@ -82,7 +82,10 @@ async function showTableBuilder(round, session, gamesHint) {
     const footer = h('<div class="section result-footer"></div>');
     const delBtn = h(`<button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button>`);
     delBtn.addEventListener('click', async () => {
-      if (!confirm(t('sessions.deleteConfirm', { when }))) return;
+      if (!await confirmDialog({
+        body: t('sessions.deleteConfirm', { when }),
+        confirmLabel: t('result.deleteSession'), icon: 'ti-trash',
+      })) return;
       try {
         await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
         toast(t('sessions.deleted'));

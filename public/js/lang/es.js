@@ -23,6 +23,10 @@ I18N.es = {
   'common.delete': 'Eliminar',
   'common.ok': 'Aceptar',
   'common.close': 'Cerrar',
+  'common.cancel': 'Cancelar',
+  'common.confirm': 'Confirmar',
+  'common.confirmTitle': 'Confirmación',
+  'common.overwrite': 'Sobrescribir',
 
   'home.docTitle': 'Mis grupos',
   'home.greeting': 'Qué bien verte.',
@@ -727,6 +731,7 @@ I18N.es = {
   'lobby.share': 'Compartir un enlace de votación',
   'lobby.shareText': 'Ayuda a elegir a qué jugamos en {round}:',
   'lobby.shareCopied': 'Enlace copiado: compártelo con el grupo.',
+  'lobby.shareManual': 'Copia este enlace y compártelo con el grupo.',
   'voteLink.loading': 'Cargando la votación …',
   'voteLink.title': 'Únete a la votación',
   'voteLink.sub': '{round} está eligiendo a qué jugar.',

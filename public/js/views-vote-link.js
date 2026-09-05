@@ -137,7 +137,7 @@ function renderVoteLinkClaim(token, ballot) {
         ${esc(personLabel(person))}
         ${person.hasVoted ? `<span class="live-person__state"><i class="ti ti-check" aria-hidden="true"></i> ${esc(t('lobby.voted'))}</span>` : ''}
       </button>`);
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       // Overwriting somebody's column is allowed — the server takes the same
       // authority the in-app per-device write has — but it is asked about first,
       // because on this screen the likeliest reason to tap a voted name is a
@@ -145,7 +145,10 @@ function renderVoteLinkClaim(token, ballot) {
       // this phone. Your OWN remembered claim is not re-confirmed: revising your
       // own ratings until voting closes is the point.
       if (person.hasVoted && person.id !== remembered
-        && !confirm(t('voteLink.overwriteConfirm', { name: personLabel(person) }))) return;
+        && !await confirmDialog({
+          body: t('voteLink.overwriteConfirm', { name: personLabel(person) }),
+          confirmLabel: t('common.overwrite'),
+        })) return;
       setVoteLinkClaim(token, person.id);
       renderVoteLinkCards(token, ballot, person);
     });

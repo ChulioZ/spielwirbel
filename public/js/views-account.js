@@ -683,10 +683,13 @@ function renderPasskeyRow(passkey, render, err) {
     });
   });
 
-  row.querySelector('[data-act=remove]').addEventListener('click', () => {
+  row.querySelector('[data-act=remove]').addEventListener('click', async () => {
     // The confirm says the account stays usable — removing the last passkey is
     // safe here precisely because the password was never replaced.
-    if (!confirm(t('konto.passkey.removeConfirm'))) return;
+    if (!await confirmDialog({
+      body: t('konto.passkey.removeConfirm'),
+      confirmLabel: t('konto.passkey.remove'), icon: 'ti-trash',
+    })) return;
     call('DELETE', undefined, 'konto.passkey.removed');
   });
 

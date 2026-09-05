@@ -280,7 +280,7 @@ function showSessionLobby(round, session, handedOn) {
           // No share sheet and no clipboard (an insecure origin, an old browser):
           // show the URL so it can at least be copied by hand, rather than
           // reporting a success that did not happen.
-          prompt(t('lobby.shareCopied'), url);
+          showShareUrlSheet(url);
         }
       } catch (e) {
         toast(e.message);
@@ -298,7 +298,10 @@ function showSessionLobby(round, session, handedOn) {
       <i class="ti ti-flag" aria-hidden="true"></i> ${esc(t('lobby.close'))}
     </button>`);
   close.addEventListener('click', async () => {
-    if (pending.length && !confirm(tn(pending.length, 'lobby.closeConfirmOne', 'lobby.closeConfirm'))) return;
+    if (pending.length && !await confirmDialog({
+      body: tn(pending.length, 'lobby.closeConfirmOne', 'lobby.closeConfirm'),
+      confirmLabel: t('lobby.close'), icon: 'ti-flag', danger: false,
+    })) return;
     try {
       stopLobbyPoll();
       await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/close`, {});
@@ -344,4 +347,38 @@ function showSessionLobby(round, session, handedOn) {
       if (before !== after) showSessionLobby(fresh, s, handedOn);
     } catch { /* a failed poll is not worth a toast; the next tick retries */ }
   }, LOBBY_POLL_MS);
+}
+
+/* Last-resort share fallback: no `navigator.share`, no clipboard. Was a
+   `prompt()` used as a read-only display — an INPUT dialog for something the
+   user can only read, in OS chrome, on a screen the round has themed (#939).
+   A field rather than a paragraph because the URL still has to be selectable,
+   and it says "copy this" rather than the clipboard path's "copied": nothing
+   was copied, and claiming otherwise is the one thing this branch must not do. */
+function showShareUrlSheet(url) {
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('lobby.share'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('lobby.share'))}</h2>
+          <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <p class="muted">${esc(t('lobby.shareManual'))}</p>
+        <input id="shareUrlField" class="input" readonly
+          aria-label="${esc(t('lobby.share'))}" value="${esc(url)}" />
+      </div>
+    </div>`);
+  const sheet = backdrop.querySelector('.sheet');
+  document.body.appendChild(backdrop);
+
+  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  document.addEventListener('keydown', onKey, true);
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+  sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+
+  // Focus AFTER openSheet, and select the whole URL: a manual copy is the only
+  // thing this sheet is for, so it starts one keystroke away.
+  const field = sheet.querySelector('#shareUrlField');
+  field.focus();
+  field.select();
 }

@@ -386,7 +386,9 @@ async function showMember(rid, mid) {
     }).catch(() => {});
     const revokeBtn = h(`<button class="link-btn round-footer__danger">${esc(t('share.revoke'))}</button>`);
     revokeBtn.addEventListener('click', async () => {
-      if (!confirm(t('share.revokeConfirm', { name: member.name }))) return;
+      if (!await confirmDialog({
+        body: t('share.revokeConfirm', { name: member.name }), confirmLabel: t('share.revoke'),
+      })) return;
       try {
         await api('DELETE', `/api/rounds/${rid}/shares/${member.userId}`);
         showMember(rid, mid); // re-render: the seat is now unlinked

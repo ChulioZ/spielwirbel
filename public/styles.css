@@ -6038,6 +6038,22 @@ kbd {
    (0,2,0) so it beats `.sheet--dialog` on specificity rather than on source
    order (.claude/rules/ds-row-is-a-click-target.md). */
 .sheet--dialog.sheet--list { max-width: 640px; }
+/* The confirmation dialog (#939), the themed replacement for window.confirm.
+   Its question IS the content of the sheet — there is nothing else to read — so
+   it sits a step above body copy rather than at the muted size the support and
+   info sheets use for their supporting prose. The two actions are pushed to the
+   trailing edge, where a dialog's primary action is looked for; the ≤639px rule
+   on `.sheet__actions` already stretches them into a full-width stack below
+   that, so this only governs the wide case. */
+.confirm-dialog__body { font-size: var(--text-lg); line-height: 1.5; }
+.sheet__actions--confirm { justify-content: flex-end; }
+/* The confirm button is deliberately NOT `btn--lg`, unlike the single-action
+   sheets: a dialog's bar carries TWO buttons, and at `btn--lg` metrics a real
+   German verb („Diese Runde löschen") plus „Abbrechen" is wider than the 460px
+   dialog — measured at 447px of buttons in 416px of content, so `.toolbar`'s
+   wrap put the cancel above a near-full-width destructive button, which reads as
+   two ragged pills rather than a pair. The danger colour, the border and the
+   icon carry the emphasis instead of the size. */
 /* Wide viewports: every sheet becomes a centered, fully-rounded card with a
    visible gap on all four sides. Below the breakpoint it stays a bottom sheet
    docked to the edge, which is the right idiom on a phone. */

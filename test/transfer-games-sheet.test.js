@@ -41,7 +41,7 @@ async function openSheetOn(t, { target = TARGET } = {}) {
   dom.set('api', async (method, path, body) => { posts.push({ method, path, body }); return { movedGames: 1, copiedGames: 1 }; });
   dom.set('toast', () => {});
   dom.set('showRound', () => {});
-  dom.set('confirm', () => true);
+  dom.set('confirmDialog', () => Promise.resolve(true));
   await dom.call('showTransferGames', ROUND);
   const sheet = dom.document.querySelector('.sheet');
   const chip = (mode) => sheet.querySelector(`.transfer-modes .chip[data-mode="${mode}"]`);

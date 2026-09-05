@@ -249,6 +249,8 @@ const frontendGlobals = {
   buildNotifyForm: 'readonly', buildPrefToggle: 'readonly', buildBgStatsForm: 'readonly',
   // support.js (issue #173)
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
+  // confirm-dialog.js (issue #939): the themed replacement for window.confirm
+  confirmDialog: 'readonly',
   // views-landing.js (issue #322): logged-out landing page
   showLanding: 'readonly', LANDING_FEATURES: 'readonly', LANDING_STEPS: 'readonly',
   LANDING_SHOTS: 'readonly', landingShots: 'readonly',
@@ -358,7 +360,7 @@ const frontendGlobals = {
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',
-  renderSessionLog: 'readonly',
+  renderSessionLog: 'readonly', showShareUrlSheet: 'readonly',
   // views-vote-link.js
   showVoteLink: 'readonly', renderVoteLinkClaim: 'readonly',
   renderVoteLinkCards: 'readonly', renderVoteLinkDone: 'readonly',

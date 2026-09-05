@@ -518,6 +518,14 @@ function startVoting(round, session, games, people, opts = {}) {
 
   // The router's leave guard (see confirmLeave in router.js): false aborts the
   // navigation, true tears this wizard down on the way out.
+  //
+  // It holds the app's ONE remaining native confirm (#939 §4). confirmLeave is a
+  // SYNCHRONOUS boolean, which onPopstate below answers with while the pop is
+  // already in flight — and the themed confirmDialog arbitrates the very history
+  // stack this guard is arbitrating (it pushes a marker of its own and pops it to
+  // close). Converting it means making the router's popstate path promise-aware,
+  // which is a redesign rather than a call-site change; a half-converted guard
+  // drops votes.
   const guardLeave = () => {
     if (!saved && hasVotes() && !confirm(t('vote.leaveConfirm'))) return false;
     window.removeEventListener('beforeunload', unloadGuard);
@@ -1148,7 +1156,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     makeGameLink(row.querySelector('.result-row__img'), round.id, g.id, { redundant: true });
     const removeBtn = row.querySelector('.result-row__remove');
     removeBtn.addEventListener('click', async () => {
-      if (!confirm(t('result.removeGameConfirm', { title: g.title }))) return;
+      if (!await confirmDialog({
+        body: t('result.removeGameConfirm', { title: g.title }),
+        confirmLabel: t('result.removeGame'), icon: 'ti-trash',
+      })) return;
       try {
         await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}/games/${g.id}`);
         toast(t('result.toast.gameRemoved', { title: g.title }));
@@ -1244,7 +1255,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       // name — SC 2.5.3 is unaffected.
       const btn = h(`<button class="link-btn" title="${esc(t('result.cancelHint'))}">${iconText('ti-x', t('result.cancel'))}</button>`);
       btn.addEventListener('click', async () => {
-        if (!confirm(t('result.cancelConfirm'))) return;
+        if (!await confirmDialog({
+          body: t('result.cancelConfirm'), confirmLabel: t('result.cancel'), icon: 'ti-x',
+        })) return;
         try {
           await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/cancel`, { cancelled: true });
           cancelled = true;
@@ -1432,7 +1445,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   if (roundCan(round, 'session.delete')) {
     const delBtn = h(`<button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button>`);
     delBtn.addEventListener('click', async () => {
-      if (!confirm(t('sessions.deleteConfirm', { when }))) return;
+      if (!await confirmDialog({
+        body: t('sessions.deleteConfirm', { when }),
+        confirmLabel: t('result.deleteSession'), icon: 'ti-trash',
+      })) return;
       try {
         await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
         toast(t('sessions.deleted'));

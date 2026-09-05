@@ -229,7 +229,9 @@ function renderChronikTab(round, activities) {
       });
     }
     if (canDelete) row.querySelector('.tl-act__del').addEventListener('click', async () => {
-      if (!confirm(t('activity.deleteConfirm'))) return;
+      if (!await confirmDialog({
+        body: t('activity.deleteConfirm'), confirmLabel: t('activity.delete'), icon: 'ti-trash',
+      })) return;
       try {
         await api('DELETE', `/api/rounds/${rid}/activities/${e.id}`);
         toast(t('activity.deleted'));

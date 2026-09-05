@@ -218,7 +218,10 @@ function renderRegalTab(round, activeGames) {
         : selectionTouchesHistory(round, selection)
           ? tn(ids.length, 'bulk.confirmDeleteOne', 'bulk.confirmDelete')
           : tn(ids.length, 'bulk.confirmDeletePlainOne', 'bulk.confirmDeletePlain');
-      if (!confirm(msg)) return;
+      if (!await confirmDialog({
+        body: msg,
+        confirmLabel: t(act === 'retire' ? 'bulk.retire' : 'bulk.delete'), icon: 'ti-trash',
+      })) return;
       const buttons = [...bulkBar.querySelectorAll('button')];
       buttons.forEach((b) => { b.disabled = true; });
       try {

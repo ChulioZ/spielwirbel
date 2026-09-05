@@ -69,7 +69,7 @@ function bootApp(t_, { onApi } = {}) {
     return {};
   });
   dom.set('toast', () => {});
-  dom.set('confirm', () => true);
+  dom.set('confirmDialog', () => Promise.resolve(true));
   return { dom, round, calls };
 }
 
