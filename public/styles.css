@@ -26,6 +26,26 @@
   --brand: #c2410c;       /* accent color */
   --surface: #ffffff;
 
+  /* WHICH WAY contrast runs away from the page (#904). Every neutral below is
+     "the page, pushed away from itself": on a light design that push is toward
+     black, on a dark one toward white, and a dark design flips this ONE token
+     rather than re-spelling four mixes (see [data-scheme="dark"] at the end of
+     this file). The percentages are shared on purpose — an oklab mix moves L by
+     p% of the remaining distance to the endpoint, so 7% off a light page
+     (L .955 -> .888) and 7% off a dark one (L .200 -> .256) are steps of
+     comparable size. What does NOT transfer is a mix toward pure #000 or #fff
+     that is not about the page: those keep their literal endpoint. */
+  --shade: #000;
+
+  /* The ink a saturated FILL carries — an accent button, a member avatar, a
+     rating pill, a semantic chip. White everywhere a light design runs; a dark
+     design's accent has to be LIGHT to clear 4.5:1 as link text on its own
+     page, so white on it would be unreadable and the pair flips together. The
+     two values live side by side here because the home tile and the design
+     picker paint one design's accent while standing in another's scheme. */
+  --on-accent: #ffffff;
+  --on-accent-dark: #16181e;
+
   /* Tones derived from --page-bg.
      Every derivation in this file interpolates `in oklab` (#544). sRGB is
      neither linear-light nor perceptually uniform, so a mix toward #fff drags
@@ -43,19 +63,19 @@
      re-tuned tones land within 1-3/255 of what shipped before — the space
      changed, the palette did not. Mixes toward #fff/--surface keep their
      percentages: there the shift IS the fix. */
-  --sunken: color-mix(in oklab, var(--page-bg), #000 4%);        /* placeholders, progress bars */
-  --sunken-soft: color-mix(in oklab, var(--page-bg), #000 2.5%); /* chips, pills, keys */
-  --line: color-mix(in oklab, var(--page-bg), #000 7%);          /* borders */
+  --sunken: color-mix(in oklab, var(--page-bg), var(--shade) 4%);        /* placeholders, progress bars */
+  --sunken-soft: color-mix(in oklab, var(--page-bg), var(--shade) 2.5%); /* chips, pills, keys */
+  --line: color-mix(in oklab, var(--page-bg), var(--shade) 7%);          /* borders */
   --bg: var(--page-bg);
 
   /* Accent tones derived from --brand. */
-  --brand-dark: color-mix(in oklab, var(--brand), #000 13%);
+  --brand-strong: color-mix(in oklab, var(--brand), var(--shade) 13%);
   --accent: var(--brand);
   --brand-tint: color-mix(in oklab, var(--brand) 13%, var(--surface));      /* light accent surfaces */
   --brand-tint-soft: color-mix(in oklab, var(--brand) 7%, var(--surface));  /* very light accent surfaces */
   --brand-edge: color-mix(in oklab, var(--brand) 32%, var(--surface));      /* borders of accent surfaces */
   --page-glow: color-mix(in oklab, var(--brand) 7%, transparent);           /* soft halo at the page top */
-  --placeholder: color-mix(in oklab, var(--page-bg), #000 18.5%);           /* fallback icons on image areas */
+  --placeholder: color-mix(in oklab, var(--page-bg), var(--shade) 18.5%);           /* fallback icons on image areas */
 
   /* The finale stage: a dark "curtain" tinted with the accent, so it matches
      every theme. --stage-bg keeps 18%: it mixes into a dark anchor rather than
@@ -63,7 +83,10 @@
      out. The three that dilute a light tone INTO that dark bg do re-tune —
      same darker-per-percent effect as above, and here it costs contrast:
      unretuned, --stage-muted drops 5.48 -> 5.12 and --stage-faint 3.59 -> 3.30. */
-  --stage-bg: color-mix(in oklab, var(--brand) 18%, #201a15);
+  --stage-anchor: #201a15;
+  --stage-bg: color-mix(in oklab, var(--brand) 18%, var(--stage-anchor));
+  /* #fff, not --shade: the stage is a dark curtain under BOTH schemes, so
+     these two lift it toward white whichever way the page runs (#904). */
   --stage-raised: color-mix(in oklab, #fff 8%, var(--stage-bg));
   --stage-line: color-mix(in oklab, #fff 18%, var(--stage-bg));
   --stage-ink: color-mix(in oklab, var(--brand) 8%, #f7f2e9);
@@ -72,6 +95,11 @@
 
   --ink: #2b2620;
   --ink-soft: #6b6358;
+  /* The sheet/dialog scrim. It reads as --ink's own shadow on a light design
+     and IS derived from it here — but --ink goes near-white on a dark one, and
+     a white scrim is not a dimmer, so the dark block anchors it instead of
+     following the token (#904). */
+  --scrim: color-mix(in oklab, var(--ink) 45%, transparent);
   /* All three are used as TEXT, and not only on white --surface: `.link-btn`
      ("Session löschen", "Aus Session entfernen") sits straight on the page. So
      the bar each has to clear is 4.5:1 against the DARKEST theme page, Schiefer
@@ -168,6 +196,9 @@
      alone: the `0 0 0 3px var(--brand-edge)` focus rings (an accessibility
      floor, never restyle them for looks), `.ticket--live`'s inset accent edge,
      and `0 0 0 1px var(--line)` used as a hairline. */
+  /* Elevation casts a BLACK shadow under both schemes — a "light shadow" is not
+     a thing, and on a dark page depth comes from --surface sitting above
+     --page-bg (see [data-scheme="dark"]), with these as the soft edge. */
   --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.10), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
   --shadow-3: 0 4px 12px rgba(0, 0, 0, 0.10), 0 18px 44px rgba(0, 0, 0, 0.12);
@@ -190,6 +221,72 @@
   --font-display-std: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: var(--font-display-std);
 }
+
+/* ---- The dark scheme (#904) --------------------------------------------
+   A design declares `scheme: 'dark'` in round-designs.js and applyBackground()
+   sets <html data-scheme="dark">, exactly as it sets data-world. Everything
+   below is a TOKEN override — no component rule keys off the attribute — so a
+   screen is dark because its tokens are, not because it was ported.
+
+   Two selectors, because two things can be dark at once. The root carries the
+   round's own scheme; a `.theme-card` on the design screen carries the scheme
+   of the design it PREVIEWS, and sets --page-bg/--brand inline, so a Sci-Fi
+   card inside a Standard round previews as a dark card (the same inheritance
+   trick the world ornaments use). The home tile is deliberately NOT in here:
+   one dark tile per round would make the lobby a patchwork, so it takes the
+   accent ink alone (.round-card[data-scheme] below).
+
+   What flips, and why it is not just "swap black and white":
+
+   - --shade is the whole neutral system in one token. Every --sunken/--line/
+     --placeholder mix keeps its percentage and only changes which way it
+     travels (see the note in :root).
+   - --surface has to be a LIFT off the page rather than a fixed colour: on a
+     light design a card is white against a cream page, on a dark one it is the
+     page raised 9%. That is why it is settable at all.
+   - --on-accent inverts because --brand does. A dark design's accent must
+     clear 4.5:1 as link text on its own page, which forces it light, and white
+     on a light accent is unreadable — so every ink on a saturated fill flips
+     with it, including the ones on --good/--warn/--danger and on a rating tone.
+   - The semantics are re-picked, not lightened by rule: #117c38 on #0e1622 is
+     2.0:1. Each of the three, plus the gold pair, is chosen to clear 4.5:1 both
+     as text on the darkest page and as text on --surface, with --on-accent
+     clearing the same bar ON them as a fill.
+   - --gold and --gold-edge deliberately do NOT move: they are the medal/seal
+     mid-tone, they sit on the finale stage, and the stage is dark either way.
+
+   test/a11y-contrast.test.js measures every pair above against every shipped
+   design, in both directions — light designs against white, dark ones against
+   their own page. */
+:root[data-scheme="dark"],
+.theme-card[data-scheme="dark"] {
+  --shade: #fff;
+  --surface: color-mix(in oklab, #fff 9%, var(--page-bg));
+  --on-accent: var(--on-accent-dark);
+  --ink: #eceef5;
+  --ink-soft: #a4adbe;
+  /* Anchored, not derived: see --scrim in :root. */
+  --scrim: color-mix(in oklab, #000 62%, transparent);
+  --good: #5fd08a;
+  --warn: #e9a33d;
+  --danger: #f0736f;
+  --gold-deep: #f0c25c;
+  --gold-soft: #3a2f14;
+  /* The curtain still has to be darker than the page it COVERS, and on a dark
+     design that is not free: 18% of a light accent lifts the mix above a
+     night-blue page on its own, however deep the anchor goes. So both terms
+     move — the anchor becomes a deepened version of this round's own page
+     (one hue on screen instead of a fixed warm black beside a cool one), and
+     the accent's share drops to the point where the curtain still reads as a
+     step DOWN. test/a11y-contrast.test.js asserts that direction. */
+  --stage-anchor: color-mix(in oklab, var(--page-bg), #000 55%);
+  --stage-bg: color-mix(in oklab, var(--brand) 9%, var(--stage-anchor));
+}
+
+/* The home tile paints ONE round's accent while the lobby around it stays
+   light, so it needs that accent's ink and nothing else from the block above
+   (views-home.js sets the attribute). */
+.round-card[data-scheme="dark"] .round-card__emblem { color: var(--on-accent-dark); }
 
 * { box-sizing: border-box; }
 
@@ -611,7 +708,7 @@ h1, h2, h3 { font-family: var(--font-display); }
   .rail__item .ti { font-size: var(--text-lg); flex: none; }
   .rail__item span { min-width: 0; }
   .rail__item:not(.is-active):hover { background: var(--brand-tint-soft); color: var(--ink); }
-  .rail__item.is-active { background: var(--brand); color: #fff; }
+  .rail__item.is-active { background: var(--brand); color: var(--on-accent); }
 }
 
 /* The dock is `position: fixed` (below the strip breakpoint), and .app's own
@@ -706,7 +803,11 @@ h1, h2, h3 { font-family: var(--font-display); }
   border-radius: 50%;
   /* Per-member color injected inline via memberColor(); accent as fallback. */
   background: var(--brand);
-  color: #fff;
+  /* The fill is a MEMBER TONE set inline. memberTone() lifts the palette hex
+     toward white on a dark scheme (core.js, #904) — a dark disc would vanish
+     into a dark page — so the initials flip with it, exactly like every other
+     ink on a saturated fill. On a light scheme --on-accent IS #fff. */
+  color: var(--on-accent);
   font-family: var(--font-display);
   font-size: 13px; /* glyph, not type */
   font-weight: 700;
@@ -1016,7 +1117,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   flex: 0 0 156px;
   padding: 12px 16px;
   border-left: 2px dashed var(--line);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   font-weight: 700;
 }
 .ticket__stub .ti { font-size: var(--text-xl); color: var(--gold); }
@@ -1044,7 +1145,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
 }
 /* In-progress ticket: an unfinished session waiting to be resumed. */
 .ticket--live { border-color: var(--brand); box-shadow: inset 3px 0 0 0 var(--brand); }
-.ticket--live .ticket__label { color: var(--brand-dark); }
+.ticket--live .ticket__label { color: var(--brand-strong); }
 .ticket--live .ticket__stub .ti { color: var(--brand); }
 /* Discard action for an abandoned draw (#329). It belongs to the ticket above
    it, so it hugs that one and keeps the breathing room on the side facing the
@@ -1087,7 +1188,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   color: var(--ink-soft);
 }
 .dock__item .ti { font-size: var(--text-xl); }
-.dock__item.is-active { background: var(--brand); color: #fff; }
+.dock__item.is-active { background: var(--brand); color: var(--on-accent); }
 .dock__item:not(.is-active):hover { background: var(--brand-tint-soft); }
 
 /* Phone form. Two things are conditioned on a dock ACTUALLY FLOATING here:
@@ -1325,14 +1426,14 @@ a.hub-row:hover { background: var(--sunken-soft); }
 }
 .chip .ti { font-size: var(--text-md); }
 .chip:hover { border-color: var(--brand-edge); }
-.chip.is-on { background: var(--brand); border-color: var(--brand-dark); color: #fff; }
+.chip.is-on { background: var(--brand); border-color: var(--brand-strong); color: var(--on-accent); }
 /* Exclude state of a tri-state tag filter (#241): the semantic danger fill, so
    "reject this tag" reads distinctly from the orange include state. */
 .chip.is-excluded {
   background: var(--danger);
   /* 78%, not 70%: a mix toward #000 darkens ~1.3x harder in oklab (see :root). */
-  border-color: color-mix(in oklab, var(--danger) 78%, #000);
-  color: #fff;
+  border-color: color-mix(in oklab, var(--danger) 78%, var(--shade));
+  color: var(--on-accent);
 }
 .filter-chips__sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; flex: none; }
 
@@ -1366,13 +1467,13 @@ a.hub-row:hover { background: var(--sunken-soft); }
    as well as by the fill (.claude/rules/accessibility-contrast-and-modals.md §3). */
 .tag-mode__opt .ti { font-size: var(--text-sm); visibility: hidden; }
 .tag-mode__opt:not(:disabled):hover { border-color: var(--brand-edge); }
-/* --brand-dark, not --brand: the accent ON a brand tint measures 4.33–4.92:1
+/* --brand-strong, not --brand: the accent ON a brand tint measures 4.33–4.92:1
    across the eight themes and fails AA on four of them
    (.claude/rules/theme-derived-colors.md). */
 .tag-mode__opt.is-on {
   background: var(--brand-tint);
-  border-color: var(--brand-dark);
-  color: var(--brand-dark);
+  border-color: var(--brand-strong);
+  color: var(--brand-strong);
 }
 .tag-mode__opt.is-on .ti { visibility: visible; }
 
@@ -1441,7 +1542,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   cursor: pointer;
 }
 .fbar__trigger:hover { border-color: var(--brand-edge); }
-.fbar__trigger[aria-expanded="true"] { border-color: var(--brand); color: var(--brand-dark); }
+.fbar__trigger[aria-expanded="true"] { border-color: var(--brand); color: var(--brand-strong); }
 .fbar__chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 /* The other half of #854, and scoped for the reason stated above: on the setup
    screen the chip row takes a full line of its own, below the trigger, at every
@@ -1453,7 +1554,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
    so an empty chip row would still claim the bar's gap
    (.claude/rules/hidden-attribute-vs-display-rule.md). */
 .fbar__chips[hidden] { display: none; }
-/* One applied filter. `--brand-dark` rather than `--brand` on a brand tint: the
+/* One applied filter. `--brand-strong` rather than `--brand` on a brand tint: the
    latter measures 4.33–4.92:1 across the eight themes, i.e. below AA on four of
    them (.claude/rules/theme-derived-colors.md). */
 .fchip {
@@ -1463,7 +1564,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   padding: 3px 4px 3px 10px;
   border-radius: var(--radius-pill);
   background: var(--brand-tint);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   font-size: var(--text-sm);
   font-weight: 600;
   max-width: 100%;
@@ -1602,10 +1703,10 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .btn:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: calc(var(--press-mb) + 2.5px); }
 .btn--primary {
   background: var(--brand);
-  border-color: var(--brand-dark);
-  color: #fff;
+  border-color: var(--brand-strong);
+  color: var(--on-accent);
 }
-.btn--primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+.btn--primary:hover { background: var(--brand-strong); border-color: var(--brand-strong); }
 .btn--ghost { background: transparent; border-bottom-width: 1.5px; }
 /* A ghost button's border is already 1.5px at rest, so nothing shrinks and it
    compensates by nothing — but it must still restate the resting margin. A
@@ -1701,7 +1802,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--on-accent);
   font-size: 28px; /* glyph, not type */
   flex: none;
 }
@@ -1878,7 +1979,8 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   height: 46px;
   border-radius: 50%;
   background: var(--brand);
-  color: #fff;
+  /* Member tone inline, like .avatar. */
+  color: var(--on-accent);
   font-family: var(--font-display);
   font-size: 16px; /* glyph, not type */
   font-weight: 700;
@@ -2053,14 +2155,14 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   color: var(--ink);
 }
 /* A circular chip, sized to one label line so it stays flush with the first line
-   of a label that wraps. --brand-dark, not --brand: the plain accent lands at
+   of a label that wraps. --brand-strong, not --brand: the plain accent lands at
    4.28:1 on the chip for four of the eight themes (test/a11y-contrast.test.js). */
 .tl-act--milestone .tl-act__icon {
   width: var(--tl-act-line);
   justify-content: center;
   border-radius: 50%;
   background: var(--brand-tint);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   opacity: 1;
 }
 /* Routine adds recede: one step down the type scale, which --tl-act-line tracks
@@ -2132,7 +2234,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   gap: 8px;
   font-size: var(--text-md);
   font-weight: 700;
-  color: var(--brand-dark);
+  color: var(--brand-strong);
 }
 .session-card__title .score-pill { position: static; }
 .session-card__meta { color: var(--ink-soft); font-size: var(--text-sm); margin-top: 3px; }
@@ -2222,7 +2324,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   display: flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in oklab, var(--brand-dark) 55%, #fff);
+  color: color-mix(in oklab, var(--brand-strong) 55%, var(--surface));
   background-image: linear-gradient(
     135deg,
     color-mix(in oklab, var(--brand) 26%, var(--page-bg)),
@@ -2301,7 +2403,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   position: absolute;
   top: 8px;
   right: 8px;
-  color: #fff;
+  color: var(--on-accent);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-sm);
@@ -2318,7 +2420,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .score-pill--none {
   /* 8%, not 10%: the oklab re-tune factor from :root. */
-  background: color-mix(in oklab, var(--page-bg), #000 8%);
+  background: color-mix(in oklab, var(--page-bg), var(--shade) 8%);
   color: var(--ink-soft);
   box-shadow: none;
 }
@@ -2339,8 +2441,8 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
    `--brand`, which lands below 4.5:1 on four of the eight themes
    (.claude/rules/theme-derived-colors.md). */
 .exp-pill {
-  background: var(--brand-dark);
-  color: #fff;
+  background: var(--brand-strong);
+  color: var(--on-accent);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-sm);
@@ -2349,7 +2451,9 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   box-shadow: var(--shadow-1);
 }
 .img-badge {
-  background: rgba(255, 255, 255, 0.88);
+  /* A wash over an arbitrary cover, so it must follow the card surface: on a
+     dark scheme a white pill would carry the (light) --ink-soft below. */
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
   border-radius: var(--radius-pill);
   padding: 4px 7px 2px;
   font-size: var(--text-sm);
@@ -2385,7 +2489,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
    concepts retired in #242. Nothing referenced them.) */
 .tag--players { background: var(--sunken); color: var(--ink-soft); }
 /* Custom round tags (#238): accent-derived so they follow the theme. */
-.tag--custom { background: var(--brand-tint); color: var(--brand-dark); }
+.tag--custom { background: var(--brand-tint); color: var(--brand-strong); }
 /* inline-flex (not the base .tag's inline-block) so the leading icon (#255)
    stays beside the label: on a narrow screen an inline-block pill wraps
    *between* the glyph and the text, leaving the icon stranded on its own line.
@@ -2684,7 +2788,7 @@ body.auth-screen .topbar__context { display: none; }
   height: 46px;
   border-radius: var(--radius-md);
   background: var(--brand-tint);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   font-size: 24px; /* glyph, not type */
   margin-bottom: 14px;
 }
@@ -2711,7 +2815,7 @@ body.auth-screen .topbar__context { display: none; }
   align-items: center;
   justify-content: center;
   background: var(--brand);
-  color: #fff;
+  color: var(--on-accent);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 18px; /* glyph, not type */
@@ -2740,7 +2844,7 @@ body.auth-screen .topbar__context { display: none; }
   font-size: var(--text-md);
   font-weight: 600;
 }
-.landing-chip .ti { color: var(--brand-dark); font-size: var(--text-lg); }
+.landing-chip .ti { color: var(--brand-strong); font-size: var(--text-lg); }
 /* The source-code chip is the one chip that is a link (#483). An anchor arrives
    browser-blue and underlined, which no chip ever wanted — and `color` must be
    named explicitly rather than inherited, because the anchor's UA colour would
@@ -2761,7 +2865,7 @@ body.auth-screen .topbar__context { display: none; }
    competing action. Colour comes from --brand via the token, never a fixed hex
    (.claude/rules/theme-derived-colors.md). */
 .landing-close__faq { margin: 14px 0 0; font-size: var(--text-sm); }
-.landing-close__faq a { color: var(--brand-dark); }
+.landing-close__faq a { color: var(--brand-strong); }
 
 /* The demo CTA and the note explaining what the demo is (#427), as ONE tinted
    group (#503). The note used to follow `.landing-hero__cta`, which is a
@@ -2873,7 +2977,7 @@ body.auth-screen .topbar__context { display: none; }
    but `a` picks one up from any later component rule and the attribute would
    silently lose (.claude/rules/hidden-attribute-vs-display-rule.md). */
 .demo-banner__terms { color: var(--brand); text-decoration: underline; }
-.demo-banner__terms:hover { color: var(--brand-dark); }
+.demo-banner__terms:hover { color: var(--brand-strong); }
 .demo-banner__terms[hidden] { display: none; }
 .demo-banner__cta {
   font: inherit;
@@ -2885,7 +2989,7 @@ body.auth-screen .topbar__context { display: none; }
   cursor: pointer;
   text-decoration: underline;
 }
-.demo-banner__cta:hover { color: var(--brand-dark); }
+.demo-banner__cta:hover { color: var(--brand-strong); }
 /* The banner is hidden on the auth screens: showRegister() from the banner's own
    CTA clears the demo session, and a "you are in a demo" strip above a register
    form would contradict the screen it sits on. */
@@ -2923,7 +3027,7 @@ body.auth-screen .demo-banner { display: none; }
 /* Ships hidden and is revealed only where /nutzungsbedingungen resolves, so it
    needs its own `[hidden]` rule for the same reason as the anchor above. */
 .terms-banner__link { color: var(--brand); text-decoration: underline; }
-.terms-banner__link:hover { color: var(--brand-dark); }
+.terms-banner__link:hover { color: var(--brand-strong); }
 .terms-banner__link[hidden] { display: none; }
 .terms-banner__dismiss {
   font: inherit;
@@ -2935,7 +3039,7 @@ body.auth-screen .demo-banner { display: none; }
   cursor: pointer;
   text-decoration: underline;
 }
-.terms-banner__dismiss:hover { color: var(--brand-dark); }
+.terms-banner__dismiss:hover { color: var(--brand-strong); }
 /* Hidden on the auth screens for the same reason as the demo banner: those
    screens render logged-out, where there is no account to be behind. */
 body.auth-screen .terms-banner { display: none; }
@@ -3180,7 +3284,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   gap: 7px;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--brand-dark);
+  color: var(--brand-strong);
 }
 .home-news__title { font-weight: 700; }
 .home-news__body {
@@ -3216,7 +3320,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 }
 .friends-invite__title { font-weight: 600; }
 .friends-invite__sub { font-size: var(--text-sm); }
-.friends-invite__action { font-weight: 600; color: var(--brand-dark); }
+.friends-invite__action { font-weight: 600; color: var(--brand-strong); }
 
 /* The home hub's Entdecken tile (#842): real podium cards inside a dashboard
    tile, where a one-line teaser strip used to sit. Stacked one per row — the
@@ -3530,7 +3634,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   font-size: var(--text-md);
   color: var(--ink-soft);
 }
-.vote__who strong { color: var(--brand-dark); font-size: var(--text-xl); display: block; margin-top: 2px; }
+.vote__who strong { color: var(--brand-strong); font-size: var(--text-xl); display: block; margin-top: 2px; }
 .vote__img {
   position: relative;
   margin: 16px 20px 8px;
@@ -3565,7 +3669,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   font-size: var(--text-xl);
   cursor: pointer;
 }
-.vote__info:hover, .vote__info:focus-visible { color: var(--brand-dark); }
+.vote__info:hover, .vote__info:focus-visible { color: var(--brand-strong); }
 
 /* The shared weight/description body (#717): the vote cards' info sheet and
    the game-detail "Über das Spiel" section. */
@@ -3573,7 +3677,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .game-info__weight-label { font-weight: 700; }
 .weight-dots { display: inline-flex; gap: 4px; }
 .weight-dots__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sunken); }
-.weight-dots__dot.is-filled { background: var(--brand-dark); }
+.weight-dots__dot.is-filled { background: var(--brand-strong); }
 /* The standard-metadata facts (#724). A label column wide enough for the longest
    German label ("Mindestalter") with the value free to wrap beside it — a grid
    rather than a flex row so every row's values line up, which is what makes the
@@ -3729,7 +3833,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .result-row__bars .bar-axis .ti { font-size: 14px; /* glyph, not type */ }
 .result-row__bars .bar-axis__n { font-size: var(--text-xs); font-weight: 700; }
 .result-row__score { text-align: right; }
-.score-big { font-size: var(--text-3xl); font-weight: 800; color: var(--brand-dark); line-height: 1; }
+.score-big { font-size: var(--text-3xl); font-weight: 800; color: var(--brand-strong); line-height: 1; }
 .score-label { font-size: var(--text-sm); color: var(--ink-soft); }
 /* Why this score is what it is — „1× gar nicht" (#893). Deliberately quiet: it
    only explains a number the reader is already looking at, and is not a call to
@@ -3752,7 +3856,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   font-size: var(--text-lg);
   cursor: pointer;
 }
-.score-info:hover, .score-info:focus-visible { color: var(--brand-dark); }
+.score-info:hover, .score-info:focus-visible { color: var(--brand-strong); }
 .score-info__body p { margin: 0 0 12px; line-height: 1.5; }
 .score-info__body p:last-child { margin-bottom: 0; }
 .result-row__remove { margin-top: 6px; color: var(--ink-soft); font-size: var(--text-sm); }
@@ -3771,13 +3875,13 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 /* The third state chip (#663, #560). The Wunschliste is neither a warning nor
    an achievement, so it takes the round's own accent instead of a semantic
    colour — via the PREPARED --brand-tint rather than a fresh color-mix, which
-   would only be another srgb mix for #544 to chase. --brand-dark, not --brand:
+   would only be another srgb mix for #544 to chase. --brand-strong, not --brand:
    the accent on its own tint measures 4.28–4.96:1 and misses AA on four of the
-   eight themes, while --brand-dark clears it everywhere
+   eight themes, while --brand-strong clears it everywhere
    (theme-derived-colors.md). */
 .tag--wish {
   background: var(--brand-tint);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
 }
 .rank-medal { font-size: var(--text-xl); margin-right: 6px; vertical-align: middle; }
 .rank-medal--gold { color: var(--gold); }
@@ -3801,7 +3905,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .chosen-banner:empty { display: none; }
 .chosen-banner.is-set {
   background: var(--brand-tint);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   border: 1px solid var(--brand-edge);
   font-size: var(--text-lg);
 }
@@ -3893,7 +3997,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   font-size: var(--text-sm);
   cursor: pointer;
 }
-.tables-seat.is-held { border-color: var(--brand); background: var(--brand-tint); color: var(--brand-dark); }
+.tables-seat.is-held { border-color: var(--brand); background: var(--brand-tint); color: var(--brand-strong); }
 /* Somebody at a game they rated 0-2. Marked on the chip as well as named in the
    notice below, so the person to move is findable without reading the list. */
 .tables-seat.is-hurt { border-color: var(--danger); }
@@ -3912,7 +4016,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   width: 100%;
   border: 1px dashed var(--brand-edge);
   background: var(--brand-tint-soft);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   border-radius: var(--radius-md);
   padding: 8px;
   cursor: pointer;
@@ -3974,7 +4078,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   padding: 4px 7px;
   border-radius: var(--radius-sm);
 }
-.rec-banner__dismiss:hover { background: rgba(0, 0, 0, 0.06); color: var(--ink); }
+.rec-banner__dismiss:hover { background: color-mix(in oklab, var(--shade) 6%, transparent); color: var(--ink); }
 .rec-banner__body { margin-top: 12px; }
 .rec-banner__sub { font-size: var(--text-sm); margin: 0 0 12px; }
 .recommend-list { display: flex; flex-direction: column; gap: 8px; }
@@ -3997,7 +4101,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   gap: 4px;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   white-space: nowrap;
 }
 .recommend-item__title { font-weight: 700; cursor: pointer; }
@@ -4055,7 +4159,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .member-chip.is-selected {
   background: var(--brand);
   border-color: var(--brand);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .winner-chips { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -4291,6 +4395,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   padding: 8px;
   font-size: var(--text-sm);
   font-weight: 700;
+  /* On the black scrim gradient below, not on a theme surface. */
   color: #fff;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
   opacity: 0;
@@ -4314,7 +4419,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   border: 1px solid var(--brand-edge);
 }
 .gd-onboard__head { display: flex; gap: 14px; align-items: flex-start; }
-.gd-onboard__icon { font-size: var(--text-2xl); color: var(--brand-dark); flex: none; line-height: 1.2; }
+.gd-onboard__icon { font-size: var(--text-2xl); color: var(--brand-strong); flex: none; line-height: 1.2; }
 .gd-onboard :is(h2, h3) { margin: 0 0 4px; font-size: var(--text-xl); }
 .gd-onboard p { margin: 0; max-width: 62ch; line-height: 1.55; }
 .gd-onboard__acts { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 0 40px; }
@@ -4377,11 +4482,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 }
 .icon-picker__trigger .ti { font-size: var(--text-xl); }
 .icon-picker__trigger .icon-picker__caret { font-size: var(--text-sm); opacity: 0.7; }
-.icon-picker__trigger:hover { border-color: var(--brand); color: var(--brand-dark); }
+.icon-picker__trigger:hover { border-color: var(--brand); color: var(--brand-strong); }
 .icon-picker__trigger[aria-expanded='true'] {
   background: var(--brand-tint);
   border-color: var(--brand);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
 }
 .icon-picker__btn {
   display: flex;
@@ -4399,7 +4504,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .icon-picker__btn.is-active {
   background: var(--brand-tint);
   border-color: var(--brand);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   cursor: default;
 }
 
@@ -4414,7 +4519,8 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  /* The swatch IS a member tone; its check mark rides the same flip. */
+  color: var(--on-accent);
   transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .member-swatch .ti { font-size: var(--text-xl); opacity: 0; }
@@ -5043,7 +5149,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .toast {
   position: fixed;
   bottom: 24px; left: 50%; transform: translateX(-50%);
-  background: var(--ink); color: #fff;
+  background: var(--ink); color: var(--surface);
   padding: 12px 22px;
   /* Deliberately NOT var(--radius-pill) (#858). A 999px radius is only a pill
      while the box is ONE line tall; on a wrapped message the four corner arcs
@@ -5164,7 +5270,7 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   font-weight: 700;
   text-decoration: none;
 }
@@ -5191,14 +5297,14 @@ kbd {
 
 /* Current price of a wished-for game (issue #679). The amount is the one number
    the section exists for, so it leads; everything under it qualifies that number
-   and stays quiet. `--brand-dark` rather than `--brand`: this is text, and the
+   and stays quiet. `--brand-strong` rather than `--brand`: this is text, and the
    accent itself clears AA on only four of the eight themes
    (.claude/rules/theme-derived-colors.md). */
 .gd-price__amount {
   font-family: var(--font-display);
   font-size: var(--text-2xl);
   font-weight: 700;
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   line-height: 1.2;
   margin-bottom: 4px;
 }
@@ -5483,7 +5589,7 @@ kbd {
   background: var(--brand-tint);
   border: 1px solid var(--brand-edge);
   border-radius: 12px 12px 0 0;
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   padding: 6px 4px 0;
 }
 /* Sized so the SHORTEST step still holds the LONGEST locale's tie marker
@@ -5679,7 +5785,7 @@ kbd {
   border: 1px solid var(--brand-edge);
   border-radius: var(--radius-pill);
   background: var(--brand-tint);
-  color: var(--brand-dark);
+  color: var(--brand-strong);
   cursor: pointer;
   transition: background var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
@@ -5841,7 +5947,7 @@ kbd {
   z-index: 40;
   /* --ink at 45%. This was the literal `rgba(43, 38, 32, 0.45)` — the token's
      own value hand-expanded, so retuning --ink left the backdrop behind. */
-  background: color-mix(in oklab, var(--ink) 45%, transparent);
+  background: var(--scrim);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -6024,7 +6130,7 @@ kbd {
   border-style: solid;
   border-color: var(--brand);
   background: var(--brand);
-  color: #fff;
+  color: var(--on-accent);
   opacity: 1;
 }
 
@@ -6235,7 +6341,7 @@ kbd {
 .team-chip.is-selected {
   background: var(--brand);
   border-color: var(--brand);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .pool-hint {
@@ -6268,7 +6374,7 @@ kbd {
 }
 .pool-thumb:not(:first-child) { margin-left: -8px; }
 .pool-thumb .ti { font-size: 16px; /* glyph, not type */ }
-.pool-thumb--more { background: var(--brand-tint); color: var(--brand-dark); }
+.pool-thumb--more { background: var(--brand-tint); color: var(--brand-strong); }
 
 /* ---- Voting: member-colored progress, handover, mood scale ---- */
 .vote-progress { display: flex; gap: 5px; padding: 14px 16px 0; }
@@ -6276,7 +6382,7 @@ kbd {
   flex: 1;
   height: 7px;
   border-radius: var(--radius-pill);
-  background: rgba(0, 0, 0, 0.14);
+  background: color-mix(in oklab, var(--shade) 14%, transparent);
   overflow: hidden;
 }
 .vote-progress__seg > span { display: block; height: 100%; border-radius: var(--radius-pill); transition: width var(--dur-slow) var(--ease-out); }
@@ -6285,7 +6391,11 @@ kbd {
   max-width: 560px;
   margin: 0 auto;
   border-radius: 22px;
-  color: #fff;
+  /* The whole card is full-bleed in one person's MEMBER TONE (personColor), so
+     this screen and its three marks below all take --on-accent: white over the
+     dark tones a light scheme uses, near-black over the lifted ones a dark
+     scheme does. */
+  color: var(--on-accent);
   text-align: center;
   padding: 0 24px 40px;
   display: flex;
@@ -6293,13 +6403,13 @@ kbd {
   align-items: center;
 }
 .handover .vote-progress { width: 100%; margin-bottom: 34px; }
-.handover .vote-progress__seg { background: rgba(255, 255, 255, 0.3); }
-.handover .vote-progress__seg > span { background: #fff !important; }
+.handover .vote-progress__seg { background: color-mix(in oklab, var(--on-accent) 30%, transparent); }
+.handover .vote-progress__seg > span { background: var(--on-accent) !important; }
 .handover__avatar {
   width: 84px;
   height: 84px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6318,9 +6428,11 @@ kbd {
    REMOVING the compensation instead of making it additive. */
 .handover__go {
   --press-mb: 0px;
-  background: #fff;
+  background: var(--on-accent);
   border: none;
-  border-bottom: 4px solid rgba(0, 0, 0, 0.25);
+  /* The press edge is the button face pulled toward the ink — a fixed black
+     would disappear under the near-black face a dark scheme gives it. */
+  border-bottom: 4px solid color-mix(in oklab, var(--on-accent) 75%, var(--ink));
   border-radius: 16px;
   font-family: var(--font-display);
   font-size: var(--text-xl);
@@ -6333,7 +6445,7 @@ kbd {
   margin-top: 18px;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.85);
+  color: color-mix(in oklab, var(--on-accent) 85%, transparent);
   font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: 700;
@@ -6358,7 +6470,7 @@ kbd {
 .mood .ti { font-size: 28px; /* glyph, not type */ }
 .mood__n { font-family: var(--font-display); font-size: var(--text-xs); font-weight: 700; }
 .mood:hover { border-color: var(--brand); transform: translateY(-2px); }
-.mood.is-selected { color: #fff; transform: scale(1.08); }
+.mood.is-selected { color: var(--on-accent); transform: scale(1.08); }
 /* ---- Per-device voting (#209) ----
    The setup toggle and the lobby that replaces the hot-seat wizard for a session
    collecting votes from several devices. Named `live-vote`, deliberately NOT
@@ -6422,7 +6534,8 @@ kbd {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  color: #fff;
+  /* Member tone inline. */
+  color: var(--on-accent);
   font-weight: 800;
   font-size: var(--text-sm);
 }
@@ -6443,7 +6556,7 @@ kbd {
   font-size: var(--text-sm);
   color: var(--ink-soft);
 }
-.live-person.is-voted .live-person__state { color: var(--brand-dark); }
+.live-person.is-voted .live-person__state { color: var(--brand-strong); }
 
 /* The session activity log. Deliberately quiet — it is a record you consult,
    not something competing with the podium above it on the results screen. */
@@ -6504,6 +6617,7 @@ kbd {
   height: 30px;
   border-radius: 50%;
   background: var(--gold);
+  /* On --gold, which does NOT flip: the stage stays dark either way. */
   color: #fff;
   display: flex;
   align-items: center;
@@ -6541,7 +6655,7 @@ kbd {
   height: 19px;
   border-radius: 50%;
   background: var(--good);
-  color: #fff;
+  color: var(--on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6786,7 +6900,7 @@ kbd {
 .is-selecting .game-card.is-picked .game-card__pick {
   background: var(--brand);
   border-color: var(--brand);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* Off-shelf screens: a real checkbox, because the row is a <div> holding its
@@ -6888,7 +7002,7 @@ kbd {
 }
 .theme-card {
   position: relative;
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--line);
   border-radius: 16px;
   padding: 14px 14px 12px;
   cursor: pointer;
@@ -6901,7 +7015,7 @@ kbd {
 }
 .theme-card:hover { transform: translateY(-2px) rotate(-0.3deg); box-shadow: var(--shadow-2); }
 .theme-card__bar { width: 56%; height: 14px; border-radius: var(--radius-pill); }
-.theme-card__line { width: 80%; height: 7px; border-radius: var(--radius-pill); background: rgba(0, 0, 0, 0.12); }
+.theme-card__line { width: 80%; height: 7px; border-radius: var(--radius-pill); background: var(--placeholder); }
 .theme-card__line--short { width: 55%; }
 .theme-card__name { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; margin-top: 4px; }
 .theme-card__check {
@@ -6911,7 +7025,7 @@ kbd {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  color: #fff;
+  color: var(--on-accent);
   display: none;
   align-items: center;
   justify-content: center;
@@ -6934,7 +7048,7 @@ kbd {
       naming its display face and its artwork: hand-authored SVG silhouettes,
       inlined as data URIs (no vendored assets, no build step, works offline).
       Every mask is drawn in black; the colour comes from the SLOT, always a
-      theme token (--brand, --brand-dark, --stage-ink), so a motif follows the
+      theme token (--brand, --brand-strong, --stage-ink), so a motif follows the
       world's accent for free and never hardcodes a shade
       (.claude/rules/theme-derived-colors.md).
    2. SIX SLOT RULES, shared by every world, keyed off the bare [data-world]:
@@ -7017,7 +7131,7 @@ kbd {
 
 /* Slot 2 — the primary button's frame: one ornament at the top-left corner,
    the same one rotated at the bottom-right. Sized in em so .btn--sm and
-   .btn--lg scale their frame with their type. --brand-dark rather than --brand:
+   .btn--lg scale their frame with their type. --brand-strong rather than --brand:
    the button IS --brand, and the part of the frame that overlaps it has to
    read as sitting in front. */
 [data-world] .btn--primary { position: relative; }
@@ -7028,7 +7142,7 @@ kbd {
   width: 2.8em;
   height: 1.8em;
   pointer-events: none;
-  background: var(--brand-dark);
+  background: var(--brand-strong);
   mask-image: var(--world-frame);
   mask-size: contain;
   mask-repeat: no-repeat;
@@ -7151,7 +7265,7 @@ kbd {
    accent (its inline --brand), so the preview is the world it names, not the
    round it sits in, and a home tile is recognisable from the lobby. The tile
    sits on white, where --ink-soft keeps 4.9:1 on the motif's densest pixel.
-   --brand rather than --brand-dark for the bar frame: the derived tokens are
+   --brand rather than --brand-strong for the bar frame: the derived tokens are
    resolved once at :root from the ROUND's accent and inherit as values, so
    inside the card only the raw token is the card's own. */
 :is(.theme-card, .round-card)[data-world] { position: relative; overflow: hidden; isolation: isolate; }

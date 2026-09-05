@@ -24,7 +24,6 @@ async function showBackground(rid) {
   const bg = round.background;
   const current = resolveDesign(bg);
   const stored = Boolean(bg && bg.type === 'theme' && bg.page);
-  const cards = []; // every card across BOTH groups, for the active-state sweep
 
   // Two groups: the colour palettes, then the worlds. Each card is a tiny live
   // preview — page background, an accent "button", a text line and the accent
@@ -41,8 +40,14 @@ async function showBackground(rid) {
     group.designs.forEach((th) => {
       const active = th.std ? !stored : Boolean(current && current.id === th.id);
       const worldAttr = th.world ? ` data-world="${esc(th.world)}"` : '';
-      const style = `background:${th.page}${th.world ? `;--brand:${th.accent}` : ''}`;
-      const sw = h(`<button class="theme-card${th.world ? ' theme-card--world' : ''}${active ? ' is-active' : ''}"${worldAttr} aria-pressed="${active}" style="${style}" title="${esc(t(th.labelKey))}">
+      // A dark design previews as a dark CARD, inside whatever scheme the round
+      // is in (#904) — the token block matches .theme-card[data-scheme] as well
+      // as :root. Both tokens it derives from go inline for that reason: a dark
+      // card needs its own --page-bg to lift a --surface and sink a --line off,
+      // and every card needs --brand so an ornament paints the design it names.
+      const schemeAttr = th.scheme ? ` data-scheme="${esc(th.scheme)}"` : '';
+      const style = `background:${th.page};--page-bg:${th.page};--brand:${th.accent}`;
+      const sw = h(`<button class="theme-card${th.world ? ' theme-card--world' : ''}${active ? ' is-active' : ''}"${worldAttr}${schemeAttr} aria-pressed="${active}" style="${style}" title="${esc(t(th.labelKey))}">
          <span class="theme-card__bar" style="background:${th.accent}"></span>
          <span class="theme-card__line"></span>
          <span class="theme-card__line theme-card__line--short"></span>
@@ -56,16 +61,30 @@ async function showBackground(rid) {
         try {
           const saved = await api('POST', `/api/rounds/${rid}/background`, payload);
           applyBackground(saved.background);
-          cards.forEach((el) => {
-            el.classList.remove('is-active');
-            el.setAttribute('aria-pressed', 'false');
-          });
-          sw.classList.add('is-active');
-          sw.setAttribute('aria-pressed', 'true');
+          /* Re-render, rather than sweeping the active class by hand.
+
+             Until #904 a design change was purely CSS — applyBackground() moved
+             two custom properties and every tone on screen followed — so the
+             only thing left to update was which card reads as chosen. A dark
+             design also flips two things JS resolves AT RENDER TIME: the member
+             tone on every avatar (memberTone) and the rating ramp (avgColor).
+             Those were painted inline while the old scheme was in force, so
+             without a redraw the rail's avatars keep light-scheme discs and
+             carry the dark scheme's near-black initials — measured: unreadable,
+             on the one screen where the design can change.
+
+             The cache has to be seeded first: fetchRound() serves the SWR copy,
+             which still holds the OLD background, so a bare currentView() would
+             repaint the previous design and only correct itself when the
+             revalidation landed. The route answers with `{ background }` alone,
+             hence the patch rather than a swrStore.set of the response. */
+          const key = 'round:' + rid;
+          const cached = swrStore.get(key);
+          if (cached) swrStore.set(key, { ...cached, background: saved.background });
           toast(t('design.toast.set'));
+          currentView();
         } catch (e) { toast(e.message); }
       });
-      cards.push(sw);
       grid.appendChild(sw);
     });
     sec.appendChild(grid);

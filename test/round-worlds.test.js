@@ -20,6 +20,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { loadApp } = require('./support/dom');
 const { CSS, rulesOf, bodyOf, mediaBlocks } = require('./support/css');
+const { contrast, tokensFor } = require('./support/theme');
 const { PALETTES, WORLDS } = require('../public/js/round-designs');
 
 const ROOT = path.join(__dirname, '..');
@@ -86,11 +87,17 @@ async function openDesign(t, background) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   const posts = [];
+  /* The stub PERSISTS the design, like the server does. It matters since #904:
+     choosing a design now re-renders the screen, and the SWR revalidation that
+     follows would otherwise hand back the ORIGINAL background and undo the
+     change — a fixture artefact that reads exactly like the bug the redraw is
+     there to fix. */
+  let savedBg = background;
   dom.set('api', async (method, url, body) => {
-    if (method === 'POST') { posts.push({ url, body }); return { background: body }; }
+    if (method === 'POST') { posts.push({ url, body }); savedBg = body; return { background: body }; }
     if (/\/activities$/.test(url)) return [];
-    if (/^\/api\/rounds\/[^/]+$/.test(url)) return roundFixture(background);
-    if (url === '/api/rounds') return [roundFixture(background)];
+    if (/^\/api\/rounds\/[^/]+$/.test(url)) return roundFixture(savedBg);
+    if (url === '/api/rounds') return [roundFixture(savedBg)];
     return {};
   });
   dom.set('accountsActive', () => false);
@@ -123,17 +130,38 @@ test('the design screen shows Farben and Welten, and only a world card carries t
 
 test('choosing a world saves its id, applies it at once and sweeps the active state across both groups', async (t) => {
   const { dom, posts } = await openDesign(t, null);
-  const std = dom.app.querySelector('.theme-card');
-  const card = dom.app.querySelector('.theme-card[data-world="forest"]');
-  card.click();
+  dom.app.querySelector('.theme-card[data-world="forest"]').click();
   await flush();
 
   // Through JSON: the body was built inside the jsdom realm, whose Object is
   // not this realm's, and strict deepEqual compares prototypes.
   assert.deepEqual(JSON.parse(JSON.stringify(posts)), [{ url: '/api/rounds/r1/background', body: stored(forest) }]);
   assert.equal(dom.document.documentElement.dataset.world, 'forest');
-  assert.equal(card.getAttribute('aria-pressed'), 'true');
-  assert.equal(std.getAttribute('aria-pressed'), 'false', 'the palette group must let go of Standard');
+  // Re-queried, not held from before the click: the screen is REDRAWN now (see
+  // below), so the elements captured earlier are detached and would report the
+  // pre-click state forever.
+  assert.equal(dom.app.querySelector('.theme-card[data-world="forest"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(dom.app.querySelector('.theme-card').getAttribute('aria-pressed'), 'false',
+    'the palette group must let go of Standard');
+});
+
+test('choosing a design REDRAWS the screen, so the tones resolved in JS follow it', async (t) => {
+  /* The one thing a design change could not do before #904: a dark design flips
+     memberTone() and avgColor(), both of which paint inline AT RENDER TIME. Left
+     un-redrawn, the rail's avatars keep the light scheme's dark discs and take
+     the dark scheme's near-black initials — unreadable, on the one screen where
+     a design can change. Measured in a browser before this was added. */
+  const { dom } = await openDesign(t, null);
+  const before = dom.app.querySelector('.theme-cards');
+  dom.app.querySelector('.theme-card[data-world="scifi"]').click();
+  await flush();
+
+  assert.notEqual(dom.app.querySelector('.theme-cards'), before, 'the screen was not re-rendered');
+  /* And the redraw must not repaint the PREVIOUS design: fetchRound() serves the
+     SWR copy, which still holds the old background until the click handler seeds
+     it. Without that seed this lands back on Standard for a beat. */
+  assert.equal(dom.document.documentElement.dataset.scheme, 'dark');
+  assert.equal(dom.document.documentElement.dataset.world, 'scifi');
 });
 
 test('a round on a world reopens the design screen with that world active', async (t) => {
@@ -235,7 +263,7 @@ test('the six slots exist, and every ornament is a pseudo-element that takes no 
   for (const [sel, body] of rules) {
     for (const m of body.matchAll(/background:\s*([^;]+);/g)) {
       painted += 1;
-      assert.match(m[1], /^(var\(--(brand|brand-dark|stage-ink)\)|radial-gradient\([^;]*var\(--stage-ink\))/,
+      assert.match(m[1], /^(var\(--(brand|brand-strong|stage-ink)\)|radial-gradient\([^;]*var\(--stage-ink\))/,
         `${sel}: background ${m[1]} is not a theme token`);
     }
   }
@@ -254,20 +282,20 @@ test('the backdrop alpha stays inside the contrast budget for body text on the p
 
   // Composite the accent over the page at that alpha and measure the two inks
   // that sit straight on the page, the way test/a11y-contrast.test.js does.
-  const srgb = (v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); };
-  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const lum = ([r, g, b]) => 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
-  const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  /* The inks come from test/support/theme.js, resolved FOR THE WORLD: a dark
+     world (#904) replaces both, and a regex over `:root` would have measured the
+     light pair over a night page — reporting ~1.05:1 for a combination the app
+     never paints, i.e. failing for the wrong reason and hiding the real one. */
   const over = (top, under, a) => top.map((c, i) => Math.round(c * a + under[i] * (1 - a)));
-  const ink = (name) => hex(new RegExp(`\\${name}:\\s*(#[0-9a-f]{6});`, 'i').exec(CSS)[1]);
   // The motif is at its densest where a silhouette is fully covered, so the
   // composite IS the worst pixel; body text keeps AAA there and the muted ink
   // keeps AA. (At .09 the drop is ~1.5 points off a ~13:1 ratio.)
   const failures = [];
   for (const w of WORLDS) {
-    const bg = over(hex(w.accent), hex(w.page), alpha);
-    const onMotif = contrast(ink('--ink'), bg);
-    const softOnMotif = contrast(ink('--ink-soft'), bg);
+    const t = tokensFor(w);
+    const bg = over(t.brand, t.page, alpha);
+    const onMotif = contrast(t.ink, bg);
+    const softOnMotif = contrast(t.inkSoft, bg);
     if (onMotif < 7) failures.push(`${w.id}: --ink on the motif = ${onMotif.toFixed(2)}:1`);
     if (softOnMotif < 4.5) failures.push(`${w.id}: --ink-soft on the motif = ${softOnMotif.toFixed(2)}:1`);
   }

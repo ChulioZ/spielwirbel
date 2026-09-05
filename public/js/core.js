@@ -892,6 +892,20 @@ function setWorld(world) {
   else delete el.dataset.world;
 }
 
+// A dark design (#904) lives on <html data-scheme="dark">, the sibling hook to
+// data-world and set the same way. It carries no ornament: everything it does
+// is a TOKEN override in styles.css, so no view and no component rule ever asks
+// which scheme it is in. Cleared when the design is light — or when there is no
+// design at all, which is what keeps home, login, the landing page and the
+// account screens light while one of the rounds they list is dark.
+function setScheme(scheme) {
+  const el = document.documentElement;
+  if (scheme === 'dark') el.dataset.scheme = 'dark';
+  else delete el.dataset.scheme;
+}
+
+const isDarkScheme = () => document.documentElement.dataset.scheme === 'dark';
+
 // The mobile browser toolbar and the installed PWA's chrome are tinted from
 // <meta name="theme-color">, which index.html ships at the standard accent — so
 // inside a Schiefer or Blaugrau round the frame around the app stayed
@@ -914,6 +928,7 @@ function applyBackground(bg) {
   const root = document.documentElement.style;
   const design = resolveDesign(bg);
   setWorld(design && design.world);
+  setScheme(design && design.scheme);
   if (bg && bg.type === 'theme' && bg.page && bg.accent) {
     const accent = resolveAccent(bg);
     root.setProperty('--page-bg', design ? design.page : bg.page);
@@ -941,18 +956,31 @@ function applyBackground(bg) {
 // case 4.5 at avg 3.0) while the ring still clears the 3:1 large-text bar on
 // every theme page. The hue is untouched, so the red→yellow→green reading is
 // unchanged; don't lighten it back without re-checking both uses.
+//
+// On a dark design (#904) BOTH of those uses invert together, which is why the
+// ramp cannot simply stay put: at 30% the ring is 2.6:1 on a dark page, and the
+// pill's ink is --on-accent, which is now near-black. 66% is the mirror of the
+// same two constraints — light enough to clear 3:1 as the ring on the darkest
+// shipped page, dark enough to carry --on-accent at 4.5:1 as a fill. Hue and
+// saturation are identical in both directions, so a 2 is the same orange-red
+// whichever design the round picked.
+const AVG_LIGHT = 30;
+const AVG_LIGHT_DARK = 66;
 function avgColor(avg) {
   const hue = Math.max(0, Math.min(120, ((avg - 1) / 4) * 120));
   // Below 1 the hue formula is already clamped at 0, so everything down there
   // would otherwise be the SAME red as a 1 (#890). The RATING scale no longer
   // reaches it — it starts at 1 since #909 — but the SCORE scale does: a badly
   // vetoed game floors at `SCORE_MIN` and `scoreColor` hands that straight in
-  // here, so a 0,4 and a 1,0 must not print as one colour. Deepen the lightness
+  // here, so a 0,4 and a 1,0 must not print as one colour. Move the lightness
   // rather than bending the hue: continuous, and a provable no-op for values
-  // >= 1, which is what bounds the ripple through every other consumer. Darker
-  // is also the safe direction for both uses — more contrast under white text,
-  // and more against every (light) theme page as text.
-  const light = 30 - 10 * Math.max(0, Math.min(1, 1 - avg));
+  // >= 1, which is what bounds the ripple through every other consumer. The
+  // step goes AWAY from the ink either way — darker under white text on a light
+  // design, lighter under near-black ink on a dark one — so it can only add
+  // contrast for both uses, never spend it.
+  const off = Math.max(0, Math.min(1, 1 - avg));
+  const dark = isDarkScheme();
+  const light = dark ? AVG_LIGHT_DARK + 10 * off : AVG_LIGHT - 10 * off;
   return `hsl(${hue}, 60%, ${light}%)`;
 }
 
@@ -986,9 +1014,29 @@ function scoreReason(st) {
   return st.vetoes ? tn(st.vetoes, 'score.reasonVetoOne', 'score.reasonVeto', { n: st.vetoes }) : '';
 }
 
-// The avatar palette itself lives in member-colors.js — one source of truth
-// shared with lib/routes/members.js, which validates against it (#420).
-function memberColor(round, memberId) {
+// What a member's palette hex is PAINTED as under the round's scheme (#904).
+// MEMBER_COLORS are fixed dark tones, tuned to carry white initials on a light
+// page (#145). On a dark page a dark disc sinks into the background, and the
+// same value is also drawn as TEXT — the voter's name on the vote screen — where
+// it lands well under AA. Lifting toward white keeps each colour recognisably
+// itself while handing the ink flip to --on-accent, which this scheme has
+// already inverted.
+//
+// Render-time, exactly like resolveAccent(): nothing is stored lifted, so the
+// stored value stays a member-colors.js hex and lib/routes/members.js keeps
+// validating the same eight (.claude/rules/shared-constants-across-the-stack.md).
+// A color-mix() is a legal inline background, so this needs no second palette.
+const MEMBER_LIFT = '42%';
+function memberTone(color) {
+  return isDarkScheme() ? `color-mix(in oklab, ${color}, #fff ${MEMBER_LIFT})` : color;
+}
+
+// The palette hex a member OWNS. The palette itself lives in member-colors.js —
+// one source of truth shared with lib/routes/members.js, which validates against
+// it (#420). Split from the painted tone below because the swatch picker has to
+// compare against the STORED value, and under a dark scheme the painted one is a
+// color-mix() string that matches nothing.
+function memberHex(round, memberId) {
   const idx = round.members.findIndex((m) => m.id === memberId);
   // A stored color (set on the member's detail page) wins; otherwise the color
   // is derived from the member's position, which is append-only and stable.
@@ -997,15 +1045,21 @@ function memberColor(round, memberId) {
   return MEMBER_COLORS[(idx >= 0 ? idx : 0) % MEMBER_COLORS.length];
 }
 
+const memberColor = (round, memberId) => memberTone(memberHex(round, memberId));
+
 // Colour for one session participant (sessionPeople shape). A guest is not a
 // round member, so memberColor() would find no row and hand every guest member
 // #0's swatch (#458) — they get the neutral ink instead, which also reads as
 // "not one of us" and reinforces the (Gast) label.
-// It has to be a DARK tone, not the light dashed one `.avatar--guest` paints
-// with: this value becomes the handover card's full-bleed background (white text
-// on it) and the voter's name colour on the page. --ink-soft clears 4.5:1 both
-// under white and on the darkest theme page, which is the bar every text colour
-// here has to meet (.claude/rules/accessibility-contrast-and-modals.md §1).
+// It has to be a SOLID tone, not the light dashed one `.avatar--guest` paints
+// with: this value becomes the handover card's full-bleed background and the
+// voter's name colour on the page. --ink-soft is the right token for both
+// because it is itself a scheme token — dark on a light design, light on a dark
+// one — so it clears 4.5:1 as text on the page either way, and the ink ON it is
+// --on-accent, which flips with it. It is deliberately NOT passed through
+// memberTone(): lifting an already-light tone would take it to near-white, i.e.
+// to --ink, and lose the "not one of us" distinction the colour is for
+// (.claude/rules/accessibility-contrast-and-modals.md §1).
 function personColor(round, person) {
   return person.guest ? 'var(--ink-soft)' : memberColor(round, person.id);
 }

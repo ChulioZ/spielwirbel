@@ -405,11 +405,15 @@ What the app does, in detail. For a short overview see the
 - **Designs** – per round, pick a colour scheme (page tone + accent); the
   whole UI derives from it — surfaces, shadows, the dark "stage" of the
   finale, and the mobile browser / installed-app chrome around the page.
+  A design can be **light or dark**: Obsidian is a plain dark scheme, and the
+  Sci-Fi world is dark too, with card surfaces, borders, text, semantic
+  colours and every ink-on-a-coloured-button re-derived for a night page.
   **Worlds** (Forest, Sci-Fi) go one step further: each brings its own display
   typeface, a backdrop motif and ornament framing on primary buttons, section
   headings, cards, empty states and the finale stage, and reaches the round's
   home tile and its shareable recap card. Body text stays Nunito in every
-  world; home, login, landing, account and inbox stay standard.
+  world; home, login, landing, account and inbox stay standard — a dark round
+  does not darken the lobby around it.
 - **Languages** – German, English, Spanish, French and Italian, following the system language by
   default, switchable any time via the picker in the top bar.
 - **Shareable links & reload-safe navigation** – the URL reflects the current

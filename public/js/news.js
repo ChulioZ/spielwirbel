@@ -32,9 +32,17 @@ const NEWS = [
    * world is something a group could not have before — its own typeface,
    * backdrop and ornaments on the round's screens, its home tile and its shared
    * recap card (#903). The remaining worlds are content on this machinery (#905).
+   *
+   * AMENDED by #904 (dark designs) rather than given a second entry, and the
+   * revision bumped WITH the text — the opposite call to #851's location fix
+   * below, because there the capability had not changed and here it has. From a
+   * reader's side these are one thing ("what the design picker can do"), the
+   * entry is a day old so most accounts have not seen either yet, and two
+   * overlapping design entries in two days would spend the attention the
+   * Nutzungsbedingungen §11 notice needs twice for one story.
    */
   {
-    revision: '2026-09-06',
+    revision: '2026-09-07',
     de: {
       title: 'Welten: Wald und Sci-Fi als Design',
       body: 'Unter Design gibt es neben den Farben jetzt Welten. Wald und Sci-Fi '
@@ -42,8 +50,10 @@ const NEWS = [
         + 'Hintergrundmotiv und Verzierungen an Karten, Knöpfen, leeren Bereichen '
         + 'und der Bühne vor der Auflösung mit. Die Kachel der Runde auf der '
         + 'Startseite und die Rückblick-Karte zum Teilen tragen die Welt ebenfalls. '
-        + 'Fließtext bleibt in jeder Welt gut lesbar, und alle Farben halten wie '
-        + 'bisher den Kontrast.',
+        + 'Neu ist außerdem: ein Design darf dunkel sein. Sci-Fi spielt jetzt vor '
+        + 'einem Sternenhimmel, und „Obsidian" ist ein dunkles Design ganz ohne '
+        + 'Verzierungen. Fließtext bleibt überall gut lesbar, und alle Farben '
+        + 'halten wie bisher den Kontrast.',
     },
     en: {
       title: 'Worlds: Forest and Sci-Fi designs',
@@ -51,8 +61,10 @@ const NEWS = [
         + 'bring their own typeface for headings and buttons, a backdrop motif and '
         + 'ornaments on cards, buttons, empty areas and the stage before the '
         + 'reveal. The round\'s tile on the home screen and the shareable recap '
-        + 'card carry the world too. Body text stays easy to read in every world, '
-        + 'and all colours keep their contrast as before.',
+        + 'card carry the world too. And a design may now be dark: Sci-Fi plays '
+        + 'against a starfield, and "Obsidian" is a dark design with no ornaments '
+        + 'at all. Body text stays easy to read everywhere, and all colours keep '
+        + 'their contrast as before.',
     },
   },
   /*

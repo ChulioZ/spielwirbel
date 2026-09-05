@@ -904,6 +904,7 @@ I18N.de = {
   'theme.sand': 'Sand',
   'theme.schiefer': 'Schiefer',
   'theme.pfirsich': 'Pfirsich',
+  'theme.obsidian': 'Obsidian',
   'theme.forest': 'Wald',
   'theme.scifi': 'Sci-Fi',
   'design.group.colors': 'Farben',

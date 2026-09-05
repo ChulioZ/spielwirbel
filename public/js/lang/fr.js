@@ -865,6 +865,7 @@ I18N.fr = {
   'theme.sand': 'Sable',
   'theme.schiefer': 'Ardoise',
   'theme.pfirsich': 'Pêche',
+  'theme.obsidian': 'Obsidienne',
   'theme.forest': 'Forêt',
   'theme.scifi': 'Science-fiction',
   'design.group.colors': 'Couleurs',

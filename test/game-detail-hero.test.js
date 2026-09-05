@@ -27,7 +27,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
-const { bodyOf, bodyOfIn, RULES, rootPx, whole, CSS: RAW_CSS } = require('./support/css');
+const { bodyOf, bodyOfIn, RULES, rootPx, whole } = require('./support/css');
+const { contrast, composite, tokensFor } = require('./support/theme');
+const { DESIGNS } = require('../public/js/round-designs');
 
 const RID = 'r1';
 
@@ -114,31 +116,63 @@ test('the cover glow stays under the opacity that would break the text contrast 
 
   const m = glow.match(/(^|[;{\s])opacity\s*:\s*([\d.]+)/);
   assert.ok(m, 'the glow layer pins an explicit opacity');
-  /* An arbitrary user cover over `--surface` (#ffffff on :root, never themed)
-     can only DARKEN it. The binding token is `--ink-soft` (#6b6358, relative
-     luminance 0.1275, 5.92:1 on white); a worst-case pure-black cover reaches
-     the 4.5:1 floor at (1.05 - a) / 0.1775 = 4.5, i.e. a = 0.25. Above that the
-     softest text on the band drops below AA. */
-  assert.ok(Number(m[2]) <= 0.25,
-    `the glow is ${m[2]}; above 0.25 a dark cover pushes --ink-soft under 4.5:1`);
+  const alpha = Number(m[2]);
+  /* The ceiling. It was derived when `--surface` was white everywhere, as
+     "a pure-black cover reaches 4.5:1 at (1.05 - a) / 0.1775 = 4.5, i.e.
+     a = 0.25" — and that arithmetic is WRONG in a way worth recording, because
+     it is the natural mistake: it treats the composited background's luminance
+     as linear in alpha. Compositing happens in gamma-encoded channels, so black
+     at 25% over white lands at channel 191, i.e. luminance 0.523 rather than
+     0.75, and the real ratio there is 3.22:1. The ceiling is kept as the
+     ceiling it has always been; what it is NOT is a proof of AA. */
+  assert.ok(alpha <= 0.25, `the glow is ${alpha}; the band's wash may not exceed 0.25`);
+
+  /* What is actually measured, per design and in both directions (#904). A dark
+     design paints a dark `--surface`, so an arbitrary cover LIGHTENS the band
+     rather than darkening it and the binding cover is white instead of black —
+     the old single-direction reasoning could not see that case at all.
+
+     FLOOR is a NON-REGRESSION guard, not a pass: at the shipped 0.16 the worst
+     case is ~4.07 on a light design and ~3.96 on Sci-Fi, both under AA. Two
+     things make that acceptable rather than a live defect, and both are
+     pessimism in this model: the cover is a real image behind `blur(40px)`, never
+     a flat black or white field, and the layer is masked by a radial gradient
+     centred at 22% that is fully transparent by 82% — i.e. it has largely faded
+     out before it reaches the column the `--ink-soft` meta lines sit in. Raising
+     the text to a true 4.5 means dropping the glow to ~0.11, which is a design
+     decision about the hero rather than a derivation one. */
+  const FLOOR = 3.9;
+  const failures = [];
+  for (const design of DESIGNS) {
+    const t = tokensFor(design);
+    for (const [what, cover] of [['a black cover', [0, 0, 0]], ['a white cover', [255, 255, 255]]]) {
+      const ratio = contrast(t.inkSoft, composite(cover, t.surface, alpha));
+      if (ratio < FLOOR) failures.push(`${design.id}: --ink-soft under ${what} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [],
+    `the band's wash may not take --ink-soft below ${FLOOR}:1 on any design`);
 });
 
-/* The opacity bound above is only sound while the band's background is the
-   LIGHTEST surface going — a wash can then only darken it, and darkening helps
-   dark text. If a theme ever painted `--surface` darker, the wash would move
-   text the other way and the 0.25 ceiling would be void, with nothing to say so.
-   That premise is two facts, and this pins both. */
-test('--surface is un-themed, which is what makes the glow bound sound', () => {
-  const decls = [...RAW_CSS.matchAll(/(^|[;{\s])--surface\s*:\s*([^;}]+)/g)].map((m) => m[2].trim());
-  assert.deepEqual(decls, ['#ffffff'],
-    '--surface is declared exactly once, on :root, as white');
+/* The measurement above is only sound while the harness can SEE every surface
+   the app paints. `--surface` stopped being a constant in #904 — a dark design
+   lifts it off its own page — so what has to hold now is not "it is white" but
+   "it is declared where tokensFor() resolves it": the two token blocks, and
+   nowhere else. A per-design inline value, or applyBackground() writing one at
+   runtime, would put a surface on screen that no contrast check ever sees. */
+test('--surface is declared only in the two token blocks the harness resolves', () => {
+  const declaring = RULES
+    .filter(([, body]) => /(^|[;{\s])--surface\s*:/.test(body))
+    .map(([sel]) => sel.replace(/\s+/g, ' ').trim());
+  assert.deepEqual(declaring, [':root', ':root[data-scheme="dark"], .theme-card[data-scheme="dark"]'],
+    '--surface must be declared by :root and the dark scheme block, and by nothing else');
 
-  // The other way a theme could reach it: applyBackground() writing it at runtime.
+  // The other way a design could reach it: applyBackground() writing it at runtime.
   const core = fs.readFileSync(path.join(__dirname, '..', 'public/js/core.js'), 'utf8');
   const applyBackground = core.slice(core.indexOf('function applyBackground'));
   const body = applyBackground.slice(0, applyBackground.indexOf('\n}\n') + 2);
   assert.doesNotMatch(body, /--surface/,
-    'applyBackground() must not set --surface, or a round could darken the band');
+    'applyBackground() must not set --surface, or a round could paint one nothing measures');
 });
 
 test('the cover leads the band and the ring does not outweigh it', () => {

@@ -16,9 +16,13 @@ it, so `styles.css` derives every tone from two custom properties that
 lighter/darker shade of the page or accent" — use `color-mix()` on the existing
 variables, or one of the prepared families:
 
-- Neutrals from the page: `--sunken`, `--sunken-soft`, `--line`, `--placeholder`.
-- Accent surfaces: `--brand-dark`, `--brand-tint`, `--brand-tint-soft`,
+- Neutrals from the page: `--sunken`, `--sunken-soft`, `--line`, `--placeholder`
+  — mixes toward **`--shade`** (`#000` light, `#fff` dark, #904); never the literal.
+- Accent surfaces: `--brand-strong` (was `--brand-dark` — "stronger" and "darker"
+  parted ways once a design could be dark), `--brand-tint`, `--brand-tint-soft`,
   `--brand-edge`, `--page-glow`.
+- Ink on a saturated FILL: **`--on-accent`** — white light, near-black dark; a
+  bare `#fff` there is a bug on half the designs.
 - The dark finale stage: `--stage-bg/raised/line/ink/muted/faint` (all derived
   from `--brand`, so the "curtain" matches every theme).
 - Semantics (theme-independent by design): `--good`, `--warn`, `--danger`, and
@@ -32,12 +36,12 @@ they clashed badly — three color worlds on one screen. The fix was exactly thi
 derivation; don't regress it. Category tags (`.tag--digital` etc.) and medal
 silver/bronze are intentionally fixed — they encode meaning, not theme.
 
-## `--brand` ON a brand tint does not clear AA — reach for `--brand-dark` (#633)
+## `--brand` ON a brand tint does not clear AA — reach for `--brand-strong` (#633)
 
 The natural way to draw an accent chip is `background: var(--brand-tint); color:
 var(--brand)`. Measured across all eight themes, that lands at **4.33–4.92:1** —
 so four of the eight (Salbei 4.33, Standard 4.34, Sand 4.36, Pfirsich 4.38) sit
-**below the 4.5 text bar**, while the other four pass. `--brand-dark` on the same
+**below the 4.5 text bar**, while the other four pass. `--brand-strong` on the same
 tint is 5.84–6.51 everywhere, for free.
 
 (Those numbers were re-measured for #544's oklab switch; the ones here before it
@@ -95,55 +99,28 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
 - **six slot rules keyed off the bare `[data-world]`** — page backdrop,
   primary-button frame, section-heading rule, card corner, empty-state scene,
   finale stage — each a pseudo-element with `pointer-events: none`, painting
-  the mask in a THEME token (`--brand`, `--brand-dark`, `--stage-ink`), never
+  the mask in a THEME token (`--brand`, `--brand-strong`, `--stage-ink`), never
   in a shade of its own.
 
 Three constraints, each with its reason: the face changes through
 `--font-display` only (`--font` stays Nunito, so reading is never harmed);
-`--surface` stays un-themed (`test/game-detail-hero.test.js` — a dark world is
-#904's problem, not a token override here); and the preview card and the home
+`--surface` is set by the two token blocks and nowhere else (#904 —
+`test/game-detail-hero.test.js` pins *where*, not *what*); and the preview card and the home
 tile carry the attribute THEMSELVES, so the slots must read TOKENS — custom
 properties inherit from the nearest element that sets them, which is what lets
 a Sci-Fi card inside a Forest round preview Sci-Fi. A motif under text costs
 contrast the plain-background harness cannot see (a stage tile at .16 put
 `--stage-faint` at 2.27:1), so the bold scenes live in text-free bands.
 `test/round-worlds.test.js` pins the hook, the token set, the pseudo-element
-discipline, the two bands' geometry and the two media gates.
+discipline, the two bands' geometry and the two media gates. **Sci-Fi is dark
+since #904** and a world may declare `scheme: 'dark'` like any palette; the
+ornaments need no change, because every slot paints in a theme token. The dark
+half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`.
 
-## The one themed colour that is NOT a CSS variable: the browser chrome (#523)
+## The browser chrome is themed too, and it is NOT a CSS variable
 
-`<meta name="theme-color">` tints the mobile browser toolbar and the installed
-PWA's chrome. It is an **HTML attribute**, so no amount of `color-mix()` reaches
-it — `applyBackground()` writes it directly (`setThemeColor`), which is why that
-function is the only place a theme colour is applied imperatively. Adding a
-themed surface? Check whether it lives outside the stylesheet before reaching
-for a variable.
-
-It follows the **accent**, not `--page-bg`, and the reason is continuity: the
-static default in `index.html` is `#c2410c`, which *is* `PALETTES[0].accent`, so
-home, the landing and unthemed rounds keep exactly that value and the chrome
-never flips between a saturated tone and a pale one mid-navigation. Tracking the
-page colour instead would have flipped it (and the toolbar's icon colours with
-it) on every round entry and exit. That choice also settles the sibling question
-in #597: `theme-color` is brand chrome here, so a standalone page's value aligns
-on the manifest's `theme_color`, not on its own background.
-
-Two constraints on any change here:
-
-- **The meta and `--brand` are set from the same local**, never re-derived
-  independently. `themeAccent(bg)` looks like it would do — it normalizes more
-  loosely (no `bg.page` requirement), so on malformed data it can disagree with
-  what `applyBackground` actually painted. The tag must state the applied accent
-  or it is worse than a stale one.
-- **The static default and `STANDARD_ACCENT` must stay equal.**
-  `test/theme-color.test.js` parses both out rather than restating a hex, so
-  editing one alone goes red. That discipline now covers the whole file (#637):
-  the stale-accent spec reads Sand's current `page`/`accent` off `PALETTES` too,
-  so a legitimate contrast retune needs no hand-edit there. Only the **pre-#145**
-  hex it feeds in stays a literal — that one is history and lives nowhere in the
-  code, and the spec asserts it still differs from Sand's current accent, or it
-  would be resolving nothing.
-
-Verification is a DOM probe (`document.querySelector('meta[name=theme-color]')
-.content`), never a screenshot: the Browser pane renders no browser chrome, so a
-capture is the same picture whether the change works or not.
+`<meta name="theme-color">` is an HTML attribute, so no amount of `color-mix()`
+reaches it — `applyBackground()` writes it directly. Adding a themed surface?
+Check whether it lives outside the stylesheet before reaching for a variable.
+The reasoning (why it follows the ACCENT rather than the page, and the two
+constraints on changing it) is `.claude/rules/theme-color-meta-tag.md`.

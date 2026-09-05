@@ -864,6 +864,7 @@ I18N.it = {
   'theme.sand': 'Sabbia',
   'theme.schiefer': 'Ardesia',
   'theme.pfirsich': 'Pesca',
+  'theme.obsidian': 'Ossidiana',
   'theme.forest': 'Foresta',
   'theme.scifi': 'Fantascienza',
   'design.group.colors': 'Colori',
