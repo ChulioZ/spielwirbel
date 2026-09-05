@@ -92,6 +92,16 @@ threshold moved with it. It is anchored rather than picked: 1.0 is exactly what
 a flat 2 from every voter scores. `VIOLATION_MAX = 2` above is untouched, being
 a threshold on the tile scale rather than on the score.
 
+**Qualified further by #922.** The rating reason no longer fires when the low
+score rests on a SINGLE voter — exactly one vote below 2 with nobody at 2. That
+is not the "correction back to a 1–5 scale" this section warns against: zeros
+still land in the number, the threshold is still 1.0, and a game two people vote
+down is still proposed. What was wrong is that a mean divides by the voter count,
+so one dissenter's weight — and therefore whether the reason fired at all —
+depended on group size (`{1,4,4}` proposed, `{1,4,4,4}` not). See
+`.claude/rules/assert-the-decision-not-its-ingredients.md` for why the spec
+guarding this could not see it.
+
 **Related:** `.claude/rules/shared-constants-across-the-stack.md` (the ninth
 inventory entry, and why this is one file rather than nine copies),
 `.claude/rules/session-guests-are-not-members.md` §4 (a guest's scale starts at
