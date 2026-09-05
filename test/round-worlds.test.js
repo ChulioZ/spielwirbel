@@ -156,9 +156,15 @@ test('the home tile shows the world glyph, and the app glyph for a palette', asy
   dom.set('accountsActive', () => false);
   dom.set('isLoggedIn', () => false);
   await dom.call('showHome');
-  const glyphs = [...dom.document.querySelectorAll('.round-card:not(.round-card--new) .round-card__emblem .ti')]
-    .map((i) => [...i.classList].find((c) => c.startsWith('ti-')));
+  const tiles = [...dom.document.querySelectorAll('.round-card:not(.round-card--new)')];
+  const glyphs = tiles.map((a) => [...a.querySelector('.round-card__emblem .ti').classList].find((c) => c.startsWith('ti-')));
   assert.deepEqual(glyphs, [forest.icon, 'ti-tornado']);
+  // The tile carries the hook ITSELF, with its own accent: home has no root
+  // hook, so the tile's backdrop and face come from its own attribute.
+  assert.equal(tiles[0].dataset.world, 'forest');
+  assert.match(tiles[0].getAttribute('style'), new RegExp(`--brand:${forest.accent}`));
+  assert.equal(tiles[1].hasAttribute('data-world'), false, 'a palette tile carries no hook');
+  assert.equal(dom.document.documentElement.hasAttribute('data-world'), false, 'home itself stays standard');
 });
 
 // ---- the CSS contract ----------------------------------------------------
@@ -266,6 +272,52 @@ test('the backdrop alpha stays inside the contrast budget for body text on the p
     if (softOnMotif < 4.5) failures.push(`${w.id}: --ink-soft on the motif = ${softOnMotif.toFixed(2)}:1`);
   }
   assert.deepEqual(failures, [], 'a motif under text must keep AAA for --ink and AA for --ink-soft');
+});
+
+/* The scene slots are BOLD (.36 / .4) because they sit where no text is — and
+   that is geometry, not a promise. The empty state's band is the art's own
+   height-to-width ratio, and the box reserves that much below its text; the
+   stage's band must end above the title, i.e. inside the seal's own height. */
+const artRatio = (token, world) => {
+  const m = /width='(\d+)' height='(\d+)'/.exec(bodyOf(`[data-world="${world.id}"]`).split(token + ':')[1] || '');
+  assert.ok(m, `${world.id}: ${token} is not an SVG with a width and a height`);
+  return Number(m[2]) / Number(m[1]);
+};
+
+test('the empty-state scene lives in a reserved band below the text', () => {
+  const box = bodyOf('[data-world] .empty');
+  assert.ok(box, 'the empty-state host rule has moved');
+  const pad = /padding-bottom:\s*calc\(\s*44px\s*\+\s*(\d+)%\s*\)/.exec(box);
+  assert.ok(pad, '.empty must reserve a percentage band below its 44px padding');
+  const scene = slotBody('[data-world] .empty::before');
+  assert.match(scene, /mask-size:\s*100% auto/);
+  assert.match(scene, /mask-position:\s*center bottom/);
+  assert.match(scene, /mask-repeat:\s*no-repeat/);
+  for (const w of WORLDS) {
+    // The band is width * ratio tall; the reserved padding must cover it.
+    assert.ok(Number(pad[1]) / 100 >= artRatio('--world-scene', w) - 1e-9,
+      `${w.id}: the scene is ${(artRatio('--world-scene', w) * 100).toFixed(0)}% of the width but only ${pad[1]}% is reserved`);
+  }
+});
+
+test('the stage scene is a band behind the seal that ends above the title', () => {
+  const stage = bodyOf('.stage');
+  const seal = bodyOf('.stage__seal');
+  const maxW = Number(/max-width:\s*(\d+)px/.exec(stage)[1]);
+  const padTop = Number(/padding:\s*(\d+)px/.exec(stage)[1]);
+  const sealH = Number(/height:\s*(\d+)px/.exec(seal)[1]);
+  const sealGap = Number(/margin-bottom:\s*(\d+)px/.exec(seal)[1]);
+  const scene = bodyOf('[data-world] .stage::before'); // exact: the shared before/after rule carries no mask
+  assert.match(scene, /mask-size:\s*var\(--world-stage-size\)/);
+  for (const w of WORLDS) {
+    const body = bodyOf(`[data-world="${w.id}"]`);
+    assert.match(body, /--world-stage-size:\s*100% auto/, `${w.id}: the stage scene must scale with the width`);
+    assert.match(body, /--world-stage-repeat:\s*no-repeat/, `${w.id}: a tiled stage motif sits under the text`);
+    assert.match(body, /--world-stage-position:\s*center top/, `${w.id}: the band belongs behind the seal`);
+    const bandPx = artRatio('--world-stage', w) * maxW;
+    assert.ok(bandPx <= padTop + sealH + sealGap,
+      `${w.id}: the band is ${bandPx.toFixed(0)}px tall at ${maxW}px, past the title at ${padTop + sealH + sealGap}px`);
+  }
 });
 
 test('the one animation is motion-gated, and the motifs drop under prefers-contrast: more', () => {

@@ -101,11 +101,14 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
 Three constraints, each with its reason: the face changes through
 `--font-display` only (`--font` stays Nunito, so reading is never harmed);
 `--surface` stays un-themed (`test/game-detail-hero.test.js` — a dark world is
-#904's problem, not a token override here); and a design-screen preview card
-carries the same attribute, so the slots must read TOKENS — custom properties
-inherit from the nearest element that sets them, which is what lets a Sci-Fi
-card inside a Forest round preview Sci-Fi. `test/round-worlds.test.js` pins the
-hook, the token set, the pseudo-element discipline and the two media gates.
+#904's problem, not a token override here); and the preview card and the home
+tile carry the attribute THEMSELVES, so the slots must read TOKENS — custom
+properties inherit from the nearest element that sets them, which is what lets
+a Sci-Fi card inside a Forest round preview Sci-Fi. A motif under text costs
+contrast the plain-background harness cannot see (a stage tile at .16 put
+`--stage-faint` at 2.27:1), so the bold scenes live in text-free bands.
+`test/round-worlds.test.js` pins the hook, the token set, the pseudo-element
+discipline, the two bands' geometry and the two media gates.
 
 ## The one themed colour that is NOT a CSS variable: the browser chrome (#523)
 

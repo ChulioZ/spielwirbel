@@ -204,13 +204,15 @@ function drawRecapCard(ctx, model, height, world = {}) {
   // frame at the card's corners — the same two marks the screen shows.
   const scale = world.scale || 1;
   if (world.backdrop) {
-    ctx.globalAlpha = 0.12;
+    // .09, the page's own backdrop budget: the round name is --ink-soft on this
+    // band, and at .12 it drops under 4.5:1 on the motif's densest pixel.
+    ctx.globalAlpha = 0.09;
     ctx.drawImage(recapTint(world.backdrop, W, 240, p.brand, scale, true), 0, 0, W, 240);
     ctx.globalAlpha = 1;
   }
   if (world.frame) {
-    const fw = 88;
-    const fh = 56;
+    const fw = 110;
+    const fh = 70;
     const frame = recapTint(world.frame, fw, fh, p.brand, scale, false);
     ctx.drawImage(frame, 8, 8, fw, fh);
     ctx.save();
