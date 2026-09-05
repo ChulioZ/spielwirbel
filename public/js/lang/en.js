@@ -16,6 +16,12 @@ I18N.en = {
   'common.delete': 'Delete',
   'common.ok': 'OK',
   'common.close': 'Close',
+  'common.cancel': 'Cancel',
+  'common.confirm': 'Confirm',
+  // Neutral heading of the confirmation dialog (#939) — the real verb is on
+  // the button and the whole question is in the body below it.
+  'common.confirmTitle': 'Please confirm',
+  'common.overwrite': 'Overwrite',
 
   // The lobby's tab title (#522). Not 'home.greeting' — that one is a welcome
   // ("Good to see you."), which says nothing about which tab it is.
@@ -760,6 +766,7 @@ I18N.en = {
   'lobby.share': 'Share a voting link',
   'lobby.shareText': 'Help pick what we play at {round}:',
   'lobby.shareCopied': 'Link copied — share it with the group.',
+  'lobby.shareManual': 'Copy this link and share it with the group.',
   'voteLink.loading': 'Loading the vote …',
   'voteLink.title': 'Join the vote',
   'voteLink.sub': '{round} is picking what to play.',

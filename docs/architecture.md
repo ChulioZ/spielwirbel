@@ -392,6 +392,10 @@ public/
                      rotation (issue #502)
     support.js       the donation/support sheet (issue #173; hidden unless
                      DONATE_URL is set)
+    confirm-dialog.js
+                     the themed confirmation sheet that replaced window.confirm
+                     at every destructive moment (issue #939) — a promise-
+                     returning helper on the shared openSheet plumbing
     ranking.js       tie-aware podium places ("1, 2, 2, 4")
     podium.js        arranges ranked members into the Pokale podium's three
                      rank columns — a tie shares one step and grows SIDEWAYS,

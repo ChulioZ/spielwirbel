@@ -302,8 +302,7 @@ test('"Ins Regal" on an expansion attaches it instead of clearing the wish flag'
     calls.push({ method, path, body: body && { ...body } });
     return roundFixture([base]);
   });
-  dom.set('confirm', () => true);
-  dom.context.window.confirm = () => true;
+  dom.set('confirmDialog', () => Promise.resolve(true));
 
   const rows = [...dom.app.querySelectorAll('.archive-row')];
   rows[0].querySelector('[data-act="restore"]').click();
@@ -334,7 +333,7 @@ test('a base game the round lacks is created from the provider, then attached', 
     if (/\/games$/.test(path)) return { id: 'new1', title: 'CATAN' };
     return roundFixture([]);
   });
-  dom.context.window.confirm = () => true;
+  dom.set('confirmDialog', () => Promise.resolve(true));
 
   dom.app.querySelector('[data-act="restore"]').click();
   await new Promise((r) => setTimeout(r, 0));
@@ -370,7 +369,7 @@ test('a base game with no player range from BGG still lands, at the widest range
     if (/\/games$/.test(path)) return { id: 'new1', title: 'CATAN' };
     return roundFixture([]);
   });
-  dom.context.window.confirm = () => true;
+  dom.set('confirmDialog', () => Promise.resolve(true));
 
   dom.app.querySelector('[data-act="restore"]').click();
   await new Promise((r) => setTimeout(r, 0));

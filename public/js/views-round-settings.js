@@ -96,7 +96,9 @@ async function showRoundSettings(rid) {
   if (round.shared) {
     const leaveBtn = h(`<button class="btn btn--danger" type="button">${esc(t('share.leave'))}</button>`);
     leaveBtn.addEventListener('click', async () => {
-      if (!confirm(t('share.leaveConfirm', { name: round.name }))) return;
+      if (!await confirmDialog({
+        body: t('share.leaveConfirm', { name: round.name }), confirmLabel: t('share.leave'),
+      })) return;
       try {
         await api('DELETE', `/api/rounds/${rid}/shares/${accountUser.id}`);
         showHome();
@@ -106,7 +108,10 @@ async function showRoundSettings(rid) {
   } else {
     const delBtn = h(`<button class="btn btn--danger" type="button">${esc(t('round.deleteRound'))}</button>`);
     delBtn.addEventListener('click', async () => {
-      if (!confirm(t('round.deleteConfirm', { name: round.name }))) return;
+      if (!await confirmDialog({
+        body: t('round.deleteConfirm', { name: round.name }),
+        confirmLabel: t('round.deleteRound'), icon: 'ti-trash',
+      })) return;
       try {
         await api('DELETE', '/api/rounds/' + rid);
         showHome();

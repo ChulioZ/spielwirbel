@@ -224,7 +224,15 @@ async function showTransferGames(round) {
         ? tn(ids.length, 'moveGames.confirmOne', 'moveGames.confirm', { round: targetName })
         : tn(ids.length, 'moveGames.confirmPlainOne', 'moveGames.confirmPlain', { round: targetName });
     }
-    if (!confirm(msg)) return;
+    // Raised from INSIDE a sheet, and openSheet REPLACES an open sheet rather
+    // than stacking on it (#939) — so declining has to bring the picker back,
+    // or the user lands on the screen behind it with their selection gone.
+    if (!await confirmDialog({
+      body: msg,
+      confirmLabel: t(copy ? 'copyGames.submit' : 'moveGames.submit'),
+      icon: copy ? 'ti-copy' : 'ti-arrow-right',
+      danger: !copy,
+    })) { showTransferGames(round); return; }
     go.disabled = true;
     try {
       // Send the explicit selection even when everything is checked — the count

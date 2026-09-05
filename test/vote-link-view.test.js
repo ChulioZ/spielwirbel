@@ -14,7 +14,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { loadApp } = require('./support/dom');
+const { loadApp, flush } = require('./support/dom');
 
 const BALLOT = {
   roundName: 'Freitagsrunde',
@@ -146,18 +146,20 @@ test('submitting sends only the claimed person\'s ratings, then shows the thank-
 test('replacing someone else\'s vote is confirmed first; your own is not', async (t) => {
   const { dom } = boot(t);
   const asked = [];
-  dom.set('confirm', (msg) => { asked.push(msg); return false; });
+  dom.set('confirmDialog', (o) => { asked.push(o.body); return Promise.resolve(false); });
   await dom.call('showVoteLink', 'tok-5');
 
   // Ben has voted and this device never claimed him -> a mis-tap is the likeliest
   // reason, so it asks. Declining leaves the claim list up.
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[1].click();
+  await flush();
   assert.equal(asked.length, 1);
   assert.match(asked[0], /Ben/);
   assert.ok(dom.app.querySelector('#vlClaim'), 'declining must not open the cards');
 
   // Anna has NOT voted, so picking her asks nothing.
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
+  await flush();
   assert.equal(asked.length, 1);
   assert.equal(dom.app.querySelectorAll('.mood').length, 5);
 });
@@ -167,7 +169,7 @@ test('a device that already claimed a name revises without being re-asked', asyn
     ballot: { ...BALLOT, people: BALLOT.people.map((p) => ({ ...p, hasVoted: p.id === 'm1' })) },
   });
   const asked = [];
-  dom.set('confirm', (msg) => { asked.push(msg); return false; });
+  dom.set('confirmDialog', (o) => { asked.push(o.body); return Promise.resolve(false); });
 
   // Anna voted from THIS device — the claim is remembered, so reopening the link
   // and tapping her own name goes straight back into the cards. Without this,
@@ -176,6 +178,7 @@ test('a device that already claimed a name revises without being re-asked', asyn
   dom.run("localStorage.setItem('spielwirbel.voteClaim.tok-6', 'm1')");
   await dom.call('showVoteLink', 'tok-6');
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
+  await flush();
   assert.deepEqual(asked, []);
   assert.equal(dom.app.querySelectorAll('.mood').length, 5);
 });

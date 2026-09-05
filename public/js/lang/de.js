@@ -17,6 +17,12 @@ I18N.de = {
   'common.delete': 'Löschen',
   'common.ok': 'OK',
   'common.close': 'Schließen',
+  'common.cancel': 'Abbrechen',
+  'common.confirm': 'Bestätigen',
+  // Neutrale Überschrift des Bestätigungsdialogs (#939) – das echte Verb
+  // steht auf dem Button, die ganze Frage im Text darunter.
+  'common.confirmTitle': 'Bitte bestätigen',
+  'common.overwrite': 'Überschreiben',
 
   // Der Tab-Titel der Lobby (#522). Nicht 'home.greeting' — das ist eine
   // Begrüßung und sagt nicht, welcher Tab das ist.
@@ -754,6 +760,7 @@ I18N.de = {
   'lobby.share': 'Link zum Abstimmen teilen',
   'lobby.shareText': 'Stimm mit ab, was wir bei {round} spielen:',
   'lobby.shareCopied': 'Link kopiert — teile ihn mit der Runde.',
+  'lobby.shareManual': 'Kopiere diesen Link und teile ihn mit der Runde.',
   'voteLink.loading': 'Abstimmung wird geladen …',
   'voteLink.title': 'Mitstimmen',
   'voteLink.sub': 'Bei {round} wird gerade ausgewählt, was gespielt wird.',

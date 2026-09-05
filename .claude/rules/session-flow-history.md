@@ -97,5 +97,9 @@ and clicks are unusable (`.claude/rules/preview-pane-paint-artifacts.md`). Drive
 it with `element.click()` and `history.back()/forward()` from `javascript_tool`
 instead — those fire the real listeners and real `popstate`, so they test the
 actual code path — and stub `window.confirm` to exercise both the accept and the
-**decline** branch. Declining is the one worth checking: it must re-push the step
+**decline** branch. `window.confirm` really is still the right stub here: since
+#939 this guard is the app's ONLY native confirmation, held back precisely
+because `confirmLeave()` is synchronous while the themed dialog is a promise over
+the same history stack — see
+`.claude/rules/confirm-dialog-is-a-promise-on-a-single-slot-sheet.md` §4. Declining is the one worth checking: it must re-push the step
 and leave the user exactly where they were, votes intact.

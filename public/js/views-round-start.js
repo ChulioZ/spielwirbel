@@ -121,7 +121,9 @@ function renderStartTab(round, activeGames) {
 
       const discard = h(`<div class="center ticket__discard"><button class="link-btn">${esc(t('round.draftDiscard'))}</button></div>`);
       discard.querySelector('button').addEventListener('click', async () => {
-        if (!confirm(t('round.draftDiscardConfirm'))) return;
+        if (!await confirmDialog({
+          body: t('round.draftDiscardConfirm'), confirmLabel: t('round.draftDiscard'),
+        })) return;
         try {
           await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
           toast(t('round.toast.draftDiscarded'));
@@ -337,7 +339,10 @@ function renderStartTab(round, activeGames) {
         showGameDetail(round.id, game.id)
       );
       item.querySelector('.recommend-item__btn').addEventListener('click', async () => {
-        if (!confirm(t('detail.retireConfirm', { title: game.title }))) return;
+        if (!await confirmDialog({
+          body: t('detail.retireConfirm', { title: game.title }),
+          confirmLabel: t('detail.retire'), icon: 'ti-trash',
+        })) return;
         try {
           await api('POST', `/api/rounds/${round.id}/games/${game.id}/retire`, { retired: true });
           toast(t('games.retired', { title: game.title }));

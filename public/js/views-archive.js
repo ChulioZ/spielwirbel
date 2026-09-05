@@ -177,7 +177,10 @@ async function showArchive(rid, kind, seg = kind) {
       // co-owner and up — the button is absent below that, hence the null check.
       const delBtn = row.querySelector('[data-act="delete"]');
       if (delBtn) delBtn.addEventListener('click', async () => {
-        if (!confirm(t(`${kind}.deleteConfirm`, { title: g.title }))) return;
+        if (!await confirmDialog({
+          body: t(`${kind}.deleteConfirm`, { title: g.title }),
+          confirmLabel: t('common.delete'), icon: 'ti-trash',
+        })) return;
         try {
           await api('DELETE', `/api/rounds/${rid}/games/${g.id}`);
           toast(t(`${kind}.deleted`, { title: g.title }));
@@ -244,7 +247,7 @@ function setupArchiveSelection(round, kind, seg, list, tools) {
     const msg = selectionTouchesHistory(round, ids)
       ? tn(ids.length, 'bulk.confirmDeleteOne', 'bulk.confirmDelete')
       : tn(ids.length, 'bulk.confirmDeletePlainOne', 'bulk.confirmDeletePlain');
-    if (!confirm(msg)) return;
+    if (!await confirmDialog({ body: msg, confirmLabel: t('bulk.delete'), icon: 'ti-trash' })) return;
     delBtn.disabled = true;
     try {
       const res = await api('POST', `/api/rounds/${rid}/games/bulk-delete`, { gameIds: ids });
@@ -306,7 +309,10 @@ function acquireWishedExpansion(round, game, done) {
 // record an inventory they do not have.
 async function attachWishedExpansion(round, game, base, done) {
   const key = base.wish ? 'wish.acquireBothConfirm' : 'wish.acquireConfirm';
-  if (!confirm(t(key, { title: game.title, base: base.title }))) return;
+  if (!await confirmDialog({
+    body: t(key, { title: game.title, base: base.title }),
+    confirmLabel: t('wish.restore'), icon: 'ti-arrow-back-up', danger: false,
+  })) return;
   try {
     if (base.wish) await api('POST', `/api/rounds/${round.id}/games/${base.id}/wish`, { wish: false });
     await api('POST', `/api/rounds/${round.id}/games/${game.id}/acquire-expansion`, { baseGameId: base.id });
@@ -321,7 +327,10 @@ async function attachWishedExpansion(round, game, base, done) {
 // confirm covers both, per #664 — being sent away to add Catan by hand before
 // the wish list will accept Seefahrer is the flow nobody finishes.
 async function createBaseThenAttach(round, game, parent, done) {
-  if (!confirm(t('wish.acquireWithBaseConfirm', { title: game.title, base: parent.title }))) return;
+  if (!await confirmDialog({
+    body: t('wish.acquireWithBaseConfirm', { title: game.title, base: parent.title }),
+    confirmLabel: t('wish.restore'), icon: 'ti-arrow-back-up', danger: false,
+  })) return;
   const provider = (game.source || {}).provider;
   let detail = null;
   try {

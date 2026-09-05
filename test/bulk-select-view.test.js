@@ -12,7 +12,7 @@
 
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
-const { loadApp } = require('./support/dom');
+const { loadApp, flush } = require('./support/dom');
 
 const dom = loadApp({ locale: 'de' });
 after(() => dom.close());
@@ -43,7 +43,7 @@ function spy({ confirm = true, reply = {}, round = null } = {}) {
     calls.push({ method, path, body: body && JSON.parse(JSON.stringify(body)) });
     return method === 'GET' && round ? round : reply;
   });
-  dom.set('confirm', (msg) => { confirms.push(msg); return confirm; });
+  dom.set('confirmDialog', (o) => { confirms.push(o.body); return Promise.resolve(confirm); });
   dom.set('toast', () => {});
   dom.set('showRound', () => {});
   return { calls, confirms, posts: () => calls.filter((c) => c.method === 'POST') };
@@ -122,8 +122,8 @@ test('the live count follows the selection and gates both actions', () => {
 /* THE reason the mode lives in the grid rather than in a picker sheet: it
    inherits the Regal's search, so "select all" means "everything I narrowed
    to" rather than "the whole shelf". */
-test('"select all" means everything the FILTERS currently show, not the whole shelf', () => {
-  const { calls, confirms } = spy();
+test('"select all" means everything the FILTERS currently show, not the whole shelf', async () => {
+  const { posts, confirms } = spy();
   const r = regal();
   toggleBtn().click();
 
@@ -137,10 +137,11 @@ test('"select all" means everything the FILTERS currently show, not the whole sh
   assert.match(bar().querySelector('.bulk-bar__count').textContent, /^2 /);
 
   act('retire').click();
+  await flush();
   assert.equal(confirms.length, 1);
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0].path, `/api/rounds/${r.id}/games/bulk-retire`);
-  assert.deepEqual([...calls[0].body.gameIds].sort(), ['g2', 'g3'],
+  assert.equal(posts().length, 1);
+  assert.equal(posts()[0].path, `/api/rounds/${r.id}/games/bulk-retire`);
+  assert.deepEqual([...posts()[0].body.gameIds].sort(), ['g2', 'g3'],
     'Azul was filtered out, so it must not be retired');
 });
 
@@ -179,37 +180,40 @@ test('leaving the mode clears the selection', () => {
    delete, so it must name the count AND state the session-history consequence —
    but only when the selection actually carries history, or it cries wolf and
    gets clicked through. */
-test('deleting games that were PLAYED warns about the session history', () => {
+test('deleting games that were PLAYED warns about the session history', async () => {
   const { confirms, calls } = spy();
   regal({ sessions: [{ id: 's1', gameIds: ['g1'], votes: {} }] });
   toggleBtn().click();
   cardFor('Azul').click();
   act('delete').click();
+  await flush();
 
   assert.equal(confirms.length, 1);
   assert.match(confirms[0], /Session/, 'the history consequence is not stated');
   assert.equal(calls[0].path.endsWith('/games/bulk-delete'), true);
 });
 
-test('deleting never-played games states the count without crying wolf', () => {
+test('deleting never-played games states the count without crying wolf', async () => {
   const { confirms } = spy();
   regal({ sessions: [{ id: 's1', gameIds: ['g3'], votes: {} }] });
   toggleBtn().click();
   cardFor('Azul').click();
   cardFor('Brass').click();
   act('delete').click();
+  await flush();
 
   assert.match(confirms[0], /2/, 'the count is not named');
   assert.equal(/Session/.test(confirms[0]), false,
     'an unplayed selection loses no history, so the warning must not appear');
 });
 
-test('declining the confirm sends nothing', () => {
+test('declining the confirm sends nothing', async () => {
   const { calls, confirms } = spy({ confirm: false });
   regal();
   toggleBtn().click();
   cardFor('Azul').click();
   act('retire').click();
+  await flush();
   assert.equal(confirms.length, 1);
   assert.deepEqual(calls, []);
 });
@@ -251,6 +255,7 @@ test('an off-shelf screen offers bulk delete over its rows', async () => {
   box.checked = true;
   box.dispatchEvent(new dom.window.Event('change'));
   dom.app.querySelector('.bulk-bar [data-act="delete"]').click();
+  await flush();
 
   assert.equal(s.posts().length, 1);
   assert.equal(s.posts()[0].path, `/api/rounds/${r.id}/games/bulk-delete`);

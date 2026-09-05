@@ -187,7 +187,10 @@ async function showTags(rid) {
       row.querySelector('.ds-row__meta').appendChild(edit);
       const del = h(`<button class="tag-act tag-act--danger" aria-label="${esc(t('tags.delete'))}"><i class="ti ti-trash" aria-hidden="true"></i></button>`);
       del.addEventListener('click', async () => {
-        if (n > 0 && !confirm(t('tags.deleteConfirm', { name: tg.name }))) return;
+        if (n > 0 && !await confirmDialog({
+          body: t('tags.deleteConfirm', { name: tg.name }),
+          confirmLabel: t('tags.delete'), icon: 'ti-trash',
+        })) return;
         try {
           await api('DELETE', `/api/rounds/${rid}/tags/${tg.id}`);
           toast(t('tags.toast.deleted'));
@@ -976,7 +979,10 @@ async function showGameDetail(rid, gameId) {
     actionWrap.appendChild(play);
     const retire = h(`<button class="btn" style="color:var(--warn)"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('detail.retire'))}</button>`);
     retire.addEventListener('click', async () => {
-      if (!confirm(t('detail.retireConfirm', { title: game.title }))) return;
+      if (!await confirmDialog({
+        body: t('detail.retireConfirm', { title: game.title }),
+        confirmLabel: t('detail.retire'), icon: 'ti-trash',
+      })) return;
       try {
         await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: true });
         toast(t('games.retired', { title: game.title }));
@@ -986,7 +992,10 @@ async function showGameDetail(rid, gameId) {
     actionWrap.appendChild(retire);
     const complete = h(`<button class="btn" style="color:var(--good)"><i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('detail.complete'))}</button>`);
     complete.addEventListener('click', async () => {
-      if (!confirm(t('detail.completeConfirm', { title: game.title }))) return;
+      if (!await confirmDialog({
+        body: t('detail.completeConfirm', { title: game.title }),
+        confirmLabel: t('detail.complete'), icon: 'ti-circle-check', danger: false,
+      })) return;
       try {
         await api('POST', `/api/rounds/${rid}/games/${gameId}/complete`, { completed: true });
         toast(t('games.completed', { title: game.title }));
@@ -1135,7 +1144,10 @@ async function showGameDetail(rid, gameId) {
       // own upload is kept, so the two wordings must not be swapped.
       const ownUpload = typeof game.image === 'string' && game.image.startsWith('/uploads/');
       const key = game.image && !ownUpload ? 'detail.unlinkConfirmCover' : 'detail.unlinkConfirm';
-      if (!confirm(t(key, { provider }))) return;
+      if (!await confirmDialog({
+        body: t(key, { provider }),
+        confirmLabel: t('detail.unlinkProvider'), icon: 'ti-unlink',
+      })) return;
       try {
         await api('PATCH', `/api/rounds/${rid}/games/${gameId}`, { removeSource: true });
         toast(t('detail.toast.unlinked'));
@@ -1182,8 +1194,11 @@ async function showGameDetail(rid, gameId) {
                <button class="link-btn exp-row__remove">${iconText('ti-trash', t('detail.expansionRemove'))}</button>
              </div>
            </div>`);
-        row.querySelector('.exp-row__remove').addEventListener('click', () => {
-          if (!confirm(t('detail.expansionRemoveConfirm', { title: e.title }))) return;
+        row.querySelector('.exp-row__remove').addEventListener('click', async () => {
+          if (!await confirmDialog({
+            body: t('detail.expansionRemoveConfirm', { title: e.title }),
+            confirmLabel: t('detail.expansionRemove'), icon: 'ti-trash',
+          })) return;
           saveExpansions(owned.filter((x) => x.id !== e.id).map((x) => ({ id: x.id })));
         });
         list.appendChild(row);
