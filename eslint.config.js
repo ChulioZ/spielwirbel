@@ -118,10 +118,6 @@ const frontendGlobals = {
   renderMetadataFilter: 'readonly', renderFilterPanel: 'readonly',
   clearMetadataFilters: 'readonly', activeFilterChips: 'readonly',
   tagFilterChips: 'readonly',
-  // vote-scale.js (issue #797) — also required by lib/session-votes.js,
-  // lib/recommend.js and both repo backends
-  RATING_MIN: 'readonly', RATING_MAX: 'readonly',
-  wantsRetire: 'readonly', effectiveRating: 'readonly',
   // vote-score.js (issue #893) — also required by lib/recommend.js
   TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
   tileValue: 'readonly', scoreRatings: 'readonly', scoreTally: 'readonly',
@@ -129,8 +125,10 @@ const frontendGlobals = {
   PLAY_LIFT: 'readonly', PLAY_HALF: 'readonly',
   playCredit: 'readonly', gamePrior: 'readonly',
   shrinkScore: 'readonly', shelfScore: 'readonly', playCounts: 'readonly',
-  // rating-faces.js (issue #890) — frontend only, by design
+  // rating-faces.js (issues #890, #909) — frontend only, by design; it also
+  // holds the vote scale's own bounds since #909 folded vote-scale.js away
   MOODS: 'readonly', ratingFace: 'readonly',
+  RATING_MIN: 'readonly', RATING_MAX: 'readonly',
   // win-score.js (issue #895): the Siegwertung
   sessionWinScores: 'readonly', memberWinScores: 'readonly',
   memberGameWinScores: 'readonly',

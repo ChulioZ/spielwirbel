@@ -229,7 +229,7 @@ What the app does, in detail. For a short overview see the
     button (with quick-start chips beside it that open the setup with the draw
     already narrowed — „unter 60 Min", „leichte Kost" …), resumable in-progress
     sessions, the last played result, and gentle retire recommendations for
-    games that are rated low or often proposed for retirement. Below those, a
+    games the group's own votes rate badly. Below those, a
     responsive card grid derived on demand from the round's own data:
     **Spielvorschläge** (up to three games worth playing, each with its reason —
     never played, not out for months, well liked and long overdue), a
@@ -303,10 +303,9 @@ What the app does, in detail. For a short overview see the
   the next time, so a group that always draws the same way just confirms.
 - **Voting** – the draw opens a **lobby** showing who has voted and who has not.
   There is nothing to configure and no mode to pick: every session works the same
-  way, and each person's ratings are saved the moment they give them: one scale
-  per drawn game, running from a trash tile — "get rid of it", the **zero** of
-  the scale and members-only — up through **1–5**. Three ways in, freely
-  mixed within one evening:
+  way, and each person's ratings are saved the moment they give them: one
+  **1–5** scale per drawn game, from „gar nicht" to „unbedingt". Three ways in,
+  freely mixed within one evening:
   - **pass the device around** – tap whoever is next, a handover screen names
     them so nobody peeks, and when they are done the lobby leads with the next
     person still open;
@@ -339,9 +338,8 @@ What the app does, in detail. For a short overview see the
   hot-seat turn, can be recorded as a winner, and stay in that session's record
   marked as a guest — but they never join the round, so they leave the member
   list, the Pokale standings and the win streak untouched — though they do count
-  as one of the parties a member's win is measured against. A guest's scale starts
-  at 1, with no trash tile: throwing a game off the shelf is the permanent
-  group's call.
+  as one of the parties a member's win is measured against. A guest rates on
+  exactly the same 1–5 scale a member does.
 - **Teams** – two or more of the people joining a session — members and guests
   in any mix — can be grouped into a team that plays and wins together, for that
   session only. A team counts as **one player** when the draw matches a game's
@@ -357,8 +355,7 @@ What the app does, in detail. For a short overview see the
   side by side, when they tie), and under it the full ranking — per-game
   **Spielwirbel-Score** (colored by score, with a short line saying why it
   diverges from the plain average, e.g. „1× gar nicht"), rating distribution
-  (six bars, the leftmost being the retirement proposals), medals for the
-  favourites, and how many want each game gone. Pick the
+  (one bar per rating) and medals for the favourites. Pick the
   game you actually played and mark it finished; recording the winner(s) is an
   optional follow-up step afterwards — or
   cancel the session if nothing appealed. Sessions can be deleted later, and a
@@ -390,8 +387,8 @@ What the app does, in detail. For a short overview see the
 - **Ratings on demand** – a game's rating is always computed live from all
   session votes, so deleting a session automatically corrects every number.
 - **The Spielwirbel-Score** – the figure every screen ranks a game by is not a
-  plain mean of the votes. Each vote is weighed first, so a „gar nicht" (and a
-  retirement proposal below it) counts for more than its numeric distance
+  plain mean of the votes. Each vote is weighed first, so a „gar nicht" counts
+  for more than its numeric distance
   suggests: two games with the same average are *not* the same recommendation
   when one of them has somebody at the table who does not want to play. Where it
   diverges the screen says why. At **shelf** scope the score is additionally

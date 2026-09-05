@@ -196,8 +196,7 @@ I18N.en = {
   'periodRecap.toast.failed': 'The image could not be created.',
 
   'rec.title': 'Retirement suggested ({n})',
-  'rec.sub': 'Unpopular or often suggested for retirement.',
-  'rec.reasonSort': '{n}× “retire” ({pct} %)',
+  'rec.sub': 'Consistently rated low by the round.',
   'rec.reasonAvg': 'Score {avg}',
   'rec.retire': 'Retire',
   'rec.moreOne': '… and {n} more',
@@ -506,7 +505,6 @@ I18N.en = {
   'sessions.deleted': 'Session deleted',
 
   'detail.noRating': 'No rating yet',
-  'detail.totalSort': 'Suggested for retirement {n}× in total',
   'detail.retire': 'Retire',
   'detail.complete': 'Completed',
   'detail.restore': 'Bring back',
@@ -820,13 +818,9 @@ I18N.en = {
   'vote.ratingLabel': '{n} out of {max}',
   'vote.scaleLow': 'not at all',
   'vote.scaleHigh': 'absolutely',
-  // Label of the scale's leftmost, zero tile (#797) — it shows only the trash
-  // glyph, so the label carries the whole of its meaning.
-  'vote.suggestRetire': 'Suggest retiring',
   'vote.next': 'Next ›',
   'vote.finish': 'Done',
-  // One scale, one message (#797): retiring IS the zero on it, and the same
-  // sentence is right for a guest, whose scale starts at 1.
+  // One scale, one message: the same 1–5 for members and guests (#909).
   'vote.toast.needRating': 'Please choose a rating',
   'vote.toast.saved': 'Results saved',
 
@@ -856,9 +850,6 @@ I18N.en = {
   'result.willPlay': 'Playing',
   'result.lockedHint': 'Reset the result first to change the choice',
   'result.barTitle': '{c}× rating {r}',
-  // The leftmost bar: the zero of the scale (#797).
-  'result.barTitleRetire': '{c}× “retire”',
-  'result.sortFlag': '{n}× suggested for retirement',
   'score.infoBody': 'The score is more than the average. If someone does not want to play a game at all, that counts for more than a good rating from someone else — so that what you end up playing is something everybody is up for.',
   'score.infoThin': 'A game with only a few ratings so far is judged more cautiously — it takes a few sessions before its score carries full weight.',
   'score.infoPlays': 'A game you keep putting on the table is judged much more favourably — even without any ratings.',
@@ -871,16 +862,12 @@ I18N.en = {
   'win.infoOpen': 'About the win score',
   'win.infoBody': 'A win counts for more when more people were at the table — beating four others is more of an achievement than beating one. Playing on your own therefore earns no win score.',
   'score.infoOpen': 'About the Spielwirbel score',
-  'score.reasonRetireOne': '{n}× retire',
-  'score.reasonRetire': '{n}× retire',
   'score.reasonVetoOne': '{n}× not at all',
   'score.reasonVeto': '{n}× not at all',
   'score.name': 'Spielwirbel score',
-  'result.retireNow': '— retire now',
   // Named on the results screen when the winning game only seats this table
   // because the round owns an expansion for it (#653).
   'result.needsExpansion': 'Needs an expansion: {names}',
-  'result.retireNowConfirm': 'Retire “{title}” now? It is removed from the round’s games list.',
   'result.retiredTag': 'retired',
   'result.completedTag': 'completed',
   'result.toast.willPlay': '“{title}” will be played',
@@ -1296,7 +1283,7 @@ I18N.en = {
   'landing.hero.ctaResume': 'Resume demo',
   'landing.hero.demoNote': 'Start straight away, no e-mail needed. The demo round comes pre-filled and is deleted after 24 hours.',
   'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their average rating, next to the navigation for Start, shelf, chronicle and trophies.',
-  'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale running from “retire it” through 1 to 5.',
+  'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale of five faces running from 1 (“not at all”) to 5 (“absolutely”).',
   'landing.features.title': 'What you get',
   'landing.features.shelf.title': 'One shelf for everything',
   'landing.features.shelf.desc': 'Every game your group owns in one place – titles, cover art and player counts come from BoardGameGeek, and anything else you type in yourself.',

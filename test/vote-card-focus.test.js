@@ -76,74 +76,65 @@ const active = (dom) => dom.document.activeElement;
 test('rating a game leaves focus on that rating in the rebuilt card', async (t) => {
   const dom = await voteCard(t);
   const before = moods(dom);
-  // Six tiles for a member since #797: the trash zero, then the five faces.
-  assert.equal(before.length, 6, 'expected the zero tile and the five mood faces');
+  // Five tiles, one per rating (#909 removed the sixth, #797's trash zero).
+  assert.equal(before.length, 5, 'expected the five mood faces and nothing else');
 
-  before[4].click(); // rating 4
+  before[3].click(); // rating 4
 
   const after = moods(dom);
-  assert.notEqual(after[4], before[4], 'the card should have been rebuilt, not patched');
-  assert.equal(active(dom), after[4], 'focus fell off the rating that was just activated');
+  assert.notEqual(after[3], before[3], 'the card should have been rebuilt, not patched');
+  assert.equal(active(dom), after[3], 'focus fell off the rating that was just activated');
   // The restored control is the SELECTED one — i.e. focus tracks the choice,
   // not a fixed position in the row.
-  assert.equal(after[4].getAttribute('aria-pressed'), 'true');
+  assert.equal(after[3].getAttribute('aria-pressed'), 'true');
 });
 
 test('re-rating moves focus to the newly chosen face', async (t) => {
   const dom = await voteCard(t);
-  moods(dom)[4].click();
-  moods(dom)[1].click(); // change of mind: rating 1
+  moods(dom)[3].click();
+  moods(dom)[0].click(); // change of mind: rating 1
 
   const after = moods(dom);
-  assert.equal(active(dom), after[1]);
-  assert.equal(after[1].getAttribute('aria-pressed'), 'true');
-  assert.equal(after[4].getAttribute('aria-pressed'), 'false');
+  assert.equal(active(dom), after[0]);
+  assert.equal(after[0].getAttribute('aria-pressed'), 'true');
+  assert.equal(after[3].getAttribute('aria-pressed'), 'false');
 });
 
-/* The retirement proposal is the zero TILE now (#797), not a separate control
-   below the scale — so it goes through the same one focus-restoration branch
-   the faces do rather than a second `{ kind: 'sort' }` one. That collapse is
-   the point of asserting it here: the old branch could have been deleted with
-   nothing red. */
-test('picking the zero tile leaves focus on it in the rebuilt card', async (t) => {
-  const dom = await voteCard(t);
-  assert.equal(dom.app.querySelector('.sortBtn'), null, 'the separate retire control is gone');
-  const before = moods(dom)[0];
-  assert.ok(before.classList.contains('mood--retire'), 'the first tile is the zero');
+/* The scale is the same five tiles for everybody since #909, which is what
+   removed the guest/member branch from this card entirely. Between #797 and
+   then a member saw a sixth, leading trash tile — and before #797 that was a
+   separate `.sortBtn` below the row with its own `{ kind: 'sort' }` focus
+   branch. Both are gone; asserting their absence is what stops either coming
+   back unnoticed. */
+test('a member and a guest get the identical five-tile scale', async (t) => {
+  const member = await voteCard(t);
+  assert.equal(moods(member).length, 5);
+  assert.equal(member.app.querySelector('.sortBtn'), null, 'no separate retire control');
+  assert.equal(member.app.querySelector('.mood--retire'), null, 'no trash tile');
+  const memberLabels = moods(member).map((b) => b.getAttribute('aria-label'));
 
-  before.click();
-
-  const after = moods(dom)[0];
-  assert.notEqual(after, before, 'the card should have been rebuilt, not patched');
-  assert.equal(active(dom), after, 'focus fell off the zero tile');
-  assert.equal(after.getAttribute('aria-pressed'), 'true');
+  const guest = await voteCard(t, GUEST);
+  assert.equal(guest.app.querySelector('.mood--retire'), null);
+  assert.deepEqual(moods(guest).map((b) => b.getAttribute('aria-label')), memberLabels,
+    'a guest card must be indistinguishable from a member one');
 });
 
-// Mutually exclusive: the zero and a face cannot both be chosen (#797).
-test('picking a face after the zero clears the retirement proposal', async (t) => {
+test('a guest card restores rating focus like a member one', async (t) => {
+  const dom = await voteCard(t, GUEST);
+  const tiles = moods(dom);
+  tiles[2].click();
+  assert.equal(active(dom), moods(dom)[2]);
+});
+
+test('re-picking clears the previous face rather than adding to it', async (t) => {
   const dom = await voteCard(t);
   moods(dom)[0].click();
-  moods(dom)[3].click(); // rating 3
+  moods(dom)[2].click(); // rating 3
 
   const after = moods(dom);
-  assert.equal(after[0].getAttribute('aria-pressed'), 'false', 'the zero stayed pressed');
-  assert.equal(after[3].getAttribute('aria-pressed'), 'true');
-  assert.equal(active(dom), after[3]);
-});
-
-// A guest rates but gets no retire toggle (#458,
-// `.claude/rules/session-guests-are-not-members.md` §4). The restoration must
-// not assume the control it is looking for exists.
-test('a guest card has no zero tile and still restores rating focus', async (t) => {
-  const dom = await voteCard(t, GUEST);
-  assert.equal(dom.app.querySelector('.sortBtn'), null);
-  const tiles = moods(dom);
-  assert.equal(tiles.length, 5, 'a guest scale starts at 1');
-  assert.equal(dom.app.querySelector('.mood--retire'), null);
-
-  tiles[2].click();
-
-  assert.equal(active(dom), moods(dom)[2]);
+  assert.equal(after[0].getAttribute('aria-pressed'), 'false', 'the 1 stayed pressed');
+  assert.equal(after[2].getAttribute('aria-pressed'), 'true');
+  assert.equal(active(dom), after[2]);
 });
 
 // ------------------------------------------------- arriving on a fresh step

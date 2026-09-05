@@ -220,10 +220,10 @@ test('the stats column wraps its labels instead of clipping them', () => {
   /* A fixed width only works because the labels reflow inside it. Truncating
      them instead would keep the row from wrapping while losing the text —
      the same screen, broken a quieter way. */
-  const cls = ['.gd-stats', '.score-label', '.score-why', '.sort-flag'];
-  /* These three labels are shared with the Regal rows, so match only selectors
-     that can actually apply INSIDE this column: the class at the end, under no
-     ancestor but the band's own. Without that, `.ds-row__meta .sort-flag` — a
+  const cls = ['.gd-stats', '.score-label', '.score-why'];
+  /* These labels are shared with the Regal rows, so match only selectors that
+     can actually apply INSIDE this column: the class at the end, under no
+     ancestor but the band's own. Without that, `.ds-row__meta .score-pill` — a
      different component entirely — would be held to this column's constraint. */
   const inThisColumn = (sel) => {
     const parts = sel.trim().split(/\s+/);

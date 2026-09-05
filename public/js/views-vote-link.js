@@ -162,18 +162,12 @@ function renderVoteLinkClaim(token, ballot) {
    handover screen between them). */
 function renderVoteLinkCards(token, ballot, person) {
   const games = ballot.games;
-  // A guest rates but gets no zero tile — deciding a game should leave the shelf
-  // is the permanent group governing its own collection (#458), so since #797
-  // their scale simply starts at 1. Not rendering it is what keeps the flag out
-  // of the payload entirely, so the server's own guard never has anything to
-  // strip.
-  const mayRetire = !person.guest;
   const votes = {};
   let idx = 0;
 
   function render() {
     const game = games[idx];
-    const current = votes[game.id] || { rating: null, retire: false };
+    const current = votes[game.id] || { rating: null };
     const color = voteLinkColor(person);
     const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
 
@@ -202,24 +196,24 @@ function renderVoteLinkCards(token, ballot, person) {
     const infoBtn = gameInfoButton(game);
     if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
 
-    // Identical to the wizard's scale, down to the aria-pressed state, the
-    // traffic-light fill on the selected face (#145) and the zero tile that
-    // carries the retirement proposal (#797). The only thing missing here is
-    // focus restoration: this card re-renders on the same tap the wizard's does,
-    // but it has no `refocus` machinery (#667) because it never had one.
+    // Identical to the wizard's scale, down to the aria-pressed state and the
+    // traffic-light fill on the selected face (#145). The only thing missing
+    // here is focus restoration: this card re-renders on the same tap the
+    // wizard's does, but it has no `refocus` machinery (#667) because it never
+    // had one.
     const ratingEl = card.querySelector('.rating');
-    for (let n = mayRetire ? 0 : 1; n <= RATING_MAX; n++) {
-      const sel = effectiveRating(current) === n;
-      const b = h(`<button class="mood${n === 0 ? ' mood--retire' : ''}${sel ? ' is-selected' : ''}"
-           aria-pressed="${sel}" aria-label="${esc(n === 0 ? t('vote.suggestRetire') : t('vote.ratingLabel', { n, max: RATING_MAX }))}">
-           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n === 0 ? '&nbsp;' : n}</span>
+    for (let n = RATING_MIN; n <= RATING_MAX; n++) {
+      const sel = current.rating === n;
+      const b = h(`<button class="mood${sel ? ' is-selected' : ''}"
+           aria-pressed="${sel}" aria-label="${esc(t('vote.ratingLabel', { n, max: RATING_MAX }))}">
+           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n}</span>
          </button>`);
       if (sel) {
         b.style.background = avgColor(n);
         b.style.borderColor = avgColor(n);
       }
       b.addEventListener('click', () => {
-        votes[game.id] = n === 0 ? { rating: null, retire: true } : { rating: n, retire: false };
+        votes[game.id] = { rating: n };
         render();
       });
       ratingEl.appendChild(b);
@@ -235,9 +229,8 @@ function renderVoteLinkCards(token, ballot, person) {
     });
 
     card.querySelector('#nextBtn').addEventListener('click', () => {
-      // Same guard as the wizard: one scale, so one question — is the game
-      // anywhere on it? (#797)
-      if (effectiveRating(votes[game.id]) === null) {
+      // Same guard as the wizard: is the game anywhere on the scale?
+      if (!Number.isFinite((votes[game.id] || {}).rating)) {
         return toast(t('vote.toast.needRating'));
       }
       if (idx === games.length - 1) return submit();

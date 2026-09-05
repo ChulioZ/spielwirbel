@@ -11,10 +11,16 @@
    recommendation box the user learns to dismiss.
 
    The DEMO fixture is asserted here too, deliberately. `lib/demo.js` carries a
-   comment doing this arithmetic by hand ("leaves that game's average at 3.0,
-   well clear of LOW_AVG"), and a hand-done sum in a comment is exactly the kind
-   that stops being true when the arithmetic under it changes — as it did here.
-   Wiring the real seed into a real assertion is what stops it drifting again. */
+   comment doing this arithmetic by hand, and a hand-done sum in a comment is
+   exactly the kind that stops being true when the arithmetic under it changes —
+   as it did here. Wiring the real seed into a real assertion is what stops it
+   drifting again.
+
+   #909 removed the SORT_SHARE branch this file also used to cover: the vote
+   card no longer offers a retirement proposal, so the rating branch is the
+   whole decision. The shapes below that used to carry a 0 now carry a 1 — the
+   bottom of the surviving scale, and the value the migration rewrites a
+   retire-only vote to. */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -36,26 +42,27 @@ test('the threshold means "the group is at all-2s or worse"', () => {
 });
 
 test('a game most people like is NOT proposed, even carrying one veto', () => {
-  // Three of four rated it 3-5 and one wants it gone. The retirement SHARE
-  // branch declines it (25% < 50%); the rating branch must decline it too, or
-  // one dissenter alone archives a game the group is fine with.
-  assert.ok(scoreRatings([0, 4, 5, 3]).score > LOW_SCORE, 'one veto must not trip the rating branch');
+  // Three of four rated it 3-5 and one does not want to play it at all. The
+  // rating branch must decline it, or one dissenter alone archives a game the
+  // group is fine with.
+  assert.ok(scoreRatings([1, 4, 5, 3]).score > LOW_SCORE, 'one veto must not trip the rating branch');
   assert.ok(scoreRatings([1, 4, 4, 4]).score > LOW_SCORE);
 });
 
 test('a genuinely disliked game still trips it, as it did on the raw mean', () => {
   // Each of these had a raw mean at or below the old LOW_AVG of 2.0, so the
   // change must not have quietly narrowed what gets proposed.
-  for (const votes of [[2, 2, 2, 2], [1, 2, 3, 2], [1, 1, 3, 3], [0, 2, 2, 2]]) {
+  for (const votes of [[2, 2, 2, 2], [1, 2, 3, 2], [1, 1, 3, 3], [1, 2, 2, 2]]) {
     assert.ok(scoreRatings(votes).score <= LOW_SCORE, `{${votes.join(',')}} should be proposable`);
   }
 });
 
 test('the demo seed arrives with nothing proposed for retirement', () => {
   // The seeded round is the first thing a visitor sees (#427). It carries
-  // exactly one retirement proposal on purpose — enough to show the zero bar on
-  // the results screen, not enough to open with a nag. That balance is an
-  // arithmetic claim about the fixture, and this is where it is checked.
+  // exactly one „gar nicht" on purpose — enough to show the leftmost bar on the
+  // results screen and the score's reason line, not enough to open with a nag.
+  // That balance is an arithmetic claim about the fixture, and this is where it
+  // is checked.
   const perGame = new Map();
   for (const spec of DEMO_SESSIONS) {
     spec.gameIndexes.forEach((gameIdx, col) => {
@@ -96,10 +103,6 @@ const { loadApp } = require('./support/dom');
 
 /* One game, one session, one vote per member — the multiset IS the fixture.
 
-   A trash vote is stored the way the card stores it (`{ rating: null, retire:
-   true }`, #797), not as a literal 0, so `sortCount` and the SORT_SHARE branch
-   see what they would see in real data.
-
    `minVotes` is passed as 0 deliberately: "is there enough data" is a separate
    condition (`round.members.length * 3` at the call site in views-round.js) and
    this file is about which vote SHAPES get proposed, not about when a game has
@@ -119,10 +122,7 @@ function recsFor(dom, votes) {
       createdAt: '2026-07-01T20:00:00.000Z',
       gameIds: ['g1'],
       memberIds: ids,
-      votes: Object.fromEntries(votes.map((r, i) => [
-        ids[i],
-        { g1: r === 0 ? { rating: null, retire: true } : { rating: r, retire: false } },
-      ])),
+      votes: Object.fromEntries(votes.map((r, i) => [ids[i], { g1: { rating: r } }])),
     }],
   });
   return dom.run('retireRecommendations(UT_ROUND.games, { g1: gameStats(UT_ROUND, "g1") }, 0)');
@@ -133,14 +133,13 @@ const proposed = (dom, votes) => recsFor(dom, votes).length > 0;
 test('one dissenter cannot propose a game the rest of the group is fine with', async (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
-  // Exactly one voter below 2, everyone else at 3+. In each of these the
-  // SORT_SHARE branch has just declined the game (one flag in three is 33%),
-  // and until #922 the rating branch proposed it anyway.
+  // Exactly one voter below 2, everyone else at 3+. Until #922 the rating
+  // branch proposed these anyway at the smaller group sizes.
   for (const votes of [
-    [1, 4, 4], [1, 3, 3], [0, 3, 3], [0, 4, 4],   // n=3 — all six flipped here
-    [1, 3, 3, 3], [0, 3, 3, 3],                    // n=4
-    [1, 4, 4, 4], [0, 4, 5, 3],                    // n=4 controls (already fine)
-    [1, 3, 3, 3, 3], [0, 3, 3, 3, 3],              // n=5 controls (already fine)
+    [1, 4, 4], [1, 3, 3],              // n=3 — both flipped here
+    [1, 3, 3, 3],                       // n=4
+    [1, 4, 4, 4], [1, 4, 5, 3],         // n=4 controls (already fine)
+    [1, 3, 3, 3, 3],                    // n=5 controls (already fine)
   ]) {
     assert.equal(
       proposed(dom, votes), false,
@@ -155,7 +154,7 @@ test('a genuinely disliked game is still proposed — the guard narrows nothing'
   // The anchor, then four shapes that are NOT a lone dissenter: either somebody
   // sits at 2 (so "everyone else is content" is false) or more than one voter
   // is below 2.
-  for (const votes of [[2, 2, 2, 2], [1, 2, 3, 2], [1, 1, 3, 3], [0, 2, 2, 2], [1, 1, 4, 4]]) {
+  for (const votes of [[2, 2, 2, 2], [1, 2, 3, 2], [1, 1, 3, 3], [1, 1, 4, 4]]) {
     assert.equal(
       proposed(dom, votes), true,
       `{${votes.join(',')}} must still be proposed`
@@ -163,17 +162,22 @@ test('a genuinely disliked game is still proposed — the guard narrows nothing'
   }
 });
 
-test('the guard touches the rating branch only — SORT_SHARE still proposes on its own', async (t) => {
+test('the low score is the ONLY reason a game is ever proposed (#909)', async (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
-  // {0,3} in a two-person round: one flag out of two votes is a 50% share, so
-  // SORT_SHARE fires, while the lone-dissenter guard suppresses the rating
-  // reason. The game must still be proposed, with the sort reason and only it.
-  // This is the one shape where the two branches can be told apart at all —
-  // half the votes being trash already forces the score far below LOW_SCORE.
-  const recs = recsFor(dom, [0, 3]);
-  assert.equal(recs.length, 1, '{0,3} must still be proposed by the share branch');
+  /* There used to be a second branch, SORT_SHARE: half a game's votes being
+     explicit "aussortieren" proposals. It is gone with the tile that fed it,
+     and the shape that used to isolate it — {0,3}, one flag in two votes, a 50%
+     share while the score branch declined — can no longer be expressed at all.
+
+     So this pins the remaining branch by its REASON rather than by a count: one
+     reason, and it is the score one. A revived share branch would show up as a
+     second entry here even where both fire on the same game. */
+  const recs = recsFor(dom, [1, 1, 2, 2]);
+  assert.equal(recs.length, 1, 'a genuinely disliked game is still proposed');
   // `Array.from` because the value crossed out of the vm realm: its prototype is
   // that context's Array.prototype, and `deepEqual` (strict) compares those.
-  assert.deepEqual(Array.from(recs[0].reasons), [dom.run("t('rec.reasonSort', { n: 1, pct: 50 })")]);
+  const reasons = Array.from(recs[0].reasons);
+  assert.equal(reasons.length, 1, `one reason, got: ${reasons.join(' | ')}`);
+  assert.equal(reasons[0], dom.run("t('rec.reasonAvg', { avg: fmtAvg(displayScore(gameStats(UT_ROUND, 'g1').score)) })"));
 });

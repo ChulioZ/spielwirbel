@@ -146,8 +146,8 @@ feature, so they live in
 survived the suite, `lint`, `coverage:ci` and a full round of DOM probes:
 **screenshot a new screen once, at a real viewport, before believing the probes.**
 
-**Related:** `.claude/rules/shared-constants-across-the-stack.md` (entries ten and
-eleven), `.claude/rules/active-games-filter-sites.md` (the pool predicates this
+**Related:** `.claude/rules/shared-constants-across-the-stack.md` (entries nine
+and ten — and its thirteenth, `vote-score.js`, for what one vote is worth),
+`.claude/rules/active-games-filter-sites.md` (the pool predicates this
 adds one to), `.claude/rules/session-teams.md` (the party arithmetic),
-`.claude/rules/retire-is-the-zero-of-the-vote-scale.md` (what one vote is worth),
 `.claude/rules/session-guests-are-not-members.md` (why guest ids are per session).

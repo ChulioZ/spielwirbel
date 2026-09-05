@@ -1,13 +1,14 @@
 /* Spielwirbel – what a SET of votes on a game is worth: the Spielwirbel-Score
    (#893).
 
-   Its sibling vote-scale.js answers what ONE vote is worth (the #797
-   retire-precedence rule); this answers what a collection of them is worth.
-   Keep the composition explicit — callers resolve a vote through
-   `effectiveRating` first, then feed the resulting 0–5 numbers in here.
+   Callers feed in the 1–5 ratings their votes carry and this answers what the
+   collection of them is worth. (It had a sibling, vote-scale.js, answering what
+   ONE vote was worth while a retirement proposal was the zero of a 0–5 scale;
+   #909 removed that option, so a vote is now just its rating and the sibling is
+   gone.)
 
    WHY THIS EXISTS. The raw arithmetic mean discards the one fact a group
-   actually decides on. `{5,5,4,3,0}` and `{4,3,3,3,4}` both read Ø 3,4 — in the
+   actually decides on. `{5,5,4,4,1}` and `{4,4,4,4,3}` both read Ø 3,8 — in the
    same size, in the same colour — while being completely different
    recommendations: the first has somebody who does not want to play at all, the
    second has nobody unhappy. Field evidence from real family use: a game gets a
@@ -25,19 +26,25 @@
 
    Pure and dependency-free, so it works both as a shared-scope frontend script
    and as a CommonJS module the server (lib/recommend.js) and the test suite
-   require. Load order: see index.html — after vote-scale.js, before core.js. */
+   require. Load order: see index.html — before core.js. */
 
 'use strict';
 
-/* What each tile is worth once a vote is scored. Index is the 0–5 rating.
+/* What each tile is worth once a vote is scored. Index IS the rating, which is
+   why slot 0 is a `null` hole rather than the array starting at 1: every caller
+   indexes this and the per-tile histogram by the rating itself, and re-basing
+   them would put an off-by-one between the two backends, the SQL aggregate and
+   six screens to save one array element. `null` reads as "not a tile" and
+   `tileValue`/`scoreTally` both skip it (#909 — it used to be the trash tile
+   at -6).
 
    INTEGERS ON PURPOSE: `scoreSplit` compares sums lexicographically and its
    determinism argument ("two runs of the same search cannot disagree") rests on
    exact integer arithmetic. Keep them integers when retuning.
 
-     0 🗑 aussortieren  -6     3 😐  3
      1 😢 gar nicht     -5     4 🙂  4
      2 🙁                1     5 🤩  5
+     3 😐                3
 
    THREE PROPERTIES ARE DELIBERATE — preserve them when retuning:
 
@@ -51,9 +58,10 @@
       disagrees with it.
 
    The cliff sits between 1 and 2 because the app itself calls the 1 „gar nicht".
-   The 0 sits just below it rather than far below: the EXTRA content of a trash
-   vote is about the shelf, not about tonight, and `retireRecommendations()`
-   already reads that separately off `sortCount`.
+   It is the bottom of the scale since #909, which removed the trash tile that
+   used to sit one rung below it — a change that is behaviour-NEUTRAL for the
+   score, because every number above is untouched and the tile it dropped was
+   worth -6 against the 1's -5. All three anchors hold unchanged.
 
    These are starting values chosen to be retuned from real use. Changing a
    number is expected; changing the SHAPE (where the cliff sits, whether the top
@@ -63,11 +71,11 @@
 
    Why a lookup table and not a set of λ weights: any stack of per-level share
    penalties and bonuses collapses algebraically to `mean(f(rᵢ))` with
-   `f(k) = k − λₖ + μₖ`. The whole design is six numbers, and it is still a mean
+   `f(k) = k − λₖ + μₖ`. The whole design is five numbers, and it is still a mean
    — just not of the tile numerals. Do not reintroduce separate λ terms; they
    cannot express anything this table cannot, and they make tuning and testing
    much harder. */
-const TILE_VALUE = [-6, -5, 1, 3, 4, 5];
+const TILE_VALUE = [null, -5, 1, 3, 4, 5];
 
 // The displayed floor. The score can go negative — a game five people vetoed
 // scores −5 — and a negative reads as broken rather than as bad, so screens
@@ -75,25 +83,31 @@ const TILE_VALUE = [-6, -5, 1, 3, 4, 5];
 // still sort; only what is printed is floored.
 const SCORE_MIN = 0;
 
-// What one tile is worth, or null when the argument is not a tile at all.
-// Integer-only: a fractional "rating" is not a tile the card can produce, and
-// admitting one would silently interpolate a curve that is deliberately a step
-// function.
+/* What one tile is worth, or null when the argument is not a tile at all.
+
+   Integer-only: a fractional "rating" is not a tile the card can produce, and
+   admitting one would silently interpolate a curve that is deliberately a step
+   function.
+
+   The range check is the ARRAY's bounds (`0 <= r < length`), not the scale's.
+   The scale's bottom is expressed once, by slot 0 holding `null` — writing
+   `r >= 1` here as well reads like a second guard and is dead code, because
+   `TILE_VALUE[0]` is already null: measured on #909, changing it back to
+   `r >= 0` reddens nothing at all. Two overlapping guards where one cannot fail
+   is worse than one that can, so there is exactly one place that says a 0 is
+   not a tile. */
 function tileValue(r) {
   return Number.isInteger(r) && r >= 0 && r < TILE_VALUE.length ? TILE_VALUE[r] : null;
 }
 
-/* Score a list of 0–5 ratings.
+/* Score a list of 1–5 ratings.
 
    Returns null for an empty list, matching what `avg` has always been in that
    case, so every `st.avg !== null` guard already on screen transfers unchanged.
 
-   `low`, `vetoes` and `retires` come back with the score because the reason
-   line („2,2 · 1× gar nicht") needs them at the same moment, and computing them
-   in a second pass at each call site is how the two would drift. `vetoes` and
-   `retires` stay separate counters rather than one "unhappy" total: they phrase
-   different sentences, and the trash tile is members-only (#458), so merging
-   them would put a control a guest never sees into a guest's mouth.
+   `low` and `vetoes` come back with the score because the reason line
+   („2,2 · 1× gar nicht") needs them at the same moment, and computing them in a
+   second pass at each call site is how the two would drift.
 
    Values off the scale are skipped rather than admitted. Nothing should ever
    store one, but the plain mean would turn a single stray into NaN and paint
@@ -114,13 +128,13 @@ function scoreRatings(ratings) {
    WHY A SECOND SHAPE EXISTS AT ALL (#914). The cross-tenant Discover aggregate
    (lib/public-stats.js) is fed by a `count(*) FILTER` per tile from SQL, because
    the Postgres aggregate cannot require() this file. The obvious alternative — a
-   `sum(CASE …)` over the tile values there — would hand-restate all six
-   TILE_VALUE numbers in a place that can never be kept in step, and the header
+   `sum(CASE …)` over the tile values there — would hand-restate every
+   TILE_VALUE number in a place that can never be kept in step, and the header
    above says those numbers are *expected* to be retuned. That copy would freeze
    the public podium on the old curve, silently, on the one surface a logged-out
    visitor sees (.claude/rules/shared-constants-across-the-stack.md). A histogram
    carries no curve at all — only which tile a vote landed on, which is the
-   SCALE, and the scale is already restated in that SQL for #797's sake.
+   SCALE, and the scale is restated in that SQL because it must be.
 
    A non-integer or negative bucket is treated as empty rather than trusted:
    `count` is a divisor here, and a stray value would paint every podium NaN. */
@@ -130,18 +144,21 @@ function scoreTally(tiles) {
   let count = 0;
   let low = null;
   let vetoes = 0;
-  let retires = 0;
   for (let r = 0; r < TILE_VALUE.length; r++) {
+    // Through `tileValue`, never `TILE_VALUE[r]` directly: "what is a tile" is
+    // then one decision in one place, so slot 0's `null` hole and the `r >= 1`
+    // bound cannot come to disagree — and either of them breaking is visible in
+    // a test, which two overlapping guards would not be.
+    const v = tileValue(r);
     const n = counts[r];
-    if (!Number.isInteger(n) || n <= 0) continue;
-    sum += TILE_VALUE[r] * n;
+    if (v === null || !Number.isInteger(n) || n <= 0) continue;
+    sum += v * n;
     count += n;
     if (low === null) low = r;
     if (r === 1) vetoes = n;
-    if (r === 0) retires = n;
   }
   if (!count) return null;
-  return { score: sum / count, count, low, vetoes, retires };
+  return { score: sum / count, count, low, vetoes };
 }
 
 /* ------------------------------------------------------------------ #894 --

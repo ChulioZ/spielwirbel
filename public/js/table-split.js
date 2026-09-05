@@ -10,15 +10,15 @@
    (.claude/rules/shared-constants-across-the-stack.md).
 
    Pure and dependency-free, so it works both as a shared-scope frontend script
-   and as a CommonJS module the server and the test suite require. It reads a
-   vote through `effectiveRating` (public/js/vote-scale.js) and weighs one
-   through `tileValue` (public/js/vote-score.js); both are INJECTED rather than
-   required, for the reason recap.js injects its two: a public/js file cannot
-   require a sibling, and the suite loads this one into Node. Neither has a
+   and as a CommonJS module the server and the test suite require. It weighs a
+   vote through `tileValue` (public/js/vote-score.js), which is INJECTED rather
+   than required, for the reason recap.js injects its own: a public/js file
+   cannot require a sibling, and the suite loads this one into Node. It has no
    default — an absent one throws on the first seat, where a silent fallback
    would hand back a plausible, confident, differently-scored split with no
-   error anywhere.
-   Load order: see index.html — after vote-scale.js and vote-score.js. */
+   error anywhere. (There was a second injected dependency, `effectiveRating`,
+   until #909 made a vote simply its rating.)
+   Load order: see index.html — after vote-score.js. */
 
 'use strict';
 
@@ -29,27 +29,31 @@
 const MIN_TABLE_PARTIES = 3;
 
 // At or below this, a seating is a tier-1 violation: the person is at a game
-// they said they did not want to play. It is the bottom two of the 0-5 scale
-// whose zero is the retirement proposal (#797) — so a retire vote is a violation
-// by construction, with no separate clause, and a legacy row carrying both a
-// rating and the flag resolves the same way here as everywhere else.
+// they said they did not want to play. It is the BOTTOM TWO RUNGS of the vote
+// scale — the 1 the card labels „gar nicht" and the 2 „eher nicht" — which is
+// what makes it a statement about the scale rather than a magnitude.
+//
+// It is numerically unchanged by #909: the scale ran 0–5 between #797 and then,
+// with a retirement proposal as its zero, and the bottom two of THAT scale were
+// the 0 and the 1. Removing the zero dropped a rung this threshold was already
+// covering, so the value stands while the sentence justifying it moved up one.
 //
 // THE THRESHOLD IS COUPLED TO THE SCALE. If the scale is ever changed, this
 // moves with it in the same change; they must not drift apart.
 const VIOLATION_MAX = 2;
 
 // What an ABSENT vote counts as. A completed vote can never produce one — the
-// vote card requires a rating or the zero tile — but partial and hand-crafted
+// vote card refuses to advance without a rating — but partial and hand-crafted
 // data can, and it must be neither a violation nor a reason to seat someone at a
-// game they never rated. The midpoint of the 1-5 range a rating is actually
-// written in; an integer, so every comparison below stays exact.
+// game they never rated. The midpoint of the 1-5 range a rating is written in;
+// an integer, so every comparison below stays exact.
 const NEUTRAL_RATING = 3;
 
 // One person's rating for one game, as this file scores it.
-function seatRating(votes, personId, gameId, effectiveRating) {
+function seatRating(votes, personId, gameId) {
   const byGame = (votes || {})[personId];
-  const r = byGame ? effectiveRating(byGame[gameId]) : null;
-  return r === null || r === undefined ? NEUTRAL_RATING : r;
+  const r = byGame && byGame[gameId] ? byGame[gameId].rating : null;
+  return Number.isFinite(r) ? r : NEUTRAL_RATING;
 }
 
 /* What ONE table says about itself: the two numbers the builder shows and the
@@ -59,14 +63,14 @@ function seatRating(votes, personId, gameId, effectiveRating) {
    answer "is this table alright" for the people actually at it. The lowest is
    what makes a bad split visible at a glance; the average alone hides one
    miserable person behind five happy ones. */
-function tableFeedback(table, votes, effectiveRating, tileValue) {
+function tableFeedback(table, votes, tileValue) {
   const personIds = (table && table.personIds) || [];
   const gameId = table && table.gameId;
   let sum = 0;
   let lowest = null;
   const violations = [];
   personIds.forEach((pid) => {
-    const r = seatRating(votes, pid, gameId, effectiveRating);
+    const r = seatRating(votes, pid, gameId);
     // Summed through the SAME curve the single-table results screen scores with
     // (#893), so the two paths cannot disagree about what one evening is worth.
     // `NEUTRAL_RATING = 3` needs no adjustment: `tileValue(3) === 3`, so an
@@ -410,7 +414,7 @@ const MAX_TABLE_PROPOSALS = 5;
    `parties` is [{ id, personIds }] — one entry per team plus one per un-teamed
    person, so a team is never split across two tables and all its people's ratings
    count. */
-function proposeTableSplits({ parties, games, votes, seed, effectiveRating, tileValue, fitsPlayerCount }) {
+function proposeTableSplits({ parties, games, votes, seed, tileValue, fitsPlayerCount }) {
   const partyList = (parties || []).filter((p) => p && Array.isArray(p.personIds) && p.personIds.length);
   const total = partyList.length;
   const counts = feasibleTableCounts(games, total, fitsPlayerCount);
@@ -432,7 +436,7 @@ function proposeTableSplits({ parties, games, votes, seed, effectiveRating, tile
   const cells = new Map();
   partyList.forEach((p) => {
     usable.forEach((gid) => {
-      const fb = tableFeedback({ gameId: gid, personIds: p.personIds }, votes, effectiveRating, tileValue);
+      const fb = tableFeedback({ gameId: gid, personIds: p.personIds }, votes, tileValue);
       cells.set(p.id + ' ' + gid, {
         sum: fb.sum,
         lowest: fb.lowest === null ? NEUTRAL_RATING : fb.lowest,

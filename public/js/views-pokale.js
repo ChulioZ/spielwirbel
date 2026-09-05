@@ -87,7 +87,7 @@ function renderPokaleTab(round) {
   // bestbewertete Spiel" names the game the Regal actually puts at the top —
   // one ranking of one shelf, not two (#894).
   const shelfIndex = roundScoreIndex(round);
-  const recap = roundRecap(round, sessionPeople, effectiveRating, (gid) => {
+  const recap = roundRecap(round, sessionPeople, (gid) => {
     const st = shelfIndex.byGame[gid];
     return st ? st.score : null;
   });

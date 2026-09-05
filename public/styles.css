@@ -3659,12 +3659,13 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   }
   .vote .vote__title { padding: 2px 20px; font-size: var(--text-xl); }
   .vote .vote__q { margin: 2px 20px; font-size: var(--text-md); }
-  /* The row carries SIX tiles since #797, so the horizontal budget got 20%
-     tighter. Measured at 390x640 with the old 20px/10px: the tiles shrank to
-     45px — WCAG 2.5.5's target-size floor is 44, i.e. no headroom left at all,
-     and at 320px they hit their min-content width and started spilling out of
-     the row's own padding box. Buying the inset and the gap back puts them at
-     ~51px instead, which is the same slack the five-tile row used to have. */
+  /* The row carried SIX tiles between #797 and #909, which cost 20% of the
+     horizontal budget. Measured at 390x640 with the old 20px/10px: the tiles
+     shrank to 45px — WCAG 2.5.5's target-size floor is 44, i.e. no headroom
+     left at all, and at 320px they hit their min-content width and started
+     spilling out of the row's own padding box. The inset and gap bought back
+     here are kept now that the row is five tiles again: they simply put the
+     tiles further above the floor, which is the safe direction. */
   .vote .rating { padding: 6px 12px 2px; gap: 6px; }
   .vote .rating-scale { padding-top: 0; padding-inline: 14px; }
   .vote .vote__nav { padding: 0 20px 14px; }
@@ -3721,10 +3722,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .result-row__score { text-align: right; }
 .score-big { font-size: var(--text-3xl); font-weight: 800; color: var(--brand-dark); line-height: 1; }
 .score-label { font-size: var(--text-sm); color: var(--ink-soft); }
-/* Why this score is what it is — „1× gar nicht" (#893). Deliberately quieter
-   than `.sort-flag` beside it: that one is a call to ACT (a game half the group
-   wants gone), this one only explains a number the reader is already looking
-   at. `--warn` here would make every vetoed game shout. */
+/* Why this score is what it is — „1× gar nicht" (#893). Deliberately quiet: it
+   only explains a number the reader is already looking at, and is not a call to
+   act on the game. `--warn` here would make every vetoed game shout. (It used to
+   be contrasted against a `.sort-flag` beside it, which #909 removed with the
+   retirement vote that fed it.) */
 .score-why { font-size: var(--text-sm); color: var(--ink-soft); font-weight: 700; margin-top: 2px; }
 /* The ⓘ that opens the Spielwirbel-Score sheet (#893). Same 28px box and the
    same colours as `.vote__info` — it is the same affordance on a different
@@ -3744,8 +3746,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .score-info:hover, .score-info:focus-visible { color: var(--brand-dark); }
 .score-info__body p { margin: 0 0 12px; line-height: 1.5; }
 .score-info__body p:last-child { margin-bottom: 0; }
-.sort-flag { color: var(--warn); font-size: var(--text-sm); font-weight: 700; margin-top: 4px; }
-.sortflag-btn { color: var(--warn); font-weight: 700; text-decoration: underline; }
 .result-row__remove { margin-top: 6px; color: var(--ink-soft); font-size: var(--text-sm); }
 .result-row__remove:hover { color: var(--danger); }
 .tag--retired {
@@ -5025,7 +5025,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   min-width: calc(92px * 4 + 8px * 3);
 }
 .ds-row__meta .score-pill { position: static; }
-.ds-row__meta .sort-flag { margin: 0; }
 
 
 /* ---- Toast ---- */
@@ -6351,14 +6350,6 @@ kbd {
 .mood__n { font-family: var(--font-display); font-size: var(--text-xs); font-weight: 700; }
 .mood:hover { border-color: var(--brand); transform: translateY(-2px); }
 .mood.is-selected { color: #fff; transform: scale(1.08); }
-/* The zero of the scale (#797) — "gar nicht", one rung below the 1. It takes the
-   same traffic-light fill as every other tile when selected (avgColor(0) is the
-   bottom of that ramp), so the only thing that sets it apart unselected is the
-   warn tone the retirement language uses everywhere else in the app. Its
-   `.mood__n` holds a non-breaking space, which is what keeps its glyph on the
-   same baseline as the five numbered faces. */
-.mood--retire { color: var(--warn); }
-
 /* ---- Per-device voting (#209) ----
    The setup toggle and the lobby that replaces the hot-seat wizard for a session
    collecting votes from several devices. Named `live-vote`, deliberately NOT

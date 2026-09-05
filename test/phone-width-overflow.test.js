@@ -220,9 +220,9 @@ test('two tracks are ARITHMETICALLY enough for the results row at 320px', () => 
   const moods = [...faces.matchAll(/const MOODS = \[([^\]]+)\]/g)];
   assert.equal(moods.length, 1,
     `rating-faces.js declares MOODS ${moods.length} times, expected exactly 1 — the rating scale drives the bar count`);
-  // Plus the retirement rung, which is the zero of the same scale (#797) and
-  // gets a column like any other — MOODS names only the five faces of 1–5.
-  const bars = moods[0][1].split(',').length + 1;
+  // One column per face, and no more: the sixth (the retirement rung, #797) was
+  // removed again in #909, so the chart is exactly the scale MOODS names.
+  const bars = moods[0][1].split(',').length;
 
   for (const [name, v] of Object.entries({ appSide, rowSide, rowGap, cover, barGap, barW })) {
     assert.ok(Number.isFinite(v) && v > 0, `could not read ${name} out of styles.css`);

@@ -601,8 +601,7 @@ function startVoting(round, session, games, people, opts = {}) {
   //
   // Only the in-place tile handler sets it; go(), onPopstate and the language
   // switch leave it null on purpose, so *arriving* on a step never yanks focus
-  // into the middle of the card. Since #797 the retirement proposal is one of
-  // those tiles rather than a separate control, so there is one kind, not two.
+  // into the middle of the card.
   let refocus = null;
 
   function render() {
@@ -644,15 +643,8 @@ function startVoting(round, session, games, people, opts = {}) {
     }
 
     const { person, game } = step;
-    const current = votes[person.id][game.id] || { rating: null, retire: false };
+    const current = votes[person.id][game.id] || { rating: null };
     const color = personColor(round, person);
-    // A guest rates the game but does not get to vote it off the shelf (#458):
-    // that is the permanent group governing its own collection, and a one-off
-    // visitor shouldn't nudge a game toward the retire recommendation. Since
-    // #797 that means their scale simply starts at 1 — the zero tile is not
-    // rendered at all rather than cast and filtered later, so gameStats() needs
-    // no guest exclusion.
-    const mayRetire = !person.guest;
 
     const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
     const fallback = coverPlaceholder(game);
@@ -681,32 +673,24 @@ function startVoting(round, session, games, people, opts = {}) {
     if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
     else fetchCardGameInfo(game, card);
 
-    /* The scale: a trash tile for 0 (members only), then 1–5 as mood faces. The
-       selected one takes the rating's traffic-light colour, and `avgColor(0)`
-       lands on the deep red at the bottom of that ramp with no special case —
-       which is the point of the whole change, the zero being the bottom of one
-       axis rather than a second question.
+    /* The scale: 1–5 as mood faces, the same five for a member and a guest
+       (#909 removed the members-only trash tile that used to sit below the 1).
+       The selected one takes the rating's traffic-light colour.
 
        The faces come from rating-faces.js, which views-vote-link.js and the
        results distribution read too — the two cards must render the same markup
        and write the same vote shape (see that file's header), and the chart the
        group reads seconds later must name each rung with the same glyph. */
     const ratingEl = card.querySelector('.rating');
-    for (let n = mayRetire ? 0 : 1; n <= RATING_MAX; n++) {
-      // Read through effectiveRating rather than comparing `current.rating`, so
-      // a legacy column carrying both a rating and the flag lights the tile the
-      // rest of the app will actually count (#797).
-      const sel = effectiveRating(current) === n;
+    for (let n = RATING_MIN; n <= RATING_MAX; n++) {
+      const sel = current.rating === n;
       // aria-pressed carries the choice (#145): the selected face is otherwise
       // marked only by its traffic-light fill, so nothing announced which rating
       // was picked — on the app's central action. The label spells out the scale
       // too; a bare "1" gave no hint of what the number meant or how far it ran.
-      // The zero carries no numeral, so its label is the whole of what it means;
-      // its `.mood__n` is a non-breaking space rather than absent, which keeps
-      // its icon on the same baseline as the five faces beside it.
-      const b = h(`<button class="mood${n === 0 ? ' mood--retire' : ''}${sel ? ' is-selected' : ''}"
-           aria-pressed="${sel}" aria-label="${esc(n === 0 ? t('vote.suggestRetire') : t('vote.ratingLabel', { n, max: RATING_MAX }))}">
-           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n === 0 ? '&nbsp;' : n}</span>
+      const b = h(`<button class="mood${sel ? ' is-selected' : ''}"
+           aria-pressed="${sel}" aria-label="${esc(t('vote.ratingLabel', { n, max: RATING_MAX }))}">
+           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n}</span>
          </button>`);
       if (sel) {
         b.style.background = avgColor(n);
@@ -714,10 +698,7 @@ function startVoting(round, session, games, people, opts = {}) {
       }
       if (wanted && wanted.kind === 'mood' && wanted.n === n) restore = b;
       b.addEventListener('click', () => {
-        // Mutually exclusive: picking a face clears the flag, picking the trash
-        // clears the rating. That is what removes the contradiction a vote could
-        // express before (#797).
-        votes[person.id][game.id] = n === 0 ? { rating: null, retire: true } : { rating: n, retire: false };
+        votes[person.id][game.id] = { rating: n };
         refocus = { kind: 'mood', n };
         render();
       });
@@ -730,8 +711,7 @@ function startVoting(round, session, games, people, opts = {}) {
 
     card.querySelector('#nextBtn').addEventListener('click', () => {
       // One scale, so one guard: has this person put the game anywhere on it?
-      // (#797 — it used to be "a rating, or the flag, unless you're a guest".)
-      if (effectiveRating(votes[person.id][game.id]) === null) {
+      if (!Number.isFinite((votes[person.id][game.id] || {}).rating)) {
         return toast(t('vote.toast.needRating'));
       }
       if (idx === total - 1) finish();
@@ -873,15 +853,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // Tally per game.
   const rows = games.map((g) => {
     const ratings = [];
-    let sortCount = 0;
     people.forEach((p) => {
       const v = (session.votes[p.id] || {})[g.id];
-      if (!v) return;
-      if (wantsRetire(v)) sortCount++;
-      // 0–5 since #797: a retirement proposal is a vote of 0, so it lands in
-      // the average and in its own bucket rather than only in `sortCount`.
-      const r = effectiveRating(v);
-      if (r !== null) ratings.push(r);
+      if (v && Number.isFinite(v.rating)) ratings.push(v.rating);
     });
     const sum = ratings.reduce((a, b) => a + b, 0);
     const avg = ratings.length ? sum / ratings.length : 0;
@@ -890,6 +864,8 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // everybody is fine with. `avg` stays for the share text's raw fallback and
     // for anything describing the votes rather than the game.
     const sc = scoreRatings(ratings);
+    // Indexed by rating, so slot 0 is a permanent hole the chart below skips —
+    // the same shape (and the same reason) as vote-score.js's TILE_VALUE.
     const dist = [0, 0, 0, 0, 0, 0];
     ratings.forEach((r) => dist[r]++);
     return {
@@ -899,9 +875,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       // What the pill prints and what places tie on — see computePlaces.
       shown: sc ? displayScore(sc.score) : 0,
       vetoes: sc ? sc.vetoes : 0,
-      retires: sc ? sc.retires : 0,
       count: ratings.length,
-      sortCount,
       dist,
     };
   });
@@ -1088,12 +1062,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     const g = r.game;
     const imgStyle = g.image ? `style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
     const fallback = coverPlaceholder(g);
-    /* The distribution, drawn in the VOTE CARD's vocabulary (#890): six columns
-       0–5, each tinted with `avgColor(n)` and named on an always-visible axis by
-       the same mood face the voter pressed minutes earlier — the trash for the
-       zero, exactly as on the tile.
+    /* The distribution, drawn in the VOTE CARD's vocabulary (#890): five columns
+       1–5, each tinted with `avgColor(n)` and named on an always-visible axis by
+       the same mood face the voter pressed minutes earlier. (It had a sixth for
+       the trash tile until #909 removed that rung; `dist` is still indexed by
+       rating, so the chart drops slot 0 rather than re-basing the array.)
 
-       What it replaces, and why: six identical `--brand-edge` bars whose only
+       What it replaces, and why: identical `--brand-edge` bars whose only
        numerals were vote COUNTS, sitting precisely where an axis label belongs.
        So a „3" in the fourth column read as „this is a 3" before it read as
        „three people", while bar height already carried that count. The label
@@ -1101,23 +1076,25 @@ async function showResults(round, session, gamesHint, reveal, plain) {
        columns stop having to be read as a left-to-right sequence at all.
 
        Counts stay in `title=`, on the whole column rather than the bar, so a
-       one-vote column is still hoverable. The readable numbers remain the score,
-       its „Spielwirbel-Score" label and the „X wollen aussortieren" line.
+       one-vote column is still hoverable. The readable numbers remain the score
+       and its „Spielwirbel-Score" label.
 
        The label cannot live INSIDE the bar: an unvoted rung is 0px tall, and
        every column must be labelled — that is what makes an empty rung read as
        an empty slot rather than as a missing one. Hence the full-height track
        behind each fill, and the separate axis row. */
     const bars = !hasVotes ? '' : r.dist
-      .map((c, n) => {
-        const title = n === 0 ? t('result.barTitleRetire', { c }) : t('result.barTitle', { c, r: n });
+      .slice(RATING_MIN)
+      .map((c, i) => {
+        const n = i + RATING_MIN;
+        const title = t('result.barTitle', { c, r: n });
         // The numeral stays `--ink-soft` while the fill and the glyph carry the
         // ramp: as TEXT on the page the tightest point of the ramp is ~4.58:1,
         // and a per-round theme moves the surface under it. A glyph is a
         // non-text UI component, so it sits at the 3:1 bar instead.
         return `<div class="bar-col" title="${esc(title)}">
              <div class="bar-track"><div class="bar" style="height:${Math.round((c / maxBar) * 100)}%;background:${avgColor(n)}"></div></div>
-             <div class="bar-axis"><i class="ti ${ratingFace(n)}" aria-hidden="true" style="color:${avgColor(n)}"></i><span class="bar-axis__n">${n === 0 ? '&nbsp;' : n}</span></div>
+             <div class="bar-axis"><i class="ti ${ratingFace(n)}" aria-hidden="true" style="color:${avgColor(n)}"></i><span class="bar-axis__n">${n}</span></div>
            </div>`;
       })
       .join('');
@@ -1127,15 +1104,6 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       : g.completed
         ? ` <span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`
         : '';
-    // "Suggested for retirement" line; with a direct action only while the game
-    // is still active — an already-archived game has nothing left to retire, and
-    // neither has one that has since moved to the Wunschliste (#560), where
-    // retiring it would claim the group is discarding a game they do not own.
-    const sortFlag = r.sortCount
-      ? `<div class="sort-flag"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('result.sortFlag', { n: r.sortCount }))}${
-          g.retired || g.completed || g.wish ? '' : ` <button class="link-btn sortflag-btn">${esc(t('result.retireNow'))}</button>`
-        }</div>`
-      : '';
     /* The score's NAME, not a vote count (#902). Within one session `n` is the
        same on every row — the vote card refuses to advance until each drawn
        game has been placed somewhere on the scale (see the guard in
@@ -1161,7 +1129,6 @@ async function showResults(round, session, gamesHint, reveal, plain) {
          <div>
            <a class="result-row__title">${medal}${esc(g.title)}${retiredBadge}</a>
            ${hasVotes ? `<div class="result-row__bars">${bars}</div>` : ''}
-           ${sortFlag}
            <button class="link-btn result-row__remove">${iconText('ti-trash', t('result.removeGame'))}</button>
          </div>
          <div class="result-row__score">
@@ -1179,19 +1146,6 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // it stays mouse-clickable but is not a second (nameless) tab stop.
     makeGameLink(row.querySelector('.result-row__title'), round.id, g.id);
     makeGameLink(row.querySelector('.result-row__img'), round.id, g.id, { redundant: true });
-    const sortBtn = row.querySelector('.sortflag-btn');
-    if (sortBtn) {
-      sortBtn.addEventListener('click', async () => {
-        if (!confirm(t('result.retireNowConfirm', { title: g.title }))) return;
-        try {
-          await api('POST', `/api/rounds/${round.id}/games/${g.id}/retire`, { retired: true });
-          toast(t('games.retired', { title: g.title }));
-          const fresh = await fetchRoundFresh(round.id);
-          const sess = fresh.sessions.find((s) => s.id === session.id) || session;
-          showResults(fresh, sess, games);
-        } catch (e) { toast(e.message); }
-      });
-    }
     const removeBtn = row.querySelector('.result-row__remove');
     removeBtn.addEventListener('click', async () => {
       if (!confirm(t('result.removeGameConfirm', { title: g.title }))) return;

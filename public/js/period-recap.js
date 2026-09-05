@@ -10,10 +10,10 @@
    reason recap.js's header sets out: a public/js file cannot require() a
    sibling, so injection is what keeps this file usable both as a shared-scope
    frontend script and as a CommonJS module the tests require, without a second
-   copy of any rule. `deps` is { peopleOf, ratingOf, scoreOf, shelfOf, playsOf,
+   copy of any rule. `deps` is { peopleOf, scoreOf, shelfOf, playsOf,
    minRatings,
-   isActive } — sessionPeople (session-people.js), effectiveRating
-   (vote-scale.js), scoreRatings (vote-score.js) and RECAP_MIN_RATINGS
+   isActive } — sessionPeople (session-people.js), scoreRatings
+   (vote-score.js) and RECAP_MIN_RATINGS
    (recap.js). The threshold is injected rather than re-declared here precisely
    because a second `3` is the drift
    .claude/rules/shared-constants-across-the-stack.md exists to prevent: the
@@ -147,10 +147,9 @@ function bestRated(round, sessions, deps) {
       const own = votes[person.id] || {};
       Object.keys(own).forEach((gid) => {
         if (!known.has(gid)) return;
-        // A retirement proposal is the zero of the scale (#797), so it belongs
-        // in the score like any other vote.
-        const rating = deps.ratingOf(own[gid]);
-        if (rating === null) return;
+        const vote = own[gid];
+        if (!vote || !Number.isFinite(vote.rating)) return;
+        const rating = vote.rating;
         const list = ratings.get(gid) || [];
         list.push(rating);
         ratings.set(gid, list);
@@ -159,7 +158,7 @@ function bestRated(round, sessions, deps) {
   });
   // Ranked on the Spielwirbel-Score (#893), not the raw mean (#914) — injected
   // rather than computed here, for the reason this file's header gives about
-  // `ratingOf`: a second copy of the curve is the drift. The all-time card next
+  // `scoreOf`: a second copy of the curve is the drift. The all-time card next
   // to this one (recap.js's `bestAndWorst`) has always used it, so until #914 the
   // two „Bestbewertet" cards were one label over two different arithmetics.
   //

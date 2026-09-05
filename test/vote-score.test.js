@@ -5,7 +5,7 @@
    outranking a game everybody is fine with.
 
    The calibration table below is the whole issue's acceptance evidence, and it
-   is pinned row by row on purpose. The six values are expected to be retuned
+   is pinned row by row on purpose. The five values are expected to be retuned
    from real use — what must NOT move silently is the SHAPE: where the cliff
    sits, and the three anchors that make the number readable next to the raw
    mean everyone already knows. A retune that breaks an anchor is a different
@@ -21,14 +21,18 @@ const { TILE_VALUE, tileValue, scoreRatings, scoreTally } = require('../public/j
 // asserts what a user actually reads rather than a float nobody sees.
 const scoreOf = (ratings) => Number(scoreRatings(ratings).score.toFixed(1));
 
-test('the curve is six integers with the cliff between 1 and 2', () => {
-  assert.deepEqual(TILE_VALUE, [-6, -5, 1, 3, 4, 5]);
+test('the curve is five integers with the cliff between 1 and 2', () => {
+  // Slot 0 is a `null` hole, not a tile: the array is indexed by the RATING, so
+  // dropping the retirement rung (#909) had to leave the index alone or every
+  // consumer — both backends, the SQL aggregate and six screens — would need
+  // re-basing. `tileValue` and `scoreTally` skip it.
+  assert.deepEqual(TILE_VALUE, [null, -5, 1, 3, 4, 5]);
   // Integers are load-bearing: scoreSplit compares sums lexicographically and
   // its determinism argument (table-split.js) rests on exact arithmetic.
-  TILE_VALUE.forEach((v) => assert.ok(Number.isInteger(v), `${v} is not an integer`));
+  TILE_VALUE.slice(1).forEach((v) => assert.ok(Number.isInteger(v), `${v} is not an integer`));
   // Strictly increasing — `lowest` in scoreSplit stays the raw rating only
   // because the curve preserves order.
-  for (let n = 1; n < TILE_VALUE.length; n++) assert.ok(TILE_VALUE[n] > TILE_VALUE[n - 1]);
+  for (let n = 2; n < TILE_VALUE.length; n++) assert.ok(TILE_VALUE[n] > TILE_VALUE[n - 1]);
 });
 
 test('f(3) = 3 and f(5) = 5 — both familiar anchors survive', () => {
@@ -36,8 +40,9 @@ test('f(3) = 3 and f(5) = 5 — both familiar anchors survive', () => {
   assert.equal(tileValue(5), 5);
 });
 
-test('tileValue rejects anything off the 0-5 scale', () => {
-  [-1, 6, 2.5, NaN, null, undefined, '3'].forEach((bad) => {
+test('tileValue rejects anything off the 1-5 scale', () => {
+  // 0 belongs in this list since #909: it used to be the trash tile.
+  [0, -1, 6, 2.5, NaN, null, undefined, '3'].forEach((bad) => {
     assert.equal(tileValue(bad), null, `${String(bad)} should not be a tile`);
   });
 });
@@ -51,7 +56,6 @@ const CALIBRATION = [
   { votes: [5, 5, 5, 5, 1], raw: 4.2, score: 3.0, why: 'calibration anchor - ties all-3s' },
   { votes: [4, 4, 4, 4, 1], raw: 3.4, score: 2.2, why: '' },
   { votes: [5, 5, 4, 3, 1], raw: 3.6, score: 2.4, why: '' },
-  { votes: [5, 5, 4, 3, 0], raw: 3.4, score: 2.2, why: '' },
   { votes: [4, 4, 4, 2, 2], raw: 3.2, score: 2.8, why: 'two sad faces, no veto' },
   { votes: [2, 2, 2, 2, 2], raw: 2.0, score: 1.0, why: '' },
 ];
@@ -78,10 +82,10 @@ test('a game nobody rated below 3 scores exactly its raw average', () => {
 });
 
 test('the ordering flip that motivates the issue', () => {
-  // Both read O 3,4 today, in the same size and the same colour, while being
-  // completely different recommendations.
-  const vetoed = [5, 5, 4, 3, 0];
-  const content = [4, 3, 3, 3, 4];
+  // Both read O 3,8 as a raw mean, in the same size and the same colour, while
+  // being completely different recommendations.
+  const vetoed = [5, 5, 4, 4, 1];
+  const content = [4, 4, 4, 4, 3];
   const mean = (xs) => Number((xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(1));
   assert.equal(mean(vetoed), mean(content), 'the raw means are indistinguishable');
   assert.ok(
@@ -98,21 +102,24 @@ test('four people at 5 exactly cancel one at 1', () => {
 
 // ---- the reason line's inputs ----
 
-test('scoreRatings reports the low, the vetoes and the retires', () => {
-  const s = scoreRatings([5, 5, 4, 1, 1, 0]);
-  assert.equal(s.low, 0, 'lowest raw rating');
+test('scoreRatings reports the low and the vetoes', () => {
+  const s = scoreRatings([5, 5, 4, 1, 1]);
+  assert.equal(s.low, 1, 'lowest raw rating');
   assert.equal(s.vetoes, 2, 'ratings of exactly 1');
-  assert.equal(s.retires, 1, 'ratings of exactly 0');
-  assert.equal(s.count, 6);
+  assert.equal(s.count, 5);
+  // The counter it had beside `vetoes` until #909 is gone with the tile that
+  // fed it — asserted so a revived `retires` cannot slip back in unnoticed.
+  assert.equal('retires' in s, false);
 });
 
-test('vetoes and retires are counted separately, never merged', () => {
-  // They phrase two different reason lines ("1x gar nicht" vs "1x aussortieren")
-  // and the trash tile is members-only, so conflating them would put a control
-  // a guest never sees into a guest's mouth.
-  assert.deepEqual(pick(scoreRatings([1, 1, 1])), { vetoes: 3, retires: 0 });
-  assert.deepEqual(pick(scoreRatings([0, 0])), { vetoes: 0, retires: 2 });
-  function pick(s) { return { vetoes: s.vetoes, retires: s.retires }; }
+test('a 0 is not a vote at all any more', () => {
+  // It was the trash tile until #909. Nothing writes one now, and the migration
+  // rewrote the ones that existed — so if one ever turns up it must be skipped
+  // like any other off-scale value, not counted as a very bad rating.
+  const s = scoreRatings([5, 0, 5]);
+  assert.equal(s.count, 2);
+  assert.equal(s.score, 5);
+  assert.equal(scoreRatings([0, 0]), null);
 });
 
 test('an empty list scores null, matching avg === null today', () => {
@@ -147,7 +154,7 @@ test('the veto scales with group size, by construction', () => {
    it, and this is the assertion that they are genuinely one implementation
    rather than two that happen to agree on the cases someone thought of. */
 test('scoreTally and scoreRatings are the same function over two input shapes', () => {
-  const cases = [[5, 5, 1], [3, 3, 3], [0, 0, 4], [2], [5, 4, 3, 2, 1, 0]];
+  const cases = [[5, 5, 1], [3, 3, 3], [4], [2], [5, 4, 3, 2, 1]];
   for (const list of cases) {
     const tiles = [0, 0, 0, 0, 0, 0];
     list.forEach((r) => { tiles[r] += 1; });
@@ -172,6 +179,9 @@ test('a malformed bucket is treated as empty, never trusted into the divisor', (
   assert.equal(s.score, 5);
   assert.equal(s.low, 5, 'low is the lowest bucket that actually has votes in it');
   assert.equal(scoreTally([0, 0, 0, '3', -1, 0]), null, 'nothing well-formed at all');
+  // Bucket 0 is not a tile, so a count sitting in it is ignored outright rather
+  // than divided into the score — the histogram's half of #909's `null` hole.
+  assert.equal(scoreTally([7, 0, 0, 0, 0, 0]), null, 'bucket 0 alone is nothing');
 });
 
 /* ------------------------------------------------------------- #894 / #928 --

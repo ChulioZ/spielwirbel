@@ -470,11 +470,6 @@ public/
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds
                      the guest cap lib/routes/sessions.js enforces (issue #458)
-    vote-scale.js    what one vote on a game is worth: the retirement proposal
-                     is the ZERO of the 0-5 scale, so it counts into every
-                     average instead of only a side counter. Required by
-                     lib/session-votes.js, lib/recommend.js and both repo
-                     backends (issue #797)
     vote-score.js    what a SET of votes is worth: the Spielwirbel-Score, a
                      per-tile value curve applied to each vote before
                      averaging, so a game one person does not want to play
@@ -484,9 +479,10 @@ public/
                      weighted by the size of the field it beat, so the
                      Ruhmeshalle ranks play rather than attendance and a solo
                      evening scores exactly zero (issue #895)
-    rating-faces.js  the mood face each rung of the 0-5 scale wears, so the two
+    rating-faces.js  the mood face each rung of the 1-5 scale wears, so the two
                      vote cards and the session result distribution name a
-                     rating with the same glyph (issue #890)
+                     rating with the same glyph; also the scale's own bounds,
+                     derived from the face list (issues #890, #909)
     guest-picker.js  the guest name field (chips + input), shared by the two
                      screens that start a session (issue #532)
     team-picker.js   the team field: group two or more of those people into one

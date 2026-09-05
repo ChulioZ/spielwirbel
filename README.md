@@ -59,10 +59,10 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
   **BoardGameGeek** and fills in the details; or import your whole *owned*
   BoardGameGeek collection in one go.
 - **Sessions** — pick who's playing, draw candidate games that fit the player
-  count, then everyone rates them — 1–5, or the trash tile at the bottom of the
-  scale for "let's get rid of this". Pass one device around the table, rate
-  from your own phone, or send a link to people with no account — mix all three
-  in one evening. Votes stay sealed until the reveal.
+  count, then everyone rates them 1–5, from "not at all" to "absolutely". Pass
+  one device around the table, rate from your own phone, or send a link to
+  people with no account — mix all three in one evening. Votes stay sealed until
+  the reveal.
 - **Guests** — someone outside the group can join one session without becoming a
   member.
 - **Teams** — members and guests can pair up for a session: a team counts as one
