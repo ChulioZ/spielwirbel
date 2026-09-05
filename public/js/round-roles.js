@@ -55,8 +55,10 @@ function normalizeRole(role) {
 // round write — adding a game, running a session, editing a member — and needs
 // `editor`, i.e. any grantee may do it.
 //
-// The owner-only four are the pre-#137 hand-placed guards, unchanged in effect;
-// the co-owner four are the destructive actions an owner may now delegate
+// The owner-only set began as the four pre-#137 hand-placed guards, unchanged in
+// effect; 'games.copyOut' joined them with the route it gates (#916), for the
+// same reason its move sibling is owner-only — see below. The co-owner four are
+// the destructive actions an owner may now delegate
 // (operator decision, 2026-08-13). The split is "destroys shared history or the
 // round's shape" (coowner) versus "changes who may reach the round at all, or
 // where its data lives" (owner) — a co-owner is trusted with the group's
@@ -72,6 +74,12 @@ const CAPABILITY_ROLE = {
   'round.shares.manage': 'owner',   // revoke someone ELSE's access, or change their role
   'member.link': 'owner',           // relink a seat to an account (keeps grant.memberId in sync)
   'games.moveOut': 'owner',         // reparent the shelf into another round (#411)
+  // Copying is owner-only for exactly the reason moving is, and the reason is
+  // the TARGET round rather than the source: a grant re-scopes the request to
+  // the owner's whole tenant (.claude/rules/round-grant-resolver.md), so a
+  // grantee clearing this could write games into any round of the owner's they
+  // were never invited to. That it destroys nothing does not make it safe.
+  'games.copyOut': 'owner',         // copy games onto another round's shelf (#916)
   // Co-owner and up.
   'round.edit': 'coowner',          // rename the round / change its design
   'game.delete': 'coowner',         // delete an archived game, and its whole rating history

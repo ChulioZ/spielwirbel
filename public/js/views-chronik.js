@@ -64,6 +64,8 @@ function renderChronikTab(round, activities) {
       // count and the other round's name, not a game title.
       games_moved_out: { icon: 'ti-arrow-right', text: tn(a.count, 'activity.gamesMovedOutOne', 'activity.gamesMovedOut', { round: a.roundName }) },
       games_moved_in: { icon: 'ti-arrow-left', text: tn(a.count, 'activity.gamesMovedInOne', 'activity.gamesMovedIn', { round: a.roundName }) },
+      games_copied_out: { icon: 'ti-copy', text: tn(a.count, 'activity.gamesCopiedOutOne', 'activity.gamesCopiedOut', { round: a.roundName }) },
+      games_copied_in: { icon: 'ti-copy', text: tn(a.count, 'activity.gamesCopiedInOne', 'activity.gamesCopiedIn', { round: a.roundName }) },
       // One bulk entry per collection import (#481) — a count, not a title, for
       // the same reason as the two moves above: an import is routinely 100+
       // games and a row each would bury every other event on the round.

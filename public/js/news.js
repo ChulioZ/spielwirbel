@@ -28,6 +28,35 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * Clears the bar: until now a game could only ever live in ONE round, so a
+   * group playing the same box in two rounds had to add it a second time by
+   * hand — cover, player range, provider link and tags included. Copying is
+   * something a person could not do at all before, which is the level this list
+   * is for (#916).
+   */
+  {
+    revision: '2026-09-05',
+    de: {
+      title: 'Spiele in eine andere Runde kopieren',
+      body: 'Ein Spiel kann jetzt in mehreren Runden stehen. In den '
+        + 'Einstellungen einer Runde könnt ihr Spiele wie bisher verschieben — '
+        + 'oder neuerdings kopieren: Das Spiel bleibt hier, wo es ist, und '
+        + 'landet zusätzlich im Regal der anderen Runde, mit Cover, '
+        + 'Spieleranzahl, Link und Tags. Bewertungen und Sessions bleiben dabei '
+        + 'bei der Runde, in der ihr gespielt habt. Spiele, die es dort schon '
+        + 'gibt, sind vorher abgewählt, damit nichts doppelt im Regal steht.',
+    },
+    en: {
+      title: 'Copy games into another round',
+      body: 'A game can now sit in more than one round. In a round\'s settings '
+        + 'you can move games as before — or now copy them instead: the game '
+        + 'stays where it is and also lands on the other round\'s shelf, with '
+        + 'its cover, player count, link and tags. Ratings and sessions stay '
+        + 'with the round you actually played in. Games the other round already '
+        + 'has are unticked beforehand, so nothing ends up on the shelf twice.',
+    },
+  },
+  /*
    * A judgement call, decided WITH the operator (#893) rather than by the bar
    * alone. Strictly this is not a new capability — ratings already existed —
    * and on that reading it does not qualify. What tipped it is the failure mode

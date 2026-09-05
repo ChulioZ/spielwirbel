@@ -198,8 +198,13 @@ const fetchRoundList = async (opts) => {
   await primePeople(rounds);
   return rounds;
 };
-const fetchRound = async (rid) => {
-  const round = await swrRead('round:' + rid, '/api/rounds/' + rid);
+// `opts` is swrRead's: every screen wants the default background re-render, but a
+// read taken WHILE A SHEET IS OPEN must pass `{ rerender: false }` — the sheet
+// lives on document.body, so uiBusy() cannot see it and a revalidation would
+// rebuild the screen underneath it (#916's duplicate flagging reads the TARGET
+// round this way).
+const fetchRound = async (rid, opts) => {
+  const round = await swrRead('round:' + rid, '/api/rounds/' + rid, opts);
   await primePeople(round);
   return round;
 };
@@ -501,7 +506,7 @@ function renderTagModeToggle(state, map, onChange) {
 // setup screen and in the Regal, which share the chips through the two helpers
 // above and so must share this too.
 //
-// Its rule is NOT `showMoveGames`'s select-all/none, on purpose: there the
+// Its rule is NOT `showTransferGames`'s select-all/none, on purpose: there the
 // useful question is "is everything on?", here it is "is there any filter to
 // clear?". So any non-empty map — including a mixed 2-included/1-excluded one —
 // offers the clear action, which makes wiping a #252 preset one click instead of

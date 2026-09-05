@@ -186,6 +186,16 @@ What the app does, in detail. For a short overview see the
   session cannot reference games that now live elsewhere (a session left with
   no games at all is dropped). Moving is owner-only — the action is not offered
   on a round that was shared with you.
+  The same sheet also **copies** games instead of moving them: a Verschieben/
+  Kopieren toggle swaps the whole flow, and a copy leaves this round exactly as
+  it was while landing fresh entries on the target's shelf — cover, player
+  range, provider link, metadata, owned expansions and tags all ride along.
+  Ratings, votes and session history never travel, because they belong to the
+  round they happened in. An archived or wished-for game copies as what it is.
+  Once a target round is picked, games it already has by title are flagged and
+  unticked, so a shelf does not quietly gain a second copy of the same box —
+  ticking one back on copies it anyway. Copying is owner-only for the same
+  reason moving is.
 - **Tags** – every round can define its own free-form tags (e.g. "outside",
   "quick lunch break", "co-op") on a dedicated screen, reached from
   the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign

@@ -171,6 +171,69 @@ test('moving all games respects the target round\'s caps (#253)', async (t) => {
   });
 });
 
+test('copying games respects the target round\'s caps (#916)', async (t) => {
+  // Its own account: MAX_ROUNDS_PER_TENANT is 2, and each pair below uses both.
+  await t.test('refuses over the games cap without copying anything', async () => {
+    const a = await makeAccount('copy-a@example.com');
+    const mk = async (name) => (await request(app).post('/api/rounds').set(auth(a.token))
+      .send({ name, members: ['Alice'] })).body.id;
+    const src = await mk('Source');
+    const dst = await mk('Target');
+    const addGame = (rid, title) => request(app).post(`/api/rounds/${rid}/games`).set(auth(a.token))
+      .field('title', title).field('minPlayers', '1').field('maxPlayers', '4');
+
+    // MAX_GAMES_PER_ROUND is 2: two in the source, one already in the target.
+    // The target's own games count, exactly as they do for a move.
+    await addGame(src, 'S1');
+    await addGame(src, 'S2');
+    await addGame(dst, 'D1');
+
+    const res = await request(app).post(`/api/rounds/${src}/games/copy-to`).set(auth(a.token))
+      .send({ targetRoundId: dst });
+    assert.equal(res.status, 403);
+    assert.equal(res.body.error, 'quota_games');
+    assert.equal(res.body.limit, 2);
+
+    // Atomic — and here the source assertion is weaker evidence than for a move
+    // (a copy never empties it anyway), so the target is the one that matters.
+    const d = await request(app).get(`/api/rounds/${dst}`).set(auth(a.token));
+    assert.equal(d.body.games.length, 1);
+    const s = await request(app).get(`/api/rounds/${src}`).set(auth(a.token));
+    assert.equal(s.body.games.length, 2);
+  });
+
+  await t.test('refuses over the tags cap without creating a tag', async () => {
+    const b = await makeAccount('copy-b@example.com');
+    const mkB = async (name) => (await request(app).post('/api/rounds').set(auth(b.token))
+      .send({ name, members: ['Alice'] })).body.id;
+    const from = await mkB('From');
+    const into = await mkB('Into');
+
+    // MAX_TAGS_PER_ROUND is 2; the source's two tags would both have to be
+    // created in the target on top of the two it already has.
+    for (const name of ['A', 'B']) {
+      await request(app).post(`/api/rounds/${into}/tags`).set(auth(b.token)).send({ name });
+    }
+    const tags = [];
+    for (const name of ['X', 'Y']) {
+      tags.push((await request(app).post(`/api/rounds/${from}/tags`).set(auth(b.token)).send({ name })).body.id);
+    }
+    await request(app).post(`/api/rounds/${from}/games`).set(auth(b.token))
+      .field('title', 'Tagged').field('minPlayers', '1').field('maxPlayers', '4')
+      .field('tagIds', tags[0]).field('tagIds', tags[1]);
+
+    const res = await request(app).post(`/api/rounds/${from}/games/copy-to`).set(auth(b.token))
+      .send({ targetRoundId: into });
+    assert.equal(res.status, 403);
+    assert.equal(res.body.error, 'quota_tags');
+    assert.equal(res.body.limit, 2);
+
+    const d = await request(app).get(`/api/rounds/${into}`).set(auth(b.token));
+    assert.equal(d.body.tags.length, 2); // nothing created
+    assert.equal(d.body.games.length, 0); // nothing copied
+  });
+});
+
 test('tags-per-round cap (#238)', async (t) => {
   const a = await makeAccount('tags-a@example.com');
   const round = await request(app).post('/api/rounds').set(auth(a.token))

@@ -134,7 +134,7 @@ still four independently-edited concerns. It is now one file per hub tab
 (`views-regal.js`, `views-chronik.js`, `views-pokale.js`) plus `views-archive.js`
 for the three off-shelf screens, plus `views-round-actions.js` for the two
 sheets whose entry points #561 had already moved to Einstellungen
-(`showMoveGames`, `showInvite`) while their markup stayed behind. **A split that lands the parts in one new
+(`showTransferGames`, `showInvite`) while their markup stayed behind. **A split that lands the parts in one new
 file rather than one per seam only defers the budget** — the seam test asks
 whether the *parts* are independently editable, not whether the result is smaller
 than what you started with.

@@ -2443,6 +2443,212 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(await repo.listActivities(T, dst.id), []);
   });
 
+
+  /* --- copyGames (#916): the move's sibling that leaves the source alone ---
+     The assertions that matter are the ones moveGames CANNOT make: the source
+     round comes out byte-identical, every copy is a fresh row, and a copied
+     archived game is still archived on the other side. */
+
+  test('copyGames lands fresh rows on the target and leaves the source untouched (#916)', async () => {
+    const src = await freshRound({ name: 'Source' });
+    const dst = await freshRound({ name: 'Target' });
+
+    const outside = await repo.addTag(T, src.id, 'Outside', 'tent');
+    const party = await repo.addTag(T, src.id, 'Party', 'confetti');
+    const unused = await repo.addTag(T, src.id, 'Unused');
+    // Same tag by name (different case + padding) already on the target: reused,
+    // not duplicated — the move's rule, shared through mergeTagsInto.
+    const dstOutside = await repo.addTag(T, dst.id, '  oUTSIDE  '.trim());
+
+    const tagged = await repo.createGame(T, src.id, gameFields({
+      title: 'Tagged', tagIds: [outside.id, party.id], minPlayers: 2, maxPlayers: 5,
+    }));
+    await repo.createGame(T, src.id, gameFields({ title: 'Plain', image: '/uploads/a.jpg' }));
+    const archived = await repo.createGame(T, src.id, gameFields({ title: 'Archived' }));
+    await repo.retireGame(T, src.id, archived.id, true);
+    await repo.createGame(T, dst.id, gameFields({ title: 'Keeper' }));
+
+    const before = await repo.getRound(T, src.id);
+    const result = await repo.copyGames(T, src.id, dst.id);
+    assert.deepEqual(result, { copiedGames: 3, mergedTags: 1, createdTags: 1 });
+
+    // The whole point: the source is exactly as it was, down to the shelf order.
+    const after = await repo.getRound(T, src.id);
+    assert.deepEqual(after, before);
+
+    const target = await repo.getRound(T, dst.id);
+    // Appended in the SOURCE's shelf order, after the target's own games.
+    assert.deepEqual(target.games.map((g) => g.title), ['Keeper', 'Tagged', 'Plain', 'Archived']);
+
+    // A copy is a NEW game: fresh id, no id from the source round survives.
+    const srcIds = new Set(before.games.map((g) => g.id));
+    for (const g of target.games) assert.equal(srcIds.has(g.id), false, `${g.title} kept the source id`);
+
+    // Everything but the history rides along, including the shared cover path.
+    const copied = target.games.find((g) => g.title === 'Tagged');
+    assert.equal(copied.minPlayers, 2);
+    assert.equal(copied.maxPlayers, 5);
+    assert.equal(target.games.find((g) => g.title === 'Plain').image, '/uploads/a.jpg');
+    // An archived game copies as archived — it is the same game over there.
+    assert.equal(target.games.find((g) => g.title === 'Archived').retired, true);
+
+    // Tags merge by name exactly as the move does; the unused one is skipped.
+    assert.deepEqual(target.tags.map((tg) => tg.name), ['oUTSIDE', 'Party']);
+    const created = target.tags.find((tg) => tg.name === 'Party');
+    assert.equal(target.tags[0].id, dstOutside.id);
+    assert.equal(created.icon, 'confetti');
+    assert.equal('icon' in target.tags[0], false);
+    assert.deepEqual(copied.tagIds, [dstOutside.id, created.id]);
+    // The source's own tag list is untouched, unused tag included.
+    assert.deepEqual(after.tags.map((tg) => tg.id), [outside.id, party.id, unused.id]);
+    assert.equal(tagged.id !== copied.id, true);
+
+    // One bulk entry per round, naming the round on the other side.
+    const outFeed = (await repo.listActivities(T, src.id)).filter((a) => a.type === 'games_copied_out');
+    const inFeed = (await repo.listActivities(T, dst.id)).filter((a) => a.type === 'games_copied_in');
+    assert.equal(outFeed.length, 1);
+    assert.equal(inFeed.length, 1);
+    assert.equal(outFeed[0].count, 3);
+    assert.equal(outFeed[0].roundId, dst.id);
+    assert.equal(outFeed[0].roundName, 'Target');
+    assert.equal(inFeed[0].roundName, 'Source');
+    // And NOT the move's entries — the two must stay tellable apart, since the
+    // period recap counts one of them and ignores the other.
+    assert.equal((await repo.listActivities(T, src.id)).some((a) => a.type === 'games_moved_out'), false);
+  });
+
+  test('copyGames leaves the source round\'s sessions, votes and ratings alone', async () => {
+    const src = await freshRound();
+    const dst = await freshRound();
+    const game = await repo.createGame(T, src.id, gameFields({ title: 'Played' }));
+    const mid = src.members[0].id;
+    await repo.createSession(T, src.id, {
+      createdAt: 't', gameIds: [game.id], votes: { [mid]: { [game.id]: { rating: 4 } } },
+      chosenGameId: game.id, chosenAt: 't', finished: true, finishedAt: 't', winnerIds: [mid],
+    });
+
+    const before = await repo.getRound(T, src.id);
+    assert.deepEqual(await repo.copyGames(T, src.id, dst.id),
+      { copiedGames: 1, mergedTags: 0, createdTags: 0 });
+
+    // This is the move's session scrub NOT happening — the assertion that would
+    // go red if copyGames were ever implemented on top of moveGames.
+    assert.deepEqual(await repo.getRound(T, src.id), before);
+
+    // History never travels: the copy is a different game in a different round.
+    const target = await repo.getRound(T, dst.id);
+    assert.deepEqual(target.sessions, []);
+    assert.equal(target.games.length, 1);
+    assert.notEqual(target.games[0].id, game.id);
+  });
+
+  test('copyGames copies only the named subset, in shelf order (#916)', async () => {
+    const src = await freshRound({ name: 'Source2' });
+    const dst = await freshRound({ name: 'Target2' });
+    const carried = await repo.addTag(T, src.id, 'Carried');
+    const idle = await repo.addTag(T, src.id, 'Idle');
+    const first = await repo.createGame(T, src.id, gameFields({ title: 'First', tagIds: [carried.id] }));
+    await repo.createGame(T, src.id, gameFields({ title: 'Middle', tagIds: [idle.id] }));
+    const last = await repo.createGame(T, src.id, gameFields({ title: 'Last' }));
+
+    // The request order (Last, First) is deliberately not the shelf order — the
+    // copy follows the SHELF, so both backends can reach the same answer.
+    assert.deepEqual(await repo.copyGames(T, src.id, dst.id, null, [last.id, first.id]),
+      { copiedGames: 2, mergedTags: 0, createdTags: 1 });
+
+    const target = await repo.getRound(T, dst.id);
+    assert.deepEqual(target.games.map((g) => g.title), ['First', 'Last']);
+    // Only the copied game's tag crosses, even though the source still has both.
+    assert.deepEqual(target.tags.map((tg) => tg.name), ['Carried']);
+    assert.deepEqual(target.games[0].tagIds, [target.tags[0].id]);
+    assert.equal('tagIds' in target.games[1], false);
+    assert.equal((await repo.getRound(T, src.id)).games.length, 3);
+
+    const outFeed = (await repo.listActivities(T, src.id)).filter((x) => x.type === 'games_copied_out');
+    assert.equal(outFeed.length, 1);
+    assert.equal(outFeed[0].count, 2);
+  });
+
+  test('copyGames refuses a missing, identical or over-quota target — atomically', async () => {
+    const src = await freshRound();
+    const dst = await freshRound();
+
+    assert.equal(await repo.copyGames(T, 'missing', dst.id), null);
+    assert.equal(await repo.copyGames(T, src.id, 'missing'), null);
+    assert.equal(await repo.copyGames(T, src.id, src.id), 'same_round');
+    // Identity is decided BEFORE the round lookup, exactly as the move does it.
+    assert.equal(await repo.copyGames(T, 'missing', 'missing'), 'same_round');
+
+    const tag = await repo.addTag(T, src.id, 'Solo');
+    const one = await repo.createGame(T, src.id, gameFields({ title: 'One', tagIds: [tag.id] }));
+    await repo.createGame(T, src.id, gameFields({ title: 'Two' }));
+    const elsewhere = await repo.createGame(T, dst.id, gameFields({ title: 'Elsewhere' }));
+
+    // An id the SOURCE does not hold is refused, even when it is a real game of
+    // the target's — a stale client is refused whole, never partly obeyed.
+    assert.equal(await repo.copyGames(T, src.id, dst.id, null, ['nope']), 'unknown_game');
+    assert.equal(await repo.copyGames(T, src.id, dst.id, null, [one.id, 'nope']), 'unknown_game');
+    assert.equal(await repo.copyGames(T, src.id, dst.id, null, [elsewhere.id]), 'unknown_game');
+
+    // Both caps refuse ATOMICALLY — nothing is copied, no tag is created, and
+    // `tags` stays ABSENT on a target that had none (absent-key parity).
+    assert.equal(await repo.copyGames(T, src.id, dst.id, { maxGames: 1, maxTags: 99 }), 'quota_games');
+    assert.equal(await repo.copyGames(T, src.id, dst.id, { maxGames: 99, maxTags: 0 }), 'quota_tags');
+    const untouched = await repo.getRound(T, dst.id);
+    assert.deepEqual(untouched.games.map((g) => g.title), ['Elsewhere']);
+    assert.equal('tags' in untouched, false);
+    assert.equal((await repo.getRound(T, src.id)).games.length, 2);
+
+    // The target's EXISTING games count toward the cap, like the move's do.
+    assert.equal(await repo.copyGames(T, src.id, dst.id, { maxGames: 2, maxTags: 99 }), 'quota_games');
+    const ok = await repo.copyGames(T, src.id, dst.id, { maxGames: 3, maxTags: 1 });
+    assert.deepEqual(ok, { copiedGames: 2, mergedTags: 0, createdTags: 1 });
+  });
+
+  test('copyGames on an empty source round is a no-op with no feed entry', async () => {
+    const src = await freshRound();
+    const dst = await freshRound();
+    assert.deepEqual(await repo.copyGames(T, src.id, dst.id),
+      { copiedGames: 0, mergedTags: 0, createdTags: 0 });
+    assert.deepEqual(await repo.listActivities(T, src.id), []);
+    assert.deepEqual(await repo.listActivities(T, dst.id), []);
+  });
+
+  test('copyGames mints fresh expansion ids and carries the wish state (#916)', async () => {
+    const src = await freshRound();
+    const dst = await freshRound();
+    const owned = await repo.createGame(T, src.id, gameFields({ title: 'Owned' }));
+    await repo.setGameExpansions(T, src.id, owned.id, [expFields({ title: 'Seefahrer' })]);
+    const wished = await repo.createGame(T, src.id, gameFields({ title: 'Wished', wish: true }));
+
+    assert.deepEqual(await repo.copyGames(T, src.id, dst.id),
+      { copiedGames: 2, mergedTags: 0, createdTags: 0 });
+
+    const before = (await repo.getRound(T, src.id)).games.find((g) => g.title === 'Owned');
+    const target = await repo.getRound(T, dst.id);
+    const copy = target.games.find((g) => g.title === 'Owned');
+    assert.deepEqual(copy.expansions.map((e) => e.title), ['Seefahrer']);
+    // A shared expansion id would make the operator's redaction ambiguous across
+    // games — the reason createRound's import deep-copies them too (#653).
+    assert.notEqual(copy.expansions[0].id, before.expansions[0].id);
+
+    // A wish copies as a wish: the picker offers it, so reviving it here would
+    // claim the target round owns a game nobody has bought.
+    const wishCopy = target.games.find((g) => g.title === 'Wished');
+    assert.equal(wishCopy.wish, true);
+    assert.notEqual(wishCopy.id, wished.id);
+  });
+
+  test('copyGames cannot reach another tenant\'s round in either direction', async () => {
+    const mine = await freshRound();
+    await repo.createGame(T, mine.id, gameFields({ title: 'Mine' }));
+    const theirs = await repo.createRound(OTHER, { name: 'Theirs', members: ['Zoe'] });
+
+    assert.equal(await repo.copyGames(T, mine.id, theirs.id), null);
+    assert.equal(await repo.copyGames(T, theirs.id, mine.id), null);
+    assert.deepEqual((await repo.getRound(OTHER, theirs.id)).games, []);
+  });
+
   test('listActivities serves the feed; rounds no longer embed it', async () => {
     const round = await freshRound();
     assert.equal('activities' in round, false); // not on the created round…

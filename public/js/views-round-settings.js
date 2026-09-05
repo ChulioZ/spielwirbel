@@ -13,7 +13,7 @@
    and deliberately NOT in that file: it is an independently editable concern and
    that file is already past its size budget (.claude/rules/token-friendly-source-files.md).
 
-   The two sheets it opens — showMoveGames and showInvite — are in
+   The two sheets it opens — showTransferGames and showInvite — are in
    views-round-actions.js, loaded right after this file (#528). They had stayed
    behind in views-round-tabs.js when #561 moved their entry points here, so a
    change to either action meant opening the Regal's file to edit an
@@ -66,7 +66,7 @@ async function showRoundSettings(rid) {
   // They open sheets rather than routing, so they stay <button>s (#330).
   const actions = [];
   if (round.games.length && roundCan(round, 'games.moveOut')) {
-    actions.push({ icon: 'ti-arrow-right', label: t('moveGames.link'), onClick: () => showMoveGames(round) });
+    actions.push({ icon: 'ti-arrow-right', label: t('transferGames.link'), onClick: () => showTransferGames(round) });
   }
   if (accountsActive() && roundCan(round, 'round.shares.manage')) {
     actions.push({ icon: 'ti-users', label: t('invite.link'), onClick: () => showInvite(round) });

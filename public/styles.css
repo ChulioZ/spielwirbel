@@ -4689,6 +4689,14 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 :is(.move-row, .bgg-import__row) .ds-row__main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 :is(.move-row__name, .bgg-import__name) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 :is(.move-row__state, .bgg-import__state) { flex: none; font-size: var(--text-sm); }
+/* The move/copy mode toggle (#916). A chip row, not a <select>: two options that
+   rewrite the whole sheet's wording deserve to be visible at once, so the user
+   can see that copying is on offer without opening anything. */
+.transfer-modes { display: flex; gap: 8px; margin-bottom: 14px; }
+/* The duplicate flag sits in the row's baseline-aligned main, beside the archive
+   state — a game can be both („aussortiert" here, already there). */
+.move-row__dup { flex: none; font-size: var(--text-sm); color: var(--danger); }
+.transfer-dup-hint { margin: -6px 0 14px; font-size: var(--text-sm); }
 /* Games already on the shelf are still shown — never dropped, the list is the
    user's own collection — but they are inert, so as of #625 they sit in their
    own collapsed section below the actionable list instead of interleaved with
