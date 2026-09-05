@@ -454,9 +454,10 @@ coincidence. `reasonsFrom` therefore names **at most one** of them:
 ## 13. Ratings are SHRUNK before they reach the ladder (#894)
 
 `ownRating` no longer feeds `gameAffinity` its raw Spielwirbel-Score: the score
-is pulled toward the round's own prior in proportion to how thin it is, so a
+is pulled toward a fixed neutral prior in proportion to how thin it is, so a
 game three people rated 5,5,5 on its one evening stops shaping the taste profile
-as hard as a staple forty votes agree on. Three things about how it landed:
+as hard as a staple forty votes agree on. (It was the round's OWN prior until
+#928 — see the third bullet.) Three things about how it landed:
 
 - **`gameAffinity(game, playScale, shelf)` — `round` left the signature.** The
   scores come from `buildShelfIndex(round)`, built once per profile beside
@@ -475,17 +476,27 @@ as hard as a staple forty votes agree on. Three things about how it landed:
   prior to outweigh twenty real votes (`k ≥ 300`, or `SHRINK_M ≥ 250`), at which
   point every shelf score collapses onto the prior and the shrinkage stops
   discriminating at all. So the shelf DISPLAY lifts its prior by plays and this
-  file does not — two mechanisms, one argument, each where it works.
-- **The prior is floored at `UNRATED_EQUIV = A_UNRATED × 2 + 1`, and this is the
-  finding #894 did not anticipate.** Shrinkage and a *fixed* unrated rung
-  interact: a thin verdict is pulled toward the shelf's prior, so if that prior
-  sits below what the ladder pays for no verdict at all, adding one „😐 passt
-  schon" vote ranks a game BELOW never having been rated — the profile saying
-  some evidence is worth less than none. Measured: the inversion starts under a
-  prior of 2,0 and the break-even is exactly this value, which is why the floor
-  is derived from the rung rather than chosen. It floors the **prior** (an
-  input), never the score, so it blunts no veto: a game with real votes still
-  converges on its own score as `n` grows.
+  file does not — two mechanisms, one argument, each where it works. Those two
+  figures were measured at #894's `PLAY_LIFT` of 1,0; #928 raised it to 2,0,
+  which widens the inversion (1,15 against 1,83) rather than closing it, so the
+  conclusion is unchanged and the argument is stronger than when it was made.
+- **The prior is `PRIOR_DEFAULT` (3) since #928 — and the `UNRATED_EQUIV` floor
+  that used to guard it is gone.** #894 shrank toward the round's OWN shelf, and
+  that interacted with the fixed unrated rung in a way it had not anticipated: a
+  thin verdict is pulled toward the prior, so a prior below what the ladder pays
+  for no verdict at all made one „😐 passt schon" vote rank a game BELOW never
+  having been rated — the profile saying some evidence is worth less than none.
+  The floor was derived (`A_UNRATED × 2 + 1`) because the inversion starts under
+  a prior of exactly 2,0.
+
+  #928 removed the shelf-relative prior outright: it had collapsed to ≈ 0,4 on a
+  real family shelf, and this file's own premise („a shelf whose prior is above
+  this is untouched, which is every ordinary round") was false there — the
+  recommender reasoned with 2,2 while the Regal printed 0,4, one shelf and two
+  beliefs. With a constant 3 the floor is unreachable by construction, so it was
+  deleted rather than left asserting a property of a mechanism that no longer
+  exists. What is still guarded, and now by the constant itself, is the
+  PROPERTY: `test/recommend.test.js` asserts one 😐 vote beats no vote at all.
 
 ## 12. Plays are a PROFILE input, not a scored term (#778)
 

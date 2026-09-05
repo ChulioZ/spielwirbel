@@ -4304,6 +4304,8 @@ module.exports = function repoContract(repo) {
       await play(2);
       await play(20);
       await play(200);
+      // Older than every real window, so only the all-time count can see it.
+      await play(900);
       // Neither of these is a play: one never finished, one settled on nothing.
       await play(1, { finished: false });
       await play(1, { chosenGameId: null });
@@ -4313,6 +4315,15 @@ module.exports = function repoContract(repo) {
       assert.equal(row.plays.d30.count, 2, 'the windows nest — 30 days includes the last 7');
       assert.equal(row.plays.d365.count, 3);
       assert.equal(row.plays.d365.tenants, 1, 'one group playing three times is still one group');
+      /* The ALL-TIME count (#928), which feeds the Discover podium's play lift.
+         The 900-day play is what makes this discriminating: it is invisible to
+         every other window, so an `all` wired to `d365` — the plausible slip,
+         and the one that would make the public number sag for a game that had a
+         quiet year — reads 3 here rather than 4. The two backends spell it
+         differently (an empty-string cutoff in the window loop, a bare
+         `count(*)` in SQL), which is exactly why it is pinned in the contract. */
+      assert.equal(row.plays.all.count, 4, 'every finished play, however old');
+      assert.equal(row.plays.all.tenants, 1);
     });
 
     await t.test('ratings bin into tiles across sessions, people and tenants', async () => {

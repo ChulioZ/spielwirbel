@@ -404,7 +404,8 @@ test('the scheduler job rebuilds the payload when the feature is on', async () =
    makes this fixture discriminating: under the mean the two games tie and the
    winner is whichever the sort happened to reach first, so a spec asserting a
    winner would have been a coin flip that passed. Under the Spielwirbel-Score
-   the veto is decisive — (5+5−5)/3 = 1,67 against (4+4+3)/3 = 3,67. */
+   the veto is decisive — (5+5−5)/3 = 1,67 against (4+4+3)/3 = 3,67, and since
+   #928 both are then shrunk toward the neutral prior: 2,4 against 3,3. */
 test('the podium ranks on the score, so a veto loses to a game nobody objects to', async () => {
   openContentFloors();
   stubProvider();
@@ -414,8 +415,64 @@ test('the podium ranks on the score, so a veto loses to a game nobody objects to
 
   const built = await rebuild();
   assert.equal(built.games.bestRated.title, 'Provider-Titel thing-content');
-  assert.equal(built.games.bestRated.score, 3.7);
+  assert.equal(built.games.bestRated.score, 3.3);
   assert.equal(built.games.bestRated.ratings, 3);
+});
+
+/* #928's acceptance criterion for this surface, and the bug it names: until then
+   `/entdecken` and the Regal printed the same label on the same 0–5 ring for two
+   different quantities. This podium applied the raw curve — no prior, no
+   shrinkage, no play lift — so five votes that were all 5s (5,0) beat any amount
+   of evidence averaging less, however deep.
+
+   The fixture is the smallest thing that can show it: three unanimous 5s against
+   a much larger body of 4s and 5s averaging 4,5. Unshrunk the thin game wins by
+   half a point; shrunk toward the neutral prior it loses, because three votes
+   buy only three sevenths of a say and twelve buy twelve sixteenths.
+
+   `PUBLIC_STATS_MIN_RATINGS` is lowered to 1 by `openContentFloors`, on purpose:
+   with the shipped floor of 5 the thin game would be excluded before it could
+   lose, and the case would pass without the shrinkage doing anything. What is
+   under test is the SCORE, not the floor. */
+test('#928 deep evidence outranks a thin unanimous verdict — the podium is shrunk', async () => {
+  openContentFloors();
+  stubProvider();
+  const round = track(await createRound(request, {
+    name: 'Tiefe', members: ['Ann', 'Bo', 'Cy'],
+  }));
+  const mk = async (externalId) => (await request(app).post(`/api/rounds/${round.id}/games`).send({
+    title: 'Getippt', minPlayers: '1', maxPlayers: '4',
+    sourceProvider: 'bgg', sourceExternalId: externalId,
+  })).body;
+  const thin = await mk('thing-thin');
+  const deep = await mk('thing-deep');
+  const ids = (await request(app).get(`/api/rounds/${round.id}`)).body.members.map((m) => m.id);
+
+  // `count: 2` draws the whole two-game shelf, so every vote below is cast on a
+  // game the session really holds. POST /sessions takes no explicit game list —
+  // it DRAWS — which is why passing one is not an option here.
+  const votingSession = async (votesFor) => {
+    const { session } = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+      count: 2, memberIds: ids,
+    })).body;
+    const res = await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/results`)
+      .send({ votes: Object.fromEntries(ids.map((id, i) => [id, votesFor(i)])) });
+    assert.equal(res.status, 200, `fixture step failed: ${JSON.stringify(res.body)}`);
+  };
+  // Three unanimous 5s for the thin game, cast once…
+  await votingSession(() => ({ [thin.id]: { rating: 5 } }));
+  // …against twelve votes on the deep game averaging 4,5.
+  for (const spread of [[5, 4, 5], [4, 5, 4], [5, 4, 5], [4, 5, 4]]) {
+    await votingSession((i) => ({ [deep.id]: { rating: spread[i] } }));
+  }
+
+  const built = await rebuild();
+  assert.equal(built.games.bestRated.ratings, 12, 'the deep game won');
+  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-deep');
+  // 12 votes at Ø 4,5 shrink to 4,1; 3 votes at 5,0 shrink to 3,9. Unshrunk the
+  // order is 5,0 against 4,5 — i.e. exactly reversed, which is what makes the
+  // winner here evidence about the shrinkage rather than about the fixture.
+  assert.equal(built.games.bestRated.score, 4.1);
 });
 
 /* Five vetoes score −5, and a negative on a public front door reads as a broken
@@ -460,14 +517,77 @@ test('retuning TILE_VALUE moves the published score — the curve is not restate
   const { TILE_VALUE } = require('../public/js/vote-score');
   const original = TILE_VALUE.slice();
 
-  assert.equal((await rebuild()).games.bestRated.score, 1.7, 'the shipped curve');
+  assert.equal((await rebuild()).games.bestRated.score, 2.4, 'the shipped curve');
 
   try {
     // Forgive the veto entirely: `{5,5,1}` becomes the raw mean again.
     TILE_VALUE[1] = 1;
-    assert.equal((await rebuild()).games.bestRated.score, 3.7, 'the podium did not follow the retune');
+    assert.equal((await rebuild()).games.bestRated.score, 3.3, 'the podium did not follow the retune');
   } finally {
     original.forEach((v, i) => { TILE_VALUE[i] = v; });
   }
-  assert.equal((await rebuild()).games.bestRated.score, 1.7, 'the retune leaked out of the case');
+  assert.equal((await rebuild()).games.bestRated.score, 2.4, 'the retune leaked out of the case');
+});
+
+/* THE PLAY LIFT REACHES THIS PODIUM TOO (#928), which is the half of the parity
+   that needed a new column: the aggregate carried only `plays7/30/365`, and the
+   lift is a fact about a game over its whole life, so `publicGameAggregates`
+   grew an all-time count in both backends for it.
+
+   The fixture is built so the two candidate implementations pick DIFFERENT
+   winners rather than the same winner by different arithmetic. `thing-quiet` is
+   rated better ({4,4,4} against {3,3,3}) and never played; `thing-staple` is
+   rated worse and was put on the table six times. Shrinkage alone crowns the
+   quiet game at 3,4; with the lift the staple takes it at 3,9. So a podium that
+   shrank correctly but ignored plays would fail on the TITLE, not merely on a
+   decimal.
+
+   Not asserted via `seedRatedPair`, which never finishes a session — a play is a
+   finished session with a chosen game, so the plays have to be real ones. */
+test('#928 plays lift the published score, using the all-time count', async () => {
+  openContentFloors();
+  stubProvider();
+  const round = track(await createRound(request, {
+    name: 'Stapelrunde', members: ['Ann', 'Bo', 'Cy'],
+  }));
+  const mk = async (externalId) => (await request(app).post(`/api/rounds/${round.id}/games`).send({
+    title: 'Getippt', minPlayers: '1', maxPlayers: '4',
+    sourceProvider: 'bgg', sourceExternalId: externalId,
+  })).body;
+  const quiet = await mk('thing-quiet');
+  const staple = await mk('thing-staple');
+  const ids = (await request(app).get(`/api/rounds/${round.id}`)).body.members.map((m) => m.id);
+
+  const ok = async (res) => {
+    assert.equal(res.status, 200, `fixture step failed: ${JSON.stringify(res.body)}`);
+    return res;
+  };
+  // One drawn evening over the whole two-game shelf (`count: 2`, since the route
+  // draws rather than taking a game list), rating both games at once.
+  const { session } = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+    count: 2, memberIds: ids,
+  })).body;
+  await ok(await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/results`).send({
+    votes: Object.fromEntries(ids.map((id) => [id, {
+      [quiet.id]: { rating: 4 }, [staple.id]: { rating: 3 },
+    }])),
+  }));
+  // Six DIRECT PICKS of the staple, each finished — the mode that writes
+  // `chosenGameId` up front, which is what a play is.
+  for (let i = 0; i < 6; i += 1) {
+    const s = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+      gameId: staple.id, memberIds: ids,
+    })).body.session;
+    await ok(await request(app).post(`/api/rounds/${round.id}/sessions/${s.id}/finish`).send({
+      finished: true, winnerIds: [],
+    }));
+  }
+
+  const built = await rebuild();
+  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-staple',
+    'without the play lift the better-rated but unplayed game would win');
+  // {3,3,3} shrunk toward a prior six plays lifted to 4,5 -> 3,9. The quiet
+  // game's {4,4,4} shrinks to 3,4, which is what it would have won with.
+  assert.equal(built.games.bestRated.score, 3.9);
+  assert.equal(built.games.bestRated.ratings, 3);
 });

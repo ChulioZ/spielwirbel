@@ -327,7 +327,7 @@ function renderPeriodRecapSection(round, activities) {
 
   const currentPeriod = () => periods.find((p) => idOf(p) === picker.value) || periods[0];
 
-  // The four dependencies period-recap.js takes injected (see its header). Built
+  // The dependencies period-recap.js takes injected (see its header). Built
   // once: two literals is how the picker's card and the shared image would start
   // to disagree about how much evidence a crown costs, or about which games may
   // wear one.
@@ -338,7 +338,6 @@ function renderPeriodRecapSection(round, activities) {
     // The shelf half of the same rule (#894): the period card is shrunk exactly
     // as the all-time one is, so „Bestbewertet" means one thing on both.
     shelfOf: shelfScore,
-    priorOf: roundPrior,
     playsOf: playCounts,
     minRatings: RECAP_MIN_RATINGS,
     isActive: isActiveGame,

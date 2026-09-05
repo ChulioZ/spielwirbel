@@ -10,8 +10,8 @@
    reason recap.js's header sets out: a public/js file cannot require() a
    sibling, so injection is what keeps this file usable both as a shared-scope
    frontend script and as a CommonJS module the tests require, without a second
-   copy of any rule. `deps` is { peopleOf, ratingOf, scoreOf, shelfOf, priorOf,
-   playsOf, minRatings,
+   copy of any rule. `deps` is { peopleOf, ratingOf, scoreOf, shelfOf, playsOf,
+   minRatings,
    isActive } — sessionPeople (session-people.js), effectiveRating
    (vote-scale.js), scoreRatings (vote-score.js) and RECAP_MIN_RATINGS
    (recap.js). The threshold is injected rather than re-declared here precisely
@@ -181,16 +181,14 @@ function bestRated(round, sessions, deps) {
     const sc = deps.scoreOf(list);
     if (sc) raw.set(gid, { score: sc.score, count: list.length });
   });
-  // The prior is read over every active game rated in the period, NOT only the
-  // ones clearing `minRatings`: it answers "what does a game on this shelf
-  // typically score", and a thin game is still evidence about that even when it
-  // may not wear a crown itself.
-  const prior = deps.priorOf([...raw.values()].map((r) => r.score));
   let top = null;
   const scores = new Map();
   raw.forEach((r, gid) => {
     if (r.count < deps.minRatings) return;
-    const score = deps.shelfOf(r.score, r.count, plays.get(gid) || 0, prior);
+    // Since #928 the shelf score takes no prior: a game's number is a function
+    // of its own votes and plays, so the period card and the all-time card
+    // cannot disagree even though they read different slices of history.
+    const score = deps.shelfOf(r.score, r.count, plays.get(gid) || 0);
     if (score === null) return;
     scores.set(gid, score);
     if (top === null || score > top) top = score;

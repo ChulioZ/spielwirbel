@@ -174,26 +174,26 @@ test('a malformed bucket is treated as empty, never trusted into the divisor', (
   assert.equal(scoreTally([0, 0, 0, '3', -1, 0]), null, 'nothing well-formed at all');
 });
 
-/* --------------------------------------------------------------------- #894 --
+/* ------------------------------------------------------------- #894 / #928 --
    Shelf scope: how much of its own score a game has actually earned.
 
-   The worked rows below are the issue's acceptance evidence and are pinned one
-   by one for the same reason the curve's are: `SHRINK_M`, `PRIOR_DEFAULT`,
+   The worked rows below are the two issues' acceptance evidence and are pinned
+   one by one for the same reason the curve's are: `SHRINK_M`, `PRIOR_DEFAULT`,
    `PLAY_LIFT` and `PLAY_HALF` are starting values expected to be retuned, and
    only a row can tell a retune that shifts a magnitude apart from one that
    breaks a property (the null contract, the one-directionality of plays, the
-   game-weighted prior). */
+   fixedness of the prior). */
 
 const {
-  SHRINK_M, PRIOR_DEFAULT, PRIOR_MIN_GAMES,
-  roundPrior, playCredit, gamePrior, shrinkScore, shelfScore, playCounts,
+  SHRINK_M, PRIOR_DEFAULT, PLAY_LIFT,
+  playCredit, gamePrior, shrinkScore, shelfScore, playCounts,
 } = require('../public/js/vote-score');
 
 // One decimal, the way fmtAvg prints it — a row asserts what a user reads.
 const d1 = (x) => (x === null ? null : Number(x.toFixed(1)));
-const shelf = (ratings, plays, prior = PRIOR_DEFAULT) => {
+const shelf = (ratings, plays) => {
   const sc = scoreRatings(ratings);
-  return d1(shelfScore(sc ? sc.score : null, ratings.length, plays, prior));
+  return d1(shelfScore(sc ? sc.score : null, ratings.length, plays));
 };
 
 test('#894 the worked rows: shrinkage alone, no plays', () => {
@@ -206,18 +206,67 @@ test('#894 the worked rows: shrinkage alone, no plays', () => {
 });
 
 test('#894 the worked rows: plays lift the prior a game is shrunk toward', () => {
-  assert.equal(shelf([5, 5, 5], 1), 4.0);
-  assert.equal(d1(shelfScore(4.3, 40, 10, PRIOR_DEFAULT)), 4.3);
-  assert.equal(shelf([5, 5, 1], 1), 2.6);
-  // The direct-pick round: never rated, played four times. Today unrankable.
-  assert.equal(shelf([], 4), 3.7);
+  assert.equal(shelf([5, 5, 5], 1), 4.2);
+  assert.equal(d1(shelfScore(4.3, 40, 10)), 4.3);
+  assert.equal(shelf([5, 5, 1], 1), 2.8);
+  // The direct-pick round: never rated, played four times. Before #894 it was
+  // unrankable; the lift is what gives it a number at all.
+  assert.equal(shelf([], 4), 4.3);
+});
+
+/* #928's own acceptance table, row by row. The two field cards are the ones the
+   issue was reported from: both read 2,7 under the shelf-relative prior, both
+   with no vote below 3 at all, so their score IS their average and every point
+   of the gap was shrinkage toward a prior that had collapsed to ≈ 0,4. */
+test('#928 the worked rows: the field cards read at or above their own average', () => {
+  // Castle Combo — Ø 3,83 over six ratings, played twice.
+  assert.equal(d1(shelfScore(23 / 6, 6, 2)), 3.9);
+  // Toriki — Ø 4,25 over four ratings, played seven times.
+  assert.equal(d1(shelfScore(4.25, 4, 7)), 4.4);
+  // A thin darling is still held back, which is what #894 exists for.
+  assert.equal(shelf([5, 5, 5], 1), 4.2);
+  // A staple, with and without a history of actually being played.
+  assert.equal(shelf([4, 4, 4, 3, 4, 3, 4, 4], 12), 4.1);
+  assert.equal(shelf([4, 4, 4, 3, 4, 3, 4, 4], 0), 3.5);
+});
+
+/* The other half of #928: the veto signal has to SURVIVE the recovery. Under the
+   shelf-relative prior a lone „gar nicht" printed the clamped 0,0 — the same
+   number a genuinely rejected game got — so the bottom of the shelf carried no
+   information at all. These rows are what separate "one person said no once"
+   from "the round has decided". */
+test('#928 the worked rows: a veto still costs, and a real dud still sinks', () => {
+  assert.equal(shelf([1], 0), 1.4, 'one lone veto is visibly low, not floored');
+  assert.equal(shelf([2], 0), 2.6);
+  assert.equal(shelf([1, 1, 2, 1], 1), 0.1, 'a real dud stays at the bottom');
+  // And the ordering between them is the point, not the magnitudes.
+  assert.ok(shelf([1, 1, 2, 1], 1) < shelf([1], 0));
 });
 
 test('#894 no evidence at all means NO NUMBER — never rated and never played', () => {
-  assert.equal(shelfScore(null, 0, 0, PRIOR_DEFAULT), null);
-  assert.equal(shelfScore(null, 0, 0, 4.2), null, 'not even on a shelf with a high prior');
+  assert.equal(shelfScore(null, 0, 0), null);
   // A game with votes always keeps a number, however few.
-  assert.notEqual(shelfScore(5, 1, 0, PRIOR_DEFAULT), null);
+  assert.notEqual(shelfScore(5, 1, 0), null);
+});
+
+/* THE COMPARABILITY CRITERION (#928). The whole defect was that the same votes
+   on the same game printed a different number in every round, while five
+   surfaces — the Regal pill, the detail ring, the Pokale, the Chronik and the
+   share text sent OUTSIDE the round — all called it „Spielwirbel-Score".
+
+   Asserted as ARITY rather than as an equality between two rounds, because an
+   equality is satisfied by a shelf-relative implementation that happens to be
+   handed two identical shelves, and constructing two genuinely different ones
+   is a fixture whose relevance nobody can check later. `shelfScore.length === 3`
+   fails the moment a prior parameter comes back, which is the only way the
+   round could get a say again. */
+test('#928 the shelf score cannot be handed a prior at all', () => {
+  assert.equal(shelfScore.length, 3, 'score, n, plays — and nothing about the shelf');
+  assert.equal(gamePrior.length, 1, 'plays alone decide the prior');
+  // The fixed prior is the neutral tile's own value, so „wir wissen es noch
+  // nicht" and „keiner hat was dagegen" stay literally the same number.
+  assert.equal(PRIOR_DEFAULT, 3);
+  assert.equal(gamePrior(0), PRIOR_DEFAULT, 'an unplayed game is shrunk toward exactly that');
 });
 
 test('#894 shrinking a score that already equals the prior is a no-op', () => {
@@ -227,26 +276,6 @@ test('#894 shrinking a score that already equals the prior is a no-op', () => {
   assert.equal(shrinkScore(4.25, 7, 4.25), 4.25);
 });
 
-test('#894 the prior is GAME-weighted, not vote-weighted', () => {
-  // One 40-vote game at 5 and two 3-vote games at 2. Vote-weighted the prior
-  // would sit near 4,5 — dragged there by whichever games get played most, so
-  // every newcomer would be shrunk toward the staples' verdict specifically.
-  assert.equal(roundPrior([5, 2, 2]), 3);
-  // The count of VOTES behind each score is not an input at all: roundPrior
-  // takes one number per game and cannot be handed a weight.
-  assert.equal(roundPrior.length, 1);
-});
-
-test('#894 a round with too little data has no prior of its own', () => {
-  assert.equal(roundPrior([]), PRIOR_DEFAULT);
-  assert.equal(roundPrior([5]), PRIOR_DEFAULT, 'one rated game must not shrink toward itself');
-  assert.equal(roundPrior([5, 5]), PRIOR_DEFAULT);
-  assert.equal(roundPrior([5, 5, 5]), 5, `${PRIOR_MIN_GAMES} rated games is enough`);
-  // Nulls are dropped rather than counted, so a caller can pass the whole shelf.
-  assert.equal(roundPrior([4, null, 2, undefined, 3, NaN]), 3);
-  assert.equal(roundPrior([4, null, null]), PRIOR_DEFAULT, 'nulls do not meet the floor');
-});
-
 test('#894 plays are ONE-DIRECTIONAL: no game scores lower for being played more', () => {
   // The property, not a row: d(shrunk)/d(prior) = m/(n+m) > 0, so a lifted
   // prior can only ever raise a number. A pseudo-vote form would fail this for
@@ -254,18 +283,17 @@ test('#894 plays are ONE-DIRECTIONAL: no game scores lower for being played more
   // rejected — and nothing else in the suite would notice.
   const scores = [null, 0, 1, 1.7, 3, 4.3, 5];
   const counts = [0, 1, 3, 12, 40];
-  const priors = [PRIOR_DEFAULT, 1.5, 4.6];
-  scores.forEach((s) => counts.forEach((n) => priors.forEach((p) => {
+  scores.forEach((s) => counts.forEach((n) => {
     if (s === null && n > 0) return;
     if (s !== null && n === 0) return;
     let prev = null;
     for (let plays = 0; plays <= 30; plays++) {
-      const cur = shelfScore(s, n, plays, p);
+      const cur = shelfScore(s, n, plays);
       if (cur === null) { assert.equal(plays, 0, 'only the no-evidence case is null'); continue; }
-      if (prev !== null) assert.ok(cur >= prev, `score ${s} n=${n} prior=${p}: ${plays} plays scored ${cur} < ${prev}`);
+      if (prev !== null) assert.ok(cur >= prev, `score ${s} n=${n}: ${plays} plays scored ${cur} < ${prev}`);
       prev = cur;
     }
-  })));
+  }));
 });
 
 test('#894 the play lift saturates but never clamps — twelve plays beat six', () => {
@@ -275,8 +303,19 @@ test('#894 the play lift saturates but never clamps — twelve plays beat six', 
   assert.ok(playCredit(12) > playCredit(6), 'a saturating curve is still strictly increasing');
   assert.equal(playCredit(0), 0);
   [-3, null, undefined, NaN].forEach((bad) => assert.equal(playCredit(bad), 0, String(bad)));
-  // The ceiling is the point: plays alone can never make a game read as 🤩.
-  assert.ok(gamePrior(PRIOR_DEFAULT, 1e6) < PRIOR_DEFAULT + 1.0001);
+  /* #928 RAISED THE LIFT TO 2,0 AND DROPPED #894'S 🤩 CEILING KNOWINGLY: a
+     never-rated game played twelve times now reads 4,7 and outranks one rated
+     {5,5,5,5} (4,0), because a family that put a game on the table twelve times
+     has said something at least as strong as four ratings.
+
+     What survives is the weaker bound that still makes the dial mean something:
+     the lift is asymptotic, so plays alone approach PRIOR_DEFAULT + PLAY_LIFT
+     and never reach it. With both at their shipped values that is 5,0, so „alle
+     5en" remains the only route to a full five. */
+  assert.equal(PLAY_LIFT, 2.0);
+  assert.ok(gamePrior(1e6) < PRIOR_DEFAULT + PLAY_LIFT);
+  assert.equal(d1(gamePrior(12)), 4.7, 'the accepted consequence, stated as a row');
+  assert.ok(gamePrior(12) > shelf([5, 5, 5, 5], 0), 'twelve plays outrank four 5-star votes');
 });
 
 test('#894 playCounts: a play is a non-cancelled session with a chosen game', () => {

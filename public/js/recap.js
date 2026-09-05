@@ -12,7 +12,8 @@
    number|null` lookup into the round's shelf index, built by core.js's
    `roundScoreIndex` — what a SET of votes is worth once a veto counts for more
    than its numeric distance (#893) and once thin data is shrunk toward the
-   round's own prior (#894)). A public/js file cannot require() a
+   fixed neutral prior, lifted by that game's own plays (#894, #928)). A
+   public/js file cannot require() a
    sibling — `require` is not among eslint.config.js's frontendGlobals and the
    browser has none — so injecting them is what keeps this file usable both as a
    shared-scope frontend script and as a CommonJS module the test suite can

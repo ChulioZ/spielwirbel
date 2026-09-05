@@ -156,6 +156,40 @@ function scoreTally(tiles) {
    move a score is (top - bottom) / n, which the curve raises from 5/n to 11/n,
    so a single vote's leverage on a thin-data game more than doubled.
 
+   THE PRIOR IS FIXED, AND THAT IS THE WHOLE POINT (#928). Every input to a
+   game's shelf score is a fact about THAT game — its own votes, its own plays —
+   so two rounds holding identical votes and plays print the identical number,
+   by construction rather than by discipline. `shelfScore` takes no prior
+   parameter for exactly that reason: "which prior did this screen use" is not a
+   question the code can express, so it cannot drift into two answers.
+
+   IT SHIPPED SHELF-RELATIVE FIRST, AND THAT WAS WRONG TWICE OVER. #894 shrank
+   toward a prior computed from the round's own shelf, reasoning that "what does
+   a game here usually turn out to be worth" is the honest expectation for a
+   newcomer. Both halves failed:
+
+   1. THE UNITS DID NOT MATCH. `PRIOR_DEFAULT` is the value of one neutral VOTE;
+      the shelf-relative prior was a mean over GAME SCORES, and #893's curve is
+      deeply asymmetric (`TILE_VALUE[1] = -5`). A game carrying one „gar nicht"
+      scores -5 and entered that mean as one full data point, weighing exactly
+      as much as an established game at +4. On a real 85-game family shelf where
+      most games have one or two votes, that thin low-voted tail WAS the prior:
+      measured at ≈ 0,4 against a documented intent of 3,0, which pulled the
+      whole shelf down by two to three points and collapsed roughly a third of
+      it onto the `SCORE_MIN` clamp — the one signal that would have made the
+      broken scale visible.
+   2. THE NUMBER MEANT NOTHING ACROSS ROUNDS. The app labels it
+      „Spielwirbel-Score" on the Regal, on the detail ring, in the Pokale, in
+      the Chronik and in the share text people send OUTSIDE the round — while
+      the number said as much about the other 84 games on that shelf as about
+      the game it was printed on. `/entdecken` printed a third quantity again on
+      the same 0–5 ring. A label used in five places must denote one thing.
+
+   Note the curve itself was NOT the defect and is unchanged at both scopes: the
+   vote card asks about tonight („Wie gern möchtest du das spielen?") and #893's
+   anchor is a decision rule for one table, which remains right. Fixing the
+   prior recovers the numbers without touching it.
+
    SESSION SCOPE IS DELIBERATELY UNTOUCHED. Tonight's podium reads
    `gameStatsForSession`, and none of this applies there for two independent
    reasons: `n` is the whole electorate rather than a sample (the vote card
@@ -164,7 +198,7 @@ function scoreTally(tiles) {
    so it would move every number on the podium and none of its ranking.
 
    ACCEPTED CONSEQUENCE: shrinkage softens a veto on thin data. `{5,5,1}` played
-   once reads 2,6 rather than 1,7. That is intended, not a bug to fix later —
+   once reads 2,8 rather than 1,7. That is intended, not a bug to fix later —
    one person's veto on one evening should not permanently sink a game the round
    has otherwise formed no view on, and the veto keeps its full force exactly
    where it decides something, on tonight's unshrunk podium.
@@ -174,26 +208,34 @@ function scoreTally(tiles) {
    #893 exists to surface: a game everybody rates 1 and the group still plays
    weekly would read 3,9. Do not reintroduce it without solving that. */
 
-// How much evidence a game needs before its own score outweighs the shelf's
-// prior — roughly one table's worth of votes, so a game earns its place on the
-// shelf after about one full evening of ratings. A STARTING VALUE, expected to
-// be retuned from real use like TILE_VALUE above.
+// How much evidence a game needs before its own score outweighs the prior —
+// roughly one table's worth of votes, so a game earns its place on the shelf
+// after about one full evening of ratings. A STARTING VALUE, expected to be
+// retuned from real use like TILE_VALUE above. Deliberately left at 4 by #928:
+// the recovery there came from fixing the prior, not from trusting thin data
+// more, and those are separate dials that must not be conflated.
 const SHRINK_M = 4;
 
-// The prior for a round with too little data to have one of its own. It is the
-// neutral face's value under TILE_VALUE, so „wir wissen es noch nicht" and
-// „keiner hat was dagegen" are literally the same number.
+// What we assume about a game before its own evidence speaks. It is the neutral
+// face's value under TILE_VALUE, so „wir wissen es noch nicht" and „keiner hat
+// was dagegen" are literally the same number — and it is a CONSTANT, never
+// derived from the shelf, which is what makes the score comparable between
+// rounds (#928, and the unit mismatch in §1 of the header above).
 const PRIOR_DEFAULT = 3;
 
-// Below this many rated games a round has no prior of its own. A round with one
-// rated game would otherwise shrink that game toward itself — a no-op that
-// looks like a bug the first time somebody checks the arithmetic.
-const PRIOR_MIN_GAMES = 3;
-
-// Full play credit is worth ONE TILE of prior: a game the group keeps choosing
-// is presumed 🙂 „wir mögen das" rather than 😐 „keiner hat was dagegen". The
-// ceiling is the point — plays alone can never make a game read as 🤩.
-const PLAY_LIFT = 1.0;
+// Full play credit is worth TWO TILES of prior: a game the group keeps choosing
+// is presumed 🤩 „wir lieben das" rather than 😐 „keiner hat was dagegen".
+// Direct plays are the round's revealed preference and count heavily — a family
+// that put a game on the table twelve times has said something at least as
+// strong as four ratings.
+//
+// #894 shipped 1,0 and asserted a ceiling with it („plays alone can never make
+// a game read as 🤩"); #928 raised it and dropped that claim KNOWINGLY. A
+// never-rated game played 12× now reads ≈ 4,7 and outranks one rated {5,5,5,5}
+// (4,0). What survives is the weaker property that still bounds the dial:
+// `gamePrior` is strictly below PRIOR_DEFAULT + PLAY_LIFT = 5,0, so plays alone
+// can never reach a full 5,0 however often a game is played.
+const PLAY_LIFT = 2.0;
 
 // Plays at which half the lift is earned. A SATURATING curve, never a clamp: it
 // is strictly increasing forever, so twelve plays still outrank six on an active
@@ -201,21 +243,6 @@ const PLAY_LIFT = 1.0;
 // what lib/recommend.js's own play bonus uses), because a displayed number must
 // not move because a DIFFERENT game got played.
 const PLAY_HALF = 2;
-
-/* What an unknown game from THIS shelf typically scores.
-
-   Game-weighted, never vote-weighted: the question is "what does a game here
-   usually turn out to be worth", so each game counts once. A mean over all
-   votes would be dominated by whichever games get played most, and would drag
-   every newcomer toward the staples' verdict specifically.
-
-   Non-numbers are dropped rather than trusted, so a caller can hand in the raw
-   `score` of every game on the shelf — nulls and all — without pre-filtering. */
-function roundPrior(scores) {
-  const xs = (Array.isArray(scores) ? scores : []).filter((s) => Number.isFinite(s));
-  if (xs.length < PRIOR_MIN_GAMES) return PRIOR_DEFAULT;
-  return xs.reduce((a, b) => a + b, 0) / xs.length;
-}
 
 // How much of the play lift `plays` nights have earned: 1 -> 0,33 · 2 -> 0,50 ·
 // 3 -> 0,60 · 10 -> 0,83 · 20 -> 0,91. Zero for a game never put on the table,
@@ -225,8 +252,8 @@ function playCredit(plays) {
   return n ? n / (n + PLAY_HALF) : 0;
 }
 
-/* The prior for ONE game: the shelf's, raised by how often the group actually
-   chose it.
+/* The prior for ONE game: the neutral expectation, raised by how often the
+   group actually chose it. Takes no shelf and no round — see the header.
 
    A play does not add points to a score — it raises the expectation the score is
    shrunk TOWARD, which is what makes it strictly one-directional:
@@ -237,19 +264,25 @@ function playCredit(plays) {
    tile value) was rejected for exactly that: it lowers any game already scoring
    above the play value, so a beloved staple played weekly would score below a
    beloved game played once. */
-function gamePrior(prior, plays) {
-  return prior + PLAY_LIFT * playCredit(plays);
+function gamePrior(plays) {
+  return PRIOR_DEFAULT + PLAY_LIFT * playCredit(plays);
 }
 
-// The shrinkage itself: (n·score + m·prior) / (n + m). With no votes the answer
-// is the prior — the caller decides whether that is a number worth showing.
+/* The shrinkage itself: (n·score + m·prior) / (n + m). With no votes the answer
+   is the prior — the caller decides whether that is a number worth showing.
+
+   This one still TAKES its prior, unlike `shelfScore` and `gamePrior` above: it
+   is the arithmetic, not the policy, and lib/recommend.js legitimately shrinks
+   without the play lift (the play signal already reaches its profile through
+   `W_PLAYS`, and applying both would count it twice). Callers pass
+   `PRIOR_DEFAULT`; nobody derives one. */
 function shrinkScore(score, n, prior) {
   if (!Number.isFinite(n) || n <= 0 || !Number.isFinite(score)) return prior;
   return (n * score + SHRINK_M * prior) / (n + SHRINK_M);
 }
 
-/* The number the shelf shows: a game's own score, shrunk toward a prior its
-   plays have lifted.
+/* The number the shelf shows: a game's own score, shrunk toward a fixed prior
+   its own plays have lifted.
 
    The null contract is the load-bearing part. A game with neither ratings nor
    plays has NO evidence at all, so it stays null and every `score !== null`
@@ -258,8 +291,8 @@ function shrinkScore(score, n, prior) {
    afterwards — gets the lifted prior, and that is the whole reason §7 exists:
    without it such a round has a shelf where nothing is ranked and nothing ever
    will be, however often they play. */
-function shelfScore(score, n, plays, prior) {
-  const c = gamePrior(prior, plays);
+function shelfScore(score, n, plays) {
+  const c = gamePrior(plays);
   if (!Number.isFinite(n) || n <= 0 || !Number.isFinite(score)) {
     return playCredit(plays) > 0 ? c : null;
   }
@@ -299,7 +332,7 @@ function playCounts(round) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     TILE_VALUE, SCORE_MIN, tileValue, scoreRatings, scoreTally,
-    SHRINK_M, PRIOR_DEFAULT, PRIOR_MIN_GAMES, PLAY_LIFT, PLAY_HALF,
-    roundPrior, playCredit, gamePrior, shrinkScore, shelfScore, playCounts,
+    SHRINK_M, PRIOR_DEFAULT, PLAY_LIFT, PLAY_HALF,
+    playCredit, gamePrior, shrinkScore, shelfScore, playCounts,
   };
 }

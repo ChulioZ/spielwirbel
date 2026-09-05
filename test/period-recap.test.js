@@ -10,14 +10,14 @@ const { periodsOf, periodRecap, periodKeyOf } = require('../public/js/period-rec
 const { sessionPeople } = require('../public/js/session-people');
 const { effectiveRating } = require('../public/js/vote-scale');
 const { RECAP_MIN_RATINGS } = require('../public/js/recap');
-const { scoreRatings, shelfScore, roundPrior, playCounts } = require('../public/js/vote-score');
+const { scoreRatings, shelfScore, playCounts } = require('../public/js/vote-score');
 const { isActiveGame } = require('../public/js/draw-pool');
 
 const deps = {
   peopleOf: sessionPeople, ratingOf: effectiveRating, scoreOf: scoreRatings,
   // The shelf half (#894): the real ones, never a stub — a substituted shrinkage
   // is exactly the drift this file's injection discipline exists to prevent.
-  shelfOf: shelfScore, priorOf: roundPrior, playsOf: playCounts,
+  shelfOf: shelfScore, playsOf: playCounts,
   minRatings: RECAP_MIN_RATINGS, isActive: isActiveGame,
 };
 
@@ -202,8 +202,8 @@ test('a retirement proposal counts as the zero it is', () => {
   });
   /* Three retirement proposals, one of them over a stored 5. TILE_VALUE[0] is
      −6, so the game's own score is exactly that — and since #894 the card prints
-     it shrunk toward the shelf's prior: no other game is rated, so the prior is
-     PRIOR_DEFAULT and nothing was played, giving (3·−6 + 4·3) / 7 = −6/7.
+     it shrunk: the prior is `PRIOR_DEFAULT` (fixed since #928) and nothing was
+     played, so no lift, giving (3·−6 + 4·3) / 7 = −6/7.
      The number still discriminates: had the stored 5 won, the raw score would be
      (5 − 6 − 6) / 3 ≈ −2,33 and the printed one +5/7 ≈ 0,71. */
   const top = periodRecap(r, [], month('2026-07'), deps).topRated;

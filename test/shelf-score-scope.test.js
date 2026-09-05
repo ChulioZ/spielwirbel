@@ -88,15 +88,52 @@ test('#894 the SESSION score is NOT shrunk — tonight is the whole electorate',
   assert.notEqual(dom.run('gameStats(ROUND, "g1")').score, perSession.score);
 });
 
-test('#894 the prior is built ONCE per index, over the active shelf', async (t) => {
+test('#894 the index is built ONCE, over the active shelf', async (t) => {
   const dom = boot(t);
   const idx = dom.run('roundScoreIndex(ROUND)');
-  // Three rated games clears PRIOR_MIN_GAMES, so the round has a prior of its
-  // own: the mean of the per-GAME scores (5, 4, 3), not of the fifteen votes
-  // behind them — a vote-weighted mean would sit at 4.07 here, dragged there by
-  // the staple's four evenings.
-  assert.equal(idx.prior, 4);
   assert.deepEqual(Object.keys(idx.byGame).sort(), ['g1', 'g2', 'g3']);
-  // Play counts come out of that same walk rather than a second one per game.
+  // Play counts come out of one walk rather than a second one per game.
   assert.equal(idx.plays.get('g2'), 4);
+  // And it publishes NO prior (#928): there is no shelf-relative quantity left
+  // for a caller to reach for, so `shelveStats` cannot be handed one.
+  assert.equal(idx.prior, undefined);
+});
+
+/* THE COMPARABILITY CRITERION, END TO END (#928).
+
+   `test/vote-score.test.js` pins it at the unit — `shelfScore` has no prior
+   parameter, so a round cannot get a say. This is the same claim through the
+   real view code, which is where it was actually broken: `gameStats` reached
+   the shrinkage through `roundScoreIndex`, and that is the layer that used to
+   derive a prior from the other 84 games on the shelf.
+
+   The second round is deliberately as HOSTILE as a shelf can be — twelve games
+   everyone rated „gar nicht", which is what dragged the reported family shelf's
+   prior to ≈ 0,4 — and `g1` in it carries the identical votes and the identical
+   single play. Under the shipped code the two numbers are the same; under a
+   shelf-relative prior the second is roughly two and a half points lower. */
+test('#928 identical votes and plays print the identical number in any round', async (t) => {
+  const dom = boot(t);
+  const gloomy = {
+    ...ROUND,
+    id: 'r2',
+    games: [
+      ROUND.games[0],
+      ...Array.from({ length: 12 }, (_, i) => ({ id: `d${i}`, title: `Dud ${i}` })),
+    ],
+    sessions: [
+      ROUND.sessions[0],
+      ...Array.from({ length: 12 }, (_, i) => ({
+        id: `ds${i}`, createdAt: '2026-08-20T20:00:00.000Z', gameIds: [`d${i}`],
+        memberIds: members.map((m) => m.id), votes: votesFor(`d${i}`, 1),
+        chosenGameId: `d${i}`, finished: true, done: true,
+      })),
+    ],
+  };
+  dom.context.GLOOMY = gloomy;
+  const here = dom.run('gameStats(ROUND, "g1")');
+  const there = dom.run('gameStats(GLOOMY, "g1")');
+  assert.equal(here.rawScore, there.rawScore, 'the fixture really is the same game');
+  assert.equal(here.plays, there.plays);
+  assert.equal(here.score, there.score, 'and so is the number the shelf prints');
 });

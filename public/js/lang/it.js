@@ -775,7 +775,7 @@ I18N.it = {
   'score.infoRaw': 'La media semplice di tutte le valutazioni resta indicata in fondo alla pagina del gioco.',
   'score.infoBody': 'Il punteggio è più della media. Se qualcuno non vuole affatto giocare a un gioco, questo pesa più di una buona valutazione di qualcun altro, così che alla fine giochiate a qualcosa che piaccia a tutti.',
   'score.infoThin': 'Un gioco con ancora poche valutazioni viene giudicato con più prudenza: servono alcune sessioni perché il suo punteggio conti del tutto.',
-  'score.infoPlays': 'Un gioco che rimettete di continuo sul tavolo viene giudicato un po’ meglio, anche senza valutazioni.',
+  'score.infoPlays': 'Un gioco che rimettete di continuo sul tavolo viene giudicato molto meglio, anche senza valutazioni.',
   'score.evidenceOne': '{n} valutazione',
   'score.evidence': '{n} valutazioni',
   'score.evidencePlaysOne': 'Non ancora valutato · giocato {n}×',

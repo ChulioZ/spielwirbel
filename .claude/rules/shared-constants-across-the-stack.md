@@ -315,25 +315,53 @@ recommender disagree about how often a game was played — a number one of them
 prints. `lib/recommend.js` re-exports it so every existing caller and spec is
 untouched.
 
-The shrinkage half (`SHRINK_M`, `PRIOR_DEFAULT`, `PRIOR_MIN_GAMES`, `PLAY_LIFT`,
-`PLAY_HALF`, `roundPrior`, `shrinkScore`, `shelfScore`) is the `draw-pool.js`
-direction — shared logic — and it reaches **five** consumers, which is why it had
+The shrinkage half (`SHRINK_M`, `PRIOR_DEFAULT`, `PLAY_LIFT`, `PLAY_HALF`,
+`playCredit`, `gamePrior`, `shrinkScore`, `shelfScore`) is the `draw-pool.js`
+direction — shared logic — and it reaches **six** consumers, which is why it had
 to be one file rather than a rule people remember: `core.js`'s
 `roundScoreIndex` (the Regal pill and sort, the detail ring, the retirement
 banner), `recap.js` via an injected lookup (the Pokale best/worst card),
-`period-recap.js` via three more injected functions (the Chronik's per-period
-card), and `lib/recommend.js`'s `buildShelfIndex`. The Chronik case is the one
+`period-recap.js` via two more injected functions (the Chronik's per-period
+card), `lib/recommend.js`'s `buildShelfIndex`, and — since #928 —
+`lib/public-stats.js`'s `bestRated` podium. The Chronik case is the one
 worth knowing: #914 had *just* finished making its „Bestbewertet" card and the
 all-time card share one arithmetic, and shrinking only the all-time one split
 them again within the same release — caught by
 `test/chronik-period-recap.test.js`, which compares the two rendered numbers
 rather than trusting either.
 
-Note `recommend.js` shrinks toward a prior floored at `UNRATED_EQUIV` and applies
-**no** play lift, and neither is drift: both are stated in `gameAffinity`'s
-comment with the measurement behind them (#894 §0). Sharing the *function* while
-each side supplies its own prior is the point — what must never differ is the
-arithmetic, not the inputs.
+**#928 removed the shelf-relative prior entirely, and the shape of the fix is
+this rule's own argument taken one step further.** `roundPrior` and
+`PRIOR_MIN_GAMES` are gone, and `shelfScore`/`gamePrior` no longer take a prior
+at all: it is the constant `PRIOR_DEFAULT`, lifted only by that game's own
+plays. Sharing a *function* while each caller supplied its own prior — which
+this paragraph used to defend — still let two surfaces print one label
+(„Spielwirbel-Score", on the same 0–5 ring) for two different quantities, and
+they did: the Regal shrank toward its own shelf while `/entdecken` applied the
+raw curve with no prior at all. Removing the parameter makes "which prior did
+this screen use" **unrepresentable**, which is strictly stronger than sharing
+the function. `test/vote-score.test.js` asserts the ARITY for that reason —
+an equality between two rounds is satisfied by a shelf-relative implementation
+handed two similar shelves, where `shelfScore.length === 3` fails the moment a
+prior parameter comes back.
+
+The one remaining caller-supplied prior is `shrinkScore`, which is the
+arithmetic rather than the policy: `lib/recommend.js` legitimately shrinks
+toward `PRIOR_DEFAULT` with **no** play lift, because the play signal already
+reaches its profile through `W_PLAYS` and applying both would count it twice
+(stated in `gameAffinity`'s comment with the measurement behind it, #894 §0).
+Its own `UNRATED_EQUIV` floor went with #928: it existed only to stop a
+collapsed shelf prior from ranking one „😐" vote below no vote at all, and a
+constant 3 is above that break-even by construction.
+
+The Discover podium is the sharpest instance in this file of the trap named
+under `vote-score.js`'s curve half, one layer over: `lib/public-stats.js` can
+`require()` the shared module, but the Postgres aggregate feeding it cannot —
+so the play lift needed an **all-time** play count the aggregate did not carry
+(`plays.d7/d30/d365` only). Rather than restate the lift in SQL, the aggregate
+grew a `plays.all` column in both backends and the lift stays in JS. Same move
+as `scoreTally`'s histogram: when a boundary cannot take the shared function,
+push the boundary **down** to something the function still owns.
 
 Two neighbouring values deliberately did **not** join it. `VIOLATION_MAX` stays
 in `table-split.js`: it is a threshold on the *tile* scale, not on the score, and

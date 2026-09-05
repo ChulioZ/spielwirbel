@@ -22,7 +22,6 @@ const {
   partyDistribution,
   buildPlayScale,
   buildShelfIndex,
-  UNRATED_EQUIV,
   MIN_PROFILE_GAMES,
   NEUTRAL,
   REASON_LINES,
@@ -183,35 +182,40 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
   // literal here would stop exercising the shape the production caller passes.
   const idle = buildPlayScale(round);
   const shelf = buildShelfIndex(round);
-  // Every rating here rests on ONE voter, so #894's shrinkage pulls each rung
-  // four fifths of the way to the shelf's prior — these are no longer the bare
-  // ladder values. The prior itself is this fixture's floor (`UNRATED_EQUIV`),
-  // because a shelf of {5, 3, veto} means 1,0 and shrinking a verdict toward
-  // something below the unrated rung would make one vote worse than none.
+  // Every rating here rests on ONE voter, so shrinkage pulls each rung four
+  // fifths of the way to the prior — these are no longer the bare ladder
+  // values. Since #928 that prior is the fixed `PRIOR_DEFAULT` of 3 rather than
+  // anything this fixture's own shelf says, so the numbers below depend only on
+  // each game's own votes.
   const aff = (game) => Math.round(gameAffinity(game, idle, shelf) * 100) / 100;
 
   // A retired game usually carries votes; letting them speak would make "we
   // threw this out" read as an ordinary five-star opinion.
   assert.equal(aff(g('gr', { retired: true })), -1, 'retired -> -1.0, ahead of any rating');
-  assert.equal(aff(g('ghigh')), 0.88, 'rated 5 by one voter -> 0.88 (bare rung 2.0)');
-  assert.equal(aff(g('gmid')), 0.68, 'rated 3 by one voter -> 0.68 (bare rung 1.0)');
+  assert.equal(aff(g('ghigh')), 1.2, 'rated 5 by one voter -> 1.2 (bare rung 2.0)');
+  assert.equal(aff(g('gmid')), 1, 'rated 3 by one voter -> 1.0, the prior itself, so shrinkage is a no-op');
   // Since #893 a lone „gar nicht" scores −5, which the clamp in `gameAffinity`
   // floors at 0 before the ladder arithmetic. Shrinkage lifts it off that clamp
   // here, but it stays the bottom rung of the three, which is what the clamp is
   // for: a game the round still owns and dislikes must not outrank-in-reverse
   // one they actually threw out.
-  assert.equal(aff(g('glow')), -0.12, 'rated 1 by one voter -> -0.12 (bare rung -0.5)');
+  assert.equal(aff(g('glow')), 0.2, 'rated 1 by one voter -> 0.2 (bare rung -0.5)');
   assert.equal(aff(g('gnone')), 0.6, 'owned, unrated -> 0.6, and shrinkage never touches it');
   // Completed is deliberately NOT a state: the game was played through, so its
   // ratings still count.
-  assert.equal(aff(g('ghigh', { completed: true })), 0.88);
+  assert.equal(aff(g('ghigh', { completed: true })), 1.2);
 
-  // #894's own interaction, pinned as a RELATION rather than a row: one neutral
-  // vote must never rank a game below never having been rated. The prior floor
-  // is what guarantees it, and without it this fixture inverts — its raw prior
-  // is 1,0, at which rated-3-once scores 0,2 against the unrated 0,6.
+  /* #894's own interaction, pinned as a RELATION rather than a row: one neutral
+     vote must never rank a game below never having been rated.
+
+     #894 needed a derived floor (`UNRATED_EQUIV`) to guarantee this, because a
+     gloomy shelf could drag the prior below what the ladder pays for no verdict
+     at all — measured, the inversion started under a prior of 2,0. #928 removed
+     both the shelf-relative prior and that floor: `PRIOR_DEFAULT` is 3, which is
+     above the break-even by construction, so the floor could never bind again.
+     What is asserted is therefore the PROPERTY, which is what mattered — the
+     mechanism guaranteeing it changed underneath. */
   assert.ok(aff(g('gmid')) > A_UNRATED, 'one 😐 vote must beat no vote at all');
-  assert.equal(UNRATED_EQUIV, 2.2, 'the floor is derived from the rung, not chosen');
 
   // The RELATION, not the literals (#799): a shelf entry nobody has voted on is
   // a real signal but a weaker one than any game the round has formed an opinion
@@ -285,14 +289,24 @@ test('lowering the unrated rung shifts profile mass onto the games the round RAT
   const games = [];
   for (let i = 1; i <= 3; i += 1) games.push({ id: `r${i}`, title: `Rated ${i}`, source: { provider: 'bgg', externalId: `or${i}` } });
   for (let i = 1; i <= 5; i += 1) games.push({ id: `u${i}`, title: `Unrated ${i}`, source: { provider: 'bgg', externalId: `ou${i}` } });
+  /* ONE TABLE VOTES, not one person, and that is load-bearing since #928. The
+     rung this case is about is what a game rated 5 earns — but the affinity it
+     actually reads is SHRUNK, so with a single voter each rated game sits four
+     fifths of the way back to the prior and the ratio would be measuring
+     `SHRINK_M` rather than `A_UNRATED`. `SHRINK_M` is "roughly one table's worth
+     of votes", so four voters is exactly the fixture that lets the rung speak:
+     {5,5,5,5} shrinks to 4,0, i.e. affinity 1,5.
+
+     Before #928 this fixture happened to escape the question — the prior was the
+     round's own shelf, which held nothing but 5s, so shrinkage was a silent
+     no-op and one voter looked like enough. */
+  const members = ['m1', 'm2', 'm3', 'm4'];
+  const allFive = Object.fromEntries(members.map((m) => [m, {
+    r1: { rating: 5 }, r2: { rating: 5 }, r3: { rating: 5 },
+  }]));
   const round = shelfRound({
     games,
-    sessions: [{
-      id: 's1',
-      gameIds: ['r1', 'r2', 'r3'],
-      memberIds: ['m1'],
-      votes: { m1: { r1: { rating: 5 }, r2: { rating: 5 }, r3: { rating: 5 } } },
-    }],
+    sessions: [{ id: 's1', gameIds: ['r1', 'r2', 'r3'], memberIds: members, votes: allFive }],
   });
   const corpus = [
     ...[1, 2, 3].map((i) => entry(`or${i}`, { info: info({ mechanics: ['Rated'] }) })),
@@ -300,10 +314,18 @@ test('lowering the unrated rung shifts profile mass onto the games the round RAT
   ];
   const profile = profileOf(round, corpus);
   const ratio = profile.mechanics.Rated / profile.mechanics.Unrated;
-  assert.equal(Math.round(ratio * 1e6) / 1e6, 2, `rated:unrated mass was ${ratio}:1`);
-  // …and the same thing said in the normalised units the cosine actually reads.
-  assert.ok(profile.mechanics.Rated > 0.85, `rated component ${profile.mechanics.Rated}`);
-  assert.ok(profile.mechanics.Unrated < 0.5, `unrated component ${profile.mechanics.Unrated}`);
+  /* 3 × 1,5 against 5 × 0,6 is 1,5:1. The number to hold it against is what the
+     OLD rung would give on the identical fixture: 3 × 1,5 against 5 × 1,0 is
+     0,9:1 — the unrated block would actually OUTWEIGH the rated one, which is
+     the defect #799 fixed. So this literal is on the correct side of 1 and the
+     alternative is on the wrong side of it, which is what makes it a test of
+     the rung rather than of the fixture. */
+  assert.equal(Math.round(ratio * 1e6) / 1e6, 1.5, `rated:unrated mass was ${ratio}:1`);
+  // …and the same thing said in the normalised units the cosine actually reads
+  // (0,83 / 0,55 here). The old rung inverts BOTH of these on this fixture —
+  // 0,67 / 0,74 — so neither bound can be satisfied by it.
+  assert.ok(profile.mechanics.Rated > 0.8, `rated component ${profile.mechanics.Rated}`);
+  assert.ok(profile.mechanics.Unrated < 0.6, `unrated component ${profile.mechanics.Unrated}`);
 });
 
 /* ---------------------------------- plays ---------------------------------- */

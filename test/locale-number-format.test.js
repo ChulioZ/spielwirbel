@@ -195,11 +195,12 @@ test('the Regal pill is written in the reader\'s notation, and the locales disag
   // The „Ø " prefix went with #893: the pill prints the bare Spielwirbel-Score,
   // because the chip repeats a dozen times per screen and a label does not fit
   // on a phone-width Regal card. #894 then shrank the value itself (4,5 -> 3,7
-  // on this fixture, a thin verdict pulled toward the shelf's prior). Neither
-  // touches what this file guards — the number is still written in the reader's
-  // locale, and the magnitude is pinned in test/vote-score.test.js.
-  assert.equal(de, '3,7');
-  assert.equal(en, '3.7');
+  // on this fixture, a thin verdict pulled toward a prior), and #928 made that
+  // prior fixed and raised the play lift (3,7 -> 3,9). None of the three touches
+  // what this file guards — the number is still written in the reader's locale,
+  // and the magnitude is pinned in test/vote-score.test.js.
+  assert.equal(de, '3,9');
+  assert.equal(en, '3.9');
   // The load-bearing half: a fmtAvg wired to a single locale, or a call site
   // still on toFixed(1), makes these two equal while each individual assertion
   // above could still be written to pass.

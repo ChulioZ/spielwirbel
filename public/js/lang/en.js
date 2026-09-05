@@ -829,7 +829,7 @@ I18N.en = {
   'score.infoRaw': 'The plain average of all ratings is still shown at the bottom of the game page.',
   'score.infoBody': 'The score is more than the average. If someone does not want to play a game at all, that counts for more than a good rating from someone else — so that what you end up playing is something everybody is up for.',
   'score.infoThin': 'A game with only a few ratings so far is judged more cautiously — it takes a few sessions before its score carries full weight.',
-  'score.infoPlays': 'A game you keep putting on the table is judged a little more favourably — even without any ratings.',
+  'score.infoPlays': 'A game you keep putting on the table is judged much more favourably — even without any ratings.',
   'score.evidenceOne': '{n} rating',
   'score.evidence': '{n} ratings',
   'score.evidencePlaysOne': 'Not rated yet · played {n}×',

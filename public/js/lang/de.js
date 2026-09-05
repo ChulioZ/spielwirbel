@@ -819,7 +819,7 @@ I18N.de = {
   'score.infoRaw': 'Unten auf der Spielseite steht weiterhin der reine Durchschnitt aller Bewertungen.',
   'score.infoBody': 'Der Score ist mehr als der Durchschnitt. Wenn jemand ein Spiel gar nicht spielen möchte, zählt das schwerer als eine gute Bewertung von jemand anderem — damit am Ende gespielt wird, worauf alle Lust haben.',
   'score.infoThin': 'Ein Spiel mit erst wenigen Bewertungen wird vorsichtiger eingeschätzt — es braucht ein paar Sessions, bis sich sein Score voll durchsetzt.',
-  'score.infoPlays': 'Ein Spiel, das ihr immer wieder auf den Tisch legt, wird etwas besser eingeschätzt — auch ohne Bewertungen.',
+  'score.infoPlays': 'Ein Spiel, das ihr immer wieder auf den Tisch legt, wird deutlich besser eingeschätzt — auch ohne Bewertungen.',
   'score.evidenceOne': '{n} Bewertung',
   'score.evidence': '{n} Bewertungen',
   'score.evidencePlaysOne': 'Noch nicht bewertet · {n}× gespielt',

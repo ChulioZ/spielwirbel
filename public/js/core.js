@@ -732,57 +732,51 @@ function rawGameStats(round, gameId) {
 // Every other field (`count`, `votesCast`, `sortCount`, `tiles`, `vetoes`,
 // `retires`) stays raw on purpose: they are counts of what happened, and
 // `scoreReason()` and `retireRecommendations()` both read them as such.
-function shelveStats(raw, prior, plays) {
+function shelveStats(raw, plays) {
   return {
     ...raw,
     plays,
     rawScore: raw.score,
-    score: shelfScore(raw.score, raw.count, plays, prior),
+    score: shelfScore(raw.score, raw.count, plays),
   };
 }
 
 /* The shelf's view of a whole round, computed ONCE per render (#894).
 
-   THE O(n²) TRAP THIS EXISTS TO AVOID. The prior is a property of the shelf,
-   not of the game being scored, and so is the play count — so deriving either
-   inside `rawGameStats` would rescan every session for every game on every
-   card. lib/recommend.js records the same mistake with numbers: 19.8 ms ->
-   364 ms for one call at the 1000-game quota ceiling. Hence one `playCounts`
-   walk, one `rawGameStats` pass, then the prior, then the shrink — never a
-   second walk and never a per-game one.
+   THE O(n²) TRAP THIS EXISTS TO AVOID. The play count is a property of the
+   round, not of the game being scored, so deriving it inside `rawGameStats`
+   would rescan every session for every game on every card. lib/recommend.js
+   records the same mistake with numbers: 19.8 ms -> 364 ms for one call at the
+   1000-game quota ceiling. Hence one `playCounts` walk and one `rawGameStats`
+   pass — never a second walk and never a per-game one.
 
-   `games` is the shelf the prior is read over, and it must be the ACTIVE one:
-   a retired game's verdict is exactly the opinion the round has withdrawn, so
-   letting it set the expectation for a newcomer would be reading the shelf by
-   what is no longer on it. Callers that already hold `activeGames` pass it;
-   otherwise it is derived here with the same predicate they use. */
+   `games` narrows the index to the ACTIVE shelf, which is what every loop site
+   renders. Since #928 nothing here is read ACROSS games — the prior is fixed,
+   so a game's number depends on its own votes and plays alone — so this
+   argument now only decides which entries `byGame` carries, not what any of
+   them says. Callers that already hold `activeGames` pass it; otherwise it is
+   derived here with the same predicate they use. */
 function roundScoreIndex(round, games) {
   const shelf = games || round.games.filter(isActiveGame);
   const plays = playCounts(round);
-  const raw = {};
-  shelf.forEach((g) => (raw[g.id] = rawGameStats(round, g.id)));
-  const prior = roundPrior(shelf.map((g) => raw[g.id].score));
   const byGame = {};
-  shelf.forEach((g) => (byGame[g.id] = shelveStats(raw[g.id], prior, plays.get(g.id) || 0)));
-  return { prior, plays, byGame };
+  shelf.forEach((g) => (byGame[g.id] = shelveStats(rawGameStats(round, g.id), plays.get(g.id) || 0)));
+  return { plays, byGame };
 }
 
 // Shelf-scope stats for ONE game — the single-game entry point (the game detail
-// screen). It derives the round's prior itself, which costs a full pass over
-// the active shelf; that is the same work opening the Regal already does, and
-// it is why this must never be called in a loop. Loop sites take
-// `roundScoreIndex` above and read `byGame`.
+// screen). It scores the game on its own, which is only possible since #928: it
+// used to build the whole `roundScoreIndex` because the prior was read across
+// the shelf, and an off-shelf game (retired, completed or a wish, opened by its
+// own URL) had to be scored against a shelf it was not part of. With the prior
+// fixed, one game's number needs nothing but that game — so this is one
+// `playCounts` walk plus one `rawGameStats`, not a full pass over the shelf.
 //
-// A game absent from `byGame` is an off-shelf one (retired, completed or a
-// wish) opened by its own URL: it gets no say in the prior, but is still shrunk
-// toward it, so its number means the same thing as every other number in the
-// round.
+// Loop sites still take `roundScoreIndex` above and read `byGame`: `playCounts`
+// walks every session, so calling this in a loop is the O(n²) trap that
+// function's header describes.
 function gameStats(round, gameId) {
-  const idx = roundScoreIndex(round);
-  return (
-    idx.byGame[gameId] ||
-    shelveStats(rawGameStats(round, gameId), idx.prior, idx.plays.get(gameId) || 0)
-  );
+  return shelveStats(rawGameStats(round, gameId), playCounts(round).get(gameId) || 0);
 }
 
 // Retirement suggestions: games often suggested for retirement and/or with a
@@ -816,20 +810,21 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
   // Pinned by test/retire-score-threshold.test.js, demo fixture included.
   //
   // THE THIRD CORRECTION (#894) IS ABOUT WHICH SCORE IT READS. Everything the
-  // shelf displays is now shrunk toward the round's own prior, but this branch
-  // deliberately keeps reading `rawScore`, and both halves of that matter:
+  // shelf displays is shrunk, but this branch deliberately keeps reading
+  // `rawScore`, for two reasons that both survive #928's fixed prior:
   //
   // - No fixed threshold on the shrunk scale can hold the anchor. {2,2,2,2}
   //   shrinks to 2,00 at four votes and 1,18 at forty, so the bar would be
   //   reached by how many people voted rather than by how the game was received
   //   — which is exactly the defect #922 fixed one divisor over.
-  // - The direction is backwards for this question. Shrinking pulls a game
-  //   TOWARD the shelf, so the better the round's other games, the harder it
-  //   would be to propose a bad one — „dieses Spiel zieht das Regal runter"
-  //   would get quieter the more it is true.
+  // - The play lift moves it too. A game the round keeps putting on the table
+  //   is shrunk toward a higher prior, so „dieses Spiel zieht das Regal runter"
+  //   would get quieter the more often they play it. (Before #928 the same
+  //   objection had a second, larger form: the prior was the round's own shelf,
+  //   so a good shelf made a bad game harder to propose.)
   //
   // This is not a second ranking: shrinkage is monotonic in the raw score at a
-  // fixed (n, prior), so `rawScore <= LOW_SCORE` is EXACTLY the same decision as
+  // fixed (n, plays), so `rawScore <= LOW_SCORE` is EXACTLY the same decision as
   // comparing the shrunk score against the shrunk anchor — just without a
   // threshold that has to move. Uncertainty is already handled here by
   // `minVotes` (three times the member count), which is a harder evidence bar
