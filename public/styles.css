@@ -7090,11 +7090,12 @@ kbd {
 [data-world] .game-card::after { top: auto; bottom: 6px; transform: rotate(90deg); }
 
 /* Slot 5 — the empty state's scene, in a band of its own along the bottom.
-   The band is one fifth of the width (the art's own ratio) and the box
-   reserves exactly that much below its text, so the scene never sits under a
-   line of --ink-soft — which is what lets it be bold: measured at .14 across
-   the text it already cost the muted line its AA (4.35:1). */
-[data-world] .empty { position: relative; overflow: hidden; isolation: isolate; padding-bottom: calc(44px + 20%); }
+   The band is one fifth of the width (the art's own ratio), capped at 160px
+   on wide screens (the art stops growing at 800px), and the box reserves
+   exactly that much below its text, so the scene never sits under a line of
+   --ink-soft — which is what lets it be bold: measured at .14 across the text
+   it already cost the muted line its AA (4.35:1). */
+[data-world] .empty { position: relative; overflow: hidden; isolation: isolate; padding-bottom: calc(44px + min(20%, 160px)); }
 [data-world] .empty::before {
   content: '';
   position: absolute;
@@ -7104,7 +7105,7 @@ kbd {
   background: var(--brand);
   opacity: .36;
   mask-image: var(--world-scene);
-  mask-size: 100% auto;
+  mask-size: min(100%, 800px) auto;
   mask-repeat: no-repeat;
   mask-position: center bottom;
 }

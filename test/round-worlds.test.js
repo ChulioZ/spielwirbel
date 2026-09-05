@@ -287,16 +287,21 @@ const artRatio = (token, world) => {
 test('the empty-state scene lives in a reserved band below the text', () => {
   const box = bodyOf('[data-world] .empty');
   assert.ok(box, 'the empty-state host rule has moved');
-  const pad = /padding-bottom:\s*calc\(\s*44px\s*\+\s*(\d+)%\s*\)/.exec(box);
-  assert.ok(pad, '.empty must reserve a percentage band below its 44px padding');
+  // Reserved: 44px + min(P%, CAPpx). Drawn: min(100%, Wpx) wide at the art's
+  // ratio. Both halves must cover the band, at every width.
+  const pad = /padding-bottom:\s*calc\(\s*44px\s*\+\s*min\(\s*(\d+)%\s*,\s*(\d+)px\s*\)\s*\)/.exec(box);
+  assert.ok(pad, '.empty must reserve a capped percentage band below its 44px padding');
   const scene = slotBody('[data-world] .empty::before');
-  assert.match(scene, /mask-size:\s*100% auto/);
+  const size = /mask-size:\s*min\(\s*100%\s*,\s*(\d+)px\s*\)\s+auto/.exec(scene);
+  assert.ok(size, 'the scene must stop growing at a capped width');
   assert.match(scene, /mask-position:\s*center bottom/);
   assert.match(scene, /mask-repeat:\s*no-repeat/);
   for (const w of WORLDS) {
-    // The band is width * ratio tall; the reserved padding must cover it.
-    assert.ok(Number(pad[1]) / 100 >= artRatio('--world-scene', w) - 1e-9,
-      `${w.id}: the scene is ${(artRatio('--world-scene', w) * 100).toFixed(0)}% of the width but only ${pad[1]}% is reserved`);
+    const ratio = artRatio('--world-scene', w);
+    assert.ok(Number(pad[1]) / 100 >= ratio - 1e-9,
+      `${w.id}: the scene is ${(ratio * 100).toFixed(0)}% of the width but only ${pad[1]}% is reserved`);
+    assert.ok(Number(pad[2]) >= Number(size[1]) * ratio - 1e-9,
+      `${w.id}: the scene caps at ${(Number(size[1]) * ratio).toFixed(0)}px tall but only ${pad[2]}px is reserved`);
   }
 });
 
