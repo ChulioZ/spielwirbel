@@ -98,7 +98,7 @@ test('the round-level actions are gone from the Regal, which keeps its archives'
   dom.call('renderRegalTab', roundFixture(), roundFixture().games);
   const found = labels(dom.app);
 
-  assert.ok(!found.includes('Spiele verschieben'), `"Spiele verschieben" is back under the game grid (#561): ${found}`);
+  assert.ok(!found.includes('Spiele verschieben oder kopieren'), `"Spiele verschieben oder kopieren" is back under the game grid (#561): ${found}`);
   assert.ok(!found.includes('Einladen'), `"Einladen" is back under the game grid (#561): ${found}`);
   // Anti-vacuous: the archives must still be REACHABLE from the Regal. Without
   // this the two assertions above pass just as happily against a tab that
@@ -126,7 +126,7 @@ test('the Chronik carries no round deletion, and still renders its timeline', (t
 test('the settings screen offers all three actions it took over', async (t) => {
   const dom = await settingsScreen(t);
   const found = labels(dom.app);
-  for (const action of ['Spiele verschieben', 'Einladen', 'Diese Runde löschen']) {
+  for (const action of ['Spiele verschieben oder kopieren', 'Einladen', 'Diese Runde löschen']) {
     assert.ok(found.includes(action), `the settings screen is missing "${action}": ${found}`);
   }
 });
@@ -141,7 +141,7 @@ test('a grantee is offered none of the owner-only actions, and leaves instead', 
   const owner = labels((await settingsScreen(t)).app);
   const grantee = labels((await settingsScreen(t, { shared: true })).app);
 
-  for (const ownerOnly of ['Spiele verschieben', 'Einladen', 'Diese Runde löschen']) {
+  for (const ownerOnly of ['Spiele verschieben oder kopieren', 'Einladen', 'Diese Runde löschen']) {
     assert.ok(!grantee.includes(ownerOnly), `a grantee is offered "${ownerOnly}", which the route 403s: ${grantee}`);
   }
   assert.ok(grantee.includes('Runde verlassen'), `a grantee cannot leave the round: ${grantee}`);
@@ -154,7 +154,7 @@ test('a round with an empty shelf offers no move-games action', async (t) => {
   // The other half of the move-games gate (`round.games.length && !round.shared`),
   // which the shared/owner pair above cannot distinguish on its own.
   const found = labels((await settingsScreen(t, { games: [] })).app);
-  assert.ok(!found.includes('Spiele verschieben'), `an empty shelf still offers "Spiele verschieben": ${found}`);
+  assert.ok(!found.includes('Spiele verschieben oder kopieren'), `an empty shelf still offers "Spiele verschieben oder kopieren": ${found}`);
   assert.ok(found.includes('Diese Runde löschen'), 'the empty-shelf round lost its delete action, so the assertion above is vacuous');
 });
 
@@ -185,7 +185,7 @@ test('the rail settings group is a single Einstellungen entry', () => {
   for (const [needle, what] of [
     [/roundPath\(rid, 'tags'\)/, 'Tags'],
     [/roundPath\(rid, 'design'\)/, 'Design'],
-    [/showMoveGames\(/, 'Spiele verschieben'],
+    [/showTransferGames\(/, 'Spiele verschieben oder kopieren'],
     [/showInvite\(/, 'Einladen'],
   ]) {
     assert.doesNotMatch(rail, needle, `the rail duplicates "${what}", which lives inside the settings screen (#581)`);

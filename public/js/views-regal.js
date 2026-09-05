@@ -139,7 +139,7 @@ function renderRegalTab(round, activeGames) {
       const n = selection.size;
       bulkCount.textContent = tn(n, 'bulk.selectedOne', 'bulk.selected');
       // „Alle auswählen" until everything currently SHOWN is on, then „Auswahl
-      // aufheben" — showMoveGames' semantics, not the tag chips' (#723). The two
+      // aufheben" — showTransferGames' semantics, not the tag chips' (#723). The two
       // differ deliberately; see the comment on core.js's bulk toggle.
       const allShown = shownCards.length > 0 && shownCards.every((c) => selection.has(c.dataset.gid));
       bulkAll.textContent = allShown ? t('bulk.selectNone') : t('bulk.selectAll');
@@ -209,7 +209,7 @@ function renderRegalTab(round, activeGames) {
 
     // Both actions send the explicit id list the user just confirmed a count
     // for — never an "everything" shortcut, which could pick up a game added
-    // from another device since the mode was entered (showMoveGames' reasoning).
+    // from another device since the mode was entered (showTransferGames' reasoning).
     async function runBulk(act) {
       const ids = [...selection];
       if (!ids.length) return;

@@ -3,7 +3,7 @@
 /* The bulk toggle above the tri-state tag chips (#723), on both screens that
    carry the filter: the session setup screen and the Regal.
  *
- * The rule under test is deliberately NOT `showMoveGames`'s select-all/none.
+ * The rule under test is deliberately NOT `showTransferGames`'s select-all/none.
  * There the question is "is everything on?"; here it is "is there any filter to
  * clear?", so a MIXED state (2 included, 1 excluded) must offer „Alle abwählen"
  * and clear in ONE click. That difference is the whole point of the issue — the
@@ -101,7 +101,7 @@ test('start session: one click clears a MIXED filter', async () => {
   chips[1].click(); chips[1].click();     // ignore -> include -> exclude
   assert.deepEqual(chipsOf(field).map(stateOf), ['include', 'exclude', 'ignore']);
   assert.equal(bulk.textContent, 'Alle abwählen',
-    'a mixed state offers the CLEAR action — this is the divergence from showMoveGames');
+    'a mixed state offers the CLEAR action — this is the divergence from showTransferGames');
 
   bulk.click();
   assert.deepEqual(chipsOf(field).map(stateOf), ['ignore', 'ignore', 'ignore']);

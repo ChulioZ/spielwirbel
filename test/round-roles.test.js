@@ -250,6 +250,9 @@ const ACTIONS = {
   'discard an open vote': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}/sessions/${s.openSession.id}`).set(tok),
   'delete a Chronik entry': (s, tok) => request(app).delete(`/api/rounds/${s.round.id}/activities/${s.activity.id}`).set(tok),
   'move games out': (s, tok) => request(app).post(`/api/rounds/${s.round.id}/games/move-to`).set(tok).send({ targetRoundId: 'anywhere' }),
+  // Copying destroys nothing, and is owner-only anyway: the hole #411 closed is
+  // the TARGET round, which a copy reaches just as freely as a move (#916).
+  'copy games out': (s, tok) => request(app).post(`/api/rounds/${s.round.id}/games/copy-to`).set(tok).send({ targetRoundId: 'anywhere' }),
   'relink a seat': (s, tok) => request(app).patch(`/api/rounds/${s.round.id}/members/${s.seat.id}`).set(tok).send({ userId: null }),
   // Ordinary writes — the editor's actual remit, and the half that proves the
   // refusals above are a role decision rather than a blanket lockout.
@@ -269,6 +272,7 @@ const MATRIX = {
     'discard an open vote': true,
     'delete a Chronik entry': false,
     'move games out': false,
+    'copy games out': false,
     'relink a seat': false,
     'add a game': true,
     'rename a member': true,
@@ -285,6 +289,7 @@ const MATRIX = {
     // Owner-only for EVERY grantee role: #411's hole, and the seat-link desync.
     // Neither is about trust, so promoting someone does not open them.
     'move games out': false,
+    'copy games out': false,
     'relink a seat': false,
     'add a game': true,
     'rename a member': true,
@@ -394,6 +399,7 @@ test('a mutating round route the table does not name is refused for a grantee', 
   // than a matcher that never matches anything.
   assert.equal(capabilityFor('DELETE', '/'), 'round.delete');
   assert.equal(capabilityFor('POST', '/games/move-to'), 'games.moveOut');
+  assert.equal(capabilityFor('POST', '/games/copy-to'), 'games.copyOut');
   assert.equal(capabilityFor('POST', '/games/x/retire'), 'round.write');
   // The FLOOR for deleting a session is the editor-level discard (#857); the
   // handler narrows to 'session.delete' for a played one, which no table keyed
@@ -448,9 +454,11 @@ test('#411 stays closed: no grantee role can name a second round in the body', a
     // re-scoped repo would happily resolve if the guard were missing.
     const other = (await request(app).post('/api/rounds').set(auth(s.owner.token))
       .send({ name: 'Privat', members: ['Owner'] })).body;
-    const res = await request(app).post(`/api/rounds/${s.round.id}/games/move-to`)
-      .set(auth(s.grantee.token)).send({ targetRoundId: other.id });
-    assert.equal(res.status, 403);
+    for (const verb of ['move-to', 'copy-to']) {
+      const res = await request(app).post(`/api/rounds/${s.round.id}/games/${verb}`)
+        .set(auth(s.grantee.token)).send({ targetRoundId: other.id });
+      assert.equal(res.status, 403, verb);
+    }
     // And nothing moved.
     const still = await request(app).get(`/api/rounds/${s.round.id}`).set(auth(s.owner.token));
     assert.equal(still.body.games.length, 1);

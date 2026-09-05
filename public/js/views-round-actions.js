@@ -1,15 +1,26 @@
 /* Spielwirbel – views: the two round-level sheets the Einstellungen screen
-   opens — "Spiele verschieben" (#253/#402) and "Einladen" (#207/#466).
+   opens — "Spiele verschieben oder kopieren" (#253/#402/#916) and "Einladen"
+   (#207/#466).
    showRoundSettings (views-round-settings.js) is their only caller; they live
    apart from it because a sheet and the screen listing it are independently
    editable (.claude/rules/token-friendly-source-files.md).
    Part of the frontend; all files share one global script scope. */
 
 // Move games of this round into another of the user's rounds (#253), either the
-// whole shelf or a selection (#402). The target list is fetched BEFORE the sheet
-// opens, so it never renders an empty picker or a loading state — a user with
-// only this one round gets a plain explanation instead.
-async function showMoveGames(round) {
+// whole shelf or a selection (#402) — or COPY them there instead (#916), which
+// leaves this shelf untouched and lands fresh rows on the target's.
+//
+// One sheet with a mode toggle rather than two, because everything except the
+// verb is shared: the picker, select-all/none, and the target dropdown. The two
+// modes differ in what they promise, so every string the user reads is swapped
+// with the mode — a copy that says „verschieben" anywhere would be describing a
+// destructive act it does not perform.
+//
+// The target list is fetched BEFORE the sheet opens, so it never renders an empty
+// picker or a loading state — a user with only this one round gets a plain
+// explanation instead. The target's own SHELF is fetched lazily and only in copy
+// mode; see the duplicate flagging below.
+async function showTransferGames(round) {
   let rounds;
   try {
     rounds = await fetchRoundList({ rerender: false });
@@ -19,10 +30,12 @@ async function showMoveGames(round) {
   }
   const others = rounds.filter((r) => r.id !== round.id);
   const n = round.games.length;
+  let mode = 'move';
 
-  // Archived games move too, so they are listed — but labelled, since they are
-  // invisible on the Regal the user is looking at and would otherwise be a
-  // surprise in the count.
+  // Archived games transfer too, so they are listed — but labelled, since they
+  // are invisible on the Regal the user is looking at and would otherwise be a
+  // surprise in the count. A copy keeps the state, so the label stays true on
+  // the other side.
   const stateOf = (g) =>
     g.retired ? t('retired.crumb')
       : g.completed ? t('completed.crumb')
@@ -32,17 +45,22 @@ async function showMoveGames(round) {
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog sheet--list" role="dialog" aria-modal="true" aria-label="${esc(t('moveGames.title'))}">
         <div class="sheet__head">
-          <h2>${esc(t('moveGames.title'))}</h2>
+          <h2 id="transferTitle">${esc(t('moveGames.title'))}</h2>
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         ${others.length
-          ? `<p class="muted">${esc(tn(n, 'moveGames.introOne', 'moveGames.intro'))}</p>
+          ? `<div class="transfer-modes" role="group" aria-label="${esc(t('transferGames.mode'))}">
+               <button type="button" class="chip is-on" data-mode="move" aria-pressed="true"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${esc(t('transferGames.modeMove'))}</button>
+               <button type="button" class="chip" data-mode="copy" aria-pressed="false"><i class="ti ti-copy" aria-hidden="true"></i> ${esc(t('transferGames.modeCopy'))}</button>
+             </div>
+             <p class="muted" id="transferIntro">${esc(tn(n, 'moveGames.introOne', 'moveGames.intro'))}</p>
              <div class="field">
-               <label for="moveTarget">${esc(t('moveGames.pick'))}</label>
+               <label for="moveTarget" id="transferPick">${esc(t('moveGames.pick'))}</label>
                <select id="moveTarget" class="input">
                  ${others.map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}
                </select>
              </div>
+             <p class="muted transfer-dup-hint" id="transferDupHint" hidden>${esc(t('copyGames.dupHint'))}</p>
              <div class="move-picker">
                <div class="move-list__head">
                  <span id="moveCount" class="muted" aria-live="polite"></span>
@@ -55,6 +73,7 @@ async function showMoveGames(round) {
                      <div class="ds-row__main">
                        <span class="move-row__name" title="${esc(g.title)}">${esc(g.title)}</span>
                        ${state ? `<span class="muted move-row__state">${esc(state)}</span>` : ''}
+                       <span class="muted move-row__dup" hidden>${esc(t('copyGames.dupFlag'))}</span>
                      </div>
                      <div class="ds-row__meta">
                        <input type="checkbox" class="provider-row__box" value="${esc(g.id)}" checked />
@@ -64,9 +83,9 @@ async function showMoveGames(round) {
                </div>
              </div>
              <div class="toolbar sheet__actions">
-               <button id="moveGo" class="btn btn--primary btn--lg"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${esc(t('moveGames.submit'))}</button>
+               <button id="moveGo" class="btn btn--primary btn--lg"><i class="ti ti-arrow-right" aria-hidden="true"></i> <span id="transferSubmit">${esc(t('moveGames.submit'))}</span></button>
              </div>`
-          : `<p class="muted">${esc(t('moveGames.empty'))}</p>`}
+          : `<p class="muted">${esc(t('transferGames.empty'))}</p>`}
       </div>
     </div>`);
   const form = backdrop.querySelector('.sheet');
@@ -82,8 +101,11 @@ async function showMoveGames(round) {
   if (!go) return;
 
   const boxes = [...form.querySelectorAll('.move-row input')];
+  const rows = [...form.querySelectorAll('.move-row')];
   const countEl = form.querySelector('#moveCount');
   const toggle = form.querySelector('#moveToggle');
+  const select = form.querySelector('#moveTarget');
+  const dupHint = form.querySelector('#transferDupHint');
   const picked = () => boxes.filter((b) => b.checked).map((b) => b.value);
   // The toggle offers whichever action is still available: "select all" once
   // anything is unchecked, "clear" while everything is on.
@@ -99,37 +121,124 @@ async function showMoveGames(round) {
     boxes.forEach((b) => { b.checked = !all; });
     sync();
   });
+
+  // Which of this round's games the CHOSEN TARGET already has by title. Fetched
+  // from the target round rather than reported back by the route, because the
+  // flag has to be visible while the user still has a choice — a "we skipped
+  // these" answer after the fact cannot be argued with, and the picker's whole
+  // job is letting them tick one back on.
+  //
+  // Same trimmed, case-insensitive rule tags merge by, so „catan" and „Catan"
+  // are one game to the eye and to this flag. fetchRound is SWR-cached, so
+  // flipping between two targets costs one request each, not one per flip.
+  const norm = (s) => (s || '').trim().toLowerCase();
+  const dupCache = new Map();
+  let dupToken = 0;
+  const clearDupes = () => {
+    rows.forEach((row) => { row.querySelector('.move-row__dup').hidden = true; });
+    dupHint.hidden = true;
+  };
+  async function markDuplicates() {
+    const token = ++dupToken;
+    const targetId = select.value;
+    if (mode !== 'copy' || !targetId) { clearDupes(); return; }
+    if (!dupCache.has(targetId)) {
+      try {
+        const target = await fetchRound(targetId);
+        dupCache.set(targetId, new Set((target.games || []).map((g) => norm(g.title))));
+      } catch {
+        // A failed lookup flags nothing rather than blocking the copy: the round
+        // is allowed to end up with two identically-titled games, so the flag is
+        // an aid, never a gate.
+        dupCache.set(targetId, new Set());
+      }
+    }
+    // A slower answer for a target the user has already moved off must not
+    // repaint the picker under them.
+    if (token !== dupToken || mode !== 'copy') return;
+    const have = dupCache.get(targetId);
+    let any = false;
+    rows.forEach((row, i) => {
+      const dup = have.has(norm(round.games[i].title));
+      row.querySelector('.move-row__dup').hidden = !dup;
+      if (dup) { boxes[i].checked = false; any = true; }
+    });
+    dupHint.hidden = !any;
+    sync();
+  }
+
+  // Every string the user reads swaps with the mode. The submit icon swaps too —
+  // an arrow on a copy would say the games are leaving.
+  const applyMode = () => {
+    const copy = mode === 'copy';
+    const title = t(copy ? 'copyGames.title' : 'moveGames.title');
+    form.setAttribute('aria-label', title);
+    form.querySelector('#transferTitle').textContent = title;
+    form.querySelector('#transferIntro').textContent =
+      tn(n, copy ? 'copyGames.introOne' : 'moveGames.introOne', copy ? 'copyGames.intro' : 'moveGames.intro');
+    form.querySelector('#transferPick').textContent = t(copy ? 'copyGames.pick' : 'moveGames.pick');
+    form.querySelector('#transferSubmit').textContent = t(copy ? 'copyGames.submit' : 'moveGames.submit');
+    go.querySelector('.ti').className = `ti ${copy ? 'ti-copy' : 'ti-arrow-right'}`;
+    form.querySelectorAll('.transfer-modes .chip').forEach((chip) => {
+      const on = chip.dataset.mode === mode;
+      chip.classList.toggle('is-on', on);
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    markDuplicates();
+  };
+  form.querySelectorAll('.transfer-modes .chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      if (chip.dataset.mode === mode) return;
+      mode = chip.dataset.mode;
+      applyMode();
+    });
+  });
+  // Switching target re-asks; switching back to move only clears the flags and
+  // deliberately leaves the ticks alone — an auto-untick is a narrowing the user
+  // can see, and silently re-ticking would undo their own choices with it.
+  select.addEventListener('change', markDuplicates);
   sync();
 
   go.addEventListener('click', async () => {
-    const select = form.querySelector('#moveTarget');
     const targetId = select.value;
     const targetName = (others.find((r) => r.id === targetId) || {}).name || '';
     const ids = picked();
     if (!ids.length) return;
-    // Only warn about history when a selected game actually carries any: a
-    // shelf-tidying move of never-played games loses nothing, and a warning
-    // that cries wolf gets clicked through.
-    const chosen = new Set(ids);
-    const touchesHistory = (round.sessions || []).some((s) => (s.gameIds || []).some((x) => chosen.has(x)));
-    const msg = touchesHistory
-      ? tn(ids.length, 'moveGames.confirmOne', 'moveGames.confirm', { round: targetName })
-      : tn(ids.length, 'moveGames.confirmPlainOne', 'moveGames.confirmPlain', { round: targetName });
+    const copy = mode === 'copy';
+    // A copy touches no history at all, so it never needs the move's warning —
+    // its confirm just names the count and the round.
+    let msg;
+    if (copy) {
+      msg = tn(ids.length, 'copyGames.confirmOne', 'copyGames.confirm', { round: targetName });
+    } else {
+      // Only warn about history when a selected game actually carries any: a
+      // shelf-tidying move of never-played games loses nothing, and a warning
+      // that cries wolf gets clicked through.
+      const chosen = new Set(ids);
+      const touchesHistory = (round.sessions || []).some((s) => (s.gameIds || []).some((x) => chosen.has(x)));
+      msg = touchesHistory
+        ? tn(ids.length, 'moveGames.confirmOne', 'moveGames.confirm', { round: targetName })
+        : tn(ids.length, 'moveGames.confirmPlainOne', 'moveGames.confirmPlain', { round: targetName });
+    }
     if (!confirm(msg)) return;
     go.disabled = true;
     try {
       // Send the explicit selection even when everything is checked — the count
-      // the user just confirmed is then exactly what the server moves, with no
-      // "all" shortcut that could pick up a game added from another device
+      // the user just confirmed is then exactly what the server transfers, with
+      // no "all" shortcut that could pick up a game added from another device
       // since the sheet opened.
-      const res = await api('POST', `/api/rounds/${round.id}/games/move-to`, { targetRoundId: targetId, gameIds: ids });
-      toast(tn(res.movedGames, 'moveGames.toast.doneOne', 'moveGames.toast.done'));
+      const path = `/api/rounds/${round.id}/games/${copy ? 'copy-to' : 'move-to'}`;
+      const res = await api('POST', path, { targetRoundId: targetId, gameIds: ids });
+      toast(copy
+        ? tn(res.copiedGames, 'copyGames.toast.doneOne', 'copyGames.toast.done')
+        : tn(res.movedGames, 'moveGames.toast.doneOne', 'moveGames.toast.done'));
       closeSheet(() => showRound(round.id, 'regal'));
     } catch (e) {
       go.disabled = false;
+      const ns = copy ? 'copyGames' : 'moveGames';
       const msg2 =
-        e.message === 'quota_games' ? t('moveGames.toast.quotaGames')
-          : e.message === 'quota_tags' ? t('moveGames.toast.quotaTags')
+        e.message === 'quota_games' ? t(`${ns}.toast.quotaGames`)
+          : e.message === 'quota_tags' ? t(`${ns}.toast.quotaTags`)
             : e.message;
       toast(msg2);
     }

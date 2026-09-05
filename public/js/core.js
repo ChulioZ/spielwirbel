@@ -501,7 +501,7 @@ function renderTagModeToggle(state, map, onChange) {
 // setup screen and in the Regal, which share the chips through the two helpers
 // above and so must share this too.
 //
-// Its rule is NOT `showMoveGames`'s select-all/none, on purpose: there the
+// Its rule is NOT `showTransferGames`'s select-all/none, on purpose: there the
 // useful question is "is everything on?", here it is "is there any filter to
 // clear?". So any non-empty map — including a mixed 2-included/1-excluded one —
 // offers the clear action, which makes wiping a #252 preset one click instead of

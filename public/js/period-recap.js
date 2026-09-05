@@ -65,6 +65,10 @@ const playedSessions = (round) => (round.sessions || []).filter((s) => s.finishe
 // off the active list, and folding the two together would make one number mean
 // two different things.
 //
+// `games_copied_in` (#916) counts for the identical reason. `games_copied_out`
+// is in no bucket either, and here that is not even a judgement call: nothing
+// left the source shelf, so a copy out changed none of the three numbers.
+//
 // `game_restored`/`game_uncompleted` do not decrement. The card is a record of
 // what happened in the period, not a net delta — a game retired in July and
 // restored in August is one event in each month, not zero in both.
@@ -72,6 +76,7 @@ const SHELF_EVENTS = {
   game_added: { field: 'added', n: 1 },
   games_imported: { field: 'added', count: true },
   games_moved_in: { field: 'added', count: true },
+  games_copied_in: { field: 'added', count: true },
   game_retired: { field: 'retired', n: 1 },
   games_retired: { field: 'retired', count: true },
   game_completed: { field: 'completed', n: 1 },

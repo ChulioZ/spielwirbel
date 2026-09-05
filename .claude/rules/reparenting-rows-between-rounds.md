@@ -2,6 +2,7 @@
 paths:
   - "lib/repo/**"
   - "lib/routes/games.js"
+  - "public/js/views-round-actions.js"
   - "test/support/repo-contract.js"
 ---
 
@@ -113,3 +114,41 @@ shelf has no undo.
   grantee `403 not_owner` before it looks anything up. That guard is what stops a
   grantee reparenting the shelf into a round of the owner's they were never
   invited to; see `.claude/rules/round-grant-resolver.md` §2.
+
+## `copyGames` is a SIBLING, not a mode (#916)
+
+The copy that leaves the source shelf alone is its own route
+(`POST …/games/copy-to`), repo method and capability (`games.copyOut`). Four
+things about that split are load-bearing:
+
+- **The risky half is not shared.** The session scrub, vote deletion and `seq`
+  re-minting above are the parts that can lose data, and a copy needs none of
+  them; a `mode` flag would have put it inside the one function whose bugs
+  destroy history. What *is* shared is what both genuinely answer alike:
+  `mergeTagsInto` (`lib/repo/import-copy.js`) holds the find-or-create remap for
+  both backends and both verbs.
+- **`copyGame` differs from `importGame` by exactly one thing: it KEEPS the shelf
+  state.** The round-creation import starts an empty round, so everything it
+  carries belongs on the active shelf; a copy answers „we have these here too",
+  and the picker offers archived and wished rows. Reviving them silently would
+  make the sheet lie about what it just did, and a revived wish would claim the
+  target round owns a box nobody has bought.
+- **Owner-only for the move's reason, which is the TARGET round and not the
+  source:** a grant re-scopes the request to the owner's whole tenant
+  (`.claude/rules/round-grant-resolver.md`), so a grantee clearing this could
+  write games into any round of the owner's they were never invited to. „It
+  destroys nothing" is not an argument for widening it.
+- **`games_copied_out` is in NEITHER period-recap bucket**, and unlike
+  `games_moved_out` that is not a judgement call: *nothing left*. Only
+  `games_copied_in` is shelf growth.
+
+**The duplicate flag needs the TARGET's shelf, which the sheet does not hold** —
+`fetchRoundList` gives the round list, not their games — so `showTransferGames`
+(`public/js/views-round-actions.js`, renamed from `showMoveGames` when it stopped
+being move-only) fetches the chosen target with `fetchRound` on change, in copy
+mode only. Having the route report skipped titles instead was rejected: the flag
+must be visible while the user still has a choice, and the picker's job is
+letting them tick one back on. Two identically-titled games on one shelf stays
+**allowed** (`test/games-copy.test.js` pins that the server does not dedupe by
+title behind the picker's back), so the flag is an aid and never a gate — a
+failed lookup flags nothing rather than blocking the copy.

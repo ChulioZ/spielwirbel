@@ -278,6 +278,25 @@ test('a move OUT and a deletion are neither retired nor completed', () => {
   assert.deepEqual({ added: rec.added, retired: rec.retired, completed: rec.completed }, { added: 1, retired: 0, completed: 0 });
 });
 
+/* A copy IN is shelf growth like a move in — those games are on this shelf now.
+   A copy OUT is in no bucket at all, and unlike a move out that is not even a
+   judgement call: nothing left the source shelf, so it changed none of the three
+   numbers. Both arms are asserted, because a mapping that counted the copy out
+   as growth would still pass a test that only looked at the copy in. */
+test('a copy IN is shelf growth; a copy OUT changes nothing (#916)', () => {
+  const r = round({ sessions: [] });
+  const rec = periodRecap(r, [
+    { type: 'games_copied_in', at: at(2026, 7, 4), count: 5, roundName: 'Andere' },
+    { type: 'games_copied_out', at: at(2026, 7, 5), count: 9, roundName: 'Andere' },
+  ], month('2026-07'), deps);
+  assert.deepEqual({ added: rec.added, retired: rec.retired, completed: rec.completed },
+    { added: 5, retired: 0, completed: 0 });
+
+  // On its own, a copy out is not even a period worth offering.
+  assert.deepEqual(periodsOf(round({ sessions: [] }),
+    [{ type: 'games_copied_out', at: at(2026, 7, 5), count: 9, roundName: 'Andere' }]), []);
+});
+
 test('an activity type the recap does not count still never creates a period', () => {
   const r = round({ sessions: [] });
   const acts = [{ type: 'round_renamed', at: at(2026, 7, 3), name: 'Neu' }];

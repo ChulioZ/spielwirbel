@@ -8,7 +8,7 @@
  * A false negative drops the "they disappear from session history" sentence off
  * a deletion that really does erase history; a false positive puts it on every
  * shelf tidy, and a warning that cries wolf is one people learn to click
- * through (the reasoning showMoveGames' own confirm split was built on).
+ * through (the reasoning showTransferGames' own confirm split was built on).
  */
 
 const { test } = require('node:test');
