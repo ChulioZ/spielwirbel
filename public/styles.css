@@ -82,7 +82,19 @@
   --brand-tint-soft: color-mix(in oklab, var(--brand) 7%, var(--surface));  /* very light accent surfaces */
   --brand-edge: color-mix(in oklab, var(--brand) 32%, var(--surface));      /* borders of accent surfaces */
   --page-glow: color-mix(in oklab, var(--brand) 7%, transparent);           /* soft halo at the page top */
-  --placeholder: color-mix(in oklab, var(--page-bg), var(--shade) 18.5%);           /* fallback icons on image areas */
+  /* The fallback GLYPH/hairline tone: the state icon on an empty image box, the
+     dashed edge of a guest avatar or chip, the stand-in lines on a theme card.
+     All three are non-text graphics carrying meaning, so 3:1 (SC 1.4.11) is the
+     floor, not AA text contrast — and at 18.5% none of them cleared it: the
+     glyph measured 1.58:1 on its --sunken box on a light design and 1.44:1 on a
+     dark one, i.e. barely a smudge either way (#938). 45% clears 3:1 on every
+     shipped design against all three of its backgrounds, worst case 3.23:1;
+     test/a11y-contrast.test.js measures it so a retune cannot quietly drop back.
+
+     NOT the tone of a coverless GAME cover — since #256 those boxes get a
+     .cover-ph gradient layer that brings its own colour, so this token never
+     paints there however much the surrounding rules look like it does. */
+  --placeholder: color-mix(in oklab, var(--page-bg), var(--shade) 45%);
 
   /* The finale stage: a dark "curtain" tinted with the accent, so it matches
      every theme. --stage-bg keeps 18%: it mixes into a dark anchor rather than
@@ -6795,9 +6807,11 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   /* --ink-soft, not --placeholder: this is real TEXT, and --placeholder is a
-     fallback GLYPH tone (18.5% off the page) that measured 1.07:1 here on a
-     light design — the label was all but invisible. Found by the #904 contrast
-     sweep, where the dark scheme happened to make it BETTER (1.58:1). */
+     fallback GLYPH tone — then 18.5% off the page — that measured 1.07:1 here
+     on a light design; the label was all but invisible. Found by the #904
+     contrast sweep, where the dark scheme happened to make it BETTER (1.58:1).
+     #938 has since taken the token to 45%, which is comfortably visible but
+     still short of AA for text; the rule stands on what the token is FOR. */
   color: var(--ink-soft);
 }
 .result-people__list { display: flex; flex-wrap: wrap; gap: 6px 14px; }
