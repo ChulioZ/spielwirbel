@@ -85,9 +85,9 @@ them were failing on light designs the whole time:
   `font: inherit` with no `color`, and the account menu rendered black on a dark
   surface at 1.40:1. `font: inherit` is the tell, and `test/a11y-contrast.test.js`
   now pins it.
-- **`--placeholder` was painting real text.** It is a fallback GLYPH tone, 18.5%
-  off the page; `.result-people__label` measured **1.07:1 on a light design** and
-  1.58 on dark, i.e. the dark scheme made it *better*.
+- **`--placeholder` was painting real text.** It is a fallback GLYPH tone — then
+  18.5% off the page, 45% since #938; `.result-people__label` measured **1.07:1
+  on a light design** and 1.58 on dark, i.e. the dark scheme made it *better*.
 - **A minted mix instead of a prepared one.** `.score-pill--none` spelled its own
   8% tone and put `--ink-soft` at 4.15:1 on the default design; `--sunken` (4%)
   is the pair the harness already measures.
@@ -99,10 +99,22 @@ back as `oklab(…)`, and a regex over that string silently reads the L/a/b numb
 as RGB — it reported a passing avatar at 1.18:1), and compare against 4.5 / 3.
 Nothing in jsdom can run it, so it stays a browser step rather than a spec.
 
-Two hits are decorative and deliberately left: the gold seal's white lock glyph
-(2.45:1) and the empty-cover placeholder glyph (1.48 dark / 1.05 light). Both are
-`aria-hidden` and both measure the same or better on dark, so neither is this
-change's to make.
+Two hits were decorative and deliberately left: the gold seal's white lock glyph
+(2.45:1, still open as #937) and the empty-cover placeholder glyph. Both are
+`aria-hidden`, so neither was this change's to make.
+
+**The placeholder figures recorded here were wrong, and #938 inherited them.**
+This paragraph read "1.48 dark / 1.05 light" and concluded the dark scheme fared
+better. The real pair, resolved through `test/support/theme.js` below rather than
+sampled off the page, is **1.58:1 light / 1.44–1.47:1 dark** — the light case is
+the better one — and the 1.05 does not correspond to any token pair on Standard.
+The cause is that a rendered-page sweep reads *whatever is painted*, and on a
+coverless game box that is `.cover-ph`'s gradient, not `--placeholder` at all:
+`.claude/rules/cover-ph-owns-the-coverless-game-glyph.md`. Prefer the resolver
+for any claim about a token; keep the page sweep for finding *which* elements to
+look at. (#938 has since taken the token to 45% and pinned it with a spec — a
+token-PAIR check is perfectly expressible without jsdom; only the page walk is
+not.)
 
 ## What the harness had to become
 

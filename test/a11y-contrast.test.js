@@ -465,11 +465,16 @@ test('no bare white is painted outside the rules that justify one', () => {
     'a bare white must be tokenised (--surface / --on-accent) or added to WHITE_EXEMPT with a reason');
 });
 
-/* `--placeholder` is a fallback GLYPH tone — 18.5% off the page, for the icon in
-   an empty cover box — and it is far too faint to read: on a light design it
-   measures 1.07:1 against the card. `.result-people__label` had been drawing the
-   results screen's „TEILGENOMMEN" line in it, i.e. all but invisible, and the
-   dark scheme is what surfaced it (there it is 1.58:1, which is *better*).
+/* `--placeholder` is a fallback GLYPH tone — the icon on an empty image box, and
+   nothing that is read as prose. `.result-people__label` had been drawing the
+   results screen's „TEILGENOMMEN" line in it, i.e. all but invisible (1.07:1 on
+   a light design), and the dark scheme is what surfaced it.
+
+   #938 took the token from 18.5% to 45%, so „far too faint to read" is no longer
+   why this rule holds — at 45% it still falls short of AA for text (3.23:1 worst
+   case against --surface, against a 4.5 bar), and the rule now stands on what the
+   token is FOR rather than on how invisible it happens to be. Keep it that way:
+   a future retune that did clear 4.5 would still be the wrong tone for a label.
 
    The exemptions are the boxes the token is actually for. Each must still be a
    glyph container, never a run of text. */
@@ -484,7 +489,36 @@ test('--placeholder paints glyph boxes, never text', () => {
     .map(([sel]) => sel.replace(/\s+/g, ' ').trim())
     .filter((sel) => !PLACEHOLDER_GLYPHS.has(sel));
   assert.deepEqual(offenders, [],
-    '--placeholder is ~1.1:1 against the card — text needs --ink-soft');
+    '--placeholder is a glyph/hairline tone below AA for text — labels need --ink-soft');
+});
+
+/* The other half of the same token: it must be VISIBLE where it does paint.
+
+   At 18.5% it was not — a state icon on its --sunken box measured 1.58:1 on a
+   light design and 1.44:1 on a dark one, so an empty session/feed/lookup box
+   read as blank rather than as "no picture here", and a guest chip's dashed edge
+   barely registered as an edge (#938).
+
+   Everything the token paints is a NON-TEXT graphic that carries meaning — a
+   state glyph, the dashed boundary that marks a guest, the stand-in lines on a
+   theme card — so the bar is SC 1.4.11's 3:1, not AA text contrast. The four
+   backgrounds are the ones its nine call sites actually land on: --sunken (the
+   five image boxes, .avatar--guest, the guest add button), --sunken-soft
+   (.guest-chip), and --surface / --page-bg (.theme-card__line, which declares no
+   background of its own and shows whichever sits behind the picker).
+
+   Measured per design rather than pinned as a percentage, so a new design whose
+   page sits differently against --shade fails here instead of shipping a glyph
+   nobody can see. */
+test('--placeholder clears the 3:1 non-text bar wherever it paints', () => {
+  const failures = sweep((t) => [
+    ['glyph / dashed edge on --sunken', t.placeholder, t.sunken],
+    ['dashed edge on --sunken-soft', t.placeholder, t.sunkenSoft],
+    ['theme-card line on --surface', t.placeholder, t.surface],
+    ['theme-card line on --page-bg', t.placeholder, t.page],
+  ], AA_LARGE);
+  assert.deepEqual(failures, [],
+    '--placeholder is a meaningful non-text graphic — SC 1.4.11 wants 3:1');
 });
 
 test('no --placeholder exemption is stale', () => {
