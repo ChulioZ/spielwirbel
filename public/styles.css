@@ -914,14 +914,38 @@ h1, h2, h3 { font-family: var(--font-display); }
 /* Quieter secondary tasks under the launchpad content. */
 .hub-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
 
-/* ---- The Start tab's card grid (#923) ----
+/* ---- The Start tab's card flow (#923, #942) ----
 
-   `auto-fill`, NOT `auto-fit`, and the choice is the opposite of the one
-   `.home-resume__list` makes. There, one ticket SHOULD span the pane; here a
-   lone card ballooning to 1400px of a mostly-empty box reads as a layout bug —
-   these are small modules whose content is a few short rows, so an empty track
-   beside one of them is correct (.claude/rules/auto-fit-collapses-only-empty-tracks.md
-   documents the same fact from the other side).
+   A COLUMN FLOW, not a grid, and that is the whole point. These cards are
+   heterogeneous by design — one suggestion row or three, a twelve-bar chart, a
+   two-line anniversary — and grid places in ROWS, so the tallest card in a row
+   holds every short neighbour's successor down with it. `align-self: start`
+   stopped the short card stretching, but the space it saved inside the card
+   reappeared as a dead band between the rows. Multicol packs instead: a card
+   takes its own height and the next one starts directly under it.
+
+   `columns: 280px` keeps the old floor AND the old `auto-fill` behaviour — a
+   column width fits floor((W + gap) / (280 + gap)) columns, literally the
+   arithmetic `columnsIn` implements — so a lone card still sits at about one
+   column's width instead of ballooning across a mostly-empty 1400px box. That
+   was the reason the grid chose `auto-fill` over `auto-fit`, and it survives
+   the mechanism change; multicol simply has no `auto-fit` to get wrong.
+
+   The vertical spacing is the CARD's margin, not a gap: a multi-column
+   container's `gap` sets the column gap only, and `row-gap` is silently
+   ignored. The trailing margin is then trimmed at a COLUMN BREAK but kept in a
+   single column, so the phone alone would have gained 12px below the last card
+   — zeroed on the last child, which is where the flow ends either way. A
+   negative margin on the container is the wrong instrument: it would cut the
+   26px to `.hub-actions` to 14px at every width that does trim. See
+   .claude/rules/css-multicolumn-card-flows.md for the five ways this fails
+   quietly.
+
+   Reading order is column-major above one column: the cards flow down column 1,
+   then column 2, so left-to-right no longer matches DOM order. Accepted with
+   the operator (#942) — these are independent modules with no narrative
+   sequence between them, so WCAG 1.3.2 holds, and DOM order is untouched, so
+   the phone (one column) still reads action-first.
 
    No media query and no JS width branch: one column on a phone, two or three in
    the wide pane, correct at every width in between, and a resize needs no
@@ -933,9 +957,8 @@ h1, h2, h3 { font-family: var(--font-display); }
    would contribute its own top margin to exactly the young round the whole
    "render nothing when there is nothing to say" rule exists to protect. */
 .hub-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  columns: 280px;
+  column-gap: 12px;
   margin-top: 20px;
 }
 .hub-cards:empty { display: none; }
@@ -944,12 +967,15 @@ h1, h2, h3 { font-family: var(--font-display); }
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 14px 16px;
-  /* The cards carry different amounts of content by nature — one suggestion or
-     three, a pulse chart or a two-line list — so they align at the TOP of their
-     row rather than stretching to the tallest sibling, which would leave the
-     short one holding a pocket of empty surface. */
-  align-self: start;
+  /* Without this a card fragments across the column boundary and its border and
+     background fragment with it — which reads as broken, not as unpacked. */
+  break-inside: avoid;
+  margin-bottom: 12px;
 }
+/* The flow's last card is at the bottom of the last column at every width, so
+   this is the one card whose margin is spacing to nothing. Live, because the
+   recommendations teaser arrives after first paint and becomes the new last. */
+.hub-cards > :last-child { margin-bottom: 0; }
 .hub-card__title {
   margin: 0 0 10px;
   font-size: var(--text-md);
@@ -3243,9 +3269,16 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    second, uneven one on top of it. */
 .home-resume__list .ticket + .ticket { margin-top: 0; }
 
-/* Zone 4 — the dashboard region. Same `auto-fit` reasoning as the resume zone:
-   an account with only one tile gets a full-width tile, not a narrow one
-   stranded on the left.
+/* Zone 4 — the dashboard region. A COLUMN FLOW since #942, for the reason
+   `.hub-cards` is: the three tiles are of very different heights (a feed of
+   however many friends, a panel of numbers, a two-line news link), so in a row
+   grid the short ones held a dead band under them until the tallest ended.
+
+   `columns` reproduces `auto-fill`, never `auto-fit` — so the one thing that
+   does NOT come free is the lone tile, which must span the zone rather than
+   sit stranded ~320px wide against the left edge of an 1800px shell (the #358
+   defect, and the whole reason this zone chose `auto-fit`). `:has(> :only-child)`
+   restores it, and re-evaluates as the async tiles remove themselves.
 
    `:empty` is what keeps the promise that nothing renders when there is nothing
    to render. Two of the three tiles decide ASYNCHRONOUSLY and remove themselves
@@ -3253,12 +3286,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    empty after they have answered — a JS check at append time would be too
    early. `:empty` re-evaluates as they go, and the margin goes with it. */
 .home-dash {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 18px;
-  align-items: start;
+  columns: 320px;
+  column-gap: 18px;
   margin-top: 34px;
 }
+.home-dash:has(> :only-child) { columns: 1; }
 .home-dash:empty { display: none; }
 .dash-tile {
   background: var(--surface);
@@ -3266,7 +3298,12 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   border-radius: var(--radius-lg);
   padding: 16px 18px;
   min-width: 0;
+  break-inside: avoid;
+  margin-bottom: 18px;
 }
+/* See `.hub-cards > :last-child` — same trailing-margin trim, and live for the
+   same reason: two of the three tiles remove themselves asynchronously. */
+.home-dash > :last-child { margin-bottom: 0; }
 /* The tiles' own cards sit inside a tile that already draws a surface, so they
    drop back to the page ground rather than stacking a second panel on it. */
 .dash-tile .stats-card { background: var(--sunken); }
@@ -3447,7 +3484,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .feed-item__report .ti { font-size: var(--text-md); display: block; }
 .feed-item__report:hover { background: var(--sunken); color: var(--ink); }
 /* Home compact section: a heading with a "see all" link, then a few feed rows.
-   Since #842 it is a tile in the `.home-dash` grid, which owns the spacing —
+   Since #842 it is a tile in the `.home-dash` flow, which owns the spacing —
    the standalone top margin it used to carry would offset it inside its row. */
 .dash-tile__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .dash-tile__head h2 { margin: 0; }

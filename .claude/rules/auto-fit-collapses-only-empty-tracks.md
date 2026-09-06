@@ -78,7 +78,26 @@ getComputedStyle(el).gridTemplateColumns   // "693px 693px 0px"  ✅ collapsed
 **`resize_window` FIRST**, or every viewport-dependent read is 0
 (`.claude/rules/preview-pane-paint-artifacts.md`).
 
-**Related:** `.claude/rules/break-the-code-on-purpose.md` (a text assertion that
+## `.home-dash` no longer uses `auto-fit` at all — the guarantee moved (#942)
+
+Everything above still describes `.home-resume__list`, which is unchanged. The
+dashboard zone became a **column flow** (`columns: 320px`) because its three
+tiles are of very different heights, and `column-width` reproduces `auto-fill`,
+never `auto-fit` — so the lone-tile span this file exists for does NOT come
+along. It is restored explicitly:
+
+```css
+.home-dash:has(> :only-child) { columns: 1; }
+```
+
+So when you read "both zone grids use auto-fit" in an older note, that is now one
+grid and one column flow. Losing the `:has()` rule reintroduces the #358 defect
+exactly as dropping `auto-fit` would.
+See `.claude/rules/css-multicolumn-card-flows.md`.
+
+**Related:** `.claude/rules/css-multicolumn-card-flows.md` (when a card container
+should pack instead, and the five ways multicol fails quietly),
+`.claude/rules/break-the-code-on-purpose.md` (a text assertion that
 passes against the broken behaviour is the "merely weaker assertion" case),
 `.claude/rules/responsive-content-width.md` (the `--w-read` cap and its
 exemption), `.claude/rules/css-text-assertions-strip-comments.md`.
