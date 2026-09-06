@@ -831,6 +831,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // way in — the finale, the lobby, the Chronik, a cold load — agree.
   if (!plain && (session.multiTable || isSplitParent(session)))
     return showTableBuilder(round, session, gamesHint);
+  // The round's design, applied HERE and not left to the hub: a results URL is
+  // shared and cold-loaded (session-share.js, showResultsById), and this screen
+  // used to render that visit on the Standard design — no accent, no world,
+  // and since #940 no victory scene on the spotlight a later visit is meant to
+  // show. Idempotent, so the finale's path pays nothing for it.
+  applyBackground(round.background);
   currentView = () => showResults(round, session, gamesHint, false, plain);
   syncUrl(resultsPath(round.id, session.id));
   setContext(round.name);
