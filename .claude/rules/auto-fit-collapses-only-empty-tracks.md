@@ -78,21 +78,34 @@ getComputedStyle(el).gridTemplateColumns   // "693px 693px 0px"  ✅ collapsed
 **`resize_window` FIRST**, or every viewport-dependent read is 0
 (`.claude/rules/preview-pane-paint-artifacts.md`).
 
-## `.home-dash` no longer uses `auto-fit` at all — the guarantee moved (#942)
+## `.home-dash` no longer uses `auto-fit` at all — the guarantee moved (#942, #948)
 
 Everything above still describes `.home-resume__list`, which is unchanged. The
 dashboard zone became a **column flow** (`columns: 320px`) because its three
 tiles are of very different heights, and `column-width` reproduces `auto-fill`,
-never `auto-fit` — so the lone-tile span this file exists for does NOT come
-along. It is restored explicitly:
+never `auto-fit` — so the span this file exists for does NOT come along.
+
+**#942 restored only the `:only-child` case, and that is the trap.** `auto-fit`
+collapses *every* surplus track; a `:has()` rule collapses the one count someone
+wrote down. So two tiles in a five-column zone shipped still broken, under a rule
+that read as though the conversion had been made whole. The replacement is one
+cap per count, and the count is a ceiling (`min(count, fit)`, floored at 1):
 
 ```css
-.home-dash:has(> :only-child) { columns: 1; }
+.home-dash:has(> :only-child)              { columns: 320px 1; }
+.home-dash:has(> :nth-child(2):last-child) { columns: 320px 2; }
+.home-dash:has(> :nth-child(3):last-child) { columns: 320px 3; }
 ```
 
+The generalisable half: converting a grid to a flow trades an `auto-fit`
+guarantee that is **total** for `:has()` rules that are **enumerated**, and an
+enumeration silently covers only what it enumerates. Count what the container can
+actually hold — against what its width actually fits — before calling a
+conversion done.
+
 So when you read "both zone grids use auto-fit" in an older note, that is now one
-grid and one column flow. Losing the `:has()` rule reintroduces the #358 defect
-exactly as dropping `auto-fit` would.
+grid and one column flow. Losing the caps reintroduces the #358 defect exactly as
+dropping `auto-fit` would.
 See `.claude/rules/css-multicolumn-card-flows.md`.
 
 **Related:** `.claude/rules/css-multicolumn-card-flows.md` (when a card container

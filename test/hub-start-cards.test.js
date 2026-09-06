@@ -358,6 +358,49 @@ test('.hub-cards is a column FLOW, so a short card does not hold its row down', 
   assert.ok(columnsIn(880, spec) >= 2, 'the wide pane must get at least two');
 });
 
+test('a pane holding fewer cards than columns fit stretches them across the width', () => {
+  /* #948. `column-width` reproduces `auto-fill`, so the pane makes as many
+     columns as FIT — three at the 900px reading measure — however many cards it
+     actually has. A young round with two cards therefore drew two narrow cards
+     against the left edge with a third column's worth of dead space beside
+     them: the #358 defect, still live for every count between "one card" and
+     "enough cards to fill the flow", which are exactly the counts a young round
+     has.
+
+     A `column-count` alongside the width caps it, because with both set the
+     used count is min(count, fit) floored at 1. So these are CEILINGS, not
+     fixed counts — which is what lets the phone keep its single column with no
+     media query, and is the property the last assertion pins. */
+  const spec = columnSpec(bodyOf('.hub-cards'));
+  const fits = columnsIn(900, spec);
+  assert.ok(fits >= 2,
+    `the pane fits ${fits} column(s) at the reading measure, so this test asserts nothing`);
+
+  /* Every count BELOW the fit needs a cap; a count at or above it is a no-op,
+     because min(count, fit) is already fit. Derived rather than written out, so
+     widening `--w-read` (or dropping the column floor) makes this demand the
+     rule the new width now needs instead of passing over its absence. */
+  for (let n = 1; n < fits; n++) {
+    const sel = n === 1
+      ? '.hub-cards:has(> :only-child)'
+      : `.hub-cards:has(> :nth-child(${n}):last-child)`;
+    const body = bodyOf(sel);
+    assert.ok(body,
+      `no cap for ${n} card(s) — they pack left and leave ${fits - n} empty column(s)`);
+
+    /* The cap rule restates the width but not the gap, so the gap comes from
+       the base rule; reading it as 0 would make the arithmetic below agree with
+       a broken cap. */
+    const cap = columnSpec(body);
+    const used = { floor: cap.floor ?? spec.floor, gap: cap.gap ?? spec.gap, count: cap.count };
+    assert.equal(used.count, n, `${sel} does not cap the flow at ${n} column(s)`);
+    assert.equal(columnsIn(900, used), n,
+      `${sel} still renders ${columnsIn(900, used)} column(s) for ${n} card(s)`);
+    assert.equal(columnsIn(360, used), 1,
+      `${sel} forces ${n} columns onto a phone — the count must be a maximum, not a target`);
+  }
+});
+
 test('a card cannot fragment across a column boundary, and its SLOT carries the row spacing', () => {
   /* Three halves, each of which fails QUIETLY and none of which is visible in a
      rule that looks finished. Without `break-inside` a card splits at the
