@@ -40,6 +40,10 @@ const NEWS = [
    * entry is a day old so most accounts have not seen either yet, and two
    * overlapping design entries in two days would spend the attention the
    * Nutzungsbedingungen §11 notice needs twice for one story.
+   *
+   * #940 (the victory scene on the winner reveal) added one sentence WITHOUT a
+   * bump — the #851 call: polish on the capability this entry announces, not a
+   * new one, so re-lighting the dot would spend attention for nothing new.
    */
   {
     revision: '2026-09-07',
@@ -52,8 +56,10 @@ const NEWS = [
         + 'Startseite und die Rückblick-Karte zum Teilen tragen die Welt ebenfalls. '
         + 'Neu ist außerdem: ein Design darf dunkel sein. Sci-Fi spielt jetzt vor '
         + 'einem Sternenhimmel, und „Obsidian" ist ein dunkles Design ganz ohne '
-        + 'Verzierungen. Fließtext bleibt überall gut lesbar, und alle Farben '
-        + 'halten wie bisher den Kontrast.',
+        + 'Verzierungen. Bei der Auflösung des Siegers wächst im Wald ein Baum '
+        + 'zwischen Glühwürmchen, und in Sci-Fi hebt eine Rakete ab. Fließtext '
+        + 'bleibt überall gut lesbar, und alle Farben halten wie bisher den '
+        + 'Kontrast.',
     },
     en: {
       title: 'Worlds: Forest and Sci-Fi designs',
@@ -63,8 +69,9 @@ const NEWS = [
         + 'reveal. The round\'s tile on the home screen and the shareable recap '
         + 'card carry the world too. And a design may now be dark: Sci-Fi plays '
         + 'against a starfield, and "Obsidian" is a dark design with no ornaments '
-        + 'at all. Body text stays easy to read everywhere, and all colours keep '
-        + 'their contrast as before.',
+        + 'at all. When the winner is revealed, a tree grows among fireflies in '
+        + 'Forest and a rocket lifts off in Sci-Fi. Body text stays easy to read '
+        + 'everywhere, and all colours keep their contrast as before.',
     },
   },
   /*

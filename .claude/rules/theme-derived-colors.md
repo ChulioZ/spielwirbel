@@ -80,7 +80,7 @@ the `body` rule in `styles.css`. There is no JS texture generation anymore —
 (below) and the world hook (§ Worlds); a legacy `pattern` field in old data is
 ignored.
 
-## Worlds (#903): one hook, six slots, additive over the tokens
+## Worlds (#903): one hook, seven slots, additive over the tokens
 
 The registry is `public/js/round-designs.js` — `PALETTES`, `WORLDS` and
 `resolveDesign(bg)`, which finds a design by its stable `id` first and by the
@@ -96,11 +96,20 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
 
 - **one token block per world** (`[data-world="forest"]`) — its display face
   and its artwork, hand-authored SVG silhouettes as data URIs;
-- **six slot rules keyed off the bare `[data-world]`** — page backdrop,
+- **seven slot rules keyed off the bare `[data-world]`** — page backdrop,
   primary-button frame, section-heading rule, card corner, empty-state scene,
-  finale stage — each a pseudo-element with `pointer-events: none`, painting
-  the mask in a THEME token (`--brand`, `--brand-strong`, `--stage-ink`), never
-  in a shade of its own.
+  finale stage, and (#940) the winner reveal's victory scene — each a
+  pseudo-element with `pointer-events: none`, painting the mask in a THEME
+  token (`--brand`, `--brand-strong`, `--stage-ink`), never in a shade of its
+  own. Slot 7 is the one with text ON its host, so its bold alpha is bought
+  with geometry rather than measured: the hero paints only in two side gutters
+  and a bottom band, and the spotlight reserves exactly those as padding
+  through the **same** custom properties the masks are sized with, so the art
+  and the reservation cannot drift apart. It also re-shapes the confetti bits
+  into the world's particles (fireflies, streaking stars) through tokens — the
+  one real element a world touches, and the generator in `views-session.js`
+  stays world-agnostic (`test/result-spotlight.test.js` scans it for a world
+  name).
 
 Three constraints, each with its reason: the face changes through
 `--font-display` only (`--font` stays Nunito, so reading is never harmed);

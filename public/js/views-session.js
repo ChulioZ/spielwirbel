@@ -831,6 +831,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // way in — the finale, the lobby, the Chronik, a cold load — agree.
   if (!plain && (session.multiTable || isSplitParent(session)))
     return showTableBuilder(round, session, gamesHint);
+  // The round's design, applied HERE and not left to the hub: a results URL is
+  // shared and cold-loaded (session-share.js, showResultsById), and this screen
+  // used to render that visit on the Standard design — no accent, no world,
+  // and since #940 no victory scene on the spotlight a later visit is meant to
+  // show. Idempotent, so the finale's path pays nothing for it.
+  applyBackground(round.background);
   currentView = () => showResults(round, session, gamesHint, false, plain);
   syncUrl(resultsPath(round.id, session.id));
   setContext(round.name);
@@ -1014,11 +1020,20 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       makeGameLink(el, round.id, el.dataset.gid);
     });
     if (reveal) {
+      // World-agnostic on purpose (#940): a world re-shapes these SAME bits in
+      // CSS — fireflies, streaking stars — off the one root hook a world sets (slot 7
+      // under "Worlds" in styles.css), so nothing here knows a world exists.
+      // The per-bit randomness therefore travels as custom properties: the
+      // colour, because an inline `background` would beat every rule a world
+      // could write; and a horizontal drift, set for every bit and simply
+      // ignored by the palette's fall. Another randomised value a world needs
+      // goes the same way — inline for all, never a branch.
       const conf = h('<div class="confetti" aria-hidden="true"></div>');
       for (let i = 0; i < 16; i++) {
         const bit = h('<span class="confetti__bit"></span>');
         bit.style.left = Math.round(Math.random() * 100) + '%';
-        bit.style.background = MEMBER_COLORS[i % MEMBER_COLORS.length];
+        bit.style.setProperty('--bit-color', MEMBER_COLORS[i % MEMBER_COLORS.length]);
+        bit.style.setProperty('--bit-drift', Math.round(Math.random() * 60 - 30) + 'px');
         bit.style.animationDelay = (Math.random() * 0.9).toFixed(2) + 's';
         conf.appendChild(bit);
       }
