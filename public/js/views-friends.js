@@ -507,9 +507,11 @@ function renderFriendRow(f) {
 // friend (#325); otherwise the placeholder section is removed so home is
 // unchanged for everyone else. Called (not awaited) by showHome.
 async function renderHomeFriends(section) {
-  if (!(accountsActive() && isLoggedIn())) { section.remove(); return; }
+  // `slotOf` because the tile sits in a `.card-slot` carrying the flow's
+  // spacing (#946) — removing only the section leaves an empty padded box.
+  if (!(accountsActive() && isLoggedIn())) { slotOf(section).remove(); return; }
   let feed;
-  try { feed = await accountApi('GET', '/friends/feed'); } catch { section.remove(); return; }
+  try { feed = await accountApi('GET', '/friends/feed'); } catch { slotOf(section).remove(); return; }
   // The section (and its host view) may have been re-rendered while we awaited.
   if (!section.isConnected) return;
 

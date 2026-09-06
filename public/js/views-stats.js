@@ -302,7 +302,8 @@ const HOME_STATS_PODIUMS = 3;
 async function mountHomeStatsPanel(placeholder) {
   const stats = await loadPublicStats();
   if (!publicStatsHasContent(stats)) {
-    placeholder.remove();
+    // The slot, not just the tile — it carries the column flow's spacing (#946).
+    slotOf(placeholder).remove();
     return;
   }
   // The section may have been re-rendered while we awaited (locale switch,

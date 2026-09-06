@@ -932,15 +932,17 @@ h1, h2, h3 { font-family: var(--font-display); }
    was the reason the grid chose `auto-fill` over `auto-fit`, and it survives
    the mechanism change; multicol simply has no `auto-fit` to get wrong.
 
-   The vertical spacing is the CARD's margin, not a gap: a multi-column
-   container's `gap` sets the column gap only, and `row-gap` is silently
-   ignored. The trailing margin is then trimmed at a COLUMN BREAK but kept in a
-   single column, so the phone alone would have gained 12px below the last card
-   — zeroed on the last child, which is where the flow ends either way. A
-   negative margin on the container is the wrong instrument: it would cut the
-   26px to `.hub-actions` to 14px at every width that does trim. See
-   .claude/rules/css-multicolumn-card-flows.md for the five ways this fails
-   quietly.
+   The vertical spacing is a SLOT's padding, not a gap and not the card's own
+   margin: a multi-column container's `gap` sets the column gap only, and
+   `row-gap` is silently ignored. It has to sit inside the break-avoid unit
+   because a margin adjoining a column break is truncated by Chromium and
+   CARRIED INTO THE NEXT COLUMN by WebKit (#946) — so with the spacing on the
+   card, every Safari user saw the first card of each column after the tallest
+   one start 12px too low. Padding inside the unit has nowhere to spill and
+   measures flush in both engines; the cost is that the container ends one gap
+   below the tallest column, zeroed on the last slot so the phone (one column)
+   still ends flush. See .claude/rules/css-multicolumn-card-flows.md for the
+   five ways this fails quietly.
 
    Reading order is column-major above one column: the cards flow down column 1,
    then column 2, so left-to-right no longer matches DOM order. Accepted with
@@ -963,20 +965,24 @@ h1, h2, h3 { font-family: var(--font-display); }
   margin-top: 20px;
 }
 .hub-cards:empty { display: none; }
+/* One slot per card, in every column flow. `break-inside` is what keeps a card
+   whole: without it a card fragments across the column boundary and its border
+   and background fragment with it — which reads as broken, not as unpacked. It
+   lives here rather than on the card because the spacing has to be inside the
+   same unavoidable box (#946); the card must carry NO vertical margin of its
+   own, or the bug comes straight back. */
+.card-slot { break-inside: avoid; }
+.hub-cards > .card-slot { padding-bottom: 12px; }
+/* The flow's last slot is at the bottom of the last column at every width, so
+   this is the one whose padding is spacing to nothing. Live, because the
+   recommendations teaser arrives after first paint and becomes the new last. */
+.hub-cards > :last-child { padding-bottom: 0; }
 .hub-card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 14px 16px;
-  /* Without this a card fragments across the column boundary and its border and
-     background fragment with it — which reads as broken, not as unpacked. */
-  break-inside: avoid;
-  margin-bottom: 12px;
 }
-/* The flow's last card is at the bottom of the last column at every width, so
-   this is the one card whose margin is spacing to nothing. Live, because the
-   recommendations teaser arrives after first paint and becomes the new last. */
-.hub-cards > :last-child { margin-bottom: 0; }
 .hub-card__title {
   margin: 0 0 10px;
   font-size: var(--text-md);
@@ -3293,18 +3299,20 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 }
 .home-dash:has(> :only-child) { columns: 1; }
 .home-dash:empty { display: none; }
+/* Spacing and `break-inside` are the SLOT's (`.card-slot`, declared with
+   `.hub-cards`) — see #946: on the tile itself, WebKit carries the margin over
+   the column break and every column after the tallest starts 18px low. The two
+   async tiles remove their SLOT (`slotOf`), so `:only-child` and `:empty` below
+   still see what the reader sees. */
+.home-dash > .card-slot { padding-bottom: 18px; }
+.home-dash > :last-child { padding-bottom: 0; }
 .dash-tile {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 16px 18px;
   min-width: 0;
-  break-inside: avoid;
-  margin-bottom: 18px;
 }
-/* See `.hub-cards > :last-child` — same trailing-margin trim, and live for the
-   same reason: two of the three tiles remove themselves asynchronously. */
-.home-dash > :last-child { margin-bottom: 0; }
 /* The tiles' own cards sit inside a tile that already draws a surface, so they
    drop back to the page ground rather than stacking a second panel on it. */
 .dash-tile .stats-card { background: var(--sunken); }

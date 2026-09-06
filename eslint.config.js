@@ -27,6 +27,7 @@ const frontendGlobals = {
   // core.js
   app: 'readonly', context: 'readonly', toastEl: 'readonly',
   currentView: 'writable', h: 'readonly', esc: 'readonly', toastTimer: 'writable',
+  cardSlot: 'readonly', slotOf: 'readonly',
   toast: 'readonly', api: 'readonly', setContext: 'readonly', setDocTitle: 'readonly',
   backRow: 'readonly', joinNames: 'readonly',
   // doc-title.js

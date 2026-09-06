@@ -55,8 +55,13 @@ async function home(t, rounds, opts = {}) {
   dom.set('markNewsSeen', async () => { marked.push(1); });
   // The two async tiles: stub the network rather than the helpers, so the real
   // mount code decides whether to render or remove itself.
-  dom.set('accountApi', async () => opts.feed || { friendCount: 0, events: [] });
-  dom.set('fetch', async () => ({ ok: false, json: async () => null }));
+  dom.set('accountApi', async () => {
+    if (opts.feedFails) throw new Error('feed unreachable');
+    return opts.feed || { friendCount: 0, events: [] };
+  });
+  dom.set('fetch', async () => (opts.stats
+    ? { ok: true, json: async () => opts.stats }
+    : { ok: false, json: async () => null }));
   await dom.call('showHome');
   await new Promise((r) => setTimeout(r, 0));
   return dom;
@@ -234,6 +239,49 @@ test('the dashboard region is coherent with every tile absent', async (t) => {
     `the empty dashboard still holds ${dash.children.length} node(s), so :empty cannot collapse it`);
 });
 
+test('every dashboard tile sits in the slot that carries the flow spacing', async (t) => {
+  /* The CSS half of #946 is pinned below; this is the DOM half, and it is the
+     one that goes green on its own. Append a tile bare and NOTHING else fails:
+     the container still packs, `:empty` and `:only-child` still behave, and the
+     tile simply has no spacing at all — cards touching, on every screen. So the
+     wrapper has to be asserted where it is built, per tile, not inferred from a
+     rule that mentions `.card-slot`. */
+  const { document } = await home(t, [roundOf()], {
+    unseenNews: true,
+    feed: { friendCount: 2, events: [] },
+    stats: { counters: { rounds: 12, sessions: 40 } },
+  });
+  const dash = document.querySelector('.home-dash');
+  const tiles = [...dash.querySelectorAll('.dash-tile')];
+  /* All THREE, not "at least two": each tile is appended by its own line, so a
+     fixture that renders two of them leaves the third's append unguarded — the
+     stats tile removes itself whenever /api/stats/public is not stubbed, which
+     is how it was missed the first time. */
+  assert.equal(tiles.length, 3,
+    `expected all three dashboard tiles, got ${tiles.length} — a tile's append site is unguarded`);
+  for (const tile of tiles) {
+    assert.ok(tile.parentElement.classList.contains('card-slot'),
+      `a .dash-tile (${tile.className}) is not wrapped in a .card-slot — it gets no row spacing at all`);
+    assert.equal(tile.parentElement.parentElement, dash,
+      'the slot is not a direct child of .home-dash, so `> .card-slot` never matches it');
+  }
+});
+
+test('an async tile that gives up takes its slot with it', async (t) => {
+  /* Both removers run in accounts mode with the tile already appended, so this
+     is the path where `section.remove()` and `slotOf(section).remove()` differ:
+     the tile goes either way and the screen looks right, while an orphaned slot
+     keeps paying 18px of padding and still counts as a child — so `:empty`
+     cannot collapse the zone and the lone-tile `:only-child` rule stops firing
+     for the account that has exactly one tile left. Nothing throws. */
+  const { document } = await home(t, [roundOf()], { feedFails: true });
+  const dash = document.querySelector('.home-dash');
+  assert.equal(dash.querySelector('.home-friends'), null, 'the failed feed tile stayed');
+  assert.equal(dash.querySelector('.home-stats'), null, 'the empty stats tile stayed');
+  assert.equal(dash.children.length, 0,
+    `${dash.children.length} orphaned slot(s) left behind — :empty and :only-child now count boxes nobody can see`);
+});
+
 test('the first-run screen keeps its .lobby-cta and grows no grid', async (t) => {
   // #358's empty state must survive the rebuild: no rounds, no resume zone, and
   // the centred CTA rather than a one-card grid.
@@ -307,10 +355,20 @@ test('a lone dashboard tile still spans the zone, which multicol does NOT give f
   /* Two of the three tiles remove themselves ASYNCHRONOUSLY, so "only child" is
      a state the zone enters after first paint — which is why this is a live
      selector rather than a class the renderer sets. */
+  assert.match(bodyOf('.card-slot') || '', /break-inside:\s*avoid/,
+    'a tile will fragment across the column boundary, splitting its own border');
+  assert.match(bodyOf('.home-dash > .card-slot') || '', /padding-bottom:\s*18px/,
+    'multicol ignores row-gap — without the slot\'s padding the column has no vertical spacing');
+  assert.match(bodyOf('.home-dash > :last-child') || '', /padding-bottom:\s*0/,
+    'the last slot pads against nothing');
+
+  /* The spacing must be the SLOT's, never the tile's: a margin adjoining a
+     column break is truncated by Chromium and CARRIED INTO THE NEXT COLUMN by
+     WebKit (#946), so a tile margin puts every column after the tallest one
+     18px low on Safari — and the Browser pane, being Chromium, cannot see it. */
   const tile = bodyOf('.dash-tile');
-  assert.match(tile, /break-inside:\s*avoid/, 'a tile will fragment across the column boundary, splitting its own border');
-  assert.match(tile, /margin-bottom:\s*18px/,
-    'multicol ignores row-gap — without the tile\'s own margin the column has no vertical spacing');
+  assert.doesNotMatch(tile, /margin-bottom|margin-top|(^|;)\s*margin:/,
+    '.dash-tile carries a vertical margin again — that is the #946 regression');
 });
 
 test('an empty dashboard grid collapses instead of leaving its margin behind', () => {

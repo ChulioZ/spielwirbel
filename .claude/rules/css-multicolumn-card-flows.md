@@ -51,17 +51,47 @@ and the click, so both stayed too.
    decide asynchronously, so "only child" is a state entered after first paint.
 4. **Keep `column-fill` at its default (`balance`)** — that IS the packing.
    `column-fill: auto` needs a definite container height and is unusable here.
-5. **The trailing margin is trimmed — do NOT compensate for it.** The last card
-   in a column carries a `margin-bottom` that looks like it should push the
-   container's bottom edge down, so the reflex is a cancelling negative margin on
-   the container. Measured in Chrome at two and three columns, the browser
-   truncates it at the column end, so the container already ends flush at the
-   last card — and the "fix" cut `.hub-cards`'s 26px gap to `.hub-actions` down
-   to 14px. Measure before compensating; if a browser is ever found that keeps
-   it, 12px of slack below a container is the cheaper error.
+5. **The vertical spacing goes INSIDE the break-avoid box — never on the card
+   as a margin.** This point said the opposite until #946, on a measurement that
+   was correct and taken in one engine.
+
+   A margin adjoining a column break is *truncated* by Chromium, exactly as
+   measured. **WebKit carries it into the next column instead**, so with the
+   spacing on the card the first card of every column after the tallest one
+   starts one gap low — 18px on `.home-dash`, 12px on `.hub-cards`, 1.25rem on
+   the admin dashboard, on every Safari and every iPhone, on the public home
+   screen. CSS Fragmentation says the margin is truncated; Chromium follows it
+   and WebKit does not.
+
+   The shape that measures flush in **both** engines is a slot element per card
+   carrying `break-inside: avoid` and `padding-bottom: <gap>`, with the card
+   itself holding no vertical margin at all:
+
+   ```css
+   .card-slot { break-inside: avoid; }
+   .home-dash > .card-slot { padding-bottom: 18px; }
+   .home-dash > :last-child { padding-bottom: 0; }
+   ```
+
+   Padding inside the unavoidable box has nowhere to spill. The cost is the
+   slack this point used to warn about — the container ends one gap below the
+   tallest column — which is now the *same* in both engines rather than in
+   neither, and is still the cheaper error. **Do not compensate for it with a
+   negative margin on the container**, which remains the wrong instrument: that
+   was the original finding and it stands (it cut `.hub-cards`'s 26px gap to
+   `.hub-actions` down to 14px).
+
+   Two consequences that are easy to miss. A renderer that removes a card must
+   remove its **slot** (`slotOf` in `core.js`), or an orphaned slot keeps paying
+   its padding and still counts as a child — so `:empty` cannot collapse the
+   container and the point-3 `:only-child` rule stops firing. And a slot around
+   a card that starts `hidden` must collapse with it
+   (`.card-slot:has(> [hidden]) { display: none }` — admin.html has two).
 
 `:empty { display: none }` still works — `display` beats `columns` — so a
-container appended before its content can arrive keeps costing nothing.
+container appended before its content can arrive keeps costing nothing. With
+point 5's slot it is the *slot* that must not be appended for an absent card,
+not merely the card left out of it.
 
 ## The trade-off that is accepted, not overlooked
 
@@ -84,6 +114,21 @@ Browser pane — every card's top must be the container's top or the previous
 card-in-that-column's bottom plus the gap. `resize_window` first, and cache-bust
 the `<link>` after editing (`.claude/rules/pwa-service-worker.md`), or you are
 measuring a 0×0 viewport against the previous stylesheet.
+
+**That sweep is Chromium-only, and point 5 is what it cost.** The Browser pane
+cannot see a fragmentation difference between engines, so a claim about column
+breaks needs the headless WebKit probe in
+`.claude/rules/browser-pane-is-chromium-only.md` as well — and the sweep must
+run with the **tallest column not last**, at two *and* three columns, because
+the offset only appears when the column setting the container's height has a
+successor.
+
+The DOM half needs its own assertion. A card appended **without** its slot
+breaks nothing else — the container still packs, `:empty` and `:only-child` still
+behave, the card simply has no spacing — so each append site is guarded by a
+`parentElement.classList.contains('card-slot')` loop over the rendered cards,
+with an exact tile/card count so a fixture that renders two of three cannot
+leave the third's append unguarded.
 
 **Related:** `.claude/rules/auto-fit-collapses-only-empty-tracks.md` (the
 guarantee point 3 costs you), `.claude/rules/tiles-vs-lists.md` (which

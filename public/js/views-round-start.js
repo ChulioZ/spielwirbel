@@ -258,13 +258,17 @@ function renderStartTab(round, activeGames) {
   // it met before, not six empty boxes.
   //
   // DOM order is the phone order, action-first.
+  //
+  // Each card goes in a `.card-slot`, which carries the flow's vertical spacing
+  // (#946) — a margin on the card itself is carried across the column break by
+  // WebKit instead of being truncated.
   const grid = h('<div class="hub-cards"></div>');
   [
     hubSuggestCard(round, activeGames, statsByGame, nagged),
     hubPulseCard(round, activeGames),
     hubCareCard(round, activeGames),
     hubAnniversaryCard(round),
-  ].forEach((card) => { if (card) grid.appendChild(card); });
+  ].forEach((card) => { if (card) grid.appendChild(cardSlot(card)); });
 
   // From 1280px up the rail owns the hero and the big CTA above, so a round with
   // no ticket to show left the pane holding only `.hub-actions` — one visible
@@ -644,7 +648,7 @@ async function renderRecoTeaser(rid, grid) {
      </a>`);
   navLink(more, roundPath(rid, 'recommendations'), () => showRecommendations(rid));
   body.appendChild(more);
-  grid.appendChild(card);
+  grid.appendChild(cardSlot(card));
   // This card is content, so the #869 stand-in above is no longer standing in
   // for an empty pane. It was rendered before the fetch resolved — the only
   // ordering available for something deliberately kept off the critical path.
