@@ -124,7 +124,10 @@ contrast the plain-background harness cannot see (a stage tile at .16 put
 discipline, the two bands' geometry and the two media gates. **Sci-Fi is dark
 since #904** and a world may declare `scheme: 'dark'` like any palette; the
 ornaments need no change, because every slot paints in a theme token. The dark
-half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`.
+half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`. Two traps in
+authoring a world's artwork — a mask reads alpha, so white is not a cutout, and
+a single-weight face needs a `font-weight` range — are
+`.claude/rules/world-artwork-masks-and-single-weight-faces.md` (#905).
 
 ## The browser chrome is themed too, and it is NOT a CSS variable
 

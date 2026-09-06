@@ -78,6 +78,19 @@ const PALETTES = [
 const WORLDS = [
   { id: 'forest', labelKey: 'theme.forest', page: '#ecf1e4', accent: '#356427', world: 'forest', font: 'Averia Serif Libre', icon: 'ti-trees' },
   { id: 'scifi', labelKey: 'theme.scifi', page: '#0e1622', accent: '#4fb3ef', world: 'scifi', font: 'Chakra Petch', icon: 'ti-planet', scheme: 'dark' },
+  // The four content worlds (#905). Each clears the same two bars as the first
+  // two — the accent as text on its own page and on its own surface — and none
+  // shares a page hex with a palette (test/round-designs.test.js). Dinosaurs is
+  // the one drawn AGAINST its neighbours: warm and prehistoric like half the
+  // registry, so it takes fossil and rock rather than foliage (that is Forest)
+  // and a fern-teal accent on limestone rather than bone-cream (Sand, Standard).
+  // Ocean therefore sits on marine BLUE, not teal, so the two never meet.
+  // Horror takes the dark page #904 made possible: a near-black plum with an
+  // acid-green accent — the one accent family no other design uses.
+  { id: 'ocean', labelKey: 'theme.ocean', page: '#e4f1f5', accent: '#0e6690', world: 'ocean', font: 'Comfortaa', icon: 'ti-fish' },
+  { id: 'chess', labelKey: 'theme.chess', page: '#f3f2f5', accent: '#38343f', world: 'chess', font: 'Playfair Display', icon: 'ti-chess-knight' },
+  { id: 'horror', labelKey: 'theme.horror', page: '#120c14', accent: '#9fdc70', world: 'horror', font: 'Creepster', icon: 'ti-ghost', scheme: 'dark' },
+  { id: 'dinos', labelKey: 'theme.dinos', page: '#f3efe3', accent: '#0f6b5f', world: 'dinos', font: 'Alfa Slab One', icon: 'ti-bone' },
 ];
 
 const DESIGNS = PALETTES.concat(WORLDS);
