@@ -20,7 +20,9 @@ three landing screenshots for the new locale** (#457), which
 `test/landing-shots.test.js` requires for every `SUPPORTED_LOCALES` entry. That
 last step is the one this checklist used to omit: skip it and the suite goes red
 pointing at a missing `.webp`, with nothing saying that shooting it is a manual
-job (`.claude/rules/landing-product-screenshots.md` is the recipe).
+job (`.claude/rules/landing-product-screenshots.md` is the recipe). A sixth
+locale also outgrows a rate-limit ceiling the demo suite never raised —
+`.claude/rules/derived-loops-outgrow-fixed-test-ceilings.md`.
 
 Three things about making it data are non-obvious, and the first one is the trap
 that makes the other two matter.

@@ -177,10 +177,15 @@ added.
 The two finished sessions must each rate **exactly one, known** game: a plain
 draw is random, so the set of rated games — and therefore which cards show a `Ø`
 badge rather than "new" — would change every run. Four ratings of `4,5,4,5` and
-`4,4,5,4` give the committed **Ø 4.5** and **Ø 4.3** (4.25 rounds up at one
-decimal) — in the **English** set. Since #850 the badge is written in the
-reader's own notation (`fmtAvg`, `i18n.js`), so the de/es/fr/it sets read
-**Ø 4,5** and **Ø 4,3**. That makes the pill a free tell when you look at a
+`4,4,5,4` gave **Ø 4.5** and **Ø 4.3** when this was written; as of #537's
+reshoot the same two seeds read **4.1** and **4.0**, because the badge is no
+longer a mean — #894/#928 made it the shrunk Spielwirbel-Score
+(`public/js/vote-score.js`), which pulls four ratings toward `PRIOR_DEFAULT`.
+**Do not treat either pair as a target**: the seeds are fixed, the curve is
+expected to be retuned, so read whatever the current arithmetic prints. What
+is stable is the NOTATION — since #850 the badge is written in the reader's
+own (`fmtAvg`, `i18n.js`), so the de/es/fr/it/nl sets use a comma where the
+English one uses a dot. That makes the pill a free tell when you look at a
 regenerated set: a **dot in a non-English shot** means the capture predates the
 locale-formatting fix, and nothing in the suite can see it.
 

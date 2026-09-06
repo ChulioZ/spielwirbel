@@ -370,6 +370,7 @@ public/
     lang/es.js       Spanish strings
     lang/fr.js       French strings
     lang/it.js       Italian strings
+    lang/nl.js       Dutch strings
     core.js          DOM/API helpers, stats, design, language picker  (loads first)
     empty-state.js   the app's one "nothing here yet" component — medallion,
                      optional title, sub-line; shares its rules with .lobby-cta

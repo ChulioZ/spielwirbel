@@ -180,10 +180,10 @@ test("a criterion's Status matches the section it sits in", () => {
 
 /*
  * The shipped locale set is DATA (`public/js/locales.js`, #504) and has been
- * five languages since then — but #504 fixed only the *code* copies. Seven
+ * six languages since then — but #504 fixed only the *code* copies. Seven
  * prose and YAML sites went on naming `lang/en.js` and `lang/de.js` as the
  * closed pair a contributor must edit, including a REQUIRED field in the bug
- * report form that an es/fr/it reporter could only answer wrongly, and
+ * report form that an es/fr/it/nl reporter could only answer wrongly, and
  * `audit-loop.md`'s repo description, which every one of the six domain audits
  * tests candidate findings against.
  *

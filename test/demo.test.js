@@ -33,6 +33,15 @@ process.env.RATE_LIMIT_MAX = '1000000';
 // than anything naming the cap. The two specs that exercise the cap set their
 // own ceiling.
 process.env.MAX_LIVE_DEMOS_PER_IP = '1000000';
+// The THIRD cap on the same endpoint, and the one nobody raised (#537). The
+// per-locale spec below loops seed.DEMO_LOCALES, which grows with every
+// shipped language — so at the sixth locale the mint window’s default of 5
+// starts answering 429 and the loop reads `list.body[0].id` off an empty
+// array: `Cannot read properties of undefined`, naming neither the limiter
+// nor the locale. Derived loops outgrow hardcoded ceilings silently; raise
+// it here so they stay in step. The one spec that exercises the limiter
+// sets its own.
+process.env.DEMO_RATE_LIMIT_MAX = '1000000';
 
 const { createApp } = require('../lib/app');
 const repo = require('../lib/repo');

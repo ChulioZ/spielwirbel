@@ -88,6 +88,33 @@ test('every asset the service worker precaches is actually served', async () => 
   }
 });
 
+/* The REVERSE direction, and the one the assertion above cannot see (#537).
+ * It walks SHELL -> served, so a shell script that is loaded by index.html but
+ * was never ADDED to SHELL passes it silently: nothing 404s, `cache.addAll`
+ * resolves, and the service worker installs perfectly. The cost lands only on
+ * an offline load, where that one script is not in the cache — for a lang table
+ * that means the app comes up in English for a reader who picked another
+ * language, with no error anywhere.
+ *
+ * Found by deleting the freshly-added '/js/lang/nl.js' SHELL line on purpose:
+ * the whole PWA suite stayed green. Derived from the markup rather than listed
+ * here, so a script added to index.html is covered without anyone remembering
+ * this file — which is exactly the step that gets forgotten. */
+test('every script index.html loads is precached by the service worker', async () => {
+  const root = path.join(__dirname, '..', 'public');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const src = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  const block = src.match(/const SHELL = \[([\s\S]*?)\];/);
+  assert.ok(block, 'could not find the SHELL precache list in sw.js');
+  const shell = new Set([...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1]));
+
+  const scripts = [...html.matchAll(/<script[^>]+src="(\/js\/[^"]+)"/g)].map((m) => m[1]);
+  assert.ok(scripts.length > 50, `expected the SPA's script tags, found ${scripts.length}`);
+
+  const missing = scripts.filter((s) => !shell.has(s));
+  assert.deepEqual(missing, [], `loaded by index.html but missing from sw.js's SHELL: ${missing.join(', ')}`);
+});
+
 test('the PWA icons are served as PNGs', async () => {
   for (const url of ['/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png']) {
     const res = await request(app).get(url);
