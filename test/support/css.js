@@ -111,11 +111,28 @@ function gridSpec(body) {
   return { floor: floor ? Number(floor[1]) : null, gap: gap ? Number(gap[1]) : null };
 }
 
+/* The same two numbers out of a MULTI-COLUMN container (#942): `columns: <n>px`
+   or `column-width: <n>px`, plus `column-gap`. Deliberately NOT reading plain
+   `gap` — in a multicol container the shorthand sets the column gap only and
+   `row-gap` is silently dropped, so a rule written with `gap` is the bug this
+   should surface rather than parse over. The result feeds `columnsIn` unchanged
+   because the column-count arithmetic is identical: `column-width` fits
+   floor((W + gap) / (width + gap)) columns, which is exactly what `auto-fill`
+   does. That equivalence is why a grid can convert without moving a
+   breakpoint. */
+function columnSpec(body) {
+  if (!body) return null;
+  const floor = body.match(/(?:^|[\s;])(?:columns|column-width):\s*(\d+)px/);
+  const gap = body.match(/column-gap:\s*(\d+)px/);
+  return { floor: floor ? Number(floor[1]) : null, gap: gap ? Number(gap[1]) : null };
+}
+
 /* How many `auto-fill` columns of `floor` width fit in `width` px of CONTENT
-   box: n columns need floor*n + gap*(n-1) <= width. */
+   box: n columns need floor*n + gap*(n-1) <= width. Shared by gridSpec and
+   columnSpec — see the note on columnSpec for why one formula serves both. */
 const columnsIn = (width, { floor, gap }) => Math.floor((width + gap) / (floor + gap));
 
 module.exports = {
-  ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, whole, rootPx, gridSpec, columnsIn,
-  specificity, outranks,
+  ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, whole, rootPx, gridSpec, columnSpec,
+  columnsIn, specificity, outranks,
 };

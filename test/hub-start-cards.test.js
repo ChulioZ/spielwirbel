@@ -17,7 +17,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
-const { bodyOf, mediaBlocks, gridSpec, columnsIn } = require('./support/css');
+const { bodyOf, mediaBlocks, columnSpec, columnsIn } = require('./support/css');
 
 // ---------------------------------------------------------------- fixtures
 
@@ -314,20 +314,42 @@ test('a teaser landing on a young round removes the stand-in it was rendered bes
 
 // ---------------------------------------------------------------------- CSS
 
-test('.hub-cards is an auto-fill grid with no breakpoint of its own', () => {
+test('.hub-cards is a column FLOW, so a short card does not hold its row down', () => {
+  /* #942. Grid places in rows, so the tallest card in a row held every short
+     neighbour's successor down with it — a dead band that `align-self: start`
+     could not reach, because it saved the space INSIDE the card and the row
+     boundary put it back between them. Multicol packs instead. */
   const body = bodyOf('.hub-cards');
   assert.ok(body, '.hub-cards has no rule');
-  assert.match(body, /repeat\(auto-fill,\s*minmax\(280px,\s*1fr\)\)/,
-    'auto-fit would collapse the empty tracks and let ONE small module span the whole pane');
-  const spec = gridSpec(body);
+  assert.doesNotMatch(body, /display:\s*grid/,
+    'still a row grid — a short card leaves a dead band under it until the tallest sibling ends');
+  const spec = columnSpec(body);
+  assert.equal(spec.floor, 280, '.hub-cards declares no column width');
+  assert.equal(spec.gap, 12, 'the column gap must be `column-gap` — plain `gap` reads as a row gap it will never set');
   assert.equal(columnsIn(360, spec), 1, 'a phone must get one column');
   assert.ok(columnsIn(880, spec) >= 2, 'the wide pane must get at least two');
+});
+
+test('a card cannot fragment across a column boundary, and carries its own row spacing', () => {
+  /* Both halves fail QUIETLY and neither is visible in a rule that looks
+     finished. Without `break-inside` a card splits at the column boundary and
+     its border and background split with it; and a multicol container's
+     `row-gap` is silently ignored, so without the margin every card in a
+     column touches its neighbour. */
+  const card = bodyOf('.hub-card');
+  assert.ok(card, '.hub-card has no rule');
+  assert.match(card, /break-inside:\s*avoid/,
+    'a card will fragment across the column boundary, splitting its own border and background');
+  assert.match(card, /margin-bottom:\s*12px/,
+    'multicol ignores row-gap — without the card\'s own margin the column has no vertical spacing at all');
+  assert.doesNotMatch(bodyOf('.hub-cards') || '', /row-gap/,
+    'row-gap does nothing in a multi-column container — the spacing belongs on the card');
 });
 
 test('no media query moves the card grid — width alone decides', () => {
   mediaBlocks().forEach(([query, css]) => {
     assert.doesNotMatch(css, /\.hub-cards[\s,{]/,
-      `.hub-cards is redefined inside "@media ${query}" — the auto-fill grid needs no breakpoint`);
+      `.hub-cards is redefined inside "@media ${query}" — the column flow needs no breakpoint`);
   });
 });
 

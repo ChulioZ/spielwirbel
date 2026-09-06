@@ -107,7 +107,23 @@ open questions asked what the desktop Chronik should show with the extra width
 answered here: neither. Nothing about #332 remains open; don't re-open it on
 the strength of that line.
 
-**Related:** `.claude/rules/responsive-content-width.md` (the pane the tiles
+## A tiled container may be a column FLOW rather than a grid (#942)
+
+That is a second, independent decision made *after* this one, and it does not
+disturb anything above: it asks how the tiles are placed, never whether the
+entries should be tiles at all. A container whose items are **uniform** stays a
+grid — which is every container in the table above. Only where heights are
+content-driven and genuinely different (`.hub-cards`, `.home-dash`) does packing
+beat a row grid; `.ds-list--tiles` measured 98px on every row and stayed put.
+
+Note the ordering half of this rule binds **harder** on a column flow: multicol
+reads column-major, so an ordered container is worse there than in a grid, which
+at least reads left-to-right. See
+`.claude/rules/css-multicolumn-card-flows.md`.
+
+**Related:** `.claude/rules/css-multicolumn-card-flows.md` (grid vs column flow,
+once a container has been tiled),
+`.claude/rules/responsive-content-width.md` (the pane the tiles
 live in, and why its width may key off the viewport only),
 `.claude/rules/css-text-assertions-strip-comments.md` (how the guarding test
 parses the stylesheet).

@@ -21,7 +21,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { RULES, bodyOf, mediaBlocks, whole } = require('./support/css');
+const { RULES, bodyOf, mediaBlocks, whole, columnSpec } = require('./support/css');
 const { loadApp } = require('./support/dom');
 
 /** The shape listRoundSummaries returns (lib/repo/json.js), with open sessions. */
@@ -273,16 +273,44 @@ test('the new zones are exempt from the --w-read cap, and only alongside the rou
     'the dashboard exemption is unconditional — it will stretch under the centred first-run CTA');
 });
 
-test('both zone grids use auto-fit, so a lone tile is not stranded on the left', () => {
-  /* `auto-fill` keeps empty tracks, so ONE ticket or ONE tile packs ~340px wide
-     against the left edge of an 1800px shell — the exact defect #358 fixed on
-     the empty lobby, which is why it is worth pinning rather than assuming. */
-  for (const cls of ['.home-resume__list', '.home-dash']) {
-    const body = bodyOf(cls);
-    assert.ok(body, `${cls} rule not found`);
-    assert.match(body, /grid-template-columns:\s*repeat\(auto-fit,/,
-      `${cls} uses auto-fill — a single item will pack left instead of filling the row`);
-  }
+test('a lone ticket is not stranded on the left', () => {
+  /* `auto-fill` keeps empty tracks, so ONE ticket packs ~340px wide against the
+     left edge of an 1800px shell — the exact defect #358 fixed on the empty
+     lobby, which is why it is worth pinning rather than assuming. The resume
+     zone stayed a grid through #942: a ticket's fields are fixed (image, round
+     name, title, time, stub), so its tiles are uniform and a column flow would
+     buy ragged bottoms for no packing at all. */
+  const body = bodyOf('.home-resume__list');
+  assert.ok(body, '.home-resume__list rule not found');
+  assert.match(body, /grid-template-columns:\s*repeat\(auto-fit,/,
+    '.home-resume__list uses auto-fill — a single ticket will pack left instead of filling the row');
+});
+
+test('a lone dashboard tile still spans the zone, which multicol does NOT give for free', () => {
+  /* #942 made the dashboard a column flow, because its three tiles are of very
+     different heights. `column-width` reproduces `auto-fill` — never `auto-fit`
+     — so the one property that does not survive the conversion is exactly the
+     one the zone chose auto-fit for: a single tile must span, not sit stranded
+     ~320px wide (the #358 defect). `:has()` is what restores it, and losing it
+     is silent — the zone simply looks wrong for an account with one tile. */
+  const body = bodyOf('.home-dash');
+  assert.ok(body, '.home-dash rule not found');
+  assert.doesNotMatch(body, /display:\s*grid/, '.home-dash is a row grid again — its short tiles will hold a dead band');
+  const spec = columnSpec(body);
+  assert.equal(spec.floor, 320, '.home-dash declares no column width');
+  assert.equal(spec.gap, 18, 'the gap must be `column-gap` — plain `gap` reads as a row gap multicol never sets');
+
+  const lone = bodyOf('.home-dash:has(> :only-child)');
+  assert.ok(lone, 'no :has(> :only-child) rule — a single tile will be stranded ~320px wide in an 1800px shell');
+  assert.match(lone, /columns:\s*1/, 'the lone-tile rule does not collapse to one column');
+
+  /* Two of the three tiles remove themselves ASYNCHRONOUSLY, so "only child" is
+     a state the zone enters after first paint — which is why this is a live
+     selector rather than a class the renderer sets. */
+  const tile = bodyOf('.dash-tile');
+  assert.match(tile, /break-inside:\s*avoid/, 'a tile will fragment across the column boundary, splitting its own border');
+  assert.match(tile, /margin-bottom:\s*18px/,
+    'multicol ignores row-gap — without the tile\'s own margin the column has no vertical spacing');
 });
 
 test('an empty dashboard grid collapses instead of leaving its margin behind', () => {
