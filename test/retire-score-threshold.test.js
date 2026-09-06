@@ -26,7 +26,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { scoreRatings } = require('../public/js/vote-score');
-const { DEMO_SESSIONS } = require('../lib/demo-seed');
+const { DEMO_ROUNDS } = require('../lib/demo-seed');
 
 // The threshold, read out of core.js rather than hand-copied — a test constant
 // copied from the thing under test proves nothing (#420).
@@ -57,27 +57,37 @@ test('a genuinely disliked game still trips it, as it did on the raw mean', () =
   }
 });
 
-test('the demo seed arrives with nothing proposed for retirement', () => {
-  // The seeded round is the first thing a visitor sees (#427). It carries
-  // exactly one „gar nicht" on purpose — enough to show the leftmost bar on the
-  // results screen and the score's reason line, not enough to open with a nag.
-  // That balance is an arithmetic claim about the fixture, and this is where it
-  // is checked.
-  const perGame = new Map();
-  for (const spec of DEMO_SESSIONS) {
-    spec.gameIndexes.forEach((gameIdx, col) => {
-      const votes = spec.ratings.map((row) => row[col]).filter((r) => r != null);
-      perGame.set(gameIdx, (perGame.get(gameIdx) || []).concat(votes));
-    });
+test('the demo seed arrives with nothing proposed for retirement, in EVERY round', () => {
+  // The seeded rounds are the first thing a visitor sees (#427/#953). The
+  // landing round carries exactly one „gar nicht" on purpose — enough to show
+  // the leftmost bar on the results screen and the score's reason line, not
+  // enough to open with a nag. #953's split round then deliberately seeds two
+  // camps who rate each other's games low, which is what makes the split worth
+  // showing and is also the shape most likely to push a game under the bar. That
+  // balance is an arithmetic claim about the fixture, and this is where it is
+  // checked — per round, since a game's votes are only ever pooled within one.
+  let checked = 0;
+  for (const round of DEMO_ROUNDS) {
+    const specs = (round.sessions || []).concat(round.split ? [round.split] : []);
+    const perGame = new Map();
+    for (const spec of specs) {
+      spec.gameIndexes.forEach((gameIdx, col) => {
+        const votes = spec.ratings.map((row) => row[col]).filter((r) => r != null);
+        perGame.set(gameIdx, (perGame.get(gameIdx) || []).concat(votes));
+      });
+    }
+    for (const [gameIdx, votes] of perGame) {
+      const sc = scoreRatings(votes);
+      assert.ok(
+        sc.score > LOW_SCORE,
+        `round '${round.key}' game ${gameIdx} scores ${sc.score} — at or below ${LOW_SCORE}, so the demo would open by proposing it for retirement`
+      );
+      checked += 1;
+    }
   }
-  assert.ok(perGame.size >= 5, 'the fixture must actually hold games');
-  for (const [gameIdx, votes] of perGame) {
-    const sc = scoreRatings(votes);
-    assert.ok(
-      sc.score > LOW_SCORE,
-      `demo game ${gameIdx} scores ${sc.score} — at or below ${LOW_SCORE}, so the demo would open by proposing it for retirement`
-    );
-  }
+  // The anti-vacuous floor. It counts games actually SCORED, not rounds walked,
+  // so a seed whose sessions lost their ratings cannot satisfy it by iterating.
+  assert.ok(checked >= 8, `only ${checked} demo games carry votes — the fixture is not exercising the threshold`);
 });
 
 /* ---------------------------------------------------------------------------

@@ -110,7 +110,7 @@ npm run check:syntax  # node --check over all JS files
 npm run build         # optional: content-hash + minify js/css into dist/
 npm run migrate       # apply pending Postgres migrations (needs DATABASE_URL)
 
-node scripts/seed-dev.js   # fill a throwaway .devdata/ with a demo round
+node scripts/seed-dev.js   # fill a throwaway .devdata/ with the demo's rounds
 ```
 
 There is **no build step for development** — `npm start` serves `public/`

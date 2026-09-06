@@ -333,7 +333,34 @@ it is already coupled to the vote scale there. And `LOW_SCORE` in
 and the server has no opinion about it, so it is a render-time choice like
 `cover-size.js`'s widths rather than a shared contract.
 
-Each new instance must be named in this inventory — the thirteen paragraphs above.
+**The fourteenth is `public/js/round-designs.js`** (#953): the design registry —
+every palette and world a round can pick, each with its page tone, accent and
+declared scheme. It is the `session-log.js` direction, server-writes /
+client-renders, with the twist that the server writing it is the **demo seed**:
+`lib/demo-seed.js` requires it to build the stored `{ type: 'theme', id, page,
+accent }` for each of the three seeded rounds, and the home screen resolves that
+blob back through this file's own `resolveDesign()` to pick the backdrop, emblem
+and display face.
+
+Its trap is that a drift here is **completely silent in the direction that
+matters**. `resolveDesign()` returns null for an id it does not know and the
+caller keeps whatever was stored, so a hand-copied hex that no longer matches the
+registry — or a typo'd id — renders the round on the **standard palette** with no
+error, no 400 and a screen that still looks finished. That is precisely the "the
+worlds are invisible" state #953 exists to end, reintroduced by the change meant
+to end it. `designFor()` therefore throws on an unknown id rather than returning
+null, because the seed is the one caller that can afford to fail loudly at
+require time, and `test/demo-seed.test.js` asserts each seeded design round-trips
+through `resolveDesign()` with the registry's own page and accent.
+
+Note what deliberately did **not** join it: `lib/routes/background.js` still
+stores a design id **without** checking it against this list. That is not an
+oversight and must not be "fixed" — an unknown id already resolves to the plain
+palette on the client, and validating server-side would turn a render-time
+fallback into a cross-boundary contract, which is the thing this file spends
+fourteen paragraphs telling you to avoid creating unnecessarily.
+
+Each new instance must be named in this inventory — the fourteen paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a
