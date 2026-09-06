@@ -22,9 +22,13 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
 const { bodyOf, mediaBlocks, rulesOf, RULES } = require('./support/css');
+const { MEMBER_COLORS } = require('../public/js/member-colors');
+const { WORLDS } = require('../public/js/round-designs');
 
 const px = (body, prop) => Number(body.match(new RegExp(prop + ':\\s*(\\d+)px'))[1]);
 
@@ -214,4 +218,59 @@ test('the reveal drops confetti inside the spotlight, and only when revealing', 
   assert.ok(spot.classList.contains('is-reveal'));
   assert.equal(spot.querySelectorAll('.confetti__bit').length, 16,
     'the confetti must hang off the spotlight, which is what anchors it');
+});
+
+// --------------------------------------------- the world's scene (#940)
+
+/* A world replaces the confetti with its own victory scene. The scene itself is
+   CSS — slot 7 under "Worlds" in styles.css, pinned by test/round-worlds.test.js
+   — and what is asserted HERE is the JS side of the contract: the generator is
+   world-agnostic, its per-bit randomness travels as custom properties a world
+   rule can read, and the screen applies the round's design itself. */
+
+test('the confetti colours its bits through a custom property, so a world rule can recolour them', async (t) => {
+  const s = session('s7', { g1: 5, g2: 3 });
+  const r = round({ sessions: [s] });
+  const dom = bootApp(t, r);
+  await dom.call('showResults', r, s, r.games, true);
+  const bits = [...dom.app.querySelectorAll('.confetti__bit')];
+  assert.equal(bits.length, 16);
+  for (const bit of bits) {
+    assert.ok(MEMBER_COLORS.includes(bit.style.getPropertyValue('--bit-color')),
+      'each bit carries its palette colour as --bit-color');
+    assert.equal(bit.style.background, '', 'an inline background would beat the world rule');
+    // The drift is set for EVERY bit — a palette simply ignores it — rather than
+    // branching on the world, which is the #903 principle: one hook, CSS decides.
+    assert.match(bit.style.getPropertyValue('--bit-drift'), /^-?\d+px$/);
+  }
+});
+
+test('the results screen carries no world name — the scene keys off the one hook, in CSS', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session.js'), 'utf8');
+  for (const w of WORLDS) assert.doesNotMatch(src, new RegExp(w.id, 'i'), `views-session.js names the ${w.id} world`);
+  assert.doesNotMatch(src, /data-world|\bWORLDS\b|\bsetWorld\b/, 'the only world branch is CSS');
+  assert.equal([...src.matchAll(/confetti__bit/g)].length, 1, 'one particle generator, re-shaped by CSS — never a second one');
+});
+
+test('under a world the winner stays a working link, and the screen applies the round\'s design itself', async (t) => {
+  /* Both halves matter for the scene. The link: every ornament is a
+     pointer-events: none pseudo-element (round-worlds pins that), so the anchor
+     under it must still navigate. The design: showResults used to leave it to
+     the hub, so a shared or cold-loaded results URL rendered on the Standard
+     design — and the scene's end state, which a later visit is meant to show,
+     was simply absent there. */
+  const forest = WORLDS.find((w) => w.id === 'forest');
+  const s = session('s8', { g1: 5, g2: 3 });
+  const r = round({ sessions: [s], background: { type: 'theme', id: forest.id, page: forest.page, accent: forest.accent } });
+  const dom = bootApp(t, r);
+  const opened = [];
+  dom.set('showGameDetail', (rid, gid) => { opened.push([rid, gid]); });
+  await dom.call('showResults', r, s, r.games, true);
+
+  assert.equal(dom.document.documentElement.dataset.world, 'forest', 'the results screen must dress the round');
+  const spot = dom.app.querySelector('.spotlight');
+  assert.ok(spot.classList.contains('is-reveal'));
+  assert.equal(spot.querySelectorAll('.confetti__bit').length, 16, 'the same bits — a world re-shapes them in CSS');
+  spot.querySelector('.spotlight__winner').click();
+  assert.deepEqual(JSON.parse(JSON.stringify(opened)), [[RID, 'g1']], 'the winner link must open the game');
 });

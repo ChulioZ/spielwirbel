@@ -68,6 +68,18 @@ This is one measurement on one pane build, so treat neither claim as settled:
 **resize first, read the numbers back, and believe what they say.** If they are
 still 0, the stubbing recipes in the files above are the fallback.
 
+**A card that is mid-ANIMATION captures as a hole in the page** (measured
+2026-09-06, #940). While the winner spotlight's reveal was running — a
+`transform`/`opacity` animation on the card and on its pseudo-elements — a
+screenshot showed the page painted correctly *around* a blank rectangle where
+the card is; two seconds later the same call captured the finished scene. The
+DOM was healthy throughout: `getComputedStyle(el, '::before').transform` sampled
+at 0.3/1.2/2.1/3.6s read the keyframes' own interpolation (`scaleY` 0.06 →
+0.25 → 0.72 → 1) and `document.getAnimations()` listed every animation running.
+It is the compositor: an animating box gets its own layer, and the pane's
+capture omits it. So **prove motion with computed values sampled over time,
+and screenshot only the resting state** — which is the thing to judge anyway.
+
 **The pane lies about focus as well as about pixels.** `document.hasFocus()` is
 permanently false there, so `element.blur()` moves `document.activeElement`
 without dispatching any `blur`/`focusout` event — which makes every

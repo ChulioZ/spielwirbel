@@ -6,8 +6,10 @@
    These specs pin that hook end to end (applyBackground sets and clears it,
    the design screen saves the id that resolves to it, the home tile shows the
    world's glyph) and the CSS contract behind it: one token block per world,
-   six slot rules that are pseudo-elements only, the two media gates, and a
-   backdrop alpha inside the contrast budget. What they cannot judge is whether
+   seven slot rules that are pseudo-elements only, the two media gates, and a
+   backdrop alpha inside the contrast budget. Slot 7 (#940) is the winner
+   reveal's victory scene — the one slot with text ON it, so its geometry is
+   pinned below the way slots 5 and 6 are. What they cannot judge is whether
    the ornaments LOOK right — that is a browser check, per the issue.
 
    Driven through the jsdom harness rather than by matching source text where a
@@ -199,9 +201,16 @@ test('the home tile shows the world glyph, and the app glyph for a palette', asy
 
 const TOKENS = ['--world-font', '--world-backdrop', '--world-backdrop-size', '--world-backdrop-fade',
   '--world-frame', '--world-rule', '--world-corner', '--world-scene',
-  '--world-stage', '--world-stage-size', '--world-stage-repeat', '--world-stage-position'];
+  '--world-stage', '--world-stage-size', '--world-stage-repeat', '--world-stage-position',
+  // Slot 7 (#940): the victory scene's two layers, each a gutter pair plus a
+  // band, the keyframes that grow it, and the shape the confetti bits take.
+  '--world-victory-l', '--world-victory-r', '--world-victory-band',
+  '--world-victory-2-l', '--world-victory-2-r', '--world-victory-2-band',
+  '--world-victory-y', '--world-victory-2-y', '--world-victory-anim', '--world-victory-anim-2',
+  '--world-particle', '--world-particle-w', '--world-particle-h', '--world-particle-inset',
+  '--world-particle-anim', '--world-particle-dur'];
 
-test('each world declares the whole token set the six slots read, in the registry\'s face', () => {
+test('each world declares the whole token set the seven slots read, in the registry\'s face', () => {
   for (const w of WORLDS) {
     const body = bodyOf(`[data-world="${w.id}"]`);
     assert.ok(body, `styles.css has no [data-world="${w.id}"] token block`);
@@ -237,15 +246,16 @@ const SLOTS = [
   '[data-world] :is(.card, .ticket, .round-card, .vote)::after',
   '[data-world] .empty::before',
   '[data-world] .stage::before',
+  '[data-world] .spotlight::before',
 ];
 
 // A slot selector can hold commas inside :is(), which bodyOfIn() would split on.
 const slotBody = (sel) => (rulesOf(CSS).find(([s]) => s.split('\n').map((x) => x.trim().replace(/,$/, '')).includes(sel)) || [])[1] || null;
 
-test('the six slots exist, and every ornament is a pseudo-element that takes no clicks', () => {
+test('the seven slots exist, and every ornament is a pseudo-element that takes no clicks', () => {
   for (const sel of SLOTS) assert.ok(slotBody(sel), `slot ${sel} is missing`);
   const rules = rulesOf(CSS).filter(([sel]) => sel.includes('[data-world'));
-  assert.ok(rules.length >= 15, `the world rules have moved (found ${rules.length})`);
+  assert.ok(rules.length >= 19, `the world rules have moved (found ${rules.length})`);
   let ornaments = 0;
   for (const [sel, body] of rules) {
     if (!/content\s*:/.test(body)) continue;
@@ -256,7 +266,7 @@ test('the six slots exist, and every ornament is a pseudo-element that takes no 
     }
     assert.match(body, /pointer-events:\s*none/, `${sel}: an ornament must not enlarge a hit target`);
   }
-  assert.ok(ornaments >= 8, `expected the slot pseudo-elements, found ${ornaments}`);
+  assert.ok(ornaments >= 9, `expected the slot pseudo-elements, found ${ornaments}`);
   // Whatever paints, paints in a theme token — never a shade of its own
   // (.claude/rules/theme-derived-colors.md). The stage glow is a gradient OF one.
   let painted = 0;
@@ -267,7 +277,7 @@ test('the six slots exist, and every ornament is a pseudo-element that takes no 
         `${sel}: background ${m[1]} is not a theme token`);
     }
   }
-  assert.ok(painted >= 8, `expected the ornaments to paint, found ${painted} backgrounds`);
+  assert.ok(painted >= 10, `expected the ornaments to paint, found ${painted} backgrounds`);
   // The focus ring and the surface are floors, not styling surfaces.
   for (const [sel, body] of rules) {
     assert.doesNotMatch(body, /box-shadow|outline|--surface\s*:/, `${sel} touches a focus ring or --surface`);
@@ -353,17 +363,137 @@ test('the stage scene is a band behind the seal that ends above the title', () =
   }
 });
 
-test('the one animation is motion-gated, and the motifs drop under prefers-contrast: more', () => {
+test('every animation is motion-gated, and the motifs drop under prefers-contrast: more', () => {
   const blocks = mediaBlocks();
   const motion = blocks.filter(([q]) => /prefers-reduced-motion:\s*no-preference/.test(q)).map(([, css]) => css).join('\n');
-  const animated = rulesOf(CSS).filter(([sel, body]) => sel.includes('[data-world') && /animation\s*:/.test(body));
-  assert.ok(animated.length >= 1, 'the stage glow animation has moved');
+  // Both call shapes — `animation:` and `animation-name:` — or a rule written
+  // the second way would be invisible here (source-scanning-guards-enumerate-shapes.md).
+  const animated = rulesOf(CSS).filter(([sel, body]) => sel.includes('[data-world') && /animation(?:-name)?\s*:/.test(body));
+  assert.ok(animated.length >= 4, `the world animations have moved (found ${animated.length})`);
   for (const [sel, body] of animated) {
     assert.ok(motion.includes(body), `${sel} animates outside a prefers-reduced-motion: no-preference block`);
   }
   const more = blocks.filter(([q]) => /prefers-contrast:\s*more/.test(q)).map(([, css]) => css).join('\n');
-  for (const sel of ['[data-world] body::before', '[data-world] .empty::before', '[data-world] .stage::before']) {
+  for (const sel of ['[data-world] body::before', '[data-world] .empty::before', '[data-world] .stage::before',
+    '[data-world] .spotlight::before', '[data-world] .spotlight::after']) {
     assert.ok(more.includes(sel), `${sel} stays on under prefers-contrast: more`);
   }
   assert.match(more, /display:\s*none/);
+});
+
+// ---- slot 7: the victory scene (#940) ------------------------------------
+
+/* The scene sits on the winner spotlight, which has text ON it — the kicker
+   and the title — so, unlike slots 5 and 6, no band is text-free by nature.
+   The contract that makes it bold anyway: the hero paints only in the two
+   side gutters and the bottom band, and the host RESERVES exactly those as
+   padding, through the same two custom properties the masks are sized with.
+   One property on both sides makes a drift unrepresentable (the shape #928
+   argued for), so the spec pins the sharing rather than comparing numbers. */
+const tokenValue = (world, tok) => {
+  // The LAST declaration, as the cascade reads it: a duplicated token would
+  // otherwise let the spec read one value while the browser paints another.
+  const all = [...bodyOf(`[data-world="${world.id}"]`).matchAll(new RegExp(`${tok}:\\s*([^;]+);`, 'g'))];
+  assert.ok(all.length, `${world.id} lacks ${tok}`);
+  return all[all.length - 1][1].trim();
+};
+
+test('the victory scene paints only in the gutters and the band the spotlight reserves', () => {
+  const host = bodyOf('[data-world] .spotlight');
+  assert.ok(host, 'the spotlight host rule is missing');
+  const col = /--victory-col:\s*min\(\s*(\d+)%\s*,\s*(\d+)px\s*\)/.exec(host);
+  const band = /--victory-band:\s*min\(\s*(\d+)%\s*,\s*(\d+)px\s*\)/.exec(host);
+  assert.ok(col, 'the gutter width must be a capped percentage, declared once on the host');
+  assert.ok(band, 'the band height must be a capped percentage, declared once on the host');
+  assert.match(host, /padding-inline:\s*var\(--victory-col\)/,
+    'the gutters are reserved through the SAME property the gutter masks are sized with');
+  assert.match(host, /padding-bottom:\s*calc\(20px \+ var\(--victory-band\)\)/, 'and so is the band');
+  assert.match(host, /overflow:\s*hidden/, 'a launching rocket starts below the card');
+  assert.match(host, /isolation:\s*isolate/, 'z-index: -1 must not sink the scene under the page');
+
+  const shared = slotBody('[data-world] .spotlight::before');
+  const size = /mask-size:\s*var\(--victory-col\) auto,\s*var\(--victory-col\) auto,\s*min\(\s*100%\s*,\s*(\d+)px\s*\)\s+auto/.exec(shared);
+  assert.ok(size, 'the two gutter layers are sized by --victory-col and the band layer caps its width');
+  assert.match(shared, /mask-repeat:\s*no-repeat/);
+  assert.match(shared, /transform-origin:\s*50% 100%/, 'a scene grows from the ground, never toward the centre');
+  for (const pseudo of ['before', 'after']) {
+    const own = bodyOf(`[data-world] .spotlight::${pseudo}`);
+    assert.ok(own, `::${pseudo} has no rule of its own`);
+    assert.match(own, /mask-position:\s*left var\(--world-victory(?:-2)?-y\),\s*right var\(--world-victory(?:-2)?-y\),\s*center bottom/,
+      `::${pseudo}: the gutter layers hug the edges and the band sits at the bottom`);
+  }
+  for (const w of WORLDS) {
+    for (const tok of ['--world-victory-y', '--world-victory-2-y']) {
+      assert.match(tokenValue(w, tok), /^(top|bottom)$/, `${w.id}: ${tok} must anchor a gutter layer to an edge`);
+    }
+    // The band art's height-to-width ratio must fit the reserved band at every
+    // width, and its capped width at the cap — slot 5's arithmetic.
+    for (const tok of ['--world-victory-band', '--world-victory-2-band']) {
+      if (tokenValue(w, tok) === 'none') continue;
+      const ratio = artRatio(tok, w);
+      assert.ok(Number(band[1]) / 100 >= ratio - 1e-9,
+        `${w.id}: ${tok} is ${(ratio * 100).toFixed(1)}% of the width tall but only ${band[1]}% is reserved`);
+      assert.ok(Number(band[2]) >= Number(size[1]) * ratio - 1e-9,
+        `${w.id}: ${tok} caps at ${(Number(size[1]) * ratio).toFixed(0)}px tall but only ${band[2]}px is reserved`);
+    }
+    // And every world puts SOMETHING in the band and in a gutter: an empty
+    // frame is the one end state the issue rules out.
+    assert.ok(['--world-victory-band', '--world-victory-2-band'].some((tok) => tokenValue(w, tok) !== 'none'),
+      `${w.id}: the band is empty`);
+    assert.ok(['--world-victory-l', '--world-victory-r', '--world-victory-2-l', '--world-victory-2-r']
+      .some((tok) => tokenValue(w, tok) !== 'none'), `${w.id}: both gutters are empty`);
+  }
+  // At the narrowest phone width the winner must still fit between the gutters
+  // WITHOUT its max-width: 100% squeeze, or the reservation is paid for with a
+  // cropped cover. 320px is the floor test/phone-width-overflow.test.js holds.
+  const appPad = Number(/padding:\s*\d+px\s+(\d+)px/.exec(bodyOf('.app'))[1]);
+  const inner = 320 - 2 * appPad;
+  const winner = Number(/width:\s*(\d+)px/.exec(bodyOf('.spotlight__winner'))[1]);
+  const left = inner * (1 - 2 * Number(col[1]) / 100);
+  assert.ok(left >= winner, `at 320px the gutters leave ${left.toFixed(0)}px for a ${winner}px winner`);
+});
+
+test('the scene rests in its end state; only the reveal animates it, through motion-gated keyframes each world names', () => {
+  // The end state IS the ornament: the un-revealed rules carry no animation,
+  // so a cold load, the Chronik and a reduced-motion reader get the composed scene.
+  for (const sel of ['[data-world] .spotlight::before', '[data-world] .spotlight::after']) {
+    assert.doesNotMatch(bodyOf(sel), /animation/, `${sel} must rest — the reveal class is what animates`);
+  }
+  const motion = mediaBlocks().filter(([q]) => /prefers-reduced-motion:\s*no-preference/.test(q)).map(([, css]) => css).join('\n');
+  const reveal = rulesOf(motion).filter(([sel]) => /^\[data-world\] \.spotlight\.is-reveal::(before|after)$/.test(sel));
+  assert.equal(reveal.length, 2, 'both layers animate on the reveal, inside the motion gate');
+  for (const [sel, body] of reveal) {
+    // Once, after the 0.55s spotlight rise (0.1s delay + 0.55s), on the
+    // long-form scale the :root comment enumerates — never the micro scale.
+    assert.match(body, /animation:\s*var\(--world-victory-anim(?:-2)?\)\s+2\.6s\s+[^;]*\.65s\s+both/,
+      `${sel} must run the world's own keyframes once, after the rise, holding both end states`);
+    assert.doesNotMatch(body, /infinite/, `${sel}: the hero runs ONCE`);
+  }
+  // Every keyframe name a world declares must exist inside the gate: a typo
+  // here animates nothing and reports nothing.
+  const names = [...motion.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1]);
+  for (const w of WORLDS) {
+    for (const tok of ['--world-victory-anim', '--world-victory-anim-2', '--world-particle-anim']) {
+      const name = tokenValue(w, tok);
+      assert.ok(names.includes(name), `${w.id}: ${tok} names "${name}", which no motion-gated @keyframes declares`);
+    }
+  }
+});
+
+test('a world re-shapes the confetti bits through tokens — the same bits, no second generator', () => {
+  // The palette colour has to arrive as a custom property: an inline
+  // `background` would beat every rule, and a world could never recolour it.
+  assert.match(bodyOf('.confetti__bit'), /background:\s*var\(--bit-color\)/);
+  const bits = bodyOf('[data-world] .confetti__bit');
+  assert.ok(bits, 'the world particle rule is missing');
+  for (const decl of ['mask-image:\\s*var\\(--world-particle\\)', 'width:\\s*var\\(--world-particle-w\\)',
+    'height:\\s*var\\(--world-particle-h\\)', 'inset-block:\\s*var\\(--world-particle-inset\\)',
+    'background:\\s*var\\(--brand\\)']) {
+    assert.match(bits, new RegExp(decl), `the particle rule lacks ${decl}`);
+  }
+  const motion = mediaBlocks().filter(([q]) => /prefers-reduced-motion:\s*no-preference/.test(q)).map(([, css]) => css).join('\n');
+  const animated = rulesOf(motion).find(([sel]) => sel === '[data-world] .confetti__bit');
+  assert.ok(animated, 'the particles animate inside the motion gate');
+  assert.match(animated[1], /animation:\s*var\(--world-particle-anim\)\s+var\(--world-particle-dur\)/,
+    'the shape and the pace are the world\'s; the loop is shared');
 });
