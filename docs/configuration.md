@@ -94,9 +94,11 @@ Guest demo mode (issue #427): set `DEMO_ENABLED=true` (on top of
 `ACCOUNTS_ENABLED`) and the landing page offers **"Ohne Anmeldung ausprobieren"**
 alongside registering, plus a `/demo` deep link so a launch post can point
 straight into a running demo. One click mints a throwaway account with its own
-tenant, seeded with a ready-to-play round — nine games with real provider covers,
-four seats and two finished sessions, so Chronik and Pokale have content on
-arrival — and drops the visitor into the app with no e-mail and no password.
+tenant, seeded with three ready-to-play rounds — two of them on a world (one
+light, one dark) and one on a plain palette, with real provider covers and
+metadata, an archived and a wished-for game, two finished sessions on the round
+the visitor lands in, and one evening split across two tables with a guest and a
+team — and drops the visitor into the app with no e-mail and no password.
 
 The account is strictly disposable: a persistent in-app banner says so, it holds
 no password identity (so it can never be logged back into), it cannot send friend
@@ -512,8 +514,9 @@ restart-loop the container.
 
 A fresh clone starts empty, so a UI change gets verified against a blank Regal,
 an empty Chronik and empty Pokale. `scripts/seed-dev.js` fills a **throwaway**
-dataset with the same content the guest demo uses — curated games with real
-cover art, tags, four seats and two finished sessions with votes:
+dataset with the same content the guest demo uses — three rounds of curated
+games with real cover art and metadata, tags, seats, finished sessions with
+votes, and one session split across two tables:
 
 ```bash
 node scripts/seed-dev.js        # seeds .devdata/ (German); `en` for English

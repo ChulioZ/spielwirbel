@@ -157,8 +157,10 @@ lib/
                      so the log cannot drift from what it records (issue #209)
   demo.js            guest demo mode: mints, seeds and purges throwaway demo
                      accounts (issue #427; off unless DEMO_ENABLED)
-  demo-seed.js       the content a demo tenant is seeded with — games (hotlinked
-                     provider covers), tags and per-locale text
+  demo-seed.js       the content a demo tenant is seeded with — three rounds,
+                     each with its design, games (hotlinked provider covers plus
+                     resolved provider metadata), tags, sessions and per-locale
+                     text (issues #427, #953)
   demo-tenant.js     the one definition of the `demo-` tenant-id prefix that
                      classifies a tenant as a demo, dependency-free so the repo
                      backends and the logger can require it without a cycle
@@ -597,11 +599,12 @@ scripts/
   build.js           optional cache-busting build: mirrors public/ into dist/
                      with content-hashed, minified js/css (npm run build)
   seed-dev.js        fills a throwaway DATA_DIR (.devdata/ by default) with the
-                     guest demo's round + a local dev account, so a fresh clone
+                     guest demo's rounds + a local dev account, so a fresh clone
                      has something to look at; refuses the real data/
   resolve-demo-covers.js
-                     re-resolves the demo seed's cover hotlinks against the
-                     providers and prints a DEMO_GAMES block for lib/demo-seed.js
+                     re-resolves the demo seed's cover hotlinks AND provider
+                     metadata against the providers, and prints one ready-to-paste
+                     games block per round for lib/demo-seed.js
   session-cost.js    reports what an agent session cost (requests, the fixed
                      preamble, the largest tool results) from Claude Code's own
                      transcripts — so a workflow change can be measured

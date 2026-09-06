@@ -7,13 +7,15 @@
  *
  * WHY THIS EXISTS. A fresh clone starts empty, so a contributor verifying a UI
  * change looks at a blank Regal, an empty Chronik and empty Pokale — i.e. at
- * none of the screens they are about to change. This writes one filled round
- * into a throwaway dataset so `preview_start`/`npm start` lands on a real app.
+ * none of the screens they are about to change. This writes the demo's filled
+ * rounds into a throwaway dataset so `preview_start`/`npm start` lands on a real
+ * app.
  *
  * IT REUSES THE GUEST DEMO'S SEED, deliberately: lib/demo.js's seedTenant()
- * already builds exactly this round (curated games with resolved hotlinked
- * covers, tags, four seats, two finished sessions with votes) through the
- * ordinary repo mutators. Copying that logic here would give the dev seed its
+ * already builds exactly these rounds (curated games with resolved hotlinked
+ * covers and provider metadata, tags, seats, finished sessions with votes, an
+ * archived and a wished game, and one evening split across two tables) through
+ * the ordinary repo mutators. Copying that logic here would give the dev seed its
  * own second implementation to rot — the failure mode
  * .claude/rules/shared-constants-across-the-stack.md is about — so the script
  * is a wrapper around the real thing, and a change to the demo's shape lands
@@ -144,14 +146,19 @@ async function main() {
   });
   if (typeof user === 'string') fail(`could not create the dev account (${user}).`);
 
-  const round = await demo.seedTenant('default', user.id, locale);
-  const full = await repo.forTenant('default').getRound(round.id);
+  await demo.seedTenant('default', user.id, locale);
+  // Every round, not just the one seedTenant hands back: since #953 the demo
+  // seeds three, and reporting only the first would under-describe what a
+  // contributor is about to look at.
+  const rounds = await repo.forTenant('default').listRounds();
 
   const rel = display(target);
   console.log(`seed-dev: seeded ${rel}/data.json`);
-  console.log(`  round     "${full.name}" — ${full.games.length} games, `
-    + `${full.members.length} seats, ${(full.tags || []).length} tags, `
-    + `${full.sessions.filter((s) => s.finished).length} finished sessions`);
+  for (const full of rounds) {
+    console.log(`  round     "${full.name}" — ${full.games.length} games, `
+      + `${full.members.length} seats, ${(full.tags || []).length} tags, `
+      + `${full.sessions.filter((s) => s.finished).length} finished sessions`);
+  }
   console.log(`  account   ${DEV_ACCOUNT.email} / ${DEV_ACCOUNT.password} (local only)`);
   console.log('  run       preview_start "dev-temp-data", or: '
     + `DATA_DIR=${rel} npm start`);

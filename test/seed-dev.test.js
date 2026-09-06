@@ -22,6 +22,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+// The script wraps demo.seedTenant, so its shape is the demo's — derived rather
+// than restated, or the two drift the moment the seed grows a round.
+const { DEMO_ROUNDS } = require('../lib/demo-seed');
 
 const ROOT = path.join(__dirname, '..');
 const SCRIPT = path.join(ROOT, 'scripts', 'seed-dev.js');
@@ -44,7 +47,9 @@ test('seeds a filled round into an isolated DATA_DIR', () => {
     assert.equal(res.status, 0, `expected a clean run, got:\n${res.stderr}`);
 
     const data = readData(dir);
-    assert.equal(data.rounds.length, 1);
+    // Every round the demo seeds, not one: the script is a wrapper around
+    // seedTenant, so its output follows the demo's shape by construction (#953).
+    assert.equal(data.rounds.length, DEMO_ROUNDS.length);
     const round = data.rounds[0];
 
     // The tenant an unauthenticated caller resolves to (lib/tenant.js), which is
@@ -167,9 +172,10 @@ test('refuses a target that already holds data', () => {
     assert.notEqual(res.status, 0, 'a second seed must not append to an existing dataset');
     assert.match(res.stderr, /already holds data/);
 
-    // Still exactly one round and one account: the refusal wrote nothing.
+    // Still exactly the first run's rounds and one account: the refusal wrote
+    // nothing. A second seed appending would show up here as double the rounds.
     const data = readData(dir);
-    assert.equal(data.rounds.length, 1);
+    assert.equal(data.rounds.length, DEMO_ROUNDS.length);
     assert.equal(data.users.length, 1);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });

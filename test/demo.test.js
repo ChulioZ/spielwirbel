@@ -49,8 +49,14 @@ const demo = require('../lib/demo');
 const seed = require('../lib/demo-seed');
 const scheduler = require('../lib/scheduler');
 const observability = require('../lib/observability');
-const { providerCoverUrl } = require('../lib/providers');
-const { TAG_ICONS } = require('../lib/tag-icons');
+// What became of a session, derived rather than read off a flag (#796) — the
+// split parent is neither played nor cancelled, and sixteen sites once got that
+// wrong silently (.claude/rules/shared-constants-across-the-stack.md).
+const { sessionOutcome } = require('../public/js/session-outcome');
+const { PROVIDER_INFO_FIELDS } = require('../lib/provider-info-fields');
+// The app's own "would this game hop BGG?" predicate, so the no-request claim is
+// asserted against the real gate rather than against a re-read of the stamp.
+const { needsProviderInfo } = require('../lib/provider-info');
 
 // Each spec restores what it changed; `env()` keeps that from being a per-test
 // chore that one spec eventually forgets.
@@ -91,79 +97,6 @@ async function startDemo(app, body) {
 const auth = (res) => ['Authorization', `Bearer ${res.body.accessToken}`];
 
 /* ------------------------------ the seed table ------------------------------ */
-
-test('every seeded cover passes the same guard the add-game route applies', () => {
-  // Not a style check: an `image` that fails this is stored but never renders —
-  // CSP blocks an off-allowlist host and the app shows a gradient with only a
-  // console violation to explain it. Rendering nothing is the failure mode this
-  // catches, and it is invisible from every other test.
-  for (const game of seed.DEMO_GAMES) {
-    if (game.image === null) continue;
-    assert.strictEqual(
-      providerCoverUrl(game.image),
-      game.image,
-      `${game.title}: cover URL is not one the app would store`
-    );
-  }
-});
-
-test('every seeded tag icon is on the TAG_ICONS allowlist', () => {
-  // An off-list key renders NOTHING, with no error anywhere — so a typo here is
-  // only ever caught by someone looking at the screen.
-  for (const [key, tag] of Object.entries(seed.DEMO_TAGS)) {
-    assert.ok(TAG_ICONS.includes(tag.icon), `tag ${key}: icon '${tag.icon}' is not in TAG_ICONS`);
-  }
-});
-
-test('every tag a seeded game references exists', () => {
-  for (const game of seed.DEMO_GAMES) {
-    for (const key of game.tags || []) {
-      assert.ok(seed.DEMO_TAGS[key], `${game.title} references unknown tag '${key}'`);
-    }
-  }
-});
-
-test('the seeded shelf can actually be drawn from at the seeded table size', () => {
-  // The demo seats four (owner + three). A shelf whose games all cap below that
-  // makes the visitor's FIRST action — "Session wirbeln" — answer "No matching
-  // games in this round", which reads as the app being broken on the one screen
-  // the demo exists to demonstrate. Arithmetic over the declared numbers, the
-  // same shape .claude/rules/responsive-content-width.md pins column counts with.
-  const seats = 1 + seed.DEMO_TEXT.de.members.length;
-  const drawable = seed.DEMO_GAMES.filter(
-    (g) => (g.minPlayers == null || seats >= g.minPlayers) && (g.maxPlayers == null || seats <= g.maxPlayers)
-  );
-  assert.ok(drawable.length >= 3, `only ${drawable.length} of ${seed.DEMO_GAMES.length} games are drawable at ${seats} players`);
-});
-
-test('every seeded locale seeds the same number of fellow players', () => {
-  // The seat count is what the draw pool's player ranges are sized against
-  // (see the drawable-games spec above), so it must not vary by language.
-  const counts = seed.DEMO_LOCALES.map((loc) => seed.DEMO_TEXT[loc].members.length);
-  assert.ok(counts.length >= 2, 'expected at least two seeded locales');
-  assert.deepEqual([...new Set(counts)], [counts[0]], `fellow-player counts differ by locale: ${counts.join(', ')}`);
-});
-
-test('a locale with no seed text falls back to English rather than throwing', () => {
-  // English, not German (#504): a UI locale may ship before its demo text, and
-  // handing a Dutch or Portuguese visitor a German round is the half-translated
-  // impression the per-locale seed exists to avoid.
-  //
-  // The stand-in is the UNSHIPPED 'zx', as in test/i18n-locales.test.js. It used
-  // to be 'it' — a language with an open translation issue, so shipping Italian
-  // (#536) made textFor('it') return the Italian seed and this assertion assert
-  // the opposite of its own name. Never stand in for "unshipped" with a code
-  // some issue is about to ship (.claude/rules/locale-set-is-data.md).
-  assert.strictEqual(seed.textFor('zx'), seed.DEMO_TEXT.en);
-  assert.strictEqual(seed.textFor(''), seed.DEMO_TEXT.en);
-  assert.strictEqual(seed.textFor(undefined), seed.DEMO_TEXT.en);
-  assert.strictEqual(seed.tagNameFor('party', 'zx'), seed.DEMO_TAGS.party.en);
-  // A locale that DOES have text still gets its own, region tag and all.
-  assert.strictEqual(seed.textFor('en-GB'), seed.DEMO_TEXT.en);
-  assert.strictEqual(seed.textFor('de'), seed.DEMO_TEXT.de);
-  assert.strictEqual(seed.tagNameFor('party', 'de'), seed.DEMO_TAGS.party.de);
-});
-
 /* --------------------------------- the gate --------------------------------- */
 
 test('the endpoint 404s when DEMO_ENABLED is unset', async () => {
@@ -206,7 +139,7 @@ test('a demo mints a working token pair scoped to its own fresh tenant', async (
 
     const rounds = await request(app).get('/api/rounds').set(...auth(res));
     assert.strictEqual(rounds.status, 200);
-    assert.strictEqual(rounds.body.length, 1);
+    assert.strictEqual(rounds.body.length, seed.DEMO_ROUNDS.length);
   });
 });
 
@@ -238,12 +171,15 @@ test('the seeded round is immediately usable: Chronik and Pokale have content, a
     const rid = list.body[0].id;
     const round = await request(app).get(`/api/rounds/${rid}`).set(...auth(res));
 
-    assert.strictEqual(round.body.games.length, seed.DEMO_GAMES.length);
-    assert.strictEqual(round.body.members.length, 1 + seed.DEMO_TEXT.de.members.length);
+    const main = seed.DEMO_ROUNDS[0];
+    assert.strictEqual(round.body.games.length, main.games.length);
+    assert.strictEqual(round.body.members.length, 1 + seed.DEMO_TEXT.de.rounds.main.members.length);
     // Chronik + Pokale both render off finished sessions; an empty state on
-    // arrival is exactly what the issue set out to avoid.
+    // arrival is exactly what the issue set out to avoid. The landing round
+    // still holds EXACTLY its two, which #953 deliberately did not deepen — the
+    // new rounds demonstrate a feature rather than simulating months of play.
     const finished = round.body.sessions.filter((s) => s.finished);
-    assert.strictEqual(finished.length, seed.DEMO_SESSIONS.length);
+    assert.strictEqual(finished.length, main.sessions.length);
     assert.ok(finished.every((s) => s.winnerIds.length > 0), 'a finished session must have winners or Pokale stays empty');
     assert.ok(finished.every((s) => Object.keys(s.votes || {}).length > 0), 'ratings drive every stat screen');
 
@@ -265,14 +201,140 @@ test('the seed is localized, and the visitor holds the owner seat', async () => 
     for (const locale of seed.DEMO_LOCALES) {
       const res = await startDemo(app, { locale });
       const list = await request(app).get('/api/rounds').set(...auth(res));
+      // EVERY round is localized, in seed order — not just the landing one. A
+      // round whose text was forgotten would otherwise sit on the home screen
+      // in English behind two translated siblings.
+      assert.strictEqual(list.body.length, seed.DEMO_ROUNDS.length);
+      seed.DEMO_ROUNDS.forEach((spec, i) => {
+        assert.strictEqual(list.body[i].name, seed.DEMO_TEXT[locale].rounds[spec.key].name,
+          `${locale}: round '${spec.key}' is not localized`);
+      });
       const round = await request(app).get(`/api/rounds/${list.body[0].id}`).set(...auth(res));
-      assert.strictEqual(round.body.name, seed.DEMO_TEXT[locale].roundName);
       // #421: the owner seat is PREPENDED and is the only member carrying a
       // userId, which is what makes Chronik attribution work for the visitor.
       assert.strictEqual(round.body.members[0].name, seed.DEMO_TEXT[locale].ownerSeat);
       assert.strictEqual(round.body.members[0].userId, res.body.user.id);
       assert.ok(round.body.tags.some((tg) => tg.name === seed.tagNameFor('party', locale)));
     }
+  });
+});
+
+test('the seeded shelf arrives with provider metadata, so the Regal offers its filters at once', async () => {
+  await withDemo({}, async () => {
+    const app = createApp();
+    const res = await startDemo(app, { locale: 'de' });
+    const list = await request(app).get('/api/rounds').set(...auth(res));
+    const round = await request(app).get(`/api/rounds/${list.body[0].id}`).set(...auth(res));
+
+    // `metadataFilterOptions` derives which controls EXIST from the values
+    // actually stored, so an unseeded shelf offers the visitor no complexity,
+    // playtime or age control at all until the lazy backfill has hopped BGG and
+    // the screen has re-rendered.
+    const stored = round.body.games.filter((g) => PROVIDER_INFO_FIELDS.some((k) => g[k] != null));
+    const resolved = seed.DEMO_ROUNDS[0].games.filter((g) => PROVIDER_INFO_FIELDS.some((k) => g[k] != null));
+    assert.strictEqual(stored.length, resolved.length,
+      'the seed metadata did not survive createGame');
+
+    // The stamp is what stops a demo mint costing BGG a request. It has to be
+    // FRESH (a historical one is past the TTL and the backfill hops anyway) and
+    // it must sit only on rows that actually carry metadata — stamping a bare
+    // row would suppress the backfill for seven days, and a demo is purged
+    // within one, so that game could never fill at all.
+    for (const game of round.body.games) {
+      const hasInfo = PROVIDER_INFO_FIELDS.some((k) => game[k] != null);
+      assert.strictEqual(!!game.providerInfoAt, hasInfo,
+        `${game.title}: providerInfoAt must be present exactly when metadata is`);
+      if (!hasInfo) continue;
+      assert.ok(!needsProviderInfo(game), `${game.title}: would still hop BGG during the demo`);
+    }
+  });
+});
+
+test('each seeded round arrives in its own design, so the home screen shows the worlds', async () => {
+  await withDemo({}, async () => {
+    const app = createApp();
+    const res = await startDemo(app, { locale: 'de' });
+    const list = await request(app).get('/api/rounds').set(...auth(res));
+    // The home screen reads the design off the SUMMARY (views-home.js), which is
+    // a different read path from the full round — so asserting it here is what
+    // proves the backdrop, emblem and display face resolve on the tile itself.
+    seed.DEMO_ROUNDS.forEach((spec, i) => {
+      assert.deepStrictEqual(list.body[i].background, spec.design,
+        `round '${spec.key}': the home tile would render on the standard palette`);
+    });
+  });
+});
+
+test('the group round arrives already split across two tables, with a guest and a team', async () => {
+  await withDemo({}, async () => {
+    const app = createApp();
+    const res = await startDemo(app, { locale: 'de' });
+    const list = await request(app).get('/api/rounds').set(...auth(res));
+    const idx = seed.DEMO_ROUNDS.findIndex((r) => r.split);
+    const round = await request(app).get(`/api/rounds/${list.body[idx].id}`).set(...auth(res));
+
+    const parent = round.body.sessions.find((s) => sessionOutcome(s) === 'split');
+    assert.ok(parent, 'no session reads as split — the Chronik would draw it as played or offer to resume it');
+    assert.ok(parent.multiTable, 'the parent must be a multi-table session');
+    assert.ok(!parent.chosenGameId, 'a split parent was never played at one table');
+    assert.ok(parent.guests && parent.guests.length, 'the split carries no guests (#458)');
+    assert.ok(parent.teams && parent.teams.length, 'the split carries no team (#575)');
+    assert.ok(parent.tableProposals && parent.tableProposals.length,
+      'no stored proposal, so the tables screen has nothing to show the split came from');
+
+    // Both children are reachable and were actually played — a split whose
+    // children are unfinished renders an evening nobody finished.
+    const children = round.body.sessions.filter((s) => s.parentSessionId === parent.id);
+    assert.strictEqual(children.length, parent.childSessionIds.length);
+    assert.strictEqual(children.length, parent.tableProposals[0].tables.length);
+    assert.ok(children.every((c) => c.finished && c.chosenGameId && c.winnerIds.length > 0),
+      'every table must be finished with a winner, or Pokale reads a half-played evening');
+    // Two tables playing one box at once needs two copies of it — the same rule
+    // validateSplitTables enforces on a hand-built arrangement.
+    const games = children.map((c) => c.chosenGameId);
+    assert.strictEqual(new Set(games).size, games.length, 'two tables share one game');
+    // Everybody who voted is seated exactly once, which is what stops a
+    // participant losing the evening they rated for.
+    const seated = children.flatMap((c) => c.memberIds.concat((c.guests || []).map((g) => g.name)));
+    const people = parent.memberIds.length + parent.guests.length;
+    assert.strictEqual(seated.length, people, 'the tables do not seat exactly the parent\'s people');
+
+    // The children must sit on the PARENT's date. buildChildSessions stamps
+    // `now`, which is correct in the route (a split is confirmed the same
+    // evening it was drawn) and wrong in a backdated seed: the Chronik would
+    // file the tables under the current month while the evening they belong to
+    // sits in the previous one, so the period recap counts plays whose sessions
+    // that month's list does not show. Observed doing exactly that.
+    for (const child of children) {
+      assert.strictEqual(child.createdAt, parent.createdAt,
+        'a table is dated apart from the evening it belongs to');
+    }
+  });
+});
+
+test('absent-key parity: a session grows guests/teams keys only when it has them', async () => {
+  // The two backends must produce byte-identical blobs
+  // (.claude/rules/postgres-backend.md), and the seed is now the one place that
+  // writes BOTH shapes — the landing round's sessions have neither key, the
+  // split has both. A seed that wrote `guests: []` would diverge only on
+  // Postgres, i.e. only in the CI job nobody runs locally.
+  await withDemo({}, async () => {
+    const app = createApp();
+    const res = await startDemo(app, { locale: 'de' });
+    const list = await request(app).get('/api/rounds').set(...auth(res));
+    let withKeys = 0;
+    let without = 0;
+    for (const summary of list.body) {
+      const round = await request(app).get(`/api/rounds/${summary.id}`).set(...auth(res));
+      for (const s of round.body.sessions) {
+        if (s.guests === undefined) { assert.strictEqual(s.teams, undefined); without += 1; continue; }
+        assert.ok(Array.isArray(s.guests) && s.guests.length, 'an empty guests array was stored');
+        withKeys += 1;
+      }
+    }
+    // Both shapes must actually occur, or this asserts nothing about either.
+    assert.ok(withKeys >= 1, 'no seeded session carries guests');
+    assert.ok(without >= 1, 'every seeded session carries guests — the absent shape is untested');
   });
 });
 
@@ -476,7 +538,7 @@ test('ending a demo erases it and frees its slot immediately', async () => {
 
     const ended = await request(app).delete('/api/account/demo').set(...auth(res));
     assert.strictEqual(ended.status, 200);
-    assert.strictEqual(ended.body.rounds, 1);
+    assert.strictEqual(ended.body.rounds, seed.DEMO_ROUNDS.length);
 
     // The whole point of the issue: the slot is back NOW, not in 24 h.
     assert.strictEqual(await repo.countLiveDemoUsers(new Date().toISOString()), before - 1);
@@ -583,7 +645,7 @@ test('an expired demo is purged with its rounds, and its live token then 401s', 
 
     const result = await scheduler.runJob('purgeExpiredDemos');
     assert.strictEqual(result.purged, 1);
-    assert.strictEqual(result.rounds, 1);
+    assert.strictEqual(result.rounds, seed.DEMO_ROUNDS.length);
     assert.strictEqual(await repo.getUserById(uid), null);
 
     // The access token is a stateless JWT and is still signature-valid — the

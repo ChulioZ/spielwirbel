@@ -88,15 +88,22 @@ what makes it genuinely disposable rather than an unadvertised permanent account
 
 ## 3. The seeded games' PLAYER RANGES must fit the seeded seat count
 
-The draw pool filters on `minPlayers`/`maxPlayers` (`drawPool`, `lib/draw.js`). The
-demo seats four — the visitor's own owner seat (#421) plus three — so a shelf of
-games capping at 2 makes the visitor's **first action** answer *"No matching games
-in this round"*. On the one screen the demo exists to demonstrate, that reads as
-the app being broken.
+The draw pool filters on `minPlayers`/`maxPlayers` (`drawPool`, `lib/draw.js`), so
+a shelf whose games cap below the round's seat count makes the visitor's **first
+action** answer *"No matching games in this round"*. On the one screen the demo
+exists to demonstrate, that reads as the app being broken.
 
 This bit during development: God of War Ragnarök resolved to `maxPlayers: 1` and
-was dropped for that reason alone. `test/demo.test.js` pins the arithmetic over
-the declared numbers rather than asserting "a game exists".
+was dropped for that reason alone.
+
+**Since #953 the seed is THREE rounds seating different numbers** (4, 2 and 6),
+so the arithmetic has to be checked **per round** — a single assertion over a
+flat game list measures the first round's shelf against the first round's seats
+and says nothing about a two-player round seeded with six-player games. It lives
+in `test/demo-seed.test.js` (split out of `test/demo.test.js` when #953 pushed
+that file past its budget) and applies the app's OWN `isActiveGame` +
+`fitsPlayerCount` rather than re-deriving a range comparison, so the archived and
+wished rows #953 added cannot be counted as shelf stock.
 
 Note the owner seat means `round.members.length` is **1 + the typed names** — the
 fixture trap `.claude/rules/member-seat-self-claim.md` describes, here in the seed.
