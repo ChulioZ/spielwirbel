@@ -4,8 +4,8 @@
  * Rating averages are written in the READER's notation (#850).
  *
  * Every Ø the app prints used to go through `Number.prototype.toFixed(1)`, which
- * is locale-independent by definition and always emits a dot — so four of the
- * five shipped locales read "Ø 3.7" where their own convention is "Ø 3,7". The
+ * is locale-independent by definition and always emits a dot — so every shipped
+ * locale but English read "Ø 3.7" where its own convention is "Ø 3,7". The
  * correct helper already existed on one screen (`/entdecken`, #786) and never
  * made it out of that file; `fmtAvg` in i18n.js is that helper, hoisted.
  *

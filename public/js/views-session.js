@@ -450,7 +450,7 @@ function showStartSession(round, prefill) {
 //   opts.skipIntro        – drop the "you're up, don't peek" handover screen
 // Absent opts is the original hot-seat behaviour, byte for byte.
 function startVoting(round, session, games, people, opts = {}) {
-  // votes[personId][gameId] = { rating, retire }
+  // votes[personId][gameId] = { rating }   (the retire flag went with #909)
   const votes = {};
   people.forEach((p) => (votes[p.id] = {}));
 

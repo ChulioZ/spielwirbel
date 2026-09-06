@@ -100,7 +100,7 @@ they wrap. It is 60px for that reason.
 
 The check to re-run if any of this is retuned: uniform avatars across a tie, one
 over-long name ellipsised (**not** wrapped — a wrapped chip is a taller chip, and
-height is the rank), and zero overhang on the tie marker in **all five locales at
+height is the rank), and zero overhang on the tie marker in **every locale shipped at the time (five) at
 320px as well as 375px**. That is one probe per width (swap the label text,
 compare the two rects), not five browser sessions.
 

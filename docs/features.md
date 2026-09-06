@@ -473,6 +473,17 @@ What the app does, in detail. For a short overview see the
   unlock nothing; the app contains no payment code and embeds no third-party
   widget — nothing is loaded from (or sent to) the donation platform until the
   link is clicked. With `DONATE_URL` unset the button does not exist.
+- **Guest demo** – *accounts mode only*, when the operator sets
+  `DEMO_ENABLED` (issues #427, #953). The landing page's primary action mints a
+  throwaway account with **no e-mail and no password**: one request, and the
+  visitor is inside a fully writable tenant seeded with three rounds — a
+  three-person round on a world design with a played history, a two-player
+  shelf on a dark design, and a big group whose last session was split across
+  two tables with guests and a team — so every screen has something to show.
+  A banner names it as a demo throughout; the tenant and everything in it are
+  deleted after 24 hours, and demo accounts are excluded from the product
+  counters and the public statistics. Registering from the banner starts a real
+  account; nothing carries over.
 - **Passkeys** – *accounts mode only* (issue #418). Sign in with a fingerprint,
   face or device PIN instead of a password. A passkey is an **additional**
   credential, never a replacement: the password and the e-mail reset stay

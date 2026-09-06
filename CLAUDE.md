@@ -125,8 +125,10 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   requiring out of `public/js/` on purpose — see
   `.claude/rules/shared-constants-across-the-stack.md`). Adding a language is a
   row there, a `lang/<code>.js` file wired into `index.html` + `sw.js`'s `SHELL`
-  + a `CACHE` bump, and a landing-screenshot set per locale (#457 — required by
-  `test/landing-shots.test.js`). Don't reintroduce a hardcoded `['de', 'en']`
+  + a `CACHE` bump, a landing-screenshot set per locale (#457 — required by
+  `test/landing-shots.test.js`), and its native label in the bug-report form's
+  language dropdown (`test/i18n-locales.test.js` derives the expected options
+  from the table). Don't reintroduce a hardcoded `['de', 'en']`
   anywhere; `tn()` stays a one/other pair, so a language with `few`/`many`
   plural categories (Polish, Czech, Russian) needs more than a data file.
 - The active locale follows the system language and is overridable via the top-bar
@@ -140,9 +142,9 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
 - Match the surrounding style: 2-space indent, single quotes, `'use strict';` in
   Node files, **English comments and code**.
 - The "retire" domain concept (a game kept but taken out of the active list) uses
-  English identifiers throughout: data fields `retired`/`retiredAt`, the vote flag
-  `retire`, activity type `game_retired`, route `…/games/:gid/retire`, the
-  `showRetired` view. The German display word "Aussortieren" lives only in
+  English identifiers throughout: data fields `retired`/`retiredAt`, activity
+  type `game_retired`, route `…/games/:gid/retire`, the `showRetired` view
+  (the vote flag `retire` is gone since #909 — a vote is a rating only). The German display word "Aussortieren" lives only in
   `lang/de.js`.
 - The core entity (a voting/play session) is called **"Session"** — in code
   (`sessions`, `…/sessions` routes) *and* in every shipped UI language. Don't
@@ -152,7 +154,7 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   "Spieleabend" in the #147 rebrand — don't reintroduce that either).
   **`test/session-naming.test.js` enforces it** (#899, after the rule was skipped
   twice with it already written), scanning translation *values* + `news.js` in
-  all five locales. It deliberately does **not** cover developer prose, **round**
+  every shipped locale. It deliberately does **not** cover developer prose, **round**
   names (a round is a group — the demo's „Spieleabend" round is fine), or
   time-of-day adverbials, which name no entity („heute", "tonight", « ce soir »).
 - There is intentionally **no one-time migration code** in the JSON backend; a
