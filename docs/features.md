@@ -411,7 +411,8 @@ What the app does, in detail. For a short overview see the
   **Worlds** (Forest, Sci-Fi, Ocean, Chess, Horror, Dinosaurs) go one step
   further: each brings its own display typeface, a backdrop motif and ornament
   framing on primary buttons, section headings, cards, empty states and the
-  finale stage, and reaches the round's home tile and its shareable recap card. On the winner reveal a world plays
+  finale stage, and reaches the round's home tile and its shareable recap card.
+  On the winner reveal a world plays
   its own victory scene in place of the confetti — in Forest a tree grows
   while fireflies drift up, in Sci-Fi a rocket lifts off past streaking stars,
   in Ocean a whale surfaces among rising bubbles, in Chess the back rank is set
