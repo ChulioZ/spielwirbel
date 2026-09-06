@@ -133,7 +133,12 @@ function renderResumeZone(rounds) {
    Every tile is optional and two of the three decide asynchronously, so the
    grid is styled to disappear when it ends up empty (`.home-dash:empty`) rather
    than leaving a gap. DOM order is the phone order and the tab order — no CSS
-   `order` anywhere. */
+   `order` anywhere.
+
+   Each tile is wrapped in a `.card-slot`, which carries the column flow's
+   vertical spacing (#946). The two async tiles must therefore remove the SLOT,
+   not just themselves, or `:empty` and the lone-tile `:only-child` rule would
+   be counting boxes the reader cannot see. */
 function renderHomeDash() {
   const dash = h('<div class="home-dash"></div>');
 
@@ -143,7 +148,7 @@ function renderHomeDash() {
   // rather than removing itself when the account simply has no friends yet.
   if (accountsActive() && isLoggedIn()) {
     const friends = h('<section class="home-friends dash-tile" id="homeFriends"></section>');
-    dash.appendChild(friends);
+    dash.appendChild(cardSlot(friends));
     renderHomeFriends(friends);
   }
 
@@ -153,11 +158,11 @@ function renderHomeDash() {
   // a password-only instance reaches it logged out and the numbers are public
   // either way.
   const stats = h('<section class="home-stats dash-tile" id="homeStats"></section>');
-  dash.appendChild(stats);
+  dash.appendChild(cardSlot(stats));
   mountHomeStatsPanel(stats);
 
   const news = renderHomeNewsTile();
-  if (news) dash.appendChild(news);
+  if (news) dash.appendChild(cardSlot(news));
   return dash;
 }
 

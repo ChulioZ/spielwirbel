@@ -29,6 +29,22 @@ const h = (html) => {
   t.innerHTML = html.trim();
   return t.content.firstElementChild;
 };
+/* One card in a column flow (.hub-cards, .home-dash) — the box that carries the
+   vertical spacing, so the CARD never does (#946).
+
+   WebKit does NOT truncate a margin adjoining a column break: it pushes the
+   part that did not fit into the next column, so the first card of every column
+   after the tallest one starts one gap too low. Spacing held INSIDE the
+   break-avoid unit has nowhere to spill, and measures flush in both engines.
+   Removing a card must take its slot with it (`slotOf`), or the empty slot
+   keeps paying its padding. */
+const cardSlot = (el) => {
+  const slot = h('<div class="card-slot"></div>');
+  slot.appendChild(el);
+  return slot;
+};
+const slotOf = (el) => el.closest('.card-slot') || el;
+
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])

@@ -68,15 +68,26 @@
       /* Tables flow into a masonry of as many ~30rem columns as fit, so wide
          screens aren't a single tall stack. Fluid (column-width, not a fixed
          count): one column on a ~1280px laptop, two from ~1400px, without a
-         hard breakpoint. break-inside keeps each card whole. */
+         hard breakpoint. break-inside keeps each card whole.
+
+         The spacing is the SLOT's padding, not the card's margin: a margin
+         adjoining a column break is truncated by Chromium but carried into the
+         next column by WebKit (#946), so on Safari the first card of every
+         column after the tallest one started 1.25rem too low. Below 1200px the
+         flex `gap` above spaces them and the slot adds nothing. */
       .dash__main { display: block; column-width: 30rem; column-gap: 1.25rem; }
-      .dash__main > .card { break-inside: avoid; margin-bottom: 1.25rem; }
-      .dash__main > .card:last-child { margin-bottom: 0; }
+      .dash__main > .card-slot { padding-bottom: 1.25rem; }
+      .dash__main > .card-slot:last-child { padding-bottom: 0; }
     }
     .card {
       background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
       padding: 1.5rem;
     }
+    .card-slot { break-inside: avoid; }
+    /* Two cards start `hidden` and are revealed by admin.js. The slot has to go
+       with them, or it contributes a flex gap (and, wide, its column padding)
+       around nothing. */
+    .card-slot:has(> [hidden]) { display: none; }
     .card--login { max-width: 340px; margin: 12vh auto 0; }
     h1 { font-size: 1.2rem; margin: 0 0 0.35rem; }
     h2 { font-size: 1rem; margin: 0 0 0.9rem; color: var(--ink-2); font-weight: 600; }
@@ -194,7 +205,7 @@
 
     <div class="dash">
       <div class="dash__main">
-        <section class="card">
+        <div class="card-slot"><section class="card">
           <h2>Meldungen</h2>
           <p class="sub" style="margin-bottom: 0.9rem;">
             Gespeicherte Kontakt- und DSA-Meldungen (Art. 16). „Bild zuordnen“ übernimmt
@@ -208,9 +219,9 @@
             <button class="ghost small" id="noticesCsv">CSV herunterladen</button>
           </div>
           <p class="msg msg--err" id="noticesError" role="alert" hidden></p>
-        </section>
+        </section></div>
 
-        <section class="card">
+        <div class="card-slot"><section class="card">
           <h2>Fehlerprotokoll (Warn/Error)</h2>
           <p class="sub" style="margin-bottom: 0.9rem;">
             Die letzten Warn- und Fehlermeldungen dieser laufenden Instanz — im
@@ -224,9 +235,9 @@
             <button class="ghost small" id="logsReload">Neu laden</button>
           </div>
           <p class="msg msg--err" id="logsError" role="alert" hidden></p>
-        </section>
+        </section></div>
 
-        <section class="card" id="contentCard" hidden>
+        <div class="card-slot"><section class="card" id="contentCard" hidden>
           <h2>Texte der Runde</h2>
           <p class="sub" style="margin-bottom: 0.9rem;">
             Von Nutzer:innen verfasste Texte. „Redigieren“ überschreibt den Text mit
@@ -235,9 +246,9 @@
           </p>
           <div class="scroll"><table id="contentTable"><tbody></tbody></table></div>
           <p class="msg" id="contentMsg" role="alert" hidden></p>
-        </section>
+        </section></div>
 
-        <section class="card">
+        <div class="card-slot"><section class="card">
           <h2>Konten</h2>
           <p class="sub" style="margin-bottom: 0.9rem;">
             Suchen zuerst: E-Mail-Adressen werden erst geladen, wenn eine Suche sie
@@ -253,9 +264,9 @@
           <p class="sub count" id="usersCount" hidden></p>
           <div class="scroll"><table id="usersTable"><tbody></tbody></table></div>
           <p class="msg msg--err" id="usersError" role="alert" hidden></p>
-        </section>
+        </section></div>
 
-        <section class="card">
+        <div class="card-slot"><section class="card">
           <h2>Feedback</h2>
           <p class="sub count" id="feedbackCount" hidden></p>
           <div class="scroll"><table id="feedbackTable"><tbody></tbody></table></div>
@@ -264,9 +275,9 @@
             <button class="ghost small" id="feedbackCsv">CSV herunterladen</button>
           </div>
           <p class="msg msg--err" id="feedbackError" role="alert" hidden></p>
-        </section>
+        </section></div>
 
-        <section class="card">
+        <div class="card-slot"><section class="card">
           <h2>Protokoll</h2>
           <!-- Filtering (#275): the log is also what gets handed over on a
                law-enforcement request, where "every action ever" is the wrong
@@ -286,7 +297,7 @@
             <button class="ghost small" id="logCsv">CSV herunterladen</button>
           </div>
           <p class="msg msg--err" id="logError" role="alert" hidden></p>
-        </section>
+        </section></div>
       </div>
 
       <aside class="dash__side">

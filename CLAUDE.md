@@ -199,7 +199,9 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
 - For UI changes, verify in a real browser. Note: a non-painted/headless preview
   tab may not flush `requestAnimationFrame`, so grid contents that render via
   rAF can appear empty until a paint (e.g. a screenshot) occurs — this is a
-  preview artifact, not a bug.
+  preview artifact, not a bug. The Browser pane is **Chromium**, so a claim
+  about an engine-dependent behaviour (CSS fragmentation, a recent feature)
+  needs WebKit too — `.claude/rules/browser-pane-is-chromium-only.md`.
 
 ## Capturing learnings → `.claude/rules/`
 

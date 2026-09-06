@@ -82,6 +82,8 @@ test('a young round meets the screen it always met — no empty cards, no empty 
   // to land — and `.hub-cards:empty` is what keeps it from costing anything.
   assert.ok(dom.app.querySelector('.hub-cards'), 'the grid must exist for the lazy teaser to reach');
   assert.equal(dom.app.querySelector('.hub-cards').children.length, 0);
+  assert.equal(dom.app.querySelectorAll('.hub-cards .card-slot').length, 0,
+    'an empty grid grew a slot — `:empty` cannot collapse it and the young round pays the margin');
   // And #869's stand-in is still doing its job, which the grid must not steal.
   assert.ok(dom.app.querySelector('.empty--rail-gap'), 'the young round lost its rail stand-in');
 });
@@ -312,6 +314,32 @@ test('a teaser landing on a young round removes the stand-in it was rendered bes
   assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the stand-in survived beside real content');
 });
 
+test('every hub card sits in the slot that carries the flow spacing', async (t) => {
+  /* See the sibling in home-dashboard.test.js: appending a card bare breaks no
+     other assertion here — the grid still packs and still collapses when empty
+     — so the wrapper is only visible if something looks for it (#946). The
+     teaser is included deliberately: it appends on a LATER tick, from a
+     different function, which is exactly the append that gets missed. */
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', async () => ({
+    recommendations: [{ externalId: '1', title: 'Ark Nova', reasons: [] }],
+  }));
+
+  const r = busyRound();
+  dom.call('renderStartTab', r, r.games);
+  await new Promise((done) => setTimeout(done, 0));
+  const grid = dom.app.querySelector('.hub-cards');
+  const cards = [...grid.querySelectorAll('.hub-card')];
+  assert.ok(cards.length >= 2, `only ${cards.length} card(s) rendered — this asserts nothing`);
+  for (const card of cards) {
+    assert.ok(card.parentElement.classList.contains('card-slot'),
+      'a .hub-card is not wrapped in a .card-slot — it gets no row spacing at all');
+    assert.equal(card.parentElement.parentElement, grid,
+      'the slot is not a direct child of .hub-cards, so `> .card-slot` never matches it');
+  }
+});
+
 // ---------------------------------------------------------------------- CSS
 
 test('.hub-cards is a column FLOW, so a short card does not hold its row down', () => {
@@ -330,20 +358,29 @@ test('.hub-cards is a column FLOW, so a short card does not hold its row down', 
   assert.ok(columnsIn(880, spec) >= 2, 'the wide pane must get at least two');
 });
 
-test('a card cannot fragment across a column boundary, and carries its own row spacing', () => {
-  /* Both halves fail QUIETLY and neither is visible in a rule that looks
-     finished. Without `break-inside` a card splits at the column boundary and
-     its border and background split with it; and a multicol container's
-     `row-gap` is silently ignored, so without the margin every card in a
-     column touches its neighbour. */
+test('a card cannot fragment across a column boundary, and its SLOT carries the row spacing', () => {
+  /* Three halves, each of which fails QUIETLY and none of which is visible in a
+     rule that looks finished. Without `break-inside` a card splits at the
+     column boundary and its border and background split with it; a multicol
+     container's `row-gap` is silently ignored, so without the slot's padding
+     every card in a column touches its neighbour; and a vertical MARGIN back on
+     the card is the #946 regression itself — Chromium truncates it at the break
+     and WebKit carries it into the next column, so the bug is invisible in the
+     Browser pane and on every Safari the first card of each column after the
+     tallest one sits 12px low. */
+  assert.match(bodyOf('.card-slot') || '', /break-inside:\s*avoid/,
+    'a card will fragment across the column boundary, splitting its own border and background');
+  assert.match(bodyOf('.hub-cards > .card-slot') || '', /padding-bottom:\s*12px/,
+    'multicol ignores row-gap — without the slot\'s padding the column has no vertical spacing at all');
+  assert.match(bodyOf('.hub-cards > :last-child') || '', /padding-bottom:\s*0/,
+    'the last slot pads against nothing');
+
   const card = bodyOf('.hub-card');
   assert.ok(card, '.hub-card has no rule');
-  assert.match(card, /break-inside:\s*avoid/,
-    'a card will fragment across the column boundary, splitting its own border and background');
-  assert.match(card, /margin-bottom:\s*12px/,
-    'multicol ignores row-gap — without the card\'s own margin the column has no vertical spacing at all');
+  assert.doesNotMatch(card, /margin-bottom|margin-top|(^|;)\s*margin:/,
+    '.hub-card carries a vertical margin again — WebKit pushes it past the column break (#946)');
   assert.doesNotMatch(bodyOf('.hub-cards') || '', /row-gap/,
-    'row-gap does nothing in a multi-column container — the spacing belongs on the card');
+    'row-gap does nothing in a multi-column container — the spacing belongs on the slot');
 });
 
 test('no media query moves the card grid — width alone decides', () => {
