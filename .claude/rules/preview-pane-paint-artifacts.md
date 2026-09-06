@@ -80,6 +80,12 @@ It is the compositor: an animating box gets its own layer, and the pane's
 capture omits it. So **prove motion with computed values sampled over time,
 and screenshot only the resting state** — which is the thing to judge anyway.
 
+**And it lies about TIME:** an animation's clock advances only when the pane
+paints, so a `getComputedStyle` sample of a running keyframe reads the start
+value on every call until a screenshot forces a frame — measured on #905; the
+sampling recipe is in
+`.claude/rules/world-artwork-masks-and-single-weight-faces.md`.
+
 **The pane lies about focus as well as about pixels.** `document.hasFocus()` is
 permanently false there, so `element.blur()` moves `document.activeElement`
 without dispatching any `blur`/`focusout` event — which makes every

@@ -156,3 +156,6 @@
 .ti-world-search::before { content: "\f9e7"; }
 .ti-trees::before { content: "\ec10"; }
 .ti-planet::before { content: "\ec08"; }
+.ti-fish::before { content: "\ef2b"; }
+.ti-chess-knight::before { content: "\f56d"; }
+.ti-bone::before { content: "\edb8"; }

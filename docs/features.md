@@ -406,14 +406,17 @@ What the app does, in detail. For a short overview see the
   whole UI derives from it — surfaces, shadows, the dark "stage" of the
   finale, and the mobile browser / installed-app chrome around the page.
   A design can be **light or dark**: Obsidian is a plain dark scheme, and the
-  Sci-Fi world is dark too, with card surfaces, borders, text, semantic
-  colours and every ink-on-a-coloured-button re-derived for a night page.
-  **Worlds** (Forest, Sci-Fi) go one step further: each brings its own display
-  typeface, a backdrop motif and ornament framing on primary buttons, section
+  Sci-Fi and Horror worlds are dark too, with card surfaces, borders, text,
+  semantic colours and every ink-on-a-coloured-button re-derived for a night page.
+  **Worlds** (Forest, Sci-Fi, Ocean, Chess, Horror, Dinosaurs) go one step
+  further: each brings its own display typeface, a backdrop motif and ornament framing on primary buttons, section
   headings, cards, empty states and the finale stage, and reaches the round's
   home tile and its shareable recap card. On the winner reveal a world plays
   its own victory scene in place of the confetti — in Forest a tree grows
-  while fireflies drift up, in Sci-Fi a rocket lifts off past streaking stars
+  while fireflies drift up, in Sci-Fi a rocket lifts off past streaking stars,
+  in Ocean a whale surfaces among rising bubbles, in Chess the back rank is set
+  down on the board, in Horror a ghost drifts up over the graveyard while bats
+  flit past, and in Dinosaurs the herd stomps into place as the volcano erupts
   — and the scene's end state stays on the spotlight whenever the results are
   opened again. Body text stays Nunito in every world; home, login, landing,
   account and inbox stay standard — a dark round does not darken the lobby
