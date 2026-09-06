@@ -6,7 +6,7 @@ Guidance for Claude Code (and other AI assistants) working in this repository.
 
 A self-hosted web app for any group or gaming round to manage their games,
 run "what should we play?" voting sessions, and track ratings. The UI ships
-**German + English + Spanish + French + Italian**; code, comments here, and
+**German + English + Spanish + French + Italian + Dutch**; code, comments here, and
 docs are **English**.
 
 **Current stage — a live, PUBLIC multi-tenant SaaS.**
@@ -112,9 +112,9 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
 
 ## Internationalization
 
-- The UI ships German + English + Spanish + French + Italian today. **Never
+- The UI ships German + English + Spanish + French + Italian + Dutch today. **Never
   hard-code user-facing text in views.** Add a key to **every**
-  `public/js/lang/*.js` file (en, de, es, fr and it today),
+  `public/js/lang/*.js` file (en, de, es, fr, it and nl today),
   then use `t('key', { params })` (see `js/i18n.js`). They must stay in key
   parity — `test/i18n-parity.test.js` enforces it, deriving the locale set so a
   new language is covered automatically.

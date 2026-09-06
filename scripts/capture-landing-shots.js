@@ -202,6 +202,15 @@ const SEEDS = {
       'Maestro di Gilda', 'Sale e Sabbia', 'L’Ultimo Treno', 'Caccia alle Aurore',
     ],
   },
+  nl: {
+    round: 'De donderdagclub',
+    tags: ['Bordspel', 'Coöperatief', 'Strategie', 'Digitaal'],
+    games: [
+      'Sterrenhaven', 'Zwarte Sintel', 'De Kraaienbrug', 'Kaartmakers van het Noorden',
+      'Dal der Lantaarns', 'Obsidiaandrift', 'Markt van Verano', 'Roest en Regen',
+      'Gildemeester', 'Zout en Zand', 'De Laatste Trein', 'Jacht op het Noorderlicht',
+    ],
+  },
 };
 
 // Teardown registry. `fail()` exits the process, and `process.exit` does NOT run

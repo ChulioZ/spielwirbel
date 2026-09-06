@@ -28,7 +28,7 @@
  * alone.
  *
  * The table is de + en only on purpose. It states a claim about GRAMMAR, and
- * those are the two languages this repo can assert one in; es/fr/it are held to
+ * those are the two languages this repo can assert one in; es/fr/it/nl are held to
  * the structural half instead, which test/i18n-parity.test.js already enforces
  * over every locale — key parity, placeholder parity, and (the trap this issue
  * is most likely to be got wrong by) that a singular substitutes {n} rather

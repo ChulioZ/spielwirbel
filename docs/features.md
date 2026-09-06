@@ -422,7 +422,7 @@ What the app does, in detail. For a short overview see the
   opened again. Body text stays Nunito in every world; home, login, landing,
   account and inbox stay standard — a dark round does not darken the lobby
   around it.
-- **Languages** – German, English, Spanish, French and Italian, following the system language by
+- **Languages** – German, English, Spanish, French, Italian and Dutch, following the system language by
   default, switchable any time via the picker in the top bar.
 - **Shareable links & reload-safe navigation** – the URL reflects the current
   screen (home, a round tab, a game, a member, a session result, …), so a

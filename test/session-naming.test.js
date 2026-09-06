@@ -54,6 +54,13 @@ const RULES = {
   // inside « soirée » and the same string would be reported twice.
   fr: { allow: [/\bce soir\b/gi], ban: [/\bsoirées?\b|\bsoirs?\b/i] },
   it: { allow: [], ban: [/\bserat[ae]\b/i, /\bsera\b/i] },
+  // Dutch takes the FRENCH shape, not the German one, and the reason is one
+  // letter: the adverbial « vanavond » (tonight) CONTAINS the entity noun
+  // « avond », so a substring ban alone would flag the landing headline and
+  // the guest prompt — both correct — and the only way to green would be to
+  // weaken the pattern until it stops catching « spelavond ». Strip the
+  // adverbial first, then ban bluntly, so compounds keep failing.
+  nl: { allow: [/\bvanavond\b/gi], ban: [/avond/i] },
 };
 
 function namesAnEvening(locale, value) {
@@ -82,6 +89,7 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     es: ['La velada se repartió', 'una noche que apetezca'],
     fr: ['la soirée plaise', 'le jeu du soir', 'vos soirées habituelles'],
     it: ['La serata è stata divisa', 'le vostre serate abituali'],
+    nl: ['De avond werd opgesplitst', 'spelavond', 'jullie gebruikelijke avonden'],
   };
   const fine = {
     de: ['Was spielen wir heute?', 'Die Session wurde aufgeteilt'],
@@ -89,6 +97,7 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     es: ['el juego de hoy', 'como vuestras partidas de siempre'],
     fr: ['On joue à quoi ce soir ?', 'Des invités ce soir ?'],
     it: ['A cosa giochiamo stasera?', 'la scelta di stasera'],
+    nl: ['Wat spelen we vanavond?', 'De sessie werd opgesplitst'],
   };
 
   for (const locale of SUPPORTED_LOCALES) {
