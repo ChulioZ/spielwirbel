@@ -21,7 +21,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { RULES, bodyOf, mediaBlocks, whole, columnSpec } = require('./support/css');
+const { RULES, bodyOf, mediaBlocks, whole, columnSpec, columnsIn } = require('./support/css');
 const { loadApp } = require('./support/dom');
 
 /** The shape listRoundSummaries returns (lib/repo/json.js), with open sessions. */
@@ -350,7 +350,7 @@ test('a lone dashboard tile still spans the zone, which multicol does NOT give f
 
   const lone = bodyOf('.home-dash:has(> :only-child)');
   assert.ok(lone, 'no :has(> :only-child) rule — a single tile will be stranded ~320px wide in an 1800px shell');
-  assert.match(lone, /columns:\s*1/, 'the lone-tile rule does not collapse to one column');
+  assert.equal(columnSpec(lone).count, 1, 'the lone-tile rule does not collapse to one column');
 
   /* Two of the three tiles remove themselves ASYNCHRONOUSLY, so "only child" is
      a state the zone enters after first paint — which is why this is a live
@@ -375,4 +375,45 @@ test('an empty dashboard grid collapses instead of leaving its margin behind', (
   const body = bodyOf('.home-dash:empty');
   assert.ok(body, '.home-dash:empty rule not found — an all-absent dashboard leaves a gap');
   assert.match(body, /display:\s*none/);
+});
+
+test('the dashboard stretches two and three tiles across the zone as well as one', () => {
+  /* #948 generalises the lone-tile rule above. `column-width` reproduces
+     `auto-fill`, so the zone makes as many columns as FIT — five at the 1800px
+     shell — and it can never hold more than three tiles, so it could never once
+     fill itself: the best case shipped was three tiles in five columns, and a
+     new account with Freundeskreis + Entdecken got two narrow tiles against the
+     left edge of an 1800px page.
+
+     A `column-count` beside the width caps the used count at min(count, fit),
+     so each rule is a ceiling and the phone still resolves to one column. */
+  const spec = columnSpec(bodyOf('.home-dash'));
+  const fits = columnsIn(1800, spec);
+
+  /* Freundeskreis, Entdecken, „Was ist neu" — the three appends in
+     renderHomeDash(), pinned by the DOM spec above. The zone cannot fill its
+     own flow, which is what makes every count between 1 and 3 a live case
+     rather than a defensive one. */
+  const MAX_TILES = 3;
+  assert.ok(MAX_TILES < fits,
+    `the zone fits ${fits} column(s) and holds ${MAX_TILES} tiles — if it can fill itself this test asserts nothing`);
+
+  for (let n = 1; n <= MAX_TILES; n++) {
+    const sel = n === 1
+      ? '.home-dash:has(> :only-child)'
+      : `.home-dash:has(> :nth-child(${n}):last-child)`;
+    const body = bodyOf(sel);
+    assert.ok(body,
+      `no cap for ${n} tile(s) — they pack left and leave ${fits - n} empty column(s) in the shell`);
+
+    // The cap rule restates the width but not the gap; reading the gap as 0
+    // would let the arithmetic below agree with a cap that does not work.
+    const cap = columnSpec(body);
+    const used = { floor: cap.floor ?? spec.floor, gap: cap.gap ?? spec.gap, count: cap.count };
+    assert.equal(used.count, n, `${sel} does not cap the zone at ${n} column(s)`);
+    assert.equal(columnsIn(1800, used), n,
+      `${sel} still renders ${columnsIn(1800, used)} column(s) for ${n} tile(s)`);
+    assert.equal(columnsIn(360, used), 1,
+      `${sel} forces ${n} columns onto a phone — the count must be a maximum, not a target`);
+  }
 });

@@ -37,18 +37,27 @@ and the click, so both stayed too.
    fragments across the column boundary and its border and background fragment
    with it — which reads as broken rather than as unpacked.
 3. **`column-width` reproduces `auto-fill`, never `auto-fit`.** `columns: 280px`
-   fits `floor((W + gap) / (280 + gap))` columns — literally `columnsIn` in
-   `test/support/css.js` — so a lone card stays about one column wide. That is
-   free where the grid *wanted* `auto-fill`, and a **regression** where it wanted
-   `auto-fit`: a lone tile is then stranded ~320px wide against the left edge of
-   an 1800px shell, the #358 defect
-   (`.claude/rules/auto-fit-collapses-only-empty-tracks.md`). Restore it rather
-   than dropping the conversion:
+   fits `floor((W + gap) / (280 + gap))` columns — the `fits` half of `columnsIn`
+   in `test/support/css.js` — **however many cards there are**, so every count
+   from one up to the fit packs left with dead space beside it: the #358 defect
+   (`.claude/rules/auto-fit-collapses-only-empty-tracks.md`). #942 restored only
+   the lone-tile case; #948 generalised it, because these zones *live* at the
+   in-between counts — `.home-dash` fits five columns and holds at most three
+   tiles, so it could never once fill its own flow.
+
+   Add a **count** beside the width. With both set the used count is
+   `min(count, fit)` floored at 1, so a count is a **ceiling**, not a target —
+   which is why the phone still gets one column with no media query:
    ```css
-   .home-dash:has(> :only-child) { columns: 1; }
+   .home-dash:has(> :only-child)              { columns: 320px 1; }
+   .home-dash:has(> :nth-child(2):last-child) { columns: 320px 2; }
    ```
-   Live selector, not a class the renderer sets: two of that zone's three tiles
-   decide asynchronously, so "only child" is a state entered after first paint.
+   One rule per count **below** the fit (at or above it the cap is a no-op), and
+   live selectors rather than a class the renderer sets: the teaser appends and
+   the async tiles remove themselves after first paint, so the count must
+   re-evaluate with no re-render. A flow that can genuinely fill itself needs
+   none of this — the admin dashboard fits two columns against six cards, so a
+   cap there would be unreachable CSS (measured, #948).
 4. **Keep `column-fill` at its default (`balance`)** — that IS the packing.
    `column-fill: auto` needs a definite container height and is unusable here.
 5. **The vertical spacing goes INSIDE the break-avoid box — never on the card
@@ -84,9 +93,11 @@ and the click, so both stayed too.
    Two consequences that are easy to miss. A renderer that removes a card must
    remove its **slot** (`slotOf` in `core.js`), or an orphaned slot keeps paying
    its padding and still counts as a child — so `:empty` cannot collapse the
-   container and the point-3 `:only-child` rule stops firing. And a slot around
-   a card that starts `hidden` must collapse with it
-   (`.card-slot:has(> [hidden]) { display: none }` — admin.html has two).
+   container and the point-3 caps stop firing. And a slot around a card that
+   starts `hidden` must collapse with it
+   (`.card-slot:has(> [hidden]) { display: none }` — admin.html has one, the
+   content card; `#takedownCard` starts hidden too but sits in the flex
+   `.dash__side`, so it is not in a slot at all).
 
 `:empty { display: none }` still works — `display` beats `columns` — so a
 container appended before its content can arrive keeps costing nothing. With

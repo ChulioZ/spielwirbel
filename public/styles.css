@@ -972,6 +972,23 @@ h1, h2, h3 { font-family: var(--font-display); }
   margin-top: 20px;
 }
 .hub-cards:empty { display: none; }
+/* `column-width` reproduces `auto-fill`, so the pane makes as many columns as
+   FIT — three at the 900px reading measure — however many cards it has. Two
+   cards then sat narrow against the left edge with a third column's worth of
+   dead space beside them (#948): the #358 defect, still live for every count
+   between "one card" and "enough cards to fill the flow".
+
+   A count beside the width caps it. With both set the used count is
+   min(count, floor((W + gap) / (width + gap))), floored at 1 — so the count is
+   a MAXIMUM, not a target, and the phone keeps its single column with no media
+   query. Only 1 and 2 exist because three is all this measure ever fits, and a
+   count at or above the fit is a no-op.
+
+   Live selectors, never a class the renderer sets: `renderRecoTeaser` appends
+   an extra card after first paint, so the count is a state entered later and
+   has to re-evaluate with no re-render. */
+.hub-cards:has(> :only-child)              { columns: 280px 1; }
+.hub-cards:has(> :nth-child(2):last-child) { columns: 280px 2; }
 /* One slot per card, in every column flow. `break-inside` is what keeps a card
    whole: without it a card fragments across the column boundary and its border
    and background fragment with it — which reads as broken, not as unpacked. It
@@ -3289,10 +3306,13 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    grid the short ones held a dead band under them until the tallest ended.
 
    `columns` reproduces `auto-fill`, never `auto-fit` — so the one thing that
-   does NOT come free is the lone tile, which must span the zone rather than
-   sit stranded ~320px wide against the left edge of an 1800px shell (the #358
-   defect, and the whole reason this zone chose `auto-fit`). `:has(> :only-child)`
-   restores it, and re-evaluates as the async tiles remove themselves.
+   does NOT come free is stretching to the tiles it actually has. The zone fits
+   FIVE 320px columns in the 1800px shell and can never hold more than three
+   tiles, so it could not once fill its own flow: a new account with just
+   Freundeskreis and Entdecken drew two narrow tiles against the left edge of
+   an 1800px page (the #358 defect, and the whole reason this zone chose
+   `auto-fit`). The caps below restore it for every count, and re-evaluate as
+   the async tiles remove themselves.
 
    `:empty` is what keeps the promise that nothing renders when there is nothing
    to render. Two of the three tiles decide ASYNCHRONOUSLY and remove themselves
@@ -3304,7 +3324,13 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   column-gap: 18px;
   margin-top: 34px;
 }
-.home-dash:has(> :only-child) { columns: 1; }
+/* A count beside the width caps the used count at min(count, fit), floored at
+   1 — a MAXIMUM, so a phone still resolves to one column with no media query.
+   Three rules because three tiles is the zone's ceiling; a fourth tile would
+   need a fourth rule, since an uncapped count falls back to the five that fit. */
+.home-dash:has(> :only-child)              { columns: 320px 1; }
+.home-dash:has(> :nth-child(2):last-child) { columns: 320px 2; }
+.home-dash:has(> :nth-child(3):last-child) { columns: 320px 3; }
 .home-dash:empty { display: none; }
 /* Spacing and `break-inside` are the SLOT's (`.card-slot`, declared with
    `.hub-cards`) — see #946: on the tile itself, WebKit carries the margin over

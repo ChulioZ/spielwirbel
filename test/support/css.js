@@ -111,26 +111,53 @@ function gridSpec(body) {
   return { floor: floor ? Number(floor[1]) : null, gap: gap ? Number(gap[1]) : null };
 }
 
-/* The same two numbers out of a MULTI-COLUMN container (#942): `columns: <n>px`
-   or `column-width: <n>px`, plus `column-gap`. Deliberately NOT reading plain
-   `gap` — in a multicol container the shorthand sets the column gap only and
-   `row-gap` is silently dropped, so a rule written with `gap` is the bug this
-   should surface rather than parse over. The result feeds `columnsIn` unchanged
-   because the column-count arithmetic is identical: `column-width` fits
-   floor((W + gap) / (width + gap)) columns, which is exactly what `auto-fill`
-   does. That equivalence is why a grid can convert without moving a
-   breakpoint. */
+/* The numbers out of a MULTI-COLUMN container (#942): `columns: <n>px [<c>]`
+   or the `column-width`/`column-count` longhands, plus `column-gap`.
+   Deliberately NOT reading plain `gap` — in a multicol container the shorthand
+   sets the column gap only and `row-gap` is silently dropped, so a rule written
+   with `gap` is the bug this should surface rather than parse over.
+
+   `count` was added by #948 and is the half that fails SILENTLY if omitted: the
+   `columns` shorthand takes a width and a count together, and with both set the
+   used count is min(count, fit) — so a count is a cap. Parsed as a plain number
+   the shorthand's second token is invisible to a width-only regex, and every
+   assertion built on `columnsIn` then reads a capped flow as an uncapped one
+   and stays green over the cap being deleted. */
 function columnSpec(body) {
   if (!body) return null;
-  const floor = body.match(/(?:^|[\s;])(?:columns|column-width):\s*(\d+)px/);
+  let floor = null;
+  let count = null;
+  const long = body.match(/(?:^|[\s;])column-width:\s*(\d+)px/);
+  if (long) floor = Number(long[1]);
+  const longCount = body.match(/(?:^|[\s;])column-count:\s*(\d+)/);
+  if (longCount) count = Number(longCount[1]);
+  /* The shorthand resets whichever half it omits, so it is read last and its
+     tokens are taken positionally-agnostically — `columns` accepts the width and
+     the count in either order. */
+  const short = body.match(/(?:^|[\s;])columns:\s*([^;}]+)/);
+  if (short) {
+    for (const token of short[1].trim().split(/\s+/)) {
+      if (/^\d+px$/.test(token)) floor = parseInt(token, 10);
+      else if (/^\d+$/.test(token)) count = Number(token);
+    }
+  }
   const gap = body.match(/column-gap:\s*(\d+)px/);
-  return { floor: floor ? Number(floor[1]) : null, gap: gap ? Number(gap[1]) : null };
+  return { floor, gap: gap ? Number(gap[1]) : null, count };
 }
 
-/* How many `auto-fill` columns of `floor` width fit in `width` px of CONTENT
-   box: n columns need floor*n + gap*(n-1) <= width. Shared by gridSpec and
-   columnSpec — see the note on columnSpec for why one formula serves both. */
-const columnsIn = (width, { floor, gap }) => Math.floor((width + gap) / (floor + gap));
+/* How many columns of `floor` width a container of `width` px of CONTENT box
+   actually USES: n columns need floor*n + gap*(n-1) <= width, and a declared
+   `column-count` caps that (#948). Shared by gridSpec and columnSpec — the fit
+   arithmetic is identical because `column-width` reproduces `auto-fill`.
+
+   `gridSpec` returns no `count`, so a grid is uncapped exactly as before. The
+   floor of 1 is the multicol spec's own (a container narrower than one column
+   still gets one), and it matters here: without it a cap on a container
+   narrower than its own floor would read as 0 columns. */
+const columnsIn = (width, { floor, gap, count }) => {
+  const fits = Math.max(1, Math.floor((width + gap) / (floor + gap)));
+  return count ? Math.min(count, fits) : fits;
+};
 
 module.exports = {
   ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, whole, rootPx, gridSpec, columnSpec,
