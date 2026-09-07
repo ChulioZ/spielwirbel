@@ -1,7 +1,7 @@
 ---
 paths:
   - "public/js/page-lock.js"
-  - "public/js/views-round-detail.js"
+  - "public/js/sheet.js"
   - "public/js/popover.js"
   - "public/styles.css"
 ---

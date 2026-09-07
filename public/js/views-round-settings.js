@@ -9,9 +9,10 @@
    concern, and on a phone it was reachable only by switching tabs and scrolling
    past the entire month-grouped history.
 
-   It is a sibling of showTags/showBackground (views-round-detail.js)
-   and deliberately NOT in that file: it is an independently editable concern and
-   that file is already past its size budget (.claude/rules/token-friendly-source-files.md).
+   Since #956 it also HOLDS showBackground/showTags, the two sub-screens its own
+   row list links to. They came from views-round-detail.js, where they were an
+   independently editable concern sitting inside a file past its size budget
+   (.claude/rules/token-friendly-source-files.md).
 
    The two sheets it opens — showTransferGames and showInvite — are in
    views-round-actions.js, loaded right after this file (#528). They had stayed
@@ -120,4 +121,214 @@ async function showRoundSettings(rid) {
     danger.appendChild(delBtn);
   }
   app.appendChild(danger);
+}
+
+// =================== The two sub-screens Einstellungen links to ===================
+//
+// Moved here from views-round-detail.js by #956: both are routed screens of
+// their own (router.js reaches them directly) and both are reached from the row
+// list above, so they belong with the screen that offers them rather than beside
+// the game detail view they had nothing to do with.
+
+async function showBackground(rid) {
+  currentView = () => showBackground(rid);
+  syncUrl(roundPath(rid, 'design'));
+  app.innerHTML = '<p class="muted">…</p>';
+  let round;
+  try { round = await fetchRound(rid); }
+  catch { return showHome(); }
+  applyBackground(round.background);
+  setContext(round.name);
+  setDocTitle(t('round.design'), round.name);
+
+  app.innerHTML = '';
+  renderSubScreenTabs(round, 'design');
+  app.appendChild(backRow(() => showRound(rid)));
+  app.appendChild(h(`<div class="page-head"><h1>${esc(t('design.title'))}</h1></div>`));
+
+  // Which card is active. A design that matches nothing — a legacy plain colour
+  // or a hand-edited hex — de-selects Standard without selecting anything else,
+  // exactly as the hex-only lookup did before ids existed (#903).
+  const bg = round.background;
+  const current = resolveDesign(bg);
+  const stored = Boolean(bg && bg.type === 'theme' && bg.page);
+
+  // Two groups: the colour palettes, then the worlds. Each card is a tiny live
+  // preview — page background, an accent "button", a text line and the accent
+  // dot. A world card also carries data-world plus its OWN --brand, so the
+  // ornament rules paint its backdrop, frame and display face in its accent
+  // rather than in the round's (see "Worlds" in styles.css).
+  [
+    { titleKey: 'design.group.colors', noteKey: 'design.note', designs: PALETTES },
+    { titleKey: 'design.group.worlds', noteKey: 'design.worlds.note', designs: WORLDS },
+  ].forEach((group) => {
+    const sec = h(`<div class="section"><h2>${esc(t(group.titleKey))}</h2></div>`);
+    sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t(group.noteKey))}</div>`));
+    const grid = h('<div class="theme-cards"></div>');
+    group.designs.forEach((th) => {
+      const active = th.std ? !stored : Boolean(current && current.id === th.id);
+      const worldAttr = th.world ? ` data-world="${esc(th.world)}"` : '';
+      // A dark design previews as a dark CARD, inside whatever scheme the round
+      // is in (#904) — the token block matches .theme-card[data-scheme] as well
+      // as :root. Both tokens it derives from go inline for that reason: a dark
+      // card needs its own --page-bg to lift a --surface and sink a --line off,
+      // and every card needs --brand so an ornament paints the design it names.
+      const schemeAttr = th.scheme ? ` data-scheme="${esc(th.scheme)}"` : '';
+      const style = `background:${th.page};--page-bg:${th.page};--brand:${th.accent}`;
+      const sw = h(`<button class="theme-card${th.world ? ' theme-card--world' : ''}${active ? ' is-active' : ''}"${worldAttr}${schemeAttr} aria-pressed="${active}" style="${style}" title="${esc(t(th.labelKey))}">
+         <span class="theme-card__bar" style="background:${th.accent}"></span>
+         <span class="theme-card__line"></span>
+         <span class="theme-card__line theme-card__line--short"></span>
+         <span class="theme-card__name" style="color:${th.accent}">${esc(t(th.labelKey))}</span>
+         <span class="theme-card__check" style="background:${th.accent}"><i class="ti ti-check" aria-hidden="true"></i></span>
+       </button>`);
+      sw.addEventListener('click', async () => {
+        const payload = th.std
+          ? { type: 'none' }
+          : { type: 'theme', id: th.id, page: th.page, accent: th.accent };
+        try {
+          const saved = await api('POST', `/api/rounds/${rid}/background`, payload);
+          applyBackground(saved.background);
+          /* Re-render, rather than sweeping the active class by hand.
+
+             Until #904 a design change was purely CSS — applyBackground() moved
+             two custom properties and every tone on screen followed — so the
+             only thing left to update was which card reads as chosen. A dark
+             design also flips two things JS resolves AT RENDER TIME: the member
+             tone on every avatar (memberTone) and the rating ramp (avgColor).
+             Those were painted inline while the old scheme was in force, so
+             without a redraw the rail's avatars keep light-scheme discs and
+             carry the dark scheme's near-black initials — measured: unreadable,
+             on the one screen where the design can change.
+
+             The cache has to be seeded first: fetchRound() serves the SWR copy,
+             which still holds the OLD background, so a bare currentView() would
+             repaint the previous design and only correct itself when the
+             revalidation landed. The route answers with `{ background }` alone,
+             hence the patch rather than a swrStore.set of the response. */
+          const key = 'round:' + rid;
+          const cached = swrStore.get(key);
+          if (cached) swrStore.set(key, { ...cached, background: saved.background });
+          toast(t('design.toast.set'));
+          currentView();
+        } catch (e) { toast(e.message); }
+      });
+      grid.appendChild(sw);
+    });
+    sec.appendChild(grid);
+    app.appendChild(sec);
+  });
+}
+
+// =================== Tags (custom round tags, #238) ===================
+
+// Manage the round's tag list: create (deduped server-side) and delete (which
+// silently unassigns the tag from every game). Assignment to games happens in
+// the add-game sheet and the game detail's tag popover, not here.
+async function showTags(rid) {
+  currentView = () => showTags(rid);
+  syncUrl(roundPath(rid, 'tags'));
+  app.innerHTML = '<p class="muted">…</p>';
+  let round;
+  try { round = await fetchRound(rid); }
+  catch { return showHome(); }
+  applyBackground(round.background);
+  setContext(round.name);
+  setDocTitle(t('tags.title'), round.name);
+
+  app.innerHTML = '';
+  renderSubScreenTabs(round, 'tags');
+  app.appendChild(backRow(() => showRound(rid)));
+  app.appendChild(h(`<div class="page-head"><h1>${esc(t('tags.title'))}</h1></div>`));
+
+  const sec = h('<div class="section"></div>');
+  sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t('tags.note'))}</div>`));
+
+  const addRow = h(`<div class="toolbar" style="margin-bottom:14px">
+       <input class="input" style="flex:1" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}"
+              aria-label="${esc(t('tags.addPlaceholder'))}" />
+       <button class="btn btn--primary"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('tags.add'))}</button>
+     </div>`);
+  const input = addRow.querySelector('input');
+  // Icon picker for the new tag (#255). The trigger sits inline in the name row
+  // so it reads as one sub-form (#293); the grid it expands still gets the full
+  // width on its own line below.
+  const picker = tagIconPicker(null);
+  input.after(picker.trigger);
+  // A duplicate name returns the existing tag (the server dedupes) — detected
+  // here by its id already being known, for the right toast.
+  const existingIds = new Set((round.tags || []).map((tg) => tg.id));
+  const add = async () => {
+    const name = input.value.trim();
+    if (!name) return;
+    try {
+      const tag = await api('POST', `/api/rounds/${rid}/tags`, { name, icon: picker.get() });
+      toast(existingIds.has(tag.id) ? t('tags.toast.exists') : t('tags.toast.added'));
+      showTags(rid);
+    } catch (e) { toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message); }
+  };
+  // Select the submit button explicitly: the icon-picker trigger (#293) is also
+  // a <button> and sits earlier in the row, so a bare `querySelector('button')`
+  // would silently bind "add" to the trigger and leave Hinzufügen inert.
+  addRow.querySelector('.btn--primary').addEventListener('click', add);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); add(); }
+  });
+  sec.appendChild(addRow);
+  sec.appendChild(picker.grid);
+
+  const tags = round.tags || [];
+  if (tags.length === 0) {
+    sec.appendChild(emptyState({ icon: 'ti-tags', title: t('tags.emptyTitle'), text: t('tags.empty') }));
+  } else {
+    const list = h('<div class="ds-list ds-list--tiles"></div>');
+    tags.forEach((tg) => {
+      const n = round.games.filter((g) => (g.tagIds || []).includes(tg.id)).length;
+      const row = h(`<div class="ds-row ds-row--static tag-row">
+           <div class="ds-row__main"><span class="tag tag--custom"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</span></div>
+           <div class="ds-row__meta"><span class="muted tag-row__count">${esc(tn(n, 'tags.gamesOne', 'tags.games'))}</span></div>
+         </div>`);
+      // Change an existing tag's icon (#255) — the Tags screen is the only
+      // surface that edits a tag; the popover and add-game sheet only create
+      // and assign. Expands the picker inline rather than opening a dialog.
+      const edit = h(`<button class="tag-act" aria-label="${esc(t('tags.editIcon'))}" title="${esc(t('tags.editIcon'))}"><i class="ti ti-pencil" aria-hidden="true"></i></button>`);
+      edit.addEventListener('click', () => {
+        const open = row.nextElementSibling;
+        if (open && open.classList.contains('icon-picker')) { // second click closes it
+          open.remove();
+          return;
+        }
+        // Expanded: the pencil button IS the disclosure here (#293), so the
+        // picker must not add a second one inside it.
+        const p = tagIconPicker(tg.icon, { expanded: true });
+        p.grid.querySelectorAll('.icon-picker__btn').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            try {
+              await api('PATCH', `/api/rounds/${rid}/tags/${tg.id}`, { icon: btn.dataset.icon });
+              toast(t('tags.toast.iconUpdated'));
+              showTags(rid);
+            } catch (e) { toast(e.message); }
+          });
+        });
+        row.after(p.grid);
+      });
+      row.querySelector('.ds-row__meta').appendChild(edit);
+      const del = h(`<button class="tag-act tag-act--danger" aria-label="${esc(t('tags.delete'))}"><i class="ti ti-trash" aria-hidden="true"></i></button>`);
+      del.addEventListener('click', async () => {
+        if (n > 0 && !await confirmDialog({
+          body: t('tags.deleteConfirm', { name: tg.name }),
+          confirmLabel: t('tags.delete'), icon: 'ti-trash',
+        })) return;
+        try {
+          await api('DELETE', `/api/rounds/${rid}/tags/${tg.id}`);
+          toast(t('tags.toast.deleted'));
+          showTags(rid);
+        } catch (e) { toast(e.message); }
+      });
+      row.querySelector('.ds-row__meta').appendChild(del);
+      list.appendChild(row);
+    });
+    sec.appendChild(list);
+  }
+  app.appendChild(sec);
 }

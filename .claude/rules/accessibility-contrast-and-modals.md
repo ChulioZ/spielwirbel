@@ -75,7 +75,7 @@ whole dark half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`.
 All five sheets were `role="dialog" aria-modal="true"` and still let Tab walk
 out into the page behind the backdrop, and closing one dropped focus to
 `<body>`. `public/js/focus-trap.js` fixes both, and **every sheet must go
-through `openSheet(backdrop, onKey)`** (`views-round-detail.js`) rather than
+through `openSheet(backdrop, onKey)`** (`sheet.js`) rather than
 assigning `activeSheet` directly — that makes it impossible to add a sheet
 that silently misses the trap. Two orderings are load-bearing:
 

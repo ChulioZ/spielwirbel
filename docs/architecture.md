@@ -545,6 +545,9 @@ public/
                      first, ahead of the brand (issue #522)
     popover-fit.js   which side of its anchor a popover goes on and how far it
                      may be squeezed to stay reachable there (issue #739)
+    sheet.js         the bottom sheet — the app's modal overlay primitive,
+                     used by eleven other modules — plus openEditor, which
+                     picks popover-or-sheet by viewport (issue #956)
     popover.js       the anchored popover itself: one open at a time, placed
                      next to its anchor, closing on Escape/outside click/
                      scroll; placement is one-shot (issue #956)
@@ -589,10 +592,12 @@ public/
     views-recommend.js    "das könnte euch auch gefallen": ranked games the
                           round does not own, each card naming up to three
                           reasons it was picked (#682, #772)
-    views-round-detail.js game detail, design picker, tags + providers screens,
-                          sheet helpers
+    views-round-detail.js game detail, plus the wish-list price block it
+                          renders
     views-round-settings.js round Einstellungen screen: the round-level actions
-                          (invite, move games, delete/leave) in one place (#561)
+                          (invite, move games, delete/leave) in one place (#561),
+                          plus the two sub-screens it links to — the design
+                          picker and the tag manager (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite
     views-round-lookup.js provider lookup, add game, link provider
     views-member.js  member detail page (stats, name/color editing)

@@ -8,7 +8,7 @@
    else: no payment code, no third-party widget/script (that would need a CSP
    widening and leak every visitor's IP on page load rather than only on click).
 
-   Cross-file references (closeSheet/openSheet from views-round-detail.js) are
+   Cross-file references (closeSheet/openSheet from sheet.js) are
    resolved at CALL time, inside the handlers below — never at load time — so
    this file is safe to load before them
    (.claude/rules/frontend-script-load-order.md). */

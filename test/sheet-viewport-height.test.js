@@ -217,7 +217,7 @@ test('exactly the three list dialogs carry .sheet--list', () => {
 test('the short-form dialogs stay narrow', () => {
   // Confirmations, invite, link-provider and the support sheet read worse wide.
   for (const file of ['public/js/views-account.js', 'public/js/support.js',
-    'public/js/views-round-detail.js']) {
+    'public/js/views-round-detail.js', 'public/js/sheet.js']) {
     for (const block of sheetBlocks(file)) {
       assert.ok(!whole('sheet--list').test(block.classes),
         `${file} widened a short form: ${block.classes}`);

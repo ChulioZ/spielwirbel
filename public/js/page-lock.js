@@ -10,10 +10,10 @@
 
    Its own small, dependency-free file for the same reason focus-trap.js is one:
    it is a cross-cutting concern of the sheet layer rather than part of any
-   screen, and views-round-detail.js is already over its line budget
-   (.claude/rules/frontend-helper-modules-and-coverage.md,
+   screen (.claude/rules/frontend-helper-modules-and-coverage.md,
    .claude/rules/token-friendly-source-files.md). openSheet/teardownSheet are its
-   only callers.
+   only callers, and since #956 they live next door in sheet.js — which was
+   itself carved out of views-round-detail.js for exactly this reason.
 
    NOT used by openPopover, deliberately: a popover tears itself down on a window
    `scroll` and that teardown is what keeps it from drifting off its anchor. See

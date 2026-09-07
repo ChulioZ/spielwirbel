@@ -295,11 +295,14 @@ test('every field the add-game sheet renders has an accessible name', async (t) 
  * popover's copy drifting back. Verified by deleting the attribute on purpose.
  */
 test('the game-detail tag popover names its new-tag field', () => {
-  const src = fs.readFileSync(path.join(ROOT, 'public/js/views-round-detail.js'), 'utf8');
+  // The two renderings sat in one file until #956 moved the Tags SCREEN to
+  // views-round-settings.js; the game-detail popover stayed. Both are scanned so
+  // the count still means "every rendering", not "every one in this file".
+  const FILES = ['public/js/views-round-detail.js', 'public/js/views-round-settings.js'];
+  const src = FILES.map((f) => fs.readFileSync(path.join(ROOT, f), 'utf8')).join('\n');
   const fields = [...src.matchAll(/<input\b[^>]*?placeholder="\$\{esc\(t\('tags\.addPlaceholder'\)\)\}"[^>]*>/g)]
     .map((m) => m[0].replace(/\s+/g, ' '));
-  // Two renderings live in this file: the Tags screen and the popover.
-  assert.equal(fields.length, 2, `expected 2 new-tag fields in views-round-detail.js, found ${fields.length}`);
+  assert.equal(fields.length, 2, `expected 2 new-tag fields across ${FILES.join(' + ')}, found ${fields.length}`);
   for (const tag of fields) {
     assert.match(tag, /aria-label="\$\{esc\(t\('tags\.addPlaceholder'\)\)\}"/, `field has no aria-label: ${tag}`);
   }

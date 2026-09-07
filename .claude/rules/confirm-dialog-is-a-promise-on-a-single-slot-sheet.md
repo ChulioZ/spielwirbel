@@ -1,7 +1,7 @@
 ---
 paths:
   - "public/js/confirm-dialog.js"
-  - "public/js/views-round-detail.js"
+  - "public/js/sheet.js"
   - "public/js/views-session.js"
   - "public/js/router.js"
   - "test/support/dom.js"
@@ -14,7 +14,7 @@ and each of them fails quietly.
 
 ## 1. `openSheet` REPLACES — so a confirmation raised inside a sheet closes it
 
-`activeSheet` (views-round-detail.js) is a single slot, and `openSheet`'s first
+`activeSheet` (sheet.js) is a single slot, and `openSheet`'s first
 act is `teardownSheet({ keepLock: true })`. That is deliberate — one history
 marker, one focus trap, one page lock — but it means **a confirmation opened from
 inside a sheet dismisses the sheet that raised it**, and declining then drops the

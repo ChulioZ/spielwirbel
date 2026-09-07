@@ -1,6 +1,6 @@
 ---
 paths:
-  - "public/js/views-round-detail.js"
+  - "public/js/sheet.js"
   - "public/js/core.js"
   - "public/js/popover.js"
   - "public/styles.css"
@@ -9,7 +9,7 @@ paths:
 
 The three game-detail editors (tags, players, cover) are one builder each with
 **two presentations**: an anchored `.popover` from 860px up, a bottom sheet below
-it. `openEditor(anchor, variant, title, build, onClose)` in `views-round-detail.js`
+it. `openEditor(anchor, variant, title, build, onClose)` in `sheet.js`
 picks between them. This is not a taste call — the anchored form is *structurally*
 unusable on a phone, and the way it fails is invisible from every check we have.
 

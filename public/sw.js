@@ -59,6 +59,7 @@ const SHELL = [
   '/js/swr.js',
   '/js/focus-trap.js',
   '/js/page-lock.js',
+  '/js/sheet.js',
   '/js/session-path.js',
   '/js/nav-link.js',
   '/js/auth-error.js',
