@@ -659,6 +659,7 @@ I18N.fr = {
   'tables.count': '{n} tables',
   'tables.countOne': '{n} table',
   'tables.gameLabel': 'Jeu à la table {n}',
+  'tables.tableLabel': 'Table {n}',
   'tables.lowest': 'Plus bas {n}',
   'tables.parties': '{n} partis',
   'tables.partiesOne': '{n} parti',

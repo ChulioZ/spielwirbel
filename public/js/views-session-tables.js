@@ -129,17 +129,69 @@ async function showTableBuilder(round, session, gamesHint) {
       body.appendChild(shareBtn);
     }
 
-    const list = h('<div class="tables-grid"></div>');
-    children.forEach((child) => {
+    /* One SPOTLIGHT per table (#957) — the component the single-table results
+       screen opens with (views-session.js), rather than a second visual language
+       for the same fact: a finished evening, and what was played at it. The card
+       itself is the link, so the winner inside it is a <span>, not the <a> the
+       sibling uses for a game link — an anchor inside an anchor is invalid and
+       the inner one would swallow the outer target.
+
+       No `is-reveal` here, deliberately. This screen is only ever a REVISIT:
+       confirming a split navigates to the hub, and every other way in is the
+       Chronik, the hub's split group or a shared URL. A reveal would therefore
+       replay on every single visit, which is what #940's note at
+       views-session.js:837 guards against. The world scene still renders — in
+       its resting end state, which is exactly what a cold load and a
+       reduced-motion reader see on the sibling screen too. */
+    const list = h('<div class="split-tables"></div>');
+    const STATE = {
+      played: { key: 'sessions.played', icon: 'ti-crown' },
+      cancelled: { key: 'sessions.cancelled', icon: 'ti-ban' },
+      open: { key: 'tables.childOpen', icon: 'ti-hourglass' },
+    };
+    children.forEach((child, index) => {
       const game = round.games.find((g) => g.id === child.chosenGameId);
-      const names = sessionPeople(round, child).map(personLabel);
-      const card = h(`<a class="tables-card">
-           <div class="tables-card__head">
-             <span class="tables-card__img"${tableCoverBg(game)}>${game ? coverPlaceholder(game) : '<i class="ti ti-cards" aria-hidden="true"></i>'}</span>
-             <span class="tables-card__title">${esc(game ? game.title : t('tables.gameGone'))}</span>
+      const seated = sessionPeople(round, child);
+      const outcome = sessionOutcome(child);
+      const state = STATE[outcome] || STATE.open;
+      /* What the people at this table thought of the game they played, weighed
+         through the SAME curve the builder scored the proposal with — so the
+         card states the number this split was chosen on rather than a second
+         opinion of it. The votes are the PARENT's: a child is a direct-pick
+         session created with `votes: {}` and never collects any of its own
+         (lib/session-split.js).
+
+         Members keep their id across the split; guests do not, because
+         buildChildSessions mints fresh guest ids. So a guest's vote is not
+         attributable here and counts as NEUTRAL_RATING — precisely what
+         seatRating already does for anybody who did not vote. */
+      const fb = outcome === 'played'
+        ? tableFeedback(
+          { gameId: child.chosenGameId, personIds: seated.map((p) => p.id) },
+          session.votes || {},
+          tileValue
+        )
+        : null;
+      const pill = fb && fb.avg !== null
+        ? `<span class="score-pill spotlight__pill" style="background:${scoreColor(fb.avg)}">${esc(fmtAvg(displayScore(fb.avg)))}</span>`
+        : '';
+      const card = h(`<a class="spotlight spotlight--table${outcome === 'played' ? '' : ' is-off'}">
+           <div class="spotlight__kicker">
+             <i class="ti ${state.icon} spotlight__crown" aria-hidden="true"></i>
+             ${esc(t('tables.tableLabel', { n: index + 1 }))}
            </div>
-           <div class="tables-card__people">${names.map(esc).join(', ')}</div>
-           <div class="tables-card__meta">${esc(child.finished ? t('sessions.played') : t('tables.childOpen'))}</div>
+           <div class="spotlight__winners">
+             <span class="spotlight__winner">
+               <span class="spotlight__img"${tableCoverBg(game)}>${game ? coverPlaceholder(game) : '<i class="ti ti-cards" aria-hidden="true"></i>'}</span>
+               <span class="spotlight__title">${esc(game ? game.title : t('tables.gameGone'))}</span>
+               ${pill}
+             </span>
+           </div>
+           <div class="spotlight__seats">${seated.map((p) => `<span class="spotlight__seat">
+                  <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
+                  <span class="spotlight__seat-name">${esc(personLabel(p))}</span>
+                </span>`).join('')}</div>
+           <div class="spotlight__state">${esc(t(state.key))}</div>
          </a>`);
       navLink(card, resultsPath(round.id, child.id), () => showResults(round, child));
       list.appendChild(card);

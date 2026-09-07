@@ -243,12 +243,21 @@ test('once confirmed the screen becomes a summary of the tables', async (t) => {
   assert.equal(dom.app.querySelector('.page-head h1').textContent, 'Die Tische',
     'nothing is being built any more, so the heading must not still say so');
   assert.match(dom.app.textContent, /Aufgeteilt auf 2 Tische/);
-  const list = cards(dom);
+  // Since #957 the summary is one SPOTLIGHT per table rather than the builder's
+  // `.tables-card`; what this test is about — which children survive resolution
+  // and what each card says — is unchanged.
+  const list = [...dom.app.querySelectorAll('.spotlight--table')];
   // The third stored id resolves to nothing — a deleted table — and is dropped
   // rather than rendered as a ghost.
   assert.equal(list.length, 2);
+  assert.equal(cards(dom).length, 0, 'the builder\'s own card must not survive the confirm');
   assert.match(list[0].textContent, /Catan/);
-  assert.match(list[0].textContent, /Anna, Ben, Dana/);
+  // One seat per person now, so the names are their own nodes rather than a
+  // comma-joined line.
+  assert.deepEqual(
+    [...list[0].querySelectorAll('.spotlight__seat-name')].map((el) => el.textContent),
+    ['Anna', 'Ben', 'Dana']
+  );
   assert.equal(list[0].getAttribute('href'), '/round/7/session/c1');
   assert.match(list[1].textContent, /Läuft noch/);
 });

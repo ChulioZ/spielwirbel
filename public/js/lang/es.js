@@ -662,6 +662,7 @@ I18N.es = {
   'tables.count': '{n} mesas',
   'tables.countOne': '{n} mesa',
   'tables.gameLabel': 'Juego de la mesa {n}',
+  'tables.tableLabel': 'Mesa {n}',
   'tables.lowest': 'La más baja: {n}',
   'tables.parties': '{n} plazas',
   'tables.partiesOne': '{n} plaza',
