@@ -11,9 +11,9 @@
  *
  * WHAT IT SCANS: translation VALUES and the entries in public/js/news.js.
  * Deliberately NOT raw file text — the comment above `result.winner` contains
- * „Abend" in all five lang files (it is the comment documenting this very rule),
- * and four of the five file headers name the banned phrase to warn translators
- * off it. A text-level scan self-trips on its own documentation.
+ * „Abend" in most lang files (it is the comment documenting this very rule),
+ * and most file headers name the banned phrase to warn translators off it. A
+ * text-level scan self-trips on its own documentation.
  *
  * WHAT IT DOES NOT COVER, on purpose:
  *   - developer-facing prose (docs/features.md says "evening" freely),

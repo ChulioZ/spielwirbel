@@ -170,3 +170,21 @@ test('a locale registered at runtime formats dates with its own tag', () => {
   // Would read "July 2026" if fmtMonth still picked its tag with a de/en ternary.
   assert.match(ctx.fmtMonth('2026-07-29T14:05:00Z'), /juillet/);
 });
+
+/*
+ * The bug-report form's language dropdown is the one hand-maintained copy of
+ * the locale list that is not code, and it was the copy #952 missed: every
+ * shipped locale but Dutch was offered, on a REQUIRED field, so a Dutch
+ * reporter could only answer wrongly (2026-09-06 audit, C-018). Derive the
+ * expected options from the table so the next language cannot skip it.
+ */
+test('the bug-report form offers exactly the shipped locales, by native label', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const yml = fs.readFileSync(path.join(__dirname, '..', '.github', 'ISSUE_TEMPLATE', 'bug_report.yml'), 'utf8');
+  const block = yml.match(/id: locale\n([\s\S]*?)validations:/);
+  assert.ok(block, 'the form still has the locale dropdown');
+  const offered = [...block[1].matchAll(/^\s+- (.+)$/gm)].map((m) => m[1].trim());
+  const expected = locales.SUPPORTED_LOCALES.map((code) => locales.LOCALE_LABELS[code]);
+  assert.deepEqual(offered.sort(), [...expected].sort());
+});

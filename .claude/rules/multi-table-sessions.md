@@ -122,10 +122,12 @@ pushes its log entry **inside** the claim rather than through `withSession`'s
   admits {3,4,6,7,8} and nothing at 5, so the search enumerates admitted sizes
   rather than reducing them to a min/max pair
   (`.claude/rules/expansions-widen-by-union.md`).
-- **`VIOLATION_MAX` is coupled to the vote scale.** "1 or 2" became "at or below
-  2 on the 0-5 scale" when #797 made retirement the zero, which is also why a
-  retire vote is a violation with no clause of its own. Change the scale and this
-  moves in the same change.
+- **`VIOLATION_MAX` is coupled to the vote scale.** It is the bottom two rungs
+  of the 1–5 scale. It was written against a 0–5 scale when #797 made
+  retirement the zero; #909 removed the retire vote and the zero with it, and
+  the value stood while the sentence justifying it moved up one rung (the
+  worked example in `shared-constants-across-the-stack.md`'s ninth-instance
+  paragraph). Change the scale and this moves in the same change.
 - **Never show a score.** An aggregate number invites arguing about the formula
   instead of about the evening; the builder shows each table's average, its
   *lowest*, and every unhappy seating by name.
