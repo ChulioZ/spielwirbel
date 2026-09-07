@@ -115,6 +115,8 @@ lib/
   faq.js             the server-rendered FAQ page, DE + EN, with each answer an
                      instance cannot honestly give gated out (issue #489)
   feed.js            the Freundeskreis activity feed's allowlisted events (#325)
+  feed-events.js     the feed's accepted event types, one dependency-free set
+                     both repo backends require rather than each holding a copy
   corpus.js          the licensed BoardGameGeek game corpus (issue #681): the
                      operator-uploaded ranks dump, filtered and capped, plus the
                      bounded, resumable enrichment pass that fills each row's
