@@ -40,8 +40,14 @@ const PROTECTED = [
     re: /\.env(?:\.[\w-]+)*\.local(?![\w.-])/,
     what: 'a local .env file — live secrets (.claude/rules/no-reading-env-files.md)',
   },
+  // The lookbehind keeps the JS identifier `process.env` (and any `foo.env`
+  // property access) out, in its plain and its regex-escaped (`process\.env`)
+  // spelling: a path has a space, quote, `/`, `=` or the start of the string
+  // before the dot; an identifier has a word character or an escaping
+  // backslash there. Without it every grep for the env vars the code reads was
+  // blocked (2026-09-06 audit, C-026).
   {
-    re: /\.env(?![\w.-])/,
+    re: /(?<![\w\\])\.env(?![\w.-])/,
     what: '.env — live secrets (.claude/rules/no-reading-env-files.md)',
   },
 ];
