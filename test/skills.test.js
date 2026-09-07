@@ -179,8 +179,8 @@ test("a criterion's Status matches the section it sits in", () => {
 });
 
 /*
- * The shipped locale set is DATA (`public/js/locales.js`, #504) and has been
- * six languages since then — but #504 fixed only the *code* copies. Seven
+ * The shipped locale set is DATA (`public/js/locales.js`, #504) and has kept
+ * growing since then — but #504 fixed only the *code* copies. Seven
  * prose and YAML sites went on naming `lang/en.js` and `lang/de.js` as the
  * closed pair a contributor must edit, including a REQUIRED field in the bug
  * report form that an es/fr/it/nl reporter could only answer wrongly, and
@@ -216,7 +216,53 @@ test('no agent- or contributor-facing file names en.js and de.js as the closed l
     .map(([rel, text]) => `${rel}: ${text.match(PAIR)[0].replace(/\s+/g, ' ').slice(0, 70)}`);
 
   assert.deepEqual(bad, [],
-    `these name en.js/de.js as the complete locale set — it is five languages, derived from public/js/locales.js:\n  ${bad.join('\n  ')}`);
+    `these name en.js/de.js as the complete locale set — the set is derived from public/js/locales.js:\n  ${bad.join('\n  ')}`);
+});
+
+/*
+ * The same drift one notch subtler: not the PAIR but the COUNT. #952 made the
+ * set six languages and "five" survived in CLAUDE.md, in this file's own
+ * assertion message above, in two spec headers, in two lib/ comments and in a
+ * rule — every one of them correct for the set of its day (2026-09-06 audit,
+ * C-009). A count in prose is a value another file owns
+ * (token-friendly-source-files.md), so agent-facing text says "every shipped
+ * locale" or derives the number.
+ *
+ * Deliberately narrow: only the forms that assert the CURRENT COMPLETE set —
+ * "all N locales", "the N shipped locales". A count inside an argument
+ * ("a loop proves nothing at two locales", "passed for five and went red on the
+ * sixth") is history, is correct forever, and is exactly what several rules
+ * exist to say. README.md and CONTRIBUTING.md are exempt: they address a human
+ * and list the languages beside the count, so the list is what drifts visibly.
+ */
+test('no agent-facing doc, rule or source comment states the locale count as a number', () => {
+  const N = '(?:two|three|four|five|six|seven|eight|nine|ten)';
+  const COUNT = new RegExp(
+    `\\ball\\s+${N}\\s+(?:shipped\\s+)?(?:locales|languages|lang files)\\b` +
+    `|\\b${N}\\s+shipped\\s+(?:locales|languages)\\b`, 'i');
+  const EXEMPT = new Set(['README.md', 'CONTRIBUTING.md']);
+
+  const SRC_DIRS = ['lib', 'test', 'public/js', 'scripts'];
+  const sources = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) { if (rel !== 'public/js/lang') walk(rel); }
+      else if (e.name.endsWith('.js')) sources.push(read(rel));
+    }
+  };
+  for (const d of SRC_DIRS) walk(d);
+
+  const scanned = [...docs, ...ruleDocs, ...rootDocs, ...sources,
+    ...['.github/PULL_REQUEST_TEMPLATE.md', '.github/ISSUE_TEMPLATE/bug_report.yml'].map(read)];
+  assert.ok(scanned.length > 150, `scanned ${scanned.length} files, expected docs plus the source tree`);
+
+  const bad = scanned
+    .filter(([rel]) => !EXEMPT.has(rel))
+    .filter(([, text]) => COUNT.test(text))
+    .map(([rel, text]) => `${rel}: ${text.match(COUNT)[0]}`);
+  assert.deepEqual(bad, [],
+    `these state the locale count as a number — say "every shipped locale" or derive it from public/js/locales.js:\n  ${bad.join('\n  ')}`);
 });
 
 /*
