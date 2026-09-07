@@ -278,6 +278,61 @@ test('most-owned needs several ACCOUNTS, not one account with several rounds', a
   assert.equal((await rebuild()).games.mostOwned.shelves, 2);
 });
 
+/* ------------------------ calendar periods (#964) --------------------------- */
+
+test('the month and year cards carry the PERIOD they are counting', async () => {
+  /*
+   * The cards are labelled with calendar periods, so each must say WHICH month
+   * and year it is showing — a label the client cannot derive, because the
+   * payload is built on the server's Europe/Berlin calendar and cached for
+   * every visitor.
+   *
+   * `now` is deliberately a month AND a year that are not today's, and the
+   * seeded play is therefore in the FUTURE relative to it — which is what makes
+   * the assertion discriminating rather than accidentally right: a period read
+   * off the wall clock, or off the fixture's own dates, cannot produce these.
+   */
+  openContentFloors();
+  stubProvider();
+  await seedPlayedGame({ externalId: 'thing-period', title: 'Periodisch' });
+
+  const built = await rebuild('2024-11-15T12:00:00.000Z');
+  assert.equal(built.games.playedMonth.period, '2024-11');
+  assert.equal(built.games.playedYear.period, '2024');
+  // The week card names no period on purpose — nobody reads ISO week numbers —
+  // so it must not grow one by accident.
+  assert.equal('period' in built.games.playedWeek, false, 'the week card names no period');
+  // And a metric that is not a period does not acquire one either.
+  assert.equal('period' in built.games.mostOwned, false);
+});
+
+test('a play in the PREVIOUS calendar month is not counted in this one', async () => {
+  /*
+   * The bug itself (#964): with rolling windows, a play from the last day of the
+   * previous month counted toward „diesen Monat" for the next 29 days. Seeded at
+   * real time and asked about a `now` in the FOLLOWING month, so the play is
+   * genuinely last month's whichever day this suite runs on.
+   */
+  openContentFloors();
+  stubProvider();
+  await seedPlayedGame({ externalId: 'thing-lastmonth', title: 'Vormonat' });
+
+  const nextMonth = new Date();
+  nextMonth.setUTCDate(1);
+  nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+  // The 5th, so the boundary sits clear of any timezone edge on either side.
+  nextMonth.setUTCDate(5);
+  const built = await rebuild(nextMonth.toISOString());
+  const games = built.games || {};
+  assert.equal('playedWeek' in games, false, 'last month is not this week');
+  assert.equal('playedMonth' in games, false, 'last month is not this month');
+  // Still inside the calendar YEAR — unless the rollover crossed one, which is
+  // the case the ternary covers rather than skipping the assertion entirely.
+  const sameYear = nextMonth.getUTCFullYear() === new Date().getUTCFullYear();
+  assert.equal('playedYear' in games, sameYear,
+    sameYear ? 'the same calendar year still counts it' : 'a December run rolls into the next year');
+});
+
 /* ---------------------------- the thresholds -------------------------------- */
 
 test('a metric below its threshold is ABSENT — not a zero, not an empty row', async () => {
@@ -595,7 +650,7 @@ test('#928 a game with no ratings can never take the best-rated podium', async (
 });
 
 /* THE PLAY LIFT REACHES THIS PODIUM TOO (#928), which is the half of the parity
-   that needed a new column: the aggregate carried only `plays7/30/365`, and the
+   that needed a new column: the aggregate carried only the three period counts, and the
    lift is a fact about a game over its whole life, so `publicGameAggregates`
    grew an all-time count in both backends for it.
 

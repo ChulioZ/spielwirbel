@@ -112,6 +112,22 @@ function fmtMonth(iso) {
   return new Date(iso).toLocaleString(localeTag(locale), { month: 'long', year: 'numeric' });
 }
 
+/* The same label from a bare "YYYY-MM" period key (#964) — what the Discover
+   podium's month card is told it is counting.
+
+   THE LOCAL-TIME CONSTRUCTION IS THE WHOLE POINT, not a stylistic choice.
+   fmtMonth takes an INSTANT and renders it in the READER's zone, so handing it
+   the period's own boundary ('2026-09-01T00:00:00Z', or Berlin's
+   '2026-08-31T22:00:00Z') renders AUGUST for anyone west of UTC — a card
+   confidently naming the wrong month, with nothing to notice. Building the date
+   from the key in local time pins it to the month the key names, whoever reads
+   it. */
+function fmtMonthKey(key) {
+  const m = /^(\d{4})-(\d{2})$/.exec(String(key || ''));
+  if (!m) return '';
+  return fmtMonth(new Date(Number(m[1]), Number(m[2]) - 1, 1));
+}
+
 // Money, in the reader's locale and the upstream's own currency (#679).
 //
 // The currency comes from the price source, never from the locale: a German

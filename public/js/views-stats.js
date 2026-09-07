@@ -41,8 +41,15 @@
 const STATS_PODIUMS = [
   { key: 'mostOwned', icon: 'ti-cards', line: (e) => tn(e.shelves, 'stats.shelves.one', 'stats.shelves.many') },
   { key: 'playedWeek', icon: 'ti-flame', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
-  { key: 'playedMonth', icon: 'ti-calendar', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
-  { key: 'playedYear', icon: 'ti-history', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
+  /* The month and the year NAME their period (#964), from `entry.period` rather
+     than from the reader's clock. The counts are calendar-bounded on the
+     server's Europe/Berlin calendar and cached for everyone, so a label built
+     here from `new Date()` would drift from the window it describes the moment
+     a reader is in another zone or the payload is a few minutes past midnight
+     on the 1st — which is the whole class of bug this replaced. The week names
+     none: nobody reads ISO week numbers. */
+  { key: 'playedMonth', icon: 'ti-calendar', label: (e) => t('stats.playedMonth', { month: fmtMonthKey(e.period) }), line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
+  { key: 'playedYear', icon: 'ti-history', label: (e) => t('stats.playedYear', { year: e.period }), line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   /* The value is the SPIELWIRBEL-SCORE, not a raw mean (#914) — so the copy must
      not call it an average, and the card carries the ⓘ that explains it. This is
      the only surface where a LOGGED-OUT visitor meets the score, which is why
@@ -113,7 +120,7 @@ function statsCard(podium, entry) {
     <li class="stats-card">
       ${cover}
       <span class="stats-card__body">
-        <span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(t('stats.' + podium.key))}${podium.info ? ` ${infoButton(podium.info)}` : ''}</span>
+        <span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(podium.label ? podium.label(entry) : t('stats.' + podium.key))}${podium.info ? ` ${infoButton(podium.info)}` : ''}</span>
         ${title}
         <span class="stats-card__value muted">${esc(podium.line(entry))}</span>
       </span>

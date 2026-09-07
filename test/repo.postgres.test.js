@@ -743,7 +743,7 @@ if (!process.env.DATABASE_URL) {
     const row = rows.find((r) => r.externalId === externalId);
     assert.ok(row, 'the games read was invisible without the admin escape');
     assert.equal(row.owners, 1, 'the owner read was invisible without the admin escape');
-    assert.equal(row.plays.d7.count, 1, 'the plays read was invisible without the admin escape');
+    assert.equal(row.plays.week.count, 1, 'the plays read was invisible without the admin escape');
     assert.equal(row.ratings.count, 1, 'the ratings read was invisible without the admin escape');
     assert.deepEqual(row.ratings.tiles, [0, 0, 0, 0, 1, 0]);
     // pg hands an uncast aggregate back as a STRING; a missing ::int would

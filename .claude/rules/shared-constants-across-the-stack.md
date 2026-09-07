@@ -321,7 +321,9 @@ The Discover podium is the sharpest instance in this file of the trap named
 under `vote-score.js`'s curve half, one layer over: `lib/public-stats.js` can
 `require()` the shared module, but the Postgres aggregate feeding it cannot —
 so the play lift needed an **all-time** play count the aggregate did not carry
-(`plays.d7/d30/d365` only). Rather than restate the lift in SQL, the aggregate
+(`plays.week/month/year` only — renamed from `d7/d30/d365` in #964, when the
+three became calendar periods rather than rolling day counts). Rather than
+restate the lift in SQL, the aggregate
 grew a `plays.all` column in both backends and the lift stays in JS. Same move
 as `scoreTally`'s histogram: when a boundary cannot take the shared function,
 push the boundary **down** to something the function still owns.

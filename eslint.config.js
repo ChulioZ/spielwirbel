@@ -22,7 +22,7 @@ const frontendGlobals = {
   applyTabTitle: 'readonly',
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
-  fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMoney: 'readonly',
+  fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtMoney: 'readonly',
   fmtAvg: 'readonly', fmtSigned: 'readonly', fmtCount: 'readonly',
   // core.js
   app: 'readonly', context: 'readonly', toastEl: 'readonly',

@@ -4293,37 +4293,51 @@ module.exports = function repoContract(repo) {
       assert.equal(await rowFor(wished), null, 'a wish has no owner, so it has no row');
     });
 
-    await t.test('plays land in the 7/30/365 windows by the date they finished', async () => {
+    await t.test('plays land in the CALENDAR week/month/year they finished in', async () => {
+      /*
+       * NOW is Thursday 2026-08-13, 14:00 Berlin (#964). Its three boundaries:
+       *   week  Monday 2026-08-10 00:00 CEST = 2026-08-09T22:00Z
+       *   month        2026-08-01 00:00 CEST = 2026-07-31T22:00Z
+       *   year         2026-01-01 00:00 CET  = 2025-12-31T23:00Z
+       *
+       * Every fixture below is an ABSOLUTE instant placed within an hour of one
+       * of those, not a `daysAgo` offset — a fixture measured in days back is
+       * satisfied by the rolling windows this replaced, which is precisely the
+       * bug. Each pair straddles one boundary, so a window off by even an hour
+       * (a DST slip) moves a count.
+       */
       const id = uniq();
       const tenant = `pga-${uniq()}`;
       const round = await repo.createRound(tenant, { name: 'E', members: ['Ann'] });
       const game = await repo.createGame(tenant, round.id, bgg(id));
-      const play = async (daysBack, over = {}) => repo.createSession(tenant, round.id, {
-        gameIds: [game.id], votes: {}, createdAt: daysAgo(daysBack),
-        finished: true, finishedAt: daysAgo(daysBack), chosenGameId: game.id, ...over,
+      const play = async (finishedAt, over = {}) => repo.createSession(tenant, round.id, {
+        gameIds: [game.id], votes: {}, createdAt: finishedAt,
+        finished: true, finishedAt, chosenGameId: game.id, ...over,
       });
-      await play(2);
-      await play(20);
-      await play(200);
-      // Older than every real window, so only the all-time count can see it.
-      await play(900);
+
+      await play('2026-08-12T09:00:00.000Z');   // Wednesday, this week
+      await play('2026-08-09T21:00:00.000Z');   // Sun 23:00 Berlin — one hour BEFORE the week began
+      await play('2026-07-31T22:30:00.000Z');   // Aug 1st, 00:30 Berlin — inside this month
+      await play('2026-07-31T21:00:00.000Z');   // Jul 31st, 23:00 Berlin — the previous month
+      await play('2025-12-31T23:30:00.000Z');   // Jan 1st, 00:30 Berlin — inside this year
+      await play('2025-12-31T22:00:00.000Z');   // Dec 31st, 23:00 Berlin — the previous year
       // Neither of these is a play: one never finished, one settled on nothing.
-      await play(1, { finished: false });
-      await play(1, { chosenGameId: null });
+      await play('2026-08-12T10:00:00.000Z', { finished: false });
+      await play('2026-08-12T10:00:00.000Z', { chosenGameId: null });
 
       const row = await rowFor(id);
-      assert.equal(row.plays.d7.count, 1);
-      assert.equal(row.plays.d30.count, 2, 'the windows nest — 30 days includes the last 7');
-      assert.equal(row.plays.d365.count, 3);
-      assert.equal(row.plays.d365.tenants, 1, 'one group playing three times is still one group');
+      assert.equal(row.plays.week.count, 1, 'only Wednesday; Sunday 23:00 is the week before');
+      assert.equal(row.plays.month.count, 3, 'the periods nest, and the 1st at 00:30 Berlin is in');
+      assert.equal(row.plays.year.count, 5, 'Dec 31st 23:00 Berlin is last year, Jan 1st 00:30 is not');
+      assert.equal(row.plays.year.tenants, 1, 'one group playing five times is still one group');
       /* The ALL-TIME count (#928), which feeds the Discover podium's play lift.
-         The 900-day play is what makes this discriminating: it is invisible to
-         every other window, so an `all` wired to `d365` — the plausible slip,
+         The two 2025 plays are what makes this discriminating: they are
+         invisible to the year window, so an `all` wired to `year` — the plausible slip,
          and the one that would make the public number sag for a game that had a
          quiet year — reads 3 here rather than 4. The two backends spell it
          differently (an empty-string cutoff in the window loop, a bare
          `count(*)` in SQL), which is exactly why it is pinned in the contract. */
-      assert.equal(row.plays.all.count, 4, 'every finished play, however old');
+      assert.equal(row.plays.all.count, 6, 'every finished play, however old');
       assert.equal(row.plays.all.tenants, 1);
     });
 
@@ -4419,7 +4433,7 @@ module.exports = function repoContract(repo) {
       assert.equal((await rowFor(mine)).ratings.count, 1, 'the in-round vote still counts');
       const other = await rowFor(theirs);
       assert.equal(other.ratings.count, 0, 'the cross-round vote must not be credited');
-      assert.equal(other.plays.d7.count, 0, 'nor a cross-round chosenGameId as a play');
+      assert.equal(other.plays.week.count, 0, 'nor a cross-round chosenGameId as a play');
     });
 
     await t.test('a demo tenant contributes to nothing', async () => {
@@ -4444,7 +4458,7 @@ module.exports = function repoContract(repo) {
 
       const row = await rowFor(id);
       assert.equal(row.owners, 1, 'the demo shelf must not count as an owner');
-      assert.equal(row.plays.d7.count, 1, 'the demo night must not count as a play');
+      assert.equal(row.plays.week.count, 1, 'the demo night must not count as a play');
       assert.equal(row.ratings.count, 0, 'the demo rating must not count');
     });
 
