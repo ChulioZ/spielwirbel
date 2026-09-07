@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-09-02
+**Stand:** 2026-09-06
 
 ## Verschlüsselung & Transport
 
@@ -50,7 +50,7 @@ list nothing that is not actually in place.
 - Request-Logs enthalten nur Methode/Pfad/Status/Dauer/IP — nie Bodies, Query-
   Strings, Header oder Cookies (`lib/observability.js`).
 - Produkt-Ereignisse: nur Ereignisname + Tenant-Id (Allowlist, #261).
-- Mail-Log: nur Empfänger/Betreff, nie Inhalte (`lib/mail.js`).
+- Mail-Log: nur Betreff, nie Empfänger oder Inhalte (`lib/mail.js`, `lib/routes/account.js`; seit #878).
 
 ## Verfügbarkeit & Wiederherstellung
 

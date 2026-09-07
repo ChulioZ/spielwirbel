@@ -98,6 +98,11 @@ test('configured: the privacy policy covers the real processors and no ODR link'
     '§ 25', 'TDDDG',                             // consent-free storage position
     'Art. 77',                                   // right to lodge a complaint
     'Art. 22',                                   // explicit no-automated-decisions statement
+    // §16 sharing scope (#878 widened it; the 2026-09-06 audit found EN still
+    // on the pre-#878 promise). Paired DE + EN markers so one language cannot
+    // drift behind the other again: both must name the profile and vote links.
+    'dein Profil und von dir geteilte',
+    'your profile and the voting links you share',
     legal.OPERATOR_NAME,
   ]) {
     assert.ok(res.text.includes(marker), `policy must mention ${marker}`);
