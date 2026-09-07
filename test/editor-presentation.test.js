@@ -40,7 +40,9 @@ const strip = (src) => src
   .replace(/\/\*[\s\S]*?\*\//g, '')
   .replace(/^\s*\/\/.*$/gm, '');
 
-const DETAIL = strip(fs.readFileSync(path.join(ROOT, 'public/js/views-round-detail.js'), 'utf8'));
+// openEditor and its breakpoint moved to sheet.js in #956, with the sheet
+// primitive they are built on; this file only ever read them.
+const SHEET = strip(fs.readFileSync(path.join(ROOT, 'public/js/sheet.js'), 'utf8'));
 
 // A function's body, brace-matched from its declaration.
 function bodyOfFn(src, name) {
@@ -154,7 +156,7 @@ test('the sheet presentation goes through openSheet/closeSheet', () => {
   // the history marker that makes Back dismiss the sheet (#333). Assigning
   // activeSheet directly gets neither, silently — which is exactly why
   // `.claude/rules/accessibility-contrast-and-modals.md` §2 requires the call.
-  const body = bodyOfFn(DETAIL, 'openEditor');
+  const body = bodyOfFn(SHEET, 'openEditor');
   assert.match(body, /openSheet\(backdrop, onKey, onClose\)/, 'openEditor does not register its sheet via openSheet');
   assert.match(body, /closeSheet\(\)/, 'openEditor never closes through closeSheet');
   assert.doesNotMatch(body, /activeSheet\s*=/, 'openEditor assigns activeSheet directly — it would miss the focus trap and Back-dismissal');
@@ -164,7 +166,7 @@ test('openEditor does not open its sheet behind a leading closeSheet()', () => {
   // The #333 trap: a leading closeSheet() queues an async history.back() that
   // lands AFTER the new sheet is up and dismisses it. openSheet tears down an
   // already-open sheet itself, synchronously.
-  const body = bodyOfFn(DETAIL, 'openEditor');
+  const body = bodyOfFn(SHEET, 'openEditor');
   const firstClose = body.indexOf('closeSheet(');
   const build = body.indexOf('build(body');
   assert.ok(firstClose === -1 || firstClose > build,
@@ -174,9 +176,9 @@ test('openEditor does not open its sheet behind a leading closeSheet()', () => {
 test('the presentation switches at 860px — the existing dock/strip breakpoint', () => {
   // Reused deliberately rather than invented, so the editors change shape at
   // the same width as the navigation (.claude/rules/responsive-hub-tabs.md).
-  assert.match(DETAIL, /const EDITOR_SHEET_BELOW = 860;/,
+  assert.match(SHEET, /const EDITOR_SHEET_BELOW = 860;/,
     'the editor breakpoint is no longer 860px — it must stay the dock/strip breakpoint');
-  const body = bodyOfFn(DETAIL, 'usesEditorSheet');
+  const body = bodyOfFn(SHEET, 'usesEditorSheet');
   assert.match(body, /matchMedia\(`\(min-width: \$\{EDITOR_SHEET_BELOW\}px\)`\)\.matches/,
     'usesEditorSheet no longer derives from EDITOR_SHEET_BELOW');
   // Below the breakpoint means SHEET. An inverted test would strand phones on

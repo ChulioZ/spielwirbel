@@ -8,7 +8,7 @@
    Its two sibling dependencies are passed IN rather than read off the shared
    scope: `peopleOf` (sessionPeople, from session-people.js) and `shelfScoreOf`
    (a `gameId ->
-   number|null` lookup into the round's shelf index, built by core.js's
+   number|null` lookup into the round's shelf index, built by game-stats.js's
    `roundScoreIndex` — what a SET of votes is worth once a veto counts for more
    than its numeric distance (#893) and once thin data is shrunk toward the
    fixed neutral prior, lifted by that game's own plays (#894, #928)). A

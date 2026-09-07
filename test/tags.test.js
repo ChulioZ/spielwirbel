@@ -304,8 +304,11 @@ test('the client maxlength on both tag inputs equals the server TAG_NAME_MAX', (
   const fs = require('node:fs');
   const path = require('node:path');
   const routeSrc = fs.readFileSync(path.join(__dirname, '..', 'lib', 'routes', 'tags.js'), 'utf8');
-  const viewSrc = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'js', 'views-round-detail.js'), 'utf8');
+  // Both renderings, across the two files they live in since #956 (the Tags
+  // screen moved to views-round-settings.js, the popover stayed).
+  const viewSrc = ['views-round-detail.js', 'views-round-settings.js']
+    .map((f) => fs.readFileSync(path.join(__dirname, '..', 'public', 'js', f), 'utf8'))
+    .join('\n');
 
   const serverMax = Number((routeSrc.match(/const TAG_NAME_MAX = (\d+)/) || [])[1]);
   assert.ok(Number.isFinite(serverMax), 'TAG_NAME_MAX not found in lib/routes/tags.js');

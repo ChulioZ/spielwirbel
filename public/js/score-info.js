@@ -17,7 +17,7 @@
    owes an explanation somewhere. Two surfaces carry it, and they do different
    jobs — keep both:
 
-   - `scoreReason()` (core.js) is the PRIMARY one: „2,2 · 1× gar nicht", printed
+   - `scoreReason()` (game-stats.js) is the PRIMARY one: „2,2 · 1× gar nicht", printed
      beside the number on the RESULTS screen. It explains THIS game at the
      moment the group is deciding, which is the only moment the explanation is
      worth anything — which is also why #919 dropped it from the game detail

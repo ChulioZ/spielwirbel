@@ -13,7 +13,7 @@
    page-lock.js are ones (.claude/rules/frontend-helper-modules-and-coverage.md).
    Part of the frontend's shared global scope; load order: see index.html.
 
-   Cross-file references (openSheet/closeSheet from views-round-detail.js) are
+   Cross-file references (openSheet/closeSheet from sheet.js) are
    resolved at CALL time, inside confirmDialog's body — never at load time — so
    this file is safe to load before them
    (.claude/rules/frontend-script-load-order.md).
@@ -21,7 +21,7 @@
    ## Sheet-over-sheet is REPLACE, and that is the app's own semantics
 
    `openSheet` tears down an already-open sheet rather than stacking on it (see
-   its comment in views-round-detail.js: one history marker, one focus trap, one
+   its comment in sheet.js: one history marker, one focus trap, one
    page lock). So a confirmation raised from inside an open sheet closes it. One
    call site does that — the „Spiele verschieben" sheet — and it re-opens itself
    when the user declines; see views-round-actions.js. Everything else is raised

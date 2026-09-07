@@ -179,7 +179,7 @@ test('.sheet--list widens the list dialogs and outranks .sheet--dialog', () => {
    satisfied by spraying `sheet--list` over every sheet, the same shape as
    `test/ds-row-affordance.test.js`. */
 const LIST_DIALOGS = [
-  ['public/js/views-round-lookup.js', 'class="bgg-import"', 'BGG collection import'],
+  ['public/js/bgg-import.js', 'class="bgg-import"', 'BGG collection import'],
   ['public/js/views-round-actions.js', 'class="move-picker"', 'Spiele verschieben'],
   ['public/js/views-archive.js', 'class="ds-list wish-pick"', 'Grundspiel wählen'],
 ];
@@ -217,7 +217,7 @@ test('exactly the three list dialogs carry .sheet--list', () => {
 test('the short-form dialogs stay narrow', () => {
   // Confirmations, invite, link-provider and the support sheet read worse wide.
   for (const file of ['public/js/views-account.js', 'public/js/support.js',
-    'public/js/views-round-detail.js']) {
+    'public/js/views-round-detail.js', 'public/js/sheet.js']) {
     for (const block of sheetBlocks(file)) {
       assert.ok(!whole('sheet--list').test(block.classes),
         `${file} widened a short form: ${block.classes}`);

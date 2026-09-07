@@ -15,7 +15,7 @@
 // rows were sorted by. Since #893 those differ: the Spielwirbel-Score can go
 // negative and every screen clamps it at 0,0, so two vetoed games sorting −0,3
 // and −5,0 both read „0,0" and must share a place, while still sorting in the
-// right order above. The caller owns the clamp (`displayScore` in core.js);
+// right order above. The caller owns the clamp (`displayScore` in game-stats.js);
 // keeping it there is what lets this file stay dependency-free instead of
 // growing a second copy of the floor.
 function computePlaces(rows) {

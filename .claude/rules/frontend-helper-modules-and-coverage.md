@@ -52,6 +52,24 @@ file must be wired into all four places or it breaks something silently:
 `test/pwa.test.js` guards (1)+(2) by parsing `SHELL` and asserting each entry is
 served. Nothing guards (3) — bump it by hand.
 
+**A SPLIT makes (3) sharper than an ordinary edit does, and the failure is a
+white screen** (#956). Splitting moves a top-level `const`/`function` from one
+shell file to another, and shell assets are served **cache-first** while
+navigations are network-first. So on an **unbuilt** deploy the first load after
+the split serves the NEW `index.html` (network) plus the OLD `core.js` (cache) —
+and the new module declares a name the stale copy still declares, which is
+`SyntaxError: Identifier 'X' has already been declared`. Both scripts die, and
+`main.js` then throws `applyStaticTexts is not defined`.
+
+It self-heals on the next navigation, because the bumped `CACHE` is what makes
+the new worker install, `skipWaiting()` and drop the old cache — so the bump
+bounds this to a single load rather than forever. **Production is not exposed at
+all**: the built deploy content-hashes `js/**`, so the old file lives at a
+different URL and is simply never requested again (measured on #956 —
+`js/core.7e38c5aa.js`). Don't let a stale-cache `SyntaxError` in a dev preview
+send you looking for a duplicate declaration in the source; check
+`caches.keys()` first (`.claude/rules/pwa-service-worker.md`).
+
 **This is also why the jsdom view harness loads scripts through `vm` rather
 than `require`** — same gate, same failure mode, and it is the single constraint
 that shapes `test/support/dom.js`. See

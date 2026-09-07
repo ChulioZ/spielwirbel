@@ -3,6 +3,7 @@ paths:
   - "lib/providers/**"
   - "lib/routes/lookup.js"
   - "lib/routes/games.js"
+  - "public/js/lookup.js"
   - "public/js/views-round-lookup.js"
   - "public/js/lookup-score.js"
   - "public/js/lookup-cover.js"
@@ -16,7 +17,7 @@ paths:
 
 The add-game title field is a search-as-you-type lookup (`lib/providers/`,
 `lib/routes/lookup.js`, `showAddGame`/`attachLookup` in
-`public/js/views-round-lookup.js`). Provider endpoints have no CORS headers, so
+`public/js/lookup.js`). Provider endpoints have no CORS headers, so
 **all provider calls run server-side** through `/api/rounds/:rid/lookup/*`; the
 browser never calls a provider. The frontend queries every provider in
 `LOOKUP_PROVIDERS` in parallel and merges the hits (round-robin interleave) into
@@ -67,7 +68,7 @@ retiring a provider must not blank covers already on people's shelves.
 
 `scoreHit` (`public/js/lookup-score.js`) tiers each hit by how well its title
 answers the query; the menu's own sort (`render()` in
-`public/js/views-round-lookup.js`) then breaks **ties** by `LOOKUP_PROVIDERS`
+`public/js/lookup.js`) then breaks **ties** by `LOOKUP_PROVIDERS`
 position, and any tie *within* one provider by the shorter title (#527). So
 provider priority is only ever meant to order *equally relevant* hits — which
 makes any bug that collapses distinct relevance to a shared `0` present itself as

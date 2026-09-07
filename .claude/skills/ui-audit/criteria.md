@@ -4,7 +4,7 @@
 - **cadence:** 90 days
 
 Seeded 2026-07-26 from `public/styles.css`, the `PALETTES` table (`public/js/round-designs.js`)
-(`public/js/views-round-detail.js`), `.claude/rules/theme-derived-colors.md`,
+(`public/js/views-round-settings.js`), `.claude/rules/theme-derived-colors.md`,
 `tiles-vs-lists.md`, `responsive-content-width.md` and the redesign memory.
 The first research pass ran the same day and added **U-014**, sharpened **U-003**
 and **U-005** with measured state, and rejected **U-R07/R08/R09**.

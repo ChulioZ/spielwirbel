@@ -43,7 +43,7 @@ const round = (over = {}) => ({
 
 /*
  * The shelf scores the recap is HANDED (#894). In production that lookup is
- * core.js's `roundScoreIndex`, which shrinks a thin verdict toward the round's
+ * game-stats.js's `roundScoreIndex`, which shrinks a thin verdict toward the round's
  * own prior — so „das bestbewertete Spiel" names the game the Regal actually
  * puts at the top rather than a second ranking of the same shelf.
  *

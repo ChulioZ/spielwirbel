@@ -1,6 +1,6 @@
 'use strict';
 
-/* The DOM half of the popover clamp (#739) — what `place()` in core.js does with
+/* The DOM half of the popover clamp (#739) — what `place()` in popover.js does with
  * `popoverFit`'s answer.
  *
  * `test/popover-fit.test.js` covers the arithmetic and `test/overlay-page-lock.test.js`

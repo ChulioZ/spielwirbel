@@ -23,7 +23,7 @@
  * three named failures; after it, green.
  *
  * The results screen deliberately KEEPS its `.score-why` line, which is why
- * `scoreReason()` stays in core.js — `test/score-results-view.test.js` guards
+ * `scoreReason()` stays in game-stats.js — `test/score-results-view.test.js` guards
  * that end and must stay green unchanged.
  */
 

@@ -8,7 +8,7 @@
  * merely off-screen, because a page scroll closes a popover outright.
  *
  * The DOM half (measuring the card, applying the clamp, barring its children
- * from collapsing, adding the scroll box) is in core.js and is verified in a
+ * from collapsing, adding the scroll box) is in popover.js and is verified in a
  * real browser; everything decidable from numbers alone lives here.
  */
 

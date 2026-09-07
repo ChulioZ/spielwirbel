@@ -3,6 +3,7 @@ paths:
   - "public/styles.css"
   - "public/js/round-designs.js"
   - "public/js/core.js"
+  - "public/js/round-theme.js"
   - "public/js/views-round-detail.js"
   - "public/js/recap-card.js"
   - "test/a11y-contrast.test.js"

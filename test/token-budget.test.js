@@ -24,6 +24,10 @@
    its budget must drop its entry, and a stale entry fails loudly instead of
    quietly exempting a file that no longer needs it.
 
+   And an entry that has never been judged states the size it was recorded at, so
+   an allowlisted file cannot quietly double either — see "The growth check"
+   below, which is the same "silently, not at all" distinction one level in.
+
    Budgets come from the documented numbers, not from taste:
    - 700 lines for source — the "rough smell" in `token-friendly-source-files.md`,
      which `M-001` repeats as the point where the seam test gets applied.
@@ -144,24 +148,29 @@ const SOURCE_ALLOW = {
   'test/prices.test.js': 'judged 2026-08-13 — one suite for one route (GET …/prices) plus the cache, cooldown, stored-fallback and sweep behind it; crossed by #742\'s edition specs. Every spec shares one stub/fixture kit AND the process-wide price cache, whose per-spec-external-id discipline is stated once at the top of the file — splitting it is how two files quietly reuse an id and answer each other from the first one\'s entry',
 
   // recorded — not yet judged against the seam test
+  // (views-round-lookup.js was on this list from 2026-07-30 until #956 SPLIT it
+  //  three ways — lookup.js (the search-as-you-type control), bgg-import.js and
+  //  direct-session.js — taking it 1350 -> 635 and under the budget.)
+  // (core.js was on this list from 2026-07-30 until #956 SPLIT it four ways —
+  //  round-theme.js, popover.js, tag-chips.js and game-stats.js — taking it
+  //  1397 -> 679, back UNDER the 700-line budget. The entry is gone rather than
+  //  re-recorded, which the still-over-budget assertion below enforces.)
   // (views-round-tabs.js was the ninth, and #528 SPLIT it: views-regal.js,
   // views-chronik.js, views-pokale.js, views-archive.js and
   // views-round-actions.js — the last holding the two sheets whose entry points
   // #561 had already moved to the Einstellungen screen. All five land well under
   // the budget, so the entry is gone rather than re-judged.)
-  'public/js/views-round-lookup.js': 'recorded 2026-07-30 — the add-game/link-provider sheets plus the shared lookup menu',
-  'public/js/pages/admin.js': 'recorded 2026-07-30 — the whole operator panel as one IIFE on its own standalone page',
-  'public/js/account.js': 'recorded 2026-07-30 — auth screens, token handling and the account screen',
-  'public/js/core.js': 'recorded 2026-07-30 — the shared helper surface every view loads',
-  'public/js/views-round-detail.js': 'recorded 2026-07-30 — game detail plus the sheet/editor machinery',
-  'lib/routes/admin.js': 'recorded 2026-07-30 — one router, but the widest surface of any',
-  'public/js/views-account.js': 'recorded 2026-09-05 — the Konto screen: profile, password, e-mail prefs, BG Stats, passkeys and the delete flow. Crossed at 702 by #939 converting the passkey confirm, which is a four-line change, not the cause — the seam (the delete sheet, or the passkey list) is visible and unjudged',
-  'lib/routes/account.js': 'recorded 2026-07-30 — register/verify/login/refresh/reset plus self-service export and deletion',
-  'lib/routes/games.js': 'recorded 2026-08-09 — one router per resource (the repo convention), sitting at 699 since #653 and pushed over by #703\'s wish-add expansion resolution. A seam is visible — the expansion endpoints (PUT /expansions, acquire-expansion, the #703 resolver) against the CRUD/state-flip rest — but splitting one resource\'s router would be a new pattern for lib/routes/; M-001\'s worklist item',
-  'lib/recommend.js': 'recorded 2026-08-15 — 722 lines, crossed by #775\'s taste-reason exclusion. A seam IS visible: the reason half (standout/observeTerms/reasonsFrom/topContributors) against the scoring half (buildProfile/gameAffinity/scoreCandidate). It is a FALSE one today, and recommendation-scoring.md §7 says why: the statistics feed the reasons only and must never reach the score, or the ranking starts depending on corpus composition — a constraint that only stays obvious while both halves are in one file. Re-recorded 2026-08-19 at 886 lines by #778\'s play counting. The earlier note deferred the split because #776 and #778 were open against buildProfile/gameAffinity in this same file; both have now landed, so that particular blocker is gone and only the false-seam argument above still holds. M-001\'s worklist item',
-  'test/recommend.test.js': 'recorded 2026-08-15, re-recorded 2026-08-19 at 1331 lines — 854 when crossed by #775. It is one module\'s spec and a catalogue of independent cases, the shape criteria.md files are excluded outright for: each case isolates ONE term against its exact weight (§1), so the length is the coverage. The per-case fixtures (shelfCorpus, tasteCorpus, standoutCorpus, twoAxisCorpus) are what a reader needs beside the case that uses them. Splits with lib/recommend.js if that one ever does',
+  'public/js/pages/admin.js': 'recorded 2026-09-07 at 1519 lines — on the list since 2026-07-30, never judged: the whole operator panel as one IIFE on its own standalone page',
+  'public/js/account.js': 'recorded 2026-09-07 at 1214 lines — on the list since 2026-07-30, never judged: auth screens, token handling and the account screen',
+  'public/js/views-round-detail.js': 'recorded 2026-09-07 at 1013 lines — SPLIT by #956, 1374 -> 1013. The sheet/editor overlay layer left as sheet.js (an OWNERSHIP fix, not a size one: openSheet had eleven callers outside this file), and the design picker + tag manager joined views-round-settings.js, which already links to both. What remains is ONE screen: showGameDetail is ~880 of the 1013 lines, plus the wish-list price block only it renders. Still recorded rather than judged, because the remaining seam is INSIDE that function — decomposing it into render helpers — which is a real refactor with behaviour risk, not a file move, and wants its own issue. M-001\'s worklist item',
+  'lib/routes/admin.js': 'recorded 2026-09-07 at 1124 lines — on the list since 2026-07-30, never judged: one router, but the widest surface of any',
+  'public/js/views-account.js': 'recorded 2026-09-07 at 704 lines — on the list since 2026-09-05: the Konto screen: profile, password, e-mail prefs, BG Stats, passkeys and the delete flow. Crossed at 702 by #939 converting the passkey confirm, which is a four-line change, not the cause — the seam (the delete sheet, or the passkey list) is visible and unjudged',
+  'lib/routes/account.js': 'recorded 2026-09-07 at 973 lines — on the list since 2026-07-30, never judged: register/verify/login/refresh/reset plus self-service export and deletion',
+  'lib/routes/games.js': 'recorded 2026-09-07 at 1121 lines — on the list since 2026-08-09, when #703\'s wish-add expansion resolution pushed it past the 699 lines it had sat at since #653. One router per resource (the repo convention). A seam is visible — the expansion endpoints (PUT /expansions, acquire-expansion, the #703 resolver) against the CRUD/state-flip rest — but splitting one resource\'s router would be a new pattern for lib/routes/; M-001\'s worklist item',
+  'lib/recommend.js': 'recorded 2026-09-07 at 1050 lines — on the list since 2026-08-15 at 722 lines, crossed by #775\'s taste-reason exclusion. A seam IS visible: the reason half (standout/observeTerms/reasonsFrom/topContributors) against the scoring half (buildProfile/gameAffinity/scoreCandidate). It is a FALSE one today, and recommendation-scoring.md §7 says why: the statistics feed the reasons only and must never reach the score, or the ranking starts depending on corpus composition — a constraint that only stays obvious while both halves are in one file. Re-recorded 2026-08-19 at 886 lines by #778\'s play counting. The earlier note deferred the split because #776 and #778 were open against buildProfile/gameAffinity in this same file; both have now landed, so that particular blocker is gone and only the false-seam argument above still holds. M-001\'s worklist item',
+  'test/recommend.test.js': 'recorded 2026-09-07 at 1573 lines — on the list since 2026-08-15, re-measured 2026-08-19 at 1331; 854 when crossed by #775. It is one module\'s spec and a catalogue of independent cases, the shape criteria.md files are excluded outright for: each case isolates ONE term against its exact weight (§1), so the length is the coverage. The per-case fixtures (shelfCorpus, tasteCorpus, standoutCorpus, twoAxisCorpus) are what a reader needs beside the case that uses them. Splits with lib/recommend.js if that one ever does',
   'test/public-stats.test.js': 'judged 2026-09-07 — 713 lines, crossed by #964 adding the two calendar-period cases (the payload naming its month/year, and a play in the previous month not counting in this one). Same shape and same verdict as test/recommend.test.js above: one module\'s spec, and a catalogue of independent cases whose length IS the coverage — each pins one threshold, one ranking rule or one provenance guarantee. The visible seam (the #914/#928 score cases against the thresholds) is a false one: both are read through the same podium, and every case shares the seedPlayedGame/seedRatedPair harness plus the delete-after-each teardown that exists because a podium is a MAXIMUM over one shared store, so splitting would duplicate ~70 lines of fixture to separate cases that constrain each other. Splits with lib/public-stats.js if that one ever does',
-  'lib/routes/sessions.js': 'recorded 2026-08-11 — one router per resource, the same class as games.js above; pushed over by #736\'s blocking pre-draw backfill. The visible seam is start-a-session (draw, direct-pick, and the guest/team resolvers only they use) against the running session\'s writes (votes, close, results, choice, finish, cancel) — but it is a session LIFECYCLE, the shape token-friendly-source-files.md names as the non-finding for views-session.js, and splitting one resource\'s router remains a new pattern for lib/routes/. M-001\'s worklist item, alongside games.js',
+  'lib/routes/sessions.js': 'recorded 2026-09-07 at 884 lines — on the list since 2026-08-11: one router per resource, the same class as games.js above; pushed over by #736\'s blocking pre-draw backfill. The visible seam is start-a-session (draw, direct-pick, and the guest/team resolvers only they use) against the running session\'s writes (votes, close, results, choice, finish, cancel) — but it is a session LIFECYCLE, the shape token-friendly-source-files.md names as the non-finding for views-session.js, and splitting one resource\'s router remains a new pattern for lib/routes/. M-001\'s worklist item, alongside games.js',
 };
 
 /* All eight were `recorded` — "over budget, nobody has looked" — from 2026-07-30
@@ -171,6 +180,7 @@ const SOURCE_ALLOW = {
    would scatter something a single reader needs at once. A `recorded` rule entry
    means a file grew past 150 and nobody has judged it yet. */
 const RULE_ALLOW = {
+  '.claude/rules/token-friendly-source-files.md': 'judged 2026-09-07 — 157 lines, crossed by #956 adding test/ to the stale-pointer grep after a moved function reddened test/build.test.js. It sat EXACTLY at 150, so the next learning was always going to be the one that tripped it — the same position break-the-code-on-purpose.md was in. No seam: this is ONE contract (what makes a file cheap to edit) and the sections are its clauses, not separate learnings — the four dimensions define the thing, the move-invalidates-pointers section is the failure mode of following them, and the budget section is the enforcement of both. It is also the file this budget least wants trimmed, since test/token-budget.test.js exists to implement it and a dozen rules cite it',
   '.claude/rules/rank-encodings-must-not-be-growable-by-ties.md': 'judged 2026-09-04 — 181 lines, crossed by #895 changing WHICH number the shared-step chip prints (the win count -> the Siegwertung) and re-measuring the crossover against it. It sat at 149, so the next measurement was always going to trip it. No seam: the file is one component\'s rank encoding, and every section is a consequence of the single claim in its title — the two screens\' opposite answers, the chip that keeps growth out of the height, the crossover that says how far that holds, the wrap trap that reintroduces it, and the probe. The measured tables are the part a trim would take, and they are the reason the file exists rather than a restatement of the heading',
   '.claude/rules/break-the-code-on-purpose.md': 'judged 2026-08-29 — 151 lines, crossed by #838 adding a pointer to source-scanning-guards-enumerate-shapes.md. It sat EXACTLY at 150, so the next cross-link was always going to be the one that tripped it, and the file is the one this budget least wants trimmed: twelve rules cite it, and every line is either a worked escape this repo actually shipped or the habit that caught it. No seam — the two routes, the four bucket lists and the escapes are one argument (which red proves what), and splitting it would let a session read "take the red first" without the three examples showing why that red can still be vacuous, which is the whole point of the file',
   // judged 2026-08-01
@@ -188,21 +198,54 @@ const RULE_ALLOW = {
   '.claude/rules/noindex-vs-disallow-and-the-crawler-surface.md': 'judged — three mechanisms that are only correct TOGETHER (noindex vs Disallow, the SPA fallback, the vacuous assertion); separating them re-creates the trap the file exists to prevent',
   '.claude/rules/bgg-collection-import.md': 'judged — four silent traps plus the placement decisions of ONE import path, from the provider parse through the bulk write to the picker\'s two lists. It sat exactly at 150, #625 pushed it 12 over and #560 took it to ~200 by adding the second shelf (the status in the cache key). The visible seam (provider hops vs. the UI "Smaller things") is a false one: the picker\'s constraints are consequences of the route shape above them (a single list carrying a `present` flag), so a session touching either half needs both open',
   '.claude/rules/active-games-filter-sites.md': 'judged 2026-08-05, re-recorded 2026-08-19 at 215 lines after #778 added the recommender-play-counter contrast — 183 when crossed by #560 adding the third game state (wish) and the event asymmetry that comes with it. The file IS an enumeration: its whole value is that every site answering "is this game in the active collection" is in one list, so splitting it by file set is what lets a site be missed. The one visible seam — the #643 taste-stats section, which drops retired games ONLY — is a false one: it is defined BY CONTRAST with the main shape ("reading it as the !retired && !completed shape above is wrong"), so moving it away re-creates the exact confusion it exists to prevent',
-  '.claude/rules/expansions-widen-by-union.md': 'recorded 2026-08-06 — 173 lines, crossed by #664 adding the SECOND way an expansion reaches a game (acquiring a wish). A seam is visible: §1–3 are the draw predicate and its two silent traps, scoped to public/js/draw-pool.js, while the rest is the expansion LIFECYCLE (which imports carry them, the two write paths, immutability, redaction) over lib/routes/games.js + the repo pair. Not split here because the halves cite each other in the direction that matters — the acquire carries min/max precisely BECAUSE §2 makes an absent range mean "widens nothing" — so a session that got the acquire wrong would have needed the predicate half open anyway. M-001\'s worklist item',
-  '.claude/rules/anchored-popover-is-placed-once.md': 'recorded 2026-08-11, re-recorded 2026-08-29 at 251 lines after #844 added the fourth capped card (.popover--filter) with the anchor sweep and the short-viewport clamp that confirm this file\'s own arithmetic, plus the probe trap where place() erases a stubbed child min-height — 198 lines when crossed by #728 measuring the expansion editor and finding this file\'s own claim about it wrong (its 78vh was called safe-by-anchor-luck; it was 96px past the fold, on 51 of one game page\'s 119 scroll positions). A seam IS visible and it is a clean one: §1–2 are "placement is one-shot, re-run it" over public/js/core.js + cover-picker.js, while the cap sections are height arithmetic over public/styles.css — #519/#653 touched only the first, #722/#728 only the second. Not split here because the file is cited by seven other rules that would each need retargeting by hand, and a mid-feature PR is the wrong place to guess which half each citation meant. The added length is the measurement itself, which is what stops the next session re-deriving a wrong number from the old prose. M-001\'s worklist item',
-  '.claude/rules/recommendation-scoring.md': 'recorded 2026-08-15, re-recorded 2026-08-19 at 424 lines after #778 added §12 (plays as a profile input) — 274 when grown by #775, which extended §11 with the taste-reason exclusion and the spike-distribution fixture trap (a z-score over one candidate above a floor of zeros is value-INDEPENDENT, so the obvious fixture ties and the spec goes vacuously green). Same seam and same reason as below. Originally recorded 2026-08-14 at 207 lines, crossed by #772, which added the reason-ranking finding (§11: three of the six reason types were structurally unreachable because the weight constants, not the candidate, decided the ordering) and two fixture-vacuity traps in §1 that were each measured going green against a deliberate break. A seam IS visible: §7–8 are the corpus snapshot\'s cost and TTL over lib/corpus-cache.js + lib/corpus.js, while the rest is scoring and reason semantics over lib/recommend.js. Not split here because #772 put the corpus-size INVARIANCE constraint in §7 and it is what binds §1\'s rescale and §11\'s statistics — profile-relative, never candidate-relative — so filing it away from the scoring half is precisely how the cheaper, broken implementation gets written next time. M-001\'s worklist item',
-  '.claude/rules/shared-constants-across-the-stack.md': 'recorded 2026-08-03 — 171 lines then, 280 since #797 added the ninth inventory entry; crossed by #209 adding the fourth and grown by every entry since. A seam IS visible: the last two sections (the licensed TAG_ICONS copy, and the standalone-page design tokens with their PAGES parity test) are about when a COPY is acceptable, over a different file set (kontakt.html, login.html, lib/faq.js, test/standalone-page-brand.test.js) than the require-the-shared-file rule above them. Not split here because the file is cited by a dozen rules and a mid-feature split is the wrong PR for it — this entry is M-001\'s worklist item, not a shrug',
+  '.claude/rules/expansions-widen-by-union.md': 'recorded 2026-09-07 at 163 lines — on the list since 2026-08-06 at 173 raw lines, crossed by #664 adding the SECOND way an expansion reaches a game (acquiring a wish). A seam is visible: §1–3 are the draw predicate and its two silent traps, scoped to public/js/draw-pool.js, while the rest is the expansion LIFECYCLE (which imports carry them, the two write paths, immutability, redaction) over lib/routes/games.js + the repo pair. Not split here because the halves cite each other in the direction that matters — the acquire carries min/max precisely BECAUSE §2 makes an absent range mean "widens nothing" — so a session that got the acquire wrong would have needed the predicate half open anyway. M-001\'s worklist item',
+  '.claude/rules/anchored-popover-is-placed-once.md': 'recorded 2026-09-07 at 245 lines — on the list since 2026-08-11, re-measured 2026-08-29 at 251 raw lines after #844 added the fourth capped card (.popover--filter) with the anchor sweep and the short-viewport clamp that confirm this file\'s own arithmetic, plus the probe trap where place() erases a stubbed child min-height — 198 lines when crossed by #728 measuring the expansion editor and finding this file\'s own claim about it wrong (its 78vh was called safe-by-anchor-luck; it was 96px past the fold, on 51 of one game page\'s 119 scroll positions). A seam IS visible and it is a clean one: §1–2 are "placement is one-shot, re-run it" over public/js/popover.js + cover-picker.js, while the cap sections are height arithmetic over public/styles.css — #519/#653 touched only the first, #722/#728 only the second. Not split here because the file is cited by seven other rules that would each need retargeting by hand, and a mid-feature PR is the wrong place to guess which half each citation meant. The added length is the measurement itself, which is what stops the next session re-deriving a wrong number from the old prose. M-001\'s worklist item',
+  '.claude/rules/recommendation-scoring.md': 'recorded 2026-09-07 at 565 lines — on the list since 2026-08-15, re-measured 2026-08-19 at 424 after #778 added §12 (plays as a profile input) — 274 when grown by #775, which extended §11 with the taste-reason exclusion and the spike-distribution fixture trap (a z-score over one candidate above a floor of zeros is value-INDEPENDENT, so the obvious fixture ties and the spec goes vacuously green). Same seam and same reason as below. Originally recorded 2026-08-14 at 207 lines, crossed by #772, which added the reason-ranking finding (§11: three of the six reason types were structurally unreachable because the weight constants, not the candidate, decided the ordering) and two fixture-vacuity traps in §1 that were each measured going green against a deliberate break. A seam IS visible: §7–8 are the corpus snapshot\'s cost and TTL over lib/corpus-cache.js + lib/corpus.js, while the rest is scoring and reason semantics over lib/recommend.js. Not split here because #772 put the corpus-size INVARIANCE constraint in §7 and it is what binds §1\'s rescale and §11\'s statistics — profile-relative, never candidate-relative — so filing it away from the scoring half is precisely how the cheaper, broken implementation gets written next time. M-001\'s worklist item',
+  '.claude/rules/shared-constants-across-the-stack.md': 'recorded 2026-09-07 at 460 lines — on the list since 2026-08-03 at 171; crossed by #209 adding the fourth and grown by every entry since. A seam IS visible: the last two sections (the licensed TAG_ICONS copy, and the standalone-page design tokens with their PAGES parity test) are about when a COPY is acceptable, over a different file set (kontakt.html, login.html, lib/faq.js, test/standalone-page-brand.test.js) than the require-the-shared-file rule above them. Not split here because the file is cited by a dozen rules and a mid-feature split is the wrong PR for it — this entry is M-001\'s worklist item, not a shrug',
 };
 
 const SKILL_ALLOW = {
   '.claude/skills/pick-issue/SKILL.md': 'judged 2026-08-18 — SPLIT: 525 -> 360. The seam taken was not the recorded one (SKILL.md + criteria.md, the audit shape): the ranking criteria are read on EVERY invocation, so filing them away would defer the load without saving it. The real seam is conditional — the three branches that fire only when a candidate belongs to someone else (the foreign-assignee reclaim ladder, the multi-PR ordering, the contributor-PR norms) left as contributor-work.md, which most rounds never open. What remains is one sequential decision procedure, gather -> rank -> hand off, read start to finish every run',
   '.claude/skills/implement/SKILL.md': 'judged 2026-08-18 — eight sequential phases, all read in order on every run, so a split defers the load rather than saving it: the file is the non-finding token-friendly-source-files.md names for views-session.js, one cohesive flow. Re-examined for prose trimming under the same PR that split pick-issue and NOT trimmed — every candidate repetition turned out to be either a distinct constraint or deliberate adherence engineering the file documents as such (the 6a gate exists precisely because a single statement of the rule was skipped on #558/PR #593). It GREW by ~2.4KB there, adding the request-count discipline section, which is a good trade in the currency this budget is about: the resident cost is paid once per session, an avoidable tool call is paid against a 220-390k context',
-  '.claude/skills/security-audit/SKILL.md': 'recorded 2026-07-30 — the loop plus the composition rules against /security-review and CodeQL',
+  '.claude/skills/security-audit/SKILL.md': 'recorded 2026-09-07 at 255 lines — on the list since 2026-07-30, never judged: the loop plus the composition rules against /security-review and CodeQL',
 };
 
 const CLAUDE_MD_ALLOW = {
-  'CLAUDE.md': 'recorded 2026-09-06 — 226 lines against C-015\'s ~200 target (219 on 2026-09-04 after #899 added the pointer to the Session-naming guard test; 212 on 2026-08-05; #952\'s six-language wording and the bug-report-form pointer in the add-a-language list account for the rest). It was recorded at 203 on 2026-07-30 and drifted +9 through #594/#598 without anyone noticing, which the 2026-08-04 claude-file audit found and #635 refreshed. The overshoot is still small and real: every candidate line is a live constraint, so trimming to the number would cost a `why` this file exists to carry — the outcome this budget explicitly does not want. Left as M-001 worklist',
+  'CLAUDE.md': 'recorded 2026-09-07 at 226 lines — on the list since 2026-07-30, re-measured 2026-09-06; against C-015\'s ~200 target (219 on 2026-09-04 after #899 added the pointer to the Session-naming guard test; 212 on 2026-08-05; #952\'s six-language wording and the bug-report-form pointer in the add-a-language list account for the rest). It was recorded at 203 on 2026-07-30 and drifted +9 through #594/#598 without anyone noticing, which the 2026-08-04 claude-file audit found and #635 refreshed. The overshoot is still small and real: every candidate line is a live constraint, so trimming to the number would cost a `why` this file exists to carry — the outcome this budget explicitly does not want. Left as M-001 worklist',
 };
+
+/* --- The growth check.
+
+   The still-over-budget assertion stops the list rotting into names that no
+   longer belong on it. It says nothing about a file that stays over budget and
+   *doubles* — the same silence this whole file exists to break, one level in.
+   Measured 2026-09-06 against the commit at each entry's recording date:
+   `core.js` had grown 69% past the size it was recorded at,
+   `views-round-detail.js` 56%, `account.js` 31%, with every test green and
+   `lib/routes/games.js`'s entry still describing it as "sitting at 699".
+
+   So a `recorded` entry states the size it was recorded at, in a form this test
+   parses, and outgrowing that by more than a quarter fails. Re-judge it, split
+   it, or re-record it at the new size with what grew it — any of the three is a
+   fine answer, and none of them is silence.
+
+   A `judged` entry is exempt on purpose: it has been argued, and its length IS
+   the finding ("the enumeration is the rule"; "the measured tables are the part
+   a trim would take"). Making it re-justify itself every 25% would spend the
+   same argument again for no new information.
+
+   The marker is ANCHORED at the start of the reason rather than matched
+   anywhere in it. These reasons carry their own history, and several legitimately
+   say "at 424 lines" about a measurement taken months ago — an unanchored
+   pattern would read whichever number came first and pin the entry to a size the
+   file has long since left. Anchoring also makes the contract one thing a writer
+   can copy rather than a convention they have to infer.
+
+   N is what `lineCount()` reports, NOT bare `wc -l`: on a scoped rule the two
+   differ by the `paths:` frontmatter, which is why three entries here were
+   recorded a few lines high. */
+const GROWTH_TOLERANCE = 1.25;
+const RECORDED_AT = /^recorded \d{4}-\d\d-\d\d at (\d+) lines — /;
 
 // --- The assertions, applied identically to all four classes.
 
@@ -222,6 +265,31 @@ for (const [label, list, budget, allow] of cases) {
     assert.deepEqual(unlisted, [], `${label} over ${budget} lines with no allowlist entry: ${unlisted.join(', ')}\n`
       + 'Apply the seam test (.claude/rules/token-friendly-source-files.md): split it along a real concern boundary, '
       + 'or add it to this file with a written reason.');
+  });
+
+  test(`${label}: no recorded file has outgrown the size it was recorded at`, () => {
+    for (const [rel, reason] of Object.entries(allow)) {
+      if (reason.startsWith('judged')) continue;
+
+      const m = RECORDED_AT.exec(reason);
+      assert.ok(m, `${rel}: an allowlist entry must start with either "judged …" or `
+        + '"recorded <YYYY-MM-DD> at <N> lines — …", N being what this test\'s lineCount() reports '
+        + `today. Got: "${reason.slice(0, 70)}…"`);
+
+      const recorded = Number(m[1]);
+      assert.ok(recorded > budget,
+        `${rel} is recorded at ${recorded} lines, which is not over the ${budget}-line budget — `
+        + 'either that number is wrong, or the entry should be gone');
+
+      const now = lineCount(rel);
+      assert.ok(now <= recorded * GROWTH_TOLERANCE,
+        `${rel} has grown to ${now} lines from the ${recorded} it was recorded at `
+        + `(+${Math.round((now / recorded - 1) * 100)}%, past the `
+        + `${Math.round((GROWTH_TOLERANCE - 1) * 100)}% allowance).\n`
+        + 'Re-judge or split it (.claude/rules/token-friendly-source-files.md) — or, if it is genuinely '
+        + `one concern, re-record the entry at ${now} lines and say what grew it. The budget does not `
+        + 'forbid growing; it forbids growing unnoticed.');
+    }
   });
 
   test(`${label}: every allowlist entry still exists and is still over budget`, () => {

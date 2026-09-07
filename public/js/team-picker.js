@@ -3,7 +3,7 @@
 
    Shared by the two screens that start a session, exactly like the guest field:
    the draw setup (views-session.js) and the direct-play sheet
-   (views-round-lookup.js). Frontend shared-scope script; load order: see
+   (direct-session.js). Frontend shared-scope script; load order: see
    index.html (after guest-picker.js, before the views that mount it).
 
    Members and guests mix freely — the whole point of the feature is that a

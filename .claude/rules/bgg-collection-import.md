@@ -3,7 +3,7 @@ paths:
   - "lib/providers/bgg.js"
   - "lib/routes/lookup.js"
   - "lib/repo/**"
-  - "public/js/views-round-lookup.js"
+  - "public/js/bgg-import.js"
   - "public/js/wish-expansion.js"
   - "test/bgg-import.test.js"
   - "test/bgg-import-picker.test.js"

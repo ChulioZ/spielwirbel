@@ -281,7 +281,7 @@ untouched.
 The shrinkage half (`SHRINK_M`, `PRIOR_DEFAULT`, `PLAY_LIFT`, `PLAY_HALF`,
 `playCredit`, `gamePrior`, `shrinkScore`, `shelfScore`) is the `draw-pool.js`
 direction — shared logic — and it reaches **six** consumers, which is why it had
-to be one file rather than a rule people remember: `core.js`'s
+to be one file rather than a rule people remember: `game-stats.js`'s
 `roundScoreIndex` (the Regal pill and sort, the detail ring, the retirement
 banner), `recap.js` via an injected lookup (the Pokale best/worst card),
 `period-recap.js` via two more injected functions (the Chronik's per-period
@@ -331,7 +331,7 @@ push the boundary **down** to something the function still owns.
 Two neighbouring values deliberately did **not** join it. `VIOLATION_MAX` stays
 in `table-split.js`: it is a threshold on the *tile* scale, not on the score, and
 it is already coupled to the vote scale there. And `LOW_SCORE` in
-`retireRecommendations` (core.js) stays in core.js — the client never states it
+`retireRecommendations` (game-stats.js) stays there — the client never states it
 and the server has no opinion about it, so it is a render-time choice like
 `cover-size.js`'s widths rather than a shared contract.
 

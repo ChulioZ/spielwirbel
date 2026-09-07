@@ -1,13 +1,13 @@
 ---
 paths:
-  - "public/js/views-round-lookup.js"
+  - "public/js/lookup.js"
   - "public/styles.css"
 ---
 
 # The lookup dropdown is `position: fixed`, placed by JS — not `absolute`
 
 The add-game / link-provider suggestion menu (`.lookup__menu`, built by
-`attachLookup` in `public/js/views-round-lookup.js`) lives **inside a `.sheet`**, and a
+`attachLookup` in `public/js/lookup.js`) lives **inside a `.sheet`**, and a
 `.sheet` sets `overflow-y: auto` so it can scroll its own content. That scroll
 box is a **clipping context**: an `overflow` of `auto` forces the cross axis to
 compute as non-`visible` too, so an `position: absolute` child menu opening

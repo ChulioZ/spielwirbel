@@ -384,7 +384,8 @@ public/
     lang/fr.js       French strings
     lang/it.js       Italian strings
     lang/nl.js       Dutch strings
-    core.js          DOM/API helpers, stats, design, language picker  (loads first)
+    core.js          DOM/API helpers, SWR fetches, member colours, the
+                     language picker  (loads first)
     empty-state.js   the app's one "nothing here yet" component — medallion,
                      optional title, sub-line; shares its rules with .lobby-cta
                      (issue #869)
@@ -443,6 +444,10 @@ public/
                      resolver every view and the recap card look a stored
                      design up through — by id, then by the legacy page hex
                      (issue #903)
+    round-theme.js   how a design reaches the page: the --page-bg/--brand
+                     pair, the data-world and data-scheme root attributes,
+                     <meta name="theme-color">, and the rating ramp that
+                     flips with the scheme (issue #956)
     round-roles.js   the owner/co-owner/editor ladder and what each may do,
                      required by lib/round-access.js so the views hide exactly
                      what the server refuses (issue #137)
@@ -522,6 +527,10 @@ public/
     swr.js           stale-while-revalidate cache: views render instantly from
                      the last known data while a background fetch refreshes
     lookup-cover.js  which cover image a picked provider match yields
+    lookup.js        the search-as-you-type provider lookup: the provider name
+                     tables and attachLookup, the control that owns an input,
+                     its suggestion menu, the debounce and the in-flight
+                     sequence guard (issue #956)
     lookup-score.js  how well a hit's title answers the query (drives the
                      cross-provider ranking; folds punctuation + diacritics)
     lookup-title.js  which title a picked provider match fills in (BGG keeps the
@@ -540,6 +549,19 @@ public/
                      first, ahead of the brand (issue #522)
     popover-fit.js   which side of its anchor a popover goes on and how far it
                      may be squeezed to stay reachable there (issue #739)
+    sheet.js         the bottom sheet — the app's modal overlay primitive,
+                     used by eleven other modules — plus openEditor, which
+                     picks popover-or-sheet by viewport (issue #956)
+    popover.js       the anchored popover itself: one open at a time, placed
+                     next to its anchor, closing on Escape/outside click/
+                     scroll; placement is one-shot (issue #956)
+    tag-chips.js     the tri-state custom-tag filter shared by the Regal and
+                     the start-session screen: chips, mode + bulk toggles,
+                     icon picker, match predicate (issue #956)
+    game-stats.js    what a game is worth to a round — the score fields, the
+                     per-session and per-round rollups, the shelf index, the
+                     retirement recommendations, and how a score prints
+                     (issue #956)
     report-link.js   builds the contact-form deep link behind the Freundeskreis
                      feed's per-item report button (issue #559)
     install-prompt.js stashes the browser's install event and decides which
@@ -574,12 +596,20 @@ public/
     views-recommend.js    "das könnte euch auch gefallen": ranked games the
                           round does not own, each card naming up to three
                           reasons it was picked (#682, #772)
-    views-round-detail.js game detail, design picker, tags + providers screens,
-                          sheet helpers
+    views-round-detail.js game detail, plus the wish-list price block it
+                          renders
     views-round-settings.js round Einstellungen screen: the round-level actions
-                          (invite, move games, delete/leave) in one place (#561)
+                          (invite, move games, delete/leave) in one place (#561),
+                          plus the two sub-screens it links to — the design
+                          picker and the tag manager (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite
-    views-round-lookup.js provider lookup, add game, link provider
+    views-round-lookup.js the two lookup sheets: add a game, link an existing
+                          game to a provider
+    bgg-import.js    the one-shot BoardGameGeek collection import: the
+                     account gate, the owned/wish picker, the error
+                     phrasing (#481, moved out in #956)
+    direct-session.js „Jetzt spielen" — start a session for one game with
+                     no vote and no draw, straight to the results screen
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, the rating cards, finale, results
     views-session-tables.js the multi-table builder and, once confirmed, the split

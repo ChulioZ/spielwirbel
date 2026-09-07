@@ -140,7 +140,7 @@ function renderRegalTab(round, activeGames) {
       bulkCount.textContent = tn(n, 'bulk.selectedOne', 'bulk.selected');
       // „Alle auswählen" until everything currently SHOWN is on, then „Auswahl
       // aufheben" — showTransferGames' semantics, not the tag chips' (#723). The two
-      // differ deliberately; see the comment on core.js's bulk toggle.
+      // differ deliberately; see the comment on tag-chips.js's bulk toggle.
       const allShown = shownCards.length > 0 && shownCards.every((c) => selection.has(c.dataset.gid));
       bulkAll.textContent = allShown ? t('bulk.selectNone') : t('bulk.selectAll');
       bulkBar.querySelectorAll('[data-act="retire"], [data-act="delete"]')

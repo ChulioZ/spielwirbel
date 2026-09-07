@@ -1,12 +1,12 @@
 ---
 paths:
-  - "public/js/views-round-detail.js"
+  - "public/js/sheet.js"
   - "public/js/router.js"
 ---
 # Back dismisses a sheet (#333): the pop is async, so navigate through closeSheet
 
 Every modal sheet (add game, link provider, move games, feedback, support) goes
-through `openSheet`/`closeSheet` (`public/js/views-round-detail.js`). Since #333
+through `openSheet`/`closeSheet` (`public/js/sheet.js`). Since #333
 a sheet is a **history entry**: opening one pushes a single URL-less marker
 (`history.pushState({ …, sheet: true })`), and `router.js`'s popstate handler
 gives `handleSheetPop()` first refusal — so browser/OS **Back dismisses the

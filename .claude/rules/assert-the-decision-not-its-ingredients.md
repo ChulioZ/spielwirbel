@@ -1,7 +1,7 @@
 ---
 paths:
   - "test/retire-score-threshold.test.js"
-  - "public/js/core.js"
+  - "public/js/game-stats.js"
   - "public/js/vote-score.js"
 ---
 

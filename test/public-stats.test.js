@@ -537,7 +537,7 @@ test('#928 deep evidence outranks a thin unanimous verdict — the podium is shr
 
 /* Five vetoes score −5, and a negative on a public front door reads as a broken
    app rather than as a bad game — every other surface clamps for display, so
-   this one must too (core.js's `displayScore`).
+   this one must too (game-stats.js's `displayScore`).
 
    Both games here are disliked, so the winner is genuinely below the floor: the
    raw mean would publish 1,0 and the score publishes the clamped 0,0. Ranking

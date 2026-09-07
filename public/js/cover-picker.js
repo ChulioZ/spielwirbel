@@ -6,7 +6,7 @@
 
    It is its own file, and not part of any view, because THREE screens open the
    same grid: the add-game sheet's cover field, the game-detail cover editor and
-   the collection-import list (public/js/views-round-lookup.js and
+   the collection-import list (public/js/bgg-import.js and
    views-round-detail.js). Keeping one renderer is what stops the three drifting
    — and it has no module.exports guard on purpose: it is DOM-only, so requiring
    it from a test would drag an almost-unreachable file into the coverage report

@@ -1,7 +1,7 @@
 ---
 paths:
   - "public/styles.css"
-  - "public/js/core.js"
+  - "public/js/popover.js"
   - "public/js/cover-picker.js"
 ---
 # A `max-width` on an anchored popover widens NOTHING on its own (#706)

@@ -1,12 +1,12 @@
 ---
 paths:
-  - "public/js/core.js"
+  - "public/js/popover.js"
   - "public/js/cover-picker.js"
   - "public/styles.css"
 ---
 # An anchored popover is placed ONCE — content that grows later hangs off the fold (#519)
 
-`openPopover` (`public/js/core.js`) decides a popover's `top` from
+`openPopover` (`public/js/popover.js`) decides a popover's `top` from
 `el.offsetHeight` at build time: below the anchor if it fits, flipped above
 otherwise. Every editor that ever used it had a fixed height, so nothing noticed
 that the placement is a **one-shot measurement**.

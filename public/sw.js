@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v229';
+const CACHE = 'spielwirbel-shell-v230';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -59,6 +59,7 @@ const SHELL = [
   '/js/swr.js',
   '/js/focus-trap.js',
   '/js/page-lock.js',
+  '/js/sheet.js',
   '/js/session-path.js',
   '/js/nav-link.js',
   '/js/auth-error.js',
@@ -67,6 +68,7 @@ const SHELL = [
   '/js/demo-marker.js',
   '/js/member-colors.js',
   '/js/round-designs.js',
+  '/js/round-theme.js',
   '/js/round-roles.js',
   '/js/draw-pool.js',
   '/js/filter-panel.js',
@@ -87,6 +89,9 @@ const SHELL = [
   '/js/popover-fit.js',
   '/js/report-link.js',
   '/js/install-prompt.js',
+  '/js/popover.js',
+  '/js/tag-chips.js',
+  '/js/game-stats.js',
   '/js/core.js',
   '/js/empty-state.js',
   '/js/guest-picker.js',
@@ -104,6 +109,7 @@ const SHELL = [
   '/js/hub-insights.js',
   '/js/lookup-cover.js',
   '/js/lookup-score.js',
+  '/js/lookup.js',
   '/js/lookup-title.js',
   '/js/lookup-nav.js',
   '/js/bgg-covers.js',
@@ -124,6 +130,8 @@ const SHELL = [
   '/js/views-round-settings.js',
   '/js/views-round-actions.js',
   '/js/views-round-lookup.js',
+  '/js/bgg-import.js',
+  '/js/direct-session.js',
   '/js/views-member.js',
   '/js/views-session.js',
   '/js/views-session-tables.js',
