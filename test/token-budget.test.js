@@ -24,6 +24,10 @@
    its budget must drop its entry, and a stale entry fails loudly instead of
    quietly exempting a file that no longer needs it.
 
+   And an entry that has never been judged states the size it was recorded at, so
+   an allowlisted file cannot quietly double either — see "The growth check"
+   below, which is the same "silently, not at all" distinction one level in.
+
    Budgets come from the documented numbers, not from taste:
    - 700 lines for source — the "rough smell" in `token-friendly-source-files.md`,
      which `M-001` repeats as the point where the seam test gets applied.
