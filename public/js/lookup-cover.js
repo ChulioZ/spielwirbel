@@ -1,7 +1,7 @@
 /* Spielwirbel – lookup covers: which image a picked provider match yields.
    Pure and dependency-free, so it works both as a shared-scope frontend script
    (browser global) and as a CommonJS module the test suite can require. Load
-   order: see index.html (before views-round-lookup.js). */
+   order: see index.html (before lookup.js). */
 
 'use strict';
 

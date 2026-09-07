@@ -36,7 +36,7 @@ Only the boxes that render a **bare `<i>`**, which are never a game cover:
 |---|---|
 | `.session-card__img` | a session's **state** icon (`ti-x` / `ti-layout-grid` / `ti-cards`) — the `chosen ? coverPlaceholder(…) : <i>` ternary in `views-chronik.js` |
 | `.feed-item__img` | a feed row with no `ev.coverUrl` (`views-friends.js`) |
-| `.lookup__thumb--none .ti` | a search hit with no thumbnail (`views-round-lookup.js`) |
+| `.lookup__thumb--none .ti` | a search hit with no thumbnail (`lookup.js`) |
 | `.avatar--guest`, the guest add button, `.guest-chip` | a **dashed border**, not a glyph at all |
 | `.theme-card__line` | a **background** — the stand-in text lines on a design card |
 

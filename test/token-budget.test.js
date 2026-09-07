@@ -148,6 +148,9 @@ const SOURCE_ALLOW = {
   'test/prices.test.js': 'judged 2026-08-13 — one suite for one route (GET …/prices) plus the cache, cooldown, stored-fallback and sweep behind it; crossed by #742\'s edition specs. Every spec shares one stub/fixture kit AND the process-wide price cache, whose per-spec-external-id discipline is stated once at the top of the file — splitting it is how two files quietly reuse an id and answer each other from the first one\'s entry',
 
   // recorded — not yet judged against the seam test
+  // (views-round-lookup.js was on this list from 2026-07-30 until #956 SPLIT it
+  //  three ways — lookup.js (the search-as-you-type control), bgg-import.js and
+  //  direct-session.js — taking it 1350 -> 635 and under the budget.)
   // (core.js was on this list from 2026-07-30 until #956 SPLIT it four ways —
   //  round-theme.js, popover.js, tag-chips.js and game-stats.js — taking it
   //  1397 -> 679, back UNDER the 700-line budget. The entry is gone rather than
@@ -157,7 +160,6 @@ const SOURCE_ALLOW = {
   // views-round-actions.js — the last holding the two sheets whose entry points
   // #561 had already moved to the Einstellungen screen. All five land well under
   // the budget, so the entry is gone rather than re-judged.)
-  'public/js/views-round-lookup.js': 'recorded 2026-09-07 at 1350 lines — on the list since 2026-07-30, never judged: the add-game/link-provider sheets plus the shared lookup menu',
   'public/js/pages/admin.js': 'recorded 2026-09-07 at 1519 lines — on the list since 2026-07-30, never judged: the whole operator panel as one IIFE on its own standalone page',
   'public/js/account.js': 'recorded 2026-09-07 at 1214 lines — on the list since 2026-07-30, never judged: auth screens, token handling and the account screen',
   'public/js/views-round-detail.js': 'recorded 2026-09-07 at 1013 lines — SPLIT by #956, 1374 -> 1013. The sheet/editor overlay layer left as sheet.js (an OWNERSHIP fix, not a size one: openSheet had eleven callers outside this file), and the design picker + tag manager joined views-round-settings.js, which already links to both. What remains is ONE screen: showGameDetail is ~880 of the 1013 lines, plus the wish-list price block only it renders. Still recorded rather than judged, because the remaining seam is INSIDE that function — decomposing it into render helpers — which is a real refactor with behaviour risk, not a file move, and wants its own issue. M-001\'s worklist item',

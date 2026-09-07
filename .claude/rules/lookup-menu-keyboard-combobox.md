@@ -1,6 +1,6 @@
 ---
 paths:
-  - "public/js/views-round-lookup.js"
+  - "public/js/lookup.js"
   - "public/js/lookup-nav.js"
   - "public/js/focus-trap.js"
   - "test/lookup-nav.test.js"
@@ -8,7 +8,7 @@ paths:
 # The lookup dropdown is an editable combobox (#542) — the sheet has to ASK about Escape
 
 The add-game / link-provider suggestion menu (`attachLookup`,
-`public/js/views-round-lookup.js`) was **completely inoperable by keyboard** from
+`public/js/lookup.js`) was **completely inoperable by keyboard** from
 its introduction until #542 — provider matching, covers, player counts and store
 links were mouse-only, while the DOM was built correctly the whole time and every
 automated check stayed green. Three independent defects, and the fix for each has

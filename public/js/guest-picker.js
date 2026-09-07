@@ -2,7 +2,7 @@
    chip per named guest, and a name input that adds on Enter.
 
    Shared by the two screens that start a session — the draw setup
-   (views-session.js) and the direct-play sheet (views-round-lookup.js) — so the
+   (views-session.js) and the direct-play sheet (direct-session.js) — so the
    two ways into a session look the same. Frontend shared-scope script; load
    order: see index.html. */
 

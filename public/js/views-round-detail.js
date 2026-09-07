@@ -371,9 +371,11 @@ async function showGameDetail(rid, gameId) {
       // doesn't offer what it would refuse, and the stored cover keeps rendering
       // either way.
       //
-      // `LOOKUP_PROVIDERS` lives in views-round-lookup.js, which loads AFTER
-      // this file. Safe because this runs on click, never at load time — keep it
-      // that way (.claude/rules/frontend-script-load-order.md).
+      // `LOOKUP_PROVIDERS` lives in lookup.js, which since #956 loads BEFORE
+      // this file — so the load-order hazard this comment used to warn about is
+      // gone. Still read it on click rather than at load time: the ordering is a
+      // property of index.html, not of the code
+      // (.claude/rules/frontend-script-load-order.md).
       if (game.source && LOOKUP_PROVIDERS.includes(game.source.provider)) {
         const prov = providerLabel(game.source.provider);
         // Short in the button, full in the toast (#817): this label's max-content

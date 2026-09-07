@@ -179,7 +179,7 @@ test('.sheet--list widens the list dialogs and outranks .sheet--dialog', () => {
    satisfied by spraying `sheet--list` over every sheet, the same shape as
    `test/ds-row-affordance.test.js`. */
 const LIST_DIALOGS = [
-  ['public/js/views-round-lookup.js', 'class="bgg-import"', 'BGG collection import'],
+  ['public/js/bgg-import.js', 'class="bgg-import"', 'BGG collection import'],
   ['public/js/views-round-actions.js', 'class="move-picker"', 'Spiele verschieben'],
   ['public/js/views-archive.js', 'class="ds-list wish-pick"', 'Grundspiel wählen'],
 ];

@@ -8,7 +8,8 @@
    views-archive.js (retired / completed / Wunschliste),
    views-round-detail.js (game detail),
    views-round-settings.js + views-round-actions.js (Einstellungen and the two
-   sheets it opens) and views-round-lookup.js (provider lookup + add/link game).
+   sheets it opens) and views-round-lookup.js (the add/link-game sheets, with the lookup control
+   itself in lookup.js).
 
    The header used to describe this file as "the Start tab (launchpad +
    buy-next)". There has never been a buy-next section — a stale pointer of

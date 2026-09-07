@@ -527,6 +527,10 @@ public/
     swr.js           stale-while-revalidate cache: views render instantly from
                      the last known data while a background fetch refreshes
     lookup-cover.js  which cover image a picked provider match yields
+    lookup.js        the search-as-you-type provider lookup: the provider name
+                     tables and attachLookup, the control that owns an input,
+                     its suggestion menu, the debounce and the in-flight
+                     sequence guard (issue #956)
     lookup-score.js  how well a hit's title answers the query (drives the
                      cross-provider ranking; folds punctuation + diacritics)
     lookup-title.js  which title a picked provider match fills in (BGG keeps the
@@ -599,7 +603,13 @@ public/
                           plus the two sub-screens it links to — the design
                           picker and the tag manager (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite
-    views-round-lookup.js provider lookup, add game, link provider
+    views-round-lookup.js the two lookup sheets: add a game, link an existing
+                          game to a provider
+    bgg-import.js    the one-shot BoardGameGeek collection import: the
+                     account gate, the owned/wish picker, the error
+                     phrasing (#481, moved out in #956)
+    direct-session.js „Jetzt spielen" — start a session for one game with
+                     no vote and no draw, straight to the results screen
     views-member.js  member detail page (stats, name/color editing)
     views-session.js session setup, the rating cards, finale, results
     views-session-tables.js the multi-table builder and, once confirmed, the split

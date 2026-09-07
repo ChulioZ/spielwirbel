@@ -8,6 +8,7 @@ paths:
   - "public/js/cover-picker.js"
   - "public/js/views-round-detail.js"
   - "public/js/views-round-lookup.js"
+  - "public/js/bgg-import.js"
   - "test/bgg-covers.test.js"
 ---
 # BGG edition covers (#519): `parseItems` LOSES the game item on a versions body
@@ -68,7 +69,7 @@ selects which language edition the wish-list price quotes**. Deduping first woul
 not merely mislabel a box; it would price a different one.
 
 Two consequences for the three call sites (`views-round-detail.js`'s cover
-popover, `views-round-lookup.js`'s add-game sheet and its bulk-import rows), all
+popover, `views-round-lookup.js`'s add-game sheet and `bgg-import.js`'s bulk-import rows), all
 of which used to keep only `c.imageUrl`:
 
 - **The edition travels WITH the cover, in both directions.** Picking a new cover
