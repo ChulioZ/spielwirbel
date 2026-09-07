@@ -91,6 +91,9 @@ lib/
     index.js         picks the backend (S3_BUCKET ? s3 : disk)
     disk.js          default backend — files under DATA_DIR/uploads
     s3.js            S3-compatible object storage, used when S3_BUCKET set
+  upload-access.js   decides WHOSE /uploads object a request may read — the
+                     owning tenant, a grantee on the referencing round, or (for
+                     a profile picture) any signed-in account (issue #955)
   upload.js          multer image-upload config (persists via lib/storage) —
                      two instances, one per kind; both sniff magic bytes and
                      then re-encode, so the stored type is always ours
