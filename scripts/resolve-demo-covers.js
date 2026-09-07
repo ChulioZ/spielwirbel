@@ -164,7 +164,10 @@ function printGame(g) {
   }
 
   // stdout is the paste-able block; the report above goes to stderr, so
-  // `> /tmp/block.js` gives you just the code.
+  // `> /tmp/block.js` gives you just the code. The stamp is part of the block:
+  // the seed is a live-service fixture whose cover URLs rot, and its age is
+  // otherwise unknowable from the repo (test/demo-seed.test.js pins the line).
+  console.log(`// Resolved ${new Date().toISOString().slice(0, 10)} by scripts/resolve-demo-covers.js — regenerate, never hand-edit.`);
   for (const { round, out } of resolved) {
     console.log(`const ${BLOCK_NAME[round.key] || round.key} = [`);
     for (const g of out) printGame(g);

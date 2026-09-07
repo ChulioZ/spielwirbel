@@ -239,3 +239,20 @@ test('a locale with no seed text falls back to English rather than throwing', ()
   assert.strictEqual(seed.textFor('de'), seed.DEMO_TEXT.de);
   assert.strictEqual(seed.tagNameFor('party', 'de'), seed.DEMO_TAGS.party.de);
 });
+
+/* The three game blocks are a live-service fixture (signed BGG cover URLs that
+   rot), and until the 2026-09-06 audit nothing in the file said WHEN they were
+   last resolved (M-009). The script prints the stamp at the head of the block
+   it emits, so it regenerates with the data; this pins that the seed carries
+   one and that the script still emits the same line. */
+test('the seed carries the date it was resolved, in the form the script emits', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const seedSrc = fs.readFileSync(path.join(__dirname, '..', 'lib', 'demo-seed.js'), 'utf8');
+  const stamp = seedSrc.match(/^\/\/ Resolved (\d{4}-\d{2}-\d{2}) by scripts\/resolve-demo-covers\.js/m);
+  assert.ok(stamp, 'lib/demo-seed.js has no "// Resolved <date> by scripts/resolve-demo-covers.js" line');
+  assert.ok(!Number.isNaN(Date.parse(stamp[1])), `not a date: ${stamp[1]}`);
+  const script = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'resolve-demo-covers.js'), 'utf8');
+  assert.match(script, /console\.log\(`\/\/ Resolved \$\{[^}]+\} by scripts\/resolve-demo-covers\.js/,
+    'the script no longer prints the stamp the seed is pinned to');
+});
