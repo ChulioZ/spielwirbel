@@ -862,3 +862,32 @@ test('PATCH does not give a game that never had an edition a null one', async ()
     .send({ removeImage: true });
   assert.equal('edition' in res.body, false);
 });
+
+/*
+ * The self-hosted default mode: no accounts, no shared password. Every round is
+ * the pre-tenancy 'default' tenant, so the /uploads ownership check added in
+ * #955 must resolve the caller to that same tenant and let the cover through.
+ *
+ * This case exists because breaking that one branch on purpose left the ENTIRE
+ * suite green (measured: 2971 pass): every other /uploads spec requests a key
+ * that does not exist, so it asserts the gate's refusal and never a successful
+ * serve. A regression here blanks every cover on every self-hosted instance —
+ * the app's most-rendered request — with nothing anywhere going red.
+ */
+test('a cover is actually SERVED in the no-accounts mode, not just stored', async () => {
+  const round = await createRound(request);
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/games`)
+    .field('title', 'Catan').field('minPlayers', '2').field('maxPlayers', '4')
+    .attach('image', PNG_BYTES, { filename: 'cover.png', contentType: 'image/png' });
+  assert.equal(res.status, 201);
+  assert.ok(res.body.image.startsWith('/uploads/'));
+
+  const served = await request(app).get(res.body.image);
+  assert.equal(served.status, 200, 'the default tenant reads its own cover');
+  assert.match(served.headers['content-type'], /image\//);
+
+  // ...and the ownership check is still doing something in this mode: an object
+  // nothing references is refused even here.
+  assert.equal((await request(app).get('/uploads/deadbeefdeadbeef.png')).status, 404);
+});
