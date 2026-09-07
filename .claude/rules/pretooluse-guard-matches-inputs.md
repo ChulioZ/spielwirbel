@@ -59,6 +59,24 @@ alternative — the **Write/Edit** tools for editing, **Grep** for searching, wh
 `content`/`old_string`/`new_string`/`pattern` fields are exempt — so the hook
 pushes toward the proper tool rather than toward a workaround that defeats it.
 
+**An identifier that ENDS in a protected name is not that tax — it is a bug in
+the pattern.** The bare `.env` branch was written as `/\.env(?![\w.-])/`, which
+also matches the JS property access `process.env` whenever the next character
+is a space, a quote or a `)`. So every `grep -rn "process.env" lib/` — the
+exact probe `claude-file-audit` §4 prescribes for C-010 — and every `node -e`
+one-liner over the environment was blocked, and the 2026-09-06 audit was
+blocked four times before it noticed the pattern rather than the path was the
+cause. The fix is a lookbehind, `/(?<![\w\\])\.env(?![\w.-])/`: a real path has
+a space, quote, `/`, `=` or the start of the string before the dot; an
+identifier has a word character there, and its regex-escaped spelling
+(`process\.env\.`, the second thing a grep for it is written as) has a
+backslash. The distinction between
+this and the paragraph above is whether the blocked string *is* the protected
+path in some spelling (accept the tax) or merely *contains its letters* (fix
+the regex) — and the spec's `ALLOW` table is where each accepted spelling of
+the second kind gets pinned, so the next collision goes red instead of
+silently costing sessions.
+
 ## What it is NOT
 
 **A guardrail against accident and drift, not a sandbox.** An agent that means to
