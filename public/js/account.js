@@ -381,10 +381,14 @@ function openAuth(render, innerHtml, build, path) {
 }
 
 const authError = (card) => card.querySelector('.auth__error');
+// The error line is a permanent `role="alert"` region: it is always in the
+// tree and its EMPTY state is its hidden state (`.auth__error:empty` costs no
+// space). Toggling `hidden` on it would take it out of the accessibility tree,
+// and un-hiding it with the text already in place is exactly the shape that
+// never gets announced (.claude/rules/accessibility-contrast-and-modals.md §4,
+// 2026-09-06 audit A-016).
 function setError(card, msg) {
-  const el = authError(card);
-  el.textContent = msg;
-  el.hidden = false;
+  authError(card).textContent = msg;
 }
 
 // The three routable auth screens (#501). Each guards itself rather than
@@ -415,7 +419,7 @@ function showLogin() {
         <label for="authPassword">${esc(t('auth.password'))}</label>
         <input id="authPassword" class="input" type="password" autocomplete="current-password" />
       </div>
-      <p class="auth__error" hidden></p>
+      <p class="auth__error" role="alert"></p>
       <button class="btn btn--primary btn--block" type="submit">${esc(t('auth.login.submit'))}</button>
       <!-- The passkey path (#418). Ships hidden and is revealed only where
            window.PublicKeyCredential exists, so a browser that cannot run the
@@ -443,7 +447,7 @@ function showLogin() {
     wirePasskeyLogin(card);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      authError(card).hidden = true;
+      authError(card).textContent = '';
       if (!ident.value.trim() || !pw.value) return setError(card, t('auth.error.missing'));
       submit.disabled = true;
       try {
@@ -480,7 +484,7 @@ function wirePasskeyLogin(card) {
   alt.hidden = false;
 
   btn.addEventListener('click', async () => {
-    authError(card).hidden = true;
+    authError(card).textContent = '';
     btn.disabled = true;
     try {
       const start = await authFetch('/passkeys/login/options', {});
@@ -539,7 +543,7 @@ function showRegister() {
         <input id="regPw" class="input" type="password" autocomplete="new-password" />
         <div class="field__hint muted">${esc(t('auth.register.pwHint'))}</div>
       </div>
-      <p class="auth__error" hidden></p>
+      <p class="auth__error" role="alert"></p>
       <button class="btn btn--primary btn--block" type="submit">${esc(t('auth.register.submit'))}</button>
       <!-- Both links here point at pages that hard-404 until the operator
            identity is configured (lib/routes/legal.js), so the whole line ships
@@ -568,7 +572,7 @@ function showRegister() {
     if (termsLine) withAppConfig((cfg) => { termsLine.hidden = !(cfg && cfg.footer); });
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      authError(card).hidden = true;
+      authError(card).textContent = '';
       const username = user.value.trim();
       if (!email.value.trim() || !username) return setError(card, t('auth.error.missing'));
       // Both checks share their definition with the route that enforces them
@@ -607,7 +611,7 @@ function showForgot() {
         <label for="fpEmail">${esc(t('auth.email'))}</label>
         <input id="fpEmail" class="input" type="email" autocomplete="username" inputmode="email" />
       </div>
-      <p class="auth__error" hidden></p>
+      <p class="auth__error" role="alert"></p>
       <button class="btn btn--primary btn--block" type="submit">${esc(t('auth.forgot.submit'))}</button>
       <div class="auth__links">
         <button class="link-btn" type="button" id="toLogin">${esc(t('auth.backToLogin'))}</button>
@@ -619,7 +623,7 @@ function showForgot() {
     card.querySelector('#toLogin').addEventListener('click', showLogin);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      authError(card).hidden = true;
+      authError(card).textContent = '';
       if (!email.value.trim()) return setError(card, t('auth.error.missing'));
       submit.disabled = true;
       // The handler itself always answers ok (anti-enumeration), so a !ok can
@@ -762,7 +766,7 @@ function renderResetLanding() {
         <label for="resetPw">${esc(t('auth.reset.newPassword'))}</label>
         <input id="resetPw" class="input" type="password" autocomplete="new-password" />
       </div>
-      <p class="auth__error" hidden></p>
+      <p class="auth__error" role="alert"></p>
       <button class="btn btn--primary btn--block" type="submit">${esc(t('auth.reset.submit'))}</button>
       <div class="auth__links">
         <button class="link-btn" type="button" id="toLogin">${esc(t('auth.backToLogin'))}</button>
@@ -774,7 +778,7 @@ function renderResetLanding() {
     card.querySelector('#toLogin').addEventListener('click', showLogin);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      authError(card).hidden = true;
+      authError(card).textContent = '';
       if (pw.value.length < 8) return setError(card, t('auth.error.shortPassword'));
       submit.disabled = true;
       const { ok, data } = cred.token

@@ -771,6 +771,7 @@ I18N.es = {
   'directPlay.guestsNote': 'Los invitados juegan con vosotros, pero no entran en el grupo.',
   'directPlay.teamsNote': 'Los equipos juegan juntos, y ganan juntos.',
 
+  'vote.progress': 'Paso {n} de {total}',
   'vote.crumb': 'Votación',
   'vote.leaveConfirm': '¿Salir de la votación? Se perderán las valoraciones hechas hasta ahora.',
   'vote.turn': '¡{name}, te toca!',
@@ -1238,8 +1239,8 @@ I18N.es = {
   'landing.hero.ctaSecondary': 'Entrar',
   'landing.hero.ctaDemo': 'Probar sin registrarse',
   'landing.hero.ctaResume': 'Seguir con la demo',
-  'landing.hero.demoNote': 'Empieza ya, sin correo electrónico. El grupo de demostración viene lleno y se elimina a las 24 horas.',
-  'landing.shot.shelfAlt': 'Captura de pantalla: la estantería de juegos de un grupo en Spielwirbel — los juegos en fichas con su valoración media, junto a la navegación de inicio, estantería, historial y trofeos.',
+  'landing.hero.demoNote': 'Empieza ya, sin correo electrónico. Tres grupos de demostración vienen llenos y se eliminan a las 24 horas.',
+  'landing.shot.shelfAlt': 'Captura de pantalla: la estantería de juegos de un grupo en Spielwirbel — los juegos en fichas con su puntuación Spielwirbel, junto a la navegación de inicio, estantería, historial y trofeos.',
   'landing.shot.voteAlt': 'Captura de pantalla: la votación en Spielwirbel — un juego sorteado con la pregunta «¿cuánto te apetece jugar a esto?» y una escala de cinco caras del 1 («para nada») al 5 («sin falta»).',
   'landing.features.title': 'Lo que os lleváis',
   'landing.features.shelf.title': 'Una estantería para todo',
@@ -1247,7 +1248,7 @@ I18N.es = {
   'landing.features.vote.title': 'Decide el grupo',
   'landing.features.vote.desc': 'Spielwirbel sortea los candidatos, el dispositivo da la vuelta a la mesa y cada uno valora por su cuenta. Se acabó el cuarto de hora de discusión. Quien tenga cuenta puede valorar desde su propio dispositivo, y quien no la tenga, desde un enlace compartido, sin registrarse.',
   'landing.features.ratings.title': 'Cada voto cuenta dos veces',
-  'landing.features.ratings.desc': 'La misma valoración elige el juego de hoy y además se queda: una media por juego, vuestros favoritos y los que solo cogen polvo.',
+  'landing.features.ratings.desc': 'La misma valoración elige el juego de hoy y además se queda: una puntuación por juego, vuestros favoritos y los que solo cogen polvo.',
   'landing.features.chronicle.title': 'Vuestro historial de partidas',
   'landing.features.chronicle.desc': 'Cada sesión se guarda: quién estaba, a qué jugasteis y qué tal salió.',
   'landing.features.noAccounts.title': 'Solo tú necesitas cuenta',
@@ -1303,7 +1304,7 @@ I18N.es = {
   'install.done': 'Spielwirbel se ha instalado.',
 
   // Nombres accesibles de la barra superior y de las dos zonas de navegación (#145).
-  'a11y.home': 'Ir a la pantalla de inicio',
+  'a11y.home': 'Spielwirbel – ir a la pantalla de inicio',
   'a11y.language': 'Idioma',
   'a11y.account': 'Cuenta',
   'a11y.hubTabs': 'Secciones del grupo',

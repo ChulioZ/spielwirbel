@@ -27,6 +27,12 @@
 @font-face { font-family: 'Alfa Slab One'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/alfa-slab-one-latin-400-normal.woff2') format('woff2'); }
 
 :root {
+  /* Native UI — the <select> popup, scrollbars, form-control defaults — follows
+     the design's scheme, not the OS: dark is a per-round design here
+     (.claude/rules/dark-designs-and-the-on-accent-flip.md), so a dark round on a
+     light OS still gets a dark select popup, and a light round on a dark OS a
+     light one. The dark block below flips it. */
+  color-scheme: light;
   /* Per-round design: page background + accent color.
      Everything else is derived from it so the whole UI matches. */
   --page-bg: #f4f1ea;
@@ -280,6 +286,7 @@
    their own page. */
 :root[data-scheme="dark"],
 .theme-card[data-scheme="dark"] {
+  color-scheme: dark;
   --shade: #fff;
   --surface: color-mix(in oklab, #fff 9%, var(--page-bg));
   --on-accent: var(--on-accent-dark);
@@ -2692,6 +2699,10 @@ body.auth-screen .topbar__context { display: none; }
    beats the UA's `[hidden] { display: none }` and would pin it visible
    (.claude/rules/hidden-attribute-vs-display-rule.md). */
 .auth__error, .konto-error { color: var(--danger); font-size: var(--text-sm); margin: -8px 0 12px; }
+/* Both are permanent role="alert" regions (A-016): empty is the hidden state, and
+   an empty <p> is zero-height, so only the margins have to go. Never toggle them
+   with `hidden` — see setError() in account.js. */
+.auth__error:empty, .konto-error:empty { margin: 0; }
 .auth__links { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
 .auth__links .link-btn { font-size: var(--text-md); }
 /* Terms-of-use notice under the register button (#140). */

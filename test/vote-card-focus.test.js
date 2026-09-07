@@ -192,3 +192,25 @@ test('switching the language does not pull focus into the rating row', async (t)
     'a language switch must not focus a rating'
   );
 });
+
+// ------------------------------------------------- the progress bar (A-016)
+
+/* The segmented bar above the card is otherwise purely visual — a reader gets
+   the card, the game and the faces, and never "step 2 of 3" (2026-09-06 audit,
+   WCAG 1.3.1). One progressbar per person, valuetext because the raw pair would
+   be announced as a percentage. */
+test('the vote progress is exposed as a progressbar per person, in steps', async (t) => {
+  const dom = await voteCard(t);
+  const seg = () => dom.app.querySelector('.vote-progress__seg');
+  assert.equal(seg().getAttribute('role'), 'progressbar');
+  assert.equal(seg().getAttribute('aria-label'), MEMBER.name);
+  assert.equal(seg().getAttribute('aria-valuemin'), '0');
+  assert.equal(seg().getAttribute('aria-valuemax'), String(GAMES.length), 'skipIntro: one step per game');
+  assert.equal(seg().getAttribute('aria-valuenow'), '0');
+  assert.equal(seg().getAttribute('aria-valuetext'), dom.run(`t('vote.progress', { n: 0, total: ${GAMES.length} })`));
+
+  moods(dom)[2].click();
+  dom.app.querySelector('#nextBtn').click();
+  assert.equal(seg().getAttribute('aria-valuenow'), '1', 'advancing a card moves the value');
+  assert.equal(seg().getAttribute('aria-valuetext'), dom.run(`t('vote.progress', { n: 1, total: ${GAMES.length} })`));
+});

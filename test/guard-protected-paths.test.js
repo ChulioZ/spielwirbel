@@ -64,6 +64,15 @@ const ALLOW = [
   ['documenting the prohibition', { file_path: 'docs/configuration.md', content: 'Set `.env` from `.env.example`.' }],
   ['editing that documentation', { old_string: 'the .env file', new_string: 'the .env file (local only)' }],
   ['a human description mentioning it', { command: 'ls', description: 'Check whether data/data.json exists' }],
+  // `process.env` is an identifier, not a path: the bare `.env` branch used to
+  // match it whenever the next character was not a name character, so every
+  // grep for the env vars the code reads — and every `node -e` one-liner over
+  // `process.env` — was blocked (2026-09-06 audit, C-026). A real path always
+  // has a non-word character before the dot.
+  ['grepping the code for the env vars it reads', { command: 'grep -rn "process.env" lib/ scripts/' }],
+  ['a node one-liner over the environment', { command: "node -e 'console.log(Object.keys(process.env))'" }],
+  ['an escaped regex over the same identifier', { command: "grep -rn 'process\\.env\\.' lib/" }],
+  ['a strict comparison against it', { command: 'grep -n "process.env === " lib/app.js' }],
 ];
 
 test('every protected read is denied', () => {

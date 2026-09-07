@@ -450,7 +450,7 @@ function showStartSession(round, prefill) {
 //   opts.skipIntro        – drop the "you're up, don't peek" handover screen
 // Absent opts is the original hot-seat behaviour, byte for byte.
 function startVoting(round, session, games, people, opts = {}) {
-  // votes[personId][gameId] = { rating, retire }
+  // votes[personId][gameId] = { rating }   (the retire flag went with #909)
   const votes = {};
   people.forEach((p) => (votes[p.id] = {}));
 
@@ -596,7 +596,11 @@ function startVoting(round, session, games, people, opts = {}) {
       .map((p, pi) => {
         const done = Math.max(0, Math.min(perPerson, idx - pi * perPerson));
         const pct = Math.round((done / perPerson) * 100);
-        return `<span class="vote-progress__seg"><span style="width:${pct}%;background:${personColor(round, p)}"></span></span>`;
+        // One progressbar per person: the bar is otherwise purely visual, and
+        // "step 2 of 3" is the one thing a reader cannot infer from the card
+        // (2026-09-06 audit, WCAG 1.3.1). aria-valuetext because the raw
+        // value/max pair would be read as a percentage.
+        return `<span class="vote-progress__seg" role="progressbar" aria-label="${esc(personLabel(p))}" aria-valuemin="0" aria-valuemax="${perPerson}" aria-valuenow="${done}" aria-valuetext="${esc(t('vote.progress', { n: done, total: perPerson }))}"><span style="width:${pct}%;background:${personColor(round, p)}"></span></span>`;
       })
       .join('')}</div>`;
   }

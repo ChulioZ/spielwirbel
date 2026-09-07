@@ -812,6 +812,7 @@ I18N.en = {
   // No draw here, so no pool to filter — this note may not promise one (#575).
   'directPlay.teamsNote': 'Teams play together — and win together.',
 
+  'vote.progress': 'Step {n} of {total}',
   'vote.crumb': 'Voting',
   'vote.leaveConfirm': 'Leave the vote? The ratings entered so far will be lost.',
   'vote.turn': '{name}, your turn!',
@@ -1297,8 +1298,8 @@ I18N.en = {
   'landing.hero.ctaDemo': 'Try it without signing up',
   // Shown instead of ctaDemo when this browser already holds a live demo (#502).
   'landing.hero.ctaResume': 'Resume demo',
-  'landing.hero.demoNote': 'Start straight away, no e-mail needed. The demo round comes pre-filled and is deleted after 24 hours.',
-  'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their average rating, next to the navigation for Start, shelf, chronicle and trophies.',
+  'landing.hero.demoNote': 'Start straight away, no e-mail needed. Three demo rounds come pre-filled and are deleted after 24 hours.',
+  'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their Spielwirbel score, next to the navigation for Start, shelf, chronicle and trophies.',
   'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale of five faces running from 1 (“not at all”) to 5 (“absolutely”).',
   'landing.features.title': 'What you get',
   'landing.features.shelf.title': 'One shelf for everything',
@@ -1306,7 +1307,7 @@ I18N.en = {
   'landing.features.vote.title': 'The group decides',
   'landing.features.vote.desc': 'Spielwirbel draws the candidates, the device goes around, everyone rates on their own. No more quarter-hour debate. Anyone with an account can rate from their own device instead – and anyone without one can rate from a shared link, no sign-up needed.',
   'landing.features.ratings.title': 'Every vote counts twice',
-  'landing.features.ratings.desc': 'The same rating picks tonight and then stays: an average per game, your favourites, your shelf-warmers.',
+  'landing.features.ratings.desc': 'The same rating picks tonight and then stays: a score per game, your favourites, your shelf-warmers.',
   'landing.features.chronicle.title': 'Your play history',
   'landing.features.chronicle.desc': 'Every session is kept – who was there, what you played, how it landed.',
   'landing.features.noAccounts.title': 'Only you need an account',
@@ -1372,7 +1373,7 @@ I18N.en = {
   'install.done': 'Spielwirbel has been installed.',
 
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
-  'a11y.home': 'Go to home screen',
+  'a11y.home': 'Spielwirbel – go to home screen',
   'a11y.language': 'Language',
   'a11y.account': 'Account',
   'a11y.hubTabs': 'Round sections',

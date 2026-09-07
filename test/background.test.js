@@ -82,3 +82,19 @@ test('POST background still never 400s: a malformed body falls back to the defau
     assert.deepEqual(res.body.background, { type: 'none' }, JSON.stringify(body));
   }
 });
+
+test('POST background bounds the free-text colour fields (2026-09-06 audit, S-014)', async () => {
+  // page/accent/color carried no length cap: no sink renders them as markup
+  // today, but a 100 kB string is a stored round field nobody can read back
+  // usefully. The schema's `.catch` turns an over-long value into the default
+  // design rather than a 400 — which is what the client would do with an
+  // unknown one anyway.
+  const round = await createRound(request);
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/background`)
+    .send({ type: 'theme', page: '#'.padEnd(5000, 'a'), accent: '#3a67b1' });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.background, { type: 'none' });
+  const list = await request(app).get('/api/rounds');
+  assert.deepEqual(list.body.find((r) => r.id === round.id).background, { type: 'none' });
+});

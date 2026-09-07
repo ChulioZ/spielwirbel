@@ -387,8 +387,8 @@ test('a voter chip keeps room for a real name beside its status badge', () => {
   const gap = Number(chip.match(/gap:\s*(\d+)px/)[1]);
   const avatar = Number(bodyOf('.live-person__avatar').match(/width:\s*(\d+)px/)[1]);
   /* Measured from the rendered chip: the icon + `lobby.voted` at --text-sm.
-     GERMAN is the worst case of the five shipped locales ("abgestimmt", vs
-     "ha votado"/"ha votato"/"voted"/"a voté"), so this is the real ceiling
+     GERMAN is the worst case of the shipped locales ("abgestimmt", vs
+     "ha votado"/"ha votato"/"voted"/"a voté"/"gestemd"), so this is the real ceiling
      today — but it is a measurement, not a derivation. A new locale whose
      word is longer than the German one silently makes the floor too small
      again, so re-measure this when one is added. */

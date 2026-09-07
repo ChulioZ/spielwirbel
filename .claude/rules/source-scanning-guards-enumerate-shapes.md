@@ -66,9 +66,9 @@ Everything above is about a scan matching too little. #899's guard
 opposite wall, and the natural implementation is the wrong one.
 
 Written over raw file text it is unshippable: the comment above `result.winner`
-contains „Abend" in **all five** `lang/*.js` files — it is the comment
-documenting this very rule — and four of the five file headers name the banned
-phrase to warn translators off it. A text scan flags six sites that are all
+contains „Abend" in most `lang/*.js` files — it is the comment documenting this
+very rule — and most file headers name the banned phrase to warn translators
+off it. A text scan flags six sites that are all
 correct, so the only way to green is to weaken the pattern until it stops
 catching the real ones.
 

@@ -304,3 +304,55 @@ test('the game-detail tag popover names its new-tag field', () => {
     assert.match(tag, /aria-label="\$\{esc\(t\('tags\.addPlaceholder'\)\)\}"/, `field has no aria-label: ${tag}`);
   }
 });
+
+/* ------------------------------ A-016 / A-017 ------------------------------ */
+
+/* WCAG 2.5.3 Label in Name: the home control carries a VISIBLE wordmark
+   (`.topbar__word`, hidden only below ~400px by CSS), so its accessible name
+   must contain that text. Until the 2026-09-06 audit it was "Zur Startseite"
+   over a visible "Spielwirbel" — a voice-control user saying the word on screen
+   found no control. Asserted per locale against the two keys rather than one
+   string, so a retranslation cannot silently break it again. */
+test('the home control’s accessible name contains its visible wordmark (A-017)', (t) => {
+  for (const locale of LOCALES.map((l) => l.code)) {
+    const dom = loadApp({ locale });
+    t.after(() => dom.close());
+    dom.call('applyStaticTexts');
+    const home = dom.document.getElementById('homeBtn');
+    const visible = home.querySelector('.topbar__word').textContent.trim();
+    assert.ok(visible.length > 0, 'the wordmark is gone — this spec is guarding nothing');
+    assert.ok(home.getAttribute('aria-label').toLowerCase().includes(visible.toLowerCase()),
+      `${locale}: aria-label "${home.getAttribute('aria-label')}" does not contain the visible "${visible}"`);
+  }
+});
+
+/* WCAG 4.1.3 / 3.3.1: an auth-form error must be ANNOUNCED, not only painted.
+   The four cards rendered `<p class="auth__error" hidden>` and set its text in
+   the same statement that un-hid it — the shape
+   .claude/rules/accessibility-contrast-and-modals.md §4 names as never
+   announced. It is now a permanent role="alert" region whose empty state is its
+   hidden state, so the mutation a reader hears is text arriving in a live
+   region already in the tree. */
+test('an auth-form error lands in a permanent alert region (A-016)', (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  dom.set('accountsActive', () => true);
+  dom.set('isLoggedIn', () => false);
+  dom.set('withAppConfig', (cb) => cb({ footer: false }));
+  dom.set('authFetch', () => new Promise(() => {}));
+  dom.call('showLogin');
+
+  const card = dom.app.querySelector('.auth__card');
+  assert.ok(card, 'the login card did not render');
+  const err = card.querySelector('.auth__error');
+  assert.ok(err, 'the error line is gone');
+  assert.equal(err.getAttribute('role'), 'alert', 'the error line must be a live region from the start');
+  assert.equal(err.hasAttribute('hidden'), false, 'a hidden live region is not in the accessibility tree');
+  assert.equal(err.textContent, '', 'empty is the hidden state');
+
+  card.closest('.auth').querySelector('form')
+    .dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+  assert.equal(err.textContent, dom.run("t('auth.error.missing')"));
+  assert.equal(err.hasAttribute('hidden'), false, 'the error must not be toggled with hidden');
+  assert.equal(card.querySelector('.auth__error'), err, 'the same element, so the mutation is what is announced');
+});
