@@ -165,3 +165,30 @@ test('the tables are numbered in the order the split made them', async (t) => {
   const kickers = [...dom.app.querySelectorAll('.spotlight__kicker')].map((k) => k.textContent.trim());
   assert.deepEqual(kickers, ['Tisch 1', 'Tisch 2']);
 });
+
+/* ---- Found while building the above (#957), not in the issue ----
+
+   `showResults` applies the round's design itself, deliberately — a results URL
+   is shared and cold-loaded, and #940 fixed exactly that screen rendering such a
+   visit on the Standard palette with no accent and no world. But its multi-table
+   branch returns to `showTableBuilder` BEFORE that line, so the sibling screen
+   for a SPLIT evening never got the fix: a shared link, a reload in the Chronik
+   or any cold load rendered the whole screen — not just the cards below — on the
+   standard light design, however the round is dressed.
+
+   Verified in the browser before fixing: the seeded „Big group" round stored
+   `{type:'theme', id:'scifi'}` and a cold load of its split screen reported
+   `data-world === null` and `data-scheme === null`. */
+test('a cold-loaded split screen wears the round\'s own design', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  dom.set('roundCan', () => false);
+
+  const dressed = { ...round([parent, PLAYED, OPEN]), background: { type: 'theme', id: 'scifi', page: '#0e1622', accent: '#4fb3ef' } };
+  await dom.call('showTableBuilder', dressed, parent);
+
+  const root = dom.document.documentElement;
+  assert.equal(root.getAttribute('data-world'), 'scifi', 'the world is the reason the victory scene paints at all');
+  assert.equal(root.getAttribute('data-scheme'), 'dark', 'and Sci-Fi is a dark design — a light one here is the #940 bug');
+  assert.equal(root.style.getPropertyValue('--page-bg'), '#0e1622');
+});
