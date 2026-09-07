@@ -1,6 +1,6 @@
 ---
 paths:
-  - "public/js/core.js"
+  - "public/js/round-theme.js"
   - "public/index.html"
   - "public/manifest.webmanifest"
   - "test/theme-color.test.js"

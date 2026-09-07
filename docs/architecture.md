@@ -384,7 +384,8 @@ public/
     lang/fr.js       French strings
     lang/it.js       Italian strings
     lang/nl.js       Dutch strings
-    core.js          DOM/API helpers, stats, design, language picker  (loads first)
+    core.js          DOM/API helpers, stats, tag chips, popovers, language
+                     picker  (loads first)
     empty-state.js   the app's one "nothing here yet" component — medallion,
                      optional title, sub-line; shares its rules with .lobby-cta
                      (issue #869)
@@ -443,6 +444,10 @@ public/
                      resolver every view and the recap card look a stored
                      design up through — by id, then by the legacy page hex
                      (issue #903)
+    round-theme.js   how a design reaches the page: the --page-bg/--brand
+                     pair, the data-world and data-scheme root attributes,
+                     <meta name="theme-color">, and the rating ramp that
+                     flips with the scheme (issue #956)
     round-roles.js   the owner/co-owner/editor ladder and what each may do,
                      required by lib/round-access.js so the views hide exactly
                      what the server refuses (issue #137)

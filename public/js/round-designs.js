@@ -4,7 +4,7 @@
    which styles.css derives every other tone. WORLDS are designs with a
    personality on top of the colours: a display face, a backdrop motif and
    ornament framing, keyed off `<html data-world="…">`, which applyBackground()
-   (core.js) sets from the entry's `world`. A world is ADDITIVE over the same two
+   (round-theme.js) sets from the entry's `world`. A world is ADDITIVE over the same two
    tokens a palette sets, so an unstyled world degrades to a palette
    (.claude/rules/theme-derived-colors.md).
 

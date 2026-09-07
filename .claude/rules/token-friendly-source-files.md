@@ -60,8 +60,15 @@ just the rules, and fix every hit in the same PR:
 
 ```bash
 grep -rn --exclude-dir=node_modules --exclude-dir=worktrees \
-  "gameCount\|min(85vh, 660px)" .claude/ lib/ public/ docs/ *.md
+  "gameCount\|min(85vh, 660px)" .claude/ lib/ public/ docs/ test/ *.md
 ```
+
+**`test/` joined that list in #956, having been missing.** Moving the theme block
+out of `core.js` reddened `test/build.test.js`, which spot-checked that the
+minifier preserves shared globals by reading *one* file and naming
+`applyBackground` in it — the different-topic case above, with a spec in place of
+a rule. It failed loudly; the same shape goes **quiet** whenever the assertion is
+a `!includes` or the moved name still occurs in the file it left.
 
 **The class `.claude/rules/` alone misses is a code comment citing a value or
 invariant owned by another file.** #678 moved `.sheet`'s `max-height` off

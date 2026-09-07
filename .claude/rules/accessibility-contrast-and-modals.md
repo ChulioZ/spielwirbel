@@ -36,7 +36,7 @@ whole dark half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`.
   **on its own page** (Sand and Pfirsich sat at 3.8:1 and put every link in
   the app below AA; both were darkened).
 - **Correcting a theme needs no migration — resolve at RENDER time.** A round
-  stores a palette *snapshot*, so `resolveAccent(bg)` in `core.js` looks the
+  stores a palette *snapshot*, so `resolveAccent(bg)` in `round-theme.js` looks the
   accent up by `page` on every render; existing rounds self-correct on next
   draw. Both `applyBackground` and `themeAccent` go through it. (Same
   render-time reasoning as `provider-cover-sizing.md`; keeps the repo free of
