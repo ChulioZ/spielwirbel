@@ -5,7 +5,17 @@ Inhalte nach der Verordnung (EU) 2022/2065 („DSA") — Spielwirbel ist ein
 **Hosting-Dienst** (Art. 3 lit. g iii), kein Online-Plattform-Dienst: die
 Inhalte eines Mandanten werden nicht öffentlich verbreitet, sondern nur
 innerhalb des Kontos sowie ausdrücklich eingeladenen Konten und bestätigten
-Freunden (#207/#325) angezeigt — keine Verbreitung an die Allgemeinheit.
+Freunden (#207/#325) angezeigt — keine Verbreitung an die Allgemeinheit. Die
+drei Oberflächen, die darüber hinausreichen, ändern diese Einordnung nicht:
+das **Kontoprofil** (#558/#841 — Nutzername, Registrierungsmonat und ein
+freiwilliges Profilbild, also ausschließlich vom Konto selbst über sich
+gewählte Angaben) ist nur für angemeldete Konten sichtbar; ein
+**Abstimmungslink** (#652) zeigt den von der Runde selbst gewählten Empfängern
+die Teilnehmerliste einer laufenden Abstimmung, nicht die Inhalte des
+Mandanten; die **öffentlichen Statistiken** (#564) sind mandantenübergreifende
+Aggregate ohne Personen-, Konto- oder Rundenbezug (`vvt.md` Zeile 22). Keine
+dieser Oberflächen macht Nutzerinhalte auf Anfrage eines Nutzers der
+Allgemeinheit zugänglich (Art. 3 lit. i DSA).
 Es gelten daher die Basispflichten der
 Art. 11–18 DSA, **nicht** die Plattform-Pflichten aus Kapitel III Abschnitt 3
 (Art. 19 ff.; von diesen wären Kleinstunternehmen ohnehin ausgenommen).
@@ -19,7 +29,7 @@ Abschnitt 7 (Maßnahmen + Begründung), Abschnitt 10 (Kontaktstellen
 Art. 11/12). **Jede Entfernung stützt sich auf eine dort benannte Regel** —
 die Begründung (unten) zeigt auf die konkrete Ziffer.
 
-**Stand:** 2026-08-01
+**Stand:** 2026-09-06
 
 ## Kanäle (Art. 16 Abs. 1)
 
