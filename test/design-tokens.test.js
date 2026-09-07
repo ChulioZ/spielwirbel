@@ -282,3 +282,16 @@ test('the tag variants retired in #242 stay deleted', () => {
     );
   }
 });
+
+/* `color-scheme` follows the DESIGN, not the OS. Dark is a per-round design
+   here (#904), so without an explicit declaration a dark round on a light OS
+   renders its native <select> popup, scrollbars and form-control defaults
+   light — measured on the Sci-Fi world with computed `color-scheme: normal`
+   (2026-09-06 UI audit). The light value on :root is the other half: a light
+   round on a dark OS must not inherit the OS's dark controls either. */
+test('color-scheme is declared per design: light on :root, dark on the dark block', () => {
+  assert.match(ROOT, /(^|;)\s*color-scheme:\s*light\s*;/m, ':root must pin color-scheme: light');
+  const dark = RULES.find(([sel]) => sel.includes(':root[data-scheme="dark"]'));
+  assert.ok(dark, 'the dark-design block is gone');
+  assert.match(dark[1], /(^|;)\s*color-scheme:\s*dark\s*;/m, 'the dark block must flip color-scheme');
+});

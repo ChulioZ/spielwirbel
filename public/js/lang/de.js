@@ -801,6 +801,7 @@ I18N.de = {
   'directPlay.guestsNote': 'Gäste spielen mit, gehören aber nicht zur Runde.',
   'directPlay.teamsNote': 'Teams spielen zusammen – und gewinnen zusammen.',
 
+  'vote.progress': 'Schritt {n} von {total}',
   'vote.crumb': 'Abstimmung',
   'vote.leaveConfirm': 'Abstimmung verlassen? Die bisher abgegebenen Bewertungen gehen verloren.',
   'vote.turn': '{name}, du bist dran!',
@@ -1364,7 +1365,7 @@ I18N.de = {
   'install.done': 'Spielwirbel wurde installiert.',
 
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
-  'a11y.home': 'Zur Startseite',
+  'a11y.home': 'Spielwirbel – zur Startseite',
   'a11y.language': 'Sprache',
   'a11y.account': 'Konto',
   'a11y.hubTabs': 'Rundenbereiche',

@@ -812,6 +812,7 @@ I18N.en = {
   // No draw here, so no pool to filter — this note may not promise one (#575).
   'directPlay.teamsNote': 'Teams play together — and win together.',
 
+  'vote.progress': 'Step {n} of {total}',
   'vote.crumb': 'Voting',
   'vote.leaveConfirm': 'Leave the vote? The ratings entered so far will be lost.',
   'vote.turn': '{name}, your turn!',
@@ -1372,7 +1373,7 @@ I18N.en = {
   'install.done': 'Spielwirbel has been installed.',
 
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
-  'a11y.home': 'Go to home screen',
+  'a11y.home': 'Spielwirbel – go to home screen',
   'a11y.language': 'Language',
   'a11y.account': 'Account',
   'a11y.hubTabs': 'Round sections',
