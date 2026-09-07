@@ -2,6 +2,7 @@
 paths:
   - "public/js/views-round-detail.js"
   - "public/js/core.js"
+  - "public/js/popover.js"
   - "public/styles.css"
   - "test/editor-presentation.test.js"
 ---
@@ -77,7 +78,7 @@ that needed, and the two traps:
   the same "win on specificity, never on source order" lesson as
   `.claude/rules/label-rows-lose-to-field-label.md`.
 
-## Popover focus restoration had to be added (core.js)
+## Popover focus restoration had to be added (popover.js)
 
 A sheet restores focus to its opener via `trapFocus` (#145), but `openPopover`
 had no equivalent — so on desktop, closing an editor dropped focus to `<body>`.

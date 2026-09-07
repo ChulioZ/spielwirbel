@@ -89,7 +89,7 @@ function bootApp(t) {
   return dom;
 }
 
-// ------------------------------------------------------------ core.js stats
+// ------------------------------------------------------------ game-stats.js stats
 
 test('gameStats reads the stored rating and steps over the flag', async (t) => {
   const dom = bootApp(t);

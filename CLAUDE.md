@@ -107,7 +107,7 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
     defined yet). Defer such references (e.g. wrap in an arrow that runs on
     click/navigation). See `.claude/rules/`.
   - Rating averages are computed **on demand** from session votes (see
-    `gameStats` in `core.js`) — sessions are the single source of truth, so
+    `gameStats` in `game-stats.js`) — sessions are the single source of truth, so
     deleting a session automatically removes its effect. Don't denormalize.
 
 ## Internationalization

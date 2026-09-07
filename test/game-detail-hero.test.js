@@ -167,10 +167,17 @@ test('--surface is declared only in the two token blocks the harness resolves', 
   assert.deepEqual(declaring, [':root', ':root[data-scheme="dark"], .theme-card[data-scheme="dark"]'],
     '--surface must be declared by :root and the dark scheme block, and by nothing else');
 
-  // The other way a design could reach it: applyBackground() writing it at runtime.
-  const core = fs.readFileSync(path.join(__dirname, '..', 'public/js/core.js'), 'utf8');
-  const applyBackground = core.slice(core.indexOf('function applyBackground'));
-  const body = applyBackground.slice(0, applyBackground.indexOf('\n}\n') + 2);
+  /* The other way a design could reach it: applyBackground() writing it at runtime.
+     The function moved to round-theme.js in #956 — and this spec did NOT go red,
+     because `indexOf` returned -1 and the slice arithmetic left a ONE-CHARACTER
+     string that trivially satisfies doesNotMatch. Hence the explicit find
+     assertions: a scan that cannot locate its subject must fail, not pass. */
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public/js/round-theme.js'), 'utf8');
+  const from = src.indexOf('function applyBackground');
+  assert.notEqual(from, -1, 'applyBackground() not found in round-theme.js — did it move again?');
+  const end = src.indexOf('\n}\n', from);
+  assert.notEqual(end, -1, 'could not find the end of applyBackground()');
+  const body = src.slice(from, end + 2);
   assert.doesNotMatch(body, /--surface/,
     'applyBackground() must not set --surface, or a round could paint one nothing measures');
 });

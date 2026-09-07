@@ -215,7 +215,7 @@ async function showTags(rid) {
 // 860px is the existing dock/strip breakpoint (.claude/rules/responsive-hub-tabs.md),
 // deliberately reused rather than a new number. `build(container, close)` is
 // presentation-agnostic and may return a callback to run once the container is
-// live — see openPopover in core.js.
+// live — see openPopover in popover.js.
 const EDITOR_SHEET_BELOW = 860;
 function usesEditorSheet() {
   return !window.matchMedia(`(min-width: ${EDITOR_SHEET_BELOW}px)`).matches;

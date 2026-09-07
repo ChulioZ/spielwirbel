@@ -28,10 +28,12 @@ const assert = require('node:assert/strict');
 const { scoreRatings } = require('../public/js/vote-score');
 const { DEMO_ROUNDS } = require('../lib/demo-seed');
 
-// The threshold, read out of core.js rather than hand-copied — a test constant
-// copied from the thing under test proves nothing (#420).
+// The threshold, read out of the source rather than hand-copied — a test constant
+// copied from the thing under test proves nothing (#420). It moved to
+// game-stats.js with retireRecommendations in #956; the `[1]` deref is what makes
+// a wrong path fail loudly (TypeError) instead of reading as an absent threshold.
 const LOW_SCORE = Number(
-  /const LOW_SCORE = ([\d.]+);/.exec(require('fs').readFileSync('public/js/core.js', 'utf8'))[1]
+  /const LOW_SCORE = ([\d.]+);/.exec(require('fs').readFileSync('public/js/game-stats.js', 'utf8'))[1]
 );
 
 test('the threshold means "the group is at all-2s or worse"', () => {

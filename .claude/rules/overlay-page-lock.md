@@ -2,7 +2,7 @@
 paths:
   - "public/js/page-lock.js"
   - "public/js/views-round-detail.js"
-  - "public/js/core.js"
+  - "public/js/popover.js"
   - "public/styles.css"
 ---
 
@@ -62,7 +62,7 @@ through `teardownSheet` too, which is why the unlock lives there rather than in
 
 ## 3. Do NOT lock the page under a popover
 
-`openPopover` (`core.js`) deliberately tears itself down on a window `scroll`,
+`openPopover` (`popover.js`) deliberately tears itself down on a window `scroll`,
 and that teardown is what keeps an anchored popover from drifting off its anchor
 (`.claude/rules/anchored-popover-is-placed-once.md`,
 `.claude/rules/popover-vs-sheet-editors.md` §1). It gets containment on its inner

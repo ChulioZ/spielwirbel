@@ -384,8 +384,8 @@ public/
     lang/fr.js       French strings
     lang/it.js       Italian strings
     lang/nl.js       Dutch strings
-    core.js          DOM/API helpers, stats, tag chips, popovers, language
-                     picker  (loads first)
+    core.js          DOM/API helpers, SWR fetches, member colours, the
+                     language picker  (loads first)
     empty-state.js   the app's one "nothing here yet" component — medallion,
                      optional title, sub-line; shares its rules with .lobby-cta
                      (issue #869)
@@ -545,6 +545,16 @@ public/
                      first, ahead of the brand (issue #522)
     popover-fit.js   which side of its anchor a popover goes on and how far it
                      may be squeezed to stay reachable there (issue #739)
+    popover.js       the anchored popover itself: one open at a time, placed
+                     next to its anchor, closing on Escape/outside click/
+                     scroll; placement is one-shot (issue #956)
+    tag-chips.js     the tri-state custom-tag filter shared by the Regal and
+                     the start-session screen: chips, mode + bulk toggles,
+                     icon picker, match predicate (issue #956)
+    game-stats.js    what a game is worth to a round — the score fields, the
+                     per-session and per-round rollups, the shelf index, the
+                     retirement recommendations, and how a score prints
+                     (issue #956)
     report-link.js   builds the contact-form deep link behind the Freundeskreis
                      feed's per-item report button (issue #559)
     install-prompt.js stashes the browser's install event and decides which

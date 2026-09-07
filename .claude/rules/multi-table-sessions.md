@@ -51,7 +51,7 @@ Both are the natural thing to copy over, and both are wrong:
 
 - **Votes.** `gameStats` (through `rawGameStats` since #894) tallies every
   session whose `gameIds` holds the game
-  (`core.js`), so copying the parent's column into a child would count each
+  (`game-stats.js`), so copying the parent's column into a child would count each
   rating twice and quietly move the game's average — a number that changed
   because the evening was split, with nothing on any screen to explain it.
 - **Guest ids.** A guest id is a key in *that session's* vote map and in its

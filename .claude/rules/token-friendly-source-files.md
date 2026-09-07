@@ -40,7 +40,7 @@ when the concern boundary is real, not reflexively by size.
 **Moving or renaming code also invalidates any RULE that cites its old home** —
 and changing a **value** does the same to whatever states it as a premise.
 `.claude/rules/**` is full of precise pointers (`lib/routes/rounds.js` `gameCount`,
-`core.js` `gameStats`, …), and those pointers are what make a rule actionable —
+`game-stats.js` `gameStats`, …), and those pointers are what make a rule actionable —
 so a move turns the rule into a wrong map without touching a line of it. Nothing
 catches it: the code still works, every test stays green, and the rule still
 *reads* authoritative.

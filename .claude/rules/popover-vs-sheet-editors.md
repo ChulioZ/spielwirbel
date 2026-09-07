@@ -2,6 +2,7 @@
 paths:
   - "public/js/views-round-detail.js"
   - "public/js/core.js"
+  - "public/js/popover.js"
   - "public/styles.css"
 ---
 # An anchored popover cannot hold a text input on a phone (#422)
@@ -20,7 +21,7 @@ more screens.
 
 ## 1. Why an anchored popover dies on a phone
 
-`openPopover` (`core.js`) tears itself down on `window` **`scroll`** and
+`openPopover` (`popover.js`) tears itself down on `window` **`scroll`** and
 **`resize`**. Both fire as a direct consequence of focusing an input:
 
 - **iOS**: focusing an input near the bottom of the viewport makes the browser
