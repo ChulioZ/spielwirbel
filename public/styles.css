@@ -6914,6 +6914,56 @@ kbd {
 .spotlight--shared .spotlight__img { width: 84px; border-radius: 14px; }
 .spotlight--shared .spotlight__img .ti { font-size: 32px; /* glyph, not type */ }
 .spotlight--shared .spotlight__title { font-size: var(--text-md); }
+
+/* One spotlight per table for a SPLIT evening (#957). The sibling screen opens
+   with this component, and the split summary answered the same question — what
+   was played, and by whom — with a flat 48px list row, which made it the one
+   major surface reading as ordinary next to its own sibling.
+
+   A GRID, not a column flow: css-multicolumn-card-flows.md converts a container
+   only when its items' heights genuinely differ, and these are uniform by
+   construction — cover, title, seats and state are present on every card. So
+   packing would buy nothing, and would import #946's WebKit column-break bug to
+   buy it. `auto-fit` rather than a breakpoint: one column on a phone, two side
+   by side from ~600px of content width, three inside the pane's 900px measure. */
+.split-tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+/* The single-table hero reserves 22px under itself for the ranked rows that
+   follow it; here the grid owns the spacing between cards. */
+.split-tables .spotlight { margin: 0; }
+/* Scaled down like `--shared`, and for the same reason: several of these sit
+   abreast where the hero has the screen to itself. */
+.spotlight--table .spotlight__winner { width: 100%; }
+.spotlight--table .spotlight__img { width: 96px; }
+.spotlight--table .spotlight__img .ti { font-size: 38px; /* glyph, not type */ }
+.spotlight--table .spotlight__title { font-size: var(--text-md); }
+.spotlight__seats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 12px;
+}
+/* Avatar AND name, the shape `.result-people__person` uses on the sibling
+   screen. Avatars alone would be prettier and would drop every participant's
+   name out of the accessible name of the only link to that table. */
+.spotlight__seat { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.spotlight__seat .avatar { width: 24px; height: 24px; font-size: 10px; /* glyph, not type */ }
+.spotlight__seat-name { font-size: var(--text-sm); font-weight: 600; }
+.spotlight__state { font-size: var(--text-sm); color: var(--ink-soft); }
+/* A table nobody has played yet, or one that was called off: the same card
+   without the celebration. Gold is this screen's reward for an evening that
+   happened, so an unplayed table wearing it announces a result nobody has. */
+.spotlight--table.is-off {
+  background: var(--surface);
+  border-color: var(--line);
+}
+.spotlight--table.is-off .spotlight__kicker,
+.spotlight--table.is-off .spotlight__crown { color: var(--ink-soft); }
 @media (prefers-reduced-motion: no-preference) {
   /* One hero rise. The stage this replaced built bottom-up through three tiers
      to the winner; with only the winner left there is nothing to build up to,
@@ -7644,6 +7694,10 @@ kbd {
   mask-image: var(--world-victory-2-l), var(--world-victory-2-r), var(--world-victory-2-band);
   mask-position: left var(--world-victory-2-y), right var(--world-victory-2-y), center bottom;
 }
+/* A victory scene celebrates, so an unplayed or cancelled table paints none —
+   through the alpha rather than `display: none`, which keeps the reserved
+   padding and so keeps every card in a row on the same geometry. */
+[data-world] .spotlight--table.is-off { --victory-alpha: 0; }
 /* The particles: the confetti generator's own bits (views-session.js), given
    the world's shape, size, start edge and pace through tokens. The palette
    rule paints the bit's inline --bit-color; under a world the accent wins. */

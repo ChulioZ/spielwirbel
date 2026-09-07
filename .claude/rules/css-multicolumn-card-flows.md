@@ -23,7 +23,9 @@ start`) is one whose author had already decided its items differ.
 Measured for #942 (natural, unstretched heights at 760–1500px): `.pokale-cards`
 168/137/137 in a single row, `.ds-list--tiles` 98/98/98/98 — no gain, so both
 stayed grids. `.home-resume__list` is structurally fixed (image, round name,
-title, time, stub — no optional part), and `.tables-grid` re-balances the
+title, time, stub — no optional part), `.split-tables` holds cards that are
+uniform by construction (#957 — cover, title, seats and state on every one), and
+`.tables-grid` re-balances the
 two-step „Hierher verschieben" target out from under the cursor between the pick
 and the click, so both stayed too.
 

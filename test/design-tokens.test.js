@@ -81,6 +81,7 @@ const GLYPH_LITERALS = [
   '.podium__avatar', '.podium__col--multi .podium__avatar',
   '.podium--single .podium__col--multi .podium__avatar',
   '.profile-head .avatar', '.member-avatar', '.handover__avatar',
+  '.spotlight__seat .avatar',
   '.konto-avatar__preview', '.feed-item__who',
   // placeholder glyphs centred in a cover / thumb / tile box
   // The medallion is one rule shared by .lobby-cta and .empty (#869), so the
@@ -91,6 +92,7 @@ const GLYPH_LITERALS = [
   '.pool-thumb', '.pool-thumb .ti', '.pool-tile__img', '.game-card__img', '.vote__img',
   '.gd-img', '.lookup__thumb--none .ti', '.archive-row__img .ti', '.rec-card__img .ti',
   '.spotlight__img .ti', '.spotlight--shared .spotlight__img .ti',
+  '.spotlight--table .spotlight__img .ti',
   '.recap-fav__cover .ti',
   // a glyph or number sized to its own small box
   '.result-row__bars .bar-axis .ti',

@@ -11,7 +11,9 @@ paths:
 # A dark design flips the INK on every fill — and two of those inks are resolved in JS
 
 A round's design may be dark since #904: `scheme: 'dark'` in `round-designs.js`,
-`<html data-scheme="dark">` from `applyBackground()`, and one token block in
+`<html data-scheme="dark">` from `applyBackground()` — which every routed
+screen must call itself, see
+`.claude/rules/routed-screens-apply-the-round-design.md` — and one token block in
 `styles.css`. The colour work is mechanical. The four things that are not
 obvious cost real effort, and each is silent.
 

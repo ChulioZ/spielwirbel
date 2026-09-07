@@ -654,6 +654,7 @@ I18N.nl = {
   'tables.count': '{n} tafels',
   'tables.countOne': '{n} tafel',
   'tables.gameLabel': 'Spel aan tafel {n}',
+  'tables.tableLabel': 'Tafel {n}',
   'tables.lowest': 'Laagste {n}',
   'tables.parties': '{n} partijen',
   'tables.partiesOne': '{n} partij',

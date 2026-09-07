@@ -685,6 +685,7 @@ I18N.en = {
   'tables.count': '{n} tables',
   'tables.countOne': '{n} table',
   'tables.gameLabel': 'Game at table {n}',
+  'tables.tableLabel': 'Table {n}',
   'tables.lowest': 'Lowest {n}',
   'tables.parties': '{n} parties',
   'tables.partiesOne': '{n} party',

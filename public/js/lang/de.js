@@ -682,6 +682,7 @@ I18N.de = {
   'tables.count': '{n} Tische',
   'tables.countOne': '{n} Tisch',
   'tables.gameLabel': 'Spiel an Tisch {n}',
+  'tables.tableLabel': 'Tisch {n}',
   'tables.lowest': 'Niedrigste {n}',
   'tables.parties': '{n} Parteien',
   'tables.partiesOne': '{n} Partei',

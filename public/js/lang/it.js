@@ -658,6 +658,7 @@ I18N.it = {
   'tables.count': '{n} tavoli',
   'tables.countOne': '{n} tavolo',
   'tables.gameLabel': 'Gioco al tavolo {n}',
+  'tables.tableLabel': 'Tavolo {n}',
   'tables.lowest': 'Minimo {n}',
   'tables.parties': '{n} partecipanti',
   'tables.partiesOne': '{n} partecipante',
