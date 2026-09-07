@@ -50,7 +50,7 @@ test('a reserved handle is refused on the form, before any request goes out', ()
   try {
     form.submit('Spielwirbel-Team');
     assert.deepEqual(form.sent, [], 'the form must not ask the server about a handle it already knows is refused');
-    assert.equal(form.error().hidden, false);
+    assert.equal(form.error().hasAttribute('hidden'), false);
     assert.equal(form.error().textContent, form.ui.run("t('auth.error.reservedUsername')"));
     // Not the message for the OTHER two username refusals: "already taken" would
     // send the person off inventing variants, all of which are refused too.
@@ -87,7 +87,10 @@ test('an ordinary handle still reaches the server', () => {
     assert.equal(form.sent.length, 1);
     assert.equal(form.sent[0].path, '/register');
     assert.equal(form.sent[0].body.username, 'badminton');
-    assert.equal(form.error().hidden, true);
+    // Empty is the error line's hidden state — it is a permanent role="alert"
+    // region and is never toggled with `hidden` (A-016, 2026-09-06 audit).
+    assert.equal(form.error().textContent, '');
+    assert.equal(form.error().hasAttribute('hidden'), false);
   } finally { form.close(); }
 });
 

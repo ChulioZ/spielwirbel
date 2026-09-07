@@ -764,6 +764,7 @@ I18N.it = {
   'directPlay.guestsNote': 'Gli ospiti giocano con voi ma non entrano nel gruppo.',
   'directPlay.teamsNote': 'Le squadre giocano insieme — e vincono insieme.',
 
+  'vote.progress': 'Passo {n} di {total}',
   'vote.crumb': 'Votazione',
   'vote.leaveConfirm': 'Uscire dalla votazione? Le valutazioni inserite finora andranno perse.',
   'vote.turn': '{name}, tocca a te!',
@@ -1258,7 +1259,7 @@ I18N.it = {
   'install.offer.dismiss': 'No, grazie',
   'install.done': 'Spielwirbel è stato installato.',
 
-  'a11y.home': 'Vai alla schermata iniziale',
+  'a11y.home': 'Spielwirbel – vai alla schermata iniziale',
   'a11y.language': 'Lingua',
   'a11y.account': 'Account',
   'a11y.hubTabs': 'Sezioni del gruppo',

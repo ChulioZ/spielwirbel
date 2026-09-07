@@ -760,6 +760,7 @@ I18N.nl = {
   'directPlay.guestsNote': 'Gasten spelen mee, maar horen nooit bij de groep.',
   'directPlay.teamsNote': 'Teams spelen samen — en winnen samen.',
 
+  'vote.progress': 'Stap {n} van {total}',
   'vote.crumb': 'Stemmen',
   'vote.leaveConfirm': 'De stemming verlaten? De tot nu toe ingevulde beoordelingen gaan verloren.',
   'vote.turn': '{name}, jouw beurt!',
@@ -1251,7 +1252,7 @@ I18N.nl = {
   'install.offer.dismiss': 'Nee, bedankt',
   'install.done': 'Spielwirbel is geïnstalleerd.',
 
-  'a11y.home': 'Naar het beginscherm',
+  'a11y.home': 'Spielwirbel – naar het beginscherm',
   'a11y.language': 'Taal',
   'a11y.account': 'Account',
   'a11y.hubTabs': 'Onderdelen van de groep',

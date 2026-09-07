@@ -130,11 +130,10 @@ async function showAccount() {
 function buildAvatarForm(me) {
   const wrap = h('<div class="konto-avatar"></div>');
   // `.konto-error` is the screen's own inline error line (the auth cards and
-  // every other Konto form use it). setKontoError always unhides, so clearing is
-  // done here rather than by calling it with an empty string — which would leave
-  // an empty red line standing above the buttons.
-  const err = h('<p class="konto-error" hidden></p>');
-  const clearError = () => { err.textContent = ''; err.hidden = true; };
+  // every other Konto form use it). Empty is its hidden state, so clearing is
+  // setting it to '' — `.konto-error:empty` costs no space.
+  const err = h('<p class="konto-error" role="alert"></p>');
+  const clearError = () => { err.textContent = ''; };
 
   const render = (avatar) => {
     wrap.innerHTML = '';
@@ -308,7 +307,7 @@ async function openDeleteSheet(me) {
           <label for="kdPw">${esc(t('konto.delete.password'))}</label>
           <input id="kdPw" class="input" type="password" autocomplete="current-password" />
         </div>
-        <p class="konto-error" hidden></p>
+        <p class="konto-error" role="alert"></p>
         <div class="toolbar sheet__actions">
           <button id="kdGo" class="btn btn--danger btn--lg" type="button"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('konto.delete.submit'))}</button>
         </div>
@@ -330,7 +329,7 @@ async function openDeleteSheet(me) {
   const go = sheet.querySelector('#kdGo');
 
   go.addEventListener('click', async () => {
-    err.hidden = true;
+    err.textContent = '';
     // Client-side first, so an obvious slip costs no request — and no Argon2
     // verify on the server.
     if (!user.value.trim() || !pw.value) return setKontoError(err, t('auth.error.missing'));
@@ -374,7 +373,7 @@ function buildBggForm(current) {
         <input id="kBgg" class="input" autocomplete="off" spellcheck="false" value="${esc(current || '')}" />
         <p class="field__hint muted">${esc(t('konto.bgg.hint'))}</p>
       </div>
-      <p class="konto-error" hidden></p>
+      <p class="konto-error" role="alert"></p>
       <button class="btn btn--primary" type="submit">${esc(t('konto.bgg.submit'))}</button>
     </form>`);
 
@@ -384,7 +383,7 @@ function buildBggForm(current) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    err.hidden = true;
+    err.textContent = '';
     submit.disabled = true;
     try {
       // A blank field clears the link — the server reads '' as null, so this is
@@ -505,7 +504,7 @@ function buildPasswordForm() {
         <input id="kpNew" class="input" type="password" autocomplete="new-password" />
         <p class="field__hint muted">${esc(t('auth.register.pwHint'))}</p>
       </div>
-      <p class="konto-error" hidden></p>
+      <p class="konto-error" role="alert"></p>
       <button class="btn btn--primary" type="submit">${esc(t('konto.pw.submit'))}</button>
     </form>`);
 
@@ -516,7 +515,7 @@ function buildPasswordForm() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    err.hidden = true;
+    err.textContent = '';
     // Client-side checks first so an obvious slip costs no request (and no
     // Argon2 verify on the server).
     if (!current.value || !next.value) return setKontoError(err, t('auth.error.missing'));
@@ -553,7 +552,7 @@ function buildPasskeySection() {
       <p class="muted konto-notify__intro">${esc(t('konto.passkey.intro'))}</p>
       <p class="field__hint muted">${esc(t('konto.passkey.privacy'))}</p>
       <div class="ds-list konto-passkeys"></div>
-      <p class="konto-error" hidden></p>
+      <p class="konto-error" role="alert"></p>
       <button class="btn btn--primary konto-passkeys__add" type="button">${iconText('ti-fingerprint', t('konto.passkey.add'))}</button>
     </div>`);
 
@@ -584,7 +583,7 @@ function buildPasskeySection() {
 
   if (add) {
     add.addEventListener('click', async () => {
-      err.hidden = true;
+      err.textContent = '';
       add.disabled = true;
       try {
         const start = await accountApi('POST', '/passkeys/options', {});
@@ -640,7 +639,7 @@ function renderPasskeyRow(passkey, render, err) {
      an object or an array at the top level, so the DELETE would 400
      `entity.parse.failed` and the passkey would never be removed. */
   const call = async (method, body, toastKey) => {
-    err.hidden = true;
+    err.textContent = '';
     try {
       const data = await accountApi(method, `/passkeys/${encodeURIComponent(passkey.credentialId)}`, body);
       render(data.passkeys || []);
@@ -696,7 +695,10 @@ function renderPasskeyRow(passkey, render, err) {
   return row;
 }
 
+// A permanent role="alert" region, like the auth cards' `.auth__error`: empty
+// is hidden, so it is never toggled with `hidden` (which would leave the
+// accessibility tree and un-hide with the text already in place — the shape
+// that is never announced).
 function setKontoError(el, message) {
   el.textContent = message;
-  el.hidden = false;
 }
