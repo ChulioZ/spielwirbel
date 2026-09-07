@@ -223,12 +223,15 @@ that a generic scanner does not know about.
 ### S-018 — The uploads/cover object lifecycle frees bytes and never serves them unauthenticated
 - **Status:** adopted · 2026-07-24
 - **Source:** `.claude/rules/cover-image-storage-backend.md`, `deletion-paths-must-free-cover-objects.md`
-- **Check:** `/uploads` is behind the auth gate; cover URLs stay same-origin `/uploads/…`
-  paths (never public bucket URLs that bypass the gate and CSP). Any row deletion that can
+- **Check:** `/uploads` is behind the auth gate **and**, since #955, behind an ownership
+  check (`lib/upload-access.js`): a cover resolves to its owning tenant or to a grantee on
+  the referencing round, a profile picture to any signed-in account, and anything
+  unreferenced to nobody — refusal and miss share one 404 branch. Cover URLs stay
+  same-origin `/uploads/…` paths (never public bucket URLs that bypass the gate and CSP). Any row deletion that can
   hold an `image` returns the freed paths so the route removes the object — an orphaned
   object is unreachable forever. Provider covers (absolute https URLs) are passed through
   `remove()` safely because it ignores non-`/uploads/` paths.
-- **Enforced by:** `test/games.test.js`, `test/provider-covers.test.js`
+- **Enforced by:** `test/games.test.js`, `test/provider-covers.test.js`, `test/uploads-tenant-isolation.test.js`
 
 ### S-019 — The mode gate never leaks data to an unauthenticated visitor, in any of the four modes
 - **Status:** adopted · 2026-07-24
@@ -287,9 +290,13 @@ that a generic scanner does not know about.
     lives in the *code* instead of in a secret or in server-side state.
   - **A predictable/guessable identifier that is the *only* thing guarding a resource** —
     the source reveals the generation scheme, so absent an independent ownership/authz check
-    the resource is enumerable. (The documented per-tenant `/uploads` byte-leak by key
-    guess, #207/#137, is exactly this archetype: the key scheme is public and the gate does
-    not check ownership. Known and tracked — a *new* instance of the shape is the finding.)
+    the resource is enumerable. (The per-tenant `/uploads` byte-leak by key was exactly
+    this archetype and is **closed since #955**: `lib/upload-access.js` resolves the object
+    to its owning tenant behind the gate, so the public key scheme no longer stands alone.
+    Note how long "known and tracked" survived — it was attributed to #207/#137, both of
+    which closed without shipping it, and nothing re-checked the attribution. Treat a
+    "tracked by #N" status as a claim to verify against #N, not as a mitigation —
+    `.claude/rules/deferred-weakness-attributions-rot.md`.)
   - **An anti-abuse control whose exact parameters, now public, make it trivially evadable
     or expose an oracle** — a rate-limit/lockout/anti-enumeration measure that only holds if
     the attacker cannot read its thresholds.

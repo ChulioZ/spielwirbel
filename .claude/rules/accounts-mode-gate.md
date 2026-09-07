@@ -74,8 +74,18 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
   TTL; every `/refresh` re-sets it. So a cover load right after the token expires
   can 401 (blank cover) until the next `/api` call refreshes and re-sets the
   cookie. That's an accepted limitation (transient — it self-heals on the next
-  `/api` call). Per-tenant `/uploads` isolation
-  is still follow-up (#207/#137) — today any valid account passes the uploads gate.
+  `/api` call).
+
+- **The gate is only HALF the uploads check since #955.** It answers "is this a
+  valid account?"; `requireUploadOwner` (`lib/upload-access.js`), mounted
+  directly behind it, answers "whose object is this?" — the owning tenant, or an
+  account holding a grant on the round that references the cover. A profile
+  picture stays readable by any signed-in account, which is #558/#841's design
+  and what the privacy policy §16 states. Refusal is a **404**, through the same
+  branch as a genuine miss, so the two cannot be told apart. Do not read the
+  bullet above as "any valid account passes the uploads gate" — that was true
+  until #955 and is the exposure it closed. The reason it survived so long is its
+  own rule: `.claude/rules/deferred-weakness-attributions-rot.md`.
 
 - **In accounts mode the SPA shell is ALWAYS served** (never `login.html`). The
   fallback in `lib/app.js` short-circuits to `index.html` so the client can render
@@ -100,8 +110,9 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
 
 - **What #138 did NOT do:** invitations / tenant-sharing (a second user can't see
   your rounds under RLS — that's #207, shipped since) and roles (#137, shipped
-  since too — `.claude/rules/round-roles-are-a-chokepoint.md`). Note the
-  per-tenant `/uploads` isolation mentioned above is a **separate** follow-up that
-  neither closed. Which mode an instance runs in is an ops decision, not something this
+  since too — `.claude/rules/round-roles-are-a-chokepoint.md`). The per-tenant
+  `/uploads` isolation was a **separate** follow-up that neither closed, left
+  open long enough that both issues were closed while it was still described as
+  "tracked by" them — it shipped in #955. Which mode an instance runs in is an ops decision, not something this
   code turns on — production has been accounts-only since the 2026-07-24
   go-live, and a self-hosted checkout is whatever its env says.

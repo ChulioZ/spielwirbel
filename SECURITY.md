@@ -33,7 +33,12 @@ Security issues especially relevant given the current architecture:
 
 - **Cross-tenant data leakage** — one account/tenant seeing another's rounds,
   members, games, sessions, or cover images (see
-  [`.claude/rules/tenancy-rls.md`](.claude/rules/tenancy-rls.md)). Note that
+  [`.claude/rules/tenancy-rls.md`](.claude/rules/tenancy-rls.md)). Round data is
+  enforced by RLS; **uploaded bytes** are enforced separately, at
+  `/uploads` (`lib/upload-access.js`, #955) — a way to fetch another tenant's
+  cover **by key**, with any account including a guest demo, is in scope. Account
+  profile pictures are deliberately readable by every signed-in account (#841,
+  privacy policy §16) and are not a finding. Note that
   *aggregate* cross-tenant figures are published **by design** on the landing
   page and at `/entdecken`, behind k-anonymity thresholds
   (`PUBLIC_STATS_MIN_*`, `lib/public-stats.js`) — a way to read those below the

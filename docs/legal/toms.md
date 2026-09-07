@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-09-06
+**Stand:** 2026-09-07
 
 ## Verschlüsselung & Transport
 
@@ -24,7 +24,9 @@ list nothing that is not actually in place.
 - Betreiber-Panel hinter eigenem `ADMIN_PASSWORD` (nie gleich dem App-Passwort,
   domain-separierte Token — `lib/admin.js`).
 - Uploads sind zugriffsgeschützt (Cookie/Bearer-Gate auf `/uploads`); kein
-  öffentlicher Bucket-Zugriff (Read-through-Proxy, #128).
+  öffentlicher Bucket-Zugriff (Read-through-Proxy, #128). Seit #955 prüft
+  `lib/upload-access.js` zusätzlich die **Eigentümerschaft** am angefragten
+  Objekt (siehe Mandantentrennung).
 
 ## Mandantentrennung
 
@@ -36,6 +38,13 @@ list nothing that is not actually in place.
   transaktionslokale Umzugs-Policy für das einmalige Übertragen der Alt-Daten
   in ein Konto (#266) wurde nach ihrer Ausführung wieder **entfernt** (#405),
   sodass keine mandantenübergreifende Schreib-Policy mehr besteht.
+- Hochgeladene Bilddateien (`/uploads`) unterliegen seit #955 derselben
+  Trennung: Ein Objekt wird nur an den besitzenden Mandanten ausgeliefert bzw.
+  an ein Konto mit einer Freigabe für die referenzierende Runde
+  (`lib/upload-access.js`). Zuvor genügte ein beliebig gültiges Konto, sodass
+  ein *bekannter* Schlüssel mandantenübergreifend lesbar war.
+  Konto-Profilbilder sind bewusst für jedes angemeldete Konto lesbar
+  (Datenschutzerklärung §16).
 
 ## Härtung & Missbrauchsabwehr
 
