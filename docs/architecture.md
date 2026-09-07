@@ -125,6 +125,12 @@ lib/
                      bounded, resumable enrichment pass that fills each row's
                      attributes from /thing. A local candidate pool exists
                      because BGG's API has no browse or attribute search at all
+  calendar-periods.js
+                     the current calendar week / month / year on ONE fixed zone
+                     (Europe/Berlin), for the Discover podiums (issue #964).
+                     Both repo backends take their boundaries from here rather
+                     than each deriving them, so the two cannot drift; DST is
+                     avoided by construction, never handled
   public-stats.js    the instance-wide statistics published on the landing page
                      and /entdecken (issue #564; off unless
                      PUBLIC_STATS_ENABLED). Ranks the repo's raw provider-keyed

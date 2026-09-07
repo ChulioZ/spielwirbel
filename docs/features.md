@@ -579,7 +579,11 @@ What the app does, in detail. For a short overview see the
 - **Entdecken** – *live by default; PUBLIC_STATS_ENABLED=false takes it down* (issue #564). Publishes
   the whole instance at a glance: how many rounds, players, shelf games and
   played sessions it holds, plus the games on the most shelves and the ones most
-  played this week / month / year, and the best-rated. It appears on the logged-out landing
+  played this week / month / year, and the best-rated. Those three are
+  *calendar* periods rather than the last 7/30/365 days (issue #964), so the
+  month and year cards name the period they are showing („Meistgespielt im
+  September 2026"); a period starts empty, so its card simply stays absent until
+  enough has happened in it. It appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —
   and, unlike everything above, is **public**: a visitor with no account sees it.
