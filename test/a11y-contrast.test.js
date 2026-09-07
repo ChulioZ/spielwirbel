@@ -129,7 +129,12 @@ test('the gold family keeps its label legible on its own wash and on the card', 
     ['--gold-deep on --gold-soft', t.goldDeep, t.goldSoft],
     ['--gold-deep on --surface', t.goldDeep, t.surface],
     ['--ink on --gold-soft', t.ink, t.goldSoft],
-  ]), [], 'the Pokale cards draw --gold-deep on --gold-soft');
+    // #957 put a MUTED line on the gold wash too — `.spotlight__state`, the
+    // „Gespielt"/„Läuft noch" under each table's spotlight. --ink-soft is a
+    // step down from --ink, so the pair it clears is not implied by the row
+    // above and needs its own entry.
+    ['--ink-soft on --gold-soft', t.inkSoft, t.goldSoft],
+  ]), [], 'the Pokale cards draw --gold-deep on --gold-soft, the split spotlights a muted state line');
 });
 
 // --- --on-accent: the one ink every saturated fill carries (#904) ------------
