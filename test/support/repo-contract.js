@@ -4223,6 +4223,11 @@ module.exports = function repoContract(repo) {
    * provider link, so a private id yields a private row.
    */
   test('publicGameAggregates groups by provider link, not by title', async (t) => {
+    /* Thursday 2026-08-13, 14:00 Berlin. Since #964 the play windows are
+       CALENDAR periods, so NOW's weekday is load-bearing for the `daysAgo(1)`
+       fixtures below: Wednesday the 12th is two days into the week that began on
+       Monday the 10th. Moving NOW to a Monday or Tuesday would push them into
+       the previous week and break cases that are not about windows at all. */
     const NOW = '2026-08-13T12:00:00.000Z';
     const daysAgo = (n) => new Date(Date.parse(NOW) - n * 86400000).toISOString();
     const rowFor = async (externalId) => (await repo.publicGameAggregates(NOW))
@@ -4332,9 +4337,9 @@ module.exports = function repoContract(repo) {
       assert.equal(row.plays.year.tenants, 1, 'one group playing five times is still one group');
       /* The ALL-TIME count (#928), which feeds the Discover podium's play lift.
          The two 2025 plays are what makes this discriminating: they are
-         invisible to the year window, so an `all` wired to `year` — the plausible slip,
-         and the one that would make the public number sag for a game that had a
-         quiet year — reads 3 here rather than 4. The two backends spell it
+         invisible to the year window, so an `all` wired to `year` — the
+         plausible slip, and the one that would make the public number sag for a
+         game that had a quiet year — reads 5 here rather than 6. The two backends spell it
          differently (an empty-string cutoff in the window loop, a bare
          `count(*)` in SQL), which is exactly why it is pinned in the contract. */
       assert.equal(row.plays.all.count, 6, 'every finished play, however old');

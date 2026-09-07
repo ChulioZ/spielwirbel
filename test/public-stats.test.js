@@ -317,11 +317,16 @@ test('a play in the PREVIOUS calendar month is not counted in this one', async (
   stubProvider();
   await seedPlayedGame({ externalId: 'thing-lastmonth', title: 'Vormonat' });
 
+  /* Set the day to the 1st BEFORE adding a month, or a run on the 31st lands
+     two months on. The 20th, not the 5th: the gap to any date in the previous
+     month is then at least 20 days, so the play can never share an ISO WEEK
+     with `now` — at the 5th it could, whenever a month's last day is a Monday
+     (Mon 2026-03-31 and Sat 2026-04-05 are one week), and the week assertion
+     below would fail on those days alone. */
   const nextMonth = new Date();
   nextMonth.setUTCDate(1);
   nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
-  // The 5th, so the boundary sits clear of any timezone edge on either side.
-  nextMonth.setUTCDate(5);
+  nextMonth.setUTCDate(20);
   const built = await rebuild(nextMonth.toISOString());
   const games = built.games || {};
   assert.equal('playedWeek' in games, false, 'last month is not this week');
