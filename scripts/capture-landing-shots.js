@@ -211,6 +211,15 @@ const SEEDS = {
       'Gildemeester', 'Zout en Zand', 'De Laatste Trein', 'Jacht op het Noorderlicht',
     ],
   },
+  pt: {
+    round: 'A turma de quinta',
+    tags: ['Tabuleiro', 'Cooperativo', 'Estratégia', 'Digital'],
+    games: [
+      'Porto Estelar', 'Brasa Negra', 'A Ponte dos Corvos', 'Cartógrafos do Norte',
+      'Vale das Lanternas', 'Deriva de Obsidiana', 'Mercado de Verano', 'Ferrugem e Chuva',
+      'Mestre da Guilda', 'Sal e Areia', 'O Último Trem', 'Caça à Aurora',
+    ],
+  },
 };
 
 // Teardown registry. `fail()` exits the process, and `process.exit` does NOT run

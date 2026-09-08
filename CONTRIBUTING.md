@@ -100,7 +100,7 @@ a reviewable PR.
 
 ## Translations
 
-The UI ships German, English, Spanish, French, Italian and Dutch. **Correcting a translation is a one-line
+The UI ships German, English, Spanish, French, Italian, Dutch and Portuguese. **Correcting a translation is a one-line
 change**: find the key in `public/js/lang/<code>.js`, fix the wording, open a PR.
 Nothing else needs touching — the key already exists in every other language, and
 `npm test` checks that the files stay in key parity.

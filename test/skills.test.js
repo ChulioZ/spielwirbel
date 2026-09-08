@@ -183,9 +183,9 @@ test("a criterion's Status matches the section it sits in", () => {
  * growing since then — but #504 fixed only the *code* copies. Seven
  * prose and YAML sites went on naming `lang/en.js` and `lang/de.js` as the
  * closed pair a contributor must edit, including a REQUIRED field in the bug
- * report form that an es/fr/it/nl reporter could only answer wrongly, and
- * `audit-loop.md`'s repo description, which every one of the six domain audits
- * tests candidate findings against.
+ * report form that a reporter in any other shipped locale could only answer
+ * wrongly, and `audit-loop.md`'s repo description, which every one of the six
+ * domain audits tests candidate findings against.
  *
  * `.claude/rules/locale-set-is-data.md` already said "don't reintroduce a
  * hardcoded ['de', 'en'] anywhere". The rule was right and got skipped, so the
