@@ -227,7 +227,10 @@ What the app does, in detail. For a short overview see the
   sessions joined, win rate, Siegwertung, average rating given, their strongest
   game (the one they hold the highest Siegwertung in) and their favorite game —
   and lets
-  you rename them and pick their avatar color from the curated palette.
+  you rename them and pick their avatar color from the curated palette. When the
+  round has recorded who owns which box, the page also lists the shelf games that
+  member owns; it is left out entirely for a member who owns none, so a round
+  that does not use ownership never sees it.
 - **Round hub** – each round is a small app of its own, with four sections
   presented per screen size: a floating bottom dock on phones, a tab strip at
   the top of the content column on tablets, and from 1280px a persistent left

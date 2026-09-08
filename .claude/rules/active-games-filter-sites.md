@@ -96,6 +96,16 @@ before assuming you have them all:
   (`public/js/direct-session.js`) deliberately does **not** filter: the user
   picked that box.
 
+  **`game.ownerIds` has four readers, and #973 added the only one that asks from
+  the PERSON's side.** The other three ask whether *this table* can put a given
+  box on it — `ownedByParty` (the pool), the detail page's owner chip, the
+  results screen's „Gehört Anna" line. The member page's „3 Spiele von Anna"
+  section inverts it: which boxes are this member's. It reads the field directly
+  rather than through `ownedByParty` — that predicate answers `true` for a game
+  with no owner at all, which is right for a draw and exactly wrong here, where
+  an unowned game is nobody's. It is in the frontend list below because it is
+  also an `isActiveGame` site.
+
   **`fitsPlayerCount` grew a second term in #653**: the range a game admits is
   now the base box's *union* the ranges of the expansions the round owns for it,
   so a 3–4 game with a 5–6 extension is drawn at six. It is still one edit in one
@@ -120,7 +130,10 @@ straight to `filter`, and its pool preview uses `fitsPlayerCount` too, #634),
 `views-pokale.js` (the Pokale "best rated" list, the stats scope, and the
 per-row "Jetzt spielen" launcher at the `pokaleGameCard` level — it lived in
 `views-round-tabs.js` until #528 split that file),
-`round-rail.js` `activeGames` (the desktop rail's counts), and `recap.js`
+`round-rail.js` `activeGames` (the desktop rail's counts),
+`views-member.js`'s „Spiele von Anna" section (#973 — a retired or completed
+game is off the shelf and a wish is nobody's, so none of the three answers
+"which boxes are Anna's?"), and `recap.js`
 **twice** — its game pool, plus an active/archived split on adjacent lines.
 
 **Those two recap halves stopped being complements in #560, and that is the
