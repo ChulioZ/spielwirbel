@@ -168,3 +168,52 @@ test('shuffle actually reorders over repeated runs', () => {
     .some((out) => out.some((v, i) => v !== source[i]));
   assert.ok(moved, 'shuffle must not return the input order every time');
 });
+
+/* ---------------------------- Owners (#971) -------------------------------- */
+
+// A round where the games live in several cupboards. `ownerIds` names members of
+// THIS round; an absent key means nobody has recorded who owns the box, which
+// must stay drawable at every table (the same absent-value rule
+// `fitsOwnRange` applies to a missing player range).
+const owned = {
+  games: [
+    { id: 'nobodys', tagIds: [] },
+    { id: 'annas', tagIds: [], ownerIds: ['anna'] },
+    { id: 'bens', tagIds: [], ownerIds: ['ben'] },
+    { id: 'shared', tagIds: [], ownerIds: ['anna', 'ben'] },
+    { id: 'emptied', tagIds: [], ownerIds: [] },
+  ],
+};
+
+test('a game whose every owner is away is out of the pool (#971)', () => {
+  const picked = ids(drawPool(owned, { playerCount: 2, memberIds: ['anna'] }));
+  assert.ok(picked.includes('annas'), "the owner is at the table, so her game is in");
+  assert.ok(!picked.includes('bens'), "Ben is not at the table, so his game is out");
+  assert.ok(picked.includes('shared'), 'one owner present is enough');
+});
+
+test('a game with no recorded owner is always drawable (#971)', () => {
+  const picked = ids(drawPool(owned, { playerCount: 2, memberIds: ['anna'] }));
+  assert.ok(picked.includes('nobodys'), 'an absent ownerIds key must never filter');
+  assert.ok(picked.includes('emptied'), 'an EMPTY ownerIds list means the same as absent');
+});
+
+// The clause has to be inert for every caller that predates it, or a draw from an
+// older client would silently lose the whole shelf.
+test('an absent memberIds leaves the pool untouched (#971)', () => {
+  assert.deepEqual(ids(drawPool(owned, { playerCount: 2 })).sort(),
+    ['annas', 'bens', 'emptied', 'nobodys', 'shared']);
+});
+
+test('ownedByParty is the SHARED predicate, not a server copy (#971)', () => {
+  assert.equal(typeof shared.ownedByParty, 'function');
+  assert.equal(shared.ownedByParty({ ownerIds: ['anna'] }, ['ben']), false);
+  assert.equal(shared.ownedByParty({ ownerIds: ['anna'] }, ['ben', 'anna']), true);
+  assert.equal(shared.ownedByParty({}, []), true, 'ownerless is drawable at an empty table too');
+});
+
+test('the owner clause applies in multi-table mode too (#971)', () => {
+  const big = { games: [{ id: 'bens', tagIds: [], ownerIds: ['ben'], minPlayers: 3, maxPlayers: 8 }] };
+  assert.deepEqual(ids(drawPool(big, { playerCount: 6, multiTable: true, memberIds: ['anna'] })), []);
+  assert.deepEqual(ids(drawPool(big, { playerCount: 6, multiTable: true, memberIds: ['ben'] })), ['bens']);
+});

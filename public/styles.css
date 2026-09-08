@@ -4775,6 +4775,33 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 /* The 120px basis is what makes the wrap above trigger: without a floor the
    input just shrinks to a few characters instead of the buttons moving down. */
 :is(.popover--tags, .editor--tags) .pp-row .input { min-width: 0; flex: 1 1 120px; }
+/* Owners (#971). The same shape and the same two reasons as the tags editor
+   above: a round may hold up to 50 member seats (MAX_MEMBERS_PER_ROUND), a
+   popover cannot be scrolled into view — a page scroll closes it outright
+   (.claude/rules/overlay-page-lock.md §3) — so an uncapped card would put the
+   OK button past the fold and out of reach.
+
+   COMPOUNDED as `.popover.popover--owners` for the reason spelled out on
+   `.popover--tags`: `.popover--clamped` is (0,1,0) too, so an uncompounded
+   selector would win only by sitting later in this file, and moving either
+   block would silently drop the cap with nothing red. */
+.popover.popover--owners {
+  max-width: 480px;
+  max-height: max(240px, min(45vh, 520px));
+}
+/* The chips are the part that gives way, so the OK row is always the last thing
+   still on screen. `min-height` is load-bearing twice, as on `.popover--tags`: a
+   flex item defaults to `min-height: auto` (its content size), which would make
+   the cap above silently inert — and the value doubles as the floor, since one
+   row of chips is better than none. Popover-only: the sheet presentation scrolls
+   itself, and a nested scroll box there would steal the gesture from `.sheet`. */
+.popover--owners .filter-chips {
+  flex: 1 1 auto;
+  min-height: 40px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+:is(.popover--owners, .editor--owners) .filter-chips { margin-bottom: 10px; }
 .popover--image { min-width: 220px; }
 /* Expansions (#653). Wider than the 300px default like the tags editor: the
    tick-list holds full expansion names, which a narrow card wraps to three

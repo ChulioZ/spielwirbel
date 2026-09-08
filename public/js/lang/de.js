@@ -346,6 +346,7 @@ I18N.de = {
   // BoardGameGeek-Sammlung ins Regal übernehmen (#481)
   'bggImport.title': 'BGG-Sammlung übernehmen',
   'bggImport.link': 'Von BoardGameGeek übernehmen',
+  'bggImport.ownersLabel': 'Wem gehören die Spiele?',
   'bggImport.tile': 'Von BGG übernehmen',
   'bggImport.loading': 'Sammlung wird geladen …',
   'bggImport.introOne': '{n} Spiel in deiner Sammlung, {m} noch nicht im Regal. Wähle aus, was du übernehmen möchtest.',
@@ -520,6 +521,8 @@ I18N.de = {
   'detail.saved': 'Gespeichert',
   'detail.setPlayers': 'Personenzahl festlegen',
   'detail.setTags': 'Tags',
+  'detail.setOwners': 'Besitzer eintragen',
+  'detail.owners': 'Gehört {names}',
   'detail.changeImage': 'Bild ändern',
   'detail.edition': 'Ausgabe: {edition}',
   'detail.pasteImage': 'Neues Bild einfügen',
@@ -539,6 +542,7 @@ I18N.de = {
     'Dieses Spiel steht auf der Wunschliste. Spielen und bewerten könnt ihr es, sobald es mit „Ins Regal“ in eurer Sammlung landet — bis dahin kannst du ihm schon ein Gesicht geben.',
   'detail.onboard.cover': 'Cover hinzufügen',
   'detail.onboard.tags': 'Tags vergeben',
+  'detail.onboard.owners': 'Besitzer eintragen',
   'detail.onboard.players': 'Personenzahl festlegen',
 
   'member.editName': 'Zum Umbenennen klicken',
@@ -578,6 +582,7 @@ I18N.de = {
   'addGame.minPlayersPlaceholder': 'Min.',
   'addGame.maxPlayersPlaceholder': 'Max.',
   'addGame.tagsLabel': 'Tags (optional)',
+  'addGame.ownersLabel': 'Wem gehört das Spiel? (optional)',
   'addGame.imageLabel': 'Bild (optional)',
   'addGame.pasteHint': 'Bild aus der Zwischenablage einfügen',
   'addGame.pasteSub': 'Bild kopieren, dann hier ⌘V drücken – oder den Knopf nutzen.',
@@ -736,6 +741,8 @@ I18N.de = {
   'startSession.countLabel': 'Wie viele Spiele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
   'startSession.availableOne': '{n} Spiel im Topf',
+  'startSession.ownersHidden': '{n} weitere Spiele fehlen, weil ihre Besitzer nicht mitspielen.',
+  'startSession.ownersHiddenOne': '{n} weiteres Spiel fehlt, weil sein Besitzer nicht mitspielt.',
   'startSession.poolEmpty': 'Zu diesen Einstellungen passt noch kein Spiel.',
   'startSession.draw': 'Loswirbeln',
   'startSession.toast.noGames': 'Keine passenden Spiele zum Wirbeln',
@@ -865,6 +872,7 @@ I18N.de = {
   // Named on the results screen when the winning game only seats this table
   // because the round owns an expansion for it (#653).
   'result.needsExpansion': 'Braucht Erweiterung: {names}',
+  'result.ownedBy': 'Gehört {names}',
   'result.retiredTag': 'aussortiert',
   'result.completedTag': 'durchgespielt',
   'result.toast.willPlay': '„{title}“ wird gespielt',

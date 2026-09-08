@@ -345,6 +345,7 @@ I18N.en = {
   // Import a BoardGameGeek collection into the shelf (#481)
   'bggImport.title': 'Import your BGG collection',
   'bggImport.link': 'Import from BoardGameGeek',
+  'bggImport.ownersLabel': 'Who owns these games?',
   'bggImport.tile': 'Import from BGG',
   'bggImport.loading': 'Loading your collection …',
   'bggImport.introOne': '{n} game in your collection, {m} not on the shelf yet. Pick what you want to add.',
@@ -519,6 +520,8 @@ I18N.en = {
   'detail.saved': 'Saved',
   'detail.setPlayers': 'Set players',
   'detail.setTags': 'Tags',
+  'detail.setOwners': 'Add owners',
+  'detail.owners': 'Owned by {names}',
   'detail.changeImage': 'Change image',
   'detail.edition': 'Edition: {edition}',
   'detail.pasteImage': 'Paste new image',
@@ -538,6 +541,7 @@ I18N.en = {
     'This one is on the wish list. You can play and rate it once “Onto the shelf” moves it into your collection — until then, you can already give it a face.',
   'detail.onboard.cover': 'Add a cover',
   'detail.onboard.tags': 'Add tags',
+  'detail.onboard.owners': 'Add owners',
   'detail.onboard.players': 'Set players',
 
   'member.editName': 'Click to rename',
@@ -577,6 +581,7 @@ I18N.en = {
   'addGame.minPlayersPlaceholder': 'Min',
   'addGame.maxPlayersPlaceholder': 'Max',
   'addGame.tagsLabel': 'Tags (optional)',
+  'addGame.ownersLabel': 'Who owns this game? (optional)',
   'addGame.imageLabel': 'Image (optional)',
   'addGame.pasteHint': 'Paste an image from the clipboard',
   'addGame.pasteSub': 'Copy an image, then press ⌘V here – or use the button.',
@@ -742,6 +747,8 @@ I18N.en = {
   'startSession.countLabel': 'How many games to draw?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',
+  'startSession.ownersHidden': '{n} more games are missing because their owners are not playing.',
+  'startSession.ownersHiddenOne': '{n} more game is missing because its owner is not playing.',
   'startSession.poolEmpty': 'No game matches these settings yet.',
   'startSession.draw': 'Start the vote',
   'startSession.toast.noGames': 'No matching games available',
@@ -877,6 +884,7 @@ I18N.en = {
   // Named on the results screen when the winning game only seats this table
   // because the round owns an expansion for it (#653).
   'result.needsExpansion': 'Needs an expansion: {names}',
+  'result.ownedBy': 'Owned by {names}',
   'result.retiredTag': 'retired',
   'result.completedTag': 'completed',
   'result.toast.willPlay': '“{title}” will be played',

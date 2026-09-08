@@ -82,6 +82,20 @@ before assuming you have them all:
   so a `grep` landing here finds it; see
   `.claude/rules/multi-table-sessions.md` §2.
 
+  **A FIFTH predicate joined the same three sites in #971: `ownedByParty`.** It
+  is not an "active games" clause either — it asks whether anyone at *this* table
+  can put the box on it — but it lives in `draw-pool.js` and is applied by
+  `drawPool`, by `showStartSession`'s preview and (as its negation) by that
+  screen's "hidden because their owners are away" count. Its absent-value rule is
+  the base game's, like `fitsMetadataFilters`: a game with **no recorded owner is
+  always drawable**, which is what keeps every shelf nobody has marked up
+  behaving exactly as it did before the feature existed. It takes the joining
+  **seats**, never `playerCount` — guests own nothing
+  (`.claude/rules/session-guests-are-not-members.md`) — so it is a second
+  parameter on `drawPool` rather than a term in the count. Direct play
+  (`public/js/direct-session.js`) deliberately does **not** filter: the user
+  picked that box.
+
   **`fitsPlayerCount` grew a second term in #653**: the range a game admits is
   now the base box's *union* the ranges of the expansions the round owns for it,
   so a 3–4 game with a 5–6 extension is drawn at six. It is still one edit in one

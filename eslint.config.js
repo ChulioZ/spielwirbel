@@ -108,6 +108,7 @@ const frontendGlobals = {
   roundCan: 'readonly',
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
   isActiveGame: 'readonly', fitsPlayerCount: 'readonly', requiredExpansions: 'readonly',
+  ownedByParty: 'readonly',
   EXPANSION_TITLE_MAX: 'readonly',
   expansionBaseCandidates: 'readonly', expansionAcquirePlan: 'readonly', acquirableBases: 'readonly',
   expansionParentTitles: 'readonly',
@@ -174,6 +175,7 @@ const frontendGlobals = {
   AVATAR_MAX_BYTES: 'readonly', AVATAR_SIZE: 'readonly', AVATAR_EXT: 'readonly',
   AVATAR_ACCEPT: 'readonly', AVATAR_MAX_PIXELS: 'readonly',
   avatarFace: 'readonly', primeAvatars: 'readonly', rememberAvatar: 'readonly',
+  ownerPresetFor: 'readonly', ownerNames: 'readonly', renderOwnerChips: 'readonly',
   knownAvatar: 'readonly', installAvatarFallback: 'readonly', resetAvatarCache: 'readonly',
   // cover-policy.js (issue #867)
   COVER_MAX_BYTES: 'readonly', COVER_MAX_MB: 'readonly', COVER_MAX_DIM: 'readonly',

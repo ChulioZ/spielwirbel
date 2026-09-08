@@ -954,3 +954,73 @@ test('a malformed editions map is a 400, like every other body-shape error', asy
     .send({ externalIds: ['13'], editions: { 13: { languages: 'German' } } });
   assert.equal(res.status, 400);
 });
+
+/* ------------------------------ owners (#971) ------------------------------ */
+
+// The import stamps ONE owner selection across the whole batch — an import is
+// one BGG shelf, and nobody fills in a per-game owner picker over 200 rows.
+test('the import stamps the chosen owners on every created game', async () => {
+  const a = await makeAccount('imp-owners@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerOwn');
+  // The round's creator is seated, so there is a member to own things.
+  const seat = round.members[0];
+
+  stubBgg(THREE);
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token)).send({ externalIds: ['13', '822'], ownerIds: [seat.id] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.imported, 2);
+
+  const shelf = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  const imported = shelf.body.games.filter((g) => ['CATAN', 'Carcassonne'].includes(g.title));
+  assert.equal(imported.length, 2);
+  assert.ok(imported.every((g) => JSON.stringify(g.ownerIds) === JSON.stringify([seat.id])),
+    `every imported game carries the owner; saw ${JSON.stringify(imported.map((g) => g.ownerIds))}`);
+});
+
+test('the import 400s on an owner that is not a member of the round', async () => {
+  const a = await makeAccount('imp-owners-bad@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerBad');
+
+  stubBgg(THREE);
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token)).send({ externalIds: ['13'], ownerIds: ['not-a-member'] });
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, 'Unknown member');
+});
+
+// A WISHLIST import records no owners: the round does not own those boxes.
+test('a wishlist import drops ownerIds entirely', async () => {
+  const a = await makeAccount('imp-owners-wish@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerWish');
+
+  stubBgg(THREE);
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg&status=wishlist`)
+    .set(auth(a.token)).send({ externalIds: ['13'], ownerIds: [round.members[0].id] });
+  assert.equal(res.status, 200);
+  const shelf = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  const wish = shelf.body.games.find((g) => g.title === 'CATAN');
+  assert.equal(wish.wish, true);
+  assert.equal('ownerIds' in wish, false);
+});
+
+// The preset is the half games.test.js cannot reach: it needs an account LINKED
+// to a member seat, which only these account-backed helpers give.
+test('the import remembers the selection on the importer\'s own seat', async () => {
+  const a = await makeAccount('imp-owners-preset@example.com');
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerPreset');
+  const seat = round.members[0];
+  assert.equal(seat.userId, a.user.id, 'the round creator is seated and linked');
+  assert.equal('ownerPreset' in seat, false);
+
+  stubBgg(THREE);
+  await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token)).send({ externalIds: ['13'], ownerIds: [seat.id] });
+
+  const after = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
+  assert.deepEqual(after.body.members.find((m) => m.id === seat.id).ownerPreset, [seat.id]);
+});

@@ -81,7 +81,15 @@ instance that shares **logic rather than a value**, and it earns the shape for t
 same reason the others do: the two sides answer one question, so a drifted copy
 makes the preview promise a pool the draw will not produce (or hide games it
 would) with no error anywhere — and the preview is precisely where the user
-decides whether to draw at all. Note what deliberately stayed duplicated: the
+decides whether to draw at all. **#971 added a third clause, `ownedByParty`** — whether anyone at the table can
+actually bring the box — and it is the logic half again, for a reason worth
+separating from the two above: nothing here is *validated* across the boundary
+and neither side 400s, so a drifted copy would simply make the setup screen's
+preview promise a pool the draw refuses (or hide one it would produce), silently.
+Its own trap is the argument, not the function: it takes the joining **seats**,
+never `playerCount`, because guests own nothing — passing the party count would
+typecheck, return plausible booleans, and filter on the wrong thing. Note what
+deliberately stayed duplicated: the
 **tag** clauses, because the server filters on resolved include/exclude id lists
 while the client holds a tri-state chip map, so one shared function would need a
 third representation invented for it. Sharing the clauses that are genuinely

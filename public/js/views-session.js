@@ -155,6 +155,9 @@ function showStartSession(round, prefill) {
   // this box seat some table this group could form?" rather than "does it seat
   // the whole party?". Both predicates are the SERVER's own, so this preview can
   // never promise a pool the draw would not produce.
+  // The owner clause (#971) keys off the joining SEATS, not `playerCount` —
+  // guests own nothing — and it is the server's own predicate, like the two
+  // above, so the preview cannot promise a pool the draw would refuse.
   const pool = () =>
     activeGames.filter(
       (g) =>
@@ -162,8 +165,27 @@ function showStartSession(round, prefill) {
         (tableState.multiTable
           ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
           : fitsPlayerCount(g, playerCount())) &&
-        fitsMetadataFilters(g, metaFilters)
+        fitsMetadataFilters(g, metaFilters) &&
+        ownedByParty(g, [...joining])
     );
+
+  // How many games pass every OTHER clause and fail only on their owners being
+  // away (#971). Counted rather than listed, and it is not a filter the user set
+  // — so it gets a plain line and stays out of `lastSessionFilters` and out of
+  // the applied-filter chips, both of which are about choices somebody made.
+  //
+  // Without it a shelf silently shrinks when somebody cannot come, which reads
+  // as games having gone missing.
+  const ownersHiddenCount = () =>
+    activeGames.filter(
+      (g) =>
+        matchesTagFilter(selectedTags, g.tagIds, tagFilterState.tagMode) &&
+        (tableState.multiTable
+          ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
+          : fitsPlayerCount(g, playerCount())) &&
+        fitsMetadataFilters(g, metaFilters) &&
+        !ownedByParty(g, [...joining])
+    ).length;
 
   // Live pool preview, in the two presentations described above. The wide panel
   // lists EVERY matching game (its own scroll box bounds it), so it needs no
@@ -173,6 +195,9 @@ function showStartSession(round, prefill) {
   const poolTitle = form.querySelector('#poolTitle');
   const poolGrid = form.querySelector('#poolGrid');
   const poolReset = form.querySelector('#poolReset');
+  // Appended once, next to the reset hatch, and filled by updateHint() below.
+  const ownersNote = h('<p class="muted pool-owners-note" role="status" aria-live="polite"></p>');
+  poolReset.after(ownersNote);
   // Clear everything that shapes the pool — tags and metadata alike. A user
   // looking at an empty pool does not care which of the two controls caused it,
   // and with five more filters than before, arriving there is far easier than it
@@ -233,6 +258,16 @@ function showStartSession(round, prefill) {
       });
       poolReset.appendChild(btn);
     }
+
+    // „3 weitere Spiele fehlen, weil ihre Besitzer nicht mitspielen." (#971).
+    // Below the reset button so it reads as a footnote to the pool rather than
+    // as another control, and rendered at 0 as an EMPTY node rather than being
+    // removed — the same always-in-the-tree shape the app's other status lines
+    // use (.claude/rules/accessibility-contrast-and-modals.md §4).
+    const hiddenN = ownersHiddenCount();
+    ownersNote.textContent = hiddenN
+      ? tn(hiddenN, 'startSession.ownersHiddenOne', 'startSession.ownersHidden')
+      : '';
   };
   // Seats around the table: tap a member to toggle whether they join tonight.
   // The group attributes go on the table itself, not on #seatMount — replaceWith
@@ -1311,6 +1346,32 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       finishWrap.appendChild(
         h(`<div class="row-finish__note">${esc(t('result.needsExpansion', { names: needed.map((e) => e.title).join(', ') }))}</div>`)
       );
+    }
+
+    // „Gehört Anna" (#971) — who has to bring the box. Said only when it is
+    // NEWS: a game everyone at the table owns needs no line, and a game with no
+    // recorded owner has nothing to say. Names the owners who are actually here
+    // where there are any, and otherwise every owner — a direct pick is not
+    // filtered by ownership, so it can legitimately land on a game nobody
+    // present owns, and that is exactly when the line is most worth printing.
+    const ownerIds = (chosenGame && chosenGame.ownerIds) || [];
+    if (ownerIds.length) {
+      const seated = new Set(session.memberIds || []);
+      // The route guarantees at least one seat (it falls back to the whole round
+      // and 400s on an empty one), so the vacuous `every` over an empty set is
+      // unreachable — and if a hand-edited session ever reached it, suppressing
+      // the line is the safe direction: saying nothing beats naming the wrong
+      // person.
+      const everyoneOwnsIt = [...seated].every((mid) => ownerIds.includes(mid));
+      if (!everyoneOwnsIt) {
+        const here = ownerIds.filter((x) => seated.has(x));
+        const names = ownerNames(round, here.length ? here : ownerIds);
+        if (names.length) {
+          finishWrap.appendChild(
+            h(`<div class="row-finish__note">${esc(t('result.ownedBy', { names: names.join(', ') }))}</div>`)
+          );
+        }
+      }
     }
     finishWrap.appendChild(
       h(`<h2>${finished ? iconText('ti-trophy', t('result.finishTitleDone')) : esc(t('result.finishTitle'))}</h2>`)

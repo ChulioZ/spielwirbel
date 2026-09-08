@@ -276,6 +276,27 @@ async function showGameDetail(rid, gameId) {
     });
   }
 
+  // Who owns the box (#971). Built like the tags popover next to it — chips over
+  // the round's members, OK commits — with nothing to create inline: a member is
+  // a seat of the round, not something this screen may mint.
+  //
+  // A WISH shows no row at all (the caller decides that), so this is only ever
+  // reached for a game the round actually owns.
+  function openOwnersPopover(anchor) {
+    openEditor(anchor, 'owners', t('detail.onboard.owners'), (el, close) => {
+      const selected = new Set(game.ownerIds || []);
+      el.appendChild(renderOwnerChips(round, selected));
+      const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
+      okBtn.addEventListener('click', () => {
+        close();
+        updateGame({ ownerIds: [...selected] });
+      });
+      const row = h('<div class="pp-row"></div>');
+      row.appendChild(okBtn);
+      el.appendChild(row);
+    });
+  }
+
   // Edit the game's custom-tag assignment (#238): toggle the round's tags,
   // create a new one inline, then OK applies the whole selection at once (like
   // the players popover — one PATCH, one re-render).
@@ -674,6 +695,20 @@ async function showGameDetail(rid, gameId) {
   } else if (!sparse) {
     const tagEl = editableTag('tag--custom tag--empty', esc(t('detail.setTags')), openTagsPopover);
     h1.append(space(), tagEl);
+  }
+
+  // Owners (#971): named when recorded, an empty chip as the way in otherwise.
+  // Never on a WISH — the round does not own the game, so there is no owner to
+  // record and the route refuses one.
+  if (!game.wish) {
+    const owners = ownerNames(round, game.ownerIds);
+    if (owners.length) {
+      h1.append(space(), editableTag('tag--custom',
+        iconText('ti-user', t('detail.owners', { names: owners.join(', ') })), openOwnersPopover));
+    } else if (!sparse) {
+      h1.append(space(), editableTag('tag--custom tag--empty',
+        esc(t('detail.setOwners')), openOwnersPopover));
+    }
   }
   if (game.retired) h1.append(space(), h(`<span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`));
   if (game.completed) h1.append(space(), h(`<span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`));
