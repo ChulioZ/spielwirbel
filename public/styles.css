@@ -4646,10 +4646,12 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    Deliberately NOT added to the >= 1280px width exemption: it stays in the
    --w-read measure with the colour picker and the identity above it, so the
    member page keeps one left edge and only the stats band spans the pane
-   (.claude/rules/tiles-vs-lists.md). At 110px minimum that is still six across.
+   (.claude/rules/tiles-vs-lists.md).
 
-   `auto-fill` so it needs no breakpoint of its own — 3 across on a phone,
-   6 in the reading column. */
+   `auto-fill` so it needs no breakpoint of its own. Measured: 2 tracks of
+   167px at 375px, 7 of 127px in the 960px reading column. `auto-fill` rather
+   than `auto-fit` on purpose — empty tracks stay, so five owned games keep the
+   same tile size as fifteen instead of stretching to fill the row. */
 .member-games {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
