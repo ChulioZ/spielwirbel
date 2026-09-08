@@ -6002,7 +6002,19 @@ kbd {
   justify-content: space-between;
   gap: 8px;
 }
-.pokale-game__title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
+/* `overflow-wrap` for the reason `.pokale-card__value` above carries it, and it
+   was missed there: this is the element a card uses when it names MORE than one
+   game, so half the cards kept overflowing after #695 fixed the other half.
+   Measured at 375px against a 67-character title — 148px of horizontal PAGE
+   overflow on the old flex card, 406px once #979's 64px cover narrowed the text
+   column. `anywhere`, not `break-word`: only `anywhere` shrinks the min-content
+   contribution a grid track sizes against. */
+.pokale-game__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
 .pokale-game__play {
   flex: 0 0 auto;
   width: 30px;

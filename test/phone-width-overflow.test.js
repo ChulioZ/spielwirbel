@@ -136,23 +136,36 @@ test('the short tools label OUTRANKS the base hide, so one spelling is always sh
    57-character title, an untouched Pokale card produced ~160-190px of horizontal
    PAGE overflow, i.e. the same class of defect as the four checks above.
 
-   The declaration belongs to `.pokale-card__value` itself rather than to any one
-   screen: the Pokale tab and the member detail page render it through the same
-   builders, so a screen-scoped copy would fix one and leave the other. It got
-   noticed on the Pokale taste cards because #695's 64px cover takes 78px off
+   The declaration belongs to the title elements themselves rather than to any
+   one screen: the Pokale tab and the member detail page render them through the
+   same builders, so a screen-scoped copy would fix one and leave the other. It
+   got noticed on the Pokale taste cards because #695's 64px cover takes 78px off
    that card's text column, which makes the title run out of room sooner — but
-   the cover only exposed it, it did not cause it. */
-test('a long unbreakable game title can wrap instead of overflowing its card', () => {
-  const body = bodyOf('.pokale-card__value');
-  const match = /overflow-wrap:\s*([\w-]+)/.exec(body);
-  assert.ok(match, '.pokale-card__value declares no overflow-wrap, so an unbreakable title overflows the page');
-  // `break-word` is NOT interchangeable here. Only `anywhere` also shrinks the
-  // element's min-content contribution, and that contribution is what a grid or
-  // flex track sizes against — `.recap-fav` is exactly such a track, so under
-  // `break-word` the text would wrap while the COLUMN still refused to narrow.
-  assert.equal(match[1], 'anywhere',
-    `.pokale-card__value uses overflow-wrap: ${match[1]}, which does not shrink the min-content size a grid track sizes against`);
-});
+   the cover only exposed it, it did not cause it.
+
+   THE LIST IS WHY THIS IS PARAMETERIZED. Written against `.pokale-card__value`
+   alone it was blind to `.pokale-game__title`, the element rendering the title
+   on every card that names MORE THAN ONE game — a different element for the
+   same user-authored text, so the guard passed while half the cards still
+   overflowed. #979 then exposed it exactly as #695 had one selector over, by
+   putting a 64px cover on the trophy cards: measured at 375px against a
+   67-character title, 148px of page overflow before that change and 406px
+   after. A new element that renders a game title is one entry here
+   (`.claude/rules/source-scanning-guards-enumerate-shapes.md`). */
+for (const sel of ['.pokale-card__value', '.pokale-game__title']) {
+  test(`a long unbreakable game title can wrap instead of overflowing its card (${sel})`, () => {
+    const body = bodyOf(sel);
+    const match = /overflow-wrap:\s*([\w-]+)/.exec(body);
+    assert.ok(match, `${sel} declares no overflow-wrap, so an unbreakable title overflows the page`);
+    // `break-word` is NOT interchangeable here. Only `anywhere` also shrinks the
+    // element's min-content contribution, and that contribution is what a grid or
+    // flex track sizes against — `.recap-fav` and `.pokale-card--cover` are
+    // exactly such tracks, so under `break-word` the text would wrap while the
+    // COLUMN still refused to narrow.
+    assert.equal(match[1], 'anywhere',
+      `${sel} uses overflow-wrap: ${match[1]}, which does not shrink the min-content size a grid track sizes against`);
+  });
+}
 
 test('the results row drops to two columns on a phone, and its score follows', () => {
   const row = PHONE.find(([sel]) => sel === '.result-row');
