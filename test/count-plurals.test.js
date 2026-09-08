@@ -113,6 +113,44 @@ const PAIRS = [
    a row in the table above would assert precisely nothing.
    What is real about them is the call SHAPE, which is what regresses — hence
    the scan below runs over these as well. */
+/* #972's four. The bulk family had no rows here at all, so these are the first —
+   registering a pair as it is written is cheaper than a sweep later, and the
+   confirm pair is exactly the shape #838 showed the scan can miss: the key is
+   picked by a ternary, so it does not follow `t(` directly. */
+const OWNER_PAIRS = [
+  {
+    what: 'bulk.ownersHint — the owner sheet\'s subtitle',
+    one: 'bulk.ownersHintOne', other: 'bulk.ownersHint', params: {},
+    de: ['Für 1 ausgewähltes Spiel. Ohne Auswahl wird der Besitz entfernt.',
+      'Für 2 ausgewählte Spiele. Ohne Auswahl wird der Besitz entfernt.'],
+    en: ['For 1 selected game. Picking nobody clears the owners.',
+      'For 2 selected games. Picking nobody clears the owners.'],
+  },
+  {
+    what: 'bulk.confirmOwners — the confirm when owners were picked',
+    one: 'bulk.confirmOwnersOne', other: 'bulk.confirmOwners', params: { names: 'Anna' },
+    de: ['Besitz von 1 Spiel auf Anna setzen? Bisherige Einträge werden ersetzt.',
+      'Besitz von 2 Spielen auf Anna setzen? Bisherige Einträge werden ersetzt.'],
+    en: ['Set the owners of 1 game to Anna? Existing entries are replaced.',
+      'Set the owners of 2 games to Anna? Existing entries are replaced.'],
+  },
+  {
+    what: 'bulk.confirmOwnersClear — the confirm when the pick was empty',
+    one: 'bulk.confirmOwnersClearOne', other: 'bulk.confirmOwnersClear', params: {},
+    de: ['Besitz von 1 Spiel entfernen? Danach ist niemand mehr als Besitzer eingetragen.',
+      'Besitz von 2 Spielen entfernen? Danach ist niemand mehr als Besitzer eingetragen.'],
+    en: ['Clear the owners of 1 game? Nobody will be recorded as owning it.',
+      'Clear the owners of 2 games? Nobody will be recorded as owning them.'],
+  },
+  {
+    what: 'bulk.ownersSet — the toast after the request',
+    one: 'bulk.ownersSetOne', other: 'bulk.ownersSet', params: {},
+    de: ['1 Spiel aktualisiert', '2 Spiele aktualisiert'],
+    en: ['1 game updated', '2 games updated'],
+  },
+];
+PAIRS.push(...OWNER_PAIRS);
+
 const SILENT_PAIRS = [
   {
     what: 'home.lastPlayedWon — the round card\'s last-played line',

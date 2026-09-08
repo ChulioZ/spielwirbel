@@ -113,6 +113,10 @@ function renderRegalTab(round, activeGames) {
     let shownCards = [];
     const selection = new Set();
     const canBulkDelete = roundCan(round, 'game.delete');
+    // A round with no seats has nobody to name as an owner, so the picker could
+    // only ever clear. Hidden rather than disabled, the same call renderOwnerChips
+    // makes for its own empty row (#971).
+    const canSetOwners = (round.members || []).length > 0;
 
     const bulkBar = h(`<div class="bulk-bar" hidden>
          <div class="bulk-bar__info">
@@ -121,6 +125,7 @@ function renderRegalTab(round, activeGames) {
          </div>
          <div class="bulk-bar__actions">
            <button type="button" class="link-btn" data-act="all"></button>
+           ${canSetOwners ? `<button type="button" class="btn" data-act="owners"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('bulk.owners'))}</button>` : ''}
            <button type="button" class="btn" data-act="retire"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('bulk.retire'))}</button>
            ${canBulkDelete ? `<button type="button" class="btn btn--danger" data-act="delete"><i class="ti ti-trash-x" aria-hidden="true"></i> ${esc(t('bulk.delete'))}</button>` : ''}
          </div>
@@ -143,7 +148,7 @@ function renderRegalTab(round, activeGames) {
       // differ deliberately; see the comment on tag-chips.js's bulk toggle.
       const allShown = shownCards.length > 0 && shownCards.every((c) => selection.has(c.dataset.gid));
       bulkAll.textContent = allShown ? t('bulk.selectNone') : t('bulk.selectAll');
-      bulkBar.querySelectorAll('[data-act="retire"], [data-act="delete"]')
+      bulkBar.querySelectorAll('[data-act="owners"], [data-act="retire"], [data-act="delete"]')
         .forEach((b) => { b.disabled = n === 0; });
     }
 
@@ -241,6 +246,85 @@ function renderRegalTab(round, activeGames) {
         toast(e.message);
       }
     }
+    /* Set who owns the selected boxes (#972). The third bulk action, and the only
+       one that is not destructive — so it leads with a PICKER instead of a
+       confirm: there is nothing to warn about until the user has said who.
+
+       The chosen set REPLACES each game's owners rather than adding to them,
+       like the other two actions and unlike a merge. That makes an empty pick
+       the clear, which is why the confirm below has a second wording rather than
+       an empty name list — "set the owners of 12 games to ''" is not a sentence.
+
+       The picker starts EMPTY on purpose: the selection can hold games with
+       different owners, so there is no honest pre-state to show, and pretending
+       one (the seat's `ownerPreset`, say) would make an accidental OK silently
+       rewrite a shelf. */
+    function openOwnersSheet() {
+      if (!selection.size) return;
+      const selected = new Set();
+      const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+          <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('bulk.owners'))}">
+            <div class="sheet__head">
+              <h2>${esc(t('bulk.owners'))}</h2>
+              <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+            </div>
+            <p class="muted bulk-owners__hint">${esc(tn(selection.size, 'bulk.ownersHintOne', 'bulk.ownersHint'))}</p>
+            <div class="toolbar sheet__actions"></div>
+          </div>
+        </div>`);
+      const sheet = backdrop.querySelector('.sheet');
+      sheet.querySelector('.bulk-owners__hint').after(renderOwnerChips(round, selected));
+      document.body.appendChild(backdrop);
+      const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+      document.addEventListener('keydown', onKey, true);
+      // Through openSheet for the focus trap (#145) and Back-dismissal (#333) —
+      // never by assigning activeSheet directly.
+      openSheet(backdrop, onKey);
+      backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+      sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+
+      const okBtn = h(`<button type="button" class="btn btn--primary">${esc(t('common.ok'))}</button>`);
+      // Through closeSheet's callback, never on the line after it: the close
+      // queues a history pop that would otherwise dismiss the confirm dialog this
+      // opens a moment later (.claude/rules/sheet-history-back-dismissal.md).
+      okBtn.addEventListener('click', () => closeSheet(() => runOwners([...selected])));
+      const cancelBtn = h(`<button type="button" class="btn">${esc(t('common.cancel'))}</button>`);
+      cancelBtn.addEventListener('click', () => closeSheet());
+      const actions = sheet.querySelector('.sheet__actions');
+      actions.appendChild(cancelBtn);
+      actions.appendChild(okBtn);
+    }
+
+    async function runOwners(ownerIds) {
+      const ids = [...selection];
+      if (!ids.length) return;
+      // Clearing is the half worth a warning, so only it is styled destructive.
+      const clearing = ownerIds.length === 0;
+      const msg = clearing
+        ? tn(ids.length, 'bulk.confirmOwnersClearOne', 'bulk.confirmOwnersClear')
+        : tn(ids.length, 'bulk.confirmOwnersOne', 'bulk.confirmOwners', { names: ownerNames(round, ownerIds).join(', ') });
+      if (!await confirmDialog({
+        // The verb has to match the deed: a btn--danger reading „Besitzer setzen"
+        // on a dialog asking whether to REMOVE them is the one moment the user
+        // most needs the button to say what it does.
+        body: msg, icon: 'ti-users', danger: clearing,
+        confirmLabel: t(clearing ? 'bulk.ownersClear' : 'bulk.owners'),
+      })) return;
+      const buttons = [...bulkBar.querySelectorAll('button')];
+      buttons.forEach((b) => { b.disabled = true; });
+      try {
+        const res = await api('POST', `/api/rounds/${rid}/games/bulk-owners`, { gameIds: ids, ownerIds });
+        toast(tn(res.updated, 'bulk.ownersSetOne', 'bulk.ownersSet'));
+        await fetchRoundFresh(rid);
+        showRound(rid, 'regal');
+      } catch (e) {
+        buttons.forEach((b) => { b.disabled = false; });
+        syncSelection();
+        toast(e.message);
+      }
+    }
+    const bulkOwnersBtn = bulkBar.querySelector('[data-act="owners"]');
+    if (bulkOwnersBtn) bulkOwnersBtn.addEventListener('click', openOwnersSheet);
     bulkBar.querySelector('[data-act="retire"]').addEventListener('click', () => runBulk('retire'));
     const bulkDelBtn = bulkBar.querySelector('[data-act="delete"]');
     if (bulkDelBtn) bulkDelBtn.addEventListener('click', () => runBulk('delete'));

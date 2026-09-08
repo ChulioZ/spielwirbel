@@ -174,15 +174,17 @@ What the app does, in detail. For a short overview see the
   A shelf can also be **tidied in bulk**. The Regal has a „Auswählen" mode that
   turns the covers into a selection: it keeps the search, the tag chips, the
   metadata filters and the sort working, so „Alle auswählen" means everything you
-  have narrowed to, and the picked games can be retired — or deleted outright —
-  in one confirmed action. The same selection sits on the two archives and the
-  Wunschliste, for delete only. It exists because the shelf can be *filled* in
-  one action by the BoardGameGeek import: undoing a 200-game import used to be
-  some 400 taps. Bulk delete is the one path that accepts a game still on the
-  shelf, deliberately — being made to retire 200 games before deleting them is
-  the two-step in bulk, i.e. the problem rather than the fix — and it is a
-  co-owner action, behind a confirm naming the count and saying that the games
-  leave every past session with it.
+  have narrowed to, and the picked games can be retired, have their **owners set**
+  in one step — or be deleted outright — in one confirmed action. Setting owners
+  replaces whatever each game held, so picking nobody clears them; a wish in the
+  selection is skipped, since a wish is nobody's box yet. The same selection sits
+  on the two archives and the Wunschliste, for delete only. It exists because the
+  shelf can be *filled* in one action by the BoardGameGeek import: undoing a
+  200-game import used to be some 400 taps. Bulk delete is the one path that
+  accepts a game still on the shelf, deliberately — being made to retire 200
+  games before deleting them is the two-step in bulk, i.e. the problem rather
+  than the fix — and it is a co-owner action, behind a confirm naming the count
+  and saying that the games leave every past session with it.
   Games can be **moved between rounds**: "Spiele verschieben" in the
   round's Einstellungen lists the round's games — archived ones included, labelled —
   each pre-checked, so confirming untouched consolidates the whole round while

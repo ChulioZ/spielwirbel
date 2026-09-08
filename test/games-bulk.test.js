@@ -295,3 +295,164 @@ test('bulk-delete keeps a cover another round still points at', async () => {
   assert.ok(fs.existsSync(objectOf(original.image)),
     'the file is still referenced by the imported round and must survive');
 });
+
+/* ------------------------------------------------------------ bulk-owners (#972)
+ *
+ * Recording who owns a box (#971) shipped as a per-game editor, so a round that
+ * adopts ownership after its shelf is full had to open every detail page once.
+ * This is the one-request path, and it REPLACES rather than adds — the other two
+ * bulk actions are absolute too, and "add Anna to these" is two clicks longer as
+ * replace than "remove Anna from these" would be as add.
+ */
+
+const ownersOf = async (rid, gid) => (await getRound(rid)).games.find((g) => g.id === gid);
+
+test('bulk-owners replaces the owner set on every selected game', async () => {
+  const round = await createRound(request);
+  const [anna, ben] = round.members;
+  const [a, b, c] = await shelf(round.id, 'Azul', 'Brass', 'Cascadia');
+
+  const res = await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id, b.id], ownerIds: [anna.id, ben.id] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.updated, 2);
+
+  assert.deepEqual((await ownersOf(round.id, a.id)).ownerIds, [anna.id, ben.id]);
+  assert.deepEqual((await ownersOf(round.id, b.id)).ownerIds, [anna.id, ben.id]);
+  assert.equal('ownerIds' in (await ownersOf(round.id, c.id)), false, 'an unnamed game is untouched');
+});
+
+/* Replace, not merge: a second call naming only Ben must leave Anna off, or the
+   action could never take somebody's name back off a shelf. */
+test('bulk-owners REPLACES rather than adding to what was there', async () => {
+  const round = await createRound(request);
+  const [anna, ben] = round.members;
+  const [a] = await shelf(round.id, 'Azul');
+
+  await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id], ownerIds: [anna.id] });
+  await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id], ownerIds: [ben.id] });
+
+  assert.deepEqual((await ownersOf(round.id, a.id)).ownerIds, [ben.id], 'Anna must not have survived');
+});
+
+/* An empty set is the CLEAR, and it leaves the key off entirely — the shape
+   createGame, move, copy and the round import all produce for an ownerless game,
+   so a cleared game becomes indistinguishable from one nobody ever marked. */
+test('bulk-owners with an empty set clears the owners, leaving no key behind', async () => {
+  const round = await createRound(request);
+  const [anna] = round.members;
+  const [a] = await shelf(round.id, 'Azul');
+
+  await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id], ownerIds: [anna.id] });
+  const cleared = await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id], ownerIds: [] });
+
+  assert.equal(cleared.status, 200);
+  assert.equal(cleared.body.updated, 1);
+  assert.equal('ownerIds' in (await ownersOf(round.id, a.id)), false, 'the key must be gone, not []');
+});
+
+/* A wish is nobody's box yet, so the single PATCH 400s on one. A bulk selection
+   is different in kind: it is a filtered sweep the user aimed at a shelf, and
+   refusing the whole request because one wish slipped in would make the action
+   unusable exactly where it is most useful. Skipped, never stamped. */
+test('bulk-owners skips a wish in the selection instead of stamping or refusing it', async () => {
+  const round = await createRound(request);
+  const [anna] = round.members;
+  const [a] = await shelf(round.id, 'Azul');
+  const wish = (await request(app).post(`/api/rounds/${round.id}/games`)
+    .field('title', 'Wanted').field('minPlayers', '2').field('maxPlayers', '4')
+    .field('wish', 'true')).body;
+
+  const res = await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id, wish.id], ownerIds: [anna.id] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.updated, 1, 'the wish must not be counted');
+
+  assert.deepEqual((await ownersOf(round.id, a.id)).ownerIds, [anna.id]);
+  assert.equal('ownerIds' in (await ownersOf(round.id, wish.id)), false, 'a wish carries no owners');
+});
+
+test('bulk-owners 400s on an owner who is not a member of THIS round', async () => {
+  const round = await createRound(request);
+  const other = await createRound(request, { name: 'Other', members: ['Zoe'] });
+  const [a] = await shelf(round.id, 'Azul');
+
+  const res = await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id], ownerIds: [other.members[0].id] });
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, 'Unknown member');
+  assert.equal('ownerIds' in (await ownersOf(round.id, a.id)), false, 'nothing may be written on a 400');
+});
+
+/* moveGames set this contract: a stale selection is refused WHOLE. Acting on the
+   subset the caller got right is worse than an error it can show. */
+test('bulk-owners refuses a selection naming a game of another round, writing nothing', async () => {
+  const round = await createRound(request);
+  const other = await createRound(request, { name: 'Other' });
+  const [anna] = round.members;
+  const [a] = await shelf(round.id, 'Azul');
+  const [foreign] = await shelf(other.id, 'Elsewhere');
+
+  const res = await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id, foreign.id], ownerIds: [anna.id] });
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, 'Unknown game');
+  assert.equal('ownerIds' in (await ownersOf(round.id, a.id)), false, 'the valid half must not be written');
+});
+
+test('bulk-owners rejects a missing or empty gameIds, and 404s a missing round', async () => {
+  const round = await createRound(request);
+  const [anna] = round.members;
+  const url = `/api/rounds/${round.id}/games/bulk-owners`;
+
+  assert.equal((await request(app).post(url).send({ ownerIds: [anna.id] })).status, 400);
+  assert.equal((await request(app).post(url).send({ gameIds: [], ownerIds: [] })).status, 400);
+  assert.equal((await request(app).post('/api/rounds/nope/games/bulk-owners')
+    .send({ gameIds: ['x'], ownerIds: [] })).status, 404);
+});
+
+/* Decision (1) of .claude/rules/bulk-paths-restate-the-single-path.md: NO
+   activity. The single-path owner edit writes none either, so a counted bulk row
+   would announce in the Chronik something the per-game editor stays silent
+   about — the two paths must not differ in what the round gets told. */
+test('bulk-owners writes no Chronik entry, because the single path writes none', async () => {
+  const round = await createRound(request);
+  const [anna] = round.members;
+  const games = await shelf(round.id, 'A', 'B', 'C');
+  const before = (await feed(round.id)).length;
+
+  await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: games.map((g) => g.id), ownerIds: [anna.id] });
+
+  assert.equal((await feed(round.id)).length, before, 'the bulk owner edit must be silent');
+});
+
+/* The per-seat memory belongs to ADDING a game (#971) — it is what the next add
+   starts from. A sweep over games that already exist is not an add, so it must
+   not overwrite what the adder last picked. */
+test('bulk-owners leaves the per-seat ownerPreset alone', async () => {
+  const round = await createRound(request);
+  const [anna] = round.members;
+  const [a] = await shelf(round.id, 'Azul');
+
+  await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id], ownerIds: [anna.id] });
+
+  const after = await getRound(round.id);
+  assert.ok(after.members.every((m) => !('ownerPreset' in m)), 'no preset may be written here');
+});
+
+test('duplicate ids in one bulk-owners request are deduped, not double-counted', async () => {
+  const round = await createRound(request);
+  const [anna] = round.members;
+  const [a] = await shelf(round.id, 'Azul');
+
+  const res = await request(app).post(`/api/rounds/${round.id}/games/bulk-owners`)
+    .send({ gameIds: [a.id, a.id, a.id], ownerIds: [anna.id, anna.id] });
+  assert.equal(res.body.updated, 1);
+  assert.deepEqual((await ownersOf(round.id, a.id)).ownerIds, [anna.id]);
+});
