@@ -20,7 +20,7 @@
 # into dist/ with hashed, minified JS/CSS, so a production deploy serves
 # self-invalidating assets. It needs the devDependency esbuild, which stays in this
 # throwaway stage and never reaches the final image.
-FROM node:22.23.2-slim AS build
+FROM node:26.8.1-slim AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -28,7 +28,7 @@ COPY . .
 RUN npm run build
 
 # ---- runtime stage: production deps + source + built assets, nothing else ----
-FROM node:22.23.2-slim
+FROM node:26.8.1-slim
 ENV NODE_ENV=production
 # Serve data from a stable, mountable path (a volume / managed disk), not the
 # in-image working directory, so user data survives container restarts and
