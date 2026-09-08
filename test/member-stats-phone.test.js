@@ -181,15 +181,26 @@ test('the value leads and outgrows its label', () => {
   assert.match(size[1], /var\(--text-3xl\)/);
 });
 
-test('both game-link tiles span the full row', () => {
+test('both game-link tiles span the full row, at EVERY width', () => {
   /* `bodyOfIn`, not `bodyOf`: the two tiles share one grouped rule (#920), and
      bodyOf compares the whole selector text — so it would report the rule as
      DELETED the moment a second component joined it, which is a confusing
-     signal for a test whose job is to notice a deletion. */
+     signal for a test whose job is to notice a deletion.
+
+     UNCONDITIONAL since #979, and looked up outside PHONE_RULES for that
+     reason. The span used to live in the phone block, where „squeezed into
+     half" was the whole argument — but above 860px `.pokale-cards` is
+     auto-fit/minmax(200px, 1fr), so these two were squeezed into a QUARTER,
+     which is worse and is the case the rule never covered. With #979's 64px
+     cover taking ~78px off a ~232px card, the eyebrow („STÄRKSTES SPIEL")
+     wrapped to two lines. The tiles hold a list of links rather than a number,
+     which is a reason that never depended on the viewport. */
   ['.member-stats__best', '.member-stats__fav'].forEach((sel) => {
-    const body = bodyOfIn(sel, PHONE_RULES);
-    assert.ok(body, `${sel} must be re-spanned inside a phone media block`);
+    const body = bodyOfIn(sel);
+    assert.ok(body, `${sel} must be spanned by a rule outside any media block`);
     assert.match(body, /grid-column:\s*1\s*\/\s*-1/);
+    assert.equal(bodyOfIn(sel, PHONE_RULES), null,
+      `${sel} is still re-spanned inside a phone block — the base rule already covers it`);
   });
 });
 

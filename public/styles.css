@@ -2451,10 +2451,12 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .result-row__img.game-link,
 .archive-row__img.game-link,
 .pool-tile.game-link .pool-tile__img,
+.pokale-card__thumb.game-link,
 .recap-fav__cover.game-link { transition: box-shadow var(--dur-base) var(--ease-out); }
 .result-row__img.game-link:hover,
 .archive-row__img.game-link:hover,
 .pool-tile.game-link:hover .pool-tile__img,
+.pokale-card__thumb.game-link:hover,
 .recap-fav__cover.game-link:hover,
 .spotlight__winner.game-link:hover .spotlight__img,
 .podium__entry.member-link:hover .podium__avatar {
@@ -5938,6 +5940,60 @@ kbd {
 }
 .pokale-card__sub { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); }
 
+/* The trophy cards (Meistgespielt, Bestbewertet, Staubfänger), the Rückblick's
+   worst-rated + disagreement cards and the Chronik's period cards LEAD WITH THE
+   NAMED GAME'S COVER (#979) — the move `.recap-fav` below already made for the
+   favourite tiles (#695). Before it, the Pokale tab was the one hub tab with no
+   imagery above the fold while every neighbouring surface (home round cards,
+   Start ticket, results spotlight, Regal grid) leads with cover art.
+
+   Compounded to (0,2,0) so it outranks `.pokale-card`'s own `display: flex`
+   outright instead of tying with it and winning on source order
+   (ds-row-is-a-click-target.md) — the same reason `.pokale-card.recap-fav` is
+   written that way, and the reason a bare `.pokale-card--cover` would be a
+   coin-flip on where the two rules happen to sit in this file.
+
+   `minmax(0, 1fr)`, not `1fr`: a grid track's automatic minimum is its content,
+   so a long unbreakable game title would otherwise widen the column past the
+   card (#695 — the same finding `.pokale-card__value`'s `overflow-wrap` is
+   there for).
+
+   Applied by the MODIFIER, never by `.pokale-card` itself: the member screen
+   builds its own cards from the same block classes (views-member.js) and has
+   its own phone reorder keyed on `.pokale-card__icon`, which this layout must
+   not reach. */
+.pokale-card.pokale-card--cover {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 2px 14px;
+  align-items: center;
+}
+/* The eyebrow keeps `.pokale-card`'s row rhythm here — its 4px top margin is
+   for the icon row this layout no longer has. */
+.pokale-card--cover .pokale-card__label { margin-top: 0; }
+.pokale-card__thumb {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: var(--sunken) center/cover no-repeat;
+  box-shadow: var(--shadow-1);
+}
+.pokale-card__thumb .ti { font-size: 26px; /* glyph, not type */ }
+/* With a cover in the lead the trophy icon moves into the eyebrow line, so it
+   still labels the card without competing for the focal point. Only the cards
+   built by `pokaleGameCard` and the disagreement card put an <i> in here, so
+   this is inert on `pokaleStatCard` and on the member screen's own cards, which
+   keep their `.pokale-card__icon` row. */
+.pokale-card__label .ti {
+  color: var(--brand);
+  margin-right: 6px;
+  font-size: var(--text-sm);
+}
+
 /* Game rows with a per-game "Jetzt spielen" launcher (Meistgespielt etc.). */
 .pokale-card__games { display: flex; flex-direction: column; gap: 4px; }
 .pokale-game {
@@ -5946,7 +6002,19 @@ kbd {
   justify-content: space-between;
   gap: 8px;
 }
-.pokale-game__title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
+/* `overflow-wrap` for the reason `.pokale-card__value` above carries it, and it
+   was missed there: this is the element a card uses when it names MORE than one
+   game, so half the cards kept overflowing after #695 fixed the other half.
+   Measured at 375px against a 67-character title — 148px of horizontal PAGE
+   overflow on the old flex card, 406px once #979's 64px cover narrowed the text
+   column. `anywhere`, not `break-word`: only `anywhere` shrinks the min-content
+   contribution a grid track sizes against. */
+.pokale-game__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
 .pokale-game__play {
   flex: 0 0 auto;
   width: 30px;
@@ -5964,6 +6032,16 @@ kbd {
 .pokale-game__play .ti { font-size: var(--text-md); }
 .pokale-game__play:hover { background: var(--brand-tint-soft); }
 .pokale-game__play:active { transform: scale(0.94); }
+
+/* The two game-link tiles hold a LIST OF LINKS, not a number, so they take the
+   full row rather than a fraction of it — at every width, not only on a phone.
+   It was a phone-only rule until #979, where „squeezed into half" was the whole
+   argument; above 860px `.pokale-cards` is auto-fit/minmax(200px, 1fr), so these
+   two were squeezed into a QUARTER, which is the worse case the rule never
+   covered. It showed once #979's 64px cover took ~78px off a ~232px card and the
+   „Stärkstes Spiel" eyebrow wrapped to two lines. */
+.member-stats__best,
+.member-stats__fav { grid-column: 1 / -1; }
 
 /* ---- Member screen STATISTIKEN on phones (#694) ----
    `.pokale-cards` is auto-fit/minmax(200px, 1fr), so a phone's ~362px content
@@ -5991,12 +6069,9 @@ kbd {
   .member-stats__card .pokale-card__value { order: 1; font-size: var(--text-3xl); line-height: 1.15; }
   .member-stats__card .pokale-card__label { order: 2; }
   .member-stats__card .pokale-card__sub { order: 3; }
-  /* The two game-link tiles hold a list of links, not a number — they keep
-     their natural order and take the full row rather than being squeezed into
-     half. Both are exempt from the reorder above for free, since it is scoped
-     to `.member-stats__card` and neither carries it. */
-  .member-stats__best,
-  .member-stats__fav { grid-column: 1 / -1; }
+  /* The two game-link tiles are exempt from the reorder above for free, since
+     it is scoped to `.member-stats__card` and neither carries it. Their full-row
+     span is unconditional and lives above this block. */
 }
 
 /* ---- Rückblick: the round's taste record, under the standings (#484) ----

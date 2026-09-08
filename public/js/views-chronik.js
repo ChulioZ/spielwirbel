@@ -390,6 +390,9 @@ function renderPeriodRecapSection(round, activities) {
     if (rec.completed) totals.appendChild(chip('ti-circle-check', tn(rec.completed, 'periodRecap.completedOne', 'periodRecap.completed')));
     body.appendChild(totals);
 
+    // One loader per render of this body (#979) — renderBody re-runs on every
+    // change of the period picker, and the cards it built last time are gone.
+    const loadCover = createCoverLoader();
     const cards = h('<div class="pokale-cards"></div>');
     // The labels carry the period. They no longer HAVE to — #851 moved this
     // section off the Pokale tab, so the all-time cards it used to collide with
@@ -400,13 +403,13 @@ function renderPeriodRecapSection(round, activities) {
     const scope = { period: labelOf(period) };
     if (rec.topPlayed) {
       cards.appendChild(pokaleGameCard(round, 'ti-flame', t('periodRecap.mostPlayed', scope), recapGames(round, rec.topPlayed.gameIds),
-        tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions')));
+        tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions'), loadCover));
     }
     // Absent rather than crowned by a single vote: below RECAP_MIN_RATINGS
     // within the period there is no card at all (period-recap.js).
     if (rec.topRated) {
       cards.appendChild(pokaleGameCard(round, 'ti-star', t('periodRecap.bestRated', scope), recapGames(round, rec.topRated.gameIds),
-        fmtAvg(displayScore(rec.topRated.score))));
+        fmtAvg(displayScore(rec.topRated.score)), loadCover));
     }
     // The grid is appended even when EMPTY. Its original reason is gone —
     // #851 took this section OUT of the >=1280px wide-column exemption, so a

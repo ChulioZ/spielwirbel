@@ -10,6 +10,7 @@ paths:
   - "test/i18n-locales.test.js"
   - "test/session-share.test.js"
   - "test/players-plural.test.js"
+  - "test/recap-card-cover.test.js"
   - "public/js/views-friends.js"
   - "public/js/views-home.js"
   - "public/js/views-round-detail.js"
@@ -20,6 +21,7 @@ paths:
   - "public/js/views-chronik.js"
   - "public/js/views-pokale.js"
   - "public/js/views-archive.js"
+  - "public/js/views-member.js"
   - "public/js/core.js"
 ---
 
