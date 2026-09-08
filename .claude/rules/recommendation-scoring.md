@@ -568,6 +568,62 @@ all** — `0.1414213562373095`. Byte-identical.
 status as the seven weights: changing a number is expected, changing the set of
 terms is a scope change.
 
+## 14. A tolerance change is INVISIBLE to §1's isolation specs (#975)
+
+§1's shape is right and it cannot see a tolerance at all. Every isolation case
+puts its "wrong" candidate far enough out to **saturate at 0 under any
+tolerance**, so the delta stays the term's full weight however the curve is
+retuned. Measured on the pre-#975 suite, against the then-current pair of fixed
+constants: halving either of them — to `0.6` and to `30` minutes — left
+`test/recommend.test.js` + `test/recommendations.test.js` at **70 pass / 0 fail**.
+Both could have been any number.
+
+This is §1's own fixture trap one term over, and the fix is the same in kind:
+assert the **curve**, not the gap. A spec pins `scoreCandidate`'s per-term
+`value` at the target, at half the tolerance (exactly `NEUTRAL`) and at the
+tolerance (exactly 0) — in **literals**, never in the constant it guards, because
+a test written in terms of `WEIGHT_TOLERANCE` holds at every value of it.
+
+Half the tolerance is the number that matters, not the tolerance: `NEUTRAL` is
+what an *undocumented* game scores, so a candidate past the half-way point is
+worse than one BGG knows nothing about, and `> NEUTRAL` is also the reason gate.
+The effective window is half the constant — ±0.3 of weight, not ±0.6.
+
+**Time is target-RELATIVE, and that is a shape claim a fixed constant cannot
+satisfy.** `TIME_TOLERANCE_SHARE = 0.5` — the tolerance is half the round's own
+`targetTime`, computed at the call site so `proximity()` stays shared with
+complexity. A fixed 60 made "30 minutes away" cost the same at every scale: a
+15-minute-filler shelf was offered 40-minute games at above-neutral credit while
+a 180-minute shelf was penalised for 150, and **narrowing the constant fixes one
+only by worsening the other**. So the spec's load-bearing assertion is a *pair* —
+half credit 10 minutes out on a 40-minute shelf and 30 minutes out on a
+120-minute one, which no single constant can be. Verified red against a fixed 60
+**and** against a fixed 20; the narrowed one passes every other assertion in that
+test, which is exactly why the pair has to be there.
+
+No division-by-zero path, and it is worth not re-deriving: `toPositiveInt()` in
+`lib/providers/bgg.js` normalises BGG's "0 = no data" to `null`, so `targetTime`
+is either null — which `proximity()` answers with `null` — or positive.
+
+### A reason line must name the ROUND's half of the comparison
+
+`quality` stands alone and the two taste terms name the owned games. The other
+three compared the candidate against something invisible: „Gewicht 2,8" restates
+the fact row directly above the title and attaches a claim the reader cannot
+judge. `reasonsFrom` now sends `target` for `complexity` and `time`.
+
+`players` deliberately sends **no** field — the count is by construction a size
+out of the round's own `partyDistribution`, so the wording carries it. Note it
+keeps the „{n} Personen" phrasing #805 settled on rather than the collective
+numeral („zu {n}"), which reads as an ordinal in German.
+
+**And the time line must say GAMES, not sessions.** It said „wie eure üblichen
+Sessions" in every shipped locale for the life of the feature, and **sessions record
+no duration anywhere in this app**: `targetTime` is the affinity-weighted mean of
+the *shelf's* `maxPlaytime`, a property of the boxes they own. A reason line
+claiming a measurement the app never takes is the failure mode §10's guard exists
+for, arrived at by wording rather than by a model.
+
 **Related:** `.claude/rules/bgg-corpus.md` (the pool this scores, and its licence
 conditions), `.claude/rules/break-the-code-on-purpose.md` (every assertion above
 was seen red against a deliberate break), `.claude/rules/session-teams.md` §4,
