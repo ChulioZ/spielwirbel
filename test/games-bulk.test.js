@@ -338,8 +338,10 @@ test('bulk-owners REPLACES rather than adding to what was there', async () => {
 });
 
 /* An empty set is the CLEAR, and it leaves the key off entirely — the shape
-   createGame, move, copy and the round import all produce for an ownerless game,
-   so a cleared game becomes indistinguishable from one nobody ever marked. */
+   createGame, move, copy, the round import and the single-game PATCH all produce
+   for an ownerless game, so a cleared game becomes indistinguishable from one
+   nobody ever marked — one stored shape per user action, whichever screen it was
+   reached from. */
 test('bulk-owners with an empty set clears the owners, leaving no key behind', async () => {
   const round = await createRound(request);
   const [anna] = round.members;

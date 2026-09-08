@@ -2253,6 +2253,40 @@ module.exports = function repoContract(repo) {
     }
   });
 
+  /* The single write path clears the same way the bulk one does (#972): an empty
+     list stores ABSENCE, not `[]`. Two shapes for one user action — differing by
+     which screen the user reached it from — is what this pins shut. */
+  test('updateGame clears owners by removing the key, like every other writer', async () => {
+    const round = await freshRound({ name: 'Single clear', members: ['Anna', 'Ben'] });
+    const [anna, ben] = round.members;
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul', ownerIds: [anna.id] }));
+
+    const swapped = await repo.updateGame(T, round.id, g.id, { ownerIds: [ben.id] });
+    assert.deepEqual(swapped.ownerIds, [ben.id], 'a non-empty list still replaces');
+
+    const cleared = await repo.updateGame(T, round.id, g.id, { ownerIds: [] });
+    assert.equal('ownerIds' in cleared, false, 'the returned row must carry no key');
+    assert.equal('ownerIds' in (await repo.getGame(T, round.id, g.id)), false, 'nor the stored one');
+  });
+
+  /* The subtle half of the Postgres implementation: `mergeData` cannot remove a
+     key, so the clear merges first and subtracts after. Subtracting the key from
+     the ROW before merging — or merging without subtracting — loses one of the
+     two halves, and only a patch carrying both can tell. */
+  test('a patch clearing owners AND setting another field lands both', async () => {
+    const round = await freshRound({ name: 'Mixed patch', members: ['Anna'] });
+    const anna = round.members[0];
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul', ownerIds: [anna.id] }));
+
+    const out = await repo.updateGame(T, round.id, g.id, { title: 'Azul II', ownerIds: [] });
+    assert.equal(out.title, 'Azul II', 'the other field must still land');
+    assert.equal('ownerIds' in out, false, 'and the owners must still be cleared');
+
+    const read = await repo.getGame(T, round.id, g.id);
+    assert.equal(read.title, 'Azul II');
+    assert.equal('ownerIds' in read, false);
+  });
+
   /* ------------------------ Bulk game owners (#972) ------------------------ */
 
   test('setGameOwners replaces the owner set across the selection', async () => {

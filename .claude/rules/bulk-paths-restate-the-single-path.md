@@ -93,6 +93,19 @@ game the round *does* hold that this action cannot apply to means the caller's
 **aim was broad**, so skip it and report the count. Both keep the user honest
 about what happened, and the count is what does it.
 
+**The counter-example is the one that got fixed rather than documented.** The
+same PR first had the bulk clear remove the `ownerIds` key while the single
+`PATCH` stored `[]`, and wrote that down here as a second deliberate asymmetry.
+It was not one. A *refusal* can legitimately differ between the two paths,
+because the caller's situation differs; a **stored shape** cannot, because the
+data outlives the path that wrote it — leaving two representations of "nobody
+owns this", picked by which screen the user happened to use. `updateGame` now
+clears the key too (both backends, pinned in the contract suite).
+
+So the question to ask of every difference you are about to justify here: does it
+follow from *who is calling and why* (legitimate), or does it leave *different
+bytes on disk for the same user action* (a bug wearing a rationale)?
+
 ## 4. The role it costs is the SINGLE path's, per action — never one gate for the pair
 
 `POST /games/bulk-retire` costs `round.write` and `POST /games/bulk-delete` costs
