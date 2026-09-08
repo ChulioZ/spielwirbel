@@ -31,6 +31,7 @@ const LOCALES = [
   { code: 'fr', label: 'Français', tag: 'fr-FR' },
   { code: 'it', label: 'Italiano', tag: 'it-IT' },
   { code: 'nl', label: 'Nederlands', tag: 'nl-NL' },
+  { code: 'pt', label: 'Português', tag: 'pt-BR' },
 ];
 
 // Order is the picker's order (public/js/core.js setupLangPicker).

@@ -61,6 +61,12 @@ const RULES = {
   // weaken the pattern until it stops catching « spelavond ». Strip the
   // adverbial first, then ban bluntly, so compounds keep failing.
   nl: { allow: [/\bvanavond\b/gi], ban: [/avond/i] },
+  // Portuguese takes the FRENCH shape too: « noite » is the entity in
+  // « noite de jogos » and the time-of-day word in « hoje à noite », which the
+  // guest prompt uses legitimately. Strip the adverbial first, then ban the
+  // bare noun — the compound is two words here, so the ban needs no substring
+  // reach the way Dutch does.
+  pt: { allow: [/\b(?:hoje|esta) à noite\b/gi], ban: [/\bnoites?\b/i] },
 };
 
 function namesAnEvening(locale, value) {
@@ -90,6 +96,7 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     fr: ['la soirée plaise', 'le jeu du soir', 'vos soirées habituelles'],
     it: ['La serata è stata divisa', 'le vostre serate abituali'],
     nl: ['De avond werd opgesplitst', 'spelavond', 'jullie gebruikelijke avonden'],
+    pt: ['A noite foi dividida', 'noite de jogos', 'as suas noites de sempre'],
   };
   const fine = {
     de: ['Was spielen wir heute?', 'Die Session wurde aufgeteilt'],
@@ -98,6 +105,7 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     fr: ['On joue à quoi ce soir ?', 'Des invités ce soir ?'],
     it: ['A cosa giochiamo stasera?', 'la scelta di stasera'],
     nl: ['Wat spelen we vanavond?', 'De sessie werd opgesplitst'],
+    pt: ['O que vamos jogar hoje?', 'Convidados hoje à noite?'],
   };
 
   for (const locale of SUPPORTED_LOCALES) {

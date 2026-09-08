@@ -184,7 +184,7 @@ longer a mean — #894/#928 made it the shrunk Spielwirbel-Score
 **Do not treat either pair as a target**: the seeds are fixed, the curve is
 expected to be retuned, so read whatever the current arithmetic prints. What
 is stable is the NOTATION — since #850 the badge is written in the reader's
-own (`fmtAvg`, `i18n.js`), so the de/es/fr/it/nl sets use a comma where the
+own (`fmtAvg`, `i18n.js`), so every non-English set uses a comma where the
 English one uses a dot. That makes the pill a free tell when you look at a
 regenerated set: a **dot in a non-English shot** means the capture predates the
 locale-formatting fix, and nothing in the suite can see it.

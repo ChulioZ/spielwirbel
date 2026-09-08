@@ -102,6 +102,7 @@ body:
         - Français
         - Italiano
         - Nederlands
+        - Português
     validations:
       required: true
 
