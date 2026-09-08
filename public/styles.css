@@ -6033,6 +6033,16 @@ kbd {
 .pokale-game__play:hover { background: var(--brand-tint-soft); }
 .pokale-game__play:active { transform: scale(0.94); }
 
+/* The two game-link tiles hold a LIST OF LINKS, not a number, so they take the
+   full row rather than a fraction of it — at every width, not only on a phone.
+   It was a phone-only rule until #979, where „squeezed into half" was the whole
+   argument; above 860px `.pokale-cards` is auto-fit/minmax(200px, 1fr), so these
+   two were squeezed into a QUARTER, which is the worse case the rule never
+   covered. It showed once #979's 64px cover took ~78px off a ~232px card and the
+   „Stärkstes Spiel" eyebrow wrapped to two lines. */
+.member-stats__best,
+.member-stats__fav { grid-column: 1 / -1; }
+
 /* ---- Member screen STATISTIKEN on phones (#694) ----
    `.pokale-cards` is auto-fit/minmax(200px, 1fr), so a phone's ~362px content
    column yields ONE column: the member's five stat cards stack into a tall strip
@@ -6059,12 +6069,9 @@ kbd {
   .member-stats__card .pokale-card__value { order: 1; font-size: var(--text-3xl); line-height: 1.15; }
   .member-stats__card .pokale-card__label { order: 2; }
   .member-stats__card .pokale-card__sub { order: 3; }
-  /* The two game-link tiles hold a list of links, not a number — they keep
-     their natural order and take the full row rather than being squeezed into
-     half. Both are exempt from the reorder above for free, since it is scoped
-     to `.member-stats__card` and neither carries it. */
-  .member-stats__best,
-  .member-stats__fav { grid-column: 1 / -1; }
+  /* The two game-link tiles are exempt from the reorder above for free, since
+     it is scoped to `.member-stats__card` and neither carries it. Their full-row
+     span is unconditional and lives above this block. */
 }
 
 /* ---- Rückblick: the round's taste record, under the standings (#484) ----
