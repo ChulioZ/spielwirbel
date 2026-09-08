@@ -30,13 +30,42 @@ function pokaleStatCard(round, icon, label, value, sub, linkMid) {
 // Like pokaleStatCard but the value is one or more games, each listed on its own
 // row with a "Jetzt spielen" launcher (icon-only; omitted for an archived game —
 // retired or completed, neither is in the active collection any more).
-function pokaleGameCard(round, icon, label, games, sub) {
-  const card = h(`<div class="pokale-card">
-       <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
-       <span class="pokale-card__label">${esc(label)}</span>
+//
+// The card LEADS WITH THE GAME'S COVER (#979), the way the Lieblingsspiele tiles
+// further down this file already did (#695) and every neighbouring surface does
+// — the home round cards, the Start ticket, the results spotlight, the Regal.
+// The trophy icon moves into the eyebrow line, where it still labels the card
+// without being the only thing above the fold.
+//
+// `loadCover` is passed IN rather than created here: one IntersectionObserver
+// then serves a whole section instead of one per card. It is required, not
+// optional — a defaulted-to-eager fallback would make a forgotten argument
+// invisible at exactly the sizes where lazy loading is the point.
+//
+// A TIE SHOWS THE FIRST GAME'S COVER. The alternative — dropping the cover
+// whenever a card names more than one game — makes the rare case the odd one
+// out, which is the sibling inconsistency this change exists to remove; the
+// other titles are named in full in the rows beside it. `games` CAN be empty
+// (recapGames drops ids whose game was deleted since the recap was computed),
+// and then there is nothing to lead with, so the card keeps the plain flex
+// layout rather than reserving a 64px frame for a cover that will never come.
+function pokaleGameCard(round, icon, label, games, sub, loadCover) {
+  const lead = games[0];
+  const card = h(`<div class="pokale-card${lead ? ' pokale-card--cover' : ''}">
+       ${lead ? `<a class="pokale-card__thumb">${coverPlaceholder(lead)}</a>` : ''}
+       <span class="pokale-card__label"><i class="ti ${icon}" aria-hidden="true"></i>${esc(label)}</span>
        <span class="pokale-card__games"></span>
        <span class="pokale-card__sub">${esc(sub)}</span>
      </div>`);
+  if (lead) {
+    const thumb = card.querySelector('.pokale-card__thumb');
+    if (lead.image) loadCover(thumb, coverUrl(lead.image, COVER_THUMB));
+    // Redundant by the archive rows' rule (#663): it targets the same game as
+    // the first title below it, so it stays mouse-clickable but leaves the tab
+    // order and the accessibility tree rather than announcing as a nameless
+    // control.
+    makeGameLink(thumb, round.id, lead.id, { redundant: true });
+  }
   const list = card.querySelector('.pokale-card__games');
   games.forEach((g) => {
     const row = h(`<span class="pokale-game">
@@ -219,6 +248,9 @@ function renderPokaleTab(round) {
     sec.appendChild(restEl);
   }
 
+  // One lazy-cover loader per section, shared by every trophy card below
+  // (#979) — a loader each would mean an IntersectionObserver each.
+  const loadCover = createCoverLoader();
   const cards = h('<div class="pokale-cards"></div>');
 
   // Most played: chosen most often across finished nights (game must exist).
@@ -251,7 +283,7 @@ function renderPokaleTab(round) {
     .map((gid) => round.games.find((x) => x.id === gid));
   if (mostGames.length) {
     cards.appendChild(
-      pokaleGameCard(round, 'ti-flame', t('pokale.mostPlayed'), mostGames, tn(maxPlays, 'home.chip.sessionsOne', 'home.chip.sessions'))
+      pokaleGameCard(round, 'ti-flame', t('pokale.mostPlayed'), mostGames, tn(maxPlays, 'home.chip.sessionsOne', 'home.chip.sessions'), loadCover)
     );
   }
 
@@ -261,7 +293,7 @@ function renderPokaleTab(round) {
   // threshold or on how ties are handled — they are one aggregation read twice.
   if (recap.best) {
     cards.appendChild(
-      pokaleGameCard(round, 'ti-star', t('pokale.bestRated'), recapGames(round, recap.best.gameIds), fmtAvg(displayScore(recap.best.score)))
+      pokaleGameCard(round, 'ti-star', t('pokale.bestRated'), recapGames(round, recap.best.gameIds), fmtAvg(displayScore(recap.best.score)), loadCover)
     );
   }
 
@@ -331,7 +363,8 @@ function renderPokaleTab(round) {
         'ti-sparkles',
         t('pokale.dusty'),
         [dusty.g],
-        dusty.at ? t('pokale.dustyAt', { when: fmtMonth(dusty.at) }) : t('pokale.dustyNever')
+        dusty.at ? t('pokale.dustyAt', { when: fmtMonth(dusty.at) }) : t('pokale.dustyNever'),
+        loadCover
       )
     );
   }
@@ -367,11 +400,15 @@ function renderRecapSection(round, recap) {
   if (recap.totals.archived) totals.appendChild(chip('ti-archive', t('recap.archived', { n: recap.totals.archived })));
   sec.appendChild(totals);
 
+  // Hoisted out of the Lieblingsspiele block below (#979): the worst-rated and
+  // disagreement cards lead with a cover now too, and one observer serves the
+  // whole Rückblick.
+  const loadCover = createCoverLoader();
   const cards = h('<div class="pokale-cards"></div>');
 
   if (recap.worst) {
     cards.appendChild(
-      pokaleGameCard(round, 'ti-mood-empty', t('recap.worstRated'), recapGames(round, recap.worst.gameIds), fmtAvg(displayScore(recap.worst.score)))
+      pokaleGameCard(round, 'ti-mood-empty', t('recap.worstRated'), recapGames(round, recap.worst.gameIds), fmtAvg(displayScore(recap.worst.score)), loadCover)
     );
   }
 
@@ -381,9 +418,9 @@ function renderRecapSection(round, recap) {
     const game = round.games.find((g) => g.id === recap.divisive.gameId);
     const nameOf = (mid) => (round.members.find((m) => m.id === mid) || {}).name || '';
     if (game) {
-      const card = h(`<div class="pokale-card">
-           <span class="pokale-card__icon"><i class="ti ti-arrows-split" aria-hidden="true"></i></span>
-           <span class="pokale-card__label">${esc(t('recap.divisive'))}</span>
+      const card = h(`<div class="pokale-card pokale-card--cover">
+           <a class="pokale-card__thumb">${coverPlaceholder(game)}</a>
+           <span class="pokale-card__label"><i class="ti ti-arrows-split" aria-hidden="true"></i>${esc(t('recap.divisive'))}</span>
            <a class="pokale-card__value">${esc(game.title)}</a>
            <span class="pokale-card__sub">${esc(t('recap.divisiveSub', {
              high: nameOf(recap.divisive.high.memberId),
@@ -392,6 +429,9 @@ function renderRecapSection(round, recap) {
              lowAvg: fmtAvg(recap.divisive.low.avg),
            }))}</span>
          </div>`);
+      const thumb = card.querySelector('.pokale-card__thumb');
+      if (game.image) loadCover(thumb, coverUrl(game.image, COVER_THUMB));
+      makeGameLink(thumb, round.id, game.id, { redundant: true });
       makeGameLink(card.querySelector('.pokale-card__value'), round.id, game.id);
       cards.appendChild(card);
     }
@@ -405,7 +445,6 @@ function renderRecapSection(round, recap) {
          <h3 class="recap__sub">${esc(t('recap.favourites'))}</h3>
        </div>`);
     const favs = h('<div class="pokale-cards"></div>');
-    const loadCover = createCoverLoader(); // lazy taste-card covers, as on the Regal/archive (#198)
     recap.favourites.forEach((fav) => {
       const member = round.members.find((m) => m.id === fav.memberId);
       const game = round.games.find((g) => g.id === fav.gameId);

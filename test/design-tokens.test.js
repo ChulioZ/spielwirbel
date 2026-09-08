@@ -93,7 +93,7 @@ const GLYPH_LITERALS = [
   '.gd-img', '.lookup__thumb--none .ti', '.archive-row__img .ti', '.rec-card__img .ti',
   '.spotlight__img .ti', '.spotlight--shared .spotlight__img .ti',
   '.spotlight--table .spotlight__img .ti',
-  '.recap-fav__cover .ti',
+  '.recap-fav__cover .ti', '.pokale-card__thumb .ti',
   // a glyph or number sized to its own small box
   '.result-row__bars .bar-axis .ti',
   '.stage__voter-check .ti', '.stage__seal > .ti', '.mood .ti',
