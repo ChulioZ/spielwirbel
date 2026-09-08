@@ -127,7 +127,7 @@ there are commented out, so match on the name, not on an assignment. (Miss
 `knexfile.js` and `DATABASE_SSL` reads as an orphan entry; the platform-injected
 `NODE_ENV`/`RAILWAY_GIT_COMMIT_SHA` family is deliberately absent.) Two files read
 their names **table-driven** through `process.env[name]` — `lib/public-stats.js`
-(the fifteen `PUBLIC_STATS_MIN_*` plus `PUBLIC_STATS_RESOLVE_MAX`) and
+(the fourteen `PUBLIC_STATS_MIN_*` plus `PUBLIC_STATS_RESOLVE_MAX`) and
 `lib/corpus.js` (`BGG_CORPUS_*`) — so a literal `process.env.X` grep reports
 nineteen false orphans; match those against the name tables, not the grep.
 

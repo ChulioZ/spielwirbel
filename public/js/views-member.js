@@ -349,6 +349,10 @@ async function showMember(rid, mid) {
     .filter((g) => isActiveGame(g) && (g.ownerIds || []).includes(mid))
     .sort((a, b) => a.title.localeCompare(b.title, getLocale(), { sensitivity: 'base' }));
   if (owned.length) {
+    // This heading puts `{name}` after a preposition in most locales, which is
+    // why the demo seed may not name a seat with a pronoun — „4 Spiele von Du"
+    // is wrong German. See
+    // .claude/rules/interpolated-names-must-not-be-case-governed.md.
     const ownedSec = h(`<div class="section">
          <h2>${esc(tn(owned.length, 'member.ownedTitleOne', 'member.ownedTitle', { name: member.name }))}</h2>
          <div class="member-games"></div>

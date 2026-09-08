@@ -190,7 +190,9 @@ test('seeds the round in the requested locale', () => {
     // The English seed text, so a contributor reading English does not get a
     // German round (lib/demo-seed.js DEMO_TEXT).
     assert.match(round.name, /demo/i);
-    assert.equal(round.members[0].name, 'You');
+    // An ordinary name, not „You"/„Du" — a pronoun breaks any sentence that puts
+    // the seat name after a preposition (lib/demo-seed.js's ownerSeat note).
+    assert.equal(round.members[0].name, 'Max');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

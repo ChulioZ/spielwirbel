@@ -7664,6 +7664,30 @@ kbd {
 [data-world] .btn--primary::before { top: -.7em; left: -.8em; }
 [data-world] .btn--primary::after { bottom: -.7em; right: -.8em; transform: rotate(180deg); }
 
+/* …and the corollary: the frame hangs .8em OUTSIDE the button box on each side,
+   while a button row sits its controls 10px apart (.toolbar, .vote__nav). So a
+   primary button with a neighbour lets its ornament land ON that neighbour —
+   measured 2026-09-08 at 4.4px of leaf over „Zurück" on the vote card and 7.6px
+   over „Speichern & weiteres" in the add-game sheet, which reads as a rendering
+   glitch rather than as a flourish.
+
+   It has to be COLUMN-GAP, not a margin on the button. A margin looked right and
+   is wrong on a phone: .toolbar wraps (flex-wrap: wrap; .sheet__actions grows its
+   buttons to full width at ≤639px), and a horizontal margin then makes the
+   primary button NARROWER than the one stacked under it — measured at 390px,
+   335px against 344px, a ragged right edge in the one place the ornament was
+   never colliding. column-gap applies only between items on the SAME line, so it
+   is inert exactly where the collision cannot happen. `gap: 10px` still supplies
+   the row-gap for the wrapped case.
+
+   22px clears the largest ornament in these rows (.8em of the sheet's 22px
+   btn--lg = 17.6px) with ~4px to spare; the vote card's 18px needs 14.4px. A
+   button type above ~27px would outgrow it — raise this with it, and note the
+   overhang is sized in the BUTTON's em while this is the row's, which is why the
+   two cannot simply be written as one number. :has() keeps every other .toolbar
+   on its normal 10px. */
+[data-world] :is(.toolbar, .vote__nav):has(> .btn--primary) { column-gap: 22px; }
+
 /* Slot 3 — a rule under a heading: section headings (direct children only:
    the same selector without `>` reaches every card title inside the
    section), sheet titles, the round's own name on the hub and in the rail,

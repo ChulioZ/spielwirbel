@@ -24,6 +24,16 @@ job (`.claude/rules/landing-product-screenshots.md` is the recipe). A sixth
 locale also outgrows a rate-limit ceiling the demo suite never raised —
 `.claude/rules/derived-loops-outgrow-fixed-test-ceilings.md`.
 
+**Two of the steps are CODE, and every summary of this procedure has omitted at
+least one** (found 2026-09-08 across `CLAUDE.md`, `CONTRIBUTING.md` and this
+file): the native label in the bug-report form's dropdown, and a `RULES` entry in
+`test/session-naming.test.js` — an `allow`/`ban` regex pair per locale, which
+needs someone who knows the language rather than a translation. A locale with no
+entry there is scanned by nothing and passes in silence. **`CONTRIBUTING.md`
+"Adding a language" is the canonical ordered list**; keep it there and point at
+it rather than growing a fourth copy — the omission that made this paragraph
+necessary is what a restated list does.
+
 Three things about making it data are non-obvious, and the first one is the trap
 that makes the other two matter.
 

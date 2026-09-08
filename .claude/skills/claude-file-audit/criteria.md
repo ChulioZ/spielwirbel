@@ -413,9 +413,13 @@ research at all.
   rule that fails to load loses its protection silently, which is the worse
   failure. It is to ask, per global rule, whether the *whole file* has to be
   resident or only its trap. `shared-constants-across-the-stack.md` is the
-  standing case at **~360 lines / 19 KB, global** — 1.8x the entire `CLAUDE.md`
-  budget, resident in every session, and structurally an *inventory* of thirteen
-  entries of which a given session needs at most one.
+  standing case at **483 lines / 30 KB, global** (re-measured 2026-09-08; it was
+  ~360 lines / 19 KB when this criterion was written on 2026-09-02) — 2.4x the
+  entire `CLAUDE.md` budget, resident in every session, and structurally an
+  *inventory* of fifteen entries of which a given session needs at most one. The
+  growth between those two measurements is itself the argument: the file gains an
+  entry per shared constant, so the standing case gets worse on its own. Tracked
+  as #978.
 
   **Why C-021 was not enough:** it asks what the corpus costs *in total*, which
   is the right question for a file nobody has to read. A global rule is read

@@ -497,3 +497,39 @@ test('a world re-shapes the confetti bits through tokens — the same bits, no s
   assert.match(animated[1], /animation:\s*var\(--world-particle-anim\)\s+var\(--world-particle-dur\)/,
     'the shape and the pace are the world\'s; the loop is shared');
 });
+
+/* Slot 2's frame hangs .8em outside the button box, and a button row sits its
+   controls 10px apart — so a primary button with a neighbour paints its ornament
+   onto that neighbour unless something reserves the space. Measured in the pane
+   on 2026-09-08 before the fix: 4.4px of leaf over „Zurück" (.vote__nav) and
+   7.6px over „Speichern & weiteres" (.toolbar.sheet__actions).
+
+   Two properties are asserted, and the SECOND is the one that cost a cycle. The
+   clearance must be `column-gap`, never a margin on the button: .toolbar wraps,
+   and a horizontal margin then narrows the primary button relative to the one
+   stacked under it (measured at 390px: 335px vs 344px) — a new defect in the
+   place the ornament never collided. column-gap is inert between lines, so it
+   cannot reintroduce that. A margin passes a naive "is there clearance" check
+   just as well, which is why the property itself is pinned.
+
+   CSS text rather than jsdom, because jsdom applies no stylesheet and the
+   geometry this is about does not exist there. */
+test('a world-framed primary button reserves room for its ornament beside a neighbour', () => {
+  const rule = rulesOf(CSS).find(([sel]) =>
+    sel.includes('[data-world]') && sel.includes(':has(> .btn--primary)'));
+  assert.ok(rule, 'no ornament-clearance rule scoped to a row holding a primary button');
+  const [sel, body] = rule;
+
+  // Both rows that hold a primary button today.
+  assert.match(sel, /\.toolbar/);
+  assert.match(sel, /\.vote__nav/);
+
+  // column-gap, not `gap` and not a margin — see the note above.
+  assert.match(body, /column-gap:/, 'the clearance must be column-gap');
+  assert.doesNotMatch(body, /margin-inline|margin-left|margin-right/,
+    'a horizontal margin narrows the button when the row wraps');
+
+  const px = parseFloat(body.match(/column-gap:\s*([\d.]+)px/)?.[1] ?? '0');
+  // .8em of the largest button in these rows (22px btn--lg) is 17.6px.
+  assert.ok(px >= 18, `column-gap ${px}px does not clear the 17.6px overhang`);
+});

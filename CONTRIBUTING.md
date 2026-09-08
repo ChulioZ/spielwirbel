@@ -119,15 +119,31 @@ Nothing else needs touching — the key already exists in every other language, 
    in `public/js/views-landing.js`. This step is **not** optional: the suite goes
    red until every shipped language has its own set, because otherwise the page
    explaining the app would show it in somebody else's language.
-5. Optionally add the language to `DEMO_TEXT`/`DEMO_TAGS` in `lib/demo-seed.js`,
+5. Add the language's native label to the bug-report form's language dropdown
+   (`.github/ISSUE_TEMPLATE/bug_report.yml`). It is the one hand-maintained copy
+   of the locale list; `test/i18n-locales.test.js` derives the expected options
+   from `locales.js`, so skipping it goes red.
+6. Add a naming rule for the locale to `RULES` in `test/session-naming.test.js` —
+   an `allow` list of time-of-day phrases and a `ban` pattern for the word that
+   would name a Session an "evening" (pt, for example, allows
+   `/\b(?:hoje|esta) à noite\b/` and bans `/\bnoites?\b/`). This is the one step
+   that needs judgement rather than translation: the guard strips the allowed
+   phrases first and then bans bluntly, so both halves have to be written by
+   someone who knows the language. A locale with no entry is scanned by nothing
+   and passes in silence, which is why the suite fails until it has one.
+7. Optionally add the language to `DEMO_TEXT`/`DEMO_TAGS` in `lib/demo-seed.js`,
    so the guest demo's round is in it too. Without this it falls back to English.
 
-Plural forms, date and month formatting and the language picker all follow from
-step 1 — there is no code to change. Translate the product vocabulary
+Plural forms, date and month formatting and the language picker do follow from
+step 1 with no code change — but steps 5 and 6 are code, so don't read that as
+"a language is only data". Translate the product vocabulary
 consistently rather than literally, keep the brand name **Spielwirbel**
 untranslated, and note that the legal pages (Impressum, privacy policy, terms)
 are deliberately German-authoritative with an English courtesy translation and
-are **not** part of the UI language files.
+are **not** part of the UI language files. Seed names — `DEMO_TEXT`'s
+members, guests and `ownerSeat` — must be ordinary names, never pronouns: they
+get interpolated into sentences that govern their case
+(`.claude/rules/interpolated-names-must-not-be-case-governed.md`).
 
 Native speakers are very welcome to correct wording — machine-drafted phrasing
 that is merely *correct* is exactly what we would like replaced with phrasing
