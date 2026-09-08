@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-09-07
+**Stand:** 2026-09-08
 
 ## Verschlüsselung & Transport
 
@@ -52,7 +52,13 @@ list nothing that is not actually in place.
 - Ratenbegrenzung global + strengere Limits für Login/Kontakt/Feedback.
 - Eingabevalidierung (zod) auf Mutationsrouten; Honeypot im Kontaktformular.
 - Per-Tenant-Quoten (Runden/Spiele/Tags, #139) begrenzen Missbrauch.
-- Abhängigkeits-Updates via Dependabot; CI (Tests, Lint, CodeQL, gitleaks).
+- Abhängigkeits-Updates via Dependabot (npm, GitHub Actions, Container-
+  Basis-Image); CI (Tests, Lint, CodeQL, gitleaks).
+- Lieferkette gepinnt: das Node-Basis-Image auf einen exakten Patch-Stand,
+  jede fremde GitHub-Action auf einen Commit-SHA — ein Sicherheits-Update
+  der Laufzeit kommt so als geprüfter Pull Request an, statt von einem
+  Build-Cache abzuhängen, und ein umgehängtes Tag kann keinen fremden Code
+  in die CI einschleusen.
 
 ## Datenminimierung & Protokollierung
 

@@ -605,8 +605,8 @@ Plain `npm start` ignores
 
 ### With Docker
 
-A production container image is provided (`Dockerfile`, `node:22-slim`, runs as a
-non-root user). Build and run it directly:
+A production container image is provided (`Dockerfile`, a `node:22.x.y-slim` base
+pinned to an exact patch, runs as a non-root user). Build and run it directly:
 
 ```bash
 docker build -t spieleabend .

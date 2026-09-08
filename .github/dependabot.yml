@@ -10,8 +10,22 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
 
-  # The GitHub Actions used by the workflows (actions/checkout, setup-node, …)
+  # The GitHub Actions used by the workflows (actions/checkout, setup-node, …).
+  # Every `uses:` is pinned to a full commit SHA with a `# vN.x.y` trailing comment;
+  # Dependabot keeps those SHA pins current and rewrites the comment, so pinning
+  # costs no freshness. A mutable major tag can be retargeted at new code — the
+  # 2025 tj-actions/changed-files incident — and `gitleaks` here is a REQUIRED
+  # branch-protection context while docker.yml publishes to GHCR with GITHUB_TOKEN.
   - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+
+  # The Dockerfile's Node base image. Pinned to an exact patch (not `node:22-slim`),
+  # so a Node security release arrives as a reviewable, CI-tested PR rather than
+  # depending on whether the builder re-pulled a floating tag.
+  # See .claude/rules/pin-images-and-actions-by-digest.md.
+  - package-ecosystem: docker
     directory: "/"
     schedule:
       interval: weekly
