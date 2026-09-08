@@ -544,6 +544,8 @@ I18N.nl = {
   'member.bestGameNone': 'Nog geen overwinningen',
   'member.favorite': 'Favoriete spel',
   'member.favoriteNone': 'Nog geen beoordelingen',
+  'member.ownedTitleOne': '{n} spel van {name}',
+  'member.ownedTitle': '{n} spellen van {name}',
   'member.noSessions': 'Nog in geen enkele sessie',
   'member.saved': 'Opgeslagen',
   'member.claim': 'Dat ben ik',

@@ -2450,9 +2450,11 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .result-row__img.game-link,
 .archive-row__img.game-link,
+.pool-tile.game-link .pool-tile__img,
 .recap-fav__cover.game-link { transition: box-shadow var(--dur-base) var(--ease-out); }
 .result-row__img.game-link:hover,
 .archive-row__img.game-link:hover,
+.pool-tile.game-link:hover .pool-tile__img,
 .recap-fav__cover.game-link:hover,
 .spotlight__winner.game-link:hover .spotlight__img,
 .podium__entry.member-link:hover .podium__avatar {
@@ -4634,6 +4636,25 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .member-swatch.is-active { box-shadow: 0 0 0 3px var(--brand-edge); cursor: default; }
 .member-swatch.is-active .ti { opacity: 1; }
 .member-nosessions { margin-bottom: 12px; }
+
+/* „3 Spiele von Anna" (#973): the boxes one member brings. Reuses the setup
+   screen's `.pool-tile` whole — same object, same 4/3 crop — but NOT its
+   `.setup-panel__body` container, whose `max-height` + internal scroll exist to
+   keep that screen's CTA above the fold. A stats page has nothing below it to
+   protect, so this grid simply grows.
+
+   Deliberately NOT added to the >= 1280px width exemption: it stays in the
+   --w-read measure with the colour picker and the identity above it, so the
+   member page keeps one left edge and only the stats band spans the pane
+   (.claude/rules/tiles-vs-lists.md). At 110px minimum that is still six across.
+
+   `auto-fill` so it needs no breakpoint of its own — 3 across on a phone,
+   6 in the reading column. */
+.member-games {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+}
 
 /* Anchored popover used by the edit menus. */
 .popover {

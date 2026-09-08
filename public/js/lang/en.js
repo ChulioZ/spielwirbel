@@ -566,6 +566,8 @@ I18N.en = {
   'member.bestGameNone': 'No wins yet',
   'member.favorite': 'Favorite game',
   'member.favoriteNone': 'No ratings yet',
+  'member.ownedTitleOne': '{n} game owned by {name}',
+  'member.ownedTitle': '{n} games owned by {name}',
   'member.noSessions': 'Not part of any session yet',
   'member.saved': 'Saved',
   'member.claim': "That's me",

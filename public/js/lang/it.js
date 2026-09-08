@@ -548,6 +548,8 @@ I18N.it = {
   'member.bestGameNone': 'Ancora nessuna vittoria',
   'member.favorite': 'Gioco preferito',
   'member.favoriteNone': 'Ancora nessuna valutazione',
+  'member.ownedTitleOne': '{n} gioco di {name}',
+  'member.ownedTitle': '{n} giochi di {name}',
   'member.noSessions': 'Non ha ancora partecipato a nessuna sessione',
   'member.saved': 'Salvato',
   'member.claim': 'Sono io',

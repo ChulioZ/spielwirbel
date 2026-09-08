@@ -192,3 +192,89 @@ test('with no owner at the table the line names every owner (#971)', async (t) =
   assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
     ['Gehört Clara']);
 });
+
+/* ----------------------------- the member page ----------------------------- */
+
+/* „3 Spiele von Anna" (#973) — the fourth reader of `game.ownerIds`, and the
+ * only one that asks the question from the PERSON's side rather than the
+ * table's. Its whole content is a filter, so the interesting cases are the ones
+ * that must NOT appear: the shelf archives, and the wish list. */
+
+async function ownedSection(t, data, mid) {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  dom.set('api', async (method, url) => {
+    if (/\/activities$/.test(url)) return [];
+    if (/\/shares$/.test(url)) return [];
+    if (/^\/api\/rounds\/[^/]+$/.test(url)) return data;
+    return {};
+  });
+  dom.set('accountsActive', () => false);
+  dom.set('isLoggedIn', () => false);
+  await dom.call('showMember', data.id, mid);
+  const grid = dom.app.querySelector('.member-games');
+  return {
+    dom,
+    grid,
+    // The section's own <h2>, not the stats one — scoped through the grid's
+    // parent so the rail's headings can never answer instead
+    // (.claude/rules/testing-views-under-jsdom.md).
+    title: grid ? grid.parentElement.querySelector('h2').textContent : null,
+    titles: grid ? [...grid.querySelectorAll('.pool-tile__name')].map((n) => n.textContent) : [],
+  };
+}
+
+test('the member page lists the shelf games that member owns, titled and linked', async (t) => {
+  const data = round({
+    games: [
+      game({ id: 7, title: 'Catan', ownerIds: [ANNA.id] }),
+      game({ id: 8, title: 'Azul', ownerIds: [ANNA.id, BEN.id] }),
+      game({ id: 9, title: 'Brass', ownerIds: [BEN.id] }),
+    ],
+  });
+  const { grid, title, titles } = await ownedSection(t, data, ANNA.id);
+
+  // Sorted by title, like the Regal — not in shelf order.
+  assert.deepEqual(titles, ['Azul', 'Catan'], 'a game Ben alone owns is not Anna\'s');
+  assert.equal(title, '2 Spiele von Anna');
+
+  const tile = grid.querySelector('.pool-tile');
+  assert.ok(tile.classList.contains('game-link'), 'each tile must be a real game link');
+  assert.match(tile.getAttribute('href') || '', /\/8$/, 'and it points at that game');
+});
+
+test('the section is hidden entirely for a member who owns nothing', async (t) => {
+  /* Most rounds will never record owners, and an empty „Spiele von …" heading on
+     every member page would advertise a feature the round does not use — the
+     same call the detail page's expansions section makes on a sparse page. */
+  const { grid } = await ownedSection(t, round({ games: [game({ id: 7 })] }), ANNA.id);
+  assert.equal(grid, null, 'no owners recorded -> no section at all');
+
+  const others = round({ games: [game({ id: 7, ownerIds: [BEN.id] })] });
+  assert.equal((await ownedSection(t, others, ANNA.id)).grid, null,
+    'somebody else\'s game does not give Anna an empty section either');
+});
+
+test('the singular inflects — one game is not „1 Spiele"', async (t) => {
+  const data = round({ games: [game({ id: 7, title: 'Catan', ownerIds: [ANNA.id] })] });
+  assert.equal((await ownedSection(t, data, ANNA.id)).title, '1 Spiel von Anna');
+});
+
+test('an off-shelf game the member owns is never listed', async (t) => {
+  /* `isActiveGame`, the draw pool's own predicate — a retired or completed game
+     is off the shelf and a wish is nobody's, so none of the three answers "which
+     boxes are Anna's?" (.claude/rules/active-games-filter-sites.md). The fixture
+     carries one of each so a filter that is missing AND one that is narrowed to
+     a single state both go red. */
+  const data = round({
+    games: [
+      game({ id: 7, title: 'Catan', ownerIds: [ANNA.id], retired: true }),
+      game({ id: 8, title: 'Azul', ownerIds: [ANNA.id], completed: true }),
+      game({ id: 9, title: 'Brass', ownerIds: [ANNA.id], wish: true }),
+      game({ id: 10, title: 'Dune', ownerIds: [ANNA.id] }),
+    ],
+  });
+  const { title, titles } = await ownedSection(t, data, ANNA.id);
+  assert.deepEqual(titles, ['Dune']);
+  assert.equal(title, '1 Spiel von Anna', 'and the count follows the list rather than the shelf');
+});

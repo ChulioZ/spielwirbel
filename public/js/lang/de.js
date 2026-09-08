@@ -567,6 +567,8 @@ I18N.de = {
   'member.bestGameNone': 'Noch keine Siege',
   'member.favorite': 'Lieblingsspiel',
   'member.favoriteNone': 'Noch keine Wertungen',
+  'member.ownedTitleOne': '{n} Spiel von {name}',
+  'member.ownedTitle': '{n} Spiele von {name}',
   'member.noSessions': 'Noch bei keiner Session dabei',
   'member.saved': 'Gespeichert',
   'member.claim': 'Das bin ich',
