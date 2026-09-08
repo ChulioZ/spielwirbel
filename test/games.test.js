@@ -942,7 +942,7 @@ test('POST games drops ownerIds on a WISH — the round does not own it yet', as
   assert.equal('ownerIds' in res.body, false);
 });
 
-test('PATCH replaces the owners, and clearing them empties the list', async () => {
+test('PATCH replaces the owners, and clearing them removes the key', async () => {
   const round = await createRound(request);
   const [alice, bob] = round.members;
   const game = (await addOwned(round.id, { title: 'Azul' }, [alice.id])).body;
@@ -951,9 +951,12 @@ test('PATCH replaces the owners, and clearing them empties the list', async () =
     .patch(`/api/rounds/${round.id}/games/${game.id}`).send({ ownerIds: [bob.id] });
   assert.deepEqual(swapped.body.ownerIds, [bob.id]);
 
+  // Clearing REMOVES the key rather than storing `[]`, so a cleared game is
+  // byte-identical to one nobody ever marked — the shape createGame, move, copy,
+  // the round import and the bulk path (#972) all produce.
   const cleared = await request(app)
     .patch(`/api/rounds/${round.id}/games/${game.id}`).send({ ownerIds: [] });
-  assert.deepEqual(cleared.body.ownerIds, [], 'cleared reads as ownerless, like an absent key');
+  assert.equal('ownerIds' in cleared.body, false, 'cleared must leave no key, not []');
 
   const bad = await request(app)
     .patch(`/api/rounds/${round.id}/games/${game.id}`).send({ ownerIds: ['nobody'] });

@@ -2253,6 +2253,109 @@ module.exports = function repoContract(repo) {
     }
   });
 
+  /* The single write path clears the same way the bulk one does (#972): an empty
+     list stores ABSENCE, not `[]`. Two shapes for one user action — differing by
+     which screen the user reached it from — is what this pins shut. */
+  test('updateGame clears owners by removing the key, like every other writer', async () => {
+    const round = await freshRound({ name: 'Single clear', members: ['Anna', 'Ben'] });
+    const [anna, ben] = round.members;
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul', ownerIds: [anna.id] }));
+
+    const swapped = await repo.updateGame(T, round.id, g.id, { ownerIds: [ben.id] });
+    assert.deepEqual(swapped.ownerIds, [ben.id], 'a non-empty list still replaces');
+
+    const cleared = await repo.updateGame(T, round.id, g.id, { ownerIds: [] });
+    assert.equal('ownerIds' in cleared, false, 'the returned row must carry no key');
+    assert.equal('ownerIds' in (await repo.getGame(T, round.id, g.id)), false, 'nor the stored one');
+  });
+
+  /* The subtle half of the Postgres implementation: `mergeData` cannot remove a
+     key, so the clear merges first and subtracts after. Subtracting the key from
+     the ROW before merging — or merging without subtracting — loses one of the
+     two halves, and only a patch carrying both can tell. */
+  test('a patch clearing owners AND setting another field lands both', async () => {
+    const round = await freshRound({ name: 'Mixed patch', members: ['Anna'] });
+    const anna = round.members[0];
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul', ownerIds: [anna.id] }));
+
+    const out = await repo.updateGame(T, round.id, g.id, { title: 'Azul II', ownerIds: [] });
+    assert.equal(out.title, 'Azul II', 'the other field must still land');
+    assert.equal('ownerIds' in out, false, 'and the owners must still be cleared');
+
+    const read = await repo.getGame(T, round.id, g.id);
+    assert.equal(read.title, 'Azul II');
+    assert.equal('ownerIds' in read, false);
+  });
+
+  /* ------------------------ Bulk game owners (#972) ------------------------ */
+
+  test('setGameOwners replaces the owner set across the selection', async () => {
+    const round = await freshRound({ name: 'Bulk owners', members: ['Anna', 'Ben'] });
+    const [anna, ben] = round.members;
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'Azul' }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'Brass' }));
+    const c = await repo.createGame(T, round.id, gameFields({ title: 'Cascadia', ownerIds: [anna.id] }));
+
+    assert.deepEqual(await repo.setGameOwners(T, round.id, [a.id, b.id], [anna.id, ben.id]), { updated: 2 });
+
+    const games = Object.fromEntries((await repo.getRound(T, round.id)).games.map((g) => [g.id, g]));
+    assert.deepEqual(games[a.id].ownerIds, [anna.id, ben.id]);
+    assert.deepEqual(games[b.id].ownerIds, [anna.id, ben.id]);
+    assert.deepEqual(games[c.id].ownerIds, [anna.id], 'a game outside the selection is untouched');
+
+    // Replace, not merge — otherwise a name could never come back off a shelf.
+    assert.deepEqual(await repo.setGameOwners(T, round.id, [a.id], [ben.id]), { updated: 1 });
+    assert.deepEqual((await repo.getGame(T, round.id, a.id)).ownerIds, [ben.id]);
+  });
+
+  /* The half most likely to drift between the backends: `mergeData` is
+     `data || patch`, which cannot REMOVE a key, so Postgres has to drop to the
+     `-` operator where the JSON backend just `delete`s. A copy that stored `[]`
+     instead would read identically everywhere and be invisible outside here. */
+  test('setGameOwners CLEARS by removing the key, not by storing []', async () => {
+    const round = await freshRound({ name: 'Clearing', members: ['Anna'] });
+    const anna = round.members[0];
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul', ownerIds: [anna.id] }));
+    assert.deepEqual(g.ownerIds, [anna.id], 'fixture: owned to start with');
+
+    assert.deepEqual(await repo.setGameOwners(T, round.id, [g.id], []), { updated: 1 });
+    assert.equal('ownerIds' in (await repo.getGame(T, round.id, g.id)), false);
+    // And through the round read too, since the two go down different paths.
+    const read = (await repo.getRound(T, round.id)).games.find((x) => x.id === g.id);
+    assert.equal('ownerIds' in read, false, 'absent-key parity with a never-owned game');
+  });
+
+  test('setGameOwners skips a wish rather than stamping or counting it', async () => {
+    const round = await freshRound({ name: 'Wishes', members: ['Anna'] });
+    const anna = round.members[0];
+    const shelf = await repo.createGame(T, round.id, gameFields({ title: 'Owned' }));
+    const wish = await repo.createGame(T, round.id, gameFields({ title: 'Wanted', wish: true }));
+
+    assert.deepEqual(
+      await repo.setGameOwners(T, round.id, [shelf.id, wish.id], [anna.id]), { updated: 1 });
+    assert.deepEqual((await repo.getGame(T, round.id, shelf.id)).ownerIds, [anna.id]);
+    assert.equal('ownerIds' in (await repo.getGame(T, round.id, wish.id)), false);
+  });
+
+  test('setGameOwners refuses a stale selection WHOLE, exactly as moveGames does', async () => {
+    const round = await freshRound({ name: 'Mine', members: ['Anna'] });
+    const other = await freshRound({ name: 'Theirs' });
+    const anna = round.members[0];
+    const mine = await repo.createGame(T, round.id, gameFields({ title: 'Mine' }));
+    const theirs = await repo.createGame(T, other.id, gameFields({ title: 'Theirs' }));
+
+    assert.equal(await repo.setGameOwners(T, round.id, [mine.id, theirs.id], [anna.id]), 'unknown_game');
+    assert.equal('ownerIds' in (await repo.getGame(T, round.id, mine.id)), false,
+      'the valid half must not have been written');
+  });
+
+  test('setGameOwners answers null for a missing round and across tenants', async () => {
+    const round = await freshRound({ name: 'Scoped', members: ['Anna'] });
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul' }));
+    assert.equal(await repo.setGameOwners(T, 'nope', ['x'], []), null);
+    assert.equal(await repo.setGameOwners(OTHER, round.id, [g.id], []), null);
+  });
+
   test('moveGames reparents every game and merges tags by name (#253)', async () => {
     const src = await freshRound({ name: 'Source' });
     const dst = await freshRound({ name: 'Target' });

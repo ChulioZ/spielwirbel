@@ -39,14 +39,17 @@ const roundFixture = (over = {}) => ({
 function spy({ confirm = true, reply = {}, round = null } = {}) {
   const calls = [];
   const confirms = [];
+  const confirmOpts = [];
   dom.set('api', async (method, path, body) => {
     calls.push({ method, path, body: body && JSON.parse(JSON.stringify(body)) });
     return method === 'GET' && round ? round : reply;
   });
-  dom.set('confirmDialog', (o) => { confirms.push(o.body); return Promise.resolve(confirm); });
+  dom.set('confirmDialog', (o) => {
+    confirms.push(o.body); confirmOpts.push(o); return Promise.resolve(confirm);
+  });
   dom.set('toast', () => {});
   dom.set('showRound', () => {});
-  return { calls, confirms, posts: () => calls.filter((c) => c.method === 'POST') };
+  return { calls, confirms, confirmOpts, posts: () => calls.filter((c) => c.method === 'POST') };
 }
 
 const regal = (over) => {
@@ -162,6 +165,124 @@ test('the selection survives a filter change, and the count states it', () => {
     'the off-screen pick is still counted, not silently dropped');
   cardFor('Brass').click();
   assert.match(bar().querySelector('.bulk-bar__count').textContent, /^2 /);
+});
+
+/* ---------------------------------------------------- owners (#972) */
+
+/* The owner picker is the only bulk action that goes through a SHEET, so its OK
+   travels closeSheet -> history.back() -> popstate -> the deferred callback
+   (.claude/rules/sheet-history-back-dismissal.md).
+
+   `flush()` CANNOT await that: it is a `setImmediate`, and jsdom queues popstate
+   on a task source `setImmediate` does not drain — measured, twenty of them move
+   it no further than one. The pop then lands during the NEXT test, which reads as
+   this one's request simply never being made while the following test passes.
+   A real timer drains it; see .claude/rules/jsdom-popstate-needs-a-real-timer.md. */
+const settle = async () => {
+  for (let i = 0; i < 6; i++) await new Promise((r) => dom.window.setTimeout(r, 0));
+};
+
+const sheet = () => dom.document.querySelector('.sheet-backdrop .sheet');
+const ownerChips = () => [...sheet().querySelectorAll('.filter-chips .chip')];
+const chipFor = (name) => ownerChips().find((c) => c.textContent.includes(name));
+const sheetBtn = (label) => [...sheet().querySelectorAll('.sheet__actions .btn')]
+  .find((b) => b.textContent.trim() === label);
+
+const OWNERS_ROUND = {
+  members: [{ id: 'm1', name: 'Anna' }, { id: 'm2', name: 'Ben' }],
+};
+
+/* Each of these closes its picker before finishing. A sheet left open is torn
+   down by the NEXT openSheet, but its history marker is not — so the following
+   test's closeSheet finds no marker to consume and never runs its callback,
+   which presents as the request simply not being made. */
+test('the owners action opens a picker over the round\'s members', async () => {
+  spy();
+  regal(OWNERS_ROUND);
+  toggleBtn().click();
+  assert.equal(act('owners').disabled, true, 'an empty selection must not be actionable');
+
+  cardFor('Azul').click();
+  assert.equal(act('owners').disabled, false);
+  act('owners').click();
+
+  assert.ok(sheet(), 'no picker opened');
+  // The chip carries an avatar before the name, so match on the name, not equality.
+  assert.equal(ownerChips().length, 2, 'one chip per seat of the round');
+  assert.ok(chipFor('Anna') && chipFor('Ben'), 'both seats must be offered');
+  assert.ok(ownerChips().every((c) => c.getAttribute('aria-pressed') === 'false'),
+    'the picker must start empty — the selection can hold games with different owners');
+
+  sheetBtn('Abbrechen').click();
+  await settle();
+});
+
+test('picking owners sends exactly the selected games and the chosen seats', async () => {
+  const { posts, confirms, confirmOpts } = spy();
+  const r = regal(OWNERS_ROUND);
+  toggleBtn().click();
+  cardFor('Azul').click();
+  cardFor('Cascadia').click();
+  act('owners').click();
+
+  chipFor('Anna').click();
+  chipFor('Ben').click();
+  chipFor('Ben').click(); // toggled back off — only Anna should travel
+  sheetBtn('OK').click();
+  await settle();
+
+  assert.equal(confirms.length, 1);
+  assert.match(confirms[0], /Anna/, 'the confirm must name who, not just how many');
+  assert.equal(confirmOpts[0].danger, false, 'setting owners destroys nothing');
+  assert.equal(confirmOpts[0].confirmLabel, 'Besitzer setzen');
+  assert.equal(posts().length, 1);
+  assert.equal(posts()[0].path, `/api/rounds/${r.id}/games/bulk-owners`);
+  assert.deepEqual([...posts()[0].body.gameIds].sort(), ['g1', 'g3']);
+  assert.deepEqual(posts()[0].body.ownerIds, ['m1']);
+});
+
+/* An empty pick is the CLEAR, and it gets its own wording: "set the owners of 3
+   games to ''" is not a sentence, and this is the half worth a warning. */
+test('OK with nobody picked sends the clear, under its own confirm', async () => {
+  const { posts, confirms, confirmOpts } = spy();
+  regal(OWNERS_ROUND);
+  toggleBtn().click();
+  cardFor('Azul').click();
+  act('owners').click();
+  sheetBtn('OK').click();
+  await settle();
+
+  assert.equal(posts().length, 1);
+  assert.deepEqual(posts()[0].body.ownerIds, [], 'an empty pick must reach the server as the clear');
+  assert.match(confirms[0], /entfernen/, 'the clear needs its own wording, not the set one');
+  // The verb on the button must match the deed — a danger button reading „Besitzer
+  // setzen" over a question about REMOVING them is the worst moment to be vague.
+  assert.equal(confirmOpts[0].danger, true, 'clearing is the half worth a warning');
+  assert.equal(confirmOpts[0].confirmLabel, 'Besitz entfernen');
+});
+
+test('cancelling the picker sends nothing at all', async () => {
+  const { posts, confirms } = spy();
+  regal(OWNERS_ROUND);
+  toggleBtn().click();
+  cardFor('Azul').click();
+  act('owners').click();
+  chipFor('Anna').click();
+  sheetBtn('Abbrechen').click();
+  await settle();
+
+  assert.equal(posts().length, 0, 'a cancelled picker must not write');
+  assert.equal(confirms.length, 0, 'and must not even reach the confirm');
+});
+
+/* A round with no seats has nobody to name, so the picker could only ever clear.
+   Hidden rather than disabled — the same call renderOwnerChips makes for itself. */
+test('the owners action is absent when the round has no members', () => {
+  spy();
+  regal({ members: [] });
+  toggleBtn().click();
+  assert.equal(act('owners'), null);
+  assert.ok(act('retire'), 'the other actions are unaffected');
 });
 
 test('leaving the mode clears the selection', () => {

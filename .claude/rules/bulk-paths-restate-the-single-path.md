@@ -8,12 +8,23 @@ paths:
 ---
 # A bulk mutation is not "the single one in a loop" — it re-decides four things
 
-`moveGames` (#253), `createGames` (#481) and now `retireGames`/`deleteGames`
-(#832) all exist because the single-game path does not scale to a shelf that was
-filled in one action. Each time, the same four questions come up, and three of
-them fail **silently** if answered by reflex.
+`moveGames` (#253), `createGames` (#481), `retireGames`/`deleteGames` (#832) and
+`setGameOwners` (#972) all exist because the single-game path does not scale to a
+shelf that was filled in one action. Each time, the same four questions come up,
+and three of them fail **silently** if answered by reflex.
 
-## 1. The activity is ONE counted row, not N
+## 1. The activity is ONE counted row, not N — or NONE
+
+**Read the single path first: the answer can be zero rows.** `setGameOwners`
+(#972) writes no activity at all, because `PATCH …/games/:gid` writes none for an
+owner change either. A counted `games_owners_set` would have been the reflex
+answer and it is the wrong one: it makes the bulk path announce in the Chronik
+something the per-game editor stays silent about, so the same edit is public or
+private depending on which screen the user happened to reach it from. It is also
+the one bulk route in `lib/routes/games.js` with no `actorSeat` argument — worth
+knowing before you "fix" that as an omission.
+
+Where the single path *does* write one, the rule below holds.
 
 `games_imported`, `games_moved_out`/`games_moved_in`, `games_retired`,
 `games_deleted` all carry `{ count }` instead of a title. Undoing a 200-game
@@ -60,6 +71,40 @@ there (#402 kept #253's behaviour). Do **not** copy that shape onto a bulk
 retire or delete: a missing field must never be read as "everything". Both
 `bulk-*` routes require a non-empty array, and `test/games-bulk.test.js` pins
 that `{}` and `{ gameIds: [] }` are 400s.
+
+## 3b. What "restates the single path" does NOT mean: identical refusals
+
+`setGameOwners` (#972) is the worked example, and it cuts against the grain of
+this file, so it is worth stating explicitly. The single `PATCH` **400s** when it
+is handed owners for a wish (`'A wish has no owners'`); the bulk path **skips**
+the wish and counts only the rest.
+
+That is not a drift. The two are answering different questions. The PATCH speaks
+for a detail page that shows no owner row at all for a wish, so a request
+carrying owners for one is a broken or stale client and deserves an error. A bulk
+selection is a *filtered sweep* the user aimed at a shelf — a wish landing in it
+is ordinary, and refusing the whole request over one would break the action
+exactly where it is most useful, with an error naming a game the user never
+thought about.
+
+The test that separates this from §3's stale-selection rule: an id the round does
+not hold means the caller's **view of the world is wrong**, so refuse whole; a
+game the round *does* hold that this action cannot apply to means the caller's
+**aim was broad**, so skip it and report the count. Both keep the user honest
+about what happened, and the count is what does it.
+
+**The counter-example is the one that got fixed rather than documented.** The
+same PR first had the bulk clear remove the `ownerIds` key while the single
+`PATCH` stored `[]`, and wrote that down here as a second deliberate asymmetry.
+It was not one. A *refusal* can legitimately differ between the two paths,
+because the caller's situation differs; a **stored shape** cannot, because the
+data outlives the path that wrote it — leaving two representations of "nobody
+owns this", picked by which screen the user happened to use. `updateGame` now
+clears the key too (both backends, pinned in the contract suite).
+
+So the question to ask of every difference you are about to justify here: does it
+follow from *who is calling and why* (legitimate), or does it leave *different
+bytes on disk for the same user action* (a bug wearing a rationale)?
 
 ## 4. The role it costs is the SINGLE path's, per action — never one gate for the pair
 

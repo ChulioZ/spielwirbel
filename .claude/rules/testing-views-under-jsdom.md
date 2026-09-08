@@ -148,8 +148,19 @@ and both worth restating because they produced confident, wrong reds:
   itself, so a test looking for „Einladen" stayed green against a genuinely
   reintroduced control.
 
+## `flush()` has one blind spot: a sheet closing through history
+
+It is a `setImmediate`, and jsdom queues `popstate` where `setImmediate` cannot
+reach it — so a spec that clicks a sheet's OK and flushes reads the page before
+`closeSheet`'s deferred callback has run, no matter how many times it flushes.
+The pop then lands during the NEXT test, so the failure shows up one test away
+from its cause and alternates as tests are added or filtered.
+`.claude/rules/jsdom-popstate-needs-a-real-timer.md` has the measurements, the
+`dom.window.setTimeout` replacement, and the two state probes that identify it.
+
 **Related:** `.claude/rules/frontend-helper-modules-and-coverage.md` (the
 coverage gate this is shaped around), `.claude/rules/break-the-code-on-purpose.md`
 (why a converted test must still be seen red),
 `.claude/rules/frontend-script-load-order.md` (the load order the harness
-reproduces).
+reproduces), `.claude/rules/jsdom-popstate-needs-a-real-timer.md` (the one async
+path `flush()` cannot await).
