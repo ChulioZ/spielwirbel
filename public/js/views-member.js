@@ -321,6 +321,45 @@ async function showMember(rid, mid) {
   );
   app.appendChild(statsSec);
 
+  /* „3 Spiele von Anna" (#973): the boxes this member brings. The fourth reader
+     of `game.ownerIds` (#971) and the only one asking from the PERSON's side —
+     the other three ask whether the table can put a given box on it.
+
+     `isActiveGame` rather than a hand-written `!retired`: a retired or completed
+     game is off the shelf and a wish is nobody's, so none of the three answers
+     "which boxes are Anna's?" (.claude/rules/active-games-filter-sites.md). An
+     owner id naming a seat that is gone simply never matches, like every other
+     reader.
+
+     HIDDEN ENTIRELY at zero, not shown empty. Most rounds will never record an
+     owner, and „Spiele von Anna" over an empty grid on every member page would
+     advertise a feature the round does not use — the same call the detail page's
+     expansions section makes on a sparse page. */
+  const owned = round.games
+    .filter((g) => isActiveGame(g) && (g.ownerIds || []).includes(mid))
+    .sort((a, b) => a.title.localeCompare(b.title, getLocale(), { sensitivity: 'base' }));
+  if (owned.length) {
+    const ownedSec = h(`<div class="section">
+         <h2>${esc(tn(owned.length, 'member.ownedTitleOne', 'member.ownedTitle', { name: member.name }))}</h2>
+         <div class="member-games"></div>
+       </div>`);
+    const grid = ownedSec.querySelector('.member-games');
+    owned.forEach((g) => {
+      // The setup screen's pool tile, reused whole: same object, same crop, so a
+      // cover the round recognises there is the same picture here. An <a>, not
+      // its <span>, because these navigate — makeGameLink then carries the href
+      // and the .nav-link reset that strips the UA underline.
+      const style = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_CARD)}')"` : '';
+      const tile = h(`<a class="pool-tile" title="${esc(g.title)}">
+           <span class="pool-tile__img"${style}>${coverPlaceholder(g)}</span>
+           <span class="pool-tile__name">${esc(g.title)}</span>
+         </a>`);
+      makeGameLink(tile, rid, g.id);
+      grid.appendChild(tile);
+    });
+    app.appendChild(ownedSec);
+  }
+
   // Who sits here? Three mutually exclusive states, and the split matters:
   //   - MY seat (#421) → „Das bin ich nicht", which only nulls the link.
   //   - someone ELSE's account (a shared grantee, #207) → the owner revokes

@@ -130,10 +130,47 @@ test('the players reason reads as a sentence, with its own solo phrasing (#805)'
   // The collective numeral is deliberately not used: „Zu 4. am besten" reads as
   // an ordinal and „zu viert" would need a hand-written table, so the line
   // reuses the app's own established „{n} Personen" phrasing.
-  assert.deepEqual(await lines('de'), ['Am besten mit 4 Personen', 'Am besten solo']);
+  //
+  // The trailing clause is the ROUND's half of the comparison (#975). `players`
+  // is the one term that carries it in wording alone rather than in a field: the
+  // count is by construction a size out of the round's own party distribution,
+  // so the sentence can assert it without the server sending anything.
+  assert.deepEqual(await lines('de'), [
+    'Am besten mit 4 Personen — eine eurer Rundengrößen',
+    'Am besten solo — und ihr spielt auch solo',
+  ]);
   // n = 1 goes through tn()'s one-category key rather than an `n === 1` branch,
   // which is what keeps „Am besten mit 1 Personen" off the card.
-  assert.deepEqual(await lines('en'), ['Plays best with 4 players', 'Plays best solo']);
+  assert.deepEqual(await lines('en'), [
+    'Plays best with 4 players — one of your group sizes',
+    'Plays best solo — and you do play solo',
+  ]);
+});
+
+test('the complexity and time lines NAME the round\'s own number, not just the candidate\'s (#975)', async (t) => {
+  const lines = async (locale) => {
+    const { dom } = await render(t, full({
+      recommendations: [rec({
+        reasons: [{ term: 'complexity', weight: 2.8, target: 2.5 }, { term: 'time', minutes: 90, target: 75 }],
+      })],
+    }), { locale });
+    return [...dom.app.querySelectorAll('.rec-card__why li')].map((li) => li.textContent);
+  };
+
+  // Both halves on the card. Without the round's number these read as a restatement
+  // of the fact row above the title with an unjudgeable claim attached — the reader
+  // cannot tell whether 2.8 is close to this round or nowhere near it.
+  const de = await lines('de');
+  assert.deepEqual(de, ['Gewicht 2,8 — euer Schnitt liegt bei 2,5', 'Rund 90 Minuten — eure Spiele liegen im Schnitt bei 75']);
+  const en = await lines('en');
+  assert.deepEqual(en, ['Complexity 2.8 — your average is 2.5', 'About 90 minutes — your games average 75']);
+
+  // The time line must say GAMES, never sessions: sessions record no duration
+  // anywhere in this app, and the number is the shelf's mean max-playtime. The
+  // pre-#975 wording („wie eure üblichen Sessions") claimed a measurement that
+  // does not exist, in every shipped locale.
+  assert.doesNotMatch(de.join(' '), /Session/i);
+  assert.doesNotMatch(en.join(' '), /session/i);
 });
 
 /* ------------------------- „Nicht interessiert" (#782) ------------------------- */
