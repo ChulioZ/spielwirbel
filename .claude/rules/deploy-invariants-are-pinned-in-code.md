@@ -19,8 +19,11 @@ copy, so every ceiling doubles and every per-caller bound stops bounding:
 | `MAX_LIVE_DEMOS_PER_IP` | *not* affected — it counts rows, not memory. Listed because the neighbouring `DEMO_RATE_LIMIT_MAX` **is**, and the two are easy to conflate (`.claude/rules/per-ip-live-caps.md`) |
 
 None of that errors, fails a check, or reddens a test — the limits simply stop
-meaning what the env vars say. **#215 (a shared Redis store) is the prerequisite
-for raising the count**, and until it ships the pin is the control.
+meaning what the env vars say. **A shared store is the prerequisite for raising
+the count, and no issue owns it**: #215 (Redis) was closed unshipped on
+2026-08-02 — found by the 2026-09-08 audit, the `deferred-weakness-attributions-rot.md`
+shape — so the pin IS the control, and the change that raises the count must ship
+the store itself.
 
 `sleepApplication` is the smaller one: a sleeping container runs no 15-minute
 demo-purge tick (`lib/scheduler.js`), so expired demos accumulate against
@@ -58,4 +61,4 @@ in this file, in `docs/deploy-railway.md`, and in the assertions in
 **Related:** `.claude/rules/liveness-vs-readiness-probes.md` (the third pinned
 `deploy` key, and why it must stay `/healthz`),
 `.claude/rules/railway-no-dockerfile-volume.md` (the other way a Railway deploy
-config breaks the container), `docs/production-readiness.md` §7 item 5 (#215).
+config breaks the container), `docs/production-readiness.md` §7 item 5 (#215, closed unshipped).

@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-07-28
+**Stand:** 2026-09-08
 
 ## Eingang & Identitätsprüfung
 
@@ -25,7 +25,15 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
   globalen Speichern (#397): **Freundschaften, Freundeskreis-Feed-Ereignisse,
   Postfach (Inbox), Einladungen und Runden-Freigaben (Grants)** — genau die
   Kategorien, die die Kontolöschung (Art. 17) ebenfalls entfernt. Auskunft und
-  Löschung decken damit dieselben Datensätze ab.
+  Löschung decken damit dieselben Datensätze ab — mit **einer bewussten
+  Ausnahme**: die **Abstimmungslinks** (#652, VVT Zeile 19) werden bei der
+  Kontolöschung mit entfernt, aber **nicht exportiert**. Ein Link-Datensatz
+  enthält keine personenbezogenen Daten (nur die zufällige Kennung und die
+  Session-Zuordnung), und er ist eine *lebende Berechtigung*: in einen Export
+  geschrieben wäre er ein funktionierender Stimmzettel in einer Datei, die
+  weitergereicht werden kann (`exportAccountData` in `lib/repo/json.js` bzw.
+  `postgres.js` begründet das im Code). Auf eine Anfrage, die ausdrücklich nach
+  den Links fragt, genügt die Auskunft über ihre Anzahl und Ablaufzeit.
 - Feedback ist kontounabhängig gespeichert; nur bei angegebener E-Mail
   zuordenbar — dann mit exportieren.
 

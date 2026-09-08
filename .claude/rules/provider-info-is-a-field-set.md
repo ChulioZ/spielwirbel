@@ -5,6 +5,7 @@ paths:
   - "lib/routes/games.js"
   - "lib/routes/vote-link.js"
   - "public/js/game-info.js"
+  - "public/js/provider-info-fields.js"
   - "lib/repo/json.js"
   - "lib/repo/postgres.js"
 ---
@@ -29,7 +30,7 @@ never complete, so every game re-asks BGG once per `PROVIDER_INFO_TTL_MS` (7 day
 forever — a standing upstream request per game per week against a provider whose
 terms ask for few requests.
 
-**So the field list is ONE module**, `lib/provider-info-fields.js` — the field
+**So the field list is ONE module**, `public/js/provider-info-fields.js` (under `public/js/` since the 2026-09-08 audit: the client's `wantsGameInfo` asks the same question, `.claude/rules/shared-constants-across-the-stack.md`) — the field
 names *and* the guard deciding what counts as a value — read by the check, the
 write loop, both repo backends and the games route. It is dependency-free on
 purpose: `lib/provider-info.js` requires `./providers`, so putting the shape

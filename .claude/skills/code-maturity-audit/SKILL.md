@@ -113,7 +113,7 @@ concern gets the question, answered in writing. The two §7 items still open are
 **already tracked** — the error-tracking half of #212 (constrained by the
 operator's deliberate `ERROR_WEBHOOK_URL` decision, see
 `.claude/rules/liveness-vs-readiness-probes.md` and `docs/deploy-railway.md`)
-and the multi-process limiter store (#215) — so they are context, not fresh
+and the multi-process limiter store (#215, closed unshipped — the replica pin is the control) — so they are context, not fresh
 findings; dedupe against them.
 
 ### 3. Multi-process state → M-006

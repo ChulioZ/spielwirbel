@@ -250,8 +250,9 @@ and `.env`-only secrets management (see
   `captureError`'s `ERROR_WEBHOOK_URL` forward. Choosing a real provider (e.g.
   Sentry) is a later, separate decision (cost/DPA implications, §9).
 - **Rate-limit store** — `express-rate-limit`'s in-memory store only works
-  correctly for one process; fine today (single Railway instance), tracked as
-  a prerequisite for horizontal scaling as **#215**.
+  correctly for one process; fine today (single Railway instance, pinned in
+  `railway.json`). **#215** was closed unshipped on 2026-08-02; a shared store
+  ships with whatever change raises the replica count.
 
 ---
 
@@ -367,7 +368,8 @@ version further. Filed as #211–#215 (2026-07-19).
    works correctly for exactly one process. Fine today (single Railway
    instance); becomes wrong the moment horizontal scaling (§12) adds a
    second process. Track `rate-limit-redis` (or similar) as a prerequisite for
-   scaling out, not an immediate fix. Filed as **#215**.
+   scaling out, not an immediate fix. Filed as **#215** — closed unshipped
+   2026-08-02; the `numReplicas: 1` pin (`railway.json`, #646) is the control.
 
 **Recommendation.** #1 (migrations/Knex) is **shipped (#211)** — it was the one
 place a real production incident risk already existed. The rest are fast-follow
@@ -665,9 +667,9 @@ same as anything else.
 | **#173** | Voluntary donations support link | **Shipped** 2026-07-22 — legally invisible (unconditional, no AGB/Widerruf) |
 | **#207** | Invitations & round sharing (multi-user rounds) | **Shipped** 2026-07-24 as per-round grants, *not* co-tenancy — see [`.claude/rules/round-grant-resolver.md`](../.claude/rules/round-grant-resolver.md) |
 | **#209** | Per-device voting | **Open**, and deliberately deprioritised — the group needing no accounts is a defining property, so this stays opt-in and never the default |
-| **#215** | Move `express-rate-limit` to a shared Redis store | **Open.** Prerequisite for horizontal scaling |
+| **#215** | Move `express-rate-limit` to a shared Redis store | **Closed unshipped** 2026-08-02. The single-replica pin (`railway.json`, #646) is the accepted control; the store ships with the change that raises the count |
 | **#311** | Automate the 3-year moderation-log retention purge | **Open.** Extremely low priority until ~2029 (year-end cutoff math) |
-| — | Horizontal scaling (multi-process behind LB — enabled by stateless tier) | Not yet filed as its own issue; depends on #215 |
+| — | Horizontal scaling (multi-process behind LB — enabled by stateless tier) | Not yet filed as its own issue; needs a shared limiter store first (#215 closed unshipped) |
 | — | Mobile-web responsiveness pass | Not yet filed as its own issue |
 | — | Localize server-side error messages if user-facing surfaces grow | Not yet filed as its own issue |
 | — | Attorney trademark clearance (DPMA + EUIPO) for the chosen brand | Advisable before heavy brand spend, not blocking anything shipped (§10) |

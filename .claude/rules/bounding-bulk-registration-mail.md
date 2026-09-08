@@ -104,7 +104,8 @@ discards the whole uncommitted change
   out from under themselves.
 - **The counters are per process and in memory**, so each instance carries its own
   budget and a restart clears it — the same caveat as the rate limiters, and the
-  reason #215 (a shared limiter store) exists.
+  reason a shared limiter store would be a prerequisite of a second replica (#215
+  was closed unshipped; `deploy-invariants-are-pinned-in-code.md` holds the pin).
 
 **Related:** `.claude/rules/mail-sending-endpoints-need-a-per-account-cooldown.md`
 (the sibling defence and why it doesn't transfer),

@@ -108,6 +108,28 @@ test('configured: the privacy policy covers the real processors and no ODR link'
     assert.ok(res.text.includes(marker), `policy must mention ${marker}`);
   }
   assert.ok(!res.text.includes('ec.europa.eu/consumers/odr'), 'no link to the shut-down ODR platform');
+});
+
+// §7 must name EVERY host the browser can be sent to for a cover — derived from
+// the CSP source list rather than restated, so a host cannot be retired from the
+// policy text while imageCspSources() still lets the browser contact it. The
+// 2026-09-08 audit found only two of the five legacy hosts pinned above, i.e.
+// the Sony, Nintendo and Microsoft lines could be deleted with the suite green
+// (Art. 13(1)(e) recipients). Twice each: once per language half.
+test('configured: the policy discloses every cover host the CSP allows, in both languages', async () => {
+  Object.assign(process.env, IDENTITY);
+  const { LEGACY_COVER_HOSTS, providers } = require('../lib/providers');
+  const hosts = new Set([...LEGACY_COVER_HOSTS, ...Object.values(providers).flatMap((p) => p.imageHosts)]);
+  assert.ok(hosts.size >= 3, 'the host list is not vacuous');
+  const res = await request(app).get('/datenschutz');
+  assert.equal(res.status, 200);
+  for (const host of hosts) {
+    // The policy names the registrable domain (`geekdo-images.com`), the CSP the
+    // exact host BGG serves from (`cf.geekdo-images.com`) — the apex covers it.
+    const apex = host.split('.').slice(-2).join('.');
+    const n = res.text.split(apex).length - 1;
+    assert.ok(n >= 2, `§7 must disclose cover host ${host} (${apex}) in both languages (found ${n})`);
+  }
   assert.ok(!res.text.includes('TTDSG'), 'uses the current TDDDG name');
 });
 

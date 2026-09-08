@@ -261,8 +261,8 @@ it waiting for the rest of the sweep to finish.
 ## Do not report these
 
 Each was decided deliberately (see the Rejected ledger): the absence of a CSRF
-token on Bearer-only `/api` (S-R01), the in-memory rate limiter (S-R02, tracked as
-#215), stateless access tokens (S-R03), the cover-host allowlist as a "hole"
+token on Bearer-only `/api` (S-R01), the in-memory rate limiter (S-R02 — #215
+closed unshipped; the tested single-replica pin is the control), stateless access tokens (S-R03), the cover-host allowlist as a "hole"
 (S-R04), "the app relies on RLS alone" (S-R05, false), and — the one most likely
 to be over-triggered by S-021 — the mere fact that a file reveals how something
 works, absent a concrete cheap exploit the disclosure enables (S-R06). Re-reporting

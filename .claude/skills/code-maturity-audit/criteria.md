@@ -111,8 +111,8 @@ not a finding; the rejected entries below are that ledger.
 - **Check:** Sweep module-level mutable state (module-scope counters, Maps,
   caches) in `lib/` and `lib/routes/`. Classify each instance: (a) correct
   per-process by design; (b) a **documented accepted trade-off** — the
-  in-memory rate-limiter stores (#215 tracks the Redis store as a scaling
-  prerequisite), the `MAIL_DAILY_MAX` budget in `lib/mail.js` (per-process by
+  in-memory rate-limiter stores (accepted: the tested `numReplicas: 1` pin is the
+  control — #215's Redis store was closed unshipped 2026-08-02), the `MAIL_DAILY_MAX` budget in `lib/mail.js` (per-process by
   documented decision, `bounding-bulk-registration-mail.md`), the 10-minute
   provider-hop cache in `lib/provider-cache.js` (extracted from
   `lib/routes/lookup.js` by #518/PR #587 once `lib/routes/games.js` became a
@@ -208,8 +208,9 @@ not a finding; the rejected entries below are that ledger.
 - **Status:** rejected · 2026-07-29
 - **Why:** `CLAUDE.md`: round data keeps exactly two backends behind the
   `lib/repo/` seam. The boundary matters — a Redis dependency for something
-  that isn't round data (the #215 limiter store) does not violate it, and #215
-  is tracked as a scaling prerequisite, not an audit finding.
+  that isn't round data (a shared limiter store) does not violate it; #215 was
+  closed unshipped and the single-replica pin is the accepted control, not an
+  audit finding.
 
 ### M-R04 — "Rewrite or optimize the JSON backend"
 - **Status:** rejected · 2026-07-29

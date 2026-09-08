@@ -88,7 +88,15 @@ const resultsPath = (rid, sid) => `/round/${rid}/session/${sid}`;
 // each routable show*(). While the router is driving (routing === true) or the
 // path already matches, it replaces; otherwise it pushes a new history entry.
 function syncUrl(path) {
-  // Every view calls this first, so it doubles as the navigation signal for
+  // Every view calls this first, so it is also where an open popover editor
+  // dies. openPopover() closes on mousedown-outside, Escape, scroll and resize —
+  // none of which a keyboard-activated link (Enter fires click with no
+  // mousedown) or the browser's Back button produces — so without this the
+  // editor floated over the NEXT screen, and `activePopover` kept uiBusy() true
+  // until the next mousedown (2026-09-08 audit). Sheets need nothing here: they
+  // own a history marker and handleSheetPop closes them.
+  closePopover();
+  // It also doubles as the navigation signal for
   // the SWR cache: bumping the token retires any background refresh armed by
   // the previous view (core.js swrRead) — a late response updates the cache
   // but must never re-render a view the user already left.

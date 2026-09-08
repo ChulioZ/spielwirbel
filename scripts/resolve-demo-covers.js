@@ -50,7 +50,7 @@ const { DEMO_ROUNDS } = require('../lib/demo-seed');
 // The same field set the repo backends store, so this script cannot emit a key
 // the seed would silently drop — nor miss one they would have kept
 // (.claude/rules/provider-info-is-a-field-set.md).
-const { PROVIDER_INFO_FIELDS, assignProviderInfo } = require('../lib/provider-info-fields');
+const { PROVIDER_INFO_FIELDS, assignProviderInfo } = require('../public/js/provider-info-fields');
 
 // Which const each round's games are declared as in lib/demo-seed.js, so the
 // printed block can be matched to the array it replaces.

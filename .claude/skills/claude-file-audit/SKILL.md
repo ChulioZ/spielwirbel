@@ -125,7 +125,11 @@ change had to update). Then diff `process.env.*` across `lib/`, `lib/routes/`,
 `scripts/`, `server.js` **and `knexfile.js`** against `.env.example` — entries
 there are commented out, so match on the name, not on an assignment. (Miss
 `knexfile.js` and `DATABASE_SSL` reads as an orphan entry; the platform-injected
-`NODE_ENV`/`RAILWAY_GIT_COMMIT_SHA` family is deliberately absent.)
+`NODE_ENV`/`RAILWAY_GIT_COMMIT_SHA` family is deliberately absent.) Two files read
+their names **table-driven** through `process.env[name]` — `lib/public-stats.js`
+(the fifteen `PUBLIC_STATS_MIN_*` plus `PUBLIC_STATS_RESOLVE_MAX`) and
+`lib/corpus.js` (`BGG_CORPUS_*`) — so a literal `process.env.X` grep reports
+nineteen false orphans; match those against the name tables, not the grep.
 
 The README tree and the cited paths are pinned by `test/readme-tree.test.js` and
 `test/skills.test.js` — check what those don't cover: prose that has quietly

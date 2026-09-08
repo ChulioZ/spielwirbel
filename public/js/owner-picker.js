@@ -46,6 +46,12 @@ function ownerNames(round, ownerIds) {
 // The chip row itself. `selected` is a live Set the caller reads back on submit —
 // the same contract the tag chips beside it use, so the two rows behave
 // identically under the finger.
+//
+// The avatar goes through memberColor() like every other avatar in the app: a
+// member's colour is position-derived unless one was picked on the member page,
+// so `m.color` is usually ABSENT, and the `m.color || '#888'` this shipped with
+// painted every chip flat grey — white initials at 3.5:1, and the one avatar on
+// screen that did not match the rail (2026-09-08 audit).
 function renderOwnerChips(round, selected) {
   const wrap = h('<div class="filter-chips"></div>');
   const members = (round && round.members) || [];
@@ -53,7 +59,7 @@ function renderOwnerChips(round, selected) {
   wrap.replaceChildren(...members.map((m) => {
     const on = selected.has(m.id);
     const chip = h(`<button type="button" class="chip${on ? ' is-on' : ''}" aria-pressed="${on}">`
-      + `<span class="chip__avatar avatar" style="background:${esc(m.color || '#888')}">`
+      + `<span class="chip__avatar avatar" style="background:${esc(memberColor(round, m.id))}">`
       + `${avatarFace(initials(m.name), { userId: m.userId })}</span>${esc(m.name)}</button>`);
     chip.addEventListener('click', () => {
       if (selected.has(m.id)) selected.delete(m.id);
