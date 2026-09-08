@@ -127,6 +127,13 @@ const profileOf = (round, corpus) =>
 const delta = (profile, a, b) =>
   Math.round((scoreCandidate(profile, a).score - scoreCandidate(profile, b).score) * 1e6) / 1e6;
 
+// One term's raw value, which is what a tolerance actually shapes. `delta` cannot
+// see a tolerance change on its own: the isolation fixtures put their "wrong"
+// candidate far enough out to saturate at 0 under any tolerance, so the gap stays
+// the full weight however the curve is retuned (#975 Part C).
+const termValue = (profile, candidate, term) =>
+  Math.round(scoreCandidate(profile, candidate).terms.find((t) => t.term === term).value * 1e6) / 1e6;
+
 /*
  * What `lib/routes/sessions.js` writes for a direct pick (#778): the game is
  * chosen up front, there is no voting phase, so `votes` stays empty and the
@@ -518,11 +525,33 @@ test('COMPLEXITY is symmetric — too heavy and too light are equally wrong', ()
   // rounding anyway. The claim is "the target IS the shelf's own weight".
   assert.equal(Math.round(profile.targetWeight * 1e6) / 1e6, 3);
   const centre = entry('x', { info: info({ weight: 3 }) });
-  const heavy = entry('y', { info: info({ weight: 4.2 }) }); // exactly the tolerance
+  const heavy = entry('y', { info: info({ weight: 4.2 }) }); // saturated: twice the tolerance out
   const light = entry('z', { info: info({ weight: 1.8 }) });
   assert.equal(delta(profile, centre, heavy), W_COMPLEXITY);
   assert.equal(delta(profile, centre, light), W_COMPLEXITY);
   assert.equal(delta(profile, heavy, light), 0, 'the same distance either side');
+});
+
+test('COMPLEXITY pays nothing 0.6 from the target, and exactly NEUTRAL at half of that', () => {
+  const profile = profileOf(shelfRound(), shelfCorpus());
+  assert.equal(Math.round(profile.targetWeight * 1e6) / 1e6, 3);
+  const at = (weight) => termValue(profile, entry('x', { info: info({ weight }) }), 'complexity');
+
+  // LITERALS, never WEIGHT_TOLERANCE: a curve test written in terms of the
+  // constant it guards holds at every value of that constant, which is the
+  // vacuous shape .claude/rules/break-the-code-on-purpose.md is about. These
+  // numbers are what 0.6 means, and they are wrong for 1.2 (which pays 0.75 at
+  // 3.3 and still pays 0.5 at 3.6).
+  assert.equal(at(3), 1, 'the target itself');
+  assert.equal(at(3.3), NEUTRAL, 'half the tolerance out is worth exactly an undocumented game');
+  assert.equal(at(2.7), NEUTRAL, 'and symmetrically on the light side');
+  assert.equal(at(3.6), 0, 'the full tolerance out pays nothing');
+  assert.equal(at(2.4), 0);
+
+  // NEUTRAL is also the reason gate, so this is the width of the band a
+  // complexity line may be spoken from: ±0.3, not ±0.6.
+  assert.ok(at(3.29) > NEUTRAL, 'just inside the gate');
+  assert.ok(at(3.31) < NEUTRAL, 'just outside it');
 });
 
 test('PLAYERS scores the poll against the round\'s real party sizes, Best over Recommended', () => {
@@ -772,6 +801,36 @@ test('TIME is the distance from the group\'s own evening length', () => {
   const fits = entry('x', { info: info({ maxPlaytime: 60 }) });
   const marathon = entry('y', { info: info({ maxPlaytime: 120 }) });
   assert.equal(delta(profile, fits, marathon), W_TIME);
+});
+
+test('TIME\'s window is a SHARE of the shelf, so it scales instead of costing the same everywhere', () => {
+  const shelfAt = (minutes) =>
+    profileOf(shelfRound(), shelfCorpus({ minPlaytime: minutes, maxPlaytime: minutes }));
+  const short = shelfAt(40);
+  const long = shelfAt(120);
+  assert.equal(Math.round(short.targetTime * 1e6) / 1e6, 40);
+  assert.equal(Math.round(long.targetTime * 1e6) / 1e6, 120);
+  const at = (profile, maxPlaytime) =>
+    termValue(profile, entry('x', { info: info({ maxPlaytime }) }), 'time');
+
+  assert.equal(at(short, 40), 1, 'each shelf still peaks at its own target');
+  assert.equal(at(long, 120), 1);
+
+  // THE ASSERTION NO FIXED TOLERANCE CAN SATISFY, at any value it could be given:
+  // half credit is reached 10 minutes out on the 40-minute shelf and 30 minutes
+  // out on the 120-minute one. A constant would have to be 20 and 60 at once.
+  // This is the whole point of the change — a narrowed fixed constant passes
+  // every other assertion in this test.
+  assert.equal(at(short, 50), NEUTRAL);
+  assert.equal(at(long, 150), NEUTRAL);
+
+  // And the zero points, which are that same claim at the edge of the window.
+  assert.equal(at(short, 60), 0, 'a 60-minute game says nothing to a filler shelf');
+  assert.equal(at(long, 180), 0);
+  // The same candidate, read by two rounds: 70 minutes is off the 40-minute
+  // shelf's scale entirely and still earns credit on the 120-minute one.
+  assert.equal(at(short, 70), 0);
+  assert.ok(at(long, 70) > 0);
 });
 
 test('an UNKNOWN attribute scores neutral, not zero', () => {
@@ -1030,6 +1089,25 @@ test('each recommendation names up to three terms that actually earned it', () =
   assert.equal(rec.reasons[0].rating, 8.4);
   assert.equal(rec.reasons[1].weight, 3);
   assert.equal(rec.reasons[2].players, 4);
+});
+
+test('the complexity and time reasons carry the ROUND\'s number alongside the candidate\'s (#975)', () => {
+  const round = shelfRound();
+  // Everything but complexity and time is pushed under the gate on purpose, so
+  // both survive the three-line slice: bottom-of-the-band rating, foreign
+  // mechanics and categories, and a poll with nothing to say.
+  const cand = entry('cand', {
+    bayesRating: 5.5,
+    info: info({ weight: 2.8, maxPlaytime: 50, mechanics: ['ZZ'], categories: ['ZZ'], bestWith: [], recommendedWith: [] }),
+  });
+  const [rec] = recommend(round, [...shelfCorpus(), cand]).recommendations;
+
+  // The shelf sits at 3.0 / 60 min and the candidate at 2.8 / 50, so a `target`
+  // wired to the candidate's own value — the copy-paste this shape invites —
+  // cannot pass. The pre-#975 payload had no `target` at all, and the line read
+  // „Gewicht 2,8" with an unjudgeable claim attached.
+  assert.deepEqual(rec.reasons.find((r) => r.term === 'complexity'), { term: 'complexity', weight: 2.8, target: 3 });
+  assert.deepEqual(rec.reasons.find((r) => r.term === 'time'), { term: 'time', minutes: 50, target: 60 });
 });
 
 /* ------------------------------- wished games ------------------------------ */
