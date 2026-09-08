@@ -140,9 +140,9 @@ step 1 with no code change — but steps 5 and 6 are code, so don't read that as
 consistently rather than literally, keep the brand name **Spielwirbel**
 untranslated, and note that the legal pages (Impressum, privacy policy, terms)
 are deliberately German-authoritative with an English courtesy translation and
-are **not** part of the UI language files. When you interpolate a member's
-name into a sentence, keep it out of any position whose grammar governs it — the
-name can be a pronoun
+are **not** part of the UI language files. Seed names — `DEMO_TEXT`'s
+members, guests and `ownerSeat` — must be ordinary names, never pronouns: they
+get interpolated into sentences that govern their case
 (`.claude/rules/interpolated-names-must-not-be-case-governed.md`).
 
 Native speakers are very welcome to correct wording — machine-drafted phrasing

@@ -195,7 +195,7 @@ test('with no owner at the table the line names every owner (#971)', async (t) =
 
 /* ----------------------------- the member page ----------------------------- */
 
-/* „Anna: 3 Spiele" (#973) — the fourth reader of `game.ownerIds`, and the
+/* „3 Spiele von Anna" (#973) — the fourth reader of `game.ownerIds`, and the
  * only one that asks the question from the PERSON's side rather than the
  * table's. Its whole content is a filter, so the interesting cases are the ones
  * that must NOT appear: the shelf archives, and the wish list. */
@@ -236,7 +236,7 @@ test('the member page lists the shelf games that member owns, titled and linked'
 
   // Sorted by title, like the Regal — not in shelf order.
   assert.deepEqual(titles, ['Azul', 'Catan'], 'a game Ben alone owns is not Anna\'s');
-  assert.equal(title, 'Anna: 2 Spiele');
+  assert.equal(title, '2 Spiele von Anna');
 
   const tile = grid.querySelector('.pool-tile');
   assert.ok(tile.classList.contains('game-link'), 'each tile must be a real game link');
@@ -257,7 +257,7 @@ test('the section is hidden entirely for a member who owns nothing', async (t) =
 
 test('the singular inflects — one game is not „1 Spiele"', async (t) => {
   const data = round({ games: [game({ id: 7, title: 'Catan', ownerIds: [ANNA.id] })] });
-  assert.equal((await ownedSection(t, data, ANNA.id)).title, 'Anna: 1 Spiel');
+  assert.equal((await ownedSection(t, data, ANNA.id)).title, '1 Spiel von Anna');
 });
 
 test('an off-shelf game the member owns is never listed', async (t) => {
@@ -276,5 +276,5 @@ test('an off-shelf game the member owns is never listed', async (t) => {
   });
   const { title, titles } = await ownedSection(t, data, ANNA.id);
   assert.deepEqual(titles, ['Dune']);
-  assert.equal(title, 'Anna: 1 Spiel', 'and the count follows the list rather than the shelf');
+  assert.equal(title, '1 Spiel von Anna', 'and the count follows the list rather than the shelf');
 });

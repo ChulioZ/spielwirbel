@@ -153,13 +153,9 @@ const OWNER_PAIRS = [
     // #973's member-page section heading. Registered as the pair is written,
     // per the note above — and it carries a second param, so it also pins that
     // `tn()` merges `{n}` into the caller's params rather than replacing them.
-    // The German form is an APPOSITION, not „… von {name}": the name can be a
-    // pronoun (the demo seats you as „Du"), and „von Du" is wrong German — see
-    // .claude/rules/interpolated-names-must-not-be-case-governed.md. English
-    // keeps its preposition because it governs nothing.
-    what: 'member.ownedTitle — the „Du: 2 Spiele" section heading',
+    what: 'member.ownedTitle — the „Spiele von Anna" section heading',
     one: 'member.ownedTitleOne', other: 'member.ownedTitle', params: { name: 'Anna' },
-    de: ['Anna: 1 Spiel', 'Anna: 2 Spiele'],
+    de: ['1 Spiel von Anna', '2 Spiele von Anna'],
     en: ['1 game owned by Anna', '2 games owned by Anna'],
   },
 ];

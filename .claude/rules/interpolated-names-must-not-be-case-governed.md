@@ -1,15 +1,16 @@
 ---
 paths:
+  - "lib/demo-seed.js"
   - "public/js/lang/*.js"
   - "public/js/views-member.js"
-  - "lib/demo-seed.js"
 ---
 
-# A `{name}` in a sentence must not sit after a preposition — the name can be a pronoun
+# A display name gets interpolated into sentences — so never seed one as a PRONOUN
 
-#973's member page heading (PR #989) reads `'{n} Spiele von {name}'`, and the guest demo
-seeds the account's own seat as **„Du"** (`lib/demo-seed.js:635`, one per locale:
-`You` · `Tú` · `Toi` · `Tu` · `Jij` · `Você`). So the shipped public demo rendered
+The guest demo used to seat the visitor's own place as „Du" (`You` · `Tú` ·
+`Toi` · `Tu` · `Jij` · `Você`). It reads perfectly everywhere a name stands alone
+— the avatar's title, „Es bewertet: Du", „Du und Ben haben gewonnen" — and then
+#973's member heading put it after a preposition:
 
 ```
 „4 Spiele von Du"      de — needs „dir"
@@ -18,49 +19,51 @@ seeds the account's own seat as **„Du"** (`lib/demo-seed.js:635`, one per loca
 "4 spellen van Jij"    nl — needs "jou"
 ```
 
-Four of the shipped languages, on the surface an anonymous visitor sees first
-(#427). `en`, `fr` and `pt` were fine by luck: English marks no case there, and
-« de toi » / "de você" already use the form a preposition governs.
+Four languages at once, on the public demo — the surface an anonymous visitor
+sees first (#427). `en`, `fr` and `pt` were fine by luck: English marks no case
+there, and « de toi » / "de você" already use the form a preposition governs.
 
 ## The rule
 
-A member name is arbitrary user text — and in the demo it is deliberately a
-**pronoun**, because „Du" is the right label for your own seat everywhere else it
-appears („Es bewertet: Du", the avatar's title). Pronouns inflect where names do
-not, so a key that interpolates one must not put it anywhere its form depends on
-the surrounding words.
+**A seeded or generated display name is an ordinary name.** A pronoun inflects
+where a name does not, and there is no single form that is right in both
+positions — German needs „Du" nominative and „dir" after `von` — so the name is
+the end that has to give, not the sentence. `lib/demo-seed.js`'s `ownerSeat` is
+now `Max` / `Marta` / `Manon` / `Paolo` / `Roos` / `Miguel`.
 
-Write the name where it governs nothing — an apposition, not a prepositional
-phrase:
+Two things to keep when changing one:
 
-```js
-'member.ownedTitle': '{name}: {n} Spiele',      // de — reads for „Du" and for „Anna"
-```
+- **Distinct two-letter initials** from every member and guest of that locale's
+  rounds — the avatar circles render initials, and a clash reads as one person
+  appearing twice (the same reasoning the `guests` note gives).
+- **A name that reads naturally in that language**, per the existing `DEMO_TEXT`
+  note; a German round full of Italian names is the half-translated impression
+  the demo exists to avoid.
 
-There is no single word to fix it from the other end: German needs „Du"
-nominative and „dir" after `von`, so changing the seed's `ownerSeat` only moves
-the error to the other site.
+## Why the fix went here and not into the sentence
 
-## Why no test guards this
+The obvious repair is to rephrase the four keys as an apposition
+(„{name}: {n} Spiele"). It works, and it was rejected: it changes the wording of
+a shipped heading in four languages to accommodate one seeded value, and it
+leaves the trap armed for the *next* key that takes `{name}` — of which there
+will be more. Fixing the value fixes every sentence at once, including the ones
+not written yet.
+
+The corollary still binds the other end, though: **if a name ever legitimately
+IS a pronoun** — a user is free to name a member seat „Du" — the sentence is
+what breaks, and no test can see it. That is a cosmetic defect in one round's own
+data rather than a shipped one, which is the reason this is filed as "don't seed
+a pronoun" rather than "never use a preposition".
+
+## Why no test guards it
 
 The invariant is per-language grammar, so a check would need a table of
-case-governing prepositions per locale — and `en`/`fr`/`pt` are *correct* with
-their preposition, so a blunt ban would flag three right answers. That is
+case-governing prepositions per locale — and `en`, `fr` and `pt` are *correct*
+with theirs, so a blunt ban flags three right answers. That is
 `.claude/rules/source-scanning-guards-enumerate-shapes.md`'s "banned word with an
-allowed sense", with no cheap strip-first form available: the allowed sense is
-the whole construction, not a phrase.
-
-So it stays a translator-facing discipline, written here and at the interpolation
-site in `public/js/views-member.js`. **When you add a key that takes `{name}`,
-read it back with the demo's own seat word substituted** — that one substitution
-is the whole check, and it is what nobody did for #989.
-
-## Where this bites next
-
-Any future `{name}` / `{member}` key, and any new locale whose grammar inflects
-more than the shipped set does — Polish, Czech and Russian decline the noun itself, so
-even an apposition needs care there (`.claude/rules/locale-set-is-data.md`
-already flags those three for `tn()`'s one/other pair).
+allowed sense", with no cheap strip-first form: the allowed sense is the whole
+construction. What *is* pinned is the value — `test/seed-dev.test.js` asserts the
+English seat is `Max`, so restoring „You" goes red.
 
 **Related:** `.claude/rules/locale-set-is-data.md` (the locale set and what adding
 one costs), `.claude/rules/guest-demo-accounts.md` (why the demo's copy is a
