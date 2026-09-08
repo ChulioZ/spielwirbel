@@ -667,9 +667,9 @@ data/                all user data (git-ignored)
   data.json          created on first run
   uploads/           cover images
 dist/                optional build output (git-ignored; npm run build)
-Dockerfile           production container image (node:22-slim, non-root,
-                     writes to DATA_DIR=/data; no VOLUME instruction — Railway's
-                     builder rejects it, see .claude/rules/)
+Dockerfile           production container image (node pinned to an exact patch,
+                     non-root, writes to DATA_DIR=/data; no VOLUME instruction —
+                     Railway's builder rejects it, see .claude/rules/)
 .dockerignore        keeps secrets + user data out of the build context
 docker-compose.yml   one-command run with a persistent /data volume
 knexfile.js          Knex config (Postgres) shared by the app + the migrate CLI
@@ -710,4 +710,9 @@ just don't build) to go back to serving `public/`.
 
 CI runs the test suite plus a coverage check, lint, and syntax checks on every
 push and pull request, and a gitleaks secret scan fails the build if a credential
-is ever committed; Dependabot keeps dependencies updated via weekly PRs.
+is ever committed; Dependabot keeps dependencies updated via weekly PRs — npm
+packages, the GitHub Actions, and the Dockerfile's Node base image. The base
+image and every third-party action are pinned to an exact patch / a commit SHA,
+so a runtime or action security release arrives as a reviewable, CI-tested PR
+rather than through a mutable tag nobody controls; the admin panel's Kennzahlen
+card reports the Node version the running process is actually on.

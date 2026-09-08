@@ -95,3 +95,63 @@ test('ci-passed runs on failure and treats any non-success as a gate failure', (
   );
   assert.match(block, /run:[ \t]*exit 1/, 'the guard step must `exit 1` on a bad result');
 });
+
+/* ---------------------------------------------------------------------------
+ * Supply-chain pinning (issue #977). Scans EVERY workflow, not just ci.yml:
+ * `gitleaks` in secret-scan.yml is a required branch-protection context and
+ * docker.yml logs into GHCR with GITHUB_TOKEN, so those two files carry more
+ * risk than the one this spec is named after.
+ * ------------------------------------------------------------------------- */
+
+const WORKFLOWS = path.join(ROOT, '.github/workflows');
+const workflowFiles = () => fs.readdirSync(WORKFLOWS)
+  .filter((f) => f.endsWith('.yml') || f.endsWith('.yaml')).sort();
+
+// Two shapes occur in these files and the second is easy to miss: a bare list
+// item (`- uses: x`) and a keyed step (`  uses: x` under a `- name:`). Matching
+// only the first would silently skip docker.yml's login/metadata steps — the
+// exact trap .claude/rules/source-scanning-guards-enumerate-shapes.md describes,
+// where widening a scan's token list proves nothing about a new call SHAPE.
+const USES_RE = /^[ \t]*(?:-[ \t]*)?uses:[ \t]*(\S+)[ \t]*(.*)$/gm;
+
+test('every third-party action is pinned to a commit SHA with a version comment', () => {
+  const offenders = [];
+  const perFile = {};
+
+  for (const file of workflowFiles()) {
+    const text = fs.readFileSync(path.join(WORKFLOWS, file), 'utf8');
+    perFile[file] = 0;
+
+    for (const [, ref, trailer] of text.matchAll(USES_RE)) {
+      // A `./…` ref is an action in THIS repo, reviewed with the rest of the
+      // diff, so there is no mutable third-party tag to pin. Nothing uses one
+      // today; the exemption is here so adding one does not read as a violation.
+      if (ref.startsWith('./')) continue;
+      perFile[file] += 1;
+
+      if (!/@[0-9a-f]{40}$/.test(ref)) {
+        offenders.push(`${file}: ${ref} — a mutable tag/branch ref, not a 40-hex commit SHA`);
+        continue;
+      }
+      // The trailing `# vN.x.y` is not decoration: it is how Dependabot's
+      // github-actions ecosystem knows which version a SHA stands for, so
+      // without it the pin freezes forever instead of being kept current.
+      if (!/^#[ \t]*v\d+\.\d+\.\d+[ \t]*$/.test(trailer)) {
+        offenders.push(`${file}: ${ref} — missing the trailing \`# vN.x.y\` version comment`);
+      }
+    }
+  }
+
+  assert.deepEqual(offenders, [],
+    'a retargeted action tag runs attacker code with this workflow\'s permissions'
+    + ' (the 2025 tj-actions/changed-files incident):\n  ' + offenders.join('\n  '));
+
+  // Anti-vacuous, asserted PER FILE rather than over the union: a pattern that
+  // stops matching one file's shape is invisible in a total, because the other
+  // four still supply plenty of hits. Same reason
+  // test/standalone-page-brand.test.js floors each page separately.
+  assert.ok(workflowFiles().length >= 5, `expected the five workflows, saw ${workflowFiles().length}`);
+  for (const [file, n] of Object.entries(perFile)) {
+    assert.ok(n >= 1, `scanned no \`uses:\` at all in ${file} — the pattern has stopped matching`);
+  }
+});

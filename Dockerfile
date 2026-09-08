@@ -7,12 +7,20 @@
 # client IP) — see issue #156. Persistence and uploads live on a mounted /data
 # volume unless DATABASE_URL / S3_BUCKET point them elsewhere.
 
+# Both stages pin an EXACT patch, not the floating `node:22-slim`: a floating tag
+# reaches production only if the builder happens to re-pull it, so a Node security
+# release may or may not arrive, silently. 22.23.2 (2026-07-28) fixed 11 CVEs,
+# among them CVE-2026-58044 — HTTP header truncation, a request-smuggling
+# primitive sitting in front of the per-IP rate limiters. Dependabot's `docker`
+# ecosystem bumps this as a reviewable, CI-tested PR instead.
+# See .claude/rules/pin-images-and-actions-by-digest.md.
+
 # ---- build stage: install all deps and produce the content-hashed assets ----
 # The optional cache-busting build (`npm run build`, issue #141) mirrors public/
 # into dist/ with hashed, minified JS/CSS, so a production deploy serves
 # self-invalidating assets. It needs the devDependency esbuild, which stays in this
 # throwaway stage and never reaches the final image.
-FROM node:22-slim AS build
+FROM node:22.23.2-slim AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -20,7 +28,7 @@ COPY . .
 RUN npm run build
 
 # ---- runtime stage: production deps + source + built assets, nothing else ----
-FROM node:22-slim
+FROM node:22.23.2-slim
 ENV NODE_ENV=production
 # Serve data from a stable, mountable path (a volume / managed disk), not the
 # in-image working directory, so user data survives container restarts and

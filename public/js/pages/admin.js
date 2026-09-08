@@ -283,6 +283,22 @@
       + ` · Spiele/Runde ${m.peaks.gamesPerRound} / ${s.quotas.gamesPerRound}`
       + ` · Tags/Runde ${m.peaks.tagsPerRound} / ${s.quotas.tagsPerRound}`]);
 
+    // The runtime the answering process is on (#977). Neutral pill, deliberately:
+    // a verdict would need a minimum-version floor hardcoded here, and a floor in
+    // the panel is exactly the kind of number that silently rots out of date
+    // while still rendering an authoritative-looking green. The operator reads
+    // the version and compares it against nodejs.org themselves.
+    // Guarded because this is the one field on the card that can be ABSENT: a
+    // deploy overlaps the outgoing and incoming containers, so a freshly-loaded
+    // panel can be answered by the old process for a few seconds. Unguarded,
+    // `s.runtime.node` throws inside statusRows — which runs outside
+    // loadStatus's try — and the whole Kennzahlen card silently renders empty.
+    // Dropping the row beats a '—' that reads as a broken runtime.
+    if (s.runtime) {
+      rows.push(['Node', null, s.runtime.node,
+        'Laufzeit des antwortenden Prozesses · das Image ist auf genau diesen Patch gepinnt']);
+    }
+
     return rows;
   }
 

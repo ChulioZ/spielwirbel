@@ -16,6 +16,14 @@ in the small hours. This is good and intended — by PostgreSQL's own policy a
 minor release carries only bug, security and data-corruption fixes, never
 features, and running the current minor is *less* risky than staying behind.
 
+**That argument is specific to a tag Railway itself re-pulls, and does NOT
+generalise to ours.** Our `Dockerfile` base image and the workflow `uses:` refs
+pin exactly (#977), because nothing re-pulls those on a schedule: a floating tag
+there resolves at build time against a layer cache, so a security release ships
+only by luck — and an action tag can be retargeted at new code outright. Don't
+cite this file as precedent for floating one of those; see
+`.claude/rules/pin-images-and-actions-by-digest.md`.
+
 **2. A 3am uptime alert with no deploy behind it is probably this.** The restart
 makes `/readyz` answer 503 for a few seconds, and UptimeRobot emails the operator
 (#462 — email, not push). Before treating it as an incident, check whether a
@@ -79,7 +87,9 @@ clean, and it only stayed cheap because the schema uses no extensions, no
 `MERGE`, no generated columns, no deferrable constraints and no logical
 replication.
 
-**Related:** `.claude/rules/ci-aggregate-gate.md` (why the `postgres` job gates
+**Related:** `.claude/rules/pin-images-and-actions-by-digest.md` (the opposite
+policy for the tags nobody re-pulls for us, and why the two are not in tension),
+`.claude/rules/ci-aggregate-gate.md` (why the `postgres` job gates
 the merge at all), `.claude/rules/railway-db-same-region.md` (the other
 Railway-Postgres property that looks healthy while being wrong),
 `.claude/rules/ops-only-changes-still-stale-the-docs.md` (this change had no

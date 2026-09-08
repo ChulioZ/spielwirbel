@@ -194,10 +194,23 @@ test('the mail budget is reported as sent against the daily ceiling', async (t) 
 // quietly puts them back.
 test('the retired configuration blocks are gone', async () => {
   const s = await instanceStatus();
-  assert.deepEqual(Object.keys(s).sort(), ['metrics', 'quotas']);
+  // `runtime` (#977) is not one of them coming back: those rows re-read the
+  // ENV a deploy was configured with, which Railway already lists. This reports
+  // what the answering PROCESS is actually running, which nothing else can say.
+  assert.deepEqual(Object.keys(s).sort(), ['metrics', 'quotas', 'runtime']);
   for (const key of ['app', 'accounts', 'admin', 'mail', 'legal', 'storage', 'hosts', 'assets', 'lookup', 'migrations']) {
     assert.equal(key in s, false, `${key} came back onto the status payload`);
   }
+});
+
+// The Dockerfile pins an exact Node patch, but a pin only describes what the
+// NEXT build will use. This row is the only way to see which runtime is live —
+// the gap that let a floating `node:22-slim` sit on an unpatched Node with
+// nothing in the app able to report it (#977).
+test('the payload reports the running Node version', async () => {
+  const s = await instanceStatus();
+  assert.equal(s.runtime.node, process.version);
+  assert.match(s.runtime.node, /^v\d+\.\d+\.\d+/);
 });
 
 // The guard that survives future edits: plant a unique, greppable value in every

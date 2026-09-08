@@ -16,10 +16,38 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
-test('Dockerfile pins the node:22-slim base (a bump is deliberate)', () => {
+// Semver compare over [major, minor, patch] triples.
+const cmp = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+
+// The release that motivated the exact pin (#977): Node 22.23.2, 2026-07-28, 11
+// CVEs — among them CVE-2026-58044 (HTTP header truncation, a request-smuggling
+// primitive in front of the per-IP rate limiters) and CVE-2026-58045 in the zlib
+// that `compression` uses. Pinning BELOW it would be a pin that ships the hole.
+const NODE_FLOOR = [22, 23, 2];
+
+test('Dockerfile pins an EXACT Node patch in every stage', () => {
   const bases = [...read('Dockerfile').matchAll(/^FROM\s+(\S+)/gm)].map((m) => m[1]);
-  assert.ok(bases.length >= 1, 'expected at least one FROM');
-  for (const b of bases) assert.match(b, /^node:22-slim$/, `unexpected base image: ${b}`);
+  assert.ok(bases.length >= 2, 'expected a build stage and a runtime stage');
+
+  // A floating `node:22-slim` reaches production only if the builder happens to
+  // re-pull it, so a Node security release may or may not arrive — silently, with
+  // nothing reporting which runtime is live. An exact patch makes the bump a
+  // reviewable Dependabot PR instead (`docker` ecosystem in dependabot.yml).
+  for (const b of bases) {
+    assert.match(b, /^node:\d+\.\d+\.\d+-slim$/,
+      `base image must pin an exact major.minor.patch, got: ${b}`);
+  }
+
+  // Both stages must be the same image: the build stage produces the hashed
+  // assets the runtime stage copies, so a drift between them would run the app
+  // on a runtime that never built it — and it reads as an ordinary two-line diff.
+  assert.equal(new Set(bases).size, 1,
+    `every stage must pin the SAME base image, got: ${[...new Set(bases)].join(', ')}`);
+
+  const v = bases[0].match(/^node:(\d+)\.(\d+)\.(\d+)-slim$/).slice(1).map(Number);
+  assert.ok(cmp(v, NODE_FLOOR) >= 0,
+    `base image ${bases[0]} is below the ${NODE_FLOOR.join('.')} security release;`
+    + ' a pin that goes backwards is worse than the floating tag it replaced');
 });
 
 test('Dockerfile runs as the non-root node user', () => {
