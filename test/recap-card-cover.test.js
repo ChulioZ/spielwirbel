@@ -72,6 +72,12 @@ const ROUND = {
     { id: 'm1', name: 'Anna' },
     { id: 'm2', name: 'Ben' },
     { id: 'm3', name: 'Cem' },
+    /* In no session, so her two game cards are EMPTY — the only way to reach
+       the no-lead branch from a rendered screen, and an ordinary state on this
+       page rather than a defensive one. She reaches no Pokale card: `hasRecord`
+       drops a member with no wins and no losses from the standings, and she has
+       rated nothing, so no Lieblingsspiele tile is built for her either. */
+    { id: 'm4', name: 'Dora' },
   ],
   /* … and Azul, never chosen, is the Staubfänger. Two active games, which is
      also the minimum that card requires. */
@@ -209,4 +215,49 @@ test('the cover modifier outranks .pokale-card’s own display, and the thumb is
   // The .cover-ph layer is absolutely positioned, so the frame must contain it.
   assert.match(thumb, /position:\s*relative/);
   assert.match(thumb, /overflow:\s*hidden/);
+});
+
+// ---- the member page's two game cards -------------------------------------
+
+/* The „Stärkstes Spiel" / „Lieblingsspiel" pair builds its own card markup
+   (views-member.js) but shares `gameCardHead`, so it must lead the same way.
+   It was NOT in #979's stated scope — the operator asked for it on review,
+   because leaving it icon-led would have recreated, one screen over, exactly
+   the sibling inconsistency the change exists to remove. */
+const memberTile = (dom, sel) => {
+  const tile = dom.app.querySelector(sel);
+  assert.ok(tile, `${sel} is missing from the member page entirely`);
+  return tile;
+};
+
+test('the member page’s game cards lead with the cover too', async (t) => {
+  const dom = boot(t);
+  await dom.call('showMember', RID, 'm1');
+  for (const sel of ['.member-stats__best', '.member-stats__fav']) {
+    const tile = memberTile(dom, sel);
+    assert.ok(tile.classList.contains('pokale-card--cover'), `${sel} must opt into the cover grid`);
+    assert.equal(tile.querySelector('.pokale-card__icon'), null, `${sel} must not also keep an icon row`);
+    assert.equal(tile.querySelector('.pokale-game__title').textContent, 'Ark Nova');
+    const thumb = tile.querySelector('.pokale-card__thumb');
+    assert.ok(thumb, `${sel} renders no cover frame`);
+    assert.ok(/[?&]w=160\b/.test(thumb.style.backgroundImage), `${sel}: expected a 160px thumb, got ${thumb.style.backgroundImage}`);
+    assert.equal(thumb.getAttribute('aria-hidden'), 'true', `${sel}: the thumb repeats the title, so it stays out of the tree`);
+  }
+});
+
+/* The other half of the one rule `gameCardHead` states, and the half no other
+   test in this file can reach: a card that names NO game keeps its icon in a
+   row of its own, like the numeric stat tiles beside it — it does not reserve
+   an empty 64px frame for a cover that will never come. */
+test('a member with no record keeps the icon-led card, with no empty cover frame', async (t) => {
+  const dom = boot(t);
+  await dom.call('showMember', RID, 'm4');
+  for (const sel of ['.member-stats__best', '.member-stats__fav']) {
+    const tile = memberTile(dom, sel);
+    assert.ok(tile.querySelector('.muted'), `${sel} should be showing its empty text`);
+    assert.equal(tile.querySelector('.pokale-card__thumb'), null, `${sel} must not reserve a cover frame it cannot fill`);
+    assert.ok(!tile.classList.contains('pokale-card--cover'), `${sel} must not opt into the cover grid`);
+    assert.ok(tile.querySelector('.pokale-card__icon'), `${sel} must fall back to its own icon row`);
+    assert.equal(tile.querySelector('.pokale-card__label .ti'), null, `${sel}: the icon must not ALSO sit in the eyebrow`);
+  }
 });

@@ -267,13 +267,23 @@ async function showMember(rid, mid) {
      the cards given the full row (#694) precisely because they hold more text.
      Hence their own classes rather than the `:last-child` the issue sketched:
      both the span and the exemption follow the card, not its position. */
+  /* Both tiles LEAD WITH THE GAME'S COVER, through the same `gameCardHead` pair
+     the Pokale and Chronik cards use (#979, views-pokale.js) — an icon-led game
+     card here would have recreated one screen over exactly the sibling
+     inconsistency that change removes. An EMPTY tile („noch kein
+     Lieblingsspiel") keeps its icon row instead, which is the helper's own rule
+     and is why the empty text still reads like the numeric tiles beside it.
+
+     One loader for both tiles, as each section elsewhere does. */
+  const loadCover = createCoverLoader();
   const gameCard = (cls, icon, label, games, sub, emptyText) => {
+    const lead = games[0];
     const card = h(`<div class="pokale-card ${cls}">
-         <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
-         <span class="pokale-card__label">${esc(label)}</span>
+         ${gameCardHead(icon, label, lead)}
          <span class="pokale-card__games"></span>
          <span class="pokale-card__sub">${esc(sub)}</span>
        </div>`);
+    wireGameCardHead(card, rid, lead, loadCover);
     const list = card.querySelector('.pokale-card__games');
     if (games.length) {
       games.forEach((g) => {

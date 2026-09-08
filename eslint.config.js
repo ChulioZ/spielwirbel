@@ -343,6 +343,7 @@ const frontendGlobals = {
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
+  gameCardHead: 'readonly', wireGameCardHead: 'readonly',
   renderRecapSection: 'readonly', renderPeriodRecapSection: 'readonly',
   canShareRecapImage: 'readonly', shareRecapCard: 'readonly',
   activeSheet: 'writable', closeSheet: 'readonly', openSheet: 'readonly',
