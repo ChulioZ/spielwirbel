@@ -504,35 +504,32 @@ test('a world re-shapes the confetti bits through tokens — the same bits, no s
    on 2026-09-08 before the fix: 4.4px of leaf over „Zurück" (.vote__nav) and
    7.6px over „Speichern & weiteres" (.toolbar.sheet__actions).
 
-   Pinned as CSS text rather than in jsdom because jsdom applies no stylesheet,
-   so the geometry this is about does not exist there. The assertion is that the
-   clearance is expressed in the BUTTON's own em: a px value, or one in the row's
-   em, silently stops clearing as soon as a button type changes size, which is
-   the failure this rule exists to prevent and the one a green suite would hide. */
+   Two properties are asserted, and the SECOND is the one that cost a cycle. The
+   clearance must be `column-gap`, never a margin on the button: .toolbar wraps,
+   and a horizontal margin then narrows the primary button relative to the one
+   stacked under it (measured at 390px: 335px vs 344px) — a new defect in the
+   place the ornament never collided. column-gap is inert between lines, so it
+   cannot reintroduce that. A margin passes a naive "is there clearance" check
+   just as well, which is why the property itself is pinned.
+
+   CSS text rather than jsdom, because jsdom applies no stylesheet and the
+   geometry this is about does not exist there. */
 test('a world-framed primary button reserves room for its ornament beside a neighbour', () => {
-  const sides = [
-    ['first', 'margin-inline-start'],
-    ['last', 'margin-inline-end'],
-  ];
-  for (const [edge, prop] of sides) {
-    const rule = rulesOf(CSS).find(([sel]) => sel.includes('.btn--primary') && sel.includes(`:not(:${edge}-child)`));
-    assert.ok(rule, `no clearance rule for the :not(:${edge}-child) side`);
-    const [sel, body] = rule;
+  const rule = rulesOf(CSS).find(([sel]) =>
+    sel.includes('[data-world]') && sel.includes(':has(> .btn--primary)'));
+  assert.ok(rule, 'no ornament-clearance rule scoped to a row holding a primary button');
+  const [sel, body] = rule;
 
-    // Only under a world — a palette round has no ornament and must not shift.
-    assert.match(sel, /\[data-world\]/);
-    // Both rows that hold a primary button today.
-    assert.match(sel, /\.toolbar/);
-    assert.match(sel, /\.vote__nav/);
-    // Direct children only: a primary button nested deeper is not the neighbour case.
-    assert.match(sel, />\s*\.btn--primary/);
+  // Both rows that hold a primary button today.
+  assert.match(sel, /\.toolbar/);
+  assert.match(sel, /\.vote__nav/);
 
-    const m = body.match(new RegExp(`${prop}:\\s*([^;]+)`));
-    assert.ok(m, `${prop} is not what the ${edge} side sets`);
-    const value = m[1].trim();
-    assert.match(value, /em$/, `the clearance must scale with the button's type, got ${value}`);
-    // .8em is the overhang; the row's own 10px does the rest. Anything under
-    // .3em stops clearing once the row gap shrinks, so pin a real floor.
-    assert.ok(parseFloat(value) >= 0.3, `clearance ${value} is too small to cover the .8em overhang`);
-  }
+  // column-gap, not `gap` and not a margin — see the note above.
+  assert.match(body, /column-gap:/, 'the clearance must be column-gap');
+  assert.doesNotMatch(body, /margin-inline|margin-left|margin-right/,
+    'a horizontal margin narrows the button when the row wraps');
+
+  const px = parseFloat(body.match(/column-gap:\s*([\d.]+)px/)?.[1] ?? '0');
+  // .8em of the largest button in these rows (22px btn--lg) is 17.6px.
+  assert.ok(px >= 18, `column-gap ${px}px does not clear the 17.6px overhang`);
 });

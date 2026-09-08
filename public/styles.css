@@ -7671,17 +7671,22 @@ kbd {
    over „Speichern & weiteres" in the add-game sheet, which reads as a rendering
    glitch rather than as a flourish.
 
-   The clearance is sized in the BUTTON's em, not the row's, because that is what
-   the overhang is sized in — a row-level `gap` bump would be a different unit
-   chasing the same number and would drift the moment a button size changes.
-   Clearance is .5em + the row's own 10px against a .8em overhang, i.e. 10px -
-   .3em — positive for any button type under ~33px, which is every button here
-   (measured after the fix: 4.6px on the vote card at 18px, 3.4px in the sheet at
-   22px). Only the sides that actually have a neighbour, so the row's outer edges
-   stay aligned with its padding. A NEW row class holding a primary button needs
-   adding here; the two below are the ones that exist today. */
-[data-world] :is(.toolbar, .vote__nav) > .btn--primary:not(:first-child) { margin-inline-start: .5em; }
-[data-world] :is(.toolbar, .vote__nav) > .btn--primary:not(:last-child) { margin-inline-end: .5em; }
+   It has to be COLUMN-GAP, not a margin on the button. A margin looked right and
+   is wrong on a phone: .toolbar wraps (flex-wrap: wrap; .sheet__actions grows its
+   buttons to full width at ≤639px), and a horizontal margin then makes the
+   primary button NARROWER than the one stacked under it — measured at 390px,
+   335px against 344px, a ragged right edge in the one place the ornament was
+   never colliding. column-gap applies only between items on the SAME line, so it
+   is inert exactly where the collision cannot happen. `gap: 10px` still supplies
+   the row-gap for the wrapped case.
+
+   22px clears the largest ornament in these rows (.8em of the sheet's 22px
+   btn--lg = 17.6px) with ~4px to spare; the vote card's 18px needs 14.4px. A
+   button type above ~27px would outgrow it — raise this with it, and note the
+   overhang is sized in the BUTTON's em while this is the row's, which is why the
+   two cannot simply be written as one number. :has() keeps every other .toolbar
+   on its normal 10px. */
+[data-world] :is(.toolbar, .vote__nav):has(> .btn--primary) { column-gap: 22px; }
 
 /* Slot 3 — a rule under a heading: section headings (direct children only:
    the same selector without `>` reaches every card title inside the
