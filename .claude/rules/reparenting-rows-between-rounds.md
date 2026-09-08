@@ -90,6 +90,17 @@ shelf has no undo.
   about history **only when a selected game actually appears in a session**
   (`round.sessions` is already on the snapshot it holds), because a warning that
   cries wolf on a tidy-up of never-played games gets clicked through.
+- **`ownerIds` is DROPPED, not remapped (#971)** — by all three reparenting
+  paths (move, copy, the round-creation import). Tags merge by *name*, so they
+  can cross; an owner is a member **id** of the source round, and the target's
+  members are different people. Keeping them is the silent-failure case: the
+  moved games would be filtered out of every draw in the target round, on ids
+  nobody there can match, while looking perfectly normal on the shelf. Copy and
+  import get it for free (`COPIED_FIELDS` in `lib/repo/import-copy.js` is an
+  allowlist, and `ownerIds` is simply not on it); the **move** needs an explicit
+  `delete` in the JSON backend and a jsonb `data - 'ownerIds'` in Postgres —
+  which is also why that backend's `patch.data` expression is now unconditional
+  rather than set only when tags need remapping.
 - **A reused tag keeps the TARGET's spelling and icon.** Matching is trimmed and
   case-insensitive, but the target round is never renamed or restyled by a move —
   same reasoning as `addTag` refusing to restyle on a duplicate name (#255).

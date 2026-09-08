@@ -78,6 +78,33 @@ function fitsPlayerCount(game, playerCount) {
   return (game.expansions || []).some((e) => expansionAdmits(e, playerCount));
 }
 
+// Whether the party at the table can actually put this box on it (#971).
+//
+// TRUE when nobody is recorded as the game's owner, or at least one owner is
+// among `memberIds`. The absent case is the load-bearing one and it is the same
+// rule `fitsOwnRange` applies to a missing player range: a shelf nobody has
+// marked up must behave exactly as it did before this existed, or the feature
+// would empty every round's pool on the day it shipped. An EMPTY list means the
+// same as an absent key — the PATCH that clears the owners stores `[]`, exactly
+// as clearing `tagIds` does.
+//
+// `memberIds` is the SEATS that joined, never guests: a guest is ephemeral and
+// owns nothing (.claude/rules/session-guests-are-not-members.md), so a game owned
+// only by somebody outside the round cannot be expressed and stays ownerless —
+// i.e. drawable. That is this feature's own accepted failure mode (#971), and it
+// errs toward offering a game rather than hiding one, which is the recoverable
+// direction: an over-filtered pool hides games with nothing on screen to say so.
+//
+// An owner id no longer in `round.members` simply never matches, the way the tag
+// filter ignores a deleted tag — a hand-edited file or an old export cannot blank
+// a screen.
+function ownedByParty(game, memberIds) {
+  const owners = (game || {}).ownerIds;
+  if (!Array.isArray(owners) || owners.length === 0) return true;
+  const party = Array.isArray(memberIds) ? memberIds : [];
+  return owners.some((x) => party.includes(x));
+}
+
 // THE MULTI-TABLE POOL PREDICATE IS `fitsSomeTable` IN public/js/table-split.js
 // (#796). A session split across several tables asks "can this box seat SOME
 // table of at least three?" instead of "does it seat exactly this party?", so it
@@ -268,6 +295,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     isActiveGame,
     fitsPlayerCount,
+    ownedByParty,
     requiredExpansions,
     EXPANSION_TITLE_MAX,
     fitsMetadataFilters,

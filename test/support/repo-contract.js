@@ -2169,6 +2169,90 @@ module.exports = function repoContract(repo) {
     assert.equal(typeof repo.setProviders, 'undefined', 'the writer is gone with the setting');
   });
 
+  /* -------------------------- Game owners (#971) --------------------------- */
+
+  test('createGame stores ownerIds, and leaves the key OFF when there are none', async () => {
+    const round = await freshRound({ name: 'Owners', members: ['Anna', 'Ben'] });
+    const [anna, ben] = round.members;
+
+    const owned = await repo.createGame(T, round.id, gameFields({ title: 'Azul', ownerIds: [anna.id, ben.id] }));
+    assert.deepEqual(owned.ownerIds, [anna.id, ben.id]);
+    // Absent, never `[]` — an unmarked shelf's rows must keep the shape they had
+    // before #971 existed, identically in both backends (absent-key parity).
+    const plain = await repo.createGame(T, round.id, gameFields({ title: 'Uno' }));
+    assert.equal('ownerIds' in plain, false);
+    const emptied = await repo.createGame(T, round.id, gameFields({ title: 'Nobody', ownerIds: [] }));
+    assert.equal('ownerIds' in emptied, false, 'an empty list is not a key');
+
+    const read = await repo.getRound(T, round.id);
+    assert.deepEqual(read.games.find((g) => g.id === owned.id).ownerIds, [anna.id, ben.id]);
+  });
+
+  test('createGames stamps ONE owner selection across the whole batch (#971)', async () => {
+    const round = await freshRound({ name: 'Import owners', members: ['Anna'] });
+    const anna = round.members[0];
+    const made = await repo.createGames(T, round.id, [
+      gameFields({ title: 'One', ownerIds: [anna.id], source: { provider: 'bgg', externalId: '1' } }),
+      gameFields({ title: 'Two', ownerIds: [anna.id], source: { provider: 'bgg', externalId: '2' } }),
+    ], undefined, null);
+    assert.equal(made.created.length, 2);
+    assert.ok(made.created.every((g) => JSON.stringify(g.ownerIds) === JSON.stringify([anna.id])));
+
+    const none = await repo.createGames(T, round.id, [
+      gameFields({ title: 'Three', source: { provider: 'bgg', externalId: '3' } }),
+    ], undefined, null);
+    assert.equal('ownerIds' in none.created[0], false);
+  });
+
+  test('updateMember remembers an owner preset, empty list included (#971)', async () => {
+    const round = await freshRound({ name: 'Preset', members: ['Anna', 'Ben'] });
+    const [anna, ben] = round.members;
+    assert.equal('ownerPreset' in anna, false, 'a fresh seat carries no preset');
+
+    const set = await repo.updateMember(T, round.id, anna.id, { ownerPreset: [anna.id, ben.id] });
+    assert.deepEqual(set.ownerPreset, [anna.id, ben.id]);
+    // "I took myself off the list" has to survive, so [] is a stored value and
+    // not a reason to leave the previous selection standing.
+    const cleared = await repo.updateMember(T, round.id, anna.id, { ownerPreset: [] });
+    assert.deepEqual(cleared.ownerPreset, []);
+
+    const read = await repo.getRound(T, round.id);
+    assert.deepEqual(read.members.find((m) => m.id === anna.id).ownerPreset, []);
+    assert.equal('ownerPreset' in read.members.find((m) => m.id === ben.id), false);
+  });
+
+  // Owners name seats of the SOURCE round, and the target has different ones —
+  // so all three reparenting paths must drop them. Keeping them would filter the
+  // target's draws on ids nobody there can match: the moved games would be
+  // invisible to every session while looking perfectly normal on the shelf.
+  test('move, copy and round-import all strip ownerIds (#971)', async () => {
+    const src = await freshRound({ name: 'From', members: ['Anna'] });
+    const dst = await freshRound({ name: 'To', members: ['Ben'] });
+    const anna = src.members[0];
+
+    const mover = await repo.createGame(T, src.id, gameFields({ title: 'Mover', ownerIds: [anna.id] }));
+    const copier = await repo.createGame(T, src.id, gameFields({ title: 'Copier', ownerIds: [anna.id] }));
+
+    assert.ok(await repo.copyGames(T, src.id, dst.id, null, [copier.id]));
+    const imported = await repo.createRound(T, { name: 'Imported', members: ['Cy'], importFromRoundId: src.id });
+
+    assert.ok(await repo.moveGames(T, src.id, dst.id, null, [mover.id]));
+
+    const target = await repo.getRound(T, dst.id);
+    for (const title of ['Mover', 'Copier']) {
+      const g = target.games.find((x) => x.title === title);
+      assert.ok(g, `${title} reached the target`);
+      assert.equal('ownerIds' in g, false, `${title} must arrive ownerless`);
+    }
+    const importedGames = (await repo.getRound(T, imported.id)).games;
+    // Anti-vacuous: with nothing imported the loop below asserts nothing at all,
+    // which is exactly how a mistyped option name would pass here.
+    assert.equal(importedGames.length, 2, 'the import actually carried both games');
+    for (const g of importedGames) {
+      assert.equal('ownerIds' in g, false, 'a round-creation import carries no owners either');
+    }
+  });
+
   test('moveGames reparents every game and merges tags by name (#253)', async () => {
     const src = await freshRound({ name: 'Source' });
     const dst = await freshRound({ name: 'Target' });

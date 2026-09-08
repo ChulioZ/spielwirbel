@@ -135,6 +135,15 @@ The rest — the positional wire format, the party-count arithmetic and why
 
 ## 5. Smaller things
 
+- **A guest OWNS NOTHING (#971).** `game.ownerIds` holds member ids, the pickers
+  offer `round.members` only, and `ownedByParty` is handed the joining **seats**
+  rather than the party — so a guest can neither be recorded as an owner nor
+  satisfy the owner clause. That is deliberate and it has one accepted cost: a
+  game whose only real owner is somebody outside the round cannot be expressed,
+  so it stays ownerless and therefore **always drawable**. The alternative — a
+  guest-owner — is worse, because a guest is ephemeral by design (§1) and the
+  ownership would vanish with the session that created it. Recording it properly
+  would need a third state ("owned by nobody here"), not a guest.
 - **`guests` is absent, never `[]`.** The route spreads
   `...(guests.length ? { guests } : {})`; the contract suite pins the absent key
   in both backends (`.claude/rules/postgres-backend.md`). Unlike

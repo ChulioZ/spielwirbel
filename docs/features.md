@@ -27,7 +27,13 @@ What the app does, in detail. For a short overview see the
   already knows for the base game, or typed in by hand — so "do we still have
   Seefahrer?" is answered by the app. An expansion that seats more (or fewer)
   people widens the range the draw filters by, which is how the 5–6-player
-  extension stops a six-person evening from hiding the game you own. When adding a
+  extension stops a six-person evening from hiding the game you own. A game can
+  also record **which members own the box** — on the add sheet, on the
+  BoardGameGeek import, and on the detail page — and the draw then skips a game
+  whose owners are all staying home tonight, with the setup screen saying how
+  many were left out for that reason. A game with nobody recorded is never
+  filtered, so a shelf nobody has marked up behaves exactly as it always did; the
+  results screen names who is bringing the box. When adding a
   game, the title field doubles as a **search-as-you-type lookup** against
   **BoardGameGeek**. Hits with the **same title** collapse into a **single
   row** — a game printed in several editions offers one entry to click rather
@@ -190,6 +196,8 @@ What the app does, in detail. For a short overview see the
   Kopieren toggle swaps the whole flow, and a copy leaves this round exactly as
   it was while landing fresh entries on the target's shelf — cover, player
   range, provider link, metadata, owned expansions and tags all ride along.
+  **Owners do not** — they name members of the round being left behind, and the
+  target has different ones — so a moved or copied game arrives ownerless.
   Ratings, votes and session history never travel, because they belong to the
   round they happened in. An archived or wished-for game copies as what it is.
   Once a target round is picked, games it already has by title are flagged and

@@ -60,6 +60,10 @@ function showAddGame(round, { wish = false } = {}) {
             <button type="button" id="addTagBtn" class="btn">${esc(t('tags.add'))}</button>
           </div>
         </div>
+        ${wish ? '' : `<div class="field" id="ownerField">
+          <label>${esc(t('addGame.ownersLabel'))}</label>
+          <div class="filter-chips" id="ownerSeg"></div>
+        </div>`}
         <div class="field">
           <label>${esc(t('addGame.imageLabel'))}</label>
           <div id="pasteZone" class="paste-zone" tabindex="0">
@@ -147,6 +151,21 @@ function showAddGame(round, { wish = false } = {}) {
     }));
   }
   renderTagChips();
+
+  // Who owns the box (#971). Not offered for a WISH — the round does not own the
+  // game yet, so the question has no answer; the route drops the field for a
+  // wish anyway, so the two agree rather than one silently ignoring the other.
+  const selectedOwnerIds = new Set(wish ? [] : ownerPresetFor(round, currentUserId()));
+  const ownerSeg = form.querySelector('#ownerSeg');
+  if (ownerSeg) {
+    ownerSeg.replaceWith(renderOwnerChips(round, selectedOwnerIds));
+    // A round with no members has nobody to pick, so the whole field goes rather
+    // than leaving a labelled empty box — the same thing the tag field does with
+    // no round tags.
+    const ownerField = form.querySelector('#ownerField');
+    if (!(round.members || []).length) ownerField.remove();
+  }
+
   const newTagInput = form.querySelector('#newTag');
   // Icon picker for the inline "create new tag" (#255). The trigger sits in the
   // new-tag toolbar so the row reads as one sub-form; the grid it expands opens
@@ -380,6 +399,7 @@ function showAddGame(round, { wish = false } = {}) {
     fd.append('minPlayers', minPlayers);
     fd.append('maxPlayers', maxPlayers);
     selectedTagIds.forEach((x) => fd.append('tagIds', x));
+    selectedOwnerIds.forEach((x) => fd.append('ownerIds', x));
     // Only sent when true: the route coerces anything unrecognised to false, so
     // an omitted field and 'false' mean the same thing, and omitting keeps the
     // ordinary add-game request byte-identical to what it has always been.

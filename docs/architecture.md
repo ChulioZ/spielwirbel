@@ -155,6 +155,10 @@ lib/
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
+  game-owners.js     which members of a round own a game: the owner-id
+                     validation and the per-seat memory of the last selection,
+                     shared by the add-game and BGG-import write paths
+                     (issue #971)
   session-votes.js   vote secrecy for a session collecting votes from several
                      devices: strips the ratings already cast out of the round
                      payload while voting is open, leaving only who has voted
@@ -494,6 +498,9 @@ public/
     member-avatar.js the ONE decision of photo-vs-initials, used by every avatar
                      render site, plus the per-page id→picture cache and the
                      broken-image fallback (issue #841)
+    owner-picker.js  the owner chip row the add-game sheet, the BGG import sheet
+                     and the game detail page share, plus the rule deciding what
+                     it starts out selected (issue #971)
     session-people.js who took part in ONE session (members who joined + that
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds

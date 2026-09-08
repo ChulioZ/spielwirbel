@@ -212,6 +212,16 @@ async function showBggImport(round, status = 'own') {
     // Before the actions bar, which is `position: sticky; bottom: 0` — anything
     // after it scrolls underneath its opaque background.
     if (present.length) body.appendChild(presentSection());
+    // Who owns the imported boxes (#971) — ONE selection for the whole batch,
+    // like the wish/own status itself: nobody fills in a per-game owner picker
+    // over 200 rows. Not offered on the WISHLIST import, whose rows the round
+    // does not own; the route drops the field there too.
+    const selectedOwnerIds = new Set(wish ? [] : ownerPresetFor(round, currentUserId()));
+    if (!wish && (round.members || []).length) {
+      const field = h(`<div class="field"><label>${esc(t('bggImport.ownersLabel'))}</label></div>`);
+      field.appendChild(renderOwnerChips(round, selectedOwnerIds));
+      body.appendChild(field);
+    }
     body.appendChild(go);
 
     const boxes = [...list.querySelectorAll('input')];
@@ -251,7 +261,7 @@ async function showBggImport(round, status = 'own') {
           // could never apply.
           if (chosenEditions[id]) editions[id] = chosenEditions[id];
         });
-        const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg&status=${status}`, { externalIds: ids, covers, editions });
+        const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg&status=${status}`, { externalIds: ids, covers, editions, ownerIds: [...selectedOwnerIds] });
         imported = imported || res.imported > 0;
         toast(tn(res.imported, 'bggImport.toast.doneOne', 'bggImport.toast.done'));
         dismiss();

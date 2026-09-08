@@ -468,6 +468,7 @@ test('the editors\' inner layout rules are shared by both presentations', () => 
     ':is(.popover--tags, .editor--tags) .pp-row',
     ':is(.popover--tags, .editor--tags) .pp-row .input',
     ':is(.popover--tags, .editor--tags) .filter-chips',
+    ':is(.popover--owners, .editor--owners) .filter-chips',
   ]) {
     assert.ok(bodyOf(sel), `${sel} not found — one presentation is missing this layout rule`);
   }
@@ -477,4 +478,26 @@ test('the editors\' inner layout rules are shared by both presentations', () => 
   assert.ok(editor, '.editor rule not found in styles.css');
   assert.match(editor, /display:\s*flex/);
   assert.match(editor, /flex-direction:\s*column/);
+});
+
+/* The owners editor (#971) is the fifth `openEditor` variant. It gets the tags
+   editor's treatment for the same two reasons, and the cap is not cosmetic: a
+   round may hold up to 50 member seats, and a popover cannot be scrolled into
+   view — a page scroll closes it — so an uncapped card puts its OK button past
+   the fold and out of reach. */
+test('the owners popover is capped, gives way at the chips, and wins on specificity', () => {
+  const card = cardRule('popover--owners');
+  assert.ok(card, '.popover--owners has no card rule — 50 member chips would run off the screen');
+  const [sel, body] = card;
+  assert.match(body, /max-height:/, 'the card must be capped to the viewport, not just to a width');
+  assert.ok(outranks(sel, '.popover'),
+    `"${sel}" does not outrank .popover — its cap is decided by block order and a move would drop it`);
+
+  // The cap is inert unless something inside is allowed to shrink, and a flex
+  // item's default `min-height: auto` is its content size — so the explicit
+  // floor is what makes the scroll box real rather than decorative.
+  const chips = bodyOf('.popover--owners .filter-chips');
+  assert.ok(chips, 'nothing inside the owners card gives way, so the cap only clips');
+  assert.match(chips, /overflow-y:\s*auto/);
+  assert.match(chips, /min-height:\s*\d+px/);
 });

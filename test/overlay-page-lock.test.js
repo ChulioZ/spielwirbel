@@ -38,6 +38,11 @@ const CONTAINED = [
   // the sheet presentation scrolls itself.
   '.popover--tags .filter-chips',
   '.popover--tags .icon-picker',
+  // The owners editor's chip row (#971) — a round may hold up to 50 member
+  // seats, so it gives way under the anchored card's cap exactly as the tags
+  // chips above do. Popover-only for the same reason: the sheet presentation
+  // scrolls itself, and a nested box there would take the gesture from `.sheet`.
+  '.popover--owners .filter-chips',
   // The filter panel's body (#844) — the round's tags plus BGG's categories and
   // mechanics as they appear on the shelf, so it grows without bound too, and it
   // is the flex item that gives way under the anchored card's cap. Popover-only,

@@ -891,3 +891,92 @@ test('a cover is actually SERVED in the no-accounts mode, not just stored', asyn
   // nothing references is refused even here.
   assert.equal((await request(app).get('/uploads/deadbeefdeadbeef.png')).status, 404);
 });
+
+/* ------------------------- Game owners (#971) ------------------------------- */
+
+// A game records WHICH MEMBERS own the box, so a draw can skip one nobody at the
+// table can bring. The route's job is the membership check and the wish rule;
+// the pool clause itself is unit-tested in test/draw.test.js.
+
+// `addGame` above is async, so it cannot be chained with a further `.field()`.
+// Owners are a REPEATED multipart field (like tagIds), which `.send()` cannot
+// express, so these build the request directly.
+function addOwned(rid, fields, ownerIds) {
+  const req = request(rid.post ? rid : app).post(`/api/rounds/${rid}/games`);
+  const all = { title: 'Chess', minPlayers: '2', maxPlayers: '4', ...fields };
+  for (const [k, v] of Object.entries(all)) req.field(k, String(v));
+  (ownerIds || []).forEach((x) => req.field('ownerIds', x));
+  return req;
+}
+
+test('POST games stores ownerIds, and leaves the key off when none are sent', async () => {
+  const round = await createRound(request);
+  const [alice, bob] = round.members;
+
+  const owned = await addOwned(round.id, { title: 'Azul' }, [alice.id]);
+  assert.equal(owned.status, 201);
+  assert.deepEqual(owned.body.ownerIds, [alice.id]);
+
+  // Multipart repeats the field for several values, exactly like tagIds.
+  const shared = await addOwned(round.id, { title: 'Catan' }, [alice.id, bob.id]);
+  assert.deepEqual(shared.body.ownerIds, [alice.id, bob.id]);
+
+  // The absent case is what keeps every pre-#971 shelf byte-identical.
+  const plain = await addGame(round.id, { title: 'Uno' });
+  assert.equal('ownerIds' in plain.body, false, 'no owners sent -> no key at all');
+});
+
+test('POST games 400s on an owner that is not a member of THIS round', async () => {
+  const round = await createRound(request);
+  const other = await createRound(request, { name: 'Other', members: ['Zoe'] });
+  const res = await addOwned(round.id, { title: 'Azul' }, [other.members[0].id]);
+  assert.equal(res.status, 400);
+  assert.equal(res.body.error, 'Unknown member');
+});
+
+test('POST games drops ownerIds on a WISH — the round does not own it yet', async () => {
+  const round = await createRound(request);
+  const res = await addOwned(round.id, { title: 'Wanted', wish: 'true' }, [round.members[0].id]);
+  assert.equal(res.status, 201);
+  assert.equal(res.body.wish, true);
+  assert.equal('ownerIds' in res.body, false);
+});
+
+test('PATCH replaces the owners, and clearing them empties the list', async () => {
+  const round = await createRound(request);
+  const [alice, bob] = round.members;
+  const game = (await addOwned(round.id, { title: 'Azul' }, [alice.id])).body;
+
+  const swapped = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`).send({ ownerIds: [bob.id] });
+  assert.deepEqual(swapped.body.ownerIds, [bob.id]);
+
+  const cleared = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`).send({ ownerIds: [] });
+  assert.deepEqual(cleared.body.ownerIds, [], 'cleared reads as ownerless, like an absent key');
+
+  const bad = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${game.id}`).send({ ownerIds: ['nobody'] });
+  assert.equal(bad.status, 400);
+  assert.equal(bad.body.error, 'Unknown member');
+});
+
+test('PATCH refuses owners on a wish rather than silently ignoring them', async () => {
+  const round = await createRound(request);
+  const wish = (await addGame(round.id, { title: 'Wanted', wish: 'true' })).body;
+  const res = await request(app)
+    .patch(`/api/rounds/${round.id}/games/${wish.id}`).send({ ownerIds: [round.members[0].id] });
+  assert.equal(res.status, 400);
+});
+
+// The whole point of the preset: the second add starts where the first left off.
+// It is keyed to the ADDER's own seat, so it needs an account linked to a member
+// — without one there is nowhere to put it and nothing is written.
+test('a create with no linked seat writes no preset and still succeeds', async () => {
+  const round = await createRound(request);
+  const res = await addOwned(round.id, { title: 'Azul' }, [round.members[0].id]);
+  assert.equal(res.status, 201);
+  const after = await request(app).get(`/api/rounds/${round.id}`);
+  assert.ok(after.body.members.every((m) => !('ownerPreset' in m)),
+    'no account is linked in this suite, so no seat may gain a preset');
+});

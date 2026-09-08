@@ -28,6 +28,38 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * Clears the bar: recording who owns a box is something a round could not do
+   * at all, and it changes what a draw produces rather than how a screen looks —
+   * the group stops being offered a game nobody at the table can bring. The bar
+   * is the owned-expansions one (#653): a new fact about a game, with a new
+   * consequence for the evening.
+   */
+  {
+    revision: '2026-09-08',
+    de: {
+      title: 'Wem gehört das Spiel?',
+      body: 'Beim Anlegen eines Spiels, beim Übernehmen von BoardGameGeek und auf '
+        + 'der Spielseite lässt sich jetzt eintragen, welchen Mitgliedern das Spiel '
+        + 'gehört. Wer eingetragen ist, wird beim nächsten Spiel gleich wieder '
+        + 'vorgeschlagen. Beim Auslosen zählt das dann: Spiele, deren Besitzer '
+        + 'heute nicht mitspielen, kommen gar nicht erst in den Topf — und die '
+        + 'Übersicht sagt, wie viele deshalb fehlen. Spiele ohne Eintrag bleiben '
+        + 'wie bisher immer dabei, es ändert sich also nichts, solange niemand '
+        + 'etwas einträgt. Im Ergebnis steht am Ende, wer die Schachtel '
+        + 'mitbringt.',
+    },
+    en: {
+      title: 'Who owns this game?',
+      body: 'When you add a game, import from BoardGameGeek, or open a game\'s '
+        + 'page, you can now record which members own it — and whoever you picked '
+        + 'last time is suggested again. It counts at draw time: a game whose '
+        + 'owners are not playing tonight never reaches the pot, and the setup '
+        + 'screen says how many are missing for that reason. Games with no owners '
+        + 'recorded stay in, exactly as before, so nothing changes until somebody '
+        + 'fills one in. The results screen then names who is bringing the box.',
+    },
+  },
+  /*
    * Clears the bar: a round's design was eight variations of one look, and a
    * world is something a group could not have before — its own typeface,
    * backdrop and ornaments on the round's screens, its home tile and its shared
