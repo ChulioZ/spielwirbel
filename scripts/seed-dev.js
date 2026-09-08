@@ -3,7 +3,8 @@
 /*
  * Fill a local dev instance with realistic content (#530).
  *
- *   node scripts/seed-dev.js [locale]        # locale: de (default) | en
+ *   node scripts/seed-dev.js [locale]        # any locale with demo text; de is
+ *                                            # the default (see DEMO_LOCALES)
  *
  * WHY THIS EXISTS. A fresh clone starts empty, so a contributor verifying a UI
  * change looks at a blank Regal, an empty Chronik and empty Pokale — i.e. at

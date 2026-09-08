@@ -128,7 +128,10 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   + a `CACHE` bump, a landing-screenshot set per locale (#457 — required by
   `test/landing-shots.test.js`), and its native label in the bug-report form's
   language dropdown (`test/i18n-locales.test.js` derives the expected options
-  from the table). Don't reintroduce a hardcoded `['de', 'en']`
+  from the table) — plus an `allow`/`ban` regex pair in `test/session-naming.test.js`'s
+  `RULES`, the one step that is judgement rather than translation.
+  **`CONTRIBUTING.md` "Adding a language" is the canonical ordered list.**
+  Don't reintroduce a hardcoded `['de', 'en']`
   anywhere; `tn()` stays a one/other pair, so a language with `few`/`many`
   plural categories (Polish, Czech, Russian) needs more than a data file.
 - The active locale follows the system language and is overridable via the top-bar

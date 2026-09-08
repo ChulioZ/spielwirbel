@@ -7664,6 +7664,25 @@ kbd {
 [data-world] .btn--primary::before { top: -.7em; left: -.8em; }
 [data-world] .btn--primary::after { bottom: -.7em; right: -.8em; transform: rotate(180deg); }
 
+/* …and the corollary: the frame hangs .8em OUTSIDE the button box on each side,
+   while a button row sits its controls 10px apart (.toolbar, .vote__nav). So a
+   primary button with a neighbour lets its ornament land ON that neighbour —
+   measured 2026-09-08 at 4.4px of leaf over „Zurück" on the vote card and 7.6px
+   over „Speichern & weiteres" in the add-game sheet, which reads as a rendering
+   glitch rather than as a flourish.
+
+   The clearance is sized in the BUTTON's em, not the row's, because that is what
+   the overhang is sized in — a row-level `gap` bump would be a different unit
+   chasing the same number and would drift the moment a button size changes.
+   Clearance is .5em + the row's own 10px against a .8em overhang, i.e. 10px -
+   .3em — positive for any button type under ~33px, which is every button here
+   (measured after the fix: 4.6px on the vote card at 18px, 3.4px in the sheet at
+   22px). Only the sides that actually have a neighbour, so the row's outer edges
+   stay aligned with its padding. A NEW row class holding a primary button needs
+   adding here; the two below are the ones that exist today. */
+[data-world] :is(.toolbar, .vote__nav) > .btn--primary:not(:first-child) { margin-inline-start: .5em; }
+[data-world] :is(.toolbar, .vote__nav) > .btn--primary:not(:last-child) { margin-inline-end: .5em; }
+
 /* Slot 3 — a rule under a heading: section headings (direct children only:
    the same selector without `>` reaches every card title inside the
    section), sheet titles, the round's own name on the hub and in the rail,

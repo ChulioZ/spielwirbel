@@ -131,7 +131,10 @@ round (`MAX_GAMES_PER_ROUND`, default 1000), custom tags per round
 **account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
 friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50) and passkeys
-(`MAX_PASSKEYS_PER_USER`, default 20, issue #418). With accounts off (the
+(`MAX_PASSKEYS_PER_USER`, default 20, issue #418). Two more are trims rather
+than refusals — the oldest rows are dropped instead of the write being rejected:
+the friends feed (`MAX_FEED_EVENTS`, default 50, issue #325) and the in-app
+inbox (`MAX_INBOX_ITEMS`, default 100, issue #207). With accounts off (the
 default, single-tenant deploy) these are inert. See the quotas block in `.env.example`.
 
 Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate
@@ -164,8 +167,9 @@ typed) chosen at registration and not self-renamable: it is how an account is
 named in an abuse report, how invitations (#207) find it, and how it logs in, so
 no account can exist without one. It is **off by default**: set `ACCOUNTS_ENABLED=true` *and* a
 strong `SESSION_SECRET` to expose it. Verification/reset mails go out via
-plain SMTP (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, links built
-from `APP_BASE_URL`); unconfigured, they are logged instead of sent. Production
+plain SMTP (`SMTP_HOST`, `SMTP_PORT` (default 465, implicit TLS), `SMTP_USER`, `SMTP_PASS`,
+`MAIL_FROM`, `MAIL_FROM_NAME` (the display name, default `Spielwirbel`), links
+built from `APP_BASE_URL`); unconfigured, they are logged instead of sent. Production
 sends through the operator's own mailbox rather than a transactional provider,
 so the mails carry no tracking pixel and no rewritten links (#440).
 
@@ -184,7 +188,9 @@ domain a credential is bound to (default: `CANONICAL_HOST`); treat it as
 permanent once anyone has registered one, since changing it silently invalidates
 every existing passkey. Set it to `localhost` for local development, and use
 `WEBAUTHN_ORIGIN` only when the origin is not simply `https://<rp-id>` (a port,
-a staging host). Verification uses `@simplewebauthn/server`; the browser half is
+a staging host). `WEBAUTHN_RP_NAME` (default `Spielwirbel`) is the name the
+authenticator shows the user when it saves or offers the credential — cosmetic,
+unlike the id. Verification uses `@simplewebauthn/server`; the browser half is
 dependency-free.
 
 Two bounds keep bulk registration from draining that mailbox's sending quota

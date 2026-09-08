@@ -349,6 +349,11 @@ async function showMember(rid, mid) {
     .filter((g) => isActiveGame(g) && (g.ownerIds || []).includes(mid))
     .sort((a, b) => a.title.localeCompare(b.title, getLocale(), { sensitivity: 'base' }));
   if (owned.length) {
+    // `{name}` is an APPOSITION in every locale, never a prepositional phrase —
+    // the name can be a pronoun (the demo seats you as „Du"/« Toi »/„Jij"), and
+    // „4 Spiele von Du" is wrong German. See
+    // .claude/rules/interpolated-names-must-not-be-case-governed.md before
+    // rephrasing either key.
     const ownedSec = h(`<div class="section">
          <h2>${esc(tn(owned.length, 'member.ownedTitleOne', 'member.ownedTitle', { name: member.name }))}</h2>
          <div class="member-games"></div>

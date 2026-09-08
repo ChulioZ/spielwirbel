@@ -497,3 +497,42 @@ test('a world re-shapes the confetti bits through tokens — the same bits, no s
   assert.match(animated[1], /animation:\s*var\(--world-particle-anim\)\s+var\(--world-particle-dur\)/,
     'the shape and the pace are the world\'s; the loop is shared');
 });
+
+/* Slot 2's frame hangs .8em outside the button box, and a button row sits its
+   controls 10px apart — so a primary button with a neighbour paints its ornament
+   onto that neighbour unless something reserves the space. Measured in the pane
+   on 2026-09-08 before the fix: 4.4px of leaf over „Zurück" (.vote__nav) and
+   7.6px over „Speichern & weiteres" (.toolbar.sheet__actions).
+
+   Pinned as CSS text rather than in jsdom because jsdom applies no stylesheet,
+   so the geometry this is about does not exist there. The assertion is that the
+   clearance is expressed in the BUTTON's own em: a px value, or one in the row's
+   em, silently stops clearing as soon as a button type changes size, which is
+   the failure this rule exists to prevent and the one a green suite would hide. */
+test('a world-framed primary button reserves room for its ornament beside a neighbour', () => {
+  const sides = [
+    ['first', 'margin-inline-start'],
+    ['last', 'margin-inline-end'],
+  ];
+  for (const [edge, prop] of sides) {
+    const rule = rulesOf(CSS).find(([sel]) => sel.includes('.btn--primary') && sel.includes(`:not(:${edge}-child)`));
+    assert.ok(rule, `no clearance rule for the :not(:${edge}-child) side`);
+    const [sel, body] = rule;
+
+    // Only under a world — a palette round has no ornament and must not shift.
+    assert.match(sel, /\[data-world\]/);
+    // Both rows that hold a primary button today.
+    assert.match(sel, /\.toolbar/);
+    assert.match(sel, /\.vote__nav/);
+    // Direct children only: a primary button nested deeper is not the neighbour case.
+    assert.match(sel, />\s*\.btn--primary/);
+
+    const m = body.match(new RegExp(`${prop}:\\s*([^;]+)`));
+    assert.ok(m, `${prop} is not what the ${edge} side sets`);
+    const value = m[1].trim();
+    assert.match(value, /em$/, `the clearance must scale with the button's type, got ${value}`);
+    // .8em is the overhang; the row's own 10px does the rest. Anything under
+    // .3em stops clearing once the row gap shrinks, so pin a real floor.
+    assert.ok(parseFloat(value) >= 0.3, `clearance ${value} is too small to cover the .8em overhang`);
+  }
+});
