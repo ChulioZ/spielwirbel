@@ -81,7 +81,7 @@ instance that shares **logic rather than a value**, and it earns the shape for t
 same reason the others do: the two sides answer one question, so a drifted copy
 makes the preview promise a pool the draw will not produce (or hide games it
 would) with no error anywhere — and the preview is precisely where the user
-decides whether to draw at all. **#971 added a third clause, `ownedByParty`** — whether anyone at the table can
+decides whether to draw at all. **#971 added a fourth clause, `ownedByParty`** — whether anyone at the table can
 actually bring the box — and it is the logic half again, for a reason worth
 separating from the two above: nothing here is *validated* across the boundary
 and neither side 400s, so a drifted copy would simply make the setup screen's
@@ -370,7 +370,20 @@ palette on the client, and validating server-side would turn a render-time
 fallback into a cross-boundary contract, which is the thing this file spends
 fourteen paragraphs telling you to avoid creating unnecessarily.
 
-Each new instance must be named in this inventory — the fourteen paragraphs above.
+**The fifteenth is `public/js/provider-info-fields.js`** (#717/#724, moved from
+`lib/` by the 2026-09-08 audit): WHICH provider-sourced fields a game carries and
+what counts as a stored value. Both repo backends, the games route, the import
+copier and the lazy backfill `require` it, and the client's `wantsGameInfo`
+(`game-info.js`) now asks it too — that predicate decides whether a detail page,
+the hot-seat wizard or the shelf refresh should request provider info at all. It
+used to be a hand-copied list of the seven names with a "keep them together"
+comment and a third copy in `test/game-info-view.test.js`; a field the server
+counted and the list did not would have made every open of the detail page, the
+setup screen and the Regal POST `…/provider-info` for a game that can never
+complete, with no error anywhere. Its two guards carry a `Provider` prefix
+because a classic script's top-level `const` is a global.
+
+Each new instance must be named in this inventory — the fifteen paragraphs above.
 `test/rule-enumerations.test.js` asserts every `require('../public/js/…')` under
 `lib/routes/` and `lib/` appears in it, because the list had already gone stale by one
 before anyone noticed. The check reads only the inventory section, so mentioning a

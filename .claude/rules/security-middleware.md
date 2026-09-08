@@ -81,7 +81,8 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   reloads**, i.e. squarely inside what an operator does while diagnosing an
   incident: the app degrades, they reload, they trip their own DoS defence, and
   everything 429s for the rest of the window. Self-amplifying, and unclearable —
-  the store is in memory and per process (#215), so the only exits are waiting or
+  the store is in memory and per process (the single-replica pin, not a shared
+  store — #215 closed unshipped), so the only exits are waiting or
   a restart. A request spike during the 2026-07-26 degradation matched it.
 
   **The skip is an EXACT path set, not an extension test — and that distinction

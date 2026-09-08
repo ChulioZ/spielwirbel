@@ -318,9 +318,9 @@ research at all.
 - **Status:** adopted · 2026-07-24
 - **Source:** official Claude Code guidance (target under ~200 lines per CLAUDE.md)
 - **Check:** `wc -l CLAUDE.md` stays around or under 200 (171 at adoption, 203 on
-  2026-07-30). Growth beyond that is a signal to move content into a scoped rule or a
+  2026-07-30, 226 on 2026-09-07). Growth beyond that is a signal to move content into a scoped rule or a
   skill, not to restructure (C-R03 still holds).
-- **Enforced by:** `test/token-budget.test.js` (allowlisted at 203 — the entry has to
+- **Enforced by:** `test/token-budget.test.js` (allowlisted, `recorded` at 226 — the entry has to
   be dropped when the trim happens, so the overshoot cannot be forgotten)
 
 ### C-021 — Rule files stay within a size budget, and the corpus is measured

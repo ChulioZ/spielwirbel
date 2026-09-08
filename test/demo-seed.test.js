@@ -30,7 +30,7 @@ const { TAG_ICONS } = require('../lib/tag-icons');
 const { isActiveGame, fitsPlayerCount } = require('../public/js/draw-pool');
 const { resolveDesign } = require('../public/js/round-designs');
 const { MIN_TABLE_PARTIES } = require('../public/js/table-split');
-const { PROVIDER_INFO_FIELDS } = require('../lib/provider-info-fields');
+const { PROVIDER_INFO_FIELDS } = require('../public/js/provider-info-fields');
 
 // Every seeded game across every round, tagged with the round it belongs to, so
 // a failure names which shelf is wrong rather than an index into a list that no

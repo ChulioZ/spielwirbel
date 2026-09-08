@@ -7,6 +7,13 @@
  * backends must not gain a path to the provider registry (lib/provider-info.js
  * requires ./providers, which is why the field shape does not live there).
  *
+ * Lives under public/js/ (moved from lib/ by the 2026-09-08 audit) because the
+ * CLIENT asks the same question — game-info.js's wantsGameInfo() decides whether
+ * a detail page, the hot-seat wizard or the shelf refresh should ask the server
+ * for provider info at all — and it used to answer it from a hand-copied list of
+ * these seven names. Shared-scope script in index.html AND `require`d by lib/:
+ * .claude/rules/shared-constants-across-the-stack.md.
+ *
  * It exists as ONE module because the alternative is the drift this repo has
  * already paid for once: a field written but not counted leaves every game
  * permanently incomplete, one counted but not written can never complete, and a
@@ -23,8 +30,9 @@
 //
 // An empty categories/mechanics array is "the provider named none", which is why
 // it is skipped exactly like a null rather than stored as [].
-const isNum = (v) => Number.isFinite(v);
-const isList = (v) => Array.isArray(v) && v.length > 0;
+// Prefixed: this is a classic script over the frontend's one global scope.
+const isProviderNum = (v) => Number.isFinite(v);
+const isProviderList = (v) => Array.isArray(v) && v.length > 0;
 
 // #729 removed `description` from this map, which is the whole of that removal
 // on the store side: nothing writes the field, so it must not be COUNTED either
@@ -33,13 +41,13 @@ const isList = (v) => Array.isArray(v) && v.length > 0;
 // it. Rows written before the removal still hold their string; it is inert and
 // deliberately not purged (no migration code, CLAUDE.md).
 const PROVIDER_INFO_GUARDS = {
-  weight: isNum,
-  minPlaytime: isNum,
-  maxPlaytime: isNum,
-  minAge: isNum,
-  categories: isList,
-  mechanics: isList,
-  rating: isNum,
+  weight: isProviderNum,
+  minPlaytime: isProviderNum,
+  maxPlaytime: isProviderNum,
+  minAge: isProviderNum,
+  categories: isProviderList,
+  mechanics: isProviderList,
+  rating: isProviderNum,
 };
 
 const PROVIDER_INFO_FIELDS = Object.keys(PROVIDER_INFO_GUARDS);
@@ -70,10 +78,12 @@ function assignProviderInfo(dst, src, fields = PROVIDER_INFO_FIELDS) {
   return dst;
 }
 
-module.exports = {
-  PROVIDER_INFO_FIELDS,
-  CHIPPED_PROVIDER_INFO_FIELDS,
-  UNCHIPPED_PROVIDER_INFO_FIELDS,
-  hasProviderField,
-  assignProviderInfo,
-};
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    PROVIDER_INFO_FIELDS,
+    CHIPPED_PROVIDER_INFO_FIELDS,
+    UNCHIPPED_PROVIDER_INFO_FIELDS,
+    hasProviderField,
+    assignProviderInfo,
+  };
+}

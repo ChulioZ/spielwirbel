@@ -35,7 +35,8 @@ them. The obvious implementation passes a flag from each call site into
   `railway.json` pins `numReplicas: 1` (2026-08-04): Railway's zero-downtime
   deploy **overlaps** the outgoing and incoming containers, so two processes run
   concurrently on every deploy regardless of the replica count — and raising that
-  count at all is gated on #215. See
+  count at all needs a shared counter store first (#215 was closed unshipped on
+  2026-08-02, so that store is a prerequisite of the change that raises it). See
   `.claude/rules/deploy-invariants-are-pinned-in-code.md`.
 
 So the classification rides on the tenant id itself — `demo-<16 hex>` versus a

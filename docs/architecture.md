@@ -235,12 +235,6 @@ lib/
                      first (#829) — one query, one write for the whole shelf —
                      and asks BGG only about what it lacks, in paced batches of
                      at most 20 ids (#828)
-  provider-info-fields.js
-                     WHICH provider fields a game carries and what counts as a
-                     value worth storing (#724). Dependency-free so both repo
-                     backends, the games route and the backfill share one
-                     definition — a second copy would decide on its own
-                     whether an empty answer erases a stored value
   provider-cache.js  the shared 10-minute cache for provider hops (search,
                      detail, collection, cover refresh), so a repeated click
                      or a debounced keystroke costs nothing upstream. A caller
@@ -455,6 +449,13 @@ public/
     round-roles.js   the owner/co-owner/editor ladder and what each may do,
                      required by lib/round-access.js so the views hide exactly
                      what the server refuses (issue #137)
+    provider-info-fields.js
+                     WHICH provider fields a game carries and what counts as a
+                     value worth storing (#724), required by both repo
+                     backends, the games route and the backfill, and asked by
+                     the client's wantsGameInfo() — one definition, so no copy
+                     decides on its own whether an empty answer erases a
+                     stored value or whether a game still needs a fetch
     draw-pool.js     which games a draw may pick from: the active-collection
                      check, the player-range fit and the filters over BGG's
                      imported metadata (issue #725), required by lib/draw.js so

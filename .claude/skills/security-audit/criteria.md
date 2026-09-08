@@ -1,6 +1,6 @@
 # Security criteria
 
-- **last-researched:** 2026-07-24
+- **last-researched:** 2026-09-08
 - **cadence:** 45 days
 
 Seeded 2026-07-24 from `lib/app.js`, `lib/accounts.js`, `lib/auth.js`,
@@ -151,8 +151,12 @@ that a generic scanner does not know about.
 - **Check:** A global limiter plus tighter `AUTH_RATE_LIMIT_MAX` on the auth routes and a
   contact limiter. Ceilings are read from env **inside** `createApp()`, never bound at
   module load. `/healthz` sits before the limiter so uptime probes aren't throttled. Note
-  the store is in-memory per instance — horizontal scaling needs a shared store (#215),
-  which is a known gap, not a finding.
+  the store is in-memory per instance. The control that keeps that correct is the
+  **`numReplicas: 1` pin in `railway.json`**, asserted by `test/docker.test.js`
+  (#646) — not a shared store: #215 (Redis) was **closed 2026-08-02 without
+  shipping one**. A change that raises the replica count reopens this criterion
+  and must ship a shared store in the same change
+  (`.claude/rules/deploy-invariants-are-pinned-in-code.md`).
 - **Enforced by:** `test/security.test.js` (429 on the global cap)
 
 ## Injection, SSRF & untrusted input
@@ -316,6 +320,26 @@ that a generic scanner does not know about.
 
 ---
 
+## Supply chain, failure handling & passkeys (adopted 2026-09-08)
+
+### S-022 — The runtime and build inputs are pinned to reviewable versions and updated through the same channel as npm packages
+- **Status:** adopted · 2026-09-08
+- **Source:** OWASP Top 10:2025 A03 Software Supply Chain Failures (https://owasp.org/Top10/2025/) · Node.js security releases 2026-07-29 (https://nodejs.org/en/blog/vulnerability/july-2026-security-releases) · `Dockerfile`, `.github/workflows/`, `.github/dependabot.yml`
+- **Check:** `package-lock.json` is committed and every install path is `npm ci` (Dockerfile, CI); the only packages with install scripts are `argon2` (prebuilt) and `esbuild` (dev). The container base image (`FROM node:…`) is pinned to a **specific** version that Dependabot's `docker` ecosystem bumps, so a Node security release arrives as a PR rather than depending on a build cache; every third-party `uses:` in `.github/workflows/` is pinned to a **commit SHA** with a version comment, maintained by the `github-actions` ecosystem. The CI Postgres image and production's floating `:18` tag are the patch channel for PG security releases — after one, verify the running minor moved (`railway-postgres-floating-major.md` recipe). A floating major tag or a mutable action tag is the finding (#977); a `--ignore-scripts`-less `npm ci` is not (the two scripts are known).
+- **Enforced by:** — (manual; a `test/ci-workflow.test.js` assertion on `uses:` SHA shape is the mechanizable half once #977 ships)
+
+### S-023 — Exceptional conditions fail closed: unexpected errors answer a generic 500, every auth/tenant lookup failure denies, and nothing falls open to a default
+- **Status:** adopted · 2026-09-08
+- **Source:** OWASP Top 10:2025 A10 Mishandling of Exceptional Conditions · `lib/app.js` (central `errorHandler`), `lib/tenant.js`, `lib/upload-access.js`, `lib/accounts.js`
+- **Check:** `errorHandler` is the last middleware and answers a generic 500 with no stack (Express 5 forwards async rejections to it); `verifyPassword`/`jwt.verify` failures resolve to "refuse", never throw into a fall-through; a token whose user row is gone resolves to ERASED/`null` — in `lib/tenant.js` **and** in the cookie path of `lib/upload-access.js` — never to `'default'`; an unset `app.tenant_id` yields zero rows; a malformed upload key is a 404, not an exception. A new lookup that `.catch()`es to a permissive value, or a new gate whose error branch calls `next()`, is the finding.
+- **Enforced by:** `test/admin.test.js` (erasure → 401), `test/uploads-tenant-isolation.test.js` (malformed key, unreferenced object), `test/observability.test.js` (generic 500) — partial; the "no fall-open default" half is manual
+
+### S-024 — Passkey ceremonies verify challenge scope, origin and RP ID server-side, and persist the signature counter
+- **Status:** adopted · 2026-09-08
+- **Source:** Web Authentication Level 3, W3C Recommendation 2026-08-25 (https://www.w3.org/TR/webauthn-3/) §6.1.1 · `lib/routes/passkeys.js`, `lib/webauthn.js`
+- **Check:** registration and login verify with `expectedChallenge` (signed, scoped — a login challenge is refused at registration), `expectedOrigin` from the configured origin list, `expectedRPID` frozen at `spielwirbel.app` (#418); `newCounter` is written back after every assertion so a cloned authenticator is detectable; login options carry `allowCredentials: []` and reveal nothing about any account. `userVerification` policy for the sole-factor login is an **operator decision recorded in the rule/issue, not a criterion** — `preferred` today (2026-09-08 audit P-2; not yet decided). Related-origins and the L3 signal API do not apply (single RP ID; client-side hygiene).
+- **Enforced by:** `test/passkeys.test.js` (challenge scope, origin/RP ID, counter, anonymity of options)
+
 ## Rejected — settled, do not re-litigate
 
 ### S-R01 — "Add a CSRF token / double-submit cookie to `/api`"
@@ -330,9 +354,11 @@ that a generic scanner does not know about.
 ### S-R02 — "Move rate limiting to Redis / a shared store now"
 - **Status:** rejected · 2026-07-24
 - **Why:** The in-memory limiter is correct for a single instance, which is today's
-  deployment. A shared store matters only when scaling horizontally — tracked as #215, a
-  known and scheduled gap, not a vulnerability. Reporting it every run is noise. Reopens
-  when a second app instance is actually run.
+  deployment. A shared store matters only when scaling horizontally. **#215 was closed
+  unshipped on 2026-08-02**; the accepted control is the tested single-replica pin (see
+  S-012). Reporting it every run is noise. Reopens when a second app instance is actually
+  run — at which point the store is a prerequisite of that change, not a follow-up.
+  Attribution corrected 2026-09-08 (`deferred-weakness-attributions-rot.md`).
 
 ### S-R03 — "Store account tokens server-side / make them revocable immediately"
 - **Status:** rejected · 2026-07-24
@@ -370,3 +396,11 @@ that a generic scanner does not know about.
   publishing it. "This reveals how auth/queries work" is not itself a finding; "this reveals
   a control an attacker can now bypass for free" is. If you cannot name the concrete cheap
   exploit that the disclosure enables, there is no S-021 finding.
+
+### S-R07 — "PostgreSQL CVE-2026-14666 (stale RLS policy cache after role changes) — audit the tenant policy for it"
+- **Status:** rejected · 2026-09-08
+- **Why:** The bug is a stale *policy choice* after role-membership, role-attribute or database-ownership changes within a session (https://www.postgresql.org/support/security/CVE-2026-14666/, fixed 18.6). This app performs none of those at runtime — one application role, FORCE RLS, and the tenant policy keys on the tx-local `app.tenant_id` setting, not on role identity — so the vulnerable path is unreachable. The actionable half (is the floating `:18` minor ≥ 18.6) is an ops check under S-022, not a code criterion.
+
+### S-R08 — "Express 5 / qs / path-to-regexp advisories from the 5.1.0 era are open findings"
+- **Status:** rejected · 2026-09-08
+- **Why:** Lockfile carries `express 5.2.1`, `path-to-regexp 8.4.2`, `qs 6.16.0`, `body-parser 2.3.0`, `multer 2.3.0`; `npm audit` is clean, and Express 5's default query parser is `simple`, so `qs` is not on the request path at all. A third-party aggregator's list for an older version is not an advisory against this lockfile. Reopens only via `npm audit`/Dependabot (S-020).

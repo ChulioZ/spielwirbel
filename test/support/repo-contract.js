@@ -29,7 +29,7 @@ const { scoreTally } = require('../../public/js/vote-score');
 // The real field set and the real pool predicate, so the import is checked
 // against what the app actually stores and draws with rather than against a
 // hand-copied expectation of it (#921).
-const { PROVIDER_INFO_FIELDS } = require('../../lib/provider-info-fields');
+const { PROVIDER_INFO_FIELDS } = require('../../public/js/provider-info-fields');
 const { fitsPlayerCount } = require('../../public/js/draw-pool');
 
 // A fresh identifier per call, so a suite run against a PERSISTENT database

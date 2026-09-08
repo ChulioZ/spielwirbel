@@ -85,8 +85,9 @@ function fitsPlayerCount(game, playerCount) {
 // rule `fitsOwnRange` applies to a missing player range: a shelf nobody has
 // marked up must behave exactly as it did before this existed, or the feature
 // would empty every round's pool on the day it shipped. An EMPTY list means the
-// same as an absent key — the PATCH that clears the owners stores `[]`, exactly
-// as clearing `tagIds` does.
+// same as an absent key — since #976 a clearing PATCH REMOVES the key in both
+// backends (absent-key parity), so the `[]` branch is defensive: it covers a
+// caller that hands the predicate a list it assembled itself.
 //
 // `memberIds` is the SEATS that joined, never guests: a guest is ephemeral and
 // owns nothing (.claude/rules/session-guests-are-not-members.md), so a game owned

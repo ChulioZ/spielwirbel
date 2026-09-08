@@ -121,16 +121,16 @@ function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {
 // question. The server-side TTL gate is the backstop that keeps a data-less game
 // from costing an upstream request per view.
 //
-// Mirrors PROVIDER_INFO_FIELDS in lib/provider-info-fields.js. A field left out here
-// only costs a trigger that never fires (the server would still backfill on the
-// next session start), so this is the softer of the two lists — but keep them
-// together anyway, or the detail page stops being a way to refresh a game.
+// Asks the server's own field set (public/js/provider-info-fields.js, shared
+// with lib/ — .claude/rules/shared-constants-across-the-stack.md) rather than a
+// hand-copied list of the seven names: a field the server counted but this list
+// did not would have made every open of the detail page, the setup screen and
+// the Regal POST …/provider-info for a game that can never complete, with no
+// error anywhere. `hasProviderField` is the same guard the server stores by, so
+// "missing" here is exactly "missing" there.
 function wantsGameInfo(game) {
   return !!game && !!game.source && game.source.provider === 'bgg'
-    && (game.weight == null
-      || game.minPlaytime == null || game.maxPlaytime == null || game.minAge == null
-      || !(game.categories || []).length || !(game.mechanics || []).length
-      || game.rating == null);
+    && PROVIDER_INFO_FIELDS.some((key) => !hasProviderField(game, key));
 }
 
 // Fold a GET …/provider-info answer into a game object the view already holds.

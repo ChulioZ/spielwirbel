@@ -225,7 +225,7 @@ dashboard, so editing them means editing the file:
 | Key | Value | Why it is pinned |
 |---|---|---|
 | `healthcheckPath` | `/healthz` | The shallow probe. Pointing the *deploy* check at `/readyz` restart-loops the container on a database blip ([`liveness-vs-readiness-probes.md`](../.claude/rules/liveness-vs-readiness-probes.md)) |
-| `numReplicas` | `1` | The rate limiters and the `MAIL_DAILY_MAX` budget are per process and in memory, so a second replica silently doubles every ceiling. **#215** (shared Redis store) is the prerequisite for raising it |
+| `numReplicas` | `1` | The rate limiters and the `MAIL_DAILY_MAX` budget are per process and in memory, so a second replica silently doubles every ceiling. a shared store is the prerequisite for raising it — #215 (Redis) was closed unshipped on 2026-08-02, so it ships with the change that raises the count |
 | `sleepApplication` | `false` | A sleeping container runs no demo-purge tick (`lib/scheduler.js`) |
 
 `test/docker.test.js` asserts all three, so a change goes red rather than quiet.

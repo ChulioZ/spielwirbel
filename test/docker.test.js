@@ -63,7 +63,7 @@ test('railway.json pins the single replica the in-memory limiter stores require'
   // being added with a slider. express-rate-limit's default store is per
   // process, so a second one silently doubles all four rate-limit ceilings and
   // the MAIL_DAILY_MAX budget — no error, no failing test, the controls just
-  // stop binding. Raising this needs the shared Redis store (#215) first.
+  // stop binding. Raising this needs a shared counter store first (#215 closed unshipped).
   // See .claude/rules/deploy-invariants-are-pinned-in-code.md.
   assert.equal(cfg.deploy.numReplicas, 1);
   // App sleeping would stop the 15-minute demo-purge tick (lib/scheduler.js),

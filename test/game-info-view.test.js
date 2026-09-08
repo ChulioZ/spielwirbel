@@ -12,6 +12,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp, translator } = require('./support/dom');
+const { PROVIDER_INFO_FIELDS, hasProviderField } = require('../public/js/provider-info-fields');
 
 const RID = 'r1';
 const t = translator('de');
@@ -55,6 +56,15 @@ function roundFixture() {
     sessions: [],
   };
 }
+
+// The g1 fixture below claims to be "the COMPLETE set". Pin that claim to the
+// shared field list so a field added server-side (#724 widened it once) fails
+// here instead of silently turning the "no backfill request" assertions vacuous.
+test('the complete fixture carries every shared provider field, and the bare one lacks one', () => {
+  const [g1, , g3] = roundFixture().games;
+  for (const key of PROVIDER_INFO_FIELDS) assert.ok(hasProviderField(g1, key), `g1 lacks ${key}`);
+  assert.ok(PROVIDER_INFO_FIELDS.some((key) => !hasProviderField(g3, key)));
+});
 
 function bootApp(t_, { providerInfo } = {}) {
   const dom = loadApp();

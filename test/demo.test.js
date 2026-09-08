@@ -53,7 +53,7 @@ const observability = require('../lib/observability');
 // split parent is neither played nor cancelled, and sixteen sites once got that
 // wrong silently (.claude/rules/shared-constants-across-the-stack.md).
 const { sessionOutcome } = require('../public/js/session-outcome');
-const { PROVIDER_INFO_FIELDS } = require('../lib/provider-info-fields');
+const { PROVIDER_INFO_FIELDS } = require('../public/js/provider-info-fields');
 // The app's own "would this game hop BGG?" predicate, so the no-request claim is
 // asserted against the real gate rather than against a re-read of the stamp.
 const { needsProviderInfo } = require('../lib/provider-info');
