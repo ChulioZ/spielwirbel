@@ -52,6 +52,14 @@ function renderChronikTab(round, activities) {
   doneSessions
     .filter((s) => !(s.parentSessionId && parentIds.has(s.parentSessionId)))
     .forEach((s) => entries.push({ kind: 'session', at: s.createdAt, session: s }));
+  /* The other round's name and id are redacted on read for a grantee who holds
+     no grant on that round (#1007, lib/routes/activities.js), so each of the four
+     bulk move/copy events needs a generic wording for the nameless case. Both key
+     pairs are passed as literals rather than derived from one name, so a source
+     scan over i18n keys can still see them (`.claude/rules/source-scanning-guards-enumerate-shapes.md`). */
+  const crossRound = (a, one, many, anonOne, anonMany) => (a.roundName
+    ? tn(a.count, one, many, { round: a.roundName })
+    : tn(a.count, anonOne, anonMany));
   (activities || []).forEach((a) => {
     const meta = {
       game_added: { icon: 'ti-plus', text: t('activity.gameAdded', { title: a.title }) },
@@ -62,10 +70,10 @@ function renderChronikTab(round, activities) {
       game_deleted: { icon: 'ti-trash', text: t('activity.gameDeleted', { title: a.title }) },
       // One bulk entry per side of a whole-shelf move (#253) — these carry a
       // count and the other round's name, not a game title.
-      games_moved_out: { icon: 'ti-arrow-right', text: tn(a.count, 'activity.gamesMovedOutOne', 'activity.gamesMovedOut', { round: a.roundName }) },
-      games_moved_in: { icon: 'ti-arrow-left', text: tn(a.count, 'activity.gamesMovedInOne', 'activity.gamesMovedIn', { round: a.roundName }) },
-      games_copied_out: { icon: 'ti-copy', text: tn(a.count, 'activity.gamesCopiedOutOne', 'activity.gamesCopiedOut', { round: a.roundName }) },
-      games_copied_in: { icon: 'ti-copy', text: tn(a.count, 'activity.gamesCopiedInOne', 'activity.gamesCopiedIn', { round: a.roundName }) },
+      games_moved_out: { icon: 'ti-arrow-right', text: crossRound(a, 'activity.gamesMovedOutOne', 'activity.gamesMovedOut', 'activity.gamesMovedOutAnotherOne', 'activity.gamesMovedOutAnother') },
+      games_moved_in: { icon: 'ti-arrow-left', text: crossRound(a, 'activity.gamesMovedInOne', 'activity.gamesMovedIn', 'activity.gamesMovedInAnotherOne', 'activity.gamesMovedInAnother') },
+      games_copied_out: { icon: 'ti-copy', text: crossRound(a, 'activity.gamesCopiedOutOne', 'activity.gamesCopiedOut', 'activity.gamesCopiedOutAnotherOne', 'activity.gamesCopiedOutAnother') },
+      games_copied_in: { icon: 'ti-copy', text: crossRound(a, 'activity.gamesCopiedInOne', 'activity.gamesCopiedIn', 'activity.gamesCopiedInAnotherOne', 'activity.gamesCopiedInAnother') },
       // One bulk entry per collection import (#481) — a count, not a title, for
       // the same reason as the two moves above: an import is routinely 100+
       // games and a row each would bury every other event on the round.

@@ -614,6 +614,12 @@ test('POST games/move-to reparents every game and merges tags by name', async ()
   assert.equal(outFeed.filter((a) => a.type === 'games_moved_out').length, 1);
   assert.equal(inFeed.filter((a) => a.type === 'games_moved_in').length, 1);
   assert.equal(inFeed.find((a) => a.type === 'games_moved_in').count, 2);
+
+  // Legacy / shared-password mode: no accounts, so no grants, so #1007's
+  // redaction never fires and both sides keep naming the other round. This is
+  // the half a redaction keyed on req.userId rather than req.grant would break.
+  assert.equal(outFeed.find((a) => a.type === 'games_moved_out').roundName, dst.name);
+  assert.equal(inFeed.find((a) => a.type === 'games_moved_in').roundId, src.id);
 });
 
 test('POST games/move-to rejects a missing, blank or identical target', async () => {
