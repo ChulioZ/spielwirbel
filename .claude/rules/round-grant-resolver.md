@@ -4,6 +4,7 @@ paths:
   - "lib/app.js"
   - "lib/routes/rounds.js"
   - "lib/routes/games.js"
+  - "lib/routes/activities.js"
   - "test/round-grants-access.test.js"
   - "test/repo.postgres.test.js"
 ---
@@ -70,6 +71,20 @@ or an OR into the tenant policy.
    **A future handler that genuinely needs a second round under a grant must
    authorize that round on its own** — check for a grant on the *target* id too;
    `req.repo` finding it proves nothing.
+
+   **The same question has a READ direction, and it is quieter** (#1007). The
+   four bulk move/copy activity events store the other round's `roundId` **and**
+   `roundName`, and `GET …/activities` is an ordinary round read that every
+   grantee passes — so a grantee of round B learned the name of round A they were
+   never invited to, round names being user-chosen free text. Nothing is
+   *reached* here, which is why the table above cannot help: the corollary's
+   remedy was to make the write owner-only, and a read the grantee is entitled to
+   has no such move. `lib/routes/activities.js` redacts the pair on the way out
+   instead, keyed on `req.grant` (an owner holds none, and neither does anyone in
+   legacy mode) and testing the *referenced* round against the caller's own
+   grants — the same "authorize the second round on its own" answer as above, one
+   verb over. **Storage stays unredacted on purpose**, so historical rows remain
+   right for the owner and no backfill is needed.
 
 3. **A grant is not authority to DESTROY or REPARENT the round.** `req.grant` is
    left set so the role layer can refuse a grantee (`403 not_owner`). A grant lets

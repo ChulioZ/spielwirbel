@@ -394,3 +394,73 @@ test('recommendations follow the grant: the grantee reads them, an outsider gets
   // Nor may an unauthenticated caller.
   assert.equal((await request(app).get(`/api/rounds/${shared.id}/recommendations`)).status, 401);
 });
+
+/*
+ * Cross-round references in the activity feed (#1007).
+ *
+ * moveGames/copyGames write one bulk entry per side, each naming the round on
+ * the OTHER side (`roundId` + `roundName`). GET …/activities is an ordinary
+ * round read, so every grantee gets the whole payload — and round names are
+ * user-chosen free text. The reference is redacted on read for a caller who
+ * holds no grant on the round it points at.
+ *
+ * Three assertions carry the weight, and dropping any one makes the spec
+ * vacuous: the grantee (the leak), the OWNER (a redaction keyed on req.userId
+ * instead of req.grant fires for them too), and a grantee holding BOTH grants
+ * (a redaction that fires unconditionally would pass without it).
+ */
+test('a grantee is not shown the name or id of a round they hold no grant on (#1007)', async () => {
+  const owner = await makeAccount('actref-owner@example.com');
+  const grantee = await makeAccount('actref-grantee@example.com');
+  const bothSides = await makeAccount('actref-both@example.com');
+
+  // „Therapiegruppe" is the round the grantee is never invited to; the moves and
+  // copies below are what put its name into the shared round's feed.
+  const priv = (await request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Therapiegruppe', members: ['Owner'] })).body;
+  const shared = (await request(app).post('/api/rounds').set(auth(owner.token))
+    .send({ name: 'Freitagsrunde', members: ['Owner'] })).body;
+
+  await request(app).post(`/api/rounds/${priv.id}/games`).set(auth(owner.token))
+    .send({ title: 'Catan', minPlayers: 2, maxPlayers: 4 });
+  // priv -> shared: writes games_moved_in on `shared`, naming `priv`.
+  assert.equal((await request(app).post(`/api/rounds/${priv.id}/games/move-to`).set(auth(owner.token))
+    .send({ targetRoundId: shared.id })).status, 200);
+  // shared -> priv: writes games_copied_out on `shared`, naming `priv` again.
+  assert.equal((await request(app).post(`/api/rounds/${shared.id}/games/copy-to`).set(auth(owner.token))
+    .send({ targetRoundId: priv.id })).status, 200);
+
+  await repo.createGrant({ roundId: shared.id, ownerTenantId: owner.user.tenantId, userId: grantee.user.id });
+  await repo.createGrant({ roundId: shared.id, ownerTenantId: owner.user.tenantId, userId: bothSides.user.id });
+  await repo.createGrant({ roundId: priv.id, ownerTenantId: owner.user.tenantId, userId: bothSides.user.id });
+
+  const feed = async (token) => {
+    const res = await request(app).get(`/api/rounds/${shared.id}/activities`).set(auth(token));
+    assert.equal(res.status, 200);
+    return res.body.filter((a) => ['games_moved_in', 'games_copied_out'].includes(a.type));
+  };
+
+  // The OWNER's own view is unchanged — both fields, both events.
+  const asOwner = await feed(owner.token);
+  assert.deepEqual(asOwner.map((a) => a.type).sort(), ['games_copied_out', 'games_moved_in']);
+  for (const a of asOwner) {
+    assert.equal(a.roundName, 'Therapiegruppe');
+    assert.equal(a.roundId, priv.id);
+  }
+
+  // The GRANTEE gets the same events, with the reference gone — the keys are
+  // absent rather than null, which is what the Chronik branches on.
+  const asGrantee = await feed(grantee.token);
+  assert.deepEqual(asGrantee.map((a) => a.type).sort(), ['games_copied_out', 'games_moved_in']);
+  for (const a of asGrantee) {
+    assert.equal('roundName' in a, false, `${a.type} must not name the other round`);
+    assert.equal('roundId' in a, false, `${a.type} must not identify the other round`);
+    assert.equal(a.count, 1, 'the rest of the payload survives');
+  }
+
+  // A grantee of BOTH rounds may see the name: they can open that round anyway.
+  for (const a of await feed(bothSides.token)) {
+    assert.equal(a.roundName, 'Therapiegruppe');
+    assert.equal(a.roundId, priv.id);
+  }
+});
