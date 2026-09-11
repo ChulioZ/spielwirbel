@@ -52,3 +52,44 @@ test('ownerNames follows member order and drops an id nobody holds', () => {
   assert.deepEqual(ownerNames(round([ANNA]), undefined), []);
   assert.deepEqual(ownerNames(null, ['m1']), []);
 });
+
+/* boxBringers — who has to BRING the box (#971, generalised by #1008). The rule
+ * was inline in renderFinish() and therefore reachable only from the chosen
+ * row; it is pure and shared now because the ranking prints it too, and two
+ * screens must never list one game's owners differently
+ * (.claude/rules/shared-constants-across-the-stack.md). */
+
+const { boxBringers } = require('../public/js/owner-picker');
+const CLARA = { id: 'm3', name: 'Clara' };
+const table = (members, memberIds) => [{ members }, { memberIds }];
+
+test('boxBringers is silent when there is nothing to say', () => {
+  const [r, s] = table([ANNA, BEN], ['m1', 'm2']);
+  assert.deepEqual(boxBringers(r, s, { title: 'Catan' }), [], 'no owners recorded');
+  assert.deepEqual(boxBringers(r, s, { ownerIds: [] }), [], 'an empty list is not news either');
+  assert.deepEqual(boxBringers(r, s, { ownerIds: ['m1', 'm2'] }), [],
+    'everyone at the table owns it, so nobody has to be told to bring it');
+});
+
+test('boxBringers names the owners who are actually at the table', () => {
+  const [r, s] = table([ANNA, BEN, CLARA], ['m1', 'm2']);
+  assert.deepEqual(boxBringers(r, s, { ownerIds: ['m1', 'm3'] }), ['Anna'],
+    'Clara owns it too but stayed home, so naming her helps nobody');
+});
+
+test('boxBringers falls back to every owner when none of them is seated', () => {
+  // A direct pick is not filtered by ownership, so it can legitimately land on
+  // a game nobody present owns — exactly when the line matters most.
+  const [r, s] = table([ANNA, BEN, CLARA], ['m1', 'm2']);
+  assert.deepEqual(boxBringers(r, s, { ownerIds: ['m3'] }), ['Clara']);
+});
+
+test('boxBringers survives a session with no seats at all', () => {
+  /* The route guarantees at least one seat, so this is unreachable today — but
+     `[].every(...)` is vacuously TRUE, which would read as "everyone owns it"
+     and suppress the line. Suppressing is the safe direction here; the point of
+     the case is that the answer is deliberate rather than accidental. */
+  const [r, s] = table([ANNA, BEN], []);
+  assert.deepEqual(boxBringers(r, s, { ownerIds: ['m1'] }), []);
+  assert.deepEqual(boxBringers(r, {}, { ownerIds: ['m1'] }), [], 'and a session with no memberIds key');
+});

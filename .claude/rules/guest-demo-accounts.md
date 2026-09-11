@@ -109,6 +109,39 @@ wished rows #953 added cannot be counted as shelf stock.
 Note the owner seat means `round.members.length` is **1 + the typed names** — the
 fixture trap `.claude/rules/member-seat-self-claim.md` describes, here in the seed.
 
+## 3b. A feature reachable only from OPTIONAL data is invisible in the demo
+
+§3 is about a seed value that makes the app look *broken*. This is the quieter
+half: a seed that omits an optional field makes whole shipped features look
+**unbuilt**, and nothing anywhere reports it.
+
+`game.ownerIds` is optional — most rounds record nothing, and a game with no
+owner is deliberately never filtered. The seed set it on **zero** games, so for
+every demo visitor the three screens that read it rendered nothing at all: the
+results ranking's „Gehört …" line (#971/#1008), the member page's „Spiele von …"
+section (#973), and the setup screen's „… fehlen, weil ihre Besitzer nicht
+mitspielen" note. Three features, shipped and correct, that a visitor could not
+reach — and the demo is the only surface an unregistered visitor ever sees.
+
+No test could see it either: every one of those screens has a documented "say
+nothing when there is nothing to say" branch, so the empty render is the
+*correct* output for the data it was given.
+
+**So when a feature keys off an optional field, seed that field** — and assert
+the seed carries it, since a later edit can empty it back out just as silently.
+Two constraints the ownership case makes concrete, both asserted in
+`test/demo-seed.test.js`:
+
+- **The seeded value has to be NEWS.** The line is suppressed when everyone
+  seated owns the game, so a shelf where every box belongs to the visitor seeds
+  the feature straight back into invisibility. At least one game must be owned
+  by somebody else and not by the whole table.
+- **It must not narrow a pool.** `ownedByParty` keeps a game only when an owner
+  is in the joining party, so an owner index that is not a seat of that round
+  drops the game from every draw with nothing on screen to explain it — §3's
+  failure via a different field. The drawability assertion therefore applies
+  `ownedByParty` alongside `isActiveGame` + `fitsPlayerCount`.
+
 ## 4. Cover URLs must be RESOLVED, never written by hand
 
 Seeded covers are hotlinks to the providers' own CDNs, exactly like a real user's

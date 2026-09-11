@@ -43,6 +43,34 @@ function ownerNames(round, ownerIds) {
   return ((round && round.members) || []).filter((m) => ids.has(m.id)).map((m) => m.name);
 }
 
+/* Who has to BRING the box (#971, lifted out of renderFinish by #1008). Said
+   only when it is NEWS, which is the whole rule:
+     - no recorded owner        -> nothing to say;
+     - everyone seated owns it  -> not news, so stay quiet;
+     - otherwise name the owners who are actually HERE, falling back to every
+       owner when none of them is — a direct pick is not filtered by ownership,
+       so it can legitimately land on a game nobody present owns, and that is
+       exactly when the line is most worth printing.
+
+   Pure and shared because two screens print it: the ranking row and the chosen
+   row's finish panel. They must never list one game's owners differently
+   (.claude/rules/shared-constants-across-the-stack.md, the logic half —
+   draw-pool.js is the precedent).
+
+   `[].every(...)` is vacuously TRUE, so a seatless session would read as
+   "everyone owns it" and fall into the quiet branch. The route guarantees at
+   least one seat, so that is unreachable — and suppressing is the safe
+   direction anyway: saying nothing beats naming the wrong person. */
+function boxBringers(round, session, game) {
+  const ownerIds = (game && game.ownerIds) || [];
+  if (!ownerIds.length) return [];
+  const seated = new Set((session && session.memberIds) || []);
+  const everyoneOwnsIt = [...seated].every((mid) => ownerIds.includes(mid));
+  if (everyoneOwnsIt) return [];
+  const here = ownerIds.filter((x) => seated.has(x));
+  return ownerNames(round, here.length ? here : ownerIds);
+}
+
 // The chip row itself. `selected` is a live Set the caller reads back on submit —
 // the same contract the tag chips beside it use, so the two rows behave
 // identically under the finger.
@@ -74,5 +102,5 @@ function renderOwnerChips(round, selected) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { ownerPresetFor, ownerNames };
+  module.exports = { ownerPresetFor, ownerNames, boxBringers };
 }

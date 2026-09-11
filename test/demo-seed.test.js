@@ -27,7 +27,7 @@ const { TAG_ICONS } = require('../lib/tag-icons');
 // The app's own predicates, never a re-derived copy: a spec that reimplements
 // "is this drawable" asserts its own arithmetic rather than the pool's
 // (.claude/rules/active-games-filter-sites.md).
-const { isActiveGame, fitsPlayerCount } = require('../public/js/draw-pool');
+const { isActiveGame, fitsPlayerCount, ownedByParty } = require('../public/js/draw-pool');
 const { resolveDesign } = require('../public/js/round-designs');
 const { MIN_TABLE_PARTIES } = require('../public/js/table-split');
 const { PROVIDER_INFO_FIELDS } = require('../public/js/provider-info-fields');
@@ -155,7 +155,13 @@ test('EVERY seeded round can actually be drawn from at its OWN table size', () =
   // as stock (.claude/rules/active-games-filter-sites.md).
   for (const round of seed.DEMO_ROUNDS) {
     const seats = 1 + seed.DEMO_TEXT.de.rounds[round.key].members.length;
-    const drawable = round.games.filter((g) => isActiveGame(g) && fitsPlayerCount(g, seats));
+    /* `ownedByParty` joined the predicate with #1008's seeded owners: a game
+       nobody at the table owns is not in the pool, so an owner index that is
+       not a seat of THIS round would quietly shrink the shelf. Seats are
+       modelled by their index, which is exactly what the seed declares. */
+    const party = [...Array(seats).keys()];
+    const drawable = round.games.filter((g) => isActiveGame(g) && fitsPlayerCount(g, seats)
+      && ownedByParty({ ownerIds: g.owners }, party));
     assert.ok(
       drawable.length >= 3,
       `round '${round.key}': only ${drawable.length} of ${round.games.length} games are drawable at ${seats} players`
@@ -255,4 +261,49 @@ test('the seed carries the date it was resolved, in the form the script emits', 
   const script = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'resolve-demo-covers.js'), 'utf8');
   assert.match(script, /console\.log\(`\/\/ Resolved \$\{[^}]+\} by scripts\/resolve-demo-covers\.js/,
     'the script no longer prints the stamp the seed is pinned to');
+});
+
+/* -------------------------------- ownership -------------------------------- */
+
+test('the seed records owners, and every owner index is a real seat of its round', () => {
+  /* Without owners the demo cannot show #971/#973/#1008 at all — the results
+     ranking's „Gehört …" line, the member page's owned-games section and the
+     setup screen's "their owners are away" note are each reachable only from a
+     game somebody owns. An index past the seat list is the silent failure: the
+     game leaves every draw with nothing on screen to explain it. */
+  let owned = 0;
+  for (const round of seed.DEMO_ROUNDS) {
+    const seats = 1 + seed.DEMO_TEXT.de.rounds[round.key].members.length;
+    for (const g of round.games) {
+      if (!g.owners) continue;
+      owned += 1;
+      assert.ok(g.owners.length, `'${g.title}' declares an empty owner list rather than none`);
+      for (const seat of g.owners) {
+        assert.ok(Number.isInteger(seat) && seat >= 0 && seat < seats,
+          `round '${round.key}': '${g.title}' names seat ${seat}, but the table has ${seats}`);
+      }
+    }
+  }
+  assert.ok(owned >= 8, `only ${owned} seeded games record an owner`);
+});
+
+test('a WISH is nobody\'s, so it never carries owners', () => {
+  // The round does not have that box yet; the games route forces `ownerIds: []`
+  // on a wish for the same reason, and the member page never lists one.
+  for (const round of seed.DEMO_ROUNDS) {
+    for (const g of round.games) {
+      if (g.wish) assert.equal(g.owners, undefined, `'${g.title}' is a wish with owners`);
+    }
+  }
+});
+
+test('the landing round shows ownership that is actually NEWS at the table', () => {
+  /* The line is suppressed when everyone seated owns the game, so a shelf whose
+     owners are all "everybody" would seed the feature into invisibility — which
+     is the state #1008 exists to end. At least one game must be owned by
+     somebody OTHER than the visitor and not by the whole table. */
+  const main = seed.DEMO_ROUNDS.find((r) => r.key === 'main');
+  const seats = 1 + seed.DEMO_TEXT.de.rounds.main.members.length;
+  const news = main.games.filter((g) => g.owners && g.owners.length < seats && !g.owners.includes(0));
+  assert.ok(news.length, 'no landing-round game is owned by a fellow player alone');
 });

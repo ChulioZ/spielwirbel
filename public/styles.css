@@ -3917,6 +3917,10 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 /* `display: block` because this is an <a> since #330 — an inline box would let
    the medal/badge line wrap differently from the block <div> it replaced. */
 .result-row__title { display: block; font-weight: 700; font-size: var(--text-xl); }
+.result-row__owners { margin-top: 4px; font-size: var(--text-sm); color: var(--ink-soft); }
+/* The attribute alone would lose to any author `display` here — the row line
+   stands down on the chosen row (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.result-row__owners[hidden] { display: none; }
 /* The vote distribution, in the vote card's own vocabulary (#890): one column
    per rung of the 0–5 scale, each a full-height track holding an `avgColor(n)`
    fill, over an axis row that names the rung with the vote tile's mood face and

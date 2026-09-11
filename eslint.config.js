@@ -178,7 +178,7 @@ const frontendGlobals = {
   AVATAR_MAX_BYTES: 'readonly', AVATAR_SIZE: 'readonly', AVATAR_EXT: 'readonly',
   AVATAR_ACCEPT: 'readonly', AVATAR_MAX_PIXELS: 'readonly',
   avatarFace: 'readonly', primeAvatars: 'readonly', rememberAvatar: 'readonly',
-  ownerPresetFor: 'readonly', ownerNames: 'readonly', renderOwnerChips: 'readonly',
+  ownerPresetFor: 'readonly', ownerNames: 'readonly', renderOwnerChips: 'readonly', boxBringers: 'readonly',
   knownAvatar: 'readonly', installAvatarFallback: 'readonly', resetAvatarCache: 'readonly',
   // cover-policy.js (issue #867)
   COVER_MAX_BYTES: 'readonly', COVER_MAX_MB: 'readonly', COVER_MAX_DIM: 'readonly',
