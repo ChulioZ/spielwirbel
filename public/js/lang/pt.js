@@ -273,6 +273,8 @@ I18N.pt = {
   'games.filter': 'Filtrar',
   'games.filterLabel': 'Filtros ({n} ativos)',
 
+  'metaFilter.boundMin': 'no mínimo',
+  'metaFilter.boundMax': 'no máximo',
   'metaFilter.any': 'Qualquer',
   'metaFilter.playtime': 'Tempo de jogo',
   'metaFilter.playtimeMin': 'Tempo de jogo no mínimo',

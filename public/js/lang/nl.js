@@ -271,6 +271,8 @@ I18N.nl = {
   'games.filter': 'Filteren',
   'games.filterLabel': 'Filters ({n} actief)',
 
+  'metaFilter.boundMin': 'ten minste',
+  'metaFilter.boundMax': 'hoogstens',
   'metaFilter.any': 'Alle',
   'metaFilter.playtime': 'Speelduur',
   'metaFilter.playtimeMin': 'Speelduur ten minste',

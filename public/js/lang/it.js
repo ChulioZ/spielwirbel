@@ -273,6 +273,8 @@ I18N.it = {
   'games.filter': 'Filtra',
   'games.filterLabel': 'Filtri ({n} attivi)',
 
+  'metaFilter.boundMin': 'almeno',
+  'metaFilter.boundMax': 'al massimo',
   'metaFilter.any': 'Qualsiasi',
   'metaFilter.playtime': 'Durata della partita',
   'metaFilter.playtimeMin': 'Durata almeno',

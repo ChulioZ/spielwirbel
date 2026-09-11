@@ -1720,7 +1720,26 @@ a.hub-row:hover { background: var(--sunken-soft); }
    rather than above it, and `.field label`/`.field__label` is `display: block`
    (.claude/rules/label-rows-lose-to-field-label.md). */
 .mfilter__label { font-family: var(--font-display); font-weight: 600; font-size: var(--text-sm); color: var(--ink); }
-.mfilter__range { display: flex; align-items: center; gap: 8px; }
+/* A range row stacks: the field name on its own line, its two labelled bounds
+   beneath, right-aligned so they still line up with the single-select rows'
+   controls. Stacked UNCONDITIONALLY rather than left to `flex-wrap`, because a
+   wrap here is decided by how wide the option text and the direction words
+   happen to be — so „Spieldauer" (120 Min.) wrapped while „Komplexität" (2,5)
+   did not, and a locale with longer words („ten minste", « au moins ») would
+   split the two rows differently again. One predictable shape beats a tidier
+   one that depends on the translation. */
+.mfilter__row--range { flex-direction: column; align-items: stretch; gap: 6px; }
+.mfilter__range { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+/* One bound: its direction word and its select, wrapping together. Measured at
+   375px with them as flat siblings, the row broke BETWEEN „höchstens" and its
+   own select and left the word sitting beside the other bound's value. */
+.mfilter__pair { display: flex; align-items: center; gap: 6px; }
+/* The direction beside each range select (#1001) — „mindestens" / „höchstens".
+   Muted and small on purpose: it is a function word next to the value that
+   carries the meaning, and the row already states the FIELD at display weight in
+   `.mfilter__label`. `nowrap` so a two-word form („ten minste", „al massimo",
+   „no mínimo") cannot break mid-phrase and read as two separate cues. */
+.mfilter__bound { font-size: var(--text-xs); color: var(--ink-soft); white-space: nowrap; }
 /* `min-width: 0` so a long option string cannot pin the row wider than its
    column and push the page into horizontal scroll
    (.claude/rules/flex-none-cancels-flex-wrap.md). */

@@ -161,6 +161,57 @@ test('setting a filter shrinks the pool preview and names itself as a chip', asy
   assert.equal(triggerLabel(), 'Filter (1 aktiv)');
 });
 
+test('both range rows say the direction IN THE ROW, not only to a screen reader', async () => {
+  /* Before #1001 the single playtime select spelled the direction out on every
+     option („Höchstens 30 Min."), so a sighted user could not miss it. A
+     two-select row moves that cue to position and to each select's aria-label —
+     which is what the complexity row had always done, and the reason it is
+     fixed for BOTH rows here rather than only for the one that changed.
+
+     The visible word is aria-hidden and the accessible name stays the FULL
+     phrase naming the field, so nothing is lost for a screen reader tabbing
+     straight into the select. test/i18n-parity.test.js asserts the substring
+     relation WCAG 2.5.3 needs between the two, in every locale. */
+  const round = roundFixture({
+    games: [
+      { id: 'k', title: 'Kurz', minPlaytime: 20, maxPlaytime: 45, weight: 2 },
+      { id: 'l', title: 'Lang', minPlaytime: 120, maxPlaytime: 240, weight: 4 },
+    ],
+  });
+  await dom.call('showStartSession', round);
+  openPanel();
+
+  const rows = [...dom.document.querySelectorAll('.mfilter__row--range')];
+  assert.equal(rows.length, 2, 'playing time and complexity are both range rows');
+  for (const row of rows) {
+    const field = row.querySelector('.mfilter__label').textContent;
+    const pairs = [...row.querySelectorAll('.mfilter__select')].map((sel) => ({
+      visible: sel.previousElementSibling,
+      name: sel.getAttribute('aria-label'),
+    }));
+    assert.equal(pairs.length, 2, `${field} lost a bound`);
+    for (const { visible, name } of pairs) {
+      assert.ok(visible && visible.classList.contains('mfilter__bound'),
+        `${field}: a select with no visible direction beside it`);
+      // Same wrapper, so a narrow row breaks BETWEEN the bounds and never
+      // between a word and the value it labels — the structural half of a
+      // layout rule jsdom cannot otherwise see.
+      assert.ok(visible.parentElement.classList.contains('mfilter__pair')
+        && visible.parentElement === visible.nextElementSibling.parentElement,
+        `${field}: the direction and its select can wrap apart`);
+      assert.ok(visible.textContent.trim(), `${field}: the direction word is empty`);
+      // Decorative for assistive tech: the select's own name already carries it,
+      // and announcing both would read the direction twice.
+      assert.equal(visible.getAttribute('aria-hidden'), 'true');
+      assert.ok(name.includes(visible.textContent),
+        `${field}: „${visible.textContent}" is not part of the accessible name „${name}" (WCAG 2.5.3)`);
+    }
+    // The two directions must differ, or the row would label both ends the same.
+    assert.notEqual(pairs[0].visible.textContent, pairs[1].visible.textContent, `${field}`);
+  }
+  closePanel();
+});
+
 test('the playing-time row offers BOTH bounds, and the minimum reads the game\'s UPPER one (#1001)', async () => {
   /* The default GAMES carry only a lower bound, so this needs its own shelf —
      which is the gating rule doing its job: „mindestens" reads `maxPlaytime`,

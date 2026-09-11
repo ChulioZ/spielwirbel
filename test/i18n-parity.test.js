@@ -122,3 +122,33 @@ test('a plural singular never spells out a literal 1 where the plural substitute
     }
   }
 });
+
+/* The two range rows (#1001) show the direction as a SHORT word beside each
+   select — „mindestens" / „höchstens" — while the select's accessible name stays
+   the full phrase that also names the field („Komplexität mindestens"), so a
+   screen-reader user tabbing straight into the control still knows which field
+   it belongs to.
+
+   WCAG 2.5.3 Label in Name requires the accessible name to CONTAIN the visible
+   text. That holds today in every shipped locale by a happy accident of phrasing —
+   and it is exactly the kind of relation a translator improving one of the two
+   strings on its own would break, silently and with no test in sight. So it is
+   asserted as data here rather than left to the rendering spec, which can only
+   ever see the locale it runs in. */
+test('the short bound word is contained in every full bound label it stands for', () => {
+  const FULL = ['metaFilter.weightMin', 'metaFilter.playtimeMin'];
+  const FULL_MAX = ['metaFilter.weightMax', 'metaFilter.playtimeMax'];
+  for (const name of SUPPORTED_LOCALES) {
+    const dict = loadLocale(name);
+    const check = (shortKey, fullKeys) => {
+      const word = dict[shortKey];
+      assert.ok(word && word.trim(), `${name}: ${shortKey} is empty`);
+      for (const k of fullKeys) {
+        assert.ok(dict[k].includes(word),
+          `${name}: the visible „${word}" (${shortKey}) is not part of the accessible name „${dict[k]}" (${k}) — WCAG 2.5.3`);
+      }
+    };
+    check('metaFilter.boundMin', FULL);
+    check('metaFilter.boundMax', FULL_MAX);
+  }
+});

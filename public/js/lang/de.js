@@ -274,6 +274,8 @@ I18N.de = {
   'games.filter': 'Filter',
   'games.filterLabel': 'Filter ({n} aktiv)',
 
+  'metaFilter.boundMin': 'mindestens',
+  'metaFilter.boundMax': 'höchstens',
   'metaFilter.any': 'Egal',
   'metaFilter.playtime': 'Spieldauer',
   'metaFilter.playtimeMin': 'Spieldauer mindestens',

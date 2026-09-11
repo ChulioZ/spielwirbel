@@ -119,9 +119,11 @@ function renderMetadataFilter(games, state, onChange) {
   };
 
   // Two bounds of one question, side by side under one label. `defs` is
-  // [[stateKey, boundLabelKey], …] with the LOWER bound first, and it is built
-  // by the caller so a bound this shelf cannot offer is simply absent rather
-  // than rendered dead.
+  // [[stateKey, boundLabelKey, shortKey], …] with the LOWER bound first, and it
+  // is built by the caller so a bound this shelf cannot offer is simply absent
+  // rather than rendered dead. `boundLabelKey` names the field as well as the
+  // direction (it is the accessible name); `shortKey` is the direction alone,
+  // shown in the row.
   //
   // `carry` is the whole reason this is a parameter and not a constant. With it,
   // choosing a minimum above the current maximum drags the maximum up (and vice
@@ -139,7 +141,24 @@ function renderMetadataFilter(games, state, onChange) {
         <span class="mfilter__range" role="group" aria-labelledby="${labelId}"></span>
       </div>`);
     const range = row.querySelector('.mfilter__range');
-    const bounds = defs.map(([key, boundLabelKey]) => {
+    const bounds = defs.map(([key, boundLabelKey, shortKey]) => {
+      // The direction, VISIBLE in the row. Until #1001 the playtime select spelled
+      // it out on every option („Höchstens 30 Min."), so a sighted user could not
+      // miss it; a two-select row would otherwise leave the cue to position and
+      // to an aria-label nobody sees. `aria-hidden` because the select's own name
+      // already carries the direction — announcing both reads it twice — and that
+      // name stays the FULL phrase („Komplexität mindestens"), so a screen-reader
+      // user tabbing straight in still learns which field it belongs to. WCAG
+      // 2.5.3 needs the accessible name to CONTAIN this visible text;
+      // test/i18n-parity.test.js asserts that per locale rather than trusting a
+      // phrasing coincidence to survive translation.
+      //
+      // The word and its select share ONE wrapper so a narrow row can only break
+      // BETWEEN bounds — flat siblings wrap apart, and at 375px they did
+      // (.claude/rules/label-and-control-wrap-as-one-item.md).
+      const pair = h('<span class="mfilter__pair"></span>');
+      pair.appendChild(h(`<span class="mfilter__bound" aria-hidden="true">${esc(t(shortKey))}</span>`));
+      range.appendChild(pair);
       const sel = h(`<select class="sort-select mfilter__select" aria-label="${esc(t(boundLabelKey))}"></select>`);
       sel.appendChild(h(`<option value="">${esc(t('metaFilter.any'))}</option>`));
       // The option text is prose and goes through `format`, so a German reader
@@ -149,7 +168,7 @@ function renderMetadataFilter(games, state, onChange) {
       const paint = () => { sel.value = state[key] === null || state[key] === undefined ? '' : String(state[key]); };
       paint();
       painters.push(paint);
-      range.appendChild(sel);
+      pair.appendChild(sel);
       return { sel, key };
     });
     bounds.forEach(({ sel, key }, i) => {
@@ -177,15 +196,16 @@ function renderMetadataFilter(games, state, onChange) {
   // READS — `playtimeMin` is gated on maxPlaytime and vice versa
   // (draw-pool.js `metadataFilterOptions` says why the crossing is deliberate).
   const playtimeBounds = [];
-  if (options.playtimeMin) playtimeBounds.push(['minPlaytime', 'metaFilter.playtimeMin']);
-  if (options.playtimeMax) playtimeBounds.push(['maxPlaytime', 'metaFilter.playtimeMax']);
+  if (options.playtimeMin) playtimeBounds.push(['minPlaytime', 'metaFilter.playtimeMin', 'metaFilter.boundMin']);
+  if (options.playtimeMax) playtimeBounds.push(['maxPlaytime', 'metaFilter.playtimeMax', 'metaFilter.boundMax']);
   if (playtimeBounds.length) {
     body.appendChild(rangeRow('metaFilter.playtime', playtimeBounds, PLAYTIME_CHOICES,
       (v) => t('metaFilter.playtimeStep', { n: v }), false));
   }
   if (options.weight) {
     body.appendChild(rangeRow('metaFilter.weight',
-      [['weightMin', 'metaFilter.weightMin'], ['weightMax', 'metaFilter.weightMax']],
+      [['weightMin', 'metaFilter.weightMin', 'metaFilter.boundMin'],
+        ['weightMax', 'metaFilter.weightMax', 'metaFilter.boundMax']],
       WEIGHT_CHOICES, fmtAvg, true));
   }
   if (options.age) {

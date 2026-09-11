@@ -264,6 +264,8 @@ I18N.es = {
   'games.filter': 'Filtrar',
   'games.filterLabel': 'Filtros ({n} activos)',
 
+  'metaFilter.boundMin': 'mínima',
+  'metaFilter.boundMax': 'máxima',
   'metaFilter.any': 'Cualquiera',
   'metaFilter.playtime': 'Duración',
   'metaFilter.playtimeMin': 'Duración mínima',

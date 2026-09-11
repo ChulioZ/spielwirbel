@@ -273,6 +273,8 @@ I18N.en = {
   'games.filter': 'Filter',
   'games.filterLabel': 'Filters ({n} active)',
 
+  'metaFilter.boundMin': 'at least',
+  'metaFilter.boundMax': 'at most',
   'metaFilter.any': 'Any',
   'metaFilter.playtime': 'Playing time',
   'metaFilter.playtimeMin': 'Playing time at least',
