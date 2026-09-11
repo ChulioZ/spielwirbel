@@ -96,6 +96,17 @@ before assuming you have them all:
   (`public/js/direct-session.js`) deliberately does **not** filter: the user
   picked that box.
 
+  **A SIXTH predicate joined the same three sites in #1005: `fitsRecommendedCount`.**
+  Also not an "active games" clause — it asks whether BGG's community endorses
+  this box at this table size — and it lives in `draw-pool.js` beside
+  `ownedByParty` for the same reason: it needs the party count, so it cannot be a
+  clause inside `fitsMetadataFilters`. Its absent-value rule is the base game's
+  again, with a second silence to respect: an UNANSWERED poll means no opinion,
+  and so does a count outside the game's own box (the poll has no rows there, so
+  an expansion-widened count is never hidden). `lib/draw.js` skips it under
+  `multiTable`. See
+  `.claude/rules/provider-metadata-is-a-filter-not-a-tag.md` §3.
+
   **Since #1002 the list it is handed is the SHELF PARTY, not the seats** —
   `shelfParty(memberIds, withoutShelfIds)`, in the same file, subtracting
   whoever is at the table without their games. All three sites reduce through

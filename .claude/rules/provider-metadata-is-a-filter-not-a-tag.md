@@ -127,6 +127,35 @@ which is the second bullet above inverted. BGG returns 0 for an unset bound and
 `toPositiveInt` makes that a null, so the one-sided shelf is real, not
 hypothetical.
 
+### The recommendation toggle is gated on the SCREEN as well as on the shelf (#1005)
+
+Every control above is available exactly when the shelf carries its field. The
+„nur was BGG hier empfiehlt" toggle is the first that is not: it compares BGG's
+suggested-players poll against the **party count**, and the Regal filters a shelf
+rather than an evening, so there is no count to compare against. Two gates,
+therefore — `options.recommended` (some game carries a NON-EMPTY poll) and the
+screen's own `opts.tableSized` — and collapsing them into one either renders a
+dead control in the Regal or hides a live one on the setup screen.
+
+`options.recommended` tests non-emptiness rather than key presence, unlike
+`anyNumber`: `[]` is a *stored* value for this field
+(`.claude/rules/provider-info-is-a-field-set.md`), so gating on the key would
+offer a toggle that can never do anything on a shelf BGG has polled nowhere.
+
+The predicate is **`fitsRecommendedCount` in `draw-pool.js`, not a clause inside
+`fitsMetadataFilters`** — that function takes a game and a filter set and nothing
+else, while this question needs the count. Same shape and same reason as
+`ownedByParty`. Three ways it must answer *yes*, each of which is a way to hide
+games on missing data: the toggle is off, the poll is unanswered (BGG has no
+not-recommended list, so silence must never read as rejection), or the count sits
+**outside the game's own box** — the poll has no rows there, so a count reached
+through an owned expansion is not its business. That last clause is
+`fitsOwnRange`, deliberately, not `fitsPlayerCount`: the union with the
+expansions is precisely the region the poll cannot speak about. And `lib/draw.js`
+**skips the clause entirely under `multiTable`**, because the relaxed pool is
+built for tables that do not exist yet and there is no one table size to ask
+about.
+
 **That last one has a second half that is easy to miss: a stored filter whose
 control is gone must be dropped too.** `normalizeMetadataFilters(raw, options)`
 is where both happen, which is why every entry point goes through it — the route,

@@ -132,6 +132,44 @@ function shelfParty(memberIds, withoutShelfIds) {
   return seats.filter((x) => !away.includes(x));
 }
 
+// Whether BGG's community endorses this box at this table size (#1005) — the
+// „nur was BGG hier empfiehlt" toggle. A SEPARATE predicate from
+// `fitsMetadataFilters` rather than a clause inside it, exactly as `ownedByParty`
+// is: that function takes a game and a filter set and nothing else, while this
+// question needs the party count. Same shape, same reason, applied at the same
+// three sites.
+//
+// THREE ways it must answer "yes", and each is a way to hide games on missing
+// data if you get it wrong:
+//
+//  - the toggle is off — a no-op, so every pool before #1005 is byte-identical;
+//  - the poll is UNANSWERED (both lists empty, or the game predates the field).
+//    BGG has no explicit not-recommended list: a count is not recommended when it
+//    is absent from both lists, so an empty poll would read as "not recommended
+//    at every count" and remove the game outright. An unanswered poll means NO
+//    OPINION (.claude/rules/provider-metadata-is-a-filter-not-a-tag.md §2, one
+//    step over);
+//  - the count is OUTSIDE the game's own declared range. The poll only ever has
+//    rows inside the box (BGG's "N+" bucket is dropped at parse time), so at a
+//    count reached through an owned EXPANSION it says nothing at all — and
+//    silence must not read as rejection. Note this is `fitsOwnRange`, the base
+//    box, not `fitsPlayerCount`: the union with the expansions is precisely what
+//    the poll has no opinion about.
+//
+// `bestWith` is unioned with `recommendedWith` rather than tested on its own: a
+// count BGG's community merely recommends is one it endorses, and "best" is a
+// ranking among the endorsed counts, not the whole of the endorsement.
+function fitsRecommendedCount(game, playerCount, on) {
+  if (!on) return true;
+  const g = game || {};
+  const best = Array.isArray(g.bestWith) ? g.bestWith : [];
+  const rec = Array.isArray(g.recommendedWith) ? g.recommendedWith : [];
+  if (best.length === 0 && rec.length === 0) return true;
+  if (!isFiniteNum(playerCount)) return true;
+  if (!fitsOwnRange(g, playerCount)) return true;
+  return best.includes(playerCount) || rec.includes(playerCount);
+}
+
 // THE MULTI-TABLE POOL PREDICATE IS `fitsSomeTable` IN public/js/table-split.js
 // (#796). A session split across several tables asks "can this box seat SOME
 // table of at least three?" instead of "does it seat exactly this party?", so it
@@ -303,6 +341,13 @@ function metadataFilterOptions(games) {
     playtimeMax: anyNumber('maxPlaytime'),
     weight: anyNumber('weight'),
     age: anyNumber('minAge'),
+    // The suggested-players poll (#1005). Gated on a NON-EMPTY poll on some
+    // game, unlike the numeric fields' `anyNumber`: `[]` is a stored value here
+    // (see provider-info-fields.js), so a shelf whose every poll is unanswered
+    // carries the field and would still render a toggle that can never do
+    // anything — the empty-pool principle inverted.
+    recommended: list.some((g) => ((g || {}).bestWith || []).length
+      || ((g || {}).recommendedWith || []).length),
     categories: valuesOf('categories'),
     mechanics: valuesOf('mechanics'),
   };
@@ -312,7 +357,7 @@ function metadataFilterOptions(games) {
 // disclosure is rendered.
 function hasMetadataFilterOptions(options) {
   const o = options || {};
-  return !!(o.playtimeMax || o.playtimeMin || o.weight || o.age ||
+  return !!(o.playtimeMax || o.playtimeMin || o.weight || o.age || o.recommended ||
     (o.categories || []).length || (o.mechanics || []).length);
 }
 
@@ -348,6 +393,11 @@ function normalizeMetadataFilters(raw, options) {
     // that is not on screen.
     excludeCategories: pick(src.excludeCategories, o.categories),
     excludeMechanics: pick(src.excludeMechanics, o.mechanics),
+    // A plain boolean, dropped on a shelf that cannot offer it — the same
+    // vanished-referent rule the ladders and the chip lists follow, so a stored
+    // #252 preset cannot show an active-filter count over a toggle that is not
+    // on screen.
+    onlyRecommended: !!(o.recommended && src.onlyRecommended),
   };
   // A value in BOTH lists is unrepresentable in the UI (one chip holds one
   // state) and reachable only from a hand-crafted preset. Exclusion is the
@@ -400,7 +450,8 @@ function countMetadataFilters(filters) {
     // an excluded category together still count 1 — the same reasoning the
     // complexity range and the playtime pair get.
     ((f.categories || []).length || (f.excludeCategories || []).length ? 1 : 0) +
-    ((f.mechanics || []).length || (f.excludeMechanics || []).length ? 1 : 0)
+    ((f.mechanics || []).length || (f.excludeMechanics || []).length ? 1 : 0) +
+    (f.onlyRecommended ? 1 : 0)
   );
 }
 
@@ -415,6 +466,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     isActiveGame,
     fitsPlayerCount,
+    fitsRecommendedCount,
     ownedByParty,
     shelfParty,
     requiredExpansions,

@@ -213,6 +213,7 @@ function showStartSession(round, prefill) {
           ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
           : fitsPlayerCount(g, playerCount())) &&
         fitsMetadataFilters(g, metaFilters) &&
+        (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended)) &&
         ownedByParty(g, shelfSeats())
     );
 
@@ -231,6 +232,7 @@ function showStartSession(round, prefill) {
           ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
           : fitsPlayerCount(g, playerCount())) &&
         fitsMetadataFilters(g, metaFilters) &&
+        (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended)) &&
         !ownedByParty(g, shelfSeats())
     ).length;
 
@@ -580,7 +582,10 @@ function showStartSession(round, prefill) {
     if (filterPanel && filterPanel.isOpen()) return;
     // Preserved across a rebuild: the user's picks (the `metaFilters` object is
     // mutated in place and handed back in) and the tag section node itself.
-    filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection);
+    // `tableSized`: this screen has a party, so the recommendation toggle
+    // (#1005) can mean something here. The Regal passes nothing and gets no
+    // toggle — it filters a shelf, not an evening.
+    filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection, { tableSized: true });
     filterMount.replaceChildren();
     if (filterPanel) filterMount.appendChild(filterPanel.el);
     filterMount.hidden = !filterPanel;

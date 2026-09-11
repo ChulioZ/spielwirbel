@@ -58,6 +58,7 @@ function clearMetadataFilters(state) {
   state.mechanics.length = 0;
   state.excludeCategories.length = 0;
   state.excludeMechanics.length = 0;
+  state.onlyRecommended = false;
 }
 
 // Build the metadata half — the rows that filter on BGG's imported fields — or
@@ -82,8 +83,14 @@ function clearMetadataFilters(state) {
 // Returns { el, repaint }. `repaint` re-reads `state` into every widget without
 // rebuilding them — what the applied chips and the escape hatch need when they
 // change a filter from outside this body.
-function renderMetadataFilter(games, state, onChange) {
+function renderMetadataFilter(games, state, onChange, opts) {
   const options = metadataFilterOptions(games);
+  // The recommendation toggle needs a TABLE SIZE, which only the setup screen
+  // has — the Regal filters a shelf, not an evening. Two gates, deliberately:
+  // the shelf must carry a poll (`options.recommended`) AND the screen must be
+  // about a table (`opts.tableSized`). Collapsing them into one would either
+  // render a dead control in the Regal or hide a live one on the setup screen.
+  const tableSized = !!(opts && opts.tableSized);
   if (!hasMetadataFilterOptions(options)) return null;
 
   const uid = `mf${++metaFilterSeq}`;
@@ -223,6 +230,23 @@ function renderMetadataFilter(games, state, onChange) {
   if (options.age) {
     body.appendChild(selectRow('metaFilter.age', 'youngestAge', AGE_CHOICES,
       (v) => t('metaFilter.ageOption', { n: v })));
+  }
+  // The one boolean control here (#1005). A plain toggle rather than a number
+  // picker: the table size is already on the screen above, so asking for it
+  // again would be a second place to get it wrong.
+  if (options.recommended && tableSized) {
+    const id = `${uid}-rec`;
+    const row = h(`<label class="mfilter__row mfilter__row--check" for="${id}">
+        <span class="mfilter__label">${esc(t('metaFilter.recommended'))}</span>
+        <input type="checkbox" id="${id}">
+      </label>`);
+    const box = row.querySelector('input');
+    const paint = () => { box.checked = !!state.onlyRecommended; };
+    paint();
+    painters.push(paint);
+    box.addEventListener('change', () => { state.onlyRecommended = box.checked; changed(); });
+    body.appendChild(row);
+    body.appendChild(h(`<p class="mfilter__hint">${esc(t('metaFilter.recommendedHint'))}</p>`));
   }
 
   // A TRI-STATE chip row since #1003 — ignore → include → exclude → ignore, the
@@ -381,6 +405,12 @@ function activeFilterChips(state, tagSection) {
       remove: () => { f.youngestAge = null; },
     });
   }
+  if (f.onlyRecommended) {
+    out.push({
+      label: t('metaFilter.chipRecommended'),
+      remove: () => { f.onlyRecommended = false; },
+    });
+  }
   // Per VALUE, not per list. `indexOf` at removal time rather than a captured
   // index: an earlier chip may have spliced the array since this closure was
   // built, and a stale index would drop somebody else's pick.
@@ -414,7 +444,7 @@ function activeFilterChips(state, tagSection) {
 //
 // Returns { el, sync, reset, isOpen }. A screen calls `sync()` after a tag chip
 // moves; the metadata controls route through `onChange` and resync themselves.
-function renderFilterPanel(games, state, onChange, tagSection) {
+function renderFilterPanel(games, state, onChange, tagSection, opts) {
   if (!hasMetadataFilterOptions(metadataFilterOptions(games)) && !tagSection) return null;
 
   // A real <button>, not the old <summary>: the disclosure's expanded state is
@@ -483,7 +513,7 @@ function renderFilterPanel(games, state, onChange, tagSection) {
       // `tagSection.el` is MOVED in (appendChild moves a node), so every chip
       // listener and the user's current picks survive being closed and reopened.
       if (tagSection) body.appendChild(tagSection.el);
-      const meta = renderMetadataFilter(games, state, () => { sync(); onChange(); });
+      const meta = renderMetadataFilter(games, state, () => { sync(); onChange(); }, opts);
       if (meta) body.appendChild(meta.el);
       container.appendChild(body);
       live = { repaint: () => { if (meta) meta.repaint(); }, close };

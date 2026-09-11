@@ -342,6 +342,34 @@ test('an exclusion narrows FURTHER, where a second inclusion widens', async () =
   assert.deepEqual(previewed(), ['Catan', 'Handgetippt'], 'AND-NOT: each exclusion removes more');
 });
 
+test('the recommendation toggle narrows the pool to what BGG endorses here (#1005)', async () => {
+  /* A 2–6 box the community calls best at four and wrong at six is the reported
+     shape; the party is three by default in this fixture, so the second game is
+     the one that discriminates. */
+  const round = roundFixture({
+    games: [
+      { id: 'p1', title: 'Passt', minPlayers: 2, maxPlayers: 6, bestWith: [3], recommendedWith: [3, 4] },
+      { id: 'p2', title: 'Kaputt', minPlayers: 2, maxPlayers: 6, bestWith: [4], recommendedWith: [4, 5] },
+      { id: 'p3', title: 'Ungefragt', minPlayers: 2, maxPlayers: 6, bestWith: [], recommendedWith: [] },
+      { id: 'p4', title: 'Handgetippt' },
+    ],
+  });
+  await dom.call('showStartSession', round);
+  openPanel();
+
+  const box = dom.document.querySelector('.mfilter__row--check input');
+  assert.ok(box, 'the shelf carries a poll and this screen has a table, so the toggle is offered');
+  assert.equal(box.checked, false, 'off by default — the pool must be what it always was');
+
+  box.checked = true;
+  box.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.deepEqual(previewed(), ['Handgetippt', 'Passt', 'Ungefragt'],
+    'an unanswered poll and an absent one are both "no opinion", never "not recommended"');
+  assert.deepEqual(appliedChips(), ['von BGG empfohlen']);
+  assert.equal(triggerLabel(), 'Filter (1 aktiv)');
+  closePanel();
+});
+
 test('the complexity selects carry each other rather than allowing an inverted range', async () => {
   await dom.call('showStartSession', roundFixture());
   openPanel();
@@ -492,7 +520,7 @@ test('the draw sends the metadata filters with the request', async () => {
   assert.deepEqual(sent, {
     maxPlaytime: null, minPlaytime: null, weightMin: null, weightMax: null,
     youngestAge: 10, categories: [], mechanics: [],
-    excludeCategories: [], excludeMechanics: [],
+    excludeCategories: [], excludeMechanics: [], onlyRecommended: false,
   }, 'the canonical shape goes out, so the route normalizes exactly what it offered');
   dom.set('api', async () => ({}));
 });
@@ -525,6 +553,21 @@ test('Regal: the panel filters the cover grid with the same semantics', () => {
   choose(selectLabelled('Spieldauer höchstens'), '30');
   assert.deepEqual(shelved(), ['Handgetippt'], 'the two controls AND together');
   assert.deepEqual(appliedChips(), ['Spieldauer bis 30 Min.', 'Trading']);
+  closePanel();
+});
+
+test('Regal: the recommendation toggle is ABSENT — it filters a shelf, not a table', () => {
+  /* The one control whose availability is not a property of the shelf alone: it
+     needs a party count, and the Regal has none. Rendering it here would be a
+     control that could never answer its own question — so the gate is two-part
+     (the shelf carries a poll AND the screen is about a table), and this is the
+     half no `metadataFilterOptions` result can express. */
+  regal({
+    games: [{ id: 'p1', title: 'Passt', minPlayers: 2, maxPlayers: 6, bestWith: [3], recommendedWith: [3, 4] }],
+  });
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check'), null,
+    'the Regal grew a toggle it has no table size to apply');
   closePanel();
 });
 
