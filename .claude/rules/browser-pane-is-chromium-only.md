@@ -92,6 +92,32 @@ reported from a screenshot.
   as text cannot be run there. Load it as a `<script src>` that assigns its
   result to a global, and read the global.
 
+## A `display: none` element reports NO transform — which reads as an engine bug
+
+The probe above compares one script's output between the engines, so anything
+that differs is, by construction, a candidate finding. On #1017 the synthetic page
+rendered both pool presentations at once (the app picks one by width), and WebKit
+at 1280px reported the shelf covers at **0°** where the panel tiles read −6° —
+i.e. "WebKit ignores the custom property in `transform`", on exactly the feature
+being checked.
+
+It does not. `getComputedStyle(el).transform` on an element inside a
+`display: none` subtree resolves to `none`, and `new DOMMatrix('none')` is the
+identity, whose `atan2(b, a)` is **0**. A missing rotation and a hidden element
+produce the same number, and the number is a plausible answer to the question
+asked.
+
+The tell is symmetry, and it is one extra run: at 390px the same script reported
+the **shelf** at −6° and the **panel tiles** at 0°, with `panelHidden: "none"`.
+Each presentation reads 0 exactly where it is hidden, which is the correct
+behaviour rather than an engine difference — and it was Chromium reporting the
+identical pair on the identical page that settled it.
+
+So when a cross-engine reading looks like a finding, **check whether the element
+was rendered at all** before believing it. Report `getComputedStyle(el).display`
+beside every geometric reading in the measurement script — it costs one field and
+it is the difference between a finding and an hour.
+
 **Related:** `.claude/rules/css-multicolumn-card-flows.md` (point 5, the claim
 this file exists because of), `.claude/rules/preview-pane-paint-artifacts.md`
 and `.claude/rules/blur-events-never-fire-in-the-preview-pane.md` (the other

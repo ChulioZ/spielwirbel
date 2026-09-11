@@ -750,6 +750,11 @@ I18N.es = {
   'startSession.barCount': '¿Cuántos sortear?',
   'startSession.available': '{n} juegos en el bombo',
   'startSession.availableOne': '{n} juego en el bombo',
+  // The pot's numeral is set apart typographically from the noun it counts, so
+  // the label is its own string rather than a slice of the phrase above — that
+  // slice would assume every locale puts {n} first (#1017).
+  'startSession.potLabel': 'juegos en el bombo',
+  'startSession.potLabelOne': 'juego en el bombo',
   'startSession.ownersHidden': 'Faltan {n} juegos más porque sus propietarios no juegan.',
   'startSession.ownersHiddenOne': 'Falta {n} juego más porque su propietario no juega.',
   'startSession.poolEmpty': 'Todavía no hay ningún juego que encaje con estos ajustes.',

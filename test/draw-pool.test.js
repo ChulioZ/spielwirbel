@@ -526,6 +526,13 @@ test('and the flag itself rides the draw request', async () => {
   /* The preview and the pool can agree perfectly while the POST omits the flag,
      in which case the server draws the ordinary pool and answers "no matching
      games" over a screen showing four. Only the request body can see that. */
+  /* Two draws from ONE screen, which the app itself never does — the lobby has
+     replaced this view by the second one. Since #1017 a draw holds the screen for
+     the length of the whirl and refuses a second press while it is in flight, so
+     this spec has to say which motion setting it runs under: with the whirl off
+     both draws complete in the turn they were clicked, and the request body —
+     the only thing under test here — is unaffected either way. */
+  dom.window.matchMedia = (q) => ({ matches: /prefers-reduced-motion:\s*reduce/.test(q) });
   await dom.call('showStartSession', round);
   const bodies = [];
   dom.set('api', async (method, path, body) => {

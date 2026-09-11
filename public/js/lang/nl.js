@@ -742,6 +742,11 @@ I18N.nl = {
   'startSession.barCount': 'Hoeveel trekken?',
   'startSession.available': '{n} spellen in de pot',
   'startSession.availableOne': '{n} spel in de pot',
+  // The pot's numeral is set apart typographically from the noun it counts, so
+  // the label is its own string rather than a slice of the phrase above — that
+  // slice would assume every locale puts {n} first (#1017).
+  'startSession.potLabel': 'spellen in de pot',
+  'startSession.potLabelOne': 'spel in de pot',
   'startSession.ownersHidden': 'Er ontbreken nog {n} spellen omdat hun eigenaars niet meespelen.',
   'startSession.ownersHiddenOne': 'Er ontbreekt nog {n} spel omdat de eigenaar niet meespeelt.',
   'startSession.poolEmpty': 'Nog geen spel dat aan deze instellingen voldoet.',

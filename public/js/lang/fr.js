@@ -747,6 +747,11 @@ I18N.fr = {
   'startSession.barCount': 'Combien en tirer ?',
   'startSession.available': '{n} jeux dans le chapeau',
   'startSession.availableOne': '{n} jeu dans le chapeau',
+  // The pot's numeral is set apart typographically from the noun it counts, so
+  // the label is its own string rather than a slice of the phrase above — that
+  // slice would assume every locale puts {n} first (#1017).
+  'startSession.potLabel': 'jeux dans le chapeau',
+  'startSession.potLabelOne': 'jeu dans le chapeau',
   'startSession.ownersHidden': '{n} autres jeux manquent, car leurs propriétaires ne jouent pas.',
   'startSession.ownersHiddenOne': '{n} autre jeu manque, car son propriétaire ne joue pas.',
   'startSession.poolEmpty': 'Aucun jeu ne correspond encore à ces réglages.',

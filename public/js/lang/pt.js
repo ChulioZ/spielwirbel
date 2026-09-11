@@ -744,6 +744,11 @@ I18N.pt = {
   'startSession.barCount': 'Quantos sortear?',
   'startSession.available': '{n} jogos no sorteio',
   'startSession.availableOne': '{n} jogo no sorteio',
+  // The pot's numeral is set apart typographically from the noun it counts, so
+  // the label is its own string rather than a slice of the phrase above — that
+  // slice would assume every locale puts {n} first (#1017).
+  'startSession.potLabel': 'jogos no sorteio',
+  'startSession.potLabelOne': 'jogo no sorteio',
   'startSession.ownersHidden': 'Faltam mais {n} jogos porque os donos deles não estão jogando.',
   'startSession.ownersHiddenOne': 'Falta mais {n} jogo porque o dono dele não está jogando.',
   'startSession.poolEmpty': 'Nenhum jogo combina com estas configurações ainda.',

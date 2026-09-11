@@ -746,6 +746,11 @@ I18N.it = {
   'startSession.barCount': 'Quanti estrarre?',
   'startSession.available': '{n} giochi nell’urna',
   'startSession.availableOne': '{n} gioco nell’urna',
+  // The pot's numeral is set apart typographically from the noun it counts, so
+  // the label is its own string rather than a slice of the phrase above — that
+  // slice would assume every locale puts {n} first (#1017).
+  'startSession.potLabel': 'giochi nell’urna',
+  'startSession.potLabelOne': 'gioco nell’urna',
   'startSession.ownersHidden': 'Mancano altri {n} giochi perché i loro proprietari non giocano.',
   'startSession.ownersHiddenOne': 'Manca {n} altro gioco perché il suo proprietario non gioca.',
   'startSession.poolEmpty': 'Nessun gioco corrisponde ancora a queste impostazioni.',

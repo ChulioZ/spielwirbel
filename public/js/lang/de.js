@@ -775,6 +775,11 @@ I18N.de = {
   'startSession.barCount': 'Wie viele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
   'startSession.availableOne': '{n} Spiel im Topf',
+  // The pot's numeral is set apart typographically from the noun it counts, so
+  // the label is its own string rather than a slice of the phrase above — that
+  // slice would assume every locale puts {n} first (#1017).
+  'startSession.potLabel': 'Spiele im Topf',
+  'startSession.potLabelOne': 'Spiel im Topf',
   'startSession.ownersHidden': '{n} weitere Spiele fehlen, weil ihre Besitzer nicht mitspielen.',
   'startSession.ownersHiddenOne': '{n} weiteres Spiel fehlt, weil sein Besitzer nicht mitspielt.',
   'startSession.poolEmpty': 'Zu diesen Einstellungen passt noch kein Spiel.',

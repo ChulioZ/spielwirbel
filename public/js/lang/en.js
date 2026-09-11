@@ -781,6 +781,11 @@ I18N.en = {
   'startSession.barCount': 'How many to draw?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',
+  // The pot's numeral is set apart typographically from the noun it counts, so
+  // the label is its own string rather than a slice of the phrase above — that
+  // slice would assume every locale puts {n} first (#1017).
+  'startSession.potLabel': 'games in the pot',
+  'startSession.potLabelOne': 'game in the pot',
   'startSession.ownersHidden': '{n} more games are missing because their owners are not playing.',
   'startSession.ownersHiddenOne': '{n} more game is missing because its owner is not playing.',
   'startSession.poolEmpty': 'No game matches these settings yet.',

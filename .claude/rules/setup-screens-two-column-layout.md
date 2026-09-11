@@ -70,7 +70,7 @@ without re-deriving that argument.
 ## 3. Two presentations of the pool, picked by CSS — never a JS width branch
 
 The eligible-game preview is rendered **twice**: the tile panel (`.setup-panel`,
-860px up) and the compact overlapping strip (`.pool-hint`, below it). Same shape
+860px up) and the compact strip (`.pool-hint`, below it). Same shape
 as the rail/dock (`round-rail.js`), and for the same reason — a resize needs no
 re-render, and only one is ever in the accessibility tree.
 
@@ -81,14 +81,35 @@ re-render, and only one is ever in the accessibility tree.
 - The strip's hide is `.setup-grid .pool-hint` — **(0,2,0)**, because
   `.pool-hint { display: flex }` is (0,1,0) and is declared ~100 lines further
   down. A one-class hide would win on position only.
-- The wide panel lists **every** matching game inside a bounded scroll box, so it
-  needs no "+n" chip and the two representations share no counting logic beyond
-  one headline string. The bound is not cosmetic: unbounded, a 60-game shelf
-  pushes the CTA straight back below the fold, i.e. re-creates the defect.
+- The wide panel lists **every** matching game inside a bounded scroll box, and
+  since #1017 so does the strip. The bound is not cosmetic: unbounded, a 60-game
+  shelf pushes the CTA straight back below the fold, i.e. re-creates the defect —
+  which is why the strip's own unbounded list is laid out on ONE row that scrolls
+  sideways rather than wrapping.
 - **The empty-state line needs `grid-column: 1 / -1`.** The panel body is a tile
   grid, so without it the message becomes one 110px grid item and wraps after
   two words — measured, and it looks like a broken panel rather than a missing
   declaration.
+
+**Since #1017 both are the same pot**: a numeral (`.pool-count` + its label) over
+a pile of covers leaning by a per-index `--r`/`--dy` written inline from a table
+in `views-session.js`. The panel is a tilted grid; the strip is `.pool-shelf`, one
+horizontally snapping row of 64px squares. Two consequences of that change that
+are easy to undo by accident:
+
+- **The strip no longer caps at six covers or carries a „+n" chip.** It shows
+  every game in the pot, because below 860px it is the *only* presentation there
+  is — a cap hides part of the pot outright rather than summarising it, which is
+  what the chip used to do honestly for a strip that sat beside nothing. The
+  scroll is what makes showing all of them affordable.
+- **The tilt must stay a function of the INDEX alone.** A random or hash-derived
+  angle looks identical on first paint and reshuffles the pile on every
+  re-render — every seat tap, tag chip and stepper press calls `updateHint()` —
+  which reads as a rendering bug rather than as a missing `% table.length`.
+  `test/session-pot.test.js` pins it across renders.
+
+The panel's rotation also has a cost the grid does not allocate; see
+`.claude/rules/rotated-grid-items-escape-their-scroll-box.md`.
 
 ## 4. Column membership is DOM, not CSS `order` — which constrains the phone order
 

@@ -6477,7 +6477,12 @@ kbd {
   }
   .setup-panel {
     display: block;
-    background: var(--surface);
+    /* A soft brand glow pooling at the bottom of the panel (#1017) — the pot the
+       covers are piled in. It is a background LAYER over --surface rather than a
+       pseudo-element so it cannot land above the tiles' hover lift. */
+    background:
+      radial-gradient(90% 55% at 50% 112%, var(--brand-tint-soft), transparent 72%),
+      var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     padding: 16px 18px;
@@ -6489,16 +6494,24 @@ kbd {
      someone moves a block (.claude/rules/responsive-content-width.md). */
   .setup-grid .pool-hint { display: none; }
 }
+/* The pot's headline: a big figure and the noun it counts, baseline-aligned.
+   `font-size` stays on the heading for anything that inherits it; the numeral
+   sets its own (#1017). */
 .setup-panel__title {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   font-size: var(--text-md);
 }
+.setup-panel__title .pool-count-group { display: flex; align-items: baseline; gap: 8px; }
+.setup-panel__title .pool-count { font-size: var(--text-4xl); }
+.setup-panel__title .pool-count__label { font-size: var(--text-md); }
 .setup-panel__body {
   display: grid;
   /* auto-fill, so the panel needs no breakpoint of its own: 3 tiles across in
      the 3fr track at 860px, 5 in the 720px one the 1280px shell gives. */
   grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
-  gap: 12px;
+  /* Tight across, roomy down: the leaning covers are meant to graze each other
+     sideways (that is the pile), while a row still needs air for the names. */
+  gap: 14px 4px;
   /* Bounded, or a 60-game shelf pushes the CTA straight back below the fold —
      which is the defect this whole layout exists to fix.
 
@@ -6513,11 +6526,31 @@ kbd {
      (.claude/rules/preview-pane-paint-artifacts.md). */
   max-height: max(300px, calc(100dvh - 500px));
   overflow-y: auto;
+  /* Room for a leaning tile's corners and for the hover lift. `overflow-y: auto`
+     computes `overflow-x` to `auto` as well, so a tile that escapes its box here
+     produces a horizontal scrollbar rather than spilling — which is why the
+     column gap is tightened instead of using negative margins for the overlap.
+     Measured at 1280x860: at 2px the outermost leaning tiles escaped by 3px and
+     the panel grew its own horizontal scrollbar. */
+  padding: 4px 10px;
 }
 /* Spans every track: the body is a tile grid, so without this the empty line
    becomes one 110px grid item and wraps after two or three words. */
 .setup-panel__empty { grid-column: 1 / -1; margin: 4px 0; font-size: var(--text-sm); }
 .pool-tile { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+/* The pile (#1017). Scoped to the panel body on purpose: `.pool-tile` is also the
+   member page's game grid (views-member.js), which is a catalogue and must stay
+   square. `position: relative` is what lets the hovered tile raise itself above
+   the ones it overlaps. */
+.setup-panel__body .pool-tile {
+  position: relative;
+  transform: rotate(var(--r)) translateY(var(--dy));
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.setup-panel__body .pool-tile:hover {
+  transform: rotate(0deg) translateY(0) scale(1.08);
+  z-index: 2;
+}
 .pool-tile__img {
   position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
   overflow: hidden;
@@ -6670,14 +6703,58 @@ kbd {
   padding: 12px 16px;
   margin-bottom: 18px;
 }
-.pool-hint__text { font-family: var(--font-display); font-size: var(--text-md); font-weight: 700; }
-.pool-thumbs { display: inline-flex; }
+/* The pot's headline, shared by both presentations (#1017): the figure is the
+   thing, the noun is its caption. Below 860px they stack to keep the shelf's row
+   short — the height this screen spends is measured
+   (.claude/rules/setup-screens-two-column-layout.md §5). */
+.pool-count {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--brand);
+}
+.pool-count__label {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+/* The pot on a phone (#1017): one row that scrolls sideways, snapping cover to
+   cover, rather than the six overlapping thumbs and a „+n" chip it replaces.
+   Below 860px this is the ONLY presentation of the pool, so it shows every game
+   — the scroll is what makes that affordable.
+
+   `min-width: 0` is load-bearing: without it the shelf sizes to its content and
+   pushes the whole page into horizontal scroll on a 390px phone
+   (.claude/rules/flex-none-cancels-flex-wrap.md, one property over). The
+   scrollbar is hidden because the covers themselves are the affordance — they
+   run off the edge mid-cover. */
+.pool-shelf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /* `mandatory`, so a flick always comes to rest cover-aligned rather than
+     mid-picture — the snap IS the pot's texture. Safe here because every item is
+     far narrower than the shelf; mandatory only traps scrolling when an item
+     cannot fit, which 64px squares never do. */
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 6px 2px;
+}
+.pool-shelf::-webkit-scrollbar { display: none; }
 .pool-thumb {
   position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
   overflow: hidden;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
   background: var(--sunken) center/cover no-repeat;
   border: 2px solid var(--surface);
   display: inline-flex;
@@ -6686,10 +6763,41 @@ kbd {
   color: var(--ink-soft);
   font-size: 13px; /* glyph, not type */
   font-weight: 800;
+  scroll-snap-align: start;
+  transform: rotate(var(--r)) translateY(var(--dy));
 }
-.pool-thumb:not(:first-child) { margin-left: -8px; }
 .pool-thumb .ti { font-size: 16px; /* glyph, not type */ }
-.pool-thumb--more { background: var(--brand-tint); color: var(--brand-strong); }
+
+/* The whirl (#1017). „Loswirbeln" is the app's own verb and nothing on the screen
+   moved for it: the pot turns once, the CTA's tornado turns with it, and the
+   lobby opens on the far side. 0.9s sits deliberately off the --dur-* scale — it
+   is a character moment like the finale seal and the podium rise, not a hover.
+
+   The duration is ALSO in views-session.js (`WHIRL_MS`), because the handler has
+   to hold the lobby back for exactly as long; test/session-pot.test.js pins the
+   two to each other, since drifted they fail silently in both directions.
+
+   `--wd` staggers the covers so the pile turns as a pile rather than as one
+   rigid block; `both` holds the 0% frame through the delay, which is the tile's
+   own resting tilt, so nothing jumps before it starts. */
+@media (prefers-reduced-motion: no-preference) {
+  .setup-grid--session.is-whirl .pool-tile,
+  .setup-grid--session.is-whirl .pool-thumb {
+    animation: pot-whirl 0.9s var(--ease-out) var(--wd, 0s) both;
+  }
+  .setup-grid--session.is-whirl .setup-bar .btn .ti {
+    animation: pot-whirl 0.9s var(--ease-out) both;
+  }
+  /* One turn with a dip through the middle — the covers drop into the pot and
+     come back up. The tile's own `--r`/`--dy` are carried through every frame,
+     so it lands exactly where it started rather than snapping upright at 100%.
+     The button icon has neither, and `var(--r, 0deg)` lets it share the keyframe. */
+  @keyframes pot-whirl {
+    0% { transform: rotate(var(--r, 0deg)) translateY(var(--dy, 0px)) scale(1); }
+    45% { transform: rotate(calc(var(--r, 0deg) + 200deg)) translateY(var(--dy, 0px)) scale(0.78); }
+    100% { transform: rotate(calc(var(--r, 0deg) + 360deg)) translateY(var(--dy, 0px)) scale(1); }
+  }
+}
 
 /* ---- Session setup: the add-on chip row and the action bar (#1015) ----
 
@@ -6788,17 +6896,33 @@ kbd {
 .pool-owners-note:empty { margin: 0; }
 
 /* The compact pool strip moved INSIDE the filter bar (#1015) — it used to be a
-   card on a row of its own, ~46px that the bar had room for. It keeps only the
-   covers there: its text would restate the number the action bar already carries,
-   so the headline rides along as the thumbs' `title` instead. */
+   card on a row of its own, ~46px that the bar had room for. It keeps no chrome
+   of its own there, and since #1017 it carries the pot's numeral beside the
+   shelf: the figure is the pot's identity rather than a second status line, and
+   it is the only place a phone sees it at all (the panel that states it is not
+   rendered below 860px).
+
+   `flex: 1 1 0` claims the bar's leftover width for the shelf instead of a fresh
+   row — the height this screen spends is measured, so the pot had to fit in the
+   row the strip already had. */
 .setup-filterbar .pool-hint {
   background: none;
   border: 0;
   border-radius: 0;
   padding: 0;
   margin: 0;
+  flex: 1 1 0;
+  min-width: 0;
 }
-.setup-grid .pool-hint__text { display: none; }
+/* Stacked on a phone — the figure over its caption keeps the shelf's row short,
+   where a baseline row would spend the width the covers need. */
+.pool-hint .pool-count-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 0 0 auto;
+  margin-right: 10px;
+}
 
 /* The ring may use its column on this screen only. The new-round form shares
    `.setup-grid` and keeps the 280px default — its left column carries a name
