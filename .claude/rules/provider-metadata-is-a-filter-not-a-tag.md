@@ -80,15 +80,22 @@ game carries it. Three properties follow, and each is load-bearing:
 - a shelf carrying none of a field renders **no control at all**, rather than an
   empty one — the same thing the tag field already does with no round tags.
 
-**A control is gated on the field its own CLAUSE reads, which for playing time
-is the OTHER bound (#1001).** „At most N" compares the game's `minPlaytime`, so
-it is gated on `playtimeMax: anyNumber('minPlaytime')`; „at least N" compares
-`maxPlaytime` and is gated on `playtimeMin: anyNumber('maxPlaytime')`. The
-crossing reads like a typo and is the whole point: one shared flag would let a
-shelf whose games carry only a lower bound render an „at least" control that
-*every* game passes — a control that can never do anything, which is the second
-bullet above inverted. BGG returns 0 for an unset bound and `toPositiveInt`
-makes that a null, so the one-sided shelf is real, not hypothetical.
+**A control is gated on the field its own CLAUSE reads.** Since #1025 the
+playing-time pair is a **containment** test, so each control is gated on the
+game field of the same name: „at most M" compares the game's `maxPlaytime` and is
+gated on `playtimeMax: anyNumber('maxPlaytime')`; „at least N" compares
+`minPlaytime` and is gated on `playtimeMin: anyNumber('minPlaytime')`.
+
+**It was CROSSED until #1025, and un-crossing it is the half of that change that
+fails silently.** While the clauses were overlap tests, „at most N" read the
+game's `minPlaytime`, so its flag was `anyNumber('minPlaytime')` — which reads
+like a typo and was the whole point. If you find a comment or a rule still
+describing a crossing, it predates #1025. Getting the gating out of step with the
+clause in either direction leaves a shelf whose games carry only one bound
+rendering a control that *every* game passes — one that can never do anything,
+which is the second bullet above inverted. BGG returns 0 for an unset bound and
+`toPositiveInt` makes that a null, so the one-sided shelf is real, not
+hypothetical.
 
 **That last one has a second half that is easy to miss: a stored filter whose
 control is gone must be dropped too.** `normalizeMetadataFilters(raw, options)`
@@ -116,14 +123,20 @@ contract). An inverted complexity range is **swapped** in the shared normalizer
 rather than dropped, so the preview and the draw cannot disagree about what a
 hand-crafted one means.
 
-**The playing-time pair is deliberately NOT swapped, and its control does not
-carry one bound along either.** A weight is one number per game, so min > max
-admits nothing; the two playtime clauses read *opposite ends of the game's own
-range*, so „at least 120, at most 30" asks for a game whose spread covers both —
-a real query, and exactly a 20–600 campaign. Swapping or carrying would silently
-answer a different question. `rangeRow`'s `carry` parameter in
-`filter-panel.js` is that distinction made explicit rather than left to whoever
-edits the row next.
+**The playing-time pair IS swapped and DOES carry, since #1025 — it was neither
+before.** Under containment the pair is a genuine interval like complexity: „at
+least 120, at most 30" asks for a game that both finishes inside 30 minutes and
+runs at least two hours, which nothing can satisfy, so the shared normalizer
+swaps it and `rangeRow` is passed `carry: true`.
+
+That is a reversal, and the reason for the old behaviour is worth keeping,
+because it is what a reader will reconstruct from the shape: while the two
+clauses read *opposite ends of the game's own range*, an inverted-looking pair was
+a real query — a game whose spread covers both, i.e. exactly a 20–600 campaign —
+so swapping or carrying would have answered a different question than the one
+asked. `rangeRow`'s `carry` parameter in `filter-panel.js` is still that
+distinction made explicit; today both ranges pass `true`, and a future
+non-interval pair would pass `false`.
 
 The **rendering** is a separate file (`public/js/filter-panel.js`) because it
 is DOM code: requiring it into a Node test would put it in the coverage report at

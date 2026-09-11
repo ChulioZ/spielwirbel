@@ -193,14 +193,20 @@ function renderMetadataFilter(games, state, onChange) {
   };
 
   // Each playtime bound appears only if the shelf carries the field its clause
-  // READS — `playtimeMin` is gated on maxPlaytime and vice versa
-  // (draw-pool.js `metadataFilterOptions` says why the crossing is deliberate).
+  // READS — since #1025 that is the SAME-named field (`playtimeMin` on
+  // minPlaytime), the crossing having gone with the overlap doctrine.
+  //
+  // `carry: true`, also since #1025: under containment the pair is a genuine
+  // interval like complexity, so an inverted one admits nothing and the user
+  // would be left staring at an empty pool with two numbers contradicting each
+  // other. It was `false` while the two clauses read opposite ends of the game's
+  // range and "at least 120, at most 30" was a real query.
   const playtimeBounds = [];
   if (options.playtimeMin) playtimeBounds.push(['minPlaytime', 'metaFilter.playtimeMin', 'metaFilter.boundMin']);
   if (options.playtimeMax) playtimeBounds.push(['maxPlaytime', 'metaFilter.playtimeMax', 'metaFilter.boundMax']);
   if (playtimeBounds.length) {
     body.appendChild(rangeRow('metaFilter.playtime', playtimeBounds, PLAYTIME_CHOICES,
-      (v) => t('metaFilter.playtimeStep', { n: v }), false));
+      (v) => t('metaFilter.playtimeStep', { n: v }), true));
   }
   if (options.weight) {
     body.appendChild(rangeRow('metaFilter.weight',

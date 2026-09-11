@@ -175,7 +175,9 @@ test('quickPresets offers nothing for a shelf carrying no BGG metadata at all', 
 });
 
 test('quickPresets offers only the chip whose field the shelf can express', () => {
-  const games = shelfOf(6).map((g, i) => (i < 3 ? { ...g, minPlaytime: 30 } : { ...g, minPlaytime: 120 }));
+  // `maxPlaytime` since #1025: the „short" chip is `maxPlaytime: 60`, which
+  // under containment reads — and is gated on — the game's own maximum.
+  const games = shelfOf(6).map((g, i) => (i < 3 ? { ...g, maxPlaytime: 30 } : { ...g, maxPlaytime: 120 }));
   const ids = quickPresets(games, deps).map((c) => c.id);
   assert.deepEqual(ids, ['short'], 'playtime is the only field on this shelf');
   const chip = quickPresets(games, deps)[0];
@@ -184,13 +186,13 @@ test('quickPresets offers only the chip whose field the shelf can express', () =
 
 test('quickPresets drops a chip that would narrow nothing', () => {
   // Every game is short, so "unter 60 Min" admits the whole shelf.
-  const games = shelfOf(6).map((g) => ({ ...g, minPlaytime: 30 }));
+  const games = shelfOf(6).map((g) => ({ ...g, maxPlaytime: 30 }));
   assert.deepEqual(quickPresets(games, deps), []);
 });
 
 test('quickPresets drops a chip that would empty the pool', () => {
   // Every game is long, so "unter 60 Min" admits none of them.
-  const games = shelfOf(6).map((g) => ({ ...g, minPlaytime: 180 }));
+  const games = shelfOf(6).map((g) => ({ ...g, maxPlaytime: 180 }));
   assert.deepEqual(quickPresets(games, deps), []);
 });
 
