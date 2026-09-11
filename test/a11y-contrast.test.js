@@ -507,10 +507,12 @@ test('--placeholder paints glyph boxes, never text', () => {
    Everything the token paints is a NON-TEXT graphic that carries meaning — a
    state glyph, the dashed boundary that marks a guest, the stand-in lines on a
    theme card — so the bar is SC 1.4.11's 3:1, not AA text contrast. The four
-   backgrounds are the ones its nine call sites actually land on: --sunken (the
-   five image boxes, .avatar--guest, the guest add button), --sunken-soft
-   (.guest-chip), and --surface / --page-bg (.theme-card__line, which declares no
-   background of its own and shows whichever sits behind the picker).
+   backgrounds are the ones its call sites actually land on: --sunken (the five
+   image boxes, .avatar--guest, the guest add button, a guest's seat on the ring),
+   --sunken-soft (that seat under the pointer — it was .guest-chip until #1016
+   moved guests onto the ring), and --surface / --page-bg (.theme-card__line,
+   which declares no background of its own and shows whichever sits behind the
+   picker).
 
    Measured per design rather than pinned as a percentage, so a new design whose
    page sits differently against --shade fails here instead of shipping a glyph

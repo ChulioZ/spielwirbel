@@ -25,8 +25,9 @@ const TEAM_TOKEN_GUEST = 'g:';
 //
 //  - `joining` is the live Set of member ids from renderSeatPicker, read (never
 //    mutated) so a member taken out of the session leaves their team too.
-//  - `guestPicker` is the renderGuestPicker element, for its live `guests` and
-//    `guestKeys` arrays.
+//  - `guestList` is the createGuestList() state holder (guest-picker.js), for its
+//    live `guests` and `guestKeys` arrays. The seat ring owns the adding and
+//    removing since #1016; this field only ever reads.
 //  - `note` is the hint under the field. A parameter for the same reason the
 //    guest picker's is: only the draw flow filters its pool by the number of
 //    parties, so only there may the hint say so.
@@ -34,9 +35,9 @@ const TEAM_TOKEN_GUEST = 'g:';
 //    refresh whatever follows from the party count (the draw's pool preview).
 //
 // The caller drives it back through `el.refreshTeams()` whenever the people
-// change — the seat picker and the guest list both live outside this field, in
-// the element-with-a-method shape renderSeatPicker and renderGuestPicker use.
-function renderTeamPicker(round, joining, guestPicker, note, onChange) {
+// change — who is at the table is decided on the seat ring, outside this field,
+// in the element-with-a-method shape renderSeatPicker uses.
+function renderTeamPicker(round, joining, guestList, note, onChange) {
   const field = h(`<div class="field">
       <label>${esc(t('startSession.teamsLabel'))}</label>
       <div class="team-list" id="teamList"></div>
@@ -61,9 +62,9 @@ function renderTeamPicker(round, joining, guestPicker, note, onChange) {
     const out = round.members
       .filter((m) => joining.has(m.id))
       .map((m) => ({ token: TEAM_TOKEN_MEMBER + m.id, label: m.name }));
-    guestPicker.guests.forEach((name, i) => {
+    guestList.guests.forEach((name, i) => {
       out.push({
-        token: TEAM_TOKEN_GUEST + guestPicker.guestKeys[i],
+        token: TEAM_TOKEN_GUEST + guestList.guestKeys[i],
         label: t('people.guest', { name }),
       });
     });
@@ -162,7 +163,7 @@ function renderTeamPicker(round, joining, guestPicker, note, onChange) {
         .map((tk) => tk.slice(TEAM_TOKEN_MEMBER.length)),
       guestIndices: tokens
         .filter((tk) => tk.startsWith(TEAM_TOKEN_GUEST))
-        .map((tk) => guestPicker.guestKeys.indexOf(tk.slice(TEAM_TOKEN_GUEST.length)))
+        .map((tk) => guestList.guestKeys.indexOf(tk.slice(TEAM_TOKEN_GUEST.length)))
         .filter((i) => i >= 0),
     }));
   return field;

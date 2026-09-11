@@ -34,42 +34,29 @@ function startDirectSession(round, game) {
   document.body.appendChild(backdrop);
 
   const joining = new Set(round.members.map((m) => m.id));
-  // The same add-on row the setup screen uses (#1015), behind the same chips —
-  // the two that apply here, since nothing is drawn (no owner clause, no
+  // The same add-on row the setup screen uses (#1015), behind the same chip —
+  // the one that still applies here, since nothing is drawn (no owner clause, no
   // multi-table). Both fields used to stand open, which roughly doubled the
   // sheet's height for an evening with neither; the two ways into a session
   // still look the same, which was the point of carrying them here at all.
   //
   // Guests (#532): there is no voting phase, so a guest is a participation
   // record and, above all, a pickable winner — the results screen's winner chips
-  // come from sessionPeople(), members ∪ guests. No pool preview to refresh
-  // either (direct-pick consults no player range), so the only things following
-  // the count are the table's centre and the chip's own label.
+  // come from sessionPeople(), members ∪ guests. Since #1016 they sit on the seat
+  // ring rather than behind a chip of their own, so the note below is the only
+  // thing left saying that these guests — unlike the draw flow's — never vote.
   const addons = renderSetupAddons(t('startSession.addon.label'));
-  const guestPicker = renderGuestPicker(t('directPlay.guestsNote'), () => {
-    seatTable.refreshSeats();
-    teamPicker.refreshTeams();
-    addons.relabelAddons();
-  });
+  const guestList = createGuestList(t('directPlay.guestsNote'));
   // Teams (#575). Nothing here is filtered by a player range — direct-pick
   // consults none — so a team changes no pool: it is here so a team that wins
   // can be recorded in one tap, the same argument that brought guests to this
   // sheet in #532. Hence its own note, which promises no filtering.
-  const teamPicker = renderTeamPicker(round, joining, guestPicker, t('directPlay.teamsNote'), () => addons.relabelAddons());
+  const teamPicker = renderTeamPicker(round, joining, guestList, t('directPlay.teamsNote'), () => addons.relabelAddons());
   const seatTable = renderSeatPicker(round, joining, () => {
     teamPicker.refreshTeams();
     addons.relabelAddons();
-  }, () => guestPicker.guests.length);
+  }, guestList);
   sheet.querySelector('#seatMount').replaceWith(seatTable);
-  addons.addAddon({
-    key: 'guest',
-    icon: 'ti-user-plus',
-    el: guestPicker,
-    label: () => (guestPicker.guests.length
-      ? tn(guestPicker.guests.length, 'startSession.addon.guestsOne', 'startSession.addon.guests')
-      : t('startSession.addon.guest')),
-    on: () => guestPicker.guests.length > 0,
-  });
   addons.addAddon({
     key: 'team',
     icon: 'ti-users',
@@ -82,7 +69,16 @@ function startDirectSession(round, game) {
   sheet.querySelector('#addonMount').replaceWith(addons);
 
   const dismiss = () => closeSheet();
-  const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
+  // The ring's guest-name input owns Escape while it is open (#1016). This
+  // handler sits on `document` in the CAPTURE phase, so without the deferral it
+  // would run first and close the whole sheet, taking the half-typed name with
+  // it — the same way the two lookup sheets ask `lookup.isOpen()`
+  // (.claude/rules/lookup-menu-keyboard-combobox.md §1).
+  const onKey = (e) => {
+    if (e.key !== 'Escape') return;
+    if (seatTable.isAddingGuest()) return;
+    dismiss();
+  };
   document.addEventListener('keydown', onKey, true);
   openSheet(backdrop, onKey);
   backdrop.addEventListener('mousedown', (e) => {
@@ -96,7 +92,7 @@ function startDirectSession(round, game) {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         gameId: game.id,
         memberIds: [...joining],
-        guests: guestPicker.guests, // names only; the server mints the ids (#458)
+        guests: guestList.guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
       });
       closeSheet(() => showResults(round, data.session, data.games));

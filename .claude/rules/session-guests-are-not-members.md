@@ -4,6 +4,7 @@ paths:
   - "lib/routes/sessions.js"
   - "public/js/views-session.js"
   - "public/js/guest-picker.js"
+  - "public/js/seat-picker.js"
   - "test/session-people.test.js"
   - "test/repo.test.js"
 ---
@@ -149,15 +150,25 @@ The rest — the positional wire format, the party-count arithmetic and why
   in both backends (`.claude/rules/postgres-backend.md`). Unlike
   the retired `round.providers` setting there is **no** meaningful third state —
   absent and `[]` read the same.
-- **`renderSeatPicker` grew `extraCount` + `refreshSeats`.** The centre count has
-  to include guests, but the guest list lives outside the picker — so the picker
-  takes a *function* and exposes its own `render` on the returned element for the
-  caller to re-run. **Since #532 the "Jetzt spielen" sheet passes both** — it
-  offers guests too, and the guest field itself is shared by the two screens as
-  `renderGuestPicker` (`public/js/guest-picker.js`), which returns the whole
-  `.field` with the live names on `el.guests`, the same element-with-a-method
-  shape. Its hint text is a **parameter**, because the draw flow's note promises
-  a vote the direct-play flow does not have.
+- **A guest SITS ON THE RING since #1016** — `renderSeatPicker`
+  (`public/js/seat-picker.js`, split out of core.js by the same issue) takes the
+  guest list itself and renders a dashed seat per guest plus a „+" seat that adds
+  one. It replaced an `extraCount` callback, and the replacement is the point:
+  the ring used to be told only how many other people there were, so the two
+  controls answering „wer ist am Tisch" could disagree. The argument is
+  **required**, not optional — an absent-means-no-guests default renders a
+  finished-looking ring that silently cannot take a visitor.
+
+  `renderGuestPicker` is gone with the field it built; `createGuestList(note)`
+  (`public/js/guest-picker.js`) is what remains — the live `guests`/`guestKeys`
+  arrays the team picker reads, `add`/`remove`, and the per-screen note. The note
+  is still a **parameter** (now a property of the list), because the draw flow's
+  wording promises a vote the direct-play flow does not have; it is the hint
+  under the ring's name input.
+
+  **MAX_SESSION_GUESTS is enforced by the ABSENCE of the „+" seat**, not by a
+  check in `add()`. So `startSession.toast.guestMax` is unreachable and gone, and
+  there is no second copy of the limit to drift from the server's.
 - **A guest participant is a `<span>`, not an `<a>`** — there is no member page to
   link to, and an anchor with no href is neither focusable nor styled
   (`.claude/rules/in-app-nav-links.md`). The round-member surfaces (hero, rail,

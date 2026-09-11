@@ -317,11 +317,12 @@ What the app does, in detail. For a short overview see the
   at the table on the left, and on the right the filter control and a live panel
   showing exactly which games are currently in the pot, so
   seating one more player or excluding a tag visibly changes the shelf beside
-  it. The rarer questions — guests, teams, who came without their games, several
-  tables — are a row of add-on chips under the seat ring rather than four open
+  it. The rarer questions — teams, who came without their games, several
+  tables — are a row of add-on chips under the seat ring rather than open
   fields: tapping one opens just that control, and a chip that has been used says
-  so („2 Gäste", „Ben ohne Spiele"), so nothing an evening actually set is
-  hidden. The draw count, a live summary of the table and the pot, and
+  so („2 Teams", „Ben ohne Spiele"), so nothing an evening actually set is
+  hidden. Guests are not among them: they are people at the table, so they sit on
+  the ring itself. The draw count, a live summary of the table and the pot, and
   „Loswirbeln" itself sit together in one bar that stays at the bottom of the
   screen, so the button is in reach without scrolling past the options. The tags,
   filters and count a round was last drawn with are remembered and preselected
@@ -358,8 +359,10 @@ What the app does, in detail. For a short overview see the
   names the account that acted, not the device: "Anna voted for Ben" is something
   the app can actually know, "Ben voted on Anna's device" is not. Shared-device
   sessions keep it too, so the list always reads as complete.
-- **Guests** – a visitor who isn't part of the group can be named on the setup
-  screen: they count toward the player range the draw filters by, take their own
+- **Guests** – a visitor who isn't part of the group takes a seat on the ring
+  like everybody else: a dashed „+" seat asks for their name, and a tap on their
+  seat sends them home again. They count toward the player range the draw
+  filters by, take their own
   hot-seat turn, can be recorded as a winner, and stay in that session's record
   marked as a guest — but they never join the round, so they leave the member
   list, the Pokale standings and the win streak untouched — though they do count

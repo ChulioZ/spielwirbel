@@ -143,20 +143,17 @@ function showStartSession(round, prefill) {
   const addons = renderSetupAddons(t('startSession.addon.label'));
   // Guests (#458): plain names, held only here until the draw POSTs them — the
   // server mints their ids. Frozen at the draw, exactly like the seat selection.
-  // The field is shared with the direct-play sheet (#532); its callback names
-  // `seatTable` and `updateHint`, both declared below, which is safe because it
-  // only ever runs on a click (.claude/rules/frontend-script-load-order.md).
-  const guestPicker = renderGuestPicker(t('startSession.guestsNote'), () => {
-    seatTable.refreshSeats();
-    teamPicker.refreshTeams();
-    addons.relabelAddons();
-    updateHint();
-  });
-  const guests = guestPicker.guests;
+  // Since #1016 they sit on the seat ring beside the members rather than in a
+  // field of their own, so this is state, not a control — the ring below adds
+  // and removes them, and everything that follows from the count comes through
+  // its `onChange`. The note travels with the list because it is a statement
+  // about THESE guests: here they vote, in the direct-play sheet they do not.
+  const guestList = createGuestList(t('startSession.guestsNote'));
+  const guests = guestList.guests;
   // Teams (#575): two or more of the people above playing as one party. Frozen
   // at the draw like the seats and the guests, and the reason the pool count
   // below is not simply a headcount.
-  const teamPicker = renderTeamPicker(round, joining, guestPicker, t('startSession.teamsNote'), () => {
+  const teamPicker = renderTeamPicker(round, joining, guestList, t('startSession.teamsNote'), () => {
     addons.relabelAddons();
     updateHint();
   });
@@ -307,19 +304,23 @@ function showStartSession(round, prefill) {
       ? tn(hiddenN, 'startSession.ownersHiddenOne', 'startSession.ownersHidden')
       : '';
   };
-  // Seats around the table: tap a member to toggle whether they join tonight.
-  // The group attributes go on the table itself, not on #seatMount — replaceWith
+  // Seats around the table: tap a member to toggle whether they join tonight,
+  // tap the „+" seat to add a guest (#1016).
+  // The group attributes go on the ring itself, not on #seatMount — replaceWith
   // swaps the mount out, so anything set on it in the markup would be lost.
   // Taking a member out of the session must also take them out of their team
   // (#575) — the picker drops them and dissolves a team left with one person.
+  // One callback for every change to who is at the table, guests included: the
+  // ring owns the guest list now, so there is no second change path to keep in
+  // step with this one.
   const seatTable = renderSeatPicker(round, joining, () => {
     teamPicker.refreshTeams();
     refreshShelfChips();
     // Unseating somebody can dissolve their team and drops their shelf mark, so
-    // two of the four chips can change from a click on the ring.
+    // two of the three chips can change from a click on the ring.
     addons.relabelAddons();
     updateHint();
-  }, () => guests.length);
+  }, guestList);
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   const multiTableNote = form.querySelector('#multiTableNote');
@@ -377,22 +378,17 @@ function showStartSession(round, prefill) {
   }
   form.querySelector('#seatMount').replaceWith(seatTable);
 
-  /* The four chips, in the order the questions used to stand open. Each one's
-     label is a function of the option's own live state, so „Gast" becomes
-     „2 Gäste" and the option can never be hidden by having been used — which is
+  /* The three chips, in the order the questions used to stand open. Each one's
+     label is a function of the option's own live state, so „Team" becomes
+     „2 Teams" and the option can never be hidden by having been used — which is
      the whole licence for collapsing them.
 
-     The first three open a body; „Mehrere Tische" has none, so it is a plain
+     There were four until #1016 took the guest field out: guests are people at
+     the table, so they belong on the ring above rather than behind a chip that
+     answers the same question a second time.
+
+     The first two open a body; „Mehrere Tische" has none, so it is a plain
      `aria-pressed` toggle whose hint appears under the row while it is on. */
-  addons.addAddon({
-    key: 'guest',
-    icon: 'ti-user-plus',
-    el: guestPicker,
-    label: () => (guests.length
-      ? tn(guests.length, 'startSession.addon.guestsOne', 'startSession.addon.guests')
-      : t('startSession.addon.guest')),
-    on: () => guests.length > 0,
-  });
   addons.addAddon({
     key: 'team',
     icon: 'ti-users',

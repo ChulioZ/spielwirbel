@@ -2,8 +2,8 @@
    session options as a row of chips, with the control that one of them opens
    unfolding in a single body BELOW the row.
 
-   Shared by the two screens that start a session, exactly like the guest and
-   team pickers it usually holds: the draw setup (views-session.js) and the
+   Shared by the two screens that start a session, exactly like the team picker
+   it usually holds: the draw setup (views-session.js) and the
    direct-play sheet (direct-session.js). Frontend shared-scope script; load
    order: see index.html (after guest-picker.js/team-picker.js, before the views
    that mount it).
@@ -108,7 +108,7 @@ function renderSetupAddons(groupLabel) {
     return chip;
   };
 
-  // The element-with-methods shape renderSeatPicker and renderGuestPicker use,
+  // The element-with-methods shape renderSeatPicker and renderTeamPicker use,
   // so a caller holds one node and drives it back through its own callbacks.
   wrap.addAddon = add;
   wrap.relabelAddons = () => items.forEach(paint);

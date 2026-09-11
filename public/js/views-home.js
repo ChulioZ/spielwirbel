@@ -377,7 +377,7 @@ async function showNewRound() {
     tableCenter.textContent = taken.length
       ? t('newRound.tableCount', { n: taken.length })
       : t('newRound.tableEmpty');
-    // Percentages of the table's own box, matching renderSeatPicker (core.js):
+    // Percentages of the table's own box, matching renderSeatPicker (seat-picker.js):
     // `.nr-table` is fluid since #1015, and although this screen keeps the 280px
     // default, a px placement here would silently stay on a 280px circle the
     // moment anyone gave it a `--ring-w`. Identical output at the default.

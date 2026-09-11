@@ -163,14 +163,11 @@ PAIRS.push(...OWNER_PAIRS);
 
 /* The session setup's add-on chips (#1015). Each states how many of its option
    is set — that label is the ONLY thing on screen once the body is closed, so an
-   uninflected „1 Gäste" is the one place this screen says a number out loud. */
+   uninflected „1 Teams" is the one place this screen says a number out loud.
+   The guest chip was the second pair here until #1016 moved guests onto the seat
+   ring, where they are counted by `startSession.tableCount` instead — which this
+   file already covers. */
 const ADDON_PAIRS = [
-  {
-    what: 'startSession.addon.guests — the setup screen\'s guest chip',
-    one: 'startSession.addon.guestsOne', other: 'startSession.addon.guests', params: {},
-    de: ['1 Gast', '2 Gäste'],
-    en: ['1 guest', '2 guests'],
-  },
   {
     what: 'startSession.addon.teams — the setup screen\'s team chip',
     one: 'startSession.addon.teamsOne', other: 'startSession.addon.teams', params: {},

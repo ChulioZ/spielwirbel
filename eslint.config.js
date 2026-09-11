@@ -79,7 +79,7 @@ const frontendGlobals = {
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', memberHex: 'readonly',
   memberTone: 'readonly', initials: 'readonly',
   personColor: 'readonly',
-  renderSeatPicker: 'readonly', renderGuestPicker: 'readonly', renderTeamPicker: 'readonly',
+  renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly', renderGameInfoSection: 'readonly',
   wantsGameInfo: 'readonly', mergeGameInfo: 'readonly',

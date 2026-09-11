@@ -2044,7 +2044,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
    derived from, and every inset below is the old px value over that box — so
    `--ring-w: 280px` (the default, which is what the new-round screen and the
    direct-play sheet keep) is pixel-identical to what shipped before.
-   The SEATS are placed by renderSeatPicker (core.js) in the same percentages;
+   The SEATS are placed by renderSeatPicker (seat-picker.js) in the same percentages;
    only their 46px avatars stay absolute, which is why the vertical placement is
    `calc(Y% - 23px)` there and the seat keeps `margin-left: -32px` here. */
 .nr-table {
@@ -6551,42 +6551,50 @@ kbd {
 }
 .nr-seat--out .nr-seat__name { opacity: 0.6; }
 
-/* ---- Session setup: guests (#458) ----
-   Named here and frozen at the draw, so the list is a plain row of removable
-   pills. The dashed edge is the same "not a member of the round" signal
-   `.nr-seat--empty` and `.avatar--guest` use. */
-.guest-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-.guest-list:empty { display: none; }
-.guest-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 5px 5px 12px;
-  border-radius: var(--radius-pill);
-  border: 2px dashed var(--placeholder);
-  background: var(--sunken-soft);
+/* ---- Session setup: guests on the seat ring (#458, #1016) ----
+   A guest sits on the ring like a member, in the same "not a member of the
+   round" language `.nr-seat--empty` and `.avatar--guest` already speak: the page
+   neutrals, dashed. Same token pair as `.avatar--guest`, so the contrast figure
+   measured there carries over unchanged
+   (.claude/rules/session-guests-are-not-members.md §2). */
+.nr-seat--guest .nr-seat__avatar {
+  background: var(--sunken);
   color: var(--ink-soft);
-  font-size: var(--text-sm);
+  border: 3px dashed var(--placeholder);
+}
+.nr-seat--guest:hover .nr-seat__avatar { background: var(--sunken-soft); filter: none; }
+/* The „(Gast)" marker is its OWN line, exactly like the owner marker above it
+   and for the same measured reason: `.nr-seat__name` is 64px with an ellipsis,
+   so „Anna (Gast)" clips the marker away — and the marker is the half that must
+   survive. */
+.nr-seat__guest {
+  font-size: var(--text-xs);
   font-weight: 700;
-  max-width: 100%;
-}
-.guest-chip__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.guest-chip__del {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex: none;
-  border: none;
-  border-radius: 50%;
-  background: none;
   color: var(--ink-soft);
-  font-family: inherit;
-  cursor: pointer;
+  line-height: 1;
 }
-.guest-chip__del:hover { background: var(--line); color: var(--ink); }
-.guest-chip__del .ti { font-size: var(--text-md); }
+/* The name input the „+" seat unfolds, BELOW the ring rather than inside it:
+   the ring is a fixed-aspect box with absolutely-placed seats, so it has no
+   flow for a field to grow into. Hidden by the `hidden` attribute plus its own
+   paired rule — this block declares `display`, which would otherwise beat the
+   UA stylesheet (.claude/rules/hidden-attribute-vs-display-rule.md). */
+/* The 34px top margin clears the SEATS, not the ring: `.nr-table` is a
+   fixed-aspect box and a seat sitting at the bottom of the circle hangs below
+   it — 20px for a member, ~34px for a guest, whose label takes two lines.
+   Measured at 375px across one to five guests (the bottom seat is a member at
+   some counts and a guest at others), where a -6px margin put the input row
+   straight through „Clara" and 34px still grazed a guest's second line. It costs
+   nothing in the resting state, since the box is only in flow while somebody is
+   actually typing a name. */
+.nr-guest-add { display: block; margin: 40px auto 14px; max-width: min(100%, 360px); }
+.nr-guest-add[hidden] { display: none; }
+/* The row must be allowed to WRAP, and the input needs a floor: at 320px the
+   „+ Hinzufügen" button took 165px and left the input 145px, which clips its own
+   placeholder („Name des Gas") — measured, not guessed. Below ~345px the button
+   drops to its own line instead of squeezing the field it belongs to, the same
+   fix .claude/rules/tiles-vs-lists.md prescribes for a `.ds-row` in a tile. */
+.nr-guest-add .row { flex-wrap: wrap; }
+.nr-guest-add .input { flex: 1 1 160px; }
 
 /* Teams (#575): the pool of people still to be grouped, and the formed teams
    above it. Both live inside a `.field`, so nothing here may be a `.ds-row` —
