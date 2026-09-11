@@ -5035,6 +5035,17 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .tag-row .tag--custom { font-size: var(--text-md); padding: 5px 12px; }
 .tag-row .ds-row__meta { gap: 2px; }
 .tag-row__count { font-size: var(--text-xs); margin-right: 4px; }
+/* The inline tag editor (#1004) — a name field plus the icon grid, opened under
+   its row by the pencil. It is inserted INTO `.ds-list--tiles`, which is a grid,
+   so without this it would take one ~280px track beside the tags and read as a
+   fourth tag rather than as an editor for the third. `1 / -1` is safe here
+   because this grid is `auto-fill`, not `auto-fit` — see the `.home-resume__list`
+   comment for the case where spanning collapses the tracks it is meant to keep.
+   The icon-only picker it replaced had the same defect and nobody had noticed,
+   because a bare glyph grid reads acceptably at tile width and an input does
+   not. */
+.ds-list--tiles > .tag-edit { grid-column: 1 / -1; }
+.tag-edit { display: flex; flex-direction: column; gap: 10px; }
 .tag-act {
   flex: none;
   border: none;
