@@ -314,10 +314,16 @@ What the app does, in detail. For a short overview see the
   looked at, so on a round whose games were added before this existed the
   controls fill themselves in over the first few visits rather than staying
   empty; a draw that uses one of these filters waits briefly for that to happen. From a tablet width up the setup screen splits in two: who is
-  at the table on the left, and on the right the filter control, the draw count
-  and a live panel showing exactly which games are currently in the pot, so
+  at the table on the left, and on the right the filter control and a live panel
+  showing exactly which games are currently in the pot, so
   seating one more player or excluding a tag visibly changes the shelf beside
-  it. The tags,
+  it. The rarer questions — guests, teams, who came without their games, several
+  tables — are a row of add-on chips under the seat ring rather than four open
+  fields: tapping one opens just that control, and a chip that has been used says
+  so („2 Gäste", „Ben ohne Spiele"), so nothing an evening actually set is
+  hidden. The draw count, a live summary of the table and the pot, and
+  „Loswirbeln" itself sit together in one bar that stays at the bottom of the
+  screen, so the button is in reach without scrolling past the options. The tags,
   filters and count a round was last drawn with are remembered and preselected
   the next time, so a group that always draws the same way just confirms.
 - **Voting** – the draw opens a **lobby** showing who has voted and who has not.

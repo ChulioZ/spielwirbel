@@ -768,12 +768,20 @@ I18N.en = {
   'startSession.withoutShelfLabel': 'Who didn’t bring their games?',
   'startSession.withoutShelfNote': 'Their boxes stay out of the draw today. They still play, vote and count for teams.',
   'startSession.teamMake': 'Form a team',
+  'startSession.addon.label': 'More options',
+  'startSession.addon.guest': 'Guest',
+  'startSession.addon.guestsOne': '{n} guest',
+  'startSession.addon.guests': '{n} guests',
+  'startSession.addon.teamsOne': '{n} team',
+  'startSession.addon.teams': '{n} teams',
+  'startSession.addon.shelf': 'Without their games',
+  'startSession.addon.shelfOn': '{names} without games',
   'startSession.teamDissolve': 'Dissolve team {name}',
   'startSession.toast.teamMin': 'A team needs at least {n} people',
   // Per-device voting (#209). The note describes what the feature does, in the
   // disabled state too. It must never read as though the round were missing
   // something: a round of names without accounts is the normal configuration.
-  'startSession.countLabel': 'How many games to draw?',
+  'startSession.barCount': 'How many to draw?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',
   'startSession.ownersHidden': '{n} more games are missing because their owners are not playing.',

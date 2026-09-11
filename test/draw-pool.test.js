@@ -499,8 +499,11 @@ test('… and still does after the table size changes', async () => {
 
 test('… and after „Mehrere Tische", against the RELAXED predicate', async () => {
   await dom.call('showStartSession', round);
-  const box = dom.app.querySelector('#multiTable');
-  assert.ok(box, 'the setup screen offers the multi-table checkbox');
+  // The chip that replaced the checkbox in #1015. Addressed by `data-addon`
+  // rather than by its label, which is localised, or by its position in the row,
+  // which the shelf chip changes.
+  const box = dom.app.querySelector('.setup-addons__chip[data-addon="multi"]');
+  assert.ok(box, 'the setup screen offers the multi-table chip');
   box.click();
 
   assert.deepEqual(previewed(), drawable(4, { multiTable: true }));
@@ -512,7 +515,7 @@ test('… and after „Mehrere Tische", against the RELAXED predicate', async ()
   assert.deepEqual(previewed(), ['Azul', 'Catan', 'Trio']);
 
   box.click();
-  assert.deepEqual(previewed(), drawable(4), 'unticking restores the ordinary pool');
+  assert.deepEqual(previewed(), drawable(4), 'switching it back off restores the ordinary pool');
   assert.deepEqual(previewed(), ['Azul', 'Catan']);
 });
 
@@ -532,20 +535,27 @@ test('and the flag itself rides the draw request', async () => {
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(bodies[0].multiTable, false);
 
-  dom.app.querySelector('#multiTable').click();
+  dom.app.querySelector('.setup-addons__chip[data-addon="multi"]').click();
   dom.app.querySelector('#go').click();
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(bodies[1].multiTable, true);
 });
 
-test('the multi-table checkbox is not inside a .field', async () => {
-  /* `.field label` is (0,1,1) and beats any component rule written for the row,
-     so a `.field` wrapper silently makes the box `display: block` above its own
-     bolded text (.claude/rules/label-rows-lose-to-field-label.md). Asserted over
-     the rendered tree, because the wrapper is markup rather than CSS and jsdom
-     applies no stylesheet to notice the result. */
+test('the multi-table chip carries its state in aria-pressed, not only in colour', async () => {
+  /* It was a checkbox until #1015, which gave the state away for free. A chip
+     announces as a bare name unless the state is on the element, and this is the
+     control that decides which pool the whole screen is previewing
+     (.claude/rules/accessibility-contrast-and-modals.md §3).
+
+     It is a TOGGLE, not a disclosure — it has no body to open — so `aria-pressed`
+     is the right half of that pair and `aria-expanded` would be wrong. */
   await dom.call('showStartSession', round);
-  const row = dom.app.querySelector('.multi-table__row');
-  assert.equal(row.tagName, 'LABEL', 'the whole row toggles the box');
-  assert.equal(row.closest('.field'), null);
+  const chip = dom.app.querySelector('.setup-addons__chip[data-addon="multi"]');
+  assert.equal(chip.tagName, 'BUTTON', 'a chip that is not a real button is not operable by keyboard');
+  assert.equal(chip.getAttribute('aria-pressed'), 'false');
+  assert.equal(chip.hasAttribute('aria-expanded'), false, 'a bodyless toggle must not claim to expand something');
+  chip.click();
+  assert.equal(chip.getAttribute('aria-pressed'), 'true');
+  chip.click();
+  assert.equal(chip.getAttribute('aria-pressed'), 'false');
 });

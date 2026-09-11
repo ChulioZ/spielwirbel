@@ -762,12 +762,20 @@ I18N.de = {
   'startSession.withoutShelfLabel': 'Wer hat seine Spiele nicht dabei?',
   'startSession.withoutShelfNote': 'Ihre Spiele bleiben heute bei der Auslosung außen vor. Mitspielen, Abstimmen und Teams ändern sich nicht.',
   'startSession.teamMake': 'Team bilden',
+  'startSession.addon.label': 'Weitere Optionen',
+  'startSession.addon.guest': 'Gast',
+  'startSession.addon.guestsOne': '{n} Gast',
+  'startSession.addon.guests': '{n} Gäste',
+  'startSession.addon.teamsOne': '{n} Team',
+  'startSession.addon.teams': '{n} Teams',
+  'startSession.addon.shelf': 'Ohne Spiele dabei',
+  'startSession.addon.shelfOn': '{names} ohne Spiele',
   'startSession.teamDissolve': 'Team {name} auflösen',
   'startSession.toast.teamMin': 'Ein Team braucht mindestens {n} Personen',
   // Per-Gerät-Abstimmung (#209). Der Hinweis beschreibt, was die Funktion tut —
   // auch im deaktivierten Zustand. Er darf nie klingen, als fehle der Runde
   // etwas: eine Runde aus Namen ohne Konten ist die normale Konfiguration.
-  'startSession.countLabel': 'Wie viele Spiele wirbeln?',
+  'startSession.barCount': 'Wie viele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
   'startSession.availableOne': '{n} Spiel im Topf',
   'startSession.ownersHidden': '{n} weitere Spiele fehlen, weil ihre Besitzer nicht mitspielen.',

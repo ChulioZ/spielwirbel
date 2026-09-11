@@ -519,7 +519,15 @@ function renderSeatPicker(round, joining, onChange, extraCount) {
     table.querySelectorAll('.nr-seat').forEach((el) => el.remove());
     const extra = typeof extraCount === 'function' ? extraCount() : 0;
     tableCenter.textContent = tn(joining.size + extra, 'startSession.tableCountOne', 'startSession.tableCount');
-    const cx = 140, cy = 118, rx = 112, ry = 92;
+    /* Percentages of the table's own box, not pixels (#1015): `.nr-table` is
+       fluid on the session setup screen (`--ring-w`) while keeping the 280x240
+       aspect ratio these numbers were derived from, so a seat placed in px would
+       stay on a 280px circle inside a 360px ring. 140/280, 118/240, 112/280,
+       92/240 — pixel-identical at the 280px default.
+       The avatar itself does NOT scale (46px, and the name under it is type), so
+       the two half-avatar corrections below stay absolute: `margin-left: -32px`
+       in the stylesheet, and the 23px lifted off `top` here. */
+    const cx = 50, cy = 49.1667, rx = 40, ry = 38.3333;
     round.members.forEach((m, i) => {
       const angle = ((-90 + (i * 360) / round.members.length) * Math.PI) / 180;
       const joined = joining.has(m.id);
@@ -534,8 +542,8 @@ function renderSeatPicker(round, joining, onChange, extraCount) {
            }</span>
            <span class="nr-seat__name">${esc(m.name)}</span>
          </button>`);
-      seat.style.left = cx + rx * Math.cos(angle) + 'px';
-      seat.style.top = cy + ry * Math.sin(angle) - 23 + 'px';
+      seat.style.left = (cx + rx * Math.cos(angle)).toFixed(3) + '%';
+      seat.style.top = `calc(${(cy + ry * Math.sin(angle)).toFixed(3)}% - 23px)`;
       seat.addEventListener('click', () => {
         if (joining.has(m.id)) {
           if (joining.size === 1) return toast(t('startSession.toast.noMembers'));

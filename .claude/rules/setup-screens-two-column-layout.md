@@ -46,7 +46,8 @@ Three parts are load-bearing and each fails silently:
   trap the lobby band records.
 - **(0,5,0) against the cap's (0,3,0).** Specificity, never source order.
 
-`--w-setup` (1240px) must also be **wider than `--w-read`**, or the exemption is
+`--w-setup` (1560px since #1015, 1240 before it) must also be **wider than
+`--w-read`**, or the exemption is
 a no-op that reads as working: `test/content-width.test.js` pins that as
 arithmetic, because every selector assertion stays green at `--w-setup: 880px`.
 
@@ -112,7 +113,8 @@ Drive `dev-temp-data` with the service worker cleared
 (`.claude/rules/pwa-service-worker.md`) and measure rather than eyeball:
 `scrollHeight` vs `innerHeight`, the `.page-head` and `.setup-grid` rects (their
 `x` and `width` must be **identical**), and the 1279→1280 step, which must grow
-(960 → 1240) and never shrink. Walk 390 / 860 / 1279 / 1280 / 1600, and probe for
+(960 → 1240, and on to `--w-setup` above 1600) and never shrink. Walk
+390 / 860 / 1279 / 1280 / 1600, and probe for
 any element whose rect escapes its own column — a grid track can clip its
 contents with every test green (`.claude/rules/tiles-vs-lists.md`).
 
@@ -124,6 +126,40 @@ actually landed** (`grep -c` for what you removed) before reading a green suite
 as evidence, and back the files up to the scratchpad first: `git checkout`
 restores from the index and discards the whole uncommitted change
 (`.claude/rules/css-text-assertions-strip-comments.md`).
+
+## 5. The height is in the CONTENT — a layout-only fix cannot reach it (#1015)
+
+§1–4 gave session setup two columns and cut ~340px of scroll. It was still not
+enough: measured a year on, the screen was 1253px at 1280×800 and 1667px on a
+390×844 phone, where „Loswirbeln" sat at y=1454. A **layout-only** answer was
+prototyped first — wider grid, the options in a 2×2 sub-grid, a viewport-height
+pool — and still scrolled 194px at 1470×870, because a narrower people column
+makes the open questions *wrap more*. Widening a column cannot remove content.
+
+What removed it: the four exception questions (guests, teams, „ohne Spiele
+dabei", „mehrere Tische") collapsed into `.setup-addons`, a row of chips whose
+open one unfolds into ONE body below the row. The chip carries the option's own
+state („2 Gäste", „Ben ohne Spiele"), which is the whole licence for collapsing
+it — a used option that reads as unused would be worse than the scroll.
+
+Three consequences worth knowing before touching this screen again:
+
+- **The tracks are 2:3, not equal.** The people side is a ring and a chip row and
+  measures ~430px of real content in a 604px track; the preview side takes every
+  pixel. `test/content-width.test.js` sizes the panel from the *second* track's
+  fraction for that reason — halving the grid measured a column the panel is not
+  in, and would have stayed green at 4fr/1fr where the panel fits **zero** tiles.
+- **The ring is fluid** (`--ring-w`, `aspect-ratio: 280 / 240`), so `renderSeatPicker`
+  places seats in **percentages**. A px placement leaves the seats on a 280px
+  circle inside a 360px ring, which looks like a rendering bug and is a unit.
+  `views-home.js` has its own copy of that arithmetic — both were converted.
+- **An always-rendered empty status line is not free.** `.pool-owners-note` is a
+  live region, so it stays in the tree with an empty text (§4 of
+  `accessibility-contrast-and-modals.md`) — and a bare `<p>` kept the UA's 1em
+  margins, costing 36px on every normal evening. `:empty { margin: 0 }`.
+
+And one thing that did **not** work: see
+`.claude/rules/sticky-bottom-bar-needs-slack-below-it.md`.
 
 ## Screens deliberately NOT changed
 
