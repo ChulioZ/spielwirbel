@@ -117,6 +117,12 @@ function renderRegalTab(round, activeGames) {
     // only ever clear. Hidden rather than disabled, the same call renderOwnerChips
     // makes for its own empty row (#971).
     const canSetOwners = (round.members || []).length > 0;
+    // A round with no tags has nothing to offer, so the picker could only ever
+    // be empty. Hidden rather than disabled, the same call `canSetOwners` makes
+    // for a seatless round — and creating a tag inline is deliberately out of
+    // scope here: that is the Tags screen's job, and it carries the per-round
+    // quota check this route does not.
+    const canSetTags = (round.tags || []).length > 0;
 
     const bulkBar = h(`<div class="bulk-bar" hidden>
          <div class="bulk-bar__info">
@@ -126,6 +132,7 @@ function renderRegalTab(round, activeGames) {
          <div class="bulk-bar__actions">
            <button type="button" class="link-btn" data-act="all"></button>
            ${canSetOwners ? `<button type="button" class="btn" data-act="owners"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('bulk.owners'))}</button>` : ''}
+           ${canSetTags ? `<button type="button" class="btn" data-act="tags"><i class="ti ti-tags" aria-hidden="true"></i> ${esc(t('bulk.tags'))}</button>` : ''}
            <button type="button" class="btn" data-act="retire"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('bulk.retire'))}</button>
            ${canBulkDelete ? `<button type="button" class="btn btn--danger" data-act="delete"><i class="ti ti-trash-x" aria-hidden="true"></i> ${esc(t('bulk.delete'))}</button>` : ''}
          </div>
@@ -148,7 +155,7 @@ function renderRegalTab(round, activeGames) {
       // differ deliberately; see the comment on tag-chips.js's bulk toggle.
       const allShown = shownCards.length > 0 && shownCards.every((c) => selection.has(c.dataset.gid));
       bulkAll.textContent = allShown ? t('bulk.selectNone') : t('bulk.selectAll');
-      bulkBar.querySelectorAll('[data-act="owners"], [data-act="retire"], [data-act="delete"]')
+      bulkBar.querySelectorAll('[data-act="owners"], [data-act="tags"], [data-act="retire"], [data-act="delete"]')
         .forEach((b) => { b.disabled = n === 0; });
     }
 
@@ -323,6 +330,123 @@ function renderRegalTab(round, activeGames) {
         toast(e.message);
       }
     }
+    /* Add and remove tags across the selection (#1000) — the fourth bulk action,
+       and like the owners one it leads with a PICKER rather than a confirm:
+       there is nothing to warn about until the user has said which tags.
+
+       IT DOES NOT REPLACE, and that is the decision that separates it from the
+       owners sheet twenty lines above. A 50-game selection carries 50 different
+       tag sets, so „Se reemplazan las entradas actuales" here would silently
+       strip every tag those games already had — on the action whose whole point
+       is organising a freshly imported shelf. Each chip is TRI-STATE: add,
+       remove, or leave alone, with `leave alone` the default for every tag.
+
+       That also removes the owners sheet's reason for starting empty: there is
+       no pre-state to misrepresent, because „untouched" is a real third answer
+       rather than a stand-in for „mixed". */
+    function openTagsSheet() {
+      if (!selection.size) return;
+      // Map<tagId, 'add' | 'remove'>; a tag absent from it is left alone.
+      const picks = new Map();
+      const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+          <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('bulk.tags'))}">
+            <div class="sheet__head">
+              <h2>${esc(t('bulk.tags'))}</h2>
+              <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+            </div>
+            <p class="muted bulk-owners__hint">${esc(tn(selection.size, 'bulk.tagsHintOne', 'bulk.tagsHint'))}</p>
+            <div class="filter-chips bulk-tags__chips" role="group" aria-label="${esc(t('bulk.tags'))}"></div>
+            <div class="toolbar sheet__actions"></div>
+          </div>
+        </div>`);
+      const sheet = backdrop.querySelector('.sheet');
+      const chipRow = sheet.querySelector('.bulk-tags__chips');
+      const okBtn = h(`<button type="button" class="btn btn--primary" disabled>${esc(t('common.ok'))}</button>`);
+      // Its OWN three labels rather than paintTagChip's: those say "only games
+      // with it" / "games with it are hidden", which describe a FILTER. Here the
+      // same three visual states mean an edit, and a chip that looks identical
+      // while meaning something else is exactly the confusion worth one more
+      // key per state.
+      (round.tags || []).forEach((tg) => {
+        const chip = h('<button type="button" class="chip"></button>');
+        const paint = () => {
+          const st = picks.get(tg.id);
+          chip.classList.toggle('is-on', st === 'add');
+          chip.classList.toggle('is-excluded', st === 'remove');
+          chip.setAttribute('aria-label', t(
+            st === 'add' ? 'bulk.tagAdd' : st === 'remove' ? 'bulk.tagRemove' : 'bulk.tagLeave',
+            { name: tg.name }));
+          const icon = st === 'remove' ? 'ti-ban' : tagIconClass(tg.icon);
+          chip.innerHTML = `<i class="ti ${icon}" aria-hidden="true"></i>${esc(tg.name)}`;
+        };
+        chip.addEventListener('click', () => {
+          const st = picks.get(tg.id);
+          if (!st) picks.set(tg.id, 'add');
+          else if (st === 'add') picks.set(tg.id, 'remove');
+          else picks.delete(tg.id);
+          paint();
+          // Nothing picked is not a no-op to confirm — it is an unfinished
+          // sentence, so the action stays unavailable rather than reporting a
+          // successful zero.
+          okBtn.disabled = picks.size === 0;
+        });
+        paint();
+        chipRow.appendChild(chip);
+      });
+      document.body.appendChild(backdrop);
+      const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+      document.addEventListener('keydown', onKey, true);
+      openSheet(backdrop, onKey);
+      backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+      sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+
+      const listOf = (want) => [...picks].filter(([, st]) => st === want).map(([id]) => id);
+      // Through closeSheet's callback, never on the line after it — the close
+      // queues a history pop that would dismiss the confirm this opens next
+      // (.claude/rules/sheet-history-back-dismissal.md).
+      okBtn.addEventListener('click', () => closeSheet(() => runTags(listOf('add'), listOf('remove'))));
+      const cancelBtn = h(`<button type="button" class="btn">${esc(t('common.cancel'))}</button>`);
+      cancelBtn.addEventListener('click', () => closeSheet());
+      const actions = sheet.querySelector('.sheet__actions');
+      actions.appendChild(cancelBtn);
+      actions.appendChild(okBtn);
+    }
+
+    async function runTags(addTagIds, removeTagIds) {
+      const ids = [...selection];
+      if (!ids.length || !(addTagIds.length + removeTagIds.length)) return;
+      const nameOf = (id) => ((round.tags || []).find((tg) => tg.id === id) || {}).name || id;
+      // The confirm states the COUNT and the DIRECTION, both of which the user
+      // can otherwise only infer from chip colours they set a moment ago. Three
+      // wordings rather than one with empty halves: „remove: " followed by
+      // nothing is not a sentence.
+      const added = addTagIds.map(nameOf).join(', ');
+      const removed = removeTagIds.map(nameOf).join(', ');
+      const key = addTagIds.length && removeTagIds.length ? 'bulk.confirmTagsBoth'
+        : addTagIds.length ? 'bulk.confirmTagsAdd' : 'bulk.confirmTagsRemove';
+      if (!await confirmDialog({
+        body: tn(ids.length, `${key}One`, key, { added, removed }),
+        icon: 'ti-tags', confirmLabel: t('bulk.tags'),
+      })) return;
+      const buttons = [...bulkBar.querySelectorAll('button')];
+      buttons.forEach((b) => { b.disabled = true; });
+      try {
+        const res = await api('POST', `/api/rounds/${rid}/games/bulk-tags`,
+          { gameIds: ids, addTagIds, removeTagIds });
+        // `updated` counts games that actually CHANGED, so re-adding a tag the
+        // selection already carries says „0 Spiele" rather than lying about 50.
+        toast(tn(res.updated, 'bulk.tagsSetOne', 'bulk.tagsSet'));
+        await fetchRoundFresh(rid);
+        showRound(rid, 'regal');
+      } catch (e) {
+        buttons.forEach((b) => { b.disabled = false; });
+        syncSelection();
+        toast(e.message);
+      }
+    }
+    const bulkTagsBtn = bulkBar.querySelector('[data-act="tags"]');
+    if (bulkTagsBtn) bulkTagsBtn.addEventListener('click', openTagsSheet);
+
     const bulkOwnersBtn = bulkBar.querySelector('[data-act="owners"]');
     if (bulkOwnersBtn) bulkOwnersBtn.addEventListener('click', openOwnersSheet);
     bulkBar.querySelector('[data-act="retire"]').addEventListener('click', () => runBulk('retire'));
