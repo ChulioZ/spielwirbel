@@ -4,32 +4,33 @@
 
 // =================== Session: setup ===================
 
-/* The pot's tilt (#1017). Each cover leans by `--r` and sits `--dy` off its
-   baseline, written inline from these tables and consumed by a `transform` in
-   styles.css — so the pile is a property of the INDEX, and re-rendering the pool
-   (a tag tap, a seat, the stepper) never reshuffles a pile someone is reading.
-   A random or hash-derived angle would look identical on first paint and wrong
-   on the second, which reads as a rendering bug rather than as a missing table.
+/* The whirl's per-cover head start (#1017), written inline as `--wd` and read by
+   the `pot-whirl` animation in styles.css. It is what makes the pot turn as a
+   pot rather than as one rigid block.
 
-   Seven entries on purpose: the panel fits 3–5 tiles per row, and 7 is coprime
-   with all of them, so no column ever ends up leaning the same way twice.
-   `--wd` staggers the whirl; its largest value plus the turn stays inside the
-   WHIRL_MS the handler waits, or the last cover is still moving when the lobby
-   replaces it. */
-const POT_TILT_DEG = [-6, 3, -2, 7, -4, 1, 5];
-const POT_TILT_DY = [3, -4, 2, -2, 5, -3, 0];
+   Derived from the INDEX, not from a random draw: every seat tap, tag chip and
+   stepper press re-runs updateHint(), and a delay that changed on each render
+   would make the same pot break differently every time it is looked at.
+
+   Seven entries on purpose — the panel fits 3–5 covers per row, and 7 is coprime
+   with all of them, so no column ever shares one delay down its whole length. */
 const POT_WHIRL_DELAY = [0, 0.06, 0.02, 0.08, 0.04, 0.07, 0.03];
-const potTilt = (i) => `--r:${POT_TILT_DEG[i % POT_TILT_DEG.length]}deg`
-  + `;--dy:${POT_TILT_DY[i % POT_TILT_DY.length]}px`
-  + `;--wd:${POT_WHIRL_DELAY[i % POT_WHIRL_DELAY.length]}s`;
+const potStagger = (i) => `--wd:${POT_WHIRL_DELAY[i % POT_WHIRL_DELAY.length]}s`;
 
-/* How long „Loswirbeln" holds the screen while the pot turns. It is the SAME
-   decision as the `pot-whirl` keyframe's duration in styles.css and the two are
-   pinned to each other by test/session-pot.test.js: drifted, the lobby either
-   cuts the turn off or opens after a dead pause, with nothing red anywhere.
-   0.9s sits deliberately off the --dur-* micro-interaction scale, like the
-   finale seal and the podium rise — see the comment on those tokens. */
-const WHIRL_MS = 900;
+/* One cover's turn. The SAME decision as the `pot-whirl` keyframe's duration in
+   styles.css, and test/session-pot.test.js pins the two to each other: drifted,
+   the lobby either cuts the turn off or opens after a dead pause, with nothing
+   red anywhere. 0.9s sits deliberately off the --dur-* micro-interaction scale,
+   like the finale seal and the podium rise — see the comment on those tokens. */
+const POT_TURN_MS = 900;
+
+/* How long „Loswirbeln" holds the screen. DERIVED, because the covers do not all
+   start together: the last one to go begins a stagger later, so a flat 900 would
+   swap the lobby in while it was still turning. Computed rather than written
+   down so retuning the stagger table cannot leave this behind — the bug would be
+   a tail of covers cut off mid-spin, which nothing errors on.
+   `Math.round` because 0.08 * 1000 is 80.00000000000001. */
+const WHIRL_MS = POT_TURN_MS + Math.round(Math.max(...POT_WHIRL_DELAY) * 1000);
 
 /* `prefill` (#923) is a partial, shaped exactly like `round.lastSessionFilters`,
    that WINS over the stored preset for this entry only — the quick-start chips
@@ -266,7 +267,7 @@ function showStartSession(round, prefill) {
   const syncFilterBar = () => { if (filterPanel) filterPanel.sync(); };
   const anyFilterActive = () => selectedTags.size > 0 || countMetadataFilters(metaFilters) > 0;
   // Split into a declaration and an attribute builder because a pot cover carries
-  // TWO things in one `style` — its cover and its lean — and a pre-baked
+  // TWO things in one `style` — its cover and its whirl delay — and a pre-baked
   // `style="…"` cannot be merged with a second one.
   const coverDecl = (g, w) => (g.image ? `background-image:url('${coverUrl(g.image, w)}')` : '');
   const styleAttr = (...decls) => {
@@ -294,7 +295,7 @@ function showStartSession(round, prefill) {
     // is, so a capped one hides part of the pot outright. The strip still lives
     // INSIDE the filter bar (#1015), so it costs no row of its own.
     const shelf = games
-      .map((g, i) => `<span class="pool-thumb"${styleAttr(potTilt(i), coverDecl(g, COVER_THUMB))} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
+      .map((g, i) => `<span class="pool-thumb"${styleAttr(potStagger(i), coverDecl(g, COVER_THUMB))} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
       .join('');
     hint.innerHTML = potCount(games.length) + `<span class="pool-shelf">${shelf}</span>`;
 
@@ -310,7 +311,7 @@ function showStartSession(round, prefill) {
     poolGrid.innerHTML = games.length
       ? games
           .map(
-            (g, i) => `<span class="pool-tile"${styleAttr(potTilt(i))} title="${esc(g.title)}">
+            (g, i) => `<span class="pool-tile"${styleAttr(potStagger(i))} title="${esc(g.title)}">
                  <span class="pool-tile__img"${styleAttr(coverDecl(g, COVER_CARD))}>${coverPlaceholder(g)}</span>
                  <span class="pool-tile__name">${esc(g.title)}</span>
                </span>`

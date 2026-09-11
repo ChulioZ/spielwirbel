@@ -11,16 +11,18 @@
  *
  * Three things below fail silently and are the reason each assertion exists:
  *
- *   - the tilt is written INLINE from a table in views-session.js and consumed by
- *     a `transform` in styles.css. Either half alone renders a perfectly tidy
- *     grid, so a dropped `--r` is invisible from the other file.
- *   - the whirl's length lives in BOTH files — 0.9s in the keyframe, 900 in the
- *     handler that waits for it. They are one decision; drifted, the lobby opens
- *     mid-turn or after a dead pause, with nothing red anywhere
+ *   - the per-cover head start is written INLINE as `--wd` in views-session.js and
+ *     read by an `animation-delay` in styles.css. Either half alone turns the pot
+ *     as one rigid block, which is a perfectly plausible animation — so a dropped
+ *     `--wd` is invisible from the other file.
+ *   - the whirl's length lives in BOTH files — 0.9s in the keyframe, POT_TURN_MS
+ *     in the handler that waits for it, plus the stagger the last cover needs.
+ *     They are one decision; drifted, the lobby opens mid-turn or after a dead
+ *     pause, with nothing red anywhere
  *     (.claude/rules/shared-constants-across-the-stack.md, one boundary over).
- *   - a pile that reshuffles on every re-render looks like a rendering bug rather
- *     than like a missing `% table.length`, so the tilt is pinned as DETERMINISTIC
- *     across renders, not merely as present.
+ *   - a pot that breaks differently on every re-render looks like a rendering bug
+ *     rather than like a missing `% table.length`, so the stagger is pinned as
+ *     DETERMINISTIC across renders, not merely as present.
  *
  * The timing half follows .claude/rules/mock-timers-jump-the-clock-before-firing.md:
  * it asks whether the lobby opened BEFORE and AFTER the boundary, and never reads a
@@ -32,9 +34,6 @@
 
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-
 const { loadApp, flush } = require('./support/dom');
 const { RULES, bodyOf, rulesOf, mediaBlocks } = require('./support/css');
 
@@ -43,9 +42,6 @@ const { RULES, bodyOf, rulesOf, mediaBlocks } = require('./support/css');
 const rulesUnder = (re) => mediaBlocks()
   .filter(([query]) => re.test(query))
   .flatMap(([, css]) => rulesOf(css));
-
-const ROOT = path.join(__dirname, '..');
-const VIEW_SRC = fs.readFileSync(path.join(ROOT, 'public', 'js', 'views-session.js'), 'utf8');
 
 const dom = loadApp({ locale: 'de' });
 after(() => dom.close());
@@ -79,7 +75,7 @@ const varsOf = (el) => (el.getAttribute('style') || '')
 
 /* ------------------------------- the pile ------------------------------- */
 
-test('every cover in both presentations carries a tilt, from one table', async () => {
+test('every cover in both presentations carries a head start, from one table', async () => {
   await dom.call('showStartSession', roundFixture());
 
   const stack = tiles();
@@ -88,43 +84,50 @@ test('every cover in both presentations carries a tilt, from one table', async (
   assert.equal(row.length, GAMES.length,
     'the shelf renders a subset — below 860px it is the ONLY presentation, so a capped one hides games');
 
-  // Same index, same tilt: the two presentations are one pot seen twice, and a
-  // second table would let them disagree about which cover leans which way.
+  // Same index, same delay: the two presentations are one pot seen twice, and a
+  // second table would let them disagree about which cover goes when.
   stack.forEach((tile, i) => {
-    assert.ok(varsOf(tile), `stack tile ${i} carries no custom properties, so the transform has nothing to read`);
+    assert.match(varsOf(tile), /^--wd:[\d.]+s$/,
+      `stack cover ${i} carries no --wd, so the animation-delay has nothing to read`);
     assert.equal(varsOf(row[i]), varsOf(tile),
-      `shelf cover ${i} is tilted differently from stack tile ${i}`);
+      `shelf cover ${i} is given a different head start from stack cover ${i}`);
   });
 });
 
-test('the tilt stays inside the stated range, and repeats rather than growing', async () => {
-  await dom.call('showStartSession', roundFixture());
+test('the handler waits for the LAST cover, not for one turn', () => {
+  /* The covers do not start together, so a wait of exactly one turn swaps the
+     lobby in while the tail is still spinning. WHIRL_MS is derived from the table
+     for that reason, and this is the arithmetic — asserted against the live
+     bindings rather than against a literal, so retuning the stagger cannot make
+     it vacuous. */
+  const turn = dom.get('POT_TURN_MS');
+  const delays = [...dom.get('POT_WHIRL_DELAY')];
+  const wait = dom.get('WHIRL_MS');
 
-  tiles().forEach((tile, i) => {
-    const style = tile.getAttribute('style') || '';
-    const r = Number((style.match(/--r:\s*(-?[\d.]+)deg/) || [])[1]);
-    const dy = Number((style.match(/--dy:\s*(-?[\d.]+)px/) || [])[1]);
-    assert.ok(Number.isFinite(r) && Math.abs(r) <= 8, `tile ${i} leans ${r}deg, outside the -8…8 the pile is drawn for`);
-    assert.ok(Number.isFinite(dy) && Math.abs(dy) <= 5, `tile ${i} is offset ${dy}px, outside the -5…5 the pile is drawn for`);
-  });
+  assert.ok(delays.length > 1 && Math.max(...delays) > 0,
+    'no cover is actually staggered, so the derivation below is trivially satisfied');
+  assert.equal(wait, turn + Math.round(Math.max(...delays) * 1000),
+    `the draw waits ${wait}ms while the last cover finishes at ${turn + Math.max(...delays) * 1000}ms`);
+  assert.ok(delays.every((d) => Number.isFinite(d) && d >= 0),
+    'a negative or non-finite head start would start a cover before the press');
 });
 
-test('the pile does not reshuffle when the pool is re-rendered', async () => {
+test('the pot does not re-break differently when the pool is re-rendered', async () => {
   const round = roundFixture();
   await dom.call('showStartSession', round);
   const before = tiles().map(varsOf);
-  // Anti-vacuous: with no tilt at all, every render is `['', '', …]` and the
+  // Anti-vacuous: with no stagger at all, every render is `['', '', …]` and the
   // equality below is satisfied by a pot that carries nothing.
-  assert.ok(before.length && before.every(Boolean), 'no tile carries a tilt, so equality proves nothing');
+  assert.ok(before.length && before.every(Boolean), 'no cover carries a head start, so equality proves nothing');
+  assert.ok(new Set(before).size > 1, 'every cover has the SAME head start, so ordering cannot be observed at all');
 
-  // Any control that narrows the pot re-runs updateHint(); the stepper is the
+  // Any control that narrows the pot re-runs updateHint(); the add-on chip is the
   // cheapest one that does not also change which games are in it.
   dom.app.querySelector('.setup-addons__chip').click();
   await dom.call('showStartSession', round);
-  const after = tiles().map(varsOf);
 
-  assert.deepEqual(after, before,
-    'the tilt is not a function of the index alone, so reading the pot reshuffles it');
+  assert.deepEqual(tiles().map(varsOf), before,
+    'the head start is not a function of the index alone, so the pot breaks differently every time it is looked at');
 });
 
 /* ------------------------------- the whirl ------------------------------- */
@@ -163,8 +166,11 @@ test('the lobby waits for the whirl, and the pot is marked while it turns', asyn
   assert.ok(grid.classList.contains('is-whirl'), 'nothing marks the pot while it turns, so no animation can be selected');
   assert.equal(opened, null, 'the lobby opened before the whirl had a chance to run');
 
-  const whirl = timers.armed.find((x) => x.ms === 900);
-  assert.ok(whirl, `no 900ms wait was armed (armed: ${timers.armed.map((x) => x.ms).join(', ') || 'none'})`);
+  // Read from the live binding, not written down: WHIRL_MS is derived from the
+  // stagger table, so a literal here would go stale on the next retune and pass.
+  const expected = dom.get('WHIRL_MS');
+  const whirl = timers.armed.find((x) => x.ms === expected);
+  assert.ok(whirl, `no ${expected}ms wait was armed (armed: ${timers.armed.map((x) => x.ms).join(', ') || 'none'})`);
 
   timers.fire();
   await flush();
@@ -274,9 +280,8 @@ test('a second press during the whirl does not send a second draw', async (t) =>
 
 /* ------------------------ the two files agreeing ------------------------- */
 
-test('the whirl lasts exactly as long in the stylesheet as the handler waits', () => {
-  const ms = Number((VIEW_SRC.match(/const WHIRL_MS = (\d+);/) || [])[1]);
-  assert.ok(ms, 'views-session.js declares no WHIRL_MS for the stylesheet to be held to');
+test('one cover turns for exactly as long in the stylesheet as the view believes', () => {
+  const turn = dom.get('POT_TURN_MS');
 
   const motion = rulesUnder(/prefers-reduced-motion:\s*no-preference/);
   const whirls = motion.filter(([, body]) => /animation:[^;]*pot-whirl/.test(body));
@@ -285,21 +290,35 @@ test('the whirl lasts exactly as long in the stylesheet as the handler waits', (
 
   whirls.forEach(([sel, body]) => {
     const secs = Number(body.match(/animation:[^;]*?([\d.]+)s/)[1]);
-    assert.equal(secs * 1000, ms,
-      `"${sel}" turns for ${secs}s while the handler holds the lobby back for ${ms}ms`);
+    assert.equal(secs * 1000, turn,
+      `"${sel}" turns for ${secs}s while the view sizes its wait around ${turn}ms`);
   });
 });
 
-test('the stylesheet reads the tilt the view writes', () => {
-  const tile = RULES.find(([sel, body]) =>
-    /\.pool-tile\b/.test(sel) && /transform:\s*rotate\(var\(--r\)\)/.test(body));
-  assert.ok(tile, 'nothing consumes --r, so the inline tilt table renders a perfectly tidy grid');
-  assert.match(tile[0], /\.setup-panel__body/,
-    `"${tile && tile[0]}" tilts every .pool-tile, including the member page's game grid`);
+test('the stylesheet reads the head start the view writes', () => {
+  const motion = rulesUnder(/prefers-reduced-motion:\s*no-preference/);
+  const covers = motion.find(([sel, body]) =>
+    /\.pool-tile\b/.test(sel) && /animation:[^;]*var\(--wd/.test(body));
+  assert.ok(covers,
+    'nothing consumes --wd, so the whole pot turns as one rigid block and the inline table renders nothing');
+  assert.match(covers[0], /\.pool-thumb/,
+    `"${covers && covers[0]}" staggers only one presentation — the other turns as a block`);
 
-  const thumb = bodyOf('.pool-thumb');
-  assert.match(thumb, /transform:\s*rotate\(var\(--r\)\)/,
-    'the shelf covers are not tilted, so the phone presentation is a plain row');
+  // The icon shares the keyframe but has no --wd of its own; it must not inherit
+  // a cover's delay, or the button lags the pot it is meant to lead.
+  const icon = motion.find(([sel]) => /\.setup-bar .*\.ti\b/.test(sel));
+  assert.ok(icon && !/var\(--wd/.test(icon[1]),
+    'the CTA icon takes a per-cover head start, so it starts turning after the pot');
+});
+
+test('the pot lifts a cover under the pointer, and only inside the panel', () => {
+  /* `.pool-tile` is also the member page's game grid, which is a catalogue and
+     wants no hover of its own — an unscoped rule reaches it silently. */
+  const hover = RULES.find(([sel, body]) =>
+    /\.pool-tile:hover/.test(sel) && /transform:\s*scale/.test(body));
+  assert.ok(hover, 'nothing lifts a cover under the pointer');
+  assert.match(hover[0], /\.setup-panel__body/,
+    `"${hover && hover[0]}" lifts every .pool-tile, including the member page's game grid`);
 });
 
 test('the pot shelf scrolls rather than clipping the games it cannot fit', () => {

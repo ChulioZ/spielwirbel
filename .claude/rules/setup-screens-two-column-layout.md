@@ -92,24 +92,28 @@ re-render, and only one is ever in the accessibility tree.
   declaration.
 
 **Since #1017 both are the same pot**: a numeral (`.pool-count` + its label) over
-a pile of covers leaning by a per-index `--r`/`--dy` written inline from a table
-in `views-session.js`. The panel is a tilted grid; the strip is `.pool-shelf`, one
-horizontally snapping row of 64px squares. Two consequences of that change that
-are easy to undo by accident:
+the covers, which turn once when „Loswirbeln" is pressed. The panel is a plain
+grid of covers that lift under the pointer; the strip is `.pool-shelf`, one
+horizontally snapping row of 64px squares. Three things about it are easy to undo
+by accident:
 
 - **The strip no longer caps at six covers or carries a „+n" chip.** It shows
   every game in the pot, because below 860px it is the *only* presentation there
   is — a cap hides part of the pot outright rather than summarising it, which is
   what the chip used to do honestly for a strip that sat beside nothing. The
   scroll is what makes showing all of them affordable.
-- **The tilt must stay a function of the INDEX alone.** A random or hash-derived
-  angle looks identical on first paint and reshuffles the pile on every
-  re-render — every seat tap, tag chip and stepper press calls `updateHint()` —
-  which reads as a rendering bug rather than as a missing `% table.length`.
-  `test/session-pot.test.js` pins it across renders.
+- **The whirl's per-cover head start (`--wd`) must stay a function of the INDEX
+  alone.** Every seat tap, tag chip and stepper press calls `updateHint()`, so a
+  random delay would make the same pot break differently every time it is looked
+  at. `test/session-pot.test.js` pins it across renders — and pins that the
+  handler waits for the LAST cover (`WHIRL_MS` is derived from the table, not
+  written down) rather than for one turn.
+- **The covers are STRAIGHT.** The first implementation tilted each one by a
+  per-index angle; it was dropped on review — the pile read as noise rather than
+  as character. Don't reintroduce it without asking.
 
-The panel's rotation also has a cost the grid does not allocate; see
-`.claude/rules/rotated-grid-items-escape-their-scroll-box.md`.
+The hover lift still costs the grid more room than it allocates; see
+`.claude/rules/transformed-grid-items-escape-their-scroll-box.md`.
 
 ## 4. Column membership is DOM, not CSS `order` — which constrains the phone order
 

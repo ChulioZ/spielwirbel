@@ -97,9 +97,10 @@ reported from a screenshot.
 The probe above compares one script's output between the engines, so anything
 that differs is, by construction, a candidate finding. On #1017 the synthetic page
 rendered both pool presentations at once (the app picks one by width), and WebKit
-at 1280px reported the shelf covers at **0°** where the panel tiles read −6° —
-i.e. "WebKit ignores the custom property in `transform`", on exactly the feature
-being checked.
+at 1280px reported the shelf covers at **0°** where the panel tiles read −6°
+(that branch tilted every cover from an inline custom property; the tilt did not
+ship) — i.e. "WebKit ignores the custom property in `transform`", on exactly the
+feature being checked.
 
 It does not. `getComputedStyle(el).transform` on an element inside a
 `display: none` subtree resolves to `none`, and `new DOMMatrix('none')` is the

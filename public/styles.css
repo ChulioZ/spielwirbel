@@ -6509,9 +6509,7 @@ kbd {
   /* auto-fill, so the panel needs no breakpoint of its own: 3 tiles across in
      the 3fr track at 860px, 5 in the 720px one the 1280px shell gives. */
   grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
-  /* Tight across, roomy down: the leaning covers are meant to graze each other
-     sideways (that is the pile), while a row still needs air for the names. */
-  gap: 14px 4px;
+  gap: 12px;
   /* Bounded, or a 60-game shelf pushes the CTA straight back below the fold —
      which is the defect this whole layout exists to fix.
 
@@ -6526,29 +6524,26 @@ kbd {
      (.claude/rules/preview-pane-paint-artifacts.md). */
   max-height: max(300px, calc(100dvh - 500px));
   overflow-y: auto;
-  /* Room for a leaning tile's corners and for the hover lift. `overflow-y: auto`
-     computes `overflow-x` to `auto` as well, so a tile that escapes its box here
-     produces a horizontal scrollbar rather than spilling — which is why the
-     column gap is tightened instead of using negative margins for the overlap.
-     Measured at 1280x860: at 2px the outermost leaning tiles escaped by 3px and
-     the panel grew its own horizontal scrollbar. */
+  /* Room for the hover lift. `overflow-y: auto` computes `overflow-x` to `auto`
+     as well, so a tile that grows past its layout box here produces a horizontal
+     scrollbar rather than spilling — and `scale(1.08)` on the outermost column
+     does exactly that (.claude/rules/transformed-grid-items-escape-their-scroll-box.md). */
   padding: 4px 10px;
 }
 /* Spans every track: the body is a tile grid, so without this the empty line
    becomes one 110px grid item and wraps after two or three words. */
 .setup-panel__empty { grid-column: 1 / -1; margin: 4px 0; font-size: var(--text-sm); }
 .pool-tile { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-/* The pile (#1017). Scoped to the panel body on purpose: `.pool-tile` is also the
-   member page's game grid (views-member.js), which is a catalogue and must stay
-   square. `position: relative` is what lets the hovered tile raise itself above
-   the ones it overlaps. */
+/* The pot's covers lift under the pointer (#1017). Scoped to the panel body on
+   purpose: `.pool-tile` is also the member page's game grid (views-member.js),
+   which is a catalogue and wants no hover of its own. `position: relative` is
+   what lets the lifted cover rise above its neighbours. */
 .setup-panel__body .pool-tile {
   position: relative;
-  transform: rotate(var(--r)) translateY(var(--dy));
   transition: transform var(--dur-slow) var(--ease-out);
 }
 .setup-panel__body .pool-tile:hover {
-  transform: rotate(0deg) translateY(0) scale(1.08);
+  transform: scale(1.08);
   z-index: 2;
 }
 .pool-tile__img {
@@ -6722,7 +6717,7 @@ kbd {
 }
 
 /* The pot on a phone (#1017): one row that scrolls sideways, snapping cover to
-   cover, rather than the six overlapping thumbs and a „+n" chip it replaces.
+   cover, rather than the six overlapping thumbs and a „+n" chip it replaced.
    Below 860px this is the ONLY presentation of the pool, so it shows every game
    — the scroll is what makes that affordable.
 
@@ -6764,7 +6759,6 @@ kbd {
   font-size: 13px; /* glyph, not type */
   font-weight: 800;
   scroll-snap-align: start;
-  transform: rotate(var(--r)) translateY(var(--dy));
 }
 .pool-thumb .ti { font-size: 16px; /* glyph, not type */ }
 
@@ -6777,9 +6771,9 @@ kbd {
    to hold the lobby back for exactly as long; test/session-pot.test.js pins the
    two to each other, since drifted they fail silently in both directions.
 
-   `--wd` staggers the covers so the pile turns as a pile rather than as one
-   rigid block; `both` holds the 0% frame through the delay, which is the tile's
-   own resting tilt, so nothing jumps before it starts. */
+   `--wd` staggers the covers so the pot turns as a pot rather than as one rigid
+   block; `both` holds the 0% frame through the delay, which is the cover's own
+   resting position, so nothing jumps before it starts. */
 @media (prefers-reduced-motion: no-preference) {
   .setup-grid--session.is-whirl .pool-tile,
   .setup-grid--session.is-whirl .pool-thumb {
@@ -6788,14 +6782,13 @@ kbd {
   .setup-grid--session.is-whirl .setup-bar .btn .ti {
     animation: pot-whirl 0.9s var(--ease-out) both;
   }
-  /* One turn with a dip through the middle — the covers drop into the pot and
-     come back up. The tile's own `--r`/`--dy` are carried through every frame,
-     so it lands exactly where it started rather than snapping upright at 100%.
-     The button icon has neither, and `var(--r, 0deg)` lets it share the keyframe. */
+  /* One full turn with a dip through the middle — the covers drop into the pot
+     and come back up, landing exactly where they started. Shared verbatim by the
+     covers and the CTA's tornado icon. */
   @keyframes pot-whirl {
-    0% { transform: rotate(var(--r, 0deg)) translateY(var(--dy, 0px)) scale(1); }
-    45% { transform: rotate(calc(var(--r, 0deg) + 200deg)) translateY(var(--dy, 0px)) scale(0.78); }
-    100% { transform: rotate(calc(var(--r, 0deg) + 360deg)) translateY(var(--dy, 0px)) scale(1); }
+    0% { transform: rotate(0deg) scale(1); }
+    45% { transform: rotate(200deg) scale(0.78); }
+    100% { transform: rotate(360deg) scale(1); }
   }
 }
 
