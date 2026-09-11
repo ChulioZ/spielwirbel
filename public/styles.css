@@ -4585,16 +4585,78 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .gd-info h1 { font-size: var(--text-2xl); }
 }
 
-/* Member detail page: big avatar + editable name, color picker, stats. */
-.member-head { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+/* Member detail page: a hero band in the member's own colour, then the editable
+   name, colour picker and stats.
+
+   #995: this was a 44px avatar beside a modest name — about 50px of head that
+   read as a breadcrumb, on the one screen in the hub with nothing leading it
+   (the round has its garlanded CTA, the Regal its cover grid, Pokale its
+   podium, a game its cover hero). Each member already OWNS a colour, and the
+   page spent it on one small circle.
+
+   `--m-tone` is the member's colour, set inline on this element by
+   views-member.js — never a hex written here, or the band would be a second
+   definition of a value the avatar already has.
+
+   The tint is deliberately weak (13% at the top, fading to plain --surface) and
+   the radial wash sits at the TOP RIGHT, away from where the name reads. Both
+   are contrast decisions rather than taste: the h1 is --ink, and beauty is
+   achieved above the AA floor rather than by lowering it. */
+.member-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  padding: 26px 24px;
+  margin: 0 0 22px;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(120% 140% at 88% 12%, color-mix(in oklab, var(--m-tone) 26%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in oklab, var(--m-tone) 13%, var(--surface)), var(--surface));
+  /* An inset ring rather than a border, so the band's size does not depend on
+     whether --m-tone resolves — a member with no colour still gets the shape. */
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--m-tone) 24%, transparent);
+  overflow: hidden;
+}
 .member-avatar {
-  width: 84px;
-  height: 84px;
-  font-size: 30px; /* glyph, not type */
+  width: 104px;
+  height: 104px;
+  font-size: 38px; /* glyph, not type */
+  flex: none;
   border-width: 3px;
+  /* A --surface RING, not a tinted drop shadow. The mockup this came from used
+     a coloured glow, and `test/design-tokens.test.js` is right to refuse it:
+     elevation comes from the --shadow-1/2/3 ramp, and a bespoke tinted shadow
+     is exactly the drift that rule exists to stop. The ring does the necessary
+     job — separating the avatar from the wash behind it — and is exempt because
+     it IS a ring rather than elevation. Don't re-add the glow. */
+  box-shadow: 0 0 0 5px var(--surface);
 }
 .member-head__info { flex: 1; min-width: 220px; }
-.member-head__info h1 { margin: 0; font-size: var(--text-2xl); }
+.member-head__info h1 {
+  margin: 0;
+  font-size: clamp(var(--text-2xl), 5vw, 44px);
+  line-height: 1.05;
+}
+/* The accent rule under the name — the one place the member's colour is used at
+   full strength, where it carries no text. */
+.member-head__info::after {
+  content: '';
+  display: block;
+  height: 6px;
+  width: 132px;
+  max-width: 100%;
+  margin-top: 12px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--m-tone), color-mix(in oklab, var(--m-tone) 12%, transparent));
+}
+@media (max-width: 520px) {
+  /* The band keeps its shape on a phone; only the breathing room goes, so the
+     avatar and a long name still fit on one row before wrapping. */
+  .member-head { padding: 20px 16px; gap: 16px; }
+  .member-avatar { width: 84px; height: 84px; font-size: 30px; }
+}
 /* Curated tag-icon picker (#255) — the glyph counterpart to .member-swatches:
    a fixed grid, exactly one active. Auto-fill keeps it usable on a phone and
    inside the narrow tag popover without a media query.

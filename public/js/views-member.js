@@ -146,8 +146,16 @@ async function showMember(rid, mid) {
   // painted, which a dark scheme lifts into a color-mix() (memberTone, #904).
   const ownHex = memberHex(round, mid);
 
-  // Header: big avatar + editable name.
-  const head = h(`<div class="member-head">
+  /* Header: the member's own colour as a hero band, then the avatar and the
+     editable name (#995).
+
+     `--m-tone` is set on the BAND rather than on the avatar, because three
+     things read it — the band's wash, the avatar's drop shadow and the accent
+     rule under the name — and a property set on a child cannot be read by its
+     parent. It is the same `memberColor` value the avatar is painted with, so
+     the tone can never be a second, drifting definition of the member's colour
+     (.claude/rules/shared-constants-across-the-stack.md). */
+  const head = h(`<div class="member-head" style="--m-tone:${color}">
        <span class="avatar member-avatar" style="background:${color}">${avatarFace(initials(member.name), { userId: member.userId })}</span>
        <div class="member-head__info">
          <h1></h1>
