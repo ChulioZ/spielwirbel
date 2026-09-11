@@ -114,9 +114,17 @@ question look urgent. Don't read a fixture as evidence about the upstream.
 
 **Store BOTH playtime bounds.** Toriki reports **20–600**, where 20 is one sitting
 and 600 the full campaign; any single number describes neither, and the average
-(310) describes nothing at all. A future filter tests the **minimum**
+(310) describes nothing at all. The filter tests the **minimum**
 (`minPlaytime <= budget`), the same interval shape `fitsPlayerCount` uses — filter
 on the maximum and Toriki leaves every realistic budget.
+
+Since #1023 that carries **one exception, and it is why both bounds are needed
+rather than just the minimum**: a game whose minimum *equals* the budget and
+which can run longer (120–180 under „at most 120") is excluded, because its
+overlap with the budget is a single point it only ever hits at full speed. A game
+*pinned* at the budget (120–120) still fits, which is exactly the distinction the
+second bound buys — and the reason the obvious `>=` is wrong. The live wording is
+in `fitsMetadataFilters`.
 
 **Match `average` by exact node name.** `parseItems` flattens every descendant into
 one child list, so `average`, `bayesaverage`, `stddev`, `median` and `rank` all sit
