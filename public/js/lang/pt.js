@@ -295,7 +295,10 @@ I18N.pt = {
   'metaFilter.chipWeightMin': 'Complexidade a partir de {min}',
   'metaFilter.chipWeightMax': 'Complexidade até {max}',
   'metaFilter.chipAge': 'Mais nova: {n} anos',
-  'metaFilter.chipTagExcluded': 'sem {name}',
+  'metaFilter.chipExcluded': 'sem {name}',
+  'metaFilter.valueIgnored': '“{name}”: sem filtro. Clique para contar os jogos com ela.',
+  'metaFilter.valueIncluded': '“{name}”: conta para o filtro. Clique para esconder os jogos com ela em vez disso.',
+  'metaFilter.valueExcluded': '“{name}”: os jogos com ela ficam escondidos. Clique para parar de filtrar por ela.',
   'metaFilter.removeFilter': 'Remover {name}',
 
   'transferGames.link': 'Mover ou copiar jogos',

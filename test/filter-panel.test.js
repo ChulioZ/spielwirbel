@@ -70,6 +70,20 @@ const chipsFor = (label) => {
     .find((g) => g.querySelector('.field__label').textContent === label);
   return group ? [...group.querySelectorAll('.chip')] : [];
 };
+/* The metadata chips are TRI-STATE since #1003, so their state is carried by the
+   `aria-label` rather than by `aria-pressed` — a button has two pressed states
+   and this control has three, so "not pressed" could not tell exclude from
+   ignore. Same answer `paintTagChip` reached, and asserting the LABEL is what
+   keeps "never by colour alone" a real check rather than a class read back. */
+const chipState = (chip) => {
+  const label = chip.getAttribute('aria-label') || '';
+  if (/ausgeblendet/.test(label)) return 'exclude';
+  if (/zählt mit/.test(label)) return 'include';
+  if (/kein Filter/.test(label)) return 'ignore';
+  return `UNLABELLED(${label})`;
+};
+const chipsInState = (group, want) => chipsFor(group).filter((c) => chipState(c) === want)
+  .map((c) => c.textContent.trim());
 const selectLabelled = (name) =>
   [...dom.document.querySelectorAll('.mfilter__select')]
     .find((s) => s.getAttribute('aria-label') === name
@@ -271,23 +285,61 @@ test('the playing-time row offers BOTH bounds, and each reads the game\'s SAME-n
   closePanel();
 });
 
-test('a category chip toggles, is announced by aria-pressed, and ORs with its siblings', async () => {
+test('a category chip CYCLES ignore → include → exclude, announced in words (#1003)', async () => {
   await dom.call('showStartSession', roundFixture());
   openPanel();
   const [abstract, adventure] = chipsFor('Kategorien');
 
-  assert.equal(abstract.getAttribute('aria-pressed'), 'false',
-    'state is never carried by the fill alone');
+  assert.equal(chipState(abstract), 'ignore', 'state is never carried by the fill alone');
   abstract.click();
-  assert.equal(abstract.getAttribute('aria-pressed'), 'true');
+  assert.equal(chipState(abstract), 'include');
   assert.deepEqual(previewed(), ['Azul', 'Handgetippt']);
 
   adventure.click();
   assert.deepEqual(previewed(), ['Azul', 'Gloomhaven', 'Handgetippt'], 'OR, not AND');
 
+  // The third click is the whole issue: „anything but Abstract Strategy".
   abstract.click();
-  assert.equal(abstract.getAttribute('aria-pressed'), 'false');
+  assert.equal(chipState(abstract), 'exclude');
+  assert.ok(abstract.querySelector('.ti-ban'), 'the exclude state is not colour alone');
+  assert.deepEqual(previewed(), ['Gloomhaven', 'Handgetippt'],
+    'Azul is out on the exclusion while Adventure still includes Gloomhaven');
+
+  // …and a fourth returns to ignoring it, so the cycle closes.
+  abstract.click();
+  assert.equal(chipState(abstract), 'ignore');
   assert.deepEqual(previewed(), ['Gloomhaven', 'Handgetippt']);
+});
+
+test('an EXCLUDED metadata value BEATS an included one on the same game', async () => {
+  /* The combinators differ by direction — included values OR, excluded values
+     AND-NOT — so a game carrying one of each has to be judged by the exclusion.
+     Catan is the fixture's only Economic game and its only Trading one, so
+     excluding the mechanic while including the category is the collision. */
+  await dom.call('showStartSession', roundFixture());
+  openPanel();
+  chipsFor('Kategorien').find((c) => c.textContent.trim() === 'Economic').click();
+  assert.deepEqual(previewed(), ['Catan', 'Handgetippt']);
+
+  const trading = chipsFor('Mechaniken').find((c) => c.textContent.trim() === 'Trading');
+  trading.click();
+  trading.click();
+  assert.equal(chipState(trading), 'exclude');
+  assert.deepEqual(previewed(), ['Handgetippt'], 'the exclusion wins over the include');
+  assert.deepEqual(appliedChips(), ['Economic', 'ohne Trading'],
+    'and an excluded value says so in words, not by a fill the chip row cannot carry');
+});
+
+test('an exclusion narrows FURTHER, where a second inclusion widens', async () => {
+  // The asymmetry stated as behaviour rather than as a comment: two included
+  // categories admit the union, two excluded ones admit neither.
+  await dom.call('showStartSession', roundFixture());
+  openPanel();
+  const [abstract, adventure] = chipsFor('Kategorien');
+  abstract.click(); abstract.click();
+  assert.deepEqual(previewed(), ['Catan', 'Gloomhaven', 'Handgetippt']);
+  adventure.click(); adventure.click();
+  assert.deepEqual(previewed(), ['Catan', 'Handgetippt'], 'AND-NOT: each exclusion removes more');
 });
 
 test('the complexity selects carry each other rather than allowing an inverted range', async () => {
@@ -332,8 +384,7 @@ test('the preset restores the last draw and drops a category the shelf lost', as
     'the surviving preset is named; "Wargame" is on no game here, so it has no chip');
   openPanel();
   assert.equal(selectLabelled('Spieldauer höchstens').value, '60');
-  const on = chipsFor('Kategorien').filter((c) => c.getAttribute('aria-pressed') === 'true');
-  assert.deepEqual(on.map((c) => c.textContent), ['Economic']);
+  assert.deepEqual(chipsInState('Kategorien', 'include'), ['Economic']);
   closePanel();
 
   // The chips alone cannot see the failure: "Wargame" has no chip to press
@@ -404,7 +455,7 @@ test('an empty pool offers a reset that clears the metadata filters AND the tags
   // And the controls inside catch up when it is next opened, rather than the
   // reset having cleared only the state behind them.
   openPanel();
-  assert.equal(chipsFor('Kategorien')[0].getAttribute('aria-pressed'), 'false');
+  assert.equal(chipState(chipsFor('Kategorien')[0]), 'ignore');
   assert.equal(dom.document.querySelector('#filterChips .chip').getAttribute('aria-pressed'), null);
   closePanel();
 });
@@ -441,6 +492,7 @@ test('the draw sends the metadata filters with the request', async () => {
   assert.deepEqual(sent, {
     maxPlaytime: null, minPlaytime: null, weightMin: null, weightMax: null,
     youngestAge: 10, categories: [], mechanics: [],
+    excludeCategories: [], excludeMechanics: [],
   }, 'the canonical shape goes out, so the route normalizes exactly what it offered');
   dom.set('api', async () => ({}));
 });
@@ -735,8 +787,7 @@ test('an applied chip removes exactly its own filter, with the panel CLOSED', as
   // The control inside catches up too, rather than the chip having cleared only
   // the state behind it.
   openPanel();
-  const on = chipsFor('Kategorien').filter((c) => c.getAttribute('aria-pressed') === 'true');
-  assert.deepEqual(on.map((c) => c.textContent), ['Adventure']);
+  assert.deepEqual(chipsInState('Kategorien', 'include'), ['Adventure']);
 });
 
 test('an EXCLUDED tag says so in words, not by a colour its chip cannot carry', async () => {

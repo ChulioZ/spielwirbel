@@ -293,7 +293,10 @@ I18N.nl = {
   'metaFilter.chipWeightMin': 'Complexiteit vanaf {min}',
   'metaFilter.chipWeightMax': 'Complexiteit tot {max}',
   'metaFilter.chipAge': 'Jongste: {n} jaar',
-  'metaFilter.chipTagExcluded': 'zonder {name}',
+  'metaFilter.chipExcluded': 'zonder {name}',
+  'metaFilter.valueIgnored': '“{name}”: niet gefilterd. Klik om spellen ermee mee te tellen.',
+  'metaFilter.valueIncluded': '“{name}”: telt mee voor het filter. Klik om spellen ermee juist uit te sluiten.',
+  'metaFilter.valueExcluded': '“{name}”: spellen ermee zijn verborgen. Klik om er niet meer op te filteren.',
   'metaFilter.removeFilter': '{name} verwijderen',
 
   'transferGames.link': 'Spellen verplaatsen of kopiëren',

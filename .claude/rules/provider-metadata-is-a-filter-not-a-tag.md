@@ -21,6 +21,7 @@ between them is what keeps either of them useful:
 | Who maintains it | the group, forever | nobody |
 | Vocabulary size | a handful, chosen | ~84 categories, ~180 mechanics |
 | Included values combine | AND by default, OR opt-in | **OR, always** |
+| Excluded values combine | AND-NOT | **AND-NOT** (#1003) |
 | An unset value on the game | the game simply lacks the tag | **the game passes** |
 
 The user request that produced #725 states the failure of ignoring this: *"as
@@ -40,8 +41,37 @@ because a round has few and chose them. So `matchesAnyOf` is `some`, not `every`
 and the AND lives only **between** the two lists (a category clause and a
 mechanic clause both have to hold).
 
-Do not "unify" this with the tag chips' tri-state cycle either. There is no
-exclude state here: with OR semantics a third click would have nothing to mean.
+### The EXCLUDE direction takes the opposite combinator (#1003)
+
+Since #1003 these chips are **tri-state**, exactly like the round-tag chips:
+ignore → include → exclude → ignore. This file used to say a third click "would
+have nothing to mean" under OR semantics, and the user request that produced
+#1003 answered that — *"se puede hacer en las etiquetas personalizadas, pero no
+en las de la bgg"*. „Anything but Party Game" is what it means.
+
+**`excludesAnyOf` is `some` and rejects outright — AND-NOT, the mirror image of
+the include list's OR.** Requiring *every* excluded value to be present before
+rejecting is the symmetry a later reader will reach for, and it is wrong for the
+very reason inclusion is an OR: against a ~84-value vocabulary a conjunction
+almost never fires, so „anything but Party Game" would hardly ever exclude
+anything. Same shape as an excluded tag, which rejects on its own in both
+combination modes.
+
+**Exclusion BEATS inclusion on the same game**, unconditionally. Letting an
+include rescue a game makes an exclusion unreachable on exactly the games it is
+aimed at. The contradictory pair is unrepresentable in the UI (one chip, one
+state) and reachable only from a hand-crafted preset, so `normalizeMetadataFilters`
+also drops the value from the include list — which is what keeps the chip able to
+paint exactly one state rather than picking one at render time.
+
+**And the absent-value rule of §2 holds in this direction too**: a game BGG knows
+no categories for carries none of the excluded ones and stays in. Inverting that
+is the one way this feature empties a shelf.
+
+**The chips' state moved from `aria-pressed` to `aria-label`** with the third
+state, because a button has two pressed states and this control has three, so
+"not pressed" cannot tell exclude from ignore. That is the answer `paintTagChip`
+already reached, and the ban glyph keeps the exclude state off colour alone.
 
 ## 2. An ABSENT field on the game passes EVERY filter — get this backwards and the shelf empties
 
@@ -164,12 +194,15 @@ Two smaller traps, one of which #827 rewrote:
 - **The metadata chips are `.mfilter__chips`, not the shared `.filter-chips`.**
   The original reason is **gone**: it was that the Regal's phone block hid
   `.regal-filter .filter-chips` behind its own „Filter" button, and #827 deleted
-  that block along with the button. What survives is the better reason — the two
-  chip rows are different controls. `.filter-chips` carries the tags' tri-state
-  cycle (ignore → include → exclude); these are plain multi-select, because with
-  OR semantics a third click would have nothing to mean (§1). Sharing the class
-  would invite sharing the behaviour. Nothing in jsdom can see a stylesheet, so
-  this is asserted over the markup the renderer emits.
+  that block along with the button. The *second* reason is gone too since #1003 —
+  the two rows now share the tri-state cycle, so they are no longer different
+  controls in that sense. What survives is that they are different **vocabularies
+  with different combinators** (§1: round tags AND by default, provider values OR)
+  over separately-scoped state, and that the two rows are styled and placed
+  independently. Keep them separate classes; the shared fills (`.chip.is-on`,
+  `.chip.is-excluded`) are base-component rules and arrive anyway. Nothing in
+  jsdom can see a stylesheet, so this is asserted over the markup the renderer
+  emits.
 - **The two badges became ONE number (#827), and then no badge at all (#844).**
   They were separate while they were two controls that collapsed on **different
   triggers** (the chips only below 860px, the drawer at every width) — one number

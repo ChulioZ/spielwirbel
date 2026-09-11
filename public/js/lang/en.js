@@ -295,7 +295,10 @@ I18N.en = {
   'metaFilter.chipWeightMin': 'Complexity from {min}',
   'metaFilter.chipWeightMax': 'Complexity up to {max}',
   'metaFilter.chipAge': 'Youngest: {n} years',
-  'metaFilter.chipTagExcluded': 'without {name}',
+  'metaFilter.chipExcluded': 'without {name}',
+  'metaFilter.valueIgnored': '“{name}”: not filtered. Click to count games with it.',
+  'metaFilter.valueIncluded': '“{name}”: counts towards the filter. Click to exclude games with it instead.',
+  'metaFilter.valueExcluded': '“{name}”: games with it are hidden. Click to stop filtering by it.',
   'metaFilter.removeFilter': 'Remove {name}',
 
   'transferGames.link': 'Move or copy games',
