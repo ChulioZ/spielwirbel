@@ -14,7 +14,7 @@ them the same way round is how #977 happened.
 
 | Tag | Policy | Why |
 |---|---|---|
-| `FROM node:…` in `Dockerfile` | **exact patch**, Dependabot bumps it | nobody re-pulls on our behalf |
+| `FROM node:…` in `Dockerfile` | **exact patch**, Dependabot bumps it — **majors included** (#994) | nobody re-pulls on our behalf |
 | every `uses:` in `.github/workflows/` | **40-hex commit SHA** + `# vN.x.y` | a tag can be retargeted at new code |
 | `postgres-ssl:18` (Railway) | **floating major**, on purpose | Railway re-pulls it in a 02:00–06:00 window |
 
@@ -57,16 +57,74 @@ load-bearing rather than decorative. Drop it and the pin freezes forever.
 ## Two things the tests do NOT cover
 
 `test/docker.test.js` and `test/ci-workflow.test.js` assert the *shape* — an exact
-`major.minor.patch`, identical across both stages, not below the 22.23.2 floor;
-a 40-hex ref plus a version comment in every workflow. Neither can check:
+`major.minor.patch`, identical across both stages, not below `NODE_FLOOR`; a
+40-hex ref plus a version comment in every workflow. **`NODE_FLOOR` rises with the
+pinned major**, by design: it names the security release on the line currently
+ridden (22.23.2 on v22, 26.5.1 on v26 — both 2026-07-28), so crossing a major
+raises it in the same change, and a downgrade has to edit it. Neither test can
+check:
 
 - **that a SHA is the one the version comment claims.** Resolve it yourself, from
   the exact tag rather than the major one, before writing it:
   `gh api repos/<owner>/<repo>/git/ref/tags/v7.0.1` (an annotated tag needs one
   more hop through `.object.url` to reach the commit).
-- **that the pinned Node is still current.** That is Dependabot's job; if its
-  `docker` ecosystem is ever removed from `dependabot.yml`, the pin silently
-  becomes the *worse* of the two policies — frozen instead of floating.
+- **that the pinned Node is still current.** That is Dependabot's job. The
+  *removal* case this bullet used to warn about — the `docker` ecosystem deleted
+  from `dependabot.yml`, leaving the pin frozen instead of floating, the worse of
+  the two policies — **is now asserted** (#994, below). What no test can see is
+  Dependabot working and simply having nothing to say.
+
+## The patch channel freezes behind a held major — so majors are NOT ignored (#994)
+
+The `docker` ecosystem opens **one PR per dependency**. While a major sits open, a
+patch or minor security release therefore produces **no PR at all**: the channel
+added to prevent a silent freeze is itself frozen, in the state that looks
+healthiest — an open, green Dependabot PR. Nothing in the repo could observe it;
+the rule above anticipated only the *removal* freeze mode.
+
+The tempting fix is an `ignore` rule for `version-update:semver-major`, mirroring
+the deliberate-majors reasoning in `railway-postgres-floating-major.md`. **That is
+not the policy here** (operator decision, 2026-09-11): majors arrive as ordinary
+PRs and get handled like any other. The Postgres argument does not transfer for
+exactly the reason the float does not — nobody re-pulls this tag for us, so an
+ignored major is a major that never arrives at all.
+
+What makes the freeze real rather than theoretical is that **the hold does not
+stick**, measured on #988/#999:
+
+- **A `blocked` label does not survive the PR being superseded.** #988 (22.23.2 →
+  26.8.1) was held and labelled `blocked` by the `dependabot` skill; Dependabot
+  then closed it and opened **#999** (→ 26.8) carrying no label at all. So the
+  hold mechanism silently resets itself, and the label that is supposed to mean
+  "we decided about this" is gone while the decision still has not been made.
+- **A major can arrive RED and unmergeable.** #999 proposed `node:26.8-slim` —
+  major.**minor**, not an exact patch — which the first test in this file rejects
+  on every matrix job. Dependabot does not reliably preserve the pin granularity
+  this whole design rests on, so a major can sit in front of the patch channel
+  *forever* without ever being mergeable. **When a docker PR arrives without a
+  patch component, hand-correct the tag** rather than merging or holding it.
+
+**CI's own Node versions ride the pin.** `ci.yml`'s `coverage` and `postgres` jobs
+track the Dockerfile's major, and the `test` matrix must include it — asserted in
+`test/docker.test.js`. `postgres` is the sharp one: it is the only job exercising
+the data-access contract against a real database, so while it sat on 24.x under a
+26 production pin, the pg/Knex stack was unproven on the runtime that actually
+ships. `lint.yml` deliberately stays on the `engines` floor (22.x) and is not
+scanned — `node --check` there answers the opposite question, whether the source
+still parses on the OLDEST supported Node.
+
+One consequence to expect rather than debug: **a Dependabot major bump now goes
+red until `ci.yml` moves with it.** That is the intended prompt, not a defect —
+under the accept-majors policy a major is reviewed by hand anyway (and, per #999,
+usually needs its tag granularity corrected first).
+
+`test/docker.test.js` asserts both halves: the `docker` ecosystem exists, and its
+block contains no `semver-major` anywhere. The ban is deliberately blunt rather
+than matching an `ignore:` shape — the same rule can be written as an inline array
+or a nested list, and a shape a source scan does not enumerate is a shape it
+cannot see (`.claude/rules/source-scanning-guards-enumerate-shapes.md`). It strips
+comments first, because the place a rule is written down is where its banned
+phrase legitimately appears.
 
 A red `gitleaks` right after re-pinning is most likely the license-probe flake,
 not the pin: `.claude/rules/gitleaks-license-flake.md`.
