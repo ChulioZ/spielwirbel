@@ -105,6 +105,24 @@ test('an id that is not a seat subtracts nothing, and no draw is rejected over i
   assert.deepEqual(res.body.games.map((g) => g.title), ['Alices']);
 });
 
+test('the marks are STORED on the session, resolved against the seats (#1002)', async () => {
+  const round = await createRound(request);
+  const [alice, bob] = round.members;
+  await addOwned(round.id, 'Bobs', [bob.id]);
+
+  const res = await request(app).post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 9, memberIds: [alice.id, bob.id], withoutShelfIds: [alice.id, 'ghost'] });
+  // The results screen reads this back, so an id naming nobody at this table
+  // must not survive into the blob.
+  assert.deepEqual(res.body.session.withoutShelfIds, [alice.id]);
+
+  // …and an ordinary evening grows no key at all, so its blob stays
+  // byte-identical to a pre-#1002 one in both backends.
+  const plain = await request(app).post(`/api/rounds/${round.id}/sessions`)
+    .send({ count: 9, memberIds: [alice.id, bob.id] });
+  assert.ok(!('withoutShelfIds' in plain.body.session), 'absent-key discipline');
+});
+
 test('who came without their shelf is NOT remembered as a preset (#1002)', async () => {
   const round = await createRound(request);
   const [alice, bob] = round.members;

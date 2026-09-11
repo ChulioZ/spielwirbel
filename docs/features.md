@@ -37,7 +37,8 @@ What the app does, in detail. For a short overview see the
   their boxes leave that one draw while they go on playing, voting and counting
   for teams exactly as before. A game with nobody recorded is never
   filtered, so a shelf nobody has marked up behaves exactly as it always did; the
-  results screen names who is bringing the box. When adding a
+  results screen names who is bringing the box — and names only the people who
+  can actually produce it, skipping anyone who came without their shelf. When adding a
   game, the title field doubles as a **search-as-you-type lookup** against
   **BoardGameGeek**. Hits with the **same title** collapse into a **single
   row** — a game printed in several editions offers one entry to click rather

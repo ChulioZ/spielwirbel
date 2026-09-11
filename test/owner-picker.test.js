@@ -84,6 +84,53 @@ test('boxBringers falls back to every owner when none of them is seated', () => 
   assert.deepEqual(boxBringers(r, s, { ownerIds: ['m3'] }), ['Clara']);
 });
 
+/* Present WITHOUT your shelf (#1002): the seat is at the table, the box is not.
+ * Every case below has the game IN the session, so it is the results screen
+ * talking, not the draw — a solely-owned game only gets there by direct pick,
+ * while the co-owned one is exactly what the draw legitimately produces. */
+
+test('boxBringers skips an owner who came without their shelf', () => {
+  const [r, s] = table([ANNA, BEN, CLARA], ['m1', 'm2', 'm3']);
+  s.withoutShelfIds = ['m1'];
+  // The bug this closes: Anna owns it, is at the table, and said she did not
+  // bring it — so telling the group to get it from her sends them to nobody.
+  assert.deepEqual(boxBringers(r, s, { ownerIds: ['m1', 'm2'] }), ['Ben'],
+    'name the co-owner who can actually put it down');
+});
+
+test('boxBringers falls back to every owner when nobody present can produce it', () => {
+  const [r, s] = table([ANNA, BEN, CLARA], ['m1', 'm2', 'm3']);
+  s.withoutShelfIds = ['m1'];
+  assert.deepEqual(boxBringers(r, s, { ownerIds: ['m1'] }), ['Anna'],
+    'the same fallback an unseated owner gets: say who has it, so it can be asked for');
+});
+
+test('boxBringers is unchanged for a session that records no marks', () => {
+  const [r, s] = table([ANNA, BEN, CLARA], ['m1', 'm2']);
+  assert.deepEqual(boxBringers(r, s, { ownerIds: ['m1', 'm3'] }), ['Anna']);
+  s.withoutShelfIds = [];
+  assert.deepEqual(boxBringers(r, s, { ownerIds: ['m1', 'm3'] }), ['Anna'],
+    'an empty list means the same as an absent key, like every other session list');
+});
+
+// The pool and the label answer two different questions over one session, and
+// they must not disagree about WHO is holding a box. This is what stands in for
+// sharing `shelfParty` outright — see the comment on `away` in owner-picker.js.
+test('boxBringers names only people the draw would have counted as bringing a shelf', () => {
+  const { shelfParty } = require('../public/js/draw-pool');
+  const [r, s] = table([ANNA, BEN, CLARA], ['m1', 'm2', 'm3']);
+  s.withoutShelfIds = ['m1'];
+  const party = shelfParty(s.memberIds, s.withoutShelfIds);
+  // Clara is seated and owns nothing, which is what keeps this out of the quiet
+  // branch — with every seat an owner the line is not printed at all.
+  const named = boxBringers(r, s, { ownerIds: ['m1', 'm2'] });
+  // Every name the label prints belongs to somebody the draw's own reduction
+  // kept — so the two can never send the group to different people.
+  const byName = new Map(r.members.map((m) => [m.name, m.id]));
+  named.forEach((n) => assert.ok(party.includes(byName.get(n)), n + ' must be in the shelf party'));
+  assert.deepEqual(named, ['Ben']);
+});
+
 test('boxBringers survives a session with no seats at all', () => {
   /* The route guarantees at least one seat, so this is unreachable today — but
      `[].every(...)` is vacuously TRUE, which would read as "everyone owns it"

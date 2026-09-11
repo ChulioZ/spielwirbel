@@ -108,7 +108,9 @@ before assuming you have them all:
   **`game.ownerIds` has four readers, and #973 added the only one that asks from
   the PERSON's side.** The other three ask whether *this table* can put a given
   box on it — `ownedByParty` (the pool), the detail page's owner chip, the
-  results screen's „Gehört Anna" line. The member page's „3 Spiele von Anna"
+  results screen's „Gehört Anna" line — and since #1002 that third one subtracts
+  the marks too, so it never sends the group to fetch a box from somebody who
+  said they did not bring it. The member page's „3 Spiele von Anna"
   section inverts it: which boxes are this member's. It reads the field directly
   rather than through `ownedByParty` — that predicate answers `true` for a game
   with no owner at all, which is right for a draw and exactly wrong here, where

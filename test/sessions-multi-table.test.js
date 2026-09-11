@@ -34,10 +34,10 @@ async function nineWithThreeSmallGames() {
 }
 
 // Start a multi-table session, have everyone rate every drawn game, and close it.
-async function votedSession(round, { rating = () => 4 } = {}) {
+async function votedSession(round, { rating = () => 4, extra = {} } = {}) {
   const start = await request(app)
     .post(`/api/rounds/${round.id}/sessions`)
-    .send({ count: 5, multiTable: true });
+    .send({ count: 5, multiTable: true, ...extra });
   assert.equal(start.status, 201, JSON.stringify(start.body));
   const session = start.body.session;
   for (const member of start.body.members) {
@@ -180,6 +180,33 @@ test('confirming creates one session per table, linked both ways', async () => {
   assert.equal(stored.finished, false);
   assert.equal(stored.cancelled, false);
   assert.ok(stored.events.some((e) => e.type === 'split' && e.count === tables.length));
+});
+
+test('a child inherits the parent\'s „without their shelf" marks, narrowed to its own table (#1002)', async () => {
+  /* Losing them here would send one table to fetch a box from somebody who is
+     sitting at another one without it — the split-session form of the exact bug
+     the marks exist to prevent, and the one place nothing else would catch it:
+     a child is a direct-pick session, so its pool was never filtered. */
+  const { round } = await nineWithThreeSmallGames();
+  const away = round.members[0].id;
+  const session = await votedSession(round, { extra: { withoutShelfIds: [away] } });
+  assert.deepEqual(session.withoutShelfIds, [away], 'the parent recorded it');
+
+  const tables = (await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${session.id}/tables`).send({})).body.proposals[0].tables;
+  const res = await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${session.id}/split`).send({ tables });
+  assert.equal(res.status, 201, JSON.stringify(res.body));
+
+  const [hers, others] = [
+    res.body.children.filter((c) => c.memberIds.includes(away)),
+    res.body.children.filter((c) => !c.memberIds.includes(away)),
+  ];
+  assert.equal(hers.length, 1, 'she sits at exactly one table');
+  assert.deepEqual(hers[0].withoutShelfIds, [away]);
+  assert.ok(others.length, 'the fixture must actually produce a second table');
+  others.forEach((c) => assert.ok(!('withoutShelfIds' in c),
+    'a table she is not at grows no key — the mark names nobody there'));
 });
 
 test('a second confirm is refused and creates nothing', async () => {

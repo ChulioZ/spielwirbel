@@ -47,10 +47,11 @@ function ownerNames(round, ownerIds) {
    only when it is NEWS, which is the whole rule:
      - no recorded owner        -> nothing to say;
      - everyone seated owns it  -> not news, so stay quiet;
-     - otherwise name the owners who are actually HERE, falling back to every
-       owner when none of them is — a direct pick is not filtered by ownership,
-       so it can legitimately land on a game nobody present owns, and that is
-       exactly when the line is most worth printing.
+     - otherwise name the owners who can actually PUT IT DOWN — here, and with
+       their shelf (#1002) — falling back to every owner when none of them can:
+       a direct pick is not filtered by ownership, so it can legitimately land
+       on a game nobody present owns, and that is exactly when the line is most
+       worth printing.
 
    Pure and shared because two screens print it: the ranking row and the chosen
    row's finish panel. They must never list one game's owners differently
@@ -65,9 +66,25 @@ function boxBringers(round, session, game) {
   const ownerIds = (game && game.ownerIds) || [];
   if (!ownerIds.length) return [];
   const seated = new Set((session && session.memberIds) || []);
+  // Seated, but they came without their games (#1002), so they cannot put the
+  // box down tonight however much they own it. This is the SAME subtraction
+  // `shelfParty` (public/js/draw-pool.js) applies to the draw's party, over a
+  // different base set — there the seats, here the game's owners. It is a
+  // direct read of the field rather than a call to that function because these
+  // are classic scripts over one global scope and this file is ALSO required
+  // from Node, where the sibling is not loaded; the injection shape
+  // table-split.js uses would put a reducer parameter on a function two screens
+  // call in a loop. Nothing can drift silently either: a disagreement changes
+  // one label, never a pool, and test/owner-picker.test.js pins the two
+  // together over the same session.
+  const away = new Set((session && session.withoutShelfIds) || []);
+  // The QUIET rule stays on the SEATS, deliberately, while the naming below
+  // moves to the people who can produce a copy. It asks about OWNERSHIP — if
+  // everybody at the table owns one, nobody needs telling, whoever happened to
+  // carry theirs — where the line itself answers tonight's logistics.
   const everyoneOwnsIt = [...seated].every((mid) => ownerIds.includes(mid));
   if (everyoneOwnsIt) return [];
-  const here = ownerIds.filter((x) => seated.has(x));
+  const here = ownerIds.filter((x) => seated.has(x) && !away.has(x));
   return ownerNames(round, here.length ? here : ownerIds);
 }
 
