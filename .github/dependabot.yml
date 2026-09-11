@@ -21,10 +21,17 @@ updates:
     schedule:
       interval: weekly
 
-  # The Dockerfile's Node base image. Pinned to an exact patch (not `node:22-slim`),
+  # The Dockerfile's Node base image. Pinned to an exact patch (not `node:26-slim`),
   # so a Node security release arrives as a reviewable, CI-tested PR rather than
   # depending on whether the builder re-pulled a floating tag.
-  # See .claude/rules/pin-images-and-actions-by-digest.md.
+  #
+  # Deliberately carries NO `ignore` rule for major bumps (#994). Dependabot opens
+  # one PR per dependency, so a major that sits open — deliberately held, or just
+  # unhandled — leaves no patch PR behind it, and the channel added to prevent a
+  # silent freeze freezes itself in the state that looks healthiest. Majors are
+  # therefore ordinary PRs here, reviewed and merged or closed like any other.
+  # test/docker.test.js fails if an ignore rule appears without that decision
+  # moving. See .claude/rules/pin-images-and-actions-by-digest.md.
   - package-ecosystem: docker
     directory: "/"
     schedule:

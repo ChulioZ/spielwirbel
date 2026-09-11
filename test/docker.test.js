@@ -19,11 +19,16 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 // Semver compare over [major, minor, patch] triples.
 const cmp = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
 
-// The release that motivated the exact pin (#977): Node 22.23.2, 2026-07-28, 11
-// CVEs — among them CVE-2026-58044 (HTTP header truncation, a request-smuggling
-// primitive in front of the per-IP rate limiters) and CVE-2026-58045 in the zlib
-// that `compression` uses. Pinning BELOW it would be a pin that ships the hole.
-const NODE_FLOOR = [22, 23, 2];
+// The floor RISES WITH THE PINNED MAJOR, by design. #994 decided this repo accepts
+// major base-image bumps as they come, so this records the minimum release on the
+// line we currently ride rather than a version fixed forever. On v26 that is 26.5.1
+// (2026-07-28) — the release carrying the same security content that made 22.23.2
+// the floor on v22 (#977): 11 CVEs, among them CVE-2026-58044 (HTTP header
+// truncation, a request-smuggling primitive in front of the per-IP rate limiters)
+// and CVE-2026-58045 in the zlib that `compression` uses. Pinning BELOW it would be
+// a pin that ships the hole, and dropping back to an older major is a downgrade
+// that has to edit this line rather than slip through as a two-word diff.
+const NODE_FLOOR = [26, 5, 1];
 
 test('Dockerfile pins an EXACT Node patch in every stage', () => {
   const bases = [...read('Dockerfile').matchAll(/^FROM\s+(\S+)/gm)].map((m) => m[1]);
@@ -48,6 +53,42 @@ test('Dockerfile pins an EXACT Node patch in every stage', () => {
   assert.ok(cmp(v, NODE_FLOOR) >= 0,
     `base image ${bases[0]} is below the ${NODE_FLOOR.join('.')} security release;`
     + ' a pin that goes backwards is worse than the floating tag it replaced');
+});
+
+// Split .github/dependabot.yml into its `- package-ecosystem:` blocks. No YAML
+// parser is a dependency here and test/ci-workflow.test.js scans its workflows as
+// text too, so this follows that shape. A block runs from its own
+// `- package-ecosystem:` line to the next one, which puts a block's LEADING comment
+// in the previous block — harmless, and the comment strip below covers it either way.
+const dependabotBlocks = () => {
+  const parts = read('.github/dependabot.yml').split(/^\s*-\s+package-ecosystem:/m).slice(1);
+  return parts.map((body) => ({ name: (body.match(/^\s*"?([\w-]+)"?/) || [])[1], body }));
+};
+
+test('dependabot.yml keeps the docker ecosystem, with MAJORS flowing (#994)', () => {
+  const docker = dependabotBlocks().find((b) => b.name === 'docker');
+  // Removing the ecosystem is the freeze mode the pinning rule already names: with
+  // no docker block the exact pin silently becomes the WORSE of the two policies —
+  // frozen instead of floating, and nothing in the repo can observe it.
+  assert.ok(docker, '.github/dependabot.yml must keep the `docker` ecosystem');
+
+  // Strip comments before the ban scan: the place a rule is written down is exactly
+  // where its banned phrase legitimately appears
+  // (.claude/rules/source-scanning-guards-enumerate-shapes.md).
+  const code = docker.body.split('\n').map((l) => l.replace(/#.*$/, '')).join('\n');
+
+  // #994 decided majors arrive as ordinary PRs rather than being ignored, so the
+  // patch channel is never silenced by a held major sitting in front of it (one PR
+  // per dependency means a held major leaves no patch PR behind it). The scan is
+  // deliberately blunt — banning the phrase anywhere in the block, rather than
+  // matching an `ignore:` shape — because the same rule can be written as an inline
+  // array or as a nested list, and a shape this guard does not enumerate is a shape
+  // it cannot see. Reversing the decision must move the rule file too, not arrive as
+  // a quiet two-line config edit.
+  assert.doesNotMatch(code, /semver-major/,
+    'the docker ecosystem must not ignore major bumps — that silences the patch'
+    + ' channel behind the held major. See'
+    + ' .claude/rules/pin-images-and-actions-by-digest.md (#994)');
 });
 
 test('Dockerfile runs as the non-root node user', () => {
