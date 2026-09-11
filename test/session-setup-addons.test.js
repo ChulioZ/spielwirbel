@@ -4,9 +4,13 @@
  *
  * The screen used to stack five always-open questions in its left column, four
  * of which are exceptions — measured at ~640px of height on every visit, for an
- * evening with no guests, no teams, everyone's shelf present and one table. The
- * four are chips now, and „Loswirbeln" moved into a bar that sticks to the
- * bottom of the viewport instead of sitting at y=1454 on a phone.
+ * evening with no guests, no teams, everyone's shelf present and one table. They
+ * are chips now, and „Loswirbeln" moved into a bar that sticks to the bottom of
+ * the viewport instead of sitting at y=1454 on a phone.
+ *
+ * Three chips rather than four since #1016: guests moved out of the row onto the
+ * seat ring, because „wer ist am Tisch" is the question the ring already answers
+ * (test/session-seat-guests.test.js).
  *
  * What the specs below can and cannot see is worth stating, because the feature
  * is a layout one and this file is not a layout test: jsdom applies no external
@@ -46,60 +50,77 @@ const roundFixture = (games = GAMES) => ({
   games: games.map((g) => ({ ...g })),
 });
 
+// The shelf chip is only offered when somebody is recorded as owning something
+// (#1002), so a spec that needs a SECOND body to open must use this fixture.
+const ownedFixture = () =>
+  roundFixture([{ id: 'g1', title: 'Azul', minPlayers: 1, maxPlayers: 8, ownerIds: ['m1'] }]);
+
 const chips = () => [...dom.app.querySelectorAll('.setup-addons__chip')];
 const chip = (key) => dom.app.querySelector(`.setup-addons__chip[data-addon="${key}"]`);
 const body = () => dom.app.querySelector('.setup-addon-body');
 const openBodies = () => [...dom.app.querySelectorAll('.setup-addon-body:not([hidden])')];
+// Guests are added on the ring now, not behind a chip — see the sibling spec.
+const addGuest = (name) => {
+  const box = dom.app.querySelector('.nr-guest-add');
+  if (box.hidden) dom.app.querySelector('.nr-seat--add').click();
+  box.querySelector('input').value = name;
+  box.querySelector('button').click();
+};
+// Form a team out of the first two people the pool offers.
+const makeTeam = (root = dom.app) => {
+  const pool = [...root.querySelectorAll('.team-chip')];
+  pool[0].click();
+  pool[1].click();
+  root.querySelector('#teamMake').click();
+};
 
-test('the four options are chips, and every body starts closed', async () => {
-  await dom.call('showStartSession', roundFixture([
-    { id: 'g1', title: 'Azul', minPlayers: 1, maxPlayers: 8, ownerIds: ['m1'] },
-  ]));
+test('the three options are chips, and every body starts closed', async () => {
+  await dom.call('showStartSession', ownedFixture());
 
-  assert.deepEqual(chips().map((c) => c.dataset.addon), ['guest', 'team', 'shelf', 'multi']);
+  assert.deepEqual(chips().map((c) => c.dataset.addon), ['team', 'shelf', 'multi']);
   assert.equal(body().hidden, true, 'a body is open on arrival — the row saves nothing');
   // The controls themselves must be out of the column entirely, not merely
   // hidden inside it: a `hidden` field still sits in the DOM, and the point of
   // the row is that the ~640px is not there at all.
-  assert.equal(dom.app.querySelector('#guestName'), null, 'the guest field is in the column before anyone asked for it');
   assert.equal(dom.app.querySelector('#teamPool'), null, 'the team field is in the column before anyone asked for it');
   assert.equal(dom.app.querySelector('#shelfChips'), null, 'the shelf chips are in the column before anyone asked for them');
+  // Guests left the row entirely in #1016 rather than moving to another chip.
+  assert.equal(chip('guest'), null, 'the guest chip is back, asking who is at the table a second time');
 });
 
 test('opening one option closes whichever was open', async () => {
-  await dom.call('showStartSession', roundFixture());
-
-  chip('guest').click();
-  assert.equal(chip('guest').getAttribute('aria-expanded'), 'true');
-  assert.ok(dom.app.querySelector('#guestName'), 'the guest field did not unfold');
+  await dom.call('showStartSession', ownedFixture());
 
   chip('team').click();
-  assert.equal(chip('guest').getAttribute('aria-expanded'), 'false',
-    'two bodies open at once puts the height this row reclaims straight back');
   assert.equal(chip('team').getAttribute('aria-expanded'), 'true');
-  assert.equal(dom.app.querySelector('#guestName'), null);
+  assert.ok(dom.app.querySelector('#teamPool'), 'the team field did not unfold');
+
+  chip('shelf').click();
+  assert.equal(chip('team').getAttribute('aria-expanded'), 'false',
+    'two bodies open at once puts the height this row reclaims straight back');
+  assert.equal(chip('shelf').getAttribute('aria-expanded'), 'true');
+  assert.equal(dom.app.querySelector('#teamPool'), null);
   assert.equal(openBodies().length, 1);
 
   // A second click on the open chip closes it again.
-  chip('team').click();
-  assert.equal(chip('team').getAttribute('aria-expanded'), 'false');
+  chip('shelf').click();
+  assert.equal(chip('shelf').getAttribute('aria-expanded'), 'false');
   assert.equal(body().hidden, true);
 });
 
 test('a closed body keeps what the user put in it', async () => {
   /* The bodies are MOVED in and out of the one host rather than rebuilt, so the
      pickers' listeners and the user's picks survive. Rebuilding would look
-     identical on the first open and silently drop a guest on the second. */
-  await dom.call('showStartSession', roundFixture());
+     identical on the first open and silently drop a team on the second. */
+  await dom.call('showStartSession', ownedFixture());
 
-  chip('guest').click();
-  dom.app.querySelector('#guestName').value = 'Kim';
-  dom.app.querySelector('#guestAdd').click();
+  chip('team').click();
+  makeTeam();
 
-  chip('team').click();   // closes the guest body
-  chip('guest').click();  // …and back
-  assert.deepEqual([...dom.app.querySelectorAll('.guest-chip__name')].map((el) => el.textContent),
-    ['Kim (Gast)'], 'the guest list was rebuilt empty, so reopening loses the guests');
+  chip('shelf').click();  // closes the team body
+  chip('team').click();   // …and back
+  assert.deepEqual([...dom.app.querySelectorAll('.team-card__name')].map((el) => el.textContent.trim()),
+    ['Anna und Ben'], 'the team field was rebuilt empty, so reopening loses the teams');
 });
 
 test('the body is never inside the chip row', async () => {
@@ -112,7 +133,7 @@ test('the body is never inside the chip row', async () => {
      assertion no future CSS rule can invalidate: with the body outside the row
      there is nothing in the row for any rule to widen. */
   await dom.call('showStartSession', roundFixture());
-  chip('guest').click();
+  chip('team').click();
 
   const row = dom.app.querySelector('.setup-addons');
   assert.equal(row.contains(body()), false, 'the open body sits inside the chip row — the chips will jump lines');
@@ -122,17 +143,12 @@ test('the body is never inside the chip row', async () => {
 test('a chip states what its option is set to, so a used option is never hidden', async () => {
   await dom.call('showStartSession', roundFixture());
 
-  assert.equal(chip('guest').textContent.trim(), 'Gast');
-  chip('guest').click();
-  dom.app.querySelector('#guestName').value = 'Kim';
-  dom.app.querySelector('#guestAdd').click();
-  assert.equal(chip('guest').textContent.trim(), '1 Gast');
-  assert.equal(chip('guest').classList.contains('is-on'), true);
-
-  dom.app.querySelector('#guestName').value = 'Lea';
-  dom.app.querySelector('#guestAdd').click();
-  assert.equal(chip('guest').textContent.trim(), '2 Gäste',
+  assert.equal(chip('team').textContent.trim(), 'Team bilden');
+  chip('team').click();
+  makeTeam();
+  assert.equal(chip('team').textContent.trim(), '1 Team',
     'the count must inflect — the chip is the only statement of this option once the body is closed');
+  assert.equal(chip('team').classList.contains('is-on'), true);
 });
 
 test('the bar states the headcount and the pool, and never disagrees with the panel', async () => {
@@ -146,9 +162,7 @@ test('the bar states the headcount and the pool, and never disagrees with the pa
   assert.equal(summary(), `2 spielen mit · ${title()}`);
   assert.match(title(), /2 Spiele im Topf/);
 
-  chip('guest').click();
-  dom.app.querySelector('#guestName').value = 'Kim';
-  dom.app.querySelector('#guestAdd').click();
+  addGuest('Kim');
   assert.equal(summary(), `3 spielen mit · ${title()}`, 'the bar did not follow the guest onto the table');
 });
 
@@ -173,22 +187,22 @@ test('the draw button is in the bar, after everything that shapes the draw', asy
   }
 });
 
-test('the direct-play sheet gets the two chips that apply there, and no others', async () => {
+test('the direct-play sheet gets the one chip that applies there, and no others', async () => {
   /* The same row, so the two ways into a session look the same (#532). It draws
      nothing, so neither the shelf question nor multi-table means anything there —
      and offering a control that cannot change an outcome is the thing
-     metadataFilterOptions drops a filter to avoid. */
-  const round = roundFixture([{ id: 'g1', title: 'Azul', minPlayers: 1, maxPlayers: 8, ownerIds: ['m1'] }]);
+     metadataFilterOptions drops a filter to avoid. Guests are on the ring in both
+     places since #1016, which is what took this row from two chips to one. */
+  const round = ownedFixture();
   await dom.call('startDirectSession', round, round.games[0]);
 
   const sheet = dom.document.querySelector('.sheet');
   assert.deepEqual([...sheet.querySelectorAll('.setup-addons__chip')].map((c) => c.dataset.addon),
-    ['guest', 'team']);
+    ['team']);
   assert.equal(sheet.querySelector('.setup-addon-body').hidden, true);
 
-  sheet.querySelector('.setup-addons__chip[data-addon="guest"]').click();
-  sheet.querySelector('#guestName').value = 'Kim';
-  sheet.querySelector('#guestAdd').click();
-  assert.equal(sheet.querySelector('.setup-addons__chip[data-addon="guest"]').textContent.trim(), '1 Gast',
-    'the sheet mounted the row without wiring its relabel, so the chip never states the guest');
+  sheet.querySelector('.setup-addons__chip[data-addon="team"]').click();
+  makeTeam(sheet);
+  assert.equal(sheet.querySelector('.setup-addons__chip[data-addon="team"]').textContent.trim(), '1 Team',
+    'the sheet mounted the row without wiring its relabel, so the chip never states the team');
 });

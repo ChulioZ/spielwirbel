@@ -31,12 +31,18 @@ Reaching for a flat `personIds` here is the obvious design and it cannot work.
 **The client side of that has its own trap, and it is the sharper one.** A
 position is only stable until an *earlier* guest is removed — after which every
 later index silently points one person to the left, and a team formed with Eli
-would submit Dana. So `renderGuestPicker` carries `el.guestKeys`, an
-index-aligned array of stable client-local keys (`g1`, `g2`, …), and the team
-picker holds **keys**, resolving them to positions only in `teamPayload()`, at
-submit time. Measured in a browser: with a team on the second guest, the payload
-reads `guestIndices: [1]`, and after removing the first guest it reads `[0]` —
-still the same person.
+would submit Dana. So `createGuestList()` (`guest-picker.js`, `renderGuestPicker`
+until #1016) carries `guestKeys`, an index-aligned array of stable client-local
+keys (`g1`, `g2`, …), and the team picker holds **keys**, resolving them to
+positions only in `teamPayload()`, at submit time. Measured in a browser: with a
+team on the second guest, the payload reads `guestIndices: [1]`, and after
+removing the first guest it reads `[0]` — still the same person.
+
+**#1016 moved the removal itself onto the seat ring, which makes this trap
+easier to hit, not harder** — a guest is now taken out with one tap on their
+seat, where before it took opening a chip first. `test/session-seat-guests.test.js`
+pins the payload across exactly that tap; measured, a `remove()` that splices the
+name without its key reddens it.
 
 Nothing about this is visible in a test that never removes a guest, and the
 failure is a silently mis-paired team, not an error.
@@ -72,9 +78,11 @@ can be recorded. That is why the two screens pass a **different note** to
 apply.
 
 **The seat picker's centre count stays a HEADCOUNT** ("5 playing"), deliberately:
-it is a table with people around it, and `startSession.tableCount` says so. Its
-`extraCount` is still just the guests. The party count is explained by the team
-field's own note instead of being shown as a second number nobody asked for.
+it is a table with people around it, and `startSession.tableCount` says so — it
+counts the seated members plus the guests now sitting on the ring beside them
+(#1016), and a team still does not fold into one. The party count is explained by
+the team field's own note instead of being shown as a second number nobody asked
+for.
 
 ## 3. `winnerIds` stays a flat list of PERSON ids — that is the whole design
 

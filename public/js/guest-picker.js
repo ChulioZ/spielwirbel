@@ -1,92 +1,55 @@
-/* Spielwirbel – the session guest field (#458, #532): a label, one removable
-   chip per named guest, and a name input that adds on Enter.
+/* Spielwirbel – the session's guests (#458, #532): the names of people at the
+   table tonight who are not members of the round.
 
-   Shared by the two screens that start a session — the draw setup
-   (views-session.js) and the direct-play sheet (direct-session.js) — so the
-   two ways into a session look the same. Frontend shared-scope script; load
-   order: see index.html. */
+   Until #1016 this file rendered a whole `.field` — a label, one removable chip
+   per guest and a name input. That field is gone: guests now sit on the seat
+   ring beside the members (seat-picker.js), which is the one control answering
+   „who is at the table". What is left here is the STATE the ring drives and two
+   other files read, which is why the file stayed rather than being folded into
+   the ring: `renderTeamPicker` position-resolves a guest against `guestKeys`
+   (.claude/rules/session-teams.md) and both screens POST `guests` at submit time.
+
+   Frontend shared-scope script; load order: see index.html. */
 
 'use strict';
 
-// Build the whole `.field`, ready to drop in wherever the caller mounted a
-// placeholder.
+// The live guest list for ONE session-starting screen.
 //
-//  - `note` is the hint under the input. It is a parameter rather than a fixed
-//    key because it differs by screen and one of the wordings would be a lie:
-//    the draw flow's guests vote, the direct-play flow's never do (no voting
-//    phase — they are there to be recorded as present, and to be pickable as
-//    the winner).
-//  - `onChange` fires after every add and every removal, so the caller can
-//    refresh whatever follows from the player count — the seat picker's centre
-//    count on both screens, plus the pool preview in the draw flow.
+//  - `note` is the hint shown under the ring's name input. It is a parameter
+//    rather than a fixed key because it differs by screen and one of the
+//    wordings would be a lie: the draw flow's guests vote, the direct-play
+//    flow's never do (no voting phase — they are there to be recorded as
+//    present, and to be pickable as the winner). It travels with the guest state
+//    rather than as a separate argument to the ring, because it is a statement
+//    about THESE guests.
 //
-// The live names hang off the returned element as `el.guests`, read at submit
-// time, in the same element-with-a-method shape renderSeatPicker uses for
-// `refreshSeats`. Only NAMES travel to the server; it mints the ids (#458).
-// `el.guestKeys` is the index-aligned sibling the team picker holds on to
-// (#575) — see the declaration below for why a position will not do.
-function renderGuestPicker(note, onChange) {
-  const field = h(`<div class="field">
-      <label for="guestName">${esc(t('startSession.guestsLabel'))}</label>
-      <div class="guest-list" id="guestList"></div>
-      <div class="row">
-        <input id="guestName" class="input" maxlength="${GUEST_NAME_MAX}" placeholder="${esc(t('startSession.guestPlaceholder'))}" />
-        <button type="button" class="btn" id="guestAdd">${iconText('ti-plus', t('startSession.guestAdd'))}</button>
-      </div>
-      <div class="muted field__hint">${esc(note)}</div>
-    </div>`);
-
+// Only NAMES travel to the server; it mints the ids (#458). `guestKeys` is the
+// index-aligned sibling the team picker holds on to (#575): it references a
+// guest by key rather than by position, because removing a guest shifts every
+// later index out from under it — while the wire format can only be positional,
+// since the ids are minted server-side and do not exist yet. Keys never leave
+// the browser.
+//
+// The cap (MAX_SESSION_GUESTS) is deliberately NOT enforced here: the ring stops
+// rendering its „+" seat at the cap, so there is no second copy of the limit and
+// no unreachable branch pretending to guard one.
+function createGuestList(note) {
   const guests = [];
-  // Stable client-side keys for the names above, index-aligned with them and
-  // mutated in the same two places (add, and the chip's remove handler). The
-  // team picker (#575) references a guest by key rather than by position,
-  // because removing a guest shifts every later index out from under it — while
-  // the wire format can only be positional, since the ids are minted server-side
-  // and do not exist yet. Keys never leave the browser.
   const guestKeys = [];
   let seq = 0;
-  const list = field.querySelector('#guestList');
-  const input = field.querySelector('#guestName');
-
-  // Re-rendered whole on every change (the list is at most MAX_SESSION_GUESTS
-  // long), so removing from the middle can't leave a chip holding a stale index.
-  const render = () => {
-    list.innerHTML = '';
-    guests.forEach((name, i) => {
-      const chip = h(`<span class="guest-chip">
-           <span class="guest-chip__name">${esc(t('people.guest', { name }))}</span>
-           <button type="button" class="guest-chip__del" aria-label="${esc(t('startSession.guestRemove', { name }))}"><i class="ti ti-x" aria-hidden="true"></i></button>
-         </span>`);
-      chip.querySelector('.guest-chip__del').addEventListener('click', () => {
-        guests.splice(i, 1);
-        guestKeys.splice(i, 1);
-        render();
-        input.focus();
-      });
-      list.appendChild(chip);
-    });
-    if (onChange) onChange();
+  return {
+    guests,
+    guestKeys,
+    note,
+    add(name) {
+      guests.push(name);
+      guestKeys.push('g' + ++seq);
+    },
+    remove(key) {
+      const i = guestKeys.indexOf(key);
+      if (i < 0) return;
+      guests.splice(i, 1);
+      guestKeys.splice(i, 1);
+    },
   };
-
-  const add = () => {
-    const name = input.value.trim();
-    if (!name) return toast(t('startSession.toast.guestName'));
-    if (guests.length >= MAX_SESSION_GUESTS)
-      return toast(t('startSession.toast.guestMax', { n: MAX_SESSION_GUESTS }));
-    guests.push(name);
-    guestKeys.push('g' + ++seq);
-    input.value = '';
-    render();
-    input.focus();
-  };
-  field.querySelector('#guestAdd').addEventListener('click', add);
-  // Enter in the name field adds, so a guest can be typed without reaching for
-  // the button. Neither screen wraps this in a <form>, so nothing submits.
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); add(); }
-  });
-
-  field.guests = guests;
-  field.guestKeys = guestKeys;
-  return field;
 }

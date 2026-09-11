@@ -520,8 +520,13 @@ public/
                      vote cards and the session result distribution name a
                      rating with the same glyph; also the scale's own bounds,
                      derived from the face list (issues #890, #909)
-    guest-picker.js  the guest name field (chips + input), shared by the two
-                     screens that start a session (issue #532)
+    seat-picker.js   the seat ring both session-starting screens open with: the
+                     round's members as in/out toggles, that session's guests
+                     beside them, and a „+" seat that adds one (issues #458,
+                     #1016)
+    guest-picker.js  the live guest list that ring drives — names, stable keys
+                     for the team picker, and the per-screen note (issues #458,
+                     #532)
     team-picker.js   the team field: group two or more of those people into one
                      party, shared by the same two screens (issue #575)
     setup-addons.js  the add-on chip row those two fields now sit behind: one

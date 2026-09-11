@@ -500,67 +500,10 @@ function initials(name) {
   return raw.toUpperCase();
 }
 
-// Seat-picker around a table: tap a member to toggle whether they join tonight.
-// `joining` is a Set of member ids, mutated in place; at least one member must
-// stay in. `onChange` (optional) runs after a toggle. `extraCount` (optional) is
-// a function returning further players who are at the table but hold no seat —
-// the session's guests (#458) — so the centre count matches the player count the
-// draw pool is actually filtered by. Returns the table element to append where
-// needed, carrying a `refreshSeats()` so a caller whose `extraCount` changed can
-// redraw it (the guest list lives outside the picker). Shared by the
-// start-session screen and the "Jetzt spielen" sheet.
-function renderSeatPicker(round, joining, onChange, extraCount) {
-  const table = h(`<div class="nr-table">
-      <div class="nr-table__ring"></div>
-      <div class="nr-table__center"></div>
-    </div>`);
-  const tableCenter = table.querySelector('.nr-table__center');
-  function render() {
-    table.querySelectorAll('.nr-seat').forEach((el) => el.remove());
-    const extra = typeof extraCount === 'function' ? extraCount() : 0;
-    tableCenter.textContent = tn(joining.size + extra, 'startSession.tableCountOne', 'startSession.tableCount');
-    /* Percentages of the table's own box, not pixels (#1015): `.nr-table` is
-       fluid on the session setup screen (`--ring-w`) while keeping the 280x240
-       aspect ratio these numbers were derived from, so a seat placed in px would
-       stay on a 280px circle inside a 360px ring. 140/280, 118/240, 112/280,
-       92/240 — pixel-identical at the 280px default.
-       The avatar itself does NOT scale (46px, and the name under it is type), so
-       the two half-avatar corrections below stay absolute: `margin-left: -32px`
-       in the stylesheet, and the 23px lifted off `top` here. */
-    const cx = 50, cy = 49.1667, rx = 40, ry = 38.3333;
-    round.members.forEach((m, i) => {
-      const angle = ((-90 + (i * 360) / round.members.length) * Math.PI) / 180;
-      const joined = joining.has(m.id);
-      // aria-pressed carries the in/out state (#145). Without it the seat is
-      // announced as a bare name and whether that member is playing tonight is
-      // conveyed by color and a "+" glyph alone — unusable without sight, on the
-      // control that decides who is in the session.
-      const seat = h(`<button type="button" class="nr-seat${joined ? '' : ' nr-seat--out'}"
-           aria-pressed="${joined}" title="${esc(m.name)}">
-           <span class="nr-seat__avatar"${joined ? ` style="background:${memberColor(round, m.id)}"` : ''}>${
-             joined ? avatarFace(initials(m.name), { userId: m.userId }) : '<i class="ti ti-plus" aria-hidden="true"></i>'
-           }</span>
-           <span class="nr-seat__name">${esc(m.name)}</span>
-         </button>`);
-      seat.style.left = (cx + rx * Math.cos(angle)).toFixed(3) + '%';
-      seat.style.top = `calc(${(cy + ry * Math.sin(angle)).toFixed(3)}% - 23px)`;
-      seat.addEventListener('click', () => {
-        if (joining.has(m.id)) {
-          if (joining.size === 1) return toast(t('startSession.toast.noMembers'));
-          joining.delete(m.id);
-        } else {
-          joining.add(m.id);
-        }
-        render();
-        if (onChange) onChange();
-      });
-      table.appendChild(seat);
-    });
-  }
-  render();
-  table.refreshSeats = render;
-  return table;
-}
+// The seat ring both session-starting screens open with moved to
+// public/js/seat-picker.js (#1016) — it grew the guest seats and the „+" seat
+// that adds one, and it is a self-contained widget with two callers rather than
+// a shared helper. `initials()` above stays here: nine other surfaces use it.
 
 // Accent color of a round's stored design (fallback: the standard accent).
 // Works with both the full round object and the home-screen summary.

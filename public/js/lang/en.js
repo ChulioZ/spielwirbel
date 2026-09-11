@@ -752,13 +752,13 @@ I18N.en = {
   'startSession.tableCountOne': '{n} playing',
   'startSession.tableCount': '{n} playing',
   // Guests (#458): session-only participants, named here and frozen at the draw.
-  'startSession.guestsLabel': 'Guests along tonight?',
   'startSession.guestsNote': 'Guests vote with you but never join the round.',
   'startSession.guestPlaceholder': 'Guest’s name',
   'startSession.guestAdd': 'Add',
   'startSession.guestRemove': 'Remove guest {name}',
+  'startSession.guestSeat': 'Guest',
+  'startSession.guestAddTitle': 'Add a guest',
   'startSession.toast.guestName': 'Please enter a name for the guest',
-  'startSession.toast.guestMax': 'At most {n} guests per session',
   // Teams (#575): members and guests in any mix, for this session only. A team
   // counts as ONE party when the draw matches a game's player range, which is
   // why the note says so — it is the only visible explanation of a pool that
@@ -769,9 +769,6 @@ I18N.en = {
   'startSession.withoutShelfNote': 'Their boxes stay out of the draw today. They still play, vote and count for teams.',
   'startSession.teamMake': 'Form a team',
   'startSession.addon.label': 'More options',
-  'startSession.addon.guest': 'Guest',
-  'startSession.addon.guestsOne': '{n} guest',
-  'startSession.addon.guests': '{n} guests',
   'startSession.addon.teamsOne': '{n} team',
   'startSession.addon.teams': '{n} teams',
   'startSession.addon.shelf': 'Without their games',

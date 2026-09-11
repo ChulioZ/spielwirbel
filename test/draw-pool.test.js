@@ -484,7 +484,10 @@ test('… and still does after the table size changes', async () => {
   await dom.call('showStartSession', round);
 
   // Two seats out -> a two-person table. Clicking a seat re-runs updateHint().
-  const seats = [...dom.app.querySelectorAll('.nr-seat')];
+  // `[aria-pressed]` is what picks the MEMBER seats out of the ring: since #1016
+  // it also carries the guests and the „+" seat, and neither of those toggles
+  // anybody in or out.
+  const seats = [...dom.app.querySelectorAll('.nr-seat[aria-pressed]')];
   assert.equal(seats.length, 4, 'fixture sanity: one seat per member');
   seats[0].click();
   seats[1].click();
