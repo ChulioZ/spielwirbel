@@ -202,6 +202,43 @@ test('the minimum-playtime filter is the MIRROR of it, reading the UPPER bound',
   assert.equal(fitsMetadataFilters({}, { minPlaytime: 120 }), true);
 });
 
+test('a game whose range only TOUCHES the budget does not fit it', () => {
+  // Reported from La BSK hours after #1001 shipped: "entre 60 y 120 min" offered
+  // Battlestar Galactica, which plays 120-180. Its range meets the ceiling at
+  // exactly one point, and a single-point overlap was counting as a fit - so the
+  // pool held a game that can only make the evening by running at its absolute
+  // floor and usually runs half as long again.
+  //
+  // NOT a #1001 regression: `{ maxPlaytime: 120 }` ALONE admitted it just the
+  // same, since #724. What #1001 changed is that offering both bounds invites
+  // reading the pair as one window, which is what made the old behaviour visible.
+  const bsg = { minPlaytime: 120, maxPlaytime: 180 };
+  assert.equal(fitsMetadataFilters(bsg, { minPlaytime: 60, maxPlaytime: 120 }), false, 'his exact case');
+  assert.equal(fitsMetadataFilters(bsg, { maxPlaytime: 120 }), false, 'the max clause alone, as before #1001');
+
+  // THE ASSERTION THAT MATTERS. `>` -> `>=` is the one-character fix and it is
+  // wrong: a game that takes exactly two hours belongs in "at most two hours".
+  // Only a game that can EXCEED the ceiling is excluded by touching it.
+  assert.equal(fitsMetadataFilters({ minPlaytime: 120, maxPlaytime: 120 }, { maxPlaytime: 120 }), true,
+    'a game pinned at the ceiling fits it');
+
+  // #724's doctrine survives: a 20-600 spread still has twenty minutes in it.
+  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 600 }, { maxPlaytime: 120 }), true);
+
+  // The MIRROR, fixed in the same change - shipping one half earns the same
+  // report from the other side. A game that reaches 60 only at its longest is
+  // not a game for "at least an hour".
+  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 60 }, { minPlaytime: 60 }), false);
+  assert.equal(fitsMetadataFilters({ minPlaytime: 60, maxPlaytime: 60 }, { minPlaytime: 60 }), true,
+    'a game pinned at the floor fits it');
+  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 600 }, { minPlaytime: 120 }), true);
+
+  // An absent bound is still never a reason to hide a game: nothing can show
+  // that a game BGG gave one number for exceeds anything.
+  assert.equal(fitsMetadataFilters({ minPlaytime: 120 }, { maxPlaytime: 120 }), true, 'no upper bound known');
+  assert.equal(fitsMetadataFilters({ maxPlaytime: 60 }, { minPlaytime: 60 }), true, 'no lower bound known');
+});
+
 test('the two playtime bounds are independent clauses, NOT an interval', () => {
   // They test different bounds of the game's own range, so a pair that reads as
   // inverted is satisfiable rather than empty: "spans from under 30 to over 120"

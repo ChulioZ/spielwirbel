@@ -62,6 +62,24 @@ const start = (rid, body) =>
 const presetOf = async (rid) =>
   (await request(app).get(`/api/rounds/${rid}`)).body.lastSessionFilters;
 
+test('the DRAW rejects a game whose range only touches the budget (#1023)', async () => {
+  // The predicate is shared with the setup screen, so this is really asking that
+  // the route agrees with the preview — the thing that would otherwise promise a
+  // pool the draw refuses. Note the `shelf()` fixture above cannot see this case:
+  // every game in it carries a lower bound ONLY, and the exclusion needs both.
+  const round = await createRound(request);
+  const bsg = await addGame(round.id, { title: 'BSG' });
+  const pinned = await addGame(round.id, { title: 'Pinned' });
+  seedMeta(round.id, bsg.id, { minPlaytime: 120, maxPlaytime: 180 });
+  seedMeta(round.id, pinned.id, { minPlaytime: 120, maxPlaytime: 120 });
+
+  // 120–180 can only make a two-hour evening at full speed; 120–120 always does.
+  assert.deepEqual(drawn(await start(round.id, { metadata: { maxPlaytime: 120 } })), ['Pinned']);
+  // Both are back one step up the ladder, so the exclusion is about the boundary
+  // rather than about either game being too long in general.
+  assert.deepEqual(drawn(await start(round.id, { metadata: { maxPlaytime: 180 } })), ['BSG', 'Pinned']);
+});
+
 test('the draw applies each metadata filter, and the described-less game survives', async () => {
   const round = await shelf();
 

@@ -194,7 +194,19 @@ function fitsMetadataFilters(game, filters) {
   // filtering on the maximum would drop such a game from every realistic
   // evening. Permissive is the safe direction here too — the draw only produces
   // candidates people then vote on, and the info sheet shows the full range.
-  if (isFiniteNum(f.maxPlaytime) && isFiniteNum(g.minPlaytime) && g.minPlaytime > f.maxPlaytime) return false;
+  //
+  // A single-point overlap is NOT a fit (#1023). A game whose shortest play
+  // EQUALS the ceiling and which can run longer only makes the evening by coming
+  // in at its absolute floor — reported from La BSK, where "entre 60 y 120 min"
+  // offered a 120–180 game. That equality case is the entire change here: `>`
+  // already rejected anything starting above the ceiling, and the tempting
+  // `>=` would also throw out a game pinned AT it (120–120 under "at most 120"),
+  // which genuinely fits. An absent upper bound can never be shown to exceed
+  // anything, so it stays in — the absent-value rule, per field.
+  if (isFiniteNum(f.maxPlaytime) && isFiniteNum(g.minPlaytime)
+      && (g.minPlaytime > f.maxPlaytime
+        || (g.minPlaytime === f.maxPlaytime && isFiniteNum(g.maxPlaytime) && g.maxPlaytime > f.maxPlaytime)))
+    return false;
   // The MIRROR of that clause (#1001), and the reason it reads `maxPlaytime` on
   // the game: "we have three hours" must still be offered a 20–600 game, which
   // testing the game's own MINIMUM would drop — the exact failure the clause
@@ -206,7 +218,13 @@ function fitsMetadataFilters(game, filters) {
   // (at least 120, at most 30) is satisfiable — it asks for a game whose spread
   // covers both — rather than empty. That is why neither is swapped in
   // `normalizeMetadataFilters` below, unlike the complexity bounds.
-  if (isFiniteNum(f.minPlaytime) && isFiniteNum(g.maxPlaytime) && g.maxPlaytime < f.minPlaytime) return false;
+  // The degenerate-overlap exclusion is mirrored too (#1023), in the same change
+  // on purpose: fixing one side only earns the same report from the other, since
+  // a game reaching the floor solely at its longest is no game for "at least N".
+  if (isFiniteNum(f.minPlaytime) && isFiniteNum(g.maxPlaytime)
+      && (g.maxPlaytime < f.minPlaytime
+        || (g.maxPlaytime === f.minPlaytime && isFiniteNum(g.minPlaytime) && g.minPlaytime < f.minPlaytime)))
+    return false;
   if (isFiniteNum(f.weightMin) && isFiniteNum(g.weight) && g.weight < f.weightMin) return false;
   if (isFiniteNum(f.weightMax) && isFiniteNum(g.weight) && g.weight > f.weightMax) return false;
   // "The youngest at the table is N" — so a game passes when its own minimum age
