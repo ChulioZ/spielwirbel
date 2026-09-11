@@ -6802,24 +6802,43 @@ kbd {
   .setup-grid--session { --ring-w: 360px; }
 }
 
-/* Phone compaction, on this screen only: every row above the fold is one the
-   user has to scroll past to reach the bar. */
+/* The action bar is a bordered card and is the last thing on the page, so the
+   40px apron `.app` leaves under its last child is dead space on THIS screen —
+   and every dead pixel here is one the user has to scroll past to reach the
+   button. At every width, not just on a phone: it is worth 24px, which is most
+   of the slack a 1280x800 laptop has. */
+.app:has(.setup-grid--session) { padding-bottom: 16px; }
+
+/* One column below 860px, so the ring no longer has a track to fill — it keeps
+   the 240 a tablet has room for rather than the 320/360 above. */
 @media (max-width: 859px) {
-  .app:has(.setup-grid--session) > .page-head { margin-bottom: 14px; }
-  /* The ring is 28% of an iPhone viewport at its desktop size, for four avatars
-     that stay 46px whatever it does. 240 keeps them clear of each other at the
-     seat counts a phone can show at all. */
   .setup-grid--session { --ring-w: 240px; }
-  .setup-grid--session .nr-table { margin: 6px auto 10px; }
+}
+
+/* PHONE compaction, on this screen only. Everything here buys height, and it is
+   scoped to 639 rather than to 859 because a tablet does not need it: measured
+   at 768x1024 the screen fits with ~190px to spare, so tightening its rhythm
+   would cost the layout air it can afford. A 390x844 phone has 4px.
+   The measurements below are banner-less, no option open, on the demo round —
+   and identical in all seven locales, which is what the numbers are worth. */
+@media (max-width: 639px) {
+  .app:has(.setup-grid--session) > .page-head { margin-bottom: 10px; }
+  /* The ring is 28% of an iPhone viewport at 280, for avatars that stay 46px
+     whatever it does — so shrinking it costs nothing anyone reads, and it is the
+     biggest block of height on the screen that is not text. It is what buys the
+     slack: 4px at 240, 42px at 208. The seats are placed in percentages, so they
+     stay on the ellipse at any of the four sizes (verified at radius 1.0). */
+  .setup-grid--session { --ring-w: 208px; }
+  .setup-grid--session .nr-table { margin: 4px auto 8px; }
+  /* One 10px rhythm between the four blocks rather than the desktop's 18/16.
+     The target for the leftover slack is a whole extra LINE of add-on chips —
+     40px, i.e. an eighth locale or a fifth option — which 38px did not cover and
+     42px does: measured by appending a fifth long chip, which takes the row to
+     three lines and still fits. */
   .setup-grid--session .setup-grid__main > .field { margin-bottom: 10px; }
-  .setup-grid--session .setup-addons-wrap { margin-bottom: 12px; }
-  .setup-grid--session .setup-filterbar { margin-bottom: 12px; }
+  .setup-grid--session .setup-addons-wrap { margin-bottom: 10px; }
+  .setup-grid--session .setup-filterbar { margin-bottom: 10px; }
   .setup-grid--session .setup-bar { padding: 10px 12px; gap: 8px 12px; }
-  /* The bar is a bordered card and ends the page, so the 40px `.app` normally
-     leaves under its last child is dead space here — and on this screen every
-     dead pixel is one the user has to scroll past to reach the button. 16 keeps
-     it off the footer. */
-  .app:has(.setup-grid--session) { padding-bottom: 16px; }
 }
 
 /* ---- Voting: member-colored progress, handover, mood scale ---- */
