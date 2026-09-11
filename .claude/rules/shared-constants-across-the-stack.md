@@ -100,7 +100,20 @@ things it must not do, both of which would be silent: the session still stores
 the FULL seat list, so the marked member votes, plays, joins a team and wins
 trophies exactly as before — only the pool narrows — and an all-away party
 reduces to `[]`, which `drawPool` must still treat as a real answer rather than
-as "this caller predates ownership", since an empty array is truthy. Note what
+as "this caller predates ownership", since an empty array is truthy.
+
+It has a SECOND consumer, and it is the sharper one: `boxBringers`
+(`public/js/owner-picker.js`) names who has to bring the box, so it must not
+send the table to somebody the draw had already counted as empty-handed. That
+file cannot call the sibling — classic scripts, one global scope, and it is also
+required from Node — so `shelfParty` is **injected with no default**, exactly as
+`table-split.js` takes `tileValue`. The reason the default is the dangerous part
+is worth stating, because the alternative looks harmless: a hand-written
+`seated && !away` filter is behaviourally IDENTICAL and every equality test over
+a session stays green against it. `test/owner-picker.test.js` therefore asserts
+the ARITY — measured, that is the only assertion that reddens on the
+re-implementation, the same technique `test/vote-score.test.js` uses to keep a
+prior parameter from coming back. Note what
 deliberately stayed duplicated: the
 **tag** clauses, because the server filters on resolved include/exclude id lists
 while the client holds a tri-state chip map, so one shared function would need a

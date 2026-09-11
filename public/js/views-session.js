@@ -1259,7 +1259,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
        until somebody taps „Spielen" — so the one screen listing every candidate
        said nothing about ownership at the exact moment the group is deciding.
        Same shared rule as the panel, so the two can never disagree. */
-    const bringers = boxBringers(round, session, g);
+    const bringers = boxBringers(round, session, g, shelfParty);
     const ownersLine = bringers.length
       ? `<div class="result-row__owners">${iconText('ti-user', t('result.ownedBy', { names: bringers.join(', ') }))}</div>`
       : '';
@@ -1437,7 +1437,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // „Gehört Anna" (#971) — who has to bring the box, via the shared rule in
     // owner-picker.js so this panel and the ranking row above it can never
     // list one game's owners differently (#1008).
-    const bringers = boxBringers(round, session, chosenGame);
+    const bringers = boxBringers(round, session, chosenGame, shelfParty);
     if (bringers.length) {
       finishWrap.appendChild(
         h(`<div class="row-finish__note">${esc(t('result.ownedBy', { names: bringers.join(', ') }))}</div>`)

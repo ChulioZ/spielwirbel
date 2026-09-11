@@ -62,29 +62,29 @@ function ownerNames(round, ownerIds) {
    "everyone owns it" and fall into the quiet branch. The route guarantees at
    least one seat, so that is unreachable — and suppressing is the safe
    direction anyway: saying nothing beats naming the wrong person. */
-function boxBringers(round, session, game) {
+function boxBringers(round, session, game, shelfParty) {
   const ownerIds = (game && game.ownerIds) || [];
   if (!ownerIds.length) return [];
   const seated = new Set((session && session.memberIds) || []);
-  // Seated, but they came without their games (#1002), so they cannot put the
-  // box down tonight however much they own it. This is the SAME subtraction
-  // `shelfParty` (public/js/draw-pool.js) applies to the draw's party, over a
-  // different base set — there the seats, here the game's owners. It is a
-  // direct read of the field rather than a call to that function because these
-  // are classic scripts over one global scope and this file is ALSO required
-  // from Node, where the sibling is not loaded; the injection shape
-  // table-split.js uses would put a reducer parameter on a function two screens
-  // call in a loop. Nothing can drift silently either: a disagreement changes
-  // one label, never a pool, and test/owner-picker.test.js pins the two
-  // together over the same session.
-  const away = new Set((session && session.withoutShelfIds) || []);
+  // Who can actually put the box down (#1002): the seats whose shelf is in the
+  // room, i.e. the very party the draw filtered its pool by.
+  //
+  // `shelfParty` (public/js/draw-pool.js) is INJECTED, and carries NO DEFAULT,
+  // for the reason table-split.js gives about `tileValue`: these are classic
+  // scripts over one global scope and this file is ALSO required from Node,
+  // where that sibling is not loaded, so it cannot simply be called. A default
+  // — or a hand-written `seated && !away` filter, which is the same subtraction
+  // spelled a second time — would let this screen and the draw part company and
+  // hand back a plausible, confident list naming somebody who said they brought
+  // nothing, with no error anywhere. Omitting the argument throws instead.
+  const bringing = new Set(shelfParty([...seated], (session && session.withoutShelfIds) || []));
   // The QUIET rule stays on the SEATS, deliberately, while the naming below
   // moves to the people who can produce a copy. It asks about OWNERSHIP — if
   // everybody at the table owns one, nobody needs telling, whoever happened to
   // carry theirs — where the line itself answers tonight's logistics.
   const everyoneOwnsIt = [...seated].every((mid) => ownerIds.includes(mid));
   if (everyoneOwnsIt) return [];
-  const here = ownerIds.filter((x) => seated.has(x) && !away.has(x));
+  const here = ownerIds.filter((x) => bringing.has(x));
   return ownerNames(round, here.length ? here : ownerIds);
 }
 
