@@ -299,8 +299,9 @@ What the app does, in detail. For a short overview see the
   at a time. It holds both kinds of filter as labelled sections. The
   first is the round's own custom tags; the second is over the metadata imported
   from BoardGameGeek rather than anything the round maintains — a playing-time
-  budget, a complexity range, the age of the youngest person at the table, and
-  category / mechanic chips. That second half offers only
+  range with a floor as well as a ceiling (so an evening with three hours in it
+  can drop the fillers), a complexity range, the age of the youngest person at
+  the table, and category / mechanic chips. That second half offers only
   the values the round's own games actually carry — a fifteen-game shelf lists
   the handful of categories those games have, not BGG's ~84 — and it is absent
   entirely on a shelf with no such data. A game BGG knows nothing about always

@@ -80,6 +80,16 @@ game carries it. Three properties follow, and each is load-bearing:
 - a shelf carrying none of a field renders **no control at all**, rather than an
   empty one — the same thing the tag field already does with no round tags.
 
+**A control is gated on the field its own CLAUSE reads, which for playing time
+is the OTHER bound (#1001).** „At most N" compares the game's `minPlaytime`, so
+it is gated on `playtimeMax: anyNumber('minPlaytime')`; „at least N" compares
+`maxPlaytime` and is gated on `playtimeMin: anyNumber('maxPlaytime')`. The
+crossing reads like a typo and is the whole point: one shared flag would let a
+shelf whose games carry only a lower bound render an „at least" control that
+*every* game passes — a control that can never do anything, which is the second
+bullet above inverted. BGG returns 0 for an unset bound and `toPositiveInt`
+makes that a null, so the one-sided shelf is real, not hypothetical.
+
 **That last one has a second half that is easy to miss: a stored filter whose
 control is gone must be dropped too.** `normalizeMetadataFilters(raw, options)`
 is where both happen, which is why every entry point goes through it — the route,
@@ -105,6 +115,15 @@ dropped exactly like an unknown tag id, an off-ladder value collapses to
 contract). An inverted complexity range is **swapped** in the shared normalizer
 rather than dropped, so the preview and the draw cannot disagree about what a
 hand-crafted one means.
+
+**The playing-time pair is deliberately NOT swapped, and its control does not
+carry one bound along either.** A weight is one number per game, so min > max
+admits nothing; the two playtime clauses read *opposite ends of the game's own
+range*, so „at least 120, at most 30" asks for a game whose spread covers both —
+a real query, and exactly a 20–600 campaign. Swapping or carrying would silently
+answer a different question. `rangeRow`'s `carry` parameter in
+`filter-panel.js` is that distinction made explicit rather than left to whoever
+edits the row next.
 
 The **rendering** is a separate file (`public/js/filter-panel.js`) because it
 is DOM code: requiring it into a Node test would put it in the coverage report at

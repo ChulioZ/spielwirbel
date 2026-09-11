@@ -132,7 +132,7 @@ test('a half-step band narrows to what no integer bound could say (#855)', async
   // A half step is now ON the ladder, so it survives into the preset rather
   // than normalizing away.
   assert.deepEqual((await presetOf(round.id)).metadata, {
-    maxPlaytime: null, weightMin: 2.5, weightMax: 3.5,
+    maxPlaytime: null, minPlaytime: null, weightMin: 2.5, weightMax: 3.5,
     youngestAge: null, categories: [], mechanics: [],
   });
   // ...and an inverted half-step pair is still swapped, not dropped.
@@ -158,7 +158,7 @@ test('the filters survive into the preset, normalized and canonical', async () =
   assert.deepEqual(await presetOf(round.id), {
     tagIds: [], excludeTagIds: [], count: 3,
     metadata: {
-      maxPlaytime: 60, weightMin: null, weightMax: null,
+      maxPlaytime: 60, minPlaytime: null, weightMin: null, weightMax: null,
       youngestAge: null, categories: ['Economic'], mechanics: [],
     },
   });

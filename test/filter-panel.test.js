@@ -144,21 +144,122 @@ test('setting a filter shrinks the pool preview and names itself as a chip', asy
   await dom.call('showStartSession', round);
 
   openPanel();
-  choose(selectLabelled('Spieldauer'), '30');
+  choose(selectLabelled('Spieldauer höchstens'), '30');
 
   // The absent-field game is still in: that is the rule, stated through the UI.
   assert.deepEqual(previewed(), ['Azul', 'Handgetippt']);
   // …and the preview agrees with what the server would actually draw.
   assert.deepEqual(previewed(), drawPool(round, {
     playerCount: 3,
-    metadata: { maxPlaytime: 30, weightMin: null, weightMax: null, youngestAge: null, categories: [], mechanics: [] },
+    metadata: { maxPlaytime: 30, minPlaytime: null, weightMin: null, weightMax: null, youngestAge: null, categories: [], mechanics: [] },
   }).map((g) => g.title).sort());
 
   // The chip says WHICH filter is on, which is the whole reason it replaced the
   // count badge: a number could only ever say how many.
-  assert.deepEqual(appliedChips(), ['Höchstens 30 Min.']);
+  assert.deepEqual(appliedChips(), ['Spieldauer bis 30 Min.']);
   assert.equal(dom.document.querySelector('.fbar__chips').hidden, false);
   assert.equal(triggerLabel(), 'Filter (1 aktiv)');
+});
+
+test('both range rows say the direction IN THE ROW, not only to a screen reader', async () => {
+  /* Before #1001 the single playtime select spelled the direction out on every
+     option („Höchstens 30 Min."), so a sighted user could not miss it. A
+     two-select row moves that cue to position and to each select's aria-label —
+     which is what the complexity row had always done, and the reason it is
+     fixed for BOTH rows here rather than only for the one that changed.
+
+     The visible word is aria-hidden and the accessible name stays the FULL
+     phrase naming the field, so nothing is lost for a screen reader tabbing
+     straight into the select. test/i18n-parity.test.js asserts the substring
+     relation WCAG 2.5.3 needs between the two, in every locale. */
+  const round = roundFixture({
+    games: [
+      { id: 'k', title: 'Kurz', minPlaytime: 20, maxPlaytime: 45, weight: 2 },
+      { id: 'l', title: 'Lang', minPlaytime: 120, maxPlaytime: 240, weight: 4 },
+    ],
+  });
+  await dom.call('showStartSession', round);
+  openPanel();
+
+  const rows = [...dom.document.querySelectorAll('.mfilter__row--range')];
+  assert.equal(rows.length, 2, 'playing time and complexity are both range rows');
+  for (const row of rows) {
+    const field = row.querySelector('.mfilter__label').textContent;
+    const pairs = [...row.querySelectorAll('.mfilter__select')].map((sel) => ({
+      visible: sel.previousElementSibling,
+      name: sel.getAttribute('aria-label'),
+    }));
+    assert.equal(pairs.length, 2, `${field} lost a bound`);
+    for (const { visible, name } of pairs) {
+      assert.ok(visible && visible.classList.contains('mfilter__bound'),
+        `${field}: a select with no visible direction beside it`);
+      // Same wrapper, so a narrow row breaks BETWEEN the bounds and never
+      // between a word and the value it labels — the structural half of a
+      // layout rule jsdom cannot otherwise see.
+      assert.ok(visible.parentElement.classList.contains('mfilter__pair')
+        && visible.parentElement === visible.nextElementSibling.parentElement,
+        `${field}: the direction and its select can wrap apart`);
+      assert.ok(visible.textContent.trim(), `${field}: the direction word is empty`);
+      // Decorative for assistive tech: the select's own name already carries it,
+      // and announcing both would read the direction twice.
+      assert.equal(visible.getAttribute('aria-hidden'), 'true');
+      assert.ok(name.includes(visible.textContent),
+        `${field}: „${visible.textContent}" is not part of the accessible name „${name}" (WCAG 2.5.3)`);
+    }
+    // The two directions must differ, or the row would label both ends the same.
+    assert.notEqual(pairs[0].visible.textContent, pairs[1].visible.textContent, `${field}`);
+  }
+  closePanel();
+});
+
+test('the playing-time row offers BOTH bounds, and the minimum reads the game\'s UPPER one (#1001)', async () => {
+  /* The default GAMES carry only a lower bound, so this needs its own shelf —
+     which is the gating rule doing its job: „mindestens" reads `maxPlaytime`,
+     so a shelf without one must not offer it. The three described games
+     discriminate in both directions, which is the point: a minimum filter built
+     on the game's own MINIMUM would drop 'Weit' — a real 20–600 spread, exactly
+     the game a group with three hours wants — and it would look correct on
+     every other row here. */
+  const round = roundFixture({
+    games: [
+      { id: 'k', title: 'Kurz', minPlaytime: 20, maxPlaytime: 45 },
+      { id: 'w', title: 'Weit', minPlaytime: 20, maxPlaytime: 600 },
+      { id: 'l', title: 'Lang', minPlaytime: 120, maxPlaytime: 240 },
+      { id: 'u', title: 'Handgetippt' },
+    ],
+  });
+  await dom.call('showStartSession', round);
+  openPanel();
+
+  // One labelled row holding two bounds — the shape the complexity range already
+  // has, which is what lets „mindestens" and „höchstens" be read side by side.
+  assert.deepEqual(rowLabels(), ['Spieldauer'], 'two bounds, one row, one label');
+  assert.ok(selectLabelled('Spieldauer mindestens'), 'the new bound is on screen');
+  assert.ok(selectLabelled('Spieldauer höchstens'), 'beside the one that was always there');
+
+  choose(selectLabelled('Spieldauer mindestens'), '120');
+  assert.deepEqual(previewed(), ['Handgetippt', 'Lang', 'Weit'],
+    "'Weit' survives on its ceiling, 'Kurz' does not, and the absent-field game is never touched");
+  assert.deepEqual(appliedChips(), ['Spieldauer ab 120 Min.']);
+  assert.deepEqual(previewed(), drawPool(round, {
+    playerCount: 3,
+    metadata: {
+      maxPlaytime: null, minPlaytime: 120, weightMin: null, weightMax: null,
+      youngestAge: null, categories: [], mechanics: [],
+    },
+  }).map((g) => g.title).sort(), 'the preview agrees with what the server would draw');
+
+  // Both bounds at once. The pair that READS as inverted is a real query here —
+  // "spans from under half an hour to over two" — so unlike the complexity row
+  // the minimum must NOT be carried along, and the two bounds still count as the
+  // one control they are rendered as.
+  choose(selectLabelled('Spieldauer höchstens'), '30');
+  assert.equal(selectLabelled('Spieldauer mindestens').value, '120',
+    'the minimum was dragged along, answering a question nobody asked');
+  assert.deepEqual(previewed(), ['Handgetippt', 'Weit'], 'only a game spanning both survives');
+  assert.deepEqual(appliedChips(), ['Spieldauer 120–30 Min.']);
+  assert.equal(triggerLabel(), 'Filter (1 aktiv)', 'two bounds are one control');
+  closePanel();
 });
 
 test('a category chip toggles, is announced by aria-pressed, and ORs with its siblings', async () => {
@@ -218,10 +319,10 @@ test('the preset restores the last draw and drops a category the shelf lost', as
     },
   }));
 
-  assert.deepEqual(appliedChips(), ['Höchstens 60 Min.', 'Economic'],
+  assert.deepEqual(appliedChips(), ['Spieldauer bis 60 Min.', 'Economic'],
     'the surviving preset is named; "Wargame" is on no game here, so it has no chip');
   openPanel();
-  assert.equal(selectLabelled('Spieldauer').value, '60');
+  assert.equal(selectLabelled('Spieldauer höchstens').value, '60');
   const on = chipsFor('Kategorien').filter((c) => c.getAttribute('aria-pressed') === 'true');
   assert.deepEqual(on.map((c) => c.textContent), ['Economic']);
   closePanel();
@@ -251,7 +352,7 @@ test('a preset filtering a field the shelf no longer carries is dropped, not cou
     },
   }));
 
-  assert.deepEqual(appliedChips(), ['Höchstens 60 Min.'], 'the age filter is not carried');
+  assert.deepEqual(appliedChips(), ['Spieldauer bis 60 Min.'], 'the age filter is not carried');
   openPanel();
   assert.deepEqual(rowLabels(), ['Spieldauer'], 'no age control is rendered');
   closePanel();
@@ -326,7 +427,7 @@ test('the draw sends the metadata filters with the request', async () => {
   // only rescues the top level (.claude/rules/testing-views-under-jsdom.md).
   const sent = JSON.parse(JSON.stringify(calls[0].body.metadata));
   assert.deepEqual(sent, {
-    maxPlaytime: null, weightMin: null, weightMax: null,
+    maxPlaytime: null, minPlaytime: null, weightMin: null, weightMax: null,
     youngestAge: 10, categories: [], mechanics: [],
   }, 'the canonical shape goes out, so the route normalizes exactly what it offered');
   dom.set('api', async () => ({}));
@@ -357,9 +458,9 @@ test('Regal: the panel filters the cover grid with the same semantics', () => {
   assert.deepEqual(shelved(), ['Catan', 'Handgetippt'],
     'the absent-field game survives here too');
 
-  choose(selectLabelled('Spieldauer'), '30');
+  choose(selectLabelled('Spieldauer höchstens'), '30');
   assert.deepEqual(shelved(), ['Handgetippt'], 'the two controls AND together');
-  assert.deepEqual(appliedChips(), ['Höchstens 30 Min.', 'Trading']);
+  assert.deepEqual(appliedChips(), ['Spieldauer bis 30 Min.', 'Trading']);
   closePanel();
 });
 
@@ -426,8 +527,8 @@ test('Regal: ONE chip row covers both halves together (#827/#844)', () => {
   body.querySelector('.fpanel__group .filter-chips .chip').click();
   assert.deepEqual(appliedChips(), ['Kenner'], 'the tag half reaches the shared chip row');
 
-  choose(selectLabelled('Spieldauer'), '30');
-  assert.deepEqual(appliedChips(), ['Kenner', 'Höchstens 30 Min.'],
+  choose(selectLabelled('Spieldauer höchstens'), '30');
+  assert.deepEqual(appliedChips(), ['Kenner', 'Spieldauer bis 30 Min.'],
     'and the metadata half joins it — tags first, the panel\'s own section order');
   assert.equal(triggerLabel(), 'Filter (2 aktiv)',
     'the count is announced on the trigger, not left to the chips\' colour alone');
@@ -594,10 +695,10 @@ test('an applied chip removes exactly its own filter, with the panel CLOSED', as
   openPanel();
   chipsFor('Kategorien').find((c) => c.textContent === 'Economic').click();
   chipsFor('Kategorien').find((c) => c.textContent === 'Adventure').click();
-  choose(selectLabelled('Spieldauer'), '120');
+  choose(selectLabelled('Spieldauer höchstens'), '120');
   closePanel();
 
-  assert.deepEqual(appliedChips(), ['Höchstens 120 Min.', 'Economic', 'Adventure']);
+  assert.deepEqual(appliedChips(), ['Spieldauer bis 120 Min.', 'Economic', 'Adventure']);
   assert.deepEqual(previewed(), ['Catan', 'Gloomhaven', 'Handgetippt']);
 
   // Drop ONE category. Not the whole list, and not the neighbouring playtime
@@ -609,11 +710,11 @@ test('an applied chip removes exactly its own filter, with the panel CLOSED', as
   assert.equal(dismiss('Economic').getAttribute('aria-label'), 'Economic entfernen');
   dismiss('Economic').click();
 
-  assert.deepEqual(appliedChips(), ['Höchstens 120 Min.', 'Adventure']);
+  assert.deepEqual(appliedChips(), ['Spieldauer bis 120 Min.', 'Adventure']);
   assert.deepEqual(previewed(), ['Gloomhaven', 'Handgetippt'], 'the pool did not follow the chip');
   assert.deepEqual(previewed(), drawPool(round, {
     playerCount: 3,
-    metadata: { maxPlaytime: 120, weightMin: null, weightMax: null, youngestAge: null, categories: ['Adventure'], mechanics: [] },
+    metadata: { maxPlaytime: 120, minPlaytime: null, weightMin: null, weightMax: null, youngestAge: null, categories: ['Adventure'], mechanics: [] },
   }).map((g) => g.title).sort(), 'and the draw agrees with the preview');
 
   // The control inside catches up too, rather than the chip having cleared only
@@ -751,7 +852,7 @@ test('setup: the fold-in keeps the seats, guests and filter picks the user set',
   // can filter before the answer lands — with the panel OPEN, which is the state
   // the rebuild has to respect.
   openPanel();
-  choose(selectLabelled('Spieldauer'), '60');
+  choose(selectLabelled('Spieldauer höchstens'), '60');
   dom.app.querySelector('.nr-seat').click(); // Anna sits out
   const outBefore = dom.app.querySelectorAll('.nr-seat--out').length;
   assert.equal(outBefore, 1, 'the fixture never took anyone out of the session');
@@ -759,7 +860,7 @@ test('setup: the fold-in keeps the seats, guests and filter picks the user set',
   await deliver(FILLED);
 
   assert.ok(panelBody(), 'the fold-in tore the open panel down under the user');
-  assert.equal(selectLabelled('Spieldauer').value, '60', 'the fold-in discarded the user\'s pick');
+  assert.equal(selectLabelled('Spieldauer höchstens').value, '60', 'the fold-in discarded the user\'s pick');
   assert.equal(dom.app.querySelectorAll('.nr-seat--out').length, outBefore,
     'the fold-in reset the seat selection');
   // The OPEN panel is left exactly as it is — deliberately. Repainting it would
@@ -775,8 +876,8 @@ test('setup: the fold-in keeps the seats, guests and filter picks the user set',
      the panel stays up and keeps filtering while the applied chips silently
      stop following it. Verified by deleting the guard: this is the only line
      that goes red (.claude/rules/break-the-code-on-purpose.md). */
-  choose(selectLabelled('Spieldauer'), '30');
-  assert.deepEqual(appliedChips(), ['Höchstens 30 Min.'],
+  choose(selectLabelled('Spieldauer höchstens'), '30');
+  assert.deepEqual(appliedChips(), ['Spieldauer bis 30 Min.'],
     'the visible chip row stopped following the open panel — its trigger was swapped out under it');
 
   // Nothing is lost by waiting: the body is rebuilt from the live `activeGames`
@@ -785,7 +886,7 @@ test('setup: the fold-in keeps the seats, guests and filter picks the user set',
   openPanel();
   assert.deepEqual(rowLabels(), ['Spieldauer', 'Komplexität', 'Jüngste Person am Tisch'],
     'the metadata that arrived while it was open is there the next time it opens');
-  assert.equal(selectLabelled('Spieldauer').value, '30',
+  assert.equal(selectLabelled('Spieldauer höchstens').value, '30',
     'and the pick made WHILE the backfill landed survives the reopen');
   closePanel();
 });

@@ -50,6 +50,7 @@ let metaFilterSeq = 0;
 // reassigning would leave both reading a list this function no longer writes to.
 function clearMetadataFilters(state) {
   state.maxPlaytime = null;
+  state.minPlaytime = null;
   state.weightMin = null;
   state.weightMax = null;
   state.youngestAge = null;
@@ -117,52 +118,95 @@ function renderMetadataFilter(games, state, onChange) {
     return row;
   };
 
-  if (options.playtime) {
-    body.appendChild(selectRow('metaFilter.playtime', 'maxPlaytime', PLAYTIME_CHOICES,
-      (v) => t('metaFilter.playtimeOption', { n: v })));
-  }
-  if (options.weight) {
-    // Two bounds in one row, because they are one question. An inverted pick is
-    // impossible to make here — choosing a minimum above the current maximum
-    // carries the maximum up with it, and vice versa — which is the friendly
-    // half of the swap `normalizeMetadataFilters` applies to a hand-crafted one.
+  // Two bounds of one question, side by side under one label. `defs` is
+  // [[stateKey, boundLabelKey, shortKey], …] with the LOWER bound first, and it
+  // is built by the caller so a bound this shelf cannot offer is simply absent
+  // rather than rendered dead. `boundLabelKey` names the field as well as the
+  // direction (it is the accessible name); `shortKey` is the direction alone,
+  // shown in the row.
+  //
+  // `carry` is the whole reason this is a parameter and not a constant. With it,
+  // choosing a minimum above the current maximum drags the maximum up (and vice
+  // versa), so an inverted pick is unreachable — the friendly half of the swap
+  // `normalizeMetadataFilters` applies to a hand-crafted complexity range. That
+  // is right for complexity, where a weight is one number per game and an
+  // inverted range admits nothing at all, and WRONG for playing time, whose two
+  // clauses read opposite ends of the game's own range: there an
+  // inverted-looking pair asks a real question ("spans from under 30 to over
+  // 120" — Toriki) and carrying would silently answer a different one (#1001).
+  const rangeRow = (labelKey, defs, values, format, carry) => {
+    const labelId = `${uid}-${defs[0][0]}-l`;
     const row = h(`<div class="mfilter__row mfilter__row--range">
-        <span class="mfilter__label" id="${uid}-wl">${esc(t('metaFilter.weight'))}</span>
-        <span class="mfilter__range" role="group" aria-labelledby="${uid}-wl"></span>
+        <span class="mfilter__label" id="${labelId}">${esc(t(labelKey))}</span>
+        <span class="mfilter__range" role="group" aria-labelledby="${labelId}"></span>
       </div>`);
     const range = row.querySelector('.mfilter__range');
-    const bounds = [['weightMin', 'metaFilter.weightMin'], ['weightMax', 'metaFilter.weightMax']]
-      .map(([key, labelKey]) => {
-        const sel = h(`<select class="sort-select mfilter__select" aria-label="${esc(t(labelKey))}"></select>`);
-        sel.appendChild(h(`<option value="">${esc(t('metaFilter.any'))}</option>`));
-        // The LABEL is prose and goes through `fmtAvg`, so a German reader sees
-        // "2,5"; the `value` stays the bare number, because it is a machine
-        // string `Number(sel.value)` reads back (the split i18n.js:137 draws).
-        WEIGHT_CHOICES.forEach((v) => sel.appendChild(h(`<option value="${v}">${esc(fmtAvg(v))}</option>`)));
-        const paint = () => { sel.value = state[key] === null || state[key] === undefined ? '' : String(state[key]); };
-        paint();
-        painters.push(paint);
-        range.appendChild(sel);
-        return { sel, key };
-      });
+    const bounds = defs.map(([key, boundLabelKey, shortKey]) => {
+      // The direction, VISIBLE in the row. Until #1001 the playtime select spelled
+      // it out on every option („Höchstens 30 Min."), so a sighted user could not
+      // miss it; a two-select row would otherwise leave the cue to position and
+      // to an aria-label nobody sees. `aria-hidden` because the select's own name
+      // already carries the direction — announcing both reads it twice — and that
+      // name stays the FULL phrase („Komplexität mindestens"), so a screen-reader
+      // user tabbing straight in still learns which field it belongs to. WCAG
+      // 2.5.3 needs the accessible name to CONTAIN this visible text;
+      // test/i18n-parity.test.js asserts that per locale rather than trusting a
+      // phrasing coincidence to survive translation.
+      //
+      // The word and its select share ONE wrapper so a narrow row can only break
+      // BETWEEN bounds — flat siblings wrap apart, and at 375px they did
+      // (.claude/rules/label-and-control-wrap-as-one-item.md).
+      const pair = h('<span class="mfilter__pair"></span>');
+      pair.appendChild(h(`<span class="mfilter__bound" aria-hidden="true">${esc(t(shortKey))}</span>`));
+      range.appendChild(pair);
+      const sel = h(`<select class="sort-select mfilter__select" aria-label="${esc(t(boundLabelKey))}"></select>`);
+      sel.appendChild(h(`<option value="">${esc(t('metaFilter.any'))}</option>`));
+      // The option text is prose and goes through `format`, so a German reader
+      // sees "2,5"; the `value` stays the bare number, because it is a machine
+      // string `Number(sel.value)` reads back (the split i18n.js:137 draws).
+      values.forEach((v) => sel.appendChild(h(`<option value="${v}">${esc(format(v))}</option>`)));
+      const paint = () => { sel.value = state[key] === null || state[key] === undefined ? '' : String(state[key]); };
+      paint();
+      painters.push(paint);
+      pair.appendChild(sel);
+      return { sel, key };
+    });
     bounds.forEach(({ sel, key }, i) => {
       sel.addEventListener('change', () => {
         state[key] = sel.value === '' ? null : Number(sel.value);
         const other = bounds[1 - i];
-        const otherVal = state[other.key];
-        // Carry the other bound along rather than refusing the pick: the user
-        // just said what they want, and an empty pool with two visible numbers
-        // that contradict each other is the worst of both.
-        const inverted = state[key] !== null && otherVal !== null &&
-          (i === 0 ? state[key] > otherVal : state[key] < otherVal);
-        if (inverted) {
-          state[other.key] = state[key];
-          other.sel.value = String(state[key]);
+        if (carry && other) {
+          const otherVal = state[other.key];
+          // The user just said what they want, and an empty pool with two
+          // visible numbers that contradict each other is the worst of both.
+          const inverted = state[key] !== null && otherVal !== null &&
+            (i === 0 ? state[key] > otherVal : state[key] < otherVal);
+          if (inverted) {
+            state[other.key] = state[key];
+            other.sel.value = String(state[key]);
+          }
         }
         changed();
       });
     });
-    body.appendChild(row);
+    return row;
+  };
+
+  // Each playtime bound appears only if the shelf carries the field its clause
+  // READS — `playtimeMin` is gated on maxPlaytime and vice versa
+  // (draw-pool.js `metadataFilterOptions` says why the crossing is deliberate).
+  const playtimeBounds = [];
+  if (options.playtimeMin) playtimeBounds.push(['minPlaytime', 'metaFilter.playtimeMin', 'metaFilter.boundMin']);
+  if (options.playtimeMax) playtimeBounds.push(['maxPlaytime', 'metaFilter.playtimeMax', 'metaFilter.boundMax']);
+  if (playtimeBounds.length) {
+    body.appendChild(rangeRow('metaFilter.playtime', playtimeBounds, PLAYTIME_CHOICES,
+      (v) => t('metaFilter.playtimeStep', { n: v }), false));
+  }
+  if (options.weight) {
+    body.appendChild(rangeRow('metaFilter.weight',
+      [['weightMin', 'metaFilter.weightMin', 'metaFilter.boundMin'],
+        ['weightMax', 'metaFilter.weightMax', 'metaFilter.boundMax']],
+      WEIGHT_CHOICES, fmtAvg, true));
   }
   if (options.age) {
     body.appendChild(selectRow('metaFilter.age', 'youngestAge', AGE_CHOICES,
@@ -254,10 +298,20 @@ function activeFilterChips(state, tagSection) {
   const f = state || {};
   const out = tagSection && tagSection.chips ? tagSection.chips() : [];
 
-  if (f.maxPlaytime !== null && f.maxPlaytime !== undefined) {
+  // One chip for the playtime ROW, in the same three phrasings the complexity
+  // range uses and for the same reason: it is one control, so a × that cleared
+  // half of it would leave the other half on screen with no way to read why.
+  // Unlike complexity, though, the pair is two independent clauses rather than
+  // an interval — see draw-pool.js — so the „{min}–{max}" phrasing is a
+  // shorthand for two bounds and not a claim that the game must sit inside them.
+  const pLo = isFiniteNum(f.minPlaytime) ? f.minPlaytime : null;
+  const pHi = isFiniteNum(f.maxPlaytime) ? f.maxPlaytime : null;
+  if (pLo !== null || pHi !== null) {
     out.push({
-      label: t('metaFilter.playtimeOption', { n: f.maxPlaytime }),
-      remove: () => { f.maxPlaytime = null; },
+      label: pLo !== null && pHi !== null ? t('metaFilter.chipPlaytime', { min: pLo, max: pHi })
+        : pLo !== null ? t('metaFilter.chipPlaytimeMin', { min: pLo })
+          : t('metaFilter.chipPlaytimeMax', { max: pHi }),
+      remove: () => { f.minPlaytime = null; f.maxPlaytime = null; },
     });
   }
   // The two bounds are ONE filter, exactly as `countMetadataFilters` treats them

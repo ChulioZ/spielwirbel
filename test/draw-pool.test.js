@@ -36,7 +36,8 @@ const NO_FILTERS = normalizeMetadataFilters(null, {});
 // Everything on offer, for the normalizer cases that are about the VALUE rather
 // than about a shelf that cannot offer it.
 const ALL_OPTIONS = {
-  playtime: true,
+  playtimeMax: true,
+  playtimeMin: true,
   weight: true,
   age: true,
   categories: ['Economic', 'Party Game'],
@@ -184,6 +185,60 @@ test('the playtime budget tests the LOWER bound, not an average or the maximum',
   assert.equal(fitsMetadataFilters({ minPlaytime: 30 }, { maxPlaytime: 30 }), true, 'inclusive');
 });
 
+test('the minimum-playtime filter is the MIRROR of it, reading the UPPER bound', () => {
+  // Toriki's 20-600 from the other side. The clause has to read the game's
+  // MAXIMUM: reading `minPlaytime` would drop a 20-600 game from "we have three
+  // hours", which is precisely the game the filter exists to keep. Getting the
+  // bound backwards looks correct in casual use, which is why both directions
+  // are asserted here rather than one.
+  const wide = { minPlaytime: 20, maxPlaytime: 600 };
+  assert.equal(fitsMetadataFilters(wide, { minPlaytime: 120 }), true, 'a 20-600 game has three hours in it');
+  assert.equal(fitsMetadataFilters(wide, { maxPlaytime: 30 }), true, 'and twenty minutes, as before');
+  assert.equal(fitsMetadataFilters({ maxPlaytime: 45 }, { minPlaytime: 120 }), false);
+  assert.equal(fitsMetadataFilters({ maxPlaytime: 120 }, { minPlaytime: 120 }), true, 'inclusive');
+  // The absent-value rule holds per FIELD, not per control: a game BGG gave no
+  // upper bound for must not be hidden by a minimum.
+  assert.equal(fitsMetadataFilters({ minPlaytime: 20 }, { minPlaytime: 120 }), true, 'no maxPlaytime on the game');
+  assert.equal(fitsMetadataFilters({}, { minPlaytime: 120 }), true);
+});
+
+test('the two playtime bounds are independent clauses, NOT an interval', () => {
+  // They test different bounds of the game's own range, so a pair that reads as
+  // inverted is satisfiable rather than empty: "spans from under 30 to over 120"
+  // is exactly Toriki. That is why the normalizer does not swap them and the
+  // control does not carry one along - both of which complexity does, because a
+  // weight is one number and an inverted weight range really does admit nothing.
+  const wide = { minPlaytime: 20, maxPlaytime: 600 };
+  assert.equal(fitsMetadataFilters(wide, { minPlaytime: 120, maxPlaytime: 30 }), true);
+  assert.equal(
+    fitsMetadataFilters({ minPlaytime: 45, maxPlaytime: 60 }, { minPlaytime: 120, maxPlaytime: 30 }), false);
+  const out = normalizeMetadataFilters({ minPlaytime: 120, maxPlaytime: 30 }, ALL_OPTIONS);
+  assert.equal(out.minPlaytime, 120, 'a playtime pair is never swapped');
+  assert.equal(out.maxPlaytime, 30);
+});
+
+test('the two playtime controls are gated SEPARATELY, each on the field it reads', () => {
+  // A shelf whose games carry only a lower bound can offer "at most" (which
+  // reads minPlaytime) and must NOT offer "at least" (which reads maxPlaytime):
+  // every game would pass the latter, so it would be a control that can never
+  // do anything - the inverse of the empty pool section 3 of
+  // .claude/rules/provider-metadata-is-a-filter-not-a-tag.md rules out.
+  const lowerOnly = metadataFilterOptions([{ minPlaytime: 30 }]);
+  assert.equal(lowerOnly.playtimeMax, true);
+  assert.equal(lowerOnly.playtimeMin, false);
+  const upperOnly = metadataFilterOptions([{ maxPlaytime: 90 }]);
+  assert.equal(upperOnly.playtimeMax, false);
+  assert.equal(upperOnly.playtimeMin, true);
+  // Either half alone is enough to render the panel at all.
+  assert.equal(hasMetadataFilterOptions(upperOnly), true);
+  assert.equal(hasMetadataFilterOptions(lowerOnly), true);
+  // ...and a bound this shelf cannot offer is dropped, like every other vanished
+  // referent, so no chip can survive over a control that is not on screen.
+  assert.deepEqual(
+    normalizeMetadataFilters({ minPlaytime: 60, maxPlaytime: 60 }, lowerOnly),
+    { ...NO_FILTERS, maxPlaytime: 60 });
+});
+
 test('the complexity bounds are inclusive and each acts on its own', () => {
   assert.equal(fitsMetadataFilters({ weight: 2 }, { weightMin: 2 }), true);
   assert.equal(fitsMetadataFilters({ weight: 1.9 }, { weightMin: 2 }), false);
@@ -219,7 +274,8 @@ test('metadataFilterOptions offers only what the SHELF carries, deduped and sort
     { title: 'no metadata at all' },
   ];
   const o = metadataFilterOptions(games);
-  assert.equal(o.playtime, true);
+  assert.equal(o.playtimeMax, true, 'a game carries a lower bound');
+  assert.equal(o.playtimeMin, false, 'none carries an upper one');
   assert.equal(o.age, true);
   assert.equal(o.weight, false, 'no game carries a weight, so complexity is not offered');
   assert.deepEqual(o.categories, ['Economic', 'Party Game'], 'BGG\'s ~84 are not on offer');
@@ -243,10 +299,11 @@ test('normalizeMetadataFilters drops a value this shelf can no longer offer', ()
   // would count toward the badge over a control the disclosure never renders.
   const out = normalizeMetadataFilters(
     { maxPlaytime: 60, weightMin: 2, youngestAge: 10, categories: ['Economic', 'Gone'], mechanics: ['Trading'] },
-    { playtime: true, weight: false, age: false, categories: ['Economic'], mechanics: [] }
+    { playtimeMax: true, playtimeMin: true, weight: false, age: false, categories: ['Economic'], mechanics: [] }
   );
   assert.deepEqual(out, {
     maxPlaytime: 60,
+    minPlaytime: null,
     weightMin: null,
     weightMax: null,
     youngestAge: null,
@@ -340,8 +397,11 @@ test('countMetadataFilters counts CONTROLS — the complexity range is one', () 
   assert.equal(countMetadataFilters({ ...NO_FILTERS, weightMin: 2 }), 1);
   assert.equal(countMetadataFilters({ ...NO_FILTERS, weightMin: 2, weightMax: 4 }), 1,
     'two bounds are one visible row, so a badge of 2 could not be reconciled');
+  assert.equal(countMetadataFilters({ ...NO_FILTERS, minPlaytime: 120 }), 1);
+  assert.equal(countMetadataFilters({ ...NO_FILTERS, minPlaytime: 120, maxPlaytime: 180 }), 1,
+    'the playtime row is one control too');
   assert.equal(countMetadataFilters({
-    maxPlaytime: 60, weightMin: 2, weightMax: 4, youngestAge: 10,
+    minPlaytime: 30, maxPlaytime: 60, weightMin: 2, weightMax: 4, youngestAge: 10,
     categories: ['Economic'], mechanics: ['Trading'],
   }), 5, 'all five controls');
   assert.equal(countMetadataFilters({ ...NO_FILTERS, categories: [] }), 0, 'an empty list filters nothing');
@@ -350,8 +410,8 @@ test('countMetadataFilters counts CONTROLS — the complexity range is one', () 
 test('drawPool applies the metadata filters, and is untouched without them', () => {
   const shelf = {
     games: [
-      { id: 'a', title: 'Kurz', minPlaytime: 20 },
-      { id: 'b', title: 'Lang', minPlaytime: 120 },
+      { id: 'a', title: 'Kurz', minPlaytime: 20, maxPlaytime: 45 },
+      { id: 'b', title: 'Lang', minPlaytime: 120, maxPlaytime: 240 },
       { id: 'c', title: 'Unbekannt' },
     ],
   };
@@ -360,6 +420,10 @@ test('drawPool applies the metadata filters, and is untouched without them', () 
   assert.deepEqual(titles(undefined), ['Kurz', 'Lang', 'Unbekannt']);
   assert.deepEqual(titles(NO_FILTERS), ['Kurz', 'Lang', 'Unbekannt']);
   assert.deepEqual(titles({ ...NO_FILTERS, maxPlaytime: 30 }), ['Kurz', 'Unbekannt']);
+  // The server picks the new bound up through the same shared predicate, with no
+  // change of its own - and it discriminates the other way round from the line
+  // above, which is what proves the two clauses are not the same one twice.
+  assert.deepEqual(titles({ ...NO_FILTERS, minPlaytime: 90 }), ['Lang', 'Unbekannt']);
 });
 
 /* ---- the cross-boundary parity check ---------------------------------------

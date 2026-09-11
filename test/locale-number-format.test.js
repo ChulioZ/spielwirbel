@@ -148,7 +148,13 @@ async function weightLabels(t, locale) {
   await dom.call('showStartSession', { ...FILTER_ROUND, games: FILTER_ROUND.games.map((g) => ({ ...g })) });
   openPanel();
 
-  const selects = [...dom.document.querySelectorAll('.mfilter__range .mfilter__select')];
+  // Scoped to the COMPLEXITY row by its label id, not "the only range row on the
+  // panel" — since #1001 the playing-time bounds share that shape, and picking
+  // the first range row would silently measure minutes instead of weights.
+  const weightRow = [...dom.document.querySelectorAll('.mfilter__row--range')]
+    .find((r) => (r.querySelector('.mfilter__label') || {}).id?.endsWith('-weightMin-l'));
+  assert.ok(weightRow, `the '${locale}' panel carries no complexity row`);
+  const selects = [...weightRow.querySelectorAll('.mfilter__select')];
   assert.equal(selects.length, 2, `the '${locale}' panel carries no complexity bounds`);
   const options = [...selects[0].options];
   // Drive the bound the way a user does, so the applied chip is real output and
