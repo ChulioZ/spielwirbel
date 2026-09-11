@@ -362,6 +362,12 @@ const frontendGlobals = {
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
+  // the whirl's stagger table and its length (#1017) — file-local today, but
+  // listed because the scope is shared whether or not anyone else reaches in:
+  // two files declaring one top-level const is a SyntaxError no linter can see
+  // (.claude/rules/duplicate-top-level-name-across-scripts.md).
+  POT_WHIRL_DELAY: 'readonly', potStagger: 'readonly',
+  POT_TURN_MS: 'readonly', WHIRL_MS: 'readonly',
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',

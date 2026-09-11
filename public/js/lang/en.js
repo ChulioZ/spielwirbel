@@ -766,12 +766,12 @@ I18N.en = {
   'startSession.teamsLabel': 'Anyone playing as a team?',
   'startSession.teamsNote': 'A team counts as one party in the draw — and wins together.',
   'startSession.withoutShelfLabel': 'Who didn’t bring their games?',
-  'startSession.withoutShelfNote': 'Their boxes stay out of the draw today. They still play, vote and count for teams.',
+  'startSession.withoutShelfNote': 'Pick anyone who didn’t bring their games today. They still play, vote and count for teams as always — only their own games stay out of the draw.',
   'startSession.teamMake': 'Form a team',
   'startSession.addon.label': 'More options',
   'startSession.addon.teamsOne': '{n} team',
   'startSession.addon.teams': '{n} teams',
-  'startSession.addon.shelf': 'Without their games',
+  'startSession.addon.shelf': 'Someone without games?',
   'startSession.addon.shelfOn': '{names} without games',
   'startSession.teamDissolve': 'Dissolve team {name}',
   'startSession.toast.teamMin': 'A team needs at least {n} people',
@@ -781,6 +781,11 @@ I18N.en = {
   'startSession.barCount': 'How many to draw?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',
+  // The pot's numeral is set apart typographically from the noun it counts, so
+  // the label is its own string rather than a slice of the phrase above — that
+  // slice would assume every locale puts {n} first (#1017).
+  'startSession.potLabel': 'games in the pot',
+  'startSession.potLabelOne': 'game in the pot',
   'startSession.ownersHidden': '{n} more games are missing because their owners are not playing.',
   'startSession.ownersHiddenOne': '{n} more game is missing because its owner is not playing.',
   'startSession.poolEmpty': 'No game matches these settings yet.',

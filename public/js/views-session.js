@@ -4,6 +4,34 @@
 
 // =================== Session: setup ===================
 
+/* The whirl's per-cover head start (#1017), written inline as `--wd` and read by
+   the `pot-whirl` animation in styles.css. It is what makes the pot turn as a
+   pot rather than as one rigid block.
+
+   Derived from the INDEX, not from a random draw: every seat tap, tag chip and
+   stepper press re-runs updateHint(), and a delay that changed on each render
+   would make the same pot break differently every time it is looked at.
+
+   Seven entries on purpose — the panel fits 3–5 covers per row, and 7 is coprime
+   with all of them, so no column ever shares one delay down its whole length. */
+const POT_WHIRL_DELAY = [0, 0.06, 0.02, 0.08, 0.04, 0.07, 0.03];
+const potStagger = (i) => `--wd:${POT_WHIRL_DELAY[i % POT_WHIRL_DELAY.length]}s`;
+
+/* One cover's turn. The SAME decision as the `pot-whirl` keyframe's duration in
+   styles.css, and test/session-pot.test.js pins the two to each other: drifted,
+   the lobby either cuts the turn off or opens after a dead pause, with nothing
+   red anywhere. 0.9s sits deliberately off the --dur-* micro-interaction scale,
+   like the finale seal and the podium rise — see the comment on those tokens. */
+const POT_TURN_MS = 900;
+
+/* How long „Loswirbeln" holds the screen. DERIVED, because the covers do not all
+   start together: the last one to go begins a stagger later, so a flat 900 would
+   swap the lobby in while it was still turning. Computed rather than written
+   down so retuning the stagger table cannot leave this behind — the bug would be
+   a tail of covers cut off mid-spin, which nothing errors on.
+   `Math.round` because 0.08 * 1000 is 80.00000000000001. */
+const WHIRL_MS = POT_TURN_MS + Math.round(Math.max(...POT_WHIRL_DELAY) * 1000);
+
 /* `prefill` (#923) is a partial, shaped exactly like `round.lastSessionFilters`,
    that WINS over the stored preset for this entry only — the quick-start chips
    on the hub. It is a shallow merge at the top level, so a chip carrying
@@ -238,25 +266,38 @@ function showStartSession(round, prefill) {
   // resync themselves, which is why only the tag half calls this.
   const syncFilterBar = () => { if (filterPanel) filterPanel.sync(); };
   const anyFilterActive = () => selectedTags.size > 0 || countMetadataFilters(metaFilters) > 0;
-  const coverStyle = (g, w) =>
-    g.image ? ` style="background-image:url('${coverUrl(g.image, w)}')"` : '';
+  // Split into a declaration and an attribute builder because a pot cover carries
+  // TWO things in one `style` — its cover and its whirl delay — and a pre-baked
+  // `style="…"` cannot be merged with a second one.
+  const coverDecl = (g, w) => (g.image ? `background-image:url('${coverUrl(g.image, w)}')` : '');
+  const styleAttr = (...decls) => {
+    const css = decls.filter(Boolean).join(';');
+    return css ? ` style="${css}"` : '';
+  };
+  /* The pot's headline, as a numeral and the noun it counts. Deliberately NOT
+     `headline` split on its number: every shipped locale happens to put {n}
+     first today, and an eighth that does not would silently render a stray digit
+     (.claude/rules/shared-constants-across-the-stack.md's family of assumption).
+     The two spans still read as the full phrase, so the panel's <h2> states the
+     count to a screen reader exactly as it always did. */
+  const potCount = (n) => `<span class="pool-count-group"><span class="pool-count">${n}</span> `
+    + `<span class="pool-count__label">${esc(tn(n, 'startSession.potLabelOne', 'startSession.potLabel'))}</span></span>`;
   const updateHint = () => {
     const games = pool();
     // Resolved once: both presentations must always report the same number, and
     // two tn() calls is two places for that to stop being true.
     const headline = tn(games.length, 'startSession.availableOne', 'startSession.available');
 
-    // Compact strip (below 860px): the first six covers, overlapping, + a count.
-    const thumbs = games
-      .slice(0, 6)
-      .map((g) => `<span class="pool-thumb"${coverStyle(g, COVER_THUMB)} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
+    // The pot below 860px: the numeral, then EVERY cover as a tilted square on a
+    // horizontally snapping shelf (#1017). It replaces the six overlapping thumbs
+    // and the „+n" chip — a shelf that scrolls needs no chip to stand in for the
+    // games it could not fit, and below 860 this is the only presentation there
+    // is, so a capped one hides part of the pot outright. The strip still lives
+    // INSIDE the filter bar (#1015), so it costs no row of its own.
+    const shelf = games
+      .map((g, i) => `<span class="pool-thumb"${styleAttr(potStagger(i), coverDecl(g, COVER_THUMB))} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
       .join('');
-    const more = games.length > 6 ? `<span class="pool-thumb pool-thumb--more">+${games.length - 6}</span>` : '';
-    // The strip lives INSIDE the filter bar since #1015, so it costs no row of
-    // its own; its text is hidden there (the bar states the number) and the
-    // headline rides along as the thumbs' title.
-    hint.innerHTML = `<span class="pool-hint__text">${esc(headline)}</span>`
-      + `<span class="pool-thumbs" title="${esc(headline)}">${thumbs}${more}</span>`;
+    hint.innerHTML = potCount(games.length) + `<span class="pool-shelf">${shelf}</span>`;
 
     // Deliberately not a live region: the ring centre and the panel title already
     // state these two numbers, and a third announcement on every seat tap would
@@ -266,12 +307,12 @@ function showStartSession(round, prefill) {
 
     // Tile panel (860px up). An empty pool needs its own line: a grid with no
     // tiles reads as a broken panel rather than as "nothing matches yet".
-    poolTitle.textContent = headline;
+    poolTitle.innerHTML = potCount(games.length);
     poolGrid.innerHTML = games.length
       ? games
           .map(
-            (g) => `<span class="pool-tile" title="${esc(g.title)}">
-                 <span class="pool-tile__img"${coverStyle(g, COVER_CARD)}>${coverPlaceholder(g)}</span>
+            (g, i) => `<span class="pool-tile"${styleAttr(potStagger(i))} title="${esc(g.title)}">
+                 <span class="pool-tile__img"${styleAttr(coverDecl(g, COVER_CARD))}>${coverPlaceholder(g)}</span>
                  <span class="pool-tile__name">${esc(g.title)}</span>
                </span>`
           )
@@ -579,13 +620,34 @@ function showStartSession(round, prefill) {
     });
   });
 
+  /* The browser default where the media feature is unsupported is "motion is
+     fine", so an ABSENT matchMedia must not read as `reduce` — that inversion
+     would silently drop the whirl for everyone in such an environment while
+     looking like a conservative guard. */
+  const motionAllowed = () =>
+    !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* The draw is in flight. It exists because of the whirl: holding the screen
+     open for WHIRL_MS is WHIRL_MS in which a second press books a second
+     session, and the button is not disabled while the request runs. */
+  let drawing = false;
+
   form.querySelector('#go').addEventListener('click', async () => {
     let count = parseInt(countInput.value, 10);
     if (!Number.isFinite(count) || count < 1) count = 1;
+    if (drawing) return;
+    // Both guards refuse the draw outright, so nothing whirls: a pot that turns
+    // and then toasts would announce a draw that never started.
     if (joining.size === 0) return toast(t('startSession.toast.noMembers'));
     if (pool().length === 0) return toast(t('startSession.toast.noGames'));
+    /* The pot turns while the request runs — Promise.all rather than a chained
+       delay, so a slow POST costs nothing on top of the animation and a fast one
+       still gets the whole turn instead of a flicker. */
+    const whirl = motionAllowed();
+    drawing = true;
+    if (whirl) form.classList.add('is-whirl');
     try {
-      const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
+      const [data] = await Promise.all([api('POST', `/api/rounds/${round.id}/sessions`, {
         count,
         tagIds: [...selectedTags].filter(([, s]) => s === 'include').map(([id]) => id),
         excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
@@ -600,7 +662,7 @@ function showStartSession(round, prefill) {
         guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
         multiTable: tableState.multiTable, // #796; the server drops it when false
-      });
+      }), whirl ? new Promise((resolve) => setTimeout(resolve, WHIRL_MS)) : null]);
       // A per-device session opens the lobby instead: its votes arrive one
       // person at a time, from wherever those people are, so there is no single
       // hot-seat run to start. The lobby is where anyone in the room votes.
@@ -610,7 +672,19 @@ function showStartSession(round, prefill) {
       // longer a mode to choose before the draw. The drawn games stay secret: the
       // lobby renders a COUNT, never a title.
       showSessionLobby(round, data.session);
-    } catch (e) { toast(e.message); }
+    } catch (e) {
+      // Back to a still pot: the class is what selects the animation, so leaving
+      // it on would sit the screen in its mid-draw state with nothing running.
+      form.classList.remove('is-whirl');
+      toast(e.message);
+    } finally {
+      // The guard covers the FLIGHT, which is what the whirl lengthened. On
+      // success the lobby has already replaced this screen by the time this runs,
+      // so releasing it here cannot reopen the window — and a screen that is
+      // somehow still up (a caller that renders nothing) stays usable rather than
+      // dead.
+      drawing = false;
+    }
   });
 }
 

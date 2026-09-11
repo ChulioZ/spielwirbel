@@ -760,12 +760,12 @@ I18N.de = {
   'startSession.teamsLabel': 'Spielt jemand im Team?',
   'startSession.teamsNote': 'Ein Team zählt beim Auslosen als eine Partei – und gewinnt gemeinsam.',
   'startSession.withoutShelfLabel': 'Wer hat seine Spiele nicht dabei?',
-  'startSession.withoutShelfNote': 'Ihre Spiele bleiben heute bei der Auslosung außen vor. Mitspielen, Abstimmen und Teams ändern sich nicht.',
+  'startSession.withoutShelfNote': 'Wähle die Personen aus, die ihre Spiele heute nicht dabeihaben. Sie spielen, stimmen ab und zählen für Teams wie immer — nur ihre eigenen Spiele bleiben bei der Auslosung außen vor.',
   'startSession.teamMake': 'Team bilden',
   'startSession.addon.label': 'Weitere Optionen',
   'startSession.addon.teamsOne': '{n} Team',
   'startSession.addon.teams': '{n} Teams',
-  'startSession.addon.shelf': 'Ohne Spiele dabei',
+  'startSession.addon.shelf': 'Jemand ohne Spiele?',
   'startSession.addon.shelfOn': '{names} ohne Spiele',
   'startSession.teamDissolve': 'Team {name} auflösen',
   'startSession.toast.teamMin': 'Ein Team braucht mindestens {n} Personen',
@@ -775,6 +775,11 @@ I18N.de = {
   'startSession.barCount': 'Wie viele wirbeln?',
   'startSession.available': '{n} Spiele im Topf',
   'startSession.availableOne': '{n} Spiel im Topf',
+  // The pot's numeral is set apart typographically from the noun it counts, so
+  // the label is its own string rather than a slice of the phrase above — that
+  // slice would assume every locale puts {n} first (#1017).
+  'startSession.potLabel': 'Spiele im Topf',
+  'startSession.potLabelOne': 'Spiel im Topf',
   'startSession.ownersHidden': '{n} weitere Spiele fehlen, weil ihre Besitzer nicht mitspielen.',
   'startSession.ownersHiddenOne': '{n} weiteres Spiel fehlt, weil sein Besitzer nicht mitspielt.',
   'startSession.poolEmpty': 'Zu diesen Einstellungen passt noch kein Spiel.',
