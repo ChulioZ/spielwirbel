@@ -1,0 +1,156 @@
+<!-- screen-deep-dive: device-frame bench for an artifact page.
+
+     Copy this file to the scratchpad, rename it after the screen, and replace
+     render() with the prototype. Everything else is the scaffold: version tabs,
+     a laptop-size switch, three scaled device frames whose breakpoints are
+     CONTAINER queries (so they sit side by side), and a live caption per frame
+     that reports whether that viewport fits or scrolls. Publish it with the
+     Artifact tool after loading the artifact-design skill.
+
+     The tokens below are Spielwirbel's standard design copied in — a throwaway
+     page, not a second source of truth. -->
+<title>Screen Bench</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Baloo+2:wght@500;600;700;800&display=swap">
+<style>
+:root { --paper: #f3f5f2; --ink: #1b2022; --muted: #5b6669; --rule: #d7ddd8; --card: #fff; --accent: #1d6b57; --accent-ink: #fff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #141819; --ink: #e7eae6; --muted: #9aa5a2; --rule: #2b3335; --card: #1c2224; --accent: #63cba9; --accent-ink: #0f1b17; } }
+:root[data-theme="dark"] { --paper: #141819; --ink: #e7eae6; --muted: #9aa5a2; --rule: #2b3335; --card: #1c2224; --accent: #63cba9; --accent-ink: #0f1b17; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.5 'Source Sans 3', system-ui, sans-serif; }
+/* minmax(0, 1fr): a nowrap table in any section would otherwise widen the page. */
+.page { max-width: 1400px; margin: 0 auto; padding: 40px 32px 80px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; }
+.page > * { min-width: 0; }
+.bench-head { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; }
+.tabs { display: inline-flex; gap: 4px; background: var(--card); border: 1px solid var(--rule); padding: 4px; border-radius: 999px; }
+.tab { border: 0; background: none; font: 600 15px inherit; color: var(--muted); padding: 7px 16px; border-radius: 999px; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.lap { font: 500 14px ui-monospace, monospace; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--rule); background: var(--card); color: var(--ink); }
+.bench { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 26px; align-items: start; }
+@media (max-width: 900px) { .bench { grid-template-columns: 1fr; } }
+.frame { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.frame--laptop { grid-column: 1 / -1; }
+.frame__slot { position: relative; overflow: hidden; border-radius: 14px; border: 1px solid var(--rule); background: #f4f1ea; }
+.frame__slot .device { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.frame figcaption { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font: 13px ui-monospace, monospace; color: var(--muted); }
+.frame__metric.good { color: var(--accent); }
+.frame__metric.warn { color: #a1580f; }
+
+/* ---- the device: Spielwirbel's tokens, standard design, one theme on purpose ---- */
+.device { --p-page: #f4f1ea; --p-surface: #fff; --p-ink: #2b2620; --p-soft: #6b6358; --p-brand: #c2410c; --p-strong: #a8380a;
+  --p-line: #e5e1d8; --p-sunken: #ebe7de; --p-tint: #f7e3d9; --p-tint-soft: #fbf0ea; --p-edge: #e8b49a;
+  font: 18px/1.5 Nunito, -apple-system, 'Segoe UI', sans-serif; color: var(--p-ink); background: var(--p-page);
+  overflow: auto; overscroll-behavior: contain; container: device / size; }
+.device * { box-sizing: border-box; }
+.proto { min-height: 100%; display: flex; flex-direction: column; }
+.p-top { position: sticky; top: 0; z-index: 8; height: 66px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 20px; background: var(--p-surface); border-bottom: 1px solid var(--p-line); font: 700 22px 'Baloo 2', Nunito, sans-serif; color: var(--p-brand); }
+.p-app { width: 100%; max-width: 1000px; margin: 0 auto; padding: 22px 20px 40px; flex: 1; display: flex; flex-direction: column; }
+.p-app h1 { font: 700 30px/1.15 'Baloo 2', Nunito, sans-serif; margin: 0 0 20px; }
+.p-card { background: var(--p-surface); border: 1px solid var(--p-line); border-radius: 18px; padding: 16px 18px; margin-bottom: 18px; }
+/* Breakpoints are CONTAINER queries so several frames can share one page.
+   Where the app says `dvh`, write `cqh` here. */
+@container device (max-width: 520px) { .p-app { padding: 20px 14px 32px; } }
+@container device (min-width: 860px) { .p-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 32px; align-items: start; } }
+@container device (min-width: 1280px) { .p-app { max-width: 1800px; } }
+</style>
+
+<div class="page">
+  <div class="bench-head">
+    <div class="tabs" role="tablist" aria-label="Version">
+      <button class="tab" role="tab" data-v="today" aria-selected="true">Today</button>
+      <button class="tab" role="tab" data-v="b" aria-selected="false">Proposal</button>
+    </div>
+    <label style="font:13px ui-monospace,monospace;color:var(--muted)">Laptop frame
+      <select class="lap" id="lapSize">
+        <option value="1280x800">1280 × 800 · small notebook</option>
+        <option value="1470x870" selected>1470 × 870 · MacBook Air 13″</option>
+        <option value="1728x1030">1728 × 1030 · MacBook Pro 16″</option>
+        <option value="1920x1080">1920 × 1080 · desktop</option>
+      </select>
+    </label>
+  </div>
+  <div class="bench" id="bench"></div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  // ---- the prototype: replace this with the screen. `st` is per-frame state,
+  //      `v` the version tab; return the whole screen as HTML. ----
+  const createState = () => ({ count: 3 });
+  function render(st, v) {
+    return `<div class="p-top">Spielwirbel</div><div class="p-app"><h1>Screen name</h1>
+      <div class="p-grid"><div class="p-card">Version ${v} · left column</div><div class="p-card">right column · count ${st.count}</div></div></div>`;
+  }
+  function handle(e, st, v, rerender) {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    // switch (el.dataset.act) { ... mutate st ... }
+    rerender();
+  }
+  // ---- scaffold ----
+  function mount(device, v, onChange) {
+    const st = createState();
+    const proto = document.createElement('div');
+    proto.className = 'proto'; proto.dataset.v = v;
+    device.replaceChildren(proto);
+    const rerender = () => { proto.innerHTML = render(st, v); if (onChange) onChange(); };
+    proto.addEventListener('click', (e) => handle(e, st, v, rerender));
+    rerender();
+  }
+  const FRAMES = [
+    { id: 'phone', name: 'Phone', w: 390, h: 844, maxH: 640 },
+    { id: 'tablet', name: 'Tablet, portrait', w: 768, h: 1024, maxH: 640 },
+    { id: 'laptop', name: 'Laptop', w: 1470, h: 870, maxH: 1200 },
+  ];
+  const bench = document.getElementById('bench');
+  const lapSel = document.getElementById('lapSize');
+  let variant = 'today';
+  const lap = () => { const [w, h] = lapSel.value.split('x').map(Number); return { w, h }; };
+  const spec = (f) => (f.id === 'laptop' ? { ...f, ...lap() } : f);
+  function frameEl(f) {
+    const fig = document.createElement('figure');
+    fig.className = 'frame frame--' + f.id;
+    fig.innerHTML = `<div class="frame__slot"><div class="device" style="width:${f.w}px;height:${f.h}px" tabindex="0" aria-label="${f.name} ${f.w} × ${f.h}"></div></div>
+      <figcaption><span><b>${f.name}</b> · ${f.w} × ${f.h}</span><span class="frame__metric"></span></figcaption>`;
+    return fig;
+  }
+  // The honest caption: scrollHeight is in the device's own CSS px, unaffected by the transform.
+  function metric(fig, f) {
+    const d = fig.querySelector('.device');
+    const over = d.scrollHeight - d.clientHeight;
+    const grid = d.querySelector('.p-grid');
+    const gut = grid ? Math.round((d.clientWidth - grid.offsetWidth) / 2) : 0;
+    const m = fig.querySelector('.frame__metric');
+    m.textContent = (over > 0 ? `scrolls ${over} px` : 'fits without scrolling') + (f.id === 'laptop' ? ` · gutter ${gut} px per side` : '');
+    m.className = 'frame__metric ' + (over > 0 ? 'warn' : 'good');
+  }
+  // transform, never zoom: the container keeps its real width, so the queries resolve at the device size.
+  function fit(fig, f) {
+    const slot = fig.querySelector('.frame__slot'); const dev = fig.querySelector('.device');
+    slot.style.width = '';
+    // A hidden or not-yet-laid-out page reports 0 here; scale 1 beats scale 0.
+    const avail = fig.clientWidth || slot.clientWidth || f.w;
+    const s = Math.min(1, avail / f.w, f.maxH / f.h);
+    dev.style.transform = `scale(${s})`;
+    slot.style.width = Math.round(f.w * s) + 'px'; slot.style.height = Math.round(f.h * s) + 'px';
+  }
+  function build() {
+    bench.replaceChildren();
+    FRAMES.forEach((f) => {
+      const sp = spec(f); const fig = frameEl(sp); bench.appendChild(fig);
+      mount(fig.querySelector('.device'), variant, () => requestAnimationFrame(() => metric(fig, sp)));
+      fit(fig, sp); metric(fig, sp);
+    });
+  }
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
+    variant = b.dataset.v;
+    document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t === b)));
+    build();
+  }));
+  lapSel.addEventListener('change', build);
+  let raf = 0;
+  window.addEventListener('resize', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() =>
+    bench.querySelectorAll('.frame').forEach((fig, i) => fit(fig, spec(FRAMES[i])))); });
+  build();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => bench.querySelectorAll('.frame').forEach((fig, i) => metric(fig, spec(FRAMES[i]))));
+})();
+</script>
