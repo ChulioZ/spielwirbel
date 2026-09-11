@@ -6964,6 +6964,27 @@ kbd {
   .setup-grid--session .setup-addons-wrap { margin-bottom: 10px; }
   .setup-grid--session .setup-filterbar { margin-bottom: 10px; }
   .setup-grid--session .setup-bar { padding: 10px 12px; gap: 8px 12px; }
+  /* The pot's caption is pure repetition on a phone — the action bar two blocks
+     below states the whole phrase („4 spielen mit · 8 Spiele im Topf") — and it
+     is the widest thing competing with the covers for the bar's single row.
+     Measured at 390px: the caption costs 81px of a 362px bar, leaving the shelf
+     154px, i.e. two covers.
+
+     CLIPPED, not `display: none`: the numeral on its own would be announced as a
+     bare „8" sitting in the filter bar, so the caption stays in the accessibility
+     tree and only leaves the screen. test/session-pot.test.js pins that choice,
+     because `display: none` is the obvious edit and is silently worse. */
+  .pool-hint .pool-count__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .pool-hint .pool-count-group { margin-right: 8px; }
 }
 
 /* ---- Voting: member-colored progress, handover, mood scale ---- */

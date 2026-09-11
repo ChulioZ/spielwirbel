@@ -321,6 +321,26 @@ test('the pot lifts a cover under the pointer, and only inside the panel', () =>
     `"${hover && hover[0]}" lifts every .pool-tile, including the member page's game grid`);
 });
 
+test('the phone hides the pot caption from the EYE, not from the reader', () => {
+  /* On a phone the caption is pure repetition — the action bar states the whole
+     phrase — and it is the widest thing competing with the covers for the bar's
+     one row: it cost 81px of 362, leaving two covers visible instead of three.
+     `display: none` is the obvious way to reclaim that and is silently worse:
+     it leaves a screen reader a bare „8" sitting in the filter bar. */
+  const phone = rulesUnder(/max-width:\s*(639|640)px/);
+  const hidden = phone.filter(([sel]) => /\.pool-count__label/.test(sel));
+  assert.equal(hidden.length, 1,
+    'the pot caption is not taken off the phone row, so the shelf keeps competing with it for width');
+
+  const [sel, body] = hidden[0];
+  assert.ok(!/display:\s*none/.test(body),
+    `"${sel}" removes the caption from the accessibility tree, leaving the numeral announced as a bare number`);
+  assert.match(body, /clip-path|clip:/,
+    `"${sel}" does not clip the caption, so whatever hides it is not the visually-hidden pattern`);
+  assert.match(body, /position:\s*absolute/,
+    `"${sel}" leaves the caption in flow, so it still claims the width it was taken off the row to release`);
+});
+
 test('the pot shelf scrolls rather than clipping the games it cannot fit', () => {
   const body = bodyOf('.pool-shelf');
   assert.ok(body, 'no .pool-shelf rule');
