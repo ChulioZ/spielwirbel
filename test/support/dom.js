@@ -208,4 +208,48 @@ function loadApp(opts = {}) {
    as the spec being one turn early. */
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 
-module.exports = { loadApp, loadI18n, translator, flush };
+/* The standalone contact page (public/kontakt.html + public/js/pages/kontakt.js).
+   It is a page IIFE OUTSIDE the SPA's shared scope, so it has no <script> tag in
+   index.html and loadApp() above never sees it — but it needs the same treatment:
+   the real markup in jsdom, the script through `vm` so its lines stay out of the
+   coverage report (`.claude/rules/testing-views-under-jsdom.md`).
+
+   Shared by every spec that boots it so the setup — and in particular the
+   navigator.language stub guard below — exists once.
+
+   `fetch` is stubbed to REJECT by default: the page probes /api/config on load
+   and swallows the failure in its own .catch(), and a spec that reaches the
+   network is a bug in the spec. Pass one in to record what the form posts. */
+const KONTAKT_HTML = fs.readFileSync(path.join(ROOT, 'public', 'kontakt.html'), 'utf8');
+const KONTAKT_JS = fs.readFileSync(path.join(JS_DIR, 'pages', 'kontakt.js'), 'utf8');
+
+function loadKontakt({ saved, pageLang, systemLanguage = 'en-US', fetch, storageBlocked } = {}) {
+  const dom = new JSDOM(KONTAKT_HTML, {
+    url: 'https://spielwirbel.app/kontakt.html',
+    runScripts: 'outside-only',
+  });
+  if (saved !== undefined) dom.window.localStorage.setItem('locale', saved);
+  if (pageLang !== undefined) dom.window.localStorage.setItem('kontaktLang', pageLang);
+  if (storageBlocked) {
+    // What Chrome does with site data blocked: touching the property throws.
+    Object.defineProperty(dom.window, 'localStorage', {
+      get() { throw new Error('SecurityError: storage is blocked'); },
+      configurable: true,
+    });
+  }
+  Object.defineProperty(dom.window.navigator, 'language', {
+    value: systemLanguage,
+    configurable: true,
+  });
+  // Guard the stub itself: jsdom answers 'en-US' by default, so a defineProperty
+  // that failed to take would make every "system language is X" case pass for
+  // the wrong reason.
+  assert.equal(dom.window.navigator.language, systemLanguage, 'navigator.language stub did not take');
+
+  const ctx = dom.getInternalVMContext();
+  ctx.fetch = fetch || (() => Promise.reject(new Error('loadKontakt: unstubbed fetch')));
+  vm.runInContext(KONTAKT_JS, ctx, { filename: 'public/js/pages/kontakt.js' });
+  return dom;
+}
+
+module.exports = { loadApp, loadI18n, translator, flush, loadKontakt };
