@@ -55,6 +55,36 @@ test('Dockerfile pins an EXACT Node patch in every stage', () => {
     + ' a pin that goes backwards is worse than the floating tag it replaced');
 });
 
+test('CI exercises the Node major production is pinned to (#994)', () => {
+  const major = Number(read('Dockerfile').match(/^FROM\s+node:(\d+)\./m)[1]);
+  const ci = read('.github/workflows/ci.yml');
+
+  // The matrix spans the supported range and must INCLUDE production's runtime,
+  // or `npm test` never runs on what actually ships.
+  const matrix = ci.match(/node-version:\s*\[([^\]]+)\]/);
+  assert.ok(matrix, 'ci.yml must declare a test matrix');
+  const versions = matrix[1].split(',').map((v) => v.trim());
+  assert.ok(versions.includes(`${major}.x`),
+    `the test matrix ${JSON.stringify(versions)} must include the pinned ${major}.x`);
+
+  // Every SINGLE-version job in ci.yml (coverage, postgres) must run on that major.
+  // `postgres` is the sharp one: it is the only thing exercising the data-access
+  // contract against a real database, so on a different runtime the pg/Knex stack is
+  // unproven where it actually runs — it sat on 24.x while production moved to 26.
+  // The bracketed matrix line and the templated `${{ matrix.node-version }}` line do
+  // not match this pattern, so only real pins are collected. lint.yml is deliberately
+  // NOT scanned: it runs on the `engines` floor (22.x) so `node --check` proves the
+  // source still parses on the OLDEST supported Node, which is a different question.
+  const pinned = [...ci.matchAll(/^\s*node-version:\s*(\d+)\.x\s*$/gm)].map((m) => Number(m[1]));
+  assert.ok(pinned.length >= 2,
+    `expected ci.yml's single-version jobs, found ${pinned.length} — pattern drifted?`);
+  for (const v of pinned) {
+    assert.equal(v, major,
+      `a ci.yml job pins Node ${v}.x while the Dockerfile pins ${major}.x —`
+      + ' the suite must run on the runtime production ships');
+  }
+});
+
 // Split .github/dependabot.yml into its `- package-ecosystem:` blocks. No YAML
 // parser is a dependency here and test/ci-workflow.test.js scans its workflows as
 // text too, so this follows that shape. A block runs from its own

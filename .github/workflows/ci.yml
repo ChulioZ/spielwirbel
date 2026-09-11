@@ -38,7 +38,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.x
+          # Tracks the Dockerfile's pinned major, so the suite is measured on the
+          # runtime production actually runs. test/docker.test.js asserts it.
+          node-version: 26.x
           cache: npm
       - run: npm ci
       - run: npm run coverage:ci
@@ -78,7 +80,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.x
+          # Must track the Dockerfile's pinned major: this job is the only thing that
+          # exercises the data-access contract against a real database, so running it
+          # on a different runtime than production leaves the pg/Knex stack unproven
+          # there. It sat on 24.x while production moved to 26 (#994).
+          # test/docker.test.js asserts the two stay together.
+          node-version: 26.x
           cache: npm
       - run: npm ci
       - run: node --test --test-concurrency=1 test/repo.postgres.test.js test/migrate.postgres.test.js

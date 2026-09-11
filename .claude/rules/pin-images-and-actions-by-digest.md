@@ -104,6 +104,20 @@ stick**, measured on #988/#999:
   *forever* without ever being mergeable. **When a docker PR arrives without a
   patch component, hand-correct the tag** rather than merging or holding it.
 
+**CI's own Node versions ride the pin.** `ci.yml`'s `coverage` and `postgres` jobs
+track the Dockerfile's major, and the `test` matrix must include it — asserted in
+`test/docker.test.js`. `postgres` is the sharp one: it is the only job exercising
+the data-access contract against a real database, so while it sat on 24.x under a
+26 production pin, the pg/Knex stack was unproven on the runtime that actually
+ships. `lint.yml` deliberately stays on the `engines` floor (22.x) and is not
+scanned — `node --check` there answers the opposite question, whether the source
+still parses on the OLDEST supported Node.
+
+One consequence to expect rather than debug: **a Dependabot major bump now goes
+red until `ci.yml` moves with it.** That is the intended prompt, not a defect —
+under the accept-majors policy a major is reviewed by hand anyway (and, per #999,
+usually needs its tag granularity corrected first).
+
 `test/docker.test.js` asserts both halves: the `docker` ecosystem exists, and its
 block contains no `semver-major` anywhere. The ban is deliberately blunt rather
 than matching an `ignore:` shape — the same rule can be written as an inline array
