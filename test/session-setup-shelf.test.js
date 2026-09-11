@@ -49,6 +49,16 @@ const roundFixture = (games = OWNED_GAMES) => ({
   games: games.map((g) => ({ ...g })),
 });
 
+/* Since #1015 the control sits behind the „Ohne Spiele dabei" add-on chip, so a
+   spec has to open it before the chips it drives are in the document. `showAddon`
+   is the whole difference; nothing below it changed, and every pool assertion is
+   still pinned against `drawPool()` over the same round. */
+const addonChip = () => dom.app.querySelector('.setup-addons__chip[data-addon="shelf"]');
+const showAddon = () => {
+  const chip = addonChip();
+  assert.ok(chip, 'the shelf add-on chip is not offered on this round');
+  if (chip.getAttribute('aria-expanded') !== 'true') chip.click();
+};
 const chipRow = () => dom.app.querySelector('#shelfChips');
 const chips = () => [...dom.app.querySelectorAll('#shelfChips .chip')];
 // The chip's own text sits AFTER the avatar span, so `textContent` would read
@@ -65,15 +75,15 @@ test('an unmarked shelf is not offered the control at all', async () => {
     ({ id: g.id, title: g.title, minPlayers: g.minPlayers, maxPlayers: g.maxPlayers }));
   await dom.call('showStartSession', roundFixture(unmarked));
 
-  assert.equal(chipRow(), null,
+  assert.equal(addonChip(), null,
     'with nobody recorded as owning anything the control could not change a single row');
-  assert.equal(dom.app.querySelector('#shelfMount'), null,
-    'and the empty mount must not sit in the column costing a gap');
+  assert.equal(chipRow(), null, 'and no chip row was built behind it either');
   assert.deepEqual(previewed(), ['Annas', 'Beide', 'Bens', 'Unmarkiert']);
 });
 
 test('a marked shelf offers one chip per SEATED member, all off', async () => {
   await dom.call('showStartSession', roundFixture());
+  showAddon();
 
   assert.deepEqual(chips().map(chipName), ['Anna', 'Ben', 'Cleo']);
   assert.deepEqual(chips().map((c) => c.getAttribute('aria-pressed')), ['false', 'false', 'false'],
@@ -85,6 +95,7 @@ test('a marked shelf offers one chip per SEATED member, all off', async () => {
 test('marking a seated member drops their solely-owned games — and KEEPS the co-owned one', async () => {
   const round = roundFixture();
   await dom.call('showStartSession', round);
+  showAddon();
 
   chipFor('Anna').click();
 
@@ -103,6 +114,7 @@ test('marking a seated member drops their solely-owned games — and KEEPS the c
 test('marking EVERY owner leaves only the games nobody is recorded as owning', async () => {
   const round = roundFixture();
   await dom.call('showStartSession', round);
+  showAddon();
 
   chipFor('Anna').click();
   chipFor('Ben').click();
@@ -117,6 +129,7 @@ test('marking EVERY owner leaves only the games nobody is recorded as owning', a
 
 test('the count of games hidden by absent owners follows the marks, not only the seats', async () => {
   await dom.call('showStartSession', roundFixture());
+  showAddon();
   const note = () => dom.app.querySelector('.pool-owners-note').textContent;
 
   assert.equal(note(), '', 'everyone is here with their shelf — nothing to explain');
@@ -127,6 +140,7 @@ test('the count of games hidden by absent owners follows the marks, not only the
 
 test('taking a member off the table takes their mark with them', async () => {
   await dom.call('showStartSession', roundFixture());
+  showAddon();
 
   chipFor('Anna').click();
   assert.deepEqual(previewed(), ['Beide', 'Bens', 'Unmarkiert']);
@@ -149,6 +163,7 @@ test('the draw sends the MARKS, and the full seat list beside them', async () =>
     return { session: { id: 's1' } };
   });
   await dom.call('showStartSession', roundFixture());
+  showAddon();
 
   chipFor('Ben').click();
   dom.app.querySelector('#go').click();

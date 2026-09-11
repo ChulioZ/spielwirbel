@@ -308,7 +308,14 @@ test('a setup form is two columns from its breakpoint, with room for a tile row'
     'a track without a 0 minimum lets its content blow the grid out');
 
   const gap = Number(hit.body.match(/column-gap:\s*(\d+)px/)[1]);
-  const column = (from - 2 * sidePadding(bodyOf('.app')) - gap) / 2;
+  /* The panel sits in the SECOND track, and since #1015 the tracks are not equal
+     (2fr / 3fr). Halving the grid measured a column the panel is not in — which
+     UNDERSTATES it today and would silently overstate it the moment anyone made
+     the preview side the narrower one, i.e. exactly the change this assertion
+     exists to catch. So read the fractions and size the panel's own track. */
+  const fr = [...tracks.matchAll(/minmax\(\s*0\s*,\s*([\d.]+)fr\s*\)/g)].map((m) => Number(m[1]));
+  assert.equal(fr.length, 2, `.setup-grid declares "${tracks.trim()}" rather than two fr tracks`);
+  const column = (from - 2 * sidePadding(bodyOf('.app')) - gap) * (fr[1] / (fr[0] + fr[1]));
   // rulesUnder() flattens every block matching the query, so the panel is found
   // whether or not it shares a block with the grid today.
   const panel = bodyOf('.setup-panel', rulesUnder(/min-width:\s*860px/));

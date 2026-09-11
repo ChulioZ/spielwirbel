@@ -161,6 +161,25 @@ const OWNER_PAIRS = [
 ];
 PAIRS.push(...OWNER_PAIRS);
 
+/* The session setup's add-on chips (#1015). Each states how many of its option
+   is set — that label is the ONLY thing on screen once the body is closed, so an
+   uninflected „1 Gäste" is the one place this screen says a number out loud. */
+const ADDON_PAIRS = [
+  {
+    what: 'startSession.addon.guests — the setup screen\'s guest chip',
+    one: 'startSession.addon.guestsOne', other: 'startSession.addon.guests', params: {},
+    de: ['1 Gast', '2 Gäste'],
+    en: ['1 guest', '2 guests'],
+  },
+  {
+    what: 'startSession.addon.teams — the setup screen\'s team chip',
+    one: 'startSession.addon.teamsOne', other: 'startSession.addon.teams', params: {},
+    de: ['1 Team', '2 Teams'],
+    en: ['1 team', '2 teams'],
+  },
+];
+PAIRS.push(...ADDON_PAIRS);
+
 const SILENT_PAIRS = [
   {
     what: 'home.lastPlayedWon — the round card\'s last-played line',

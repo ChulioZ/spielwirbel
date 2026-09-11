@@ -524,6 +524,10 @@ public/
                      screens that start a session (issue #532)
     team-picker.js   the team field: group two or more of those people into one
                      party, shared by the same two screens (issue #575)
+    setup-addons.js  the add-on chip row those two fields now sit behind: one
+                     chip per rare session option, each carrying its own state,
+                     with the open one unfolding into a single body BELOW the
+                     row (issue #1015)
     score-info.js    the ⓘ that explains the Spielwirbel-Score, once per screen
                      beside its primary occurrence (issue #893)
     game-info.js     BGG provider-info surfaces (issues #717/#724): the info

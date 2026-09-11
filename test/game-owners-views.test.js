@@ -12,6 +12,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
+const { bodyOf } = require('./support/css');
 
 const ANNA = { id: 'm1', name: 'Anna', color: '#c2410c', userId: 'u-anna' };
 const BEN = { id: 'm2', name: 'Ben', color: '#1d9e75' };
@@ -320,4 +321,20 @@ test('the ranking line is suppressed on the row that IS the chosen game (#1008)'
   assert.equal(catan[1], null, 'the row line stands down for the finish panel');
   assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
     ['Gehört Anna'], 'and the panel still carries it (#971)');
+});
+
+test('the owners note costs no layout while it is empty (#1015)', () => {
+  /* It is an announced live region, so it must stay in the tree with an empty
+     text rather than being removed or `hidden` — a region revealed with its text
+     already in place is never announced
+     (.claude/rules/accessibility-contrast-and-modals.md §4). That only works if
+     the empty node is free, and it was not: with no rule of its own a bare <p>
+     kept the UA's 1em margins, so the normal evening — where nobody is away and
+     the line says nothing — paid 36px on the screen #1015 exists to shorten.
+
+     A CSS-text assertion because jsdom applies no external stylesheet, which is
+     the one layer that can hold this. */
+  const empty = bodyOf('.pool-owners-note:empty');
+  assert.ok(empty, 'no `.pool-owners-note:empty` rule — the empty status line is back to costing a <p>\'s margins');
+  assert.match(empty, /margin:\s*0/);
 });

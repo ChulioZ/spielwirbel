@@ -33,12 +33,6 @@ function showStartSession(round, prefill) {
   // wrapped input labels nothing at all. `aria-labelledby` on the group is what
   // actually ties the text to the seats/chips.
   //
-  // The „Mehrere Tische" checkbox (#796) is deliberately NOT wrapped in a
-  // `.field`: `.field label` is (0,1,1) and beats any component rule written for
-  // it, stacking the box above its own text and bolding it
-  // (.claude/rules/label-rows-lose-to-field-label.md). `.multi-table` restates
-  // the 18px spacing `.field` would have provided.
-  //
   // `.setup-grid` splits the screen along the two questions it actually asks:
   // WHO is at the table (left) and WHAT gets drawn (right — the filter control
   // and the count that shape the pool, the resulting pool itself, and the button
@@ -46,47 +40,55 @@ function showStartSession(round, prefill) {
   // block, so the DOM order below IS the phone order — and it is byte-for-byte
   // the order this screen already had, so nothing moves on a phone.
   //
+  // Since #1015 the four exception questions — guests, teams, „wer hat seine
+  // Spiele nicht dabei", „mehrere Tische" — are the add-on CHIP row below the
+  // ring rather than four always-open fields. Measured before: they cost ~640px
+  // on every visit, ~200px of it hint text, for an evening that has no guests,
+  // no teams, everyone's shelf present and one table. A layout-only fix was
+  // prototyped and still scrolled ~200px on a 13" laptop, because the height is
+  // in the content — so the content collapses and the chip carries its state.
+  //
+  // The count and „Loswirbeln" moved out of the row above the pool into
+  // `.setup-bar` at the end of the column: on a phone the button used to be the
+  // last thing on a 1667px page, at y=1454. It is a plain in-flow card and
+  // deliberately NOT sticky — see the stylesheet, and
+  // .claude/rules/sticky-bottom-bar-needs-slack-below-it.md for the measurement.
+  //
   // The pool is rendered twice on purpose — a tile panel beside the form, the
-  // compact overlapping strip below it — and CSS picks one by width, the same
-  // "render both, let the viewport decide" shape the rail and dock use. Both are
-  // filled by the one updateHint() below, so they cannot drift.
-  const form = h(`<div class="setup-grid">
+  // compact overlapping strip inside the filter bar below it — and CSS picks one
+  // by width, the same "render both, let the viewport decide" shape the rail and
+  // dock use. Both are filled by the one updateHint() below, so they cannot
+  // drift, and the bar's summary is resolved from the same string.
+  const form = h(`<div class="setup-grid setup-grid--session">
       <div class="setup-grid__main">
         <div class="field">
           <div class="field__label" id="seatsLabel">${esc(t('startSession.membersLabel'))}</div>
           <div id="seatMount"></div>
           <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
         </div>
-        <div id="guestMount"></div>
-        <div id="teamMount"></div>
-        <div id="shelfMount"></div>
-        <div class="multi-table">
-          <label class="multi-table__row">
-            <input type="checkbox" id="multiTable" />
-            <span>${esc(t('startSession.multiTable'))}</span>
-          </label>
-          <div class="muted field__hint">${esc(t('startSession.multiTableNote'))}</div>
-        </div>
+        <div id="addonMount"></div>
+        <div class="muted field__hint setup-addons__note" id="multiTableNote" hidden>${esc(t('startSession.multiTableNote'))}</div>
       </div>
       <div class="setup-grid__aside">
         <div class="setup-filterbar">
-          <div class="field">
-            <label for="count">${esc(t('startSession.countLabel'))}</label>
-            <div class="stepper">
-              <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
-              <input id="count" class="stepper__val" inputmode="numeric" value="3" />
-              <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
-            </div>
-          </div>
+          <div class="pool-hint" id="poolHint"></div>
           <div id="filterMount" class="fbar-mount"></div>
         </div>
         <div class="setup-panel">
           <h2 class="setup-panel__title" id="poolTitle"></h2>
           <div class="setup-panel__body" id="poolGrid"></div>
         </div>
-        <div class="pool-hint" id="poolHint"></div>
         <div id="poolReset"></div>
-        <div class="toolbar">
+        <div class="setup-bar">
+          <div class="setup-bar__count">
+            <label for="count">${esc(t('startSession.barCount'))}</label>
+            <div class="stepper">
+              <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+              <input id="count" class="stepper__val" inputmode="numeric" value="3" />
+              <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+            </div>
+          </div>
+          <p class="setup-bar__summary" id="barSummary"></p>
           <button id="go" class="btn btn--primary btn--lg"><i class="ti ti-tornado" aria-hidden="true"></i> ${esc(t('startSession.draw'))}</button>
         </div>
       </div>
@@ -134,6 +136,11 @@ function showStartSession(round, prefill) {
   // (draw-pool.js), so the preview below cannot narrow differently than the
   // draw will (.claude/rules/shared-constants-across-the-stack.md).
   const shelfSeats = () => shelfParty([...joining], [...awayShelves]);
+  // The chip row (#1015). Built empty here, before anything that has to relabel
+  // it: the chips themselves are added once every body they open exists (the
+  // shelf one does not exist on every round), but `relabelAddons()` is a safe
+  // no-op until then, so the change callbacks below can all name it.
+  const addons = renderSetupAddons(t('startSession.addon.label'));
   // Guests (#458): plain names, held only here until the draw POSTs them — the
   // server mints their ids. Frozen at the draw, exactly like the seat selection.
   // The field is shared with the direct-play sheet (#532); its callback names
@@ -142,13 +149,17 @@ function showStartSession(round, prefill) {
   const guestPicker = renderGuestPicker(t('startSession.guestsNote'), () => {
     seatTable.refreshSeats();
     teamPicker.refreshTeams();
+    addons.relabelAddons();
     updateHint();
   });
   const guests = guestPicker.guests;
   // Teams (#575): two or more of the people above playing as one party. Frozen
   // at the draw like the seats and the guests, and the reason the pool count
   // below is not simply a headcount.
-  const teamPicker = renderTeamPicker(round, joining, guestPicker, t('startSession.teamsNote'), () => updateHint());
+  const teamPicker = renderTeamPicker(round, joining, guestPicker, t('startSession.teamsNote'), () => {
+    addons.relabelAddons();
+    updateHint();
+  });
   const playerCount = () =>
     joining.size + guests.length - teamPicker.teamedPeopleCount() + teamPicker.teamCount();
   // Multi-table mode (#796). Preset from the same #252 blob as everything else on
@@ -206,6 +217,12 @@ function showStartSession(round, prefill) {
   const poolTitle = form.querySelector('#poolTitle');
   const poolGrid = form.querySelector('#poolGrid');
   const poolReset = form.querySelector('#poolReset');
+  // The action bar's own line. It restates the two numbers the screen is about —
+  // how many people are at the table, how many games are in the pot — because on
+  // a phone the panel is not rendered at all, and it must never disagree with the
+  // panel title where both are: they come from the one `headline` resolved in
+  // updateHint() below.
+  const barSummary = form.querySelector('#barSummary');
   // Appended once, next to the reset hatch, and filled by updateHint() below.
   const ownersNote = h('<p class="muted pool-owners-note" role="status" aria-live="polite"></p>');
   poolReset.after(ownersNote);
@@ -238,7 +255,17 @@ function showStartSession(round, prefill) {
       .map((g) => `<span class="pool-thumb"${coverStyle(g, COVER_THUMB)} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
       .join('');
     const more = games.length > 6 ? `<span class="pool-thumb pool-thumb--more">+${games.length - 6}</span>` : '';
-    hint.innerHTML = `<span class="pool-hint__text">${esc(headline)}</span><span class="pool-thumbs">${thumbs}${more}</span>`;
+    // The strip lives INSIDE the filter bar since #1015, so it costs no row of
+    // its own; its text is hidden there (the bar states the number) and the
+    // headline rides along as the thumbs' title.
+    hint.innerHTML = `<span class="pool-hint__text">${esc(headline)}</span>`
+      + `<span class="pool-thumbs" title="${esc(headline)}">${thumbs}${more}</span>`;
+
+    // Deliberately not a live region: the ring centre and the panel title already
+    // state these two numbers, and a third announcement on every seat tap would
+    // talk over the ownersNote below, which IS one.
+    barSummary.textContent = tn(joining.size + guests.length,
+      'startSession.tableCountOne', 'startSession.tableCount') + ' · ' + headline;
 
     // Tile panel (860px up). An empty pool needs its own line: a grid with no
     // tiles reads as a broken panel rather than as "nothing matches yet".
@@ -288,16 +315,14 @@ function showStartSession(round, prefill) {
   const seatTable = renderSeatPicker(round, joining, () => {
     teamPicker.refreshTeams();
     refreshShelfChips();
+    // Unseating somebody can dissolve their team and drops their shelf mark, so
+    // two of the four chips can change from a click on the ring.
+    addons.relabelAddons();
     updateHint();
   }, () => guests.length);
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
-  const multiTableBox = form.querySelector('#multiTable');
-  multiTableBox.checked = tableState.multiTable;
-  multiTableBox.addEventListener('change', () => {
-    tableState.multiTable = multiTableBox.checked;
-    updateHint();
-  });
+  const multiTableNote = form.querySelector('#multiTableNote');
   /* „Wer hat seine Spiele nicht dabei?" (#1002) — a chip per seated member,
      OFF by default.
 
@@ -311,13 +336,13 @@ function showStartSession(round, prefill) {
      `ownedByParty` is true for every game, so the control could not change a
      single row, and offering one that cannot do anything is exactly what
      `metadataFilterOptions` drops a metadata control to avoid. */
-  const shelfMount = form.querySelector('#shelfMount');
   const shelfIsMarked = activeGames.some((g) => (g.ownerIds || []).length > 0);
   let refreshShelfChips = () => {};
-  if (!shelfIsMarked) {
-    shelfMount.remove();
-  } else {
-    const shelfField = h(`<div class="field">
+  // Null on an unmarked shelf, which is what decides whether the chip is offered
+  // at all — the control has no body, so there is nothing to open.
+  let shelfField = null;
+  if (shelfIsMarked) {
+    shelfField = h(`<div class="field">
         <div class="field__label" id="shelfLabel">${esc(t('startSession.withoutShelfLabel'))}</div>
         <div class="filter-chips" id="shelfChips" role="group" aria-labelledby="shelfLabel"></div>
         <div class="muted field__hint">${esc(t('startSession.withoutShelfNote'))}</div>
@@ -342,17 +367,71 @@ function showStartSession(round, prefill) {
           const now = awayShelves.has(m.id);
           chip.classList.toggle('is-on', now);
           chip.setAttribute('aria-pressed', String(now));
+          addons.relabelAddons();
           updateHint();
         });
         return chip;
       }));
     };
     refreshShelfChips();
-    shelfMount.replaceWith(shelfField);
   }
   form.querySelector('#seatMount').replaceWith(seatTable);
-  form.querySelector('#guestMount').replaceWith(guestPicker);
-  form.querySelector('#teamMount').replaceWith(teamPicker);
+
+  /* The four chips, in the order the questions used to stand open. Each one's
+     label is a function of the option's own live state, so „Gast" becomes
+     „2 Gäste" and the option can never be hidden by having been used — which is
+     the whole licence for collapsing them.
+
+     The first three open a body; „Mehrere Tische" has none, so it is a plain
+     `aria-pressed` toggle whose hint appears under the row while it is on. */
+  addons.addAddon({
+    key: 'guest',
+    icon: 'ti-user-plus',
+    el: guestPicker,
+    label: () => (guests.length
+      ? tn(guests.length, 'startSession.addon.guestsOne', 'startSession.addon.guests')
+      : t('startSession.addon.guest')),
+    on: () => guests.length > 0,
+  });
+  addons.addAddon({
+    key: 'team',
+    icon: 'ti-users',
+    el: teamPicker,
+    label: () => (teamPicker.teamCount()
+      ? tn(teamPicker.teamCount(), 'startSession.addon.teamsOne', 'startSession.addon.teams')
+      : t('startSession.teamMake')),
+    on: () => teamPicker.teamCount() > 0,
+  });
+  if (shelfField) {
+    addons.addAddon({
+      key: 'shelf',
+      icon: 'ti-ban',
+      el: shelfField,
+      // Named rather than counted: „Ben ohne Spiele" says which shelf is missing,
+      // and it is at most a handful of people. Read in round order so the chip
+      // and the body below it list them the same way.
+      label: () => (awayShelves.size
+        ? t('startSession.addon.shelfOn', {
+          names: joinNames(round.members.filter((m) => awayShelves.has(m.id)).map((m) => m.name)),
+        })
+        : t('startSession.addon.shelf')),
+      on: () => awayShelves.size > 0,
+    });
+  }
+  addons.addAddon({
+    key: 'multi',
+    icon: 'ti-layout-grid',
+    label: () => t('startSession.multiTable'),
+    on: () => tableState.multiTable,
+    onToggle: () => {
+      tableState.multiTable = !tableState.multiTable;
+      multiTableNote.hidden = !tableState.multiTable;
+      updateHint();
+    },
+  });
+  // A remembered preset can arrive with the mode already on (#252).
+  multiTableNote.hidden = !tableState.multiTable;
+  form.querySelector('#addonMount').replaceWith(addons);
   updateHint();
 
   // Custom-tag chips (#238, tri-state #241). Clicking cycles ignore -> include

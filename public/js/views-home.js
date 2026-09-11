@@ -377,7 +377,11 @@ async function showNewRound() {
     tableCenter.textContent = taken.length
       ? t('newRound.tableCount', { n: taken.length })
       : t('newRound.tableEmpty');
-    const cx = 140, cy = 118, rx = 112, ry = 92;
+    // Percentages of the table's own box, matching renderSeatPicker (core.js):
+    // `.nr-table` is fluid since #1015, and although this screen keeps the 280px
+    // default, a px placement here would silently stay on a 280px circle the
+    // moment anyone gave it a `--ring-w`. Identical output at the default.
+    const cx = 50, cy = 49.1667, rx = 40, ry = 38.3333;
     const seats = taken.length + 1; // + empty seat
     for (let i = 0; i < seats; i++) {
       const angle = ((-90 + (i * 360) / seats) * Math.PI) / 180;
@@ -393,8 +397,8 @@ async function showNewRound() {
                <span class="nr-seat__name">${esc(taken[i].name)}</span>
                ${taken[i].owner ? `<span class="nr-seat__you">${esc(t('newRound.ownerSeatYou'))}</span>` : ''}
              </button>`);
-      seat.style.left = x + 'px';
-      seat.style.top = y - 23 + 'px';
+      seat.style.left = x.toFixed(3) + '%';
+      seat.style.top = `calc(${y.toFixed(3)}% - 23px)`;
       if (isEmpty) {
         seat.addEventListener('click', () => memberInput.focus());
       } else if (taken[i].owner) {

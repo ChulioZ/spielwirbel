@@ -24,8 +24,7 @@ function startDirectSession(round, game) {
           <label>${esc(t('startSession.membersLabel'))}</label>
           <div id="seatMount"></div>
         </div>
-        <div id="guestMount"></div>
-        <div id="teamMount"></div>
+        <div id="addonMount"></div>
         <div class="toolbar sheet__actions">
           <button id="startDirect" class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.start'))}</button>
         </div>
@@ -35,26 +34,52 @@ function startDirectSession(round, game) {
   document.body.appendChild(backdrop);
 
   const joining = new Set(round.members.map((m) => m.id));
-  // Guests (#532). The field is always visible, like the setup screen's — the
-  // sheet roughly doubles in height, which is the accepted price of the two ways
-  // into a session looking the same. There is no voting phase here, so a guest
-  // is a participation record and, above all, a pickable winner: the results
-  // screen's winner chips come from sessionPeople(), members ∪ guests.
-  // No pool preview to refresh either (direct-pick consults no player range),
-  // so the only thing following the count is the table's centre.
+  // The same add-on row the setup screen uses (#1015), behind the same chips —
+  // the two that apply here, since nothing is drawn (no owner clause, no
+  // multi-table). Both fields used to stand open, which roughly doubled the
+  // sheet's height for an evening with neither; the two ways into a session
+  // still look the same, which was the point of carrying them here at all.
+  //
+  // Guests (#532): there is no voting phase, so a guest is a participation
+  // record and, above all, a pickable winner — the results screen's winner chips
+  // come from sessionPeople(), members ∪ guests. No pool preview to refresh
+  // either (direct-pick consults no player range), so the only things following
+  // the count are the table's centre and the chip's own label.
+  const addons = renderSetupAddons(t('startSession.addon.label'));
   const guestPicker = renderGuestPicker(t('directPlay.guestsNote'), () => {
     seatTable.refreshSeats();
     teamPicker.refreshTeams();
+    addons.relabelAddons();
   });
   // Teams (#575). Nothing here is filtered by a player range — direct-pick
   // consults none — so a team changes no pool: it is here so a team that wins
   // can be recorded in one tap, the same argument that brought guests to this
   // sheet in #532. Hence its own note, which promises no filtering.
-  const teamPicker = renderTeamPicker(round, joining, guestPicker, t('directPlay.teamsNote'), null);
-  const seatTable = renderSeatPicker(round, joining, () => teamPicker.refreshTeams(), () => guestPicker.guests.length);
+  const teamPicker = renderTeamPicker(round, joining, guestPicker, t('directPlay.teamsNote'), () => addons.relabelAddons());
+  const seatTable = renderSeatPicker(round, joining, () => {
+    teamPicker.refreshTeams();
+    addons.relabelAddons();
+  }, () => guestPicker.guests.length);
   sheet.querySelector('#seatMount').replaceWith(seatTable);
-  sheet.querySelector('#guestMount').replaceWith(guestPicker);
-  sheet.querySelector('#teamMount').replaceWith(teamPicker);
+  addons.addAddon({
+    key: 'guest',
+    icon: 'ti-user-plus',
+    el: guestPicker,
+    label: () => (guestPicker.guests.length
+      ? tn(guestPicker.guests.length, 'startSession.addon.guestsOne', 'startSession.addon.guests')
+      : t('startSession.addon.guest')),
+    on: () => guestPicker.guests.length > 0,
+  });
+  addons.addAddon({
+    key: 'team',
+    icon: 'ti-users',
+    el: teamPicker,
+    label: () => (teamPicker.teamCount()
+      ? tn(teamPicker.teamCount(), 'startSession.addon.teamsOne', 'startSession.addon.teams')
+      : t('startSession.teamMake')),
+    on: () => teamPicker.teamCount() > 0,
+  });
+  sheet.querySelector('#addonMount').replaceWith(addons);
 
   const dismiss = () => closeSheet();
   const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
