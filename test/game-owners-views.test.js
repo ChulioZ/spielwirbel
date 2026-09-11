@@ -278,3 +278,46 @@ test('an off-shelf game the member owns is never listed', async (t) => {
   assert.deepEqual(titles, ['Dune']);
   assert.equal(title, '1 Spiel von Anna', 'and the count follows the list rather than the shelf');
 });
+
+/* The ranking itself (#1008). A VOTING session has `chosenGameId: null` until
+ * somebody taps „Spielen", and renderFinish() returns immediately without one —
+ * so at the exact moment the group is deciding, the one screen listing every
+ * candidate said nothing at all about who has to bring which box. */
+
+const ranking = (dom) => [...dom.document.querySelectorAll('.result-row')].map((row) => {
+  const owners = row.querySelector('.result-row__owners');
+  // `hidden` is how the line stands down on the chosen row, so an element that
+  // is present but hidden must read as absent here.
+  return [row.querySelector('.result-row__title').textContent.trim(),
+    owners && !owners.hidden ? owners.textContent.trim() : null];
+});
+
+const VOTING = { ...SESSION, gameIds: [7, 8, 9], chosenGameId: null };
+
+const threeGames = (over = {}) => round({
+  games: [
+    game({ id: 7, title: 'Catan', ownerIds: ['m1'] }),
+    game({ id: 8, title: 'Azul', ownerIds: ['m1', 'm2'] }),
+    game({ id: 9, title: 'Brass' }),
+  ],
+  ...over,
+});
+
+test('every ranking row names its box-bringer, with no game chosen yet (#1008)', async (t) => {
+  const dom = await results(t, threeGames(), VOTING);
+  assert.deepEqual(ranking(dom).sort(), [
+    ['Azul', null],   // both seats own it — not news
+    ['Brass', null],  // nobody recorded — nothing to say
+    ['Catan', 'Gehört Anna'],
+  ].sort());
+});
+
+test('the ranking line is suppressed on the row that IS the chosen game (#1008)', async (t) => {
+  /* The chosen row opens its finish panel, which states the same fact with more
+     context — printing it twice inside one card is the thing to avoid. */
+  const dom = await results(t, threeGames(), { ...VOTING, chosenGameId: 7 });
+  const catan = ranking(dom).find(([title]) => title.includes('Catan'));
+  assert.equal(catan[1], null, 'the row line stands down for the finish panel');
+  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+    ['Gehört Anna'], 'and the panel still carries it (#971)');
+});

@@ -1185,11 +1185,21 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       ? `<div class="score-label">${esc(t('score.name'))}${infoPlaced ? '' : ` ${infoButton('score')}`}</div>`
       : '';
     if (r.count) infoPlaced = true;
+    /* Who brings the box, on EVERY row (#1008). #971 printed this only inside
+       the chosen row's finish panel, and a VOTING session has no chosen game
+       until somebody taps „Spielen" — so the one screen listing every candidate
+       said nothing about ownership at the exact moment the group is deciding.
+       Same shared rule as the panel, so the two can never disagree. */
+    const bringers = boxBringers(round, session, g);
+    const ownersLine = bringers.length
+      ? `<div class="result-row__owners">${iconText('ti-user', t('result.ownedBy', { names: bringers.join(', ') }))}</div>`
+      : '';
     const medal = r.place && r.place <= 3 ? `<span class="rank-medal rank-medal--${medalRanks[r.place - 1]}"><i class="ti ti-medal" aria-hidden="true"></i></span>` : '';
     const row = h(`<div class="result-row">
          <a class="result-row__img" ${imgStyle}>${fallback}</a>
          <div>
            <a class="result-row__title">${medal}${esc(g.title)}${retiredBadge}</a>
+           ${ownersLine}
            ${hasVotes ? `<div class="result-row__bars">${bars}</div>` : ''}
            <button class="link-btn result-row__remove">${iconText('ti-trash', t('result.removeGame'))}</button>
          </div>
@@ -1233,7 +1243,8 @@ async function showResults(round, session, gamesHint, reveal, plain) {
         toast(newId ? t('result.toast.willPlay', { title: g.title }) : t('result.toast.choiceCleared'));
       } catch (e) { toast(e.message); }
     });
-    rowRefs.push({ gameId: g.id, row, btn, finishEl: row.querySelector('.row-finish') });
+    rowRefs.push({ gameId: g.id, row, btn, finishEl: row.querySelector('.row-finish'),
+      ownersEl: row.querySelector('.result-row__owners') });
     app.appendChild(row);
   });
   // One call for whatever the loop placed — and none to bind when no row had
@@ -1326,7 +1337,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
   function renderFinish() {
     updateTitle();
-    rowRefs.forEach(({ finishEl }) => { finishEl.hidden = true; finishEl.innerHTML = ''; });
+    rowRefs.forEach(({ gameId, finishEl, ownersEl }) => {
+      finishEl.hidden = true;
+      finishEl.innerHTML = '';
+      // The chosen row's panel states the same fact with more context, so the
+      // row's own line stands down rather than saying it twice in one card.
+      if (ownersEl) ownersEl.hidden = gameId === chosenId;
+    });
     if (!chosenId) return;
     const ref = rowRefs.find((x) => x.gameId === chosenId);
     if (!ref) return;
@@ -1348,30 +1365,14 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       );
     }
 
-    // „Gehört Anna" (#971) — who has to bring the box. Said only when it is
-    // NEWS: a game everyone at the table owns needs no line, and a game with no
-    // recorded owner has nothing to say. Names the owners who are actually here
-    // where there are any, and otherwise every owner — a direct pick is not
-    // filtered by ownership, so it can legitimately land on a game nobody
-    // present owns, and that is exactly when the line is most worth printing.
-    const ownerIds = (chosenGame && chosenGame.ownerIds) || [];
-    if (ownerIds.length) {
-      const seated = new Set(session.memberIds || []);
-      // The route guarantees at least one seat (it falls back to the whole round
-      // and 400s on an empty one), so the vacuous `every` over an empty set is
-      // unreachable — and if a hand-edited session ever reached it, suppressing
-      // the line is the safe direction: saying nothing beats naming the wrong
-      // person.
-      const everyoneOwnsIt = [...seated].every((mid) => ownerIds.includes(mid));
-      if (!everyoneOwnsIt) {
-        const here = ownerIds.filter((x) => seated.has(x));
-        const names = ownerNames(round, here.length ? here : ownerIds);
-        if (names.length) {
-          finishWrap.appendChild(
-            h(`<div class="row-finish__note">${esc(t('result.ownedBy', { names: names.join(', ') }))}</div>`)
-          );
-        }
-      }
+    // „Gehört Anna" (#971) — who has to bring the box, via the shared rule in
+    // owner-picker.js so this panel and the ranking row above it can never
+    // list one game's owners differently (#1008).
+    const bringers = boxBringers(round, session, chosenGame);
+    if (bringers.length) {
+      finishWrap.appendChild(
+        h(`<div class="row-finish__note">${esc(t('result.ownedBy', { names: bringers.join(', ') }))}</div>`)
+      );
     }
     finishWrap.appendChild(
       h(`<h2>${finished ? iconText('ti-trophy', t('result.finishTitleDone')) : esc(t('result.finishTitle'))}</h2>`)
