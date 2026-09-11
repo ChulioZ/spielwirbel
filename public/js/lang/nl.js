@@ -535,8 +535,8 @@ I18N.nl = {
   'detail.chosen': 'gekozen',
   'detail.notChosen': 'niet gekozen',
   'detail.sessionCancelled': 'sessie afgebroken',
-  'detail.retireConfirm': '“{title}” opzijleggen?',
-  'detail.completeConfirm': '“{title}” als uitgespeeld markeren?',
+  'detail.retireConfirm': '“{title}” opzijleggen? Uit de Kast en uit de loting — je kunt het altijd terughalen.',
+  'detail.completeConfirm': '“{title}” als uitgespeeld markeren? Uit de Kast en uit de loting — je kunt het altijd terughalen.',
   'detail.onboard.title': 'Een schone lei',
   'detail.onboard.text':
     'Niemand heeft dit spel al beoordeeld of gespeeld. Beoordelingen en sessies verschijnen hier vanzelf zodra jullie het spelen — tot dan kun je het een gezicht geven.',

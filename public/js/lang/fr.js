@@ -540,8 +540,8 @@ I18N.fr = {
   'detail.chosen': 'choisi',
   'detail.notChosen': 'non choisi',
   'detail.sessionCancelled': 'session annulée',
-  'detail.retireConfirm': 'Retirer « {title} » ?',
-  'detail.completeConfirm': 'Marquer « {title} » comme terminé ?',
+  'detail.retireConfirm': 'Retirer « {title} » ? Quitte l’Étagère et le tirage — tu peux le récupérer à tout moment.',
+  'detail.completeConfirm': 'Marquer « {title} » comme terminé ? Quitte l’Étagère et le tirage — tu peux le récupérer à tout moment.',
   'detail.onboard.title': 'Page blanche',
   'detail.onboard.text':
     'Personne ne l’a encore noté ni joué. Les notes et les sessions apparaîtront ici toutes seules dès que vous y jouerez — en attendant, tu peux lui donner un visage.',

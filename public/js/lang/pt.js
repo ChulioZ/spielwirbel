@@ -537,8 +537,8 @@ I18N.pt = {
   'detail.chosen': 'escolhido',
   'detail.notChosen': 'não escolhido',
   'detail.sessionCancelled': 'sessão cancelada',
-  'detail.retireConfirm': 'Aposentar “{title}”?',
-  'detail.completeConfirm': 'Marcar “{title}” como concluído?',
+  'detail.retireConfirm': 'Aposentar “{title}”? Sai da Estante e do sorteio — podes trazê-lo de volta quando quiseres.',
+  'detail.completeConfirm': 'Marcar “{title}” como concluído? Sai da Estante e do sorteio — podes trazê-lo de volta quando quiseres.',
   'detail.onboard.title': 'Uma folha em branco',
   'detail.onboard.text':
     'Ninguém avaliou nem jogou este ainda. Avaliações e sessões aparecem aqui sozinhas assim que vocês jogarem — até lá, você pode dar um rosto a ele.',

@@ -539,8 +539,8 @@ I18N.es = {
   'detail.chosen': 'elegido',
   'detail.notChosen': 'no elegido',
   'detail.sessionCancelled': 'sesión cancelada',
-  'detail.retireConfirm': '¿Retirar «{title}»?',
-  'detail.completeConfirm': '¿Marcar «{title}» como completado?',
+  'detail.retireConfirm': '¿Retirar «{title}»? Sale de la Estantería y del sorteo — puedes recuperarlo.',
+  'detail.completeConfirm': '¿Marcar «{title}» como completado? Sale de la Estantería y del sorteo — puedes recuperarlo.',
   'detail.onboard.title': 'Una página en blanco',
   'detail.onboard.text':
     'Todavía nadie lo ha valorado ni jugado. Las valoraciones y las sesiones aparecerán aquí solas en cuanto juguéis; hasta entonces, puedes ponerle cara.',
