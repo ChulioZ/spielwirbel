@@ -188,9 +188,11 @@ function suggestScore(stats, game, neutral) {
    broken:
 
    - the shelf must OFFER the field (`filterOptions`). On an instance with no
-     BGG_API_TOKEN, or a shelf of hand-typed games, `playtime` is false and
+     BGG_API_TOKEN, or a shelf of hand-typed games, `playtimeMax` is false and
      `normalizeMetadataFilters` drops `maxPlaytime` silently — so the chip would
-     open the setup screen having changed nothing at all.
+     open the setup screen having changed nothing at all. (Since #1001 the two
+     playtime bounds are gated separately; this chip needs the „at most" half,
+     which is the one keyed on the game's minPlaytime.)
    - it must NARROW something without emptying it. A filter that admits the
      whole shelf is a chip that does nothing; one that admits none of it is a
      chip that opens an empty pool.
@@ -213,7 +215,7 @@ function quickPresets(activeGames, deps) {
   const shelf = activeGames || [];
   const options = deps.filterOptions(shelf);
   const candidates = [
-    { id: 'short', metadata: { maxPlaytime: 60 }, needs: options.playtime },
+    { id: 'short', metadata: { maxPlaytime: 60 }, needs: options.playtimeMax },
     { id: 'light', metadata: { weightMax: 2 }, needs: options.weight },
     { id: 'meaty', metadata: { weightMin: 3 }, needs: options.weight },
     { id: 'family', metadata: { youngestAge: 8 }, needs: options.age },

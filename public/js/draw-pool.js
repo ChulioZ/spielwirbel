@@ -169,6 +169,18 @@ function fitsMetadataFilters(game, filters) {
   // evening. Permissive is the safe direction here too — the draw only produces
   // candidates people then vote on, and the info sheet shows the full range.
   if (isFiniteNum(f.maxPlaytime) && isFiniteNum(g.minPlaytime) && g.minPlaytime > f.maxPlaytime) return false;
+  // The MIRROR of that clause (#1001), and the reason it reads `maxPlaytime` on
+  // the game: "we have three hours" must still be offered a 20–600 game, which
+  // testing the game's own MINIMUM would drop — the exact failure the clause
+  // above avoids, seen from the other side. Reading the wrong bound here looks
+  // correct in casual use, so both directions are asserted in the spec.
+  //
+  // NOTE the two clauses are INDEPENDENT, not the ends of one interval: they
+  // test different bounds of the game's range, so a pair that reads as inverted
+  // (at least 120, at most 30) is satisfiable — it asks for a game whose spread
+  // covers both — rather than empty. That is why neither is swapped in
+  // `normalizeMetadataFilters` below, unlike the complexity bounds.
+  if (isFiniteNum(f.minPlaytime) && isFiniteNum(g.maxPlaytime) && g.maxPlaytime < f.minPlaytime) return false;
   if (isFiniteNum(f.weightMin) && isFiniteNum(g.weight) && g.weight < f.weightMin) return false;
   if (isFiniteNum(f.weightMax) && isFiniteNum(g.weight) && g.weight > f.weightMax) return false;
   // "The youngest at the table is N" — so a game passes when its own minimum age
@@ -217,7 +229,15 @@ function metadataFilterOptions(games) {
     return [...seen].sort();
   };
   return {
-    playtime: anyNumber('minPlaytime'),
+    // The two playtime controls are gated SEPARATELY, each on the field its own
+    // clause reads — deliberately crossed, and it looks like a typo until you
+    // hold it against `fitsMetadataFilters`: "at most N" compares the game's
+    // minPlaytime, "at least N" its maxPlaytime. One shared flag would let a
+    // shelf whose games carry only a lower bound render an "at least" control
+    // that every game passes, i.e. one that can never do anything — the inverse
+    // of the empty pool this function exists to rule out.
+    playtimeMax: anyNumber('minPlaytime'),
+    playtimeMin: anyNumber('maxPlaytime'),
     weight: anyNumber('weight'),
     age: anyNumber('minAge'),
     categories: valuesOf('categories'),
@@ -229,7 +249,8 @@ function metadataFilterOptions(games) {
 // disclosure is rendered.
 function hasMetadataFilterOptions(options) {
   const o = options || {};
-  return !!(o.playtime || o.weight || o.age || (o.categories || []).length || (o.mechanics || []).length);
+  return !!(o.playtimeMax || o.playtimeMin || o.weight || o.age ||
+    (o.categories || []).length || (o.mechanics || []).length);
 }
 
 // Coerce anything — a request body, a stored #252 preset, a hand-crafted blob —
@@ -251,7 +272,8 @@ function normalizeMetadataFilters(raw, options) {
     return [...new Set(v.filter((x) => typeof x === 'string' && ok.has(x)))];
   };
   const out = {
-    maxPlaytime: step(src.maxPlaytime, PLAYTIME_CHOICES, o.playtime),
+    maxPlaytime: step(src.maxPlaytime, PLAYTIME_CHOICES, o.playtimeMax),
+    minPlaytime: step(src.minPlaytime, PLAYTIME_CHOICES, o.playtimeMin),
     weightMin: step(src.weightMin, WEIGHT_CHOICES, o.weight),
     weightMax: step(src.weightMax, WEIGHT_CHOICES, o.weight),
     youngestAge: step(src.youngestAge, AGE_CHOICES, o.age),
@@ -262,6 +284,12 @@ function normalizeMetadataFilters(raw, options) {
   // "No matching games" over a shelf that is fine. Swapping (rather than
   // dropping a bound) is done HERE, in the shared function, so the preview and
   // the draw cannot disagree about what an inverted range means.
+  //
+  // COMPLEXITY ONLY. The playtime pair above is deliberately left alone: a
+  // weight is one number per game, so min > max really does admit nothing,
+  // whereas the two playtime clauses read opposite ends of the game's own range
+  // and an inverted-looking pair is a real query (#1001). Swapping it would
+  // silently answer a different question than the one asked.
   if (out.weightMin !== null && out.weightMax !== null && out.weightMin > out.weightMax) {
     const lo = out.weightMax;
     out.weightMax = out.weightMin;
@@ -277,7 +305,14 @@ function normalizeMetadataFilters(raw, options) {
 function countMetadataFilters(filters) {
   const f = filters || {};
   return (
-    (f.maxPlaytime !== null && f.maxPlaytime !== undefined ? 1 : 0) +
+    // The playtime BOUNDS are one control, exactly like the complexity range
+    // below: one visible row, so a badge of 2 over it could not be reconciled.
+    // Kept on the loose `!= null` test rather than `isFiniteNum` on purpose —
+    // lib/routes/sessions.js calls this on the RAW request body to decide
+    // whether to wait for the metadata backfill, where a garbage value costing
+    // one needless wait is the safe direction.
+    ((f.minPlaytime !== null && f.minPlaytime !== undefined) ||
+      (f.maxPlaytime !== null && f.maxPlaytime !== undefined) ? 1 : 0) +
     (isFiniteNum(f.weightMin) || isFiniteNum(f.weightMax) ? 1 : 0) +
     (f.youngestAge !== null && f.youngestAge !== undefined ? 1 : 0) +
     ((f.categories || []).length ? 1 : 0) +
