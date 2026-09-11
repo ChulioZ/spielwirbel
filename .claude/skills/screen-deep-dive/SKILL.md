@@ -158,7 +158,12 @@ scaffold — and load the `artifact-design` skill before writing.
   frame, `position: fixed` does not; the app's fonts come from Google Fonts,
   its tokens are copied in (a throwaway page, not a second source of truth).
 
-Look at the published page once, fix what that look shows, stop.
+Look at the page once, fix what that look shows, stop. The published URL needs
+a claude.ai sign-in the pane does not have, so look at the file: inside the
+project folder the pane runs its scripts, outside it renders a static snapshot
+— serve a scratchpad copy (`python3 -m http.server`, which sends no charset;
+the mojibake is the server) and probe the frames' captions with JS rather than
+scrolling to a screenshot.
 
 ## 6. Decide, record, file
 
@@ -191,8 +196,6 @@ The pane never delivers Escape and fires no blur
 (`.claude/rules/escape-keypresses-never-reach-the-preview-pane.md`,
 `.claude/rules/blur-events-never-fire-in-the-preview-pane.md`); a freshly
 opened tab can report a 0 × 0 viewport until `resize_window`; a claim about
-sticky, `dvh`, `scroll-snap` or multicolumn needs WebKit too; the prototype
-bench's static server (`python3 -m http.server` in the scratchpad, for the one
-look) sends no charset — the mojibake is the server, not the page; and the
-operator judges from what they can click, so a static mockup is the weaker
-deliverable here.
+sticky, `dvh`, `scroll-snap` or multicolumn needs WebKit too; and the operator
+judges from what they can click, so a static mockup is the weaker deliverable
+here.
