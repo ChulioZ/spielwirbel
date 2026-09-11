@@ -24,6 +24,42 @@ Product code ships afterwards through `create-issue` → `implement`.
 controls used rarely. Most layout trouble is rare controls rendered at the size
 of common ones. Classify before you measure; it decides tier B below.
 
+## The brief — what "better" means here
+
+The operator's standing brief for a deep-dive, first given for the session
+setup screen on 2026-09-11: **be bold and creative, aiming at a great, fresh,
+cool, fancy, lightweight experience — nothing on the screen is set in stone.**
+Every proposal has to pass all four readings of that sentence:
+
+- **Lightweight.** Fewer things on screen at once, fewer taps for the common
+  case, no scrolling past the rare to reach the usual — and lightweight in the
+  codebase: no dependency, no build step, no new stored state when an existing
+  mechanism (tags, the vote, retire, the filters) already answers the need. The
+  operator prefers the existing mechanism over a new field every time; "add a
+  feature to fix a layout" defaults to no, and a proposal that adds a mechanism
+  must argue why the existing one cannot carry it.
+- **Fresh and fancy.** At least one character moment per proposal — a scene,
+  motion, the brand's own verb made visible — built from the app's tokens and
+  faces. Boldness starts **one notch past what feels safe**, reaches a few more
+  surfaces than the cautious version, and is spent in one place with quiet
+  around it. The calibration on record: the world artwork and the victory
+  scenes that were approved on the first pass without notes filled the
+  gutters at .55 alpha — start there, not below it.
+- **Beautiful.** Inside the brand and above the accessibility floor;
+  `.claude/skills/ui-audit/SKILL.md` names both fences (evolution, never
+  rebrand; never trade the floor for looks). Labelled controls, real buttons
+  and target sizes are part of the proposal, not an afterthought.
+- **Nothing set in stone.** Entry points, the order of questions, which
+  questions are asked at all, the copy, the component shapes and the layout
+  system are all in play — say so in the tiers rather than assuming the
+  current screen's skeleton. What stays fixed: the data the action needs, the
+  tokens, and the rules that name other screens (change those knowingly, in
+  the same change, never by accident).
+
+Bold is not *more*. The strongest proposal in the first run removed things
+(four always-open questions became one row of chips) and added one moment (the
+pot whirls). Judge your own tiers by that ratio.
+
 ## 0. Pin the screen
 
 - Which `show*` function renders it (`public/js/views-*.js`), what it asks the
