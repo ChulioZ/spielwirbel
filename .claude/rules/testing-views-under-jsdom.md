@@ -1,6 +1,8 @@
 ---
 paths:
   - "test/support/dom.js"
+  - "test/kontakt-page-locale.test.js"
+  - "test/locale-fallback.test.js"
   - "test/feed-report.test.js"
   - "test/editor-presentation.test.js"
   - "test/home-empty-cta.test.js"
@@ -56,7 +58,12 @@ single export on #281). Verified on #602: with five specs converted, no
 
 - **The script list is parsed from `index.html`**, minus `main.js`/`pwa.js`
   (bootstrap + SW registration) — so a new frontend file is picked up with no
-  edit here, and the load order is the real one.
+  edit here, and the load order is the real one. A **standalone page** under
+  `public/js/pages/**` is loaded by its own document, so `loadApp` never sees it:
+  use the sibling **`loadKontakt`** export (real markup + the page IIFE through
+  `vm`, a `navigator.language` stub that asserts it took, and a rejecting `fetch`
+  you pass a recorder to). It exists because the first spec to need it hand-rolled
+  the boot inline, and the second would have copied it.
 - **`set()` only replaces `function`-declared globals**, because those are the
   ones that are properties of the global object. A top-level `const`/`let` lives
   in the global *lexical* scope, where an outside assignment is invisible — the

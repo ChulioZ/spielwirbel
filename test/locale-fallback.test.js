@@ -14,43 +14,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert');
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
-const { JSDOM } = require('jsdom');
 
-const { loadApp } = require('./support/dom');
-
-const ROOT = path.join(__dirname, '..');
-const KONTAKT_HTML = fs.readFileSync(path.join(ROOT, 'public', 'kontakt.html'), 'utf8');
-const KONTAKT_JS = fs.readFileSync(path.join(ROOT, 'public', 'js', 'pages', 'kontakt.js'), 'utf8');
-
-/* kontakt.js is a page IIFE outside the SPA's shared scope, so it has no entry
-   in index.html and `test/support/dom.js` never sees it. Boot it the same way
-   that harness does — the real markup in jsdom, the script through `vm` so it
-   stays out of the coverage report. */
-function loadKontakt({ saved, systemLanguage }) {
-  const dom = new JSDOM(KONTAKT_HTML, {
-    url: 'https://spielwirbel.app/kontakt.html',
-    runScripts: 'outside-only',
-  });
-  if (saved !== undefined) dom.window.localStorage.setItem('locale', saved);
-  Object.defineProperty(dom.window.navigator, 'language', {
-    value: systemLanguage,
-    configurable: true,
-  });
-  // Guard the stub itself: jsdom answers 'en-US' by default, so a defineProperty
-  // that failed to take would make every "system language is X" case below pass
-  // for the wrong reason.
-  assert.equal(dom.window.navigator.language, systemLanguage, 'navigator.language stub did not take');
-
-  const ctx = dom.getInternalVMContext();
-  // The page probes /api/config on load; the rejection is swallowed by its own
-  // .catch(), and a spec that reaches the network is a bug in the spec.
-  ctx.fetch = () => Promise.reject(new Error('locale-fallback.test.js: unstubbed fetch'));
-  vm.runInContext(KONTAKT_JS, ctx, { filename: 'public/js/pages/kontakt.js' });
-  return dom;
-}
+const { loadApp, loadKontakt } = require('./support/dom');
 
 const shownLang = (dom) => dom.window.document.documentElement.lang;
 const heading = (dom) => dom.window.document.getElementById('t-title').textContent;

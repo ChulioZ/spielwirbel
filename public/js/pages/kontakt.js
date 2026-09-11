@@ -4,9 +4,18 @@
  * Standalone contact page script (issue #224). NOT part of the SPA's shared
  * global scope — wrapped in an IIFE so it declares no top-level names and needs
  * no entry in eslint.config.js's frontendGlobals (like js/login.js). Bilingual
- * in-page (DE authoritative + EN); the language follows the same `locale`
- * localStorage key the SPA uses, with an in-page DE/EN toggle. Posts JSON to the
- * public POST /api/contact endpoint and renders success/error states.
+ * in-page (DE authoritative + EN), with an in-page DE/EN toggle. Posts JSON to
+ * the public POST /api/contact endpoint and renders success/error states.
+ *
+ * Two different things used to share the SPA's `locale` key, and conflating them
+ * produced two silent bugs (#993). They are separate now:
+ *
+ *  - WHICH OF THE PAGE'S TWO LANGUAGES a visitor reads (resolveLang) is this
+ *    page's own business and is stored under its own key. Writing `locale` here
+ *    changed the whole app's language, which nobody asked for and nothing said.
+ *  - WHAT THE VISITOR'S APP LOCALE IS (reportedLocale) is reported with feedback
+ *    so a "this wording is wrong" report can be routed. Collapsing it to de/en
+ *    first made every shipped locale but those two report `en`.
  */
 (function () {
   const STR = {
@@ -119,18 +128,56 @@
   };
   const reportFields = document.getElementById('reportFields');
 
-  // Resolve the display language: saved SPA choice -> system language -> English.
-  // German only for a German reader, English for everyone else (#822) — the page
-  // renders ONE language at a time, so "not English" must not mean "German": the
-  // app already ships a locale picker, and a visitor who chose (or whose system
-  // reports) fr/es/it would otherwise be handed German text they cannot read.
-  // The page's German text stays authoritative; this only picks which of the two
-  // a reader is shown.
+  // localStorage THROWS on access in a browser with site data blocked (Chrome's
+  // "block all cookies", Firefox's strictest mode). Unguarded, that takes the
+  // whole IIFE down at load — and every label on this page is filled in by JS,
+  // so the DSA notice-and-action channel would render as a blank form. Degrade
+  // to the system language instead. (The SPA guards its own storage the same way
+  // in core.js.)
+  function readStore(key) {
+    try { return localStorage.getItem(key); } catch { return null; }
+  }
+  function writeStore(key, value) {
+    try { localStorage.setItem(key, value); } catch { /* storage blocked */ }
+  }
+
+  // This page's OWN display choice — never the SPA's `locale` key (#993). A
+  // visitor tapping DE/EN asked which of two languages to read this page in,
+  // not to re-language the app they came from.
+  const LANG_KEY = 'kontaktLang';
+
+  const systemLang = () => (navigator.language || '').slice(0, 2).toLowerCase();
+
+  // Resolve the display language: this page's own choice -> SPA locale ->
+  // system language -> English. German only for a German reader, English for
+  // everyone else (#822) — the page renders ONE language at a time, so "not
+  // English" must not mean "German": the app already ships a locale picker, and
+  // a visitor who chose (or whose system reports) fr/es/it would otherwise be
+  // handed German text they cannot read. The page's German text stays
+  // authoritative; this only picks which of the two a reader is shown.
   function resolveLang() {
-    const saved = localStorage.getItem('locale');
+    const own = readStore(LANG_KEY);
+    if (own === 'de' || own === 'en') return own;
+    const saved = readStore('locale');
     if (saved) return saved === 'de' ? 'de' : 'en';
-    const sys = (navigator.language || 'en').slice(0, 2).toLowerCase();
-    return sys === 'de' ? 'de' : 'en';
+    return systemLang() === 'de' ? 'de' : 'en';
+  }
+
+  // The visitor's real app locale, for the feedback metadata — NOT the display
+  // language above, which only ever holds de/en. Mirrors the SPA's own
+  // detectLocale() (saved choice, else system language) minus its final `en`
+  // fallback: `en` there means "we had nothing", and reporting it would be the
+  // guess this field exists to avoid.
+  //
+  // Deliberately NOT filtered against SUPPORTED_LOCALES here. The server already
+  // owns that allowlist — it requires public/js/locales.js and drops an unknown
+  // locale without ever 400ing (lib/routes/contact.js) — so sending the raw value
+  // keeps the list in exactly one place. A copy on this page is the failure mode
+  // .claude/rules/shared-constants-across-the-stack.md exists to prevent, and it
+  // would be a copy that silently drops the NEXT locale we ship. Capped like the
+  // page's other free-form params so a hand-edited key can't ship a blob.
+  function reportedLocale() {
+    return (readStore('locale') || systemLang() || '').trim().slice(0, 20);
   }
 
   let lang = resolveLang();
@@ -200,7 +247,7 @@
   document.querySelectorAll('.langs button').forEach((b) => {
     b.addEventListener('click', () => {
       lang = b.dataset.lang;
-      localStorage.setItem('locale', lang);
+      writeStore(LANG_KEY, lang);
       applyLang();
     });
   });
@@ -221,6 +268,7 @@
     const message = fields.message.value.trim();
     const category = fields.category.value;
     const isReport = REPORT_CATEGORIES.includes(category);
+    const locale = reportedLocale();
     // E-mail is optional for every category (#321) — only the message is
     // required here. The server still rejects a malformed address if one is typed.
     if (!message) {
@@ -250,7 +298,8 @@
             reportedUsername: fields.reportedUsername.value.trim(),
             goodFaith: fields.goodFaith.checked,
           } : {}),
-          ...(category === 'feedback' ? { path: feedbackPath, locale: lang } : {}),
+          // `lang` is the DE/EN display choice, never the reported locale (#993).
+          ...(category === 'feedback' ? { path: feedbackPath, ...(locale ? { locale } : {}) } : {}),
           website: fields.website.value, // honeypot (empty for real users)
         }),
       });
