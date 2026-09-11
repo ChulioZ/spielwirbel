@@ -32,8 +32,11 @@ let seatGuestSeq = 0;
 //    one: an absent-means-no-guests default would render a ring with no „+" seat
 //    that looks finished and silently cannot take a visitor.
 //
-// Returns the wrapper to append where needed (the ring plus the guest-name input
-// that unfolds under it), carrying a `refreshSeats()` so a caller can redraw it.
+// Returns the wrapper to append where needed: the ring plus the guest-name input
+// that unfolds under it. It exposed a `refreshSeats()` until #1016 — the guest
+// list lived outside the picker then, so a caller had to be able to redraw it.
+// The ring owns that list now, so there is nothing left for an outside caller to
+// tell it, and a redraw hook nobody calls is a second way to render the ring.
 function renderSeatPicker(round, joining, onChange, guestList) {
   const addId = 'seatGuestAdd' + ++seatGuestSeq;
   const wrap = h(`<div class="nr-seats">
@@ -100,6 +103,21 @@ function renderSeatPicker(round, joining, onChange, guestList) {
   // never leave a seat holding a stale index — the same reason the guest chips
   // were re-rendered whole before #1016.
   function render() {
+    /* The ring is rebuilt whole, so the button that was just clicked is about to
+       be destroyed — and with it the focus a keyboard user had. Remember which
+       seat held it and put it back below.
+
+       `table.contains` is a guard NO TEST HOLDS, measured: every render today is
+       either detached (the first one, before the ring is mounted — `focus()` on
+       a detached element is a no-op) or started by a seat click, so focus is
+       always either nowhere or already in this ring. It is here for the two
+       shapes that would be observable if either came back: a render started from
+       the name input, which is a sibling and must keep its focus; and a second
+       ring in the document at once — the direct-play sheet opens over the setup
+       screen, and both would match `[data-seat="m:<id>"]` for the same member. */
+    const hadFocus = table.contains(document.activeElement)
+      ? document.activeElement.closest('.nr-seat')?.dataset.seat
+      : null;
     table.querySelectorAll('.nr-seat').forEach((el) => el.remove());
     const guests = guestList.guests;
     tableCenter.textContent = tn(joining.size + guests.length,
@@ -120,7 +138,8 @@ function renderSeatPicker(round, joining, onChange, guestList) {
     // the whole ring rather than squeezing them in beside the last member.
     const total = round.members.length + guests.length + (canAdd() ? 1 : 0);
     let slot = 0;
-    const place = (seat) => {
+    const place = (seat, key) => {
+      seat.dataset.seat = key;
       const angle = ((-90 + (slot * 360) / total) * Math.PI) / 180;
       slot++;
       seat.style.left = (cx + rx * Math.cos(angle)).toFixed(3) + '%';
@@ -150,7 +169,7 @@ function renderSeatPicker(round, joining, onChange, guestList) {
         }
         changed();
       });
-      place(seat);
+      place(seat, 'm:' + m.id);
     });
 
     guests.forEach((name, i) => {
@@ -174,11 +193,24 @@ function renderSeatPicker(round, joining, onChange, guestList) {
         // is back by definition, so the open box still belongs to it.
         changed();
       });
-      place(seat);
+      place(seat, 'g:' + key);
     });
+
+    // Restoring focus has to happen whether or not the „+" seat is rendered, so
+    // it is a closure both exits call rather than a line at the end of one.
+    const restore = () => {
+      if (!hadFocus) return;
+      // The seat may be gone — a removed guest — in which case the „+" seat is
+      // the honest destination: it is the one that is back BECAUSE of the
+      // removal, and it is where the user would go next.
+      const again = table.querySelector(`.nr-seat[data-seat="${hadFocus}"]`)
+        || table.querySelector('.nr-seat--add');
+      if (again) again.focus();
+    };
 
     if (!canAdd()) {
       if (adding) closeAdd(false);
+      restore();
       return;
     }
     const add = h(`<button type="button" class="nr-seat nr-seat--empty nr-seat--add"
@@ -195,7 +227,8 @@ function renderSeatPicker(round, joining, onChange, guestList) {
       add.setAttribute('aria-expanded', 'true');
       input.focus();
     });
-    place(add);
+    place(add, 'add');
+    restore();
   }
 
   addBox.querySelector('button').addEventListener('click', submit);
@@ -214,7 +247,6 @@ function renderSeatPicker(round, joining, onChange, guestList) {
   });
 
   render();
-  wrap.refreshSeats = render;
   // What a sheet asks before letting Escape dismiss it.
   wrap.isAddingGuest = () => adding;
   return wrap;

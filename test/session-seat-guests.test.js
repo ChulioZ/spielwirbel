@@ -100,6 +100,11 @@ test('with nobody invited the ring is the members plus one „+" seat, and the i
   assert.equal(addSeat().getAttribute('aria-expanded'), 'false');
   assert.equal(addBox().hidden, true, 'the name input stands open, which is the height the ring exists to save');
   assert.equal(centre(), '2 spielen mit');
+  // Arriving on the screen must not pull focus onto the ring: `render()` runs
+  // once at build time, and the focus restoration below it has to stay inert
+  // when nothing in the ring had focus to begin with.
+  assert.notEqual(dom.document.activeElement, addSeat(),
+    'opening the screen focused the „+" seat, so a screen reader starts mid-page');
 
   // The field the ring replaced must be gone, not merely moved out of sight:
   // two controls answering „wer ist am Tisch" is the thing #1016 removed.
@@ -160,6 +165,10 @@ test('an empty name is refused, and adding stays open for the next one', async (
   addGuest('Kim');
   assert.deepEqual(guestSeats().map(seatName), ['Kim']);
   assert.equal(addBox().hidden, false, 'the box folded away after one guest, so the second costs an extra tap');
+  // The ring's own focus restoration must not reach across into the input: the
+  // render it just ran was triggered from here, not from a seat.
+  assert.equal(dom.document.activeElement, addBox().querySelector('input'),
+    'focus was pulled out of the input onto a seat, so the next name is typed nowhere');
   dom.set('toast', () => {});
 });
 
@@ -207,6 +216,28 @@ test('a member seat stays a toggle, and the last member cannot leave', async () 
     'the last member was allowed out, which leaves a session nobody is in');
   assert.deepEqual(toasts, ['Mindestens eine Person muss mitspielen']);
   dom.set('toast', () => {});
+});
+
+test('the ring is rebuilt whole on every change, so it has to put focus back', async () => {
+  /* Every click here destroys the button that was clicked — the ring re-renders
+     from scratch so a removal from the middle cannot leave a seat holding a
+     stale index. Without restoring focus afterwards, a keyboard user is dropped
+     to <body> after every single toggle, which is the pre-#1016 behaviour of the
+     member seats as well (it just had no guests to make it obvious). */
+  await showSetup();
+
+  const ben = memberSeats()[1];
+  ben.focus();
+  ben.click();
+  assert.equal(dom.document.activeElement.getAttribute('title'), 'Ben',
+    'toggling a member dropped focus to <body>, so the next Tab restarts at the top of the page');
+
+  addGuest('Kim');
+  const guest = guestSeats()[0];
+  guest.focus();
+  guest.click();
+  assert.equal(dom.document.activeElement, addSeat(),
+    'the seat that had focus is gone — focus must land on the „+" seat, not on <body>');
 });
 
 test('Escape folds the input away and hands focus back to the „+" seat', async () => {
