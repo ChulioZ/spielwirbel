@@ -737,6 +737,8 @@ I18N.es = {
   'startSession.toast.guestMax': 'Como máximo {n} invitados por sesión',
   'startSession.teamsLabel': '¿Alguien juega en equipo?',
   'startSession.teamsNote': 'Un equipo cuenta como una sola plaza en el sorteo, y gana junto.',
+  'startSession.withoutShelfLabel': '¿Quién no ha traído sus juegos?',
+  'startSession.withoutShelfNote': 'Sus juegos quedan hoy fuera del sorteo. Siguen jugando, votando y contando para los equipos.',
   'startSession.teamMake': 'Formar un equipo',
   'startSession.teamDissolve': 'Deshacer el equipo {name}',
   'startSession.toast.teamMin': 'Un equipo necesita al menos {n} personas',

@@ -88,7 +88,19 @@ and neither side 400s, so a drifted copy would simply make the setup screen's
 preview promise a pool the draw refuses (or hide one it would produce), silently.
 Its own trap is the argument, not the function: it takes the joining **seats**,
 never `playerCount`, because guests own nothing — passing the party count would
-typecheck, return plausible booleans, and filter on the wrong thing. Note what
+typecheck, return plausible booleans, and filter on the wrong thing.
+
+**#1002 added `shelfParty` beside it**, which is that same trap one layer out:
+the clause was always about the right *list*, and now that list has to be
+COMPUTED identically on both sides — the seats minus whoever came without their
+games. It is an exported function rather than a `filter` written twice because
+the reduction is the whole feature; a drifted copy makes the setup screen
+promise a pool the draw then refuses, with nothing on screen to explain it. Two
+things it must not do, both of which would be silent: the session still stores
+the FULL seat list, so the marked member votes, plays, joins a team and wins
+trophies exactly as before — only the pool narrows — and an all-away party
+reduces to `[]`, which `drawPool` must still treat as a real answer rather than
+as "this caller predates ownership", since an empty array is truthy. Note what
 deliberately stayed duplicated: the
 **tag** clauses, because the server filters on resolved include/exclude id lists
 while the client holds a tri-state chip map, so one shared function would need a

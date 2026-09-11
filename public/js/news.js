@@ -33,6 +33,13 @@ const NEWS = [
    * the group stops being offered a game nobody at the table can bring. The bar
    * is the owned-expansions one (#653): a new fact about a game, with a new
    * consequence for the evening.
+   *
+   * #1002 added the „ohne Regal" exception to the SAME entry, three days on,
+   * without bumping the revision — the #851 move one step further. It does widen
+   * the capability rather than merely correcting a location, so this is a
+   * judgement: a second dot for a refinement of the feature the reader was dotted
+   * about on Monday spends the attention the terms notice needs (§11), and the
+   * entry would then be incomplete either way. One sentence, no dot.
    */
   {
     revision: '2026-09-08',
@@ -45,8 +52,10 @@ const NEWS = [
         + 'heute nicht mitspielen, kommen gar nicht erst in den Topf — und die '
         + 'Übersicht sagt, wie viele deshalb fehlen. Spiele ohne Eintrag bleiben '
         + 'wie bisher immer dabei, es ändert sich also nichts, solange niemand '
-        + 'etwas einträgt. Im Ergebnis steht am Ende, wer die Schachtel '
-        + 'mitbringt.',
+        + 'etwas einträgt. Wer mitspielt, aber seine Spiele nicht dabei hat, kann '
+        + 'das beim Start der Session eintragen — dann bleiben nur seine Spiele '
+        + 'heute außen vor, alles andere ändert sich nicht. Im Ergebnis steht am '
+        + 'Ende, wer die Schachtel mitbringt.',
     },
     en: {
       title: 'Who owns this game?',
@@ -56,7 +65,10 @@ const NEWS = [
         + 'owners are not playing tonight never reaches the pot, and the setup '
         + 'screen says how many are missing for that reason. Games with no owners '
         + 'recorded stay in, exactly as before, so nothing changes until somebody '
-        + 'fills one in. The results screen then names who is bringing the box.',
+        + 'fills one in. If someone is playing but did not bring their games, you '
+        + 'can say so when you set the session up — only their boxes sit out today, '
+        + 'and nothing else about their seat changes. The results screen then names '
+        + 'who is bringing the box.',
     },
   },
   /*

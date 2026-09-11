@@ -729,6 +729,8 @@ I18N.nl = {
   'startSession.toast.guestMax': 'Hoogstens {n} gasten per sessie',
   'startSession.teamsLabel': 'Speelt er iemand als team?',
   'startSession.teamsNote': 'Een team telt in de trekking als één partij — en wint samen.',
+  'startSession.withoutShelfLabel': 'Wie heeft zijn spellen niet bij zich?',
+  'startSession.withoutShelfNote': 'Hun spellen blijven vandaag buiten de trekking. Ze spelen, stemmen en tellen gewoon mee voor teams.',
   'startSession.teamMake': 'Een team vormen',
   'startSession.teamDissolve': 'Team {name} opheffen',
   'startSession.toast.teamMin': 'Een team heeft minstens {n} mensen nodig',

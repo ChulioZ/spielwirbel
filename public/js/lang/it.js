@@ -733,6 +733,8 @@ I18N.it = {
   'startSession.toast.guestMax': 'Al massimo {n} ospiti per sessione',
   'startSession.teamsLabel': 'Qualcuno gioca in squadra?',
   'startSession.teamsNote': 'Una squadra conta come un solo partecipante nell’estrazione — e vince insieme.',
+  'startSession.withoutShelfLabel': 'Chi non ha portato i suoi giochi?',
+  'startSession.withoutShelfNote': 'Le loro scatole restano oggi fuori dall’estrazione. Continuano a giocare, votare e contare per le squadre.',
   'startSession.teamMake': 'Forma una squadra',
   'startSession.teamDissolve': 'Sciogli la squadra {name}',
   'startSession.toast.teamMin': 'Una squadra ha bisogno di almeno {n} persone',

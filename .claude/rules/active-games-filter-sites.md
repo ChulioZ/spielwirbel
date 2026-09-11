@@ -96,6 +96,15 @@ before assuming you have them all:
   (`public/js/direct-session.js`) deliberately does **not** filter: the user
   picked that box.
 
+  **Since #1002 the list it is handed is the SHELF PARTY, not the seats** —
+  `shelfParty(memberIds, withoutShelfIds)`, in the same file, subtracting
+  whoever is at the table without their games. All three sites reduce through
+  it: the route hands the reduced list to `drawPool` while still storing the
+  FULL `memberIds` on the session, and the preview and its negated hidden-count
+  apply the identical reduction. A site that passes the raw seats loses the
+  feature silently — the pool is just the pre-#1002 one, on a screen that said
+  otherwise.
+
   **`game.ownerIds` has four readers, and #973 added the only one that asks from
   the PERSON's side.** The other three ask whether *this table* can put a given
   box on it — `ownedByParty` (the pool), the detail page's owner chip, the

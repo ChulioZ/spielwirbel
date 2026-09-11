@@ -765,6 +765,8 @@ I18N.en = {
   // shrank or grew when a team was formed.
   'startSession.teamsLabel': 'Anyone playing as a team?',
   'startSession.teamsNote': 'A team counts as one party in the draw — and wins together.',
+  'startSession.withoutShelfLabel': 'Who didn’t bring their games?',
+  'startSession.withoutShelfNote': 'Their boxes stay out of the draw today. They still play, vote and count for teams.',
   'startSession.teamMake': 'Form a team',
   'startSession.teamDissolve': 'Dissolve team {name}',
   'startSession.toast.teamMin': 'A team needs at least {n} people',

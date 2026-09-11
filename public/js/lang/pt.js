@@ -731,6 +731,8 @@ I18N.pt = {
   'startSession.toast.guestMax': 'No máximo {n} convidados por sessão',
   'startSession.teamsLabel': 'Alguém joga em dupla ou time?',
   'startSession.teamsNote': 'Um time conta como uma participação no sorteio — e vence junto.',
+  'startSession.withoutShelfLabel': 'Quem não trouxe os jogos?',
+  'startSession.withoutShelfNote': 'As caixas deles ficam hoje fora do sorteio. Continuam jogando, votando e contando para os times.',
   'startSession.teamMake': 'Formar um time',
   'startSession.teamDissolve': 'Desfazer o time {name}',
   'startSession.toast.teamMin': 'Um time precisa de pelo menos {n} pessoas',

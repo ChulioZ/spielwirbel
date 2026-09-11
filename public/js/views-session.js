@@ -59,6 +59,7 @@ function showStartSession(round, prefill) {
         </div>
         <div id="guestMount"></div>
         <div id="teamMount"></div>
+        <div id="shelfMount"></div>
         <div class="multi-table">
           <label class="multi-table__row">
             <input type="checkbox" id="multiTable" />
@@ -123,6 +124,16 @@ function showStartSession(round, prefill) {
   // All members join by default; the number of people joining filters the games
   // by their player count.
   const joining = new Set(round.members.map((m) => m.id));
+  // Seats that are here WITHOUT their shelf (#1002): somebody came straight from
+  // work, or the evening is at someone else's place. Empty by default, because
+  // that is the normal evening — see the chip row further down for why this is
+  // framed as the exception rather than as a second seat picker.
+  const awayShelves = new Set();
+  // What the owner clause is actually about, on BOTH sides of the draw: the
+  // seats whose boxes are in the room. The reduction is the server's own
+  // (draw-pool.js), so the preview below cannot narrow differently than the
+  // draw will (.claude/rules/shared-constants-across-the-stack.md).
+  const shelfSeats = () => shelfParty([...joining], [...awayShelves]);
   // Guests (#458): plain names, held only here until the draw POSTs them — the
   // server mints their ids. Frozen at the draw, exactly like the seat selection.
   // The field is shared with the direct-play sheet (#532); its callback names
@@ -166,7 +177,7 @@ function showStartSession(round, prefill) {
           ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
           : fitsPlayerCount(g, playerCount())) &&
         fitsMetadataFilters(g, metaFilters) &&
-        ownedByParty(g, [...joining])
+        ownedByParty(g, shelfSeats())
     );
 
   // How many games pass every OTHER clause and fail only on their owners being
@@ -184,7 +195,7 @@ function showStartSession(round, prefill) {
           ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
           : fitsPlayerCount(g, playerCount())) &&
         fitsMetadataFilters(g, metaFilters) &&
-        !ownedByParty(g, [...joining])
+        !ownedByParty(g, shelfSeats())
     ).length;
 
   // Live pool preview, in the two presentations described above. The wide panel
@@ -276,6 +287,7 @@ function showStartSession(round, prefill) {
   // (#575) — the picker drops them and dissolves a team left with one person.
   const seatTable = renderSeatPicker(round, joining, () => {
     teamPicker.refreshTeams();
+    refreshShelfChips();
     updateHint();
   }, () => guests.length);
   seatTable.setAttribute('role', 'group');
@@ -286,6 +298,58 @@ function showStartSession(round, prefill) {
     tableState.multiTable = multiTableBox.checked;
     updateHint();
   });
+  /* „Wer hat seine Spiele nicht dabei?" (#1002) — a chip per seated member,
+     OFF by default.
+
+     Framed as the exception rather than as "who IS bringing theirs" with every
+     chip lit: the normal evening ticks nothing here, and a row of all-on
+     avatars directly under the seat ring would read as a second seat picker
+     that disagrees with the first. Off-by-default also means the control is
+     inert until somebody deliberately touches it.
+
+     Built only when the shelf records an owner ANYWHERE — on an unmarked shelf
+     `ownedByParty` is true for every game, so the control could not change a
+     single row, and offering one that cannot do anything is exactly what
+     `metadataFilterOptions` drops a metadata control to avoid. */
+  const shelfMount = form.querySelector('#shelfMount');
+  const shelfIsMarked = activeGames.some((g) => (g.ownerIds || []).length > 0);
+  let refreshShelfChips = () => {};
+  if (!shelfIsMarked) {
+    shelfMount.remove();
+  } else {
+    const shelfField = h(`<div class="field">
+        <div class="field__label" id="shelfLabel">${esc(t('startSession.withoutShelfLabel'))}</div>
+        <div class="filter-chips" id="shelfChips" role="group" aria-labelledby="shelfLabel"></div>
+        <div class="muted field__hint">${esc(t('startSession.withoutShelfNote'))}</div>
+      </div>`);
+    const shelfChips = shelfField.querySelector('#shelfChips');
+    refreshShelfChips = () => {
+      // Taking a member off the table takes their mark with them, so re-seating
+      // them is a fresh statement about tonight rather than a resurrected old
+      // one — the same rule the team picker applies to an unseated player. It
+      // also keeps the two sets consistent: `shelfSeats()` subtracts from the
+      // seats, so a stale mark would be inert but would still light a chip the
+      // moment that member came back.
+      [...awayShelves].forEach((id) => { if (!joining.has(id)) awayShelves.delete(id); });
+      shelfChips.replaceChildren(...round.members.filter((m) => joining.has(m.id)).map((m) => {
+        const on = awayShelves.has(m.id);
+        const chip = h(`<button type="button" class="chip${on ? ' is-on' : ''}" aria-pressed="${on}">`
+          + `<span class="chip__avatar avatar" style="background:${esc(memberColor(round, m.id))}">`
+          + `${avatarFace(initials(m.name), { userId: m.userId })}</span>${esc(m.name)}</button>`);
+        chip.addEventListener('click', () => {
+          if (awayShelves.has(m.id)) awayShelves.delete(m.id);
+          else awayShelves.add(m.id);
+          const now = awayShelves.has(m.id);
+          chip.classList.toggle('is-on', now);
+          chip.setAttribute('aria-pressed', String(now));
+          updateHint();
+        });
+        return chip;
+      }));
+    };
+    refreshShelfChips();
+    shelfMount.replaceWith(shelfField);
+  }
   form.querySelector('#seatMount').replaceWith(seatTable);
   form.querySelector('#guestMount').replaceWith(guestPicker);
   form.querySelector('#teamMount').replaceWith(teamPicker);
@@ -453,6 +517,11 @@ function showStartSession(round, prefill) {
         tagMode: tagFilterState.tagMode, // #726; the server drops it when nothing is included
         metadata: metaFilters, // #725; re-normalized server-side against the same shelf
         memberIds: [...joining],
+        // Who is here without their games (#1002). The MARKS travel, not the
+        // reduced list: the server subtracts them with the same `shelfParty` the
+        // preview above used, so the two cannot apply different arithmetic to
+        // the same answer.
+        withoutShelfIds: [...awayShelves],
         guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
         multiTable: tableState.multiTable, // #796; the server drops it when false

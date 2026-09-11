@@ -106,6 +106,32 @@ function ownedByParty(game, memberIds) {
   return owners.some((x) => party.includes(x));
 }
 
+// The seats whose SHELF is at the table (#1002) — the joining seats minus the
+// people who came without their games (straight from work, or the evening is at
+// somebody else's place). This, not the raw seat list, is what `ownedByParty`
+// above must be handed by both sides of the draw.
+//
+// It is a function rather than a `filter` written twice because the reduction is
+// the whole feature: a drifted copy would make the setup screen's preview offer
+// boxes the draw refuses, or hide ones it would produce, with nothing on screen
+// to explain either (.claude/rules/shared-constants-across-the-stack.md).
+//
+// Nothing away returns the seats UNCHANGED — the same array, so the overwhelming
+// majority of draws take a path that is byte-identical to the pre-#1002 one.
+//
+// Everyone away returns `[]`, and that is deliberate rather than a degenerate
+// case to guard: it means no box in the cupboard is here, so only the games
+// nobody is recorded as owning stay drawable. Note `drawPool`'s clause tests
+// `!memberIds`, and an empty ARRAY is truthy — so the owner filter still applies
+// at `[]` instead of silently switching itself off, which is the one way this
+// could have failed quietly.
+function shelfParty(memberIds, withoutShelfIds) {
+  const seats = Array.isArray(memberIds) ? memberIds : [];
+  const away = Array.isArray(withoutShelfIds) ? withoutShelfIds : [];
+  if (away.length === 0) return seats;
+  return seats.filter((x) => !away.includes(x));
+}
+
 // THE MULTI-TABLE POOL PREDICATE IS `fitsSomeTable` IN public/js/table-split.js
 // (#796). A session split across several tables asks "can this box seat SOME
 // table of at least three?" instead of "does it seat exactly this party?", so it
@@ -332,6 +358,7 @@ if (typeof module !== 'undefined' && module.exports) {
     isActiveGame,
     fitsPlayerCount,
     ownedByParty,
+    shelfParty,
     requiredExpansions,
     EXPANSION_TITLE_MAX,
     fitsMetadataFilters,

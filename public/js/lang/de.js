@@ -759,6 +759,8 @@ I18N.de = {
   // Teams (#575): Mitglieder und Gäste beliebig gemischt, nur für diese Session.
   'startSession.teamsLabel': 'Spielt jemand im Team?',
   'startSession.teamsNote': 'Ein Team zählt beim Auslosen als eine Partei – und gewinnt gemeinsam.',
+  'startSession.withoutShelfLabel': 'Wer hat seine Spiele nicht dabei?',
+  'startSession.withoutShelfNote': 'Ihre Spiele bleiben heute bei der Auslosung außen vor. Mitspielen, Abstimmen und Teams ändern sich nicht.',
   'startSession.teamMake': 'Team bilden',
   'startSession.teamDissolve': 'Team {name} auflösen',
   'startSession.toast.teamMin': 'Ein Team braucht mindestens {n} Personen',
