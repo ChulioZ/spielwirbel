@@ -124,7 +124,9 @@ inside the vm context, so it carries **that** realm's `Object.prototype`.
 `assert/strict`'s deep equality compares prototypes, so it reports "Values have
 same structure but are not reference-equal" on two objects that print
 identically. Spread it into this realm first (`{ ...calls[0].body }`), or assert
-field by field.
+field by field. **That spread is SHALLOW** — a body carrying arrays still fails
+on each one (#1002), so spread the array you assert rather than the object
+holding it: `assert.deepEqual([...sent.body.memberIds], ['m1'])`.
 
 ## The pane's falsehoods do NOT apply here
 

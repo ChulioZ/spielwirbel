@@ -734,6 +734,8 @@ I18N.fr = {
   'startSession.toast.guestMax': 'Au plus {n} invités par session',
   'startSession.teamsLabel': 'Quelqu’un joue en équipe ?',
   'startSession.teamsNote': 'Une équipe compte comme un seul parti dans le tirage — et gagne ensemble.',
+  'startSession.withoutShelfLabel': 'Qui n’a pas apporté ses jeux ?',
+  'startSession.withoutShelfNote': 'Leurs boîtes restent aujourd’hui hors du tirage. Ils jouent, votent et comptent pour les équipes comme d’habitude.',
   'startSession.teamMake': 'Former une équipe',
   'startSession.teamDissolve': 'Dissoudre l’équipe {name}',
   'startSession.toast.teamMin': 'Une équipe compte au moins {n} personnes',

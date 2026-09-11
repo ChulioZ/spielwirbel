@@ -217,3 +217,39 @@ test('the owner clause applies in multi-table mode too (#971)', () => {
   assert.deepEqual(ids(drawPool(big, { playerCount: 6, multiTable: true, memberIds: ['anna'] })), []);
   assert.deepEqual(ids(drawPool(big, { playerCount: 6, multiTable: true, memberIds: ['ben'] })), ['bens']);
 });
+
+/* ------------------ Present without your shelf (#1002) --------------------- */
+
+test('shelfParty subtracts the people who came without their games (#1002)', () => {
+  assert.deepEqual(shared.shelfParty(['anna', 'ben'], ['anna']), ['ben']);
+  assert.deepEqual(shared.shelfParty(['anna', 'ben'], []), ['anna', 'ben']);
+  assert.deepEqual(shared.shelfParty(['anna', 'ben'], ['clara']), ['anna', 'ben'],
+    'an id that is not a seat subtracts nothing');
+  assert.deepEqual(shared.shelfParty(['anna', 'ben'], ['anna', 'ben']), [],
+    'everyone away is a real answer: no box in the cupboard is here');
+});
+
+// Both arguments reach it straight off a request body or a live Set, so neither
+// may be assumed to be an array. A throw here would 500 a draw.
+test('shelfParty survives a non-array on either side (#1002)', () => {
+  assert.deepEqual(shared.shelfParty(undefined, ['anna']), []);
+  assert.deepEqual(shared.shelfParty(['anna'], undefined), ['anna']);
+  assert.deepEqual(shared.shelfParty(null, null), []);
+});
+
+// The clause is what the whole feature rides on, and it is the one place it
+// could have failed SILENTLY: `drawPool` gates the owner filter on `!memberIds`,
+// and an empty array is truthy, so an all-away party must still filter rather
+// than reading as "this caller predates ownership" and passing everything.
+test('an empty shelf party still applies the owner clause (#1002)', () => {
+  assert.deepEqual(ids(drawPool(owned, { playerCount: 2, memberIds: [] })).sort(),
+    ['emptied', 'nobodys'], 'only the games nobody is recorded as owning');
+});
+
+test('a game co-owned by somebody who DID bring theirs survives the subtraction (#1002)', () => {
+  const party = shared.shelfParty(['anna', 'ben'], ['anna']);
+  const picked = ids(drawPool(owned, { playerCount: 2, memberIds: party }));
+  assert.ok(picked.includes('shared'), 'Ben is here with his copy, so the box is in the room');
+  assert.ok(!picked.includes('annas'), 'her own shelf is not');
+  assert.ok(picked.includes('bens'));
+});

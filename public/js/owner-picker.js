@@ -47,10 +47,11 @@ function ownerNames(round, ownerIds) {
    only when it is NEWS, which is the whole rule:
      - no recorded owner        -> nothing to say;
      - everyone seated owns it  -> not news, so stay quiet;
-     - otherwise name the owners who are actually HERE, falling back to every
-       owner when none of them is — a direct pick is not filtered by ownership,
-       so it can legitimately land on a game nobody present owns, and that is
-       exactly when the line is most worth printing.
+     - otherwise name the owners who can actually PUT IT DOWN — here, and with
+       their shelf (#1002) — falling back to every owner when none of them can:
+       a direct pick is not filtered by ownership, so it can legitimately land
+       on a game nobody present owns, and that is exactly when the line is most
+       worth printing.
 
    Pure and shared because two screens print it: the ranking row and the chosen
    row's finish panel. They must never list one game's owners differently
@@ -61,13 +62,29 @@ function ownerNames(round, ownerIds) {
    "everyone owns it" and fall into the quiet branch. The route guarantees at
    least one seat, so that is unreachable — and suppressing is the safe
    direction anyway: saying nothing beats naming the wrong person. */
-function boxBringers(round, session, game) {
+function boxBringers(round, session, game, shelfParty) {
   const ownerIds = (game && game.ownerIds) || [];
   if (!ownerIds.length) return [];
   const seated = new Set((session && session.memberIds) || []);
+  // Who can actually put the box down (#1002): the seats whose shelf is in the
+  // room, i.e. the very party the draw filtered its pool by.
+  //
+  // `shelfParty` (public/js/draw-pool.js) is INJECTED, and carries NO DEFAULT,
+  // for the reason table-split.js gives about `tileValue`: these are classic
+  // scripts over one global scope and this file is ALSO required from Node,
+  // where that sibling is not loaded, so it cannot simply be called. A default
+  // — or a hand-written `seated && !away` filter, which is the same subtraction
+  // spelled a second time — would let this screen and the draw part company and
+  // hand back a plausible, confident list naming somebody who said they brought
+  // nothing, with no error anywhere. Omitting the argument throws instead.
+  const bringing = new Set(shelfParty([...seated], (session && session.withoutShelfIds) || []));
+  // The QUIET rule stays on the SEATS, deliberately, while the naming below
+  // moves to the people who can produce a copy. It asks about OWNERSHIP — if
+  // everybody at the table owns one, nobody needs telling, whoever happened to
+  // carry theirs — where the line itself answers tonight's logistics.
   const everyoneOwnsIt = [...seated].every((mid) => ownerIds.includes(mid));
   if (everyoneOwnsIt) return [];
-  const here = ownerIds.filter((x) => seated.has(x));
+  const here = ownerIds.filter((x) => bringing.has(x));
   return ownerNames(round, here.length ? here : ownerIds);
 }
 

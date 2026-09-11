@@ -31,9 +31,14 @@ What the app does, in detail. For a short overview see the
   also record **which members own the box** — on the add sheet, on the
   BoardGameGeek import, and on the detail page — and the draw then skips a game
   whose owners are all staying home tonight, with the setup screen saying how
-  many were left out for that reason. A game with nobody recorded is never
+  many were left out for that reason. Somebody can also be **at the table without
+  their shelf** — they came straight from work, or the evening is at someone
+  else's place — and the setup screen offers a chip per seated member to say so;
+  their boxes leave that one draw while they go on playing, voting and counting
+  for teams exactly as before. A game with nobody recorded is never
   filtered, so a shelf nobody has marked up behaves exactly as it always did; the
-  results screen names who is bringing the box. When adding a
+  results screen names who is bringing the box — and names only the people who
+  can actually produce it, skipping anyone who came without their shelf. When adding a
   game, the title field doubles as a **search-as-you-type lookup** against
   **BoardGameGeek**. Hits with the **same title** collapse into a **single
   row** — a game printed in several editions offers one entry to click rather
