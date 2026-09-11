@@ -86,12 +86,16 @@ trigger. Each is self-contained and enforces this repo's constraints.
 | **`ui-audit`** | Judges the app's *visual* design — colour, layout, spacing, type, depth, iconography, motion polish — in a browser and drives it toward beautiful-and-characterful within the brand. Plain UI only (not UX, not accessibility). |
 | **`claude-file-audit`** | Audits the repo's own documentation — `CLAUDE.md`, `README.md`, the root docs (`CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE`), the `.github/` community files, everything under `.claude/` and the end-user product copy (the landing text, the in-app FAQ, the landing screenshots) — for staleness, dangling references and contradictions, and refreshes its criteria from current harness capabilities. |
 | **`code-maturity-audit`** | Audits the codebase's production maturity — structure smells, hand-rolled code that should become a mature dependency, single-process in-memory-state assumptions, and test-suite maturity — continuing the build-vs-buy ledger that produced the Knex/pino/zod/JWT adoptions. |
+| **`screen-deep-dive`** | Takes *one* screen apart at every screen size: measures its layout over generated data at phone, tablet, laptop and desktop widths, diagnoses where the height and the width go, proposes tiered improvements as live, clickable prototypes in a device-frame artifact, and — once you decide — files one implementable issue per agreed slice. UX, layout and visuals together, no product code. |
 
 A typical flow: **`create-issue`** to capture the work → **`pick-issue`** to
 choose what's next → **`implement`** to ship it (it calls `review-pr` before
 merging). If a pull request is open, though, `pick-issue` sends you to
 **`review-pr`** instead — an unanswered PR outranks the backlog, because the wait
-is the only cost that grows while you build something else. For dependency bumps,
+is the only cost that grows while you build something else. When a whole screen
+needs rethinking rather than a single change, **`screen-deep-dive`** produces
+the measured proposal first and ends by filing the issues `implement` then
+builds. For dependency bumps,
 **`dependabot`** handles the batch. The six **`*-audit`** skills (and the
 **`audit`** umbrella) run a research → self-critique → audit loop over
 accessibility, legal, security, UI, code maturity and the repo's own Claude
