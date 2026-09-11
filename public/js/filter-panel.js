@@ -128,12 +128,16 @@ function renderMetadataFilter(games, state, onChange) {
   // `carry` is the whole reason this is a parameter and not a constant. With it,
   // choosing a minimum above the current maximum drags the maximum up (and vice
   // versa), so an inverted pick is unreachable — the friendly half of the swap
-  // `normalizeMetadataFilters` applies to a hand-crafted complexity range. That
-  // is right for complexity, where a weight is one number per game and an
-  // inverted range admits nothing at all, and WRONG for playing time, whose two
-  // clauses read opposite ends of the game's own range: there an
-  // inverted-looking pair asks a real question ("spans from under 30 to over
-  // 120" — Toriki) and carrying would silently answer a different one (#1001).
+  // `normalizeMetadataFilters` applies to a hand-crafted range. It is right
+  // wherever the pair is a genuine interval, i.e. BOTH ranges since #1025: a
+  // weight is one number per game, and containment made the playtime pair an
+  // interval too.
+  //
+  // It stays a parameter because the distinction it draws is real and was live
+  // until #1025: while the playtime clauses read opposite ends of the game's OWN
+  // range, an inverted-looking pair asked a real question ("spans from under 30
+  // to over 120" — Toriki) and carrying would have silently answered a different
+  // one. A future non-interval pair passes `false`.
   const rangeRow = (labelKey, defs, values, format, carry) => {
     const labelId = `${uid}-${defs[0][0]}-l`;
     const row = h(`<div class="mfilter__row mfilter__row--range">
