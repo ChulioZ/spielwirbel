@@ -263,8 +263,9 @@ What the app does, in detail. For a short overview see the
     never played, not out for months, well liked and long overdue), a
     **Rundenpuls** (sessions per month over the last year, days since the last
     one, how much of the shelf has ever reached the table), a **Kümmerliste**
-    (played sessions with no winner recorded, games with no cover, games with no
-    player count — each deep-linking to the fix), a „**heute vor N Jahren**"
+    (played sessions with **no result recorded at all** — one that records a
+    winner *or* an ending leaves the list — games with no cover, games with no
+    player count; each deep-linking to the fix), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
     screen. Every card renders nothing at all when it has nothing to say, so a
     young round sees none of them.
@@ -406,7 +407,14 @@ What the app does, in detail. For a short overview see the
   diverges from the plain average, e.g. „1× gar nicht"), rating distribution
   (one bar per rating) and medals for the favourites. Pick the
   game you actually played and mark it finished; recording the winner(s) is an
-  optional follow-up step afterwards — or
+  optional follow-up step afterwards. When nobody won, the same step records
+  **how it ended instead** — „Verloren" (a cooperative game beat the table),
+  „Kein Sieger" (a game that is not about winning) or „Fortsetzung folgt" (a
+  campaign session that is over for tonight while the campaign is not). A winner
+  and an ending are mutually exclusive, every screen that lists a finished
+  session says the ending where there is one, and the statistics treat a loss as
+  a contested night everybody lost while the other two count as non-competitive.
+  Or
   cancel the session if nothing appealed. Sessions can be deleted later, and a
   single game can be removed from a session's results.
 - **Several tables from one vote** – a group too big for a single game ticks

@@ -20,7 +20,15 @@ function memberStats(round, mid) {
   // case worse than the plain count it replaced rather than better. `wins`
   // above stays over every finished night: it is a factual record of nights
   // won, not a claim about skill.
-  const contested = joined.filter((s) => sessionPartyCount(round, s) > 1);
+  // …and a night that was not ABOUT winning is not a contest either (#1038):
+  // „Kein Sieger" and „Fortsetzung folgt" leave the rate untouched rather than
+  // counting as a loss. „Verloren" stays contested and unwon — the table played
+  // to win and did not — so it lowers the rate, which is the honest reading.
+  const notAContest = (s) => {
+    const e = sessionEnding(s);
+    return e === 'noWinner' || e === 'ongoing';
+  };
+  const contested = joined.filter((s) => sessionPartyCount(round, s) > 1 && !notAContest(s));
   const contestedWins = contested.filter((s) => (s.winnerIds || []).includes(mid)).length;
   const winRate = contested.length ? contestedWins / contested.length : null;
 

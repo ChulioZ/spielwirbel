@@ -30,6 +30,7 @@ const { TAG_ICONS } = require('../lib/tag-icons');
 const { isActiveGame, fitsPlayerCount, ownedByParty } = require('../public/js/draw-pool');
 const { resolveDesign } = require('../public/js/round-designs');
 const { MIN_TABLE_PARTIES } = require('../public/js/table-split');
+const { ENDINGS } = require('../public/js/session-outcome');
 const { PROVIDER_INFO_FIELDS } = require('../public/js/provider-info-fields');
 
 // Every seeded game across every round, tagged with the round it belongs to, so
@@ -306,4 +307,28 @@ test('the landing round shows ownership that is actually NEWS at the table', () 
   const seats = 1 + seed.DEMO_TEXT.de.rounds.main.members.length;
   const news = main.games.filter((g) => g.owners && g.owners.length < seats && !g.owners.includes(0));
   assert.ok(news.length, 'no landing-round game is owned by a fellow player alone');
+});
+
+test('the seed shows BOTH ways a session can end, and never both on one (#1038)', () => {
+  /* Asserted here rather than only over the minted round: `test/demo.test.js`'s
+     "winners or an ending" check is satisfied by a seed in which every session
+     has winners, so it cannot on its own tell you the ending is seeded at all.
+     Measured — with `winners: [0, 2]` put back on the cooperative night, that
+     test stays green and this one reddens naming the file. */
+  const sessions = seed.DEMO_ROUNDS.flatMap((r) => r.sessions || []);
+  const withWinners = sessions.filter((s) => (s.winners || []).length > 0);
+  const withEnding = sessions.filter((s) => s.ending);
+
+  assert.ok(withWinners.length > 0, 'a visitor must meet a recorded winner');
+  assert.ok(withEnding.length > 0, 'and a night that ended without one');
+  sessions.forEach((s) => {
+    assert.ok(
+      !(s.ending && (s.winners || []).length),
+      'winners and an ending are mutually exclusive — the route refuses this pair',
+    );
+    assert.ok(
+      !s.ending || ENDINGS.includes(s.ending),
+      `a seeded ending must be one the app can store: ${s.ending}`,
+    );
+  });
 });

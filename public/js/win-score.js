@@ -32,6 +32,12 @@
      scoring an incompleteness in the data as though it were a result. This also
      covers a cancelled evening and a split parent for free — neither carries
      winnerIds — so this file needs no `sessionOutcome` branch of its own.
+     IT ALSO COVERS ALL THREE ENDINGS (#1038) with no change: an ending and
+     winnerIds are mutually exclusive, so a night recorded as „Verloren",
+     „Kein Sieger" or „Fortsetzung folgt" is skipped here exactly as an
+     unrecorded one is. For `lost` that coincides with scoring it — w = 0
+     charges every party 0 — so there is nothing to add either way. Said out
+     loud so nobody "fixes" this file when the endings land elsewhere.
 
    THE FORK, if this is ever retuned: the shape above answers "who has won the
    most". If the family later wants "who is the best", the variant is this same

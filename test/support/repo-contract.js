@@ -1776,6 +1776,34 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteSession(T, round.id, session.id), false);
   });
 
+  // How a played session ended when nobody won (#1038). Like `guests` below it
+  // lives inside the blob, so the absent-key parity is the thing that can break
+  // silently — and here there is a second half the guests case does not have:
+  // the key must be CLEARED again, because the results screen re-POSTs the whole
+  // result on every winner-chip tap.
+  test('a session carries its ending through the blob, and clearing removes the key', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const session = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    });
+    const read = async () => (await repo.getRound(T, round.id)).sessions[0];
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [] });
+    assert.equal('ending' in (await read()), false, 'an ordinary session grows no key');
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [], ending: 'lost' });
+    assert.equal((await read()).ending, 'lost');
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: ['m1'] });
+    assert.equal('ending' in (await read()), false, 'winners clear it');
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [], ending: 'ongoing' });
+    await repo.finishSession(T, round.id, session.id, { finished: false, winnerIds: [] });
+    assert.equal('ending' in (await read()), false, 'un-finishing clears it');
+  });
+
   // Guests (#458) live inside the session blob, so neither backend needed a
   // schema change — which is exactly what makes absent-key parity the thing that
   // can silently break. A `guests: []` written onto a guestless session (or a

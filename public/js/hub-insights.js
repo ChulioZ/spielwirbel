@@ -15,8 +15,9 @@
    a sibling, so injection is what keeps this usable both as a shared-scope
    frontend script and as a CommonJS module the tests require, without a second
    copy of any rule. `deps` is
-   { outcomeOf, monthKeyOf, neutralScore, filterOptions, normalizeMetadata,
-   fitsMetadata } — sessionOutcome (session-outcome.js), periodKeyOf
+   { outcomeOf, endingOf, monthKeyOf, neutralScore, filterOptions,
+   normalizeMetadata, fitsMetadata } — sessionOutcome and sessionEnding
+   (session-outcome.js), periodKeyOf
    (period-recap.js), PRIOR_DEFAULT (vote-score.js) and the three
    metadata-filter functions (draw-pool.js). Each is injected rather than
    restated because a second copy of any of them is exactly the drift
@@ -315,8 +316,13 @@ function careList(round, activeGames, deps) {
   const isRange = (v) => typeof v === 'number' && Number.isFinite(v);
   const plays = hubPlayedSessions(round, deps);
   if (!plays.length) return { winnerless: [], winnerlessTotal: 0, coverless: [], coverlessTotal: 0, noRange: [], noRangeTotal: 0, empty: true };
+  /* Only a session with NO result at all (#1038). It used to be every played
+     session with no winners, which listed a lost coop night, a party game and a
+     campaign chapter as gaps to fix forever — the three things `ending` exists
+     to record. A session that HAS an ending is finished business and leaves the
+     list; an unrecorded one stays, which is the list's job. */
   const winnerless = plays
-    .filter((s) => !(s.winnerIds || []).length && s.chosenGameId)
+    .filter((s) => deps.endingOf(s) === 'unrecorded' && s.chosenGameId)
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   const coverless = shelf.filter((g) => !g.image);
   const noRange = shelf.filter((g) => !isRange(g.minPlayers) || !isRange(g.maxPlayers));

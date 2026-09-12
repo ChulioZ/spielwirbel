@@ -17,7 +17,7 @@ const {
   SUGGEST_MIN_SHELF, PULSE_MONTHS,
   gameSuggestions, quickPresets, roundPulse, careList, anniversary,
 } = require('../public/js/hub-insights');
-const { sessionOutcome } = require('../public/js/session-outcome');
+const { sessionOutcome, sessionEnding } = require('../public/js/session-outcome');
 const { periodKeyOf } = require('../public/js/period-recap');
 const {
   metadataFilterOptions, normalizeMetadataFilters, fitsMetadataFilters,
@@ -26,6 +26,7 @@ const { PRIOR_DEFAULT } = require('../public/js/vote-score');
 
 const deps = {
   outcomeOf: sessionOutcome,
+  endingOf: sessionEnding,
   monthKeyOf: periodKeyOf,
   neutralScore: PRIOR_DEFAULT,
   filterOptions: metadataFilterOptions,
@@ -288,6 +289,32 @@ test('careList reports nothing about a round with nothing to fix', () => {
   const games = shelfOf(3);
   const list = careList(round(games, [played('s1', 'g1', at(2026, 9, 1))]), games, deps);
   assert.equal(list.empty, true);
+});
+
+test('a session with a recorded ending leaves the Kümmerliste (#1038)', () => {
+  // The three nights `ending` exists for used to sit here forever: they have no
+  // winner and never will, so the list nagged about data that was complete.
+  const games = shelfOf(3);
+  const sessions = [
+    played('s1', 'g1', at(2026, 9, 1), { winnerIds: [], ending: 'lost' }),
+    played('s2', 'g2', at(2026, 8, 20), { winnerIds: [], ending: 'noWinner' }),
+    played('s3', 'g3', at(2026, 8, 10), { winnerIds: [], ending: 'ongoing' }),
+  ];
+  const list = careList(round(games, sessions), games, deps);
+  assert.equal(list.winnerlessTotal, 0);
+  assert.equal(list.empty, true);
+});
+
+test('a session with NO result recorded still counts as a loose end (#1038)', () => {
+  // The other direction, and the reason the list still exists: an unrecorded
+  // night is a gap, and an unknown ending value must not rescue it.
+  const games = shelfOf(3);
+  const sessions = [
+    played('s1', 'g1', at(2026, 9, 1), { winnerIds: [] }),
+    played('s2', 'g2', at(2026, 8, 20), { winnerIds: [], ending: 'abandoned' }),
+  ];
+  const list = careList(round(games, sessions), games, deps);
+  assert.equal(list.winnerlessTotal, 2);
 });
 
 test('careList finds the three gaps and caps each section', () => {
