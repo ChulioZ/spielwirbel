@@ -54,8 +54,21 @@ Non-obvious things baked into the design — keep them:
   (!round) 404`, then calls the mutator, which returns `null` when the *sub-entity*
   is missing → the second, specific 404. A couple of methods return a small
   marker instead of a bare entity where a 400 is needed (`deleteGame` →
-  `'not_archived'`; `setBackground`/`deleteGame` return the previous background /
-  freed image path so the route can do the filesystem cleanup). Preconditions that
+  `'not_archived'`; `updateTag` → `'name_taken'`; `setBackground`/`deleteGame`
+  return the previous background / freed image path so the route can do the
+  filesystem cleanup).
+
+  **`updateTag`'s marker is the one that could NOT have lived in the route**, and
+  it is worth knowing why before moving a check outward for tidiness. The
+  uniqueness it enforces is over a list the Postgres backend holds under
+  `FOR UPDATE`, so a route-level `getRoundMeta` → check → `updateTag` puts the
+  read and the write on either side of that lock: two concurrent renames both
+  pass and produce two tags with one name — a state `addTag` can never reach,
+  and one nothing on screen can tell apart. Same reasoning as `quota_dismissed`
+  (`.claude/rules/per-tenant-quotas.md`), which is in the mutator for the same
+  race rather than for convenience. **A precondition over data the mutator
+  itself serializes belongs INSIDE it**; the ones the route still owns are those
+  it can answer from its own snapshot. Preconditions that
   need round/session data (e.g. "game belongs to this session", "session is
   cancelled") are validated in the route against the fetched snapshot *before*
   calling the mutator — that's why the snapshot read is there.
