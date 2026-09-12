@@ -3,18 +3,13 @@
 /* The shared draw-pool predicates (#634) and — the point of the whole exercise —
    that the session-setup screen's live preview really applies them.
 
-   `test/draw.test.js` covers the server's side of this. What it cannot see is the
-   failure #634 exists to prevent: the preview promising a pool the draw would not
-   produce. That is invisible to every server-side test by construction, which is
-   why the parity check at the bottom renders the real view and compares its tiles
-   against `drawPool()` over the same round.
+   `test/draw.test.js` covers the server's side of this. The cross-boundary
+   PARITY check — that the setup screen's live preview really applies these same
+   predicates — lives in test/draw-pool-preview.test.js since #1005: it boots the
+   jsdom harness and renders a view, where everything here calls a pure function
+   directly, and the two halves are never edited for each other's reason. */
 
-   Only the ACTIVE and RANGE clauses are shared, so only those are asserted as
-   parity. The tag filter is deliberately still expressed twice — the server takes
-   resolved include/exclude id lists, the client a tri-state chip map — and
-   `test/draw.test.js` owns that half. */
-
-const { test, after } = require('node:test');
+const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
@@ -26,10 +21,10 @@ const {
   hasMetadataFilterOptions,
   normalizeMetadataFilters,
   countMetadataFilters,
+  fitsRecommendedCount,
   WEIGHT_CHOICES,
 } = require('../public/js/draw-pool');
 const { drawPool } = require('../lib/draw');
-const { loadApp } = require('./support/dom');
 
 // The canonical "nothing is filtered" shape, minted the way the app mints it.
 const NO_FILTERS = normalizeMetadataFilters(null, {});
@@ -349,6 +344,73 @@ test('countMetadataFilters counts the category CONTROL once, whichever way it fi
     'categories and mechanics are still two controls');
 });
 
+// A 2–6 box the community calls best at four, fine at five, wrong at six — the
+// exact shape #1005 was reported against.
+const POLLED = { minPlayers: 2, maxPlayers: 6, bestWith: [4], recommendedWith: [3, 4, 5] };
+
+test('the recommendation toggle hides a count BGG does not endorse (#1005)', () => {
+  assert.equal(fitsRecommendedCount(POLLED, 5, true), true, 'recommended at five');
+  assert.equal(fitsRecommendedCount(POLLED, 4, true), true, 'best at four');
+  assert.equal(fitsRecommendedCount(POLLED, 6, true), false, 'the box says 6, the community does not');
+  assert.equal(fitsRecommendedCount(POLLED, 2, true), false, 'and neither list holds two');
+
+  // OFF is a strict no-op, which is what keeps every pool before #1005
+  // byte-identical.
+  assert.equal(fitsRecommendedCount(POLLED, 6, false), true);
+  assert.equal(fitsRecommendedCount(POLLED, 6, undefined), true);
+});
+
+test('an UNANSWERED poll means no opinion, never "not recommended"', () => {
+  // The failure that would hide games on the strength of missing data — the
+  // absent-value rule one step over. Three shapes of "unanswered": both lists
+  // empty, and a game that predates the field entirely.
+  assert.equal(fitsRecommendedCount({ minPlayers: 1, maxPlayers: 8, bestWith: [], recommendedWith: [] }, 6, true), true);
+  assert.equal(fitsRecommendedCount({ minPlayers: 1, maxPlayers: 8 }, 6, true), true, 'no keys at all');
+  assert.equal(fitsRecommendedCount({}, 6, true), true, 'nothing known about the game whatsoever');
+});
+
+test('the poll has no opinion OUTSIDE the box, so an expansion count is never hidden', () => {
+  // BGG's poll only carries rows inside the box (its "N+" bucket is dropped at
+  // parse time), so at a count reached through an owned expansion the poll says
+  // nothing — and silence must not read as rejection. Deliberately the BASE
+  // range, not `fitsPlayerCount`'s union with the expansions: the union is
+  // precisely the region the poll cannot speak about.
+  assert.equal(fitsRecommendedCount(POLLED, 7, true), true, 'a 5-6 expansion count is not rejected');
+  assert.equal(fitsRecommendedCount(POLLED, 1, true), true, 'nor a solo expansion count');
+  // The control — INSIDE the box, an unendorsed count is still rejected, so the
+  // clause above cannot pass by having turned the whole predicate off.
+  assert.equal(fitsRecommendedCount(POLLED, 6, true), false);
+  // A game with no declared range has no "outside", so its poll applies at every
+  // count rather than at none.
+  assert.equal(fitsRecommendedCount({ bestWith: [4], recommendedWith: [4] }, 6, true), false);
+});
+
+test('the toggle is offered only where some game carries a NON-EMPTY poll', () => {
+  // `[]` is a stored value here, unlike an absent number, so gating on the KEY
+  // would render a toggle that can never do anything on a shelf BGG has polled
+  // nowhere — the inverse of the empty pool.
+  assert.equal(metadataFilterOptions([POLLED]).recommended, true);
+  assert.equal(metadataFilterOptions([{ bestWith: [], recommendedWith: [] }]).recommended, false);
+  assert.equal(metadataFilterOptions([{ title: 'Handgetippt' }]).recommended, false);
+  // Either half alone is enough.
+  assert.equal(metadataFilterOptions([{ recommendedWith: [3] }]).recommended, true);
+  // …and on its own it is enough to render the panel at all.
+  assert.equal(hasMetadataFilterOptions(metadataFilterOptions([POLLED])), true);
+});
+
+test('a stored onlyRecommended is dropped on a shelf that cannot offer it', () => {
+  const offered = normalizeMetadataFilters({ onlyRecommended: true }, { ...ALL_OPTIONS, recommended: true });
+  assert.equal(offered.onlyRecommended, true);
+  const gone = normalizeMetadataFilters({ onlyRecommended: true }, ALL_OPTIONS);
+  assert.equal(gone.onlyRecommended, false, 'no poll on this shelf, so no chip over a missing toggle');
+  assert.equal(countMetadataFilters(gone), 0);
+  assert.equal(countMetadataFilters(offered), 1, 'and it is its own control');
+  // Junk collapses to false rather than riding through as a truthy string.
+  assert.equal(
+    normalizeMetadataFilters({ onlyRecommended: 'yes' }, { ...ALL_OPTIONS, recommended: true }).onlyRecommended,
+    true, 'coerced, not passed through');
+});
+
 test('metadataFilterOptions offers only what the SHELF carries, deduped and sorted', () => {
   const games = [
     { minPlaytime: 30, categories: ['Party Game', 'Economic'] },
@@ -393,6 +455,7 @@ test('normalizeMetadataFilters drops a value this shelf can no longer offer', ()
     mechanics: [],
     excludeCategories: [],
     excludeMechanics: [],
+    onlyRecommended: false,
   });
 });
 
@@ -491,6 +554,30 @@ test('countMetadataFilters counts CONTROLS — the complexity range is one', () 
   assert.equal(countMetadataFilters({ ...NO_FILTERS, categories: [] }), 0, 'an empty list filters nothing');
 });
 
+test('drawPool applies the recommendation toggle — and a MULTI-TABLE draw does not', () => {
+  const shelf = {
+    games: [
+      { id: 'a', title: 'Passt', minPlayers: 2, maxPlayers: 6, bestWith: [6], recommendedWith: [5, 6] },
+      { id: 'b', title: 'Kaputt', minPlayers: 2, maxPlayers: 6, bestWith: [2], recommendedWith: [2, 3] },
+      { id: 'c', title: 'Ungefragt', minPlayers: 2, maxPlayers: 6, bestWith: [], recommendedWith: [] },
+    ],
+  };
+  const titles = (opts) => drawPool(shelf, { playerCount: 6, ...opts }).map((g) => g.title).sort();
+
+  assert.deepEqual(titles({ metadata: { ...NO_FILTERS, onlyRecommended: true } }), ['Passt', 'Ungefragt']);
+  // The regression guard: off, and absent, are both the pre-#1005 pool.
+  assert.deepEqual(titles({ metadata: NO_FILTERS }), ['Kaputt', 'Passt', 'Ungefragt']);
+  assert.deepEqual(titles({}), ['Kaputt', 'Passt', 'Ungefragt']);
+
+  // MULTI-TABLE skips the clause entirely. The relaxed pool asks "can this box
+  // seat SOME table of three or more?", and those tables do not exist yet — so
+  // there is no one table size the community could have an opinion about, and
+  // applying the party count would answer a question nobody asked.
+  assert.deepEqual(
+    titles({ multiTable: true, metadata: { ...NO_FILTERS, onlyRecommended: true } }),
+    ['Kaputt', 'Passt', 'Ungefragt']);
+});
+
 test('drawPool applies the metadata filters, and is untouched without them', () => {
   const shelf = {
     games: [
@@ -512,148 +599,4 @@ test('drawPool applies the metadata filters, and is untouched without them', () 
   // change of its own - and it discriminates the other way round from the line
   // above, which is what proves the two clauses are not the same one twice.
   assert.deepEqual(titles({ ...NO_FILTERS, minPlaytime: 90 }), ['Lang', 'Unbekannt']);
-});
-
-/* ---- the cross-boundary parity check ---------------------------------------
-   Four members join by default and there are no guests or teams, so the view's
-   party count is round.members.length — the same number handed to drawPool here.
-
-   The fixture discriminates in BOTH directions as that count changes: at four
-   players 'Catan' is in and 'Duo' is out, at two it is the other way round. A
-   preview that had drifted to a wrong bound, a wrong comparison or a missing
-   archive clause changes one of those four answers. */
-
-const round = {
-  id: 'r1',
-  name: 'Freitagsrunde',
-  members: [
-    { id: 'm1', name: 'Anna' },
-    { id: 'm2', name: 'Ben' },
-    { id: 'm3', name: 'Cleo' },
-    { id: 'm4', name: 'Dana' },
-  ],
-  games: [
-    { id: 'g1', title: 'Azul' },
-    { id: 'g2', title: 'Uno', retired: true },
-    { id: 'g3', title: 'Risiko', completed: true },
-    { id: 'g4', title: 'Duo', minPlayers: 2, maxPlayers: 2 },
-    { id: 'g5', title: 'Catan', minPlayers: 3, maxPlayers: 4 },
-    // Exactly three, which is what separates the two range predicates at a table
-    // of four: `fitsPlayerCount` asks whether the box seats the whole party (no),
-    // `fitsSomeTable` whether it seats SOME table of three or more (yes).
-    { id: 'g6', title: 'Trio', minPlayers: 3, maxPlayers: 3 },
-  ],
-};
-
-const dom = loadApp({ locale: 'de' });
-after(() => dom.close());
-// The screen renders the per-device-voting row only in accounts mode, and it is
-// not what this spec is about.
-dom.set('isLoggedIn', () => false);
-
-// The titles the preview panel is offering right now.
-const previewed = () =>
-  [...dom.app.querySelectorAll('.pool-tile__name')].map((el) => el.textContent).sort();
-
-// What the server would actually draw from, for the same table size.
-const drawable = (playerCount, over = {}) =>
-  drawPool(round, { playerCount, ...over }).map((g) => g.title).sort();
-
-test('the setup preview offers exactly what the draw would pick from', async () => {
-  await dom.call('showStartSession', round);
-
-  assert.deepEqual(previewed(), drawable(4));
-  // Anti-vacuous: an empty preview would satisfy a comparison against an empty
-  // pool, and both archives must be doing work in that equality.
-  assert.deepEqual(previewed(), ['Azul', 'Catan']);
-});
-
-test('… and still does after the table size changes', async () => {
-  await dom.call('showStartSession', round);
-
-  // Two seats out -> a two-person table. Clicking a seat re-runs updateHint().
-  // `[aria-pressed]` is what picks the MEMBER seats out of the ring: since #1016
-  // it also carries the guests and the „+" seat, and neither of those toggles
-  // anybody in or out.
-  const seats = [...dom.app.querySelectorAll('.nr-seat[aria-pressed]')];
-  assert.equal(seats.length, 4, 'fixture sanity: one seat per member');
-  seats[0].click();
-  seats[1].click();
-
-  assert.deepEqual(previewed(), drawable(2));
-  // The set must have moved in both directions, or this asserts nothing that the
-  // four-player case did not already cover.
-  assert.deepEqual(previewed(), ['Azul', 'Duo']);
-});
-
-/* ---- Multi-table (#796) ---- */
-
-test('… and after „Mehrere Tische", against the RELAXED predicate', async () => {
-  await dom.call('showStartSession', round);
-  // The chip that replaced the checkbox in #1015. Addressed by `data-addon`
-  // rather than by its label, which is localised, or by its position in the row,
-  // which the shelf chip changes.
-  const box = dom.app.querySelector('.setup-addons__chip[data-addon="multi"]');
-  assert.ok(box, 'the setup screen offers the multi-table chip');
-  box.click();
-
-  assert.deepEqual(previewed(), drawable(4, { multiTable: true }));
-  // The set must actually have GROWN, or this asserts nothing the four-player
-  // case above did not already cover — which is exactly what the first version of
-  // this spec did, and it stayed green against a preview that ignored the flag.
-  // Trio (3-3) is the game that separates them; Duo (2-2) seats no table of three
-  // and stays out of both.
-  assert.deepEqual(previewed(), ['Azul', 'Catan', 'Trio']);
-
-  box.click();
-  assert.deepEqual(previewed(), drawable(4), 'switching it back off restores the ordinary pool');
-  assert.deepEqual(previewed(), ['Azul', 'Catan']);
-});
-
-test('and the flag itself rides the draw request', async () => {
-  /* The preview and the pool can agree perfectly while the POST omits the flag,
-     in which case the server draws the ordinary pool and answers "no matching
-     games" over a screen showing four. Only the request body can see that. */
-  /* Two draws from ONE screen, which the app itself never does — the lobby has
-     replaced this view by the second one. Since #1017 a draw holds the screen for
-     the length of the whirl and refuses a second press while it is in flight, so
-     this spec has to say which motion setting it runs under: with the whirl off
-     both draws complete in the turn they were clicked, and the request body —
-     the only thing under test here — is unaffected either way. */
-  dom.window.matchMedia = (q) => ({ matches: /prefers-reduced-motion:\s*reduce/.test(q) });
-  await dom.call('showStartSession', round);
-  const bodies = [];
-  dom.set('api', async (method, path, body) => {
-    bodies.push({ ...body });
-    return { session: { id: 's1', gameIds: [] }, games: [], members: [], guests: [], teams: [] };
-  });
-  dom.set('showSessionLobby', () => {});
-
-  dom.app.querySelector('#go').click();
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  assert.equal(bodies[0].multiTable, false);
-
-  dom.app.querySelector('.setup-addons__chip[data-addon="multi"]').click();
-  dom.app.querySelector('#go').click();
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  assert.equal(bodies[1].multiTable, true);
-});
-
-test('the multi-table chip carries its state in aria-pressed, not only in colour', async () => {
-  /* It was a checkbox until #1015, which gave the state away for free. A chip
-     announces as a bare name unless the state is on the element, and this is the
-     control that decides which pool the whole screen is previewing
-     (.claude/rules/accessibility-contrast-and-modals.md §3).
-
-     It is a TOGGLE, not a disclosure — it has no body to open — so `aria-pressed`
-     is the right half of that pair and `aria-expanded` would be wrong. */
-  await dom.call('showStartSession', round);
-  const chip = dom.app.querySelector('.setup-addons__chip[data-addon="multi"]');
-  assert.equal(chip.tagName, 'BUTTON', 'a chip that is not a real button is not operable by keyboard');
-  assert.equal(chip.getAttribute('aria-pressed'), 'false');
-  assert.equal(chip.hasAttribute('aria-expanded'), false, 'a bodyless toggle must not claim to expand something');
-  chip.click();
-  assert.equal(chip.getAttribute('aria-pressed'), 'true');
-  chip.click();
-  assert.equal(chip.getAttribute('aria-pressed'), 'false');
 });

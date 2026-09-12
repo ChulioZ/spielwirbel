@@ -49,6 +49,24 @@ empty answer must never erase a stored list) and `hasProviderField` treats it as
 unfilled. Get those two out of step and a game with no categories either loops
 forever or is written as permanently empty.
 
+**Except for the suggested-players POLL (#1005), whose guard accepts `[]`.** It
+is the one field where an empty answer is a *real* one, and the reason is scale
+rather than taste: BGG has no explicit not-recommended list, so an unanswered
+poll is two empty lists — and an unanswered poll is the **common** case on the
+long tail of BGG, unlike a missing category. Under `isProviderList` every such
+game would be permanently incomplete, i.e. exactly the standing weekly upstream
+request the paragraph above calls the mirror-image break, at a scale the
+categories precedent does not cover. The cost of accepting `[]` is the ordinary
+one every other field pays: once stored the game is complete, so a poll that
+gains votes later is not picked up.
+
+`bestWith` and `recommendedWith` deliberately use the **corpus's own key names**,
+so `corpusPatch` fills a shelf game's poll with no upstream hop at all. That is
+the first field to cross between the two parsers, and it is why `parseGameInfo`
+had to start slicing per `<item>`: `parseItems` flattens every descendant into
+one list, so run flat a two-item body's polls merge and the second game inherits
+the first one's verdict.
+
 **#729 exercised all of this in reverse** by removing `description`, and the
 shape held: deleting its entry from `PROVIDER_INFO_GUARDS` *was* the whole
 store-side change, because the guard map is what both the write loop and the

@@ -38,6 +38,7 @@ function roundFixture() {
         categories: ['Civilization', 'Economic'],
         mechanics: ['Dice Rolling', 'Hand Management', 'Trading', 'Network Building', 'Income', 'Set Collection'],
         rating: 7.09054,
+        bestWith: [4], recommendedWith: [3, 4],
         source: { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' },
         providerInfoAt: '2026-08-09T10:00:00.000Z',
       },

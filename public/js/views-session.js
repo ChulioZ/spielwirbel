@@ -190,6 +190,12 @@ function showStartSession(round, prefill) {
   // Multi-table mode (#796). Preset from the same #252 blob as everything else on
   // this screen; the checkbox below is bound to it and the pool reads it live.
   const tableState = { multiTable: !!(preset && preset.multiTable) };
+  // A preset can arrive with BOTH remembered (#252), and `normalizeMetadataFilters`
+  // above cannot drop it: it prunes against the SHELF's options, and whether this
+  // evening has one table is a property of the screen. Without this the restored
+  // session shows a chip for a filter with no control and no effect — see the gate
+  // in `mountFilterPanel` for why the toggle does not exist in this mode.
+  if (tableState.multiTable) metaFilters.onlyRecommended = false;
 
   // Games matching the tag filter, whose player range fits the joining count.
   // Guests sit at the table, so they count here, and a team counts once however
@@ -213,6 +219,7 @@ function showStartSession(round, prefill) {
           ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
           : fitsPlayerCount(g, playerCount())) &&
         fitsMetadataFilters(g, metaFilters) &&
+        (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended)) &&
         ownedByParty(g, shelfSeats())
     );
 
@@ -231,6 +238,7 @@ function showStartSession(round, prefill) {
           ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
           : fitsPlayerCount(g, playerCount())) &&
         fitsMetadataFilters(g, metaFilters) &&
+        (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended)) &&
         !ownedByParty(g, shelfSeats())
     ).length;
 
@@ -344,6 +352,16 @@ function showStartSession(round, prefill) {
     ownersNote.textContent = hiddenN
       ? tn(hiddenN, 'startSession.ownersHiddenOne', 'startSession.ownersHidden')
       : '';
+
+    // The applied chips STATE the party count since #1005 („BGG-Tipp für 4
+    // Personen"), so seating somebody changes a chip nobody touched. This runs on
+    // every seat, guest and team change, which is exactly the set of events that
+    // moves the number — without it the chip keeps naming the party the filter
+    // was switched on at, disagreeing with the label inside the panel and with
+    // the ring above it. Cheap and idempotent: `sync` only rebuilds the chip row
+    // and the trigger's aria-label, and it is safe under an open overlay because
+    // the chips live OUTSIDE it (unlike `mountFilterPanel`, which must not).
+    if (filterPanel) filterPanel.sync();
   };
   // Seats around the table: tap a member to toggle whether they join tonight,
   // tap the „+" seat to add a guest (#1016).
@@ -463,6 +481,18 @@ function showStartSession(round, prefill) {
     onToggle: () => {
       tableState.multiTable = !tableState.multiTable;
       multiTableNote.hidden = !tableState.multiTable;
+      // Hiding the control is not enough: the VALUE would survive on `metaFilters`,
+      // so the chip outside the panel would keep claiming a filter whose control
+      // has gone — a filter the user could neither see nor clear, which is the
+      // vanished-referent rule `normalizeMetadataFilters` applies to every other
+      // control here. Cleared rather than remembered, because the mode is a
+      // deliberate act and a filter silently returning later is worse than
+      // re-ticking a box.
+      if (tableState.multiTable) metaFilters.onlyRecommended = false;
+      // The panel carries one control fewer (or one more), so it is rebuilt
+      // rather than merely resynced — `mountFilterPanel` is a no-op under an open
+      // overlay, and this addon sits outside it, so it cannot be mid-adjustment.
+      mountFilterPanel();
       updateHint();
     },
   });
@@ -580,7 +610,21 @@ function showStartSession(round, prefill) {
     if (filterPanel && filterPanel.isOpen()) return;
     // Preserved across a rebuild: the user's picks (the `metaFilters` object is
     // mutated in place and handed back in) and the tag section node itself.
-    filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection);
+    // `tableSized`: this screen has a party, so the recommendation toggle
+    // (#1005) can mean something here. The Regal passes nothing and gets no
+    // toggle — it filters a shelf, not an evening.
+    // `tableSized` is FALSE under „Mehrere Tische", and that is the same gate the
+    // Regal gets rather than a second one: the toggle asks what the community
+    // recommends AT A TABLE SIZE, and a split has no one size — which is why both
+    // the draw (lib/draw.js) and the preview above skip the clause there. Left
+    // rendered it would be a control that does nothing, and since #1005 states a
+    // count it would do worse than nothing: „BGG-Tipp für 5 Personen" over an
+    // evening where those five sit at two tables of two and three.
+    //
+    // `partyCount`: a thunk, so the toggle's own label and its applied chip can
+    // state the number they are filtering on rather than saying „hier".
+    filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection,
+      { tableSized: !tableState.multiTable, partyCount: playerCount });
     filterMount.replaceChildren();
     if (filterPanel) filterMount.appendChild(filterPanel.el);
     filterMount.hidden = !filterPanel;

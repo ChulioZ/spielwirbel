@@ -314,9 +314,14 @@ What the app does, in detail. For a short overview see the
   at a time. It holds both kinds of filter as labelled sections. The
   first is the round's own custom tags; the second is over the metadata imported
   from BoardGameGeek rather than anything the round maintains — a playing-time
-  range with a floor as well as a ceiling (so an evening with three hours in it
-  can drop the fillers), a complexity range, the age of the youngest person at
-  the table, and category / mechanic chips. That second half offers only
+  range with a floor as well as a ceiling, meaning **containment** — „höchstens
+  120 Min." keeps only games that really finish inside two hours, rather than
+  games that merely *might* — a complexity range, the age of the youngest person
+  at the table, category / mechanic chips that cycle through include, **exclude**
+  and off (so „alles außer Party-Spiele" is one thing you can ask for), and a
+  toggle for **only what BGG's community recommends at this table size**: the box
+  may say 2–6, but the poll often says six is a bad idea. A game whose poll
+  nobody has answered is never hidden by it. That second half offers only
   the values the round's own games actually carry — a fifteen-game shelf lists
   the handful of categories those games have, not BGG's ~84 — and it is absent
   entirely on a shelf with no such data. A game BGG knows nothing about always

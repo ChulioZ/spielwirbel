@@ -498,10 +498,19 @@ test('gameInfo without a token asks about nothing at all', async (t) => {
 });
 
 test('parseGameInfo reads a MULTI-item stats body for the backfill', () => {
+  /* The POLL is what forces the per-item slicing (#1005). `parseItems` flattens
+     every descendant into one list, so run flat this body's two polls merge and
+     Carcassonne — whose poll nobody answered — inherits CATAN's verdict. Only
+     the FIRST item carries one here, for exactly that reason. */
   const xml = `<items>
     <item type="boardgame" id="13">
       <name type="primary" value="CATAN"/>
       <description>Handel &amp; Bau.</description>
+      <poll name="suggested_numplayers">
+        <results numplayers="3"><result value="Best" numvotes="9"/><result value="Recommended" numvotes="4"/><result value="Not Recommended" numvotes="1"/></results>
+        <results numplayers="4"><result value="Best" numvotes="2"/><result value="Recommended" numvotes="7"/><result value="Not Recommended" numvotes="1"/></results>
+        <results numplayers="4+"><result value="Best" numvotes="0"/><result value="Recommended" numvotes="1"/><result value="Not Recommended" numvotes="8"/></results>
+      </poll>
       <statistics><ratings><average value="7.1"/><averageweight value="2.28"/></ratings></statistics>
     </item>
     <item type="boardgame" id="822">
@@ -509,13 +518,19 @@ test('parseGameInfo reads a MULTI-item stats body for the backfill', () => {
       <statistics><ratings><averageweight value="0"/></ratings></statistics>
     </item>
   </items>`;
-  const none = { minPlaytime: null, maxPlaytime: null, minAge: null, categories: [], mechanics: [] };
+  const none = {
+    minPlaytime: null, maxPlaytime: null, minAge: null, categories: [], mechanics: [],
+    bestWith: [], recommendedWith: [],
+  };
   assert.deepEqual(bgg.parseGameInfo(xml), [
     // The first item's body carries a <description>; the deepEqual is exact, so
     // an extra key would fail here — the parse-path guard for #729.
-    { providerId: '13', weight: 2.28, rating: 7.1, ...none },
-    // A game the community has not weighted: everything null/empty, so the
-    // backfill can stamp the attempt without inventing data.
+    // The "4+" bucket is dropped, not parsed: `parseInt('4+')` is 4, which would
+    // merge BGG's "more than the box allows" row into the real four-player one.
+    { providerId: '13', weight: 2.28, rating: 7.1, ...none, bestWith: [3], recommendedWith: [3, 4] },
+    // A game the community has not weighted OR polled: everything null/empty, so
+    // the backfill can stamp the attempt without inventing data. The empty poll
+    // is the assertion that the slicing held — flat, it would read [3]/[3,4].
     { providerId: '822', weight: null, rating: null, ...none },
   ]);
   assert.deepEqual(bgg.parseGameInfo(''), []);

@@ -1736,6 +1736,16 @@ a.hub-row:hover { background: var(--sunken-soft); }
    split the two rows differently again. One predictable shape beats a tidier
    one that depends on the translation. */
 .mfilter__row--range { flex-direction: column; align-items: stretch; gap: 6px; }
+/* The one boolean row (#1005). It is a <label> wrapping its checkbox so the
+   whole row toggles — and it is NOT inside a `.field`, which would make
+   `.field label`'s `display: block` beat `.mfilter__row`'s flex and stack the
+   label over the box (.claude/rules/label-rows-lose-to-field-label.md). */
+.mfilter__row--check { cursor: pointer; }
+.mfilter__row--check input { width: 20px; height: 20px; accent-color: var(--brand); flex: none; }
+/* The sentence under it. A toggle whose meaning is "what BGG's community says"
+   needs one line of explanation; every other control here names its own field.
+   Pulled up against the row it belongs to, so it reads as part of it. */
+.mfilter__hint { margin: -6px 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
 .mfilter__range { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 /* One bound: its direction word and its select, wrapping together. Measured at
    375px with them as flat siblings, the row broke BETWEEN „höchstens" and its
