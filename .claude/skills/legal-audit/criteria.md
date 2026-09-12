@@ -67,8 +67,9 @@ than an acknowledged gap.
 - **Source:** `keep-legal-docs-current.md` direction 2 · Art. 5(2) GDPR
 - **Check:** The published text is a ceiling. Verify against code, not intent:
   no analytics or tracking storage; `trackEvent`'s field allowlist still refuses anything
-  beyond `event` + `tenantId`; `requestLogger`'s `customProps` still logs no bodies, query
-  strings, headers or cookies; feedback deletion works; erasure leaves an e-mail-free
+  beyond `event` + `tenantId`; `requestLogger` still logs no bodies, query strings,
+  headers or cookies (check `customProps` AND `customSuccessObject`/`customErrorObject`,
+  which carry four of the five fields); feedback deletion works; erasure leaves an e-mail-free
   record; sharing stays limited to the named recipients.
 - **Enforced by:** partially — `test/status.test.js` sweeps secrets out of the admin
   status response; the logging allowlists are manual.
