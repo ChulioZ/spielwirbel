@@ -133,5 +133,5 @@ call", that stopped being true in #832.
 
 **Related:** `.claude/rules/active-games-filter-sites.md` (the archive states and
 the single-game guard), `.claude/rules/round-roles-are-a-chokepoint.md` (§4's
-table), `.claude/rules/shared-constants-across-the-stack.md` (§1's client half),
+table), `.claude/rules/shared-constants-inventory.md` (§1's client half),
 `.claude/rules/deletion-paths-must-free-cover-objects.md`.

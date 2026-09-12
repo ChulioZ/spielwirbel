@@ -126,7 +126,7 @@ pushes its log entry **inside** the claim rather than through `withSession`'s
   of the 1–5 scale. It was written against a 0–5 scale when #797 made
   retirement the zero; #909 removed the retire vote and the zero with it, and
   the value stood while the sentence justifying it moved up one rung (the
-  worked example in `shared-constants-across-the-stack.md`'s ninth-instance
+  worked example in `shared-constants-inventory.md`'s ninth-instance
   paragraph). Change the scale and this moves in the same change.
 - **Never show a score.** An aggregate number invites arguing about the formula
   instead of about the evening; the builder shows each table's average, its
@@ -148,7 +148,7 @@ feature, so they live in
 survived the suite, `lint`, `coverage:ci` and a full round of DOM probes:
 **screenshot a new screen once, at a real viewport, before believing the probes.**
 
-**Related:** `.claude/rules/shared-constants-across-the-stack.md` (entries nine
+**Related:** `.claude/rules/shared-constants-inventory.md` (entries nine
 and ten — and its thirteenth, `vote-score.js`, for what one vote is worth),
 `.claude/rules/active-games-filter-sites.md` (the pool predicates this
 adds one to), `.claude/rules/session-teams.md` (the party arithmetic),
