@@ -4688,6 +4688,118 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .pass__table { display: contents; }
 }
 
+/* ---- Game detail: the session stamps (#1040) ----
+   „Verwandte Sessions" is a Stempelkarte, not a list. The exception to
+   `.claude/rules/tiles-vs-lists.md` (which files this list under *keep it a
+   list*) is written up there: the rule's argument was ORDERING, and a row-major
+   strip keeps it — newest first, read left to right like text.
+
+   `--sc` is the stamp's ink, set inline from `scoreColor()` for an evening this
+   game was taken to and defaulted to `--ink-soft` for one it was not. Every
+   colour on the component derives from it, so the whole stamp re-inks from one
+   custom property.
+
+   Three measured constraints, none of which the eye can check
+   (`test/a11y-contrast.test.js` pins all three over all 15 designs x the whole
+   0-5 ramp):
+
+   1. The TEXT is NOT the score colour, except on the date. Score ink on its own
+      7% tint bottoms out at 4.15:1 (standard, O3.0) — the yellow-green middle of
+      the ramp is simply not a 4.5:1 body ink over anything light, and dropping
+      the tint to 0 only reaches 4.53. The date is 22px/700 display type, i.e.
+      AA-large at the 3:1 bar, which it clears at 4.15; the two small lines take
+      `--ink` / `--ink-soft` (11.23 / 5.11 worst).
+   2. The border is the component's only boundary, so it carries 1.4.11 at 3:1
+      against the page, where it measures 3.88 worst — and the worn-edge mask
+      spends exactly that. At the 0.72 the design called for it falls to 2.52:1,
+      below the bar (the #1037 lesson: a chip whose boundary is invisible reads
+      as bare text). 0.9 is the floor that keeps it at 3.30.
+   3. `double` needs three whole pixels to render as two rules; at the 2.5px
+      first drawn it collapses to a solid line in one engine and not the other.
+
+   The worn edge is masked on a PSEUDO-ELEMENT rather than on the <a> itself.
+   That is not tidiness: a mask on the link clips its focus ring (the app leans
+   on the UA default outline here, it has no `.stamp:focus-visible` of its own)
+   and fades the corner text, which would put the measured numbers above out by
+   an amount nothing checks. */
+.gd-history { min-width: 0; }
+.stamps { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.stamp {
+  --sc: var(--ink-soft);
+  position: relative;
+  isolation: isolate;
+  display: block;
+  padding: 13px 15px 14px;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  /* On the LINK, though the fill and the border are on its ::before — a radius
+     here is what makes both the hover shadow below and the UA focus ring follow
+     the stamp's shape instead of boxing it. */
+  border-radius: var(--radius-md);
+}
+/* NOT on `::before`, where it is invisible: a mask clips to the border box, so
+   an OUTER shadow is painted entirely outside the mask and removed. Measured in
+   Chromium against an unmasked control — the masked box showed no shadow at all,
+   with no error and a rule that reads as working. */
+.stamp:hover { box-shadow: var(--shadow-2); }
+.stamp::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 3px double var(--sc);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--sc) 7%, var(--surface));
+  mask-image: radial-gradient(130% 110% at 50% 50%, #000 62%, rgba(0, 0, 0, 0.9) 100%);
+}
+/* An evening this game was not taken to has no score to be stamped in, and says
+   so rather than borrowing one: soft ink, and a dashed rule instead of a
+   double one. */
+.stamp--muted { color: var(--ink-soft); }
+.stamp--muted::before { border-style: dashed; }
+.stamp__date {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--sc);
+}
+/* The pill is a badge on a cover elsewhere (`position: absolute; top: 8px; right:
+   8px`), and it cannot be one here: it would land on the date, and a date cannot
+   get out of its way. „01.06.2026" is a single unbreakable token measuring 125px
+   at 22px display type against a 130px content box at the 150px minimum, so
+   reserving a lane beside it overflows instead of wrapping — measured in WebKit,
+   which put the text 31px under the pill. It rides the last TEXT line instead,
+   which is short (an uppercase 12px status) and does have spaces to break at.
+   `align-items: flex-end` is what makes that read as a denomination in the
+   corner rather than as a third line. */
+.stamp__foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+.stamp__lines { min-width: 0; }
+.stamp__foot .score-pill { position: static; flex: none; }
+.stamp__status {
+  margin-top: 7px;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.stamp__win { margin-top: 3px; font-size: var(--text-sm); }
+/* Below the split the right page is a single column, so an auto-fill grid would
+   put the whole Stempelkarte in one 1-wide stack — the tallest thing on the
+   phone page again, which is what this component exists to stop. One snapping
+   row instead: still row-major, still newest first. */
+@media (max-width: 859px) {
+  .stamps {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 2px;
+  }
+  .stamp { flex: none; width: 160px; scroll-snap-align: start; }
+}
+
 /* The chips left the <h1> in #1039. They used to be appended into the heading so
    they could sit beside the title's last line; their own flex line also takes
    four interactive controls out of a heading's accessible name. */

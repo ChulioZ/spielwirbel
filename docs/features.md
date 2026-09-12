@@ -276,7 +276,9 @@ What the app does, in detail. For a short overview see the
     ("Spielepass"), a two-page spread: the game on the left (cover with its
     Spielwirbel-Score, editable title, chips for players / tags / owners /
     expansions, the glance facts, and a „Mehr zum Spiel" disclosure for the rest
-    of the BGG metadata), the group's own history on the right with a
+    of the BGG metadata), the group's own history on the right as a
+    *Stempelkarte* — one rubber stamp per session, inked in the score that game
+    earned that evening, muted for an evening it was not taken to — with a
     **Jetzt spielen** launcher pinned at its foot. The rarer actions
     (Aussortieren, Durchgespielt, unlinking the provider) live in a „…" menu.
   - **Chronik** – one month-grouped timeline of everything that happened:
