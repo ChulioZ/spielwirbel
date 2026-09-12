@@ -1667,12 +1667,27 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .fbar__chips[hidden] { display: none; }
 /* One applied filter. `--brand-strong` rather than `--brand` on a brand tint: the
    latter measures 4.33–4.92:1 across the eight themes, i.e. below AA on four of
-   them (.claude/rules/theme-derived-colors.md). */
+   them (.claude/rules/theme-derived-colors.md).
+
+   The BORDER is what makes it a chip (#1037). The tint fill is not a boundary —
+   it measures 1.04–1.16:1 against --page-bg on every light design, and both mount
+   points sit straight on the page rather than on a card, so that is the edge the
+   user actually looks for. Until #1037 the only thing saying "chip" was the
+   label's hue, which holds until a design's accent is desaturated: Chess's
+   `#38343f` resolves to something indistinguishable from body ink and the whole
+   chip — its remove button included — vanishes.
+
+   Full-strength `--brand`, nothing softer: measured across the fifteen registry
+   designs it is the only tone clearing SC 1.4.11's 3:1 everywhere (4.50 on Salbei
+   at worst). `--brand-edge` lands 1.37–2.40 and fails on all fifteen. Pinned in
+   test/a11y-contrast.test.js, which resolves the tone out of this declaration
+   rather than restating it. */
 .fchip {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   padding: 3px 4px 3px 10px;
+  border: 1.5px solid var(--brand);
   border-radius: var(--radius-pill);
   background: var(--brand-tint);
   color: var(--brand-strong);
@@ -1695,7 +1710,12 @@ a.hub-row:hover { background: var(--sunken-soft); }
   font-size: 14px; /* glyph, not type */
   cursor: pointer;
 }
-.fchip__x:hover { background: var(--brand-tint-soft); }
+/* #1037: this was `--brand-tint-soft` on the chip's own `--brand-tint` ground —
+   a ~7% wash over a ~13% wash of the same accent, which measures 1.08–1.15:1 on
+   every design, i.e. no hover at all. The accent fill is the pair `.chip.is-on`
+   already uses, and --on-accent on --brand is pinned at AA in
+   test/a11y-contrast.test.js. */
+.fchip__x:hover { background: var(--brand); color: var(--on-accent); }
 
 /* The overlay card. Shared by both presentations via :is(), except the two rules
    that size the floating card — meaningless for a sheet, which is already its own
