@@ -561,8 +561,8 @@ I18N.de = {
   'detail.chosen': 'gewählt',
   'detail.notChosen': 'nicht gewählt',
   'detail.sessionCancelled': 'Session abgebrochen',
-  'detail.retireConfirm': '„{title}“ aussortieren?',
-  'detail.completeConfirm': '„{title}“ als durchgespielt markieren?',
+  'detail.retireConfirm': '„{title}“ aussortieren? Weg aus Regal und Auslosung — jederzeit zurückholen.',
+  'detail.completeConfirm': '„{title}“ als durchgespielt markieren? Weg aus Regal und Auslosung — jederzeit zurückholen.',
   'detail.onboard.title': 'Ein unbeschriebenes Blatt',
   'detail.onboard.text':
     'Dieses Spiel wurde noch nicht gespielt oder bewertet. Bewertungen und Sessions erscheinen hier von selbst, sobald ihr es spielt — bis dahin kannst du ihm ein Gesicht geben.',
@@ -1001,6 +1001,12 @@ I18N.de = {
   'tags.filter.modeAny': 'Mind. ein Tag',
   'tags.chooseIcon': 'Symbol wählen',
   'tags.editIcon': 'Symbol ändern',
+  'tags.namePlaceholder': 'Tag-Name',
+  'tags.edit': 'Tag bearbeiten',
+  'tags.save': 'Speichern',
+  'tags.toast.updated': 'Tag geändert',
+  'tags.toast.nameTaken': 'Diese Runde hat schon einen Tag mit diesem Namen',
+  'tags.toast.nameMissing': 'Bitte einen Namen eingeben',
   'tags.toast.iconUpdated': 'Symbol geändert',
   // Labels for the curated tag-icon set (#255) — keep in sync with TAG_ICONS
   // in lib/tag-icons.js / public/js/tag-icons.js.

@@ -293,11 +293,22 @@ test('the member page rates Dan on contested nights only, and shows his Siegwert
   const round = roundWith([...group, ...solos]);
   const dom = boot(t, round);
   await dom.call('showMember', RID, 'dan');
-  const cards = [...dom.app.querySelectorAll('.member-stats__card')].map((c) => [
-    c.querySelector('.pokale-card__label').textContent,
-    c.querySelector('.pokale-card__value').textContent,
-  ]);
-  const valueOf = (key) => (cards.find(([l]) => l === dom.run(`t('${key}')`)) || [])[1];
+  /* Two of the three figures moved into the hero band in #995 — Siege and
+     Siegquote are `.member-head__stat`s now, the Siegwertung is still a card.
+     Both shapes are read here on purpose: reading only the cards would have
+     made the two moved assertions vanish rather than fail, which is exactly the
+     silence a relocation can hide behind. */
+  const pairs = [
+    ...[...dom.app.querySelectorAll('.member-stats__card')].map((c) => [
+      c.querySelector('.pokale-card__label').textContent,
+      c.querySelector('.pokale-card__value').textContent,
+    ]),
+    ...[...dom.app.querySelectorAll('.member-head__stat')].map((c) => [
+      c.querySelector('.member-head__stat-label').textContent,
+      c.querySelector('.member-head__stat-value').textContent,
+    ]),
+  ];
+  const valueOf = (key) => (pairs.find(([l]) => l === dom.run(`t('${key}')`)) || [])[1];
 
   // Six wins over nine finished nights would read 67 %; over the four CONTESTED
   // nights it is one win in four. A rate that counts solo plays is the naive
@@ -306,4 +317,10 @@ test('the member page rates Dan on contested nights only, and shows his Siegwert
   assert.equal(valueOf('member.winRate'), '25%');
   assert.equal(valueOf('member.wins'), '6', 'the raw count is a factual record and is unchanged');
   assert.equal(valueOf('member.winScore'), '0,0');
+  // …and each figure appears exactly ONCE across the two shapes: the band is a
+  // relocation, not a copy, so a number stated twice is the regression.
+  ['member.wins', 'member.winRate', 'member.winScore'].forEach((key) => {
+    const label = dom.run(`t('${key}')`);
+    assert.equal(pairs.filter(([l]) => l === label).length, 1, `${key} is stated twice`);
+  });
 });

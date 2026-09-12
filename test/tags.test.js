@@ -248,7 +248,7 @@ test('tag icons: create with one, patch it, clear it, reject bad input', async (
       .send({ icon: 'brain' });
     assert.equal(res.status, 200);
     assert.equal(res.body.icon, 'brain');
-    assert.equal(res.body.name, 'Puzzles'); // the route patches icon only
+    assert.equal(res.body.name, 'Puzzles', 'a key the patch omits is left alone');
 
     const round2 = await request(app).get(`/api/rounds/${round.id}`);
     assert.equal(round2.body.tags.find((tg) => tg.id === puzzles.id).icon, 'brain');
@@ -265,10 +265,63 @@ test('tag icons: create with one, patch it, clear it, reject bad input', async (
     const bad = await request(app).patch(`/api/rounds/${round.id}/tags/${puzzles.id}`)
       .send({ icon: 'not-a-real-icon' });
     assert.equal(bad.status, 400);
-    // `icon` is required on update — an empty body is a client error, not a
-    // silent no-op that reports success.
+    // At least one key is required on update — an empty body is a client error,
+    // not a silent no-op that reports success. Since #1004 that is a `refine`
+    // rather than a required `icon`, so it is the assertion keeping the two
+    // now-optional keys from making the route a no-op.
     const empty = await request(app).patch(`/api/rounds/${round.id}/tags/${puzzles.id}`).send({});
     assert.equal(empty.status, 400);
+    const blank = await request(app).patch(`/api/rounds/${round.id}/tags/${puzzles.id}`)
+      .send({ name: '   ' });
+    assert.equal(blank.status, 400, 'a whitespace-only name is not a name');
+  });
+
+  await t.test('PATCH renames, and every assignment survives it (#1004)', async () => {
+    const game = await addGame(round.id, 'Azul', [puzzles.id]);
+    const res = await request(app).patch(`/api/rounds/${round.id}/tags/${puzzles.id}`)
+      .send({ name: '  Knobelei  ' });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.name, 'Knobelei', 'trimmed, exactly as POST trims');
+    assert.equal(res.body.id, puzzles.id, 'the id is stable');
+
+    const after = await request(app).get(`/api/rounds/${round.id}`);
+    assert.deepEqual(after.body.games.find((g) => g.id === game.body.id).tagIds, [puzzles.id],
+      'the whole point: a rename costs no re-tagging, where delete+recreate unassigns');
+  });
+
+  await t.test('a rename onto another tag\'s name is REFUSED, trimmed and case-insensitively', async () => {
+    const solo = (await request(app).post(`/api/rounds/${round.id}/tags`).send({ name: 'Solo' })).body;
+    for (const name of ['knobelei', '  KNOBELEI ', 'Knobelei']) {
+      const res = await request(app).patch(`/api/rounds/${round.id}/tags/${solo.id}`).send({ name });
+      assert.equal(res.status, 409, `"${name}" should collide`);
+      assert.equal(res.body.error, 'tag_name_taken');
+    }
+    const after = await request(app).get(`/api/rounds/${round.id}`);
+    assert.equal(after.body.tags.find((tg) => tg.id === solo.id).name, 'Solo',
+      'a refused rename changes nothing at all');
+
+    // Its OWN name is never a collision — which is what makes a pure case fix
+    // reachable rather than permanently refused.
+    const cased = await request(app).patch(`/api/rounds/${round.id}/tags/${solo.id}`)
+      .send({ name: 'SOLO' });
+    assert.equal(cased.status, 200);
+    assert.equal(cased.body.name, 'SOLO');
+  });
+
+  await t.test('a remembered draw preset stores tagIds, so a rename cannot break it', async () => {
+    /* The tempting later simplification is a names-based preset, and this is
+       what would break silently if anyone took it: the round's remembered
+       filters would stop matching the moment a tag is renamed, with no error. */
+    // `puzzles` is the tag Azul carries, from the rename sub-test above.
+    const drawn = await request(app).post(`/api/rounds/${round.id}/sessions`)
+      .send({ count: 3, tagIds: [puzzles.id] });
+    assert.equal(drawn.status, 201, drawn.body.error || '');
+    const preset = (await request(app).get(`/api/rounds/${round.id}`)).body.lastSessionFilters;
+    assert.deepEqual(preset.tagIds, [puzzles.id], 'ids, never names');
+
+    await request(app).patch(`/api/rounds/${round.id}/tags/${puzzles.id}`).send({ name: 'Umbenannt' });
+    const after = (await request(app).get(`/api/rounds/${round.id}`)).body.lastSessionFilters;
+    assert.deepEqual(after.tagIds, [puzzles.id], 'the preset still resolves after the rename');
   });
 
   await t.test('PATCH 404s for an unknown tag and an unknown round', async () => {
@@ -294,7 +347,7 @@ test('tag icons: create with one, patch it, clear it, reject bad input', async (
   });
 });
 
-test('the client maxlength on both tag inputs equals the server TAG_NAME_MAX', () => {
+test('the client maxlength on EVERY tag-name input equals the server TAG_NAME_MAX', () => {
   // TAG_NAME_MAX in lib/routes/tags.js carries a literal "keep in sync" comment
   // pointing at the two tag inputs in views-round-detail.js — the exact
   // hand-copied-constant shape that produced the #420 palette bug. Neither
@@ -315,8 +368,13 @@ test('the client maxlength on both tag inputs equals the server TAG_NAME_MAX', (
 
   // Only the tag inputs (identified by their shared placeholder key) — an
   // unrelated maxlength elsewhere in the view must not join this assertion.
-  const clientMaxes = [...viewSrc.matchAll(/maxlength="(\d+)"[^>]*tags\.addPlaceholder/g)]
+  // Three since #1004 added the rename field. The alternation is the whole
+  // point: a new tag-name input that spelled its label differently would drop
+  // OUT of this scan and reintroduce the un-guarded hand-copy, which is the
+  // shape .claude/rules/source-scanning-guards-enumerate-shapes.md is about —
+  // so the count is asserted as well as the values.
+  const clientMaxes = [...viewSrc.matchAll(/maxlength="(\d+)"[^>]*tags\.(?:add|name)Placeholder/g)]
     .map((m) => Number(m[1]));
-  assert.equal(clientMaxes.length, 2, 'expected exactly two tag inputs with a maxlength');
+  assert.equal(clientMaxes.length, 3, 'expected exactly three tag-name inputs with a maxlength');
   for (const max of clientMaxes) assert.equal(max, serverMax);
 });
