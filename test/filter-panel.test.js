@@ -39,10 +39,14 @@ const { trigger, panelBody, openPanel, closePanel, appliedChips, triggerLabel } 
 // A shelf that discriminates on every one of the five controls, and — crucially
 // — carries one game with NO metadata at all, so every assertion below also
 // states that the absent-field game survives the filter.
+// Each described game carries BOTH playtime bounds since #1025: "höchstens"
+// now reads the game's own maximum, so a shelf of lower bounds alone would not
+// offer that control at all and every assertion using it would vanish rather
+// than fail.
 const GAMES = [
-  { id: 'g1', title: 'Azul', minPlaytime: 30, weight: 2, minAge: 8, categories: ['Abstract Strategy'], mechanics: ['Tile Placement'] },
-  { id: 'g2', title: 'Catan', minPlaytime: 60, weight: 3, minAge: 10, categories: ['Economic'], mechanics: ['Trading', 'Dice Rolling'] },
-  { id: 'g3', title: 'Gloomhaven', minPlaytime: 120, weight: 4, minAge: 14, categories: ['Adventure'], mechanics: ['Deck Building'] },
+  { id: 'g1', title: 'Azul', minPlaytime: 30, maxPlaytime: 30, weight: 2, minAge: 8, categories: ['Abstract Strategy'], mechanics: ['Tile Placement'] },
+  { id: 'g2', title: 'Catan', minPlaytime: 60, maxPlaytime: 90, weight: 3, minAge: 10, categories: ['Economic'], mechanics: ['Trading', 'Dice Rolling'] },
+  { id: 'g3', title: 'Gloomhaven', minPlaytime: 120, maxPlaytime: 180, weight: 4, minAge: 14, categories: ['Adventure'], mechanics: ['Deck Building'] },
   { id: 'g4', title: 'Handgetippt' },
 ];
 
@@ -212,19 +216,19 @@ test('both range rows say the direction IN THE ROW, not only to a screen reader'
   closePanel();
 });
 
-test('the playing-time row offers BOTH bounds, and the minimum reads the game\'s UPPER one (#1001)', async () => {
+test('the playing-time row offers BOTH bounds, and each reads the game\'s SAME-named one (#1025)', async () => {
   /* The default GAMES carry only a lower bound, so this needs its own shelf —
-     which is the gating rule doing its job: „mindestens" reads `maxPlaytime`,
-     so a shelf without one must not offer it. The three described games
-     discriminate in both directions, which is the point: a minimum filter built
-     on the game's own MINIMUM would drop 'Weit' — a real 20–600 spread, exactly
-     the game a group with three hours wants — and it would look correct on
-     every other row here. */
+     which is the gating rule doing its job: since #1025 „mindestens" reads the
+     game's `minPlaytime` and „höchstens" its `maxPlaytime`, so a shelf without
+     an upper bound must not offer „höchstens". The four described games
+     discriminate in both directions, and 'Weit' is the one that matters: a real
+     20–600 spread passed EVERY budget under the old overlap doctrine and passes
+     none of them now. */
   const round = roundFixture({
     games: [
       { id: 'k', title: 'Kurz', minPlaytime: 20, maxPlaytime: 45 },
       { id: 'w', title: 'Weit', minPlaytime: 20, maxPlaytime: 600 },
-      { id: 'l', title: 'Lang', minPlaytime: 120, maxPlaytime: 240 },
+      { id: 'l', title: 'Lang', minPlaytime: 120, maxPlaytime: 180 },
       { id: 'u', title: 'Handgetippt' },
     ],
   });
@@ -238,8 +242,8 @@ test('the playing-time row offers BOTH bounds, and the minimum reads the game\'s
   assert.ok(selectLabelled('Spieldauer höchstens'), 'beside the one that was always there');
 
   choose(selectLabelled('Spieldauer mindestens'), '120');
-  assert.deepEqual(previewed(), ['Handgetippt', 'Lang', 'Weit'],
-    "'Weit' survives on its ceiling, 'Kurz' does not, and the absent-field game is never touched");
+  assert.deepEqual(previewed(), ['Handgetippt', 'Lang'],
+    "only 'Lang' really takes two hours; the absent-field game is never touched");
   assert.deepEqual(appliedChips(), ['Spieldauer ab 120 Min.']);
   assert.deepEqual(previewed(), drawPool(round, {
     playerCount: 3,
@@ -249,16 +253,21 @@ test('the playing-time row offers BOTH bounds, and the minimum reads the game\'s
     },
   }).map((g) => g.title).sort(), 'the preview agrees with what the server would draw');
 
-  // Both bounds at once. The pair that READS as inverted is a real query here —
-  // "spans from under half an hour to over two" — so unlike the complexity row
-  // the minimum must NOT be carried along, and the two bounds still count as the
-  // one control they are rendered as.
-  choose(selectLabelled('Spieldauer höchstens'), '30');
-  assert.equal(selectLabelled('Spieldauer mindestens').value, '120',
-    'the minimum was dragged along, answering a question nobody asked');
-  assert.deepEqual(previewed(), ['Handgetippt', 'Weit'], 'only a game spanning both survives');
-  assert.deepEqual(appliedChips(), ['Spieldauer 120–30 Min.']);
+  // Both bounds at once — a real interval now, so 'Lang' (120–240) sits inside
+  // it while 'Weit' (20–600) is outside on both ends.
+  choose(selectLabelled('Spieldauer höchstens'), '180');
+  assert.deepEqual(previewed(), ['Handgetippt', 'Lang']);
+  assert.deepEqual(appliedChips(), ['Spieldauer 120–180 Min.']);
   assert.equal(triggerLabel(), 'Filter (1 aktiv)', 'two bounds are one control');
+
+  // THE CARRY, new in #1025 and the mirror of the complexity row's. Under the
+  // old overlap reading an inverted pair was a real query ("spans from under
+  // half an hour to over two" — exactly 'Weit'), so the minimum was pointedly
+  // NOT dragged along. Containment makes it admit nothing at all, so it is.
+  choose(selectLabelled('Spieldauer höchstens'), '30');
+  assert.equal(selectLabelled('Spieldauer mindestens').value, '30',
+    'lowering the maximum past the minimum carries the minimum down');
+  assert.deepEqual(appliedChips(), ['Spieldauer 30–30 Min.']);
   closePanel();
 });
 
@@ -345,14 +354,17 @@ test('a preset filtering a field the shelf no longer carries is dropped, not cou
   // screen — a filter the user could clear from the chip but never see the
   // reason for.
   await dom.call('showStartSession', roundFixture({
+    // Only a LOWER bound on the shelf, so since #1025 only „mindestens" is
+    // offered — and a `maxPlaytime` in the preset would be dropped for the same
+    // reason the age filter is, which would blur the two halves of the rule.
     games: [{ id: 'x', title: 'Nur Dauer', minPlaytime: 45 }],
     lastSessionFilters: {
       tagIds: [], excludeTagIds: [], count: 3,
-      metadata: { maxPlaytime: 60, youngestAge: 10 },
+      metadata: { minPlaytime: 30, youngestAge: 10 },
     },
   }));
 
-  assert.deepEqual(appliedChips(), ['Spieldauer bis 60 Min.'], 'the age filter is not carried');
+  assert.deepEqual(appliedChips(), ['Spieldauer ab 30 Min.'], 'the age filter is not carried');
   openPanel();
   assert.deepEqual(rowLabels(), ['Spieldauer'], 'no age control is rendered');
   closePanel();
@@ -695,10 +707,13 @@ test('an applied chip removes exactly its own filter, with the panel CLOSED', as
   openPanel();
   chipsFor('Kategorien').find((c) => c.textContent === 'Economic').click();
   chipsFor('Kategorien').find((c) => c.textContent === 'Adventure').click();
-  choose(selectLabelled('Spieldauer höchstens'), '120');
+  // 180 rather than 120 since #1025: containment reads Gloomhaven's OWN maximum
+  // (180), so a 120 budget would drop it on the playtime clause and the spec
+  // could no longer tell a per-value chip removal from a whole-list one.
+  choose(selectLabelled('Spieldauer höchstens'), '180');
   closePanel();
 
-  assert.deepEqual(appliedChips(), ['Spieldauer bis 120 Min.', 'Economic', 'Adventure']);
+  assert.deepEqual(appliedChips(), ['Spieldauer bis 180 Min.', 'Economic', 'Adventure']);
   assert.deepEqual(previewed(), ['Catan', 'Gloomhaven', 'Handgetippt']);
 
   // Drop ONE category. Not the whole list, and not the neighbouring playtime
@@ -710,11 +725,11 @@ test('an applied chip removes exactly its own filter, with the panel CLOSED', as
   assert.equal(dismiss('Economic').getAttribute('aria-label'), 'Economic entfernen');
   dismiss('Economic').click();
 
-  assert.deepEqual(appliedChips(), ['Spieldauer bis 120 Min.', 'Adventure']);
+  assert.deepEqual(appliedChips(), ['Spieldauer bis 180 Min.', 'Adventure']);
   assert.deepEqual(previewed(), ['Gloomhaven', 'Handgetippt'], 'the pool did not follow the chip');
   assert.deepEqual(previewed(), drawPool(round, {
     playerCount: 3,
-    metadata: { maxPlaytime: 120, minPlaytime: null, weightMin: null, weightMax: null, youngestAge: null, categories: ['Adventure'], mechanics: [] },
+    metadata: { maxPlaytime: 180, minPlaytime: null, weightMin: null, weightMax: null, youngestAge: null, categories: ['Adventure'], mechanics: [] },
   }).map((g) => g.title).sort(), 'and the draw agrees with the preview');
 
   // The control inside catches up too, rather than the chip having cleared only
@@ -844,7 +859,7 @@ test('setup: the fold-in keeps the seats, guests and filter picks the user set',
      would rebuild the screen and throw away everything below. */
   const { deliver } = deferredApi();
   const round = roundFixture({
-    games: [...UNFILLED.map((g) => ({ ...g })), { id: 'u3', title: 'Schon da', minPlaytime: 45 }],
+    games: [...UNFILLED.map((g) => ({ ...g })), { id: 'u3', title: 'Schon da', minPlaytime: 45, maxPlaytime: 45 }],
   });
   await dom.call('showStartSession', round);
 

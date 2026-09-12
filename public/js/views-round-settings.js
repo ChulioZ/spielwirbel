@@ -288,29 +288,52 @@ async function showTags(rid) {
            <div class="ds-row__main"><span class="tag tag--custom"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</span></div>
            <div class="ds-row__meta"><span class="muted tag-row__count">${esc(tn(n, 'tags.gamesOne', 'tags.games'))}</span></div>
          </div>`);
-      // Change an existing tag's icon (#255) — the Tags screen is the only
-      // surface that edits a tag; the popover and add-game sheet only create
-      // and assign. Expands the picker inline rather than opening a dialog.
-      const edit = h(`<button class="tag-act" aria-label="${esc(t('tags.editIcon'))}" title="${esc(t('tags.editIcon'))}"><i class="ti ti-pencil" aria-hidden="true"></i></button>`);
+      // Edit an existing tag — its NAME (#1004) and its icon (#255). The Tags
+      // screen is the only surface that edits a tag; the popover and add-game
+      // sheet only create and assign. Expands inline rather than opening a
+      // dialog, as the icon-only version did before it.
+      //
+      // ONE pencil rather than a second button beside it: the row already
+      // carries two actions at tile width, and name and icon are one question
+      // („what is this tag"). They are also saved in ONE PATCH, so the two can
+      // never land half-applied — which is the reason the repo takes a patch
+      // rather than two mutators.
+      const edit = h(`<button class="tag-act" aria-label="${esc(t('tags.edit'))}" title="${esc(t('tags.edit'))}"><i class="ti ti-pencil" aria-hidden="true"></i></button>`);
       edit.addEventListener('click', () => {
         const open = row.nextElementSibling;
-        if (open && open.classList.contains('icon-picker')) { // second click closes it
+        if (open && open.classList.contains('tag-edit')) { // second click closes it
           open.remove();
           return;
         }
         // Expanded: the pencil button IS the disclosure here (#293), so the
         // picker must not add a second one inside it.
         const p = tagIconPicker(tg.icon, { expanded: true });
-        p.grid.querySelectorAll('.icon-picker__btn').forEach((btn) => {
-          btn.addEventListener('click', async () => {
-            try {
-              await api('PATCH', `/api/rounds/${rid}/tags/${tg.id}`, { icon: btn.dataset.icon });
-              toast(t('tags.toast.iconUpdated'));
-              showTags(rid);
-            } catch (e) { toast(e.message); }
-          });
+        const editor = h(`<div class="tag-edit">
+             <div class="toolbar">
+               <input class="input" style="flex:1" maxlength="30" value="${esc(tg.name)}"
+                      aria-label="${esc(t('tags.namePlaceholder'))}" />
+               <button class="btn btn--primary">${esc(t('tags.save'))}</button>
+             </div>
+           </div>`);
+        editor.appendChild(p.grid);
+        const nameInput = editor.querySelector('input');
+        const save = async () => {
+          const name = nameInput.value.trim();
+          if (!name) { toast(t('tags.toast.nameMissing')); return; }
+          try {
+            await api('PATCH', `/api/rounds/${rid}/tags/${tg.id}`, { name, icon: p.get() });
+            toast(t('tags.toast.updated'));
+            showTags(rid);
+          } catch (e) {
+            toast(e.message === 'tag_name_taken' ? t('tags.toast.nameTaken') : e.message);
+          }
+        };
+        editor.querySelector('.btn--primary').addEventListener('click', save);
+        nameInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); save(); }
         });
-        row.after(p.grid);
+        row.after(editor);
+        nameInput.focus();
       });
       row.querySelector('.ds-row__meta').appendChild(edit);
       const del = h(`<button class="tag-act tag-act--danger" aria-label="${esc(t('tags.delete'))}"><i class="ti ti-trash" aria-hidden="true"></i></button>`);

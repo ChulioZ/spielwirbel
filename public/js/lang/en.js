@@ -1010,6 +1010,12 @@ I18N.en = {
   'tags.filter.modeAny': 'Any tag',
   'tags.chooseIcon': 'Choose an icon',
   'tags.editIcon': 'Change icon',
+  'tags.namePlaceholder': 'Tag name',
+  'tags.edit': 'Edit tag',
+  'tags.save': 'Save',
+  'tags.toast.updated': 'Tag updated',
+  'tags.toast.nameTaken': 'This round already has a tag with that name',
+  'tags.toast.nameMissing': 'Please enter a name',
   'tags.toast.iconUpdated': 'Icon updated',
   // Labels for the curated tag-icon set (#255) — keep in sync with TAG_ICONS
   // in lib/tag-icons.js / public/js/tag-icons.js.
