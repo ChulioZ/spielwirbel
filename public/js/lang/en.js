@@ -862,6 +862,9 @@ I18N.en = {
   // hardware. "Anna voted for Ben" is therefore something we can stand behind;
   // "Ben voted on Anna's device" is not.
   'log.title': 'What happened',
+  'log.summaryOne': '{n} entry, latest {when}',
+  'log.summary': '{n} entries, latest {when}',
+  'log.open': 'Show the log',
   'log.someone': 'Someone',
   'log.aGame': 'a game',
   'log.started': '{actor} started the session',
