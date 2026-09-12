@@ -551,6 +551,41 @@ test('the finale stage keeps its sub-line and its note legible on every theme', 
     `--stage-faint must not fall below ${FAINT_FLOOR}:1 on the stage`);
 });
 
+test('the seal\'s padlock clears the 3:1 non-text bar, and the pair cannot flip apart', () => {
+  /* #937. The badge was `color: #fff` on `background: var(--gold)` — 2.45:1,
+     identical on light and dark because --gold does not flip. SC 1.4.11 arguably
+     exempts it (it is aria-hidden decoration and the stage copy carries the
+     meaning), but the glyph is the thing that says "sealed", and --gold is a
+     FILL here and nowhere else in the app, so the fix costs no other screen.
+
+     BOTH declarations are read out of the rule rather than named here, because
+     the failure this guards against is somebody reaching for --gold-deep: it is
+     the obvious "use the existing dark gold", it FLIPS to pale #f0c25c on a dark
+     design (1.5:1 on a fill that stayed put), and even its light value is 2.9:1
+     — just under the bar. A test pinning the current hex would be green against
+     that; a test computing the declared pair is not. */
+  const lock = bodyOf('.stage__lock');
+  assert.ok(lock, 'the .stage__lock rule was not found');
+  const ink = /color:\s*(var\(--[\w-]+\)|#[0-9a-f]{3,8})/i.exec(lock);
+  const fill = /background:\s*(var\(--[\w-]+\)|#[0-9a-f]{3,8})/i.exec(lock);
+  assert.ok(ink && fill, '.stage__lock must declare both its ink and its fill for this to mean anything');
+
+  const failures = [];
+  for (const t of THEMES) {
+    const ratio = contrast(evaluate(ink[1], t.design), evaluate(fill[1], t.design));
+    if (ratio < AA_LARGE) failures.push(`${name(t)} — ${ink[1]} on ${fill[1]} = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    `the padlock is a non-text graphic and needs ${AA_LARGE}:1 against the seal it sits on`);
+
+  /* And the pair must be scheme-INDEPENDENT, which is the property that makes
+     one ratio enough. Asserted as "every design agrees" rather than by reading
+     the dark block, so it holds however the tokens are later expressed. */
+  const ratios = new Set(THEMES.map((t) =>
+    contrast(evaluate(ink[1], t.design), evaluate(fill[1], t.design)).toFixed(2)));
+  assert.equal(ratios.size, 1, `the seal pair differs per design (${[...ratios].join(', ')}) — one of the two now flips`);
+});
+
 test('the curtain still reads as darker than the page it covers', () => {
   /* On a light design that is self-evident. On a dark one it is the constraint
      that made --stage-anchor a token: the stage anchored at #201a15 over a
@@ -581,7 +616,6 @@ const WHITE_EXEMPT = new Map([
   ['.gd-score .score-info', 'on its own translucent-black scrim over box art, like .gd-img__edit'],
   ['.gd-score .score-info:hover, .gd-score .score-info:focus-visible',
     'the same scrim, deepened — still not on a theme surface'],
-  ['.stage__lock', 'on --gold, which does not flip: the stage is dark either way'],
 ]);
 
 test('no bare white is painted outside the rules that justify one', () => {

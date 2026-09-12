@@ -81,6 +81,48 @@ the `body` rule in `styles.css`. There is no JS texture generation anymore —
 (below) and the world hook (§ Worlds); a legacy `pattern` field in old data is
 ignored.
 
+## A NON-FLIPPING fill needs a non-flipping ink — `--gold-deep` is not it (#937)
+
+Almost every token in `:root` has a dark-scheme twin, so "use the family's dark
+member as the ink" is the reflex. For the three gold tokens that **deliberately
+stand still** — `--gold`, `--gold-edge`, and now `--gold-ink` — that reflex is
+wrong in a way no screen shows you.
+
+`.stage__lock`, the padlock on the finale seal, is the app's **only** place where
+`--gold` is a `background` rather than a `color`. It carried `#fff` at
+**2.45:1**, under SC 1.4.11's 3:1 non-text bar, identically on light and dark
+because the fill does not flip. Three candidate inks, measured:
+
+| ink | on `--gold` | why it fails |
+|---|---|---|
+| `#fff` | **2.45:1** | what shipped |
+| `var(--gold-deep)` | **2.90:1** light, **~1.5:1** dark | the obvious fix, and it is *just* under the bar — then flips to pale `#f0c25c` over a fill that stayed put |
+| `var(--gold-edge)` | 1.30:1 | a mid-tone sibling of the fill |
+| `--gold-ink` `#6b3405` | **4.05:1**, both schemes | hue 28, between `--gold-deep` (23) and `--gold` (42), at the same saturation |
+
+**The rule:** when a fill is scheme-independent, its ink must be too — a new
+non-flipping token, not the family's existing dark member. Then there is one
+ratio to hold instead of two, and it cannot be broken from the other side.
+
+**And measure the candidate, don't reason about it.** `--gold-deep` on `--gold`
+*looks* like a comfortable dark-on-light pair; it is 2.90:1. Both are saturated
+mid-tones, and relative luminance between two saturated colours is not something
+the eye estimates well. `test/a11y-contrast.test.js` therefore reads **both
+declarations out of the rule** and computes the pair per design, rather than
+pinning today's hex — a spec that pinned `#6b3405` would be green against a later
+switch to `--gold-deep`, which is precisely the change somebody will make.
+
+Its second assertion is that every design produces the *same* ratio, which is
+what makes one number sufficient. Both halves were taken red separately: the
+first on `#fff`/`--gold-deep`/`--gold-edge`, the second on a pair that flips
+while still clearing the bar (`--gold-deep` on `--gold-soft`, 6.37 vs 7.88).
+
+**The decorative exemption was considered and not taken.** The badge is
+`aria-hidden` and the stage copy carries the meaning, so SC 1.4.11 arguably
+exempts it — but the glyph is the thing that says „sealed", and because `--gold`
+is a fill *here and nowhere else*, the fix moves no medal, crown or trophy. An
+exemption is the right answer when the fix has blast radius; this one had none.
+
 ## Worlds (#903): one hook, seven slots, additive over the tokens
 
 The registry is `public/js/round-designs.js` — `PALETTES`, `WORLDS` and
