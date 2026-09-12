@@ -1029,6 +1029,10 @@ I18N.nl = {
   'stats.playedWeek': 'Deze week het meest gespeeld',
   'stats.playedMonth': 'Het meest gespeeld in {month}',
   'stats.playedYear': 'Het meest gespeeld in {year}',
+  // All-time (#1035). Names the phenomenon rather than a window — there is no
+  // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
+  // of the same kind rather than as the one durable fact.
+  'stats.playedAll': 'Spielwirbels blijvertje',
   'stats.bestRated': 'Best beoordeeld',
   'stats.shelves.one': 'in {n} kast',
   'stats.shelves.many': 'in {n} kasten',

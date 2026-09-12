@@ -1036,6 +1036,10 @@ I18N.it = {
   'stats.playedWeek': 'Più giocati questa settimana',
   'stats.playedMonth': 'Più giocati a {month}',
   'stats.playedYear': 'Più giocati nel {year}',
+  // All-time (#1035). Names the phenomenon rather than a window — there is no
+  // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
+  // of the same kind rather than as the one durable fact.
+  'stats.playedAll': 'L\'intramontabile di Spielwirbel',
   'stats.bestRated': 'Meglio valutati',
   'stats.shelves.one': 'su {n} scaffale',
   'stats.shelves.many': 'su {n} scaffali',

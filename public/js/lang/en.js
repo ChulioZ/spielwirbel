@@ -1100,6 +1100,10 @@ I18N.en = {
   'stats.playedWeek': 'Most played this week',
   'stats.playedMonth': 'Most played in {month}',
   'stats.playedYear': 'Most played in {year}',
+  // All-time (#1035). Names the phenomenon rather than a window — there is no
+  // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
+  // of the same kind rather than as the one durable fact.
+  'stats.playedAll': 'Spielwirbel\'s evergreen',
   'stats.bestRated': 'Best rated',
   'stats.shelves.one': 'on {n} shelf',
   'stats.shelves.many': 'on {n} shelves',
