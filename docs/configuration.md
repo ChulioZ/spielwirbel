@@ -482,7 +482,11 @@ has one Regal — with `PUBLIC_STATS_MIN_OWNER_TENANTS` (2), which stops one
 person with several rounds reaching the podium alone. The three period cards get
 their own floors, because three sessions in a week is a fact and three in a year
 is noise: `PUBLIC_STATS_MIN_PLAYS_WEEK` / `_MONTH` / `_YEAR` (3/8/25) each with
-a `_PLAY_TENANTS_` spread (2/3/5). Best rated pairs `PUBLIC_STATS_MIN_RATINGS`
+a `_PLAY_TENANTS_` spread (2/3/5). The all-time card („Spielwirbels
+Dauerbrenner") is the exception: `PUBLIC_STATS_MIN_PLAYS_ALL` and
+`PUBLIC_STATS_MIN_PLAY_TENANTS_ALL` both default to **0**, so it publishes
+whatever it says — the levers are kept only so it can be pulled back live.
+Best rated pairs `PUBLIC_STATS_MIN_RATINGS`
 (5) with `PUBLIC_STATS_MIN_RATING_TENANTS` (2) — the count floor is why the card
 can rank on the average at all. Like every ceiling here they are read per call,
 so raising one pulls a single metric back without a deploy. A `0` is honoured

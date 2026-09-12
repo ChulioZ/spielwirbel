@@ -1063,6 +1063,10 @@ I18N.es = {
   'stats.playedWeek': 'Lo más jugado esta semana',
   'stats.playedMonth': 'Lo más jugado en {month}',
   'stats.playedYear': 'Lo más jugado en {year}',
+  // All-time (#1035). Names the phenomenon rather than a window — there is no
+  // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
+  // of the same kind rather than as the one durable fact.
+  'stats.playedAll': 'El clásico de Spielwirbel',
   'stats.bestRated': 'Lo mejor valorado',
   'stats.shelves.one': 'en {n} estantería',
   'stats.shelves.many': 'en {n} estanterías',

@@ -1100,6 +1100,10 @@ I18N.de = {
   'stats.playedWeek': 'Meistgespielt diese Woche',
   'stats.playedMonth': 'Meistgespielt im {month}',
   'stats.playedYear': 'Meistgespielt {year}',
+  // All-time (#1035). Names the phenomenon rather than a window — there is no
+  // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
+  // of the same kind rather than as the one durable fact.
+  'stats.playedAll': 'Spielwirbels Dauerbrenner',
   'stats.bestRated': 'Am besten bewertet',
   'stats.shelves.one': 'in {n} Regal',
   'stats.shelves.many': 'in {n} Regalen',
