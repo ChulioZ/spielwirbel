@@ -4671,6 +4671,49 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   }
   .gd-info h1 { font-size: var(--text-2xl); }
 }
+/* The cover stands as a BOX (#1041): a hard, unblurred second shadow layer is
+   the side of the thing, where `--shadow-2` alone is a card lying on a page.
+   It is the reading the rejected tilt was after — „a box on the shelf" — bought
+   without rotating anything, which the operator ruled out because an angled
+   cover makes the whole screen feel unsteady (2026-09-12).
+
+   701, not 700: it has to tile exactly with the block above, which stacks the
+   card. Below it the cover is the full column width with nothing beside it to
+   stand off, so the edge would read as a stray rule down the page.
+
+   The lift is scoped to `.gd-cover`, not to `.gd-img` itself, and that is the
+   whole reason it is not one selector: `.gd-score` is a SIBLING of the cover
+   pinned to its top-right corner (`position: absolute` on `.gd-cover`), so a
+   transform on the image alone slides the box out from under its own pill.
+   Hovering the pill or its ⓘ keeps the box up for the same reason — with the
+   hover on `.gd-img`, crossing onto the pill would drop it. The cost of that
+   scope is that the edition line (#742), when a game has one, is inside
+   `.gd-cover` too and so lifts the box as well — accepted: it is the cover's own
+   caption, sitting 8px under it, and reads as one block. That 8px is also what
+   keeps the 8px hover edge clear of the text (the −2px lift nets it to 6px).
+
+   Not gated on prefers-reduced-motion, matching every other card lift in this
+   sheet: a hover transition is a response to the pointer, not motion the page
+   starts by itself. */
+@media (min-width: 701px) {
+  .gd-img {
+    /* Spelled once so the resting edge and the hover edge cannot drift apart.
+       `--shade` rather than the warm grey the issue proposed: it is the token
+       that means "pushed away from THIS page", so the edge stays visible on the
+       seven dark designs, where 16% black over a dark surface paints nothing at
+       all and the rule still reads as working
+       (`.claude/rules/theme-derived-colors.md`). */
+    --gd-edge-ink: color-mix(in oklab, var(--shade) 16%, transparent);
+    box-shadow: var(--shadow-2), 5px 5px 0 var(--gd-edge-ink);
+    transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+  }
+  .gd-score { transition: transform var(--dur-fast) var(--ease-out); }
+  .gd-cover:hover :is(.gd-img, .gd-score) { transform: translate(-2px, -2px); }
+  /* Both layers restated rather than moving the offset through the custom
+     property: a custom property is `<declaration-value>`, so it interpolates
+     discretely — the edge would jump to 8px while the box slid. */
+  .gd-cover:hover .gd-img { box-shadow: var(--shadow-2), 8px 8px 0 var(--gd-edge-ink); }
+}
 
 /* ---- Game detail: the two-page spread (#1039) ----
    The screen asks two questions on every visit — what is this game, and how did
@@ -4921,6 +4964,40 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 }
 .gd-score .score-pill { position: static; }
 .score-pill--lg { font-size: var(--text-xl); padding: 5px 14px; box-shadow: var(--shadow-2); }
+/* The screen presses itself in once on open (#1041), and then holds still.
+   This is the other half of the rejected tilt: what the angle was saying —
+   these were stamped by hand, one evening at a time — said in motion instead,
+   so it is over in a second rather than sitting on the page forever.
+
+   Declared under `no-preference` rather than cancelled by a `reduce` override,
+   which is this sheet's convention (`seal-pulse`, `spotlight-rise`,
+   `confetti-fall`) and the only safe direction here: `animation-fill-mode: both`
+   holds the `from` keyframe, so a missed `animation: none` would leave the pill
+   and the whole Stempelkarte at `opacity: 0` — permanently invisible for
+   exactly the people who asked for less motion.
+
+   The stagger runs newest-first because `--i` is render order, which the view
+   already sorts that way; the index is CAPPED by the renderer so the sequence
+   ends inside a second whatever the shelf holds (see views-round-detail.js).
+
+   It restarts on every re-render of the screen — `showGameDetail` rebuilds after
+   each PATCH — and that is accepted: it is the same "the page opened" moment.
+   Long-form motion, so deliberately off the `--dur-*` micro-interaction scale
+   (see the token block). */
+@media (prefers-reduced-motion: no-preference) {
+  .score-pill--lg { animation: press-in 0.45s var(--ease-out) both; }
+  .stamp {
+    animation: press-in 0.38s var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 70ms + 120ms);
+  }
+  /* It arrives LARGER and lands through a compression, which is what separates
+     a stamp being pressed from the app's existing `spotlight-rise` fade-up. */
+  @keyframes press-in {
+    from { transform: scale(1.25); opacity: 0; }
+    60% { transform: scale(0.97); opacity: 1; }
+    to { transform: scale(1); }
+  }
+}
 /* A translucent-dark scrim under white, NOT a theme token: this button sits on
    arbitrary box art, so nothing derived from the page can be relied on to carry
    it. Same reasoning and the same precedent as `.gd-img__edit`'s gradient one

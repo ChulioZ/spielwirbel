@@ -110,6 +110,41 @@ value on every call until a screenshot forces a frame — measured on #905; the
 sampling recipe is in
 `.claude/rules/world-artwork-masks-and-single-weight-faces.md`.
 
+**Toggling `data-scheme` at runtime updates the CUSTOM PROPERTY and not the
+value that USES it** (measured 2026-09-12, #1041). Setting
+`documentElement.setAttribute('data-scheme', 'dark')` mid-session and re-reading
+is the obvious way to check that a new colour is theme-derived, and it reports
+the derivation working and the paint not:
+
+```js
+document.documentElement.setAttribute('data-scheme', 'dark');
+getComputedStyle(root).getPropertyValue('--shade')          // '#fff'    ✅ flipped
+getComputedStyle(img).getPropertyValue('--gd-edge-ink')     // '…#fff 16%…'  ✅ flipped
+getComputedStyle(img).boxShadow.split(',').pop()            // 'oklab(0 0 0 / .16)'  ❌ still black
+```
+
+A forced reflow, a `requestAnimationFrame` and a 400 ms wait changed nothing,
+and `--surface` → `background` was stale in the same way — so it is the used
+value that is not re-resolved, not this one rule. That reads exactly like a
+`color-mix()` on `--shade` having been written wrong, which is the one thing the
+probe exists to rule out.
+
+**Build the dark subtree instead, so nothing has to be re-resolved.** The app's
+second scheme hook is a class, so a fresh element under it is styled once with
+the scheme already in force:
+
+```js
+const card = document.createElement('div');
+card.className = 'theme-card';
+card.setAttribute('data-scheme', 'dark');
+card.innerHTML = '<div class="gd-cover"><button class="gd-img"></button></div>';
+document.body.appendChild(card);
+getComputedStyle(card.querySelector('.gd-img')).boxShadow   // oklab(0.99… / .16) ✅
+```
+
+Run the light case through the same factory as the control — a single dark
+reading proves nothing about which branch produced it.
+
 **The pane lies about focus as well as about pixels.** `document.hasFocus()` is
 permanently false there, so `element.blur()` moves `document.activeElement`
 without dispatching any `blur`/`focusout` event — which makes every

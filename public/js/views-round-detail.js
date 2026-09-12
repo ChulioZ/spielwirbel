@@ -1000,8 +1000,17 @@ async function showGameDetail(rid, gameId) {
     // "1. Juni 2026, 19:00" is ~230px against a 150px stamp, and the minute an
     // evening started is not what a stamp records. The full timestamp is on the
     // results screen the stamp links to.
+    // The stamps press in one after another on open (#1041). The stagger is a
+    // ladder, not a queue: 15 stamps ship, so an uncapped 70ms step would still
+    // be pressing at 1.55s — long after the reader has started reading. Past
+    // this rung they land together, which is the point at which a stagger has
+    // said what it has to say anyway. The CSS carries the step and the offset;
+    // `test/game-detail-press.test.js` derives the budget from all three, so
+    // retuning any one of them re-checks it.
+    const STAGGER_LAST = 8;
     const list = h('<div class="stamps"></div>');
-    related.slice(0, 15).forEach((s) => {
+    // `i` is the press-in stagger (#1041), capped below — see STAGGER_LAST.
+    related.slice(0, 15).forEach((s, i) => {
       const sst = gameStatsForSession(round, s, gameId);
       const picked = s.chosenGameId === gameId;
       let status;
@@ -1054,14 +1063,14 @@ async function showGameDetail(rid, gameId) {
       // An evening this game was NOT taken to has nothing to say about it and
       // borrows no colour: `--sc` falls through to the stylesheet's `--ink-soft`.
       const ink = picked
-        ? ` style="--sc:${scoreColor(sst.avg !== null ? sst.score : PLAYED_UNRATED)}"`
+        ? `--sc:${scoreColor(sst.avg !== null ? sst.score : PLAYED_UNRATED)};`
         : '';
       // The pill rides the LAST text line, not the date's. A date is one
       // unbreakable token — „01.06.2026" measures 125px at 22px display type,
       // against a 130px content box at the 150px grid minimum — so a pill lane
       // beside it does not fit in any locale, and the token cannot wrap out of
       // the way. Measured in WebKit at both breakpoints; see the CSS.
-      const row = h(`<a class="stamp${picked ? '' : ' stamp--muted'}"${ink}>
+      const row = h(`<a class="stamp${picked ? '' : ' stamp--muted'}" style="${ink}--i:${Math.min(i, STAGGER_LAST)}">
            <div class="stamp__date">${esc(fmtDate(s.createdAt))}</div>
            <div class="stamp__foot">
              <div class="stamp__lines">

@@ -128,17 +128,42 @@ test('no glyph exemption is stale', () => {
 });
 
 /* Elevation is the one that regressed hardest, so it gets the strict form: a
-   box-shadow is either a ramp token or one of the shapes that is NOT elevation.
-   The exemptions are deliberate and narrow:
+   box-shadow LAYER is either a ramp token or one of the shapes that is NOT
+   elevation. The exemptions are deliberate and narrow:
      - `0 0 0 <n>px` — a ring, not a shadow. The focus rings live here and must
        never be restyled for looks (accessibility floor, U-R04).
+     - `<x> <y> 0 …`  — a zero-blur HARD EDGE. It casts no penumbra, so it is not
+       depth at all: it is the SIDE of a thing rather than the space under it
+       (#1041 stands the game cover as a box this way). The ramp is three blurs
+       and has nothing to offer it.
      - `inset …`     — .ticket--live's accent edge.
-     - `none`        — a reset. */
+     - `none`        — a reset.
+
+   Checked per LAYER rather than per declaration, which is strictly stronger than
+   the whole-value form this replaced: that one could only ever be satisfied by a
+   single-layer value, so the first composite to be written would have had to be
+   exempted wholesale — soft layer included. */
 const RING = /^0 0 0 \d+px/;
-const isElevation = (v) => v !== 'none' && !v.includes('inset') && !RING.test(v);
+const HARD = /^-?[\d.]+px\s+-?[\d.]+px\s+0(px)?(\s|$)/;
+const isElevation = (v) => v !== 'none' && !v.includes('inset') && !RING.test(v) && !HARD.test(v);
+
+// Top-level commas only — `color-mix(in oklab, …)` inside a layer is not a split.
+function layers(value) {
+  const out = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < value.length; i++) {
+    if (value[i] === '(') depth++;
+    else if (value[i] === ')') depth--;
+    else if (value[i] === ',' && depth === 0) { out.push(value.slice(start, i).trim()); start = i + 1; }
+  }
+  out.push(value.slice(start).trim());
+  return out;
+}
 
 test('every elevation box-shadow comes from the 3-step ramp', () => {
   const offenders = decls('box-shadow')
+    .flatMap(layers)
     .filter(isElevation)
     .filter((v) => !/^var\(--shadow-[123]\)$/.test(v));
 

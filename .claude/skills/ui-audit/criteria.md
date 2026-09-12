@@ -94,11 +94,17 @@ is not a UI finding, it is a rejected idea.
   on `--shadow-3`, the old inversions are gone. The remaining non-token `box-shadow`s are
   deliberately off-ramp: focus/selection rings (`0 0 0 3px var(--brand-edge)` etc.),
   `.ticket--live`'s inset accent edge, and a `0 0 0 1px var(--line)` hairline — those are
-  not elevation. Audit against drift (a new ad-hoc elevation value), not against the old
-  gap. (Previously: one `--shadow` token plus 8 ad-hoc values, inverted at both ends.)
-- **Enforced by:** `test/design-tokens.test.js` (every elevation box-shadow must be a
-  ramp token; rings/inset/none are the documented off-ramp, and the ramp's ordering is
-  asserted too)
+  not elevation. **#1041 added a fourth off-ramp shape: a zero-blur layer**
+  (`5px 5px 0 …` on the game detail cover). A shadow with no blur casts no penumbra, so
+  it is not depth at all — it is the SIDE of an object, and the ramp of three blurs has
+  nothing to offer it. Audit it as *character*, not as elevation: what U-003 wants is
+  that a zero-blur edge never stands in for a level the ramp already names. Audit
+  against drift (a new ad-hoc elevation value), not against the old gap. (Previously:
+  one `--shadow` token plus 8 ad-hoc values, inverted at both ends.)
+- **Enforced by:** `test/design-tokens.test.js` (every elevation box-shadow LAYER must
+  be a ramp token; rings/inset/zero-blur/none are the documented off-ramp, and the
+  ramp's ordering is asserted too). Checked per layer since #1041, so a composite value
+  no longer has to be exempted wholesale to carry one non-elevation layer.
 
 ### U-004 — Consistent radii, borders and surface treatment
 - **Status:** adopted · 2026-07-26

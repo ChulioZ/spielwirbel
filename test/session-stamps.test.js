@@ -216,11 +216,19 @@ test('no shadow is declared on the masked pseudo-element, where it cannot paint'
 /* The operator rejected tilt outright (2026-09-12): the character comes from
  * the ink, not from an angle. Asserted over the stylesheet because a rotation
  * would be added there, and it is the one acceptance criterion with no visible
- * symptom in the DOM. */
+ * symptom in the DOM.
+ *
+ * A PREFIX match, not `\b`. This guard asks „does any rule in this family
+ * rotate?", which is the including direction — and `_` is a word character, so
+ * the `\.stamps?\b` it shipped with saw `.stamp` and `.stamp--muted` but never
+ * `.stamp__date`, i.e. not the line a tilt would most naturally be put on.
+ * Measured (#1041): with `transform: rotate(2deg)` on `.stamp__date` the `\b`
+ * form stayed GREEN. `.claude/rules/css-text-assertions-strip-comments.md`
+ * names this exact inversion — `whole()` is for excluding a family. */
 test('no stamp rule rotates anything', () => {
   const { rulesOf, CSS } = require('./support/css');
   const rotated = rulesOf(CSS)
-    .filter(([sel, body]) => /(^|[\s,])\.stamps?\b/.test(sel) && /\brotate\s*\(/.test(body))
+    .filter(([sel, body]) => /(^|[\s,])\.stamps?[\w-]*/.test(sel) && /\brotate\s*\(/.test(body))
     .map(([sel]) => sel);
   assert.deepEqual(rotated, [], 'tilt was rejected for this component');
 });
