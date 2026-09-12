@@ -346,6 +346,16 @@ function showStartSession(round, prefill) {
     ownersNote.textContent = hiddenN
       ? tn(hiddenN, 'startSession.ownersHiddenOne', 'startSession.ownersHidden')
       : '';
+
+    // The applied chips STATE the party count since #1005 („BGG-Tipp für 4
+    // Personen"), so seating somebody changes a chip nobody touched. This runs on
+    // every seat, guest and team change, which is exactly the set of events that
+    // moves the number — without it the chip keeps naming the party the filter
+    // was switched on at, disagreeing with the label inside the panel and with
+    // the ring above it. Cheap and idempotent: `sync` only rebuilds the chip row
+    // and the trigger's aria-label, and it is safe under an open overlay because
+    // the chips live OUTSIDE it (unlike `mountFilterPanel`, which must not).
+    if (filterPanel) filterPanel.sync();
   };
   // Seats around the table: tap a member to toggle whether they join tonight,
   // tap the „+" seat to add a guest (#1016).
@@ -585,7 +595,10 @@ function showStartSession(round, prefill) {
     // `tableSized`: this screen has a party, so the recommendation toggle
     // (#1005) can mean something here. The Regal passes nothing and gets no
     // toggle — it filters a shelf, not an evening.
-    filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection, { tableSized: true });
+    // `partyCount`: a thunk, so the toggle's own label and its applied chip can
+    // state the number they are filtering on rather than saying „hier".
+    filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection,
+      { tableSized: true, partyCount: playerCount });
     filterMount.replaceChildren();
     if (filterPanel) filterMount.appendChild(filterPanel.el);
     filterMount.hidden = !filterPanel;

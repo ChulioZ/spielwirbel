@@ -91,6 +91,11 @@ function renderMetadataFilter(games, state, onChange, opts) {
   // about a table (`opts.tableSized`). Collapsing them into one would either
   // render a dead control in the Regal or hide a live one on the setup screen.
   const tableSized = !!(opts && opts.tableSized);
+  // A THUNK, read at render time. The body is rebuilt on every open (see above),
+  // and `mountFilterPanel` refuses to rebuild under an open overlay — so the
+  // count in the label is always the party that is seated right now, and cannot
+  // go stale behind a panel nobody can change the seating from.
+  const partyCount = (opts && opts.partyCount) || (() => 0);
   if (!hasMetadataFilterOptions(options)) return null;
 
   const uid = `mf${++metaFilterSeq}`;
@@ -237,7 +242,7 @@ function renderMetadataFilter(games, state, onChange, opts) {
   if (options.recommended && tableSized) {
     const id = `${uid}-rec`;
     const row = h(`<label class="mfilter__row mfilter__row--check" for="${id}">
-        <span class="mfilter__label">${esc(t('metaFilter.recommended'))}</span>
+        <span class="mfilter__label">${esc(tn(partyCount(), 'metaFilter.recommendedOne', 'metaFilter.recommended'))}</span>
         <input type="checkbox" id="${id}">
       </label>`);
     const box = row.querySelector('input');
@@ -361,7 +366,7 @@ function tagFilterChips(roundTags, tagFilter, afterRemove) {
 // source, so the label can never disagree with what is on screen.
 // `countMetadataFilters` is untouched: the SERVER uses it (lib/routes/sessions.js)
 // to decide whether a draw carried filters at all, which is a different question.
-function activeFilterChips(state, tagSection) {
+function activeFilterChips(state, tagSection, partyCount) {
   const f = state || {};
   const out = tagSection && tagSection.chips ? tagSection.chips() : [];
 
@@ -407,7 +412,10 @@ function activeFilterChips(state, tagSection) {
   }
   if (f.onlyRecommended) {
     out.push({
-      label: t('metaFilter.chipRecommended'),
+      // The COUNT, not a bare „von BGG empfohlen": recommended at what? The
+      // whole clause is about one table size, and the chip is read after the
+      // panel has closed, with nothing else on it to supply the number.
+      label: tn(partyCount, 'metaFilter.chipRecommendedOne', 'metaFilter.chipRecommended'),
       remove: () => { f.onlyRecommended = false; },
     });
   }
@@ -446,6 +454,9 @@ function activeFilterChips(state, tagSection) {
 // moves; the metadata controls route through `onChange` and resync themselves.
 function renderFilterPanel(games, state, onChange, tagSection, opts) {
   if (!hasMetadataFilterOptions(metadataFilterOptions(games)) && !tagSection) return null;
+  // Same thunk the body reads, because the applied chip states the count too and
+  // the two must never name different numbers.
+  const partyCount = (opts && opts.partyCount) || (() => 0);
 
   // A real <button>, not the old <summary>: the disclosure's expanded state is
   // gone with it, so `aria-expanded` is set by hand and kept true only while an
@@ -481,7 +492,7 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
   }
 
   function sync() {
-    const chips = activeFilterChips(state, tagSection);
+    const chips = activeFilterChips(state, tagSection, partyCount());
     trigger.setAttribute('aria-label', t('games.filterLabel', { n: chips.length }));
     chipRow.replaceChildren(...chips.map(appliedChip));
     // `.fbar__chips` declares its own `display`, so the attribute alone would not

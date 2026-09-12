@@ -360,14 +360,72 @@ test('the recommendation toggle narrows the pool to what BGG endorses here (#100
   const box = dom.document.querySelector('.mfilter__row--check input');
   assert.ok(box, 'the shelf carries a poll and this screen has a table, so the toggle is offered');
   assert.equal(box.checked, false, 'off by default — the pool must be what it always was');
+  /* The label and the chip STATE the count. „recommends here" named the source
+     and not the question — recommended at what? — and the count is the whole
+     clause. Both are asserted, and against the same number, because they are
+     read at different moments: the label inside the panel, the chip after it has
+     closed with nothing else on it to supply the number. */
+  assert.equal(dom.document.querySelector('.mfilter__row--check .mfilter__label').textContent,
+    'Nur Spiele, die BGG für 3 Personen empfiehlt');
 
   box.checked = true;
   box.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   assert.deepEqual(previewed(), ['Handgetippt', 'Passt', 'Ungefragt'],
     'an unanswered poll and an absent one are both "no opinion", never "not recommended"');
-  assert.deepEqual(appliedChips(), ['von BGG empfohlen']);
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 3 Personen']);
   assert.equal(triggerLabel(), 'Filter (1 aktiv)');
   closePanel();
+});
+
+/* The count in the label is the POINT of #1005's wording, and a single-party
+   spec cannot see it: „für 3 Personen" is equally satisfied by a hardcoded 3.
+   Two parties, and the singular, are what make the interpolation load-bearing. */
+test('the label and the chip follow the party, they do not state a fixed number', async () => {
+  const polled = [{ id: 'p1', title: 'Passt', minPlayers: 1, maxPlayers: 6, bestWith: [3], recommendedWith: [1, 3] }];
+
+  await dom.call('showStartSession', roundFixture({
+    members: [{ id: 'm1', name: 'Anna' }, { id: 'm2', name: 'Ben' }, { id: 'm3', name: 'Cleo' },
+      { id: 'm4', name: 'Dina' }, { id: 'm5', name: 'Emil' }],
+    games: polled,
+  }));
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check .mfilter__label').textContent,
+    'Nur Spiele, die BGG für 5 Personen empfiehlt');
+  closePanel();
+
+  // …and the singular is a real phrase, not „für 1 Personen".
+  await dom.call('showStartSession', roundFixture({ members: [{ id: 'm1', name: 'Anna' }], games: polled }));
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check .mfilter__label').textContent,
+    'Nur Spiele, die BGG für 1 Person empfiehlt');
+  const box = dom.document.querySelector('.mfilter__row--check input');
+  box.checked = true;
+  box.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 1 Person'], 'the chip takes the same count as the label');
+  closePanel();
+});
+
+/* Found in a browser, not by a spec: the LABEL followed a seat change and the
+   chip did not, so the panel said „für 3 Personen" while the chip beside it
+   still said 4. Stating a count is only an improvement if the count cannot go
+   stale — the old wording had no number to be wrong about. */
+test('unseating somebody moves the chip too, not just the label inside the panel', async () => {
+  await dom.call('showStartSession', roundFixture({
+    games: [{ id: 'p1', title: 'Passt', minPlayers: 1, maxPlayers: 6, bestWith: [3], recommendedWith: [1, 2, 3] }],
+  }));
+  openPanel();
+  const box = dom.document.querySelector('.mfilter__row--check input');
+  box.checked = true;
+  box.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 3 Personen']);
+  closePanel();
+
+  // Tap a seat: the party is now two, and the chip must say so without the user
+  // reopening the panel — it is the only statement of the filter left on screen.
+  const seat = [...dom.app.querySelectorAll('button')].find((b) => /Cleo/.test(b.textContent));
+  assert.ok(seat, 'fixture: the third seat is tappable');
+  seat.click();
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 2 Personen']);
 });
 
 test('the complexity selects carry each other rather than allowing an inverted range', async () => {
