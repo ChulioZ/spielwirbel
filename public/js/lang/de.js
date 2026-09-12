@@ -296,7 +296,10 @@ I18N.de = {
   'metaFilter.chipWeightMin': 'Komplexität ab {min}',
   'metaFilter.chipWeightMax': 'Komplexität bis {max}',
   'metaFilter.chipAge': 'Jüngste: {n} Jahre',
-  'metaFilter.chipTagExcluded': 'ohne {name}',
+  'metaFilter.chipExcluded': 'ohne {name}',
+  'metaFilter.valueIgnored': '„{name}“: kein Filter. Klicken, um Spiele damit mitzuzählen.',
+  'metaFilter.valueIncluded': '„{name}“: zählt mit. Klicken, um Spiele damit stattdessen auszuschließen.',
+  'metaFilter.valueExcluded': '„{name}“: Spiele damit sind ausgeblendet. Klicken, um den Filter aufzuheben.',
   'metaFilter.removeFilter': '{name} entfernen',
 
   'transferGames.link': 'Spiele verschieben oder kopieren',
@@ -572,8 +575,8 @@ I18N.de = {
   'detail.chosen': 'gewählt',
   'detail.notChosen': 'nicht gewählt',
   'detail.sessionCancelled': 'Session abgebrochen',
-  'detail.retireConfirm': '„{title}“ aussortieren?',
-  'detail.completeConfirm': '„{title}“ als durchgespielt markieren?',
+  'detail.retireConfirm': '„{title}“ aussortieren? Weg aus Regal und Auslosung — jederzeit zurückholen.',
+  'detail.completeConfirm': '„{title}“ als durchgespielt markieren? Weg aus Regal und Auslosung — jederzeit zurückholen.',
   'detail.onboard.title': 'Ein unbeschriebenes Blatt',
   'detail.onboard.text':
     'Dieses Spiel wurde noch nicht gespielt oder bewertet. Bewertungen und Sessions erscheinen hier von selbst, sobald ihr es spielt — bis dahin kannst du ihm ein Gesicht geben.',

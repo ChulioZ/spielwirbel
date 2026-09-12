@@ -21,6 +21,7 @@ between them is what keeps either of them useful:
 | Who maintains it | the group, forever | nobody |
 | Vocabulary size | a handful, chosen | ~84 categories, ~180 mechanics |
 | Included values combine | AND by default, OR opt-in | **OR, always** |
+| Excluded values combine | AND-NOT | **AND-NOT** (#1003) |
 | An unset value on the game | the game simply lacks the tag | **the game passes** |
 
 The user request that produced #725 states the failure of ignoring this: *"as
@@ -40,8 +41,37 @@ because a round has few and chose them. So `matchesAnyOf` is `some`, not `every`
 and the AND lives only **between** the two lists (a category clause and a
 mechanic clause both have to hold).
 
-Do not "unify" this with the tag chips' tri-state cycle either. There is no
-exclude state here: with OR semantics a third click would have nothing to mean.
+### The EXCLUDE direction takes the opposite combinator (#1003)
+
+Since #1003 these chips are **tri-state**, exactly like the round-tag chips:
+ignore → include → exclude → ignore. This file used to say a third click "would
+have nothing to mean" under OR semantics, and the user request that produced
+#1003 answered that — *"se puede hacer en las etiquetas personalizadas, pero no
+en las de la bgg"*. „Anything but Party Game" is what it means.
+
+**`excludesAnyOf` is `some` and rejects outright — AND-NOT, the mirror image of
+the include list's OR.** Requiring *every* excluded value to be present before
+rejecting is the symmetry a later reader will reach for, and it is wrong for the
+very reason inclusion is an OR: against a ~84-value vocabulary a conjunction
+almost never fires, so „anything but Party Game" would hardly ever exclude
+anything. Same shape as an excluded tag, which rejects on its own in both
+combination modes.
+
+**Exclusion BEATS inclusion on the same game**, unconditionally. Letting an
+include rescue a game makes an exclusion unreachable on exactly the games it is
+aimed at. The contradictory pair is unrepresentable in the UI (one chip, one
+state) and reachable only from a hand-crafted preset, so `normalizeMetadataFilters`
+also drops the value from the include list — which is what keeps the chip able to
+paint exactly one state rather than picking one at render time.
+
+**And the absent-value rule of §2 holds in this direction too**: a game BGG knows
+no categories for carries none of the excluded ones and stays in. Inverting that
+is the one way this feature empties a shelf.
+
+**The chips' state moved from `aria-pressed` to `aria-label`** with the third
+state, because a button has two pressed states and this control has three, so
+"not pressed" cannot tell exclude from ignore. That is the answer `paintTagChip`
+already reached, and the ban glyph keeps the exclude state off colour alone.
 
 ## 2. An ABSENT field on the game passes EVERY filter — get this backwards and the shelf empties
 
@@ -80,15 +110,22 @@ game carries it. Three properties follow, and each is load-bearing:
 - a shelf carrying none of a field renders **no control at all**, rather than an
   empty one — the same thing the tag field already does with no round tags.
 
-**A control is gated on the field its own CLAUSE reads, which for playing time
-is the OTHER bound (#1001).** „At most N" compares the game's `minPlaytime`, so
-it is gated on `playtimeMax: anyNumber('minPlaytime')`; „at least N" compares
-`maxPlaytime` and is gated on `playtimeMin: anyNumber('maxPlaytime')`. The
-crossing reads like a typo and is the whole point: one shared flag would let a
-shelf whose games carry only a lower bound render an „at least" control that
-*every* game passes — a control that can never do anything, which is the second
-bullet above inverted. BGG returns 0 for an unset bound and `toPositiveInt`
-makes that a null, so the one-sided shelf is real, not hypothetical.
+**A control is gated on the field its own CLAUSE reads.** Since #1025 the
+playing-time pair is a **containment** test, so each control is gated on the
+game field of the same name: „at most M" compares the game's `maxPlaytime` and is
+gated on `playtimeMax: anyNumber('maxPlaytime')`; „at least N" compares
+`minPlaytime` and is gated on `playtimeMin: anyNumber('minPlaytime')`.
+
+**It was CROSSED until #1025, and un-crossing it is the half of that change that
+fails silently.** While the clauses were overlap tests, „at most N" read the
+game's `minPlaytime`, so its flag was `anyNumber('minPlaytime')` — which reads
+like a typo and was the whole point. If you find a comment or a rule still
+describing a crossing, it predates #1025. Getting the gating out of step with the
+clause in either direction leaves a shelf whose games carry only one bound
+rendering a control that *every* game passes — one that can never do anything,
+which is the second bullet above inverted. BGG returns 0 for an unset bound and
+`toPositiveInt` makes that a null, so the one-sided shelf is real, not
+hypothetical.
 
 **That last one has a second half that is easy to miss: a stored filter whose
 control is gone must be dropped too.** `normalizeMetadataFilters(raw, options)`
@@ -116,14 +153,20 @@ contract). An inverted complexity range is **swapped** in the shared normalizer
 rather than dropped, so the preview and the draw cannot disagree about what a
 hand-crafted one means.
 
-**The playing-time pair is deliberately NOT swapped, and its control does not
-carry one bound along either.** A weight is one number per game, so min > max
-admits nothing; the two playtime clauses read *opposite ends of the game's own
-range*, so „at least 120, at most 30" asks for a game whose spread covers both —
-a real query, and exactly a 20–600 campaign. Swapping or carrying would silently
-answer a different question. `rangeRow`'s `carry` parameter in
-`filter-panel.js` is that distinction made explicit rather than left to whoever
-edits the row next.
+**The playing-time pair IS swapped and DOES carry, since #1025 — it was neither
+before.** Under containment the pair is a genuine interval like complexity: „at
+least 120, at most 30" asks for a game that both finishes inside 30 minutes and
+runs at least two hours, which nothing can satisfy, so the shared normalizer
+swaps it and `rangeRow` is passed `carry: true`.
+
+That is a reversal, and the reason for the old behaviour is worth keeping,
+because it is what a reader will reconstruct from the shape: while the two
+clauses read *opposite ends of the game's own range*, an inverted-looking pair was
+a real query — a game whose spread covers both, i.e. exactly a 20–600 campaign —
+so swapping or carrying would have answered a different question than the one
+asked. `rangeRow`'s `carry` parameter in `filter-panel.js` is still that
+distinction made explicit; today both ranges pass `true`, and a future
+non-interval pair would pass `false`.
 
 The **rendering** is a separate file (`public/js/filter-panel.js`) because it
 is DOM code: requiring it into a Node test would put it in the coverage report at
@@ -151,12 +194,15 @@ Two smaller traps, one of which #827 rewrote:
 - **The metadata chips are `.mfilter__chips`, not the shared `.filter-chips`.**
   The original reason is **gone**: it was that the Regal's phone block hid
   `.regal-filter .filter-chips` behind its own „Filter" button, and #827 deleted
-  that block along with the button. What survives is the better reason — the two
-  chip rows are different controls. `.filter-chips` carries the tags' tri-state
-  cycle (ignore → include → exclude); these are plain multi-select, because with
-  OR semantics a third click would have nothing to mean (§1). Sharing the class
-  would invite sharing the behaviour. Nothing in jsdom can see a stylesheet, so
-  this is asserted over the markup the renderer emits.
+  that block along with the button. The *second* reason is gone too since #1003 —
+  the two rows now share the tri-state cycle, so they are no longer different
+  controls in that sense. What survives is that they are different **vocabularies
+  with different combinators** (§1: round tags AND by default, provider values OR)
+  over separately-scoped state, and that the two rows are styled and placed
+  independently. Keep them separate classes; the shared fills (`.chip.is-on`,
+  `.chip.is-excluded`) are base-component rules and arrive anyway. Nothing in
+  jsdom can see a stylesheet, so this is asserted over the markup the renderer
+  emits.
 - **The two badges became ONE number (#827), and then no badge at all (#844).**
   They were separate while they were two controls that collapsed on **different
   triggers** (the chips only below 860px, the drawer at every width) — one number

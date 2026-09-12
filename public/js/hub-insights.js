@@ -191,8 +191,9 @@ function suggestScore(stats, game, neutral) {
      BGG_API_TOKEN, or a shelf of hand-typed games, `playtimeMax` is false and
      `normalizeMetadataFilters` drops `maxPlaytime` silently — so the chip would
      open the setup screen having changed nothing at all. (Since #1001 the two
-     playtime bounds are gated separately; this chip needs the „at most" half,
-     which is the one keyed on the game's minPlaytime.)
+     playtime bounds are gated separately, and since #1025 each is keyed on the
+     game field its own clause reads: this chip needs the „at most" half, keyed
+     on the game's maxPlaytime.)
    - it must NARROW something without emptying it. A filter that admits the
      whole shelf is a chip that does nothing; one that admits none of it is a
      chip that opens an empty pool.

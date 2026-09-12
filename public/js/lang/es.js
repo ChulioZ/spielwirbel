@@ -286,7 +286,10 @@ I18N.es = {
   'metaFilter.chipWeightMin': 'Complejidad desde {min}',
   'metaFilter.chipWeightMax': 'Complejidad hasta {max}',
   'metaFilter.chipAge': 'El más joven: {n} años',
-  'metaFilter.chipTagExcluded': 'sin {name}',
+  'metaFilter.chipExcluded': 'sin {name}',
+  'metaFilter.valueIgnored': '«{name}»: sin filtrar. Haz clic para que cuente en el filtro.',
+  'metaFilter.valueIncluded': '«{name}»: cuenta para el filtro. Haz clic para excluir los juegos que la llevan.',
+  'metaFilter.valueExcluded': '«{name}»: los juegos que la llevan están ocultos. Haz clic para dejar de filtrar por ella.',
   'metaFilter.removeFilter': 'Quitar {name}',
 
   'transferGames.link': 'Mover o copiar juegos',
@@ -553,8 +556,8 @@ I18N.es = {
   'detail.chosen': 'elegido',
   'detail.notChosen': 'no elegido',
   'detail.sessionCancelled': 'sesión cancelada',
-  'detail.retireConfirm': '¿Retirar «{title}»?',
-  'detail.completeConfirm': '¿Marcar «{title}» como completado?',
+  'detail.retireConfirm': '¿Retirar «{title}»? Sale de la Estantería y del sorteo — puedes recuperarlo.',
+  'detail.completeConfirm': '¿Marcar «{title}» como completado? Sale de la Estantería y del sorteo — puedes recuperarlo.',
   'detail.onboard.title': 'Una página en blanco',
   'detail.onboard.text':
     'Todavía nadie lo ha valorado ni jugado. Las valoraciones y las sesiones aparecerán aquí solas en cuanto juguéis; hasta entonces, puedes ponerle cara.',

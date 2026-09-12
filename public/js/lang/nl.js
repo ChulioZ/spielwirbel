@@ -293,7 +293,10 @@ I18N.nl = {
   'metaFilter.chipWeightMin': 'Complexiteit vanaf {min}',
   'metaFilter.chipWeightMax': 'Complexiteit tot {max}',
   'metaFilter.chipAge': 'Jongste: {n} jaar',
-  'metaFilter.chipTagExcluded': 'zonder {name}',
+  'metaFilter.chipExcluded': 'zonder {name}',
+  'metaFilter.valueIgnored': '“{name}”: niet gefilterd. Klik om spellen ermee mee te tellen.',
+  'metaFilter.valueIncluded': '“{name}”: telt mee voor het filter. Klik om spellen ermee juist uit te sluiten.',
+  'metaFilter.valueExcluded': '“{name}”: spellen ermee zijn verborgen. Klik om er niet meer op te filteren.',
   'metaFilter.removeFilter': '{name} verwijderen',
 
   'transferGames.link': 'Spellen verplaatsen of kopiëren',
@@ -549,8 +552,8 @@ I18N.nl = {
   'detail.chosen': 'gekozen',
   'detail.notChosen': 'niet gekozen',
   'detail.sessionCancelled': 'sessie afgebroken',
-  'detail.retireConfirm': '“{title}” opzijleggen?',
-  'detail.completeConfirm': '“{title}” als uitgespeeld markeren?',
+  'detail.retireConfirm': '“{title}” opzijleggen? Uit de Kast en uit de loting — je kunt het altijd terughalen.',
+  'detail.completeConfirm': '“{title}” als uitgespeeld markeren? Uit de Kast en uit de loting — je kunt het altijd terughalen.',
   'detail.onboard.title': 'Een schone lei',
   'detail.onboard.text':
     'Niemand heeft dit spel al beoordeeld of gespeeld. Beoordelingen en sessies verschijnen hier vanzelf zodra jullie het spelen — tot dan kun je het een gezicht geven.',

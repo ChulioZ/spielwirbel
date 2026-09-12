@@ -295,7 +295,10 @@ I18N.pt = {
   'metaFilter.chipWeightMin': 'Complexidade a partir de {min}',
   'metaFilter.chipWeightMax': 'Complexidade até {max}',
   'metaFilter.chipAge': 'Mais nova: {n} anos',
-  'metaFilter.chipTagExcluded': 'sem {name}',
+  'metaFilter.chipExcluded': 'sem {name}',
+  'metaFilter.valueIgnored': '“{name}”: sem filtro. Clique para contar os jogos com ela.',
+  'metaFilter.valueIncluded': '“{name}”: conta para o filtro. Clique para esconder os jogos com ela em vez disso.',
+  'metaFilter.valueExcluded': '“{name}”: os jogos com ela ficam escondidos. Clique para parar de filtrar por ela.',
   'metaFilter.removeFilter': 'Remover {name}',
 
   'transferGames.link': 'Mover ou copiar jogos',
@@ -551,8 +554,8 @@ I18N.pt = {
   'detail.chosen': 'escolhido',
   'detail.notChosen': 'não escolhido',
   'detail.sessionCancelled': 'sessão cancelada',
-  'detail.retireConfirm': 'Aposentar “{title}”?',
-  'detail.completeConfirm': 'Marcar “{title}” como concluído?',
+  'detail.retireConfirm': 'Aposentar “{title}”? Sai da Estante e do sorteio — podes trazê-lo de volta quando quiseres.',
+  'detail.completeConfirm': 'Marcar “{title}” como concluído? Sai da Estante e do sorteio — podes trazê-lo de volta quando quiseres.',
   'detail.onboard.title': 'Uma folha em branco',
   'detail.onboard.text':
     'Ninguém avaliou nem jogou este ainda. Avaliações e sessões aparecem aqui sozinhas assim que vocês jogarem — até lá, você pode dar um rosto a ele.',

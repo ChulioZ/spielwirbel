@@ -296,7 +296,10 @@ I18N.fr = {
   'metaFilter.chipWeightMin': 'Complexité d’au moins {min}',
   'metaFilter.chipWeightMax': 'Complexité d’au plus {max}',
   'metaFilter.chipAge': 'Le plus jeune : {n} ans',
-  'metaFilter.chipTagExcluded': 'sans {name}',
+  'metaFilter.chipExcluded': 'sans {name}',
+  'metaFilter.valueIgnored': '« {name} » : pas de filtre. Clique pour la compter dans le filtre.',
+  'metaFilter.valueIncluded': '« {name} » : compte dans le filtre. Clique pour exclure les jeux qui la portent.',
+  'metaFilter.valueExcluded': '« {name} » : les jeux qui la portent sont masqués. Clique pour ne plus filtrer dessus.',
   'metaFilter.removeFilter': 'Retirer {name}',
 
   'transferGames.link': 'Déplacer ou copier des jeux',
@@ -554,8 +557,8 @@ I18N.fr = {
   'detail.chosen': 'choisi',
   'detail.notChosen': 'non choisi',
   'detail.sessionCancelled': 'session annulée',
-  'detail.retireConfirm': 'Retirer « {title} » ?',
-  'detail.completeConfirm': 'Marquer « {title} » comme terminé ?',
+  'detail.retireConfirm': 'Retirer « {title} » ? Quitte l’Étagère et le tirage — tu peux le récupérer à tout moment.',
+  'detail.completeConfirm': 'Marquer « {title} » comme terminé ? Quitte l’Étagère et le tirage — tu peux le récupérer à tout moment.',
   'detail.onboard.title': 'Page blanche',
   'detail.onboard.text':
     'Personne ne l’a encore noté ni joué. Les notes et les sessions apparaîtront ici toutes seules dès que vous y jouerez — en attendant, tu peux lui donner un visage.',

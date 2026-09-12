@@ -189,47 +189,43 @@ const WEIGHT_CHOICES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 function fitsMetadataFilters(game, filters) {
   const f = filters || {};
   const g = game || {};
-  // Playing time is an INTERVAL test against the lower bound, never a comparison
-  // against a synthesised average (#724 §1): BGG's 20–600 spreads are real, and
-  // filtering on the maximum would drop such a game from every realistic
-  // evening. Permissive is the safe direction here too — the draw only produces
-  // candidates people then vote on, and the info sheet shows the full range.
+  // Playing time is a CONTAINMENT test (#1025), reversing the overlap doctrine
+  // of #724/#1001/#1023: "at most M" reads the game's OWN maximum, "at least N"
+  // its own minimum. If you say you have two hours you want to be sure you
+  // finish — not a game that merely *might* come in under the wire by running at
+  // its absolute floor.
   //
-  // A single-point overlap is NOT a fit (#1023). A game whose shortest play
-  // EQUALS the ceiling and which can run longer only makes the evening by coming
-  // in at its absolute floor — reported from La BSK, where "entre 60 y 120 min"
-  // offered a 120–180 game. That equality case is the entire change here: `>`
-  // already rejected anything starting above the ceiling, and the tempting
-  // `>=` would also throw out a game pinned AT it (120–120 under "at most 120"),
-  // which genuinely fits. An absent upper bound can never be shown to exceed
-  // anything, so it stays in — the absent-value rule, per field.
-  if (isFiniteNum(f.maxPlaytime) && isFiniteNum(g.minPlaytime)
-      && (g.minPlaytime > f.maxPlaytime
-        || (g.minPlaytime === f.maxPlaytime && isFiniteNum(g.maxPlaytime) && g.maxPlaytime > f.maxPlaytime)))
+  // What makes this right despite BGG's wide spreads: its min/max mostly tracks
+  // PLAYER COUNT rather than variance at one table, so a 60–120 game is "60 at
+  // two players, 120 at four" and `maxPlaytime` IS the honest worst case at a
+  // full table. The class that genuinely loses is campaign/legacy/epic games,
+  // where the top of the range is a different activity (Toriki 20–600, TI4
+  // 240–480) — and those are games a group PLANS, never draws. Accepted
+  // deliberately; `test/draw-pool.test.js` asserts the loss so it reads as a
+  // decision rather than a regression.
+  //
+  // Rejected: interpolating expected playtime for the party size. The app knows
+  // the count, so it is theoretically better — and it is a guess wearing the
+  // clothes of precision, where a filter someone sets by hand must above all be
+  // predictable.
+  //
+  // Both bounds stay INCLUSIVE: a game pinned at the ceiling (120–120 under "at
+  // most 120") takes exactly two hours and belongs in the pool.
+  if (isFiniteNum(f.maxPlaytime) && isFiniteNum(g.maxPlaytime) && g.maxPlaytime > f.maxPlaytime)
     return false;
-  // The MIRROR of that clause (#1001), and the reason it reads `maxPlaytime` on
-  // the game: "we have three hours" must still be offered a 20–600 game, which
-  // testing the game's own MINIMUM would drop — the exact failure the clause
-  // above avoids, seen from the other side. Reading the wrong bound here looks
-  // correct in casual use, so both directions are asserted in the spec.
-  //
-  // NOTE the two clauses are INDEPENDENT, not the ends of one interval: they
-  // test different bounds of the game's range, so a pair that reads as inverted
-  // (at least 120, at most 30) is satisfiable — it asks for a game whose spread
-  // covers both — rather than empty. That is why neither is swapped in
-  // `normalizeMetadataFilters` below, unlike the complexity bounds.
-  // The degenerate-overlap exclusion is mirrored too (#1023), in the same change
-  // on purpose: fixing one side only earns the same report from the other, since
-  // a game reaching the floor solely at its longest is no game for "at least N".
-  if (isFiniteNum(f.minPlaytime) && isFiniteNum(g.maxPlaytime)
-      && (g.maxPlaytime < f.minPlaytime
-        || (g.maxPlaytime === f.minPlaytime && isFiniteNum(g.minPlaytime) && g.minPlaytime < f.minPlaytime)))
+  if (isFiniteNum(f.minPlaytime) && isFiniteNum(g.minPlaytime) && g.minPlaytime < f.minPlaytime)
     return false;
   if (isFiniteNum(f.weightMin) && isFiniteNum(g.weight) && g.weight < f.weightMin) return false;
   if (isFiniteNum(f.weightMax) && isFiniteNum(g.weight) && g.weight > f.weightMax) return false;
   // "The youngest at the table is N" — so a game passes when its own minimum age
   // is at most N.
   if (isFiniteNum(f.youngestAge) && isFiniteNum(g.minAge) && g.minAge > f.youngestAge) return false;
+  // EXCLUSION runs before inclusion, and it is unconditional (#1003): a game
+  // carrying an excluded value is out even when it also carries an included one.
+  // The alternative — letting an include rescue it — makes an exclusion
+  // unreachable on exactly the games it is aimed at, silently.
+  if (excludesAnyOf(g.categories, f.excludeCategories)) return false;
+  if (excludesAnyOf(g.mechanics, f.excludeMechanics)) return false;
   return matchesAnyOf(g.categories, f.categories) && matchesAnyOf(g.mechanics, f.mechanics);
 }
 
@@ -250,6 +246,27 @@ function matchesAnyOf(values, picked) {
   if (!Array.isArray(picked) || picked.length === 0) return true; // unfiltered
   if (!Array.isArray(values) || values.length === 0) return true; // absent on the game
   return picked.some((x) => values.includes(x));
+}
+
+// The EXCLUDE direction (#1003), and its combinator is the exact OPPOSITE of the
+// one above: ANY excluded value present removes the game (AND-NOT), where any
+// included value present keeps it (OR). That asymmetry is deliberate and is the
+// thing a later reader will try to "fix" into symmetry.
+//
+// The reason is the same vocabulary-size argument that makes inclusion an OR: a
+// game carries 3–8 of BGG's ~84 categories, so requiring ALL of the excluded
+// values to be present before rejecting would mean "anything but Party Game"
+// hardly ever rejects anything. Same shape as the tri-state tag chips, where an
+// excluded tag rejects on its own in both combination modes.
+//
+// An absent field on the game excludes NOTHING, the same permissiveness rule the
+// include side follows: a game BGG knows no categories for carries none of the
+// excluded ones. Get that backwards and the first exclusion hides every
+// hand-typed game and, on an instance without BGG_API_TOKEN, the entire shelf.
+function excludesAnyOf(values, excluded) {
+  if (!Array.isArray(excluded) || excluded.length === 0) return false; // unfiltered
+  if (!Array.isArray(values) || values.length === 0) return false; // absent on the game
+  return excluded.some((x) => values.includes(x));
 }
 
 // Which metadata filters this shelf can offer at all, derived from the games
@@ -274,14 +291,16 @@ function metadataFilterOptions(games) {
   };
   return {
     // The two playtime controls are gated SEPARATELY, each on the field its own
-    // clause reads — deliberately crossed, and it looks like a typo until you
-    // hold it against `fitsMetadataFilters`: "at most N" compares the game's
-    // minPlaytime, "at least N" its maxPlaytime. One shared flag would let a
-    // shelf whose games carry only a lower bound render an "at least" control
-    // that every game passes, i.e. one that can never do anything — the inverse
-    // of the empty pool this function exists to rule out.
-    playtimeMax: anyNumber('minPlaytime'),
-    playtimeMin: anyNumber('maxPlaytime'),
+    // clause reads. #1025 UN-CROSSED this pair: under containment "at most M"
+    // compares the game's maxPlaytime and "at least N" its minPlaytime, so each
+    // flag names the field it now reads. (It was crossed while the clauses were
+    // overlap tests — if you find a rule or comment still describing a crossing,
+    // it predates #1025.) One shared flag would let a shelf whose games carry
+    // only a lower bound render an "at most" control that every game passes,
+    // i.e. one that can never do anything — the inverse of the empty pool this
+    // function exists to rule out.
+    playtimeMin: anyNumber('minPlaytime'),
+    playtimeMax: anyNumber('maxPlaytime'),
     weight: anyNumber('weight'),
     age: anyNumber('minAge'),
     categories: valuesOf('categories'),
@@ -323,22 +342,40 @@ function normalizeMetadataFilters(raw, options) {
     youngestAge: step(src.youngestAge, AGE_CHOICES, o.age),
     categories: pick(src.categories, o.categories),
     mechanics: pick(src.mechanics, o.mechanics),
+    // The exclude lists are pruned against the SAME option list (#1003) — one
+    // chip per value, three states, so a value the shelf no longer carries has
+    // to vanish from both directions or an active-filter count sits over a chip
+    // that is not on screen.
+    excludeCategories: pick(src.excludeCategories, o.categories),
+    excludeMechanics: pick(src.excludeMechanics, o.mechanics),
   };
+  // A value in BOTH lists is unrepresentable in the UI (one chip holds one
+  // state) and reachable only from a hand-crafted preset. Exclusion is the
+  // stronger statement and `fitsMetadataFilters` already lets it win, so the
+  // include entry is dropped here — which is what keeps the chip able to paint
+  // exactly one state, rather than picking one arbitrarily at render time.
+  out.categories = out.categories.filter((v) => !out.excludeCategories.includes(v));
+  out.mechanics = out.mechanics.filter((v) => !out.excludeMechanics.includes(v));
   // An inverted range admits nothing at all, so a hand-crafted one would answer
   // "No matching games" over a shelf that is fine. Swapping (rather than
   // dropping a bound) is done HERE, in the shared function, so the preview and
   // the draw cannot disagree about what an inverted range means.
   //
-  // COMPLEXITY ONLY. The playtime pair above is deliberately left alone: a
-  // weight is one number per game, so min > max really does admit nothing,
-  // whereas the two playtime clauses read opposite ends of the game's own range
-  // and an inverted-looking pair is a real query (#1001). Swapping it would
-  // silently answer a different question than the one asked.
-  if (out.weightMin !== null && out.weightMax !== null && out.weightMin > out.weightMax) {
-    const lo = out.weightMax;
-    out.weightMax = out.weightMin;
-    out.weightMin = lo;
-  }
+  // BOTH pairs, since #1025. The playtime pair was deliberately NOT swapped
+  // while its clauses were overlap tests reading opposite ends of the game's
+  // range — "at least 120, at most 30" then asked for a game whose spread
+  // covered both, which is a real query and exactly a 20–600 campaign. Under
+  // containment it asks for a game that both finishes inside 30 and runs at
+  // least 120, which nothing can satisfy, so it joins complexity.
+  const swap = (minKey, maxKey) => {
+    if (out[minKey] !== null && out[maxKey] !== null && out[minKey] > out[maxKey]) {
+      const lo = out[maxKey];
+      out[maxKey] = out[minKey];
+      out[minKey] = lo;
+    }
+  };
+  swap('weightMin', 'weightMax');
+  swap('minPlaytime', 'maxPlaytime');
   return out;
 }
 
@@ -359,8 +396,11 @@ function countMetadataFilters(filters) {
       (f.maxPlaytime !== null && f.maxPlaytime !== undefined) ? 1 : 0) +
     (isFiniteNum(f.weightMin) || isFiniteNum(f.weightMax) ? 1 : 0) +
     (f.youngestAge !== null && f.youngestAge !== undefined ? 1 : 0) +
-    ((f.categories || []).length ? 1 : 0) +
-    ((f.mechanics || []).length ? 1 : 0)
+    // One chip ROW is one control however it filters (#1003), so an included and
+    // an excluded category together still count 1 — the same reasoning the
+    // complexity range and the playtime pair get.
+    ((f.categories || []).length || (f.excludeCategories || []).length ? 1 : 0) +
+    ((f.mechanics || []).length || (f.excludeMechanics || []).length ? 1 : 0)
   );
 }
 
