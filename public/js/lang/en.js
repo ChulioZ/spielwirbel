@@ -557,8 +557,8 @@ I18N.en = {
   'detail.chosen': 'chosen',
   'detail.notChosen': 'not chosen',
   'detail.sessionCancelled': 'session cancelled',
-  'detail.retireConfirm': 'Retire “{title}”?',
-  'detail.completeConfirm': 'Mark “{title}” as completed?',
+  'detail.retireConfirm': 'Retire “{title}”? Off the Shelf and out of the draw — you can bring it back any time.',
+  'detail.completeConfirm': 'Mark “{title}” as completed? Off the Shelf and out of the draw — you can bring it back any time.',
   'detail.onboard.title': 'A blank slate',
   'detail.onboard.text':
     'Nobody has rated or played this one yet. Ratings and sessions show up here by themselves once you play it — until then, you can give it a face.',

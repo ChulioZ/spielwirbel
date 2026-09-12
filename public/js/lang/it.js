@@ -539,8 +539,8 @@ I18N.it = {
   'detail.chosen': 'scelto',
   'detail.notChosen': 'non scelto',
   'detail.sessionCancelled': 'sessione annullata',
-  'detail.retireConfirm': 'Ritirare «{title}»?',
-  'detail.completeConfirm': 'Segnare «{title}» come completato?',
+  'detail.retireConfirm': 'Ritirare «{title}»? Esce dallo Scaffale e dal sorteggio — puoi recuperarlo.',
+  'detail.completeConfirm': 'Segnare «{title}» come completato? Esce dallo Scaffale e dal sorteggio — puoi recuperarlo.',
   'detail.onboard.title': 'Una pagina bianca',
   'detail.onboard.text':
     'Nessuno lo ha ancora valutato o giocato. Valutazioni e sessioni compaiono qui da sole non appena ci giocate — nel frattempo, puoi dargli un volto.',
