@@ -195,7 +195,9 @@ test('a quick-start chip opens the setup screen with its filter already applied'
   const r = busyRound();
   // Half the shelf short, half long: the only shelf shape on which „unter
   // 60 Min" both narrows something and leaves something.
-  r.games.forEach((g, i) => { g.minPlaytime = i < 4 ? 30 : 120; });
+  // `maxPlaytime`: the „short" quick-start chip is `maxPlaytime: 60`, gated and
+  // evaluated on the game's OWN maximum since #1025 (containment).
+  r.games.forEach((g, i) => { g.maxPlaytime = i < 4 ? 30 : 120; });
 
   const seen = [];
   dom.set('showStartSession', (round, prefill) => seen.push(prefill));
@@ -222,7 +224,9 @@ test('the chips follow the CTA into the rail instead of being left behind', (t) 
      own. Asserting only the class would pass against a build where the rail
      shows nothing at all, so both halves are here. */
   const r = busyRound();
-  r.games.forEach((g, i) => { g.minPlaytime = i < 4 ? 30 : 120; });
+  // `maxPlaytime`: the „short" quick-start chip is `maxPlaytime: 60`, gated and
+  // evaluated on the game's OWN maximum since #1025 (containment).
+  r.games.forEach((g, i) => { g.maxPlaytime = i < 4 ? 30 : 120; });
 
   dom.call('renderStartTab', r, r.games);
   const pane = dom.app.querySelector('.hub-presets');
@@ -242,7 +246,9 @@ test('showStartSession lets a prefill win over the round\'s remembered preset', 
   t.after(() => dom.close());
 
   const r = busyRound();
-  r.games.forEach((g, i) => { g.minPlaytime = i < 4 ? 30 : 120; });
+  // `maxPlaytime`: the „short" quick-start chip is `maxPlaytime: 60`, gated and
+  // evaluated on the game's OWN maximum since #1025 (containment).
+  r.games.forEach((g, i) => { g.maxPlaytime = i < 4 ? 30 : 120; });
   // The remembered preset says 180; the chip says 60 and must win for this
   // entry — otherwise the chip silently opens last week's draw.
   r.lastSessionFilters = { count: 5, metadata: { maxPlaytime: 180 } };

@@ -112,19 +112,28 @@ Measured 2026-08-09 against `/thing?id=…&stats=1` for Catan (13), Ark Nova
 distractor** for the expansion-parent parser, not BGG data — it is what made the
 question look urgent. Don't read a fixture as evidence about the upstream.
 
-**Store BOTH playtime bounds.** Toriki reports **20–600**, where 20 is one sitting
-and 600 the full campaign; any single number describes neither, and the average
-(310) describes nothing at all. The filter tests the **minimum**
-(`minPlaytime <= budget`), the same interval shape `fitsPlayerCount` uses — filter
-on the maximum and Toriki leaves every realistic budget.
+**Store BOTH playtime bounds.** Toriki reports **20–600**, where 20 is one
+sitting and 600 the full campaign; any single number describes neither, and the
+average (310) describes nothing at all.
 
-Since #1023 that carries **one exception, and it is why both bounds are needed
-rather than just the minimum**: a game whose minimum *equals* the budget and
-which can run longer (120–180 under „at most 120") is excluded, because its
-overlap with the budget is a single point it only ever hits at full speed. A game
-*pinned* at the budget (120–120) still fits, which is exactly the distinction the
-second bound buys — and the reason the obvious `>=` is wrong. The live wording is
-in `fitsMetadataFilters`.
+**Since #1025 the filter is a CONTAINMENT test, and both bounds are load-bearing
+for a different reason than they used to be.** „At most M" reads the game's own
+`maxPlaytime` and „at least N" its own `minPlaytime` — so a group that says it
+has two hours is offered only games that finish inside two hours, and Toriki is
+out of every budget below 600. That reverses #724's doctrine (filter on the
+minimum, so a wide spread survives every budget) and supersedes #1023's
+single-point-overlap carve-out, which containment handles with no special case.
+
+What makes the reversal right despite the wide spreads: BGG's min/max mostly
+tracks **player count** rather than variance at one table, so a 60–120 game is
+"60 at two players, 120 at four" and `maxPlaytime` IS the honest worst case at a
+full table. The class that genuinely loses is campaign/legacy/epic games, where
+the top of the range is a different activity (Toriki 20–600, TI4 240–480) — games
+a group *plans* rather than draws. Accepted deliberately.
+
+The live wording is in `fitsMetadataFilters`; the consequences that fail silently
+(the un-crossed option gating, the now-swapped inverted pair) are in
+`.claude/rules/provider-metadata-is-a-filter-not-a-tag.md` §3 and §4.
 
 **Match `average` by exact node name.** `parseItems` flattens every descendant into
 one child list, so `average`, `bayesaverage`, `stddev`, `median` and `rank` all sit

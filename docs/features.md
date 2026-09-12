@@ -224,9 +224,13 @@ What the app does, in detail. For a short overview see the
   selects every tag at once, or clears the whole filter in one click whenever
   anything is filtered. Each tag can carry an
   **icon** picked from a curated set, shown next to its name everywhere the tag
-  appears; a tag without one keeps the default tag glyph, and the icon can be
-  changed later from the Tags screen.
-  Deleting a tag simply unassigns it from every game.
+  appears; a tag without one keeps the default tag glyph. Both the **name and
+  the icon** can be changed later from the Tags screen — so fixing a typo, or
+  simply thinking of a better word, costs nothing: every game keeps the tag, and
+  a round's remembered draw filters keep working, because assignments are stored
+  by id rather than by name. A rename onto a name the round already uses is
+  refused rather than merging the two tags. Deleting a tag simply unassigns it
+  from every game.
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list) with their stats — wins,
   sessions joined, win rate, Siegwertung, average rating given, their strongest
