@@ -137,14 +137,47 @@ test('a chosen-but-unfinished session keeps the score ink and states no winner',
   assert.ok(open.style.getPropertyValue('--sc').startsWith('hsl('), 'it is inked from scoreColor()');
 });
 
-test('the session score rides in the corner, and an unrated session shows the empty pill', async (t_) => {
+/* A pill means a number was actually given. The Regal card and the game's own
+ * badge print „neu" when a game has no score, because the question they answer
+ * („what does this game score?") HAS that answer — a stamp asks what happened on
+ * one evening, and an evening nobody rated has no number at all. So no pill,
+ * not the empty variant (operator decision, overriding the issue's own
+ * acceptance criterion). Checked on a muted stamp too: the reasoning is about
+ * the rating being absent, not about which branch rendered it. */
+test('a pill appears only where a rating was actually given', async (t_) => {
   const dom = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g1');
   const by = (id) => stampsOf(dom).find((s) => s.getAttribute('href').endsWith(`/${id}`));
   const rated = by('s1').querySelector('.score-pill');
   assert.ok(rated, 'a rated session shows its own score');
-  assert.ok(!rated.classList.contains('score-pill--none'));
-  assert.ok(by('s2').querySelector('.score-pill.score-pill--none'), 'an unrated session shows the empty pill');
+  assert.ok(!rated.classList.contains('score-pill--none'), 'and it is a real pill, not the empty variant');
+  assert.equal(by('s2').querySelector('.score-pill'), null, 'a played-but-unrated session prints no pill');
+  assert.equal(by('s5').querySelector('.score-pill'), null, 'nor does an unrated cancelled one');
+  assert.ok(by('s4').querySelector('.score-pill'), 'a session that rated the game keeps its pill even unchosen');
+});
+
+/* The state the issue did not name, and the one with the most room to go wrong:
+ * the round CHOSE this game and played it, and then nobody rated it. That is not
+ * a blank — putting a game on the table is revealed preference, which is why
+ * `vote-score.js` lifts a game's shelf score by its plays — so the stamp takes
+ * the ink of a strong evening rather than the muted grey of an evening this game
+ * sat out. Its honesty rests on the pill being absent: with a „–" beside it, a
+ * green stamp would be claiming a rating the same component says nobody gave. */
+test('a played-but-unrated session is inked as a strong evening, not muted', async (t_) => {
+  const dom = bootApp(t_);
+  await dom.call('showGameDetail', RID, 'g1');
+  const el = stampsOf(dom).find((s) => s.getAttribute('href').endsWith('/s2'));
+  assert.ok(!el.classList.contains('stamp--muted'), 'it was our evening, so it is not muted');
+  assert.equal(el.querySelector('.score-pill'), null, 'and it claims no number');
+  const ink = el.style.getPropertyValue('--sc');
+  assert.ok(ink.startsWith('hsl('), `expected score-ramp ink, got ${ink}`);
+  // Off the ramp's green end but below its top: "chosen" is weaker than "everyone
+  // gave it a 5" — a game can win the draw just by fitting the player count.
+  const hue = Number(/hsl\((\d+(?:\.\d+)?)/.exec(ink)[1]);
+  assert.ok(hue > 90 && hue < 120, `expected a strong-but-not-perfect hue, got ${hue}`);
+  const muted = stampsOf(dom).find((s) => s.getAttribute('href').endsWith('/s5'));
+  assert.notEqual(ink, muted.style.getPropertyValue('--sc'),
+    'it must not read as the evenings this game sat out');
 });
 
 /* The acceptance criterion "the pill never overlaps the date at 150px" has no

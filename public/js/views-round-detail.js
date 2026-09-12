@@ -1029,16 +1029,33 @@ async function showGameDetail(rid, gameId) {
       } else {
         status = esc(t('detail.notChosen'));
       }
+      // No rating, no pill — not the empty „–" variant the Regal card and the
+      // game's own badge use. Those two answer „what does this game score?",
+      // where „nothing yet" is the answer; a stamp asks what happened on ONE
+      // evening, and an evening nobody rated simply has no number to print. The
+      // absent pill says that more quietly than a dash does, and at 150px the
+      // quiet version is the one that fits (operator decision, 2026-09-12,
+      // overriding this issue's own acceptance criterion).
       const scoreCell =
         sst.avg !== null
           ? `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
-          : '<span class="score-pill score-pill--none">–</span>';
-      // The ink is the game's score IN THAT SESSION, so an evening this game
-      // was taken to is stamped in the colour it earned there. An evening it
-      // was not taken to has no such colour to state, and says so by going
-      // muted rather than by borrowing one — `--sc` then falls through to the
-      // stylesheet's `--ink-soft` default.
-      const ink = picked && sst.avg !== null ? ` style="--sc:${scoreColor(sst.score)}"` : '';
+          : '';
+      // The ink is how the evening went for this game. Usually that is the
+      // score it earned there — but a game the round CHOSE and played without
+      // rating is not a blank: being put on the table is revealed preference,
+      // which is why `vote-score.js` lifts a game's shelf score by its plays at
+      // all. So it is stamped in the ink of a strong evening.
+      //
+      // NOT the top of the ramp, and it prints no pill: a game can win the draw
+      // for fitting the player count, so „chosen" is weaker than „everyone gave
+      // it a 5". Read off avgColor() rather than written as a hex, so a retune
+      // of the ramp carries this with it (.claude/rules/theme-derived-colors.md).
+      const PLAYED_UNRATED = 4.5;
+      // An evening this game was NOT taken to has nothing to say about it and
+      // borrows no colour: `--sc` falls through to the stylesheet's `--ink-soft`.
+      const ink = picked
+        ? ` style="--sc:${scoreColor(sst.avg !== null ? sst.score : PLAYED_UNRATED)}"`
+        : '';
       // The pill rides the LAST text line, not the date's. A date is one
       // unbreakable token — „01.06.2026" measures 125px at 22px display type,
       // against a 130px content box at the 150px grid minimum — so a pill lane
