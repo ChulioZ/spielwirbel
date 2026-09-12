@@ -87,7 +87,7 @@ retention is still manual (the 3-year moderation-log purge, #311). → **L-004, 
 
 This is the half that is easy to skip and the half that produces real findings.
 Check the published commitments against implementations: the `trackEvent` field
-allowlist and `requestLogger`'s `customProps` (`product-event-logging.md`), the
+allowlist and `requestLogger`'s field allowlist (`product-event-logging.md`), the
 "no analytics/tracking" claim, feedback deletion, the e-mail-free erasure record,
 the named-recipients-only sharing claim. → **L-005**
 

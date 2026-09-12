@@ -36,9 +36,10 @@ buy-next and all AI surface were removed in #264, so it has no call site.)
   over-engineering — it makes "just one more field" impossible to add by
   accident at a call site, so a game title, member name, e-mail, rating comment
   or any other free text can never reach the logs. This is GDPR data
-  minimisation, and the same allowlist discipline `requestLogger`'s
-  `customProps` already enforces for HTTP lines (method/path/status/duration/ip
-  only, never bodies, query strings, headers or cookies). Widening it means
+  minimisation, and the same allowlist discipline `requestLogger` already
+  enforces for HTTP lines (method/path/status/duration/ip only, never bodies,
+  query strings, headers or cookies — built in `customProps` plus
+  `customSuccessObject`/`customErrorObject`). Widening it means
   editing `trackEvent` and this file, on purpose.
 - **Call it AFTER the repo mutation resolves, never before**, so a failed or
   rejected mutation can't log an event that didn't happen.
