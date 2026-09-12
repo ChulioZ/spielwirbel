@@ -53,6 +53,56 @@ function isSplitParent(session) {
   return sessionOutcome(session) === 'split';
 }
 
+/* How a played session ENDED when nobody won (#1038).
+
+   `finished: true` plus an empty `winnerIds` used to be the ONLY way to say
+   "no winner", and nine screens read it as "not recorded yet" — the Loose Ends
+   card listed a lost coop night as a gap to fix forever, the results title said
+   „wurde gespielt." and stopped there. Three things happen all the time and had
+   no representation: the table lost, the game is not about winning, and the
+   campaign session is over while the campaign is not.
+
+   ONE stored key with three values rather than three booleans, for the reason
+   `split` is derived above: two flags can disagree, one field cannot. The
+   invariant against `winnerIds` is the other half — a session has winners, or
+   an ending, or neither, never both — and it is enforced at the route (400) as
+   well as here, where winners simply outrank a stored ending so a hand-crafted
+   blob still renders something coherent.
+
+   An ALLOWLIST, not a denylist: an unknown value reads as `unrecorded` rather
+   than reaching a render site that has no icon and no label for it. */
+const ENDINGS = ['lost', 'noWinner', 'ongoing'];
+
+// For a PLAYED session: 'won' | 'lost' | 'noWinner' | 'ongoing' | 'unrecorded'.
+// null for every other outcome — an open, cancelled or split session did not
+// come to an end that this question is about, and a caller that renders the
+// answer blindly must get nothing rather than „Gespielt – ohne Sieger".
+//
+// The one question every render site asks, for the same reason `sessionOutcome`
+// is: a site that branches on `winnerIds.length` itself fails silently the day
+// an ending exists, which is exactly what this file's header describes
+// happening to `cancelled`.
+function sessionEnding(session) {
+  if (sessionOutcome(session) !== 'played') return null;
+  if ((session.winnerIds || []).length) return 'won';
+  return ENDINGS.includes(session.ending) ? session.ending : 'unrecorded';
+}
+
+/* What each ending is CALLED and what it looks like — the `session-log.js`
+   shape (one map from a stored value to the i18n key that phrases it), for the
+   same reason: five screens render a finished session in one line, and an
+   ending with no phrase renders as nothing at all.
+
+   The `ti-mood-*` faces are deliberately not reused — they are the vote scale,
+   and a skull beside a 1-star face would read as a rating. All three codepoints
+   were taken from the bundled woff2's own cmap
+   (.claude/rules/tabler-icon-codepoints.md). */
+const ENDING_LABELS = {
+  lost: { key: 'sessions.endLost', icon: 'ti-skull', title: 'result.titleLost', line: 'result.endedLost' },
+  noWinner: { key: 'sessions.endNoWinner', icon: 'ti-scale', title: 'result.titleNoWinner', line: 'result.endedNoWinner' },
+  ongoing: { key: 'sessions.endOngoing', icon: 'ti-player-track-next', title: 'result.titleOngoing', line: 'result.endedOngoing' },
+};
+
 // Did anybody vote at all (#915)?
 //
 // Not an outcome, but the same kind of question and the same failure shape. A
@@ -76,5 +126,7 @@ function sessionHasVotes(session) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { sessionChildIds, sessionOutcome, isSplitParent, sessionHasVotes };
+  module.exports = {
+    sessionChildIds, sessionOutcome, isSplitParent, sessionHasVotes, sessionEnding, ENDINGS, ENDING_LABELS,
+  };
 }

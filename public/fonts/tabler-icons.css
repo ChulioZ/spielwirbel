@@ -146,6 +146,12 @@
 .ti-puzzle::before { content: "\eb10"; }
 .ti-sword::before { content: "\f030"; }
 .ti-shield::before { content: "\eb24"; }
+/* How a played session ended when nobody won (#1038). Codepoints read from
+   THIS woff2's own cmap, never from tabler.io — see
+   .claude/rules/tabler-icon-codepoints.md. `ti-scale` (line 55) carries the
+   third ending; the vote-scale `ti-mood-*` faces are deliberately not reused. */
+.ti-skull::before { content: "\f292"; }
+.ti-player-track-next::before { content: "\ed4b"; }
 .ti-rocket::before { content: "\ec45"; }
 .ti-brain::before { content: "\f59f"; }
 .ti-ghost::before { content: "\eb8e"; }

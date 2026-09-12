@@ -153,7 +153,8 @@ const frontendGlobals = {
   setupArchiveSelection: 'readonly',
   // session-outcome.js (issue #796) — also required by lib/routes/sessions.js
   sessionChildIds: 'readonly', sessionOutcome: 'readonly', isSplitParent: 'readonly',
-  sessionHasVotes: 'readonly',
+  sessionHasVotes: 'readonly', sessionEnding: 'readonly', ENDINGS: 'readonly',
+  ENDING_LABELS: 'readonly', endingText: 'readonly',
   // table-split.js (issue #796) — also required by lib/draw.js and lib/session-split.js
   MIN_TABLE_PARTIES: 'readonly', VIOLATION_MAX: 'readonly', NEUTRAL_RATING: 'readonly',
   MAX_TABLE_PROPOSALS: 'readonly', seatRating: 'readonly', tableFeedback: 'readonly',
@@ -293,7 +294,7 @@ const frontendGlobals = {
   recapCardHeight: 'readonly', drawRecapCard: 'readonly', recapCardBlob: 'readonly',
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
-  SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly',
+  SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly', SHARE_ENDING_TITLES: 'readonly',
   // bgstats.js (issue #485) — internal helpers listed for the same reason.
   BGSTATS_SOURCE: 'readonly', BGSTATS_CREATE_PLAY: 'readonly', BGSTATS_URL_MAX: 'readonly',
   bgStatsPlayDate: 'readonly', bgStatsGuestId: 'readonly', bgStatsTeamLabel: 'readonly',

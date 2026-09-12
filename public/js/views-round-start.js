@@ -236,7 +236,7 @@ function renderStartTab(round, activeGames) {
          </span>
          <span class="ticket__stub">
            <i class="ti ti-trophy" aria-hidden="true"></i>
-           <span class="ticket__names">${winnerNames.length ? esc(joinNames(winnerNames)) : esc(t('sessions.played'))}</span>
+           <span class="ticket__names">${winnerNames.length ? esc(joinNames(winnerNames)) : (endingText(lastPlayed) || esc(t('sessions.played')))}</span>
          </span>
        </a>`);
     navLink(ticket, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));
@@ -407,6 +407,7 @@ function renderStartTab(round, activeGames) {
    hub-insights.js's header explains. */
 const hubDeps = () => ({
   outcomeOf: sessionOutcome,
+  endingOf: sessionEnding,
   monthKeyOf: periodKeyOf,
   neutralScore: PRIOR_DEFAULT,
   filterOptions: metadataFilterOptions,
@@ -594,7 +595,7 @@ function hubAnniversaryCard(round) {
   const row = h(`<a class="hub-row">
        <span class="hub-row__main">
          <span class="hub-row__title">${esc(game.title)}</span>
-         <span class="hub-row__sub">${esc(names.length ? t('result.winners', { names: joinNames(names) }) : fmtDate(session.createdAt))}</span>
+         <span class="hub-row__sub">${names.length ? esc(t('result.winners', { names: joinNames(names) })) : (endingText(session) || esc(fmtDate(session.createdAt)))}</span>
        </span>
        <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
      </a>`);

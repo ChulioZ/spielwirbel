@@ -214,6 +214,23 @@ third boolean, so a flag can never disagree with the links the same screens rend
 — the `sessionOutcome`-not-`s.cancelled` discipline is the whole rule, and it is
 the shape `.claude/rules/active-games-filter-sites.md` exists for one entity over.
 
+**#1038 added `ENDINGS`, `sessionEnding` and `ENDING_LABELS` to the same file**,
+and it runs in **two** directions at once, which is why it belongs here rather
+than beside `sessionOutcome`. `ENDINGS` is the plain offer/validate half — the
+results screen renders one chip per value, `lib/routes/sessions.js` validates by
+membership — while `ENDING_LABELS` is the `session-log.js` inversion: the server
+stores the value, five screens render it, and an ending with no phrase renders
+as **nothing at all**, so a winnerless night would silently lose its line.
+
+Its own trap is the one the ninth instance warns about in another form: the
+ending and `winnerIds` are **mutually exclusive**, and the exclusivity lives in
+three places that fail differently — the route 400s on both at once, the
+backends DELETE the key on any finish that does not carry one, and
+`sessionEnding` lets winners outrank a stored ending. Only the middle one is
+load-bearing for the UI: the results screen has no save button, so every winner
+chip re-POSTs the whole result, and without the delete a recorded ending would
+survive underneath a recorded winner with nothing on screen saying so.
+
 **The eleventh is `public/js/avatar-policy.js`** (#841): what an account profile
 picture may be — the upload byte cap, the stored square, and the accepted types.
 The plain value half of this rule, like `EXPANSION_TITLE_MAX`: the Konto picker

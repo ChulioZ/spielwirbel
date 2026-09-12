@@ -176,7 +176,9 @@ function renderChronikTab(round, activities) {
     const parts = [];
     if (chosen) parts.push(esc(when));
     if (outcome === 'split') parts.push(iconText('ti-layout-grid', t('sessions.split')));
-    else if (s.finished) parts.push(winnerNames.length ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' + winnerNames.map(esc).join(', ') : iconText('ti-check', t('sessions.played')));
+    // A winnerless night says HOW it ended where it has one (#1038); an
+    // unrecorded one still reads „Gespielt", which is all that is known about it.
+    else if (s.finished) parts.push(winnerNames.length ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' + winnerNames.map(esc).join(', ') : (endingText(s) || iconText('ti-check', t('sessions.played'))));
     else if (outcome === 'cancelled') parts.push(`<span style="color:var(--danger)">${iconText('ti-x', t('sessions.cancelled'))}</span>`);
     // „N Spiele bewertet" counts the games IN the session, phrased as games
     // RATED — true for a voted session, and for a direct-play one (#532) it read

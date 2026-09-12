@@ -547,6 +547,19 @@ function shuffled(arr) {
 // Inline "<icon> label" markup for buttons/badges/tags; the label is escaped.
 const iconText = (icon, text) => `<i class="ti ${icon}" aria-hidden="true"></i> ${esc(text)}`;
 
+/* „Verloren" / „Kein Sieger" / „Fortsetzung folgt" as one icon+label (#1038),
+   for a session that was played and that nobody won.
+
+   Returns '' for every other state — including `won` and `unrecorded` — so a
+   caller can write `endingText(s) || <its own fallback>` and keep its existing
+   line for the cases this does not answer. Five screens render that fallback
+   today; going through one helper is what stops a sixth from inventing a
+   different word for the same stored value. */
+const endingText = (session) => {
+  const meta = ENDING_LABELS[sessionEnding(session)];
+  return meta ? iconText(meta.icon, t(meta.key)) : '';
+};
+
 // Lazy cover loading (#198). Covers render as CSS background-image, which the
 // browser can't natively lazy-load — so a long list (Regal grid, Chronik,
 // archive) would fire every cover request on its first paint. Each list render
