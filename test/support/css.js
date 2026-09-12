@@ -72,10 +72,39 @@ function mediaBlocks(css = CSS) {
 const whole = (cls) =>
   new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w-])');
 
-/* Specificity as [ids, classes, elements]. Enough for `.a`, `.a .b` and `.a.b`;
-   it does not model :is()/:has() and does not need to — every selector compared
-   through it is a plain class sequence, and a future one that isn't should be
-   compared deliberately rather than by a silently-wrong number.
+// Split on a top-level separator — one outside any parentheses. The selector
+// list inside `:is(.a, .b)` is not a selector list of the enclosing selector.
+function splitTop(selector, separator) {
+  const out = [];
+  let depth = 0;
+  let cur = '';
+  for (const ch of selector) {
+    if (ch === '(') depth += 1;
+    else if (ch === ')') depth -= 1;
+    if (depth === 0 && ch === separator) { out.push(cur); cur = ''; continue; }
+    cur += ch;
+  }
+  out.push(cur);
+  return out.map((s) => s.trim()).filter(Boolean);
+}
+
+const moreSpecific = (a, b) => {
+  for (let i = 0; i < 3; i += 1) if (a[i] !== b[i]) return a[i] > b[i];
+  return false;
+};
+
+/* Specificity as [ids, classes, elements].
+
+   `:is()`, `:not()` and `:has()` contribute the specificity of their MOST
+   SPECIFIC argument and nothing of their own; `:where()` contributes nothing at
+   all. That is not a refinement of a good-enough count — this sheet carries 23
+   `:not()` selectors, and the naive form (what this was until #1053) reads
+   `*:not(.rail):not(.dock)` as FOUR classes instead of two, so any comparison
+   touching one is off by a whole level while reading as authoritative.
+
+   Deliberately still not modelled: `:nth-child(An+B of S)`, whose `of S` would
+   need the argument counted; it is counted as a plain pseudo-class instead,
+   which is right for every other pseudo and appears nowhere in this sheet.
 
    This lives here rather than in one test because the question it answers comes
    up wherever a media block overrides a component: several of this sheet's
@@ -83,17 +112,173 @@ const whole = (cls) =>
    at equal specificity loses on source order — silently, and more than once for
    real (`.claude/rules/flex-none-cancels-flex-wrap.md`). */
 function specificity(sel) {
-  const ids = (sel.match(/#[\w-]+/g) || []).length;
-  const classes = (sel.match(/[.:[][\w-]+/g) || []).length;
-  const els = (sel.replace(/[.#:[][\w-]+/g, '').match(/[a-z]+/g) || []).length;
-  return [ids, classes, els];
+  const acc = [0, 0, 0];
+  let rest = '';
+  let i = 0;
+  for (;;) {
+    const m = /:(not|is|where|has)\(/.exec(sel.slice(i));
+    if (!m) { rest += sel.slice(i); break; }
+    rest += sel.slice(i, i + m.index);
+    let j = i + m.index + m[0].length;
+    const from = j;
+    for (let depth = 1; j < sel.length && depth > 0; j += 1) {
+      if (sel[j] === '(') depth += 1;
+      else if (sel[j] === ')') depth -= 1;
+    }
+    if (m[1] !== 'where') {
+      const best = splitTop(sel.slice(from, j - 1), ',')
+        .map(specificity)
+        .reduce((a, b) => (moreSpecific(b, a) ? b : a), [0, 0, 0]);
+      for (let k = 0; k < 3; k += 1) acc[k] += best[k];
+    }
+    i = j;
+  }
+  /* Attribute selectors are removed WHOLE, and pseudo-ELEMENTS before
+     pseudo-classes. Both mattered: `[aria-expanded="true"]` used to leave
+     `="true"]` behind, whose `true` was then counted as an ELEMENT — which read
+     the add-on chip's open-state rule as (0,2,1), i.e. outranking `.chip.is-on`
+     outright rather than tying it, and a tie is exactly what made #1053 a bug. */
+  const attrs = rest.match(/\[[^\]]*\]/g) || [];
+  const pseudoEls = rest.replace(/\[[^\]]*\]/g, '').match(/::[\w-]+/g) || [];
+  const bare = rest.replace(/\[[^\]]*\]/g, '').replace(/::[\w-]+/g, '');
+  const ids = (bare.match(/#[\w-]+/g) || []).length;
+  const classes = (bare.match(/[.:][\w-]+/g) || []).length + attrs.length;
+  const els = (bare.replace(/[.#:][\w-]+/g, '').match(/[a-z]+/g) || []).length + pseudoEls.length;
+  return [acc[0] + ids, acc[1] + classes, acc[2] + els];
 }
 
-const outranks = (a, b) => {
-  const [x, y] = [specificity(a), specificity(b)];
-  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i];
-  return false; // a tie loses to source order, which is the bug being guarded
+// A tie returns false: at equal specificity source order decides, which is the
+// bug every caller of this is guarding against.
+const outranks = (a, b) => moreSpecific(specificity(a), specificity(b));
+
+/* ---- Resolving the cascade for one element ----------------------------------
+
+   `bodyOf()` answers "what does this rule say"; these answer "what does the
+   BROWSER paint". The difference is the whole of #1053: `.chip.is-on` and
+   `.setup-addons__chip[aria-expanded="true"]` both say the right thing, tie on
+   specificity, and the later one silently took the `color` while the earlier
+   one kept the `background` — so a test measuring either rule's own tokens
+   passed over an invisible label. See
+   `.claude/rules/assert-the-decision-not-its-ingredients.md`.
+
+   An element is described rather than built: `{ tag, classes, attrs }`. jsdom
+   is not used on purpose — it does not substitute custom properties, so the
+   only thing it could report for these rules is `var(--on-accent)`, i.e. the
+   same string this reads out of the sheet, at the cost of a DOM. */
+
+/* A compound selector split into its simple selectors. A shape it cannot model
+   THROWS rather than quietly failing to match: a selector that dropped out of
+   the cascade unnoticed would make every assertion built on this vacuous, which
+   is the exact failure this machinery exists to prevent. */
+function simpleSelectors(compound) {
+  const out = [];
+  let i = 0;
+  while (i < compound.length) {
+    const start = i;
+    const ch = compound[i];
+    if (ch === '*') i += 1;
+    else if (ch === '.' || ch === '#') { i += 1; while (/[\w-]/.test(compound[i] || '')) i += 1; }
+    else if (ch === '[') { while (i < compound.length && compound[i] !== ']') i += 1; i += 1; }
+    else if (ch === ':') {
+      i += 1;
+      if (compound[i] === ':') i += 1;
+      while (/[\w-]/.test(compound[i] || '')) i += 1;
+      if (compound[i] === '(') { let d = 0; do { if (compound[i] === '(') d += 1; else if (compound[i] === ')') d -= 1; i += 1; } while (i < compound.length && d > 0); }
+    } else if (/[a-z]/i.test(ch)) { while (/[\w-]/.test(compound[i] || '')) i += 1; }
+    else throw new Error(`cannot model "${compound}" at offset ${i} — teach simpleSelectors() the shape rather than letting it drop out of the cascade`);
+    if (i <= start) throw new Error(`simpleSelectors() stalled on "${compound}" at offset ${i}`);
+    out.push(compound.slice(start, i));
+  }
+  return out;
+}
+
+/* Transient pseudo-classes. An element described by class and attribute alone is
+   at rest, enabled and unfocused, so these are FALSE for it — listed explicitly,
+   because anything not named here throws, and a silent `false` is what makes a
+   cascade model lie rather than fail. */
+const AT_REST = [':hover', ':active', ':focus', ':focus-visible', ':focus-within', ':disabled', ':checked', ':target', ':visited', ':link'];
+
+function satisfies(simple, el) {
+  if (simple === '*') return true;
+  if (simple.startsWith('.')) return el.classes.includes(simple.slice(1));
+  if (simple.startsWith('[')) {
+    const m = /^\[([\w-]+)(?:=(?:"([^"]*)"|'([^']*)'|([\w-]+)))?\]$/.exec(simple);
+    if (!m) throw new Error(`cannot model the attribute selector ${simple}`);
+    const value = m[2] ?? m[3] ?? m[4];
+    const attrs = el.attrs || {};
+    return value === undefined ? m[1] in attrs : attrs[m[1]] === value;
+  }
+  if (simple.startsWith(':')) {
+    const open = simple.indexOf('(');
+    const fn = open === -1 ? simple : simple.slice(0, open);
+    const args = open === -1 ? [] : splitTop(simple.slice(open + 1, -1), ',');
+    // `:not(X)` fails when the element matches X AS A WHOLE, so `:not(.a.b)` is
+    // one condition rather than two — hence the negated `some` over `every`.
+    if (fn === ':not') return !args.some((a) => simpleSelectors(a).every((s) => satisfies(s, el)));
+    if (fn === ':is' || fn === ':where') return args.some((a) => simpleSelectors(a).every((s) => satisfies(s, el)));
+    if (AT_REST.includes(fn)) return false;
+    throw new Error(`cannot model the pseudo-class ${simple} — decide what it means for a resting element rather than guessing`);
+  }
+  return simple.toLowerCase() === el.tag;
+}
+
+// What is left of a complex selector after its last combinator. Whitespace is
+// normalised by the caller, so a descendant combinator is always one space.
+const subjectOf = (complex) => [' ', '>', '+', '~']
+  .reduce((parts, c) => parts.flatMap((p) => splitTop(p, c)), [complex])
+  .pop();
+
+/* Does `selector` match `el`? Only the SUBJECT compound is tested, so an
+   ancestor-qualified rule whose subject matches is kept. That over-includes
+   rather than missing one, which is the safe direction for a question of the
+   form "what could win here".
+
+   The `\s+` collapse is load-bearing: this sheet writes long selector GROUPS
+   over several lines, and a multi-line DESCENDANT selector would otherwise reach
+   the tokenizer with a newline in it and throw. There is none today, so the
+   collapse is what keeps that a non-event rather than a future false alarm. */
+const matchesEl = (selector, el) => splitTop(selector.replace(/\s+/g, ' '), ',')
+  .some((one) => simpleSelectors(subjectOf(one)).every((s) => satisfies(s, el)));
+
+// The last declaration of `prop` in a rule body — within one rule, later wins.
+const declaredValue = (body, prop) => {
+  const hits = [...body.matchAll(new RegExp(`(?:^|[\\s;{])${prop}:\\s*([^;}]+)`, 'g'))];
+  return hits.length ? hits[hits.length - 1][1].trim() : null;
 };
+
+// Every rule that sets `prop` on `el`, wherever it lives — media blocks included.
+const settersOf = (el, prop, rules = RULES) => rules
+  .map(([sel, body], order) => ({ sel, order, value: declaredValue(body, prop) }))
+  .filter((c) => c.value && matchesEl(c.sel, el));
+
+/* The declaration that actually wins for `prop` on `el`: specificity first, then
+   source order — the tie that produces this whole class of bug. Returns the
+   selector alongside the value, so a failing assertion names the rule to go and
+   look at. Throws when the answer would be conditional or guessed. */
+function resolvedDeclaration(el, prop) {
+  const conditional = mediaBlocks(CSS).flatMap(([query, css]) =>
+    rulesOf(css)
+      .filter(([sel, body]) => declaredValue(body, prop) && matchesEl(sel, el))
+      .map(([sel]) => `@media ${query} { ${sel} }`));
+  if (conditional.length) {
+    // rulesOf() sees THROUGH @media, so a width-scoped rule would otherwise be
+    // counted as if it applied at every width — silently making the answer
+    // conditional on a viewport the caller never stated.
+    throw new Error(`${prop} is set inside ${conditional.join(', ')} — this resolution no longer holds at every width`);
+  }
+  const candidates = settersOf(el, prop);
+  if (!candidates.length) throw new Error(`no rule sets ${prop} on this element — check the description, or the sheet has moved`);
+  for (const c of candidates) {
+    // specificity() models `:not`/`:is`/`:where`/`:has` and nothing else, so a
+    // candidate carrying any other pseudo-class would be ranked by a number that
+    // is quietly wrong. Fail rather than guess.
+    if (c.sel.replace(/:(?:not|is|where|has)\((?:[^()]|\([^()]*\))*\)/g, '').includes(':')) {
+      throw new Error(`${c.sel} carries a pseudo-class specificity() does not model — rank it deliberately`);
+    }
+  }
+  candidates.sort((a, b) => (moreSpecific(specificity(a.sel), specificity(b.sel)) ? 1 : moreSpecific(specificity(b.sel), specificity(a.sel)) ? -1 : a.order - b.order));
+  return candidates[candidates.length - 1];
+}
 
 // The declared value of a custom property in :root, e.g. px('--w-wide') -> 1440.
 function rootPx(name) {
@@ -161,5 +346,5 @@ const columnsIn = (width, { floor, gap, count }) => {
 
 module.exports = {
   ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, whole, rootPx, gridSpec, columnSpec,
-  columnsIn, specificity, outranks,
+  columnsIn, specificity, outranks, matchesEl, declaredValue, resolvedDeclaration,
 };
