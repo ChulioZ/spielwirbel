@@ -25,6 +25,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp, translator } = require('./support/dom');
+const { bodyOf } = require('./support/css');
 
 const RID = 'r1';
 const t = translator('de');
@@ -160,6 +161,23 @@ test('the score pill stays in the flow, where a date cannot collide with it', ()
     'an absolute pill lands on the date, which has no break opportunity to escape with');
   assert.match(bodyOf('.stamp__foot'), /align-items:\s*flex-end/,
     'the pill reads as a corner denomination by sitting on the last text line');
+});
+
+/* A mask clips to the border box, so an OUTER shadow on `.stamp::before` is
+ * painted outside the mask and removed — measured in Chromium against an
+ * unmasked control, which showed the shadow while the masked box showed none.
+ * The natural place to put the hover lift is exactly that dead one, since the
+ * fill and the border already live there, and nothing reports it: the rule
+ * parses, computes, and paints nothing. */
+test('no shadow is declared on the masked pseudo-element, where it cannot paint', () => {
+  const { rulesOf, CSS } = require('./support/css');
+  const dead = rulesOf(CSS)
+    .filter(([sel, body]) => /\.stamp[^,]*::before/.test(sel) && /box-shadow\s*:(?!\s*none)/.test(body))
+    .map(([sel]) => sel);
+  assert.deepEqual(dead, [], 'a box-shadow here is clipped away by the worn-edge mask');
+  assert.match(bodyOf('.stamp:hover'), /box-shadow/, 'the hover lift belongs on the link itself');
+  assert.match(bodyOf('.stamp'), /border-radius/,
+    'the link needs the radius too, or the shadow and the focus ring box the stamp');
 });
 
 /* The operator rejected tilt outright (2026-09-12): the character comes from

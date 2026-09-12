@@ -4733,7 +4733,16 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   color: var(--ink);
   text-decoration: none;
   cursor: pointer;
+  /* On the LINK, though the fill and the border are on its ::before — a radius
+     here is what makes both the hover shadow below and the UA focus ring follow
+     the stamp's shape instead of boxing it. */
+  border-radius: var(--radius-md);
 }
+/* NOT on `::before`, where it is invisible: a mask clips to the border box, so
+   an OUTER shadow is painted entirely outside the mask and removed. Measured in
+   Chromium against an unmasked control — the masked box showed no shadow at all,
+   with no error and a rule that reads as working. */
+.stamp:hover { box-shadow: var(--shadow-2); }
 .stamp::before {
   content: '';
   position: absolute;
@@ -4749,7 +4758,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    double one. */
 .stamp--muted { color: var(--ink-soft); }
 .stamp--muted::before { border-style: dashed; }
-.stamp:hover::before { box-shadow: var(--shadow-2); }
 .stamp__date {
   font-family: var(--font-display);
   font-size: var(--text-xl);
