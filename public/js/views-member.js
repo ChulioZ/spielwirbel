@@ -141,19 +141,36 @@ async function showMember(rid, mid) {
     }
   }
 
+  // Computed before the head because the band renders two of its figures (#995);
+  // the stats section below reads the same object rather than recomputing it.
+  const headStatsSource = memberStats(round, mid);
+
   const color = memberColor(round, mid);
   // The picker compares against the STORED hex; `color` above is what gets
   // painted, which a dark scheme lifts into a color-mix() (memberTone, #904).
   const ownHex = memberHex(round, mid);
 
-  // Header: big avatar + editable name.
-  const head = h(`<div class="member-head">
+  /* Header: the member's own colour as a hero band, then the avatar and the
+     editable name (#995).
+
+     `--m-tone` is set on the BAND rather than on the avatar, because three
+     things read it — the band's wash, the avatar's drop shadow and the accent
+     rule under the name — and a property set on a child cannot be read by its
+     parent. It is the same `memberColor` value the avatar is painted with, so
+     the tone can never be a second, drifting definition of the member's colour
+     (.claude/rules/shared-constants-across-the-stack.md). */
+  const head = h(`<div class="member-head" style="--m-tone:${color}">
        <span class="avatar member-avatar" style="background:${color}">${avatarFace(initials(member.name), { userId: member.userId })}</span>
        <div class="member-head__info">
          <h1></h1>
        </div>
      </div>`);
   const h1 = head.querySelector('h1');
+  /* The two headline figures live IN the band (#995), filling the empty right
+     half a wide screen leaves beside the name. A RELOCATION, not a copy: they
+     are no longer appended to the stats grid below, so the same number can
+     never be stated twice on one screen in two different treatments. On a phone
+     the band wraps and they sit under the name instead. */
   const nameEl = h(`<span class="gd-title" title="${esc(t('member.editName'))}">${esc(member.name)}</span>`);
 
   // Click the name → inline input; Enter/blur saves, Escape cancels.
@@ -186,6 +203,22 @@ async function showMember(rid, mid) {
     });
   });
   h1.appendChild(nameEl);
+
+  /* The two relocated figures. Computed here rather than in the stats section
+     below, because the band is built first — `memberStats` is pure and cheap, so
+     calling it before the head costs nothing and keeps one source for both. */
+  const headStat = (label, value) =>
+    h(`<div class="member-head__stat">
+         <span class="member-head__stat-value">${esc(value)}</span>
+         <span class="member-head__stat-label">${esc(label)}</span>
+       </div>`);
+  const headStats = h('<div class="member-head__stats"></div>');
+  headStats.appendChild(headStat(t('member.wins'), String(headStatsSource.wins)));
+  headStats.appendChild(headStat(
+    t('member.winRate'),
+    headStatsSource.winRate === null ? '–' : Math.round(headStatsSource.winRate * 100) + '%'
+  ));
+  head.appendChild(headStats);
   app.appendChild(head);
 
   // Color picker: the curated MEMBER_COLORS palette (no free hex).
@@ -207,7 +240,7 @@ async function showMember(rid, mid) {
   app.appendChild(colorSec);
 
   // Statistics, computed on demand from the sessions.
-  const st = memberStats(round, mid);
+  const st = headStatsSource;
   const statsSec = h(`<div class="section">
        <h2>${esc(t('member.statsTitle'))}</h2>
        <div class="pokale-cards member-stats"></div>
@@ -234,16 +267,11 @@ async function showMember(rid, mid) {
          <span class="pokale-card__sub">${esc(sub)}</span>
        </div>`);
 
-  cards.appendChild(statCard('ti-trophy', t('member.wins'), String(st.wins), ''));
+  /* „Siege" and „Siegquote" are NOT here — they were relocated into the hero
+     band above (#995), where they fill the space beside the name. Rendering
+     them in both places would state one number twice on one screen, in two
+     different treatments, which is worse than either alone. */
   cards.appendChild(statCard('ti-confetti', t('member.sessions'), String(st.joined), ''));
-  cards.appendChild(
-    statCard(
-      'ti-percentage',
-      t('member.winRate'),
-      st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%',
-      ''
-    )
-  );
   // Beside the rate, because the two answer the same question differently and
   // the pair is what makes either legible: the rate ignores how many people
   // were beaten, the Siegwertung is exactly that correction.

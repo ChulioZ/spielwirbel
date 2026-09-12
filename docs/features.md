@@ -180,9 +180,15 @@ What the app does, in detail. For a short overview see the
   turns the covers into a selection: it keeps the search, the tag chips, the
   metadata filters and the sort working, so „Alle auswählen" means everything you
   have narrowed to, and the picked games can be retired, have their **owners set**
-  in one step — or be deleted outright — in one confirmed action. Setting owners
-  replaces whatever each game held, so picking nobody clears them; a wish in the
-  selection is skipped, since a wish is nobody's box yet. The same selection sits
+  or their **tags changed** in one step — or be deleted outright — in one
+  confirmed action. Setting owners replaces whatever each game held, so picking
+  nobody clears them; a wish in the selection is skipped, since a wish is
+  nobody's box yet. Tags deliberately work the other way round: each tag is
+  add / remove / leave alone, so tags you do not touch stay exactly as they
+  were — a selection of fifty games carries fifty different tag sets, and there
+  is no single right value to replace them with. The confirm says how many games
+  and in which direction, and the result counts only the games that actually
+  changed. The same selection sits
   on the two archives and the Wunschliste, for delete only. It exists because the
   shelf can be *filled* in one action by the BoardGameGeek import: undoing a
   200-game import used to be some 400 taps. Bulk delete is the one path that
@@ -224,9 +230,13 @@ What the app does, in detail. For a short overview see the
   selects every tag at once, or clears the whole filter in one click whenever
   anything is filtered. Each tag can carry an
   **icon** picked from a curated set, shown next to its name everywhere the tag
-  appears; a tag without one keeps the default tag glyph, and the icon can be
-  changed later from the Tags screen.
-  Deleting a tag simply unassigns it from every game.
+  appears; a tag without one keeps the default tag glyph. Both the **name and
+  the icon** can be changed later from the Tags screen — so fixing a typo, or
+  simply thinking of a better word, costs nothing: every game keeps the tag, and
+  a round's remembered draw filters keep working, because assignments are stored
+  by id rather than by name. A rename onto a name the round already uses is
+  refused rather than merging the two tags. Deleting a tag simply unassigns it
+  from every game.
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list) with their stats — wins,
   sessions joined, win rate, Siegwertung, average rating given, their strongest

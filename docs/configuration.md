@@ -607,7 +607,9 @@ npm run start:env         # loads .env, then runs the server
 `.env` is fine), so there is no extra dependency. **`.env` is gitignored** — it
 may hold your `SESSION_SECRET` and provider credentials, so never commit it.
 Plain `npm start` ignores
-`.env` and reads only real environment variables.
+`.env` and reads only real environment variables. **`npm run dev`** is the same
+loader plus Node's `--watch`, so a development run picks the file up too and
+restarts the server on every backend change.
 
 ### With Docker
 
