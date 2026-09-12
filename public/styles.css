@@ -139,6 +139,13 @@
 
   /* Trophies, crowns, winners: one gold family across the app. */
   --gold: #d99a06;
+  /* The one ink painted ON --gold as a fill (#937), and the only non-flipping
+     member of the family besides --gold/--gold-edge — see the dark-scheme block
+     below for why those three stand still. A deep amber-brown rather than a
+     near-black: hue 28 sits between --gold-deep (23) and --gold (42) at the same
+     saturation, so the padlock reads as struck INTO the seal rather than as a
+     foreign dark mark on it. 4.05:1 on --gold, against SC 1.4.11's 3:1. */
+  --gold-ink: #6b3405;
   --gold-deep: #92400e;
   --gold-soft: #fef3c7;
   --gold-edge: #d97706;
@@ -293,8 +300,13 @@
      2.0:1. Each of the three, plus the gold pair, is chosen to clear 4.5:1 both
      as text on the darkest page and as text on --surface, with --on-accent
      clearing the same bar ON them as a fill.
-   - --gold and --gold-edge deliberately do NOT move: they are the medal/seal
-     mid-tone, they sit on the finale stage, and the stage is dark either way.
+   - --gold, --gold-edge and --gold-ink deliberately do NOT move: they are the
+     medal/seal mid-tone and the one ink painted on it, they sit on the finale
+     stage, and the stage is dark either way. That is exactly why the ink is its
+     own token rather than --gold-deep: --gold-deep FLIPS, so reusing it would
+     put pale #f0c25c on a gold fill that stayed put (1.5:1) on every dark
+     design. Its light value is no answer either — #92400e on --gold is 2.9:1,
+     i.e. the obvious "use the existing dark gold" fix lands just under the bar.
 
    test/a11y-contrast.test.js measures every pair above against every shipped
    design, in both directions — light designs against white, dark ones against
@@ -7790,8 +7802,15 @@ kbd {
   height: 30px;
   border-radius: 50%;
   background: var(--gold);
-  /* On --gold, which does NOT flip: the stage stays dark either way. */
-  color: #fff;
+  /* Neither the fill nor the ink flips, so this pair is scheme-independent by
+     construction — which is the point: the seal looks the same on every design
+     and there is only one ratio to hold. It was #fff at 2.45:1 until #937,
+     below SC 1.4.11's 3:1 non-text bar. Arguably exempt (the badge is
+     aria-hidden decoration and the stage copy carries the meaning), but the
+     glyph is the thing that says "sealed", and a fix with no blast radius
+     beats an exemption: --gold is a FILL here and nowhere else, so nothing
+     but this badge changes. */
+  color: var(--gold-ink);
   display: flex;
   align-items: center;
   justify-content: center;

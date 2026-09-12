@@ -47,7 +47,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // Only evenings that actually happened, asked through `sessionOutcome` and never
 // through `s.finished`/`s.cancelled` directly: a split parent (#796) is neither
 // played nor cancelled, and sixteen sites got that wrong before the outcome
-// existed (.claude/rules/shared-constants-across-the-stack.md §11). Its tables
+// existed (.claude/rules/shared-constants-inventory.md, the tenth entry). Its tables
 // are the sessions that were played, and they count individually — which is
 // what the Chronik shows above these cards.
 // Prefixed `hub`, and that is not cosmetic: period-recap.js already declares a
