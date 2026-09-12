@@ -341,6 +341,7 @@ const frontendGlobals = {
   hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
   editableRoundName: 'readonly',
+  createRegalBulk: 'readonly', openBulkPicker: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
