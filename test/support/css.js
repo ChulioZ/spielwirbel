@@ -222,12 +222,23 @@ function satisfies(simple, el) {
   return simple.toLowerCase() === el.tag;
 }
 
-/* Does `selector` match `el`? Only the SUBJECT compound (after the last
-   combinator) is tested, so an ancestor-qualified rule whose subject matches is
-   kept. That over-includes rather than missing one, which is the safe direction
-   for a question of the form "what could win here". */
-const matchesEl = (selector, el) => splitTop(selector, ',')
-  .some((one) => simpleSelectors(splitTop(one, ' ').flatMap((p) => splitTop(p, '>')).flatMap((p) => splitTop(p, '+')).flatMap((p) => splitTop(p, '~')).pop()).every((s) => satisfies(s, el)));
+// What is left of a complex selector after its last combinator. Whitespace is
+// normalised by the caller, so a descendant combinator is always one space.
+const subjectOf = (complex) => [' ', '>', '+', '~']
+  .reduce((parts, c) => parts.flatMap((p) => splitTop(p, c)), [complex])
+  .pop();
+
+/* Does `selector` match `el`? Only the SUBJECT compound is tested, so an
+   ancestor-qualified rule whose subject matches is kept. That over-includes
+   rather than missing one, which is the safe direction for a question of the
+   form "what could win here".
+
+   The `\s+` collapse is load-bearing: this sheet writes long selector GROUPS
+   over several lines, and a multi-line DESCENDANT selector would otherwise reach
+   the tokenizer with a newline in it and throw. There is none today, so the
+   collapse is what keeps that a non-event rather than a future false alarm. */
+const matchesEl = (selector, el) => splitTop(selector.replace(/\s+/g, ' '), ',')
+  .some((one) => simpleSelectors(subjectOf(one)).every((s) => satisfies(s, el)));
 
 // The last declaration of `prop` in a rule body — within one rule, later wins.
 const declaredValue = (body, prop) => {
@@ -335,5 +346,5 @@ const columnsIn = (width, { floor, gap, count }) => {
 
 module.exports = {
   ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, whole, rootPx, gridSpec, columnSpec,
-  columnsIn, specificity, outranks, splitTop, matchesEl, declaredValue, settersOf, resolvedDeclaration,
+  columnsIn, specificity, outranks, matchesEl, declaredValue, resolvedDeclaration,
 };
