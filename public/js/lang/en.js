@@ -557,8 +557,8 @@ I18N.en = {
   'detail.chosen': 'chosen',
   'detail.notChosen': 'not chosen',
   'detail.sessionCancelled': 'session cancelled',
-  'detail.retireConfirm': 'Retire “{title}”?',
-  'detail.completeConfirm': 'Mark “{title}” as completed?',
+  'detail.retireConfirm': 'Retire “{title}”? Off the Shelf and out of the draw — you can bring it back any time.',
+  'detail.completeConfirm': 'Mark “{title}” as completed? Off the Shelf and out of the draw — you can bring it back any time.',
   'detail.onboard.title': 'A blank slate',
   'detail.onboard.text':
     'Nobody has rated or played this one yet. Ratings and sessions show up here by themselves once you play it — until then, you can give it a face.',
@@ -1010,6 +1010,12 @@ I18N.en = {
   'tags.filter.modeAny': 'Any tag',
   'tags.chooseIcon': 'Choose an icon',
   'tags.editIcon': 'Change icon',
+  'tags.namePlaceholder': 'Tag name',
+  'tags.edit': 'Edit tag',
+  'tags.save': 'Save',
+  'tags.toast.updated': 'Tag updated',
+  'tags.toast.nameTaken': 'This round already has a tag with that name',
+  'tags.toast.nameMissing': 'Please enter a name',
   'tags.toast.iconUpdated': 'Icon updated',
   // Labels for the curated tag-icon set (#255) — keep in sync with TAG_ICONS
   // in lib/tag-icons.js / public/js/tag-icons.js.

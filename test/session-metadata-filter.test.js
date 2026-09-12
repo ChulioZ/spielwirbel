@@ -44,14 +44,18 @@ async function shelf() {
   const mittel = await addGame(round.id, { title: 'Mittel' });
   const lang = await addGame(round.id, { title: 'Lang' });
   await addGame(round.id, { title: 'Blank' });
+  // BOTH playtime bounds since #1025: containment reads the game's own maximum
+  // for „at most" and its own minimum for „at least", so a shelf of lower bounds
+  // alone would not even OFFER the „at most" control and every playtime
+  // assertion here would be normalized away rather than answered.
   seedMeta(round.id, kurz.id, {
-    minPlaytime: 30, weight: 2, minAge: 8, categories: ['Abstract Strategy'], mechanics: ['Tile Placement'],
+    minPlaytime: 30, maxPlaytime: 45, weight: 2, minAge: 8, categories: ['Abstract Strategy'], mechanics: ['Tile Placement'],
   });
   seedMeta(round.id, mittel.id, {
-    minPlaytime: 60, weight: 3, minAge: 10, categories: ['Economic'], mechanics: ['Trading'],
+    minPlaytime: 60, maxPlaytime: 60, weight: 3, minAge: 10, categories: ['Economic'], mechanics: ['Trading'],
   });
   seedMeta(round.id, lang.id, {
-    minPlaytime: 120, weight: 4, minAge: 14, categories: ['Adventure'], mechanics: ['Deck Building'],
+    minPlaytime: 120, maxPlaytime: 180, weight: 4, minAge: 14, categories: ['Adventure'], mechanics: ['Deck Building'],
   });
   return round;
 }
@@ -62,20 +66,21 @@ const start = (rid, body) =>
 const presetOf = async (rid) =>
   (await request(app).get(`/api/rounds/${rid}`)).body.lastSessionFilters;
 
-test('the DRAW rejects a game whose range only touches the budget (#1023)', async () => {
+test('the DRAW contains the budget, and agrees with the preview (#1025)', async () => {
   // The predicate is shared with the setup screen, so this is really asking that
   // the route agrees with the preview — the thing that would otherwise promise a
-  // pool the draw refuses. Note the `shelf()` fixture above cannot see this case:
-  // every game in it carries a lower bound ONLY, and the exclusion needs both.
+  // pool the draw refuses. This case superseded #1023's degenerate-overlap
+  // carve-out: containment rejects a 120–180 game under „at most 120" on its own
+  // arithmetic, with no special case for a range that merely TOUCHES the bound.
   const round = await createRound(request);
   const bsg = await addGame(round.id, { title: 'BSG' });
   const pinned = await addGame(round.id, { title: 'Pinned' });
   seedMeta(round.id, bsg.id, { minPlaytime: 120, maxPlaytime: 180 });
   seedMeta(round.id, pinned.id, { minPlaytime: 120, maxPlaytime: 120 });
 
-  // 120–180 can only make a two-hour evening at full speed; 120–120 always does.
+  // 120–180 can run half as long again as the evening allows; 120–120 cannot.
   assert.deepEqual(drawn(await start(round.id, { metadata: { maxPlaytime: 120 } })), ['Pinned']);
-  // Both are back one step up the ladder, so the exclusion is about the boundary
+  // Both are back one step up the ladder, so the exclusion is about the bound
   // rather than about either game being too long in general.
   assert.deepEqual(drawn(await start(round.id, { metadata: { maxPlaytime: 180 } })), ['BSG', 'Pinned']);
 });
@@ -193,7 +198,7 @@ test('a filter that empties the pool answers the ordinary 400', async () => {
   // is the only way a metadata filter can empty a pool at all.
   const round = await createRound(request);
   const g = await addGame(round.id, { title: 'Nur eins' });
-  seedMeta(round.id, g.id, { minPlaytime: 120, categories: ['Adventure'] });
+  seedMeta(round.id, g.id, { minPlaytime: 120, maxPlaytime: 180, categories: ['Adventure'] });
 
   const res = await start(round.id, { metadata: { maxPlaytime: 30 } });
   assert.equal(res.status, 400);

@@ -539,8 +539,8 @@ I18N.es = {
   'detail.chosen': 'elegido',
   'detail.notChosen': 'no elegido',
   'detail.sessionCancelled': 'sesión cancelada',
-  'detail.retireConfirm': '¿Retirar «{title}»?',
-  'detail.completeConfirm': '¿Marcar «{title}» como completado?',
+  'detail.retireConfirm': '¿Retirar «{title}»? Sale de la Estantería y del sorteo — puedes recuperarlo.',
+  'detail.completeConfirm': '¿Marcar «{title}» como completado? Sale de la Estantería y del sorteo — puedes recuperarlo.',
   'detail.onboard.title': 'Una página en blanco',
   'detail.onboard.text':
     'Todavía nadie lo ha valorado ni jugado. Las valoraciones y las sesiones aparecerán aquí solas en cuanto juguéis; hasta entonces, puedes ponerle cara.',
@@ -963,6 +963,12 @@ I18N.es = {
   'tags.filter.modeAny': 'Cualquier etiqueta',
   'tags.chooseIcon': 'Elegir un icono',
   'tags.editIcon': 'Cambiar el icono',
+  'tags.namePlaceholder': 'Nombre de la etiqueta',
+  'tags.edit': 'Editar etiqueta',
+  'tags.save': 'Guardar',
+  'tags.toast.updated': 'Etiqueta actualizada',
+  'tags.toast.nameTaken': 'Esta ronda ya tiene una etiqueta con ese nombre',
+  'tags.toast.nameMissing': 'Escribe un nombre',
   'tags.toast.iconUpdated': 'Icono actualizado',
   // Nombres del juego de iconos de etiqueta (#255) — mantener en línea con
   // TAG_ICONS en lib/tag-icons.js / public/js/tag-icons.js.
