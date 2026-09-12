@@ -22,7 +22,9 @@
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { rulesOf, bodyOf, mediaBlocks, whole, CSS } = require('./support/css');
+const {
+  rulesOf, bodyOf, mediaBlocks, whole, CSS, RULES, matchesEl, declaredValue, resolvedDeclaration,
+} = require('./support/css');
 const { loadApp } = require('./support/dom');
 const {
   contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf, mixOklab,
@@ -165,6 +167,89 @@ test('--brand-strong stays the readable accent on a brand tint, in both directio
     ['--brand-strong on --brand-tint', t.brandStrong, t.brandTint],
     ['--brand-strong on --brand-tint-soft', t.brandStrong, t.brandTintSoft],
   ]), [], 'accent chips draw --brand-strong on a tint');
+});
+
+// --- the ink that WINS, not the ink the rule intends (#1053) ----------------
+
+/* Everything above measures a pair of TOKENS. `--on-accent on the accent
+   (.btn--primary, .chip.is-on)` is exactly the right pair for a set add-on chip
+   — and it passed for months while the app painted `--brand-strong` on
+   `--brand` at 1.07–1.31:1 on a chip that was both set and OPEN, because
+   `.setup-addons__chip[aria-expanded="true"]` ties `.chip.is-on` on specificity
+   and is declared ~5800 lines later. The ingredients were all fine; the decision
+   was made somewhere no token pair can see
+   (`.claude/rules/assert-the-decision-not-its-ingredients.md`).
+
+   So this section resolves the cascade for the real element and measures
+   whatever ink actually wins. Reverting the fix reddens the selector assertion
+   AND the sweep, and the sweep reports the real per-design ratios. */
+
+// The three states of an add-on chip, as `renderAddonRow` builds and paints one
+// (`public/js/setup-addons.js`: the classes from `add`/`paint`, `aria-expanded`
+// from `show`/`close`). Only the third was broken; the first two are the control.
+const OPEN_UNSET = { tag: 'button', classes: ['chip', 'setup-addons__chip'], attrs: { 'aria-expanded': 'true' } };
+const CLOSED_SET = { tag: 'button', classes: ['chip', 'setup-addons__chip', 'is-on'], attrs: { 'aria-expanded': 'false' } };
+const OPEN_SET = { tag: 'button', classes: ['chip', 'setup-addons__chip', 'is-on'], attrs: { 'aria-expanded': 'true' } };
+
+// The `var(--x)` a resolved declaration names, mapped onto the per-design token.
+const TOKENS = {
+  '--on-accent': 'onAccent', '--brand': 'brand', '--brand-strong': 'brandStrong',
+  '--surface': 'surface', '--ink': 'ink', '--ink-soft': 'inkSoft', '--line': 'line',
+};
+const tokenOf = (decl) => {
+  const m = /var\((--[\w-]+)\)/.exec(decl.value);
+  assert.ok(m && TOKENS[m[1]], `${decl.sel} resolves to "${decl.value}" — add its token to TOKENS so it can be measured`);
+  return TOKENS[m[1]];
+};
+
+test('an add-on chip that is both SET and OPEN keeps its filled look — the ink that wins is --on-accent', () => {
+  const ink = resolvedDeclaration(OPEN_SET, 'color');
+  const fill = resolvedDeclaration(OPEN_SET, 'background');
+  assert.equal(tokenOf(ink), 'onAccent',
+    `${ink.sel} wins the ink and paints "${ink.value}" — the accent on the accent, which is invisible`);
+  assert.equal(tokenOf(fill), 'brand', `${fill.sel} wins the fill and paints "${fill.value}"`);
+});
+
+test('the other two add-on chip states are untouched: closed + set stays filled, open + unset keeps the accent ink', () => {
+  /* The control. Without it, a matcher that matched nothing — or one that
+     ignored `:not()` — would satisfy the test above by accident. */
+  assert.equal(tokenOf(resolvedDeclaration(CLOSED_SET, 'color')), 'onAccent');
+  assert.equal(tokenOf(resolvedDeclaration(CLOSED_SET, 'background')), 'brand');
+  assert.equal(tokenOf(resolvedDeclaration(OPEN_UNSET, 'color')), 'brandStrong');
+  assert.equal(tokenOf(resolvedDeclaration(OPEN_UNSET, 'background')), 'surface');
+});
+
+test('the RESOLVED ink/fill pair of an open + set add-on chip clears AA on every design', () => {
+  /* Measured off the winning declarations rather than off the pair the rule
+     hopes for, which is the whole point: with the fix reverted this reports
+     1.07–1.31:1 per design instead of going green on the intended tokens. */
+  const ink = tokenOf(resolvedDeclaration(OPEN_SET, 'color'));
+  const fill = tokenOf(resolvedDeclaration(OPEN_SET, 'background'));
+  assert.deepEqual(sweep((t) => [['the open + set add-on chip label', t[ink], t[fill]]]), [],
+    'the label of a chip that is both set and open');
+});
+
+test('an open + set add-on chip carries a state marker clearing 3:1 on both of its adjacencies', () => {
+  /* Splitting the two rules removes the collision but also removes the only cue
+     that said "open" on a set chip — its border already reads --brand-strong
+     when closed. The ring restores it, and SC 1.4.11 binds because it is a state
+     indicator rather than decoration. Its adjacencies are the fill it sits on
+     and the border it sits against; it never touches the page, and nothing
+     could — no palette token clears 3:1 against --brand AND --page-bg at once
+     (the numbers are in the comment above the rule). */
+  const ring = resolvedDeclaration(OPEN_SET, 'box-shadow');
+  assert.match(ring.value, /^inset\b/,
+    `${ring.sel} draws the open marker outside the chip — its adjacency is then the page, which nothing can clear`);
+  const ink = tokenOf(ring);
+  assert.deepEqual(sweep((t) => [
+    ['the open marker on the chip fill', t[ink], t.brand],
+    ['the open marker on the chip border', t[ink], t.brandStrong],
+  ], AA_LARGE), [], 'SC 1.4.11 — a non-text state indicator needs 3:1 against every colour it touches');
+  // And no other state may claim it, or the ring stops meaning "open".
+  for (const [label, el] of [['closed + set', CLOSED_SET], ['open + unset', OPEN_UNSET]]) {
+    const hits = RULES.filter(([sel, body]) => declaredValue(body, 'box-shadow') && matchesEl(sel, el));
+    assert.deepEqual(hits.map(([sel]) => sel), [], `a ${label} chip must carry no ring`);
+  }
 });
 
 // --- the rating scale (avgColor) -------------------------------------------

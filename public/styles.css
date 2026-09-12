@@ -7380,9 +7380,35 @@ kbd {
    row can be widened here, so nothing in it can move. */
 .setup-addons-wrap { margin-bottom: 18px; }
 .setup-addons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-/* An OPEN chip, distinct from a SET one: `.chip.is-on` (0,2,0) still wins for a
-   chip that carries state, so a set option keeps its filled look while open. */
-.setup-addons__chip[aria-expanded="true"] { border-color: var(--brand); color: var(--brand-strong); }
+/* An OPEN chip, distinct from a SET one — and since #1053 the two states are
+   SPLIT rather than layered, because layered they fought and the later rule won.
+
+   `.setup-addons__chip[aria-expanded="true"]` is (0,2,0), exactly like
+   `.chip.is-on`, and it is declared ~5800 lines below it — so it took the
+   `color` while the `background` stayed `--brand`. That painted
+   `--brand-strong` on `--brand`, the accent on the accent, measuring
+   1.07–1.31:1 on every shipped design: an invisible label on a chip that is both
+   set and open. The shape was copied from `.fbar__trigger[aria-expanded="true"]`
+   above, where it is correct — that trigger has no filled state to fight.
+
+   So an UNSET chip keeps the accent-ink treatment, and a SET one keeps its
+   filled look and marks "open" with a ring of its own ink instead. */
+.setup-addons__chip[aria-expanded="true"]:not(.is-on) { border-color: var(--brand); color: var(--brand-strong); }
+/* The ring is drawn INSIDE the chip, so its two adjacencies are the `--brand`
+   fill (>= 5.17:1) and the `--brand-strong` border (>= 4.5:1, pinned by
+   a11y-contrast's "--on-accent on --brand-strong" sweep) — SC 1.4.11 on both.
+   It cannot ALSO clear 3:1 against the page, and no colour could: measured over
+   all 15 designs in both schemes, nothing in the palette clears 3:1 against
+   `--brand` and `--page-bg` at once (best on the fill side is `--on-accent`
+   at 5.17 / 1.02; best on the page side `--shade` at 1.62 / 17.99), because
+   `--on-accent` is by construction the flip of the page's own direction. The
+   ring never touches the page, so that adjacency does not arise — the chip's
+   outer edge is unchanged from the closed + set state.
+
+   A shape cue (squaring the bottom corners into the body) was rejected: the body
+   is a sibling of the ROW, not of the chip, so on a wrapped row the open chip is
+   usually nowhere near the edge it would be pointing at. */
+.setup-addons__chip.is-on[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--on-accent); }
 .setup-addon-body {
   margin-top: 12px;
   padding: 14px 16px 2px;

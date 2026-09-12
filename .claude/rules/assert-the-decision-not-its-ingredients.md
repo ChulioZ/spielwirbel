@@ -1,8 +1,11 @@
 ---
 paths:
   - "test/retire-score-threshold.test.js"
+  - "test/a11y-contrast.test.js"
+  - "test/support/css.js"
   - "public/js/game-stats.js"
   - "public/js/vote-score.js"
+  - "public/styles.css"
 ---
 
 # A test that RE-DERIVES a decision cannot see a bug in the decision
@@ -60,6 +63,47 @@ green from the start (a lone dissenter can never reach `LOW_SCORE` at n=5); say
 in a comment which rows discriminate and which do not, or the next reader assumes
 the whole sweep is load-bearing.
 
+## The CSS instance: the decision is the CASCADE, and a token pair cannot see it
+
+Same shape, different medium, and it shipped an invisible control for months
+(#1053). `test/a11y-contrast.test.js` measured
+
+```js
+['--on-accent on the accent (.btn--primary, .chip.is-on)', t.onAccent, t.brand],
+```
+
+which is exactly the right pair for a set add-on chip — and it is the pair the
+*rule intends*, not the pair the browser paints. `.chip.is-on` (0,2,0) and
+`.setup-addons__chip[aria-expanded="true"]` (0,2,0) tie, and the second is
+declared ~5800 lines later, so a chip that was both set and open took its
+`background` from one rule and its `color` from the other: `--brand-strong` on
+`--brand`, 1.07–1.31:1 on all fifteen designs.
+
+**Both tokens cleared every bar they were measured against.** There is no
+ingredient to fix and no assertion to strengthen — the decision is made by the
+cascade, which lives in neither rule.
+
+So `test/support/css.js` gained `resolvedDeclaration(el, prop)`: describe the
+element (`{ tag, classes, attrs }`), collect every rule whose subject compound
+matches, rank by specificity then source order, and measure **whatever wins**.
+Reverted, the sweep now reports the real per-design ratios instead of going green
+on the intended pair. Three things about it are load-bearing:
+
+- **It throws on any shape it cannot model** — an unknown pseudo-class, a
+  `@media`-scoped setter, a selector `specificity()` does not count correctly.
+  A cascade model that silently fails to match makes every assertion built on it
+  vacuous, which is the failure it exists to prevent.
+- **`specificity()` had to be fixed first.** It counted `:not(.a)` as two classes
+  and let an attribute selector's *value* count as a tag, so it read the offending
+  rule as (0,2,1) — an outright win rather than the tie it is. An over-count
+  cannot see a tie, and a tie is the whole bug.
+- **The unbroken states are the control.** Assert the closed and unset chips
+  resolve as before, or a matcher that matches nothing satisfies the new test by
+  accident.
+
+The tell generalises: **whenever a CSS value can be set by more than one rule, a
+test naming the tokens is testing the author's intent.** Resolve the element.
+
 ## Recognising it before it costs you
 
 The tell is a test that names the implementation's own constants and operators in
@@ -71,6 +115,10 @@ header comment.
 
 **Related:** `.claude/rules/break-the-code-on-purpose.md` (the discipline this is
 an instance of — a green test that guards nothing),
+`.claude/rules/state-rules-clobber-component-values.md` (the CSS half's sibling:
+a state rule REPLACING what a component declared, also with nothing red),
+`.claude/rules/css-text-assertions-strip-comments.md` (the other trap in reading
+this stylesheet as text),
 `.claude/rules/testing-views-under-jsdom.md` (the harness that makes calling the
 real function affordable, and the cross-realm `deepEqual` trap you meet on the
 way), `.claude/rules/shared-constants-across-the-stack.md` (the sibling failure:
