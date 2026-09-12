@@ -4641,7 +4641,7 @@ module.exports = function repoContract(repo) {
       assert.equal(await rowFor(wished), null, 'a wish has no owner, so it has no row');
     });
 
-    await t.test('plays land in the CALENDAR week/month/year they finished in', async () => {
+    await t.test('plays land in the CALENDAR week/month/year the evening STARTED in', async () => {
       /*
        * NOW is Thursday 2026-08-13, 14:00 Berlin (#964). Its three boundaries:
        *   week  Monday 2026-08-10 00:00 CEST = 2026-08-09T22:00Z
@@ -4653,28 +4653,55 @@ module.exports = function repoContract(repo) {
        * satisfied by the rolling windows this replaced, which is precisely the
        * bug. Each pair straddles one boundary, so a window off by even an hour
        * (a DST slip) moves a count.
+       *
+       * The two stamps are deliberately on OPPOSITE sides of those boundaries
+       * (#1059). They used to be identical for every row here, which made the
+       * case green whichever field the aggregate bucketed on — so it survived
+       * the bug it looks like it covers. `finishedAt` is rewritten by every
+       * winner-chip re-POST, so each row below is "an evening that happened
+       * then, corrected later": reading it instead of `createdAt` reads
+       * 3 / 4 / 6 rather than 1 / 3 / 5.
        */
       const id = uniq();
       const tenant = `pga-${uniq()}`;
       const round = await repo.createRound(tenant, { name: 'E', members: ['Ann'] });
       const game = await repo.createGame(tenant, round.id, bgg(id));
-      const play = async (finishedAt, over = {}) => repo.createSession(tenant, round.id, {
-        gameIds: [game.id], votes: {}, createdAt: finishedAt,
+      const play = async (createdAt, finishedAt, over = {}) => repo.createSession(tenant, round.id, {
+        gameIds: [game.id], votes: {}, createdAt,
         finished: true, finishedAt, chosenGameId: game.id, ...over,
       });
 
-      await play('2026-08-12T09:00:00.000Z');   // Wednesday, this week
-      await play('2026-08-09T21:00:00.000Z');   // Sun 23:00 Berlin — one hour BEFORE the week began
-      await play('2026-07-31T22:30:00.000Z');   // Aug 1st, 00:30 Berlin — inside this month
-      await play('2026-07-31T21:00:00.000Z');   // Jul 31st, 23:00 Berlin — the previous month
-      await play('2025-12-31T23:30:00.000Z');   // Jan 1st, 00:30 Berlin — inside this year
-      await play('2025-12-31T22:00:00.000Z');   // Dec 31st, 23:00 Berlin — the previous year
+      // Wednesday, this week — settled again today.
+      await play('2026-08-12T09:00:00.000Z', '2026-08-13T11:00:00.000Z');
+      // Sun 23:00 Berlin, one hour BEFORE the week began — settled on Wednesday.
+      await play('2026-08-09T21:00:00.000Z', '2026-08-12T09:00:00.000Z');
+      // Aug 1st, 00:30 Berlin — inside this month, corrected today.
+      await play('2026-07-31T22:30:00.000Z', '2026-08-13T11:00:00.000Z');
+      // Jul 31st, 23:00 Berlin — the previous month, settled in August.
+      await play('2026-07-31T21:00:00.000Z', '2026-08-01T09:00:00.000Z');
+      // Jan 1st, 00:30 Berlin — inside this year, settled a few days later.
+      await play('2025-12-31T23:30:00.000Z', '2026-01-05T10:00:00.000Z');
+      // Dec 31st, 23:00 Berlin — the previous year, settled in January.
+      await play('2025-12-31T22:00:00.000Z', '2026-01-02T10:00:00.000Z');
+      /* A row with NO usable stamp — the case that decides whether dropping the
+         `finishedAt` fallback may take `|| ''` with it (#1059). It must stay out
+         of all three calendar windows and still count in `all`, whose cutoff is
+         the empty string.
+
+         Discriminating on the JSON side ONLY, measured: `String(s.createdAt)`
+         without the fallback yields the string `"null"`, which sorts ABOVE every
+         ISO instant, so the row lands in all three windows (week reads 2). The
+         SQL `coalesce` is belt-and-braces by comparison — a bare NULL comparison
+         inside the FILTER excludes the row just the same, and dropping it keeps
+         this case green. It stays because the two expressions are meant to be
+         readable as one rule. */
+      await play(null, null);
       // Neither of these is a play: one never finished, one settled on nothing.
-      await play('2026-08-12T10:00:00.000Z', { finished: false });
-      await play('2026-08-12T10:00:00.000Z', { chosenGameId: null });
+      await play('2026-08-12T10:00:00.000Z', '2026-08-12T10:00:00.000Z', { finished: false });
+      await play('2026-08-12T10:00:00.000Z', '2026-08-12T10:00:00.000Z', { chosenGameId: null });
 
       const row = await rowFor(id);
-      assert.equal(row.plays.week.count, 1, 'only Wednesday; Sunday 23:00 is the week before');
+      assert.equal(row.plays.week.count, 1, 'only Wednesday; the Sunday-23:00 evening is the week before, however late it was settled');
       assert.equal(row.plays.month.count, 3, 'the periods nest, and the 1st at 00:30 Berlin is in');
       assert.equal(row.plays.year.count, 5, 'Dec 31st 23:00 Berlin is last year, Jan 1st 00:30 is not');
       assert.equal(row.plays.year.tenants, 1, 'one group playing five times is still one group');
@@ -4682,10 +4709,10 @@ module.exports = function repoContract(repo) {
          The two 2025 plays are what makes this discriminating: they are
          invisible to the year window, so an `all` wired to `year` — the
          plausible slip, and the one that would make the public number sag for a
-         game that had a quiet year — reads 5 here rather than 6. The two backends spell it
+         game that had a quiet year — reads 5 here rather than 7. The two backends spell it
          differently (an empty-string cutoff in the window loop, a bare
          `count(*)` in SQL), which is exactly why it is pinned in the contract. */
-      assert.equal(row.plays.all.count, 6, 'every finished play, however old');
+      assert.equal(row.plays.all.count, 7, 'every finished play, however old — the stamp-less row included');
       assert.equal(row.plays.all.tenants, 1);
     });
 
