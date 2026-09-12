@@ -281,6 +281,74 @@ test('categories and mechanics are OR within a list and AND between them', () =>
     'a matching category cannot carry a failing mechanic');
 });
 
+test('an EXCLUDED category removes a game that carries it — AND-NOT, not OR (#1003)', () => {
+  const party = { categories: ['Party Game', 'Economic'], mechanics: ['Dice Rolling'] };
+  const euro = { categories: ['Economic'], mechanics: ['Worker Placement'] };
+
+  assert.equal(fitsMetadataFilters(party, { excludeCategories: ['Party Game'] }), false);
+  assert.equal(fitsMetadataFilters(euro, { excludeCategories: ['Party Game'] }), true);
+
+  // AND-NOT, the exact opposite combinator from the include list's OR — and the
+  // thing a later reader will try to "fix" into symmetry. ANY excluded value
+  // present removes the game, so listing two exclusions narrows further rather
+  // than less.
+  assert.equal(fitsMetadataFilters(euro, { excludeCategories: ['Party Game', 'Economic'] }), false,
+    'a second exclusion narrows; ORing the rejections would have kept it');
+
+  // The mirror for mechanics, and the AND between the two lists.
+  assert.equal(fitsMetadataFilters(party, { excludeMechanics: ['Dice Rolling'] }), false);
+  assert.equal(fitsMetadataFilters(party, { excludeMechanics: ['Worker Placement'] }), true);
+});
+
+test('exclusion BEATS inclusion on the same game, and the precedence is asserted', () => {
+  // The one case the tri-state chips cannot produce (one chip, one state) and a
+  // hand-crafted preset can. A game carrying an excluded value is out even when
+  // it also carries an included one — exclusion is the stronger statement, and
+  // the alternative silently makes an exclusion unreachable.
+  const game = { categories: ['Party Game', 'Economic'] };
+  assert.equal(
+    fitsMetadataFilters(game, { categories: ['Economic'], excludeCategories: ['Party Game'] }), false);
+
+  // …and the normalizer makes the contradictory pair unrepresentable by dropping
+  // the value from the INCLUDE list, so the chip can only ever paint one state.
+  const out = normalizeMetadataFilters(
+    { categories: ['Economic', 'Party Game'], excludeCategories: ['Party Game'] }, ALL_OPTIONS);
+  assert.deepEqual(out.categories, ['Economic']);
+  assert.deepEqual(out.excludeCategories, ['Party Game']);
+});
+
+test('an ABSENT field on the game is never EXCLUDED either', () => {
+  // The permissiveness rule, restated for the new direction — and it is the one
+  // that would empty a shelf. A game BGG knows no categories for carries none of
+  // the excluded ones, so it stays in, exactly as it passes every include list.
+  assert.equal(fitsMetadataFilters({}, { excludeCategories: ['Party Game'] }), true);
+  assert.equal(fitsMetadataFilters({ categories: [] }, { excludeCategories: ['Party Game'] }), true);
+  assert.equal(fitsMetadataFilters({}, { excludeMechanics: ['Trading'] }), true);
+});
+
+test('an exclusion of a value no shelf game carries is DROPPED, like every vanished referent', () => {
+  // Same rule as the include list: a filter the user can neither see nor clear
+  // would otherwise sit behind an active-filter count over a chip that is gone.
+  const out = normalizeMetadataFilters(
+    { excludeCategories: ['Economic', 'Wargame'], excludeMechanics: ['Trading'] }, ALL_OPTIONS);
+  assert.deepEqual(out.excludeCategories, ['Economic']);
+  assert.deepEqual(out.excludeMechanics, [], 'Trading is on no game this shelf offers');
+  assert.equal(countMetadataFilters(out), 1, 'and the dropped list contributes no count');
+});
+
+test('countMetadataFilters counts the category CONTROL once, whichever way it filters', () => {
+  // One chip row, one control — the same reasoning the complexity range and the
+  // playtime pair already get. A badge reading 2 over one visible row could not
+  // be reconciled.
+  assert.equal(countMetadataFilters({ ...NO_FILTERS, categories: ['Economic'] }), 1);
+  assert.equal(countMetadataFilters({ ...NO_FILTERS, excludeCategories: ['Economic'] }), 1);
+  assert.equal(countMetadataFilters(
+    { ...NO_FILTERS, categories: ['Economic'], excludeCategories: ['Party Game'] }), 1);
+  assert.equal(countMetadataFilters(
+    { ...NO_FILTERS, excludeCategories: ['Economic'], excludeMechanics: ['Trading'] }), 2,
+    'categories and mechanics are still two controls');
+});
+
 test('metadataFilterOptions offers only what the SHELF carries, deduped and sorted', () => {
   const games = [
     { minPlaytime: 30, categories: ['Party Game', 'Economic'] },
@@ -323,6 +391,8 @@ test('normalizeMetadataFilters drops a value this shelf can no longer offer', ()
     youngestAge: null,
     categories: ['Economic'],
     mechanics: [],
+    excludeCategories: [],
+    excludeMechanics: [],
   });
 });
 

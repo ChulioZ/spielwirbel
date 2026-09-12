@@ -295,7 +295,10 @@ I18N.it = {
   'metaFilter.chipWeightMin': 'Complessità da {min}',
   'metaFilter.chipWeightMax': 'Complessità fino a {max}',
   'metaFilter.chipAge': 'Il più giovane: {n} anni',
-  'metaFilter.chipTagExcluded': 'senza {name}',
+  'metaFilter.chipExcluded': 'senza {name}',
+  'metaFilter.valueIgnored': '«{name}»: non filtrata. Clicca per farla contare nel filtro.',
+  'metaFilter.valueIncluded': '«{name}»: conta ai fini del filtro. Clicca per escludere invece i giochi che la portano.',
+  'metaFilter.valueExcluded': '«{name}»: i giochi che la portano sono nascosti. Clicca per smettere di filtrare in base a essa.',
   'metaFilter.removeFilter': 'Rimuovi {name}',
 
   'transferGames.link': 'Sposta o copia giochi',

@@ -296,7 +296,10 @@ I18N.fr = {
   'metaFilter.chipWeightMin': 'Complexité d’au moins {min}',
   'metaFilter.chipWeightMax': 'Complexité d’au plus {max}',
   'metaFilter.chipAge': 'Le plus jeune : {n} ans',
-  'metaFilter.chipTagExcluded': 'sans {name}',
+  'metaFilter.chipExcluded': 'sans {name}',
+  'metaFilter.valueIgnored': '« {name} » : pas de filtre. Clique pour la compter dans le filtre.',
+  'metaFilter.valueIncluded': '« {name} » : compte dans le filtre. Clique pour exclure les jeux qui la portent.',
+  'metaFilter.valueExcluded': '« {name} » : les jeux qui la portent sont masqués. Clique pour ne plus filtrer dessus.',
   'metaFilter.removeFilter': 'Retirer {name}',
 
   'transferGames.link': 'Déplacer ou copier des jeux',

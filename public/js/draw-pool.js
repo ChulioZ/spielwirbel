@@ -220,6 +220,12 @@ function fitsMetadataFilters(game, filters) {
   // "The youngest at the table is N" — so a game passes when its own minimum age
   // is at most N.
   if (isFiniteNum(f.youngestAge) && isFiniteNum(g.minAge) && g.minAge > f.youngestAge) return false;
+  // EXCLUSION runs before inclusion, and it is unconditional (#1003): a game
+  // carrying an excluded value is out even when it also carries an included one.
+  // The alternative — letting an include rescue it — makes an exclusion
+  // unreachable on exactly the games it is aimed at, silently.
+  if (excludesAnyOf(g.categories, f.excludeCategories)) return false;
+  if (excludesAnyOf(g.mechanics, f.excludeMechanics)) return false;
   return matchesAnyOf(g.categories, f.categories) && matchesAnyOf(g.mechanics, f.mechanics);
 }
 
@@ -240,6 +246,27 @@ function matchesAnyOf(values, picked) {
   if (!Array.isArray(picked) || picked.length === 0) return true; // unfiltered
   if (!Array.isArray(values) || values.length === 0) return true; // absent on the game
   return picked.some((x) => values.includes(x));
+}
+
+// The EXCLUDE direction (#1003), and its combinator is the exact OPPOSITE of the
+// one above: ANY excluded value present removes the game (AND-NOT), where any
+// included value present keeps it (OR). That asymmetry is deliberate and is the
+// thing a later reader will try to "fix" into symmetry.
+//
+// The reason is the same vocabulary-size argument that makes inclusion an OR: a
+// game carries 3–8 of BGG's ~84 categories, so requiring ALL of the excluded
+// values to be present before rejecting would mean "anything but Party Game"
+// hardly ever rejects anything. Same shape as the tri-state tag chips, where an
+// excluded tag rejects on its own in both combination modes.
+//
+// An absent field on the game excludes NOTHING, the same permissiveness rule the
+// include side follows: a game BGG knows no categories for carries none of the
+// excluded ones. Get that backwards and the first exclusion hides every
+// hand-typed game and, on an instance without BGG_API_TOKEN, the entire shelf.
+function excludesAnyOf(values, excluded) {
+  if (!Array.isArray(excluded) || excluded.length === 0) return false; // unfiltered
+  if (!Array.isArray(values) || values.length === 0) return false; // absent on the game
+  return excluded.some((x) => values.includes(x));
 }
 
 // Which metadata filters this shelf can offer at all, derived from the games
@@ -315,7 +342,20 @@ function normalizeMetadataFilters(raw, options) {
     youngestAge: step(src.youngestAge, AGE_CHOICES, o.age),
     categories: pick(src.categories, o.categories),
     mechanics: pick(src.mechanics, o.mechanics),
+    // The exclude lists are pruned against the SAME option list (#1003) — one
+    // chip per value, three states, so a value the shelf no longer carries has
+    // to vanish from both directions or an active-filter count sits over a chip
+    // that is not on screen.
+    excludeCategories: pick(src.excludeCategories, o.categories),
+    excludeMechanics: pick(src.excludeMechanics, o.mechanics),
   };
+  // A value in BOTH lists is unrepresentable in the UI (one chip holds one
+  // state) and reachable only from a hand-crafted preset. Exclusion is the
+  // stronger statement and `fitsMetadataFilters` already lets it win, so the
+  // include entry is dropped here — which is what keeps the chip able to paint
+  // exactly one state, rather than picking one arbitrarily at render time.
+  out.categories = out.categories.filter((v) => !out.excludeCategories.includes(v));
+  out.mechanics = out.mechanics.filter((v) => !out.excludeMechanics.includes(v));
   // An inverted range admits nothing at all, so a hand-crafted one would answer
   // "No matching games" over a shelf that is fine. Swapping (rather than
   // dropping a bound) is done HERE, in the shared function, so the preview and
@@ -356,8 +396,11 @@ function countMetadataFilters(filters) {
       (f.maxPlaytime !== null && f.maxPlaytime !== undefined) ? 1 : 0) +
     (isFiniteNum(f.weightMin) || isFiniteNum(f.weightMax) ? 1 : 0) +
     (f.youngestAge !== null && f.youngestAge !== undefined ? 1 : 0) +
-    ((f.categories || []).length ? 1 : 0) +
-    ((f.mechanics || []).length ? 1 : 0)
+    // One chip ROW is one control however it filters (#1003), so an included and
+    // an excluded category together still count 1 — the same reasoning the
+    // complexity range and the playtime pair get.
+    ((f.categories || []).length || (f.excludeCategories || []).length ? 1 : 0) +
+    ((f.mechanics || []).length || (f.excludeMechanics || []).length ? 1 : 0)
   );
 }
 
