@@ -1032,7 +1032,7 @@ async function showGameDetail(rid, gameId) {
           .map((wid) => personLabel(sPeople.find((p) => p.id === wid)))
           .filter(Boolean);
         status = s.finished
-          ? `<i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('detail.played'))}`
+          ? (endingText(s) || `<i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('detail.played'))}`)
           : esc(t('detail.chosen'));
         if (s.finished && names.length) {
           winner = `<div class="stamp__win"><i class="ti ti-trophy" aria-hidden="true"></i> ${names.map(esc).join(', ')}</div>`;

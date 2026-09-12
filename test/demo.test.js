@@ -45,6 +45,7 @@ process.env.DEMO_RATE_LIMIT_MAX = '1000000';
 
 const { createApp } = require('../lib/app');
 const repo = require('../lib/repo');
+const { ENDINGS } = require('../public/js/session-outcome');
 const demo = require('../lib/demo');
 const seed = require('../lib/demo-seed');
 const scheduler = require('../lib/scheduler');
@@ -180,7 +181,17 @@ test('the seeded round is immediately usable: Chronik and Pokale have content, a
     // new rounds demonstrate a feature rather than simulating months of play.
     const finished = round.body.sessions.filter((s) => s.finished);
     assert.strictEqual(finished.length, main.sessions.length);
-    assert.ok(finished.every((s) => s.winnerIds.length > 0), 'a finished session must have winners or Pokale stays empty');
+    /* Every finished session records a RESULT — winners, or how it ended when
+       nobody won (#1038). Not "every one has winners" any more: „Just One" is
+       cooperative, so the seed records it as lost rather than inventing two
+       individual winners for a game nobody wins alone. At least one still has
+       winners, or the Pokale tab is the empty state this test exists to rule
+       out — asserted separately so the ending can never satisfy it. */
+    assert.ok(
+      finished.every((s) => s.winnerIds.length > 0 || ENDINGS.includes(s.ending)),
+      'a finished session records winners or an ending, or the Kümmerliste nags about it forever',
+    );
+    assert.ok(finished.some((s) => s.winnerIds.length > 0), 'or Pokale stays empty');
     assert.ok(finished.every((s) => Object.keys(s.votes || {}).length > 0), 'ratings drive every stat screen');
 
     // The whole point: the visitor can run a session.

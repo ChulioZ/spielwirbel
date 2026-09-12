@@ -35,6 +35,17 @@
 const SHARE_MEDALS = ['🥇', '🥈', '🥉'];
 const SHARE_TROPHY = '🏆';
 
+// The three endings' headlines (#1038). Duplicated from `ENDING_LABELS` rather
+// than injected because this file is required into Node by its own spec and by
+// nothing that loads the shared-scope scripts; `test/session-share.test.js`
+// asserts the two agree, the TAG_ICONS shape from
+// .claude/rules/shared-constants-across-the-stack.md.
+const SHARE_ENDING_TITLES = {
+  lost: 'result.titleLost',
+  noWinner: 'result.titleNoWinner',
+  ongoing: 'result.titleOngoing',
+};
+
 // One line per rated game, in the screen's order: "🥇 Catan · Ø 4.5".
 //
 // Unrated games are skipped rather than rendered as the screen's "–": a bare
@@ -91,7 +102,14 @@ function shareHeadline(result, t, join, tn) {
   if (result.cancelled) return t('result.titleCancelled');
   if (!result.playedTitle) return null;
   const names = result.winnerNames || [];
-  if (!names.length) return t('result.titlePlayed', { game: result.playedTitle });
+  if (!names.length) {
+    // How it ended when nobody won (#1038). The key is passed IN, already
+    // resolved by `sessionEnding`, for the same reason `t` and `join` are: this
+    // file is pure and cannot reach the helper. An ending nobody recorded keeps
+    // the plain sentence, which is the honest thing to say about it.
+    const key = SHARE_ENDING_TITLES[result.ending];
+    return t(key || 'result.titlePlayed', { game: result.playedTitle });
+  }
   return SHARE_TROPHY + ' ' + tn(names.length, 'result.titleWonOne', 'result.titleWonMany', {
     game: result.playedTitle,
     names: (join || ((xs) => xs.join(', ')))(names),
@@ -99,7 +117,7 @@ function shareHeadline(result, t, join, tn) {
 }
 
 // The full message. `result` is
-// { roundName, when, outcome, cancelled, playedTitle, winnerNames,
+// { roundName, when, outcome, cancelled, playedTitle, winnerNames, ending,
 //   tables: [{ title, names }], rows: [{ title, score, count, place }] }.
 // `score` is the DISPLAYED Spielwirbel-Score (#893), already clamped by the
 // caller — this text lands in a group chat where non-users see it and there is
@@ -127,5 +145,7 @@ function sessionShareText(result, t, join, tn, fmtAvg) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { sessionShareText, shareRatingLines, shareHeadline, SHARE_MEDALS, SHARE_TROPHY };
+  module.exports = {
+    sessionShareText, shareRatingLines, shareHeadline, SHARE_MEDALS, SHARE_TROPHY, SHARE_ENDING_TITLES,
+  };
 }

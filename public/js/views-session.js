@@ -1234,6 +1234,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       cancelled,
       playedTitle: chosenId ? (games.find((g) => g.id === chosenId) || {}).title || null : null,
       winnerNames: winnerIds.map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),
+      // So the shared headline says „Verloren" where the screen does, instead
+      // of the bare „wurde gespielt." every winnerless night used to get (#1038).
+      ending: sessionEnding(session),
       rows: rows.map((r) => ({ title: r.game.title, score: r.shown, count: r.count, place: r.place })),
     }));
     head.appendChild(shareBtn);
@@ -1353,7 +1356,14 @@ async function showResults(round, session, gamesHint, reveal, plain) {
         .map((wid) => personLabel(people.find((p) => p.id === wid)))
         .filter(Boolean);
       if (names.length === 0) {
-        titleEl.textContent = t('result.titlePlayed', { game: gname });
+        // „wurde gespielt." was the only sentence a winnerless night could get,
+        // and it reads as unfinished business for the three nights that are
+        // finished (#1038). `ending` is the session's own copy, kept in step by
+        // saveWinners below.
+        const meta = ENDING_LABELS[ending];
+        titleEl.textContent = meta
+          ? t(meta.title, { game: gname })
+          : t('result.titlePlayed', { game: gname });
       } else {
         titleEl.textContent = tn(names.length, 'result.titleWonOne', 'result.titleWonMany', {
           game: gname,
@@ -1553,6 +1563,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   let finished = !!session.finished;
   let cancelled = !!session.cancelled;
   let winnerIds = Array.isArray(session.winnerIds) ? session.winnerIds.slice() : [];
+  // How it ended when nobody won (#1038). Null unless the session carries one —
+  // and mutually exclusive with `winnerIds` by the route's own rule, so these
+  // two never both hold a value.
+  let ending = ENDINGS.includes(session.ending) ? session.ending : null;
 
   // Cancel is the alternative final state: only offered while no game is
   // chosen, and undoable like the finish reset. Rendered as a `link-btn` in the
@@ -1682,6 +1696,24 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     });
     finishWrap.appendChild(chips);
 
+    /* The second row: how it ended when nobody won (#1038). Same chip component
+       as the parties above, because it answers the same question — the party
+       chips and these are mutually exclusive by construction, so selecting one
+       deselects the other with no extra state to keep in step: the server
+       clears whichever the request did not carry, and this re-renders from what
+       it returned. */
+    const endChips = h('<div class="winner-chips"></div>');
+    ENDINGS.forEach((id) => {
+      const meta = ENDING_LABELS[id];
+      const sel = ending === id;
+      const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${iconText(meta.icon, t(meta.key))}</button>`);
+      // Tapping the selected one again returns to "nothing recorded", which is
+      // the same toggle the party chips give and the only way back without Reset.
+      chip.addEventListener('click', () => saveWinners([], sel ? null : id));
+      endChips.appendChild(chip);
+    });
+    finishWrap.appendChild(endChips);
+
     const actions = h('<div class="toolbar" style="margin-top:14px"></div>');
     const resetBtn = h(`<button class="btn btn--ghost">${esc(t('result.reset'))}</button>`);
     resetBtn.addEventListener('click', async () => {
@@ -1692,8 +1724,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
         });
         finished = false;
         winnerIds = [];
+        ending = null;
         session.finished = false;
         session.winnerIds = [];
+        delete session.ending;
         session.finishedAt = null; // the server clears it too; keep the copy honest
         toast(t('result.toast.reset'));
         renderFinish();
@@ -1707,7 +1741,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       .filter(Boolean);
     const inner = names.length
       ? iconText('ti-trophy', t('result.winners', { names: names.join(', ') }))
-      : iconText('ti-check', t('result.playedNoWinner'));
+      : ENDING_LABELS[ending]
+        ? iconText(ENDING_LABELS[ending].icon, t(ENDING_LABELS[ending].line))
+        : iconText('ti-check', t('result.playedNoWinner'));
     finishWrap.appendChild(h(`<div class="winner-result">${inner}</div>`));
 
     // „An BG Stats übergeben" (#485): the whole play as one tappable link.
@@ -1736,16 +1772,24 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
   // Marks the session finished with the given winners (possibly none) and
   // re-renders; only committed to local state once the server accepted it.
-  async function saveWinners(ids) {
+  async function saveWinners(ids, nextEnding) {
     try {
       const saved = await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/finish`, {
         finished: true,
         winnerIds: ids,
+        // Omitted rather than sent as null when there is none: the route CLEARS
+        // a stored ending on every finish that does not carry one, so a winner
+        // tap needs no second field to replace it (#1038).
+        ...(nextEnding ? { ending: nextEnding } : {}),
       });
       finished = true;
       winnerIds = saved.winnerIds.slice(); // filtered server-side
+      // Read back from the server, never from the argument: it is the side that
+      // decides the exclusivity, so this is what keeps the two chip rows honest.
+      ending = saved.ending || null;
       session.finished = true;
       session.winnerIds = winnerIds.slice();
+      if (ending) session.ending = ending; else delete session.ending;
       // The server stamps this, and the BG Stats push (#485) sends it as the
       // play's date — without the sync it would fall back to createdAt, i.e.
       // report the evening as having happened when the draw started, until the

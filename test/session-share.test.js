@@ -218,3 +218,41 @@ test('the tables block appears for nothing else', () => {
   const text = sessionShareText(model(), translator('en'), joinNames('en'));
   assert.ok(!text.includes('The tables:'));
 });
+
+// ---- how it ended when nobody won (#1038) ------------------------------------
+
+test('the shared headline says the ending, and carries no trophy', () => {
+  // „wurde gespielt." was the only sentence a winnerless night could get, and it
+  // is the one the reader of the chat message sees. The trophy stays off: these
+  // are the three nights that are finished WITHOUT a winner.
+  const de = (ending) =>
+    sessionShareText(model({ winnerNames: [], ending }), translator('de')).split('\n')[1];
+
+  assert.equal(de('lost'), '„Catan“ wurde gespielt – und hat gewonnen.');
+  assert.equal(de('noWinner'), '„Catan“ wurde gespielt – ohne Sieger.');
+  assert.equal(de('ongoing'), '„Catan“ wurde gespielt – Fortsetzung folgt.');
+  assert.equal(de('unrecorded'), '„Catan“ wurde gespielt.', 'nothing recorded, nothing claimed');
+  assert.equal(de(undefined), '„Catan“ wurde gespielt.');
+  [...'lost noWinner ongoing unrecorded'.split(' '), undefined].forEach((e) => {
+    assert.ok(!de(e).includes(SHARE_TROPHY), `${e} must not carry a trophy`);
+  });
+
+  // And the English side, so a half-added key cannot hide behind one locale.
+  const en = (ending) =>
+    sessionShareText(model({ winnerNames: [], ending }), translator('en')).split('\n')[1];
+  assert.equal(en('lost'), '“Catan” was played — and it won.');
+});
+
+test('SHARE_ENDING_TITLES names exactly the endings the app can store', () => {
+  /* The TAG_ICONS shape (.claude/rules/shared-constants-across-the-stack.md):
+     this file is pure and required into Node, so it cannot reach ENDING_LABELS —
+     the copy is licensed by this assertion and by nothing else. A drift here is
+     silent: an ending with no entry falls back to the plain „wurde gespielt.",
+     i.e. exactly the sentence #1038 exists to replace. */
+  const { ENDINGS, ENDING_LABELS } = require('../public/js/session-outcome');
+  const { SHARE_ENDING_TITLES } = shareModule;
+  assert.deepEqual(Object.keys(SHARE_ENDING_TITLES).sort(), [...ENDINGS].sort());
+  ENDINGS.forEach((e) => {
+    assert.equal(SHARE_ENDING_TITLES[e], ENDING_LABELS[e].title, `${e} shares one headline key`);
+  });
+});

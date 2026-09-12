@@ -343,8 +343,19 @@ function renderPokaleTab(round) {
   // break nor extend a streak. A one-person session is single-winner by
   // definition, so twenty logged solo plays read as a twenty-night streak.
   const isSolo = (s) => sessionPartyCount(round, s) === 1;
+  // A night recorded as „Kein Sieger" or „Fortsetzung folgt" (#1038) is skipped
+  // for the SAME reason as a solo one: it was not a contest, so it can neither
+  // break nor extend a streak. „Verloren" is NOT skipped — the table played to
+  // win and did not, which breaks a streak exactly as somebody else's win does
+  // (it already did, via `ws.length !== 1`; naming it here stops a future reader
+  // from folding all three together). An UNRECORDED night also still breaks one;
+  // the fix for that is recording it.
+  const notAContest = (s) => {
+    const e = sessionEnding(s);
+    return e === 'noWinner' || e === 'ongoing';
+  };
   const chrono = [...finished]
-    .filter((s) => !wonByGuest(s) && !isSolo(s))
+    .filter((s) => !wonByGuest(s) && !isSolo(s) && !notAContest(s))
     .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
   let streakMember = null;
   let streak = 0;

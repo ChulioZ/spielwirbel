@@ -160,7 +160,13 @@ async function showTableBuilder(round, session, gamesHint) {
       const game = round.games.find((g) => g.id === child.chosenGameId);
       const seated = sessionPeople(round, child);
       const outcome = sessionOutcome(child);
-      const state = STATE[outcome] || STATE.open;
+      // A child table that was PLAYED and that nobody won says how it ended
+      // (#1038) — the STATE map above keys on `sessionOutcome` alone, so without
+      // this a lost coop table reads „Gespielt" beside its siblings.
+      const endMeta = ENDING_LABELS[sessionEnding(child)];
+      const state = endMeta
+        ? { key: endMeta.key, icon: endMeta.icon }
+        : (STATE[outcome] || STATE.open);
       /* What the people at this table thought of the game they played, weighed
          through the SAME curve the builder scored the proposal with — so the
          card states the number this split was chosen on rather than a second
