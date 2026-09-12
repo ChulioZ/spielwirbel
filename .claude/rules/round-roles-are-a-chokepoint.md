@@ -45,7 +45,7 @@ action costs; `lib/round-access.js` holds the **route → capability** table and
 middleware, mounted on `/api/rounds/:rid` right after `resolveRoundGrant`.
 
 The ladder is shared because the views hide what the server refuses — the eighth
-entry in `.claude/rules/shared-constants-across-the-stack.md`. The **table** is
+entry in `.claude/rules/shared-constants-inventory.md`. The **table** is
 deliberately *not* shared: the client speaks in capabilities and never in paths,
 so exporting it would ship a list with no reader.
 
