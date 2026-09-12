@@ -250,40 +250,68 @@ function boot(t, expansions) {
   return { dom, round };
 }
 
-test('the detail page lists the owned expansions, with and without a range', async (t) => {
-  const { dom } = boot(t, EXP);
-  await dom.call('showGameDetail', 'r1', 'g1');
+/* #1039 replaced the `.gd-expansions` page section with a chip on the card that
+   opens the editor, and moved the owned rows — with their remove control — to
+   the top of that editor. So the "does the round own anything" question is now
+   answered by the chip, and the rows are asserted inside the overlay.
 
-  const titles = [...dom.app.querySelectorAll('.gd-expansions .ds-row__title')].map((el) => el.textContent);
+   Opening it needs the desktop branch stubbed, because jsdom's matchMedia never
+   matches and the editor would otherwise present as a sheet. */
+const expansionsChip = (dom) => dom.app.querySelector('.gd-chips .tag--expansions');
+
+async function openExpansions(dom, gameId) {
+  dom.set('usesEditorSheet', () => false);
+  await dom.call('showGameDetail', 'r1', gameId);
+  const chip = expansionsChip(dom);
+  assert.ok(chip, 'the expansions chip is not on the card');
+  chip.click();
+  const card = dom.document.querySelector('.popover--expansions');
+  assert.ok(card, 'the expansions editor did not open');
+  return card;
+}
+
+test('the chip counts the owned expansions and the editor lists them, with and without a range', async (t) => {
+  const { dom } = boot(t, EXP);
+  const card = await openExpansions(dom, 'g1');
+
+  assert.match(expansionsChip(dom).textContent, /2 Erweiterungen/, 'the chip states the count');
+
+  const titles = [...card.querySelectorAll('.exp-have__row .ds-row__title')].map((el) => el.textContent);
   assert.deepEqual(titles, ['5–6 Spieler', 'Ohne Angabe']);
   // An expansion whose player count nobody knows says so, rather than showing
   // a range it does not have.
-  const metas = [...dom.app.querySelectorAll('.gd-expansions .ds-row__main .muted')].map((el) => el.textContent);
+  const metas = [...card.querySelectorAll('.exp-have__row .ds-row__main .muted')].map((el) => el.textContent);
   assert.deepEqual(metas, ['5–6 Personen', 'ohne Spielerzahl']);
-  assert.equal(dom.app.querySelectorAll('.gd-expansions .exp-row__remove').length, 2);
-  assert.ok(dom.app.querySelector('.gd-expansions button.link-out'), 'and a way to add one');
+  // The remove control is the reason the rows had to move rather than simply go:
+  // the editor is now the only way to it.
+  assert.equal(card.querySelectorAll('.exp-have__row .exp-row__remove').length, 2);
+  assert.ok(card.querySelector('.exp-own__name'), 'and the add form is still below them');
 });
 
-test('an empty section still offers the way in', async (t) => {
+test('owning none leaves a dashed chip as the way in, and the editor lists nothing', async (t) => {
   const { dom } = boot(t, null);
-  await dom.call('showGameDetail', 'r1', 'g1');
-  assert.equal(dom.app.querySelectorAll('.gd-expansions .ds-row').length, 0);
-  assert.match(dom.app.querySelector('.gd-expansions .muted').textContent, /Noch keine Erweiterung/);
+  const card = await openExpansions(dom, 'g1');
+  assert.ok(expansionsChip(dom).classList.contains('tag--empty'), 'the chip reads as unset');
+  assert.match(expansionsChip(dom).textContent, /Erweiterung/);
+  assert.equal(card.querySelector('.exp-have'), null, 'no owned block at all');
+  assert.ok(card.querySelector('.exp-own__name'), 'but still the way to add one');
 });
 
-test('a wished EXPANSION\'s own detail page offers no expansions section at all (#698)', async (t) => {
+test('a wished EXPANSION\'s own detail page offers no expansions affordance at all (#698)', async (t) => {
   const { dom, round } = boot(t, null);
   round.games.push({
     id: 'g3', title: 'Seefahrer', minPlayers: 5, maxPlayers: 6, tagIds: [], image: null,
     wish: true, expansionOf: [{ providerId: '13', title: 'CATAN' }],
   });
   await dom.call('showGameDetail', 'r1', 'g3');
-  // The whole section — heading, empty-state line and „Erweiterung hinzufügen" —
-  // must be gone, not merely empty: an expansion holds no expansions of its own.
-  assert.equal(dom.app.querySelector('.gd-expansions'), null);
+  // The chip must be gone, not merely empty: an expansion holds no expansions of
+  // its own. Anti-vacuous — the chip row itself has to be on screen, or this
+  // would pass for a page that failed to render.
+  assert.ok(dom.app.querySelector('.gd-chips'), 'the chip row rendered');
+  assert.equal(expansionsChip(dom), null);
 });
 
-test('an ordinary WISHED game keeps the section — its row survives acquisition', async (t) => {
+test('an ordinary WISHED game keeps the chip — its row survives acquisition', async (t) => {
   // The anti-vacuous control for the spec above: the condition is the presence
   // of `expansionOf`, never `wish` itself.
   const { dom, round } = boot(t, null);
@@ -292,8 +320,7 @@ test('an ordinary WISHED game keeps the section — its row survives acquisition
     wish: true,
   });
   await dom.call('showGameDetail', 'r1', 'g4');
-  assert.ok(dom.app.querySelector('.gd-expansions'), 'the section renders');
-  assert.ok(dom.app.querySelector('.gd-expansions button.link-out'), 'with the way in');
+  assert.ok(expansionsChip(dom), 'the chip renders');
 });
 
 test('the players chip states the widening — and says nothing without one', async (t) => {
@@ -396,7 +423,7 @@ test('the expansion editor re-places its popover once the candidates arrive', as
   dom.set('repositionPopover', () => { placements += 1; });
 
   await dom.call('showGameDetail', 'r1', 'g1');
-  dom.app.querySelector('.gd-expansions button.link-out').click();
+  dom.app.querySelector('.gd-chips .tag--expansions').click();
   await new Promise((r) => setTimeout(r, 0));
   assert.equal(placements, 0, 'nothing to re-place while the list is still loading');
 
@@ -433,7 +460,7 @@ test('… and re-places even when the lookup FAILS or comes back empty', async (
     dom.set('repositionPopover', () => { placements += 1; });
 
     await dom.call('showGameDetail', 'r1', 'g1');
-    dom.app.querySelector('.gd-expansions button.link-out').click();
+    dom.app.querySelector('.gd-chips .tag--expansions').click();
     for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0));
     assert.equal(placements, 1, `the ${outcome} branch must re-place too`);
     dom.close();

@@ -273,8 +273,12 @@ What the app does, in detail. For a short overview see the
     filters (see Sessions below), a search pill, sorting
     (random / name / rating),
     and the add-game sheet. Each card opens the game's detail page
-    ("Spielepass") with its score ring, editable details, a **Jetzt spielen**
-    launcher, and the history of sessions it appeared in.
+    ("Spielepass"), a two-page spread: the game on the left (cover with its
+    Spielwirbel-Score, editable title, chips for players / tags / owners /
+    expansions, the glance facts, and a „Mehr zum Spiel" disclosure for the rest
+    of the BGG metadata), the group's own history on the right with a
+    **Jetzt spielen** launcher pinned at its foot. The rarer actions
+    (Aussortieren, Durchgespielt, unlinking the provider) live in a „…" menu.
   - **Chronik** – one month-grouped timeline of everything that happened:
     games added / retired / restored and session outcomes. Above the timeline,
     a **period recap** sums up one calendar month or year — sessions played,

@@ -105,14 +105,19 @@ stronger than withholding it in the client.
 The client half is still worth its shape: `gameInfoBody` and `hasGameInfo`
 (`public/js/game-info.js`) both **default `rating` to off**, so the one builder
 that fills three surfaces — two of them vote cards — fails safe when a caller
-forgets the flag. Only `renderGameInfoSection` opts in. A spec that passes
+forgets the flag. Only the game-detail surface opts in — `gameInfoRest`, which
+replaced `renderGameInfoSection` in #1039 when the section became the card's
+glance pills plus a „Mehr zum Spiel" disclosure. A spec that passes
 `{ rating: false }` itself cannot see a flipped default; the sheet spec asserts
 the default by passing nothing
 (`.claude/rules/break-the-code-on-purpose.md`, "A test that SETS the state it
 asserts").
 
 Note the two gates must *disagree* for a rating-only game: no ⓘ (its sheet would
-be empty) but a detail section (it has something to say).
+be empty) but a disclosure body (it has something to say). Since #1039 there is a
+third place the rating must NOT reach — `gameGlanceFacts`, the pills on the card —
+because those are the always-visible facts, where #724's vote-anchoring argument
+applies again; `test/game-info-view.test.js` asserts both directions.
 
 ## What the live captures settled — don't re-measure these
 

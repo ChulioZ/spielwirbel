@@ -536,7 +536,6 @@ I18N.nl = {
   'sessions.deleteConfirm': 'De sessie van {when} echt verwijderen?',
   'sessions.deleted': 'Sessie verwijderd',
 
-  'detail.noRating': 'Nog geen beoordeling',
   'detail.retire': 'Opzijleggen',
   'detail.complete': 'Uitgespeeld',
   'detail.restore': 'Terughalen',
@@ -650,8 +649,9 @@ I18N.nl = {
   'detail.toast.coverUnreachable': '{provider} was niet bereikbaar.',
 
   'detail.expansionsTitle': 'Uitbreidingen',
-  'detail.expansionsEmpty': 'Nog geen uitbreidingen vastgelegd.',
-  'detail.expansionAdd': 'Uitbreiding toevoegen',
+  'detail.more': 'Meer over het spel',
+  'detail.moreActions': 'Meer acties',
+  'detail.addExpansionChip': '+ Uitbreiding',
   'detail.expansionRemove': 'Verwijderen',
   'detail.expansionRemoveConfirm': '“{title}” uit je uitbreidingen verwijderen?',
   'detail.expansionPickTitle': 'Van {provider}',

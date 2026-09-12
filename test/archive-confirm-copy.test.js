@@ -99,9 +99,15 @@ test('the RETIRE dialog on the real detail screen says what pressing it does', a
   // (rid, gameId) — it fetches the round itself through the stubbed api().
   await dom.call('showGameDetail', 'r1', 'g1');
 
-  const btn = [...dom.app.querySelectorAll('button')]
+  // Aussortieren moved off the page and into the „…" page menu in #1039 — it is
+  // the opposite of playing, so it does not sit beside the play button. The menu
+  // is a popover on <body>, so the walk starts at the trigger in the back row.
+  const menu = dom.app.querySelector('.gd-menu');
+  assert.ok(menu, 'the „…" page menu is not on the screen');
+  menu.click();
+  const btn = [...dom.document.querySelectorAll('.popover--menu .popover__opt')]
     .find((b) => b.textContent.includes(dom.run("t('detail.retire')")));
-  assert.ok(btn, 'the Aussortieren action is not on the screen');
+  assert.ok(btn, 'the Aussortieren action is not in the page menu');
   btn.click();
   await new Promise((r) => setImmediate(r));
 

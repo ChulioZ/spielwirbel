@@ -166,7 +166,10 @@ async function showGameDetail(rid, gameId) {
   // so this is the deep-link case, and a page reached by URL has no origin to
   // pass: a game belongs to whichever screen lists it, whether it was opened
   // from a shared link, a session results row or the Pokale cards.
-  app.appendChild(backRow(() => (offShelf ? offShelf.show(rid) : showRound(rid, 'regal'))));
+  // Held rather than appended-and-forgotten: the „…" page menu (#1039) joins
+  // this row at its right end, and its handlers are closures defined below.
+  const back = backRow(() => (offShelf ? offShelf.show(rid) : showRound(rid, 'regal')));
+  app.appendChild(back);
 
   // Send a partial update, then re-render the page from fresh data.
   async function updateGame(updates) {
@@ -475,11 +478,58 @@ async function showGameDetail(rid, gameId) {
   // candidates cost no extra upstream request — they ride on the /thing body the
   // detail hop already fetched (lib/routes/lookup.js).
   function openExpansionEditor(anchor) {
-    openEditor(anchor, 'expansions', t('detail.expansionAdd'), (el, close) => {
+    // Titled „Erweiterungen" rather than „Erweiterung hinzufügen" since #1039:
+    // the editor absorbed the removed section's list, so it is no longer only an
+    // add form — and on a phone that string is the sheet's accessible name.
+    openEditor(anchor, 'expansions', t('detail.expansionsTitle'), (el, close) => {
       const keep = owned.map((e) => ({ id: e.id }));
       const picked = new Set();
       const canPick = game.source && typeof game.source.externalId === 'string'
         && game.source.provider === 'bgg';
+
+      // What the round already owns — the rows the `.gd-expansions` section used
+      // to carry on the page (#1039). They lead the editor because it is now the
+      // only way to this list: dropping them with the section would have made an
+      // owned expansion unremovable, which no test could have seen (the route is
+      // untouched and the chip still counts them).
+      if (owned.length) {
+        const have = h(`<div class="exp-have">
+             <div class="exp-have__head muted">${esc(t('detail.expansionsTitle'))}</div>
+             <div class="exp-have__body"></div>
+           </div>`);
+        const haveBody = have.querySelector('.exp-have__body');
+        owned.forEach((e) => {
+          const range = Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
+            ? playersText(e.minPlayers, e.maxPlayers)
+            : t('detail.expansionNoRange');
+          // A plain <div> row, so it must carry `ds-row--static` — `.ds-row`
+          // declares cursor:pointer and a hover lift, i.e. it promises a click
+          // target (.claude/rules/ds-row-is-a-click-target.md). The remove button
+          // inside it is the only thing here that is clickable.
+          const row = h(`<div class="ds-row ds-row--static exp-have__row">
+               <div class="ds-row__main">
+                 <div class="ds-row__title">${esc(e.title)}</div>
+                 <div class="muted">${esc(range)}</div>
+               </div>
+               <div class="ds-row__meta">
+                 <button class="link-btn exp-row__remove" aria-label="${esc(t('detail.expansionRemove'))}">${iconText('ti-trash', t('detail.expansionRemove'))}</button>
+               </div>
+             </div>`);
+          row.querySelector('.exp-row__remove').addEventListener('click', async () => {
+            // The editor goes first: `confirmDialog` is a sheet on <body>, and a
+            // mousedown on it is "outside" the popover, which would tear this one
+            // down mid-await anyway. Same order as the image editor's actions.
+            close();
+            if (!await confirmDialog({
+              body: t('detail.expansionRemoveConfirm', { title: e.title }),
+              confirmLabel: t('detail.expansionRemove'), icon: 'ti-trash',
+            })) return;
+            saveExpansions(owned.filter((x) => x.id !== e.id).map((x) => ({ id: x.id })));
+          });
+          haveBody.appendChild(row);
+        });
+        el.appendChild(have);
+      }
 
       if (canPick) {
         const prov = providerLabel(game.source.provider);
@@ -577,86 +627,109 @@ async function showGameDetail(rid, gameId) {
   const sparse =
     !game.image && st.score === null && related.length === 0 && assignedTagIds.length === 0;
 
-  // Header card: image + title + score ring ("Spielepass").
-  // The ring carries the Spielwirbel-Score and NOTHING else (#919). It used to
-  // print the honest raw mean under it — #893's answer to „warum steht da 2,2
-  // wenn alle 4 gegeben haben" — plus the ratings/session counts and
-  // `scoreReason()`. The score has since become the number every surface ranks
-  // on (Regal, results, Pokale, recommendations, /entdecken since #918) and the
-  // plain average is read nowhere, so the line cost the page's best real estate
-  // to state a number nobody acts on. The principle now lives only in the ⓘ
-  // sheet; the per-game reason line survives on the results screen, which is
-  // where it is worth something — at the moment the group is deciding.
-  const shown = st.score === null ? null : displayScore(st.score);
-  const RING_C = (2 * Math.PI * 34).toFixed(1);
-  const scoreRing =
-    st.score !== null
-      ? `<div class="gd-ring">
-           <svg viewBox="0 0 80 80" aria-hidden="true">
-             <circle cx="40" cy="40" r="34" fill="none" stroke="var(--sunken)" stroke-width="8"/>
-             <circle cx="40" cy="40" r="34" fill="none" stroke="${scoreColor(st.score)}" stroke-width="8" stroke-linecap="round"
-               stroke-dasharray="${(((Math.max(1, shown) - 1) / 4) * 2 * Math.PI * 34).toFixed(1)} ${RING_C}" transform="rotate(-90 40 40)"/>
-           </svg>
-           <span class="gd-ring__num" style="color:${scoreColor(st.score)}">${fmtAvg(shown)}</span>
-         </div>
-         <div class="score-label">${esc(t('score.name'))} ${infoButton('score')}</div>`
-      : `<div class="gd-ring gd-ring--none"><span class="gd-ring__num">–</span></div>
-         <div class="score-label">${esc(t('detail.noRating'))}</div>`;
-  // The score ring is dropped for a sparse game — an empty ring next to an
-  // empty everything-else is what made the page read as broken (#256) — and
-  // for a wish (#699): the round does not own the game, so it cannot be rated
-  // or aussortiert while on the list. Unconditional for a wish, even if the
-  // data holds ratings (API-only edge); they reappear via „Ins Regal".
-  const head = h(`<div class="gd-head${sparse ? ' gd-head--sparse' : ''}"${
+  // =================== The spread (#1039) ===================
+  //
+  // The screen asks two questions on every visit — *what is this game* and *how
+  // did it go for us* — and offers one action. Before this it answered both in
+  // one 900px column of stacked sections, so from 1280px up 45% of the pane was
+  // gutter while „Verwandte Sessions" sat below the fold and the score ring
+  // printed the mean of sessions listed 800px further down.
+  //
+  // Now the two questions are the two pages of a spread: the game on the left,
+  // our table on the right, with the one action pinned at the right page's foot.
+  // Single column below 860px — the app's existing strip/dock/editor breakpoint
+  // (.claude/rules/responsive-hub-tabs.md) — in the order card → history → bar.
+  const pass = h('<div class="pass"></div>');
+  const leftPage = h('<div class="pass__game"></div>');
+  const rightPage = h('<div class="pass__table"></div>');
+  pass.append(leftPage, rightPage);
+
+  // --- Left page: the game's own card --------------------------------------
+  //
+  // Keeps #868's framed treatment and its 0.16 cover wash (the opacity is
+  // contrast-capped — test/game-detail-hero.test.js), and #901's fixed cover
+  // basis. What changed is the row: cover + title only, so the 701–939px gap
+  // that used to sit where the ring's column was closes by itself.
+  const card = h(`<div class="gd-head${sparse ? ' gd-head--sparse' : ''}"${
     coverCss ? ` style="--gd-cover:${coverCss}"` : ''
   }>
+       <div class="gd-cover"></div>
        <div class="gd-info">
          <h1></h1>
+         <div class="gd-chips"></div>
        </div>
-       ${sparse || game.wish ? '' : `<div class="gd-stats">${scoreRing}</div>`}
      </div>`);
-  wireInfoButtons(head);
+  const coverCol = card.querySelector('.gd-cover');
+  const chips = card.querySelector('.gd-chips');
+  const info = card.querySelector('.gd-info');
 
   // Editable cover image (activate to paste a new one or remove it). A <button>
-  // for the same reason as the chips (#424); its fixed 240px box means the UA's
+  // for the same reason as the chips (#424); its fixed box means the UA's
   // inline-block is no change, and the `.gd-img--edit:focus-visible` overlay
   // rule was already written for a focusable frame.
   const imgEl = h(`<button type="button" class="gd-img gd-img--edit" ${imgStyle} title="${esc(t('detail.changeImage'))}">${fallback}<span class="gd-img__edit">${esc(t('detail.changeImage'))}</span></button>`);
   imgEl.addEventListener('click', () => openImagePopover(imgEl));
+  coverCol.appendChild(imgEl);
 
-  // Which printing this cover is (#742) — a quiet line under it, and only when
-  // the game actually carries one. The wrapper is added ONLY in that case, so a
-  // game with no stored edition (every game before this shipped, and every
-  // pasted or uploaded cover after it) renders exactly the DOM it always did.
-  // An edition that carries only languages has nothing to say here and correctly
-  // renders nothing.
-  const editionText = editionLabel(game.edition);
-  if (editionText) {
-    const col = h('<div class="gd-cover"></div>');
-    col.append(imgEl, h(`<p class="gd-edition muted">${esc(t('detail.edition', { edition: editionText }))}</p>`));
-    head.prepend(col);
-  } else {
-    head.prepend(imgEl);
+  // The score, on the cover's top-right corner — exactly where every Regal card
+  // already puts it (#1039). It replaces the 88px ring and the „Spielwirbel-Score"
+  // caption under it: the ring spent the page's best real estate on a number the
+  // shelf states in a pill, and the caption is what the ⓘ beside it says.
+  //
+  // The pill carries an aria-label because the visible label went with the ring:
+  // a bare „3,5" over box art announces a number with no subject. It CONTAINS the
+  // visible text, so nothing here trades away WCAG 2.2 SC 2.5.3 (and the pill is
+  // static text rather than a control, where that criterion would bind).
+  //
+  // Rendered only for a scored, non-wish, non-sparse game — the same three gates
+  // the ring had (#256/#699): the round does not own a wish, so it cannot rate it,
+  // and an empty badge on an empty page is what made this screen read as broken.
+  //
+  // An unscored game gets the Regal's own „neu" variant rather than nothing: the
+  // issue's acceptance criterion names the two states that show NO pill (a wish
+  // and a sparse game), and dropping it for a third — a game with a cover but no
+  // plays yet — would leave that page with no score affordance at all, where
+  // the same game's shelf card still says „neu".
+  const shown = st.score === null ? null : displayScore(st.score);
+  if (!sparse && !game.wish) {
+    const pill = st.score !== null
+      ? `<span class="score-pill score-pill--lg" style="background:${scoreColor(st.score)}"
+               aria-label="${esc(`${t('score.name')}: ${fmtAvg(shown)}`)}">${fmtAvg(shown)}</span>`
+      : `<span class="score-pill score-pill--lg score-pill--none">${esc(t('games.scoreNew'))}</span>`;
+    const badge = h(`<div class="gd-score">${pill}${infoButton('score')}</div>`);
+    coverCol.appendChild(badge);
+    wireInfoButtons(badge);
   }
 
-  // Title + editable tags.
-  const h1 = head.querySelector('h1');
-  const space = () => document.createTextNode(' ');
+  // Which printing this cover is (#742) — a quiet line under it, and only when
+  // the game actually carries one. An edition that carries only languages has
+  // nothing to say here and correctly renders nothing.
+  const editionText = editionLabel(game.edition);
+  if (editionText) {
+    coverCol.appendChild(h(`<p class="gd-edition muted">${esc(t('detail.edition', { edition: editionText }))}</p>`));
+  }
+
+  // Title.
+  const h1 = card.querySelector('h1');
 
   // The one trigger that is NOT a button (#424): the title is inline text that
   // wraps mid-line — that is what `box-decoration-break: clone` on `.gd-title`
   // is for — and a <button> is an atomic inline-block, so a long title would
-  // take the whole line and push the chips below it instead of sitting beside
-  // its last line. `role="button"` is what tells a screen reader Enter does
-  // something; a bare focusable span announces only its text.
+  // take the whole line. `role="button"` is what tells a screen reader Enter
+  // does something; a bare focusable span announces only its text.
   const titleEl = h(`<span class="gd-title" role="button" tabindex="0" title="${esc(t('detail.editName'))}">${esc(game.title)}</span>`);
   titleEl.addEventListener('click', () => startTitleEdit(titleEl));
   titleEl.addEventListener('keydown', (e) => {
     // preventDefault on Space, or the page scrolls under the editor.
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startTitleEdit(titleEl); }
   });
-  h1.append(titleEl, space());
+  h1.append(titleEl);
 
+  // The chips move OUT of the <h1> (#1039). They were appended into the heading
+  // so they could sit beside the title's last line; the row is now its own flex
+  // line, which also takes four interactive controls out of a heading's
+  // accessible name.
+  //
   // On a sparse page the dashed "set …" chips are suppressed: the onboarding
   // panel below already offers those exact actions, and two competing
   // affordances for one action is what made the old layout feel scattered.
@@ -679,7 +752,7 @@ async function showGameDetail(rid, gameId) {
     const plEl = hasPl
       ? editableTag('tag--players', iconText('ti-users', plText), openPlayersPopover)
       : editableTag('tag--players tag--empty', esc(t('detail.setPlayers')), openPlayersPopover);
-    h1.append(plEl);
+    chips.append(plEl);
   }
 
   // Custom round tags (#238): assigned tags render as chips, each opening the
@@ -689,12 +762,10 @@ async function showGameDetail(rid, gameId) {
   if (assignedTagIds.length) {
     assignedTagIds.forEach((x) => {
       const tg = roundTags.find((q) => q.id === x);
-      const tagEl = editableTag('tag--custom', `<i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}`, openTagsPopover);
-      h1.append(space(), tagEl);
+      chips.append(editableTag('tag--custom', `<i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}`, openTagsPopover));
     });
   } else if (!sparse) {
-    const tagEl = editableTag('tag--custom tag--empty', esc(t('detail.setTags')), openTagsPopover);
-    h1.append(space(), tagEl);
+    chips.append(editableTag('tag--custom tag--empty', esc(t('detail.setTags')), openTagsPopover));
   }
 
   // Owners (#971): named when recorded, an empty chip as the way in otherwise.
@@ -703,96 +774,162 @@ async function showGameDetail(rid, gameId) {
   if (!game.wish) {
     const owners = ownerNames(round, game.ownerIds);
     if (owners.length) {
-      h1.append(space(), editableTag('tag--custom',
+      chips.append(editableTag('tag--custom',
         iconText('ti-user', t('detail.owners', { names: owners.join(', ') })), openOwnersPopover));
     } else if (!sparse) {
-      h1.append(space(), editableTag('tag--custom tag--empty',
+      chips.append(editableTag('tag--custom tag--empty',
         esc(t('detail.setOwners')), openOwnersPopover));
     }
   }
-  if (game.retired) h1.append(space(), h(`<span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`));
-  if (game.completed) h1.append(space(), h(`<span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`));
+
+  // What the round owns for this game (#653), as a chip instead of the 110px
+  // section it used to cost on every visit (#1039). The editor it opens now
+  // lists the owned expansions with their remove control, so nothing that was
+  // reachable from the section is lost.
+  //
+  // Rendered on a sparse page EVEN WHEN EMPTY, unlike the three chips above:
+  // it is one of the few things you can record about a game nobody has played,
+  // and it is the answer to "do we still have Seefahrer?". Never on a
+  // wishlist-imported EXPANSION (#698): an expansion holds no expansions of its
+  // own, and anything recorded here would be silently lost on acquire. Presence
+  // check, not truthiness — the key is absent on ordinary games and legitimately
+  // [] on an orphan expansion (.claude/rules/expansions-widen-by-union.md).
+  if (!Array.isArray(game.expansionOf)) {
+    chips.append(owned.length
+      ? editableTag('tag--custom tag--expansions',
+        `<i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(owned.length, 'detail.expansionsBadgeOne', 'detail.expansionsBadge'))}`,
+        openExpansionEditor)
+      : editableTag('tag--custom tag--empty tag--expansions', esc(t('detail.addExpansionChip')), openExpansionEditor));
+  }
+
+  // State chips — read-only, so plain spans rather than `editableTag`.
+  if (game.retired) chips.append(h(`<span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`));
+  if (game.completed) chips.append(h(`<span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`));
   // The third chip (#663). Its key is `wish.tag`, not a fourth `result.*` one:
   // the two above are shared with the session results rows, and a wish can never
   // appear on one — the round does not own the game, so it was never played.
-  if (game.wish) h1.append(space(), h(`<span class="tag tag--wish">${iconText('ti-heart', t('wish.tag'))}</span>`));
+  if (game.wish) chips.append(h(`<span class="tag tag--wish">${iconText('ti-heart', t('wish.tag'))}</span>`));
 
-  app.appendChild(head);
+  // The glance facts (#717/#724), promoted out of the „Über das Spiel" section
+  // and onto the card as pills (#1039): weight, playing time, minimum age are
+  // what a group asks before playing, while CATAN's 15 mechanics made that
+  // section 517px tall on a phone. Both anchors are re-rendered together by
+  // `renderInfo` below, because the provider backfill can fill either.
+  const factsAnchor = h('<div></div>');
+  info.appendChild(factsAnchor);
 
-  // Off-shelf actions right from here. A game is Active, Retired, Completed
-  // (#250) or Wished-for (#560), and the repo enforces that those four are
-  // mutually exclusive — so the branches are too: a game that is off the shelf
-  // offers only the way onto it, an active one both ways out.
-  const actionWrap = h('<div class="toolbar" style="margin-top:18px"></div>');
-  // Move the game onto the shelf, out of whichever state it is in. `opts` exists
-  // for the wish list alone (see its branch below); the two archives take the
-  // defaults.
-  const restoreFrom = (kind, endpoint, body, opts = {}) => {
-    const icon = opts.icon || 'ti-arrow-back-up';
-    const label = opts.label || t('detail.restore');
-    const restore = h(`<button class="btn"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
-    restore.addEventListener('click', async () => {
-      try {
-        await api('POST', `/api/rounds/${rid}/games/${gameId}/${endpoint}`, body);
-        toast(t(`${kind}.restored`, { title: game.title }));
-        showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message); }
-    });
-    actionWrap.appendChild(restore);
-  };
-  if (game.retired) {
-    restoreFrom('retired', 'retire', { retired: false });
-  } else if (game.completed) {
-    restoreFrom('completed', 'complete', { completed: false });
-  } else if (game.wish) {
-    // „Ins Regal" with the Regal's own icon, never „Wiederherstellen": the game
-    // is arriving on the shelf for the first time, so "restore" would claim it
-    // is going back somewhere it has never been. Same reasoning — and the same
-    // two values — as ARCHIVES.wish.restoreIcon in views-archive.js.
-    //
-    // This branch is what keeps the active `else` below off a wished-for game.
-    // Without it a wish was offered „Direkt spielen", which the server refuses
-    // with a 400 `Game is on the wishlist` (the shared isActiveGame predicate,
-    // active-games-filter-sites.md) — so the user got a seat picker, a start
-    // button and an English server error.
-    restoreFrom('wish', 'wish', { wish: false }, { icon: 'ti-cards', label: t('wish.restore') });
+  // „Mehr zum Spiel" — the reference half, collapsed by default: the category
+  // and mechanic lists, the community rating (detail only, #724), the BGG credit,
+  // and the provider link. A native <details>, so the platform owns the
+  // disclosure state, the keyboard and the accessible name.
+  const moreBody = h('<div class="gd-more__body"></div>');
+  const more = h(`<details class="gd-more"><summary>${esc(t('detail.more'))}<i class="ti ti-chevron-down" aria-hidden="true"></i></summary></details>`);
+  more.appendChild(moreBody);
+
+  // The provider link, which is the one thing in the disclosure every game has
+  // something to say about. „Verknüpfung lösen" is NOT here — it moved to the
+  // page menu with the other two rare state changes.
+  if (game.source) {
+    // A link built before the provider exposed a URL has none — it stays
+    // unlinkable rather than rendering nothing at all.
+    if (game.source.url) {
+      // Short label, and deliberately NO aria-label over it (#817): a spelled-out
+      // name above a visible „Auf BGG ansehen" would fail WCAG 2.2 SC 2.5.3,
+      // which requires the accessible name to contain the visible text.
+      moreBody.appendChild(h(`<a class="link-out" href="${esc(game.source.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('detail.viewSource', { provider: providerLabelShort(game.source.provider) }))}</a>`));
+    }
   } else {
-    // Direct launch: skip the vote and play this game right away.
-    const play = h(`<button class="btn btn--primary"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>`);
-    play.addEventListener('click', () => startDirectSession(round, game));
-    actionWrap.appendChild(play);
-    const retire = h(`<button class="btn" style="color:var(--warn)"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('detail.retire'))}</button>`);
-    retire.addEventListener('click', async () => {
-      if (!await confirmDialog({
-        body: t('detail.retireConfirm', { title: game.title }),
-        confirmLabel: t('detail.retire'), icon: 'ti-trash',
-      })) return;
-      try {
-        await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: true });
-        toast(t('games.retired', { title: game.title }));
-        showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message); }
-    });
-    actionWrap.appendChild(retire);
-    const complete = h(`<button class="btn" style="color:var(--good)"><i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('detail.complete'))}</button>`);
-    complete.addEventListener('click', async () => {
-      if (!await confirmDialog({
-        body: t('detail.completeConfirm', { title: game.title }),
-        confirmLabel: t('detail.complete'), icon: 'ti-circle-check', danger: false,
-      })) return;
-      try {
-        await api('POST', `/api/rounds/${rid}/games/${gameId}/complete`, { completed: true });
-        toast(t('games.completed', { title: game.title }));
-        showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message); }
-    });
-    actionWrap.appendChild(complete);
+    const link = h(`<button class="link-out link-out--btn"><i class="ti ti-link" aria-hidden="true"></i> ${esc(t('detail.linkProvider'))}</button>`);
+    link.addEventListener('click', () => showLinkProvider(round, game));
+    moreBody.appendChild(link);
   }
-  app.appendChild(actionWrap);
+
+  // The provider metadata's two anchors, filled now and again after the
+  // detail-open backfill answers: a BGG-linked game missing a field asks the
+  // server, which fills the store best-effort and answers whatever it holds (the
+  // TTL gate is server-side, so a game BGG has no data for costs one cheap local
+  // request per open, never an upstream one).
+  {
+    // The reference rows sit ABOVE the provider link inside the disclosure, so
+    // the re-render must not append past it — hence a held anchor rather than
+    // `moreBody.appendChild`.
+    const restAnchor = h('<div></div>');
+    moreBody.prepend(restAnchor);
+    let restNode = restAnchor;
+    let factsNode = factsAnchor;
+    const swap = (holder, next) => {
+      if (!next) return holder;
+      holder.replaceWith(next);
+      return next;
+    };
+    // The disclosure is attached only once it has something in it. A game linked
+    // to a provider that exposes no URL and carrying no metadata would otherwise
+    // show an empty „Mehr zum Spiel" that opens onto nothing — and the check has
+    // to run again after the backfill answers, because for a freshly imported
+    // game the metadata IS what fills it. Idempotent: `isConnected` is what keeps
+    // a second answer from re-appending it below the facts.
+    //
+    // `.gd-more__body` always holds the rest-anchor placeholder, so counting its
+    // children would be vacuously true; the query asks for real content instead.
+    const ensureMore = () => {
+      if (more.isConnected) return;
+      if (moreBody.querySelector('.link-out, .game-info__body')) info.appendChild(more);
+    };
+    const renderInfo = () => {
+      factsNode = swap(factsNode, gameGlanceFacts(game));
+      restNode = swap(restNode, gameInfoRest(game));
+      ensureMore();
+    };
+    renderInfo();
+    if (wantsGameInfo(game)) {
+      api('GET', `/api/rounds/${rid}/games/${gameId}/provider-info`)
+        .then((info) => {
+          mergeGameInfo(game, info);
+          renderInfo();
+        })
+        .catch(() => {}); // best-effort enrichment; the page stands without it
+    }
+  }
+
+
+  leftPage.appendChild(card);
+
+  // Sparse game (#256): one inviting panel that says why the page is bare and
+  // offers the steps that fill it, instead of scattering half-empty widgets.
+  // The actions reuse the very same popovers the chips/cover would have opened,
+  // so this is a different presentation of existing affordances, not new API.
+  if (sparse) {
+    const onboard = h(`<div class="gd-onboard">
+         <div class="gd-onboard__head">
+           <i class="ti ti-sparkles gd-onboard__icon" aria-hidden="true"></i>
+           <div>
+             <h2>${esc(t('detail.onboard.title'))}</h2>
+             <p class="muted">${esc(t(game.wish ? 'detail.onboard.wishText' : 'detail.onboard.text'))}</p>
+           </div>
+         </div>
+         <div class="gd-onboard__acts"></div>
+       </div>`);
+    const acts = onboard.querySelector('.gd-onboard__acts');
+    [
+      // The cover popover anchors on the hero itself (that's what it edits);
+      // the other two anchor on their own button, which is where the eye is.
+      // Cover and tags are always missing here (that's part of `sparse`), but
+      // players can already be set — don't offer to fill in what's filled in.
+      ['ti-photo', t('detail.onboard.cover'), () => openImagePopover(imgEl)],
+      ['ti-tags', t('detail.onboard.tags'), (b) => openTagsPopover(b)],
+      ...(hasPl ? [] : [['ti-users', t('detail.onboard.players'), (b) => openPlayersPopover(b)]]),
+    ].forEach(([icon, label, onClick]) => {
+      const b = h(`<button class="btn gd-onboard__act"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
+      b.addEventListener('click', () => onClick(b));
+      acts.appendChild(b);
+    });
+    leftPage.appendChild(onboard);
+  }
+
+  // --- Right page: what it cost, how it went, and the one action -----------
 
   // What it costs right now (#679) — the one question that turns a wish into a
-  // purchase, so it sits directly under "Ins Regal" rather than at the foot of
-  // the page.
+  // purchase, so it leads the right page rather than sitting at the foot of it.
   //
   // Only a wish, and only one carrying a provider link: the round already owns
   // everything on the shelf, and a hand-typed wish has no id to ask about (a
@@ -807,7 +944,7 @@ async function showGameDetail(rid, gameId) {
   // same place: the anchor is dropped and the page is exactly what it was.
   if (game.wish && game.source && game.source.externalId) {
     const priceAnchor = h('<div></div>');
-    app.appendChild(priceAnchor);
+    rightPage.appendChild(priceAnchor);
     // Stale-while-revalidate (#707): two requests race. `stored=1` answers from
     // the last-known-price store instantly; the full request may block on the
     // upstream for seconds (every in-memory cache miss — hourly, and after each
@@ -846,161 +983,12 @@ async function showGameDetail(rid, gameId) {
       });
   }
 
-  // The provider metadata (#717/#724), between the actions and the provider
-  // block. Nothing renders when the game carries none of it. The
-  // anchor also carries the detail-open backfill trigger: a BGG-linked game
-  // missing a field asks the server, which fills the store best-effort and
-  // answers whatever it holds (the TTL gate is server-side, so a game BGG has
-  // no data for costs one cheap local request per open, never an upstream one).
-  {
-    const infoAnchor = h('<div></div>');
-    app.appendChild(infoAnchor);
-    let infoNode = infoAnchor;
-    const renderInfo = () => {
-      // { rating: true } on BOTH calls — this is the one surface that renders
-      // the community score (#724), so the gate has to count it or a game whose
-      // only provider fact is a rating would hide a section that has content.
-      if (!hasGameInfo(game, { rating: true })) return;
-      const sec = renderGameInfoSection(game);
-      infoNode.replaceWith(sec);
-      infoNode = sec;
-    };
-    renderInfo();
-    if (wantsGameInfo(game)) {
-      api('GET', `/api/rounds/${rid}/games/${gameId}/provider-info`)
-        .then((info) => {
-          mergeGameInfo(game, info);
-          renderInfo();
-        })
-        .catch(() => {}); // best-effort enrichment; the page stands without it
-    }
-  }
-
-  // Sparse game (#256): one inviting panel that says why the page is bare and
-  // offers the steps that fill it, instead of scattering half-empty widgets.
-  // The actions reuse the very same popovers the chips/cover would have opened,
-  // so this is a different presentation of existing affordances, not new API.
-  if (sparse) {
-    const onboard = h(`<div class="gd-onboard">
-         <div class="gd-onboard__head">
-           <i class="ti ti-sparkles gd-onboard__icon" aria-hidden="true"></i>
-           <div>
-             <h2>${esc(t('detail.onboard.title'))}</h2>
-             <p class="muted">${esc(t(game.wish ? 'detail.onboard.wishText' : 'detail.onboard.text'))}</p>
-           </div>
-         </div>
-         <div class="gd-onboard__acts"></div>
-       </div>`);
-    const acts = onboard.querySelector('.gd-onboard__acts');
-    [
-      // The cover popover anchors on the hero itself (that's what it edits);
-      // the other two anchor on their own button, which is where the eye is.
-      // Cover and tags are always missing here (that's part of `sparse`), but
-      // players can already be set — don't offer to fill in what's filled in.
-      ['ti-photo', t('detail.onboard.cover'), () => openImagePopover(imgEl)],
-      ['ti-tags', t('detail.onboard.tags'), (b) => openTagsPopover(b)],
-      ...(hasPl ? [] : [['ti-users', t('detail.onboard.players'), (b) => openPlayersPopover(b)]]),
-    ].forEach(([icon, label, onClick]) => {
-      const b = h(`<button class="btn gd-onboard__act"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
-      b.addEventListener('click', () => onClick(b));
-      acts.appendChild(b);
-    });
-    app.appendChild(onboard);
-  }
-
-  // Link back to the provider page when the game was added from an external
-  // source. A game with no source instead offers to link one after the fact
-  // (issue #74). Provider names are proper nouns, not translated.
-  if (game.source) {
-    const provider = providerLabel(game.source.provider);
-    const src = h('<div class="section gd-source"></div>');
-    // A link built before the provider exposed a URL has none — it stays
-    // unlinkable rather than rendering nothing at all.
-    if (game.source.url) {
-      // Short label, and deliberately NO aria-label over it (#817): a spelled-out
-      // name above a visible „Auf BGG ansehen" would fail WCAG 2.2 SC 2.5.3,
-      // which requires the accessible name to contain the visible text.
-      src.appendChild(h(`<a class="link-out" href="${esc(game.source.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('detail.viewSource', { provider: providerLabelShort(game.source.provider) }))}</a>`));
-    }
-    const un = h(`<button class="link-out link-out--btn link-out--muted"><i class="ti ti-unlink" aria-hidden="true"></i> ${esc(t('detail.unlinkProvider'))}</button>`);
-    un.addEventListener('click', async () => {
-      // Only a hotlinked provider cover is dropped with the link; the member's
-      // own upload is kept, so the two wordings must not be swapped.
-      const ownUpload = typeof game.image === 'string' && game.image.startsWith('/uploads/');
-      const key = game.image && !ownUpload ? 'detail.unlinkConfirmCover' : 'detail.unlinkConfirm';
-      if (!await confirmDialog({
-        body: t(key, { provider }),
-        confirmLabel: t('detail.unlinkProvider'), icon: 'ti-unlink',
-      })) return;
-      try {
-        await api('PATCH', `/api/rounds/${rid}/games/${gameId}`, { removeSource: true });
-        toast(t('detail.toast.unlinked'));
-        showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message); }
-    });
-    src.appendChild(un);
-    app.appendChild(src);
-  } else {
-    const link = h(`<div class="section"><button class="link-out link-out--btn"><i class="ti ti-link" aria-hidden="true"></i> ${esc(t('detail.linkProvider'))}</button></div>`);
-    link.querySelector('button').addEventListener('click', () => showLinkProvider(round, game));
-    app.appendChild(link);
-  }
-
-  // What the round owns for this game (#653). Rendered on a sparse page too:
-  // it is one of the few things you CAN record about a game nobody has played,
-  // and it is the answer to "do we still have Seefahrer?". Never on a
-  // wishlist-imported EXPANSION (#698): an expansion holds no expansions of its
-  // own, and anything recorded here would be silently lost on acquire — the
-  // wish row (and this list with it) is deleted in the same transaction that
-  // carries only title/link/range onto the base game. Presence check, not
-  // truthiness: the key is absent on ordinary games and legitimately [] on an
-  // orphan expansion (.claude/rules/expansions-widen-by-union.md).
-  if (!Array.isArray(game.expansionOf)) {
-    const expSec = h(`<div class="section gd-expansions"><h2>${esc(t('detail.expansionsTitle'))}</h2></div>`);
-    if (!owned.length) {
-      expSec.appendChild(h(`<div class="muted">${esc(t('detail.expansionsEmpty'))}</div>`));
-    } else {
-      const list = h('<div class="ds-list"></div>');
-      owned.forEach((e) => {
-        const range = Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
-          ? playersText(e.minPlayers, e.maxPlayers)
-          : t('detail.expansionNoRange');
-        // A plain <div> row, so it must carry `ds-row--static` — `.ds-row`
-        // declares cursor:pointer and a hover lift, i.e. it promises a click
-        // target (.claude/rules/ds-row-is-a-click-target.md). The remove button
-        // inside it is the only thing here that is clickable.
-        const row = h(`<div class="ds-row ds-row--static">
-             <div class="ds-row__main">
-               <div class="ds-row__title">${esc(e.title)}</div>
-               <div class="muted">${esc(range)}</div>
-             </div>
-             <div class="ds-row__meta">
-               <button class="link-btn exp-row__remove">${iconText('ti-trash', t('detail.expansionRemove'))}</button>
-             </div>
-           </div>`);
-        row.querySelector('.exp-row__remove').addEventListener('click', async () => {
-          if (!await confirmDialog({
-            body: t('detail.expansionRemoveConfirm', { title: e.title }),
-            confirmLabel: t('detail.expansionRemove'), icon: 'ti-trash',
-          })) return;
-          saveExpansions(owned.filter((x) => x.id !== e.id).map((x) => ({ id: x.id })));
-        });
-        list.appendChild(row);
-      });
-      expSec.appendChild(list);
-    }
-    const addExp = h(`<button class="link-out link-out--btn"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('detail.expansionAdd'))}</button>`);
-    addExp.addEventListener('click', () => openExpansionEditor(addExp));
-    expSec.appendChild(addExp);
-    app.appendChild(expSec);
-  }
-
   // Related sessions (`related` is computed near the top — `sparse` needs it).
   // On a sparse page the section is omitted entirely: the onboarding panel
   // already explains that ratings and sessions appear once the game is played,
   // so a heading over one line of muted text only adds to the emptiness.
-  // A wish omits it too (#699), same reasoning as the score ring above.
-  const sec = h(`<div class="section"><h2>${esc(t('detail.relatedTitle'))}</h2></div>`);
+  // A wish omits it too (#699), same reasoning as the score badge above.
+  const sec = h(`<div class="section gd-history"><h2>${esc(t('detail.relatedTitle'))}</h2></div>`);
   if (related.length === 0) {
     sec.appendChild(h(`<div class="muted">${esc(t('detail.relatedEmpty'))}</div>`));
   } else {
@@ -1046,5 +1034,129 @@ async function showGameDetail(rid, gameId) {
     });
     sec.appendChild(list);
   }
-  if (!sparse && !game.wish) app.appendChild(sec);
+  if (!sparse && !game.wish) rightPage.appendChild(sec);
+
+  // The one action, alone in a bar at the foot of the right page (#1039). It
+  // used to be the first of three equally-weighted full-width buttons — 167px of
+  // phone viewport for „Jetzt spielen", „Aussortieren" and „Durchgespielt", of
+  // which one is what anybody came for.
+  //
+  // A game is Active, Retired, Completed (#250) or Wished-for (#560), and the
+  // repo enforces that those four are mutually exclusive — so the branches are
+  // too: a game that is off the shelf offers only the way onto it.
+  const bar = h('<div class="gd-bar"></div>');
+  // Move the game onto the shelf, out of whichever state it is in. `opts` exists
+  // for the wish list alone (see its branch below); the two archives take the
+  // defaults.
+  const restoreFrom = (kind, endpoint, body, opts = {}) => {
+    const icon = opts.icon || 'ti-arrow-back-up';
+    const label = opts.label || t('detail.restore');
+    const restore = h(`<button class="btn btn--lg"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
+    restore.addEventListener('click', async () => {
+      try {
+        await api('POST', `/api/rounds/${rid}/games/${gameId}/${endpoint}`, body);
+        toast(t(`${kind}.restored`, { title: game.title }));
+        showGameDetail(rid, gameId);
+      } catch (e) { toast(e.message); }
+    });
+    bar.appendChild(restore);
+  };
+  if (game.retired) {
+    restoreFrom('retired', 'retire', { retired: false });
+  } else if (game.completed) {
+    restoreFrom('completed', 'complete', { completed: false });
+  } else if (game.wish) {
+    // „Ins Regal" with the Regal's own icon, never „Wiederherstellen": the game
+    // is arriving on the shelf for the first time, so "restore" would claim it
+    // is going back somewhere it has never been. Same reasoning — and the same
+    // two values — as ARCHIVES.wish.restoreIcon in views-archive.js.
+    //
+    // This branch is what keeps the active `else` below off a wished-for game.
+    // Without it a wish was offered „Direkt spielen", which the server refuses
+    // with a 400 `Game is on the wishlist` (the shared isActiveGame predicate,
+    // active-games-filter-sites.md) — so the user got a seat picker, a start
+    // button and an English server error.
+    restoreFrom('wish', 'wish', { wish: false }, { icon: 'ti-cards', label: t('wish.restore') });
+  } else {
+    // Direct launch: skip the vote and play this game right away.
+    const play = h(`<button class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>`);
+    play.addEventListener('click', () => startDirectSession(round, game));
+    bar.appendChild(play);
+  }
+  rightPage.appendChild(bar);
+
+  app.appendChild(pass);
+
+  // =================== The page menu (#1039) ===================
+  //
+  // The three rare things this screen can do, out of the action row and into a
+  // „…" at the top right of the back row: two state flips that are the opposite
+  // of playing, and one that undoes an import. They do not belong beside the
+  // play button (operator decision), and each keeps its existing confirm sheet
+  // verbatim.
+  const menuItems = [];
+  if (!game.retired && !game.completed && !game.wish) {
+    menuItems.push(['ti-trash', t('detail.retire'), 'popover__opt--warn', async () => {
+      if (!await confirmDialog({
+        body: t('detail.retireConfirm', { title: game.title }),
+        confirmLabel: t('detail.retire'), icon: 'ti-trash',
+      })) return;
+      try {
+        await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: true });
+        toast(t('games.retired', { title: game.title }));
+        showGameDetail(rid, gameId);
+      } catch (e) { toast(e.message); }
+    }]);
+    menuItems.push(['ti-circle-check', t('detail.complete'), 'popover__opt--good', async () => {
+      if (!await confirmDialog({
+        body: t('detail.completeConfirm', { title: game.title }),
+        confirmLabel: t('detail.complete'), icon: 'ti-circle-check', danger: false,
+      })) return;
+      try {
+        await api('POST', `/api/rounds/${rid}/games/${gameId}/complete`, { completed: true });
+        toast(t('games.completed', { title: game.title }));
+        showGameDetail(rid, gameId);
+      } catch (e) { toast(e.message); }
+    }]);
+  }
+  if (game.source) {
+    const provider = providerLabel(game.source.provider);
+    menuItems.push(['ti-unlink', t('detail.unlinkProvider'), 'popover__opt--muted', async () => {
+      // Only a hotlinked provider cover is dropped with the link; the member's
+      // own upload is kept, so the two wordings must not be swapped.
+      const ownUpload = typeof game.image === 'string' && game.image.startsWith('/uploads/');
+      const key = game.image && !ownUpload ? 'detail.unlinkConfirmCover' : 'detail.unlinkConfirm';
+      if (!await confirmDialog({
+        body: t(key, { provider }),
+        confirmLabel: t('detail.unlinkProvider'), icon: 'ti-unlink',
+      })) return;
+      try {
+        await api('PATCH', `/api/rounds/${rid}/games/${gameId}`, { removeSource: true });
+        toast(t('detail.toast.unlinked'));
+        showGameDetail(rid, gameId);
+      } catch (e) { toast(e.message); }
+    }]);
+  }
+  if (menuItems.length) {
+    back.classList.add('back-row--split');
+    const menuBtn = h(`<button type="button" class="btn btn--sm gd-menu" aria-label="${esc(t('detail.moreActions'))}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);
+    // Buttons only, so this is a popover at EVERY width — the account menu's
+    // case, not the editors' (.claude/rules/popover-vs-sheet-editors.md §2b).
+    // `aria-expanded` is synced through openPopover's onClose rather than by
+    // wrapping `close`: the wrapped form misses four of the six exits (Escape,
+    // a backdrop tap, Back, the page scroll that tears a popover down) and
+    // leaves the trigger claiming a panel that is gone.
+    menuBtn.addEventListener('click', () => {
+      openPopover(menuBtn, (el, close) => {
+        el.classList.add('popover--menu');
+        menuItems.forEach(([icon, label, cls, run]) => {
+          const b = h(`<button class="popover__opt ${cls}"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
+          b.addEventListener('click', () => { close(); run(); });
+          el.appendChild(b);
+        });
+      }, () => menuBtn.setAttribute('aria-expanded', 'false'));
+      menuBtn.setAttribute('aria-expanded', 'true');
+    });
+    back.appendChild(menuBtn);
+  }
 }
