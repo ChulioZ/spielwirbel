@@ -175,97 +175,74 @@ test('an empty filter set admits everything, including a fully described game', 
   assert.equal(fitsMetadataFilters(game, undefined), true);
 });
 
-test('the playtime budget tests the LOWER bound, not an average or the maximum', () => {
-  // Toriki's real 20–600 spread is the case that decides this: filtering on the
-  // maximum (or on a synthesised mean of 310) would drop it from every realistic
-  // evening, though it genuinely plays in twenty minutes.
-  const wide = { minPlaytime: 20, maxPlaytime: 600 };
-  assert.equal(fitsMetadataFilters(wide, { maxPlaytime: 30 }), true);
-  assert.equal(fitsMetadataFilters({ minPlaytime: 45 }, { maxPlaytime: 30 }), false);
-  assert.equal(fitsMetadataFilters({ minPlaytime: 30 }, { maxPlaytime: 30 }), true, 'inclusive');
-});
-
-test('the minimum-playtime filter is the MIRROR of it, reading the UPPER bound', () => {
-  // Toriki's 20-600 from the other side. The clause has to read the game's
-  // MAXIMUM: reading `minPlaytime` would drop a 20-600 game from "we have three
-  // hours", which is precisely the game the filter exists to keep. Getting the
-  // bound backwards looks correct in casual use, which is why both directions
-  // are asserted here rather than one.
-  const wide = { minPlaytime: 20, maxPlaytime: 600 };
-  assert.equal(fitsMetadataFilters(wide, { minPlaytime: 120 }), true, 'a 20-600 game has three hours in it');
-  assert.equal(fitsMetadataFilters(wide, { maxPlaytime: 30 }), true, 'and twenty minutes, as before');
-  assert.equal(fitsMetadataFilters({ maxPlaytime: 45 }, { minPlaytime: 120 }), false);
-  assert.equal(fitsMetadataFilters({ maxPlaytime: 120 }, { minPlaytime: 120 }), true, 'inclusive');
-  // The absent-value rule holds per FIELD, not per control: a game BGG gave no
-  // upper bound for must not be hidden by a minimum.
-  assert.equal(fitsMetadataFilters({ minPlaytime: 20 }, { minPlaytime: 120 }), true, 'no maxPlaytime on the game');
-  assert.equal(fitsMetadataFilters({}, { minPlaytime: 120 }), true);
-});
-
-test('a game whose range only TOUCHES the budget does not fit it', () => {
-  // Reported from La BSK hours after #1001 shipped: "entre 60 y 120 min" offered
-  // Battlestar Galactica, which plays 120-180. Its range meets the ceiling at
-  // exactly one point, and a single-point overlap was counting as a fit - so the
-  // pool held a game that can only make the evening by running at its absolute
-  // floor and usually runs half as long again.
-  //
-  // NOT a #1001 regression: `{ maxPlaytime: 120 }` ALONE admitted it just the
-  // same, since #724. What #1001 changed is that offering both bounds invites
-  // reading the pair as one window, which is what made the old behaviour visible.
-  const bsg = { minPlaytime: 120, maxPlaytime: 180 };
-  assert.equal(fitsMetadataFilters(bsg, { minPlaytime: 60, maxPlaytime: 120 }), false, 'his exact case');
-  assert.equal(fitsMetadataFilters(bsg, { maxPlaytime: 120 }), false, 'the max clause alone, as before #1001');
-
-  // THE ASSERTION THAT MATTERS. `>` -> `>=` is the one-character fix and it is
-  // wrong: a game that takes exactly two hours belongs in "at most two hours".
-  // Only a game that can EXCEED the ceiling is excluded by touching it.
+test('"at most M" means the game FINISHES inside M — its maxPlaytime, not its minimum', () => {
+  // CONTAINMENT (#1025), reversing the overlap doctrine of #724/#1001/#1023. If
+  // you say you have two hours you want to be sure you finish, not a game that
+  // *might* come in under the wire at its absolute floor.
+  assert.equal(fitsMetadataFilters({ minPlaytime: 120, maxPlaytime: 180 }, { maxPlaytime: 120 }), false,
+    'a 120-180 game is out of "at most 120"');
+  assert.equal(fitsMetadataFilters({ minPlaytime: 60, maxPlaytime: 120 }, { maxPlaytime: 120 }), true,
+    'a 60-120 game fits it');
   assert.equal(fitsMetadataFilters({ minPlaytime: 120, maxPlaytime: 120 }, { maxPlaytime: 120 }), true,
-    'a game pinned at the ceiling fits it');
+    'a game pinned at the ceiling fits it — the bound is inclusive');
 
-  // #724's doctrine survives: a 20-600 spread still has twenty minutes in it.
-  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 600 }, { maxPlaytime: 120 }), true);
-
-  // The MIRROR, fixed in the same change - shipping one half earns the same
-  // report from the other side. A game that reaches 60 only at its longest is
-  // not a game for "at least an hour".
-  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 60 }, { minPlaytime: 60 }), false);
-  assert.equal(fitsMetadataFilters({ minPlaytime: 60, maxPlaytime: 60 }, { minPlaytime: 60 }), true,
-    'a game pinned at the floor fits it');
-  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 600 }, { minPlaytime: 120 }), true);
-
-  // An absent bound is still never a reason to hide a game: nothing can show
-  // that a game BGG gave one number for exceeds anything.
-  assert.equal(fitsMetadataFilters({ minPlaytime: 120 }, { maxPlaytime: 120 }), true, 'no upper bound known');
-  assert.equal(fitsMetadataFilters({ maxPlaytime: 60 }, { minPlaytime: 60 }), true, 'no lower bound known');
+  // THE DELIBERATE LOSS, asserted so it reads as a decision rather than as a
+  // regression. Toriki is 20-600 and #724 was decided on it: under overlap it
+  // fitted every budget, under containment it fits none below 600. The class
+  // that genuinely loses is campaign/legacy/epic games, where the top of the
+  // range is a different activity — and those are games a group PLANS rather
+  // than draws (#1025).
+  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 600 }, { maxPlaytime: 120 }), false,
+    'a 20-600 campaign is out of every budget below 600 — accepted');
+  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 600 }, { maxPlaytime: 600 }), true);
 });
 
-test('the two playtime bounds are independent clauses, NOT an interval', () => {
-  // They test different bounds of the game's own range, so a pair that reads as
-  // inverted is satisfiable rather than empty: "spans from under 30 to over 120"
-  // is exactly Toriki. That is why the normalizer does not swap them and the
-  // control does not carry one along - both of which complexity does, because a
-  // weight is one number and an inverted weight range really does admit nothing.
-  const wide = { minPlaytime: 20, maxPlaytime: 600 };
-  assert.equal(fitsMetadataFilters(wide, { minPlaytime: 120, maxPlaytime: 30 }), true);
-  assert.equal(
-    fitsMetadataFilters({ minPlaytime: 45, maxPlaytime: 60 }, { minPlaytime: 120, maxPlaytime: 30 }), false);
+test('"at least N" is the mirror — the game\'s minPlaytime must reach N', () => {
+  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 60 }, { minPlaytime: 60 }), false,
+    'a 20-60 game is out of "at least 60"');
+  assert.equal(fitsMetadataFilters({ minPlaytime: 60, maxPlaytime: 120 }, { minPlaytime: 60 }), true);
+  assert.equal(fitsMetadataFilters({ minPlaytime: 60, maxPlaytime: 60 }, { minPlaytime: 60 }), true,
+    'a game pinned at the floor fits it — inclusive');
+  assert.equal(fitsMetadataFilters({ minPlaytime: 20, maxPlaytime: 600 }, { minPlaytime: 120 }), false,
+    'the mirror of the deliberate loss');
+});
+
+test('an ABSENT bound on the game still never excludes it — per field', () => {
+  // The rule that survives #1025 unchanged, and it is now stated per field in
+  // the new direction: "at most M" reads the game's maxPlaytime, so a game BGG
+  // gave only a minimum for passes it, and vice versa.
+  assert.equal(fitsMetadataFilters({ minPlaytime: 120 }, { maxPlaytime: 30 }), true, 'no upper bound known');
+  assert.equal(fitsMetadataFilters({ maxPlaytime: 30 }, { minPlaytime: 120 }), true, 'no lower bound known');
+  assert.equal(fitsMetadataFilters({}, { minPlaytime: 120, maxPlaytime: 30 }), true, 'nothing known at all');
+});
+
+test('an inverted playtime pair is SWAPPED, exactly like complexity', () => {
+  // Under overlap this pair was a real query ("spans from under 30 to over
+  // 120" — Toriki) and the normalizer pointedly did not swap it. Containment
+  // makes it genuinely empty: no game both finishes inside 30 and runs at
+  // least 120. So it swaps, in the SHARED normalizer, so the preview and the
+  // draw cannot disagree about what a hand-crafted one means.
   const out = normalizeMetadataFilters({ minPlaytime: 120, maxPlaytime: 30 }, ALL_OPTIONS);
-  assert.equal(out.minPlaytime, 120, 'a playtime pair is never swapped');
-  assert.equal(out.maxPlaytime, 30);
+  assert.equal(out.minPlaytime, 30);
+  assert.equal(out.maxPlaytime, 120);
+  assert.equal(fitsMetadataFilters({ minPlaytime: 45, maxPlaytime: 60 }, out), true,
+    'and the swapped pair is a query a game can satisfy');
 });
 
 test('the two playtime controls are gated SEPARATELY, each on the field it reads', () => {
-  // A shelf whose games carry only a lower bound can offer "at most" (which
-  // reads minPlaytime) and must NOT offer "at least" (which reads maxPlaytime):
-  // every game would pass the latter, so it would be a control that can never
-  // do anything - the inverse of the empty pool section 3 of
+  // Each control is gated on the field ITS OWN clause reads, and #1025
+  // UN-CROSSED that: "at least N" reads the game's minPlaytime, "at most M" its
+  // maxPlaytime. A shelf whose games carry only a lower bound can therefore
+  // offer "at least" and must NOT offer "at most" - every game would pass the
+  // latter, i.e. a control that can never do anything, the inverse of the empty
+  // pool section 3 of
   // .claude/rules/provider-metadata-is-a-filter-not-a-tag.md rules out.
   const lowerOnly = metadataFilterOptions([{ minPlaytime: 30 }]);
-  assert.equal(lowerOnly.playtimeMax, true);
-  assert.equal(lowerOnly.playtimeMin, false);
+  assert.equal(lowerOnly.playtimeMin, true);
+  assert.equal(lowerOnly.playtimeMax, false);
   const upperOnly = metadataFilterOptions([{ maxPlaytime: 90 }]);
-  assert.equal(upperOnly.playtimeMax, false);
-  assert.equal(upperOnly.playtimeMin, true);
+  assert.equal(upperOnly.playtimeMin, false);
+  assert.equal(upperOnly.playtimeMax, true);
   // Either half alone is enough to render the panel at all.
   assert.equal(hasMetadataFilterOptions(upperOnly), true);
   assert.equal(hasMetadataFilterOptions(lowerOnly), true);
@@ -273,7 +250,7 @@ test('the two playtime controls are gated SEPARATELY, each on the field it reads
   // referent, so no chip can survive over a control that is not on screen.
   assert.deepEqual(
     normalizeMetadataFilters({ minPlaytime: 60, maxPlaytime: 60 }, lowerOnly),
-    { ...NO_FILTERS, maxPlaytime: 60 });
+    { ...NO_FILTERS, minPlaytime: 60 });
 });
 
 test('the complexity bounds are inclusive and each acts on its own', () => {
@@ -311,8 +288,8 @@ test('metadataFilterOptions offers only what the SHELF carries, deduped and sort
     { title: 'no metadata at all' },
   ];
   const o = metadataFilterOptions(games);
-  assert.equal(o.playtimeMax, true, 'a game carries a lower bound');
-  assert.equal(o.playtimeMin, false, 'none carries an upper one');
+  assert.equal(o.playtimeMin, true, 'a game carries a lower bound');
+  assert.equal(o.playtimeMax, false, 'none carries an upper one');
   assert.equal(o.age, true);
   assert.equal(o.weight, false, 'no game carries a weight, so complexity is not offered');
   assert.deepEqual(o.categories, ['Economic', 'Party Game'], 'BGG\'s ~84 are not on offer');
@@ -447,7 +424,11 @@ test('countMetadataFilters counts CONTROLS — the complexity range is one', () 
 test('drawPool applies the metadata filters, and is untouched without them', () => {
   const shelf = {
     games: [
-      { id: 'a', title: 'Kurz', minPlaytime: 20, maxPlaytime: 45 },
+      // 20-30 rather than 20-45 since #1025: under CONTAINMENT "at most 30"
+      // reads the game's own maximum, so a 20-45 game is out of it and the
+      // fixture would have stopped discriminating (a filter that drops
+      // everything but 'Unbekannt' proves nothing about which bound is read).
+      { id: 'a', title: 'Kurz', minPlaytime: 20, maxPlaytime: 30 },
       { id: 'b', title: 'Lang', minPlaytime: 120, maxPlaytime: 240 },
       { id: 'c', title: 'Unbekannt' },
     ],
