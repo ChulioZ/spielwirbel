@@ -2063,20 +2063,50 @@ module.exports = function repoContract(repo) {
     const dup = await repo.addTag(T, round.id, 'plain', 'rocket');
     assert.deepEqual(dup, plain);
 
-    // setTagIcon sets…
-    const set = await repo.setTagIcon(T, round.id, plain.id, 'brain');
+    // updateTag sets the icon…
+    const set = await repo.updateTag(T, round.id, plain.id, { icon: 'brain' });
     assert.equal(set.icon, 'brain');
-    assert.equal(set.name, 'Plain'); // name untouched — renaming stays unsupported
+    assert.equal(set.name, 'Plain', 'a key the patch omits is left alone');
     assert.equal((await repo.getRound(T, round.id)).tags[0].icon, 'brain');
 
     // …and clears back to the absent key, not an empty string.
-    const cleared = await repo.setTagIcon(T, round.id, plain.id, null);
+    const cleared = await repo.updateTag(T, round.id, plain.id, { icon: null });
     assert.equal('icon' in cleared, false);
     assert.equal('icon' in (await repo.getRound(T, round.id)).tags[0], false);
 
+    // RENAME (#1004), and the assignments on every game survive it — the whole
+    // point of renaming rather than delete-and-recreate, which unassigns.
+    const game = await repo.createGame(T, round.id, { title: 'Azul', tagIds: [plain.id] });
+    const renamed = await repo.updateTag(T, round.id, plain.id, { name: '  Kenner  ' });
+    assert.equal(renamed.name, 'Kenner', 'trimmed, like addTag');
+    assert.equal(renamed.id, plain.id, 'the id is stable, so nothing that stored it breaks');
+    assert.deepEqual((await repo.getRound(T, round.id)).games.find((g) => g.id === game.id).tagIds,
+      [plain.id], 'a rename must not touch a single assignment');
+
+    // Both keys in ONE call, so a patch can never land half-applied.
+    const both = await repo.updateTag(T, round.id, plain.id, { name: 'Familie', icon: 'star' });
+    assert.equal(both.name, 'Familie');
+    assert.equal(both.icon, 'star');
+
+    // THE DEDUPE, and it lives HERE rather than in the route: the Postgres
+    // backend serializes the tags array under FOR UPDATE, so a check outside
+    // the transaction lets two concurrent renames both pass and produce twins —
+    // a state `addTag` can never produce, indistinguishable in every chip row.
+    // Trimmed and case-insensitive, exactly as addTag dedupes.
+    const other = await repo.addTag(T, round.id, 'Solo');
+    assert.equal(await repo.updateTag(T, round.id, other.id, { name: 'familie' }), 'name_taken');
+    assert.equal(await repo.updateTag(T, round.id, other.id, { name: '  FAMILIE ' }), 'name_taken');
+    assert.equal((await repo.getRound(T, round.id)).tags.find((tg) => tg.id === other.id).name, 'Solo',
+      'a refused rename changes nothing at all');
+
+    // Renaming a tag to its OWN name is not a collision — which is what makes a
+    // pure case fix („kenner" -> „Kenner") reachable at all.
+    const cased = await repo.updateTag(T, round.id, other.id, { name: 'SOLO' });
+    assert.equal(cased.name, 'SOLO');
+
     // A missing round and a missing tag both read as not-found.
-    assert.equal(await repo.setTagIcon(T, round.id, 'nope', 'star'), null);
-    assert.equal(await repo.setTagIcon(T, 'missing', plain.id, 'star'), null);
+    assert.equal(await repo.updateTag(T, round.id, 'nope', { icon: 'star' }), null);
+    assert.equal(await repo.updateTag(T, 'missing', plain.id, { icon: 'star' }), null);
   });
 
   test('dismissed recommendations: a round-scoped id list, never a game row (#782)', async () => {
