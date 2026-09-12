@@ -329,7 +329,9 @@ function renderPokaleTab(round) {
 
   // Streak: how many of the latest nights in a row one member won alone.
   // Chronological by `createdAt` (when the night happened), like the Chronik —
-  // `finishedAt` moves when an old session is re-finished.
+  // `finishedAt` moves when an old session is re-finished. The Discover
+  // aggregate missed this note until #1059; the rule is now written down in
+  // .claude/rules/server-computed-calendar-periods.md §7.
   // A night any guest won is skipped entirely (#458): a session-only visitor
   // must neither break nor extend a member's streak, and treating their win as
   // an ordinary sole win would silently blank the card (there is no member row

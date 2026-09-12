@@ -4,6 +4,7 @@ paths:
   - "lib/public-stats.js"
   - "lib/repo/json.js"
   - "lib/repo/postgres.js"
+  - "test/support/repo-contract.js"
   - "public/js/views-stats.js"
   - "public/js/i18n.js"
   - "public/js/period-recap.js"
@@ -101,6 +102,37 @@ versus 00:30 the morning of — and pick a `now` that is deliberately mid-period
 `.claude/rules/break-the-code-on-purpose.md` is the general form; this is the
 date-shaped instance of it, and the tell is that a day-offset fixture is
 satisfied by the very arithmetic under test.
+
+## 7. The window is half the question — WHICH STAMP is the other half
+
+Everything above decides *which period* a play is counted in. It says nothing
+about *which of a session's timestamps* is bucketed, and that gap held a second
+bug (#1059): both backends' aggregate read `finishedAt || createdAt`
+while every other surface in the app dates a session by `createdAt`.
+
+`finishedAt` is **not** "when it ended". `finishSession` sets it to `now` on every
+successful POST, and that route is re-POSTed by every winner-chip tap — so
+correcting a winner weeks later dragged the play into the current week and month
+while the Chronik entry stayed put. `public/js/views-pokale.js` already knew this
+(its streak card reads `createdAt`, with a comment saying why); the Discover
+aggregate was the one place that did not.
+
+**Bucket by `createdAt`, and take no fallback.** Every creation path writes it
+(`lib/routes/sessions.js`, `lib/session-split.js`, `lib/demo.js`); the bare
+`|| ''` keeps a stamp-less row out of the three calendar windows while still
+counting in `all`, whose cutoff is the empty string. `finishedAt` stays mutable
+after this, and its one remaining consumer for *dating* is the BG Stats export
+(`public/js/bgstats.js`), which wants "the end of the evening" on purpose — think
+twice before adding a second.
+
+**The fixture trap is §6 one field over.** The contract case seeded
+`createdAt: finishedAt` for every row, so the two stamps were identical and the
+case was green whichever field the aggregate read — it would have survived the
+bug and it survived the fix. A fixture field that is *inert under the old
+meaning* becomes the thing under test the moment the meaning moves
+(`.claude/rules/redefining-a-measure-invalidates-its-fixtures.md`), so the rows
+now straddle each boundary in **both** stamps: reading `finishedAt` reads
+3 / 4 / 6 where `createdAt` reads 1 / 3 / 5.
 
 **Related:** `.claude/rules/shared-constants-across-the-stack.md` (the same
 "one fact, two places" shape for a value rather than a period),
