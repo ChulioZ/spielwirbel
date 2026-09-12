@@ -444,6 +444,50 @@ test('the Wunschliste state chip clears AA on every theme', () => {
     'the Wunschliste chip draws --brand-strong on --brand-tint');
 });
 
+/* The applied-filter chip (#1037). Its fill was its ONLY boundary, and a fill is
+   not a boundary: `--brand-tint` measures 1.04-1.16:1 against `--page-bg` on the
+   twelve light designs and 1.47-1.52 on the three dark ones, so the chip has
+   never been visible as a shape anywhere. What rescued it everywhere but Chess
+   was the LABEL — `--brand-strong` is a saturated orange/blue/green, so hue alone
+   said "chip". Chess's accent is `#38343f`, a desaturated near-black, so the
+   label resolves to something indistinguishable from body ink and the chip
+   disappears completely, taking its `.fchip__x` control with it.
+
+   So this is a component defect on all fifteen designs that only one makes
+   visible, and the fix is a border rather than a Chess accent retune — the next
+   desaturated design would reintroduce it.
+
+   The bar is SC 1.4.11's 3:1, not AA text contrast: the chip is a meaningful
+   non-text graphic, and it is the one place a filter can be re-read (and removed)
+   after the panel closes, so "which filters are on" is information the screen
+   states nowhere else.
+
+   The tone is READ OUT of the declaration and resolved per design rather than
+   restated here, which is what makes the sweep discriminating: a retune to
+   `--brand-edge` — the natural "softer border" reach — reddens on the numbers
+   below, where a test asserting the token name by hand would only red on the
+   name. Measured, `--brand-edge` lands 1.37-2.40 and fails on all fifteen. */
+test('the applied-filter chip has a border that clears the 3:1 non-text bar on every design', () => {
+  const chip = bodyOf('.fchip');
+  assert.ok(chip, 'the .fchip rule was not found');
+
+  assert.match(chip, /background:\s*var\(--brand-tint\)/,
+    'the chip no longer washes with --brand-tint, so the reasoning above does not apply to it');
+  assert.match(chip, /color:\s*var\(--brand-strong\)/,
+    'the chip label must stay --brand-strong: plain --brand on a brand tint drops to 4.33:1 on Salbei');
+
+  const declared = /border:\s*[\d.]+px\s+solid\s+(var\(--[\w-]+\)|#[0-9a-f]{3,8})/i.exec(chip);
+  assert.ok(declared, '.fchip declares no solid border — its tint fill is 1.04:1 against the page, so the chip has no boundary at all');
+
+  const failures = [];
+  for (const t of THEMES) {
+    const ratio = contrast(evaluate(declared[1], t.design), t.page);
+    if (ratio < AA_LARGE) failures.push(`${name(t)} — ${declared[1]} on the page = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    `.fchip's border is the chip's only boundary and sits on --page-bg; needs ${AA_LARGE}:1`);
+});
+
 // --- the Chronik milestone rows (#633) --------------------------------------
 
 test('the Chronik milestone row keeps its label, its meta line AND its icon at AA', () => {
