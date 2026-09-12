@@ -147,6 +147,65 @@ than an acknowledged gap.
   L-007 age question at once. This is a legal-shape criterion, not a product preference.
 - **Enforced by:** — (manual)
 
+### L-013 — Erasure and export reach every store that holds account data
+- **Status:** adopted · 2026-09-12
+- **Source:** Art. 17, 15, 20 GDPR · #1036
+- **Check:** `eraseAccount` and `exportAccountData` (`lib/repo/postgres.js`, and their
+  siblings in `lib/repo/json.js`) name the global, non-RLS stores **one at a time**. The
+  repo has added five global tables since the initial schema, and a sixth arriving with no
+  disposition is total silence: no error, no red test, an erasure that reports success
+  while leaving rows behind, and an export that under-answers an Art. 15 request. The
+  check is therefore mechanical: derive the live table list, split it by whether the table
+  carries `tenant_id`, and require every global one to be erased, exported, or named in a
+  reasoned exclusion list. The exclusion list is the load-bearing half — it is what makes
+  a *new* table a failure rather than a default pass.
+- **Enforced by:** `test/erasure-completeness.test.js` (runs in the `postgres` CI job)
+
+### L-014 — Every stored field is necessary, not merely disclosed
+- **Status:** adopted · 2026-09-12 · **judgement, no test possible**
+- **Source:** Art. 5(1)(c) GDPR
+- **Check:** Every other criterion here asks whether a field is *disclosed*; none asks
+  whether it is *needed*. A field fully documented in `docs/legal/vvt.md` and required by
+  nobody passes the whole suite. Walk the schema and the `data` JSONB shapes and, per
+  field, ask what breaks if it were not stored — then compare against the purpose its VVT
+  row states. "It might be useful later" is the finding. Likeliest candidates, so a run
+  starts somewhere rather than sweeping open-ended: free-text fields, imported third-party
+  payloads (the BGG collection/wishlist import, #481), and anything retained after the
+  feature that wrote it was removed (#744's retired storefront `source` links are the
+  worked example — #981).
+- **Enforced by:** — (manual)
+
+### L-015 — Art. 32 measures are verified against the platform, not read back
+- **Status:** adopted · 2026-09-12
+- **Source:** Art. 32 GDPR · `.claude/rules/ops-only-changes-still-stale-the-docs.md`
+- **Check:** L-008 reads `docs/legal/toms.md` "against the security measures really in
+  place", which in practice is prose against prose — and it has burned once: `toms.md`
+  claimed platform backups from the day it was written while the Railway project had
+  **none configured at all** (found 2026-08-04). So each claim gets a stated verification
+  route, and the route matters more than the claim: backups and their real window
+  (Railway dashboard — and beware reading the PITR window too early, it only grows until
+  the first truncation, `.claude/rules/railway-postgres-floating-major.md`), encryption at
+  rest (Railway Postgres, R2), TLS, access control and whether the app's DB role is a
+  superuser, `ipHash` pseudonymisation (code), and the deployment regions of every service
+  (dashboard, cf. L-011). A **platform-side** claim is the one no commit can touch, so it
+  is the one that rots.
+- **Enforced by:** — (manual; platform-side by construction)
+
+### L-016 — No personal data reaches a derived or public surface undeclared
+- **Status:** adopted · 2026-09-12
+- **Source:** Art. 5(1)(a), 6, 13 GDPR
+- **Check:** S-017 covers logs only. Enumerate the surfaces that publish anything
+  *computed* from tenant data and state, per surface, whether a **structural guarantee**
+  exists or only a convention: `lib/public-stats.js` (the landing page and `/entdecken` —
+  the one with a real guarantee, that no user-authored byte reaches the payload because
+  titles and covers resolve from the provider; its header documents it and the criterion's
+  job is to check it still holds), `feed_events` and its allowlist, shared vote links
+  (#652), public profiles (#558), and the recap/share text. A surface leaning on "only
+  logged-in users can see it" is a finding: L-007 already records that as invalid on this
+  instance, since `DEMO_ENABLED` has been on since 2026-07-27 and an unauthenticated
+  visitor reaches the authenticated surface in one request.
+- **Enforced by:** — (manual)
+
 ---
 
 ## Rejected — settled, do not re-litigate
@@ -191,3 +250,13 @@ than an acknowledged gap.
   thresholds, a paid tier changes the classification, or the EAA/EN 301 549
   harmonisation (V4.1.1 expected in the OJEU ~Oct 2026) shifts the applicability
   analysis.
+
+### L-R06 — "Add a standalone data-protection-audit domain"
+- **Status:** rejected · 2026-09-12
+- **Why:** Considered in #1036 for the four checks above and rejected: a seventh domain
+  would re-derive `legal-audit`'s recipient/category/retention method wholesale, add a
+  seventh pass to every `/audit` sweep, and split the remedy from the documents it
+  changes. Data protection **is** this skill's domain — L-001/L-002 (recipients), L-003
+  (§ 25 TDDDG storage), L-004 (categories, basis, retention → VVT), L-005 (code breaches a
+  promise), L-008 (internal records), L-011 (transfer locations) — and L-013…L-016 are
+  criteria in it, not a domain beside it.

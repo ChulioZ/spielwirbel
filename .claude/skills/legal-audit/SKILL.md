@@ -99,7 +99,28 @@ deployment regions behind the transfer statements — verify the *platform*, not
 code, since a service can be moved without a commit (`railway-db-same-region.md`).
 → **L-006, L-009, L-010, L-011**
 
-### 6. Trigger sweep
+### 6. Data-subject rights, minimisation, measures, derived surfaces (#1036)
+
+Four checks nothing else owns. The first is a test, so **read its report rather
+than re-deriving it**: `test/erasure-completeness.test.js` derives the live table
+list, splits it by `tenant_id`, and fails on any global table with no declared
+disposition. Your job here is the *reasons* in its `GLOBAL_DISPOSITION` map — an
+entry saying "holds no personal data" is a claim, and a table that has since
+grown a user id makes it wrong while the test stays green. → **L-013**
+
+Then the three judgement ones. **Minimisation:** per field, what breaks if it
+were not stored, against the purpose its `vvt.md` row states — start at free-text
+fields, imported third-party payloads, and anything outliving the feature that
+wrote it. → **L-014**. **Art. 32 measures:** turn `toms.md`'s claims into a list
+with a stated verification route each, and treat every *platform-side* claim as
+suspect, because no commit can touch one (this is where the "platform backups"
+line was wrong from the day it was written). → **L-015**. **Derived surfaces:**
+for `public-stats`, `feed_events`, shared vote links, public profiles and the
+recap/share text, say whether the guarantee is structural or a convention — and
+never accept "only logged-in users see it", which `DEMO_ENABLED` has made false
+since 2026-07-27. → **L-016**
+
+### 7. Trigger sweep
 
 Run the L-007 trigger list against everything that shipped since the last audit:
 consent-based processing, a paid tier, public dissemination of user content,
