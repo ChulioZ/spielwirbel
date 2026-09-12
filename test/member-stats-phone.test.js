@@ -98,13 +98,18 @@ test('every numeric stat card is marked, and the favourite tile is exempt', asyn
   await dom.call('showMember', RID, 'm1');
   const grid = dom.app.querySelector('.member-stats');
 
-  /* Five numeric cards + the favourite — the fifth is the Siegwertung (#895),
-     which sits beside the win rate it corrects. The count is asserted rather
-     than "at least one": the reorder is applied per card, so a helper that
-     stopped marking one of them would leave a single label-first tile in the
-     grid. */
+  /* THREE numeric cards + the favourite since #995, which relocated Siege and
+     Siegquote into the hero band (`.member-head__stat`). The count is asserted
+     rather than "at least one": the reorder is applied per card, so a helper
+     that stopped marking one of them would leave a single label-first tile in
+     the grid — and the exact number is what makes a card silently dropped from
+     the grid fail here rather than pass unnoticed. */
   const marked = grid.querySelectorAll('.member-stats__card');
-  assert.equal(marked.length, 5, 'all five numeric stat cards must be marked');
+  assert.equal(marked.length, 3, 'all three numeric stat cards must be marked');
+  // The relocated pair is on the screen, in the band — so "the grid lost two
+  // cards" cannot be satisfied by them having gone missing altogether.
+  assert.equal(dom.app.querySelectorAll('.member-head__stat').length, 2,
+    'the two relocated figures must be in the hero band');
   marked.forEach((c) =>
     assert.ok(c.querySelector('.pokale-card__value'), 'a marked card must have a value to promote')
   );
