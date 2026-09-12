@@ -85,7 +85,19 @@ function bootApp(t_, { providerInfo } = {}) {
   return { dom, round, infoCalls };
 }
 
-const aboutSection = (dom) => dom.app.querySelector(':scope > .gd-about');
+/* #1039 split this surface in two. The three GLANCE facts — weight, playing
+   time, minimum age — are pills on the game card, because they are what a group
+   asks before playing; the reference half (categories, mechanics, the BGG
+   rating) and the attribution line sit inside the collapsed „Mehr zum Spiel"
+   disclosure. So a spec that used to ask one `.gd-about` section now asks
+   whichever half owns the field, and `metaBody` returning null is a real answer
+   (a game with no provider data has no rows in the disclosure at all). */
+const glance = (dom) => dom.app.querySelector('.gd-head .gd-facts');
+const metaBody = (dom) => dom.app.querySelector('.gd-more__body .game-info__body');
+const pillOf = (root, label) => [...(root ? root.querySelectorAll('.fact') : [])]
+  .find((f) => f.querySelector('.fact__label')
+    && f.querySelector('.fact__label').textContent === label);
+const pillValue = (root, label) => pillOf(root, label).querySelector('.fact__value').textContent;
 
 // #729: a row stored before the field was dropped still HOLDS the text (no
 // purge, no migration code — CLAUDE.md), so the guarantee is that nothing
@@ -95,11 +107,12 @@ test('a stored description renders nowhere — not in the detail section, not in
   const { dom, round } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g1');
 
-  const sec = aboutSection(dom);
-  assert.ok(sec, 'the section still renders — weight and the #724 facts remain');
-  assert.equal(sec.querySelector('.game-info__desc'), null, 'the detail section still renders the description');
-  assert.doesNotMatch(sec.textContent, /Aufbauspiel/, 'the description text leaked into the section');
-  assert.equal(sec.querySelector('.game-info__more'), null, 'the show-more toggle survived');
+  const page = dom.app.querySelector('.pass__game');
+  assert.ok(page, 'the spread rendered its left page');
+  assert.ok(glance(dom), 'the glance pills still render — weight and the #724 facts remain');
+  assert.equal(page.querySelector('.game-info__desc'), null, 'the detail page still renders the description');
+  assert.doesNotMatch(page.textContent, /Aufbauspiel/, 'the description text leaked onto the page');
+  assert.equal(page.querySelector('.game-info__more'), null, 'the show-more toggle survived');
 
   const btn = dom.call('gameInfoButton', round.games[0]);
   assert.ok(btn, 'the ⓘ affordance still renders for a game with weight');
@@ -111,18 +124,24 @@ test('a stored description renders nowhere — not in the detail section, not in
   assert.doesNotMatch(sheet.textContent, /Aufbauspiel/, 'the description text leaked into the sheet');
 });
 
-test('the detail section renders weight and the BGG attribution', async (t_) => {
+test('the card carries the weight pill and the disclosure the BGG attribution', async (t_) => {
   const { dom, infoCalls } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g1');
-  const sec = aboutSection(dom);
-  assert.ok(sec, 'the gd-about section renders when the game carries the data');
-  assert.equal(sec.querySelector('h2').textContent, t('gameInfo.title'));
+  const facts = glance(dom);
+  assert.ok(facts, 'the glance pills render when the game carries the data');
   // One decimal — never BGG's four (2.2809 would imply a precision the number
-  // does not have).
-  assert.match(sec.querySelector('.game-info__weight').textContent, /2,3 von 5/);
-  assert.equal(sec.querySelectorAll('.weight-dots__dot').length, 5);
-  assert.equal(sec.querySelectorAll('.weight-dots__dot.is-filled').length, 2);
-  assert.match(sec.querySelector('.game-info__source').textContent, /BoardGameGeek/);
+  // does not have). Same markup as the info sheet's row, because both come from
+  // `weightInner` — a second dot loop would round the same number twice.
+  const weight = facts.querySelector('.fact--weight');
+  assert.ok(weight, 'the weight is a pill on the card');
+  assert.match(weight.textContent, /2,3 von 5/);
+  assert.equal(weight.querySelectorAll('.weight-dots__dot').length, 5);
+  assert.equal(weight.querySelectorAll('.weight-dots__dot.is-filled').length, 2);
+  // The credit the BGG licence asks for wherever its data is shown. It is one
+  // click away inside the disclosure — the same treatment the two voting
+  // surfaces already give the whole body behind their ⓘ.
+  assert.match(metaBody(dom).querySelector('.game-info__source').textContent, /BoardGameGeek/);
+  assert.equal(dom.app.querySelector('.gd-more > summary').textContent.trim(), t('detail.more'));
   // Every field present -> no backfill request.
   assert.equal(infoCalls.length, 0);
 });
@@ -130,7 +149,8 @@ test('the detail section renders weight and the BGG attribution', async (t_) => 
 test('a storefront game gets no section and fires no backfill request', async (t_) => {
   const { dom, infoCalls } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g2');
-  assert.equal(aboutSection(dom), null);
+  assert.equal(glance(dom), null, 'no glance pills for a game with no provider metadata');
+  assert.equal(metaBody(dom), null, 'and no reference rows in the disclosure either');
   assert.equal(infoCalls.length, 0);
 });
 
@@ -143,9 +163,13 @@ test('a BGG-linked game missing the fields asks the server and renders the answe
   assert.equal(infoCalls.length, 1);
   assert.match(infoCalls[0], /\/games\/g3\/provider-info$/);
   await new Promise((r) => setTimeout(r, 0));
-  const sec = aboutSection(dom);
-  assert.ok(sec, 'the section appears once the backfill answers');
-  assert.match(sec.querySelector('.game-info__weight').textContent, /3,5 von 5/);
+  const facts = glance(dom);
+  assert.ok(facts, 'the pills appear once the backfill answers');
+  assert.match(facts.querySelector('.fact--weight').textContent, /3,5 von 5/);
+  // The disclosure is attached by the same re-render: for a freshly imported
+  // game the metadata IS what fills it, so a first render that found nothing
+  // must not leave it off the page for good.
+  assert.ok(metaBody(dom), 'the disclosure gained its rows too');
 });
 
 test('a backfill that finds nothing leaves the page without the section', async (t_) => {
@@ -153,7 +177,8 @@ test('a backfill that finds nothing leaves the page without the section', async 
   await dom.call('showGameDetail', RID, 'g3');
   await new Promise((r) => setTimeout(r, 0));
   assert.equal(infoCalls.length, 1);
-  assert.equal(aboutSection(dom), null);
+  assert.equal(glance(dom), null);
+  assert.equal(metaBody(dom), null);
 });
 
 test('gameInfoButton renders only when there is something to show, and opens the sheet', async (t_) => {
@@ -184,19 +209,24 @@ const RICH = {
 const factOf = (root, label) => [...root.querySelectorAll('.game-info__fact')]
   .find((f) => f.querySelector('.game-info__fact-label').textContent === label);
 
-test('the detail section renders the standard metadata AND the BGG rating', async (t_) => {
+test('the detail page renders the standard metadata AND the BGG rating, in its two halves', async (t_) => {
   const { dom } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g1');
-  const sec = aboutSection(dom);
+  const facts = glance(dom);
   // The playtime SPREAD is the information — a range where the bounds differ.
-  assert.equal(factOf(sec, t('gameInfo.playtime')).querySelector('.game-info__fact-value').textContent, '60–120 Min.');
-  assert.equal(factOf(sec, t('gameInfo.minAge')).querySelector('.game-info__fact-value').textContent, 'ab 10');
-  assert.equal(factOf(sec, t('gameInfo.categories')).querySelector('.game-info__fact-value').textContent, 'Civilization, Economic');
-  // Uncapped here: the detail screen shows all six mechanics, unlike the sheet.
-  assert.equal(factOf(sec, t('gameInfo.mechanics')).querySelector('.game-info__fact-value').textContent,
+  assert.equal(pillValue(facts, t('gameInfo.playtime')), '60–120 Min.');
+  assert.equal(pillValue(facts, t('gameInfo.minAge')), 'ab 10');
+  // Reference half: one click away, and uncapped — the detail screen shows all
+  // six mechanics, unlike the vote sheet.
+  const body = metaBody(dom);
+  assert.equal(factOf(body, t('gameInfo.categories')).querySelector('.game-info__fact-value').textContent, 'Civilization, Economic');
+  assert.equal(factOf(body, t('gameInfo.mechanics')).querySelector('.game-info__fact-value').textContent,
     'Dice Rolling, Hand Management, Trading, Network Building, Income, Set Collection');
   // One decimal, like the weight — never BGG's five.
-  assert.equal(factOf(sec, t('gameInfo.rating')).querySelector('.game-info__fact-value').textContent, '7,1 von 10');
+  assert.equal(factOf(body, t('gameInfo.rating')).querySelector('.game-info__fact-value').textContent, '7,1 von 10');
+  // And the split is a split, not a duplication: neither half repeats the other.
+  assert.equal(pillOf(facts, t('gameInfo.mechanics')), undefined, 'a reference list leaked onto the card');
+  assert.equal(factOf(body, t('gameInfo.playtime')), undefined, 'a glance fact is repeated in the disclosure');
 });
 
 test('the vote sheet shows the same metadata but NEVER the rating', async (t_) => {
@@ -228,14 +258,17 @@ test('a game whose only provider fact is a rating gets no ⓘ, but does get a de
   const { dom } = bootApp(t_);
   const ratingOnly = { id: 'g', title: 'Nur Wertung', rating: 8.1 };
   assert.equal(dom.call('gameInfoButton', ratingOnly), null);
-  const sec = dom.call('renderGameInfoSection', ratingOnly);
-  assert.ok(factOf(sec, t('gameInfo.rating')), 'the detail section dropped the one fact it had');
+  const body = dom.call('gameInfoRest', ratingOnly);
+  assert.ok(body, 'the disclosure body was dropped for a game whose one fact belongs in it');
+  assert.ok(factOf(body, t('gameInfo.rating')), 'the detail section dropped the one fact it had');
+  // The rating is a reference detail, not a glance fact: it must not turn up on
+  // the card, where the vote-anchoring argument #724 made would apply again.
+  assert.equal(dom.call('gameGlanceFacts', ratingOnly), null, 'the rating reached the card');
 });
 
 test('one known playtime bound reads as a single number, not a half-open range', async (t_) => {
   const { dom } = bootApp(t_);
-  const value = (game) => factOf(dom.call('renderGameInfoSection', game), t('gameInfo.playtime'))
-    .querySelector('.game-info__fact-value').textContent;
+  const value = (game) => pillValue(dom.call('gameGlanceFacts', game), t('gameInfo.playtime'));
   assert.equal(value({ id: 'a', title: 'A', minPlaytime: 90, maxPlaytime: 90 }), '90 Min.',
     'equal bounds are one number, not "90–90"');
   assert.equal(value({ id: 'b', title: 'B', minPlaytime: 45, maxPlaytime: null }), '45 Min.');

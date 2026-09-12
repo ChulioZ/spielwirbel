@@ -538,7 +538,6 @@ I18N.pt = {
   'sessions.deleteConfirm': 'Excluir mesmo a sessão de {when}?',
   'sessions.deleted': 'Sessão excluída',
 
-  'detail.noRating': 'Sem avaliação ainda',
   'detail.retire': 'Aposentar',
   'detail.complete': 'Concluído',
   'detail.restore': 'Trazer de volta',
@@ -652,8 +651,9 @@ I18N.pt = {
   'detail.toast.coverUnreachable': 'Não foi possível acessar o {provider}.',
 
   'detail.expansionsTitle': 'Expansões',
-  'detail.expansionsEmpty': 'Nenhuma expansão registrada ainda.',
-  'detail.expansionAdd': 'Adicionar expansão',
+  'detail.more': 'Mais sobre o jogo',
+  'detail.moreActions': 'Mais ações',
+  'detail.addExpansionChip': '+ Expansão',
   'detail.expansionRemove': 'Remover',
   'detail.expansionRemoveConfirm': 'Remover “{title}” das suas expansões?',
   'detail.expansionPickTitle': 'Do {provider}',

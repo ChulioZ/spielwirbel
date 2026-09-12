@@ -19,6 +19,20 @@ asks for — so the sheet/popover split, the focus trap, Esc, Back and the
 outside-click dismissal all came for free rather than being re-hand-rolled on two
 more screens.
 
+**The exception, and how to recognise it: a menu of BUTTONS goes through
+`openPopover` directly, at every width.** The account menu has always done this;
+#1039's „…" page menu on game detail is the second. The whole argument in §1 is
+about a **text input** — an anchored card dies on a phone because *focusing a
+field* scrolls the page and tears the popover down. A menu focuses nothing, so
+there is no scroll to lose to, and a bottom sheet for three rows of buttons is
+ceremony. Measured on #1039 at 390×844: the menu opens as a `.popover--menu`,
+fits inside the viewport, and dismisses on Escape with `aria-expanded` following.
+
+So the test is not "which screen is this on" but **"does it contain a field?"**
+If it does, `openEditor`. If it is buttons only, `openPopover` — and then
+`aria-expanded` is yours to sync, through `onClose` and never by wrapping the
+`close` you are handed (§2b).
+
 ## 1. Why an anchored popover dies on a phone
 
 `openPopover` (`popover.js`) tears itself down on `window` **`scroll`** and

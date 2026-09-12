@@ -540,7 +540,6 @@ I18N.it = {
   'sessions.deleteConfirm': 'Eliminare davvero la sessione del {when}?',
   'sessions.deleted': 'Sessione eliminata',
 
-  'detail.noRating': 'Ancora nessuna valutazione',
   'detail.retire': 'Ritira',
   'detail.complete': 'Completato',
   'detail.restore': 'Rimetti in gioco',
@@ -654,8 +653,9 @@ I18N.it = {
   'detail.toast.coverUnreachable': 'Non è stato possibile raggiungere {provider}.',
 
   'detail.expansionsTitle': 'Espansioni',
-  'detail.expansionsEmpty': 'Ancora nessuna espansione registrata.',
-  'detail.expansionAdd': 'Aggiungi un’espansione',
+  'detail.more': 'Altro sul gioco',
+  'detail.moreActions': 'Altre azioni',
+  'detail.addExpansionChip': '+ Espansione',
   'detail.expansionRemove': 'Rimuovi',
   'detail.expansionRemoveConfirm': 'Rimuovere «{title}» dalle vostre espansioni?',
   'detail.expansionPickTitle': 'Da {provider}',

@@ -450,6 +450,9 @@ const WHITE_EXEMPT = new Map([
   [':root[data-scheme="dark"], .theme-card[data-scheme="dark"]',
     'the dark scheme\'s own defaults: --shade is white BECAUSE the page is dark'],
   ['.gd-img__edit', 'on its own black scrim gradient, not on a theme surface'],
+  ['.gd-score .score-info', 'on its own translucent-black scrim over box art, like .gd-img__edit'],
+  ['.gd-score .score-info:hover, .gd-score .score-info:focus-visible',
+    'the same scrim, deepened — still not on a theme surface'],
   ['.stage__lock', 'on --gold, which does not flip: the stage is dark either way'],
 ]);
 

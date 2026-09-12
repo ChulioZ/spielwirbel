@@ -559,7 +559,6 @@ I18N.de = {
   'sessions.deleteConfirm': 'Session vom {when} wirklich löschen?',
   'sessions.deleted': 'Session gelöscht',
 
-  'detail.noRating': 'Noch keine Bewertung',
   'detail.retire': 'Aussortieren',
   'detail.complete': 'Durchgespielt',
   'detail.restore': 'Wieder aufnehmen',
@@ -674,8 +673,9 @@ I18N.de = {
   'detail.toast.coverUnreachable': '{provider} ist gerade nicht erreichbar.',
 
   'detail.expansionsTitle': 'Erweiterungen',
-  'detail.expansionsEmpty': 'Noch keine Erweiterung eingetragen.',
-  'detail.expansionAdd': 'Erweiterung hinzufügen',
+  'detail.more': 'Mehr zum Spiel',
+  'detail.moreActions': 'Weitere Aktionen',
+  'detail.addExpansionChip': '+ Erweiterung',
   'detail.expansionRemove': 'Entfernen',
   'detail.expansionRemoveConfirm': '„{title}“ aus euren Erweiterungen entfernen?',
   'detail.expansionPickTitle': 'Von {provider}',

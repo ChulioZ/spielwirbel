@@ -210,6 +210,14 @@
      chip row, the other a cover grid — so the wall argument above does not bind
      at this width. */
   --w-setup: 1560px;
+  /* The game detail spread (.pass) inside that pane (#1039). Between the reading
+     measure and the setup forms: the left page carries a 300–340px cover beside a
+     title, chips and a fact row, and the right page a list of dated rows — so it
+     needs more than 900px and less than the 1560px two-column forms, whose tracks
+     are a seat ring and a cover grid. Measured on the prototype: at 1400 the 13"
+     laptop scrolls ~11px and 1470 up fits outright, where 900 left 258–968px of
+     dead gutter. */
+  --w-detail: 1400px;
   --rail-w: 260px;
   --rail-gap: 32px;
   /* Elevation: a 3-step ramp, resting -> raised -> overlay. Three is where
@@ -644,6 +652,26 @@ h1, h2, h3 { font-family: var(--font-display); }
      source order. */
   .app:has(.setup-grid) > *:not(.rail):not(.dock):is(.page-head, .setup-grid) {
     max-width: var(--w-setup);
+  }
+
+  /* The game detail spread (#1039) is a grid too, and the SAME licence applies
+     for a different reason than the setup forms': this screen does render
+     navigation, but all of it — the rail and the dock — is excluded by the cap's
+     own two `:not()`s, so there is nothing persistent left inside the column for
+     a width change to move. `.app`'s own width is untouched, and beside a rail
+     the children are left-aligned, so the pages only ever grow rightward. The
+     round's sub-screen tab strip keeps `--w-read` and stays put
+     (`.claude/rules/responsive-content-width.md`).
+
+     The back row opts out WITH the grid, and that half is the one that fails
+     silently: it is a SIBLING of `.pass`, so neither exemption selector above
+     reaches it, and capped at 900 the „…" page menu would sit ~250px inside the
+     page's right edge — the #543/#577 lesson, one screen over. Both take the same
+     custom property so their edges cannot drift apart.
+
+     (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app:has(.pass) > *:not(.rail):not(.dock):is(.back-row, .pass) {
+    max-width: var(--w-detail);
   }
 
   /* On a screen WITHOUT a rail — home, the new-round form, the session wizard —
@@ -4343,47 +4371,64 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 }
 
 /* Game detail page */
-/* The hero band (#868). It used to be `width: fit-content`, so the header was
-   as wide as cover + facts + ring and no wider — which kept the score ring from
-   being stranded at the far edge of an otherwise empty 900px row, but made the
-   band's right edge a function of its CONTENT. Measured across four games of one
-   round it landed at 990, 1109, 1119 and 1212px while every section below runs
-   to 1212px, so the page frame visibly shifted from game to game.
-   It is now a framed card at the column's full width, which fixes the frame and
-   re-earns the original intent a different way: the ring rides the card's own
-   right edge (`.gd-info` grows into the slack) instead of floating in open
-   whitespace, because it is the card boundary — not proximity — that relates it
-   to the game.
-   `flex-wrap: wrap` is deliberately KEPT. The cover is 300px and .gd-info holds
-   a 240px floor, so a `nowrap` row cannot fit a 390px screen and would overflow
-   rather than shrink.
-   --gd-stats-w (#901) is the other half of "the frame does not move". The band
-   was pinned to the column, but the ROW inside it still wrapped for some games
-   and not others, because .gd-stats was `flex: none` — sized to the max-content
-   of its longest label. The headroom at >=1280px, where
-   `.app > *:not(.rail):not(.dock)` caps the band at --w-read:
-       900 - 2x28 padding                                    = 844 inner
-       - 300 cover - 2x24 gaps - .gd-info's own 240px floor   = 256 for .gd-stats
-   The common German „Ø 4,2 aus 7 Bewertungen in 3 Sessions" measures 246.9px,
-   so the row had NINE pixels of slack: two-digit counts (263.7px) and fr
-   (264.8px) tipped it, dropping the ring onto a line of its own and taking the
-   band from 281px to 450px tall (measured at 1440). A fixed basis is data-independent — no label, count or
-   locale can move it — and 200px leaves 56px of headroom instead of 5. The
-   labels wrap inside it, which is what `text-align: center` on .gd-stats is for.
-   It is `auto` below the breakpoint, where the band is a stack and the column
-   sits at the content edge on a line of its own.
+/* The game card — the left page of the spread (#1039), and #868's hero band
+   before that. Two settled decisions survive from then and are worth keeping:
+
+   1. It is a framed card at its COLUMN's full width, never `width: fit-content`.
+      Content-sized, the band's right edge was a function of the title and chips:
+      measured across four games of one round it landed at 990, 1109, 1119 and
+      1212px while every section below ran to 1212px, so the page frame visibly
+      shifted from game to game.
+   2. The row's wrap point may not be a function of the data. #901 fixed that for
+      the flex row with a fixed `--gd-stats-w` basis on the score column, because
+      `flex: none` there sized it to its longest LABEL and left nine pixels of
+      slack — a two-digit rating count, or switching the UI to French, dropped the
+      ring onto its own line and took the band from 281px to 450px tall.
+
+   #1039 retired the whole mechanism rather than retuning it: the score is a pill
+   on the cover, the stats column is gone, and the row is a two-track GRID whose
+   text track is `minmax(0, 1fr)` — so there is no wrap point left for content to
+   decide, and no `.gd-stats`/`--gd-stats-w` to keep fitting. The measurements
+   above are preserved as the reasoning, not as a map: see
+   `.claude/rules/flex-none-item-makes-the-row-data-dependent.md` (the rule they
+   are the evidence for, marked historical there too) and
+   `.claude/rules/card-tracks-are-a-fraction-of-a-fraction.md` (why the cover
+   track is a percentage of this card rather than a flat px width).
    #919 removed that longest label — the column now holds only the score's name
    („Puntuación Spielwirbel" is the widest of the five) plus its ⓘ. Keep the
    fixed basis anyway: data-independence is the property that stops the frame
    moving, and it does not depend on which label happens to be longest today. */
 .gd-head {
-  --gd-cover-w: 300px;
-  --gd-stats-w: 200px;
+  /* The CEILING on the cover, not its width — see the track below. */
+  --gd-cover-w: 340px;
   position: relative;
-  display: flex;
+  /* A GRID since #1039, not a wrapping flex row. The row is cover + title only
+     now (the score moved onto the cover as a pill and the stats column is gone),
+     so there is nothing left to wrap — and a `minmax(0, 1fr)` text track cannot
+     be pushed wider by a long title the way `flex: 1 1 240px` could. It also
+     retires the whole `--gd-stats-w` headroom calculation
+     (`.claude/rules/flex-none-item-makes-the-row-data-dependent.md`, whose
+     worked example this was): with two tracks and one of them fixed, there is no
+     content-dependent wrap point left. */
+  display: grid;
+  /* The cover track is PROPORTIONAL, capped at --gd-cover-w. A flat 340px track
+     was measured starving the text column at every pane narrower than ~1430px:
+     the card lives in the spread's left page (3/5 of the pane), which at a
+     1280px viewport is 550px — cover 340 + padding 56 + gap 24 left the title,
+     the chips and the fact pills **130px**, and the card rendered 626px tall
+     with the action bar out of the fold.
+
+     `min(var(--gd-cover-w), 46%)` fixes it with no breakpoint and no container
+     query: the percentage resolves against the card's own content box, so the
+     cover tracks the page it is on rather than the viewport — which is the
+     quantity that actually varies here, and non-monotonically (the rail takes
+     292px at 1280, so the left page SHRINKS across that breakpoint). Measured
+     below: 232px of cover beside 238px of text at 1280, 286/298 at 1470,
+     340/400 once the cap binds. `COVER_HERO` is 480, so the cap still
+     oversamples (cover-size.js). */
+  grid-template-columns: minmax(0, min(var(--gd-cover-w), 46%)) minmax(0, 1fr);
   gap: 24px;
-  flex-wrap: wrap;
-  align-items: center;
+  align-items: start;
   max-width: 100%;
   padding: 28px;
   border-radius: var(--radius-xl);
@@ -4425,7 +4470,9 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .gd-head > * { position: relative; }
 .gd-img {
   position: relative;
-  width: var(--gd-cover-w);
+  /* Fills its grid track, which is what carries the cover's size since #1039
+     (`min(var(--gd-cover-w), 46%)` on `.gd-head`). */
+  width: 100%;
   max-width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: var(--radius-lg);
@@ -4446,7 +4493,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    .gd-head was `width: fit-content` (#868 made the band full-width, so it can
    no longer widen the BAND) and is kept because it still decides where the
    text column starts. */
-.gd-cover { flex: none; width: var(--gd-cover-w); max-width: 100%; }
+/* Always rendered since #1039 (it was added only for an edition line before),
+   because it is the score pill's containing block: `position: relative` is what
+   keeps `.gd-score`'s `position: absolute` on the cover's own corner rather than
+   on the card's. */
+.gd-cover { position: relative; width: 100%; }
 .gd-edition { margin: 8px 0 0; font-size: var(--text-sm); line-height: 1.4; }
 
 /* `flex: 1 1 240px`, not `0 1 auto`. Two reasons, and the first is a bug:
@@ -4459,7 +4510,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    ring to the far right "so the game's rating read as belonging to nothing" —
    true when the band had no frame; since #868 the right edge it lands on is the
    card's own, which is what relates the two. */
-.gd-info { flex: 1 1 240px; min-width: 240px; }
+/* `min-width: 0`, the grid counterpart of the old `flex: 1 1 240px`: a grid item
+   defaults to a min-content minimum, so a long unbroken title would push this
+   track — and with it the card — wider than the column. The track's own
+   `minmax(0, …)` and this line are a pair; either alone leaves the blow-out. */
+.gd-info { min-width: 0; }
 .gd-info h1 { margin: 0 0 14px; font-size: var(--text-3xl); line-height: 1.35; }
 
 /* --- Inline editing on the game detail page --- */
@@ -4579,21 +4634,196 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .gd-onboard__acts { margin-left: 0; }
   .gd-onboard__act { flex: 1 1 100%; justify-content: center; }
 }
-/* With no stats column the head is just cover + title, so let the title block
-   sit beside a full-width-ish cover instead of stretching across the page. */
-.gd-head--sparse .gd-info { min-width: 200px; }
-/* Narrow: the band wraps into a stack, and a 300px cover with nothing beside it
-   wastes the width it could be leading with — so the art takes the full column
-   and the title steps back down under it. 700px is where the desktop row
-   (cover 300 + .gd-info's 240 floor + the ring + gaps) stops fitting the
-   column, measured — not a new device breakpoint.
-   Nothing needs to move the ring: .gd-info grows, so once the line wraps it
-   takes the whole row and .gd-stats starts the next one at the left on its own
-   (measured at 390: stats x=34, the content edge). */
+/* Narrow: the card stacks, and a 300px cover with nothing beside it wastes the
+   width it could be leading with — so the art takes the full column and the
+   title steps back down under it. 700px is the existing breakpoint, kept: it is
+   where the desktop row stopped fitting the reading measure, and since #1039 the
+   row is cover + title only, so it fits with more room to spare rather than less.
+
+   `grid-template-columns` has to be restated, not just `--gd-cover-w`: a
+   `100%` track inside a one-column grid would be 100% of the grid, i.e. the
+   text would be pushed off the card entirely. */
 @media (max-width: 700px) {
-  .gd-head { --gd-cover-w: 100%; --gd-stats-w: auto; padding: 20px; gap: 18px; align-items: flex-start; }
+  .gd-head {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px;
+    gap: 18px;
+  }
   .gd-info h1 { font-size: var(--text-2xl); }
 }
+
+/* ---- Game detail: the two-page spread (#1039) ----
+   The screen asks two questions on every visit — what is this game, and how did
+   it go for us — so it is two pages of one spread rather than one column of
+   eight stacked sections. 860px is the app's existing strip/dock/editor
+   breakpoint (`.claude/rules/responsive-hub-tabs.md`), not a new one.
+
+   3fr/2fr, not equal tracks: the left page carries a 340px cover BESIDE a title,
+   a chip row and a fact row, while the right page is a list of dated rows whose
+   content is short. Both `minmax(0, …)` — a bare `1fr` has a min-content
+   minimum, so one long game title or one long session status would push its
+   column past its share and blow the grid out. */
+.pass { display: grid; gap: 24px 32px; align-items: stretch; }
+@media (min-width: 860px) {
+  .pass { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+}
+/* Column membership is DOM, not CSS `order`, so below 860px the grid is a plain
+   block and the phone order is card → history → bar — which is also the tab
+   order (`.claude/rules/setup-screens-two-column-layout.md` §4). */
+.pass__game, .pass__table { min-width: 0; }
+.pass__table { display: flex; flex-direction: column; gap: 12px; }
+/* Below the split the right page stops being a box and hands its children
+   straight to `.pass`. That is not tidiness — it is what makes the sticky bar
+   reach the fold AT REST on a phone: sticky-bottom travel is clamped by the
+   containing block's top edge, and `.pass__table` starts at y=813 on a 390×844
+   phone (the card above it is 550px tall), so the bar could only ever rise to
+   55px below the floor. Promoted to `.pass`, whose top is at y=120, it pins at
+   the floor immediately — measured, gapToFloor −55 → +12 at scroll 0.
+
+   Safe on a bare <div>: `display: contents` drops the box, and with it the
+   element's own flex/gap, but the div carries no role for the accessibility
+   tree to lose. The row gap becomes `.pass`'s 24px, which is the spacing the
+   card above already uses. */
+@media (max-width: 859px) {
+  .pass__table { display: contents; }
+}
+
+/* The chips left the <h1> in #1039. They used to be appended into the heading so
+   they could sit beside the title's last line; their own flex line also takes
+   four interactive controls out of a heading's accessible name. */
+.gd-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gd-chips:empty { display: none; }
+
+/* The three glance facts — weight, playing time, minimum age — promoted out of
+   the „Über das Spiel" section onto the card. They are what a group asks before
+   playing; CATAN's 15 mechanics, which made that section 517px tall on a phone,
+   are in the disclosure below. */
+.gd-facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+.fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--sunken);
+  font-size: var(--text-sm);
+}
+.fact__label { color: var(--ink-soft); }
+.fact__value { font-weight: 700; }
+/* The weight pill reuses the info sheet's own markup, so its block-level
+   margins have to be unwound to sit on one pill line. */
+.fact--weight .game-info__weight { margin: 0; gap: 8px; }
+
+/* „Mehr zum Spiel" — the reference half, collapsed by default. A native
+   <details>, so the platform owns the state, the keyboard and the accessible
+   name; the marker is suppressed in favour of the app's own chevron, which is a
+   real <i class="ti"> in the summary rather than a ::after content codepoint
+   (`.claude/rules/tabler-icon-codepoints.md` — a wrong-but-present codepoint
+   renders a plausible other icon with no error). */
+.gd-more { margin: 16px 0 0; }
+.gd-more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: -6px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--brand-strong);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.gd-more > summary::-webkit-details-marker { display: none; }
+.gd-more > summary:hover { background: var(--brand-tint); }
+.gd-more > summary .ti { transition: transform var(--dur-base) var(--ease-out); }
+.gd-more[open] > summary .ti { transform: rotate(180deg); }
+.gd-more__body { display: flex; flex-direction: column; gap: 10px; padding: 10px 0 0; }
+
+/* The one action, alone at the foot of the right page. It used to be the first
+   of three equally-weighted full-width buttons — 167px of phone viewport for
+   „Jetzt spielen", „Aussortieren" and „Durchgespielt", of which one is what
+   anybody came for; the other two are in the „…" page menu.
+
+   It IS sticky, and that needed measuring rather than assuming — with the
+   `static` control, because `.claude/rules/sticky-bottom-bar-needs-slack-below-it.md`
+   said this could not work. That rule had the direction backwards: a
+   `bottom`-stuck box travels upward over its PRECEDING siblings, clamped by its
+   containing block's TOP edge, not by whatever slack sits below it. Measured at
+   390×844 (Carcassonne, demo round), bar bottom relative to the viewport floor:
+
+     scroll    0    120    240
+     static  -232   -112     +8
+     sticky   -55    +12    +12      ← pinned from 120px on
+
+   So the button stops scrolling away instead of being reachable only at the
+   very foot of the page. The rule's own #1015 measurement is consistent once
+   read this way: that aside held nothing ABOVE its bar, so there was nothing to
+   travel over. Both files were corrected together.
+
+   `z-index` is what keeps it opaque over the history rows it rides up across. */
+.gd-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+.gd-bar .btn { flex: 1 1 auto; justify-content: center; }
+
+/* The score, on the cover's top-right corner — exactly where every Regal card
+   already puts it. `.score-pill` is `position: absolute; top: 8px; right: 8px`
+   by default, so it goes static inside this wrapper and the wrapper takes the
+   corner, which is what lets the ⓘ sit beside it. */
+.gd-score {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.gd-score .score-pill { position: static; }
+.score-pill--lg { font-size: var(--text-xl); padding: 5px 14px; box-shadow: var(--shadow-2); }
+/* A translucent-dark scrim under white, NOT a theme token: this button sits on
+   arbitrary box art, so nothing derived from the page can be relied on to carry
+   it. Same reasoning and the same precedent as `.gd-img__edit`'s gradient one
+   component over (`.claude/rules/theme-derived-colors.md` — the exception is
+   "over an image", not "a tone I liked"). */
+.gd-score .score-info {
+  width: 26px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: var(--text-md);
+  box-shadow: var(--shadow-1);
+}
+.gd-score .score-info:hover,
+.gd-score .score-info:focus-visible { background: rgba(0, 0, 0, 0.78); color: #fff; }
+
+/* The back row carries the „…" page menu at its right end on this one screen, so
+   the flex treatment is a modifier rather than a change to `.back-row` — nine
+   other sub-screens share that component and none of them has a right slot. */
+.back-row--split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* The page menu: buttons only, so it is a popover at EVERY width — the account
+   menu's case rather than the editors' (`.claude/rules/popover-vs-sheet-editors.md`). */
+.popover.popover--menu { min-width: 210px; }
+/* (0,2,0) on purpose. `.popover__opt` declares `color: inherit`, so a one-class
+   modifier would tie it and win on SOURCE ORDER alone — the loss shape
+   `.claude/rules/responsive-content-width.md` records three times over. */
+.popover__opt.popover__opt--warn { color: var(--warn); }
+.popover__opt.popover__opt--good { color: var(--good); }
+.popover__opt.popover__opt--muted { color: var(--ink-soft); }
 
 /* Member detail page: a hero band in the member's own colour, then the editable
    name, colour picker and stats.
@@ -5042,6 +5272,14 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
      can only shorten the card and scroll the remainder. */
   max-height: max(380px, min(45vh, 620px));
 }
+/* One more child since #1039, so one more term in that floor: the owned list's
+   head (21) + margin (10) + its own 46px body floor = 77, i.e. 457 rounded to
+   460. Scoped with `:has()` rather than raised outright, so a game that owns
+   nothing keeps the card #722/#728 actually measured. (0,2,0) beats the base
+   `:is()` rule's (0,1,0) on specificity, not on source order. */
+:is(.popover--expansions, .editor--expansions):has(.exp-have) {
+  max-height: max(460px, min(45vh, 620px));
+}
 :is(.popover--expansions, .editor--expansions) .exp-pick {
   margin-bottom: 10px;
   /* A flex item's default `min-height: auto` is its content size, so without
@@ -5052,10 +5290,39 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   flex-direction: column;
 }
 :is(.popover--expansions, .editor--expansions) .exp-pick__head,
+:is(.popover--expansions, .editor--expansions) .exp-have__head,
 :is(.popover--expansions, .editor--expansions) .exp-own__head {
   font-size: var(--text-sm);
   margin-bottom: 6px;
 }
+/* What the round already owns (#1039) — the rows the removed `.gd-expansions`
+   page section used to carry. Built like `.exp-pick` above, and it has to be:
+   the card's `max-height` budget is shared out by its children, so a child
+   without `min-height: 0` and a cap of its own would ignore the budget and push
+   the free-text form and the OK button out (the 53px overlap #728 measured). */
+:is(.popover--expansions, .editor--expansions) .exp-have {
+  margin-bottom: 10px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+:is(.popover--expansions, .editor--expansions) .exp-have__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Gives way with the candidate list, but never all the way: without a floor
+     this box is the first thing squeezed to zero on a short viewport, and since
+     #1039 this editor is the ONLY way to remove an owned expansion — so a
+     collapsed list is not a cosmetic loss but an unreachable action. */
+  flex: 0 1 auto;
+  min-height: 46px;
+  max-height: 168px;
+  overflow-y: auto;
+  /* Reaching the end must not chain into the page, because a page scroll closes
+     the popover outright (.claude/rules/overlay-page-lock.md §3). */
+  overscroll-behavior: contain;
+}
+:is(.popover--expansions, .editor--expansions) .exp-have__row { padding: 8px 10px; }
 /* A game can have 100+ expansions, so the list is a bounded scroll box. It
    lives inside an overlay, so it must not chain its scroll into the page
    behind it (.claude/rules/overlay-page-lock.md §5). */
@@ -5602,15 +5869,6 @@ kbd {
   color: inherit;
 }
 
-/* "View on X" and "Remove link" side by side (issue #282). The unlink action is
-   secondary to the outbound link, so it is muted rather than brand-coloured. */
-.gd-source {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 18px;
-}
-.link-out--muted { color: var(--ink-soft); font-weight: 600; }
 
 /* Current price of a wished-for game (issue #679). The amount is the one number
    the section exists for, so it leads; everything under it qualifies that number
@@ -6302,36 +6560,6 @@ kbd {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* ---- Game detail: score ring ---- */
-.gd-ring { position: relative; width: 88px; height: 88px; }
-.gd-ring svg { width: 100%; height: 100%; display: block; }
-.gd-ring__num {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 700;
-}
-.gd-ring--none {
-  border: 8px solid var(--sunken);
-  border-radius: 50%;
-}
-.gd-ring--none .gd-ring__num { color: var(--ink-soft); }
-.gd-stats {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  /* See the --gd-stats-w paragraph on .gd-head: `flex: none` sized this
-     column to its longest label, which is what made the row wrap for some
-     games and not others. */
-  flex: 0 0 var(--gd-stats-w);
-  text-align: center;
 }
 
 /* ---- Add game: bottom sheet ---- */

@@ -81,7 +81,8 @@ const frontendGlobals = {
   personColor: 'readonly',
   renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
   renderSetupAddons: 'readonly',
-  hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly', renderGameInfoSection: 'readonly',
+  hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
+  gameGlanceFacts: 'readonly', gameInfoRest: 'readonly',
   wantsGameInfo: 'readonly', mergeGameInfo: 'readonly',
   foldGameInfoList: 'readonly', refreshShelfGameInfo: 'readonly',
   // username-policy.js

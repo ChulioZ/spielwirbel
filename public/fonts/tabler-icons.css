@@ -71,6 +71,7 @@
 .ti-chevron-left::before { content: "\ea60"; }
 .ti-chevron-right::before { content: "\ea61"; }
 .ti-chevron-down::before { content: "\ea5f"; }
+.ti-dots::before { content: "\ea95"; }
 .ti-arrow-right::before { content: "\ea1f"; }
 .ti-arrow-left::before { content: "\ea19"; }
 .ti-arrow-back-up::before { content: "\eb77"; }

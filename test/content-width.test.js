@@ -288,6 +288,76 @@ test('the setup width is WIDER than the reading measure it replaces', () => {
   assert.ok(setup <= rootPx('--w-shell'), '--w-setup exceeds the shell it sits in');
 });
 
+/* The game detail spread (#1039) — the third screen to escape the reading
+   measure, and the first to do it while rendering navigation. Two halves fail
+   silently, so both are pinned. */
+test('the detail spread and its back row opt out of the reading measure TOGETHER', () => {
+  /* The `.page-head` lesson one screen over, with a different sibling: the back
+     row — which carries the „…" page menu — sits NEXT TO `.pass`, not around it,
+     so neither grid exemption reaches it. Capped at 900 while the spread spans
+     1400, the menu would sit ~250px inside the page's right edge. */
+  const exemptions = RULES.filter(([sel, body]) =>
+    whole('.pass').test(sel) && /max-width:/.test(body));
+  assert.ok(exemptions.length,
+    'nothing exempts .pass from the reading measure, so the spread is capped at the text measure');
+
+  exemptions.forEach(([sel, body]) => {
+    assert.ok(whole('.back-row').test(sel),
+      `"${sel}" widens the spread without widening the back row, which leaves the page menu inside the page's right edge`);
+    // Conditioned on the spread being present, or every other screen's back row
+    // loses its reading measure too — the "it moves the misalignment rather than
+    // fixing it" trap the lobby band records.
+    assert.match(sel, /:has\(\.pass\)/,
+      `"${sel}" is not conditioned on the spread being present, so it widens every screen's back row`);
+    const vars = [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]);
+    assert.equal(vars.length, 1,
+      `"${sel}" does not take its width from a single custom property`);
+    // It competes with the (0,3,0) reading-measure cap; source order breaks
+    // silently when someone moves a block.
+    const classes = (sel.match(/\.[\w-]+/g) || []).length;
+    assert.ok(classes > 3,
+      `"${sel}" has ${classes} class components and does not out-rank the (0,3,0) reading-measure cap`);
+  });
+});
+
+test('the detail width sits between the reading measure and the shell', () => {
+  // Arithmetic, not "a --w-detail exists": at 880 every selector assertion above
+  // stays green while the exemption makes the screen NARROWER than the cap it
+  // exists to escape — the `--w-setup: 880px` failure one token over.
+  const detail = rootPx('--w-detail');
+  const read = rootPx('--w-read');
+  assert.ok(detail, ':root does not declare --w-detail');
+  assert.ok(detail > read,
+    `--w-detail (${detail}px) is not wider than --w-read (${read}px), so the exemption buys nothing`);
+  assert.ok(detail <= rootPx('--w-shell'), '--w-detail exceeds the shell it sits in');
+});
+
+test('the detail spread is two columns from the app breakpoint, on bounded tracks', () => {
+  const hit = mediaBlocks()
+    .map(([query, css]) => ({ query, body: bodyOf('.pass', rulesOf(css)) }))
+    .find((b) => b.body && /grid-template-columns/.test(b.body));
+  assert.ok(hit, '.pass never becomes a multi-column grid');
+
+  // 860 is the strip/dock/editor breakpoint the whole app already turns on; a
+  // fourth number here would put the spread's columns out of step with the
+  // editors its own chips open.
+  assert.match(hit.query, /min-width:\s*860px/,
+    `the spread splits at "${hit.query.trim()}" rather than at the app's own 860px`);
+
+  const tracks = hit.body.match(/grid-template-columns:([^;]+);/)[1];
+  assert.equal((tracks.match(/minmax\(/g) || []).length, 2,
+    `.pass declares "${tracks.trim()}" rather than two tracks`);
+  // A bare `1fr` track has an auto (min-content) minimum, so one long game title
+  // or one long session status would push its column past its share.
+  assert.ok(!/minmax\(\s*(?!0)/.test(tracks),
+    'a track without a 0 minimum lets its content blow the grid out');
+  // The game side is the wider one: it carries a 340px cover BESIDE a title, a
+  // chip row and a fact row, where the history is a list of short dated rows.
+  const fr = [...tracks.matchAll(/minmax\(\s*0\s*,\s*([\d.]+)fr\s*\)/g)].map((m) => Number(m[1]));
+  assert.equal(fr.length, 2, `.pass declares "${tracks.trim()}" rather than two fr tracks`);
+  assert.ok(fr[0] > fr[1], `the history track (${fr[1]}fr) is not narrower than the game track (${fr[0]}fr)`);
+});
+
 test('a setup form is two columns from its breakpoint, with room for a tile row', () => {
   /* The grid must actually become two columns, and the preview panel inside the
      narrower of them must still fit more than one tile — a floor nudged up

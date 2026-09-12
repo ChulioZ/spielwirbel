@@ -541,7 +541,6 @@ I18N.fr = {
   'sessions.deleteConfirm': 'Vraiment supprimer la session du {when} ?',
   'sessions.deleted': 'Session supprimée',
 
-  'detail.noRating': 'Pas encore de note',
   'detail.retire': 'Retirer',
   'detail.complete': 'Terminé',
   'detail.restore': 'Faire revenir',
@@ -655,8 +654,9 @@ I18N.fr = {
   'detail.toast.coverUnreachable': '{provider} est injoignable.',
 
   'detail.expansionsTitle': 'Extensions',
-  'detail.expansionsEmpty': 'Aucune extension enregistrée pour l’instant.',
-  'detail.expansionAdd': 'Ajouter une extension',
+  'detail.more': 'En savoir plus sur le jeu',
+  'detail.moreActions': 'Autres actions',
+  'detail.addExpansionChip': '+ Extension',
   'detail.expansionRemove': 'Retirer',
   'detail.expansionRemoveConfirm': 'Retirer « {title} » de tes extensions ?',
   'detail.expansionPickTitle': 'Depuis {provider}',

@@ -558,7 +558,6 @@ I18N.en = {
   'sessions.deleteConfirm': 'Really delete the session from {when}?',
   'sessions.deleted': 'Session deleted',
 
-  'detail.noRating': 'No rating yet',
   'detail.retire': 'Retire',
   'detail.complete': 'Completed',
   'detail.restore': 'Bring back',
@@ -675,8 +674,9 @@ I18N.en = {
   'detail.toast.coverUnreachable': '{provider} could not be reached.',
 
   'detail.expansionsTitle': 'Expansions',
-  'detail.expansionsEmpty': 'No expansions recorded yet.',
-  'detail.expansionAdd': 'Add expansion',
+  'detail.more': 'More about the game',
+  'detail.moreActions': 'More actions',
+  'detail.addExpansionChip': '+ Expansion',
   'detail.expansionRemove': 'Remove',
   'detail.expansionRemoveConfirm': 'Remove “{title}” from your expansions?',
   'detail.expansionPickTitle': 'From {provider}',

@@ -42,7 +42,11 @@ whole dark half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`.
   render-time reasoning as `provider-cover-sizing.md`; keeps the repo free of
   migration code.)
 - **`avgColor()` is used in BOTH directions** — fill under `--on-accent` text
-  (`.score-pill`) *and* text/stroke on the page (`.gd-ring__num`). Its
+  (`.score-pill`) *and* text/stroke on the page (the Chronik's and the results
+  screen's score text; the game-detail ring it was derived from went with #1039,
+  where the score became a `.score-pill--lg` on the cover — so the *fill* leg now
+  binds on that screen and the ring leg is carried by the remaining text uses).
+  Its
   lightness is **30%** for every value at or above 1: the lightest value
   clearing 4.5:1 under white across the whole hue range while the ring still
   clears 3:1 (large text) on every light design. Don't lighten it without

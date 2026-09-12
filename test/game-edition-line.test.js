@@ -4,10 +4,18 @@
  * its box art from („Ausgabe: Deutsche Erstausgabe · 2019").
  *
  * Rendered through the jsdom harness rather than asserted as a regex over the
- * view's source, because the interesting half is STRUCTURAL: the wrapper that
- * carries the line is added only when there is one, so a game without an edition
- * must render the cover as a direct child of `.gd-head` exactly as it always did.
- * A text assertion cannot see that (.claude/rules/testing-views-under-jsdom.md).
+ * view's source, because the interesting half is STRUCTURAL: the LINE is added
+ * only when there is an edition to name, so a game without one must render a
+ * bare cover column. A text assertion cannot see that
+ * (.claude/rules/testing-views-under-jsdom.md).
+ *
+ * `.gd-cover` itself stopped being conditional in #1039 — it is now the score
+ * pill's containing block, so every game has one — which is why the two
+ * negative tests below assert the absence of the LINE inside it rather than the
+ * absence of the wrapper. The wrapper check they used to make was the load-
+ * bearing half at the time (an unconditional wrapper would have restructured
+ * the flex band of every game); the band is a grid now, and the column is a
+ * real track in it.
  *
  * Selectors are scoped to `.gd-head` because the desktop rail inside `dom.app`
  * carries its own headings and its own `.gd-title`.
@@ -84,11 +92,14 @@ test('a game with a stored edition names its printing under the cover', async (t
   const line = editionLine(dom);
   assert.ok(line, 'the edition line renders');
   assert.equal(line.textContent, t('detail.edition', { edition: 'Deutsche Erstausgabe · 2021' }));
-  // Under the cover, not beside it: same column, cover first.
+  // Under the cover, not beside it: same column, cover first, line last. Asserted
+  // as first/last rather than by index — since #1039 the score badge sits between
+  // them in DOM order (it is absolutely positioned on the cover's corner, so it
+  // takes no flow space and the line still lands directly under the art).
   const col = dom.app.querySelector('.gd-head .gd-cover');
   assert.ok(col, 'the cover gains its own column');
-  assert.equal(col.children[0].classList.contains('gd-img'), true);
-  assert.equal(col.children[1], line);
+  assert.equal(col.firstElementChild.classList.contains('gd-img'), true);
+  assert.equal(col.lastElementChild, line);
 });
 
 test('the line follows the UI language', async (t_) => {
@@ -101,25 +112,25 @@ test('the line follows the UI language', async (t_) => {
   assert.match(editionLine(dom).textContent, /Deutsche Erstausgabe/);
 });
 
-test('a game with NO edition renders the cover exactly as it always did', async (t_) => {
+test('a game with NO edition renders a bare cover column', async (t_) => {
   const { dom } = bootApp(t_, 'de');
   await dom.call('showGameDetail', RID, 'g2');
   assert.equal(editionLine(dom), null, 'no line');
-  assert.equal(dom.app.querySelector('.gd-head .gd-cover'), null, 'and no wrapper either');
-  // The load-bearing half: the cover is still a DIRECT child of .gd-head, which
-  // is what `.gd-head`'s flex layout was written against. A wrapper added
-  // unconditionally would restructure the head band of every game in the app.
-  const head = dom.app.querySelector('.gd-head');
-  const img = head.querySelector('.gd-img');
-  assert.ok(img, 'the cover renders');
-  assert.equal(img.parentElement, head);
+  // The load-bearing half, restated for the grid: the cover column is the card's
+  // FIRST track, so the cover still leads the row rather than being pushed into
+  // the text column by a wrapper that appeared for some games and not others.
+  const col = dom.app.querySelector('.gd-head .gd-cover');
+  assert.ok(col, 'the cover column renders for a game with no edition too');
+  assert.equal(col.parentElement, dom.app.querySelector('.gd-head'));
+  assert.ok(col.querySelector('.gd-img'), 'and it carries the cover');
+  assert.equal(col.querySelector('.gd-edition'), null, 'with nothing under it');
 });
 
 test('an edition with only a language renders nothing — it prices, it does not label', async (t_) => {
   const { dom } = bootApp(t_, 'de');
   await dom.call('showGameDetail', RID, 'g3');
   assert.equal(editionLine(dom), null);
-  assert.equal(dom.app.querySelector('.gd-head .gd-cover'), null);
+  assert.equal(dom.app.querySelector('.gd-head .gd-cover .gd-edition'), null);
   // Derived from the same helper the view uses, so this stays true if the
   // "what counts as a label" rule ever moves.
   assert.equal(editionLabel({ name: '', year: null, languages: ['German'] }), '');
