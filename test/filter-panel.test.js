@@ -428,6 +428,54 @@ test('unseating somebody moves the chip too, not just the label inside the panel
   assert.deepEqual(appliedChips(), ['BGG-Tipp für 2 Personen']);
 });
 
+/* „Mehrere Tische" makes the toggle meaningless — the draw and the preview both
+   SKIP the clause there, because a split has no one table size for the poll to
+   have an opinion about. So the control must not exist in that mode: left
+   rendered it does nothing, and since it states a count it would state a wrong
+   one, naming a party that is about to be seated at two tables. */
+test('„Mehrere Tische" removes the toggle, and takes the filter with it', async () => {
+  await dom.call('showStartSession', roundFixture({
+    games: [{ id: 'p1', title: 'Passt', minPlayers: 1, maxPlayers: 6, bestWith: [3], recommendedWith: [1, 2, 3] }],
+  }));
+  openPanel();
+  const box = dom.document.querySelector('.mfilter__row--check input');
+  box.checked = true;
+  box.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 3 Personen']);
+  closePanel();
+
+  dom.app.querySelector('.setup-addons__chip[data-addon="multi"]').click();
+  // Both halves: the control is gone, AND the value went with it. Hiding alone
+  // would leave a chip for a filter the user can neither see nor clear.
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check'), null,
+    'the toggle must not be offered where it can do nothing');
+  closePanel();
+  assert.deepEqual(appliedChips(), [], 'and no chip may survive its own control');
+
+  // Back off: the mode is reversible, so the control comes back — unticked,
+  // because the filter was cleared rather than remembered.
+  dom.app.querySelector('.setup-addons__chip[data-addon="multi"]').click();
+  openPanel();
+  const back = dom.document.querySelector('.mfilter__row--check input');
+  assert.ok(back, 'leaving the mode brings the toggle back');
+  assert.equal(back.checked, false);
+  closePanel();
+});
+
+/* The same pair, arriving together from a remembered preset (#252) — which
+   `normalizeMetadataFilters` cannot prune, because it asks what the SHELF can
+   offer and this is a property of the screen. */
+test('a preset carrying both restores the split, never the dead filter', async () => {
+  await dom.call('showStartSession', roundFixture({
+    games: [{ id: 'p1', title: 'Passt', minPlayers: 1, maxPlayers: 6, bestWith: [3], recommendedWith: [1, 2, 3] }],
+  }), { multiTable: true, metadata: { onlyRecommended: true } });
+  assert.deepEqual(appliedChips(), []);
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check'), null);
+  closePanel();
+});
+
 test('the complexity selects carry each other rather than allowing an inverted range', async () => {
   await dom.call('showStartSession', roundFixture());
   openPanel();

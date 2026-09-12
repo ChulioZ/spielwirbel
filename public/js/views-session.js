@@ -190,6 +190,12 @@ function showStartSession(round, prefill) {
   // Multi-table mode (#796). Preset from the same #252 blob as everything else on
   // this screen; the checkbox below is bound to it and the pool reads it live.
   const tableState = { multiTable: !!(preset && preset.multiTable) };
+  // A preset can arrive with BOTH remembered (#252), and `normalizeMetadataFilters`
+  // above cannot drop it: it prunes against the SHELF's options, and whether this
+  // evening has one table is a property of the screen. Without this the restored
+  // session shows a chip for a filter with no control and no effect — see the gate
+  // in `mountFilterPanel` for why the toggle does not exist in this mode.
+  if (tableState.multiTable) metaFilters.onlyRecommended = false;
 
   // Games matching the tag filter, whose player range fits the joining count.
   // Guests sit at the table, so they count here, and a team counts once however
@@ -475,6 +481,18 @@ function showStartSession(round, prefill) {
     onToggle: () => {
       tableState.multiTable = !tableState.multiTable;
       multiTableNote.hidden = !tableState.multiTable;
+      // Hiding the control is not enough: the VALUE would survive on `metaFilters`,
+      // so the chip outside the panel would keep claiming a filter whose control
+      // has gone — a filter the user could neither see nor clear, which is the
+      // vanished-referent rule `normalizeMetadataFilters` applies to every other
+      // control here. Cleared rather than remembered, because the mode is a
+      // deliberate act and a filter silently returning later is worse than
+      // re-ticking a box.
+      if (tableState.multiTable) metaFilters.onlyRecommended = false;
+      // The panel carries one control fewer (or one more), so it is rebuilt
+      // rather than merely resynced — `mountFilterPanel` is a no-op under an open
+      // overlay, and this addon sits outside it, so it cannot be mid-adjustment.
+      mountFilterPanel();
       updateHint();
     },
   });
@@ -595,10 +613,18 @@ function showStartSession(round, prefill) {
     // `tableSized`: this screen has a party, so the recommendation toggle
     // (#1005) can mean something here. The Regal passes nothing and gets no
     // toggle — it filters a shelf, not an evening.
+    // `tableSized` is FALSE under „Mehrere Tische", and that is the same gate the
+    // Regal gets rather than a second one: the toggle asks what the community
+    // recommends AT A TABLE SIZE, and a split has no one size — which is why both
+    // the draw (lib/draw.js) and the preview above skip the clause there. Left
+    // rendered it would be a control that does nothing, and since #1005 states a
+    // count it would do worse than nothing: „BGG-Tipp für 5 Personen" over an
+    // evening where those five sit at two tables of two and three.
+    //
     // `partyCount`: a thunk, so the toggle's own label and its applied chip can
     // state the number they are filtering on rather than saying „hier".
     filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection,
-      { tableSized: true, partyCount: playerCount });
+      { tableSized: !tableState.multiTable, partyCount: playerCount });
     filterMount.replaceChildren();
     if (filterPanel) filterMount.appendChild(filterPanel.el);
     filterMount.hidden = !filterPanel;
