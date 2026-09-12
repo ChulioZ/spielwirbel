@@ -606,6 +606,9 @@ public/
     views-round-start.js  Start tab: hero, the one big CTA and its quick-start
                           chips, the tickets, and the derived card grid (#923)
     views-regal.js        Regal tab: the games library (search, filters, grid)
+    regal-bulk.js         the Regal's selection mode and its four bulk actions
+                          (tags, owners, retire, delete), lifted out of
+                          views-regal.js so each is editable on its own (#1000)
     views-chronik.js      Chronik tab: the month-grouped session/shelf timeline,
                           and the shareable month/year recap above it
     views-pokale.js       Pokale tab: podium + fun stats, and the Rückblick

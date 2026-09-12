@@ -458,3 +458,91 @@ test('duplicate ids in one bulk-owners request are deduped, not double-counted',
   assert.equal(res.body.updated, 1);
   assert.deepEqual((await ownersOf(round.id, a.id)).ownerIds, [anna.id]);
 });
+
+/* ---------------------------- bulk-tags (#1000) ---------------------------- */
+
+const addTag = async (rid, name) =>
+  (await request(app).post(`/api/rounds/${rid}/tags`).send({ name })).body;
+
+test('bulk-tags ADDS without touching the tags a game already carries', async () => {
+  /* The whole difference from bulk-owners, which replaces: a 50-game selection
+     carries 50 different tag sets, so replacing would silently strip every tag
+     those games had — on the action whose purpose is organising a shelf. */
+  const round = await createRound(request);
+  const kenner = await addTag(round.id, 'Kenner');
+  const familie = await addTag(round.id, 'Familie');
+  const [a, b] = await shelf(round.id, 'Azul', 'Brass');
+  await request(app).patch(`/api/rounds/${round.id}/games/${a.id}`).send({ tagIds: [familie.id] });
+
+  const res = await request(app).post(`/api/rounds/${round.id}/games/bulk-tags`)
+    .send({ gameIds: [a.id, b.id], addTagIds: [kenner.id] });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.updated, 2);
+
+  const games = Object.fromEntries((await getRound(round.id)).games.map((g) => [g.id, g]));
+  assert.deepEqual(games[a.id].tagIds, [familie.id, kenner.id], 'the existing tag survived');
+  assert.deepEqual(games[b.id].tagIds, [kenner.id]);
+});
+
+test('bulk-tags removes, and clearing the last tag leaves no key behind', async () => {
+  const round = await createRound(request);
+  const kenner = await addTag(round.id, 'Kenner');
+  const [a] = await shelf(round.id, 'Azul');
+  await request(app).patch(`/api/rounds/${round.id}/games/${a.id}`).send({ tagIds: [kenner.id] });
+
+  const res = await request(app).post(`/api/rounds/${round.id}/games/bulk-tags`)
+    .send({ gameIds: [a.id], removeTagIds: [kenner.id] });
+  assert.equal(res.status, 200);
+  assert.equal('tagIds' in (await getRound(round.id)).games[0], false,
+    'absent-key parity with a never-tagged game');
+});
+
+test('bulk-tags counts games that CHANGED, so a no-op says so', async () => {
+  const round = await createRound(request);
+  const kenner = await addTag(round.id, 'Kenner');
+  const [a, b] = await shelf(round.id, 'Azul', 'Brass');
+  await request(app).post(`/api/rounds/${round.id}/games/bulk-tags`)
+    .send({ gameIds: [a.id], addTagIds: [kenner.id] });
+
+  const res = await request(app).post(`/api/rounds/${round.id}/games/bulk-tags`)
+    .send({ gameIds: [a.id, b.id], addTagIds: [kenner.id] });
+  assert.equal(res.body.updated, 1, 'only Brass moved; the toast must not claim two');
+});
+
+test('bulk-tags writes NO activity, exactly as the single tag edit does not', async () => {
+  // The reflex answer is a counted `games_tagged` row, and it is wrong: it would
+  // make the same edit public or private depending on which screen reached it.
+  const round = await createRound(request);
+  const kenner = await addTag(round.id, 'Kenner');
+  const [a] = await shelf(round.id, 'Azul');
+  const before = (await feed(round.id)).length;
+
+  await request(app).post(`/api/rounds/${round.id}/games/bulk-tags`)
+    .send({ gameIds: [a.id], addTagIds: [kenner.id] });
+  assert.equal((await feed(round.id)).length, before, 'the Chronik gained a row it should not have');
+});
+
+test('bulk-tags 400s an unknown tag and an empty instruction, and refuses a stale selection whole', async () => {
+  const round = await createRound(request);
+  const other = await createRound(request);
+  const kenner = await addTag(round.id, 'Kenner');
+  const [a] = await shelf(round.id, 'Azul');
+  const [theirs] = await shelf(other.id, 'Theirs');
+
+  const unknownTag = await request(app).post(`/api/rounds/${round.id}/games/bulk-tags`)
+    .send({ gameIds: [a.id], addTagIds: ['nope'] });
+  assert.equal(unknownTag.status, 400);
+  assert.equal(unknownTag.body.error, 'Unknown tag');
+
+  // Neither list — a caller bug, not the "clear" that an empty ownerIds means on
+  // bulk-owners. Reporting a successful zero would hide a broken client.
+  const nothing = await request(app).post(`/api/rounds/${round.id}/games/bulk-tags`)
+    .send({ gameIds: [a.id] });
+  assert.equal(nothing.status, 400);
+
+  const stale = await request(app).post(`/api/rounds/${round.id}/games/bulk-tags`)
+    .send({ gameIds: [a.id, theirs.id], addTagIds: [kenner.id] });
+  assert.equal(stale.status, 400);
+  assert.equal('tagIds' in (await getRound(round.id)).games[0], false,
+    'a refused selection writes nothing at all');
+});

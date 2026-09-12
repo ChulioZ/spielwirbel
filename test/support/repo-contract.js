@@ -2367,6 +2367,104 @@ module.exports = function repoContract(repo) {
     assert.equal('ownerIds' in (await repo.getGame(T, round.id, wish.id)), false);
   });
 
+  /* ------------------------- Bulk game tags (#1000) ------------------------- */
+
+  test('setGameTags ADDS and REMOVES — it never replaces the set', async () => {
+    /* THE semantic decision of #1000, and the one that would be destructive if
+       taken by reflex from its sibling above: a 50-game selection carries 50
+       different tag sets, so replacing would silently strip every tag those
+       games already had — on the action whose whole purpose is organising a
+       freshly imported shelf. */
+    const round = await freshRound({ name: 'Bulk tags' });
+    const kenner = await repo.addTag(T, round.id, 'Kenner');
+    const familie = await repo.addTag(T, round.id, 'Familie');
+    const party = await repo.addTag(T, round.id, 'Party');
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'Azul', tagIds: [familie.id] }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'Brass' }));
+    const c = await repo.createGame(T, round.id, gameFields({ title: 'Cascadia', tagIds: [party.id] }));
+
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id, b.id], { add: [kenner.id] }), { updated: 2 });
+    const games = Object.fromEntries((await repo.getRound(T, round.id)).games.map((g) => [g.id, g]));
+    assert.deepEqual(games[a.id].tagIds, [familie.id, kenner.id],
+      'the tag it already had SURVIVED — this is the whole difference from setGameOwners');
+    assert.deepEqual(games[b.id].tagIds, [kenner.id]);
+    assert.deepEqual(games[c.id].tagIds, [party.id], 'a game outside the selection is untouched');
+
+    // Remove takes only what it names.
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id], { remove: [familie.id] }), { updated: 1 });
+    assert.deepEqual((await repo.getGame(T, round.id, a.id)).tagIds, [kenner.id]);
+
+    // Both directions in one call, which is what the tri-state picker sends.
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id], { add: [party.id], remove: [kenner.id] }),
+      { updated: 1 });
+    assert.deepEqual((await repo.getGame(T, round.id, a.id)).tagIds, [party.id]);
+  });
+
+  test('setGameTags counts games that CHANGED, and removing the last tag drops the key', async () => {
+    const round = await freshRound({ name: 'Counting' });
+    const kenner = await repo.addTag(T, round.id, 'Kenner');
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'Azul', tagIds: [kenner.id] }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'Brass' }));
+
+    // A no-op on `a`, a real change on `b` — so the toast can say something true
+    // rather than reporting the selection size back at the user.
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id, b.id], { add: [kenner.id] }), { updated: 1 });
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id, b.id], { add: [kenner.id] }), { updated: 0 },
+      'nothing moved the second time');
+
+    /* Clearing removes the KEY, never stores []. `mergeData` is `data || patch`
+       and cannot remove one, so Postgres drops to the `-` operator where the
+       JSON backend `delete`s — a copy storing [] would read identically
+       everywhere and be invisible outside this suite. */
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id], { remove: [kenner.id] }), { updated: 1 });
+    assert.equal('tagIds' in (await repo.getGame(T, round.id, a.id)), false);
+    const read = (await repo.getRound(T, round.id)).games.find((x) => x.id === a.id);
+    assert.equal('tagIds' in read, false, 'absent-key parity with a never-tagged game');
+  });
+
+  test('setGameTags lets REMOVE win over ADD, and does not skip a wish', async () => {
+    const round = await freshRound({ name: 'Edges' });
+    const kenner = await repo.addTag(T, round.id, 'Kenner');
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul' }));
+    // A wish CAN carry tags (the single PATCH takes tagIds for one) and
+    // organising the wish list is exactly this action's job — unlike owners,
+    // where a wish is nobody's box yet.
+    const wish = await repo.createGame(T, round.id, gameFields({ title: 'Wanted', wish: true }));
+
+    // Unreachable from the tri-state chip (one chip, one state); a hand-rolled
+    // body can send it, so the precedence is stated rather than left to
+    // statement order.
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [g.id], { add: [kenner.id], remove: [kenner.id] }),
+      { updated: 0 });
+    assert.equal('tagIds' in (await repo.getGame(T, round.id, g.id)), false);
+
+    assert.deepEqual(await repo.setGameTags(T, round.id, [wish.id], { add: [kenner.id] }),
+      { updated: 1 });
+    assert.deepEqual((await repo.getGame(T, round.id, wish.id)).tagIds, [kenner.id]);
+  });
+
+  test('setGameTags refuses a stale selection WHOLE, like every other bulk path', async () => {
+    const round = await freshRound({ name: 'Mine' });
+    const other = await freshRound({ name: 'Theirs' });
+    const kenner = await repo.addTag(T, round.id, 'Kenner');
+    const mine = await repo.createGame(T, round.id, gameFields({ title: 'Mine' }));
+    const theirs = await repo.createGame(T, other.id, gameFields({ title: 'Theirs' }));
+
+    assert.equal(
+      await repo.setGameTags(T, round.id, [mine.id, theirs.id], { add: [kenner.id] }),
+      'unknown_game');
+    assert.equal('tagIds' in (await repo.getGame(T, round.id, mine.id)), false,
+      'a refused selection writes nothing at all');
+    assert.equal(await repo.setGameTags(T, 'missing', [mine.id], { add: [kenner.id] }), null);
+  });
+
   test('setGameOwners refuses a stale selection WHOLE, exactly as moveGames does', async () => {
     const round = await freshRound({ name: 'Mine', members: ['Anna'] });
     const other = await freshRound({ name: 'Theirs' });
