@@ -856,6 +856,9 @@ I18N.de = {
   // wissen, wer das Gerät gerade in der Hand hielt. „Anna hat für Ben
   // abgestimmt" ist deshalb belegbar, „Ben hat an Annas Gerät abgestimmt" nicht.
   'log.title': 'Verlauf',
+  'log.summaryOne': '{n} Eintrag, zuletzt {when}',
+  'log.summary': '{n} Einträge, zuletzt {when}',
+  'log.open': 'Verlauf anzeigen',
   'log.someone': 'Jemand',
   'log.aGame': 'ein Spiel',
   'log.started': '{actor} hat die Session gestartet',
