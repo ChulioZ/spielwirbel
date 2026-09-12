@@ -14,7 +14,7 @@ deliberately were not, and the line between them is not about available width:
 | entries are **unordered** | order carries meaning |
 | entries are **short** (a chip, a name, a toggle) | entries are rich (cover, stats, several actions) |
 | you scan for one entry | you read the sequence |
-| tags, providers, the round lobby, the Regal | session results, the Chronik, a game's related sessions |
+| tags, providers, the round lobby, the Regal | session results, the Chronik (related sessions left this column in #1040) |
 
 **The ordering half is the one that actually bites.** A grid is read
 left-to-right and then wrapped, so putting a *ranking* in one makes rank 3 sit
@@ -32,8 +32,8 @@ its width, so it has nothing to gain.
 
 ## How to tile, in this codebase
 
-`.ds-list--tiles` (a modifier on `.ds-list`, never a change to it — the related
-sessions list shares that component and must stay a list):
+`.ds-list--tiles` (a modifier on `.ds-list`, never a change to it — every other
+list in the app shares that component):
 
 ```css
 .ds-list--tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
@@ -114,6 +114,19 @@ open questions asked what the desktop Chronik should show with the extra width
 — "more metadata per row, or a denser two-column timeline". That question is
 answered here: neither. Nothing about #332 remains open; don't re-open it on
 the strength of that line.
+
+## The one entry that left the right-hand column (#1040)
+
+A game's related sessions are **stamps** now, and neither half of the table was
+waived — check that before citing this as precedent. The *ordering* argument
+still binds and a row-major strip keeps it (newest first, wrapping like text).
+What moved is *richness*, and only because the **container** changed shape:
+#1039 made the history a ~150px column instead of a full-width `.ds-row`, and a
+date + outcome + winner is a stamp's worth of content at that width. Six
+scrolled a 13″ laptop by 88px as rows and fit as stamps. Below 860px it becomes
+one snapping row, not a 1-wide stack — a single column of stamps is the tall
+thing again. Tilt was proposed and rejected (operator, 2026-09-12): the
+character is in the ink, and `test/session-stamps.test.js` keeps rotation out.
 
 ## A tiled container may be a column FLOW rather than a grid (#942)
 

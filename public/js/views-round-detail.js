@@ -992,12 +992,20 @@ async function showGameDetail(rid, gameId) {
   if (related.length === 0) {
     sec.appendChild(h(`<div class="muted">${esc(t('detail.relatedEmpty'))}</div>`));
   } else {
-    const list = h('<div class="ds-list"></div>');
+    // A Stempelkarte, not a list (#1040). The exception to
+    // `.claude/rules/tiles-vs-lists.md` is written up there: the rule's argument
+    // for keeping this a list was ordering, and a row-major strip keeps it.
+    //
+    // `fmtDate`, not `fmtDateTime` as the row used: at 22px display type
+    // "1. Juni 2026, 19:00" is ~230px against a 150px stamp, and the minute an
+    // evening started is not what a stamp records. The full timestamp is on the
+    // results screen the stamp links to.
+    const list = h('<div class="stamps"></div>');
     related.slice(0, 15).forEach((s) => {
       const sst = gameStatsForSession(round, s, gameId);
-      const when = fmtDateTime(s.createdAt);
       const picked = s.chosenGameId === gameId;
       let status;
+      let winner = '';
       if (picked) {
         // Session people, not round members, so a guest winner still resolves
         // (marked as a guest) rather than vanishing from the line (#458).
@@ -1006,28 +1014,45 @@ async function showGameDetail(rid, gameId) {
           .map((wid) => personLabel(sPeople.find((p) => p.id === wid)))
           .filter(Boolean);
         status = s.finished
-          ? `${esc(t('detail.played'))}${names.length ? ' · <i class="ti ti-trophy" aria-hidden="true"></i> ' + names.map(esc).join(', ') : ''}`
+          ? `<i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('detail.played'))}`
           : esc(t('detail.chosen'));
+        if (s.finished && names.length) {
+          winner = `<div class="stamp__win"><i class="ti ti-trophy" aria-hidden="true"></i> ${names.map(esc).join(', ')}</div>`;
+        }
       } else if (sessionOutcome(s) === 'cancelled') {
-        status = `<span class="muted">${esc(t('detail.sessionCancelled'))}</span>`;
+        status = esc(t('detail.sessionCancelled'));
       } else if (sessionOutcome(s) === 'split') {
         // A split parent never chose a game (#796), so the plain "not chosen"
         // below would be true and useless: this game was voted on and the
-        // evening moved to its tables, which each have their own row here.
-        status = `<span class="muted">${esc(t('detail.sessionSplit'))}</span>`;
+        // evening moved to its tables, which each have their own stamp here.
+        status = esc(t('detail.sessionSplit'));
       } else {
-        status = `<span class="muted">${esc(t('detail.notChosen'))}</span>`;
+        status = esc(t('detail.notChosen'));
       }
       const scoreCell =
         sst.avg !== null
           ? `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
           : '<span class="score-pill score-pill--none">–</span>';
-      const row = h(`<a class="ds-row${picked ? ' ds-row--picked' : ''}">
-           <div class="ds-row__main">
-             <div class="ds-row__date">${when}</div>
-             <div class="ds-row__status">${status}</div>
+      // The ink is the game's score IN THAT SESSION, so an evening this game
+      // was taken to is stamped in the colour it earned there. An evening it
+      // was not taken to has no such colour to state, and says so by going
+      // muted rather than by borrowing one — `--sc` then falls through to the
+      // stylesheet's `--ink-soft` default.
+      const ink = picked && sst.avg !== null ? ` style="--sc:${scoreColor(sst.score)}"` : '';
+      // The pill rides the LAST text line, not the date's. A date is one
+      // unbreakable token — „01.06.2026" measures 125px at 22px display type,
+      // against a 130px content box at the 150px grid minimum — so a pill lane
+      // beside it does not fit in any locale, and the token cannot wrap out of
+      // the way. Measured in WebKit at both breakpoints; see the CSS.
+      const row = h(`<a class="stamp${picked ? '' : ' stamp--muted'}"${ink}>
+           <div class="stamp__date">${esc(fmtDate(s.createdAt))}</div>
+           <div class="stamp__foot">
+             <div class="stamp__lines">
+               <div class="stamp__status">${status}</div>
+               ${winner}
+             </div>
+             ${scoreCell}
            </div>
-           <div class="ds-row__meta">${scoreCell}</div>
          </a>`);
       navLink(row, resultsPath(round.id, s.id), () => showResults(round, s));
       list.appendChild(row);

@@ -25,7 +25,7 @@ const assert = require('node:assert/strict');
 const { rulesOf, bodyOf, mediaBlocks, whole, CSS } = require('./support/css');
 const { loadApp } = require('./support/dom');
 const {
-  contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf,
+  contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf, mixOklab,
 } = require('./support/theme');
 
 // Every design a round can pick — the palettes AND the worlds — required off
@@ -258,6 +258,90 @@ test('the light ramp is unchanged for every value at or above 1', () => {
     .filter((avg) => APP.run(`avgColor(${avg})`) !== `hsl(${avgHue(avg)}, 60%, 30%)`)
     .map((avg) => `Ø${avg.toFixed(1)} -> ${APP.run(`avgColor(${avg})`)}`);
   assert.deepEqual(drifted, [], 'the 1–5 half of the light ramp moved — every consumer of it changed too');
+});
+
+// --- the session stamps (#1040) ---------------------------------------------
+
+/* The Stempelkarte on the game detail screen re-inks its whole component from
+   one custom property, `--sc`, which the view sets from scoreColor(). So the
+   whole 0-5 ramp lands on a fill mixed from itself, on every design — three
+   pairs, each at a different bar, none of them checkable by eye.
+
+   Everything below reads the real declarations out of styles.css rather than
+   restating them. That is what makes the numbers mean anything: the sweeps
+   measure "score ink on the stamp's fill", and a change that inked the small
+   lines with `--sc` instead of `--ink` would otherwise leave every sweep here
+   green while putting real body text at 4.15:1. */
+const stampFill = (t, ink) => {
+  const decl = bodyOf('.stamp::before');
+  assert.ok(decl, '.stamp::before is gone — the sweeps below measure nothing');
+  const m = /background:\s*color-mix\(in oklab,\s*var\(--sc\)\s*([\d.]+)%,\s*var\(--surface\)\)/.exec(decl);
+  assert.ok(m, `.stamp::before no longer fills with a tint of --sc over --surface: ${decl}`);
+  return mixOklab(ink, t.surface, Number(m[1]) / 100);
+};
+
+/* The anti-vacuous half, and the one that actually binds: which token each line
+   is painted in. The sweeps are only a check on the RIGHT pairs while these
+   hold, and a swap here is exactly the change an author would make to get the
+   score colour onto more of the stamp. */
+test('the stamp paints each line in the token its contrast was measured for', () => {
+  assert.match(bodyOf('.stamp'), /color:\s*var\(--ink\)/,
+    '.stamp body text must stay --ink — score ink bottoms out at 4.15:1 on this fill');
+  assert.match(bodyOf('.stamp--muted'), /color:\s*var\(--ink-soft\)/);
+  assert.match(bodyOf('.stamp__date'), /color:\s*var\(--sc\)/,
+    'the date is the one line inked from the score, and the only one big enough for it');
+  assert.match(bodyOf('.stamp__date'), /font-size:\s*var\(--text-xl\)/,
+    '22px/700 is what puts the date at the 3:1 AA-large bar rather than 4.5:1');
+});
+
+test('the stamp date clears AA-large in every score colour, on every design', () => {
+  const failures = [];
+  for (const t of THEMES) {
+    for (const avg of SWEEP) {
+      const ink = avgRgb(avg, t.dark);
+      const ratio = contrast(ink, stampFill(t, ink));
+      if (ratio < AA_LARGE) failures.push(`${name(t)} \u00d8${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [], `.stamp__date is 22px/700 --sc on a tint of itself; needs ${AA_LARGE}:1`);
+});
+
+test('the stamp body lines clear AA on the reddest and the greenest fill alike', () => {
+  const failures = [];
+  for (const t of THEMES) {
+    for (const avg of SWEEP) {
+      const fill = stampFill(t, avgRgb(avg, t.dark));
+      for (const [label, fg] of [['--ink', t.ink], ['--ink-soft', t.inkSoft]]) {
+        const ratio = contrast(fg, fill);
+        if (ratio < AA_TEXT) failures.push(`${name(t)} \u00d8${avg.toFixed(1)} ${label} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures, [], `.stamp__status / .stamp__win sit on the stamp fill; needs ${AA_TEXT}:1`);
+});
+
+/* 1.4.11, and the expensive one. The border is the stamp's ONLY boundary — the
+   fill is within 1.2:1 of the page on several designs — so it is the thing that
+   makes a stamp a stamp rather than four lines of loose text (#1037, one
+   component over). The worn-edge mask spends that contrast directly, and at the
+   0.72 the design first called for it lands at 2.52:1: a deliberately faded
+   boundary, drawn by a rule that reads as pure decoration. */
+test('the worn edge never fades the stamp border below the 3:1 non-text bar', () => {
+  const decl = bodyOf('.stamp::before');
+  const alpha = /rgba\(0,\s*0,\s*0,\s*([\d.]+)\)/.exec(decl);
+  assert.ok(alpha, `.stamp::before lost its worn-edge mask stop: ${decl}`);
+  const floor = Number(alpha[1]);
+  const failures = [];
+  for (const t of THEMES) {
+    const inks = SWEEP.map((avg) => [`\u00d8${avg.toFixed(1)}`, avgRgb(avg, t.dark)]);
+    inks.push(['muted', t.inkSoft]);
+    for (const [label, ink] of inks) {
+      const ratio = contrast(composite(ink, t.page, floor), t.page);
+      if (ratio < AA_LARGE) failures.push(`${name(t)} ${label} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [],
+    `the mask fades the border to ${floor} alpha over the page; needs ${AA_LARGE}:1`);
 });
 
 // --- member avatar palette --------------------------------------------------
