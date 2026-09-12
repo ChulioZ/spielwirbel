@@ -4639,6 +4639,34 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   font-size: clamp(var(--text-2xl), 5vw, 44px);
   line-height: 1.05;
 }
+/* The two relocated headline figures (#995), filling the band's right half on a
+   wide screen. `margin-left: auto` rather than `justify-content: space-between`
+   on the band: the band wraps, and space-between on a wrapped line spreads the
+   avatar and the name apart too. On a phone the block wraps onto its own line
+   under the name, where `margin-left: 0` keeps it left-aligned with it. */
+.member-head__stats { display: flex; gap: 26px; margin-left: auto; flex: none; }
+.member-head__stat { display: flex; flex-direction: column; gap: 2px; }
+.member-head__stat-value {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--ink);
+}
+/* `--ink`, NOT `--ink-soft`, and that is a contrast decision rather than a
+   stylistic one. These labels sit in the band's top-right corner — exactly where
+   the radial wash is strongest — and measured there `--ink-soft` lands at
+   3.40:1 against the 4.5 AA bar for normal text, while `--ink` is 6.63:1. The
+   hierarchy against the value above it is carried by size, weight and the
+   display face, none of which costs contrast. Weakening the tone here, or
+   moving these labels under the wash elsewhere, re-opens it. */
+.member-head__stat-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
 /* The accent rule under the name — the one place the member's colour is used at
    full strength, where it carries no text. */
 .member-head__info::after {
@@ -4656,6 +4684,10 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
      avatar and a long name still fit on one row before wrapping. */
   .member-head { padding: 20px 16px; gap: 16px; }
   .member-avatar { width: 84px; height: 84px; font-size: 30px; }
+  /* Wrapped onto its own line, so `auto` would push it to the right edge away
+     from the name it belongs to. */
+  .member-head__stats { margin-left: 0; gap: 20px; }
+  .member-head__stat-value { font-size: var(--text-xl); }
 }
 /* Curated tag-icon picker (#255) — the glyph counterpart to .member-swatches:
    a fixed grid, exactly one active. Auto-fill keeps it usable on a phone and

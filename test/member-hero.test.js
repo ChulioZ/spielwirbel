@@ -115,6 +115,17 @@ test('the band is derived from --m-tone and the surface — never a literal hex'
   assert.ok(rule, 'the accent rule under the name is gone');
   assert.match(rule, /var\(--m-tone\)/);
 
+  /* The relocated figures' LABEL must be `--ink`. It sits in the band's
+     top-right corner, where the radial wash is strongest — measured there,
+     `--ink-soft` is 3.40:1 against the 4.5 AA bar while `--ink` is 6.63:1. The
+     quiet tone is the natural choice for a small uppercase label, which is
+     exactly why it is pinned. */
+  const statLabel = bodyOf('.member-head__stat-label');
+  assert.ok(statLabel, 'the relocated figures have no label rule');
+  assert.match(statLabel, /color:\s*var\(--ink\)/);
+  assert.doesNotMatch(statLabel, /var\(--ink-soft\)/,
+    'the stat label went back to the quiet tone, which fails AA over the wash');
+
   // The avatar grew, and it must not carry a bespoke tinted shadow: elevation
   // comes from the --shadow ramp, and a ring is the exempt shape
   // (test/design-tokens.test.js refuses anything else).
