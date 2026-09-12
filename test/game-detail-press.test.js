@@ -88,8 +88,8 @@ test('both entry animations live only under prefers-reduced-motion: no-preferenc
   const block = motionBlock();
   assert.ok(block, 'no no-preference block declares press-in');
   const inBlock = rulesOf(block);
-  assert.match(bodyOf('.score-pill--lg', inBlock), /animation:\s*press-in/, 'the cover pill presses in');
-  assert.match(bodyOf('.stamp', inBlock), /animation:\s*press-in/, 'and so does each stamp');
+  assert.match(bodyOf('.pass[data-fresh] .score-pill--lg', inBlock), /animation:\s*press-in/, 'the cover pill presses in');
+  assert.match(bodyOf('.pass[data-fresh] .stamp', inBlock), /animation:\s*press-in/, 'and so does each stamp');
   // Nothing outside the gate may animate these two, or the gate is decorative.
   const ungated = ungatedRules()
     .filter(([sel, body]) => /\.(score-pill--lg|stamp)\b/.test(sel) && /animation[-a-z]*\s*:/.test(body))
@@ -98,7 +98,7 @@ test('both entry animations live only under prefers-reduced-motion: no-preferenc
 });
 
 test('the stamps stagger off an index the renderer supplies', () => {
-  const body = bodyOf('.stamp', rulesOf(motionBlock()));
+  const body = bodyOf('.pass[data-fresh] .stamp', rulesOf(motionBlock()));
   assert.match(body, /animation-delay:\s*calc\(var\(--i[^)]*\)\s*\*\s*\d+ms\s*\+\s*\d+ms\)/,
     'the delay is a function of the stamp index');
 });
@@ -108,19 +108,11 @@ test('the stamps stagger off an index the renderer supplies', () => {
  * slices there), so an uncapped 70ms step would still be pressing at 1.55s —
  * long after the reader has started reading. Derived from the three numbers
  * rather than restated, so retuning any of them re-checks the budget. */
-test('the whole entry sequence is over inside 1.1 s, however many stamps there are', async (t_) => {
-  const body = bodyOf('.stamp', rulesOf(motionBlock()));
-  const [, step, offset] = /calc\(var\(--i[^)]*\)\s*\*\s*(\d+)ms\s*\+\s*(\d+)ms\)/.exec(body).map(Number);
-  const dur = Number(/animation:\s*press-in\s+([\d.]+)s/.exec(body)[1]) * 1000;
-
+/* More sessions than the view renders, so the stagger cap is exercised rather
+ * than hidden behind the slice. */
+function bootPass(t_) {
   const dom = loadApp();
   t_.after(() => dom.close());
-  dom.set('api', async (method, url) => {
-    if (/\/activities$/.test(url)) return [];
-    if (/^\/api\/rounds\/[^/]+$/.test(url) && method === 'GET') return round;
-    return {};
-  });
-  dom.set('toast', () => {});
   const round = {
     id: RID,
     name: 'Freitagsrunde',
@@ -129,8 +121,6 @@ test('the whole entry sequence is over inside 1.1 s, however many stamps there a
     providers: [],
     members: [{ id: 'm1', name: 'Anna' }],
     games: [{ id: 'g1', title: 'Catan', image: '/uploads/catan.jpg', tagIds: [] }],
-    // More sessions than the view renders, so the cap is exercised rather than
-    // the slice hiding it.
     sessions: Array.from({ length: 20 }, (_, n) => ({
       id: `s${n}`,
       createdAt: `2026-06-${String(n + 1).padStart(2, '0')}T19:00:00.000Z`,
@@ -141,6 +131,21 @@ test('the whole entry sequence is over inside 1.1 s, however many stamps there a
       votes: { m1: { g1: { rating: 4 } } },
     })),
   };
+  dom.set('api', async (method, url) => {
+    if (/\/activities$/.test(url)) return [];
+    if (/^\/api\/rounds\/[^/]+$/.test(url) && method === 'GET') return round;
+    return {};
+  });
+  dom.set('toast', () => {});
+  return dom;
+}
+
+test('the whole entry sequence is over inside 1.1 s, however many stamps there are', async (t_) => {
+  const body = bodyOf('.pass[data-fresh] .stamp', rulesOf(motionBlock()));
+  const [, step, offset] = /calc\(var\(--i[^)]*\)\s*\*\s*(\d+)ms\s*\+\s*(\d+)ms\)/.exec(body).map(Number);
+  const dur = Number(/animation:\s*press-in\s+([\d.]+)s/.exec(body)[1]) * 1000;
+
+  const dom = bootPass(t_);
   await dom.call('showGameDetail', RID, 'g1');
 
   const idx = [...dom.app.querySelectorAll('.stamps .stamp')]
@@ -150,6 +155,35 @@ test('the whole entry sequence is over inside 1.1 s, however many stamps there a
   assert.ok(idx.every((n) => Number.isInteger(n)), 'every stamp carries an index');
   const last = Math.max(...idx) * step + offset + dur;
   assert.ok(last <= 1100, `the last stamp settles at ${last}ms, past the 1.1s budget`);
+});
+
+/* The screen re-renders itself after every one of its own writes — a tag edit, a
+ * new cover, an expansion, a language switch — so without this gate the whole
+ * Stempelkarte replays each time, and a welcome becomes a stutter. The signal is
+ * `syncUrl()`'s, which already had to tell an arrival from an in-place re-render
+ * for the scroll reset (#623): reusing it is what stops a re-render site added
+ * later from having to remember this separately.
+ *
+ * Note the second call here IS the real re-render path rather than a simulation
+ * of one: `syncUrl` replaces when nothing is driving the router and the URL is
+ * already ours, which is exactly what `updateGame()` produces. */
+test('the entry animation runs on arrival and not on a re-render', async (t_) => {
+  const dom = bootPass(t_);
+  await dom.call('showGameDetail', RID, 'g1');
+  assert.ok(dom.app.querySelector('.pass').hasAttribute('data-fresh'), 'arriving is fresh');
+
+  await dom.call('showGameDetail', RID, 'g1');
+  assert.equal(dom.app.querySelector('.pass').hasAttribute('data-fresh'), false,
+    're-rendering the same screen is not an arrival');
+
+  // The safe direction: a re-render must have NO animation, never one cancelled
+  // by an override — `animation-fill-mode: both` holds `opacity: 0`, so an
+  // override missed on one of the two selectors hides that element for good.
+  const gated = rulesOf(motionBlock()).map(([sel]) => sel).filter((sel) => /animation|press-in/.test(sel) === false);
+  for (const sel of gated) {
+    if (/from|to|\d+%/.test(sel)) continue;
+    assert.match(sel, /\[data-fresh\]/, `${sel} animates regardless of arrival`);
+  }
 });
 
 /* The cover's depth edge. Two separate things are pinned: that it exists at all

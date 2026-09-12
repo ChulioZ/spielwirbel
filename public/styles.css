@@ -4980,13 +4980,23 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    already sorts that way; the index is CAPPED by the renderer so the sequence
    ends inside a second whatever the shelf holds (see views-round-detail.js).
 
-   It restarts on every re-render of the screen — `showGameDetail` rebuilds after
-   each PATCH — and that is accepted: it is the same "the page opened" moment.
+   Gated on `.pass[data-fresh]`, which showGameDetail() sets only when the reader
+   ARRIVED at the screen. The screen re-renders itself after every one of its own
+   writes — a tag edit, a new cover, an expansion — and replaying the whole
+   Stempelkarte each time turns a welcome into a stutter. `syncUrl()` already
+   computes that distinction for the scroll reset and now returns it, so a
+   re-render site added later cannot forget this one thing separately.
+
+   Declared only under the attribute rather than cancelled by it, for the same
+   reason as the reduced-motion gate around it: a re-render then simply has no
+   animation, where an override missed on one of the two selectors would leave
+   that element stuck at the `from` keyframe's `opacity: 0`.
+
    Long-form motion, so deliberately off the `--dur-*` micro-interaction scale
    (see the token block). */
 @media (prefers-reduced-motion: no-preference) {
-  .score-pill--lg { animation: press-in 0.45s var(--ease-out) both; }
-  .stamp {
+  .pass[data-fresh] .score-pill--lg { animation: press-in 0.45s var(--ease-out) both; }
+  .pass[data-fresh] .stamp {
     animation: press-in 0.38s var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 70ms + 120ms);
   }

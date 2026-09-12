@@ -140,7 +140,11 @@ const offShelfListOf = (game) => OFF_SHELF_LISTS.find((l) => l.holds(game)) || n
 
 async function showGameDetail(rid, gameId) {
   currentView = () => showGameDetail(rid, gameId);
-  syncUrl(gamePath(rid, gameId));
+  // Whether the reader just ARRIVED here, as opposed to this screen re-rendering
+  // itself after one of its own writes (#1041). The entry animation is gated on
+  // it — see `.pass[data-fresh]` below. Read here and held, because `syncUrl`
+  // answers for the moment it is called and this function awaits twice after.
+  const arrived = syncUrl(gamePath(rid, gameId));
   app.innerHTML = '<p class="muted">…</p>';
   let round;
   try { round = await fetchRound(rid); }
@@ -639,7 +643,12 @@ async function showGameDetail(rid, gameId) {
   // our table on the right, with the one action pinned at the right page's foot.
   // Single column below 860px — the app's existing strip/dock/editor breakpoint
   // (.claude/rules/responsive-hub-tabs.md) — in the order card → history → bar.
-  const pass = h('<div class="pass"></div>');
+  // `data-fresh` carries the arrival to the stylesheet, which is where the
+  // decision belongs: the animation is declared only under it, so a re-render
+  // simply has none rather than having one it must cancel — the same safe
+  // direction as the reduced-motion gate it nests inside. An attribute, not a
+  // class, so it reads as state rather than as a style hook.
+  const pass = h(`<div class="pass"${arrived ? ' data-fresh' : ''}></div>`);
   const leftPage = h('<div class="pass__game"></div>');
   const rightPage = h('<div class="pass__table"></div>');
   pass.append(leftPage, rightPage);
