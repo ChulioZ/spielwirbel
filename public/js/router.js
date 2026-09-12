@@ -87,6 +87,19 @@ const resultsPath = (rid, sid) => `/round/${rid}/session/${sid}`;
 // Reflect the current view in the URL. Called synchronously at the start of
 // each routable show*(). While the router is driving (routing === true) or the
 // path already matches, it replaces; otherwise it pushes a new history entry.
+//
+// RETURNS whether this is a fresh ARRIVAL at the screen rather than the screen
+// re-rendering itself in place (#1041). That is not the same question as
+// push-vs-replace below — a Back button or a cold deep link arrives through the
+// replace branch, and both are arrivals — so it is spelled separately: a
+// re-render is the case where nothing is driving us and the URL is already ours
+// (updateGame() -> showGameDetail() after every PATCH, and `currentView()` on a
+// language switch). A view that plays an entry animation gates it on this;
+// without it the whole screen replays every time a tag is edited.
+//
+// Returning it rather than exporting a flag keeps the answer tied to the one
+// call that computes it — a getter read later would be stale after the first
+// `await` in an async view.
 function syncUrl(path) {
   // Every view calls this first, so it is also where an open popover editor
   // dies. openPopover() closes on mousedown-outside, Escape, scroll and resize —
@@ -101,6 +114,7 @@ function syncUrl(path) {
   // the previous view (core.js swrRead) — a late response updates the cache
   // but must never re-render a view the user already left.
   swrRenderToken += 1;
+  const arrival = routing || path !== location.pathname;
   if (routing || path === location.pathname) {
     history.replaceState({ path, idx: navIndex }, '', path);
   } else {
@@ -124,6 +138,7 @@ function syncUrl(path) {
          every rename would be wrong. */
     window.scrollTo(0, 0);
   }
+  return arrival;
 }
 
 // Generic "Zurück": return to the previous in-app view. If there is one

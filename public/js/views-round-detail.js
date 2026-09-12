@@ -140,7 +140,11 @@ const offShelfListOf = (game) => OFF_SHELF_LISTS.find((l) => l.holds(game)) || n
 
 async function showGameDetail(rid, gameId) {
   currentView = () => showGameDetail(rid, gameId);
-  syncUrl(gamePath(rid, gameId));
+  // Whether the reader just ARRIVED here, as opposed to this screen re-rendering
+  // itself after one of its own writes (#1041). The entry animation is gated on
+  // it — see `.pass[data-fresh]` below. Read here and held, because `syncUrl`
+  // answers for the moment it is called and this function awaits twice after.
+  const arrived = syncUrl(gamePath(rid, gameId));
   app.innerHTML = '<p class="muted">…</p>';
   let round;
   try { round = await fetchRound(rid); }
@@ -639,7 +643,12 @@ async function showGameDetail(rid, gameId) {
   // our table on the right, with the one action pinned at the right page's foot.
   // Single column below 860px — the app's existing strip/dock/editor breakpoint
   // (.claude/rules/responsive-hub-tabs.md) — in the order card → history → bar.
-  const pass = h('<div class="pass"></div>');
+  // `data-fresh` carries the arrival to the stylesheet, which is where the
+  // decision belongs: the animation is declared only under it, so a re-render
+  // simply has none rather than having one it must cancel — the same safe
+  // direction as the reduced-motion gate it nests inside. An attribute, not a
+  // class, so it reads as state rather than as a style hook.
+  const pass = h(`<div class="pass"${arrived ? ' data-fresh' : ''}></div>`);
   const leftPage = h('<div class="pass__game"></div>');
   const rightPage = h('<div class="pass__table"></div>');
   pass.append(leftPage, rightPage);
@@ -1000,8 +1009,17 @@ async function showGameDetail(rid, gameId) {
     // "1. Juni 2026, 19:00" is ~230px against a 150px stamp, and the minute an
     // evening started is not what a stamp records. The full timestamp is on the
     // results screen the stamp links to.
+    // The stamps press in one after another on open (#1041). The stagger is a
+    // ladder, not a queue: 15 stamps ship, so an uncapped 70ms step would still
+    // be pressing at 1.55s — long after the reader has started reading. Past
+    // this rung they land together, which is the point at which a stagger has
+    // said what it has to say anyway. The CSS carries the step and the offset;
+    // `test/game-detail-press.test.js` derives the budget from all three, so
+    // retuning any one of them re-checks it.
+    const STAGGER_LAST = 8;
     const list = h('<div class="stamps"></div>');
-    related.slice(0, 15).forEach((s) => {
+    // `i` is the press-in stagger (#1041), capped below — see STAGGER_LAST.
+    related.slice(0, 15).forEach((s, i) => {
       const sst = gameStatsForSession(round, s, gameId);
       const picked = s.chosenGameId === gameId;
       let status;
@@ -1054,14 +1072,14 @@ async function showGameDetail(rid, gameId) {
       // An evening this game was NOT taken to has nothing to say about it and
       // borrows no colour: `--sc` falls through to the stylesheet's `--ink-soft`.
       const ink = picked
-        ? ` style="--sc:${scoreColor(sst.avg !== null ? sst.score : PLAYED_UNRATED)}"`
+        ? `--sc:${scoreColor(sst.avg !== null ? sst.score : PLAYED_UNRATED)};`
         : '';
       // The pill rides the LAST text line, not the date's. A date is one
       // unbreakable token — „01.06.2026" measures 125px at 22px display type,
       // against a 130px content box at the 150px grid minimum — so a pill lane
       // beside it does not fit in any locale, and the token cannot wrap out of
       // the way. Measured in WebKit at both breakpoints; see the CSS.
-      const row = h(`<a class="stamp${picked ? '' : ' stamp--muted'}"${ink}>
+      const row = h(`<a class="stamp${picked ? '' : ' stamp--muted'}" style="${ink}--i:${Math.min(i, STAGGER_LAST)}">
            <div class="stamp__date">${esc(fmtDate(s.createdAt))}</div>
            <div class="stamp__foot">
              <div class="stamp__lines">
