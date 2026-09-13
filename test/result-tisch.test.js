@@ -16,7 +16,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadApp, flush } = require('./support/dom');
-const { bodyOf, mediaBlocks, rulesOf, outranks } = require('./support/css');
+const {
+  bodyOf, mediaBlocks, rulesOf, outranks, resolvedDeclaration, declaredValue,
+} = require('./support/css');
 
 const ME = 'user-me';
 
@@ -231,11 +233,62 @@ test('the band is a two-column grid and its box carries a box shadow', () => {
     'the winners are ringed in gold');
 });
 
+/* The table stamp against the component it re-sizes.
+ *
+ * `bodyOf('.stamp--table')` above reads the rule's TEXT, and the text was
+ * correct the whole time #1057 was broken in production: every property the
+ * modifier declares is ALSO declared by `.stamp` itself, at the same (0,1,0)
+ * specificity, so the winner was decided by SOURCE ORDER — and `.stamp` sits
+ * ~470 lines further down the sheet. `position` therefore resolved to
+ * `relative`, the stamp left the corner, stayed in flow at the box's full
+ * width and grew to its own content height: measured on the shipped
+ * stylesheet, a 159px card over a 128px cover (124% of it), and 224% at 390px
+ * where the box is 96px.
+ *
+ * So these ask which declaration WINS, not which one exists — the distinction
+ * `.claude/rules/assert-the-decision-not-its-ingredients.md` is about, and the
+ * reason test/support/css.js has resolvedDeclaration() at all. */
+const TABLE_STAMP = { tag: 'span', classes: ['stamp', 'stamp--table'] };
+
+test('the table stamp WINS the cascade against the Stempelkarte it re-sizes', () => {
+  const pos = resolvedDeclaration(TABLE_STAMP, 'position');
+  assert.equal(pos.value, 'absolute',
+    `${pos.sel} wins and sets position: ${pos.value} — the stamp is back in flow`);
+
+  const pad = resolvedDeclaration(TABLE_STAMP, 'padding');
+  assert.equal(pad.value, '5px 8px 6px', `${pad.sel} wins the padding instead`);
+
+  /* The box carries `font-size: 44px` for the cover PLACEHOLDER GLYPH, and
+     font-size inherits — so without a reset here the stamp's two short lines
+     were 66px each. This is the half a specificity fix alone does not reach. */
+  const fs = resolvedDeclaration(TABLE_STAMP, 'font-size');
+  assert.match(fs.value, /var\(--text-sm\)/,
+    `${fs.sel} wins the font-size and leaves it at "${fs.value}" — the box's glyph size`);
+});
+
+test('the phone stamp drops the DATE, which no 96px box can hold', () => {
+  /* „13.09.2026" is one unbreakable token and overran the 84px stamp by 9px;
+     every locale that writes the date with spaces wrapped instead, which is the
+     same bug in the other direction — pt reached 82px of stamp on a 96px cover.
+     Type size does not reach it: pt needs ~8px to fit on one line. */
+  // The 96px box is the <= 639px form — NOT the <= 859px block the
+  // Stempelkarte's own phone width lives in, which is a different question.
+  const phone = mediaBlocks().filter(([q]) => /max-width:\s*639px/.test(q));
+  const hide = phone.flatMap(([, css]) => rulesOf(css))
+    .find(([sel]) => sel.replace(/\s+/g, ' ') === '.tisch__box .stamp--table .stamp__date');
+  assert.ok(hide, 'the phone stamp no longer drops the date — re-measure before removing this');
+  assert.equal(declaredValue(hide[1], 'display'), 'none');
+
+  // And it must outrank the rule that gives the date its size, or it changes
+  // nothing at all.
+  assert.ok(outranks('.tisch__box .stamp--table .stamp__date', '.stamp--table .stamp__date'));
+});
+
 test('the stamp on the box is the SAME component as the game page presses', () => {
   // Not a look-alike: `.stamp--table` only re-sizes it, so a change to the
   // Stempelkarte's border, mask or tint reaches this surface for free.
-  const table = bodyOf('.stamp--table');
-  assert.ok(table, '.stamp--table rule is gone');
+  const table = bodyOf('.tisch__box .stamp--table');
+  assert.ok(table, 'the .stamp--table rule is gone (it is compounded with the box — see below)');
   assert.doesNotMatch(table, /border:\s*3px double/, 'the double rule belongs to `.stamp` itself');
   assert.match(bodyOf('.stamp::before'), /border:\s*3px double var\(--sc\)/,
     'and `.stamp` must still be the thing that declares it');

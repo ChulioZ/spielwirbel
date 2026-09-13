@@ -8,6 +8,14 @@
  * forward-looking, person-facing surfaces stop offering them. `activeMembers()`
  * is the one filter those surfaces apply, and the point of driving real screens
  * here is that a helper nobody calls looks exactly like a feature that works.
+ *
+ * The button labels below are the GERMAN ones on purpose — the point of two
+ * assertions is what a German-speaking user reads. Two of them are NEGATIVE
+ * (`=== undefined`), which a rename SATISFIES rather than breaks, so grep this
+ * file for the old text whenever `member.retire`/`member.restore` move
+ * (.claude/rules/renaming-a-label-silences-its-negative-assertion.md). They
+ * were „Aussortieren" / „Zurückholen" until the shelf's verb was judged the
+ * wrong register for a person — .claude/rules/retired-members-filter-sites.md.
  */
 
 const { test, after } = require('node:test');
@@ -110,10 +118,10 @@ const dialogOpts = () => [...dom.document.querySelectorAll('.confirm-dialog__opt
 
 test('the dialog asks about solely-owned games ONLY when there are any', async () => {
   // None owned at all. Clara (m3) is still active — m2 is the retired one, whose
-  // page offers „Zurückholen" instead.
+  // page offers „Wieder aufnehmen" instead.
   const plain = roundFixture();
   await openMember(plain, 'm3');
-  footerBtn(/Aussortieren/).click();
+  footerBtn(/Aus der Runde entfernen/).click();
   assert.deepEqual(dialogOpts(), [], 'nothing is owned, so nothing to ask about');
   dom.document.querySelector('[data-act="cancel"]').click();
 
@@ -126,7 +134,7 @@ test('the dialog asks about solely-owned games ONLY when there are any', async (
     ],
   });
   await openMember(owned, 'm3');
-  footerBtn(/Aussortieren/).click();
+  footerBtn(/Aus der Runde entfernen/).click();
   const opts = dialogOpts();
   assert.equal(opts.length, 1);
   assert.match(opts[0], /Spiel aussortieren/);
@@ -137,7 +145,7 @@ test('the dialog asks about the account link ONLY on your own seat', async () =>
   const mine = roundFixture();
   mine.members[2].userId = 'acct-me';
   await openMember(mine, 'm3', { me: 'acct-me' });
-  footerBtn(/Aussortieren/).click();
+  footerBtn(/Aus der Runde entfernen/).click();
   assert.equal(dialogOpts().length, 1);
   assert.match(dialogOpts()[0], /Konto/);
   dom.document.querySelector('[data-act="cancel"]').click();
@@ -150,15 +158,15 @@ test('the dialog asks about the account link ONLY on your own seat', async () =>
   const theirs = roundFixture();
   theirs.members[0].userId = 'acct-anna';
   await openMember(theirs, 'm1', { me: 'acct-me' });
-  footerBtn(/Aussortieren/).click();
+  footerBtn(/Aus der Runde entfernen/).click();
   assert.deepEqual(dialogOpts(), []);
 });
 
 test('a retired member\'s page offers the way back, not a second retirement', async () => {
   const round = roundFixture();
   await openMember(round, 'm2');
-  assert.ok(footerBtn(/Zurückholen/), 'restoring is the point of keeping them reachable');
-  assert.equal(footerBtn(/Aussortieren/), undefined);
+  assert.ok(footerBtn(/Wieder aufnehmen/), 'restoring is the point of keeping them reachable');
+  assert.equal(footerBtn(/Aus der Runde entfernen/), undefined);
 });
 
 test('delete is offered only where nothing is lost — and hidden once there are votes', async () => {
@@ -172,5 +180,5 @@ test('delete is offered only where nothing is lost — and hidden once there are
   });
   await openMember(voted, 'm3');
   assert.equal(footerBtn(/Platz löschen/), undefined, 'a vote is history — retire, do not delete');
-  assert.ok(footerBtn(/Aussortieren/), 'which is what is offered instead');
+  assert.ok(footerBtn(/Aus der Runde entfernen/), 'which is what is offered instead');
 });

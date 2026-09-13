@@ -208,6 +208,11 @@ function satisfies(simple, el) {
     const attrs = el.attrs || {};
     return value === undefined ? m[1] in attrs : attrs[m[1]] === value;
   }
+  /* A pseudo-ELEMENT selects a generated box, not this element, so a rule like
+     `.stamp::before { position: absolute }` says nothing about what `.stamp`
+     resolves to. Excluded rather than modelled: the alternative is throwing
+     on every sheet that styles a ::before, which is most of them. */
+  if (simple.startsWith('::')) return false;
   if (simple.startsWith(':')) {
     const open = simple.indexOf('(');
     const fn = open === -1 ? simple : simple.slice(0, open);

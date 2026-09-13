@@ -4682,13 +4682,40 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .tisch__outcome { margin-top: 10px; font-weight: 700; color: var(--ink-soft); }
 /* The stamp, pressed onto the box — the SAME component as the game page's
    Stempelkarte (#1040), re-sized only. Reusing the class rather than a
-   look-alike is what stops the two drifting. */
-.stamp--table {
+   look-alike is what stops the two drifting.
+
+   COMPOUNDED WITH THE BOX, and that is load-bearing rather than tidy. Every
+   property below is also declared by `.stamp` itself, which is (0,1,0) — the
+   same specificity as a bare `.stamp--table` — so a tie would be broken by
+   SOURCE ORDER, and `.stamp` is declared ~470 lines further down this file.
+   #1057 shipped the bare form and it reached production: `position` resolved
+   to `relative`, so the stamp left the corner, stayed in flow at the box's
+   full width and grew to its own content height. Measured on the live
+   stylesheet — a 159px card over a 128px cover, 124% of it from 900px up and
+   224% at 390px, where the box is 96px. `.tisch__box .stamp--table` is (0,2,0)
+   and wins outright, wherever either block ends up sitting. */
+.tisch__box .stamp--table {
   position: absolute;
   right: 6px;
   bottom: 6px;
   left: 6px;
-  padding: 6px 8px 7px;
+  /* The box is sized by its edges here, so the Stempelkarte's own phone width
+     (`.stamp { width: 160px }`, in the <= 859px block) has to be turned off —
+     at 390px it made a 160px stamp on a 96px box. */
+  width: auto;
+  /* The box carries `font-size: 44px` for the cover PLACEHOLDER GLYPH, and a
+     font-size is inherited: the stamp took it as its line strut, so its two
+     short lines were 66px each and the card came out 145px tall over a 128px
+     cover. Anything text-shaped inside this box has to re-declare its size. */
+  font-size: var(--text-sm);
+  line-height: 1.25;
+  /* Blockifies the two children, which are inline in the base component: as
+     inline text they sat on one line or two depending on how the DATE happened
+     to measure in the reader's locale. */
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 8px 6px;
   text-align: center;
   background: color-mix(in oklab, var(--surface) 82%, transparent);
   border-radius: var(--radius-sm);
@@ -4720,6 +4747,17 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 @media (max-width: 639px) {
   .tisch { grid-template-columns: 96px minmax(0, 1fr); gap: 14px; padding: 14px; }
   .tisch__box { width: 96px; font-size: 34px; /* glyph, not type */ }
+  /* A 96px box cannot hold a localized date. „13.09.2026" is one unbreakable
+     token and overran the stamp by 9px; every locale that writes the date with
+     spaces wraps instead, which is the same bug wearing a different hat —
+     measured at 390px, pt („13 de set. de 2026") reached 82px of stamp on a
+     96px cover, en and ko 64px. Tuning the type size does not reach it: pt
+     needs ~8px to fit on one line.
+
+     So the phone stamp keeps the half that is not repeated elsewhere. The date
+     is already the session's own subtitle two elements up the same screen,
+     where it has the width to be read. */
+  .tisch__box .stamp--table .stamp__date { display: none; }
 }
 .member-chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .member-chip {

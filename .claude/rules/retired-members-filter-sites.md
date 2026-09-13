@@ -76,3 +76,22 @@ together.
 entity over — a retired GAME, and the enumeration problem it documents),
 `.claude/rules/member-seat-self-claim.md`,
 `.claude/rules/shared-constants-across-the-stack.md`.
+
+## The WORDS are not the game's words — and that is deliberate
+
+The field is `retired`, the route is `…/members/:mid/retire` and the activity is
+`member_retired`, exactly like a game's. **The user-facing strings are not.**
+„Aussortieren" / "Retire" is the shelf's verb, and applying it to a person reads
+as discarding them — the operator said so on 2026-09-13, looking at the shipped
+screen. So `member.retire` is „Aus der Runde entfernen" / "Remove from the
+round", `member.retiredTitle` is „nicht mehr dabei" rather than „aussortiert",
+and the „Was ist neu" entry was rewritten with it.
+
+Two things follow, and both are easy to undo by accident:
+
+- **Do not re-align the copy with the identifiers.** The split is the point. The
+  identifiers stay English and stay `retired` per CLAUDE.md; the words stay
+  distinct from the shelf's.
+- **`member.retireGamesOne` / `member.retireGames` keep „aussortieren"**, because
+  that checkbox really does retire GAMES — it is the one place in this feature
+  where the shelf's verb is the correct one.
