@@ -67,6 +67,18 @@ const RULES = {
   // bare noun — the compound is two words here, so the ban needs no substring
   // reach the way Dutch does.
   pt: { allow: [/\b(?:hoje|esta) à noite\b/gi], ban: [/\bnoites?\b/i] },
+  /* Finnish is the one locale where a BARE substring ban is wrong, and it took a
+     real false positive to see it: „kavereiltasi" (from your friends) contains
+     „ilta" because the plural ablative ending is `-ilta`, and so does every
+     other noun in that case — „peleiltä", „ihmisiltä". So the ban anchors on a
+     WORD BOUNDARY, which still reaches into the compound („peli-ilta" — the
+     hyphen is a boundary) while sparing the case ending.
+
+     The allow list then needs only one entry, not two: „illalla" (the adverbial
+     „in the evening") is never matched by `\billan\b`, so it needs no exception,
+     while „tänä iltana" does — that one really does start a word with the
+     banned stem. */
+  fi: { allow: [/\btänä iltana\b/gi], ban: [/\bilta/i, /\billan\b/i] },
 };
 
 function namesAnEvening(locale, value) {
@@ -97,6 +109,7 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     it: ['La serata è stata divisa', 'le vostre serate abituali'],
     nl: ['De avond werd opgesplitst', 'spelavond', 'jullie gebruikelijke avonden'],
     pt: ['A noite foi dividida', 'noite de jogos', 'as suas noites de sempre'],
+    fi: ['Peli-ilta jaettiin', 'peli-ilta', 'tavalliset peli-iltanne', 'Illan peli'],
   };
   const fine = {
     de: ['Was spielen wir heute?', 'Die Session wurde aufgeteilt'],
@@ -106,6 +119,9 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     it: ['A cosa giochiamo stasera?', 'la scelta di stasera'],
     nl: ['Wat spelen we vanavond?', 'De sessie werd opgesplitst'],
     pt: ['O que vamos jogar hoje?', 'Convidados hoje à noite?'],
+    // „kavereiltasi" and „illalla" are the two shapes the bare substring ban
+    // got wrong — a case ending and an adverbial.
+    fi: ['Mitä pelataan tänään?', 'Vieraita tänä iltana?', 'Kavereiltasi ei ole toimintaa', 'pelataan illalla'],
   };
 
   for (const locale of SUPPORTED_LOCALES) {
