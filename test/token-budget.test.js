@@ -129,6 +129,7 @@ const claudeMd = () => ['CLAUDE.md'];
    other half, and the still-over-budget assertion below is what forces it. */
 
 const SOURCE_ALLOW = {
+  'public/js/news.js': 'judged 2026-09-13 — 1023 lines, crossed by #1087 translating all 11 entries into the seven locales that shipped after the list was written (de/en -> nine). It sat at 392, and the growth is PURELY the locale dimension: the file holds one flat data table plus three four-line functions, so it is the same shape as public/js/lang/**, which this budget excludes outright for being a flat data table. No seam exists to cut: splitting by locale would make adding an entry nine edits instead of one, which is the exact property news.js was built for and which keeps it out of test/i18n-parity.test.js; splitting by entry would file the ten-entry trim budget across ten files. An agent editing it reads one entry, and the file is never edited except to add or trim one',
   // judged
   'lib/repo/postgres.js': 'judged — one file per repo backend, paired with json.js against the shared contract; splitting one without the other is what drifts them (data-access-layer.md)',
   'lib/repo/json.js': 'judged — the other half of the same pair',

@@ -138,9 +138,16 @@ Nothing else needs touching — the key already exists in every other language, 
    phrases first and then bans bluntly, so both halves have to be written by
    someone who knows the language. A locale with no entry is scanned by nothing
    and passes in silence, which is why the suite fails until it has one.
-7. Optionally add the language to `DEMO_TEXT`/`DEMO_TAGS` in `lib/demo-seed.js`,
+7. Translate every entry in `public/js/news.js` („Was ist neu") into the new
+   language — one `{ title, body }` block per entry, beside the existing ones.
+   The list sits outside `lang/*.js` on purpose (one entry is one edit), which is
+   exactly why nothing used to warn as languages were added;
+   `test/news-locales.test.js` derives the required set from `locales.js`, so the
+   suite is red until every entry has the new code. Look the screen names up in
+   your new `lang/<code>.js` rather than translating them fresh.
+8. Optionally add the language to `DEMO_TEXT`/`DEMO_TAGS` in `lib/demo-seed.js`,
    so the guest demo's round is in it too. Without this it falls back to English.
-8. **For a script that does not break lines at spaces** — CJK, and Thai — add
+9. **For a script that does not break lines at spaces** — CJK, and Thai — add
    the wrapping rule the script needs to `public/styles.css` and look at every
    screen at phone width before believing it. Korean's is one `:lang(ko)` line,
    and the obvious value for half of it is the wrong one:
