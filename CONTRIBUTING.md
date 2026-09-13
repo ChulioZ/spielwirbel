@@ -104,7 +104,7 @@ a reviewable PR.
 
 ## Translations
 
-The UI ships German, English, Spanish, French, Italian, Dutch, Portuguese and Finnish. **Correcting a translation is a one-line
+The UI ships German, English, Spanish, French, Italian, Dutch, Portuguese, Finnish and Korean. **Correcting a translation is a one-line
 change**: find the key in `public/js/lang/<code>.js`, fix the wording, open a PR.
 Nothing else needs touching — the key already exists in every other language, and
 `npm test` checks that the files stay in key parity.
@@ -119,10 +119,13 @@ Nothing else needs touching — the key already exists in every other language, 
    add it to `SHELL` in `public/sw.js`, and bump that file's `CACHE` version.
 4. Shoot the three landing-page screenshots for the new language. Add a seed
    (round name, tag names, invented game titles) to `SEEDS` in
-   `scripts/capture-landing-shots.js`, run it, and add the `LANDING_SHOTS` entry
-   in `public/js/views-landing.js`. This step is **not** optional: the suite goes
-   red until every shipped language has its own set, because otherwise the page
-   explaining the app would show it in somebody else's language.
+   `scripts/landing-seed-data.js`, run `node scripts/capture-landing-shots.js`,
+   and add the `LANDING_SHOTS` entry in `public/js/views-landing.js`. This step
+   is **not** optional: the suite goes red until every shipped language has its
+   own set, because otherwise the page explaining the app would show it in
+   somebody else's language. A seed may also override `members` — do that for
+   any language whose readers would find the default Latin seat names foreign,
+   since a seat name is read back out as an avatar.
 5. Add the language's native label to the bug-report form's language dropdown
    (`.github/ISSUE_TEMPLATE/bug_report.yml`). It is the one hand-maintained copy
    of the locale list; `test/i18n-locales.test.js` derives the expected options
@@ -137,6 +140,13 @@ Nothing else needs touching — the key already exists in every other language, 
    and passes in silence, which is why the suite fails until it has one.
 7. Optionally add the language to `DEMO_TEXT`/`DEMO_TAGS` in `lib/demo-seed.js`,
    so the guest demo's round is in it too. Without this it falls back to English.
+8. **For a script that does not break lines at spaces** — CJK, and Thai — add
+   the wrapping rule the script needs to `public/styles.css` and look at every
+   screen at phone width before believing it. Korean's is one `:lang(ko)` line,
+   and the obvious value for half of it is the wrong one:
+   `.claude/rules/hangul-locale-typography.md` has the measurements, the font
+   decision that goes with it, and the particle convention such a language needs
+   in its translation file.
 
 Plural forms, date and month formatting and the language picker do follow from
 step 1 with no code change — but steps 5 and 6 are code, so don't read that as

@@ -384,6 +384,7 @@ public/
     lang/nl.js       Dutch strings
     lang/pt.js       Portuguese strings
     lang/fi.js       Finnish strings
+    lang/ko.js       Korean strings
     core.js          DOM/API helpers, SWR fetches, member colours, the
                      language picker  (loads first)
     empty-state.js   the app's one "nothing here yet" component — medallion,
@@ -675,6 +676,10 @@ scripts/
                      regenerates the committed landing-page product screenshots
                      (public/img/landing-*.webp) — seeds a throwaway dataset and
                      drives headless Chrome over CDP, one run for every locale
+  landing-seed-data.js
+                     the per-locale seed that run puts in (round name, seats,
+                     tags, invented titles, provider metadata) — a flat table,
+                     so adding a language edits this file and not the pipeline
 test/                automated tests (node --test + supertest); view specs
                      run the real frontend under jsdom (test/support/dom.js)
 data/                all user data (git-ignored)
