@@ -5,6 +5,7 @@ paths:
   - "lib/auth.js"
   - "lib/tenant.js"
   - "public/js/account.js"
+  - "public/js/auth-tokens.js"
   - "test/layered-auth.test.js"
 ---
 # Accounts mode: the /api + /uploads gate and the SPA shell (issue #138)
@@ -105,7 +106,7 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
   `auth_required` in accounts mode, does ONE silent `refreshAccessToken()` +
   retry, then `onSessionLost()` (→ login). Legacy mode keeps the old
   `window.location.assign('/')` bounce. The account helpers live in the
-  later-loaded `account.js` but are only referenced at call time, so the load
+  later-loaded `auth-tokens.js` but are only referenced at call time, so the load
   order (core → account → main) is safe — see frontend-script-load-order.md.
 
 - **What #138 did NOT do:** invitations / tenant-sharing (a second user can't see

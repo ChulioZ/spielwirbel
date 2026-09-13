@@ -1,7 +1,7 @@
 ---
 paths:
   - "public/js/pages/kontakt.js"
-  - "public/js/account.js"
+  - "public/js/views-auth.js"
   - "public/js/news.js"
   - "public/js/i18n.js"
   - "public/js/locales.js"
