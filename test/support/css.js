@@ -208,6 +208,11 @@ function satisfies(simple, el) {
     const attrs = el.attrs || {};
     return value === undefined ? m[1] in attrs : attrs[m[1]] === value;
   }
+  /* A pseudo-ELEMENT selects a generated box, not this element, so a rule like
+     `.stamp::before { position: absolute }` says nothing about what `.stamp`
+     resolves to. Excluded rather than modelled: the alternative is throwing
+     on every sheet that styles a ::before, which is most of them. */
+  if (simple.startsWith('::')) return false;
   if (simple.startsWith(':')) {
     const open = simple.indexOf('(');
     const fn = open === -1 ? simple : simple.slice(0, open);
@@ -237,7 +242,21 @@ const subjectOf = (complex) => [' ', '>', '+', '~']
    over several lines, and a multi-line DESCENDANT selector would otherwise reach
    the tokenizer with a newline in it and throw. There is none today, so the
    collapse is what keeps that a non-event rather than a future false alarm. */
+/* A KEYFRAME STEP is not a cascade selector. rulesOf() cannot see the
+   `@keyframes name {` wrapper — that has braces of its own — so a keyframe's
+   steps arrive here looking like ordinary rules, and `0%` then throws out of
+   simpleSelectors(). It only ever bit once the sheet grew a keyframe animating a
+   COLOUR (#1056's `tafel-gold`): the existing ones animate opacity and
+   transform, which no resolvedDeclaration() caller asks about, so the whole
+   class of failure was one property away the entire time.
+
+   Excluded explicitly rather than left to fail as a `false`, because everything
+   else this tokenizer cannot model throws on purpose — a step matching nothing
+   is a FACT about @keyframes, not a gap in the model. */
+const KEYFRAME_STEP = /^(?:from|to|-?\d+(?:\.\d+)?%)$/;
+
 const matchesEl = (selector, el) => splitTop(selector.replace(/\s+/g, ' '), ',')
+  .filter((one) => !KEYFRAME_STEP.test(one.trim()))
   .some((one) => simpleSelectors(subjectOf(one)).every((s) => satisfies(s, el)));
 
 // The last declaration of `prop` in a rule body — within one rule, later wins.

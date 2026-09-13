@@ -51,7 +51,7 @@ than an acknowledged gap.
 - **Check:** Grep `localStorage`, `sessionStorage`, `document.cookie`, `caches.open` and
   every `res.cookie` across `public/`, `lib/` and `lib/routes/`. Each item must appear in the
   policy's § 25 inventory with its purpose and lifetime. Known: the locale preference
-  (`i18n.js`), account tokens (`core.js`, `account.js`), the `sa` access cookie, the
+  (`i18n.js`), account tokens (`core.js`, `auth-tokens.js`), the `sa` access cookie, the
   admin `aid` cookie, and the service-worker shell cache.
 - **Enforced by:** — (manual)
 

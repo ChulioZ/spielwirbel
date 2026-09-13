@@ -87,6 +87,9 @@ function renderChronikTab(round, activities) {
       // for both an added seat and an accepted invitation (#207), since either way
       // a new person is in the round.
       member_added: { icon: 'ti-user-plus', text: t('activity.memberAdded', { name: a.name }) },
+      member_retired: { icon: 'ti-user-minus', text: t('activity.memberRetired', { name: a.name }) },
+      member_restored: { icon: 'ti-arrow-back-up', text: t('activity.memberRestored', { name: a.name }) },
+      member_deleted: { icon: 'ti-trash', text: t('activity.memberDeleted', { name: a.name }) },
       // A one-off operator clean-up (#981): the storefront links this round still
       // held were cleared, so a cover that vanished has a line saying why.
       storefront_cleared: { icon: 'ti-unlink', text: tn(a.n || 0, 'activity.storefrontClearedOne', 'activity.storefrontCleared', { n: a.n || 0 }) },

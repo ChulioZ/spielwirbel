@@ -496,6 +496,100 @@ async function showMember(rid, mid) {
     sec.appendChild(btn);
     app.appendChild(sec);
   }
+
+  /* Retire / restore this seat, and — only where there is demonstrably nothing
+     to keep — delete it outright (#1006).
+
+     Retiring touches nothing but two flags, so every past session's participant
+     list and every game's Spielwirbel-Score stay byte-identical; what changes is
+     that the person leaves the forward-looking lists (`activeMembers`). Deleting
+     is offered only when the seat holds no votes, no recorded win and no team
+     membership anywhere — the "added by mistake" case, which should not leave a
+     retired ghost behind. The server re-checks both; this is what to OFFER. */
+  const myVotes = (round.sessions || []).some((s2) => {
+    const v = (s2.votes || {})[mid];
+    if (v && Object.keys(v).length) return true;
+    if (Array.isArray(s2.winnerIds) && s2.winnerIds.includes(mid)) return true;
+    // Stored as `personIds` (#575) — a team can hold guests too.
+    return (s2.teams || []).some((team) => (team.personIds || []).includes(mid));
+  });
+  const retireSec = h('<div class="round-footer"></div>');
+  if (member.retired) {
+    const back = h(`<button class="link-btn">${iconText('ti-arrow-back-up', t('member.restore'))}</button>`);
+    back.addEventListener('click', async () => {
+      try {
+        await api('POST', `/api/rounds/${rid}/members/${mid}/retire`, { retired: false });
+        toast(t('member.toast.restored', { name: member.name }));
+        showMember(rid, mid);
+      } catch (e) { toast(e.message); }
+    });
+    retireSec.appendChild(back);
+  } else {
+    const retire = h(`<button class="link-btn round-footer__danger">${iconText('ti-user-minus', t('member.retire'))}</button>`);
+    retire.addEventListener('click', async () => {
+      /* The two follow-up questions, asked ONLY when they apply — each is a real
+         consequence the user cannot see from here.
+
+         Solely-owned games are load-bearing rather than a nicety: `ownedByParty`
+         keeps a game in the draw only while an owner is seated, and a retired
+         member is never seated, so those games would silently vanish from every
+         draw with nothing on screen to explain it.
+
+         The seat link is offered only for the caller's OWN seat, because
+         releasing someone else's is what `PATCH …/members/:mid` refuses on
+         purpose — nulling a grantee's link leaves their grant matching on
+         roundId+userId with no chair, invitable to someone else
+         (.claude/rules/member-seat-self-claim.md §1). For another person's
+         linked seat the honest path is „Zugriff entfernen" above, which drops
+         the grant and the link together. */
+      const solely = (round.games || []).filter((g) => !g.retired && !g.completed && !g.wish
+        && Array.isArray(g.ownerIds) && g.ownerIds.length === 1 && g.ownerIds[0] === mid);
+      const options = [];
+      if (solely.length) {
+        options.push({ id: 'games', checked: true,
+          label: tn(solely.length, 'member.retireGamesOne', 'member.retireGames', { n: solely.length, name: member.name }) });
+      }
+      if (member.userId && me && member.userId === me) {
+        options.push({ id: 'seat', checked: true, label: t('member.retireSeat') });
+      }
+      const answer = await confirmDialog({
+        body: t('member.retireConfirm', { name: member.name }),
+        confirmLabel: t('member.retire'), icon: 'ti-user-minus', options,
+      });
+      const ok = options.length ? answer.ok : answer;
+      if (!ok) return;
+      const picked = options.length ? answer.picked : {};
+      try {
+        if (picked.games) {
+          for (const g of solely) {
+            await api('POST', `/api/rounds/${rid}/games/${g.id}/retire`, { retired: true });
+          }
+        }
+        if (picked.seat) await api('PATCH', `/api/rounds/${rid}/members/${mid}`, { userId: null });
+        await api('POST', `/api/rounds/${rid}/members/${mid}/retire`, { retired: true });
+        toast(t('member.toast.retired', { name: member.name }));
+        showMember(rid, mid);
+      } catch (e) { toast(e.message); }
+    });
+    retireSec.appendChild(retire);
+  }
+  if (!myVotes && roundCan(round, 'round.delete')) {
+    const del = h(`<button class="link-btn round-footer__danger">${iconText('ti-trash', t('member.delete'))}</button>`);
+    del.addEventListener('click', async () => {
+      if (!await confirmDialog({
+        body: t('member.deleteConfirm', { name: member.name }),
+        confirmLabel: t('member.delete'), icon: 'ti-trash',
+      })) return;
+      try {
+        await api('DELETE', `/api/rounds/${rid}/members/${mid}`);
+        toast(t('member.toast.deleted', { name: member.name }));
+        showRound(rid);
+      } catch (e) { toast(e.message); }
+    });
+    retireSec.appendChild(del);
+  }
+  app.appendChild(retireSec);
+
 }
 
 // The "+" trigger for the member strips, built in one place so the hero and the

@@ -65,11 +65,20 @@ async function results(t, sessionOver = {}) {
   return { dom, sent };
 }
 
+/* Since #1057 an ARCHIVED session opens on the picture — the winners as seats —
+   and the picker sits behind „Ändern". So every case below that wants the chips
+   opens it first; the ones about a state with no chips at all (unfinished,
+   after Reset) deliberately do not, and `rows()` is then correctly empty. */
+const openPicker = (dom) => {
+  const btn = [...dom.app.querySelectorAll('.tisch button')].find((b) => /Ändern/.test(b.textContent));
+  if (btn) btn.click();
+};
 const rows = (dom) => [...dom.app.querySelectorAll('.winner-chips')];
 const selected = (row) => [...row.querySelectorAll('.winner-chip.is-selected')];
 
 test('a finished session offers the three endings under the party chips', async (t) => {
   const { dom } = await results(t);
+  openPicker(dom);
   const [parties, endings] = rows(dom);
   assert.ok(parties && endings, 'both chip rows render');
   assert.equal(endings.querySelectorAll('.winner-chip').length, 3);
@@ -92,26 +101,33 @@ test('an unfinished session offers no endings at all', async (t) => {
 
 test('tapping an ending selects it, sends it, and titles the screen with it', async (t) => {
   const { dom, sent } = await results(t);
+  openPicker(dom);
   const endings = rows(dom)[1];
   endings.querySelectorAll('.winner-chip')[0].click();
   await flush();
 
   assert.deepEqual(sent, [{ finished: true, winnerIds: [], ending: 'lost' }]);
-  assert.deepEqual(selected(rows(dom)[1]).map((c) => c.textContent.trim()), ['Verloren']);
   assert.equal(
     dom.app.querySelector('.result-title').textContent,
     '„Pandemie“ wurde gespielt – und hat gewonnen.',
   );
-  assert.match(dom.app.querySelector('.winner-result').textContent, /Verloren – das Spiel hat gewonnen/);
+  // Recording collapses the picker back to the picture, which for an ending is
+  // its own line rather than seats (#1057).
+  assert.equal(rows(dom).length, 0, 'the picker closed on the recording');
+  assert.match(dom.app.querySelector('.tisch__outcome').textContent, /Verloren – das Spiel hat gewonnen/);
+  openPicker(dom);
+  assert.deepEqual(selected(rows(dom)[1]).map((c) => c.textContent.trim()), ['Verloren']);
 });
 
 test('tapping the selected ending again returns to unrecorded', async (t) => {
   const { dom, sent } = await results(t, { ending: 'noWinner' });
+  openPicker(dom);
   assert.deepEqual(selected(rows(dom)[1]).map((c) => c.textContent.trim()), ['Kein Sieger']);
 
   rows(dom)[1].querySelectorAll('.winner-chip')[1].click();
   await flush();
   assert.deepEqual(sent, [{ finished: true, winnerIds: [] }], 'no ending field at all');
+  openPicker(dom);
   assert.equal(selected(rows(dom)[1]).length, 0);
   assert.equal(dom.app.querySelector('.result-title').textContent, '„Pandemie“ wurde gespielt.');
 });
@@ -120,15 +136,18 @@ test('a winner and an ending are never selected at the same time', async (t) => 
   // The whole invariant, seen from the screen: recording a winner must drop the
   // ending WITHOUT the client sending a second field, and vice versa.
   const { dom, sent } = await results(t, { ending: 'lost' });
+  openPicker(dom);
   rows(dom)[0].querySelectorAll('.winner-chip')[0].click();
   await flush();
 
   assert.deepEqual(sent[0], { finished: true, winnerIds: ['m1'] });
+  openPicker(dom);
   assert.equal(selected(rows(dom)[1]).length, 0, 'the ending chip deselected itself');
   assert.equal(selected(rows(dom)[0]).length, 1);
 
   rows(dom)[1].querySelectorAll('.winner-chip')[2].click();
   await flush();
+  openPicker(dom);
   assert.deepEqual(selected(rows(dom)[1]).map((c) => c.textContent.trim()), ['Fortsetzung folgt']);
   assert.equal(selected(rows(dom)[0]).length, 0, 'and the party chip deselected itself');
 });

@@ -58,6 +58,7 @@
    tabler.io (.claude/rules/tabler-icon-codepoints.md): a wrong-but-present value
    renders a plausible other icon with no error anywhere. */
 .ti-user-plus::before { content: "\eb4b"; }
+.ti-user-minus::before { content: "\eb4a"; }
 /* #561 — same cmap verification as the line above; `settings` is 0xeb20 in this
    bundle, one codepoint away from `search` below it. */
 .ti-settings::before { content: "\eb20"; }

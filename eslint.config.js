@@ -77,6 +77,7 @@ const frontendGlobals = {
   // score-info.js (issue #893)
   infoButton: 'readonly', wireInfoButtons: 'readonly', openInfoSheet: 'readonly', INFO_SHEETS: 'readonly',
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', memberHex: 'readonly',
+  memberIsActive: 'readonly', activeMembers: 'readonly',
   memberTone: 'readonly', initials: 'readonly',
   personColor: 'readonly',
   renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
@@ -220,6 +221,9 @@ const frontendGlobals = {
   isAuthRoute: 'readonly', isVoteLinkRoute: 'readonly', isPublicStatsRoute: 'readonly',
   pendingPath: 'writable', authScreensAvailable: 'readonly',
   showLogin: 'readonly', showRegister: 'readonly', showForgot: 'readonly',
+  // Cross-file since #969 split account.js: the boot gate calls it, views-auth.js
+  // defines it.
+  showRateLimited: 'readonly',
   showAuthDone: 'readonly', buildResend: 'readonly', renderVerifyLanding: 'readonly',
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',
   accountApi: 'readonly', setupInboxUi: 'readonly', setInboxDot: 'readonly',

@@ -67,6 +67,25 @@ const RULES = {
   // bare noun — the compound is two words here, so the ban needs no substring
   // reach the way Dutch does.
   pt: { allow: [/\b(?:hoje|esta) à noite\b/gi], ban: [/\bnoites?\b/i] },
+  /* Finnish is the one locale where a BARE substring ban is wrong, and it took a
+     real false positive to see it: „kavereiltasi" (from your friends) contains
+     „ilta" because the plural ablative ending is `-ilta`, and so does every
+     other noun in that case — „peleiltä", „ihmisiltä". So the ban anchors on a
+     WORD BOUNDARY, which still reaches into the compound („peli-ilta" — the
+     hyphen is a boundary) while sparing the case ending.
+
+     The allow list then needs only one entry, not two: „illalla" (the adverbial
+     „in the evening") is never matched by `\billan\b`, so it needs no exception,
+     while „tänä iltana" does — that one really does start a word with the
+     banned stem. */
+  fi: { allow: [/\btänä iltana\b/gi], ban: [/\bilta/i, /\billan\b/i] },
+  /* Korean has NO word boundaries, so `\b` is unavailable and the Dutch
+     substring shape is the only one on offer. The entity is “세션”; what is
+     banned is 저녁 and 밤 (evening / night) and the loan 나이트, which together
+     cover “게임의 밤” and “보드게임 나이트”. The adverbials 오늘 밤 /
+     오늘 저녁 are stripped first — the guest prompt uses one legitimately —
+     and the optional space matters, because Korean writes both spellings. */
+  ko: { allow: [/오늘\s*밤/g, /오늘\s*저녁/g], ban: [/밤/, /저녁/, /나이트/] },
 };
 
 function namesAnEvening(locale, value) {
@@ -97,6 +116,8 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     it: ['La serata è stata divisa', 'le vostre serate abituali'],
     nl: ['De avond werd opgesplitst', 'spelavond', 'jullie gebruikelijke avonden'],
     pt: ['A noite foi dividida', 'noite de jogos', 'as suas noites de sempre'],
+    fi: ['Peli-ilta jaettiin', 'peli-ilta', 'tavalliset peli-iltanne', 'Illan peli'],
+    ko: ['게임의 밤이 나누어졌습니다', '보드게임 나이트', '평소의 게임 저녁'],
   };
   const fine = {
     de: ['Was spielen wir heute?', 'Die Session wurde aufgeteilt'],
@@ -106,6 +127,10 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     it: ['A cosa giochiamo stasera?', 'la scelta di stasera'],
     nl: ['Wat spelen we vanavond?', 'De sessie werd opgesplitst'],
     pt: ['O que vamos jogar hoje?', 'Convidados hoje à noite?'],
+    // „kavereiltasi" and „illalla" are the two shapes the bare substring ban
+    // got wrong — a case ending and an adverbial.
+    fi: ['Mitä pelataan tänään?', 'Vieraita tänä iltana?', 'Kavereiltasi ei ole toimintaa', 'pelataan illalla'],
+    ko: ['오늘 뭐 할까요?', '오늘 밤에 손님이 오나요?', '세션이 나누어졌습니다'],
   };
 
   for (const locale of SUPPORTED_LOCALES) {

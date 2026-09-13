@@ -288,8 +288,9 @@ test('#520: both links to /nutzungsbedingungen ship hidden (fail closed)', () =>
   assert.ok(banner[0].includes('href="/nutzungsbedingungen"'), 'it points at the terms');
   assert.ok(/\bhidden\b/.test(banner[0]), 'it ships hidden — revealed only where the page resolves');
 
-  // The register form's legal line is built in account.js, not in the shell.
-  const js = fs.readFileSync(path.join(REPO, 'public/js/account.js'), 'utf8');
+  // The register form's legal line is built in views-auth.js, not in the shell
+  // (it was account.js until #969 split that file).
+  const js = fs.readFileSync(path.join(REPO, 'public/js/views-auth.js'), 'utf8');
   assert.ok(
     /<p class="auth__terms muted" hidden>/.test(js),
     'the register form ships its legal line hidden'
@@ -441,7 +442,7 @@ test('#521: only a TERMS bump raises the change notice', () => {
   const legacyUser = {};                                   // predates #521
   const currentUser = { acceptedTermsRevision: legal.TERMS_REVISION };
 
-  // Mirrors what setupTermsBanner (public/js/account.js) does with the two
+  // Mirrors what setupTermsBanner (public/js/account-chrome.js) does with the two
   // fields /me hands it — the comparison lives on the CLIENT, so there is no
   // server-side predicate to call here.
   const behind = (mod, user) => {
