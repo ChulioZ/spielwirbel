@@ -517,36 +517,6 @@
     loadCorpus();
   });
 
-  // ---- storefront clean-up (#981), a ONE-OFF action -------------------------
-
-  // Two buttons rather than a confirm dialog: the number the operator is
-  // deciding on — how many covers go blank — is not knowable from the code, so
-  // counting has to be a separate, harmless press. The confirm flag is what the
-  // route branches on; a body without it is always a dry run.
-  const storefrontReport = (run, dryRun) => {
-    if (!run.games) return ['Nichts mehr verknüpft — die Karte kann weg.', 'ok'];
-    const parts = [`${run.games} Spiele in ${run.rounds} Runden (${run.tenants} Konten)`];
-    if (run.covers) parts.push(`${run.covers} Cover ${dryRun ? 'würden' : ''} auf den Platzhalter`);
-    if (run.sources) parts.push(`${run.sources} Quell-Links`);
-    if (run.uploads) parts.push(`${run.uploads} mit eigenem Titelbild — das bleibt`);
-    return [parts.join(' · ') + (dryRun ? '. Noch nichts geändert.' : '. Erledigt.'), 'ok'];
-  };
-  const runStorefronts = async (confirm) => {
-    hide($('storefrontMsg'));
-    show($('storefrontMsg'), confirm ? 'Wird bereinigt …' : 'Wird gezählt …', 'ok');
-    try {
-      const { run, dryRun } = await api('/storefronts/clear', {
-        method: 'POST', body: JSON.stringify({ confirm }),
-      });
-      const [text, kind] = storefrontReport(run, dryRun);
-      show($('storefrontMsg'), text, kind);
-    } catch (err) {
-      show($('storefrontMsg'), message(err), 'err');
-    }
-  };
-  $('storefrontCount').addEventListener('click', () => runStorefronts(false));
-  $('storefrontClear').addEventListener('click', () => runStorefronts(true));
-
   // ---- cover re-encode backfill (#867) --------------------------------------
 
   // The route reports the numbers; this decides what reads as good, the same

@@ -39,18 +39,13 @@ const COVER_HERO = 480;
 // Each entry matches the host itself and any subdomain, mirroring the
 // `host === h || host.endsWith('.' + h)` shape every provider's download guard
 // uses (IMAGE_HOSTS in lib/providers/*.js).
-//
-// ALL THREE ARE LEGACY-DATA HOSTS SINCE #744 — PS Store and Xbox were retired as
-// lookup providers, so no new cover can ever land on them. The rules stay because
-// the ~66 covers already stored on real shelves still render through them: delete
-// an entry and those games silently go back to serving a 1–2 MB master (the whole
-// finding in .claude/rules/provider-cover-sizing.md). They are not dead code,
-// they are the render half of data we no longer write.
-const COVER_RESIZERS = [
-  { host: 'image.api.playstation.com', query: (w) => `w=${w}` },
-  { host: 'playstation.net', query: (w) => `w=${w}` },
-  { host: 's-microsoft.com', query: (w) => `w=${w}&h=${w}&q=90` },
-];
+
+// Empty since #981: the three entries here were PS Store and Xbox, kept only so
+// the covers #744 left on real shelves still rendered at a sane size. Those rows
+// are cleared, so the hosts are gone from the CSP and no cover can reach them
+// again. The machinery stays — BGG serves one size today, and the next provider
+// that does not will add a row here.
+const COVER_RESIZERS = [];
 
 // Rewrite a stored cover URL to a size-appropriate variant for a frame `width`
 // CSS px wide. Returns `image` untouched unless it is an https:// URL on a host

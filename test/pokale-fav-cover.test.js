@@ -29,7 +29,11 @@ const RID = 'r1';
    green against a render site that forgot to size its thumb at all. These hosts
    are legacy data since #744 but still render, which is exactly why the sizing
    path has to keep working (`.claude/rules/provider-cover-sizing.md`). */
-const IMAGE = 'https://image.api.playstation.com/example/img/abc.jpg';
+/* A SYNTHETIC resizer host since #981: the storefront rules went with the rows
+   that needed them, so with no rule in the table `coverUrl` is a pass-through
+   and the `?w=` assertions below would have no subject. */
+const IMAGE = 'https://img.sized.test/example/img/abc.jpg';
+const SIZED = { host: 'sized.test', query: (w) => `w=${w}` };
 
 /* Anna's favourite is the game WITH a cover, Ben's the one without — so a card
    built with the two paths swapped fails by name rather than by count. */
@@ -81,6 +85,8 @@ function bootApp(t) {
   });
   dom.set('accountsActive', () => false);
   dom.set('isLoggedIn', () => false);
+  dom.run('COVER_RESIZERS').push(SIZED);
+  t.after(() => { dom.run('COVER_RESIZERS').pop(); });
   return dom;
 }
 
