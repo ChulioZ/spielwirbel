@@ -3,11 +3,11 @@ paths:
   - "lib/me-projection.js"
   - "lib/routes/account.js"
   - "lib/routes/passkeys.js"
-  - "public/js/account.js"
+  - "public/js/auth-tokens.js"
 ---
 # A response that STARTS a session seats `accountUser` for its whole lifetime — send the full projection
 
-`public/js/account.js` seats its module-level `accountUser` straight from
+`public/js/auth-tokens.js` seats its module-level `accountUser` straight from
 whatever started the session (`accountUser = data.user || null`), and refreshes
 it from `GET /api/account/me` only on the **next cold load**. So a field the
 session-start response omits is not merely absent from one payload — it reads
