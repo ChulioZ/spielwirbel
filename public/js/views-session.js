@@ -153,7 +153,9 @@ function showStartSession(round, prefill) {
   );
   // All members join by default; the number of people joining filters the games
   // by their player count.
-  const joining = new Set(round.members.map((m) => m.id));
+  // Retired members are not offered a seat (#1006); every past session's
+  // participant list keeps resolving them through sessionPeople().
+  const joining = new Set(activeMembers(round).map((m) => m.id));
   // Seats that are here WITHOUT their shelf (#1002): somebody came straight from
   // work, or the evening is at someone else's place. Empty by default, because
   // that is the normal evening — see the chip row further down for why this is
@@ -416,7 +418,7 @@ function showStartSession(round, prefill) {
       // seats, so a stale mark would be inert but would still light a chip the
       // moment that member came back.
       [...awayShelves].forEach((id) => { if (!joining.has(id)) awayShelves.delete(id); });
-      shelfChips.replaceChildren(...round.members.filter((m) => joining.has(m.id)).map((m) => {
+      shelfChips.replaceChildren(...activeMembers(round).filter((m) => joining.has(m.id)).map((m) => {
         const on = awayShelves.has(m.id);
         const chip = h(`<button type="button" class="chip${on ? ' is-on' : ''}" aria-pressed="${on}">`
           + `<span class="chip__avatar avatar" style="background:${esc(memberColor(round, m.id))}">`
@@ -467,7 +469,7 @@ function showStartSession(round, prefill) {
       // and the body below it list them the same way.
       label: () => (awayShelves.size
         ? t('startSession.addon.shelfOn', {
-          names: joinNames(round.members.filter((m) => awayShelves.has(m.id)).map((m) => m.name)),
+          names: joinNames(activeMembers(round).filter((m) => awayShelves.has(m.id)).map((m) => m.name)),
         })
         : t('startSession.addon.shelf')),
       on: () => awayShelves.size > 0,

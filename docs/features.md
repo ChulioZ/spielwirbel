@@ -19,7 +19,12 @@ What the app does, in detail. For a short overview see the
   the head of that table is **yours** — the creator is seated automatically (opt
   out with "Ich spiele mit"), and on any other round a member page offers
   „Das bin ich" so your account can take its own seat. A claimed seat is what
-  puts your name on your actions in the Chronik.
+  puts your name on your actions in the Chronik. A member who stops playing can
+  be **retired** from their own page, exactly the way a game is: they leave the
+  seating list, the teams, the standings and the trophies, while every vote,
+  winner and team they are part of keeps counting — so no game's score moves.
+  Bringing them back is one tap, and a seat created by mistake, with nothing
+  attached to it at all, can be deleted outright instead.
 - **Games** – each game has a title, a required player range (min–max), any
   number of custom round **tags** (see below), and an optional cover image (paste
   from clipboard or pick a file). A game's detail page can also record the

@@ -1,5 +1,7 @@
 'use strict';
 
+const { MEMBER_COLORS } = require('../../public/js/member-colors');
+
 /*
  * The data-access-layer contract (issue #127), as a backend-parameterized suite.
  * Both backends must satisfy it identically: test/repo.test.js runs it against
@@ -276,6 +278,63 @@ module.exports = function repoContract(repo) {
     // Missing round, or another tenant's round, is null (indistinguishable).
     assert.equal(await repo.createMember(T, 'nope', { name: 'X' }), null);
     assert.equal(await repo.createMember(OTHER, round.id, { name: 'X' }), null);
+  });
+
+  /* #1006. The whole requirement is that retiring touches NOTHING else, so the
+     assertion is a deep-equal of the round with the two flags subtracted rather
+     than a spot-check of a field or two. */
+  test('retireMember sets the two flags and changes nothing else; restoring clears them', async () => {
+    const round = await freshRound();
+    const alice = (await repo.getRound(T, round.id)).members[0];
+    const strip = (r) => JSON.stringify({
+      ...r,
+      members: r.members.map((m) => { const x = { ...m }; delete x.retired; delete x.retiredAt; return x; }),
+      activities: undefined,
+    });
+    const before = strip(await repo.getRound(T, round.id));
+
+    const out = await repo.retireMember(T, round.id, alice.id, true);
+    assert.equal(out.retired, true);
+    assert.match(out.retiredAt, /^\d{4}-\d{2}-\d{2}T/);
+    const after = await repo.getRound(T, round.id);
+    assert.equal(strip(after), before, 'retiring must leave every other field byte-identical');
+    assert.equal(after.members[0].retired, true);
+
+    const back = await repo.retireMember(T, round.id, alice.id, false);
+    assert.equal(back.retired, false);
+    assert.equal(back.retiredAt, null);
+
+    assert.equal(await repo.retireMember(T, round.id, 'nope', true), null);
+    assert.equal(await repo.retireMember(OTHER, round.id, alice.id, true), null);
+
+    const acts = await repo.listActivities(T, round.id);
+    assert.ok(acts.some((a) => a.type === 'member_retired' && a.name === 'Alice'));
+    assert.ok(acts.some((a) => a.type === 'member_restored' && a.name === 'Alice'));
+  });
+
+  /* The colour FREEZE is the non-obvious half: an unset avatar colour is derived
+     from the seat's POSITION, so removing a row silently re-colours everyone
+     after it on every screen, historical ones included. */
+  test('deleteMember removes the seat and freezes the colours that would have shifted', async () => {
+    const round = await freshRound(); // Alice, Bob
+    await repo.createMember(T, round.id, { name: 'Charlie' });
+    const before = (await repo.getRound(T, round.id)).members;
+    assert.equal(before.length, 3);
+    // Nobody has picked a colour, so all three are position-derived.
+    assert.ok(before.every((m) => !('color' in m)), 'fixture must start with derived colours');
+
+    assert.equal(await repo.deleteMember(T, round.id, before[0].id), true);
+    const after = (await repo.getRound(T, round.id)).members;
+    assert.deepEqual(after.map((m) => m.name), ['Bob', 'Charlie']);
+    // Bob was at index 1 and Charlie at 2; both keep those swatches.
+    assert.equal(after[0].color, MEMBER_COLORS[1]);
+    assert.equal(after[1].color, MEMBER_COLORS[2]);
+
+    assert.equal(await repo.deleteMember(T, round.id, 'nope'), false);
+    assert.equal(await repo.deleteMember(OTHER, round.id, after[0].id), false);
+
+    const acts = await repo.listActivities(T, round.id);
+    assert.ok(acts.some((a) => a.type === 'member_deleted' && a.name === 'Alice'));
   });
 
   // #563: a new seat is logged, because a new person in the round is real history
