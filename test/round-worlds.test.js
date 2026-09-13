@@ -399,8 +399,14 @@ const tokenValue = (world, tok) => {
 };
 
 test('the victory scene paints only in the gutters and the band the spotlight reserves', () => {
-  const host = bodyOf('[data-world] .spotlight');
+  // Two hosts since #1056: the split screen's spotlight card and the result
+  // screen's gold Tafel group, which took the slot over there. `slotBody`, not
+  // `bodyOf`: the rule is a selector GROUP now, and an exact-text lookup reports
+  // a shared rule as a DELETED one.
+  const host = slotBody('[data-world] .spotlight');
   assert.ok(host, 'the spotlight host rule is missing');
+  assert.ok(slotBody('[data-world] .tafel-top') || /\.tafel-top/.test(host),
+    'the result screen\'s gold group is not a host for the victory scene');
   const col = /--victory-col:\s*min\(\s*(\d+)%\s*,\s*(\d+)px\s*\)/.exec(host);
   const band = /--victory-band:\s*min\(\s*(\d+)%\s*,\s*(\d+)px\s*\)/.exec(host);
   assert.ok(col, 'the gutter width must be a capped percentage, declared once on the host');
@@ -416,8 +422,16 @@ test('the victory scene paints only in the gutters and the band the spotlight re
   assert.ok(size, 'the two gutter layers are sized by --victory-col and the band layer caps its width');
   assert.match(shared, /mask-repeat:\s*no-repeat/);
   assert.match(shared, /transform-origin:\s*50% 100%/, 'a scene grows from the ground, never toward the centre');
+  /* The layer's OWN rule, not the `content: ''` block it shares with its
+     sibling. Since #1056 both are selector groups, so a "first rule naming this
+     selector" lookup lands on the shared one — which carries no mask-position
+     and reports the contract as broken. Pick by the declaration under test. */
+  const ownBody = (sel) => rulesOf(CSS)
+    .filter(([s2]) => s2.split('\n').map((x) => x.trim().replace(/,$/, '')).includes(sel))
+    .map(([, b]) => b)
+    .find((b) => /mask-position/.test(b));
   for (const pseudo of ['before', 'after']) {
-    const own = bodyOf(`[data-world] .spotlight::${pseudo}`);
+    const own = ownBody(`[data-world] .spotlight::${pseudo}`);
     assert.ok(own, `::${pseudo} has no rule of its own`);
     assert.match(own, /mask-position:\s*left var\(--world-victory(?:-2)?-y\),\s*right var\(--world-victory(?:-2)?-y\),\s*center bottom/,
       `::${pseudo}: the gutter layers hug the edges and the band sits at the bottom`);
@@ -456,11 +470,15 @@ test('the victory scene paints only in the gutters and the band the spotlight re
 test('the scene rests in its end state; only the reveal animates it, through motion-gated keyframes each world names', () => {
   // The end state IS the ornament: the un-revealed rules carry no animation,
   // so a cold load, the Chronik and a reduced-motion reader get the composed scene.
-  for (const sel of ['[data-world] .spotlight::before', '[data-world] .spotlight::after']) {
-    assert.doesNotMatch(bodyOf(sel), /animation/, `${sel} must rest — the reveal class is what animates`);
+  for (const sel of ['[data-world] .spotlight::before', '[data-world] .spotlight::after',
+    '[data-world] .tafel-top::before', '[data-world] .tafel-top::after']) {
+    assert.doesNotMatch(slotBody(sel), /animation/, `${sel} must rest — the reveal class is what animates`);
   }
   const motion = mediaBlocks().filter(([q]) => /prefers-reduced-motion:\s*no-preference/.test(q)).map(([, css]) => css).join('\n');
-  const reveal = rulesOf(motion).filter(([sel]) => /^\[data-world\] \.spotlight\.is-reveal::(before|after)$/.test(sel));
+  // Both hosts are named in one `:is()` since #1056, so the reveal is still two
+  // rules — one per layer — and the assertion below checks BOTH hosts are in it
+  // rather than only that two rules exist.
+  const reveal = rulesOf(motion).filter(([sel]) => /^\[data-world\] :is\(\.spotlight, \.tafel-top\)\.is-reveal::(before|after)$/.test(sel));
   assert.equal(reveal.length, 2, 'both layers animate on the reveal, inside the motion gate');
   for (const [sel, body] of reveal) {
     // Once, after the 0.55s spotlight rise (0.1s delay + 0.55s), on the

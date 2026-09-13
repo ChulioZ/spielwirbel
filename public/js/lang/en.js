@@ -862,6 +862,9 @@ I18N.en = {
   // hardware. "Anna voted for Ben" is therefore something we can stand behind;
   // "Ben voted on Anna's device" is not.
   'log.title': 'What happened',
+  'log.summaryOne': '{n} entry, latest {when}',
+  'log.summary': '{n} entries, latest {when}',
+  'log.open': 'Show the log',
   'log.someone': 'Someone',
   'log.aGame': 'a game',
   'log.started': '{actor} started the session',
@@ -920,7 +923,6 @@ I18N.en = {
   // The winner spotlight's kicker (#897). Deliberately names no entity: „Spiel
   // des Abends" would put „Abend" back in the UI, which the Session naming rule
   // bans (CLAUDE.md).
-  'result.winner': 'Winner',
   'result.winnerShared': 'Shared win',
   'result.participants': 'Who played',
   // The teams of this session (#575), listed next to the participants row.
@@ -931,10 +933,15 @@ I18N.en = {
   'result.titleLost': '“{game}” was played — and it won.',
   'result.titleNoWinner': '“{game}” was played — with no winner.',
   'result.titleOngoing': '“{game}” was played — to be continued.',
-  'result.bannerPrompt': 'Tap “Play” on a game to record what you’re playing.',
   'result.play': 'Play',
-  'result.willPlay': 'Playing',
-  'result.lockedHint': 'Reset the result first to change the choice',
+  'result.voteTitleOne': 'The vote · {n} game',
+  'result.voteTitle': 'The vote · {n} games',
+  'result.voteWinner': 'Winner of the vote',
+  'result.choosePrompt': 'Tap “Play” on the game that goes on the table.',
+  'result.onTable': 'on the table',
+  'result.more': 'More',
+  'result.openGame': 'Open the game',
+  'result.clearChoice': 'Clear the choice',
   'result.barTitle': '{c}× rating {r}',
   'score.infoBody': 'The score is more than the average. If someone does not want to play a game at all, that counts for more than a good rating from someone else — so that what you end up playing is something everybody is up for.',
   'score.infoThin': 'A game with only a few ratings so far is judged more cautiously — it takes a few sessions before its score carries full weight.',
@@ -965,7 +972,6 @@ I18N.en = {
   'result.cancelHint': 'No game appeals',
   'result.cancelConfirm': 'Cancel this session? No game can be chosen to play anymore.',
   'result.cancelUndo': 'Undo cancellation',
-  'result.cancelledHint': 'Undo the cancellation first to choose a game',
   'result.toast.cancelled': 'Session cancelled',
   'result.toast.cancelUndone': 'Cancellation undone',
   'result.finishTitleDone': 'Result recorded',

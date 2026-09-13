@@ -204,7 +204,7 @@ test('finishing a session offers the install once, below the results', async (t)
   // Below the games, and above the footer: „Session abbrechen"/„löschen" must
   // stay the last thing on the screen (#614), so a promo may not follow them.
   const FOLLOWING = dom.window.Node.DOCUMENT_POSITION_FOLLOWING;
-  const firstRow = dom.app.querySelector('.result-row');
+  const firstRow = dom.app.querySelector('.trow');
   const footer = dom.app.querySelector('.result-footer');
   assert.ok(firstRow.compareDocumentPosition(card) & FOLLOWING, 'the offer interrupts the results');
   assert.ok(card.compareDocumentPosition(footer) & FOLLOWING, 'the offer landed after the destructive footer');

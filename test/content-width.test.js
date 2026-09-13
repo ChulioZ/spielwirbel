@@ -332,6 +332,48 @@ test('the detail width sits between the reading measure and the shell', () => {
   assert.ok(detail <= rootPx('--w-shell'), '--w-detail exceeds the shell it sits in');
 });
 
+/* The result screen (#1055) — the fourth screen to escape the reading measure.
+   Same two silent halves as the spread above, so both are pinned the same way;
+   this one matters more, because the screen it widens is the one shared by link
+   and cold-loaded by people who were not in the room. */
+test('the result screen and its back row opt out of the reading measure TOGETHER', () => {
+  const exemptions = RULES.filter(([sel, body]) =>
+    whole('.result-screen').test(sel) && /max-width:/.test(body));
+  assert.ok(exemptions.length,
+    'nothing exempts .result-screen from the reading measure, so the result stays at the text measure');
+
+  exemptions.forEach(([sel, body]) => {
+    assert.ok(whole('.back-row').test(sel),
+      `"${sel}" widens the result without widening the back row, which leaves the page menu inside the page's right edge`);
+    assert.match(sel, /:has\(\.result-screen\)/,
+      `"${sel}" is not conditioned on the result screen being present, so it widens every screen's back row`);
+    const vars = [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]);
+    assert.equal(vars.length, 1,
+      `"${sel}" does not take its width from a single custom property`);
+    const classes = (sel.match(/\.[\w-]+/g) || []).length;
+    assert.ok(classes > 3,
+      `"${sel}" has ${classes} class components and does not out-rank the (0,3,0) reading-measure cap`);
+  });
+});
+
+test('the result width sits between the reading measure and the shell', () => {
+  // The same arithmetic the spread's token gets: every selector assertion above
+  // stays green with the exemption pointing at a NARROWER value than the cap it
+  // exists to escape, which is the `--w-setup: 880px` failure two tokens over.
+  const exemptions = RULES.filter(([sel, body]) =>
+    whole('.result-screen').test(sel) && /max-width:/.test(body));
+  const vars = exemptions.flatMap(([, body]) =>
+    [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]));
+  assert.ok(vars.length, 'the result screen takes no custom property for its width');
+  vars.forEach((name) => {
+    const width = rootPx(name);
+    assert.ok(width, `:root does not declare ${name}`);
+    assert.ok(width > rootPx('--w-read'),
+      `${name} (${width}px) is not wider than --w-read (${rootPx('--w-read')}px), so the exemption buys nothing`);
+    assert.ok(width <= rootPx('--w-shell'), `${name} exceeds the shell it sits in`);
+  });
+});
+
 test('the detail spread is two columns from the app breakpoint, on bounded tracks', () => {
   const hit = mediaBlocks()
     .map(([query, css]) => ({ query, body: bodyOf('.pass', rulesOf(css)) }))
