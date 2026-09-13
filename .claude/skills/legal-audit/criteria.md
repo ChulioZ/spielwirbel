@@ -29,7 +29,8 @@ than an acknowledged gap.
   the donation target. Each must appear in the policy's processor section **and** the
   recipient list in **both** DE and EN, with a `docs/legal/vvt.md` row and an AVV
   inventory entry. Currently disclosed: Railway, Cloudflare, Heinlein/mailbox.org,
-  Ko-fi (+ Stripe, PayPal), BoardGameGeek, Sony, Microsoft, Nintendo, Valve.
+  Ko-fi (+ Stripe, PayPal), BoardGameGeek. (Sony, Microsoft, Nintendo and Valve
+  were recipients until #981 cleared the last hotlinked storefront covers.)
 - **Enforced by:** `test/legal.test.js` pins markers for named processors — which catches
   *removing* one, never *adding* one in code. This direction is the manual half.
 
@@ -37,7 +38,8 @@ than an acknowledged gap.
 - **Status:** adopted · 2026-07-23
 - **Source:** Art. 13 GDPR · `provider-cover-hotlinking.md`
 - **Check:** Provider covers are hotlinked (#172), so the visitor's IP reaches Sony,
-  Microsoft, Nintendo, Valve and BGG directly. Any new `IMAGE_HOSTS` entry, embed,
+  BGG directly — and, until #981 cleared the last stored ones, the four
+  storefront CDNs. Any new `IMAGE_HOSTS` entry, embed,
   iframe, remote font, CDN script or pixel adds a recipient. Cross-check the CSP
   `img-src`/`connect-src`/`script-src` in `lib/app.js` against the disclosed list — the
   CSP is the machine-readable inventory of who the browser may talk to.

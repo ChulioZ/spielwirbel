@@ -91,7 +91,7 @@ test('configured: the privacy policy covers the real processors and no ODR link'
     'Brettspielpreise.de / BoardGamePrices',
     'Ein Empfänger personenbezogener Daten entsteht dadurch nicht',
     'keine Affiliate- oder Provisionsverknüpfung',  // the operator decision, stated publicly
-    'geekdo-images.com', 'steamstatic.com',      // hotlinked cover hosts disclosed (#172)
+    'geekdo-images.com',                        // the hotlinked cover host, disclosed (#172)
     'Nutzungsereignisse',                        // product-event logging (#261) disclosed
     'keine Konto- oder Mandanten-Kennung',       // feedback is anonymous since #321 — pin the §11 disclosure
     'Aktionsprotokoll',                          // moderation log + erasure-record retention
@@ -110,17 +110,22 @@ test('configured: the privacy policy covers the real processors and no ODR link'
   assert.ok(!res.text.includes('ec.europa.eu/consumers/odr'), 'no link to the shut-down ODR platform');
 });
 
-// §7 must name EVERY host the browser can be sent to for a cover — derived from
-// the CSP source list rather than restated, so a host cannot be retired from the
-// policy text while imageCspSources() still lets the browser contact it. The
-// 2026-09-08 audit found only two of the five legacy hosts pinned above, i.e.
-// the Sony, Nintendo and Microsoft lines could be deleted with the suite green
-// (Art. 13(1)(e) recipients). Twice each: once per language half.
+/* §7 must name EVERY host the browser can be sent to for a cover — derived from
+   the CSP source list rather than restated, so a host cannot be retired from the
+   policy text while imageCspSources() still lets the browser contact it. The
+   2026-09-08 audit found only two of the five legacy hosts pinned above, i.e.
+   the Sony, Nintendo and Microsoft lines could be deleted with the suite green
+   (Art. 13(1)(e) recipients). Twice each: once per language half.
+
+   Since #981 the derivation is the LIVE registry alone: the frozen legacy list
+   is gone with the rows that needed it, which is why those four recipients could
+   finally leave the policy. The direction that matters is unchanged — add a
+   provider and this goes red until §7 names it. */
 test('configured: the policy discloses every cover host the CSP allows, in both languages', async () => {
   Object.assign(process.env, IDENTITY);
-  const { LEGACY_COVER_HOSTS, providers } = require('../lib/providers');
-  const hosts = new Set([...LEGACY_COVER_HOSTS, ...Object.values(providers).flatMap((p) => p.imageHosts)]);
-  assert.ok(hosts.size >= 3, 'the host list is not vacuous');
+  const { providers } = require('../lib/providers');
+  const hosts = new Set(Object.values(providers).flatMap((p) => p.imageHosts));
+  assert.ok(hosts.size >= 1, 'the host list is not vacuous');
   const res = await request(app).get('/datenschutz');
   assert.equal(res.status, 200);
   for (const host of hosts) {

@@ -71,9 +71,6 @@ lib/
     index.js         picks the backend (DATABASE_URL ? postgres : json)
     json.js          default backend — the data/data.json store below
     postgres.js      PostgreSQL backend (Knex query builder), used when DATABASE_URL set
-    storefront-match.js which rows still point at a retired digital storefront
-                     — one definition, shared by both backends, behind the
-                     operator's one-off clean-up action (issue #981)
     import-copy.js   what travels when a new round imports another round's
                      games (#921) — shared by both backends so a copy carries
                      the same fields whichever one is running
@@ -318,13 +315,11 @@ lib/
                                              in index.js, because they share the
                                              prefix and seven mounts would run
                                              authLimiter seven times — issue #996)
-      index.js       the gate, login/logout/me, and the eight mounts
+      index.js       the gate, login/logout/me, and the seven mounts
       shared.js      the schemas and the paging shape more than one needs
       status.js      instance status + the recent warn/error ring buffer
       corpus.js      the licensed BGG corpus ingest (issue #681)
       covers.js      the cover re-encode backfill (issue #867)
-      storefronts.js the one-off storefront link clean-up (issue #981) —
-                     its own file so that removing it is a file delete
       moderation.js  lookup by image/round/e-mail/tenant, per-tenant summary,
                      round text + redaction, takedown
       users.js       account suspend/restore/rename, GDPR export + erasure

@@ -15,28 +15,36 @@ numbers are not marginal — measured live on 2026-07-20:
 | BGG | `…/fit-in/200x150/…` (was `246x300` before #117) | 4–13 KB | small |
 | Steam | `…/capsule_231x87.jpg` | ~50 KB | small |
 | Nintendo | `nintendo.com/…` | ~100 KB | medium |
-| **Xbox** | `store-images.s-microsoft.com/…` | **207–837 KB** | large |
-| **PS Store** | `image.api.playstation.com/…` | **1.0–1.7 MB** | **3840×2160** |
+| **Xbox** (retired #744, data cleared #981) | `store-images.s-microsoft.com/…` | **207–837 KB** | large |
+| **PS Store** (retired #744, data cleared #981) | `image.api.playstation.com/…` | **1.0–1.7 MB** | **3840×2160** |
 
 `public/js/cover-size.js` → `coverUrl(image, width)` rewrites those two hosts to
 a sized variant at every render site. A 14-game PS shelf went **13,196 KB → 239
 KB (55×)**, i.e. ~17 KB/cover — the same order as a BGG shelf.
 
-## Since #744 this file is about LEGACY DATA — which makes it more load-bearing, not less
+## The table is CLOSED since #981 — and `COVER_RESIZERS` is empty
 
-PS Store and Xbox were retired as lookup providers, so **no new cover can land on
-either host**. The `COVER_RESIZERS` rules for them stay, and deleting them as
-"dead code" is the specific mistake to avoid: the ~66 covers already stored on
-those hosts still render through them, and without the rewrite each one goes back
-to serving a 1–2 MB master — the exact regression measured above, reintroduced by
-a tidy-up rather than by a feature.
+#744 retired PS Store and Xbox as lookup providers, and from then until #981 this
+file was about legacy DATA: the ~66 covers already stored on those hosts still
+rendered through the resizers, so deleting the rules as "dead code" would have
+sent every one of them back to a 1–2 MB master. That asymmetry — refused by the
+*write* gate (`isAllowedImageUrl`), kept on the *render* one
+(`imageCspSources`) — was the whole point.
 
-The same asymmetry runs through the whole retirement: those hosts are refused by
-the *write* gate (`isAllowedImageUrl`) and kept on the *render* one
-(`imageCspSources`, `.claude/rules/security-middleware.md`).
-`test/cover-size.test.js` pins both directions for the two resizer hosts, so a
-future "these hosts aren't providers any more" cleanup fails rather than blanking
-or bloating a shelf.
+#981's operator action cleared those rows, so both halves collapsed together: the
+resizers went, the hosts left the CSP, and the four storefronts left the privacy
+policy. **`COVER_RESIZERS` is empty today, and that is a fact about the DATA, not
+about the machinery.** BGG serves one modest size, so nothing needs rewriting —
+the next provider that hands over a master adds a row here and inherits the whole
+mechanism.
+
+**Two things that means for a test in this area.** Every `coverUrl` case is now a
+pass-through, so an assertion that the URL comes back unchanged is satisfied by a
+function that returns its argument unconditionally: `test/cover-size.test.js`
+pushes a **synthetic** rule onto `COVER_RESIZERS` to prove the rewrite still
+happens at all, and three view specs do the same rather than keeping a dead
+storefront host as a fixture. And the empty table is itself asserted — a rule
+with no provider behind it rewrites a URL nothing can produce.
 
 ## The finding that explains the symptom: decode memory, not download
 

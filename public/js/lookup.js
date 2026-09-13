@@ -21,11 +21,11 @@
 //
 // The four storefronts are LOOKUP-RETIRED (#744) but stay named here, and that is
 // deliberate: games linked to them are still on real shelves, and the game-detail
-// page renders „Auf {provider} ansehen" from this table. Drop an entry and that
-// link silently degrades to the bare id (`psstore`), which reads as a bug in the
-// one place the stored link is still useful. They are absent from
-// LOOKUP_PROVIDERS below — being nameable is not being queryable.
-const PROVIDER_LABELS = { psstore: 'PlayStation Store', bgg: 'BoardGameGeek', steam: 'Steam', nintendo: 'Nintendo eShop', xbox: 'Xbox' };
+// page renders „Auf {provider} ansehen" from this table. The four retired
+// storefronts were nameable here until #981 cleared the last stored links to
+// them; an id with no entry still degrades to the raw string rather than
+// throwing, which is the behaviour a future retirement relies on.
+const PROVIDER_LABELS = { bgg: 'BoardGameGeek' };
 function providerLabel(provider) {
   return PROVIDER_LABELS[provider] || provider;
 }
@@ -34,9 +34,8 @@ function providerLabel(provider) {
 // and the cover-fetch button take these instead.
 //
 // The fallback chains to providerLabel, NOT to the raw id: a missing short entry
-// must land on the full name rather than doubling the bare-`psstore` exposure the
-// comment above already warns about.
-const PROVIDER_LABELS_SHORT = { psstore: 'PS Store', bgg: 'BGG', nintendo: 'eShop' };
+// must land on the full name rather than on a bare provider id.
+const PROVIDER_LABELS_SHORT = { bgg: 'BGG' };
 function providerLabelShort(provider) {
   return PROVIDER_LABELS_SHORT[provider] || providerLabel(provider);
 }

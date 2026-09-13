@@ -82,7 +82,9 @@ download-and-cache**, however tempting the reliability argument is.
   commercial (they say such a licence is "most likely free"), and Spielwirbel's
   stated direction is donations — so the application was registered and
   approved as commercial, not under the free non-commercial grant. See #173.
-- **The digital storefronts have no path at all.** Sony, Microsoft, Nintendo and
+- **The digital storefronts have no path at all.** (Historic — #744 retired the
+  four as providers and #981 cleared the last stored covers, so no shelf points
+  at them any more.) Sony, Microsoft, Nintendo and
   Valve offer no cover-art licence at any price, so hotlinking is the end state
   for them, not a stopgap.
 - **Since #744 those four are LEGACY DATA, and the hotlinks stay.** The providers
@@ -98,7 +100,8 @@ download-and-cache**, however tempting the reliability argument is.
 
 ## Privacy follow-through
 
-Hotlinking means the **visitor's browser contacts Sony/Microsoft/Nintendo/Valve/
+Hotlinking means the **visitor's browser contacts BoardGameGeek (until #981 also
+Sony/Microsoft/Nintendo/Valve — those are gone with their covers)/
 BGG directly**, so their IP address reaches those third parties. That is a
 disclosure obligation in the privacy policy (**#134**) — it was recorded there
 when #172 shipped. It is also the one real argument *against* hotlinking; it was

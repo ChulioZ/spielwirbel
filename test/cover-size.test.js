@@ -13,25 +13,13 @@ const {
   COVER_CARD,
   COVER_HERO,
   coverUrl,
+  COVER_RESIZERS,
 } = require('../public/js/cover-size');
 
-const { isAllowedImageUrl, providerCoverUrl } = require('../lib/providers');
+const { isAllowedImageUrl } = require('../lib/providers');
 
-test('resizes a PlayStation Store cover', () => {
-  const url = 'https://image.api.playstation.com/vulcan/ap/rnd/202309/1215/abc.png';
-  assert.strictEqual(coverUrl(url, COVER_CARD), `${url}?w=330`);
-  assert.strictEqual(coverUrl(url, COVER_THUMB), `${url}?w=160`);
-});
 
-test('resizes a playstation.net subdomain cover', () => {
-  const url = 'https://apollo2.dl.playstation.net/cdn/cover.jpg';
-  assert.strictEqual(coverUrl(url, COVER_HERO), `${url}?w=480`);
-});
 
-test('resizes an Xbox cover with the width/height/quality triple', () => {
-  const url = 'https://store-images.s-microsoft.com/image/apps.64416.138287.abc';
-  assert.strictEqual(coverUrl(url, COVER_CARD), `${url}?w=330&h=330&q=90`);
-});
 
 test('passes through the providers that are already right-sized', () => {
   // BGG ships a fit-in transform, Steam a capsule crop, and Nintendo's CDN
@@ -72,49 +60,59 @@ test('passes through an unparseable https value', () => {
   assert.strictEqual(coverUrl('https://', 330), 'https://');
 });
 
-test('the sized URLs still carry no character the server-side guard refuses', () => {
-  // providerCoverUrl() rejects quotes, parens, backslashes and whitespace
-  // because game.image is interpolated into background-image:url('…'). Verify
-  // rather than assume that the appended query trips none of them (#298 §4).
-  //
-  // Since #744 the two resizer hosts are LEGACY: no provider vouches for them,
-  // so providerCoverUrl() refuses them on the host check before it ever looks at
-  // the characters. Asserting `providerCoverUrl(sized) === sized` would now be
-  // asserting `null === null` — vacuously green against a resizer that appended
-  // a quote. So the character rule is checked directly, and the host rule is
-  // checked separately below, where it says the opposite thing on purpose.
-  const UNSAFE = /['"<>\\\s]/;
-  [
+/* #981 removed the three storefront resizers with the rows that needed them, so
+   `COVER_RESIZERS` is empty today and every case below is a PASS-THROUGH case.
+   That makes the pass-throughs vacuous on their own — a coverUrl() that returned
+   its argument unconditionally would satisfy all of them — so this file pins the
+   MACHINERY instead: a synthetic rule proves the rewrite still happens, and the
+   real hosts prove nothing is rewritten by accident. */
+test('the rewrite machinery still works — proved against a synthetic rule', () => {
+  // Reaching into the module's own table rather than inventing a second
+  // implementation: this is the exact list a future provider adds a row to.
+  COVER_RESIZERS.push({ host: 'sized.test', query: (w) => `w=${w}` });
+  try {
+    assert.strictEqual(coverUrl('https://img.sized.test/a.png', 300), 'https://img.sized.test/a.png?w=300');
+    assert.strictEqual(coverUrl('https://sized.test/a.png', 300), 'https://sized.test/a.png?w=300',
+      'the apex matches too, like every provider download guard');
+    assert.strictEqual(coverUrl('https://notsized.test/a.png', 300), 'https://notsized.test/a.png',
+      'and a host that merely ENDS in the name does not');
+  } finally {
+    COVER_RESIZERS.pop();
+  }
+});
+
+test('no cover host is rewritten today — the storefront rules went with their data (#981)', () => {
+  assert.deepEqual(COVER_RESIZERS, [],
+    'a rule here without a provider behind it rewrites a URL nothing can produce');
+  for (const url of [
     'https://image.api.playstation.com/vulcan/ap/rnd/202309/1215/abc.png',
     'https://store-images.s-microsoft.com/image/apps.64416.138287.abc',
-  ].forEach((url) => {
+  ]) {
+    assert.strictEqual(coverUrl(url, COVER_CARD), url, 'the rows pointing here are gone');
+    assert.equal(isAllowedImageUrl(url), false, 'and no provider vouches for the host');
+  }
+});
+
+test('a sized URL carries no character the server-side guard refuses', () => {
+  /* providerCoverUrl() rejects quotes, parens, backslashes and whitespace
+     because game.image is interpolated into background-image:url('…'). Verify
+     rather than assume that an appended query trips none of them (#298 §4).
+
+     Checked against a SYNTHETIC rule since #981 emptied the table: the two hosts
+     this used to use are gone with their data, and a rule that rewrites nothing
+     cannot be asked whether what it writes is safe. The `query` shape is the one
+     a real entry uses. */
+  const UNSAFE = /['"<>\\\s]/;
+  COVER_RESIZERS.push({ host: 'sized.test', query: (w) => `w=${w}&h=${w}&q=90` });
+  try {
     [COVER_THUMB, COVER_CARD, COVER_HERO].forEach((w) => {
-      const sized = coverUrl(url, w);
-      assert.notStrictEqual(sized, url, 'expected the URL to be rewritten');
+      const sized = coverUrl('https://img.sized.test/a.png', w);
+      assert.notStrictEqual(sized, 'https://img.sized.test/a.png', 'expected the URL to be rewritten');
       assert.doesNotMatch(sized, UNSAFE, `${sized} carries a character the cover guard refuses`);
       assert.ok(sized.startsWith('https://'), 'the resizer must not change the scheme');
     });
-  });
-
-  // A BGG cover passes through untouched AND clears the real guard — the
-  // anti-vacuous half: it proves providerCoverUrl still accepts something, so
-  // the refusals above are about the host and not about the function being dead.
-  const bggCover = 'https://cf.geekdo-images.com/x/fit-in/200x150/filters:strip_icc()/pic1.jpg';
-  assert.strictEqual(coverUrl(bggCover, COVER_CARD), bggCover, 'geekdo paths are signed — never rewritten');
-  assert.ok(isAllowedImageUrl(bggCover));
-  assert.strictEqual(providerCoverUrl(bggCover), bggCover);
+  } finally {
+    COVER_RESIZERS.pop();
+  }
 });
 
-test('the two resizer hosts are legacy-render-only since #744', () => {
-  // The rules stay in COVER_RESIZERS for the ~66 covers already stored on those
-  // hosts — delete them and those games silently go back to serving a 1–2 MB
-  // master. But nothing may WRITE one any more, and this is what pins that the
-  // two halves disagree deliberately rather than by oversight.
-  [
-    'https://image.api.playstation.com/vulcan/ap/rnd/202309/1215/abc.png',
-    'https://store-images.s-microsoft.com/image/apps.64416.138287.abc',
-  ].forEach((url) => {
-    assert.notStrictEqual(coverUrl(url, COVER_CARD), url, 'the resizer still sizes a stored cover');
-    assert.equal(isAllowedImageUrl(url), false, 'no provider vouches for this host any more');
-  });
-});
