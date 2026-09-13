@@ -103,6 +103,7 @@ body:
         - Italiano
         - Nederlands
         - Português
+        - Suomi
     validations:
       required: true
 

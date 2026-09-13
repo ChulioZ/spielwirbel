@@ -47,6 +47,7 @@ const CLAIMS = {
   it: { shelf: 'dallo Scaffale', draw: 'sorteggio', back: 'recuperarlo' },
   nl: { shelf: 'uit de Kast', draw: 'loting', back: 'terughalen' },
   pt: { shelf: 'da Estante', draw: 'do sorteio', back: 'de volta' },
+  fi: { shelf: 'Pois hyllystä', draw: 'pois arvonnasta', back: 'takaisin' },
 };
 
 function loadLocale(name) {

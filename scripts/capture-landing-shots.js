@@ -211,6 +211,15 @@ const SEEDS = {
       'Gildemeester', 'Zout en Zand', 'De Laatste Trein', 'Jacht op het Noorderlicht',
     ],
   },
+  fi: {
+    round: 'Perjantain porukka',
+    tags: ['Lautapeli', 'Yhteistyö', 'Strategia', 'Digitaalinen'],
+    games: [
+      'Tähtisatama', 'Musta Hiillos', 'Korppien Silta', 'Pohjolan Kartanpiirtäjät',
+      'Lyhtyjen Laakso', 'Obsidiaanin Ajelehdus', 'Kesämarkkinat', 'Ruoste ja Sade',
+      'Killan Mestari', 'Suola ja Hiekka', 'Viimeinen Juna', 'Revontulten Metsästys',
+    ],
+  },
   pt: {
     round: 'A turma de quinta',
     tags: ['Tabuleiro', 'Cooperativo', 'Estratégia', 'Digital'],

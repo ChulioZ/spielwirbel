@@ -383,6 +383,7 @@ public/
     lang/it.js       Italian strings
     lang/nl.js       Dutch strings
     lang/pt.js       Portuguese strings
+    lang/fi.js       Finnish strings
     core.js          DOM/API helpers, SWR fetches, member colours, the
                      language picker  (loads first)
     empty-state.js   the app's one "nothing here yet" component — medallion,
