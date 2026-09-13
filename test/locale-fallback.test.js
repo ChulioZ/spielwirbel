@@ -51,7 +51,7 @@ test('kontakt.html: a saved English choice still wins over a German system langu
   dom.window.close();
 });
 
-/* The terms-notice link (setupTermsBanner, public/js/account.js). The document
+/* The terms-notice link (setupTermsBanner, public/js/account-chrome.js). The document
    itself is unchanged: it carries the authoritative German change summary at
    #aenderungen followed by the English one at #changes-en — this is only about
    which of the two a reader is dropped on. */
