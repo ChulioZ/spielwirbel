@@ -733,6 +733,22 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: var(--w-detail);
   }
 
+  /* Der Kreis (#1092) takes the same licence, and its argument is the plainest
+     of the three: the screen renders NO navigation at all — no rail, no dock, no
+     back row — so widening it moves nothing. That is the setup forms' reasoning,
+     not the rail/dock one.
+
+     ONE selector, unlike `.pass` and `.result-screen`: `showFriends` renders no
+     `.back-row` sibling to drag along. Confirmed rather than assumed.
+
+     Measured before: page height and every section position were IDENTICAL from
+     768 to 2560, and at 2560 1660 of 2560px (65%) was gutter.
+
+     (0,4,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app:has(.friends-screen) > *:not(.rail):not(.dock):is(.friends-screen) {
+    max-width: var(--w-detail);
+  }
+
   /* On a screen WITHOUT a rail — home, the new-round form, the session wizard —
      capped content centres instead. Beside a rail, a left edge is anchored and
      reads as deliberate; with no rail it is just a column shoved against the
@@ -3645,9 +3661,90 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .stats-cta { margin-top: 32px; padding-top: 24px; }
 }
 
-/* ===== Freundeskreis / friends (#325) ===== */
-/* Add-friend row: a username field + submit, above the feed and lists. */
-.friends-add { display: flex; gap: 8px; margin: 4px 0 22px; }
+/* ===== Freundeskreis / friends (#325), rebuilt as Der Kreis (#1092) ===== */
+
+/* Two contents with opposite needs, one column each. The feed is a
+   chronological text line wanting ~360px of measure and getting 766; the people
+   are short, unordered entries you scan for ONE of. Stacking both in one column
+   served neither.
+
+   `auto-fill`, not `auto-fit`: the grid then needs no breakpoint of its own and
+   a lone card cannot balloon to the full width — the constraint
+   .claude/rules/tiles-vs-lists.md states for `.ds-list--tiles`. The FEED stays a
+   list, because its order carries meaning. */
+.k-split { display: grid; gap: 26px; }
+.k-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(252px, 1fr)); gap: 12px; }
+@media (min-width: 1024px) {
+  .k-split { grid-template-columns: minmax(0, 1fr) 344px; column-gap: 34px; align-items: start; }
+  /* Sticky, so scanning a long roster keeps the feed in view rather than
+     scrolling it away above the fold. */
+  .k-feed { position: sticky; top: 16px; }
+}
+
+/* One card, three states. It is NOT a click target and must not look like one
+   (.claude/rules/ds-row-is-a-click-target.md): the avatar+name half is the
+   anchor, and the buttons are buttons. */
+.k-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.k-card__who { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.k-card__line {
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.k-card__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+
+/* Requests are the one LIFTED state: a brand left edge and a tint, so the
+   actionable cards read as different WITHOUT a heading above them — which is
+   what lets the headings go. Outgoing is quieter than incoming: it is a fact
+   about something you already did, not something waiting on you. */
+.k-card--incoming { border-left: 3px solid var(--brand); background: var(--brand-tint-soft); }
+.k-card--outgoing { border-left: 3px solid var(--ink-soft); }
+
+/* The „＋" tile, last in the grid. A dashed edge so it reads as a slot rather
+   than as a person. */
+.k-card--add {
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  border-style: dashed;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  min-height: 96px;
+  justify-content: center;
+}
+.k-card--add:hover { border-color: var(--brand); color: var(--brand-strong); }
+.k-card__plus { font-size: var(--text-2xl); line-height: 1; /* glyph, not type */ }
+.k-card__name { font-weight: 600; }
+.k-card--adding { gap: 8px; justify-content: center; }
+.k-feed__more { margin-top: 10px; }
+/* Below the column breakpoint the feed sits UNDER the grid, where eighteen
+   events are a screenful of something the home dashboard already carries. Six,
+   then the expander. Above 1024px the feed has its own sticky column and shows
+   the lot, so both the cap and the button are gone — hence the media query
+   rather than a slice in JS, which would need a resize listener to stay right. */
+@media (max-width: 1023px) {
+  .k-feed:not(.is-open) .feed-item:nth-child(n + 7) { display: none; }
+}
+@media (min-width: 1024px) {
+  .k-feed__more { display: none; }
+}
+
+/* Add-friend row: a username field + submit. It lives INSIDE the „＋" tile since
+   #1092 — it was a full-width row at the top of the page, i.e. the rarest
+   control on the screen owning its first slot. */
+.friends-add { display: flex; gap: 8px; }
 .friends-add .input { flex: 1; min-width: 0; }
 /* Section headings inside a per-account view (friends, Konto #482) / on the
    home feed section. */
@@ -3658,6 +3755,12 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 /* A friend / request row reuses .ds-row; its main side pairs avatar + name. */
 .friend-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .friend-row__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* In a card the name has its own line and a 252px track, so it WRAPS rather than
+   truncating. At 390px the old row gave it 36px where it needed 75-166 and
+   rendered "an…" / "de…" — you were asked to accept a friendship with somebody
+   you could not identify (#1092). */
+.k-card .friend-row__name { overflow: visible; white-space: normal; overflow-wrap: anywhere; }
+.k-card .friend-row__main { align-items: flex-start; }
 .friend-req__pending { font-size: var(--text-sm); }
 /* The avatar+name half links to the account's profile (#558). The ROW stays
    inert (ds-row--static), so this anchor carries the whole affordance: navLink
@@ -3725,6 +3828,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    hover is unreachable on touch, which is this app's primary platform. Quiet by
    default (it must not compete with the entry it sits beside) and 32x32, which
    clears WCAG 2.2 SC 2.5.8 without the spacing exception. */
+.friend-row__report,
 .feed-item__report {
   flex: none;
   align-self: center;
@@ -3736,7 +3840,14 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   padding: 8px 9px;
   border-radius: var(--radius-sm);
 }
+/* `.friend-row__report` joins it (#1092): it rendered at 16x22 where this
+   one is a deliberate 32x32, i.e. the same control at half the size one
+   section up. It was conformant — the centre-to-centre distance to
+   „Ablehnen" measured 53px, so SC 2.5.8's spacing exception applied — but
+   the card is being rewritten anyway. */
+.friend-row__report .ti,
 .feed-item__report .ti { font-size: var(--text-md); display: block; }
+.friend-row__report:hover,
 .feed-item__report:hover { background: var(--sunken); color: var(--ink); }
 /* Home compact section: a heading with a "see all" link, then a few feed rows.
    Since #842 it is a tile in the `.home-dash` flow, which owns the spacing —
@@ -3811,6 +3922,16 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 @media (max-width: 520px) {
   .konto-passkeys .ds-row { flex-wrap: wrap; row-gap: 8px; }
   .konto-passkeys .ds-row__meta { margin-left: auto; }
+}
+/* The inbox's friend-request row is the SAME shape one screen over (#1092): a
+   nowrap `.ds-row` whose `.ds-row__meta` is content-sized, holding „Annehmen"
+   (130px) and „Ablehnen" (70px). Measured at 390px the meta's right edge was
+   404px against the row's own 376 — so „Ablehnen" sat 28px OUTSIDE the card.
+   Same remedy, same compounding to (0,2,0) so it beats `.ds-row` outright rather
+   than tying and riding on source order. */
+@media (max-width: 520px) {
+  .inbox-row .ds-row__meta { flex-wrap: wrap; }
+  .inbox-row.ds-row { flex-wrap: wrap; row-gap: 8px; }
 }
 /* Self-service account deletion (#419). The one irreversible control on this
    screen, so it is set apart rather than styled like the forms above it: its own
