@@ -39,7 +39,7 @@ function boot(t, { entries = [], lastSeen = null, loggedIn = true, accounts = tr
   t.after(() => dom.close());
 
   // NEWS is a top-level `const`, so it can only be mutated, never replaced —
-  // which is exactly what a spec wants: the view and account.js read the same
+  // which is exactly what a spec wants: the view and account-chrome.js read the same
   // array this pushes into.
   const news = dom.get('NEWS');
   news.length = 0;

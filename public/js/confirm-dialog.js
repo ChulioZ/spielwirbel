@@ -73,6 +73,7 @@ function confirmDialog(o) {
             <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
           </div>
           <p class="confirm-dialog__body">${esc(opts.body || '')}</p>
+          <div class="confirm-dialog__opts"></div>
           <div class="toolbar sheet__actions sheet__actions--confirm">
             <button class="btn" type="button" data-act="cancel">${esc(t('common.cancel'))}</button>
             <button class="btn ${danger ? 'btn--danger' : 'btn--primary'}" type="button" data-act="ok"><i class="ti ${esc(icon)}" aria-hidden="true"></i> ${esc(label)}</button>
@@ -80,13 +81,38 @@ function confirmDialog(o) {
         </div>
       </div>`);
     const sheet = backdrop.querySelector('.sheet');
+    /* Optional follow-up questions (#1006), each a checkbox the caller reads
+       back. They exist because the one destructive act can have consequences
+       only the caller knows about — retiring a member orphans the games they
+       alone own, and leaves their seat linked to an account that can then never
+       claim another one here — and asking about those in a second dialog after
+       the first has been confirmed is how a user ends up answering a question
+       about a change they have already made.
+
+       The RETURN TYPE is conditional, deliberately: with no options this still
+       resolves to a plain boolean, so none of the ~20 existing callers change.
+       With options it resolves to `{ ok, picked }`. */
+    const optWrap = sheet.querySelector('.confirm-dialog__opts');
+    const options = Array.isArray(opts.options) ? opts.options : [];
+    options.forEach((o) => {
+      const row = h(`<label class="confirm-dialog__opt">
+           <input type="checkbox"${o.checked ? ' checked' : ''} />
+           <span>${esc(o.label)}</span>
+         </label>`);
+      row.dataset.id = o.id;
+      optWrap.appendChild(row);
+    });
+    const picked = () => Object.fromEntries(
+      [...optWrap.querySelectorAll('.confirm-dialog__opt')]
+        .map((row) => [row.dataset.id, row.querySelector('input').checked]));
+    const answer = (ok) => (options.length ? { ok, picked: ok ? picked() : {} } : ok);
     document.body.appendChild(backdrop);
 
     const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
     document.addEventListener('keydown', onKey, true);
     // The onClose hook covers every path that does NOT run a closeSheet
     // callback — browser Back, and one sheet being replaced by another.
-    openSheet(backdrop, onKey, () => { if (outcome === null) finish(false); });
+    openSheet(backdrop, onKey, () => { if (outcome === null) finish(answer(false)); });
     backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
     sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 
@@ -96,11 +122,15 @@ function confirmDialog(o) {
     // views-archive.js's option list already follows).
     sheet.querySelector('[data-act="cancel"]').addEventListener('click', () => {
       outcome = false;
-      closeSheet(() => finish(false));
+      closeSheet(() => finish(answer(false)));
     });
     sheet.querySelector('[data-act="ok"]').addEventListener('click', () => {
       outcome = true;
-      closeSheet(() => finish(true));
+      // Read BEFORE closeSheet: the close tears the backdrop out of the
+      // document, and an unchecked read afterwards answers about a detached
+      // tree that no longer holds the user's choices.
+      const a = answer(true);
+      closeSheet(() => finish(a));
     });
 
     // Focus the CANCEL button, not the destructive one — a stray Enter on a

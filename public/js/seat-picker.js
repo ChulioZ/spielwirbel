@@ -136,7 +136,7 @@ function renderSeatPicker(round, joining, onChange, guestList) {
     // lists people in, and the order the stored session resolves them in
     // (sessionPeople). The angles run over the TOTAL, so adding a guest re-spaces
     // the whole ring rather than squeezing them in beside the last member.
-    const total = round.members.length + guests.length + (canAdd() ? 1 : 0);
+    const total = activeMembers(round).length + guests.length + (canAdd() ? 1 : 0);
     let slot = 0;
     const place = (seat, key) => {
       seat.dataset.seat = key;
@@ -147,7 +147,8 @@ function renderSeatPicker(round, joining, onChange, guestList) {
       table.appendChild(seat);
     };
 
-    round.members.forEach((m) => {
+    // Retired members are off the seating list (#1006).
+    activeMembers(round).forEach((m) => {
       const joined = joining.has(m.id);
       // aria-pressed carries the in/out state (#145). Without it the seat is
       // announced as a bare name and whether that member is playing tonight is

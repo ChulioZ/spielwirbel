@@ -2,6 +2,7 @@
 paths:
   - "public/js/router.js"
   - "public/js/account.js"
+  - "public/js/views-auth.js"
   - "public/js/views-home.js"
   - "lib/app.js"
   - "test/auth-routes.test.js"
@@ -45,7 +46,8 @@ instead of the manual `history.replaceState` + `showLanding()` pair it used to.
 The old shape had no store because it did not need one: `bootApp()` rendered the
 login card **at the deep-link path**, and `enterApp()` then read
 `location.pathname` back. Giving login its own URL destroys that store, so the
-path moves into a module-level `pendingPath` in `account.js`.
+path moves into a module-level `pendingPath` in `account.js` (the boot gate;
+the screens themselves moved to `views-auth.js` in #969).
 
 Two halves, and the second is the subtle one:
 

@@ -28,6 +28,37 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * Clears the bar: until now a round's member list could only ever GROW. There
+   * was no way to remove anybody, and that was not an oversight — votes are
+   * stored per member id and every game's score is recomputed from them, so a
+   * delete would have rewritten the group's own history. So this is a capability
+   * a round genuinely did not have, reported by a user who wanted exactly it.
+   */
+  {
+    revision: '2026-09-13',
+    de: {
+      title: 'Mitglieder aussortieren',
+      body: 'Gruppen verändern sich, und bisher konnte die Mitgliederliste einer '
+        + 'Runde nur wachsen. Jetzt lässt sich ein Mitglied auf seiner eigenen '
+        + 'Seite aussortieren — genauso wie ein Spiel. Die Person verschwindet aus '
+        + 'der Sitzliste, den Teams, den Wertungen und den Pokalen; alles, was sie '
+        + 'jemals abgestimmt und gewonnen hat, bleibt unverändert stehen, und '
+        + 'kein Spiel ändert dadurch seinen Spielwirbel-Score. Zurückholen geht '
+        + 'jederzeit. Wenn ein Platz nur aus Versehen entstanden ist und noch gar '
+        + 'nichts daran hängt, lässt er sich stattdessen ganz löschen.',
+    },
+    en: {
+      title: 'Retiring a member',
+      body: 'Groups change, and until now a round\'s member list could only grow. '
+        + 'You can now retire a member from their own page, exactly the way you '
+        + 'retire a game. They leave the seating list, the teams, the standings '
+        + 'and the trophies; everything they ever voted on and won stays exactly '
+        + 'as it was, and no game\'s Spielwirbel-Score moves because of it. '
+        + 'Bringing them back is one tap. A seat that was created by mistake and '
+        + 'has nothing attached to it yet can simply be deleted instead.',
+    },
+  },
+  /*
    * Clears the bar: recording who owns a box is something a round could not do
    * at all, and it changes what a draw produces rather than how a screen looks —
    * the group stops being offered a game nobody at the table can bring. The bar
