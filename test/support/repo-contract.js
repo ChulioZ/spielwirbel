@@ -4341,7 +4341,7 @@ module.exports = function repoContract(repo) {
   });
 
   // Deletion (#389): the repo removes ANY notice, including a decided one — the
-  // Art. 17 retention guard is a ROUTE concern (lib/routes/admin.js reads decidedAt
+  // Art. 17 retention guard is a ROUTE concern (lib/routes/admin/ reads decidedAt
   // and demands ?force=1), deliberately not baked into the store.
   test('deleteContactNotice removes any notice; unknown id is null (#389)', async () => {
     const notice = await repo.createContactNotice({
