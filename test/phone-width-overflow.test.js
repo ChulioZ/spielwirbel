@@ -168,19 +168,25 @@ for (const sel of ['.pokale-card__value', '.pokale-game__title']) {
 }
 
 test('the results row drops to two columns on a phone, and its score follows', () => {
-  const row = PHONE.find(([sel]) => sel === '.result-row');
-  assert.ok(row, 'the <=520px block no longer re-tracks .result-row');
+  // Both the row and its score are compounded to (0,2,0): their base rules are
+  // declared ~2600 lines BELOW this block, so a bare `.trow` ties and loses on
+  // source order. Measured — WebKit rendered the four-track desktop layout at
+  // 390px while `position: absolute` from this same block did take effect.
+  const row = PHONE.find(([sel, body]) => /\.trow$/.test(sel.trim()) && /grid-template-columns:/.test(body));
+  assert.ok(row, 'the <=520px block no longer re-tracks the results row');
+  assert.ok(outranks(row[0], '.trow'),
+    `"${row[0]}" ties the base ".trow" rule and loses on source order`);
   const tracks = row[1].match(/grid-template-columns:\s*([^;]+);/);
-  assert.ok(tracks, '.result-row declares no grid-template-columns in the phone block');
+  assert.ok(tracks, 'the phone block declares no grid-template-columns for the row');
   assert.equal(tracks[1].trim().split(/\s+(?![^(]*\))/).length, 2,
-    '.result-row is back to three tracks at phone widths, which cannot fit (#621)');
+    'the row is back to three tracks at phone widths, which cannot fit (#621)');
 
-  // Same source-order trap as the label: `.result-row__score { text-align: right }`
+  // Same source-order trap as the label: `.trow__score { text-align: right }`
   // is declared ~1600 lines below the phone block.
-  const score = PHONE.find(([sel]) => /\.result-row__score(?![\w-])/.test(sel));
-  assert.ok(score, 'the <=520px block no longer re-places .result-row__score');
-  assert.ok(outranks(score[0], '.result-row__score'),
-    `"${score[0]}" ties the base ".result-row__score" rule and loses on source order (#621)`);
+  const score = PHONE.find(([sel]) => /\.trow__score(?![\w-])/.test(sel));
+  assert.ok(score, 'the <=520px block no longer re-places .trow__score');
+  assert.ok(outranks(score[0], '.trow__score'),
+    `"${score[0]}" ties the base ".trow__score" rule and loses on source order (#621)`);
 });
 
 test('two tracks are ARITHMETICALLY enough for the results row at 320px', () => {
@@ -199,7 +205,7 @@ test('two tracks are ARITHMETICALLY enough for the results row at 320px', () => 
     return m ? Number(m[1]) : null;
   };
   /* The FIRST rule with this selector that actually declares `prop`. bodyOf()
-     alone is wrong here: `.result-row` is declared twice — the phone block's
+     alone is wrong here: `.trow` is declared twice — the phone block's
      re-tracking comes first in the file, and it carries no padding or gap, so a
      plain lookup silently reads the override instead of the geometry. */
   const declaring = (sel, prop) => {
@@ -213,17 +219,17 @@ test('two tracks are ARITHMETICALLY enough for the results row at 320px', () => 
   const appSide = appPad ? Number(appPad[1])
     : Number(declaring('.app', 'padding').match(/padding:\s*\d+px\s+(\d+)px/)[1]);
 
-  const rowBody = declaring('.result-row', 'padding');
-  assert.ok(rowBody, '.result-row declares no padding');
+  const rowBody = declaring('.trow', 'padding');
+  assert.ok(rowBody, '.trow declares no padding');
   const rowSide = Number(rowBody.match(/padding:\s*\d+px\s+(\d+)px/)[1]);
-  const rowGap = px(declaring('.result-row', 'gap'), 'gap');
-  const cover = px(bodyOf('.result-row__img'), 'width');
+  const rowGap = px(declaring('.trow', 'gap'), 'gap');
+  const cover = px(bodyOf('.trow__img'), 'width');
 
-  const barsBody = bodyOf('.result-row__bars');
+  const barsBody = bodyOf('.trow__bars');
   const barGap = px(barsBody, 'gap');
   // The COLUMN is what occupies the strip since #890 — the fill inside it is
   // `width: 100%` of the track, so reading `.bar` here would find no px at all.
-  const barW = px(bodyOf('.result-row__bars .bar-col'), 'width');
+  const barW = px(bodyOf('.trow__bars .bar-col'), 'width');
   // MOODS moved to its own shared module (#890) — the chart, the wizard's vote
   // card and the shared-link card all read it from there. The UNIQUE
   // declaration, not the first one: a commented-out copy above the live line

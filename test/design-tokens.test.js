@@ -87,15 +87,15 @@ const GLYPH_LITERALS = [
   // The medallion is one rule shared by .lobby-cta and .empty (#869), so the
   // exemption has to name the whole selector text — these are matched exactly.
   '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon,\n.empty__icon',
-  '.landing-card__icon', '.landing-step__num', '.feed-item__img', '.result-row__img',
+  '.landing-card__icon', '.landing-step__num', '.feed-item__img', '.trow__img',
   '.friends-invite__icon',
   '.pool-thumb', '.pool-thumb .ti', '.pool-tile__img', '.game-card__img', '.vote__img',
   '.gd-img', '.lookup__thumb--none .ti', '.archive-row__img .ti', '.rec-card__img .ti',
-  '.spotlight__img .ti', '.spotlight--shared .spotlight__img .ti',
+  '.spotlight__img .ti', 
   '.spotlight--table .spotlight__img .ti',
   '.recap-fav__cover .ti', '.pokale-card__thumb .ti',
   // a glyph or number sized to its own small box
-  '.result-row__bars .bar-axis .ti',
+  '.trow__bars .bar-axis .ti',
   '.stage__voter-check .ti', '.stage__seal > .ti', '.mood .ti',
   '.fchip__x',
   '.game-card__pick',
@@ -173,7 +173,7 @@ test('every elevation box-shadow comes from the 3-step ramp', () => {
 /* One ring recipe per meaning (2026-08-07 audit): "currently selected on a
    picker" drifted to 2px on `.cover-pick.is-current` while the member swatch,
    avatar hover and focus rings all say 3px of --brand-edge. The inset chosen-row
-   ring (`.result-row.is-chosen`) is a different treatment on purpose and stays
+   ring (`.trow.is-chosen`) is a different treatment on purpose and stays
    out of scope — the filter keys on non-inset --brand-edge rings only. */
 test('every --brand-edge ring is 3px', () => {
   const rings = decls('box-shadow')

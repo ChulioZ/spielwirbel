@@ -99,35 +99,44 @@ const show = async (t, s, r = round({ sessions: [s] })) => {
 test('a session nobody voted in renders no ranking treatment', async (t) => {
   const dom = await show(t, unvoted());
 
-  assert.equal(dom.app.querySelectorAll('.result-row').length, 1, 'the game is still listed');
-  assert.equal(dom.app.querySelector('.result-row__bars'), null, 'no distribution columns');
+  assert.equal(dom.app.querySelectorAll('.trow').length, 1, 'the game is still listed');
+  assert.equal(dom.app.querySelector('.trow__bars'), null, 'no distribution columns');
   assert.equal(dom.app.querySelector('.score-big'), null, 'no score, not even a „–"');
   assert.equal(dom.app.querySelector('.score-label'), null, 'nothing to name');
   assert.equal(dom.app.querySelector('.score-info'), null, 'and so no ⓘ explaining it');
   assert.equal(dom.app.querySelector('.rank-medal'), null, 'no medal (characterization — computePlaces already declines to place it)');
   // Scoped to the score column on purpose: the screen elsewhere contains an en
   // dash of its own („Als gespielt markieren – Gewinner …"), so a page-wide
-  // match would be asserting the wrong thing while looking stricter.
+  // match would be asserting the wrong thing while looking stricter. Since
+  // #1056 the action lives in its OWN column, so the score column of an unvoted
+  // row is genuinely empty rather than holding the button.
   assert.equal(
-    dom.app.querySelector('.result-row__score').textContent.replace(/\s+/g, ' ').trim(),
-    'Wird gespielt',
-    'the score column holds the play button and nothing else'
+    dom.app.querySelector('.trow__score').textContent.replace(/\s+/g, ' ').trim(),
+    '',
+    'the score column of an unvoted row holds nothing at all'
+  );
+  assert.match(
+    dom.app.querySelector('.trow__action').textContent.replace(/\s+/g, ' ').trim(),
+    /auf dem Tisch/,
+    'the chosen row states it is on the table, in the action column'
   );
 });
 
 test('the row keeps every control that is not about votes', async (t) => {
   const dom = await show(t, unvoted());
-  const row = dom.app.querySelector('.result-row');
+  const row = dom.app.querySelector('.trow');
 
-  assert.ok(row.querySelector('.result-row__title'), 'title');
-  assert.ok(row.querySelector('.result-row__img'), 'cover');
-  assert.ok(row.querySelector('.play-btn'), 'the „Spielen"/„Wird gespielt" button survives');
-  assert.ok(row.querySelector('.result-row__remove'), '„Aus Session entfernen" survives');
+  assert.ok(row.querySelector('.trow__title'), 'title');
+  assert.ok(row.querySelector('.trow__img'), 'cover');
+  // The chosen game is g1, so the action column carries the chip rather than a
+  // „Spielen" button — and „Aus Session entfernen" moved into the row's „…"
+  // menu, which is present in every phase (#1056).
+  assert.equal(row.querySelector('.play-btn'), null, 'the chosen row offers no second „Spielen"');
+  assert.ok(row.querySelector('.trow__chip'), 'it states „auf dem Tisch" instead');
+  assert.ok(row.querySelector('.trow__menu'), 'the „…" menu carries the game link and the removal');
   assert.ok(row.querySelector('.row-finish'), 'the finish/winner block survives');
-  // The chosen game is g1, so updateChosen must have found the button through
-  // `rowRefs` and flipped it — the wiring the score column's removal could break.
+  // …which is the wiring updateChosen drives through `rowRefs`.
   assert.ok(row.classList.contains('is-chosen'), 'the chosen row is still marked');
-  assert.match(row.querySelector('.play-btn').textContent, /gespielt/i, 'and its button reads „Wird gespielt"');
 });
 
 test('an unvoted draw session gets no winner spotlight', async (t) => {
@@ -136,18 +145,18 @@ test('an unvoted draw session gets no winner spotlight', async (t) => {
   // spotlight never fires. Pinned here because the row template around it moved.
   const dom = await show(t, unvoted({ gameIds: ['g1', 'g2'], chosenGameId: null }));
 
-  assert.equal(dom.app.querySelectorAll('.result-row').length, 2, 'both games are listed');
-  assert.equal(dom.app.querySelector('.spotlight'), null, 'nobody won anything here');
+  assert.equal(dom.app.querySelectorAll('.trow').length, 2, 'both games are listed');
+  assert.equal(dom.app.querySelector('.tafel-top'), null, 'nobody won anything here');
 });
 
 test('a normally voted session is untouched', async (t) => {
   const dom = await show(t, voted());
 
-  assert.equal(dom.app.querySelectorAll('.result-row__bars').length, 2, 'bars on every row');
+  assert.equal(dom.app.querySelectorAll('.trow__bars').length, 2, 'bars on every row');
   assert.equal(dom.app.querySelectorAll('.score-big').length, 2, 'scores on every row');
   assert.equal(dom.app.querySelectorAll('.score-info').length, 1, 'exactly one ⓘ, as before');
-  assert.ok(dom.app.querySelector('.rank-medal'), 'medals are back');
-  assert.ok(dom.app.querySelector('.spotlight'), 'and so is the winner spotlight');
+  assert.ok(dom.app.querySelector('.trow__rank--1'), 'the rank rail places them');
+  assert.ok(dom.app.querySelector('.tafel-top'), 'and the winner is in the gold group');
 });
 
 test('„Gespielt wird: X" is gone, and its banner takes no space', async (t) => {
@@ -161,8 +170,13 @@ test('„Gespielt wird: X" is gone, and its banner takes no space', async (t) =>
 });
 
 test('the prompt and cancelled banner states still speak', async (t) => {
+  // The prompt moved onto the Tafel's own kicker in #1056, beside the heading it
+  // belongs to; the banner keeps only the cancelled state.
   const prompt = await show(t, voted({ chosenGameId: null }));
-  assert.match(prompt.app.querySelector('.chosen-banner').textContent, /Tippe bei einem Spiel/);
+  assert.equal(prompt.app.querySelector('.chosen-banner').innerHTML, '', 'no second prompt');
+  const hint = prompt.app.querySelector('.tafel__hint');
+  assert.equal(hint.hidden, false, 'the prompt shows while nothing is chosen');
+  assert.match(hint.textContent, /Tippt „Spielen“/);
 
   const cancelled = await show(t, voted({ chosenGameId: null, cancelled: true }));
   assert.match(cancelled.app.querySelector('.chosen-banner').textContent, /abgebrochen/i);
@@ -185,7 +199,7 @@ test('„Braucht Erweiterung" survives the banner, on the chosen game‘s row', 
   assert.ok(note, 'the note is rendered');
   assert.match(note.textContent, /Städte & Ritter/, 'and names the expansion the draw used');
   assert.ok(
-    dom.app.querySelector('.result-row.is-chosen .row-finish__note'),
+    dom.app.querySelector('.trow.is-chosen .row-finish__note'),
     'inside the chosen game‘s row, where the box it names is the one to bring'
   );
 });

@@ -401,11 +401,13 @@ What the app does, in detail. For a short overview see the
   Pokale tile: pick who joins and skip the vote entirely, landing directly on
   the results screen with that game chosen.
 - **Finale & results** – votes stay sealed until everyone is done, then a
-  little show reveals the results: a spotlight on the top-rated game (several,
-  side by side, when they tie), and under it the full ranking — per-game
-  **Spielwirbel-Score** (colored by score, with a short line saying why it
-  diverges from the plain average, e.g. „1× gar nicht"), rating distribution
-  (one bar per rating) and medals for the favourites. Pick the
+  little show reveals the results: the ranked rows fill in as a race, shortest
+  first, and the game that won the vote is last to finish — rows sharing first
+  place sit together in one gold group. Every row states its own
+  **Spielwirbel-Score** twice, as a number (colored by score, with a short line
+  saying why it diverges from the plain average, e.g. „1× gar nicht") and as the
+  width of the row's own fill, beside its rank, its rating distribution (one bar
+  per rating) and who brings the box. Pick the
   game you actually played and mark it finished; recording the winner(s) is an
   optional follow-up step afterwards. When nobody won, the same step records
   **how it ended instead** — „Verloren" (a cooperative game beat the table),
@@ -475,8 +477,8 @@ What the app does, in detail. For a short overview see the
   in Ocean a whale surfaces among rising bubbles, in Chess the back rank is set
   down on the board, in Horror a ghost drifts up over the graveyard while bats
   flit past, and in Dinosaurs the herd stomps into place as the volcano erupts
-  — and the scene's end state stays on the spotlight whenever the results are
-  opened again. Body text stays Nunito in every world; home, login, landing,
+  — and the scene's end state stays on the winners' group whenever the results
+  are opened again. Body text stays Nunito in every world; home, login, landing,
   account and inbox stay standard — a dark round does not darken the lobby
   around it.
 - **Languages** – German, English, Spanish, French, Italian, Dutch and Portuguese, following the system language by

@@ -131,12 +131,12 @@ test('the results distribution has five buckets, 1 through 5', async (t) => {
   const dom = bootApp(t);
   await dom.call('showResults', ROUND, ROUND.sessions[0], ROUND.games, false);
 
-  const rows = [...dom.app.querySelectorAll('.result-row')];
+  const rows = [...dom.app.querySelectorAll('.trow')];
   assert.ok(rows.length, 'the results screen rendered no rows');
   for (const row of rows) {
-    assert.equal(row.querySelectorAll('.result-row__bars .bar-col').length, 5,
+    assert.equal(row.querySelectorAll('.trow__bars .bar-col').length, 5,
       'the distribution must run 1–5, with no retirement column');
-    assert.equal(row.querySelector('.result-row__bars .bar-axis .ti-trash'), null,
+    assert.equal(row.querySelector('.trow__bars .bar-axis .ti-trash'), null,
       'no column may be named by the trash glyph any more');
   }
 
@@ -145,13 +145,13 @@ test('the results distribution has five buckets, 1 through 5', async (t) => {
   // the scale, not with counts), so "nothing anywhere else" is every other fill
   // sitting at 0%.
   const catan = rows.find((r) => /Catan/.test(r.textContent));
-  const cols = [...catan.querySelectorAll('.result-row__bars .bar-col')];
+  const cols = [...catan.querySelectorAll('.trow__bars .bar-col')];
   assert.deepEqual(cols.map((c) => c.querySelector('.bar').style.height),
     ['0%', '0%', '0%', '100%', '0%']);
   assert.equal(catan.querySelector('.sort-flag'), null,
     'the „X wollen aussortieren" line is gone with the vote that fed it');
   // And the score the row prints is the 4 that vote makes it.
-  assert.match(catan.querySelector('.result-row__score').textContent, /4[.,]0/);
+  assert.match(catan.querySelector('.trow__score').textContent, /4[.,]0/);
 });
 
 // --------------------------------------------------- the recommendation side

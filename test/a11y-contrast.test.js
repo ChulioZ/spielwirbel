@@ -804,6 +804,66 @@ test('a control that inherits its font inherits its colour too', () => {
     'these take the UA\'s buttontext (~black), which is unreadable on a dark design');
 });
 
+// --- die Tafel's score fill (#1056) -----------------------------------------
+
+/* The result row IS its own bar: a `::before` whose width is the Spielwirbel-
+   Score and whose colour is a tint of `scoreColor()` over the surface. So the
+   whole 0-5 ramp lands under the row's own text, on every design — and unlike
+   the stamp's, this ground is under `--ink` AND `--ink-soft` at ordinary body
+   size, which is the 4.5:1 bar rather than 3:1.
+
+   The alpha is read out of the sheet rather than restated, so tightening the
+   tint is what this test measures. It is also what SETS the ceiling: raise it
+   until this goes red and you have found the maximum the ramp allows.
+
+   `.tafel-top .trow` tints from `--gold` instead — one colour, not a ramp, but
+   at a higher alpha, so it is measured separately. */
+test('the row fill is mixed in CSS from the accent the view hands over', () => {
+  const fill = bodyOf('.trow::before');
+  assert.ok(fill, '.trow::before is gone — the sweeps below measure nothing');
+  assert.match(fill, /background:\s*color-mix\(in oklab, var\(--fill-tint\) var\(--fill-a\),\s*var\(--surface\)\)/,
+    'the fill must be a tint of the row accent over --surface, or the sweeps measure the wrong ground');
+});
+
+/* Reads the alpha off whichever `.trow` rule declares it — `.trow` is declared
+   three times (phone, base, one-line) and only one carries the token. */
+const fillAlpha = (sel) => {
+  const bodies = RULES.filter(([s2]) => s2 === sel).map(([, b]) => b);
+  const body = bodies.find((b) => /--fill-a:/.test(b));
+  assert.ok(body, `${sel} declares no --fill-a`);
+  return Number(/--fill-a:\s*(\d+)%/.exec(body)[1]) / 100;
+};
+
+test('every score on the 0-5 ramp clears AA as a row fill, under body ink and muted ink alike', () => {
+  const alpha = fillAlpha('.trow');
+  const failures = [];
+  for (const t of THEMES) {
+    for (const avg of SWEEP) {
+      const ground = mixOklab(avgRgb(avg, t.dark), t.surface, alpha);
+      for (const [label, ink] of [['--ink', t.ink], ['--ink-soft', t.inkSoft]]) {
+        const ratio = contrast(ink, ground);
+        if (ratio < AA_TEXT) failures.push(`${name(t)} ${label} \u00d8${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures.slice(0, 8), [],
+    `${failures.length} pairs fail: the row fill is ${(alpha * 100).toFixed(0)}% of the score colour over --surface; body text on it needs ${AA_TEXT}:1`);
+});
+
+test('the winners\' gold fill clears AA too, at its higher alpha', () => {
+  const alpha = fillAlpha('.tafel-top .trow');
+  const failures = [];
+  for (const t of THEMES) {
+    const ground = mixOklab(t.gold, t.surface, alpha);
+    for (const [label, ink] of [['--ink', t.ink], ['--ink-soft', t.inkSoft]]) {
+      const ratio = contrast(ink, ground);
+      if (ratio < AA_TEXT) failures.push(`${name(t)} ${label} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [],
+    `the winners' rows fill at ${(alpha * 100).toFixed(0)}% --gold over --surface; body text on it needs ${AA_TEXT}:1`);
+});
+
 /* The anti-vacuous half, the shape test/design-tokens.test.js uses for its glyph
    list: an exemption nobody re-checks rots into a selector that no longer exists,
    and every stale entry silently widens the assertion above. */
