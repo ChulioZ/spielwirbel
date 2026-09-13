@@ -393,7 +393,16 @@ public/
     empty-state.js   the app's one "nothing here yet" component — medallion,
                      optional title, sub-line; shares its rules with .lobby-cta
                      (issue #869)
-    account.js       onboarding + auth UI (login/register/verify/reset), token wiring
+    auth-tokens.js   the token layer (#135): the access/refresh/demo keys, the
+                     cached /me projection, the silent-refresh retry and
+                     onSessionLost — what core.js's api() chokepoint reads
+                     through (split out of account.js by #969)
+    account.js       boot + the route gate: what a visitor sees first
+    views-auth.js    the auth screens: login, register, forgot, the verify and
+                     reset landings, the rate-limited state, passkey login
+    demo-account.js  the guest-demo lifecycle: start, enter, resume, end (#427)
+    account-chrome.js the terms banner (#521), the top-bar account menu, the
+                     inbox badge and the „Was ist neu" dot (#741)
     auth-error.js    maps an auth API error code to the localized message each
                      form shows (issue #399)
     username-policy.js
