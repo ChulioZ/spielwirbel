@@ -309,17 +309,22 @@ lib/
     faq.js           /faq                   (the FAQ page — public, login-free
                                              and never 404s, unlike the legal
                                              pages above; issue #489)
-    admin.js         /api/admin             (operator moderation: instance
-                                             status, lookup by image/round/
-                                             e-mail/tenant, per-tenant summary,
-                                             round text + redaction, takedown,
-                                             notices inbox + decisions, Art. 17
-                                             statements of reasons,
-                                             account suspend/restore, GDPR
-                                             export + erasure,
-                                             filterable action log, user feedback,
-                                             recent warn/error logs —
-                                             404 unless ADMIN_PASSWORD)
+    admin/           /api/admin             (operator moderation — 404 unless
+                                             ADMIN_PASSWORD. ONE mount in
+                                             lib/app.js; the sub-routers compose
+                                             in index.js, because they share the
+                                             prefix and seven mounts would run
+                                             authLimiter seven times — issue #996)
+      index.js       the gate, login/logout/me, and the seven mounts
+      shared.js      the schemas and the paging shape more than one needs
+      status.js      instance status + the recent warn/error ring buffer
+      corpus.js      the licensed BGG corpus ingest (issue #681)
+      covers.js      the cover re-encode backfill (issue #867)
+      moderation.js  lookup by image/round/e-mail/tenant, per-tenant summary,
+                     round text + redaction, takedown
+      users.js       account suspend/restore/rename, GDPR export + erasure
+      log.js         the filterable action log and the feedback inbox, + CSV
+      notices.js     the DSA notices inbox, decisions and Art. 17 statements
     recommendations.js …/recommendations    (games the round does not own,
                                             scored from the BGG corpus — #682)
     lookup.js        …/lookup               (search/game — provider proxy for
