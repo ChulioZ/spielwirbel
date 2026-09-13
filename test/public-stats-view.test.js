@@ -151,14 +151,21 @@ test('a cover goes through coverUrl, and is left decorative', async (t) => {
     games: {
       mostOwned: {
         title: 'Altlast', shelves: 3, url: null,
-        image: 'https://image.api.playstation.com/vulcan/master.png',
+        image: 'https://img.sized.test/master.png',
       },
     },
   }));
+  /* A SYNTHETIC resizer host since #981 emptied the table with the storefront
+     rows that needed it. The point of the assertion is that this screen routes
+     its cover through `coverUrl` at all — a master is 3840×2160 = ~31 MB
+     decoded, so the rewrite is not cosmetic — and with no rule in the table
+     every URL passes through and the check has no subject. Pushed into the
+     module's own list rather than a second implementation of it. */
+  dom.run('COVER_RESIZERS').push({ host: 'sized.test', query: (w) => `w=${w}` });
+  t.after(() => { dom.run('COVER_RESIZERS').pop(); });
   await dom.call('showEntdecken');
   const img = dom.document.querySelector('.stats-card__cover');
-  // A master here is 3840×2160 = ~31 MB decoded, so the rewrite is not cosmetic.
-  assert.match(img.getAttribute('src'), /^https:\/\/image\.api\.playstation\.com\/vulcan\/master\.png\?w=\d+$/);
+  assert.match(img.getAttribute('src'), /^https:\/\/img\.sized\.test\/master\.png\?w=\d+$/);
   // The title beside it is the accessible name, so the image adds nothing.
   assert.equal(img.getAttribute('alt'), '');
 });

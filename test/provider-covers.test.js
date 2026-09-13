@@ -38,33 +38,29 @@ test('providerCoverUrl keeps an allowlisted https cover URL verbatim', () => {
   for (const u of urls) assert.equal(providerCoverUrl(u), u);
 });
 
-/*
- * #744's load-bearing invariant, and the one nothing else guards.
+/* #744's invariant, RETIRED by #981.
  *
- * The write gate and the render gate used to be the same list, derived from the
- * live registry. Unregistering the four storefront modules therefore did not
- * merely stop new storefront covers being stored — it silently revoked img-src
- * for the ~75 covers ALREADY on people's shelves, which go blank with nothing
- * but a console violation. So the two questions are separate now, and they must
- * answer differently for exactly these hosts.
+ * The write gate and the render gate were the same list until #744 unregistered
+ * the four storefront modules — which did not merely stop new storefront covers
+ * being stored, it silently revoked img-src for the ~75 already on people's
+ * shelves. The fix was a frozen legacy list feeding `imageCspSources()` only.
+ *
+ * #981's operator action cleared those rows, so the two questions have one
+ * answer again and the frozen list is gone. What remains worth pinning is that
+ * the storefront hosts are now refused by BOTH gates — a row could only come
+ * back through a hand-rolled request, and nothing would render it.
  */
-test('a stored storefront cover still RENDERS after its provider was retired', () => {
+test('a retired storefront host is refused by the render gate as well as the write gate', () => {
   const sources = imageCspSources();
   const covered = (h) => sources.some((s) => s === h || (s.startsWith('*.') && h.endsWith(s.slice(1))));
   for (const url of LEGACY_COVERS) {
-    assert.ok(covered(new URL(url).hostname), `${url} must stay on img-src`);
-  }
-});
-
-test('…but can no longer be STORED — the write gate follows the registry', () => {
-  // The other direction, and it is what stops the test above being satisfied by
-  // simply re-registering the providers. A cover we may render is not a cover we
-  // may accept: nothing offers these hosts any more, so a URL naming one now
-  // arrives only from a hand-rolled request.
-  for (const url of LEGACY_COVERS) {
+    assert.equal(covered(new URL(url).hostname), false, `${url} must no longer be on img-src`);
     assert.equal(isAllowedImageUrl(url), false, `${url} must no longer pass the write gate`);
     assert.equal(providerCoverUrl(url), null);
   }
+  // Anti-vacuous: the live provider's host IS still on img-src, so the refusals
+  // above are about these hosts and not about an empty source list.
+  assert.ok(covered('cf.geekdo-images.com'), 'BGG covers must still render');
 });
 
 test('providerCoverUrl refuses a host no provider vouches for', () => {

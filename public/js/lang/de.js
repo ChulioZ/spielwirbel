@@ -249,6 +249,8 @@ I18N.de = {
   'activity.gamesDeletedOne': '{n} Spiel endgültig gelöscht',
   'activity.gamesDeleted': '{n} Spiele endgültig gelöscht',
   'activity.memberAdded': '{name} ist dabei',
+  'activity.storefrontClearedOne': 'Bei {n} Spiel wurde die Store-Verknüpfung entfernt',
+  'activity.storefrontCleared': 'Bei {n} Spielen wurden die Store-Verknüpfungen entfernt',
   'activity.roundRenamed': 'Runde in „{name}“ umbenannt',
   // One entry per SAVE carrying a count (#653), like the two moves and the
   // import above: ticking ten boxes at once must not bury the round's feed.
