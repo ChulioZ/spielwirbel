@@ -74,7 +74,7 @@ const GLOBAL_DISPOSITION = {
     export: false,
     why: 'operator data ABOUT tenants, deliberately outliving erasure — the record '
       + 'that a takedown happened is the legal basis for having acted (see the '
-      + 'comment above the erase route in lib/routes/admin.js) and is retained '
+      + 'comment above the erase route in lib/routes/admin/) and is retained '
       + 'for three years (docs/legal/retention.md)',
   },
   feedback: {
