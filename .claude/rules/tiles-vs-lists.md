@@ -62,16 +62,20 @@ Three things about that are load-bearing:
 Re-deciding these costs a browser session each; the reasoning is here so it
 doesn't have to be redone.
 
-- **Session results** — a ranking (see above). It opens on a **winner
-  spotlight** since #897, not a stage: the stage restated the top three places in
-  a second visual language twenty pixels above rows that already state them
-  properly, and redundancy reads as clutter however well it is drawn. Moving
-  either half beside the other saves ~250px of scroll at the cost of squeezing
-  it and breaking the reveal-then-detail flow. **The spotlight is not a
-  counter-example to the ordering rule** — it is the one component on the screen
-  that may wrap, precisely because everything in it holds the *same* place, so
-  reading it left-to-right says nothing false. The moment a component carries
-  two different ranks, the rule binds again.
+- **Session results** — a ranking (see above), and since #1056 a **single**
+  component: die Tafel. It had a stage until #897 and a winner spotlight until
+  #1056, and each removal was the same argument one step further — the stage
+  restated the top three places twenty pixels above rows that already stated
+  them, and the spotlight then restated the top place. What replaced it is a
+  row that IS its own bar: `--pct` is the displayed Spielwirbel-Score over the
+  scale's top, so the 544px of nothing this rule filed as the `.ds-row`
+  complaint became the score's own axis, and a wider column is a longer axis
+  instead of a wider gutter. The rows sharing first place are wrapped in one
+  gold group with one kicker.
+  **Nothing on this screen wraps any more**, so the ordering rule now binds
+  here without exception — the old carve-out ("the spotlight is the one
+  component that may wrap, because everything in it holds the *same* place") is
+  gone with the spotlight. A tie adds a ROW.
 - **Member** — already uses the pane: the five stat cards span it (they are
   `.pokale-cards`, already exempt) while identity and the colour picker keep
   the reading measure. At 900px those cards are ~170px and labels like

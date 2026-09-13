@@ -1309,67 +1309,6 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     );
   }
 
-  // The winner spotlight (#897). This screen used to open with a STAGE showing
-  // the top three places — and the ranked rows twenty pixels below it already
-  // state that ranking, with distribution bars, vote counts and the big score.
-  // Two visual languages for one fact reads as clutter however well it is
-  // drawn, and places 2 and 3 are already marked in the list by their silver
-  // and bronze medals, so nothing is lost by cutting the stage down to its one
-  // unique job: celebration.
-  //
-  // A tie therefore stops needing a geometry to decode — it gets a headline.
-  // And nothing here encodes rank in height, so several winners may simply
-  // scale down and wrap: a tall spotlight can only ever mean „several games
-  // tied", never „these outrank the winner".
-  const topRows = rows.filter((r) => r.place === 1);
-  if (rows.length >= 2 && topRows.length && !session.cancelled) {
-    const shared = topRows.length > 1;
-    const winnerHtml = (r) => {
-      const g = r.game;
-      const imgStyle = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
-      // Its OWN link: a shared win is several games, each reachable.
-      return `<a class="spotlight__winner" data-gid="${esc(g.id)}">
-             <span class="spotlight__img"${imgStyle}>${coverPlaceholder(g)}</span>
-             <span class="spotlight__title">${esc(g.title)}</span>
-             <span class="score-pill spotlight__pill" style="background:${scoreColor(r.score)}">${fmtAvg(displayScore(r.score))}</span>
-           </a>`;
-    };
-    // The kicker deliberately names no entity: „Spiel des Abends" would put
-    // „Abend" back in the UI, which the Session naming rule bans (CLAUDE.md).
-    const spot = h(
-      `<div class="spotlight${shared ? ' spotlight--shared' : ''}${reveal ? ' is-reveal' : ''}">
-         <div class="spotlight__kicker">
-           <i class="ti ti-crown spotlight__crown" aria-hidden="true"></i>
-           ${esc(t(shared ? 'result.winnerShared' : 'result.winner'))}
-         </div>
-         <div class="spotlight__winners">${topRows.map(winnerHtml).join('')}</div>
-       </div>`
-    );
-    spot.querySelectorAll('.spotlight__winner[data-gid]').forEach((el) => {
-      makeGameLink(el, round.id, el.dataset.gid);
-    });
-    if (reveal) {
-      // World-agnostic on purpose (#940): a world re-shapes these SAME bits in
-      // CSS — fireflies, streaking stars — off the one root hook a world sets (slot 7
-      // under "Worlds" in styles.css), so nothing here knows a world exists.
-      // The per-bit randomness therefore travels as custom properties: the
-      // colour, because an inline `background` would beat every rule a world
-      // could write; and a horizontal drift, set for every bit and simply
-      // ignored by the palette's fall. Another randomised value a world needs
-      // goes the same way — inline for all, never a branch.
-      const conf = h('<div class="confetti" aria-hidden="true"></div>');
-      for (let i = 0; i < 16; i++) {
-        const bit = h('<span class="confetti__bit"></span>');
-        bit.style.left = Math.round(Math.random() * 100) + '%';
-        bit.style.setProperty('--bit-color', MEMBER_COLORS[i % MEMBER_COLORS.length]);
-        bit.style.setProperty('--bit-drift', Math.round(Math.random() * 60 - 30) + 'px');
-        bit.style.animationDelay = (Math.random() * 0.9).toFixed(2) + 's';
-        conf.appendChild(bit);
-      }
-      spot.appendChild(conf);
-    }
-    screen.appendChild(spot);
-  }
 
   function updateTitle() {
     if (cancelled) {
@@ -1412,7 +1351,68 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // time anything can click it.
   const cancelWrap = h('<div class="cancel-area"></div>');
 
-  const medalRanks = ['gold', 'silver', 'bronze'];
+  /* Die Tafel (#1056) — the ranked rows, carrying the celebration themselves.
+
+     What this replaces: a 900px gold `.spotlight` around 272px of winner covers,
+     sitting above rows that stated the same ranking again. It conflated two
+     different facts — what the VOTE said (a top place, possibly shared) and what
+     was PLAYED (one game, someone won) — so a tie showed two covers over one
+     pair of winners with nothing linking them, and a group that played a third
+     game made the hero contradict the record.
+
+     The row is the whole instrument now: a rank rail, a background fill whose
+     width IS the Spielwirbel-Score, and — for every row sharing first place —
+     one gold group with one kicker. A tie therefore adds a ROW rather than
+     growing anything, which is the property `.claude/rules/rank-encodings-must-
+     not-be-growable-by-ties.md` asks for. */
+  const tafel = h(`<div class="tafel">
+       <div class="tafel__kick">
+         <h2 class="tafel__title">${esc(tn(games.length, 'result.voteTitleOne', 'result.voteTitle', { n: games.length }))}</h2>
+         <span class="tafel__hint" hidden>${esc(t('result.choosePrompt'))}</span>
+       </div>
+     </div>`);
+  screen.appendChild(tafel);
+  const tafelHint = tafel.querySelector('.tafel__hint');
+
+  /* The gold group. Same gate the spotlight had: two or more games to rank, a
+     top place to name, and a session that was not cancelled — a cancelled
+     evening has nothing to celebrate, and a single-game session has nothing to
+     have won. `reveal` is the only thing that animates it; every other way in
+     (the Chronik, a shared link, a cold load) renders the rest state, which is
+     also what a reduced-motion reader gets. */
+  const topRows = rows.filter((r) => r.place === 1);
+  const hasTop = rows.length >= 2 && topRows.length && !session.cancelled;
+  let topGroup = null;
+  if (hasTop) {
+    const shared = topRows.length > 1;
+    topGroup = h(`<div class="tafel-top${reveal ? ' is-reveal' : ''}">
+         <div class="tafel-top__kicker">
+           <i class="ti ti-crown tafel-top__crown" aria-hidden="true"></i>
+           ${esc(t(shared ? 'result.winnerShared' : 'result.voteWinner'))}
+         </div>
+       </div>`);
+    tafel.appendChild(topGroup);
+    if (reveal) {
+      // World-agnostic on purpose (#940): a world re-shapes these SAME bits in
+      // CSS — fireflies, streaking stars — off the one root hook a world sets
+      // (slot 7 under "Worlds" in styles.css), so nothing here knows a world
+      // exists. The per-bit randomness therefore travels as custom properties:
+      // the colour, because an inline `background` would beat every rule a world
+      // could write; and a horizontal drift, set for every bit and simply
+      // ignored by the palette's fall.
+      const conf = h('<div class="confetti" aria-hidden="true"></div>');
+      for (let i = 0; i < 16; i++) {
+        const bit = h('<span class="confetti__bit"></span>');
+        bit.style.left = Math.round(Math.random() * 100) + '%';
+        bit.style.setProperty('--bit-color', MEMBER_COLORS[i % MEMBER_COLORS.length]);
+        bit.style.setProperty('--bit-drift', Math.round(Math.random() * 60 - 30) + 'px');
+        bit.style.animationDelay = (Math.random() * 0.9).toFixed(2) + 's';
+        conf.appendChild(bit);
+      }
+      topGroup.appendChild(conf);
+    }
+  }
+
   const maxBar = Math.max(1, ...rows.map((r) => Math.max(...r.dist)));
   const rowRefs = [];
   let infoPlaced = false;
@@ -1473,11 +1473,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
        The single ⓘ rides the first labelled row, i.e. the highest-scoring game
        anybody voted on (`rows` is sorted by score above). score-info.js places
-       it once per screen, never per pill — that rule is kept, only this one
-       occurrence moves: it used to hang off the page head's „4 Spiele · 3.
-       September", where it read as an annotation on the date and went
-       unnoticed. A session nobody voted in renders no label and therefore no
-       ⓘ, which is correct — there is no number on screen to explain. */
+       it once per screen, never per pill. */
     const scoreLabel = r.count
       ? `<div class="score-label">${esc(t('score.name'))}${infoPlaced ? '' : ` ${infoButton('score')}`}</div>`
       : '';
@@ -1489,79 +1485,143 @@ async function showResults(round, session, gamesHint, reveal, plain) {
        Same shared rule as the panel, so the two can never disagree. */
     const bringers = boxBringers(round, session, g, shelfParty);
     const ownersLine = bringers.length
-      ? `<div class="result-row__owners">${iconText('ti-user', t('result.ownedBy', { names: bringers.join(', ') }))}</div>`
+      ? `<div class="trow__owners">${iconText('ti-user', t('result.ownedBy', { names: bringers.join(', ') }))}</div>`
       : '';
-    const medal = r.place && r.place <= 3 ? `<span class="rank-medal rank-medal--${medalRanks[r.place - 1]}"><i class="ti ti-medal" aria-hidden="true"></i></span>` : '';
-    const row = h(`<div class="result-row">
-         <a class="result-row__img" ${imgStyle}>${fallback}</a>
-         <div>
-           <a class="result-row__title">${medal}${esc(g.title)}${retiredBadge}</a>
+    /* The fill: `--pct` is the displayed score over the scale's top, so the row
+       IS its own bar chart and the empty part of a row is the score's
+       remainder. That is what lets the row use the 544px of nothing it used to
+       carry between the mini chart and the number — a wider column becomes a
+       longer score axis instead of a wider gutter (`.claude/rules/tiles-vs-
+       lists.md`). `--sc` travels as the raw accent and CSS does the mix, the
+       `.stamp` mechanism from #1040: an inline `background` would beat every
+       rule a design or a world could write. A row nobody voted on carries 0%,
+       so it is simply bare. */
+    const pct = r.count ? Math.round((r.shown / RATING_MAX) * 1000) / 10 : 0;
+    const fillVars = `--pct:${pct}%;${r.count ? `--sc:${scoreColor(r.score)};` : ''}`;
+    // Only the reveal path gets a duration, and it is per row: every fill starts
+    // together, the short ones land first and the winner's completes last.
+    const raceVar = reveal && r.count ? `--dur:${(0.5 + r.shown * 0.32).toFixed(2)}s;` : '';
+    const rankClass = r.place && r.place <= 3 ? ` trow__rank--${r.place}` : '';
+    const row = h(`<div class="trow${reveal ? ' is-race' : ''}" style="${fillVars}${raceVar}">
+         <span class="trow__rank${rankClass}">${r.place || ''}</span>
+         <a class="trow__img" ${imgStyle}>${fallback}</a>
+         <div class="trow__main">
+           <a class="trow__title">${esc(g.title)}${retiredBadge}</a>
            ${ownersLine}
-           ${hasVotes ? `<div class="result-row__bars">${bars}</div>` : ''}
-           <button class="link-btn result-row__remove">${iconText('ti-trash', t('result.removeGame'))}</button>
+           ${r.count && scoreReason(r) ? `<div class="score-why">${esc(scoreReason(r))}</div>` : ''}
          </div>
-         <div class="result-row__score">
+         ${hasVotes ? `<div class="trow__bars">${bars}</div>` : ''}
+         <div class="trow__score">
            ${!hasVotes ? '' : `
            <div class="score-big"${r.count ? ` style="color:${scoreColor(r.score)}"` : ''}>${r.count ? fmtAvg(r.shown) : '–'}</div>
-           ${scoreLabel}
-           ${r.count && scoreReason(r) ? `<div class="score-why">${esc(scoreReason(r))}</div>` : ''}`}
-           <button class="btn play-btn">${iconText('ti-player-play', t('result.play'))}</button>
+           ${scoreLabel}`}
          </div>
+         <div class="trow__action"></div>
          <div class="row-finish" hidden></div>
        </div>`);
-    // Title and cover open the game's detail page (the action buttons below
-    // live in sibling elements, so they keep working independently). The cover
-    // is flagged redundant: it targets the same game as the title beside it, so
-    // it stays mouse-clickable but is not a second (nameless) tab stop.
-    makeGameLink(row.querySelector('.result-row__title'), round.id, g.id);
-    makeGameLink(row.querySelector('.result-row__img'), round.id, g.id, { redundant: true });
-    const removeBtn = row.querySelector('.result-row__remove');
-    removeBtn.addEventListener('click', async () => {
-      if (!await confirmDialog({
-        body: t('result.removeGameConfirm', { title: g.title }),
-        confirmLabel: t('result.removeGame'), icon: 'ti-trash',
-      })) return;
-      try {
-        await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}/games/${g.id}`);
-        toast(t('result.toast.gameRemoved', { title: g.title }));
-        const fresh = await fetchRoundFresh(round.id);
-        const sess = fresh.sessions.find((s) => s.id === session.id) || session;
-        showResults(fresh, sess, games);
-      } catch (e) { toast(e.message); }
-    });
-    const btn = row.querySelector('.play-btn');
-    btn.addEventListener('click', async () => {
-      const newId = chosenId === g.id ? null : g.id; // tapping again clears it
-      try {
-        await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId: newId });
-        chosenId = newId;
-        session.chosenGameId = newId;
-        updateChosen();
-        toast(newId ? t('result.toast.willPlay', { title: g.title }) : t('result.toast.choiceCleared'));
-      } catch (e) { toast(e.message); }
-    });
-    rowRefs.push({ gameId: g.id, row, btn, finishEl: row.querySelector('.row-finish'),
-      ownersEl: row.querySelector('.result-row__owners') });
-    screen.appendChild(row);
+    // Title and cover open the game's detail page (the action column below lives
+    // in a sibling element, so it keeps working independently). The cover is
+    // flagged redundant: it targets the same game as the title beside it, so it
+    // stays mouse-clickable but is not a second (nameless) tab stop.
+    makeGameLink(row.querySelector('.trow__title'), round.id, g.id);
+    makeGameLink(row.querySelector('.trow__img'), round.id, g.id, { redundant: true });
+    rowRefs.push({ gameId: g.id, game: g, row, actionEl: row.querySelector('.trow__action'),
+      finishEl: row.querySelector('.row-finish'), ownersEl: row.querySelector('.trow__owners') });
+    (hasTop && r.place === 1 ? topGroup : tafel).appendChild(row);
   });
   // One call for whatever the loop placed — and none to bind when no row had
   // votes. `wireInfoButtons` is idempotent, so the re-renders below (retire,
   // remove) cannot stack a second listener.
   wireInfoButtons(app);
 
-  function updateChosen() {
-    rowRefs.forEach(({ gameId, row, btn }) => {
-      const isChosen = gameId === chosenId;
-      row.classList.toggle('is-chosen', isChosen);
-      btn.classList.toggle('btn--primary', isChosen);
-      btn.innerHTML = isChosen
-        ? iconText('ti-check', t('result.willPlay'))
-        : iconText('ti-player-play', t('result.play'));
-      // Once the result is recorded or the session cancelled, the choice can
-      // no longer be changed.
-      btn.disabled = finished || cancelled;
-      btn.title = finished ? t('result.lockedHint') : cancelled ? t('result.cancelledHint') : '';
+  async function removeGame(g) {
+    if (!await confirmDialog({
+      body: t('result.removeGameConfirm', { title: g.title }),
+      confirmLabel: t('result.removeGame'), icon: 'ti-trash',
+    })) return;
+    try {
+      await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}/games/${g.id}`);
+      toast(t('result.toast.gameRemoved', { title: g.title }));
+      const fresh = await fetchRoundFresh(round.id);
+      const sess = fresh.sessions.find((s) => s.id === session.id) || session;
+      showResults(fresh, sess, games);
+    } catch (e) { toast(e.message); }
+  }
+
+  /* One action column per row, rebuilt by `updateChosen` whenever the phase
+     moves. The old row carried a „Spielen" button that went `disabled` at 0.45
+     opacity on every row of every finished session (245px over five rows) plus
+     a permanent „Aus Session entfernen" trash link (168px) — spent instrument
+     on a record. Nothing is disabled here: a control that cannot act is not
+     rendered.
+
+     The „…" menu is on EVERY row, not only on a finished one. Removing a game
+     is the session's own housekeeping and must not disappear while the evening
+     is running — the issue's phase list only requires that a FINISHED session
+     have no bare remove link, and putting the menu everywhere satisfies that
+     while keeping the action reachable in both phases. */
+  function renderAction({ gameId, game, actionEl }) {
+    actionEl.innerHTML = '';
+    const isChosen = gameId === chosenId;
+    if (finished || cancelled) {
+      // nothing primary: the choice is settled and the row is a record
+    } else if (isChosen) {
+      actionEl.appendChild(h(`<span class="trow__chip">${iconText('ti-check', t('result.onTable'))}</span>`));
+    } else {
+      const btn = h(`<button class="btn play-btn">${iconText('ti-player-play', t('result.play'))}</button>`);
+      btn.addEventListener('click', async () => {
+        try {
+          await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId });
+          chosenId = gameId;
+          session.chosenGameId = gameId;
+          updateChosen();
+          toast(t('result.toast.willPlay', { title: game.title }));
+        } catch (e) { toast(e.message); }
+      });
+      actionEl.appendChild(btn);
+    }
+    const menuBtn = h(`<button type="button" class="btn btn--sm trow__menu" aria-label="${esc(t('result.more'))}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);
+    const items = [['ti-external-link', t('result.openGame'), () => showGameDetail(round.id, gameId)]];
+    // Un-choosing is how a live session changes its mind; it was the second tap
+    // on „Spielen" before the chip replaced that button.
+    if (isChosen && !finished && !cancelled) {
+      items.push(['ti-x', t('result.clearChoice'), async () => {
+        try {
+          await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId: null });
+          chosenId = null;
+          session.chosenGameId = null;
+          updateChosen();
+          toast(t('result.toast.choiceCleared'));
+        } catch (e) { toast(e.message); }
+      }]);
+    }
+    items.push(['ti-trash', t('result.removeGame'), () => removeGame(game)]);
+    // Buttons only, so this is a popover at every width — the account menu's
+    // case, not the editors' (.claude/rules/popover-vs-sheet-editors.md §2b).
+    // `aria-expanded` is synced through openPopover's onClose rather than by
+    // wrapping `close`: the wrapped form misses four of the six exits.
+    menuBtn.addEventListener('click', () => {
+      openPopover(menuBtn, (el, close) => {
+        el.classList.add('popover--menu');
+        items.forEach(([icon, label, run]) => {
+          const b = h(`<button class="popover__opt"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
+          b.addEventListener('click', () => { close(); run(); });
+          el.appendChild(b);
+        });
+      }, () => menuBtn.setAttribute('aria-expanded', 'false'));
+      menuBtn.setAttribute('aria-expanded', 'true');
     });
+    actionEl.appendChild(menuBtn);
+  }
+
+  function updateChosen() {
+    rowRefs.forEach((ref) => {
+      ref.row.classList.toggle('is-chosen', ref.gameId === chosenId);
+      renderAction(ref);
+    });
+    // The prompt lives on the Tafel's own kicker now, beside the heading it
+    // belongs to, rather than in a banner between the head and the rows.
+    if (tafelHint) tafelHint.hidden = !!(chosenId || finished || cancelled);
     banner.classList.toggle('is-cancelled', cancelled);
     if (cancelled) {
       banner.innerHTML = iconText('ti-x', t('result.bannerCancelled'));
@@ -1577,7 +1637,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       banner.innerHTML = '';
       banner.classList.remove('is-set');
     } else {
-      banner.textContent = t('result.bannerPrompt');
+      // The prompt moved onto the Tafel's kicker (#1056), where it sits beside
+      // the heading it belongs to instead of in a strip between the head and the
+      // rows. The element stays for the cancelled state above — and for
+      // views-session-tables.js, which renders its own banner into the same
+      // class — and `.chosen-banner:empty` collapses it here.
+      banner.innerHTML = '';
       banner.classList.remove('is-set');
     }
     renderCancel();

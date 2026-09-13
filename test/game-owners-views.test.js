@@ -289,11 +289,11 @@ test('an off-shelf game the member owns is never listed', async (t) => {
  * so at the exact moment the group is deciding, the one screen listing every
  * candidate said nothing at all about who has to bring which box. */
 
-const ranking = (dom) => [...dom.document.querySelectorAll('.result-row')].map((row) => {
-  const owners = row.querySelector('.result-row__owners');
+const ranking = (dom) => [...dom.document.querySelectorAll('.trow')].map((row) => {
+  const owners = row.querySelector('.trow__owners');
   // `hidden` is how the line stands down on the chosen row, so an element that
   // is present but hidden must read as absent here.
-  return [row.querySelector('.result-row__title').textContent.trim(),
+  return [row.querySelector('.trow__title').textContent.trim(),
     owners && !owners.hidden ? owners.textContent.trim() : null];
 });
 

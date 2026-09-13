@@ -909,10 +909,11 @@ I18N.de = {
   'result.title': 'Ergebnis',
   'result.subtitleOne': '{when} · {n} Spiel',
   'result.subtitle': '{when} · {n} Spiele',
-  // The winner spotlight's kicker (#897). Deliberately names no entity: „Spiel
-  // des Abends" would put „Abend" back in the UI, which the Session naming rule
-  // bans (CLAUDE.md).
-  'result.winner': 'Sieger',
+  // The gold group's kicker (#1056, was the winner spotlight's). „Sieger der
+  // Abstimmung" and not „Sieger": the vote's winner and the evening's winner are
+  // different facts, and conflating them is what the spotlight did. Deliberately
+  // names no entity either — „Spiel des Abends" would put „Abend" back in the
+  // UI, which the Session naming rule bans (CLAUDE.md).
   'result.winnerShared': 'Geteilter Sieg',
   'result.participants': 'Wer dabei war',
   'result.teams': 'Im Team',
@@ -922,10 +923,15 @@ I18N.de = {
   'result.titleLost': '„{game}“ wurde gespielt – und hat gewonnen.',
   'result.titleNoWinner': '„{game}“ wurde gespielt – ohne Sieger.',
   'result.titleOngoing': '„{game}“ wurde gespielt – Fortsetzung folgt.',
-  'result.bannerPrompt': 'Tippe bei einem Spiel auf „Spielen“, um festzuhalten, was ihr spielt.',
   'result.play': 'Spielen',
-  'result.willPlay': 'Wird gespielt',
-  'result.lockedHint': 'Erst „Zurücksetzen“, um die Auswahl zu ändern',
+  'result.voteTitleOne': 'Die Abstimmung · {n} Spiel',
+  'result.voteTitle': 'Die Abstimmung · {n} Spiele',
+  'result.voteWinner': 'Sieger der Abstimmung',
+  'result.choosePrompt': 'Tippt „Spielen“ bei dem Spiel, das auf den Tisch kommt.',
+  'result.onTable': 'auf dem Tisch',
+  'result.more': 'Mehr',
+  'result.openGame': 'Zum Spiel',
+  'result.clearChoice': 'Auswahl aufheben',
   'result.barTitle': '{c}× die Note {r}',
   'score.infoBody': 'Der Score ist mehr als der Durchschnitt. Wenn jemand ein Spiel gar nicht spielen möchte, zählt das schwerer als eine gute Bewertung von jemand anderem — damit am Ende gespielt wird, worauf alle Lust haben.',
   'score.infoThin': 'Ein Spiel mit erst wenigen Bewertungen wird vorsichtiger eingeschätzt — es braucht ein paar Sessions, bis sich sein Score voll durchsetzt.',
@@ -956,7 +962,6 @@ I18N.de = {
   'result.cancelHint': 'Kein Spiel gefällt',
   'result.cancelConfirm': 'Diese Session abbrechen? Danach kann kein Spiel mehr zum Spielen gewählt werden.',
   'result.cancelUndo': 'Abbruch rückgängig machen',
-  'result.cancelledHint': 'Erst den Abbruch rückgängig machen, um ein Spiel zu wählen',
   'result.toast.cancelled': 'Session abgebrochen',
   'result.toast.cancelUndone': 'Abbruch rückgängig gemacht',
   'result.finishTitleDone': 'Ergebnis eingetragen',

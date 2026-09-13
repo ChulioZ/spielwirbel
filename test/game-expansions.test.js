@@ -364,7 +364,7 @@ test('the results screen names the expansion the table actually needs', async (t
 
   // #915 removed the „Gespielt wird:" banner this note used to hang under; it
   // now rides the chosen game's own row, which is the box it is about.
-  const note = dom.app.querySelector('.result-row.is-chosen .row-finish__note');
+  const note = dom.app.querySelector('.trow.is-chosen .row-finish__note');
   assert.ok(note, 'the chosen row carries the warning');
   assert.match(note.textContent, /Braucht Erweiterung: 5–6 Spieler/);
   // And it must NOT name the expansion that admits nothing.
@@ -383,7 +383,7 @@ test('… and says nothing when the base box already seats the table', async (t)
   await dom.call('showResults', round, session);
   // The anti-vacuous half: a screen that failed to render also carries no note,
   // so pin the chosen row's finish block — the note's host — as present first.
-  assert.ok(dom.app.querySelector('.result-row.is-chosen .row-finish'), 'the chosen row rendered');
+  assert.ok(dom.app.querySelector('.trow.is-chosen .row-finish'), 'the chosen row rendered');
   assert.equal(dom.app.querySelector('.row-finish__note'), null, 'and says nothing about a box');
 });
 
