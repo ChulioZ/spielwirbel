@@ -243,6 +243,8 @@ I18N.pt = {
   'activity.gamesDeletedOne': '{n} jogo excluído definitivamente',
   'activity.gamesDeleted': '{n} jogos excluídos definitivamente',
   'activity.memberAdded': '{name} entrou',
+  'activity.storefrontClearedOne': 'O link da loja de {n} jogo foi removido',
+  'activity.storefrontCleared': 'Os links da loja de {n} jogos foram removidos',
   'activity.roundRenamed': 'Grupo renomeado para “{name}”',
   'activity.expansionAddedOne': '{n} expansão registrada para “{title}”',
   'activity.expansionAdded': '{n} expansões registradas para “{title}”',
