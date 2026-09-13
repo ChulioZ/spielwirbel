@@ -87,6 +87,9 @@ function renderChronikTab(round, activities) {
       // for both an added seat and an accepted invitation (#207), since either way
       // a new person is in the round.
       member_added: { icon: 'ti-user-plus', text: t('activity.memberAdded', { name: a.name }) },
+      member_retired: { icon: 'ti-user-minus', text: t('activity.memberRetired', { name: a.name }) },
+      member_restored: { icon: 'ti-arrow-back-up', text: t('activity.memberRestored', { name: a.name }) },
+      member_deleted: { icon: 'ti-trash', text: t('activity.memberDeleted', { name: a.name }) },
       // A rename (#562) — the round's NEW name. Renaming is open to a grantee
       // (it is acting within the round, not destroying it), so this entry is how
       // an owner sees that their shared round changed name, and who did it. The

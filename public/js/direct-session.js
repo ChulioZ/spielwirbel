@@ -33,7 +33,8 @@ function startDirectSession(round, game) {
   const sheet = backdrop.querySelector('.sheet');
   document.body.appendChild(backdrop);
 
-  const joining = new Set(round.members.map((m) => m.id));
+  // Retired members are not offered a seat (#1006); their history is untouched.
+  const joining = new Set(activeMembers(round).map((m) => m.id));
   // The same add-on row the setup screen uses (#1015), behind the same chip —
   // the one that still applies here, since nothing is drawn (no owner clause, no
   // multi-table). Both fields used to stand open, which roughly doubled the

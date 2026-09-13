@@ -871,6 +871,12 @@ h1, h2, h3 { font-family: var(--font-display); }
 .hero { margin-bottom: 20px; }
 .hero h1 { font-size: var(--text-3xl); margin: 0; }
 .hero__members { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+/* A retired seat (#1006) — still reachable, visibly not playing. Opacity plus a
+   dashed ring rather than a grey fill: the member keeps their own colour, which
+   is what makes them recognisable on the historical screens that still name
+   them. */
+.avatar--retired { opacity: 0.45; box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--line); }
+.avatar--retired:hover { opacity: 0.75; }
 .avatar {
   width: 34px;
   height: 34px;
@@ -6879,6 +6885,12 @@ kbd {
    on `.sheet__actions` already stretches them into a full-width stack below
    that, so this only governs the wide case. */
 .confirm-dialog__body { font-size: var(--text-lg); line-height: 1.5; }
+/* The optional follow-up checkboxes (#1006). Empty on every other caller, and
+   `:empty` is what keeps the dialog's spacing identical for them. */
+.confirm-dialog__opts { display: flex; flex-direction: column; gap: 8px; margin: 0 0 4px; }
+.confirm-dialog__opts:empty { display: none; }
+.confirm-dialog__opt { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: var(--text-md); }
+.confirm-dialog__opt input { margin-top: 3px; flex: none; }
 .sheet__actions--confirm { justify-content: flex-end; }
 /* The confirm button is deliberately NOT `btn--lg`, unlike the single-action
    sheets: a dialog's bar carries TWO buttons, and at `btn--lg` metrics a real

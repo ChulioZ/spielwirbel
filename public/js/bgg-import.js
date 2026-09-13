@@ -217,7 +217,7 @@ async function showBggImport(round, status = 'own') {
     // over 200 rows. Not offered on the WISHLIST import, whose rows the round
     // does not own; the route drops the field there too.
     const selectedOwnerIds = new Set(wish ? [] : ownerPresetFor(round, currentUserId()));
-    if (!wish && (round.members || []).length) {
+    if (!wish && activeMembers(round).length) {
       const field = h(`<div class="field"><label>${esc(t('bggImport.ownersLabel'))}</label></div>`);
       field.appendChild(renderOwnerChips(round, selectedOwnerIds));
       body.appendChild(field);

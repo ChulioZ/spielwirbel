@@ -163,7 +163,7 @@ function showAddGame(round, { wish = false } = {}) {
     // than leaving a labelled empty box — the same thing the tag field does with
     // no round tags.
     const ownerField = form.querySelector('#ownerField');
-    if (!(round.members || []).length) ownerField.remove();
+    if (!activeMembers(round).length) ownerField.remove();
   }
 
   const newTagInput = form.querySelector('#newTag');

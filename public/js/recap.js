@@ -181,7 +181,11 @@ function mostDivisive(round, index) {
 // more often, then to the one indexed first.
 function memberFavourites(round, index) {
   const retired = retiredIds(round);
-  return round.members
+// Retired seats are out (#1006). Spelled out rather than calling
+  // `activeMembers` (member-active.js): this file is require()d from Node, and a
+  // public/js file cannot require a sibling — the same constraint that makes
+  // `shelfScoreOf` an injected parameter above. One predicate, not a list.
+  return (round.members || []).filter((m) => !m.retired)
     .map((m) => {
       let best = null;
       index.games.forEach((entry, gid) => {

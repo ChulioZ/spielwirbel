@@ -438,6 +438,10 @@ public/
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
                      lib/routes/members.js validates against (issue #420)
+    member-active.js which members are still PLAYING — the one filter the
+                     forward-looking surfaces (session setup, teams, rankings,
+                     trophies) apply, while history keeps resolving a retired
+                     seat unchanged (issue #1006)
     round-designs.js the design registry: the eight colour palettes and the
                      worlds (Forest, Sci-Fi) under a stable id each, plus the
                      resolver every view and the recap card look a stored

@@ -77,6 +77,7 @@ const frontendGlobals = {
   // score-info.js (issue #893)
   infoButton: 'readonly', wireInfoButtons: 'readonly', openInfoSheet: 'readonly', INFO_SHEETS: 'readonly',
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', memberHex: 'readonly',
+  memberIsActive: 'readonly', activeMembers: 'readonly',
   memberTone: 'readonly', initials: 'readonly',
   personColor: 'readonly',
   renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
