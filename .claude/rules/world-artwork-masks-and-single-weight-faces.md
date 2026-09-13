@@ -42,6 +42,55 @@ Note the fetched files are checked for the `wOF2` tag there too: a CDN 404 saved
 under a `.woff2` name passes "the file exists" and ships a world that falls back
 to Baloo 2 with no error anywhere.
 
+## 3. An arc's radius is SCALED UP to reach its endpoint — silently
+
+Three crescent moons in the Horror world painted **zero pixels** in production
+(#1081): the reveal's `--world-victory-2-r`, the stage's, and the backdrop's.
+Each was two arcs on one chord:
+
+```
+M70 22a36 36 0 1 0 0 72a29 29 0 1 1 0-72z      <- 0 px of ink
+```
+
+Per SVG F.6.6.2, an elliptical arc whose radii are too small to reach its own
+endpoint is **not an error**: both radii are multiplied by √Λ until it just
+fits, where Λ = (x₁′/rx)² + (y₁′/ry)². So `r 29` on a 72px chord becomes `r 36`,
+the inner arc becomes the same half-circle as the outer one, and they cancel
+exactly. The SVG parses, the mask applies, the token is present, and the ornament
+simply is not there.
+
+**Draw a crescent as a disc minus an OFFSET disc, in one `fill-rule='evenodd'`
+path** — the technique the ghost's eye already used:
+
+```
+%3Cpath fill-rule='evenodd' d='M50 60a36 36 0 1 0 72 0a36 36 0 1 0-72 0z
+                               M64 60a29 29 0 1 0 58 0a29 29 0 1 0-58 0z'/%3E
+```
+
+Both subpaths are full circles, so no radius is ever short, and the offset is
+what makes the bite. **A cutout drawn as its OWN `<path>` does not work under a
+mask** — alpha is what a mask reads, and a second black path adds alpha rather
+than removing it. It has to be a subpath of the shape it cuts.
+
+`test/round-worlds.test.js` now applies Λ to every relative arc in every world
+mask. Two things about that guard are worth keeping:
+
+- **It implements the spec's formula, not the obvious paraphrase.** “2·rx and
+  2·ry must both reach the chord” flags `a 10 8 0 0 1 20 0` — a flat-ended
+  ellipse whose short radius is *perpendicular* to the chord and which is not
+  scaled at all. Three of Forest's mushroom caps are that shape, and a guard that
+  reddens on correct artwork gets weakened until it stops catching the real thing.
+- **In path data a minus sign IS a separator.** The shipped crescents spell their
+  endpoint `0-72`, with no space. The first draft of the guard demanded
+  whitespace, swept all six worlds, reported clean, and missed every moon it was
+  written for — `.claude/rules/source-scanning-guards-enumerate-shapes.md`
+  exactly: what varies is the syntax around the token, not the token. The guard
+  carries a self-test with that spelling in it.
+
+It found a third moon nobody knew about, which is the argument for writing it at
+all: node has no canvas, so ink cannot be measured in CI, and this is the one
+failure mode that is invisible from every other direction.
+
 ## The animation timeline in the pane advances only on a PAINT
 
 Sampling `getComputedStyle(el, '::before').transform` at 0.3/1.0/1.5/2.2/3.6 s
