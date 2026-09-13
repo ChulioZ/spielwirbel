@@ -244,6 +244,8 @@ I18N.nl = {
   'activity.memberRetired': '{name} is uitgesorteerd',
   'activity.memberRestored': '{name} is terug',
   'activity.memberDeleted': 'De plek van {name} is verwijderd',
+  'activity.storefrontClearedOne': 'De winkellink van {n} spel is verwijderd',
+  'activity.storefrontCleared': 'De winkellinks van {n} spellen zijn verwijderd',
   'activity.roundRenamed': 'Groep hernoemd naar “{name}”',
   'activity.expansionAddedOne': '{n} uitbreiding vastgelegd voor “{title}”',
   'activity.expansionAdded': '{n} uitbreidingen vastgelegd voor “{title}”',

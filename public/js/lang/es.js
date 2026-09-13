@@ -237,6 +237,8 @@ I18N.es = {
   'activity.memberRetired': '{name} fue retirada',
   'activity.memberRestored': '{name} ha vuelto',
   'activity.memberDeleted': 'Se eliminó la plaza de {name}',
+  'activity.storefrontClearedOne': 'Se quitó el enlace a la tienda de {n} juego',
+  'activity.storefrontCleared': 'Se quitaron los enlaces a la tienda de {n} juegos',
   'activity.roundRenamed': 'El grupo ahora se llama «{name}»',
   'activity.expansionAddedOne': '{n} expansión registrada para «{title}»',
   'activity.expansionAdded': '{n} expansiones registradas para «{title}»',

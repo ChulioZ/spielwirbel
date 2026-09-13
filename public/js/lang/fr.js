@@ -247,6 +247,8 @@ I18N.fr = {
   'activity.memberRetired': '{name} a été retiré',
   'activity.memberRestored': '{name} est de retour',
   'activity.memberDeleted': 'La place de {name} a été supprimée',
+  'activity.storefrontClearedOne': 'Le lien vers la boutique de {n} jeu a été retiré',
+  'activity.storefrontCleared': 'Les liens vers la boutique de {n} jeux ont été retirés',
   'activity.roundRenamed': 'Groupe renommé en « {name} »',
   'activity.expansionAddedOne': '{n} extension enregistrée pour « {title} »',
   'activity.expansionAdded': '{n} extensions enregistrées pour « {title} »',

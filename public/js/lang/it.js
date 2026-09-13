@@ -246,6 +246,8 @@ I18N.it = {
   'activity.memberRetired': '{name} è stata ritirata',
   'activity.memberRestored': '{name} è tornata',
   'activity.memberDeleted': 'Il posto di {name} è stato eliminato',
+  'activity.storefrontClearedOne': 'Il collegamento allo store di {n} gioco è stato rimosso',
+  'activity.storefrontCleared': 'I collegamenti allo store di {n} giochi sono stati rimossi',
   'activity.roundRenamed': 'Gruppo rinominato in «{name}»',
   'activity.expansionAddedOne': '{n} espansione registrata per «{title}»',
   'activity.expansionAdded': '{n} espansioni registrate per «{title}»',

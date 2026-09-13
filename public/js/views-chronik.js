@@ -90,6 +90,9 @@ function renderChronikTab(round, activities) {
       member_retired: { icon: 'ti-user-minus', text: t('activity.memberRetired', { name: a.name }) },
       member_restored: { icon: 'ti-arrow-back-up', text: t('activity.memberRestored', { name: a.name }) },
       member_deleted: { icon: 'ti-trash', text: t('activity.memberDeleted', { name: a.name }) },
+      // A one-off operator clean-up (#981): the storefront links this round still
+      // held were cleared, so a cover that vanished has a line saying why.
+      storefront_cleared: { icon: 'ti-unlink', text: tn(a.n || 0, 'activity.storefrontClearedOne', 'activity.storefrontCleared', { n: a.n || 0 }) },
       // A rename (#562) — the round's NEW name. Renaming is open to a grantee
       // (it is acting within the round, not destroying it), so this entry is how
       // an owner sees that their shared round changed name, and who did it. The
