@@ -126,7 +126,7 @@ I18N.fr = {
   'hub.pulse.sessionsOne': '{n} session en 12 mois',
   'hub.pulse.sessions': '{n} sessions en 12 mois',
   'hub.pulse.lastToday': 'Joué aujourd’hui',
-  'hub.pulse.lastDaysOne': 'Joué il y a un jour',
+  'hub.pulse.lastDaysOne': 'Joué hier',
   'hub.pulse.lastDays': 'Joué il y a {n} jours',
   'hub.pulse.coverage': '{n} jeux sur {total} n’ont jamais été joués',
   'hub.care.title': 'À régler',

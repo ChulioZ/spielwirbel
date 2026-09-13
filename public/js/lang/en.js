@@ -117,7 +117,7 @@ I18N.en = {
   'hub.pulse.sessionsOne': '{n} session in 12 months',
   'hub.pulse.sessions': '{n} sessions in 12 months',
   'hub.pulse.lastToday': 'Played today',
-  'hub.pulse.lastDaysOne': 'Played a day ago',
+  'hub.pulse.lastDaysOne': 'Played yesterday',
   'hub.pulse.lastDays': 'Played {n} days ago',
   'hub.pulse.coverage': '{n} of {total} games have never been played',
   'hub.care.title': 'Loose ends',

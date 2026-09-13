@@ -118,7 +118,7 @@ I18N.de = {
   'hub.pulse.sessionsOne': '{n} Session in 12 Monaten',
   'hub.pulse.sessions': '{n} Sessions in 12 Monaten',
   'hub.pulse.lastToday': 'Heute gespielt',
-  'hub.pulse.lastDaysOne': 'Vor einem Tag gespielt',
+  'hub.pulse.lastDaysOne': 'Gestern gespielt',
   'hub.pulse.lastDays': 'Vor {n} Tagen gespielt',
   'hub.pulse.coverage': '{n} von {total} Spielen waren noch nie dran',
   'hub.care.title': 'Kümmerliste',

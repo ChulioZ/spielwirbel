@@ -127,7 +127,7 @@ I18N.nl = {
   'hub.pulse.sessionsOne': '{n} sessie in 12 maanden',
   'hub.pulse.sessions': '{n} sessies in 12 maanden',
   'hub.pulse.lastToday': 'Vandaag gespeeld',
-  'hub.pulse.lastDaysOne': 'Een dag geleden gespeeld',
+  'hub.pulse.lastDaysOne': 'Gisteren gespeeld',
   'hub.pulse.lastDays': '{n} dagen geleden gespeeld',
   'hub.pulse.coverage': '{n} van de {total} spellen zijn nog nooit gespeeld',
   'hub.care.title': 'Losse eindjes',
