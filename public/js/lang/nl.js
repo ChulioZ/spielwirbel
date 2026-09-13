@@ -581,7 +581,10 @@ I18N.nl = {
 
   'member.editName': 'Klik om te hernoemen',
   'member.colorLabel': 'Kleur van de avatar',
-  'member.statsTitle': 'Statistieken',
+  'member.colorChange': 'Avatarkleur wijzigen',
+  'member.mySeat': 'Jouw plek',
+  'member.atTable': 'Aan tafel',
+  'member.retiredChip': 'Niet meer in de groep',
   'member.wins': 'Overwinningen',
   'member.sessions': 'Sessies',
   'member.winRate': 'Winstpercentage',

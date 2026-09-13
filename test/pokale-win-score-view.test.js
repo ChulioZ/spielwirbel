@@ -293,21 +293,17 @@ test('the member page rates Dan on contested nights only, and shows his Siegwert
   const round = roundWith([...group, ...solos]);
   const dom = boot(t, round);
   await dom.call('showMember', RID, 'dan');
-  /* Two of the three figures moved into the hero band in #995 — Siege and
-     Siegquote are `.member-head__stat`s now, the Siegwertung is still a card.
-     Both shapes are read here on purpose: reading only the cards would have
-     made the two moved assertions vanish rather than fail, which is exactly the
-     silence a relocation can hide behind. */
-  const pairs = [
-    ...[...dom.app.querySelectorAll('.member-stats__card')].map((c) => [
-      c.querySelector('.pokale-card__label').textContent,
-      c.querySelector('.pokale-card__value').textContent,
-    ]),
-    ...[...dom.app.querySelectorAll('.member-head__stat')].map((c) => [
-      c.querySelector('.member-head__stat-label').textContent,
-      c.querySelector('.member-head__stat-value').textContent,
-    ]),
-  ];
+  /* ONE shape since #1074: the five figures were split across a hero band
+     (#995's `.member-head__stat`) and `.pokale-card`s under a „Statistiken"
+     heading, and die Tischkarte put them in one strip. The two-shape read this
+     replaced existed because reading only the cards would have made the two
+     relocated assertions VANISH rather than fail — which is the silence a
+     relocation hides behind, and the reason the count assertion below is here. */
+  const pairs = [...dom.app.querySelectorAll('.member-figure')].map((c) => [
+    c.querySelector('.member-figure__label').textContent,
+    c.querySelector('.member-figure__value').textContent,
+  ]);
+  assert.equal(pairs.length, 5, 'the figure strip lost a figure, so a valueOf() below reads undefined');
   const valueOf = (key) => (pairs.find(([l]) => l === dom.run(`t('${key}')`)) || [])[1];
 
   // Six wins over nine finished nights would read 67 %; over the four CONTESTED
@@ -317,8 +313,9 @@ test('the member page rates Dan on contested nights only, and shows his Siegwert
   assert.equal(valueOf('member.winRate'), '25%');
   assert.equal(valueOf('member.wins'), '6', 'the raw count is a factual record and is unchanged');
   assert.equal(valueOf('member.winScore'), '0,0');
-  // …and each figure appears exactly ONCE across the two shapes: the band is a
-  // relocation, not a copy, so a number stated twice is the regression.
+  // …and each figure appears exactly ONCE. #995 relocated two of them and #1074
+  // merged the shapes; both were relocations rather than copies, so a number
+  // stated twice on one screen is the regression either would hide behind.
   ['member.wins', 'member.winRate', 'member.winScore'].forEach((key) => {
     const label = dom.run(`t('${key}')`);
     assert.equal(pairs.filter(([l]) => l === label).length, 1, `${key} is stated twice`);
@@ -359,10 +356,10 @@ test('the win rate excludes a non-contest and is lowered by a loss (#1038)', asy
     const round = roundWith([night(['dan'], MEMBERS), night([], MEMBERS, extra)]);
     const dom = boot(t, round);
     await dom.call('showMember', RID, 'dan');
-    const stat = [...dom.app.querySelectorAll('.member-head__stat')].find(
-      (c) => c.querySelector('.member-head__stat-label').textContent === dom.run("t('member.winRate')")
+    const stat = [...dom.app.querySelectorAll('.member-figure')].find(
+      (c) => c.querySelector('.member-figure__label').textContent === dom.run("t('member.winRate')")
     );
-    return stat.querySelector('.member-head__stat-value').textContent;
+    return stat.querySelector('.member-figure__value').textContent;
   };
 
   // One win out of one contested night.

@@ -111,8 +111,18 @@ const openMember = async (round, mid, over = {}) => {
   dom.set('currentUserId', () => over.me || null);
   await dom.call('showMember', round.id, mid);
 };
-const footerBtn = (rx) => [...dom.app.querySelectorAll('.round-footer button')]
-  .find((b) => rx.test(b.textContent));
+/* The seat actions moved out of three stacked `.round-footer` blocks into the
+   back row's „…“ page menu (#1074), so reaching one means OPENING the menu
+   first. Deliberately not a source match on `menuItems`: the gates are the
+   interesting part and only a rendered popover shows what survived them. */
+const menuBtn = (rx) => {
+  const trigger = dom.app.querySelector('.gd-menu');
+  if (!trigger) return undefined;
+  dom.document.querySelectorAll('.popover').forEach((el) => el.remove());
+  trigger.click();
+  return [...dom.document.querySelectorAll('.popover--menu .popover__opt')]
+    .find((b) => rx.test(b.textContent));
+};
 const dialogOpts = () => [...dom.document.querySelectorAll('.confirm-dialog__opt')]
   .map((el) => el.textContent.trim());
 
@@ -121,7 +131,7 @@ test('the dialog asks about solely-owned games ONLY when there are any', async (
   // page offers „Wieder aufnehmen" instead.
   const plain = roundFixture();
   await openMember(plain, 'm3');
-  footerBtn(/Aus der Runde entfernen/).click();
+  menuBtn(/Aus der Runde entfernen/).click();
   assert.deepEqual(dialogOpts(), [], 'nothing is owned, so nothing to ask about');
   dom.document.querySelector('[data-act="cancel"]').click();
 
@@ -134,7 +144,7 @@ test('the dialog asks about solely-owned games ONLY when there are any', async (
     ],
   });
   await openMember(owned, 'm3');
-  footerBtn(/Aus der Runde entfernen/).click();
+  menuBtn(/Aus der Runde entfernen/).click();
   const opts = dialogOpts();
   assert.equal(opts.length, 1);
   assert.match(opts[0], /Spiel aussortieren/);
@@ -145,7 +155,7 @@ test('the dialog asks about the account link ONLY on your own seat', async () =>
   const mine = roundFixture();
   mine.members[2].userId = 'acct-me';
   await openMember(mine, 'm3', { me: 'acct-me' });
-  footerBtn(/Aus der Runde entfernen/).click();
+  menuBtn(/Aus der Runde entfernen/).click();
   assert.equal(dialogOpts().length, 1);
   assert.match(dialogOpts()[0], /Konto/);
   dom.document.querySelector('[data-act="cancel"]').click();
@@ -158,27 +168,27 @@ test('the dialog asks about the account link ONLY on your own seat', async () =>
   const theirs = roundFixture();
   theirs.members[0].userId = 'acct-anna';
   await openMember(theirs, 'm1', { me: 'acct-me' });
-  footerBtn(/Aus der Runde entfernen/).click();
+  menuBtn(/Aus der Runde entfernen/).click();
   assert.deepEqual(dialogOpts(), []);
 });
 
 test('a retired member\'s page offers the way back, not a second retirement', async () => {
   const round = roundFixture();
   await openMember(round, 'm2');
-  assert.ok(footerBtn(/Wieder aufnehmen/), 'restoring is the point of keeping them reachable');
-  assert.equal(footerBtn(/Aus der Runde entfernen/), undefined);
+  assert.ok(menuBtn(/Wieder aufnehmen/), 'restoring is the point of keeping them reachable');
+  assert.equal(menuBtn(/Aus der Runde entfernen/), undefined);
 });
 
 test('delete is offered only where nothing is lost — and hidden once there are votes', async () => {
   const clean = roundFixture();
   await openMember(clean, 'm3');
-  assert.ok(footerBtn(/Platz löschen/), 'no votes anywhere, so the seat can simply go');
+  assert.ok(menuBtn(/Platz löschen/), 'no votes anywhere, so the seat can simply go');
 
   const voted = roundFixture({
     sessions: [{ id: 's1', memberIds: ['m1', 'm3'], votes: { m3: { g1: { rating: 4 } } },
       winnerIds: [], guests: [], teams: [] }],
   });
   await openMember(voted, 'm3');
-  assert.equal(footerBtn(/Platz löschen/), undefined, 'a vote is history — retire, do not delete');
-  assert.ok(footerBtn(/Aus der Runde entfernen/), 'which is what is offered instead');
+  assert.equal(menuBtn(/Platz löschen/), undefined, 'a vote is history — retire, do not delete');
+  assert.ok(menuBtn(/Aus der Runde entfernen/), 'which is what is offered instead');
 });

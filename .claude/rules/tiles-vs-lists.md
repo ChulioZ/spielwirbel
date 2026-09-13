@@ -76,12 +76,23 @@ doesn't have to be redone.
   here without exception — the old carve-out ("the spotlight is the one
   component that may wrap, because everything in it holds the *same* place") is
   gone with the spotlight. A tie adds a ROW.
-- **Member** — already uses the pane: the five stat cards span it (they are
-  `.pokale-cards`, already exempt) while identity and the colour picker keep
-  the reading measure. At 900px those cards are ~170px and labels like
-  "Ø vergebene Wertung" wrap badly; at ~280px they read cleanly. The resulting
-  raggedness (a full-width stats band under narrower sections above) is
-  deliberate and reads as a band, not as a mistake.
+- **Member** — **restructured in #1074, so this entry is history**, the same way
+  the Game-detail one below it is. The reading here was that the raggedness was
+  deliberate: the five stat cards spanned the pane (they were `.pokale-cards`,
+  already exempt) while identity and the colour picker kept the reading measure,
+  and "a full-width stats band under narrower sections above … reads as a band,
+  not as a mistake". Every sentence was about the CARDS, and the cards were the
+  problem: `.pokale-cards` is `auto-fit`, so three numeric tiles plus two
+  full-row game tiles left 1 to 3 empty slots from 860px up — 728px of blank card
+  at 1920 — and the argument for spanning the pane was that labels like
+  "Ø vergebene Wertung" wrap badly at ~170px, i.e. a defence of a grid that
+  should not have been a grid. Measured, the widths ran 900 / 1468 / 900.
+
+  Die Tischkarte has no grid for the figures at all (one wrapping flex row), and
+  the card, the owned-games grid and the back row now share `--w-detail`. **One
+  width per viewport is what that argument actually wanted**; it reached for
+  "deliberate raggedness" because the component in the middle could not be any
+  other width.
 - **Game detail** — **restructured in #1039, so this entry is history.** For two
   releases the reading here was that the defect was a *sizing* one, not a shape
   one: the score ring sat 453px from the title because `.gd-info` was `flex: 1`,
