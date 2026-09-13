@@ -79,6 +79,13 @@ const RULES = {
      while „tänä iltana" does — that one really does start a word with the
      banned stem. */
   fi: { allow: [/\btänä iltana\b/gi], ban: [/\bilta/i, /\billan\b/i] },
+  /* Korean has NO word boundaries, so `\b` is unavailable and the Dutch
+     substring shape is the only one on offer. The entity is “세션”; what is
+     banned is 저녁 and 밤 (evening / night) and the loan 나이트, which together
+     cover “게임의 밤” and “보드게임 나이트”. The adverbials 오늘 밤 /
+     오늘 저녁 are stripped first — the guest prompt uses one legitimately —
+     and the optional space matters, because Korean writes both spellings. */
+  ko: { allow: [/오늘\s*밤/g, /오늘\s*저녁/g], ban: [/밤/, /저녁/, /나이트/] },
 };
 
 function namesAnEvening(locale, value) {
@@ -110,6 +117,7 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     nl: ['De avond werd opgesplitst', 'spelavond', 'jullie gebruikelijke avonden'],
     pt: ['A noite foi dividida', 'noite de jogos', 'as suas noites de sempre'],
     fi: ['Peli-ilta jaettiin', 'peli-ilta', 'tavalliset peli-iltanne', 'Illan peli'],
+    ko: ['게임의 밤이 나누어졌습니다', '보드게임 나이트', '평소의 게임 저녁'],
   };
   const fine = {
     de: ['Was spielen wir heute?', 'Die Session wurde aufgeteilt'],
@@ -122,6 +130,7 @@ test('the matcher flags the entity noun and spares the time-of-day adverbial', (
     // „kavereiltasi" and „illalla" are the two shapes the bare substring ban
     // got wrong — a case ending and an adverbial.
     fi: ['Mitä pelataan tänään?', 'Vieraita tänä iltana?', 'Kavereiltasi ei ole toimintaa', 'pelataan illalla'],
+    ko: ['오늘 뭐 할까요?', '오늘 밤에 손님이 오나요?', '세션이 나누어졌습니다'],
   };
 
   for (const locale of SUPPORTED_LOCALES) {

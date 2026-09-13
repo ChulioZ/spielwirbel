@@ -32,16 +32,15 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const fs = require('fs');
 const path = require('path');
-const vm = require('node:vm');
 
 const { app } = require('./helpers');
 const { loadApp } = require('./support/dom');
 const { SUPPORTED_LOCALES } = require('../public/js/locales');
 const { metadataFilterOptions, hasMetadataFilterOptions } = require('../public/js/draw-pool');
+const { METADATA } = require('../scripts/landing-seed-data');
 
 const ROOT = path.join(__dirname, '..');
 const VIEW = fs.readFileSync(path.join(ROOT, 'public/js/views-landing.js'), 'utf8');
-const CAPTURE = fs.readFileSync(path.join(ROOT, 'scripts/capture-landing-shots.js'), 'utf8');
 
 // Per-locale weight budget: what one visitor's landing page can cost. Generous
 // next to today's ~120 KB per set so an honest re-crop never trips it, small
@@ -70,19 +69,16 @@ function declaredShots() {
   return byLocale;
 }
 
-// The capture script's METADATA profiles, read out of the script for the same
-// reason declaredShots() reads the view: a hand-copied constant proves nothing.
+// The capture script's METADATA profiles — the REAL ones, for the same reason
+// declaredShots() parses the view: a hand-copied constant proves nothing.
 //
-// Matched globally with a uniqueness assertion rather than by stripping comments
-// — over JS source a line-comment strip would eat the `//` inside any URL and
-// destroy the value being read (.claude/rules/css-text-assertions-strip-comments.md).
+// Required rather than matched out of source. It used to be a regex over
+// capture-landing-shots.js, because that script starts a server and a browser
+// the moment it is loaded and so cannot be required; #1047 moved the seed table
+// into its own module (scripts/landing-seed-data.js), which can.
 function captureMetadata() {
-  const found = [...CAPTURE.matchAll(/\nconst METADATA = (\[[\s\S]*?\n\]);/g)];
-  assert.equal(found.length, 1,
-    `capture-landing-shots.js declares METADATA ${found.length} times, expected exactly 1`);
-  const profiles = vm.runInNewContext(found[0][1]);
-  assert.ok(profiles.length > 0, 'METADATA holds at least one profile');
-  return profiles;
+  assert.ok(METADATA.length > 0, 'METADATA holds at least one profile');
+  return METADATA;
 }
 
 // Flattened, for the assertions that don't care which locale an asset belongs to.

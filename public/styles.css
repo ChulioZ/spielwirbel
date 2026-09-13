@@ -371,6 +371,32 @@ body {
 /* Headings speak in the display face. */
 h1, h2, h3 { font-family: var(--font-display); }
 
+/* Hangul carries no inter-word break opportunities of its own, so a browser
+   breaks Korean per SYLLABLE — mid-word, wherever the box happens to end. In
+   running prose that is merely unusual; in a chip, a pill, a tab or a button
+   label it reads as a typo. `keep-all` restores word-level wrapping (Korean
+   does write spaces between words), and `overflow-wrap: anywhere` is the
+   escape hatch it then requires: measured in a 60px box, `keep-all` alone
+   leaves a nine-syllable word 109px wide, overhanging the edge by 49px, where
+   `break-word` wraps it to three lines inside the box. Both properties
+   inherit, so the one rule on <html> reaches every surface; `:lang(ko)`
+   matches the bare `ko` that i18n.js writes onto the element (setLocale,
+   js/i18n.js).
+
+   `break-word`, NOT `anywhere`, and the difference is not stylistic: only
+   `anywhere` counts toward a box's MIN-CONTENT size, so it lowers the
+   `min-width: auto` floor of every flex item to one syllable. Measured at
+   390px with `anywhere`, the bottom dock's „트로피" wrapped to two lines in a
+   dock that had 127px of room to spare — the flex item shrank below its own
+   word because it now could. With `break-word` the label is one line (16px,
+   not 32px) and the over-long word above still wraps.
+
+   This is the only `:lang()` rule in the stylesheet. It sits with the base
+   typography rather than on the components, because the surfaces that need it
+   are every narrow box in the app, and a per-component list is a list that
+   goes stale the next time one is added. */
+:lang(ko) { word-break: keep-all; overflow-wrap: break-word; }
+
 /* In-app navigation renders as real <a href> links (#330) so Cmd/middle-click
    opens a new tab and "Copy link address" works. Every one of them is styled as
    a card/tab/chip that used to be a <button>, and an anchor arrives with a UA

@@ -4,6 +4,7 @@ paths:
   - "public/js/views-landing.js"
   - "test/landing-shots.test.js"
   - "scripts/capture-landing-shots.js"
+  - "scripts/landing-seed-data.js"
 ---
 # Regenerating the landing-page product screenshots (#438, #457, #669)
 
@@ -139,7 +140,8 @@ can make that feature appear at all.** A feature gated on data is invisible to a
 "is the code current?" reading, and the failure looks exactly like the code not
 having shipped.
 
-The script therefore writes `METADATA` onto every seeded game — with the server
+The script therefore writes `METADATA` (in `scripts/landing-seed-data.js`,
+where the whole per-locale seed lives since #1047) onto every seeded game — with the server
 **stopped**, because the store rewrites the whole file on its next save
 (`.claude/rules/data-json-external-edits.md`). It is the one thing the API cannot
 seed: `POST …/games` takes title, player counts, tags and a cover, and the six
@@ -383,8 +385,8 @@ gets filed when someone happens to look.
 
 **One sliver of that blindness is now covered (#752).** The suite still cannot
 see a picture, but it *can* see whether the seed is able to produce a
-data-gated affordance at all — so it runs `METADATA` through the two real
-predicates (`hasMetadataFilterOptions`, and `hasGameInfo` via the jsdom harness,
+data-gated affordance at all — so it `require`s `METADATA` out of
+`scripts/landing-seed-data.js` and runs it through the two real predicates (`hasMetadataFilterOptions`, and `hasGameInfo` via the jsdom harness,
 since `game-info.js` has no exports guard). That is the whole of §3a expressed as
 an assertion: a future edit dropping the metadata cannot silently reshoot the ⓘ
 and the disclosure back out of the images. It says nothing about whether either

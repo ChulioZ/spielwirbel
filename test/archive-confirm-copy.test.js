@@ -48,6 +48,7 @@ const CLAIMS = {
   nl: { shelf: 'uit de Kast', draw: 'loting', back: 'terughalen' },
   pt: { shelf: 'da Estante', draw: 'do sorteio', back: 'de volta' },
   fi: { shelf: 'Pois hyllystä', draw: 'pois arvonnasta', back: 'takaisin' },
+  ko: { shelf: '선반에서', draw: '추첨에도', back: '다시 가져올' },
 };
 
 function loadLocale(name) {
