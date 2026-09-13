@@ -40,15 +40,23 @@ async function showFriends() {
   // is no visible label to point a <label for> at — the form is one row — so the
   // name goes on the control itself, and says what the field is FOR rather than
   // restating the placeholder's "Nutzername".
+  //
+  // `friendHandle`, not `friendUser`, and the three data-* opt-outs: this field
+  // names ANOTHER account, so a saved login is never the right answer — but
+  // Safari offered one anyway, because `autocomplete="off"` is ignored for
+  // anything its heuristics read as a login form and an id containing "user" is
+  // one of the things they read (#1077). See
+  // .claude/rules/password-managers-ignore-autocomplete-off.md.
   const addForm = h(`<form class="friends-add">
-      <input class="input" id="friendUser" type="text" autocomplete="off" spellcheck="false"
+      <input class="input" id="friendHandle" type="text" autocomplete="off" spellcheck="false"
              autocapitalize="none" maxlength="30" aria-label="${esc(t('friends.addLabel'))}"
+             data-1p-ignore data-lpignore="true" data-bwignore
              placeholder="${esc(t('friends.addPlaceholder'))}" />
       <button class="btn btn--primary" type="submit">${esc(t('friends.addSubmit'))}</button>
     </form>`);
   addForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const input = addForm.querySelector('#friendUser');
+    const input = addForm.querySelector('#friendHandle');
     const username = input.value.trim();
     if (!username) return toast(t('friends.needUsername'));
     const btn = addForm.querySelector('button');
