@@ -20,7 +20,9 @@ What the app does, in detail. For a short overview see the
   out with "Ich spiele mit"), and on any other round a member page offers
   „Das bin ich" so your account can take its own seat. A claimed seat is what
   puts your name on your actions in the Chronik. A member who stops playing can
-  be **retired** from their own page, exactly the way a game is: they leave the
+  be **removed from the round** on their own page — the same mechanism a game's
+  „Aussortieren" uses, under deliberately different words, because the shelf's
+  verb is the wrong register for a person: they leave the
   seating list, the teams, the standings and the trophies, while every vote,
   winner and team they are part of keeps counting — so no game's score moves.
   Bringing them back is one tap, and a seat created by mistake, with nothing
