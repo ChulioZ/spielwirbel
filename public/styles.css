@@ -4251,6 +4251,48 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    victory scene (slot 7) runs after that. A cold load, the Chronik, a shared
    link and a reduced-motion reader all get the rest state — which is the thing
    worth looking at anyway. */
+/* The three moments of the table (#1058) — the quiet half of this redesign,
+   against #1056's one bold one. Each is declared ONLY under its own one-shot
+   attribute or class, never cancelled by one: an override missed on a single
+   selector would leave the element parked at its `from` keyframe, which here is
+   `opacity: 0` and `0fr`. Under reduced motion the attributes simply do nothing
+   and the rest state is the finished picture.
+
+   Long-form motion, deliberately off the `--dur-*` micro-interaction scale, like
+   the podium rise and the finale seal. */
+@media (prefers-reduced-motion: no-preference) {
+  .tisch-slot[data-unroll] { overflow: hidden; animation: tisch-unroll 0.35s var(--ease-out) both; }
+  /* A `0fr` row does NOT resolve to zero on its own: the item's own padding and
+     border are outside `min-height`, so the track floors at them — measured in
+     WebKit at 34px (2x16 padding + 2x1 border), i.e. the band appearing a fifth
+     open before it starts to grow. The band therefore rolls its own box open in
+     step with the slot. The `overflow: hidden` above is what lets the content
+     inside be clipped while it does.
+
+     Both rides the attribute, so at rest the row is 1fr, the padding is its own
+     and nothing is clipped. */
+  .tisch-slot[data-unroll] > .tisch { animation: tisch-open 0.35s var(--ease-out) both; }
+  @keyframes tisch-open {
+    from { padding-block: 0; border-block-width: 0; }
+    to { padding-block: 16px; border-block-width: 1px; }
+  }
+  @keyframes tisch-unroll {
+    from { grid-template-rows: 0fr; opacity: 0; transform: translateY(10px); }
+    to { grid-template-rows: 1fr; opacity: 1; transform: none; }
+  }
+  /* The row hands its game to the table and settles back. `both` with a `to`
+     that is the rest state, so a dropped `animationend` cannot strand it. */
+  .trow.is-lift { animation: trow-lift 0.35s var(--ease-out) both; }
+  @keyframes trow-lift {
+    0% { transform: none; box-shadow: none; }
+    45% { transform: translateY(-6px); box-shadow: var(--shadow-2); }
+    100% { transform: none; box-shadow: none; }
+  }
+  /* The press — the game page's own keyframe (#1041), unchanged, so the stamp
+     this evening leaves behind arrives the same way in that game's history. */
+  .tisch[data-fresh] .stamp { animation: press-in 0.38s var(--ease-out) both; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .trow.is-race::before { animation: trow-fill var(--dur, 1s) var(--ease-out) both; }
   @keyframes trow-fill {
@@ -4547,12 +4589,16 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    344px winner picker on a session finished months ago. The band renders ONLY
    while a game is chosen; before that nothing takes room at all (the deep-dive's
    empty „Auf dem Tisch" slot was rejected on 2026-09-12 for exactly that). */
+/* The slot exists only so the band can UNROLL (#1058): a `0fr -> 1fr` grid row
+   is height-auto without JS measuring anything. It carries the band's outer
+   margin, because a margin inside a 0fr row still takes its space. */
+.tisch-slot { display: grid; margin: 4px 0 20px; }
 .tisch {
   display: grid;
   grid-template-columns: 128px minmax(0, 1fr);
   gap: 18px;
   align-items: start;
-  margin: 4px 0 20px;
+  min-height: 0;
   padding: 16px 18px;
   border-radius: var(--radius-lg);
   background: var(--surface);

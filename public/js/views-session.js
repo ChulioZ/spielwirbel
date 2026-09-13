@@ -1354,8 +1354,17 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      outcome in the h1 („„X" wurde gespielt."), and the cancelled case has its
      own title too. `views-session-tables.js` still renders that class on the
      split screen, so the CSS stays. */
+  const tischSlot = h('<div class="tisch-slot"></div>');
   const tisch = h('<section class="tisch" hidden></section>');
-  screen.appendChild(tisch);
+  tischSlot.appendChild(tisch);
+  screen.appendChild(tischSlot);
+  /* Two one-shot motion flags (#1058). Each is set by the CLICK that causes the
+     moment and consumed by the next `renderTisch`, so a re-render from a chip
+     toggle, a cold load, a Chronik visit or a shared link replays nothing —
+     the `.pass[data-fresh]` precedent, where replaying a whole Stempelkarte on
+     every self-write turned a welcome into a stutter. */
+  let freshChoice = false;
+  let freshFinish = false;
 
   // Cancel session (the alternative to choosing a game; see renderCancel).
   // Created here because updateChosen() -> renderCancel() runs below while the
@@ -1598,7 +1607,21 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId });
           chosenId = gameId;
           session.chosenGameId = gameId;
+          freshChoice = true;
           updateChosen();
+          // The row lifts as it hands its game to the table (#1058). Added
+          // AFTER the re-render, because `updateChosen` rebuilds the action
+          // column and a class set before it would be on a node nobody sees.
+          // Removed on `animationend` so a later re-render cannot replay it.
+          const lifted = rowRefs.find((x) => x.gameId === gameId);
+          if (lifted) {
+            lifted.row.classList.add('is-lift');
+            lifted.row.addEventListener('animationend', function off(e) {
+              if (e.animationName !== 'trow-lift') return;
+              lifted.row.classList.remove('is-lift');
+              lifted.row.removeEventListener('animationend', off);
+            });
+          }
           toast(t('result.toast.willPlay', { title: game.title }));
         } catch (e) { toast(e.message); }
       });
@@ -1729,9 +1752,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     });
     tisch.innerHTML = '';
     tischBar.innerHTML = '';
+    // Cleared on every pass and re-set below only for the one render that earned
+    // it: an attribute left behind would re-run the animation on the next write.
+    delete tisch.dataset.fresh;
+    tischSlot.removeAttribute('data-unroll');
     tisch.hidden = !chosenId;
     tischBar.hidden = true;
-    if (!chosenId) return;
+    if (!chosenId) { freshChoice = false; freshFinish = false; return; }
+    if (freshChoice) { tischSlot.setAttribute('data-unroll', ''); freshChoice = false; }
+    if (freshFinish && finished) { tisch.dataset.fresh = ''; freshFinish = false; }
     const game = games.find((g) => g.id === chosenId);
     tisch.dataset.state = finished ? 'done' : 'table';
 
@@ -1786,7 +1815,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       // Finishing comes first and needs no winners; the picker only appears
       // afterwards, so it can never read as a prerequisite (#254).
       const cta = h(`<button class="btn btn--primary tisch__cta">${iconText('ti-check', t('result.markPlayed'))}</button>`);
-      cta.addEventListener('click', () => { pickerOpen = true; saveWinners([]); });
+      cta.addEventListener('click', () => { pickerOpen = true; freshFinish = true; saveWinners([]); });
       actions.appendChild(cta);
       // Today's toggle-off path, spelled out: tapping „Spielen" again on the
       // chosen row used to be the only way back, which is invisible.
@@ -1806,7 +1835,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       // one: both must be live at once, because the band's own CTA is what a
       // tablet and a desktop press.
       const barBtn = h(`<button class="btn btn--primary">${iconText('ti-check', t('result.markPlayed'))}</button>`);
-      barBtn.addEventListener('click', () => { pickerOpen = true; saveWinners([]); });
+      barBtn.addEventListener('click', () => { pickerOpen = true; freshFinish = true; saveWinners([]); });
       tischBar.appendChild(barBtn);
       tischBar.hidden = false;
     } else if (pickerOpen) {

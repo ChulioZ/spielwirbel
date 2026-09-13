@@ -130,7 +130,9 @@ test('nothing stands between the table band and the ranking', async (t) => {
   assert.ok(tisch && !tisch.hidden, 'a chosen game must render the table band');
   assert.equal(dom.app.querySelector('.chosen-banner'), null,
     'the banner is gone from this screen — the title and the Tafel kicker carry its states');
-  const tafel = tisch.nextElementSibling;
+  // Since #1058 the band sits in a slot that can unroll it, so the Tafel is the
+  // SLOT's next sibling rather than the band's.
+  const tafel = tisch.closest('.tisch-slot').nextElementSibling;
   assert.ok(tafel && tafel.classList.contains('tafel'), 'the Tafel must follow the band directly');
   assert.equal(
     tafel.querySelector('.tafel__kick').nextElementSibling,
