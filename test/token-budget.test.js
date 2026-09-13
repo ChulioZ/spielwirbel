@@ -129,6 +129,7 @@ const claudeMd = () => ['CLAUDE.md'];
    other half, and the still-over-budget assertion below is what forces it. */
 
 const SOURCE_ALLOW = {
+  'lib/faq.js': 'judged 2026-09-14 — crossed by #1088 translating all ten answers into the seven locales that shipped after the page was written (de/en -> nine). It sat at 511, and the growth is PURELY the locale dimension: the file is one flat data table (QUESTIONS) plus the document template, which is the same shape public/js/lang/** is excluded outright for. No seam: splitting by locale would put one answer\'s nine translations in nine files, so editing an answer — which the content rules say must happen in the same PR that makes it untrue — becomes nine edits instead of one. Splitting the TEMPLATE out is possible but would take the inline <style> with it, and test/standalone-page-brand.test.js reads that tag as TEXT: hoisted behind an interpolation, its "no palette hex outside the :root copy" assertion scans an empty string and passes vacuously, which lib/faq.js\'s own header records as measured',
   // judged
   'lib/repo/postgres.js': 'judged — one file per repo backend, paired with json.js against the shared contract; splitting one without the other is what drifts them (data-access-layer.md)',
   'lib/repo/json.js': 'judged — the other half of the same pair',
