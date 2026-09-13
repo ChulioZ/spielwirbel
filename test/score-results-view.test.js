@@ -78,8 +78,8 @@ const show = async (t, s) => {
   return dom;
 };
 
-const rowsOf = (dom) => [...dom.app.querySelectorAll('.result-row')].map((row) => ({
-  title: row.querySelector('.result-row__title').textContent.trim(),
+const rowsOf = (dom) => [...dom.app.querySelectorAll('.trow')].map((row) => ({
+  title: row.querySelector('.trow__title').textContent.trim(),
   score: row.querySelector('.score-big').textContent.trim(),
   why: row.querySelector('.score-why') && row.querySelector('.score-why').textContent.trim(),
   // `null` when the element is absent, which is a different statement from an
@@ -108,7 +108,7 @@ test('the ⓘ survives the heading rewrite that states the outcome', async (t) =
     dom.app.querySelector('.page-head .score-info'), null,
     'and not in the page head either — it belongs beside the numbers'
   );
-  const rows = [...dom.app.querySelectorAll('.result-row')];
+  const rows = [...dom.app.querySelectorAll('.trow')];
   assert.equal(
     rows[0].querySelectorAll('.score-label .score-info').length, 1,
     'it rides the FIRST result row\'s label — the highest-scoring game'
@@ -154,7 +154,7 @@ test('a session nobody voted in renders no ⓘ and does not throw', async (t) =>
   });
   const dom = await show(t, s);
 
-  assert.equal(dom.app.querySelectorAll('.result-row').length, 2, 'the rows still render');
+  assert.equal(dom.app.querySelectorAll('.trow').length, 2, 'the rows still render');
   assert.equal(dom.app.querySelectorAll('.score-label').length, 0, 'nothing to name');
   // Correct rather than a miss: with no number on screen there is nothing for
   // the sheet to explain. The point of the assertion is that the empty case is

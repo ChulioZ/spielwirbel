@@ -686,6 +686,27 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: var(--w-detail);
   }
 
+  /* The result screen (#1055) takes the same licence as the spread above, for
+     the same reason and with the same two halves. It is the widest thing the
+     app renders that is not a spread: measured 2026-09-12 the page stayed 2905px
+     tall from 1280 all the way to 2560 because the column never left --w-read,
+     leaving 41% of a 1920px pane and 51% of a 2560px one empty while not one
+     complete ranked row sat above the fold.
+
+     Everything persistent on this screen — the rail, the dock and the round's
+     sub-screen tab strip — is either excluded by the cap's own two `:not()`s or
+     lives outside `.result-screen`, so widening the content moves no navigation.
+
+     The back row opts out WITH the wrapper: it is a SIBLING of `.result-screen`,
+     so a selector naming only the wrapper leaves the „Zurück" control and its
+     „…" menu ~250px inside the page's right edge. Both take the same custom
+     property so their edges cannot drift apart.
+
+     (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app:has(.result-screen) > *:not(.rail):not(.dock):is(.back-row, .result-screen) {
+    max-width: var(--w-detail);
+  }
+
   /* On a screen WITHOUT a rail — home, the new-round form, the session wizard —
      capped content centres instead. Beside a rail, a left edge is anchored and
      reads as deliberate; with no rail it is just a column shoved against the
@@ -864,6 +885,16 @@ h1, h2, h3 { font-family: var(--font-display); }
   margin-bottom: 20px;
 }
 .page-head h1 { font-size: var(--text-3xl); margin: 0; }
+/* The result screen's head (#1055). Every other `.page-head` puts a short label
+   in the title slot, where the default `flex: 0 1 auto` parks the trailing
+   button at the right edge on its own. This one puts a whole sentence there
+   („„Ticket to Ride" wurde gespielt. Max und Anna haben gewonnen!"), which at
+   900px fills the row and wraps „Teilen" onto a second line — a 180px head with
+   the button at x=312 instead of at the edge. Giving the first child a flexible
+   basis makes the sentence wrap inside its own column instead of pushing the
+   button out. `min-width: 0` is the load-bearing half: without it the flex item
+   refuses to shrink below its longest unbreakable word. */
+.page-head--result > :first-child { flex: 1 1 0; min-width: 0; }
 .page-head h2 { font-size: var(--text-xl); margin: 0; }
 .muted { color: var(--ink-soft); }
 
@@ -1406,21 +1437,33 @@ a.hub-row:hover { background: var(--sunken-soft); }
   .tools-label--long { display: none; }
   .section-tools .tools-label--short { display: inline; }
 
-  /* The results row's three tracks need ~306px of a 256px content box at 320px,
-     and none of it can shrink: the cover is a fixed 64px and the rating bars are
-     five 22px bars with 4px gaps (#621). So the score/action block wraps onto its
-     own line under the title rather than being pushed out of the card. It keeps
-     column 2 — aligned under the title it belongs to, with the cover's column
-     reading as an indent — and drops the right-alignment that only made sense
-     while it sat at the row's right edge.
+  /* The Tafel row's four tracks need more than a 256px content box has at
+     320px, and none of them can shrink: the cover is a fixed 56px and the rating
+     bars are five 22px bars with 4px gaps (#621). So it drops to two tracks, the
+     chart and the score/action pair take rows of their own, and the right
+     alignment that only made sense at the row's right edge goes.
 
-     The score rule is compounded to (0,2,0) on purpose: `.result-row__score {
-     text-align: right }` is declared ~1600 lines further down, so a bare class
-     ties and loses on source order — the block stayed right-aligned with no
-     error anywhere (`.claude/rules/responsive-content-width.md`, "your rule
-     will lose"). */
-  .result-row { grid-template-columns: 64px minmax(0, 1fr); }
-  .result-row .result-row__score { grid-column: 2; text-align: left; }
+     The rank leaves the FLOW rather than keeping a track: it is a two-character
+     numeral, and a third track for it is precisely what does not fit. `.trow` is
+     already `position: relative` for its score fill, so the corner is free.
+
+     BOTH rules here are compounded to (0,2,0) on purpose, and each was measured
+     losing at (0,1,0). `.trow`'s own base rule is declared ~2600 lines further
+     down, so a bare `.trow { grid-template-columns }` here ties and loses on
+     source order: WebKit reported the FOUR-track desktop layout at 390px while
+     `position: absolute` from this same block took effect, because nothing else
+     declares position on the rank. Same for `.trow__score { text-align: right }`
+     below. (`.claude/rules/responsive-content-width.md`, "your rule will lose")
+     — and note a test reading the DECLARED rule cannot see this at all. */
+  .tafel .trow {
+    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-areas:
+      "cover main"
+      "bars  bars"
+      "score action";
+  }
+  .trow .trow__score { text-align: left; }
+  .trow__rank { position: absolute; top: 10px; right: 12px; }
 }
 
 .section { margin-top: 32px; }
@@ -2553,18 +2596,18 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .game-link { cursor: pointer; }
 .game-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--radius-sm); }
 /* Text titles underline on hover; image/tile targets get a brand ring. */
-.result-row__title.game-link:hover,
+.trow__title.game-link:hover,
 .pokale-game__title.game-link:hover,
 .archive-row__title.game-link:hover {
   text-decoration: underline;
   text-decoration-color: color-mix(in oklab, var(--brand) 60%, transparent);
 }
-.result-row__img.game-link,
+.trow__img.game-link,
 .archive-row__img.game-link,
 .pool-tile.game-link .pool-tile__img,
 .pokale-card__thumb.game-link,
 .recap-fav__cover.game-link { transition: box-shadow var(--dur-base) var(--ease-out); }
-.result-row__img.game-link:hover,
+.trow__img.game-link:hover,
 .archive-row__img.game-link:hover,
 .pool-tile.game-link:hover .pool-tile__img,
 .pokale-card__thumb.game-link:hover,
@@ -4007,57 +4050,220 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 
 
 /* ---- Ergebnisse ---- */
-.result-row {
+/* ---- Die Tafel (#1056): the ranked rows, and the celebration on them ----
+
+   The screen's one visual language. It replaces a gold `.spotlight` hero above a
+   list that stated the same ranking a second time, and the old `.result-row`
+   underneath it — 37% ink, with 544px of nothing between the mini chart and the
+   number that chart produces, the `.ds-row` complaint `.claude/rules/tiles-vs-
+   lists.md` files. That gutter is now the score's own axis. */
+.tafel { margin-bottom: 10px; }
+.tafel__kick {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+}
+.tafel__title { font-size: var(--text-lg); margin: 0; }
+/* Only while nothing is chosen — `updateChosen` owns the attribute. The
+   attribute alone would lose to the author `display` above it, so it is spelled
+   out (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.tafel__hint { font-size: var(--text-sm); color: var(--ink-soft); }
+.tafel__hint[hidden] { display: none; }
+
+/* The gold group: every row sharing first place, under ONE kicker. A tie adds a
+   ROW here rather than growing a hero, which is the property
+   `.claude/rules/rank-encodings-must-not-be-growable-by-ties.md` asks for — and
+   is what the spotlight could not do, since it showed several covers over a
+   single pair of winners with nothing linking them. */
+.tafel-top {
+  position: relative; /* anchors the confetti overlay, and the world's scene */
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px 12px;
+  margin-bottom: 12px;
+}
+.tafel-top__kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold-deep);
+}
+.tafel-top__crown { font-size: var(--text-xl); color: var(--gold); line-height: 1; }
+/* Inside the group the card ground is the group's gold, so the row keeps only
+   its outline — two nested filled boxes would read as a list inside a list. */
+
+.trow {
+  position: relative;
+  isolation: isolate; /* so the fill's z-index: -1 stays inside the row */
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: 16px 18px;
-  margin-bottom: 14px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
   display: grid;
-  grid-template-columns: 64px 1fr auto;
-  gap: 16px;
+  grid-template-columns: 30px 56px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rank cover main action"
+    "rank cover bars score"
+    "fin  fin   fin  fin";
+  gap: 6px 14px;
   align-items: center;
+  /* 12%, and the number is MEASURED, not chosen: `.score-why` and the owners
+     line sit on this fill in `--ink-soft` at body size, so the ceiling is the
+     4.5:1 bar rather than 3:1. test/a11y-contrast.test.js sweeps the whole 0–5
+     ramp across every design and both schemes — at 14% the worst pair (the
+     Standard design's 0-score red under --ink-soft) is 4.38:1, at 12% it is
+     4.57:1. Raise it and that test is what tells you. */
+  --fill-tint: var(--sc, var(--line));
+  --fill-a: 12%;
 }
-.result-row__img {
+/* THE ROW IS ITS OWN BAR (#1056). `--pct` is the displayed Spielwirbel-Score
+   over the scale's top, so the empty part of a row is the score's remainder and
+   a wider column becomes a longer axis instead of a wider gutter. `--sc` arrives
+   inline as the raw accent and the mix happens HERE — the `.stamp` mechanism
+   from #1040 — because an inline `background` would beat every rule a design or
+   a world could write. A row nobody voted on carries no `--sc` and `--pct: 0`,
+   so it is simply bare.
+
+   `inset: 0 auto 0 0` rather than `inset: 0`: with left, right and width all
+   set the box is over-constrained and `right` is the one dropped, which is
+   correct but relies on a rule nobody should have to remember. */
+.tafel-top .trow {
+  background: transparent;
+  border-color: var(--gold-edge);
+  --fill-tint: var(--gold);
+  /* One colour rather than a ramp, so it affords more — but only to 22%: at 26%
+     Sci-Fi's dark scheme reads 4.26:1 under --ink-soft. */
+  --fill-a: 22%;
+}
+.trow::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--pct, 0%);
+  z-index: -1;
+  pointer-events: none;
+  background: color-mix(in oklab, var(--fill-tint) var(--fill-a), var(--surface));
+}
+/* The rank rail. A NUMBER, not a medal: the places are tie-aware („1, 1, 3"),
+   and a numeral states a shared place where three gold medals in a column read
+   as a rendering fault. `.rank-medal` is untouched — the Pokale podium and the
+   member page still use it. */
+.trow__rank {
+  grid-area: rank;
+  align-self: center;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.trow__rank--1 { color: var(--gold); }
+.trow__rank--2 { color: #9ca3af; }
+.trow__rank--3 { color: #b3703a; }
+.trow__img {
+  grid-area: cover;
+  align-self: center;
   position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
   overflow: hidden;
-  width: 64px; height: 64px; border-radius: var(--radius-md);
+  width: 56px; height: 56px; border-radius: var(--radius-md);
   background: var(--sunken) center/cover no-repeat;
-  display: flex; align-items: center; justify-content: center; font-size: 28px; /* glyph, not type */
+  display: flex; align-items: center; justify-content: center; font-size: 26px; /* glyph, not type */
 }
+.trow__main { grid-area: main; min-width: 0; }
 /* `display: block` because this is an <a> since #330 — an inline box would let
-   the medal/badge line wrap differently from the block <div> it replaced. */
-.result-row__title { display: block; font-weight: 700; font-size: var(--text-xl); }
-.result-row__owners { margin-top: 4px; font-size: var(--text-sm); color: var(--ink-soft); }
+   the badge line wrap differently from the block <div> it replaced. */
+.trow__title { display: block; font-weight: 700; font-size: var(--text-lg); }
+.trow__owners { margin-top: 2px; font-size: var(--text-sm); color: var(--ink-soft); }
 /* The attribute alone would lose to any author `display` here — the row line
    stands down on the chosen row (.claude/rules/hidden-attribute-vs-display-rule.md). */
-.result-row__owners[hidden] { display: none; }
+.trow__owners[hidden] { display: none; }
 /* The vote distribution, in the vote card's own vocabulary (#890): one column
    per rung of the 0–5 scale, each a full-height track holding an `avgColor(n)`
    fill, over an axis row that names the rung with the vote tile's mood face and
    its numeral. The track is what makes a rung nobody chose read as an EMPTY
    SLOT — before this it was a 4px sliver indistinguishable from a rounding
    error. The track is `align-items: flex-end`, so the fill grows upward. */
-.result-row__bars { margin-top: 6px; display: flex; gap: 4px; }
-.result-row__bars .bar-col { width: 22px; display: flex; flex-direction: column; gap: 2px; }
-.result-row__bars .bar-track {
+.trow__bars { grid-area: bars; display: flex; gap: 4px; }
+.trow__bars .bar-col { width: 22px; display: flex; flex-direction: column; gap: 2px; }
+.trow__bars .bar-track {
   height: 24px; border-radius: 4px 4px 0 0;
   background: var(--sunken);
   display: flex; align-items: flex-end;
 }
 /* The fill only — its colour is inline, from avgColor(n). No min-height: a rung
    with no votes must be the empty track, not a stub that reads as one vote. */
-.result-row__bars .bar { width: 100%; border-radius: 4px 4px 0 0; }
+.trow__bars .bar { width: 100%; border-radius: 4px 4px 0 0; }
 /* The axis. Colour carries the scale on the glyph (a non-text UI component, 3:1)
    while the numeral stays --ink-soft — the ramp as TEXT only just clears 4.5:1
    at its tightest point, and a per-round theme moves the surface under it. */
-.result-row__bars .bar-axis {
+.trow__bars .bar-axis {
   display: flex; flex-direction: column; align-items: center; line-height: 1;
   color: var(--ink-soft);
 }
-.result-row__bars .bar-axis .ti { font-size: 14px; /* glyph, not type */ }
-.result-row__bars .bar-axis__n { font-size: var(--text-xs); font-weight: 700; }
-.result-row__score { text-align: right; }
+.trow__bars .bar-axis .ti { font-size: 14px; /* glyph, not type */ }
+.trow__bars .bar-axis__n { font-size: var(--text-xs); font-weight: 700; }
+.trow__score { grid-area: score; text-align: right; }
+/* The action column. Nothing here is ever `disabled`: a control that cannot act
+   is not rendered at all, which is what removes the 0.45-opacity „Spielen" that
+   every row of every finished session used to carry. */
+.trow__action { grid-area: action; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.trow__chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint-soft);
+  color: var(--brand-strong);
+  border: 1px solid var(--brand-edge);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.trow__menu { padding: 6px 8px; }
+
+/* From the rail breakpoint the row is ONE LINE — rank, cover, title, chart,
+   score, action — which is what keeps a six-row Tafel honest on a 13". The
+   cover drops to 44px with it: at one line its job is identification, not
+   display. */
+@media (min-width: 1280px) {
+  .tafel .trow {
+    grid-template-columns: 30px 44px minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "rank cover main bars score action";
+    padding: 10px 16px;
+    gap: 4px 16px;
+  }
+  .trow__img { width: 44px; height: 44px; font-size: 20px; /* glyph, not type */ }
+}
+
+/* The race (#1056), on the reveal path only. Every fill starts together and
+   runs at `--dur` = 0.5s + score × 0.32s, so the short rows land first and the
+   winner's completes last; the gold then tints in under it, and the world's own
+   victory scene (slot 7) runs after that. A cold load, the Chronik, a shared
+   link and a reduced-motion reader all get the rest state — which is the thing
+   worth looking at anyway. */
+@media (prefers-reduced-motion: no-preference) {
+  .trow.is-race::before { animation: trow-fill var(--dur, 1s) var(--ease-out) both; }
+  @keyframes trow-fill {
+    from { width: 0; }
+    to { width: var(--pct, 0%); }
+  }
+  .tafel-top.is-reveal { animation: tafel-gold 3.6s var(--ease-out) both; }
+  @keyframes tafel-gold {
+    0%, 55% { background: var(--surface); border-color: var(--line); }
+    100% { background: var(--gold-soft); border-color: var(--gold-edge); }
+  }
+}
+
 .score-big { font-size: var(--text-3xl); font-weight: 800; color: var(--brand-strong); line-height: 1; }
 .score-label { font-size: var(--text-sm); color: var(--ink-soft); }
 /* Why this score is what it is — „1× gar nicht" (#893). Deliberately quiet: it
@@ -4084,8 +4290,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .score-info:hover, .score-info:focus-visible { color: var(--brand-strong); }
 .score-info__body p { margin: 0 0 12px; line-height: 1.5; }
 .score-info__body p:last-child { margin-bottom: 0; }
-.result-row__remove { margin-top: 6px; color: var(--ink-soft); font-size: var(--text-sm); }
-.result-row__remove:hover { color: var(--danger); }
 .tag--retired {
   background: color-mix(in oklab, var(--warn) 14%, var(--surface));
   color: var(--warn);
@@ -4134,12 +4338,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   border: 1px solid var(--brand-edge);
   font-size: var(--text-lg);
 }
-.chosen-banner.is-cancelled {
-  background: color-mix(in oklab, var(--danger) 6%, var(--surface));
-  color: var(--danger);
-  border: 1px solid color-mix(in oklab, var(--danger) 25%, var(--surface));
-  font-size: var(--text-lg);
-}
 /* The results footer: cancel and delete side by side, centered, wrapping to two
    lines on a narrow phone. `.cancel-area:empty` is load-bearing — a chosen or
    finished session renders no cancel control, and `display:none` takes it out of
@@ -4153,10 +4351,9 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .cancel-area { text-align: center; }
 .cancel-area:empty { display: none; }
 .play-btn { margin-top: 8px; padding: 8px 14px; font-size: var(--text-md); }
-.result-row.is-chosen {
+.trow.is-chosen {
   border-color: var(--brand);
   box-shadow: 0 0 0 2px var(--brand) inset;
-  background: var(--brand-tint-soft);
 }
 
 /* ---- The multi-table builder (#796) ----
@@ -4343,18 +4540,109 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .round-footer { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
-/* Finish game / winners (inside the chosen game's result row) */
-.row-finish {
-  grid-column: 1 / -1;
-  border-top: 1px dashed var(--brand-edge);
-  padding-top: 14px;
+/* ---- Der Tisch (#1057): the chosen game, above the Tafel ----
+
+   It replaces the in-row `.row-finish` panel, which sat 1000+px down the page on
+   the evening it was needed and then stayed there at full size afterwards — a
+   344px winner picker on a session finished months ago. The band renders ONLY
+   while a game is chosen; before that nothing takes room at all (the deep-dive's
+   empty „Auf dem Tisch" slot was rejected on 2026-09-12 for exactly that). */
+.tisch {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  margin: 4px 0 20px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--brand-edge);
 }
-.row-finish :is(h2, h3) { margin: 0 0 6px; }
-/* "Braucht Erweiterung: …" (#653) — the chosen game only seats this table
-   because the round owns an expansion for it, so the group has to bring the
-   right box. It sat inside the „Gespielt wird:" banner until #915 removed that;
-   here it is on the chosen game's own row, which is the box it is about. */
-.row-finish__note { font-size: var(--text-sm); font-weight: 600; margin-bottom: 8px; }
+.tisch[hidden] { display: none; }
+/* The box. A cover with a box's shadow rather than the row's flat thumbnail:
+   this is the physical thing somebody carries to the table. */
+.tisch__box {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
+  width: 128px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  background: var(--sunken) center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px; /* glyph, not type */
+  box-shadow: var(--shadow-2);
+}
+.tisch__main { min-width: 0; }
+.tisch__kick {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+.tisch__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  margin: 2px 0 8px;
+  overflow-wrap: anywhere;
+}
+.tisch__note { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+.tisch__note--warn { color: var(--warn-ink, var(--ink)); }
+.tisch__prompt { color: var(--ink-soft); margin: 4px 0 10px; }
+.tisch__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 14px; }
+/* The record, as a picture: the winners as seats. A gold ring rather than a
+   trophy line, because a face is the thing worth recognising months later. */
+.tisch__seats { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
+.tisch__seats .seat { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tisch__seats .avatar { box-shadow: 0 0 0 3px var(--gold); }
+.seat__name { font-weight: 700; }
+.tisch__won { color: var(--gold-deep); font-weight: 700; }
+.tisch__outcome { margin-top: 10px; font-weight: 700; color: var(--ink-soft); }
+/* The stamp, pressed onto the box — the SAME component as the game page's
+   Stempelkarte (#1040), re-sized only. Reusing the class rather than a
+   look-alike is what stops the two drifting. */
+.stamp--table {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  padding: 6px 8px 7px;
+  text-align: center;
+  background: color-mix(in oklab, var(--surface) 82%, transparent);
+  border-radius: var(--radius-sm);
+}
+.stamp--table .stamp__status { margin-top: 0; }
+.stamp--table .stamp__date { font-size: var(--text-md); }
+
+/* The phone's one CTA. Hidden above the rail breakpoint by the block further
+   down: on a desktop the column already fits, so a sticky bar never sticks and
+   reads as one more card — which is why the deep-dive's first prototype had an
+   invisible one. */
+.tisch-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin: 8px 0 0;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, var(--page-bg) 72%, transparent);
+}
+.tisch-bar[hidden] { display: none; }
+.tisch-bar .btn { width: 100%; justify-content: center; }
+
+@media (min-width: 1280px) {
+  /* (0,3,0). `.tisch-bar[hidden]` is (0,2,0) — an attribute counts in the same
+     column as a class — so a two-class selector would TIE it and ride on source
+     order, which is this sheet's standing trap. */
+  .app .result-screen .tisch-bar { display: none; }
+}
+@media (max-width: 639px) {
+  .tisch { grid-template-columns: 96px minmax(0, 1fr); gap: 14px; padding: 14px; }
+  .tisch__box { width: 96px; font-size: 34px; /* glyph, not type */ }
+}
 .member-chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .member-chip {
   font-family: var(--font-display);
@@ -4391,15 +4679,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   background: var(--gold-soft);
   border-color: var(--gold-edge);
   color: var(--gold-deep);
-}
-.winner-result {
-  margin-top: 14px;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  background: var(--gold-soft);
-  color: var(--gold-deep);
-  font-weight: 700;
-  font-size: var(--text-lg);
 }
 
 /* Game detail page */
@@ -4982,7 +5261,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    so it is over in a second rather than sitting on the page forever.
 
    Declared under `no-preference` rather than cancelled by a `reduce` override,
-   which is this sheet's convention (`seal-pulse`, `spotlight-rise`,
+   which is this sheet's convention (`seal-pulse`, `trow-fill`,
    `confetti-fall`) and the only safe direction here: `animation-fill-mode: both`
    holds the `from` keyframe, so a missed `animation: none` would leave the pill
    and the whole Stempelkarte at `opacity: 0` — permanently invisible for
@@ -5013,7 +5292,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
     animation-delay: calc(var(--i, 0) * 70ms + 120ms);
   }
   /* It arrives LARGER and lands through a compression, which is what separates
-     a stamp being pressed from the app's existing `spotlight-rise` fade-up. */
+     a stamp being pressed from the app's other fade-up keyframes. */
   @keyframes press-in {
     from { transform: scale(1.25); opacity: 0; }
     60% { transform: scale(0.97); opacity: 1; }
@@ -7772,6 +8051,38 @@ kbd {
 /* The session activity log. Deliberately quiet — it is a record you consult,
    not something competing with the podium above it on the results screen. */
 .session-log { margin: 28px 0 8px; }
+/* The collapsed form on the result screen (#1055). `<details>` brings its own
+   marker, which sits at a different x in every engine and cannot be tinted —
+   so it is removed (both spellings; WebKit still needs the pseudo-element) and
+   the chevron below stands in for it. */
+.session-log--fold > summary::-webkit-details-marker { display: none; }
+.session-log--fold > summary { list-style: none; }
+.session-log__summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.session-log__summary:hover .session-log__summary-title { color: var(--brand); }
+.session-log__summary-title { font-size: var(--text-lg); font-weight: 700; }
+.session-log__summary-meta { color: var(--ink-soft); font-size: var(--text-sm); }
+/* Rotated rather than swapped for a second glyph: one declared codepoint, and
+   the turn is what reads as the disclosure opening. */
+.session-log__chevron {
+  flex: none;
+  color: var(--ink-soft);
+  transition: transform var(--dur-base) var(--ease-out);
+  align-self: center;
+}
+.session-log--fold[open] .session-log__chevron { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) {
+  .session-log__chevron { transition: none; }
+}
+.session-log--fold[open] .session-log__list { margin-top: 4px; }
 .session-log__title { font-size: var(--text-lg); margin: 0 0 8px; }
 .session-log__list { list-style: none; margin: 0; padding: 0; }
 .session-log__row {
@@ -7987,13 +8298,6 @@ kbd {
 /* `.score-pill` is absolutely positioned on a cover; here it is an ordinary
    item in the column. */
 .spotlight__pill { position: static; }
-/* A shared win scales the winners down so several fit abreast before wrapping.
-   No cap: a one-voter session that rates three games alike is ordinary, not
-   exotic, and every tied game must stay reachable by its own link. */
-.spotlight--shared .spotlight__winner { width: 126px; }
-.spotlight--shared .spotlight__img { width: 84px; border-radius: 14px; }
-.spotlight--shared .spotlight__img .ti { font-size: 32px; /* glyph, not type */ }
-.spotlight--shared .spotlight__title { font-size: var(--text-md); }
 
 /* One spotlight per table for a SPLIT evening (#957). The sibling screen opens
    with this component, and the split summary answered the same question — what
@@ -8048,9 +8352,6 @@ kbd {
   /* One hero rise. The stage this replaced built bottom-up through three tiers
      to the winner; with only the winner left there is nothing to build up to,
      and a staged reveal of a single element is just a longer wait. */
-  .spotlight.is-reveal { animation: spotlight-rise 0.55s ease-out backwards; animation-delay: 0.1s; }
-  @keyframes spotlight-rise {
-    from { transform: translateY(26px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
 }
@@ -8103,7 +8404,7 @@ kbd {
 .archive-row__img .ti { font-size: 24px; /* glyph, not type */ }
 .archive-row__body { flex: 1; min-width: 200px; }
 /* An <a> since #663, so `display: block` restores the block box the slot used to
-   hold — same shape as .result-row__title, which is an anchor for the same
+   hold — same shape as .trow__title, which is an anchor for the same
    reason. Colour and underline come from .nav-link. */
 .archive-row__title { display: block; font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
 .archive-row__meta { font-size: var(--text-sm); font-weight: 600; margin-top: 3px; }
@@ -8765,7 +9066,8 @@ kbd {
    spotlight rise (gated below). A keyframe animates the pseudo-element, never
    one mask layer, so a thing that must move as a unit gets a layer to itself
    (the rocket). The winners keep their default z-order above both layers. */
-[data-world] .spotlight {
+[data-world] .spotlight,
+[data-world] .tafel-top {
   --victory-col: min(18%, 120px);
   --victory-band: min(15%, 120px);
   --victory-alpha: .55;
@@ -8774,8 +9076,14 @@ kbd {
   padding-inline: var(--victory-col);
   padding-bottom: calc(20px + var(--victory-band));
 }
+/* Tighter gutters than the spotlight's: this host holds full-width ROWS, and an
+   18% reservation per side would eat the mini chart before the scene earned its
+   place. At 560px of content the rows still keep ≥400px. */
+[data-world] .tafel-top { --victory-col: min(12%, 80px); }
 [data-world] .spotlight::before,
-[data-world] .spotlight::after {
+[data-world] .spotlight::after,
+[data-world] .tafel-top::before,
+[data-world] .tafel-top::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -8790,11 +9098,13 @@ kbd {
      same ground line for that reason. */
   mask-repeat: no-repeat, no-repeat, repeat-x;
 }
-[data-world] .spotlight::before {
+[data-world] .spotlight::before,
+[data-world] .tafel-top::before {
   mask-image: var(--world-victory-l), var(--world-victory-r), var(--world-victory-band);
   mask-position: left var(--world-victory-y), right var(--world-victory-y), center bottom;
 }
-[data-world] .spotlight::after {
+[data-world] .spotlight::after,
+[data-world] .tafel-top::after {
   mask-image: var(--world-victory-2-l), var(--world-victory-2-r), var(--world-victory-2-band);
   mask-position: left var(--world-victory-2-y), right var(--world-victory-2-y), center bottom;
 }
@@ -8814,8 +9124,8 @@ kbd {
   mask-image: var(--world-particle);
 }
 @media (prefers-reduced-motion: no-preference) {
-  [data-world] .spotlight.is-reveal::before { animation: var(--world-victory-anim) 2.6s ease-out .65s both; }
-  [data-world] .spotlight.is-reveal::after { animation: var(--world-victory-anim-2) 2.6s ease-out .65s both; }
+  [data-world] :is(.spotlight, .tafel-top).is-reveal::before { animation: var(--world-victory-anim) 2.6s ease-out .65s both; }
+  [data-world] :is(.spotlight, .tafel-top).is-reveal::after { animation: var(--world-victory-anim-2) 2.6s ease-out .65s both; }
   [data-world] .confetti__bit { animation: var(--world-particle-anim) var(--world-particle-dur) ease-in-out 3; }
   /* Forest: the trunks and the floor shoot up from the ground line, then the
      canopies lift into place and fill out — a sapling's crown rising with it.
@@ -8978,5 +9288,7 @@ kbd {
   [data-world] .stage::after,
   [data-world] .spotlight::before,
   [data-world] .spotlight::after,
+  [data-world] .tafel-top::before,
+  [data-world] .tafel-top::after,
   :is(.theme-card, .round-card)[data-world]::before { display: none; }
 }
