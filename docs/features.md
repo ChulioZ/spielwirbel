@@ -553,6 +553,13 @@ What the app does, in detail. For a short overview see the
   deleted after 24 hours, and demo accounts are excluded from the product
   counters and the public statistics. Registering from the banner starts a real
   account; nothing carries over.
+- **Changing your e-mail address** – *accounts mode only* (issue #1076). Under
+  **Konto → „E-Mail-Adresse ändern“**, confirmed by a link sent to the **new**
+  address and re-authenticated with the current password. Nothing moves until
+  that link is opened, so the old address keeps working — and a typo can never
+  lock anyone out. The address that is losing the account is notified when the
+  swap completes, and a pending change can be cancelled or resent from the same
+  screen. Not offered to a demo account, which has no address of its own.
 - **Passkeys** – *accounts mode only* (issue #418). Sign in with a fingerprint,
   face or device PIN instead of a password. A passkey is an **additional**
   credential, never a replacement: the password and the e-mail reset stay

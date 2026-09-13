@@ -78,6 +78,10 @@ async function bootApp() {
   // renders the "link expired" screen with its resend recovery, not a blank page.
   if (path === '/v' || path === '/verify-email') return renderVerifyLanding();
   if (path === '/r' || path === '/reset-password') return renderResetLanding();
+  // '/e' only — no long-form alias. The two above carry one because their long
+  // paths were the shape before #434 and old mails are still out there; this
+  // link has never had another form (#1076).
+  if (path === '/e') return renderEmailChangeLanding();
   // The /demo deep link (#427), so a launch post can point straight into a
   // running demo. Handled here rather than in resolveRoute because it is not a
   // view: it performs a side effect and then routes to Home. Someone who is

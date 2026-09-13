@@ -434,6 +434,37 @@ function renderVerifyLanding() {
   });
 }
 
+/* Landing for the address-change link (/e?t=…, #1076): POST the token, then show
+   the outcome.
+
+   Unlike the verification landing it carries NO resend control. `buildResend`
+   resends a VERIFICATION by address, which is a different thing entirely — and
+   this landing knows only a token, never which account or which address, so
+   there is nothing it could resend. The recovery is to request the change again
+   from the account screen, which is what the failure text says. */
+function renderEmailChangeLanding() {
+  const cred = linkToken();
+  openAuth(renderEmailChangeLanding, `<div class="auth__card">
+      <div class="auth__logo"><i class="ti ti-mail-check" aria-hidden="true"></i></div>
+      <h1 class="auth__title">${esc(t('auth.emailChange.working'))}</h1>
+      <p class="auth__sub muted" id="emailChangeMsg">…</p>
+      <button class="btn btn--primary btn--block" type="button" id="toLogin" hidden></button>
+    </div>`, (card) => {
+    const toLogin = card.querySelector('#toLogin');
+    toLogin.addEventListener('click', showLogin);
+    (async () => {
+      const { ok } = cred.token ? await authFetch('/confirm-email', cred) : { ok: false };
+      card.querySelector('.auth__title').textContent = t(ok ? 'auth.emailChange.okTitle' : 'auth.emailChange.failTitle');
+      // The heading openAuth titled the tab from is gone now — re-read it, or the
+      // tab keeps saying "Confirming…" on a screen that has finished either way.
+      setAuthDocTitle(card);
+      card.querySelector('#emailChangeMsg').textContent = t(ok ? 'auth.emailChange.okSub' : 'auth.emailChange.failSub');
+      toLogin.textContent = t('auth.backToLogin');
+      toLogin.hidden = false;
+    })();
+  });
+}
+
 // Landing for the password-reset link (/r?t=…): a new-password form that posts
 // the token.
 function renderResetLanding() {
