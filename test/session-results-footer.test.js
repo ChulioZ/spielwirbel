@@ -8,7 +8,7 @@
    (.claude/rules/testing-views-under-jsdom.md). A regex over the view source
    could see that `.cancel-area` exists, which was never in doubt — it existed in
    the wrong place, directly under the chosen-game banner and above the first
-   `.result-row`, giving a destructive action more prominence than the scores it
+   `.trow`, giving a destructive action more prominence than the scores it
    interrupted.
 
    Note there is no back row at the bottom to anchor against any more: #623/#624
@@ -103,11 +103,11 @@ test('the cancel control renders after the last game row and after the log', asy
   const btn = cancelBtn(dom);
   assert.ok(btn, 'expected the cancel control in the footer');
 
-  const rows = [...dom.app.querySelectorAll('.result-row')];
+  const rows = [...dom.app.querySelectorAll('.trow')];
   assert.equal(rows.length, 2, 'fixture should render both games');
   assert.equal(
     precedes(dom, rows[rows.length - 1], btn), true,
-    'the cancel control must come after the last .result-row, not above the first',
+    'the cancel control must come after the last .trow, not above the first',
   );
 
   const log = dom.app.querySelector('.session-log');
@@ -118,15 +118,26 @@ test('the cancel control renders after the last game row and after the log', asy
 
 // The whole point of the move: the most-read part of the screen is the run from
 // the banner into the standings, and nothing may interrupt it.
-test('nothing renders between the chosen-game banner and the first game row', async (t) => {
-  const dom = await results(t);
+test('nothing stands between the table band and the ranking', async (t) => {
+  /* The whole point of the move: the most-read part of the screen is the run
+     from the chosen game into the standings, and nothing may interrupt it. The
+     `.chosen-banner` that used to anchor this assertion is gone with #1057 —
+     the h1 states the outcome and the Tafel's kicker carries the prompt — so
+     the anchor is the table band itself, in the one state where it renders. */
+  const dom = await results(t, { chosenGameId: 'g1' });
 
-  const banner = dom.app.querySelector('.chosen-banner');
-  assert.ok(banner, 'expected the chosen-game banner');
+  const tisch = dom.app.querySelector('.tisch');
+  assert.ok(tisch && !tisch.hidden, 'a chosen game must render the table band');
+  assert.equal(dom.app.querySelector('.chosen-banner'), null,
+    'the banner is gone from this screen — the title and the Tafel kicker carry its states');
+  // Since #1058 the band sits in a slot that can unroll it, so the Tafel is the
+  // SLOT's next sibling rather than the band's.
+  const tafel = tisch.closest('.tisch-slot').nextElementSibling;
+  assert.ok(tafel && tafel.classList.contains('tafel'), 'the Tafel must follow the band directly');
   assert.equal(
-    banner.nextElementSibling,
-    dom.app.querySelector('.result-row'),
-    'the first .result-row must follow the banner directly',
+    tafel.querySelector('.tafel__kick').nextElementSibling,
+    tafel.querySelector('.trow, .tafel-top'),
+    'nothing but the kicker stands between the band and the first row',
   );
 });
 

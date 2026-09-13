@@ -54,7 +54,7 @@ correctly the whole time.
 **Rule:** any popover that contains a focusable text input must present as a
 sheet below 860px. If you add another editor, route it through `openEditor`
 rather than `openPopover`. A popover holding only buttons (the top-bar account
-menu, `account.js`) is fine at every width — it raises no keyboard.
+menu, `account-chrome.js`) is fine at every width — it raises no keyboard.
 
 The filter panel holds `<select>`s and chip buttons rather than a text input, so
 it raises no soft keyboard and (1) does not strictly bind it. It takes the sheet

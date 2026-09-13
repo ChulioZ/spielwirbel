@@ -393,6 +393,29 @@
           </div>
           <p class="msg" id="coverMsg" role="alert" hidden></p>
         </section>
+
+        <!-- Storefront clean-up (#981). A ONE-OFF action: #744 retired the four
+             digital storefronts as lookup providers but left the covers and the
+             source links already stored, which is why their CDNs are still in
+             the CSP img-src list and why the privacy policy still names Sony,
+             Valve, Nintendo and Microsoft as recipients. Clearing the rows is
+             what lets all of that go. REMOVE THIS CARD once the count reaches 0
+             in production — the tool-used-then-deleted pattern from #242. -->
+        <section class="card">
+          <h2>Storefront-Verknüpfungen</h2>
+          <p class="sub" style="margin-bottom: 0.9rem;">
+            Zählt Spiele, deren Titelbild noch bei PS Store, Steam, Nintendo eShop
+            oder Xbox liegt oder deren Quell-Link dorthin zeigt. „Zählen" ändert
+            nichts. Beim Bereinigen werden verlinkte Cover auf den Platzhalter
+            gesetzt und die Quell-Links entfernt; selbst hochgeladene Titelbilder
+            bleiben. Jede betroffene Runde bekommt einen Chronik-Eintrag.
+          </p>
+          <div class="row">
+            <button class="ghost small" id="storefrontCount">Zählen</button>
+            <button class="ghost small" id="storefrontClear">Bereinigen</button>
+          </div>
+          <p class="msg" id="storefrontMsg" role="alert" hidden></p>
+        </section>
       </aside>
     </div>
   </div>

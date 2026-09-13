@@ -35,10 +35,14 @@ position** — tiers descending, best on top — and letting a tie grow sideways
 That was right about the defect and wrong to apply one shape to two screens:
 
 - **Session results** has a ranked list under the stage, so a stage there states
-  the ranking **twice**. It now opens on a **winner spotlight** and nothing else;
-  the rows below carry the order, medals included. Rank is encoded in *nothing*
-  there, so the question this file asks does not arise — which is why several
-  tied winners may simply wrap.
+  the ranking **twice**. #897 cut it to a winner spotlight; #1056 cut that too,
+  and the rows are now the whole instrument (die Tafel). Rank is encoded in a
+  **number** (the tie-aware place from `computePlaces`, on a rail at the row's
+  left) and in a **length** (the row's score fill, `--pct`) — and *neither is
+  growable by a tie*, because a tie adds a ROW. So the question this file asks
+  is answered by construction here rather than avoided. Note what changed with
+  it: nothing on this screen wraps any more, so the wrapping carve-out the
+  spotlight enjoyed is gone.
 - **Pokale** has no list. The stage *is* the content, so it keeps the pedestals —
   and with them, height as the rank encoding.
 
@@ -175,7 +179,7 @@ above are written down rather than left as "verified".
 **Related:** `.claude/rules/percent-sizes-under-a-shrink-to-fit-flex-item.md`
 (the entry widths this arrangement depends on, and the locale-sized box that has
 moved from width to height), `.claude/rules/tiles-vs-lists.md` (the same ordering
-argument one component out — why the rows below are not tiled, and why the
-spotlight is allowed to wrap where they are not),
+argument one component out — why the rows are not tiled; its wrapping
+carve-out went with the spotlight in #1056),
 `.claude/rules/testing-views-under-jsdom.md` (what the view layer can and cannot
 assert).

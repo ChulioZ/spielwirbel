@@ -70,7 +70,8 @@ the pages still said „Stand: 2026-07-22" (caught by the audit).
 
 They were one shared `REVISION` until #521, and the split is **load-bearing, not
 tidiness**: `TERMS_REVISION` is what the in-app change notice keys off
-(Nutzungsbedingungen §11, `setupTermsBanner()` in `public/js/account.js`). Under
+(Nutzungsbedingungen §11, `setupTermsBanner()` in `public/js/account-chrome.js`).
+Under
 a shared constant a typo fix in the Impressum would notify every user that the
 *terms* changed — and a banner people learn to dismiss unread destroys the only
 channel §11 has. So bumping the wrong one is not a cosmetic slip: it either
