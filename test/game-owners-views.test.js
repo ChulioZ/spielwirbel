@@ -165,7 +165,9 @@ const SESSION = {
 };
 
 test('the results screen names who brings the box, and says nothing when everyone owns it', async (t) => {
-  const notes = (dom) => [...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim());
+  // Since #1057 the ownership line lives on the table band, not inside the
+  // chosen game's result row.
+  const notes = (dom) => [...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim());
 
   // Anna owns it, You do not -> the line is worth printing.
   const hers = round({ games: [game({ ownerIds: ['m1'] })] });
@@ -184,7 +186,7 @@ test('the line names only the owners actually at the table (#971)', async (t) =>
   const clara = { id: 'm3', name: 'Clara' };
   const data = round({ members: [ANNA, BEN, clara], games: [game({ ownerIds: ['m1', 'm3'] })] });
   const dom = await results(t, data, { ...SESSION, memberIds: ['m1', 'm2'] });
-  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+  assert.deepEqual([...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim()),
     ['Gehört Anna'], 'Clara owns it too but is not here, so naming her helps nobody');
 });
 
@@ -194,7 +196,7 @@ test('with no owner at the table the line names every owner (#971)', async (t) =
   const clara = { id: 'm3', name: 'Clara' };
   const data = round({ members: [ANNA, BEN, clara], games: [game({ ownerIds: ['m3'] })] });
   const dom = await results(t, data, { ...SESSION, memberIds: ['m1', 'm2'] });
-  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+  assert.deepEqual([...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim()),
     ['Gehört Clara']);
 });
 
@@ -323,7 +325,7 @@ test('the ranking line is suppressed on the row that IS the chosen game (#1008)'
   const dom = await results(t, threeGames(), { ...VOTING, chosenGameId: 7 });
   const catan = ranking(dom).find(([title]) => title.includes('Catan'));
   assert.equal(catan[1], null, 'the row line stands down for the finish panel');
-  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+  assert.deepEqual([...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim()),
     ['Gehört Anna'], 'and the panel still carries it (#971)');
 });
 

@@ -362,10 +362,11 @@ test('the results screen names the expansion the table actually needs', async (t
   round.sessions = [session];
   await dom.call('showResults', round, session);
 
-  // #915 removed the „Gespielt wird:" banner this note used to hang under; it
-  // now rides the chosen game's own row, which is the box it is about.
-  const note = dom.app.querySelector('.trow.is-chosen .row-finish__note');
-  assert.ok(note, 'the chosen row carries the warning');
+  // #915 removed the „Gespielt wird:" banner this note used to hang under, #1056
+  // the chosen row's own panel — it now rides the table band (#1057), which IS
+  // the box it is about.
+  const note = dom.app.querySelector('.tisch .tisch__note--warn');
+  assert.ok(note, 'the table band carries the warning');
   assert.match(note.textContent, /Braucht Erweiterung: 5–6 Spieler/);
   // And it must NOT name the expansion that admits nothing.
   assert.doesNotMatch(note.textContent, /Ohne Angabe/);
@@ -382,9 +383,10 @@ test('… and says nothing when the base box already seats the table', async (t)
   round.sessions = [session];
   await dom.call('showResults', round, session);
   // The anti-vacuous half: a screen that failed to render also carries no note,
-  // so pin the chosen row's finish block — the note's host — as present first.
-  assert.ok(dom.app.querySelector('.trow.is-chosen .row-finish'), 'the chosen row rendered');
-  assert.equal(dom.app.querySelector('.row-finish__note'), null, 'and says nothing about a box');
+  // so pin the note's host — the table band — as present first.
+  const band = dom.app.querySelector('.tisch');
+  assert.ok(band && !band.hidden, 'the table band rendered');
+  assert.equal(dom.app.querySelector('.tisch__note--warn'), null, 'and says nothing about a box');
 });
 
 /* --------- the editor's anchored variant must be RE-PLACED (#653) ----------

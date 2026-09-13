@@ -134,9 +134,27 @@ test('the row keeps every control that is not about votes', async (t) => {
   assert.equal(row.querySelector('.play-btn'), null, 'the chosen row offers no second „Spielen"');
   assert.ok(row.querySelector('.trow__chip'), 'it states „auf dem Tisch" instead');
   assert.ok(row.querySelector('.trow__menu'), 'the „…" menu carries the game link and the removal');
-  assert.ok(row.querySelector('.row-finish'), 'the finish/winner block survives');
+  // The finish controls left the row entirely in #1057 — they are the table
+  // band's now, and the band is what a direct-play session opens on.
+  assert.equal(row.querySelector('.row-finish'), null, 'no finish panel inside the row any more');
+  const band = dom.app.querySelector('.tisch');
+  assert.ok(band && !band.hidden, 'the table band carries them instead');
+  assert.ok([...band.querySelectorAll('button')].some((b) => /Als gespielt markieren/.test(b.textContent)),
+    'with the one action the evening needs');
   // …which is the wiring updateChosen drives through `rowRefs`.
   assert.ok(row.classList.contains('is-chosen'), 'the chosen row is still marked');
+});
+
+test('a direct-play session is the band and the row — and no Tafel', async (t) => {
+  /* #532: created with `votes: {}`, so `sessionHasVotes` is false and there is
+     no ranking to show. What must still be there is the table band, because
+     that session's whole purpose is the one game on it. */
+  const dom = await show(t, unvoted());
+  const band = dom.app.querySelector('.tisch');
+  assert.ok(band && !band.hidden, 'the chosen game must have its band');
+  assert.equal(dom.app.querySelector('.tafel-top'), null, 'and nothing to celebrate a vote with');
+  assert.equal(dom.app.querySelector('.trow__bars'), null, 'nor a distribution to rank by');
+  assert.ok(dom.app.querySelector('.result-people'), 'the people who played are still named');
 });
 
 test('an unvoted draw session gets no winner spotlight', async (t) => {
@@ -159,30 +177,29 @@ test('a normally voted session is untouched', async (t) => {
   assert.ok(dom.app.querySelector('.tafel-top'), 'and the winner is in the gold group');
 });
 
-test('„Gespielt wird: X" is gone, and its banner takes no space', async (t) => {
+test('the chosen-game banner is gone from this screen altogether', async (t) => {
+  /* Three removals in a row, each because something else already said it:
+     #915 the „Gespielt wird: X" line, #1056 the prompt (onto the Tafel's
+     kicker), #1057 the banner itself. The cancelled state was its last use and
+     the h1 states that too. */
   const dom = await show(t, voted());
-
   assert.doesNotMatch(dom.app.textContent, /Gespielt wird/, 'the chosen game is already marked in the list');
-  const banner = dom.app.querySelector('.chosen-banner');
-  assert.ok(banner, 'the element stays — the prompt and cancelled states still use it');
-  assert.equal(banner.innerHTML, '', 'but renders nothing, so `:empty` collapses it');
-  assert.equal(banner.classList.contains('is-set'), false, 'and carries no filled styling');
+  assert.equal(dom.app.querySelector('.chosen-banner'), null, 'no banner element at all');
 });
 
-test('the prompt and cancelled banner states still speak', async (t) => {
-  // The prompt moved onto the Tafel's own kicker in #1056, beside the heading it
-  // belongs to; the banner keeps only the cancelled state.
+test('the prompt and the cancelled state still speak, each in its own place', async (t) => {
   const prompt = await show(t, voted({ chosenGameId: null }));
-  assert.equal(prompt.app.querySelector('.chosen-banner').innerHTML, '', 'no second prompt');
   const hint = prompt.app.querySelector('.tafel__hint');
   assert.equal(hint.hidden, false, 'the prompt shows while nothing is chosen');
   assert.match(hint.textContent, /Tippt „Spielen“/);
+  assert.ok(prompt.app.querySelector('.tisch').hidden, 'and nothing is on the table yet');
 
   const cancelled = await show(t, voted({ chosenGameId: null, cancelled: true }));
-  assert.match(cancelled.app.querySelector('.chosen-banner').textContent, /abgebrochen/i);
+  assert.match(cancelled.app.querySelector('.result-title').textContent, /abgebrochen/i,
+    'the cancelled state is the title now, which is also what the share text and the document title use');
 });
 
-test('„Braucht Erweiterung" survives the banner, on the chosen game‘s row', async (t) => {
+test('„Braucht Erweiterung" survives every move, now on the table band', async (t) => {
   // Five people at a 2–4 base box that only seats them because the round owns a
   // 2–6 expansion — the one warning that the base box does not seat this table.
   const g = { id: 'g1', title: 'Catan', tagIds: [], minPlayers: 2, maxPlayers: 4,
@@ -195,12 +212,12 @@ test('„Braucht Erweiterung" survives the banner, on the chosen game‘s row', 
   });
   const dom = await show(t, s, r);
 
-  const note = dom.app.querySelector('.row-finish__note');
+  const note = dom.app.querySelector('.tisch__note--warn');
   assert.ok(note, 'the note is rendered');
   assert.match(note.textContent, /Städte & Ritter/, 'and names the expansion the draw used');
   assert.ok(
-    dom.app.querySelector('.trow.is-chosen .row-finish__note'),
-    'inside the chosen game‘s row, where the box it names is the one to bring'
+    dom.app.querySelector('.tisch .tisch__note--warn'),
+    'on the table band, which IS the box it is about'
   );
 });
 
