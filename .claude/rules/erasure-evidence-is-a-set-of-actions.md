@@ -1,6 +1,6 @@
 ---
 paths:
-  - "lib/routes/admin.js"
+  - "lib/routes/admin/**"
   - "lib/routes/account.js"
   - "docs/legal/retention.md"
   - "test/account-deletion.test.js"
@@ -21,7 +21,7 @@ Since #419 there are **two** erasure actions, not one:
 
 | Action | Written by | Path |
 |---|---|---|
-| `user_erased` | `lib/routes/admin.js` | operator-assisted (#273) |
+| `user_erased` | `lib/routes/admin/` | operator-assisted (#273) |
 | `account_deleted` | `lib/routes/account.js` | self-service from `/konto` (#419) |
 
 **The one the naive exemption drops is the common one.** Most people delete their

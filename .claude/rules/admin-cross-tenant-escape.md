@@ -1,7 +1,7 @@
 ---
 paths:
   - "lib/repo/**"
-  - "lib/routes/admin.js"
+  - "lib/routes/admin/**"
   - "lib/routes/account.js"
   - "test/repo.postgres.test.js"
   - "test/admin.test.js"
