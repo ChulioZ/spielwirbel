@@ -1,16 +1,45 @@
 ---
 paths:
   - "lib/admin.js"
-  - "lib/routes/admin.js"
+  - "lib/routes/admin/**"
   - "public/admin.html"
   - "public/js/pages/admin.js"
   - "test/admin.test.js"
 ---
 # The operator moderation surface (#268/#273/#274/#275) — traps
 
+**Since #996 it is `lib/routes/admin/`, not one file.** Seven sub-routers
+(`status`, `corpus`, `covers`, `moderation`, `users`, `log`, `notices`) plus
+`shared.js` (the schemas and paging shape more than one needs) and `index.js`,
+which owns the login pair, the `ADMIN_PASSWORD` gate and the mounts.
+
+Two things about that shape are load-bearing:
+
+- **The composition is in `index.js`, NOT in `lib/app.js`** — unlike the five
+  `/api/account` sub-routers #996 argued from. Those have distinct path
+  prefixes; these do not (`/status`, `/users`, `/log` all sit directly under
+  `/api/admin`), so seven mounts on one prefix would run `authLimiter` seven
+  times per request and silently divide `AUTH_RATE_LIMIT_MAX` by seven — the
+  exact trap `lib/routes/passkeys.js` carries a comment about.
+- **The gate is applied once, before the mounts.** A sub-router re-applying
+  `requireAdmin` would be harmless today and would become the place someone
+  reads the gate from, at which point removing it from `index.js` looks safe.
+  `test/admin-router-composition.test.js` pins both, plus the thing a split
+  loses in silence: a sub-router that exists and is never mounted 404s every one
+  of its routes, and no other spec can tell that apart from the feature not
+  existing.
+
+**A source-scanning guard over `lib/routes/` must recurse.**
+`test/route-body-validation.test.js` used a one-level `readdirSync` and stopped
+seeing all seven sub-routers the moment they moved — with nothing going red for
+the lost coverage. It only surfaced because its own stale-entry check noticed
+the `admin.js POST /login` key no longer matched anything. A guard that
+enumerates FILES has the same blind spot as one that enumerates call shapes
+(`.claude/rules/source-scanning-guards-enumerate-shapes.md`).
+
 `ADMIN_PASSWORD` turns on `/admin.html` + `/api/admin`: lookup/takedown/
 redaction, account suspend/restore, GDPR export/erasure, the action log, the
-Kennzahlen card. `lib/admin.js` · `lib/routes/admin.js` · `public/admin.html` +
+Kennzahlen card. `lib/admin.js` · `lib/routes/admin/` · `public/admin.html` +
 `public/js/pages/admin.js`. Every trap below fails *silently* or *dangerously* if
 undone.
 
@@ -43,17 +72,17 @@ asserts an app token is rejected.
 `moderationActions` (#275) and `instanceMetrics` (#404) are **absent** from
 `TENANT_METHODS` (`lib/repo/index.js`). That absence is the enforcement:
 handlers only hold `req.repo`, so they cannot reach cross-tenant methods.
-Since #419 the admin-gated `lib/routes/admin.js` is no longer the *only* caller of
+Since #419 the admin-gated `lib/routes/admin/` is no longer the *only* caller of
 the module-level repo: `lib/routes/account.js` reaches `eraseAccount`,
 `tenantSummary` and `exportAccountData` for **self-service** deletion/export —
 that is safe because every such call is bound to the authenticated caller's
 own uid/tenant behind `requireUser` plus a password re-auth, never to a
 request-supplied id. The invariant is therefore: a global repo method is
-reachable outside `lib/routes/admin.js` **only when bound to the caller's own
+reachable outside `lib/routes/admin/` **only when bound to the caller's own
 account**. Adding one
 to `TENANT_METHODS` would both break it (no tenant argument) and expose
 cross-tenant reads to every route. Also: `listUsers()` returns the raw stored
-user shape **including secrets** — `lib/routes/admin.js` projects it down to the
+user shape **including secrets** — `lib/routes/admin/` projects it down to the
 safe fields; never respond with it directly.
 
 ## 3. Redaction blanks TEXT; it must never delete a row
