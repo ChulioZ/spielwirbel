@@ -165,7 +165,9 @@ const SESSION = {
 };
 
 test('the results screen names who brings the box, and says nothing when everyone owns it', async (t) => {
-  const notes = (dom) => [...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim());
+  // Since #1057 the ownership line lives on the table band, not inside the
+  // chosen game's result row.
+  const notes = (dom) => [...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim());
 
   // Anna owns it, You do not -> the line is worth printing.
   const hers = round({ games: [game({ ownerIds: ['m1'] })] });
@@ -184,7 +186,7 @@ test('the line names only the owners actually at the table (#971)', async (t) =>
   const clara = { id: 'm3', name: 'Clara' };
   const data = round({ members: [ANNA, BEN, clara], games: [game({ ownerIds: ['m1', 'm3'] })] });
   const dom = await results(t, data, { ...SESSION, memberIds: ['m1', 'm2'] });
-  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+  assert.deepEqual([...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim()),
     ['Gehört Anna'], 'Clara owns it too but is not here, so naming her helps nobody');
 });
 
@@ -194,7 +196,7 @@ test('with no owner at the table the line names every owner (#971)', async (t) =
   const clara = { id: 'm3', name: 'Clara' };
   const data = round({ members: [ANNA, BEN, clara], games: [game({ ownerIds: ['m3'] })] });
   const dom = await results(t, data, { ...SESSION, memberIds: ['m1', 'm2'] });
-  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+  assert.deepEqual([...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim()),
     ['Gehört Clara']);
 });
 
@@ -289,11 +291,11 @@ test('an off-shelf game the member owns is never listed', async (t) => {
  * so at the exact moment the group is deciding, the one screen listing every
  * candidate said nothing at all about who has to bring which box. */
 
-const ranking = (dom) => [...dom.document.querySelectorAll('.result-row')].map((row) => {
-  const owners = row.querySelector('.result-row__owners');
+const ranking = (dom) => [...dom.document.querySelectorAll('.trow')].map((row) => {
+  const owners = row.querySelector('.trow__owners');
   // `hidden` is how the line stands down on the chosen row, so an element that
   // is present but hidden must read as absent here.
-  return [row.querySelector('.result-row__title').textContent.trim(),
+  return [row.querySelector('.trow__title').textContent.trim(),
     owners && !owners.hidden ? owners.textContent.trim() : null];
 });
 
@@ -323,7 +325,7 @@ test('the ranking line is suppressed on the row that IS the chosen game (#1008)'
   const dom = await results(t, threeGames(), { ...VOTING, chosenGameId: 7 });
   const catan = ranking(dom).find(([title]) => title.includes('Catan'));
   assert.equal(catan[1], null, 'the row line stands down for the finish panel');
-  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+  assert.deepEqual([...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim()),
     ['Gehört Anna'], 'and the panel still carries it (#971)');
 });
 

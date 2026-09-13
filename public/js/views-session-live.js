@@ -68,7 +68,7 @@ function sessionGames(round, session) {
    session they sit out), which is why the lookup is not simply sessionPeople().
    Anything since deleted falls back to a neutral placeholder rather than
    disappearing — a missing line would silently shorten the history. */
-function renderSessionLog(round, session) {
+function renderSessionLog(round, session, { collapsed } = {}) {
   const byId = new Map((round.members || []).map((m) => [m.id, m.name]));
   (session.guests || []).forEach((g) => byId.set(g.id, personLabel({ name: g.name, guest: true })));
   const lines = sessionLogLines(session, {
@@ -78,13 +78,38 @@ function renderSessionLog(round, session) {
   });
   if (!lines.length) return null;
 
-  const wrap = h(`<section class="session-log">
-      <h2 class="session-log__title">${esc(t('log.title'))}</h2>
-      <!-- reversed: the rows run newest-first, so the implicit numbering counts
-           down. No marker is rendered (list-style: none), but the semantics are
-           free and a screen reader announces the positions correctly. -->
-      <ol class="session-log__list" reversed></ol>
-    </section>`);
+  /* reversed: the rows run newest-first, so the implicit numbering counts down.
+     No marker is rendered (list-style: none), but the semantics are free and a
+     screen reader announces the positions correctly. */
+  const listHtml = `<ol class="session-log__list" reversed></ol>`;
+  /* Collapsed form (#1055), asked for by the RESULT screen only. Measured on a
+     finished six-game session it cost 355px of a 2905px page on every visit,
+     for a list most sessions never open — while in the LOBBY the same list is
+     the live record of what is happening right now, so that caller keeps the
+     open section.
+
+     `<details>` rather than a button plus a hidden div: the disclosure
+     semantics, the keyboard control and the expanded/collapsed state are all
+     native, and Ctrl-F in the browser opens it. The summary carries `title` and
+     not `aria-label` — the visible text is the accessible name, so a label
+     attribute would replace it and break SC 2.5.3 (the same reasoning as
+     „Session abbrechen" in showResults). */
+  const wrap = collapsed
+    ? h(`<details class="session-log session-log--fold">
+        <summary class="session-log__summary" title="${esc(t('log.open'))}">
+          <i class="ti ti-chevron-right session-log__chevron" aria-hidden="true"></i>
+          <span class="session-log__summary-title">${esc(t('log.title'))}</span>
+          <span class="session-log__summary-meta">${esc(tn(lines.length, 'log.summaryOne', 'log.summary', {
+            n: lines.length,
+            when: fmtDateTime(lines[0].at),
+          }))}</span>
+        </summary>
+        ${listHtml}
+      </details>`)
+    : h(`<section class="session-log">
+        <h2 class="session-log__title">${esc(t('log.title'))}</h2>
+        ${listHtml}
+      </section>`);
   const list = wrap.querySelector('.session-log__list');
   lines.forEach((line) => {
     list.appendChild(h(`<li class="session-log__row">

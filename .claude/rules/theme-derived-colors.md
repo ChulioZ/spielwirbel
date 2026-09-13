@@ -146,12 +146,15 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
   token (`--brand`, `--brand-strong`, `--stage-ink`), never in a shade of its
   own. Slot 7 is the one with text ON its host, so its bold alpha is bought
   with geometry rather than measured: the hero paints only in two side gutters
-  and a bottom band, and the spotlight reserves exactly those as padding
+  and a bottom band, and the **host** reserves exactly those as padding
   through the **same** custom properties the masks are sized with, so the art
-  and the reservation cannot drift apart. It also re-shapes the confetti bits
-  into the world's particles (fireflies, streaking stars) through tokens — the
-  one real element a world touches, and the generator in `views-session.js`
-  stays world-agnostic (`test/result-spotlight.test.js` scans it for a world
+  and the reservation cannot drift apart. Since #1056 there are TWO hosts —
+  the split screen's `.spotlight` card and the result screen's gold `.tafel-top`
+  group — and the group declares a tighter `--victory-col` because it holds
+  full-width rows rather than two small covers. It also re-shapes the confetti
+  bits into the world's particles (fireflies, streaking stars) through tokens —
+  the one real element a world touches, and the generator in `views-session.js`
+  stays world-agnostic (`test/result-tafel.test.js` scans it for a world
   name).
 
 Three constraints, each with its reason: the face changes through
