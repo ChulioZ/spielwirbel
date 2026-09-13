@@ -911,16 +911,39 @@ h1, h2, h3 { font-family: var(--font-display); }
   margin-bottom: 20px;
 }
 .page-head h1 { font-size: var(--text-3xl); margin: 0; }
-/* The result screen's head (#1055). Every other `.page-head` puts a short label
-   in the title slot, where the default `flex: 0 1 auto` parks the trailing
+/* The result screen's head (#1055, #1078). Every other `.page-head` puts a short
+   label in the title slot, where the default `flex: 0 1 auto` parks the trailing
    button at the right edge on its own. This one puts a whole sentence there
-   („„Ticket to Ride" wurde gespielt. Max und Anna haben gewonnen!"), which at
-   900px fills the row and wraps „Teilen" onto a second line — a 180px head with
-   the button at x=312 instead of at the edge. Giving the first child a flexible
-   basis makes the sentence wrap inside its own column instead of pushing the
-   button out. `min-width: 0` is the load-bearing half: without it the flex item
-   refuses to shrink below its longest unbreakable word. */
+   („„Ticket to Ride" wurde gespielt. Max und Anna haben gewonnen!").
+
+   FROM 640px UP that sentence fills the row and wraps „Teilen" onto a second
+   line — a 180px head with the button at x=312 instead of at the edge. Giving
+   the first child a flexible basis makes the sentence wrap inside its own
+   column instead of pushing the button out. `min-width: 0` is the load-bearing
+   half: without it the flex item refuses to shrink below its longest
+   unbreakable word.
+
+   ON A PHONE the same rule is the problem rather than the fix. Measured at
+   390px: the title column keeps only 228 of 362px because a 118px button and a
+   16px gap sit beside it, so the sentence became FOUR lines of 30px display
+   type — a 234px head that pushed the Tisch to y=557, below the fold, on the
+   screen whose whole content is the Tisch. So below 640px the head stacks and
+   the type drops one step. */
 .page-head--result > :first-child { flex: 1 1 0; min-width: 0; }
+@media (max-width: 639px) {
+  /* `.page-head--result h1` is (0,1,1) and so is `.page-head h1` at the top of
+     this section — a TIE, decided by source order, which is this sheet's
+     standing trap (see the note at the `.tisch-bar` block). It holds only
+     because this block sits after that rule; keep it here if either moves. */
+  .page-head--result h1 { font-size: var(--text-2xl); line-height: 1.2; }
+  /* Column, so the sentence gets the full content width and „Teilen" sits
+     below the date line at the left edge. `flex-basis: auto` because `1 1 0` in
+     a column means "share the HEIGHT", which is not what the desktop rule is
+     for. The gap costs nothing when `canShareResult()` is false: a flex gap
+     applies between items, so a lone title block leaves no stray space. */
+  .page-head--result { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .page-head--result > :first-child { flex-basis: auto; }
+}
 .page-head h2 { font-size: var(--text-xl); margin: 0; }
 .muted { color: var(--ink-soft); }
 
