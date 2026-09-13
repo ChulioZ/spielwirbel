@@ -4,7 +4,7 @@ paths:
   - "lib/storage/**"
   - "lib/routes/games.js"
   - "lib/routes/rounds.js"
-  - "lib/routes/admin.js"
+  - "lib/routes/admin/**"
 ---
 # Any row deletion that can hold a cover must hand the image paths back (#280)
 
