@@ -1251,7 +1251,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     const shareBtn = h(`<button class="btn btn--ghost">${iconText('ti-share', t('share.button'))}</button>`);
     // The model is built at CLICK time, never up front: choosing a game,
     // finishing, recording winners and cancelling all mutate this closure's
-    // state in place (updateChosen/renderFinish re-render only fragments), so a
+    // state in place (updateChosen/renderTisch re-render only fragments), so a
     // text captured at render would share a result the user has since changed.
     shareBtn.addEventListener('click', () => shareResult({
       roundName: round.name,
@@ -1339,10 +1339,23 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     }
   }
 
-  // Banner: shows which game is being played (or prompts to choose).
   let chosenId = session.chosenGameId || null;
-  const banner = h('<div class="chosen-banner"></div>');
-  screen.appendChild(banner);
+  /* Der Tisch (#1057) — the chosen game, as a band above the Tafel, and the
+     only place the evening's own controls live.
+
+     It exists ONLY while a game is chosen. Before that nothing may take room:
+     the deep-dive's empty „Auf dem Tisch" slot was rejected on 2026-09-12 for
+     exactly that. What it replaces is the in-row `.row-finish` panel, which sat
+     1000+px down a 2905px page on the evening it was needed, and then stayed
+     there at full size afterwards — a 344px winner picker on a session finished
+     months ago.
+
+     The `.chosen-banner` is gone with it: `updateTitle` already states the
+     outcome in the h1 („„X" wurde gespielt."), and the cancelled case has its
+     own title too. `views-session-tables.js` still renders that class on the
+     split screen, so the CSS stays. */
+  const tisch = h('<section class="tisch" hidden></section>');
+  screen.appendChild(tisch);
 
   // Cancel session (the alternative to choosing a game; see renderCancel).
   // Created here because updateChosen() -> renderCancel() runs below while the
@@ -1373,6 +1386,17 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      </div>`);
   screen.appendChild(tafel);
   const tafelHint = tafel.querySelector('.tafel__hint');
+  /* The phone's one CTA (#1057). Desktop gets NO action bar: a sticky bar inside
+     a column that fits never sticks and reads as one more card, which is why the
+     deep-dive's first prototype had an invisible one. A thumb zone is a physical
+     fact, so touch keeps it — CSS hides this above the rail breakpoint.
+
+     Placed after the rows rather than after the footer: `position: sticky` pins
+     an element while its containing block still extends below it, so this holds
+     through the whole ranking and releases over the log. After the footer it
+     would also trip the "nothing is appended after the footer" guard, which is
+     there to keep the destructive actions last. */
+  const tischBar = h('<div class="tisch-bar" hidden></div>');
 
   /* The gold group. Same gate the spotlight had: two or more games to rank, a
      top place to name, and a session that was not cancelled — a cancelled
@@ -1517,7 +1541,6 @@ async function showResults(round, session, gamesHint, reveal, plain) {
            ${scoreLabel}`}
          </div>
          <div class="trow__action"></div>
-         <div class="row-finish" hidden></div>
        </div>`);
     // Title and cover open the game's detail page (the action column below lives
     // in a sibling element, so it keeps working independently). The cover is
@@ -1526,12 +1549,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     makeGameLink(row.querySelector('.trow__title'), round.id, g.id);
     makeGameLink(row.querySelector('.trow__img'), round.id, g.id, { redundant: true });
     rowRefs.push({ gameId: g.id, game: g, row, actionEl: row.querySelector('.trow__action'),
-      finishEl: row.querySelector('.row-finish'), ownersEl: row.querySelector('.trow__owners') });
+      ownersEl: row.querySelector('.trow__owners') });
     (hasTop && r.place === 1 ? topGroup : tafel).appendChild(row);
   });
   // One call for whatever the loop placed — and none to bind when no row had
   // votes. `wireInfoButtons` is idempotent, so the re-renders below (retire,
   // remove) cannot stack a second listener.
+  screen.appendChild(tischBar);
   wireInfoButtons(app);
 
   async function removeGame(g) {
@@ -1622,31 +1646,8 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // The prompt lives on the Tafel's own kicker now, beside the heading it
     // belongs to, rather than in a banner between the head and the rows.
     if (tafelHint) tafelHint.hidden = !!(chosenId || finished || cancelled);
-    banner.classList.toggle('is-cancelled', cancelled);
-    if (cancelled) {
-      banner.innerHTML = iconText('ti-x', t('result.bannerCancelled'));
-      banner.classList.remove('is-set');
-    } else if (chosenId) {
-      // „Gespielt wird: X" is gone (#915): the chosen row already carries
-      // `is-chosen`, its own button already reads „Wird gespielt", and once the
-      // game is finished the page title states „„X" wurde gespielt." — so the
-      // banner restated, in a third place, a fact the screen makes twice
-      // already. It renders nothing here; `.chosen-banner:empty` collapses it so
-      // the removal costs no vertical space. The element itself stays for the
-      // prompt and cancelled states below (and for views-session-tables.js).
-      banner.innerHTML = '';
-      banner.classList.remove('is-set');
-    } else {
-      // The prompt moved onto the Tafel's kicker (#1056), where it sits beside
-      // the heading it belongs to instead of in a strip between the head and the
-      // rows. The element stays for the cancelled state above — and for
-      // views-session-tables.js, which renders its own banner into the same
-      // class — and `.chosen-banner:empty` collapses it here.
-      banner.innerHTML = '';
-      banner.classList.remove('is-set');
-    }
     renderCancel();
-    renderFinish();
+    renderTisch();
   }
 
   // --- Finish game / record winners (rendered inside the chosen game's tile) ---
@@ -1657,6 +1658,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // and mutually exclusive with `winnerIds` by the route's own rule, so these
   // two never both hold a value.
   let ending = ENDINGS.includes(session.ending) ? session.ending : null;
+  /* Is the winner picker showing? False on load, so an archived session opens on
+     the PICTURE (seats or the ending line) rather than on a 344px picker for a
+     question answered months ago. It turns true for exactly two moments: right
+     after „Als gespielt markieren", when the one question left is who won, and
+     on „Ändern". Recording anything collapses it again. */
+  let pickerOpen = false;
 
   // Cancel is the alternative final state: only offered while no game is
   // chosen, and undoable like the finish reset. Rendered as a `link-btn` in the
@@ -1701,163 +1708,230 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     }
   }
 
-  function renderFinish() {
+  /* Der Tisch (#1057). One builder for all three states of the chosen game, so
+     the evening and the record cannot drift apart:
+
+       am Tisch   — box, title, who brings it, the expansion note, „Als gespielt
+                    markieren" and „Anderes Spiel wählen".
+       frisch fertig — the stamp on the box and the picker OPEN, because the one
+                    question left is who won.
+       im Archiv  — the stamp and the winners as SEATS, with the picker behind
+                    „Ändern". The record needs the outcome once, as a picture.
+
+     `updateChosen()` calls this on every phase change, so nothing here holds
+     state of its own beyond `pickerOpen`. */
+  function renderTisch() {
     updateTitle();
-    rowRefs.forEach(({ gameId, finishEl, ownersEl }) => {
-      finishEl.hidden = true;
-      finishEl.innerHTML = '';
-      // The chosen row's panel states the same fact with more context, so the
-      // row's own line stands down rather than saying it twice in one card.
+    rowRefs.forEach(({ gameId, ownersEl }) => {
+      // The table band states the same fact with more context, so the chosen
+      // row's own line stands down rather than saying it twice on one screen.
       if (ownersEl) ownersEl.hidden = gameId === chosenId;
     });
+    tisch.innerHTML = '';
+    tischBar.innerHTML = '';
+    tisch.hidden = !chosenId;
+    tischBar.hidden = true;
     if (!chosenId) return;
-    const ref = rowRefs.find((x) => x.gameId === chosenId);
-    if (!ref) return;
-    const finishWrap = ref.finishEl;
-    finishWrap.hidden = false;
-    const chosenGame = games.find((g) => g.id === chosenId);
+    const game = games.find((g) => g.id === chosenId);
+    tisch.dataset.state = finished ? 'done' : 'table';
+
+    const imgStyle = game && game.image
+      ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"`
+      : '';
+    const box = h(`<a class="tisch__box"${imgStyle}>${game ? coverPlaceholder(game) : ''}</a>`);
+    if (game) makeGameLink(box, round.id, game.id, { redundant: true });
+    if (finished) {
+      /* The same stamp the game page presses (#1040) — the class, not a
+         look-alike — so the two surfaces can never drift. `--sc` is the score,
+         which is what makes a well-liked evening's stamp read differently from
+         a lukewarm one. `--table` only re-sizes it onto the box. */
+      const r = rows.find((x) => x.game && x.game.id === chosenId);
+      const sc = r && r.count ? ` style="--sc:${scoreColor(r.score)}"` : '';
+      // `finishedAt` only if it actually parses: a session finished before #254
+      // recorded one has none, and a garbage value would print „Invalid Date"
+      // onto the record rather than falling back to the evening it happened.
+      const at = [session.finishedAt, session.createdAt]
+        .find((d) => d && !Number.isNaN(Date.parse(d)));
+      box.appendChild(h(`<span class="stamp stamp--table"${sc}>
+           <span class="stamp__status">${esc(t('result.stamp'))}</span>
+           ${at ? `<span class="stamp__date">${esc(fmtDate(at))}</span>` : ''}
+         </span>`));
+    }
+
+    const main = h('<div class="tisch__main"></div>');
+    main.appendChild(h(`<div class="tisch__kick">${esc(t('result.tableTitle'))}</div>`));
+    const title = h(`<a class="tisch__title">${esc(game ? game.title : '')}</a>`);
+    if (game) makeGameLink(title, round.id, game.id);
+    main.appendChild(title);
+
     // Say so when the base box does NOT seat this table and an owned expansion
     // is what made the game drawable at all (#653) — otherwise the group
     // carries the wrong box to the table. Derived from the same predicate the
     // draw used, so the warning can never name a different set.
-    //
-    // It used to be a second line inside the „Gespielt wird:" banner, which
-    // #915 removed; this is the chosen row's own area and re-renders on the
-    // same path, so the note keeps its one trigger and gains the right context.
-    const needed = chosenGame ? requiredExpansions(chosenGame, parties.length) : [];
+    const needed = game ? requiredExpansions(game, parties.length) : [];
     if (needed.length) {
-      finishWrap.appendChild(
-        h(`<div class="row-finish__note">${esc(t('result.needsExpansion', { names: needed.map((e) => e.title).join(', ') }))}</div>`)
-      );
+      main.appendChild(h(`<div class="tisch__note tisch__note--warn">${iconText('ti-alert-triangle', t('result.needsExpansion', { names: needed.map((e) => e.title).join(', ') }))}</div>`));
     }
-
     // „Gehört Anna" (#971) — who has to bring the box, via the shared rule in
-    // owner-picker.js so this panel and the ranking row above it can never
-    // list one game's owners differently (#1008).
-    const bringers = boxBringers(round, session, chosenGame, shelfParty);
+    // owner-picker.js so this band and the ranking rows can never list one
+    // game's owners differently (#1008).
+    const bringers = boxBringers(round, session, game, shelfParty);
     if (bringers.length) {
-      finishWrap.appendChild(
-        h(`<div class="row-finish__note">${esc(t('result.ownedBy', { names: bringers.join(', ') }))}</div>`)
-      );
+      main.appendChild(h(`<div class="tisch__note">${iconText('ti-user', t('result.ownedBy', { names: bringers.join(', ') }))}</div>`));
     }
-    finishWrap.appendChild(
-      h(`<h2>${finished ? iconText('ti-trophy', t('result.finishTitleDone')) : esc(t('result.finishTitle'))}</h2>`)
-    );
-    // Finishing comes first and needs no winners; the winner picker only shows
-    // up afterwards, so it can't read as a prerequisite (#254).
+
+    const actions = h('<div class="tisch__actions"></div>');
+
     if (!finished) {
-      finishWrap.appendChild(
-        h(`<div class="muted" style="margin-bottom:10px">${esc(t('result.finishPrompt', { game: chosenGame ? chosenGame.title : '' }))}</div>`)
-      );
-      const finishBtn = h(`<button class="btn btn--primary">${iconText('ti-check', t('result.markPlayed'))}</button>`);
-      finishBtn.addEventListener('click', () => saveWinners([]));
-      const actions = h('<div class="toolbar" style="margin-top:14px"></div>');
-      actions.appendChild(finishBtn);
-      finishWrap.appendChild(actions);
-      return;
-    }
+      // Finishing comes first and needs no winners; the picker only appears
+      // afterwards, so it can never read as a prerequisite (#254).
+      const cta = h(`<button class="btn btn--primary tisch__cta">${iconText('ti-check', t('result.markPlayed'))}</button>`);
+      cta.addEventListener('click', () => { pickerOpen = true; saveWinners([]); });
+      actions.appendChild(cta);
+      // Today's toggle-off path, spelled out: tapping „Spielen" again on the
+      // chosen row used to be the only way back, which is invisible.
+      const other = h(`<button class="link-btn">${esc(t('result.otherGame'))}</button>`);
+      other.addEventListener('click', async () => {
+        try {
+          await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId: null });
+          chosenId = null;
+          session.chosenGameId = null;
+          updateChosen();
+          toast(t('result.toast.choiceCleared'));
+        } catch (e) { toast(e.message); }
+      });
+      actions.appendChild(other);
+      main.appendChild(actions);
+      // The phone's copy of the one CTA. A second button rather than a moved
+      // one: both must be live at once, because the band's own CTA is what a
+      // tablet and a desktop press.
+      const barBtn = h(`<button class="btn btn--primary">${iconText('ti-check', t('result.markPlayed'))}</button>`);
+      barBtn.addEventListener('click', () => { pickerOpen = true; saveWinners([]); });
+      tischBar.appendChild(barBtn);
+      tischBar.hidden = false;
+    } else if (pickerOpen) {
+      main.appendChild(h(`<div class="tisch__prompt">${esc(t('result.whoWon', { game: game ? game.title : '' }))}</div>`));
 
-    finishWrap.appendChild(
-      h(`<div class="muted" style="margin-bottom:10px">${esc(t('result.whoWon', { game: chosenGame ? chosenGame.title : '' }))}</div>`)
-    );
+      /* Guests can win too (#458) — they played the game. They just never enter
+         the round-level standings; see the Pokale tab.
 
-    // Guests can win too (#458) — they played the game. They just never enter
-    // the round-level standings; see the Pokale tab.
-    //
-    // One chip per PARTY (#575), so a team is recorded in a single tap. What is
-    // stored stays a flat list of person ids: a team win is a win for each of
-    // its people, which is what lets the Pokale standings, the Chronik and the
-    // recap keep reading `winnerIds` with no idea teams exist.
-    const chips = h('<div class="winner-chips"></div>');
-    parties.forEach((party) => {
-      const ids = party.people.map((p) => p.id);
-      // A team counts as selected only when ALL of its people are in — a
-      // partially-set list (hand-crafted, or written before the team existed)
-      // reads as not selected, so one tap completes it rather than clearing it.
-      const sel = ids.every((id) => winnerIds.includes(id));
-      const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${party.team ? '<i class="ti ti-users" aria-hidden="true"></i> ' : ''}${esc(party.name)}</button>`);
-      // Each toggle persists right away — no separate save button in this state.
-      chip.addEventListener('click', () => saveWinners(
-        sel
-          ? winnerIds.filter((x) => !ids.includes(x))
-          : [...winnerIds, ...ids.filter((id) => !winnerIds.includes(id))]
-      ));
-      chips.appendChild(chip);
-    });
-    finishWrap.appendChild(chips);
-
-    /* The second row: how it ended when nobody won (#1038). Same chip component
-       as the parties above, because it answers the same question — the party
-       chips and these are mutually exclusive by construction, so selecting one
-       deselects the other with no extra state to keep in step: the server
-       clears whichever the request did not carry, and this re-renders from what
-       it returned. */
-    const endChips = h('<div class="winner-chips"></div>');
-    ENDINGS.forEach((id) => {
-      const meta = ENDING_LABELS[id];
-      const sel = ending === id;
-      const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${iconText(meta.icon, t(meta.key))}</button>`);
-      // Tapping the selected one again returns to "nothing recorded", which is
-      // the same toggle the party chips give and the only way back without Reset.
-      chip.addEventListener('click', () => saveWinners([], sel ? null : id));
-      endChips.appendChild(chip);
-    });
-    finishWrap.appendChild(endChips);
-
-    const actions = h('<div class="toolbar" style="margin-top:14px"></div>');
-    const resetBtn = h(`<button class="btn btn--ghost">${esc(t('result.reset'))}</button>`);
-    resetBtn.addEventListener('click', async () => {
-      try {
-        await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/finish`, {
-          finished: false,
-          winnerIds: [],
+         One chip per PARTY (#575), so a team is recorded in a single tap. What
+         is stored stays a flat list of person ids: a team win is a win for each
+         of its people, which is what lets the Pokale standings, the Chronik and
+         the recap keep reading `winnerIds` with no idea teams exist. */
+      const chips = h('<div class="winner-chips"></div>');
+      parties.forEach((party) => {
+        const ids = party.people.map((pp) => pp.id);
+        // A team counts as selected only when ALL of its people are in — a
+        // partially-set list reads as not selected, so one tap completes it
+        // rather than clearing it.
+        const sel = ids.every((id) => winnerIds.includes(id));
+        const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${party.team ? '<i class="ti ti-users" aria-hidden="true"></i> ' : ''}${esc(party.name)}</button>`);
+        // Each toggle persists right away — no separate save button in this
+        // state — and collapses the picker to the picture it just produced.
+        chip.addEventListener('click', () => {
+          pickerOpen = false;
+          saveWinners(sel
+            ? winnerIds.filter((x) => !ids.includes(x))
+            : [...winnerIds, ...ids.filter((id) => !winnerIds.includes(id))]);
         });
-        finished = false;
-        winnerIds = [];
-        ending = null;
-        session.finished = false;
-        session.winnerIds = [];
-        delete session.ending;
-        session.finishedAt = null; // the server clears it too; keep the copy honest
-        toast(t('result.toast.reset'));
-        renderFinish();
-      } catch (e) { toast(e.message); }
-    });
-    actions.appendChild(resetBtn);
-    finishWrap.appendChild(actions);
+        chips.appendChild(chip);
+      });
+      main.appendChild(chips);
 
-    const names = winnerIds
-      .map((wid) => personLabel(people.find((p) => p.id === wid)))
-      .filter(Boolean);
-    const inner = names.length
-      ? iconText('ti-trophy', t('result.winners', { names: names.join(', ') }))
-      : ENDING_LABELS[ending]
-        ? iconText(ENDING_LABELS[ending].icon, t(ENDING_LABELS[ending].line))
-        : iconText('ti-check', t('result.playedNoWinner'));
-    finishWrap.appendChild(h(`<div class="winner-result">${inner}</div>`));
+      /* The second row: how it ended when nobody won (#1038). Same chip
+         component as the parties above, because it answers the same question —
+         the two rows are mutually exclusive by construction, so selecting one
+         deselects the other with no extra state to keep in step: the server
+         clears whichever the request did not carry, and this re-renders from
+         what it returned. */
+      const endChips = h('<div class="winner-chips"></div>');
+      ENDINGS.forEach((id) => {
+        const meta = ENDING_LABELS[id];
+        const sel = ending === id;
+        const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${iconText(meta.icon, t(meta.key))}</button>`);
+        // Tapping the selected one again returns to "nothing recorded", which is
+        // the same toggle the party chips give and the only way back without Reset.
+        chip.addEventListener('click', () => { pickerOpen = false; saveWinners([], sel ? null : id); });
+        endChips.appendChild(chip);
+      });
+      main.appendChild(endChips);
 
-    // „An BG Stats übergeben" (#485): the whole play as one tappable link.
-    //
-    // Rendered only for an account that opted in (Konto → BG Stats), because a
-    // website cannot detect whether the app is installed and the vendor's own
-    // guidance is to let the user enable the button rather than dead-end
-    // everyone else. Built here rather than at click time because renderFinish()
-    // re-runs after every winner toggle, so the href is never stale — and a real
-    // anchor is long-pressable and copyable, which a JS click is not.
-    //
-    // `noreferrer` as well as `noopener`: the referrer would otherwise carry
-    // this round's and session's ids to a third party that has no use for them
-    // (.claude/rules/secrets-in-paths-reach-the-logs.md, same reasoning one hop
-    // further out).
-    const pushUrl = bgStatsEnabled()
-      ? bgStatsPlayUrl({ session, game: chosenGame, people, parties, winnerIds })
-      : null;
-    if (pushUrl) {
-      const push = h(`<div class="toolbar" style="margin-top:14px">
-           <a class="btn btn--ghost" target="_blank" rel="noopener noreferrer" href="${esc(pushUrl)}">${iconText('ti-external-link', t('result.bgStats'))}</a>
-         </div>`);
-      finishWrap.appendChild(push);
+      const done = h(`<button class="btn btn--ghost">${esc(t('result.done'))}</button>`);
+      done.addEventListener('click', () => { pickerOpen = false; renderTisch(); });
+      actions.appendChild(done);
+    } else {
+      /* The record, as a picture. One seat per winner — a team win is already a
+         flat list of its people, so nothing here knows teams exist — and an
+         ENDING renders its own line instead, because the two are exclusive. */
+      const winners = winnerIds.map((wid) => people.find((pp) => pp.id === wid)).filter(Boolean);
+      if (winners.length) {
+        const seats = h('<div class="tisch__seats"></div>');
+        winners.forEach((pp) => {
+          seats.appendChild(h(`<span class="seat">
+               <span class="avatar${pp.guest ? ' avatar--guest' : ''}"${pp.guest ? '' : ` style="background:${memberColor(round, pp.id)}"`}>${avatarFace(initials(pp.name), { userId: pp.userId })}</span>
+               <span class="seat__name">${esc(personLabel(pp))}</span>
+             </span>`));
+        });
+        seats.appendChild(h(`<span class="tisch__won">${esc(tn(winners.length, 'result.wonSeatsOne', 'result.wonSeats'))}</span>`));
+        main.appendChild(seats);
+      } else {
+        const meta = ENDING_LABELS[ending];
+        main.appendChild(h(`<div class="tisch__outcome">${meta
+          ? iconText(meta.icon, t(meta.line))
+          : iconText('ti-check', t('result.playedNoWinner'))}</div>`));
+      }
+      const change = h(`<button class="btn btn--ghost btn--sm">${esc(t('result.change'))}</button>`);
+      change.addEventListener('click', () => { pickerOpen = true; renderTisch(); });
+      actions.appendChild(change);
     }
+
+    if (finished) {
+      const resetBtn = h(`<button class="link-btn">${esc(t('result.reset'))}</button>`);
+      resetBtn.addEventListener('click', async () => {
+        try {
+          await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/finish`, {
+            finished: false,
+            winnerIds: [],
+          });
+          finished = false;
+          winnerIds = [];
+          ending = null;
+          pickerOpen = false;
+          session.finished = false;
+          session.winnerIds = [];
+          delete session.ending;
+          session.finishedAt = null; // the server clears it too; keep the copy honest
+          toast(t('result.toast.reset'));
+          updateChosen();
+        } catch (e) { toast(e.message); }
+      });
+      actions.appendChild(resetBtn);
+
+      /* „An BG Stats übergeben" (#485): the whole play as one tappable link.
+
+         Rendered only for an account that opted in (Konto → BG Stats), because a
+         website cannot detect whether the app is installed and the vendor's own
+         guidance is to let the user enable the button rather than dead-end
+         everyone else. Built here rather than at click time because renderTisch()
+         re-runs after every winner toggle, so the href is never stale — and a
+         real anchor is long-pressable and copyable, which a JS click is not.
+
+         `noreferrer` as well as `noopener`: the referrer would otherwise carry
+         this round's and session's ids to a third party that has no use for them
+         (.claude/rules/secrets-in-paths-reach-the-logs.md, same reasoning one hop
+         further out). */
+      const pushUrl = bgStatsEnabled()
+        ? bgStatsPlayUrl({ session, game, people, parties, winnerIds })
+        : null;
+      if (pushUrl) {
+        actions.appendChild(h(`<a class="link-btn" target="_blank" rel="noopener noreferrer" href="${esc(pushUrl)}">${iconText('ti-external-link', t('result.bgStats'))}</a>`));
+      }
+      main.appendChild(actions);
+    }
+
+    tisch.appendChild(box);
+    tisch.appendChild(main);
   }
 
   // Marks the session finished with the given winners (possibly none) and
@@ -1886,7 +1960,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       // next reload.
       session.finishedAt = saved.finishedAt || session.finishedAt;
       toast(t('result.toast.saved'));
-      renderFinish();
+      renderTisch();
     } catch (e) { toast(e.message); }
   }
 

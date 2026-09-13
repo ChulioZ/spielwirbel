@@ -118,23 +118,24 @@ test('the cancel control renders after the last game row and after the log', asy
 
 // The whole point of the move: the most-read part of the screen is the run from
 // the banner into the standings, and nothing may interrupt it.
-test('nothing renders between the chosen-game banner and the first game row', async (t) => {
-  const dom = await results(t);
+test('nothing stands between the table band and the ranking', async (t) => {
+  /* The whole point of the move: the most-read part of the screen is the run
+     from the chosen game into the standings, and nothing may interrupt it. The
+     `.chosen-banner` that used to anchor this assertion is gone with #1057 —
+     the h1 states the outcome and the Tafel's kicker carries the prompt — so
+     the anchor is the table band itself, in the one state where it renders. */
+  const dom = await results(t, { chosenGameId: 'g1' });
 
-  const banner = dom.app.querySelector('.chosen-banner');
-  assert.ok(banner, 'expected the chosen-game banner');
-  // Since #1056 the rows live inside `.tafel`, whose first child is the kicker
-  // that names the vote — so the run is banner → Tafel → kicker → rows, and
-  // nothing else may get in between. (#1057 removes the banner outright.)
-  const tafel = banner.nextElementSibling;
-  assert.ok(tafel && tafel.classList.contains('tafel'),
-    'the Tafel must follow the banner directly');
-  assert.ok(tafel.firstElementChild.classList.contains('tafel__kick'),
-    'and open on its own kicker');
+  const tisch = dom.app.querySelector('.tisch');
+  assert.ok(tisch && !tisch.hidden, 'a chosen game must render the table band');
+  assert.equal(dom.app.querySelector('.chosen-banner'), null,
+    'the banner is gone from this screen — the title and the Tafel kicker carry its states');
+  const tafel = tisch.nextElementSibling;
+  assert.ok(tafel && tafel.classList.contains('tafel'), 'the Tafel must follow the band directly');
   assert.equal(
     tafel.querySelector('.tafel__kick').nextElementSibling,
     tafel.querySelector('.trow, .tafel-top'),
-    'nothing but the kicker stands between the banner and the first row',
+    'nothing but the kicker stands between the band and the first row',
   );
 });
 

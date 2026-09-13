@@ -1460,8 +1460,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
     grid-template-areas:
       "cover main"
       "bars  bars"
-      "score action"
-      "fin   fin";
+      "score action";
   }
   .trow .trow__score { text-align: left; }
   .trow__rank { position: absolute; top: 10px; right: 12px; }
@@ -4231,7 +4230,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   white-space: nowrap;
 }
 .trow__menu { padding: 6px 8px; }
-.trow .row-finish { grid-area: fin; }
 
 /* From the rail breakpoint the row is ONE LINE — rank, cover, title, chart,
    score, action — which is what keeps a six-row Tafel honest on a 13". The
@@ -4240,9 +4238,7 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 @media (min-width: 1280px) {
   .tafel .trow {
     grid-template-columns: 30px 44px minmax(0, 1fr) auto auto auto;
-    grid-template-areas:
-      "rank cover main bars score action"
-      "fin  fin   fin  fin  fin  fin";
+    grid-template-areas: "rank cover main bars score action";
     padding: 10px 16px;
     gap: 4px 16px;
   }
@@ -4340,12 +4336,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   background: var(--brand-tint);
   color: var(--brand-strong);
   border: 1px solid var(--brand-edge);
-  font-size: var(--text-lg);
-}
-.chosen-banner.is-cancelled {
-  background: color-mix(in oklab, var(--danger) 6%, var(--surface));
-  color: var(--danger);
-  border: 1px solid color-mix(in oklab, var(--danger) 25%, var(--surface));
   font-size: var(--text-lg);
 }
 /* The results footer: cancel and delete side by side, centered, wrapping to two
@@ -4550,18 +4540,109 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .round-footer { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
-/* Finish game / winners (inside the chosen game's result row) */
-.row-finish {
-  grid-column: 1 / -1;
-  border-top: 1px dashed var(--brand-edge);
-  padding-top: 14px;
+/* ---- Der Tisch (#1057): the chosen game, above the Tafel ----
+
+   It replaces the in-row `.row-finish` panel, which sat 1000+px down the page on
+   the evening it was needed and then stayed there at full size afterwards — a
+   344px winner picker on a session finished months ago. The band renders ONLY
+   while a game is chosen; before that nothing takes room at all (the deep-dive's
+   empty „Auf dem Tisch" slot was rejected on 2026-09-12 for exactly that). */
+.tisch {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  margin: 4px 0 20px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--brand-edge);
 }
-.row-finish :is(h2, h3) { margin: 0 0 6px; }
-/* "Braucht Erweiterung: …" (#653) — the chosen game only seats this table
-   because the round owns an expansion for it, so the group has to bring the
-   right box. It sat inside the „Gespielt wird:" banner until #915 removed that;
-   here it is on the chosen game's own row, which is the box it is about. */
-.row-finish__note { font-size: var(--text-sm); font-weight: 600; margin-bottom: 8px; }
+.tisch[hidden] { display: none; }
+/* The box. A cover with a box's shadow rather than the row's flat thumbnail:
+   this is the physical thing somebody carries to the table. */
+.tisch__box {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
+  width: 128px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  background: var(--sunken) center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px; /* glyph, not type */
+  box-shadow: var(--shadow-2);
+}
+.tisch__main { min-width: 0; }
+.tisch__kick {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+.tisch__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  margin: 2px 0 8px;
+  overflow-wrap: anywhere;
+}
+.tisch__note { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+.tisch__note--warn { color: var(--warn-ink, var(--ink)); }
+.tisch__prompt { color: var(--ink-soft); margin: 4px 0 10px; }
+.tisch__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 14px; }
+/* The record, as a picture: the winners as seats. A gold ring rather than a
+   trophy line, because a face is the thing worth recognising months later. */
+.tisch__seats { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
+.tisch__seats .seat { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tisch__seats .avatar { box-shadow: 0 0 0 3px var(--gold); }
+.seat__name { font-weight: 700; }
+.tisch__won { color: var(--gold-deep); font-weight: 700; }
+.tisch__outcome { margin-top: 10px; font-weight: 700; color: var(--ink-soft); }
+/* The stamp, pressed onto the box — the SAME component as the game page's
+   Stempelkarte (#1040), re-sized only. Reusing the class rather than a
+   look-alike is what stops the two drifting. */
+.stamp--table {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  padding: 6px 8px 7px;
+  text-align: center;
+  background: color-mix(in oklab, var(--surface) 82%, transparent);
+  border-radius: var(--radius-sm);
+}
+.stamp--table .stamp__status { margin-top: 0; }
+.stamp--table .stamp__date { font-size: var(--text-md); }
+
+/* The phone's one CTA. Hidden above the rail breakpoint by the block further
+   down: on a desktop the column already fits, so a sticky bar never sticks and
+   reads as one more card — which is why the deep-dive's first prototype had an
+   invisible one. */
+.tisch-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin: 8px 0 0;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, var(--page-bg) 72%, transparent);
+}
+.tisch-bar[hidden] { display: none; }
+.tisch-bar .btn { width: 100%; justify-content: center; }
+
+@media (min-width: 1280px) {
+  /* (0,3,0). `.tisch-bar[hidden]` is (0,2,0) — an attribute counts in the same
+     column as a class — so a two-class selector would TIE it and ride on source
+     order, which is this sheet's standing trap. */
+  .app .result-screen .tisch-bar { display: none; }
+}
+@media (max-width: 639px) {
+  .tisch { grid-template-columns: 96px minmax(0, 1fr); gap: 14px; padding: 14px; }
+  .tisch__box { width: 96px; font-size: 34px; /* glyph, not type */ }
+}
 .member-chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .member-chip {
   font-family: var(--font-display);
@@ -4598,15 +4679,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   background: var(--gold-soft);
   border-color: var(--gold-edge);
   color: var(--gold-deep);
-}
-.winner-result {
-  margin-top: 14px;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  background: var(--gold-soft);
-  color: var(--gold-deep);
-  font-weight: 700;
-  font-size: var(--text-lg);
 }
 
 /* Game detail page */

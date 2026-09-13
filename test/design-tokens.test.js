@@ -87,7 +87,7 @@ const GLYPH_LITERALS = [
   // The medallion is one rule shared by .lobby-cta and .empty (#869), so the
   // exemption has to name the whole selector text — these are matched exactly.
   '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon,\n.empty__icon',
-  '.landing-card__icon', '.landing-step__num', '.feed-item__img', '.trow__img',
+  '.landing-card__icon', '.landing-step__num', '.feed-item__img', '.trow__img', '.tisch__box',
   '.friends-invite__icon',
   '.pool-thumb', '.pool-thumb .ti', '.pool-tile__img', '.game-card__img', '.vote__img',
   '.gd-img', '.lookup__thumb--none .ti', '.archive-row__img .ti', '.rec-card__img .ti',

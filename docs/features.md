@@ -407,8 +407,11 @@ What the app does, in detail. For a short overview see the
   **Spielwirbel-Score** twice, as a number (colored by score, with a short line
   saying why it diverges from the plain average, e.g. „1× gar nicht") and as the
   width of the row's own fill, beside its rank, its rating distribution (one bar
-  per rating) and who brings the box. Pick the
-  game you actually played and mark it finished; recording the winner(s) is an
+  per rating) and who brings the box. Picking a game puts it **on the table**: a
+  band above the ranking with the box, who brings it and the one action
+  („Als gespielt markieren") — and nothing at all before a game is chosen. Once
+  it is played, the table carries a stamp with the date and the winners as
+  seats, with the picker behind „Ändern". Recording the winner(s) is an
   optional follow-up step afterwards. When nobody won, the same step records
   **how it ended instead** — „Verloren" (a cooperative game beat the table),
   „Kein Sieger" (a game that is not about winning) or „Fortsetzung folgt" (a
