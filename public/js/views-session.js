@@ -1208,20 +1208,45 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // nothing and so get no strip).
   renderSubScreenTabs(round, 'session');
   app.appendChild(backRow(() => showRound(round.id)));
+  /* ONE content wrapper for the whole result (#1055). Everything from the head
+     down used to be a direct child of `#app`, which meant each block took the
+     reading measure (`--w-read`, 900px) on its own and the screen could not opt
+     out of it as a unit: measured 2026-09-12, the page was 2905px tall at every
+     width from 1280 to 2560 while the pane grew to 1900, leaving 51% of a
+     2560px pane empty.
+
+     The sub-screen tab strip and the back row stay OUTSIDE it — the strip
+     because navigation must not move with content
+     (`.claude/rules/responsive-content-width.md`), the back row because it opts
+     out alongside the wrapper in CSS instead, so their edges cannot drift apart
+     (the #543/#577 lesson). The wrapper carries no padding or border, so the
+     blocks inside keep collapsing their margins exactly as they did as
+     children of `#app`. */
+  const screen = h('<div class="result-screen"></div>');
+  app.appendChild(screen);
   const when = fmtDateTime(session.createdAt);
-  const head = h(`<div class="page-head"><div>
+  /* `page-head--result`, not a change to `.page-head` itself: that class is
+     shared by ~16 sites and only this one puts a whole SENTENCE in the title
+     slot. With the finished-session title („„Ticket to Ride" wurde gespielt.
+     Max und Anna haben gewonnen!") the default `flex: 0 1 auto` first child
+     fills all 900px and „Teilen" wraps to a second line — head 180px, button at
+     x=312. The modifier gives that child `flex: 1 1 0; min-width: 0` so the
+     sentence wraps inside its own column and the button keeps the edge. */
+  const head = h(`<div class="page-head page-head--result"><div>
          <h1 class="result-title">${esc(t('result.title'))}</h1>
          <div class="muted">${esc(tn(games.length, 'result.subtitleOne', 'result.subtitle', { when }))}</div>
        </div></div>`);
-  app.appendChild(head);
+  screen.appendChild(head);
   const titleEl = head.querySelector('.result-title');
 
   // „Teilen": hand the group chat what this screen says, as plain text (#526).
   // Hidden outright where neither API exists — which is a real case, not a
   // theoretical one: `navigator.clipboard` is undefined outside a secure
   // context, so a self-hosted plain-HTTP instance shows no button rather than a
-  // dead one. `.page-head` is already a space-between flex row, so appending the
-  // button as its second child parks it at the right edge with no new CSS.
+  // dead one. `.page-head` is a space-between flex row, so the button is its
+  // second child — but that alone parks it at the right edge only while the
+  // title is SHORT. `page-head--result` above is what makes it hold for the
+  // finished-session sentence too, which is every archived session (#1055).
   if (canShareResult()) {
     const shareBtn = h(`<button class="btn btn--ghost">${iconText('ti-share', t('share.button'))}</button>`);
     // The model is built at CLICK time, never up front: choosing a game,
@@ -1262,7 +1287,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     peopleEl.querySelectorAll('.result-people__person[data-mid]').forEach((el) => {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
-    app.appendChild(peopleEl);
+    screen.appendChild(peopleEl);
   }
 
   // Who played together (#575). Listed as its own row rather than folded into
@@ -1270,7 +1295,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // entry per person, and a team is a different fact about the same people.
   const teamParties = parties.filter((p) => p.team);
   if (teamParties.length) {
-    app.appendChild(
+    screen.appendChild(
       h(`<div class="result-people">
            <span class="result-people__label">${esc(t('result.teams'))}</span>
            <span class="result-people__list">${teamParties
@@ -1343,7 +1368,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       }
       spot.appendChild(conf);
     }
-    app.appendChild(spot);
+    screen.appendChild(spot);
   }
 
   function updateTitle() {
@@ -1378,7 +1403,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // Banner: shows which game is being played (or prompts to choose).
   let chosenId = session.chosenGameId || null;
   const banner = h('<div class="chosen-banner"></div>');
-  app.appendChild(banner);
+  screen.appendChild(banner);
 
   // Cancel session (the alternative to choosing a game; see renderCancel).
   // Created here because updateChosen() -> renderCancel() runs below while the
@@ -1517,7 +1542,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     });
     rowRefs.push({ gameId: g.id, row, btn, finishEl: row.querySelector('.row-finish'),
       ownersEl: row.querySelector('.result-row__owners') });
-    app.appendChild(row);
+    screen.appendChild(row);
   });
   // One call for whatever the loop placed — and none to bind when no row had
   // votes. `wireInfoButtons` is idempotent, so the re-renders below (retire,
@@ -1808,14 +1833,16 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // views-session-live.js — a later file in the load order, which is fine
   // because this runs on navigation, never at load time
   // (.claude/rules/frontend-script-load-order.md).
-  const sessionLog = renderSessionLog(round, session);
-  if (sessionLog) app.appendChild(sessionLog);
+  // Collapsed here (#1055): 355px on every visit for a list most sessions never
+  // open. The lobby renders the same builder open — there it is the live record.
+  const sessionLog = renderSessionLog(round, session, { collapsed: true });
+  if (sessionLog) screen.appendChild(sessionLog);
 
   // One install nudge (#616), at the one moment the app has just delivered
   // something. Above the footer, because the footer's two controls are how you
   // throw this evening away and nothing may push them off the end of the screen.
   const installOffer = buildInstallOffer(reveal);
-  if (installOffer) app.appendChild(installOffer);
+  if (installOffer) screen.appendChild(installOffer);
 
   // The two ways to get rid of this session, together and last on the screen:
   // cancel (reversible, destroys nothing) before delete (permanent). Both sit
@@ -1844,7 +1871,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     });
     footer.appendChild(delBtn);
   }
-  app.appendChild(footer);
+  screen.appendChild(footer);
 }
 
 /* The one post-session install offer (#616), or null.

@@ -686,6 +686,27 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: var(--w-detail);
   }
 
+  /* The result screen (#1055) takes the same licence as the spread above, for
+     the same reason and with the same two halves. It is the widest thing the
+     app renders that is not a spread: measured 2026-09-12 the page stayed 2905px
+     tall from 1280 all the way to 2560 because the column never left --w-read,
+     leaving 41% of a 1920px pane and 51% of a 2560px one empty while not one
+     complete ranked row sat above the fold.
+
+     Everything persistent on this screen — the rail, the dock and the round's
+     sub-screen tab strip — is either excluded by the cap's own two `:not()`s or
+     lives outside `.result-screen`, so widening the content moves no navigation.
+
+     The back row opts out WITH the wrapper: it is a SIBLING of `.result-screen`,
+     so a selector naming only the wrapper leaves the „Zurück" control and its
+     „…" menu ~250px inside the page's right edge. Both take the same custom
+     property so their edges cannot drift apart.
+
+     (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app:has(.result-screen) > *:not(.rail):not(.dock):is(.back-row, .result-screen) {
+    max-width: var(--w-detail);
+  }
+
   /* On a screen WITHOUT a rail — home, the new-round form, the session wizard —
      capped content centres instead. Beside a rail, a left edge is anchored and
      reads as deliberate; with no rail it is just a column shoved against the
@@ -864,6 +885,16 @@ h1, h2, h3 { font-family: var(--font-display); }
   margin-bottom: 20px;
 }
 .page-head h1 { font-size: var(--text-3xl); margin: 0; }
+/* The result screen's head (#1055). Every other `.page-head` puts a short label
+   in the title slot, where the default `flex: 0 1 auto` parks the trailing
+   button at the right edge on its own. This one puts a whole sentence there
+   („„Ticket to Ride" wurde gespielt. Max und Anna haben gewonnen!"), which at
+   900px fills the row and wraps „Teilen" onto a second line — a 180px head with
+   the button at x=312 instead of at the edge. Giving the first child a flexible
+   basis makes the sentence wrap inside its own column instead of pushing the
+   button out. `min-width: 0` is the load-bearing half: without it the flex item
+   refuses to shrink below its longest unbreakable word. */
+.page-head--result > :first-child { flex: 1 1 0; min-width: 0; }
 .page-head h2 { font-size: var(--text-xl); margin: 0; }
 .muted { color: var(--ink-soft); }
 
@@ -7772,6 +7803,38 @@ kbd {
 /* The session activity log. Deliberately quiet — it is a record you consult,
    not something competing with the podium above it on the results screen. */
 .session-log { margin: 28px 0 8px; }
+/* The collapsed form on the result screen (#1055). `<details>` brings its own
+   marker, which sits at a different x in every engine and cannot be tinted —
+   so it is removed (both spellings; WebKit still needs the pseudo-element) and
+   the chevron below stands in for it. */
+.session-log--fold > summary::-webkit-details-marker { display: none; }
+.session-log--fold > summary { list-style: none; }
+.session-log__summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.session-log__summary:hover .session-log__summary-title { color: var(--brand); }
+.session-log__summary-title { font-size: var(--text-lg); font-weight: 700; }
+.session-log__summary-meta { color: var(--ink-soft); font-size: var(--text-sm); }
+/* Rotated rather than swapped for a second glyph: one declared codepoint, and
+   the turn is what reads as the disclosure opening. */
+.session-log__chevron {
+  flex: none;
+  color: var(--ink-soft);
+  transition: transform var(--dur-base) var(--ease-out);
+  align-self: center;
+}
+.session-log--fold[open] .session-log__chevron { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) {
+  .session-log__chevron { transition: none; }
+}
+.session-log--fold[open] .session-log__list { margin-top: 4px; }
 .session-log__title { font-size: var(--text-lg); margin: 0 0 8px; }
 .session-log__list { list-style: none; margin: 0; padding: 0; }
 .session-log__row {

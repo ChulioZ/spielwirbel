@@ -826,6 +826,9 @@ I18N.es = {
   // servidor ve qué cuenta envió una petición y no puede saber quién tenía el
   // aparato en la mano.
   'log.title': 'Qué ha pasado',
+  'log.summaryOne': '{n} entrada, la última {when}',
+  'log.summary': '{n} entradas, la última {when}',
+  'log.open': 'Mostrar el historial',
   'log.someone': 'Alguien',
   'log.aGame': 'un juego',
   'log.started': '{actor} ha empezado la sesión',
