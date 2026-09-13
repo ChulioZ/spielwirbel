@@ -32,7 +32,7 @@ function renderStartTab(round, activeGames) {
   const playedCount = round.sessions.filter((s) => s.finished).length;
   const hero = h(`<div class="hero rail-owned">
        <h1></h1>
-       <div class="hero__members">${round.members
+       <div class="hero__members">${activeMembers(round)
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
          .join('')}</div>
        <div class="hero__chips">
@@ -47,13 +47,24 @@ function renderStartTab(round, activeGames) {
   // Each hero avatar opens that member's detail page. Queried before the "+" is
   // appended, so the index-to-member mapping cannot pick it up.
   hero.querySelectorAll('.hero__members .avatar').forEach((el, i) => {
-    const m = round.members[i];
+    const m = activeMembers(round)[i];
     if (m) makeMemberLink(el, rid, m.id);
   });
   // Add a seat (#563), right where the seats are listed. A real <button>, not a
   // focusable span: it is not inline text sharing a line, so the platform gives
   // focus, Enter and Space for free (.claude/rules/native-button-vs-focusable-span.md).
   hero.querySelector('.hero__members').appendChild(addMemberBtn(round));
+  /* Retired seats (#1006), dimmed and after the "+", on the hero ONLY. They are
+     off every forward-looking list — the setup seats, teams, rankings, trophies —
+     but they have to stay REACHABLE or there is no way back: restoring one
+     happens on that member's own page, and nothing else on the screen links to
+     it. Appended after the link wiring above so the index-to-member mapping
+     cannot pick them up, and given their own link here. */
+  (round.members || []).filter((m) => !memberIsActive(m)).forEach((m) => {
+    const el = h(`<a class="avatar avatar--retired" style="background:${memberColor(round, m.id)}" title="${esc(t('member.retiredTitle', { name: m.name }))}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`);
+    makeMemberLink(el, rid, m.id);
+    hero.querySelector('.hero__members').appendChild(el);
+  });
 
   const startBtn = h(
     `<button class="btn btn--primary hub-cta rail-owned"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
@@ -248,7 +259,7 @@ function renderStartTab(round, activeGames) {
   // a screen that recommends and archives the same game in one render reads as
   // the app disagreeing with itself. The banner is appended further down, in
   // the position it has always had.
-  const recs = retireRecommendations(activeGames, statsByGame, round.members.length * 3);
+  const recs = retireRecommendations(activeGames, statsByGame, activeMembers(round).length * 3);
   const nagged = new Set(recs.map((r) => r.game.id));
 
   // The card grid (#923). Built DETACHED and appended below, so the #869

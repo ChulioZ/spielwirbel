@@ -96,7 +96,7 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
   const nameTag = activeTab === 'start' && !sub ? 'h1' : 'div';
   const id = h(`<div class="rail__id">
        <${nameTag} class="rail__name"></${nameTag}>
-       <div class="rail__members">${round.members
+       <div class="rail__members">${activeMembers(round)
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
          .join('')}</div>
        <div class="rail__chips">
@@ -109,7 +109,7 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
   // seat below is repeated.
   id.querySelector('.rail__name').appendChild(editableRoundName(round));
   id.querySelectorAll('.rail__members .avatar').forEach((el, i) => {
-    const m = round.members[i];
+    const m = activeMembers(round)[i];
     if (m) makeMemberLink(el, rid, m.id);
   });
   // Add a seat (#563). The hero this mirrors is hidden at rail widths, so without

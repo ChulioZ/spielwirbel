@@ -156,7 +156,7 @@ function renderPokaleTab(round) {
   // the standings are the permanent group's leaderboard, and a one-evening
   // visitor in it would be noise (#458).
   const wins = {};
-  round.members.forEach((m) => (wins[m.id] = 0));
+  activeMembers(round).forEach((m) => (wins[m.id] = 0));
   finished.forEach((s) =>
     (s.winnerIds || []).forEach((wid) => {
       if (wid in wins) wins[wid]++;
@@ -169,7 +169,7 @@ function renderPokaleTab(round) {
   // because it is what the group recognises; both are shown, which is what
   // explains why 12 Siege can sit below 5.
   const scores = memberWinScores(round, sessionPartyGroups);
-  const ranked = [...round.members].sort((a, b) => scores[b.id] - scores[a.id]);
+  const ranked = [...activeMembers(round)].sort((a, b) => scores[b.id] - scores[a.id]);
 
   // THE PODIUM IS THE TOP THREE PLACES, and nothing else decides who stands.
   //

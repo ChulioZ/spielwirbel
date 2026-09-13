@@ -94,7 +94,7 @@ function createRegalBulk(ctx) {
   // A round with no seats has nobody to name as an owner, so the picker could
   // only ever clear. Hidden rather than disabled, the same call renderOwnerChips
   // makes for its own empty row (#971).
-  const canSetOwners = (round.members || []).length > 0;
+  const canSetOwners = activeMembers(round).length > 0;
   // A round with no tags has nothing to offer, so the picker could only ever
   // be empty. Hidden rather than disabled, the same call `canSetOwners` makes
   // for a seatless round — and creating a tag inline is deliberately out of

@@ -88,7 +88,9 @@ function sessionWinScores(round, session, partyGroupsOf) {
 // sort over this map, and a missing key would sort as NaN.
 function memberWinScores(round, partyGroupsOf) {
   const totals = {};
-  (round.members || []).forEach((m) => (totals[m.id] = 0));
+  // Retired seats hold no standing (#1006). Spelled out — this file is
+  // require()d from Node; see the note in recap.js.
+  ((round && round.members) || []).filter((m) => !m.retired).forEach((m) => (totals[m.id] = 0));
   (round.sessions || []).forEach((session) => {
     if (!session.finished) return;
     sessionWinScores(round, session, partyGroupsOf).forEach((value, id) => {

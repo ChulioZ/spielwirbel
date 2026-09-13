@@ -24,7 +24,9 @@
 //   3. otherwise nothing — a grantee, or an instance with accounts off, has no
 //      seat, so there is nobody to guess at.
 function ownerPresetFor(round, userId) {
-  const members = (round && round.members) || [];
+  // Retired seats are out (#1006); see the note in recap.js for why this is
+  // spelled out rather than calling `activeMembers`.
+  const members = ((round && round.members) || []).filter((m) => !m.retired);
   const seat = userId ? members.find((m) => m.userId === userId) : null;
   if (seat && Array.isArray(seat.ownerPreset)) {
     // A preset naming a seat that is gone must not resurrect it — same rule the
@@ -99,7 +101,9 @@ function boxBringers(round, session, game, shelfParty) {
 // screen that did not match the rail (2026-09-08 audit).
 function renderOwnerChips(round, selected) {
   const wrap = h('<div class="filter-chips"></div>');
-  const members = (round && round.members) || [];
+  // Retired seats are out (#1006); see the note in recap.js for why this is
+  // spelled out rather than calling `activeMembers`.
+  const members = ((round && round.members) || []).filter((m) => !m.retired);
   wrap.hidden = members.length === 0;
   wrap.replaceChildren(...members.map((m) => {
     const on = selected.has(m.id);
