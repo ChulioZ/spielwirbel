@@ -241,6 +241,8 @@ I18N.nl = {
   'activity.gamesDeletedOne': '{n} spel definitief verwijderd',
   'activity.gamesDeleted': '{n} spellen definitief verwijderd',
   'activity.memberAdded': '{name} doet mee',
+  'activity.storefrontClearedOne': 'De winkellink van {n} spel is verwijderd',
+  'activity.storefrontCleared': 'De winkellinks van {n} spellen zijn verwijderd',
   'activity.roundRenamed': 'Groep hernoemd naar “{name}”',
   'activity.expansionAddedOne': '{n} uitbreiding vastgelegd voor “{title}”',
   'activity.expansionAdded': '{n} uitbreidingen vastgelegd voor “{title}”',

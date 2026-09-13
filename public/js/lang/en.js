@@ -240,6 +240,8 @@ I18N.en = {
   'activity.gamesDeletedOne': '{n} game permanently deleted',
   'activity.gamesDeleted': '{n} games permanently deleted',
   'activity.memberAdded': '{name} joined',
+  'activity.storefrontClearedOne': 'A store link on {n} game was cleared',
+  'activity.storefrontCleared': 'Store links on {n} games were cleared',
   'activity.roundRenamed': 'Round renamed to “{name}”',
   // One entry per SAVE carrying a count (#653), like the two moves and the
   // import above: ticking ten boxes at once must not bury the round's feed.

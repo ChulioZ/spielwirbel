@@ -243,6 +243,8 @@ I18N.it = {
   'activity.gamesDeletedOne': '{n} gioco eliminato definitivamente',
   'activity.gamesDeleted': '{n} giochi eliminati definitivamente',
   'activity.memberAdded': '{name} si è unito',
+  'activity.storefrontClearedOne': 'Il collegamento allo store di {n} gioco è stato rimosso',
+  'activity.storefrontCleared': 'I collegamenti allo store di {n} giochi sono stati rimossi',
   'activity.roundRenamed': 'Gruppo rinominato in «{name}»',
   'activity.expansionAddedOne': '{n} espansione registrata per «{title}»',
   'activity.expansionAdded': '{n} espansioni registrate per «{title}»',
