@@ -1116,6 +1116,8 @@ I18N.pt = {
   'friends.unknownUser': '(desconhecido)',
   'friends.feed.played': '{user} jogou {game}',
   'friends.feed.added': '{user} colocou {game} na estante',
+  'friends.feed.importedOne': '{user} colocou {game} e mais {n} jogo na estante',
+  'friends.feed.imported': '{user} colocou {game} e mais {n} jogos na estante',
   'friends.feed.report': 'Denunciar esta entrada',
   'friends.feed.reportSubject': 'Entrada do feed: {user} — {game} ({date})',
   'friends.reportAccount': 'Denunciar esta conta',

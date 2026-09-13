@@ -345,12 +345,30 @@ function wireFriendRowMain(row, username) {
 // The localized feed line, with the friend's name and the game title emphasised.
 // The lang string is trusted; the two interpolated values are escaped first, so
 // injecting the result as HTML is safe.
+/* One branch per event type, which is how it has to be read now (#1079).
+
+   It used to be "session_played, else added", the shape lib/feed-events.js's
+   header warned would need revisiting — and `games_imported` is that case: it
+   carries a COUNT and therefore a plural, so `t()` is not enough.
+
+   `{n}` is `count - 1`, the "and N more" part, so a three-game import reads
+   "…and 2 more games" and a two-game one takes the SINGULAR. The route never
+   emits this type for one game, so `n` is never 0.
+
+   A row with no count is rendered as a plain `game_added` rather than throwing:
+   rows written before this change are still in production feeds and age out
+   over MAX_FEED_EVENTS, and the row still carries the title they name. */
 function feedText(ev) {
-  const key = ev.type === 'session_played' ? 'friends.feed.played' : 'friends.feed.added';
-  return t(key, {
+  const params = {
     user: `<strong>${friendName(ev.username)}</strong>`,
     game: `<strong>${esc(ev.title || '')}</strong>`,
-  });
+  };
+  if (ev.type === 'session_played') return t('friends.feed.played', params);
+  if (ev.type === 'games_imported' && Number.isInteger(ev.count) && ev.count > 1) {
+    const n = ev.count - 1;
+    return tn(n, 'friends.feed.importedOne', 'friends.feed.imported', { ...params, n });
+  }
+  return t('friends.feed.added', params);
 }
 
 function renderFeedEvent(ev) {

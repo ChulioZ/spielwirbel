@@ -15,8 +15,8 @@ const path = require('node:path');
 
 const { FEED_EVENT_TYPES } = require('../lib/feed-events');
 
-test('the feed event types are the two the client can phrase', () => {
-  assert.deepEqual([...FEED_EVENT_TYPES].sort(), ['game_added', 'session_played']);
+test('the feed event types are the three the client can phrase', () => {
+  assert.deepEqual([...FEED_EVENT_TYPES].sort(), ['game_added', 'games_imported', 'session_played']);
 });
 
 test('neither backend carries its own copy of the set', () => {

@@ -1056,6 +1056,8 @@ I18N.ko = {
   'friends.unknownUser': '(알 수 없음)',
   'friends.feed.played': '{user}이(가) {game}을(를) 플레이했어요',
   'friends.feed.added': '{user}이(가) {game}을(를) 선반에 추가했어요',
+  'friends.feed.importedOne': '{user}이(가) {game} 외 {n}개를 선반에 추가했어요',
+  'friends.feed.imported': '{user}이(가) {game} 외 {n}개를 선반에 추가했어요',
   'friends.feed.report': '이 항목 신고',
   'friends.feed.reportSubject': '피드 항목: {user} — {game} ({date})',
   'friends.reportAccount': '이 계정 신고',

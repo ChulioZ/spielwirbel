@@ -1082,6 +1082,8 @@ I18N.fi = {
   'friends.unknownUser': '(tuntematon)',
   'friends.feed.played': '{user} pelasi pelin {game}',
   'friends.feed.added': '{user} lisäsi pelin {game} hyllyyn',
+  'friends.feed.importedOne': '{user} lisäsi hyllyyn pelin {game} ja {n} muun pelin',
+  'friends.feed.imported': '{user} lisäsi hyllyyn pelin {game} ja {n} muuta peliä',
   'friends.feed.report': 'Ilmoita tästä merkinnästä',
   'friends.feed.reportSubject': 'Syötemerkintä: {user} — {game} ({date})',
   'friends.reportAccount': 'Ilmoita tästä tilistä',

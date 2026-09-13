@@ -590,9 +590,11 @@ What the app does, in detail. For a short overview see the
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a
   **Freundeskreis feed** (a tile on the home dashboard plus a dedicated
-  view at `/freunde`): only "*added a game*" and "*played a game*" notes with the
-  **game title and cover** — never member names, ratings, votes or round names,
-  and only for activity after you became friends. A friendship shares **no round
+  view at `/freunde`): only "*added a game*", "*played a game*" and — for a
+  BoardGameGeek collection import — "*added ‹game› and N more games*" notes, with
+  the **game title and cover** and, for that last one, a plain count; never
+  member names, ratings, votes or round names, and only for activity after you
+  became friends. A friendship shares **no round
   data**; it is purely social. Unfriending is unilateral and immediate in both
   directions. With accounts off the whole feature is inert.
 - **E-mail for actionable inbox items** – *accounts mode only* (issue #618). A

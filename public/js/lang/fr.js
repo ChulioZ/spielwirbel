@@ -1122,6 +1122,8 @@ I18N.fr = {
   'friends.unknownUser': '(inconnu)',
   'friends.feed.played': '{user} a joué à {game}',
   'friends.feed.added': '{user} a ajouté {game} à son étagère',
+  'friends.feed.importedOne': '{user} a ajouté {game} et {n} autre jeu à son étagère',
+  'friends.feed.imported': '{user} a ajouté {game} et {n} autres jeux à son étagère',
   'friends.feed.report': 'Signaler cette entrée',
   'friends.feed.reportSubject': 'Entrée du fil : {user} — {game} ({date})',
   'friends.reportAccount': 'Signaler ce compte',
