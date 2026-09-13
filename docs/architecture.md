@@ -71,6 +71,9 @@ lib/
     index.js         picks the backend (DATABASE_URL ? postgres : json)
     json.js          default backend — the data/data.json store below
     postgres.js      PostgreSQL backend (Knex query builder), used when DATABASE_URL set
+    storefront-match.js which rows still point at a retired digital storefront
+                     — one definition, shared by both backends, behind the
+                     operator's one-off clean-up action (issue #981)
     import-copy.js   what travels when a new round imports another round's
                      games (#921) — shared by both backends so a copy carries
                      the same fields whichever one is running
@@ -309,17 +312,24 @@ lib/
     faq.js           /faq                   (the FAQ page — public, login-free
                                              and never 404s, unlike the legal
                                              pages above; issue #489)
-    admin.js         /api/admin             (operator moderation: instance
-                                             status, lookup by image/round/
-                                             e-mail/tenant, per-tenant summary,
-                                             round text + redaction, takedown,
-                                             notices inbox + decisions, Art. 17
-                                             statements of reasons,
-                                             account suspend/restore, GDPR
-                                             export + erasure,
-                                             filterable action log, user feedback,
-                                             recent warn/error logs —
-                                             404 unless ADMIN_PASSWORD)
+    admin/           /api/admin             (operator moderation — 404 unless
+                                             ADMIN_PASSWORD. ONE mount in
+                                             lib/app.js; the sub-routers compose
+                                             in index.js, because they share the
+                                             prefix and seven mounts would run
+                                             authLimiter seven times — issue #996)
+      index.js       the gate, login/logout/me, and the eight mounts
+      shared.js      the schemas and the paging shape more than one needs
+      status.js      instance status + the recent warn/error ring buffer
+      corpus.js      the licensed BGG corpus ingest (issue #681)
+      covers.js      the cover re-encode backfill (issue #867)
+      storefronts.js the one-off storefront link clean-up (issue #981) —
+                     its own file so that removing it is a file delete
+      moderation.js  lookup by image/round/e-mail/tenant, per-tenant summary,
+                     round text + redaction, takedown
+      users.js       account suspend/restore/rename, GDPR export + erasure
+      log.js         the filterable action log and the feedback inbox, + CSV
+      notices.js     the DSA notices inbox, decisions and Art. 17 statements
     recommendations.js …/recommendations    (games the round does not own,
                                             scored from the BGG corpus — #682)
     lookup.js        …/lookup               (search/game — provider proxy for
@@ -390,7 +400,16 @@ public/
     empty-state.js   the app's one "nothing here yet" component — medallion,
                      optional title, sub-line; shares its rules with .lobby-cta
                      (issue #869)
-    account.js       onboarding + auth UI (login/register/verify/reset), token wiring
+    auth-tokens.js   the token layer (#135): the access/refresh/demo keys, the
+                     cached /me projection, the silent-refresh retry and
+                     onSessionLost — what core.js's api() chokepoint reads
+                     through (split out of account.js by #969)
+    account.js       boot + the route gate: what a visitor sees first
+    views-auth.js    the auth screens: login, register, forgot, the verify and
+                     reset landings, the rate-limited state, passkey login
+    demo-account.js  the guest-demo lifecycle: start, enter, resume, end (#427)
+    account-chrome.js the terms banner (#521), the top-bar account menu, the
+                     inbox badge and the „Was ist neu" dot (#741)
     auth-error.js    maps an auth API error code to the localized message each
                      form shows (issue #399)
     username-policy.js
@@ -440,6 +459,10 @@ public/
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
                      lib/routes/members.js validates against (issue #420)
+    member-active.js which members are still PLAYING — the one filter the
+                     forward-looking surfaces (session setup, teams, rankings,
+                     trophies) apply, while history keeps resolving a retired
+                     seat unchanged (issue #1006)
     round-designs.js the design registry: the eight colour palettes and the
                      worlds (Forest, Sci-Fi) under a stable id each, plus the
                      resolver every view and the recap card look a stored

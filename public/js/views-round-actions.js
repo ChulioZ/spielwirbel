@@ -264,7 +264,7 @@ async function showTransferGames(round) {
 // fails safely: the send route 404s a round they don't own.
 async function showInvite(round) {
   const rid = round.id;
-  const freeSeats = (round.members || []).filter((m) => !m.userId);
+  const freeSeats = activeMembers(round).filter((m) => !m.userId);
 
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('invite.title'))}">

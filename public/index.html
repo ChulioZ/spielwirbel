@@ -279,6 +279,7 @@
   <script src="/js/passkey.js"></script>
   <script src="/js/demo-marker.js"></script>
   <script src="/js/member-colors.js"></script>
+    <script src="/js/member-active.js"></script>
   <script src="/js/round-designs.js"></script>
   <script src="/js/round-theme.js"></script>
   <script src="/js/round-roles.js"></script>
@@ -315,7 +316,16 @@
   <script src="/js/setup-addons.js"></script>
   <script src="/js/game-info.js"></script>
   <script src="/js/score-info.js"></script>
-  <script src="/js/account.js"></script>
+  <!-- The account files, in dependency order (#969). `auth-tokens.js` first: it
+         is the token chokepoint core.js's api() reads through. Nothing here runs
+         at load time, so the rest is ordered for readability rather than
+         necessity — but keep it, so a future top-level statement does not have
+         to re-derive it (.claude/rules/frontend-script-load-order.md). -->
+    <script src="/js/auth-tokens.js"></script>
+    <script src="/js/account.js"></script>
+    <script src="/js/views-auth.js"></script>
+    <script src="/js/demo-account.js"></script>
+    <script src="/js/account-chrome.js"></script>
   <script src="/js/ranking.js"></script>
   <script src="/js/podium.js"></script>
   <script src="/js/session-share.js"></script>

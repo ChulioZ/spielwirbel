@@ -92,6 +92,15 @@ the whole uncommitted change along with the break. That cost a full
 re-implementation of #424's three source files
 (`.claude/rules/css-text-assertions-strip-comments.md`).
 
+**Back up EVERY file the break touches, in the same call that makes it.** The
+shape that gets past this rule is a *mixed* one: on #1058 a three-break sweep
+copied `views-session.js` to the scratchpad and restored it correctly three
+times — and reached for `git checkout -- public/styles.css` for the one break
+that was in the stylesheet, discarding that slice's whole CSS. Having done it
+right for the first file is exactly what makes the second feel handled. The tell
+is a suite that goes red *after* the restore, so end a break sweep by re-running
+the spec and reading the pass count, not by assuming the restore took.
+
 ## The worked example that argues for Route 1
 
 `test/seo.test.js` matched two hero strings that **also** live in `<title>` and

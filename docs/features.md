@@ -19,7 +19,12 @@ What the app does, in detail. For a short overview see the
   the head of that table is **yours** — the creator is seated automatically (opt
   out with "Ich spiele mit"), and on any other round a member page offers
   „Das bin ich" so your account can take its own seat. A claimed seat is what
-  puts your name on your actions in the Chronik.
+  puts your name on your actions in the Chronik. A member who stops playing can
+  be **retired** from their own page, exactly the way a game is: they leave the
+  seating list, the teams, the standings and the trophies, while every vote,
+  winner and team they are part of keeps counting — so no game's score moves.
+  Bringing them back is one tap, and a seat created by mistake, with nothing
+  attached to it at all, can be deleted outright instead.
 - **Games** – each game has a title, a required player range (min–max), any
   number of custom round **tags** (see below), and an optional cover image (paste
   from clipboard or pick a file). A game's detail page can also record the
@@ -401,12 +406,17 @@ What the app does, in detail. For a short overview see the
   Pokale tile: pick who joins and skip the vote entirely, landing directly on
   the results screen with that game chosen.
 - **Finale & results** – votes stay sealed until everyone is done, then a
-  little show reveals the results: a spotlight on the top-rated game (several,
-  side by side, when they tie), and under it the full ranking — per-game
-  **Spielwirbel-Score** (colored by score, with a short line saying why it
-  diverges from the plain average, e.g. „1× gar nicht"), rating distribution
-  (one bar per rating) and medals for the favourites. Pick the
-  game you actually played and mark it finished; recording the winner(s) is an
+  little show reveals the results: the ranked rows fill in as a race, shortest
+  first, and the game that won the vote is last to finish — rows sharing first
+  place sit together in one gold group. Every row states its own
+  **Spielwirbel-Score** twice, as a number (colored by score, with a short line
+  saying why it diverges from the plain average, e.g. „1× gar nicht") and as the
+  width of the row's own fill, beside its rank, its rating distribution (one bar
+  per rating) and who brings the box. Picking a game puts it **on the table**: a
+  band above the ranking with the box, who brings it and the one action
+  („Als gespielt markieren") — and nothing at all before a game is chosen. Once
+  it is played, the table carries a stamp with the date and the winners as
+  seats, with the picker behind „Ändern". Recording the winner(s) is an
   optional follow-up step afterwards. When nobody won, the same step records
   **how it ended instead** — „Verloren" (a cooperative game beat the table),
   „Kein Sieger" (a game that is not about winning) or „Fortsetzung folgt" (a
@@ -475,8 +485,8 @@ What the app does, in detail. For a short overview see the
   in Ocean a whale surfaces among rising bubbles, in Chess the back rank is set
   down on the board, in Horror a ghost drifts up over the graveyard while bats
   flit past, and in Dinosaurs the herd stomps into place as the volcano erupts
-  — and the scene's end state stays on the spotlight whenever the results are
-  opened again. Body text stays Nunito in every world; home, login, landing,
+  — and the scene's end state stays on the winners' group whenever the results
+  are opened again. Body text stays Nunito in every world; home, login, landing,
   account and inbox stay standard — a dark round does not darken the lobby
   around it.
 - **Languages** – German, English, Spanish, French, Italian, Dutch, Portuguese, Finnish and Korean, following the system language by

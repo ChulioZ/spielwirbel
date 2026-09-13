@@ -245,7 +245,11 @@ test('the results screen opens with the back control and ends with the delete', 
   // is declared well above its append, so comparing the literal's index passes
   // even with the appends swapped — i.e. against exactly the regression this
   // pins. (Measured: it did.)
-  const footer = results.indexOf('app.appendChild(footer)');
+  // Since #1055 the screen's blocks go into one `.result-screen` wrapper while
+  // the back row stays a direct child of `#app` — it opts out of the reading
+  // measure in CSS instead, alongside the wrapper. So the two appends name
+  // different containers on purpose, and both spellings are checked below.
+  const footer = results.indexOf('screen.appendChild(footer)');
   const back = results.indexOf('app.appendChild(backRow(');
   assert.notEqual(footer, -1, 'the results screen lost its terminal footer row');
   assert.notEqual(back, -1, 'the results screen lost its back control');
@@ -256,8 +260,13 @@ test('the results screen opens with the back control and ends with the delete', 
   assert.ok(back < footer, 'the back control is appended after the footer — it belongs at the top of the content (#623)');
   // Last, not merely after the back control: a block appended below it would
   // put something after the screen's terminal destructive action again.
-  assert.equal(results.indexOf('app.appendChild(', footer + 1), -1,
-    'something is appended after the footer row, which is meant to end the screen');
+  // Both containers, or the check stops seeing the half it is pointed away from:
+  // the wrapper is what the blocks go into, and `#app` is still reachable from
+  // inside the function (that is how the back row gets there).
+  ['screen.appendChild(', 'app.appendChild('].forEach((call) => {
+    assert.equal(results.indexOf(call, footer + 1), -1,
+      `something is appended with ${call}…) after the footer row, which is meant to end the screen`);
+  });
 });
 
 /* A `ti-*` class whose rule is missing renders NOTHING — no tofu, no console

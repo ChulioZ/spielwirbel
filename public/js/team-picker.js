@@ -59,7 +59,7 @@ function renderTeamPicker(round, joining, guestList, note, onChange) {
   // Everyone at the table right now, in the same order the session will resolve
   // them: the members who are in, then the guests.
   const people = () => {
-    const out = round.members
+    const out = activeMembers(round)
       .filter((m) => joining.has(m.id))
       .map((m) => ({ token: TEAM_TOKEN_MEMBER + m.id, label: m.name }));
     guestList.guests.forEach((name, i) => {

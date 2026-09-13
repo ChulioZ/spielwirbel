@@ -25,6 +25,13 @@ const path = require('node:path');
 
 const DIR = path.join(__dirname, '..', 'lib', 'routes');
 
+// Every .js under lib/routes, at any depth, as a path relative to DIR — so a
+// sub-router directory is named `admin/login.js` in the ALLOW keys and in the
+// failure message, which is where a reader would look for it.
+const walk = (dir, prefix = '') => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (
+  e.isDirectory() ? walk(path.join(dir, e.name), `${prefix}${e.name}/`)
+    : (e.name.endsWith('.js') ? [prefix + e.name] : [])));
+
 /* Raw readers that stay raw, each with the reason. A new entry takes an
    argument; an entry whose handler stops reading the body goes stale and is
    reported below, so the list cannot rot into names nobody has looked at. */
@@ -36,7 +43,7 @@ const ALLOW = {
   'passkeys.js': 'the WebAuthn response is verified by @simplewebauthn/server',
   // The shared-password gate: one string, compared with timingSafeEqual.
   'auth.js POST /login': 'a single password field, compared constant-time',
-  'admin.js POST /login': 'a single password field, compared constant-time',
+  'admin/index.js POST /login': 'a single password field, compared constant-time',
   // Its own zod union with `.catch` — a malformed design becomes the default
   // rather than a 400, which is what the client would do with an unknown one.
   'background.js POST /': 'own zod schema with .catch (unknown design -> default)',
@@ -50,7 +57,14 @@ const ALLOW = {
 const HANDLER = /^router\.(get|post|put|patch|delete)\('([^']*)'/gm;
 
 test('every mutating route that reads req.body validates it, or is allowlisted with a reason', () => {
-  const files = fs.readdirSync(DIR).filter((f) => f.endsWith('.js')).sort();
+  /* RECURSIVE since #996, and the reason is the whole point of this file: that
+     split moved seven routers into lib/routes/admin/, and a one-level
+     `readdirSync` stopped seeing every one of them — silently. Nothing went red
+     for the missing coverage; the only signal was the ALLOW entry for
+     `admin.js POST /login` going stale, and that is a check this spec happens to
+     have. A guard that enumerates FILES has the same blind spot as one that
+     enumerates call shapes. */
+  const files = walk(DIR).sort();
   assert.ok(files.length >= 10, `found only ${files.length} routers`);
 
   const raw = [];
