@@ -1,6 +1,6 @@
 'use strict';
 
-/* The member page's hero band (#995).
+/* The member page's card — die Tischkarte (#995's hero band, rebuilt by #1074).
  *
  * The page used to open on a 44px avatar and a modest name — about 50px of head
  * that read as a breadcrumb, on the one screen in the round hub with nothing
@@ -54,10 +54,10 @@ test('the head carries --m-tone, and it is the member\'s OWN colour', async (t) 
   });
   await dom.call('showMember', RID, MID);
 
-  const head = dom.app.querySelector('.member-head');
+  const head = dom.app.querySelector('.member-card');
   assert.ok(head, 'the member page rendered no head at all');
   const tone = head.style.getPropertyValue('--m-tone');
-  assert.ok(tone, '.member-head carries no --m-tone, so the band paints on nothing');
+  assert.ok(tone, '.member-card carries no --m-tone, so the band paints on nothing');
 
   /* THE ASSERTION THAT MATTERS. The band, the avatar ring and the accent rule
      all read one property, and it has to be the value the avatar is already
@@ -94,13 +94,13 @@ test('a member with no colour of their own still renders a band', async (t) => {
     return {};
   });
   await dom.call('showMember', RID, 'm2');
-  const head = dom.app.querySelector('.member-head');
+  const head = dom.app.querySelector('.member-card');
   assert.ok(head.style.getPropertyValue('--m-tone'), 'the uncoloured member got no tone');
 });
 
 test('the band is derived from --m-tone and the surface — never a literal hex', () => {
-  const head = bodyOf('.member-head');
-  assert.ok(head, '.member-head has no rule any more');
+  const head = bodyOf('.member-card');
+  assert.ok(head, '.member-card has no rule any more');
 
   // Every colour in the band comes from the tone or from a theme token, so a
   // round's design carries it and a dark scheme is not a special case.
@@ -109,18 +109,20 @@ test('the band is derived from --m-tone and the surface — never a literal hex'
   assert.doesNotMatch(head, /#[0-9a-f]{3,8}\b/i,
     'a literal hex in the band — the tone must come from the member, the rest from tokens');
 
-  // The accent rule under the name is the one place the colour is used at full
-  // strength, and it is the only one carrying no text.
-  const rule = bodyOf('.member-head__info::after');
-  assert.ok(rule, 'the accent rule under the name is gone');
-  assert.match(rule, /var\(--m-tone\)/);
+  /* The figure strip's rule reads the tone too. #995's accent bar under the
+     name went with the head band (#1074) — the strip's top border is now where
+     the colour is used at strength on a surface carrying no text, and the
+     character slice adds the rest. */
+  const rule = bodyOf('.member-card__figures');
+  assert.ok(rule, 'the figure strip has no rule any more');
+  assert.match(rule, /var\(--m-tone\)/, 'the strip no longer reads the member tone');
 
-  /* The relocated figures' LABEL must be `--ink`. It sits in the band's
-     top-right corner, where the radial wash is strongest — measured there,
+  /* The figures' LABEL must be `--ink`. The strip sits on the wash, and the
+     measurement that pinned this was taken where it is strongest — measured there,
      `--ink-soft` is 3.40:1 against the 4.5 AA bar while `--ink` is 6.63:1. The
      quiet tone is the natural choice for a small uppercase label, which is
      exactly why it is pinned. */
-  const statLabel = bodyOf('.member-head__stat-label');
+  const statLabel = bodyOf('.member-figure__label');
   assert.ok(statLabel, 'the relocated figures have no label rule');
   assert.match(statLabel, /color:\s*var\(--ink\)/);
   assert.doesNotMatch(statLabel, /var\(--ink-soft\)/,

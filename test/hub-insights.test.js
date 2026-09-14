@@ -18,7 +18,7 @@ const {
   gameSuggestions, quickPresets, roundPulse, careList, anniversary,
 } = require('../public/js/hub-insights');
 const { sessionOutcome, sessionEnding } = require('../public/js/session-outcome');
-const { periodKeyOf } = require('../public/js/period-recap');
+const { periodKeyOf, dayIndexOf, monthsBetween } = require('../public/js/period-recap');
 const {
   metadataFilterOptions, normalizeMetadataFilters, fitsMetadataFilters,
 } = require('../public/js/draw-pool');
@@ -28,6 +28,8 @@ const deps = {
   outcomeOf: sessionOutcome,
   endingOf: sessionEnding,
   monthKeyOf: periodKeyOf,
+  dayIndexOf,
+  monthsBetween,
   neutralScore: PRIOR_DEFAULT,
   filterOptions: metadataFilterOptions,
   normalizeMetadata: normalizeMetadataFilters,
@@ -267,9 +269,73 @@ test('roundPulse reports the days since the last evening and the untouched shelf
   const games = shelfOf(5);
   const sessions = [played('s1', 'g1', at(2026, 8, 26)), played('s2', 'g2', at(2026, 9, 1))];
   const pulse = roundPulse(round(games, sessions), games, { now: NOW }, deps);
-  assert.equal(pulse.daysSinceLast, 3);
+  assert.equal(pulse.daysSinceLast, 4, 'Sep 1 to Sep 5 is four calendar days, whatever the clock says');
   assert.equal(pulse.shelfSize, 5);
   assert.equal(pulse.neverPlayed, 3, 'g3, g4 and g5 have never reached the table');
+});
+
+/* The three cases the old floor(elapsed / 24h) got wrong. Each is a session the
+   group would describe in a word ("yesterday", "today") and the arithmetic
+   described in hours, so they are the whole point of the change rather than
+   edge cases: the 23:30 -> 00:30 pair is one hour apart and two calendar days,
+   and the noon-written test above is green under either rule at 2 days. */
+const pulseDays = (when, now) => {
+  const games = shelfOf(5);
+  const sessions = [played('s1', 'g1', when), played('s2', 'g2', when)];
+  return roundPulse(round(games, sessions), games, { now }, deps).daysSinceLast;
+};
+
+test('roundPulse calls last evening yesterday from midnight, not from the hour it ended', () => {
+  // 20:00 yesterday, read at 10:00 today: 14 hours, one calendar day.
+  assert.equal(pulseDays(at(2026, 9, 4, 20), new Date(2026, 8, 5, 10).getTime()), 1);
+});
+
+test('roundPulse counts the midnight crossing as a day, an hour after it', () => {
+  // 23:30 -> 00:30 is 60 minutes and still yesterday's session.
+  const halfPastEleven = new Date(2026, 8, 4, 23, 30).toISOString();
+  assert.equal(pulseDays(halfPastEleven, new Date(2026, 8, 5, 0, 30).getTime()), 1);
+});
+
+test('roundPulse calls a session earlier the same day today, whatever the gap', () => {
+  // 09:00 -> 22:00 is 13 hours and the same calendar day.
+  assert.equal(pulseDays(at(2026, 9, 5, 9), new Date(2026, 8, 5, 22).getTime()), 0);
+});
+
+test('roundPulse survives a DST transition without losing a day', () => {
+  // Europe's clocks go FORWARD on 29 March 2026, making that local day 23 hours
+  // long, so three calendar days are 71 elapsed hours and floor(71 / 24) is 2.
+  // In a zone without DST this passes either way — dayIndexOf being DST-proof by
+  // construction is the real guarantee (see its own spec in period-recap).
+  assert.equal(pulseDays(at(2026, 3, 27, 20), new Date(2026, 2, 30, 20).getTime()), 3);
+});
+
+// ------------------------------------------------------- suggestion arithmetic
+
+test('gameSuggestions counts the gap in calendar months, not in 30-day blocks', () => {
+  // 1 March 12:00 to 31 May 20:00 is 91.3 elapsed days — three 30-day blocks —
+  // and TWO completed calendar months, which is under the card's floor of three.
+  const games = shelfOf(8);
+  const sessions = games.map((g, i) => played('s' + i, g.id, at(2026, 3, 1, 12)));
+  const now = new Date(2026, 4, 31, 20).getTime();
+  const out = gameSuggestions(round(games, sessions), games, { now }, deps);
+  assert.ok(!out.some((r) => r.reason.kind === 'longAgo'), '1 March is not three months before 31 May');
+});
+
+test('gameSuggestions measures the recent-play window in calendar days too', () => {
+  // Played at 09:00, read at 22:00 on the 60th day after: 60.5 elapsed days, so
+  // the old arithmetic called it "not out recently" on the very day the window
+  // closes. A shelf where every game is well liked and played on the same day
+  // leaves `loved` as the only row that can appear.
+  const games = shelfOf(8);
+  const sessions = games.map((g, i) => played('s' + i, g.id, at(2026, 7, 7, 9)));
+  const stats = {};
+  games.forEach((g) => { stats[g.id] = { score: 4.6 }; });
+  const onTheSixtiethDay = new Date(2026, 8, 5, 22).getTime(); // 7 Jul + 60 days
+  const inside = gameSuggestions(round(games, sessions), games, { now: onTheSixtiethDay, statsByGame: stats }, deps);
+  assert.ok(!inside.some((r) => r.reason.kind === 'loved'), 'day 60 is still inside the 60-day window');
+  const dayAfter = new Date(2026, 8, 6, 1).getTime();
+  const outside = gameSuggestions(round(games, sessions), games, { now: dayAfter, statsByGame: stats }, deps);
+  assert.ok(outside.some((r) => r.reason.kind === 'loved'), 'day 61 is outside it');
 });
 
 // ----------------------------------------------------------------- Kümmerliste

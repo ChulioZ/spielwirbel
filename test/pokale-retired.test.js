@@ -243,9 +243,14 @@ test("the member page's Lieblingsspiel follows the same rule as the Pokale card"
 test('a member page still averages every rating given, retired games included', async (t) => {
   const dom = bootApp(t);
   await dom.call('showMember', RID, 'm1');
-  const card = cardByLabel(dom.app, dom.run("t('member.avgGiven')"));
+  // A `.member-figure`, not a `.pokale-card`, since #1074 put the five figures
+  // in one strip inside die Tischkarte.
+  const fig = [...dom.app.querySelectorAll('.member-figure')].find(
+    (c) => c.querySelector('.member-figure__label').textContent === dom.run("t('member.avgGiven')")
+  );
+  assert.ok(fig, 'the Ø-given figure is gone from the card');
   // Anna gave 3 (Catan), 5 (Azul, retired) and 4 (Cascadia) -> 4.0. This stat is
   // about how she rates, not about what is on the shelf, so the favourite filter
   // two lines above it in memberStats must not reach `allRatings`.
-  assert.equal(card.querySelector('.pokale-card__value').textContent, 'Ø 4,0');
+  assert.equal(fig.querySelector('.member-figure__value').textContent, '\u00d8 4,0');
 });

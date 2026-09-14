@@ -26,7 +26,7 @@ that no test can check:
 |---|---|
 | changes how a user-facing feature *works*, in a way an existing answer describes | `lib/faq.js` — **both languages**, and mind its content rules (`test/faq.test.js` bans naming a device kind: say "Gerät"/"device", never "Handy"/"phone") |
 | adds or changes a feature the pitch describes | the `landing.*` keys in **every** `public/js/lang/*.js` (hero, feature cards, the three steps) |
-| ships a genuinely new user-facing **capability** — and only then | a `NEWS` entry in `public/js/news.js` (#741), **both languages inline** |
+| ships a genuinely new user-facing **capability** — and only then | a `NEWS` entry in `public/js/news.js` (#741), **every shipped locale inline** (#1087 — nine today; `test/news-locales.test.js` derives the set from `locales.js` and goes red naming the missing one) |
 
 **Why this row exists.** #209 added per-device voting and the four documents above
 were all updated — while `lib/faq.js` still answered "a round runs from one

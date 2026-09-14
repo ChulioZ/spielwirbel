@@ -112,6 +112,29 @@ function fmtMonth(iso) {
   return new Date(iso).toLocaleString(localeTag(locale), { month: 'long', year: 'numeric' });
 }
 
+/* A relative day count in the reader's language — „gestern", „vor 3 Tagen",
+   „letzte Woche" — for a surface where WHEN-ish beats WHEN exactly.
+
+   It takes a COUNT OF LOCAL CALENDAR DAYS, not a date, and that is deliberate
+   twice over. It keeps the count honest (`dayIndexOf`, period-recap.js — an
+   elapsed-hours division says „gestern" for something 14 hours old, which is
+   #1080), and it keeps THIS file free of a forward reference to a script that
+   loads after it (.claude/rules/frontend-script-load-order.md).
+
+   `Intl.RelativeTimeFormat` rather than six new keys in every shipped locale:
+   `numeric: 'auto'` is what turns -1 into „gestern" instead of „vor 1 Tag", and
+   it is right in every language the app ships — including Korean, whose single
+   plural category `tn()`'s one/other pair cannot express anyway.
+
+   NULL past the cutoff, rather than a longer phrase: „vor 412 Tagen" is a number
+   nobody pictures, so the caller falls back to the absolute date. */
+const RELATIVE_DAYS_MAX = 30;
+function fmtRelativeDays(days) {
+  if (!Number.isFinite(days) || days < 0 || days > RELATIVE_DAYS_MAX) return null;
+  const rtf = new Intl.RelativeTimeFormat(localeTag(locale), { numeric: 'auto' });
+  return days < 7 ? rtf.format(-days, 'day') : rtf.format(-Math.floor(days / 7), 'week');
+}
+
 /* The same label from a bare "YYYY-MM" period key (#964) — what the Discover
    podium's month card is told it is counting.
 

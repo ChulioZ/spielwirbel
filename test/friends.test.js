@@ -320,6 +320,93 @@ test('feed: a run of stored duplicates does not shorten the returned page', asyn
   assert.equal(new Set(events.map((e) => e.title)).size, 50, 'and 50 DISTINCT entries');
 });
 
+/* The stored row gained a `count` in #1079 — the first widening of an allowlist
+   whose whole point is that it is narrow. Both halves are asserted: the new field
+   survives, and NOTHING else does. */
+test('feed: the stored row keeps type/title/coverUrl/count and drops everything else', async () => {
+  const alice = await makeAccount('allow-alice@example.com');
+  const row = await repo.addFeedEvent(alice.user.id, {
+    type: 'games_imported',
+    title: 'Catan',
+    coverUrl: 'https://example.test/c.png',
+    count: 23,
+    // Everything below is what the allowlist exists to stop. A round name and a
+    // member name are personal data about a group the reader is not in; `uid`
+    // and `at` are set by the store and must not be caller-controlled.
+    roundName: 'Freitagsrunde',
+    member: 'Ada',
+    note: 'anything at all',
+    uid: 'somebody-else',
+    at: '1999-01-01T00:00:00.000Z',
+  });
+  assert.equal(row.type, 'games_imported');
+  assert.equal(row.title, 'Catan');
+  assert.equal(row.coverUrl, 'https://example.test/c.png');
+  assert.equal(row.count, 23);
+  assert.equal(row.uid, alice.user.id, 'uid comes from the argument, never the event');
+  assert.notEqual(row.at, '1999-01-01T00:00:00.000Z', 'the stamp is the store\'s own');
+  for (const stray of ['roundName', 'member', 'note']) {
+    assert.equal(row[stray], undefined, `"${stray}" reached a friend's feed`);
+  }
+});
+
+test('feed: a count that is not a non-negative integer is dropped, not stored', async () => {
+  // The widening is typed at the store, not trusted from the caller — the same
+  // stance the rest of the allowlist takes.
+  const alice = await makeAccount('count-alice@example.com');
+  for (const bad of [-1, 1.5, '3', null, NaN, Infinity]) {
+    const row = await repo.addFeedEvent(alice.user.id, { type: 'games_imported', title: 'X', count: bad });
+    assert.equal(row.count, undefined, `count ${String(bad)} was stored`);
+  }
+});
+
+test('feed: the two older types carry no count key at all', async () => {
+  /* Absent, not 0 or null. Both backends store the row as one JSON blob, so an
+     always-present key would be a jsonb shape difference between the types and
+     between rows written before and after this change
+     (.claude/rules/postgres-backend.md). */
+  const alice = await makeAccount('nocount-alice@example.com');
+  for (const type of ['game_added', 'session_played']) {
+    const row = await repo.addFeedEvent(alice.user.id, { type, title: 'X', count: 7 });
+    assert.equal(row.count, undefined, `${type} accepted a count`);
+    assert.ok(!Object.prototype.hasOwnProperty.call(row, 'count'), `${type} carries a count KEY`);
+  }
+});
+
+test('feed: the read route surfaces the count, and only for the type that has one', async () => {
+  const alice = await makeAccount('cread-alice@example.com');
+  const bob = await makeAccount('cread-bob@example.com');
+  await befriend(alice, bob);
+  await sleep(20); // clear the acceptedAt cutoff
+
+  await repo.addFeedEvent(alice.user.id, { type: 'game_added', title: 'Solo' });
+  await repo.addFeedEvent(alice.user.id, { type: 'games_imported', title: 'Catan', count: 23 });
+
+  const events = (await getFeed(bob)).events;
+  const imported = events.find((e) => e.type === 'games_imported');
+  const added = events.find((e) => e.type === 'game_added');
+  assert.equal(imported.count, 23, 'the projection dropped the count');
+  assert.equal(added.count, undefined, 'a game_added row grew a count');
+});
+
+test('feed: two imports of the same collection collapse to the newest count', async () => {
+  /* collapseFeedEvents keys a run on uid+type+title, which is right for this type
+     too: re-importing the same collection within the window is one piece of news,
+     and the newest row is the one that survives — so the count a friend reads is
+     the latest, not a sum and not the first. */
+  const alice = await makeAccount('ccol-alice@example.com');
+  const bob = await makeAccount('ccol-bob@example.com');
+  await befriend(alice, bob);
+  await sleep(20);
+
+  await repo.addFeedEvent(alice.user.id, { type: 'games_imported', title: 'Catan', count: 3 });
+  await repo.addFeedEvent(alice.user.id, { type: 'games_imported', title: 'Catan', count: 5 });
+
+  const events = (await getFeed(bob)).events;
+  assert.equal(events.length, 1, 'the run did not collapse');
+  assert.equal(events[0].count, 5, 'the newest row survives a collapse');
+});
+
 test('accounts off: every friend route 404s accounts_disabled', async () => {
   // A fresh app with accounts disabled (the shared helpers app has them on).
   const { createApp } = require('../lib/app');
