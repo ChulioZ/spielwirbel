@@ -97,6 +97,14 @@ async function showAccount() {
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.notify.title'))}</h2>`));
   app.appendChild(buildNotifyForm(me));
 
+  /* Changing the address (#1076). Below the demo return with the mail and
+     password sections, and for both of their reasons at once: a guest demo's
+     stored address is a synthetic `…@demo.invalid` placeholder, and it holds no
+     password identity to re-authenticate against — so the route answers
+     403 demo_account and the form could only ever fail. */
+  app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.email.title'))}</h2>`));
+  app.appendChild(buildEmailForm(me));
+
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.pw.title'))}</h2>`));
   app.appendChild(buildPasswordForm());
 
@@ -540,6 +548,84 @@ function buildPasswordForm() {
   });
 
   return form;
+}
+
+/* Change the account's e-mail address (#1076).
+
+   CONFIRM-THEN-SWAP, so this form only ever REQUESTS: the address moves when the
+   link mailed to the new one is opened. That is what makes a typo survivable,
+   and it is why the pending panel echoes the address back — the request answers
+   `ok` for an address that already belongs to somebody else (anti-enumeration,
+   the same shape as register and forgot-password), so the only way to notice a
+   slip is to see what you typed.
+
+   The pending state keeps the FORM visible rather than offering a bare "resend"
+   button: resending is a fresh request and needs the password again, so a button
+   that opens the form is one click more for nothing. */
+function buildEmailForm(me) {
+  const wrap = h('<div class="konto-notify"></div>');
+
+  const render = (pending) => {
+    wrap.innerHTML = '';
+    wrap.appendChild(h(`<p class="muted konto-notify__intro">${esc(t(pending ? 'konto.email.pendingIntro' : 'konto.email.intro'))}</p>`));
+    if (pending) {
+      const row = h(`<p class="konto-email__pending">${t('konto.email.pending', { email: `<strong>${esc(pending)}</strong>` })}</p>`);
+      const cancel = h(`<button class="link-btn" type="button">${esc(t('konto.email.cancel'))}</button>`);
+      cancel.addEventListener('click', async () => {
+        try {
+          await accountApi('DELETE', '/change-email');
+          toast(t('konto.email.cancelled'));
+          render(null);
+        } catch (ex) { if (ex.message !== 'auth') toast(t('auth.error.network')); }
+      });
+      row.appendChild(cancel);
+      wrap.appendChild(row);
+    }
+
+    const form = h(`<form class="konto-form" autocomplete="on">
+        <div class="field">
+          <label for="keNew">${esc(t('konto.email.newLabel'))}</label>
+          <input id="keNew" class="input" type="email" autocomplete="email" inputmode="email" />
+        </div>
+        <div class="field">
+          <label for="keCurrent">${esc(t('konto.pw.current'))}</label>
+          <input id="keCurrent" class="input" type="password" autocomplete="current-password" />
+        </div>
+        <p class="field__hint muted">${esc(t('konto.email.hint'))}</p>
+        <p class="konto-error" role="alert"></p>
+        <button class="btn btn--primary" type="submit">${esc(t(pending ? 'konto.email.resend' : 'konto.email.submit'))}</button>
+      </form>`);
+    // Prefilled in the pending state so a resend is one field, not two.
+    if (pending) form.querySelector('#keNew').value = pending;
+    wrap.appendChild(form);
+
+    const next = form.querySelector('#keNew');
+    const current = form.querySelector('#keCurrent');
+    const err = form.querySelector('.konto-error');
+    const submit = form.querySelector('button[type=submit]');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.textContent = '';
+      // Client-side first, so an obvious slip costs no request and no Argon2
+      // verify on the server.
+      if (!next.value.trim() || !current.value) return setKontoError(err, t('auth.error.missing'));
+      submit.disabled = true;
+      try {
+        const data = await accountApi('POST', '/change-email', {
+          email: next.value.trim(),
+          currentPassword: current.value,
+        });
+        toast(t('konto.email.sent'));
+        render(data.pendingEmail || next.value.trim());
+      } catch (ex) {
+        if (ex.message !== 'auth') setKontoError(err, t(authErrorKey('changeEmail', ex.message)));
+        submit.disabled = false;
+      }
+    });
+  };
+
+  render(me.pendingEmail || null);
+  return wrap;
 }
 
 /* The passkey list plus its "add" button (#418).

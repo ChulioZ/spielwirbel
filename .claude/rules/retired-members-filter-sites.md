@@ -10,6 +10,7 @@ paths:
   - "public/js/owner-picker.js"
   - "public/js/round-rail.js"
   - "public/js/views-round-start.js"
+  - "public/js/views-member.js"
   - "lib/routes/members.js"
 ---
 
@@ -39,6 +40,7 @@ filter `activeMembers()` (`public/js/member-active.js`):
 | `views-pokale.js`, `win-score.js` | standings, streaks, trophies |
 | `recap.js` | the "two members disagree about most" card |
 | `round-rail.js`, `views-round-start.js` | the member strips |
+| `views-member.js` | die Tischkarte's „Am Tisch" seat strip (#1074) — the screen that is BOTH halves of this rule: a retired member is absent from the strip and still is the page's own subject, or there would be no way to bring them back |
 | `owner-picker.js` | who can be recorded as owning a box |
 | `views-round-actions.js` | the free seats an invitation may fill |
 | `bgg-import.js`, `regal-bulk.js`, `views-round-lookup.js` | whether an owner field is worth showing at all |

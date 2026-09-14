@@ -46,6 +46,14 @@ characters**, with the uid moved *inside* a combined token in the same
 `<version>.<uid>.<secret>` shape `lib/accounts.js` already uses for refresh
 tokens. Three parts of that are load-bearing:
 
+**Three links ride this shape, not two:** `/v` (verify, #434), `/r` (reset,
+#434) and `/e` (confirm an address change, #1076). A FOURTH costs one more
+two-character path and one more version prefix — and it inherits this budget, so
+add its own assertion to the spec rather than assuming a one-character path
+name leaves room. The prefixes are what keep the three apart: all three hash into
+the same `tokenHash` field shape, so without the version check a verification
+link would double as a reset link, and a reset link as an address change.
+
 - **The secret is 16 bytes, not the 32 `newRawToken()` uses.** 22 base64url
   characters instead of 43 is most of the saving. 128 bits is still ample for a
   token that is single-use, time-limited (24 h / 1 h) *and* behind the auth rate

@@ -1183,10 +1183,14 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // (public/js/news.js), so only the account's own stamp has to travel.
   // `avatar` (#841) rides on every account as a path or null — the client needs
   // to know there is nothing to remove as much as it needs the path itself.
+  // `pendingEmail` (#1076) is the ADDRESS of a pending change, or null — never
+  // the token hash or the timestamps beside it in the stored record, which is
+  // the half this exact-key assertion is here to catch.
   assert.deepEqual(Object.keys(res.body).sort(),
     ['acceptedTermsRevision', 'avatar', 'bgStats', 'bggUsername', 'createdAt', 'demo',
       'demoExpiresAt', 'email', 'emailVerified', 'id', 'lastSeenNewsRevision',
-      'notifyFriendRequests', 'notifyRoundInvitations', 'termsRevision', 'username']);
+      'notifyFriendRequests', 'notifyRoundInvitations', 'pendingEmail', 'termsRevision',
+      'username']);
   assert.equal(res.body.demo, false);
   assert.equal(res.body.demoExpiresAt, null);
 
