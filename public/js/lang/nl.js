@@ -1118,6 +1118,8 @@ I18N.nl = {
   'friends.unknownUser': '(onbekend)',
   'friends.feed.played': '{user} speelde {game}',
   'friends.feed.added': '{user} zette {game} in de kast',
+  'friends.feed.importedOne': '{user} zette {game} en {n} ander spel in de kast',
+  'friends.feed.imported': '{user} zette {game} en {n} andere spellen in de kast',
   'friends.feed.report': 'Dit item melden',
   'friends.feed.reportSubject': 'Item in de tijdlijn: {user} — {game} ({date})',
   'friends.reportAccount': 'Dit account melden',

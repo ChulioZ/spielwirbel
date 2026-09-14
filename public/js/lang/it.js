@@ -1125,6 +1125,8 @@ I18N.it = {
   'friends.unknownUser': '(sconosciuto)',
   'friends.feed.played': '{user} ha giocato a {game}',
   'friends.feed.added': '{user} ha aggiunto {game} allo scaffale',
+  'friends.feed.importedOne': '{user} ha aggiunto {game} e {n} altro gioco allo scaffale',
+  'friends.feed.imported': '{user} ha aggiunto {game} e {n} altri giochi allo scaffale',
   'friends.feed.report': 'Segnala questa voce',
   'friends.feed.reportSubject': 'Voce del feed: {user} — {game} ({date})',
   'friends.reportAccount': 'Segnala questo account',

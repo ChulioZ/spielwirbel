@@ -130,6 +130,7 @@ const claudeMd = () => ['CLAUDE.md'];
 
 const SOURCE_ALLOW = {
   // judged
+  'public/js/views-friends.js': 'recorded 2026-09-14 at 701 lines — crossed by #1079 adding the count-bearing import line to the feed text, one line over, on a file #1092 had just rebuilt to 683. A SEAM IS VISIBLE and it is the one the screen was rebuilt around: #1092\'s own diagnosis is "two contents with opposite needs" — the people grid (cards, states, the add tile) and the FEED (its text, its cap, its collapse), which are edited independently, as this very change does by touching only the feed half. Not split here because #1079 is a five-line allowlist widening and splitting a public/js file is its own change — a new file, its <script> tag at the right point in the load order, its SHELL entry, a CACHE bump and an eslint globals entry (.claude/rules/frontend-helper-modules-and-coverage.md). M-001\'s worklist item',
   'lib/repo/postgres.js': 'judged — one file per repo backend, paired with json.js against the shared contract; splitting one without the other is what drifts them (data-access-layer.md)',
   'lib/repo/json.js': 'judged — the other half of the same pair',
   'lib/legal.js': 'judged — flat data: the rendered legal texts, DE + EN, kept in one file so a revision bump touches one place (keep-legal-docs-current.md)',

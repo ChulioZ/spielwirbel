@@ -590,9 +590,11 @@ What the app does, in detail. For a short overview see the
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a
   **Freundeskreis feed** (a tile on the home dashboard plus a dedicated
-  view at `/freunde`): only "*added a game*" and "*played a game*" notes with the
-  **game title and cover** — never member names, ratings, votes or round names,
-  and only for activity after you became friends. The screen itself is **one grid
+  view at `/freunde`): only "*added a game*", "*played a game*" and — for a
+  BoardGameGeek collection import — "*added ‹game› and N more games*" notes, with
+  the **game title and cover** and, for that last one, a plain count; never
+  member names, ratings, votes or round names, and only for activity after you
+  became friends. The screen itself is **one grid
   of person cards** sorted by state — a request you have not answered is always
   the first card, whatever the friend count — with the feed as a second column
   from 1024px up and collapsed under the grid below it. Each card carries what
