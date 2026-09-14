@@ -529,7 +529,11 @@ What the app does, in detail. For a short overview see the
   from the bottom of the logged-out landing page, answering what people ask
   before signing up: whether everyone needs an account, whether it is really
   free, whether there is an app, whether it does more than board games, and what
-  happens to the data. German (authoritative) and English in one document. It is
+  happens to the data. **One language per page, in every shipped locale** (issue
+  #1088): an explicit `?lang=` wins, then the browser's `Accept-Language`, then
+  German — and a small row at the top links the other eight. German stays the
+  reference text every translation is made from, which each translated page says
+  in one line. It is
   **server-rendered**, and that is what keeps it honest on a self-hosted
   instance: an answer that instance cannot truthfully give — donations where
   `DONATE_URL` is unset, the account answers with accounts off, the data answers
