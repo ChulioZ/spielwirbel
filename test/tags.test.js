@@ -357,9 +357,9 @@ test('the client maxlength on EVERY tag-name input equals the server TAG_NAME_MA
   const fs = require('node:fs');
   const path = require('node:path');
   const routeSrc = fs.readFileSync(path.join(__dirname, '..', 'lib', 'routes', 'tags.js'), 'utf8');
-  // Both renderings, across the two files they live in since #956 (the Tags
-  // screen moved to views-round-settings.js, the popover stayed).
-  const viewSrc = ['views-round-detail.js', 'views-round-settings.js']
+  // Both renderings, across the files they live in: #956 moved the Tags screen
+  // to views-round-settings.js and #968 moved the popover to game-editors.js.
+  const viewSrc = ['game-editors.js', 'views-round-detail.js', 'views-round-settings.js']
     .map((f) => fs.readFileSync(path.join(__dirname, '..', 'public', 'js', f), 'utf8'))
     .join('\n');
 

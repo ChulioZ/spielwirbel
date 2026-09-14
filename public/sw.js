@@ -139,6 +139,7 @@ const SHELL = [
   '/js/views-pokale.js',
   '/js/views-archive.js',
   '/js/views-recommend.js',
+  '/js/game-editors.js',
   '/js/views-round-detail.js',
   '/js/views-round-settings.js',
   '/js/views-round-actions.js',

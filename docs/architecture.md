@@ -658,6 +658,11 @@ public/
     views-recommend.js    "das könnte euch auch gefallen": ranked games the
                           round does not own, each card naming up to three
                           reasons it was picked (#682, #772)
+    game-editors.js  the game page's five field editors — players, owners,
+                     tags, cover and expansions (issue #968). Split out of
+                     views-round-detail.js, whose remaining seam ran INSIDE
+                     showGameDetail; each takes one explicit context instead of
+                     closing over that function's scope
     views-round-detail.js game detail, plus the wish-list price block it
                           renders
     views-round-settings.js round Einstellungen screen: the round-level actions
