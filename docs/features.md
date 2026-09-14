@@ -633,7 +633,9 @@ What the app does, in detail. For a short overview see the
   username and the kind of request — never a round name or any other free text.
 - **„Was ist neu"** (issue #741). A small screen at `/neu`, reached from the
   account menu, listing the handful of genuinely new capabilities that have
-  shipped — newest first, in your language. A **dot on the account button**
+  shipped — newest first, in your language: every entry is written in **every
+  shipped locale** (issue #1087), so the screen never falls back to English for a
+  language the rest of the app speaks. A **dot on the account button**
   appears when there is an entry you have not seen, and the „Was ist neu" row
   inside that menu repeats it (issue #764) — the button is a menu rather than a
   destination, so without the second mark the trail ends at five unlabelled

@@ -19,8 +19,8 @@ getLocale() === 'en' ? englishThing : germanThing   // "not English" -> German
 It reads as correct because the app ships exactly two languages *today*, so the
 two branches are exhaustive and every test passes. It is already wrong for a
 visitor whose system language is French, Spanish or Italian — they are handed
-German — and it silently mis-serves every locale of #534–#538 the moment one
-lands. Nothing errors, nothing 400s, no screen is blank: the reader simply gets
+German — and it silently mis-serves every one of the seven locales that landed
+after it (#534–#538, then fi #1045 and ko #1047). Nothing errors, nothing 400s, no screen is blank: the reader simply gets
 prose they cannot read, which is indistinguishable from the feature working.
 
 **The rule:** German is the *exception*, English is the fallback. Test for `de`

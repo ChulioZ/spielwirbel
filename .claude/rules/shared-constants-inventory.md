@@ -156,8 +156,15 @@ client cannot claim to have seen an entry that does not exist. A drifted copy
 would not 400 and would not blank a screen — it would stamp accounts as caught up
 on a revision the list never held, permanently suppressing the dot for the entry
 that mattered, with no error and a screen that still looks finished. The entry
-text is deliberately **not** i18n keys but inline `de`/`en` objects, so adding an
-entry stays one edit and `test/i18n-parity.test.js` never has to care.
+text is deliberately **not** i18n keys but one inline object per shipped locale,
+so adding an entry stays one edit and `test/i18n-parity.test.js` never has to
+care. That was `de`/`en` only until #1087, which is a cautionary note on this
+whole shape: the design that keeps a list out of the parity test is also what
+stops anything noticing when the locale set moves past it — seven languages
+shipped and the screen kept handing their readers English. `test/news-locales.test.js`
+derives the required set from `locales.js` instead, and rejects a key that is
+neither `revision` nor a shipped locale (a `kr:` typo would otherwise fall back
+in silence).
 
 **The eighth is `public/js/round-roles.js`** (#137): the owner/co-owner/editor
 ladder, the capability each guarded action costs, and the `can`/`roundCan`
