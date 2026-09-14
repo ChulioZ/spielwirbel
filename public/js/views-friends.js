@@ -13,12 +13,38 @@
 
 'use strict';
 
+// How many feed events the collapsed column shows below 1024px, where it sits
+// UNDER the grid rather than beside it. Six is what fits without the duplicate
+// of the home dashboard's own tile costing a screenful (#1092).
+const KREIS_FEED_COLLAPSED = 6;
+
 /* ------------------------------ dedicated view ----------------------------- */
 
-async function showFriends() {
+/* Der Kreis (#1092): one state-sorted grid of person cards beside a narrow feed
+   column.
+
+   It was four stacked lists, and the order was the inverse of both frequency and
+   uniqueness. Measured over 9 friends / 2 incoming / 1 outgoing / 18 events: the
+   add form — used once per friend — owned the top slot, the two DUPLICATES (the
+   feed, which the home dashboard already shows, and the incoming requests, which
+   the inbox already carries) filled the first 1700px, and the roster, the only
+   content unique to this screen, started at y = 2119. The first request sat at
+   y = 1762 at every viewport from 768 to 2560 — and at y = 4258 for an account
+   with 28 friends, i.e. the account that most needs the screen scrolled furthest
+   to reach the thing a person is waiting on.
+
+   The diagnosis is that the screen holds two contents with opposite needs. The
+   feed is a chronological text line wanting ~360px of measure and getting 766.
+   The people are short, unordered entries you scan for ONE of — a grid, not
+   rows with their action 511px away. One content per column, action first.
+
+   `opts.feed === 'all'` pre-expands the feed, so the home tile's „Alle anzeigen"
+   keeps its promise. */
+async function showFriends(opts) {
   // Per-account surface; without an account there is nothing to show.
   if (!(accountsActive() && isLoggedIn())) return showHome();
-  currentView = () => showFriends();
+  const o = opts || {};
+  currentView = () => showFriends(o);
   syncUrl('/freunde');
   setContext(t('friends.title'));
   setDocTitle(t('friends.title'));
@@ -32,71 +58,112 @@ async function showFriends() {
   } catch { return; } // accountApi already handled a dead session (→ login)
 
   app.innerHTML = '';
-  app.appendChild(h(`<div class="lobby-head"><h1>${esc(t('friends.title'))}</h1></div>`));
+  /* One wrapper, so the screen can opt out of the reading measure as a UNIT.
+     A screen that "cannot opt out" is usually a screen missing a wrapper
+     (.claude/rules/responsive-content-width.md, the #1055 lesson) — and this one
+     renders NO navigation at all, which is the licence: widening it moves no
+     rail and no dock, the same argument the setup forms use. */
+  const screen = h('<div class="friends-screen"></div>');
+  screen.appendChild(h(`<div class="lobby-head"><h1>${esc(t('friends.title'))}</h1></div>`));
 
-  // Add a friend by username.
-  // The placeholder is not the label (WCAG 2.2 SC 3.3.2/4.1.2): it disappears on
-  // the first keystroke and screen readers announce an unnamed edit field. There
-  // is no visible label to point a <label for> at — the form is one row — so the
-  // name goes on the control itself, and says what the field is FOR rather than
-  // restating the placeholder's "Nutzername".
-  const addForm = h(`<form class="friends-add">
-      <input class="input" id="friendUser" type="text" autocomplete="off" spellcheck="false"
-             autocapitalize="none" maxlength="30" aria-label="${esc(t('friends.addLabel'))}"
-             placeholder="${esc(t('friends.addPlaceholder'))}" />
-      <button class="btn btn--primary" type="submit">${esc(t('friends.addSubmit'))}</button>
-    </form>`);
-  addForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const input = addForm.querySelector('#friendUser');
-    const username = input.value.trim();
-    if (!username) return toast(t('friends.needUsername'));
-    const btn = addForm.querySelector('button');
-    btn.disabled = true;
-    try {
-      await accountApi('POST', '/friends', { username });
-      toast(t('friends.toast.sent', { user: username }));
-      showFriends();
-    } catch (err) {
-      toast(friendSendError(err.message));
-      btn.disabled = false;
-    }
+  const split = h('<div class="k-split"></div>');
+  const grid = h('<div class="k-grid"></div>');
+
+  /* ORDER IS THE FEATURE: incoming first, then outgoing, then friends. A request
+     is the one thing on this screen somebody is waiting on, and it now lands at
+     the top whatever the friend count — which is the property the stacked lists
+     could not have, since the roster sat above them and grew. */
+  lists.incoming.forEach((r) => grid.appendChild(renderPersonCard(r, 'incoming')));
+  lists.outgoing.forEach((r) => grid.appendChild(renderPersonCard(r, 'outgoing')));
+  lists.friends.forEach((f) => grid.appendChild(renderPersonCard(f, 'friend', feed.events)));
+  grid.appendChild(renderAddTile());
+  split.appendChild(grid);
+
+  split.appendChild(renderKreisFeed(feed.events, o.feed === 'all'));
+  screen.appendChild(split);
+  app.appendChild(screen);
+}
+
+/* The „＋" tile, last in the grid. The add form was a full-width row at the TOP
+   of the page for a control used once per friend; as a tile it costs one grid
+   cell and sits where you look after scanning the people you already have.
+
+   It becomes the field IN PLACE rather than opening an editor: there is nothing
+   to dismiss, and the enclosing <form> is what keeps Enter-to-submit and the
+   submit button's semantics. */
+function renderAddTile() {
+  const tile = h(`<button type="button" class="k-card k-card--add">
+       <span class="k-card__plus" aria-hidden="true">＋</span>
+       <span class="k-card__name">${esc(t('friends.addTile'))}</span>
+       <span class="k-card__line muted">${esc(t('friends.addTileSub'))}</span>
+     </button>`);
+  tile.addEventListener('click', () => {
+    // The placeholder is not the label (WCAG 2.2 SC 3.3.2/4.1.2): it disappears
+    // on the first keystroke and screen readers announce an unnamed edit field.
+    // There is no visible label to point a <label for> at, so the name goes on
+    // the control itself and says what the field is FOR.
+    const form = h(`<form class="k-card k-card--adding friends-add">
+         <input class="input" id="friendUser" type="text" autocomplete="off" spellcheck="false"
+                autocapitalize="none" maxlength="30" aria-label="${esc(t('friends.addLabel'))}"
+                placeholder="${esc(t('friends.addPlaceholder'))}" />
+         <button class="btn btn--primary btn--sm" type="submit">${esc(t('friends.addSubmit'))}</button>
+       </form>`);
+    tile.replaceWith(form);
+    const input = form.querySelector('#friendUser');
+    input.focus();
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = input.value.trim();
+      if (!username) return toast(t('friends.needUsername'));
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      try {
+        await accountApi('POST', '/friends', { username });
+        toast(t('friends.toast.sent', { user: username }));
+        showFriends();
+      } catch (err) {
+        toast(friendSendError(err.message));
+        btn.disabled = false;
+      }
+    });
   });
-  app.appendChild(addForm);
+  return tile;
+}
 
-  // Feed.
-  app.appendChild(h(`<h2 class="friends-section__h">${esc(t('friends.feedTitle'))}</h2>`));
-  if (feed.events.length) {
-    const list = h('<div class="feed-list"></div>');
-    feed.events.forEach((ev) => list.appendChild(renderFeedEvent(ev)));
-    app.appendChild(list);
-  } else {
-    app.appendChild(h(`<p class="muted empty-note">${esc(t('friends.feedEmpty'))}</p>`));
-  }
+/* The feed as the second column. It stays a LIST, not a grid: its chronological
+   order carries meaning, which is exactly the half of
+   .claude/rules/tiles-vs-lists.md that decides between the two shapes — the
+   people beside it are unordered and short, so they tile.
 
-  // Incoming requests (actionable) and outgoing (pending, cancellable).
-  if (lists.incoming.length) {
-    app.appendChild(h(`<h2 class="friends-section__h">${esc(t('friends.incoming'))}</h2>`));
-    const list = h('<div class="ds-list"></div>');
-    lists.incoming.forEach((r) => list.appendChild(renderIncomingRequest(r)));
-    app.appendChild(list);
+   Below 1024px it collapses under the grid to six events plus an expander, so
+   the duplicate of the home dashboard's own tile stops costing a screenful. */
+function renderKreisFeed(events, expanded) {
+  const col = h(`<section class="k-feed">
+       <h2 class="friends-section__h">${esc(t('friends.newsTitle'))}</h2>
+     </section>`);
+  if (!events.length) {
+    col.appendChild(h(`<p class="muted empty-note">${esc(t('friends.feedEmpty'))}</p>`));
+    return col;
   }
-  if (lists.outgoing.length) {
-    app.appendChild(h(`<h2 class="friends-section__h">${esc(t('friends.outgoing'))}</h2>`));
-    const list = h('<div class="ds-list"></div>');
-    lists.outgoing.forEach((r) => list.appendChild(renderOutgoingRequest(r)));
-    app.appendChild(list);
-  }
+  /* EVERY event is rendered; the collapse is CSS, not a slice. Above 1024px the
+     feed is its own sticky column and shows the lot — that is what the column is
+     for. Below it the feed sits UNDER the grid, where the same eighteen events
+     are a screenful of something the home dashboard already shows, so all but
+     the first six are hidden and the expander appears.
 
-  // Friends list.
-  app.appendChild(h(`<h2 class="friends-section__h">${esc(t('friends.listTitle'))}</h2>`));
-  if (lists.friends.length) {
-    const list = h('<div class="ds-list"></div>');
-    lists.friends.forEach((f) => list.appendChild(renderFriendRow(f)));
-    app.appendChild(list);
-  } else {
-    app.appendChild(h(`<p class="muted empty-note">${esc(t('friends.listEmpty'))}</p>`));
+     Doing it in CSS rather than by slicing is what keeps it correct without a
+     resize listener: a width read once at render time is wrong the moment the
+     window changes, and this screen re-renders only on an action. */
+  const list = h('<div class="feed-list"></div>');
+  events.forEach((ev) => list.appendChild(renderFeedEvent(ev)));
+  col.appendChild(list);
+  if (expanded) col.classList.add('is-open');
+  if (events.length > KREIS_FEED_COLLAPSED) {
+    const more = h(`<button type="button" class="link-btn k-feed__more">${esc(t('friends.feedMore', { count: events.length }))}</button>`);
+    more.addEventListener('click', () => col.classList.add('is-open'));
+    col.appendChild(more);
   }
+  return col;
 }
 
 /* ------------------------------ account profile ---------------------------- */
@@ -432,73 +499,99 @@ function accountReportButton(username) {
 
 /* ----------------------------- request/friend rows ------------------------- */
 
-function renderIncomingRequest(r) {
-  const row = h(`<div class="ds-row ds-row--static">
-      ${friendRowMain(r.username, r.avatar)}
-      <div class="ds-row__meta">
-        <button class="btn btn--primary friend-req__accept" type="button">${esc(t('friends.accept'))}</button>
-        <button class="link-btn friend-req__decline" type="button">${esc(t('friends.decline'))}</button>
-      </div>
+/* ONE card for all three states (#1092), replacing renderIncomingRequest,
+   renderOutgoingRequest and renderFriendRow. They were the same markup three
+   times with a different `.ds-row__meta`, and the state was carried by which
+   HEADING they sat under — so removing the headings is what forces the card to
+   state its own status.
+
+   `.claude/rules/account-profiles.md` binds unchanged: only the avatar+name half
+   is an <a>, because the card keeps its action buttons and a <button> inside an
+   <a> is invalid HTML. The CARD is not a click target and must not promise one
+   (.claude/rules/ds-row-is-a-click-target.md). An account with no resolvable
+   username (edge: mid-erasure) stays a <span> — an <a> with no usable href is
+   not a link at all.
+
+   Requests are the one LIFTED state: a brand left edge and a tint, so the
+   actionable cards read as different without a heading above them. */
+function renderPersonCard(p, state, events) {
+  const card = h(`<div class="k-card k-card--${state}">
+      <div class="k-card__who"></div>
+      <div class="k-card__meta"></div>
     </div>`);
-  wireFriendRowMain(row, r.username);
-  const report = accountReportButton(r.username);
-  if (report) row.querySelector('.ds-row__meta').appendChild(report);
-  row.querySelector('.friend-req__accept').addEventListener('click', async () => {
-    try {
-      await accountApi('POST', `/friends/${r.friendshipId}/accept`);
-      toast(t('friends.toast.accepted'));
+  const who = card.querySelector('.k-card__who');
+  who.innerHTML = friendRowMain(p.username, p.avatar);
+  wireFriendRowMain(card, p.username);
+
+  // The second line: what this person last did, else how long you have been
+  // friends. Both come from payloads the view already holds — `since` is the
+  // acceptedAt the friends list has always returned and nothing rendered.
+  const line = personCardLine(p, state, events);
+  if (line) who.appendChild(h(`<div class="k-card__line muted">${line}</div>`));
+
+  const meta = card.querySelector('.k-card__meta');
+  if (state === 'incoming') {
+    meta.appendChild(h(`<button class="btn btn--primary btn--sm friend-req__accept" type="button">${esc(t('friends.accept'))}</button>`));
+    meta.appendChild(h(`<button class="link-btn friend-req__decline" type="button">${esc(t('friends.decline'))}</button>`));
+    meta.querySelector('.friend-req__accept').addEventListener('click', async () => {
+      try {
+        await accountApi('POST', `/friends/${p.friendshipId}/accept`);
+        toast(t('friends.toast.accepted'));
+        refreshInboxBadge();
+        showFriends();
+      } catch (err) {
+        toast(err.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('friends.err.generic'));
+      }
+    });
+    meta.querySelector('.friend-req__decline').addEventListener('click', async () => {
+      try { await accountApi('POST', `/friends/${p.friendshipId}/decline`); } catch {}
       refreshInboxBadge();
       showFriends();
-    } catch (err) {
-      toast(err.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('friends.err.generic'));
-    }
-  });
-  row.querySelector('.friend-req__decline').addEventListener('click', async () => {
-    try { await accountApi('POST', `/friends/${r.friendshipId}/decline`); } catch {}
-    refreshInboxBadge();
-    showFriends();
-  });
-  return row;
-}
-
-function renderOutgoingRequest(r) {
-  const row = h(`<div class="ds-row ds-row--static">
-      ${friendRowMain(r.username, r.avatar)}
-      <div class="ds-row__meta">
-        <span class="muted friend-req__pending">${esc(t('friends.pending'))}</span>
-        <button class="link-btn friend-req__cancel" type="button">${esc(t('friends.cancel'))}</button>
-      </div>
-    </div>`);
-  wireFriendRowMain(row, r.username);
-  row.querySelector('.friend-req__cancel').addEventListener('click', async () => {
-    try { await accountApi('POST', `/friends/${r.friendshipId}/decline`); } catch {}
-    showFriends();
-  });
-  return row;
-}
-
-function renderFriendRow(f) {
-  const row = h(`<div class="ds-row ds-row--static">
-      ${friendRowMain(f.username, f.avatar)}
-      <div class="ds-row__meta">
-        <button class="link-btn friend-row__remove" type="button">${esc(t('friends.unfriend'))}</button>
-      </div>
-    </div>`);
-  wireFriendRowMain(row, f.username);
-  const report = accountReportButton(f.username);
-  if (report) row.querySelector('.ds-row__meta').appendChild(report);
-  row.querySelector('.friend-row__remove').addEventListener('click', async () => {
-    if (!await confirmDialog({
-      body: t('friends.unfriendConfirm', { name: f.username || t('friends.unknownUser') }),
-      confirmLabel: t('friends.unfriend'),
-    })) return;
-    try {
-      await accountApi('DELETE', `/friends/${f.friendshipId}`);
-      toast(t('friends.toast.removed'));
+    });
+  } else if (state === 'outgoing') {
+    meta.appendChild(h(`<button class="link-btn friend-req__cancel" type="button">${esc(t('friends.cancel'))}</button>`));
+    meta.querySelector('.friend-req__cancel').addEventListener('click', async () => {
+      try { await accountApi('POST', `/friends/${p.friendshipId}/decline`); } catch {}
       showFriends();
-    } catch { toast(t('friends.err.generic')); }
-  });
-  return row;
+    });
+  } else {
+    meta.appendChild(h(`<button class="link-btn friend-row__remove" type="button">${esc(t('friends.unfriend'))}</button>`));
+    meta.querySelector('.friend-row__remove').addEventListener('click', async () => {
+      if (!await confirmDialog({
+        body: t('friends.unfriendConfirm', { name: p.username || t('friends.unknownUser') }),
+        confirmLabel: t('friends.unfriend'),
+      })) return;
+      try {
+        await accountApi('DELETE', `/friends/${p.friendshipId}`);
+        toast(t('friends.toast.removed'));
+        showFriends();
+      } catch { toast(t('friends.err.generic')); }
+    });
+  }
+  // Outgoing carries no report button: you are the one who reached out, and the
+  // account has not accepted, so there is nothing of theirs on screen to report.
+  if (state !== 'outgoing') {
+    const report = accountReportButton(p.username);
+    if (report) meta.appendChild(report);
+  }
+  return card;
+}
+
+/* The card's second line. A request says what it is; a friend gets their most
+   recent event out of the feed the view already fetched, and falls back to the
+   friendship's own age.
+
+   The date is ABSOLUTE (`fmtDate`), not „vor 3 Tagen". A relative one has to
+   count LOCAL CALENDAR days or it says „gestern" for something 14 hours old —
+   the bug #1080 fixes elsewhere — and the helper that does it correctly lands
+   with that issue. An absolute date is unambiguous, already localized, and needs
+   no new key; the relative form is a one-line change once `dayIndexOf` exists. */
+function personCardLine(p, state, events) {
+  if (state === 'incoming') return esc(t('friends.card.wants'));
+  if (state === 'outgoing') return esc(t('friends.card.sent'));
+  const last = (events || []).find((ev) => ev.username && ev.username === p.username);
+  if (last) return `${esc(last.title || '')} · ${esc(fmtDate(last.at))}`;
+  return p.since ? esc(t('friends.card.since', { when: fmtMonth(p.since) })) : '';
 }
 
 /* -------------------------- home-screen feed section ----------------------- */
@@ -520,7 +613,9 @@ async function renderHomeFriends(section) {
       <h2>${esc(t('friends.home.title'))}</h2>
       <a class="link-btn" href="/freunde">${esc(t('friends.home.all'))}</a>
     </div>`);
-  navLink(head.querySelector('a'), '/freunde', () => showFriends());
+  // „Alle anzeigen" opens the feed EXPANDED (#1092): the screen collapses it to
+  // six below 1024px, so a link promising all of them has to say so.
+  navLink(head.querySelector('a'), '/freunde', () => showFriends({ feed: 'all' }));
   section.appendChild(head);
 
   /* No friends yet is an EMPTY STATE, not an absence (#842). This section used
