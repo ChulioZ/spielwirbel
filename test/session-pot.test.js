@@ -1,7 +1,7 @@
 'use strict';
 
 /* The pot (#1017) — the eligible-game preview on the session setup screen, and
- * the whirl that runs when „Loswirbeln" is pressed.
+ * what „Loswirbeln" does with it.
  *
  * Its own spec rather than more of test/content-width.test.js: that file is about
  * WIDTHS — which presentation is on at which breakpoint — and everything here is
@@ -9,33 +9,24 @@
  * (`.setup-panel` defaults to hidden, `.pool-hint` is hidden from 860) still live
  * there and are deliberately not restated.
  *
- * Three things below fail silently and are the reason each assertion exists:
- *
- *   - the per-cover head start is written INLINE as `--wd` in views-session.js and
- *     read by an `animation-delay` in styles.css. Either half alone turns the pot
- *     as one rigid block, which is a perfectly plausible animation — so a dropped
- *     `--wd` is invisible from the other file.
- *   - the whirl's length lives in BOTH files — 0.9s in the keyframe, POT_TURN_MS
- *     in the handler that waits for it, plus the stagger the last cover needs.
- *     They are one decision; drifted, the lobby opens mid-turn or after a dead
- *     pause, with nothing red anywhere
- *     (.claude/rules/shared-constants-across-the-stack.md, one boundary over).
- *   - a pot that breaks differently on every re-render looks like a rendering bug
- *     rather than like a missing `% table.length`, so the stagger is pinned as
- *     DETERMINISTIC across renders, not merely as present.
+ * #1122 removed the whirl the draw used to run, so the assertions that pinned its
+ * two halves to each other are gone and what is pinned instead is the ABSENCE of
+ * any delay: the draw must cost the POST and nothing on top of it. That failure
+ * is silent in the only direction that matters — a re-added hold still opens the
+ * lobby in the end, it just makes „Loswirbeln" feel slow again, which is the
+ * complaint the removal answered.
  *
  * The timing half follows .claude/rules/mock-timers-jump-the-clock-before-firing.md:
- * it asks whether the lobby opened BEFORE and AFTER the boundary, and never reads a
- * timestamp from inside a callback. Node's `mock.timers` cannot reach this code —
- * the view calls jsdom's `window.setTimeout`, not Node's — so the window's own
- * timer is replaced with a recorder, the same seam
- * .claude/rules/jsdom-popstate-needs-a-real-timer.md uses.
+ * it asks WHETHER a wait was armed rather than reading a timestamp from inside a
+ * callback. Node's `mock.timers` cannot reach this code — the view calls jsdom's
+ * `window.setTimeout`, not Node's — so the window's own timer is replaced with a
+ * recorder, the same seam .claude/rules/jsdom-popstate-needs-a-real-timer.md uses.
  */
 
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadApp, flush } = require('./support/dom');
-const { RULES, bodyOf, rulesOf, mediaBlocks } = require('./support/css');
+const { CSS, RULES, bodyOf, rulesOf, mediaBlocks } = require('./support/css');
 
 // Every rule inside any @media block whose query matches — the same flattening
 // helper test/content-width.test.js keeps locally.
@@ -67,74 +58,28 @@ const roundFixture = (games = GAMES) => ({
 
 const tiles = () => [...dom.app.querySelectorAll('.setup-panel__body .pool-tile')];
 const shelf = () => [...dom.app.querySelectorAll('.pool-shelf .pool-thumb')];
-const varsOf = (el) => (el.getAttribute('style') || '')
-  .split(';')
-  .filter((d) => d.trim().startsWith('--'))
-  .map((d) => d.trim())
-  .join(';');
-
 /* ------------------------------- the pile ------------------------------- */
 
-test('every cover in both presentations carries a head start, from one table', async () => {
+test('both presentations render the WHOLE pot, not a subset', async () => {
   await dom.call('showStartSession', roundFixture());
 
-  const stack = tiles();
-  const row = shelf();
-  assert.equal(stack.length, GAMES.length, 'the stack does not render the whole pot');
-  assert.equal(row.length, GAMES.length,
+  assert.equal(tiles().length, GAMES.length, 'the stack does not render the whole pot');
+  assert.equal(shelf().length, GAMES.length,
     'the shelf renders a subset — below 860px it is the ONLY presentation, so a capped one hides games');
-
-  // Same index, same delay: the two presentations are one pot seen twice, and a
-  // second table would let them disagree about which cover goes when.
-  stack.forEach((tile, i) => {
-    assert.match(varsOf(tile), /^--wd:[\d.]+s$/,
-      `stack cover ${i} carries no --wd, so the animation-delay has nothing to read`);
-    assert.equal(varsOf(row[i]), varsOf(tile),
-      `shelf cover ${i} is given a different head start from stack cover ${i}`);
-  });
 });
 
-test('the handler waits for the LAST cover, not for one turn', () => {
-  /* The covers do not start together, so a wait of exactly one turn swaps the
-     lobby in while the tail is still spinning. WHIRL_MS is derived from the table
-     for that reason, and this is the arithmetic — asserted against the live
-     bindings rather than against a literal, so retuning the stagger cannot make
-     it vacuous. */
-  const turn = dom.get('POT_TURN_MS');
-  const delays = [...dom.get('POT_WHIRL_DELAY')];
-  const wait = dom.get('WHIRL_MS');
-
-  assert.ok(delays.length > 1 && Math.max(...delays) > 0,
-    'no cover is actually staggered, so the derivation below is trivially satisfied');
-  assert.equal(wait, turn + Math.round(Math.max(...delays) * 1000),
-    `the draw waits ${wait}ms while the last cover finishes at ${turn + Math.max(...delays) * 1000}ms`);
-  assert.ok(delays.every((d) => Number.isFinite(d) && d >= 0),
-    'a negative or non-finite head start would start a cover before the press');
-});
-
-test('the pot does not re-break differently when the pool is re-rendered', async () => {
-  const round = roundFixture();
-  await dom.call('showStartSession', round);
-  const before = tiles().map(varsOf);
-  // Anti-vacuous: with no stagger at all, every render is `['', '', …]` and the
-  // equality below is satisfied by a pot that carries nothing.
-  assert.ok(before.length && before.every(Boolean), 'no cover carries a head start, so equality proves nothing');
-  assert.ok(new Set(before).size > 1, 'every cover has the SAME head start, so ordering cannot be observed at all');
-
-  // Any control that narrows the pot re-runs updateHint(); the add-on chip is the
-  // cheapest one that does not also change which games are in it.
-  dom.app.querySelector('.setup-addons__chip').click();
-  await dom.call('showStartSession', round);
-
-  assert.deepEqual(tiles().map(varsOf), before,
-    'the head start is not a function of the index alone, so the pot breaks differently every time it is looked at');
-});
-
-/* ------------------------------- the whirl ------------------------------- */
+/* ------------------------------ „Loswirbeln" ----------------------------- */
 
 /* Replace jsdom's window timer with a recorder and hand back the runner. Node's
    t.mock.timers patches the TEST realm's globals; the view runs inside the vm
-   context, where a bare `setTimeout` is `window.setTimeout`. */
+   context, where a bare `setTimeout` is `window.setTimeout`.
+
+   It is still here after #1122 removed the whirl, and that is the point: the
+   assertion has flipped from "a wait of exactly WHIRL_MS was armed" to "NO wait
+   was armed at all", which is the acceptance criterion the operator asked for —
+   the draw must cost the request and nothing on top of it. Without the recorder
+   a re-added delay is invisible from a test, because the lobby still opens in
+   the end. */
 const captureTimers = () => {
   const armed = [];
   const real = dom.window.setTimeout;
@@ -146,90 +91,61 @@ const captureTimers = () => {
   };
 };
 
-const reducedMotion = (reduce) => {
-  dom.window.matchMedia = (q) => ({ matches: reduce && /prefers-reduced-motion:\s*reduce/.test(q) });
-};
-
-test('the lobby waits for the whirl, and the pot is marked while it turns', async (t) => {
+test('the lobby opens as soon as the POST returns, and not a moment later', async (t) => {
   let opened = null;
+  let finish;
   dom.set('showSessionLobby', (round, session) => { opened = session; });
-  dom.set('api', async () => ({ session: { id: 's1' } }));
-  reducedMotion(false);
+  // Held in flight deliberately: a request that resolves immediately cannot tell
+  // "opens when the response lands" from "opens after a delay that happens to be
+  // short", so the slow response is the one that discriminates.
+  dom.set('api', () => new Promise((resolve) => { finish = () => resolve({ session: { id: 's1' } }); }));
   const timers = captureTimers();
   t.after(timers.restore);
 
   await dom.call('showStartSession', roundFixture());
   dom.app.querySelector('#go').click();
   await flush();
+  assert.equal(opened, null, 'the lobby opened before the draw had returned');
 
-  const grid = dom.app.querySelector('.setup-grid--session');
-  assert.ok(grid.classList.contains('is-whirl'), 'nothing marks the pot while it turns, so no animation can be selected');
-  assert.equal(opened, null, 'the lobby opened before the whirl had a chance to run');
-
-  // Read from the live binding, not written down: WHIRL_MS is derived from the
-  // stagger table, so a literal here would go stale on the next retune and pass.
-  const expected = dom.get('WHIRL_MS');
-  const whirl = timers.armed.find((x) => x.ms === expected);
-  assert.ok(whirl, `no ${expected}ms wait was armed (armed: ${timers.armed.map((x) => x.ms).join(', ') || 'none'})`);
-
-  timers.fire();
+  finish();
   await flush();
-  assert.equal(opened && opened.id, 's1', 'the lobby never opened once the whirl was over');
+  assert.equal(opened && opened.id, 's1', 'the lobby did not open when the request returned');
+  assert.equal(timers.armed.length, 0,
+    `the draw armed a wait of ${timers.armed.map((x) => x.ms).join(', ')}ms on top of the request`);
 });
 
-test('reduced motion opens the lobby as soon as the request returns', async (t) => {
-  let opened = null;
-  dom.set('showSessionLobby', (round, session) => { opened = session; });
-  dom.set('api', async () => ({ session: { id: 's2' } }));
-  reducedMotion(true);
-  const timers = captureTimers();
-  t.after(timers.restore);
-
-  await dom.call('showStartSession', roundFixture());
-  dom.app.querySelector('#go').click();
-  await flush();
-
-  assert.equal(timers.armed.length, 0, 'a wait was armed although the reader asked for no motion');
-  assert.equal(opened && opened.id, 's2', 'the lobby did not open when the request returned');
-  assert.ok(!dom.app.querySelector('.setup-grid--session').classList.contains('is-whirl'),
-    'the pot is marked for an animation the reader asked not to see');
-});
-
-test('a failed draw clears the whirl instead of leaving the pot spinning', async (t) => {
+test('a failed draw toasts and leaves the setup screen usable', async (t) => {
   const toasts = [];
   dom.set('showSessionLobby', () => { throw new Error('the lobby must not open on a failed draw'); });
   dom.set('toast', (m) => toasts.push(m));
-  // Held open deliberately: a request that rejects synchronously is caught inside
-  // the same microtask chain as the click, so there is no moment at which the pot
-  // is marked and the anti-vacuous check below could never pass.
   let failDraw;
-  dom.set('api', () => new Promise((resolve, reject) => { failDraw = reject; }));
-  reducedMotion(false);
+  let sent = 0;
+  dom.set('api', () => new Promise((resolve, reject) => { sent += 1; failDraw = reject; }));
   const timers = captureTimers();
   t.after(timers.restore);
 
   await dom.call('showStartSession', roundFixture());
   dom.app.querySelector('#go').click();
   await flush();
-  // Anti-vacuous: the "cleared" assertion below is satisfied by a class that was
-  // never added, which is exactly the state before this feature existed.
-  assert.ok(dom.app.querySelector('.setup-grid--session').classList.contains('is-whirl'),
-    'the pot was never marked, so there is nothing for the failure path to clear');
   failDraw(new Error('Nope'));
-  timers.fire();
   await flush();
 
-  const grid = dom.app.querySelector('.setup-grid--session');
-  assert.ok(grid && !grid.classList.contains('is-whirl'),
-    'the pot keeps its whirl class after a failed draw, so it spins once and then sits marked forever');
   assert.deepEqual([...toasts], ['Nope']);
+  assert.ok(dom.app.querySelector('.setup-grid--session'), 'the setup screen was torn down by a failure');
+  assert.equal(timers.armed.length, 0, 'a failed draw armed a wait');
+  // The whole point of the toast is that the reader can try again, which the
+  // in-flight guard would prevent if the failure path did not release it. The
+  // retry is asserted as a SENT request rather than as a second toast: this
+  // second promise is never settled, so a toast would never arrive either way.
+  dom.app.querySelector('#go').click();
+  await flush();
+  assert.equal(sent, 2, 'the in-flight guard was never released, so the screen is dead after one failure');
 });
 
-test('a guard that toasts never starts the whirl', async (t) => {
+test('a guard that toasts never sends a draw', async (t) => {
   const toasts = [];
   dom.set('toast', (m) => toasts.push(m));
   dom.set('api', async () => { throw new Error('the draw must not be sent from an empty pot'); });
-  reducedMotion(false);
   const timers = captureTimers();
   t.after(timers.restore);
 
@@ -246,21 +162,20 @@ test('a guard that toasts never starts the whirl', async (t) => {
 
   assert.equal(toasts[toasts.length - 1], dom.run("t('startSession.toast.noGames')"),
     'the empty-pot guard did not refuse the draw');
-  assert.equal(timers.armed.length, 0, 'the pot whirls for a draw that was refused before it started');
-  assert.ok(!dom.app.querySelector('.setup-grid--session').classList.contains('is-whirl'));
+  assert.equal(timers.armed.length, 0, 'a refused draw armed a wait');
 });
 
-test('a second press during the whirl does not send a second draw', async (t) => {
+test('a second press while the draw is in flight does not send a second one', async (t) => {
   let sent = 0;
   let finish;
   dom.set('showSessionLobby', () => {});
-  // Held in flight on purpose: the guard covers the flight, and the whirl is what
-  // made that flight long enough to press through.
+  // Held in flight on purpose: #1122 removed the whirl that used to make this
+  // window ~1s long, so the request itself is now the whole of it — which is
+  // exactly why the guard stays rather than going with the animation.
   dom.set('api', () => {
     sent += 1;
     return new Promise((resolve) => { finish = () => resolve({ session: { id: 's3' } }); });
   });
-  reducedMotion(false);
   const timers = captureTimers();
   t.after(timers.restore);
 
@@ -272,43 +187,26 @@ test('a second press during the whirl does not send a second draw', async (t) =>
   await flush();
 
   assert.equal(sent, 1,
-    'the 0.9s the whirl holds the screen open is 0.9s in which a second press books a second session');
+    'the request is still in flight and the button is not disabled, so a second press books a second session');
   finish();
-  timers.fire();
   await flush();
 });
 
 /* ------------------------ the two files agreeing ------------------------- */
 
-test('one cover turns for exactly as long in the stylesheet as the view believes', () => {
-  const turn = dom.get('POT_TURN_MS');
-
-  const motion = rulesUnder(/prefers-reduced-motion:\s*no-preference/);
-  const whirls = motion.filter(([, body]) => /animation:[^;]*pot-whirl/.test(body));
-  assert.ok(whirls.length >= 2,
-    'the covers and the button icon are not both animated inside a no-preference query');
-
-  whirls.forEach(([sel, body]) => {
-    const secs = Number(body.match(/animation:[^;]*?([\d.]+)s/)[1]);
-    assert.equal(secs * 1000, turn,
-      `"${sel}" turns for ${secs}s while the view sizes its wait around ${turn}ms`);
-  });
-});
-
-test('the stylesheet reads the head start the view writes', () => {
-  const motion = rulesUnder(/prefers-reduced-motion:\s*no-preference/);
-  const covers = motion.find(([sel, body]) =>
-    /\.pool-tile\b/.test(sel) && /animation:[^;]*var\(--wd/.test(body));
-  assert.ok(covers,
-    'nothing consumes --wd, so the whole pot turns as one rigid block and the inline table renders nothing');
-  assert.match(covers[0], /\.pool-thumb/,
-    `"${covers && covers[0]}" staggers only one presentation — the other turns as a block`);
-
-  // The icon shares the keyframe but has no --wd of its own; it must not inherit
-  // a cover's delay, or the button lags the pot it is meant to lead.
-  const icon = motion.find(([sel]) => /\.setup-bar .*\.ti\b/.test(sel));
-  assert.ok(icon && !/var\(--wd/.test(icon[1]),
-    'the CTA icon takes a per-cover head start, so it starts turning after the pot');
+/* #1122 removed the turn. Asserted as an absence for the same reason as the
+ * press (`test/result-motion.test.js`): „Loswirbeln" is the app's own verb and a
+ * turn is the obvious thing to give it, so without this nothing would object to
+ * one coming back — and this one did not merely look like a wait, it WAS one. */
+test('the pot does not turn — pot-whirl and the head start are gone from the sheet', () => {
+  assert.equal([...CSS.matchAll(/@keyframes\s+pot-whirl\b/g)].length, 0,
+    'the pot-whirl keyframe is declared again');
+  const users = RULES.filter(([, body]) => /animation[-a-z]*:[^;]*pot-whirl/.test(body)).map(([sel]) => sel);
+  assert.deepEqual(users, [], 'something still turns the pot');
+  // `--wd` was the per-cover head start, written inline by the view. Nothing else
+  // ever read it, so a rule consuming it means the stagger came back too.
+  const staggered = RULES.filter(([, body]) => /var\(--wd/.test(body)).map(([sel]) => sel);
+  assert.deepEqual(staggered, [], 'a per-cover head start is being read again');
 });
 
 test('the pot lifts a cover under the pointer, and only inside the panel', () => {

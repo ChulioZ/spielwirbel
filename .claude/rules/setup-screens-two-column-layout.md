@@ -92,7 +92,7 @@ re-render, and only one is ever in the accessibility tree.
   declaration.
 
 **Since #1017 both are the same pot**: a numeral (`.pool-count` + its label) over
-the covers, which turn once when „Loswirbeln" is pressed. The panel is a plain
+the covers. The panel is a plain
 grid of covers that lift under the pointer; the strip is `.pool-shelf`, one
 horizontally snapping row of 64px squares. Three things about it are easy to undo
 by accident:
@@ -102,12 +102,12 @@ by accident:
   is — a cap hides part of the pot outright rather than summarising it, which is
   what the chip used to do honestly for a strip that sat beside nothing. The
   scroll is what makes showing all of them affordable.
-- **The whirl's per-cover head start (`--wd`) must stay a function of the INDEX
-  alone.** Every seat tap, tag chip and stepper press calls `updateHint()`, so a
-  random delay would make the same pot break differently every time it is looked
-  at. `test/session-pot.test.js` pins it across renders — and pins that the
-  handler waits for the LAST cover (`WHIRL_MS` is derived from the table, not
-  written down) rather than for one turn.
+- **„Loswirbeln" must not hold the lobby back.** The pot used to turn once on the
+  press, and the handler held the screen for the length of that turn — so the
+  draw cost ~0.98s of dead time even when the POST had already returned. #1122
+  removed both: the lobby now opens as soon as the request lands.
+  `test/session-pot.test.js` asserts no wait is armed at all, because a re-added
+  one still opens the lobby in the end and is invisible from anything else.
 - **The covers are STRAIGHT.** The first implementation tilted each one by a
   per-index angle; it was dropped on review — the pile read as noise rather than
   as character. Don't reintroduce it without asking.

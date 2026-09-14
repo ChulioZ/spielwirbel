@@ -1,16 +1,15 @@
 'use strict';
 
-/* „Tisch & Tafel" 4/4 (#1058): the three one-shot moments on the result screen —
- * the table band unrolling when a game is chosen, the row lifting as it hands
- * that game over, and the stamp being PRESSED onto the box when the evening is
- * recorded.
+/* „Tisch & Tafel" 4/4 (#1058): the two one-shot moments left on the result
+ * screen — the table band unrolling when a game is chosen, and the row lifting as
+ * it hands that game over. Both fire in response to the reader's own click, which
+ * is why #1122 kept them while removing the stamp's press: a click-response reads
+ * as feedback, where an entry animation reads as a page still loading.
  *
  * What is actually testable here is the GATE, and the gate is the whole risk:
  * every one of these must fire for the moment that caused it and for nothing
  * else. A cold load, a Chronik visit, a shared link and — the one that bites —
  * a re-render caused by the screen's own next write must replay none of them.
- * That is the `.pass[data-fresh]` lesson from #1041, where replaying a whole
- * Stempelkarte on every self-write turned a welcome into a stutter.
  *
  * The motion itself is not assertable in jsdom (no layout, no compositor) and is
  * measured in the browser instead; what is pinned below in CSS is the property
@@ -89,12 +88,11 @@ const btn = (dom, rx) => [...dom.app.querySelectorAll('.tisch button')].find((b)
 
 // --------------------------------------------------------------- the gates
 
-test('a cold load carries none of the three hooks', async (t) => {
+test('a cold load carries neither hook', async (t) => {
   // The state that matters: a session already chosen AND already finished, i.e.
   // everything the animations celebrate, arrived at from the Chronik.
   const dom = await show(t, { chosenGameId: 'g1', finished: true, winnerIds: ['m1'] });
   assert.ok(tisch(dom).querySelector('.stamp'), 'the stamp is there — this is the state that would replay');
-  assert.equal(tisch(dom).hasAttribute('data-fresh'), false, 'nothing was just pressed');
   assert.equal(slot(dom).hasAttribute('data-unroll'), false, 'nothing was just chosen');
   assert.equal(dom.app.querySelector('.trow.is-lift'), null, 'and no row just handed anything over');
 });
@@ -146,24 +144,7 @@ test('the unroll hook is consumed by its own render, not left behind', async (t)
     'the band must not unroll a second time on a re-render');
 });
 
-test('finishing presses the stamp — and a chip toggle after it does not', async (t) => {
-  const dom = await show(t, { chosenGameId: 'g1' });
-  assert.equal(tisch(dom).hasAttribute('data-fresh'), false);
-
-  btn(dom, /Als gespielt markieren/).click();
-  await flush();
-  assert.equal(tisch(dom).hasAttribute('data-fresh'), true, 'the press fires once, here');
-  assert.ok(tisch(dom).querySelector('.stamp'), 'and there is a stamp to press');
-
-  // Recording a winner re-renders the whole band, stamp included.
-  [...dom.app.querySelectorAll('.winner-chip')].find((c) => /Anna/.test(c.textContent)).click();
-  await flush();
-  assert.ok(tisch(dom).querySelector('.stamp'), 'the stamp is still on the box');
-  assert.equal(tisch(dom).hasAttribute('data-fresh'), false,
-    're-pressing it on every write is the stutter #1041 records');
-});
-
-test('clearing the choice clears both hooks with it', async (t) => {
+test('clearing the choice clears the unroll hook with it', async (t) => {
   const dom = await show(t);
   play(dom, 'Catan').click();
   await flush();
@@ -171,7 +152,6 @@ test('clearing the choice clears both hooks with it', async (t) => {
   await flush();
   assert.ok(tisch(dom).hidden);
   assert.equal(slot(dom).hasAttribute('data-unroll'), false);
-  assert.equal(tisch(dom).hasAttribute('data-fresh'), false);
 });
 
 // ------------------------------------------------------- the CSS contract
@@ -186,7 +166,6 @@ test('every moment is declared ONLY under its hook, inside the motion gate', () 
     ['.tisch-slot[data-unroll]', 'tisch-unroll'],
     ['.tisch-slot[data-unroll] > .tisch', 'tisch-open'],
     ['.trow.is-lift', 'trow-lift'],
-    ['.tisch[data-fresh] .stamp', 'press-in'],
   ]) {
     const hit = has(sel);
     assert.ok(hit, `${sel} is not inside a prefers-reduced-motion gate`);
@@ -201,14 +180,21 @@ test('every moment is declared ONLY under its hook, inside the motion gate', () 
   }
 });
 
-test('the stamp press REUSES the game page keyframe rather than restating it', () => {
-  // The point of the rhyme: the stamp this evening leaves behind arrives the
-  // same way in that game's history the next time anyone opens it.
-  const names = RULES.map(([sel]) => sel).filter((sel) => /@keyframes\s+press-in/.test(sel));
-  assert.ok(names.length <= 1, 'press-in must be defined once, not copied per screen');
-  const users = RULES.filter(([, body]) => /animation:\s*press-in/.test(body)).map(([sel]) => sel);
-  assert.ok(users.some((sel) => /\.pass\[data-fresh\]/.test(sel)), 'the game page still presses it');
-  assert.ok(users.some((sel) => /\.tisch\[data-fresh\]/.test(sel)), 'and now so does the table');
+/* #1122 removed the press from BOTH screens it ran on. Asserted as an absence
+ * rather than by simply deleting the old test: the comment that argued for it is
+ * gone with it, so a later pass re-adding an entry animation here would meet
+ * nothing that objects — and the failure it guards against is the one the
+ * operator named, a screen that reads as still loading. One stylesheet-wide
+ * check covers both call sites, because the keyframe was shared. */
+test('nothing presses in any more — press-in and its hook are gone from the sheet', () => {
+  assert.equal([...CSS.matchAll(/@keyframes\s+press-in\b/g)].length, 0,
+    'the press-in keyframe is declared again');
+  const users = RULES.filter(([, body]) => /animation[-a-z]*:[^;]*press-in/.test(body)).map(([sel]) => sel);
+  assert.deepEqual(users, [], 'something still runs the press');
+  // The attribute existed only to gate the press, so a selector reading it again
+  // means the plumbing came back with it.
+  const gated = RULES.map(([sel]) => sel).filter((sel) => /\[data-fresh\]/.test(sel));
+  assert.deepEqual(gated, [], 'the data-fresh gate is back in the stylesheet');
 });
 
 test('the band rolls its OWN box open, because a 0fr row does not reach zero alone', () => {

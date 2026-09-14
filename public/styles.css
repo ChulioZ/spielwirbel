@@ -4797,9 +4797,6 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
     45% { transform: translateY(-6px); box-shadow: var(--shadow-2); }
     100% { transform: none; box-shadow: none; }
   }
-  /* The press — the game page's own keyframe (#1041), unchanged, so the stamp
-     this evening leaves behind arrives the same way in that game's history. */
-  .tisch[data-fresh] .stamp { animation: press-in 0.38s var(--ease-out) both; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -5848,50 +5845,6 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 }
 .gd-score .score-pill { position: static; }
 .score-pill--lg { font-size: var(--text-xl); padding: 5px 14px; box-shadow: var(--shadow-2); }
-/* The screen presses itself in once on open (#1041), and then holds still.
-   This is the other half of the rejected tilt: what the angle was saying —
-   these were stamped by hand, one evening at a time — said in motion instead,
-   so it is over in a second rather than sitting on the page forever.
-
-   Declared under `no-preference` rather than cancelled by a `reduce` override,
-   which is this sheet's convention (`seal-pulse`, `trow-fill`,
-   `confetti-fall`) and the only safe direction here: `animation-fill-mode: both`
-   holds the `from` keyframe, so a missed `animation: none` would leave the pill
-   and the whole Stempelkarte at `opacity: 0` — permanently invisible for
-   exactly the people who asked for less motion.
-
-   The stagger runs newest-first because `--i` is render order, which the view
-   already sorts that way; the index is CAPPED by the renderer so the sequence
-   ends inside a second whatever the shelf holds (see views-round-detail.js).
-
-   Gated on `.pass[data-fresh]`, which showGameDetail() sets only when the reader
-   ARRIVED at the screen. The screen re-renders itself after every one of its own
-   writes — a tag edit, a new cover, an expansion — and replaying the whole
-   Stempelkarte each time turns a welcome into a stutter. `syncUrl()` already
-   computes that distinction for the scroll reset and now returns it, so a
-   re-render site added later cannot forget this one thing separately.
-
-   Declared only under the attribute rather than cancelled by it, for the same
-   reason as the reduced-motion gate around it: a re-render then simply has no
-   animation, where an override missed on one of the two selectors would leave
-   that element stuck at the `from` keyframe's `opacity: 0`.
-
-   Long-form motion, so deliberately off the `--dur-*` micro-interaction scale
-   (see the token block). */
-@media (prefers-reduced-motion: no-preference) {
-  .pass[data-fresh] .score-pill--lg { animation: press-in 0.45s var(--ease-out) both; }
-  .pass[data-fresh] .stamp {
-    animation: press-in 0.38s var(--ease-out) both;
-    animation-delay: calc(var(--i, 0) * 70ms + 120ms);
-  }
-  /* It arrives LARGER and lands through a compression, which is what separates
-     a stamp being pressed from the app's other fade-up keyframes. */
-  @keyframes press-in {
-    from { transform: scale(1.25); opacity: 0; }
-    60% { transform: scale(0.97); opacity: 1; }
-    to { transform: scale(1); }
-  }
-}
 /* A translucent-dark scrim under white, NOT a theme token: this button sits on
    arbitrary box art, so nothing derived from the page can be relied on to carry
    it. Same reasoning and the same precedent as `.gd-img__edit`'s gradient one
@@ -8402,36 +8355,6 @@ kbd {
 }
 .pool-thumb .ti { font-size: 16px; /* glyph, not type */ }
 
-/* The whirl (#1017). „Loswirbeln" is the app's own verb and nothing on the screen
-   moved for it: the pot turns once, the CTA's tornado turns with it, and the
-   lobby opens on the far side. 0.9s sits deliberately off the --dur-* scale — it
-   is a character moment like the finale seal and the podium rise, not a hover.
-
-   The duration is ALSO in views-session.js (`WHIRL_MS`), because the handler has
-   to hold the lobby back for exactly as long; test/session-pot.test.js pins the
-   two to each other, since drifted they fail silently in both directions.
-
-   `--wd` staggers the covers so the pot turns as a pot rather than as one rigid
-   block; `both` holds the 0% frame through the delay, which is the cover's own
-   resting position, so nothing jumps before it starts. */
-@media (prefers-reduced-motion: no-preference) {
-  .setup-grid--session.is-whirl .pool-tile,
-  .setup-grid--session.is-whirl .pool-thumb {
-    animation: pot-whirl 0.9s var(--ease-out) var(--wd, 0s) both;
-  }
-  .setup-grid--session.is-whirl .setup-bar .btn .ti {
-    animation: pot-whirl 0.9s var(--ease-out) both;
-  }
-  /* One full turn with a dip through the middle — the covers drop into the pot
-     and come back up, landing exactly where they started. Shared verbatim by the
-     covers and the CTA's tornado icon. */
-  @keyframes pot-whirl {
-    0% { transform: rotate(0deg) scale(1); }
-    45% { transform: rotate(200deg) scale(0.78); }
-    100% { transform: rotate(360deg) scale(1); }
-  }
-}
-
 /* ---- Session setup: the add-on chip row and the action bar (#1015) ----
 
    The four exception questions (guests, teams, "who came without their games",
@@ -9135,13 +9058,6 @@ kbd {
 }
 .spotlight--table.is-off .spotlight__kicker,
 .spotlight--table.is-off .spotlight__crown { color: var(--ink-soft); }
-@media (prefers-reduced-motion: no-preference) {
-  /* One hero rise. The stage this replaced built bottom-up through three tiers
-     to the winner; with only the winner left there is nothing to build up to,
-     and a staged reveal of a single element is just a longer wait. */
-    to { transform: translateY(0); opacity: 1; }
-  }
-}
 .confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .confetti__bit {
   position: absolute;

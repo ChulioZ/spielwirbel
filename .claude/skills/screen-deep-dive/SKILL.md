@@ -57,8 +57,12 @@ Every proposal has to pass all four readings of that sentence:
   the same change, never by accident).
 
 Bold is not *more*. The strongest proposal in the first run removed things
-(four always-open questions became one row of chips) and added one moment (the
-pot whirls). Judge your own tiers by that ratio.
+(four always-open questions became one row of chips) and added one moment (a
+turn on the pot). Judge your own tiers by that ratio — but note which half
+survived: the removals did, and the moment was cut again by #1122, along with
+the game page's entry press. Motion the reader WAITS THROUGH reads as a page
+still loading, however well it is made; motion that answers their own click
+reads as feedback and keeps. Propose the second kind.
 
 ## 0. Pin the screen
 

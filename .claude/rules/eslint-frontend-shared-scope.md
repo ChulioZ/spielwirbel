@@ -15,6 +15,13 @@ override for `public/js/**`:
   `api`, `PALETTES`, …) so a use of one in *another* file isn't a `no-undef`
   error. **When you add/rename/remove a top-level `function`/`const` in
   `public/js`, update that list** or lint will (wrongly) flag it — or miss a typo.
+  **The REMOVE half had no signal at all until #1122**, and it rots: declaring a
+  global that does not exist is not an ESLint error, and nothing else read
+  `eslint.config.js`, so nine dead entries had accumulated across 673 — including
+  three that #1092 had replaced with one card, in a commit whose own source
+  comment *names all three as removed*. A dead entry is not untidy, it is a hole
+  left open in `no-undef`: a since-renamed call to that name still lints clean.
+  `test/eslint-globals-declared.test.js` now fails naming each one.
 - **`no-redeclare` is off** there: each shared name is both declared in its home
   file *and* listed in `globals`, which would otherwise collide. **The cost of
   that is real and is not a lint problem**: two files declaring the same

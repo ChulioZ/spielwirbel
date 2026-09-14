@@ -247,7 +247,6 @@ const frontendGlobals = {
   publicStatsHasContent: 'readonly', mountLandingStats: 'readonly',
   mountHomeStatsPanel: 'readonly', statsCard: 'readonly',
   renderEntdeckenCta: 'readonly',
-  formatCount: 'readonly', formatAverage: 'readonly',
   STATS_PODIUMS: 'readonly', STATS_COUNTERS: 'readonly',
   // views-inbox.js (issue #207)
   showInbox: 'readonly', renderInboxItem: 'readonly',
@@ -256,8 +255,7 @@ const frontendGlobals = {
   // views-friends.js (issue #325)
   showFriends: 'readonly', renderHomeFriends: 'readonly',
   renderFriendRequestItem: 'readonly', renderFeedEvent: 'readonly',
-  renderIncomingRequest: 'readonly', renderOutgoingRequest: 'readonly',
-  renderFriendRow: 'readonly', friendAvatar: 'readonly', friendName: 'readonly',
+  friendAvatar: 'readonly', friendName: 'readonly',
   feedText: 'readonly', friendSendError: 'readonly',
   // views-friends.js — account profile (issue #558)
   showProfile: 'readonly', renderProfileCta: 'readonly',
@@ -389,12 +387,6 @@ const frontendGlobals = {
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
-  // the whirl's stagger table and its length (#1017) — file-local today, but
-  // listed because the scope is shared whether or not anyone else reaches in:
-  // two files declaring one top-level const is a SyntaxError no linter can see
-  // (.claude/rules/duplicate-top-level-name-across-scripts.md).
-  POT_WHIRL_DELAY: 'readonly', potStagger: 'readonly',
-  POT_TURN_MS: 'readonly', WHIRL_MS: 'readonly',
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
