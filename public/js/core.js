@@ -322,7 +322,13 @@ function applyStaticTexts() {
   document.getElementById('inboxBtn').setAttribute('aria-label', t('inbox.title'));
   // Shared site footer (issues #224/#134): link labels, re-localized on
   // language change like the aria-labels above.
-  document.getElementById('footerFaq').textContent = t('footer.faq');
+  /* The FAQ renders ONE language per page (#1088), so the footer link carries the
+     reader's own. Set beside the label rather than once at boot, because this
+     whole block is what re-runs on a language change — a href fixed at load
+     would keep sending a reader who switched to Korean to the German page. */
+  const faqLink = document.getElementById('footerFaq');
+  faqLink.textContent = t('footer.faq');
+  faqLink.setAttribute('href', `/faq?lang=${getLocale()}`);
   document.getElementById('footerKontakt').textContent = t('footer.contact');
   document.getElementById('footerImpressum').textContent = t('footer.impressum');
   document.getElementById('footerPrivacy').textContent = t('footer.privacy');

@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-09-08
+**Stand:** 2026-09-13
 
 ## Eingang & Identitätsprüfung
 
@@ -41,6 +41,12 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
 
 - Nutzer können fast alles selbst ändern (Namen, Titel, Tags, Bilder). Sonst
   gezielt über das Moderations-Panel oder auf Wunsch des Nutzers im Konto.
+- **Die E-Mail-Adresse seit #1076 ebenfalls selbst** (Konto → „E-Mail-Adresse
+  ändern“). Sie war die eine Ausnahme, weil sie zugleich Anmeldename und einziger
+  Wiederherstellungsweg ist. Bestätigt wird über einen Link an die NEUE Adresse,
+  die alte bleibt bis dahin aktiv — ein Tippfehler sperrt also niemanden aus. Ein
+  operatorseitiges Werkzeug dafür gibt es weiterhin nicht: wer den Zugriff auf
+  sein Postfach verloren hat, kommt über die Export-/Lösch-Wege im Panel.
 
 ## Löschung (Art. 17)
 
