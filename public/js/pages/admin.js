@@ -258,19 +258,64 @@
     return 'ok';
   }
 
+  /* Turn the raw design histogram into „Wald 12 · Standard 7 · unbekannt 1",
+     biggest first, capped so one card row cannot become a list of everything.
+
+     `resolveDesign` comes from public/js/round-designs.js, which this page now
+     loads: it is dependency-free with the module.exports guard, and a page
+     script is its own eslint block — it must NOT be added to index.html's SPA
+     scope for this (.claude/rules/frontend-helper-modules-and-coverage.md). */
+  const DESIGN_ROW_MAX = 5;
+
+  function designLabel(key) {
+    if (key === 'none') return 'ohne Design';
+    if (key === 'collage') return 'Collage';
+    /* The design's own STABLE ID is the label. `resolveDesign` hands back a
+       `labelKey` (an i18n key like `theme.forest`) and this page ships no
+       translation table — it is German-only by design — so resolving is used
+       for what it can actually answer: does the registry still know this id?
+       If not, the round is wearing something the app cannot draw, and saying
+       „unbekannt" is the honest report rather than echoing the stored string
+       back as though it were a design. */
+    const hit = typeof resolveDesign === 'function'
+      ? (resolveDesign({ type: 'theme', id: key }) || resolveDesign({ type: 'theme', page: key }))
+      : null;
+    return hit ? hit.id : 'unbekannt';
+  }
+
+  function designSummary(hist) {
+    const sorted = Object.entries(hist).sort((a, b) => b[1] - a[1]);
+    const shown = sorted.slice(0, DESIGN_ROW_MAX)
+      .map(([k, n]) => `${designLabel(k)} ${n}`);
+    const rest = sorted.length - shown.length;
+    if (rest > 0) shown.push(`+${rest} weitere`);
+    return shown.join(' · ');
+  }
+
   function statusRows(s) {
     const m = s.metrics;
     const rows = [];
 
     rows.push(['Konten', null, String(m.accounts.total),
       `${m.accounts.verified} bestätigt · ${m.accounts.total - m.accounts.verified} unbestätigt`
-      + ` · ${m.accounts.disabled} gesperrt`]);
+      + ` · ${m.accounts.disabled} gesperrt · ${m.accounts.withAvatar} mit Bild`]);
 
-    rows.push(['Neue Konten', null, `${m.accounts.new7d} / ${m.accounts.new30d}`,
-      'letzte 7 / 30 Tage']);
+    /* The two metrics that CAN be graphed, and the only two: `createRound`
+       writes no `createdAt`, and the rounds/games/members tables carry only a
+       `seq`. Runden, Spieler*innen and Spiele therefore keep plain counts — a
+       knowing trade (operator decision 2026-09-05: derive history from the
+       timestamps that exist rather than add a snapshot table).
 
-    rows.push(['Aktivierung', null, `${m.rounds.tenants} / ${m.accounts.total}`,
-      'Konten mit mindestens einer Runde']);
+       New-per-week, not a cumulative curve: a cumulative created-line drifts
+       above the headline total forever, because deletions never subtract from
+       it. The text value is the last complete figure, which is what the removed
+       „Neue Konten" row was trying to say. */
+    const lastOf = (series) => {
+      const v = Object.values(series);
+      return v.length ? v[v.length - 1] : 0;
+    };
+    rows.push(['Konten (Verlauf)', null, String(lastOf(m.accounts.history)),
+      'neu diese Woche · 26 Wochen', m.accounts.history]);
 
     rows.push(['Runden', null, String(m.rounds.total)]);
 
@@ -287,6 +332,24 @@
 
     rows.push(['Sessions', null, String(m.content.sessions),
       `${m.content.sessionsFinished} abgeschlossen · ${m.content.sessions30d} in den letzten 30 Tagen`]);
+
+    rows.push(['Sessions (Verlauf)', null, String(lastOf(m.content.sessionHistory)),
+      'neu diese Woche · 26 Wochen', m.content.sessionHistory]);
+
+    // Rounds USING each shelf state — how many groups reach for the archive and
+    // the wishlist at all, which the game totals above do not answer.
+    rows.push(['Regal-Nutzung', null,
+      `${m.content.roundsWithRetired} · ${m.content.roundsWithCompleted} · ${m.content.roundsWithWish}`,
+      `Runden mit Aussortiertem · mit Durchgespieltem · mit Wunschliste (von ${m.rounds.total})`]);
+
+    /* What rounds are wearing. The SERVER sends a raw histogram keyed by the
+       stored id (or a legacy page hex, or 'collage'/'none') and never resolves
+       it — round-designs.js's header says the stored id is deliberately not
+       validated against the registry, so that the list never becomes a
+       cross-boundary contract. Resolving happens HERE, and an id the registry
+       does not know falls back to „unbekannt" rather than disappearing. */
+    rows.push(['Designs', null, String(Object.keys(m.designs).length),
+      designSummary(m.designs) || 'keine Runde trägt ein Design']);
 
     rows.push(['Demo-Konten', capVerdict(m.demo.live, m.demo.max),
       `${m.demo.live} / ${m.demo.max}`, 'aktiv gegen MAX_LIVE_DEMOS']);
@@ -354,11 +417,56 @@
     renderTiles(grid, statusRows(status));
   }
 
-  // One [label, verdict, value, note?] row per tile. Shared by the Kennzahlen
-  // board and the BGG-Korpus card so the two cannot drift into two ideas of what
-  // a status tile looks like. Every value goes in via textContent.
+  /* A 26-week bar chart, hand-rolled (#941). No charting dependency: this file
+     is a standalone IIFE with no SPA globals and no build step, and one sparkline
+     is not worth either.
+
+     Colours come from the page's own tokens via `currentColor` and a `fill`
+     that names a variable — never a hex. test/standalone-page-brand.test.js
+     sweeps this page for stray palette hexes, and a chart is exactly where one
+     would look harmless.
+
+     ACCESSIBILITY: a bare <svg> is invisible to a screen reader, so it carries
+     role="img" and an aria-label summarising the series. The tile also keeps a
+     TEXT value beside it, which is what anyone not looking at pixels actually
+     reads. */
+  const CHART_W = 150;
+  const CHART_H = 28;
+
+  function renderChart(series, label) {
+    const values = Object.values(series);
+    if (!values.length) return null;
+    const max = Math.max(1, ...values);
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', `0 0 ${CHART_W} ${CHART_H}`);
+    svg.setAttribute('class', 'status__chart');
+    svg.setAttribute('role', 'img');
+    const total = values.reduce((a, b) => a + b, 0);
+    const weeks = Object.keys(series);
+    svg.setAttribute('aria-label',
+      `${label}: ${total} in 26 Wochen, Höchstwert ${max}, zuletzt ${values[values.length - 1]}`
+      + ` (Woche ab ${weeks[weeks.length - 1]})`);
+    const slot = CHART_W / values.length;
+    values.forEach((v, i) => {
+      // A zero week still draws a 1px stub, so a quiet week reads as "nothing
+      // happened" rather than as a gap in the data.
+      const h = v === 0 ? 1 : Math.max(2, Math.round((v / max) * CHART_H));
+      const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bar.setAttribute('x', String(Math.round(i * slot)));
+      bar.setAttribute('y', String(CHART_H - h));
+      bar.setAttribute('width', String(Math.max(1, Math.floor(slot) - 1)));
+      bar.setAttribute('height', String(h));
+      bar.setAttribute('fill', v === 0 ? 'var(--line)' : 'var(--accent)');
+      svg.appendChild(bar);
+    });
+    return svg;
+  }
+
+  // One [label, verdict, value, note?, series?] row per tile. Shared by the
+  // Kennzahlen board and the BGG-Korpus card so the two cannot drift into two
+  // ideas of what a status tile looks like. Every value goes in via textContent.
   function renderTiles(grid, rows) {
-    for (const [label, verdict, value, note] of rows) {
+    for (const [label, verdict, value, note, series] of rows) {
       const item = document.createElement('div');
       item.className = 'status__item';
 
@@ -379,6 +487,11 @@
         hint.className = 'status__note';
         hint.textContent = note;
         item.appendChild(hint);
+      }
+
+      if (series) {
+        const chart = renderChart(series, label);
+        if (chart) item.appendChild(chart);
       }
 
       grid.appendChild(item);
@@ -517,35 +630,46 @@
     loadCorpus();
   });
 
-  // ---- cover re-encode backfill (#867) --------------------------------------
+  // ---- object storage and the orphan estimate (#941) ------------------------
 
-  // The route reports the numbers; this decides what reads as good, the same
-  // division of labour the status card uses. `remaining` is the one that must
-  // not be buried: a run that stopped at the batch ceiling looks identical to a
-  // finished one unless the panel says so.
-  $('coverReencode').addEventListener('click', async () => {
-    hide($('coverMsg'));
-    show($('coverMsg'), 'Titelbilder werden geprüft …', 'ok');
-    let run;
+  /* Loaded on demand, never with the panel: the route lists the whole bucket.
+     The orphan figure is worded as an ESTIMATE everywhere it appears, because
+     an object written by another replica between the listing and the database
+     read looks orphaned — and nothing here deletes anything, so a wrong guess
+     costs a sentence rather than somebody's cover. */
+  $('storageLoad').addEventListener('click', async () => {
+    hide($('storageMsg'));
+    show($('storageMsg'), 'Speicher wird geprüft …', 'ok');
+    let storage;
     try {
-      ({ run } = await api('/covers/reencode', { method: 'POST' }));
+      ({ storage } = await api('/storage'));
     } catch (err) {
-      show($('coverMsg'), message(err), 'err');
+      show($('storageMsg'), message(err), 'err');
       return;
     }
-    if (!run.scanned) {
-      show($('coverMsg'), 'Keine eigenen Titelbilder gespeichert.', 'ok');
+    const grid = $('storageGrid');
+    grid.textContent = '';
+    if (!storage) {
+      show($('storageMsg'), 'Dieser Speicher-Backend kann nicht aufgelistet werden.', 'err');
       return;
     }
-    const parts = [`${run.scanned} von ${run.hosted} geprüft`];
-    parts.push(run.converted
-      ? `${run.converted} verkleinert, ${formatBytes(run.reclaimed)} gespart`
-      : 'nichts zu tun — alle geprüften Bilder sind bereits verkleinert');
-    if (run.skipped) parts.push(`${run.skipped} übersprungen`);
-    if (run.failed) parts.push(`${run.failed} nicht lesbar`);
-    if (run.remaining) parts.push(`${run.remaining} noch offen — nochmal drücken`);
-    show($('coverMsg'), `${parts.join(' · ')}.`, run.failed ? 'err' : 'ok');
+    // `complete: false` means the sweep hit its page cap, so every figure is a
+    // FLOOR. The „≥" is the same marker the Uploads row already uses for a
+    // sampled measurement — without it a partial listing is indistinguishable
+    // from a complete one, and the orphan count would read as a total.
+    const ge = storage.complete ? '' : '≥ ';
+    renderTiles(grid, [
+      ['Objekte', null, `${ge}${storage.objects}`,
+        storage.complete ? 'im Speicher' : 'im Speicher · Auflistung abgeschnitten'],
+      ['Belegt', null, `${ge}${formatBytes(storage.bytes)}`],
+      ['Referenziert', null, String(storage.referenced), 'Titelbilder und Konto-Bilder zusammen'],
+      ['Vermutlich verwaist', storage.orphans > 0 ? 'warn' : 'ok', `${ge}${storage.orphans}`,
+        'Schätzung — es wird nichts gelöscht'],
+    ]);
+    hide($('storageMsg'));
   });
+
+
 
   // ---- error/warn logs (#359) ----------------------------------------------
 

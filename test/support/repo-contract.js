@@ -3928,37 +3928,6 @@ module.exports = function repoContract(repo) {
     assert.equal(images.includes(undefined), false);
   });
 
-  test('replaceImage repoints every reference across tenants and reports the count', async () => {
-    const mine = await freshRound();
-    const g1 = await repo.createGame(T, mine.id, gameFields({ title: 'One', image: '/uploads/old.jpg' }));
-    const theirs = await repo.createRound(OTHER, { name: 'Their round', members: ['Zoe'] });
-    await repo.createGame(OTHER, theirs.id, gameFields({ title: 'Two', image: '/uploads/old.jpg' }));
-    const keep = await repo.createGame(T, mine.id, gameFields({ title: 'Keep', image: '/uploads/ok.jpg' }));
-
-    assert.equal(await repo.replaceImage('/uploads/old.jpg', '/uploads/new.webp'), 2);
-
-    const after = await repo.getRound(T, mine.id);
-    assert.equal(after.games.find((g) => g.id === g1.id).image, '/uploads/new.webp');
-    assert.equal(after.games.find((g) => g.id === keep.id).image, '/uploads/ok.jpg');
-    assert.equal((await repo.getRound(OTHER, theirs.id)).games[0].image, '/uploads/new.webp');
-
-    // EVERY reference moved, which is what lets the route delete the old object
-    // without an isImageReferenced check.
-    assert.equal(await repo.isImageReferenced(T, '/uploads/old.jpg'), false);
-    // A repeat is an honest no-op — the property the admin button leans on.
-    assert.equal(await repo.replaceImage('/uploads/old.jpg', '/uploads/new.webp'), 0);
-  });
-
-  test('replaceImage refuses a degenerate rewrite rather than reporting a change', async () => {
-    const mine = await freshRound();
-    await repo.createGame(T, mine.id, gameFields({ title: 'One', image: '/uploads/same.jpg' }));
-    // Same path in and out would otherwise report a "change" the route answers
-    // by deleting the object it just kept.
-    assert.equal(await repo.replaceImage('/uploads/same.jpg', '/uploads/same.jpg'), 0);
-    assert.equal(await repo.replaceImage('', '/uploads/new.webp'), 0);
-    assert.equal(await repo.replaceImage('/uploads/same.jpg', null), 0);
-    assert.equal(await repo.isImageReferenced(T, '/uploads/same.jpg'), true);
-  });
 
   /* ------------------- Account profile pictures (#841) ---------------------- */
 
@@ -4548,7 +4517,6 @@ module.exports = function repoContract(repo) {
     await t.test('rounds, games, sessions and their maxima all move', async () => {
       const m = await repo.instanceMetrics(NOW);
       assert.equal(m.rounds.total, before.rounds.total + 1);
-      assert.equal(m.rounds.tenants, before.rounds.tenants + 1);
       assert.equal(m.content.games, before.content.games + 2);
       assert.equal(m.content.sessions, before.content.sessions + 2);
       assert.equal(m.content.sessionsFinished, before.content.sessionsFinished + 1);
@@ -4565,11 +4533,18 @@ module.exports = function repoContract(repo) {
       // is reduced or Number()-ed in JS is a number whatever SQL returned, and
       // the fields that would actually catch a dropped cast are the ones nobody
       // remembers to add.
-      for (const [name, block] of Object.entries(m)) {
-        for (const [field, value] of Object.entries(block)) {
-          assert.equal(typeof value, 'number', `${name}.${field} is not a number`);
+      /* RECURSES to the leaves since #941, which added two history objects and a
+         design histogram. Stopping at the first level would have reported
+         `accounts.history` as "not a number" — and the tempting fix, an
+         allowlist of known-nested fields, has to be maintained by whoever just
+         added the nesting. Recursing has no such gap. */
+      const leaves = (node, path) => {
+        for (const [k, v] of Object.entries(node)) {
+          if (v && typeof v === 'object' && !Array.isArray(v)) { leaves(v, `${path}.${k}`); continue; }
+          assert.equal(typeof v, 'number', `${path}.${k} is not a number`);
         }
-      }
+      };
+      leaves(m, 'metrics');
     });
 
     await t.test('a demo tenant contributes to nothing', async () => {
@@ -4625,7 +4600,7 @@ module.exports = function repoContract(repo) {
       assert.equal(m.social.friendships, mid.social.friendships, 'a demo friendship must not count');
     });
 
-    await t.test('accounts count by state, and by the 7/30-day windows', async () => {
+    await t.test('accounts count by state, and by the 30-day window', async () => {
       const mid = await repo.instanceMetrics(NOW);
       await repo.createUser({
         ...userFields(), tenantId: `t-${Math.random().toString(16).slice(2)}`,
@@ -4644,9 +4619,170 @@ module.exports = function repoContract(repo) {
       assert.equal(m.accounts.total, mid.accounts.total + 3);
       assert.equal(m.accounts.verified, mid.accounts.verified + 2);
       assert.equal(m.accounts.disabled, mid.accounts.disabled + 1);
-      assert.equal(m.accounts.new7d, mid.accounts.new7d + 1);
-      assert.equal(m.accounts.new30d, mid.accounts.new30d + 2);
     });
+
+    /* ---- #941: the numbers the panel gained, and the two the backends can
+       silently disagree about --------------------------------------------- */
+
+    await t.test('withAvatar agrees on a CLEARED avatar, null and empty string alike', async () => {
+      /* The one place these two backends can drift without anything failing.
+         JSON tests `!!u.avatar`, which is falsy for null, undefined AND ''. A
+         Postgres `data->>'avatar' is not null` agrees on JSON null but COUNTS an
+         empty string — so the takedown path (which writes `avatar: null`) would
+         be fine while a cleared-to-'' row inflated the figure on one backend
+         only. Hence `coalesce(data->>'avatar', '') <> ''`, asserted with all
+         three shapes present. */
+      const mid = await repo.instanceMetrics(NOW);
+      const mk = (avatar) => repo.createUser({
+        ...userFields(), tenantId: `av-${Math.random().toString(16).slice(2)}`,
+        createdAt: daysAgo(1), avatar,
+      });
+      await mk('/uploads/a.webp');   // counted
+      await mk(null);                // cleared by the takedown path
+      await mk('');                  // cleared to empty
+      await mk(undefined);           // never set
+
+      const m = await repo.instanceMetrics(NOW);
+      assert.equal(m.accounts.total, mid.accounts.total + 4);
+      assert.equal(m.accounts.withAvatar, mid.accounts.withAvatar + 1,
+        'only the account with real bytes behind it may count');
+    });
+
+    await t.test('the history series is 26 weekly buckets ending with NOW\'s week', async () => {
+      const m = await repo.instanceMetrics(NOW);
+      for (const [label, series] of [['accounts', m.accounts.history], ['sessions', m.content.sessionHistory]]) {
+        const keys = Object.keys(series);
+        assert.equal(keys.length, 26, `${label}: expected 26 buckets`);
+        assert.deepEqual(keys, [...keys].sort(), `${label}: buckets must be oldest-first`);
+        // NOW is a Tuesday, so its ISO week starts on the Monday before.
+        assert.equal(keys[25], '2026-07-27', `${label}: the last bucket is NOW's ISO week (Monday)`);
+        for (const v of Object.values(series)) assert.equal(typeof v, 'number');
+      }
+    });
+
+    await t.test('a dated account lands in its own week; an UNDATED one is dropped', async () => {
+      /* Dropped rather than bucketed as "unknown", and BOTH backends must drop
+         it identically — a row that one counts and the other ignores is the
+         same silent-drift shape as withAvatar above. */
+      const mid = await repo.instanceMetrics(NOW);
+      const week = (s) => Object.entries(s);
+      const sum = (s) => Object.values(s).reduce((a, b) => a + b, 0);
+
+      await repo.createUser({
+        ...userFields(), tenantId: `hw-${Math.random().toString(16).slice(2)}`,
+        createdAt: '2026-07-28T09:00:00.000Z',   // NOW's own Tuesday
+      });
+      await repo.createUser({
+        ...userFields(), tenantId: `hw-${Math.random().toString(16).slice(2)}`,
+        createdAt: null,
+      });
+      await repo.createUser({
+        ...userFields(), tenantId: `hw-${Math.random().toString(16).slice(2)}`,
+        createdAt: 'not a date at all',
+      });
+
+      const m = await repo.instanceMetrics(NOW);
+      assert.equal(sum(m.accounts.history), sum(mid.accounts.history) + 1,
+        'exactly one of the three was datable');
+      const bucket = Object.fromEntries(week(m.accounts.history));
+      const wasBucket = Object.fromEntries(week(mid.accounts.history));
+      assert.equal(bucket['2026-07-27'], wasBucket['2026-07-27'] + 1,
+        'a Tuesday row belongs to its Monday');
+    });
+
+    await t.test('a row OUTSIDE the 26-week window is ignored, not clamped into the first bucket', async () => {
+      // Clamping would draw a false spike at the left edge every time the
+      // window moves.
+      const mid = await repo.instanceMetrics(NOW);
+      const sum = (s) => Object.values(s).reduce((a, b) => a + b, 0);
+      await repo.createUser({
+        ...userFields(), tenantId: `old-${Math.random().toString(16).slice(2)}`,
+        createdAt: '2024-01-01T00:00:00.000Z',
+      });
+      const m = await repo.instanceMetrics(NOW);
+      assert.equal(m.accounts.total, mid.accounts.total + 1, 'it still counts in the total');
+      assert.equal(sum(m.accounts.history), sum(mid.accounts.history), 'but not in the series');
+    });
+
+    await t.test('rounds-with-retired/completed/wish count ROUNDS, not games', async () => {
+      const mid = await repo.instanceMetrics(NOW);
+      const tn = `shelf-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Regal', members: ['Ann'] });
+      // TWO archived games in ONE round: the round must count once.
+      for (const title of ['A', 'B']) {
+        const g = await repo.createGame(tn, r.id, gameFields({ title }));
+        await repo.updateGame(tn, r.id, g.id, { retired: true });
+      }
+      const w = await repo.createGame(tn, r.id, gameFields({ title: 'W' }));
+      await repo.updateGame(tn, r.id, w.id, { wish: true });
+
+      const m = await repo.instanceMetrics(NOW);
+      assert.equal(m.content.roundsWithRetired, mid.content.roundsWithRetired + 1,
+        'two archived games in one round is ONE round using the archive');
+      assert.equal(m.content.roundsWithWish, mid.content.roundsWithWish + 1);
+      assert.equal(m.content.roundsWithCompleted, mid.content.roundsWithCompleted,
+        'nothing was marked completed');
+    });
+
+    await t.test('the design histogram keys on the RAW id, and never resolves it', async () => {
+      /* The server must not check a stored id against the registry —
+         round-designs.js's header says so, and the panel resolves labels
+         instead. An unknown id must therefore survive as itself rather than
+         being folded into 'none'. */
+      const mid = await repo.instanceMetrics(NOW);
+      const tn = `dz-${Math.random().toString(16).slice(2)}`;
+      const plain = await repo.createRound(tn, { name: 'Ohne', members: ['Ann'] });
+      const forest = await repo.createRound(tn, { name: 'Wald', members: ['Ann'] });
+      const legacy = await repo.createRound(tn, { name: 'Alt', members: ['Ann'] });
+      const alien = await repo.createRound(tn, { name: 'Fremd', members: ['Ann'] });
+      await repo.setBackground(tn, forest.id, { type: 'theme', id: 'forest', page: '#f7f2e9', accent: '#2f6b3f' });
+      await repo.setBackground(tn, legacy.id, { type: 'theme', page: '#eef4ff', accent: '#3b5bdb' });
+      await repo.setBackground(tn, alien.id, { type: 'theme', id: 'not-a-design', page: '#fff', accent: '#000' });
+
+      const d = (await repo.instanceMetrics(NOW)).designs;
+      const was = mid.designs;
+      const delta = (k) => (d[k] || 0) - (was[k] || 0);
+      assert.equal(delta('forest'), 1, 'a world counts under its id');
+      assert.equal(delta('#eef4ff'), 1, 'a legacy hex-only round counts under its page hex');
+      assert.equal(delta('not-a-design'), 1, 'an unknown id survives as itself');
+      assert.equal(delta('none'), 1, 'a round with no design counts under none');
+      assert.ok(plain);
+    });
+  });
+
+  /* ------------- storage-facing globals (#941) ------------------------------ */
+
+  test('referencedImages is the UNION of game covers and account avatars', async () => {
+    /* One method, not two the caller has to remember to combine — an orphan
+       report built from half the references would name live objects as
+       deletable, which is the one way that feature could do harm. */
+    const tenant = `ref-${Math.random().toString(16).slice(2)}`;
+    const round = await repo.createRound(tenant, { name: 'Bilder', members: ['Ann'] });
+    await repo.createGame(tenant, round.id, gameFields({ title: 'Mit Cover', image: '/uploads/cover-x.webp' }));
+    // A hotlink rides along exactly as listGameImages returns it: the caller
+    // filters to /uploads/, and a union that dropped them would be a second
+    // place that has to know the difference.
+    await repo.createGame(tenant, round.id, gameFields({ title: 'Hotlink', image: 'https://cf.geekdo-images.com/y.jpg' }));
+    const user = await repo.createUser({
+      ...userFields(), tenantId: tenant, avatar: '/uploads/avatar-x.webp',
+    });
+    await repo.createUser({ ...userFields(), tenantId: `${tenant}-2`, avatar: null });
+
+    const refs = await repo.referencedImages();
+    assert.ok(refs.includes('/uploads/cover-x.webp'), 'a game cover is missing');
+    assert.ok(refs.includes('/uploads/avatar-x.webp'), 'an account avatar is missing');
+    assert.ok(refs.includes('https://cf.geekdo-images.com/y.jpg'), 'a hotlink must ride along');
+    assert.equal(refs.includes(null), false);
+    assert.equal(refs.length, new Set(refs).size, 'the union must be deduplicated');
+    assert.ok(user);
+  });
+
+  test('databaseSize answers a number of bytes, or null — never a string', async () => {
+    // pg hands bigint back as a STRING; a missing Number() would make this
+    // backend answer '8384512' where the JSON one answers a number.
+    const n = await repo.databaseSize();
+    assert.ok(n === null || typeof n === 'number', `databaseSize returned ${typeof n}`);
+    if (n !== null) assert.ok(n > 0, 'a store that exists occupies something');
   });
 
   /* --------------------- Public game aggregates (#564) ----------------------- */

@@ -1344,103 +1344,64 @@ test('with no ADMIN_PASSWORD the whole surface 404s', async () => {
 });
 
 
-/* ------------------- Cover re-encode backfill (#867) ------------------------ */
 
-test('the cover backfill converts legacy objects, skips the rest, and is safe to press twice', async (t) => {
-  const sharp = require('sharp');
+/* ------------- object storage and the orphan estimate (#941) --------------- */
+
+test('GET /storage reports usage and an orphan estimate — and deletes nothing', async (t) => {
   const storage = require('../lib/storage');
-  const { COVER_MAX_DIM } = require('../public/js/cover-policy');
-
   const cookie = await adminCookie();
-  const owner = await makeAccount('backfill@example.com');
-  const round = await request(app)
-    .post('/api/rounds')
-    .set('Authorization', `Bearer ${owner.token}`)
-    .send({ name: 'Shelf', members: ['Zoe'] });
-  const rid = round.body.id;
-  const tenantRepo = repo.forTenant(owner.user.tenantId);
 
-  const addGame = async (title) => {
-    const res = await request(app)
-      .post(`/api/rounds/${rid}/games`)
-      .set('Authorization', `Bearer ${owner.token}`)
-      .send({ title, minPlayers: 1, maxPlayers: 4 });
-    return res.body.id;
-  };
+  // One object the app references, one it does not. The referenced set is the
+  // UNION of game covers and account avatars, so this exercises both halves.
+  const referencedCover = await storage.save(Buffer.from([1, 2, 3, 4, 5, 6, 7, 8]), '.png');
+  const referencedAvatar = await storage.save(Buffer.from([9, 9, 9, 9]), '.png');
+  const orphan = await storage.save(Buffer.from([7, 7]), '.png');
 
-  // A pre-#867 cover: stored exactly as pasted, so big and not our format.
-  // Written through the storage seam directly because the upload route would
-  // now re-encode it — the legacy shape is precisely what no longer occurs.
-  const legacyBytes = await sharp({
-    create: { width: 2400, height: 1600, channels: 3, background: '#c2410c' },
-  }).jpeg({ quality: 100 }).toBuffer();
-  const legacyPath = await storage.save(legacyBytes, '.jpg');
+  const tenant = `store-${Math.random().toString(16).slice(2)}`;
+  const round = await repo.createRound(tenant, { name: 'Speicherrunde', members: ['Ann'] });
+  await repo.createGame(tenant, round.id, {
+    title: 'Mit Bild', minPlayers: 1, maxPlayers: 4, image: referencedCover, source: null,
+  });
+  const acc = await makeAccount(`storage-${Math.random().toString(16).slice(2)}@example.test`);
+  await repo.updateUser(acc.user.id, { avatar: referencedAvatar });
 
-  const legacyGame = await addGame('Legacy cover');
-  await tenantRepo.updateGame(rid, legacyGame, { image: legacyPath });
+  const res = await request(app).get('/api/admin/storage').set('Cookie', cookie);
+  assert.equal(res.status, 200);
+  const s = res.body.storage;
+  assert.ok(s, 'the disk backend must be listable');
 
-  // An already-converted object, which must be left alone rather than re-encoded
-  // a second time (a lossy generation for no bytes reclaimed).
-  const currentBytes = await sharp({
-    create: { width: 800, height: 600, channels: 3, background: '#0f766e' },
-  }).webp().toBuffer();
-  const currentPath = await storage.save(currentBytes, '.webp');
-  const currentGame = await addGame('Already reduced');
-  await tenantRepo.updateGame(rid, currentGame, { image: currentPath });
+  assert.ok(s.objects >= 3, `expected at least the three just written, got ${s.objects}`);
+  assert.ok(s.referenced >= 2, 'both the cover AND the avatar must count as referenced');
+  assert.ok(s.orphans >= 1, 'the unreferenced object must be estimated as an orphan');
+  assert.equal(typeof s.bytes, 'number');
+  assert.equal(typeof s.complete, 'boolean');
 
-  // A hotlinked provider cover (#172): no bytes of ours behind it, and fetching
-  // or rewriting one would be exactly the re-hosting that rule forbids.
-  const hotlink = 'https://cf.geekdo-images.com/thumb/img/abc/pic1.jpg';
-  const linkedGame = await addGame('Hotlinked');
-  await tenantRepo.updateGame(rid, linkedGame, { image: hotlink });
-
-  let newPath;
-
-  await t.test('the first run converts only the legacy object', async () => {
-    const res = await request(app).post('/api/admin/covers/reencode').set('Cookie', cookie);
-    assert.equal(res.status, 200);
-    const { run } = res.body;
-
-    assert.equal(run.converted, 1);
-    assert.equal(run.skipped, 1, 'the already-converted object was skipped');
-    assert.equal(run.failed, 0);
-    assert.equal(run.remaining, 0);
-    assert.ok(run.reclaimed > 0, 'the run reports bytes actually reclaimed');
-    assert.equal(run.reclaimed, run.bytesBefore - run.bytesAfter);
-
-    const games = (await tenantRepo.getRound(rid)).games;
-    newPath = games.find((g) => g.id === legacyGame).image;
-    assert.notEqual(newPath, legacyPath, 'the game was repointed');
-    assert.match(newPath, /^\/uploads\/[0-9a-f]+\.webp$/);
-
-    const stored = await storage.read(newPath);
-    const meta = await sharp(stored).metadata();
-    assert.equal(meta.format, 'webp');
-    assert.equal(Math.max(meta.width, meta.height), COVER_MAX_DIM);
-    assert.ok(stored.length < legacyBytes.length);
-
-    // Reference first, bytes second: the superseded object is gone only after
-    // the row moved off it.
-    assert.equal(await storage.read(legacyPath), null, 'the superseded object was deleted');
+  await t.test('it returns NUMBERS ONLY — no key, path, title or tenant', () => {
+    /* An object key is a random id, but the referenced/orphaned split is a
+       statement about somebody's uploads and the panel needs only the counts.
+       Same generic sweep /status gets. */
+    const serialized = JSON.stringify(res.body);
+    for (const secret of [referencedCover, orphan, tenant, 'Speicherrunde', 'Mit Bild']) {
+      assert.equal(serialized.includes(secret), false, `${secret} reached the storage payload`);
+    }
+    for (const [k, v] of Object.entries(s)) {
+      assert.ok(typeof v === 'number' || typeof v === 'boolean', `storage.${k} is ${typeof v}`);
+    }
   });
 
-  await t.test('the hotlinked and already-current covers are untouched', async () => {
-    const games = (await tenantRepo.getRound(rid)).games;
-    assert.equal(games.find((g) => g.id === linkedGame).image, hotlink);
-    assert.equal(games.find((g) => g.id === currentGame).image, currentPath);
-    assert.ok(await storage.read(currentPath), 'its object still exists');
+  await t.test('NOTHING was deleted — not even the object it called an orphan', async () => {
+    /* The safety property, and it is a correctness one rather than a scope
+       decision: a zero-downtime deploy overlaps two processes, so an object
+       written by the other replica between the listing and the database read
+       looks orphaned. Asserted by reading the bytes back. */
+    for (const p of [referencedCover, referencedAvatar, orphan]) {
+      assert.notEqual(await storage.size(p), null, `${p} was removed by a read-only report`);
+    }
   });
 
-  await t.test('a second press converts nothing — the run is idempotent', async () => {
-    const res = await request(app).post('/api/admin/covers/reencode').set('Cookie', cookie);
-    const { run } = res.body;
-    assert.equal(run.converted, 0);
-    assert.equal(run.reclaimed, 0);
-    assert.equal(run.skipped, 2, 'both objects now have the stored shape');
-
-    // The decisive half: the object the FIRST run wrote is still the one the
-    // game points at, so pressing again cannot churn covers indefinitely.
-    const games = (await tenantRepo.getRound(rid)).games;
-    assert.equal(games.find((g) => g.id === legacyGame).image, newPath);
+  await t.test('the route is behind the operator gate', async () => {
+    assert.equal((await request(app).get('/api/admin/storage')).status, 401);
   });
+
+  for (const p of [referencedCover, referencedAvatar, orphan]) await storage.remove(p);
 });

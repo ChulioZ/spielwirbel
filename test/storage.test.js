@@ -35,9 +35,10 @@ function serveApp(storage) {
 
 // An in-memory stand-in for an S3 client: records the commands it receives and
 // keeps objects in a Map. Branches on the SDK command class name.
-function fakeS3() {
+function fakeS3({ pageSize = 1000 } = {}) {
   const objects = new Map(); // Key -> { body: Buffer, contentType }
   const puts = [];
+  const lists = [];
   const client = {
     async send(cmd) {
       const name = cmd.constructor.name;
@@ -70,10 +71,27 @@ function fakeS3() {
         }
         return { ContentLength: obj.body.length, ContentType: obj.contentType };
       }
+      // usage() (#941) — ONE listing per 1000 keys, carrying Size per object, so
+      // a bucket-wide sweep costs no HeadObject at all. `lists` records the
+      // calls so a test can prove the paging actually paged.
+      if (name === 'ListObjectsV2Command') {
+        lists.push({ Prefix: input.Prefix, ContinuationToken: input.ContinuationToken });
+        const all = [...objects.entries()]
+          .filter(([k]) => !input.Prefix || k.startsWith(input.Prefix))
+          .map(([k, o]) => ({ Key: k, Size: o.body.length }));
+        const from = input.ContinuationToken ? Number(input.ContinuationToken) : 0;
+        const page = all.slice(from, from + pageSize);
+        const next = from + page.length;
+        return {
+          Contents: page,
+          IsTruncated: next < all.length,
+          NextContinuationToken: next < all.length ? String(next) : undefined,
+        };
+      }
       throw new Error('unexpected command ' + name);
     },
   };
-  return { client, objects, puts };
+  return { client, objects, puts, lists };
 }
 
 /* --------------------------------- disk ----------------------------------- */
@@ -279,4 +297,68 @@ test('index: size ignores anything that is not a hosted /uploads path', async ()
   assert.equal(await storage.size(null), null);
 
   await storage.remove(p);
+});
+
+/* ------------------------- usage() — both backends (#941) ------------------ */
+
+test('disk: usage reports objects, bytes and the public keys', async () => {
+  const a = await disk.save(PNG, '.png');
+  const b = await disk.save(Buffer.concat([PNG, PNG]), '.png');
+
+  const u = await disk.usage();
+  assert.ok(u.objects >= 2, `expected at least the two just written, got ${u.objects}`);
+  assert.ok(u.bytes >= PNG.length * 3);
+  assert.equal(u.complete, true);
+  // The PUBLIC shape, not file names: the caller diffs these straight against
+  // the `image` values in the database without knowing which backend answered.
+  assert.ok(u.keys.includes(a), 'the first object is missing from the key list');
+  assert.ok(u.keys.includes(b));
+  for (const k of u.keys) assert.match(k, /^\/uploads\//);
+  assert.equal(u.keys.length, u.objects, 'objects must be the length of keys');
+
+  await disk.remove(a);
+  await disk.remove(b);
+});
+
+test('s3: usage pages the listing, honours the prefix, and needs no HeadObject', async () => {
+  // pageSize 2 with 5 objects, so the paging is actually exercised rather than
+  // returned whole on the first call.
+  const { client, lists } = fakeS3({ pageSize: 2 });
+  const s3 = createS3Storage({ client, bucket: 'test-bucket', prefix: 'cov/' });
+  const saved = [];
+  for (let i = 0; i < 5; i += 1) saved.push(await s3.save(PNG, '.png'));
+
+  const u = await s3.usage();
+  assert.equal(u.objects, 5);
+  assert.equal(u.bytes, PNG.length * 5);
+  assert.equal(u.complete, true);
+  assert.ok(lists.length >= 3, `expected the listing to page, it made ${lists.length} call(s)`);
+  assert.equal(lists[0].Prefix, 'cov/', 'the sweep must honour S3_PREFIX');
+
+  // The prefix is an internal detail: keys come back in the public shape, so
+  // they compare against stored `image` values directly.
+  for (const k of u.keys) assert.match(k, /^\/uploads\/[^/]+$/);
+  assert.deepEqual([...u.keys].sort(), [...saved].sort());
+});
+
+test('s3: a listing that fails mid-sweep reports what it has, and says it is incomplete', async () => {
+  /* Best-effort like size(): the card is an operator convenience, and a bucket
+     we cannot finish listing must report a FLOOR rather than failing the whole
+     page — `complete: false` is what stops the panel presenting it as a total. */
+  const { client } = fakeS3({ pageSize: 2 });
+  const s3 = createS3Storage({ client, bucket: 'test-bucket' });
+  for (let i = 0; i < 5; i += 1) await s3.save(PNG, '.png');
+
+  let calls = 0;
+  const flaky = { async send(cmd) {
+    if (cmd.constructor.name === 'ListObjectsV2Command') {
+      calls += 1;
+      if (calls > 1) throw new Error('network');
+    }
+    return client.send(cmd);
+  } };
+  const broken = createS3Storage({ client: flaky, bucket: 'test-bucket' });
+  const u = await broken.usage();
+  assert.equal(u.complete, false, 'a truncated sweep must not claim to be complete');
+  assert.equal(u.objects, 2, 'it reports the page it did get');
 });

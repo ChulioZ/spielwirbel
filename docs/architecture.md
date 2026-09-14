@@ -225,6 +225,11 @@ lib/
   status.js          aggregate usage metrics + the quota ceilings for the
                      operator panel's Kennzahlen card (issues #274/#404) —
                      counts only, never a secret value and never personal data
+  metrics-history.js the 26 weekly buckets behind the Konten and Sessions
+                     charts (issue #941). One module both repo backends use, so
+                     the two cannot pick different week boundaries — and the
+                     reason neither casts a stored date in SQL: one malformed
+                     value would throw for the whole query
   provider-info.js   lazy backfill of BGG's standard metadata onto linked
                      games (issues #717/#724/#736/#828/#829): eligibility (a
                      TTL-stamped attempt marker) and the best-effort fill every
@@ -317,11 +322,13 @@ lib/
                                              in index.js, because they share the
                                              prefix and seven mounts would run
                                              authLimiter seven times — issue #996)
-      index.js       the gate, login/logout/me, and the seven mounts
+      index.js       the gate, login/logout/me, and the sub-router mounts
       shared.js      the schemas and the paging shape more than one needs
       status.js      instance status + the recent warn/error ring buffer
       corpus.js      the licensed BGG corpus ingest (issue #681)
-      covers.js      the cover re-encode backfill (issue #867)
+      storage.js     object-storage usage + the orphan estimate (issue #941),
+                     behind a button because it lists the whole bucket; reports
+                     only, never deletes
       moderation.js  lookup by image/round/e-mail/tenant, per-tenant summary,
                      round text + redaction, takedown
       users.js       account suspend/restore/rename, GDPR export + erasure

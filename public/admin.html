@@ -374,24 +374,24 @@
           <p class="msg" id="corpusMsg" role="alert" hidden></p>
         </section>
 
-        <!-- Cover re-encode backfill (#867). New uploads are resized and
-             re-encoded on the way in; covers stored before that are not, and a
-             10 MB one is re-served at 10 MB on every render. This converts them
-             in place. An operator button rather than boot-time migration code,
-             per CLAUDE.md's standing rule. -->
+        <!-- Object storage and the orphan estimate (#941). Behind a button
+             because it lists the whole bucket: a bucket-wide listing must not
+             run every time somebody opens the panel. Report only — it never
+             deletes anything, for the reason the route explains. -->
         <section class="card">
-          <h2>Titelbilder</h2>
+          <h2>Speicher</h2>
           <p class="sub" style="margin-bottom: 0.9rem;">
-            Verkleinert hochgeladene Titelbilder, die noch im Originalformat im
-            Speicher liegen — neue Uploads werden schon beim Hochladen verkleinert.
-            Läuft in kleinen Schritten — bei Bedarf mehrmals drücken;
-            bereits umgewandelte Bilder werden übersprungen. Fremd verlinkte
-            Cover bleiben unberührt.
+            Was im Objektspeicher liegt und wie viel davon von keiner Zeile mehr
+            referenziert wird. Die Zahl verwaister Objekte ist eine
+            <strong>Schätzung</strong>: ein Bild, das zwischen Auflistung und
+            Datenbankabfrage hochgeladen wird, sieht verwaist aus. Es wird hier
+            nichts gelöscht.
           </p>
           <div class="row">
-            <button class="ghost small" id="coverReencode">Titelbilder verkleinern</button>
+            <button class="ghost small" id="storageLoad">Speicher prüfen</button>
           </div>
-          <p class="msg" id="coverMsg" role="alert" hidden></p>
+          <div class="status" id="storageGrid"></div>
+          <p class="msg" id="storageMsg" role="alert" hidden></p>
         </section>
 
       </aside>
@@ -413,6 +413,7 @@
     <div class="row" id="detailActions" style="margin-top: 1.1rem;" hidden></div>
   </dialog>
 
+  <script src="/js/round-designs.js"></script>
   <script src="/js/pages/admin.js"></script>
 </body>
 </html>

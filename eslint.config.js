@@ -460,7 +460,12 @@ module.exports = [
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'script',
-      globals: { ...globals.browser },
+      // `resolveDesign` (#941): public/admin.html loads the dependency-free
+      // round-designs.js so the Kennzahlen card can tell a design id the
+      // registry still knows from one it does not. Named ONE BY ONE rather than
+      // by spreading frontendGlobals — the whole point of this block is that a
+      // page script reaching for an SPA global is a no-undef error.
+      globals: { ...globals.browser, resolveDesign: 'readonly' },
     },
   },
   {
