@@ -23,6 +23,7 @@ const frontendGlobals = {
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
   fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtMoney: 'readonly',
+  fmtRelativeDays: 'readonly',
   fmtAvg: 'readonly', fmtSigned: 'readonly', fmtCount: 'readonly',
   // core.js
   app: 'readonly', context: 'readonly', toastEl: 'readonly',
@@ -288,7 +289,8 @@ const frontendGlobals = {
   memberFavourites: 'readonly', retiredIds: 'readonly', isNameableGame: 'readonly',
   // period-recap.js + recap-card.js (issue #800) — internal helpers listed for
   // the same reason.
-  periodKeyOf: 'readonly', inPeriod: 'readonly', playedSessions: 'readonly',
+  periodKeyOf: 'readonly', dayIndexOf: 'readonly', monthsBetween: 'readonly',
+  inPeriod: 'readonly', playedSessions: 'readonly',
   SHELF_EVENTS: 'readonly', shelfEvents: 'readonly', periodsOf: 'readonly',
   playTally: 'readonly', bestRated: 'readonly', periodRecap: 'readonly',
   // hub-insights.js (#923) — the Start tab's derivations

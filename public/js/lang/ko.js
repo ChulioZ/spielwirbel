@@ -105,7 +105,7 @@ I18N.ko = {
   'hub.pulse.sessionsOne': '12개월 동안 세션 {n}회',
   'hub.pulse.sessions': '12개월 동안 세션 {n}회',
   'hub.pulse.lastToday': '오늘 플레이함',
-  'hub.pulse.lastDaysOne': '하루 전 플레이함',
+  'hub.pulse.lastDaysOne': '어제 플레이함',
   'hub.pulse.lastDays': '{n}일 전 플레이함',
   'hub.pulse.coverage': '전체 {total}개 중 {n}개는 아직 플레이한 적이 없어요',
   'hub.care.title': '남은 일',

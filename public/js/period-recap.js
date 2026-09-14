@@ -24,6 +24,12 @@
 
 'use strict';
 
+// One nominal day. Used only to turn a UTC calendar date into an integer day
+// index below, never to divide an elapsed span — see dayIndexOf's header for why
+// that distinction is the whole point. hub-insights.js declared this until
+// #1080; two classic scripts share one lexical scope, so exactly one file may.
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 // The month and year a timestamp falls in, by the LOCAL calendar of the device
 // reading it. That is deliberate and must not be "fixed" toward UTC: a session
 // that started at 22:00 on July 31 belongs to the group's July, and every other
@@ -35,6 +41,45 @@ function periodKeyOf(iso) {
   if (Number.isNaN(d.getTime())) return null;
   const y = String(d.getFullYear());
   return { month: `${y}-${String(d.getMonth() + 1).padStart(2, '0')}`, year: y };
+}
+
+/* The same local calendar, one granularity down: the integer day a timestamp
+   falls on, and the whole months between two of them (#1080).
+
+   WHY NOT (b - a) / 86400000. A local day is 23 or 25 hours across a DST
+   transition, so dividing an elapsed millisecond span by a nominal day gains or
+   loses one right at the boundary — and every count on these screens is the
+   answer to a question about the calendar ("played today?", "not played for
+   three months"), never about elapsed hours. A session at 20:00 yesterday read
+   at 10:00 today is 14 hours old and one day ago, and the group calls it
+   yesterday.
+
+   The trick that makes it exact: read the LOCAL y/m/d off the date, then turn
+   that calendar triple into a UTC-based integer. `Date.UTC(y, m, d)` is always a
+   whole multiple of a day because UTC has no DST, so the division is exact and
+   two timestamps on the same local day can never land on different integers —
+   which local-noon arithmetic does not guarantee (rounding two noons an offset
+   apart can collide). */
+function dayIndexOf(v) {
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return null;
+  return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY_MS;
+}
+
+/* COMPLETED calendar months between two timestamps — the bare month difference
+   `(y2 - y1) * 12 + (m2 - m1)` minus one while the day of the month has not come
+   round again.
+
+   The correction is load-bearing, not a refinement: without it a game played on
+   31 January reads „Seit einem Monat nicht gespielt" on 1 February. With it,
+   31 December to 1 March is two months (the issue's own example) and
+   1 February to 1 March is one. */
+function monthsBetween(from, to) {
+  const a = new Date(from);
+  const b = new Date(to);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null;
+  const months = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+  return Math.max(0, months - (b.getDate() < a.getDate() ? 1 : 0));
 }
 
 // A period matches a timestamp when the timestamp's own key for that granularity
@@ -223,5 +268,5 @@ function periodRecap(round, activities, period, deps) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { periodKeyOf, periodsOf, periodRecap };
+  module.exports = { periodKeyOf, dayIndexOf, monthsBetween, periodsOf, periodRecap };
 }

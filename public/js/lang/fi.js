@@ -104,7 +104,7 @@ I18N.fi = {
   'hub.pulse.sessionsOne': '{n} sessio 12 kuukaudessa',
   'hub.pulse.sessions': '{n} sessiota 12 kuukaudessa',
   'hub.pulse.lastToday': 'Pelattu tänään',
-  'hub.pulse.lastDaysOne': 'Pelattu päivä sitten',
+  'hub.pulse.lastDaysOne': 'Pelattu eilen',
   'hub.pulse.lastDays': 'Pelattu {n} päivää sitten',
   'hub.pulse.coverage': '{n} peliä {total} pelistä on vielä pelaamatta',
   'hub.care.title': 'Avoimet asiat',

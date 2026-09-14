@@ -116,7 +116,7 @@ I18N.es = {
   'hub.pulse.sessionsOne': '{n} sesión en 12 meses',
   'hub.pulse.sessions': '{n} sesiones en 12 meses',
   'hub.pulse.lastToday': 'Jugado hoy',
-  'hub.pulse.lastDaysOne': 'Jugado hace un día',
+  'hub.pulse.lastDaysOne': 'Jugado ayer',
   'hub.pulse.lastDays': 'Jugado hace {n} días',
   'hub.pulse.coverage': '{n} de {total} juegos nunca se han jugado',
   'hub.care.title': 'Cabos sueltos',

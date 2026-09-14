@@ -129,7 +129,7 @@ I18N.pt = {
   'hub.pulse.sessionsOne': '{n} sessão em 12 meses',
   'hub.pulse.sessions': '{n} sessões em 12 meses',
   'hub.pulse.lastToday': 'Jogado hoje',
-  'hub.pulse.lastDaysOne': 'Jogado um dia atrás',
+  'hub.pulse.lastDaysOne': 'Jogado ontem',
   'hub.pulse.lastDays': 'Jogado {n} dias atrás',
   'hub.pulse.coverage': '{n} de {total} jogos nunca foram jogados',
   'hub.care.title': 'Pontas soltas',

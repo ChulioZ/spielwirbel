@@ -609,16 +609,23 @@ function renderPersonCard(p, state, events) {
    recent event out of the feed the view already fetched, and falls back to the
    friendship's own age.
 
-   The date is ABSOLUTE (`fmtDate`), not „vor 3 Tagen". A relative one has to
-   count LOCAL CALENDAR days or it says „gestern" for something 14 hours old —
-   the bug #1080 fixes elsewhere — and the helper that does it correctly lands
-   with that issue. An absolute date is unambiguous, already localized, and needs
-   no new key; the relative form is a one-line change once `dayIndexOf` exists. */
+   The date is RELATIVE within the last month — „gestern", „vor 3 Tagen",
+   „letzte Woche" — and absolute past it. #1092 shipped it absolute because a
+   relative one has to count LOCAL CALENDAR days or it says „gestern" for
+   something 14 hours old, and the helper that does that correctly (`dayIndexOf`)
+   landed with #1080; this is that follow-up.
+
+   The cutoff is the point: a friendship two years old reads „seit September
+   2024", never „vor 743 Tagen". `fmtRelativeDays` returns null past it and this
+   falls back, so the threshold lives in one place. */
 function personCardLine(p, state, events) {
   if (state === 'incoming') return esc(t('friends.card.wants'));
   if (state === 'outgoing') return esc(t('friends.card.sent'));
   const last = (events || []).find((ev) => ev.username && ev.username === p.username);
-  if (last) return `${esc(last.title || '')} · ${esc(fmtDate(last.at))}`;
+  if (last) {
+    const rel = fmtRelativeDays(dayIndexOf(Date.now()) - dayIndexOf(last.at));
+    return `${esc(last.title || '')} · ${esc(rel || fmtDate(last.at))}`;
+  }
   return p.since ? esc(t('friends.card.since', { when: fmtMonth(p.since) })) : '';
 }
 

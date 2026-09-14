@@ -8,6 +8,8 @@ paths:
   - "public/js/views-stats.js"
   - "public/js/i18n.js"
   - "public/js/period-recap.js"
+  - "public/js/hub-insights.js"
+  - "public/js/views-round-start.js"
 ---
 
 # A period LABEL and the window it counts are one fact — derive both, never state one
@@ -133,6 +135,53 @@ meaning* becomes the thing under test the moment the meaning moves
 (`.claude/rules/redefining-a-measure-invalidates-its-fixtures.md`), so the rows
 now straddle each boundary in **both** stamps: reading `finishedAt` reads
 3 / 4 / 6 where `createdAt` reads 1 / 3 / 5.
+
+## 8. §3 applies to a COUNT of days, not only to a window boundary — and the scope is what failed
+
+§3 has said "anything of the shape `now − N × 86400000` is wrong twice a year"
+since #564. `public/js/hub-insights.js` shipped three of them anyway (#923/#933)
+and they sat in production until #1080:
+
+```js
+daysSinceLast: Math.max(0, Math.floor((now - newest) / DAY_MS)),        // the pulse
+const months = Math.floor((now - played.get(stale.id)) / (DAY_MS * 30)); // "not played for n months"
+return at === undefined || now - at > SUGGEST_RECENT_DAYS * DAY_MS;      // the 60-day filter
+```
+
+**The rule was right and the file never read it**, because this file is
+`paths:`-scoped and `hub-insights.js` was not in the list — a scoped rule that
+fails to load loses its protection silently (CLAUDE.md §Capturing learnings). It
+is in the list now, with `views-round-start.js` beside it because that is where
+the injected clock is assembled. **When a rule is scoped, the scope is part of the
+rule**: adding a file that does the thing the rule governs is as much a part of
+fixing an instance as changing the code.
+
+Two things generalise past the scope miss:
+
+- **A day COUNT has the same DST hazard as a day BOUNDARY, and a second problem
+  §3 does not mention: the reader's semantics.** The pulse said „Heute gespielt"
+  for a session that ended at 20:00 *yesterday*, because 14 elapsed hours floor to
+  zero — then „Vor einem Tag gespielt" from 20:00 today onwards, while the group
+  was sitting down to play again. Every count on these screens answers a question
+  about the calendar ("played today?", "not played for three months"), never about
+  elapsed hours, so elapsed arithmetic is wrong on most days and not merely twice
+  a year.
+- **The primitive is a local calendar triple turned into a UTC integer**, which is
+  §3's "avoided by construction" one granularity down:
+  `Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000`. Read the
+  **local** y/m/d, then index it in UTC, where no offset exists to shift. Local
+  *noon* arithmetic is the tempting alternative and it is not exact — rounding two
+  noons an offset apart can land two different days on the same integer.
+  `dayIndexOf` and `monthsBetween` in `period-recap.js` are the two that exist;
+  use them rather than writing a third.
+
+**And a month count needs a day-of-month correction, which the bare formula
+hides.** `(y2 - y1) * 12 + (m2 - m1)` is a difference of month *buckets*, not of
+elapsed months: on 1 February it reports "a month" for a game played on
+31 January. `monthsBetween` subtracts one while the day of the month has not come
+round again, so 31 Dec → 1 Mar is two and 1 Feb → 1 Mar is one. The bucket
+difference is the natural thing to write and it overstates every gap by up to a
+month — in a sentence whose whole content is the number.
 
 **Related:** `.claude/rules/shared-constants-across-the-stack.md` (the same
 "one fact, two places" shape for a value rather than a period),

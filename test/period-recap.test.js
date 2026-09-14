@@ -3,7 +3,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { periodsOf, periodRecap, periodKeyOf } = require('../public/js/period-recap');
+const { periodsOf, periodRecap, periodKeyOf, dayIndexOf, monthsBetween } = require('../public/js/period-recap');
 // The real resolvers, not stand-ins — same reasoning as test/recap.test.js: the
 // member/guest split is something these assertions depend on, so a simplified
 // fake would test the wrong rules.
@@ -101,6 +101,46 @@ test('an unfinished or cancelled session contributes no period at all', () => {
 
 test('periodKeyOf buckets a timestamp by the LOCAL calendar', () => {
   assert.deepEqual(periodKeyOf(at(2026, 1, 31, 23)), { month: '2026-01', year: '2026' });
+});
+
+// ---- local day and month arithmetic (#1080) --------------------------------
+
+test('dayIndexOf gives one integer per LOCAL calendar day, whatever the hour', () => {
+  assert.equal(dayIndexOf(at(2026, 9, 5, 0)), dayIndexOf(at(2026, 9, 5, 23)));
+  assert.equal(dayIndexOf(at(2026, 9, 5, 23)) + 1, dayIndexOf(at(2026, 9, 6, 0)));
+  assert.equal(dayIndexOf('nonsense'), null);
+});
+
+test('dayIndexOf accepts a timestamp as well as an ISO string', () => {
+  const iso = at(2026, 9, 5, 14);
+  assert.equal(dayIndexOf(Date.parse(iso)), dayIndexOf(iso));
+});
+
+test('dayIndexOf counts a DST day as one day, not as 23 or 25 hours', () => {
+  // Europe's clocks go FORWARD on the last Sunday of March 2026 (the 29th),
+  // making that local day 23 hours long — so (b - a) / 86400000 over the
+  // transition loses a day while the calendar does not. In a zone without DST
+  // the assertion holds trivially; it is the arithmetic being DST-proof by
+  // construction (a local y/m/d turned into a UTC-based integer) that the
+  // property rests on, not on the suite running in Europe.
+  assert.equal(dayIndexOf(at(2026, 3, 30, 20)) - dayIndexOf(at(2026, 3, 27, 20)), 3);
+});
+
+test('monthsBetween counts COMPLETED calendar months, so a gap is never overstated', () => {
+  // The day-of-month correction is the whole point: without it a game played on
+  // 31 January reads "not played for a month" on 1 February.
+  assert.equal(monthsBetween(at(2026, 1, 31), at(2026, 2, 1)), 0);
+  assert.equal(monthsBetween(at(2025, 12, 31), at(2026, 3, 1)), 2);
+  assert.equal(monthsBetween(at(2026, 1, 31), at(2026, 3, 31)), 2);
+  assert.equal(monthsBetween(at(2026, 2, 1), at(2026, 3, 1)), 1);
+  assert.equal(monthsBetween(at(2026, 3, 1), at(2026, 3, 1)), 0);
+});
+
+test('monthsBetween never drifts the way a 30-day month does', () => {
+  // A 30-day month walks a whole extra month off the calendar over a year.
+  assert.equal(monthsBetween(at(2025, 9, 5), at(2026, 9, 5)), 12);
+  assert.equal(monthsBetween(at(2026, 3, 1, 12), at(2026, 5, 31, 20)), 2);
+  assert.equal(monthsBetween('nonsense', at(2026, 5, 1)), null);
 });
 
 // ---- counts ---------------------------------------------------------------

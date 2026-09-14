@@ -97,6 +97,40 @@ test('a friend card shows their most recent event, else how long you have been f
   assert.ok(!/Wingspan/.test(line(1)), 'the wrong friend\'s event leaked onto a card');
 });
 
+/* The relative form (#1080's follow-up). #1092 shipped this line ABSOLUTE and
+   said why: a relative count is only honest over LOCAL CALENDAR days, and
+   `dayIndexOf` landed with #1080.
+
+   The dates are built off the harness's own clock rather than written as
+   literals, because a fixed „2026-09-01" drifts out of the 30-day window as the
+   suite ages — the class of undated fixture that passes for a year and then
+   reports a bug that is not there. */
+const daysAgoIso = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  d.setHours(12, 0, 0, 0);
+  return d.toISOString();
+};
+
+test('a recent event reads relatively, and an old one falls back to the date', async () => {
+  await open(
+    { friends: [person('dora'), person('erik')] },
+    [event('dora', 'Wingspan', daysAgoIso(1)), event('erik', 'Azul', daysAgoIso(400))],
+  );
+  const line = (i) => cards()[i].querySelector('.k-card__line').textContent;
+
+  // `numeric: 'auto'` is what makes one day „gestern" rather than „vor 1 Tag";
+  // asserted against Intl itself, not against a German literal this file would
+  // then have to keep in step with nine locales.
+  const yesterday = dom.run("new Intl.RelativeTimeFormat('de-DE', { numeric: 'auto' }).format(-1, 'day')");
+  assert.match(line(0), new RegExp(yesterday), 'a day-old event is not relative');
+
+  // Past the cutoff the absolute date comes back, because „vor 400 Tagen" is a
+  // number nobody pictures.
+  assert.ok(!new RegExp(yesterday).test(line(1)), 'an ancient event is still relative');
+  assert.match(line(1), /\d{4}/, 'and it did not fall back to a year-bearing date');
+});
+
 test('neither line needs a request the view does not already make', async () => {
   // `since` has been in the /friends payload since #325 and nothing rendered it;
   // the events come from the feed the screen fetches anyway. Two calls, as before.

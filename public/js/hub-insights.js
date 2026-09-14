@@ -15,9 +15,9 @@
    a sibling, so injection is what keeps this usable both as a shared-scope
    frontend script and as a CommonJS module the tests require, without a second
    copy of any rule. `deps` is
-   { outcomeOf, endingOf, monthKeyOf, neutralScore, filterOptions,
-   normalizeMetadata, fitsMetadata } — sessionOutcome and sessionEnding
-   (session-outcome.js), periodKeyOf
+   { outcomeOf, endingOf, monthKeyOf, dayIndexOf, monthsBetween, neutralScore,
+   filterOptions, normalizeMetadata, fitsMetadata } — sessionOutcome and
+   sessionEnding (session-outcome.js), periodKeyOf, dayIndexOf and monthsBetween
    (period-recap.js), PRIOR_DEFAULT (vote-score.js) and the three
    metadata-filter functions (draw-pool.js). Each is injected rather than
    restated because a second copy of any of them is exactly the drift
@@ -34,7 +34,9 @@
 // anything. Below this, "play one of these" is a list of most of the shelf.
 const SUGGEST_MIN_SHELF = 6;
 // A game put on the table inside this window is not something the hub needs to
-// suggest — the group has just played it and knows.
+// suggest — the group has just played it and knows. LOCAL CALENDAR days, counted
+// through deps.dayIndexOf: on the 60th day the group still remembers playing it,
+// whichever hour each of the two sittings happened to start (#1080).
 const SUGGEST_RECENT_DAYS = 60;
 // How many months of bars the pulse shows, and how much evidence it needs
 // before drawing them: one played session makes a chart of one bar.
@@ -42,7 +44,6 @@ const PULSE_MONTHS = 12;
 const PULSE_MIN_SESSIONS = 2;
 // Rows per Kümmerliste section. The card names what to fix, it is not a report.
 const CARE_ROW_MAX = 3;
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Only evenings that actually happened, asked through `sessionOutcome` and never
 // through `s.finished`/`s.cancelled` directly: a split parent (#796) is neither
@@ -147,7 +148,10 @@ function gameSuggestions(round, activeGames, opts, deps) {
     .filter((g) => played.has(g.id) && !seen.has(g.id) && suggestScore(stats, g, neutral) >= neutral)
     .sort((a, b) => played.get(a.id) - played.get(b.id))[0];
   if (stale) {
-    const months = Math.floor((now - played.get(stale.id)) / (DAY_MS * 30));
+    // COMPLETED calendar months, not elapsed 30-day blocks: a 30-day month walks
+    // a whole extra month off the calendar over a year, and it made „seit drei
+    // Monaten" appear for a gap of 1 March to 31 May (#1080).
+    const months = deps.monthsBetween(played.get(stale.id), now);
     if (months >= 3) take(stale, { kind: 'longAgo', months });
   }
 
@@ -165,7 +169,7 @@ function gameSuggestions(round, activeGames, opts, deps) {
     .filter((g) => !seen.has(g.id))
     .filter((g) => {
       const at = played.get(g.id);
-      return at === undefined || now - at > SUGGEST_RECENT_DAYS * DAY_MS;
+      return at === undefined || deps.dayIndexOf(now) - deps.dayIndexOf(at) > SUGGEST_RECENT_DAYS;
     })
     .filter((g) => suggestScore(stats, g, neutral) > neutral)
     .sort((a, b) => suggestScore(stats, b, neutral) - suggestScore(stats, a, neutral))[0];
@@ -280,8 +284,14 @@ function roundPulse(round, activeGames, opts, deps) {
   const total = months.reduce((n, m) => n + m.count, 0);
   if (total < PULSE_MIN_SESSIONS) return null;
 
-  // `daysSinceLast` deliberately looks past the window: once the card is on
-  // screen at all, "last played 400 days ago" is exactly the fact worth having.
+  /* `daysSinceLast` deliberately looks past the window: once the card is on
+     screen at all, "last played 400 days ago" is exactly the fact worth having.
+
+     LOCAL CALENDAR days, through the same injected clock the month buckets use.
+     It counted elapsed 24-hour periods until #1080, which made an evening that
+     ended at 20:00 yesterday read „Heute gespielt" until 20:00 today and then
+     „Vor einem Tag gespielt" for the rest of the evening the group sat down
+     again — a card describing hours while every reader reads days. */
   const everPlayed = new Set(
     played.map((s) => s.chosenGameId).filter(Boolean)
   );
@@ -289,7 +299,7 @@ function roundPulse(round, activeGames, opts, deps) {
   return {
     months,
     total,
-    daysSinceLast: newest === null ? null : Math.max(0, Math.floor((now - newest) / DAY_MS)),
+    daysSinceLast: newest === null ? null : Math.max(0, deps.dayIndexOf(now) - deps.dayIndexOf(newest)),
     shelfSize: shelf.length,
     neverPlayed: shelf.filter((g) => !everPlayed.has(g.id)).length,
   };
