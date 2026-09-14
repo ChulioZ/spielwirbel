@@ -417,3 +417,53 @@ test('the dashboard stretches two and three tiles across the zone as well as one
       `${sel} forces ${n} columns onto a phone — the count must be a maximum, not a target`);
   }
 });
+
+/* --------------------------------- zone 3 ---------------------------------
+   The round card's „Zuletzt gespielt" line (#1106). The trophy was rendered
+   unconditionally, so a round whose last evening nobody won wore a gold trophy
+   over „… wurde gespielt." Home's summary read carries no `ending`
+   (`lib/repo/json.js`: `{ gameTitle, winnerNames, at }`) and widening it is not
+   worth a one-line screen — the line never CLAIMED a win, it just wore one, so
+   dropping the trophy is the whole fix here. */
+
+const lastLineOf = (document) => document.querySelector('.round-card__last');
+
+test('a round whose last evening was won wears the trophy', async (t) => {
+  const { document } = await home(t, [roundOf({
+    lastPlayed: { gameTitle: 'Azul', winnerNames: ['Anna'], at: '2026-05-01T10:00:00.000Z' },
+  })]);
+  const line = lastLineOf(document);
+  assert.ok(line, 'the round card lost its „Zuletzt gespielt" line');
+  const icons = [...line.querySelectorAll('.ti')];
+  assert.equal(icons.length, 1);
+  assert.ok(icons[0].classList.contains('ti-trophy'), `expected the trophy, got ${icons[0].className}`);
+  assert.equal(line.classList.contains('round-card__last--plain'), false);
+});
+
+test('a round whose last evening nobody won does not wear a trophy', async (t) => {
+  const { document } = await home(t, [roundOf({
+    lastPlayed: { gameTitle: 'Azul', winnerNames: [], at: '2026-05-01T10:00:00.000Z' },
+  })]);
+  const line = lastLineOf(document);
+  assert.ok(line, 'the round card lost its „Zuletzt gespielt" line');
+  const icons = [...line.querySelectorAll('.ti')];
+  assert.equal(icons.length, 1, 'the line carries exactly one icon');
+  assert.ok(icons[0].classList.contains('ti-cards'),
+    `a trophy nobody earned: ${icons[0].className}`);
+  assert.ok(line.classList.contains('round-card__last--plain'),
+    'gold means somebody won — an evening with no winner must not wear it');
+});
+
+test('gold on the round card is reserved for the trophy', () => {
+  assert.match(bodyOf('.round-card__last .ti') || '', /color:\s*var\(--gold\)/,
+    'the base rule is no longer gold — this test is asserting against the wrong rule');
+  const plain = bodyOf('.round-card__last--plain .ti');
+  assert.ok(plain, 'no rule for the winnerless line — its icon inherits the winner gold');
+  assert.doesNotMatch(plain, /--gold/, 'the winnerless line is still gold');
+
+  // Equal specificity (two classes each) — the muted rule wins on order alone.
+  const at = (sel) => RULES.findIndex(([s]) => s === sel);
+  assert.ok(at('.round-card__last .ti') > -1 && at('.round-card__last--plain .ti') > -1, 'a rule moved — this ordering check is asserting nothing');
+  assert.ok(at('.round-card__last--plain .ti') > at('.round-card__last .ti'),
+    'equal specificity: the muted rule must come AFTER the gold one or it never applies');
+});
