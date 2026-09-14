@@ -1,9 +1,9 @@
 'use strict';
 
 /*
- * Landing-page product screenshots (issues #438, #457, #752).
+ * Landing-page product screenshots (issues #438, #457, #752, #1090).
  *
- * The hero and the how-it-works section render committed static images. Nothing
+ * The hero and the walkthrough render committed static images. Nothing
  * else in the suite would notice if one of them broke, and both failure modes are
  * silent in exactly the way link-preview.test.js describes for og-image.png:
  *
@@ -47,10 +47,11 @@ const VIEW = fs.readFileSync(path.join(ROOT, 'public/js/views-landing.js'), 'utf
 // enough that a full-resolution screenshot does.
 const WEIGHT_BUDGET = 200 * 1024;
 
-// The three entries every locale owes. Named here rather than derived from one
-// locale's set, or a locale missing `vote` would define the requirement as "the
-// two I happen to have".
-const REQUIRED_SHOTS = ['shelfWide', 'shelfPhone', 'vote'];
+// The three entries every locale owes — the walkthrough's three steps, in the
+// order it renders them (#1090). Named here rather than derived from one
+// locale's set, or a locale missing `result` would define the requirement as
+// "the two I happen to have".
+const REQUIRED_SHOTS = ['shelfPhone', 'vote', 'result'];
 
 // The LANDING_SHOTS table, read out of the view rather than restated here — a
 // test constant hand-copied from the thing under test proves nothing
@@ -153,9 +154,12 @@ test('the declared width/height match the real pixels, so the hero reserves its 
 });
 
 test("each locale's screenshot set stays inside its weight budget", () => {
-  // Per locale, because that is what a visitor downloads — of which <picture>
-  // then fetches only the matching width. Budgeting the committed total instead
-  // would halve this cap's strictness with every language added.
+  // Per locale, because that is what a visitor downloads. Budgeting the
+  // committed total instead would halve this cap's strictness with every
+  // language added. Since #1090 the visitor downloads the WHOLE set — the hero
+  // and the walkthrough's first step share one <img src>, and the other two are
+  // the steps beside it — where the retired <picture> used to fetch one of two
+  // shelf widths, so the budget binds harder than it did.
   for (const [locale, shots] of Object.entries(declaredShots())) {
     const bytes = shots.reduce(
       (sum, s) => sum + fs.statSync(path.join(ROOT, 'public', s.src)).size,
@@ -168,29 +172,33 @@ test("each locale's screenshot set stays inside its weight budget", () => {
   }
 });
 
-test('the <picture> breakpoint and the stylesheet agree on 720px', () => {
-  const bp = VIEW.match(/const LANDING_SHOT_BP = '\(min-width: (\d+)px\)'/);
-  assert.ok(bp, 'views-landing.js declares LANDING_SHOT_BP');
-  // Comments stripped first: a selector regex otherwise matches inside prose
-  // that merely mentions the class (.claude/rules/css-text-assertions-strip-comments.md).
+test('every narrow landing block stops below the hero shot\u2019s own breakpoint', () => {
+  // What this used to pin was the <picture> `media` against the stylesheet. The
+  // <picture> went with #1090 — all three shots are phone-shaped now, so the hero
+  // renders one <img> at every width — and the adjacency survives it: the hero
+  // shot is capped at 300px below 720 and 340 above, so a narrow landing block
+  // that reached 720 would apply the phone rhythm at a width where the wider cap
+  // is already in force. Same discipline as the dock clearance
+  // (.claude/rules/responsive-hub-tabs.md §2), and just as invisible.
+  //
+  // `<`, not `===`: the landing legitimately has more than one narrow
+  // breakpoint since #1090 (719 for the walkthrough strip, 519 for the primary
+  // button's size), so pinning equality would forbid the second one rather than
+  // catch a straddle. Comments stripped first, or a selector regex matches
+  // inside prose that merely mentions the class
+  // (.claude/rules/css-text-assertions-strip-comments.md).
   const css = fs
     .readFileSync(path.join(ROOT, 'public/styles.css'), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '');
-  // The rule that un-caps the hero shot must fire at exactly the width at which
-  // <picture> swaps in the desktop screenshot. If they drift, the wide shot
-  // renders inside the 300px phone cap (or the phone shot stretches full-width).
-  const rule = new RegExp(
-    `@media \\(min-width: ${bp[1]}px\\)\\s*\\{[^}]*\\.landing-hero__visual \\.landing-shot`
-  );
-  assert.match(css, rule, `styles.css un-caps the hero shot at ${bp[1]}px`);
 
-  // …and every narrow landing block must stop one pixel BELOW it. A block left
-  // at `max-width: 720px` overlaps the wide branch by exactly 1px, so at a
-  // viewport of exactly 720 the hero renders the desktop screenshot — un-capped
-  // by the wide block — on the phone's tighter vertical rhythm. Same adjacency
-  // rule as the dock clearance (.claude/rules/responsive-hub-tabs.md §2), and
-  // just as invisible.
-  const wide = Number(bp[1]);
+  // Derived from the stylesheet, never restated: the wide branch is whatever
+  // block un-caps the hero shot, so a retune of that breakpoint moves both sides.
+  const wideRule = css.match(
+    /@media \(min-width: (\d+)px\)\s*\{[^}]*\.landing-hero__visual \.landing-shot/
+  );
+  assert.ok(wideRule, 'styles.css un-caps the hero shot in a min-width block');
+  const wide = Number(wideRule[1]);
+
   let checked = 0;
   for (const m of css.matchAll(/@media \(max-width: (\d+)px\)\s*\{/g)) {
     // Inner rules are indented, so a newline followed by an unindented `}` is
@@ -198,9 +206,9 @@ test('the <picture> breakpoint and the stylesheet agree on 720px', () => {
     const body = css.slice(m.index + m[0].length, css.indexOf('\n}', m.index));
     if (!/\.landing[\w-]*\s*\{|\.landing[\w-]*\s+\./.test(body)) continue;
     checked++;
-    assert.equal(
-      Number(m[1]), wide - 1,
-      `a landing @media (max-width: ${m[1]}px) block must end at ${wide - 1}px to tile with ${wide}px`
+    assert.ok(
+      Number(m[1]) < wide,
+      `a landing @media (max-width: ${m[1]}px) block must stop below ${wide}px to tile with it`
     );
   }
   // Without this the loop passes vacuously the moment the stylesheet's
@@ -210,9 +218,40 @@ test('the <picture> breakpoint and the stylesheet agree on 720px', () => {
   assert.ok(checked > 0, 'found at least one narrow landing @media block to check');
 });
 
+test('the walkthrough renders all three shots to ONE height (#1090)', () => {
+  // The three crops are not one aspect ratio and cannot be made into one: each
+  // is cut where that screen has whitespace to cut in, and the result shot's cut
+  // is measured PER LOCALE (resultCrop in scripts/capture-landing-shots.js),
+  // because the table band above the ranking is 100px taller in Dutch than in
+  // Korean. So the row is levelled in CSS instead, by bounding the height as
+  // well as the width — without which the three columns' captions sit at three
+  // different heights and the section reads as broken.
+  //
+  // Asserted because it is invisible everywhere else: jsdom applies no external
+  // stylesheet, and each image on its own is perfectly correct.
+  const css = fs
+    .readFileSync(path.join(ROOT, 'public/styles.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const rule = css.match(/\.landing-walk \.landing-shot \{([^}]*)\}/);
+  assert.ok(rule, '.landing-walk .landing-shot is declared');
+  assert.match(rule[1], /max-height:[^;]*\d+px/, 'the walkthrough shots are bounded by height');
+  // …and that bound has to give way on a narrow three-column row, or the shots
+  // outgrow their tracks and overlap. Measured at 768px before the `vw` term:
+  // 272px and 251px shots in 224px tracks, with no page overflow to notice.
+  assert.match(rule[1], /max-height:\s*min\(/,
+    'a flat max-height is taller than a tablet track can carry — it must be fluid');
+  assert.match(rule[1], /width:\s*auto/,
+    'width must give way, or the height cap cannot bind on the taller shot');
+
+  // …and the heights really do differ, so the rule above is not decoration. A
+  // set that happened to be uniform would make it vacuous.
+  const heights = new Set(allShots().map((s) => s.h));
+  assert.ok(heights.size > 1, 'the shots have different heights — that is why the cap exists');
+});
+
 test('the render sites read the set through the locale resolver, never a fixed one', () => {
   // The whole feature is that getLocale() decides at render time. A single
-  // `LANDING_SHOTS.de.shelfWide` left behind renders a valid page in the wrong
+  // `LANDING_SHOTS.de.shelfPhone` left behind renders a valid page in the wrong
   // language — no error, no broken image, just the half-translated result #457
   // exists to remove. So: the table is read exactly once, by the resolver.
   assert.match(
@@ -229,8 +268,18 @@ test('the screenshots are informative images, not decoration', () => {
   // Both carry localized alt text and neither is aria-hidden — the pre-#438 hero
   // was aria-hidden decoration, which is the wrong answer once the image is the
   // thing explaining the product.
+  // The walkthrough interpolates its alt key from LANDING_WALK, so the three are
+  // asserted through that table rather than as three literals — which is also
+  // what makes a fourth step arrive covered.
+  const walk = VIEW.match(/const LANDING_WALK = \[([\s\S]*?)\];/);
+  assert.ok(walk, 'views-landing.js declares LANDING_WALK');
+  const altKeys = [...walk[1].matchAll(/'(landing\.shot\.\w+)'/g)].map((m) => m[1]);
+  assert.deepEqual(altKeys, ['landing.shot.shelfAlt', 'landing.shot.voteAlt', 'landing.shot.resultAlt']);
+  assert.match(VIEW, /alt="\$\{esc\(t\(altKey\)\)\}"/, 'the walkthrough renders its alt from the table');
+  // The hero's own shot names its key directly, and must not be decoration
+  // either — the pre-#438 hero was aria-hidden, which is the wrong answer once
+  // the image is the thing explaining the product.
   assert.match(VIEW, /alt="\$\{esc\(t\('landing\.shot\.shelfAlt'\)\)\}"/);
-  assert.match(VIEW, /alt="\$\{esc\(t\('landing\.shot\.voteAlt'\)\)\}"/);
   assert.doesNotMatch(VIEW, /landing-hero__visual"[^>]*aria-hidden/);
 });
 

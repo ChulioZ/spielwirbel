@@ -225,6 +225,19 @@
      laptop scrolls ~11px and 1470 up fits outright, where 900 left 258–968px of
      dead gutter. */
   --w-detail: 1400px;
+  /* The logged-out landing page (#1090). It is marketing, not prose: the hero is
+     two columns from 1024px and every section below it is a grid of three, so the
+     900px reading measure was sizing a page that has no paragraph in it. Measured
+     2026-09-13 before the rebuild: the column stopped growing at 900 from 1280px
+     up, leaving 285px of gutter per side on a 15" laptop, 510px at 1920 and 830px
+     at 2560, while the hero screenshot was cut through its first row of covers.
+
+     1400, the same value as the detail spread and for the same reason — wide
+     enough that the hero's two tracks and the walkthrough's three shots each get
+     a real column, narrow enough that the claims row does not stretch into a
+     banner. It must stay between --w-read and --w-shell; test/content-width.test.js
+     pins that ordering. */
+  --w-landing: 1400px;
   --rail-w: 260px;
   --rail-gap: 32px;
   /* Elevation: a 3-step ramp, resting -> raised -> overlay. Three is where
@@ -766,6 +779,21 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: var(--w-detail);
   }
 
+  /* The logged-out landing page (#1090) takes the same licence, on the plainest
+     argument of the four: nothing persistent renders on this screen at all. The
+     auth-screen chrome hides home, context and feedback, the rail never renders
+     logged out, and there is no back row and no page head — so widening the
+     column moves no navigation. That is the setup forms' reasoning rather than
+     the rail/dock one.
+
+     ONE selector, like `.friends-screen`: `showLanding` renders a single
+     `.landing` child and no sibling to drag along. Confirmed rather than assumed.
+
+     (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app:has(.landing) > *:not(.rail):not(.dock):is(.landing) {
+    max-width: var(--w-landing);
+  }
+
   /* On a screen WITHOUT a rail — home, the new-round form, the session wizard —
      capped content centres instead. Beside a rail, a left edge is anchored and
      reads as deliberate; with no rail it is just a column shoved against the
@@ -1276,7 +1304,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .rail .hub-presets { margin: -6px 0 4px; }
 /* ≤520px: stretched buttons, so a wrap reads as a deliberate stack instead of
    two ragged pills — the `.sheet__actions` narrow rule's reasoning, applied to
-   the page-level action rows (`.toolbar`, `.landing-hero__cta` likewise). */
+   the page-level action rows (`.toolbar` likewise). */
 @media (max-width: 520px) {
   .hub-actions .btn { flex: 1 1 auto; }
 }
@@ -2983,26 +3011,27 @@ body.auth-screen .topbar__context { display: none; }
   content: ''; flex: 1; height: 1px; background: var(--line);
 }
 
-/* ---- Logged-out landing page (issue #322) ---- */
+/* ---- Logged-out landing page (issue #322, rebuilt in #1090) ---- */
 /* Renders in accounts mode for a logged-out visitor at GET /. Reuses the
    .auth-screen body class (which hides the top-bar home/context/feedback), but
    lays out scrollable marketing sections instead of one centred card. Renders on
    the default theme (applyBackground(null)); every colour is theme-derived
    (.claude/rules/theme-derived-colors.md). */
 .landing {
-  max-width: 960px;
+  max-width: var(--w-landing);
   margin: 0 auto;
   padding: 8px 0 48px;
   display: flex;
   flex-direction: column;
   gap: 60px;
 }
-/* The hero is a stacked band since #438: centred copy, then one full-width
-   product screenshot. It used to be a two-column row with a ~300px decorative
-   column — too narrow for a screenshot that has to show how the app works, and
-   the abstract gradients that fitted there showed nothing. Centred at every
-   width, so the narrow block at the end of this section no longer has to
-   re-centre it — nor to reorder it (#473). */
+/* The hero is two columns from 1024px (#1090): the copy and THE offer on the
+   left, one phone screenshot on the right. It was a centred stack at every width
+   from #438 until then, which put 645px of copy and three same-size buttons
+   before any picture on a phone and left the screenshot starting at y = 769.
+
+   Below 1024 it stays that stack, centred — a two-column hero in a 768px column
+   gives the screenshot ~330px and the copy ~360px, which is worse than either. */
 .landing-hero {
   display: flex;
   flex-direction: column;
@@ -3041,20 +3070,34 @@ body.auth-screen .topbar__context { display: none; }
   margin: 0 auto 26px;
   max-width: 30em;
 }
-.landing-hero__cta { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-/* Narrow branch: same stretched treatment as `.hub-actions` — the two CTAs kept
-   their intrinsic (different) widths when stacked, reading as misalignment; on
-   one row they now split it evenly. 719px and not a tighter cut, because every
-   narrow landing block must tile with the 720px <picture> branch
-   (test/landing-shots.test.js pins the adjacency). */
-@media (max-width: 719px) {
-  .landing-hero__cta .btn { flex: 1 1 auto; }
+.landing-hero__visual { width: 100%; }
+/* The phone-shaped shot would otherwise fill the whole column and push
+   everything below it off the first screen. 300 below 720, 340 above — the two
+   values the stacked hero and the two-column hero respectively have room for. */
+.landing-hero__visual .landing-shot { max-width: 300px; margin: 0 auto; }
+@media (min-width: 720px) {
+  .landing-hero__visual .landing-shot { max-width: 340px; }
+}
+@media (min-width: 1024px) {
+  .landing-hero {
+    display: grid;
+    /* Both tracks minmax(0, …): a grid track's default `auto` minimum is its
+       content's min-content size, so the image track would refuse to shrink
+       below the screenshot's intrinsic width and push the copy out. */
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 40px;
+    text-align: left;
+  }
+  .landing-hero__text { max-width: none; }
+  .landing-hero__brand { justify-content: flex-start; }
+  .landing-hero__sub { margin-inline: 0; }
+  .landing-hero .landing-offer { align-items: flex-start; }
+  .landing-hero__visual .landing-shot { margin-inline: 0; }
 }
 
-.landing-hero__visual { width: 100%; }
-
 /* A product screenshot, framed as a window onto the app (#438). Shared by the
-   hero shelf shot and the how-it-works vote shot. `height: auto` beside the
+   hero shot and the three walkthrough shots. `height: auto` beside the
    intrinsic width/height attributes is what lets the box be reserved from the
    real aspect ratio and still scale down — without it the attributes would pin
    the rendered height to the asset's pixel height. */
@@ -3067,31 +3110,6 @@ body.auth-screen .topbar__context { display: none; }
   box-shadow: var(--shadow-3);
   background: var(--surface);
 }
-/* The phone-shaped shelf shot would otherwise fill the whole column on a phone
-   and push the "how it works" section far below the fold. */
-.landing-hero__visual .landing-shot { max-width: 300px; margin: 0 auto; }
-@media (min-width: 720px) {
-  /* From here the hero shows the DESKTOP shot, which wants the full column. */
-  .landing-hero__visual .landing-shot { max-width: none; }
-}
-
-/* Steps beside the voting screenshot, so "wie es funktioniert" is shown as well
-   as told. Stacks below 720px — the same breakpoint the <picture> switches on. */
-.landing-how {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-}
-/* Scoped to (0,2,0) so it BEATS `.landing-shot { width: 100% }` on specificity
-   rather than on source order — the same "your rule will lose" trap
-   .claude/rules/responsive-content-width.md documents. Unscoped it ties, and
-   whoever moves a block later silently stretches the shot to the full column. */
-.landing-how .landing-how__shot { flex: none; width: 260px; }
-@media (max-width: 719px) {
-  .landing-how { flex-direction: column; gap: 32px; }
-  .landing-how .landing-how__shot { width: 240px; }
-}
 
 .landing-section__title {
   font-family: var(--font-display);
@@ -3101,82 +3119,68 @@ body.auth-screen .topbar__context { display: none; }
   color: var(--ink);
 }
 
-.landing-cards {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
-}
-.landing-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 22px 20px;
-}
-.landing-card__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-md);
-  background: var(--brand-tint);
-  color: var(--brand-strong);
-  font-size: 24px; /* glyph, not type */
-  margin-bottom: 14px;
-}
-.landing-card__title { font-family: var(--font-display); font-size: var(--text-lg); margin: 0 0 6px; color: var(--ink); }
-.landing-card__desc { font-size: var(--text-md); line-height: 1.45; margin: 0; }
+/* ---- THE offer (#1090) ---- */
+/* One block, three surfaces: the hero, the closing section, and /entdecken's
+   logged-out CTA (renderLandingOffer in views-landing.js). The page used to make
+   two different offers — the hero led with the demo and the close with
+   „Registrieren" — so this is a component rather than a layout, and its rules are
+   unscoped so they apply on all three.
 
-.landing-steps {
-  list-style: none;
-  margin: 0 auto;
-  padding: 0;
-  max-width: 620px;
-  flex: 1 1 auto; /* fill what the vote screenshot beside it leaves (#438) */
+   No tinted box any more. The note used to sit in one (#503) because it had to be
+   kept away from „Anmelden", which shared the row beneath it; with a single
+   primary and „Anmelden" up in the top bar there is no adjacency left to guard
+   against, so the caption simply follows its button. */
+.landing-offer {
   display: flex;
   flex-direction: column;
-  gap: 22px;
-}
-.landing-step { display: flex; gap: 16px; align-items: flex-start; }
-.landing-step__num {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  background: var(--brand);
-  color: var(--on-accent);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 18px; /* glyph, not type */
+  gap: 10px;
 }
-.landing-step__title { font-family: var(--font-display); font-size: var(--text-lg); margin: 6px 0 4px; color: var(--ink); }
-.landing-step__desc { font-size: var(--text-md); line-height: 1.45; margin: 0; }
-
-.landing-trust__chips {
-  list-style: none;
+/* Load-bearing, like `.landing-chip[hidden]` below: these three declare their own
+   `display`, and an author rule beats the UA `[hidden] { display: none }` — so
+   without the pair an instance with DEMO_ENABLED unset renders a dead demo button
+   beneath a promise of a demo it does not offer
+   (.claude/rules/hidden-attribute-vs-display-rule.md). `el.hidden` still reports
+   true while the element is on screen, which is why nothing but the paint shows
+   it. `.btn[hidden]` already covers the two buttons. */
+.landing-offer__note[hidden],
+.landing-offer__alt[hidden],
+.landing-offer__trust[hidden] { display: none; }
+.landing-offer__note {
   margin: 0;
+  font-size: var(--text-sm);
+  max-width: 34em;
+}
+.landing-offer__alt {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--ink-soft);
+}
+.landing-offer__alt .link-btn { font-weight: 600; }
+/* The four trust claims as one small row under the hero's button, rendered only
+   there. They used to be their own chapter („Fair und datensparsam") as well as
+   a footer line as well as part of the demo note — the same promise stated three
+   times on one page. Text in --ink rather than --ink-soft so it keeps AA on
+   --sunken-soft (.claude/rules/accessibility-contrast-and-modals.md §1). */
+.landing-offer__trust {
+  list-style: none;
+  margin: 6px 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
 }
 .landing-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 6px 10px;
   border-radius: var(--radius-pill);
   background: var(--sunken-soft);
   border: 1px solid var(--line);
   color: var(--ink);
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 .landing-chip .ti { color: var(--brand-strong); font-size: var(--text-lg); }
@@ -3194,6 +3198,104 @@ body.auth-screen .topbar__context { display: none; }
    off the operator's EU deployment. Keep it. */
 .landing-chip[hidden] { display: none; }
 
+/* ---- „So läuft eine Session": the walkthrough (#1090) ---- */
+/* Three phone screenshots of the loop itself, replacing „In drei Schritten los"
+   — whose three steps were onboarding (account → round → session) while the one
+   picture beside them showed the vote, so the section illustrated something
+   other than what it listed. */
+.landing-walk {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  text-align: center;
+}
+.landing-walk__item { display: flex; flex-direction: column; align-items: center; }
+/* Bounded by HEIGHT as well as width, so all three render exactly as tall as
+   each other and the captions below them line up. They are not one aspect ratio
+   and cannot be made into one: each crop is cut where that screen has whitespace
+   to cut in, and the result shot's cut is measured per locale (resultCrop in
+   scripts/capture-landing-shots.js). Height binds for all three at these caps,
+   so `width: auto` lets each keep its own proportions and the row reads as three
+   phones rather than three differently-sized pictures.
+
+   The cap is FLUID below ~1040px, and that half is not decoration: a flat 500px
+   is taller than a three-column track can carry on a tablet. Measured at 768px
+   (224px tracks): the vote shot came out 272px wide and the shelf 251px, so the
+   first two overlapped their neighbours — no page overflow, nothing red, just two
+   pictures on top of each other. 48vw keeps the widest of the three (the vote
+   crop, 0.542 wide per unit of height) inside its track at every width from 720
+   up, and reaches the 500px ceiling at 1042 where the tracks are 309px. The
+   `max-width: 100%` behind it is a floor rather than a working constraint — it
+   binds nowhere today, and it is what stops a future re-crop from silently
+   reintroducing the overlap. */
+.landing-walk .landing-shot {
+  max-width: min(280px, 100%);
+  max-height: min(500px, 48vw);
+  width: auto;
+}
+.landing-walk__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  margin: 16px 0 4px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.landing-walk__desc { font-size: var(--text-md); line-height: 1.45; margin: 0; max-width: 30em; }
+.landing-step__num {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px; /* glyph, not type */
+}
+
+/* ---- The claims strip (#1090) ---- */
+/* Icon + title + one line, 3/2/1 columns. It was a grid of cards each holding a
+   paragraph, and the paragraphs were different lengths: the vote card carried
+   four sentences and its neighbours one, so the first row came out 325px tall
+   against the second's 209. */
+.landing-claims {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px 28px;
+}
+@media (min-width: 520px) {
+  .landing-claims { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) {
+  .landing-claims { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.landing-claim { display: flex; gap: 14px; align-items: flex-start; }
+.landing-claim__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--brand-tint);
+  color: var(--brand-strong);
+  font-size: 20px; /* glyph, not type */
+}
+.landing-claim__title { font-family: var(--font-display); font-size: var(--text-md); margin: 6px 0 2px; color: var(--ink); }
+.landing-claim__desc { font-size: var(--text-md); line-height: 1.45; margin: 0; }
+
 .landing-close { text-align: center; }
 /* The FAQ line under the closing CTA (#489). Subordinate to the button above it
    — smaller, muted — so it reads as a way out for the undecided rather than as a
@@ -3201,41 +3303,6 @@ body.auth-screen .topbar__context { display: none; }
    (.claude/rules/theme-derived-colors.md). */
 .landing-close__faq { margin: 14px 0 0; font-size: var(--text-sm); }
 .landing-close__faq a { color: var(--brand-strong); }
-
-/* The demo CTA and the note explaining what the demo is (#427), as ONE tinted
-   group (#503). The note used to follow `.landing-hero__cta`, which is a
-   centred wrapping row — so at 375px (all three buttons stacked) and at 1600px
-   („Anmelden" wrapping to a second line) it sat directly beneath „Anmelden",
-   reading as a claim that *logging in* needs no e-mail. Grouping is the whole
-   fix; the copy is untouched.
-
-   Tinted from the brand family rather than a fixed pastel
-   (.claude/rules/theme-derived-colors.md), reusing the --brand-tint-soft +
-   --brand-edge pairing `.btn:hover` already uses so the surface reads as one
-   piece with the button it holds. Deliberately softer than `.demo-banner`,
-   which is a warning strip; this one only has to group. */
-.landing-hero__demo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-  padding: 18px 20px;
-  border-radius: var(--radius-lg);
-  background: var(--brand-tint-soft);
-  border: 1px solid var(--brand-edge);
-}
-/* Load-bearing, exactly like `.landing-chip[hidden]` above: the wrapper ships
-   `hidden` and the `display: flex` here beats the UA `[hidden]` rule, so
-   without this every instance — including a self-hosted one with DEMO_ENABLED
-   unset — renders a dead button under a promise of a demo that does not exist
-   (.claude/rules/hidden-attribute-vs-display-rule.md). With it the group
-   collapses whole, leaving the hero byte-for-byte its pre-#503 single row.
-   `test/landing-copy.test.js` pins it. */
-.landing-hero__demo[hidden] { display: none; }
-/* No `[hidden]` pairing needed here since #503 — the note no longer ships
-   hidden on its own, it rides the wrapper above. */
-.landing-hero__demo-note { margin: 0; font-size: var(--text-sm); max-width: 34em; }
 /* #toLogin (account.js) and #clearImg (the add-game sheet) ship hidden, and
    `.btn` declares its own display. */
 .btn[hidden] { display: none; }
@@ -3379,26 +3446,84 @@ body.auth-screen .demo-banner { display: none; }
    screens render logged-out, where there is no account to be behind. */
 body.auth-screen .terms-banner { display: none; }
 
-/* The hero is centred and stacked at every width since #438, so this block no
-   longer has to rebuild it below the breakpoint — only the vertical rhythm
-   changes.
+/* The phone rhythm, and the walkthrough's second presentation.
 
-   It deliberately sets NO `order` (#473). #438 put the visual first here, on the
-   reasoning that "the image says what the app is before any copy is read" — but
-   the phone shot is 300x600 once capped, so on a 390x844 phone it filled the
-   whole first viewport and pushed the title, the subline and both CTA buttons
-   below the fold. A landing page whose call to action is unreachable without
-   scrolling loses the visitor it exists for. Every width now follows the DOM
-   order views-landing.js emits: brand → title → subline → CTA → screenshot.
+   The hero deliberately sets NO `order` (#473). #438 put the visual first here,
+   on the reasoning that "the image says what the app is before any copy is
+   read" — but the phone shot is 300x600 once capped, so on a 390x844 phone it
+   filled the whole first viewport and pushed the title, the subline and the
+   offer below the fold. A landing page whose call to action is unreachable
+   without scrolling loses the visitor it exists for. Every width follows the DOM
+   order views-landing.js emits: brand → title → subline → offer → screenshot.
 
-   719, not 720: it must tile with the `min-width: 720px` block above and with
-   the <picture>'s own `(min-width: 720px)` switch, or at exactly 720px the
-   DESKTOP screenshot — un-capped by that block — is laid out on the phone's
-   tighter vertical rhythm. Same adjacency discipline as
-   .claude/rules/responsive-hub-tabs.md §2. */
+   719, not 720: every narrow landing block must stop one pixel below the
+   `min-width: 720px` block above, or at exactly 720px the hero's wider shot cap
+   is applied on the phone's tighter vertical rhythm. Same adjacency discipline
+   as .claude/rules/responsive-hub-tabs.md §2, pinned by
+   test/landing-shots.test.js. */
 @media (max-width: 719px) {
   .landing { gap: 48px; }
   .landing-hero { gap: 28px; }
+  /* Three shots side by side in a phone column would be ~110px each. A snap
+     strip keeps them readable and keeps the section one screen tall — the
+     `.pool-shelf` mechanism (#1017), bleeding into the page's side padding so
+     the second card is visibly cut off and the strip reads as scrollable. */
+  .landing-walk {
+    --walk-bleed: 20px;
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    gap: 16px;
+    margin-inline: calc(var(--walk-bleed) * -1);
+    padding-inline: var(--walk-bleed);
+  }
+  .landing-walk::-webkit-scrollbar { display: none; }
+  .landing-walk__item { flex: 0 0 78%; scroll-snap-align: center; }
+  .landing-walk .landing-shot { max-width: 240px; max-height: 430px; }
+  /* Four bordered pills stack into FOUR ROWS at this width — measured at 390px,
+     94px tall for the three an un-configured instance shows. Stripping the pill
+     is not enough: the widest German claim is 247px against 362px of column, so
+     no two of them can share a row as boxes however small the padding.
+
+     So below 720 they stop being boxes at all and flow as one ·-separated line,
+     which fills each line instead of breaking after every claim. Same words,
+     same order, ~45px. */
+  .landing-offer__trust { display: block; line-height: 1.5; }
+  /* `:not([hidden])` on BOTH, and it is load-bearing rather than defensive. The
+     EU-hosting claim ships `hidden` and is revealed only on the operator's
+     configured instance; `.landing-chip[hidden] { display: none }` is (0,2,0),
+     and a bare `.landing-offer__trust .landing-chip` is (0,2,0) too — a TIE,
+     decided by source order, which this block wins because it is declared later.
+     Measured before the guard went in: `el.hidden` reported true while the claim
+     rendered, i.e. „EU-Hosting, DSGVO-konform" published on a self-hoster's box.
+     That is the exact failure .claude/rules/hidden-attribute-vs-display-rule.md
+     §3 records — the guard for a previous instance of this bug being outranked
+     by the fix for the next one. The separator rides the same exclusion, or a
+     hidden claim still contributes its ·. */
+  .landing-offer__trust li:not([hidden]) { display: inline; }
+  .landing-offer__trust li:not([hidden]) + li:not([hidden])::before {
+    content: '\00b7';
+    margin: 0 6px;
+    color: var(--ink-soft);
+  }
+  .landing-offer__trust .landing-chip:not([hidden]) {
+    display: inline;
+    border: 0;
+    background: none;
+    padding: 0;
+  }
+  /* The icons are what made them chips; inline in running text they read as
+     noise. The claims still say what they say — no information is lost. */
+  .landing-offer__trust .landing-chip .ti { display: none; }
+}
+@media (max-width: 519px) {
+  .landing-walk { --walk-bleed: 14px; }
+  /* The 22px `.btn--lg` label wraps to two lines at 362px, making the page's one
+     primary action 106px tall. Display type above 18px may step down (the
+     type-scale note in the token block); U-R04 guards the ≤ 18px sizes. */
+  .landing-offer .btn--lg { font-size: var(--text-lg); padding: 14px 20px; }
 }
 
 .topbar__acct {
@@ -3412,6 +3537,26 @@ body.auth-screen .terms-banner { display: none; }
   cursor: pointer;
 }
 .topbar__acct:hover { color: var(--brand); border-color: var(--brand-edge); }
+/* „Anmelden" is the bar's one TEXT control (#1090), offered on the logged-out
+   landing and on a logged-out /entdecken. It takes the tinted pair `.btn:hover`
+   already uses rather than inventing a tone
+   (.claude/rules/theme-derived-colors.md), so it reads as an invitation next to
+   the icon buttons without becoming a second primary next to the demo.
+
+   `.topbar__acct` declares no `display`, which is what lets the `hidden`
+   attribute work on it — the same reason `#supportBtn` needs no `[hidden]`
+   pair. Don't give either a `display` without adding one
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.topbar__login {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--brand-strong);
+  background: var(--brand-tint-soft);
+  border-color: var(--brand-edge);
+  text-decoration: none;
+}
+.topbar__login:hover { color: var(--brand-strong); background: var(--brand-tint); }
 
 /* The topbar notification dot, and the inbox's per-row unread mark, both follow
    the round accent rather than a fixed colour
@@ -3542,6 +3687,57 @@ body.auth-screen .terms-banner { display: none; }
 a.stats-card__title { color: inherit; text-decoration: none; }
 a.stats-card__title:hover,
 a.stats-card__title:focus-visible { text-decoration: underline; }
+
+/* On the LANDING page only (#1090), the block reads as a band rather than as a
+   chapter: it is social proof under the walkthrough, not a screen of its own.
+   Scoped to `.landing-stats` so /entdecken — where the numbers ARE the page —
+   and the home tile are untouched; one renderer, three surfaces
+   (the header comment in views-stats.js).
+
+   The counters become one line of number+label pairs instead of a row of
+   bordered boxes, and the podiums pack from 240px so five fit one row from
+   ~1300px in the widened column. */
+.landing-stats .stats-counters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 28px;
+}
+.landing-stats .stats-counter {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+.landing-stats .stats-counter__num {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--brand-strong);
+}
+.landing-stats .stats-cards { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+@media (max-width: 719px) {
+  /* Same snap strip as the walkthrough, for the same reason: five podium cards
+     stacked one per row is 5 screens of a page that has already made its offer. */
+  .landing-stats .stats-cards {
+    --walk-bleed: 20px;
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin-inline: calc(var(--walk-bleed) * -1);
+    padding-inline: var(--walk-bleed);
+  }
+  .landing-stats .stats-cards::-webkit-scrollbar { display: none; }
+  .landing-stats .stats-card { flex: 0 0 250px; scroll-snap-align: center; }
+}
+@media (max-width: 519px) {
+  .landing-stats .stats-cards { --walk-bleed: 14px; }
+}
 .stats-card__value { font-size: var(--text-sm); }
 .stats-note { font-size: var(--text-sm); margin: 0; }
 /* ===== Home dashboard zones (#842) =====
@@ -3684,17 +3880,17 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    tile is a grid column, not the page. */
 .stats-cards--home { grid-template-columns: 1fr; }
 /* The logged-out closing CTA on /entdecken (#786). Everything inside it is a
-   landing-page component — the heading, the demo group and the button row all
-   reuse `.landing-*` rules, which are unscoped and so apply here (see
+   landing-page component — the heading and the offer block both reuse
+   `.landing-*` rules, which are unscoped and so apply here (see
    renderEntdeckenCta in views-stats.js). So this rule has only two jobs: place
    the section on a screen that has no `.landing` flex parent to space it, and
    set it off from the statistics it follows, so the pitch reads as a separate
    offer rather than as a caption on the numbers.
 
    The rule sets no display, and the section is conditionally RENDERED rather
-   than hidden, so it needs no `[hidden]` pairing of its own — the demo wrapper
-   inside it ships hidden and rides `.landing-hero__demo[hidden]`, which is
-   already declared above (.claude/rules/hidden-attribute-vs-display-rule.md).
+   than hidden, so it needs no `[hidden]` pairing of its own — the demo-gated
+   elements inside it ship hidden and ride the `.landing-offer__*[hidden]` pairs
+   declared above (.claude/rules/hidden-attribute-vs-display-rule.md).
    Separator from the token, never a fixed grey
    (.claude/rules/theme-derived-colors.md). */
 .stats-cta {

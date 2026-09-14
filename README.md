@@ -17,7 +17,9 @@ phones, or through a link — and
 remembers what your round actually likes.
 
 <p align="center">
-  <img src="public/img/landing-shelf-wide.en.webp" alt="The Regal — a round's game shelf as a card grid, with tag filter chips and the desktop navigation rail" width="820">
+  <img src="public/img/landing-shelf-phone.en.webp" alt="The shelf — a group's games as tiles, each with its Spielwirbel score" width="250">
+  <img src="public/img/landing-vote.en.webp" alt="Voting — one drawn game and a scale of five faces" width="250">
+  <img src="public/img/landing-result.en.webp" alt="The result — the game that was played, with the group's ranking below it" width="250">
 </p>
 
 Self-hostable, German + English + Spanish + French + Italian + Dutch + Portuguese + Finnish + Korean UI, no tracking. Try it without an account at

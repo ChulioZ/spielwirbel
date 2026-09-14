@@ -17,10 +17,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { JSDOM } = require('jsdom');
+const { CSS, rulesOf, mediaBlocks, outranks, whole } = require('./support/css');
 const { bodyOf } = require('./support/css');
 
 const ROOT = path.join(__dirname, '..');
 const VIEW = fs.readFileSync(path.join(ROOT, 'public/js/views-landing.js'), 'utf8');
+const STATS = fs.readFileSync(path.join(ROOT, 'public/js/views-stats.js'), 'utf8');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
 
 /** Loads a lang table the way i18n-parity does — they are browser scripts. */
@@ -71,39 +73,110 @@ test('the "code out in the open" chip actually links somewhere (#483)', () => {
   assert.match(chip[0], /rel="noopener noreferrer"/, 'an external _blank link needs rel="noopener noreferrer"');
 });
 
-test('the demo note sits inside the demo block, not under the CTA row (#503)', () => {
-  // The defect this pins is a CLAIM going false by adjacency rather than by
-  // wording: `.landing-hero__cta` wraps, so a note rendered after it landed
-  // under „Anmelden" at 375px and at 1600px alike — "start now, no e-mail"
-  // labelling the two actions that do need one. Structure is the fix, so
-  // structure is what is asserted; the copy keys are deliberately untouched.
-  const block = VIEW.match(/<div class="landing-hero__demo"[\s\S]*?<\/div>/);
-  assert.ok(block, 'the hero renders a .landing-hero__demo wrapper');
-  assert.match(block[0], /id="landingDemo"/, 'the demo button lives in the demo block');
-  assert.match(block[0], /landing-hero__demo-note/, 'the demo note lives in the demo block, beside its button');
+test('the offer is ONE renderer, and its demo half is gated as a whole (#1090)', () => {
+  // The claim this pins is a positioning one: the page must make ONE offer. It
+  // used to make two — the hero led with the demo, the closing block with
+  // „Registrieren" — because they were two hand-copied blocks that drifted. So
+  // what is asserted is that there is one renderer and that every surface goes
+  // through it, which is the only property a second copy cannot satisfy.
+  const fn = VIEW.match(/function renderLandingOffer\(opts\) \{[\s\S]*?\n\}/);
+  assert.ok(fn, 'views-landing.js declares renderLandingOffer()');
+  assert.match(fn[0], /landing-offer__demo/, 'the demo button lives in the offer');
+  assert.match(fn[0], /landing-offer__note/, 'the note lives in the offer, beside its button');
+  assert.match(fn[0], /landing-offer__register/, 'the register fallback lives in the offer');
 
-  // The gate rides the wrapper alone: on its children it would leave an empty
-  // tinted box on a demo-less instance, which is worse than the bug it fixes.
-  assert.match(block[0], /<div class="landing-hero__demo" data-demo-only hidden>/,
-    'the demo block carries the data-demo-only/hidden pair itself');
-  const cta = VIEW.match(/<div class="landing-hero__cta">[\s\S]*?<\/div>/);
-  assert.ok(cta, 'the hero still renders a .landing-hero__cta row');
-  assert.doesNotMatch(cta[0], /data-demo-only|landingDemo/,
-    'nothing demo-gated may sit in the CTA row — that is what put the note under „Anmelden"');
+  // Two call sites here (hero + close) and one in views-stats.js. Counting them
+  // is what makes a fourth surface with its own copy show up as a red test.
+  assert.equal((VIEW.match(/renderLandingOffer\(\{/g) || []).length, 2,
+    'the landing renders the offer exactly twice — hero and close');
+  assert.match(STATS, /renderLandingOffer\(\{ trust: false \}\)/,
+    '/entdecken\u2019s logged-out CTA renders the shared offer, not a copy of it');
+  assert.doesNotMatch(STATS, /landing-offer__demo|landing\.hero\.ctaDemo/,
+    'views-stats.js must not rebuild the offer — that is how the two pitches drifted');
+
+  // #503's finding, carried forward: a promise of „ohne E-Mail" must never end
+  // up labelling a control that needs one. With one primary there is no button
+  // row left to sit under, so what replaces that structural guard is the gate —
+  // each demo-only element carries the pair itself, so an instance without a
+  // demo renders none of them rather than an orphaned caption.
+  for (const cls of ['landing-offer__demo', 'landing-offer__note', 'landing-offer__alt']) {
+    const el = new RegExp(`class="[^"]*${cls}[^"]*"[^>]*data-demo-only hidden`);
+    assert.match(fn[0], el, `.${cls} carries the data-demo-only/hidden pair itself`);
+  }
+  assert.doesNotMatch(
+    fn[0].slice(fn[0].indexOf('landing-offer__register')),
+    /data-demo-only/,
+    'the register fallback is NOT demo-gated — it is what an instance without a demo shows',
+  );
 });
 
-test('.landing-hero__demo[hidden] undoes its own display (#503)', () => {
-  // `.landing-hero__demo` declares `display: flex`, and an author rule beats the
-  // UA `[hidden] { display: none }` — so without the pair below, an instance
-  // with DEMO_ENABLED unset renders a dead button beneath a promise of a demo it
-  // does not offer (.claude/rules/hidden-attribute-vs-display-rule.md). Same
-  // failure family as the operator-gated EU-hosting chip, and just as invisible:
-  // `el.hidden` still reports true while the block is on screen.
-  assert.match(bodyOf('.landing-hero__demo') || '', /display:\s*flex/,
-    '.landing-hero__demo declares its own display, which is why the guard below is needed');
-  const guard = bodyOf('.landing-hero__demo[hidden]');
-  assert.ok(guard, '.landing-hero__demo[hidden] rule not found');
-  assert.match(guard, /display:\s*none/);
+test('every demo-gated element in the offer undoes its own display (#1090)', () => {
+  // An author `display` rule beats the UA `[hidden] { display: none }`, so an
+  // element that declares one and ships hidden is ON SCREEN on an instance with
+  // DEMO_ENABLED unset — a dead button under a promise of a demo it does not
+  // offer (.claude/rules/hidden-attribute-vs-display-rule.md). `el.hidden` still
+  // reports true while it renders, so nothing but the paint shows it.
+  //
+  // Derived from the stylesheet rather than listed here: any element that
+  // declares a display and is gated must have its pair, and a hand-written list
+  // would go stale the moment a fourth element joined the offer.
+  const gated = ['.landing-offer__note', '.landing-offer__alt', '.landing-offer__trust'];
+  for (const sel of gated) {
+    assert.ok(bodyOf(sel), `${sel} is declared`);
+    const guard = bodyOf(`${sel}[hidden]`)
+      || bodyOf('.landing-offer__note[hidden],\n.landing-offer__alt[hidden],\n.landing-offer__trust[hidden]');
+    assert.ok(guard, `${sel}[hidden] has no display:none pair`);
+    assert.match(guard, /display:\s*none/);
+  }
+  // The two buttons are covered by `.btn[hidden]`, which predates this block —
+  // asserted rather than assumed, because dropping it would break them silently.
+  assert.match(bodyOf('.btn[hidden]') || '', /display:\s*none/,
+    '.btn[hidden] is what hides the demo and register buttons');
+});
+
+test('no rule can out-rank `.landing-chip[hidden]` and publish the EU claim (#1090)', () => {
+  // The EU-hosting claim is true only on the operator's configured instance; on a
+  // self-hoster's non-EU box it is a false public statement, which is the whole
+  // reason it ships `hidden` (.claude/rules/hidden-attribute-vs-display-rule.md).
+  //
+  // §3 of that rule is what this guards, and it is NOT hypothetical here: #1090's
+  // own phone rule re-published the claim. `.landing-chip[hidden]` is (0,2,0) and
+  // `.landing-offer__trust .landing-chip` is (0,2,0) too — a TIE, decided by source
+  // order, which the later block won. Measured on the page before the fix:
+  // `el.hidden === true` with `getComputedStyle(el).display === 'inline'`, i.e. the
+  // claim on screen while every DOM probe said it was hidden.
+  //
+  // So the invariant is cascade-level rather than about one selector: ANY rule
+  // that gives a `.landing-chip` a display must either lose to the guard on
+  // specificity or exclude `[hidden]` itself. Media blocks are swept too — the
+  // rule that caused this lived in one, which is exactly where nobody looks.
+  const guard = '.landing-chip[hidden]';
+  const everywhere = [
+    ...rulesOf(CSS).map(([sel, body]) => [sel, body, '']),
+    ...mediaBlocks(CSS).flatMap(([q, css]) => rulesOf(css).map(([sel, body]) => [sel, body, ` in @media ${q.trim()}`])),
+  ];
+  // The chip must be the SUBJECT of the rule, not merely somewhere in it: a rule
+  // that hides a descendant (`.landing-chip .ti`) says nothing about the chip's
+  // own display, and counting it would make the sweep flag correct rules.
+  const subjectIsChip = (sel) => sel.split(',').some((part) =>
+    whole('.landing-chip').test(part.trim().split(/\s+|\s*>\s*/).pop() || ''));
+  const setters = everywhere.filter(([sel, body]) =>
+    subjectIsChip(sel) && /(?:^|;|\{)\s*display:/.test(body));
+  assert.ok(setters.length >= 2,
+    'expected at least the base rule and the [hidden] guard — the sweep found nothing to check');
+
+  let guarded = 0;
+  for (const [sel, body, where] of setters) {
+    if (sel.includes('[hidden]') && /display:\s*none/.test(body)) { guarded++; continue; }
+    // Every OTHER display setter is safe only if the guard STRICTLY out-ranks it
+    // — a tie is decided by source order, which is what shipped the bug — or if
+    // it refuses to match a hidden chip at all.
+    const safe = outranks(guard, sel) || sel.includes(':not([hidden])');
+    assert.ok(safe,
+      `"${sel}"${where} gives .landing-chip a display at or above the specificity of `
+      + `${guard} without excluding [hidden] — the operator-gated EU claim renders on every instance`);
+  }
+  assert.ok(guarded >= 1, `${guard} itself is gone — nothing hides the gated claim any more`);
 });
 
 test('the static crawlable hero in index.html matches lang/de.js (#510)', () => {
@@ -182,13 +255,18 @@ test('the static hero carries no config-gated claim (#510)', () => {
     'the static hero holds no controls — nothing wires them yet');
 });
 
-test('the hero demo block takes every colour from the theme variables (#503)', () => {
+test('the landing takes every colour from the theme variables (#503, #1090)', () => {
   // A literal pastel here would clash the moment --brand is retuned, and the
   // landing page renders on the default theme rather than a round's chosen one,
   // so nothing else would ever surface the mismatch
-  // (.claude/rules/theme-derived-colors.md).
-  const body = bodyOf('.landing-hero__demo') || '';
-  assert.doesNotMatch(body, /#[0-9a-fA-F]{3,8}\b/, 'no literal hex in .landing-hero__demo');
-  assert.match(body, /background:\s*var\(--brand-tint-soft\)/);
-  assert.match(body, /border:[^;]*var\(--brand-edge\)/);
+  // (.claude/rules/theme-derived-colors.md). The tinted box the demo used to sit
+  // in went with #1090 — what carries a tint now is the trust chip and the top
+  // bar's „Anmelden", so those are what this checks.
+  for (const sel of ['.landing-chip', '.topbar__login', '.landing-claim__icon']) {
+    const body = bodyOf(sel) || '';
+    assert.ok(body, `${sel} is declared`);
+    assert.doesNotMatch(body, /#[0-9a-fA-F]{3,8}\b/, `no literal hex in ${sel}`);
+  }
+  assert.match(bodyOf('.topbar__login') || '', /background:\s*var\(--brand-tint-soft\)/);
+  assert.match(bodyOf('.topbar__login') || '', /border-color:[^;]*var\(--brand-edge\)/);
 });

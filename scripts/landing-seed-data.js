@@ -24,7 +24,7 @@
  */
 
 /*
- * The seeds. One per locale, same SHAPE in each (12 games, 4 seats, 4 tags, 2
+ * The seeds. One per locale, same SHAPE in each (12 games, 4 seats, 4 tags, 3
  * finished sessions) so every set shows the same badges and counts and a
  * difference between two locales can only be the app or the words.
  *
@@ -33,18 +33,44 @@
  * exactly the half-translated impression #457 removed. So the content is
  * localized too — round name, game titles.
  *
- * The first two games are the ones the finished sessions rate, in that order:
- * 4,5,4,5 -> Ø 4.5 and 4,4,5,4 -> Ø 4.3 (4.25 rounds up at one decimal). Since
- * #850 the badge is written in the READER's notation, so the en set shows those
- * two figures and the de/es/fr/it sets show „Ø 4,5" / „Ø 4,3" — a dot in a
- * non-English set now means the capture predates that change. Every
- * other game shows the "neu"/"new" badge. Cover gradients are derived from the
+ * The first two games are the ones the first two finished sessions rate, in
+ * that order: 4,5,4,5 and 4,4,5,4. Since
+ * #850 the badge is written in the READER's notation, so the en set shows a dot
+ * where the de/es/fr/it sets show a comma — a dot in a
+ * non-English set now means the capture predates that change. Do NOT treat any
+ * particular figure as a target: the badge is the shrunk Spielwirbel-Score since
+ * #894/#928, which is expected to be retuned, so read whatever the current
+ * arithmetic prints.
+ *
+ * THREE more games carry a score since #1090, because the `result` shot needs a
+ * session with a ranking in it (RESULT_RATINGS below). They are the three whose
+ * only tag is the fourth — indices 3, 7 and 11 — which is what the exclude
+ * filter in seedRound selects. Every other game shows the "neu"/"new" badge. Cover gradients are derived from the
  * title (gameHue() in public/js/cover.js), so they follow the words and differ
  * between the two locales by construction — that is not a bug in the set.
  */
 const RATINGS = [
   [4, 5, 4, 5], // -> Ø 4.5 on games[0]
   [4, 4, 5, 4], // -> Ø 4.3 on games[1]
+];
+
+/* The THIRD session (#1090), the one the `result` shot is taken of. It exists
+ * because the two above each rate exactly ONE game — deliberately, so which
+ * cards carry a Ø badge is reproducible — and a results screen holding one row
+ * is not a ranking. The walkthrough's caption promises the group sees its
+ * ranking, so the picture has to be one.
+ *
+ * One row per DRAWN game, four ratings each (one per seat), spread so the three
+ * rows come out in an unmistakable order rather than within a rounding error of
+ * each other. Keyed by draw order rather than by game, so the spread holds
+ * whichever three games the filter leaves — see seedRound in
+ * scripts/capture-landing-shots.js, where an exclude filter makes that set
+ * deterministic.
+ */
+const RESULT_RATINGS = [
+  [5, 5, 4, 5],
+  [4, 3, 4, 3],
+  [2, 3, 2, 1],
 ];
 
 /* The default four seats. They are proper names, and the committed sets have
@@ -182,4 +208,4 @@ const SEEDS = {
     ],
   },
 };
-module.exports = { RATINGS, MEMBERS, METADATA, SEEDS };
+module.exports = { RATINGS, RESULT_RATINGS, MEMBERS, METADATA, SEEDS };

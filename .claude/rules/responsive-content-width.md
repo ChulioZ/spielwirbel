@@ -121,6 +121,22 @@ opt out as a unit. Measured 2026-09-12 the page stayed 2905px tall from 1280 to
 when a screen "cannot opt out", check whether it is missing a wrapper rather than
 widening `.app`, which `test/content-width.test.js` forbids outright.
 
+**A FIFTH and a SIXTH, in #1092 and #1090** — the Freundeskreis and the
+logged-out landing page. Both are the setup forms' argument rather than the
+rail/dock one (they render no navigation at all), and both are **one** selector
+rather than a pair, because neither renders a `.back-row` sibling to drag along.
+Confirm that per screen rather than copying it: the pair exists because a sibling
+control left at `--w-read` sits ~250px inside the page's right edge, and a screen
+that grows one later needs the second half added with it.
+
+The landing's licence is worth stating because it looks like the widest claim of
+the six and is the narrowest: the auth-screen chrome hides home, context and
+feedback, the rail never renders logged out, and the page has no back row and no
+page head — so there is nothing in the column for a width change to move.
+Measured 2026-09-13 before it: the column stopped growing at 900px from 1280 up,
+leaving 285px of gutter per side on a 15" laptop and 830px at 2560, on the one
+screen every prospective user meets.
+
 **This had already happened a second time, so treat it as the norm rather than as
 one screen's quirk.** #577 gave the two setup forms a two-column layout and
 exempted `.setup-grid` alone; the `.page-head` above it — again a *sibling*, not

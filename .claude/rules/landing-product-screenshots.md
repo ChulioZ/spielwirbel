@@ -6,9 +6,10 @@ paths:
   - "scripts/capture-landing-shots.js"
   - "scripts/landing-seed-data.js"
 ---
-# Regenerating the landing-page product screenshots (#438, #457, #669)
+# Regenerating the landing-page product screenshots (#438, #457, #669, #1090)
 
-The logged-out landing hero shows real screenshots of the app
+The logged-out landing page's hero and its three-step walkthrough show real
+screenshots of the app
 (`public/img/landing-<shot>.<locale>.webp`, referenced from `LANDING_SHOTS` in
 `public/js/views-landing.js` — **one set per shipped locale** since #457). They
 are **generated once and committed**, the same stance as
@@ -102,8 +103,9 @@ change to the scale; never to make a run go green. The pre-selected index moves
 with it (`moods[3]` is the 4 now that the row is not offset by a leading tile).
 
 Note the drawn game is **random each run**, so the title in the committed image
-changes when you regenerate, and the two locales generally show different games.
-That is cosmetic; nothing asserts it.
+changes when you regenerate, and the locales generally show different games. That
+is cosmetic for the vote shot, where nothing asserts it — but it is exactly why
+the **result** crop has to be derived rather than fixed (§5).
 
 ## 3. Never let real cover art into these images
 
@@ -311,33 +313,75 @@ therefore the unique best height**, and the pre-#666 value of 780 now leaves
 is what #669 actually fixed, over and above the card's own restyling. Re-derive
 this table (not just re-run the probe) if the cover formula changes.
 
-## 5. Two widths, because one cannot work
+## 5. Three PHONE crops, and the third one's height is DERIVED
 
-A 1280px-wide desktop screenshot scaled into a 375px phone column is illegible,
-and a phone screenshot stretched across a 900px hero is absurd. So the shelf
-ships as a `<picture>` with a `media` switch at **720px**, and that number is
-duplicated in `views-landing.js` (`LANDING_SHOT_BP`) and `styles.css`. They must
-agree — if they drift, the wide shot renders inside the 300px phone cap.
-`test/landing-shots.test.js` pins the agreement by parsing both.
+There used to be a fourth asset — a 1280-wide desktop shelf capture the hero
+swapped in through a `<picture>` above 720px. #1090 retired it: the rebuilt hero
+is two columns from 1024px and gives its image 660–800px, where that capture's
+tile labels shrink to ~9px. So every shot is phone-shaped, the hero renders one
+`<img>`, and `LANDING_SHOT_BP` is gone.
 
 Size each asset at **~1.8–2.2×** its widest rendered box (measured: 2.08× on a
-phone, 1.79× at ≥1280px, where `--w-read` caps the column at 900px). That is the
-decode-memory budget from `.claude/rules/provider-cover-sizing.md` applied to one
-big image instead of many small ones.
-
-The committed sizes come out of exactly two `Emulation.setDeviceMetricsOverride`
-calls, and they are worth writing down because the ratios are not round numbers:
+phone; the walkthrough caps them at 280px). That is the decode-memory budget from
+`.claude/rules/provider-cover-sizing.md` applied to one big image instead of many
+small ones.
 
 | Asset | CSS viewport | `deviceScaleFactor` | File |
 |---|---|---|---|
-| `landing-shelf-wide` | 1280 × 756 | 1.25 | 1600 × 945 |
 | `landing-shelf-phone` | 390 × 779 | 1.6 | 624 × 1246 |
 | `landing-vote` | 390 × **720** | 1.6 | 624 × **1152** |
+| `landing-result` | 390 × **derived** | 1.6 | 624 × **1413–1514** |
 
-(945 rather than 944.99, and 1246 rather than the 1247 the script's own log
-prints for 779 × 1.6: Chrome's rounding is not a rule you can predict from the
-arithmetic. Declare what the file says,
-which is what `test/landing-shots.test.js` reads back out of the WebP header.)
+(1246 rather than the 1247 the script's own log prints for 779 × 1.6: Chrome's
+rounding is not a rule you can predict from the arithmetic. Declare what the file
+says, which is what `test/landing-shots.test.js` reads back out of the WebP
+header.)
+
+### The result crop cannot be a constant — `resultCrop()` measures it per locale
+
+§4's method is "measure once, then hold the number". That does not converge for
+the results screen, and it is worth knowing why before anyone tries to tidy the
+derivation into a literal:
+
+- the table band above the ranking varies by **~100px** across locales (measured
+  2026-09-14: 521 in Korean, 621 in Dutch), and
+- the seeded session that shot is taken of draws its three games in a **random
+  order**, so which title lands in row 1 — and whether it wraps — changes between
+  runs.
+
+Every fixed height inside that spread cuts through a title in some locale. Two
+candidates were measured doing exactly that before the script was changed.
+
+So `resultCrop()` takes the **midpoint of the gap between row 1 and row 2**:
+whitespace by construction, in every locale and every run, showing the band, the
+Tafel heading and one complete ranked row. It re-probes after setting the
+viewport and fails if the two derivations disagree — nothing on that screen is
+viewport-height-sized today, so they agree, and asserting it is what stops a
+future screen that *does* size itself from slicing a title silently.
+
+The heights it produces differ per locale, which is fine: `LANDING_SHOTS`
+declares dimensions per asset, and `.landing-walk .landing-shot` bounds
+**max-height** as well as max-width with `width: auto`, so all three render
+exactly as tall as each other and the captions line up.
+`test/landing-shots.test.js` pins that pairing — and pins that the heights really
+do differ, so the rule cannot go vacuous.
+
+### The result shot needs a session with a RANKING in it
+
+The two seeded sessions each rate exactly one game, deliberately, so which cards
+carry a Ø badge is reproducible (§3b). A results screen holding one row is not a
+ranking, and the walkthrough's caption promises the group sees one — so
+`seedRound` adds a **third** session.
+
+Making that one deterministic without collapsing the pool to a single game uses
+the other half of the filter semantics: include filters are AND, **exclude
+filters are OR**, so excluding the first three tags leaves exactly the games
+whose only tag is the fourth (indices 3, 7 and 11). A draw of four then takes all
+three, and order is the only thing chance decides.
+
+The cost is that **three more games carry a score in the shelf shot** — stated in
+`scripts/landing-seed-data.js`'s header, because "every other game shows the
+new badge" was true before it and is the kind of prose that rots silently.
 
 ## 6. What the test can and cannot see
 
@@ -354,15 +398,17 @@ Three details in there are load-bearing:
 
 - **Chrome does not always write the same WebP chunk.** The phone captures come
   out `VP8X` (extended: canvas size as two 24-bit LE values at offsets 24 and 27)
-  and the wide one `VP8 ` (lossy simple: 14-bit width/height after the start
+  where others come out `VP8 ` (lossy simple: 14-bit width/height after the start
   code). The reader handles `VP8X`/`VP8 `/`VP8L` and **throws** on anything else
   rather than guessing — a silently mis-read header would fail the dimension
   assertion for a reason that has nothing to do with the image.
 - **The weight budget is per locale, not a committed total.** A flat total gets
   laxer per visitor with each language added, which is backwards for the one
-  number guarding the page's first paint. Today: ~118 KB (en), ~125 KB (de)
-  against a 200 KB cap; a `<picture>` fetches only one of the two shelf widths,
-  so the real download is smaller again.
+  number guarding the page's first paint. Today: ~104 KB (en), ~108 KB (de)
+  against a 200 KB cap. Since #1090 a visitor downloads the WHOLE set — the hero
+  and the walkthrough's first step share one `<img src>` and the other two are
+  the steps beside it — where the retired `<picture>` used to fetch one of two
+  shelf widths, so the budget binds harder than it did.
 - **The parity test is what a third language trips.** Adding a `lang/fr.js` and a
   `LOCALES` row without shooting the screenshots would otherwise ship French copy
   around German images — `landingShots()` falls back rather than breaking, so

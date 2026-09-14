@@ -208,14 +208,15 @@ test('the podium note is rendered only alongside actual podiums', async (t) => {
  * control; so someone arriving from a shared link could read the stats and then
  * only edit the URL.
  *
- * The demo assertions double as the pin on a SHARED interface: the CTA reuses
- * landingRevealOperatorClaims() rather than fetching /api/config a second time,
- * and that helper addresses the two buttons by the ids `#landingDemo` and
- * `#landingRegister`. Rename those in the helper and the *reveal* still works
- * (it keys off `[data-demo-only]`), but the demo silently stops being promoted
- * over registering and a returning visitor is told to start a demo they already
- * hold — measured: exactly the two tests below go red, and the hidden-when-off
- * one correctly stays green.
+ * The demo assertions double as the pin on a SHARED interface: since #1090 the
+ * CTA renders renderLandingOffer() — the same function the landing page's hero
+ * and closing block use — and reuses landingRevealOperatorClaims() rather than
+ * fetching /api/config a second time. The offer is addressed by CLASS, not by
+ * id, because the landing page renders it twice and ids may not repeat. Rename
+ * `.landing-offer__demo` or `.landing-offer__register` in the helper and the
+ * *reveal* still works (it keys off `[data-demo-only]`), but the register
+ * fallback silently stays visible beside the demo and a returning visitor is
+ * told to start a demo they already hold.
  */
 
 test('a logged-out visitor gets a CTA offering register and login', async (t) => {
@@ -225,24 +226,32 @@ test('a logged-out visitor gets a CTA offering register and login', async (t) =>
 
   const cta = dom.document.querySelector('.stats-cta');
   assert.ok(cta, 'the CTA is rendered');
-  assert.ok(cta.querySelector('#landingRegister'));
-  assert.ok(cta.querySelector('#landingLogin'));
+  assert.ok(cta.querySelector('.landing-offer'), 'it renders the shared offer block');
+  // On an instance with no demo configured — which `bootWith` defaults to — the
+  // offer is a single „Kostenlos registrieren" primary and nothing else. „Anmelden"
+  // is NOT here since #1090: it lives in the top bar, so the page makes one offer.
+  assert.ok(cta.querySelector('.landing-offer__register'));
+  assert.equal(cta.querySelector('#landingLogin'), null,
+    'the login button left this block for the top bar (#1090)');
   // The screen title is the page h1, so the CTA heading is one level down.
   assert.equal(cta.querySelector('.landing-section__title').tagName, 'H2');
   assert.equal(dom.document.querySelectorAll('h1').length, 1);
 });
 
-test('the CTA buttons reach the register and login screens', async (t) => {
+test('the CTA button reaches the register screen, and the bar offers login', async (t) => {
   const dom = bootWith(t, ok(FULL));
   const seen = [];
   dom.set('showRegister', () => seen.push('register'));
-  dom.set('showLogin', () => seen.push('login'));
   await dom.call('showEntdecken');
   await settle();
 
-  dom.document.querySelector('#landingRegister').click();
-  dom.document.querySelector('#landingLogin').click();
-  assert.deepEqual(seen, ['register', 'login']);
+  dom.document.querySelector('.stats-cta .landing-offer__register').click();
+  assert.deepEqual(seen, ['register']);
+  // The other half of the pair: a logged-out visitor here is offered „Anmelden"
+  // in the top bar, which authScreen() has just hidden — so this asserts the
+  // screen turns it back on rather than inheriting it from wherever they came
+  // from (#1090).
+  assert.equal(dom.document.querySelector('#loginBtn').hidden, false);
 });
 
 test('the CTA renders in the EMPTY state too', async (t) => {
@@ -283,11 +292,15 @@ test('the demo block stays hidden on an instance whose demo is off', async (t) =
   await dom.call('showEntdecken');
   await settle();
 
-  const demo = dom.document.querySelector('.stats-cta .landing-hero__demo');
-  assert.ok(demo, 'the block is in the DOM');
+  const demo = dom.document.querySelector('.stats-cta .landing-offer__demo');
+  assert.ok(demo, 'the element is in the DOM');
   assert.equal(demo.hidden, true, 'a demo button that 404s is worse than no button');
+  assert.equal(dom.document.querySelector('.stats-cta .landing-offer__note').hidden, true,
+    'and its caption with it — an orphaned „ohne E-Mail" note is worse than the button');
   // And registering keeps the primary slot it shipped with.
-  assert.ok(dom.document.querySelector('#landingRegister').classList.contains('btn--primary'));
+  const reg = dom.document.querySelector('.stats-cta .landing-offer__register');
+  assert.equal(reg.hidden, false);
+  assert.ok(reg.classList.contains('btn--primary'));
 });
 
 test('the demo leads when the instance has it on, and register is demoted', async (t) => {
@@ -295,14 +308,18 @@ test('the demo leads when the instance has it on, and register is demoted', asyn
   await dom.call('showEntdecken');
   await settle();
 
-  const demo = dom.document.querySelector('.stats-cta .landing-hero__demo');
-  assert.equal(demo.hidden, false);
-  const demoBtn = dom.document.querySelector('#landingDemo');
+  const demoBtn = dom.document.querySelector('.stats-cta .landing-offer__demo');
+  assert.equal(demoBtn.hidden, false);
   assert.ok(demoBtn.classList.contains('btn--primary'), 'the demo is THE primary action');
-  assert.ok(!dom.document.querySelector('#landingRegister').classList.contains('btn--primary'));
   assert.equal(demoBtn.textContent, 'Ohne Anmeldung ausprobieren');
-  // The note rides the wrapper, so it is revealed with it rather than separately.
-  assert.ok(demo.querySelector('.landing-hero__demo-note'));
+  // ONE offer: the standalone register button steps back to the „oder
+  // kostenlos registrieren" link revealed beside the demo. Both halves matter —
+  // a second primary is what made the page read as two offers (#1090).
+  assert.equal(dom.document.querySelector('.stats-cta .landing-offer__register').hidden, true);
+  const alt = dom.document.querySelector('.stats-cta .landing-offer__alt');
+  assert.equal(alt.hidden, false);
+  assert.ok(alt.querySelector('.landing-offer__register-link'));
+  assert.equal(dom.document.querySelector('.stats-cta .landing-offer__note').hidden, false);
 });
 
 test('a visitor already holding a live demo is offered to RESUME it', async (t) => {
@@ -313,20 +330,23 @@ test('a visitor already holding a live demo is offered to RESUME it', async (t) 
 
   // Minting a second demo strands the first one's slot for its whole TTL (#502),
   // so the label has to say resume rather than read as starting over.
-  assert.equal(dom.document.querySelector('#landingDemo').textContent, 'Demo fortsetzen');
+  assert.equal(dom.document.querySelector('.stats-cta .landing-offer__demo').textContent,
+    'Demo fortsetzen');
 });
 
 test('the demo button starts the demo, passing itself as the busy control', async (t) => {
   const dom = bootWith(t, ok(FULL), { demo: true });
   const started = [];
-  dom.set('startDemo', (busy) => { started.push(busy && busy.id); });
+  dom.set('startDemo', (busy) => { started.push(busy && busy.className); });
   await dom.call('showEntdecken');
   await settle();
 
   // Passing the button is what disables it — without it a second click mints a
-  // second demo tenant and abandons the first.
-  dom.document.querySelector('#landingDemo').click();
-  assert.deepEqual(started, ['landingDemo']);
+  // second demo tenant and abandons the first. The class rather than an id: the
+  // offer renders on three surfaces and the landing page renders it twice.
+  const btn = dom.document.querySelector('.stats-cta .landing-offer__demo');
+  btn.click();
+  assert.deepEqual(started.map((c) => c.includes('landing-offer__demo')), [true]);
 });
 
 /* ------------------------------ the landing page ---------------------------- */

@@ -39,7 +39,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { RATINGS, MEMBERS, METADATA, SEEDS } = require('./landing-seed-data');
+const { RATINGS, RESULT_RATINGS, MEMBERS, METADATA, SEEDS } = require('./landing-seed-data');
 
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'public', 'img');
@@ -49,33 +49,22 @@ const PORT = 3199;
 const CDP_PORT = 9333;
 const BASE = `http://127.0.0.1:${PORT}`;
 
-// The two viewports, and the only two that exist: a 1280px desktop shot scaled
-// into a 375px phone column is illegible, and a phone shot stretched across a
-// 900px hero is absurd — hence the <picture> switch at LANDING_SHOT_BP.
+// The three viewports, all PHONE-shaped since #1090. The set used to carry a
+// 1280-wide desktop shelf capture for the hero's <picture>; the rebuilt hero is
+// two columns from 1024px and gives its image 660-800px, where that capture's
+// tile labels shrink to ~9px — so the hero shows the phone shelf shot at every
+// width and the wide capture is retired.
 //
 // `height` is the CROP, and it is measured, not chosen: see probeGeometry()
 // below and §4 of the rule. Re-run --probe after any change to the rail, the
-// game cards or the vote card, because the band moves with the *content* as
-// well as with the code — a title that wraps to a second line shifts it ~25px.
+// game cards, the vote card or the results screen, because the band moves with
+// the *content* as well as with the code — a title that wraps to a second line
+// shifts it ~25px.
 const VIEWPORTS = {
-  // Both shelf crops SHRANK by exactly what the Regal lost above its grid
-  // (#827), which is the mirror image of the #752 note this replaces. That note
-  // added +82 wide / +41 phone for two controls that had landed above the grid
-  // — the bulk select/clear toggle (#723) and the „Weitere Filter" disclosure
-  // (#725). #827 folds the whole tag half INTO one disclosure, so above the grid
-  // there is now a single 40px „Filter" button at every width.
-  //
-  // Measured with --probe on both sides of the change (rail 730, unmoved):
-  //
-  //            row 1 ends   row 2 ends   delta
-  //   wide      594 -> 478   831 -> 715   -116
-  //   phone     514 -> 472   736 -> 694    -42
-  //
-  // Shifting each crop by its OWN delta again preserves the composition rather
-  // than re-deriving a new one: the wide cut still clears the rail and lands
-  // 24px into row 3's cover art, the phone cut 68px into it — the same two
-  // numbers as before. The vote shot is untouched (card bottom 617 either way).
-  shelfWide: { width: 1280, height: 756, deviceScaleFactor: 1.25, mobile: false },
+  // 779 is the #827 number: the Regal's whole tag half folded into one 40px
+  // „Filter" button, so the phone crop moved by that delta (821 → 779) and the
+  // cut still lands 68px into row 3's cover art. Unchanged by #1090 — that issue
+  // touched no round screen.
   shelfPhone: { width: 390, height: 779, deviceScaleFactor: 1.6, mobile: true },
   // 720, not the 780 that shipped before #666. The vote card now SIZES ITSELF to
   // the viewport, so the crop is a fixed point rather than a free choice: the
@@ -86,7 +75,15 @@ const VIEWPORTS = {
   // by BGG" footer sliding into frame. Measured card bottoms: 621@660, 651@690,
   // 671@710, 681@720, 681@780.
   vote: { width: 390, height: 720, deviceScaleFactor: 1.6, mobile: true },
+  // The results screen (#1090), same phone width as the other two. Its height is
+  // a FLOOR, not the crop: resultCrop() below measures the real cut per locale.
+  result: { width: 390, height: 720, deviceScaleFactor: 1.6, mobile: true },
 };
+
+// Shot name -> committed file stem. A map rather than the nested ternary this
+// replaced: that form silently wrote every unknown shot to `landing-vote`, which
+// is exactly the mistake adding a fourth shot would make.
+const FILE_STEM = { shelfPhone: 'shelf-phone', vote: 'vote', result: 'result' };
 
 // WebP quality. 84 lands each locale's set at ~120 KB against the 200 KB
 // per-locale budget test/landing-shots.test.js enforces.
@@ -218,6 +215,10 @@ async function seedRound(locale) {
   // survives solely for browsers running a pre-#209 bundle out of the service
   // worker cache and is documented for deletion. Constraining the draw's pool to
   // a single game buys the same reproducibility through the live route.
+  // Collected so the result shot can be navigated to directly: unlike the vote
+  // screen, `/round/:rid/session/:sid` IS a routable view for a finished session
+  // (showResultsById in router.js), so it needs no click-through.
+  const sessionIds = [];
   for (const [i, ratings] of RATINGS.entries()) {
     const { session, games: drawn } = await api('POST', `/api/rounds/${rid}/sessions`, {
       memberIds, count: 1, tagIds: pairs[i], excludeTagIds: [], guests: [], teams: [],
@@ -235,9 +236,48 @@ async function seedRound(locale) {
     await api('POST', `/api/rounds/${rid}/sessions/${session.id}/close`, {});
     await api('POST', `/api/rounds/${rid}/sessions/${session.id}/choice`, { gameId: games[i].id });
     await api('POST', `/api/rounds/${rid}/sessions/${session.id}/finish`, { winnerIds: [memberIds[0]] });
+    sessionIds.push(session.id);
   }
 
-  return rid;
+  // A THIRD session, and the only one with a ranking in it — the `result` shot
+  // is taken of this one (#1090). The two above draw a one-game pool each so
+  // their Ø badges are reproducible, which makes their results screen a list of
+  // one; a caption promising the group sees its ranking needs a picture of one.
+  //
+  // Deterministic without constraining the pool to a single game: include
+  // filters are AND and exclude filters are OR, so excluding the first THREE
+  // tags leaves exactly the games whose only tag is the fourth. With the
+  // assignment above (games 0 and 1 take a tag pair each, the rest take
+  // `tags[i % 4]`) that is indices 3, 7 and 11 — three games, so a draw of four
+  // takes all of them and the order is the only thing chance decides.
+  {
+    const { session, games: drawn } = await api('POST', `/api/rounds/${rid}/sessions`, {
+      memberIds,
+      count: 4,
+      tagIds: [],
+      excludeTagIds: [tags[0].id, tags[1].id, tags[2].id],
+      guests: [],
+      teams: [],
+    });
+    if (drawn.length !== RESULT_RATINGS.length) {
+      fail(`the ${locale} result draw produced ${drawn.length} games, expected `
+        + `${RESULT_RATINGS.length} (drew ${drawn.map((g) => g.title).join(', ') || 'nothing'}) `
+        + '— check the tag assignment');
+    }
+    for (const [j, mid] of memberIds.entries()) {
+      const votes = {};
+      drawn.forEach((game, k) => { votes[game.id] = { rating: RESULT_RATINGS[k][j], retire: false }; });
+      await api('POST', `/api/rounds/${rid}/sessions/${session.id}/votes/${mid}`, { votes });
+    }
+    await api('POST', `/api/rounds/${rid}/sessions/${session.id}/close`, {});
+    // The top-rated game, so the table band and the ranking agree — a chosen
+    // game the group rated third reads as a mistake in the picture.
+    await api('POST', `/api/rounds/${rid}/sessions/${session.id}/choice`, { gameId: drawn[0].id });
+    await api('POST', `/api/rounds/${rid}/sessions/${session.id}/finish`, { winnerIds: [memberIds[1]] });
+    sessionIds.push(session.id);
+  }
+
+  return { rid, sessionIds };
 }
 
 // The one thing the API cannot seed. POST …/games accepts title, player counts,
@@ -390,6 +430,8 @@ async function probeGeometry(cdp) {
     const rail = rect('.rail a, .rail button');
     const vote = rect('.vote');
     const nav = rect('.vote__nav');
+    const tisch = rect('.tisch');
+    const rows = rect('.trow');
     return {
       railBottom: rail.length ? Math.max(...rail.map((r) => r.bottom)) : null,
       cardRows: cards.map((c) => c.bottom),
@@ -397,22 +439,69 @@ async function probeGeometry(cdp) {
       // nav buttons and stop before the page's footer, not slice either.
       voteBottom: vote.length ? vote[0].bottom : null,
       navBottom: nav.length ? nav[0].bottom : null,
+      // The results screen (#1090): the table band and each ranked row. The crop
+      // wants the whole band plus whole rows — a cut through a row's score bar
+      // reads as the list continuing, a cut through its title reads as broken.
+      tischBottom: tisch.length ? tisch[0].bottom : null,
+      rowTops: rows.map((r) => r.top),
+      rowBottoms: rows.map((r) => r.bottom),
       docHeight: document.documentElement.scrollHeight,
     };
   })()`);
 }
 
+// The result crop is the one height this script does NOT fix in VIEWPORTS, and
+// the reason is worth stating: it cannot be fixed. The ranked rows sit below a
+// table band whose height varies by locale (measured 2026-09-14: 521 in Korean,
+// 621 in Dutch — a 100px spread), and the third session draws its three games in
+// a random ORDER, so which title lands in row 1 (and whether it wraps) changes
+// between runs. Every fixed height in that spread cuts through a title in some
+// locale, which is exactly what §4 of the rule says looks broken; two candidate
+// constants were measured doing so before this was written.
+//
+// So the cut is derived: the MIDPOINT OF THE GAP between row 1 and row 2. That
+// is whitespace by construction, in every locale and every run, and it shows the
+// band, the Tafel heading and one complete ranked row. The per-locale heights it
+// produces are fine — LANDING_SHOTS declares dimensions per asset, and the
+// walkthrough renders all three shots to one height in CSS (.landing-walk).
+function resultCrop(geom, locale) {
+  const { rowTops, rowBottoms } = geom;
+  if (rowTops.length < 2) {
+    fail(`the ${locale} result screen has ${rowTops.length} ranked rows, need at least 2`);
+  }
+  const gap = rowTops[1] - rowBottoms[0];
+  if (gap <= 0) fail(`the ${locale} result rows overlap (gap ${gap}) — re-derive the crop`);
+  return Math.round(rowBottoms[0] + gap / 2);
+}
+
 async function capture(cdp, shot, locale, probeOnly) {
   await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORTS[shot]);
-  const geom = await probeGeometry(cdp);
+  let geom = await probeGeometry(cdp);
+  let metrics = VIEWPORTS[shot];
+  if (shot === 'result') {
+    metrics = { ...VIEWPORTS.result, height: resultCrop(geom, locale) };
+    await cdp.send('Emulation.setDeviceMetricsOverride', metrics);
+    // Re-probe and re-derive: the viewport change is what the screenshot is
+    // taken at, so the cut has to be checked against the layout it actually
+    // gets. Nothing here is viewport-height-sized, so the two agree — but
+    // asserting that is cheaper than assuming it, and a future screen that DOES
+    // size itself would otherwise slice a title silently.
+    geom = await probeGeometry(cdp);
+    const again = resultCrop(geom, locale);
+    if (again !== metrics.height) {
+      fail(`the ${locale} result layout moved when the viewport was set `
+        + `(${metrics.height} -> ${again}) — the crop is not a fixed point`);
+    }
+  }
   console.log(`  ${locale}/${shot}  rail=${geom.railBottom} vote=${geom.voteBottom} nav=${geom.navBottom} `
+    + `tisch=${geom.tischBottom} rows=${JSON.stringify(geom.rowBottoms.slice(0, 6))} `
     + `doc=${geom.docHeight} cards=${JSON.stringify(geom.cardRows.slice(0, 8))}`);
   if (probeOnly) return;
 
   const { data } = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: QUALITY });
-  const file = path.join(OUT_DIR, `landing-${shot === 'shelfWide' ? 'shelf-wide' : shot === 'shelfPhone' ? 'shelf-phone' : 'vote'}.${locale}.webp`);
+  const file = path.join(OUT_DIR, `landing-${FILE_STEM[shot]}.${locale}.webp`);
   fs.writeFileSync(file, Buffer.from(data, 'base64'));
-  const { width, height, deviceScaleFactor } = VIEWPORTS[shot];
+  const { width, height, deviceScaleFactor } = metrics;
   console.log(`  wrote ${path.relative(ROOT, file)} `
     + `(${Math.round(width * deviceScaleFactor)}x${Math.ceil(height * deviceScaleFactor)}, `
     + `${(fs.statSync(file).size / 1024).toFixed(0)} KB)`);
@@ -493,13 +582,30 @@ async function reachVoteScreen(cdp, rid) {
   if (!walk || walk.moods !== 5) fail(`could not reach the vote screen: ${JSON.stringify(walk, null, 1)}`);
 }
 
+// The results screen's own equivalent of reachVoteScreen's tile-count guard: a
+// cold load that fails to resolve the session falls back to the round hub
+// (showRound), which is a perfectly valid-looking page in the right language —
+// so without this the run would quietly commit nine screenshots of the Start
+// screen. Assert the two things the walkthrough's third caption promises: the
+// table band, and ranked rows to be a ranking OF.
+async function assertResultScreen(cdp) {
+  const seen = await evaluate(cdp, `(() => ({
+    tisch: !!document.querySelector('.tisch'),
+    rows: document.querySelectorAll('.trow').length,
+    stamp: !!document.querySelector('.stamp--table'),
+  }))()`);
+  if (!seen.tisch || seen.rows < RESULT_RATINGS.length) {
+    fail(`the result screen did not render a ranking: ${JSON.stringify(seen)}`);
+  }
+}
+
 /* ------------------------------------------------------------------- main */
 
 async function main() {
   const args = process.argv.slice(2);
   const probeOnly = args.includes('--probe');
   const only = args.filter((a) => !a.startsWith('--'));
-  const shots = only.length ? only : ['shelfWide', 'shelfPhone', 'vote'];
+  const shots = only.length ? only : ['shelfPhone', 'vote', 'result'];
   for (const s of shots) if (!VIEWPORTS[s]) fail(`unknown shot '${s}' (have: ${Object.keys(VIEWPORTS).join(', ')})`);
 
   const dataDir = tempDataDir();
@@ -511,7 +617,7 @@ async function main() {
     // can no longer be told apart from seed differences (§3b).
     for (const locale of Object.keys(SEEDS)) {
       rounds[locale] = await seedRound(locale);
-      console.log(`  seeded ${locale}: round ${rounds[locale]}`);
+      console.log(`  seeded ${locale}: round ${rounds[locale].rid}`);
     }
 
     // Down, patch, up: see writeProviderMetadata. The old server's cleanup entry
@@ -524,7 +630,7 @@ async function main() {
     const cdp = await connectCdp();
     for (const locale of Object.keys(SEEDS)) {
       await setLocale(cdp, locale);
-      const rid = rounds[locale];
+      const { rid, sessionIds } = rounds[locale];
 
       for (const shot of shots) {
         if (shot === 'vote') {
@@ -533,6 +639,14 @@ async function main() {
           // shrinking leaves a card measured for the wrong width.
           await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORTS.vote);
           await reachVoteScreen(cdp, rid);
+        } else if (shot === 'result') {
+          // The THIRD seeded session — the only one with more than one game in
+          // it (seedRound). Set the viewport first for the same reason the vote
+          // shot does, then navigate: unlike the vote screen this URL resolves
+          // on a cold load (showResultsById), so there is nothing to click.
+          await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORTS.result);
+          await navigate(cdp, `${BASE}/round/${rid}/session/${sessionIds[2]}`);
+          await assertResultScreen(cdp);
         } else {
           await navigate(cdp, `${BASE}/round/${rid}/regal`);
         }
