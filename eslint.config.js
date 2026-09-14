@@ -106,6 +106,8 @@ const frontendGlobals = {
   // what turns a future cross-file typo into an error rather than a silent
   // runtime failure (.claude/rules/eslint-frontend-shared-scope.md).
   wirePasskeyLogin: 'readonly', buildPasskeySection: 'readonly', renderPasskeyRow: 'readonly',
+  // views-account.js / views-auth.js (#1076)
+  buildEmailForm: 'readonly', renderEmailChangeLanding: 'readonly',
   // round-roles.js (issue #137) — also required by lib/round-access.js and the
   // rounds/members/invitations routes
   ROUND_ROLES: 'readonly', ROLE_RANK: 'readonly', LEGACY_GRANT_ROLE: 'readonly',
