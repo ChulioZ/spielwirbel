@@ -36,6 +36,9 @@ const frontendGlobals = {
   popoverFit: 'readonly', popoverRoom: 'readonly', POPOVER_GAP: 'readonly',
   // report-link.js
   feedReportUrl: 'readonly', setContactAvailable: 'readonly',
+  // views-friends.js (#1092)
+  KREIS_FEED_COLLAPSED: 'readonly', renderPersonCard: 'readonly', personCardLine: 'readonly',
+  renderAddTile: 'readonly', renderKreisFeed: 'readonly',
   REPORT_SUBJECT_MAX: 'readonly', REPORT_USERNAME_MAX: 'readonly',
   // install-prompt.js (issue #616)
   INSTALL_DISMISSED_KEY: 'readonly', isIosDevice: 'readonly', installStateFrom: 'readonly',
@@ -103,6 +106,8 @@ const frontendGlobals = {
   // what turns a future cross-file typo into an error rather than a silent
   // runtime failure (.claude/rules/eslint-frontend-shared-scope.md).
   wirePasskeyLogin: 'readonly', buildPasskeySection: 'readonly', renderPasskeyRow: 'readonly',
+  // views-account.js / views-auth.js (#1076)
+  buildEmailForm: 'readonly', renderEmailChangeLanding: 'readonly',
   // round-roles.js (issue #137) — also required by lib/round-access.js and the
   // rounds/members/invitations routes
   ROUND_ROLES: 'readonly', ROLE_RANK: 'readonly', LEGACY_GRANT_ROLE: 'readonly',

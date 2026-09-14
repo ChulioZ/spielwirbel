@@ -105,6 +105,31 @@ still naming the round just left (defect 4 of the issue). An expired session is
 not a departure — that user was working and wants back in, so marketing copy
 they have already read would be a detour.
 
+## 6. `/e` is the third mailed landing (#1076) — and it carries NO resend
+
+`/v` (verify) and `/r` (reset) were joined by `/e` (confirm an address change).
+Three things about adding one that are easy to get wrong:
+
+- **It needs no server change.** The SPA fallback in `lib/app.js` is a catch-all
+  regex, so a new client-side path is served the shell for free; and the service
+  worker treats navigations network-first with no path list. Grep `'/r'` before
+  assuming otherwise — as of #1076 it appears in exactly one file,
+  `public/js/account.js`.
+- **No long-form alias.** `/v` and `/r` each answer to a long path too
+  (`/verify-email`, `/reset-password`) because those were the shape before #434
+  and old mails are still in inboxes. `/e` has never had another form, so giving
+  it one would be inventing a URL nothing links to.
+- **It must NOT offer `buildResend`.** The verification landing's failure branch
+  does, and copying it looks obviously right. It is wrong: `buildResend` resends
+  a *verification* keyed by ADDRESS, while this landing knows only a token —
+  never which account, never which address — so the control could not work. The
+  recovery is to request the change again from the account screen, which is what
+  the failure text says.
+
+`/e` is also not an `isAuthRoute`, for the same reason `/v` and `/r` are not:
+that list is the three screens a logged-out visitor navigates to deliberately,
+not the landings a mailed link drops them on.
+
 ## Verifying a change here
 
 The routing is client-side and `resolveRoute` is deliberately not exported (a

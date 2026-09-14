@@ -93,6 +93,15 @@ doesn't have to be redone.
   width per viewport is what that argument actually wanted**; it reached for
   "deliberate raggedness" because the component in the middle could not be any
   other width.
+- **Der Kreis** — the screen that needs BOTH shapes at once (#1092), which is
+  why it is worth an entry. The people tile: short, unordered entries you scan
+  for one of, in an `auto-fill` grid so a lone card cannot balloon. The feed
+  beside them stays a LIST, because its chronological order carries meaning —
+  the second half of the rule, applied to two contents on one screen rather than
+  to two screens. Stacking both in one column served neither: measured, a feed
+  line carried 247px of text in a 766px box while a friend's name sat 511px from
+  its own „Entfernen".
+
 - **Game detail** — **restructured in #1039, so this entry is history.** For two
   releases the reading here was that the defect was a *sizing* one, not a shape
   one: the score ring sat 453px from the title because `.gd-info` was `flex: 1`,

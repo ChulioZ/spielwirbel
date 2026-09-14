@@ -3793,6 +3793,38 @@ module.exports = function repoContract(repo) {
     assert.equal((await repo.addFeedEvent('feed-u', { type: 'session_played', title: 'Catan' })).coverUrl, null);
   });
 
+  /* The allowlist's one widening (#1079): a games_imported row keeps an integer
+     `count`, so an import can say "and 22 more games" instead of naming one game
+     out of the batch. Both backends store the row as a single JSON blob, so the
+     key must be ABSENT — not 0, not null — on the other two types, or the two
+     backends' jsonb shapes drift apart by type and by age
+     (.claude/rules/postgres-backend.md). */
+  test('feed: only games_imported keeps a count, and only an integer one', async () => {
+    const ev = await repo.addFeedEvent('feed-c', {
+      type: 'games_imported', title: 'Catan', coverUrl: null, count: 23,
+      roundName: 'Familienrunde', // still dropped — the widening is one field, not a door
+    });
+    assert.equal(ev.count, 23);
+    assert.deepEqual(Object.keys(ev).sort(), ['at', 'count', 'coverUrl', 'id', 'title', 'type', 'uid']);
+    const stored = (await repo.listFeedEvents(['feed-c']))[0];
+    assert.equal(stored.count, 23, 'the count did not survive the round trip');
+
+    // Typed at the store, never trusted from the caller.
+    for (const bad of [-1, 1.5, '3', null]) {
+      const row = await repo.addFeedEvent('feed-c', { type: 'games_imported', title: 'X', count: bad });
+      assert.equal(row.count, undefined, `count ${String(bad)} was stored`);
+      assert.ok(!Object.prototype.hasOwnProperty.call(row, 'count'), 'a rejected count still left its key');
+    }
+
+    // And the two older types carry no count KEY at all, even when one is passed.
+    for (const type of ['game_added', 'session_played']) {
+      const row = await repo.addFeedEvent('feed-c', { type, title: 'X', count: 7 });
+      assert.ok(!Object.prototype.hasOwnProperty.call(row, 'count'), `${type} grew a count key`);
+      const back = (await repo.listFeedEvents(['feed-c']))[0];
+      assert.ok(!Object.prototype.hasOwnProperty.call(back, 'count'), `${type} persisted a count key`);
+    }
+  });
+
   test('feed: listFeedEvents reads the given uids newest-first; empty ids read nothing', async () => {
     await repo.addFeedEvent('feed-x', { type: 'game_added', title: 'One' });
     const two = await repo.addFeedEvent('feed-y', { type: 'game_added', title: 'Two' });

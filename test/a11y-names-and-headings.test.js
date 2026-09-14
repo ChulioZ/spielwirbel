@@ -52,12 +52,19 @@ async function friendsView(t, locale) {
   dom.set('isLoggedIn', () => true);
   dom.set('accountApi', async (method, path) => (path === '/friends' ? EMPTY_FRIENDS : EMPTY_FEED));
   await dom.call('showFriends');
+  /* Since #1092 the field is not on the page until the „+" tile is opened: it
+     was a full-width row at the top for a control used once per friend, and it
+     is now the last tile in the grid, becoming the input in place. The finding
+     this file guards (A-011, a placeholder standing in for a label) is about the
+     field, so the spec opens it — asserting the tile instead would quietly stop
+     testing the input. */
+  dom.app.querySelector('.k-card--add').click();
   return dom;
 }
 
 test('the Freundeskreis request field has an accessible name, not just a placeholder', async (t) => {
   const dom = await friendsView(t, 'de');
-  const input = dom.document.querySelector('#friendUser');
+  const input = dom.document.querySelector('#friendHandle');
   assert.ok(input, 'the add-a-friend input did not render');
 
   /* The name has to be programmatic. Checking `aria-label` alone would pass on
@@ -67,7 +74,7 @@ test('the Freundeskreis request field has an accessible name, not just a placeho
      the fix ever moves to one) and require it to be non-empty. */
   const label = input.getAttribute('aria-label');
   const labelledby = input.getAttribute('aria-labelledby');
-  const forLabel = dom.document.querySelector('label[for="friendUser"]');
+  const forLabel = dom.document.querySelector('label[for="friendHandle"]');
   const name = (label || (labelledby && dom.document.getElementById(labelledby)?.textContent) || forLabel?.textContent || '').trim();
 
   assert.ok(name, 'the input has no accessible name (placeholder is not a label — WCAG 2.2 SC 3.3.2/4.1.2)');
@@ -76,8 +83,8 @@ test('the Freundeskreis request field has an accessible name, not just a placeho
 });
 
 test('the accessible name is localized, not a hardcoded string or a raw key', async (t) => {
-  const de = (await friendsView(t, 'de')).document.querySelector('#friendUser').getAttribute('aria-label');
-  const en = (await friendsView(t, 'en')).document.querySelector('#friendUser').getAttribute('aria-label');
+  const de = (await friendsView(t, 'de')).document.querySelector('#friendHandle').getAttribute('aria-label');
+  const en = (await friendsView(t, 'en')).document.querySelector('#friendHandle').getAttribute('aria-label');
 
   assert.ok(de && en, 'one of the locales rendered no aria-label at all');
   /* A missing key renders as the key itself (i18n.js), which is a non-empty
