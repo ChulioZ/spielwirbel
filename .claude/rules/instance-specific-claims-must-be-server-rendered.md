@@ -67,10 +67,22 @@ suite still reports three passing tests for the file.
 
 ## Trap 2: one document, two languages → every id is emitted twice
 
-`renderFaq` renders the same question list in German and again in English, so
-each `<section id="faq-…">` appeared **twice**: invalid HTML, and `#faq-app`
-becomes an ambiguous anchor. The English half now takes a `-en` suffix and the
-German half keeps the bare id (it is the stable, linkable one).
+`renderFaq` used to render the same question list in German and again in
+English, so each `<section id="faq-…">` appeared **twice**: invalid HTML, and
+`#faq-app` became an ambiguous anchor. The English half took a `-en` suffix and
+the German half kept the bare id.
+
+**#1088 removed the cause rather than the symptom**, and the shape of that is
+worth keeping: the page renders ONE language now, chosen by `?lang=` →
+`Accept-Language` → German, so the bare id is unique again by construction and
+the suffix is gone. The trap below is therefore historical for this page — but
+it is exactly as live for the next one, because what creates it is *a list
+rendered per language from one source*, not this page.
+
+It also gained a property the suffix could never give: every language emits the
+**same** id set, so `#faq-app` is linkable from any of them. `test/faq.test.js`
+asserts that across all nine — a per-language suffix would have made an anchor
+shared between two readers point at a section one of them does not have.
 
 `lib/legal.js` does not have this problem and it is worth knowing why, because it
 looks like the same shape: it renders each document's DE and EN halves as

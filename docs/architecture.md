@@ -115,8 +115,9 @@ lib/
   quota.js           per-tenant state caps — rounds/tenant, games/round,
                      tags/round, members/round (issue #139; inert unless
                      ACCOUNTS_ENABLED)
-  faq.js             the server-rendered FAQ page, DE + EN, with each answer an
-                     instance cannot honestly give gated out (issue #489)
+  faq.js             the server-rendered FAQ page, one language per page in
+                     every shipped locale (#1088), with each answer an instance
+                     cannot honestly give gated out (issue #489)
   feed.js            the Freundeskreis activity feed's allowlisted events (#325)
   feed-events.js     the feed's accepted event types, one dependency-free set
                      both repo backends require rather than each holding a copy
@@ -308,7 +309,8 @@ lib/
                                              404 until configured)
     faq.js           /faq                   (the FAQ page — public, login-free
                                              and never 404s, unlike the legal
-                                             pages above; issue #489)
+                                             pages above; resolves ?lang →
+                                             Accept-Language → de; #489/#1088)
     admin/           /api/admin             (operator moderation — 404 unless
                                              ADMIN_PASSWORD. ONE mount in
                                              lib/app.js; the sub-routers compose

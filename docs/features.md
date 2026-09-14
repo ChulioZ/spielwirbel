@@ -529,7 +529,11 @@ What the app does, in detail. For a short overview see the
   from the bottom of the logged-out landing page, answering what people ask
   before signing up: whether everyone needs an account, whether it is really
   free, whether there is an app, whether it does more than board games, and what
-  happens to the data. German (authoritative) and English in one document. It is
+  happens to the data. **One language per page, in every shipped locale** (issue
+  #1088): an explicit `?lang=` wins, then the browser's `Accept-Language`, then
+  German — and a small row at the top links the other eight. German stays the
+  reference text every translation is made from, which each translated page says
+  in one line. It is
   **server-rendered**, and that is what keeps it honest on a self-hosted
   instance: an answer that instance cannot truthfully give — donations where
   `DONATE_URL` is unset, the account answers with accounts off, the data answers
@@ -597,9 +601,15 @@ What the app does, in detail. For a short overview see the
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a
   **Freundeskreis feed** (a tile on the home dashboard plus a dedicated
-  view at `/freunde`): only "*added a game*" and "*played a game*" notes with the
-  **game title and cover** — never member names, ratings, votes or round names,
-  and only for activity after you became friends. A friendship shares **no round
+  view at `/freunde`): only "*added a game*", "*played a game*" and — for a
+  BoardGameGeek collection import — "*added ‹game› and N more games*" notes, with
+  the **game title and cover** and, for that last one, a plain count; never
+  member names, ratings, votes or round names, and only for activity after you
+  became friends. The screen itself is **one grid
+  of person cards** sorted by state — a request you have not answered is always
+  the first card, whatever the friend count — with the feed as a second column
+  from 1024px up and collapsed under the grid below it. Each card carries what
+  that person last did, or how long you have been friends. A friendship shares **no round
   data**; it is purely social. Unfriending is unilateral and immediate in both
   directions. With accounts off the whole feature is inert.
 - **E-mail for actionable inbox items** – *accounts mode only* (issue #618). A
