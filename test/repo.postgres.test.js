@@ -671,10 +671,23 @@ if (!process.env.DATABASE_URL) {
     // The rows belong to a tenant the probe never scoped itself to, so a
     // non-zero count is only reachable through the FOR SELECT admin escape.
     assert.ok(out.rounds.total >= 1, 'rounds were invisible without the admin escape');
-    assert.ok(out.rounds.tenants >= 1, 'tenants were invisible without the admin escape');
     assert.ok(out.content.games >= 1, 'games were invisible without the admin escape');
     assert.ok(out.content.sessions >= 1, 'sessions were invisible without the admin escape');
     assert.ok(out.peaks.gamesPerRound >= 1, 'the games peak was invisible without the admin escape');
+
+    /* #941's additions, and the reason this probe exists at all. `sessions` is
+       RLS-scoped, so a history read outside atx() returns ZERO ROWS RATHER THAN
+       AN ERROR — the panel would draw a healthy-looking EMPTY CHART on
+       production while every superuser-run test stayed green. The session
+       created above is dated now, so its bucket must be non-empty here. */
+    const played = Object.values(out.content.sessionHistory).reduce((a, b) => a + b, 0);
+    assert.ok(played >= 1,
+      'the session history was empty without the admin escape — it is not reading under atx()');
+    assert.equal(Object.keys(out.content.sessionHistory).length, 26, 'and it is still 26 buckets');
+    assert.ok(Object.values(out.designs).reduce((a, b) => a + b, 0) >= 1,
+      'the design histogram was invisible without the admin escape');
+    assert.equal(typeof out.content.roundsWithRetired, 'number');
+    assert.equal(typeof out.accounts.withAvatar, 'number');
     // pg returns count() as a bigint STRING; a missing ::int would make this
     // backend answer '1' where the JSON one answers 1.
     for (const n of [out.rounds.total, out.content.games, out.social.friendships, out.peaks.tagsPerRound]) {

@@ -89,6 +89,11 @@ const GLYPH_LITERALS = [
   '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon,\n.empty__icon',
   '.landing-claim__icon', '.landing-step__num', '.feed-item__img', '.trow__img', '.tisch__box',
   '.friends-invite__icon',
+  /* The Tischkarte's initials watermark (#1075) — a letterform used as
+     furniture in the card's text-free corner, sized to the card rather than to
+     the type scale, and `aria-hidden` because the name it draws is already the
+     <h1> beside it. Two rules: the base size and its phone step-down. */
+  '.member-card__mark',
   '.pool-thumb', '.pool-thumb .ti', '.pool-tile__img', '.game-card__img', '.vote__img',
   '.gd-img', '.lookup__thumb--none .ti', '.archive-row__img .ti', '.rec-card__img .ti',
   '.spotlight__img .ti', 

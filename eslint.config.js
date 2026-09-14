@@ -40,6 +40,10 @@ const frontendGlobals = {
   // views-friends.js (#1092)
   KREIS_FEED_COLLAPSED: 'readonly', renderPersonCard: 'readonly', personCardLine: 'readonly',
   renderAddTile: 'readonly', renderKreisFeed: 'readonly',
+  // views-friends.js (#1094 — the cover wash)
+  lastEventOf: 'readonly',
+  // views-friends.js (#1093 — the avatar band)
+  BAND_MAX: 'readonly', renderCircleBand: 'readonly', bandAvatar: 'readonly',
   REPORT_SUBJECT_MAX: 'readonly', REPORT_USERNAME_MAX: 'readonly',
   // install-prompt.js (issue #616)
   INSTALL_DISMISSED_KEY: 'readonly', isIosDevice: 'readonly', installStateFrom: 'readonly',
@@ -378,7 +382,9 @@ const frontendGlobals = {
   providerLabel: 'readonly', providerLabelShort: 'readonly',
   PROVIDER_LABELS: 'readonly', PROVIDER_LABELS_SHORT: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
   // views-member.js
-  showMember: 'readonly', memberStats: 'readonly',
+  showMember: 'readonly',
+  // member-stats.js (#1075 — split out of views-member.js)
+  memberStats: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
@@ -465,7 +471,12 @@ module.exports = [
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'script',
-      globals: { ...globals.browser },
+      // `resolveDesign` (#941): public/admin.html loads the dependency-free
+      // round-designs.js so the Kennzahlen card can tell a design id the
+      // registry still knows from one it does not. Named ONE BY ONE rather than
+      // by spreading frontendGlobals — the whole point of this block is that a
+      // page script reaching for an SPA global is a no-undef error.
+      globals: { ...globals.browser, resolveDesign: 'readonly' },
     },
   },
   {

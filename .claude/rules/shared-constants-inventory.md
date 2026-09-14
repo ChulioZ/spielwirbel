@@ -271,11 +271,19 @@ Its trap is that the two constants fail in **different directions**, so neither
 drift resembles the other. `COVER_MAX_BYTES` is the avatar case exactly — a
 client cap above the server's produces the palette bug (the zone accepts a paste
 the route then 413s), one below it silently refuses a cover the server would
-have taken. `COVER_MAX_DIM` is not offered to anyone: it is shared because
-`lib/cover.js` writes it and the admin backfill's `coverIsCurrent` decides
-against it, and if those two ever disagreed the backfill would either re-encode
-every object on every press (a lossy generation each time, reclaiming nothing) or
-skip the ones it exists to convert. The message takes `{mb}` from the derived
+have taken. **`COVER_MAX_DIM` no longer has a second reader at all** — corrected
+in #941. It used to be justified by the admin backfill's `coverIsCurrent`
+deciding against the value `lib/cover.js` writes; #941 removed that backfill (an
+object can only reach the store re-encoded now, so the button could report
+nothing but "nothing to do") and `coverIsCurrent` with it.
+
+It STAYS in `cover-policy.js` regardless, and the reason is the file rather than
+the constant: `COVER_MAX_BYTES` beside it is genuinely shared, so the module is
+not going anywhere, and moving one of a pair of cover limits into `lib/cover.js`
+would put the two halves of the same policy in two places — which is the drift
+this whole document exists to prevent, spent to save nothing. Read it now as a
+single-reader constant that lives with its sibling; if `COVER_MAX_BYTES` ever
+stops being shared, move both. The message takes `{mb}` from the derived
 `COVER_MAX_MB` for the reason `avatar-policy.js` gives: a hand-written "at most
 5 MB" is the third copy, and it is the one that states a number nobody
 re-checks.

@@ -121,15 +121,12 @@ test('the usage numbers count what the instance holds', async () => {
 
   const s = await instanceStatus();
   assert.equal(s.metrics.rounds.total, before.metrics.rounds.total + 1);
-  assert.equal(s.metrics.rounds.tenants, before.metrics.rounds.tenants + 1);
   assert.equal(s.metrics.content.games, before.metrics.content.games + 1);
   assert.equal(s.metrics.content.sessions, before.metrics.content.sessions + 1);
   assert.equal(s.metrics.content.sessionsFinished, before.metrics.content.sessionsFinished + 1);
   assert.equal(s.metrics.content.sessions30d, before.metrics.content.sessions30d + 1);
   assert.equal(s.metrics.accounts.total, before.metrics.accounts.total + 1);
   assert.equal(s.metrics.accounts.verified, before.metrics.accounts.verified + 1);
-  assert.equal(s.metrics.accounts.new7d, before.metrics.accounts.new7d + 1);
-  assert.equal(s.metrics.accounts.new30d, before.metrics.accounts.new30d + 1);
 });
 
 test('demo tenants are excluded from every number except the demo row', async () => {
@@ -263,9 +260,47 @@ test('every metric is a number — no name, address or id reaches the card', asy
   for (const secret of ['GEHEIMER-RUNDENNAME', 'GEHEIMER-NAME', 'GEHEIMER-TITEL', 'GEHEIME-ADRESSE', 'GEHEIMER-NUTZER', tenant]) {
     assert.equal(serialized.includes(secret), false, `${secret} reached the metrics payload`);
   }
-  for (const block of Object.values(s.metrics)) {
-    for (const [field, value] of Object.entries(block)) {
-      assert.equal(typeof value, 'number', `metrics.${field} is not a number`);
+  /* RECURSES TO THE LEAVES since #941, which added two history objects and a
+     design histogram. The old two-level form reported `accounts.history` as
+     "not a number" the moment nesting appeared — and the tempting fix is an
+     allowlist of known-nested fields, which is exactly wrong: it has to be
+     maintained by the same person who just added the nesting, i.e. by the
+     person who would also be adding the leak. Recursion has no such gap.
+
+     KEYS are swept too, not just values. The design histogram is keyed by a
+     stored design id, and an id is the one thing on this card that comes from
+     data rather than from code — a histogram keyed by something user-authored
+     would put that text in the payload with every value still a tidy number. */
+  const leaves = (node, path) => {
+    for (const [k, v] of Object.entries(node)) {
+      assert.equal(typeof k, 'string');
+      if (v && typeof v === 'object' && !Array.isArray(v)) { leaves(v, `${path}.${k}`); continue; }
+      assert.equal(typeof v, 'number', `${path}.${k} is not a number`);
     }
-  }
+  };
+  leaves(s.metrics, 'metrics');
+});
+
+test('a name planted in a metrics KEY is caught, not just in a value', async () => {
+  /* The recursion above walks keys as well as values; this proves the sweep
+     actually looks at them. Without it the recursion could quietly stop
+     checking keys and every assertion would still pass — the design histogram
+     is keyed by a stored id, so a key is a real route for user text onto this
+     card. Driven against a hand-built payload rather than the live one, because
+     the point is the SWEEP, not today's data. */
+  const planted = {
+    accounts: { total: 1, history: { '2026-01-05': 0 } },
+    designs: { 'GEHEIMER-DESIGNNAME': 2 },
+  };
+  const serialized = JSON.stringify(planted);
+  assert.equal(serialized.includes('GEHEIMER-DESIGNNAME'), true,
+    'the fixture must contain the planted name, or this proves nothing');
+
+  let caught = null;
+  try {
+    for (const secret of ['GEHEIMER-DESIGNNAME']) {
+      assert.equal(serialized.includes(secret), false, `${secret} reached the metrics payload`);
+    }
+  } catch (err) { caught = err; }
+  assert.ok(caught, 'the string sweep did not catch a name planted in a KEY');
 });

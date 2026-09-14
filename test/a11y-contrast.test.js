@@ -39,6 +39,11 @@ const { MEMBER_COLORS } = require('../public/js/member-colors');
 assert.ok(DESIGNS.length >= 11, 'expected the nine palettes plus the two worlds');
 
 const THEMES = DESIGNS.map(tokensFor);
+
+// A rule whose selector may be one MEMBER of a grouped, newline-separated
+// selector — bodyOf() compares the whole text and would miss it.
+const slotBodyFor = (sel) => (rulesOf(CSS).find(([s]) => s.split('\n')
+  .map((x) => x.trim().replace(/,$/, '')).includes(sel)) || [])[1] || null;
 const name = (t) => `${t.design.id}${t.dark ? ' (dark)' : ''}`;
 
 /* Anti-vacuous, and it guards the whole file: every loop below is "for each
@@ -862,6 +867,120 @@ test('the winners\' gold fill clears AA too, at its higher alpha', () => {
   }
   assert.deepEqual(failures, [],
     `the winners' rows fill at ${(alpha * 100).toFixed(0)}% --gold over --surface; body text on it needs ${AA_TEXT}:1`);
+});
+
+/* The dock's world motif (#1082). The dock is the one element on a phone that is
+   on screen every second, which is why the world now reaches it — and it is
+   therefore also the one where a motif under the labels is least escapable.
+
+   Measured against the WORLD's --surface, not white. The home tile carries the
+   same motif at .16 and clears comfortably because the lobby it sits in is never
+   themed; the dock inherits the round's own surface, where .16 lands at 4.44:1
+   on Chess — under the bar, and on a LIGHT world rather than one of the dark
+   ones the issue expected to bind. */
+test('the dock motif leaves its labels over AA on every design', () => {
+  const decl = slotBodyFor('[data-world] .dock::before');
+  assert.ok(decl, '[data-world] .dock::before is gone — did the dock motif move?');
+  const m = /opacity:\s*([\d.]+)/.exec(decl);
+  assert.ok(m, `the dock motif declares no opacity: ${decl}`);
+  const alpha = Number(m[1]);
+
+  const failures = [];
+  for (const t of THEMES) {
+    // The motif's densest pixel is a fully covered silhouette, i.e. the accent
+    // at the full declared alpha over the dock's --surface.
+    const ground = composite(t.brand, t.surface, alpha);
+    const ratio = contrast(t.inkSoft, ground);
+    if (ratio < AA_TEXT) failures.push(`${name(t)} = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    `the dock paints its world motif at ${(alpha * 100).toFixed(0)}% --brand over --surface; `
+    + `.dock__item is --ink-soft and needs ${AA_TEXT}:1. The issue's .16 lands at 4.44:1 on Chess.`);
+});
+
+/* The Freundeskreis cover wash (#1094). Unlike every fill above it, the layer is
+   an arbitrary USER-FACING IMAGE — a game cover — so there is no token to mix
+   with and no average to assume. The honest worst case is the extremes: pure
+   black over a light design, pure white over a dark one, which is what a very
+   dark or very bright cover approaches.
+
+   Measured at FULL alpha on purpose. The card's second line is
+   `white-space: nowrap` with an ellipsis, so it spans the whole card and really
+   does reach the far right where the mask is fully opaque — the fade buys the
+   text nothing and must not be credited to it.
+
+   The --accent link buttons in `.k-card__meta` are deliberately NOT here: they
+   would fail at full alpha (4.03:1 on Salbei) and do not fail in fact, because
+   the mask has not opened where they sit — measured at 375px they end at 46% of
+   the card and see 0.0148 effective alpha. That is a LAYOUT fact, which this
+   file cannot see; it is recorded in the CSS comment beside the rule with the
+   threshold (~67% of the card width) at which it would stop holding. */
+test('the friend card\'s cover wash keeps its text over AA, for any cover', () => {
+  const decl = bodyOf('.k-card__art');
+  assert.ok(decl, '.k-card__art is gone — did the wash move?');
+  const m = /(^|[\s;])opacity:\s*([\d.]+)/.exec(decl);
+  assert.ok(m, `.k-card__art declares no opacity: ${decl}`);
+  const alpha = Number(m[2]);
+
+  const failures = [];
+  for (const t of THEMES) {
+    for (const [cover, coverName] of [['#000000', 'a black cover'], ['#ffffff', 'a white cover']]) {
+      const ground = composite(cover, t.surface, alpha);
+      for (const [label, ink] of [['--ink', t.ink], ['--ink-soft', t.inkSoft]]) {
+        const ratio = contrast(ink, ground);
+        if (ratio < AA_TEXT) failures.push(`${name(t)} ${label} under ${coverName} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures, [],
+    `the wash paints a cover at ${(alpha * 100).toFixed(0)}% over --surface; the card's text needs `
+    + `${AA_TEXT}:1. The issue's starting .17 lands at 3.84:1 on Sci-Fi dark — lower the alpha, `
+    + 'do not widen this test.');
+});
+
+/* The Tischkarte's initials watermark (#1075). It sits in the card's top-right
+   corner on top of the wash, and the SIZE is what keeps it off the text — both
+   sizes were measured against the painted ink of every label, figure, chip and
+   ribbon and are written into the stylesheet beside the rule.
+
+   One thing can still reach it and does: a very long NAME at 1280px, which is
+   `--ink`. So that is what this checks — and `--ink-soft` deliberately is not,
+   because no --ink-soft surface overlaps the mark at the shipped sizes.
+
+   Worth knowing before reading the number: the card's radial peak ALREADY
+   measures 3.26:1 for --ink-soft with no watermark at all. That is #1074's own
+   reason the corner carries no text; it is not something this added, and it is
+   why a naive "every ink over the densest pixel" sweep here would fail on
+   shipped code and tempt someone to lighten the wrong thing.
+
+   BE HONEST ABOUT WHAT THIS CAN SEE. `--ink` is very dark, so the bar is not
+   reached until roughly .5 alpha — measured: .30 still passes at 5.67:1, .50
+   fails at 4.36:1. So this catches a watermark turned into a BLOCK, not one
+   nudged a few points up. What really bounds the alpha here is taste and the
+   geometry above, neither of which a contrast test can hold; the number that
+   ships is the issue's, and the sizes beside it are the measured half. */
+test('the Tischkarte watermark leaves the name legible over it', () => {
+  const body = bodyOf('.member-card__mark');
+  assert.ok(body, '.member-card__mark is gone — did the watermark move?');
+  const m = /opacity:\s*([\d.]+)/.exec(body);
+  assert.ok(m, `the watermark declares no opacity: ${body}`);
+  const alpha = Number(m[1]);
+
+  const failures = [];
+  for (const t of THEMES) {
+    for (const tone of MEMBER_COLORS) {
+      // The card: a 13% linear wash, then the 26% radial at its densest, then
+      // the watermark on top — all of them the member's own tone.
+      const base = mixOklab(tone, t.surface, 0.13);
+      const wash = mixOklab(tone, base, 0.26);
+      const ground = composite(tone, wash, alpha);
+      const ratio = contrast(t.ink, ground);
+      if (ratio < AA_TEXT) failures.push(`${name(t)} on ${tone} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures.slice(0, 6), [],
+    `the watermark paints the member tone at ${(alpha * 100).toFixed(0)}% over the card's wash; `
+    + `the name (--ink) can overlap it at 1280px and needs ${AA_TEXT}:1`);
 });
 
 /* The anti-vacuous half, the shape test/design-tokens.test.js uses for its glyph

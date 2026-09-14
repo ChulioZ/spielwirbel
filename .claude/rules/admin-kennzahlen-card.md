@@ -39,6 +39,60 @@ seeds rounds/accounts with recognisable names and asserts every field of
 `metrics` is a `number`. A row that "just shows the biggest tenant's name" fails
 without anyone remembering the test exists.
 
+**#941 made that sweep RECURSE TO THE LEAVES, and swept the KEYS too.** It
+added two history objects and a design histogram, so a payload field is no longer
+always a scalar — and the two-level form then reported `accounts.history` as
+"not a number" the moment nesting appeared.
+
+The tempting fix is an allowlist of known-nested fields. **Do not add one.** It
+has to be maintained by the same person who just added the nesting, i.e. by the
+person who would also be adding the leak; recursion has no such gap. Same
+argument the aggregate-CI gate makes for allowlists over denylists
+(`.claude/rules/ci-aggregate-gate.md`).
+
+Keys matter now as well as values, and that is not theoretical: the design
+histogram is keyed by the **stored design id**, which is the one thing on this
+card that comes from data rather than from code. A histogram keyed by something
+user-authored would put that text in the payload with every value still a tidy
+number.
+
+## What the card no longer carries, and why it can't come back cheaply (#941)
+
+Three fields were **removed from `instanceMetrics` in both backends**, not merely
+hidden: `accounts.new7d`, `accounts.new30d` and `rounds.tenants`. The first two
+are superseded by the Konten history (a weekly series says what "last 7 / 30
+days" was reaching for, and keeps saying it); „Aktivierung" was read once and
+never again.
+
+**Only Konten and Sessions have history, and adding a third is not a small
+change.** They are the only dated rows: `createRound` writes no `createdAt`, and
+the rounds/games/members tables carry only a `seq` bigserial. The operator
+decided (2026-09-05) to derive history from the timestamps that exist rather than
+add a snapshot table or backfill a date. Giving Runden/Spieler*innen/Spiele a
+series needs either a daily snapshot table written by a `lib/scheduler.js` job
+or a `createdAt` on new rows from that point on — neither of which backfills the
+past, which is the part that makes it a decision rather than a chore.
+
+**Neither backend casts a stored date in SQL, and that is load-bearing.** The
+obvious `date_trunc('week', (data->>'createdAt')::timestamptz)` **throws for the
+whole query** on one malformed historical value — measured:
+`invalid input syntax for type timestamp with time zone: "t"` — while the JSON
+backend silently drops that row. The backend that was supposed to agree instead
+500s the panel, and only on the instance that has the bad row. Both now filter
+by a plain text compare (ISO-8601 sorts chronologically) and bucket through
+`lib/metrics-history.js`, so they agree **by construction** rather than by two
+implementations someone has to keep in step. Same reasoning as the moderation
+log's own `at` comparison.
+
+## The session history MUST be read under `atx()`
+
+`sessions` is RLS-scoped. A plain query under a non-superuser role returns
+**zero rows rather than an error**, so the panel would draw a healthy-looking
+**empty chart** on production while every superuser-run test stayed green. The
+plain-role probe in `test/repo.postgres.test.js` is what holds it — verified by
+moving the read off `trx` and watching it fail with "the session history was
+empty without the admin escape". See `.claude/rules/admin-cross-tenant-escape.md` §2.
+
 Both are generic on purpose: a new leaking field fails without anyone extending
 them. **Keep them that way** — an allowlist of known-safe fields would have to be
 maintained by the same person who just added the leak.
