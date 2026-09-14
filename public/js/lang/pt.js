@@ -583,7 +583,10 @@ I18N.pt = {
 
   'member.editName': 'Clique para renomear',
   'member.colorLabel': 'Cor do avatar',
-  'member.statsTitle': 'Estatísticas',
+  'member.colorChange': 'Mudar a cor do avatar',
+  'member.mySeat': 'Seu lugar',
+  'member.atTable': 'À mesa',
+  'member.retiredChip': 'Já não está no grupo',
   'member.wins': 'Vitórias',
   'member.sessions': 'Sessões',
   'member.winRate': 'Taxa de vitórias',

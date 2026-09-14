@@ -604,7 +604,10 @@ I18N.de = {
 
   'member.editName': 'Zum Umbenennen klicken',
   'member.colorLabel': 'Avatar-Farbe',
-  'member.statsTitle': 'Statistiken',
+  'member.colorChange': 'Avatar-Farbe ändern',
+  'member.mySeat': 'Dein Platz',
+  'member.atTable': 'Am Tisch',
+  'member.retiredChip': 'Nicht mehr dabei',
   'member.wins': 'Siege',
   'member.sessions': 'Sessions',
   'member.winRate': 'Siegquote',

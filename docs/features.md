@@ -245,11 +245,16 @@ What the app does, in detail. For a short overview see the
   refused rather than merging the two tags. Deleting a tag simply unassigns it
   from every game.
 - **Members** – each member has a detail page (opened from the Start hero row,
-  the Pokale podium, or a session's participant list) with their stats — wins,
-  sessions joined, win rate, Siegwertung, average rating given, their strongest
-  game (the one they hold the highest Siegwertung in) and their favorite game —
-  and lets
-  you rename them and pick their avatar color from the curated palette. When the
+  the Pokale podium, or a session's participant list): **one card in that
+  member's own colour** carrying the whole record — wins, sessions joined, win
+  rate, Siegwertung, average rating given, their strongest game (the one they
+  hold the highest Siegwertung in) and their favorite game. The name is renamed
+  in place, the avatar colour is picked by **clicking the avatar**, and the rare
+  seat actions (claiming or releasing a seat, revoking a grantee's access,
+  removing someone from the round or deleting an unused seat) live in a
+  „…" menu at the top right. Below 1280px the card's foot seats the round's
+  other members as links to their pages; above it the desktop rail carries the
+  same strip. When the
   round has recorded who owns which box, the page also lists the shelf games that
   member owns; it is left out entirely for a member who owns none, so a round
   that does not use ownership never sees it.

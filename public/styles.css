@@ -733,6 +733,23 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: var(--w-detail);
   }
 
+  /* Die Tischkarte (#1074) takes the same licence, for the same reason and with
+     the same two halves.
+
+     Measured before: from 1280px up the member page ran 900 / 1468 / 900 — the
+     card at the reading measure, the stats band spanning the pane, the owned
+     grid back at 900. Three left edges and two right ones, on a page that is one
+     record. The card, the owned-games grid AND the back row that carries the
+     „…“ page menu now share one width.
+
+     The back row is a SIBLING of both, so a selector naming only the content
+     leaves „Zurück“ and the menu ~250px inside the page's right edge — the
+     #543/#577 lesson. `.member-games` is wrapped in a `.section`, so it is
+     reached through `:has()` rather than by name.
+
+     (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app:has(.member-card) > *:not(.rail):not(.dock):is(.back-row, .member-card),
+  .app:has(.member-card) > *:not(.rail):not(.dock):has(.member-games),
   /* Der Kreis (#1092) takes the same licence, and its argument is the plainest
      of the three: the screen renders NO navigation at all — no rail, no dock, no
      back row — so widening it moves nothing. That is the setup forms' reasoning,
@@ -5572,68 +5589,117 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .popover__opt.popover__opt--good { color: var(--good); }
 .popover__opt.popover__opt--muted { color: var(--ink-soft); }
 
-/* Member detail page: a hero band in the member's own colour, then the editable
-   name, colour picker and stats.
+/* Die Tischkarte — the member page's one card (#1074).
 
-   #995: this was a 44px avatar beside a modest name — about 50px of head that
-   read as a breadcrumb, on the one screen in the hub with nothing leading it
-   (the round has its garlanded CTA, the Regal its cover grid, Pokale its
-   podium, a game its cover hero). Each member already OWNS a colour, and the
-   page spent it on one small circle.
+   It replaced a head band, a colour-picker section and a „Statistiken“ grid.
+   Measured before, over the demo round: the two game tiles — the only imagery
+   on the page — ended at 952px on every viewport from 1280 up, i.e. below the
+   fold on a laptop; `.member-stats` was `auto-fit` with three numeric cards plus
+   two full-row tiles, so no track could collapse and 1 to 3 card slots sat empty
+   from 860px (728px of blank card at 1920).
 
-   `--m-tone` is the member's colour, set inline on this element by
-   views-member.js — never a hex written here, or the band would be a second
-   definition of a value the avatar already has.
-
-   The tint is deliberately weak (13% at the top, fading to plain --surface) and
-   the radial wash sits at the TOP RIGHT, away from where the name reads. Both
-   are contrast decisions rather than taste: the h1 is --ink, and beauty is
-   achieved above the AA floor rather than by lowering it. */
-.member-head {
+   The wash recipe is the band's (#995), unchanged: a weak 13% tint fading to
+   plain --surface, the radial at the TOP RIGHT away from where the name reads,
+   and an inset ring rather than a border so the card's size does not depend on
+   whether --m-tone resolves. Both are contrast decisions rather than taste. */
+.member-card {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  flex-wrap: wrap;
   padding: 26px 24px;
   margin: 0 0 22px;
   border-radius: var(--radius-lg);
   background:
     radial-gradient(120% 140% at 88% 12%, color-mix(in oklab, var(--m-tone) 26%, transparent), transparent 62%),
     linear-gradient(180deg, color-mix(in oklab, var(--m-tone) 13%, var(--surface)), var(--surface));
-  /* An inset ring rather than a border, so the band's size does not depend on
-     whether --m-tone resolves — a member with no colour still gets the shape. */
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--m-tone) 24%, transparent);
   overflow: hidden;
 }
+.member-card__id {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.member-card__who { flex: 1; min-width: 220px; }
+.member-card__who h1 {
+  margin: 0;
+  font-size: clamp(var(--text-2xl), 5vw, 44px);
+  line-height: 1.05;
+}
+/* The avatar is the colour control (#1074). A real <button>, so it is focusable
+   and announced as one — a focusable span would be neither
+   (.claude/rules/native-button-vs-focusable-span.md). The pencil is a badge on
+   the corner rather than a separate control, because the target has to stay the
+   whole 104px circle on a phone.
+
+   The --surface RING is the band's, and it is a ring rather than a tinted glow
+   on purpose: elevation comes from the --shadow-1/2/3 ramp and a bespoke tinted
+   shadow is the drift test/design-tokens.test.js exists to refuse. Don't re-add
+   the glow. */
 .member-avatar {
+  position: relative;
   width: 104px;
   height: 104px;
   font-size: 38px; /* glyph, not type */
   flex: none;
   border-width: 3px;
-  /* A --surface RING, not a tinted drop shadow. The mockup this came from used
-     a coloured glow, and `test/design-tokens.test.js` is right to refuse it:
-     elevation comes from the --shadow-1/2/3 ramp, and a bespoke tinted shadow
-     is exactly the drift that rule exists to stop. The ring does the necessary
-     job — separating the avatar from the wash behind it — and is exempt because
-     it IS a ring rather than elevation. Don't re-add the glow. */
+  padding: 0;
+  cursor: pointer;
   box-shadow: 0 0 0 5px var(--surface);
 }
-.member-head__info { flex: 1; min-width: 220px; }
-.member-head__info h1 {
-  margin: 0;
-  font-size: clamp(var(--text-2xl), 5vw, 44px);
-  line-height: 1.05;
+.member-avatar__pen {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--line);
+  font-size: var(--text-sm); /* glyph, not type */
 }
-/* The two relocated headline figures (#995), filling the band's right half on a
-   wide screen. `margin-left: auto` rather than `justify-content: space-between`
-   on the band: the band wraps, and space-between on a wrapped line spreads the
-   avatar and the name apart too. On a phone the block wraps onto its own line
-   under the name, where `margin-left: 0` keeps it left-aligned with it. */
-.member-head__stats { display: flex; gap: 26px; margin-left: auto; flex: none; }
-.member-head__stat { display: flex; flex-direction: column; gap: 2px; }
-.member-head__stat-value {
+.member-avatar:hover .member-avatar__pen { color: var(--brand); }
+/* The state row: one chip and, for an unclaimed seat, the claim button. */
+.member-card__state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.member-card__chip {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  background: color-mix(in oklab, var(--m-tone) 18%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--m-tone) 38%, transparent);
+}
+/* A retired seat is the one state that must NOT wear the member's colour: it is
+   a fact about the person having left, not about their identity. */
+.member-card__chip--retired {
+  background: var(--sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink-soft);
+}
+/* The five figures, one treatment, one row that wraps. `1 1 96px` puts 3 + 2 on
+   a phone with the second row filling the width; there is no grid, so no track
+   can be empty at any viewport — which is the defect this replaced. */
+.member-card__figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 26px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in oklab, var(--m-tone) 26%, transparent);
+}
+.member-figure { display: flex; flex-direction: column; gap: 2px; flex: 1 1 96px; }
+.member-figure__value {
   font-family: var(--font-display);
   font-size: var(--text-2xl);
   font-weight: 700;
@@ -5641,41 +5707,65 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   color: var(--ink);
 }
 /* `--ink`, NOT `--ink-soft`, and that is a contrast decision rather than a
-   stylistic one. These labels sit in the band's top-right corner — exactly where
-   the radial wash is strongest — and measured there `--ink-soft` lands at
-   3.40:1 against the 4.5 AA bar for normal text, while `--ink` is 6.63:1. The
-   hierarchy against the value above it is carried by size, weight and the
-   display face, none of which costs contrast. Weakening the tone here, or
-   moving these labels under the wash elsewhere, re-opens it. */
-.member-head__stat-label {
+   stylistic one. Measured on the wash for #995: `--ink-soft` lands at 3.40:1
+   against the 4.5 AA bar for normal text, `--ink` at 6.63:1. The hierarchy
+   against the value above is carried by size, weight and the display face, none
+   of which costs contrast. Weakening the tone here re-opens it. */
+.member-figure__label {
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ink);
 }
-/* The accent rule under the name — the one place the member's colour is used at
-   full strength, where it carries no text. */
-.member-head__info::after {
-  content: '';
+/* The two game tiles inside the card. `.pokale-cards` gives the grid; two
+   columns from 560px so they read as the pair they are, stacked below. */
+.member-card__games { margin-top: 22px; }
+@media (min-width: 560px) {
+  .member-card__games { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* „Am Tisch“ — the round's other seats, below 1280px only; above it the rail
+   carries the same strip. */
+.member-card__table {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in oklab, var(--m-tone) 26%, transparent);
+}
+.member-card__table-label {
   display: block;
-  height: 6px;
-  width: 132px;
-  max-width: 100%;
-  margin-top: 12px;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--m-tone), color-mix(in oklab, var(--m-tone) 12%, transparent));
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 10px;
 }
+.member-card__seats { display: flex; flex-wrap: wrap; gap: 8px; }
+.member-seat { width: 40px; height: 40px; font-size: var(--text-sm); }
+.member-seat.is-current { box-shadow: 0 0 0 3px var(--brand-edge); }
+.member-role { margin-bottom: 22px; }
 @media (max-width: 520px) {
-  /* The band keeps its shape on a phone; only the breathing room goes, so the
+  /* The card keeps its shape on a phone; only the breathing room goes, so the
      avatar and a long name still fit on one row before wrapping. */
-  .member-head { padding: 20px 16px; gap: 16px; }
+  .member-card { padding: 20px 16px; }
+  .member-card__id { gap: 16px; }
   .member-avatar { width: 84px; height: 84px; font-size: 30px; }
-  /* Wrapped onto its own line, so `auto` would push it to the right edge away
-     from the name it belongs to. */
-  .member-head__stats { margin-left: 0; gap: 20px; }
-  .member-head__stat-value { font-size: var(--text-xl); }
+  .member-figure__value { font-size: var(--text-xl); }
+  /* THREE per row, then two filling the width — arithmetic, not taste: the
+     content column is 330px at 390px, and the desktop `1 1 96px` with a 26px
+     column gap needs 340px for three, so five wrapped 2 + 2 + 1 and the last
+     figure sat alone on a row of its own. 3×88 + 2×14 = 292 fits; a fourth
+     would need 394 and cannot. The two on the second row then grow to fill it. */
+  .member-card__figures { gap: 16px 14px; }
+  .member-figure { flex: 1 1 88px; }
 }
+@media (min-width: 1280px) {
+  /* The rail carries the member strip from here, so the card's foot would be the
+     same information twice. Same breakpoint as the Start hero's, which is hidden
+     for exactly this reason. */
+  .member-card__table { display: none; }
+}
+
 /* Curated tag-icon picker (#255) — the glyph counterpart to .member-swatches:
    a fixed grid, exactly one active. Auto-fill keeps it usable on a phone and
    inside the narrow tag popover without a media query.
@@ -5750,7 +5840,6 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 .member-swatch:hover { transform: translateY(-1px); }
 .member-swatch.is-active { box-shadow: 0 0 0 3px var(--brand-edge); cursor: default; }
 .member-swatch.is-active .ti { opacity: 1; }
-.member-nosessions { margin-bottom: 12px; }
 
 /* „3 Spiele von Anna" (#973): the boxes one member brings. Reuses the setup
    screen's `.pool-tile` whole — same object, same 4/3 crop — but NOT its
@@ -5758,10 +5847,11 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    keep that screen's CTA above the fold. A stats page has nothing below it to
    protect, so this grid simply grows.
 
-   Deliberately NOT added to the >= 1280px width exemption: it stays in the
-   --w-read measure with the colour picker and the identity above it, so the
-   member page keeps one left edge and only the stats band spans the pane
-   (.claude/rules/tiles-vs-lists.md).
+   Since #1074 it IS in the >= 1280px width exemption, with the Tischkarte. The
+   note that used to stand here argued the page keeps one left edge while only
+   the stats band spans the pane — which described the raggedness rather than
+   defending it: measured, the widths ran 900 / 1468 / 900 from 1280 up. One
+   width per viewport is the thing that argument actually wanted.
 
    `auto-fill` so it needs no breakpoint of its own. Measured: 2 tracks of
    167px at 375px, 7 of 127px in the 960px reading column. `auto-fill` rather
@@ -7192,39 +7282,6 @@ kbd {
    two were squeezed into a QUARTER, which is the worse case the rule never
    covered. It showed once #979's 64px cover took ~78px off a ~232px card and the
    „Stärkstes Spiel" eyebrow wrapped to two lines. */
-.member-stats__best,
-.member-stats__fav { grid-column: 1 / -1; }
-
-/* ---- Member screen STATISTIKEN on phones (#694) ----
-   `.pokale-cards` is auto-fit/minmax(200px, 1fr), so a phone's ~362px content
-   column yields ONE column: the member's five stat cards stack into a tall strip
-   for five short facts, with the number — the entire point of each card —
-   rendered last and smallest under an icon that dominates the tile. Two columns
-   and a promoted value make the section readable at a glance. Measured at 390px
-   on a member with two finished sessions: 640px -> 432px.
-
-   Scoped to the member screen's own classes, never to `.pokale-card`: the Pokale
-   tab's category and Rückblick tiles share that class and are composed for their
-   own content.
-
-   This block must stay BELOW `.pokale-cards`. `.member-stats` and `.pokale-cards`
-   are both (0,1,0), so the grid override is a specificity TIE broken purely by
-   source order — moving this block above the component silently restores the
-   one-column layout with nothing red. (The other overrides here are (0,2,0) and
-   win outright.) Same lesson as the ≤520px block in
-   `.claude/rules/flex-none-cancels-flex-wrap.md`. */
-@media (max-width: 859px) {
-  .member-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .member-stats .pokale-card { padding: 12px 14px; }
-  /* Value leads: icon, then the number at display size, then its label. */
-  .member-stats__card .pokale-card__icon { order: 0; }
-  .member-stats__card .pokale-card__value { order: 1; font-size: var(--text-3xl); line-height: 1.15; }
-  .member-stats__card .pokale-card__label { order: 2; }
-  .member-stats__card .pokale-card__sub { order: 3; }
-  /* The two game-link tiles are exempt from the reorder above for free, since
-     it is scoped to `.member-stats__card` and neither carries it. Their full-row
-     span is unconditional and lives above this block. */
-}
 
 /* ---- Rückblick: the round's taste record, under the standings (#484) ----
    Reuses .pokale-cards / .pokale-card wholesale, so the grid, the tile chrome

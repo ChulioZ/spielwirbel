@@ -555,7 +555,10 @@ I18N.fi = {
 
   'member.editName': 'Napsauta nimetäksesi uudelleen',
   'member.colorLabel': 'Avatarin väri',
-  'member.statsTitle': 'Tilastot',
+  'member.colorChange': 'Vaihda avatarin väri',
+  'member.mySeat': 'Sinun paikkasi',
+  'member.atTable': 'Pöydässä',
+  'member.retiredChip': 'Ei enää porukassa',
   'member.wins': 'Voitot',
   'member.sessions': 'Sessiot',
   'member.winRate': 'Voittoprosentti',

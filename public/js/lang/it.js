@@ -585,7 +585,10 @@ I18N.it = {
 
   'member.editName': 'Clicca per rinominare',
   'member.colorLabel': 'Colore dell’avatar',
-  'member.statsTitle': 'Statistiche',
+  'member.colorChange': 'Cambia il colore dell’avatar',
+  'member.mySeat': 'Il tuo posto',
+  'member.atTable': 'Al tavolo',
+  'member.retiredChip': 'Non fa più parte del gruppo',
   'member.wins': 'Vittorie',
   'member.sessions': 'Sessioni',
   'member.winRate': 'Percentuale di vittorie',

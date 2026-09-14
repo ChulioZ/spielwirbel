@@ -585,7 +585,10 @@ I18N.es = {
 
   'member.editName': 'Haz clic para renombrar',
   'member.colorLabel': 'Color del avatar',
-  'member.statsTitle': 'Estadísticas',
+  'member.colorChange': 'Cambiar el color del avatar',
+  'member.mySeat': 'Tu sitio',
+  'member.atTable': 'En la mesa',
+  'member.retiredChip': 'Ya no está en el grupo',
   'member.wins': 'Victorias',
   'member.sessions': 'Sesiones',
   'member.winRate': 'Porcentaje de victorias',

@@ -603,7 +603,10 @@ I18N.en = {
 
   'member.editName': 'Click to rename',
   'member.colorLabel': 'Avatar color',
-  'member.statsTitle': 'Statistics',
+  'member.colorChange': 'Change the avatar colour',
+  'member.mySeat': 'Your seat',
+  'member.atTable': 'At the table',
+  'member.retiredChip': 'No longer in the round',
   'member.wins': 'Wins',
   'member.sessions': 'Sessions',
   'member.winRate': 'Win rate',
