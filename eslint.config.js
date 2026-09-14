@@ -36,6 +36,9 @@ const frontendGlobals = {
   popoverFit: 'readonly', popoverRoom: 'readonly', POPOVER_GAP: 'readonly',
   // report-link.js
   feedReportUrl: 'readonly', setContactAvailable: 'readonly',
+  // views-friends.js (#1092)
+  KREIS_FEED_COLLAPSED: 'readonly', renderPersonCard: 'readonly', personCardLine: 'readonly',
+  renderAddTile: 'readonly', renderKreisFeed: 'readonly',
   REPORT_SUBJECT_MAX: 'readonly', REPORT_USERNAME_MAX: 'readonly',
   // install-prompt.js (issue #616)
   INSTALL_DISMISSED_KEY: 'readonly', isIosDevice: 'readonly', installStateFrom: 'readonly',
