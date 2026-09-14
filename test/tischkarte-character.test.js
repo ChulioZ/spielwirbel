@@ -20,7 +20,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
-const { bodyOf, mediaBlocks, rulesOf, CSS } = require('./support/css');
+const { bodyOf, rulesOf, CSS } = require('./support/css');
 
 const RID = 'r1';
 const MID = 'm1';
@@ -175,22 +175,28 @@ test('the ring is a conic gauge in the member\'s tone, with @property behind it'
   assert.ok(body, '.member-ring is gone');
   assert.match(body, /conic-gradient\(\s*var\(--m-tone\)\s*calc\(var\(--pct\)/,
     'the gauge does not read --pct, so the ring cannot be the Siegquote');
-  assert.match(CSS, /@property\s+--pct\s*\{[^}]*syntax:\s*'<number>'/,
-    '--pct is not registered as a <number>, so it cannot animate at all');
   // No tinted glow: elevation comes from the ramp (test/design-tokens.test.js).
   assert.doesNotMatch(body, /box-shadow/, 'the ring grew a shadow — the gauge is the treatment');
 });
 
-test('the sweep is GATED on no-preference, never cancelled by a reduce override', () => {
-  /* The `from` keyframe is --pct 0, so a missed `reduce` override would park the
-     gauge at EMPTY — a WRONG STATISTIC, not merely a still one. */
-  const inGate = mediaBlocks()
-    .filter(([q]) => /prefers-reduced-motion:\s*no-preference/.test(q))
-    .reduce((n, [, css]) => n + rulesOf(css).filter(([s]) => /\.member-ring\.is-sweeping/.test(s)).length, 0);
-  const total = rulesOf(CSS).filter(([s]) => /\.member-ring\.is-sweeping/.test(s)).length;
-  assert.ok(total > 0, 'the sweep is gone');
-  assert.equal(total, inGate,
-    'the sweep is declared outside the no-preference gate, so it runs under reduced motion');
+test('the gauge does NOT animate — it renders at its value', () => {
+  /* The ring originally swept from 0 over 800ms. The operator dropped that
+     during #1075's merge review (2026-09-14), together with #1095's accept
+     whirl, so the gauge simply appears filled.
+
+     Asserted rather than merely deleted, because re-adding motion here is a
+     decision with a trap attached: the `from` keyframe would be `--pct: 0`, so
+     it must be GATED on `prefers-reduced-motion: no-preference` and never
+     cancelled by a `reduce` override — a missed override parks the gauge at
+     EMPTY, which is a wrong statistic rather than a still picture. It would also
+     need the `@property --pct` registration back, since an unregistered custom
+     property does not interpolate. */
+  assert.equal(rulesOf(CSS).filter(([sel]) => /\.member-ring/.test(sel))
+    .filter(([, body]) => /animation/.test(body)).length, 0,
+  'the ring animates again — see the comment above before keeping it');
+  assert.doesNotMatch(CSS, /@keyframes\s+member-sweep/, 'the sweep keyframe is back');
+  assert.doesNotMatch(CSS, /@property\s+--pct/,
+    '--pct is registered again, which is only needed to animate it');
 });
 
 test('the game boxes use a HARD edge, not a tinted glow', () => {

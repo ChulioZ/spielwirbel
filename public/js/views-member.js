@@ -2,18 +2,6 @@
    lets the user edit their name and avatar color. Part of the frontend; all
    files share one global script scope (load order: see index.html). */
 
-/* Which rings have already swept, keyed `rid:mid` (#1075). The sweep is a
-   MOUNT moment, not a render one: `showMember` re-runs on every colour change
-   (the picker) and on a locale switch through `currentView`, and a gauge that
-   re-animates on those reads as a glitch rather than as an arrival.
-
-   A module-level Set rather than a flag on the element, because the element is
-   rebuilt by each of those re-renders. It lives for the page load, so returning
-   to a member days later in the same tab does not sweep again — a knowing trade:
-   re-sweeping on every visit would make it ambient, which is what spending the
-   boldness in ONE place is meant to avoid. */
-const SWEPT_RINGS = new Set();
-
 async function showMember(rid, mid) {
   currentView = () => showMember(rid, mid);
   syncUrl(memberPath(rid, mid));
@@ -337,14 +325,6 @@ async function showMember(rid, mid) {
     card.appendChild(table);
   }
   app.appendChild(card);
-  // Sweep the gauge in, once. Added AFTER the card is in the document so the
-  // animation has a layout to run against.
-  const ring = card.querySelector('.member-ring:not(.member-ring--none)');
-  const sweepKey = `${rid}:${mid}`;
-  if (ring && !SWEPT_RINGS.has(sweepKey)) {
-    SWEPT_RINGS.add(sweepKey);
-    ring.classList.add('is-sweeping');
-  }
 
   /* „3 Spiele von Anna" (#973): the boxes this member brings. The fourth reader
      of `game.ownerIds` (#971) and the only one asking from the PERSON's side —

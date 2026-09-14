@@ -5969,12 +5969,17 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
    this member does is the shape of their own face. The avatar's own 3px
    --surface ring sits INSIDE the gauge, which is what keeps the face separated
    from the card's wash as #995 requires, and the pencil badge stays on the
-   ring's edge because it is positioned on the button, not on this wrapper. */
-@property --pct {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 0;
-}
+   ring's edge because it is positioned on the button, not on this wrapper.
+
+   IT DOES NOT ANIMATE. The gauge originally swept from 0 over 800ms; the
+   operator dropped that during #1075's merge review (2026-09-14), together with
+   #1095's accept whirl. The ring renders at its value, so `--pct` is a plain
+   inline custom property and needs no @property registration — nothing
+   interpolates it. Re-adding motion here means re-adding that registration, and
+   gating it on `prefers-reduced-motion: no-preference` rather than cancelling it
+   with a `reduce` override: the `from` keyframe would be --pct 0, so a missed
+   override parks the gauge at EMPTY, which is a wrong statistic rather than a
+   still picture. */
 .member-ring {
   padding: 8px;
   border-radius: 50%;
@@ -5988,19 +5993,6 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 /* No contested session at all: the plain tone ring, no gauge. A 0% gauge would
    say "never wins" about somebody who has never been in a contest. */
 .member-ring--none { background: color-mix(in oklab, var(--m-tone) 18%, var(--surface)); }
-/* The sweep. GATED on no-preference rather than cancelled by a reduce override,
-   like every other motion in this sheet: the `from` keyframe is --pct 0, so a
-   missed override would park the gauge at EMPTY — a wrong statistic, not merely
-   a still one.
-
-   @property is Chromium + WebKit 16.4+. Where it is unsupported --pct is not an
-   animatable <number> and the keyframe simply does not run, which lands on the
-   resting value — i.e. exactly the reduced-motion rendering, and correct. */
-@media (prefers-reduced-motion: no-preference) {
-  .member-ring.is-sweeping { animation: member-sweep 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-  @keyframes member-sweep { from { --pct: 0; } }
-}
-
 /* 2. THE WATERMARK. The member's initials in their own tone, in the card's
    text-free top-right corner under the radial wash — the name and the figure
    strip sit left and lower. `aria-hidden` and unselectable: it is the name
