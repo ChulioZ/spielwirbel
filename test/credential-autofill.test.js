@@ -42,8 +42,14 @@ async function friendsField(t) {
   dom.set('isLoggedIn', () => true);
   dom.set('accountApi', async (method, path) => (path === '/friends' ? EMPTY_FRIENDS : EMPTY_FEED));
   await dom.call('showFriends');
+  /* Since #1092 the field lives inside the „＋" tile and only exists once it is
+     pressed — so the spec presses it. Asserting against the tile instead would
+     quietly stop testing the input, which is the whole subject here. */
+  const tile = dom.app.querySelector('.k-card--add');
+  assert.ok(tile, 'the „＋" tile did not render — the add form has moved again');
+  tile.click();
   const form = dom.document.querySelector('form.friends-add');
-  assert.ok(form, 'the add-a-friend form did not render');
+  assert.ok(form, 'pressing the „＋" tile rendered no add-a-friend form');
   const input = form.querySelector('input[type="text"], input[type="search"]');
   assert.ok(input, 'the add-a-friend form rendered no text input');
   return { dom, form, input };

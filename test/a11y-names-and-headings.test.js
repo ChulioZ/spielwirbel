@@ -52,6 +52,13 @@ async function friendsView(t, locale) {
   dom.set('isLoggedIn', () => true);
   dom.set('accountApi', async (method, path) => (path === '/friends' ? EMPTY_FRIENDS : EMPTY_FEED));
   await dom.call('showFriends');
+  /* Since #1092 the field is not on the page until the „+" tile is opened: it
+     was a full-width row at the top for a control used once per friend, and it
+     is now the last tile in the grid, becoming the input in place. The finding
+     this file guards (A-011, a placeholder standing in for a label) is about the
+     field, so the spec opens it — asserting the tile instead would quietly stop
+     testing the input. */
+  dom.app.querySelector('.k-card--add').click();
   return dom;
 }
 
