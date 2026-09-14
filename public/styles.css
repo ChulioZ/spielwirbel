@@ -1574,13 +1574,30 @@ a.hub-row:hover { background: var(--sunken-soft); }
      `position: absolute` from this same block took effect, because nothing else
      declares position on the rank. Same for `.trow__score { text-align: right }`
      below. (`.claude/rules/responsive-content-width.md`, "your rule will lose")
-     — and note a test reading the DECLARED rule cannot see this at all. */
+     — and note a test reading the DECLARED rule cannot see this at all.
+
+     The THIRD track is the score label's room (#1111). With `score` bound to
+     the 56px cover track, `score.name` fit in no shipped locale: measured at
+     320px, eight of nine overflowed the column by 15–21px, and `ko` instead
+     split the brand — „Spielwir / bel 점수" — because the `:lang(ko)`
+     `overflow-wrap: break-word` escape hatch fires when a box really is too
+     narrow for its word (that rule is right; the 56px box was the bug —
+     `.claude/rules/hangul-locale-typography.md`). So `score` spans tracks 1+2
+     and `action` takes an `auto` track sized to its own content. `main` spans
+     2+3, which keeps its width exactly as it was. The row got SHORTER: the
+     label no longer wraps to two lines, so 166px → 145px at 390px.
+
+     The floor to respect if you touch this: the narrowest `score` box the
+     layout can produce is ~88px (320px viewport, the „auf dem Tisch" chip in
+     the action track), and the longest unbreakable run in any shipped
+     `score.name` is „Spielwirbel" at ~77px. test/score-label-fits.test.js pins
+     the character side of that headroom, since the pixel side needs a browser. */
   .tafel .trow {
-    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-columns: 56px minmax(0, 1fr) auto;
     grid-template-areas:
-      "cover main"
-      "bars  bars"
-      "score action";
+      "cover main  main"
+      "bars  bars  bars"
+      "score score action";
   }
   .trow .trow__score { text-align: left; }
   .trow__rank { position: absolute; top: 10px; right: 12px; }
@@ -4504,6 +4521,12 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
    number that chart produces, the `.ds-row` complaint `.claude/rules/tiles-vs-
    lists.md` files. That gutter is now the score's own axis. */
 .tafel { margin-bottom: 10px; }
+/* The section stands down whole on a vote-less single-game session (#1107).
+   Explicit, though `.tafel` declares no `display` today and the UA rule would
+   carry it: a later `display:` on this selector would beat `[hidden]` silently
+   and the gate would just stop working, with every jsdom assertion still green
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.tafel[hidden] { display: none; }
 .tafel__kick {
   display: flex;
   align-items: baseline;

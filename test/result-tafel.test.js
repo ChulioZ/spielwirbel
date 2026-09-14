@@ -80,7 +80,7 @@ test('the gold group tints harder than an ordinary row, and both alphas are decl
    `position: absolute` from the same block did take effect (nothing else
    declares position on the rank). A spec that reads the DECLARED rule cannot
    see that, which is why the rank comparison below is the load-bearing half. */
-test('the row is ONE LINE from the rail breakpoint, and two tracks on a phone', () => {
+test('the row is ONE LINE from the rail breakpoint, and stacks on a phone', () => {
   const pick = (query) => mediaBlocks()
     .filter(([q]) => query.test(q))
     .flatMap(([, css]) => rulesOf(css))
@@ -97,9 +97,20 @@ test('the row is ONE LINE from the rail breakpoint, and two tracks on a phone', 
 
   const phone = pick(/max-width:\s*520px/);
   assert.ok(phone, 'the <=520px block no longer re-tracks the row');
-  assert.equal(
-    /grid-template-columns:\s*([^;]+);/.exec(phone[1])[1].trim().split(/\s+(?![^(]*\))/).length, 2,
-    'the row keeps more than two tracks at phone widths, which cannot fit (#621)');
+  /* Three tracks since #1111 — the third carries the ACTION alone so `score` can
+     span the other two; every row that needs the width spans all three. Four is
+     the desktop layout, which is what #621 measured as unfittable at 320px. */
+  const phoneTracks =
+    /grid-template-columns:\s*([^;]+);/.exec(phone[1])[1].trim().split(/\s+(?![^(]*\))/).length;
+  assert.ok(phoneTracks < 4,
+    `the row keeps ${phoneTracks} tracks at phone widths, which cannot fit (#621)`);
+  const phoneAreas = /grid-template-areas:\s*([^;]+);/.exec(phone[1])[1];
+  assert.ok(!/\brank\b/.test(phoneAreas),
+    'the rank took a track again — it is absolutely positioned on a phone (#621)');
+  const scoreRow = phoneAreas.split('"').filter((x) => x.trim())
+    .map((r) => r.trim().split(/\s+/)).find((cells) => cells.includes('score'));
+  assert.ok(scoreRow.filter((c) => c === 'score').length > 1,
+    'the score is back in the 56px cover track, where its label does not fit (#1111)');
   assert.ok(outranks(phone[0], '.trow'),
     `"${phone[0]}" ties the base .trow rule and loses on source order — WebKit rendered four tracks at 390px`);
 });

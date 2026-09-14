@@ -89,47 +89,47 @@ const LANDING_SHOTS = {
   en: {
     shelfPhone: { src: '/img/landing-shelf-phone.en.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.en.webp', w: 624, h: 1152 },
-    result: { src: '/img/landing-result.en.webp', w: 624, h: 1514 },
+    result: { src: '/img/landing-result.en.webp', w: 624, h: 1384 },
   },
   de: {
     shelfPhone: { src: '/img/landing-shelf-phone.de.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.de.webp', w: 624, h: 1152 },
-    result: { src: '/img/landing-result.de.webp', w: 624, h: 1451 },
+    result: { src: '/img/landing-result.de.webp', w: 624, h: 1384 },
   },
   es: {
     shelfPhone: { src: '/img/landing-shelf-phone.es.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.es.webp', w: 624, h: 1152 },
-    result: { src: '/img/landing-result.es.webp', w: 624, h: 1451 },
+    result: { src: '/img/landing-result.es.webp', w: 624, h: 1446 },
   },
   fr: {
     shelfPhone: { src: '/img/landing-shelf-phone.fr.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.fr.webp', w: 624, h: 1152 },
-    result: { src: '/img/landing-result.fr.webp', w: 624, h: 1451 },
+    result: { src: '/img/landing-result.fr.webp', w: 624, h: 1446 },
   },
   it: {
     shelfPhone: { src: '/img/landing-shelf-phone.it.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.it.webp', w: 624, h: 1152 },
-    result: { src: '/img/landing-result.it.webp', w: 624, h: 1514 },
+    result: { src: '/img/landing-result.it.webp', w: 624, h: 1446 },
   },
   nl: {
     shelfPhone: { src: '/img/landing-shelf-phone.nl.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.nl.webp', w: 624, h: 1152 },
-    result: { src: '/img/landing-result.nl.webp', w: 624, h: 1510 },
+    result: { src: '/img/landing-result.nl.webp', w: 624, h: 1443 },
   },
   pt: {
     shelfPhone: { src: '/img/landing-shelf-phone.pt.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.pt.webp', w: 624, h: 1152 },
-    result: { src: '/img/landing-result.pt.webp', w: 624, h: 1514 },
+    result: { src: '/img/landing-result.pt.webp', w: 624, h: 1384 },
   },
   fi: {
     shelfPhone: { src: '/img/landing-shelf-phone.fi.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.fi.webp', w: 624, h: 1152 },
-    result: { src: '/img/landing-result.fi.webp', w: 624, h: 1514 },
+    result: { src: '/img/landing-result.fi.webp', w: 624, h: 1446 },
   },
   ko: {
     shelfPhone: { src: '/img/landing-shelf-phone.ko.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.ko.webp', w: 624, h: 1152 },
-    result: { src: '/img/landing-result.ko.webp', w: 624, h: 1413 },
+    result: { src: '/img/landing-result.ko.webp', w: 624, h: 1346 },
   },
 };
 
