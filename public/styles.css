@@ -4469,6 +4469,12 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    number that chart produces, the `.ds-row` complaint `.claude/rules/tiles-vs-
    lists.md` files. That gutter is now the score's own axis. */
 .tafel { margin-bottom: 10px; }
+/* The section stands down whole on a vote-less single-game session (#1107).
+   Explicit, though `.tafel` declares no `display` today and the UA rule would
+   carry it: a later `display:` on this selector would beat `[hidden]` silently
+   and the gate would just stop working, with every jsdom assertion still green
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.tafel[hidden] { display: none; }
 .tafel__kick {
   display: flex;
   align-items: baseline;

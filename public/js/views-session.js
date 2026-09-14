@@ -1167,6 +1167,38 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      in is not a ranking at all. */
   const hasVotes = sessionHasVotes(session);
 
+  /* The „aussortiert" / „durchgespielt" badge (#250). Shared by the ranking row
+     and the table band (#1107) rather than written twice: the band is the ONLY
+     surface carrying it once the Tafel is gated away, so a look-alike copy here
+     would be a fact that silently drifts. */
+  const archivedBadge = (g) => (g.retired
+    ? ` <span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`
+    : g.completed
+      ? ` <span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`
+      : '');
+
+  /* Is this a direct-play session (#532) whose Tafel says nothing? Such a
+     session is created with `votes: {}` and its game already chosen, so the
+     section renders a heading naming a vote nobody was asked for over exactly
+     one row restating the „Auf dem Tisch" band directly above it. #915 already
+     stripped that row's vote-derived parts; this drops the rest (#1107).
+
+     All three terms are load-bearing, and two of them guard states reachable
+     TODAY rather than legacy data:
+       !hasVotes          — session-level, per #915's reasoning.
+       games.length === 1 — a lobby closed with zero votes and 2+ games is a
+                            real state, and there the rows are the only list of
+                            candidates the group has.
+       chosenId           — draw ONE game, close the lobby with zero votes, and
+                            nothing is chosen: the row's „Spielen" button is then
+                            the only way onto the table. Without this term that
+                            group lands on an empty screen.
+
+     A FUNCTION, not a frozen flag: `chosenId` is mutable, so `updateChosen()`
+     has to re-ask. The transition is one-way in practice, because the two
+     clear-choice controls are dropped for this case below. */
+  const isSoloDirectPlay = () => !hasVotes && games.length === 1 && !!chosenId;
+
   // Tally per game.
   const rows = games.map((g) => {
     const ratings = [];
@@ -1493,11 +1525,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       })
       .join('');
     // Info if the game has been archived in the meantime (#250: either way).
-    const retiredBadge = g.retired
-      ? ` <span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`
-      : g.completed
-        ? ` <span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`
-        : '';
+    const retiredBadge = archivedBadge(g);
     /* The score's NAME, not a vote count (#902). Within one session `n` is the
        same on every row — the vote card refuses to advance until each drawn
        game has been placed somewhere on the scale (see the guard in
@@ -1633,7 +1661,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     const items = [['ti-external-link', t('result.openGame'), () => showGameDetail(round.id, gameId)]];
     // Un-choosing is how a live session changes its mind; it was the second tap
     // on „Spielen" before the chip replaced that button.
-    if (isChosen && !finished && !cancelled) {
+    // Not for a solo direct-play session: with one game there is nothing else to
+    // choose, and with the Tafel gone there would be no way back (#1107). The
+    // escape hatch stays „Session löschen" in the footer.
+    if (isChosen && !finished && !cancelled && !isSoloDirectPlay()) {
       items.push(['ti-x', t('result.clearChoice'), async () => {
         try {
           await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId: null });
@@ -1671,6 +1702,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // The prompt lives on the Tafel's own kicker now, beside the heading it
     // belongs to, rather than in a banner between the head and the rows.
     if (tafelHint) tafelHint.hidden = !!(chosenId || finished || cancelled);
+    // …and the whole section stands down when it would only restate the band
+    // (#1107). Toggled here rather than skipped at build time so `rowRefs` stays
+    // intact and nothing downstream needs a null check.
+    tafel.hidden = isSoloDirectPlay();
     renderCancel();
     renderTisch();
   }
@@ -1791,7 +1826,14 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
     const main = h('<div class="tisch__main"></div>');
     main.appendChild(h(`<div class="tisch__kick">${esc(t('result.tableTitle'))}</div>`));
-    const title = h(`<a class="tisch__title">${esc(game ? game.title : '')}</a>`);
+    /* The archived badge rides INSIDE the title anchor, exactly as the ranking
+       row builds it — same helper, same classes, same placement. Once the Tafel
+       is gated away on a solo direct-play session the band is the only surface
+       left that can say a game was retired or completed after the fact (#1107),
+       and a badge sitting in a different place would be a second implementation
+       waiting to drift. It joins the link's accessible name, which is the
+       behaviour the row has shipped since #250. */
+    const title = h(`<a class="tisch__title">${esc(game ? game.title : '')}${game ? archivedBadge(game) : ''}</a>`);
     if (game) makeGameLink(title, round.id, game.id);
     main.appendChild(title);
 
@@ -1820,18 +1862,22 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       cta.addEventListener('click', () => { pickerOpen = true; freshFinish = true; saveWinners([]); });
       actions.appendChild(cta);
       // Today's toggle-off path, spelled out: tapping „Spielen" again on the
-      // chosen row used to be the only way back, which is invisible.
-      const other = h(`<button class="link-btn">${esc(t('result.otherGame'))}</button>`);
-      other.addEventListener('click', async () => {
-        try {
-          await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId: null });
-          chosenId = null;
-          session.chosenGameId = null;
-          updateChosen();
-          toast(t('result.toast.choiceCleared'));
-        } catch (e) { toast(e.message); }
-      });
-      actions.appendChild(other);
+      // chosen row used to be the only way back, which is invisible. Suppressed
+      // for a solo direct-play session, where there is no other game (#1107).
+      const other = isSoloDirectPlay() ? null
+        : h(`<button class="link-btn">${esc(t('result.otherGame'))}</button>`);
+      if (other) {
+        other.addEventListener('click', async () => {
+          try {
+            await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId: null });
+            chosenId = null;
+            session.chosenGameId = null;
+            updateChosen();
+            toast(t('result.toast.choiceCleared'));
+          } catch (e) { toast(e.message); }
+        });
+        actions.appendChild(other);
+      }
       main.appendChild(actions);
       // The phone's copy of the one CTA. A second button rather than a moved
       // one: both must be live at once, because the band's own CTA is what a
