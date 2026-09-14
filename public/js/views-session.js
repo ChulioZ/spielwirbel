@@ -4,34 +4,6 @@
 
 // =================== Session: setup ===================
 
-/* The whirl's per-cover head start (#1017), written inline as `--wd` and read by
-   the `pot-whirl` animation in styles.css. It is what makes the pot turn as a
-   pot rather than as one rigid block.
-
-   Derived from the INDEX, not from a random draw: every seat tap, tag chip and
-   stepper press re-runs updateHint(), and a delay that changed on each render
-   would make the same pot break differently every time it is looked at.
-
-   Seven entries on purpose — the panel fits 3–5 covers per row, and 7 is coprime
-   with all of them, so no column ever shares one delay down its whole length. */
-const POT_WHIRL_DELAY = [0, 0.06, 0.02, 0.08, 0.04, 0.07, 0.03];
-const potStagger = (i) => `--wd:${POT_WHIRL_DELAY[i % POT_WHIRL_DELAY.length]}s`;
-
-/* One cover's turn. The SAME decision as the `pot-whirl` keyframe's duration in
-   styles.css, and test/session-pot.test.js pins the two to each other: drifted,
-   the lobby either cuts the turn off or opens after a dead pause, with nothing
-   red anywhere. 0.9s sits deliberately off the --dur-* micro-interaction scale,
-   like the finale seal and the podium rise — see the comment on those tokens. */
-const POT_TURN_MS = 900;
-
-/* How long „Loswirbeln" holds the screen. DERIVED, because the covers do not all
-   start together: the last one to go begins a stagger later, so a flat 900 would
-   swap the lobby in while it was still turning. Computed rather than written
-   down so retuning the stagger table cannot leave this behind — the bug would be
-   a tail of covers cut off mid-spin, which nothing errors on.
-   `Math.round` because 0.08 * 1000 is 80.00000000000001. */
-const WHIRL_MS = POT_TURN_MS + Math.round(Math.max(...POT_WHIRL_DELAY) * 1000);
-
 /* `prefill` (#923) is a partial, shaped exactly like `round.lastSessionFilters`,
    that WINS over the stored preset for this entry only — the quick-start chips
    on the hub. It is a shallow merge at the top level, so a chip carrying
@@ -276,9 +248,10 @@ function showStartSession(round, prefill) {
   // resync themselves, which is why only the tag half calls this.
   const syncFilterBar = () => { if (filterPanel) filterPanel.sync(); };
   const anyFilterActive = () => selectedTags.size > 0 || countMetadataFilters(metaFilters) > 0;
-  // Split into a declaration and an attribute builder because a pot cover carries
-  // TWO things in one `style` — its cover and its whirl delay — and a pre-baked
-  // `style="…"` cannot be merged with a second one.
+  // Split into a declaration and an attribute builder so a game with NO cover
+  // emits no `style` attribute at all rather than an empty one. Variadic because
+  // a pre-baked `style="…"` cannot be merged with a second one; it carried the
+  // whirl's per-cover delay alongside the cover until #1122.
   const coverDecl = (g, w) => (g.image ? `background-image:url('${coverUrl(g.image, w)}')` : '');
   const styleAttr = (...decls) => {
     const css = decls.filter(Boolean).join(';');
@@ -305,7 +278,7 @@ function showStartSession(round, prefill) {
     // is, so a capped one hides part of the pot outright. The strip still lives
     // INSIDE the filter bar (#1015), so it costs no row of its own.
     const shelf = games
-      .map((g, i) => `<span class="pool-thumb"${styleAttr(potStagger(i), coverDecl(g, COVER_THUMB))} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
+      .map((g) => `<span class="pool-thumb"${styleAttr(coverDecl(g, COVER_THUMB))} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
       .join('');
     hint.innerHTML = potCount(games.length) + `<span class="pool-shelf">${shelf}</span>`;
 
@@ -321,7 +294,7 @@ function showStartSession(round, prefill) {
     poolGrid.innerHTML = games.length
       ? games
           .map(
-            (g, i) => `<span class="pool-tile"${styleAttr(potStagger(i))} title="${esc(g.title)}">
+            (g) => `<span class="pool-tile" title="${esc(g.title)}">
                  <span class="pool-tile__img"${styleAttr(coverDecl(g, COVER_CARD))}>${coverPlaceholder(g)}</span>
                  <span class="pool-tile__name">${esc(g.title)}</span>
                </span>`
@@ -666,34 +639,23 @@ function showStartSession(round, prefill) {
     });
   });
 
-  /* The browser default where the media feature is unsupported is "motion is
-     fine", so an ABSENT matchMedia must not read as `reduce` — that inversion
-     would silently drop the whirl for everyone in such an environment while
-     looking like a conservative guard. */
-  const motionAllowed = () =>
-    !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-
-  /* The draw is in flight. It exists because of the whirl: holding the screen
-     open for WHIRL_MS is WHIRL_MS in which a second press books a second
-     session, and the button is not disabled while the request runs. */
+  /* The draw is in flight. #1122 removed the whirl this was written for, which
+     SHRINKS the double-press window to the request itself rather than closing it:
+     the button is still not disabled while the POST runs, so a second press on a
+     slow connection would otherwise still book a second session. */
   let drawing = false;
 
   form.querySelector('#go').addEventListener('click', async () => {
     let count = parseInt(countInput.value, 10);
     if (!Number.isFinite(count) || count < 1) count = 1;
     if (drawing) return;
-    // Both guards refuse the draw outright, so nothing whirls: a pot that turns
-    // and then toasts would announce a draw that never started.
+    // Both guards refuse the draw outright, before `drawing` is raised: a refusal
+    // must leave the screen exactly as usable as it was.
     if (joining.size === 0) return toast(t('startSession.toast.noMembers'));
     if (pool().length === 0) return toast(t('startSession.toast.noGames'));
-    /* The pot turns while the request runs — Promise.all rather than a chained
-       delay, so a slow POST costs nothing on top of the animation and a fast one
-       still gets the whole turn instead of a flicker. */
-    const whirl = motionAllowed();
     drawing = true;
-    if (whirl) form.classList.add('is-whirl');
     try {
-      const [data] = await Promise.all([api('POST', `/api/rounds/${round.id}/sessions`, {
+      const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         count,
         tagIds: [...selectedTags].filter(([, s]) => s === 'include').map(([id]) => id),
         excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
@@ -708,7 +670,7 @@ function showStartSession(round, prefill) {
         guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
         multiTable: tableState.multiTable, // #796; the server drops it when false
-      }), whirl ? new Promise((resolve) => setTimeout(resolve, WHIRL_MS)) : null]);
+      });
       // A per-device session opens the lobby instead: its votes arrive one
       // person at a time, from wherever those people are, so there is no single
       // hot-seat run to start. The lobby is where anyone in the room votes.
@@ -719,16 +681,12 @@ function showStartSession(round, prefill) {
       // lobby renders a COUNT, never a title.
       showSessionLobby(round, data.session);
     } catch (e) {
-      // Back to a still pot: the class is what selects the animation, so leaving
-      // it on would sit the screen in its mid-draw state with nothing running.
-      form.classList.remove('is-whirl');
       toast(e.message);
     } finally {
-      // The guard covers the FLIGHT, which is what the whirl lengthened. On
-      // success the lobby has already replaced this screen by the time this runs,
-      // so releasing it here cannot reopen the window — and a screen that is
-      // somehow still up (a caller that renders nothing) stays usable rather than
-      // dead.
+      // The guard covers the FLIGHT. On success the lobby has already replaced
+      // this screen by the time this runs, so releasing it here cannot reopen the
+      // window — and a screen that is somehow still up (a caller that renders
+      // nothing) stays usable rather than dead.
       drawing = false;
     }
   });
@@ -1392,13 +1350,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const tisch = h('<section class="tisch" hidden></section>');
   tischSlot.appendChild(tisch);
   screen.appendChild(tischSlot);
-  /* Two one-shot motion flags (#1058). Each is set by the CLICK that causes the
-     moment and consumed by the next `renderTisch`, so a re-render from a chip
-     toggle, a cold load, a Chronik visit or a shared link replays nothing —
-     the `.pass[data-fresh]` precedent, where replaying a whole Stempelkarte on
-     every self-write turned a welcome into a stutter. */
+  /* The band's one-shot unroll (#1058). Set by the CLICK that causes the moment
+     and consumed by the next `renderTisch`, so a re-render from a chip toggle, a
+     cold load, a Chronik visit or a shared link replays nothing. Its sibling flag
+     gated the stamp's press, which #1122 removed. */
   let freshChoice = false;
-  let freshFinish = false;
 
   // Cancel session (the alternative to choosing a game; see renderCancel).
   // Created here because updateChosen() -> renderCancel() runs below while the
@@ -1791,13 +1747,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     tischBar.innerHTML = '';
     // Cleared on every pass and re-set below only for the one render that earned
     // it: an attribute left behind would re-run the animation on the next write.
-    delete tisch.dataset.fresh;
     tischSlot.removeAttribute('data-unroll');
     tisch.hidden = !chosenId;
     tischBar.hidden = true;
-    if (!chosenId) { freshChoice = false; freshFinish = false; return; }
+    if (!chosenId) { freshChoice = false; return; }
     if (freshChoice) { tischSlot.setAttribute('data-unroll', ''); freshChoice = false; }
-    if (freshFinish && finished) { tisch.dataset.fresh = ''; freshFinish = false; }
     const game = games.find((g) => g.id === chosenId);
     tisch.dataset.state = finished ? 'done' : 'table';
 
@@ -1807,7 +1761,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     const box = h(`<a class="tisch__box"${imgStyle}>${game ? coverPlaceholder(game) : ''}</a>`);
     if (game) makeGameLink(box, round.id, game.id, { redundant: true });
     if (finished) {
-      /* The same stamp the game page presses (#1040) — the class, not a
+      /* The same stamp the game page shows (#1040) — the class, not a
          look-alike — so the two surfaces can never drift. `--sc` is the score,
          which is what makes a well-liked evening's stamp read differently from
          a lukewarm one. `--table` only re-sizes it onto the box. */
@@ -1859,7 +1813,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       // Finishing comes first and needs no winners; the picker only appears
       // afterwards, so it can never read as a prerequisite (#254).
       const cta = h(`<button class="btn btn--primary tisch__cta">${iconText('ti-check', t('result.markPlayed'))}</button>`);
-      cta.addEventListener('click', () => { pickerOpen = true; freshFinish = true; saveWinners([]); });
+      cta.addEventListener('click', () => { pickerOpen = true; saveWinners([]); });
       actions.appendChild(cta);
       // Today's toggle-off path, spelled out: tapping „Spielen" again on the
       // chosen row used to be the only way back, which is invisible. Suppressed
@@ -1883,7 +1837,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       // one: both must be live at once, because the band's own CTA is what a
       // tablet and a desktop press.
       const barBtn = h(`<button class="btn btn--primary">${iconText('ti-check', t('result.markPlayed'))}</button>`);
-      barBtn.addEventListener('click', () => { pickerOpen = true; freshFinish = true; saveWinners([]); });
+      barBtn.addEventListener('click', () => { pickerOpen = true; saveWinners([]); });
       tischBar.appendChild(barBtn);
       tischBar.hidden = false;
     } else if (pickerOpen) {
