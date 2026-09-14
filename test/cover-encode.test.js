@@ -23,7 +23,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const sharp = require('sharp');
 
-const { renderCover, inspectCover, coverIsCurrent } = require('../lib/cover');
+const { renderCover } = require('../lib/cover');
 const { COVER_MAX_DIM, COVER_MAX_PIXELS } = require('../public/js/cover-policy');
 
 const solid = (width, height, opts = {}) =>
@@ -146,30 +146,23 @@ test('a decompression bomb is refused, not expanded', async () => {
   assert.equal(await renderCover(bomb), null);
 });
 
-/* ---------------- the backfill's "is this one already done?" ---------------- */
+/* ----------------------- the stored shape, restated ------------------------ */
 
-test('inspectCover reports the stored shape, or null for a non-image', async () => {
-  const meta = await inspectCover(await solid(640, 480).jpeg().toBuffer());
-  assert.deepEqual(meta, { format: 'jpeg', width: 640, height: 480 });
-  assert.equal(await inspectCover(Buffer.from('nope')), null);
-  assert.equal(await inspectCover(null), null);
-});
+test('renderCover always lands on the stored shape: WebP, inside COVER_MAX_DIM', async () => {
+  /* This used to be phrased as "what renderCover produces is already current",
+     asserted through `inspectCover` + `coverIsCurrent` — the two helpers the
+     operator backfill used to decide whether an object needed converting. #941
+     removed the backfill (it can only ever report "nothing to do" now that
+     uploads are re-encoded on the way in) and those helpers with it.
 
-test('coverIsCurrent is true only for an object renderCover would leave alone', async () => {
-  // This predicate is what makes the admin backfill idempotent: a wrong `true`
-  // leaves an oversized cover in the bucket forever, and a wrong `false` costs
-  // a generation of lossy re-encoding on every press.
-  assert.equal(coverIsCurrent({ format: 'webp', width: COVER_MAX_DIM, height: 400 }), true);
-  assert.equal(coverIsCurrent({ format: 'webp', width: COVER_MAX_DIM + 1, height: 400 }), false,
-    'one pixel over the ceiling still needs converting');
-  assert.equal(coverIsCurrent({ format: 'jpeg', width: 100, height: 100 }), false,
-    'a small JPEG is inside the ceiling but is not our format');
-  assert.equal(coverIsCurrent(null), false);
-});
-
-test('what renderCover produces is, by construction, already current', async () => {
-  // The two halves have to agree or the backfill never converges: press the
-  // button once and every object it wrote must be skipped on the next press.
+     The CLAIM is still worth pinning and has nothing to do with the backfill:
+     whatever goes in, what comes out is WebP no larger than COVER_MAX_DIM on
+     its long edge. Asserted straight off the bytes now, which is also a
+     stronger statement than round-tripping through a predicate that was itself
+     part of the code under test. */
   const out = await renderCover(await solid(3000, 2000).jpeg().toBuffer());
-  assert.equal(coverIsCurrent(await inspectCover(out)), true);
+  const meta = await sharp(out).metadata();
+  assert.equal(meta.format, 'webp');
+  assert.ok(Math.max(meta.width, meta.height) <= COVER_MAX_DIM,
+    `${meta.width}x${meta.height} exceeds COVER_MAX_DIM ${COVER_MAX_DIM}`);
 });
