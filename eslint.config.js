@@ -40,6 +40,10 @@ const frontendGlobals = {
   // views-friends.js (#1092)
   KREIS_FEED_COLLAPSED: 'readonly', renderPersonCard: 'readonly', personCardLine: 'readonly',
   renderAddTile: 'readonly', renderKreisFeed: 'readonly',
+  // views-friends.js (#1094 — the cover wash)
+  lastEventOf: 'readonly',
+  // views-friends.js (#1093 — the avatar band)
+  BAND_MAX: 'readonly', renderCircleBand: 'readonly', bandAvatar: 'readonly',
   REPORT_SUBJECT_MAX: 'readonly', REPORT_USERNAME_MAX: 'readonly',
   // install-prompt.js (issue #616)
   INSTALL_DISMISSED_KEY: 'readonly', isIosDevice: 'readonly', installStateFrom: 'readonly',

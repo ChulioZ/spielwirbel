@@ -185,10 +185,21 @@ lib/
                      it. Exists because an ABANDONED session — never closed,
                      never cancelled — reaches none of the five event-driven
                      deletions, so without a max age its link never expires
+  erasure-actions.js the moderation-log actions that are Art. 17(3) erasure
+                     proofs and are therefore exempt from the retention purge
+                     (issue #311). One list, dependency-free, so both repo
+                     backends require it without the cycle that keeping it in
+                     retention.js would create
+  retention.js       the moderation log's 3-year retention purge (issue #311):
+                     the year-end cutoff #140's promise is written in, plus the
+                     sweep and its audit record. Deletes nothing before 2030 by
+                     construction — the earliest entries that can expire are
+                     2026's
   scheduler.js       background jobs, started from server.js only: the
                      expired-demo purge (issue #427), the expired-vote-link
                      sweep (issue #652), the stored-price sweep (issue #688),
-                     the public-statistics rebuild (issue #564) and the BGG
+                     the moderation-log retention purge (issue #311), the
+                     public-statistics rebuild (issue #564) and the BGG
                      corpus enrichment pass (issue #681)
   shutdown.js        the SIGTERM/SIGINT drain server.js installs — stops the
                      scheduler, lets in-flight requests finish, destroys the
