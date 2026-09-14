@@ -66,6 +66,9 @@ async function showFriends(opts) {
   const screen = h('<div class="friends-screen"></div>');
   screen.appendChild(h(`<div class="lobby-head"><h1>${esc(t('friends.title'))}</h1></div>`));
 
+  const band = renderCircleBand(lists);
+  if (band) screen.appendChild(band);
+
   const split = h('<div class="k-split"></div>');
   const grid = h('<div class="k-grid"></div>');
 
@@ -82,6 +85,73 @@ async function showFriends(opts) {
   split.appendChild(renderKreisFeed(feed.events, o.feed === 'all'));
   screen.appendChild(split);
   app.appendChild(screen);
+}
+
+/* „Der Kreis" made visible (#1093): a row of overlapping avatars above the grid,
+   doubling as a way into each profile, with the screen's whole state in one line
+   beside it.
+
+   Overlapping avatars are the app's OWN idiom — the home round cards render
+   member stacks exactly this way — so this is the established shape one notch
+   bolder rather than a new invention.
+
+   ORDER MIRRORS THE GRID: accounts with a pending incoming request first, each
+   wearing a brand ring, then friends. The one thing somebody is waiting on is
+   the one thing that leads, on both halves of the screen.
+
+   Nothing is rendered for an empty circle: a band with no faces is not a
+   picture, and the grid's own empty state already speaks. */
+const BAND_MAX = 12;
+
+function renderCircleBand(lists) {
+  const waiting = lists.incoming.filter((r) => r.username);
+  const people = waiting.concat(lists.friends);
+  if (!people.length) return null;
+
+  const wrap = h('<div class="c-band"></div>');
+  const ring = h('<div class="c-ring"></div>');
+  people.slice(0, BAND_MAX).forEach((p, i) => ring.appendChild(bandAvatar(p, i < waiting.length)));
+  const rest = people.length - Math.min(people.length, BAND_MAX);
+  /* The overflow chip is DECORATION, not information: the count line beside it
+     already states the whole number, so announcing „+16" as well would read the
+     same fact twice in a less useful form. */
+  if (rest) ring.appendChild(h(`<span class="c-more" aria-hidden="true">+${rest}</span>`));
+  wrap.appendChild(ring);
+
+  const bold = (n) => `<strong>${n}</strong>`;
+  let text = tn(lists.friends.length, 'friends.band.countOne', 'friends.band.count',
+    { n: bold(lists.friends.length) });
+  if (lists.incoming.length) {
+    text += ` · ${tn(lists.incoming.length, 'friends.band.waitingOne', 'friends.band.waiting',
+      { n: bold(lists.incoming.length) })}`;
+  }
+  wrap.appendChild(h(`<p class="c-band__text">${text}</p>`));
+  return wrap;
+}
+
+/* One band avatar. NOT `friendAvatar()`: that one is `aria-hidden="true"` on
+   purpose, because everywhere it is used today the account's name sits beside it
+   in text. Here there is no name beside it, so reusing it would produce a row of
+   links with no accessible name at all — the one thing about this band that is
+   easy to get wrong and invisible on screen.
+
+   An account with no resolvable username (edge: mid-erasure) has no profile to
+   point at and stays a <span>, exactly as `friendRowMain` decided: an <a> with
+   no usable href is not a link — not focusable, no affordance. */
+function bandAvatar(p, waiting) {
+  const name = p.username || '';
+  const shown = name || t('friends.unknownUser');
+  const color = MEMBER_COLORS[gameHue(shown) % MEMBER_COLORS.length];
+  const face = avatarFace(initials(shown), { src: p.avatar });
+  const cls = `avatar c-ring__face${waiting ? ' avatar--wait' : ''}`;
+  if (!name) {
+    return h(`<span class="${cls}" style="background:${color}" aria-hidden="true">${face}</span>`);
+  }
+  const label = t(waiting ? 'friends.band.avatarWaiting' : 'friends.band.avatarLabel', { user: shown });
+  const el = h(`<a class="${cls}" style="background:${color}" href="${esc(profilePath(name))}"
+       aria-label="${esc(label)}">${face}</a>`);
+  navLink(el, profilePath(name), () => showProfile(name));
+  return el;
 }
 
 /* The „＋" tile, last in the grid. The add form was a full-width row at the TOP

@@ -1574,13 +1574,30 @@ a.hub-row:hover { background: var(--sunken-soft); }
      `position: absolute` from this same block took effect, because nothing else
      declares position on the rank. Same for `.trow__score { text-align: right }`
      below. (`.claude/rules/responsive-content-width.md`, "your rule will lose")
-     — and note a test reading the DECLARED rule cannot see this at all. */
+     — and note a test reading the DECLARED rule cannot see this at all.
+
+     The THIRD track is the score label's room (#1111). With `score` bound to
+     the 56px cover track, `score.name` fit in no shipped locale: measured at
+     320px, eight of nine overflowed the column by 15–21px, and `ko` instead
+     split the brand — „Spielwir / bel 점수" — because the `:lang(ko)`
+     `overflow-wrap: break-word` escape hatch fires when a box really is too
+     narrow for its word (that rule is right; the 56px box was the bug —
+     `.claude/rules/hangul-locale-typography.md`). So `score` spans tracks 1+2
+     and `action` takes an `auto` track sized to its own content. `main` spans
+     2+3, which keeps its width exactly as it was. The row got SHORTER: the
+     label no longer wraps to two lines, so 166px → 145px at 390px.
+
+     The floor to respect if you touch this: the narrowest `score` box the
+     layout can produce is ~88px (320px viewport, the „auf dem Tisch" chip in
+     the action track), and the longest unbreakable run in any shipped
+     `score.name` is „Spielwirbel" at ~77px. test/score-label-fits.test.js pins
+     the character side of that headroom, since the pixel side needs a browser. */
   .tafel .trow {
-    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-columns: 56px minmax(0, 1fr) auto;
     grid-template-areas:
-      "cover main"
-      "bars  bars"
-      "score action";
+      "cover main  main"
+      "bars  bars  bars"
+      "score score action";
   }
   .trow .trow__score { text-align: left; }
   .trow__rank { position: absolute; top: 10px; right: 12px; }
@@ -3913,6 +3930,58 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    a lone card cannot balloon to the full width — the constraint
    .claude/rules/tiles-vs-lists.md states for `.ds-list--tiles`. The FEED stays a
    list, because its order carries meaning. */
+/* „Der Kreis" (#1093): the circle the screen is named after, made visible.
+   Overlapping avatars are the home round card's own member-stack idiom, one
+   notch bolder. Colours are tokens throughout — the disc is the account's
+   deterministic MEMBER_COLORS entry set inline, its 2px ring is `.avatar`'s own
+   border in --surface, and a pending request re-colours that border to --brand
+   with a --brand-tint halo. No literals. */
+.c-band {
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  flex-wrap: wrap;          /* ring and count stack on a phone rather than scroll */
+  margin-bottom: 18px;
+}
+/* The padding/negative-margin pair is what lets the ring WRAP: every face
+   carries -10px, and the container's matching padding cancels it for the first
+   one on EVERY row. A `:first-child` exemption looks equivalent and is not — it
+   pulls each wrapped row 10px left of the one above it. */
+.c-ring {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  padding-left: 10px;
+}
+.c-ring__face { margin-left: -10px; width: 38px; height: 38px; }
+.c-ring .avatar--wait {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+  /* Above its neighbours, so the halo is never clipped by the next face. */
+  position: relative;
+  z-index: 1;
+}
+a.c-ring__face:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
+.c-more {
+  margin-left: -10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--surface);
+  background: var(--line);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+.c-band__text { margin: 0; color: var(--ink-soft); font-size: var(--text-md); }
+.c-band__text strong { color: var(--ink); font-weight: 700; }
+
 .k-split { display: grid; gap: 26px; }
 .k-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(252px, 1fr)); gap: 12px; }
 @media (min-width: 1024px) {
@@ -4492,6 +4561,12 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    number that chart produces, the `.ds-row` complaint `.claude/rules/tiles-vs-
    lists.md` files. That gutter is now the score's own axis. */
 .tafel { margin-bottom: 10px; }
+/* The section stands down whole on a vote-less single-game session (#1107).
+   Explicit, though `.tafel` declares no `display` today and the UA rule would
+   carry it: a later `display:` on this selector would beat `[hidden]` silently
+   and the gate would just stop working, with every jsdom assertion still green
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.tafel[hidden] { display: none; }
 .tafel__kick {
   display: flex;
   align-items: baseline;
