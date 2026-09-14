@@ -4687,6 +4687,32 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .tisch[data-fresh] .stamp { animation: press-in 0.38s var(--ease-out) both; }
 }
 
+/* The accept whirl (#1095). Accepting a friend request is the one moment on the
+   Freundeskreis where something genuinely changes state — and after #1092 it is
+   also a move across the grid, from the actionable block at the front back into
+   the roster. As an instant re-render the card is simply somewhere else, and the
+   one event worth noticing reads as a flicker.
+
+   The app is called Spielwirbel and its verb is the whirl. This is the cheapest
+   place in the product to show one, tied to a real state change rather than
+   applied as ambience — so exactly ONE card moves and nothing else does. The
+   grid's own re-flow is deliberately not transitioned: with 28 cards it turns
+   one event into a screen-wide ripple.
+
+   GATED, NOT CANCELLED, per the block above: the `from` keyframe is
+   `opacity: 0`, so a `prefers-reduced-motion: reduce` override missed on one
+   selector would leave the card invisible rather than merely unanimated. The
+   issue proposed the override shape; this is the house form and the safer one.
+   `both` with a `to` that IS the rest state, so a dropped `animationend` cannot
+   strand the card mid-flight. */
+@media (prefers-reduced-motion: no-preference) {
+  .k-card--whirl { animation: whirl-in 0.46s cubic-bezier(0.2, 0.9, 0.25, 1.02) both; }
+  @keyframes whirl-in {
+    from { transform: rotate(-16deg) scale(0.86); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .trow.is-race::before { animation: trow-fill var(--dur, 1s) var(--ease-out) both; }
   @keyframes trow-fill {

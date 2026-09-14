@@ -44,7 +44,13 @@ async function showFriends(opts) {
   // Per-account surface; without an account there is nothing to show.
   if (!(accountsActive() && isLoggedIn())) return showHome();
   const o = opts || {};
-  currentView = () => showFriends(o);
+  /* The whirl (#1095) is a ONE-SHOT, carried in on the accept that caused it and
+     deliberately dropped from the view callback. `currentView` is what a locale
+     switch re-runs, so leaving it in `o` would replay the animation on a render
+     that has nothing to do with accepting anybody — worse than no animation,
+     because it would then read as noise rather than as an event. */
+  const whirl = o.whirl || null;
+  currentView = () => showFriends(Object.assign({}, o, { whirl: null }));
   syncUrl('/freunde');
   setContext(t('friends.title'));
   setDocTitle(t('friends.title'));
@@ -75,7 +81,8 @@ async function showFriends(opts) {
      could not have, since the roster sat above them and grew. */
   lists.incoming.forEach((r) => grid.appendChild(renderPersonCard(r, 'incoming')));
   lists.outgoing.forEach((r) => grid.appendChild(renderPersonCard(r, 'outgoing')));
-  lists.friends.forEach((f) => grid.appendChild(renderPersonCard(f, 'friend', feed.events)));
+  lists.friends.forEach((f) => grid.appendChild(
+    renderPersonCard(f, 'friend', feed.events, !!whirl && f.username === whirl)));
   grid.appendChild(renderAddTile());
   split.appendChild(grid);
 
@@ -542,8 +549,8 @@ function accountReportButton(username) {
 
    Requests are the one LIFTED state: a brand left edge and a tint, so the
    actionable cards read as different without a heading above them. */
-function renderPersonCard(p, state, events) {
-  const card = h(`<div class="k-card k-card--${state}">
+function renderPersonCard(p, state, events, whirl) {
+  const card = h(`<div class="k-card k-card--${state}${whirl ? ' k-card--whirl' : ''}">
       <div class="k-card__who"></div>
       <div class="k-card__meta"></div>
     </div>`);
@@ -566,7 +573,10 @@ function renderPersonCard(p, state, events) {
         await accountApi('POST', `/friends/${p.friendshipId}/accept`);
         toast(t('friends.toast.accepted'));
         refreshInboxBadge();
-        showFriends();
+        // The accepted account whirls into the circle on the way back (#1095):
+        // this is the one moment on the screen where something changes state,
+        // and after #1092 it is also a move across the grid.
+        showFriends({ whirl: p.username });
       } catch (err) {
         toast(err.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('friends.err.generic'));
       }
