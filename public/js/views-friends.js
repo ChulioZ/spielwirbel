@@ -102,14 +102,24 @@ function renderAddTile() {
     // on the first keystroke and screen readers announce an unnamed edit field.
     // There is no visible label to point a <label for> at, so the name goes on
     // the control itself and says what the field is FOR.
+    //
+    // `friendHandle`, not `friendUser`, and the three data-* opt-outs: this
+    // field names ANOTHER account, so a saved login is never the right answer —
+    // but Safari offered one anyway, because `autocomplete="off"` is ignored for
+    // anything its heuristics read as a login form and an id containing "user"
+    // is one of the things they read (#1077). The one-input-plus-submit shape
+    // those heuristics also key on is unchanged by the tile, so the id and the
+    // opt-outs are the whole mitigation here. See
+    // .claude/rules/password-managers-ignore-autocomplete-off.md.
     const form = h(`<form class="k-card k-card--adding friends-add">
-         <input class="input" id="friendUser" type="text" autocomplete="off" spellcheck="false"
+         <input class="input" id="friendHandle" type="text" autocomplete="off" spellcheck="false"
                 autocapitalize="none" maxlength="30" aria-label="${esc(t('friends.addLabel'))}"
+                data-1p-ignore data-lpignore="true" data-bwignore
                 placeholder="${esc(t('friends.addPlaceholder'))}" />
          <button class="btn btn--primary btn--sm" type="submit">${esc(t('friends.addSubmit'))}</button>
        </form>`);
     tile.replaceWith(form);
-    const input = form.querySelector('#friendUser');
+    const input = form.querySelector('#friendHandle');
     input.focus();
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
