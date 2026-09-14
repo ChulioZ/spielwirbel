@@ -1024,3 +1024,74 @@ test('the import remembers the selection on the importer\'s own seat', async () 
   const after = await request(app).get(`/api/rounds/${round.id}`).set(auth(a.token));
   assert.deepEqual(after.body.members.find((m) => m.id === seat.id).ownerPreset, [seat.id]);
 });
+
+/* ------------------------- the friends' feed (#1079) ------------------------ */
+
+/* Until #1079 an import of 23 games announced itself to friends as a plain
+   `game_added` for the FIRST game — "Ada added Catan to the shelf" — because the
+   stored row's allowlist was { type, title, coverUrl } with no count, so an
+   aggregate line was not expressible. Read by a friend that is simply wrong: it
+   picks one game out of a batch for no visible reason and understates what
+   happened. Per-game events were rejected for the reason repo.createGames writes
+   ONE Chronik row: 50 rows per account would evict the importer's own history
+   and fill every friend's feed end to end.
+
+   These read the STORE, not GET /friends/feed — the convention test/friends.test.js
+   states for every emit-side spec, because the read route collapses adjacent
+   runs and would make a route that still emits per game look correct. The read
+   route's own half (that `count` survives the projection) is asserted there. */
+
+const stored = (a) => repo.listFeedEvents([a.user.id], 200);
+
+async function importFor(prefix, ids, query = '') {
+  const a = await makeAccount(`${prefix}@example.com`);
+  const round = await makeRound(a.token);
+  await link(a.token, 'GamerList');
+  stubBgg(THREE);
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg${query}`)
+    .set(auth(a.token)).send({ externalIds: ids });
+  assert.equal(res.status, 200);
+  return { a, round, res };
+}
+
+test('importing several games writes ONE games_imported feed event carrying the count', async () => {
+  const { a, res } = await importFor('fi3-imp', ['13', '822', '9209']);
+  assert.equal(res.body.imported, 3);
+
+  const events = await stored(a);
+  assert.equal(events.length, 1, 'one row for the whole import, never one per game');
+  assert.equal(events[0].type, 'games_imported');
+  assert.equal(events[0].count, 3);
+  // The first imported game's identity rides along, so the row still has a cover
+  // and the report button still names a subject.
+  assert.equal(events[0].title, 'CATAN');
+  assert.match(events[0].coverUrl, /pic13\.png$/);
+});
+
+test('the count is what LANDED, not what was asked for', async () => {
+  const { a, round } = await importFor('fi-skip-imp', ['822']);
+  stubBgg(THREE);
+  const res = await request(app).post(`/api/rounds/${round.id}/lookup/import?provider=bgg`)
+    .set(auth(a.token)).send({ externalIds: ['13', '822', '9209'] });
+  assert.deepEqual(res.body, { imported: 2, skipped: 1 });
+
+  const imported = (await stored(a)).filter((e) => e.type === 'games_imported');
+  assert.equal(imported.length, 1);
+  assert.equal(imported[0].count, 2, 'the skipped duplicate must not be counted');
+});
+
+test('importing exactly ONE game stays a plain game_added — never "and 0 more"', async () => {
+  const { a, res } = await importFor('fi1-imp', ['822']);
+  assert.equal(res.body.imported, 1);
+
+  const events = await stored(a);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, 'game_added', 'one game imported IS one game added');
+  assert.equal(events[0].count, undefined, 'the two older types carry no count at all');
+  assert.equal(events[0].title, 'Carcassonne');
+});
+
+test('a wishlist import still writes nothing to the feed', async () => {
+  const { a } = await importFor('fi-wish-imp', ['13', '822'], '&status=wishlist');
+  assert.deepEqual(await stored(a), [], 'nothing was acquired, so nothing is announced (#560)');
+});

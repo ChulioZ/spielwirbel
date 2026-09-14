@@ -307,7 +307,7 @@ function showLanding() {
            A real <a> rather than a routed button — the page lives outside the
            SPA, so it opens in a new tab like the footer's legal links (#390). -->
       <p class="landing-close__faq muted">${esc(t('landing.faq.q'))}
-        <a href="/faq" target="_blank" rel="noopener">${esc(t('landing.faq.link'))}</a></p>
+        <a href="/faq?lang=${esc(getLocale())}" target="_blank" rel="noopener">${esc(t('landing.faq.link'))}</a></p>
     </section>
   </div>`);
 

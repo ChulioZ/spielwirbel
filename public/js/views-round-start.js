@@ -420,6 +420,8 @@ const hubDeps = () => ({
   outcomeOf: sessionOutcome,
   endingOf: sessionEnding,
   monthKeyOf: periodKeyOf,
+  dayIndexOf,
+  monthsBetween,
   neutralScore: PRIOR_DEFAULT,
   filterOptions: metadataFilterOptions,
   normalizeMetadata: normalizeMetadataFilters,

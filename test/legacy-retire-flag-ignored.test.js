@@ -118,7 +118,8 @@ test('gameStatsForSession agrees with it, so the two screens cannot disagree', a
 test("a member's Ø uses the rating stored beside a stale flag", async (t) => {
   const dom = bootApp(t);
   await dom.call('showMember', RID, 'm2');
-  const values = [...dom.app.querySelectorAll('.member-stats__card')]
+  // `.member-figure` since #1074 — the five figures are one strip in the card.
+  const values = [...dom.app.querySelectorAll('.member-figure')]
     .map((c) => c.textContent.replace(/\s+/g, ' ').trim());
   // Ben: 4 for Catan (his stored rating, flag ignored) and 5 for Azul -> Ø 4,5.
   // Reading the flag as a 0 would report Ø 2,5, which is the #797 number.

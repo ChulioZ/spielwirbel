@@ -36,6 +36,17 @@ const AUTH_ERROR_KEYS = {
     invalid_credentials: 'konto.pw.wrongCurrent',
     invalid_password: 'auth.error.shortPassword',
   },
+  // The logged-IN address change (#1076). `invalid_credentials` means the
+  // current PASSWORD was wrong — the endpoint re-authenticates for the same
+  // reason change-password does — so it borrows that wording rather than
+  // login's. `same_email` is the one refusal that is a plain slip: the caller
+  // already knows the address is theirs, so it is safe to name.
+  changeEmail: {
+    invalid_credentials: 'konto.pw.wrongCurrent',
+    invalid_email: 'auth.error.invalidEmail',
+    same_email: 'konto.email.same',
+    demo_account: 'konto.email.demo',
+  },
   // Self-service account deletion (#419). `tenant_shared` is a real refusal, not
   // a fault: the erasure would cascade a tenant a second account still lives on,
   // so it must read as an explained "not this way" rather than a generic error.

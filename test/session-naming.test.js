@@ -193,7 +193,15 @@ test('no „Was ist neu" entry names the session an evening', () => {
     }
   }
 
-  assert.ok(scanned >= 8, `expected to scan the news entries' text, scanned ${scanned}`);
+  /* DERIVED, not a constant. It was `>= 8` when the entries were German and
+     English only, which #1087 turned into a floor satisfied by 8 of 198 values —
+     i.e. a scan that had stopped reading seven whole languages would still have
+     passed. Every entry owes a title and a body in every shipped locale
+     (test/news-locales.test.js), so the exact count is knowable and a floor that
+     drifts with the data is the only one worth having. */
+  const expected = NEWS.length * SUPPORTED_LOCALES.length * 2;
+  assert.equal(scanned, expected,
+    `expected to scan every entry in every shipped locale (${expected} values), scanned ${scanned}`);
   assert.deepEqual(violations, [],
     `these news strings name the session an evening (CLAUDE.md bans it):\n  ${violations.join('\n  ')}`);
 });

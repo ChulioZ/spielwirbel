@@ -111,6 +111,16 @@ method writes **one** `games_imported` activity carrying a *count* (the shape
 `games_moved_out`/`_in` already established), and the route fires one event and
 one feed event.
 
+**The feed event carries the count too, since #1079** — as a `games_imported`
+type, rendered "added Catan and 22 more games to the shelf". It was a plain
+`game_added` for the *first imported game* until then, which is worth knowing as
+a cautionary tale rather than as history: that stopgap was chosen because the
+stored row's allowlist had no count field, it was documented in three places as
+deliberate, and read by a friend it was simply **wrong** — it named one game out
+of a batch for no visible reason. An `n === 1` import is still a plain
+`game_added`, and that is not a nicety: one game imported IS one game added, and
+the aggregate phrasing would render "and 0 more games".
+
 Two placement decisions are load-bearing:
 
 - **The already-present check is in the repo, inside the transaction**, not in
@@ -267,6 +277,7 @@ browser contacts nothing new.
 **Related:** `.claude/rules/add-game-lookup-provider.md` (the two hops this joins,
 and BGG's token/throttling rules), `.claude/rules/data-access-layer.md`,
 `.claude/rules/per-tenant-quotas.md`,
-`.claude/rules/product-event-logging.md` (why the feed event stays a plain
-`game_added` — the allowlist has no count field, and widening it is a deliberate
-act).
+`.claude/rules/product-event-logging.md` (the sibling allowlist discipline; the
+feed row's own allowlist was widened by exactly one field in #1079 — a count,
+typed at the store rather than trusted from the caller, and absent rather than 0
+for the types that carry none).
