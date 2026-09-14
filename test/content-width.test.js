@@ -374,6 +374,49 @@ test('the result width sits between the reading measure and the shell', () => {
   });
 });
 
+/* The logged-out landing page (#1090) — the sixth screen to escape the reading
+   measure, and the one whose licence is plainest: it renders NO navigation at
+   all. The auth-screen chrome hides home, context and feedback, the rail never
+   renders logged out, and there is no back row and no page head, so widening the
+   column moves nothing. That is the setup forms' argument, not the rail/dock one
+   — which is also why this pair has no back-row half, unlike the spread and the
+   result screen above. */
+test('the landing page opts out of the reading measure, conditioned on itself', () => {
+  const exemptions = RULES.filter(([sel, body]) =>
+    whole('.landing').test(sel) && /max-width:/.test(body) && /:not\(\.rail\)/.test(sel));
+  assert.ok(exemptions.length,
+    'nothing exempts .landing from the reading measure, so the front door stays at the text measure');
+
+  exemptions.forEach(([sel, body]) => {
+    assert.match(sel, /:has\(\.landing\)/,
+      `"${sel}" is not conditioned on the landing being present, so it widens every screen`);
+    const vars = [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]);
+    assert.equal(vars.length, 1,
+      `"${sel}" does not take its width from a single custom property`);
+    const classes = (sel.match(/\.[\w-]+/g) || []).length;
+    assert.ok(classes > 3,
+      `"${sel}" has ${classes} class components and does not out-rank the (0,3,0) reading-measure cap`);
+  });
+});
+
+test('the landing width sits between the reading measure and the shell', () => {
+  // Every selector assertion above stays green with the exemption pointing at a
+  // NARROWER value than the cap it escapes — the `--w-setup: 880px` failure
+  // three tokens over — so the arithmetic is pinned separately.
+  const exemptions = RULES.filter(([sel, body]) =>
+    whole('.landing').test(sel) && /max-width:/.test(body) && /:not\(\.rail\)/.test(sel));
+  const vars = exemptions.flatMap(([, body]) =>
+    [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]));
+  assert.ok(vars.length, 'the landing takes no custom property for its width');
+  vars.forEach((name) => {
+    const width = rootPx(name);
+    assert.ok(width, `:root does not declare ${name}`);
+    assert.ok(width > rootPx('--w-read'),
+      `${name} (${width}px) is not wider than --w-read (${rootPx('--w-read')}px), so the exemption buys nothing`);
+    assert.ok(width <= rootPx('--w-shell'), `${name} exceeds the shell it sits in`);
+  });
+});
+
 test('the detail spread is two columns from the app breakpoint, on bounded tracks', () => {
   const hit = mediaBlocks()
     .map(([query, css]) => ({ query, body: bodyOf('.pass', rulesOf(css)) }))

@@ -19,6 +19,22 @@ navLink(document.getElementById('homeBtn'), '/', () => {
   if (confirmLeave()) showHome();
 });
 
+// „Anmelden" in the top bar (#1090). Same shape as the brand mark above: a real
+// link the router resolves, with showLogin resolved at click time because
+// account.js loads later.
+//
+// It is hidden in the markup and shown only by the two logged-out screens that
+// offer it. `authScreen()` (views-auth.js) hides it on EVERY call, in both
+// directions, so the login and register screens — which call authScreen(true)
+// themselves — can never inherit it from the landing page, and no screen deeper
+// in the app can either. The landing and a logged-out /entdecken turn it back on
+// after their own authScreen() call.
+navLink(document.getElementById('loginBtn'), '/login', () => showLogin());
+
+function showLoginLink(on) {
+  document.getElementById('loginBtn').hidden = !on;
+}
+
 // Re-invoked when the language changes, to re-render the current screen.
 let currentView = () => showHome();
 
@@ -314,6 +330,10 @@ function applyStaticTexts() {
   document.getElementById('feedbackBtn').setAttribute('aria-label', t('feedback.button'));
   document.getElementById('supportBtn').setAttribute('aria-label', t('support.button'));
   document.getElementById('accountBtn').setAttribute('aria-label', t('a11y.account'));
+  // The one TEXT control in the bar (#1090) — it reuses the landing hero's old
+  // secondary-CTA key rather than gaining one of its own, because it is the same
+  // word for the same destination and a second string could only ever drift.
+  document.getElementById('loginBtn').textContent = t('landing.hero.ctaSecondary');
   // #inboxBtn was the one control this list missed when #145 wrote it — it kept
   // index.html's hardcoded „Postfach" and announced that to every reader,
   // whatever their language. It reuses the inbox screen's own title rather than

@@ -270,11 +270,13 @@ const frontendGlobals = {
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
   // confirm-dialog.js (issue #939): the themed replacement for window.confirm
   confirmDialog: 'readonly',
+  // core.js (issue #1090): the top bar's „Anmelden" link
+  showLoginLink: 'readonly',
   // views-landing.js (issue #322): logged-out landing page
-  showLanding: 'readonly', LANDING_FEATURES: 'readonly', LANDING_STEPS: 'readonly',
-  LANDING_SHOTS: 'readonly', landingShots: 'readonly',
-  LANDING_SHOT_BP: 'readonly', LANDING_REPO_URL: 'readonly',
+  showLanding: 'readonly', LANDING_FEATURES: 'readonly', LANDING_WALK: 'readonly',
+  LANDING_SHOTS: 'readonly', landingShots: 'readonly', LANDING_REPO_URL: 'readonly',
   landingCfg: 'writable', landingRevealOperatorClaims: 'readonly',
+  renderLandingOffer: 'readonly', wireLandingOffer: 'readonly',
   // ranking.js + lookup-cover.js + lookup-title.js + lookup-score.js +
   // cover.js + tag-icons.js (also CommonJS modules for tests — hence `module`)
   computePlaces: 'readonly', module: 'readonly',

@@ -185,48 +185,27 @@ function renderPublicStats(stats) {
  * either. Without this section the one page built for that audience answered
  * them with a dead end: read the stats, then edit the URL.
  *
- * The markup reuses the landing page's closing-CTA components rather than
- * declaring its own — `.landing-close`, `.landing-hero__demo` and
- * `.landing-hero__cta` are all unscoped rules, so they apply cleanly outside
- * `.landing`, and sharing them is what keeps the two pitches from drifting into
- * two different-looking offers. `.landing-hero__demo` in particular already
- * carries its paired `[hidden] { display: none }` rule, which the wrapper needs
- * because it ships hidden and the class sets `display: flex`
- * (.claude/rules/hidden-attribute-vs-display-rule.md).
+ * The offer itself comes from renderLandingOffer() (views-landing.js), which is
+ * the third surface it renders on. It used to be a hand-copied duplicate of the
+ * landing page's closing block, which is exactly how the two pitches drift into
+ * two different-looking offers — #1090 made the offer one function for that
+ * reason, addressed by class rather than by id so a page may render it twice.
  *
- * The two ids are not decoration: `#landingDemo` and `#landingRegister` are
- * landingRevealOperatorClaims()'s interface. It is reused here — rather than a
- * second /api/config fetch — because it already memoizes the config, reveals
- * `[data-demo-only]` only when the instance HAS a demo (a button that answers
- * 404 is worse than no button), promotes the demo over registering, and
- * relabels it for a visitor who already holds one (#502). Nothing renders two
- * screens at once, so the ids cannot collide with the landing page's own.
+ * landingRevealOperatorClaims() is reused rather than a second /api/config
+ * fetch: it already memoizes the config, reveals `[data-demo-only]` only when
+ * the instance HAS a demo (a button that answers 404 is worse than no button),
+ * steps the register button back to a link beside it, and relabels the demo for
+ * a visitor who already holds one (#502).
  */
 function renderEntdeckenCta() {
   const cta = h(`<section class="landing-close stats-cta">
       <h2 class="landing-section__title">${esc(t('stats.cta.title'))}</h2>
-      <!-- Ships hidden and is revealed only on an instance whose /api/config
-           reports a demo, exactly as the landing hero does. The note rides the
-           wrapper rather than sitting under the button row, so a promise of
-           "no e-mail needed" can never end up beneath Anmelden (#503). (No
-           backticks in here: this comment is inside a template literal.) -->
-      <div class="landing-hero__demo" data-demo-only hidden>
-        <button class="btn btn--lg" id="landingDemo">${esc(t('landing.hero.ctaDemo'))}</button>
-        <p class="landing-hero__demo-note muted">${esc(t('landing.hero.demoNote'))}</p>
-      </div>
-      <div class="landing-hero__cta">
-        <button class="btn btn--primary btn--lg" id="landingRegister">${esc(t('landing.hero.ctaPrimary'))}</button>
-        <button class="btn btn--lg" id="landingLogin">${esc(t('landing.hero.ctaSecondary'))}</button>
-      </div>
+      ${renderLandingOffer({ trust: false })}
     </section>`);
-  // startDemo/showRegister/showLogin live in account.js and
-  // landingRevealOperatorClaims in views-landing.js — both load before this
-  // file, and the first three are referenced inside handlers either way, so
-  // they resolve at click time (.claude/rules/frontend-script-load-order.md).
-  const demoBtn = cta.querySelector('#landingDemo');
-  demoBtn.addEventListener('click', () => startDemo(demoBtn));
-  cta.querySelector('#landingRegister').addEventListener('click', () => showRegister());
-  cta.querySelector('#landingLogin').addEventListener('click', () => showLogin());
+  // renderLandingOffer/wireLandingOffer/landingRevealOperatorClaims all live in
+  // views-landing.js, which loads before this file
+  // (.claude/rules/frontend-script-load-order.md).
+  wireLandingOffer(cta);
   landingRevealOperatorClaims(cta);
   return cta;
 }
@@ -248,6 +227,12 @@ async function showEntdecken() {
   const loggedOut = accountsActive() && !isLoggedIn();
   // A logged-out visitor is on the auth-screen chrome; a logged-in one is not.
   authScreen(loggedOut);
+  // …and a logged-out one gets „Anmelden" in the bar (#1090), which the call
+  // above has just hidden. Written as the whole expression rather than as
+  // `if (loggedOut)`: the two are equivalent today only because authScreen()
+  // hides the link on EVERY call including `authScreen(false)`, and stating the
+  // condition here does not depend on that.
+  showLoginLink(loggedOut);
 
   app.innerHTML = '';
   app.appendChild(h(`<div class="lobby-head">

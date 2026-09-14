@@ -20,7 +20,16 @@
 // Toggle the whole-screen auth layout: hides the top-bar home link and context
 // label (the language picker stays) so a logged-out visitor sees only the auth
 // card.
-function authScreen(on) { document.body.classList.toggle('auth-screen', !!on); }
+function authScreen(on) {
+  document.body.classList.toggle('auth-screen', !!on);
+  // „Anmelden" in the bar belongs to exactly two screens (#1090) — the logged-out
+  // landing and a logged-out /entdecken — and both turn it back on right after
+  // calling this. Hiding it on EVERY call, in both directions, is what makes that
+  // safe: the login and register screens come through here too, so without the
+  // `false` branch the landing's link would follow a visitor onto the very form
+  // it opened, and without the `true` branch it would survive into the app.
+  showLoginLink(false);
+}
 
 // Title an auth screen from its own `<h1 class="auth__title">` (#522). `root` is
 // anything containing it — openAuth passes the wrapper it built, a screen

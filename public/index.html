@@ -9,7 +9,7 @@
        Static German like the og tags below — a crawler runs no JS and has no
        locale, so this is deliberately outside i18n. -->
   <title>Spielwirbel – Was spielen wir heute? Abstimmen und bewerten</title>
-  <meta name="description" content="Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele. Heraus kommt das Spiel für heute – und mit jeder Session ein schärferes Bild davon, was eure Runde gern spielt." />
+  <meta name="description" content="Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele – und mit jeder Session kennt ihr euren Geschmack besser." />
   <!-- Link preview (issue #430): what a messenger/social scraper shows when the
        link is shared. These are STATIC on purpose:
        - Scrapers do not run JS, so nothing views-landing.js renders is visible
@@ -27,7 +27,7 @@
   <meta property="og:locale" content="de_DE" />
   <meta property="og:url" content="https://spielwirbel.app/" />
   <meta property="og:title" content="Spielwirbel – Was spielen wir heute?" />
-  <meta property="og:description" content="Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele. Heraus kommt das Spiel für heute – und mit jeder Session ein schärferes Bild davon, was eure Runde gern spielt." />
+  <meta property="og:description" content="Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele – und mit jeder Session kennt ihr euren Geschmack besser." />
   <meta property="og:image" content="https://spielwirbel.app/icons/og-image.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
@@ -35,7 +35,7 @@
   <meta property="og:image:alt" content="Spielwirbel – das Wirbel-Logo auf orangem Grund" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Spielwirbel – Was spielen wir heute?" />
-  <meta name="twitter:description" content="Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele. Heraus kommt das Spiel für heute – und mit jeder Session ein schärferes Bild davon, was eure Runde gern spielt." />
+  <meta name="twitter:description" content="Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele – und mit jeder Session kennt ihr euren Geschmack besser." />
   <meta name="twitter:image" content="https://spielwirbel.app/icons/og-image.png" />
   <!-- Every SPA route is served from this document; the routes behind the login
        hold private data and are not indexable anyway, so the canonical is the
@@ -62,6 +62,14 @@
     <a id="homeBtn" class="topbar__home" href="/" aria-label="Home"><i class="ti ti-tornado" aria-hidden="true"></i></a>
     <div id="context" class="topbar__context"></div>
     <select id="langPicker" class="lang-picker" aria-label="Language"></select>
+    <!-- "Anmelden" (issue #1090). The logged-out landing page and /entdecken
+         offer it; every other screen hides it, which authScreen() does on its
+         way in and out, so the auth screens themselves never show it either.
+         A real <a href="/login"> wired with navLink (js/core.js) rather than a
+         button: it is a destination the router resolves, so Cmd-click has to
+         work like any other in-app link. Its label is set by applyStaticTexts()
+         so it follows the language picker. -->
+    <a id="loginBtn" class="topbar__acct topbar__login" href="/login" hidden></a>
     <!-- Support link (issue #173): hidden until GET /api/config reports a
          donateUrl; wired by js/support.js. -->
     <button id="supportBtn" class="topbar__acct" type="button" hidden aria-label="Support"><i class="ti ti-heart" aria-hidden="true"></i></button>
@@ -187,7 +195,7 @@
             <i class="ti ti-tornado" aria-hidden="true"></i><span>Spielwirbel</span>
           </div>
           <h1 class="landing-hero__title">Was spielen wir heute?</h1>
-          <p class="landing-hero__sub">Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele. Heraus kommt das Spiel für heute – und mit jeder Session ein schärferes Bild davon, was eure Runde gern spielt.</p>
+          <p class="landing-hero__sub">Ein Gerät wandert um den Tisch, alle bewerten die ausgelosten Spiele – und mit jeder Session kennt ihr euren Geschmack besser.</p>
         </div>
       </section>
     </div>

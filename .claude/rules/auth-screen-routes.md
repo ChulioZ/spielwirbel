@@ -68,9 +68,16 @@ open-redirect surface bolted onto a one-screen convenience.
 `if (!authScreensAvailable()) return showHome();` — the inverse of how
 `showInbox`/`showAccount` guard themselves. Putting it in `resolveRoute` instead
 would cover the typed URL and miss every in-app call site, of which there are
-seven: the landing's two buttons, the cross-links between the three cards, both
-mail landings' "back to login", `showAuthDone`, `onSessionLost()` and the demo
-banner's register CTA.
+seven: the landing page's offer block (`renderLandingOffer`, rendered on three
+surfaces but wired through one function), the top bar's „Anmelden" link, the
+cross-links between the three cards, both mail landings' "back to login",
+`showAuthDone`, `onSessionLost()` and the demo banner's register CTA.
+
+#1090 moved the login call site from the hero into the chrome (`navLink` in
+`core.js`), shown by `showLanding` and a logged-out `showEntdecken` and hidden by
+**every** `authScreen()` call in both directions — which is what keeps the guard's
+reasoning intact, since the login and register screens call `authScreen(true)`
+themselves and so cannot inherit a link into the screen they already are.
 
 It is safe at all of them because the two that could plausibly run while a
 session exists — `onSessionLost()` and the demo banner's CTA — both

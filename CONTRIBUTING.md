@@ -117,7 +117,8 @@ Nothing else needs touching — the key already exists in every other language, 
    values. Keep every key; the parity test will tell you if one is missing.
 3. Register the file in `public/index.html` (next to the other `lang/` scripts),
    add it to `SHELL` in `public/sw.js`, and bump that file's `CACHE` version.
-4. Shoot the three landing-page screenshots for the new language. Add a seed
+4. Shoot the three landing-page screenshots for the new language (the shelf,
+   the vote card and a session result). Add a seed
    (round name, tag names, invented game titles) to `SEEDS` in
    `scripts/landing-seed-data.js`, run `node scripts/capture-landing-shots.js`,
    and add the `LANDING_SHOTS` entry in `public/js/views-landing.js`. This step

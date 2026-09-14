@@ -367,9 +367,10 @@ public/
                      "Powered by BGG" attribution logo shown in the footer, and
                      og-image.png (the 1200×630 card link previews show)
   img/               product screenshots on the logged-out landing page — the
-                     shelf in two widths plus the voting screen, one set per UI
-                     locale (landing-*.<locale>.webp), generated once from
-                     throwaway data and committed (see .claude/rules/)
+                     shelf, the voting screen and a session result, all phone
+                     width, one set per UI locale (landing-*.<locale>.webp),
+                     generated once from throwaway data and committed (see
+                     .claude/rules/)
   js/
     pages/           scripts for the standalone HTML pages above. Each is a
                      self-contained IIFE loaded by its OWN document only, so it

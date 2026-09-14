@@ -4,6 +4,14 @@
    the "/" path; every other path (deep links, the /v and /r mail links)
    still goes straight to the auth screens.
 
+   Rebuilt in #1090 around ONE offer. Before it the page made two — the hero led
+   with the demo while the closing block led with "Registrieren" — and rendered
+   every chapter at the same weight in the 900px reading measure, so on a phone
+   645px of copy and three same-size buttons came before any picture. The page
+   now states the offer once (in one renderer, on three surfaces), moves
+   "Anmelden" out of the hero into the top bar, and shows the loop as three phone
+   screenshots instead of describing onboarding in prose.
+
    Part of the frontend's shared global scope. Loads after core.js and
    account.js (showLogin/showRegister), before router.js — see index.html.
    Cross-file names (showRegister/showLogin) are referenced only inside click
@@ -12,14 +20,16 @@
 
 'use strict';
 
-// The "what you get" cards: [icon class, i18n key prefix]. Every icon is
-// declared in the bundled tabler subset (public/fonts/tabler-icons.css) — an
-// undeclared class renders NOTHING, silently (.claude/rules/tabler-icon-codepoints.md).
+// The claims strip: [icon class, i18n key prefix]. Every icon is declared in the
+// bundled tabler subset (public/fonts/tabler-icons.css) — an undeclared class
+// renders NOTHING, silently (.claude/rules/tabler-icon-codepoints.md).
 //
 // #483 replaced the per-round themes card with `noAccounts`: "nobody but the
 // round owner needs an account" is one of the app's defining design choices and
 // the copy never said it, while a colour theme is the most cosmetic thing here.
-// Six stays a clean grid — .landing-cards is auto-fill from 240px.
+// Since #1090 each is an icon + title + ONE line rather than a card holding a
+// paragraph — the vote card carried four sentences and its neighbours one, which
+// is what made the first row of that grid 325px tall against the second's 209.
 const LANDING_FEATURES = [
   ['ti-cards', 'landing.features.shelf'],
   ['ti-tornado', 'landing.features.vote'],
@@ -29,8 +39,16 @@ const LANDING_FEATURES = [
   ['ti-rocket', 'landing.features.pwa'],
 ];
 
-// The three how-it-works steps, numbered 1–3 in render order.
-const LANDING_STEPS = ['landing.how.step1', 'landing.how.step2', 'landing.how.step3'];
+// The walkthrough (#1090): [shot name, copy key prefix, alt key]. It replaced
+// "In drei Schritten los", whose three steps were ONBOARDING (account → round →
+// session) while the single picture beside them showed the vote — so the section
+// illustrated something other than what it listed. These three are the loop
+// itself, one picture each, in the order it runs.
+const LANDING_WALK = [
+  ['shelfPhone', 'landing.walk.shelf', 'landing.shot.shelfAlt'],
+  ['vote', 'landing.walk.whirl', 'landing.shot.voteAlt'],
+  ['result', 'landing.walk.result', 'landing.shot.resultAlt'],
+];
 
 // Real product screenshots (#438). The hero used to show six abstract
 // coverPlaceholder() gradients, which told a visitor nothing about the app they
@@ -42,9 +60,11 @@ const LANDING_STEPS = ['landing.how.step1', 'landing.how.step2', 'landing.how.st
 // in .claude/rules/landing-product-screenshots.md). Three things about them are
 // load-bearing:
 //
-//  - The shelf ships in TWO widths because a 1280px-wide desktop screenshot
-//    scaled into a 375px phone column is illegible; <picture> downloads only the
-//    one that matches, so the phone never pays for the desktop pixels.
+//  - All three are PHONE shots since #1090. The set used to carry a 1280-wide
+//    desktop shelf capture for the hero's wide branch; at the 660–800px the
+//    two-column hero gives it, its tile labels shrink to ~9px, so the hero shows
+//    the phone shot at every width and the wide capture is retired. That also
+//    removes the <picture> element and its breakpoint.
 //  - Every declared width/height is the asset's REAL pixel size, so the hero
 //    reserves its box before the image lands (no layout shift above the fold).
 //    test/landing-shots.test.js reads the dimensions back out of the files.
@@ -54,62 +74,62 @@ const LANDING_STEPS = ['landing.how.step1', 'landing.how.step2', 'landing.how.st
 //    artwork — the exact thing .claude/rules/provider-cover-hotlinking.md avoids.
 //
 // One set per shipped locale (#457), keyed by locale code. Everything else on
-// this page switches language — headline, cards, steps, chips — so a German
-// screenshot under English copy was the one part of the page that stayed
+// this page switches language — headline, claims, walkthrough, chips — so a
+// German screenshot under English copy was the one part of the page that stayed
 // half-translated, on the page whose whole job is "what is this and how does it
 // work". Each set is shot against its own seed, so the *content* is localized
 // too (round name, member names, game titles), not just the app's chrome; the
-// two seeds live in the regeneration recipe.
+// seeds live in scripts/landing-seed-data.js.
 //
 // The dimensions stay PER ASSET rather than per family: they are asserted
 // against the real files, so re-shooting one locale may legitimately change one
 // height (a title that wraps to two lines moves the crop) without touching the
 // other.
 const LANDING_SHOTS = {
-  de: {
-    shelfWide: { src: '/img/landing-shelf-wide.de.webp', w: 1600, h: 945 },
-    shelfPhone: { src: '/img/landing-shelf-phone.de.webp', w: 624, h: 1246 },
-    vote: { src: '/img/landing-vote.de.webp', w: 624, h: 1152 },
-  },
   en: {
-    shelfWide: { src: '/img/landing-shelf-wide.en.webp', w: 1600, h: 945 },
     shelfPhone: { src: '/img/landing-shelf-phone.en.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.en.webp', w: 624, h: 1152 },
+    result: { src: '/img/landing-result.en.webp', w: 624, h: 1514 },
+  },
+  de: {
+    shelfPhone: { src: '/img/landing-shelf-phone.de.webp', w: 624, h: 1246 },
+    vote: { src: '/img/landing-vote.de.webp', w: 624, h: 1152 },
+    result: { src: '/img/landing-result.de.webp', w: 624, h: 1451 },
   },
   es: {
-    shelfWide: { src: '/img/landing-shelf-wide.es.webp', w: 1600, h: 945 },
     shelfPhone: { src: '/img/landing-shelf-phone.es.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.es.webp', w: 624, h: 1152 },
+    result: { src: '/img/landing-result.es.webp', w: 624, h: 1451 },
   },
   fr: {
-    shelfWide: { src: '/img/landing-shelf-wide.fr.webp', w: 1600, h: 945 },
     shelfPhone: { src: '/img/landing-shelf-phone.fr.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.fr.webp', w: 624, h: 1152 },
+    result: { src: '/img/landing-result.fr.webp', w: 624, h: 1451 },
   },
   it: {
-    shelfWide: { src: '/img/landing-shelf-wide.it.webp', w: 1600, h: 945 },
     shelfPhone: { src: '/img/landing-shelf-phone.it.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.it.webp', w: 624, h: 1152 },
+    result: { src: '/img/landing-result.it.webp', w: 624, h: 1514 },
   },
   nl: {
-    shelfWide: { src: '/img/landing-shelf-wide.nl.webp', w: 1600, h: 945 },
     shelfPhone: { src: '/img/landing-shelf-phone.nl.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.nl.webp', w: 624, h: 1152 },
+    result: { src: '/img/landing-result.nl.webp', w: 624, h: 1510 },
   },
   pt: {
-    shelfWide: { src: '/img/landing-shelf-wide.pt.webp', w: 1600, h: 945 },
     shelfPhone: { src: '/img/landing-shelf-phone.pt.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.pt.webp', w: 624, h: 1152 },
+    result: { src: '/img/landing-result.pt.webp', w: 624, h: 1514 },
   },
   fi: {
-    shelfWide: { src: '/img/landing-shelf-wide.fi.webp', w: 1600, h: 945 },
     shelfPhone: { src: '/img/landing-shelf-phone.fi.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.fi.webp', w: 624, h: 1152 },
+    result: { src: '/img/landing-result.fi.webp', w: 624, h: 1514 },
   },
   ko: {
-    shelfWide: { src: '/img/landing-shelf-wide.ko.webp', w: 1600, h: 945 },
     shelfPhone: { src: '/img/landing-shelf-phone.ko.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.ko.webp', w: 624, h: 1152 },
+    result: { src: '/img/landing-result.ko.webp', w: 624, h: 1413 },
   },
 };
 
@@ -136,15 +156,60 @@ function landingShots() {
 // user-facing copy. The chip is phrased as a benefit, so it needs no term at all.
 const LANDING_REPO_URL = 'https://github.com/ChulioZ/spielwirbel';
 
-// The width at which the hero swaps the phone shelf shot for the desktop one.
-// Same 720px the stylesheet's landing breakpoint uses — they must agree, or the
-// wide screenshot renders in the stacked one-column layout.
-const LANDING_SHOT_BP = '(min-width: 720px)';
-
 // Memoized /api/config, used to gate the operator-only trust claim (below). The
 // same unauthenticated endpoint initFooter() reads; cached so a language-switch
 // re-render doesn't refetch.
 let landingCfg = null;
+
+/* ------------------------------------------------------------- the offer ---- */
+
+// THE offer, rendered by every surface that makes it: the hero, the closing
+// block, and /entdecken's logged-out CTA (renderEntdeckenCta, views-stats.js).
+// One renderer rather than three copies, because the page's whole defect in
+// #1090 was that its two copies had drifted into two different offers — the hero
+// led with the demo and the close led with registering, so a visitor who
+// scrolled was asked for two different things.
+//
+// Addressed by CLASS, not by id: the landing page renders this twice, and ids
+// may not repeat. `landingRevealOperatorClaims` reveals every [data-demo-only]
+// and hides every .landing-offer__register, so an instance whose /api/config
+// reports no demo keeps a single "Kostenlos registrieren" primary and renders no
+// dead demo element at all.
+//
+// `trust` adds the claims row; only the hero passes it. The four claims used to
+// be their own chapter ("Fair und datensparsam") AND appear in the footer AND in
+// the demo note — three statements of the same thing on one page.
+function renderLandingOffer(opts) {
+  const trust = !!(opts && opts.trust);
+  // (No backticks in the comments inside this literal: it is a template literal.)
+  return `<div class="landing-offer">
+        <button class="btn btn--primary btn--lg landing-offer__demo" type="button" data-demo-only hidden>${esc(t('landing.hero.ctaDemo'))}</button>
+        <p class="landing-offer__note muted" data-demo-only hidden>${esc(t('landing.hero.demoNote'))}</p>
+        <p class="landing-offer__alt" data-demo-only hidden>${esc(t('landing.hero.or'))}
+          <button class="link-btn landing-offer__register-link" type="button">${esc(t('landing.hero.registerLink'))}</button></p>
+        <button class="btn btn--primary btn--lg landing-offer__register" type="button">${esc(t('landing.hero.ctaPrimary'))}</button>
+        ${trust ? `<ul class="landing-offer__trust">
+          <li class="landing-chip"><i class="ti ti-heart" aria-hidden="true"></i>${esc(t('landing.trust.free'))}</li>
+          <li class="landing-chip"><i class="ti ti-eye-off" aria-hidden="true"></i>${esc(t('landing.trust.noTracking'))}</li>
+          <li><a class="landing-chip landing-chip--link" href="${LANDING_REPO_URL}"
+                 target="_blank" rel="noopener noreferrer"><i class="ti ti-code" aria-hidden="true"></i>${esc(t('landing.trust.source'))}</a></li>
+          <li class="landing-chip" data-operator-only hidden><i class="ti ti-shield" aria-hidden="true"></i>${esc(t('landing.trust.eu'))}</li>
+        </ul>` : ''}
+      </div>`;
+}
+
+// Wire every offer block inside `root`. startDemo/showRegister live in
+// account.js, which loads BEFORE this file — and both are referenced inside
+// handlers either way, so they resolve at click time
+// (.claude/rules/frontend-script-load-order.md).
+function wireLandingOffer(root) {
+  root.querySelectorAll('.landing-offer__demo').forEach((btn) => {
+    btn.addEventListener('click', () => startDemo(btn));
+  });
+  root.querySelectorAll('.landing-offer__register, .landing-offer__register-link').forEach((btn) => {
+    btn.addEventListener('click', () => showRegister());
+  });
+}
 
 // The EU-hosting claim is only true on the operator's configured public instance
 // (a self-hoster on a US VPS must not publish it). Gate it on the SAME cfg.footer
@@ -161,19 +226,18 @@ function landingRevealOperatorClaims(root) {
     // demo switched off, and a button that answers 404 is worse than no button.
     if (cfg && cfg.demo) {
       root.querySelectorAll('[data-demo-only]').forEach((el) => { el.hidden = false; });
-      // Promote the demo to THE primary action and demote registering, because
-      // "try it without signing up" is the offer this page is making. Done here
-      // rather than in the markup so an instance without the demo keeps its
-      // existing single primary CTA, byte-for-byte.
-      const demoBtn = root.querySelector('#landingDemo');
-      const registerBtn = root.querySelector('#landingRegister');
-      if (demoBtn) demoBtn.classList.add('btn--primary');
-      if (registerBtn) registerBtn.classList.remove('btn--primary');
+      // With a demo the offer IS the demo, so the standalone register button
+      // steps back to a link beside it ('.landing-offer__alt', revealed above).
+      // Done here rather than in the markup so an instance without the demo
+      // keeps its single primary CTA, byte-for-byte.
+      root.querySelectorAll('.landing-offer__register').forEach((el) => { el.hidden = true; });
       // A visitor who already holds a live demo re-enters it rather than
       // minting a second (#502), so the CTA has to say so — "ausprobieren"
       // would read as starting over, which is exactly what it no longer does.
       // getDemoToken lives in account.js, which loads before this file.
-      if (demoBtn && getDemoToken()) demoBtn.textContent = t('landing.hero.ctaResume');
+      if (getDemoToken()) {
+        root.querySelectorAll('.landing-offer__demo').forEach((el) => { el.textContent = t('landing.hero.ctaResume'); });
+      }
     }
   };
   if (landingCfg) { apply(landingCfg); return; }
@@ -182,6 +246,8 @@ function landingRevealOperatorClaims(root) {
     .then((cfg) => { if (cfg) landingCfg = cfg; apply(cfg); })
     .catch(() => {});
 }
+
+/* -------------------------------------------------------------- the view ---- */
 
 // The landing view. Full-screen like the auth screens (authScreen(true) hides the
 // top-bar home/context/feedback; the language picker stays), but scrollable
@@ -195,6 +261,12 @@ function showLanding() {
   // they came from (a failed /demo deep link) go through routeTo() instead.
   syncUrl('/');
   authScreen(true);
+  // authScreen() hides it on every screen, so the two that offer it turn it back
+  // on afterwards (#1090). The hero has no login control any more: with the demo
+  // as the single primary, a third button competing with it is exactly the
+  // "two offers on one page" this rebuild removes — and a returning user is
+  // looking for "Anmelden" in the chrome, not in the pitch.
+  showLoginLink(true);
   setContext('');
   // The one screen that keeps the DEFAULT tab title rather than naming itself
   // (#522): this is the front door, and its title is the app's own pitch —
@@ -205,33 +277,26 @@ function showLanding() {
   applyBackground(null);
   app.innerHTML = '';
 
-  const featureCards = LANDING_FEATURES.map(([icon, key]) => `
-      <li class="landing-card">
-        <span class="landing-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
-        <h3 class="landing-card__title">${esc(t(key + '.title'))}</h3>
-        <p class="landing-card__desc muted">${esc(t(key + '.desc'))}</p>
-      </li>`).join('');
-
-  const steps = LANDING_STEPS.map((key, i) => `
-      <li class="landing-step">
-        <span class="landing-step__num">${i + 1}</span>
+  const claims = LANDING_FEATURES.map(([icon, key]) => `
+      <li class="landing-claim">
+        <span class="landing-claim__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
         <div>
-          <h3 class="landing-step__title">${esc(t(key + '.title'))}</h3>
-          <p class="landing-step__desc muted">${esc(t(key + '.desc'))}</p>
+          <h3 class="landing-claim__title">${esc(t(key + '.title'))}</h3>
+          <p class="landing-claim__desc muted">${esc(t(key + '.desc'))}</p>
         </div>
       </li>`).join('');
 
   // Informative images, not decoration: each carries real alt text, so the page
   // still explains itself to a screen reader.
   const shots = landingShots();
-  const shelfShot = `
-      <picture>
-        <source media="${LANDING_SHOT_BP}" srcset="${shots.shelfWide.src}"
-                width="${shots.shelfWide.w}" height="${shots.shelfWide.h}" />
-        <img class="landing-shot" src="${shots.shelfPhone.src}"
-             width="${shots.shelfPhone.w}" height="${shots.shelfPhone.h}"
-             alt="${esc(t('landing.shot.shelfAlt'))}" />
-      </picture>`;
+  const walk = LANDING_WALK.map(([name, key, altKey], i) => `
+      <li class="landing-walk__item">
+        <img class="landing-shot" src="${shots[name].src}"
+             width="${shots[name].w}" height="${shots[name].h}"
+             alt="${esc(t(altKey))}" />
+        <h3 class="landing-walk__title"><span class="landing-step__num">${i + 1}</span>${esc(t(key + '.title'))}</h3>
+        <p class="landing-walk__desc muted">${esc(t(key + '.desc'))}</p>
+      </li>`).join('');
 
   const view = h(`<div class="landing">
     <section class="landing-hero">
@@ -241,42 +306,31 @@ function showLanding() {
         </div>
         <h1 class="landing-hero__title">${esc(t('landing.hero.title'))}</h1>
         <p class="landing-hero__sub">${esc(t('landing.hero.sub'))}</p>
-        <!-- The demo (#427) leads, ahead of registering: the whole point is
-             that a visitor can judge the app before being asked for anything.
-             Its note lives INSIDE this block rather than under the button row
-             (#503): the row wraps, so „Sofort loslegen, ohne E-Mail" ended up
-             directly beneath „Anmelden" at both 375px and 1600px — a promise of
-             no-e-mail attached to the two actions that require one.
-             The data-demo-only/hidden pair sits on the wrapper alone, so the
-             whole group collapses on an instance whose /api/config reports the
-             demo off and the hero keeps its pre-#503 single row — the reveal is
-             in landingRevealOperatorClaims(). (No backticks in here: this
-             comment is inside a template literal.) -->
-        <div class="landing-hero__demo" data-demo-only hidden>
-          <button class="btn btn--lg" id="landingDemo">${esc(t('landing.hero.ctaDemo'))}</button>
-          <p class="landing-hero__demo-note muted">${esc(t('landing.hero.demoNote'))}</p>
-        </div>
-        <div class="landing-hero__cta">
-          <button class="btn btn--primary btn--lg" id="landingRegister">${esc(t('landing.hero.ctaPrimary'))}</button>
-          <button class="btn btn--lg" id="landingLogin">${esc(t('landing.hero.ctaSecondary'))}</button>
-        </div>
+        ${renderLandingOffer({ trust: true })}
       </div>
-      <div class="landing-hero__visual">${shelfShot}</div>
+      <!-- ONE element on purpose: #1091 replaces this slot with the app's own
+           three moments played live from the shipped components, and a
+           <picture> or a wrapper full of siblings would make that a rewrite
+           rather than a swap. (No backticks in here: this comment is inside a
+           template literal.) -->
+      <div class="landing-hero__visual">
+        <img class="landing-shot" src="${shots.shelfPhone.src}"
+             width="${shots.shelfPhone.w}" height="${shots.shelfPhone.h}"
+             alt="${esc(t('landing.shot.shelfAlt'))}" />
+      </div>
+    </section>
+
+    <!-- The strip holds no focusable content, so below 720px — where it becomes
+         a horizontal snap strip — it needs tabindex and a name of its own for a
+         keyboard user to be able to scroll it at all (WCAG 2.1.1). -->
+    <section class="landing-section">
+      <h2 class="landing-section__title" id="landingWalkTitle">${esc(t('landing.walk.title'))}</h2>
+      <ol class="landing-walk" tabindex="0" aria-labelledby="landingWalkTitle">${walk}</ol>
     </section>
 
     <section class="landing-section">
       <h2 class="landing-section__title">${esc(t('landing.features.title'))}</h2>
-      <ul class="landing-cards">${featureCards}</ul>
-    </section>
-
-    <section class="landing-section">
-      <h2 class="landing-section__title">${esc(t('landing.how.title'))}</h2>
-      <div class="landing-how">
-        <ol class="landing-steps">${steps}</ol>
-        <img class="landing-shot landing-how__shot" src="${shots.vote.src}"
-             width="${shots.vote.w}" height="${shots.vote.h}"
-             alt="${esc(t('landing.shot.voteAlt'))}" />
-      </div>
+      <ul class="landing-claims">${claims}</ul>
     </section>
 
     <!-- Instance-wide statistics (#564). An EMPTY placeholder: mountLandingStats
@@ -287,20 +341,9 @@ function showLanding() {
          this comment is inside a template literal.) -->
     <section class="landing-section landing-stats" id="landingStats"></section>
 
-    <section class="landing-section landing-trust">
-      <h2 class="landing-section__title">${esc(t('landing.trust.title'))}</h2>
-      <ul class="landing-trust__chips">
-        <li class="landing-chip"><i class="ti ti-heart" aria-hidden="true"></i>${esc(t('landing.trust.free'))}</li>
-        <li class="landing-chip"><i class="ti ti-eye-off" aria-hidden="true"></i>${esc(t('landing.trust.noTracking'))}</li>
-        <li><a class="landing-chip landing-chip--link" href="${LANDING_REPO_URL}"
-               target="_blank" rel="noopener noreferrer"><i class="ti ti-code" aria-hidden="true"></i>${esc(t('landing.trust.source'))}</a></li>
-        <li class="landing-chip" data-operator-only hidden><i class="ti ti-shield" aria-hidden="true"></i>${esc(t('landing.trust.eu'))}</li>
-      </ul>
-    </section>
-
     <section class="landing-section landing-close">
       <h2 class="landing-section__title">${esc(t('landing.cta.title'))}</h2>
-      <button class="btn btn--primary btn--lg" id="landingRegisterClose">${esc(t('landing.hero.ctaPrimary'))}</button>
+      ${renderLandingOffer({ trust: false })}
       <!-- The FAQ (#489) is ungated on purpose, unlike the site footer's copy of
            this link: GET /faq answers on every instance, and this is the only
            entry point a logged-out visitor on an unconfigured one would have.
@@ -312,14 +355,7 @@ function showLanding() {
   </div>`);
 
   app.appendChild(view);
-  // startDemo lives in account.js, which loads BEFORE this file — and it is
-  // referenced inside a handler either way, so it resolves at click time
-  // (.claude/rules/frontend-script-load-order.md).
-  const demoBtn = view.querySelector('#landingDemo');
-  demoBtn.addEventListener('click', () => startDemo(demoBtn));
-  view.querySelector('#landingRegister').addEventListener('click', () => showRegister());
-  view.querySelector('#landingRegisterClose').addEventListener('click', () => showRegister());
-  view.querySelector('#landingLogin').addEventListener('click', () => showLogin());
+  wireLandingOffer(view);
   landingRevealOperatorClaims(view);
   // Not awaited: the landing page must render at once, and the block appears
   // (or its placeholder disappears) when the payload lands.
