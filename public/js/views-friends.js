@@ -617,6 +617,25 @@ function renderPersonCard(p, state, events) {
       <div class="k-card__who"></div>
       <div class="k-card__meta"></div>
     </div>`);
+  /* The wash (#1094): that friend's most recently played cover, bled into the
+     card's right side so every card carries a colour taken from what the person
+     actually plays. The art is already in the `/friends/feed` payload the second
+     line is derived from, so it costs no request.
+
+     FRIENDS ONLY, and only with an event. A card with no recent activity stays
+     plain — that is a difference the grid should show, not hide — and request
+     cards keep their lifted brand edge from #1092 as the one loud thing in the
+     grid, which art would compete with.
+
+     Requested at thumb size: the grid can hold 28 of these
+     (.claude/rules/provider-cover-sizing.md). */
+  const last = state === 'friend' ? lastEventOf(p, events) : null;
+  if (last && last.coverUrl) {
+    card.insertBefore(
+      h(`<div class="k-card__art" style="background-image:url('${coverUrl(last.coverUrl, COVER_THUMB)}')"></div>`),
+      card.firstChild);
+  }
+
   const who = card.querySelector('.k-card__who');
   who.innerHTML = friendRowMain(p.username, p.avatar);
   wireFriendRowMain(card, p.username);
@@ -688,10 +707,17 @@ function renderPersonCard(p, state, events) {
    The cutoff is the point: a friendship two years old reads „seit September
    2024", never „vor 743 Tagen". `fmtRelativeDays` returns null past it and this
    falls back, so the threshold lives in one place. */
+/* That account's most recent feed event, or null. Shared by the card's second
+   line and its cover wash (#1094) so the two can never describe different
+   games — the wash IS the line's game, rendered as colour. */
+function lastEventOf(p, events) {
+  return (events || []).find((ev) => ev.username && ev.username === p.username) || null;
+}
+
 function personCardLine(p, state, events) {
   if (state === 'incoming') return esc(t('friends.card.wants'));
   if (state === 'outgoing') return esc(t('friends.card.sent'));
-  const last = (events || []).find((ev) => ev.username && ev.username === p.username);
+  const last = lastEventOf(p, events);
   if (last) {
     const rel = fmtRelativeDays(dayIndexOf(Date.now()) - dayIndexOf(last.at));
     return `${esc(last.title || '')} · ${esc(rel || fmtDate(last.at))}`;

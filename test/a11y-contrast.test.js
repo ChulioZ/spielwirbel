@@ -864,6 +864,46 @@ test('the winners\' gold fill clears AA too, at its higher alpha', () => {
     `the winners' rows fill at ${(alpha * 100).toFixed(0)}% --gold over --surface; body text on it needs ${AA_TEXT}:1`);
 });
 
+/* The Freundeskreis cover wash (#1094). Unlike every fill above it, the layer is
+   an arbitrary USER-FACING IMAGE — a game cover — so there is no token to mix
+   with and no average to assume. The honest worst case is the extremes: pure
+   black over a light design, pure white over a dark one, which is what a very
+   dark or very bright cover approaches.
+
+   Measured at FULL alpha on purpose. The card's second line is
+   `white-space: nowrap` with an ellipsis, so it spans the whole card and really
+   does reach the far right where the mask is fully opaque — the fade buys the
+   text nothing and must not be credited to it.
+
+   The --accent link buttons in `.k-card__meta` are deliberately NOT here: they
+   would fail at full alpha (4.03:1 on Salbei) and do not fail in fact, because
+   the mask has not opened where they sit — measured at 375px they end at 46% of
+   the card and see 0.0148 effective alpha. That is a LAYOUT fact, which this
+   file cannot see; it is recorded in the CSS comment beside the rule with the
+   threshold (~67% of the card width) at which it would stop holding. */
+test('the friend card\'s cover wash keeps its text over AA, for any cover', () => {
+  const decl = bodyOf('.k-card__art');
+  assert.ok(decl, '.k-card__art is gone — did the wash move?');
+  const m = /(^|[\s;])opacity:\s*([\d.]+)/.exec(decl);
+  assert.ok(m, `.k-card__art declares no opacity: ${decl}`);
+  const alpha = Number(m[2]);
+
+  const failures = [];
+  for (const t of THEMES) {
+    for (const [cover, coverName] of [['#000000', 'a black cover'], ['#ffffff', 'a white cover']]) {
+      const ground = composite(cover, t.surface, alpha);
+      for (const [label, ink] of [['--ink', t.ink], ['--ink-soft', t.inkSoft]]) {
+        const ratio = contrast(ink, ground);
+        if (ratio < AA_TEXT) failures.push(`${name(t)} ${label} under ${coverName} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures, [],
+    `the wash paints a cover at ${(alpha * 100).toFixed(0)}% over --surface; the card's text needs `
+    + `${AA_TEXT}:1. The issue's starting .17 lands at 3.84:1 on Sci-Fi dark — lower the alpha, `
+    + 'do not widen this test.');
+});
+
 /* The anti-vacuous half, the shape test/design-tokens.test.js uses for its glyph
    list: an exemption nobody re-checks rots into a selector that no longer exists,
    and every stale entry silently widens the assertion above. */
