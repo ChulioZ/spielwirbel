@@ -110,13 +110,18 @@ CSS-injection hole.
 
 ## Verifying it in the preview pane
 
-The Regal grid's covers are lazy (`createCoverLoader`, #198), and the Claude
-Code Browser pane reports **`window.innerHeight === 0`**, so its
-IntersectionObserver **can never fire** and every grid cover stays blank no
-matter how you scroll. That looks exactly like a broken lazy loader. It isn't —
-it is the pane artifact family documented in
-`.claude/rules/preview-pane-paint-artifacts.md`, and `resize_window` does not
-fix it.
+The Regal grid's covers are lazy (`createCoverLoader`, #198), and in the Claude
+Code Browser pane the IntersectionObserver **never fires**, so every grid cover
+stays blank no matter how you scroll. That looks exactly like a broken lazy
+loader. It isn't — it is the pane artifact family documented in
+`.claude/rules/preview-pane-paint-artifacts.md`.
+
+**A real viewport does not fix it, and the degenerate `innerHeight === 0` is not
+the reason.** This paragraph used to give that as the cause, which reads as
+"resize and the observer works"; #979 measured a bare probe — one appended 50×50
+div, one observer — never firing at 1200×900 with `innerWidth`/`innerHeight`
+confirming the size. So `resize_window` is worth doing for the *rects*, and
+changes nothing here.
 
 Verify instead via a path that doesn't depend on the observer:
 - the **game-detail hero** and the **voting screen** set `background-image`

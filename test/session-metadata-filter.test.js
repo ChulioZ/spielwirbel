@@ -6,7 +6,9 @@
    (.claude/rules/token-friendly-source-files.md).
 
    The predicate is unit-tested in test/draw-pool.test.js and the two client
-   surfaces in test/metadata-filter.test.js. What only the route can answer is
+   surfaces in test/filter-panel.test.js — they moved there out of a file of
+   their own when #827/#844 collapsed the affordances into one control. What only
+   the route can answer is
    here: that the field is lenient enough never to 400, that an unknown category
    is dropped exactly like an unknown tag id, that an unfiltered draw's stored
    blob is byte-identical to a pre-#725 one, and that the preset round-trips.

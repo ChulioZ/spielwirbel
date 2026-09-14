@@ -91,43 +91,25 @@ the *other* workflows: `eslint`, `syntax`, `gitleaks`, `dco`).
   same remedy: check the outcome, not the summary of it. See
   `.claude/rules/verify-the-deployed-artifact-not-the-status.md`.
 
-  **Verifying a change to this condition costs a scratch branch, and a clean
-  before/after is hard to get.** CI runs only on `push` to `main` and on
-  `pull_request`, so a scratch branch triggers nothing — it needs a **draft PR**
-  to fire at all. Force the failure with an unpullable service image
-  (`image: postgres:18-this-tag-does-not-exist`). Measured with the allowlist in
-  place: `postgres` fails and `ci-passed` fails **with its guard step executing**,
-  where the pre-fix run recorded that same step as `skipped`. The *control* —
-  the old condition against the same break — could not be isolated: two further
-  independent `Set up job` flakes hit `test` mid-experiment and tripped the
-  denylist for an unrelated reason. So the last inch rests on construction rather
-  than measurement, which is sound here because
-  `{failure, cancelled, skipped} ⊂ {≠ 'success'}` — the new condition fires
-  everywhere the old one did, and then some. **Delete the scratch branch and
-  close the draft PR afterwards.**
+  **Changing this condition can only be verified through a draft PR** — CI runs
+  on `push` to `main` and on `pull_request`, so a scratch branch alone triggers
+  nothing. Force the failure with an unpullable service image
+  (`image: postgres:18-this-tag-does-not-exist`) and check that `ci-passed`'s
+  guard step *executes* rather than being recorded as `skipped`, which is how the
+  broken form passed. Clean up the branch and the draft PR afterwards.
 
 ## Part B is an ops step, not code
 
-Requiring `ci-passed` is a repo-admin change in GitHub branch-protection
-settings — it is **not** in the workflow file and `implement` cannot make it.
-The command (run once, after `ci-passed` has appeared at least once):
-
-```bash
-gh api --method PUT repos/ChulioZ/spielwirbel/branches/main/protection/required_status_checks \
-  -F strict=true \
-  -f 'checks[][context]=ci-passed' \
-  -f 'checks[][context]=eslint' \
-  -f 'checks[][context]=syntax' \
-  -f 'checks[][context]=gitleaks' \
-  -f 'checks[][context]=dco'
-```
-
-No deadlock while the Part-A PR is open: the *old* required checks
-(`test (18/20/22)` + `dco`) still gate it, so it merges normally; the switch to
-`ci-passed` happens only afterwards. Whether to also require the `docker` job
-(a broken Dockerfile breaks the Railway deploy — see
-`.claude/rules/railway-no-dockerfile-volume.md`) was left as an explicit
-decision for whoever flips the setting, not pulled in silently.
+What `main` requires lives in GitHub branch-protection settings, **not** in the
+workflow file, so `implement` cannot change it — the required contexts are
+`ci-passed`, `eslint`, `syntax`, `gitleaks` and `dco`, with `strict` on. Read them
+with `gh api repos/{owner}/{repo}/branches/main/protection`, and change them with
+the `required_status_checks` sub-endpoint rather than a full `PUT` on
+`…/protection` (`.claude/rules/verify-the-branch-immediately-before-committing.md`
+has why that distinction matters). The `docker` job is deliberately **not**
+required — a broken Dockerfile breaks the Railway deploy
+(`.claude/rules/railway-no-dockerfile-volume.md`), so adding it is a live option,
+left as an explicit decision rather than pulled in silently.
 
 ## Part C: none of the above applied to the OWNER until 2026-09-05
 

@@ -108,10 +108,13 @@ Note the issue that filed this named two of them wrongly (`.cover-grid`,
 
 ## Verifying a change here
 
-The Browser pane is the wrong instrument for the *gesture*, and partly wrong for
-the geometry: it reports `innerWidth === 0` (`resize_window` does not clear it,
-confirmed again on #622), so the scrollbar-gutter compensation and every rect are
-unmeasurable there. What it answers honestly:
+The Browser pane is the wrong instrument for the *gesture*. For the geometry,
+**resize first**: a freshly opened tab reports `innerWidth === 0`, and #622 read
+that as permanent — but #722 measured an explicit `resize_window` clearing it, and
+`.claude/rules/preview-pane-paint-artifacts.md` is the canonical account. So take
+the reading rather than assuming: while the viewport is degenerate the
+scrollbar-gutter compensation and every rect are unmeasurable, and once it is not,
+they are. What the pane answers honestly either way:
 
 - `getComputedStyle(document.body).position` / `.top` while a sheet is open, and
   `window.scrollY` before / during / after — a `scrollBy` while locked must leave

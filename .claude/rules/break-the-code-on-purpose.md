@@ -147,14 +147,6 @@ account is created carrying every key, so an absent-key default reads the same
 whichever way it is written:
 `.claude/rules/defaulted-account-fields-need-a-legacy-shape-spec.md`.
 
-## History
-
-This lived in `.claude/rules/admin-cross-tenant-escape.md` §4 by accident — it was
-first written up for an RLS policy — until #599 gave it its own file. Twelve files
-cite the discipline and **not one of the eight citing rules is about databases**,
-which is why it could not stay filed under an RLS heading once `paths:` scoping
-made that heading decide who gets to read it.
-
 **Related:** `.claude/rules/assert-the-decision-not-its-ingredients.md` (a spec
 that re-derives the decision from its ingredients instead of calling it — green
 for months over a live bug),

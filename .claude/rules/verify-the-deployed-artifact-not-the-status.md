@@ -85,20 +85,12 @@ how a superseded deploy is marked: `5780187104` (`a92f4d1`) read
 state on the wrong row and you conclude a healthy deploy failed. Check the
 record's `sha` matches `origin/main` before reading its state at all.
 
-## The trigger, for the record
+## The trigger
 
-The failed deploy straddled the GitHub Actions incident `qcvjkzcs7j74`, and
-Railway's GitHub integration rides the same APIs. The correlation is tighter than
-"same day" — **the same merge, in the same minute, broke twice**:
-
-- CI run `31114551171` attempt 1 on `480c93e`: the `postgres` job died in
-  **`Set up job`** (runner/service-container provisioning) at 15:15:14, which is
-  the failure that exposed the `ci-passed` denylist hole and got fixed in #675.
-- Railway's deployment for that same SHA went `inactive` at 15:15:25, eleven
-  seconds later, under a green commit status.
-
-**During a GitHub incident, treat every green aggregate signal as suspect** and
-go look at the thing the signal is standing in for.
+The failed deploy straddled a GitHub Actions incident, and Railway's GitHub
+integration rides the same APIs — the same merge broke twice in the same minute,
+taking out `ci-passed` as well (#675). **During a GitHub incident, treat every
+green aggregate signal as suspect** and go look at the thing it stands in for.
 
 ## Same failure shape as the `ci-passed` hole
 

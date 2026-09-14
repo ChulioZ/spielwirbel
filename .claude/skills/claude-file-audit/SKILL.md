@@ -127,9 +127,12 @@ there are commented out, so match on the name, not on an assignment. (Miss
 `knexfile.js` and `DATABASE_SSL` reads as an orphan entry; the platform-injected
 `NODE_ENV`/`RAILWAY_GIT_COMMIT_SHA` family is deliberately absent.) Two files read
 their names **table-driven** through `process.env[name]` — `lib/public-stats.js`
-(the fourteen `PUBLIC_STATS_MIN_*` plus `PUBLIC_STATS_RESOLVE_MAX`) and
-`lib/corpus.js` (`BGG_CORPUS_*`) — so a literal `process.env.X` grep reports
-nineteen false orphans; match those against the name tables, not the grep.
+(the whole `PUBLIC_STATS_MIN_*` family plus `PUBLIC_STATS_RESOLVE_MAX`) and
+`lib/corpus.js` (`BGG_CORPUS_*`) — so a literal `process.env.X` grep reports every
+one of them as a false orphan; match those against the name tables, not the grep.
+**Don't restate how many there are here**: the count is a value those files own
+and it grows with the feature — #1035 added two, and the stale number this
+paragraph carried until 2026-09-14 is what the check is supposed to catch.
 
 The README tree and the cited paths are pinned by `test/readme-tree.test.js` and
 `test/skills.test.js` — check what those don't cover: prose that has quietly

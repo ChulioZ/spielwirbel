@@ -318,8 +318,9 @@ research at all.
 - **Status:** adopted · 2026-07-24
 - **Source:** official Claude Code guidance (target under ~200 lines per CLAUDE.md)
 - **Check:** `wc -l CLAUDE.md` stays around or under 200 (171 at adoption, 203 on
-  2026-07-30, 226 on 2026-09-07). Growth beyond that is a signal to move content into a scoped rule or a
-  skill, not to restructure (C-R03 still holds).
+  2026-07-30, 226 on 2026-09-07, 227 on 2026-09-14 after the i18n paragraph stopped
+  restating `CONTRIBUTING.md`'s ten-step list). Growth beyond that is a signal to move
+  content into a scoped rule or a skill, not to restructure (C-R03 still holds).
 - **Enforced by:** `test/token-budget.test.js` (allowlisted, `recorded` at 226 — the entry has to
   be dropped when the trim happens, so the overshoot cannot be forgotten)
 
@@ -331,8 +332,13 @@ research at all.
   measurement each run, so growth is visible rather than cumulative:
   ```bash
   wc -l .claude/rules/*.md | sort -rn | head        # per file
-  cat .claude/rules/*.md | wc -c                    # corpus (427 KB / 82 files on 2026-07-30)
+  cat .claude/rules/*.md | wc -c                    # corpus (427 KB / 82 files on 2026-07-30;
+                                                    #  862 KB / 134 on 2026-09-02;
+                                                    #  1.15 MB / 168 on 2026-09-14)
   ```
+  **The rate is the signal, not the total.** The 2026-09-14 reading is +34 files and
+  +34% in **twelve days**, against +52 files over the preceding ~33 — so the corpus is
+  compounding faster than it is being read, and nothing bounds it.
   The remedy for an over-budget rule is the one `C-004` already prescribes — it holds
   several learnings, so split it — or the narrative has outgrown the trap it exists to
   prevent, in which case cut the narrative, never the trap or the *why*.
@@ -403,7 +409,9 @@ research at all.
   for f in .claude/rules/*.md; do head -5 "$f" | grep -q 'scope: global' && cat "$f"; done | wc -c
   for f in .claude/rules/*.md; do head -5 "$f" | grep -q 'scope: global' && echo "$f"; done | wc -l
   ```
-  Baseline **2026-09-02: 26 global files / 135 KB**, against 18 files at the
+  Baseline **2026-09-02: 26 global files / 135 KB** — **2026-09-14: 29 / 151 KB**,
+  of which the four Browser-pane rules alone are **25 KB (16.7%)**, resident in every
+  session for a tool most never open. Against 18 files at the
   C-022 trial's conclusion (2026-08-01) — while the corpus as a whole went
   82 files/427 KB (2026-07-30) to 134 files/862 KB. So the global slice grew ~44%
   while the corpus grew ~102%: scoping is working, and the number still needs
@@ -419,7 +427,13 @@ research at all.
   *inventory* of fifteen entries of which a given session needs at most one.
   **#978 split it** (2026-09-12): the rule is 130 lines and stays global, the
   entries moved to `shared-constants-inventory.md`, `paths:`-scoped to
-  `public/js/**` + `lib/**`. Keep it as the worked example of this remedy — what
+  `public/js/**` + `lib/**`. **Re-measured 2026-09-14: the split took 378 lines off
+  the resident slice (508 global -> 130 global + 417 scoped), the largest single
+  saving in the corpus — and two residuals belong in the record. That glob matches
+  225 tracked files, i.e. essentially every implementation session still loads the
+  inventory; and the criterion's own prediction held, the inventory reaching 440
+  lines two days after being judged at 417.**
+  Keep it as the worked example of this remedy — what
   it demonstrates is that the seam was not the one the token-budget allowlist had
   recorded (the licensed-copy sections, a *topic* seam) but the RESIDENCY one:
   which half a session that is not creating an instance actually needs. The

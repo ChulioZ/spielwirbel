@@ -47,7 +47,9 @@ The bug is invisible to the obvious checks, and two separate probes said so:
   `innerWidth === 0` state (`.claude/rules/preview-pane-paint-artifacts.md`), so
   `getBoundingClientRect()` returned zero widths for everything and the
   "is the checkbox to the right of the title?" probe answered a meaningless
-  `false`. `resize_window` did **not** clear it.
+  `false`. `resize_window` did not clear it *that day* — #722 later measured it
+  clearing the degenerate viewport, so **resize and read `innerWidth` back**
+  before concluding the rects are unusable.
 
 **Only the screenshot showed it** — the pane renders the capture at real size
 even while it reports a 0-width layout. So for a *layout* claim, trust the

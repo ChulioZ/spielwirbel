@@ -1118,7 +1118,7 @@
   }
 
   // Art. 15/20. The response is JSON rather than a download URL because the
-  // required reason travels in the request body (see lib/routes/admin.js) — so the
+  // required reason travels in the request body (see lib/routes/admin/users.js) — so the
   // file is assembled here and saved via an object URL.
   async function exportUser(user) {
     const reason = askReason('Export');

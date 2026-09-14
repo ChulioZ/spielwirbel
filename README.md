@@ -115,16 +115,11 @@ npm run dev           # the server, restarted on every backend file change
 node scripts/seed-dev.js   # fill a throwaway .devdata/ with the demo's rounds
 ```
 
-`npm run dev` is `npm start` plus Node's built-in `--watch` (Node ≥ 18.11, well
-under this project's floor) and the same env-file loading `start:env` does — no
-extra dependency, and no nodemon. It restarts on a **backend** change; files
-under `public/` are served from disk, so a browser reload is enough for those
-and a restart would be wasted work. Data handling is identical to `npm start`:
-a bare run uses the default `data/`, and `DATA_DIR` overrides it.
-
 There is **no build step for development** — `npm start` serves `public/`
 directly. `npm run build` is optional and only for production; see
-[`docs/architecture.md`](docs/architecture.md).
+[`docs/architecture.md`](docs/architecture.md), and
+[`docs/configuration.md`](docs/configuration.md) for `npm run dev` and the
+env-file loading.
 
 ## Contributing
 
