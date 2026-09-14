@@ -492,6 +492,10 @@ What the app does, in detail. For a short overview see the
   further: each brings its own display typeface, a backdrop motif and ornament
   framing on primary buttons, section headings, cards, empty states and the
   finale stage, and reaches the round's home tile and its shareable recap card.
+  The round also **wears** its world on the screens you actually look at it on:
+  a crown of the world's own scenery above the round's name, the world's motif
+  behind the bottom navigation, the round's name in the world's face in the top
+  bar, and the world's mark on a game that has no cover art.
   On the winner reveal a world plays
   its own victory scene in place of the confetti — in Forest a tree grows
   while fireflies drift up, in Sci-Fi a rocket lifts off past streaking stars,

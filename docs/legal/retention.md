@@ -6,7 +6,7 @@ den Prüf-Rhythmus fest; die veröffentlichte Datenschutzerklärung
 Frist, die hier steht, aber nicht gelebt oder nicht veröffentlicht wird, ist
 schlimmer als keine.
 
-**Stand:** 2026-08-30
+**Stand:** 2026-09-14
 
 ## Grundsatz
 
@@ -37,7 +37,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Spenden (`vvt.md` Zeile 12) | Dashboard-Daten bei Ko-fi/Stripe/PayPal nach deren Regime — die App speichert selbst nichts; eigene Aufzeichnungen: solange steuerlich erforderlich | beim Anbieter / manuell |
 | DSA-Meldungen + Bescheide (Postfach-Ordner `Meldungen`) | **3 Jahre** ab Jahresende der Entscheidung (wie Moderations-Log) | manuell, Jahresprüfung |
 | Gespeicherte Kontakt-Meldungen (Datenbank `contact_notices`, #272) | wie Postfach: Allgemeine Anfragen nach Bearbeitung, DSA-Meldungen **3 Jahre** ab Jahresende der Entscheidung | manuell (DB), Jahresprüfung |
-| **Moderations-Log-Einträge mit personenbezogenen Daten** (E-Mail-Adressen, redigierte Texte als `previous`-Nachweis) | **3 Jahre ab Ende des Jahres der Maßnahme** | Jahresprüfung (unten) |
+| **Moderations-Log-Einträge mit personenbezogenen Daten** (E-Mail-Adressen, redigierte Texte als `previous`-Nachweis) | **3 Jahre ab Ende des Jahres der Maßnahme** | **automatisch** (Scheduler-Job `purgeModerationLog`, #311); Jahresprüfung nur noch zur Kontrolle (unten) |
 | Löschnachweise (`eraseAccount`-Einträge — ohne E-Mail-Adresse by design): Aktionen **`user_erased`** (betreiberseitig, #273) **und `account_deleted`** (Selbstbedienung, #419) | dauerhaft (Art. 17 Abs. 3 lit. b/e DSGVO) | — |
 | **Backups** (Railway Managed Postgres, eingerichtet 2026-08-04) | **Point-in-Time-Recovery: bis zu ca. 4 Wochen** (rollierend die letzten 4 wöchentlichen Vollsicherungen; plattformseitig nicht konfigurierbar); **Volume-Sicherungen: 6 Tage** (täglicher Lauf) | automatisch |
 
@@ -81,21 +81,33 @@ nicht stillschweigend auf 10 Jahre „korrigieren".
 
 ## Jahresprüfung (jeweils Januar)
 
-1. Moderations-Log im Panel nach Datum filtern (`/admin.html`, #275): Einträge
-   mit Maßnahme-Datum vor dem 1. Januar vor drei Jahren (Beispiel: Prüfung
-   Januar 2030 → Einträge bis 31.12.2026) exportieren (CSV, falls ein
-   Aufbewahrungsgrund im Einzelfall fortbesteht — z. B. laufender Streit —
-   sonst nicht) und anschließend löschen bzw. die personenbezogenen Felder
-   anonymisieren. **Löschnachweise bleiben — und das sind ZWEI Aktionen:**
-   `user_erased` (betreiberseitige Löschung, #273) und `account_deleted`
-   (Selbstbedienung über die Kontoeinstellungen, #419). Beide sind
-   Art.-17-Nachweise; die zweite Aktion ist seit #419 der Regelfall, weil die
-   meisten Löschungen ohne den Betreiber ablaufen. Ein Purge, der nur auf
-   `user_erased` ausnimmt (so der Vorschlag in #311), löscht also genau die
-   Nachweise, um die es überwiegend geht.
-   *Tooling-Hinweis:* ein Lösch-/Anonymisier-Endpunkt für alte Log-Einträge
-   existiert noch nicht (#275 §6 lieferte Filter/Export); bis dahin per
-   direktem DB-Zugriff löschen und den Vorgang im Log der Prüfung vermerken.
+1. **Moderations-Log: nur noch KONTROLLIEREN, nicht mehr selbst löschen.** Seit
+   #311 erledigt das der Scheduler-Job `purgeModerationLog` (`lib/retention.js`)
+   bei jedem Tick: er löscht Einträge mit Maßnahme-Datum vor dem 1. Januar vor
+   drei Jahren (Beispiel: ein Lauf im Jahr 2030 löscht alles vor dem
+   01.01.2027). Zu prüfen ist daher nur:
+   - Gibt es im Panel (`/admin.html`, #275) noch Einträge **vor** dem Stichtag?
+     Dann läuft der Job nicht — nachsehen, nicht von Hand nachlöschen.
+   - Läuft der Job überhaupt? Vor der ersten echten Löschung (frühestens
+     Januar 2030) gibt es dazu **keinen** Log-Eintrag, weil ein Lauf ohne
+     Löschung bewusst keinen schreibt — sonst stünde nach jedem Deploy einer
+     im Protokoll. Der Nachweis ist die Zeile `retention_purge_ran` in den
+     Anwendungs-Logs (Railway-Logsuche), die bei **jedem** Lauf erscheint und
+     `cutoff` und `deleted` nennt. Ab der ersten Löschung erscheint zusätzlich
+     eine `retention_purge`-Aktion im Panel (nur Zahlen und Daten, keine
+     personenbezogenen Inhalte).
+   - Besteht im Einzelfall ein Aufbewahrungsgrund fort (z. B. laufender
+     Streit)? Dann den Eintrag **vor** dem Stichtag per CSV exportieren — der
+     Job nimmt darauf keine Rücksicht.
+
+   **Löschnachweise bleiben — und das sind ZWEI Aktionen:** `user_erased`
+   (betreiberseitige Löschung, #273) und `account_deleted` (Selbstbedienung über
+   die Kontoeinstellungen, #419). Beide sind Art.-17-Nachweise; die zweite
+   Aktion ist seit #419 der Regelfall, weil die meisten Löschungen ohne den
+   Betreiber ablaufen. **Der Vorschlag in #311 nahm nur `user_erased` aus und
+   hätte damit genau die Nachweise gelöscht, um die es überwiegend geht** — die
+   Umsetzung nimmt beide aus (`lib/erasure-actions.js`, eine Liste für beide
+   Backends). Eine dritte Löschaktion muss dort ergänzt werden.
 2. Postfach: Ordner `Meldungen` nach demselben Stichtag aufräumen; erledigte
    Support-Korrespondenz löschen. Ebenso die **gespeicherten Meldungen** der
    `contact_notices`-Tabelle (Panel-Karte „Meldungen“, #272) nach demselben
