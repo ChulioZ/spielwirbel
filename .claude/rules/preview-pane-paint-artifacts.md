@@ -44,9 +44,9 @@ where it decided the shape of a fix.
 **A real viewport does NOT revive them — the 0×0 reading is a symptom, not the
 cause.** This paragraph used to name the degenerate viewport as the root cause,
 which reads as "resize and the observers work" given the section below. Measured
-2026-09-08 (#979) with `resize_window {width: 1200, height: 900}` in force and
-`innerWidth`/`innerHeight` confirming 1200/900, a bare probe with no app code —
-an appended 50×50 div, one `IntersectionObserver`, 1.5 s — **never fired**:
+2026-09-08 (#979) at `resize_window {width: 1200, height: 900}`, confirmed by
+`innerWidth`/`innerHeight`: a bare probe with no app code — an appended 50×50 div,
+one `IntersectionObserver`, 1.5 s — **never fired**:
 
 ```js
 const d = document.createElement('div');
@@ -68,12 +68,9 @@ because `IntersectionObserver` is absent entirely.
 
 ## `resize_window` DOES clear the 0×0 viewport — re-test before writing it off
 
-Measured 2026-08-09 (#722), and it contradicts four rule files that state the
-opposite (`overlay-page-lock.md`, `popover-vs-sheet-editors.md`,
-`label-rows-lose-to-field-label.md`, `provider-cover-sizing.md`). A **freshly
-opened** tab reports `innerWidth === 0 / innerHeight === 0`, as those files say —
-but an explicit `resize_window` clears it, and a plain resize with **no**
-navigate afterwards was enough:
+Measured 2026-08-09 (#722). A **freshly opened** tab reports
+`innerWidth === 0 / innerHeight === 0` — but an explicit `resize_window` clears
+it, and a plain resize with **no** navigate afterwards was enough:
 
 ```js
 // after resize_window {width: 1100, height: 640}
@@ -81,16 +78,19 @@ window.innerWidth / innerHeight        // 1100 / 640
 document.documentElement.clientWidth   // 1100
 ```
 
-That matters more than a footnote, because those files talk future sessions out
-of measuring layout in the pane at all — and with a real viewport the whole of
-#722 (a `vh` cap, `place()`'s arithmetic, flex give-way, a low-anchor control)
-was directly measurable, no stubbing needed. `vh` resolves to **0** while the
-viewport is degenerate, so the *unresized* pane silently tests only a rule's
-`max()` floor and never its viewport term.
+That matters, because a pane believed permanently 0×0 talks future sessions out
+of measuring layout there at all — and with a real viewport the whole of #722 (a
+`vh` cap, `place()`'s arithmetic, flex give-way, a low-anchor control) was
+directly measurable, no stubbing needed. `vh` resolves to **0** while the viewport
+is degenerate, so the *unresized* pane tests only a rule's `max()` floor.
 
 This is one measurement on one pane build, so treat neither claim as settled:
 **resize first, read the numbers back, and believe what they say.** If they are
-still 0, the stubbing recipes in the files above are the fallback.
+still 0, the stubbing recipes in `overlay-page-lock.md`,
+`popover-vs-sheet-editors.md`, `label-rows-lose-to-field-label.md` and
+`provider-cover-sizing.md` are the fallback. Those four wrote it up as permanent,
+and naming them here did not correct them — three still said the opposite a month
+later. **Do the edit, don't cite the file you meant to correct.**
 
 **A card that is mid-ANIMATION captures as a hole in the page** (measured
 2026-09-06, #940). While the winner spotlight's reveal was running — a

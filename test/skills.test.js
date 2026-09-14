@@ -318,3 +318,88 @@ test('every .claude/ reference in a source comment resolves', () => {
   assert.deepEqual(missing, [],
     `source comments cite .claude/ files that do not exist:\n  ${missing.join('\n  ')}`);
 });
+
+/*
+ * The same check, over SOURCE PATHS in source comments — the half the spec above
+ * deliberately left out, and the half that actually rotted.
+ *
+ * That spec's own comment explains the omission: "source comments quote source
+ * paths loosely (in prose, in regex literals, inside string templates) and
+ * matching those would produce false positives nobody can act on." Reasonable,
+ * and measured wrong on 2026-09-14: of ~950 distinct citations across the tree the
+ * pattern below left eight paths unresolved, and not one was noise — six named a
+ * deleted file as history, and two were rot. So the cost of the omission was real
+ * and its premise was not: #996 had split `lib/routes/admin.js` into
+ * `lib/routes/admin/` and left ELEVEN comments in nine files across `lib/` and
+ * `public/js/pages/` naming the deleted file as where the moderation write side
+ * lives, with nothing able to see it.
+ *
+ * `.claude/rules/token-friendly-source-files.md` had already diagnosed the class
+ * and prescribed the grep; this is the remedy criteria C-017 asks for when a rule
+ * was right and got skipped anyway — a check, not a rewording.
+ *
+ * Narrow in two ways that keep the false positives at zero: the path must end in
+ * `.js` (so `lib/routes/` and `public/img/` prose never match), and it must start
+ * at one of the repo's real source roots.
+ */
+
+/* Exemptions are `<citing file> -> <cited path>` PAIRS, not bare paths — which is
+   where this list departs from DELETED_ON_PURPOSE above, and the departure is
+   load-bearing. A deleted file gets cited two ways at once: as history ("the
+   retired X"), which is legitimate and permanent, and as a live location, which is
+   the rot. `lib/routes/admin.js` was BOTH on the day this was written — two
+   history mentions and eleven stale pointers. Exempting the path would have masked
+   all eleven; exempting the pair exempts the sentence that earned it and leaves every
+   other file's citation of the same dead path failing. */
+const SOURCE_PATH_HISTORY = new Set([
+  'test/readme-tree.test.js -> lib/ai.js',                                    // removed with the AI surface (#264)
+  'test/prices.test.js -> lib/prices/steam.js',                               // retired provider (#744)
+  'test/contact.test.js -> lib/routes/feedback.js',                           // became lib/routes/contact.js (#321)
+  'test/signed-token-parity.test.js -> lib/signed-token.js',                  // never existed: the refactor that spec names as the road not taken
+  'test/podium-ranks.test.js -> test/result-spotlight.test.js',               // removed with the winner spotlight (#1056)
+  'test/legacy-retire-flag-ignored.test.js -> test/vote-zero-counts.test.js', // replaced, and named as such (#909)
+  'test/admin-router-composition.test.js -> lib/routes/admin.js',             // the split this spec exists to pin (#996)
+  'test/token-budget.test.js -> lib/routes/admin.js',                         // two allowlist reasons citing the pre-split file (#996)
+]);
+
+/* This table necessarily SPELLS every dead path, so the file defining it cites
+   them all — and would fail its own check. Exempt exactly those self-citations,
+   derived rather than listed, so the rest of this file stays scanned and the
+   exemption cannot outlive an entry it was written for. */
+for (const pair of [...SOURCE_PATH_HISTORY]) {
+  SOURCE_PATH_HISTORY.add(`test/skills.test.js -> ${pair.split(' -> ')[1]}`);
+}
+
+test('every source path cited in a source comment resolves', () => {
+  const SRC_DIRS = ['lib', 'test', 'public/js', 'scripts'];
+  const files = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) walk(rel);
+      else if (e.name.endsWith('.js')) files.push(rel);
+    }
+  };
+  for (const d of SRC_DIRS) walk(d);
+  assert.ok(files.length > 100, `walked ${files.length} source files, expected the whole tree`);
+
+  const PATH_RE = /\b(?:lib|scripts|test)\/[A-Za-z0-9_./-]*\.js\b|\bpublic\/js\/[A-Za-z0-9_./-]*\.js\b/g;
+
+  const missing = [];
+  let checked = 0;
+  for (const rel of files) {
+    const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    for (const ref of new Set(text.match(PATH_RE) || [])) {
+      checked += 1;
+      if (SOURCE_PATH_HISTORY.has(`${rel} -> ${ref}`)) continue;
+      if (!fs.existsSync(path.join(ROOT, ref))) missing.push(`${rel} -> ${ref}`);
+    }
+  }
+  // Counts hits, not attempts — a regex that stopped matching would go to zero.
+  assert.ok(checked > 400, `matched only ${checked} source paths, expected many more`);
+
+  assert.deepEqual(missing, [],
+    'source comments cite source files that do not exist — fix the pointer, or, if the sentence\n'
+    + 'names the file as history, add the <citing file> -> <cited path> pair to SOURCE_PATH_HISTORY\n'
+    + `with the issue that removed it:\n  ${missing.join('\n  ')}`);
+});

@@ -124,14 +124,11 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   from it — the picker, `Intl.PluralRules` in `tn()`, date/month formatting, and
   the feedback-metadata allowlist in `lib/routes/contact.js` (a backend file
   requiring out of `public/js/` on purpose — see
-  `.claude/rules/shared-constants-across-the-stack.md`). Adding a language is a
-  row there, a `lang/<code>.js` file wired into `index.html` + `sw.js`'s `SHELL`
-  + a `CACHE` bump, a landing-screenshot set per locale (#457 — required by
-  `test/landing-shots.test.js`), and its native label in the bug-report form's
-  language dropdown (`test/i18n-locales.test.js` derives the expected options
-  from the table) — plus an `allow`/`ban` regex pair in `test/session-naming.test.js`'s
-  `RULES`, the one step that is judgement rather than translation.
-  **`CONTRIBUTING.md` "Adding a language" is the canonical ordered list.**
+  `.claude/rules/shared-constants-across-the-stack.md`). Adding a language is
+  mostly that row plus a `lang/<code>.js` file — but only mostly, and the rest is
+  longer than it looks. **`CONTRIBUTING.md` "Adding a language" is the canonical
+  ordered list, and the only one**: nearly every step there is red-tested, so
+  working from a summary means discovering the remainder as failures.
   Don't reintroduce a hardcoded `['de', 'en']`
   anywhere; `tn()` stays a one/other pair, so a language with `few`/`many`
   plural categories (Polish, Czech, Russian) needs more than a data file.
