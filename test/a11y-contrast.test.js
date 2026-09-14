@@ -39,6 +39,11 @@ const { MEMBER_COLORS } = require('../public/js/member-colors');
 assert.ok(DESIGNS.length >= 11, 'expected the nine palettes plus the two worlds');
 
 const THEMES = DESIGNS.map(tokensFor);
+
+// A rule whose selector may be one MEMBER of a grouped, newline-separated
+// selector — bodyOf() compares the whole text and would miss it.
+const slotBodyFor = (sel) => (rulesOf(CSS).find(([s]) => s.split('\n')
+  .map((x) => x.trim().replace(/,$/, '')).includes(sel)) || [])[1] || null;
 const name = (t) => `${t.design.id}${t.dark ? ' (dark)' : ''}`;
 
 /* Anti-vacuous, and it guards the whole file: every loop below is "for each
@@ -862,6 +867,35 @@ test('the winners\' gold fill clears AA too, at its higher alpha', () => {
   }
   assert.deepEqual(failures, [],
     `the winners' rows fill at ${(alpha * 100).toFixed(0)}% --gold over --surface; body text on it needs ${AA_TEXT}:1`);
+});
+
+/* The dock's world motif (#1082). The dock is the one element on a phone that is
+   on screen every second, which is why the world now reaches it — and it is
+   therefore also the one where a motif under the labels is least escapable.
+
+   Measured against the WORLD's --surface, not white. The home tile carries the
+   same motif at .16 and clears comfortably because the lobby it sits in is never
+   themed; the dock inherits the round's own surface, where .16 lands at 4.44:1
+   on Chess — under the bar, and on a LIGHT world rather than one of the dark
+   ones the issue expected to bind. */
+test('the dock motif leaves its labels over AA on every design', () => {
+  const decl = slotBodyFor('[data-world] .dock::before');
+  assert.ok(decl, '[data-world] .dock::before is gone — did the dock motif move?');
+  const m = /opacity:\s*([\d.]+)/.exec(decl);
+  assert.ok(m, `the dock motif declares no opacity: ${decl}`);
+  const alpha = Number(m[1]);
+
+  const failures = [];
+  for (const t of THEMES) {
+    // The motif's densest pixel is a fully covered silhouette, i.e. the accent
+    // at the full declared alpha over the dock's --surface.
+    const ground = composite(t.brand, t.surface, alpha);
+    const ratio = contrast(t.inkSoft, ground);
+    if (ratio < AA_TEXT) failures.push(`${name(t)} = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    `the dock paints its world motif at ${(alpha * 100).toFixed(0)}% --brand over --surface; `
+    + `.dock__item is --ink-soft and needs ${AA_TEXT}:1. The issue's .16 lands at 4.44:1 on Chess.`);
 });
 
 /* The Freundeskreis cover wash (#1094). Unlike every fill above it, the layer is

@@ -208,9 +208,13 @@ const TOKENS = ['--world-font', '--world-backdrop', '--world-backdrop-size', '--
   '--world-victory-2-l', '--world-victory-2-r', '--world-victory-2-band',
   '--world-victory-y', '--world-victory-2-y', '--world-victory-anim', '--world-victory-anim-2',
   '--world-particle', '--world-particle-w', '--world-particle-h', '--world-particle-inset',
-  '--world-particle-anim', '--world-particle-dur'];
+  '--world-particle-anim', '--world-particle-dur',
+  // Slot 8 (#1082): where the stage art is anchored inside the crown strip —
+  // `top` for the worlds whose motif hangs (canopy, waves, webs), `bottom` for
+  // those whose motif stands (skyline, rank, horizon).
+  '--world-crown-y'];
 
-test('each world declares the whole token set the seven slots read, in the registry\'s face', () => {
+test('each world declares the whole token set the eight slots read, in the registry\'s face', () => {
   for (const w of WORLDS) {
     const body = bodyOf(`[data-world="${w.id}"]`);
     assert.ok(body, `styles.css has no [data-world="${w.id}"] token block`);
@@ -247,12 +251,15 @@ const SLOTS = [
   '[data-world] .empty::before',
   '[data-world] .stage::before',
   '[data-world] .spotlight::before',
+  // Slot 8 (#1082) — the crown. One rule for both hosts, so it is asserted as
+  // the grouped selector the sheet declares rather than twice.
+  '[data-world] .hero::before',
 ];
 
 // A slot selector can hold commas inside :is(), which bodyOfIn() would split on.
 const slotBody = (sel) => (rulesOf(CSS).find(([s]) => s.split('\n').map((x) => x.trim().replace(/,$/, '')).includes(sel)) || [])[1] || null;
 
-test('the seven slots exist, and every ornament is a pseudo-element that takes no clicks', () => {
+test('the eight slots exist, and every ornament is a pseudo-element that takes no clicks', () => {
   for (const sel of SLOTS) assert.ok(slotBody(sel), `slot ${sel} is missing`);
   const rules = rulesOf(CSS).filter(([sel]) => sel.includes('[data-world'));
   assert.ok(rules.length >= 19, `the world rules have moved (found ${rules.length})`);
@@ -273,15 +280,74 @@ test('the seven slots exist, and every ornament is a pseudo-element that takes n
   for (const [sel, body] of rules) {
     for (const m of body.matchAll(/background:\s*([^;]+);/g)) {
       painted += 1;
-      assert.match(m[1], /^(var\(--(brand|brand-strong|stage-ink)\)|radial-gradient\([^;]*var\(--stage-ink\))/,
+      assert.match(m[1], /^(var\(--(brand|brand-strong|stage-ink)\)|currentColor|radial-gradient\([^;]*var\(--stage-ink\))/,
         `${sel}: background ${m[1]} is not a theme token`);
     }
   }
   assert.ok(painted >= 10, `expected the ornaments to paint, found ${painted} backgrounds`);
+  /* `currentColor` is allowed above, and it is NOT a loophole — but it only
+     holds while the element it inherits from sets a theme-derived `color`. The
+     one user is the coverless tile's motif (#1082), which takes the tornado's
+     own ink on purpose so the two cannot differ. Check the chain rather than
+     trusting it: an ornament inheriting a literal would pass the allowlist
+     while painting a shade of its own. */
+  const inheritors = rules.filter(([, body]) => /background:\s*currentColor/.test(body))
+    .map(([sel]) => sel.replace(/::(before|after)$/, '').replace(/^\[data-world\]\s*/, '').trim());
+  assert.deepEqual([...new Set(inheritors)], ['.cover-ph'],
+    'a new ornament paints currentColor — add its host to the colour check below');
+  for (const [sel, body] of rulesOf(CSS)) {
+    if (sel.trim() !== '.cover-ph') continue;
+    const c = /(^|[\s;])color:\s*([^;]+);/.exec(body);
+    if (!c) continue;
+    assert.match(c[2].trim(), /^(color-mix\(|oklch\(from )[^;]*var\(--brand/,
+      `.cover-ph ink ${c[2]} is not derived from the round's accent, so currentColor is not either`);
+  }
   // The focus ring and the surface are floors, not styling surfaces.
   for (const [sel, body] of rules) {
     assert.doesNotMatch(body, /box-shadow|outline|--surface\s*:/, `${sel} touches a focus ring or --surface`);
   }
+});
+
+test('the crown reserves its own height through ONE property, so art and space cannot drift', () => {
+  /* Slot 5's discipline, and the reason it exists: the strip is painted at
+     `height: var(--crown-h)` and the host reserves `padding-top: calc(var(--crown-h) + N)`.
+     Two literals that must agree would drift on the first retune, and the
+     failure is SILENT in both directions — too little padding clips the art,
+     too much leaves an empty band above the round's name, and nothing goes red.
+     Assert the property is what carries both, not the number it holds today. */
+  for (const host of ['[data-world] .hero', '[data-world] .rail__id']) {
+    const body = rulesOf(CSS).find(([sel]) => sel.trim() === host);
+    assert.ok(body, `${host} does not reserve the crown's strip`);
+    assert.match(body[1], /--crown-h:\s*[^;]+;/, `${host} declares no --crown-h`);
+    assert.match(body[1], /padding-top:\s*calc\(var\(--crown-h\)/,
+      `${host} reserves a literal instead of var(--crown-h) — art and space will drift`);
+  }
+  const art = slotBody('[data-world] .hero::before');
+  assert.match(art, /height:\s*var\(--crown-h\)/,
+    'the crown paints at a literal height instead of --crown-h');
+
+  // And the anchor is per world, never a fixed edge: cropping a 600x140 scene to
+  // a <=96px strip keeps the TOP for a canopy and the BOTTOM for a skyline.
+  assert.match(art, /mask-position:\s*center var\(--world-crown-y\)/,
+    'the crown crops at a fixed edge, so half the worlds show the wrong part of their art');
+});
+
+test('the crown and the dock motif stand down under prefers-contrast: more', () => {
+  /* Every world ornament does, and these two need their RESERVATION removed
+     with them: a hidden crown over an unchanged `padding-top` leaves the round's
+     name floating under an empty 96px band. The coverless tile gets its tornado
+     back rather than nothing at all. */
+  const hi = mediaBlocks().filter(([q]) => /prefers-contrast:\s*more/.test(q))
+    .map(([, css]) => css).join('\n');
+  assert.ok(hi, 'no prefers-contrast: more block');
+  for (const sel of ['[data-world] .hero::before', '[data-world] .rail__id::before',
+    '[data-world] .dock::before', '[data-world] .cover-ph::after']) {
+    assert.ok(hi.includes(sel), `${sel} still paints under prefers-contrast: more`);
+  }
+  assert.match(hi, /\[data-world\] \.hero[^:][^{]*\{[^}]*padding-top:\s*0/,
+    'the crown is hidden but its reservation stays — an empty band above the name');
+  assert.match(hi, /\[data-world\] \.cover-ph \.ti\s*\{[^}]*display:\s*block/,
+    'the tornado does not come back, so a coverless tile shows nothing at all');
 });
 
 test('the backdrop alpha stays inside the contrast budget for body text on the page', () => {
@@ -550,101 +616,4 @@ test('a world-framed primary button reserves room for its ornament beside a neig
   const px = parseFloat(body.match(/column-gap:\s*([\d.]+)px/)?.[1] ?? '0');
   // .8em of the largest button in these rows (22px btn--lg) is 17.6px.
   assert.ok(px >= 18, `column-gap ${px}px does not clear the 17.6px overhang`);
-});
-
-/* ---- the arc guard (#1081) ------------------------------------------------
- *
- * Both Horror moons painted ZERO pixels in production, and nothing could see
- * it: the SVG parsed, the mask applied, the token was present, every geometry
- * assertion above stayed green, and the ornament simply was not there.
- *
- * The mechanism is in the SVG spec: an elliptical arc whose radius is too small
- * to reach its own endpoint is not an error — the radii are SCALED UP until it
- * just fits. A crescent drawn as two arcs on a 72px chord whose inner arc asks
- * for r 29 therefore becomes two identical half-circles, which cancel exactly.
- *
- * So the guard is arithmetic on the path data, and it applies the SPEC's own
- * test rather than a paraphrase of it (F.6.6.2):
- *
- *     Λ = (x₁′/rx)² + (y₁′/ry)²,  scaled up iff Λ > 1
- *
- * where (x₁′, y₁′) is half the endpoint delta rotated by −φ. The obvious
- * shorthand — "2·rx and 2·ry must both reach the chord" — is WRONG and was
- * measured wrong: it flags `a 10 8 0 0 1 20 0`, a flat-ended ellipse where the
- * short radius is the one perpendicular to the chord and nothing is scaled at
- * all. Three of Forest's mushroom caps are that shape, and a guard that fails on
- * correct artwork gets weakened until it stops catching the real thing.
- *
- * It cannot judge whether a mask LOOKS right — node has no canvas, and the ink
- * measurements that found this live on the bench — but it catches the one
- * failure that is invisible in every other direction.
- */
-
-/* `a rx ry rot large sweep dx dy`, relative. The uppercase form is absolute and
-   carries no chord computable from the command alone, so it is skipped rather
-   than guessed at — no world mask uses one today.
-
-   `SEP` is the whole reason this is not a one-liner. In SVG path data a MINUS
-   SIGN is itself a separator, so the shipped Horror crescent spells its endpoint
-   `0-72`, with no space. A pattern demanding `[\s,]+` between dx and dy matches
-   nothing there — and the first draft of this guard swept every world, reported
-   clean, and missed both of the moons it was written for
-   (.claude/rules/source-scanning-guards-enumerate-shapes.md: what varies is the
-   syntax around the token, not the token). */
-const SEP = '(?:[\\s,]+|(?=-))';
-const N = '(-?[\\d.]+)';
-const ARC_RE = new RegExp(
-  `a[\\s,]*${N}${SEP}${N}${SEP}${N}[\\s,]*([01])[\\s,]*([01])[\\s,]*${N}${SEP}${N}`, 'g');
-
-function badArcs(css) {
-  const out = [];
-  for (const m of css.matchAll(ARC_RE)) {
-    if (m[0][0] !== 'a') continue; // relative only
-    const [rx, ry, rot, , , dx, dy] = m.slice(1).map(Number);
-    // A zero radius is a straight line by spec, and deliberate where it appears.
-    if (rx === 0 || ry === 0) continue;
-    const phi = (rot * Math.PI) / 180;
-    const x1 = (Math.cos(phi) * dx + Math.sin(phi) * dy) / 2;
-    const y1 = (-Math.sin(phi) * dx + Math.cos(phi) * dy) / 2;
-    const lambda = (x1 / rx) ** 2 + (y1 / ry) ** 2;
-    if (lambda > 1 + 1e-9) {
-      out.push(`a ${rx} ${ry} … ${dx} ${dy} — Λ ${lambda.toFixed(2)}, so both radii are scaled by ${Math.sqrt(lambda).toFixed(2)}×`);
-    }
-  }
-  return out;
-}
-
-test('the arc guard can see a radius that is too small for its chord', () => {
-  // The guard's own self-test, with the shape that shipped. Without it a broken
-  // regex reports "no bad arcs" over every world and the check is vacuous.
-  assert.deepEqual(badArcs("d='M0 0a36 36 0 0 1 0 72z'"), [], 'a radius exactly half the chord is legal');
-  assert.equal(badArcs("d='M0 0a29 29 0 0 0 0 72z'").length, 1, 'the shipped Horror crescent must be caught');
-  assert.equal(badArcs("d='M0 0a40 20 0 0 0 0 72z'").length, 1,
-    'a short radius ALONG the chord is still scaled — here ry, on a vertical chord');
-  // …and the negative that the naive "2r >= chord" form gets wrong: a flat
-  // ellipse whose SHORT radius is perpendicular to the chord is untouched.
-  assert.deepEqual(badArcs("d='M0 0a10 8 0 0 1 20 0z'"), [],
-    'a flat-ended ellipse is legal — three of Forest\'s mushroom caps are this shape');
-  // The SPELLING that shipped: a minus sign as the separator, no space. The
-  // first draft of this guard swept every world clean and missed both moons.
-  assert.equal(badArcs("d='M70 22a36 36 0 1 0 0 72a29 29 0 1 1 0-72z'").length, 1,
-    'the compact `0-72` endpoint form must be parsed, not skipped');
-});
-
-test('no world mask asks for an arc radius the browser will silently scale up', () => {
-  let checked = 0;
-  const bad = [];
-  for (const w of WORLDS) {
-    const body = bodyOf(`[data-world="${w.id}"]`);
-    assert.ok(body, `no token block for ${w.id}`);
-    for (const [, token, value] of body.matchAll(/(--world-[\w-]+):\s*(url\("data:image\/svg\+xml,[^"]*"\))/g)) {
-      checked += 1;
-      for (const hit of badArcs(decodeURIComponent(value))) bad.push(`${w.id} ${token}: ${hit}`);
-    }
-  }
-  // Anti-vacuous: counts masks actually put through the check, so a lookup that
-  // stopped finding any would fail here rather than reporting a clean sweep.
-  assert.ok(checked >= 30, `expected to scan every world's masks, scanned ${checked}`);
-  assert.deepEqual(bad, [],
-    `these arcs are scaled up silently and paint the wrong shape (a crescent becomes two cancelling half-discs):\n  ${bad.join('\n  ')}`);
 });

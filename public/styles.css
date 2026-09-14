@@ -9305,6 +9305,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: a canopy hangs from the top, so the strip shows the art’s top. */
+  --world-crown-y: top;
   /* Slot 7 (#940) — the victory scene. Layer 1 grows: two trunks in the
      gutters and the forest floor across the band; layer 2 is the canopies,
      which lift into place after it. The confetti bits become fireflies —
@@ -9341,6 +9343,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: a skyline stands on the bottom, so the strip shows the art’s bottom. */
+  --world-crown-y: bottom;
   /* Slot 7 (#940) — layer 1 is the rocket ALONE, at the top of the right
      gutter, so the launch can translate the whole layer; layer 2 is the ringed
      planet low in the left gutter plus the pad, its exhaust cloud and a still
@@ -9379,6 +9383,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: waves break downward from the top, so the strip shows the art’s top. */
+  --world-crown-y: top;
   /* Slot 7 — layer 1 is the sea floor: kelp in both gutters and a sand bed
      with starfish and shells across the band, rising with the tide; layer 2
      is a whale surfacing in the left gutter, blowing, plus its bubbles. The
@@ -9415,6 +9421,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: a rank stands on the bottom, so the strip shows the art’s bottom. */
+  --world-crown-y: bottom;
   /* Slot 7 — layer 1 is the board: the king in the left gutter, the queen in
      the right, and the checkered floor across the band, all rising into
      place; layer 2 is the back rank on the floor — rook, knight, bishop and
@@ -9451,6 +9459,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: webs hang from the top, so the strip shows the art’s top. */
+  --world-crown-y: top;
   /* Slot 7 — layer 1 is the graveyard: a dead tree in each gutter and fog,
      stones and crosses across the band, looming in; layer 2 is the ghost
      rising in the left gutter and the moon high in the right. The bits become
@@ -9487,6 +9497,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: a horizon stands on the bottom, so the strip shows the art’s bottom. */
+  --world-crown-y: bottom;
   /* Slot 7 — layer 1 is the herd: a long-neck in the left gutter, a
      tyrannosaur in the right and a fern floor across the band, stomping up
      into place; layer 2 is the volcano in the band, its smoke rising, with a
@@ -9904,6 +9916,123 @@ kbd {
   mask-size: var(--world-backdrop-size);
   mask-repeat: repeat;
 }
+/* ---- #1082: the round WEARS its world ----------------------------------
+   Measured 2026-09-13 over the seeded demo at 1470x870: besides the .09
+   backdrop a world painted 3 marks on the hub, 4 on Chronik and Pokale, 12 on
+   the Regal — while the three BOLD slots (.36/.40/.55) sit on an empty list,
+   the finale stage and the winners' group, i.e. a young round's screen and two
+   once-per-session moments. On a phone the dock at y 761 — the one element on
+   screen every second — carried nothing. A world was loud where nobody is and
+   a whisper where everybody lives.
+
+   Every addition below is a pseudo-element painting an existing token into a
+   TEXT-FREE band, or at an alpha a text surface already clears, so the contrast
+   budget is untouched. No new artwork: the crown re-uses --world-stage. */
+
+/* Slot 8 — DIE KRONE. The stage art as a text-free strip above the round's
+   name, on the two surfaces a round is actually looked at on.
+
+   The reservation and the art are sized through ONE custom property
+   (--crown-h) on purpose: slot 5's discipline. Two numbers that must agree
+   drift, and the failure is silent — the strip either clips the art or leaves a
+   gap above the name, with nothing to fail. */
+[data-world] .hero {
+  --crown-h: clamp(56px, 16vw, 96px);
+  position: relative;
+  padding-top: calc(var(--crown-h) + 12px);
+}
+[data-world] .hero::before,
+[data-world] .rail__id::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--crown-h);
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .36;
+  mask-image: var(--world-stage);
+  /* The anchor is per world: a canopy, waves and webs hang from the TOP of the
+     art, while a skyline, a rank and a horizon stand on its BOTTOM. Cropping a
+     600x140 scene to a 56–96px strip therefore has to keep a different edge
+     per world, which is what --world-crown-y carries. */
+  mask-position: center var(--world-crown-y);
+  mask-size: 100% auto;
+  mask-repeat: no-repeat;
+}
+/* The rail's crown is gated on HEIGHT as well as width (operator decision): the
+   rail already measures 746px tall under the demo banner and its last group
+   sits at y 860–899, so at 1280x800 a 48px crown would push it 7–20px past the
+   fold. The hero's crown is unconditional because the hub scrolls. */
+@media (min-width: 1280px) and (min-height: 860px) {
+  [data-world] .rail__id {
+    --crown-h: 48px;
+    position: relative;
+    padding-top: calc(var(--crown-h) + 8px);
+  }
+  [data-world] .rail__id::before { mask-size: 260px auto; }
+}
+
+/* B2 — the dock and the tab strip. One element in both forms
+   (.claude/rules/responsive-hub-tabs.md): a fixed pill below 860px, an in-flow
+   strip at 860–1279. It gets the home tile's treatment above — the same shape,
+   a small surface carrying the motif behind its own labels. `isolation:
+   isolate` keeps the z-index: -1 layer inside the pill instead of behind the
+   page.
+
+   BUT NOT THE TILE'S .16, and the difference is exactly what #1082 said to
+   measure rather than assume. The home tile's comment says it "sits on white,
+   where --ink-soft keeps 4.9:1" — true of the LOBBY, which is never themed. The
+   dock lives inside the round and inherits the WORLD's --surface, and there .16
+   measures 4.44:1 on Chess: under the AA bar, on a light world rather than one
+   of the dark ones the issue expected to bind.
+
+     .16 -> 4.44:1 (Chess)   fails AA
+     .15 -> 4.53:1           passes by 0.03, i.e. inside rounding noise
+     .14 -> 4.61:1           ships
+
+   .14 rather than the bare ceiling, for the margin: 0.03 is not a budget.
+   test/a11y-contrast.test.js re-derives this from the opacity below. */
+[data-world] .dock { overflow: hidden; isolation: isolate; }
+[data-world] .dock::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .14;
+  mask-image: var(--world-backdrop);
+  mask-size: var(--world-backdrop-size);
+  mask-repeat: repeat;
+}
+
+/* B3 — the round's name in the top bar, in the world's face. The wordmark
+   stays Baloo: the brand names the product, the context names this round.
+   Mind .claude/rules/hangul-locale-typography.md — a world face carries no
+   Hangul and falls back per glyph, the same trade the round name already makes
+   on the hub. */
+[data-world] .topbar__context { font-family: var(--font-display); }
+
+/* B4 — a coverless game tile shows the world's corner motif instead of the
+   app's tornado. `currentColor` is the placeholder's OWN glyph ink — set on
+   .cover-ph, including its @supports oklch branch — so the motif keeps exactly
+   the tone the tornado had rather than introducing one.
+   (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md.) The recap card
+   draws its own placeholder in canvas; that one is untouched. */
+[data-world] .cover-ph .ti { display: none; }
+[data-world] .cover-ph::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: currentColor;
+  opacity: .72;
+  mask-image: var(--world-corner);
+  mask-size: 44%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+}
+
 .theme-card[data-world] .theme-card__bar { position: relative; }
 .theme-card[data-world] .theme-card__bar::before,
 .theme-card[data-world] .theme-card__bar::after {
@@ -9933,5 +10062,13 @@ kbd {
   [data-world] .spotlight::after,
   [data-world] .tafel-top::before,
   [data-world] .tafel-top::after,
+  [data-world] .hero::before,
+  [data-world] .rail__id::before,
+  [data-world] .dock::before,
   :is(.theme-card, .round-card)[data-world]::before { display: none; }
+  /* The crown's reservation goes with its art, or the name sits under an empty
+     96px band. The coverless tile gets its tornado back rather than nothing. */
+  [data-world] .hero, [data-world] .rail__id { padding-top: 0; }
+  [data-world] .cover-ph::after { display: none; }
+  [data-world] .cover-ph .ti { display: block; }
 }
