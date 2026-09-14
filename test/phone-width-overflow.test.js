@@ -178,8 +178,20 @@ test('the results row drops to two columns on a phone, and its score follows', (
     `"${row[0]}" ties the base ".trow" rule and loses on source order`);
   const tracks = row[1].match(/grid-template-columns:\s*([^;]+);/);
   assert.ok(tracks, 'the phone block declares no grid-template-columns for the row');
-  assert.equal(tracks[1].trim().split(/\s+(?![^(]*\))/).length, 2,
-    'the row is back to three tracks at phone widths, which cannot fit (#621)');
+  /* #621's constraint is that the DESKTOP four-track layout cannot fit a 320px
+     content box: rank + cover + main + action, with the five rating bars needing
+     130px of the `main` track. What it forbids is the rank taking a track and
+     every cell sitting on its own column — not a track count as such. #1111 then
+     added a third track for the action alone, so the score can span the other
+     two (at 56px its label overflowed in every shipped locale but ko, and split
+     the brand in ko). The rows that need the width span all three, so nothing
+     #621 measured got narrower. Assert the constraint, not the old solution. */
+  const count = tracks[1].trim().split(/\s+(?![^(]*\))/).length;
+  assert.ok(count < 4,
+    `the row is back to ${count} tracks at phone widths, which cannot fit (#621)`);
+  const areas = row[1].match(/grid-template-areas:\s*([^;]+);/);
+  assert.ok(areas && !/\brank\b/.test(areas[1]),
+    'the rank took a track again — it is absolutely positioned on a phone (#621)');
 
   // Same source-order trap as the label: `.trow__score { text-align: right }`
   // is declared ~1600 lines below the phone block.

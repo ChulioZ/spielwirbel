@@ -145,16 +145,127 @@ test('the row keeps every control that is not about votes', async (t) => {
   assert.ok(row.classList.contains('is-chosen'), 'the chosen row is still marked');
 });
 
-test('a direct-play session is the band and the row — and no Tafel', async (t) => {
+test('a direct-play session is the band alone — the whole Tafel stands down', async (t) => {
   /* #532: created with `votes: {}`, so `sessionHasVotes` is false and there is
      no ranking to show. What must still be there is the table band, because
-     that session's whole purpose is the one game on it. */
+     that session's whole purpose is the one game on it.
+
+     RENAMED in #1107. This test was called „…and no Tafel" while asserting only
+     the absence of `.tafel-top` and `.trow__bars` — the `.tafel` container and
+     its heading were rendered the whole time, which is precisely the defect
+     #1107 fixed. A test whose name outruns its assertions is worse than no
+     test: it answers the question for the next reader without having asked it. */
   const dom = await show(t, unvoted());
   const band = dom.app.querySelector('.tisch');
   assert.ok(band && !band.hidden, 'the chosen game must have its band');
+
+  const tafel = dom.app.querySelector('.tafel');
+  assert.ok(tafel && tafel.hidden, 'the Tafel section is hidden, heading and all');
   assert.equal(dom.app.querySelector('.tafel-top'), null, 'and nothing to celebrate a vote with');
   assert.equal(dom.app.querySelector('.trow__bars'), null, 'nor a distribution to rank by');
+  const hint = dom.app.querySelector('.tafel__hint');
+  assert.ok(!hint || hint.hidden, 'no „Welches spielt ihr?" over an answered question');
   assert.ok(dom.app.querySelector('.result-people'), 'the people who played are still named');
+});
+
+/* --- the three terms of the gate, one test each ------------------------------
+   Each fixture differs from `unvoted()` in exactly ONE term, so a test that goes
+   green by suppressing everything cannot hide among them. */
+
+test('a vote-less session with two games keeps every row (the abandoned draw)', async (t) => {
+  // A lobby closed with zero votes. The rows are the only list of candidates the
+  // group has, so the Tafel is the whole screen here.
+  const dom = await show(t, unvoted({ gameIds: ['g1', 'g2'], chosenGameId: null }));
+  const tafel = dom.app.querySelector('.tafel');
+  assert.ok(tafel && !tafel.hidden, 'the Tafel stays');
+  assert.equal(dom.app.querySelectorAll('.trow').length, 2, 'with both candidates listed');
+});
+
+test('a vote-less session with two games keeps them once one is CHOSEN', async (t) => {
+  /* The `games.length === 1` term, and the only fixture that can see it: with
+     nothing chosen the gate is already false through its `chosenId` term, so
+     the abandoned-draw test above passes whether or not this term exists
+     (measured — deleting it left the whole file green).
+
+     Reachable today: close a lobby with zero votes and two games, then tap
+     „Spielen" on one. The other game must stay listed, because the group can
+     still change its mind and the rows are the only place that choice lives. */
+  const dom = await show(t, unvoted({ gameIds: ['g1', 'g2'], chosenGameId: 'g1' }));
+  const tafel = dom.app.querySelector('.tafel');
+  assert.ok(tafel && !tafel.hidden, 'the Tafel stays while there is another game to pick');
+  assert.equal(dom.app.querySelectorAll('.trow').length, 2, 'both games stay listed');
+});
+
+test('a vote-less one-game session with nothing chosen keeps its row', async (t) => {
+  /* Draw one game, close the lobby with zero votes: one game, no votes, nothing
+     chosen. The row's „Spielen" button is the ONLY way onto the table, so
+     dropping the `chosenId` term would strand this group on an empty screen. */
+  const dom = await show(t, unvoted({ chosenGameId: null }));
+  const tafel = dom.app.querySelector('.tafel');
+  assert.ok(tafel && !tafel.hidden, 'the Tafel stays');
+  assert.equal(dom.app.querySelectorAll('.trow').length, 1, 'the one candidate is listed');
+  assert.ok([...dom.app.querySelectorAll('.trow button')].some((b) => /Spielen/.test(b.textContent)),
+    'and it can still be put on the table');
+});
+
+test('a VOTED one-game session keeps its Tafel — there is a vote to report', async (t) => {
+  // The `!hasVotes` term. One game is not a ranking, but a vote that happened is
+  // still a fact about the evening, and #1107 explicitly does not touch it.
+  const dom = await show(t, voted({
+    gameIds: ['g1'],
+    votes: { m1: { g1: { rating: 4, retire: false } } },
+    chosenGameId: 'g1',
+  }));
+  const tafel = dom.app.querySelector('.tafel');
+  assert.ok(tafel && !tafel.hidden, 'the Tafel stays');
+  assert.equal(dom.app.querySelectorAll('.score-big').length, 1, 'and still reports the score');
+});
+
+test('a direct-play session offers neither way to clear the choice', async (t) => {
+  /* With one game there is nothing else to choose, and with the Tafel gone there
+     would be no way back from an un-choice. „Session löschen" stays the hatch. */
+  const dom = await show(t, unvoted());
+
+  const band = dom.app.querySelector('.tisch');
+  assert.ok(!/Anderes Spiel/.test(band.textContent), 'no „Anderes Spiel wählen" on the band');
+
+  const menu = dom.app.querySelector('.trow__menu');
+  assert.ok(menu, 'the row still builds its „…" menu');
+  menu.click();
+  // The popover mounts on <body>, not inside #app.
+  const opts = [...dom.document.querySelectorAll('.popover--menu .popover__opt')]
+    .map((b) => b.textContent.trim());
+  assert.ok(opts.length, 'the menu opened');
+  assert.ok(!opts.some((o) => /Auswahl aufheben/.test(o)),
+    `„Auswahl aufheben" is still offered: ${opts.join(' | ')}`);
+
+  assert.ok([...dom.app.querySelectorAll('.result-footer button')]
+    .some((b) => /Session löschen/.test(b.textContent)), 'the escape hatch is still there');
+});
+
+test('the band carries the archived badge, in the row\'s own classes', async (t) => {
+  /* Once the Tafel is gated away the band is the ONLY surface that can say the
+     game was retired after the session. Same helper as the row, so the two
+     cannot drift — asserted on the CLASS rather than the text, which is what a
+     look-alike copy would get wrong first. */
+  const retired = round({
+    games: [{ id: 'g1', title: 'Catan', tagIds: [], retired: true }, GAMES[1], GAMES[2]],
+    sessions: [unvoted()],
+  });
+  const dom = await show(t, unvoted(), retired);
+  const badge = dom.app.querySelector('.tisch__title .tag--retired');
+  assert.ok(badge, 'the band says the game was archived');
+  assert.equal(dom.app.querySelector('.tafel').hidden, true, 'and it is the only surface saying it');
+});
+
+test('a completed game gets the completed badge on the band, not the retired one', async (t) => {
+  const done = round({
+    games: [{ id: 'g1', title: 'Catan', tagIds: [], completed: true }, GAMES[1], GAMES[2]],
+    sessions: [unvoted()],
+  });
+  const dom = await show(t, unvoted(), done);
+  assert.ok(dom.app.querySelector('.tisch__title .tag--completed'), 'the completed badge');
+  assert.equal(dom.app.querySelector('.tisch__title .tag--retired'), null, 'and not the other one');
 });
 
 test('an unvoted draw session gets no winner spotlight', async (t) => {
