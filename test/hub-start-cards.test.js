@@ -17,7 +17,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
-const { bodyOf, mediaBlocks, columnSpec, columnsIn } = require('./support/css');
+const { RULES, bodyOf, mediaBlocks, columnSpec, columnsIn } = require('./support/css');
 
 // ---------------------------------------------------------------- fixtures
 
@@ -444,4 +444,88 @@ test('an empty grid costs nothing, which is what lets it be appended uncondition
      round — the exact empty-container failure #923's acceptance criteria rule
      out — because the grid is appended before the teaser can fill it. */
   assert.match(bodyOf('.hub-cards:empty') || '', /display:\s*none/);
+});
+
+/* ------------------------- the „Zuletzt gespielt" ticket stub (#1106) ------
+
+   The stub convention is that the icon names what is written under it — the
+   three live stubs pair `ti-player-play` with „Fortsetzen". This one hard-coded
+   a trophy OUTSIDE the winner ternary, and `endingText()` carries an icon of
+   its own, so a lost night rendered 🏆 stacked over 💀 „Verloren".
+
+   Hence the icon COUNT is the load-bearing half of every case below: asserting
+   only that the skull is present passes just as well with the trophy still
+   sitting above it. */
+
+/** A round with exactly one evening behind it, so the only ticket is the stub. */
+const playedRound = (over = {}) => ({
+  id: 5,
+  name: 'Freitagsrunde',
+  members: [{ id: 1, name: 'Anna' }, { id: 2, name: 'Ben' }],
+  games: [game(10)],
+  sessions: [play(900, 10, daysAgo(3), over)],
+  tags: [],
+});
+
+function lastPlayedStub(t, over) {
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', noRecos());
+  const r = playedRound(over);
+  dom.call('renderStartTab', r, r.games);
+  const stub = dom.app.querySelector('.ticket:not(.ticket--live) .ticket__stub');
+  assert.ok(stub, 'the „Zuletzt gespielt" ticket did not render at all');
+  return { dom, stub, icons: [...stub.querySelectorAll('.ti')] };
+}
+
+test('a won evening keeps the trophy and the winners', (t) => {
+  const { stub, icons } = lastPlayedStub(t, {});
+  assert.equal(icons.length, 1, 'the winner stub grew a second icon');
+  assert.ok(icons[0].classList.contains('ti-trophy'), `a win is not wearing the trophy: ${icons[0].className}`);
+  assert.equal(stub.querySelector('.ticket__names').textContent.trim(), 'Anna');
+  assert.equal(stub.classList.contains('ticket__stub--plain'), false,
+    'a win must keep the gold — the muted modifier is for the evenings nobody won');
+});
+
+[
+  ['lost', 'ti-skull', 'sessions.endLost'],
+  ['noWinner', 'ti-scale', 'sessions.endNoWinner'],
+  ['ongoing', 'ti-player-track-next', 'sessions.endOngoing'],
+].forEach(([ending, icon, key]) => {
+  test(`an evening that ended "${ending}" wears its own icon, not a trophy over it`, (t) => {
+    const { dom, stub, icons } = lastPlayedStub(t, { winnerIds: [], ending });
+    assert.equal(icons.length, 1,
+      `the stub holds ${icons.length} icons (${icons.map((i) => i.className).join(', ')}) — endingText() brings its own, so a hard-coded trophy stacks over it`);
+    assert.ok(icons[0].classList.contains(icon), `expected ${icon}, got ${icons[0].className}`);
+    assert.equal(stub.querySelector('.ticket__names').textContent.trim(), dom.run(`t('${key}')`));
+    assert.ok(stub.classList.contains('ticket__stub--plain'),
+      'gold means somebody won — an ending nobody won must not wear it');
+  });
+});
+
+test('a played evening with no recorded ending reads „Gespielt", like the Chronik line for it', (t) => {
+  const { dom, stub, icons } = lastPlayedStub(t, { winnerIds: [] });
+  assert.equal(icons.length, 1, `the stub holds ${icons.length} icons: ${icons.map((i) => i.className).join(', ')}`);
+  assert.ok(icons[0].classList.contains('ti-check'), `expected ti-check, got ${icons[0].className}`);
+  assert.equal(stub.querySelector('.ticket__names').textContent.trim(), dom.run("t('sessions.played')"));
+  assert.ok(stub.classList.contains('ticket__stub--plain'));
+});
+
+test('gold is reserved for the trophy — the muted stub has its own rule', () => {
+  /* jsdom applies no external stylesheet, so this half is unreachable from the
+     rendered assertions above (.claude/rules/css-text-assertions-strip-comments.md). */
+  assert.match(bodyOf('.ticket__stub .ti') || '', /color:\s*var\(--gold\)/,
+    'the base stub icon is no longer gold — this test is asserting against the wrong rule');
+  const plain = bodyOf('.ticket__stub--plain .ti');
+  assert.ok(plain, 'no rule for the winnerless stub — its icon inherits the winner gold');
+  assert.doesNotMatch(plain, /--gold/, 'the winnerless stub is still gold');
+
+  /* Two class selectors each, so the two rules have EQUAL specificity and the
+     muted one wins on source order alone. Moving it above the base rule leaves
+     both rules present, correct-looking and doing nothing — which no assertion
+     on their bodies can see. */
+  const at = (sel) => RULES.findIndex(([s]) => s === sel);
+  assert.ok(at('.ticket__stub .ti') > -1 && at('.ticket__stub--plain .ti') > -1, 'a rule moved — this ordering check is asserting nothing');
+  assert.ok(at('.ticket__stub--plain .ti') > at('.ticket__stub .ti'),
+    'equal specificity: the muted rule must come AFTER the gold one or it never applies');
 });

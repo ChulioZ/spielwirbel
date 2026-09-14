@@ -1363,6 +1363,10 @@ a.hub-row:hover { background: var(--sunken-soft); }
   font-weight: 700;
 }
 .ticket__stub .ti { font-size: var(--text-xl); color: var(--gold); }
+/* Gold means somebody won. An evening that was lost, drawn, left running or
+   simply played carries its own icon (#1106) and must not wear the winner's
+   colour with it. */
+.ticket__stub--plain .ti { color: var(--ink-soft); }
 /* Punch holes where the stub is torn off. */
 .ticket__stub::before,
 .ticket__stub::after {
@@ -2159,6 +2163,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   gap: 6px;
 }
 .round-card__last .ti { color: var(--gold); }
+.round-card__last--plain .ti { color: var(--ink-soft); }
 .round-card__chev { align-self: center; font-size: var(--text-xl); color: var(--brand-edge); flex: none; }
 .round-card--new {
   justify-content: center;

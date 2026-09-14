@@ -236,6 +236,20 @@ function renderStartTab(round, activeGames) {
       sst.avg !== null
         ? `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
         : '';
+    /* The stub's icon names what is written under it — the convention the three
+       live stubs above follow, and the one this ticket broke (#1106): the trophy
+       sat OUTSIDE the winner ternary, so a lost evening rendered it over the
+       skull „Verloren" carries. Icon and label now come from the same entry, so
+       they cannot disagree, and `endingText()` is deliberately NOT used here —
+       it returns icon and label as one unit, which is what stacked the second
+       glyph. `ENDING_LABELS` has no `won` entry by design (session-outcome.js),
+       so the winner branch and the map cannot overlap; don't re-derive the state
+       from `winnerIds`/`cancelled`. */
+    const ending = ENDING_LABELS[sessionEnding(lastPlayed)];
+    const stubIcon = winnerNames.length ? 'ti-trophy' : ending ? ending.icon : 'ti-check';
+    const stubLabel = winnerNames.length
+      ? joinNames(winnerNames)
+      : ending ? t(ending.key) : t('sessions.played');
     const ticket = h(`<a class="ticket">
          <span class="ticket__main">
            <span class="ticket__img"${imgStyle}>${fallback}</span>
@@ -245,9 +259,9 @@ function renderStartTab(round, activeGames) {
              <span class="ticket__meta">${esc(when)}${pill}</span>
            </span>
          </span>
-         <span class="ticket__stub">
-           <i class="ti ti-trophy" aria-hidden="true"></i>
-           <span class="ticket__names">${winnerNames.length ? esc(joinNames(winnerNames)) : (endingText(lastPlayed) || esc(t('sessions.played')))}</span>
+         <span class="ticket__stub${winnerNames.length ? '' : ' ticket__stub--plain'}">
+           <i class="ti ${stubIcon}" aria-hidden="true"></i>
+           <span class="ticket__names">${esc(stubLabel)}</span>
          </span>
        </a>`);
     navLink(ticket, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));

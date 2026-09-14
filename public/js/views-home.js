@@ -229,13 +229,20 @@ function renderLobbyList(rounds) {
     let lastLine = '';
     if (r.lastPlayed) {
       const lp = r.lastPlayed;
-      const text = lp.winnerNames.length
+      const won = lp.winnerNames.length > 0;
+      const text = won
         ? tn(lp.winnerNames.length, 'home.lastPlayedWonOne', 'home.lastPlayedWonMany', {
             game: lp.gameTitle,
             names: joinNames(lp.winnerNames),
           })
         : t('home.lastPlayed', { game: lp.gameTitle });
-      lastLine = `<span class="round-card__last"><i class="ti ti-trophy" aria-hidden="true"></i>${esc(text)}</span>`;
+      /* The trophy was rendered unconditionally, so an evening nobody won wore
+         one over „… wurde gespielt." (#1106). The summary read carries no
+         `ending` — `{ gameTitle, winnerNames, at }`, and widening it would touch
+         both backends and the summary contract for one line — so this says only
+         what it knows: a played evening, with the trophy kept for a named
+         winner. */
+      lastLine = `<span class="round-card__last${won ? '' : ' round-card__last--plain'}"><i class="ti ${won ? 'ti-trophy' : 'ti-cards'}" aria-hidden="true"></i>${esc(text)}</span>`;
     }
 
     // A round on a world carries the hook ITSELF (#903), with its own accent
