@@ -517,3 +517,35 @@ test('a voter chip keeps room for a real name beside its status badge', () => {
   assert.ok(nameWidth >= 100,
     `a voter chip leaves its name ${nameWidth}px, which truncates an ordinary member name`);
 });
+
+/* Der Kreis (#1092) — the fifth screen to escape the reading measure, and the
+   only one that needs NO back-row half: `showFriends` renders no `.back-row`
+   sibling, so there is nothing to drag along. The spec asserts that absence
+   rather than assuming it — if the screen ever grows one, this goes red and the
+   exemption has to grow a second selector like the four above. */
+test('Der Kreis opts out of the reading measure, and has no sibling to drag with it', () => {
+  const exemptions = RULES.filter(([sel, body]) =>
+    whole('.friends-screen').test(sel) && /max-width:/.test(body));
+  assert.ok(exemptions.length,
+    'nothing exempts .friends-screen from the reading measure, so the grid is capped at the text measure');
+
+  exemptions.forEach(([sel, body]) => {
+    assert.match(sel, /:has\(\.friends-screen\)/,
+      `"${sel}" is not conditioned on the screen being present, so it widens every screen`);
+    const vars = [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]);
+    assert.equal(vars.length, 1, `"${sel}" does not take its width from a single custom property`);
+    assert.equal(vars[0], '--w-detail',
+      `"${sel}" takes ${vars[0]}, not the one custom property the other widened screens share`);
+    // It competes with the (0,3,0) reading-measure cap, and source order breaks
+    // silently when someone moves a block.
+    const classes = (sel.match(/\.[\w-]+/g) || []).length;
+    assert.ok(classes > 3,
+      `"${sel}" has ${classes} class components and does not out-rank the (0,3,0) reading-measure cap`);
+  });
+
+  // The screen renders no back row today, which is WHY one selector is enough.
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public/js/views-friends.js'), 'utf8');
+  const view = src.slice(src.indexOf('async function showFriends'), src.indexOf('function renderAddTile'));
+  assert.doesNotMatch(view, /backRow\(/,
+    'showFriends grew a back row — it is a SIBLING of .friends-screen, so it needs its own half of the exemption');
+});

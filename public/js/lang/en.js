@@ -1174,10 +1174,14 @@ I18N.en = {
   'friends.addSubmit': 'Send request',
   'friends.needUsername': 'Please enter a username.',
   'friends.feedTitle': 'Friends’ activity',
+  'friends.card.wants': 'Wants to add you',
+  'friends.card.sent': 'Request sent · pending',
+  'friends.card.since': 'Friends since {when}',
+  'friends.addTile': 'Add a friend',
+  'friends.addTileSub': 'by username',
+  'friends.feedMore': 'All {count} activities',
+  'friends.newsTitle': 'What’s new',
   'friends.feedEmpty': 'No activity from your friends yet.',
-  'friends.incoming': 'Incoming requests',
-  'friends.outgoing': 'Sent requests',
-  'friends.listTitle': 'Friends',
   'friends.listEmpty': 'You haven’t added any friends yet.',
   'friends.accept': 'Accept',
   'friends.decline': 'Decline',
@@ -1188,6 +1192,8 @@ I18N.en = {
   'friends.unknownUser': '(unknown)',
   'friends.feed.played': '{user} played {game}',
   'friends.feed.added': '{user} added {game} to the shelf',
+  'friends.feed.importedOne': '{user} added {game} and {n} more game to the shelf',
+  'friends.feed.imported': '{user} added {game} and {n} more games to the shelf',
   // Per-item report control (#559) — opens the contact form as a DSA notice.
   // The subject is prefilled into an editable field the reporter sees, so it
   // names the entry precisely enough for the operator to find it again.

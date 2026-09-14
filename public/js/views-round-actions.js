@@ -274,8 +274,10 @@ async function showInvite(round) {
         </div>
         <p class="muted">${esc(t('invite.intro', { round: round.name }))}</p>
         <div class="field">
-          <label for="inviteUser">${esc(t('invite.username'))}</label>
-          <input id="inviteUser" class="input" type="text" autocomplete="off" spellcheck="false" placeholder="${esc(t('invite.usernamePlaceholder'))}">
+          <label for="inviteHandle">${esc(t('invite.username'))}</label>
+          <input id="inviteHandle" class="input" type="text" autocomplete="off" spellcheck="false"
+                 data-1p-ignore data-lpignore="true" data-bwignore
+                 placeholder="${esc(t('invite.usernamePlaceholder'))}">
         </div>
         <div class="field">
           <label for="inviteSeat">${esc(t('invite.seat'))}</label>
@@ -306,7 +308,7 @@ async function showInvite(round) {
   // Synchronous, and after openSheet: iOS only raises the soft keyboard for a
   // focus() inside the opening gesture, and trapFocus captures the pre-open
   // activeElement as its restore target. Don't defer this into a timeout.
-  form.querySelector('#inviteUser').focus();
+  form.querySelector('#inviteHandle').focus();
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   form.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 
@@ -319,10 +321,10 @@ async function showInvite(round) {
 
   const go = form.querySelector('#inviteGo');
   go.addEventListener('click', async () => {
-    const username = form.querySelector('#inviteUser').value.trim();
+    const username = form.querySelector('#inviteHandle').value.trim();
     const memberId = form.querySelector('#inviteSeat').value || null;
     const role = roleSel.value;
-    if (!username) { form.querySelector('#inviteUser').focus(); return; }
+    if (!username) { form.querySelector('#inviteHandle').focus(); return; }
     go.disabled = true;
     try {
       await accountApi('POST', '/invitations', { roundId: rid, username, memberId, role });
@@ -333,7 +335,7 @@ async function showInvite(round) {
       toast(inviteError(e.message));
     }
   });
-  form.querySelector('#inviteUser').addEventListener('keydown', (e) => {
+  form.querySelector('#inviteHandle').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       go.click();
@@ -372,7 +374,7 @@ function insertFriendPicker(form, round, friends) {
       </select>
     </div>`);
 
-  const user = form.querySelector('#inviteUser');
+  const user = form.querySelector('#inviteHandle');
   user.closest('.field').before(field);
   // Fill the input rather than replacing it: it stays editable, so a non-friend
   // can still be invited by hand and the submit path reads one field as before.
