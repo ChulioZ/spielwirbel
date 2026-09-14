@@ -123,7 +123,7 @@ exempts it — but the glyph is the thing that says „sealed", and because `--g
 is a fill *here and nowhere else*, the fix moves no medal, crown or trophy. An
 exemption is the right answer when the fix has blast radius; this one had none.
 
-## Worlds (#903): one hook, seven slots, additive over the tokens
+## Worlds (#903): one hook, eight slots, additive over the tokens
 
 The registry is `public/js/round-designs.js` — `PALETTES`, `WORLDS` and
 `resolveDesign(bg)`, which finds a design by its stable `id` first and by the
@@ -139,9 +139,11 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
 
 - **one token block per world** (`[data-world="forest"]`) — its display face
   and its artwork, hand-authored SVG silhouettes as data URIs;
-- **seven slot rules keyed off the bare `[data-world]`** — page backdrop,
+- **eight slot rules keyed off the bare `[data-world]`** — page backdrop,
   primary-button frame, section-heading rule, card corner, empty-state scene,
-  finale stage, and (#940) the winner reveal's victory scene — each a
+  finale stage, (#940) the winner reveal's victory scene, and (#1082) the
+  **crown**: the stage art as a text-free strip above the round's name, on the
+  hub hero and the desktop rail — each a
   pseudo-element with `pointer-events: none`, painting the mask in a THEME
   token (`--brand`, `--brand-strong`, `--stage-ink`), never in a shade of its
   own. Slot 7 is the one with text ON its host, so its bold alpha is bought
@@ -156,6 +158,29 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
   the one real element a world touches, and the generator in `views-session.js`
   stays world-agnostic (`test/result-tafel.test.js` scans it for a world
   name).
+
+  **Slot 8 (#1082) takes slot 7's reservation discipline to a second place, and
+  needs it for the same reason.** The crown is painted at
+  `height: var(--crown-h)` and its host reserves
+  `padding-top: calc(var(--crown-h) + N)` — ONE property carrying both. Two
+  literals that must agree drift on the first retune and the failure is silent
+  in both directions: too little padding clips the art, too much leaves an empty
+  band above the round's name, and nothing goes red.
+
+  Its own wrinkle is that the art is a 600x140 SCENE cropped to a <=96px strip,
+  so which edge survives is per world: `--world-crown-y` is `top` where the
+  motif hangs (canopy, waves, webs) and `bottom` where it stands (skyline, rank,
+  horizon). A fixed edge would show half the worlds the empty part of their own
+  artwork — and it would look deliberate.
+
+  The rail's copy is gated on `min-height: 860px` as well as the rail's own
+  width (operator decision): the rail measures 746px tall under the demo banner
+  and its last group sits at y 860–899, so at 1280x800 a 48px crown pushes it
+  past the fold. The hero's is unconditional, because the hub scrolls.
+
+  And under `prefers-contrast: more` the RESERVATION goes with the art — a
+  hidden crown over an unchanged `padding-top` is the empty band again. Same for
+  the coverless tile, which gets its tornado back rather than nothing at all.
 
 Three constraints, each with its reason: the face changes through
 `--font-display` only (`--font` stays Nunito, so reading is never harmed);
