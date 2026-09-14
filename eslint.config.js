@@ -373,7 +373,9 @@ const frontendGlobals = {
   providerLabel: 'readonly', providerLabelShort: 'readonly',
   PROVIDER_LABELS: 'readonly', PROVIDER_LABELS_SHORT: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
   // views-member.js
-  showMember: 'readonly', memberStats: 'readonly',
+  showMember: 'readonly',
+  // member-stats.js (#1075 — split out of views-member.js)
+  memberStats: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',

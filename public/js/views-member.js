@@ -2,123 +2,17 @@
    lets the user edit their name and avatar color. Part of the frontend; all
    files share one global script scope (load order: see index.html). */
 
-// Statistics for one member, computed on demand from the round's sessions
-// (sessions are the single source of truth, like the game rating averages).
-function memberStats(round, mid) {
-  const finished = round.sessions.filter((s) => s.finished);
+/* Which rings have already swept, keyed `rid:mid` (#1075). The sweep is a
+   MOUNT moment, not a render one: `showMember` re-runs on every colour change
+   (the picker) and on a locale switch through `currentView`, and a gauge that
+   re-animates on those reads as a glitch rather than as an arrival.
 
-  // Sessions joined: finished sessions whose memberIds include the member.
-  // Legacy sessions have no memberIds -> everyone counts as having joined.
-  const joined = finished.filter(
-    (s) => !Array.isArray(s.memberIds) || s.memberIds.includes(mid)
-  );
-  const wins = finished.filter((s) => (s.winnerIds || []).includes(mid)).length;
-
-  // The RATE is over contested evenings only (#895). A solo night is not a
-  // contest, and counting it showed a member who logs their solo plays at
-  // 100 % — the naive "measure against opportunity" fix, which makes the solo
-  // case worse than the plain count it replaced rather than better. `wins`
-  // above stays over every finished night: it is a factual record of nights
-  // won, not a claim about skill.
-  // …and a night that was not ABOUT winning is not a contest either (#1038):
-  // „Kein Sieger" and „Fortsetzung folgt" leave the rate untouched rather than
-  // counting as a loss. „Verloren" stays contested and unwon — the table played
-  // to win and did not — so it lowers the rate, which is the honest reading.
-  const notAContest = (s) => {
-    const e = sessionEnding(s);
-    return e === 'noWinner' || e === 'ongoing';
-  };
-  const contested = joined.filter((s) => sessionPartyCount(round, s) > 1 && !notAContest(s));
-  const contestedWins = contested.filter((s) => (s.winnerIds || []).includes(mid)).length;
-  const winRate = contested.length ? contestedWins / contested.length : null;
-
-  // The Siegwertung, the measure the Ruhmeshalle now ranks on (#895). Shown
-  // here UNCLAMPED, negatives included, unlike the Pokale tab: this is the
-  // member's own stats page rather than a leaderboard, the number sits beside
-  // the rate it explains, and clamping it would make one person's figure
-  // disagree with the standings they are reading it against.
-  const winScore = memberWinScores(round, sessionPartyGroups)[mid];
-
-  // Every numeric rating this member has given, and the per-game averages used
-  // to find their favorite game (only games that still exist in the round and
-  // that a taste stat may name — `isNameableGame`, recap.js, which this page
-  // shares with the Pokale Lieblingsspiele card so a game cannot vanish there
-  // while still sitting here). `allRatings` — and so `avgGiven` — deliberately
-  // counts EVERY rating, retired games included: it measures how this member
-  // rates, not what is on the shelf, so the filter must not reach it (#643).
-  const allRatings = [];
-  const perGame = {}; // gameId -> [ratings]
-  round.sessions.forEach((s) => {
-    const votes = s.votes[mid] || {};
-    Object.keys(votes).forEach((gid) => {
-      const v = votes[gid];
-      if (!v || !Number.isFinite(v.rating)) return;
-      const r = v.rating;
-      allRatings.push(r);
-      if (round.games.some((g) => g.id === gid && isNameableGame(g)))
-        (perGame[gid] = perGame[gid] || []).push(r);
-    });
-  });
-  const avgGiven = allRatings.length
-    ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length
-    : null;
-
-  // Favorite game(s): highest average this member gave. Ties share the tile.
-  let favGames = [];
-  let favAvg = null;
-  Object.keys(perGame).forEach((gid) => {
-    const avg = perGame[gid].reduce((a, b) => a + b, 0) / perGame[gid].length;
-    if (favAvg === null || avg > favAvg) {
-      favAvg = avg;
-      favGames = [gid];
-    } else if (avg === favAvg) {
-      favGames.push(gid);
-    }
-  });
-  const favorite = favGames.map((gid) => round.games.find((g) => g.id === gid)).filter(Boolean);
-
-  /* „Stärkstes Spiel" (#920): the same Siegwertung above, partitioned by the
-     game that was played. It is a TERM of that total rather than a second
-     measure, so the two tiles can never disagree — and it needs none of #894's
-     shrinkage for the same reason `win-score.js` gives: a sum, not a rate.
-
-     Same nameability bar as the favourite, and deliberately so: a retired game
-     may not be NAMED by a stat tile even though it still counts toward the
-     Siegwertung beside it. That is the opposite call from `avgGiven` (#643),
-     which counts every rating including retired games — the split is between
-     measuring and naming, not between two filters.
-
-     Ties share the tile, like `favorite`. A member with no qualifying game
-     leaves `bestScore` at null, which is what the empty state keys off: 0 is a
-     real answer here (a solo-only game scores exactly 0) and must not be
-     mistaken for "nothing". */
-  const perGameWin = memberGameWinScores(round, mid, sessionPartyGroups);
-  let bestIds = [];
-  let bestScore = null;
-  Object.keys(perGameWin).forEach((gid) => {
-    if (!round.games.some((g) => g.id === gid && isNameableGame(g))) return;
-    const v = perGameWin[gid];
-    if (bestScore === null || v > bestScore) {
-      bestScore = v;
-      bestIds = [gid];
-    } else if (v === bestScore) {
-      bestIds.push(gid);
-    }
-  });
-  const bestGames = bestIds.map((gid) => round.games.find((g) => g.id === gid)).filter(Boolean);
-
-  return {
-    wins,
-    joined: joined.length,
-    winRate,
-    winScore,
-    avgGiven,
-    favorite,
-    favAvg,
-    bestGames,
-    bestScore,
-  };
-}
+   A module-level Set rather than a flag on the element, because the element is
+   rebuilt by each of those re-renders. It lives for the page load, so returning
+   to a member days later in the same tab does not sweep again — a knowing trade:
+   re-sweeping on every visit would make it ambient, which is what spending the
+   boldness in ONE place is meant to avoid. */
+const SWEPT_RINGS = new Set();
 
 async function showMember(rid, mid) {
   currentView = () => showMember(rid, mid);
@@ -190,9 +84,21 @@ async function showMember(rid, mid) {
      same `memberColor` value the avatar is painted with, so the tone can never be
      a second, drifting definition of the member's colour
      (.claude/rules/shared-constants-across-the-stack.md). */
+  /* The Siegquote AS the ring (#1075): a conic fill around the avatar, so the
+     one number that says how this member does is the shape of their own face
+     rather than a figure three tiles along. `--pct` is set inline from the same
+     `memberStats` value the figure strip prints, so the two can never disagree.
+
+     `winRate === null` (no contested session at all) gets `--member-ring--none`:
+     the plain 18% tone ring, no gauge. A 0% gauge would say "never wins" about
+     somebody who has never been in a contest (operator decision). */
+  const pct = st.winRate === null ? null : Math.round(st.winRate * 100);
   const card = h(`<div class="member-card" style="--m-tone:${color}">
+       <span class="member-card__mark" aria-hidden="true">${esc(initials(member.name))}</span>
        <div class="member-card__id">
+         <span class="member-ring${pct === null ? ' member-ring--none' : ''}"${pct === null ? '' : ` style="--pct:${pct}"`}>
          <button type="button" class="avatar member-avatar" style="background:${color}" aria-label="${esc(t('member.colorChange'))}" aria-expanded="false">${avatarFace(initials(member.name), { userId: member.userId })}<span class="member-avatar__pen" aria-hidden="true"><i class="ti ti-pencil"></i></span></button>
+         </span>
          <div class="member-card__who">
            <h1></h1>
            <div class="member-card__state"></div>
@@ -302,15 +208,29 @@ async function showMember(rid, mid) {
      exactly that), and a card that silently loses half its content reads as
      broken rather than as empty. */
   const figures = card.querySelector('.member-card__figures');
-  const figure = (label, value) =>
+  const figure = (label, value, extra) =>
     h(`<div class="member-figure">
          <span class="member-figure__value">${esc(value)}</span>
+         ${extra || ''}
          <span class="member-figure__label">${esc(label)}</span>
        </div>`);
+  /* The Siegwertung's bar (#1075): the Tafel's row-fill idea (#1056) at figure
+     size. It grows FROM THE CENTRE — right in the member's tone for a positive
+     score, left in --placeholder for a negative one — so the sign is a
+     direction rather than a glyph to read. The number stays the statement; the
+     bar is the glance.
+     `--w` is the half-width as a percentage: ±2.0 fills the half, and it is
+     clamped so a runaway score cannot paint past the track. */
+  const winBar = (score) => {
+    if (score === undefined || score === null) return '';
+    const w = Math.min(50, Math.abs(score) * 25);
+    return `<span class="member-bar${score < 0 ? ' member-bar--neg' : ''}" style="--w:${w.toFixed(1)}%" aria-hidden="true"></span>`;
+  };
   figures.appendChild(figure(t('member.wins'), String(st.wins)));
   figures.appendChild(figure(t('member.winRate'), st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%'));
   figures.appendChild(figure(t('member.sessions'), String(st.joined)));
-  figures.appendChild(figure(t('member.winScore'), st.winScore === undefined ? '–' : fmtSigned(st.winScore)));
+  figures.appendChild(figure(t('member.winScore'), st.winScore === undefined ? '–' : fmtSigned(st.winScore),
+    winBar(st.winScore)));
   figures.appendChild(figure(t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven)));
 
   const cards = card.querySelector('.member-card__games');
@@ -334,9 +254,14 @@ async function showMember(rid, mid) {
 
      One loader for both tiles, as each section elsewhere does. */
   const loadCover = createCoverLoader();
-  const gameCard = (cls, icon, label, games, sub, emptyText) => {
+  /* The ribbon (#1075) says which of the pair a tile is, in the member's own
+     tone, so the two read apart at a glance instead of by their eyebrow text.
+     An EMPTY tile gets none: a ribbon over „noch kein Lieblingsspiel" labels an
+     absence as an award. */
+  const gameCard = (cls, icon, label, games, sub, emptyText, ribbon) => {
     const lead = games[0];
     const card = h(`<div class="pokale-card ${cls}">
+         ${games.length && ribbon ? `<span class="member-ribbon">${esc(ribbon)}</span>` : ''}
          ${gameCardHead(icon, label, lead)}
          <span class="pokale-card__games"></span>
          <span class="pokale-card__sub">${esc(sub)}</span>
@@ -374,7 +299,8 @@ async function showMember(rid, mid) {
       t('member.bestGame'),
       st.bestGames,
       st.bestScore === null ? '' : fmtSigned(st.bestScore),
-      t('member.bestGameNone')
+      t('member.bestGameNone'),
+      t('member.ribbonBest')
     )
   );
   cards.appendChild(
@@ -384,7 +310,8 @@ async function showMember(rid, mid) {
       t('member.favorite'),
       st.favorite,
       st.favAvg === null ? '' : 'Ø ' + fmtAvg(st.favAvg),
-      t('member.favoriteNone')
+      t('member.favoriteNone'),
+      t('member.ribbonFav')
     )
   );
 
@@ -410,6 +337,14 @@ async function showMember(rid, mid) {
     card.appendChild(table);
   }
   app.appendChild(card);
+  // Sweep the gauge in, once. Added AFTER the card is in the document so the
+  // animation has a layout to run against.
+  const ring = card.querySelector('.member-ring:not(.member-ring--none)');
+  const sweepKey = `${rid}:${mid}`;
+  if (ring && !SWEPT_RINGS.has(sweepKey)) {
+    SWEPT_RINGS.add(sweepKey);
+    ring.classList.add('is-sweeping');
+  }
 
   /* „3 Spiele von Anna" (#973): the boxes this member brings. The fourth reader
      of `game.ownerIds` (#971) and the only one asking from the PERSON's side —

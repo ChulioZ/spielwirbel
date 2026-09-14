@@ -654,7 +654,13 @@ public/
                      phrasing (#481, moved out in #956)
     direct-session.js „Jetzt spielen" — start a session for one game with
                      no vote and no draw, straight to the results screen
-    views-member.js  member detail page (stats, name/color editing)
+    member-stats.js  one member's statistics, derived on demand from the
+                     round's sessions. Split out of views-member.js by #1075;
+                     a pure derivation, edited when a statistic changes rather
+                     than when the screen does
+    views-member.js  member detail page (die Tischkarte: the Siegquote ring,
+                     the initials watermark, the figure strip and its
+                     Siegwertung bar, the two game boxes; name/colour editing)
     views-session.js session setup, the rating cards, finale, results
     views-session-tables.js the multi-table builder and, once confirmed, the split
                      summary linking to the evening's tables (issue #796)

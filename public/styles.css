@@ -5843,6 +5843,162 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   gap: 22px;
   flex-wrap: wrap;
 }
+/* ---- #1075: the Tischkarte's character --------------------------------------
+   Bold in the card only; everything below it stays quiet. Built from tokens the
+   screen already owns — the member's tone, the display face, the Tafel's
+   row-fill vocabulary (#1056) and the box treatment the elevation guard
+   already exempts. Nothing here rotates: the operator rejected the tilt on the
+   Spielepass stamps, so character comes from ink and motion, never angles. */
+
+/* 1. THE RING IS THE SIEGQUOTE. A conic fill, so the one number that says how
+   this member does is the shape of their own face. The avatar's own 3px
+   --surface ring sits INSIDE the gauge, which is what keeps the face separated
+   from the card's wash as #995 requires, and the pencil badge stays on the
+   ring's edge because it is positioned on the button, not on this wrapper. */
+@property --pct {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+.member-ring {
+  padding: 8px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-flex;
+  background: conic-gradient(
+    var(--m-tone) calc(var(--pct) * 1%),
+    color-mix(in oklab, var(--m-tone) 18%, var(--surface)) 0
+  );
+}
+/* No contested session at all: the plain tone ring, no gauge. A 0% gauge would
+   say "never wins" about somebody who has never been in a contest. */
+.member-ring--none { background: color-mix(in oklab, var(--m-tone) 18%, var(--surface)); }
+/* The sweep. GATED on no-preference rather than cancelled by a reduce override,
+   like every other motion in this sheet: the `from` keyframe is --pct 0, so a
+   missed override would park the gauge at EMPTY — a wrong statistic, not merely
+   a still one.
+
+   @property is Chromium + WebKit 16.4+. Where it is unsupported --pct is not an
+   animatable <number> and the keyframe simply does not run, which lands on the
+   resting value — i.e. exactly the reduced-motion rendering, and correct. */
+@media (prefers-reduced-motion: no-preference) {
+  .member-ring.is-sweeping { animation: member-sweep 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  @keyframes member-sweep { from { --pct: 0; } }
+}
+
+/* 2. THE WATERMARK. The member's initials in their own tone, in the card's
+   text-free top-right corner under the radial wash — the name and the figure
+   strip sit left and lower. `aria-hidden` and unselectable: it is the name
+   already in the <h1>, at furniture scale.
+
+   THE SIZES ARE MEASURED, not chosen, and the issue's 250/190 do not clear.
+   The corner is only text-free up to a point, and the point differs per width
+   because the card reflows: measured against the painted INK of every label,
+   figure, chip, ribbon and the name (a Range over the text nodes — the h1 is a
+   full-width block, so its BOX overlaps at any size and says nothing):
+
+     1280px   250 -> overlaps the last figure by 65x31   200 clears   ships 190
+      390px   190 -> overlaps the name by 142x31         150 clears   ships 140
+
+   Shrinking rather than lightening is the issue's own instruction, and it is the
+   right half to spend: the alpha is what makes the mark read as the member's
+   colour at all, while the size only decides how much corner it fills.
+
+   The alpha is bounded by the motif-under-text measurement, like every world
+   slot. Note the card's radial peak ALREADY measures 3.26:1 for --ink-soft
+   without any watermark — that is #1074's own reason the corner carries no
+   text, not something this added. Where text actually sits (the linear wash) it
+   is 4.82:1, and the watermark does not reach there. */
+.member-card__mark {
+  position: absolute;
+  top: -18px;
+  right: 10px;
+  /* Longhands, not the `font:` shorthand: test/design-tokens.test.js scans
+     `font-size` declarations, so a size hidden inside the shorthand escapes the
+     type-scale guard entirely. Better to be inside its field of view and
+     exempted by name than accidentally outside it. */
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 190px; /* glyph, not type — a letterform used as furniture */
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: var(--m-tone);
+  opacity: .11;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /* BEHIND the card's content but above its own background. An absolutely
+     positioned child otherwise paints over its static siblings, so at 1280 a
+     40-character name ran under the mark rather than over it — legible either
+     way (--ink measures 7.24:1 on the wash + watermark) but plainly wrong:
+     decoration does not sit on top of the thing it decorates. `z-index: -1`
+     against the card's own `position: relative` puts it between the gradient
+     and the text, which is the only layer it belongs in. */
+  z-index: -1;
+}
+@media (max-width: 520px) { .member-card__mark { font-size: 140px; } }
+
+/* 3. THE SIEGWERTUNG'S BAR — the Tafel's row fill at figure size. It grows from
+   the CENTRE so the sign reads as a direction rather than a glyph, and the
+   centre mark stays visible at a score of exactly 0, which is the state that
+   otherwise looks like a missing bar. */
+.member-bar {
+  position: relative;
+  display: block;
+  height: 6px;
+  margin: 6px 0 2px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--m-tone) 16%, var(--surface));
+}
+.member-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--w, 0%);
+  border-radius: var(--radius-pill);
+  background: var(--m-tone);
+}
+.member-bar--neg::before { left: auto; right: 50%; background: var(--placeholder); }
+.member-bar::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: var(--surface);
+}
+
+/* 4. THE TWO GAME TILES STAND AS BOXES. A zero-blur colour-mix edge — the side
+   of a thing rather than the space under it, which is why the elevation ramp
+   has nothing to offer it and why test/design-tokens.test.js exempts the shape
+   by construction rather than by name. The hover lift is the one place a real
+   ramp token appears. */
+.member-card__games .pokale-card {
+  position: relative;
+  border-radius: 6px;
+  box-shadow: 6px 6px 0 0 color-mix(in oklab, var(--m-tone) 55%, var(--ink));
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+.member-card__games .pokale-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0 0 color-mix(in oklab, var(--m-tone) 55%, var(--ink)), var(--shadow-2);
+}
+.member-ribbon {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  z-index: 1;
+  padding: 3px 10px 3px 8px;
+  border-radius: 0 999px 999px 0;
+  background: var(--m-tone);
+  color: var(--on-accent);
+  font: 800 11px/1.4 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 .member-card__who { flex: 1; min-width: 220px; }
 .member-card__who h1 {
   margin: 0;

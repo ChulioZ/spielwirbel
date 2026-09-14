@@ -553,6 +553,8 @@ I18N.ko = {
   'member.winRate': '승률',
   'member.winScore': '승리 점수',
   'member.avgGiven': 'Ø 준 평가',
+  'member.ribbonBest': '최강',
+  'member.ribbonFav': '최애',
   'member.bestGame': '가장 강한 게임',
   'member.bestGameNone': '아직 승리가 없어요',
   'member.favorite': '가장 좋아하는 게임',
