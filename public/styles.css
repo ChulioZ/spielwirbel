@@ -1574,13 +1574,30 @@ a.hub-row:hover { background: var(--sunken-soft); }
      `position: absolute` from this same block took effect, because nothing else
      declares position on the rank. Same for `.trow__score { text-align: right }`
      below. (`.claude/rules/responsive-content-width.md`, "your rule will lose")
-     — and note a test reading the DECLARED rule cannot see this at all. */
+     — and note a test reading the DECLARED rule cannot see this at all.
+
+     The THIRD track is the score label's room (#1111). With `score` bound to
+     the 56px cover track, `score.name` fit in no shipped locale: measured at
+     320px, eight of nine overflowed the column by 15–21px, and `ko` instead
+     split the brand — „Spielwir / bel 점수" — because the `:lang(ko)`
+     `overflow-wrap: break-word` escape hatch fires when a box really is too
+     narrow for its word (that rule is right; the 56px box was the bug —
+     `.claude/rules/hangul-locale-typography.md`). So `score` spans tracks 1+2
+     and `action` takes an `auto` track sized to its own content. `main` spans
+     2+3, which keeps its width exactly as it was. The row got SHORTER: the
+     label no longer wraps to two lines, so 166px → 145px at 390px.
+
+     The floor to respect if you touch this: the narrowest `score` box the
+     layout can produce is ~88px (320px viewport, the „auf dem Tisch" chip in
+     the action track), and the longest unbreakable run in any shipped
+     `score.name` is „Spielwirbel" at ~77px. test/score-label-fits.test.js pins
+     the character side of that headroom, since the pixel side needs a browser. */
   .tafel .trow {
-    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-columns: 56px minmax(0, 1fr) auto;
     grid-template-areas:
-      "cover main"
-      "bars  bars"
-      "score action";
+      "cover main  main"
+      "bars  bars  bars"
+      "score score action";
   }
   .trow .trow__score { text-align: left; }
   .trow__rank { position: absolute; top: 10px; right: 12px; }
@@ -3913,6 +3930,58 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    a lone card cannot balloon to the full width — the constraint
    .claude/rules/tiles-vs-lists.md states for `.ds-list--tiles`. The FEED stays a
    list, because its order carries meaning. */
+/* „Der Kreis" (#1093): the circle the screen is named after, made visible.
+   Overlapping avatars are the home round card's own member-stack idiom, one
+   notch bolder. Colours are tokens throughout — the disc is the account's
+   deterministic MEMBER_COLORS entry set inline, its 2px ring is `.avatar`'s own
+   border in --surface, and a pending request re-colours that border to --brand
+   with a --brand-tint halo. No literals. */
+.c-band {
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  flex-wrap: wrap;          /* ring and count stack on a phone rather than scroll */
+  margin-bottom: 18px;
+}
+/* The padding/negative-margin pair is what lets the ring WRAP: every face
+   carries -10px, and the container's matching padding cancels it for the first
+   one on EVERY row. A `:first-child` exemption looks equivalent and is not — it
+   pulls each wrapped row 10px left of the one above it. */
+.c-ring {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  padding-left: 10px;
+}
+.c-ring__face { margin-left: -10px; width: 38px; height: 38px; }
+.c-ring .avatar--wait {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+  /* Above its neighbours, so the halo is never clipped by the next face. */
+  position: relative;
+  z-index: 1;
+}
+a.c-ring__face:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
+.c-more {
+  margin-left: -10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--surface);
+  background: var(--line);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+.c-band__text { margin: 0; color: var(--ink-soft); font-size: var(--text-md); }
+.c-band__text strong { color: var(--ink); font-weight: 700; }
+
 .k-split { display: grid; gap: 26px; }
 .k-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(252px, 1fr)); gap: 12px; }
 @media (min-width: 1024px) {
@@ -3934,7 +4003,47 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
+  position: relative;   /* hosts .k-card__art */
+  overflow: hidden;     /* the art bleeds past the right edge and is clipped here */
 }
+/* The cover wash (#1094): the friend's most recently played game, bled into the
+   card's right side. Colour that is ABOUT the person rather than applied to them.
+
+   THE ALPHA IS A MEASURED CEILING, NOT A TASTE CALL, and the issue's starting
+   value of .17 does not pass. Compositing an arbitrary cover over --surface
+   across every design in both schemes (a cover is user-facing art, so the worst
+   case is pure black on a light design and pure white on a dark one):
+
+     alpha   worst --ink-soft
+     .17     3.84:1  (Sci-Fi dark, light cover)   FAILS AA
+     .13     4.40:1                                FAILS AA
+     .12     4.48:1                                FAILS AA by 0.02
+     .11     4.61:1  (Standard, dark cover)        ships
+
+   --ink measures 9.17:1 at .11, so the muted second line is what binds — it is
+   `white-space: nowrap` with an ellipsis, so it spans the whole card and really
+   does reach the far right where the mask is fully opaque. test/a11y-contrast
+   re-derives all of this from the `opacity` below, so raising it goes red.
+
+   The --accent link buttons in .k-card__meta would fail at full alpha (4.03:1),
+   and do not, because the mask has not opened yet where they sit: measured at
+   375px they end at 46% of the card and see 0.0148 effective alpha (5.00:1).
+   The threshold to know if that row ever grows: --accent first drops under AA
+   around .065 effective, which the fade reaches at roughly 67% of the card
+   width. Today's buttons have a ~47% width margin before that bites. */
+.k-card__art {
+  position: absolute;
+  inset: 0 -18% 0 38%;
+  background: center / cover no-repeat;
+  opacity: .11;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 62%);
+          mask-image: linear-gradient(90deg, transparent, #000 62%);
+}
+/* Content above the art. `.k-card__art` is the one child that must NOT be
+   lifted, and it is excluded by being absolutely positioned rather than by a
+   selector — a `:not()` here would be one more thing to keep in step. */
+.k-card > *:not(.k-card__art) { position: relative; }
 .k-card__who { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .k-card__line {
   font-size: var(--text-sm);
@@ -4452,6 +4561,12 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    number that chart produces, the `.ds-row` complaint `.claude/rules/tiles-vs-
    lists.md` files. That gutter is now the score's own axis. */
 .tafel { margin-bottom: 10px; }
+/* The section stands down whole on a vote-less single-game session (#1107).
+   Explicit, though `.tafel` declares no `display` today and the UA rule would
+   carry it: a later `display:` on this selector would beat `[hidden]` silently
+   and the gate would just stop working, with every jsdom assertion still green
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.tafel[hidden] { display: none; }
 .tafel__kick {
   display: flex;
   align-items: baseline;
@@ -5842,6 +5957,154 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   align-items: center;
   gap: 22px;
   flex-wrap: wrap;
+}
+/* ---- #1075: the Tischkarte's character --------------------------------------
+   Bold in the card only; everything below it stays quiet. Built from tokens the
+   screen already owns — the member's tone, the display face, the Tafel's
+   row-fill vocabulary (#1056) and the box treatment the elevation guard
+   already exempts. Nothing here rotates: the operator rejected the tilt on the
+   Spielepass stamps, so character comes from ink and motion, never angles. */
+
+/* 1. THE RING IS THE SIEGQUOTE. A conic fill, so the one number that says how
+   this member does is the shape of their own face. The avatar's own 3px
+   --surface ring sits INSIDE the gauge, which is what keeps the face separated
+   from the card's wash as #995 requires, and the pencil badge stays on the
+   ring's edge because it is positioned on the button, not on this wrapper.
+
+   IT DOES NOT ANIMATE. The gauge originally swept from 0 over 800ms; the
+   operator dropped that during #1075's merge review (2026-09-14), together with
+   #1095's accept whirl. The ring renders at its value, so `--pct` is a plain
+   inline custom property and needs no @property registration — nothing
+   interpolates it. Re-adding motion here means re-adding that registration, and
+   gating it on `prefers-reduced-motion: no-preference` rather than cancelling it
+   with a `reduce` override: the `from` keyframe would be --pct 0, so a missed
+   override parks the gauge at EMPTY, which is a wrong statistic rather than a
+   still picture. */
+.member-ring {
+  padding: 8px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-flex;
+  background: conic-gradient(
+    var(--m-tone) calc(var(--pct) * 1%),
+    color-mix(in oklab, var(--m-tone) 18%, var(--surface)) 0
+  );
+}
+/* No contested session at all: the plain tone ring, no gauge. A 0% gauge would
+   say "never wins" about somebody who has never been in a contest. */
+.member-ring--none { background: color-mix(in oklab, var(--m-tone) 18%, var(--surface)); }
+/* 2. THE WATERMARK. The member's initials in their own tone, in the card's
+   text-free top-right corner under the radial wash — the name and the figure
+   strip sit left and lower. `aria-hidden` and unselectable: it is the name
+   already in the <h1>, at furniture scale.
+
+   THE SIZES ARE MEASURED, not chosen, and the issue's 250/190 do not clear.
+   The corner is only text-free up to a point, and the point differs per width
+   because the card reflows: measured against the painted INK of every label,
+   figure, chip, ribbon and the name (a Range over the text nodes — the h1 is a
+   full-width block, so its BOX overlaps at any size and says nothing):
+
+     1280px   250 -> overlaps the last figure by 65x31   200 clears   ships 190
+      390px   190 -> overlaps the name by 142x31         150 clears   ships 140
+
+   Shrinking rather than lightening is the issue's own instruction, and it is the
+   right half to spend: the alpha is what makes the mark read as the member's
+   colour at all, while the size only decides how much corner it fills.
+
+   The alpha is bounded by the motif-under-text measurement, like every world
+   slot. Note the card's radial peak ALREADY measures 3.26:1 for --ink-soft
+   without any watermark — that is #1074's own reason the corner carries no
+   text, not something this added. Where text actually sits (the linear wash) it
+   is 4.82:1, and the watermark does not reach there. */
+.member-card__mark {
+  position: absolute;
+  top: -18px;
+  right: 10px;
+  /* Longhands, not the `font:` shorthand: test/design-tokens.test.js scans
+     `font-size` declarations, so a size hidden inside the shorthand escapes the
+     type-scale guard entirely. Better to be inside its field of view and
+     exempted by name than accidentally outside it. */
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 190px; /* glyph, not type — a letterform used as furniture */
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: var(--m-tone);
+  opacity: .11;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /* BEHIND the card's content but above its own background. An absolutely
+     positioned child otherwise paints over its static siblings, so at 1280 a
+     40-character name ran under the mark rather than over it — legible either
+     way (--ink measures 7.24:1 on the wash + watermark) but plainly wrong:
+     decoration does not sit on top of the thing it decorates. `z-index: -1`
+     against the card's own `position: relative` puts it between the gradient
+     and the text, which is the only layer it belongs in. */
+  z-index: -1;
+}
+@media (max-width: 520px) { .member-card__mark { font-size: 140px; } }
+
+/* 3. THE SIEGWERTUNG'S BAR — the Tafel's row fill at figure size. It grows from
+   the CENTRE so the sign reads as a direction rather than a glyph, and the
+   centre mark stays visible at a score of exactly 0, which is the state that
+   otherwise looks like a missing bar. */
+.member-bar {
+  position: relative;
+  display: block;
+  height: 6px;
+  margin: 6px 0 2px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--m-tone) 16%, var(--surface));
+}
+.member-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--w, 0%);
+  border-radius: var(--radius-pill);
+  background: var(--m-tone);
+}
+.member-bar--neg::before { left: auto; right: 50%; background: var(--placeholder); }
+.member-bar::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: var(--surface);
+}
+
+/* 4. THE TWO GAME TILES STAND AS BOXES. A zero-blur colour-mix edge — the side
+   of a thing rather than the space under it, which is why the elevation ramp
+   has nothing to offer it and why test/design-tokens.test.js exempts the shape
+   by construction rather than by name. The hover lift is the one place a real
+   ramp token appears. */
+.member-card__games .pokale-card {
+  position: relative;
+  border-radius: 6px;
+  box-shadow: 6px 6px 0 0 color-mix(in oklab, var(--m-tone) 55%, var(--ink));
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+.member-card__games .pokale-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0 0 color-mix(in oklab, var(--m-tone) 55%, var(--ink)), var(--shadow-2);
+}
+.member-ribbon {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  z-index: 1;
+  padding: 3px 10px 3px 8px;
+  border-radius: 0 999px 999px 0;
+  background: var(--m-tone);
+  color: var(--on-accent);
+  font: 800 11px/1.4 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .member-card__who { flex: 1; min-width: 220px; }
 .member-card__who h1 {
@@ -9190,6 +9453,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: a canopy hangs from the top, so the strip shows the art’s top. */
+  --world-crown-y: top;
   /* Slot 7 (#940) — the victory scene. Layer 1 grows: two trunks in the
      gutters and the forest floor across the band; layer 2 is the canopies,
      which lift into place after it. The confetti bits become fireflies —
@@ -9226,6 +9491,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: a skyline stands on the bottom, so the strip shows the art’s bottom. */
+  --world-crown-y: bottom;
   /* Slot 7 (#940) — layer 1 is the rocket ALONE, at the top of the right
      gutter, so the launch can translate the whole layer; layer 2 is the ringed
      planet low in the left gutter plus the pad, its exhaust cloud and a still
@@ -9264,6 +9531,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: waves break downward from the top, so the strip shows the art’s top. */
+  --world-crown-y: top;
   /* Slot 7 — layer 1 is the sea floor: kelp in both gutters and a sand bed
      with starfish and shells across the band, rising with the tide; layer 2
      is a whale surfacing in the left gutter, blowing, plus its bubbles. The
@@ -9300,6 +9569,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: a rank stands on the bottom, so the strip shows the art’s bottom. */
+  --world-crown-y: bottom;
   /* Slot 7 — layer 1 is the board: the king in the left gutter, the queen in
      the right, and the checkered floor across the band, all rising into
      place; layer 2 is the back rank on the floor — rook, knight, bishop and
@@ -9336,6 +9607,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: webs hang from the top, so the strip shows the art’s top. */
+  --world-crown-y: top;
   /* Slot 7 — layer 1 is the graveyard: a dead tree in each gutter and fog,
      stones and crosses across the band, looming in; layer 2 is the ghost
      rising in the left gutter and the moon high in the right. The bits become
@@ -9372,6 +9645,8 @@ kbd {
   --world-stage-size: 100% auto;
   --world-stage-repeat: no-repeat;
   --world-stage-position: center top;
+  /* Slot 8 — the crown: a horizon stands on the bottom, so the strip shows the art’s bottom. */
+  --world-crown-y: bottom;
   /* Slot 7 — layer 1 is the herd: a long-neck in the left gutter, a
      tyrannosaur in the right and a fern floor across the band, stomping up
      into place; layer 2 is the volcano in the band, its smoke rising, with a
@@ -9789,6 +10064,123 @@ kbd {
   mask-size: var(--world-backdrop-size);
   mask-repeat: repeat;
 }
+/* ---- #1082: the round WEARS its world ----------------------------------
+   Measured 2026-09-13 over the seeded demo at 1470x870: besides the .09
+   backdrop a world painted 3 marks on the hub, 4 on Chronik and Pokale, 12 on
+   the Regal — while the three BOLD slots (.36/.40/.55) sit on an empty list,
+   the finale stage and the winners' group, i.e. a young round's screen and two
+   once-per-session moments. On a phone the dock at y 761 — the one element on
+   screen every second — carried nothing. A world was loud where nobody is and
+   a whisper where everybody lives.
+
+   Every addition below is a pseudo-element painting an existing token into a
+   TEXT-FREE band, or at an alpha a text surface already clears, so the contrast
+   budget is untouched. No new artwork: the crown re-uses --world-stage. */
+
+/* Slot 8 — DIE KRONE. The stage art as a text-free strip above the round's
+   name, on the two surfaces a round is actually looked at on.
+
+   The reservation and the art are sized through ONE custom property
+   (--crown-h) on purpose: slot 5's discipline. Two numbers that must agree
+   drift, and the failure is silent — the strip either clips the art or leaves a
+   gap above the name, with nothing to fail. */
+[data-world] .hero {
+  --crown-h: clamp(56px, 16vw, 96px);
+  position: relative;
+  padding-top: calc(var(--crown-h) + 12px);
+}
+[data-world] .hero::before,
+[data-world] .rail__id::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--crown-h);
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .36;
+  mask-image: var(--world-stage);
+  /* The anchor is per world: a canopy, waves and webs hang from the TOP of the
+     art, while a skyline, a rank and a horizon stand on its BOTTOM. Cropping a
+     600x140 scene to a 56–96px strip therefore has to keep a different edge
+     per world, which is what --world-crown-y carries. */
+  mask-position: center var(--world-crown-y);
+  mask-size: 100% auto;
+  mask-repeat: no-repeat;
+}
+/* The rail's crown is gated on HEIGHT as well as width (operator decision): the
+   rail already measures 746px tall under the demo banner and its last group
+   sits at y 860–899, so at 1280x800 a 48px crown would push it 7–20px past the
+   fold. The hero's crown is unconditional because the hub scrolls. */
+@media (min-width: 1280px) and (min-height: 860px) {
+  [data-world] .rail__id {
+    --crown-h: 48px;
+    position: relative;
+    padding-top: calc(var(--crown-h) + 8px);
+  }
+  [data-world] .rail__id::before { mask-size: 260px auto; }
+}
+
+/* B2 — the dock and the tab strip. One element in both forms
+   (.claude/rules/responsive-hub-tabs.md): a fixed pill below 860px, an in-flow
+   strip at 860–1279. It gets the home tile's treatment above — the same shape,
+   a small surface carrying the motif behind its own labels. `isolation:
+   isolate` keeps the z-index: -1 layer inside the pill instead of behind the
+   page.
+
+   BUT NOT THE TILE'S .16, and the difference is exactly what #1082 said to
+   measure rather than assume. The home tile's comment says it "sits on white,
+   where --ink-soft keeps 4.9:1" — true of the LOBBY, which is never themed. The
+   dock lives inside the round and inherits the WORLD's --surface, and there .16
+   measures 4.44:1 on Chess: under the AA bar, on a light world rather than one
+   of the dark ones the issue expected to bind.
+
+     .16 -> 4.44:1 (Chess)   fails AA
+     .15 -> 4.53:1           passes by 0.03, i.e. inside rounding noise
+     .14 -> 4.61:1           ships
+
+   .14 rather than the bare ceiling, for the margin: 0.03 is not a budget.
+   test/a11y-contrast.test.js re-derives this from the opacity below. */
+[data-world] .dock { overflow: hidden; isolation: isolate; }
+[data-world] .dock::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .14;
+  mask-image: var(--world-backdrop);
+  mask-size: var(--world-backdrop-size);
+  mask-repeat: repeat;
+}
+
+/* B3 — the round's name in the top bar, in the world's face. The wordmark
+   stays Baloo: the brand names the product, the context names this round.
+   Mind .claude/rules/hangul-locale-typography.md — a world face carries no
+   Hangul and falls back per glyph, the same trade the round name already makes
+   on the hub. */
+[data-world] .topbar__context { font-family: var(--font-display); }
+
+/* B4 — a coverless game tile shows the world's corner motif instead of the
+   app's tornado. `currentColor` is the placeholder's OWN glyph ink — set on
+   .cover-ph, including its @supports oklch branch — so the motif keeps exactly
+   the tone the tornado had rather than introducing one.
+   (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md.) The recap card
+   draws its own placeholder in canvas; that one is untouched. */
+[data-world] .cover-ph .ti { display: none; }
+[data-world] .cover-ph::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: currentColor;
+  opacity: .72;
+  mask-image: var(--world-corner);
+  mask-size: 44%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+}
+
 .theme-card[data-world] .theme-card__bar { position: relative; }
 .theme-card[data-world] .theme-card__bar::before,
 .theme-card[data-world] .theme-card__bar::after {
@@ -9818,5 +10210,13 @@ kbd {
   [data-world] .spotlight::after,
   [data-world] .tafel-top::before,
   [data-world] .tafel-top::after,
+  [data-world] .hero::before,
+  [data-world] .rail__id::before,
+  [data-world] .dock::before,
   :is(.theme-card, .round-card)[data-world]::before { display: none; }
+  /* The crown's reservation goes with its art, or the name sits under an empty
+     96px band. The coverless tile gets its tornado back rather than nothing. */
+  [data-world] .hero, [data-world] .rail__id { padding-top: 0; }
+  [data-world] .cover-ph::after { display: none; }
+  [data-world] .cover-ph .ti { display: block; }
 }

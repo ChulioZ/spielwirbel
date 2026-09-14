@@ -248,7 +248,13 @@ What the app does, in detail. For a short overview see the
   the Pokale podium, or a session's participant list): **one card in that
   member's own colour** carrying the whole record — wins, sessions joined, win
   rate, Siegwertung, average rating given, their strongest game (the one they
-  hold the highest Siegwertung in) and their favorite game. The name is renamed
+  hold the highest Siegwertung in) and their favorite game. The card wears that
+  colour rather than merely being tinted by it: the **win rate is the ring
+  around the avatar**, sweeping into place once when the page opens; the
+  member's **initials stand as a watermark** in the card's corner; the
+  Siegwertung grows as a bar from the centre, right for a positive score and
+  left for a negative one; and the two game tiles stand as **boxes** with a
+  ribbon naming which is which. The name is renamed
   in place, the avatar colour is picked by **clicking the avatar**, and the rare
   seat actions (claiming or releasing a seat, revoking a grantee's access,
   removing someone from the round or deleting an unused seat) live in a
@@ -486,6 +492,10 @@ What the app does, in detail. For a short overview see the
   further: each brings its own display typeface, a backdrop motif and ornament
   framing on primary buttons, section headings, cards, empty states and the
   finale stage, and reaches the round's home tile and its shareable recap card.
+  The round also **wears** its world on the screens you actually look at it on:
+  a crown of the world's own scenery above the round's name, the world's motif
+  behind the bottom navigation, the round's name in the world's face in the top
+  bar, and the world's mark on a game that has no cover art.
   On the winner reveal a world plays
   its own victory scene in place of the confetti — in Forest a tree grows
   while fireflies drift up, in Sci-Fi a rocket lifts off past streaking stars,
