@@ -1,11 +1,17 @@
 'use strict';
 
-/* A wished-for game's detail page hides the score ring and the related-sessions
+/* A wished-for game's detail page hides the score and the related-sessions
  * section (#699). A wish is a game the round does not own, so it can never be
- * drawn, played, rated or aussortiert while on the list — the empty "–" ring
- * („Noch keine Bewertung") and the empty „Related sessions" block implied
- * otherwise and padded the page with exactly the near-empty widgets #256
- * removed for sparse games.
+ * drawn, played, rated or aussortiert while on the list — an empty score badge
+ * and the empty „Related sessions" block implied otherwise and padded the page
+ * with exactly the near-empty widgets #256 removed for sparse games.
+ *
+ * Since #1039 the score is a pill on the cover rather than an 88px ring, and
+ * the history lives in the spread's right page — so both selectors moved. The
+ * `relatedSection` helper below is the one that matters: pointed at the old
+ * `:scope > .section` it would have returned undefined for EVERY game, and the
+ * wish assertion (which expects undefined) would have passed while checking
+ * nothing at all (`.claude/rules/break-the-code-on-purpose.md`).
  *
  * The hide is unconditional for a wish: even when the data DOES hold sessions
  * and ratings for the game (reachable only by flagging an already-played game
@@ -71,28 +77,37 @@ function bootApp(t_) {
   return { dom, round };
 }
 
-/** The screen's related-sessions section, found by its heading — scoped past
- *  the rail by walking only direct `.section` children of #app. */
+/** The screen's related-sessions section, found by its heading — scoped to the
+ *  spread's right page, because the desktop rail inside `dom.app` carries its
+ *  own headings. The heading check is kept as well as the class: a class alone
+ *  would still match an empty renamed block. */
 function relatedSection(dom) {
-  return [...dom.app.querySelectorAll(':scope > .section')].find(
+  return [...dom.app.querySelectorAll('.pass__table > .gd-history')].find(
     (sec) => sec.querySelector('h2') && sec.querySelector('h2').textContent === t('detail.relatedTitle')
   );
 }
+
+/** The score badge on the cover (#1039) — the pill plus its ⓘ. */
+const scoreBadge = (dom) => dom.app.querySelector('.gd-head .gd-cover .gd-score');
 
 test('a wished game shows neither the score ring nor related sessions — even with session data present', async (t_) => {
   const { dom } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g4');
   assert.ok(dom.app.querySelector('.gd-head'), 'detail page rendered');
-  assert.equal(dom.app.querySelector('.gd-head .gd-stats'), null, 'no score ring block on a wish');
+  assert.equal(scoreBadge(dom), null, 'no score badge on a wish');
   assert.equal(relatedSection(dom), undefined, 'no related-sessions section on a wish');
 });
 
 test('an active game still renders both, including their empty states', async (t_) => {
   const { dom } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g1');
-  const stats = dom.app.querySelector('.gd-head .gd-stats');
-  assert.ok(stats, 'score ring block renders for an active game');
-  assert.ok(stats.textContent.includes(t('detail.noRating')), 'the empty ring state still shows');
+  const badge = scoreBadge(dom);
+  assert.ok(badge, 'the score badge renders for an active game');
+  // g1 has a cover but no plays and no ratings, so it is not sparse and not a
+  // wish — the two states that suppress the badge. It takes the Regal card's own
+  // „neu" variant rather than nothing, which is the empty state this asserts.
+  assert.ok(badge.querySelector('.score-pill--none'), 'the unscored variant still shows');
+  assert.ok(badge.textContent.includes(t('games.scoreNew')), 'and it reads „neu"');
   const sec = relatedSection(dom);
   assert.ok(sec, 'related-sessions section renders for an active game');
   assert.ok(sec.textContent.includes(t('detail.relatedEmpty')), 'its empty state still shows');
@@ -101,6 +116,6 @@ test('an active game still renders both, including their empty states', async (t
 test('a retired game still renders both', async (t_) => {
   const { dom } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g2');
-  assert.ok(dom.app.querySelector('.gd-head .gd-stats'));
+  assert.ok(scoreBadge(dom));
   assert.ok(relatedSection(dom));
 });

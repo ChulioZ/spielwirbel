@@ -37,8 +37,11 @@ see A-R05. AA is held here as the product bar regardless.
 ### A-003 — Non-text and large-text contrast ≥ 3:1
 - **Status:** adopted · 2026-07-23
 - **Source:** WCAG 2.2 SC 1.4.11, 1.4.3 (large text)
-- **Check:** UI component boundaries, focus indicators and the score ring
-  (`.gd-ring__num`) clear 3:1. `avgColor()`'s 30% lightness (for values at or
+- **Check:** UI component boundaries, focus indicators and the score as TEXT on
+  the page (the Chronik and results score lines — the game-detail ring this
+  criterion was written against went with #1039, where the score became a
+  `.score-pill--lg` on the cover and so falls under the fill leg instead) clear
+  3:1. `avgColor()`'s 30% lightness (for values at or
   above 1; it ramps darker below, #890) is tuned to sit at the boundary of two
   competing uses — fill under white text *and* stroke on the page; re-check both
   if it moves.

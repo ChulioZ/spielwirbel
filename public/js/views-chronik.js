@@ -87,6 +87,12 @@ function renderChronikTab(round, activities) {
       // for both an added seat and an accepted invitation (#207), since either way
       // a new person is in the round.
       member_added: { icon: 'ti-user-plus', text: t('activity.memberAdded', { name: a.name }) },
+      member_retired: { icon: 'ti-user-minus', text: t('activity.memberRetired', { name: a.name }) },
+      member_restored: { icon: 'ti-arrow-back-up', text: t('activity.memberRestored', { name: a.name }) },
+      member_deleted: { icon: 'ti-trash', text: t('activity.memberDeleted', { name: a.name }) },
+      // A one-off operator clean-up (#981): the storefront links this round still
+      // held were cleared, so a cover that vanished has a line saying why.
+      storefront_cleared: { icon: 'ti-unlink', text: tn(a.n || 0, 'activity.storefrontClearedOne', 'activity.storefrontCleared', { n: a.n || 0 }) },
       // A rename (#562) — the round's NEW name. Renaming is open to a grantee
       // (it is acting within the round, not destroying it), so this entry is how
       // an owner sees that their shared round changed name, and who did it. The
@@ -176,7 +182,9 @@ function renderChronikTab(round, activities) {
     const parts = [];
     if (chosen) parts.push(esc(when));
     if (outcome === 'split') parts.push(iconText('ti-layout-grid', t('sessions.split')));
-    else if (s.finished) parts.push(winnerNames.length ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' + winnerNames.map(esc).join(', ') : iconText('ti-check', t('sessions.played')));
+    // A winnerless night says HOW it ended where it has one (#1038); an
+    // unrecorded one still reads „Gespielt", which is all that is known about it.
+    else if (s.finished) parts.push(winnerNames.length ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' + winnerNames.map(esc).join(', ') : (endingText(s) || iconText('ti-check', t('sessions.played'))));
     else if (outcome === 'cancelled') parts.push(`<span style="color:var(--danger)">${iconText('ti-x', t('sessions.cancelled'))}</span>`);
     // „N Spiele bewertet" counts the games IN the session, phrased as games
     // RATED — true for a voted session, and for a direct-play one (#532) it read

@@ -151,14 +151,21 @@ test('a cover goes through coverUrl, and is left decorative', async (t) => {
     games: {
       mostOwned: {
         title: 'Altlast', shelves: 3, url: null,
-        image: 'https://image.api.playstation.com/vulcan/master.png',
+        image: 'https://img.sized.test/master.png',
       },
     },
   }));
+  /* A SYNTHETIC resizer host since #981 emptied the table with the storefront
+     rows that needed it. The point of the assertion is that this screen routes
+     its cover through `coverUrl` at all — a master is 3840×2160 = ~31 MB
+     decoded, so the rewrite is not cosmetic — and with no rule in the table
+     every URL passes through and the check has no subject. Pushed into the
+     module's own list rather than a second implementation of it. */
+  dom.run('COVER_RESIZERS').push({ host: 'sized.test', query: (w) => `w=${w}` });
+  t.after(() => { dom.run('COVER_RESIZERS').pop(); });
   await dom.call('showEntdecken');
   const img = dom.document.querySelector('.stats-card__cover');
-  // A master here is 3840×2160 = ~31 MB decoded, so the rewrite is not cosmetic.
-  assert.match(img.getAttribute('src'), /^https:\/\/image\.api\.playstation\.com\/vulcan\/master\.png\?w=\d+$/);
+  assert.match(img.getAttribute('src'), /^https:\/\/img\.sized\.test\/master\.png\?w=\d+$/);
   // The title beside it is the accessible name, so the image adds nothing.
   assert.equal(img.getAttribute('alt'), '');
 });
@@ -469,4 +476,60 @@ test('the payload is fetched ONCE for the whole page load', async (t) => {
   await dom.run('loadPublicStats()');
   // Three surfaces on one page must not mean three requests for one payload.
   assert.equal(calls['/api/stats/public'], 1);
+});
+
+/* ------------------- the all-time podium (#1035) ----------------------------- */
+
+test('the all-time card renders between the year card and the best-rated one', async (t) => {
+  /* POSITION is the assertion, not presence: `STATS_PODIUMS` is a list and the
+     ladder has to read week → month → year → ever → best rated, so a row
+     appended at the end would render a card and still be wrong. Asserted over
+     the whole rendered order rather than against a neighbour, because a
+     neighbour comparison stays true if BOTH move. */
+  const payload = {
+    ...FULL,
+    games: {
+      ...FULL.games,
+      playedMonth: { title: 'Azul', image: null, url: null, plays: 14, period: '2026-08' },
+      playedYear: { title: 'Catan', image: null, url: null, plays: 60, period: '2026' },
+      playedAll: { title: 'Dauerbrenner', image: null, url: null, plays: 231 },
+    },
+  };
+  const dom = bootWith(t, ok(payload));
+  await dom.call('showEntdecken');
+
+  assert.deepEqual(
+    [...dom.document.querySelectorAll('.stats-card__title')].map((n) => n.textContent),
+    ['Cascadia', 'Ark Nova', 'Azul', 'Catan', 'Dauerbrenner', 'Wingspan'],
+  );
+
+  const card = [...dom.document.querySelectorAll('.stats-card')].find(
+    (c) => c.querySelector('.stats-card__title').textContent === 'Dauerbrenner'
+  );
+  // It names the phenomenon, not a window — and reuses the plain plural line.
+  assert.match(card.querySelector('.stats-card__label').textContent, /Spielwirbels Dauerbrenner/);
+  assert.equal(card.querySelector('.stats-card__value').textContent, '231 Sessions');
+  assert.equal(card.querySelector('.stats-card__label i').className, 'ti ti-crown');
+});
+
+test('the home dashboard panel still shows three podiums, and not the new one', async (t) => {
+  /* HOME_STATS_PODIUMS is 3 and the all-time card is FIFTH, so the panel must
+     be unchanged. Asserted rather than assumed: the constant is a count into a
+     list this change reordered, and a row inserted above the cut would silently
+     push a card off the home screen. */
+  const payload = {
+    ...FULL,
+    games: {
+      ...FULL.games,
+      playedMonth: { title: 'Azul', image: null, url: null, plays: 14, period: '2026-08' },
+      playedYear: { title: 'Catan', image: null, url: null, plays: 60, period: '2026' },
+      playedAll: { title: 'Dauerbrenner', image: null, url: null, plays: 231 },
+    },
+  };
+  const dom = bootWith(t, ok(payload));
+  const host = dom.document.createElement('div');
+  dom.document.body.appendChild(host);
+  await dom.call('mountHomeStatsPanel', host);
+  const titles = [...host.querySelectorAll('.stats-card__title')].map((n) => n.textContent);
+  assert.deepEqual(titles, ['Cascadia', 'Ark Nova', 'Azul']);
 });

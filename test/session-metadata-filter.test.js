@@ -101,6 +101,52 @@ test('the draw applies each metadata filter, and the described-less game survive
     ['Blank'], 'AND between the two lists');
 });
 
+test('the DRAW excludes a category, and an unknown exclusion is dropped (#1003)', async () => {
+  const round = await shelf();
+
+  // AND-NOT on the route, through the same shared predicate the preview uses.
+  assert.deepEqual(drawn(await start(round.id, { metadata: { excludeCategories: ['Economic'] } })),
+    ['Blank', 'Kurz', 'Lang'], 'Mittel carries it; the described-less game never does');
+  assert.deepEqual(drawn(await start(round.id, { metadata: { excludeMechanics: ['Deck Building'] } })),
+    ['Blank', 'Kurz', 'Mittel']);
+
+  // An exclusion is normalized exactly like an inclusion: a value no game in
+  // this round carries is DROPPED rather than 400ing or riding into the preset.
+  const res = await start(round.id, { metadata: { excludeCategories: ['Wargame'] } });
+  assert.equal(res.status, 201);
+  assert.deepEqual(drawn(res), ['Blank', 'Kurz', 'Lang', 'Mittel']);
+  assert.equal('metadata' in (await presetOf(round.id)), false,
+    'an exclusion that normalized away writes no metadata into the preset');
+
+  // Exclusion beats inclusion — the one state the chips cannot reach and a
+  // hand-crafted preset can, so the route is where it has to be pinned.
+  assert.deepEqual(drawn(await start(round.id, {
+    metadata: { categories: ['Economic'], excludeMechanics: ['Trading'] },
+  })), ['Blank'], 'Mittel matched the category and carries the excluded mechanic');
+});
+
+test('the DRAW applies BGG\'s player-count poll, and a multi-table draw does not (#1005)', async () => {
+  const round = await createRound(request);
+  const ok = await addGame(round.id, { title: 'Passt', minPlayers: 2, maxPlayers: 6 });
+  const bad = await addGame(round.id, { title: 'Kaputt', minPlayers: 2, maxPlayers: 6 });
+  const mute = await addGame(round.id, { title: 'Ungefragt', minPlayers: 2, maxPlayers: 6 });
+  seedMeta(round.id, ok.id, { bestWith: [2], recommendedWith: [2, 3] });
+  seedMeta(round.id, bad.id, { bestWith: [4], recommendedWith: [4, 5] });
+  // The poll BGG's community has not answered — two empty lists, which is a
+  // STORED value here rather than an absent key, and must read as "no opinion".
+  seedMeta(round.id, mute.id, { bestWith: [], recommendedWith: [] });
+
+  // Two members join by default (`createRound`'s Alice and Bob), so the party is
+  // two — the count 'Kaputt' is explicitly not recommended at.
+  assert.deepEqual(drawn(await start(round.id, { metadata: { onlyRecommended: true } })),
+    ['Passt', 'Ungefragt']);
+  // OFF is a strict no-op — every draw before #1005 is byte-identical.
+  assert.deepEqual(drawn(await start(round.id, {})), ['Kaputt', 'Passt', 'Ungefragt']);
+  // The multi-table half is asserted against `drawPool` in test/draw-pool.test.js:
+  // a multi-table request answers with a SPLIT rather than a game list, so the
+  // route cannot show the pool it was built from.
+});
+
 test('an unfiltered draw is byte-identical to a pre-#725 one', async () => {
   const round = await shelf();
 
@@ -157,6 +203,7 @@ test('a half-step band narrows to what no integer bound could say (#855)', async
   assert.deepEqual((await presetOf(round.id)).metadata, {
     maxPlaytime: null, minPlaytime: null, weightMin: 2.5, weightMax: 3.5,
     youngestAge: null, categories: [], mechanics: [],
+    excludeCategories: [], excludeMechanics: [], onlyRecommended: false,
   });
   // ...and an inverted half-step pair is still swapped, not dropped.
   assert.deepEqual(drawn(await start(round.id, { metadata: { weightMin: 3.5, weightMax: 2.5 } })),
@@ -183,6 +230,7 @@ test('the filters survive into the preset, normalized and canonical', async () =
     metadata: {
       maxPlaytime: 60, minPlaytime: null, weightMin: null, weightMax: null,
       youngestAge: null, categories: ['Economic'], mechanics: [],
+      excludeCategories: [], excludeMechanics: [], onlyRecommended: false,
     },
   });
 

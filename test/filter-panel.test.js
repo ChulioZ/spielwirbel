@@ -70,6 +70,20 @@ const chipsFor = (label) => {
     .find((g) => g.querySelector('.field__label').textContent === label);
   return group ? [...group.querySelectorAll('.chip')] : [];
 };
+/* The metadata chips are TRI-STATE since #1003, so their state is carried by the
+   `aria-label` rather than by `aria-pressed` — a button has two pressed states
+   and this control has three, so "not pressed" could not tell exclude from
+   ignore. Same answer `paintTagChip` reached, and asserting the LABEL is what
+   keeps "never by colour alone" a real check rather than a class read back. */
+const chipState = (chip) => {
+  const label = chip.getAttribute('aria-label') || '';
+  if (/ausgeblendet/.test(label)) return 'exclude';
+  if (/zählt mit/.test(label)) return 'include';
+  if (/kein Filter/.test(label)) return 'ignore';
+  return `UNLABELLED(${label})`;
+};
+const chipsInState = (group, want) => chipsFor(group).filter((c) => chipState(c) === want)
+  .map((c) => c.textContent.trim());
 const selectLabelled = (name) =>
   [...dom.document.querySelectorAll('.mfilter__select')]
     .find((s) => s.getAttribute('aria-label') === name
@@ -271,23 +285,195 @@ test('the playing-time row offers BOTH bounds, and each reads the game\'s SAME-n
   closePanel();
 });
 
-test('a category chip toggles, is announced by aria-pressed, and ORs with its siblings', async () => {
+test('a category chip CYCLES ignore → include → exclude, announced in words (#1003)', async () => {
   await dom.call('showStartSession', roundFixture());
   openPanel();
   const [abstract, adventure] = chipsFor('Kategorien');
 
-  assert.equal(abstract.getAttribute('aria-pressed'), 'false',
-    'state is never carried by the fill alone');
+  assert.equal(chipState(abstract), 'ignore', 'state is never carried by the fill alone');
   abstract.click();
-  assert.equal(abstract.getAttribute('aria-pressed'), 'true');
+  assert.equal(chipState(abstract), 'include');
   assert.deepEqual(previewed(), ['Azul', 'Handgetippt']);
 
   adventure.click();
   assert.deepEqual(previewed(), ['Azul', 'Gloomhaven', 'Handgetippt'], 'OR, not AND');
 
+  // The third click is the whole issue: „anything but Abstract Strategy".
   abstract.click();
-  assert.equal(abstract.getAttribute('aria-pressed'), 'false');
+  assert.equal(chipState(abstract), 'exclude');
+  assert.ok(abstract.querySelector('.ti-ban'), 'the exclude state is not colour alone');
+  assert.deepEqual(previewed(), ['Gloomhaven', 'Handgetippt'],
+    'Azul is out on the exclusion while Adventure still includes Gloomhaven');
+
+  // …and a fourth returns to ignoring it, so the cycle closes.
+  abstract.click();
+  assert.equal(chipState(abstract), 'ignore');
   assert.deepEqual(previewed(), ['Gloomhaven', 'Handgetippt']);
+});
+
+test('an EXCLUDED metadata value BEATS an included one on the same game', async () => {
+  /* The combinators differ by direction — included values OR, excluded values
+     AND-NOT — so a game carrying one of each has to be judged by the exclusion.
+     Catan is the fixture's only Economic game and its only Trading one, so
+     excluding the mechanic while including the category is the collision. */
+  await dom.call('showStartSession', roundFixture());
+  openPanel();
+  chipsFor('Kategorien').find((c) => c.textContent.trim() === 'Economic').click();
+  assert.deepEqual(previewed(), ['Catan', 'Handgetippt']);
+
+  const trading = chipsFor('Mechaniken').find((c) => c.textContent.trim() === 'Trading');
+  trading.click();
+  trading.click();
+  assert.equal(chipState(trading), 'exclude');
+  assert.deepEqual(previewed(), ['Handgetippt'], 'the exclusion wins over the include');
+  assert.deepEqual(appliedChips(), ['Economic', 'ohne Trading'],
+    'and an excluded value says so in words, not by a fill the chip row cannot carry');
+});
+
+test('an exclusion narrows FURTHER, where a second inclusion widens', async () => {
+  // The asymmetry stated as behaviour rather than as a comment: two included
+  // categories admit the union, two excluded ones admit neither.
+  await dom.call('showStartSession', roundFixture());
+  openPanel();
+  const [abstract, adventure] = chipsFor('Kategorien');
+  abstract.click(); abstract.click();
+  assert.deepEqual(previewed(), ['Catan', 'Gloomhaven', 'Handgetippt']);
+  adventure.click(); adventure.click();
+  assert.deepEqual(previewed(), ['Catan', 'Handgetippt'], 'AND-NOT: each exclusion removes more');
+});
+
+test('the recommendation toggle narrows the pool to what BGG endorses here (#1005)', async () => {
+  /* A 2–6 box the community calls best at four and wrong at six is the reported
+     shape; the party is three by default in this fixture, so the second game is
+     the one that discriminates. */
+  const round = roundFixture({
+    games: [
+      { id: 'p1', title: 'Passt', minPlayers: 2, maxPlayers: 6, bestWith: [3], recommendedWith: [3, 4] },
+      { id: 'p2', title: 'Kaputt', minPlayers: 2, maxPlayers: 6, bestWith: [4], recommendedWith: [4, 5] },
+      { id: 'p3', title: 'Ungefragt', minPlayers: 2, maxPlayers: 6, bestWith: [], recommendedWith: [] },
+      { id: 'p4', title: 'Handgetippt' },
+    ],
+  });
+  await dom.call('showStartSession', round);
+  openPanel();
+
+  const box = dom.document.querySelector('.mfilter__row--check input');
+  assert.ok(box, 'the shelf carries a poll and this screen has a table, so the toggle is offered');
+  assert.equal(box.checked, false, 'off by default — the pool must be what it always was');
+  /* The label and the chip STATE the count. „recommends here" named the source
+     and not the question — recommended at what? — and the count is the whole
+     clause. Both are asserted, and against the same number, because they are
+     read at different moments: the label inside the panel, the chip after it has
+     closed with nothing else on it to supply the number. */
+  assert.equal(dom.document.querySelector('.mfilter__row--check .mfilter__label').textContent,
+    'Nur Spiele, die BGG für 3 Personen empfiehlt');
+
+  box.checked = true;
+  box.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.deepEqual(previewed(), ['Handgetippt', 'Passt', 'Ungefragt'],
+    'an unanswered poll and an absent one are both "no opinion", never "not recommended"');
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 3 Personen']);
+  assert.equal(triggerLabel(), 'Filter (1 aktiv)');
+  closePanel();
+});
+
+/* The count in the label is the POINT of #1005's wording, and a single-party
+   spec cannot see it: „für 3 Personen" is equally satisfied by a hardcoded 3.
+   Two parties, and the singular, are what make the interpolation load-bearing. */
+test('the label and the chip follow the party, they do not state a fixed number', async () => {
+  const polled = [{ id: 'p1', title: 'Passt', minPlayers: 1, maxPlayers: 6, bestWith: [3], recommendedWith: [1, 3] }];
+
+  await dom.call('showStartSession', roundFixture({
+    members: [{ id: 'm1', name: 'Anna' }, { id: 'm2', name: 'Ben' }, { id: 'm3', name: 'Cleo' },
+      { id: 'm4', name: 'Dina' }, { id: 'm5', name: 'Emil' }],
+    games: polled,
+  }));
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check .mfilter__label').textContent,
+    'Nur Spiele, die BGG für 5 Personen empfiehlt');
+  closePanel();
+
+  // …and the singular is a real phrase, not „für 1 Personen".
+  await dom.call('showStartSession', roundFixture({ members: [{ id: 'm1', name: 'Anna' }], games: polled }));
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check .mfilter__label').textContent,
+    'Nur Spiele, die BGG für 1 Person empfiehlt');
+  const box = dom.document.querySelector('.mfilter__row--check input');
+  box.checked = true;
+  box.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 1 Person'], 'the chip takes the same count as the label');
+  closePanel();
+});
+
+/* Found in a browser, not by a spec: the LABEL followed a seat change and the
+   chip did not, so the panel said „für 3 Personen" while the chip beside it
+   still said 4. Stating a count is only an improvement if the count cannot go
+   stale — the old wording had no number to be wrong about. */
+test('unseating somebody moves the chip too, not just the label inside the panel', async () => {
+  await dom.call('showStartSession', roundFixture({
+    games: [{ id: 'p1', title: 'Passt', minPlayers: 1, maxPlayers: 6, bestWith: [3], recommendedWith: [1, 2, 3] }],
+  }));
+  openPanel();
+  const box = dom.document.querySelector('.mfilter__row--check input');
+  box.checked = true;
+  box.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 3 Personen']);
+  closePanel();
+
+  // Tap a seat: the party is now two, and the chip must say so without the user
+  // reopening the panel — it is the only statement of the filter left on screen.
+  const seat = [...dom.app.querySelectorAll('button')].find((b) => /Cleo/.test(b.textContent));
+  assert.ok(seat, 'fixture: the third seat is tappable');
+  seat.click();
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 2 Personen']);
+});
+
+/* „Mehrere Tische" makes the toggle meaningless — the draw and the preview both
+   SKIP the clause there, because a split has no one table size for the poll to
+   have an opinion about. So the control must not exist in that mode: left
+   rendered it does nothing, and since it states a count it would state a wrong
+   one, naming a party that is about to be seated at two tables. */
+test('„Mehrere Tische" removes the toggle, and takes the filter with it', async () => {
+  await dom.call('showStartSession', roundFixture({
+    games: [{ id: 'p1', title: 'Passt', minPlayers: 1, maxPlayers: 6, bestWith: [3], recommendedWith: [1, 2, 3] }],
+  }));
+  openPanel();
+  const box = dom.document.querySelector('.mfilter__row--check input');
+  box.checked = true;
+  box.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.deepEqual(appliedChips(), ['BGG-Tipp für 3 Personen']);
+  closePanel();
+
+  dom.app.querySelector('.setup-addons__chip[data-addon="multi"]').click();
+  // Both halves: the control is gone, AND the value went with it. Hiding alone
+  // would leave a chip for a filter the user can neither see nor clear.
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check'), null,
+    'the toggle must not be offered where it can do nothing');
+  closePanel();
+  assert.deepEqual(appliedChips(), [], 'and no chip may survive its own control');
+
+  // Back off: the mode is reversible, so the control comes back — unticked,
+  // because the filter was cleared rather than remembered.
+  dom.app.querySelector('.setup-addons__chip[data-addon="multi"]').click();
+  openPanel();
+  const back = dom.document.querySelector('.mfilter__row--check input');
+  assert.ok(back, 'leaving the mode brings the toggle back');
+  assert.equal(back.checked, false);
+  closePanel();
+});
+
+/* The same pair, arriving together from a remembered preset (#252) — which
+   `normalizeMetadataFilters` cannot prune, because it asks what the SHELF can
+   offer and this is a property of the screen. */
+test('a preset carrying both restores the split, never the dead filter', async () => {
+  await dom.call('showStartSession', roundFixture({
+    games: [{ id: 'p1', title: 'Passt', minPlayers: 1, maxPlayers: 6, bestWith: [3], recommendedWith: [1, 2, 3] }],
+  }), { multiTable: true, metadata: { onlyRecommended: true } });
+  assert.deepEqual(appliedChips(), []);
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check'), null);
+  closePanel();
 });
 
 test('the complexity selects carry each other rather than allowing an inverted range', async () => {
@@ -332,8 +518,7 @@ test('the preset restores the last draw and drops a category the shelf lost', as
     'the surviving preset is named; "Wargame" is on no game here, so it has no chip');
   openPanel();
   assert.equal(selectLabelled('Spieldauer höchstens').value, '60');
-  const on = chipsFor('Kategorien').filter((c) => c.getAttribute('aria-pressed') === 'true');
-  assert.deepEqual(on.map((c) => c.textContent), ['Economic']);
+  assert.deepEqual(chipsInState('Kategorien', 'include'), ['Economic']);
   closePanel();
 
   // The chips alone cannot see the failure: "Wargame" has no chip to press
@@ -404,7 +589,7 @@ test('an empty pool offers a reset that clears the metadata filters AND the tags
   // And the controls inside catch up when it is next opened, rather than the
   // reset having cleared only the state behind them.
   openPanel();
-  assert.equal(chipsFor('Kategorien')[0].getAttribute('aria-pressed'), 'false');
+  assert.equal(chipState(chipsFor('Kategorien')[0]), 'ignore');
   assert.equal(dom.document.querySelector('#filterChips .chip').getAttribute('aria-pressed'), null);
   closePanel();
 });
@@ -441,6 +626,7 @@ test('the draw sends the metadata filters with the request', async () => {
   assert.deepEqual(sent, {
     maxPlaytime: null, minPlaytime: null, weightMin: null, weightMax: null,
     youngestAge: 10, categories: [], mechanics: [],
+    excludeCategories: [], excludeMechanics: [], onlyRecommended: false,
   }, 'the canonical shape goes out, so the route normalizes exactly what it offered');
   dom.set('api', async () => ({}));
 });
@@ -473,6 +659,21 @@ test('Regal: the panel filters the cover grid with the same semantics', () => {
   choose(selectLabelled('Spieldauer höchstens'), '30');
   assert.deepEqual(shelved(), ['Handgetippt'], 'the two controls AND together');
   assert.deepEqual(appliedChips(), ['Spieldauer bis 30 Min.', 'Trading']);
+  closePanel();
+});
+
+test('Regal: the recommendation toggle is ABSENT — it filters a shelf, not a table', () => {
+  /* The one control whose availability is not a property of the shelf alone: it
+     needs a party count, and the Regal has none. Rendering it here would be a
+     control that could never answer its own question — so the gate is two-part
+     (the shelf carries a poll AND the screen is about a table), and this is the
+     half no `metadataFilterOptions` result can express. */
+  regal({
+    games: [{ id: 'p1', title: 'Passt', minPlayers: 2, maxPlayers: 6, bestWith: [3], recommendedWith: [3, 4] }],
+  });
+  openPanel();
+  assert.equal(dom.document.querySelector('.mfilter__row--check'), null,
+    'the Regal grew a toggle it has no table size to apply');
   closePanel();
 });
 
@@ -735,8 +936,7 @@ test('an applied chip removes exactly its own filter, with the panel CLOSED', as
   // The control inside catches up too, rather than the chip having cleared only
   // the state behind it.
   openPanel();
-  const on = chipsFor('Kategorien').filter((c) => c.getAttribute('aria-pressed') === 'true');
-  assert.deepEqual(on.map((c) => c.textContent), ['Adventure']);
+  assert.deepEqual(chipsInState('Kategorien', 'include'), ['Adventure']);
 });
 
 test('an EXCLUDED tag says so in words, not by a colour its chip cannot carry', async () => {

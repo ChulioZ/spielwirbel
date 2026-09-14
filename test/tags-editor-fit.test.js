@@ -119,7 +119,9 @@ async function tagsPopover(t) {
   await dom.call('showGameDetail', ROUND.id, 7);
   // The editors are nested inside showGameDetail and not callable from a spec,
   // so the only way in is the one a user takes.
-  dom.document.querySelector('#app h1 .tag--custom').click();
+  // The chips left the <h1> for their own row in #1039. First `.tag--custom` in
+  // the row is the tag chip (the order is players, tags, owners, expansions).
+  dom.document.querySelector('#app .gd-chips .tag--custom').click();
   const popover = dom.document.querySelector('.popover--tags');
   assert.ok(popover, 'the tags editor did not open as a popover');
   return { dom, popover };

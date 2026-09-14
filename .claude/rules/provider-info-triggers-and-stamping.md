@@ -31,6 +31,12 @@ It degrades the **controls** too, one step worse: `metadataFilterOptions` derive
 which controls exist from stored values, so an unfilled shelf offers no complexity
 control *at all* and a half-filled one offers a control that half works.
 
+**#1005 added a sixth filtered field and rode the existing triggers**, which is
+what the rule below is for: the toggle counts toward `countMetadataFilters`, so a
+draw carrying only it waits for the fill like any other filtered draw, and the
+setup screen's trigger fills the poll on the way in. Nothing new was needed —
+which is the tell that the rule is doing its job rather than being restated.
+
 So the rule that pairs with the field set: **a field the app filters on must have
 a trigger on the screen that filters it.** `lib/provider-info.js`'s header lists
 all five triggers; two of them (#736) exist purely to satisfy this. Note the

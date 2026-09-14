@@ -90,19 +90,23 @@ test('the picker preselects the stored preset, else the adder\'s own seat', asyn
 test('the detail page names the owners, and offers an empty chip otherwise', async (t) => {
   const owned = round({ games: [game({ ownerIds: [ANNA.id, BEN.id] })] });
   const dom = await screen(t, 'showGameDetail', owned, [owned.id, 7]);
-  const chips = chipLabels(dom.document.querySelector('#app h1'), '.tag--custom');
+  const chips = chipLabels(dom.document.querySelector('#app .gd-chips'), '.tag--custom');
   assert.ok(chips.includes('Gehört Anna, Ben'), `owners named; saw ${JSON.stringify(chips)}`);
 
   const bare = round();
   const empty = await screen(t, 'showGameDetail', bare, [bare.id, 7]);
-  const emptyChips = chipLabels(empty.document.querySelector('#app h1'), '.tag--custom.tag--empty');
+  const emptyChips = chipLabels(empty.document.querySelector('#app .gd-chips'), '.tag--custom.tag--empty');
   assert.ok(emptyChips.includes('Besitzer eintragen'), `way in offered; saw ${JSON.stringify(emptyChips)}`);
 });
 
 test('a wish shows no owner row on the detail page', async (t) => {
   const wish = round({ games: [game({ wish: true, ownerIds: [ANNA.id] })] });
   const dom = await screen(t, 'showGameDetail', wish, [wish.id, 7]);
-  const chips = chipLabels(dom.document.querySelector('#app h1'), '.tag--custom');
+  const chips = chipLabels(dom.document.querySelector('#app .gd-chips'), '.tag--custom');
+  /* Anti-vacuous, and it earns its place: the chips moved out of the <h1> into
+     `.gd-chips` in #1039, and an absence assertion pointed at the old selector
+     would have compared two empty lists and passed for every game. */
+  assert.ok(chips.length > 0, 'the chip row rendered no chips at all — the selector has stopped matching');
   assert.ok(!chips.some((c) => c.startsWith('Gehört')), `saw ${JSON.stringify(chips)}`);
 });
 
@@ -161,7 +165,9 @@ const SESSION = {
 };
 
 test('the results screen names who brings the box, and says nothing when everyone owns it', async (t) => {
-  const notes = (dom) => [...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim());
+  // Since #1057 the ownership line lives on the table band, not inside the
+  // chosen game's result row.
+  const notes = (dom) => [...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim());
 
   // Anna owns it, You do not -> the line is worth printing.
   const hers = round({ games: [game({ ownerIds: ['m1'] })] });
@@ -180,7 +186,7 @@ test('the line names only the owners actually at the table (#971)', async (t) =>
   const clara = { id: 'm3', name: 'Clara' };
   const data = round({ members: [ANNA, BEN, clara], games: [game({ ownerIds: ['m1', 'm3'] })] });
   const dom = await results(t, data, { ...SESSION, memberIds: ['m1', 'm2'] });
-  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+  assert.deepEqual([...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim()),
     ['Gehört Anna'], 'Clara owns it too but is not here, so naming her helps nobody');
 });
 
@@ -190,7 +196,7 @@ test('with no owner at the table the line names every owner (#971)', async (t) =
   const clara = { id: 'm3', name: 'Clara' };
   const data = round({ members: [ANNA, BEN, clara], games: [game({ ownerIds: ['m3'] })] });
   const dom = await results(t, data, { ...SESSION, memberIds: ['m1', 'm2'] });
-  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+  assert.deepEqual([...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim()),
     ['Gehört Clara']);
 });
 
@@ -285,11 +291,11 @@ test('an off-shelf game the member owns is never listed', async (t) => {
  * so at the exact moment the group is deciding, the one screen listing every
  * candidate said nothing at all about who has to bring which box. */
 
-const ranking = (dom) => [...dom.document.querySelectorAll('.result-row')].map((row) => {
-  const owners = row.querySelector('.result-row__owners');
+const ranking = (dom) => [...dom.document.querySelectorAll('.trow')].map((row) => {
+  const owners = row.querySelector('.trow__owners');
   // `hidden` is how the line stands down on the chosen row, so an element that
   // is present but hidden must read as absent here.
-  return [row.querySelector('.result-row__title').textContent.trim(),
+  return [row.querySelector('.trow__title').textContent.trim(),
     owners && !owners.hidden ? owners.textContent.trim() : null];
 });
 
@@ -319,7 +325,7 @@ test('the ranking line is suppressed on the row that IS the chosen game (#1008)'
   const dom = await results(t, threeGames(), { ...VOTING, chosenGameId: 7 });
   const catan = ranking(dom).find(([title]) => title.includes('Catan'));
   assert.equal(catan[1], null, 'the row line stands down for the finish panel');
-  assert.deepEqual([...dom.document.querySelectorAll('.row-finish__note')].map((n) => n.textContent.trim()),
+  assert.deepEqual([...dom.document.querySelectorAll('.tisch__note')].map((n) => n.textContent.trim()),
     ['Gehört Anna'], 'and the panel still carries it (#971)');
 });
 

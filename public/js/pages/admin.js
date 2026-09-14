@@ -146,6 +146,42 @@
     detailDialog.showModal();
   }
 
+  /* Close on a backdrop click (#417). Every other overlay in the app dismisses
+     that way — the SPA's sheets do — and native <dialog> is the one that does
+     not, so the operator's reflex click beside the popup did nothing. Esc and
+     the ✕ are untouched; this only ADDS a dismissal path.
+
+     Registered ONCE, here rather than inside `openDetail`, which runs on every
+     row click and would stack a listener per open.
+
+     THE TRAP: `e.target === detailDialog` is not "the backdrop". The dialog
+     carries 1.5rem of padding, and a click on that padding also targets the
+     dialog element itself — so the naive check closes the popup when the
+     operator clicks just inside its own edge. Compare the pointer against the
+     box instead. (The other fix is a padded inner wrapper, which makes the
+     target test exact; geometry was chosen because it needs no markup change.) */
+  const outsideDialog = (e) => {
+    // A keyboard-triggered synthetic click reports 0,0 — which IS outside the
+    // rect — so Enter or Space on a focused action button would read as a
+    // backdrop click and close the dialog before its own handler ran.
+    // `detail` is 0 for those and at least 1 for a real pointer click.
+    if (!e.detail) return false;
+    const r = detailDialog.getBoundingClientRect();
+    return e.clientX < r.left || e.clientX > r.right
+      || e.clientY < r.top || e.clientY > r.bottom;
+  };
+  let pressedOutside = false;
+  detailDialog.addEventListener('mousedown', (e) => { pressedOutside = outsideDialog(e); });
+  detailDialog.addEventListener('click', (e) => {
+    /* BOTH ends have to be on the backdrop. Selecting an e-mail address or an
+       account id inside the dialog and releasing the mouse outside it fires a
+       click whose target is the dialog — without this guard the popup vanishes
+       mid-copy, and copying an id out of here is an ordinary operator action. */
+    const closeIt = pressedOutside && outsideDialog(e);
+    pressedOutside = false;
+    if (closeIt) detailDialog.close();
+  });
+
   // A table row that opens `spec`'s dialog. Focusable and Enter/Space-activatable
   // so the actions are reachable without a mouse; deliberately no role="button"
   // — that would detach the cells from their row for a screen reader. The row

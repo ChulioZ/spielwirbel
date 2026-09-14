@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const { app } = require('./helpers');
 const { createApp } = require('../lib/app');
-const { imageCspSources, LEGACY_COVER_HOSTS } = require('../lib/providers');
+const { imageCspSources } = require('../lib/providers');
 
 test('helmet sets security headers on every response', async () => {
   const res = await request(app).get('/');
@@ -38,14 +38,16 @@ test('helmet sets security headers on every response', async () => {
   assert.ok(sources.length > 0, 'there are cover image hosts to allow');
   for (const src of sources) assert.ok(imgSrc.includes(src), `img-src lists ${src}`);
 
-  // …and the retired storefronts' hosts are among them, checked HERE against
-  // the served header rather than only against imageCspSources() — the point of
-  // #744's split is that the app's real CSP still permits covers whose provider
-  // is gone, and a test that only compared the header to the function would
-  // agree with itself while every one of those covers went blank.
-  assert.ok(LEGACY_COVER_HOSTS.length > 0, 'the frozen legacy list is not empty');
-  for (const host of LEGACY_COVER_HOSTS) {
-    assert.ok(imgSrc.includes(host), `img-src still lists the legacy cover host ${host}`);
+  /* …and the four retired storefronts are NOT among them any more (#981).
+     #744's split kept their CDNs in `img-src` so the ~75 covers already on real
+     shelves would not go blank; the operator's clean-up cleared those rows, so
+     the permission has no data behind it. Pinned against the SERVED header
+     rather than against imageCspSources(), for the same reason the old
+     assertion was: a test comparing the header only to the function agrees with
+     itself whatever the function says. */
+  for (const host of ['image.api.playstation.com', 'playstation.net',
+    'steamstatic.com', 'nintendo.com', 's-microsoft.com']) {
+    assert.ok(!imgSrc.includes(host), `img-src still lists the retired storefront host ${host}`);
   }
 });
 

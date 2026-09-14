@@ -155,7 +155,7 @@ same property, while the `function` declarations — `setLocale`, `tn`, `initLoc
 
 `Intl.PluralRules` returns CLDR categories (`zero`/`one`/`two`/`few`/`many`/
 `other`), and `tn()` maps `one` → `keyOne` and **everything else** → `keyOther`.
-That is exact for the latin-script languages in scope (fr, es, it, nl, pt) and
+That is exact for the latin-script languages in scope (fr, es, it, nl, pt, fi) and
 gains French and Portuguese the thing the old `n === 1` got wrong: both put **0
 in the singular**.
 

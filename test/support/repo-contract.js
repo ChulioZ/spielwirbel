@@ -1,5 +1,7 @@
 'use strict';
 
+const { MEMBER_COLORS } = require('../../public/js/member-colors');
+
 /*
  * The data-access-layer contract (issue #127), as a backend-parameterized suite.
  * Both backends must satisfy it identically: test/repo.test.js runs it against
@@ -276,6 +278,63 @@ module.exports = function repoContract(repo) {
     // Missing round, or another tenant's round, is null (indistinguishable).
     assert.equal(await repo.createMember(T, 'nope', { name: 'X' }), null);
     assert.equal(await repo.createMember(OTHER, round.id, { name: 'X' }), null);
+  });
+
+  /* #1006. The whole requirement is that retiring touches NOTHING else, so the
+     assertion is a deep-equal of the round with the two flags subtracted rather
+     than a spot-check of a field or two. */
+  test('retireMember sets the two flags and changes nothing else; restoring clears them', async () => {
+    const round = await freshRound();
+    const alice = (await repo.getRound(T, round.id)).members[0];
+    const strip = (r) => JSON.stringify({
+      ...r,
+      members: r.members.map((m) => { const x = { ...m }; delete x.retired; delete x.retiredAt; return x; }),
+      activities: undefined,
+    });
+    const before = strip(await repo.getRound(T, round.id));
+
+    const out = await repo.retireMember(T, round.id, alice.id, true);
+    assert.equal(out.retired, true);
+    assert.match(out.retiredAt, /^\d{4}-\d{2}-\d{2}T/);
+    const after = await repo.getRound(T, round.id);
+    assert.equal(strip(after), before, 'retiring must leave every other field byte-identical');
+    assert.equal(after.members[0].retired, true);
+
+    const back = await repo.retireMember(T, round.id, alice.id, false);
+    assert.equal(back.retired, false);
+    assert.equal(back.retiredAt, null);
+
+    assert.equal(await repo.retireMember(T, round.id, 'nope', true), null);
+    assert.equal(await repo.retireMember(OTHER, round.id, alice.id, true), null);
+
+    const acts = await repo.listActivities(T, round.id);
+    assert.ok(acts.some((a) => a.type === 'member_retired' && a.name === 'Alice'));
+    assert.ok(acts.some((a) => a.type === 'member_restored' && a.name === 'Alice'));
+  });
+
+  /* The colour FREEZE is the non-obvious half: an unset avatar colour is derived
+     from the seat's POSITION, so removing a row silently re-colours everyone
+     after it on every screen, historical ones included. */
+  test('deleteMember removes the seat and freezes the colours that would have shifted', async () => {
+    const round = await freshRound(); // Alice, Bob
+    await repo.createMember(T, round.id, { name: 'Charlie' });
+    const before = (await repo.getRound(T, round.id)).members;
+    assert.equal(before.length, 3);
+    // Nobody has picked a colour, so all three are position-derived.
+    assert.ok(before.every((m) => !('color' in m)), 'fixture must start with derived colours');
+
+    assert.equal(await repo.deleteMember(T, round.id, before[0].id), true);
+    const after = (await repo.getRound(T, round.id)).members;
+    assert.deepEqual(after.map((m) => m.name), ['Bob', 'Charlie']);
+    // Bob was at index 1 and Charlie at 2; both keep those swatches.
+    assert.equal(after[0].color, MEMBER_COLORS[1]);
+    assert.equal(after[1].color, MEMBER_COLORS[2]);
+
+    assert.equal(await repo.deleteMember(T, round.id, 'nope'), false);
+    assert.equal(await repo.deleteMember(OTHER, round.id, after[0].id), false);
+
+    const acts = await repo.listActivities(T, round.id);
+    assert.ok(acts.some((a) => a.type === 'member_deleted' && a.name === 'Alice'));
   });
 
   // #563: a new seat is logged, because a new person in the round is real history
@@ -1776,6 +1835,34 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteSession(T, round.id, session.id), false);
   });
 
+  // How a played session ended when nobody won (#1038). Like `guests` below it
+  // lives inside the blob, so the absent-key parity is the thing that can break
+  // silently — and here there is a second half the guests case does not have:
+  // the key must be CLEARED again, because the results screen re-POSTs the whole
+  // result on every winner-chip tap.
+  test('a session carries its ending through the blob, and clearing removes the key', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const session = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    });
+    const read = async () => (await repo.getRound(T, round.id)).sessions[0];
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [] });
+    assert.equal('ending' in (await read()), false, 'an ordinary session grows no key');
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [], ending: 'lost' });
+    assert.equal((await read()).ending, 'lost');
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: ['m1'] });
+    assert.equal('ending' in (await read()), false, 'winners clear it');
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [], ending: 'ongoing' });
+    await repo.finishSession(T, round.id, session.id, { finished: false, winnerIds: [] });
+    assert.equal('ending' in (await read()), false, 'un-finishing clears it');
+  });
+
   // Guests (#458) live inside the session blob, so neither backend needed a
   // schema change — which is exactly what makes absent-key parity the thing that
   // can silently break. A `guests: []` written onto a guestless session (or a
@@ -2365,6 +2452,104 @@ module.exports = function repoContract(repo) {
       await repo.setGameOwners(T, round.id, [shelf.id, wish.id], [anna.id]), { updated: 1 });
     assert.deepEqual((await repo.getGame(T, round.id, shelf.id)).ownerIds, [anna.id]);
     assert.equal('ownerIds' in (await repo.getGame(T, round.id, wish.id)), false);
+  });
+
+  /* ------------------------- Bulk game tags (#1000) ------------------------- */
+
+  test('setGameTags ADDS and REMOVES — it never replaces the set', async () => {
+    /* THE semantic decision of #1000, and the one that would be destructive if
+       taken by reflex from its sibling above: a 50-game selection carries 50
+       different tag sets, so replacing would silently strip every tag those
+       games already had — on the action whose whole purpose is organising a
+       freshly imported shelf. */
+    const round = await freshRound({ name: 'Bulk tags' });
+    const kenner = await repo.addTag(T, round.id, 'Kenner');
+    const familie = await repo.addTag(T, round.id, 'Familie');
+    const party = await repo.addTag(T, round.id, 'Party');
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'Azul', tagIds: [familie.id] }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'Brass' }));
+    const c = await repo.createGame(T, round.id, gameFields({ title: 'Cascadia', tagIds: [party.id] }));
+
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id, b.id], { add: [kenner.id] }), { updated: 2 });
+    const games = Object.fromEntries((await repo.getRound(T, round.id)).games.map((g) => [g.id, g]));
+    assert.deepEqual(games[a.id].tagIds, [familie.id, kenner.id],
+      'the tag it already had SURVIVED — this is the whole difference from setGameOwners');
+    assert.deepEqual(games[b.id].tagIds, [kenner.id]);
+    assert.deepEqual(games[c.id].tagIds, [party.id], 'a game outside the selection is untouched');
+
+    // Remove takes only what it names.
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id], { remove: [familie.id] }), { updated: 1 });
+    assert.deepEqual((await repo.getGame(T, round.id, a.id)).tagIds, [kenner.id]);
+
+    // Both directions in one call, which is what the tri-state picker sends.
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id], { add: [party.id], remove: [kenner.id] }),
+      { updated: 1 });
+    assert.deepEqual((await repo.getGame(T, round.id, a.id)).tagIds, [party.id]);
+  });
+
+  test('setGameTags counts games that CHANGED, and removing the last tag drops the key', async () => {
+    const round = await freshRound({ name: 'Counting' });
+    const kenner = await repo.addTag(T, round.id, 'Kenner');
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'Azul', tagIds: [kenner.id] }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'Brass' }));
+
+    // A no-op on `a`, a real change on `b` — so the toast can say something true
+    // rather than reporting the selection size back at the user.
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id, b.id], { add: [kenner.id] }), { updated: 1 });
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id, b.id], { add: [kenner.id] }), { updated: 0 },
+      'nothing moved the second time');
+
+    /* Clearing removes the KEY, never stores []. `mergeData` is `data || patch`
+       and cannot remove one, so Postgres drops to the `-` operator where the
+       JSON backend `delete`s — a copy storing [] would read identically
+       everywhere and be invisible outside this suite. */
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [a.id], { remove: [kenner.id] }), { updated: 1 });
+    assert.equal('tagIds' in (await repo.getGame(T, round.id, a.id)), false);
+    const read = (await repo.getRound(T, round.id)).games.find((x) => x.id === a.id);
+    assert.equal('tagIds' in read, false, 'absent-key parity with a never-tagged game');
+  });
+
+  test('setGameTags lets REMOVE win over ADD, and does not skip a wish', async () => {
+    const round = await freshRound({ name: 'Edges' });
+    const kenner = await repo.addTag(T, round.id, 'Kenner');
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul' }));
+    // A wish CAN carry tags (the single PATCH takes tagIds for one) and
+    // organising the wish list is exactly this action's job — unlike owners,
+    // where a wish is nobody's box yet.
+    const wish = await repo.createGame(T, round.id, gameFields({ title: 'Wanted', wish: true }));
+
+    // Unreachable from the tri-state chip (one chip, one state); a hand-rolled
+    // body can send it, so the precedence is stated rather than left to
+    // statement order.
+    assert.deepEqual(
+      await repo.setGameTags(T, round.id, [g.id], { add: [kenner.id], remove: [kenner.id] }),
+      { updated: 0 });
+    assert.equal('tagIds' in (await repo.getGame(T, round.id, g.id)), false);
+
+    assert.deepEqual(await repo.setGameTags(T, round.id, [wish.id], { add: [kenner.id] }),
+      { updated: 1 });
+    assert.deepEqual((await repo.getGame(T, round.id, wish.id)).tagIds, [kenner.id]);
+  });
+
+  test('setGameTags refuses a stale selection WHOLE, like every other bulk path', async () => {
+    const round = await freshRound({ name: 'Mine' });
+    const other = await freshRound({ name: 'Theirs' });
+    const kenner = await repo.addTag(T, round.id, 'Kenner');
+    const mine = await repo.createGame(T, round.id, gameFields({ title: 'Mine' }));
+    const theirs = await repo.createGame(T, other.id, gameFields({ title: 'Theirs' }));
+
+    assert.equal(
+      await repo.setGameTags(T, round.id, [mine.id, theirs.id], { add: [kenner.id] }),
+      'unknown_game');
+    assert.equal('tagIds' in (await repo.getGame(T, round.id, mine.id)), false,
+      'a refused selection writes nothing at all');
+    assert.equal(await repo.setGameTags(T, 'missing', [mine.id], { add: [kenner.id] }), null);
   });
 
   test('setGameOwners refuses a stale selection WHOLE, exactly as moveGames does', async () => {
@@ -3608,6 +3793,38 @@ module.exports = function repoContract(repo) {
     assert.equal((await repo.addFeedEvent('feed-u', { type: 'session_played', title: 'Catan' })).coverUrl, null);
   });
 
+  /* The allowlist's one widening (#1079): a games_imported row keeps an integer
+     `count`, so an import can say "and 22 more games" instead of naming one game
+     out of the batch. Both backends store the row as a single JSON blob, so the
+     key must be ABSENT — not 0, not null — on the other two types, or the two
+     backends' jsonb shapes drift apart by type and by age
+     (.claude/rules/postgres-backend.md). */
+  test('feed: only games_imported keeps a count, and only an integer one', async () => {
+    const ev = await repo.addFeedEvent('feed-c', {
+      type: 'games_imported', title: 'Catan', coverUrl: null, count: 23,
+      roundName: 'Familienrunde', // still dropped — the widening is one field, not a door
+    });
+    assert.equal(ev.count, 23);
+    assert.deepEqual(Object.keys(ev).sort(), ['at', 'count', 'coverUrl', 'id', 'title', 'type', 'uid']);
+    const stored = (await repo.listFeedEvents(['feed-c']))[0];
+    assert.equal(stored.count, 23, 'the count did not survive the round trip');
+
+    // Typed at the store, never trusted from the caller.
+    for (const bad of [-1, 1.5, '3', null]) {
+      const row = await repo.addFeedEvent('feed-c', { type: 'games_imported', title: 'X', count: bad });
+      assert.equal(row.count, undefined, `count ${String(bad)} was stored`);
+      assert.ok(!Object.prototype.hasOwnProperty.call(row, 'count'), 'a rejected count still left its key');
+    }
+
+    // And the two older types carry no count KEY at all, even when one is passed.
+    for (const type of ['game_added', 'session_played']) {
+      const row = await repo.addFeedEvent('feed-c', { type, title: 'X', count: 7 });
+      assert.ok(!Object.prototype.hasOwnProperty.call(row, 'count'), `${type} grew a count key`);
+      const back = (await repo.listFeedEvents(['feed-c']))[0];
+      assert.ok(!Object.prototype.hasOwnProperty.call(back, 'count'), `${type} persisted a count key`);
+    }
+  });
+
   test('feed: listFeedEvents reads the given uids newest-first; empty ids read nothing', async () => {
     await repo.addFeedEvent('feed-x', { type: 'game_added', title: 'One' });
     const two = await repo.addFeedEvent('feed-y', { type: 'game_added', title: 'Two' });
@@ -4215,7 +4432,7 @@ module.exports = function repoContract(repo) {
   });
 
   // Deletion (#389): the repo removes ANY notice, including a decided one — the
-  // Art. 17 retention guard is a ROUTE concern (lib/routes/admin.js reads decidedAt
+  // Art. 17 retention guard is a ROUTE concern (lib/routes/admin/ reads decidedAt
   // and demands ?force=1), deliberately not baked into the store.
   test('deleteContactNotice removes any notice; unknown id is null (#389)', async () => {
     const notice = await repo.createContactNotice({
@@ -4515,7 +4732,7 @@ module.exports = function repoContract(repo) {
       assert.equal(await rowFor(wished), null, 'a wish has no owner, so it has no row');
     });
 
-    await t.test('plays land in the CALENDAR week/month/year they finished in', async () => {
+    await t.test('plays land in the CALENDAR week/month/year the evening STARTED in', async () => {
       /*
        * NOW is Thursday 2026-08-13, 14:00 Berlin (#964). Its three boundaries:
        *   week  Monday 2026-08-10 00:00 CEST = 2026-08-09T22:00Z
@@ -4527,28 +4744,55 @@ module.exports = function repoContract(repo) {
        * satisfied by the rolling windows this replaced, which is precisely the
        * bug. Each pair straddles one boundary, so a window off by even an hour
        * (a DST slip) moves a count.
+       *
+       * The two stamps are deliberately on OPPOSITE sides of those boundaries
+       * (#1059). They used to be identical for every row here, which made the
+       * case green whichever field the aggregate bucketed on — so it survived
+       * the bug it looks like it covers. `finishedAt` is rewritten by every
+       * winner-chip re-POST, so each row below is "an evening that happened
+       * then, corrected later": reading it instead of `createdAt` reads
+       * 3 / 4 / 6 rather than 1 / 3 / 5.
        */
       const id = uniq();
       const tenant = `pga-${uniq()}`;
       const round = await repo.createRound(tenant, { name: 'E', members: ['Ann'] });
       const game = await repo.createGame(tenant, round.id, bgg(id));
-      const play = async (finishedAt, over = {}) => repo.createSession(tenant, round.id, {
-        gameIds: [game.id], votes: {}, createdAt: finishedAt,
+      const play = async (createdAt, finishedAt, over = {}) => repo.createSession(tenant, round.id, {
+        gameIds: [game.id], votes: {}, createdAt,
         finished: true, finishedAt, chosenGameId: game.id, ...over,
       });
 
-      await play('2026-08-12T09:00:00.000Z');   // Wednesday, this week
-      await play('2026-08-09T21:00:00.000Z');   // Sun 23:00 Berlin — one hour BEFORE the week began
-      await play('2026-07-31T22:30:00.000Z');   // Aug 1st, 00:30 Berlin — inside this month
-      await play('2026-07-31T21:00:00.000Z');   // Jul 31st, 23:00 Berlin — the previous month
-      await play('2025-12-31T23:30:00.000Z');   // Jan 1st, 00:30 Berlin — inside this year
-      await play('2025-12-31T22:00:00.000Z');   // Dec 31st, 23:00 Berlin — the previous year
+      // Wednesday, this week — settled again today.
+      await play('2026-08-12T09:00:00.000Z', '2026-08-13T11:00:00.000Z');
+      // Sun 23:00 Berlin, one hour BEFORE the week began — settled on Wednesday.
+      await play('2026-08-09T21:00:00.000Z', '2026-08-12T09:00:00.000Z');
+      // Aug 1st, 00:30 Berlin — inside this month, corrected today.
+      await play('2026-07-31T22:30:00.000Z', '2026-08-13T11:00:00.000Z');
+      // Jul 31st, 23:00 Berlin — the previous month, settled in August.
+      await play('2026-07-31T21:00:00.000Z', '2026-08-01T09:00:00.000Z');
+      // Jan 1st, 00:30 Berlin — inside this year, settled a few days later.
+      await play('2025-12-31T23:30:00.000Z', '2026-01-05T10:00:00.000Z');
+      // Dec 31st, 23:00 Berlin — the previous year, settled in January.
+      await play('2025-12-31T22:00:00.000Z', '2026-01-02T10:00:00.000Z');
+      /* A row with NO usable stamp — the case that decides whether dropping the
+         `finishedAt` fallback may take `|| ''` with it (#1059). It must stay out
+         of all three calendar windows and still count in `all`, whose cutoff is
+         the empty string.
+
+         Discriminating on the JSON side ONLY, measured: `String(s.createdAt)`
+         without the fallback yields the string `"null"`, which sorts ABOVE every
+         ISO instant, so the row lands in all three windows (week reads 2). The
+         SQL `coalesce` is belt-and-braces by comparison — a bare NULL comparison
+         inside the FILTER excludes the row just the same, and dropping it keeps
+         this case green. It stays because the two expressions are meant to be
+         readable as one rule. */
+      await play(null, null);
       // Neither of these is a play: one never finished, one settled on nothing.
-      await play('2026-08-12T10:00:00.000Z', { finished: false });
-      await play('2026-08-12T10:00:00.000Z', { chosenGameId: null });
+      await play('2026-08-12T10:00:00.000Z', '2026-08-12T10:00:00.000Z', { finished: false });
+      await play('2026-08-12T10:00:00.000Z', '2026-08-12T10:00:00.000Z', { chosenGameId: null });
 
       const row = await rowFor(id);
-      assert.equal(row.plays.week.count, 1, 'only Wednesday; Sunday 23:00 is the week before');
+      assert.equal(row.plays.week.count, 1, 'only Wednesday; the Sunday-23:00 evening is the week before, however late it was settled');
       assert.equal(row.plays.month.count, 3, 'the periods nest, and the 1st at 00:30 Berlin is in');
       assert.equal(row.plays.year.count, 5, 'Dec 31st 23:00 Berlin is last year, Jan 1st 00:30 is not');
       assert.equal(row.plays.year.tenants, 1, 'one group playing five times is still one group');
@@ -4556,10 +4800,10 @@ module.exports = function repoContract(repo) {
          The two 2025 plays are what makes this discriminating: they are
          invisible to the year window, so an `all` wired to `year` — the
          plausible slip, and the one that would make the public number sag for a
-         game that had a quiet year — reads 5 here rather than 6. The two backends spell it
+         game that had a quiet year — reads 5 here rather than 7. The two backends spell it
          differently (an empty-string cutoff in the window loop, a bare
          `count(*)` in SQL), which is exactly why it is pinned in the contract. */
-      assert.equal(row.plays.all.count, 6, 'every finished play, however old');
+      assert.equal(row.plays.all.count, 7, 'every finished play, however old — the stamp-less row included');
       assert.equal(row.plays.all.tenants, 1);
     });
 

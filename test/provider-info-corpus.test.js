@@ -75,9 +75,23 @@ const stubFetch = () => {
 const FULL_INFO = {
   weight: 3.2, minPlaytime: 60, maxPlaytime: 120, minAge: 12,
   categories: ['Economic'], mechanics: ['Trading'],
+  // The suggested-players poll (#1005). It is the one corpus key that CROSSED
+  // over: the two sides share these names deliberately, so a corpus row now
+  // fills a shelf game's poll with no upstream hop at all.
+  bestWith: [4], recommendedWith: [3, 4],
   // Corpus-only keys, which must NOT reach a game row.
   families: ['Legacy'], designers: ['Ada'], imageUrl: 'https://cf.geekdo-images.com/x.jpg',
 };
+
+// FULL_INFO's comment above CLAIMS full coverage; pin the claim, so a field
+// added to the shared list turns every "nothing was asked of BGG" assertion
+// below red instead of silently vacuous (the same guard test/game-info-view.test.js
+// carries for its own complete fixture).
+test('the FULL_INFO fixture really covers every shared provider field', () => {
+  const { PROVIDER_INFO_FIELDS, hasProviderField } = require('../public/js/provider-info-fields');
+  const row = { ...FULL_INFO, rating: 7.4 };
+  for (const key of PROVIDER_INFO_FIELDS) assert.ok(hasProviderField(row, key), `FULL_INFO lacks ${key}`);
+});
 
 const seedCorpus = async (rows) => {
   await repo.replaceCorpus(

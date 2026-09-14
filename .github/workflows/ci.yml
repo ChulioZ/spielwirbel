@@ -88,7 +88,7 @@ jobs:
           node-version: 26.x
           cache: npm
       - run: npm ci
-      - run: node --test --test-concurrency=1 test/repo.postgres.test.js test/migrate.postgres.test.js
+      - run: node --test --test-concurrency=1 test/repo.postgres.test.js test/migrate.postgres.test.js test/erasure-completeness.test.js
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/gamesessions
 

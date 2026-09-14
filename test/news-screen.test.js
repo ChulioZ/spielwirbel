@@ -39,7 +39,7 @@ function boot(t, { entries = [], lastSeen = null, loggedIn = true, accounts = tr
   t.after(() => dom.close());
 
   // NEWS is a top-level `const`, so it can only be mutated, never replaced —
-  // which is exactly what a spec wants: the view and account.js read the same
+  // which is exactly what a spec wants: the view and account-chrome.js read the same
   // array this pushes into.
   const news = dom.get('NEWS');
   news.length = 0;
@@ -112,8 +112,11 @@ test('a German reader gets the German half of the same entry', async (t) => {
 });
 
 test('an entry with no translation for this locale falls back rather than blanking', async (t) => {
-  // The five queued locales (#534–#538) will read entries nobody translated.
-  // English is the fallback, not German — see newsText().
+  /* DEFENSIVE since #1087, not the normal path: every real entry now carries
+     every shipped locale (test/news-locales.test.js enforces it). This covers an
+     unknown code reaching the renderer at all — a stale localStorage value, or a
+     locale removed from locales.js — where blanking would be worse than English.
+     The fallback is English, not German; see newsText(). */
   const { dom } = boot(t, { entries: [{ revision: '2026-08-20', en: { title: 'Only EN', body: 'Body.' } }], locale: 'de' });
   await dom.call('showNews');
   assert.equal(dom.app.querySelector('.news-entry__title').textContent, 'Only EN');

@@ -82,11 +82,27 @@ const deepLink = (dom, path) => dom.run(`history.replaceState({}, '', ${JSON.str
 
 const tick = () => new Promise((r) => setImmediate(r));
 
-/** Text of every <button> in the detail page's action toolbar. */
+/** Text of every <button> in the detail page's action bar (`.gd-bar` since
+ *  #1039 — the toolbar of three equally-weighted buttons it replaced). */
 function actionLabels(app) {
-  const bar = app.querySelector('.toolbar');
-  assert.ok(bar, 'the detail page rendered no action toolbar at all');
+  const bar = app.querySelector('.gd-bar');
+  assert.ok(bar, 'the detail page rendered no action bar at all');
   return [...bar.querySelectorAll('button')].map((b) => b.textContent.trim());
+}
+
+/** Text of every row in the „…" page menu, which is where #1039 moved the rare
+ *  actions. Opening it is the only way to see them — they are built on click,
+ *  into a popover on <body> — and the test that a wish is never offered
+ *  „Direkt spielen" has to look here as well as in the bar, or the guarantee
+ *  moves out of its field of view the next time an action does. */
+function menuLabels(dom) {
+  const trigger = dom.app.querySelector('.gd-menu');
+  if (!trigger) return [];
+  trigger.click();
+  const labels = [...dom.document.querySelectorAll('.popover--menu .popover__opt')]
+    .map((b) => b.textContent.trim());
+  dom.run('closePopover()');
+  return labels;
 }
 
 const SCREENS = [
@@ -152,14 +168,22 @@ test('a wished-for game offers only the way onto the shelf', async (t_) => {
      `Game is on the wishlist`, so offering it hands the user a seat picker, a
      start button and an English server error. */
   assert.deepEqual(labels, [t('wish.restore')],
-    `a wish's detail page offers ${JSON.stringify(labels)}; it may offer only „${t('wish.restore')}"`);
+    `a wish's action bar offers ${JSON.stringify(labels)}; it may offer only „${t('wish.restore')}"`);
+  /* And not from the page menu either. Aussortieren and Durchgespielt are
+     suppressed for a wish for the same reason; whatever the menu does carry, it
+     must not be a way to play a game the round does not own. */
+  const menu = menuLabels(dom);
+  for (const forbidden of [t('directPlay.button'), t('detail.retire'), t('detail.complete')]) {
+    assert.ok(!menu.includes(forbidden),
+      `the page menu offers „${forbidden}" for a wish; it carries ${JSON.stringify(menu)}`);
+  }
 });
 
 test('„Ins Regal" from the detail page hits the wish endpoint, like the row button', async (t_) => {
   const { dom, calls } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g4');
 
-  dom.app.querySelector('.toolbar button').click();
+  dom.app.querySelector('.gd-bar button').click();
   await tick();
 
   assert.equal(calls.length, 1);
@@ -177,16 +201,17 @@ test('a wished-for game wears a Wunschliste chip beside its title', async (t_) =
 
   /* Scoped to `.gd-head`: the desktop rail carries its own <h1> and its own
      `.gd-title` (the round-name editor), so an unscoped selector answers about
-     the wrong screen furniture entirely. */
-  const chip = dom.app.querySelector('.gd-head h1 .tag--wish');
+     the wrong screen furniture entirely. The chips left the <h1> for their own
+     `.gd-chips` row in #1039. */
+  const chip = dom.app.querySelector('.gd-head .gd-chips .tag--wish');
   assert.ok(chip, 'a wished-for game shows no state chip, so the page looks like an ordinary shelf game');
   assert.equal(chip.textContent.trim(), t('wish.tag'));
 
   /* The two archives keep theirs — this is a third chip, not a replacement. */
   await dom.call('showGameDetail', RID, 'g2');
-  assert.ok(dom.app.querySelector('.gd-head h1 .tag--retired'));
+  assert.ok(dom.app.querySelector('.gd-head .gd-chips .tag--retired'));
   await dom.call('showGameDetail', RID, 'g3');
-  assert.ok(dom.app.querySelector('.gd-head h1 .tag--completed'));
+  assert.ok(dom.app.querySelector('.gd-head .gd-chips .tag--completed'));
 });
 
 test("a wish's title can be edited from its detail page", async (t_) => {

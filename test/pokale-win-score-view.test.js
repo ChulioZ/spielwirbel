@@ -293,11 +293,18 @@ test('the member page rates Dan on contested nights only, and shows his Siegwert
   const round = roundWith([...group, ...solos]);
   const dom = boot(t, round);
   await dom.call('showMember', RID, 'dan');
-  const cards = [...dom.app.querySelectorAll('.member-stats__card')].map((c) => [
-    c.querySelector('.pokale-card__label').textContent,
-    c.querySelector('.pokale-card__value').textContent,
+  /* ONE shape since #1074: the five figures were split across a hero band
+     (#995's `.member-head__stat`) and `.pokale-card`s under a „Statistiken"
+     heading, and die Tischkarte put them in one strip. The two-shape read this
+     replaced existed because reading only the cards would have made the two
+     relocated assertions VANISH rather than fail — which is the silence a
+     relocation hides behind, and the reason the count assertion below is here. */
+  const pairs = [...dom.app.querySelectorAll('.member-figure')].map((c) => [
+    c.querySelector('.member-figure__label').textContent,
+    c.querySelector('.member-figure__value').textContent,
   ]);
-  const valueOf = (key) => (cards.find(([l]) => l === dom.run(`t('${key}')`)) || [])[1];
+  assert.equal(pairs.length, 5, 'the figure strip lost a figure, so a valueOf() below reads undefined');
+  const valueOf = (key) => (pairs.find(([l]) => l === dom.run(`t('${key}')`)) || [])[1];
 
   // Six wins over nine finished nights would read 67 %; over the four CONTESTED
   // nights it is one win in four. A rate that counts solo plays is the naive
@@ -306,4 +313,59 @@ test('the member page rates Dan on contested nights only, and shows his Siegwert
   assert.equal(valueOf('member.winRate'), '25%');
   assert.equal(valueOf('member.wins'), '6', 'the raw count is a factual record and is unchanged');
   assert.equal(valueOf('member.winScore'), '0,0');
+  // …and each figure appears exactly ONCE. #995 relocated two of them and #1074
+  // merged the shapes; both were relocations rather than copies, so a number
+  // stated twice on one screen is the regression either would hide behind.
+  ['member.wins', 'member.winRate', 'member.winScore'].forEach((key) => {
+    const label = dom.run(`t('${key}')`);
+    assert.equal(pairs.filter(([l]) => l === label).length, 1, `${key} is stated twice`);
+  });
+});
+
+// ---- how a winnerless night ended (#1038) -----------------------------------
+
+test('a „Kein Sieger" night between two wins does not break a streak; „Verloren" does', async (t) => {
+  // Three nights Anna won, with one winnerless night in the middle. What that
+  // night RECORDS decides whether the run survives: a game that is not about
+  // winning was never a contest, so it is skipped like a solo night — while a
+  // night the table played to win and lost breaks the run exactly as somebody
+  // else's win does.
+  const run = (middle) => [
+    night(['anna'], MEMBERS),
+    night([], MEMBERS, middle),
+    night(['anna'], MEMBERS),
+    night(['anna'], MEMBERS),
+  ];
+  // The LENGTH, not the card's presence: a broken run of two still renders a
+  // card, so asserting `includes(streak)` would be green for every case here.
+  const streakOf = async (middle) => {
+    const dom = await pokale(t, roundWith(run(middle)));
+    const card = [...dom.app.querySelectorAll('.pokale-card')].find(
+      (c) => c.querySelector('.pokale-card__label').textContent === dom.run("t('pokale.streak')")
+    );
+    return card ? card.querySelector('.pokale-card__sub').textContent : null;
+  };
+  assert.equal(await streakOf({ ending: 'noWinner' }), '3 Siege in Folge', 'not a contest — skipped');
+  assert.equal(await streakOf({ ending: 'ongoing' }), '3 Siege in Folge', 'nor is a campaign chapter');
+  assert.equal(await streakOf({ ending: 'lost' }), '2 Siege in Folge', 'a loss is a contest Anna did not win');
+  assert.equal(await streakOf({}), '2 Siege in Folge', 'and an UNRECORDED night still breaks one');
+});
+
+test('the win rate excludes a non-contest and is lowered by a loss (#1038)', async (t) => {
+  const rateFor = async (extra) => {
+    const round = roundWith([night(['dan'], MEMBERS), night([], MEMBERS, extra)]);
+    const dom = boot(t, round);
+    await dom.call('showMember', RID, 'dan');
+    const stat = [...dom.app.querySelectorAll('.member-figure')].find(
+      (c) => c.querySelector('.member-figure__label').textContent === dom.run("t('member.winRate')")
+    );
+    return stat.querySelector('.member-figure__value').textContent;
+  };
+
+  // One win out of one contested night.
+  assert.equal(await rateFor({ ending: 'noWinner' }), '100%', 'the party night is not counted at all');
+  assert.equal(await rateFor({ ending: 'ongoing' }), '100%');
+  // One win out of two: the table played to win and did not.
+  assert.equal(await rateFor({ ending: 'lost' }), '50%');
+  assert.equal(await rateFor({}), '50%', 'an unrecorded night is contested, as before');
 });

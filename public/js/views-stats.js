@@ -31,12 +31,12 @@
 
 'use strict';
 
-// The four podiums, in render order, each with the icon and the i18n key that
-// phrases its value. Data rather than four near-identical branches, so adding a
-// metric is a row here and a key pair in both lang files.
+// The six podiums, in render order, each with the icon and the i18n key that
+// phrases its value. Data rather than six near-identical branches, so adding a
+// metric is a row here and a key pair in every lang file.
 //
 // Icons are declared in the bundled tabler subset — an UNDECLARED class renders
-// nothing at all, silently (.claude/rules/tabler-icon-codepoints.md). All four
+// nothing at all, silently (.claude/rules/tabler-icon-codepoints.md). All six
 // are already used elsewhere in the app.
 const STATS_PODIUMS = [
   { key: 'mostOwned', icon: 'ti-cards', line: (e) => tn(e.shelves, 'stats.shelves.one', 'stats.shelves.many') },
@@ -50,6 +50,13 @@ const STATS_PODIUMS = [
      none: nobody reads ISO week numbers. */
   { key: 'playedMonth', icon: 'ti-calendar', label: (e) => t('stats.playedMonth', { month: fmtMonthKey(e.period) }), line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   { key: 'playedYear', icon: 'ti-history', label: (e) => t('stats.playedYear', { year: e.period }), line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
+  /* All-time (#1035), after the three calendar cards so the ladder reads
+     week → month → year → ever. It names no period and takes the static
+     `t('stats.' + key)` path, like `mostOwned` and `playedWeek` — and its label
+     deliberately names the PHENOMENON („Spielwirbels Dauerbrenner") rather than
+     the measurement the other three state, because there is no window to name.
+     The value line reuses the same plural pair unchanged. */
+  { key: 'playedAll', icon: 'ti-crown', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   /* The value is the SPIELWIRBEL-SCORE, not a raw mean (#914) — so the copy must
      not call it an average, and the card carries the ⓘ that explains it. This is
      the only surface where a LOGGED-OUT visitor meets the score, which is why
@@ -283,7 +290,7 @@ async function mountLandingStats(placeholder) {
   placeholder.appendChild(block);
 }
 
-/* How many of the five podiums the home panel shows. The dashboard tile sits
+/* How many of the six podiums the home panel shows. The dashboard tile sits
    beside two others in one grid, so it takes the first few rather than the whole
    ladder — /entdecken remains the place that publishes all of them. */
 const HOME_STATS_PODIUMS = 3;

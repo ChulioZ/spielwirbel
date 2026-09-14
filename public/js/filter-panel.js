@@ -56,6 +56,9 @@ function clearMetadataFilters(state) {
   state.youngestAge = null;
   state.categories.length = 0;
   state.mechanics.length = 0;
+  state.excludeCategories.length = 0;
+  state.excludeMechanics.length = 0;
+  state.onlyRecommended = false;
 }
 
 // Build the metadata half — the rows that filter on BGG's imported fields — or
@@ -80,8 +83,19 @@ function clearMetadataFilters(state) {
 // Returns { el, repaint }. `repaint` re-reads `state` into every widget without
 // rebuilding them — what the applied chips and the escape hatch need when they
 // change a filter from outside this body.
-function renderMetadataFilter(games, state, onChange) {
+function renderMetadataFilter(games, state, onChange, opts) {
   const options = metadataFilterOptions(games);
+  // The recommendation toggle needs a TABLE SIZE, which only the setup screen
+  // has — the Regal filters a shelf, not an evening. Two gates, deliberately:
+  // the shelf must carry a poll (`options.recommended`) AND the screen must be
+  // about a table (`opts.tableSized`). Collapsing them into one would either
+  // render a dead control in the Regal or hide a live one on the setup screen.
+  const tableSized = !!(opts && opts.tableSized);
+  // A THUNK, read at render time. The body is rebuilt on every open (see above),
+  // and `mountFilterPanel` refuses to rebuild under an open overlay — so the
+  // count in the label is always the party that is seated right now, and cannot
+  // go stale behind a panel nobody can change the seating from.
+  const partyCount = (opts && opts.partyCount) || (() => 0);
   if (!hasMetadataFilterOptions(options)) return null;
 
   const uid = `mf${++metaFilterSeq}`;
@@ -222,16 +236,50 @@ function renderMetadataFilter(games, state, onChange) {
     body.appendChild(selectRow('metaFilter.age', 'youngestAge', AGE_CHOICES,
       (v) => t('metaFilter.ageOption', { n: v })));
   }
+  // The one boolean control here (#1005). A plain toggle rather than a number
+  // picker: the table size is already on the screen above, so asking for it
+  // again would be a second place to get it wrong.
+  if (options.recommended && tableSized) {
+    const id = `${uid}-rec`;
+    const row = h(`<label class="mfilter__row mfilter__row--check" for="${id}">
+        <span class="mfilter__label">${esc(tn(partyCount(), 'metaFilter.recommendedOne', 'metaFilter.recommended'))}</span>
+        <input type="checkbox" id="${id}">
+      </label>`);
+    const box = row.querySelector('input');
+    const paint = () => { box.checked = !!state.onlyRecommended; };
+    paint();
+    painters.push(paint);
+    box.addEventListener('change', () => { state.onlyRecommended = box.checked; changed(); });
+    body.appendChild(row);
+    body.appendChild(h(`<p class="mfilter__hint">${esc(t('metaFilter.recommendedHint'))}</p>`));
+  }
 
-  // A plain multi-select chip row, NOT the tri-state tag cycle: these combine
-  // with OR (draw-pool.js `matchesAnyOf`), so there is no "reject this one"
-  // state to reach and a third click would have nothing to mean.
+  // A TRI-STATE chip row since #1003 — ignore → include → exclude → ignore, the
+  // same cycle the round-tag chips have carried since #241 and the one sitting a
+  // section above in this very panel. It replaces a plain multi-select, whose
+  // justification ("with OR semantics a third click would have nothing to mean")
+  // was answered by the request this implements: "anything but Party Game" is
+  // exactly what a third state means.
+  //
+  // The two directions deliberately do NOT share a combinator — included values
+  // OR, excluded values AND-NOT — and draw-pool.js's `excludesAnyOf` says why.
+  // Sharing the CYCLE is not sharing the semantics.
+  //
+  // State is carried by the `aria-label`, not by `aria-pressed`, which is the
+  // change the third state forces: a button has two pressed states and this
+  // control has three, so "not pressed" could not tell exclude from ignore. That
+  // is the same answer `paintTagChip` reached for the same reason, and it keeps
+  // the two chip rows in one panel announcing themselves the same way
+  // (.claude/rules/accessibility-contrast-and-modals.md §3). The ban glyph
+  // carries the exclude state visually, so it is never colour alone either.
   //
   // `.mfilter__chips` rather than the app's shared `.filter-chips`: the Regal's
   // phone block hides `.regal-filter .filter-chips` behind its own "Filter"
   // button, and this disclosure mounts inside `.regal-filter` — so borrowing the
   // class would collapse these chips behind a control that does not govern them.
-  const chipGroup = (labelKey, key, values) => {
+  // (`.chip.is-on` / `.chip.is-excluded` are base-component rules, so both fills
+  // arrive without a class of our own.)
+  const chipGroup = (labelKey, key, excludeKey, values) => {
     const id = `${uid}-${key}`;
     const group = h(`<div class="mfilter__group">
         <div class="field__label" id="${id}">${esc(t(labelKey))}</div>
@@ -239,16 +287,30 @@ function renderMetadataFilter(games, state, onChange) {
       </div>`);
     const row = group.querySelector('.mfilter__chips');
     values.forEach((v) => {
-      const chip = h(`<button type="button" class="chip">${esc(v)}</button>`);
+      const chip = h('<button type="button" class="chip"></button>');
+      const stateOf = () => (state[key].includes(v) ? 'include'
+        : state[excludeKey].includes(v) ? 'exclude'
+          : null);
       const paint = () => {
-        const on = state[key].includes(v);
-        chip.classList.toggle('is-on', on);
-        chip.setAttribute('aria-pressed', String(on));
+        const st = stateOf();
+        chip.classList.toggle('is-on', st === 'include');
+        chip.classList.toggle('is-excluded', st === 'exclude');
+        chip.setAttribute('aria-label', t(
+          st === 'include' ? 'metaFilter.valueIncluded'
+            : st === 'exclude' ? 'metaFilter.valueExcluded'
+              : 'metaFilter.valueIgnored', { name: v }));
+        chip.innerHTML = st === 'exclude'
+          ? `<i class="ti ti-ban" aria-hidden="true"></i>${esc(v)}`
+          : esc(v);
       };
+      // Splice in place — the caller and every other paint closure hold the same
+      // arrays, exactly as `clearMetadataFilters` does.
+      const drop = (list) => { const at = list.indexOf(v); if (at >= 0) list.splice(at, 1); };
       chip.addEventListener('click', () => {
-        const at = state[key].indexOf(v);
-        if (at >= 0) state[key].splice(at, 1);
-        else state[key].push(v);
+        const st = stateOf();
+        if (st === null) state[key].push(v);
+        else if (st === 'include') { drop(state[key]); state[excludeKey].push(v); }
+        else drop(state[excludeKey]);
         paint();
         changed();
       });
@@ -259,8 +321,8 @@ function renderMetadataFilter(games, state, onChange) {
     return group;
   };
 
-  if (options.categories.length) body.appendChild(chipGroup('metaFilter.categories', 'categories', options.categories));
-  if (options.mechanics.length) body.appendChild(chipGroup('metaFilter.mechanics', 'mechanics', options.mechanics));
+  if (options.categories.length) body.appendChild(chipGroup('metaFilter.categories', 'categories', 'excludeCategories', options.categories));
+  if (options.mechanics.length) body.appendChild(chipGroup('metaFilter.mechanics', 'mechanics', 'excludeMechanics', options.mechanics));
 
   // Re-read `state` into every widget. The controls are not rebuilt, so a
   // <select> the user has open keeps its identity and the chip rows keep their
@@ -287,7 +349,7 @@ function tagFilterChips(roundTags, tagFilter, afterRemove) {
       // glyph alone: include and exclude are opposite filters and a chip row is
       // read at a glance (.claude/rules/accessibility-contrast-and-modals.md §3).
       label: tagFilter.get(tg.id) === 'exclude'
-        ? t('metaFilter.chipTagExcluded', { name: tg.name })
+        ? t('metaFilter.chipExcluded', { name: tg.name })
         : tg.name,
       remove: () => { tagFilter.delete(tg.id); afterRemove(); },
     }));
@@ -304,7 +366,7 @@ function tagFilterChips(roundTags, tagFilter, afterRemove) {
 // source, so the label can never disagree with what is on screen.
 // `countMetadataFilters` is untouched: the SERVER uses it (lib/routes/sessions.js)
 // to decide whether a draw carried filters at all, which is a different question.
-function activeFilterChips(state, tagSection) {
+function activeFilterChips(state, tagSection, partyCount) {
   const f = state || {};
   const out = tagSection && tagSection.chips ? tagSection.chips() : [];
 
@@ -348,13 +410,27 @@ function activeFilterChips(state, tagSection) {
       remove: () => { f.youngestAge = null; },
     });
   }
+  if (f.onlyRecommended) {
+    out.push({
+      // The COUNT, not a bare „von BGG empfohlen": recommended at what? The
+      // whole clause is about one table size, and the chip is read after the
+      // panel has closed, with nothing else on it to supply the number.
+      label: tn(partyCount, 'metaFilter.chipRecommendedOne', 'metaFilter.chipRecommended'),
+      remove: () => { f.onlyRecommended = false; },
+    });
+  }
   // Per VALUE, not per list. `indexOf` at removal time rather than a captured
   // index: an earlier chip may have spliced the array since this closure was
   // built, and a stale index would drop somebody else's pick.
-  ['categories', 'mechanics'].forEach((key) => {
+  // An EXCLUDED value says so IN WORDS („ohne Party Game"), like an excluded tag
+  // and for the same reason: include and exclude are opposite filters, a chip
+  // row is read at a glance, and out here there is no ban glyph to carry it
+  // (.claude/rules/accessibility-contrast-and-modals.md §3).
+  [['categories', false], ['mechanics', false],
+    ['excludeCategories', true], ['excludeMechanics', true]].forEach(([key, excluded]) => {
     (f[key] || []).forEach((v) => {
       out.push({
-        label: v,
+        label: excluded ? t('metaFilter.chipExcluded', { name: v }) : v,
         remove: () => { const at = f[key].indexOf(v); if (at >= 0) f[key].splice(at, 1); },
       });
     });
@@ -376,8 +452,11 @@ function activeFilterChips(state, tagSection) {
 //
 // Returns { el, sync, reset, isOpen }. A screen calls `sync()` after a tag chip
 // moves; the metadata controls route through `onChange` and resync themselves.
-function renderFilterPanel(games, state, onChange, tagSection) {
+function renderFilterPanel(games, state, onChange, tagSection, opts) {
   if (!hasMetadataFilterOptions(metadataFilterOptions(games)) && !tagSection) return null;
+  // Same thunk the body reads, because the applied chip states the count too and
+  // the two must never name different numbers.
+  const partyCount = (opts && opts.partyCount) || (() => 0);
 
   // A real <button>, not the old <summary>: the disclosure's expanded state is
   // gone with it, so `aria-expanded` is set by hand and kept true only while an
@@ -413,7 +492,7 @@ function renderFilterPanel(games, state, onChange, tagSection) {
   }
 
   function sync() {
-    const chips = activeFilterChips(state, tagSection);
+    const chips = activeFilterChips(state, tagSection, partyCount());
     trigger.setAttribute('aria-label', t('games.filterLabel', { n: chips.length }));
     chipRow.replaceChildren(...chips.map(appliedChip));
     // `.fbar__chips` declares its own `display`, so the attribute alone would not
@@ -445,7 +524,7 @@ function renderFilterPanel(games, state, onChange, tagSection) {
       // `tagSection.el` is MOVED in (appendChild moves a node), so every chip
       // listener and the user's current picks survive being closed and reopened.
       if (tagSection) body.appendChild(tagSection.el);
-      const meta = renderMetadataFilter(games, state, () => { sync(); onChange(); });
+      const meta = renderMetadataFilter(games, state, () => { sync(); onChange(); }, opts);
       if (meta) body.appendChild(meta.el);
       container.appendChild(body);
       live = { repaint: () => { if (meta) meta.repaint(); }, close };

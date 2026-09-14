@@ -19,7 +19,14 @@ What the app does, in detail. For a short overview see the
   the head of that table is **yours** — the creator is seated automatically (opt
   out with "Ich spiele mit"), and on any other round a member page offers
   „Das bin ich" so your account can take its own seat. A claimed seat is what
-  puts your name on your actions in the Chronik.
+  puts your name on your actions in the Chronik. A member who stops playing can
+  be **removed from the round** on their own page — the same mechanism a game's
+  „Aussortieren" uses, under deliberately different words, because the shelf's
+  verb is the wrong register for a person: they leave the
+  seating list, the teams, the standings and the trophies, while every vote,
+  winner and team they are part of keeps counting — so no game's score moves.
+  Bringing them back is one tap, and a seat created by mistake, with nothing
+  attached to it at all, can be deleted outright instead.
 - **Games** – each game has a title, a required player range (min–max), any
   number of custom round **tags** (see below), and an optional cover image (paste
   from clipboard or pick a file). A game's detail page can also record the
@@ -180,9 +187,15 @@ What the app does, in detail. For a short overview see the
   turns the covers into a selection: it keeps the search, the tag chips, the
   metadata filters and the sort working, so „Alle auswählen" means everything you
   have narrowed to, and the picked games can be retired, have their **owners set**
-  in one step — or be deleted outright — in one confirmed action. Setting owners
-  replaces whatever each game held, so picking nobody clears them; a wish in the
-  selection is skipped, since a wish is nobody's box yet. The same selection sits
+  or their **tags changed** in one step — or be deleted outright — in one
+  confirmed action. Setting owners replaces whatever each game held, so picking
+  nobody clears them; a wish in the selection is skipped, since a wish is
+  nobody's box yet. Tags deliberately work the other way round: each tag is
+  add / remove / leave alone, so tags you do not touch stay exactly as they
+  were — a selection of fifty games carries fifty different tag sets, and there
+  is no single right value to replace them with. The confirm says how many games
+  and in which direction, and the result counts only the games that actually
+  changed. The same selection sits
   on the two archives and the Wunschliste, for delete only. It exists because the
   shelf can be *filled* in one action by the BoardGameGeek import: undoing a
   200-game import used to be some 400 taps. Bulk delete is the one path that
@@ -232,11 +245,16 @@ What the app does, in detail. For a short overview see the
   refused rather than merging the two tags. Deleting a tag simply unassigns it
   from every game.
 - **Members** – each member has a detail page (opened from the Start hero row,
-  the Pokale podium, or a session's participant list) with their stats — wins,
-  sessions joined, win rate, Siegwertung, average rating given, their strongest
-  game (the one they hold the highest Siegwertung in) and their favorite game —
-  and lets
-  you rename them and pick their avatar color from the curated palette. When the
+  the Pokale podium, or a session's participant list): **one card in that
+  member's own colour** carrying the whole record — wins, sessions joined, win
+  rate, Siegwertung, average rating given, their strongest game (the one they
+  hold the highest Siegwertung in) and their favorite game. The name is renamed
+  in place, the avatar colour is picked by **clicking the avatar**, and the rare
+  seat actions (claiming or releasing a seat, revoking a grantee's access,
+  removing someone from the round or deleting an unused seat) live in a
+  „…" menu at the top right. Below 1280px the card's foot seats the round's
+  other members as links to their pages; above it the desktop rail carries the
+  same strip. When the
   round has recorded who owns which box, the page also lists the shelf games that
   member owns; it is left out entirely for a member who owns none, so a round
   that does not use ownership never sees it.
@@ -257,8 +275,9 @@ What the app does, in detail. For a short overview see the
     never played, not out for months, well liked and long overdue), a
     **Rundenpuls** (sessions per month over the last year, days since the last
     one, how much of the shelf has ever reached the table), a **Kümmerliste**
-    (played sessions with no winner recorded, games with no cover, games with no
-    player count — each deep-linking to the fix), a „**heute vor N Jahren**"
+    (played sessions with **no result recorded at all** — one that records a
+    winner *or* an ending leaves the list — games with no cover, games with no
+    player count; each deep-linking to the fix), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
     screen. Every card renders nothing at all when it has nothing to say, so a
     young round sees none of them.
@@ -267,8 +286,14 @@ What the app does, in detail. For a short overview see the
     filters (see Sessions below), a search pill, sorting
     (random / name / rating),
     and the add-game sheet. Each card opens the game's detail page
-    ("Spielepass") with its score ring, editable details, a **Jetzt spielen**
-    launcher, and the history of sessions it appeared in.
+    ("Spielepass"), a two-page spread: the game on the left (cover with its
+    Spielwirbel-Score, editable title, chips for players / tags / owners /
+    expansions, the glance facts, and a „Mehr zum Spiel" disclosure for the rest
+    of the BGG metadata), the group's own history on the right as a
+    *Stempelkarte* — one rubber stamp per session, inked in the score that game
+    earned that evening, muted for an evening it was not taken to — with a
+    **Jetzt spielen** launcher pinned at its foot. The rarer actions
+    (Aussortieren, Durchgespielt, unlinking the provider) live in a „…" menu.
   - **Chronik** – one month-grouped timeline of everything that happened:
     games added / retired / restored and session outcomes. Above the timeline,
     a **period recap** sums up one calendar month or year — sessions played,
@@ -308,9 +333,14 @@ What the app does, in detail. For a short overview see the
   at a time. It holds both kinds of filter as labelled sections. The
   first is the round's own custom tags; the second is over the metadata imported
   from BoardGameGeek rather than anything the round maintains — a playing-time
-  range with a floor as well as a ceiling (so an evening with three hours in it
-  can drop the fillers), a complexity range, the age of the youngest person at
-  the table, and category / mechanic chips. That second half offers only
+  range with a floor as well as a ceiling, meaning **containment** — „höchstens
+  120 Min." keeps only games that really finish inside two hours, rather than
+  games that merely *might* — a complexity range, the age of the youngest person
+  at the table, category / mechanic chips that cycle through include, **exclude**
+  and off (so „alles außer Party-Spiele" is one thing you can ask for), and a
+  toggle for **only what BGG's community recommends at this table size**: the box
+  may say 2–6, but the poll often says six is a bad idea. A game whose poll
+  nobody has answered is never hidden by it. That second half offers only
   the values the round's own games actually carry — a fifteen-game shelf lists
   the handful of categories those games have, not BGG's ~84 — and it is absent
   entirely on a shelf with no such data. A game BGG knows nothing about always
@@ -383,13 +413,25 @@ What the app does, in detail. For a short overview see the
   Pokale tile: pick who joins and skip the vote entirely, landing directly on
   the results screen with that game chosen.
 - **Finale & results** – votes stay sealed until everyone is done, then a
-  little show reveals the results: a spotlight on the top-rated game (several,
-  side by side, when they tie), and under it the full ranking — per-game
-  **Spielwirbel-Score** (colored by score, with a short line saying why it
-  diverges from the plain average, e.g. „1× gar nicht"), rating distribution
-  (one bar per rating) and medals for the favourites. Pick the
-  game you actually played and mark it finished; recording the winner(s) is an
-  optional follow-up step afterwards — or
+  little show reveals the results: the ranked rows fill in as a race, shortest
+  first, and the game that won the vote is last to finish — rows sharing first
+  place sit together in one gold group. Every row states its own
+  **Spielwirbel-Score** twice, as a number (colored by score, with a short line
+  saying why it diverges from the plain average, e.g. „1× gar nicht") and as the
+  width of the row's own fill, beside its rank, its rating distribution (one bar
+  per rating) and who brings the box. Picking a game puts it **on the table**: a
+  band above the ranking with the box, who brings it and the one action
+  („Als gespielt markieren") — and nothing at all before a game is chosen. Once
+  it is played, the table carries a stamp with the date and the winners as
+  seats, with the picker behind „Ändern". Recording the winner(s) is an
+  optional follow-up step afterwards. When nobody won, the same step records
+  **how it ended instead** — „Verloren" (a cooperative game beat the table),
+  „Kein Sieger" (a game that is not about winning) or „Fortsetzung folgt" (a
+  campaign session that is over for tonight while the campaign is not). A winner
+  and an ending are mutually exclusive, every screen that lists a finished
+  session says the ending where there is one, and the statistics treat a loss as
+  a contested night everybody lost while the other two count as non-competitive.
+  Or
   cancel the session if nothing appealed. Sessions can be deleted later, and a
   single game can be removed from a session's results.
 - **Several tables from one vote** – a group too big for a single game ticks
@@ -450,11 +492,11 @@ What the app does, in detail. For a short overview see the
   in Ocean a whale surfaces among rising bubbles, in Chess the back rank is set
   down on the board, in Horror a ghost drifts up over the graveyard while bats
   flit past, and in Dinosaurs the herd stomps into place as the volcano erupts
-  — and the scene's end state stays on the spotlight whenever the results are
-  opened again. Body text stays Nunito in every world; home, login, landing,
+  — and the scene's end state stays on the winners' group whenever the results
+  are opened again. Body text stays Nunito in every world; home, login, landing,
   account and inbox stay standard — a dark round does not darken the lobby
   around it.
-- **Languages** – German, English, Spanish, French, Italian, Dutch and Portuguese, following the system language by
+- **Languages** – German, English, Spanish, French, Italian, Dutch, Portuguese, Finnish and Korean, following the system language by
   default, switchable any time via the picker in the top bar.
 - **Shareable links & reload-safe navigation** – the URL reflects the current
   screen (home, a round tab, a game, a member, a session result, …), so a
@@ -492,7 +534,11 @@ What the app does, in detail. For a short overview see the
   from the bottom of the logged-out landing page, answering what people ask
   before signing up: whether everyone needs an account, whether it is really
   free, whether there is an app, whether it does more than board games, and what
-  happens to the data. German (authoritative) and English in one document. It is
+  happens to the data. **One language per page, in every shipped locale** (issue
+  #1088): an explicit `?lang=` wins, then the browser's `Accept-Language`, then
+  German — and a small row at the top links the other eight. German stays the
+  reference text every translation is made from, which each translated page says
+  in one line. It is
   **server-rendered**, and that is what keeps it honest on a self-hosted
   instance: an answer that instance cannot truthfully give — donations where
   `DONATE_URL` is unset, the account answers with accounts off, the data answers
@@ -516,6 +562,13 @@ What the app does, in detail. For a short overview see the
   deleted after 24 hours, and demo accounts are excluded from the product
   counters and the public statistics. Registering from the banner starts a real
   account; nothing carries over.
+- **Changing your e-mail address** – *accounts mode only* (issue #1076). Under
+  **Konto → „E-Mail-Adresse ändern“**, confirmed by a link sent to the **new**
+  address and re-authenticated with the current password. Nothing moves until
+  that link is opened, so the old address keeps working — and a typo can never
+  lock anyone out. The address that is losing the account is notified when the
+  swap completes, and a pending change can be cancelled or resent from the same
+  screen. Not offered to a demo account, which has no address of its own.
 - **Passkeys** – *accounts mode only* (issue #418). Sign in with a fingerprint,
   face or device PIN instead of a password. A passkey is an **additional**
   credential, never a replacement: the password and the e-mail reset stay
@@ -553,9 +606,15 @@ What the app does, in detail. For a short overview see the
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a
   **Freundeskreis feed** (a tile on the home dashboard plus a dedicated
-  view at `/freunde`): only "*added a game*" and "*played a game*" notes with the
-  **game title and cover** — never member names, ratings, votes or round names,
-  and only for activity after you became friends. A friendship shares **no round
+  view at `/freunde`): only "*added a game*", "*played a game*" and — for a
+  BoardGameGeek collection import — "*added ‹game› and N more games*" notes, with
+  the **game title and cover** and, for that last one, a plain count; never
+  member names, ratings, votes or round names, and only for activity after you
+  became friends. The screen itself is **one grid
+  of person cards** sorted by state — a request you have not answered is always
+  the first card, whatever the friend count — with the feed as a second column
+  from 1024px up and collapsed under the grid below it. Each card carries what
+  that person last did, or how long you have been friends. A friendship shares **no round
   data**; it is purely social. Unfriending is unilateral and immediate in both
   directions. With accounts off the whole feature is inert.
 - **E-mail for actionable inbox items** – *accounts mode only* (issue #618). A
@@ -574,7 +633,9 @@ What the app does, in detail. For a short overview see the
   username and the kind of request — never a round name or any other free text.
 - **„Was ist neu"** (issue #741). A small screen at `/neu`, reached from the
   account menu, listing the handful of genuinely new capabilities that have
-  shipped — newest first, in your language. A **dot on the account button**
+  shipped — newest first, in your language: every entry is written in **every
+  shipped locale** (issue #1087), so the screen never falls back to English for a
+  language the rest of the app speaks. A **dot on the account button**
   appears when there is an entry you have not seen, and the „Was ist neu" row
   inside that menu repeats it (issue #764) — the button is a menu rather than a
   destination, so without the second mark the trail ends at five unlabelled

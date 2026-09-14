@@ -58,6 +58,9 @@
    tabler.io (.claude/rules/tabler-icon-codepoints.md): a wrong-but-present value
    renders a plausible other icon with no error anywhere. */
 .ti-user-plus::before { content: "\eb4b"; }
+.ti-user-minus::before { content: "\eb4a"; }
+.ti-user-x::before { content: "\eb4c"; }
+.ti-lock-off::before { content: "\ed1e"; }
 /* #561 — same cmap verification as the line above; `settings` is 0xeb20 in this
    bundle, one codepoint away from `search` below it. */
 .ti-settings::before { content: "\eb20"; }
@@ -71,6 +74,7 @@
 .ti-chevron-left::before { content: "\ea60"; }
 .ti-chevron-right::before { content: "\ea61"; }
 .ti-chevron-down::before { content: "\ea5f"; }
+.ti-dots::before { content: "\ea95"; }
 .ti-arrow-right::before { content: "\ea1f"; }
 .ti-arrow-left::before { content: "\ea19"; }
 .ti-arrow-back-up::before { content: "\eb77"; }
@@ -145,6 +149,12 @@
 .ti-puzzle::before { content: "\eb10"; }
 .ti-sword::before { content: "\f030"; }
 .ti-shield::before { content: "\eb24"; }
+/* How a played session ended when nobody won (#1038). Codepoints read from
+   THIS woff2's own cmap, never from tabler.io — see
+   .claude/rules/tabler-icon-codepoints.md. `ti-scale` (line 55) carries the
+   third ending; the vote-scale `ti-mood-*` faces are deliberately not reused. */
+.ti-skull::before { content: "\f292"; }
+.ti-player-track-next::before { content: "\ed4b"; }
 .ti-rocket::before { content: "\ec45"; }
 .ti-brain::before { content: "\f59f"; }
 .ti-ghost::before { content: "\eb8e"; }

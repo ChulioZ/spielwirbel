@@ -33,6 +33,21 @@
 // Prefixed: this is a classic script over the frontend's one global scope.
 const isProviderNum = (v) => Number.isFinite(v);
 const isProviderList = (v) => Array.isArray(v) && v.length > 0;
+// The suggested-players POLL (#1005) is the one field where an EMPTY answer is a
+// REAL one, so its guard accepts `[]` where `isProviderList` rejects it.
+//
+// BGG has no "not recommended" list: a count is not recommended when it is
+// absent from both of these, and a poll nobody has answered yields two empty
+// lists. Under `isProviderList` such a game could never complete, so it would
+// re-ask BGG once per TTL forever — and an unanswered poll is the COMMON case
+// on the long tail of BGG, unlike a missing category. That is the standing
+// weekly upstream request .claude/rules/provider-info-is-a-field-set.md names as
+// the mirror-image break, at a scale the categories precedent does not cover.
+//
+// The cost of accepting `[]` is the ordinary one every other field already pays:
+// once stored, the game is complete, so a poll that gains votes later is not
+// picked up. Same as a game whose categories BGG fills in afterwards.
+const isProviderPoll = (v) => Array.isArray(v);
 
 // #729 removed `description` from this map, which is the whole of that removal
 // on the store side: nothing writes the field, so it must not be COUNTED either
@@ -48,6 +63,11 @@ const PROVIDER_INFO_GUARDS = {
   categories: isProviderList,
   mechanics: isProviderList,
   rating: isProviderNum,
+  // BGG's suggested_numplayers poll (#1005) — which table sizes the community
+  // endorses. Same two key names the CORPUS already uses, deliberately, so a
+  // corpus row fills a shelf game's poll with no upstream hop (`corpusPatch`).
+  bestWith: isProviderPoll,
+  recommendedWith: isProviderPoll,
 };
 
 const PROVIDER_INFO_FIELDS = Object.keys(PROVIDER_INFO_GUARDS);

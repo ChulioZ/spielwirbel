@@ -13,7 +13,7 @@
      it to `EVENTS` *and* to this list".
    - `per-tenant-quotas.md` named 3 of the 6 quota refusals (#325 added two, #563
      one) and said "All three are state caps".
-   - `shared-constants-across-the-stack.md` named 2 of the 3 shared files
+   - the shared-constant inventory named 2 of the 3 shared files
      (`session-people.js`, #458).
 
    Two audits had already missed all three, because an audit spot-checks a rule's
@@ -113,10 +113,13 @@ test('every constant the backend shares out of public/js is named in its rule', 
   }
   assert.ok(shared.size >= 3, `expected at least 3 shared frontend modules, found ${shared.size}`);
 
-  const rel = '.claude/rules/shared-constants-across-the-stack.md';
-  const rule = section(src(rel), rel, '## The rule');
+  /* The INVENTORY, which is its own file since #978: it is `paths:`-scoped to
+     the directories that can create an instance, while the rule beside it is
+     global and stays small enough to be worth loading into every session. */
+  const rel = '.claude/rules/shared-constants-inventory.md';
+  const rule = section(src(rel), rel, '## The instances');
   const missing = [...shared].filter((n) => !rule.includes(n)).sort();
   assert.deepEqual(missing, [],
-    `shared-constants-across-the-stack.md does not name: ${missing.join(', ')}`
+    `shared-constants-inventory.md does not name: ${missing.join(', ')}`
     + ' — every backend require out of public/js/ belongs in that inventory.');
 });

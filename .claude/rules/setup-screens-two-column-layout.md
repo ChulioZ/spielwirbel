@@ -188,12 +188,21 @@ And one thing that did **not** work: see
 
 ## Screens deliberately NOT changed
 
-Chronik, session results and game detail are also ~900px and also scroll. All
-three are settled decisions in `.claude/rules/tiles-vs-lists.md` — the first two
-because **order carries meaning** (a ranking read in columns puts rank 3 beside
-rank 2), the third because its defect was a sizing one, already fixed. "It is a
-tall single column on a wide screen" is not on its own a reason to split a
-screen; the two forms qualified because neither reads as a sequence.
+Chronik and session results are also ~900px and also scroll. Both are settled
+decisions in `.claude/rules/tiles-vs-lists.md`, because **order carries meaning**
+(a ranking read in columns puts rank 3 beside rank 2). "It is a tall single column
+on a wide screen" is not on its own a reason to split a screen; the two forms
+qualified because neither reads as a sequence.
+
+**Game detail was on this list and came off it in #1039.** Its entry said the
+defect was a sizing one, already fixed — true of the *hero*, and it stopped being
+the whole story once the screen was measured end to end: 45% of the pane was
+gutter at 1920 while the history sat below the fold, because nothing on the
+screen was a grid. What qualified it is the same test the forms passed — it is
+two questions (*what is this game* / *how did it go for us*), not one sequence.
+Note the two numbers it did **not** inherit: it takes `--w-detail`, not
+`--w-setup`, and its card sizes its own tracks as a fraction of the page rather
+than from a breakpoint (`.claude/rules/card-tracks-are-a-fraction-of-a-fraction.md`).
 
 **Related:** `.claude/rules/responsive-content-width.md` (the cap this escapes
 and the #332 revert it must not repeat), `.claude/rules/tiles-vs-lists.md`

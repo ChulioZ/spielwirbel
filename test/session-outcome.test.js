@@ -12,7 +12,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { sessionChildIds, sessionOutcome, isSplitParent, sessionHasVotes } = require('../public/js/session-outcome');
+const {
+  sessionChildIds, sessionOutcome, isSplitParent, sessionHasVotes, sessionEnding, ENDINGS,
+} = require('../public/js/session-outcome');
 
 test('the four outcomes', () => {
   assert.equal(sessionOutcome({ done: false }), 'open');
@@ -73,4 +75,45 @@ test('every shape of "nobody voted" reads as no votes', () => {
   assert.equal(sessionHasVotes({ votes: 'oops' }), false, 'nor can a non-object');
   assert.equal(sessionHasVotes(null), false);
   assert.equal(sessionHasVotes(undefined), false);
+});
+
+/* How a played session ENDED when nobody won (#1038).
+
+   An empty `winnerIds` was the only representation for "no winner", and nine
+   screens read it as "not recorded yet" — most visibly the hub's Loose Ends
+   card, which listed a lost coop night as a gap to fix forever. `ending` adds
+   the three real answers; `sessionEnding` is the one question every render site
+   asks, so a new one cannot forget a case.
+
+   The exclusivity against `winnerIds` is what makes the pair unable to
+   disagree, and it is enforced twice: the route 400s, and the derivation here
+   lets winners win — a hand-crafted blob carrying both says somebody won. */
+
+test('sessionEnding answers only for a PLAYED session', () => {
+  assert.equal(sessionEnding({}), null, 'open');
+  assert.equal(sessionEnding({ cancelled: true, ending: 'lost' }), null, 'cancelled');
+  assert.equal(sessionEnding({ finished: true, childSessionIds: ['s1'], ending: 'lost' }), null, 'split');
+  assert.equal(sessionEnding(null), null);
+});
+
+test('the five answers a played session can give', () => {
+  assert.equal(sessionEnding({ finished: true, winnerIds: ['m1'] }), 'won');
+  assert.equal(sessionEnding({ finished: true, winnerIds: [], ending: 'lost' }), 'lost');
+  assert.equal(sessionEnding({ finished: true, ending: 'noWinner' }), 'noWinner');
+  assert.equal(sessionEnding({ finished: true, ending: 'ongoing' }), 'ongoing');
+  assert.equal(sessionEnding({ finished: true, winnerIds: [] }), 'unrecorded');
+  assert.equal(sessionEnding({ finished: true }), 'unrecorded', 'an absent key is unrecorded');
+});
+
+test('an unknown ending reads as unrecorded, and winners outrank a stored ending', () => {
+  // Allowlist, not denylist: a value nobody has thought of must lose rather
+  // than reach a render site as a missing icon and a missing label.
+  assert.equal(sessionEnding({ finished: true, ending: 'abandoned' }), 'unrecorded');
+  assert.equal(sessionEnding({ finished: true, ending: '' }), 'unrecorded');
+  // The route refuses this combination, so it can only be a hand-crafted blob.
+  assert.equal(sessionEnding({ finished: true, winnerIds: ['m1'], ending: 'lost' }), 'won');
+});
+
+test('ENDINGS is the shared offer/validate list', () => {
+  assert.deepEqual(ENDINGS, ['lost', 'noWinner', 'ongoing']);
 });

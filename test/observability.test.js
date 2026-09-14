@@ -28,60 +28,13 @@ const {
   clearLogs,
 } = require('../lib/observability');
 
-// Capture everything written to stdout while `fn` runs, restoring afterwards.
-async function captureStdout(fn) {
-  const lines = [];
-  const orig = process.stdout.write;
-  process.stdout.write = (chunk, ...rest) => {
-    lines.push(String(chunk));
-    return orig.call(process.stdout, chunk, ...rest);
-  };
-  try {
-    await fn();
-  } finally {
-    process.stdout.write = orig;
-  }
-  return lines.join('').split('\n').filter(Boolean);
-}
-
-// Parse only the JSON log lines, ignoring any unrelated stdout noise the test
-// runner may interleave.
-//
-// The noise is not merely *between* our lines: node:test's reporter writes
-// binary IPC frames to the same stdout we're capturing, and one write can carry
-// a frame AND a pino line in a single chunk with no newline between them. So
-// locate where our JSON actually starts instead of requiring index 0 — a
-// `startsWith('{')` check silently drops a real, correctly-emitted log line
-// depending on chunk boundaries (which is exactly how it behaves: flaky by
-// test-name-pattern and by position in the file).
-function parseLogLines(lines) {
-  const out = [];
-  for (const l of lines) {
-    const start = l.indexOf('{"level":');
-    if (start === -1) continue;
-    try {
-      out.push(JSON.parse(l.slice(start)));
-    } catch {
-      // not one of ours
-    }
-  }
-  return out;
-}
-
-function withEnv(key, value, fn) {
-  const had = Object.prototype.hasOwnProperty.call(process.env, key);
-  const prev = process.env[key];
-  if (value === undefined) delete process.env[key];
-  else process.env[key] = value;
-  return (async () => {
-    try {
-      return await fn();
-    } finally {
-      if (had) process.env[key] = prev;
-      else delete process.env[key];
-    }
-  })();
-}
+// The stdout-capture kit is shared with test/client-error-logging.test.js,
+// which needs the same seam to read what the logger actually wrote.
+const {
+  captureStdout,
+  parseLogLines,
+  withEnv,
+} = require('./support/log-capture');
 
 test('logger writes a structured JSON line with ts + level', async () => {
   const lines = await withEnv('LOG_LEVEL', 'info', () =>

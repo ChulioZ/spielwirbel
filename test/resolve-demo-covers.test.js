@@ -64,5 +64,11 @@ test('it still reports every row, so the refusal is diagnosable', () => {
   // empty seed, and would also satisfy it if the titles happened to appear only
   // in the refusal message.
   assert.ok(DEMO_ROUNDS.length >= 3);
-  assert.match(res.stderr, /0\/7 fields/, 'the report does not state how much each row resolved');
+  // Derived from the shared list rather than pinned at 7: the field set has been
+  // widened twice (#724, #1005), and a literal here fails the whole spec over a
+  // number nothing in this script decides
+  // (.claude/rules/shared-constants-across-the-stack.md, applied to a test).
+  const { PROVIDER_INFO_FIELDS } = require('../public/js/provider-info-fields');
+  assert.match(res.stderr, new RegExp(`0/${PROVIDER_INFO_FIELDS.length} fields`),
+    'the report does not state how much each row resolved');
 });

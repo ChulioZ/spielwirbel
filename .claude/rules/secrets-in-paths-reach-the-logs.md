@@ -8,10 +8,13 @@ paths:
 # A secret in the URL PATH lands in the logs — the logger is doing its job
 
 Every credential in this app rides somewhere the request logger already refuses to
-record: a header (`Authorization`), a cookie, or a body. `requestLogger`'s
-`customProps` is an allowlist of five fields — method, **path**, status, duration,
-ip — and the deliberate omission of bodies, query strings, headers and cookies is
-what makes that safe (`.claude/rules/product-event-logging.md`).
+record: a header (`Authorization`), a cookie, or a body. `requestLogger` emits an
+allowlist of five fields — method, **path**, status, duration, ip — and the
+deliberate omission of bodies, query strings, headers and cookies is what makes
+that safe (`.claude/rules/product-event-logging.md`). (`customProps` carried all
+five until the pino-http double-evaluation fix; four of them now come from
+`customSuccessObject`/`customErrorObject` — same allowlist, two more call sites to
+check. See `.claude/rules/pino-http-customprops-runs-twice.md`.)
 
 Put a secret in the **path** and that reasoning inverts: the one field the logger
 records *by design* is now the credential.

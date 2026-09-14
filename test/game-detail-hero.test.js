@@ -27,9 +27,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
-const { bodyOf, bodyOfIn, RULES, rootPx, whole } = require('./support/css');
+const { bodyOf, bodyOfIn, RULES, rulesOf, mediaBlocks, whole, CSS } = require('./support/css');
+
+/* Every rule declared inside a media block whose query matches `re`, flattened
+   — so a rule is found whether or not it shares a block with its neighbours. */
+const rulesUnder = (re) => rulesOf(mediaBlocks()
+  .filter(([query]) => re.test(query)).map(([, css]) => css).join('\n'));
 const { contrast, composite, tokensFor } = require('./support/theme');
 const { DESIGNS } = require('../public/js/round-designs');
+const { COVER_HERO } = require('../public/js/cover-size');
 
 const RID = 'r1';
 
@@ -182,104 +188,137 @@ test('--surface is declared only in the two token blocks the harness resolves', 
     'applyBackground() must not set --surface, or a round could paint one nothing measures');
 });
 
-test('the cover leads the band and the ring does not outweigh it', () => {
-  const img = bodyOf('.gd-img');
-  assert.ok(img, '.gd-img still has a rule of its own');
-  assert.match(img, /width:\s*var\(--gd-cover-w\)/,
-    'the cover sizes from the band token, so one breakpoint retunes it');
-
-  const head = bodyOf('.gd-head');
-  const w = head.match(/--gd-cover-w:\s*(\d+)px/);
-  assert.ok(w, 'the band sets a desktop cover width');
-  /* 240px was the thumbnail this issue was filed about; the ring is 88px, and
-     the cover has to read as the larger object by a clear margin. */
-  assert.ok(Number(w[1]) >= 300, `the desktop cover is ${w[1]}px, not clearly leading`);
-});
-
-/* --- The score ring's column (#901) ---------------------------------------
+/* --- The card's two tracks (#901, re-derived for #1039) --------------------
    #868 fixed the band's OUTER edge; the row inside it still wrapped for some
    games and not others, because `.gd-stats` was `flex: none` — i.e. as wide as
-   its longest label. Route 1 is unavailable for a CSS text assertion (the sheet
-   already exists), so each of the three below was seen red against a deliberate
-   break (`.claude/rules/break-the-code-on-purpose.md`). */
+   its longest label, so a two-digit rating count or switching the UI to French
+   took the band from 281px to 450px tall.
 
-const px = (body, prop) => {
-  const m = body && body.match(new RegExp(`(^|[;{\\s])${prop}\\s*:\\s*(\\d+)px`));
-  return m ? Number(m[2]) : null;
-};
+   #1039 removed that column outright (the score is a pill on the cover) and
+   made the card a GRID, which retires the whole `--gd-stats-w` headroom
+   arithmetic the old assertions computed: with two tracks and one of them
+   fixed, there is no content-dependent wrap point left to measure. What has to
+   hold instead is that the text track cannot be pushed wider by its content,
+   which is the same defect one mechanism over — and the mechanism is now two
+   declarations that only work as a pair.
 
-test('the stats column sizes from a token, not from its longest label', () => {
-  const stats = bodyOf('.gd-stats');
-  assert.ok(stats, '.gd-stats still has a rule of its own');
-  assert.match(stats, /flex:\s*0\s+0\s+var\(--gd-stats-w\)/,
-    '.gd-stats needs a fixed basis; `flex: none` is what made the row data-dependent');
-  /* `flex: none` and `flex: 0 0 auto` are the same declaration spelled two ways,
-     and either one reinstates the bug while still looking like a sized column. */
-  assert.doesNotMatch(stats, /flex:\s*(none|0\s+0\s+auto)/,
-    '.gd-stats must not be content-sized');
-});
+   Route 1 is unavailable for a CSS text assertion (the sheet already exists), so
+   each of the three below was seen red against a deliberate break
+   (`.claude/rules/break-the-code-on-purpose.md`): dropping the `minmax(0, …)`
+   from the text track, dropping `min-width: 0` from `.gd-info`, and dropping the
+   `grid-template-columns` restatement from the 700px block. */
 
-test('the stats column fits the row it shares with the cover and the title block', () => {
+test('the card is a two-track grid: a fixed cover column and a text track that cannot be pushed', () => {
   const head = bodyOf('.gd-head');
-  const info = bodyOf('.gd-info');
-  assert.ok(head && info, 'both halves of the hero row still have rules');
-  /* `.gd-head` is declared TWICE — here and inside @media (max-width: 700px) —
-     and bodyOf() returns whichever comes first in the sheet. Only the desktop
-     one has a headroom to compute, so pin that this is it: the phone rule sets
-     `--gd-cover-w: 100%`, whose 20px padding would compute a LARGER headroom and
-     quietly weaken every assertion below. */
-  assert.match(head, /--gd-cover-w:\s*\d+px/,
-    'this must be the desktop .gd-head rule, not the phone block');
+  assert.ok(head, '.gd-head still has a rule of its own');
+  /* `bodyOf()` returns whichever rule comes first in the sheet, and `.gd-head`
+     is declared three times (here, the 700px stack and the 1280px cover bump).
+     Pin that this is the base one: the phone rule declares a ONE-column grid,
+     against which every assertion below would be vacuous. */
+  assert.match(head, /--gd-cover-w:\s*\d+px/, 'this must be the base .gd-head rule, not a media block');
 
-  /* Every term is read from the sheet rather than pinned as a literal, so this
-     also catches a retune of the cover, the gap, the padding, the .gd-info
-     floor or --w-read — any of which eats the same headroom this column needs.
-     Above 1280px `.app > *:not(.rail):not(.dock)` caps the band at --w-read. */
-  const terms = {
-    read: rootPx('--w-read'),
-    padding: px(head, 'padding'),
-    cover: px(head, '--gd-cover-w'),
-    gap: px(head, 'gap'),
-    infoFloor: Number((info.match(/flex:\s*1\s+1\s+(\d+)px/) || [])[1]),
-  };
-  for (const [name, v] of Object.entries(terms)) {
-    assert.ok(Number.isFinite(v), `could not read ${name} out of the sheet — the arithmetic below would be vacuous`);
-  }
-  const headroom = terms.read - 2 * terms.padding
-    - terms.cover - 2 * terms.gap - terms.infoFloor;
-
-  const statsW = px(head, '--gd-stats-w');
-  assert.ok(statsW, '.gd-head declares --gd-stats-w as a px value');
-  assert.ok(statsW <= headroom,
-    `--gd-stats-w is ${statsW}px but only ${headroom}px is left on the row — the ring wraps`);
-  /* The ring is a fixed 88px box, so a column narrower than that clips it. */
-  const ring = px(bodyOf('.gd-ring'), 'width');
-  assert.ok(statsW >= ring, `--gd-stats-w is ${statsW}px, narrower than the ${ring}px ring`);
+  assert.match(head, /display:\s*grid/, '.gd-head is a grid since #1039, not a wrapping flex row');
+  const tracks = head.match(/grid-template-columns:([^;]+);/);
+  assert.ok(tracks, '.gd-head declares no tracks');
+  assert.match(tracks[1], /var\(--gd-cover-w\)/, 'the cover track sizes from the band token');
+  /* The whole point of the grid. A bare `1fr` track has an auto (min-content)
+     minimum, so one long unbroken game title would push the text column — and
+     with it the card — wider than the column it sits in. */
+  assert.match(tracks[1], /minmax\(\s*0\s*,\s*1fr\s*\)/,
+    `the text track is "${tracks[1].trim()}"; without a 0 minimum its content can blow the grid out`);
 });
 
-test('the stats column wraps its labels instead of clipping them', () => {
-  /* A fixed width only works because the labels reflow inside it. Truncating
-     them instead would keep the row from wrapping while losing the text —
-     the same screen, broken a quieter way. */
-  const cls = ['.gd-stats', '.score-label', '.score-why'];
-  /* These labels are shared with the Regal rows, so match only selectors that
-     can actually apply INSIDE this column: the class at the end, under no
-     ancestor but the band's own. Without that, `.ds-row__meta .score-pill` — a
-     different component entirely — would be held to this column's constraint. */
-  const inThisColumn = (sel) => {
-    const parts = sel.trim().split(/\s+/);
-    const last = parts.pop();
-    return cls.some((c) => whole(c).test(last))
-      && parts.every((p) => whole('.gd-head').test(p) || whole('.gd-stats').test(p));
-  };
-  let checked = 0;
-  for (const [sel, body] of RULES) {
-    if (!sel.split(',').some((s_) => inThisColumn(s_))) continue;
-    checked++;
-    assert.doesNotMatch(body, /white-space:\s*nowrap/, `${sel} must not stop the labels wrapping`);
-    assert.doesNotMatch(body, /text-overflow:\s*ellipsis/, `${sel} must not truncate the labels`);
+test('the text column carries the other half of that pair', () => {
+  const info = bodyOf('.gd-info');
+  assert.ok(info, '.gd-info still has a rule of its own');
+  /* `minmax(0, …)` on the track and `min-width: 0` on the item are a pair —
+     either alone leaves the blow-out, because a grid item's own automatic
+     minimum size is its min-content size. The old `flex: 1 1 240px` floor is
+     what this replaced, and a floor here would be the bug back. */
+  assert.match(info, /min-width:\s*0/, '.gd-info needs min-width: 0 for the minmax track to bite');
+  assert.doesNotMatch(info, /min-width:\s*[1-9]/, '.gd-info must not floor its own width');
+});
+
+test('the cover track is a fraction of the CARD, capped by the token', () => {
+  /* The bug this replaced an assertion for: a flat `var(--gd-cover-w)` track is
+     a number chosen against the viewport, and the card is two indirections away
+     from one — it sits in the spread's left page, itself 3/5 of the pane. At a
+     1280px viewport that left the title, the chips and the fact pills **130px**
+     and the card 626px tall, with a cover that measured perfectly fine. So the
+     assertion has to be about the TRACK, not about the cover's size: "is the
+     cover big enough" passes against the defect
+     (`.claude/rules/card-tracks-are-a-fraction-of-a-fraction.md`). */
+  const head = bodyOf('.gd-head');
+  const tracks = head.match(/grid-template-columns:([^;]+);/)[1];
+  const cap = tracks.match(/min\(\s*var\(--gd-cover-w\)\s*,\s*(\d+)%\s*\)/);
+  assert.ok(cap, `the cover track is "${tracks.trim()}"; it must be min(var(--gd-cover-w), <pct>)`);
+  /* The percentage is what keeps the two sides comparable at every pane width.
+     Past ~50% the cover is the majority of the card and the text column starves
+     again — the same defect, one number further on. */
+  assert.ok(Number(cap[1]) <= 50,
+    `the cover takes ${cap[1]}% of the card, so the text column is the minority share`);
+
+  const w = head.match(/--gd-cover-w:\s*(\d+)px/);
+  assert.ok(w, '.gd-head sets a cover ceiling');
+  /* 240px was the thumbnail #868 was filed about; once the cap binds, the cover
+     has to read as the card's leading object. And it must stay inside the
+     requested image (COVER_HERO), or the hero is upscaled. */
+  assert.ok(Number(w[1]) >= 300, `the cover ceiling is ${w[1]}px, not clearly leading`);
+  assert.ok(Number(w[1]) <= COVER_HERO,
+    `the ceiling is ${w[1]}px but the hero is requested at ${COVER_HERO}px, so it upscales`);
+
+  // And the cover fills whatever that track resolves to.
+  assert.match(bodyOf('.gd-img'), /width:\s*100%/,
+    '.gd-img must fill its track — the track is what carries the size now');
+});
+
+test('the action bar can actually pin, at both ends of the split', () => {
+  /* Measured, not assumed — `.claude/rules/sticky-bottom-bar-needs-slack-below-it.md`
+     said this could not work and had the mechanism backwards. A bottom-stuck box
+     travels over its PRECEDING siblings, clamped by its containing block's top
+     edge, so the two declarations below are a pair and each is useless alone:
+
+       - `position: sticky` on the bar (its containing block holds the history
+         above it, which is what it travels over);
+       - `display: contents` on `.pass__table` below the split, which promotes the
+         bar's siblings to `.pass`. Without it the containing block starts at
+         y=813 on a 390x844 phone and the pin stops 55px short of the floor —
+         measured in both engines, gapToFloor -55 vs +12 at scroll 0. */
+  const bar = bodyOf('.gd-bar');
+  assert.ok(bar, '.gd-bar still has a rule of its own');
+  assert.match(bar, /position:\s*sticky/, 'the action bar is not sticky, so it scrolls away');
+  assert.match(bar, /bottom:\s*\d+px/, 'a sticky bar with no `bottom` inset never sticks');
+  /* It rides up over the history rows, so it has to paint above them. */
+  assert.match(bar, /z-index:\s*[1-9]/, 'an opaque bar over scrolling rows needs a z-index');
+
+  const promoted = bodyOf('.pass__table', rulesUnder(/max-width:\s*859px/));
+  assert.ok(promoted, 'nothing retunes .pass__table below the split');
+  assert.match(promoted, /display:\s*contents/,
+    'below the split the right page must hand its children to .pass, or the pin cannot reach the fold at rest');
+});
+
+test('the card stacks to a SINGLE track, not just a 100% cover', () => {
+  /* `--gd-cover-w: 100%` alone is not enough and fails in the worst direction:
+     inside a two-track grid a 100% first track is 100% of the GRID, which
+     pushes the text off the card entirely. So the phone block has to restate
+     `grid-template-columns`. */
+  const phone = bodyOf('.gd-head', rulesUnder(/max-width:\s*700px/));
+  assert.ok(phone, '.gd-head is no longer retuned for the narrow stack');
+  const phoneTracks = phone.match(/grid-template-columns:([^;]+);/);
+  assert.ok(phoneTracks, 'the phone block does not restate the tracks, so the card stays two columns');
+  assert.equal((phoneTracks[1].match(/minmax\(/g) || []).length, 1,
+    `the stacked card declares "${phoneTracks[1].trim()}" rather than a single track`);
+});
+
+/* The ring, its column and the section the chip replaced are gone from the
+   stylesheet too, not merely unused by the view. Dead CSS for a component that
+   no longer exists is how `.tag--digital` survived four releases (#242). */
+test('the ring, the stats column and the expansions section leave no dead CSS', () => {
+  for (const dead of ['.gd-ring', '.gd-ring__num', '.gd-ring--none', '.gd-stats', '.gd-expansions', '.gd-source', '.gd-about']) {
+    assert.ok(
+      !RULES.some(([sel]) => sel.split(',').some((one) => whole(dead).test(one.trim()))),
+      `${dead} is dead CSS — nothing in public/js renders it any more`,
+    );
   }
-  /* Anti-vacuous: a selector-matching change that stopped matching anything
-     would leave this test green while checking nothing at all. */
-  assert.ok(checked >= cls.length, `only ${checked} rules matched; the sweep has stopped seeing the column`);
+  assert.doesNotMatch(CSS, /--gd-stats-w/, '--gd-stats-w outlived the column it sized');
 });

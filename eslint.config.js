@@ -23,6 +23,7 @@ const frontendGlobals = {
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
   fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtMoney: 'readonly',
+  fmtRelativeDays: 'readonly',
   fmtAvg: 'readonly', fmtSigned: 'readonly', fmtCount: 'readonly',
   // core.js
   app: 'readonly', context: 'readonly', toastEl: 'readonly',
@@ -36,6 +37,9 @@ const frontendGlobals = {
   popoverFit: 'readonly', popoverRoom: 'readonly', POPOVER_GAP: 'readonly',
   // report-link.js
   feedReportUrl: 'readonly', setContactAvailable: 'readonly',
+  // views-friends.js (#1092)
+  KREIS_FEED_COLLAPSED: 'readonly', renderPersonCard: 'readonly', personCardLine: 'readonly',
+  renderAddTile: 'readonly', renderKreisFeed: 'readonly',
   REPORT_SUBJECT_MAX: 'readonly', REPORT_USERNAME_MAX: 'readonly',
   // install-prompt.js (issue #616)
   INSTALL_DISMISSED_KEY: 'readonly', isIosDevice: 'readonly', installStateFrom: 'readonly',
@@ -77,11 +81,13 @@ const frontendGlobals = {
   // score-info.js (issue #893)
   infoButton: 'readonly', wireInfoButtons: 'readonly', openInfoSheet: 'readonly', INFO_SHEETS: 'readonly',
   MEMBER_COLORS: 'readonly', memberColor: 'readonly', memberHex: 'readonly',
+  memberIsActive: 'readonly', activeMembers: 'readonly',
   memberTone: 'readonly', initials: 'readonly',
   personColor: 'readonly',
   renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
   renderSetupAddons: 'readonly',
-  hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly', renderGameInfoSection: 'readonly',
+  hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
+  gameGlanceFacts: 'readonly', gameInfoRest: 'readonly',
   wantsGameInfo: 'readonly', mergeGameInfo: 'readonly',
   foldGameInfoList: 'readonly', refreshShelfGameInfo: 'readonly',
   // username-policy.js
@@ -101,6 +107,8 @@ const frontendGlobals = {
   // what turns a future cross-file typo into an error rather than a silent
   // runtime failure (.claude/rules/eslint-frontend-shared-scope.md).
   wirePasskeyLogin: 'readonly', buildPasskeySection: 'readonly', renderPasskeyRow: 'readonly',
+  // views-account.js / views-auth.js (#1076)
+  buildEmailForm: 'readonly', renderEmailChangeLanding: 'readonly',
   // round-roles.js (issue #137) — also required by lib/round-access.js and the
   // rounds/members/invitations routes
   ROUND_ROLES: 'readonly', ROLE_RANK: 'readonly', LEGACY_GRANT_ROLE: 'readonly',
@@ -109,7 +117,7 @@ const frontendGlobals = {
   roundCan: 'readonly',
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
   isActiveGame: 'readonly', fitsPlayerCount: 'readonly', requiredExpansions: 'readonly',
-  ownedByParty: 'readonly', shelfParty: 'readonly',
+  ownedByParty: 'readonly', shelfParty: 'readonly', fitsRecommendedCount: 'readonly',
   // provider-info-fields.js (shared with lib/, #717/#724; client since the 2026-09-08 audit)
   PROVIDER_INFO_FIELDS: 'readonly', CHIPPED_PROVIDER_INFO_FIELDS: 'readonly',
   UNCHIPPED_PROVIDER_INFO_FIELDS: 'readonly', hasProviderField: 'readonly', assignProviderInfo: 'readonly',
@@ -152,7 +160,8 @@ const frontendGlobals = {
   setupArchiveSelection: 'readonly',
   // session-outcome.js (issue #796) — also required by lib/routes/sessions.js
   sessionChildIds: 'readonly', sessionOutcome: 'readonly', isSplitParent: 'readonly',
-  sessionHasVotes: 'readonly',
+  sessionHasVotes: 'readonly', sessionEnding: 'readonly', ENDINGS: 'readonly',
+  ENDING_LABELS: 'readonly', endingText: 'readonly',
   // table-split.js (issue #796) — also required by lib/draw.js and lib/session-split.js
   MIN_TABLE_PARTIES: 'readonly', VIOLATION_MAX: 'readonly', NEUTRAL_RATING: 'readonly',
   MAX_TABLE_PROPOSALS: 'readonly', seatRating: 'readonly', tableFeedback: 'readonly',
@@ -218,6 +227,9 @@ const frontendGlobals = {
   isAuthRoute: 'readonly', isVoteLinkRoute: 'readonly', isPublicStatsRoute: 'readonly',
   pendingPath: 'writable', authScreensAvailable: 'readonly',
   showLogin: 'readonly', showRegister: 'readonly', showForgot: 'readonly',
+  // Cross-file since #969 split account.js: the boot gate calls it, views-auth.js
+  // defines it.
+  showRateLimited: 'readonly',
   showAuthDone: 'readonly', buildResend: 'readonly', renderVerifyLanding: 'readonly',
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',
   accountApi: 'readonly', setupInboxUi: 'readonly', setInboxDot: 'readonly',
@@ -277,7 +289,8 @@ const frontendGlobals = {
   memberFavourites: 'readonly', retiredIds: 'readonly', isNameableGame: 'readonly',
   // period-recap.js + recap-card.js (issue #800) — internal helpers listed for
   // the same reason.
-  periodKeyOf: 'readonly', inPeriod: 'readonly', playedSessions: 'readonly',
+  periodKeyOf: 'readonly', dayIndexOf: 'readonly', monthsBetween: 'readonly',
+  inPeriod: 'readonly', playedSessions: 'readonly',
   SHELF_EVENTS: 'readonly', shelfEvents: 'readonly', periodsOf: 'readonly',
   playTally: 'readonly', bestRated: 'readonly', periodRecap: 'readonly',
   // hub-insights.js (#923) — the Start tab's derivations
@@ -292,7 +305,7 @@ const frontendGlobals = {
   recapCardHeight: 'readonly', drawRecapCard: 'readonly', recapCardBlob: 'readonly',
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
-  SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly',
+  SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly', SHARE_ENDING_TITLES: 'readonly',
   // bgstats.js (issue #485) — internal helpers listed for the same reason.
   BGSTATS_SOURCE: 'readonly', BGSTATS_CREATE_PLAY: 'readonly', BGSTATS_URL_MAX: 'readonly',
   bgStatsPlayDate: 'readonly', bgStatsGuestId: 'readonly', bgStatsTeamLabel: 'readonly',
@@ -341,6 +354,7 @@ const frontendGlobals = {
   hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
   editableRoundName: 'readonly',
+  createRegalBulk: 'readonly', openBulkPicker: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',

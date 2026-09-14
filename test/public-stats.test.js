@@ -378,6 +378,11 @@ test('a floor of 0 is honoured, not swallowed back to the default', async () => 
 
 test('with every metric below its threshold the payload carries NO block at all', async () => {
   stubProvider();
+  // The all-time card (#1035) has NO floor by default, so it is the one metric
+  // that has to be switched off explicitly for "nothing to render" to still be
+  // a reachable state. That is the operator's own lever, used as an operator
+  // would — not a workaround for the card.
+  process.env.PUBLIC_STATS_MIN_PLAYS_ALL = '999';
   await seedPlayedGame({ externalId: 'thing-all-dark', title: 'Alles dunkel' });
   // The shipped counter defaults are far above a test fixture, and the content
   // floors are left at their defaults too.
@@ -385,6 +390,7 @@ test('with every metric below its threshold the payload carries NO block at all'
   assert.equal('counters' in built, false);
   assert.equal('games' in built, false);
   assert.deepEqual(Object.keys(built), ['generatedAt'], 'nothing for the client to render');
+  delete process.env.PUBLIC_STATS_MIN_PLAYS_ALL;
 });
 
 /* --------------------------- provider degradation --------------------------- */
@@ -715,4 +721,76 @@ test('#928 plays lift the published score, using the all-time count', async () =
   // game's {4,4,4} shrinks to 3,4, which is what it would have won with.
   assert.equal(built.games.bestRated.score, 3.9);
   assert.equal(built.games.bestRated.ratings, 3);
+});
+
+/* -------------------- the all-time podium (#1035) --------------------------- */
+
+test('the all-time card publishes with NO floor, and hides when one is raised', async () => {
+  /* Every other metric hides itself until it clears a minimum; this one does
+     not, by explicit operator decision (#1035) — the instance's one durable
+     fact is published whatever it says. The lever is kept anyway so the card
+     can be pulled back live without a deploy, which is what the second half
+     asserts: `threshold()` documents 0 as a meaningful value, so "no floor"
+     has to be a DEFAULT rather than a missing clause.
+
+     Two steps, deliberately, not one call: an assertion that it renders proves
+     nothing about the lever, and an assertion that a raised floor hides it
+     proves nothing about the default. */
+  delete process.env.PUBLIC_STATS_MIN_PLAYS_ALL;
+  delete process.env.PUBLIC_STATS_MIN_PLAY_TENANTS_ALL;
+  // Deliberately NOT openContentFloors(): the point is that this card needs no
+  // floor lowered for it, while its period siblings sit above theirs.
+  stubProvider();
+  await seedPlayedGame({ externalId: 'thing-alltime', title: 'Dauerbrenner' });
+
+  const games = (await rebuild()).games || {};
+  assert.ok(games.playedAll, 'one play on one shelf is enough — there is no floor');
+  assert.equal(games.playedAll.plays, 1);
+  assert.equal(games.playedAll.title, 'Provider-Titel thing-alltime');
+  assert.equal('period' in games.playedAll, false, 'all-time names no period');
+  assert.equal('playedYear' in games, false, 'while the year card is still under its own floor');
+
+  process.env.PUBLIC_STATS_MIN_PLAYS_ALL = '2';
+  assert.equal('playedAll' in ((await rebuild()).games || {}), false, 'the lever still works');
+  process.env.PUBLIC_STATS_MIN_PLAYS_ALL = '0';
+  process.env.PUBLIC_STATS_MIN_PLAY_TENANTS_ALL = '2';
+  assert.equal('playedAll' in ((await rebuild()).games || {}), false, 'and so does the spread lever');
+  delete process.env.PUBLIC_STATS_MIN_PLAY_TENANTS_ALL;
+});
+
+test('the all-time card ranks on the all-time count, not on any calendar window', async () => {
+  openContentFloors();
+  delete process.env.PUBLIC_STATS_MIN_PLAYS_ALL;
+  stubProvider();
+  // Two games. The first is played twice, but BOTH plays are backdated out of
+  // every calendar window; the second is played once, today. So the year card
+  // and the all-time card must name DIFFERENT games — which is the whole reason
+  // this metric is not folded into the period block above it.
+  // The SAME external id in two rounds — two plays of one game. Two different
+  // ids would be two games with one play each, which ranks identically to the
+  // single-play newcomer and makes the assertion below accidentally true.
+  await seedPlayedGame({ externalId: 'thing-old', title: 'Klassiker' });
+  await seedPlayedGame({ externalId: 'thing-old', title: 'Klassiker' });
+  await seedPlayedGame({ externalId: 'thing-new', title: 'Neuling' });
+
+  const built = await rebuild('2031-06-15T12:00:00.000Z');
+  const games = built.games || {};
+  assert.equal(games.playedAll.url.includes('thing-old'), true, 'all-time sees both old plays');
+  assert.equal(games.playedAll.plays, 2);
+  assert.equal('playedYear' in games, false, 'and 2031 saw none of them');
+});
+
+test('the all-time and year winners may be the same game — both cards still render', async () => {
+  // Decision 2 of #1035: for the instance's first months the all-time winner
+  // IS the year's winner, and the grid will show one cover twice. Accepted —
+  // the two cards carry different numbers. Pinned so nobody adds a
+  // suppress-if-equal comparison later.
+  openContentFloors();
+  delete process.env.PUBLIC_STATS_MIN_PLAYS_ALL;
+  stubProvider();
+  await seedPlayedGame({ externalId: 'thing-both', title: 'Beides' });
+
+  const games = (await rebuild()).games || {};
+  assert.equal(games.playedAll.url, games.playedYear.url, 'the fixture really is the same game');
+  assert.ok(games.playedAll && games.playedYear, 'and both cards are published');
 });

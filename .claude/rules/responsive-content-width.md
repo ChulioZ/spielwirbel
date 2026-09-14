@@ -103,7 +103,25 @@ a 900px centred CTA. Measured both ways before shipping; the numbers are
 symmetric, which is what makes the unconditional version look correct in the one
 state anyone tests.
 
-**This has since happened a second time, so treat it as the norm rather than as
+**And a THIRD time, in #1039** — the game detail spread (`.pass`, opting out to
+`--w-detail`) and the `.back-row` that carries its „…" page menu. Same sibling
+shape, same condition (`:has(.pass)`), same shared custom property. It is the
+first opt-out on a screen that *does* render navigation, and the licence is
+different from the setup forms': the rail and the dock are excluded by the cap's
+own two `:not()`s, and `.app`'s own width is untouched, so the round's sub-screen
+tab strip keeps `--w-read` and stays put. Don't read the setup forms' "renders no
+navigation" argument as the only one available — re-derive whichever applies.
+
+**And a FOURTH, in #1055** — the result screen. It differs from the three above
+in that it had no grid at all to hang the exemption on: its blocks were *direct
+children of `#app`*, so each took `--w-read` on its own and the screen could not
+opt out as a unit. Measured 2026-09-12 the page stayed 2905px tall from 1280 to
+2560 with no complete ranked row above the fold. The fix is one wrapper
+(`.result-screen`, built in `showResults`) plus the identical `:has()` pair — so
+when a screen "cannot opt out", check whether it is missing a wrapper rather than
+widening `.app`, which `test/content-width.test.js` forbids outright.
+
+**This had already happened a second time, so treat it as the norm rather than as
 one screen's quirk.** #577 gave the two setup forms a two-column layout and
 exempted `.setup-grid` alone; the `.page-head` above it — again a *sibling*, not
 a wrapper — stayed capped and centred, indenting each screen's own `<h1>` ~170px

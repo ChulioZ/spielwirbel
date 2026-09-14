@@ -219,6 +219,11 @@ test('a game carrying EVERY field is complete — the widened check still termin
     source: { provider: 'bgg', externalId: '900013', url: null },
     weight: 2.5, minPlaytime: 45, maxPlaytime: 75, minAge: 12,
     categories: ['Economic'], mechanics: ['Trading'], rating: 7.4,
+    // EMPTY lists, deliberately (#1005): the poll's guard accepts `[]` as the
+    // real answer "nobody voted", so an unpolled game still completes. Written
+    // as [] here rather than as a filled poll precisely because that is the case
+    // that would otherwise re-ask BGG once a week forever.
+    bestWith: [], recommendedWith: [],
   });
   const calls = stubFetch([{ id: '900013' }]);
   await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
@@ -421,11 +426,19 @@ test('a game with weight and the #724 fields is COMPLETE — no weekly re-ask fo
     source: { provider: 'bgg', externalId: '13' },
     weight: 2.28, minPlaytime: 60, maxPlaytime: 120, minAge: 10,
     categories: ['Economic'], mechanics: ['Trading'], rating: 7.09,
+    bestWith: [3], recommendedWith: [3, 4],
   };
   assert.equal(needsProviderInfo(complete), false, 'a fully-filled game still asks the provider');
   // The control: still incomplete when a field that IS written is missing, so
   // the assertion above cannot pass by the check having been gutted.
   assert.equal(needsProviderInfo({ ...complete, minAge: null }), true);
+  // An UNANSWERED poll is complete too (#1005) — `[]` is a real answer there,
+  // unlike an empty categories list. Get this wrong and every game BGG's
+  // community has not polled re-asks once per TTL, forever.
+  assert.equal(needsProviderInfo({ ...complete, bestWith: [], recommendedWith: [] }), false,
+    'an unanswered poll must not make a game permanently incomplete');
+  // …but an ABSENT poll is still incomplete, or the field would never arrive.
+  assert.equal(needsProviderInfo({ ...complete, bestWith: undefined }), true);
 });
 
 test('a stale client still sending applyDescription writes nothing', async () => {

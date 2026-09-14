@@ -14,7 +14,7 @@ deliberately were not, and the line between them is not about available width:
 | entries are **unordered** | order carries meaning |
 | entries are **short** (a chip, a name, a toggle) | entries are rich (cover, stats, several actions) |
 | you scan for one entry | you read the sequence |
-| tags, providers, the round lobby, the Regal | session results, the Chronik, a game's related sessions |
+| tags, providers, the round lobby, the Regal | session results, the Chronik (related sessions left this column in #1040) |
 
 **The ordering half is the one that actually bites.** A grid is read
 left-to-right and then wrapped, so putting a *ranking* in one makes rank 3 sit
@@ -32,8 +32,8 @@ its width, so it has nothing to gain.
 
 ## How to tile, in this codebase
 
-`.ds-list--tiles` (a modifier on `.ds-list`, never a change to it — the related
-sessions list shares that component and must stay a list):
+`.ds-list--tiles` (a modifier on `.ds-list`, never a change to it — every other
+list in the app shares that component):
 
 ```css
 .ds-list--tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
@@ -62,32 +62,64 @@ Three things about that are load-bearing:
 Re-deciding these costs a browser session each; the reasoning is here so it
 doesn't have to be redone.
 
-- **Session results** — a ranking (see above). It opens on a **winner
-  spotlight** since #897, not a stage: the stage restated the top three places in
-  a second visual language twenty pixels above rows that already state them
-  properly, and redundancy reads as clutter however well it is drawn. Moving
-  either half beside the other saves ~250px of scroll at the cost of squeezing
-  it and breaking the reveal-then-detail flow. **The spotlight is not a
-  counter-example to the ordering rule** — it is the one component on the screen
-  that may wrap, precisely because everything in it holds the *same* place, so
-  reading it left-to-right says nothing false. The moment a component carries
-  two different ranks, the rule binds again.
-- **Member** — already uses the pane: the five stat cards span it (they are
-  `.pokale-cards`, already exempt) while identity and the colour picker keep
-  the reading measure. At 900px those cards are ~170px and labels like
-  "Ø vergebene Wertung" wrap badly; at ~280px they read cleanly. The resulting
-  raggedness (a full-width stats band under narrower sections above) is
-  deliberate and reads as a band, not as a mistake.
-- **Game detail** — the defect there was a *sizing* one, not a shape one: the
-  score ring sat 453px from the title because `.gd-info` was `flex: 1`. That was
-  first fixed by `flex: 0 1 auto` plus `width: fit-content` on `.gd-head`, and
-  **#868 replaced both** — `fit-content` made the band's right edge a function of
-  the title, so the page frame shifted between games (990–1212px across four
-  games of one round). The band is now a full-width framed card and `.gd-info` is
-  back to growing (`flex: 1 1 240px`); the ring lands on the card's own right
-  edge, which is what relates it to the game now that there is a boundary. A full
-  two-column restructure would still need the view rebuilt (cover and facts live
-  inside one `.gd-head`, the rest are flat siblings of `.app`).
+- **Session results** — a ranking (see above), and since #1056 a **single**
+  component: die Tafel. It had a stage until #897 and a winner spotlight until
+  #1056, and each removal was the same argument one step further — the stage
+  restated the top three places twenty pixels above rows that already stated
+  them, and the spotlight then restated the top place. What replaced it is a
+  row that IS its own bar: `--pct` is the displayed Spielwirbel-Score over the
+  scale's top, so the 544px of nothing this rule filed as the `.ds-row`
+  complaint became the score's own axis, and a wider column is a longer axis
+  instead of a wider gutter. The rows sharing first place are wrapped in one
+  gold group with one kicker.
+  **Nothing on this screen wraps any more**, so the ordering rule now binds
+  here without exception — the old carve-out ("the spotlight is the one
+  component that may wrap, because everything in it holds the *same* place") is
+  gone with the spotlight. A tie adds a ROW.
+- **Member** — **restructured in #1074, so this entry is history**, the same way
+  the Game-detail one below it is. The reading here was that the raggedness was
+  deliberate: the five stat cards spanned the pane (they were `.pokale-cards`,
+  already exempt) while identity and the colour picker kept the reading measure,
+  and "a full-width stats band under narrower sections above … reads as a band,
+  not as a mistake". Every sentence was about the CARDS, and the cards were the
+  problem: `.pokale-cards` is `auto-fit`, so three numeric tiles plus two
+  full-row game tiles left 1 to 3 empty slots from 860px up — 728px of blank card
+  at 1920 — and the argument for spanning the pane was that labels like
+  "Ø vergebene Wertung" wrap badly at ~170px, i.e. a defence of a grid that
+  should not have been a grid. Measured, the widths ran 900 / 1468 / 900.
+
+  Die Tischkarte has no grid for the figures at all (one wrapping flex row), and
+  the card, the owned-games grid and the back row now share `--w-detail`. **One
+  width per viewport is what that argument actually wanted**; it reached for
+  "deliberate raggedness" because the component in the middle could not be any
+  other width.
+- **Der Kreis** — the screen that needs BOTH shapes at once (#1092), which is
+  why it is worth an entry. The people tile: short, unordered entries you scan
+  for one of, in an `auto-fill` grid so a lone card cannot balloon. The feed
+  beside them stays a LIST, because its chronological order carries meaning —
+  the second half of the rule, applied to two contents on one screen rather than
+  to two screens. Stacking both in one column served neither: measured, a feed
+  line carried 247px of text in a 766px box while a friend's name sat 511px from
+  its own „Entfernen".
+
+- **Game detail** — **restructured in #1039, so this entry is history.** For two
+  releases the reading here was that the defect was a *sizing* one, not a shape
+  one: the score ring sat 453px from the title because `.gd-info` was `flex: 1`,
+  fixed by `flex: 0 1 auto` + `width: fit-content` and then by #868's full-width
+  framed card. That was all true and all about the hero. What it missed is the
+  screen: nothing on it was a grid, so from 1280px up every block sat at
+  `--w-read` while the pane ran to ~1450 — 45% gutter at 1920, with „Verwandte
+  Sessions" below the fold. The last sentence here even named the obstacle ("a
+  full two-column restructure would need the view rebuilt") and read as a reason
+  not to.
+
+  It is now a two-page spread (`.pass`): the game left, the group's history
+  right, one action in a bar at the right page's foot. It qualifies under the
+  same test the setup forms did — **two questions, not one sequence** — and it
+  does not contradict the ordering rule above, because neither page is a ranking.
+  The rule to carry forward is that "the fix was a sizing one" is an answer about
+  a component, and a screen can still be the wrong shape around a correctly
+  sized component.
 - **The two archives and the Wunschliste** (`.archive-list` / `.archive-row` —
   retired, completed and, since #560, wished-for, all through one renderer) —
   they look like the next tiling candidate after tags and
@@ -106,6 +138,19 @@ open questions asked what the desktop Chronik should show with the extra width
 — "more metadata per row, or a denser two-column timeline". That question is
 answered here: neither. Nothing about #332 remains open; don't re-open it on
 the strength of that line.
+
+## The one entry that left the right-hand column (#1040)
+
+A game's related sessions are **stamps** now, and neither half of the table was
+waived — check that before citing this as precedent. The *ordering* argument
+still binds and a row-major strip keeps it (newest first, wrapping like text).
+What moved is *richness*, and only because the **container** changed shape:
+#1039 made the history a ~150px column instead of a full-width `.ds-row`, and a
+date + outcome + winner is a stamp's worth of content at that width. Six
+scrolled a 13″ laptop by 88px as rows and fit as stamps. Below 860px it becomes
+one snapping row, not a 1-wide stack — a single column of stamps is the tall
+thing again. Tilt was proposed and rejected (operator, 2026-09-12): the
+character is in the ink, and `test/session-stamps.test.js` keeps rotation out.
 
 ## A tiled container may be a column FLOW rather than a grid (#942)
 

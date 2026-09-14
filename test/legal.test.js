@@ -91,7 +91,7 @@ test('configured: the privacy policy covers the real processors and no ODR link'
     'Brettspielpreise.de / BoardGamePrices',
     'Ein Empfänger personenbezogener Daten entsteht dadurch nicht',
     'keine Affiliate- oder Provisionsverknüpfung',  // the operator decision, stated publicly
-    'geekdo-images.com', 'steamstatic.com',      // hotlinked cover hosts disclosed (#172)
+    'geekdo-images.com',                        // the hotlinked cover host, disclosed (#172)
     'Nutzungsereignisse',                        // product-event logging (#261) disclosed
     'keine Konto- oder Mandanten-Kennung',       // feedback is anonymous since #321 — pin the §11 disclosure
     'Aktionsprotokoll',                          // moderation log + erasure-record retention
@@ -110,17 +110,22 @@ test('configured: the privacy policy covers the real processors and no ODR link'
   assert.ok(!res.text.includes('ec.europa.eu/consumers/odr'), 'no link to the shut-down ODR platform');
 });
 
-// §7 must name EVERY host the browser can be sent to for a cover — derived from
-// the CSP source list rather than restated, so a host cannot be retired from the
-// policy text while imageCspSources() still lets the browser contact it. The
-// 2026-09-08 audit found only two of the five legacy hosts pinned above, i.e.
-// the Sony, Nintendo and Microsoft lines could be deleted with the suite green
-// (Art. 13(1)(e) recipients). Twice each: once per language half.
+/* §7 must name EVERY host the browser can be sent to for a cover — derived from
+   the CSP source list rather than restated, so a host cannot be retired from the
+   policy text while imageCspSources() still lets the browser contact it. The
+   2026-09-08 audit found only two of the five legacy hosts pinned above, i.e.
+   the Sony, Nintendo and Microsoft lines could be deleted with the suite green
+   (Art. 13(1)(e) recipients). Twice each: once per language half.
+
+   Since #981 the derivation is the LIVE registry alone: the frozen legacy list
+   is gone with the rows that needed it, which is why those four recipients could
+   finally leave the policy. The direction that matters is unchanged — add a
+   provider and this goes red until §7 names it. */
 test('configured: the policy discloses every cover host the CSP allows, in both languages', async () => {
   Object.assign(process.env, IDENTITY);
-  const { LEGACY_COVER_HOSTS, providers } = require('../lib/providers');
-  const hosts = new Set([...LEGACY_COVER_HOSTS, ...Object.values(providers).flatMap((p) => p.imageHosts)]);
-  assert.ok(hosts.size >= 3, 'the host list is not vacuous');
+  const { providers } = require('../lib/providers');
+  const hosts = new Set(Object.values(providers).flatMap((p) => p.imageHosts));
+  assert.ok(hosts.size >= 1, 'the host list is not vacuous');
   const res = await request(app).get('/datenschutz');
   assert.equal(res.status, 200);
   for (const host of hosts) {
@@ -283,8 +288,9 @@ test('#520: both links to /nutzungsbedingungen ship hidden (fail closed)', () =>
   assert.ok(banner[0].includes('href="/nutzungsbedingungen"'), 'it points at the terms');
   assert.ok(/\bhidden\b/.test(banner[0]), 'it ships hidden — revealed only where the page resolves');
 
-  // The register form's legal line is built in account.js, not in the shell.
-  const js = fs.readFileSync(path.join(REPO, 'public/js/account.js'), 'utf8');
+  // The register form's legal line is built in views-auth.js, not in the shell
+  // (it was account.js until #969 split that file).
+  const js = fs.readFileSync(path.join(REPO, 'public/js/views-auth.js'), 'utf8');
   assert.ok(
     /<p class="auth__terms muted" hidden>/.test(js),
     'the register form ships its legal line hidden'
@@ -436,7 +442,7 @@ test('#521: only a TERMS bump raises the change notice', () => {
   const legacyUser = {};                                   // predates #521
   const currentUser = { acceptedTermsRevision: legal.TERMS_REVISION };
 
-  // Mirrors what setupTermsBanner (public/js/account.js) does with the two
+  // Mirrors what setupTermsBanner (public/js/account-chrome.js) does with the two
   // fields /me hands it — the comparison lives on the CLIENT, so there is no
   // server-side predicate to call here.
   const behind = (mod, user) => {

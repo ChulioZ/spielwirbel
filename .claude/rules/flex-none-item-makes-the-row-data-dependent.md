@@ -12,6 +12,14 @@ item's **content** — its text, its counts, its locale. The row then fits for s
 records and not others, and the screen's frame changes shape as you page through
 them.
 
+**The worked example below is HISTORICAL since #1039** — `.gd-stats` and
+`--gd-stats-w` are gone, and `.gd-head` is a two-track grid whose text track is
+`minmax(0, 1fr)`, so there is no wrap point left for content to decide. The rule
+itself stands unchanged and is why the replacement was written that way; read the
+measurements as the evidence for it, not as a map of the current stylesheet
+(`.claude/rules/card-tracks-are-a-fraction-of-a-fraction.md` is what that card
+does now).
+
 #901, the game detail hero. Three columns in a `flex-wrap: wrap` row, of which
 only `.gd-stats` was content-sized:
 

@@ -22,10 +22,12 @@
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { rulesOf, bodyOf, mediaBlocks, whole, CSS } = require('./support/css');
+const {
+  rulesOf, bodyOf, mediaBlocks, whole, CSS, RULES, matchesEl, declaredValue, resolvedDeclaration,
+} = require('./support/css');
 const { loadApp } = require('./support/dom');
 const {
-  contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf,
+  contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf, mixOklab,
 } = require('./support/theme');
 
 // Every design a round can pick — the palettes AND the worlds — required off
@@ -167,6 +169,89 @@ test('--brand-strong stays the readable accent on a brand tint, in both directio
   ]), [], 'accent chips draw --brand-strong on a tint');
 });
 
+// --- the ink that WINS, not the ink the rule intends (#1053) ----------------
+
+/* Everything above measures a pair of TOKENS. `--on-accent on the accent
+   (.btn--primary, .chip.is-on)` is exactly the right pair for a set add-on chip
+   — and it passed for months while the app painted `--brand-strong` on
+   `--brand` at 1.07–1.31:1 on a chip that was both set and OPEN, because
+   `.setup-addons__chip[aria-expanded="true"]` ties `.chip.is-on` on specificity
+   and is declared ~5800 lines later. The ingredients were all fine; the decision
+   was made somewhere no token pair can see
+   (`.claude/rules/assert-the-decision-not-its-ingredients.md`).
+
+   So this section resolves the cascade for the real element and measures
+   whatever ink actually wins. Reverting the fix reddens the selector assertion
+   AND the sweep, and the sweep reports the real per-design ratios. */
+
+// The three states of an add-on chip, as `renderAddonRow` builds and paints one
+// (`public/js/setup-addons.js`: the classes from `add`/`paint`, `aria-expanded`
+// from `show`/`close`). Only the third was broken; the first two are the control.
+const OPEN_UNSET = { tag: 'button', classes: ['chip', 'setup-addons__chip'], attrs: { 'aria-expanded': 'true' } };
+const CLOSED_SET = { tag: 'button', classes: ['chip', 'setup-addons__chip', 'is-on'], attrs: { 'aria-expanded': 'false' } };
+const OPEN_SET = { tag: 'button', classes: ['chip', 'setup-addons__chip', 'is-on'], attrs: { 'aria-expanded': 'true' } };
+
+// The `var(--x)` a resolved declaration names, mapped onto the per-design token.
+const TOKENS = {
+  '--on-accent': 'onAccent', '--brand': 'brand', '--brand-strong': 'brandStrong',
+  '--surface': 'surface', '--ink': 'ink', '--ink-soft': 'inkSoft', '--line': 'line',
+};
+const tokenOf = (decl) => {
+  const m = /var\((--[\w-]+)\)/.exec(decl.value);
+  assert.ok(m && TOKENS[m[1]], `${decl.sel} resolves to "${decl.value}" — add its token to TOKENS so it can be measured`);
+  return TOKENS[m[1]];
+};
+
+test('an add-on chip that is both SET and OPEN keeps its filled look — the ink that wins is --on-accent', () => {
+  const ink = resolvedDeclaration(OPEN_SET, 'color');
+  const fill = resolvedDeclaration(OPEN_SET, 'background');
+  assert.equal(tokenOf(ink), 'onAccent',
+    `${ink.sel} wins the ink and paints "${ink.value}" — the accent on the accent, which is invisible`);
+  assert.equal(tokenOf(fill), 'brand', `${fill.sel} wins the fill and paints "${fill.value}"`);
+});
+
+test('the other two add-on chip states are untouched: closed + set stays filled, open + unset keeps the accent ink', () => {
+  /* The control. Without it, a matcher that matched nothing — or one that
+     ignored `:not()` — would satisfy the test above by accident. */
+  assert.equal(tokenOf(resolvedDeclaration(CLOSED_SET, 'color')), 'onAccent');
+  assert.equal(tokenOf(resolvedDeclaration(CLOSED_SET, 'background')), 'brand');
+  assert.equal(tokenOf(resolvedDeclaration(OPEN_UNSET, 'color')), 'brandStrong');
+  assert.equal(tokenOf(resolvedDeclaration(OPEN_UNSET, 'background')), 'surface');
+});
+
+test('the RESOLVED ink/fill pair of an open + set add-on chip clears AA on every design', () => {
+  /* Measured off the winning declarations rather than off the pair the rule
+     hopes for, which is the whole point: with the fix reverted this reports
+     1.07–1.31:1 per design instead of going green on the intended tokens. */
+  const ink = tokenOf(resolvedDeclaration(OPEN_SET, 'color'));
+  const fill = tokenOf(resolvedDeclaration(OPEN_SET, 'background'));
+  assert.deepEqual(sweep((t) => [['the open + set add-on chip label', t[ink], t[fill]]]), [],
+    'the label of a chip that is both set and open');
+});
+
+test('an open + set add-on chip carries a state marker clearing 3:1 on both of its adjacencies', () => {
+  /* Splitting the two rules removes the collision but also removes the only cue
+     that said "open" on a set chip — its border already reads --brand-strong
+     when closed. The ring restores it, and SC 1.4.11 binds because it is a state
+     indicator rather than decoration. Its adjacencies are the fill it sits on
+     and the border it sits against; it never touches the page, and nothing
+     could — no palette token clears 3:1 against --brand AND --page-bg at once
+     (the numbers are in the comment above the rule). */
+  const ring = resolvedDeclaration(OPEN_SET, 'box-shadow');
+  assert.match(ring.value, /^inset\b/,
+    `${ring.sel} draws the open marker outside the chip — its adjacency is then the page, which nothing can clear`);
+  const ink = tokenOf(ring);
+  assert.deepEqual(sweep((t) => [
+    ['the open marker on the chip fill', t[ink], t.brand],
+    ['the open marker on the chip border', t[ink], t.brandStrong],
+  ], AA_LARGE), [], 'SC 1.4.11 — a non-text state indicator needs 3:1 against every colour it touches');
+  // And no other state may claim it, or the ring stops meaning "open".
+  for (const [label, el] of [['closed + set', CLOSED_SET], ['open + unset', OPEN_UNSET]]) {
+    const hits = RULES.filter(([sel, body]) => declaredValue(body, 'box-shadow') && matchesEl(sel, el));
+    assert.deepEqual(hits.map(([sel]) => sel), [], `a ${label} chip must carry no ring`);
+  }
+});
+
 // --- the rating scale (avgColor) -------------------------------------------
 
 /* Evaluate the REAL avgColor rather than parsing it (#890).
@@ -258,6 +343,90 @@ test('the light ramp is unchanged for every value at or above 1', () => {
     .filter((avg) => APP.run(`avgColor(${avg})`) !== `hsl(${avgHue(avg)}, 60%, 30%)`)
     .map((avg) => `Ø${avg.toFixed(1)} -> ${APP.run(`avgColor(${avg})`)}`);
   assert.deepEqual(drifted, [], 'the 1–5 half of the light ramp moved — every consumer of it changed too');
+});
+
+// --- the session stamps (#1040) ---------------------------------------------
+
+/* The Stempelkarte on the game detail screen re-inks its whole component from
+   one custom property, `--sc`, which the view sets from scoreColor(). So the
+   whole 0-5 ramp lands on a fill mixed from itself, on every design — three
+   pairs, each at a different bar, none of them checkable by eye.
+
+   Everything below reads the real declarations out of styles.css rather than
+   restating them. That is what makes the numbers mean anything: the sweeps
+   measure "score ink on the stamp's fill", and a change that inked the small
+   lines with `--sc` instead of `--ink` would otherwise leave every sweep here
+   green while putting real body text at 4.15:1. */
+const stampFill = (t, ink) => {
+  const decl = bodyOf('.stamp::before');
+  assert.ok(decl, '.stamp::before is gone — the sweeps below measure nothing');
+  const m = /background:\s*color-mix\(in oklab,\s*var\(--sc\)\s*([\d.]+)%,\s*var\(--surface\)\)/.exec(decl);
+  assert.ok(m, `.stamp::before no longer fills with a tint of --sc over --surface: ${decl}`);
+  return mixOklab(ink, t.surface, Number(m[1]) / 100);
+};
+
+/* The anti-vacuous half, and the one that actually binds: which token each line
+   is painted in. The sweeps are only a check on the RIGHT pairs while these
+   hold, and a swap here is exactly the change an author would make to get the
+   score colour onto more of the stamp. */
+test('the stamp paints each line in the token its contrast was measured for', () => {
+  assert.match(bodyOf('.stamp'), /color:\s*var\(--ink\)/,
+    '.stamp body text must stay --ink — score ink bottoms out at 4.15:1 on this fill');
+  assert.match(bodyOf('.stamp--muted'), /color:\s*var\(--ink-soft\)/);
+  assert.match(bodyOf('.stamp__date'), /color:\s*var\(--sc\)/,
+    'the date is the one line inked from the score, and the only one big enough for it');
+  assert.match(bodyOf('.stamp__date'), /font-size:\s*var\(--text-xl\)/,
+    '22px/700 is what puts the date at the 3:1 AA-large bar rather than 4.5:1');
+});
+
+test('the stamp date clears AA-large in every score colour, on every design', () => {
+  const failures = [];
+  for (const t of THEMES) {
+    for (const avg of SWEEP) {
+      const ink = avgRgb(avg, t.dark);
+      const ratio = contrast(ink, stampFill(t, ink));
+      if (ratio < AA_LARGE) failures.push(`${name(t)} \u00d8${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [], `.stamp__date is 22px/700 --sc on a tint of itself; needs ${AA_LARGE}:1`);
+});
+
+test('the stamp body lines clear AA on the reddest and the greenest fill alike', () => {
+  const failures = [];
+  for (const t of THEMES) {
+    for (const avg of SWEEP) {
+      const fill = stampFill(t, avgRgb(avg, t.dark));
+      for (const [label, fg] of [['--ink', t.ink], ['--ink-soft', t.inkSoft]]) {
+        const ratio = contrast(fg, fill);
+        if (ratio < AA_TEXT) failures.push(`${name(t)} \u00d8${avg.toFixed(1)} ${label} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures, [], `.stamp__status / .stamp__win sit on the stamp fill; needs ${AA_TEXT}:1`);
+});
+
+/* 1.4.11, and the expensive one. The border is the stamp's ONLY boundary — the
+   fill is within 1.2:1 of the page on several designs — so it is the thing that
+   makes a stamp a stamp rather than four lines of loose text (#1037, one
+   component over). The worn-edge mask spends that contrast directly, and at the
+   0.72 the design first called for it lands at 2.52:1: a deliberately faded
+   boundary, drawn by a rule that reads as pure decoration. */
+test('the worn edge never fades the stamp border below the 3:1 non-text bar', () => {
+  const decl = bodyOf('.stamp::before');
+  const alpha = /rgba\(0,\s*0,\s*0,\s*([\d.]+)\)/.exec(decl);
+  assert.ok(alpha, `.stamp::before lost its worn-edge mask stop: ${decl}`);
+  const floor = Number(alpha[1]);
+  const failures = [];
+  for (const t of THEMES) {
+    const inks = SWEEP.map((avg) => [`\u00d8${avg.toFixed(1)}`, avgRgb(avg, t.dark)]);
+    inks.push(['muted', t.inkSoft]);
+    for (const [label, ink] of inks) {
+      const ratio = contrast(composite(ink, t.page, floor), t.page);
+      if (ratio < AA_LARGE) failures.push(`${name(t)} ${label} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [],
+    `the mask fades the border to ${floor} alpha over the page; needs ${AA_LARGE}:1`);
 });
 
 // --- member avatar palette --------------------------------------------------
@@ -360,6 +529,50 @@ test('the Wunschliste state chip clears AA on every theme', () => {
     'the Wunschliste chip draws --brand-strong on --brand-tint');
 });
 
+/* The applied-filter chip (#1037). Its fill was its ONLY boundary, and a fill is
+   not a boundary: `--brand-tint` measures 1.04-1.16:1 against `--page-bg` on the
+   twelve light designs and 1.47-1.52 on the three dark ones, so the chip has
+   never been visible as a shape anywhere. What rescued it everywhere but Chess
+   was the LABEL — `--brand-strong` is a saturated orange/blue/green, so hue alone
+   said "chip". Chess's accent is `#38343f`, a desaturated near-black, so the
+   label resolves to something indistinguishable from body ink and the chip
+   disappears completely, taking its `.fchip__x` control with it.
+
+   So this is a component defect on all fifteen designs that only one makes
+   visible, and the fix is a border rather than a Chess accent retune — the next
+   desaturated design would reintroduce it.
+
+   The bar is SC 1.4.11's 3:1, not AA text contrast: the chip is a meaningful
+   non-text graphic, and it is the one place a filter can be re-read (and removed)
+   after the panel closes, so "which filters are on" is information the screen
+   states nowhere else.
+
+   The tone is READ OUT of the declaration and resolved per design rather than
+   restated here, which is what makes the sweep discriminating: a retune to
+   `--brand-edge` — the natural "softer border" reach — reddens on the numbers
+   below, where a test asserting the token name by hand would only red on the
+   name. Measured, `--brand-edge` lands 1.37-2.40 and fails on all fifteen. */
+test('the applied-filter chip has a border that clears the 3:1 non-text bar on every design', () => {
+  const chip = bodyOf('.fchip');
+  assert.ok(chip, 'the .fchip rule was not found');
+
+  assert.match(chip, /background:\s*var\(--brand-tint\)/,
+    'the chip no longer washes with --brand-tint, so the reasoning above does not apply to it');
+  assert.match(chip, /color:\s*var\(--brand-strong\)/,
+    'the chip label must stay --brand-strong: plain --brand on a brand tint drops to 4.33:1 on Salbei');
+
+  const declared = /border:\s*[\d.]+px\s+solid\s+(var\(--[\w-]+\)|#[0-9a-f]{3,8})/i.exec(chip);
+  assert.ok(declared, '.fchip declares no solid border — its tint fill is 1.04:1 against the page, so the chip has no boundary at all');
+
+  const failures = [];
+  for (const t of THEMES) {
+    const ratio = contrast(evaluate(declared[1], t.design), t.page);
+    if (ratio < AA_LARGE) failures.push(`${name(t)} — ${declared[1]} on the page = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    `.fchip's border is the chip's only boundary and sits on --page-bg; needs ${AA_LARGE}:1`);
+});
+
 // --- the Chronik milestone rows (#633) --------------------------------------
 
 test('the Chronik milestone row keeps its label, its meta line AND its icon at AA', () => {
@@ -423,6 +636,41 @@ test('the finale stage keeps its sub-line and its note legible on every theme', 
     `--stage-faint must not fall below ${FAINT_FLOOR}:1 on the stage`);
 });
 
+test('the seal\'s padlock clears the 3:1 non-text bar, and the pair cannot flip apart', () => {
+  /* #937. The badge was `color: #fff` on `background: var(--gold)` — 2.45:1,
+     identical on light and dark because --gold does not flip. SC 1.4.11 arguably
+     exempts it (it is aria-hidden decoration and the stage copy carries the
+     meaning), but the glyph is the thing that says "sealed", and --gold is a
+     FILL here and nowhere else in the app, so the fix costs no other screen.
+
+     BOTH declarations are read out of the rule rather than named here, because
+     the failure this guards against is somebody reaching for --gold-deep: it is
+     the obvious "use the existing dark gold", it FLIPS to pale #f0c25c on a dark
+     design (1.5:1 on a fill that stayed put), and even its light value is 2.9:1
+     — just under the bar. A test pinning the current hex would be green against
+     that; a test computing the declared pair is not. */
+  const lock = bodyOf('.stage__lock');
+  assert.ok(lock, 'the .stage__lock rule was not found');
+  const ink = /color:\s*(var\(--[\w-]+\)|#[0-9a-f]{3,8})/i.exec(lock);
+  const fill = /background:\s*(var\(--[\w-]+\)|#[0-9a-f]{3,8})/i.exec(lock);
+  assert.ok(ink && fill, '.stage__lock must declare both its ink and its fill for this to mean anything');
+
+  const failures = [];
+  for (const t of THEMES) {
+    const ratio = contrast(evaluate(ink[1], t.design), evaluate(fill[1], t.design));
+    if (ratio < AA_LARGE) failures.push(`${name(t)} — ${ink[1]} on ${fill[1]} = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    `the padlock is a non-text graphic and needs ${AA_LARGE}:1 against the seal it sits on`);
+
+  /* And the pair must be scheme-INDEPENDENT, which is the property that makes
+     one ratio enough. Asserted as "every design agrees" rather than by reading
+     the dark block, so it holds however the tokens are later expressed. */
+  const ratios = new Set(THEMES.map((t) =>
+    contrast(evaluate(ink[1], t.design), evaluate(fill[1], t.design)).toFixed(2)));
+  assert.equal(ratios.size, 1, `the seal pair differs per design (${[...ratios].join(', ')}) — one of the two now flips`);
+});
+
 test('the curtain still reads as darker than the page it covers', () => {
   /* On a light design that is self-evident. On a dark one it is the constraint
      that made --stage-anchor a token: the stage anchored at #201a15 over a
@@ -450,7 +698,9 @@ const WHITE_EXEMPT = new Map([
   [':root[data-scheme="dark"], .theme-card[data-scheme="dark"]',
     'the dark scheme\'s own defaults: --shade is white BECAUSE the page is dark'],
   ['.gd-img__edit', 'on its own black scrim gradient, not on a theme surface'],
-  ['.stage__lock', 'on --gold, which does not flip: the stage is dark either way'],
+  ['.gd-score .score-info', 'on its own translucent-black scrim over box art, like .gd-img__edit'],
+  ['.gd-score .score-info:hover, .gd-score .score-info:focus-visible',
+    'the same scrim, deepened — still not on a theme surface'],
 ]);
 
 test('no bare white is painted outside the rules that justify one', () => {
@@ -552,6 +802,66 @@ test('a control that inherits its font inherits its colour too', () => {
     .map(([sel]) => sel.replace(/\s+/g, ' ').trim());
   assert.deepEqual(offenders, [],
     'these take the UA\'s buttontext (~black), which is unreadable on a dark design');
+});
+
+// --- die Tafel's score fill (#1056) -----------------------------------------
+
+/* The result row IS its own bar: a `::before` whose width is the Spielwirbel-
+   Score and whose colour is a tint of `scoreColor()` over the surface. So the
+   whole 0-5 ramp lands under the row's own text, on every design — and unlike
+   the stamp's, this ground is under `--ink` AND `--ink-soft` at ordinary body
+   size, which is the 4.5:1 bar rather than 3:1.
+
+   The alpha is read out of the sheet rather than restated, so tightening the
+   tint is what this test measures. It is also what SETS the ceiling: raise it
+   until this goes red and you have found the maximum the ramp allows.
+
+   `.tafel-top .trow` tints from `--gold` instead — one colour, not a ramp, but
+   at a higher alpha, so it is measured separately. */
+test('the row fill is mixed in CSS from the accent the view hands over', () => {
+  const fill = bodyOf('.trow::before');
+  assert.ok(fill, '.trow::before is gone — the sweeps below measure nothing');
+  assert.match(fill, /background:\s*color-mix\(in oklab, var\(--fill-tint\) var\(--fill-a\),\s*var\(--surface\)\)/,
+    'the fill must be a tint of the row accent over --surface, or the sweeps measure the wrong ground');
+});
+
+/* Reads the alpha off whichever `.trow` rule declares it — `.trow` is declared
+   three times (phone, base, one-line) and only one carries the token. */
+const fillAlpha = (sel) => {
+  const bodies = RULES.filter(([s2]) => s2 === sel).map(([, b]) => b);
+  const body = bodies.find((b) => /--fill-a:/.test(b));
+  assert.ok(body, `${sel} declares no --fill-a`);
+  return Number(/--fill-a:\s*(\d+)%/.exec(body)[1]) / 100;
+};
+
+test('every score on the 0-5 ramp clears AA as a row fill, under body ink and muted ink alike', () => {
+  const alpha = fillAlpha('.trow');
+  const failures = [];
+  for (const t of THEMES) {
+    for (const avg of SWEEP) {
+      const ground = mixOklab(avgRgb(avg, t.dark), t.surface, alpha);
+      for (const [label, ink] of [['--ink', t.ink], ['--ink-soft', t.inkSoft]]) {
+        const ratio = contrast(ink, ground);
+        if (ratio < AA_TEXT) failures.push(`${name(t)} ${label} \u00d8${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures.slice(0, 8), [],
+    `${failures.length} pairs fail: the row fill is ${(alpha * 100).toFixed(0)}% of the score colour over --surface; body text on it needs ${AA_TEXT}:1`);
+});
+
+test('the winners\' gold fill clears AA too, at its higher alpha', () => {
+  const alpha = fillAlpha('.tafel-top .trow');
+  const failures = [];
+  for (const t of THEMES) {
+    const ground = mixOklab(t.gold, t.surface, alpha);
+    for (const [label, ink] of [['--ink', t.ink], ['--ink-soft', t.inkSoft]]) {
+      const ratio = contrast(ink, ground);
+      if (ratio < AA_TEXT) failures.push(`${name(t)} ${label} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [],
+    `the winners' rows fill at ${(alpha * 100).toFixed(0)}% --gold over --surface; body text on it needs ${AA_TEXT}:1`);
 });
 
 /* The anti-vacuous half, the shape test/design-tokens.test.js uses for its glyph

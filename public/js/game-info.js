@@ -76,6 +76,21 @@ function playtimeText(game) {
   return one == null ? null : t('gameInfo.playtimeValue', { n: one });
 }
 
+// The weight, as a label + five-dot scale + one-decimal value. One markup for
+// the two presentations that show it — the info sheet's labelled row and the
+// detail card's glance pill (#1039) — because a second copy of the dot loop is
+// exactly the drift `.claude/rules/shared-constants-across-the-stack.md` is
+// about, one component down: the two would keep rounding the same number
+// differently with nothing on screen to say so.
+function weightInner(game) {
+  const filled = Math.round(game.weight);
+  const dots = Array.from({ length: 5 }, (_, i) =>
+    `<span class="weight-dots__dot${i < filled ? ' is-filled' : ''}"></span>`).join('');
+  return `<span class="game-info__weight-label">${esc(t('gameInfo.weight'))}</span>`
+    + `<span class="weight-dots" aria-hidden="true">${dots}</span>`
+    + `<span class="game-info__weight-value">${esc(t('gameInfo.weightValue', { n: fmtAvg(game.weight) }))}</span>`;
+}
+
 // The shared body: weight as a labelled five-dot scale (one decimal — BGG's
 // four decimals would imply a precision the number does not have), the standard
 // metadata facts, and the BGG attribution line the licence asks for wherever
@@ -88,16 +103,7 @@ function playtimeText(game) {
 // omitting the field entirely — is the real enforcement; this is the view half.
 function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {}) {
   const box = h('<div class="game-info__body"></div>');
-  if (game.weight != null) {
-    const filled = Math.round(game.weight);
-    const dots = Array.from({ length: 5 }, (_, i) =>
-      `<span class="weight-dots__dot${i < filled ? ' is-filled' : ''}"></span>`).join('');
-    box.appendChild(h(`<div class="game-info__weight">
-        <span class="game-info__weight-label">${esc(t('gameInfo.weight'))}</span>
-        <span class="weight-dots" aria-hidden="true">${dots}</span>
-        <span class="game-info__weight-value">${esc(t('gameInfo.weightValue', { n: fmtAvg(game.weight) }))}</span>
-      </div>`));
-  }
+  if (game.weight != null) box.appendChild(h(`<div class="game-info__weight">${weightInner(game)}</div>`));
   const facts = h('<div class="game-info__facts"></div>');
   const playtime = playtimeText(game);
   if (playtime) facts.appendChild(factRow(t('gameInfo.playtime'), playtime));
@@ -226,14 +232,58 @@ function openGameInfoSheet(game) {
   backdrop.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 }
 
-// The game-detail section (#717), same body under a section heading — and the
-// ONE surface that opts into the community rating and the uncapped lists (#724).
-// It used to be the long half of this feature; since #729 dropped the
-// description it is the same short fact list the sheet shows, plus the rating.
-// It is not a voting screen, so the vote-anchoring concern that keeps the rating
-// off the cards does not apply here.
-function renderGameInfoSection(game) {
-  const sec = h(`<div class="section gd-about"><h2>${esc(t('gameInfo.title'))}</h2></div>`);
-  sec.appendChild(gameInfoBody(game, { rating: true, listCap: Infinity }));
-  return sec;
+// The three facts worth a glance — weight, playing time, minimum age — as pills
+// for the game detail card (#1039). They lead the page because they are what a
+// group asks before playing; everything else BGG carries is a reference detail
+// and lives in `gameInfoRest` below, behind a disclosure.
+//
+// Here rather than in the view for the reason `gameInfoBody` is: the formatting
+// decisions (the weight's one decimal, playtimeText's range-vs-single rule, the
+// age phrasing) are one set, and a second copy would let two surfaces state the
+// same BGG number differently.
+//
+// Returns null when the game carries none of the three, so the card renders no
+// empty row — the `.gd-facts` div itself would still occupy its gap.
+function gameGlanceFacts(game) {
+  const box = h('<div class="gd-facts"></div>');
+  if (game.weight != null) {
+    box.appendChild(h(`<span class="fact fact--weight">${weightInner(game)}</span>`));
+  }
+  const playtime = playtimeText(game);
+  if (playtime) box.appendChild(factPill(t('gameInfo.playtime'), playtime));
+  if (game.minAge != null) {
+    box.appendChild(factPill(t('gameInfo.minAge'), t('gameInfo.minAgeValue', { n: game.minAge })));
+  }
+  return box.children.length ? box : null;
+}
+
+// One glance pill. The value goes in via textContent for the same reason
+// factRow's does — playtime and age are formatted here, but the function is one
+// edit away from carrying a BGG string, and the two must not disagree about it.
+function factPill(label, value) {
+  const pill = h(`<span class="fact"><span class="fact__label">${esc(label)}</span><span class="fact__value"></span></span>`);
+  pill.querySelector('.fact__value').textContent = value;
+  return pill;
+}
+
+// What is left once the glance facts are on the card (#1039): the reference
+// lists, the community rating, and the BGG credit the licence asks for wherever
+// its data is shown. Rendered inside the detail page's „Mehr zum Spiel"
+// disclosure — the same one-click-away treatment the voting surfaces already
+// give the whole body, which is why the credit may sit in it.
+//
+// Returns null when the game carries no provider data at all, so a hand-typed
+// game's disclosure holds only its provider link.
+function gameInfoRest(game) {
+  if (!hasGameInfo(game, { rating: true })) return null;
+  const box = h('<div class="game-info__body"></div>');
+  const facts = h('<div class="game-info__facts"></div>');
+  if ((game.categories || []).length) facts.appendChild(factRow(t('gameInfo.categories'), factList(game.categories, Infinity)));
+  if ((game.mechanics || []).length) facts.appendChild(factRow(t('gameInfo.mechanics'), factList(game.mechanics, Infinity)));
+  if (game.rating != null) {
+    facts.appendChild(factRow(t('gameInfo.rating'), t('gameInfo.ratingValue', { n: fmtAvg(game.rating) })));
+  }
+  if (facts.children.length) box.appendChild(facts);
+  box.appendChild(h(`<div class="muted game-info__source">${esc(t('gameInfo.source'))}</div>`));
+  return box;
 }

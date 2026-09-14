@@ -104,8 +104,11 @@ function applyBackground(bg) {
 
 // Color for a value on the 0–5 ramp: deep red → red → yellow → green (good).
 // The lightness is 30%, not the more obvious 42%, for contrast (#145): the scale
-// is used BOTH as a fill under white text (.score-pill) and as text/stroke on the
-// page (.gd-ring__num, the ring). At 42% the yellow-green middle only reached
+// is used BOTH as a fill under white text (.score-pill) and as text on the page
+// (the Chronik and results score lines — the game-detail ring this was first
+// derived against is gone since #1039, where the score became a pill on the
+// cover; the text leg still binds elsewhere, so neither half may be dropped).
+// At 42% the yellow-green middle only reached
 // 2.4:1 under white — every rating badge in the app failed WCAG AA. 30% is the
 // lightest value that clears 4.5:1 under white across the whole hue range (worst
 // case 4.5 at avg 3.0) while the ring still clears the 3:1 large-text bar on

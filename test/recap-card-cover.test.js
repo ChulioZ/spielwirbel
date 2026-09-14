@@ -39,7 +39,12 @@ const RID = 'r1';
    `coverUrl(image, COVER_THUMB)` apart from a bare `game.image` — vacuously
    green against a card that forgot to size its thumb at all
    (`.claude/rules/provider-cover-sizing.md`). */
-const IMAGE = 'https://image.api.playstation.com/example/img/abc.jpg';
+/* A SYNTHETIC resizer host since #981: the storefront rules went with the rows
+   that needed them, so with no rule in the table every URL passes through and
+   the `?w=` assertions below would have no subject. The push happens per spec,
+   beside the boot. */
+const IMAGE = 'https://img.sized.test/example/img/abc.jpg';
+const SIZED = { host: 'sized.test', query: (w) => `w=${w}` };
 
 const VOTES = {
   m1: { g1: { rating: 5 }, g2: { rating: 4 } },
@@ -102,6 +107,10 @@ function boot(t) {
   });
   dom.set('accountsActive', () => false);
   dom.set('isLoggedIn', () => false);
+  // See SIZED above: without a rule in the table `coverUrl` is a pass-through
+  // and every `?w=` assertion in this file would be vacuous.
+  dom.run('COVER_RESIZERS').push(SIZED);
+  t.after(() => { dom.run('COVER_RESIZERS').pop(); });
   return dom;
 }
 

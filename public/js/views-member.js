@@ -20,7 +20,15 @@ function memberStats(round, mid) {
   // case worse than the plain count it replaced rather than better. `wins`
   // above stays over every finished night: it is a factual record of nights
   // won, not a claim about skill.
-  const contested = joined.filter((s) => sessionPartyCount(round, s) > 1);
+  // …and a night that was not ABOUT winning is not a contest either (#1038):
+  // „Kein Sieger" and „Fortsetzung folgt" leave the rate untouched rather than
+  // counting as a loss. „Verloren" stays contested and unwon — the table played
+  // to win and did not — so it lowers the rate, which is the honest reading.
+  const notAContest = (s) => {
+    const e = sessionEnding(s);
+    return e === 'noWinner' || e === 'ongoing';
+  };
+  const contested = joined.filter((s) => sessionPartyCount(round, s) > 1 && !notAContest(s));
   const contestedWins = contested.filter((s) => (s.winnerIds || []).includes(mid)).length;
   const winRate = contested.length ? contestedWins / contested.length : null;
 
@@ -127,7 +135,10 @@ async function showMember(rid, mid) {
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'member');
-  app.appendChild(backRow(() => showRound(rid)));
+  // Kept, because the „…“ page menu (#1074) rides on it as a second child —
+  // the #1039 shape, `back-row--split` and all.
+  const back = backRow(() => showRound(rid));
+  app.appendChild(back);
 
   // Persist a partial update, then re-render the page from fresh data so the
   // new name/color is reflected here and everywhere it is derived from.
@@ -141,22 +152,59 @@ async function showMember(rid, mid) {
     }
   }
 
+  const st = memberStats(round, mid);
   const color = memberColor(round, mid);
   // The picker compares against the STORED hex; `color` above is what gets
   // painted, which a dark scheme lifts into a color-mix() (memberTone, #904).
   const ownHex = memberHex(round, mid);
+  const me = currentUserId();
+  const mine = !!me && member.userId === me;
 
-  // Header: big avatar + editable name.
-  const head = h(`<div class="member-head">
-       <span class="avatar member-avatar" style="background:${color}">${avatarFace(initials(member.name), { userId: member.userId })}</span>
-       <div class="member-head__info">
-         <h1></h1>
+  // Link or unlink this seat, then re-render into the other state. Shared by
+  // „Das bin ich“ in the card and „Das bin ich nicht“ in the page menu.
+  const seatPatch = async (userId) => {
+    try {
+      await api('PATCH', `/api/rounds/${rid}/members/${mid}`, { userId });
+      showMember(rid, mid);
+    } catch (e) {
+      toast(e.message === 'seat_taken' ? t('member.toast.seatTaken')
+        : e.message === 'already_seated' ? t('member.toast.alreadySeated')
+          : e.message);
+    }
+  };
+
+  /* Die Tischkarte (#1074): ONE card in the member's colour carrying the whole
+     record — who this is, how they play, what they are strongest at.
+
+     It replaces a head band, a colour-picker section and a „Statistiken" grid,
+     which split the answer across three treatments and put the two RARE
+     questions (what colour, whose seat) above the one the screen exists for.
+     Measured before: the two game tiles — the only imagery on the page — ended
+     at 952px, below the fold on every laptop and on the phone, and the auto-fit
+     grid left one to three empty card slots from 860px up (728px of blank card
+     at 1920).
+
+     `--m-tone` is set on the CARD rather than on the avatar, because four things
+     read it — the wash, the avatar ring, the figure strip's rules and the state
+     chip — and a property set on a child cannot be read by its parent. It is the
+     same `memberColor` value the avatar is painted with, so the tone can never be
+     a second, drifting definition of the member's colour
+     (.claude/rules/shared-constants-across-the-stack.md). */
+  const card = h(`<div class="member-card" style="--m-tone:${color}">
+       <div class="member-card__id">
+         <button type="button" class="avatar member-avatar" style="background:${color}" aria-label="${esc(t('member.colorChange'))}" aria-expanded="false">${avatarFace(initials(member.name), { userId: member.userId })}<span class="member-avatar__pen" aria-hidden="true"><i class="ti ti-pencil"></i></span></button>
+         <div class="member-card__who">
+           <h1></h1>
+           <div class="member-card__state"></div>
+         </div>
        </div>
+       <div class="member-card__figures"></div>
+       <div class="pokale-cards member-card__games"></div>
      </div>`);
-  const h1 = head.querySelector('h1');
+  const h1 = card.querySelector('h1');
   const nameEl = h(`<span class="gd-title" title="${esc(t('member.editName'))}">${esc(member.name)}</span>`);
 
-  // Click the name → inline input; Enter/blur saves, Escape cancels.
+  // Click the name -> inline input; Enter/blur saves, Escape cancels.
   nameEl.addEventListener('click', () => {
     const input = h('<input class="input gd-title-input" />');
     input.value = member.name;
@@ -186,76 +234,86 @@ async function showMember(rid, mid) {
     });
   });
   h1.appendChild(nameEl);
-  app.appendChild(head);
 
-  // Color picker: the curated MEMBER_COLORS palette (no free hex).
-  const colorSec = h(`<div class="section">
-       <h2>${esc(t('member.colorLabel'))}</h2>
-       <div class="member-swatches"></div>
-     </div>`);
-  const swatches = colorSec.querySelector('.member-swatches');
-  MEMBER_COLORS.forEach((c) => {
-    const active = c === ownHex;
-    // Shown in the tone the round actually paints, so the swatch a member wears
-    // and the swatch you pick are the same colour on a dark design too.
-    const sw = h(`<button class="member-swatch${active ? ' is-active' : ''}" aria-pressed="${active}" style="background:${memberTone(c)}" aria-label="${c}">
-         <i class="ti ti-check" aria-hidden="true"></i>
-       </button>`);
-    if (!active) sw.addEventListener('click', () => updateMember({ color: c }));
-    swatches.appendChild(sw);
+  /* The colour picker moved BEHIND the avatar (#1074). It was the second block
+     on the page, above the record — 94px of chrome answering a question asked
+     once per member, and 144px with eight 40px targets on a phone. The avatar IS
+     the colour, so clicking it is where the change belongs.
+
+     openEditor, not openPopover: a popover above 860px and a sheet below, which
+     is what gives the swatch row the focus trap and Back-dismissal on a phone
+     for free (.claude/rules/popover-vs-sheet-editors.md). `aria-expanded` is
+     synced through the onClose hook rather than by wrapping `close` — the
+     wrapped form misses Escape, a backdrop tap, Back and the scroll teardown. */
+  const avatarBtn = card.querySelector('.member-avatar');
+  avatarBtn.addEventListener('click', () => {
+    openEditor(avatarBtn, 'member-color', t('member.colorLabel'), (el, close) => {
+      const swatches = h('<div class="member-swatches"></div>');
+      MEMBER_COLORS.forEach((c) => {
+        const active = c === ownHex;
+        // Shown in the tone the round actually paints, so the swatch a member
+        // wears and the swatch you pick are the same colour on a dark design too.
+        const sw = h(`<button class="member-swatch${active ? ' is-active' : ''}" aria-pressed="${active}" style="background:${memberTone(c)}" aria-label="${c}">
+             <i class="ti ti-check" aria-hidden="true"></i>
+           </button>`);
+        if (!active) sw.addEventListener('click', () => { close(); updateMember({ color: c }); });
+        swatches.appendChild(sw);
+      });
+      el.appendChild(swatches);
+    }, () => avatarBtn.setAttribute('aria-expanded', 'false'));
+    avatarBtn.setAttribute('aria-expanded', 'true');
   });
-  app.appendChild(colorSec);
 
-  // Statistics, computed on demand from the sessions.
-  const st = memberStats(round, mid);
-  const statsSec = h(`<div class="section">
-       <h2>${esc(t('member.statsTitle'))}</h2>
-       <div class="pokale-cards member-stats"></div>
-     </div>`);
-  if (st.joined === 0) {
-    // After the section title. The template has an <h2> (not <h3>) — querying the
-    // wrong tag returned null and threw for EVERY member with no joined sessions
-    // (a freshly-shared grantee is exactly that), crashing the member screen.
-    statsSec
-      .querySelector('h2')
-      .insertAdjacentElement('afterend', h(`<div class="muted member-nosessions">${esc(t('member.noSessions'))}</div>`));
+  /* The state row: at most one chip, plus the one action a newcomer needs.
+
+     „nicht mehr dabei", never „aussortiert" — a person is not a game
+     (.claude/rules/retired-members-filter-sites.md). The chip is mutually
+     exclusive by construction: a retired seat's state is what matters about it,
+     a claimed seat's is whose it is, and „noch bei keiner Session dabei" only
+     ever applies to a seat that is neither. */
+  const state = card.querySelector('.member-card__state');
+  const chip = (cls, text) => h(`<span class="member-card__chip ${cls}">${esc(text)}</span>`);
+  if (member.retired) state.appendChild(chip('member-card__chip--retired', t('member.retiredChip')));
+  else if (mine) state.appendChild(chip('member-card__chip--mine', t('member.mySeat')));
+  else if (st.joined === 0) state.appendChild(chip('member-card__chip--new', t('member.noSessions')));
+
+  /* „Das bin ich" stays a VISIBLE button in the card rather than moving into the
+     „…" menu with its siblings. It is the one action on this screen a newcomer
+     is looking for, and the gate already makes it rare: an unlinked seat, in a
+     round they may link in, while logged in and holding no other seat here.
+     Holding a seat elsewhere hides it entirely — moving seats is a deliberate
+     two-step (release, then claim), so a claim can never silently unlink a chair
+     nobody is looking at and make it invitable. */
+  if (!member.userId && roundCan(round, 'member.link') && isLoggedIn() && me
+      && !round.members.some((m) => m.userId === me)) {
+    const claim = h(`<button class="btn btn--sm btn--primary member-card__claim">${esc(t('member.claim'))}</button>`);
+    claim.addEventListener('click', () => seatPatch(me));
+    state.appendChild(claim);
   }
-  const cards = statsSec.querySelector('.pokale-cards');
 
-  /* The scoping classes carry the phone recomposition (#694). `.member-stats`
-     alone would reach the Pokale tab's own `.pokale-card` uses if the grid were
-     ever reused, and the per-card classes keep the "value leads" reorder off the
-     favourite tile, which has no `__value` at all — see the note there. */
-  const statCard = (icon, label, value, sub) =>
-    h(`<div class="pokale-card member-stats__card">
-         <span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
-         <span class="pokale-card__label">${esc(label)}</span>
-         <span class="pokale-card__value">${esc(value)}</span>
-         <span class="pokale-card__sub">${esc(sub)}</span>
+  /* Five figures in ONE strip, in one treatment. Two of them used to sit in the
+     head band and three in `.pokale-card`s under a „Statistiken" heading — on a
+     page that is nothing but statistics — so the record read as two unrelated
+     things. `flex: 1 1 96px` wraps five to 3 + 2 on a phone with the second row
+     filling the width, and no track can be empty because there is no grid.
+
+     An empty record shows a dash or 0 rather than hiding the strip: a member
+     with no sessions is a real and common state (a freshly-shared grantee is
+     exactly that), and a card that silently loses half its content reads as
+     broken rather than as empty. */
+  const figures = card.querySelector('.member-card__figures');
+  const figure = (label, value) =>
+    h(`<div class="member-figure">
+         <span class="member-figure__value">${esc(value)}</span>
+         <span class="member-figure__label">${esc(label)}</span>
        </div>`);
+  figures.appendChild(figure(t('member.wins'), String(st.wins)));
+  figures.appendChild(figure(t('member.winRate'), st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%'));
+  figures.appendChild(figure(t('member.sessions'), String(st.joined)));
+  figures.appendChild(figure(t('member.winScore'), st.winScore === undefined ? '–' : fmtSigned(st.winScore)));
+  figures.appendChild(figure(t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven)));
 
-  cards.appendChild(statCard('ti-trophy', t('member.wins'), String(st.wins), ''));
-  cards.appendChild(statCard('ti-confetti', t('member.sessions'), String(st.joined), ''));
-  cards.appendChild(
-    statCard(
-      'ti-percentage',
-      t('member.winRate'),
-      st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%',
-      ''
-    )
-  );
-  // Beside the rate, because the two answer the same question differently and
-  // the pair is what makes either legible: the rate ignores how many people
-  // were beaten, the Siegwertung is exactly that correction.
-  cards.appendChild(
-    // ti-medal, not the wins card's ti-trophy: two cards side by side under one
-    // icon read as one statistic shown twice, and the medal is already the
-    // app's mark for a placing (the results rows' rank-medal).
-    statCard('ti-medal', t('member.winScore'), st.winScore === undefined ? '–' : fmtSigned(st.winScore), '')
-  );
-  cards.appendChild(
-    statCard('ti-star', t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven), '')
-  );
+  const cards = card.querySelector('.member-card__games');
 
   /* The two game-link cards: „Stärkstes Spiel" (where this member has won most,
      #920) and „Lieblingsspiel" (what they rate highest). They read as a pair on
@@ -329,7 +387,29 @@ async function showMember(rid, mid) {
       t('member.favoriteNone')
     )
   );
-  app.appendChild(statsSec);
+
+  /* „Am Tisch“ — the round's other seats in the card's foot, below 1280px only.
+     ACTIVE members (`activeMembers`): a forward-facing strip, so a retired
+     member is absent from it while still being reachable as this page's own
+     subject (.claude/rules/retired-members-filter-sites.md). From 1280px the
+     rail carries the same strip, so the foot is hidden by the media query that
+     hides the Start hero rather than being rendered twice. */
+  const seated = activeMembers(round);
+  if (seated.length > 1) {
+    const table = h(`<div class="member-card__table">
+         <span class="member-card__table-label">${esc(t('member.atTable'))}</span>
+         <div class="member-card__seats"></div>
+       </div>`);
+    const seats = table.querySelector('.member-card__seats');
+    seated.forEach((m) => {
+      const here = m.id === mid;
+      const el = h(`<a class="avatar member-seat${here ? ' is-current' : ''}" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}"${here ? ' aria-current="page"' : ''}>${avatarFace(initials(m.name), { userId: m.userId })}</a>`);
+      makeMemberLink(el, rid, m.id);
+      seats.appendChild(el);
+    });
+    card.appendChild(table);
+  }
+  app.appendChild(card);
 
   /* „3 Spiele von Anna" (#973): the boxes this member brings. The fourth reader
      of `game.ownerIds` (#971) and the only one asking from the PERSON's side —
@@ -374,51 +454,166 @@ async function showMember(rid, mid) {
     app.appendChild(ownedSec);
   }
 
-  // Who sits here? Three mutually exclusive states, and the split matters:
-  //   - MY seat (#421) → „Das bin ich nicht", which only nulls the link.
-  //   - someone ELSE's account (a shared grantee, #207) → the owner revokes
-  //     their access; the seat and its ratings/history stay.
-  //   - unlinked → „Das bin ich" (#421).
-  // Before #421 the first two were one branch, so an owner-claimed seat would
-  // have offered „Zugriff entfernen" and hit DELETE …/shares/:userId, which
-  // finds no grant and 404s.
-  const me = currentUserId();
-  const mine = !!me && member.userId === me;
-  const seatPatch = async (userId) => {
-    try {
-      await api('PATCH', `/api/rounds/${rid}/members/${mid}`, { userId });
-      showMember(rid, mid); // re-render into the other state
-    } catch (e) {
-      toast(e.message === 'seat_taken' ? t('member.toast.seatTaken')
-        : e.message === 'already_seated' ? t('member.toast.alreadySeated')
-          : e.message);
-    }
-  };
+  /* The rare seat actions, in the back row's „…“ menu (#1074).
+
+     They were three stacked `.round-footer` blocks under the record — up to two
+     of them at once, each a full-width strip for something done at most once per
+     member. The menu is the Spielepass's (#1039): same class, same position,
+     same „state flips at the top right, the record on the page“ reading. Don't
+     invent a second menu shape.
+
+     Which items exist is unchanged — the three footers' gates are the three
+     branches below, in the same order and running the same flows. Only „Das bin
+     ich“ left, into the card, because it is the one a newcomer looks for.
+
+     Who sits here? Three mutually exclusive states, and the split matters:
+       - MY seat (#421) → „Das bin ich nicht“, which only nulls the link.
+       - someone ELSE's account (a shared grantee, #207) → the owner revokes
+         their access; the seat and its ratings/history stay.
+       - unlinked → „Das bin ich“ (#421), rendered in the card above.
+     Before #421 the first two were one branch, so an owner-claimed seat would
+     have offered „Zugriff entfernen“ and hit DELETE …/shares/:userId, which
+     finds no grant and 404s. */
+  const menuItems = [];
 
   if (mine) {
-    const sec = h(`<div class="round-footer">
-        <p class="muted">${esc(t('member.claimed'))}</p>
-      </div>`);
-    // No confirm, deliberately: this only nulls the link and the button one
-    // click later puts it back. Unlike „Zugriff entfernen" below, which cuts
+    // No confirm, deliberately: this only nulls the link and „Das bin ich“ one
+    // click later puts it back. Unlike „Zugriff entfernen“ below, which cuts
     // another person's access to the round and they cannot undo it themselves.
-    const btn = h(`<button class="link-btn">${esc(t('member.unclaim'))}</button>`);
-    btn.addEventListener('click', () => seatPatch(null));
-    sec.appendChild(btn);
-    app.appendChild(sec);
+    menuItems.push(['ti-user-x', t('member.unclaim'), 'popover__opt--muted', () => seatPatch(null)]);
   } else if (roundCan(round, 'round.shares.manage') && member.userId) {
-    const shareSec = h(`<div class="round-footer">
-        <p class="muted">${esc(t('share.linked'))}</p>
-      </div>`);
-    // #137: the role control. Rendered only once the server confirms this seat
-    // really holds a grant — a seat the OWNER claimed for themselves is linked but
-    // un-granted, and offering a role picker there would 404 on save. The fetch is
-    // owner-only and best-effort: a failure leaves the revoke button working
-    // rather than blanking the section.
+    menuItems.push(['ti-lock-off', t('share.revoke'), 'popover__opt--warn', async () => {
+      if (!await confirmDialog({
+        body: t('share.revokeConfirm', { name: member.name }), confirmLabel: t('share.revoke'),
+      })) return;
+      try {
+        await api('DELETE', `/api/rounds/${rid}/shares/${member.userId}`);
+        showMember(rid, mid); // re-render: the seat is now unlinked
+      } catch (e) { toast(e.message); }
+    }]);
+  }
+
+  /* Retire / restore this seat, and — only where there is demonstrably nothing
+     to keep — delete it outright (#1006).
+
+     Retiring touches nothing but two flags, so every past session's participant
+     list and every game's Spielwirbel-Score stay byte-identical; what changes is
+     that the person leaves the forward-looking lists (`activeMembers`). Deleting
+     is offered only when the seat holds no votes, no recorded win and no team
+     membership anywhere — the "added by mistake" case, which should not leave a
+     retired ghost behind. The server re-checks both; this is what to OFFER. */
+  const myVotes = (round.sessions || []).some((s2) => {
+    const v = (s2.votes || {})[mid];
+    if (v && Object.keys(v).length) return true;
+    if (Array.isArray(s2.winnerIds) && s2.winnerIds.includes(mid)) return true;
+    // Stored as `personIds` (#575) — a team can hold guests too.
+    return (s2.teams || []).some((team) => (team.personIds || []).includes(mid));
+  });
+
+  if (member.retired) {
+    menuItems.push(['ti-arrow-back-up', t('member.restore'), '', async () => {
+      try {
+        await api('POST', `/api/rounds/${rid}/members/${mid}/retire`, { retired: false });
+        toast(t('member.toast.restored', { name: member.name }));
+        showMember(rid, mid);
+      } catch (e) { toast(e.message); }
+    }]);
+  } else {
+    menuItems.push(['ti-user-minus', t('member.retire'), 'popover__opt--warn', async () => {
+      /* The two follow-up questions, asked ONLY when they apply — each is a real
+         consequence the user cannot see from here.
+
+         Solely-owned games are load-bearing rather than a nicety: `ownedByParty`
+         keeps a game in the draw only while an owner is seated, and a retired
+         member is never seated, so those games would silently vanish from every
+         draw with nothing on screen to explain it.
+
+         The seat link is offered only for the caller's OWN seat, because
+         releasing someone else's is what `PATCH …/members/:mid` refuses on
+         purpose — nulling a grantee's link leaves their grant matching on
+         roundId+userId with no chair, invitable to someone else
+         (.claude/rules/member-seat-self-claim.md §1). For another person's
+         linked seat the honest path is „Zugriff entfernen“ above, which drops
+         the grant and the link together. */
+      const solely = (round.games || []).filter((g) => !g.retired && !g.completed && !g.wish
+        && Array.isArray(g.ownerIds) && g.ownerIds.length === 1 && g.ownerIds[0] === mid);
+      const options = [];
+      if (solely.length) {
+        options.push({ id: 'games', checked: true,
+          label: tn(solely.length, 'member.retireGamesOne', 'member.retireGames', { n: solely.length, name: member.name }) });
+      }
+      if (member.userId && me && member.userId === me) {
+        options.push({ id: 'seat', checked: true, label: t('member.retireSeat') });
+      }
+      const answer = await confirmDialog({
+        body: t('member.retireConfirm', { name: member.name }),
+        confirmLabel: t('member.retire'), icon: 'ti-user-minus', options,
+      });
+      const ok = options.length ? answer.ok : answer;
+      if (!ok) return;
+      const picked = options.length ? answer.picked : {};
+      try {
+        if (picked.games) {
+          for (const g of solely) {
+            await api('POST', `/api/rounds/${rid}/games/${g.id}/retire`, { retired: true });
+          }
+        }
+        if (picked.seat) await api('PATCH', `/api/rounds/${rid}/members/${mid}`, { userId: null });
+        await api('POST', `/api/rounds/${rid}/members/${mid}/retire`, { retired: true });
+        toast(t('member.toast.retired', { name: member.name }));
+        showMember(rid, mid);
+      } catch (e) { toast(e.message); }
+    }]);
+  }
+  if (!myVotes && roundCan(round, 'round.delete')) {
+    menuItems.push(['ti-trash', t('member.delete'), 'popover__opt--warn', async () => {
+      if (!await confirmDialog({
+        body: t('member.deleteConfirm', { name: member.name }),
+        confirmLabel: t('member.delete'), icon: 'ti-trash',
+      })) return;
+      try {
+        await api('DELETE', `/api/rounds/${rid}/members/${mid}`);
+        toast(t('member.toast.deleted', { name: member.name }));
+        showRound(rid);
+      } catch (e) { toast(e.message); }
+    }]);
+  }
+
+  if (menuItems.length) {
+    back.classList.add('back-row--split');
+    const menuBtn = h(`<button type="button" class="btn btn--sm gd-menu" aria-label="${esc(t('detail.moreActions'))}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);
+    // Buttons only, so this is a popover at EVERY width — the account menu's
+    // case, not the editors' (.claude/rules/popover-vs-sheet-editors.md §2b).
+    // `aria-expanded` is synced through openPopover's onClose rather than by
+    // wrapping `close`: the wrapped form misses four of the six exits (Escape,
+    // a backdrop tap, Back, the page scroll that tears a popover down) and
+    // leaves the trigger claiming a panel that is gone.
+    menuBtn.addEventListener('click', () => {
+      openPopover(menuBtn, (el, close) => {
+        el.classList.add('popover--menu');
+        menuItems.forEach(([icon, label, cls, run]) => {
+          const b = h(`<button class="popover__opt ${cls}"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
+          b.addEventListener('click', () => { close(); run(); });
+          el.appendChild(b);
+        });
+      }, () => menuBtn.setAttribute('aria-expanded', 'false'));
+      menuBtn.setAttribute('aria-expanded', 'true');
+    });
+    back.appendChild(menuBtn);
+  }
+
+  /* The grantee's role select keeps a compact row UNDER the card, owner-only.
+     Not a menu item: a `<select>` does not belong in a buttons-only popover, and
+     `share.linked` — which used to be the footer's lead text — is the row's
+     own now. Rendered only once the server confirms this seat really holds a
+     grant: a seat the OWNER claimed for themselves is linked but un-granted, and
+     offering a role picker there would 404 on save. The fetch is best-effort. */
+  if (!mine && roundCan(round, 'round.shares.manage') && member.userId) {
     api('GET', `/api/rounds/${rid}/shares`).then((shares) => {
-      const grant = (shares || []).find((s) => s.userId === member.userId);
+      const grant = (shares || []).find((sh) => sh.userId === member.userId);
       if (!grant) return;
-      const field = h(`<div class="field">
+      const field = h(`<div class="field member-role">
+          <p class="muted">${esc(t('share.linked'))}</p>
           <label for="shareRole">${esc(t('share.role'))}</label>
           <select id="shareRole" class="input">
             ${ROUND_ROLES.filter((r) => r !== 'owner').map((r) =>
@@ -435,31 +630,10 @@ async function showMember(rid, mid) {
           toast(t('share.roleSaved', { name: member.name }));
         } catch (e) { toast(e.message); }
       });
-      shareSec.insertBefore(field, shareSec.firstChild);
+      app.appendChild(field);
     }).catch(() => {});
-    const revokeBtn = h(`<button class="link-btn round-footer__danger">${esc(t('share.revoke'))}</button>`);
-    revokeBtn.addEventListener('click', async () => {
-      if (!await confirmDialog({
-        body: t('share.revokeConfirm', { name: member.name }), confirmLabel: t('share.revoke'),
-      })) return;
-      try {
-        await api('DELETE', `/api/rounds/${rid}/shares/${member.userId}`);
-        showMember(rid, mid); // re-render: the seat is now unlinked
-      } catch (e) { toast(e.message); }
-    });
-    shareSec.appendChild(revokeBtn);
-    app.appendChild(shareSec);
-  } else if (!member.userId && roundCan(round, 'member.link') && isLoggedIn() && me
-      && !round.members.some((m) => m.userId === me)) {
-    // Holding a seat elsewhere in this round hides the button entirely — moving
-    // seats is a deliberate two-step (release, then claim), so that a claim can
-    // never silently unlink a chair you aren't looking at and make it invitable.
-    const sec = h('<div class="round-footer"></div>');
-    const btn = h(`<button class="link-btn">${esc(t('member.claim'))}</button>`);
-    btn.addEventListener('click', () => seatPatch(me));
-    sec.appendChild(btn);
-    app.appendChild(sec);
   }
+
 }
 
 // The "+" trigger for the member strips, built in one place so the hero and the

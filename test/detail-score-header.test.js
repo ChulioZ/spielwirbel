@@ -25,6 +25,13 @@
  * The results screen deliberately KEEPS its `.score-why` line, which is why
  * `scoreReason()` stays in game-stats.js — `test/score-results-view.test.js` guards
  * that end and must stay green unchanged.
+ *
+ * #1039 moved the number again: the 88px ring and its „Spielwirbel-Score"
+ * caption are gone, and the score is a pill on the cover's top-right corner —
+ * exactly where every Regal card already puts it — with the ⓘ beside it. The
+ * removals above all still hold, and are now asserted over the card as a whole:
+ * a caption that came back would be on the page again whether or not anything
+ * called it `.score-label`.
  */
 
 const { test } = require('node:test');
@@ -33,11 +40,10 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const { loadApp, translator } = require('./support/dom');
+const { loadApp } = require('./support/dom');
 const { SUPPORTED_LOCALES } = require('../public/js/locales');
 
 const RID = 'r1';
-const t = translator('de');
 
 /* The lang files are plain browser scripts registering into a global I18N, so
    they load in a tiny vm sandbox — the same seam test/i18n-parity.test.js uses.
@@ -110,51 +116,64 @@ function bootApp(t_) {
   return { dom, round };
 }
 
-/** The header's stats block — the ring and whatever sits under it. */
-function statsBlock(dom) {
-  return dom.app.querySelector('.gd-head .gd-stats');
-}
+/** The score badge on the cover (#1039) — the pill and its ⓘ. */
+const scoreBadge = (dom) => dom.app.querySelector('.gd-head .gd-cover .gd-score');
+/** The whole game card, which is what the removals below are asserted over. */
+const card = (dom) => dom.app.querySelector('.gd-head');
 
-test('a rated game shows the score name and its ⓘ under the ring, and nothing else', async (t_) => {
+test('a rated game shows the score as a pill on the cover, with its ⓘ and nothing else', async (t_) => {
   const { dom } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g1');
-  const stats = statsBlock(dom);
-  assert.ok(stats, 'the score ring block renders');
+  const badge = scoreBadge(dom);
+  assert.ok(badge, 'the score badge renders on the cover');
 
-  const labels = [...stats.querySelectorAll('.score-label')];
-  assert.equal(labels.length, 1, 'exactly one label under the ring');
-  // Asserting the surviving label's TEXT, not just the count: a spec that only
-  // counted elements would pass just as well if the selector had stopped
-  // matching anything at all.
-  assert.match(labels[0].textContent, /Spielwirbel-Score/, 'the one label names the score');
-  assert.equal(labels[0].textContent.trim(), t('score.name'), 'and carries no second sentence');
+  const pill = badge.querySelector('.score-pill--lg');
+  assert.ok(pill, 'the score is the cover pill');
+  // The value, so this cannot pass against an empty pill. g1's veto pulls the
+  // score below its 3,0 mean, which is also what gives `scoreReason()` below
+  // something to say.
+  assert.match(pill.textContent.trim(), /^\d,\d$/, `the pill reads „${pill.textContent.trim()}"`);
+  // The visible caption went with the ring, so the pill carries its subject in
+  // the accessible name instead — and the name CONTAINS the visible text.
+  assert.match(pill.getAttribute('aria-label'), /Spielwirbel-Score/);
+  assert.ok(pill.getAttribute('aria-label').includes(pill.textContent.trim()));
+  assert.ok(badge.querySelector('.score-info'), 'the ⓘ button survived');
 
-  assert.ok(stats.querySelector('.score-info'), 'the ⓘ button survived');
-  assert.doesNotMatch(stats.textContent, /Ø/, 'no raw average');
-  assert.doesNotMatch(stats.textContent, /Bewertung/, 'no ratings count');
-  assert.doesNotMatch(stats.textContent, /Session/, 'no session count');
+  // The ring and its column are gone outright, not merely restyled.
+  assert.equal(card(dom).querySelector('.gd-ring'), null, 'the score ring is still on the page');
+  assert.equal(card(dom).querySelector('.gd-stats'), null, 'the stats column is still on the page');
+  assert.equal(card(dom).querySelector('.score-label'), null, 'the caption came back');
+
+  // The #919 removals, now asserted over the whole card rather than one block:
+  // a line that returned would be on the page whatever it was called.
+  assert.doesNotMatch(card(dom).textContent, /Ø/, 'no raw average');
+  assert.doesNotMatch(card(dom).textContent, /Bewertung/, 'no ratings count');
+  assert.doesNotMatch(card(dom).textContent, /Session/, 'no session count');
 });
 
-test('the reason line is gone from the detail header even when the score diverges', async (t_) => {
+test('the reason line is gone from the detail card even when the score diverges', async (t_) => {
   const { dom, round } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g1');
-  const stats = statsBlock(dom);
   // Anti-vacuous: prove the fixture really does produce a reason, so the
   // assertions below test a REMOVED line rather than an empty one.
   dom.set('__round', round);
   assert.ok(dom.run('scoreReason(gameStats(__round, "g1"))'), 'the fixture produces a reason line');
-  assert.equal(stats.querySelector('.score-why'), null, 'no .score-why on the detail header');
-  assert.doesNotMatch(stats.textContent, /gar nicht/, 'and its text is not rendered elsewhere');
+  assert.equal(card(dom).querySelector('.score-why'), null, 'no .score-why on the detail card');
+  assert.doesNotMatch(card(dom).textContent, /gar nicht/, 'and its text is not rendered elsewhere');
 });
 
 test('a played-but-unrated game shows no evidence line either', async (t_) => {
   const { dom } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g2');
-  const stats = statsBlock(dom);
-  assert.ok(stats, 'the score ring block renders');
-  assert.ok(stats.querySelector('.gd-ring__num'), 'it still carries a ring number');
-  assert.equal(stats.querySelectorAll('.score-label').length, 1, 'one label, the score name');
-  assert.doesNotMatch(stats.textContent, /gespielt/, 'no „×gespielt" evidence line');
+  const badge = scoreBadge(dom);
+  assert.ok(badge, 'the score badge renders');
+  // Since #894 a played-but-unrated game still HAS a score (the play lift), so
+  // it gets a real pill rather than the „neu" variant — which is what makes the
+  // absence below about the evidence line and not about an empty page.
+  assert.ok(badge.querySelector('.score-pill--lg'), 'it still carries a number');
+  assert.equal(badge.querySelector('.score-pill--none'), null, 'and it is not the unscored variant');
+  assert.equal(card(dom).querySelector('.score-label'), null, 'no caption');
+  assert.doesNotMatch(card(dom).textContent, /gespielt/, 'no „×gespielt" evidence line');
 });
 
 test('the ⓘ sheet no longer promises the raw average is printed on the page', async (t_) => {
@@ -169,7 +188,13 @@ test('the ⓘ sheet no longer promises the raw average is printed on the page', 
 });
 
 test('the removed keys are gone from every shipped locale', () => {
-  const gone = ['detail.ratingsLine', 'detail.ratingsLineOne', 'score.infoRaw'];
+  const gone = [
+    'detail.ratingsLine', 'detail.ratingsLineOne', 'score.infoRaw',
+    // #1039's three: the empty-ring caption (the unscored state now takes the
+    // Regal's own „neu" pill), and the two strings of the `.gd-expansions`
+    // section the chip replaced.
+    'detail.noRating', 'detail.expansionsEmpty', 'detail.expansionAdd',
+  ];
   for (const name of SUPPORTED_LOCALES) {
     const dict = loadLocale(name);
     // Anti-vacuous floor: a typo'd path or an empty dictionary would satisfy

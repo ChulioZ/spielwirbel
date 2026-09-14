@@ -156,7 +156,7 @@ function renderPokaleTab(round) {
   // the standings are the permanent group's leaderboard, and a one-evening
   // visitor in it would be noise (#458).
   const wins = {};
-  round.members.forEach((m) => (wins[m.id] = 0));
+  activeMembers(round).forEach((m) => (wins[m.id] = 0));
   finished.forEach((s) =>
     (s.winnerIds || []).forEach((wid) => {
       if (wid in wins) wins[wid]++;
@@ -169,7 +169,7 @@ function renderPokaleTab(round) {
   // because it is what the group recognises; both are shown, which is what
   // explains why 12 Siege can sit below 5.
   const scores = memberWinScores(round, sessionPartyGroups);
-  const ranked = [...round.members].sort((a, b) => scores[b.id] - scores[a.id]);
+  const ranked = [...activeMembers(round)].sort((a, b) => scores[b.id] - scores[a.id]);
 
   // THE PODIUM IS THE TOP THREE PLACES, and nothing else decides who stands.
   //
@@ -329,7 +329,9 @@ function renderPokaleTab(round) {
 
   // Streak: how many of the latest nights in a row one member won alone.
   // Chronological by `createdAt` (when the night happened), like the Chronik —
-  // `finishedAt` moves when an old session is re-finished.
+  // `finishedAt` moves when an old session is re-finished. The Discover
+  // aggregate missed this note until #1059; the rule is now written down in
+  // .claude/rules/server-computed-calendar-periods.md §7.
   // A night any guest won is skipped entirely (#458): a session-only visitor
   // must neither break nor extend a member's streak, and treating their win as
   // an ordinary sole win would silently blank the card (there is no member row
@@ -343,8 +345,19 @@ function renderPokaleTab(round) {
   // break nor extend a streak. A one-person session is single-winner by
   // definition, so twenty logged solo plays read as a twenty-night streak.
   const isSolo = (s) => sessionPartyCount(round, s) === 1;
+  // A night recorded as „Kein Sieger" or „Fortsetzung folgt" (#1038) is skipped
+  // for the SAME reason as a solo one: it was not a contest, so it can neither
+  // break nor extend a streak. „Verloren" is NOT skipped — the table played to
+  // win and did not, which breaks a streak exactly as somebody else's win does
+  // (it already did, via `ws.length !== 1`; naming it here stops a future reader
+  // from folding all three together). An UNRECORDED night also still breaks one;
+  // the fix for that is recording it.
+  const notAContest = (s) => {
+    const e = sessionEnding(s);
+    return e === 'noWinner' || e === 'ongoing';
+  };
   const chrono = [...finished]
-    .filter((s) => !wonByGuest(s) && !isSolo(s))
+    .filter((s) => !wonByGuest(s) && !isSolo(s) && !notAContest(s))
     .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
   let streakMember = null;
   let streak = 0;

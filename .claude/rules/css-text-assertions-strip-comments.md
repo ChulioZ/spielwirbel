@@ -56,6 +56,15 @@ Two follow-on habits from the same bug:
   own `.member-stats__card` rules as leaks, which is the loud failure that
   reveals the quiet one.
 
+  **A hand-written `\b` is the same mistake, and the paragraph above does not
+  look like it applies** — it is phrased around the helper, so an author who
+  never calls `whole()` reads past it. #1040's tilt guard matched
+  `/\.stamps?\b/`, which sees `.stamp` and `.stamp--muted` (a `-` ends the word)
+  but never `.stamp__date` — i.e. not the line a tilt would most naturally be put
+  on. Measured (#1041): with `transform: rotate(2deg)` on `.stamp__date` that
+  guard stayed **green**. Read this rule as being about the `\b`, not about the
+  helper that spells it.
+
 ## In HTML strip too — in JS, assert UNIQUENESS instead (#637)
 
 The trap is the *first match*, not CSS, so it follows the same regex into any
