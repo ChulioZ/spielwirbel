@@ -938,6 +938,51 @@ test('the friend card\'s cover wash keeps its text over AA, for any cover', () =
     + 'do not widen this test.');
 });
 
+/* The Tischkarte's initials watermark (#1075). It sits in the card's top-right
+   corner on top of the wash, and the SIZE is what keeps it off the text — both
+   sizes were measured against the painted ink of every label, figure, chip and
+   ribbon and are written into the stylesheet beside the rule.
+
+   One thing can still reach it and does: a very long NAME at 1280px, which is
+   `--ink`. So that is what this checks — and `--ink-soft` deliberately is not,
+   because no --ink-soft surface overlaps the mark at the shipped sizes.
+
+   Worth knowing before reading the number: the card's radial peak ALREADY
+   measures 3.26:1 for --ink-soft with no watermark at all. That is #1074's own
+   reason the corner carries no text; it is not something this added, and it is
+   why a naive "every ink over the densest pixel" sweep here would fail on
+   shipped code and tempt someone to lighten the wrong thing.
+
+   BE HONEST ABOUT WHAT THIS CAN SEE. `--ink` is very dark, so the bar is not
+   reached until roughly .5 alpha — measured: .30 still passes at 5.67:1, .50
+   fails at 4.36:1. So this catches a watermark turned into a BLOCK, not one
+   nudged a few points up. What really bounds the alpha here is taste and the
+   geometry above, neither of which a contrast test can hold; the number that
+   ships is the issue's, and the sizes beside it are the measured half. */
+test('the Tischkarte watermark leaves the name legible over it', () => {
+  const body = bodyOf('.member-card__mark');
+  assert.ok(body, '.member-card__mark is gone — did the watermark move?');
+  const m = /opacity:\s*([\d.]+)/.exec(body);
+  assert.ok(m, `the watermark declares no opacity: ${body}`);
+  const alpha = Number(m[1]);
+
+  const failures = [];
+  for (const t of THEMES) {
+    for (const tone of MEMBER_COLORS) {
+      // The card: a 13% linear wash, then the 26% radial at its densest, then
+      // the watermark on top — all of them the member's own tone.
+      const base = mixOklab(tone, t.surface, 0.13);
+      const wash = mixOklab(tone, base, 0.26);
+      const ground = composite(tone, wash, alpha);
+      const ratio = contrast(t.ink, ground);
+      if (ratio < AA_TEXT) failures.push(`${name(t)} on ${tone} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures.slice(0, 6), [],
+    `the watermark paints the member tone at ${(alpha * 100).toFixed(0)}% over the card's wash; `
+    + `the name (--ink) can overlap it at 1280px and needs ${AA_TEXT}:1`);
+});
+
 /* The anti-vacuous half, the shape test/design-tokens.test.js uses for its glyph
    list: an exemption nobody re-checks rots into a selector that no longer exists,
    and every stale entry silently widens the assertion above. */

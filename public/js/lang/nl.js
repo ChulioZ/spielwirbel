@@ -590,6 +590,8 @@ I18N.nl = {
   'member.winRate': 'Winstpercentage',
   'member.winScore': 'Winstscore',
   'member.avgGiven': 'Ø gegeven beoordeling',
+  'member.ribbonBest': 'Sterkste',
+  'member.ribbonFav': 'Favoriet',
   'member.bestGame': 'Sterkste spel',
   'member.bestGameNone': 'Nog geen overwinningen',
   'member.favorite': 'Favoriete spel',

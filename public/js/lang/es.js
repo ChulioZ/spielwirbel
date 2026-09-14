@@ -594,6 +594,8 @@ I18N.es = {
   'member.winRate': 'Porcentaje de victorias',
   'member.winScore': 'Puntuación de victorias',
   'member.avgGiven': 'Ø de sus valoraciones',
+  'member.ribbonBest': 'El mejor',
+  'member.ribbonFav': 'Favorito',
   'member.bestGame': 'Juego más fuerte',
   'member.bestGameNone': 'Todavía sin victorias',
   'member.favorite': 'Juego favorito',

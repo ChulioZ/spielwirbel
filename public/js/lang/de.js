@@ -613,6 +613,8 @@ I18N.de = {
   'member.winRate': 'Siegquote',
   'member.winScore': 'Siegwertung',
   'member.avgGiven': 'Ø vergebene Wertung',
+  'member.ribbonBest': 'Stärkstes',
+  'member.ribbonFav': 'Liebling',
   'member.bestGame': 'Stärkstes Spiel',
   'member.bestGameNone': 'Noch keine Siege',
   'member.favorite': 'Lieblingsspiel',

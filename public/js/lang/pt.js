@@ -592,6 +592,8 @@ I18N.pt = {
   'member.winRate': 'Taxa de vitórias',
   'member.winScore': 'Pontuação de vitórias',
   'member.avgGiven': 'Ø nota dada',
+  'member.ribbonBest': 'O melhor',
+  'member.ribbonFav': 'Favorito',
   'member.bestGame': 'Jogo mais forte',
   'member.bestGameNone': 'Nenhuma vitória ainda',
   'member.favorite': 'Jogo favorito',

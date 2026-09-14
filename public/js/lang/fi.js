@@ -564,6 +564,8 @@ I18N.fi = {
   'member.winRate': 'Voittoprosentti',
   'member.winScore': 'Voittopisteet',
   'member.avgGiven': 'Ø annettu arvio',
+  'member.ribbonBest': 'Vahvin',
+  'member.ribbonFav': 'Suosikki',
   'member.bestGame': 'Vahvin peli',
   'member.bestGameNone': 'Ei vielä voittoja',
   'member.favorite': 'Lempipeli',

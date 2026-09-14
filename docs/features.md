@@ -248,7 +248,13 @@ What the app does, in detail. For a short overview see the
   the Pokale podium, or a session's participant list): **one card in that
   member's own colour** carrying the whole record — wins, sessions joined, win
   rate, Siegwertung, average rating given, their strongest game (the one they
-  hold the highest Siegwertung in) and their favorite game. The name is renamed
+  hold the highest Siegwertung in) and their favorite game. The card wears that
+  colour rather than merely being tinted by it: the **win rate is the ring
+  around the avatar**, sweeping into place once when the page opens; the
+  member's **initials stand as a watermark** in the card's corner; the
+  Siegwertung grows as a bar from the centre, right for a positive score and
+  left for a negative one; and the two game tiles stand as **boxes** with a
+  ribbon naming which is which. The name is renamed
   in place, the avatar colour is picked by **clicking the avatar**, and the rare
   seat actions (claiming or releasing a seat, revoking a grantee's access,
   removing someone from the round or deleting an unused seat) live in a
