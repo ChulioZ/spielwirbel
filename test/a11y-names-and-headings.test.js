@@ -302,10 +302,17 @@ test('every field the add-game sheet renders has an accessible name', async (t) 
  * popover's copy drifting back. Verified by deleting the attribute on purpose.
  */
 test('the game-detail tag popover names its new-tag field', () => {
-  // The two renderings sat in one file until #956 moved the Tags SCREEN to
-  // views-round-settings.js; the game-detail popover stayed. Both are scanned so
-  // the count still means "every rendering", not "every one in this file".
-  const FILES = ['public/js/views-round-detail.js', 'public/js/views-round-settings.js'];
+  /* The two renderings sat in one file until #956 moved the Tags SCREEN to
+     views-round-settings.js, and #968 moved the game-detail POPOVER again, into
+     game-editors.js. All three are scanned so the count still means "every
+     rendering", not "every one in this file" — the exact stale-pointer class
+     .claude/rules/token-friendly-source-files.md is about, and this test found
+     it by going red rather than by anyone remembering. */
+  const FILES = [
+    'public/js/game-editors.js',
+    'public/js/views-round-detail.js',
+    'public/js/views-round-settings.js',
+  ];
   const src = FILES.map((f) => fs.readFileSync(path.join(ROOT, f), 'utf8')).join('\n');
   const fields = [...src.matchAll(/<input\b[^>]*?placeholder="\$\{esc\(t\('tags\.addPlaceholder'\)\)\}"[^>]*>/g)]
     .map((m) => m[0].replace(/\s+/g, ' '));

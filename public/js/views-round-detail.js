@@ -206,6 +206,28 @@ async function showGameDetail(rid, gameId) {
     }
   }
 
+  /* The five field editors live in public/js/game-editors.js since #968. They
+     take an explicit context instead of closing over this function's scope —
+     the SAME context for all five, so a reader learns the shape once — and it is
+     bound here into the one-argument callbacks `editableTag` and the „…" menu
+     already expect.
+
+     `refresh` rather than letting them call `showGameDetail`: that keeps the
+     dependency one-way, so the editors file needs nothing from this one. */
+  // The game's owned expansions (#653), used by the chip below and derived
+  // again inside the expansions editor — one line each, rather than a value in
+  // the context that is a pure function of another value already in it.
+  const owned = game.expansions || [];
+
+  const editorCtx = {
+    rid, round, game, updateGame, refresh: () => showGameDetail(rid, gameId),
+  };
+  const editPlayers = (anchor) => openPlayersPopover(editorCtx, anchor);
+  const editOwners = (anchor) => openOwnersPopover(editorCtx, anchor);
+  const editTags = (anchor) => openTagsPopover(editorCtx, anchor);
+  const editImage = (anchor) => openImagePopover(editorCtx, anchor);
+  const editExpansions = (anchor) => openExpansionEditor(editorCtx, anchor);
+
   // A tag chip that opens an editor (#424). A real <button>, not a span with a
   // click handler: Tab reaches it, Enter *and* Space activate it, and closing
   // the editor restores focus to it — all from the platform, which is the
@@ -249,372 +271,6 @@ async function showGameDetail(rid, gameId) {
   }
 
   // Min–max player inputs, as a popover or a sheet (see openEditor).
-  function openPlayersPopover(anchor) {
-    openEditor(anchor, 'players', t('detail.onboard.players'), (el, close) => {
-      const min = h('<input class="input" inputmode="numeric" />');
-      const max = h('<input class="input" inputmode="numeric" />');
-      if (Number.isInteger(game.minPlayers)) min.value = game.minPlayers;
-      if (Number.isInteger(game.maxPlayers)) max.value = game.maxPlayers;
-      [min, max].forEach((inp) => inp.addEventListener('input', () => {
-        const digits = inp.value.replace(/\D/g, '');
-        if (inp.value !== digits) inp.value = digits;
-      }));
-      const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
-      const save = () => {
-        const mn = parseInt(min.value, 10);
-        const mx = parseInt(max.value, 10);
-        if (!Number.isInteger(mn) || mn < 1 || !Number.isInteger(mx) || mx < 1)
-          return toast(t('addGame.toast.needPlayers'));
-        if (mx < mn) return toast(t('addGame.toast.playersRange'));
-        close();
-        updateGame({ minPlayers: mn, maxPlayers: mx });
-      };
-      okBtn.addEventListener('click', save);
-      [min, max].forEach((inp) => inp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); save(); }
-      }));
-      const row = h('<div class="pp-row"></div>');
-      row.appendChild(min);
-      row.appendChild(h('<span>–</span>'));
-      row.appendChild(max);
-      row.appendChild(okBtn);
-      el.appendChild(row);
-      return () => { min.focus(); min.select(); };
-    });
-  }
-
-  // Who owns the box (#971). Built like the tags popover next to it — chips over
-  // the round's members, OK commits — with nothing to create inline: a member is
-  // a seat of the round, not something this screen may mint.
-  //
-  // A WISH shows no row at all (the caller decides that), so this is only ever
-  // reached for a game the round actually owns.
-  function openOwnersPopover(anchor) {
-    openEditor(anchor, 'owners', t('detail.onboard.owners'), (el, close) => {
-      const selected = new Set(game.ownerIds || []);
-      el.appendChild(renderOwnerChips(round, selected));
-      const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
-      okBtn.addEventListener('click', () => {
-        close();
-        updateGame({ ownerIds: [...selected] });
-      });
-      const row = h('<div class="pp-row"></div>');
-      row.appendChild(okBtn);
-      el.appendChild(row);
-    });
-  }
-
-  // Edit the game's custom-tag assignment (#238): toggle the round's tags,
-  // create a new one inline, then OK applies the whole selection at once (like
-  // the players popover — one PATCH, one re-render).
-  function openTagsPopover(anchor) {
-    openEditor(anchor, 'tags', t('detail.onboard.tags'), (el, close) => {
-      const selected = new Set(game.tagIds || []);
-      const tags = (round.tags || []).slice(); // local copy; never mutate the cached round
-      const chipsWrap = h('<div class="filter-chips"></div>');
-      const renderChips = () => {
-        chipsWrap.replaceChildren(...tags.map((tg) => {
-          const chip = h(`<button type="button" class="chip${selected.has(tg.id) ? ' is-on' : ''}"><i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}</button>`);
-          chip.addEventListener('click', () => {
-            if (selected.has(tg.id)) selected.delete(tg.id);
-            else selected.add(tg.id);
-            chip.classList.toggle('is-on', selected.has(tg.id));
-          });
-          return chip;
-        }));
-        chipsWrap.hidden = tags.length === 0;
-      };
-      renderChips();
-      el.appendChild(chipsWrap);
-
-      // aria-label as well as placeholder: a placeholder is not a label (it is
-      // not exposed as the accessible name and it disappears on input), so
-      // without this the field is an unnamed text input to a screen reader.
-      // The Tags screen's own copy of this control already carries it.
-      const input = h(`<input class="input" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}"
-              aria-label="${esc(t('tags.addPlaceholder'))}" />`);
-      const addBtn = h(`<button class="btn">${esc(t('tags.add'))}</button>`);
-      // Icon picker for the inline "create new tag" (#255). The trigger joins
-      // the input row and the grid opens below it (#293) — an always-open grid
-      // used to push the chips and the input out of this popover entirely.
-      const picker = tagIconPicker(null);
-      // Returns false only when a real creation attempt failed, so the OK
-      // handler below can keep the popover open instead of discarding the
-      // typed name (an empty input is a no-op, not a failure).
-      const create = async () => {
-        const name = input.value.trim();
-        if (!name) return true;
-        try {
-          const tag = await api('POST', `/api/rounds/${rid}/tags`, { name, icon: picker.get() });
-          if (!tags.some((x) => x.id === tag.id)) tags.push(tag);
-          selected.add(tag.id);
-          input.value = '';
-          renderChips();
-          return true;
-        } catch (e) {
-          toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message);
-          return false;
-        }
-      };
-      addBtn.addEventListener('click', create);
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); create(); }
-      });
-      const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
-      // OK commits unsubmitted input first (#249): typing a name and hitting OK
-      // without clicking Hinzufügen used to discard it silently.
-      okBtn.addEventListener('click', async () => {
-        if (!await create()) return; // creation failed — stay open, toast already shown
-        close();
-        updateGame({ tagIds: [...selected] });
-      });
-      const row = h('<div class="pp-row"></div>');
-      row.appendChild(input);
-      row.appendChild(picker.trigger);
-      row.appendChild(addBtn);
-      row.appendChild(okBtn);
-      el.appendChild(row);
-      el.appendChild(picker.grid);
-      return () => input.focus();
-    });
-  }
-
-  // Paste a new cover image, take it from the linked provider, or remove the
-  // current one.
-  function openImagePopover(anchor) {
-    openEditor(anchor, 'image', t('detail.onboard.cover'), (el, close) => {
-      const paste = h(`<button class="btn btn--primary">${esc(t('detail.pasteImage'))}</button>`);
-      paste.addEventListener('click', async () => {
-        const blob = await readClipboardImage();
-        if (!blob) return; // toast already shown; keep popover open to retry
-        close();
-        updateGame({ imageBlob: blob });
-      });
-      el.appendChild(paste);
-
-      // Re-fetch the cover from the provider this game is linked to (#518).
-      // Offered whether or not there is a cover today, so it doubles as a repair
-      // for a hotlink the provider has since moved. Hidden for a game linked to a
-      // RETIRED provider (#744) — the route refuses it anyway (400), this just
-      // doesn't offer what it would refuse, and the stored cover keeps rendering
-      // either way.
-      //
-      // `LOOKUP_PROVIDERS` lives in lookup.js, which since #956 loads BEFORE
-      // this file — so the load-order hazard this comment used to warn about is
-      // gone. Still read it on click rather than at load time: the ordering is a
-      // property of index.html, not of the code
-      // (.claude/rules/frontend-script-load-order.md).
-      if (game.source && LOOKUP_PROVIDERS.includes(game.source.provider)) {
-        const prov = providerLabel(game.source.provider);
-        // Short in the button, full in the toast (#817): this label's max-content
-        // width sized the whole image-editor popover
-        // (.claude/rules/popover-width-is-shrink-to-fit.md), while the toast has
-        // room and reads better spelled out.
-        const fetchBtn = h(`<button class="btn">${esc(t('detail.coverFromProvider', { provider: providerLabelShort(game.source.provider) }))}</button>`);
-        fetchBtn.addEventListener('click', async () => {
-          close();
-          try {
-            await api('POST', `/api/rounds/${rid}/games/${gameId}/cover/provider?lang=${encodeURIComponent(getLocale())}`);
-            toast(t('detail.toast.coverFetched', { provider: prov }));
-            showGameDetail(rid, gameId);
-          } catch (e) {
-            // Each refusal says something the user can act on; anything else
-            // falls through as-is, like the other sheets (bggImportError).
-            const known = {
-              no_cover: 'detail.toast.noProviderCover',
-              no_source: 'detail.toast.coverNoSource',
-              provider_unreachable: 'detail.toast.coverUnreachable',
-            }[e.message];
-            toast(known ? t(known, { provider: prov }) : e.message);
-          }
-        });
-        el.appendChild(fetchBtn);
-      }
-
-      // Pick one of the game's BGG edition covers (#519) — the printing on this
-      // group's table rather than whatever /thing serves as the item's default.
-      // BGG only: the route answers 400 for a provider without the capability,
-      // so offering it for one would only produce an error on expand.
-      if (game.source && game.source.provider === 'bgg') {
-        // Widens the floating card: three tiles of box art do not fit the
-        // 300px `.popover` default. Compounded in CSS so it beats `.popover`
-        // on specificity rather than on source order.
-        el.classList.add('has-covers');
-        el.appendChild(editionCoverPicker(rid, game.source.externalId, game.image || null, async (c) => {
-          close();
-          // The pick's edition rides along with its URL (#742) — the picker has
-          // always handed back `{ edition, year, languages }` and every caller
-          // used to keep only the image. It is what the detail page labels the
-          // cover with, and what the wish-list price quotes an edition for.
-          await updateGame({ imageUrl: c.imageUrl, ...editionFields(c) });
-        }));
-      }
-
-      if (game.image) {
-        const rm = h(`<button class="btn btn--ghost">${esc(t('addGame.removeImage'))}</button>`);
-        rm.addEventListener('click', () => { close(); updateGame({ removeImage: true }); });
-        el.appendChild(rm);
-      }
-      el.appendChild(h(`<div class="muted popover__hint">${esc(t('detail.imageHint'))}</div>`));
-    });
-  }
-
-  // --- Expansions (#653) ---------------------------------------------------
-  //
-  // Owned expansions are a list on the game row, never an entity: they are not
-  // voted on, drawn, rated or tagged. The one place they reach into the app is
-  // the player range, through the shared `fitsPlayerCount` in draw-pool.js.
-  const owned = game.expansions || [];
-
-  // Send the whole list — the route replaces it wholesale, because "here is the
-  // set we own" is what the tick-list expresses.
-  async function saveExpansions(list) {
-    try {
-      await api('PUT', `/api/rounds/${rid}/games/${gameId}/expansions`, { expansions: list });
-      toast(t('detail.toast.expansionsSaved'));
-      showGameDetail(rid, gameId);
-    } catch (e) {
-      toast(e.message === 'quota_expansions' ? t('detail.toast.expansionQuota') : e.message);
-    }
-  }
-
-  // Add: the provider's own list as a tick-list, plus a free-text field. The
-  // candidates cost no extra upstream request — they ride on the /thing body the
-  // detail hop already fetched (lib/routes/lookup.js).
-  function openExpansionEditor(anchor) {
-    // Titled „Erweiterungen" rather than „Erweiterung hinzufügen" since #1039:
-    // the editor absorbed the removed section's list, so it is no longer only an
-    // add form — and on a phone that string is the sheet's accessible name.
-    openEditor(anchor, 'expansions', t('detail.expansionsTitle'), (el, close) => {
-      const keep = owned.map((e) => ({ id: e.id }));
-      const picked = new Set();
-      const canPick = game.source && typeof game.source.externalId === 'string'
-        && game.source.provider === 'bgg';
-
-      // What the round already owns — the rows the `.gd-expansions` section used
-      // to carry on the page (#1039). They lead the editor because it is now the
-      // only way to this list: dropping them with the section would have made an
-      // owned expansion unremovable, which no test could have seen (the route is
-      // untouched and the chip still counts them).
-      if (owned.length) {
-        const have = h(`<div class="exp-have">
-             <div class="exp-have__head muted">${esc(t('detail.expansionsTitle'))}</div>
-             <div class="exp-have__body"></div>
-           </div>`);
-        const haveBody = have.querySelector('.exp-have__body');
-        owned.forEach((e) => {
-          const range = Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
-            ? playersText(e.minPlayers, e.maxPlayers)
-            : t('detail.expansionNoRange');
-          // A plain <div> row, so it must carry `ds-row--static` — `.ds-row`
-          // declares cursor:pointer and a hover lift, i.e. it promises a click
-          // target (.claude/rules/ds-row-is-a-click-target.md). The remove button
-          // inside it is the only thing here that is clickable.
-          const row = h(`<div class="ds-row ds-row--static exp-have__row">
-               <div class="ds-row__main">
-                 <div class="ds-row__title">${esc(e.title)}</div>
-                 <div class="muted">${esc(range)}</div>
-               </div>
-               <div class="ds-row__meta">
-                 <button class="link-btn exp-row__remove" aria-label="${esc(t('detail.expansionRemove'))}">${iconText('ti-trash', t('detail.expansionRemove'))}</button>
-               </div>
-             </div>`);
-          row.querySelector('.exp-row__remove').addEventListener('click', async () => {
-            // The editor goes first: `confirmDialog` is a sheet on <body>, and a
-            // mousedown on it is "outside" the popover, which would tear this one
-            // down mid-await anyway. Same order as the image editor's actions.
-            close();
-            if (!await confirmDialog({
-              body: t('detail.expansionRemoveConfirm', { title: e.title }),
-              confirmLabel: t('detail.expansionRemove'), icon: 'ti-trash',
-            })) return;
-            saveExpansions(owned.filter((x) => x.id !== e.id).map((x) => ({ id: x.id })));
-          });
-          haveBody.appendChild(row);
-        });
-        el.appendChild(have);
-      }
-
-      if (canPick) {
-        const prov = providerLabel(game.source.provider);
-        const list = h(`<div class="exp-pick"><div class="exp-pick__head muted">${esc(t('detail.expansionPickTitle', { provider: prov }))}</div><div class="exp-pick__body muted">…</div></div>`);
-        el.appendChild(list);
-        const body = list.querySelector('.exp-pick__body');
-        api('GET', `/api/rounds/${rid}/lookup/expansions?provider=${encodeURIComponent(game.source.provider)}&id=${encodeURIComponent(game.source.externalId)}`)
-          .then((res) => {
-            const have = new Set(owned.map((e) => (e.source || {}).externalId).filter(Boolean));
-            const fresh = (res.expansions || []).filter((c) => !have.has(c.providerId));
-            body.innerHTML = '';
-            if (!fresh.length) {
-              body.className = 'exp-pick__body muted';
-              body.textContent = t('detail.expansionPickEmpty', { provider: prov });
-              return;
-            }
-            body.className = 'exp-pick__body';
-            fresh.forEach((c) => {
-              // A <label> row, so the whole line toggles its checkbox — and it
-              // must NOT sit inside a `.field`, where `.field label` (0,1,1)
-              // would flatten it (.claude/rules/label-rows-lose-to-field-label.md).
-              const row = h(`<label class="ds-row exp-pick__row"><span class="ds-row__main">${esc(c.title)}</span><span class="ds-row__meta"><input type="checkbox" /></span></label>`);
-              row.querySelector('input').addEventListener('change', (ev) => {
-                if (ev.target.checked) picked.add(c.providerId);
-                else picked.delete(c.providerId);
-              });
-              body.appendChild(row);
-            });
-          })
-          .catch(() => {
-            body.className = 'exp-pick__body muted';
-            body.textContent = t('detail.expansionPickError', { provider: prov });
-          })
-          // The candidates arrive AFTER openPopover measured the card, so the
-          // anchored variant is still placed for its loading height and would
-          // hang off the fold — with no way back, since a page scroll closes a
-          // popover. Placement is idempotent and this is a no-op for the sheet
-          // and when no popover is open (.claude/rules/anchored-popover-is-placed-once.md).
-          .finally(() => repositionPopover());
-      }
-
-      const own = h(`<div class="exp-own">
-           <div class="exp-own__head muted">${esc(t('detail.expansionOwnTitle'))}</div>
-           <input class="input exp-own__name" maxlength="${EXPANSION_TITLE_MAX}" placeholder="${esc(t('detail.expansionNamePlaceholder'))}" />
-           <div class="pp-row exp-own__range"></div>
-           <div class="muted popover__hint">${esc(t('detail.expansionRangeHint'))}</div>
-         </div>`);
-      const nameEl = own.querySelector('.exp-own__name');
-      const min = h('<input class="input" inputmode="numeric" />');
-      const max = h('<input class="input" inputmode="numeric" />');
-      [min, max].forEach((inp) => inp.addEventListener('input', () => {
-        const digits = inp.value.replace(/\D/g, '');
-        if (inp.value !== digits) inp.value = digits;
-      }));
-      const range = own.querySelector('.exp-own__range');
-      range.append(min, h('<span>–</span>'), max);
-      el.appendChild(own);
-
-      const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
-      okBtn.addEventListener('click', () => {
-        const list = [...keep, ...[...picked].map((providerId) => ({ providerId }))];
-        const title = nameEl.value.trim();
-        if (title) {
-          const mn = min.value.trim() === '' ? null : parseInt(min.value, 10);
-          const mx = max.value.trim() === '' ? null : parseInt(max.value, 10);
-          // Both bounds or neither: a lone bound states no interval, and an
-          // expansion widens nothing at all unless it declares one in full.
-          if ((mn === null) !== (mx === null)) return toast(t('detail.toast.expansionNeedsBoth'));
-          if (mn !== null && (!Number.isInteger(mn) || !Number.isInteger(mx) || mn < 1 || mx < mn))
-            return toast(t('detail.toast.expansionRange'));
-          list.push({ title, minPlayers: mn, maxPlayers: mx });
-        } else if (!picked.size) {
-          return close(); // nothing to do
-        }
-        close();
-        saveExpansions(list);
-      });
-      el.appendChild(okBtn);
-      return () => { if (!canPick) { nameEl.focus(); } };
-    });
-  }
 
   // Related sessions (those that drew this game) – newest first. Computed up
   // here, not at its own section below, because `sparse` needs it.
@@ -677,7 +333,7 @@ async function showGameDetail(rid, gameId) {
   // inline-block is no change, and the `.gd-img--edit:focus-visible` overlay
   // rule was already written for a focusable frame.
   const imgEl = h(`<button type="button" class="gd-img gd-img--edit" ${imgStyle} title="${esc(t('detail.changeImage'))}">${fallback}<span class="gd-img__edit">${esc(t('detail.changeImage'))}</span></button>`);
-  imgEl.addEventListener('click', () => openImagePopover(imgEl));
+  imgEl.addEventListener('click', () => editImage(imgEl));
   coverCol.appendChild(imgEl);
 
   // The score, on the cover's top-right corner — exactly where every Regal card
@@ -759,8 +415,8 @@ async function showGameDetail(rid, gameId) {
       ? playersText(game.minPlayers, game.maxPlayers) + (extra.length ? ` (${extra.join(', ')})` : '')
       : '';
     const plEl = hasPl
-      ? editableTag('tag--players', iconText('ti-users', plText), openPlayersPopover)
-      : editableTag('tag--players tag--empty', esc(t('detail.setPlayers')), openPlayersPopover);
+      ? editableTag('tag--players', iconText('ti-users', plText), editPlayers)
+      : editableTag('tag--players tag--empty', esc(t('detail.setPlayers')), editPlayers);
     chips.append(plEl);
   }
 
@@ -771,10 +427,10 @@ async function showGameDetail(rid, gameId) {
   if (assignedTagIds.length) {
     assignedTagIds.forEach((x) => {
       const tg = roundTags.find((q) => q.id === x);
-      chips.append(editableTag('tag--custom', `<i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}`, openTagsPopover));
+      chips.append(editableTag('tag--custom', `<i class="ti ${tagIconClass(tg.icon)}" aria-hidden="true"></i>${esc(tg.name)}`, editTags));
     });
   } else if (!sparse) {
-    chips.append(editableTag('tag--custom tag--empty', esc(t('detail.setTags')), openTagsPopover));
+    chips.append(editableTag('tag--custom tag--empty', esc(t('detail.setTags')), editTags));
   }
 
   // Owners (#971): named when recorded, an empty chip as the way in otherwise.
@@ -784,10 +440,10 @@ async function showGameDetail(rid, gameId) {
     const owners = ownerNames(round, game.ownerIds);
     if (owners.length) {
       chips.append(editableTag('tag--custom',
-        iconText('ti-user', t('detail.owners', { names: owners.join(', ') })), openOwnersPopover));
+        iconText('ti-user', t('detail.owners', { names: owners.join(', ') })), editOwners));
     } else if (!sparse) {
       chips.append(editableTag('tag--custom tag--empty',
-        esc(t('detail.setOwners')), openOwnersPopover));
+        esc(t('detail.setOwners')), editOwners));
     }
   }
 
@@ -807,8 +463,8 @@ async function showGameDetail(rid, gameId) {
     chips.append(owned.length
       ? editableTag('tag--custom tag--expansions',
         `<i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(owned.length, 'detail.expansionsBadgeOne', 'detail.expansionsBadge'))}`,
-        openExpansionEditor)
-      : editableTag('tag--custom tag--empty tag--expansions', esc(t('detail.addExpansionChip')), openExpansionEditor));
+        editExpansions)
+      : editableTag('tag--custom tag--empty tag--expansions', esc(t('detail.addExpansionChip')), editExpansions));
   }
 
   // State chips — read-only, so plain spans rather than `editableTag`.
@@ -924,9 +580,9 @@ async function showGameDetail(rid, gameId) {
       // the other two anchor on their own button, which is where the eye is.
       // Cover and tags are always missing here (that's part of `sparse`), but
       // players can already be set — don't offer to fill in what's filled in.
-      ['ti-photo', t('detail.onboard.cover'), () => openImagePopover(imgEl)],
-      ['ti-tags', t('detail.onboard.tags'), (b) => openTagsPopover(b)],
-      ...(hasPl ? [] : [['ti-users', t('detail.onboard.players'), (b) => openPlayersPopover(b)]]),
+      ['ti-photo', t('detail.onboard.cover'), () => editImage(imgEl)],
+      ['ti-tags', t('detail.onboard.tags'), editTags],
+      ...(hasPl ? [] : [['ti-users', t('detail.onboard.players'), editPlayers]]),
     ].forEach(([icon, label, onClick]) => {
       const b = h(`<button class="btn gd-onboard__act"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
       b.addEventListener('click', () => onClick(b));

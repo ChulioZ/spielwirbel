@@ -340,7 +340,12 @@ const frontendGlobals = {
   recReasonText: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
   showArchive: 'readonly', ARCHIVES: 'readonly',
   PALETTES: 'readonly', WORLDS: 'readonly', DESIGNS: 'readonly', resolveDesign: 'readonly', designIcon: 'readonly',
-  showBackground: 'readonly', showGameDetail: 'readonly', showAddGame: 'readonly',
+  showBackground: 'readonly', showGameDetail: 'readonly',
+  // game-editors.js (#968 — the five field editors, split out of
+  // views-round-detail.js; each takes an explicit context)
+  openPlayersPopover: 'readonly', openOwnersPopover: 'readonly',
+  openTagsPopover: 'readonly', openImagePopover: 'readonly',
+  openExpansionEditor: 'readonly', saveExpansions: 'readonly', showAddGame: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
   showInvite: 'readonly', inviteError: 'readonly', insertFriendPicker: 'readonly',
