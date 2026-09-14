@@ -3934,7 +3934,47 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
+  position: relative;   /* hosts .k-card__art */
+  overflow: hidden;     /* the art bleeds past the right edge and is clipped here */
 }
+/* The cover wash (#1094): the friend's most recently played game, bled into the
+   card's right side. Colour that is ABOUT the person rather than applied to them.
+
+   THE ALPHA IS A MEASURED CEILING, NOT A TASTE CALL, and the issue's starting
+   value of .17 does not pass. Compositing an arbitrary cover over --surface
+   across every design in both schemes (a cover is user-facing art, so the worst
+   case is pure black on a light design and pure white on a dark one):
+
+     alpha   worst --ink-soft
+     .17     3.84:1  (Sci-Fi dark, light cover)   FAILS AA
+     .13     4.40:1                                FAILS AA
+     .12     4.48:1                                FAILS AA by 0.02
+     .11     4.61:1  (Standard, dark cover)        ships
+
+   --ink measures 9.17:1 at .11, so the muted second line is what binds — it is
+   `white-space: nowrap` with an ellipsis, so it spans the whole card and really
+   does reach the far right where the mask is fully opaque. test/a11y-contrast
+   re-derives all of this from the `opacity` below, so raising it goes red.
+
+   The --accent link buttons in .k-card__meta would fail at full alpha (4.03:1),
+   and do not, because the mask has not opened yet where they sit: measured at
+   375px they end at 46% of the card and see 0.0148 effective alpha (5.00:1).
+   The threshold to know if that row ever grows: --accent first drops under AA
+   around .065 effective, which the fade reaches at roughly 67% of the card
+   width. Today's buttons have a ~47% width margin before that bites. */
+.k-card__art {
+  position: absolute;
+  inset: 0 -18% 0 38%;
+  background: center / cover no-repeat;
+  opacity: .11;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 62%);
+          mask-image: linear-gradient(90deg, transparent, #000 62%);
+}
+/* Content above the art. `.k-card__art` is the one child that must NOT be
+   lifted, and it is excluded by being absolutely positioned rather than by a
+   selector — a `:not()` here would be one more thing to keep in step. */
+.k-card > *:not(.k-card__art) { position: relative; }
 .k-card__who { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .k-card__line {
   font-size: var(--text-sm);
