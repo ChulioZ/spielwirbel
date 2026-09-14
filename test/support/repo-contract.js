@@ -4287,6 +4287,58 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(actions, [...new Set(actions)].sort());
   });
 
+  /* The 3-year retention purge (#311). Both backends answer a lexicographic ISO
+     comparison — JSON walks the array, Postgres runs `data->>'at' < ?` — so the
+     BOUNDARY and the `user_erased` exemption are exactly the kind of thing the
+     two could disagree about silently.
+
+     This suite shares state across its cases, so everything below works on
+     entries it writes itself and asserts relative to the count on entry. */
+  test('purgeModerationLog drops expired entries, keeps the erasure records', async () => {
+    /* A cutoff in 2020, deliberately: this suite SHARES STATE, and every other
+       case writes entries dated 2026-07-xx. A cutoff after those makes the purge
+       sweep them too and the exact count below reads 11 instead of 1 (measured).
+       Dating the fixtures around an era nothing else uses is what keeps
+       `deleted` an exact assertion rather than a `>= 1`. */
+    const CUTOFF = '2020-01-01T00:00:00.000Z';
+    const before = await repo.countModeration();
+
+    // One entry per claim, each identifiable by its target.
+    await repo.logModeration({ action: 'takedown', target: 'p-old', reason: 'expired', at: '2019-12-31T23:59:59.999Z' });
+    await repo.logModeration({ action: 'takedown', target: 'p-boundary', reason: 'exactly at the cutoff', at: CUTOFF });
+    await repo.logModeration({ action: 'takedown', target: 'p-new', reason: 'inside the window', at: '2020-01-01T00:00:00.001Z' });
+    await repo.logModeration({ action: 'user_erased', target: 'p-erased', reason: 'kept forever', at: '2015-01-01T00:00:00.000Z' });
+    await repo.logModeration({ action: 'account_deleted', target: 'p-self', reason: 'self-service', at: '2015-01-01T00:00:00.000Z' });
+    await repo.logModeration({ action: 'redact_member', target: 'p-undated', reason: 'no at at all' });
+    assert.equal(await repo.countModeration(), before + 6);
+
+    const deleted = await repo.purgeModerationLog(CUTOFF);
+    assert.equal(deleted, 1, 'exactly the one expired, non-erasure entry');
+    assert.equal(await repo.countModeration(), before + 5);
+
+    const targets = (await repo.listModeration(500)).map((e) => e.target);
+    assert.ok(!targets.includes('p-old'), 'the expired entry is gone');
+    assert.ok(targets.includes('p-boundary'),
+      'an entry exactly AT the cutoff is kept — the comparison is strictly "before"');
+    assert.ok(targets.includes('p-new'), 'an entry inside the window is kept');
+    assert.ok(targets.includes('p-erased'),
+      'a user_erased record is kept regardless of age — the Art. 17(3) Löschnachweis');
+    assert.ok(targets.includes('p-self'),
+      'an account_deleted record is kept too — since #419 the SELF-SERVICE erasure is the '
+      + 'normal case, and #311 as written exempted only the operator-side one');
+    assert.ok(targets.includes('p-undated'),
+      'an entry with no `at` is KEPT, not deleted: destroying a record because its date '
+      + 'is unreadable loses evidence the operator may owe an authority');
+
+    // Idempotent: the same cutoff a second time has nothing left to do.
+    assert.equal(await repo.purgeModerationLog(CUTOFF), 0);
+
+    /* The four survivors are left in place. There is no repo method to delete a
+       single moderation entry — by design, the log is append-only apart from
+       this purge — and every case in this suite computes its own `before`, so
+       leftovers cost nothing. */
+  });
+
   // Feedback (#260) is global and un-scoped like the moderation log, so it is
   // covered here rather than among the tenant-isolation cases — there is no
   // tenant argument to isolate on. The submitter's tenant rides along inside
