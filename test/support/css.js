@@ -68,6 +68,37 @@ function mediaBlocks(css = CSS) {
   return out;
 }
 
+/* The sheet with every top-level @media block CUT OUT — the rules that apply
+   unconditionally, and nothing else.
+
+   rulesOf() sees through @media on purpose (above), which is right for "where
+   is this rule" and wrong for "does this rule EXIST". A sheet's media blocks are
+   full of grouped resets naming the very selectors a slot/component test looks
+   up, so a whole-sheet lookup answers with the RESET when the rule itself has
+   been deleted. Measured on #1083: the prefers-contrast block lists four world
+   ornaments in one `display: none` group, so deleting the podium floor outright
+   left the test asserting its existence green.
+
+   Cut rather than filtered, so a nested block goes with its parent. */
+function topLevel(css = CSS) {
+  const re = /@media[^{]*\{/g;
+  let out = '';
+  let from = 0;
+  let m;
+  while ((m = re.exec(css))) {
+    out += css.slice(from, m.index);
+    let depth = 1;
+    let j = re.lastIndex;
+    for (; j < css.length && depth > 0; j += 1) {
+      if (css[j] === '{') depth += 1;
+      else if (css[j] === '}') depth -= 1;
+    }
+    from = j;
+    re.lastIndex = j;
+  }
+  return out + css.slice(from);
+}
+
 // A regex matching `cls` as a WHOLE class name (see trap 2 above).
 const whole = (cls) =>
   new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w-])');
@@ -364,6 +395,6 @@ const columnsIn = (width, { floor, gap, count }) => {
 };
 
 module.exports = {
-  ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, whole, rootPx, gridSpec, columnSpec,
+  ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, topLevel, whole, rootPx, gridSpec, columnSpec,
   columnsIn, specificity, outranks, matchesEl, declaredValue, resolvedDeclaration,
 };

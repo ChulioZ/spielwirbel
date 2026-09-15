@@ -29,10 +29,11 @@
    instead. A WORLD (#903) reaches the card the same way: its display face is
    whatever --font-display resolves to, and its backdrop motif and button frame
    are the SVG masks the world's token block declares in styles.css, drawn here
-   in the accent. A data: URI is same-origin, so drawing it taints nothing —
-   constraint 1 holds. Constraint 2 grows a half: a canvas ctx.font never
-   TRIGGERS a font load, so a world face no DOM node has painted yet would draw
-   in a fallback; recapCardBlob asks for it explicitly.
+   in the accent — and since #1083 its SCENE too, in a band along the foot: the
+   one piece of world art that leaves the app. A data: URI is same-origin, so
+   drawing it taints nothing — constraint 1 holds. Constraint 2 grows a half: a
+   canvas ctx.font never TRIGGERS a font load, so a world face no DOM node has
+   painted yet would draw in a fallback; recapCardBlob asks for it explicitly.
 
    Load order: see index.html. */
 
@@ -51,6 +52,11 @@ const RECAP_CARD_GAP = 14;
 const RECAP_CARD_TILE_H = 104;
 const RECAP_CARD_ROW_H = 82;
 const RECAP_CARD_SHELF_H = 68;
+// The world's scene band along the foot (#1083). The art is 600x120, drawn the
+// full width of the card, so its height is the width's fifth — derived rather
+// than written down, because a literal here and a stretch there is how the
+// scene ends up squashed with nothing to fail.
+const RECAP_CARD_SCENE_H = RECAP_CARD_W / 5;
 
 /* Normalize any CSS colour to what a canvas will actually paint, or null.
 
@@ -203,25 +209,34 @@ function recapCardBlocks(model) {
 // How tall this card has to be. The trailing term is the wordmark's own line
 // plus the breathing space above it, which is what keeps a two-block card and a
 // four-block card looking like the same design.
-function recapCardHeight(model) {
+//
+// `scene` is the world's scene mask when the round has one (recapCardBlob loads
+// it): the card then GROWS by the band rather than fitting it in, so the band is
+// text-free by construction. Both passes take the same argument, so the height
+// and the drawing cannot disagree about where the content ends.
+function recapCardHeight(model, scene) {
   const { rows, shelf } = recapCardBlocks(model);
   let h = RECAP_CARD_PAD + 26 + 44 + 26 + RECAP_CARD_TILE_H + RECAP_CARD_GAP;
   h += rows.length * (RECAP_CARD_ROW_H + RECAP_CARD_GAP);
   if (shelf.length) h += RECAP_CARD_SHELF_H + RECAP_CARD_GAP;
-  return h + 24 + 20 + RECAP_CARD_PAD;
+  return h + 24 + 20 + RECAP_CARD_PAD + (scene ? RECAP_CARD_SCENE_H : 0);
 }
 
 // `model` is what the view already computed for the screen:
 // { roundName, periodLabel, sessions, gamesPlayed, played: [titles],
 //   playedCount, rated: [titles], ratedScore, added, retired, completed }.
-// `world` is { backdrop, frame, scale } — the two masks (either may be null)
-// loaded by recapCardBlob before this synchronous pass, and the backing-store
-// scale the tints are rendered at.
+// `world` is { backdrop, frame, scene, scale } — the three masks (any may be
+// null) loaded by recapCardBlob before this synchronous pass, and the
+// backing-store scale the tints are rendered at.
 function drawRecapCard(ctx, model, height, world = {}) {
   const p = recapPalette();
   const W = RECAP_CARD_W;
   const pad = RECAP_CARD_PAD;
   const inner = W - pad * 2;
+  // Where the card's CONTENT ends: the foot of the panel stack, above the
+  // world's scene band. Everything that used to anchor on `height` anchors here,
+  // which is what keeps the band clear of the wordmark and the frame corner.
+  const foot = height - (world.scene ? RECAP_CARD_SCENE_H : 0);
 
   ctx.fillStyle = p.bg;
   ctx.fillRect(0, 0, W, height);
@@ -250,7 +265,7 @@ function drawRecapCard(ctx, model, height, world = {}) {
     const frame = recapTint(world.frame, fw, fh, p.brand, scale, false);
     ctx.drawImage(frame, 8, 8, fw, fh);
     ctx.save();
-    ctx.translate(W - 8, height - 8);
+    ctx.translate(W - 8, foot - 8);
     ctx.rotate(Math.PI);
     ctx.drawImage(frame, 0, 0, fw, fh);
     ctx.restore();
@@ -328,12 +343,24 @@ function drawRecapCard(ctx, model, height, world = {}) {
   // says where it came from.
   ctx.fillStyle = p.brand;
   ctx.font = recapFont(700, 20, true);
-  ctx.fillText('Spielwirbel', pad, height - pad);
+  ctx.fillText('Spielwirbel', pad, foot - pad);
   ctx.fillStyle = p.inkSoft;
   ctx.font = recapFont(600, 13);
   ctx.textAlign = 'right';
-  ctx.fillText(recapFit(ctx, 'spielwirbel.app', inner / 2), W - pad, height - pad);
+  ctx.fillText(recapFit(ctx, 'spielwirbel.app', inner / 2), W - pad, foot - pad);
   ctx.textAlign = 'left';
+
+  /* The world's scene along the foot, full width — the same band the empty
+     state carries on screen (slot 5), at the same bold alpha, and bold for the
+     same reason: the card grew by exactly this much, so no line of type is on
+     it. Drawn LAST so it sits over the page glow rather than under it; nothing
+     else reaches this far down. */
+  if (world.scene) {
+    ctx.globalAlpha = 0.36;
+    const band = recapTint(world.scene, W, RECAP_CARD_SCENE_H, p.brand, scale, false);
+    ctx.drawImage(band, 0, foot, W, RECAP_CARD_SCENE_H);
+    ctx.globalAlpha = 1;
+  }
 }
 
 // Render the card to a PNG Blob. Rejects rather than resolving null, so the
@@ -350,14 +377,16 @@ async function recapCardBlob(model) {
     try { await document.fonts.load(recapFont(700, 30, true)); } catch { /* fallback face */ }
   }
   const scale = 2; // constraint 3
-  const [backdrop, frame] = await Promise.all([recapWorldMask('--world-backdrop'), recapWorldMask('--world-frame')]);
-  const height = recapCardHeight(model);
+  const [backdrop, frame, scene] = await Promise.all([
+    recapWorldMask('--world-backdrop'), recapWorldMask('--world-frame'), recapWorldMask('--world-scene'),
+  ]);
+  const height = recapCardHeight(model, scene);
   const canvas = document.createElement('canvas');
   canvas.width = RECAP_CARD_W * scale;
   canvas.height = height * scale;
   const ctx = canvas.getContext('2d');
   ctx.scale(scale, scale);
-  drawRecapCard(ctx, model, height, { backdrop, frame, scale });
+  drawRecapCard(ctx, model, height, { backdrop, frame, scene, scale });
   return new Promise((resolve, reject) => {
     // Nothing cross-origin is ever drawn (constraint 1), so toBlob cannot taint
     // — but it still answers null on an out-of-memory canvas.

@@ -123,7 +123,7 @@ exempts it — but the glyph is the thing that says „sealed", and because `--g
 is a fill *here and nowhere else*, the fix moves no medal, crown or trophy. An
 exemption is the right answer when the fix has blast radius; this one had none.
 
-## Worlds (#903): one hook, eight slots, additive over the tokens
+## Worlds (#903): one hook, nine slots, additive over the tokens
 
 The registry is `public/js/round-designs.js` — `PALETTES`, `WORLDS` and
 `resolveDesign(bg)`, which finds a design by its stable `id` first and by the
@@ -139,11 +139,12 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
 
 - **one token block per world** (`[data-world="forest"]`) — its display face
   and its artwork, hand-authored SVG silhouettes as data URIs;
-- **eight slot rules keyed off the bare `[data-world]`** — page backdrop,
+- **nine slot rules keyed off the bare `[data-world]`** — page backdrop,
   primary-button frame, section-heading rule, card corner, empty-state scene,
-  finale stage, (#940) the winner reveal's victory scene, and (#1082) the
+  finale stage, (#940) the winner reveal's victory scene, (#1082) the
   **crown**: the stage art as a text-free strip above the round's name, on the
-  hub hero and the desktop rail — each a
+  hub hero and the desktop rail, and (#1083) the **floor** under the Pokale
+  podium — each a
   pseudo-element with `pointer-events: none`, painting the mask in a THEME
   token (`--brand`, `--brand-strong`, `--stage-ink`), never in a shade of its
   own. Slot 7 is the one with text ON its host, so its bold alpha is bought
@@ -181,6 +182,19 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
   And under `prefers-contrast: more` the RESERVATION goes with the art — a
   hidden crown over an unchanged `padding-top` is the empty band again. Same for
   the coverless tile, which gets its tornado back rather than nothing at all.
+
+  **Slot 9 (#1083) is the third reservation, and it adds two wrinkles.** The
+  podium's floor re-uses slot 7's victory band under the pedestals, which is free
+  artwork — but a world may carry its ground line on EITHER victory layer
+  (Sci-Fi's `--world-victory-band` is `none`; its pad and starfield are on the
+  `-2` layer), so the floor lists both masks or one world of six gets a bare
+  podium and nothing says so. And its `--podium-band` must be an absolute LENGTH,
+  not slot 5's capped percentage: a percentage resolves against the containing
+  block's WIDTH in `padding-bottom` and against the element's own HEIGHT in
+  `mask-size`, so one property would silently mean two different bands. The same
+  band reaches the shareable recap card, where the card GROWS by it rather than
+  fitting it in — the canvas's wordmark and frame corner anchor on that foot, so
+  the band stays text-free by construction.
 
 Three constraints, each with its reason: the face changes through
 `--font-display` only (`--font` stays Nunito, so reading is never harmed);

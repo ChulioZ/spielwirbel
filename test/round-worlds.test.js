@@ -6,10 +6,12 @@
    These specs pin that hook end to end (applyBackground sets and clears it,
    the design screen saves the id that resolves to it, the home tile shows the
    world's glyph) and the CSS contract behind it: one token block per world,
-   seven slot rules that are pseudo-elements only, the two media gates, and a
+   nine slot rules that are pseudo-elements only, the two media gates, and a
    backdrop alpha inside the contrast budget. Slot 7 (#940) is the winner
    reveal's victory scene — the one slot with text ON it, so its geometry is
-   pinned below the way slots 5 and 6 are. What they cannot judge is whether
+   pinned below the way slots 5 and 6 are. Slot 9 (#1083) re-uses slot 7's band
+   art as the Pokale podium's floor, so what is pinned for it is the sizing
+   discipline and the fact that EVERY world has a band for it to paint. What they cannot judge is whether
    the ornaments LOOK right — that is a browser check, per the issue.
 
    Driven through the jsdom harness rather than by matching source text where a
@@ -21,7 +23,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { loadApp } = require('./support/dom');
-const { CSS, rulesOf, bodyOf, mediaBlocks } = require('./support/css');
+const { CSS, rulesOf, bodyOf, mediaBlocks, topLevel } = require('./support/css');
 const { contrast, tokensFor } = require('./support/theme');
 const { PALETTES, WORLDS } = require('../public/js/round-designs');
 
@@ -214,7 +216,7 @@ const TOKENS = ['--world-font', '--world-backdrop', '--world-backdrop-size', '--
   // those whose motif stands (skyline, rank, horizon).
   '--world-crown-y'];
 
-test('each world declares the whole token set the eight slots read, in the registry\'s face', () => {
+test('each world declares the whole token set the nine slots read, in the registry\'s face', () => {
   for (const w of WORLDS) {
     const body = bodyOf(`[data-world="${w.id}"]`);
     assert.ok(body, `styles.css has no [data-world="${w.id}"] token block`);
@@ -254,15 +256,21 @@ const SLOTS = [
   // Slot 8 (#1082) — the crown. One rule for both hosts, so it is asserted as
   // the grouped selector the sheet declares rather than twice.
   '[data-world] .hero::before',
+  // Slot 9 (#1083) — the podium's floor, slot 7's band art under the pedestals.
+  '[data-world] .podium::before',
 ];
 
-// A slot selector can hold commas inside :is(), which bodyOfIn() would split on.
-const slotBody = (sel) => (rulesOf(CSS).find(([s]) => s.split('\n').map((x) => x.trim().replace(/,$/, '')).includes(sel)) || [])[1] || null;
+/* A slot selector can hold commas inside :is(), which bodyOfIn() would split on.
+   TOP LEVEL only: four of these selectors appear again inside the
+   prefers-contrast block's grouped `display: none`, so a whole-sheet lookup
+   would answer with that reset for a slot that has been DELETED — measured on
+   #1083, where removing the podium floor left the existence test green. */
+const slotBody = (sel) => (rulesOf(topLevel()).find(([s]) => s.split('\n').map((x) => x.trim().replace(/,$/, '')).includes(sel)) || [])[1] || null;
 
-test('the eight slots exist, and every ornament is a pseudo-element that takes no clicks', () => {
+test('the nine slots exist, and every ornament is a pseudo-element that takes no clicks', () => {
   for (const sel of SLOTS) assert.ok(slotBody(sel), `slot ${sel} is missing`);
   const rules = rulesOf(CSS).filter(([sel]) => sel.includes('[data-world'));
-  assert.ok(rules.length >= 19, `the world rules have moved (found ${rules.length})`);
+  assert.ok(rules.length >= 21, `the world rules have moved (found ${rules.length})`);
   let ornaments = 0;
   for (const [sel, body] of rules) {
     if (!/content\s*:/.test(body)) continue;
@@ -273,7 +281,7 @@ test('the eight slots exist, and every ornament is a pseudo-element that takes n
     }
     assert.match(body, /pointer-events:\s*none/, `${sel}: an ornament must not enlarge a hit target`);
   }
-  assert.ok(ornaments >= 9, `expected the slot pseudo-elements, found ${ornaments}`);
+  assert.ok(ornaments >= 10, `expected the slot pseudo-elements, found ${ornaments}`);
   // Whatever paints, paints in a theme token — never a shade of its own
   // (.claude/rules/theme-derived-colors.md). The stage glow is a gradient OF one.
   let painted = 0;
@@ -284,7 +292,7 @@ test('the eight slots exist, and every ornament is a pseudo-element that takes n
         `${sel}: background ${m[1]} is not a theme token`);
     }
   }
-  assert.ok(painted >= 10, `expected the ornaments to paint, found ${painted} backgrounds`);
+  assert.ok(painted >= 11, `expected the ornaments to paint, found ${painted} backgrounds`);
   /* `currentColor` is allowed above, and it is NOT a loophole — but it only
      holds while the element it inherits from sets a theme-derived `color`. The
      one user is the coverless tile's motif (#1082), which takes the tornado's
@@ -332,20 +340,70 @@ test('the crown reserves its own height through ONE property, so art and space c
     'the crown crops at a fixed edge, so half the worlds show the wrong part of their art');
 });
 
-test('the crown and the dock motif stand down under prefers-contrast: more', () => {
-  /* Every world ornament does, and these two need their RESERVATION removed
+test('the podium floor reserves its band through ONE property, and that property is a LENGTH', () => {
+  /* The crown's discipline (above), plus the trap that is specific to this host.
+     A percentage resolves against the containing block's WIDTH in
+     `padding-bottom` and against the element's own HEIGHT in `mask-size`, so one
+     property holding `15%` would silently mean two different bands — reserving
+     one size and painting another, with nothing to fail. Slot 5 can afford a
+     percentage because it pairs it with a capped WIDTH and restates the art's
+     ratio; this one is sized by height, so the property must be absolute. */
+  const host = rulesOf(CSS).find(([sel]) => sel.trim() === '[data-world] .podium');
+  assert.ok(host, 'the podium does not reserve the world floor');
+  assert.match(host[1], /--podium-band:\s*([^;]+);/, 'the podium declares no --podium-band');
+  assert.doesNotMatch(/--podium-band:\s*([^;]+);/.exec(host[1])[1], /%/,
+    '--podium-band is a percentage — it means a different band in each of its two uses');
+  assert.match(host[1], /padding-bottom:\s*calc\(\s*\d+px\s*\+\s*var\(--podium-band\)\s*\)/,
+    'the podium reserves a literal instead of var(--podium-band) — art and space will drift');
+
+  const floor = slotBody('[data-world] .podium::before');
+  assert.match(floor, /mask-size:\s*auto var\(--podium-band\)/,
+    'the floor is sized by a literal instead of --podium-band');
+  assert.match(floor, /mask-repeat:\s*repeat-x/,
+    'the floor must tile — a podium is wider than one band of art');
+  assert.match(floor, /mask-position:\s*center bottom/);
+  // `overflow: hidden` would clip the focus ring of a .podium__entry link at the
+  // outer columns, and buys nothing: the art is `inset: 0` on the pseudo-element.
+  assert.doesNotMatch(host[1], /overflow:\s*hidden/,
+    'the podium clips its own entries\' focus rings for an ornament that cannot overflow');
+  assert.match(host[1], /isolation:\s*isolate/,
+    'without a stacking context the z-index: -1 floor paints behind the card');
+});
+
+test('every world has a floor for the podium to stand on, on one of the two band layers', () => {
+  /* The floor reads BOTH victory bands because a world may carry its ground line
+     on either: Sci-Fi's `--world-victory-band` is `none` and its pad and
+     starfield live on the `-2` layer. Without this, a new world declaring only
+     the layer it happens to animate would ship a bare podium — the ornament
+     simply absent, which looks like the round having no world at all. */
+  const floor = slotBody('[data-world] .podium::before');
+  assert.match(floor, /mask-image:\s*var\(--world-victory-band\),\s*var\(--world-victory-2-band\)/,
+    'the floor reads one band layer, so a world carrying its ground on the other paints nothing');
+  const bare = WORLDS.filter((w) => {
+    const body = bodyOf(`[data-world="${w.id}"]`);
+    return ![/--world-victory-band:\s*url\(/, /--world-victory-2-band:\s*url\(/].some((re) => re.test(body));
+  }).map((w) => w.id);
+  assert.deepEqual(bare, [], 'these worlds declare no victory band at all, so their podium has no floor');
+});
+
+test('the crown, the dock motif and the podium floor stand down under prefers-contrast: more', () => {
+  /* Every world ornament does, and three of them need their RESERVATION removed
      with them: a hidden crown over an unchanged `padding-top` leaves the round's
-     name floating under an empty 96px band. The coverless tile gets its tornado
+     name floating under an empty 96px band, and a hidden floor leaves the
+     pedestals standing on 84px of nothing. The coverless tile gets its tornado
      back rather than nothing at all. */
   const hi = mediaBlocks().filter(([q]) => /prefers-contrast:\s*more/.test(q))
     .map(([, css]) => css).join('\n');
   assert.ok(hi, 'no prefers-contrast: more block');
   for (const sel of ['[data-world] .hero::before', '[data-world] .rail__id::before',
-    '[data-world] .dock::before', '[data-world] .cover-ph::after']) {
+    '[data-world] .dock::before', '[data-world] .cover-ph::after',
+    '[data-world] .podium::before']) {
     assert.ok(hi.includes(sel), `${sel} still paints under prefers-contrast: more`);
   }
   assert.match(hi, /\[data-world\] \.hero[^:][^{]*\{[^}]*padding-top:\s*0/,
     'the crown is hidden but its reservation stays — an empty band above the name');
+  assert.match(hi, /\[data-world\] \.podium\s*\{[^}]*padding-bottom:\s*0/,
+    'the floor is hidden but its reservation stays — the pedestals stand on nothing');
   assert.match(hi, /\[data-world\] \.cover-ph \.ti\s*\{[^}]*display:\s*block/,
     'the tornado does not come back, so a coverless tile shows nothing at all');
 });

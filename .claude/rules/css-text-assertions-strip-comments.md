@@ -141,6 +141,10 @@ file read as text. Two of them were found matching source that is not CSS:
   too, and there is no parser to get wrong. Prefer it wherever the value cannot
   legally repeat.
 
+Trap 3 is the LOOKUP rather than the parse — a grouped `@media` reset answering
+for a rule that has been deleted — and it has its own file:
+`.claude/rules/css-rule-lookup-answers-with-the-media-reset.md`.
+
 And always break the production code on purpose once to confirm the assertion
 actually goes red — a CSS-text test gives you no other signal that it is wired
 to anything real.

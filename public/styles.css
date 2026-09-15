@@ -9958,6 +9958,55 @@ kbd {
   }
 }
 
+/* Slot 9 — DER BODEN. The Pokale podium stands on the world's floor (#1083).
+   Pokale is the round's own celebration screen and carried 4 marks in every
+   world before this. The pedestals already sit on one baseline
+   (`align-items: flex-end` on .podium), so a band beneath them reads as a
+   floor by construction, and it needs no new artwork: slot 7's victory band is
+   the one piece of world art drawn to stand ON a ground line.
+
+   BOTH band layers, because a world may carry its floor on either. Sci-Fi's
+   `--world-victory-band` is `none` — its pad and starfield live on the `-2`
+   layer — so a rule reading only the first would leave one world of six with a
+   bare podium and nothing to say so. A `none` layer contributes no mask, which
+   is why listing both costs the other five nothing (test/round-worlds.test.js
+   asserts every world paints on one of them).
+
+   --podium-band carries the reservation AND the art's height, slot 8's
+   discipline — but as a pure LENGTH, never the percentage slot 5 can afford: a
+   percentage resolves against the containing block's WIDTH in `padding-bottom`
+   and against the element's own HEIGHT in `mask-size`, so one property holding
+   `15%` would quietly mean two different bands.
+
+   No `overflow: hidden`, unlike slots 5 and 6: the art is `inset: 0` on the
+   pseudo-element, so it cannot reach outside the padding box anyway, while a
+   podium entry IS a link (.podium__entry.member-link) whose focus ring is drawn
+   just outside it — and the outer columns touch the podium's edge once the row
+   is full. Clipping is the only thing `overflow` would add here. */
+[data-world] .podium {
+  --podium-band: clamp(44px, 10vw, 84px);
+  position: relative;
+  isolation: isolate;
+  padding-bottom: calc(18px + var(--podium-band));
+}
+[data-world] .podium::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .36;
+  mask-image: var(--world-victory-band), var(--world-victory-2-band);
+  /* The art tiles across any width, which is what each band SVG's matching
+     start and end ground line is for (slot 7's comment). Sized by HEIGHT so the
+     width follows the art's own ratio — a per-world ratio that a width-and-cap
+     pair, as slot 5 uses, would have to restate correctly six times. */
+  mask-size: auto var(--podium-band);
+  mask-repeat: repeat-x;
+  mask-position: center bottom;
+}
+
 /* The design screen's preview card and the home tile carry data-world THEMSELVES
    (views-round-detail.js, views-home.js): the world's backdrop across the box
    and, on the preview, its frame around the accent bar — both in the BOX's
@@ -10129,10 +10178,13 @@ kbd {
   [data-world] .hero::before,
   [data-world] .rail__id::before,
   [data-world] .dock::before,
+  [data-world] .podium::before,
   :is(.theme-card, .round-card)[data-world]::before { display: none; }
-  /* The crown's reservation goes with its art, or the name sits under an empty
-     96px band. The coverless tile gets its tornado back rather than nothing. */
+  /* The crown's and the floor's reservations go with their art, or the name
+     sits under an empty 96px band and the pedestals stand on 84px of nothing.
+     The coverless tile gets its tornado back rather than nothing. */
   [data-world] .hero, [data-world] .rail__id { padding-top: 0; }
+  [data-world] .podium { padding-bottom: 0; }
   [data-world] .cover-ph::after { display: none; }
   [data-world] .cover-ph .ti { display: block; }
 }
