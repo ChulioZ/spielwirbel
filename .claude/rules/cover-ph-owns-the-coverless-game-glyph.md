@@ -26,7 +26,8 @@ own colour:
 So wherever a coverless **game** renders, the box's `--placeholder` is inherited
 and then immediately overridden. Measured in a browser on #938 — the `.cover-ph`
 glyph's computed colour is byte-identical with `--placeholder` at 18.5% and at
-45%.
+45% — and at the 53% #1140 gave it on a dark design, for the same reason: the
+token never reaches this box whatever it is retuned to.
 
 ## What the token actually paints
 

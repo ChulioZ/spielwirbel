@@ -199,6 +199,8 @@ function tokensFor(design) {
     sunken: t('--sunken'),
     sunkenSoft: t('--sunken-soft'),
     line: t('--line'),
+    controlEdge: t('--control-edge'),
+    controlFill: t('--control-fill'),
     placeholder: t('--placeholder'),
     brandStrong: t('--brand-strong'),
     brandTint: t('--brand-tint'),

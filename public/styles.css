@@ -80,6 +80,42 @@
   --sunken: color-mix(in oklab, var(--page-bg), var(--shade) 4%);        /* placeholders, progress bars */
   --sunken-soft: color-mix(in oklab, var(--page-bg), var(--shade) 2.5%); /* chips, pills, keys */
   --line: color-mix(in oklab, var(--page-bg), var(--shade) 7%);          /* borders */
+  /* The border of an INTERACTIVE control, split off --line in #1140. SC 1.4.11
+     binds a boundary only where it identifies a control, so the ~50 structural
+     borders (card edges, dividers, the topbar and footer rules) keep --line's
+     quiet hairline and this token carries the 3:1 bar for the ~25 that are a
+     chip, a button, a field or a seat. A blanket 3:1 on --line was measured and
+     rejected: it turns every divider in the app into a mid grey and the page
+     into a wireframe.
+
+     34% is the light minimum (worst: salbei 3.05:1 on its own page) and 43% the
+     dark one (worst: scifi 3.01:1 on --surface); both ship one point up so a
+     future palette has somewhere to land before the bar moves. The percentage
+     has to be re-picked per scheme rather than inherited through --shade,
+     because the two grounds sit on opposite sides: on light a control is white
+     on a near-white page, on dark it is a 9-16% lift on a near-black one. Dark
+     ships 50% rather than its bare 43% minimum because --control-fill lifts the
+     control's own interior off --surface there, and the edge has to clear 3:1
+     against that too — an edge measured only against the grounds OUTSIDE the
+     control passes while sitting 2.5:1 on the fill it encloses.
+
+     A consequence worth knowing: at 3:1 the resting edge is stronger than
+     --brand-edge (1.4-2.0), so the nine control hovers that used to move to
+     --brand-edge now move to --brand, as .mood, .member-chip, .winner-chip and
+     .cover-pick already did. Left alone, hovering a chip would have made its
+     outline FAINTER than at rest.
+
+     test/a11y-contrast.test.js measures it against both grounds on every design,
+     and scans the sheet so a new control cannot quietly take --line instead. */
+  --control-edge: color-mix(in oklab, var(--page-bg), var(--shade) 35%);
+  /* The FILL of a control, which on a light design is the same white --surface
+     its parent card already is — the border alone says where the control starts,
+     and at 3:1 it does that job. On dark it cannot: --surface is a lift off the
+     page rather than a fixed colour, so a chip inside a popover repeated its
+     parent's exact tone. The dark block points this at --sunken-soft, which is
+     already the documented tone for "chips, pills, keys", so the control gets a
+     real step without any component rule keying off the scheme attribute. */
+  --control-fill: var(--surface);
   --bg: var(--page-bg);
 
   /* Accent tones derived from --brand. */
@@ -98,7 +134,13 @@
      shipped design against all three of its backgrounds, worst case 3.23:1;
      test/a11y-contrast.test.js measures it so a retune cannot quietly drop back.
 
-     NOT the tone of a coverless GAME cover — since #256 those boxes get a
+     The dark block overrides it to 53% (#1140), and NOT because this value was
+     wrong: raising --sunken/--sunken-soft there lifted two of the grounds this
+     token is measured against, which walked the glyph back down to 2.43:1 — #938
+     undone from underneath by a change that never named it. Retune one, re-measure
+     the other. */
+
+  /* NOT the tone of a coverless GAME cover — since #256 those boxes get a
      .cover-ph gradient layer that brings its own colour, so this token never
      paints there however much the surrounding rules look like it does. */
   --placeholder: color-mix(in oklab, var(--page-bg), var(--shade) 45%);
@@ -330,6 +372,38 @@
   color-scheme: dark;
   --shade: #fff;
   --surface: color-mix(in oklab, #fff 9%, var(--page-bg));
+  /* The neutral ramp is re-picked here, not just flipped, and #1140 is why.
+     Every tone below is a mix of the page toward --shade, and on light --surface
+     is a fixed #fff sitting the page's whole distance away — so a 7% line is
+     separated from the card by that distance PLUS its own 7%. On dark --surface
+     is the same page lifted 9%, so 7% landed BETWEEN page and card and touched
+     neither: the border of a chip measured 1.05:1 against the chip's own fill.
+
+     So the percentages move to where the ratios match what light ships:
+
+       --line       21%  -> 1.40-1.42 vs --surface   (light: 1.37-1.43)
+       --sunken     19%  -> 1.32-1.33 vs --surface   (light: 1.25-1.31)
+       --sunken-soft 16% -> 1.20-1.21 vs --surface   (light: 1.20-1.26)
+
+     All three now sit ABOVE --surface, which inverts the words: a "sunken" well
+     reads as raised. That is the only direction available — the dark pages are
+     near-black, so mixing toward #000 tops out at 1.10:1 against the page even
+     at 35%, i.e. there is no room below. The ordering the names describe is
+     preserved (soft < sunken < line < control-edge) and it is the ordering, not
+     the direction, that the components rely on. */
+  --sunken: color-mix(in oklab, var(--page-bg), var(--shade) 19%);
+  --sunken-soft: color-mix(in oklab, var(--page-bg), var(--shade) 16%);
+  --line: color-mix(in oklab, var(--page-bg), var(--shade) 21%);
+  --control-edge: color-mix(in oklab, var(--page-bg), var(--shade) 50%);
+  --control-fill: var(--sunken-soft);
+  /* --placeholder rides the ramp above rather than keeping :root's 45%. It is a
+     non-text graphic on --sunken and --sunken-soft (#938), so lifting those two
+     by 15 points walked the glyph down to 2.43:1 on its own box — the exact
+     failure #938 fixed, reintroduced from underneath. 51.5% is the recomputed
+     minimum against all four of its grounds; 53% ships for the same headroom as
+     --control-edge. test/a11y-contrast.test.js measures it and went red for
+     this, which is how it was found. */
+  --placeholder: color-mix(in oklab, var(--page-bg), var(--shade) 53%);
   --on-accent: var(--on-accent-dark);
   --ink: #eceef5;
   --ink-soft: #a4adbe;
@@ -464,8 +538,8 @@ h1, h2, h3 { font-family: var(--font-display); }
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--ink-soft);
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--control-fill);
+  border: 1px solid var(--control-edge);
   border-radius: 10px;
   padding: 6px 8px;
   cursor: pointer;
@@ -1657,8 +1731,8 @@ a.hub-row:hover { background: var(--sunken-soft); }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--surface);
-  border: 1.5px solid var(--line);
+  background: var(--control-fill);
+  border: 1.5px solid var(--control-edge);
   border-radius: var(--radius-pill);
   padding: 7px 14px;
   color: var(--ink-soft);
@@ -1690,8 +1764,8 @@ a.hub-row:hover { background: var(--sunken-soft); }
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--ink-soft);
-  background: var(--surface);
-  border: 1.5px solid var(--line);
+  background: var(--control-fill);
+  border: 1.5px solid var(--control-edge);
   border-radius: var(--radius-pill);
   padding: 8px 12px;
   cursor: pointer;
@@ -1719,8 +1793,8 @@ a.hub-row:hover { background: var(--sunken-soft); }
   gap: 6px;
   padding: 6px 14px;
   border-radius: var(--radius-pill);
-  border: 1.5px solid var(--line);
-  background: var(--surface);
+  border: 1.5px solid var(--control-edge);
+  background: var(--control-fill);
   font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 700;
@@ -1729,7 +1803,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
 }
 .chip .ti { font-size: var(--text-md); }
-.chip:hover { border-color: var(--brand-edge); }
+.chip:hover { border-color: var(--brand); }
 .chip.is-on { background: var(--brand); border-color: var(--brand-strong); color: var(--on-accent); }
 /* Exclude state of a tri-state tag filter (#241): the semantic danger fill, so
    "reject this tag" reads distinctly from the orange include state. */
@@ -1758,8 +1832,8 @@ a.hub-row:hover { background: var(--sunken-soft); }
   gap: 4px;
   padding: 4px 12px;
   border-radius: var(--radius-pill);
-  border: 1.5px solid var(--line);
-  background: var(--surface);
+  border: 1.5px solid var(--control-edge);
+  background: var(--control-fill);
   font-family: var(--font-display);
   font-size: var(--text-xs);
   font-weight: 700;
@@ -1770,7 +1844,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
    modes cannot resize either pill — and so the selection is carried by a shape
    as well as by the fill (.claude/rules/accessibility-contrast-and-modals.md §3). */
 .tag-mode__opt .ti { font-size: var(--text-sm); visibility: hidden; }
-.tag-mode__opt:not(:disabled):hover { border-color: var(--brand-edge); }
+.tag-mode__opt:not(:disabled):hover { border-color: var(--brand); }
 /* --brand-strong, not --brand: the accent ON a brand tint measures 4.33–4.92:1
    across the eight themes and fails AA on four of them
    (.claude/rules/theme-derived-colors.md). */
@@ -1837,15 +1911,15 @@ a.hub-row:hover { background: var(--sunken-soft); }
   gap: 8px;
   padding: 8px 16px;
   border-radius: var(--radius-pill);
-  border: 1.5px solid var(--line);
-  background: var(--surface);
+  border: 1.5px solid var(--control-edge);
+  background: var(--control-fill);
   font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--ink-soft);
   cursor: pointer;
 }
-.fbar__trigger:hover { border-color: var(--brand-edge); }
+.fbar__trigger:hover { border-color: var(--brand); }
 .fbar__trigger[aria-expanded="true"] { border-color: var(--brand); color: var(--brand-strong); }
 .fbar__chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 /* The other half of #854, and scoped for the reason stated above: on the setup
@@ -2045,14 +2119,14 @@ a.hub-row:hover { background: var(--sunken-soft); }
   font-weight: 700;
   padding: 11px 20px;
   border-radius: 14px;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid var(--control-edge);
   border-bottom-width: 4px;
-  background: var(--surface);
+  background: var(--control-fill);
   color: var(--ink);
   cursor: pointer;
   transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
 }
-.btn:hover { background: var(--brand-tint-soft); border-color: var(--brand-edge); }
+.btn:hover { background: var(--brand-tint-soft); border-color: var(--brand); }
 .btn .ti { vertical-align: -2px; }
 .btn:active { transform: translateY(2px); border-bottom-width: 1.5px; margin-bottom: calc(var(--press-mb) + 2.5px); }
 .btn--primary {
@@ -2943,9 +3017,9 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   font-family: inherit;
   font-size: var(--text-lg);
   padding: 12px 14px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-edge);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--control-fill);
   color: var(--ink);
 }
 .input:focus, .select:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
@@ -3379,7 +3453,7 @@ body.auth-screen .topbar__context { display: none; }
   padding: 6px 10px;
   border-radius: var(--radius-pill);
   background: var(--sunken-soft);
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-edge);
   color: var(--ink);
   font-size: var(--text-sm);
   font-weight: 600;
@@ -3391,7 +3465,7 @@ body.auth-screen .topbar__context { display: none; }
    otherwise win over .landing-chip's. Hover mirrors .landing-chip's own resting
    surface rather than inventing a tone (.claude/rules/theme-derived-colors.md). */
 .landing-chip--link { color: var(--ink); text-decoration: none; }
-.landing-chip--link:hover { border-color: var(--brand-edge); background: var(--brand-tint-soft); }
+.landing-chip--link:hover { border-color: var(--brand); background: var(--brand-tint-soft); }
 /* The operator-gated EU-hosting claim ships with the `hidden` attribute and is
    un-hidden by JS only on the configured operator instance (views-landing.js).
    An author `display` rule beats the UA `[hidden] { display: none }`, so without
@@ -3731,13 +3805,13 @@ body.auth-screen .terms-banner { display: none; }
   flex: none;
   font-size: var(--text-lg);
   color: var(--ink-soft);
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--control-fill);
+  border: 1px solid var(--control-edge);
   border-radius: 10px;
   padding: 6px 9px;
   cursor: pointer;
 }
-.topbar__acct:hover { color: var(--brand); border-color: var(--brand-edge); }
+.topbar__acct:hover { color: var(--brand); border-color: var(--brand); }
 /* „Anmelden" is the bar's one TEXT control (#1090), offered on the logged-out
    landing and on a logged-out /entdecken. It takes the tinted pair `.btn:hover`
    already uses rather than inventing a tone
@@ -5139,7 +5213,7 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .tables-card__select { flex: 1 1 auto; min-width: 0; }
 .tables-card__seats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .tables-seat {
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-edge);
   background: var(--sunken-soft);
   color: var(--ink);
   border-radius: var(--radius-pill);
@@ -5433,8 +5507,8 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
   font-weight: 600;
   padding: 10px 18px;
   border-radius: var(--radius-pill);
-  border: 2px solid var(--line);
-  background: var(--surface);
+  border: 2px solid var(--control-edge);
+  background: var(--control-fill);
   color: var(--ink-soft);
   cursor: pointer;
 }
@@ -5452,8 +5526,8 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
   font-weight: 600;
   padding: 10px 18px;
   border-radius: var(--radius-pill);
-  border: 2px solid var(--line);
-  background: var(--surface);
+  border: 2px solid var(--control-edge);
+  background: var(--control-fill);
   color: var(--ink);
   cursor: pointer;
 }
@@ -6426,9 +6500,9 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
   flex: none;
   height: 44px;
   padding: 0 8px;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid var(--control-edge);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--control-fill);
   color: var(--ink-soft);
   cursor: pointer;
 }
@@ -6445,9 +6519,9 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid var(--control-edge);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--control-fill);
   color: var(--ink-soft);
   cursor: pointer;
 }
@@ -7077,9 +7151,9 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
   flex-direction: column;
   gap: 4px;
   padding: 4px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-edge);
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--control-fill);
   /* A fresh component, so the `font` shorthand is safe here — the caveat in
      .claude/rules/native-button-vs-focusable-span.md is about un-button-ing an
      EXISTING component whose own rule declares a size/weight the shorthand
@@ -7250,9 +7324,9 @@ img.preview { max-width: 120px; border-radius: 10px; margin-top: 8px; display: b
 
 /* ---- Paste image (clipboard) ---- */
 .paste-zone {
-  border: 2px dashed var(--line);
+  border: 2px dashed var(--control-edge);
   border-radius: 14px;
-  background: var(--surface);
+  background: var(--control-fill);
   min-height: 160px;
   display: flex;
   align-items: center;
@@ -7490,9 +7564,9 @@ kbd {
   width: 42px;
   height: 42px;
   border-radius: var(--radius-md);
-  border: 1.5px solid var(--line);
+  border: 1.5px solid var(--control-edge);
   border-bottom-width: 3px;
-  background: var(--surface);
+  background: var(--control-fill);
   color: var(--ink-soft);
   cursor: pointer;
   display: inline-flex;
@@ -7500,7 +7574,7 @@ kbd {
   justify-content: center;
 }
 .stepper__btn .ti { font-size: var(--text-md); }
-.stepper__btn:hover { border-color: var(--brand-edge); }
+.stepper__btn:hover { border-color: var(--brand); }
 .stepper__btn:active { transform: translateY(1px); }
 .stepper__val {
   width: 58px;
@@ -7509,8 +7583,8 @@ kbd {
   font-size: var(--text-xl);
   font-weight: 700;
   color: var(--ink);
-  background: var(--surface);
-  border: 1.5px solid var(--line);
+  background: var(--control-fill);
+  border: 1.5px solid var(--control-edge);
   border-radius: var(--radius-md);
   padding: 7px 4px;
 }
@@ -8196,9 +8270,9 @@ kbd {
   align-items: center;
   gap: 6px;
   padding: 14px;
-  border: 2px dashed var(--line);
+  border: 2px dashed var(--control-edge);
   border-radius: 14px;
-  background: var(--surface);
+  background: var(--control-fill);
   font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: 700;
@@ -8212,7 +8286,7 @@ kbd {
 .opt-card__logo svg { width: 100%; height: 100%; display: block; }
 /* Six platforms: let them wrap into a tidy grid rather than one cramped row. */
 .opt-cards--platform .opt-card { min-width: 100px; }
-.opt-card:hover { opacity: 1; border-color: var(--brand-edge); }
+.opt-card:hover { opacity: 1; border-color: var(--brand); }
 .opt-card.is-on {
   border-style: solid;
   border-color: var(--brand);
@@ -8374,7 +8448,7 @@ kbd {
 /* ---- Session setup: pool preview + inactive seats ---- */
 .nr-seat--out .nr-seat__avatar {
   background: transparent;
-  border: 2px dashed var(--line);
+  border: 2px dashed var(--control-edge);
   color: var(--ink-soft);
   opacity: 0.7;
 }
@@ -8471,15 +8545,15 @@ kbd {
 .team-chip {
   padding: 7px 14px;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid var(--control-edge);
+  background: var(--control-fill);
   color: var(--ink);
   font-family: inherit;
   font-size: var(--text-sm);
   font-weight: 700;
   cursor: pointer;
 }
-.team-chip:hover { border-color: var(--brand-edge); }
+.team-chip:hover { border-color: var(--brand); }
 /* The tick is carried by aria-pressed as well (#145) — this is only its
    visible half. */
 .team-chip.is-selected {
@@ -8864,8 +8938,8 @@ kbd {
   width: 64px;
   height: 68px;
   border-radius: 16px;
-  border: 2px solid var(--line);
-  background: var(--surface);
+  border: 2px solid var(--control-edge);
+  background: var(--control-fill);
   color: var(--ink-soft);
   cursor: pointer;
   display: flex;
@@ -9377,8 +9451,8 @@ kbd {
   width: 26px;
   height: 26px;
   border-radius: var(--radius-pill);
-  background: var(--surface);
-  border: 2px solid var(--line);
+  background: var(--control-fill);
+  border: 2px solid var(--control-edge);
   align-items: center;
   justify-content: center;
   font-size: 16px; /* glyph, not type */
@@ -9494,7 +9568,7 @@ kbd {
    and .theme-card--world, with the world preview rules near the end of this file. */
 .theme-card {
   position: relative;
-  border: 2px solid var(--line);
+  border: 2px solid var(--control-edge);
   border-radius: 16px;
   padding: 14px 14px 12px;
   cursor: pointer;
