@@ -16,6 +16,9 @@
       session-share.js already refuses them for exactly this) — and drawing a
       cross-origin image onto a canvas TAINTS it, so toBlob() then throws a
       SecurityError at export time, long after the code looked fine.
+      CROSS-ORIGIN IS NOT THE ONLY WAY TO TAINT: WebKit also taints on a
+      createPattern() built from an SVG image, however same-origin — see
+      .claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md and recapTint.
    2. Wait for document.fonts.ready before drawing. The app's own woff2 faces
       load with `font-display: swap`; a canvas drawn before they resolve renders
       in a fallback face and looks subtly wrong rather than broken.
@@ -31,7 +34,8 @@
    are the SVG masks the world's token block declares in styles.css, drawn here
    in the accent — and since #1083 its SCENE too, in a band along the foot: the
    one piece of world art that leaves the app. A data: URI is same-origin, so
-   drawing it taints nothing — constraint 1 holds. Constraint 2 grows a half: a
+   DRAWING it taints nothing — but making a repeat PATTERN from it taints in
+   WebKit, which is why recapTint stamps instead. Constraint 2 grows a half: a
    canvas ctx.font never TRIGGERS a font load, so a world face no DOM node has
    painted yet would draw in a fallback; recapCardBlob asks for it explicitly.
 
@@ -160,6 +164,16 @@ function recapWorldMask(name) {
 // The silhouette painted in `color`, at `scale` for the 2x backing store:
 // tile (or stretch) it onto a scratch canvas, then keep the colour only where
 // the silhouette is (source-in). Returned as a canvas the caller drawImage()s.
+//
+// The tiling branch STAMPS the mask rather than reaching for createPattern, and
+// that is the whole of constraint 1's WebKit half (see the header): a pattern
+// built from an SVG image taints every canvas it touches in WebKit, so toBlob()
+// then threw SecurityError on a world round — while plain drawImage() of the
+// very same data: URI is clean. The mask is rasterized once into a scratch tile
+// at the backing-store scale, so stamping costs no sharpness — it GAINS some:
+// the pattern rasterized the SVG at 1x and upscaled it, where a stamped tile is
+// pixel-identical to a true 2x vector rasterization (measured in Chromium, 5x
+// fewer half-covered edge pixels). Constraint 3 was quietly being missed here.
 function recapTint(mask, w, h, color, scale, tile) {
   const c = document.createElement('canvas');
   c.width = w * scale;
@@ -167,8 +181,17 @@ function recapTint(mask, w, h, color, scale, tile) {
   const g = c.getContext('2d');
   g.scale(scale, scale);
   if (tile) {
-    g.fillStyle = g.createPattern(mask, 'repeat');
-    g.fillRect(0, 0, w, h);
+    // The loop steps by the tile's own size, so a mask that reports none would
+    // spin forever; it draws nothing instead, as the pattern did.
+    const tw = mask.naturalWidth || mask.width;
+    const th = mask.naturalHeight || mask.height;
+    if (tw && th) {
+      const t = document.createElement('canvas');
+      t.width = tw * scale;
+      t.height = th * scale;
+      t.getContext('2d').drawImage(mask, 0, 0, tw * scale, th * scale);
+      for (let y = 0; y < h; y += th) for (let x = 0; x < w; x += tw) g.drawImage(t, x, y, tw, th);
+    }
   } else {
     g.drawImage(mask, 0, 0, w, h);
   }
